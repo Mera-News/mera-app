@@ -1,0 +1,54 @@
+{
+  "description": "Two sports facts and \"the sports one\": asking which is correct.",
+  "category": "ambiguous",
+  "clear": false,
+  "knownFacts": "- 'interest: sport': Follows Formula 1 racing\n- 'location: residence': Lives in Toronto, Canada\n- 'interest: topic': Interested in personal finance\n- 'profession: job': Works as a data analyst at a bank\n- 'pets: dog': Has a dog\n- 'interest: sport': Follows the Toronto Raptors",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows the Toronto Raptors",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f6",
+      "statement": "Has a dog",
+      "attribute": "pets: dog"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a data analyst at a bank",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f5",
+      "statement": "Interested in personal finance",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Toronto, Canada",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f4",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: sport"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Remove the sports one."
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "deleteUserFacts",
+    "intent": "remove_fact",
+    "calls": [],
+    "ask": "required",
+    "askMentions": [
+      "Raptors",
+      "Formula"
+    ]
+  }
+}

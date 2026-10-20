@@ -1,0 +1,49 @@
+{
+  "sources": [
+    "harness-local/fixtures/persona-chat/<id>.json"
+  ],
+  "dev": [
+    "ondevice-delete",
+    "ondevice-no-save-known",
+    "ondevice-no-save-thanks",
+    "ondevice-onboarding-save",
+    "ondevice-save-german",
+    "ondevice-save-new-fact",
+    "ondevice-save-two-facts",
+    "pc-delete-one",
+    "pc-delete-two",
+    "pc-correct-moved-city",
+    "pc-save-one",
+    "pc-save-three",
+    "pc-save-long-buried",
+    "pc-lang-german",
+    "pc-lang-hindi-latin",
+    "pc-sensitive-health",
+    "pc-sensitive-lgbtq",
+    "pc-restated-known",
+    "pc-thanks",
+    "pc-question-mera",
+    "pc-pending-yes",
+    "pc-pending-go-ahead",
+    "pc-pending-ok",
+    "pc-pending-no",
+    "pc-ambig-anymore",
+    "pc-ambig-single-word"
+  ],
+  "test": [
+    "pc-delete-one-of-two",
+    "pc-correct-new-job",
+    "pc-save-two",
+    "pc-save-question-plus-fact",
+    "pc-lang-dutch",
+    "pc-sensitive-religion",
+    "pc-sensitive-party",
+    "pc-ok",
+    "pc-nice",
+    "pc-pending-do-it",
+    "pc-pending-cool",
+    "pc-pending-cancel",
+    "pc-ambig-change-no-value",
+    "pc-ambig-sports"
+  ]
+}

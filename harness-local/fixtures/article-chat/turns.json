@@ -1,0 +1,772 @@
+[
+  {
+    "id": "art-answer-short",
+    "agent": "article",
+    "description": "A plain question about the article.",
+    "category": "answer",
+    "clear": true,
+    "message": "What happened here, in short?",
+    "expect": "answer",
+    "intent": "answer_question",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Rotterdam port workers start 48-hour strike over automation",
+      "publication": "NL Times",
+      "description": "Dockworkers at the Port of Rotterdam walked out on Monday in a dispute over automated cranes and job guarantees, the FNV union said.",
+      "related": [
+        "Shipping lines divert vessels to Antwerp as Rotterdam strike bites",
+        "Port of Rotterdam talks with union to resume Thursday"
+      ]
+    },
+    "matchedTopics": [
+      "Port of Rotterdam",
+      "Dutch labour unions"
+    ],
+    "producingFacts": [
+      "Interested in Dutch shipping"
+    ]
+  },
+  {
+    "id": "art-answer-renters",
+    "agent": "article",
+    "description": "A question about what the article means.",
+    "category": "answer",
+    "clear": true,
+    "message": "Does this change anything for people already renting?",
+    "expect": "answer",
+    "intent": "answer_question",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Utrecht caps rent rises for mid-rent homes",
+      "publication": "DUIC",
+      "description": "The Utrecht city council voted to cap yearly rent rises for mid-rent homes at the inflation rate from January, covering about 9,000 homes.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Dutch housing market",
+      "Utrecht local politics"
+    ],
+    "producingFacts": [
+      "Lives in Utrecht, Netherlands"
+    ]
+  },
+  {
+    "id": "art-follow-port",
+    "agent": "article",
+    "description": "Follow the article's story: 3 or 4 options.",
+    "category": "follow",
+    "clear": true,
+    "message": "Follow this story",
+    "expect": "proposeTrack",
+    "intent": "follow_story",
+    "ask": "no",
+    "search": [
+      "Shipping lines divert vessels to Antwerp as Rotterdam strike bites",
+      "Port of Rotterdam talks with union to resume Thursday"
+    ],
+    "article": {
+      "title": "Rotterdam port workers start 48-hour strike over automation",
+      "publication": "NL Times",
+      "description": "Dockworkers at the Port of Rotterdam walked out on Monday in a dispute over automated cranes and job guarantees, the FNV union said.",
+      "related": [
+        "Shipping lines divert vessels to Antwerp as Rotterdam strike bites",
+        "Port of Rotterdam talks with union to resume Thursday"
+      ]
+    },
+    "matchedTopics": [
+      "Port of Rotterdam"
+    ],
+    "producingFacts": [
+      "Interested in Dutch shipping"
+    ]
+  },
+  {
+    "id": "art-follow-keep-posted",
+    "agent": "article",
+    "description": "Follow, said another way.",
+    "category": "follow",
+    "clear": true,
+    "message": "Keep me posted on how this develops",
+    "expect": "proposeTrack",
+    "intent": "follow_story",
+    "ask": "no",
+    "search": [
+      "EU AI Office publishes guidance for general-purpose AI models"
+    ],
+    "article": {
+      "title": "EU AI Office opens first investigation under AI Act",
+      "publication": "Euractiv",
+      "description": "The EU AI Office opened its first formal investigation into a general-purpose AI provider over missing transparency documentation.",
+      "related": [
+        "EU AI Office publishes guidance for general-purpose AI models"
+      ]
+    },
+    "matchedTopics": [
+      "EU tech regulation",
+      "AI safety"
+    ],
+    "producingFacts": [
+      "Works on machine learning products"
+    ]
+  },
+  {
+    "id": "art-less-energy-drinks",
+    "agent": "article",
+    "description": "Less of one named topic, not the first listed.",
+    "category": "less",
+    "clear": true,
+    "message": "Less about the drinks company side of this, please",
+    "expect": "proposeChanges",
+    "intent": "see_less",
+    "target": "Energy drink industry",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Energy drink maker extends Formula 1 title sponsorship to 2030",
+      "publication": "Motorsport Week",
+      "description": "The drinks company signed a five-year extension of its title sponsorship, the largest commercial deal on the current grid.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Formula 1 racing",
+      "Energy drink industry",
+      "Sports sponsorship deals"
+    ],
+    "producingFacts": [
+      "Follows Formula 1 racing"
+    ]
+  },
+  {
+    "id": "art-less-crypto-fines",
+    "agent": "article",
+    "description": "Less of the topic the user describes, in the middle of the list.",
+    "category": "less",
+    "clear": true,
+    "message": "I do not need the regulator stories",
+    "expect": "proposeChanges",
+    "intent": "see_less",
+    "target": "European financial regulation",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Crypto exchange fined for weak money-laundering checks",
+      "publication": "Market Desk Daily",
+      "description": "A European regulator fined a large crypto exchange 40 million euros for failing to check where customer deposits came from.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Bitcoin price",
+      "European financial regulation",
+      "Crypto exchanges"
+    ],
+    "producingFacts": [
+      "Interested in personal finance"
+    ]
+  },
+  {
+    "id": "art-less-crypto",
+    "agent": "article",
+    "description": "Less of the topic the user names, last in the list.",
+    "category": "less",
+    "clear": true,
+    "message": "Show me less crypto stuff",
+    "expect": "proposeChanges",
+    "intent": "see_less",
+    "target": "Bitcoin and crypto",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Bitcoin funds see record outflows as rate fears return",
+      "publication": "Market Desk Daily",
+      "description": "Spot bitcoin funds lost 2.1 billion dollars in a week as traders priced in fewer US rate cuts, the largest weekly outflow on record.",
+      "related": []
+    },
+    "matchedTopics": [
+      "US interest rates",
+      "Stock market news",
+      "Bitcoin and crypto"
+    ],
+    "producingFacts": [
+      "Interested in personal finance"
+    ]
+  },
+  {
+    "id": "art-more-climate",
+    "agent": "article",
+    "description": "More of the named topic, second of two.",
+    "category": "more",
+    "clear": true,
+    "message": "More like this, especially the climate angle",
+    "expect": "proposeChanges",
+    "intent": "see_more",
+    "target": "Climate change in India",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Assam floods: farmers count losses as waters recede",
+      "publication": "The Hindu",
+      "description": "Rice farmers in 9 districts of Assam lost most of their crop this season, and climate scientists link the heavier monsoon bursts to warming.",
+      "related": [
+        "Assam floods displace thousands as Brahmaputra rises"
+      ]
+    },
+    "matchedTopics": [
+      "Assam floods",
+      "Climate change in India"
+    ],
+    "producingFacts": [
+      "Lives in Guwahati, India"
+    ]
+  },
+  {
+    "id": "art-more-heat-pumps",
+    "agent": "article",
+    "description": "More of the named topic, middle of three.",
+    "category": "more",
+    "clear": true,
+    "message": "I want more news about heat pumps like this",
+    "expect": "proposeChanges",
+    "intent": "see_more",
+    "target": "Heat pumps and home heating",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Leipzig district heating to switch to large heat pumps",
+      "publication": "Leipziger Volkszeitung",
+      "description": "The city utility will replace a gas boiler plant with river-water heat pumps by 2028, covering a fifth of district heating demand.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Leipzig local news",
+      "Heat pumps and home heating",
+      "German energy prices"
+    ],
+    "producingFacts": [
+      "Interested in renewable energy policy"
+    ]
+  },
+  {
+    "id": "art-more-ai-act",
+    "agent": "article",
+    "description": "More of the topic the user describes, last of three.",
+    "category": "more",
+    "clear": true,
+    "message": "More on the regulation side please",
+    "expect": "proposeChanges",
+    "intent": "see_more",
+    "target": "EU AI Act",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "EU AI Office opens first investigation under AI Act",
+      "publication": "Euractiv",
+      "description": "The EU AI Office opened its first formal investigation into a general-purpose AI provider over missing transparency documentation.",
+      "related": [
+        "EU AI Office publishes guidance for general-purpose AI models"
+      ]
+    },
+    "matchedTopics": [
+      "AI startups",
+      "Big tech earnings",
+      "EU AI Act"
+    ],
+    "producingFacts": [
+      "Works on machine learning products"
+    ]
+  },
+  {
+    "id": "art-mute-site",
+    "agent": "article",
+    "description": "Mute the publication.",
+    "category": "mute",
+    "clear": true,
+    "message": "Stop showing me anything from this site",
+    "expect": "proposeChanges",
+    "intent": "mute_source",
+    "target": "Daily Ledger Online",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Ten celebrity homes you will not believe",
+      "publication": "Daily Ledger Online",
+      "description": "A gallery of luxury homes owned by television stars, with prices and floor plans.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Housing market"
+    ],
+    "producingFacts": [
+      "Interested in the Dutch housing market"
+    ]
+  },
+  {
+    "id": "art-mute-paper",
+    "agent": "article",
+    "description": "Mute the publication, said another way.",
+    "category": "mute",
+    "clear": true,
+    "message": "I never want to see this paper again",
+    "expect": "proposeChanges",
+    "intent": "mute_source",
+    "target": "Daily Ledger Online",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Reality show star launches skincare line",
+      "publication": "Daily Ledger Online",
+      "description": "The star announced a skincare range sold online from next month.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Consumer products"
+    ],
+    "producingFacts": [
+      "Interested in personal finance"
+    ]
+  },
+  {
+    "id": "art-pending-yes",
+    "agent": "article",
+    "description": "A one-action card is waiting; \"yes\" applies it.",
+    "category": "pending-apply",
+    "clear": true,
+    "message": "yes",
+    "expect": "applyProposal",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Pune startup unveils low-cost electric three-wheeler",
+      "publication": "Pune Mirror",
+      "description": "The startup said its electric autorickshaw will cost under 2 lakh rupees and charge in four hours from a home socket.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Electric vehicles in India",
+      "Pune local news"
+    ],
+    "producingFacts": [
+      "Interested in electric vehicles"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Show more stories about electric vehicles in India",
+      "expectedEffects": "You will see more electric vehicle stories.",
+      "actions": [
+        {
+          "type": "set_topic_weight",
+          "topicText": "Electric vehicles in India",
+          "delta": 0.3
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "More like this"
+      },
+      {
+        "role": "assistant",
+        "content": "I can show you more stories about electric vehicles in India. Should I make that change?"
+      }
+    ]
+  },
+  {
+    "id": "art-pending-do-it",
+    "agent": "article",
+    "description": "A one-action card is waiting; \"do it\" applies it.",
+    "category": "pending-apply",
+    "clear": true,
+    "message": "do it",
+    "expect": "applyProposal",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Raptors trade for veteran guard before deadline",
+      "publication": "TSN",
+      "description": "Toronto sent two second-round picks for a veteran guard to add depth to a young backcourt.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Toronto Raptors",
+      "NBA trades"
+    ],
+    "producingFacts": [
+      "Follows the Toronto Raptors"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Show more Toronto Raptors stories",
+      "expectedEffects": "You will see more Raptors stories.",
+      "actions": [
+        {
+          "type": "set_topic_weight",
+          "topicText": "Toronto Raptors",
+          "delta": 0.3
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "More of this"
+      },
+      {
+        "role": "assistant",
+        "content": "I can show you more Toronto Raptors stories. Want me to make that change?"
+      }
+    ]
+  },
+  {
+    "id": "art-pending-go-ahead",
+    "agent": "article",
+    "description": "A one-action mute card is waiting; \"go ahead\" applies it.",
+    "category": "pending-apply",
+    "clear": true,
+    "message": "go ahead",
+    "expect": "applyProposal",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Ten celebrity homes you will not believe",
+      "publication": "Daily Ledger Online",
+      "description": "A gallery of luxury homes owned by television stars, with prices and floor plans.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Housing market"
+    ],
+    "producingFacts": [
+      "Interested in the Dutch housing market"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Hide stories from Daily Ledger Online",
+      "expectedEffects": "You will not see Daily Ledger Online in your feed.",
+      "actions": [
+        {
+          "type": "set_publication_pref",
+          "publicationId": "Daily Ledger Online",
+          "publicationPref": "mute"
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "Hide this site"
+      },
+      {
+        "role": "assistant",
+        "content": "I can hide Daily Ledger Online from your feed. Should I go ahead?"
+      }
+    ]
+  },
+  {
+    "id": "art-pending-no",
+    "agent": "article",
+    "description": "A card is waiting; \"no\" cancels it.",
+    "category": "pending-decline",
+    "clear": true,
+    "message": "no, leave it as it is",
+    "expect": "cancelProposal",
+    "intent": "decline_card",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "IPL franchises set retention lists ahead of auction",
+      "publication": "Cricbuzz",
+      "description": "Teams submitted the players they will keep before the auction, with three franchises keeping five players each.",
+      "related": []
+    },
+    "matchedTopics": [
+      "IPL cricket",
+      "Indian sports business"
+    ],
+    "producingFacts": [
+      "Follows IPL cricket"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Show more IPL stories",
+      "expectedEffects": "You will see more IPL stories.",
+      "actions": [
+        {
+          "type": "set_topic_weight",
+          "topicText": "IPL cricket",
+          "delta": 0.3
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "More IPL please"
+      },
+      {
+        "role": "assistant",
+        "content": "I can show you more IPL stories. Should I make that change?"
+      }
+    ]
+  },
+  {
+    "id": "art-pending-cancel",
+    "agent": "article",
+    "description": "A card is waiting; \"cancel\" cancels it.",
+    "category": "pending-decline",
+    "clear": true,
+    "message": "cancel",
+    "expect": "cancelProposal",
+    "intent": "decline_card",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Bank of Canada cuts rate, lenders lower mortgage offers",
+      "publication": "CBC News",
+      "description": "The central bank cut its policy rate by a quarter point, and the big lenders lowered five-year fixed offers within hours.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Canadian mortgage rates",
+      "Bank of Canada"
+    ],
+    "producingFacts": [
+      "Interested in personal finance"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Show more mortgage rate stories",
+      "expectedEffects": "You will see more mortgage rate stories.",
+      "actions": [
+        {
+          "type": "set_topic_weight",
+          "topicText": "Canadian mortgage rates",
+          "delta": 0.3
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want more like this"
+      },
+      {
+        "role": "assistant",
+        "content": "I can show you more stories about Canadian mortgage rates. Should I?"
+      }
+    ]
+  },
+  {
+    "id": "art-pending-ok",
+    "agent": "article",
+    "description": "A card is waiting and the user only says \"ok\": nothing is applied or cancelled.",
+    "category": "pending-other",
+    "clear": true,
+    "message": "ok",
+    "expect": "answer",
+    "intent": "answer_question",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Pune startup unveils low-cost electric three-wheeler",
+      "publication": "Pune Mirror",
+      "description": "The startup said its electric autorickshaw will cost under 2 lakh rupees and charge in four hours from a home socket.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Electric vehicles in India",
+      "Pune local news"
+    ],
+    "producingFacts": [
+      "Interested in electric vehicles"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Show more stories about electric vehicles in India",
+      "expectedEffects": "You will see more electric vehicle stories.",
+      "actions": [
+        {
+          "type": "set_topic_weight",
+          "topicText": "Electric vehicles in India",
+          "delta": 0.3
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "More like this"
+      },
+      {
+        "role": "assistant",
+        "content": "I can show you more stories about electric vehicles in India. Should I make that change?"
+      }
+    ]
+  },
+  {
+    "id": "art-pending-question",
+    "agent": "article",
+    "description": "A card is waiting and the user asks about it: answered, the card stays.",
+    "category": "pending-other",
+    "clear": true,
+    "message": "What exactly would that change?",
+    "expect": "answer",
+    "intent": "answer_question",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Bank of Canada cuts rate, lenders lower mortgage offers",
+      "publication": "CBC News",
+      "description": "The central bank cut its policy rate by a quarter point, and the big lenders lowered five-year fixed offers within hours.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Canadian mortgage rates",
+      "Bank of Canada"
+    ],
+    "producingFacts": [
+      "Interested in personal finance"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Show more mortgage rate stories",
+      "expectedEffects": "You will see more mortgage rate stories.",
+      "actions": [
+        {
+          "type": "set_topic_weight",
+          "topicText": "Canadian mortgage rates",
+          "delta": 0.3
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want more like this"
+      },
+      {
+        "role": "assistant",
+        "content": "I can show you more stories about Canadian mortgage rates. Should I?"
+      }
+    ]
+  },
+  {
+    "id": "art-followed-follow",
+    "agent": "article",
+    "description": "The story is already followed: no options again.",
+    "category": "already-followed",
+    "clear": true,
+    "message": "Follow this story",
+    "expect": "answer",
+    "intent": "answer_question",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Rotterdam port workers start 48-hour strike over automation",
+      "publication": "NL Times",
+      "description": "Dockworkers at the Port of Rotterdam walked out on Monday in a dispute over automated cranes and job guarantees, the FNV union said.",
+      "related": [
+        "Shipping lines divert vessels to Antwerp as Rotterdam strike bites",
+        "Port of Rotterdam talks with union to resume Thursday"
+      ]
+    },
+    "matchedTopics": [
+      "Port of Rotterdam"
+    ],
+    "producingFacts": [
+      "Interested in Dutch shipping"
+    ],
+    "alreadyFollowing": true
+  },
+  {
+    "id": "art-followed-keep-posted",
+    "agent": "article",
+    "description": "Already followed, asked another way: no options again.",
+    "category": "already-followed",
+    "clear": true,
+    "message": "Can you keep me updated on this one?",
+    "expect": "answer",
+    "intent": "answer_question",
+    "ask": "no",
+    "search": [],
+    "article": {
+      "title": "Assam floods: farmers count losses as waters recede",
+      "publication": "The Hindu",
+      "description": "Rice farmers in 9 districts of Assam lost most of their crop this season, and climate scientists link the heavier monsoon bursts to warming.",
+      "related": [
+        "Assam floods displace thousands as Brahmaputra rises"
+      ]
+    },
+    "matchedTopics": [
+      "Assam floods",
+      "Climate change in India"
+    ],
+    "producingFacts": [
+      "Lives in Guwahati, India"
+    ],
+    "alreadyFollowing": true
+  },
+  {
+    "id": "art-ambig-less-which",
+    "agent": "article",
+    "description": "\"Less of this\" with three topics and no hint: asking which one is correct, nothing staged.",
+    "category": "ambiguous",
+    "clear": false,
+    "message": "Less of this",
+    "expect": "answer",
+    "intent": "see_less",
+    "ask": "required",
+    "askMentions": [
+      "Formula 1",
+      "Energy drink",
+      "sponsorship"
+    ],
+    "search": [],
+    "article": {
+      "title": "Energy drink maker extends Formula 1 title sponsorship to 2030",
+      "publication": "Motorsport Week",
+      "description": "The drinks company signed a five-year extension of its title sponsorship, the largest commercial deal on the current grid.",
+      "related": []
+    },
+    "matchedTopics": [
+      "Formula 1 racing",
+      "Energy drink industry",
+      "Sports sponsorship deals"
+    ],
+    "producingFacts": [
+      "Follows Formula 1 racing"
+    ]
+  },
+  {
+    "id": "art-ambig-tired",
+    "agent": "article",
+    "description": "Fatigue with no target: less of a topic or mute the source. Asking is correct, nothing staged.",
+    "category": "ambiguous",
+    "clear": false,
+    "message": "I am so tired of this",
+    "expect": "answer",
+    "intent": [
+      "see_less",
+      "mute_source"
+    ],
+    "ask": "required",
+    "search": [],
+    "article": {
+      "title": "IPL franchises set retention lists ahead of auction",
+      "publication": "Cricbuzz",
+      "description": "Teams submitted the players they will keep before the auction, with three franchises keeping five players each.",
+      "related": []
+    },
+    "matchedTopics": [
+      "IPL cricket",
+      "Indian sports business"
+    ],
+    "producingFacts": [
+      "Follows IPL cricket"
+    ]
+  }
+]

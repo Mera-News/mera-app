@@ -1,0 +1,556 @@
+[
+  {
+    "id": "fs-named-another",
+    "agent": "follow-story",
+    "description": "Options for one story are waiting; the user names another. New options for the new story.",
+    "category": "named-another",
+    "clear": true,
+    "message": "No, I meant the teachers strike in Belgium",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Belgian teachers strike over pension reform",
+      "Schools in Brussels close as teachers walk out",
+      "Flemish government meets teachers unions"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "Assam Flood Relief",
+          "searchText": "assam flood relief",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Assam Flood Relief"
+          }
+        },
+        {
+          "type": "track_story",
+          "label": "Brahmaputra Floods",
+          "searchText": "brahmaputra floods",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Assam Flood Relief"
+          }
+        },
+        {
+          "type": "track_story",
+          "label": "Northeast India Monsoon",
+          "searchText": "northeast india monsoon",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Assam Flood Relief"
+          }
+        }
+      ],
+      "chooseOne": true
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "the floods in assam"
+      },
+      {
+        "role": "assistant",
+        "content": "Pick the story to follow below."
+      }
+    ]
+  },
+  {
+    "id": "fs-named-another-2",
+    "agent": "follow-story",
+    "description": "Another story named over a waiting card.",
+    "category": "named-another",
+    "clear": true,
+    "message": "Actually, the Paris metro extension works instead",
+    "expect": "proposeTrack",
+    "intent": "follow_a_named_story",
+    "ask": "no",
+    "search": [
+      "Grand Paris Express line 15 opening delayed",
+      "Paris metro extension costs rise again"
+    ],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "AI Act Enforcement",
+          "searchText": "ai act enforcement",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "AI Act Enforcement"
+          }
+        },
+        {
+          "type": "track_story",
+          "label": "EU AI Office Probes",
+          "searchText": "eu ai office probes",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "AI Act Enforcement"
+          }
+        },
+        {
+          "type": "track_story",
+          "label": "EU Tech Regulation",
+          "searchText": "eu tech regulation",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "AI Act Enforcement"
+          }
+        }
+      ],
+      "chooseOne": true
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "eu ai act enforcement"
+      },
+      {
+        "role": "assistant",
+        "content": "Pick the story to follow below."
+      }
+    ]
+  },
+  {
+    "id": "fs-question-following",
+    "agent": "follow-story",
+    "description": "A question, not a story: answered, no options.",
+    "category": "question",
+    "clear": true,
+    "message": "Which stories are you already following for me?",
+    "expect": "answer",
+    "intent": "question_or_other",
+    "ask": "no",
+    "search": [],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-question-how",
+    "agent": "follow-story",
+    "description": "A question about the feature: answered, no options.",
+    "category": "question",
+    "clear": true,
+    "message": "How does following a story work?",
+    "expect": "answer",
+    "intent": "question_or_other",
+    "ask": "no",
+    "search": [],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-pending-yes",
+    "agent": "follow-story",
+    "description": "A one-option card is waiting; \"yes\" applies it.",
+    "category": "pending-apply",
+    "clear": true,
+    "message": "yes",
+    "expect": "applyProposal",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "Black Sea Grain Exports",
+          "searchText": "black sea grain exports",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Black Sea Grain Exports"
+          }
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "ukraine grain shipping"
+      },
+      {
+        "role": "assistant",
+        "content": "I can follow Black Sea Grain Exports for you. Should I?"
+      }
+    ]
+  },
+  {
+    "id": "fs-pending-go-ahead",
+    "agent": "follow-story",
+    "description": "A one-option card is waiting; \"go ahead\" applies it.",
+    "category": "pending-apply",
+    "clear": true,
+    "message": "go ahead",
+    "expect": "applyProposal",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "Amsterdam Rent Rules",
+          "searchText": "amsterdam rent rules",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Amsterdam Rent Rules"
+          }
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "amsterdam rent rules"
+      },
+      {
+        "role": "assistant",
+        "content": "I can follow Amsterdam Rent Rules for you. Want that?"
+      }
+    ]
+  },
+  {
+    "id": "fs-pending-sure",
+    "agent": "follow-story",
+    "description": "A one-option card is waiting; \"sure\" applies it.",
+    "category": "pending-apply",
+    "clear": true,
+    "message": "sure",
+    "expect": "applyProposal",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "US Government Shutdown",
+          "searchText": "us government shutdown",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "US Government Shutdown"
+          }
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "the shutdown in the us"
+      },
+      {
+        "role": "assistant",
+        "content": "I can follow the US Government Shutdown for you. Should I?"
+      }
+    ]
+  },
+  {
+    "id": "fs-pending-no",
+    "agent": "follow-story",
+    "description": "A one-option card is waiting; \"no thanks\" cancels it.",
+    "category": "pending-no-apply",
+    "clear": true,
+    "message": "no thanks",
+    "expect": "cancelProposal",
+    "intent": "decline_card",
+    "ask": "no",
+    "search": [],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "Amsterdam Rent Rules",
+          "searchText": "amsterdam rent rules",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Amsterdam Rent Rules"
+          }
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "amsterdam rent rules"
+      },
+      {
+        "role": "assistant",
+        "content": "I can follow Amsterdam Rent Rules for you. Want that?"
+      }
+    ]
+  },
+  {
+    "id": "fs-pending-yes-multi",
+    "agent": "follow-story",
+    "description": "A three-option card is waiting; a typed yes cannot pick one. Nothing is applied (an applyProposal the executor refuses also applies nothing); the reply points to tapping a story.",
+    "category": "pending-no-apply",
+    "clear": true,
+    "message": "yes",
+    "expect": "answer",
+    "intent": "agree_to_card",
+    "ask": "no",
+    "search": [],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "Assam Flood Relief",
+          "searchText": "assam flood relief",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Assam Flood Relief"
+          }
+        },
+        {
+          "type": "track_story",
+          "label": "Brahmaputra Floods",
+          "searchText": "brahmaputra floods",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Assam Flood Relief"
+          }
+        },
+        {
+          "type": "track_story",
+          "label": "Northeast India Monsoon",
+          "searchText": "northeast india monsoon",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Assam Flood Relief"
+          }
+        }
+      ],
+      "chooseOne": true
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "the floods in assam"
+      },
+      {
+        "role": "assistant",
+        "content": "Pick the story to follow below."
+      }
+    ]
+  },
+  {
+    "id": "fs-pending-ok",
+    "agent": "follow-story",
+    "description": "A one-option card is waiting and the user only says \"ok\": nothing is applied or cancelled.",
+    "category": "pending-no-apply",
+    "clear": true,
+    "message": "ok",
+    "expect": "answer",
+    "intent": "question_or_other",
+    "ask": "no",
+    "search": [],
+    "pending": {
+      "id": "pending-1",
+      "explanation": "Pick the story to follow",
+      "expectedEffects": "Mera will follow the story you pick.",
+      "actions": [
+        {
+          "type": "track_story",
+          "label": "Black Sea Grain Exports",
+          "searchText": "black sea grain exports",
+          "subject": {
+            "origin": "article",
+            "surface": "chat",
+            "articleId": "a1",
+            "title": "Black Sea Grain Exports"
+          }
+        }
+      ]
+    },
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      },
+      {
+        "role": "user",
+        "content": "ukraine grain shipping"
+      },
+      {
+        "role": "assistant",
+        "content": "I can follow Black Sea Grain Exports for you. Should I?"
+      }
+    ]
+  },
+  {
+    "id": "fs-ambig-election",
+    "agent": "follow-story",
+    "description": "Which election is unclear: asking is correct, no options yet.",
+    "category": "ambiguous",
+    "clear": false,
+    "message": "the election",
+    "expect": "answer",
+    "intent": [
+      "follow_a_named_story",
+      "question_or_other"
+    ],
+    "ask": "allowed",
+    "search": [],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  },
+  {
+    "id": "fs-ambig-that-thing",
+    "agent": "follow-story",
+    "description": "No story is named: asking is correct, no options yet.",
+    "category": "ambiguous",
+    "clear": false,
+    "message": "that thing everyone was talking about yesterday",
+    "expect": "answer",
+    "intent": [
+      "follow_a_named_story",
+      "question_or_other"
+    ],
+    "ask": "allowed",
+    "search": [],
+    "history": [
+      {
+        "role": "user",
+        "content": "I want to follow a story"
+      },
+      {
+        "role": "assistant",
+        "content": "What story or subject should Mera follow?"
+      }
+    ]
+  }
+]

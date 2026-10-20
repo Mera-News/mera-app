@@ -1,0 +1,32 @@
+{
+  "sources": [
+    "lib/mera-harness/eval/fixtures/singleshot/turns.json",
+    "harness-local/fixtures/follow-story/turns.json"
+  ],
+  "dev": [
+    "follow-dutch-cabinet",
+    "follow-gaza-ceasefire",
+    "follow-eu-ai-act",
+    "follow-champions-league",
+    "follow-assam-floods",
+    "follow-us-shutdown",
+    "follow-amsterdam-rents",
+    "follow-ukraine-grain",
+    "follow-bitcoin-etf",
+    "follow-nobody-knows",
+    "fs-named-another",
+    "fs-question-following",
+    "fs-pending-yes",
+    "fs-pending-go-ahead",
+    "fs-pending-no",
+    "fs-pending-yes-multi",
+    "fs-ambig-election"
+  ],
+  "test": [
+    "fs-named-another-2",
+    "fs-question-how",
+    "fs-pending-sure",
+    "fs-pending-ok",
+    "fs-ambig-that-thing"
+  ]
+}
