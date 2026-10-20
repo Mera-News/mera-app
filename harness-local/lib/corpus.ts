@@ -15,9 +15,11 @@
 // group, which is the reading the card presents by default. That is why a
 // rater scores the post-filter view: it is what a user would have been shown.
 //
-// TRAP. `deleteUserFacts.fact_ids` are QUESTIONNAIRE ATTRIBUTE STRINGS, not
-// fact ids, per the tool schema in prompts/persona-prompts.ts. Matching them
-// against `id` silently deletes nothing.
+// TRAP. `deleteUserFacts.fact_ids` from the CLOUD prompt are QUESTIONNAIRE
+// ATTRIBUTE STRINGS, per the tool schema in prompts/persona-prompts.ts, while the
+// on-device persona chat sends real fact ids. The app's handler takes an id
+// first, then an attribute, so both are matched here; matching only one kind
+// silently deletes nothing for the other.
 //
 // WHY CROSS-TURN STATE AT ALL. The `confused` cohort restates facts that are
 // already saved and the `heavy` cohort adds facts that conflict with existing
@@ -202,10 +204,10 @@ export function applyToolCalls(
         added.push(chosen);
       }
     } else if (name === 'deleteUserFacts') {
-      // ATTRIBUTE STRINGS, not ids. See the trap note in the header.
-      const attrs = new Set(asStringArray(call.parsed?.fact_ids));
-      if (attrs.size > 0) {
-        next.facts = next.facts.filter((fct) => !attrs.has(fct.questionnaireAttribute));
+      // Ids (on-device) or attribute strings (cloud). See the trap note in the header.
+      const handles = new Set(asStringArray(call.parsed?.fact_ids));
+      if (handles.size > 0) {
+        next.facts = next.facts.filter((fct) => !handles.has(fct.id) && !handles.has(fct.questionnaireAttribute));
       }
     }
   }
