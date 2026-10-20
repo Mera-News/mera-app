@@ -87,10 +87,12 @@ export default function DevTestAccountSection({ header }: { header: React.ReactN
         });
         if (!ok) return;
         setBusy(true);
+        // Only a confirmed delete signs out: for the signed-in handle a 404 means a
+        // wrong or disabled token, and the account is still alive server side.
         const result = await deleteTestAccount(handle);
-        if (result === 'failed') {
+        if (result !== 'deleted') {
             setBusy(false);
-            setError('Delete failed');
+            setError(`Delete failed: ${result}`);
             return;
         }
         await finishAccountDeletion();
