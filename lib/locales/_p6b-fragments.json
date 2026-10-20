@@ -1,0 +1,882 @@
+{
+  "ar": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "de": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "en": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "es": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "fr": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "hi": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "id": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "it": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "ja": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "ko": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "nl": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "pl": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "pt-BR": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "ru": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "th": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "tr": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "uk": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "vi": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "zh-CN": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  },
+  "zh-TW": {
+    "askChoice": {
+      "somethingElse": "Something else"
+    },
+    "kevChat": {
+      "askIntent": "What would you like to do?",
+      "askFact": "Which fact do you mean?",
+      "askTopic": "Which topic do you mean?",
+      "persona": {
+        "share": "Add this as a new fact",
+        "remove": "Remove a saved fact",
+        "correct": "Update a saved fact",
+        "chat": "Just chatting"
+      },
+      "card": {
+        "agree": "Apply the change",
+        "decline": "Leave it as it is"
+      },
+      "article": {
+        "answer": "Answer a question",
+        "follow": "Follow this story",
+        "less": "Show less like this",
+        "more": "Show more like this",
+        "mute": "Mute this publication"
+      },
+      "follow": {
+        "follow": "Follow a story",
+        "other": "Ask something else"
+      },
+      "reply": {
+        "pickOnCard": "Tap the one you want on the card.",
+        "saveFailed": "I couldn't catch that. Could you say it another way?",
+        "alreadyKnown": "I already have that in your profile.",
+        "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+        "notFound": "I couldn't find that in your profile.",
+        "applied": "Done.",
+        "cancelled": "Okay, I left it as it is.",
+        "ack": "Anytime.",
+        "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+        "followFailed": "Which story would you like to follow?",
+        "changeCard": "Tap the card to confirm the change."
+      }
+    }
+  }
+}

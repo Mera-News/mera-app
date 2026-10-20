@@ -1,7 +1,8 @@
 // On-device article chat: one intent per turn, run through the cloud agent's
 // own executors (already-following guard, choose-one refusal and all). The
 // context reads are copies of the cloud agent's private ones, so the cloud
-// class stays untouched.
+// class stays untouched. Route 'kev' (D38): Kev decides, the built-in model
+// writes; 'single' is one built-in call.
 
 import type { FeedbackSubject } from '../../../../components/custom/cards/feedback-subject';
 import {
@@ -12,7 +13,9 @@ import {
   type ArticleChatContext,
   type ArticleFeedbackReply,
 } from '../../../news-harness/on-device/article-feedback';
+import { runArticleKevTurn } from '../../../news-harness/on-device/article-feedback/kev-spec';
 import { describePending } from '../../../news-harness/on-device/shared';
+import { proposalRequiresUserChoice } from '../../../news-harness/core/proposals';
 import { getSuggestionFeedbackContext } from '../../../database/services/article-suggestion-reads';
 import { ArticleSuggestionStatus } from '../../../database/article-suggestion-status';
 import { ArticleService } from '../../../article-service';
@@ -22,7 +25,17 @@ import { isSubjectTracked } from '../../../tracking/track-actions';
 import { ArticleFeedbackAgent } from '../ArticleFeedbackAgent';
 import type { ConversationMessage } from '../../types';
 import type { OnDeviceAgent } from './types';
-import { appLanguageName, chatTurns, respondStructured, today } from './run';
+import {
+  appLanguageName,
+  chatTurns,
+  kevPorts,
+  onDeviceTool,
+  respondStructured,
+  routeOf,
+  today,
+  tryKev,
+  type OnDeviceAgentOptions,
+} from './run';
 
 function day(raw: string | null | undefined): string | null {
   const ms = raw ? Date.parse(raw) : NaN;
@@ -39,6 +52,7 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
     userId: string,
     private readonly target: { articleId?: string; suggestionId?: string },
     private readonly trackSubject?: TrackFeedbackSubject | null,
+    private readonly opts: OnDeviceAgentOptions = {},
   ) {
     this.cloud = new ArticleFeedbackAgent(userId, target, trackSubject);
     this.id = this.cloud.id;
@@ -110,6 +124,21 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
 
   async respond(messages: ConversationMessage[]) {
     const context = await this.context();
+    if (routeOf('article', this.opts) === 'kev') {
+      const proposal = useFloatingChatStore.getState().proposal;
+      const kev = await tryKev('ArticleFeedbackOnDeviceAgent', () =>
+        runArticleKevTurn(
+          {
+            context,
+            pendingTapOnly: proposal != null && proposalRequiresUserChoice(proposal),
+            languageName: appLanguageName(),
+          },
+          messages,
+          kevPorts(this.opts),
+        ),
+      );
+      if (kev) return kev;
+    }
     const value = await respondStructured<ArticleFeedbackReply>(
       articleFeedbackInstructions(appLanguageName()),
       ARTICLE_FEEDBACK_SCHEMA,
@@ -122,7 +151,7 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
     });
   }
 
-  executeTool(name: string, input: unknown) {
-    return this.cloud.executeTool(name, input);
+  async executeTool(name: string, input: unknown) {
+    return (await onDeviceTool(name, input)) ?? this.cloud.executeTool(name, input);
   }
 }

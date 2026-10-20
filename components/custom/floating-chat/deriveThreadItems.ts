@@ -176,9 +176,12 @@ function emitMessage(
         if (askResult && askResult.awaiting !== 'user') return;
         const askInput = asRecord(tc.input) ?? {};
         const allOptions = toStringArray(askInput.options);
+        // An on-device Kev ask (D39) is always a pick-one, even over fact
+        // statements ("which fact do you mean"), and carries Something else.
+        const somethingElse = askInput.somethingElse === true;
         // Distinct facts are never a pick-one: their chip list carries Save
         // all, which always covers EVERY option, even past the chips shown.
-        const factPick = isFactPickChoice(allOptions);
+        const factPick = !somethingElse && isFactPickChoice(allOptions);
         const options = allOptions.slice(0, factPick ? 4 : 3);
         const own = saveAsWrittenOf(tc, `${message.id}::${idx}`);
         if (options.length >= 2) {
@@ -195,6 +198,7 @@ function emitMessage(
             options,
             saveAll: factPick ? joinFactPick(allOptions) : null,
             saveAsWritten: own && !own.saved ? own.offer : null,
+            ...(somethingElse ? { somethingElse: true } : {}),
             answered: answeredAsk,
           });
           if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved, own.offer.entry.topic_skill_id);

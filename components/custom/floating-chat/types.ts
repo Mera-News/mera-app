@@ -325,6 +325,9 @@ export type ChatThreadItem =
        *  own sentence and where its outcome is recorded. Committed directly on
        *  tap, never sent to the model. Null when not offered. */
       saveAsWritten: SaveAsWrittenOffer | null;
+      /** An on-device Kev ask (D39): the card adds a "Something else" chip
+       *  that focuses the composer and sends nothing. Cloud asks never set it. */
+      somethingElse?: boolean;
       /** A later user message exists, so the offer is spent. Rendered inert
        *  rather than removed, so the thread keeps what was offered. */
       answered: boolean;
