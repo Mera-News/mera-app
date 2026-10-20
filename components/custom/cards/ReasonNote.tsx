@@ -1,5 +1,4 @@
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips';
@@ -50,8 +49,6 @@ interface ReasonNoteProps {
 const BADGE_ROW_PADDING = 6;
 /** The priority chip's height at text scale 1 (11/16 text + 4pt padding). */
 const CHIP_HEIGHT = 24;
-/** The waiting logo: 0.7x of the 56pt the board first drew. */
-const WAIT_LOGO_SIZE = 39;
 /** At most this many facts are named in the waiting line. */
 const MAX_FACTS_NAMED = 3;
 /** FinalRead #3: 250 ms per word, 40 ms apart, the whole reveal under a
@@ -150,9 +147,8 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
 /**
  * The AI note block, ONE layout for the Feed card and the detail screen.
  *
- *   writing   [priority]
- *             [moving logo]  Suggested for your fact: X. Please wait while
- *                            Mera writes the reason.
+ *   writing   [priority]  Suggested for your fact: X. Please wait while
+ *                         Mera writes the reason.
  *   note      [priority] ..................... [✦ AI-generated]
  *             Mera's note, full width.
  *   held      [priority] ...... Today's reading is used up, so Mera will
@@ -223,22 +219,25 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     };
 
     if (pending === 'writing') {
+        // The chip stands where the moving logo used to (owner, 2026-10-21): the
+        // score is already known, so it is the anchor while the note is written.
         return (
             <Box testID={testID} className="rounded-lg px-3 pb-3" style={boxStyle}>
-                <HStack style={{ paddingVertical: BADGE_ROW_PADDING }} testID={testID ? `${testID}-badge-row` : undefined}>
-                    <RelevanceChip relevance={relevance} />
-                </HStack>
-                <Animated.View
-                    exiting={FadeOutUp.duration(180)}
-                    style={{ flex: boxHeight ? 1 : undefined, flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 }}
-                    testID={testID ? `${testID}-writing` : undefined}
-                    {...hideSlot}
+                <HStack
+                    space="md"
+                    style={{ flex: boxHeight ? 1 : undefined, alignItems: 'flex-start', paddingVertical: BADGE_ROW_PADDING }}
+                    testID={testID ? `${testID}-badge-row` : undefined}
                 >
-                    <MeraLogo size={WAIT_LOGO_SIZE} animated scrollCards color={note.ink} />
-                    <View style={{ flex: 1 }}>
+                    <RelevanceChip relevance={relevance} />
+                    <Animated.View
+                        exiting={FadeOutUp.duration(180)}
+                        style={{ flex: 1 }}
+                        testID={testID ? `${testID}-writing` : undefined}
+                        {...hideSlot}
+                    >
                         <WaitingFacts topicIds={topicIds} />
-                    </View>
-                </Animated.View>
+                    </Animated.View>
+                </HStack>
             </Box>
         );
     }
