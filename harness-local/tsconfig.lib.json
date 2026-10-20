@@ -40,6 +40,8 @@
     "adapters/gateway-e2ee-llm.ts",
     "adapters/afm-llm.ts",
     "lib/engine.ts",
+    "lib/option-quality.ts",
+    "lib/option-quality.test.ts",
     "scripts/selftest.ts",
     "scripts/replay-persona-chat.ts",
     "scripts/run-newsharness-corpus.ts",
@@ -53,6 +55,8 @@
     "scripts/extraction-metrics.ts",
     "scripts/run-agent-corpus.ts",
     "scripts/probe-agent-contract.ts",
-    "scripts/score-topic-run.ts"
+    "scripts/score-topic-run.ts",
+    "scripts/run-singleshot-corpus.ts",
+    "scripts/score-option-quality.ts"
   ]
 }
