@@ -58,7 +58,11 @@ describe('ota-publish --scan', () => {
 });
 
 describe('ota-publish --channel', () => {
-    const ROOT = path.resolve(__dirname, '../../..');
+    // A copy of the script under a temp root: its dist/ and .env* reads stay out of the checkout.
+    const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'ota-root-'));
+    const COPY = path.join(ROOT, 'scripts', 'ota-publish.js');
+    fs.mkdirSync(path.dirname(COPY));
+    fs.copyFileSync(SCRIPT, COPY);
     const DIST = path.join(ROOT, 'dist');
 
     /** Stub `eas` and `npx` that log their argv; `eas env:exec` writes a clean dist as the export would. */
@@ -83,7 +87,7 @@ describe('ota-publish --channel', () => {
     }
 
     const publish = (bin: string, args: string[]) =>
-        spawnSync(process.execPath, [SCRIPT, ...args], {
+        spawnSync(process.execPath, [COPY, ...args], {
             encoding: 'utf8',
             env: { PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`, NODE_ENV: 'test' },
         });
