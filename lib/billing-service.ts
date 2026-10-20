@@ -63,6 +63,10 @@ export async function fetchUserBillingLapseState(): Promise<UserBillingInfo | nu
         const { data } = await client.query<UserBillingResponse>({
             query: GET_USER_BILLING_LAPSE_STATE,
             fetchPolicy: 'no-cache',
+            // The error link runs before the catch below, so quiet needs both:
+            // the missing-fields code is a breadcrumb, and no error here is a
+            // Feed sync failure (lib/apollo-client.ts).
+            context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
         });
         return data?.userBilling ?? null;
     } catch {
