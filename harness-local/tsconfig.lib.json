@@ -51,6 +51,7 @@
     "scripts/extraction-metrics.ts",
     "scripts/run-agent-corpus.ts",
     "scripts/probe-agent-contract.ts",
-    "scripts/score-topic-run.ts"
+    "scripts/score-topic-run.ts",
+    "scripts/test-account.ts"
   ]
 }
