@@ -57,6 +57,7 @@
     "scripts/probe-agent-contract.ts",
     "scripts/score-topic-run.ts",
     "scripts/run-singleshot-corpus.ts",
-    "scripts/score-option-quality.ts"
+    "scripts/score-option-quality.ts",
+    "scripts/adoption-report.ts"
   ]
 }
