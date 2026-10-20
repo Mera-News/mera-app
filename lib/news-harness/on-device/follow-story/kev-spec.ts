@@ -185,7 +185,9 @@ export async function runFollowKevTurn(
     const value = await write<FollowStoryReply & Record<string, unknown>>(ports, trace, {
       system: followStoryInstructions(input.languageName),
       schema: FOLLOW_STORY_SCHEMA,
-      context: `Option rules: ${TRACK_OPTION_RULES}\n\n${decisionBlock(line)}\n\n${followStoryContext({ today: input.today, pending: input.pending?.text ?? null })}`,
+      // No waiting card here: the new options replace it, and shown its labels the
+      // writer offered them again instead of the story the user just named.
+      context: `Option rules: ${TRACK_OPTION_RULES}\n\n${decisionBlock(line)}\n\n${followStoryContext({ today: input.today, pending: null })}`,
       history: chat.history,
     });
     if (!value) return done(intent, ports.t('kevChat.reply.followFailed'));

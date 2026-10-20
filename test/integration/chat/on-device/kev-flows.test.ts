@@ -605,6 +605,8 @@ describe('follow-story on Kev', () => {
     writerReply = { reply: 'Pick one below.', options: [{ label: 'The Other Story', search: 'other story' }] };
     expect((await turn(follow(), [], 'no, I meant the <other event>')).names).toEqual(['proposeTrack']);
     expect(offeredIntents()).not.toContain('decline_card');
+    // The options writer never sees the card it replaces.
+    expect(writes[0].prompt).not.toContain('A card on screen offers');
     stageChange(true);
     expect((await turn(follow(), [], 'no thanks')).names).toEqual(['cancelProposal']);
   });
