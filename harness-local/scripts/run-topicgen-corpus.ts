@@ -32,6 +32,13 @@
 // with it on, the trace ate the whole budget and content came back empty on 8
 // of 10 probe runs. This runner records whether each arm actually honoured it.
 //
+// --engine afm|qwen-local|nano-proxy runs the ON-DEVICE topic generation
+// (lib/news-harness/on-device/topic-gen) the way topic-generation-service.ts
+// does: one structured call per fact, the fact alone, no combo pass, count
+// totalLocal, the prompt cut to the engine's input. Facts are the STEP A corpus
+// (--facts, default lib/mera-harness/eval/fixtures/topic-facts.json) and the
+// rows are STEP A shaped, so `score-topic-run.ts <runDir>` prints G1, G1b and G3.
+//
 // Node-only: never imported by the app bundle.
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -87,6 +94,20 @@ import { planTopupTopicRows } from '../../lib/news-harness/persona-management/to
 import { f6Words } from './score-topic-run';
 import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
 import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
+import { DEFAULT_HARNESS_CONFIG } from '../../lib/news-harness/core/config';
+import { buildTopicGenPrompt, TOPIC_GEN_SYSTEM } from '../../lib/news-harness/on-device/topic-gen/prompt';
+import { topicGenSchema, type TopicGenReply } from '../../lib/news-harness/on-device/topic-gen/schema';
+import { topicsFromReply } from '../../lib/news-harness/on-device/topic-gen/parse';
+import { promptBudgetTokens } from '../../lib/news-harness/on-device/shared';
+import {
+  assertEngineReady,
+  engineContextSize,
+  isTransportError,
+  parseEngine,
+  respondStructuredLocal,
+  STRUCTURED_OUTPUT_ERROR,
+  type LocalEngine,
+} from '../lib/engine';
 
 // Once per process, before any variant resolves. See the note in
 // run-persona-corpus.ts; the topic-gen arms take no options.
@@ -430,8 +451,58 @@ export function dryRunFlowTopics(
   return JSON.stringify(topics);
 }
 
+/** topic-generation-service.ts's on-device call, over the STEP A facts. */
+async function mainOnDevice(engine: LocalEngine, args: Args): Promise<number> {
+  await assertEngineReady(engine);
+  const factsPath = resolve(args.factsFile ?? join(__dirname, '../../lib/mera-harness/eval/fixtures/topic-facts.json'));
+  const facts = (JSON.parse(readFileSync(factsPath, 'utf8')) as { facts: { id: string; statement: string }[] }).facts;
+  const count = DEFAULT_HARNESS_CONFIG.topicGen.totalLocal;
+  const schema = topicGenSchema(count);
+  const maxTokens = Math.max(1024, count * 30);
+  const contextSize = await engineContextSize(engine);
+  const run = createRunWriter({ label: args.label === 'topicgen' ? `topicgen-${engine}` : args.label, runsRoot: args.runsRoot ? resolve(args.runsRoot) : undefined });
+  const rows = createJsonlWriter({ dir: run.dir });
+  const runId = run.dir.split('/').pop() ?? args.label;
+  console.log(`run      : ${runId}\nrun dir  : ${run.dir}\nengine   : ${engine} (on-device topic generation)\nfacts    : ${factsPath} (${facts.length})\ncount    : ${count}\nrepeat   : ${args.repeat}\n`);
+  for (let rep = args.repeatStart; rep < args.repeatStart + args.repeat; rep++) {
+    for (const [fi, fact] of facts.entries()) {
+      const budget = promptBudgetTokens({ contextSize, maxTokens, system: TOPIC_GEN_SYSTEM, schemaJson: JSON.stringify(schema) });
+      const { system, prompt } = buildTopicGenPrompt({ factStatement: fact.statement, excludeTopics: [] }, count, budget);
+      const out = await respondStructuredLocal<TopicGenReply>(engine, { system, prompt, schema, maxTokens, temperature: 0.3 });
+      // A transport failure is not a result: stop rather than score a dead server as empty sets.
+      if (out.error && isTransportError(out.error)) throw new Error(`harness-local: ${engine} transport failure on ${fact.id}: ${out.error}`);
+      const topics = out.value ? topicsFromReply(out.value) : [];
+      const last = out.attempts.at(-1);
+      rows.write({
+        rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
+        cohort: 'step-a', turnIndex: fi, arm: `${engine}@ondevice`, callType: 'topicgen-factOnly',
+        interleaveGroup: `${fi}`, lane: engine, surface: 'TOPICGEN', variant: engine,
+        promptHash: hashMessages([{ role: 'system', content: system }, { role: 'user', content: prompt }]),
+        promptDeterministic: true, fenceNonce: null,
+        modelRequested: engine, modelSent: last ? engine : null, fallbackFrom: null, hedged: false,
+        input: { systemPrompt: system, messages: [{ role: 'user', content: prompt }], toolSchemaNames: [] },
+        personaStateIn: { factCount: 1, topicCount: 0, factsInPrompt: 1, turnsInPrompt: 1 },
+        // An engine refusal leaves no text: G1 counts it as empty, like a blank cloud reply.
+        rawOutput: out.error && out.error !== STRUCTURED_OUTPUT_ERROR ? '' : last?.content ?? '',
+        toolCalls: [], parsedSchema: topics, items: [{ id: fact.id }],
+        requestedCount: count, returnedCount: topics.length, personaStateDelta: null,
+        finishReason: last?.finishReason ?? '-', truncated: last?.truncated ?? false, reasoningLeak: false,
+        usage: last?.usage ?? null, cost: null,
+        latencyMs: out.attempts.reduce((a, r) => a + r.latencyMs, 0), ttVisibleMs: null, error: out.error,
+      });
+      console.log(`r${rep} ${fact.id} ${out.error ?? 'ok'} attempts=${out.attempts.length} ${topics.join(' | ')}`);
+    }
+  }
+  await rows.close();
+  run.finish({ args, engine, rows: rows.path });
+  console.log(`\nscore: npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/score-topic-run.ts ${run.dir} --control ${engine}`);
+  return 0;
+}
+
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
+  const engine = parseEngine(argv);
+  if (engine !== 'cloud') return mainOnDevice(engine, parseArgs(argv));
   applyTargetOverride(argv);
   const overridden = applyEndpointOverrides(argv);
   const args = parseArgs(argv);
