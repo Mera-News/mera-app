@@ -69,6 +69,8 @@ function assertCopyMatches(): void {
     `DESCRIPTION_CHARS = ${DESCRIPTION_CHARS};`,
     "candidate.countryCode === 'GLOBAL' ? undefined : resolveCountryName(candidate.countryCode)",
     'description: candidate.descriptionEn?.slice(0, DESCRIPTION_CHARS) ?? null',
+    // key order renders into the prompt (rn-decision.cpp walks an ordered JSON)
+    'reader: facts,\n    reader_facts_this_article_matched: candidate.relatedFacts.map((f) => f.statement),\n    article: {\n      title: candidate.titleEn,',
   ];
   const missing = needles.filter((n) => !src.includes(n));
   if (missing.length) throw new Error(`kev-parity: the copy of kev-relevance.ts is stale:\n${missing.join('\n')}`);
