@@ -25,6 +25,10 @@ import { buildExampleQuestionsText } from './questionnaire-data';
 import { asUntrusted } from './untrusted-text';
 
 /**
+ * Builds tool definitions in OpenAI JSON Schema format (sent to cloud backend).
+ * Same tools as the XML format in buildToolFormatSection() — single source of truth.
+ */
+/**
  * How much of the "not interested" FILTERS feature this turn's prompt can
  * afford (not-interested P4a). The feature YIELDS TO THE USER'S DATA, never the
  * reverse: the persona's facts are the whole point of this prompt, our filter
@@ -35,7 +39,9 @@ import { asUntrusted } from './untrusted-text';
  *                filter, it just gets less guidance).
  *  - `off`     — no filter rules and no filter tools. BYTE-IDENTICAL to the
  *                pre-P4a prompt, so a fact-saturated turn can never cost more
- *                than it did before this wave.
+ *                than it did before this wave (useLocalLLM HARD-ERRORS a turn
+ *                over budget — a dead turn is far worse than a turn where Mera
+ *                can't stage a filter).
  *
  * The variant is chosen by MEASUREMENT per turn — see
  * persona-management/persona-agent-core::planPersonaPrompt.
@@ -46,11 +52,14 @@ export type FilterToolsVariant = 'full' | 'compact' | 'off';
  * DEEP MODE question bank (item 17) — used in place of the standard
  * `EXAMPLE_QUESTIONS` when the user turns "Deeper questions" on.
  *
- * REPLACES rather than extends, so the prompt stays inside the persona
- * planner's budget (PERSONA_INPUT_TOKEN_BUDGET): the filters ladder cannot
- * save a deep-mode user, since its last rung still carries the question bank.
- * So this list is deliberately SHORTER than the standard one, and
- * `persona-agent-core.test.ts` asserts the deep prompt is no larger.
+ * REPLACES rather than extends, and that is a hard budget requirement, not a
+ * style choice. The LOCAL path has a 3072-token input budget that HARD-ERRORS
+ * the turn when exceeded, and the measured pre-existing worst case
+ * (CONFIG + LOCAL + XML tools + 22 saturated facts) already sits at ~3008 with
+ * ~64 to spare. Appending a second bank would put a deep-mode user over that
+ * line, and the filters ladder cannot save them — its last rung still carries
+ * the question bank. So this list is deliberately SHORTER than the standard
+ * one, and `persona-agent-core.test.ts` asserts the deep prompt is no larger.
  *
  * The first four keep the anchors relevance actually needs (place, work); the
  * rest are the deeper interview. Note what is NOT here: nothing asks the user
@@ -81,7 +90,6 @@ function buildQuestionBankText(deepMode: boolean): string {
   return DEEP_EXAMPLE_QUESTIONS.map((q, i) => `${i + 1}. ${q}`).join('\n');
 }
 
-/** Tool definitions in OpenAI JSON Schema format (sent to the cloud). */
 export function buildToolDefinitions(
   surface: 'ONBOARDING' | 'CONFIG',
   filterTools: FilterToolsVariant = 'full',
@@ -295,8 +303,87 @@ export function buildToolDefinitions(
 }
 
 /**
+ * Converts a ToolDefinition's JSON Schema parameters into a compact type signature
+ * for the local LLM XML prompt (e.g. `{"fact_ids": string[]}`).
+ */
+function schemaToCompactSignature(params: ToolDefinition['function']['parameters']): string {
+  const props = params.properties;
+  const required = new Set(params.required ?? []);
+  const entries = Object.entries(props);
+  if (entries.length === 0) return '{}';
+
+  const parts = entries.map(([key, schema]) => {
+    const opt = required.has(key) ? '' : '?';
+    const typeStr = schemaTypeToString(schema as Record<string, unknown>);
+    return `"${key}"${opt}: ${typeStr}`;
+  });
+  return `{${parts.join(', ')}}`;
+}
+
+function schemaTypeToString(schema: Record<string, unknown>): string {
+  const type = schema.type as string | undefined;
+  if (type === 'array') {
+    const items = schema.items as Record<string, unknown> | undefined;
+    if (!items) return 'any[]';
+    if (items.type === 'object') {
+      const nested = schemaToCompactSignature(items as ToolDefinition['function']['parameters']);
+      return `[${nested}]`;
+    }
+    return `${items.type as string}[]`;
+  }
+  return type ?? 'any';
+}
+
+/**
+ * Builds the XML tool format section (tool definitions, rules, and examples).
+ * Tool listing is derived from buildToolDefinitions() — single source of truth.
+ */
+export function buildToolFormatSection(
+  surface: 'ONBOARDING' | 'CONFIG',
+  filterTools: FilterToolsVariant = 'full',
+): string {
+  const isOnboarding = surface === 'ONBOARDING';
+
+  const tools = buildToolDefinitions(surface, filterTools);
+  const toolLines = tools
+    .map((t) => `- ${t.function.name}: ${schemaToCompactSignature(t.function.parameters)}`)
+    .join('\n');
+
+  const saveFactsFields =
+    '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_attribute: a short category label for this fact (e.g. "location: residence", "profession: job", "background: origin"). Mint freely.';
+
+  const examples = `<examples>
+<example>
+<user_input>I live near Brixton in London</user_input>
+<assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
+<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Lives near Brixton, London, UK, Europe", "questionnaire_attribute": "location: residence"}]}}</tool_call></assistant_output>
+</example>
+<example>
+<user_input>I'm a senior ML engineer at DeepMind</user_input>
+<assistant_output>${isOnboarding ? "DeepMind, exciting! Do you follow any AI companies or hold any stocks?" : "Got it. Anything else to update?"}
+<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Senior ML engineer at DeepMind", "questionnaire_attribute": "profession: job"}, {"statement": "Works in AI/Machine Learning industry", "questionnaire_attribute": "industry: sector"}]}}</tool_call></assistant_output>
+</example>
+</examples>`;
+
+  return `
+
+## Tools
+Every response MUST include BOTH conversational text AND ≥1 <tool_call>. Never reply with text only. Never reply with tool calls only.
+Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call> — multiple calls per response OK.
+
+${toolLines}
+
+## saveExtractedFacts fields
+${saveFactsFields}
+
+## Examples (format only — never save these as real facts; translate conversational text into the user's language)
+${examples}`;
+}
+
+/**
  * The "not interested" FILTERS section (not-interested P4a, D6) — CONFIG only
- * (onboarding has no feed yet, so there is nothing to filter).
+ * (onboarding has no feed yet, so there is nothing to filter). Shared verbatim
+ * by the CLOUD and LOCAL prompt variants so the two paths can't drift.
  *
  * Wording is deliberately keyword-first: this surface has no article in front
  * of it, so there is nothing to copy a structured field value from and nothing
@@ -339,20 +426,22 @@ function filtersPromptSection(variant: FilterToolsVariant): string {
  */
 export function buildPersonaUpdateStaticPrompt(params: {
   surface: 'ONBOARDING' | 'CONFIG';
-  /** Always false: the cloud calls tools natively. Kept so existing callers
-   *  (harness runners) still typecheck; on-device has its own flows. */
-  includeToolFormat?: false;
+  /** When false, omits XML tool format instructions (AI SDK handles tool calling natively). Default true. */
+  includeToolFormat?: boolean;
   /** Human-readable name of the user's app language (e.g. "Hindi", "Spanish").
    *  When provided, the LLM is instructed to respond in this language. */
   languageName?: string;
-  /** Always CLOUD: on-device runs its own flow (on-device/persona-chat). Kept
-   *  so existing callers (harness runners) still typecheck. */
-  mode?: 'CLOUD';
+  /** Inference path. CLOUD = Qwen3.5-122B-A10B (large MoE, holds the full
+   *  rubric); LOCAL = Qwen3.5-4B on-device (qwen35 architecture; richer than
+   *  the over-compressed Qwen3 4B prompt would imply — see
+   *  buildPersonaUpdateLocalPrompt for the architecture-aware rationale). */
+  mode?: 'CLOUD' | 'LOCAL';
   /** not-interested P4a: how much of the FILTERS feature this turn can afford.
    *  Chosen by measurement per turn (planPersonaPrompt); `off` reproduces the
    *  pre-P4a prompt exactly. Defaults to `full`. */
   filterTools?: FilterToolsVariant;
-  /** item 17 — swap in the deeper question bank. */
+  /** item 17 — swap in the deeper question bank. Applies to BOTH paths (the
+   *  bank is smaller than the standard one, so LOCAL stays inside budget). */
   deepMode?: boolean;
   /** item 13 — the user's "Web search in chat" toggle. CLOUD-only prose, and
    *  only when ON: an off toggle must cost zero prompt tokens. */
@@ -365,7 +454,9 @@ export function buildPersonaUpdateStaticPrompt(params: {
 }): string {
   const {
     surface,
+    includeToolFormat = true,
     languageName,
+    mode = 'CLOUD',
     filterTools = 'full',
     deepMode = false,
     webSearch = false,
@@ -373,15 +464,33 @@ export function buildPersonaUpdateStaticPrompt(params: {
   } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
-  // The arm's whole-string override; `baseline` resolves to no override and
-  // returns the shipped bytes.
+  // The arm's whole-string override, resolved once and applied to whichever
+  // mode's prompt is built below. Placed here rather than at each return so
+  // CLOUD and LOCAL cannot drift over which one honours an arm; `baseline`
+  // resolves to no override and both paths return their shipped bytes.
   const variantSpec = resolvePromptVariant(promptVariant);
   const armPrompt = variantSpec.systemPrompts?.personaStatic;
   if (armPrompt !== undefined) return armPrompt;
 
+  if (mode === 'LOCAL') {
+    // `webSearch` is deliberately NOT forwarded: the LOCAL path carries neither
+    // search tool (both are appended CLOUD-only at the getPersonaToolDefinitions
+    // seam), so prose about them would be instructions for tools that do not
+    // exist — and bytes the 3072-token budget cannot spare.
+    return buildPersonaUpdateLocalPrompt({
+      surface,
+      includeToolFormat,
+      languageName,
+      filterTools,
+      deepMode,
+    });
+  }
+
   const languageRule = languageName
     ? `- LANGUAGE: User's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch languages even if the user writes in English, Chinese, or any other language; reply in ${languageName} regardless. Fact statements stay English (see Facts).`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English (see Facts).`;
+
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
 - DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
@@ -440,7 +549,72 @@ Asked: "What do you do for work?" — User: "I'm an expat from India".
 Either way return to the unanswered question — do NOT just repeat "What do you do for work?".
 
 ## Config & Deletion
-- updateUserConfig: language preference ONLY, never preemptive.${deletingFactsSection}`;
+- updateUserConfig: language preference ONLY, never preemptive.${deletingFactsSection}${toolSection}`;
+}
+
+/**
+ * LOCAL variant — Qwen3.5-4B on-device (architecture qwen35, base
+ * `Qwen/Qwen3.5-4B`, GGUF Q4_K_M via unsloth). Stronger instruction follower
+ * than Qwen3 4B — can carry the full Facts rubric reliably as long as
+ * procedures are imperatively numbered. Compared to the cloud (Qwen3.5-122B-
+ * A10B) variant: dropped the Per-turn order intro fluff, collapsed the
+ * languageRule to one line, kept the off-script extraction rule inline at
+ * the top of Rules where the 4B can't miss it, kept a single anchoring
+ * example instead of two.
+ */
+function buildPersonaUpdateLocalPrompt(params: {
+  surface: 'ONBOARDING' | 'CONFIG';
+  includeToolFormat: boolean;
+  languageName?: string;
+  filterTools?: FilterToolsVariant;
+  deepMode?: boolean;
+}): string {
+  const { surface, includeToolFormat, languageName, filterTools = 'full', deepMode = false } = params;
+  const isOnboarding = surface === 'ONBOARDING';
+
+  const languageRule = languageName
+    ? `ALWAYS reply in **${languageName}**, never switch — even if the user writes another language. Fact statements stay English.`
+    : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
+
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
+
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Info on a DIFFERENT subject is NEVER a correction — saving one never deletes another. Match by attribute key; if unsure, ask.\n- runCalibration: only when the user was invited to recalibrate AND explicitly confirms; never unprompted.' + filtersPromptSection(filterTools);
+
+  const rulesSection = `## Rules
+- ${languageRule}
+- **Save first, then ask.** Save anything the user volunteers before asking. Acknowledge briefly, then ask one follow-up or the next question.
+- **Read Known Facts before asking** — if the city is known, never ask for the city again.
+- **Off-script example.** "I'm an expat from India", known "Lives in Amsterdam" → \`{"statement": "From India", "questionnaire_attribute": "background: country of origin"}\` and \`{"statement": "Expat in the Netherlands", "questionnaire_attribute": "background: expat in country of residence"}\`, never one fact.${isOnboarding ? '\n- A welcome message was already shown — ask the first unanswered question below.' : ''}
+- Stay on profile/news topics; redirect off-topic politely.
+
+## Questions to explore
+Ask one at a time, only if not already in Known Facts.
+${buildQuestionBankText(deepMode)}`;
+
+  return `You are Mera. ${isOnboarding ? 'Onboard the user — learn what news matters to them.' : 'Update the user\'s news profile (add / change / remove info).'}
+
+## Per turn
+1. Read <context> in user message (Known Facts always present).
+2. Write 1 short message (<200 chars, 1 question, no inline option lists).
+3. Emit ≥1 tool call — always saveExtractedFacts (empty array if nothing new).${includeToolFormat ? '' : '\nBoth (2) and (3) are REQUIRED — never omit either.'}
+
+${rulesSection}
+
+## Facts (saveExtractedFacts.statement)
+- ENGLISH ONLY. Translate meaning to natural English; preserve specifics (places, names, numbers). GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech".
+- NOTHING SAVES until the user taps. You OFFER readings; never say "saved" or "added".
+- Never add or remove "a"/"the" inside a possible NAME. "sporting football club" → Sporting the club, NOT "sporting a football club".
+- alternatives: 0-3 other readings, only when they retrieve different news. One reading → omit.
+- ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts (profession ≠ identity). BUT origin + residence = ONE fact.
+- <200 chars. No "User" prefix. Never save greetings, navigation ("Help me start"), negatives ("No stocks held"), meta facts ("User greeted assistant"), or language prefs (use updateUserConfig).
+- Cross-reference Known Facts ONLY for the same subject. "got promoted to senior" + known "Works at Google" → "Senior engineer at Google". Never combine different subjects (workplace ≠ parents' location).
+- LOCATION ANCHORING for personal/local facts only (residency, family role, school, commute, neighborhood) — expand the full chain neighborhood → city → country → continent: "a flat in Jordaan" + known Amsterdam → "Lives in Jordaan, Amsterdam, Netherlands, Europe". DO NOT anchor global/professional interests ("works in AI", "follows F1" stay unanchored).
+- Continent map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/ID → Asia; BR/AR → South America; EG/NG → Africa; AU/NZ → Oceania.
+- Extract ALL new info (interests, hobbies, opinions). Infer obvious siblings: "works at Google" → also "Works in Technology industry".
+- Never re-extract ${isOnboarding ? 'known facts.' : 'unchanged known facts; ADDITIVE by default — replace only on an explicit same-subject correction.'}
+
+## Config${deletingLine}
+- updateUserConfig: language preference ONLY, never preemptive.${toolSection}`;
 }
 
 /**
@@ -453,8 +627,8 @@ export function buildPersonaUpdateContext(params: {
    *  ACTIVE filters. Omitted (not empty-stated) when there are none, so a user
    *  with no filters pays zero tokens for the feature. */
   filtersList?: string;
-  /** not-interested P4a: pre-rendered body of the in-flight staged proposal,
-   *  re-injected every turn. */
+  /** not-interested P4a: pre-rendered body of the in-flight staged proposal.
+   *  Re-injected every turn so the one-shot LOCAL path can still confirm. */
   pendingProposal?: string;
   /** Pre-rendered record of what the user did with topic-plan cards this
    *  session. Omitted (not empty-stated) when they have answered none. */
@@ -816,9 +990,158 @@ export function buildTopicGenSystemPrompt(
   return systemPromptForSlot(slot, shipped, resolvePromptVariant(promptVariant));
 }
 
+
 /**
- * Back-compat alias. New code should import the explicit CLOUD_ prompt; the
- * on-device topic prompt lives in ../on-device/topic-gen.
+ * Shared LOCAL fact-only rules + examples — single source of truth embedded
+ * by `LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT` and the LOCAL noise prompt.
+ * Trimmed examples vs. the cloud variant because the 4B starts duplicating
+ * past ~18 outputs.
+ */
+export const LOCAL_TOPIC_GEN_RULES_SNIPPET = `## Inputs
+1. **Fact** (primary) — every topic MUST be about this fact's subject only.
+2. **User location** (optional) — where the user CURRENTLY LIVES, as the raw statement of their residence fact. A PLACE ANCHOR only: read the place out of it and IGNORE anything else it mentions (origin, profession, family) — those are other facts with their own runs.
+
+You will NEVER receive Other user facts. A sibling prompt covers fact-combination topics.
+
+## Step 1 — Anchoring (decide in order)
+- **(a-1)** Fact contains the USER's OWN location (lives/works/studies in X) → anchor to THAT location, full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location. Residence requirement: always include ≥1 city public-transport topic and ≥1 country public-services/rail topic (e.g. "Amsterdam public transport updates", "Netherlands rail strikes").
+- **(a-2)** Fact contains a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or someone is only briefly there — partner's parents live in X, family from X, parents traveling/visiting X) → anchor to X and STAY there. Do NOT ladder to its state/country/continent. "Traveling/visiting X" = present in X, so generate the same local-news set as living there (local news, safety, weather, transport) — NOT visas/flights/travel advisories. Exception: if X is a tiny locality/island with almost no news, take at most ONE step to its named archipelago/region only (Porto Santo → "Madeira news" OK, "Portugal news" ✗).
+- **(a-3)** **THE FACT ITSELF** names the user's COUNTRY OF ORIGIN while they live elsewhere ("originally from X", "X heritage", "X-born", "expat from X", "X diaspora") → anchor to X but generate DIASPORA-FACING shapes only. Origin in the User location line does NOT trigger this branch — a work/interest Fact stays on (c)/(b). Shapes: visa/entry/passport rule changes, consular services abroad, citizenship and overseas-citizen status, remittance rules, double-tax treaties, customs and travel rules, property/inheritance rules for citizens abroad, diaspora voting rights. **The X-domestic ladder is FORBIDDEN here** — it belongs to a RESIDENCE fact (a-1). ✗ "India monsoon", "India elections", "India economy", "India rail strikes", "X state politics", bare "X news", X weather. If the fact carries BOTH origin AND current residence ("Expat from India living in Amsterdam, Netherlands"), generate the CROSS PRODUCT — roughly half origin-country rules reaching citizens abroad, half host-country law affecting migrants (immigration/residence-permit reform, integration requirements, recognition of foreign qualifications) — then practical residence items.
+- **(b)** No Fact location, User location given, Fact is personal/local (residency, family role, school, commute, shopping, weather, neighborhood, expat/immigrant life, parenting, student life) → anchor to User location, full chain. No location-less variants.
+- **(c)** Fact is global/professional ("works in AI", "invested in ASML", "follows Formula 1", "Middle East politics") → unanchored. Never use User location.
+- **(d)** Ambiguous → default to (c).
+
+Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/ID → Asia; BR/AR → South America; EG/NG → Africa; AU/NZ → Oceania. Pick the most apt bloc (EU, GCC, ASEAN, Schengen).
+
+## Step 2 — Granularity by scope
+- Neighborhood / city → broad OK ("Amsterdam news", "Bengaluru news").
+- State / region → lean specific ("North Holland politics", "Karnataka transport"). Bare "X news" only for tiny regions (e.g. Madeira).
+- Country → SPECIFIC only (policy, tax, elections, immigration, economy, transport, emergencies, weather, healthcare, energy, defense). NEVER "Netherlands news" / "US news" / "Portugal news".
+- Continent / bloc → SPECIFIC only ("EU regulation", "Schengen news", "ASEAN trade"). NEVER "Europe news" / "Asia news".
+- **Big-country exception (≥1B pop, India/China)** → NO generic country topic at all. Specific only ("India tech regulation", "China tax policy"). City/state stay normal.
+
+## Other rules
+- **NEVER COPY AN EXAMPLE'S OUTPUT.** The examples teach SHAPES only. Every topic must be traceable to THIS Fact (plus the User location where a rule anchors it). Emitting an example's countries or organisations for a Fact that names none of them is a hard failure.
+- **Neutral group terms only** — no country-specific acronyms or nationality labels (NRI, OCI, PIO, H-1B). Use "expat", "diaspora", "overseas citizens", "non-residents".
+- **BANNED empty shapes:** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic; also bare "press freedom news" / "media ethics". Award ceremonies and "industry trends" round-ups feel like news but are LOW-VALUE — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Dutch journalism awards", "European journalism awards". Each topic needs a concrete bridge (location, named actor, policy, or specific event) ✓ "Netherlands press-freedom law", "newsroom AI adoption", "EU media freedom act", "AI copyright ruling".
+- No duplicates and no near-synonyms — emit only ONE per concept. ✗ "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes". No personal names — use roles. Identifier-only fact → \`[]\`.
+- Output EXACTLY the count specified in the user message. JSON array only, no prose.
+
+## Examples
+
+Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate 14 topics
+["Nieuw-West Amsterdam news", "Amsterdam local government", "Amsterdam urban planning", "Amsterdam community news", "North Holland politics", "North Holland transport", "Randstad region updates", "Netherlands policy", "Netherlands tax law", "Netherlands elections", "Dutch immigration law", "Netherlands weather emergencies", "EU regulation", "European policy"]
+
+Fact: "Lives in Bengaluru, India" — Generate 13 topics
+(RESIDENCE fact — branch (a-1). The India-domestic ladder is correct HERE only, because the user IS in India. An ORIGIN fact takes (a-3) — see below.)
+["Bengaluru news", "Bengaluru traffic", "Bengaluru tech scene", "Bengaluru weather", "Karnataka politics", "Karnataka transport", "South India news", "India tech regulation", "India tax policy", "India monsoon", "India elections", "India economy", "Asia economic news"]
+
+Fact: "Expat from Brazil living in Lisbon, Portugal" — Generate 10 topics
+(ORIGIN + RESIDENCE — branch (a-3) cross product. NOTE THE SHAPES, NEVER THE COUNTRIES. ✗ NEVER the origin country's domestic ladder: "Brazil elections", "Brazil economy", "Brazil weather".)
+["Brazil visa rule changes", "Brazil passport renewal abroad", "Brazil consular services Portugal", "Brazil Portugal tax treaty", "Brazil remittance rules", "Portugal immigration law reform", "Portugal residence permit rules", "Portugal citizenship requirements", "Lisbon housing market", "Lisbon public transport updates"]
+
+Fact: "Parents are currently traveling in Chhindwara, India" — Generate 6 topics
+(Relational + TEMPORARY — STAY at Chhindwara, same local-news set as residence. No MP/India ladder, no travel advisories/visas.)
+["Chhindwara news", "Chhindwara safety", "Chhindwara weather", "Chhindwara transport", "Chhindwara healthcare", "Chhindwara civic issues"]
+
+Fact: "Senior ML engineer at DeepMind" — Generate 6 topics
+(concrete AI-news hooks, not "AI industry trends"; note the shapes, don't copy the org)
+["DeepMind research news", "AI training data lawsuits", "AI copyright rulings", "AI safety policy", "AI model release news", "AI startups"]`;
+
+/**
+ * LOCAL fact-only topic-generation prompt — Qwen3.5-4B on-device. The caller
+ * specifies the exact count in the user message. Sees ONLY the Fact and
+ * optional User location — a sibling combo prompt below handles Other-fact
+ * combinations.
+ */
+export const LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics from one user fact. The exact count is specified in the user message. Output: a JSON array of 1–5-word strings, nothing else.
+
+${LOCAL_TOPIC_GEN_RULES_SNIPPET}
+
+Output: JSON array of strings, at most the requested count.`;
+
+/**
+ * LOCAL combo topic-generation prompt — Qwen3.5-4B on-device. Mirrors the
+ * cloud combo prompt: weaves Other facts into Fact-subject topics. Run as a
+ * second sequential local call (the 4B has no batch path). Caller skips this
+ * prompt when otherFacts.length === 0.
+ */
+export const LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics that combine the Fact with one or more Other user facts. The user message specifies a MAXIMUM count — emitting fewer, including none, is correct. Output: a JSON array of 1–5-word strings, nothing else.
+
+## Inputs
+1. **Fact** (primary) — the Fact is ALWAYS the subject of every topic.
+2. **User location** (optional) — where the user CURRENTLY LIVES, as the raw statement of their residence fact. A PLACE ANCHOR only: ignore anything else it mentions (origin, profession, family).
+3. **Other user facts** (REQUIRED, ≥1) — qualifiers. Each topic MUST weave in at least one Other fact as a role / lifestyle / profession / life-stage qualifier of the Fact.
+
+## Combo rule (hard requirement)
+Every topic = Fact-subject + Other-fact qualifier. NEVER invert (NEVER make an Other fact the subject). If no meaningful combo exists, output \`[]\`.
+
+## Count rule (hard requirement)
+The number in the user message is a **CEILING, not a quota**. Emit only genuinely good combos and STOP when you run out. 1 topic when 4 were allowed, or \`[]\`, is a CORRECT answer. **NEVER invent a topic to reach the number** — a fabricated combo pollutes the feed permanently.
+
+## Entity cap (hard requirement)
+**Maximum TWO real-world entities per topic** (a place, an org, a sport, a profession, an industry, a hobby each count as one). Three or more means unrelated facts have been mashed together — drop it.
+- ✓ "Bhopal elder care", "AI copyright rulings".
+- ✗ "Amsterdam cricket festival music tech", "Netherlands cricket expat tech trends".
+
+## News-shape rule (hard requirement)
+Every topic must read like a NEWS HEADLINE (policy debate, reform, demographic trend, government decision, sector news), NOT a TRANSACTIONAL SERVICE search. Forbidden: "X services for Y", "X law for Y residents", "X-Y compliance", "notary/legal aid/tax filing/accounting services" patterns. These are looking-to-hire queries, not news.
+- Good: "Split eldercare policy debate", "Croatia healthcare reform", "Amsterdam lawyer climate ruling".
+- Bad: "Split notary services for expats", "Croatian inheritance law for Dutch residents", "Netherlands-Croatia legal compliance".
+- **ORIGIN / IMMIGRATION CARVE-OUT (overrides the forbidden list).** When the Fact carries a country of ORIGIN, diaspora or immigration status, RULE CHANGES reaching that group ARE news: ✓ "India visa rule changes", "India passport rules abroad", "India overseas citizenship rules", "Netherlands residence permit reform", "Dutch civic integration exam changes". HIRING vs LEGISLATING is the line — ✗ still "India visa services", "notary services for expats", "immigration lawyer Amsterdam".
+
+## Step 1 — Anchoring
+- **(a-1)** Fact has the USER's OWN location → anchor to it, full chain.
+- **(a-2)** Fact has a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or briefly there — partner's parents live in X, family from X, parents traveling/visiting X) → anchor to X and STAY there. NO ladder to its state/country/continent. Combos stay at the EXACT place X. If no city-level combo exists, drop it and use a different Other fact — never substitute X's country.
+- **(a-3)** Fact names the user's COUNTRY OF ORIGIN while they live elsewhere ("originally from X", "X heritage", "expat from X") → anchor to X but generate DIASPORA-FACING combos only (visa/passport rules, consular services, overseas citizenship, remittance and tax treaties, customs rules, diaspora voting). ✗ NEVER the X-domestic ladder: "India monsoon", "India elections", "India economy", "X state politics". If the Fact carries BOTH origin and residence, combos may use either side.
+- **(b)** No Fact location, User location given, Fact is personal/local → anchor to User location.
+- **(c)** Fact is global/professional → unanchored.
+- **(d)** Ambiguous → (c).
+
+Continent/bloc map: NL/DE/FR → EU; US/CA/MX → North America; IN/JP/ID → Asia; BR/AR → South America; EG/NG → Africa; AU/NZ → Oceania.
+
+## Step 2 — Granularity
+- City → broad OK with qualifier woven in.
+- State / region → lean specific.
+- Country → SPECIFIC only. NEVER bare "X news".
+- Continent / bloc → SPECIFIC only.
+- Big-country (≥1B pop, India/China) → NO generic country topic. Specific + qualifier only.
+
+## Other rules
+- No duplicates. No personal names — use roles.
+- **Other-fact locations are exact too.** If an Other fact you weave in carries a relational/temporary location (parents in X, traveling in X), stay at that EXACT place X — never expand to X's country. ✗ "India AI news app trends" from a Chhindwara/Bhopal fact.
+- **Near-duplicate-fact guard.** If an Other fact is essentially the SAME role/subject as the Fact, don't restate the Fact's concepts as near-synonyms ("startup tax" / "startup tax incentives"). One phrasing per concept; add a new angle.
+- **No country-specific acronyms or diaspora terms** (NRI, OCI, PIO, CPA, MD, FRCS, JD, BEng — any abbreviation tied to one country's nationals or credentialing). Use neutral forms: "expat", "diaspora", "tax accountant", "physician".
+- Output AT MOST the count specified. Fewer is correct; \`[]\` is correct. Never pad.
+- JSON array only, no prose.
+
+## Examples
+
+Fact: "Is an expat"
+User location: Amsterdam, Netherlands
+Other user facts: Works in tech; Has young children
+Generate at most 7 topics
+["Amsterdam expat tech jobs", "Amsterdam expat childcare", "international schools Amsterdam", "Dutch expat parental leave", "Netherlands expat tech visa", "Schengen expat family rules", "EU expat childcare policy"]
+
+Fact: "Parents live in Bhopal, India, Asia"
+Other user facts: Building an AI news app; Senior software engineer
+(Relational location — STAY at Bhopal. No MP/India/Asia ladder. NO country acronyms — use "expat" / "diaspora".)
+Generate at most 5 topics
+["Bhopal remote-work elder care", "Bhopal expat tech remittances", "Bhopal elder telehealth tech", "Bhopal video-call apps for seniors", "Bhopal AI-assisted eldercare"]
+
+Fact: "Interested in privacy-safe AI"
+User location: Amsterdam, Netherlands
+Other user facts: Interested in journalism conferences; Building an AI news app
+(AI × journalism intersection — concrete newsworthy shapes, not "industry trends".)
+Generate at most 4 topics
+["AI training data lawsuits", "newsroom AI adoption", "AI copyright rulings news", "AI journalism tool launches"]
+
+Output: JSON array of strings, AT MOST the requested count. Fewer is correct, \`[]\` is correct. Never pad.`;
+
+/**
+ * Back-compat alias. New code should import the explicit CLOUD_/LOCAL_ pair
+ * and choose by mode at the call site (see topic-generation-service.ts and
+ * topic-gen-handler.ts).
  */
 /**
  * TOPIC SANITY prompt (r12 K-P3) — judges whether each already-minted topic

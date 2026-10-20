@@ -11,6 +11,7 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
   CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
+  LOCAL_REASON_SYSTEM_PROMPT,
   resolvePromptVariant,
   promptVariantIds,
   REASON_V1_ID,
@@ -78,6 +79,14 @@ describe('the promoted reason prompt', () => {
     for (const p of [CLOUD_REASON_SYSTEM_PROMPT, CLOUD_HEADLINE_REASON_SYSTEM_PROMPT]) {
       expect(p.trimEnd()).toMatch(/Output: single plain string, no prefixes, no markdown\.$/);
     }
+  });
+
+  it('never reached the on-device prompt', () => {
+    // The promotion is cloud-only. LOCAL is built on a different base and states
+    // its voice rule inline, so nothing here can touch it, and nothing measures
+    // it either.
+    expect(LOCAL_REASON_SYSTEM_PROMPT).not.toMatch(/Three additional rules/);
+    expect(LOCAL_REASON_SYSTEM_PROMPT).not.toMatch(/Never describe the feed/);
   });
 });
 

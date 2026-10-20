@@ -1,7 +1,7 @@
 // lib/mera-protocol/topic-generation-service through the real on-device engine: completeLocalStructured,
 // modelManager and the inference queue run for real, with only llama.rn (scripted), the built-in
-// model module (scripted) and expo-file-system (in-memory) faked. The parser is the harness one that
-// every topic path shares.
+// model module (scripted) and expo-file-system (in-memory) faked. The on-device reply is read by
+// topicsFromReply; parseTopicsFromOutput is the cloud parser (combo pass, top-up), pinned here as is.
 //
 // The service is LOCAL ONLY since ux2 F5 (cloud topics come from the skill core's topic-gen handler
 // in lib/mera-harness) and FACT ONLY (on-device has no combination pass), so the cloud half is the
@@ -48,7 +48,7 @@ const inputs = (over: Partial<Parameters<typeof generateTopicsForFact>[0]> = {})
 const topicsReply = (...topics: string[]) => [JSON.stringify({ topics })];
 
 // ===========================================================================
-// parseTopicsFromOutput (shared by every topic path)
+// parseTopicsFromOutput (the cloud parser, unchanged)
 // ===========================================================================
 
 describe('parseTopicsFromOutput', () => {
@@ -79,28 +79,16 @@ describe('parseTopicsFromOutput', () => {
     ['text around the array', 'Here are the topics: ["Amsterdam news", "EU regulation"] , end', ['Amsterdam news', 'EU regulation']],
     ['a markdown code fence', '```json\n["Amsterdam news", "EU tech"]\n```', ['Amsterdam news', 'EU tech']],
     ['trailing text after the bracket', '["Amsterdam news", "EU regulation"] some note', ['Amsterdam news', 'EU regulation']],
-    ['a bracket inside a topic', 'Topics: ["Rail [strike] news", "EU tech"]', ['Rail [strike] news', 'EU tech']],
-  ])('finds the array in %s', (_label, output, expected) => {
+  ])('uses the bracket fallback for %s', (_label, output, expected) => {
     expect(parse(output)).toEqual(expected);
   });
 
-  it.each([
-    ['the object form', '{"topics": ["Amsterdam news", "EU tech"]}'],
-    ['the object form in a code fence', '```json\n{"topics": ["Amsterdam news", "EU tech"]}\n```'],
-    ['the object form after prose', 'Sure. {"topics": ["Amsterdam news", "EU tech"]}'],
-  ])('reads %s', (_label, output) => {
-    expect(parse(output)).toEqual(['Amsterdam news', 'EU tech']);
-    expect(warn).not.toHaveBeenCalled();
-  });
-
-  it('returns [] and warns for an object with no topics list (another key\'s list is not topics), or no JSON at all', () => {
-    expect(parse('{"items": ["a"]}')).toEqual([]);
-    expect(parse('```json\n{"rejected": ["a"], "kept": ["b"]}\n```')).toEqual([]);
+  it('returns [] and warns when the output is completely unparseable', () => {
     expect(parse('no json here')).toEqual([]);
-    expect(warn).toHaveBeenCalledTimes(3);
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
-  it.each([[''], ['[]'], ['{"topics": []}']])('returns [] for %j', (output) => {
+  it.each([[''], ['[]']])('returns [] for %j', (output) => {
     expect(parse(output)).toEqual([]);
   });
 });

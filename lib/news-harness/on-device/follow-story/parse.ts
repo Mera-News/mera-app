@@ -1,6 +1,5 @@
-import { MAX_TRACK_SEARCH_WORDS } from '../../article-feedback/agent-core';
 import { capWords, text, type OnDeviceToolCall, type OnDeviceTurnResult } from '../shared';
-import { MAX_OPTION_LABEL_WORDS, type FollowStoryReply } from './schema';
+import { MAX_OPTION_LABEL_WORDS, MAX_TRACK_SEARCH_WORDS, type FollowStoryReply } from './schema';
 
 /**
  * The options as `proposeTrack` input, word caps applied. The executor

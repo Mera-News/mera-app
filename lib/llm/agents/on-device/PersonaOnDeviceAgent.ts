@@ -16,7 +16,8 @@ import { describePending } from '../../../news-harness/on-device/shared';
 import { formatTopicPlanNotesBlock } from '../../../news-harness/persona-management/topic-plan-notes';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { PersonaUpdateAgent } from '../PersonaUpdateAgent';
-import type { ConversationMessage, OnDeviceAgent } from '../../types';
+import type { ConversationMessage } from '../../types';
+import type { OnDeviceAgent } from './types';
 import { appLanguageName, chatTurns, respondStructured } from './run';
 
 export class PersonaOnDeviceAgent implements OnDeviceAgent {

@@ -17,7 +17,8 @@
 // execution) after their text has stopped.
 
 import { holdRestart } from '@/lib/app-restart';
-import type { ChatAgent, ConversationMessage, IAgent, OnDeviceAgent } from '@/lib/llm/types';
+import type { ConversationMessage, IAgent } from '@/lib/llm/types';
+import type { ChatAgent, OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import logger from '@/lib/logger';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';

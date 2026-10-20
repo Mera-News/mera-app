@@ -7,7 +7,6 @@ import { attachChatSession, resetChatSession } from '@/lib/chat-session/chat-ses
 import { appendMessage, createConversation, fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
-import { PersonaOnDeviceAgent } from '@/lib/llm/agents/on-device/PersonaOnDeviceAgent';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, mockGateway, server, signInFixtureAccount } from '@/test/helpers';
 import { isRouteLeg, resetChatModules, systemOf, until } from '@/test/integration/chat/_helpers';
@@ -64,12 +63,7 @@ describe('attach', () => {
     expect(busy()).toBe(false);
 
     // Same conversation, other kind: the cloud engine is disposed too.
-    const third = attachChatSession({
-      conversationId: secondId,
-      kind: 'local',
-      agent: new PersonaOnDeviceAgent('u1', 'CONFIG'),
-      persistedIds: [],
-    });
+    const third = attachChatSession({ conversationId: secondId, kind: 'local', agent: personaAgent(), persistedIds: [] });
     expect(third).not.toBe(second);
     second.send('into the void again');
     expect(cloud().messages).toEqual([]);

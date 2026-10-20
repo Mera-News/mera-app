@@ -8,7 +8,8 @@ import {
   tutorialHelpInstructions,
 } from '../../../news-harness/on-device/tutorial-help';
 import logger from '../../../logger';
-import type { ConversationMessage, OnDeviceAgent } from '../../types';
+import type { ConversationMessage } from '../../types';
+import type { OnDeviceAgent } from './types';
 import { appLanguageName, chatTurns, promptBudget } from './run';
 
 export class TutorialHelpOnDeviceAgent implements OnDeviceAgent {

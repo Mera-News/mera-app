@@ -14,13 +14,19 @@ import {
   buildLocalReasonUserMessage,
   buildPersonaUpdateContext,
   buildToolDefinitions,
+  buildToolFormatSection,
   buildPersonaUpdateStaticPrompt,
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
+  LOCAL_RELEVANCE_SYSTEM_PROMPT,
+  LOCAL_REASON_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
+  LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
+  LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   NOISE_GENERATION_SYSTEM_PROMPT,
   CLOUD_TOPIC_GEN_RULES_SNIPPET,
+  LOCAL_TOPIC_GEN_RULES_SNIPPET,
 } from '@/lib/news-harness/prompts/prompts';
 
 // ============================================================
@@ -379,6 +385,36 @@ describe('buildToolDefinitions', () => {
 });
 
 // ============================================================
+// buildToolFormatSection
+// ============================================================
+
+describe('buildToolFormatSection', () => {
+  it('includes tool names from buildToolDefinitions', () => {
+    const section = buildToolFormatSection('ONBOARDING');
+    expect(section).toContain('saveExtractedFacts');
+    expect(section).toContain('updateUserConfig');
+    expect(section).toContain('issueWarning');
+  });
+
+  it('includes examples block', () => {
+    const section = buildToolFormatSection('ONBOARDING');
+    expect(section).toContain('<examples>');
+  });
+
+  it('returns different content for CONFIG vs ONBOARDING', () => {
+    const onboarding = buildToolFormatSection('ONBOARDING');
+    const config = buildToolFormatSection('CONFIG');
+    expect(onboarding).not.toBe(config);
+    expect(config).toContain('deleteUserFacts');
+  });
+
+  it('includes saveExtractedFacts fields section', () => {
+    const section = buildToolFormatSection('ONBOARDING');
+    expect(section).toContain('saveExtractedFacts');
+  });
+});
+
+// ============================================================
 // buildPersonaUpdateStaticPrompt
 // ============================================================
 
@@ -399,15 +435,26 @@ describe('buildPersonaUpdateStaticPrompt', () => {
     expect(prompt.toLowerCase()).toMatch(/profile|update/);
   });
 
-  it('names the tools and carries no <tool_call> text format (the cloud calls tools natively)', () => {
+  it('includes tool format section when includeToolFormat=true (default)', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING' });
     expect(prompt).toContain('saveExtractedFacts');
+  });
+
+  it('omits tool format section when includeToolFormat=false', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', includeToolFormat: false });
     expect(prompt).not.toContain('<tool_call>');
   });
 
   it('includes language rule when languageName is provided', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', languageName: 'Hindi' });
     expect(prompt).toContain('Hindi');
+  });
+
+  it('uses LOCAL variant when mode=LOCAL', () => {
+    const cloudPrompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'CLOUD' });
+    const localPrompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL' });
+    // They should differ — local is shorter/different
+    expect(cloudPrompt).not.toBe(localPrompt);
   });
 
   it('includes the example-questions approach', () => {
@@ -489,6 +536,37 @@ describe('CLOUD_REASON_SYSTEM_PROMPT', () => {
   });
 });
 
+describe('LOCAL_RELEVANCE_SYSTEM_PROMPT', () => {
+  it('is distinct from CLOUD_RELEVANCE_SYSTEM_PROMPT', () => {
+    expect(LOCAL_RELEVANCE_SYSTEM_PROMPT).not.toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
+  });
+
+  it('instructs returning a JSON array of 1 number', () => {
+    expect(LOCAL_RELEVANCE_SYSTEM_PROMPT).toContain('JSON array of 1 number');
+  });
+});
+
+describe('LOCAL_REASON_SYSTEM_PROMPT', () => {
+  it('is a non-empty string', () => {
+    expect(typeof LOCAL_REASON_SYSTEM_PROMPT).toBe('string');
+    expect(LOCAL_REASON_SYSTEM_PROMPT.length).toBeGreaterThan(50);
+  });
+
+  it('pins the second-person voice rule (QA 2026-07-28 third-person leak)', () => {
+    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
+      'Voice: write TO the user — "you"/"your", never "the user", "User …", or third person, in every band.',
+    );
+    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
+      'Wrong: "User follows F1; the race matches this interest." Right: "The race matches your F1 interest."',
+    );
+    // The ≤0.25 exemplar was pronoun-free ("no Dutch tie") — the band the leak
+    // came from now anchors the voice too.
+    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
+      "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.",
+    );
+  });
+});
+
 describe('CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
   it('is a non-empty string', () => {
     expect(typeof CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT).toBe('string');
@@ -506,6 +584,18 @@ describe('CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
   });
 });
 
+describe('LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
+  it('is distinct from CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
+    expect(LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT).not.toBe(CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT);
+  });
+});
+
+describe('LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT', () => {
+  it('mentions Combo rule', () => {
+    expect(LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT).toContain('Combo rule');
+  });
+});
+
 describe('NOISE_GENERATION_SYSTEM_PROMPT', () => {
   it('mentions entity substitution', () => {
     expect(NOISE_GENERATION_SYSTEM_PROMPT.toLowerCase()).toContain('entity substitution');
@@ -518,10 +608,47 @@ describe('NOISE_GENERATION_SYSTEM_PROMPT', () => {
 });
 
 // ============================================================
-// buildPersonaUpdateStaticPrompt — surface branches
+// buildToolFormatSection — schemaTypeToString edge cases
+// (exercised indirectly via the tool listing which uses schemaToCompactSignature)
 // ============================================================
 
-describe('buildPersonaUpdateStaticPrompt — surface branches', () => {
+describe('buildToolFormatSection — compact signature edge cases', () => {
+  it('renders array-of-object fields as bracket notation', () => {
+    // saveExtractedFacts has items.type = 'object' (the extracted_user_information field)
+    const section = buildToolFormatSection('ONBOARDING');
+    // The compact signature for extracted_user_information should contain nested {}
+    expect(section).toContain('[{');
+  });
+
+  it('renders string[] fields using type[]', () => {
+    // language_codes is string[]
+    const section = buildToolFormatSection('ONBOARDING');
+    expect(section).toContain('string[]');
+  });
+});
+
+// ============================================================
+// buildPersonaUpdateStaticPrompt — LOCAL / CLOUD surface branches
+// ============================================================
+
+describe('buildPersonaUpdateStaticPrompt — LOCAL/CLOUD surface branches', () => {
+  it('uses the example-questions list for LOCAL mode', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL' });
+    expect(prompt).toContain('Questions to explore');
+  });
+
+  it('LOCAL CONFIG responds directly rather than using the onboarding start', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'LOCAL' });
+    // Asserts the BEHAVIOUR the name describes — no onboarding opener — rather
+    // than the presence of a "Respond directly" line. r14 deleted that line as
+    // redundant (the "Save first, then ask" rule directly above it already says
+    // "Acknowledge briefly, then ask one follow-up or the next question") while
+    // reclaiming LOCAL token budget. The onboarding branch is what actually
+    // distinguishes the two surfaces, and it must stay absent here.
+    expect(prompt).not.toContain('welcome message');
+    expect(prompt).toContain('Save first, then ask');
+  });
+
   it('CLOUD ONBOARDING uses the welcome message start', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'CLOUD' });
     expect(prompt).toContain('welcome message');
@@ -537,6 +664,13 @@ describe('CLOUD_TOPIC_GEN_RULES_SNIPPET', () => {
   it('contains anchoring steps', () => {
     expect(CLOUD_TOPIC_GEN_RULES_SNIPPET).toContain('Step 1');
     expect(CLOUD_TOPIC_GEN_RULES_SNIPPET).toContain('Step 2');
+  });
+});
+
+describe('LOCAL_TOPIC_GEN_RULES_SNIPPET', () => {
+  it('is a non-empty string', () => {
+    expect(typeof LOCAL_TOPIC_GEN_RULES_SNIPPET).toBe('string');
+    expect(LOCAL_TOPIC_GEN_RULES_SNIPPET.length).toBeGreaterThan(50);
   });
 });
 

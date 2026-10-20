@@ -11,7 +11,8 @@ import {
 import { describePending } from '../../../news-harness/on-device/shared';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { FollowStoryAgent } from '../FollowStoryAgent';
-import type { ConversationMessage, OnDeviceAgent } from '../../types';
+import type { ConversationMessage } from '../../types';
+import type { OnDeviceAgent } from './types';
 import { appLanguageName, chatTurns, respondStructured, today } from './run';
 
 export class FollowStoryOnDeviceAgent implements OnDeviceAgent {

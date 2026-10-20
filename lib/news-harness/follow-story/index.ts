@@ -62,19 +62,23 @@ export function makeFollowStorySubject(): TrackFeedbackSubject {
 // ---------------------------------------------------------------------------
 
 export function buildFollowStorySystemPrompt(params: {
+  needsToolFormat: boolean;
   languageName?: string;
-  /** Whether searchNews is declared. Part of the caller's prompt CACHE KEY. */
+  /** CLOUD only — LOCAL has no retrieval tools at all, so it must not be told
+   *  to use them. Part of the caller's prompt CACHE KEY. */
   canSearch?: boolean;
   /** The user's "Web search in chat" setting. Also part of the cache key: a
    *  prompt cached while it was off keeps telling the model it cannot search
    *  after the user turns it on, which is a reported bug, not a hypothetical. */
   webSearch?: boolean;
 }): string {
-  const { languageName, canSearch = false, webSearch = false } = params;
+  const { needsToolFormat, languageName, canSearch = false, webSearch = false } = params;
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS write conversational text in **${languageName}**, with no exceptions — even if the user writes in another language. Scope labels and search queries stay English.`
     : "LANGUAGE: Match the user's language (switch if they switch). Scope labels and search queries stay English.";
+
+  const toolSection = needsToolFormat ? buildFollowStoryToolFormat() : '';
 
   // THE FIX FOR THE REFUSAL. Without retrieval this agent had no article, no
   // index and a rule against inventing entities, so a user naming anything
@@ -122,7 +126,22 @@ Rules:
 ## The confirm card
 The card the user sees IS the plan: it lists the scopes and they tap ONE. You never apply it for them — a scope is chosen by tapping, never by typing "yes". If they decline, call cancelProposal. If they ask for different scopes, call proposeTrack again.
 
-Keep replies short (≤2 sentences). ${languageRule}`;
+Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
+}
+
+/** XML tool-call format block for the local (no native tool-calling) path. */
+function buildFollowStoryToolFormat(): string {
+  return `
+
+## Tools
+Write conversational text, then emit tool calls when needed.
+Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
+
+- proposeTrack: {"options": [{"label": string, "search": string}]}
+- cancelProposal: {}
+
+## Example (format only)
+<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "Russia Ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}, {"label": "European security crisis", "search": "Europe Russia security military tensions"}]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +153,8 @@ export interface FollowStoryContextInput {
    *  reads the clock, so the rendered prompt stays a pure function of its
    *  inputs. Anchors scopes to the present (no already-ended seasons). */
   nowMs: number;
-  /** The single in-flight staged proposal, re-injected every turn. */
+  /** The single in-flight staged proposal, re-injected every turn so the
+   *  one-shot LOCAL path can still resolve a decline. */
   proposal: StagedProposal | null;
 }
 
@@ -209,7 +229,9 @@ export function buildFollowStoryContext(input: FollowStoryContextInput): string 
  * field has to be a query Mera's retrieval can actually match, and the articles
  * this returns ARE that corpus. A web result is a URL on someone else's site;
  * it can tell the model a story exists, but it cannot tell it which words will
- * keep matching future coverage.
+ * keep matching future coverage. CLOUD only, like its siblings — the LOCAL turn
+ * never pushes a `role:'tool'` message back, so a search the model can never
+ * read is strictly worse than no tool.
  */
 const SEARCH_NEWS_TOOL: ToolDefinition = {
   type: 'function',
@@ -260,12 +282,11 @@ const WEB_SEARCH_TOOL: ToolDefinition = {
 };
 
 /**
- * @param _mode always CLOUD: on-device runs its own flow (on-device/follow-story).
- *   Kept positional so existing callers' `webSearchEnabled` stays second.
+ * @param mode LOCAL gets the proposal tools only — see SEARCH_NEWS_TOOL.
  * @param webSearchEnabled the user's "Web search in chat" setting.
  */
 export function getFollowStoryToolDefinitions(
-  _mode: 'CLOUD' = 'CLOUD',
+  mode: 'CLOUD' | 'LOCAL' = 'CLOUD',
   webSearchEnabled: boolean = false,
 ): ToolDefinition[] {
   return [
@@ -312,7 +333,7 @@ export function getFollowStoryToolDefinitions(
         parameters: { type: 'object', properties: {} },
       },
     },
-    SEARCH_NEWS_TOOL,
-    ...(webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
+    ...(mode === 'CLOUD' ? [SEARCH_NEWS_TOOL] : []),
+    ...(mode === 'CLOUD' && webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
   ];
 }

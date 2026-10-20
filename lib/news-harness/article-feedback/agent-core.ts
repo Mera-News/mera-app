@@ -15,6 +15,7 @@ import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { proposalRequiresUserChoice } from '../core/proposals';
 import {
   PROPOSE_FACT_CHECK_TOOL,
+  PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE,
   buildFactCheckPromptSection,
 } from '../fact-check';
 import type {
@@ -134,7 +135,7 @@ const FEATURE_REQUEST_SUMMARY_MAX = 500;
 /** Target ceiling on a scope pill's display label (prompt guidance). */
 const MAX_TRACK_LABEL_WORDS = 5;
 /** Target ceiling on a scope pill's hidden search query (prompt guidance). */
-export const MAX_TRACK_SEARCH_WORDS = 8;
+const MAX_TRACK_SEARCH_WORDS = 8;
 /** Hard cap on the display label / search text we stage (defensive trim). */
 const MAX_TRACK_CHARS = 200;
 /** Max distinct track-scope pills a single follow-a-story card offers. */
@@ -290,6 +291,7 @@ function isoDayFromString(value: string | null | undefined): string | null {
 // ---------------------------------------------------------------------------
 
 export function buildArticleFeedbackSystemPrompt(params: {
+  needsToolFormat: boolean;
   languageName?: string;
   /**
    * CLOUD mode AND the user's "Web search in chat" toggle on — the SAME gate
@@ -316,11 +318,13 @@ export function buildArticleFeedbackSystemPrompt(params: {
    */
   factCheck?: boolean;
 }): string {
-  const { languageName, webSearch = false, factCheck = false } = params;
+  const { needsToolFormat, languageName, webSearch = false, factCheck = false } = params;
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS write conversational text in **${languageName}**, with no exceptions — even if the user writes in another language. Fact statements stay English.`
     : 'LANGUAGE: Match the user\'s language (switch if they switch). Fact statements stay English.';
+
+  const toolSection = needsToolFormat ? buildArticleFeedbackToolFormat(factCheck) : '';
 
   // Appended, never rewritten in place — the base two bullets stay exactly as
   // they were (the "NEVER the full article text" limitation is still true; the
@@ -385,7 +389,30 @@ ${factCheck ? `${buildFactCheckPromptSection()}
 - "This isn't important to me" → ask ONE short why-question FIRST, then stage the persona update their answer implies.
 - When a PENDING PROPOSAL is shown and the user confirms (yes / ok / do it, in any language) call applyProposal; if they decline call cancelProposal. If they say anything else, leave the proposal pending and answer normally.
 - EXCEPTION — a card offering ALTERNATIVES (choose_one, or the track options): the user must TAP the option they want. NEVER applyProposal on one; if they say "yes", ask which option, in words.
-- Keep replies short (≤2 sentences). ${languageRule}`;
+- Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
+}
+
+/**
+ * XML tool-call format block for the local path (same convention as the persona
+ * agent's buildToolFormatSection, but scoped to the 3 proposal tools with one
+ * compact proposeChanges example).
+ */
+function buildArticleFeedbackToolFormat(factCheck: boolean): string {
+  return `
+
+## Tools
+Write conversational text, then emit tool calls when needed.
+Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
+
+- proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "suppressionKind"?: ${SUPPRESSION_KINDS.join('|')}, "suppressionValue"?, "suppressionId"?, "highPriority"?: boolean}]}
+  suppressionValue: copy VERBATIM from <context>, or omit it together with suppressionKind. suppressionId: an [id] from YOUR FILTERS.
+- proposeTrack: {"options": [{"label": string, "search": string}]}
+${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {}
+- cancelProposal: {}
+
+## Example (format only)
+<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You want less of this.", "expected_effects": "Pick how far to go.", "choose_one": true, "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}, {"type": "retire_topic", "topicText": "cricket"}]}}</tool_call>
+<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "Russia Ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}, {"label": "European security crisis", "search": "Europe Russia security military tensions"}]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -595,12 +622,8 @@ const WEB_SEARCH_TOOL: ToolDefinition = {
   },
 };
 
-/**
- * @param _mode always CLOUD: on-device runs its own flow (on-device/article-feedback).
- *   Kept positional so existing callers' `webSearchEnabled` stays second.
- */
 export function getArticleFeedbackToolDefinitions(
-  _mode: 'CLOUD' = 'CLOUD',
+  mode: 'CLOUD' | 'LOCAL' = 'CLOUD',
   webSearchEnabled: boolean = false,
 ): ToolDefinition[] {
   return [
@@ -721,8 +744,14 @@ export function getArticleFeedbackToolDefinitions(
         parameters: { type: 'object', properties: {} },
       },
     },
-    PROPOSE_FACT_CHECK_TOOL,
-    ...(webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
+    // CLOUD ONLY, and the gate is on the DECLARATION as well as the prose — see
+    // buildArticleFeedbackSystemPrompt's `factCheck` param for both reasons
+    // (a cloud-dependent feature, and ~1,200 tokens the local budget has no room
+    // for). Not for the reason `webSearch` is cloud-only, though: this tool needs
+    // no result read back — its whole effect is `sideEffects.proposal`, which a
+    // one-shot LOCAL turn would stage perfectly well.
+    ...(mode === 'CLOUD' ? [PROPOSE_FACT_CHECK_TOOL] : []),
+    ...(mode === 'CLOUD' && webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
   ];
 }
 

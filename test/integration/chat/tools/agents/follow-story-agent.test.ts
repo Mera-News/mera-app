@@ -32,10 +32,15 @@ describe('FollowStoryAgent: identity and prompt', () => {
   });
 
   it('builds a prompt that names the article-less follow flow and proposeTrack', async () => {
-    const prompt = await makeAgent().buildSystemPrompt();
+    const prompt = await makeAgent().buildSystemPrompt(false);
 
     expect(prompt).toContain('proposeTrack');
     expect(prompt).toContain('NO article');
+  });
+
+  it('adds the XML tool-call block only for the local path', async () => {
+    expect(await makeAgent().buildSystemPrompt(true)).toContain('<tool_call>');
+    expect(await makeAgent().buildSystemPrompt(false)).not.toContain('<tool_call>');
   });
 
   // The cache is observed by counting calls into the REAL builder (a spy, no replacement).
@@ -43,9 +48,11 @@ describe('FollowStoryAgent: identity and prompt', () => {
     const agent = makeAgent();
     const build = jest.spyOn(followStory, 'buildFollowStorySystemPrompt');
     try {
-      const first = await agent.buildSystemPrompt();
-      expect(await agent.buildSystemPrompt()).toBe(first);
+      const first = await agent.buildSystemPrompt(false);
+      expect(await agent.buildSystemPrompt(false)).toBe(first);
       expect(build).toHaveBeenCalledTimes(1);
+      await agent.buildSystemPrompt(true);
+      expect(build).toHaveBeenCalledTimes(2);
     } finally {
       build.mockRestore();
     }
@@ -53,10 +60,10 @@ describe('FollowStoryAgent: identity and prompt', () => {
 
   it('rebuilds when the app language changes mid-session', async () => {
     const agent = makeAgent();
-    const english = await agent.buildSystemPrompt();
+    const english = await agent.buildSystemPrompt(false);
 
     setLanguage('fr');
-    const french = await agent.buildSystemPrompt();
+    const french = await agent.buildSystemPrompt(false);
 
     expect(french).not.toBe(english);
     expect(french).toContain('**French**');
@@ -64,7 +71,7 @@ describe('FollowStoryAgent: identity and prompt', () => {
 
   it('falls back to English for a language outside the supported table', async () => {
     setLanguage('xx');
-    expect(await makeAgent().buildSystemPrompt()).toContain('**English**');
+    expect(await makeAgent().buildSystemPrompt(false)).toContain('**English**');
   });
 
   it('exposes the proposal and retrieval tools, and deliberately NOT applyProposal', () => {
@@ -79,10 +86,9 @@ describe('FollowStoryAgent: identity and prompt', () => {
     expect(toolNames(makeAgent())).toEqual(['proposeTrack', 'cancelProposal', 'searchNews']);
   });
 
-  // On-device runs FollowStoryOnDeviceAgent; this agent is cloud-only whatever the mode says.
-  it('keeps the cloud tool set when the mode is on-device', async () => {
+  it('offers no retrieval at all on the on-device path', async () => {
     await setProcessingMode('on-device');
-    expect(toolNames(makeAgent())).toEqual(['proposeTrack', 'cancelProposal', 'searchNews', 'webSearch']);
+    expect(toolNames(makeAgent())).toEqual(['proposeTrack', 'cancelProposal']);
   });
 
   // THE REGRESSION GUARD for "toggle on, still refuses": the prompt is cached, so if the toggle is
@@ -91,10 +97,10 @@ describe('FollowStoryAgent: identity and prompt', () => {
   it('rebuilds the system prompt when the web-search toggle flips', async () => {
     const agent = makeAgent();
     await setWebSearchInChat(false);
-    const before = await agent.buildSystemPrompt();
+    const before = await agent.buildSystemPrompt(false);
 
     await setWebSearchInChat(true);
-    const after = await agent.buildSystemPrompt();
+    const after = await agent.buildSystemPrompt(false);
 
     expect(after).not.toBe(before);
     expect(after).toContain('webSearch');

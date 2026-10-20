@@ -3,7 +3,7 @@
 // nothing that can change the reader's profile.
 import { TutorialHelpAgent } from '@/lib/llm/agents/TutorialHelpAgent';
 import { gatewayCalls, server } from '@/test/helpers';
-import { setWebSearchInChat } from '@/test/integration/chat/_helpers';
+import { setProcessingMode, setWebSearchInChat } from '@/test/integration/chat/_helpers';
 import { factStatements, queuedJobs, resetAgentWorld, setLanguage, spyWarn, toolNames } from './agents-kit';
 
 jest.setTimeout(30_000);
@@ -28,6 +28,11 @@ describe('TutorialHelpAgent', () => {
 
   it('offers NO tools at all when the user has web search off', async () => {
     await setWebSearchInChat(false);
+    expect(new TutorialHelpAgent('u1', null).getToolDefinitions()).toEqual([]);
+  });
+
+  it('offers NO tools on the on-device path: that turn cannot read a result', async () => {
+    await setProcessingMode('on-device');
     expect(new TutorialHelpAgent('u1', null).getToolDefinitions()).toEqual([]);
   });
 

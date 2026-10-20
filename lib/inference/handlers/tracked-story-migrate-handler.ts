@@ -18,7 +18,7 @@ import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocalStructured } from '../../llm/completeLocal';
 import { isOnDeviceDeferrable } from '../job-defer';
-import { buildStoryScopePrompt, parseStoryScopeOutput, type StoryScope } from '../../news-harness/story-scope';
+import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
 import { buildOnDeviceStoryScopePrompt } from '../../news-harness/on-device/story-scope/prompt';
 import { STORY_SCOPE_SCHEMA, type StoryScopeReply } from '../../news-harness/on-device/story-scope/schema';
 import { storyScopeFromReply } from '../../news-harness/on-device/story-scope/parse';
@@ -63,40 +63,50 @@ export async function handleTrackedStoryMigrateJob(
     return { ok: false };
   }
 
-  // Real clock supplied HERE: both prompt builders take the date as a
-  // parameter so their prompts stay deterministic/pinnable.
+  // Real clock supplied HERE — buildStoryScopePrompt takes the date as a
+  // parameter so its prompt stays deterministic/pinnable.
   const now = Date.now();
-  let scope: StoryScope;
+  const { system, user } = buildStoryScopePrompt(titles, now);
+
+  let raw = '';
+  /** The on-device branch's structured reply (its own prompt and schema). */
+  let onDeviceReply: StoryScopeReply | null = null;
   try {
     // A job queued in cloud mode runs locally if the mode has since changed.
     if (payload.useCloud && !(await isOnDeviceMode())) {
-      const { system, user } = buildStoryScopePrompt(titles, now);
-      const raw = await cloudComplete({
+      raw = await cloudComplete({
         systemPrompt: system,
         prompt: user,
         maxTokens: 128,
         temperature: 0.3,
       });
-      scope = parseStoryScopeOutput(raw);
     } else {
-      const { system, prompt } = buildOnDeviceStoryScopePrompt(titles, now);
-      const reply = await completeLocalStructured<StoryScopeReply>({
-        systemPrompt: system,
-        prompt,
+      const local = buildOnDeviceStoryScopePrompt(titles, now);
+      onDeviceReply = await completeLocalStructured<StoryScopeReply>({
+        systemPrompt: local.system,
+        prompt: local.prompt,
         schema: STORY_SCOPE_SCHEMA,
         maxTokens: 128,
         temperature: 0.3,
       });
-      scope = storyScopeFromReply(reply);
     }
   } catch (err) {
     // The built-in model said "not now" (busy, unavailable): the queue defers the job.
     if (isOnDeviceDeferrable(err)) throw err;
-    // Transport failure or unusable output: leave the story unmigrated (no write).
-    logger.warn('[tracked-story-migrate] no scope', { error: String(err) });
+    // Transport failure — leave the story unmigrated (no write).
+    logger.warn('[tracked-story-migrate] completion failed', { error: String(err) });
     return { ok: false };
   }
-  const { label, search } = scope;
+
+  let label: string;
+  let search: string;
+  try {
+    ({ label, search } = onDeviceReply ? storyScopeFromReply(onDeviceReply) : parseStoryScopeOutput(raw));
+  } catch (err) {
+    // Model produced non-JSON garbage — leave the story unmigrated.
+    logger.warn('[tracked-story-migrate] parse failed', { error: String(err) });
+    return { ok: false };
+  }
 
   // Mint (or resolve an existing) 'tracked' topic from the generated search
   // query, bind it onto the story, and set the display label as its headline.

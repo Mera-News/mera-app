@@ -3,7 +3,7 @@
 // child's effect (the auto-send of a seeded message) runs before ours.
 
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
-import type { ChatAgent } from '@/lib/llm/types';
+import type { ChatAgent } from '@/lib/llm/agents/on-device/types';
 import { useCallback, useEffect, useRef } from 'react';
 import { attachChatSession, type EngineKind } from './chat-session';
 

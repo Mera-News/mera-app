@@ -12,7 +12,6 @@ import type {
   ToolDefinition,
   ToolExecutionResult,
 } from '@/lib/news-harness/core/types';
-import type { OnDeviceTurnResult } from '@/lib/news-harness/on-device/shared';
 export type {
   BatchCall,
   ProposalAction,
@@ -79,8 +78,8 @@ export interface ConversationHistory {
 export interface IAgent {
   /** Unique ID used to scope conversation persistence (e.g. "persona-{userId}-ONBOARDING"). */
   readonly id: string;
-  /** Build the (cloud) system prompt. */
-  buildSystemPrompt(): Promise<string>;
+  /** Build the system prompt given whether the engine needs XML tool-call format. */
+  buildSystemPrompt(needsToolFormat: boolean): Promise<string>;
   /** Build dynamic context (known facts, questionnaire state) to inject into user messages. */
   buildContext?(): Promise<string>;
   /** Return tool definitions in OpenAI JSON Schema format (for cloud chat). */
@@ -101,24 +100,3 @@ export interface IAgent {
     content: string,
   ): Promise<void>;
 }
-
-/**
- * An ON-DEVICE chat agent (D27, D31). It builds its own prompt, runs the
- * on-device model (structured output, or a plain stream) and names the existing
- * executor tools the reply maps to; the on-device engine runs those through
- * `executeTool` exactly as a cloud tool call runs, so the cards are unchanged.
- */
-export interface OnDeviceAgent {
-  /** The same id as the cloud agent for this surface (persistence scoping). */
-  readonly id: string;
-  readonly onDevice: true;
-  /** One turn. `onText` streams the reply for a plain-text flow; a structured flow never calls it. */
-  respond(
-    messages: ConversationMessage[],
-    io: { signal: AbortSignal; onText: (delta: string) => void },
-  ): Promise<OnDeviceTurnResult>;
-  executeTool(name: string, input: unknown): Promise<ToolExecutionResult>;
-}
-
-/** What a chat view hands the chat session: a cloud agent or an on-device one, by engine kind. */
-export type ChatAgent = IAgent | OnDeviceAgent;

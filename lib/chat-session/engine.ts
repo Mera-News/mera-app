@@ -2,7 +2,8 @@
 // are plain closures over their own turn state and write to their store; no
 // component owns them, so closing the chat never ends a turn.
 
-import type { ChatAgent, IAgent } from '@/lib/llm/types';
+import type { IAgent } from '@/lib/llm/types';
+import type { ChatAgent } from '@/lib/llm/agents/on-device/types';
 
 /** `A` is the agent kind the engine runs: IAgent on cloud, OnDeviceAgent on the phone. */
 export interface ChatEngine<A extends ChatAgent = IAgent> {

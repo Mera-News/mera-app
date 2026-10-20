@@ -16,7 +16,8 @@ import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from './chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
-import type { ConversationMessage, OnDeviceAgent, ToolCallRecord } from './types';
+import type { ConversationMessage, ToolCallRecord } from './types';
+import type { OnDeviceAgent } from './agents/on-device/types';
 
 const TAG = '[LocalLLM]';
 

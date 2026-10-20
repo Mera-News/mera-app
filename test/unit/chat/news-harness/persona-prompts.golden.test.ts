@@ -31,11 +31,15 @@ import {
   CLOUD_TOPIC_GEN_RULES_SNIPPET,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
+  LOCAL_TOPIC_GEN_RULES_SNIPPET,
+  LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
+  LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   TOPIC_SANITY_SYSTEM_PROMPT,
   TOPIC_GENERATION_SYSTEM_PROMPT,
   NOISE_GENERATION_SYSTEM_PROMPT,
   LOCAL_NOISE_GENERATION_SYSTEM_PROMPT,
   buildToolDefinitions,
+  buildToolFormatSection,
   buildPersonaUpdateStaticPrompt,
   type FilterToolsVariant,
 } from '@/lib/news-harness/prompts/persona-prompts';
@@ -49,6 +53,12 @@ const PINNED_TOKENS: Record<string, [string, number]> = {
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT: [
     CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
     3113,
+  ],
+  LOCAL_TOPIC_GEN_RULES_SNIPPET: [LOCAL_TOPIC_GEN_RULES_SNIPPET, 1883],
+  LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT: [LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT, 1937],
+  LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT: [
+    LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
+    1601,
   ],
   TOPIC_SANITY_SYSTEM_PROMPT: [TOPIC_SANITY_SYSTEM_PROMPT, 518],
   NOISE_GENERATION_SYSTEM_PROMPT: [NOISE_GENERATION_SYSTEM_PROMPT, 1109],
@@ -70,6 +80,21 @@ describe('persona prompts — measured sizes', () => {
       expect(prompt.length).toBeGreaterThan(0);
       expect(name.length).toBeGreaterThan(0);
     }
+  });
+
+  it('keeps the LOCAL topic prompts smaller than their CLOUD twins', () => {
+    // The on-device model loses calibration on a prompt the cloud model holds
+    // fine, so the local family is deliberately the shorter one. A local prompt
+    // that grew past its cloud twin is a real regression, not a style change.
+    expect(estimateTokens(LOCAL_TOPIC_GEN_RULES_SNIPPET)).toBeLessThan(
+      estimateTokens(CLOUD_TOPIC_GEN_RULES_SNIPPET),
+    );
+    expect(estimateTokens(LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT)).toBeLessThan(
+      estimateTokens(CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT),
+    );
+    expect(estimateTokens(LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT)).toBeLessThan(
+      estimateTokens(CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT),
+    );
   });
 });
 
@@ -119,6 +144,7 @@ describe('persona prompts — re-export identity', () => {
 
   it('re-exports the persona builders too', () => {
     expect(viaBarrel.buildToolDefinitions).toBe(buildToolDefinitions);
+    expect(viaBarrel.buildToolFormatSection).toBe(buildToolFormatSection);
     expect(viaBarrel.buildPersonaUpdateStaticPrompt).toBe(buildPersonaUpdateStaticPrompt);
     expect(viaBarrel.TOPIC_GENERATION_SYSTEM_PROMPT).toBe(TOPIC_GENERATION_SYSTEM_PROMPT);
   });
@@ -137,10 +163,13 @@ describe('persona prompts — tool builders are deterministic per variant', () =
       const b = buildToolDefinitions(surface, variant);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
       expect(a.length).toBeGreaterThan(0);
+
+      const fa = buildToolFormatSection(surface, variant);
+      expect(buildToolFormatSection(surface, variant)).toBe(fa);
     }
   });
 
-  it("'off' is the smallest rung, on both surfaces", () => {
+  it("'off' is the smallest rung on both axes, on both surfaces", () => {
     // The `off` rung exists to be byte-identical to the pre-filters prompt, so
     // it must never carry more tools or more text than a richer rung.
     for (const surface of SURFACES) {
@@ -149,6 +178,10 @@ describe('persona prompts — tool builders are deterministic per variant', () =
       const full = buildToolDefinitions(surface, 'full');
       expect(off.length).toBeLessThanOrEqual(compact.length);
       expect(compact.length).toBeLessThanOrEqual(full.length);
+
+      expect(buildToolFormatSection(surface, 'off').length).toBeLessThanOrEqual(
+        buildToolFormatSection(surface, 'full').length,
+      );
     }
   });
 });

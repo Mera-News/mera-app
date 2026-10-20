@@ -11,7 +11,8 @@ import { ArticleFeedbackOnDeviceAgent } from '@/lib/llm/agents/on-device/Article
 import { FollowStoryOnDeviceAgent } from '@/lib/llm/agents/on-device/FollowStoryOnDeviceAgent';
 import { PersonaOnDeviceAgent } from '@/lib/llm/agents/on-device/PersonaOnDeviceAgent';
 import { TutorialHelpOnDeviceAgent } from '@/lib/llm/agents/on-device/TutorialHelpOnDeviceAgent';
-import type { ChatAgent, IAgent, OnDeviceAgent } from '@/lib/llm/types';
+import type { IAgent } from '@/lib/llm/types';
+import type { ChatAgent, OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 
 /** The agent for a chat context on the given engine. On-device has its own

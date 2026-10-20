@@ -1,10 +1,10 @@
 // Owner ruling ux1 Q2: origin and current home are TWO facts, on every path.
-// The cloud loop's skills say so; these pin the one-shot prompt, which is
-// separate text and used to instruct the opposite.
+// The cloud loop's skills say so; these pin the one-shot and ON-DEVICE prompts,
+// which are separate text and used to instruct the opposite.
 
 import { buildPersonaUpdateStaticPrompt } from '@/lib/news-harness/prompts/persona-prompts';
 
-const MODES = ['CLOUD'] as const;
+const MODES = ['CLOUD', 'LOCAL'] as const;
 const SURFACES = ['ONBOARDING', 'CONFIG'] as const;
 
 describe.each(MODES)('the %s persona prompt', (mode) => {

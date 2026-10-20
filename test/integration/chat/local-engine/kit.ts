@@ -13,7 +13,7 @@ import { useLocalChatStore } from '@/lib/chat-session/local-chat-store';
 import { createConversation } from '@/lib/database/services/conversation-service';
 import { PersonaOnDeviceAgent } from '@/lib/llm/agents/on-device/PersonaOnDeviceAgent';
 import { TutorialHelpOnDeviceAgent } from '@/lib/llm/agents/on-device/TutorialHelpOnDeviceAgent';
-import type { OnDeviceAgent } from '@/lib/llm/types';
+import type { OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import { attestationRequests, FIXTURE_ACCOUNT, gatewayCalls } from '@/test/helpers';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';

@@ -9,7 +9,8 @@ import { createAgentForContext } from '@/components/custom/floating-chat/agent-r
 import { useLocalChatStore } from '@/lib/chat-session/local-chat-store';
 import { ArticleFeedbackOnDeviceAgent } from '@/lib/llm/agents/on-device/ArticleFeedbackOnDeviceAgent';
 import { FollowStoryOnDeviceAgent } from '@/lib/llm/agents/on-device/FollowStoryOnDeviceAgent';
-import type { ConversationMessage, OnDeviceAgent, StagedProposal } from '@/lib/llm/types';
+import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
+import type { OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import { __resetTextEngineForTests, setTextEngine } from '@/lib/mera-protocol-toolkit/core/text-engine';
 import { FOLLOW_STORY_SURFACE } from '@/lib/news-harness/follow-story';
 import { countTokens, IDENTITY_LINE } from '@/lib/news-harness/on-device/shared';

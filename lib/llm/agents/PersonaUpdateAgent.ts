@@ -19,6 +19,7 @@ import logger from '../../logger';
 import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '@/lib/news-harness/prompts/prompts';
 import { useAppLanguageStore } from '../../stores/app-language-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
+import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import {
   buildPersonaContext,
@@ -29,6 +30,7 @@ import {
   getPersonaToolDefinitions,
   normalizePublicationNameForMatch,
   planPersonaPrompt,
+  type PersonaMode,
   type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { estimateTokens } from '../../algorithms/estimate-tokens';
@@ -59,7 +61,9 @@ export class PersonaUpdateAgent implements IAgent {
   // --- IAgent: system prompt (static — cacheable by KV cache) ---
 
   private cachedSystemPrompt: string | null = null;
+  private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
+  private lastMode: 'CLOUD' | 'LOCAL' | null = null;
   private lastFilterTools: PersonaPromptPlan['filterTools'] | null = null;
   /** Both toggles change the STATIC prompt, so both belong in its cache key —
    *  without them, flipping a toggle mid-session would keep serving the prompt
@@ -68,22 +72,26 @@ export class PersonaUpdateAgent implements IAgent {
 
   /**
    * This turn's FILTERS budget decision (not-interested P4a). Recomputed by
-   * MEASUREMENT in buildSystemPrompt — which the cloud chat calls immediately
-   * before buildContext — and read back in buildContext. Defaults to the full feature so an agent
+   * MEASUREMENT in buildSystemPrompt — which both chat hooks call immediately
+   * before buildContext (useLocalLLM.ts:267/278, useCloudPersonaChat.ts:372/382)
+   * — and read back in buildContext. Defaults to the full feature so an agent
    * whose buildSystemPrompt was never called still behaves.
    */
   private turnPlan: PersonaPromptPlan = { filterTools: 'full', includeFiltersBlock: true };
 
-  async buildSystemPrompt(): Promise<string> {
+  async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
     // Read ONCE, non-reactively, at turn-build time — so the whole turn
     // (prompt + tool payload) is built against one consistent snapshot of the
     // user's settings rather than re-reading a store that could change mid-turn.
+    const protocol = useMeraProtocolStore.getState();
+    const mode: PersonaMode =
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
     // Prose about `webSearch` only makes sense where the tool is declared:
-    // with the toggle on. Cloud-only: on-device runs PersonaOnDeviceAgent.
-    const webSearch = useMeraProtocolStore.getState().webSearchInChat === true;
+    // CLOUD, and only with the toggle on.
+    const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
 
     // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
     // so persona-agent-core calls THIS function reference rather than its own
@@ -97,9 +105,9 @@ export class PersonaUpdateAgent implements IAgent {
       const prompt = buildPersonaSystemPrompt(
         {
           surface: this.surface,
-          includeToolFormat: false,
+          includeToolFormat: needsToolFormat,
           languageName,
-          mode: 'CLOUD',
+          mode,
           // ONBOARDING carries no filter tools at all, so leave the pre-P4a
           // call-args shape untouched there.
           ...(this.surface === 'CONFIG' ? { filterTools } : {}),
@@ -116,19 +124,23 @@ export class PersonaUpdateAgent implements IAgent {
 
     this.turnPlan = await this.planTurn({ buildAt });
 
-    // Static prompt depends on surface + languageName — fixed per session —
-    // PLUS this turn's filter variant, which is data-dependent and so must be
-    // part of the cache key.
+    // Static prompt depends on surface + needsToolFormat + languageName + mode —
+    // all fixed per session — PLUS this turn's filter variant, which is
+    // data-dependent and so must be part of the cache key.
     if (
       this.cachedSystemPrompt
+      && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
+      && this.lastMode === mode
       && this.lastFilterTools === this.turnPlan.filterTools
       && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
     this.cachedSystemPrompt = buildAt(this.turnPlan.filterTools);
+    this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
+    this.lastMode = mode;
     this.lastFilterTools = this.turnPlan.filterTools;
     this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
@@ -246,6 +258,7 @@ export class PersonaUpdateAgent implements IAgent {
   async buildContext(): Promise<string> {
     const facts = await getFacts();
     const suppressions = await this.loadActiveSuppressions();
+    // Re-injected every turn so the one-shot LOCAL path can resolve a confirm.
     const { proposal, topicPlanNotes } = useFloatingChatStore.getState();
 
     return buildPersonaContext(
@@ -269,19 +282,26 @@ export class PersonaUpdateAgent implements IAgent {
   getToolDefinitions(): ToolDefinition[] {
     // The turn's plan also decides whether the cloud tool payload carries them.
     //
-    // `webSearchInChat` gates the web-search DECLARATION, read fresh rather
-    // than cached from the last buildSystemPrompt call: this method is also
-    // called standalone (executeTool's name normalisation, and the on-device
-    // persona agent, which delegates its executors here). Gating the DECLARATION (not just the handler) is the
+    // `mode` gates the CLOUD-only knowledge tool (explainMera). Derived exactly
+    // as buildSystemPrompt derives it, from the same store — not cached from the
+    // last buildSystemPrompt call, because this method is also called
+    // standalone (executeTool's name normalisation) on an agent whose prompt was never built this turn.
+    //
+    // `webSearchInChat` gates the web-search DECLARATION, and it is read from
+    // the same non-reactive snapshot for the same reason: this method is also
+    // called standalone. Gating the DECLARATION (not just the handler) is the
     // point — a handler-only check would leave an off-by-default tool in the
     // payload on every turn, paying tokens for a feature the user declined.
     // The handler re-checks the toggle regardless; see chat-tools/web-search-handler.
+    const protocol = useMeraProtocolStore.getState();
+    const mode: PersonaMode =
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
     return getPersonaToolDefinitions(
       this.surface,
       buildToolDefinitions,
       this.turnPlan.filterTools,
-      'CLOUD',
-      useMeraProtocolStore.getState().webSearchInChat === true,
+      mode,
+      protocol.webSearchInChat === true,
     );
   }
 

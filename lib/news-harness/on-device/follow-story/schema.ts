@@ -1,8 +1,9 @@
 import type { JsonSchema } from '@/lib/mera-protocol-toolkit/core/structured-json';
-import { MAX_TRACK_SEARCH_WORDS } from '../../article-feedback/agent-core';
 
 /** Word cap on an option's display label. */
 export const MAX_OPTION_LABEL_WORDS = 6;
+/** Word cap on an option's hidden search query (the cloud prompt's figure). */
+export const MAX_TRACK_SEARCH_WORDS = 8;
 
 /** The story options a follow turn offers: up to 4, none while the story is still unnamed. */
 export const TRACK_OPTIONS_SCHEMA: JsonSchema = {
