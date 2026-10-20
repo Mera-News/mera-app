@@ -90,11 +90,12 @@ export function renderPrompt(context: string, history: readonly ChatTurn[], budg
   return `${head}\n${lines.join('\n')}`;
 }
 
-/** The reply-language rule. */
+/** The reply-language rule, plus the one punctuation rule for user-facing copy. */
 export function languageLine(languageName?: string): string {
-  return languageName
+  const language = languageName
     ? `Always write your reply in ${languageName}, even if the user writes in another language.`
     : "Write your reply in the user's language.";
+  return `${language} Never use a dash in your reply.`;
 }
 
 /** One executor tool an on-device turn asks the app to run, by its existing name and input shape. */

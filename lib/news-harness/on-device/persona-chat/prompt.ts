@@ -12,9 +12,9 @@ export function personaChatInstructions(surface: PersonaSurface, languageName?: 
       ? 'Learn what news matters to the user, one question at a time.'
       : 'Help the user add, change or remove facts in their news profile.';
   return `${IDENTITY_LINE}
-${task} Facts are short statements about where they live, their work, family and interests, which Mera uses to find news for them.
-Each turn, write a reply under 200 characters with at most one question, and fill the fields:
-- save: each new fact the user just shared, in English, keeping their names and places. Never repeat a known fact. Nothing is saved until the user taps it, so never say saved.${surface === 'CONFIG' ? '\n- delete: ids from Known facts, only when the user asks to remove one or corrects it.' : ''}
+${task} Facts are short statements about where they live, their work, family and interests.
+Write a reply under 200 characters with at most one question, and fill the fields:
+- save: each new fact the user just shared, statement and attribute in English, keeping their names and places. Never repeat a known fact. The user taps to save, so never say saved.${surface === 'CONFIG' ? '\n- delete: ids from Known facts, only when the user asks to remove one or corrects it.' : ''}
 - confirm or cancel: true only when a change is waiting and the user agrees or declines.
 ${languageLine(languageName)}`;
 }
@@ -22,6 +22,8 @@ ${languageLine(languageName)}`;
 export interface PersonaChatContext {
   /** Newest first. */
   facts: { id: string; statement: string; attribute?: string | null }[];
+  /** What the user did with topic-plan cards (formatTopicPlanNotesBlock), if anything. */
+  topicPlanNotes?: string | null;
   pending?: string | null;
 }
 
@@ -36,6 +38,9 @@ export function personaChatContext(surface: PersonaSurface, c: PersonaChatContex
         : 'None yet.'
     }`,
   ];
+  if (c.topicPlanNotes) {
+    blocks.push(`Topic plan decisions, already applied, so do not repeat or undo them:\n${c.topicPlanNotes}`);
+  }
   if (surface === 'ONBOARDING') {
     blocks.push(`Questions you can ask, skipping any Known facts already answer:\n${DEEP_EXAMPLE_QUESTIONS.map((q) => `- ${q}`).join('\n')}`);
   }

@@ -13,6 +13,7 @@ import {
   type PersonaChatReply,
 } from '../../../news-harness/on-device/persona-chat';
 import { describePending } from '../../../news-harness/on-device/shared';
+import { formatTopicPlanNotesBlock } from '../../../news-harness/persona-management/topic-plan-notes';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { PersonaUpdateAgent } from '../PersonaUpdateAgent';
 import type { ConversationMessage, OnDeviceAgent } from '../../types';
@@ -33,9 +34,12 @@ export class PersonaOnDeviceAgent implements OnDeviceAgent {
 
   async respond(messages: ConversationMessage[]) {
     const facts = await getFacts(); // newest first
-    const proposal = useFloatingChatStore.getState().proposal;
+    const { proposal, topicPlanNotes } = useFloatingChatStore.getState();
     const context: PersonaChatContext = {
       facts: facts.map((f) => ({ id: f.id, statement: f.statement, attribute: f.questionnaireAttribute })),
+      // The same notes the cloud context carries: a hidden discard turn is the
+      // first thing history trimming drops, this block is not.
+      topicPlanNotes: formatTopicPlanNotesBlock(topicPlanNotes),
       pending: describePending(proposal),
     };
     const value = await respondStructured<PersonaChatReply>(

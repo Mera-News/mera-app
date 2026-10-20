@@ -32,6 +32,7 @@ import {
   resetAgentWorld,
   seedFactWithTopics,
   seedSuggestion,
+  setLanguage,
 } from '@/test/integration/chat/tools/agents/agents-kit';
 
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
@@ -126,6 +127,17 @@ describe('follow a story', () => {
     // The persisted record carries what the resumed card is rebuilt from.
     expect(lastAssistant()?.toolCalls?.[0].result).toMatchObject({ staged: true, chooseOne: true, proposalId: staged.id });
     expect(await activeTopicTexts()).toEqual([]);
+  });
+
+  // The server matches a followed story's search against an English corpus and finds places by
+  // their capitals, so the options stay English whatever language the reply is in.
+  it('keeps the options English when the app speaks another language', async () => {
+    setLanguage('hi');
+    answer({ reply: 'Which story?', options: [] });
+    await turn(new FollowStoryOnDeviceAgent(USER), 'I want to follow a story');
+
+    expect(lastCall().instructions).toContain('Always write your reply in Hindi');
+    expect(lastCall().prompt).toContain('Write label and search in English, whatever language the reply is in');
   });
 
   it('describes a card still on screen in the next prompt', async () => {
@@ -244,6 +256,19 @@ describe('the article chat', () => {
     engine.send('no');
     await turnDone();
     expect(toolNamesOfReply()).toEqual([]);
+  });
+});
+
+describe('persona chat', () => {
+  it('carries the topic-plan decisions, as the cloud context does', async () => {
+    useFloatingChatStore.setState({
+      topicPlanNotes: [{ kind: 'discarded', statement: 'Follows <club>', at: Date.now() }],
+    });
+    answer({ reply: 'Understood.', save: [] });
+    await turn(personaAgent(), 'ok');
+
+    expect(lastCall().prompt).toContain('Topic plan decisions, already applied');
+    expect(lastCall().prompt).toContain('REJECTED "Follows <club>"');
   });
 });
 
