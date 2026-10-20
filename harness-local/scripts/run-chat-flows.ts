@@ -23,7 +23,7 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { closeAfm } from '../adapters/afm-llm';
+import { afmCall, closeAfm } from '../adapters/afm-llm';
 import { startKev, type KevBackend } from '../adapters/kev-local';
 import {
   assertEngineReady,
@@ -337,6 +337,27 @@ async function runTurn(arm: Arm, f: Fixture, split: string, repeat: number, kev:
   return row;
 }
 
+// --- AFM outages -----------------------------------------------------------------------
+
+function afmErrored(row: Record<string, unknown>): boolean {
+  const errors = [String(row.visibleError ?? ''), ...((row.writes as { error: string | null }[]) ?? []).map((w) => String(w.error ?? ''))];
+  return errors.some((e) => e.startsWith('ERR_AFM_'));
+}
+
+async function afmHealthy(): Promise<boolean> {
+  const r = await afmCall({ instructions: 'You are a helpful assistant.', prompt: 'Say hello in five words.', maxTokens: 30 });
+  return !r.error;
+}
+
+async function waitForAfm(maxMs = 20 * 60_000): Promise<void> {
+  const until = Date.now() + maxMs;
+  while (Date.now() < until) {
+    await new Promise((r) => setTimeout(r, 30_000));
+    if (await afmHealthy()) return;
+  }
+  throw new Error('harness-local: the Mac model did not recover in 20 minutes; the run is incomplete.');
+}
+
 // --- Main ---------------------------------------------------------------------------
 
 function arg(argv: string[], name: string): string | undefined {
@@ -371,7 +392,15 @@ async function main(): Promise<number> {
     for (let r = 0; r < repeat; r++) {
       for (const f of fixtures) {
         for (const arm of r % 2 ? [...arms].reverse() : arms) {
-          const row = await runTurn(arm, f, split, r, kev, t);
+          let row = await runTurn(arm, f, split, r, kev, t);
+          // The Mac's model sometimes fails every request for minutes (SensitiveContentAnalysisML
+          // error 15, even on "say hello"). A turn that met an AFM error while a benign prompt
+          // also fails is an outage, not the turn's outcome: wait it out and run the turn again.
+          for (let tries = 0; arm.engine === 'afm' && tries < 3 && afmErrored(row) && !(await afmHealthy()); tries++) {
+            console.log(`AFM outage on ${f.id}; waiting for it to answer a benign prompt`);
+            await waitForAfm();
+            row = await runTurn(arm, f, split, r, kev, t);
+          }
           rows.push(row);
           appendFileSync(rowsPath, `${JSON.stringify(row)}\n`);
           const intent = row.intentOk === null ? '' : row.intentOk ? ' intent ok' : ` intent ${row.routeIntent}`;
