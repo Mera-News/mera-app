@@ -1,0 +1,63 @@
+// Layer 2: deterministic rules that override Kev. Pure and RN-free.
+
+import { comparableStatement, isPlainNo } from '../../../mera-harness/core/prose';
+
+export type Consent = 'apply' | 'acknowledge' | 'decline' | 'none';
+
+// Closed lists, matched against the whole message. Not the cloud's isPlainYes:
+// that one counts "ok" and "please" as yes, and "ok" must never apply a card.
+// "keep it" is in none: it declines a delete card but could mean save on a fact card.
+const APPLY = /^(?:(?:ok(?:ay)?|yes|yeah|yep|yup|sure)[ ,]+)?(?:yes|yeah|yep|yup|sure|do it|go ahead|please do|apply it|yes please|sure thing)(?:[ ,]+(?:please|thanks|thank you|do it|go ahead|apply it))*$/;
+const ACKNOWLEDGE = /^(?:ok|okay|cool|thanks|thank you|thx|nice|great|hmm+|got it|alright|fine)(?:[ ,]+(?:ok|okay|cool|thanks|thank you|nice|great|got it))*$/;
+const DECLINE = /^(?:no|nope|nah|cancel|cancel it|don'?t|do not|never ?mind|forget it|leave it|not now|no thanks|no thank you)(?:[ ,]+(?:thanks|thank you|cancel it|leave it))*$/;
+
+function plain(text: string): string {
+  return (text ?? '')
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[\s.!?…]+$/u, '');
+}
+
+/**
+ * What a message says about a card that is waiting. Call it only while a card
+ * is pending. `apply` and `decline` act without asking Kev; `acknowledge`
+ * ("ok", "thanks") VETOES a Kev agree_to_card, which is the point of the rule.
+ * `none` (anything longer, "yes, and I follow F1", or another language) defers
+ * to Kev. Order: decline, then apply, then acknowledge, so "no thanks" declines
+ * and "ok, do it" applies.
+ */
+export function classifyConsent(message: string): Consent {
+  const t = plain(message);
+  if (!t) return 'none';
+  if (DECLINE.test(t) || isPlainNo(t)) return 'decline';
+  if (APPLY.test(t)) return 'apply';
+  if (ACKNOWLEDGE.test(t)) return 'acknowledge';
+  return 'none';
+}
+
+/** True when `statement` says what a saved fact already says (the cloud's "already on file" form). */
+export function isKnownFact(statement: string, known: readonly string[]): boolean {
+  const key = comparableStatement(statement);
+  return key !== '' && known.some((k) => comparableStatement(k) === key);
+}
+
+/** Drops facts the user restated and repeats within the batch; keeps order. Empty statements go too. */
+export function dropKnownFacts<T extends { statement: string }>(facts: readonly T[], known: readonly string[]): T[] {
+  const seen = new Set(known.map(comparableStatement));
+  const out: T[] = [];
+  for (const fact of facts) {
+    const key = comparableStatement(fact.statement);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(fact);
+  }
+  return out;
+}
+
+/** Ids that exist, each once, in the order given. */
+export function existingIds(ids: readonly string[], known: Iterable<string>): string[] {
+  const valid = new Set(known);
+  return [...new Set(ids)].filter((id) => valid.has(id));
+}
