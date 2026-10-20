@@ -66,31 +66,39 @@ describe('resetChatModules', () => {
 
 describe('on-device fakes', () => {
   it('run the real local engine through the chat session with zero network', async () => {
-    await setProcessingMode('on-device');
-    installLlama([]);
-    installOnDeviceLlm({ reply: ['Hello', ' there', '.'] });
-    const conversationId = await createConversation('CONFIG' as never);
-    const engine = attachChatSession({
-      conversationId,
-      kind: 'local',
-      agent: new TutorialHelpOnDeviceAgent(FIXTURE_ACCOUNT.userId, null),
-      persistedIds: [],
-    });
+    // The built-in fake can reply in the user row's millisecond, and rows on one created_at sort by
+    // id ('asst-' before 'user-'). A clock that always moves keeps the stored order real.
+    let now = Date.now();
+    const clock = jest.spyOn(Date, 'now').mockImplementation(() => ++now);
+    try {
+      await setProcessingMode('on-device');
+      installLlama([]);
+      installOnDeviceLlm({ reply: ['Hello', ' there', '.'] });
+      const conversationId = await createConversation('CONFIG' as never);
+      const engine = attachChatSession({
+        conversationId,
+        kind: 'local',
+        agent: new TutorialHelpOnDeviceAgent(FIXTURE_ACCOUNT.userId, null),
+        persistedIds: [],
+      });
 
-    engine.send('hi');
-    await until(() => useLocalChatStore.getState().turnBusy === false && onDeviceLlmCalls().length > 0, 10_000, 'turn end');
+      engine.send('hi');
+      await until(() => useLocalChatStore.getState().turnBusy === false && onDeviceLlmCalls().length > 0, 10_000, 'turn end');
 
-    const last = useLocalChatStore.getState().messages.at(-1);
-    expect(last).toMatchObject({ role: 'assistant', content: 'Hello there.' });
-    expect(onDeviceLlmCalls()).toHaveLength(1);
-    expect(onDeviceLlmCalls()[0].prompt).toContain('hi');
-    expect(gatewayCalls()).toHaveLength(0);
-    expect(attestationRequests()).toBe(0);
-    await until(() => true);
-    const stored = await fetchMessagesForConversation(conversationId);
-    expect(stored.map((m) => [m.role, m.content])).toEqual([
-      ['user', 'hi'],
-      ['assistant', 'Hello there.'],
-    ]);
+      const last = useLocalChatStore.getState().messages.at(-1);
+      expect(last).toMatchObject({ role: 'assistant', content: 'Hello there.' });
+      expect(onDeviceLlmCalls()).toHaveLength(1);
+      expect(onDeviceLlmCalls()[0].prompt).toContain('hi');
+      expect(gatewayCalls()).toHaveLength(0);
+      expect(attestationRequests()).toBe(0);
+      await until(() => true);
+      const stored = await fetchMessagesForConversation(conversationId);
+      expect(stored.map((m) => [m.role, m.content])).toEqual([
+        ['user', 'hi'],
+        ['assistant', 'Hello there.'],
+      ]);
+    } finally {
+      clock.mockRestore();
+    }
   });
 });

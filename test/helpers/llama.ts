@@ -40,8 +40,12 @@ export type LlamaScript =
 export interface DecideCall {
   request: { state: unknown; questions: Record<string, unknown> };
 }
-/** A Kev answer: the `score` of each question (0..levels-1), or an error to throw. */
-export type DecideScript = { scores: Record<string, number> } | { error: string };
+/** A Kev answer: the `score` of each question (0..levels-1), the option probabilities of each
+ *  choice question, or an error to throw. */
+export type DecideScript =
+  | { scores: Record<string, number> }
+  | { choices: Record<string, Record<string, number>> }
+  | { error: string };
 
 const state: {
   calls: LlamaCall[];
@@ -103,8 +107,15 @@ function makeContext(modelPath: string) {
       await nextTick();
       const answer = state.decideScript(call);
       if ('error' in answer) throw new Error(answer.error);
-      const answers: Record<string, { type: 'score'; score: number }> = {};
-      for (const [id, score] of Object.entries(answer.scores)) answers[id] = { type: 'score', score };
+      const answers: Record<string, unknown> = {};
+      if ('choices' in answer) {
+        for (const [id, probabilities] of Object.entries(answer.choices)) {
+          const choice = Object.entries(probabilities).sort((a, b) => b[1] - a[1])[0][0];
+          answers[id] = { type: 'choice', choice, probabilities, confidence: 0.5 };
+        }
+      } else {
+        for (const [id, score] of Object.entries(answer.scores)) answers[id] = { type: 'score', score };
+      }
       return { model: 'Kev-4B', answers, usage: { input_tokens: 100, output_tokens: 0 } };
     },
     async completion(

@@ -41,6 +41,8 @@ jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-devic
 jest.setTimeout(30_000);
 
 const USER = FIXTURE_ACCOUNT.userId;
+/** These suites script the single built-in call; the Kev route is covered in kev-flows. */
+const SINGLE = { route: 'single' } as const;
 
 beforeEach(async () => {
   resetFileSystem();
@@ -88,7 +90,7 @@ describe('follow a story', () => {
   it('asks which story while none is named: no options, nothing staged', async () => {
     answer({ reply: 'Which story would you like to follow?', options: [] });
 
-    await turn(new FollowStoryOnDeviceAgent(USER), 'I want to follow a story');
+    await turn(new FollowStoryOnDeviceAgent(USER, SINGLE), 'I want to follow a story');
 
     expect(lastCall().kind).toBe('structured');
     // An asking turn must be possible: the schema never forces options.
@@ -110,7 +112,7 @@ describe('follow a story', () => {
       ],
     });
 
-    await turn(new FollowStoryOnDeviceAgent(USER), 'the story about <event>');
+    await turn(new FollowStoryOnDeviceAgent(USER, SINGLE), 'the story about <event>');
 
     expect(lastAssistant()?.content).toBe('Pick the story to follow below.');
     expect(lastAssistant()?.toolCalls?.map((t) => [t.name, t.status])).toEqual([['proposeTrack', 'done']]);
@@ -132,7 +134,7 @@ describe('follow a story', () => {
   it('keeps the options English when the app speaks another language', async () => {
     setLanguage('hi');
     answer({ reply: 'Which story?', options: [] });
-    await turn(new FollowStoryOnDeviceAgent(USER), 'I want to follow a story');
+    await turn(new FollowStoryOnDeviceAgent(USER, SINGLE), 'I want to follow a story');
 
     expect(lastCall().instructions).toContain('Always write your reply in Hindi');
     expect(lastCall().prompt).toContain('Write label and search in English, whatever language the reply is in');
@@ -140,7 +142,7 @@ describe('follow a story', () => {
 
   it('describes a card still on screen in the next prompt', async () => {
     answer({ reply: 'Pick one.', options: [{ label: 'The Wider Story', search: 'Named Region story' }, { label: 'The Broad Theme', search: 'theme' }] });
-    const { engine } = await attachLocal(new FollowStoryOnDeviceAgent(USER));
+    const { engine } = await attachLocal(new FollowStoryOnDeviceAgent(USER, SINGLE));
     engine.send('the story about <event>');
     await turnDone();
     engine.send('what is the difference?');
@@ -166,6 +168,7 @@ describe('the article chat', () => {
       opts.trackSubject
         ? { origin: 'suggestion', surface: 'detail', articleId: seeded.articleId, title: 'A <place> headline' }
         : null,
+      SINGLE,
     );
   }
 
@@ -300,8 +303,8 @@ async function oneTurnOfEachFlow(): Promise<OnDeviceLlmCall[]> {
     await turn(agent, 'hello');
     calls.push(...onDeviceLlmCalls());
   };
-  await run(new FollowStoryOnDeviceAgent(USER), { reply: 'Which story?', options: [] });
-  await run(new ArticleFeedbackOnDeviceAgent(USER, { articleId: 'none' }), { intent: 'answer', reply: 'Hi.' });
+  await run(new FollowStoryOnDeviceAgent(USER, SINGLE), { reply: 'Which story?', options: [] });
+  await run(new ArticleFeedbackOnDeviceAgent(USER, { articleId: 'none' }, null, SINGLE), { intent: 'answer', reply: 'Hi.' });
   await run(personaAgent('CONFIG'), { reply: 'Hi.', save: [] });
   await run(personaAgent('ONBOARDING'), { reply: 'Hi.', save: [] });
   await run(tutorialAgent(), ['Hi.']);

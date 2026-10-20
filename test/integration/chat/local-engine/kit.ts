@@ -21,8 +21,9 @@ import { until } from '@/test/integration/chat/_helpers';
 
 export const local = () => useLocalChatStore.getState();
 export const tutorialAgent = () => new TutorialHelpOnDeviceAgent(FIXTURE_ACCOUNT.userId, null);
+/** The single built-in call (route 'single'): these suites script its one structured reply. Kev turns are in on-device/kev-flows. */
 export const personaAgent = (surface: 'ONBOARDING' | 'CONFIG' = 'CONFIG') =>
-  new PersonaOnDeviceAgent(FIXTURE_ACCOUNT.userId, surface);
+  new PersonaOnDeviceAgent(FIXTURE_ACCOUNT.userId, surface, { route: 'single' });
 
 export async function attachLocal(agent: OnDeviceAgent = tutorialAgent(), persistedIds: string[] = []) {
   const conversationId = await createConversation('CONFIG' as never);

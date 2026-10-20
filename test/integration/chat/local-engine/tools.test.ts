@@ -1,6 +1,6 @@
 // The on-device tool phase: a structured persona reply mapped to the executors, the tool call
 // record's life, reasoning tags on the streamed flow, and the prompt the model reads. All through
-// the real engine, toolkit (Qwen path: llama.rn under a json_schema grammar) and chat session.
+// the real engine, toolkit (the built-in model's structured call) and chat session, on route 'single'.
 import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -111,7 +111,7 @@ describe('a structured persona turn', () => {
 });
 
 describe('the persona fields to the executors', () => {
-  it('deletes only fact ids the context showed; an invented id is dropped', async () => {
+  it('stages a delete of only the fact ids the context showed (D40): an invented id is dropped, nothing is removed until the card', async () => {
     const kept = await addFact('Works as a <job>');
     const gone = await addFact('Lives in <old place>');
     text([personaReply({ reply: 'Removed.', delete: [gone.id, 'invented-id'] })]);
@@ -124,7 +124,8 @@ describe('the persona fields to the executors', () => {
     expect(lastAssistant()?.toolCalls?.map((t) => [t.name, t.input])).toEqual([
       ['deleteUserFacts', { fact_ids: [gone.id] }],
     ]);
-    expect((await getFacts()).map((f) => f.id)).toEqual([kept.id]);
+    expect(lastAssistant()?.toolCalls?.[0].result).toMatchObject({ pendingFactIds: [gone.id], pendingStatements: ['Lives in <old place>'] });
+    expect((await getFacts()).map((f) => f.id).sort()).toEqual([kept.id, gone.id].sort());
   });
 
   it('with nothing waiting, confirm and cancel do nothing; cancel discards a waiting change', async () => {
