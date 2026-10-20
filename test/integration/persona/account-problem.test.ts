@@ -171,7 +171,7 @@ it('the gate offers exactly two actions: contact support and reset this phone', 
 });
 
 describe('contact support', () => {
-    it('opens the Intercom Messenger when an identity can be minted', async () => {
+    it('with a live session (the server mints the identity), opens the Intercom Messenger', async () => {
         await seedStuckPhone();
         const hook = mountGate();
 
@@ -285,5 +285,28 @@ describe('reset this phone', () => {
 
         await settledWrites();
         expect(await settings.getSetting('mera_processing_mode')).toBeNull();
+    });
+
+    it('the next launch still treats this phone as installed, so its sign-in credentials survive and the account comes back', async () => {
+        await seedStuckPhone();
+        const hook = mountGate();
+        await waitFor(() => expect(hook.result.current.screen.stage).toBe('reauth-no-email'));
+
+        let done!: Promise<void>;
+        act(() => {
+            done = hook.result.current.gate.resetThisPhone();
+        });
+        await answerDialog(true);
+        await act(async () => {
+            await done;
+        });
+
+        // Relaunch before signing in: the install boundary reads "no has_launched, no
+        // cached_user_id" as a fresh install and would delete the device binding.
+        const boundary = require('@/lib/security/install-boundary');
+        boundary.__resetInstallBoundaryForTests();
+        await boundary.enforceInstallBoundary();
+        for (const credential of DEVICE_CREDENTIALS) expect(secureStoreDump()[credential]).toBe('device');
+        expect(secureStoreDump()[`${SLUG}_cookie`]).toBeUndefined();
     });
 });

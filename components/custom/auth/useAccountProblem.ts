@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { setSetting } from '@/lib/database/services/setting-service';
 import { showDialog } from '@/lib/dialog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useSupportAction } from '@/lib/intercom';
+import { HAS_LAUNCHED_SETTING_KEY } from '@/lib/security/install-boundary';
 import { signOutAndWipe } from '@/lib/security/local-wipe';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { toastManager } from '@/lib/toast-manager';
@@ -43,6 +45,10 @@ export function useAccountProblem({ onReset }: { onReset: () => void }) {
             // Signed out already; the next launch finishes the erase.
             toastManager.showError(t('preferences.logoutFailedTitle'), t('preferences.logoutFailedDescription'));
         } finally {
+            // Same install: without the marker the next launch's install boundary reads the
+            // empty settings as a reinstall and deletes the device binding, and this phone
+            // then signs in to a NEW account. The cookie is already gone either way.
+            await setSetting(HAS_LAUNCHED_SETTING_KEY, '1').catch(() => undefined);
             if (processingMode === ProcessingMode.OnDevice) {
                 const store = useMeraProtocolStore.getState();
                 store.setProcessingMode(processingMode);
