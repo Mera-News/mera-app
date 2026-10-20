@@ -117,3 +117,6 @@ __pycache__/
 e2e-output/
 .stryker-tmp/
 modules/*/android/build/
+
+# eas metadata:pull downloads App Store screenshots here (26 MB); not versioned
+/store/
