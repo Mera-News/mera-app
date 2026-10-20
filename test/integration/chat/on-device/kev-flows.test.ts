@@ -374,6 +374,14 @@ describe('persona chat on Kev', () => {
     expect(out.trace).toMatchObject({ intent: 'thanks_or_ack', asked: false });
   });
 
+  it('facts written with an empty reply point at the card, never "I couldn\'t catch that"', async () => {
+    kevScript = { intent: { share_new_fact: 0.9, question_or_chat: 0.1 } };
+    writerReply = { reply: '', facts: [{ statement: 'Follows marathon running', attribute: 'interests' }] };
+    const { names, out } = await turn(persona(), [], 'I follow marathon running');
+    expect(names).toEqual(['saveExtractedFacts']);
+    expect(out.reply).toBe('kevChat.reply.changeCard');
+  });
+
   it('a writer refusal falls back to the fixed reply: no error, nothing staged', async () => {
     kevScript = { intent: { share_new_fact: 0.9, question_or_chat: 0.1 } };
     writerReply = new Error('SensitiveContentAnalysis');

@@ -28,7 +28,8 @@ describe('confidenceWord', () => {
     [0.8, 'very likely'],
     [0.79, 'likely'],
     [0.6, 'likely'],
-    [0.59, 'unsure'],
+    [0.4, 'likely'],
+    [0.39, 'unsure'],
     [0, 'unsure'],
   ])('%p is %p', (p, word) => {
     expect(confidenceWord(p)).toBe(word);
@@ -44,7 +45,7 @@ describe('intentLine', () => {
 
   it('adds the runner-up when it is within the unsure margin', () => {
     expect(intentLine(choice({ remove_fact: 0.5, share_new_fact: 0.38, question_or_chat: 0.12 }), INTENT)).toBe(
-      'What the user wants: remove a saved fact (unsure, 0.50), or maybe: share a new fact about themselves (0.38)',
+      'What the user wants: remove a saved fact (likely, 0.50), or maybe: share a new fact about themselves (0.38)',
     );
   });
 
@@ -60,7 +61,7 @@ describe('intentLine', () => {
 
   it('breaks a tie by the criteria order, the same on every call', () => {
     const tie = choice({ remove_fact: 0.5, share_new_fact: 0.5 });
-    const line = 'What the user wants: share a new fact about themselves (unsure, 0.50), or maybe: remove a saved fact (0.50)';
+    const line = 'What the user wants: share a new fact about themselves (likely, 0.50), or maybe: remove a saved fact (0.50)';
     expect(intentLine(tie, INTENT)).toBe(line);
     expect(intentLine({ ...tie, probabilities: { share_new_fact: 0.5, remove_fact: 0.5 } }, INTENT)).toBe(line);
   });
@@ -82,7 +83,7 @@ describe('targetFactLine', () => {
       'The fact they mean: none of the saved facts (likely, 0.70)',
     );
     expect(targetFactLine(choice({ f2: 0.5, none: 0.45, f1: 0.05 }), FACTS)).toBe(
-      'The fact they mean: "Works as a nurse" (unsure, 0.50), or maybe: none of the saved facts (0.45)',
+      'The fact they mean: "Works as a nurse" (likely, 0.50), or maybe: none of the saved facts (0.45)',
     );
   });
 
@@ -110,7 +111,7 @@ describe('relevanceLine', () => {
 
   it('breaks a level tie toward the lower level', () => {
     expect(relevanceLine(score({ '3': 0.45, '2': 0.45, '1': 0.1 }), 'Relevance')).toBe(
-      'Relevance: Medium: clearly about one of their interests (unsure, 0.45), or maybe: High (0.45)',
+      'Relevance: Medium: clearly about one of their interests (likely, 0.45), or maybe: High (0.45)',
     );
   });
 });

@@ -355,7 +355,9 @@ export async function runPersonaKevTurn(
       if (fresh.length === 0) {
         return done(intent, wrote.length > 0 ? ports.t('kevChat.reply.alreadyKnown') : replyOr(value, ports.t('kevChat.reply.chat')));
       }
-      return done(intent, replyOr(value, ports.t('kevChat.reply.saveFailed')), [
+      // A card goes out with these facts, so an empty reply points at it
+      // instead of saying nothing was caught.
+      return done(intent, replyOr(value, ports.t('kevChat.reply.changeCard')), [
         {
           name: 'saveExtractedFacts',
           input: {
@@ -369,7 +371,7 @@ export async function runPersonaKevTurn(
       const statement = text(value?.statement);
       if (!statement) return done(intent, ports.t('kevChat.reply.saveFailed'));
       if (isKnownFact(statement, known)) return done(intent, ports.t('kevChat.reply.alreadyKnown'));
-      return done(intent, replyOr(value, ports.t('kevChat.reply.saveFailed')), [
+      return done(intent, replyOr(value, ports.t('kevChat.reply.changeCard')), [
         {
           name: 'saveExtractedFacts',
           // `replaces`: the tap on the new fact swaps it for the old one in one

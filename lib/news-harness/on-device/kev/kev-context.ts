@@ -16,15 +16,17 @@ import type {
   DecisionQuestions,
   DecisionScoreAnswer,
 } from 'llama.rn';
-import { margin, ranked, UNSURE_MIN_MARGIN } from './decision';
+import { margin, ranked, UNSURE_MIN_CONFIDENCE, UNSURE_MIN_MARGIN } from './decision';
 
 /** Above the default cap the block starts eating the writer's 4,000-token input. */
 const DEFAULT_MAX_CHARS = 600;
 /** One option description in a line; the criteria texts are authored short. */
 const MAX_OPTION_CHARS = 120;
 
+/** 'unsure' starts where Mera stops acting (UNSURE_MIN_CONFIDENCE), so a reading
+ *  the writer is told to act on is never labelled unsure to it. */
 export function confidenceWord(p: number): 'very likely' | 'likely' | 'unsure' {
-  return p >= 0.8 ? 'very likely' : p >= 0.6 ? 'likely' : 'unsure';
+  return p >= 0.8 ? 'very likely' : p >= UNSURE_MIN_CONFIDENCE ? 'likely' : 'unsure';
 }
 
 function clip(text: string, max: number): string {
