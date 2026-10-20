@@ -307,6 +307,18 @@ Scorers: `score-option-quality.ts <singleshot dir>` (copied example, 3 to 4 opti
 the article, widens, no ended season) and `adoption-report.ts --candidate <dirs>
 --baseline <dirs>` (the D34 table). Unit test: `npx tsx --test harness-local/lib/option-quality.test.ts`.
 
+## Chat flows on both routes (`run-chat-flows`)
+
+`scripts/run-chat-flows.ts --arms afm:kev,afm:single --split dev|test [--flow persona,article,follow] [--repeat 3]`
+runs persona chat, article chat and follow-story on `<engine>:<route>` arms. `kev` is the
+app's "Kev decides, the built-in model writes" core (`lib/news-harness/on-device/kev`,
+`*/kev-spec.ts`) with local Kev (above) and the engine as writer; `single` is the one
+built-in call. Both routes get the same per-fixture input (conversation, matched topics,
+already-following, the waiting card). Ids per split: `fixtures/splits/<flow>.json`.
+Scoring is `lib/chat-flow-score.ts` (unit test: `npx tsx --test harness-local/lib/chat-flow-score.test.ts`);
+`scripts/chat-flow-report.ts <dirs>` pools runs into one table. The test split is held out:
+tune on dev only.
+
 ## Kev on this Mac
 
 `adapters/kev-local.ts` runs Kev through llama.rn's own C++. It builds `kev/` (CMake) from
