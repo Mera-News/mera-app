@@ -17,7 +17,7 @@ import { router } from 'expo-router';
 import { Linking } from 'react-native';
 import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { mockGqlError, secureStoreDump, server } from '@/test/helpers';
+import { mockGqlError, secureStoreDump, server, useFakeClock } from '@/test/helpers';
 
 // The model cache and the two backup directories, by name. Only the backup ones may ever go.
 const mockExistingDirs = new Set<string>();
@@ -73,21 +73,52 @@ beforeAll(() => {
 
 let openURL: jest.SpyInstance;
 let requests: string[];
-const onRequest = ({ request }: { request: Request }) => requests.push(new URL(request.url).pathname);
+let operations: string[];
+const onRequest = ({ request }: { request: Request }) => {
+    requests.push(new URL(request.url).pathname);
+    if (request.method === 'POST' && request.url.includes('/graphql')) {
+        void request
+            .clone()
+            .json()
+            .then((b: { operationName?: string }) => b.operationName && operations.push(b.operationName))
+            .catch(() => undefined);
+    }
+};
 
 beforeEach(() => {
     mockExistingDirs.clear();
     mockDeleteLog.length = 0;
     requests = [];
+    operations = [];
+    // Real-clock timers (the Support ID read's timeout, toasts) would outlive the run.
+    useFakeClock(Date.now(), { advanceTimers: true });
     server.events.on('request:start', onRequest);
     openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
     require('@/lib/security/identity-gate').__resetIdentityStateForTests();
     require('@/lib/security/local-wipe').__resetLocalWipeForTests();
 });
 
-afterEach(() => {
+let inFlight = 0;
+const onStart = () => (inFlight += 1);
+const onEnd = () => (inFlight -= 1);
+beforeAll(() => {
+    server.events.on('request:start', onStart);
+    server.events.on('request:end', onEnd);
+});
+afterAll(() => {
+    server.events.removeListener('request:start', onStart);
+    server.events.removeListener('request:end', onEnd);
+});
+
+afterEach(async () => {
     server.events.removeListener('request:start', onRequest);
     openURL.mockRestore();
+    // The sign-out's session refetch can still be in flight; let it land before the next test.
+    jest.useRealTimers();
+    for (let quiet = 0, spent = 0; quiet < 3 && spent < 3000; spent += 25) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        quiet = inFlight === 0 ? quiet + 1 : 0;
+    }
 });
 
 /** A phone stuck on the gate: an account id with no email, its Support ID, data, an on-device
@@ -163,7 +194,7 @@ describe('contact support', () => {
         });
 
         // Intercom was tried (the identity mint was asked for) and could not open.
-        expect(requests).toContain('/graphql');
+        expect(operations).toContain('GetIntercomIdentity');
         expect(Intercom.setUserJwt).not.toHaveBeenCalled();
         expect(Intercom.present).not.toHaveBeenCalled();
         expect(openURL).toHaveBeenCalledTimes(1);

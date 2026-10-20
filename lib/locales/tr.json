@@ -2895,7 +2895,7 @@
   "gate": {
     "enterCode": "Kodu girin",
     "getHelp": "Yardım alın",
-    "noEmailBody": "Bu telefonda giriş yaparken bir sorun oluştu. Destekle iletişime geç ya da bu telefonu sıfırlayıp yeniden giriş yap.",
+    "noEmailBody": "Bu telefonda giriş yaparken bir sorun oluştu. Destekle iletişime geçin veya bu telefonu sıfırlayıp yeniden giriş yapın.",
     "noEmailTitle": "Hesabınızla ilgili bir sorun var",
     "offlineBody": "Mera, açılmadan önce hesabınızı kontrol etmek için bağlantıya ihtiyaç duyar.",
     "offlineTitle": "Çevrimdışısınız",
@@ -2907,10 +2907,10 @@
     "mismatchTitle": "Bu e-posta farklı bir hesaba ait",
     "mismatchBody": "Bu hesapla ilişkili e-postayla giriş yapın veya yardım alın.",
     "mismatchOtherEmail": "Başka bir e-posta kullan",
-    "contactSupport": "Destekle iletişime geç",
-    "resetPhone": "Bu telefonu sıfırla ve yeniden giriş yap",
+    "contactSupport": "Destekle iletişime geçin",
+    "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
     "resetTitle": "Bu telefon sıfırlansın mı?",
-    "resetBody": "Çıkış yapılır ve Mera'ya anlattıkların dahil bu telefondaki Mera verileri silinir. Hesabın silinmez ve indirilen yapay zeka modelleri kalır. Yedekleme kullanıyorsan verilerini kurtarma kodunla geri alabilirsin.",
+    "resetBody": "Oturumunuz kapatılır ve Mera'ya anlattıklarınız dahil bu telefondaki Mera verileri silinir. Hesabınız silinmez ve indirilen yapay zeka modelleri kalır. Yedekleme kullanıyorsanız verilerinizi kurtarma kodunuzla geri alabilirsiniz.",
     "resetConfirm": "Sıfırla"
   },
   "relatedSort": {
