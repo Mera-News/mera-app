@@ -118,7 +118,8 @@ export function platformModel(): 'afm' | 'nano' | null {
   return null;
 }
 
-/** The built-in model's context window in tokens (input plus output), or null when unknown. */
+/** The built-in model's token budget, or null when unknown: Apple's whole window (input plus
+ *  output), Gemini Nano's input limit (getTokenLimit). Size prompts as this minus maxTokens. */
 export async function contextSize(): Promise<number | null> {
   const native = resolveNative();
   if (!native) return null;

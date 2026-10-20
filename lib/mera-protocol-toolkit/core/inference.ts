@@ -431,9 +431,11 @@ export function inferStructured<T = unknown>(params: StructuredParams): Promise<
 }
 
 /**
- * The text engine's context window in tokens, input plus output, so a flow can
- * size its prompt. The built-in model reports its own (null when it cannot say);
- * Qwen runs at LOCAL_CONTEXT_TOKENS.
+ * The text engine's token budget, so a flow can size its prompt. Not the same
+ * measure everywhere: Apple and Qwen (LOCAL_CONTEXT_TOKENS) report the whole
+ * window, input plus output; Gemini Nano reports its INPUT limit (~4000). Size a
+ * prompt as `contextSize - maxTokens`, which is safe on all three. Null when the
+ * built-in model cannot say.
  */
 export async function contextSize(engine?: TextEngine): Promise<number | null> {
   const e = engine ?? (await getTextEngine());

@@ -1,5 +1,4 @@
 import type { InferenceLabel } from './core/inference-stats';
-import type { TextEngine } from './core/text-engine';
 
 // ============================================================
 // Mera Protocol Toolkit — Type Definitions
@@ -33,6 +32,10 @@ export type Fact = {
 };
 
 // --- Core Inference ---
+
+/** The on-device text engine (core/text-engine.ts). Declared here so this file
+ *  stays a leaf: the harness typechecks it without the app graph. */
+export type TextEngine = 'qwen' | 'afm' | 'nano';
 
 export type InferParams = {
   prompt: string; // Full prompt string

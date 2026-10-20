@@ -13,9 +13,12 @@
 // earlier build read as: 'mera' -> 'qwen', 'native' -> this platform's built-in.
 //
 // With no row the engine is derived, never stored (D34): the downloaded text
-// model when its file is on disk, else the built-in model when it can run now,
-// else 'qwen'. A derived value is re-derived on every read, so a download that
-// lands or a built-in model that becomes ready changes it.
+// model when its file is on disk, else the built-in model unless it can never
+// run on this phone, else 'qwen'. A built-in model that is only briefly unable
+// (still downloading, switched off) stays the default: flipping to 'qwen' with
+// no file on disk would fail calls with "not found" instead of a deferrable
+// ERR_AFM_UNAVAILABLE and ask for the 2.7 GB download. A derived value is
+// re-derived on every read, so a download that lands changes it.
 
 import { useSyncExternalStore } from 'react';
 import {
@@ -24,8 +27,9 @@ import {
   type OnDeviceLlmAvailability,
 } from '@/modules/mera-on-device-llm';
 import { TEXT_MODEL } from './model-catalog';
+import type { TextEngine } from '../types';
 
-export type TextEngine = 'qwen' | 'afm' | 'nano';
+export type { TextEngine };
 export type BuiltInEngine = Exclude<TextEngine, 'qwen'>;
 
 export const TEXT_ENGINE_SETTING = 'mera_text_engine';
@@ -81,6 +85,9 @@ function modelManager(): typeof import('./modelManager') {
 }
 /* eslint-enable @typescript-eslint/no-require-imports */
 
+/** Why a built-in model cannot run now that pass on their own (download, settings). */
+const PASSING_REASONS: ReadonlySet<string> = new Set(['modelNotReady', 'appleIntelligenceNotEnabled']);
+
 async function derivedEngine(): Promise<TextEngine> {
   try {
     if (await modelManager().isModelDownloaded(TEXT_MODEL.modelId)) return 'qwen';
@@ -88,7 +95,10 @@ async function derivedEngine(): Promise<TextEngine> {
     // An unreadable manifest is "not on disk".
   }
   const builtIn = builtInEngine();
-  if (builtIn && (await builtInAvailability()).available) return builtIn;
+  if (builtIn) {
+    const { available, reason } = await builtInAvailability();
+    if (available || (reason != null && PASSING_REASONS.has(reason))) return builtIn;
+  }
   return DEFAULT_TEXT_ENGINE;
 }
 

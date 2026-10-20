@@ -242,21 +242,33 @@ describe("the built-in text engine (Apple Foundation Models, Gemini Nano)", () =
             textEngine.__resetTextEngineForTests();
         });
 
+        // A built-in model that is only briefly unable (mid-download, switched off) stays the default, so
+        // the default never flips to a text model that is not on disk; one that can never run here does not.
         it.each([
-            ['the text model on disk', { qwenOnDisk: true, platformModel: 'afm' as const, available: true }, 'qwen'],
-            ['no text model, Apple Intelligence ready', { qwenOnDisk: false, platformModel: 'afm' as const, available: true }, 'afm'],
-            ['no text model, Gemini Nano ready', { qwenOnDisk: false, platformModel: 'nano' as const, available: true }, 'nano'],
-            ['no text model, built-in not ready', { qwenOnDisk: false, platformModel: 'afm' as const, available: false }, 'qwen'],
-            ['no text model, no built-in model', { qwenOnDisk: false, platformModel: null, available: true }, 'qwen'],
+            ['the text model on disk', { qwenOnDisk: true, platformModel: 'afm' as const, reason: null }, 'qwen'],
+            ['no text model, Apple Intelligence ready', { qwenOnDisk: false, platformModel: 'afm' as const, reason: null }, 'afm'],
+            ['no text model, Gemini Nano ready', { qwenOnDisk: false, platformModel: 'nano' as const, reason: null }, 'nano'],
+            ['no text model, built-in model still downloading', { qwenOnDisk: false, platformModel: 'afm' as const, reason: 'modelNotReady' as const }, 'afm'],
+            ['no text model, Apple Intelligence switched off', { qwenOnDisk: false, platformModel: 'afm' as const, reason: 'appleIntelligenceNotEnabled' as const }, 'afm'],
+            ['no text model, phone not eligible', { qwenOnDisk: false, platformModel: 'afm' as const, reason: 'deviceNotEligible' as const }, 'qwen'],
+            ['no text model, OS too old', { qwenOnDisk: false, platformModel: 'afm' as const, reason: 'osTooOld' as const }, 'qwen'],
+            ['no text model, Nano needs a system update', { qwenOnDisk: false, platformModel: 'nano' as const, reason: 'needsSystemUpdate' as const }, 'qwen'],
+            ['no text model, no built-in model', { qwenOnDisk: false, platformModel: null, reason: null }, 'qwen'],
         ])('%s: %s -> %s', async (_label, c, expected) => {
             installOnDeviceLlm({
                 platformModel: c.platformModel,
-                availability: c.available ? { available: true, reason: null } : { available: false, reason: 'modelNotReady' },
+                availability: c.reason ? { available: false, reason: c.reason } : { available: true, reason: null },
             });
             if (c.qwenOnDisk) placeDownloadedModel(TEXT);
             expect(await toolkit.getTextEngine()).toBe(expected);
             // Derived, never stored.
             expect(await getSetting('mera_text_engine')).toBeNull();
+        });
+
+        it('a derived built-in default that is briefly not ready still needs only the relevance model', async () => {
+            installOnDeviceLlm({ availability: { available: false, reason: 'modelNotReady' } });
+            expect((await toolkit.requiredModels()).map((m) => m.modelId)).toEqual([KEV]);
+            expect(await toolkit.isModelDownloaded()).toBe(false);
         });
 
         it('re-derives on every read: the text model landing switches a derived built-in default to it', async () => {
