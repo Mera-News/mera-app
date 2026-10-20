@@ -721,7 +721,8 @@
     "mayMistakes": "A Mera pode cometer erros, então confira as notícias importantes na fonte original.",
     "cardWaitingHint": "Toque em uma opção acima ou digite sim",
     "cardCancelled": "Tudo bem, nada mudou",
-    "changeUndone": "Desfeito"
+    "changeUndone": "Desfeito",
+    "cardTapHint": "Toque em uma opção acima."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Gostei deste artigo: \"{{title}}\". Gostaria de ver mais sugestões como essa.",
@@ -2514,7 +2515,8 @@
     },
     "stories": {
       "privacy": "As histórias que você acompanha ficam guardadas neste celular."
-    }
+    },
+    "sourcesLink": "Veja todas as fontes que a Mera lê"
   },
   "articleMenu": {
     "openA11y": "Mais ações",
@@ -2659,11 +2661,10 @@
       "privacy": "A Mera não liga suas buscas à sua conta."
     },
     "explainer": {
-      "country1": "As histórias sobem mais quanto mais os veículos deste país estão escrevendo sobre elas.",
-      "countrySame": "Esta página é igual para todos. Nada sobre você é usado aqui.",
-      "same": "O Mundo é igual para todos. Nada sobre você é usado aqui.",
-      "top1": "Histórias cobertas em muitos países, por muitos veículos diferentes, ficam no topo. Um país muito ativo não consegue preencher a página sozinho, e muitos artigos de um mesmo veículo contam uma vez só.",
-      "window": "O seletor de tempo define até onde a página olha: 6, 12, 24 ou 48 horas. Cada lista só conta artigos publicados dentro dessa janela."
+      "window": "O seletor de tempo define até onde a página olha: 6, 12, 24 ou 48 horas. Cada lista só conta artigos publicados dentro dessa janela.",
+      "justMath": "Só matemática. Nenhuma IA ordena esta página, e ela é igual para todo mundo.",
+      "mathWorld": "Cada país que cobre uma notícia dá 1 ponto a ela, mais um pouco por cada veículo extra de lá, com limite de 4 pontos por país. Some todos os países, e o maior total aparece primeiro.",
+      "mathCountry": "Conte os artigos que os veículos deste país publicaram sobre uma notícia nas últimas 24 horas. A notícia com mais artigos aparece primeiro."
     }
   },
   "library": {

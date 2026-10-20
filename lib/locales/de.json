@@ -721,7 +721,8 @@
     "mayMistakes": "Mera kann Fehler machen, prüfe wichtige Nachrichten daher an der Quelle.",
     "cardWaitingHint": "Tippe oben auf eine Option oder schreib ja",
     "cardCancelled": "Okay, nichts hat sich geändert",
-    "changeUndone": "Rückgängig gemacht"
+    "changeUndone": "Rückgängig gemacht",
+    "cardTapHint": "Tippe oben auf eine Option."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Mir hat dieser Artikel gefallen: \"{{title}}\". Ich würde gerne mehr solcher Vorschläge sehen.",
@@ -2514,7 +2515,8 @@
     },
     "stories": {
       "privacy": "Die Geschichten, denen du folgst, bleiben auf diesem Telefon."
-    }
+    },
+    "sourcesLink": "Alle Quellen ansehen, die Mera liest"
   },
   "articleMenu": {
     "openA11y": "Weitere Aktionen",
@@ -2659,11 +2661,10 @@
       "privacy": "Mera verknüpft deine Suchen nicht mit deinem Konto."
     },
     "explainer": {
-      "country1": "Geschichten stehen weiter oben, je mehr die eigenen Verlage dieses Landes darüber schreiben.",
-      "countrySame": "Diese Seite ist für alle gleich. Nichts über dich wird hier verwendet.",
-      "same": "World ist für alle gleich. Nichts über dich wird hier verwendet.",
-      "top1": "Geschichten, die in vielen Ländern von vielen verschiedenen Verlagen behandelt werden, stehen ganz oben. Ein sehr aktives Land kann die Seite nicht allein füllen, und viele Artikel desselben Verlags zählen nur einmal.",
-      "window": "Der Zeitschalter legt fest, wie weit die Seite zurückschaut: 6, 12, 24 oder 48 Stunden. Jede Liste zählt nur Artikel, die innerhalb dieses Zeitraums erschienen sind."
+      "window": "Der Zeitschalter legt fest, wie weit die Seite zurückschaut: 6, 12, 24 oder 48 Stunden. Jede Liste zählt nur Artikel, die innerhalb dieses Zeitraums erschienen sind.",
+      "justMath": "Nur Mathematik. Keine KI sortiert diese Seite, und sie sieht für alle gleich aus.",
+      "mathWorld": "Jedes Land, das über eine Geschichte berichtet, gibt ihr 1 Punkt, dazu ein bisschen mehr für jeden weiteren Verlag dort, maximal 4 Punkte pro Land. Alle Länder werden zusammengezählt, und die höchste Summe steht ganz oben.",
+      "mathCountry": "Gezählt werden die Artikel, die Verlage dieses Landes in den letzten 24 Stunden über eine Geschichte geschrieben haben. Die Geschichte mit den meisten Artikeln steht ganz oben."
     }
   },
   "library": {

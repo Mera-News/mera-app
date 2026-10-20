@@ -726,7 +726,8 @@
     "mayMistakes": "Mera peut faire des erreurs, alors vérifiez les informations importantes auprès de la source.",
     "cardWaitingHint": "Appuyez sur une option ci-dessus, ou tapez oui",
     "cardCancelled": "D'accord, rien n'a changé",
-    "changeUndone": "Annulé"
+    "changeUndone": "Annulé",
+    "cardTapHint": "Appuyez sur une option ci-dessus."
   },
   "articleFeedback": {
     "thumbsUpMessage": "J'ai aimé cet article : \"{{title}}\". J'aimerais voir plus de suggestions comme celle-ci.",
@@ -2520,7 +2521,8 @@
     },
     "stories": {
       "privacy": "Les histoires que vous suivez sont conservées sur ce téléphone."
-    }
+    },
+    "sourcesLink": "Voir toutes les sources que Mera lit"
   },
   "articleMenu": {
     "openA11y": "Plus d'actions",
@@ -2665,11 +2667,10 @@
       "privacy": "Mera ne relie pas vos recherches à votre compte."
     },
     "explainer": {
-      "country1": "Les histoires remontent d'autant plus que les éditeurs de ce pays en parlent.",
-      "countrySame": "Cette page est la même pour tout le monde. Rien de vous n'est utilisé ici.",
-      "same": "Le Monde est le même pour tout le monde. Rien de vous n'est utilisé ici.",
-      "top1": "Les histoires couvertes dans de nombreux pays, par de nombreux éditeurs différents, sont en tête. Un pays très actif ne peut pas remplir la page, et plusieurs articles d'un même éditeur ne comptent qu'une fois.",
-      "window": "Le sélecteur de temps définit la profondeur de la page : 6, 12, 24 ou 48 heures. Chaque liste ne compte que les articles publiés dans cette fenêtre."
+      "window": "Le sélecteur de temps définit la profondeur de la page : 6, 12, 24 ou 48 heures. Chaque liste ne compte que les articles publiés dans cette fenêtre.",
+      "justMath": "Juste des calculs. Aucune IA ne classe cette page, et elle est la même pour tout le monde.",
+      "mathWorld": "Chaque pays qui couvre un sujet lui donne 1 point, plus un peu pour chaque autre éditeur présent dans ce pays, jusqu'à 4 points par pays. On additionne les points de tous les pays, et le total le plus élevé arrive en premier.",
+      "mathCountry": "On compte les articles que les éditeurs de ce pays ont écrits sur un sujet au cours des dernières 24 heures. Le sujet qui en a le plus arrive en premier."
     }
   },
   "library": {

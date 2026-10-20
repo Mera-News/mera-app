@@ -721,7 +721,8 @@
     "mayMistakes": "Mera può commettere errori, quindi controlla le notizie importanti alla fonte.",
     "cardWaitingHint": "Tocca un'opzione qui sopra, oppure scrivi sì",
     "cardCancelled": "Va bene, non è cambiato nulla",
-    "changeUndone": "Annullato"
+    "changeUndone": "Annullato",
+    "cardTapHint": "Tocca un'opzione qui sopra."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Mi è piaciuto questo articolo: \"{{title}}\". Vorrei vedere altri suggerimenti come questo.",
@@ -2514,7 +2515,8 @@
     },
     "stories": {
       "privacy": "Le storie che segui restano su questo telefono."
-    }
+    },
+    "sourcesLink": "Vedi tutte le fonti che Mera legge"
   },
   "articleMenu": {
     "openA11y": "Altre azioni",
@@ -2659,11 +2661,10 @@
       "privacy": "Mera non collega le tue ricerche al tuo account."
     },
     "explainer": {
-      "country1": "Le storie salgono di posizione più le testate di questo paese ne scrivono.",
-      "countrySame": "Questa pagina è uguale per tutti. Nulla di te viene usato qui.",
-      "same": "Mondo è uguale per tutti. Nulla di te viene usato qui.",
-      "top1": "Le storie coperte da molti paesi, da molte testate diverse, salgono in cima. Un solo paese molto attivo non può riempire la pagina, e molti articoli di una stessa testata contano una volta sola.",
-      "window": "Il selettore del tempo stabilisce quanto indietro guarda la pagina: 6, 12, 24 o 48 ore. Ogni elenco conta solo gli articoli pubblicati entro quella finestra."
+      "window": "Il selettore del tempo stabilisce quanto indietro guarda la pagina: 6, 12, 24 o 48 ore. Ogni elenco conta solo gli articoli pubblicati entro quella finestra.",
+      "justMath": "Solo calcoli. Nessuna IA classifica questa pagina, e appare uguale per tutti.",
+      "mathWorld": "Ogni paese che copre una notizia le assegna 1 punto, più un po' in più per ogni altra testata di quel paese, fino a un massimo di 4 punti per paese. Si sommano tutti i paesi e il totale più alto viene per primo.",
+      "mathCountry": "Si contano gli articoli che le testate di questo paese hanno scritto su una notizia nelle ultime 24 ore. La notizia con più articoli viene per prima."
     }
   },
   "library": {

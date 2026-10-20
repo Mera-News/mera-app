@@ -717,7 +717,8 @@
     "mayMistakes": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra các tin quan trọng tại nguồn gốc.",
     "cardWaitingHint": "Chọn một tùy chọn phía trên, hoặc gõ “có”",
     "cardCancelled": "Được rồi, chưa có gì thay đổi",
-    "changeUndone": "Đã hoàn tác"
+    "changeUndone": "Đã hoàn tác",
+    "cardTapHint": "Chọn một tùy chọn phía trên."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Tôi thích bài viết này: \"{{title}}\". Tôi muốn xem thêm gợi ý như thế này.",
@@ -2509,7 +2510,8 @@
     },
     "stories": {
       "privacy": "Các câu chuyện bạn theo dõi được lưu trên điện thoại này."
-    }
+    },
+    "sourcesLink": "Xem mọi nguồn tin Mera đọc"
   },
   "articleMenu": {
     "openA11y": "Thao tác khác",
@@ -2653,11 +2655,10 @@
       "privacy": "Mera không liên kết các tìm kiếm của bạn với tài khoản của bạn."
     },
     "explainer": {
-      "country1": "Câu chuyện xếp hạng cao hơn khi các nhà xuất bản của chính quốc gia này viết về nó nhiều hơn.",
-      "countrySame": "Trang này giống nhau với mọi người. Không có gì về bạn được dùng ở đây.",
-      "same": "Thế giới giống nhau với mọi người. Không có gì về bạn được dùng ở đây.",
-      "top1": "Các câu chuyện được đưa tin ở nhiều quốc gia, bởi nhiều nhà xuất bản khác nhau, xếp hạng cao nhất. Một quốc gia nhiều tin không thể lấp đầy trang này, và nhiều bài của cùng một nhà xuất bản chỉ được tính một lần.",
-      "window": "Công tắc thời gian quyết định trang này nhìn lại bao xa: 6, 12, 24 hoặc 48 giờ. Mỗi danh sách chỉ đếm các bài được đăng trong khoảng thời gian đó."
+      "window": "Công tắc thời gian quyết định trang này nhìn lại bao xa: 6, 12, 24 hoặc 48 giờ. Mỗi danh sách chỉ đếm các bài được đăng trong khoảng thời gian đó.",
+      "justMath": "Chỉ là phép đếm. Không có AI nào xếp hạng trang này, và trang trông giống nhau với mọi người.",
+      "mathWorld": "Mỗi quốc gia đưa tin về một câu chuyện được 1 điểm, cộng thêm một chút cho mỗi báo khác ở quốc gia đó, tối đa 4 điểm cho mỗi quốc gia. Cộng tất cả các quốc gia lại, tổng điểm cao nhất sẽ đứng đầu.",
+      "mathCountry": "Đếm số bài mà các báo của quốc gia này viết về một câu chuyện trong 24 giờ qua. Câu chuyện có nhiều bài nhất sẽ đứng đầu."
     }
   },
   "library": {

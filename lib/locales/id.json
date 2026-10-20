@@ -717,7 +717,8 @@
     "mayMistakes": "Mera bisa membuat kesalahan, jadi periksa berita penting di sumbernya.",
     "cardWaitingHint": "Ketuk salah satu pilihan di atas, atau ketik ya",
     "cardCancelled": "Baik, tidak ada yang berubah",
-    "changeUndone": "Diurungkan"
+    "changeUndone": "Diurungkan",
+    "cardTapHint": "Ketuk salah satu pilihan di atas."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Saya suka artikel ini: \"{{title}}\". Saya ingin melihat lebih banyak saran seperti ini.",
@@ -2509,7 +2510,8 @@
     },
     "stories": {
       "privacy": "Cerita yang Anda ikuti disimpan di ponsel ini."
-    }
+    },
+    "sourcesLink": "Lihat semua sumber yang dibaca Mera"
   },
   "articleMenu": {
     "openA11y": "Tindakan lain",
@@ -2653,11 +2655,10 @@
       "privacy": "Mera tidak menautkan pencarian Anda ke akun Anda."
     },
     "explainer": {
-      "country1": "Cerita naik peringkat semakin banyak media di negara ini sendiri yang menulis tentangnya.",
-      "countrySame": "Halaman ini sama untuk semua orang. Tidak ada hal tentang Anda yang digunakan di sini.",
-      "same": "Dunia sama untuk semua orang. Tidak ada hal tentang Anda yang digunakan di sini.",
-      "top1": "Cerita yang diliput di banyak negara, oleh banyak penerbit berbeda, naik peringkat paling tinggi. Satu negara yang sibuk tidak bisa memenuhi halaman, dan banyak artikel dari satu penerbit dihitung sekali.",
-      "window": "Tombol waktu menentukan seberapa jauh halaman melihat ke belakang: 6, 12, 24 atau 48 jam. Setiap daftar hanya menghitung artikel yang terbit dalam rentang itu."
+      "window": "Tombol waktu menentukan seberapa jauh halaman melihat ke belakang: 6, 12, 24 atau 48 jam. Setiap daftar hanya menghitung artikel yang terbit dalam rentang itu.",
+      "justMath": "Hanya hitungan. Tidak ada AI yang mengurutkan halaman ini, dan tampilannya sama untuk semua orang.",
+      "mathWorld": "Setiap negara yang meliput sebuah berita mendapat 1 poin, ditambah sedikit lagi untuk setiap penerbit tambahan di negara itu, dengan batas 4 poin per negara. Semua poin dari semua negara dijumlahkan, dan total tertinggi tampil paling atas.",
+      "mathCountry": "Hitung artikel yang ditulis penerbit di negara ini tentang sebuah berita dalam 24 jam terakhir. Berita dengan artikel terbanyak tampil paling atas."
     }
   },
   "library": {

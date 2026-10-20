@@ -721,7 +721,8 @@
     "mayMistakes": "Mera kan fouten maken, dus controleer belangrijk nieuws bij de bron.",
     "cardWaitingHint": "Tik hierboven op een optie, of typ ja",
     "cardCancelled": "Oké, er is niets veranderd",
-    "changeUndone": "Ongedaan gemaakt"
+    "changeUndone": "Ongedaan gemaakt",
+    "cardTapHint": "Tik hierboven op een optie."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Ik vond dit artikel leuk: \"{{title}}\". Ik zou graag meer van dit soort suggesties zien.",
@@ -2514,7 +2515,8 @@
     },
     "stories": {
       "privacy": "De verhalen die je volgt blijven op deze telefoon."
-    }
+    },
+    "sourcesLink": "Bekijk elke bron die Mera leest"
   },
   "articleMenu": {
     "openA11y": "Meer acties",
@@ -2659,11 +2661,10 @@
       "privacy": "Mera koppelt je zoekopdrachten niet aan je account."
     },
     "explainer": {
-      "country1": "Verhalen staan hoger naarmate de eigen uitgevers van dit land er meer over schrijven.",
-      "countrySame": "Deze pagina is voor iedereen hetzelfde. Niets over jou wordt hier gebruikt.",
-      "same": "Wereld is voor iedereen hetzelfde. Niets over jou wordt hier gebruikt.",
-      "top1": "Verhalen die in veel landen en door veel verschillende uitgevers worden behandeld, staan het hoogst. Eén druk land kan de pagina niet vullen, en veel artikelen van één uitgever tellen één keer.",
-      "window": "De tijdschakelaar bepaalt hoe ver de pagina terugkijkt: 6, 12, 24 of 48 uur. Elke lijst telt alleen artikelen die binnen dat venster zijn gepubliceerd."
+      "window": "De tijdschakelaar bepaalt hoe ver de pagina terugkijkt: 6, 12, 24 of 48 uur. Elke lijst telt alleen artikelen die binnen dat venster zijn gepubliceerd.",
+      "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina, en hij ziet er voor iedereen hetzelfde uit.",
+      "mathWorld": "Elk land dat een verhaal behandelt, geeft het 1 punt, plus een beetje meer voor elke extra uitgever daar, tot maximaal 4 punten per land. Tel alle landen op, en het hoogste totaal staat bovenaan.",
+      "mathCountry": "Tel de artikelen die de uitgevers van dit land in de afgelopen 24 uur over een verhaal schreven. Het verhaal met de meeste artikelen staat bovenaan."
     }
   },
   "library": {

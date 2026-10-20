@@ -721,7 +721,8 @@
     "mayMistakes": "Mera puede cometer errores, así que comprueba las noticias importantes en su fuente.",
     "cardWaitingHint": "Toca una opción de arriba, o escribe sí",
     "cardCancelled": "Vale, no cambié nada",
-    "changeUndone": "Deshecho"
+    "changeUndone": "Deshecho",
+    "cardTapHint": "Toca una opción de arriba."
   },
   "articleFeedback": {
     "thumbsUpMessage": "Me gustó este artículo: \"{{title}}\". Me gustaría ver más sugerencias como esta.",
@@ -2514,7 +2515,8 @@
     },
     "stories": {
       "privacy": "Las historias que sigues se guardan en este teléfono."
-    }
+    },
+    "sourcesLink": "Ver todas las fuentes que Mera lee"
   },
   "articleMenu": {
     "openA11y": "Más acciones",
@@ -2659,11 +2661,10 @@
       "privacy": "Mera no vincula tus búsquedas a tu cuenta."
     },
     "explainer": {
-      "country1": "Las historias suben de posición cuanto más escriben sobre ellas los medios de este país.",
-      "countrySame": "Esta página es igual para todos. No se usa nada sobre ti aquí.",
-      "same": "Mundo es igual para todos. No se usa nada sobre ti aquí.",
-      "top1": "Las historias cubiertas en muchos países, por muchos medios distintos, son las que más suben. Un país muy activo no puede llenar la página, y muchos artículos de un mismo medio cuentan una vez.",
-      "window": "El selector de tiempo define hasta dónde mira la página: 6, 12, 24 o 48 horas. Cada lista solo cuenta los artículos publicados dentro de ese intervalo."
+      "window": "El selector de tiempo define hasta dónde mira la página: 6, 12, 24 o 48 horas. Cada lista solo cuenta los artículos publicados dentro de ese intervalo.",
+      "justMath": "Solo matemáticas. Ninguna IA ordena esta página, y se ve igual para todo el mundo.",
+      "mathWorld": "Cada país que cubre una noticia le da 1 punto, más un poco más por cada medio extra de ese país, hasta 4 puntos por país. Se suman todos los países, y el total más alto aparece primero.",
+      "mathCountry": "Se cuentan los artículos que los medios de este país escribieron sobre una noticia en las últimas 24 horas. La noticia con más artículos aparece primero."
     }
   },
   "library": {

@@ -6,7 +6,8 @@
 // the content. A card opened from inside a tab survives a tab switch, so its
 // host (TabPages) closes it on blur. Learn more closes the card and pushes the
 // tutorial only once it is fully gone (`onClosed`): an RN Modal paints above a
-// root push.
+// root push. The sources link opens the same way: iOS drops a browser
+// presented while a Modal is dismissing.
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -16,6 +17,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { HelpModal } from '@/components/ui/help-modal';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { WEBSITE_URL } from '@/lib/config/branding';
+import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { useColors } from '@/lib/theme/tokens';
 import type { PageExplainer } from './page-registry';
 
@@ -26,22 +29,26 @@ interface PageExplainerSheetProps {
 }
 
 const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open, onClose }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useColors();
-  const wantsTutorial = useRef(false);
+  const afterClose = useRef<'tutorial' | 'sources' | null>(null);
   // Keep the last copy while the sheet slides away after its host clears it.
   const last = useRef(explainer);
   if (explainer) last.current = explainer;
   const shown = last.current;
   if (!shown) return null;
-  const learnMore = () => {
-    wantsTutorial.current = true;
+  const closeThen = (next: 'tutorial' | 'sources') => {
+    afterClose.current = next;
     onClose();
   };
   const onClosed = () => {
-    if (!wantsTutorial.current) return;
-    wantsTutorial.current = false;
-    if (shown.chapter) openTutorial(shown.chapter, shown.slide);
+    const next = afterClose.current;
+    afterClose.current = null;
+    if (next === 'tutorial' && shown.chapter) openTutorial(shown.chapter, shown.slide);
+    // The site serves the app's 20 language codes, so the reader lands in their own language.
+    if (next === 'sources') {
+      void openInAppBrowser(`${WEBSITE_URL}/${i18n.resolvedLanguage ?? 'en'}/publications`).catch(() => undefined);
+    }
   };
 
   return (
@@ -59,11 +66,22 @@ const PageExplainerSheet: React.FC<PageExplainerSheetProps> = ({ explainer, open
               {t(key)}
             </Text>
           ))}
+          {shown.sourcesLink ? (
+            <Pressable
+              onPress={() => closeThen('sources')}
+              accessibilityRole="link"
+              accessibilityLabel={t('tabExplainer.sourcesLink')}
+              style={styles.link}
+              testID="page-explainer-sources-link"
+            >
+              <Text style={[styles.linkText, { color: colors.ink2 }]}>{t('tabExplainer.sourcesLink')}</Text>
+            </Pressable>
+          ) : null}
         </View>
         <View style={styles.actions}>
           {shown.chapter ? (
             <Pressable
-              onPress={learnMore}
+              onPress={() => closeThen('tutorial')}
               accessibilityRole="button"
               style={[styles.button, styles.outlined, { borderColor: colors.helpRing }]}
               testID="page-explainer-learn-more"
@@ -94,6 +112,9 @@ const styles = StyleSheet.create({
   content: { gap: 12 },
   body: { gap: 12 },
   paragraph: { fontSize: 15, lineHeight: 22 },
+  // A 44pt row around a small underlined line.
+  link: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  linkText: { fontSize: 13, lineHeight: 18, textDecorationLine: 'underline' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 8 },
   button: {
     flex: 1,
