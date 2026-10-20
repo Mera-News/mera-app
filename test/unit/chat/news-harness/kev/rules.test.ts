@@ -1,4 +1,4 @@
-import { classifyConsent, dropKnownFacts, existingIds, isKnownFact } from '@/lib/news-harness/on-device/kev';
+import { classifyConsent, dropKnownFacts, existingIds, isKnownFact, negates } from '@/lib/news-harness/on-device/kev';
 
 describe('classifyConsent', () => {
   it.each(['yes', 'Yes!', 'yeah', 'sure', 'do it', 'Go ahead.', 'please do', 'apply it', 'yes please', 'yes, thanks', 'ok, do it', 'okay go ahead', 'Sure thing'])(
@@ -15,7 +15,7 @@ describe('classifyConsent', () => {
     },
   );
 
-  it.each(['no', 'No.', 'nope', 'nah', 'no thanks', 'no thank you', 'cancel', 'never mind', 'nevermind', 'don’t', 'not now', 'forget it'])(
+  it.each(['no', 'No.', 'nope', 'nah', 'no thanks', 'no thank you', 'cancel', 'never mind', 'nevermind', 'don’t', 'not now', 'forget it', "don't do it", 'do not do that', "please don't", "no, don't", 'no, keep it', 'not yet', 'stop'])(
     '%p declines',
     (text) => {
       expect(classifyConsent(text)).toBe('decline');
@@ -31,6 +31,16 @@ describe('classifyConsent', () => {
 
   it('normalises spacing and trailing punctuation', () => {
     expect(classifyConsent('  go   ahead !! ')).toBe('apply');
+  });
+});
+
+describe('negates', () => {
+  it.each(["no wait, don't apply that yet", 'hold on', 'yes but not now', 'Never mind that', 'I do not want it'])('%p says no', (text) => {
+    expect(negates(text)).toBe(true);
+  });
+
+  it.each(['yes, add that one', 'go ahead', 'I know about it', 'notes are fine', 'nothing else, apply it'])('%p does not', (text) => {
+    expect(negates(text)).toBe(false);
   });
 });
 

@@ -8,6 +8,7 @@ import type { JsonSchema } from '../../../mera-protocol-toolkit/core/structured-
 import { renderPrompt, type ChatTurn, type OnDeviceToolCall, type OnDeviceTurnResult } from '../shared';
 import { ASK_CHOICE_TOOL, buildAskChoice, readingFromTap, type AskChoiceInput } from './ask-choice';
 import { isUnsure, type DecidePort, type WriterPort } from './decision';
+import { negates } from './rules';
 
 export interface KevPorts {
   decide: DecidePort;
@@ -148,6 +149,24 @@ export function askCall<K extends string>(
   if (!ask) return null;
   const input: KevAskInput = { ...ask, readings: ask.options.map((o) => readingFromTap(o, labels) ?? '') };
   return { name: ASK_CHOICE_TOOL, input: input as unknown as Record<string, unknown> };
+}
+
+/**
+ * Consent rule over Kev: an agree_to_card read from a message that says no
+ * somewhere ("no wait, don't apply that yet") is never applied. Null when the
+ * rule does not apply; otherwise the calls to send instead of applying: the
+ * agree / decline chips, or nothing at all.
+ */
+export function vetoNegatedAgree(
+  intent: string,
+  message: string,
+  answer: Pick<DecisionChoiceAnswer<string>, 'probabilities'>,
+  labels: Partial<Record<string, string>>,
+  question: string,
+): OnDeviceToolCall[] | null {
+  if (intent !== 'agree_to_card' || !negates(message)) return null;
+  const ask = askCall(answer, { agree_to_card: labels.agree_to_card, decline_card: labels.decline_card }, question);
+  return ask ? [ask] : [];
 }
 
 export function newTrace(): KevTrace {

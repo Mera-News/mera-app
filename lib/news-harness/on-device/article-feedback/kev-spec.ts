@@ -18,6 +18,7 @@ import {
   runDecision,
   timedDecide,
   top,
+  vetoNegatedAgree,
   write,
   type DecisionSpec,
   type KevMessage,
@@ -243,6 +244,11 @@ export async function runArticleKevTurn(
     if (ask) {
       trace.asked = true;
       return done(trace.intent as ArticleKevIntent, ports.t('kevChat.askIntent'), [ask]);
+    }
+    const veto = vetoNegatedAgree(trace.intent, chat.subject, run.decision, labels, ports.t('kevChat.askIntent'));
+    if (veto) {
+      trace.asked = veto.length > 0;
+      return done(trace.intent as ArticleKevIntent, ports.t('kevChat.askIntent'), veto);
     }
     intent = trace.intent as ArticleKevIntent;
     lines.push(formatDecision(run.questions, run.answers, { labels: { intent: 'What the user wants' } }));

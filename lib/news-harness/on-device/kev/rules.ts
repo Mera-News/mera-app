@@ -9,7 +9,10 @@ export type Consent = 'apply' | 'acknowledge' | 'decline' | 'none';
 // "keep it" is in none: it declines a delete card but could mean save on a fact card.
 const APPLY = /^(?:(?:ok(?:ay)?|yes|yeah|yep|yup|sure)[ ,]+)?(?:yes|yeah|yep|yup|sure|do it|go ahead|please do|apply it|yes please|sure thing)(?:[ ,]+(?:please|thanks|thank you|do it|go ahead|apply it))*$/;
 const ACKNOWLEDGE = /^(?:ok|okay|cool|thanks|thank you|thx|nice|great|hmm+|got it|alright|fine)(?:[ ,]+(?:ok|okay|cool|thanks|thank you|nice|great|got it))*$/;
-const DECLINE = /^(?:no|nope|nah|cancel|cancel it|don'?t|do not|never ?mind|forget it|leave it|not now|no thanks|no thank you)(?:[ ,]+(?:thanks|thank you|cancel it|leave it))*$/;
+const DECLINE = /^(?:(?:no|nope|nah|please)[ ,]+)?(?:no|nope|nah|cancel|cancel it|don'?t|don'?t do (?:it|that)|do not|do not do (?:it|that)|never ?mind|forget it|leave it|not now|not yet|stop|no thanks|no thank you)(?:[ ,]+(?:thanks|thank you|cancel it|leave it|keep it|don'?t do (?:it|that)|do not do (?:it|that)|please))*$/;
+// A "no" anywhere in the message. Not a decline on its own ("yes, and no more
+// F1" is a yes), but Kev may never turn such a message into an apply.
+const NEGATION = /(?:^|[^a-z'])(?:no|not|nope|nah|never|don'?t|do not|cancel|stop|wait|hold on)(?![a-z'])/;
 
 function plain(text: string): string {
   return (text ?? '')
@@ -35,6 +38,15 @@ export function classifyConsent(message: string): Consent {
   if (APPLY.test(t)) return 'apply';
   if (ACKNOWLEDGE.test(t)) return 'acknowledge';
   return 'none';
+}
+
+/**
+ * True when the message says no somewhere. A Kev agree_to_card on such a
+ * message is never applied: the flow asks agree or decline instead ("no wait,
+ * don't apply that yet" must not apply a change).
+ */
+export function negates(message: string): boolean {
+  return NEGATION.test(plain(message));
 }
 
 /** True when `statement` says what a saved fact already says (the cloud's "already on file" form). */

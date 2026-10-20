@@ -330,6 +330,26 @@ describe('persona chat on Kev', () => {
       expect(names).toEqual(['applyProposal']);
     });
 
+    it.each(["don't do it", 'no, keep it', 'please don\'t', 'not yet', 'stop'])('"%s" declines by the rule: cancelled, never applied', async (word) => {
+      stageChange();
+      const { names } = await turn(persona(), [], word);
+      expect(decideRequests).toHaveLength(0);
+      expect(names).toEqual(['cancelProposal']);
+    });
+
+    it('a Kev agree_to_card on a message that says no is never applied: agree or decline chips', async () => {
+      const staged = stageChange();
+      kevScript = { intent: { agree_to_card: 0.9, decline_card: 0.05, question_or_chat: 0.05 } };
+      const thread: ConversationMessage[] = [];
+      const { names, toolCalls, out } = await turn(persona(), thread, "no wait, don't apply that yet");
+      expect(names).toEqual(['ask_choice']);
+      expect((toolCalls[0].input as { options: string[] }).options).toEqual(['kevChat.card.agree', 'kevChat.card.decline']);
+      expect(proposal()?.id).toBe(staged.id);
+      expect(out.trace.asked).toBe(true);
+      // The tap is the answer.
+      expect((await turn(persona(), thread, 'kevChat.card.decline')).names).toEqual(['cancelProposal']);
+    });
+
     it('a tap-only card is never applied by a typed yes', async () => {
       stageChange(true);
       const { names, out } = await turn(persona(), [], 'yes');
@@ -454,6 +474,14 @@ describe('article chat on Kev', () => {
     expect(proposal()).not.toBeNull();
   });
 
+  it('a Kev agree_to_card on a negated message applies nothing', async () => {
+    const agent = await article();
+    stageChange();
+    kevScript = { intent: { agree_to_card: 0.9, decline_card: 0.1 } };
+    expect((await turn(agent, [], 'hold on, not like that')).names).toEqual(['ask_choice']);
+    expect(proposal()).not.toBeNull();
+  });
+
   it('a typed yes applies a waiting change through the executor', async () => {
     const agent = await article();
     stageChange();
@@ -547,6 +575,13 @@ describe('follow-story on Kev', () => {
     kevScript = { intent: { decline_card: 0.85, question_or_other: 0.15 } };
     expect((await turn(follow(), [], 'actually no, skip that')).names).toEqual(['cancelProposal']);
     expect(proposal()).toBeNull();
+  });
+
+  it('a Kev agree_to_card on a negated message applies nothing', async () => {
+    stageChange();
+    kevScript = { intent: { agree_to_card: 0.9, decline_card: 0.1 } };
+    expect((await turn(follow(), [], 'hold on, not like that')).names).toEqual(['ask_choice']);
+    expect(proposal()).not.toBeNull();
   });
 
   it('a typed yes on the story options (tap only) applies nothing', async () => {

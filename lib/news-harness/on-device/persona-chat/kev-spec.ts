@@ -24,6 +24,7 @@ import {
   runDecision,
   timedDecide,
   top,
+  vetoNegatedAgree,
   write,
   type DecisionSpec,
   type KevMessage,
@@ -262,6 +263,11 @@ export async function runPersonaKevTurn(
     if (ask) {
       trace.asked = true;
       return done(trace.intent, ports.t('kevChat.askIntent'), [ask]);
+    }
+    const veto = vetoNegatedAgree(trace.intent, chat.subject, answer, labels(keys), ports.t('kevChat.askIntent'));
+    if (veto) {
+      trace.asked = veto.length > 0;
+      return done(trace.intent, ports.t('kevChat.askIntent'), veto);
     }
     intent = trace.intent as PersonaIntent;
     lines.push(formatDecision(run.questions, run.answers, { labels: { intent: 'What the user wants' } }));
