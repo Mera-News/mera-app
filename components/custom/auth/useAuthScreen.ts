@@ -35,7 +35,7 @@ type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
  * meant this account: when the phone opens a different account than the one
  * on this device, it runs only after the user confirms the switch.
  */
-async function completeDeviceSignIn(result: DeviceSignInSuccess): Promise<void> {
+export async function completeDeviceSignIn(result: DeviceSignInSuccess): Promise<void> {
     recordAuthenticatedUser(result.userId);
     useUserStore.getState().setNeedsReauth(false);
     clearIdentityFault().catch(() => {});

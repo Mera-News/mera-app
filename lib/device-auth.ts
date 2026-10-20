@@ -81,6 +81,15 @@ export const DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_device_id`;
  *  leftover. */
 const RETIRED_DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
 
+/** Keychain slot for the TEST account handle this device signs in to (dev
+ *  builds with EXPO_PUBLIC_TEST_ACCOUNT_TOKEN only). Severed with the other
+ *  device credentials, never by logout or the account-switch wipe. */
+export const TEST_ACCOUNT_HANDLE_STORE_KEY = `${APP_SLUG}_test_account_handle`;
+
+/** The server's handle rule, verbatim. The handle is the ONLY way into a test
+ *  account: no route takes a user id. */
+export const TEST_ACCOUNT_HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,39}$/;
+
 /**
  * Sever this device's ACCOUNT binding. Called on account DELETION
  * (ManageDataScreen) and by the refusal recovery below — never on logout:
@@ -97,6 +106,7 @@ export async function clearDeviceAuthCredentials(): Promise<void> {
     APP_ATTEST_KEY_PROVEN_STORE_KEY,
     DEVICE_ID_STORE_KEY,
     RETIRED_DEVICE_REF_STORE_KEY,
+    TEST_ACCOUNT_HANDLE_STORE_KEY,
   ]) {
     try {
       await secureStore.deleteItemAsync(key);
@@ -118,6 +128,18 @@ export async function clearDeviceAuthCredentials(): Promise<void> {
 // only on a server with DEVICE_ATTESTATION_DEV_BYPASS_TOKEN, i.e. staging).
 function readDevBypassToken(): string {
   return __DEV__ ? process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN || '' : '';
+}
+
+// Test accounts (staging and prod): DEV BUILDS ONLY, same shape as the dev
+// bypass. A release build reads '' here and the minifier drops every branch
+// that needs the token, so neither the token nor the route ships.
+function readTestAccountToken(): string {
+  return __DEV__ ? process.env.EXPO_PUBLIC_TEST_ACCOUNT_TOKEN || '' : '';
+}
+
+/** True in a dev build carrying a test-account token. */
+export function hasTestAccountToken(): boolean {
+  return Boolean(readTestAccountToken());
 }
 
 function readPlayIntegrityProject(): string | null {
@@ -162,7 +184,7 @@ export type DeviceSignInAvailability = 'native' | 'dev-bypass' | 'unavailable';
  *  so instead of showing a dead CTA. Same order as `signInWithDevice`. Never
  *  rejects. */
 export async function deviceSignInAvailability(): Promise<DeviceSignInAvailability> {
-  if (readDevBypassToken()) return 'dev-bypass';
+  if (readTestAccountToken() || readDevBypassToken()) return 'dev-bypass';
   if (await isSupported()) return 'native';
   return 'unavailable';
 }
@@ -183,7 +205,7 @@ export type DeviceSignInPath =
   | 'unavailable';
 
 export async function deviceSignInPath(): Promise<DeviceSignInPath> {
-  if (readDevBypassToken()) return 'dev-bypass';
+  if (readTestAccountToken() || readDevBypassToken()) return 'dev-bypass';
   if (!(await isSupported())) return 'unavailable';
   if (Platform.OS === 'ios') return 'app-attest';
   if (Platform.OS === 'android') {
@@ -466,10 +488,89 @@ async function signInDev(token: string, target: FlowTarget): Promise<FlowRespons
   return finalPost(target, 'dev', { token, deviceId });
 }
 
+// ─── Test accounts (dev builds only) ─────────────────────────────────────────
+
+/** POST to a test-account route. The path and the call sit INSIDE the
+ *  `__DEV__` block so a release bundle carries neither. */
+async function testAccountPost<T>(route: 'sign-in' | 'delete' | 'list', body: Record<string, unknown>): Promise<T> {
+  if (__DEV__) {
+    return post<T>(`/test-account/${route}`, body);
+  }
+  throw new Error('Test accounts exist only in dev builds');
+}
+
+/** The handle this device signs in to: the slot's, else a throwaway derived
+ *  from the stored device UUID (stable per install). */
+export async function currentTestAccountHandle(): Promise<string> {
+  const stored = await secureStore.getItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY).catch(() => null);
+  if (stored && TEST_ACCOUNT_HANDLE_PATTERN.test(stored)) return stored;
+  const deviceId = await readOrCreateDeviceId();
+  return `tmp-${deviceId.replace(/-/g, '').toLowerCase().slice(0, 12)}`;
+}
+
+/** Point this device at a handle (null: back to its throwaway). Throws on a
+ *  handle the server would refuse, so nothing invalid is ever stored. */
+export async function setTestAccountHandle(handle: string | null): Promise<void> {
+  if (handle === null) {
+    await secureStore.deleteItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY);
+    return;
+  }
+  if (!TEST_ACCOUNT_HANDLE_PATTERN.test(handle)) throw new Error('Invalid test account handle');
+  await secureStore.setItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY, handle);
+}
+
+async function signInTestAccount(token: string): Promise<FlowResponse> {
+  const handle = await currentTestAccountHandle();
+  return { path: 'test-account', data: await testAccountPost('sign-in', { token, handle }) };
+}
+
+/** Delete a test account now (a tombstone server side; the handle mints
+ *  fresh next time). `not-found` covers a handle with no account, and also a
+ *  wrong or disabled token, which the server answers with the same 404. */
+export async function deleteTestAccount(handle: string): Promise<'deleted' | 'not-found' | 'failed'> {
+  const token = readTestAccountToken();
+  if (!token || !TEST_ACCOUNT_HANDLE_PATTERN.test(handle)) return 'failed';
+  try {
+    await testAccountPost('delete', { token, handle });
+    return 'deleted';
+  } catch (error) {
+    if (error instanceof ServerRejection && error.status === 404) return 'not-found';
+    logger.warn('[device-auth] test account delete failed', {
+      ...(error instanceof ServerRejection ? { httpStatus: error.status, code: error.code } : {}),
+    });
+    return 'failed';
+  }
+}
+
+export interface TestAccountSummary {
+  handle: string;
+  userId: string | null;
+}
+
+/** The test accounts the server holds, or null when the call failed. */
+export async function listTestAccounts(): Promise<TestAccountSummary[] | null> {
+  const token = readTestAccountToken();
+  if (!token) return null;
+  try {
+    const data = await testAccountPost<{ accounts?: unknown }>('list', { token });
+    if (!Array.isArray(data?.accounts)) return null;
+    return data.accounts.flatMap((row: { handle?: unknown; userId?: unknown }) =>
+      typeof row?.handle === 'string'
+        ? [{ handle: row.handle, userId: typeof row.userId === 'string' ? row.userId : null }]
+        : [],
+    );
+  } catch {
+    return null;
+  }
+}
+
 /** The flow this device runs, in the one decision order every reader shares:
- *  the dev bypass (dev builds with the token), then native attestation. Null
- *  when the phone cannot attest at all. */
+ *  a test account (dev builds with its token, sign-in only: a test session is
+ *  never moved or bound), the dev bypass (dev builds with the token), then
+ *  native attestation. Null when the phone cannot attest at all. */
 async function pickFlow(target: FlowTarget): Promise<(() => Promise<FlowResponse>) | null> {
+  const testToken = target.kind === 'sign-in' ? readTestAccountToken() : '';
+  if (testToken) return () => signInTestAccount(testToken);
   const token = readDevBypassToken();
   if (token) return () => signInDev(token, target);
   if (!(await isSupported())) return null;
@@ -592,7 +693,10 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
       secureStore.getItemAsync(APP_ATTEST_KEY_ID_STORE_KEY).catch(() => null),
       secureStore.getItemAsync(DEVICE_ID_STORE_KEY).catch(() => null),
     ]);
-    const hadStoredCredentials = Boolean(storedKey || storedDeviceId);
+    // A test account has no binding to recover: a refusal there (a wrong
+    // token's 404 included) must never sever this device's credentials.
+    const testFlow = hasTestAccountToken();
+    const hadStoredCredentials = !testFlow && Boolean(storedKey || storedDeviceId);
 
     let parsed: ParsedSignIn;
     try {
@@ -618,7 +722,8 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
     // A brand-new account takes any plan the store account holds (owner: at
     // mint and after a move only, never on resume). It runs once RevenueCat
     // is identified as this account. Lazy: revenuecat is not needed here.
-    if (parsed.minted) {
+    // A test account never takes the store plan.
+    if (parsed.minted && !testFlow) {
       (require('@/lib/revenuecat') as typeof import('@/lib/revenuecat')).requestStorePurchasesSync(parsed.userId);
     }
 

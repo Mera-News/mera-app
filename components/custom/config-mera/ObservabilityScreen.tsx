@@ -25,6 +25,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import TableDetailScreen from './TableDetailScreen';
+import DevTestAccountSection from './DevTestAccountSection';
 import { useObservabilityScreen } from './useObservabilityScreen';
 import { FEED_FUNNEL_LABELS, FIELD_LABELS, TASK_LABELS, humanizeKey, humanizeValue, statusLabel, tableLabel, IMAGE_RESOLUTION_LABELS } from './observability-labels';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
@@ -685,6 +686,9 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
                 )}
+
+                {/* Test accounts: dev builds with EXPO_PUBLIC_TEST_ACCOUNT_TOKEN only. */}
+                {__DEV__ && <DevTestAccountSection header={<SectionHeader title="Test account (dev)" />} />}
 
                 {/*
                   * Backup blob primitives probe. __DEV__ ONLY — this never renders in a

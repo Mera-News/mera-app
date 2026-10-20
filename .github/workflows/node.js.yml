@@ -57,3 +57,28 @@ jobs:
 
     - name: Run tests with coverage
       run: npm run test:coverage
+
+  # A dev-only test-account token must never reach a release bundle
+  # (lib/device-auth.ts reads it under __DEV__, scripts/ota-publish.js gates
+  # every OTA on it). The release export must drop a canary token; the dev
+  # export must keep it, which proves the canary reached the bundle at all.
+  # EXPO_NO_DOTENV: env comes from the sourced example plus the canary only.
+  ota-leak-canary:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    - name: Release export drops the test-account token, dev export keeps it
+      run: |
+        set -a; . ./.env.example; EXPO_PUBLIC_TEST_ACCOUNT_TOKEN=mera_tsk_ci_CANARY; set +a
+        EXPO_NO_DOTENV=1 npx expo export --output-dir dist-release --platform ios
+        EXPO_NO_DOTENV=1 npx expo export --dev --output-dir dist-dev --platform ios
+        node scripts/ota-publish.js --scan dist-release
+        if node scripts/ota-publish.js --scan dist-dev; then
+          echo "The dev export lacks the canary, so the release check proves nothing"; exit 1
+        fi
