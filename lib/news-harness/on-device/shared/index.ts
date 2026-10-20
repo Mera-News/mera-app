@@ -51,8 +51,8 @@ export function largestFitting(max: number, fits: (n: number) => boolean): numbe
 /**
  * Tokens left for the prompt (context plus conversation) once the system
  * instructions, the schema and the reply are paid for. `contextSize` is the
- * toolkit's value: the whole window for Apple and Qwen, the input limit for
- * Nano, so `contextSize - maxTokens` is safe on all three.
+ * toolkit's value: the whole window for Apple, the input limit for Nano, so
+ * `contextSize - maxTokens` is safe on both.
  */
 export function promptBudgetTokens(params: {
   contextSize: number | null;

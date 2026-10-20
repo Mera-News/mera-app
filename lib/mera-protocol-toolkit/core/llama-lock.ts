@@ -1,10 +1,11 @@
 // The one lock every llama.rn caller goes through.
 //
-// llama.rn holds ONE context for the whole app at a time (the text model or the
-// relevance model, never both), and a completion mutates its KV cache in place,
-// so two overlapping calls interleave: the second one's prefill lands on top of
-// the first one's state. Loading, releasing and swapping the resident model run
-// under the same lock, so a load can never release a context mid-call.
+// llama.rn holds ONE context for the whole app: Kev, the relevance model (D37).
+// A call mutates its KV cache in place, so two overlapping calls interleave: the
+// second one's prefill lands on top of the first one's state. Loading and
+// releasing Kev run under the same lock, so a load can never release a context
+// mid-call. The built-in text model runs out of process but takes the same lock,
+// so a chat turn's decide and write run one after the other, never nested.
 //
 // NOT re-entrant. Every public toolkit entry (infer, inferStream, decide,
 // initBaseModel, disposeModel, resetContext, the deletes) takes it exactly once,

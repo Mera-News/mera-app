@@ -244,8 +244,8 @@ export function useMeraProtocolSettings() {
 
     // While the reader wants On this phone, the phone follows what can run: it moves to On this phone
     // when it can, else falls back to Private cloud on this phone only (the server persona and the
-    // intent are kept). Not held off by a running download: a phone running on the built-in model
-    // stays on it while the text model downloads, and a landing promotes by itself.
+    // intent are kept). The move is visible: this screen shows the mode and why it cannot run.
+    // Not held off by a running download: Kev's landing promotes by itself.
     const applyIntent = useCallback(async (next: ModelsStatus) => {
         if (!intentRef.current || deletingRef.current) return;
         const current = useMeraProtocolStore.getState().processingMode;

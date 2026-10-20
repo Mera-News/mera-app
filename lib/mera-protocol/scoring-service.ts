@@ -830,8 +830,8 @@ export async function runFeedVerifierPass(
 type BatchUpdates = { id: string; relevance: number; reason: string | null }[];
 
 /**
- * On this phone the pass is two phases so each model loads once per sync: Kev scores every
- * unscored row, then the text model writes the notes (the sweep at the end). Queued background
+ * On this phone the pass is two phases: Kev scores every unscored row, then the built-in
+ * model writes the notes (the sweep at the end; none with Skip notes on). Queued background
  * jobs are held off for the whole pass, and the sweep runs even when nothing was unscored, since
  * an earlier pass may have left notes owed.
  */
