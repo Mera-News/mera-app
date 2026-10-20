@@ -6,7 +6,7 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import Purchases from 'react-native-purchases';
 import { Platform } from 'react-native';
-import { useDevTestAccountLink } from '@/components/custom/auth/useDevTestAccountLink';
+import { removeTestAccount, useDevTestAccountLink } from '@/components/custom/auth/useDevTestAccountLink';
 import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
 import {
     APP_ATTEST_KEY_ID_STORE_KEY,
@@ -259,6 +259,20 @@ describe('the /dev-test-account deep link', () => {
     });
 
     it.each([
+        ['a slot that held a handle', 'resident-ios'],
+        ['an empty slot', undefined],
+    ])('a failed switch leaves %s as it was', async (_label, before) => {
+        if (before) await setTestAccountHandle(before);
+        answer(SIGN_IN, 404, { code: 'NOT_FOUND', message: 'Not found' });
+
+        mount({ handle: 'resident-android' });
+        await routed();
+
+        expect(replace()).toHaveBeenCalledWith('/');
+        expect(secureStoreDump()[TEST_ACCOUNT_HANDLE_STORE_KEY]).toBe(before);
+    });
+
+    it.each([
         ['a release build', () => (g.__DEV__ = false)],
         ['a dev build with no token', () => delete process.env.EXPO_PUBLIC_TEST_ACCOUNT_TOKEN],
     ])('%s goes to / and touches nothing', async (_label, arrange) => {
@@ -270,5 +284,46 @@ describe('the /dev-test-account deep link', () => {
         expect(replace()).toHaveBeenCalledWith('/');
         expect(sent).toHaveLength(0);
         expect(secureStoreDump()[TEST_ACCOUNT_HANDLE_STORE_KEY]).toBeUndefined();
+    });
+});
+
+describe("Observability's test-account Delete (removeTestAccount)", () => {
+    const signedOut = () => replace().mock.calls.some(([to]) => to?.pathname === '/login');
+
+    it('deletes the signed-in test account, then signs out and severs this device', async () => {
+        await setTestAccountHandle('resident-ios');
+        await secureStore.setItemAsync(DEVICE_ID_STORE_KEY, 'device-1');
+        answer(LIST, 200, { accounts: [{ handle: 'resident-ios', userId: ME }] });
+
+        await expect(removeTestAccount('resident-ios', ME)).resolves.toBe('signed-out');
+
+        expect(paths()).toContain('/test-account/delete');
+        expect(signedOut()).toBe(true);
+        expect(secureStoreDump()[DEVICE_ID_STORE_KEY]).toBeUndefined();
+        expect(secureStoreDump()[TEST_ACCOUNT_HANDLE_STORE_KEY]).toBeUndefined();
+    });
+
+    it.each([
+        ['another account', { accounts: [{ handle: 'resident-ios', userId: 'bbbbbbbbbbbbbbbbbbbbbbbb' }] }, 200],
+        ['an unknown owner (list failed)', { code: 'X', message: 'X' }, 500],
+    ])('a handle owned by %s is deleted server side only: no sign-out, this device keeps its credentials', async (_l, list, status) => {
+        await setTestAccountHandle('resident-ios');
+        await secureStore.setItemAsync(DEVICE_ID_STORE_KEY, 'device-1');
+        answer(LIST, status, list);
+
+        await expect(removeTestAccount('resident-ios', ME)).resolves.toBe('deleted');
+
+        expect(paths()).toContain('/test-account/delete');
+        expect(signedOut()).toBe(false);
+        expect(secureStoreDump()[DEVICE_ID_STORE_KEY]).toBe('device-1');
+    });
+
+    it('a delete that did not happen signs nothing out', async () => {
+        answer(LIST, 200, { accounts: [{ handle: 'resident-ios', userId: ME }] });
+        answer(DELETE, 404, { code: 'NOT_FOUND', message: 'Not found' });
+
+        await expect(removeTestAccount('resident-ios', ME)).resolves.toBe('not-found');
+
+        expect(signedOut()).toBe(false);
     });
 });

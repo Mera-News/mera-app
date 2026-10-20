@@ -9,7 +9,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
     currentTestAccountHandle,
-    deleteTestAccount,
     hasTestAccountToken,
     listTestAccounts,
     type TestAccountSummary,
@@ -17,8 +16,7 @@ import {
 import { showDialog } from '@/lib/dialog';
 import { useUserStore } from '@/lib/stores/user-store';
 
-import { newThrowawayHandle, signInToTestAccount } from '../auth/useDevTestAccountLink';
-import { finishAccountDeletion } from './use-delete-account';
+import { newThrowawayHandle, removeTestAccount, signInToTestAccount } from '../auth/useDevTestAccountLink';
 
 const Button = ({ label, onPress, busy, testID }: { label: string; onPress: () => void; busy: boolean; testID: string }) => (
     <Pressable
@@ -79,7 +77,7 @@ export default function DevTestAccountSection({ header }: { header: React.ReactN
         if (!handle) return;
         const ok = await showDialog({
             title: 'Delete test account',
-            body: `Delete ${handle} now and sign out of this phone.`,
+            body: `Delete ${handle} now. If it is the signed-in account, this phone signs out.`,
             warning: "You can't undo this.",
             confirmLabel: 'Delete',
             cancelLabel: 'Cancel',
@@ -87,16 +85,16 @@ export default function DevTestAccountSection({ header }: { header: React.ReactN
         });
         if (!ok) return;
         setBusy(true);
-        // Only a confirmed delete signs out: for the signed-in handle a 404 means a
-        // wrong or disabled token, and the account is still alive server side.
-        const result = await deleteTestAccount(handle);
+        const result = await removeTestAccount(handle, userId);
+        if (result === 'signed-out') return;
+        setBusy(false);
         if (result !== 'deleted') {
-            setBusy(false);
             setError(`Delete failed: ${result}`);
             return;
         }
-        await finishAccountDeletion();
-    }, [handle]);
+        setError(`Deleted ${handle}. It was not the signed-in account, so this phone stays signed in.`);
+        await refresh();
+    }, [handle, userId, refresh]);
 
     if (!__DEV__ || !hasTestAccountToken()) return null;
 

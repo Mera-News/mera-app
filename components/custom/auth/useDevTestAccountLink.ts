@@ -11,15 +11,19 @@ import * as Crypto from 'expo-crypto';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
+import { finishAccountDeletion } from '@/components/custom/config-mera/use-delete-account';
 import {
     TEST_ACCOUNT_HANDLE_PATTERN,
+    TEST_ACCOUNT_HANDLE_STORE_KEY,
     deleteTestAccount,
     hasTestAccountToken,
+    listTestAccounts,
     setTestAccountHandle,
     signInWithDevice,
 } from '@/lib/device-auth';
 import logger from '@/lib/logger';
 import { isAuthReadQuarantineActive } from '@/lib/security/install-boundary-latch';
+import { secureStore } from '@/lib/utils/secure-store-adapter';
 
 import { completeDeviceSignIn } from './useAuthScreen';
 
@@ -56,13 +60,36 @@ export async function signInToTestAccount(handle: string, { reset = false } = {}
     if (!TEST_ACCOUNT_HANDLE_PATTERN.test(handle)) return { ok: false, why: 'invalid-handle' };
     await waitForInstallBoundary();
     if (reset && (await deleteTestAccount(handle)) === 'failed') return { ok: false, why: 'reset-failed' };
+    // The slot names the account this device is ON, so a failed switch puts it back.
+    const previous = await secureStore.getItemAsync(TEST_ACCOUNT_HANDLE_STORE_KEY).catch(() => null);
     await setTestAccountHandle(handle);
     const result = await signInWithDevice();
     if (result.status !== 'success') {
+        await setTestAccountHandle(previous && TEST_ACCOUNT_HANDLE_PATTERN.test(previous) ? previous : null);
         return { ok: false, why: result.status === 'failed' ? result.reason : result.status };
     }
     await completeDeviceSignIn(result);
     return { ok: true, userId: result.userId };
+}
+
+/**
+ * Delete the test account `handle` now. Signs out and severs this device only
+ * when the server says that handle IS the signed-in account: the handle in the
+ * slot (or the tmp- fallback) can name another account, for example in a dev
+ * build signed in with OTP. An unknown owner (the list failed) counts as not
+ * this account. Never signs out on a delete that did not happen: a 404 for the
+ * signed-in handle means a wrong or disabled token, and the account is alive.
+ */
+export async function removeTestAccount(
+    handle: string,
+    signedInUserId: string | null,
+): Promise<'signed-out' | 'deleted' | 'not-found' | 'failed'> {
+    const owner = (await listTestAccounts())?.find((a) => a.handle === handle)?.userId ?? null;
+    const result = await deleteTestAccount(handle);
+    if (result !== 'deleted') return result;
+    if (!owner || owner !== signedInUserId) return 'deleted';
+    await finishAccountDeletion();
+    return 'signed-out';
 }
 
 /** Where the link goes, after doing its work. */

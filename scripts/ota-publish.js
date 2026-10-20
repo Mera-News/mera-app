@@ -3,15 +3,23 @@
  * ota-publish: every `npm run update:*` goes through here, so no OTA can carry
  * a test-account token.
  *
- *   node scripts/ota-publish.js --channel <name> [-- <extra eas update args>]
+ *   node scripts/ota-publish.js --channel <name> --environment <eas env> [-- <extra eas update args>]
  *   node scripts/ota-publish.js --scan <dir>     (the leak gate alone; CI uses it)
  *
- * Publish = `expo export` (the same arguments eas-cli would pass: iOS and
- * Android only, source maps, asset map), then the leak gate over `dist`, then
- * `eas update --skip-bundler --input-dir dist`, then the Sentry source-map
- * upload. The gate refuses the bundle when any file holds the test-token
- * prefix or the value of EXPO_PUBLIC_TEST_ACCOUNT_TOKEN found in this shell
- * or in any local .env* file. It never prints a value, only which needle hit.
+ * Publish = the export eas-cli would run (iOS and Android, source maps, asset
+ * map) under `eas env:exec <env>` with EXPO_NO_DOTENV=1, then the leak gate
+ * over `dist`, then `eas update --skip-bundler --input-dir dist --environment
+ * <env>`, then the Sentry source-map upload.
+ *
+ * WHY env:exec: with --skip-bundler, eas-cli applies --environment only to the
+ * update's label, never to the bundle. A plain `expo export` would bundle the
+ * local .env and drop every EAS-hosted value (prod endpoints, RevenueCat keys,
+ * Sentry DSN). So --environment is required, and refused when given twice
+ * with different values.
+ *
+ * The gate refuses the bundle when any file holds the test-token prefix or the
+ * value of EXPO_PUBLIC_TEST_ACCOUNT_TOKEN found in this shell or in any local
+ * .env* file. It never prints a value, only which needle hit.
  *
  * Test-account tokens are read only under __DEV__ (lib/device-auth.ts), so a
  * release export drops them; this gate is what proves it on every publish.
@@ -95,25 +103,47 @@ function run(cmd, args) {
     }
 }
 
+const EXPORT = 'npx expo export --output-dir dist --source-maps --dump-assetmap --platform ios --platform android';
+
+/** `--environment <v>` pulled out of `args`: the values found and the rest. */
+function takeEnvironment(args) {
+    const values = [];
+    const rest = [];
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--environment') values.push(args[++i]);
+        else if (args[i].startsWith('--environment=')) values.push(args[i].slice('--environment='.length));
+        else rest.push(args[i]);
+    }
+    return { values, rest };
+}
+
 function main(argv) {
     const scanAt = argv.indexOf('--scan');
     if (scanAt !== -1) return process.exit(scan(path.resolve(argv[scanAt + 1] || 'dist')));
 
-    const channelAt = argv.indexOf('--channel');
-    const channel = channelAt !== -1 ? argv[channelAt + 1] : undefined;
-    if (!channel) {
-        console.error('usage: ota-publish.js --channel <name> [-- <eas update args>] | --scan <dir>');
+    const dashes = argv.indexOf('--');
+    const own = dashes === -1 ? argv : argv.slice(0, dashes);
+    const extraRaw = dashes === -1 ? [] : argv.slice(dashes + 1);
+    const channelAt = own.indexOf('--channel');
+    const channel = channelAt !== -1 ? own[channelAt + 1] : undefined;
+    const ownEnv = takeEnvironment(own).values;
+    const { values: extraEnv, rest: extra } = takeEnvironment(extraRaw);
+    const envs = [...new Set([...ownEnv, ...extraEnv])];
+    if (!channel || envs.length !== 1 || !envs[0]) {
+        console.error(
+            'usage: ota-publish.js --channel <name> --environment <eas env> [-- <eas update args>] | --scan <dir>\n' +
+                '  exactly one --environment is required: it is what puts the EAS variables into the bundle',
+        );
         return process.exit(2);
     }
-    const dashes = argv.indexOf('--');
-    const extra = dashes === -1 ? [] : argv.slice(dashes + 1);
+    const environment = envs[0];
     const dist = path.join(ROOT, 'dist');
 
     fs.rmSync(dist, { recursive: true, force: true });
-    run('npx', ['expo', 'export', '--output-dir', 'dist', '--source-maps', '--dump-assetmap', '--platform', 'ios', '--platform', 'android']);
+    run('eas', ['env:exec', environment, `EXPO_NO_DOTENV=1 ${EXPORT}`, '--non-interactive']);
     const verdict = scan(dist);
     if (verdict !== 0) return process.exit(verdict);
-    run('eas', ['update', '--skip-bundler', '--input-dir', 'dist', '--channel', channel, ...extra]);
+    run('eas', ['update', '--skip-bundler', '--input-dir', 'dist', '--channel', channel, '--environment', environment, ...extra]);
     run('npx', ['sentry-expo-upload-sourcemaps', 'dist']);
 }
 
