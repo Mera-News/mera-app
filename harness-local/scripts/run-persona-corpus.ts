@@ -13,6 +13,11 @@
 // calling with schema-conformant arguments, which is a different requirement
 // from the scoring path, so it keeps its own roster.
 //
+// --engine afm|qwen-local|nano-proxy drives the ON-DEVICE persona chat
+// (lib/news-harness/on-device/persona-chat) through the same cohorts and state
+// machine: one row per turn, the reply's fields mapped to the executor tools the
+// app runs. No staging credentials, no cost.
+//
 // Node-only: never imported by the app bundle.
 
 import { writeFileSync } from 'node:fs';
@@ -47,6 +52,17 @@ import {
   type CorpusPersona,
 } from '../lib/corpus';
 import { BIG_MODEL } from '../../lib/llm/constants';
+import { assertEngineReady, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
+import {
+  buildPersonaChatPrompt,
+  personaChatInstructions,
+  personaChatSchema,
+  personaChatTurn,
+  shownFactIds,
+  type PersonaChatContext,
+  type PersonaChatReply,
+} from '../../lib/news-harness/on-device/persona-chat';
+import type { ChatTurn } from '../../lib/news-harness/on-device/shared';
 import {
   buildPersonaUpdateContext,
   buildPersonaUpdateStaticPrompt,
@@ -150,8 +166,80 @@ function dryRunToolCalls(cohort: string, turnIndex: number): { name: string; arg
   ];
 }
 
+/** The cohorts through the on-device persona chat, state carried across turns. */
+async function mainOnDevice(engine: LocalEngine, args: Args): Promise<number> {
+  await assertEngineReady(engine);
+  const run = createRunWriter({ label: args.label === 'persona' ? `persona-${engine}` : args.label });
+  const rows = createJsonlWriter({ dir: run.dir });
+  const runId = run.dir.split('/').pop() ?? args.label;
+  const system = personaChatInstructions('CONFIG', 'English');
+  const schema = personaChatSchema('CONFIG');
+  console.log(`run      : ${runId}\nrun dir  : ${run.dir}\nengine   : ${engine} (on-device persona chat)\ncohorts  : ${args.cohorts.join(', ')}\nrepeat   : ${args.repeat}\n`);
+  for (const cohortName of args.cohorts) {
+    const cohort = loadCohort(cohortName);
+    for (let rep = 0; rep < args.repeat; rep++) {
+      let state: CorpusPersona = freshState(cohort.persona);
+      const history: ChatTurn[] = [];
+      for (const turn of cohort.turns) {
+        history.push({ role: 'user', content: turn.user });
+        const context: PersonaChatContext = {
+          facts: [...state.facts]
+            .sort((a, b) => b.createdAtMs - a.createdAtMs)
+            .map((f) => ({ id: f.id, statement: f.statement, attribute: f.questionnaireAttribute })),
+          topicPlanNotes: null,
+          pending: null,
+        };
+        const out = await onDeviceChatTurn<PersonaChatReply>(engine, system, schema, (b) =>
+          buildPersonaChatPrompt('CONFIG', context, history, b),
+        );
+        const turnOut = out.value ? personaChatTurn(out.value, { factIds: shownFactIds(context), hasPending: false }) : null;
+        const toolCalls: RowToolCall[] = (turnOut?.calls ?? []).map((c) => ({
+          name: c.name, argumentsRaw: JSON.stringify(c.input), parsed: c.input, schemaValid: true,
+        }));
+        const applied = applyToolCalls(state, toolCalls.map((t) => ({ name: t.name, parsed: t.parsed })));
+        const last = out.attempts.at(-1);
+        rows.write({
+          rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
+          cohort: cohortName, turnIndex: turn.index, arm: `${engine}@ondevice`,
+          callType: 'chat-extraction', interleaveGroup: `${cohortName}:${turn.index}`, lane: engine, surface: 'CONFIG',
+          variant: 'ondevice',
+          promptHash: hashMessages([{ role: 'system', content: system }, { role: 'user', content: out.prompt }]),
+          promptDeterministic: turn.index === 0, fenceNonce: null,
+          // llama-server answers with the GGUF path; the engine id is the arm's own model.
+          modelRequested: engine, modelSent: last ? engine : null, fallbackFrom: null, hedged: false,
+          input: { systemPrompt: system, messages: [{ role: 'user', content: out.prompt }], toolSchemaNames: [] },
+          personaStateIn: {
+            factCount: state.facts.length, topicCount: state.topics.length,
+            factsInPrompt: shownFactIds(context).size, turnsInPrompt: history.length,
+          },
+          rawOutput: last?.content ?? '',
+          toolCalls,
+          parsedSchema: out.value ?? null,
+          items: null, requestedCount: null, returnedCount: null,
+          personaStateDelta: { added: applied.delta.added, conflicts: applied.delta.conflicts, rejectedByRails: applied.delta.rejectedByRails },
+          finishReason: last?.finishReason ?? '-', truncated: last?.truncated ?? false, reasoningLeak: false,
+          usage: last?.usage ?? null, cost: null,
+          latencyMs: out.attempts.reduce((a, r) => a + r.latencyMs, 0), ttVisibleMs: null, error: out.error,
+        });
+        console.log(`${cohortName} r${rep} t${turn.index} ${out.error ?? 'ok'} saved=${applied.delta.added.length} calls=${toolCalls.map((t) => t.name).join('+') || 'none'}`);
+        history.push({ role: 'assistant', content: turnOut?.reply ?? '' });
+        state = applied.state;
+      }
+    }
+  }
+  await rows.close();
+  const report = computeAgreement(readJsonl(rows.path), {});
+  const text = formatAgreementReport(report);
+  console.log(`\n${text}`);
+  run.finish({ args, engine, rows: rows.path, agreement: report });
+  writeFileSync(join(run.dir, 'agreement.txt'), `${text}\n`, 'utf8');
+  return 0;
+}
+
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
+  const engine = parseEngine(argv);
+  if (engine !== 'cloud') return mainOnDevice(engine, parseArgs(argv));
   applyTargetOverride(argv);
   const overridden = applyEndpointOverrides(argv);
   const args = parseArgs(argv);

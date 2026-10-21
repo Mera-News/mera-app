@@ -605,14 +605,17 @@ async function main(): Promise<number> {
   ck('every reading is recorded as offered', alts.delta.offered.length === 2, alts.delta.offered.join(' | '));
   ck('only the first reading is committed', alts.delta.added.length === 1, alts.delta.added.join(''));
 
-  // deleteUserFacts takes ATTRIBUTE strings, not ids
+  // deleteUserFacts takes ATTRIBUTE strings (cloud) or ids (on-device), as handleDeleteUserFacts does
   const del = applyToolCalls(heavy.persona,
     [{ name: 'deleteUserFacts', parsed: { fact_ids: ['location: residence'] } }]);
   ck('deleteUserFacts matches on the ATTRIBUTE', del.state.facts.length === 19, String(del.state.facts.length));
   const delById = applyToolCalls(heavy.persona,
     [{ name: 'deleteUserFacts', parsed: { fact_ids: ['f01'] } }]);
-  ck('passing an id deletes nothing, as the schema implies',
-    delById.state.facts.length === 20, String(delById.state.facts.length));
+  ck('an id deletes exactly that fact, as the app handler does',
+    delById.state.facts.length === 19 && !delById.state.facts.some((f) => f.id === 'f01'), String(delById.state.facts.length));
+  const delNone = applyToolCalls(heavy.persona,
+    [{ name: 'deleteUserFacts', parsed: { fact_ids: ['no-such-fact'] } }]);
+  ck('an unknown handle deletes nothing', delNone.state.facts.length === 20, String(delNone.state.facts.length));
 
   ck('the cohort fixture is not mutated', heavy.persona.facts.length === 20, String(heavy.persona.facts.length));
   ck('an empty extraction array is a no-op',

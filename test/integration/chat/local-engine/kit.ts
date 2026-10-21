@@ -3,44 +3,52 @@
 // A turn is driven the way the app drives it: createConversation, attachChatSession, engine.send,
 // against the REAL toolkit, inference lock and inference queue with only llama.rn (scripted) and
 // expo-file-system (in-memory) faked. "Busy" is the whole-turn signal (`turnBusy`), never `status`.
+//
+// The default agent is on-device tutorial help, the one flow that streams plain text, so the
+// engine's streaming, stop and lifecycle behaviour is observed token by token. Persona turns are
+// structured: the scripted completion answers with the JSON the schema asks for.
 import { activeHolds } from '@/lib/app-restart';
 import { attachChatSession } from '@/lib/chat-session/chat-session';
 import { useLocalChatStore } from '@/lib/chat-session/local-chat-store';
 import { createConversation } from '@/lib/database/services/conversation-service';
-import { PersonaUpdateAgent } from '@/lib/llm/agents/PersonaUpdateAgent';
+import { PersonaOnDeviceAgent } from '@/lib/llm/agents/on-device/PersonaOnDeviceAgent';
+import { TutorialHelpOnDeviceAgent } from '@/lib/llm/agents/on-device/TutorialHelpOnDeviceAgent';
+import type { OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import { attestationRequests, FIXTURE_ACCOUNT, gatewayCalls } from '@/test/helpers';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { until } from '@/test/integration/chat/_helpers';
 
 export const local = () => useLocalChatStore.getState();
-export const personaAgent = () => new PersonaUpdateAgent(FIXTURE_ACCOUNT.userId, 'CONFIG');
+export const tutorialAgent = () => new TutorialHelpOnDeviceAgent(FIXTURE_ACCOUNT.userId, null);
+/** The single built-in call (route 'single'): these suites script its one structured reply. Kev turns are in on-device/kev-flows. */
+export const personaAgent = (surface: 'ONBOARDING' | 'CONFIG' = 'CONFIG') =>
+  new PersonaOnDeviceAgent(FIXTURE_ACCOUNT.userId, surface, { route: 'single' });
 
-export async function attachLocal(agent = personaAgent(), persistedIds: string[] = []) {
+export async function attachLocal(agent: OnDeviceAgent = tutorialAgent(), persistedIds: string[] = []) {
   const conversationId = await createConversation('CONFIG' as never);
   const engine = attachChatSession({ conversationId, kind: 'local', agent, persistedIds });
   return { conversationId, engine };
 }
 
-/** Waits for the whole turn (stream AND tools) to end. `engine.send` marks the turn busy
+/** Waits for the whole turn (model AND tools) to end. `engine.send` marks the turn busy
  *  synchronously, so call this right after it. */
 export async function turnDone(ms = 15_000): Promise<void> {
   await until(() => !local().turnBusy, ms, 'turn end');
 }
 
-/** One tool call in the on-device wire format: JSON inside <tool_call> tags. */
-export const localToolCall = (name: string, args: Record<string, unknown> = {}): string =>
-  `<tool_call>${JSON.stringify({ name, arguments: args })}</tool_call>`;
+/** A persona reply as the structured completion returns it (the persona-chat schema). */
+export const personaReply = (fields: {
+  reply?: string;
+  save?: { statement: string; attribute: string }[];
+  delete?: string[];
+  confirm?: boolean;
+  cancel?: boolean;
+}): string => JSON.stringify({ reply: 'Got it.', save: [], ...fields });
 
-/** Splits text into tokens of `size` characters, so a tag lands across several tokens. */
-export function tokensOf(text: string, size = 3): string[] {
-  const out: string[] = [];
-  for (let i = 0; i < text.length; i += size) out.push(text.slice(i, i + size));
-  return out;
-}
-
-export const saveFactsCall = (statement = 'Lives in Porto') =>
-  localToolCall('saveExtractedFacts', { extracted_user_information: [{ statement }] });
+/** A persona reply offering one fact. */
+export const saveFactReply = (statement = 'Lives in <place>') =>
+  personaReply({ reply: 'Did I get that right?', save: [{ statement, attribute: 'location: residence' }] });
 
 export const streamHolds = (): number => activeHolds().filter((h) => h === 'chat-stream').length;
 

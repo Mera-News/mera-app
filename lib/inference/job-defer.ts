@@ -8,9 +8,12 @@
 // is no local session credential yet, or the gateway said "busy" (503) or
 // "slow down" (429). Anything else is an ordinary failed attempt.
 //
-// Only job types the queue lists as deferrable use this; today that is
-// `topic_combo`, whose pass would otherwise burn three attempts on an app
-// closed without a connection.
+// Only job types the queue lists as deferrable use `isDeferrableError`; today
+// that is `topic_combo`, whose pass would otherwise burn three attempts on an
+// app closed without a connection. The built-in model's "busy" and
+// "unavailable" (`isOnDeviceDeferrable`) defer EVERY job type: Gemini Nano
+// refuses background work and has a per-app quota, Apple throttles, and the
+// model can be mid-download. None of that is the job's fault.
 
 /** First delay. The idle poll caps at 30s, so anything shorter is noise. */
 export const DEFER_BASE_MS = 30_000;
@@ -26,6 +29,16 @@ export function deferDelayMs(count: number): number {
 /** `E2EE batch failed: 503 …` — cloudBatchComplete puts the status in the TEXT
  *  and attaches no `statusCode`, so the message is the only place to read it. */
 const STATUS_IN_MESSAGE = /\bfailed: (503|429)\b/;
+
+/**
+ * The built-in on-device model said "not now": busy, over quota, blocked in the
+ * background (all ERR_AFM_BUSY) or not available yet (ERR_AFM_UNAVAILABLE).
+ * Duck-typed on `code`, so this module never imports the native module.
+ */
+export function isOnDeviceDeferrable(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return code === 'ERR_AFM_BUSY' || code === 'ERR_AFM_UNAVAILABLE';
+}
 
 export function isDeferrableError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;

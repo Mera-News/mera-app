@@ -1,27 +1,33 @@
 // Boot-time retirement of on-device models no longer in the catalogue.
 //
-// Runs once after hydrateAllStores(), for OnDevice users only (Cloud users
-// already have every model purged by the boot step in app/_layout.tsx). Nothing
+// Runs once after hydrateAllStores(), for OnDevice users only. Local Cloud
+// users go through the boot purge in use-app-root instead, which deletes every
+// model file only when the cached persona has no on-device intent either. Nothing
 // here may block boot: every failure is captured and swallowed.
 
-import { AccountService } from '@/lib/account-service';
+import { deleteSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
-import { useUserStore } from '@/lib/stores/user-store';
 import { RETIRED_MODEL_IDS } from './model-catalog';
 import { deleteBaseModel, isModelDownloaded } from './modelManager';
+import { RETIRED_TEXT_ENGINE_SETTING } from './text-engine';
+
+/** The notice's notification type: one per day at most. */
+export const ON_DEVICE_FALLBACK_NOTICE = 'on-device-fallback';
 
 /**
- * Deletes the files of every retired model, then enforces the one rule that
- * matters: OnDevice mode requires the selected model to be on disk.
+ * Deletes the files of every retired model (the Qwen text model among them,
+ * D37), then enforces the one rule that matters: OnDevice mode requires On this
+ * phone to be runnable, Kev on disk AND the built-in model available.
  *
- * A user who was on a retired model had their selection remapped to the
- * default at hydrate, so their selected model is not downloaded and they fall
- * back to Cloud here, the same way confirmDeleteModel handles a deleted model.
- * The settings screen keeps their on-device intent and promotes them back to
- * OnDevice once they download a model from the catalogue. The same rule covers
- * a model file the OS evicted from Caches.
+ * A phone that cannot run it (a phone with no built-in model that used the
+ * retired text model, Apple Intelligence switched off, a file the OS evicted
+ * from Caches) falls back to Cloud LOCALLY ONLY, and says so: a notice in the
+ * notifications inbox, with a toast when the app can show one. Never silently
+ * (D37). The server persona keeps saying OnDevice, which is the reader's intent:
+ * the settings screen reads it and shows why, and the download path or the
+ * foreground restore promote the phone back once it can run.
  */
 export async function retireLegacyModels(): Promise<void> {
   for (const modelId of RETIRED_MODEL_IDS) {
@@ -35,32 +41,47 @@ export async function retireLegacyModels(): Promise<void> {
     }
   }
 
+  deleteSetting(RETIRED_TEXT_ENGINE_SETTING).catch(() => {});
+
   const store = useMeraProtocolStore.getState();
   if (store.processingMode !== ProcessingMode.OnDevice) return;
-
-  let downloaded = false;
-  try {
-    downloaded = await isModelDownloaded();
-  } catch {
-    downloaded = false;
-  }
-  if (downloaded) return;
+  if ((await localModeFor(ProcessingMode.OnDevice)) === ProcessingMode.OnDevice) return;
 
   store.setProcessingMode(ProcessingMode.Cloud);
   store.setModelState('not_downloaded');
   store.setDownloadProgress(0);
+}
 
-  // Local identity, never the session (only the logout button logs out, and the
-  // session may not have resolved this early in boot).
-  const userId = useUserStore.getState().userId;
-  if (!userId) return;
+/** Lazy: the toast manager reaches components, and this module is in the toolkit barrel. */
+async function showFallbackNotice(): Promise<void> {
   try {
-    await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
-  } catch (err) {
-    // Best effort. The settings screen will not re-promote OnDevice without a
-    // model on disk, so a failed write here cannot strand the user.
-    logger.captureException(err, {
-      tags: { component: 'retire-models', method: 'update-processing-mode' },
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
+    await toastManager.showNotifiedToast({
+      type: ON_DEVICE_FALLBACK_NOTICE,
+      source: 'mera-protocol',
+      title: 'meraProtocol.fallbackNoticeTitle',
+      body: 'meraProtocol.fallbackNoticeBody',
+      action: 'info',
+      dedupeDaily: true,
     });
+  } catch (err) {
+    logger.captureException(err, { tags: { component: 'retire-models', method: 'fallback-notice' } });
   }
+}
+
+/**
+ * The mode this phone may run for a given server persona mode: OnDevice only
+ * when On this phone can run now, else Cloud. Every copy of the server mode into
+ * the local store goes through this, so the local Private cloud fallback is never
+ * undone by a persona read while the server keeps the on-device intent. When the
+ * answer moves a phone that is on OnDevice now to Cloud, the reader is told
+ * (D37): the notice fires here, where every such move passes.
+ */
+export async function localModeFor(mode: ProcessingMode): Promise<ProcessingMode> {
+  if (mode !== ProcessingMode.OnDevice) return mode;
+  const runnable = await isModelDownloaded().catch(() => false);
+  if (runnable) return mode;
+  if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice) await showFallbackNotice();
+  return ProcessingMode.Cloud;
 }

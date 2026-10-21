@@ -23,33 +23,24 @@ import { getSubscribedCoverageForArticle } from '@/lib/database/services/subscri
 import { createTopics } from '@/lib/database/services/topic-service';
 import { ProcessingMode, type ArticleWithClusters } from '@/lib/generated/graphql-types';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
-import { LOCAL_CONTEXT_TOKENS } from '@/lib/mera-protocol-toolkit/core/context-size';
-import { getInferenceStats, resetInferenceStats } from '@/lib/mera-protocol-toolkit/core/inference-stats';
-import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
+import { resetInferenceStats } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import logger from '@/lib/logger';
+import { KEV_QUESTIONS } from '@/lib/mera-protocol/kev-relevance';
 import { buildReasonCallsForSubset, buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
 import {
-  LOCAL_ARTICLES_PER_SCORE_PROMPT,
-  LOCAL_SCORE_MAX_TOKENS,
   buildStageCandidates,
   computeAndScoreForCandidates,
   computeMathStage,
   effectiveHarnessConfig,
   getScoringLlmPort,
   loadPersonaScoringContext,
-  withLocalScoringOverrides,
 } from '@/lib/mera-protocol/stage-scoring';
 import { runSubscriptionReadStage } from '@/lib/mera-protocol/stage-subscription-read';
-import { buildScoreCallForChunk } from '@/lib/news-harness/article-pipeline/scoring';
 import { ARTICLE_METADATA_PREFIX } from '@/lib/news-harness/article-pipeline/tag-prompt';
 import {
   DEFAULT_HARNESS_CONFIG,
   type ArticlePipelineConfig,
 } from '@/lib/news-harness/core/config';
-import {
-  CLOUD_RELEVANCE_SYSTEM_PROMPT,
-  LOCAL_RELEVANCE_SYSTEM_PROMPT,
-} from '@/lib/news-harness/prompts/prompts';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {
   advanceUntilDone,
@@ -61,12 +52,16 @@ import {
   type GatewayCall,
   type GatewayResponder,
 } from '@/test/helpers';
-import { installLlama, llamaCalls } from '@/test/helpers/llama';
+import { decideCalls, installDecide, installLlama, llamaCalls } from '@/test/helpers/llama';
+import { setAppState } from '@/test/helpers/app-state';
 import { resetFileSystem } from '@/test/helpers/fs';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
+import { SUBSCRIPTION_READ_SYSTEM } from '@/lib/news-harness/on-device/subscription-read/prompt';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 jest.setTimeout(30_000);
 
@@ -84,6 +79,7 @@ beforeEach(async () => {
   resetFileSystem();
   resetInferenceStats();
   await disposeModel();
+  installOnDeviceLlm();
   useMeraProtocolStore.getState().setModelState('downloaded');
   mode('cloud');
   await signInFixtureAccount();
@@ -172,163 +168,106 @@ function scoreAll(score: number): GatewayResponder {
 }
 
 // ===========================================================================
-// withLocalScoringOverrides / the local prompt
+// on-device relevance runs through Kev
 // ===========================================================================
 
-describe('withLocalScoringOverrides', () => {
-  it('routes the local prompt, one article per call, with a small output budget', () => {
-    const cfg = withLocalScoringOverrides(DEFAULT_HARNESS_CONFIG);
-    expect(cfg.articlePipeline.relevanceSystemPrompt).toBe(LOCAL_RELEVANCE_SYSTEM_PROMPT);
-    expect(cfg.articlePipeline.articlesPerScorePrompt).toBe(LOCAL_ARTICLES_PER_SCORE_PROMPT);
-    expect(LOCAL_ARTICLES_PER_SCORE_PROMPT).toBe(1);
-    expect(cfg.articlePipeline.scoreBatchMaxTokens).toBe(LOCAL_SCORE_MAX_TOKENS);
-    expect(LOCAL_SCORE_MAX_TOKENS).toBe(24);
-  });
-
-  it('never edits DEFAULT_HARNESS_CONFIG (the cloud path keeps its prompt)', () => {
-    withLocalScoringOverrides(DEFAULT_HARNESS_CONFIG);
-    expect(DEFAULT_HARNESS_CONFIG.articlePipeline.relevanceSystemPrompt).toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
-    expect(DEFAULT_HARNESS_CONFIG.articlePipeline.articlesPerScorePrompt).toBe(5);
-    expect(DEFAULT_HARNESS_CONFIG.articlePipeline.scoreBatchMaxTokens).toBe(320);
-  });
-});
-
-describe('local prompt fits the model context', () => {
-  const heavyPersona = Array.from(
-    { length: 20 },
-    (_, i) => `Fact ${i}: follows local council decisions and school closures in a mid-size city near the coast`,
-  );
-
-  it('a 20-fact persona plus one long article fits with room for the answer, on the real local lane', async () => {
-    mode('on-device');
-    installLlama(['[0.6]']);
-    for (const f of heavyPersona) await addFact(f);
-    const [c] = await seedAndLoad(['a1'], { factless: true, headline: 'COUNTRY', description: 'x'.repeat(600) });
-    const stageInput = { ...c, relatedFacts: [{ id: 'f', statement: 'Lives in Hoorn, North Holland, Netherlands' }] };
-
-    await run(computeAndScoreForCandidates([stageInput]));
-
-    const [call] = llamaCalls();
-    expect(call).toBeDefined();
-    const total = estimateTokens(call.messages[0].content) + estimateTokens(call.messages[1].content) + LOCAL_SCORE_MAX_TOKENS;
-    expect(total).toBeLessThan(LOCAL_CONTEXT_TOKENS);
-    expect(call.messages[0].content).toBe(LOCAL_RELEVANCE_SYSTEM_PROMPT);
-    expect(call.params.n_predict).toBe(24);
-    expect(call.messages[1].content.match(/<<ARTICLE /g)).toHaveLength(1);
-    // Every fact of the bank went in.
-    expect(call.messages[1].content).toContain('Fact 19');
-  });
-
-  it('the old routing (cloud prompt, five articles) did NOT fit, which is the bug this pins', async () => {
-    const [c] = await seedAndLoad(['a1'], { description: 'x'.repeat(600) });
-    const { system, prompt } = buildScoreCallForChunk(Array(5).fill(c), heavyPersona, CLOUD_RELEVANCE_SYSTEM_PROMPT);
-    expect(estimateTokens(system) + estimateTokens(prompt) + 320).toBeGreaterThan(LOCAL_CONTEXT_TOKENS);
-  });
-});
-
-// ===========================================================================
-// the local LLM port
-// ===========================================================================
-
-describe('the local LLM port', () => {
+describe('on-device relevance - Kev', () => {
   beforeEach(() => mode('on-device'));
 
-  const call = (over: Record<string, unknown> = {}) => ({
-    id: 'score:0',
-    system: 's',
-    prompt: 'p',
-    maxTokens: 24,
-    temperature: 0.1,
-    ...over,
+  it('asks Kev one question per article and makes no completion', async () => {
+    installLlama([]);
+    installDecide({ scores: { rel: 3 } });
+    const cs = await seedAndLoad(['a', 'b']);
+
+    const stage = await run(computeAndScoreForCandidates(cs));
+
+    expect(decideCalls()).toHaveLength(2);
+    expect(llamaCalls()).toHaveLength(0);
+    // Kev's top level is relevance 1 before the shared penalties.
+    expect(stage.rawScoreMap.get('a')).toBeCloseTo(1, 5);
+    expect(stage.rawScoreMap.get('b')).toBeCloseTo(1, 5);
   });
 
-  it('is the port on-device mode gets, and tags relevance calls for the speed readout', async () => {
-    installLlama(['[0.62]']);
+  it('sends the decided request: the question, the whole fact bank and a 500-char description', async () => {
+    installLlama([]);
+    await addFact('Lives in Hoorn');
+    const cs = await seedAndLoad(['a'], { description: 'x'.repeat(900) });
 
-    const [res] = await run(getScoringLlmPort().batchComplete([call()], {}));
+    await run(computeAndScoreForCandidates(cs));
 
-    expect(res).toEqual({ id: 'score:0', output: '[0.62]' });
-    expect(llamaCalls()).toHaveLength(1);
-    expect(getInferenceStats().relevance.count).toBe(1);
-    // A bare `[0.62]` answer is plain text: the JSON grammar contradicts it and breaks the LFM family.
-    expect(llamaCalls()[0].params.response_format).toBeUndefined();
+    const { request } = decideCalls()[0];
+    expect(request.questions).toEqual(KEV_QUESTIONS);
+    const state = request.state as { reader: string[]; article: { title: string; description: string } };
+    expect(state.reader).toContain('Lives in Hoorn');
+    expect(state.article.title).toBe('Story a saga' + 'a');
+    expect(state.article.description).toHaveLength(500);
+    expect(state.article).not.toHaveProperty('country');
+  });
+
+  it('calibrates the level: 0 is far below the 0.4 gate, 2 of 3 lands above it', async () => {
+    installLlama([]);
+    installDecide((call) => ({ scores: { rel: String(JSON.stringify(call.request.state)).includes('Story low') ? 0 : 2 } }));
+    const cs = [...(await seedAndLoad(['low'], { title: 'Story low' })), ...(await seedAndLoad(['mid']))];
+
+    const stage = await run(computeAndScoreForCandidates(cs));
+
+    expect(stage.rawScoreMap.get('low')).toBe(0);
+    expect(stage.rawScoreMap.get('mid')).toBeGreaterThan(0.4);
+  });
+
+  it('a Kev failure leaves the math score standing and logs a scrubbed message and the prompt size, never the article or a fact', async () => {
+    installLlama([]);
+    await addFact('Lives in Hoorn');
+    installDecide({ error: 'system_one template failed to render: Story a sagaa / Lives in Hoorn / "x"' });
+    const [c] = await seedAndLoad(['a']);
+
+    const stage = await run(computeAndScoreForCandidates([c]));
+
+    expect(stage.rawScoreMap.get('a')).toBe(stage.computedScoreMap.get('a'));
+    expect(logger.warn).toHaveBeenCalledWith('kev_decide_failed', {
+      id: 'a',
+      error: 'Error',
+      message: 'system_one template failed to render: … / … / "…"',
+      stateChars: expect.any(Number),
+    });
+    const logged = JSON.stringify((logger.warn as jest.Mock).mock.calls);
+    expect(logged).not.toContain('Hoorn');
+    expect(logged).not.toContain('saga');
+  });
+
+  it('in the background the stage throws a busy instead of scoring, so the batch stays unscored', async () => {
+    installLlama([]);
+    const [c] = await seedAndLoad(['a']);
+    setAppState('background');
+    try {
+      await expect(run(computeAndScoreForCandidates([c]))).rejects.toMatchObject({ code: 'ERR_AFM_BUSY' });
+      expect(decideCalls()).toHaveLength(0);
+    } finally {
+      setAppState('active');
+    }
   });
 
   it('is the cloud port in cloud mode', async () => {
+    installLlama([]); // sets on-device; the mode under test comes after it
     mode('cloud');
-    installLlama([]);
     server.use(...mockGateway(() => '[0.5]'));
 
-    const [res] = await run(getScoringLlmPort().batchComplete([call()], {}));
+    const [res] = await run(getScoringLlmPort().batchComplete([{ id: 'score:0', system: 's', prompt: 'p', maxTokens: 24, temperature: 0.1 }], {}));
 
     expect(res.output).toBe('[0.5]');
     expect(gatewayCalls('batch')).toHaveLength(1);
     expect(llamaCalls()).toHaveLength(0);
   });
 
-  it('refuses a prompt that cannot fit, fails open and says why', async () => {
-    installLlama(['[0.5]']);
-
-    const [res] = await run(getScoringLlmPort().batchComplete([call({ system: 'x'.repeat(4 * LOCAL_CONTEXT_TOKENS) })], {}));
-
-    expect(llamaCalls()).toHaveLength(0);
-    expect(res.error).toBe('local prompt exceeds the model context');
-    expect(res.output).toBe('');
-    expect(logger.warn).toHaveBeenCalledWith('local_relevance_prompt_overflow', expect.any(Object));
-  });
-
-  it('warns on an empty completion instead of letting it pass silently', async () => {
-    installLlama(['']);
-
-    const [res] = await run(getScoringLlmPort().batchComplete([call()], {}));
-
-    expect(llamaCalls()).toHaveLength(1);
-    expect(res.output).toBe('');
-    expect(logger.warn).toHaveBeenCalledWith('local_relevance_empty_output', expect.any(Object));
-  });
-
-  it('turns a model failure into the error channel instead of throwing', async () => {
-    installLlama({ tokens: [], error: 'native crash' });
-
-    const [res] = await run(getScoringLlmPort().batchComplete([call()], {}));
-
-    expect(res).toEqual({ id: 'score:0', output: '', error: 'native crash' });
-  });
-
-  it('completes a single prompt as JSON', async () => {
-    installLlama(['{"ok":true}']);
+  it('the local port completes the subscription read as plain text on the built-in model: no schema to quote its SKIP', async () => {
+    installLlama([]);
+    installOnDeviceLlm({ reply: 'SKIP' });
 
     const out = await run(getScoringLlmPort().complete({ systemPrompt: 's', prompt: 'p', maxTokens: 10, temperature: 0 }));
 
-    expect(out).toBe('{"ok":true}');
-    expect(llamaCalls()[0].params.response_format).toEqual({ type: 'json_object' });
-  });
-});
-
-describe('decoding the local answer shape', () => {
-  beforeEach(() => mode('on-device'));
-
-  it.each([
-    ['[0.62]', 0.62],
-    ['[0.05]', 0.05],
-    [' [0.91] ', 0.91],
-  ])('decodes %s', async (output, expected) => {
-    installLlama([output]);
-    const [c] = await seedAndLoad(['a']);
-
-    const stage = await run(computeAndScoreForCandidates([c]));
-
-    expect(stage.rawScoreMap.get('a')).toBeCloseTo(expected, 5);
-  });
-
-  it('an empty answer is the fallback, which is what the old overflow produced for every article', async () => {
-    installLlama(['']);
-    const [c] = await seedAndLoad(['a']);
-
-    const stage = await run(computeAndScoreForCandidates([c]));
-
-    expect(llamaCalls()).toHaveLength(1);
-    expect(stage.rawScoreMap.get('a')).toBe(ART.fallbackRelevance);
+    expect(out).toBe('SKIP');
+    expect(onDeviceLlmCalls()[0]).toMatchObject({ kind: 'respond', instructions: 's', prompt: 'p' });
+    expect(llamaCalls()).toHaveLength(0);
   });
 });
 
@@ -926,15 +865,81 @@ describe('runSubscriptionReadStage', () => {
 
   it('reads on the on-device model when the person runs on device, with no gateway call', async () => {
     mode('on-device');
-    installLlama(['Leads with the coalition talks.']);
+    installLlama([]);
+    installOnDeviceLlm({ reply: 'Leads with the coalition talks.' });
     await subscribe();
     await seedStory();
 
     expect(await run(runSubscriptionReadStage())).toBe(1);
 
     expect(gatewayCalls()).toHaveLength(0);
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect((await stamp('anchor')).read).toBe('Leads with the coalition talks.');
+  });
+
+  describe('on device: its own prompt and reader', () => {
+    const userOf = () => onDeviceLlmCalls()[0].prompt;
+    const reads = (reply: string) => {
+      installLlama([]);
+      installOnDeviceLlm({ reply });
+    };
+
+    it('sends the on-device instruction and the outlet\'s fields', async () => {
+      reads('Leads with the coalition talks.');
+      await subscribe();
+      await seedStory();
+
+      await run(runSubscriptionReadStage());
+
+      expect(onDeviceLlmCalls()[0].instructions).toBe(SUBSCRIPTION_READ_SYSTEM);
+      expect(userOf()).toContain('The reader is looking at this story: Cabinet falls over nitrogen plan');
+      expect(userOf()).toContain('Their subscribed outlet: Het Parool');
+      expect(userOf()).toContain('Its headline: Coalition talks collapse');
+      expect(userOf()).toContain('Its description: The coalition failed to agree on nitrogen limits.');
+      expect(onDeviceLlmCalls()[0].kind).toBe('respond');
+    });
+
+    // A small model dresses its SKIP up. Each of these must be stamped like a bare SKIP, or the
+    // row shows the word to the reader or is re-asked on every sync.
+    it.each(['SKIP.', '"SKIP"', 'skip', '```\nSKIP\n```', 'SKIP. The text is too thin to say more.'])(
+      '%j is a SKIP: stamped, no read, never re-asked',
+      async (reply) => {
+        reads(reply);
+        await subscribe();
+        await seedStory();
+
+        expect(await run(runSubscriptionReadStage())).toBe(0);
+        expect(await stamp('anchor')).toMatchObject({ read: '' });
+        expect((await stamp('anchor')).at).not.toBeNull();
+        await run(runSubscriptionReadStage());
+        expect(onDeviceLlmCalls()).toHaveLength(1);
+      },
+    );
+
+    it('drops quotes around a real read', async () => {
+      reads('"Leads with the coalition talks."');
+      await subscribe();
+      await seedStory();
+
+      expect(await run(runSubscriptionReadStage())).toBe(1);
+      expect((await stamp('anchor')).read).toBe('Leads with the coalition talks.');
+    });
+
+    describe('on the built-in model', () => {
+      it('stops on busy: no row is stamped and the next row is never asked', async () => {
+        installLlama([]);
+        installOnDeviceLlm({ reply: { error: 'ERR_AFM_BUSY' } });
+        await subscribe();
+        await seedStory(['a', 'b']);
+
+        expect(await run(runSubscriptionReadStage())).toBe(0);
+
+        expect(onDeviceLlmCalls()).toHaveLength(1);
+        expect((await stamp('a')).at).toBeNull();
+        expect((await stamp('b')).at).toBeNull();
+        expect(logger.warn).not.toHaveBeenCalledWith('[subscription-read] one row failed, continuing', expect.anything());
+      });
+    });
   });
 
   describe('the prompt', () => {

@@ -16,6 +16,8 @@ import React, { useEffect, useState } from 'react';
  */
 export const useNoteInk = themedStyles((c, mode) => ({
     box: mode === 'dark' ? tint(c.base, 0.25) : tint(c.ink, 0.06),
+    /** A fact chip inside the note box: a step lighter than the box itself. */
+    chip: tint(c.ink, mode === 'dark' ? 0.12 : 0.08),
     ink: c.ink,
     ai: c.ink2,
 }));
@@ -59,22 +61,19 @@ export function useMatchedFacts(topicIds: string[] | null | undefined): Fact[] {
 }
 
 /**
- * The facts a complete, note-less suggestion matched, as chips. ONE component
- * for the Feed card and the detail screen, so the two show the same chips.
- * Mount it only where the chips can appear: it queries on mount.
+ * The facts that found a suggestion, as chips. ONE component for the Feed card
+ * and the detail screen, drawn INSIDE the note box beside the relevance chip
+ * whenever there is no note yet (writing) or none at all (Skip notes). Mount it
+ * only where the chips can appear: it queries on mount.
  */
 const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicIds }) => {
     const facts = useMatchedFacts(topicIds);
     const note = useNoteInk();
     if (facts.length === 0) return null;
     return (
-        <HStack className="flex-wrap justify-end" space="xs" testID="fact-chips">
+        <HStack className="flex-wrap" space="xs" testID="fact-chips">
             {facts.map((fact) => (
-                <Box
-                    key={fact.id}
-                    className="px-2.5 py-1 rounded-full mb-1"
-                    style={{ backgroundColor: note.box }}
-                >
+                <Box key={fact.id} className="px-2.5 py-1 rounded-full" style={{ backgroundColor: note.chip, marginVertical: 2 }}>
                     <Text size="2xs" style={{ color: note.ink, fontWeight: '600' }} numberOfLines={1}>
                         {primaryStatement(fact.statement)}
                     </Text>

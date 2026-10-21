@@ -18,6 +18,7 @@
 
 import { holdRestart } from '@/lib/app-restart';
 import type { ConversationMessage, IAgent } from '@/lib/llm/types';
+import type { ChatAgent, OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import logger from '@/lib/logger';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -30,7 +31,7 @@ export type EngineKind = 'cloud' | 'local';
 interface Live {
     readonly conversationId: string;
     readonly kind: EngineKind;
-    readonly engine: ChatEngine;
+    readonly engine: ChatEngine<ChatAgent>;
     readonly persisted: Set<string>;
 }
 
@@ -38,15 +39,16 @@ let live: Live | null = null;
 let release: (() => void) | null = null;
 let wired = false;
 
-/** Engine factories, required lazily: they pull in the inference stack. */
-function createEngine(kind: EngineKind, agent: IAgent): ChatEngine {
+/** Engine factories, required lazily: they pull in the inference stack. The
+ *  view pairs the kind with its agent (createAgentForContext). */
+function createEngine(kind: EngineKind, agent: ChatAgent): ChatEngine<ChatAgent> {
     if (kind === 'cloud') {
         const { createCloudEngine } =
             require('@/lib/hooks/useCloudPersonaChat') as typeof import('@/lib/hooks/useCloudPersonaChat');
-        return createCloudEngine(agent);
+        return createCloudEngine(agent as IAgent) as ChatEngine<ChatAgent>;
     }
     const { createLocalEngine } = require('@/lib/llm/useLocalLLM') as typeof import('@/lib/llm/useLocalLLM');
-    return createLocalEngine(agent);
+    return createLocalEngine(agent as OnDeviceAgent) as ChatEngine<ChatAgent>;
 }
 
 function busyNow(): boolean {
@@ -115,7 +117,7 @@ function wire(): void {
 export interface AttachOptions {
     readonly conversationId: string;
     readonly kind: EngineKind;
-    readonly agent: IAgent;
+    readonly agent: ChatAgent;
     /** Ids already in the `messages` table for this conversation. */
     readonly persistedIds: readonly string[];
 }

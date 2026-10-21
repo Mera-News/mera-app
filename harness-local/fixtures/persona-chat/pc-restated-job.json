@@ -1,0 +1,40 @@
+{
+  "description": "A saved job said again: nothing is offered.",
+  "category": "no-action",
+  "clear": true,
+  "knownFacts": "- 'location: residence': Lives in Leipzig, Germany\n- 'profession: job': Works as a pharmacist\n- 'family: children': Has two young children",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Has two young children",
+      "attribute": "family: children"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a pharmacist",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Leipzig, Germany",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "I'm a pharmacist, I told you that already."
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "saveExtractedFacts",
+    "intent": [
+      "repeats_saved_fact",
+      "share_new_fact",
+      "question_or_chat",
+      "thanks_or_ack"
+    ],
+    "calls": [],
+    "ask": "no"
+  }
+}

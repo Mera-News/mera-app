@@ -33,6 +33,10 @@ export type Fact = {
 
 // --- Core Inference ---
 
+/** The on-device text engine (core/text-engine.ts): the platform's built-in model. Declared here
+ *  so this file stays a leaf: the harness typechecks it without the app graph. */
+export type TextEngine = 'afm' | 'nano';
+
 export type InferParams = {
   prompt: string; // Full prompt string
   systemPrompt?: string; // Optional system-level instruction
@@ -40,8 +44,9 @@ export type InferParams = {
   temperature?: number; // Sampling temperature (default: 0.3)
   stopSequences?: string[]; // Early termination strings
   responseFormat?: 'text' | 'json'; // Hint for structured output
-  enableThinking?: boolean; // Enable Qwen3 thinking mode (default: false)
+  enableThinking?: boolean; // Ignored by the built-in models; kept for callers that still pass it
   label?: InferenceLabel; // Which caller this is, for the in-memory speed readout
+  engine?: TextEngine; // The engine the prompt was built for; a phone only ever has one
 };
 
 export type InferResult = {
@@ -54,10 +59,9 @@ export type InferResult = {
 // --- Model Lifecycle ---
 
 export type BaseModelDownloadConfig = {
-  modelId: string; // e.g., "mera-qwen3-4b"
-  modelUrl: string; // URL to GGUF base model
-  expectedChecksum: string; // SHA-256 of final artifact
-  storageBudgetMB?: number; // Max local storage allowed
+  modelId: string; // e.g., "mera-kev-4b"
+  modelUrl: string; // URL to the GGUF
+  sizeBytes: number; // Exact size; any other size is a damaged download
 };
 
 export type BaseModelManifest = {
@@ -80,7 +84,7 @@ export type ModelState = {
 
 // --- System Requirements ---
 
-export type RequirementCheckId = 'ram' | 'os_version' | 'chip' | 'storage';
+export type RequirementCheckId = 'ram' | 'os_version' | 'chip' | 'built_in' | 'storage';
 
 export type SystemRequirementsResult = {
   supported: boolean;

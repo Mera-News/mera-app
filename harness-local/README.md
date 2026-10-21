@@ -267,6 +267,92 @@ The two together are a control pair. A run where the prefix reaches the model in
 the first and not in the second is the cap working; either result alone proves
 nothing.
 
+## On-device engines (`--engine`)
+
+`--engine cloud|afm|qwen-local|nano-proxy` (default `cloud`) on `run-singleshot-corpus`,
+`replay-persona-chat`, `run-persona-corpus`, `run-topicgen-corpus` and
+`run-newsharness-corpus`. A non-cloud engine switches the PROMPTS too: the runner builds
+the phone's on-device flows from `lib/news-harness/on-device/<flow>/` and calls the model
+the way `inference.ts` does (`lib/engine.ts`: guided JSON on AFM, a json_schema grammar
+on Qwen, the schema in the prompt on Nano, one retry with the JSON reminder, prompts cut
+to the engine's window). No staging credentials, no cost.
+
+| Engine | What | Setup |
+|---|---|---|
+| `afm` | Apple's on-device model via `harness-local/afm/main.swift` (JSONL over stdin) | macOS with Apple Intelligence on. Built to `~/.cache/mera-harness/afm-bridge` on first use. |
+| `qwen-local` | The pinned Qwen3.5-4B Q4_K_M, the retired Mera text model. A reference only: the app no longer ships it (D37) | `llama-server -m ~/.cache/mera-harness/models/Qwen3.5-4B-Q4_K_M.gguf -c 4096 -np 1 --jinja --port 8080` |
+| `nano-proxy` | Gemma 4 E4B Q4_0 (ggml-org, Apache 2.0). A PROXY for Gemini Nano, never Nano: same 4000-token input and JSON-in-text output, a different model. | `llama-server -m ~/.cache/mera-harness/models/gemma-4-E4B-it-Q4_0.gguf -c 4096 -np 1 --jinja --port 8081` |
+
+Setup: `brew install llama.cpp`, then download with `curl -L -C - -o <file> <url>`
+(resume-safe) into `~/.cache/mera-harness/models/`. The Qwen URL is
+`https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf`
+(2,740,937,888 bytes); Gemma is
+`ggml-org/gemma-4-E4B-it-GGUF` at `a69f018d`. `-np 1` matters: the server splits `-c`
+across slots. `NEWS_HARNESS_QWEN_URL` / `NEWS_HARNESS_NANO_PROXY_URL` move the servers.
+
+What each runner does on-device:
+- `run-singleshot-corpus`: follow-story and article chat; arms `<engine>` and `<engine>-twin`
+  (noise floor). Fact-check fixtures pass as `answer` with no calls (cloud-only there).
+- `replay-persona-chat`: the `ondevice-*` fixtures (or `--fixture a,b`); `saveMentions` and
+  `deleteIds` check what was offered. `runCalibration` fixtures are N/A.
+- `run-persona-corpus`: the cohorts with state carried, `<engine>@ondevice` rows.
+- `run-topicgen-corpus`: the STEP A facts, one call per fact, no combo; score with
+  `score-topic-run.ts <dir> --control <engine>`.
+- `run-newsharness-corpus`: the notes pass only, on goldset articles whose `v1Relevance`
+  clears the gate (a stand-in for Kev's score). Rate blind with `rater-export.ts`.
+
+A guardrail, refusal, context overflow or reply that never fit the schema is a FAIL the
+user would see. Only a transport failure (server or bridge down, busy) drops a row.
+
+Scorers: `score-option-quality.ts <singleshot dir>` (copied example, 3 to 4 options, names
+the article, widens, no ended season) and `adoption-report.ts --candidate <dirs>
+--baseline <dirs>` (the D34 table). Unit test: `npx tsx --test harness-local/lib/option-quality.test.ts`.
+
+## Chat flows on both routes (`run-chat-flows`)
+
+`scripts/run-chat-flows.ts --arms afm:kev,afm:single --split dev|test [--flow persona,article,follow] [--repeat 3]`
+runs persona chat, article chat and follow-story on `<engine>:<route>` arms. `kev` is the
+app's "Kev decides, the built-in model writes" core (`lib/news-harness/on-device/kev`,
+`*/kev-spec.ts`) with local Kev (above) and the engine as writer; `single` is the one
+built-in call. Both routes get the same per-fixture input (conversation, matched topics,
+already-following, the waiting card). Ids per split: `fixtures/splits/<flow>.json`.
+Scoring is `lib/chat-flow-score.ts` (unit test: `npx tsx --test harness-local/lib/chat-flow-score.test.ts`);
+`scripts/chat-flow-report.ts <dirs>` pools runs into one table. The test split is held out:
+tune on dev only.
+
+## Kev on this Mac
+
+`adapters/kev-local.ts` runs Kev through llama.rn's own C++. It builds `kev/` (CMake) from
+`node_modules/llama.rn`: the vendored llama.cpp it pins, plus `rn-decision.cpp`, built for
+Metal into `~/.cache/mera-harness/kev-build/kev-decide`. The context is the app's
+(`initParamsFor`), and every request goes through `llama_rn_context::decide()`. It is built
+on first use and rebuilt when `kev/` or the llama.rn version changes. `startKevLocal()`
+returns `{ label, decide, stop }`; `decide` has the toolkit's `decide()` shape (the kev
+core's DecidePort) and runs one request at a time.
+
+Setup: `brew install cmake`, then the pinned GGUF (`RELEVANCE_MODEL.modelUrl` in
+`lib/mera-protocol-toolkit/core/model-catalog.ts`):
+`curl -L -C - -o ~/.cache/mera-harness/models/Kev-4B-Q4_K_M.gguf <url>`. It must be exactly
+3,033,489,824 bytes, sha256 `33ae6b18…a19eff9`.
+
+`--kev-url <base>` swaps in any `/v1/systemone` server. It is a labelled fallback and never
+the default:
+- brew's `llama-server -m <Kev gguf> -c 4096 -b 4096 -ub 4096 -fa on -ctk f16 -ctv f16 -np 1
+  --cache-ram 0 --port 8090` serves the same answers, within 3e-8.
+- `https://api.redpill.ai/v1` is cloud kev-4b at full precision. It needs `REDPILL_API_KEY`
+  in `.env.harness`.
+
+Smoke and parity:
+`npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/kev-parity.ts --rows 3`.
+It runs the app's relevance question on goldset rows and checks the following:
+- that A, then B, then A gives identical answers;
+- the k distribution;
+- `--compare-url`: per-row deltas against a second backend;
+- per-row deltas against the 2026-10-16 cloud run.
+
+Kev's `systemone` template writes no `{{ sep }}` and does not use the question id, so llama.rn
+and upstream render the same prompt. The temperature (2.406) comes from the GGUF.
+
 ## Known limits and follow-ups
 
 **Reason-gated metrics cannot compare arms, and nothing in the runner stops you

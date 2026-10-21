@@ -1,0 +1,38 @@
+{
+  "description": "A bare thanks carries no fact. Nothing may be saved.",
+  "knownFacts": "- 'location: residence': Lives in Porto, Portugal\n- 'profession: job': Senior software engineer\n- 'interest: topic': Follows Formula 1 racing",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Senior software engineer",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Porto, Portugal",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "What do you know about me so far?"
+    },
+    {
+      "role": "assistant",
+      "content": "You live in Porto, work as a senior software engineer and follow Formula 1."
+    },
+    {
+      "role": "user",
+      "content": "thanks, that's all for now"
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "saveExtractedFacts"
+  }
+}

@@ -280,6 +280,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             options={item.options}
             saveAll={item.saveAll}
             answered={item.answered}
+            // Focuses the composer and sends nothing: the user types their own reading.
+            onSomethingElse={item.somethingElse ? () => promptRef.current?.focus() : null}
             // The thread's existing send, i.e. ChatSessionView.handleSend —
             // the one funnel every gate already sits on.
             onSend={onSend}

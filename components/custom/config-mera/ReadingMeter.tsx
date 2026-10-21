@@ -1,3 +1,4 @@
+import BetaBadge from '@/components/custom/BetaBadge';
 import { Text } from '@/components/ui/text';
 import { fetchUserReading } from '@/lib/billing-service';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
@@ -107,7 +108,13 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, size = 'card'
     if (m.mode === 'onDevice') {
         return (
             <View testID="reading-meter" style={{ gap: 8 }}>
-                {modeRow}
+                <View>
+                    {modeRow}
+                    {/* On this phone is in Beta (D30): the red subtext under its value. */}
+                    <View style={{ alignItems: 'flex-end' }}>
+                        <BetaBadge variant="subtext" testID="reading-on-phone-beta" />
+                    </View>
+                </View>
                 <GlyphRow testID="reading-unlimited" icon="all-inclusive" value={t('you.settings.unlimited')} />
             </View>
         );

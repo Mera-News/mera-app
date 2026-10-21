@@ -1,0 +1,50 @@
+{
+  "description": "A question carrying a new fact: the fact is offered and the question answered.",
+  "category": "save",
+  "clear": true,
+  "knownFacts": "- 'education: study': Studies mechanical engineering\n- 'interest: sport': Follows IPL cricket\n- 'hobby: food': Likes cooking Maharashtrian food\n- 'location: residence': Lives in Pune, India\n- 'interest: topic': Interested in electric vehicles",
+  "facts": [
+    {
+      "id": "f4",
+      "statement": "Interested in electric vehicles",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Pune, India",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f5",
+      "statement": "Likes cooking Maharashtrian food",
+      "attribute": "hobby: food"
+    },
+    {
+      "id": "f3",
+      "statement": "Follows IPL cricket",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f2",
+      "statement": "Studies mechanical engineering",
+      "attribute": "education: study"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "I got an internship at a car maker in Chakan. What kind of news should I keep an eye on?"
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "intern"
+    ],
+    "intent": "share_new_fact",
+    "calls": [
+      "saveExtractedFacts"
+    ],
+    "ask": "no"
+  }
+}

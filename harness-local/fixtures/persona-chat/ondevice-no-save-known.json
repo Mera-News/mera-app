@@ -1,0 +1,30 @@
+{
+  "description": "The user repeats a known fact. It must not be offered again.",
+  "knownFacts": "- 'location: residence': Lives in Porto, Portugal\n- 'profession: job': Senior software engineer\n- 'interest: topic': Follows Formula 1 racing",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Senior software engineer",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Porto, Portugal",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Like I said before, I live in Porto."
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "saveExtractedFacts"
+  }
+}

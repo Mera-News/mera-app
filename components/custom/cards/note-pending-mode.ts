@@ -30,3 +30,13 @@ export function notePendingMode(
     if (s.status !== ArticleSuggestionStatus.ReasonPending || s.reason) return undefined;
     return held ? 'held' : 'writing';
 }
+
+/**
+ * A scored row finalised with no note (Skip notes, D42, in either mode; or a
+ * cloud reasons batch that failed for good): the card shows the relevance chip
+ * alone. Not `reason_skipped` (its fact chips show instead) and not a zero
+ * relevance (never scored, or excluded).
+ */
+export function showsChipOnly(s: Pick<ForYouSuggestion, 'status' | 'reason' | 'relevance'>): boolean {
+    return s.status === ArticleSuggestionStatus.Complete && !s.reason && (s.relevance ?? 0) > 0;
+}

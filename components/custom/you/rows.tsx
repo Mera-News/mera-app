@@ -1,12 +1,14 @@
 // The grouped list look shared by the You pages and Settings: a rounded group
 // card, rows inside it (title, optional sub-line, trailing value, badge or
 // chevron), a small intro line under a page title, and a section label.
+import BetaBadge from '@/components/custom/BetaBadge';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { I18nManager, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 /** A forward chevron that points the reading direction (mirrored in RTL). */
@@ -57,6 +59,8 @@ export interface RowProps {
     readonly bold?: boolean;
     readonly titleColor?: string;
     readonly subtitle?: string;
+    /** A red Beta line under the title: the row is about something that runs on this phone (D30). */
+    readonly beta?: boolean;
     /** Grey text on the trailing side ("5 topics", "Off"). */
     readonly value?: string;
     /** Anything else on the trailing side (a badge, a switch). */
@@ -75,6 +79,7 @@ export const Row: React.FC<RowProps> = ({
     bold = false,
     titleColor,
     subtitle,
+    beta = false,
     value,
     trailing,
     leadingIcon,
@@ -84,6 +89,7 @@ export const Row: React.FC<RowProps> = ({
     testID,
 }) => {
     const colors = useColors();
+    const { t } = useTranslation();
     const titleStyle = { color: titleColor ?? colors.ink, fontSize: 16, lineHeight: 21, fontWeight: bold ? '700' : '400' } as const;
     const body = (
         <View style={styles.row}>
@@ -96,6 +102,7 @@ export const Row: React.FC<RowProps> = ({
                         {title}
                     </Text>
                 )}
+                {beta ? <BetaBadge variant="subtext" testID={testID ? `${testID}-beta` : undefined} /> : null}
                 {subtitle ? (
                     <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{subtitle}</Text>
                 ) : null}
@@ -115,7 +122,7 @@ export const Row: React.FC<RowProps> = ({
             testID={testID}
             onPress={onPress}
             accessibilityRole="button"
-            accessibilityLabel={[title, subtitle, value].filter(Boolean).join(', ')}
+            accessibilityLabel={[title, beta ? t('common.beta') : null, subtitle, value].filter(Boolean).join(', ')}
         >
             {body}
         </Pressable>

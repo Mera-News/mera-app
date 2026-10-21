@@ -14,6 +14,12 @@
 // ARMS: `on` (shipped: thinking on, budget + reasoning headroom), `on-twin`
 // (byte-identical, the noise floor) and `off` (thinking off, no headroom).
 // The pass rule is printed before any call and judged on the turn's outcome.
+//
+// --engine afm|qwen-local|nano-proxy runs the ON-DEVICE flows instead
+// (lib/news-harness/on-device/follow-story and article-feedback): their prompts,
+// schemas and turn mappers, through lib/engine.ts. Arms are `<engine>` and its
+// byte-identical `<engine>-twin`; no staging credentials are needed. Score the
+// options with scripts/score-option-quality.ts.
 import { appendFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadHarnessEnv } from '../config/env';
@@ -35,6 +41,23 @@ import {
 } from '../../lib/news-harness/article-feedback/agent-core';
 import { KNOWLEDGE_TOOL_NAMES } from '../../lib/news-harness/persona-management/persona-agent-core';
 import { asUntrusted } from '../../lib/news-harness/prompts/untrusted-text';
+import { jsonCandidates } from '../../lib/mera-protocol-toolkit/core/structured-json';
+import {
+  buildFollowStoryPrompt,
+  FOLLOW_STORY_SCHEMA,
+  followStoryInstructions,
+  followStoryTurn,
+  type FollowStoryReply,
+} from '../../lib/news-harness/on-device/follow-story';
+import {
+  ARTICLE_FEEDBACK_SCHEMA,
+  articleFeedbackInstructions,
+  articleFeedbackTurn,
+  buildArticleFeedbackPrompt,
+  type ArticleFeedbackReply,
+} from '../../lib/news-harness/on-device/article-feedback';
+import type { OnDeviceTurnResult } from '../../lib/news-harness/on-device/shared';
+import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 
 interface Fixture {
   id: string;
@@ -135,6 +158,12 @@ interface TurnRow {
   passes: number; wallMs: number; firstVisibleMs: number | null;
   completionTokens: number; reasoningTokens: number; truncated: boolean; error: string | null;
   calls: string[]; trackOptions: number; reply: string;
+  /** The staged options as parsed by the executor, for score-option-quality. */
+  options?: { label: string; search: string }[];
+  /** On-device: options in the model's raw JSON, before the schema reader cut any. */
+  rawOptionCount?: number;
+  /** On-device article chat: the intent the model picked. */
+  intent?: string;
 }
 
 async function runTurn(
@@ -181,7 +210,11 @@ async function runTurn(
     for (const [i, c] of r.toolCalls.entries()) {
       row.calls.push(c.name);
       if (c.name === 'proposeTrack') {
-        try { row.trackOptions = Math.max(row.trackOptions, parseTrackScopeOptions(JSON.parse(c.argumentsRaw || '{}').options).length); } catch { /* 0 */ }
+        try {
+          const options = parseTrackScopeOptions(JSON.parse(c.argumentsRaw || '{}').options);
+          if (options.length >= row.trackOptions) row.options = options;
+          row.trackOptions = Math.max(row.trackOptions, options.length);
+        } catch { /* 0 */ }
       }
       wire.push({ role: 'tool', tool_call_id: ids[i], content: JSON.stringify(runTool(f, c)) });
     }
@@ -206,6 +239,137 @@ async function runTurn(
   return row;
 }
 
+/** Options in the model's raw reply, before fitsSchema cut a fifth. */
+function rawOptionCount(content: string): number | undefined {
+  for (const t of [content, ...jsonCandidates(content, '{')]) {
+    try {
+      const v = JSON.parse(t) as { options?: unknown };
+      if (Array.isArray(v?.options)) return v.options.length;
+    } catch { /* next */ }
+  }
+  return undefined;
+}
+
+/**
+ * One on-device turn: the app's on-device agent run in the harness. The
+ * history and fixture article are the cloud path's; prompt, schema and the
+ * reply-to-executor mapping are the on-device flow's. On-device has no fact
+ * check, so a fact-check request passes as an `answer` with no calls.
+ */
+async function runTurnOnDevice(engine: LocalEngine, f: Fixture, arm: string, repeat: number): Promise<TurnRow> {
+  const today = new Date(NOW_MS).toISOString().slice(0, 10);
+  const row: TurnRow = {
+    fixture: f.id, arm, repeat, at: new Date().toISOString(), expect: f.expect, pass: false, why: '',
+    passes: 0, wallMs: 0, firstVisibleMs: null, completionTokens: 0, reasoningTokens: 0, truncated: false,
+    error: null, calls: [], trackOptions: 0, reply: '',
+  };
+  const started = Date.now();
+  let turn: OnDeviceTurnResult | null = null;
+  let content = '';
+  if (f.agent === 'follow-story') {
+    const history = [
+      { role: 'user' as const, content: 'I want to follow a story' },
+      { role: 'assistant' as const, content: 'What story or subject should Mera follow?' },
+      { role: 'user' as const, content: f.message },
+    ];
+    const out = await onDeviceChatTurn<FollowStoryReply>(engine, followStoryInstructions('English'), FOLLOW_STORY_SCHEMA, (b) =>
+      buildFollowStoryPrompt({ today }, history, b),
+    );
+    row.passes = out.attempts.length;
+    content = out.attempts.at(-1)?.content ?? '';
+    row.error = out.error;
+    if (out.value) turn = followStoryTurn(out.value);
+  } else {
+    const a = f.article!;
+    const context = {
+      today, title: a.title, publication: a.publication, description: a.description, relevance: 0.7,
+      matchedTopics: [], producingFacts: [], relatedCoverage: a.related,
+    };
+    const out = await onDeviceChatTurn<ArticleFeedbackReply>(engine, articleFeedbackInstructions('English'), ARTICLE_FEEDBACK_SCHEMA, (b) =>
+      buildArticleFeedbackPrompt(context, [{ role: 'user', content: f.message }], b),
+    );
+    row.passes = out.attempts.length;
+    content = out.attempts.at(-1)?.content ?? '';
+    row.error = out.error;
+    if (out.value) {
+      row.intent = out.value.intent;
+      turn = articleFeedbackTurn(out.value, { matchedTopics: [], publication: a.publication, hasPending: false });
+    }
+  }
+  row.wallMs = Date.now() - started;
+  row.rawOptionCount = rawOptionCount(content);
+  if (turn) {
+    row.reply = turn.reply;
+    row.calls = turn.calls.map((c) => c.name);
+    const track = turn.calls.find((c) => c.name === 'proposeTrack');
+    if (track) {
+      row.options = parseTrackScopeOptions(track.input.options);
+      row.trackOptions = row.options.length;
+    }
+  }
+
+  if (row.error) {
+    // A model outcome (guardrail, refusal, context, no JSON) is a FAIL the user would see;
+    // only a transport failure is an error row that drops its repeat.
+    row.why = row.error;
+    if (!isTransportError(row.error)) row.error = null;
+    return row;
+  }
+  if (/<\/?think>|<tool_call>|<function=/.test(row.reply)) row.why = 'leaked markup in reply';
+  else if (f.expect === 'proposeTrack') {
+    row.pass = row.trackOptions >= 3 && row.trackOptions <= 4;
+    row.why = row.pass ? 'ok' : `proposeTrack options=${row.trackOptions}`;
+  } else {
+    // proposeFactCheck is cloud-only: on-device the right turn explains that, with no calls.
+    row.pass = row.reply.length > 0 && row.calls.length === 0 && (row.intent === undefined || row.intent === 'answer');
+    row.why = row.pass ? 'ok' : `intent=${row.intent ?? '-'} calls=${row.calls.join('+') || 'none'} reply=${row.reply.length}`;
+  }
+  return row;
+}
+
+async function mainOnDevice(engine: LocalEngine, args: { repeat: number; label: string }, fixtures: Fixture[]): Promise<number> {
+  await assertEngineReady(engine);
+  const arms = [engine, `${engine}-twin`];
+  console.log(
+    `fixtures ${fixtures.length} x arms ${arms.join(',')} x repeat ${args.repeat}, ON-DEVICE flows on ${engine}\n` +
+      'PASS RULE (fixed before the run): proposeTrack = 3 or 4 staged options; proposeFactCheck and answer = intent answer,\n' +
+      'a non-empty reply and no calls (fact checks are cloud-only). A guardrail, refusal, context or no-JSON outcome is a FAIL;\n' +
+      'only a transport failure is an error row, and it drops its repeat. The twin is the noise floor.',
+  );
+  const run = createRunWriter({ label: args.label });
+  const out = join(run.dir, 'rows.jsonl');
+  const rows: TurnRow[] = [];
+  for (let r = 0; r < args.repeat; r++) {
+    for (const f of fixtures) {
+      for (const arm of r % 2 ? [...arms].reverse() : arms) {
+        const row = await runTurnOnDevice(engine, f, arm, r);
+        rows.push(row);
+        appendFileSync(out, `${JSON.stringify(row)}\n`);
+        console.log(`r${r} ${arm.padEnd(16)} ${f.id.padEnd(24)} ${row.pass ? 'PASS' : 'FAIL'} ${String(row.wallMs).padStart(6)}ms ${row.why}`);
+      }
+    }
+  }
+  const badRepeats = new Set(rows.filter((x) => x.error).map((x) => x.repeat));
+  const valid = rows.filter((x) => !badRepeats.has(x.repeat));
+  console.log(`\nrun dir: ${run.dir}\ndropped repeats (transport errors): ${[...badRepeats].join(',') || 'none'}`);
+  const stats: Record<string, { pass: number; n: number; p50: number; p90: number; modelFails: number }> = {};
+  for (const a of arms) {
+    const xs = valid.filter((x) => x.arm === a);
+    const s = (stats[a] = {
+      pass: xs.filter((x) => x.pass).length, n: xs.length,
+      p50: pct(xs.map((x) => x.wallMs), 50), p90: pct(xs.map((x) => x.wallMs), 90),
+      modelFails: xs.filter((x) => /^(ERR_AFM_|StructuredOutputError|HTTP 400)/.test(x.why)).length,
+    });
+    console.log(`${a.padEnd(16)} pass ${s.pass}/${s.n}  turn p50 ${s.p50}ms p90 ${s.p90}ms  model-outcome fails ${s.modelFails}`);
+    for (const kind of ['proposeTrack', 'proposeFactCheck', 'answer'] as const) {
+      const k = xs.filter((x) => x.expect === kind);
+      console.log(`                 ${kind.padEnd(16)} ${k.filter((x) => x.pass).length}/${k.length}`);
+    }
+  }
+  run.writeJson('summary', { engine, stats, droppedRepeats: [...badRepeats] });
+  return 0;
+}
+
 function pct(xs: number[], p: number): number {
   if (xs.length === 0) return NaN;
   const s = [...xs].sort((a, b) => a - b);
@@ -217,6 +381,11 @@ async function main(): Promise<number> {
   applyTargetOverride(argv);
   applyEndpointOverrides(argv);
   const args = parseArgs(argv);
+  const engine = parseEngine(argv);
+  if (engine !== 'cloud') {
+    return mainOnDevice(engine, { ...args, label: args.label === 'singleshot' ? `singleshot-${engine}` : args.label },
+      JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[]);
+  }
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
   const fixtures = JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[];

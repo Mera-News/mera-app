@@ -3,7 +3,8 @@
 // It LLM-generates a `{label, search}` scope from the story's known titles, mints
 // a tracked TOPIC from the `search` query, binds it onto the story, and writes the
 // display `label` as the story's headline. Cloud path = one E2EE completion;
-// on-device path = one local completion. Mirrors the story_headline handler's
+// on-device path = one structured local completion with its own prompt
+// (news-harness/on-device/story-scope). Mirrors the story_headline handler's
 // shape (titles → LLM → strict JSON → write) and reuses the queue's retry
 // mechanics. Non-destructive: any transport/parse failure leaves the row
 // unmigrated (still legacy) so a later wave can retry.
@@ -15,8 +16,11 @@ import {
 } from '../../database/services/tracked-story-service';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
-import { completeLocal } from '../../llm/completeLocal';
+import { completeLocalStructured } from '../../llm/completeLocal';
+import { isOnDeviceDeferrable } from '../job-defer';
 import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
+import { buildOnDeviceStoryScopePrompt } from '../../news-harness/on-device/story-scope/prompt';
+import { STORY_SCOPE_SCHEMA, type StoryScopeReply } from '../../news-harness/on-device/story-scope/schema';
 import logger from '../../logger';
 
 /** Seed weight for a topic minted from a legacy follow — mirrors the interactive
@@ -73,16 +77,21 @@ export async function handleTrackedStoryMigrateJob(
         temperature: 0.3,
       });
     } else {
-      raw = await completeLocal({
-        systemPrompt: system,
-        prompt: user,
-        maxTokens: 128,
-        temperature: 0.3,
-        responseFormat: 'json',
-        enableThinking: false,
-      });
+      // Its own prompt and schema; the reply goes through the same parser.
+      const local = buildOnDeviceStoryScopePrompt(titles, Date.now());
+      raw = JSON.stringify(
+        await completeLocalStructured<StoryScopeReply>({
+          systemPrompt: local.system,
+          prompt: local.prompt,
+          schema: STORY_SCOPE_SCHEMA,
+          maxTokens: 128,
+          temperature: 0.3,
+        }),
+      );
     }
   } catch (err) {
+    // The built-in model said "not now" (busy, unavailable): the queue defers the job.
+    if (isOnDeviceDeferrable(err)) throw err;
     // Transport failure — leave the story unmigrated (no write).
     logger.warn('[tracked-story-migrate] completion failed', { error: String(err) });
     return { ok: false };

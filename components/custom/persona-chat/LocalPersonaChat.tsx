@@ -31,7 +31,7 @@ export default function LocalPersonaChat({
   loadingMessage,
 }: LocalPersonaChatProps) {
   const agent = useMemo(
-    () => createAgentForContext(context, userId, surface),
+    () => createAgentForContext(context, userId, surface, 'local'),
     [context, userId, surface],
   );
   const session = useChatSession('local', agent, conversationId, resumeMessages);

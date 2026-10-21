@@ -1,0 +1,32 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'news.mera.ondevicellm'
+version = '1.0.0'
+
+android {
+  namespace "news.mera.ondevicellm"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // Gemini Nano through AICore. The AAR declares minSdk 26; the app keeps 24
+  // through tools:overrideLibrary (plugins/withOnDeviceLlmMinSdk.js) and every
+  // call here is guarded by SDK_INT >= 26.
+  implementation 'com.google.mlkit:genai-prompt:1.0.0-beta4'
+}
+
+// genai-prompt beta4 is compiled with Kotlin 2.3 (metadata 2.3.0) and pulls
+// kotlin-stdlib 2.3.21; the app builds with Kotlin 2.1.20 (React Native 0.83),
+// which reads metadata only up to 2.2. This flag lets this module compile, but
+// stdlib 2.3.21 also reaches every module that depends on this one (the expo
+// aggregator first), so linking the Android side (expo-module.config.json)
+// needs a Kotlin 2.2+ toolchain or this flag on every Kotlin compile task.
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  compilerOptions.freeCompilerArgs.add('-Xskip-metadata-version-check')
+}

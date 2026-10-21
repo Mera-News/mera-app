@@ -60,19 +60,30 @@ export function accountHandle(supportId: string | null, email: string | null): A
 
 /**
  * Best-effort read of the CURRENT account's support id, bounded so no support
- * surface ever waits on a dead network. Resolves null on timeout, error, or an
- * account without one (pre-wave email accounts) — callers hide the id then.
+ * surface ever waits on a dead network: the session's, else the copy saved on
+ * this phone (the sign-in gate has no session). Resolves null when neither has
+ * one (pre-wave email accounts) — callers hide the id then.
  */
 export async function getSupportId(): Promise<string | null> {
+  let user: unknown = null;
   try {
     const session = (await Promise.race([
       authClient.getSession(),
       new Promise<null>((resolve) => setTimeout(resolve, SUPPORT_ID_FETCH_TIMEOUT_MS, null)),
     ])) as { data?: { user?: unknown } } | null;
-    return readSupportIdFromUser(session?.data?.user ?? null);
+    user = session?.data?.user ?? null;
   } catch {
-    return null;
+    // Fall through to the saved copy.
   }
+  let cached: string | null = null;
+  try {
+    // Lazy: the settings service reaches the database, and this module sits in auth-client's graph.
+    const { getSetting } = require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
+    cached = await getSetting('cached_support_id');
+  } catch {
+    cached = null;
+  }
+  return resolveSupportId(user, cached);
 }
 
 /** The one line support surfaces embed. Deliberately English and unlocalized:

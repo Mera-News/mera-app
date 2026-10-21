@@ -129,9 +129,12 @@ export function useChatSessionView(props: ChatSessionViewProps) {
                     )
               : t('personaChat.introMessage');
 
+  // On this phone is Beta (D30), and its intro says so in words: a chat bubble cannot draw the badge.
+  const introShown = introText && isOnDevice ? `${introText}\n\n${t('chat.onDeviceBetaNote')}` : introText;
+
   // Intro pseudo-message until the first send of this session.
   const [introCleared, setIntroCleared] = useState(false);
-  const introMessage = introCleared ? null : introText;
+  const introMessage = introCleared ? null : introShown;
 
   // Lazily page in older history on scroll-up.
   const { history, loadOlder, hasOlder, isLoadingOlder } = useChatHistory(

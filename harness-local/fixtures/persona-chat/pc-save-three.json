@@ -1,0 +1,57 @@
+{
+  "description": "Three new facts in one message, all offered.",
+  "category": "save",
+  "clear": true,
+  "knownFacts": "- 'family: children': Has two young children\n- 'profession: job': Works as a pharmacist\n- 'interest: sport': Follows Bundesliga football\n- 'location: residence': Lives in Leipzig, Germany\n- 'interest: sport': Follows handball\n- 'interest: topic': Interested in renewable energy policy",
+  "facts": [
+    {
+      "id": "f6",
+      "statement": "Interested in renewable energy policy",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f3",
+      "statement": "Follows handball",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Leipzig, Germany",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f4",
+      "statement": "Follows Bundesliga football",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a pharmacist",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f5",
+      "statement": "Has two young children",
+      "attribute": "family: children"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "I play chess online, I am vegetarian, and we plan to buy a house next year."
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "chess",
+      "vegetarian",
+      "house|home"
+    ],
+    "intent": "share_new_fact",
+    "calls": [
+      "saveExtractedFacts"
+    ],
+    "ask": "no"
+  }
+}

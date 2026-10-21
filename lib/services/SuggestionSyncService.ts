@@ -10,7 +10,6 @@ import type {
 } from '@/lib/stores/for-you-store';
 import { classifyScoringError } from '@/lib/services/scoring-error';
 import logger from '@/lib/logger';
-import { initBaseModel } from '@/lib/mera-protocol-toolkit';
 import { processAllUnscored } from '@/lib/mera-protocol/scoring-service';
 import { runBackgroundCycle } from '@/lib/background/run-inference-handler';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -66,12 +65,6 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
   // anywhere. Its copy now lives in the header narration's `onDevice` pool.
   useForYouStore.getState().startDeviceProcessing(0);
   try {
-    if (useMeraProtocolStore.getState().modelState !== 'ready') {
-      useMeraProtocolStore.getState().setModelState('loading');
-      await initBaseModel();
-      useMeraProtocolStore.getState().setModelState('ready');
-    }
-
     // Progressive rendering during scoring: coalesce the per-batch refreshes so
     // rapid batches don't each rebuild + replace the whole suggestion array on
     // the JS thread. The trailing flush below guarantees the final batch lands.

@@ -44,6 +44,53 @@ interface FactFixture {
   placeChain?: TopicSetInput['placeChain'];
 }
 
+/** A STEP A row as the gates read it. */
+function toTopicSet(r: ReturnType<typeof readJsonl>[number], byId: Map<string, FactFixture>): TopicSetInput {
+  const fid = r.items?.[0]?.id ?? '';
+  const f = byId.get(fid);
+  return {
+    factId: fid,
+    factStatement: f?.statement ?? '',
+    factKind: f?.kind ?? 'generic',
+    placeChain: f?.placeChain ?? null,
+    topics: Array.isArray(r.parsedSchema) ? (r.parsedSchema as string[]) : [],
+    existingTopics: [],
+    declinedTopics: [],
+    rawOutput: r.rawOutput,
+    finishReason: r.finishReason,
+  };
+}
+
+export interface TopicGates {
+  calls: number;
+  /** G1: empty content rate. */
+  g1: number;
+  /** G1b: no usable set rate (empty plus prose instead of JSON). */
+  g1b: number;
+  /** G3: mean post-filter S7 near-duplicate rate over the sets that returned topics. */
+  g3: number;
+}
+
+/** G1, G1b and G3 per arm (variant) of a STEP A run, computed as main() prints them. */
+export function topicGates(runDir: string): Record<string, TopicGates> {
+  const rows = readJsonl(join(resolve(runDir), 'rows.jsonl')).filter((r) => r.dupOf === null);
+  const facts = (JSON.parse(readFileSync(FACTS, 'utf8')) as { facts: FactFixture[] }).facts;
+  const byId = new Map(facts.map((f) => [f.id, f]));
+  const out: Record<string, TopicGates> = {};
+  for (const arm of new Set(rows.map((r) => r.variant))) {
+    const sets = rows.filter((r) => r.variant === arm).map((r) => toTopicSet(r, byId));
+    const ig = integrityReport(sets);
+    const s7 = sets.filter((x) => x.topics.length > 0).map(s7Report);
+    out[arm] = {
+      calls: ig.calls,
+      g1: ig.emptyRate,
+      g1b: ig.noUsableSetRate,
+      g3: s7.length ? s7.reduce((a, b) => a + b.postFilterRate, 0) / s7.length : 0,
+    };
+  }
+  return out;
+}
+
 function pct(n: number, d: number): string {
   return d === 0 ? '   n/a' : `${((n / d) * 100).toFixed(1)}%`;
 }
@@ -68,19 +115,8 @@ function main(): number {
   for (const arm of arms) {
     const mine = rows.filter((r) => r.variant === arm);
     const sets: TopicSetInput[] = mine.map((r) => {
-      const fid = r.items?.[0]?.id ?? '';
-      const f = byId.get(fid);
-      const set: TopicSetInput = {
-        factId: fid,
-        factStatement: f?.statement ?? '',
-        factKind: f?.kind ?? 'generic',
-        placeChain: f?.placeChain ?? null,
-        topics: Array.isArray(r.parsedSchema) ? (r.parsedSchema as string[]) : [],
-        existingTopics: [],
-        declinedTopics: [],
-        rawOutput: r.rawOutput,
-        finishReason: r.finishReason,
-      };
+      const set = toTopicSet(r, byId);
+      const fid = set.factId;
       entries.push({ arm, key: `${fid}|${r.repeat}`, set });
       if (set.topics.length > 0) {
         const sel = selectCase(set.factStatement, exp.cases);

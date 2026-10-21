@@ -196,6 +196,21 @@ describe('stop', () => {
 });
 
 describe('pause and resume', () => {
+  it('pauses are ref-counted: two pauses and one resume stay paused, the second resume runs', async () => {
+    await startIdle();
+    await inferenceQueue.pause();
+    await inferenceQueue.pause();
+    inferenceQueue.resume();
+    expect(inferenceQueue.getState()).toBe('paused');
+    inferenceQueue.resume();
+    expect(inferenceQueue.getState()).toBe('running');
+    inferenceQueue.resume(); // never below zero
+    await inferenceQueue.pause();
+    expect(inferenceQueue.getState()).toBe('paused');
+    inferenceQueue.resume();
+    expect(inferenceQueue.getState()).toBe('running');
+  });
+
   it('pause() moves running to paused and resume() back; both are no-ops when stopped', async () => {
     await inferenceQueue.pause();
     inferenceQueue.resume();

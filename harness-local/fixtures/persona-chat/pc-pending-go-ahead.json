@@ -1,0 +1,69 @@
+{
+  "description": "A card is waiting and the user says \"go ahead\": it is applied.",
+  "category": "pending-apply",
+  "clear": true,
+  "knownFacts": "- 'education: study': Studies mechanical engineering\n- 'interest: sport': Follows IPL cricket\n- 'hobby: food': Likes cooking Maharashtrian food\n- 'location: residence': Lives in Pune, India\n- 'interest: topic': Interested in electric vehicles",
+  "facts": [
+    {
+      "id": "f4",
+      "statement": "Interested in electric vehicles",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Pune, India",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f5",
+      "statement": "Likes cooking Maharashtrian food",
+      "attribute": "hobby: food"
+    },
+    {
+      "id": "f3",
+      "statement": "Follows IPL cricket",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f2",
+      "statement": "Studies mechanical engineering",
+      "attribute": "education: study"
+    }
+  ],
+  "pending": {
+    "id": "pending-1",
+    "explanation": "Add electric scooters in India to your EV topics",
+    "expectedEffects": "You will see more stories about Electric scooters in India.",
+    "actions": [
+      {
+        "type": "add_topics",
+        "fact_id": "f4",
+        "topics": [
+          "Electric scooters in India"
+        ]
+      }
+    ]
+  },
+  "wire": [
+    {
+      "role": "user",
+      "content": "What else could I follow?"
+    },
+    {
+      "role": "assistant",
+      "content": "I can add electric scooters in India next to your electric vehicle topics. Should I add it?"
+    },
+    {
+      "role": "user",
+      "content": "go ahead"
+    }
+  ],
+  "expect": {
+    "toolCalled": "applyProposal",
+    "intent": "agree_to_card",
+    "calls": [
+      "applyProposal"
+    ],
+    "ask": "no"
+  }
+}

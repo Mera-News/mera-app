@@ -36,6 +36,8 @@ function cardEntering() {
   };
 }
 
+const SOMETHING_ELSE = 'askChoice.somethingElse';
+
 export interface AskChoiceCardProps {
   question: string | null;
   options: string[];
@@ -49,6 +51,9 @@ export interface AskChoiceCardProps {
    *  `onSend`: it commits the user's own sentence directly, and the model
    *  never sees the tap. Null or absent hides the chip. */
   onSaveAsWritten?: (() => void) | null;
+  /** "Something else" (D39), on an on-device Kev ask only: focuses the
+   *  composer and sends nothing. Null or absent hides the chip. */
+  onSomethingElse?: (() => void) | null;
 }
 
 export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
@@ -58,6 +63,7 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
   answered,
   onSend,
   onSaveAsWritten = null,
+  onSomethingElse = null,
 }) => {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -138,6 +144,27 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
           >
             <Text size="xs" style={answered ? styles.chipTextAnswered : styles.chipText}>
               {t('floatingChat.saveAsWritten')}
+            </Text>
+          </Pressable>
+        )}
+        {onSomethingElse && (
+          <Pressable
+            onPress={() => {
+              if (answered) return;
+              void hapticLight();
+              onSomethingElse();
+            }}
+            disabled={answered}
+            style={[styles.chip, answered && styles.chipAnswered]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: answered }}
+            accessibilityLabel={
+              answered ? `${t(SOMETHING_ELSE)}, ${t('askChoice.answeredA11y')}` : t(SOMETHING_ELSE)
+            }
+            testID="ask-choice-something-else"
+          >
+            <Text size="xs" style={answered ? styles.chipTextAnswered : styles.chipText}>
+              {t(SOMETHING_ELSE)}
             </Text>
           </Pressable>
         )}

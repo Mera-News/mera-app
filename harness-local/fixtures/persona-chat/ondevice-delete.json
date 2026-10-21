@@ -1,0 +1,33 @@
+{
+  "description": "The user asks to remove a known fact. deleteUserFacts must name exactly its id.",
+  "knownFacts": "- 'location: residence': Lives in Porto, Portugal\n- 'profession: job': Senior software engineer\n- 'interest: topic': Follows Formula 1 racing",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Senior software engineer",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Porto, Portugal",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Please remove the Formula 1 one, I stopped watching it."
+    }
+  ],
+  "expect": {
+    "toolCalled": "deleteUserFacts",
+    "deleteIds": [
+      "f3"
+    ]
+  }
+}

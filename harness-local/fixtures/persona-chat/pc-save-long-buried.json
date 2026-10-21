@@ -1,0 +1,55 @@
+{
+  "description": "A long chatty message with one fact buried in it.",
+  "category": "save",
+  "clear": true,
+  "knownFacts": "- 'interest: sport': Follows Formula 1 racing\n- 'location: residence': Lives in Toronto, Canada\n- 'interest: topic': Interested in personal finance\n- 'profession: job': Works as a data analyst at a bank\n- 'pets: dog': Has a dog\n- 'interest: sport': Follows the Toronto Raptors",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows the Toronto Raptors",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f6",
+      "statement": "Has a dog",
+      "attribute": "pets: dog"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a data analyst at a bank",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f5",
+      "statement": "Interested in personal finance",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Toronto, Canada",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f4",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: sport"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Busy week here. The weather turned cold, the dog refuses to go out in the rain, and work is all quarterly reports so I barely read the news. I tried the new ramen place near the office, it was fine, nothing special. Oh, and my partner and I are expecting our first baby in March, so that is on my mind a lot. Anyway, the Raptors lost again on Tuesday. How are things on your side?"
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "baby|expecting|child|parent"
+    ],
+    "intent": "share_new_fact",
+    "calls": [
+      "saveExtractedFacts"
+    ],
+    "ask": "no"
+  }
+}

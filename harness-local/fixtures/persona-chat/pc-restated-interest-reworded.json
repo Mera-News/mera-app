@@ -1,0 +1,40 @@
+{
+  "description": "A saved interest restated with different words: nothing is offered.",
+  "category": "no-action",
+  "clear": true,
+  "knownFacts": "- 'location: residence': Lives in Pune, India\n- 'interest: topic': Interested in electric vehicles\n- 'interest: sport': Follows IPL cricket",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows IPL cricket",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f2",
+      "statement": "Interested in electric vehicles",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Pune, India",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "EVs are really my thing, I care a lot about electric cars."
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "saveExtractedFacts",
+    "intent": [
+      "repeats_saved_fact",
+      "share_new_fact",
+      "question_or_chat",
+      "thanks_or_ack"
+    ],
+    "calls": [],
+    "ask": "no"
+  }
+}
