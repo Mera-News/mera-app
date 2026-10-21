@@ -257,7 +257,11 @@
       "announce_other": "Toont {{show}}, {{formatted}} artikelen",
       "emptyPicks": "Mera heeft nog niets voor je gekozen.",
       "emptyUnread": "Mera heeft hier alles gelezen.",
-      "showAll": "Alle artikelen tonen"
+      "showAll": "Alle artikelen tonen",
+      "discarded": "Afgewezen door Mera",
+      "emptyDiscarded": "Niets afgewezen in de afgelopen 48 uur.",
+      "optionA11y_one": "{{show}}, {{formatted}} verhaal",
+      "optionA11y_other": "{{show}}, {{formatted}} verhalen"
     },
     "readHold": {
       "waitingToday_one": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikel hieronder is nog niet gelezen. Mera leest vandaag weer om {{time}}.",
@@ -273,7 +277,8 @@
       "writing": "Reden wordt geschreven",
       "failed": "Kon de reden niet schrijven",
       "off": "Redenen uit in Instellingen",
-      "paused": "Redenen gepauzeerd voor vandaag"
+      "paused": "Redenen gepauzeerd voor vandaag",
+      "discarded": "Onder de lat van Mera"
     }
   },
   "relevance": {

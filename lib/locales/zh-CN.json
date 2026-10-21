@@ -256,7 +256,10 @@
       "announce_other": "正在显示{{show}}，共 {{formatted}} 篇文章",
       "emptyPicks": "梅拉还没有为你挑选任何内容。",
       "emptyUnread": "梅拉已阅读这里的所有内容。",
-      "showAll": "显示所有文章"
+      "showAll": "显示所有文章",
+      "discarded": "梅拉已排除",
+      "emptyDiscarded": "过去 48 小时内没有排除任何内容。",
+      "optionA11y_other": "{{show}}，{{formatted}} 条报道"
     },
     "readHold": {
       "waitingToday_other": "梅拉已用完今日阅读量。下方还有 {{formatted}} 篇文章未阅读。梅拉将于今天 {{time}} 再次阅读。",
@@ -270,7 +273,8 @@
       "writing": "正在撰写理由",
       "failed": "无法撰写理由",
       "off": "已在设置中关闭理由",
-      "paused": "今日理由已暂停"
+      "paused": "今日理由已暂停",
+      "discarded": "未达梅拉标准"
     }
   },
   "relevance": {

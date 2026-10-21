@@ -257,7 +257,11 @@
       "announce_other": "Mostrando {{show}}, {{formatted}} artigos",
       "emptyPicks": "O Mera ainda não escolheu nada para você.",
       "emptyUnread": "O Mera leu tudo aqui.",
-      "showAll": "Mostrar todos os artigos"
+      "showAll": "Mostrar todos os artigos",
+      "discarded": "Descartados pelo Mera",
+      "emptyDiscarded": "Nada descartado nas últimas 48 horas.",
+      "optionA11y_one": "{{show}}, {{formatted}} história",
+      "optionA11y_other": "{{show}}, {{formatted}} histórias"
     },
     "readHold": {
       "waitingToday_one": "O Mera já usou a leitura de hoje. {{formatted}} artigo abaixo ainda não foi lido. O Mera volta a ler hoje às {{time}}.",
@@ -273,7 +277,8 @@
       "writing": "Escrevendo o motivo",
       "failed": "Não foi possível escrever o motivo",
       "off": "Motivos desativados nos Ajustes",
-      "paused": "Motivos pausados por hoje"
+      "paused": "Motivos pausados por hoje",
+      "discarded": "Abaixo do critério do Mera"
     }
   },
   "relevance": {

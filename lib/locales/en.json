@@ -294,7 +294,11 @@
       "announce_other": "Showing {{show}}, {{formatted}} articles",
       "emptyPicks": "Mera hasn't picked anything for you yet.",
       "emptyUnread": "Mera has read everything here.",
-      "showAll": "Show all articles"
+      "showAll": "Show all articles",
+      "discarded": "Discarded by Mera",
+      "emptyDiscarded": "Nothing discarded in the last 48 hours.",
+      "optionA11y_one": "{{show}}, {{formatted}} story",
+      "optionA11y_other": "{{show}}, {{formatted}} stories"
     },
     "readHold": {
       "waitingToday_one": "Mera has used today's reading. {{formatted}} article below is still unread. Mera reads again today at {{time}}.",
@@ -310,7 +314,8 @@
       "writing": "Writing the reason",
       "failed": "Couldn't write the reason",
       "off": "Reasons off in Settings",
-      "paused": "Reasons paused for today"
+      "paused": "Reasons paused for today",
+      "discarded": "Below Mera's bar"
     }
   },
   "relevance": {

@@ -275,7 +275,13 @@
       "announce_other": "Pokazywane: {{show}}, {{formatted}} artykułów",
       "emptyPicks": "Mera nie wybrała dla Ciebie jeszcze niczego.",
       "emptyUnread": "Mera przeczytała tutaj wszystko.",
-      "showAll": "Pokaż wszystkie artykuły"
+      "showAll": "Pokaż wszystkie artykuły",
+      "discarded": "Odrzucone przez Merę",
+      "emptyDiscarded": "Nic nie zostało odrzucone w ciągu ostatnich 48 godzin.",
+      "optionA11y_one": "{{show}}, {{formatted}} historia",
+      "optionA11y_few": "{{show}}, {{formatted}} historie",
+      "optionA11y_many": "{{show}}, {{formatted}} historii",
+      "optionA11y_other": "{{show}}, {{formatted}} historii"
     },
     "readHold": {
       "waitingToday_one": "Mera wykorzystała dzisiejsze czytanie. {{formatted}} artykuł poniżej jest nadal nieprzeczytany. Mera czyta ponownie dzisiaj o {{time}}.",
@@ -295,7 +301,8 @@
       "writing": "Piszę uzasadnienie",
       "failed": "Nie udało się napisać uzasadnienia",
       "off": "Uzasadnienia wyłączone w Ustawieniach",
-      "paused": "Uzasadnienia wstrzymane na dziś"
+      "paused": "Uzasadnienia wstrzymane na dziś",
+      "discarded": "Poniżej progu Mery"
     }
   },
   "relevance": {

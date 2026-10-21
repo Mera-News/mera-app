@@ -257,7 +257,11 @@
       "announce_other": "Zeigt {{show}}, {{formatted}} Artikel",
       "emptyPicks": "Mera hat noch nichts für dich ausgewählt.",
       "emptyUnread": "Mera hat hier alles gelesen.",
-      "showAll": "Alle Artikel anzeigen"
+      "showAll": "Alle Artikel anzeigen",
+      "discarded": "Von Mera aussortiert",
+      "emptyDiscarded": "In den letzten 48 Stunden wurde nichts aussortiert.",
+      "optionA11y_one": "{{show}}, {{formatted}} Geschichte",
+      "optionA11y_other": "{{show}}, {{formatted}} Geschichten"
     },
     "readHold": {
       "waitingToday_one": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten ist noch ungelesen. Mera liest heute um {{time}} wieder.",
@@ -273,7 +277,8 @@
       "writing": "Grund wird geschrieben",
       "failed": "Grund konnte nicht geschrieben werden",
       "off": "Gründe in den Einstellungen aus",
-      "paused": "Gründe für heute pausiert"
+      "paused": "Gründe für heute pausiert",
+      "discarded": "Unter Meras Schwelle"
     }
   },
   "relevance": {

@@ -23,10 +23,16 @@
 // The tail is capped at TAIL_RENDER_CAP rows (the newest at session start);
 // the waiting count is always the true number of articles.
 //
+// The Show filter's fourth segment, "Discarded by Mera", lives here too: the
+// stories Mera read and scored below the gate (`buildDiscardedStories`). They
+// never enter `feed-order-store` either, and never show under All.
+//
 // PURE: no React, no store, no database.
 
+import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
-import type { FeedListItem } from '@/lib/stores/feed-list-selector';
+import { buildFeedList, type FeedListItem } from '@/lib/stores/feed-list-selector';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /** At most this many not-read cards render (owner, W14). */
 export const TAIL_RENDER_CAP = 200;
@@ -52,6 +58,8 @@ export interface FoldedTail {
   /** Articles Mera has not read among the candidates that would be tail
    *  rows: the TRUE count, never capped. */
   readonly notReadArticles: number;
+  /** The tail is full and not-read stories were left out of it. */
+  readonly capped: boolean;
 }
 
 function pubMs(it: FeedListItem): number {
@@ -114,22 +122,75 @@ export function foldNotReadTail(
     const it = session.items.get(id);
     if (it) tail.push(it);
   }
-  return { tail, withheld, notReadArticles };
+  const capped =
+    session.ids.length >= cap && candidates.some((it) => isNotRead(it.suggestion) && !inTail.has(it.id));
+  return { tail, withheld, notReadArticles, capped };
+}
+
+/** The stories Mera discarded: rows it read and scored below the gate, in
+ *  the 48h window, grouped like the main list but on their own, newest
+ *  published first, at most `cap` (`total` is the true story count). Not a
+ *  session list: these rows are terminal, so only new ones arrive. */
+export function buildDiscardedStories(
+  suggestions: ForYouSuggestion[],
+  userCtx: UserGeoLanguageContext | null,
+  nowMs: number = Date.now(),
+  cap: number = TAIL_RENDER_CAP,
+): { rows: FeedListItem[]; total: number } {
+  const all = buildFeedList(suggestions, new Set(), nowMs, userCtx, { onlyDiscarded: true }).sort(newestFirst);
+  return { rows: all.slice(0, cap), total: all.length };
 }
 
 /** The Show filter (feed-view-prefs `feed_show`). */
-export type FeedShow = 'all' | 'picks' | 'unread';
+export type FeedShow = 'all' | 'picks' | 'unread' | 'discarded';
+export const FEED_SHOWS: readonly FeedShow[] = ['all', 'picks', 'unread', 'discarded'];
 
-/** What the list renders for a filter: Mera's picks, then the tail. `picks`
- *  is how many leading rows are scored (the divider sits after them). */
+/** What the list renders for a filter: Mera's picks, then the tail (All
+ *  never holds a discarded story). `picks` is how many leading rows are
+ *  scored (the divider sits after them). */
 export function applyFeedShow(
   scored: readonly FeedListItem[],
   tail: readonly FeedListItem[],
   show: FeedShow,
+  discarded: readonly FeedListItem[] = [],
 ): { rows: FeedListItem[]; picks: number } {
   if (show === 'picks') return { rows: [...scored], picks: scored.length };
   if (show === 'unread') return { rows: [...tail], picks: 0 };
+  if (show === 'discarded') return { rows: [...discarded], picks: 0 };
   return { rows: [...scored, ...tail], picks: scored.length };
+}
+
+/** How many cards a filter shows: `n`, and `capped` when more were left out. */
+export interface FeedShowCount {
+  readonly n: number;
+  readonly capped: boolean;
+}
+
+/** Every Show option's card count, from `applyFeedShow` itself so a count
+ *  is always what that option renders. */
+export function feedShowCounts(
+  scored: readonly FeedListItem[],
+  tail: readonly FeedListItem[],
+  tailCapped: boolean,
+  discarded: readonly FeedListItem[],
+  discardedCapped: boolean,
+): Record<FeedShow, FeedShowCount> {
+  const capped: Record<FeedShow, boolean> = {
+    all: tailCapped,
+    picks: false,
+    unread: tailCapped,
+    discarded: discardedCapped,
+  };
+  const out = {} as Record<FeedShow, FeedShowCount>;
+  for (const show of FEED_SHOWS) {
+    out[show] = { n: applyFeedShow(scored, tail, show, discarded).rows.length, capped: capped[show] };
+  }
+  return out;
+}
+
+/** "30", or "200+" for a capped list; `format` localises the number. */
+export function formatShowCount(c: FeedShowCount, format: (n: number) => string): string {
+  return c.capped ? `${format(c.n)}+` : format(c.n);
 }
 
 /** Whether the picks/not-read divider is true: at least one tail card still

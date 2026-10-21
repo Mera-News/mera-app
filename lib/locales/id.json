@@ -256,7 +256,10 @@
       "announce_other": "Menampilkan {{show}}, {{formatted}} artikel",
       "emptyPicks": "Mera belum memilih apa pun untuk Anda.",
       "emptyUnread": "Mera sudah membaca semua di sini.",
-      "showAll": "Tampilkan semua artikel"
+      "showAll": "Tampilkan semua artikel",
+      "discarded": "Dibuang oleh Mera",
+      "emptyDiscarded": "Tidak ada yang dibuang dalam 48 jam terakhir.",
+      "optionA11y_other": "{{show}}, {{formatted}} cerita"
     },
     "readHold": {
       "waitingToday_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi hari ini pukul {{time}}.",
@@ -270,7 +273,8 @@
       "writing": "Menulis alasan",
       "failed": "Tidak dapat menulis alasan",
       "off": "Alasan dimatikan di Pengaturan",
-      "paused": "Alasan dijeda untuk hari ini"
+      "paused": "Alasan dijeda untuk hari ini",
+      "discarded": "Di bawah batas Mera"
     }
   },
   "relevance": {

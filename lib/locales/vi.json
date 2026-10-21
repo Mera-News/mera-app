@@ -256,7 +256,10 @@
       "announce_other": "Đang hiển thị {{show}}, {{formatted}} bài viết",
       "emptyPicks": "Mera chưa chọn gì cho bạn.",
       "emptyUnread": "Mera đã đọc hết mọi thứ ở đây.",
-      "showAll": "Hiển thị tất cả bài viết"
+      "showAll": "Hiển thị tất cả bài viết",
+      "discarded": "Mera đã loại bỏ",
+      "emptyDiscarded": "Không có gì bị loại bỏ trong 48 giờ qua.",
+      "optionA11y_other": "{{show}}, {{formatted}} câu chuyện"
     },
     "readHold": {
       "waitingToday_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại hôm nay lúc {{time}}.",
@@ -270,7 +273,8 @@
       "writing": "Đang viết lý do",
       "failed": "Không viết được lý do",
       "off": "Lý do đã tắt trong Cài đặt",
-      "paused": "Lý do tạm dừng hôm nay"
+      "paused": "Lý do tạm dừng hôm nay",
+      "discarded": "Dưới ngưỡng của Mera"
     }
   },
   "relevance": {
