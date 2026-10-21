@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mera",
     "slug": "meraapp",
-    "version": "1.3.4",
+    "version": "1.3.5",
     "orientation": "portrait",
     "runtimeVersion": {
       "policy": "appVersion"
@@ -23,6 +23,9 @@
       "bundleIdentifier": "com.mera.news",
       "appleTeamId": "Q8RA98G9S9",
       "icon": "./assets/icons/ios-dark.png",
+      "entitlements": {
+        "com.apple.developer.kernel.increased-memory-limit": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Mera does not record audio. This notice is required because an on-device AI component references the microphone API. The microphone is never accessed without your permission.",
@@ -158,6 +161,7 @@
         }
       ],
       "./plugins/withMlKit16kb",
+      "./plugins/withOnDeviceLlmMinSdk",
       "./plugins/withWatermelonJsi",
       [
         "@intercom/intercom-react-native",

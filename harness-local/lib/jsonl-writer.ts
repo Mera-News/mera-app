@@ -98,7 +98,8 @@ export interface RunRow {
    *  than trusting a flag: a group counts only when every arm in the roster
    *  produced a row for it. */
   interleaveGroup: string | null;
-  lane: 'near' | 'gateway';
+  /** The transport. The three on-device engines (lib/engine.ts) run the on-device prompts. */
+  lane: 'near' | 'gateway' | 'afm' | 'qwen-local' | 'nano-proxy';
   surface: string;
   variant: string;
   /** sha256 over the MATERIALISED messages array. Two rows in one cell with

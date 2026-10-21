@@ -1,0 +1,56 @@
+{
+  "description": "Dutch message, one fact; statement in English.",
+  "category": "multilingual",
+  "clear": true,
+  "language": "Dutch",
+  "knownFacts": "- 'interest: sport': Follows Ajax Amsterdam\n- 'hobby: music': Plays the cello in an amateur orchestra\n- 'location: residence': Lives in Utrecht, Netherlands\n- 'interest: sport': Follows Feyenoord\n- 'profession: job': Works as a nurse at a hospital\n- 'interest: topic': Interested in the Dutch housing market",
+  "facts": [
+    {
+      "id": "f5",
+      "statement": "Interested in the Dutch housing market",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a nurse at a hospital",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f4",
+      "statement": "Follows Feyenoord",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Utrecht, Netherlands",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f6",
+      "statement": "Plays the cello in an amateur orchestra",
+      "attribute": "hobby: music"
+    },
+    {
+      "id": "f3",
+      "statement": "Follows Ajax Amsterdam",
+      "attribute": "interest: sport"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Ik doe sinds kort vrijwilligerswerk bij de voedselbank."
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "food bank|voedselbank|volunteer|vrijwillig"
+    ],
+    "intent": "share_new_fact",
+    "calls": [
+      "saveExtractedFacts"
+    ],
+    "ask": "no"
+  }
+}

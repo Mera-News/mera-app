@@ -251,7 +251,9 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
   // that reintroduces an empty-shell state for either kind should fail here.
   // D4: the FACT section now stays as an empty section; the HEADLINE section
   // still disappears (empty headline scopes keep the old rule).
-  it('an all-LOW HEADLINE section disappears; an all-LOW FACT section stays EMPTY', () => {
+  // Owner, 2026-10-21: "low should still show the section" for FACT sections; headline
+  // sections keep the MEDIUM floor (HEADLINE_SECTION_MIN_VIABLE_BUCKET).
+  it('an all-LOW HEADLINE section disappears; an all-LOW FACT section shows its story', () => {
     const { rows } = build(
       [
         sugg({ relevance: REL_LOW, matchedTopics: [{ topicId: 't1', text: 'dutch tax' }] }),
@@ -260,7 +262,7 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
       snapshots({ topics: [['t1', { factId: 'f1' }]], facts: [['f1', {}]] }),
     );
     expect(rows.map((r) => r.factId)).toEqual(['f1']);
-    expect(rows[0].groups).toEqual([]);
+    expect(rows[0].groups).toHaveLength(1);
   });
 });
 

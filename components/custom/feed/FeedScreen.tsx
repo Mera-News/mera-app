@@ -346,10 +346,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     () =>
       listData.length > 0 ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard />
+          <AllCaughtUpCard onRefresh={onRefresh} refreshing={refreshing} />
         </Box>
       ) : null,
-    [listData.length],
+    [listData.length, onRefresh, refreshing],
   );
 
 
@@ -389,6 +389,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           action={{ label: t('feed.show.showAll'), onPress: () => setFeedShow('all'), testID: 'feed-show-empty-show-all' }}
           testID="feed-show-empty-picks"
         />
+      ) : show === 'discarded' ? (
+        <ForYouEmptyState icon="done-all" body={t('feed.show.emptyDiscarded')} testID="feed-show-empty-discarded" />
       ) : (
         <ForYouEmptyState icon="done-all" body={t('feed.show.emptyUnread')} testID="feed-show-empty-unread" />
       );

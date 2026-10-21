@@ -3,18 +3,18 @@
 // reload while a job's handler is running therefore restarts the queue under that job, and the job
 // runs again (see jobs/queue-restart.test.ts for the queue on its own).
 //
-// Real hook under renderHook, real toolkit, real queue and DB; only llama.rn and expo-file-system
-// are faked, and AppState is driven with setAppState. Real timers: nothing here waits on the clock.
+// Real hook under renderHook, real toolkit, real queue and DB; only llama.rn, the built-in model and
+// expo-file-system are faked, and AppState is driven with setAppState. Real timers: nothing here waits on the clock.
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { enqueueJob } from '@/lib/database/services/inference-job-service';
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
-import { disposeModel } from '@/lib/mera-protocol-toolkit';
+import { disposeModel, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit';
 import { useAppStateStore } from '@/lib/stores/app-state-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { setAppState } from '@/test/helpers';
+import { placeDownloadedModel } from '@/test/helpers/fs';
 import {
-  fileSystemModule,
   installLlama,
   resetChatModules,
   resetFileSystem,
@@ -24,16 +24,14 @@ import { hold, jobRow } from '../inference/kit';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 const initLlama = () => (jest.requireMock('llama.rn') as { initLlama: jest.Mock }).initLlama;
 const protocol = () => useMeraProtocolStore.getState();
 const settle = (ms = 300) => new Promise((r) => setTimeout(r, ms));
 
 async function markDownloaded(): Promise<void> {
-  const id = protocol().selectedModelId;
-  await new fileSystemModule.File(fileSystemModule.Paths.cache, 'mera-models', id, 'manifest.json').write(
-    JSON.stringify({ modelId: id, ready: true }),
-  );
+  placeDownloadedModel(RELEVANCE_MODEL.modelId);
 }
 
 async function stopQueue(): Promise<void> {

@@ -29,8 +29,8 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
+import { showsBelowGate, showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { useReadHeld } from '@/components/custom/cards/use-read-held';
 import { noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-read-line';
@@ -174,13 +174,18 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     // article-suggestion status state machine.
     const status = suggestion?.status;
     const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
-    const reasonReady = status === ArticleSuggestionStatus.Complete;
     const relevance = suggestion?.relevance ?? 0;
     const reason = relevanceReady ? suggestion?.reason ?? '' : '';
     // The detail screen reads the hold itself (one subscription per screen),
     // the same input and rule (`notePendingMode`) as the Feed card.
     const readHeld = useReadHeld();
     const pendingMode = suggestion ? notePendingMode(suggestion, readHeld.held) : undefined;
+    // A row with no note (Skip notes): the chip alone, the same rule as the Feed card.
+    const chipOnly = suggestion
+        ? showsChipOnly(suggestion) || (status === ArticleSuggestionStatus.ReasonSkipped && !(suggestion.reason ?? ''))
+        : false;
+    // Mera read it and scored it below its bar: no note is owed (the card's rule).
+    const belowGate = suggestion ? showsBelowGate(suggestion) : false;
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || t('feed.newsCluster');
@@ -221,13 +226,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     );
 
-    // Same chips as the Feed card for a complete (or reason_skipped), note-less row.
-    const factChipsEl =
-        isSuggestion && (reasonReady || status === ArticleSuggestionStatus.ReasonSkipped) && !reason ? (
-        <FactChips topicIds={suggestion?.userTopicIds} />
-    ) : null;
-
-    const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode) ? (
+    const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode || chipOnly || belowGate) ? (
         <ReasonNote
             relevance={relevance}
             reason={reason}
@@ -239,6 +238,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             }
             topicIds={suggestion?.userTopicIds}
             testID="detail-reason"
+            belowGate={belowGate}
         />
     ) : isSuggestion && suggestion && isNotRead(suggestion) ? (
         <Text size="sm" className="text-ink-3" testID="detail-not-read">
@@ -266,7 +266,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                     <VStack className="p-4" space="sm">
                         {metaRow}
                         {titleEl}
-                        {factChipsEl}
                         {reasonBoxEl}
                     </VStack>
                 </Card>
@@ -328,7 +327,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 )}
                 {titleEl}
                 {aboveReason}
-                {factChipsEl}
                 {reasonBoxEl}
                 <ExtractedMetadataPanel
                     eventType={metaEventType}

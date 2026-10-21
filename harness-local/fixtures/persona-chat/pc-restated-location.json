@@ -1,0 +1,40 @@
+{
+  "description": "A saved location said again in other words: nothing is offered.",
+  "category": "no-action",
+  "clear": true,
+  "knownFacts": "- 'location: residence': Lives in Porto, Portugal\n- 'profession: job': Works as a nurse\n- 'interest: sport': Follows Formula 1 racing",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a nurse",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Porto, Portugal",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "As I said, I'm based in Porto."
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "saveExtractedFacts",
+    "intent": [
+      "repeats_saved_fact",
+      "share_new_fact",
+      "question_or_chat",
+      "thanks_or_ack"
+    ],
+    "calls": [],
+    "ask": "no"
+  }
+}

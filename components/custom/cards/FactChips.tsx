@@ -1,12 +1,8 @@
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
-import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 import { themedStyles, tint } from '@/lib/theme/tokens';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * The note box's inks (SuggestionCard board), shared by the note and these
@@ -58,30 +54,4 @@ export function useMatchedFacts(topicIds: string[] | null | undefined): Fact[] {
     return facts;
 }
 
-/**
- * The facts a complete, note-less suggestion matched, as chips. ONE component
- * for the Feed card and the detail screen, so the two show the same chips.
- * Mount it only where the chips can appear: it queries on mount.
- */
-const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicIds }) => {
-    const facts = useMatchedFacts(topicIds);
-    const note = useNoteInk();
-    if (facts.length === 0) return null;
-    return (
-        <HStack className="flex-wrap justify-end" space="xs" testID="fact-chips">
-            {facts.map((fact) => (
-                <Box
-                    key={fact.id}
-                    className="px-2.5 py-1 rounded-full mb-1"
-                    style={{ backgroundColor: note.box }}
-                >
-                    <Text size="2xs" style={{ color: note.ink, fontWeight: '600' }} numberOfLines={1}>
-                        {primaryStatement(fact.statement)}
-                    </Text>
-                </Box>
-            ))}
-        </HStack>
-    );
-};
 
-export default FactChips;

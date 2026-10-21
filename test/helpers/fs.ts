@@ -44,6 +44,20 @@ class FakeFile {
   create(): void {
     if (!files.has(this.uri)) files.set(this.uri, '');
   }
+  /** A read handle, as expo's FileHandle: `readBytes(n)` from the start, one char per byte. */
+  open(): { readBytes: (length: number) => Uint8Array; close: () => void } {
+    const content = files.get(this.uri);
+    if (content === undefined) throw new Error(`no such file: ${this.uri}`);
+    let offset = 0;
+    return {
+      readBytes: (length: number) => {
+        const out = Uint8Array.from(content.slice(offset, offset + length), (c) => c.charCodeAt(0));
+        offset += out.length;
+        return out;
+      },
+      close: () => {},
+    };
+  }
   delete(): void {
     files.delete(this.uri);
   }
@@ -97,4 +111,13 @@ export function resetFileSystem(): void {
 /** Puts a model file where modelManager looks for it (`<cache>/mera-models/<id>/model.gguf`). */
 export function placeModelFile(modelId: string): void {
   files.set(new FakeFile(fileSystemModule.Paths.cache, 'mera-models', modelId, 'model.gguf').uri, 'GGUF');
+}
+
+/** A model as a finished download leaves it: the file AND the ready manifest `isModelDownloaded` reads. */
+export function placeDownloadedModel(modelId: string): void {
+  placeModelFile(modelId);
+  files.set(
+    new FakeFile(fileSystemModule.Paths.cache, 'mera-models', modelId, 'manifest.json').uri,
+    JSON.stringify({ modelId, version: '1.0.0', sizeBytes: 4, quantization: 'Q4_K_M', downloadedAt: '2026-10-19T00:00:00Z', ready: true }),
+  );
 }

@@ -42,12 +42,12 @@ function DifferentAccountSheet({
                     : t('auth.differentAccount.bodyGeneric')}
             </Text>
             <View style={styles.sheetActions}>
-                <Button variant="outline" action="secondary" onPress={() => void run(onKeep)} isDisabled={busy} className="flex-1" testID="auth-different-account-back">
-                    <ButtonText>{t('auth.differentAccount.useEmail')}</ButtonText>
-                </Button>
-                <Button action="negative" onPress={() => void run(onContinue)} isDisabled={busy} className="flex-1" testID="auth-different-account-continue">
+                <Button action="negative" onPress={() => void run(onContinue)} isDisabled={busy} style={{ minHeight: 44 }} testID="auth-different-account-continue">
                     {busy ? <ButtonSpinner /> : null}
                     <ButtonText>{t('auth.differentAccount.continue')}</ButtonText>
+                </Button>
+                <Button variant="outline" action="secondary" onPress={() => void run(onKeep)} isDisabled={busy} style={{ minHeight: 44 }} testID="auth-different-account-back">
+                    <ButtonText>{t('auth.differentAccount.useEmail')}</ButtonText>
                 </Button>
             </View>
         </View>

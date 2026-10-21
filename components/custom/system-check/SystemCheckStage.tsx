@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 
+import BetaBadge from '@/components/custom/BetaBadge';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Button, ButtonText } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -27,8 +28,9 @@ const STEP_MS = 150;
 
 type RowState = 'pending' | 'ok' | 'info' | 'warn';
 
-function CheckRow({ state, title, detail, testID }: { state: RowState; title: string; detail?: string; testID: string }) {
+function CheckRow({ state, title, detail, beta, testID }: { state: RowState; title: string; detail?: string; beta?: boolean; testID: string }) {
     const colors = useColors();
+    const { t } = useTranslation();
     const reduceMotion = useReducedMotion();
     return (
         <Animated.View
@@ -36,7 +38,7 @@ function CheckRow({ state, title, detail, testID }: { state: RowState; title: st
             testID={testID}
             style={[styles.row, { borderColor: colors.line }]}
             accessible
-            accessibilityLabel={detail ? `${title}. ${detail}` : title}
+            accessibilityLabel={[title, beta ? t('common.beta') : null, detail].filter(Boolean).join('. ')}
         >
             <View style={styles.rowIcon}>
                 {state === 'pending' ? (
@@ -51,6 +53,7 @@ function CheckRow({ state, title, detail, testID }: { state: RowState; title: st
             </View>
             <View style={styles.rowText}>
                 <Text style={[styles.rowTitle, { color: colors.ink }]}>{title}</Text>
+                {beta ? <BetaBadge variant="subtext" testID={`${testID}-beta`} /> : null}
                 {detail ? <Text style={[styles.rowDetail, { color: colors.ink3 }]}>{detail}</Text> : null}
             </View>
         </Animated.View>
@@ -122,7 +125,7 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
     }, [ready, onContinue, saving]);
 
     const languageName = getNativeLanguageName(appLanguage) ?? appLanguage;
-    const rows: { key: string; state: RowState; title: string; detail?: string }[] = [
+    const rows: { key: string; state: RowState; title: string; detail?: string; beta?: boolean }[] = [
         { key: 'phone', state: 'ok', title: t('systemCheck.phoneSupportedLine') },
         { key: 'mode', state: 'ok', title: t(liteMode ? 'systemCheck.liteOn' : 'systemCheck.liteOff') },
         ...(english
@@ -134,7 +137,7 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
                       title: t('systemCheck.translationFor', { language: languageName }),
                   },
               ]),
-        { key: 'ai', state: 'info', title: t('systemCheck.aiTitle'), detail: t('systemCheck.aiCloud') },
+        { key: 'ai', state: 'info', title: t('systemCheck.aiTitle'), detail: t('systemCheck.aiCloud'), beta: true },
     ];
 
     return (
@@ -152,9 +155,9 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
             <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
                 {rows.map((row, i) =>
                     i < shown ? (
-                        <CheckRow key={row.key} testID={`${testID}-${row.key}`} state={row.state} title={row.title} detail={row.detail} />
+                        <CheckRow key={row.key} testID={`${testID}-${row.key}`} state={row.state} title={row.title} detail={row.detail} beta={row.beta} />
                     ) : i === shown ? (
-                        <CheckRow key={row.key} testID={`${testID}-${row.key}`} state="pending" title={row.title} />
+                        <CheckRow key={row.key} testID={`${testID}-${row.key}`} state="pending" title={row.title} beta={row.beta} />
                     ) : null,
                 )}
             </View>

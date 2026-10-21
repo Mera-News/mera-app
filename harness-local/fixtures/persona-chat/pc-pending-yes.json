@@ -1,0 +1,74 @@
+{
+  "description": "A card is waiting and the user says \"yes\": it is applied.",
+  "category": "pending-apply",
+  "clear": true,
+  "knownFacts": "- 'family: children': Has two young children\n- 'profession: job': Works as a pharmacist\n- 'interest: sport': Follows Bundesliga football\n- 'location: residence': Lives in Leipzig, Germany\n- 'interest: sport': Follows handball\n- 'interest: topic': Interested in renewable energy policy",
+  "facts": [
+    {
+      "id": "f6",
+      "statement": "Interested in renewable energy policy",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f3",
+      "statement": "Follows handball",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Leipzig, Germany",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f4",
+      "statement": "Follows Bundesliga football",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a pharmacist",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f5",
+      "statement": "Has two young children",
+      "attribute": "family: children"
+    }
+  ],
+  "pending": {
+    "id": "pending-1",
+    "explanation": "Add RB Leipzig to your football topics",
+    "expectedEffects": "You will see more stories about RB Leipzig.",
+    "actions": [
+      {
+        "type": "add_topics",
+        "fact_id": "f4",
+        "topics": [
+          "RB Leipzig"
+        ]
+      }
+    ]
+  },
+  "wire": [
+    {
+      "role": "user",
+      "content": "What else could I follow?"
+    },
+    {
+      "role": "assistant",
+      "content": "Since you follow Bundesliga football, I can add RB Leipzig news to your topics. Should I?"
+    },
+    {
+      "role": "user",
+      "content": "yes"
+    }
+  ],
+  "expect": {
+    "toolCalled": "applyProposal",
+    "intent": "agree_to_card",
+    "calls": [
+      "applyProposal"
+    ],
+    "ask": "no"
+  }
+}

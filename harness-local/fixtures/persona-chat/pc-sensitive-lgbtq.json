@@ -1,0 +1,55 @@
+{
+  "description": "LGBTQ rights news as an interest.",
+  "category": "sensitive",
+  "clear": true,
+  "knownFacts": "- 'interest: sport': Follows Ajax Amsterdam\n- 'hobby: music': Plays the cello in an amateur orchestra\n- 'location: residence': Lives in Utrecht, Netherlands\n- 'interest: sport': Follows Feyenoord\n- 'profession: job': Works as a nurse at a hospital\n- 'interest: topic': Interested in the Dutch housing market",
+  "facts": [
+    {
+      "id": "f5",
+      "statement": "Interested in the Dutch housing market",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Works as a nurse at a hospital",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f4",
+      "statement": "Follows Feyenoord",
+      "attribute": "interest: sport"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Utrecht, Netherlands",
+      "attribute": "location: residence"
+    },
+    {
+      "id": "f6",
+      "statement": "Plays the cello in an amateur orchestra",
+      "attribute": "hobby: music"
+    },
+    {
+      "id": "f3",
+      "statement": "Follows Ajax Amsterdam",
+      "attribute": "interest: sport"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Please keep me updated on LGBTQ rights news in Europe."
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "LGBT|queer"
+    ],
+    "intent": "share_new_fact",
+    "calls": [
+      "saveExtractedFacts"
+    ],
+    "ask": "no"
+  }
+}

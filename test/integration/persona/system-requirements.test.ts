@@ -1,7 +1,10 @@
-// systemRequirements.ts checks Device capabilities and storage.
+// systemRequirements.ts checks Device capabilities, the built-in text model (D37) and storage.
 
 import { Platform } from 'react-native';
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
+import { installOnDeviceLlm } from '@/test/helpers/on-device-llm';
+
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 // jest.mock() is hoisted before variable declarations, so the factory must NOT
 // directly reference variables defined below (they would be in the TDZ).
 // We use a lazy wrapper so getFSInfo is looked up at call time, not factory time.
@@ -39,8 +42,8 @@ afterAll(() => {
 });
 
 const GB = 1024 * 1024 * 1024;
-const ENOUGH_STORAGE = 4 * GB; // > 2.5 GB threshold
-const LOW_STORAGE = 1 * GB;   // < 2.5 GB threshold
+const ENOUGH_STORAGE = 4 * GB;
+const KEV_ONLY = 3_033_489_824; // the one model still to download
 
 describe('checkRequirements', () => {
   beforeEach(() => {
@@ -51,6 +54,44 @@ describe('checkRequirements', () => {
     mockDevice.modelId = 'iPhone15,2';
     mockDevice.platformApiLevel = null;
     mockGetFSInfo.mockResolvedValue({ freeSpace: ENOUGH_STORAGE });
+    installOnDeviceLlm({ availability: { available: true, reason: null } });
+  });
+
+  describe('the built-in text model (Apple Intelligence, Gemini Nano)', () => {
+    it('fails on Android during the iOS-only beta, even with Gemini Nano available', async () => {
+      mockPlatformOS.OS = 'android';
+      mockDevice.platformApiLevel = 34;
+      const result = await checkRequirements();
+      expect(result.supported).toBe(false);
+      expect(result.failedCheck).toBe('built_in');
+    });
+
+    it.each([
+      ['no built-in model on this phone', 'unsupportedPlatform' as const],
+      ['a phone that is not eligible', 'deviceNotEligible' as const],
+      ['an OS too old for it', 'osTooOld' as const],
+    ])('fails on %s: this phone cannot run On this phone', async (_label, reason) => {
+      installOnDeviceLlm({ availability: { available: false, reason } });
+      const result = await checkRequirements();
+      expect(result.supported).toBe(false);
+      expect(result.failedCheck).toBe('built_in');
+    });
+
+    it.each([
+      ['still downloading', 'modelNotReady' as const],
+      ['switched off in Settings', 'appleIntelligenceNotEnabled' as const],
+      ['the app language', 'appLanguageNotSupported' as const],
+      ['a pending system update', 'needsSystemUpdate' as const],
+    ])('passes when it is only %s: the screen shows the reason instead', async (_label, reason) => {
+      installOnDeviceLlm({ availability: { available: false, reason } });
+      expect((await checkRequirements()).supported).toBe(true);
+    });
+
+    it('a phone that fails RAM reports RAM first', async () => {
+      installOnDeviceLlm({ availability: { available: false, reason: 'unsupportedPlatform' } });
+      mockDevice.totalMemory = 2 * GB;
+      expect((await checkRequirements()).failedCheck).toBe('ram');
+    });
   });
 
   describe('happy path — all checks pass', () => {
@@ -231,26 +272,32 @@ describe('checkRequirements', () => {
     });
   });
 
-  describe('storage check', () => {
-    it('fails when free storage is below 2.5 GB', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: LOW_STORAGE }); // 1 GB
-      const result = await checkRequirements();
+  describe('storage check (only the bytes still to download count)', () => {
+    it('fails when free storage is below what is missing plus the 0.5 GB margin, in decimal GB', async () => {
+      mockGetFSInfo.mockResolvedValue({ freeSpace: 3_000_000_000 });
+      const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
       expect(result.supported).toBe(false);
       expect(result.failedCheck).toBe('storage');
-      expect(result.reason).toMatch(/2\.5 GB free storage/);
+      expect(result.reason).toMatch(/3\.5 GB free storage/);
+      expect(result.deviceInfo.freeStorageGB).toBe(3);
     });
 
-    it('passes when free storage is exactly 2.5 GB', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: 2.5 * GB });
-      const result = await checkRequirements();
+    it('passes with exactly what is missing plus the margin', async () => {
+      mockGetFSInfo.mockResolvedValue({ freeSpace: KEV_ONLY + 500_000_000 });
+      const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
       expect(result.failedCheck).not.toBe('storage');
+    });
+
+    it('never fails on storage once nothing is left to download, however full the phone is', async () => {
+      mockGetFSInfo.mockResolvedValue({ freeSpace: 1_000 });
+      expect((await checkRequirements()).supported).toBe(true);
+      expect((await checkRequirements({ bytesToDownload: 0 })).supported).toBe(true);
     });
 
     it('skips storage check when getFSInfo throws', async () => {
       mockGetFSInfo.mockRejectedValue(new Error('FS unavailable'));
-      const result = await checkRequirements();
+      const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
       expect(result.deviceInfo.freeStorageGB).toBeNull();
-      // Should not fail on storage
       expect(result.failedCheck).not.toBe('storage');
     });
   });

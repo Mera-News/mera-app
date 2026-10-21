@@ -177,7 +177,7 @@
         "downloading": "Mengunduh artikel",
         "grouping": "Mengelompokkan berita yang sama",
         "analysing": "Menganalisis relevansi",
-        "summarising": "Menulis catatan Anda",
+        "summarising": "Menulis alasan Anda",
         "preparing": "Menyiapkan feed Anda"
       },
       "downloadProgress": "{{done}} dari {{total}} artikel terunduh",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Menghitung relevansi",
-      "reasonsTitle": "Menulis catatan untuk Anda",
+      "reasonsTitle": "Menulis alasan untuk Anda",
       "onDeviceTitle": "Memberi skor di ponsel Anda",
       "completedTitle": "Selesai",
       "completedMessage": "Feed Anda sudah siap"
@@ -206,15 +206,13 @@
     "statsRelevant_one": "{{formatted}} terlihat relevan,",
     "loadingA11y": "Memuat feed kamu",
     "translatingCaption": "Menerjemahkan…",
-    "reasonWritingA11y": "menulis catatan",
+    "reasonWritingA11y": "menulis alasan",
     "findingStories": "Mencari cerita untuk Anda",
     "findingStoriesBody": "Cerita akan muncul di sini begitu siap",
     "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
     "forYouTitle": "Untuk Anda",
     "newStoriesBelowA11y": "Cerita baru di bawah",
     "noFactsBody": "Ketuk tombol Mera untuk memberi tahu Mera apa yang Anda ikuti. Hasilnya jadi feed Anda.",
-    "noteSuggestedMany": "Disarankan untuk fakta Anda:",
-    "noteSuggestedOne": "Disarankan untuk fakta Anda: {{fact}}. Mohon tunggu sementara Mera menulis alasannya.",
     "noteWait": "Mohon tunggu sementara Mera menulis alasannya.",
     "opened": "Dibuka",
     "statsSyncAnalysing_one": "{{formatted}} artikel sedang dianalisis untuk Anda,",
@@ -258,7 +256,10 @@
       "announce_other": "Menampilkan {{show}}, {{formatted}} artikel",
       "emptyPicks": "Mera belum memilih apa pun untuk Anda.",
       "emptyUnread": "Mera sudah membaca semua di sini.",
-      "showAll": "Tampilkan semua artikel"
+      "showAll": "Tampilkan semua artikel",
+      "discarded": "Dibuang oleh Mera",
+      "emptyDiscarded": "Tidak ada yang dibuang dalam 48 jam terakhir.",
+      "optionA11y_other": "{{show}}, {{formatted}} cerita"
     },
     "readHold": {
       "waitingToday_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi hari ini pukul {{time}}.",
@@ -266,8 +267,17 @@
       "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
     },
-    "noteHeldToday": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
-    "noteHeldTomorrow": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}."
+    "noteHeldToday": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
+    "noteHeldTomorrow": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
+    "noteState": {
+      "writing": "Menulis alasan",
+      "failed": "Tidak dapat menulis alasan",
+      "off": "Alasan dimatikan di Pengaturan",
+      "paused": "Alasan dijeda untuk hari ini",
+      "discarded": "Dibuang oleh Mera"
+    },
+    "readyForMore": "Siap membaca lebih banyak?",
+    "refreshFeedAction": "Muat ulang feed Anda"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -397,45 +407,20 @@
   },
   "meraProtocol": {
     "title": "Mera Protocol",
-    "modelRequiredForOnDevice": "Diperlukan untuk pemrosesan di perangkat.",
-    "aiModel": "AI Model",
-    "notDownloaded": "Belum diunduh",
-    "downloading": "Mengunduh ({{percent}}%)",
-    "starting": "Memulai unduhan...",
-    "downloaded": "Sudah diunduh, siap digunakan",
-    "loadingMemory": "Memuat ke memori...",
-    "loaded": "Dimuat dan siap",
-    "errorOccurred": "Terjadi kesalahan",
-    "unknown": "Tidak diketahui",
-    "cancelDownload": "Batalkan Unduhan",
-    "retryDownload": "Coba Unduh Ulang",
     "deviceNotSupported": "Perangkat Tidak Didukung",
     "deviceNotSupportedDescription": "Perangkat Anda tidak memenuhi persyaratan pemrosesan di perangkat. Pemrosesan cloud tetap tersedia.",
     "ramLabel": "RAM 6GB+",
     "iosVersion": "iOS 16+",
     "androidVersion": "Android 10+",
     "chipLabel": "Chip A15 atau lebih baru",
-    "storageLabel": "~2,5GB penyimpanan tersedia",
-    "deleteTitle": "Hapus AI Model",
-    "deleteButton": "Hapus",
-    "dlInProgressTitle": "Unduhan Sedang Berlangsung",
-    "dlInProgressDescription": "Model sedang dalam proses diunduh.",
-    "dlStartedTitle": "Unduhan Dimulai",
-    "dlStartedDescription": "Mengunduh di latar belakang. Anda akan diberi tahu saat selesai.",
-    "dlCompleteTitle": "Unduhan Selesai",
-    "dlCompleteDescription": "AI Model siap digunakan.",
-    "dlFailedTitle": "Unduhan Gagal",
-    "dlFailedDescription": "Gagal mengunduh AI Model. Silakan coba lagi.",
     "modeUpdatedOnDeviceTitle": "Beralih ke di perangkat",
     "modeUpdatedOnDeviceDescription": "Mera AI kini berjalan di ponsel Anda. Berita tetap berasal dari server Mera.",
     "modeUpdatedCloudTitle": "Beralih ke cloud",
     "modeUpdatedCloudDescription": "Mera Protocol kini menggunakan inferensi cloud terenkripsi ujung ke ujung.",
     "settingUpdateFailedTitle": "Pembaruan Gagal",
     "settingUpdateFailedDescription": "Gagal memperbarui mode pemrosesan. Silakan coba lagi.",
-    "modelDeletedTitle": "Model Dihapus",
-    "modelDeletedDescription": "AI Model telah dihapus.",
     "deleteFailedTitle": "Gagal Menghapus",
-    "deleteFailedDescription": "Gagal menghapus model. Silakan coba lagi.",
+    "deleteFailedDescription": "The model wasn't deleted. Try again.",
     "attestationTitle": "Verifikasi atestasi",
     "attestationSubtitle": "Periksa bahwa AI cloud berjalan di perangkat keras Intel TDX asli, dan bahwa kunci tempat data Anda dienkripsi berasal dari dalamnya.",
     "attestationVerifyButton": "Jalankan verifikasi",
@@ -461,8 +446,7 @@
     "attestationCheckTcbStatus": "Tingkat patch platform saat ini",
     "attestationCheckGpuAttestation": "Atestasi GPU",
     "attestationNotCheckedLabel": "tidak diperiksa",
-    "attestationScopeNotice": "Ini memeriksa model yang ditampilkan di atas. Mera menggunakan lebih dari satu model cloud (chat menggunakan yang berbeda, dan masing-masing memiliki cadangan), jadi pass di sini mencakup model ini, bukan setiap permintaan.",
-    "attestationModelLabel": "Model diperiksa",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Pencarian web dalam chat",
     "extractedMetadataPanelHeading": "Metadata yang Diekstrak",
     "extractedMetadataEventTypeLabel": "Jenis peristiwa",
@@ -471,18 +455,7 @@
     "extractedMetadataCaption": "Diekstrak AI, bukan fakta terverifikasi",
     "loadFailedDescription": "Gagal memuat pengaturan Mera Protocol.",
     "loadFailedTitle": "Gagal Memuat",
-    "chooseModel": "Pilih satu model untuk diunduh. Anda dapat menggantinya nanti.",
-    "downloadModelNamed": "Unduh {{model}} ({{size}})",
-    "deleteModelDescription": "Ini akan menghapus {{model}} ({{size}}) dari perangkat ini. Anda dapat mengunduhnya kembali nanti. Jika Anda menggunakan pemrosesan di perangkat, Anda akan dialihkan ke cloud.",
-    "switchModelTitle": "Ganti model?",
-    "switchModelDescription": "{{current}} akan dihapus dari perangkat ini. Unduh {{new}} untuk menggunakan pemrosesan di perangkat lagi.",
-    "switchModelConfirm": "Ganti",
-    "modelLicense": "Lisensi: {{license}}",
     "speedTitle": "Kecepatan di perangkat ini",
-    "speedLoad": "Waktu muat: {{seconds}} dtk",
-    "speedGeneration": "Kecepatan menulis: {{tokPerSec}} token/dtk",
-    "speedRelevance": "Relevansi: {{ms}} md per artikel",
-    "speedReason": "Alasan: {{ms}} md per artikel",
     "speedResetNote": "Diukur saat sinkronisasi terakhir Anda. Dihapus saat aplikasi dimulai ulang.",
     "bgRefreshTitle": "Penyegaran Latar Belakang",
     "bgRefreshCloudIos": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan dalam Mode Daya Rendah atau saat Penyegaran App Latar Belakang dimatikan. Menggunakan sedikit baterai dan data, serta sebagian dari pembacaan harian Mera untuk Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
@@ -498,9 +471,53 @@
     "webSearchShort": "Hanya kata pencarian yang keluar dari ponsel Anda, lewat server Mera. Mesin pencari tidak pernah tahu siapa Anda.",
     "whereReads": "Di mana Mera membaca berita Anda",
     "whileClosed": "Saat Mera ditutup",
-    "deleting": "Menghapus…",
     "onDeviceNeedsCloud": "Beberapa fitur chat memerlukan “Cloud pribadi”.",
-    "explainerOnPhoneLimits": "Di ponsel ini, Mera tidak bisa mencari berita atau web, atau memeriksa fakta."
+    "explainerOnPhoneLimits": "Di ponsel ini, Mera tidak bisa mencari berita atau web, atau memeriksa fakta.",
+    "modelsHelp": "Mera uses Private cloud until the download finishes.",
+    "modelRowReady": "{{name}}, {{size}}, downloaded",
+    "modelRowMissing": "{{name}}, {{size}}",
+    "modelLicenseLink": "License: Apache 2.0",
+    "downloadAction": "Download ({{size}})",
+    "downloadingOf": "Downloading {{done}} of {{total}} GB",
+    "cancelDownloadAction": "Cancel download",
+    "tryAgain": "Try again",
+    "cellularTitle": "Download on mobile data?",
+    "cellularBody": "This uses {{size}} of data.",
+    "cellularConfirm": "Download",
+    "cellularWait": "Wait for Wi-Fi",
+    "freeUpToDownload": "Free up {{size}} to download.",
+    "errorFinish": "The download didn't finish. Try again.",
+    "errorFile": "Part of the download didn't arrive correctly. Try again.",
+    "errorSpace": "Not enough space. Free up {{size}} and try again.",
+    "speedRanking": "Ranking: {{seconds}} s per article",
+    "speedNotes": "Alasan: {{seconds}} dtk per artikel",
+    "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
+    "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
+    "nativeNotReady": "{{name}} is still getting ready. Try again later.",
+    "nativeAppLanguage": "{{name}} doesn't support Mera's current language yet.",
+    "nativeDeviceLanguage": "{{name}} doesn't support this phone's language yet.",
+    "nativeOsTooOld": "{{name}} needs a newer version of this phone's software.",
+    "nativeUnknown": "{{name}} isn't available right now.",
+    "speedLoad": "Load time: {{seconds}} s",
+    "speedRefused_other": "{{name}} declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until {{name}} is ready.",
+    "relevanceTitle": "Mera relevance model",
+    "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
+    "textTitle": "Text model",
+    "textHelp": "Menulis balasan chat, alasan, dan topik.",
+    "modelReady": "Downloaded",
+    "modelQueued": "Waiting to download",
+    "deleteModelLabel": "Delete {{name}}",
+    "deleteModelTitle": "Delete {{name}}?",
+    "deleteRelevanceBody": "This removes it ({{size}}) from this phone. Mera will use Private cloud.",
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Alasan",
+    "skipNotesTitle": "Lewati alasan",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "Mera uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah memiliki data ini.",
@@ -619,14 +636,17 @@
     "networkErrorTitle": "Kesalahan Jaringan"
   },
   "download": {
-    "modelDownloading": "Mengunduh AI model...",
+    "modelDownloading": "Downloading Mera models",
     "modelProgress": "{{percent}}%",
-    "completeBody": "Mera Protocol siap digunakan.",
     "completeTitle": "Unduhan Selesai",
     "failedTitle": "Unduhan Gagal",
     "failedConnection": "Periksa koneksi Anda lalu coba lagi.",
     "failedServer": "Server unduhan sedang bermasalah. Coba lagi nanti.",
-    "failedDamaged": "Unduhan rusak. Coba lagi."
+    "failedDamaged": "Unduhan rusak. Coba lagi.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again.",
+    "betaTitle": "{{title}} (Beta)",
+    "relevanceDone": "The Mera relevance model is on this phone."
   },
   "chat": {
     "startingChat": "Memulai obrolan...",
@@ -662,7 +682,8 @@
     "stopped": "Dihentikan",
     "replyLeakFallback": "Baik. Ada lagi yang ingin Anda tambahkan?",
     "replyProcessFallback": "Maaf, saya belum menangkap maksud itu. Bisa diulangi?",
-    "cloudOnlyNotice": "Ini memerlukan “Cloud pribadi” Mera. Anda bisa beralih di Pengaturan, di bagian Mera Protocol."
+    "cloudOnlyNotice": "Ini memerlukan “Cloud pribadi” Mera. Anda bisa beralih di Pengaturan, di bagian Mera Protocol.",
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
     "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
@@ -2435,7 +2456,8 @@
   },
   "askChoice": {
     "answeredA11y": "sudah dijawab",
-    "saveAll": "Simpan semua"
+    "saveAll": "Simpan semua",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2484,7 +2506,7 @@
     "selectAll": "Pilih semua",
     "selectedCount": "{{count}} dipilih",
     "includeReason": "Sertakan alasan Mera",
-    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Artikel yang disimpan sendiri tidak memilikinya.",
+    "includeReasonHint": "Alasan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Artikel yang disimpan sendiri tidak memilikinya.",
     "formatMarkdown": "Daftar Markdown",
     "formatMarkdownHint": "Daftar yang mudah dibaca, cocok untuk catatan dan dokumen.",
     "formatJson": "JSON",
@@ -2530,7 +2552,7 @@
   "storyExport": {
     "shareA11y": "Ekspor cerita ini",
     "shareDialogTitle": "Ekspor cerita",
-    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
+    "includeReasonHint": "Alasan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
   },
   "systemCheck": {
     "title": "Memeriksa ponsel Anda",
@@ -2872,10 +2894,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Email dukungan",
     "enterCode": "Masukkan kode",
     "getHelp": "Minta bantuan",
-    "noEmailBody": "Silakan coba lagi nanti. Jika terus terjadi, kirim email kepada kami dan sertakan ID Dukungan Anda.",
+    "noEmailBody": "Terjadi masalah saat masuk di ponsel ini. Hubungi dukungan, atau reset ponsel ini lalu masuk lagi.",
     "noEmailTitle": "Ada masalah dengan akun Anda",
     "offlineBody": "Mera perlu koneksi untuk memeriksa akun Anda sebelum dibuka.",
     "offlineTitle": "Anda sedang offline",
@@ -2886,7 +2907,12 @@
     "unreachableTitle": "Mera tidak dapat dihubungi",
     "mismatchTitle": "Email ini milik akun lain",
     "mismatchBody": "Masuk dengan email di akun ini, atau minta bantuan.",
-    "mismatchOtherEmail": "Gunakan email lain"
+    "mismatchOtherEmail": "Gunakan email lain",
+    "contactSupport": "Hubungi dukungan",
+    "resetPhone": "Reset ponsel ini dan masuk lagi",
+    "resetTitle": "Reset ponsel ini?",
+    "resetBody": "Anda akan keluar dan data Mera di ponsel ini akan dihapus, termasuk yang sudah Anda ceritakan kepada Mera. Akun Anda tidak dihapus, dan model AI yang sudah diunduh tetap ada. Jika Anda menggunakan cadangan, kode pemulihan Anda dapat mengembalikan data Anda.",
+    "resetConfirm": "Reset"
   },
   "relatedSort": {
     "relevance": "Kecocokan terbaik",
@@ -2915,5 +2941,44 @@
     "inboxBody": "Beralih ke masuk dengan ponsel untuk menyimpan akun Anda.",
     "settingsRow": "Pindah ke masuk dengan ponsel",
     "settingsRowHint": "Masuk dengan email berakhir {{date}}."
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }

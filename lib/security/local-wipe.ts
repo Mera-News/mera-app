@@ -301,7 +301,8 @@ export async function wipeAllLocalUserData(
  * The wipe itself is allowed to throw, and the caller decides what that means.
  *
  * Callers are explicit actions only: the logout button (useAppPreferences), the
- * identity-switch failure screen and the onboarding server-error eject. A dead
+ * identity-switch failure screen, the onboarding server-error eject and the
+ * account-problem gate's Reset this phone (useAccountProblem). A dead
  * server session must never come here; it keeps its local identity, which is
  * the point of the offline-first gate in launch-route.ts.
  */

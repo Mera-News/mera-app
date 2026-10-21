@@ -2,8 +2,9 @@
 //   feed_view     'continuous' | 'sectioned'  the View chip (FinalFeed #3)
 //   feed_minimap  'true' | absent             Settings > Display > Minimap
 //   feed_show     'all' | 'picks'             the View chip's Show section
-//                 (Continuous only). 'unread' is never written: it lasts until
-//                 the next cold launch, which opens on All (owner, R7).
+//                 (Continuous only). 'unread' and 'discarded' are never
+//                 written: they last until the next cold launch, which opens
+//                 on All (owner, R7).
 //
 // None is a counter (invariant 9). All are backed up with the other
 // preferences. `loadFeedViewPrefs` is awaited by the startup gate beside the
@@ -11,7 +12,7 @@
 // Sectioned. `resetFeedViewPrefs` runs in clearAllStores: the database reset
 // takes the rows, not this memory.
 
-import type { FeedShow } from '@/components/custom/feed/not-read-tail';
+import type { FeedShow, FeedShowCount } from '@/components/custom/feed/not-read-tail';
 import logger from '@/lib/logger';
 import { create } from 'zustand';
 
@@ -30,11 +31,39 @@ interface FeedViewPrefsState {
 
 const DEFAULTS: FeedViewPrefsState = { view: 'continuous', minimap: false, show: 'all' };
 
+/** Each Show option's name. */
+export const FEED_SHOW_LABEL_KEY = {
+  all: 'feed.show.all',
+  picks: 'feed.show.picks',
+  unread: 'feed.show.unread',
+  discarded: 'feed.show.discarded',
+} as const satisfies Record<FeedShow, string>;
+
 export const useFeedViewPrefs = create<FeedViewPrefsState>()(() => DEFAULTS);
 
 export const useFeedView = (): FeedView => useFeedViewPrefs((s) => s.view);
 export const useFeedMinimap = (): boolean => useFeedViewPrefs((s) => s.minimap);
 export const useFeedShow = (): FeedShow => useFeedViewPrefs((s) => s.show);
+
+/** Each Show option's card count, published by the mounted Continuous list
+ *  for the View chip's menu (null while it is not mounted). `discarded` is
+ *  there only while the menu is open (`menuOpen`) or that option is on: its
+ *  stories are grouped only then. Never stored. */
+export type FeedShowCounts = Partial<Record<FeedShow, FeedShowCount>>;
+export const useFeedShowCountsStore = create<{ counts: FeedShowCounts | null; menuOpen: boolean }>()(() => ({
+  counts: null,
+  menuOpen: false,
+}));
+export const useFeedShowCounts = (): FeedShowCounts | null => useFeedShowCountsStore((s) => s.counts);
+
+export function setFeedShowCounts(counts: FeedShowCounts | null): void {
+  useFeedShowCountsStore.setState({ counts });
+}
+
+/** The View chip's menu is open (the Continuous list then counts Discarded). */
+export function setFeedShowMenuOpen(menuOpen: boolean): void {
+  useFeedShowCountsStore.setState({ menuOpen });
+}
 
 /** Unknown or absent reads as the default, so an older or newer row is safe. */
 function parseFeedView(raw: string | null | undefined): FeedView {
@@ -91,8 +120,8 @@ export function setFeedView(view: FeedView): void {
   write(FEED_VIEW_SETTING_KEY, view);
 }
 
-/** The Show section. 'unread' is written as 'all', so a cold launch opens on
- *  All while 'picks' survives it. */
+/** The Show section. 'unread' and 'discarded' are written as 'all', so a
+ *  cold launch opens on All while 'picks' survives it. */
 export function setFeedShow(show: FeedShow): void {
   useFeedViewPrefs.setState({ show });
   write(FEED_SHOW_SETTING_KEY, show === 'picks' ? 'picks' : 'all');

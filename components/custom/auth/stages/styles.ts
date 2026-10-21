@@ -48,15 +48,6 @@ const styles = StyleSheet.create({
     pillAction: { fontSize: 14, fontWeight: '600' },
     copy: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
     actions: { alignSelf: 'stretch', gap: 12 },
-    iconRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 4 },
-    iconAction: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        borderWidth: StyleSheet.hairlineWidth,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
     gateIcon: {
         width: 64,
         height: 64,
@@ -69,7 +60,9 @@ const styles = StyleSheet.create({
     },
     sheet: { paddingHorizontal: 20, paddingTop: 4, gap: 12 },
     sheetTitle: { fontSize: 20, fontWeight: '700' },
-    sheetActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+    // Stacked, full width: side by side, a long label ("Remove and continue",
+    // longer in German) was clipped mid-word. Same order as ConfirmDialog.
+    sheetActions: { gap: 10, marginTop: 8 },
 });
 
 export { LOGO_TOP, styles };

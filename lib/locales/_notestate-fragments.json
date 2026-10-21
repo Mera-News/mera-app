@@ -1,0 +1,323 @@
+{
+  "_comment": "Standardise on 'reason' (owner, 2026-10-21): the no-note captions and the Mera Protocol reason strings, each in the word the locale's feed.noteWait already uses.",
+  "ar": {
+    "feed": {
+      "noteState": {
+        "writing": "جارٍ كتابة السبب",
+        "failed": "تعذّرت كتابة السبب",
+        "off": "الأسباب متوقفة في الإعدادات",
+        "paused": "الأسباب متوقفة مؤقتًا لليوم"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "تخطي الأسباب",
+      "notesGroup": "الأسباب",
+      "speedNotes": "الأسباب: {{seconds}} ث لكل مقال",
+      "textHelp": "يكتب ردود الدردشة والأسباب والمواضيع."
+    }
+  },
+  "de": {
+    "feed": {
+      "noteState": {
+        "writing": "Grund wird geschrieben",
+        "failed": "Grund konnte nicht geschrieben werden",
+        "off": "Gründe in den Einstellungen aus",
+        "paused": "Gründe für heute pausiert"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Gründe überspringen",
+      "notesGroup": "Gründe",
+      "speedNotes": "Gründe: {{seconds}} s pro Artikel",
+      "textHelp": "Schreibt Chat-Antworten, Gründe und Themen."
+    }
+  },
+  "en": {
+    "feed": {
+      "noteState": {
+        "writing": "Writing the reason",
+        "failed": "Couldn't write the reason",
+        "off": "Reasons off in Settings",
+        "paused": "Reasons paused for today"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Skip reasons",
+      "notesGroup": "Reasons",
+      "speedNotes": "Reasons: {{seconds}} s per article",
+      "textHelp": "Writes chat replies, reasons and topics."
+    }
+  },
+  "es": {
+    "feed": {
+      "noteState": {
+        "writing": "Escribiendo el motivo",
+        "failed": "No se pudo escribir el motivo",
+        "off": "Motivos desactivados en Ajustes",
+        "paused": "Motivos en pausa por hoy"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Omitir motivos",
+      "notesGroup": "Motivos",
+      "speedNotes": "Motivos: {{seconds}} s por artículo",
+      "textHelp": "Escribe respuestas del chat, motivos y temas."
+    }
+  },
+  "fr": {
+    "feed": {
+      "noteState": {
+        "writing": "Rédaction de la raison",
+        "failed": "Impossible d'écrire la raison",
+        "off": "Raisons désactivées dans les Réglages",
+        "paused": "Raisons en pause pour aujourd'hui"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Ignorer les raisons",
+      "notesGroup": "Raisons",
+      "speedNotes": "Raisons : {{seconds}} s par article",
+      "textHelp": "Rédige les réponses du chat, les raisons et les sujets."
+    }
+  },
+  "hi": {
+    "feed": {
+      "noteState": {
+        "writing": "कारण लिखा जा रहा है",
+        "failed": "कारण नहीं लिखा जा सका",
+        "off": "सेटिंग्स में कारण बंद हैं",
+        "paused": "आज के लिए कारण रुके हैं"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "कारण छोड़ें",
+      "notesGroup": "कारण",
+      "speedNotes": "कारण: प्रति लेख {{seconds}} से.",
+      "textHelp": "चैट जवाब, कारण और विषय लिखता है।"
+    }
+  },
+  "id": {
+    "feed": {
+      "noteState": {
+        "writing": "Menulis alasan",
+        "failed": "Tidak dapat menulis alasan",
+        "off": "Alasan dimatikan di Pengaturan",
+        "paused": "Alasan dijeda untuk hari ini"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Lewati alasan",
+      "notesGroup": "Alasan",
+      "speedNotes": "Alasan: {{seconds}} dtk per artikel",
+      "textHelp": "Menulis balasan chat, alasan, dan topik."
+    }
+  },
+  "it": {
+    "feed": {
+      "noteState": {
+        "writing": "Scrittura del motivo",
+        "failed": "Impossibile scrivere il motivo",
+        "off": "Motivi disattivati nelle Impostazioni",
+        "paused": "Motivi in pausa per oggi"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Salta i motivi",
+      "notesGroup": "Motivi",
+      "speedNotes": "Motivi: {{seconds}} s per articolo",
+      "textHelp": "Scrive le risposte in chat, i motivi e gli argomenti."
+    }
+  },
+  "ja": {
+    "feed": {
+      "noteState": {
+        "writing": "理由を作成中",
+        "failed": "理由を作成できませんでした",
+        "off": "設定で理由はオフ",
+        "paused": "今日は理由を一時停止中"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "理由をスキップ",
+      "notesGroup": "理由",
+      "speedNotes": "理由: 記事あたり{{seconds}}秒",
+      "textHelp": "チャットの返信、理由、トピックを作成します。"
+    }
+  },
+  "ko": {
+    "feed": {
+      "noteState": {
+        "writing": "이유 작성 중",
+        "failed": "이유를 작성하지 못했어요",
+        "off": "설정에서 이유 꺼짐",
+        "paused": "오늘은 이유 일시 중지"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "이유 건너뛰기",
+      "notesGroup": "이유",
+      "speedNotes": "이유: 기사당 {{seconds}}초",
+      "textHelp": "채팅 답변, 이유, 토픽을 작성해요."
+    }
+  },
+  "nl": {
+    "feed": {
+      "noteState": {
+        "writing": "Reden wordt geschreven",
+        "failed": "Kon de reden niet schrijven",
+        "off": "Redenen uit in Instellingen",
+        "paused": "Redenen gepauzeerd voor vandaag"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Redenen overslaan",
+      "notesGroup": "Redenen",
+      "speedNotes": "Redenen: {{seconds}} s per artikel",
+      "textHelp": "Schrijft chatantwoorden, redenen en onderwerpen."
+    }
+  },
+  "pl": {
+    "feed": {
+      "noteState": {
+        "writing": "Piszę uzasadnienie",
+        "failed": "Nie udało się napisać uzasadnienia",
+        "off": "Uzasadnienia wyłączone w Ustawieniach",
+        "paused": "Uzasadnienia wstrzymane na dziś"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Pomiń uzasadnienia",
+      "notesGroup": "Uzasadnienia",
+      "speedNotes": "Uzasadnienia: {{seconds}} s na artykuł",
+      "textHelp": "Pisze odpowiedzi na czacie, uzasadnienia i tematy."
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "noteState": {
+        "writing": "Escrevendo o motivo",
+        "failed": "Não foi possível escrever o motivo",
+        "off": "Motivos desativados nos Ajustes",
+        "paused": "Motivos pausados por hoje"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Pular motivos",
+      "notesGroup": "Motivos",
+      "speedNotes": "Motivos: {{seconds}} s por artigo",
+      "textHelp": "Escreve respostas do chat, motivos e temas."
+    }
+  },
+  "ru": {
+    "feed": {
+      "noteState": {
+        "writing": "Пишу пояснение",
+        "failed": "Не удалось написать пояснение",
+        "off": "Пояснения отключены в настройках",
+        "paused": "Пояснения приостановлены на сегодня"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Пропускать пояснения",
+      "notesGroup": "Пояснения",
+      "speedNotes": "Пояснения: {{seconds}} с на статью",
+      "textHelp": "Пишет ответы в чате, пояснения и темы."
+    }
+  },
+  "th": {
+    "feed": {
+      "noteState": {
+        "writing": "กำลังเขียนเหตุผล",
+        "failed": "เขียนเหตุผลไม่ได้",
+        "off": "ปิดเหตุผลไว้ในการตั้งค่า",
+        "paused": "หยุดเหตุผลชั่วคราววันนี้"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "ข้ามเหตุผล",
+      "notesGroup": "เหตุผล",
+      "speedNotes": "เหตุผล: {{seconds}} วินาทีต่อบทความ",
+      "textHelp": "เขียนคำตอบแชต เหตุผล และหัวข้อ"
+    }
+  },
+  "tr": {
+    "feed": {
+      "noteState": {
+        "writing": "Neden yazılıyor",
+        "failed": "Neden yazılamadı",
+        "off": "Nedenler Ayarlar'da kapalı",
+        "paused": "Nedenler bugünlük duraklatıldı"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Nedenleri atla",
+      "notesGroup": "Nedenler",
+      "speedNotes": "Nedenler: makale başına {{seconds}} sn",
+      "textHelp": "Sohbet yanıtlarını, nedenleri ve konuları yazar."
+    }
+  },
+  "uk": {
+    "feed": {
+      "noteState": {
+        "writing": "Пишу причину",
+        "failed": "Не вдалося написати причину",
+        "off": "Причини вимкнено в налаштуваннях",
+        "paused": "Причини призупинено на сьогодні"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Пропускати причини",
+      "notesGroup": "Причини",
+      "speedNotes": "Причини: {{seconds}} с на статтю",
+      "textHelp": "Пише відповіді в чаті, причини й теми."
+    }
+  },
+  "vi": {
+    "feed": {
+      "noteState": {
+        "writing": "Đang viết lý do",
+        "failed": "Không viết được lý do",
+        "off": "Lý do đã tắt trong Cài đặt",
+        "paused": "Lý do tạm dừng hôm nay"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "Bỏ qua lý do",
+      "notesGroup": "Lý do",
+      "speedNotes": "Lý do: {{seconds}} giây mỗi bài",
+      "textHelp": "Viết câu trả lời trò chuyện, lý do và chủ đề."
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "noteState": {
+        "writing": "正在撰写理由",
+        "failed": "无法撰写理由",
+        "off": "已在设置中关闭理由",
+        "paused": "今日理由已暂停"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "跳过理由",
+      "notesGroup": "理由",
+      "speedNotes": "理由：每篇 {{seconds}} 秒",
+      "textHelp": "撰写聊天回复、理由和主题。"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "noteState": {
+        "writing": "正在撰寫理由",
+        "failed": "無法撰寫理由",
+        "off": "已在設定中關閉理由",
+        "paused": "今日理由已暫停"
+      }
+    },
+    "meraProtocol": {
+      "skipNotesTitle": "略過理由",
+      "notesGroup": "理由",
+      "speedNotes": "理由：每篇 {{seconds}} 秒",
+      "textHelp": "撰寫聊天回覆、理由和主題。"
+    }
+  }
+}

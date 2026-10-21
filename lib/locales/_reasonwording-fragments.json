@@ -1,0 +1,423 @@
+{
+  "_comment": "'reason' replaces 'note' for the per-article reason in feed and export strings (owner, 2026-10-21).",
+  "en": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Writing your reasons"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Writing reasons for you"
+      },
+      "reasonWritingA11y": "reason being written",
+      "noteHeldToday": "Today's reading is used up, so Mera will write this reason after {{time}} today.",
+      "noteHeldTomorrow": "Today's reading is used up, so Mera will write this reason after {{time}} tomorrow."
+    },
+    "savedExport": {
+      "includeReasonHint": "The one-line reason explaining why each article reached your feed. Standalone saves do not have one."
+    },
+    "storyExport": {
+      "includeReasonHint": "The one-line reason explaining why each article reached your feed. Some articles may not have one."
+    }
+  },
+  "ar": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "كتابة أسبابك"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "كتابة أسباب لك"
+      },
+      "reasonWritingA11y": "جارٍ كتابة سبب",
+      "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} اليوم.",
+      "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} غدًا."
+    },
+    "savedExport": {
+      "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليه."
+    },
+    "storyExport": {
+      "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليه."
+    }
+  },
+  "de": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Gründe werden geschrieben"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Gründe werden verfasst"
+      },
+      "reasonWritingA11y": "Grund wird geschrieben",
+      "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund heute ab {{time}}.",
+      "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund morgen ab {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "Der kurze Grund, warum jeder Artikel in deinen Feed gelangt ist. Einzeln gespeicherte Artikel haben keinen."
+    },
+    "storyExport": {
+      "includeReasonHint": "Der kurze Grund, warum jeder Artikel in deinen Feed gelangt ist. Manche Artikel haben keinen."
+    }
+  },
+  "es": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Escribiendo tus motivos"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Escribiendo motivos para ti"
+      },
+      "reasonWritingA11y": "escribiendo un motivo",
+      "noteHeldToday": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de hoy.",
+      "noteHeldTomorrow": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de mañana."
+    },
+    "savedExport": {
+      "includeReasonHint": "El motivo breve que explica por qué cada artículo llegó a tu feed. Los artículos guardados por separado no lo tienen."
+    },
+    "storyExport": {
+      "includeReasonHint": "El motivo breve que explica por qué cada artículo llegó a tu feed. Es posible que algunos artículos no lo tengan."
+    }
+  },
+  "fr": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Rédaction de vos raisons"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Rédaction des raisons pour vous"
+      },
+      "reasonWritingA11y": "rédaction d'une raison",
+      "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison aujourd'hui après {{time}}.",
+      "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison demain après {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "La raison d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Les articles enregistrés seuls n'en ont pas."
+    },
+    "storyExport": {
+      "includeReasonHint": "La raison d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Certains articles peuvent ne pas en avoir."
+    }
+  },
+  "hi": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "आपके लिए कारण लिखे जा रहे हैं"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "आपके लिए कारण लिखे जा रहे हैं"
+      },
+      "reasonWritingA11y": "कारण लिखा जा रहा है",
+      "noteHeldToday": "आज की रीडिंग इस्तेमाल कर ली है, इसलिए मेरा ऐप यह कारण आज {{time}} के बाद लिखेगा।",
+      "noteHeldTomorrow": "आज की रीडिंग इस्तेमाल कर ली है, इसलिए मेरा ऐप यह कारण कल {{time}} के बाद लिखेगा।"
+    },
+    "savedExport": {
+      "includeReasonHint": "एक पंक्ति का कारण जो बताता है कि हर लेख आपकी फ़ीड तक क्यों पहुँचा। अलग से सहेजे गए लेखों में यह नहीं होता।"
+    },
+    "storyExport": {
+      "includeReasonHint": "एक पंक्ति का कारण जो बताता है कि हर लेख आपकी फ़ीड तक क्यों पहुँचा। कुछ लेखों में यह नहीं हो सकता।"
+    }
+  },
+  "id": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Menulis alasan Anda"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Menulis alasan untuk Anda"
+      },
+      "reasonWritingA11y": "menulis alasan",
+      "noteHeldToday": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
+      "noteHeldTomorrow": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "Alasan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Artikel yang disimpan sendiri tidak memilikinya."
+    },
+    "storyExport": {
+      "includeReasonHint": "Alasan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
+    }
+  },
+  "it": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Scrivo i tuoi motivi"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Scrittura dei motivi per te"
+      },
+      "reasonWritingA11y": "scrittura di un motivo",
+      "noteHeldToday": "Mera ha usato la lettura di oggi, quindi scriverà questo motivo dopo le {{time}} di oggi.",
+      "noteHeldTomorrow": "Mera ha usato la lettura di oggi, quindi scriverà questo motivo dopo le {{time}} di domani."
+    },
+    "savedExport": {
+      "includeReasonHint": "Il motivo di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Gli articoli salvati singolarmente non ce l'hanno."
+    },
+    "storyExport": {
+      "includeReasonHint": "Il motivo di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Alcuni articoli potrebbero non averlo."
+    }
+  },
+  "ja": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "理由を作成中"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "あなたへの理由を作成中"
+      },
+      "reasonWritingA11y": "理由作成中",
+      "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の理由を書きます。",
+      "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の理由を書きます。"
+    },
+    "savedExport": {
+      "includeReasonHint": "各記事がフィードに届いた理由を 1 行で説明したものです。単独で保存した記事にはありません。"
+    },
+    "storyExport": {
+      "includeReasonHint": "各記事がフィードに届いた理由を 1 行で説明したものです。理由がない記事もあります。"
+    }
+  },
+  "ko": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "이유를 작성하는 중"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "이유 작성 중"
+      },
+      "reasonWritingA11y": "이유 작성 중",
+      "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 오늘 {{time}} 이후에 작성합니다.",
+      "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 내일 {{time}} 이후에 작성합니다."
+    },
+    "savedExport": {
+      "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 이유입니다. 개별로 저장한 기사에는 없습니다."
+    },
+    "storyExport": {
+      "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 이유입니다. 이유가 없는 기사도 있을 수 있습니다."
+    }
+  },
+  "nl": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Je redenen schrijven"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Redenen voor jou schrijven"
+      },
+      "reasonWritingA11y": "reden schrijven",
+      "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas vandaag na {{time}}.",
+      "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas morgen na {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet."
+    },
+    "storyExport": {
+      "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
+    }
+  },
+  "pl": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Piszę twoje uzasadnienia"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Pisanie uzasadnień dla Ciebie"
+      },
+      "reasonWritingA11y": "uzasadnienie jest pisane",
+      "noteHeldToday": "Mera napisze to uzasadnienie dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+      "noteHeldTomorrow": "Mera napisze to uzasadnienie jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania."
+    },
+    "savedExport": {
+      "includeReasonHint": "Jednolinijkowe uzasadnienie wyjaśniające, dlaczego każdy artykuł trafił do Twojego kanału. Artykuły zapisane pojedynczo go nie mają."
+    },
+    "storyExport": {
+      "includeReasonHint": "Jednolinijkowe uzasadnienie wyjaśniające, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą go nie mieć."
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Escrevendo seus motivos"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Escrevendo motivos para você"
+      },
+      "reasonWritingA11y": "motivo sendo escrito",
+      "noteHeldToday": "O Mera já usou a leitura de hoje, então vai escrever este motivo hoje depois das {{time}}.",
+      "noteHeldTomorrow": "O Mera já usou a leitura de hoje, então vai escrever este motivo amanhã depois das {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "O motivo de uma linha que explica por que cada artigo chegou ao seu feed. Artigos salvos avulsos não têm esse motivo."
+    },
+    "storyExport": {
+      "includeReasonHint": "O motivo de uma linha que explica por que cada artigo chegou ao seu feed. Alguns artigos podem não ter esse motivo."
+    }
+  },
+  "ru": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Пишем ваши пояснения"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Готовим пояснения для вас"
+      },
+      "reasonWritingA11y": "пояснение пишется",
+      "noteHeldToday": "Мера уже использовала сегодняшнее чтение, поэтому это пояснение она напишет сегодня после {{time}}.",
+      "noteHeldTomorrow": "Мера уже использовала сегодняшнее чтение, поэтому это пояснение она напишет завтра после {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "Короткое пояснение о том, почему каждая статья попала в вашу ленту. У статей, сохранённых по отдельности, его нет."
+    },
+    "storyExport": {
+      "includeReasonHint": "Короткое пояснение о том, почему каждая статья попала в вашу ленту. У некоторых статей его может не быть."
+    }
+  },
+  "th": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "กำลังเขียนเหตุผลให้คุณ"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "กำลังเขียนเหตุผลให้คุณ"
+      },
+      "reasonWritingA11y": "กำลังเขียนเหตุผล",
+      "noteHeldToday": "เมร่ายังไม่ได้เขียนเหตุผลนี้ เพราะเมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะเขียนเหตุผลนี้หลังเวลา {{time}} ของวันนี้",
+      "noteHeldTomorrow": "เมร่ายังไม่ได้เขียนเหตุผลนี้ เพราะเมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะเขียนเหตุผลนี้หลังเวลา {{time}} ของวันพรุ่งนี้"
+    },
+    "savedExport": {
+      "includeReasonHint": "เหตุผลสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บทความที่บันทึกแยกจะไม่มีเหตุผลนี้"
+    },
+    "storyExport": {
+      "includeReasonHint": "เหตุผลสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บางบทความอาจไม่มีเหตุผลนี้"
+    }
+  },
+  "tr": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Nedenleriniz yazılıyor"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Nedenler yazılıyor"
+      },
+      "reasonWritingA11y": "neden yazılıyor",
+      "noteHeldToday": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni bugün {{time}} saatinde yazacak.",
+      "noteHeldTomorrow": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni yarın {{time}} saatinde yazacak."
+    },
+    "savedExport": {
+      "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Tek tek kaydedilen makalelerde bu neden bulunmaz."
+    },
+    "storyExport": {
+      "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Bazı makalelerde bu neden bulunmayabilir."
+    }
+  },
+  "uk": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Пишемо ваші причини"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Написання причин для вас"
+      },
+      "reasonWritingA11y": "причина пишеться",
+      "noteHeldToday": "Мера вже використала сьогоднішнє читання, тому напише цю причину сьогодні після {{time}}.",
+      "noteHeldTomorrow": "Мера вже використала сьогоднішнє читання, тому напише цю причину завтра після {{time}}."
+    },
+    "savedExport": {
+      "includeReasonHint": "Коротка причина того, чому кожна стаття потрапила у вашу стрічку. Статті, збережені окремо, її не мають."
+    },
+    "storyExport": {
+      "includeReasonHint": "Коротка причина того, чому кожна стаття потрапила у вашу стрічку. Деякі статті можуть її не мати."
+    }
+  },
+  "vi": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "Đang viết lý do cho bạn"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "Đang viết lý do cho bạn"
+      },
+      "reasonWritingA11y": "đang viết lý do",
+      "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} hôm nay.",
+      "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} vào ngày mai."
+    },
+    "savedExport": {
+      "includeReasonHint": "Lý do một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Các bài lưu riêng lẻ không có lý do này."
+    },
+    "storyExport": {
+      "includeReasonHint": "Lý do một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có lý do này."
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "正在撰写你的推荐理由"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "为您撰写推荐理由"
+      },
+      "reasonWritingA11y": "正在撰写推荐理由",
+      "noteHeldToday": "今日阅读量已用完，梅拉将于今天 {{time}} 之后撰写这条推荐理由。",
+      "noteHeldTomorrow": "今日阅读量已用完，梅拉将于明天 {{time}} 之后撰写这条推荐理由。"
+    },
+    "savedExport": {
+      "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句推荐理由。单独保存的文章没有这句推荐理由。"
+    },
+    "storyExport": {
+      "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句推荐理由。部分文章可能没有这句推荐理由。"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "summarising": "正在撰寫你的理由"
+        }
+      },
+      "syncToast": {
+        "reasonsTitle": "為您撰寫理由"
+      },
+      "reasonWritingA11y": "正在撰寫理由",
+      "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則理由。",
+      "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則理由。"
+    },
+    "savedExport": {
+      "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句理由。單獨儲存的文章沒有這句理由。"
+    },
+    "storyExport": {
+      "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句理由。部分文章可能沒有這句理由。"
+    }
+  }
+}

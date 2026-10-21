@@ -1,0 +1,22 @@
+{
+  "description": "Onboarding: the first answer carries two facts. saveExtractedFacts must offer the city.",
+  "surface": "ONBOARDING",
+  "knownFacts": "",
+  "facts": [],
+  "wire": [
+    {
+      "role": "assistant",
+      "content": "Hi, I am Mera. Where do you live?"
+    },
+    {
+      "role": "user",
+      "content": "In Lyon. I moved here from Brazil two years ago."
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "Lyon"
+    ]
+  }
+}

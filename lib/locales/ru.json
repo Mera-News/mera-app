@@ -177,7 +177,7 @@
         "downloading": "Загружаем статьи",
         "grouping": "Объединяем повторяющиеся сюжеты",
         "analysing": "Анализируем релевантность",
-        "summarising": "Пишем ваши заметки",
+        "summarising": "Пишем ваши пояснения",
         "preparing": "Готовим вашу ленту"
       },
       "downloadProgress": "Загружено {{done}} из {{total}} статей",
@@ -216,15 +216,13 @@
     "statsRead_other": "и вы прочитали {{formatted}}.",
     "loadingA11y": "Загружаем вашу ленту",
     "translatingCaption": "Перевод…",
-    "reasonWritingA11y": "заметка пишется",
+    "reasonWritingA11y": "пояснение пишется",
     "findingStories": "Подбираем ваши истории",
     "findingStoriesBody": "Они появятся здесь, как только будут готовы",
     "processingOffline": "Вы не в сети. Истории появятся, когда соединение восстановится.",
     "forYouTitle": "Для вас",
     "newStoriesBelowA11y": "Новые истории ниже",
     "noFactsBody": "Нажмите кнопку Мера и расскажите, за чем вы следите. Мера превратит это в вашу ленту.",
-    "noteSuggestedMany": "Предложено по вашим фактам:",
-    "noteSuggestedOne": "Предложено по вашему факту: {{fact}}. Подождите, пока Мера напишет пояснение.",
     "noteWait": "Подождите, пока Мера напишет пояснение.",
     "opened": "Открыто",
     "statsSyncAnalysing_one": "{{formatted}} статья анализируется для вас,",
@@ -277,7 +275,13 @@
       "announce_other": "Показано: {{show}}, {{formatted}} статьи",
       "emptyPicks": "Мера пока ничего не выбрала для вас.",
       "emptyUnread": "Мера прочитала всё здесь.",
-      "showAll": "Показать все статьи"
+      "showAll": "Показать все статьи",
+      "discarded": "Отклонено Мерой",
+      "emptyDiscarded": "За последние 48 часов ничего не отклонено.",
+      "optionA11y_one": "{{show}}, {{formatted}} история",
+      "optionA11y_few": "{{show}}, {{formatted}} истории",
+      "optionA11y_many": "{{show}}, {{formatted}} историй",
+      "optionA11y_other": "{{show}}, {{formatted}} истории"
     },
     "readHold": {
       "waitingToday_one": "Мера использовала сегодняшнее чтение. {{formatted}} статья ниже ещё не прочитана. Мера снова читает сегодня в {{time}}.",
@@ -291,8 +295,17 @@
       "bodyToday": "Мера использовала сегодняшнее чтение. Она снова читает сегодня в {{time}}.",
       "bodyTomorrow": "Мера использовала сегодняшнее чтение. Она снова читает завтра в {{time}}."
     },
-    "noteHeldToday": "Мера уже использовала сегодняшнее чтение, поэтому эту заметку она напишет сегодня после {{time}}.",
-    "noteHeldTomorrow": "Мера уже использовала сегодняшнее чтение, поэтому эту заметку она напишет завтра после {{time}}."
+    "noteHeldToday": "Мера уже использовала сегодняшнее чтение, поэтому это пояснение она напишет сегодня после {{time}}.",
+    "noteHeldTomorrow": "Мера уже использовала сегодняшнее чтение, поэтому это пояснение она напишет завтра после {{time}}.",
+    "noteState": {
+      "writing": "Пишу пояснение",
+      "failed": "Не удалось написать пояснение",
+      "off": "Пояснения отключены в настройках",
+      "paused": "Пояснения приостановлены на сегодня",
+      "discarded": "Отклонено Мерой"
+    },
+    "readyForMore": "Готовы читать дальше?",
+    "refreshFeedAction": "Обновить ленту"
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -424,45 +437,20 @@
   },
   "meraProtocol": {
     "title": "Протокол Мера",
-    "modelRequiredForOnDevice": "Требуется для обработки на устройстве.",
-    "aiModel": "Модель ИИ",
-    "notDownloaded": "Не загружена",
-    "downloading": "Загрузка ({{percent}}%)",
-    "starting": "Начало загрузки...",
-    "downloaded": "Загружена, готова к использованию",
-    "loadingMemory": "Загрузка в память...",
-    "loaded": "Загружена и готова",
-    "errorOccurred": "Произошла ошибка",
-    "unknown": "Неизвестно",
-    "cancelDownload": "Отменить загрузку",
-    "retryDownload": "Повторить загрузку",
     "deviceNotSupported": "Устройство не поддерживается",
     "deviceNotSupportedDescription": "Ваше устройство не соответствует требованиям для обработки на устройстве. Облачная обработка по-прежнему доступна.",
     "ramLabel": "6 ГБ+ ОЗУ",
     "iosVersion": "iOS 16+",
     "androidVersion": "Android 10+",
     "chipLabel": "Чип A15 или новее",
-    "storageLabel": "~2,5 ГБ свободного места",
-    "deleteTitle": "Удалить модель ИИ",
-    "deleteButton": "Удалить",
-    "dlInProgressTitle": "Загрузка в процессе",
-    "dlInProgressDescription": "Модель уже загружается.",
-    "dlStartedTitle": "Загрузка начата",
-    "dlStartedDescription": "Загрузка выполняется в фоновом режиме. Вы получите уведомление по завершении.",
-    "dlCompleteTitle": "Загрузка завершена",
-    "dlCompleteDescription": "Модель ИИ готова к использованию.",
-    "dlFailedTitle": "Ошибка загрузки",
-    "dlFailedDescription": "Не удалось загрузить модель ИИ. Пожалуйста, попробуйте ещё раз.",
     "modeUpdatedOnDeviceTitle": "Переключено на устройство",
     "modeUpdatedOnDeviceDescription": "Мера AI теперь работает на вашем телефоне. Новости по-прежнему приходят с серверов Меры.",
     "modeUpdatedCloudTitle": "Переключено в облако",
     "modeUpdatedCloudDescription": "Протокол Мера теперь использует сквозное зашифрованное облачное вычисление.",
     "settingUpdateFailedTitle": "Ошибка обновления",
     "settingUpdateFailedDescription": "Не удалось обновить режим обработки. Пожалуйста, попробуйте ещё раз.",
-    "modelDeletedTitle": "Модель удалена",
-    "modelDeletedDescription": "Модель ИИ была удалена.",
     "deleteFailedTitle": "Ошибка удаления",
-    "deleteFailedDescription": "Не удалось удалить модель. Пожалуйста, попробуйте ещё раз.",
+    "deleteFailedDescription": "The model wasn't deleted. Try again.",
     "attestationTitle": "Проверить аттестацию",
     "attestationSubtitle": "Убедитесь, что облачный ИИ работает на настоящем оборудовании Intel TDX и что ключ, на который зашифрованы ваши данные, пришёл из него.",
     "attestationVerifyButton": "Запустить проверку",
@@ -488,8 +476,7 @@
     "attestationCheckTcbStatus": "Уровень патчей платформы актуален",
     "attestationCheckGpuAttestation": "Аттестация GPU",
     "attestationNotCheckedLabel": "не проверено",
-    "attestationScopeNotice": "Это проверяет модель выше. Мера использует несколько облачных моделей (для чата другая, и у каждой есть резервная), поэтому успешная проверка относится к этой модели, а не к каждому запросу.",
-    "attestationModelLabel": "Проверенная модель",
+    "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
     "webSearchTitle": "Веб-поиск в чате",
     "extractedMetadataPanelHeading": "Извлеченные Метаданные",
     "extractedMetadataEventTypeLabel": "Тип события",
@@ -498,18 +485,7 @@
     "extractedMetadataCaption": "Извлечено ИИ, не проверенный факт",
     "loadFailedDescription": "Не удалось загрузить настройки Протокола Мера.",
     "loadFailedTitle": "Ошибка загрузки",
-    "chooseModel": "Выберите одну модель для загрузки. Позже её можно сменить.",
-    "downloadModelNamed": "Загрузить {{model}} ({{size}})",
-    "deleteModelDescription": "Это удалит {{model}} ({{size}}) с этого устройства. Вы сможете загрузить её снова позже. Если вы используете режим «на устройстве», будет выполнено переключение на облачный режим.",
-    "switchModelTitle": "Сменить модель?",
-    "switchModelDescription": "{{current}} будет удалена с этого устройства. Загрузите {{new}}, чтобы снова использовать режим «на устройстве».",
-    "switchModelConfirm": "Сменить",
-    "modelLicense": "Лицензия: {{license}}",
     "speedTitle": "Скорость на этом устройстве",
-    "speedLoad": "Время загрузки: {{seconds}} с",
-    "speedGeneration": "Скорость генерации: {{tokPerSec}} токенов/с",
-    "speedRelevance": "Релевантность: {{ms}} мс на статью",
-    "speedReason": "Пояснения: {{ms}} мс на статью",
     "speedResetNote": "Измерено во время последней синхронизации. Сбрасывается при перезапуске приложения.",
     "bgRefreshTitle": "Фоновое обновление",
     "bgRefreshCloudIos": "Мера загружает новые статьи, пока приложение закрыто, и начинает их для вас ранжировать. Ваш телефон решает, когда это происходит. Может не работать в режиме энергосбережения или когда выключено «Обновление контента». Немного расходует батарею и трафик, а также часть ежедневного чтения Меры для вас. Это не меняет резервное копирование. Никакие данные не передаются сверх того, что Мера уже использует, когда приложение открыто.",
@@ -525,9 +501,56 @@
     "webSearchShort": "С телефона уходят только слова для поиска, через сервер Меры. Поисковая система не узнаёт, кто вы.",
     "whereReads": "Где Мера читает ваши новости",
     "whileClosed": "Пока Мера закрыта",
-    "deleting": "Удаляем…",
     "onDeviceNeedsCloud": "Некоторым функциям чата нужен режим «Частное облако».",
-    "explainerOnPhoneLimits": "На этом телефоне Мера не может искать новости и информацию в интернете или проверять факты."
+    "explainerOnPhoneLimits": "На этом телефоне Мера не может искать новости и информацию в интернете или проверять факты.",
+    "modelsHelp": "Мера uses Private cloud until the download finishes.",
+    "modelRowReady": "{{name}}, {{size}}, downloaded",
+    "modelRowMissing": "{{name}}, {{size}}",
+    "modelLicenseLink": "License: Apache 2.0",
+    "downloadAction": "Download ({{size}})",
+    "downloadingOf": "Downloading {{done}} of {{total}} GB",
+    "cancelDownloadAction": "Cancel download",
+    "tryAgain": "Try again",
+    "cellularTitle": "Download on mobile data?",
+    "cellularBody": "This uses {{size}} of data.",
+    "cellularConfirm": "Download",
+    "cellularWait": "Wait for Wi-Fi",
+    "freeUpToDownload": "Free up {{size}} to download.",
+    "errorFinish": "The download didn't finish. Try again.",
+    "errorFile": "Part of the download didn't arrive correctly. Try again.",
+    "errorSpace": "Not enough space. Free up {{size}} and try again.",
+    "speedRanking": "Ranking: {{seconds}} s per article",
+    "speedNotes": "Пояснения: {{seconds}} с на статью",
+    "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
+    "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
+    "nativeNotReady": "{{name}} is still getting ready. Try again later.",
+    "nativeAppLanguage": "{{name}} doesn't support Мера's current language yet.",
+    "nativeDeviceLanguage": "{{name}} doesn't support this phone's language yet.",
+    "nativeOsTooOld": "{{name}} needs a newer version of this phone's software.",
+    "nativeUnknown": "{{name}} isn't available right now.",
+    "speedLoad": "Load time: {{seconds}} s",
+    "speedRefused_one": "{{name}} declined {{count}} request",
+    "speedRefused_few": "{{name}} declined {{count}} requests",
+    "speedRefused_many": "{{name}} declined {{count}} requests",
+    "speedRefused_other": "{{name}} declined {{count}} requests",
+    "modelsWaitingNative": "Мера uses Private cloud until {{name}} is ready.",
+    "relevanceTitle": "Мера relevance model",
+    "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
+    "textTitle": "Text model",
+    "textHelp": "Пишет ответы в чате, пояснения и темы.",
+    "modelReady": "Downloaded",
+    "modelQueued": "Waiting to download",
+    "deleteModelLabel": "Delete {{name}}",
+    "deleteModelTitle": "Delete {{name}}?",
+    "deleteRelevanceBody": "This removes it ({{size}}) from this phone. Мера will use Private cloud.",
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Пояснения",
+    "skipNotesTitle": "Пропускать пояснения",
+    "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "Мера uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Мера Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Очищает локальный журнал открытых вами статей. Карточка «Издания, которые вы читаете» на вкладке «Источники» и история по каждому изданию сбросятся до пустых. Ничего другого не затрагивается, и данные на сервере не изменяются, так как серверы Меры никогда не получали эти данные.",
@@ -649,14 +672,17 @@
     "networkErrorTitle": "Ошибка сети"
   },
   "download": {
-    "modelDownloading": "Загрузка модели ИИ...",
+    "modelDownloading": "Downloading Мера models",
     "modelProgress": "{{percent}}%",
-    "completeBody": "Протокол Мера готов к использованию.",
     "completeTitle": "Загрузка завершена",
     "failedTitle": "Ошибка загрузки",
     "failedConnection": "Проверьте подключение и попробуйте ещё раз.",
     "failedServer": "У сервера загрузки возникла проблема. Попробуйте позже.",
-    "failedDamaged": "Загрузка повреждена. Попробуйте ещё раз."
+    "failedDamaged": "Загрузка повреждена. Попробуйте ещё раз.",
+    "onDeviceReady": "Мера now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again.",
+    "betaTitle": "{{title}} (Beta)",
+    "relevanceDone": "The Мера relevance model is on this phone."
   },
   "chat": {
     "startingChat": "Запуск чата...",
@@ -692,7 +718,8 @@
     "stopped": "Остановлено",
     "replyLeakFallback": "Понятно. Хотите добавить что-нибудь ещё?",
     "replyProcessFallback": "Простите, не получилось ответить. Не могли бы вы повторить?",
-    "cloudOnlyNotice": "Для этого нужен режим «Частное облако». Переключиться можно в Настройках, в разделе «Протокол Мера»."
+    "cloudOnlyNotice": "Для этого нужен режим «Частное облако». Переключиться можно в Настройках, в разделе «Протокол Мера».",
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
     "introMessage": "Привет! Я Мера, ваш персональный новостной помощник.\n\nЧтобы находить новости, которые действительно важны для вас, мне нужно знать о вас немного больше. Где вы живёте, чем занимаетесь, какие у вас увлечения, какие акции вы отслеживаете, где живёт ваша семья. Делитесь столько, сколько захотите.\n\nЕсли это вас насторожило, у вас правильное чутьё. Отдавать личные данные компании-разработчику приложения не стоит. Мера устроена иначе: всё, что вы мне рассказываете, сохраняется на вашем устройстве, а не на наших серверах. Спросите, как это работает, или скажите «помогите настроить», и мы начнём."
@@ -2500,7 +2527,8 @@
   },
   "askChoice": {
     "answeredA11y": "уже отвечено",
-    "saveAll": "Сохранить все"
+    "saveAll": "Сохранить все",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2549,7 +2577,7 @@
     "selectAll": "Выбрать все",
     "selectedCount": "Выбрано: {{count}}",
     "includeReason": "Включить объяснение Меры",
-    "includeReasonHint": "Короткая заметка о том, почему каждая статья попала в вашу ленту. У статей, сохранённых по отдельности, её нет.",
+    "includeReasonHint": "Короткое пояснение о том, почему каждая статья попала в вашу ленту. У статей, сохранённых по отдельности, его нет.",
     "formatMarkdown": "Список Markdown",
     "formatMarkdownHint": "Удобный для чтения список, подходит для заметок и документов.",
     "formatJson": "JSON",
@@ -2595,7 +2623,7 @@
   "storyExport": {
     "shareA11y": "Экспортировать эту историю",
     "shareDialogTitle": "Экспорт истории",
-    "includeReasonHint": "Короткая заметка о том, почему каждая статья попала в вашу ленту. У некоторых статей её может не быть."
+    "includeReasonHint": "Короткое пояснение о том, почему каждая статья попала в вашу ленту. У некоторых статей его может не быть."
   },
   "systemCheck": {
     "title": "Проверяем ваш телефон",
@@ -2966,10 +2994,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Написать в поддержку",
     "enterCode": "Введите код",
     "getHelp": "Получить помощь",
-    "noEmailBody": "Попробуйте позже. Если проблема повторится, напишите нам и укажите ваш ID поддержки.",
+    "noEmailBody": "При входе на этом телефоне что-то пошло не так. Свяжитесь с поддержкой или сбросьте этот телефон и войдите снова.",
     "noEmailTitle": "Возникла проблема с вашим аккаунтом",
     "offlineBody": "Чтобы проверить аккаунт, Мере нужно подключение к интернету.",
     "offlineTitle": "Нет подключения",
@@ -2980,7 +3007,12 @@
     "unreachableTitle": "Мера недоступна",
     "mismatchTitle": "Этот адрес почты принадлежит другому аккаунту",
     "mismatchBody": "Войдите с той почтой, которая привязана к этому аккаунту, или получите помощь.",
-    "mismatchOtherEmail": "Использовать другую почту"
+    "mismatchOtherEmail": "Использовать другую почту",
+    "contactSupport": "Связаться с поддержкой",
+    "resetPhone": "Сбросить этот телефон и войти снова",
+    "resetTitle": "Сбросить этот телефон?",
+    "resetBody": "Вы выйдете из аккаунта, а данные Меры на этом телефоне будут удалены, включая то, что вы рассказали Мере. Ваш аккаунт не удаляется, а скачанные ИИ-модели останутся. Если вы пользуетесь резервным копированием, данные можно вернуть с помощью кода восстановления.",
+    "resetConfirm": "Сбросить"
   },
   "relatedSort": {
     "relevance": "Лучше всего подходит",
@@ -3009,5 +3041,44 @@
     "inboxBody": "Перейдите на вход по телефону, чтобы сохранить аккаунт.",
     "settingsRow": "Перейти на вход по телефону",
     "settingsRowHint": "Вход по почте заканчивается {{date}}."
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }

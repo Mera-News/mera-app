@@ -1,0 +1,282 @@
+{
+  "ar": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI ميرا uses right now. A pass here doesn't cover every request ميرا makes.",
+      "deleteFailedTitle": "فشل الحذف",
+      "deleteFailedDescription": "ميرا AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "ميرا uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while ميرا AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading ميرا AI models",
+      "completeTitle": "اكتمل التنزيل",
+      "failedTitle": "فشل التنزيل"
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Löschen fehlgeschlagen",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Download abgeschlossen",
+      "failedTitle": "Download fehlgeschlagen"
+    }
+  },
+  "en": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Couldn't delete",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Download complete",
+      "failedTitle": "Download failed"
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Error al eliminar",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Descarga completada",
+      "failedTitle": "Error de descarga"
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Échec de la suppression",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Téléchargement terminé",
+      "failedTitle": "Échec du téléchargement"
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI मेरा uses right now. A pass here doesn't cover every request मेरा makes.",
+      "deleteFailedTitle": "हटाना विफल",
+      "deleteFailedDescription": "मेरा AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "मेरा uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while मेरा AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading मेरा AI models",
+      "completeTitle": "डाउनलोड पूरा हुआ",
+      "failedTitle": "डाउनलोड विफल"
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Gagal Menghapus",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Unduhan Selesai",
+      "failedTitle": "Unduhan Gagal"
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Eliminazione non riuscita",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Download completato",
+      "failedTitle": "Download non riuscito"
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI メラ uses right now. A pass here doesn't cover every request メラ makes.",
+      "deleteFailedTitle": "削除に失敗しました",
+      "deleteFailedDescription": "メラ AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "メラ uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while メラ AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading メラ AI models",
+      "completeTitle": "ダウンロード完了",
+      "failedTitle": "ダウンロード失敗"
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI 메라 uses right now. A pass here doesn't cover every request 메라 makes.",
+      "deleteFailedTitle": "삭제 실패",
+      "deleteFailedDescription": "메라 AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "메라 uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while 메라 AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading 메라 AI models",
+      "completeTitle": "다운로드 완료",
+      "failedTitle": "다운로드 실패"
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Verwijderen mislukt",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Download voltooid",
+      "failedTitle": "Download mislukt"
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Usuwanie nieudane",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Pobieranie ukończone",
+      "failedTitle": "Pobieranie nie powiodło się"
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Falha ao Excluir",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Download concluído",
+      "failedTitle": "Falha no download"
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
+      "deleteFailedTitle": "Ошибка удаления",
+      "deleteFailedDescription": "Мера AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Мера AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Мера AI models",
+      "completeTitle": "Загрузка завершена",
+      "failedTitle": "Ошибка загрузки"
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI เมร่า uses right now. A pass here doesn't cover every request เมร่า makes.",
+      "deleteFailedTitle": "ลบไม่สำเร็จ",
+      "deleteFailedDescription": "เมร่า AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "เมร่า uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while เมร่า AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading เมร่า AI models",
+      "completeTitle": "ดาวน์โหลดเสร็จแล้ว",
+      "failedTitle": "ดาวน์โหลดไม่สำเร็จ"
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Silme Başarısız",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "İndirme tamamlandı",
+      "failedTitle": "İndirme başarısız"
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Мера uses right now. A pass here doesn't cover every request Мера makes.",
+      "deleteFailedTitle": "Не вдалося видалити",
+      "deleteFailedDescription": "Мера AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Мера uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Мера AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Мера AI models",
+      "completeTitle": "Завантаження завершено",
+      "failedTitle": "Помилка завантаження"
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+      "deleteFailedTitle": "Xóa thất bại",
+      "deleteFailedDescription": "Mera AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "Mera uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while Mera AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading Mera AI models",
+      "completeTitle": "Tải xuống hoàn tất",
+      "failedTitle": "Tải xuống thất bại"
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI 梅拉 uses right now. A pass here doesn't cover every request 梅拉 makes.",
+      "deleteFailedTitle": "删除失败",
+      "deleteFailedDescription": "梅拉 AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while 梅拉 AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading 梅拉 AI models",
+      "completeTitle": "下载完成",
+      "failedTitle": "下载失败"
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "attestationScopeNotice": "This checks the cloud AI 梅拉 uses right now. A pass here doesn't cover every request 梅拉 makes.",
+      "deleteFailedTitle": "刪除失敗",
+      "deleteFailedDescription": "梅拉 AI models weren't deleted. Try again.",
+      "modelsWaitingNative": "梅拉 uses Private cloud until Apple Intelligence is ready.",
+      "engineUnavailableDownloading": "Unavailable while 梅拉 AI models download"
+    },
+    "download": {
+      "modelDownloading": "Downloading 梅拉 AI models",
+      "completeTitle": "下載完成",
+      "failedTitle": "下載失敗"
+    }
+  }
+}

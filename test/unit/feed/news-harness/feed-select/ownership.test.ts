@@ -295,8 +295,8 @@ describe('isSectionMemberEligible', () => {
 });
 
 describe('isFactSectionViable', () => {
-  it('is false for an all-LOW section (nothing genuinely about the fact)', () => {
-    expect(isFactSectionViable(['LOW', 'LOW', 'LOW', 'LOW', 'LOW'])).toBe(false);
+  it('is true for an all-LOW section: LOW still shows the section (owner, 2026-10-21)', () => {
+    expect(isFactSectionViable(['LOW', 'LOW', 'LOW', 'LOW', 'LOW'])).toBe(true);
   });
 
   it('is false for an empty section', () => {
@@ -310,11 +310,12 @@ describe('isFactSectionViable', () => {
   });
 
   it('does not count UNSCORED members as backing', () => {
-    expect(isFactSectionViable(['UNSCORED', 'LOW'])).toBe(false);
+    expect(isFactSectionViable(['UNSCORED'])).toBe(false);
+    expect(isFactSectionViable(['UNSCORED', 'LOW'])).toBe(true);
   });
 
-  it('the viability floor is the MEDIUM display tier', () => {
-    expect(SECTION_MIN_VIABLE_BUCKET).toBe('MEDIUM');
+  it('the viability floor is the LOW display tier', () => {
+    expect(SECTION_MIN_VIABLE_BUCKET).toBe('LOW');
     expect(isFactSectionViable([SECTION_MIN_VIABLE_BUCKET])).toBe(true);
   });
 });

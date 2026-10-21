@@ -6,35 +6,28 @@
 // Decided behaviour (DECISIONS.md, "Behaviour choices for P3 fixes"): refuse it, the same as
 // during streaming.
 //
-// The tool is held with a web search whose HTTP reply waits on a gate the test opens.
+// The tool is held by the real persona agent's executor behind a gate the test opens.
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { initBaseModel } from '@/lib/mera-protocol-toolkit';
-import { http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
+import { signInFixtureAccount } from '@/test/helpers';
+import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import {
   installLlama,
-  llamaCalls,
   resetChatModules,
   resetFileSystem,
   setProcessingMode,
-  setWebSearchInChat,
   until,
 } from '@/test/integration/chat/_helpers';
-import {
-  attachLocal,
-  local,
-  localToolCall,
-  settle,
-  streamHolds,
-  turnDone,
-} from './kit';
+import { attachLocal, local, personaAgent, personaReply, saveFactReply, settle, streamHolds, turnDone } from './kit';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 jest.setTimeout(30_000);
 
 let openGate: () => void;
-let searchStarted: boolean;
+let toolStarted: boolean;
 
 afterEach(async () => {
   openGate();
@@ -47,33 +40,31 @@ beforeEach(async () => {
   resetFileSystem();
   await signInFixtureAccount();
   await setProcessingMode('on-device');
-  await setWebSearchInChat(true);
-  searchStarted = false;
-  const gate = new Promise<void>((r) => (openGate = r));
-  server.use(
-    http.post('*/v1/web-search', async () => {
-      searchStarted = true;
-      await gate;
-      return HttpResponse.json({ results: [{ title: 'Mera', url: 'https://mera.news', snippet: 'News.' }] });
-    }),
-  );
-  // Turn 1 calls the search tool; every later completion is a plain reply.
-  installLlama((call) =>
-    llamaCalls().indexOf(call) === 0
-      ? ['Looking it up. ', localToolCall('webSearch', { query: 'mera news today' })]
-      : ['Second reply.'],
-  );
+  toolStarted = false;
+  // Turn 1 offers a fact; every later completion is a plain reply.
+  installLlama([]);
+  installOnDeviceLlm({
+    reply: (call) => (onDeviceLlmCalls().indexOf(call) === 0 ? saveFactReply() : personaReply({ reply: 'Second reply.' })),
+  });
   await initBaseModel();
   await inferenceQueue.start();
 });
 
 /** Sends the first message and returns once its tool is in flight: status idle, turn busy. */
 async function reachToolPhase() {
-  const session = await attachLocal();
+  const agent = personaAgent();
+  const gate = new Promise<void>((r) => (openGate = r));
+  const run = agent.executeTool.bind(agent);
+  agent.executeTool = async (name, input) => {
+    toolStarted = true;
+    await gate;
+    return run(name, input);
+  };
+  const session = await attachLocal(agent);
   session.engine.send('first');
-  await until(() => searchStarted, 10_000, 'the web search in flight');
+  await until(() => toolStarted, 10_000, 'the tool in flight');
   expect(local()).toMatchObject({ status: 'idle', turnBusy: true });
-  expect(local().messages.at(-1)?.toolCalls?.[0]).toMatchObject({ name: 'webSearch', status: 'pending' });
+  expect(local().messages.at(-1)?.toolCalls?.[0]).toMatchObject({ name: 'saveExtractedFacts', status: 'pending' });
   return session;
 }
 
@@ -87,14 +78,14 @@ describe('a send while the first turn runs its tools', () => {
     await new Promise((r) => setTimeout(r, 150));
 
     // Refused: no second completion, no second user message, and the turn is still busy.
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect(userTexts()).toEqual(['first']);
     expect(local().turnBusy).toBe(true);
     expect(streamHolds()).toBe(1);
 
     openGate();
     await turnDone();
-    expect(llamaCalls()).toHaveLength(1);
+    expect(onDeviceLlmCalls()).toHaveLength(1);
     expect(local().messages.find((m) => m.role === 'assistant')?.toolCalls?.[0].status).toBe('done');
   });
 });

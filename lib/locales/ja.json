@@ -177,7 +177,7 @@
         "downloading": "記事をダウンロード中",
         "grouping": "重複する記事をまとめています",
         "analysing": "関連度を分析中",
-        "summarising": "メモを作成中",
+        "summarising": "理由を作成中",
         "preparing": "フィードを準備中"
       },
       "downloadProgress": "{{total}}件中{{done}}件の記事をダウンロード済み",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "関連性を計算中",
-      "reasonsTitle": "あなたへのメモを作成中",
+      "reasonsTitle": "あなたへの理由を作成中",
       "onDeviceTitle": "端末でスコアリング中",
       "completedTitle": "完了しました",
       "completedMessage": "フィードの準備ができました"
@@ -206,15 +206,13 @@
     "statsRelevant_one": "{{formatted}}件が関連しており、",
     "loadingA11y": "フィードを読み込んでいます",
     "translatingCaption": "翻訳中…",
-    "reasonWritingA11y": "メモ作成中",
+    "reasonWritingA11y": "理由作成中",
     "findingStories": "あなたのストーリーを探しています",
     "findingStoriesBody": "準備ができ次第、ここに表示されます",
     "processingOffline": "オフラインです。オンラインに戻るとストーリーが届きます。",
     "forYouTitle": "あなたへ",
     "newStoriesBelowA11y": "下に新しいストーリーがあります",
     "noFactsBody": "メラボタンをタップして、フォローしているものを伝えましょう。それをもとにフィードが作られます。",
-    "noteSuggestedMany": "あなたのファクトに基づく提案：",
-    "noteSuggestedOne": "あなたのファクトに基づく提案：{{fact}}。メラが理由を書いている間、お待ちください。",
     "noteWait": "メラが理由を書いている間、お待ちください。",
     "opened": "開いた",
     "statsSyncAnalysing_one": "{{formatted}}件の記事をあなたのために分析しています、",
@@ -258,7 +256,10 @@
       "announce_other": "{{show}}を表示中、{{formatted}}件の記事",
       "emptyPicks": "メラはまだ、あなたにおすすめを選んでいません。",
       "emptyUnread": "メラはここにあるすべてを読みました。",
-      "showAll": "すべての記事を表示"
+      "showAll": "すべての記事を表示",
+      "discarded": "メラが除外した",
+      "emptyDiscarded": "過去48時間に除外されたものはありません。",
+      "optionA11y_other": "{{show}}、{{formatted}}件のストーリー"
     },
     "readHold": {
       "waitingToday_other": "メラは今日の読書を使い切りました。下の{{formatted}}件の記事はまだ未読です。メラは今日の{{time}}にまた読み始めます。",
@@ -266,8 +267,17 @@
       "bodyToday": "メラは今日の読書を使い切りました。今日の{{time}}に、メラがまた読み始めます。",
       "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。"
     },
-    "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の解説を書きます。",
-    "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の解説を書きます。"
+    "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の理由を書きます。",
+    "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の理由を書きます。",
+    "noteState": {
+      "writing": "理由を作成中",
+      "failed": "理由を作成できませんでした",
+      "off": "設定で理由はオフ",
+      "paused": "今日は理由を一時停止中",
+      "discarded": "メラが除外した"
+    },
+    "readyForMore": "もっと読む準備はできましたか？",
+    "refreshFeedAction": "フィードを更新"
   },
   "relevance": {
     "emergency": "緊急",
@@ -397,45 +407,20 @@
   },
   "meraProtocol": {
     "title": "メラ・プロトコル",
-    "modelRequiredForOnDevice": "デバイス上での処理に必要です。",
-    "aiModel": "AIモデル",
-    "notDownloaded": "未ダウンロード",
-    "downloading": "ダウンロード中 ({{percent}}%)",
-    "starting": "ダウンロードを開始中...",
-    "downloaded": "ダウンロード済み、使用可能",
-    "loadingMemory": "メモリに読み込み中...",
-    "loaded": "読み込み済み、使用可能",
-    "errorOccurred": "エラーが発生しました",
-    "unknown": "不明",
-    "cancelDownload": "ダウンロードをキャンセル",
-    "retryDownload": "ダウンロードを再試行",
     "deviceNotSupported": "デバイス非対応",
     "deviceNotSupportedDescription": "お使いのデバイスはデバイス上処理の要件を満たしていません。クラウド処理は引き続き利用可能です。",
     "ramLabel": "6GB以上のRAM",
     "iosVersion": "iOS 16以上",
     "androidVersion": "Android 10以上",
     "chipLabel": "A15チップ以上",
-    "storageLabel": "約2.5GBの空きストレージ",
-    "deleteTitle": "AIモデルを削除",
-    "deleteButton": "削除",
-    "dlInProgressTitle": "ダウンロード中",
-    "dlInProgressDescription": "モデルはすでにダウンロード中です。",
-    "dlStartedTitle": "ダウンロードを開始しました",
-    "dlStartedDescription": "バックグラウンドでダウンロード中です。完了したらお知らせします。",
-    "dlCompleteTitle": "ダウンロード完了",
-    "dlCompleteDescription": "AIモデルが使用可能になりました。",
-    "dlFailedTitle": "ダウンロードに失敗しました",
-    "dlFailedDescription": "AIモデルのダウンロードに失敗しました。もう一度お試しください。",
     "modeUpdatedOnDeviceTitle": "デバイス上に切り替えました",
     "modeUpdatedOnDeviceDescription": "メラ AIがお使いのスマートフォン上で動くようになりました。ニュースは引き続きメラのサーバーから届きます。",
     "modeUpdatedCloudTitle": "クラウドに切り替えました",
     "modeUpdatedCloudDescription": "メラ・プロトコルで、エンドツーエンド暗号化されたクラウド推論を使うようになりました。",
     "settingUpdateFailedTitle": "更新に失敗しました",
     "settingUpdateFailedDescription": "処理モードの更新に失敗しました。もう一度お試しください。",
-    "modelDeletedTitle": "モデルを削除しました",
-    "modelDeletedDescription": "AIモデルが削除されました。",
     "deleteFailedTitle": "削除に失敗しました",
-    "deleteFailedDescription": "モデルの削除に失敗しました。もう一度お試しください。",
+    "deleteFailedDescription": "The model wasn't deleted. Try again.",
     "attestationTitle": "認証を検証",
     "attestationSubtitle": "クラウドAIが本物のIntel TDXハードウェアで実行されていること、およびデータが暗号化されているキーがそれから来ていることを確認してください。",
     "attestationVerifyButton": "検証を実行",
@@ -461,8 +446,7 @@
     "attestationCheckTcbStatus": "プラットフォームパッチレベルは現在です",
     "attestationCheckGpuAttestation": "GPU認証",
     "attestationNotCheckedLabel": "確認されていません",
-    "attestationScopeNotice": "ここでは上に表示されたモデルを確認します。メラは複数のクラウドモデルを使っています（チャットは別のモデルを使い、それぞれにバックアップがあります）。そのため、ここで合格となるのはこのモデルだけで、すべてのリクエストが対象というわけではありません。",
-    "attestationModelLabel": "チェックされたモデル",
+    "attestationScopeNotice": "This checks the cloud AI メラ uses right now. A pass here doesn't cover every request メラ makes.",
     "webSearchTitle": "チャット内のウェブ検索",
     "extractedMetadataPanelHeading": "抽出されたメタデータ",
     "extractedMetadataEventTypeLabel": "イベントタイプ",
@@ -471,18 +455,7 @@
     "extractedMetadataCaption": "AI抽出、検証済みの事実ではありません",
     "loadFailedDescription": "メラ・プロトコルの設定を読み込めませんでした。",
     "loadFailedTitle": "読み込みに失敗しました",
-    "chooseModel": "ダウンロードするモデルを1つ選んでください。後で切り替えられます。",
-    "downloadModelNamed": "{{model}}をダウンロード（{{size}}）",
-    "deleteModelDescription": "このデバイスから{{model}}（{{size}}）が削除されます。後で再ダウンロードできます。デバイス上処理を使用している場合は、クラウドに切り替わります。",
-    "switchModelTitle": "モデルを切り替えますか？",
-    "switchModelDescription": "このデバイスから{{current}}が削除されます。デバイス上処理を再び使うには{{new}}をダウンロードしてください。",
-    "switchModelConfirm": "切り替える",
-    "modelLicense": "ライセンス：{{license}}",
     "speedTitle": "このデバイスでの速度",
-    "speedLoad": "読み込み時間：{{seconds}}秒",
-    "speedGeneration": "生成速度：{{tokPerSec}}トークン/秒",
-    "speedRelevance": "関連性：記事あたり{{ms}}ミリ秒",
-    "speedReason": "理由：記事あたり{{ms}}ミリ秒",
     "speedResetNote": "前回の同期中に測定。アプリを再起動するとリセットされます。",
     "bgRefreshTitle": "バックグラウンド更新",
     "bgRefreshCloudIos": "アプリを閉じている間も、メラが新しい記事を取得して、あなたのためにランク付けを始めます。実行されるタイミングはスマートフォンが決めます。低電力モードのときや、「Appのバックグラウンド更新」がオフのときは動かないことがあります。バッテリーとデータを少し使い、あなたのためのメラの1日の読書の一部を使います。バックアップには影響しません。アプリを開いているときにメラがすでに使っている情報以外は共有されません。",
@@ -498,9 +471,53 @@
     "webSearchShort": "スマートフォンから外に出るのは検索語だけで、メラのサーバーを経由します。検索エンジンがあなたが誰かを知ることはありません。",
     "whereReads": "メラがあなたのニュースを読む場所",
     "whileClosed": "メラを閉じている間",
-    "deleting": "削除しています…",
     "onDeviceNeedsCloud": "一部のチャット機能には「プライベートクラウド」が必要です。",
-    "explainerOnPhoneLimits": "「この電話上」では、メラはニュースやウェブの検索、事実確認ができません。"
+    "explainerOnPhoneLimits": "「この電話上」では、メラはニュースやウェブの検索、事実確認ができません。",
+    "modelsHelp": "メラ uses Private cloud until the download finishes.",
+    "modelRowReady": "{{name}}, {{size}}, downloaded",
+    "modelRowMissing": "{{name}}, {{size}}",
+    "modelLicenseLink": "License: Apache 2.0",
+    "downloadAction": "Download ({{size}})",
+    "downloadingOf": "Downloading {{done}} of {{total}} GB",
+    "cancelDownloadAction": "Cancel download",
+    "tryAgain": "Try again",
+    "cellularTitle": "Download on mobile data?",
+    "cellularBody": "This uses {{size}} of data.",
+    "cellularConfirm": "Download",
+    "cellularWait": "Wait for Wi-Fi",
+    "freeUpToDownload": "Free up {{size}} to download.",
+    "errorFinish": "The download didn't finish. Try again.",
+    "errorFile": "Part of the download didn't arrive correctly. Try again.",
+    "errorSpace": "Not enough space. Free up {{size}} and try again.",
+    "speedRanking": "Ranking: {{seconds}} s per article",
+    "speedNotes": "理由: 記事あたり{{seconds}}秒",
+    "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
+    "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
+    "nativeNotReady": "{{name}} is still getting ready. Try again later.",
+    "nativeAppLanguage": "{{name}} doesn't support メラ's current language yet.",
+    "nativeDeviceLanguage": "{{name}} doesn't support this phone's language yet.",
+    "nativeOsTooOld": "{{name}} needs a newer version of this phone's software.",
+    "nativeUnknown": "{{name}} isn't available right now.",
+    "speedLoad": "Load time: {{seconds}} s",
+    "speedRefused_other": "{{name}} declined {{count}} requests",
+    "modelsWaitingNative": "メラ uses Private cloud until {{name}} is ready.",
+    "relevanceTitle": "メラ relevance model",
+    "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
+    "textTitle": "Text model",
+    "textHelp": "チャットの返信、理由、トピックを作成します。",
+    "modelReady": "Downloaded",
+    "modelQueued": "Waiting to download",
+    "deleteModelLabel": "Delete {{name}}",
+    "deleteModelTitle": "Delete {{name}}?",
+    "deleteRelevanceBody": "This removes it ({{size}}) from this phone. メラ will use Private cloud.",
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "理由",
+    "skipNotesTitle": "理由をスキップ",
+    "skipNotesHelp": "メラ ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "メラ uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then メラ Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "開いた記事のローカルログを消去します。「ソース」タブの「読んでいた出版社」カードと各出版社の履歴が空にリセットされます。他のものには影響せず、サーバー上のデータにも触れません。メラのサーバーはこのデータを受け取ったことがないためです。",
@@ -619,14 +636,17 @@
     "networkErrorTitle": "ネットワークエラー"
   },
   "download": {
-    "modelDownloading": "AIモデルをダウンロード中...",
+    "modelDownloading": "Downloading メラ models",
     "modelProgress": "{{percent}}%",
-    "completeBody": "メラ・プロトコルを利用できるようになりました。",
     "completeTitle": "ダウンロード完了",
     "failedTitle": "ダウンロード失敗",
     "failedConnection": "接続を確認して、もう一度お試しください。",
     "failedServer": "ダウンロードサーバーに問題が発生しました。しばらくしてからもう一度お試しください。",
-    "failedDamaged": "ダウンロードしたファイルが破損していました。もう一度お試しください。"
+    "failedDamaged": "ダウンロードしたファイルが破損していました。もう一度お試しください。",
+    "onDeviceReady": "メラ now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again.",
+    "betaTitle": "{{title}} (Beta)",
+    "relevanceDone": "The メラ relevance model is on this phone."
   },
   "chat": {
     "startingChat": "チャットを開始中...",
@@ -662,7 +682,8 @@
     "stopped": "停止しました",
     "replyLeakFallback": "承知しました。ほかに追加したいことはありますか？",
     "replyProcessFallback": "すみません、うまく処理できませんでした。もう一度言っていただけますか？",
-    "cloudOnlyNotice": "これにはメラの「プライベートクラウド」が必要です。設定の「メラ・プロトコル」で切り替えられます。"
+    "cloudOnlyNotice": "これにはメラの「プライベートクラウド」が必要です。設定の「メラ・プロトコル」で切り替えられます。",
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
     "introMessage": "こんにちは、メラです。あなたの個人ニュースアシスタントです。\n\nあなたにとって本当に大切なニュースを見つけるために、あなたのことを少し知る必要があります。どこに住んでいるか、何をしているか、どんな趣味をフォローしているか、どんな銘柄を追っているか、ご家族がどこに住んでいるか。どれくらい話すかは自由です。\n\nもし少し迷うなら、それは良い感覚です。個人データをアプリ会社に預けるのは、賢明とは言えません。メラは違う作りになっています。あなたが話してくれたことはすべて、サーバーではなくあなたの端末に保存されます。仕組みを知りたければ聞いてください。「セットアップを手伝って」と言ってもらえれば、すぐに始めましょう。"
@@ -2435,7 +2456,8 @@
   },
   "askChoice": {
     "answeredA11y": "回答済み",
-    "saveAll": "すべて保存"
+    "saveAll": "すべて保存",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2484,7 +2506,7 @@
     "selectAll": "すべて選択",
     "selectedCount": "{{count}} 件選択中",
     "includeReason": "メラの理由を含める",
-    "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。単独で保存した記事にはありません。",
+    "includeReasonHint": "各記事がフィードに届いた理由を 1 行で説明したものです。単独で保存した記事にはありません。",
     "formatMarkdown": "Markdown リスト",
     "formatMarkdownHint": "読みやすいリストです。メモや文書に適しています。",
     "formatJson": "JSON",
@@ -2530,7 +2552,7 @@
   "storyExport": {
     "shareA11y": "このストーリーを書き出す",
     "shareDialogTitle": "ストーリーを書き出す",
-    "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。メモがない記事もあります。"
+    "includeReasonHint": "各記事がフィードに届いた理由を 1 行で説明したものです。理由がない記事もあります。"
   },
   "systemCheck": {
     "title": "電話を確認しています",
@@ -2872,10 +2894,9 @@
     }
   },
   "gate": {
-    "emailSupport": "メールでサポートに連絡",
     "enterCode": "コードを入力",
     "getHelp": "ヘルプを見る",
-    "noEmailBody": "しばらくしてから、もう一度お試しください。繰り返し起きる場合は、サポートIDを添えてメールでお知らせください。",
+    "noEmailBody": "この電話でのサインイン中に問題が発生しました。サポートに問い合わせるか、この電話をリセットしてもう一度サインインしてください。",
     "noEmailTitle": "アカウントに問題があります",
     "offlineBody": "メラは、開く前にアカウントを確認するため接続が必要です。",
     "offlineTitle": "オフラインです",
@@ -2886,7 +2907,12 @@
     "unreachableTitle": "メラに接続できません",
     "mismatchTitle": "このメールは別のアカウントのものです",
     "mismatchBody": "このアカウントのメールでサインインするか、ヘルプをご利用ください。",
-    "mismatchOtherEmail": "別のメールアドレスを使う"
+    "mismatchOtherEmail": "別のメールアドレスを使う",
+    "contactSupport": "サポートに問い合わせる",
+    "resetPhone": "この電話をリセットしてサインインし直す",
+    "resetTitle": "この電話をリセットしますか？",
+    "resetBody": "サインアウトし、この電話にあるメラのデータを消去します。メラに伝えた内容も含まれます。アカウントは削除されず、ダウンロード済みのAIモデルは残ります。バックアップを使っている場合は、リカバリーコードでデータを元に戻せます。",
+    "resetConfirm": "リセット"
   },
   "relatedSort": {
     "relevance": "最も一致したもの",
@@ -2915,5 +2941,44 @@
     "inboxBody": "アカウントを残すには、電話でのサインインに切り替えてください。",
     "settingsRow": "電話でのサインインに切り替える",
     "settingsRowHint": "メールでのサインインは{{date}}に終了します。"
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }

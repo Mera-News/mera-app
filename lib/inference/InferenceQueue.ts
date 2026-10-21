@@ -1,5 +1,6 @@
 // InferenceQueue — Singleton FIFO consumer for on-device LLM jobs.
-// Serializes all non-chat llama.rn access. Supports pause/resume for chat priority.
+// Runs queued on-device LLM jobs one at a time. The toolkit's llama lock is the only serialiser of
+// llama.rn; pause/resume only gives chat priority over queued jobs.
 
 import { AppState } from 'react-native';
 
@@ -18,7 +19,7 @@ import {
   dropPendingComboJobs,
   finishComboPassIfDrained,
 } from '../database/services/combo-pass-service';
-import { deferDelayMs, isDeferrableError } from './job-defer';
+import { deferDelayMs, isDeferrableError, isOnDeviceDeferrable } from './job-defer';
 import { getFacts, markOrphanedFactsAsFailed } from '../database/services/fact-service';
 import { destroyOrphanedTopics, getAllTopicIds } from '../database/services/topic-service';
 import { purgeSuggestionsForDeadTopics } from '../database/services/article-suggestion-lifecycle';
@@ -28,6 +29,8 @@ import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
 import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
 import { handleTopicComboJob } from './handlers/topic-combo-handler';
 import { resetContext } from '../mera-protocol-toolkit';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import { ProcessingMode } from '../generated/graphql-types';
 import type { InferenceJobType } from '../database/models/InferenceJob';
 import logger from '../logger';
 
@@ -104,7 +107,7 @@ const DRAIN_IGNORES: InferenceJobType[] = ['topic_combo'];
  * (`wake()` — i.e. notify/resume/stop — or a successful dequeue).
  *
  * `POLL_INTERVAL_MIN` is ALSO the fixed cadence of the `paused` branch, which
- * must NOT back off: paused means chat is holding exclusive llama.rn access
+ * must NOT back off: paused means chat has priority over queued jobs
  * (useLocalLLM), and a slow re-check there is a slow hand-back to the queue.
  */
 const POLL_INTERVAL_MIN = 2000;
@@ -115,6 +118,8 @@ const PRUNE_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 class InferenceQueueImpl {
   private state: QueueState = 'stopped';
+  /** Outstanding pause() calls; the queue restarts only when resume() brings it back to 0. */
+  private pauseDepth = 0;
   private loopPromise: Promise<void> | null = null;
   /** The in-flight stop(): a start() during it must wait, or it re-pends the job the old loop is still running. */
   private stopping: Promise<void> | null = null;
@@ -237,6 +242,7 @@ class InferenceQueueImpl {
     if (this.state === 'stopped') return this.stopping ?? undefined;
 
     this.state = 'stopped';
+    this.pauseDepth = 0;
     this.appStateSub?.remove();
     this.appStateSub = null;
     this.wake(); // unblock any sleep
@@ -251,15 +257,16 @@ class InferenceQueueImpl {
 
   /**
    * Pause processing and wait for the current job to finish.
-   * Used when chat needs exclusive llama.rn access.
-   * Must be awaited to guarantee no concurrent llamaContext usage.
+   * Gives chat priority over queued jobs; it is NOT exclusive llama.rn access.
+   * The toolkit lock is the only serialiser (scoring calls completeLocal outside this queue).
    */
   async pause(): Promise<void> {
-    if (this.state === 'running') {
-      this.state = 'paused';
-      if (this.currentJobPromise) {
-        await this.currentJobPromise;
-      }
+    if (this.state === 'stopped') return;
+    // Ref-counted: a chat turn mid scoring pass must not un-pause the pass's hold.
+    this.pauseDepth += 1;
+    this.state = 'paused';
+    if (this.currentJobPromise) {
+      await this.currentJobPromise;
     }
   }
 
@@ -267,7 +274,8 @@ class InferenceQueueImpl {
    * Resume processing after a pause.
    */
   resume(): void {
-    if (this.state === 'paused') {
+    if (this.pauseDepth > 0) this.pauseDepth -= 1;
+    if (this.pauseDepth === 0 && this.state === 'paused') {
       this.state = 'running';
       this.wake(); // unblock the sleep so it picks up jobs immediately
     }
@@ -289,7 +297,7 @@ class InferenceQueueImpl {
   /**
    * Synchronous "is on-device inference busy right now?" signal for low-priority
    * background schedulers to yield to. True when a job is actively executing OR
-   * the queue is paused for chat's exclusive llama.rn access. Deliberately does
+   * the queue is paused so chat has priority. Deliberately does
    * NOT count merely-pending jobs (the loop is idle between polls, and those
    * polls now back off to 30s) — this is a best-effort "something important is
    * running" check, not a backlog gauge.
@@ -358,6 +366,16 @@ class InferenceQueueImpl {
       // minimum, never the backoff — see POLL_INTERVAL_MIN.
       if (this.state === 'paused') {
         await this.sleep(POLL_INTERVAL_MIN);
+        continue;
+      }
+
+      // The built-in model works only in the foreground (Gemini Nano refuses
+      // background work, Apple throttles it), so on it nothing starts until the
+      // app is active again. Checked before the dequeue: waiting spends no
+      // attempt. The AppState gate wakes this sleep on return.
+      if (await this.waitsForForeground()) {
+        this.idleDelay = POLL_INTERVAL_MAX;
+        await this.sleep(POLL_INTERVAL_MAX);
         continue;
       }
 
@@ -443,7 +461,7 @@ class InferenceQueueImpl {
           const errorMsg =
             (err as Error)?.message ||
             (err ? String(err) : 'Native crash (no error message)');
-          if (DEFERRABLE_TYPES.has(job.jobType) && isDeferrableError(err)) {
+          if ((DEFERRABLE_TYPES.has(job.jobType) && isDeferrableError(err)) || isOnDeviceDeferrable(err)) {
             deferred = true;
             logger.warn('[InferenceQueue] Job deferred', { jobId: job.id, jobType: job.jobType, error: errorMsg });
             await job.markDeferred(errorMsg);
@@ -477,6 +495,12 @@ class InferenceQueueImpl {
       await jobExec;
       this.currentJobPromise = null;
     }
+  }
+
+  /** On this phone (the built-in text model), while the app is not active. */
+  private async waitsForForeground(): Promise<boolean> {
+    if (AppState.currentState === 'active') return false;
+    return useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
   }
 
   private sleep(ms: number): Promise<void> {
@@ -516,7 +540,9 @@ class InferenceQueueImpl {
    *
    * In-flight work is untouched — only the empty-queue sleep changes — so
    * `isBusy()` keeps reporting truthfully for background-idle.ts, and a job
-   * enqueued while backgrounded still calls notify() -> wake() and runs at once.
+   * enqueued while backgrounded still calls notify() -> wake() and runs at once,
+   * except on the built-in model, where it waits for the foreground
+   * (`waitsForForeground`).
    */
   private armAppStateGate(): void {
     if (this.appStateSub) return;

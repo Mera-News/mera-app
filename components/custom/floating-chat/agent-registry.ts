@@ -7,14 +7,35 @@ import { ArticleFeedbackAgent } from '@/lib/llm/agents/ArticleFeedbackAgent';
 import { FollowStoryAgent } from '@/lib/llm/agents/FollowStoryAgent';
 import { PersonaUpdateAgent } from '@/lib/llm/agents/PersonaUpdateAgent';
 import { TutorialHelpAgent } from '@/lib/llm/agents/TutorialHelpAgent';
+import { ArticleFeedbackOnDeviceAgent } from '@/lib/llm/agents/on-device/ArticleFeedbackOnDeviceAgent';
+import { FollowStoryOnDeviceAgent } from '@/lib/llm/agents/on-device/FollowStoryOnDeviceAgent';
+import { PersonaOnDeviceAgent } from '@/lib/llm/agents/on-device/PersonaOnDeviceAgent';
+import { TutorialHelpOnDeviceAgent } from '@/lib/llm/agents/on-device/TutorialHelpOnDeviceAgent';
 import type { IAgent } from '@/lib/llm/types';
+import type { ChatAgent, OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 
+/** The agent for a chat context on the given engine. On-device has its own
+ *  agents (prompts, schemas, D27); the cloud ones are cloud-only. */
 export function createAgentForContext(
   context: ChatContext,
   userId: string,
   surface: 'ONBOARDING' | 'CONFIG',
-): IAgent {
+  kind?: 'cloud',
+): IAgent;
+export function createAgentForContext(
+  context: ChatContext,
+  userId: string,
+  surface: 'ONBOARDING' | 'CONFIG',
+  kind: 'local',
+): OnDeviceAgent;
+export function createAgentForContext(
+  context: ChatContext,
+  userId: string,
+  surface: 'ONBOARDING' | 'CONFIG',
+  kind: 'cloud' | 'local' = 'cloud',
+): ChatAgent {
+  if (kind === 'local') return createOnDeviceAgent(context, userId, surface);
   switch (context.kind) {
     case 'article-suggestion':
       // Also the FACT-CHECK surface (pivot P8c). `proposeFactCheck` moved onto
@@ -49,5 +70,27 @@ export function createAgentForContext(
     case 'persona':
     default:
       return new PersonaUpdateAgent(userId, surface);
+  }
+}
+
+function createOnDeviceAgent(
+  context: ChatContext,
+  userId: string,
+  surface: 'ONBOARDING' | 'CONFIG',
+): OnDeviceAgent {
+  switch (context.kind) {
+    case 'article-suggestion':
+      return new ArticleFeedbackOnDeviceAgent(
+        userId,
+        { articleId: context.articleId, suggestionId: context.suggestionId },
+        context.trackSubject ?? null,
+      );
+    case 'follow-story':
+      return new FollowStoryOnDeviceAgent(userId);
+    case 'generic':
+      return new TutorialHelpOnDeviceAgent(userId, context.route);
+    case 'persona':
+    default:
+      return new PersonaOnDeviceAgent(userId, surface);
   }
 }

@@ -177,7 +177,7 @@
         "downloading": "Makaleler indiriliyor",
         "grouping": "Yinelenen haberler gruplanıyor",
         "analysing": "İlgililik analiz ediliyor",
-        "summarising": "Notlarınız yazılıyor",
+        "summarising": "Nedenleriniz yazılıyor",
         "preparing": "Akışınız hazırlanıyor"
       },
       "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",
-      "reasonsTitle": "Notlar yazılıyor",
+      "reasonsTitle": "Nedenler yazılıyor",
       "onDeviceTitle": "Telefonda puanlanıyor",
       "completedTitle": "Tamamlandı",
       "completedMessage": "Haber akışın hazır"
@@ -206,15 +206,13 @@
     "statsRead_other": "ve {{formatted}} tanesini okudun.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
-    "reasonWritingA11y": "not yazılıyor",
+    "reasonWritingA11y": "neden yazılıyor",
     "findingStories": "Hikayeleriniz aranıyor",
     "findingStoriesBody": "Hazır olur olmaz burada görünürler",
     "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
     "forYouTitle": "Sizin için",
     "newStoriesBelowA11y": "Aşağıda yeni haberler",
     "noFactsBody": "Takip ettiklerinizi Mera'ya anlatmak için Mera düğmesine dokunun. Mera bunu akışınıza dönüştürür.",
-    "noteSuggestedMany": "Bilgileriniz için önerilenler:",
-    "noteSuggestedOne": "Bilginiz için önerilen: {{fact}}. Mera nedenini yazarken lütfen bekleyin.",
     "noteWait": "Mera nedenini yazarken lütfen bekleyin.",
     "opened": "Açıldı",
     "statsSyncAnalysing_one": "{{formatted}} makale senin için analiz ediliyor,",
@@ -259,7 +257,11 @@
       "announce_other": "{{show}} gösteriliyor, {{formatted}} makale",
       "emptyPicks": "Mera senin için henüz bir şey seçmedi.",
       "emptyUnread": "Mera buradaki her şeyi okudu.",
-      "showAll": "Tüm makaleleri göster"
+      "showAll": "Tüm makaleleri göster",
+      "discarded": "Mera tarafından elendi",
+      "emptyDiscarded": "Son 48 saatte hiçbir şey elenmedi.",
+      "optionA11y_one": "{{show}}, {{formatted}} haber",
+      "optionA11y_other": "{{show}}, {{formatted}} haber"
     },
     "readHold": {
       "waitingToday_one": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera bugün {{time}} saatinde yeniden okur.",
@@ -269,8 +271,17 @@
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
     },
-    "noteHeldToday": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu bugün {{time}} saatinde yazacak.",
-    "noteHeldTomorrow": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu yarın {{time}} saatinde yazacak."
+    "noteHeldToday": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni bugün {{time}} saatinde yazacak.",
+    "noteHeldTomorrow": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni yarın {{time}} saatinde yazacak.",
+    "noteState": {
+      "writing": "Neden yazılıyor",
+      "failed": "Neden yazılamadı",
+      "off": "Nedenler Ayarlar'da kapalı",
+      "paused": "Nedenler bugünlük duraklatıldı",
+      "discarded": "Mera tarafından elendi"
+    },
+    "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
+    "refreshFeedAction": "Akışınızı yenileyin"
   },
   "relevance": {
     "emergency": "Acil",
@@ -400,45 +411,20 @@
   },
   "meraProtocol": {
     "title": "Mera Protocol",
-    "modelRequiredForOnDevice": "Cihaz üzerinde işleme için gereklidir.",
-    "aiModel": "AI Model",
-    "notDownloaded": "İndirilmedi",
-    "downloading": "İndiriliyor ({{percent}}%)",
-    "starting": "İndirme başlatılıyor...",
-    "downloaded": "İndirildi, kullanıma hazır",
-    "loadingMemory": "Belleğe yükleniyor...",
-    "loaded": "Yüklendi ve hazır",
-    "errorOccurred": "Hata oluştu",
-    "unknown": "Bilinmiyor",
-    "cancelDownload": "İndirmeyi İptal Et",
-    "retryDownload": "İndirmeyi Tekrar Dene",
     "deviceNotSupported": "Cihaz Desteklenmiyor",
     "deviceNotSupportedDescription": "Cihazın, cihaz üzerinde işleme gereksinimlerini karşılamıyor. Bulut işleme hâlâ kullanılabilir.",
     "ramLabel": "6GB+ RAM",
     "iosVersion": "iOS 16+",
     "androidVersion": "Android 10+",
     "chipLabel": "A15 çip veya daha yenisi",
-    "storageLabel": "~2.5GB boş depolama alanı",
-    "deleteTitle": "AI Model Sil",
-    "deleteButton": "Sil",
-    "dlInProgressTitle": "İndirme Devam Ediyor",
-    "dlInProgressDescription": "Model zaten indiriliyor.",
-    "dlStartedTitle": "İndirme Başladı",
-    "dlStartedDescription": "Arka planda indiriliyor. Tamamlandığında bilgilendirileceksin.",
-    "dlCompleteTitle": "İndirme Tamamlandı",
-    "dlCompleteDescription": "AI modeli kullanıma hazır.",
-    "dlFailedTitle": "İndirme Başarısız",
-    "dlFailedDescription": "AI modeli indirilemedi. Lütfen tekrar dene.",
     "modeUpdatedOnDeviceTitle": "Cihaz üzerine geçildi",
     "modeUpdatedOnDeviceDescription": "Mera AI artık telefonunda çalışıyor. Haberler yine Mera'nın sunucularından geliyor.",
     "modeUpdatedCloudTitle": "Buluta geçildi",
     "modeUpdatedCloudDescription": "Mera Protocol artık uçtan uca şifreli bulut çıkarımı kullanıyor.",
     "settingUpdateFailedTitle": "Güncelleme Başarısız",
     "settingUpdateFailedDescription": "İşleme modu güncellenemedi. Lütfen tekrar dene.",
-    "modelDeletedTitle": "Model Silindi",
-    "modelDeletedDescription": "AI modeli kaldırıldı.",
     "deleteFailedTitle": "Silme Başarısız",
-    "deleteFailedDescription": "Model silinemedi. Lütfen tekrar dene.",
+    "deleteFailedDescription": "The model wasn't deleted. Try again.",
     "attestationTitle": "Tasdiki doğrula",
     "attestationSubtitle": "Bulut yapay zekasının gerçek Intel TDX donanımında çalıştığını ve verilerinizin şifrelendiği anahtarın bu donanımın içinden geldiğini kontrol edin.",
     "attestationVerifyButton": "Doğrulamayı çalıştır",
@@ -464,8 +450,7 @@
     "attestationCheckTcbStatus": "Platform yaması düzey güncel",
     "attestationCheckGpuAttestation": "GPU tasdiki",
     "attestationNotCheckedLabel": "kontrol edilmedi",
-    "attestationScopeNotice": "Bu, yukarıda gösterilen modeli kontrol eder. Mera birden fazla bulut modeli kullanır (sohbet farklı bir model kullanır ve her birinin bir yedeği vardır), bu yüzden buradaki başarılı sonuç yalnızca bu modeli kapsar, her isteği değil.",
-    "attestationModelLabel": "Kontrol edilen model",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Sohbette web araması",
     "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
     "extractedMetadataEventTypeLabel": "Olay türü",
@@ -474,18 +459,7 @@
     "extractedMetadataCaption": "Yapay zeka tarafından çıkartıldı, doğrulanmamış gerçek",
     "loadFailedDescription": "Mera Protocol ayarları yüklenemedi.",
     "loadFailedTitle": "Yükleme başarısız",
-    "chooseModel": "İndirmek için bir model seç. Daha sonra değiştirebilirsin.",
-    "downloadModelNamed": "{{model}} indir ({{size}})",
-    "deleteModelDescription": "Bu, {{model}} ({{size}}) modelini bu cihazdan kaldıracak. Daha sonra yeniden indirebilirsin. Cihaz üzerinde işleme kullanıyorsan, buluta geçirileceksin.",
-    "switchModelTitle": "Model değiştirilsin mi?",
-    "switchModelDescription": "{{current}} bu cihazdan kaldırılacak. Cihaz üzerinde işlemeyi yeniden kullanmak için {{new}} indir.",
-    "switchModelConfirm": "Değiştir",
-    "modelLicense": "Lisans: {{license}}",
     "speedTitle": "Bu cihazdaki hız",
-    "speedLoad": "Yükleme süresi: {{seconds}} sn",
-    "speedGeneration": "Yazma hızı: {{tokPerSec}} token/sn",
-    "speedRelevance": "Alaka düzeyi: makale başına {{ms}} ms",
-    "speedReason": "Gerekçeler: makale başına {{ms}} ms",
     "speedResetNote": "Son eşitlemen sırasında ölçüldü. Uygulama yeniden başladığında silinir.",
     "bgRefreshTitle": "Arka Planda Yenileme",
     "bgRefreshCloudIos": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Düşük Güç Modu açıkken veya Arka Planda Yenileme kapalıyken çalışmayabilir. Biraz pil ve veri tüketir ve Mera'nın senin için yaptığı günlük okumanın bir kısmını kullanır. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
@@ -501,9 +475,54 @@
     "webSearchShort": "Telefonundan yalnızca arama kelimeleri, Mera'nın sunucusu üzerinden çıkar. Arama motoru senin kim olduğunu hiçbir zaman öğrenmez.",
     "whereReads": "Mera haberlerinizi nerede okur",
     "whileClosed": "Mera kapalıyken",
-    "deleting": "Siliniyor…",
     "onDeviceNeedsCloud": "Bazı sohbet özellikleri için “Özel bulut” gerekiyor.",
-    "explainerOnPhoneLimits": "“Bu telefonda” modunda Mera haberlerde ya da web'de arama yapamaz ve iddiaları kontrol edemez."
+    "explainerOnPhoneLimits": "“Bu telefonda” modunda Mera haberlerde ya da web'de arama yapamaz ve iddiaları kontrol edemez.",
+    "modelsHelp": "Mera uses Private cloud until the download finishes.",
+    "modelRowReady": "{{name}}, {{size}}, downloaded",
+    "modelRowMissing": "{{name}}, {{size}}",
+    "modelLicenseLink": "License: Apache 2.0",
+    "downloadAction": "Download ({{size}})",
+    "downloadingOf": "Downloading {{done}} of {{total}} GB",
+    "cancelDownloadAction": "Cancel download",
+    "tryAgain": "Try again",
+    "cellularTitle": "Download on mobile data?",
+    "cellularBody": "This uses {{size}} of data.",
+    "cellularConfirm": "Download",
+    "cellularWait": "Wait for Wi-Fi",
+    "freeUpToDownload": "Free up {{size}} to download.",
+    "errorFinish": "The download didn't finish. Try again.",
+    "errorFile": "Part of the download didn't arrive correctly. Try again.",
+    "errorSpace": "Not enough space. Free up {{size}} and try again.",
+    "speedRanking": "Ranking: {{seconds}} s per article",
+    "speedNotes": "Nedenler: makale başına {{seconds}} sn",
+    "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
+    "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
+    "nativeNotReady": "{{name}} is still getting ready. Try again later.",
+    "nativeAppLanguage": "{{name}} doesn't support Mera's current language yet.",
+    "nativeDeviceLanguage": "{{name}} doesn't support this phone's language yet.",
+    "nativeOsTooOld": "{{name}} needs a newer version of this phone's software.",
+    "nativeUnknown": "{{name}} isn't available right now.",
+    "speedLoad": "Load time: {{seconds}} s",
+    "speedRefused_one": "{{name}} declined {{count}} request",
+    "speedRefused_other": "{{name}} declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until {{name}} is ready.",
+    "relevanceTitle": "Mera relevance model",
+    "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
+    "textTitle": "Text model",
+    "textHelp": "Sohbet yanıtlarını, nedenleri ve konuları yazar.",
+    "modelReady": "Downloaded",
+    "modelQueued": "Waiting to download",
+    "deleteModelLabel": "Delete {{name}}",
+    "deleteModelTitle": "Delete {{name}}?",
+    "deleteRelevanceBody": "This removes it ({{size}}) from this phone. Mera will use Private cloud.",
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Nedenler",
+    "skipNotesTitle": "Nedenleri atla",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "Mera uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",
@@ -623,14 +642,17 @@
     "networkErrorTitle": "Ağ hatası"
   },
   "download": {
-    "modelDownloading": "AI modeli indiriliyor...",
+    "modelDownloading": "Downloading Mera models",
     "modelProgress": "{{percent}}%",
-    "completeBody": "Mera Protocol artık kullanıma hazır.",
     "completeTitle": "İndirme tamamlandı",
     "failedTitle": "İndirme başarısız",
     "failedConnection": "Bağlantınızı kontrol edip tekrar deneyin.",
     "failedServer": "İndirme sunucusunda bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
-    "failedDamaged": "İndirme bozuk geldi. Lütfen tekrar deneyin."
+    "failedDamaged": "İndirme bozuk geldi. Lütfen tekrar deneyin.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again.",
+    "betaTitle": "{{title}} (Beta)",
+    "relevanceDone": "The Mera relevance model is on this phone."
   },
   "chat": {
     "startingChat": "Sohbet başlatılıyor...",
@@ -666,7 +688,8 @@
     "stopped": "Durduruldu",
     "replyLeakFallback": "Anladım. Eklemek istediğiniz başka bir şey var mı?",
     "replyProcessFallback": "Özür dilerim, buna yetişemedim. Bir daha söyleyebilir misiniz?",
-    "cloudOnlyNotice": "Bunun için Mera'nın “Özel bulut” modu gerekir. Ayarlar'da, Mera Protocol bölümünden geçiş yapılabilir."
+    "cloudOnlyNotice": "Bunun için Mera'nın “Özel bulut” modu gerekir. Ayarlar'da, Mera Protocol bölümünden geçiş yapılabilir.",
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nBu seni biraz tereddüte düşürüyorsa, içgüdün doğru. Kişisel verilerini bir uygulama şirketine teslim etmek akıllıca değil. Mera farklı tasarlandı: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana bunun nasıl çalıştığını sorabilirsin ya da 'kurulumda bana yardım et' de, başlayalım."
@@ -2442,7 +2465,8 @@
   },
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı",
-    "saveAll": "Tümünü kaydet"
+    "saveAll": "Tümünü kaydet",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2491,7 +2515,7 @@
     "selectAll": "Tümünü seç",
     "selectedCount": "{{count}} seçildi",
     "includeReason": "Mera'nın gerekçesini ekle",
-    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Tek tek kaydedilen makalelerde bu not bulunmaz.",
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Tek tek kaydedilen makalelerde bu neden bulunmaz.",
     "formatMarkdown": "Markdown listesi",
     "formatMarkdownHint": "Okunması kolay bir liste, notlar ve belgeler için uygun.",
     "formatJson": "JSON",
@@ -2537,7 +2561,7 @@
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",
     "shareDialogTitle": "Haberi dışa aktar",
-    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Bazı makalelerde bu neden bulunmayabilir."
   },
   "systemCheck": {
     "title": "Telefonunuz kontrol ediliyor",
@@ -2880,10 +2904,9 @@
     }
   },
   "gate": {
-    "emailSupport": "E-posta ile destek",
     "enterCode": "Kodu girin",
     "getHelp": "Yardım alın",
-    "noEmailBody": "Lütfen daha sonra tekrar deneyin. Sorun sürerse bize e-posta gönderin ve Destek Kimliğinizi ekleyin.",
+    "noEmailBody": "Bu telefonda giriş yaparken bir sorun oluştu. Destekle iletişime geçin veya bu telefonu sıfırlayıp yeniden giriş yapın.",
     "noEmailTitle": "Hesabınızla ilgili bir sorun var",
     "offlineBody": "Mera, açılmadan önce hesabınızı kontrol etmek için bağlantıya ihtiyaç duyar.",
     "offlineTitle": "Çevrimdışısınız",
@@ -2894,7 +2917,12 @@
     "unreachableTitle": "Mera'ya ulaşılamıyor",
     "mismatchTitle": "Bu e-posta farklı bir hesaba ait",
     "mismatchBody": "Bu hesapla ilişkili e-postayla giriş yapın veya yardım alın.",
-    "mismatchOtherEmail": "Başka bir e-posta kullan"
+    "mismatchOtherEmail": "Başka bir e-posta kullan",
+    "contactSupport": "Destekle iletişime geçin",
+    "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
+    "resetTitle": "Bu telefon sıfırlansın mı?",
+    "resetBody": "Oturumunuz kapatılır ve Mera'ya anlattıklarınız dahil bu telefondaki Mera verileri silinir. Hesabınız silinmez ve indirilen yapay zeka modelleri kalır. Yedekleme kullanıyorsanız verilerinizi kurtarma kodunuzla geri alabilirsiniz.",
+    "resetConfirm": "Sıfırla"
   },
   "relatedSort": {
     "relevance": "En iyi eşleşme",
@@ -2923,5 +2951,44 @@
     "inboxBody": "Hesabını korumak için telefonla girişe geç.",
     "settingsRow": "Telefonla girişe geç",
     "settingsRowHint": "E-posta ile giriş {{date}} tarihinde sona eriyor."
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }

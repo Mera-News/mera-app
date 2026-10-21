@@ -1,0 +1,35 @@
+{
+  "description": "On-device fact save from a German message: statements in English, names kept.",
+  "language": "German",
+  "knownFacts": "- 'location: residence': Lives in Porto, Portugal\n- 'profession: job': Senior software engineer\n- 'interest: topic': Follows Formula 1 racing",
+  "facts": [
+    {
+      "id": "f3",
+      "statement": "Follows Formula 1 racing",
+      "attribute": "interest: topic"
+    },
+    {
+      "id": "f2",
+      "statement": "Senior software engineer",
+      "attribute": "profession: job"
+    },
+    {
+      "id": "f1",
+      "statement": "Lives in Porto, Portugal",
+      "attribute": "location: residence"
+    }
+  ],
+  "wire": [
+    {
+      "role": "user",
+      "content": "Ich wohne in München und arbeite als Lehrerin an einer Grundschule."
+    }
+  ],
+  "expect": {
+    "toolCalled": "saveExtractedFacts",
+    "saveMentions": [
+      "Munich|München",
+      "teacher|Lehrer"
+    ]
+  }
+}

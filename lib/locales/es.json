@@ -177,7 +177,7 @@
         "downloading": "Descargando artículos",
         "grouping": "Agrupando historias duplicadas",
         "analysing": "Analizando la relevancia",
-        "summarising": "Escribiendo tus notas",
+        "summarising": "Escribiendo tus motivos",
         "preparing": "Preparando tu feed"
       },
       "downloadProgress": "{{done}} de {{total}} artículos descargados",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Calculando relevancia",
-      "reasonsTitle": "Escribiendo notas para ti",
+      "reasonsTitle": "Escribiendo motivos para ti",
       "onDeviceTitle": "Puntuando en tu teléfono",
       "completedTitle": "Todo listo",
       "completedMessage": "Tu feed está listo"
@@ -206,15 +206,13 @@
     "statsRead_other": "y has leído {{formatted}}.",
     "loadingA11y": "Cargando tu feed",
     "translatingCaption": "Traduciendo…",
-    "reasonWritingA11y": "escribiendo una nota",
+    "reasonWritingA11y": "escribiendo un motivo",
     "findingStories": "Buscando tus historias",
     "findingStoriesBody": "Aparecerán aquí en cuanto estén listas",
     "processingOffline": "Sin conexión. Tus historias llegarán cuando vuelvas a conectarte.",
     "forYouTitle": "Para ti",
     "newStoriesBelowA11y": "Nuevas historias abajo",
     "noFactsBody": "Toca el botón de Mera para contarle lo que sigues. Con eso crea tu Feed.",
-    "noteSuggestedMany": "Sugerido para tus hechos:",
-    "noteSuggestedOne": "Sugerido para tu hecho: {{fact}}. Espera mientras Mera escribe el motivo.",
     "noteWait": "Espera mientras Mera escribe el motivo.",
     "opened": "Abierto",
     "statsSyncAnalysing_one": "{{formatted}} artículo se está analizando para ti,",
@@ -259,7 +257,11 @@
       "announce_other": "Mostrando {{show}}, {{formatted}} artículos",
       "emptyPicks": "Mera aún no ha elegido nada para ti.",
       "emptyUnread": "Mera ha leído todo lo de aquí.",
-      "showAll": "Mostrar todos los artículos"
+      "showAll": "Mostrar todos los artículos",
+      "discarded": "Descartados por Mera",
+      "emptyDiscarded": "No se descartó nada en las últimas 48 horas.",
+      "optionA11y_one": "{{show}}, {{formatted}} historia",
+      "optionA11y_other": "{{show}}, {{formatted}} historias"
     },
     "readHold": {
       "waitingToday_one": "Mera ha usado la lectura de hoy. {{formatted}} artículo de abajo aún no ha sido leído. Mera vuelve a leer hoy a las {{time}}.",
@@ -269,8 +271,17 @@
       "bodyToday": "Mera ha usado la lectura de hoy. Mera vuelve a leer hoy a las {{time}}.",
       "bodyTomorrow": "Mera ha usado la lectura de hoy. Mera vuelve a leer mañana a las {{time}}."
     },
-    "noteHeldToday": "Ya se ha usado la lectura de hoy, así que Mera escribirá esta nota después de las {{time}} de hoy.",
-    "noteHeldTomorrow": "Ya se ha usado la lectura de hoy, así que Mera escribirá esta nota después de las {{time}} de mañana."
+    "noteHeldToday": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de hoy.",
+    "noteHeldTomorrow": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de mañana.",
+    "noteState": {
+      "writing": "Escribiendo el motivo",
+      "failed": "No se pudo escribir el motivo",
+      "off": "Motivos desactivados en Ajustes",
+      "paused": "Motivos en pausa por hoy",
+      "discarded": "Descartados por Mera"
+    },
+    "readyForMore": "¿Listo para leer más?",
+    "refreshFeedAction": "Actualizar tu feed"
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -400,45 +411,20 @@
   },
   "meraProtocol": {
     "title": "Mera Protocol",
-    "modelRequiredForOnDevice": "Requerido para el procesamiento en el dispositivo.",
-    "aiModel": "Modelo de IA",
-    "notDownloaded": "No descargado",
-    "downloading": "Descargando ({{percent}}%)",
-    "starting": "Iniciando descarga...",
-    "downloaded": "Descargado, listo para usar",
-    "loadingMemory": "Cargando en memoria...",
-    "loaded": "Cargado y listo",
-    "errorOccurred": "Ocurrió un error",
-    "unknown": "Desconocido",
-    "cancelDownload": "Cancelar descarga",
-    "retryDownload": "Reintentar descarga",
     "deviceNotSupported": "Dispositivo no compatible",
     "deviceNotSupportedDescription": "Tu dispositivo no cumple los requisitos para el procesamiento en el dispositivo. El procesamiento en la nube sigue disponible.",
     "ramLabel": "6GB+ de RAM",
     "iosVersion": "iOS 16+",
     "androidVersion": "Android 10+",
     "chipLabel": "Chip A15 o superior",
-    "storageLabel": "~2.5GB de almacenamiento libre",
-    "deleteTitle": "Eliminar AI Model",
-    "deleteButton": "Eliminar",
-    "dlInProgressTitle": "Descarga en progreso",
-    "dlInProgressDescription": "El modelo ya se está descargando.",
-    "dlStartedTitle": "Descarga iniciada",
-    "dlStartedDescription": "Descargando en segundo plano. Se te notificará cuando se complete.",
-    "dlCompleteTitle": "Descarga completa",
-    "dlCompleteDescription": "El AI Model está listo para usar.",
-    "dlFailedTitle": "Error en la descarga",
-    "dlFailedDescription": "No se pudo descargar el AI Model. Por favor, inténtalo de nuevo.",
     "modeUpdatedOnDeviceTitle": "Cambiado a en el dispositivo",
     "modeUpdatedOnDeviceDescription": "Mera AI ahora se ejecuta en tu teléfono. Las noticias siguen viniendo de los servidores de Mera.",
     "modeUpdatedCloudTitle": "Cambiado a la nube",
     "modeUpdatedCloudDescription": "Mera Protocol ahora usa inferencia en la nube cifrada de extremo a extremo.",
     "settingUpdateFailedTitle": "Error al actualizar",
     "settingUpdateFailedDescription": "No se pudo actualizar el modo de procesamiento. Por favor, inténtalo de nuevo.",
-    "modelDeletedTitle": "Modelo eliminado",
-    "modelDeletedDescription": "El AI Model ha sido eliminado.",
     "deleteFailedTitle": "Error al eliminar",
-    "deleteFailedDescription": "No se pudo eliminar el modelo. Por favor, inténtalo de nuevo.",
+    "deleteFailedDescription": "The model wasn't deleted. Try again.",
     "attestationTitle": "Verificar atestación",
     "attestationSubtitle": "Comprueba que la IA en la nube se ejecuta en hardware Intel TDX genuino, y que la clave a la que se cifran tus datos proviene de adentro.",
     "attestationVerifyButton": "Ejecutar verificación",
@@ -464,8 +450,7 @@
     "attestationCheckTcbStatus": "El nivel de parche de la plataforma está actualizado",
     "attestationCheckGpuAttestation": "Atestación de GPU",
     "attestationNotCheckedLabel": "no verificado",
-    "attestationScopeNotice": "Esto verifica el modelo mostrado arriba. Mera usa más de un modelo en la nube (el chat usa uno diferente, y cada uno tiene un respaldo), así que un éxito aquí cubre este modelo, no cada solicitud.",
-    "attestationModelLabel": "Modelo verificado",
+    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
     "webSearchTitle": "Búsqueda web en el chat",
     "extractedMetadataPanelHeading": "Metadatos extraídos",
     "extractedMetadataEventTypeLabel": "Tipo de evento",
@@ -474,18 +459,7 @@
     "extractedMetadataCaption": "Extraído por IA, hecho no verificado",
     "loadFailedDescription": "No se pudieron cargar los ajustes de Mera Protocol.",
     "loadFailedTitle": "Error al cargar",
-    "chooseModel": "Elige un modelo para descargar. Puedes cambiarlo más tarde.",
-    "downloadModelNamed": "Descargar {{model}} ({{size}})",
-    "deleteModelDescription": "Esto eliminará {{model}} ({{size}}) de este dispositivo. Puedes volver a descargarlo más tarde. Si estás usando el procesamiento en el dispositivo, se cambiará a la nube.",
-    "switchModelTitle": "¿Cambiar de modelo?",
-    "switchModelDescription": "{{current}} se eliminará de este dispositivo. Descarga {{new}} para volver a usar el procesamiento en el dispositivo.",
-    "switchModelConfirm": "Cambiar",
-    "modelLicense": "Licencia: {{license}}",
     "speedTitle": "Velocidad en este dispositivo",
-    "speedLoad": "Tiempo de carga: {{seconds}} s",
-    "speedGeneration": "Velocidad de escritura: {{tokPerSec}} tokens/s",
-    "speedRelevance": "Relevancia: {{ms}} ms por artículo",
-    "speedReason": "Motivos: {{ms}} ms por artículo",
     "speedResetNote": "Medido en tu última sincronización. Se borra al reiniciar la app.",
     "bgRefreshTitle": "Actualización en segundo plano",
     "bgRefreshCloudIos": "Mera obtiene nuevos artículos cuando la aplicación está cerrada y comienza a clasificarlos para ti. Tu teléfono decide cuándo ocurre esto. Es posible que no funcione en Modo de Bajo Consumo o cuando la actualización en segundo plano está desactivada. Usa algo de batería y datos, y parte de la lectura diaria de Mera para ti. Esto no cambia la copia de seguridad. Nada se comparte más allá de lo que Mera ya usa cuando la aplicación está abierta.",
@@ -501,9 +475,54 @@
     "webSearchShort": "Solo las palabras de búsqueda salen de tu teléfono, a través del servidor de Mera. El buscador nunca llega a saber quién eres.",
     "whereReads": "Dónde lee Mera tus noticias",
     "whileClosed": "Mientras Mera está cerrada",
-    "deleting": "Eliminando…",
     "onDeviceNeedsCloud": "Algunas funciones del chat necesitan «Nube privada».",
-    "explainerOnPhoneLimits": "En este teléfono, Mera no puede buscar noticias ni en la web, ni comprobar datos."
+    "explainerOnPhoneLimits": "En este teléfono, Mera no puede buscar noticias ni en la web, ni comprobar datos.",
+    "modelsHelp": "Mera uses Private cloud until the download finishes.",
+    "modelRowReady": "{{name}}, {{size}}, downloaded",
+    "modelRowMissing": "{{name}}, {{size}}",
+    "modelLicenseLink": "License: Apache 2.0",
+    "downloadAction": "Download ({{size}})",
+    "downloadingOf": "Downloading {{done}} of {{total}} GB",
+    "cancelDownloadAction": "Cancel download",
+    "tryAgain": "Try again",
+    "cellularTitle": "Download on mobile data?",
+    "cellularBody": "This uses {{size}} of data.",
+    "cellularConfirm": "Download",
+    "cellularWait": "Wait for Wi-Fi",
+    "freeUpToDownload": "Free up {{size}} to download.",
+    "errorFinish": "The download didn't finish. Try again.",
+    "errorFile": "Part of the download didn't arrive correctly. Try again.",
+    "errorSpace": "Not enough space. Free up {{size}} and try again.",
+    "speedRanking": "Ranking: {{seconds}} s per article",
+    "speedNotes": "Motivos: {{seconds}} s por artículo",
+    "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
+    "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
+    "nativeNotReady": "{{name}} is still getting ready. Try again later.",
+    "nativeAppLanguage": "{{name}} doesn't support Mera's current language yet.",
+    "nativeDeviceLanguage": "{{name}} doesn't support this phone's language yet.",
+    "nativeOsTooOld": "{{name}} needs a newer version of this phone's software.",
+    "nativeUnknown": "{{name}} isn't available right now.",
+    "speedLoad": "Load time: {{seconds}} s",
+    "speedRefused_one": "{{name}} declined {{count}} request",
+    "speedRefused_other": "{{name}} declined {{count}} requests",
+    "modelsWaitingNative": "Mera uses Private cloud until {{name}} is ready.",
+    "relevanceTitle": "Mera relevance model",
+    "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
+    "textTitle": "Text model",
+    "textHelp": "Escribe respuestas del chat, motivos y temas.",
+    "modelReady": "Downloaded",
+    "modelQueued": "Waiting to download",
+    "deleteModelLabel": "Delete {{name}}",
+    "deleteModelTitle": "Delete {{name}}?",
+    "deleteRelevanceBody": "This removes it ({{size}}) from this phone. Mera will use Private cloud.",
+    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
+    "builtInReady": "Ready on this phone",
+    "builtInRequirement": "{{name}} on this phone",
+    "notesGroup": "Motivos",
+    "skipNotesTitle": "Omitir motivos",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "fallbackNoticeTitle": "Mera uses Private cloud for now",
+    "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Borra el registro local de artículos que has abierto. La tarjeta \"Publicaciones que has estado leyendo\" de la pestaña Fuentes y el historial por publicación se restablecerán a vacío. No se afecta nada más y no se toca ningún dato del servidor, ya que los servidores de Mera nunca tuvieron estos datos.",
@@ -623,14 +642,17 @@
     "networkErrorTitle": "Error de red"
   },
   "download": {
-    "modelDownloading": "Descargando AI model...",
+    "modelDownloading": "Downloading Mera models",
     "modelProgress": "{{percent}}%",
-    "completeBody": "Mera Protocol ya está listo para usarse.",
     "completeTitle": "Descarga completada",
     "failedTitle": "Error de descarga",
     "failedConnection": "Revisa tu conexión e inténtalo de nuevo.",
     "failedServer": "El servidor de descargas tuvo un problema. Inténtalo más tarde.",
-    "failedDamaged": "La descarga está dañada. Inténtalo de nuevo."
+    "failedDamaged": "La descarga está dañada. Inténtalo de nuevo.",
+    "onDeviceReady": "Mera now runs on this phone.",
+    "failedSpace": "Not enough space on this phone. Free up space and try again.",
+    "betaTitle": "{{title}} (Beta)",
+    "relevanceDone": "The Mera relevance model is on this phone."
   },
   "chat": {
     "startingChat": "Iniciando chat...",
@@ -666,7 +688,8 @@
     "stopped": "Detenido",
     "replyLeakFallback": "Entendido. ¿Quieres añadir algo más?",
     "replyProcessFallback": "Perdona, no llegué a eso. ¿Podrías repetirlo?",
-    "cloudOnlyNotice": "Esto necesita la «Nube privada» de Mera. Puedes cambiarlo en Ajustes, en Mera Protocol."
+    "cloudOnlyNotice": "Esto necesita la «Nube privada» de Mera. Puedes cambiarlo en Ajustes, en Mera Protocol.",
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
     "introMessage": "¡Hola! Soy Mera, tu asistente personal de noticias.\n\nPara encontrar noticias que realmente te importan, necesito saber algo sobre ti. Dónde vives, a qué te dedicas, qué aficiones tienes, qué acciones sigues, dónde vive tu familia. Comparte lo que quieras o tan poco como prefieras.\n\nSi esto te genera dudas, buen instinto. No es prudente entregar datos personales a una empresa de aplicaciones. Mera está construida de forma diferente: todo lo que me dices se guarda en tu dispositivo, no en nuestros servidores. Pregúntame cómo funciona, o di 'Ayúdame a configurar' y comenzaremos."
@@ -2440,7 +2463,8 @@
   },
   "askChoice": {
     "answeredA11y": "ya respondido",
-    "saveAll": "Guardar todo"
+    "saveAll": "Guardar todo",
+    "somethingElse": "Something else"
   },
   "chatPhases": {
     "preparing": [
@@ -2489,7 +2513,7 @@
     "selectAll": "Seleccionar todo",
     "selectedCount": "{{count}} seleccionados",
     "includeReason": "Incluir el motivo de Mera",
-    "includeReasonHint": "La nota breve que explica por qué cada artículo llegó a tu feed. Los artículos guardados por separado no la tienen.",
+    "includeReasonHint": "El motivo breve que explica por qué cada artículo llegó a tu feed. Los artículos guardados por separado no lo tienen.",
     "formatMarkdown": "Lista Markdown",
     "formatMarkdownHint": "Una lista fácil de leer, ideal para notas y documentos.",
     "formatJson": "JSON",
@@ -2535,7 +2559,7 @@
   "storyExport": {
     "shareA11y": "Exportar esta historia",
     "shareDialogTitle": "Exportar historia",
-    "includeReasonHint": "La nota breve que explica por qué cada artículo llegó a tu feed. Es posible que algunos artículos no la tengan."
+    "includeReasonHint": "El motivo breve que explica por qué cada artículo llegó a tu feed. Es posible que algunos artículos no lo tengan."
   },
   "systemCheck": {
     "title": "Revisando tu teléfono",
@@ -2878,10 +2902,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Escribir a soporte",
     "enterCode": "Introduce el código",
     "getHelp": "Obtener ayuda",
-    "noEmailBody": "Inténtalo de nuevo más tarde. Si sigue pasando, escríbenos e incluye tu ID de soporte.",
+    "noEmailBody": "Algo salió mal al iniciar sesión en este teléfono. Contacta con soporte o restablece este teléfono y vuelve a iniciar sesión.",
     "noEmailTitle": "Hay un problema con tu cuenta",
     "offlineBody": "Mera necesita conexión para revisar tu cuenta antes de abrirse.",
     "offlineTitle": "Estás sin conexión",
@@ -2892,7 +2915,12 @@
     "unreachableTitle": "No se puede acceder a Mera",
     "mismatchTitle": "Este correo pertenece a otra cuenta",
     "mismatchBody": "Inicia sesión con el correo de esta cuenta o obtén ayuda.",
-    "mismatchOtherEmail": "Usar otro correo"
+    "mismatchOtherEmail": "Usar otro correo",
+    "contactSupport": "Contactar con soporte",
+    "resetPhone": "Restablecer este teléfono e iniciar sesión de nuevo",
+    "resetTitle": "¿Restablecer este teléfono?",
+    "resetBody": "Se cerrará tu sesión y se borrarán los datos de Mera en este teléfono, incluido lo que le has contado a Mera. Tu cuenta no se elimina y los modelos de IA descargados se conservan. Si usas copias de seguridad, tu código de recuperación devuelve tus datos.",
+    "resetConfirm": "Restablecer"
   },
   "relatedSort": {
     "relevance": "Mejor coincidencia",
@@ -2921,5 +2949,44 @@
     "inboxBody": "Cambia al inicio de sesión con teléfono para conservar tu cuenta.",
     "settingsRow": "Pasar al inicio de sesión con teléfono",
     "settingsRowHint": "El inicio de sesión con correo termina el {{date}}."
+  },
+  "kevChat": {
+    "askIntent": "What would you like to do?",
+    "askFact": "Which fact do you mean?",
+    "askTopic": "Which topic do you mean?",
+    "persona": {
+      "share": "Add this as a new fact",
+      "remove": "Remove a saved fact",
+      "correct": "Update a saved fact",
+      "chat": "Just chatting"
+    },
+    "card": {
+      "agree": "Apply the change",
+      "decline": "Leave it as it is"
+    },
+    "article": {
+      "answer": "Answer a question",
+      "follow": "Follow this story",
+      "less": "Show less like this",
+      "more": "Show more like this",
+      "mute": "Mute this publication"
+    },
+    "follow": {
+      "follow": "Follow a story",
+      "other": "Ask something else"
+    },
+    "reply": {
+      "pickOnCard": "Tap the one you want on the card.",
+      "saveFailed": "I couldn't catch that. Could you say it another way?",
+      "alreadyKnown": "I already have that in your profile.",
+      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
+      "notFound": "I couldn't find that in your profile.",
+      "applied": "Done.",
+      "cancelled": "Okay, I left it as it is.",
+      "ack": "Anytime.",
+      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
+      "followFailed": "Which story would you like to follow?",
+      "changeCard": "Tap the card to confirm the change."
+    }
   }
 }
