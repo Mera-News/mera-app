@@ -1,4 +1,6 @@
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import { MaterialIcons } from '@expo/vector-icons';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips';
@@ -118,6 +120,14 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
  * Reduce Motion, Lite, a translated app and scripts without spaces get the
  * whole note fading in instead.
  */
+/** The caption's glyph per state, beside its words like the AI caption's sparkle. Decorative. */
+const NOTE_STATE_GLYPH: Record<NoteBoxState, keyof typeof MaterialIcons.glyphMap> = {
+    writing: 'edit',
+    paused: 'pause-circle-outline',
+    off: 'toggle-off',
+    failed: 'error-outline',
+};
+
 /**
  * No AI note: the relevance chip with a caption saying why (writing, paused for
  * the day, Skip notes on, or the note failed), then the matched facts as one
@@ -144,10 +154,15 @@ const FactsNote: React.FC<{
                 testID={testID ? `${testID}-badge-row` : undefined}
             >
                 <RelevanceChip relevance={relevance} />
-                <Animated.View exiting={state === 'writing' ? FadeOutUp.duration(180) : undefined} style={{ flexShrink: 1 }} {...hideSlot}>
+                <Animated.View
+                    exiting={state === 'writing' ? FadeOutUp.duration(180) : undefined}
+                    style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                    {...hideSlot}
+                >
+                    <MaterialIcons name={NOTE_STATE_GLYPH[state]} size={11} color={note.ai} {...DECORATIVE_ICON_A11Y} />
                     <Text
                         size="2xs"
-                        style={{ color: note.ai, textAlign: 'right' }}
+                        style={{ color: note.ai, textAlign: 'right', flexShrink: 1 }}
                         testID={testID ? `${testID}-${state}` : undefined}
                     >
                         {t(`feed.noteState.${state}`)}
