@@ -27,7 +27,7 @@ import {
   isNewCard,
   type FeedEntry,
 } from './feed-entries';
-import { FEED_SHOW_LABEL_KEY, setFeedShowCounts, useFeedMinimap, useFeedShow } from './feed-view-prefs';
+import { FEED_SHOW_LABEL_KEY, setFeedShowCounts, useFeedMinimap, useFeedShow, useFeedViewPrefs } from './feed-view-prefs';
 import {
   applyFeedShow,
   buildDiscardedStories,
@@ -272,7 +272,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const onScreenIdsRef = useRef<ReadonlySet<string>>(new Set());
   const recomputeNewBelowRef = useRef(() => {});
   recomputeNewBelowRef.current = () => {
-    const since = newSinceRef.current;
+    // Discarded rows never get a seen-mark (they are not in the order), so
+    // under Discarded by Mera nothing counts as new.
+    const since = useFeedViewPrefs.getState().show === 'discarded' ? null : newSinceRef.current;
     let found = false;
     if (since !== null) {
       const rows = listDataRef.current;
@@ -945,7 +947,8 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     rowSessionRef,
     arrivingIdsRef,
     arrivalMotion,
-    newSince,
+    // No halo under Discarded by Mera: its rows can never be marked seen.
+    newSince: show === 'discarded' ? null : newSince,
     registerRow,
     viewabilityConfigCallbackPairs,
     onScrollToIndexFailed,
