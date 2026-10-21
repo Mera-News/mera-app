@@ -71,7 +71,7 @@ const FactChips: React.FC<{ topicIds: string[] | null | undefined }> = ({ topicI
     const note = useNoteInk();
     if (facts.length === 0) return null;
     return (
-        <HStack className="flex-wrap" space="xs" testID="fact-chips">
+        <HStack className="flex-wrap justify-end" space="xs" testID="fact-chips">
             {facts.map((fact) => (
                 <Box key={fact.id} className="px-2.5 py-1 rounded-full" style={{ backgroundColor: note.chip, marginVertical: 2 }}>
                     <Text size="2xs" style={{ color: note.ink, fontWeight: '600' }} numberOfLines={1}>
