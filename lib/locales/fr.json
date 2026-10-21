@@ -2884,10 +2884,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Écrire à l'assistance",
     "enterCode": "Saisissez le code",
     "getHelp": "Obtenir de l'aide",
-    "noEmailBody": "Veuillez réessayer plus tard. Si le problème persiste, écrivez-nous et indiquez votre ID d'assistance.",
+    "noEmailBody": "Un problème est survenu lors de la connexion sur ce téléphone. Contactez l'assistance, ou réinitialisez ce téléphone et reconnectez-vous.",
     "noEmailTitle": "Un problème est survenu avec votre compte",
     "offlineBody": "Mera a besoin d'une connexion pour vérifier votre compte avant de s'ouvrir.",
     "offlineTitle": "Vous êtes hors ligne",
@@ -2898,7 +2897,12 @@
     "unreachableTitle": "Mera est injoignable",
     "mismatchTitle": "Cet e-mail appartient à un autre compte",
     "mismatchBody": "Connectez-vous avec l'e-mail de ce compte, ou obtenez de l'aide.",
-    "mismatchOtherEmail": "Utiliser un autre e-mail"
+    "mismatchOtherEmail": "Utiliser un autre e-mail",
+    "contactSupport": "Contacter l'assistance",
+    "resetPhone": "Réinitialiser ce téléphone et se reconnecter",
+    "resetTitle": "Réinitialiser ce téléphone ?",
+    "resetBody": "Vous serez déconnecté et les données de Mera sur ce téléphone seront effacées, y compris ce que vous avez dit à Mera. Votre compte n'est pas supprimé et les modèles d'IA téléchargés sont conservés. Si vous utilisez la sauvegarde, votre code de récupération restaure vos données.",
+    "resetConfirm": "Réinitialiser"
   },
   "relatedSort": {
     "relevance": "Meilleure correspondance",

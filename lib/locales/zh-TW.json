@@ -2872,10 +2872,9 @@
     }
   },
   "gate": {
-    "emailSupport": "電子郵件支援",
     "enterCode": "輸入驗證碼",
     "getHelp": "取得協助",
-    "noEmailBody": "請稍後再試。如果問題持續發生，請寄信給我們並附上你的支援 ID。",
+    "noEmailBody": "在這支手機上登入時出了問題。請聯絡支援團隊，或重設這支手機後重新登入。",
     "noEmailTitle": "你的帳號出現問題",
     "offlineBody": "梅拉需要網路連線，才能在開啟前確認你的帳號。",
     "offlineTitle": "你目前離線",
@@ -2886,7 +2885,12 @@
     "unreachableTitle": "無法連上梅拉",
     "mismatchTitle": "這個電子郵件屬於其他帳號",
     "mismatchBody": "請使用此帳號的電子郵件登入，或取得協助。",
-    "mismatchOtherEmail": "使用其他電子郵件"
+    "mismatchOtherEmail": "使用其他電子郵件",
+    "contactSupport": "聯絡支援團隊",
+    "resetPhone": "重設這支手機並重新登入",
+    "resetTitle": "要重設這支手機嗎？",
+    "resetBody": "這會讓你登出，並清除梅拉在這支手機上的資料，包括你告訴梅拉的內容。你的帳號不會被刪除，已下載的 AI 模型也會保留。如果你使用了備份，可以用復原代碼找回資料。",
+    "resetConfirm": "重設"
   },
   "relatedSort": {
     "relevance": "最符合",

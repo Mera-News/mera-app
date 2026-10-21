@@ -2872,10 +2872,9 @@
     }
   },
   "gate": {
-    "emailSupport": "Email cho bộ phận hỗ trợ",
     "enterCode": "Nhập mã",
     "getHelp": "Nhận trợ giúp",
-    "noEmailBody": "Vui lòng thử lại sau. Nếu sự cố vẫn tiếp diễn, hãy gửi email cho chúng tôi và ghi kèm Mã hỗ trợ của bạn.",
+    "noEmailBody": "Đã xảy ra lỗi khi đăng nhập trên điện thoại này. Hãy liên hệ bộ phận hỗ trợ, hoặc đặt lại điện thoại này rồi đăng nhập lại.",
     "noEmailTitle": "Tài khoản của bạn đang gặp sự cố",
     "offlineBody": "Mera cần kết nối để kiểm tra tài khoản của bạn trước khi mở.",
     "offlineTitle": "Bạn đang ngoại tuyến",
@@ -2886,7 +2885,12 @@
     "unreachableTitle": "Không thể kết nối đến Mera",
     "mismatchTitle": "Email này thuộc về một tài khoản khác",
     "mismatchBody": "Đăng nhập bằng email của tài khoản này, hoặc nhận trợ giúp.",
-    "mismatchOtherEmail": "Dùng email khác"
+    "mismatchOtherEmail": "Dùng email khác",
+    "contactSupport": "Liên hệ bộ phận hỗ trợ",
+    "resetPhone": "Đặt lại điện thoại này và đăng nhập lại",
+    "resetTitle": "Đặt lại điện thoại này?",
+    "resetBody": "Bạn sẽ bị đăng xuất và dữ liệu của Mera trên điện thoại này sẽ bị xóa, bao gồm cả những gì bạn đã kể với Mera. Tài khoản của bạn không bị xóa và các mô hình AI đã tải xuống vẫn được giữ lại. Nếu bạn dùng tính năng sao lưu, mã khôi phục sẽ giúp bạn lấy lại dữ liệu.",
+    "resetConfirm": "Đặt lại"
   },
   "relatedSort": {
     "relevance": "Khớp tốt nhất",

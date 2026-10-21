@@ -1,0 +1,202 @@
+{
+  "en": {
+    "gate": {
+      "noEmailBody": "Something went wrong signing in on this phone. Contact support, or reset this phone and sign in again.",
+      "contactSupport": "Contact support",
+      "resetPhone": "Reset this phone and sign in again",
+      "resetTitle": "Reset this phone?",
+      "resetBody": "This signs you out and clears Mera's data on this phone, including what you've told Mera. Your account isn't deleted, and downloaded AI models stay. If you use backup, your recovery code brings your data back.",
+      "resetConfirm": "Reset"
+    }
+  },
+  "ar": {
+    "gate": {
+      "noEmailBody": "حدث خطأ أثناء تسجيل الدخول على هذا الهاتف. تواصل مع الدعم، أو أعد ضبط هذا الهاتف وسجّل الدخول مرة أخرى.",
+      "contactSupport": "تواصل مع الدعم",
+      "resetPhone": "إعادة ضبط هذا الهاتف وتسجيل الدخول مجددًا",
+      "resetTitle": "هل تريد إعادة ضبط هذا الهاتف؟",
+      "resetBody": "سيؤدي هذا إلى تسجيل خروجك ومسح بيانات ميرا على هذا الهاتف، بما في ذلك ما أخبرت به ميرا. لن يُحذف حسابك، وستبقى نماذج الذكاء الاصطناعي التي نزّلتها. إذا كنت تستخدم النسخ الاحتياطي، يمكنك استعادة بياناتك برمز الاسترداد.",
+      "resetConfirm": "إعادة الضبط"
+    }
+  },
+  "de": {
+    "gate": {
+      "noEmailBody": "Beim Anmelden auf diesem Telefon ist etwas schiefgelaufen. Wende dich an den Support oder setz dieses Telefon zurück und melde dich neu an.",
+      "contactSupport": "Support kontaktieren",
+      "resetPhone": "Telefon zurücksetzen und neu anmelden",
+      "resetTitle": "Dieses Telefon zurücksetzen?",
+      "resetBody": "Du wirst abgemeldet und die Daten von Mera auf diesem Telefon werden gelöscht, auch alles, was du Mera erzählt hast. Dein Konto wird nicht gelöscht und heruntergeladene KI-Modelle bleiben erhalten. Wenn du Backups nutzt, holst du deine Daten mit deinem Wiederherstellungscode zurück.",
+      "resetConfirm": "Zurücksetzen"
+    }
+  },
+  "es": {
+    "gate": {
+      "noEmailBody": "Algo salió mal al iniciar sesión en este teléfono. Contacta con soporte o restablece este teléfono y vuelve a iniciar sesión.",
+      "contactSupport": "Contactar con soporte",
+      "resetPhone": "Restablecer este teléfono e iniciar sesión de nuevo",
+      "resetTitle": "¿Restablecer este teléfono?",
+      "resetBody": "Se cerrará tu sesión y se borrarán los datos de Mera en este teléfono, incluido lo que le has contado a Mera. Tu cuenta no se elimina y los modelos de IA descargados se conservan. Si usas copias de seguridad, tu código de recuperación devuelve tus datos.",
+      "resetConfirm": "Restablecer"
+    }
+  },
+  "fr": {
+    "gate": {
+      "noEmailBody": "Un problème est survenu lors de la connexion sur ce téléphone. Contactez l'assistance, ou réinitialisez ce téléphone et reconnectez-vous.",
+      "contactSupport": "Contacter l'assistance",
+      "resetPhone": "Réinitialiser ce téléphone et se reconnecter",
+      "resetTitle": "Réinitialiser ce téléphone ?",
+      "resetBody": "Vous serez déconnecté et les données de Mera sur ce téléphone seront effacées, y compris ce que vous avez dit à Mera. Votre compte n'est pas supprimé et les modèles d'IA téléchargés sont conservés. Si vous utilisez la sauvegarde, votre code de récupération restaure vos données.",
+      "resetConfirm": "Réinitialiser"
+    }
+  },
+  "hi": {
+    "gate": {
+      "noEmailBody": "इस फ़ोन पर साइन इन करते समय कुछ गड़बड़ हो गई। सहायता टीम से संपर्क करें, या इस फ़ोन को रीसेट करके फिर से साइन इन करें।",
+      "contactSupport": "सहायता टीम से संपर्क करें",
+      "resetPhone": "यह फ़ोन रीसेट करें और फिर से साइन इन करें",
+      "resetTitle": "यह फ़ोन रीसेट करें?",
+      "resetBody": "इससे आप साइन आउट हो जाएँगे और इस फ़ोन पर मेरा का डेटा मिट जाएगा, जिसमें वह भी शामिल है जो आपने मेरा को बताया है। आपका अकाउंट डिलीट नहीं होगा और डाउनलोड किए गए AI मॉडल बने रहेंगे। अगर आप बैकअप इस्तेमाल करते हैं, तो अपने रिकवरी कोड से अपना डेटा वापस पा सकते हैं।",
+      "resetConfirm": "रीसेट करें"
+    }
+  },
+  "id": {
+    "gate": {
+      "noEmailBody": "Terjadi masalah saat masuk di ponsel ini. Hubungi dukungan, atau reset ponsel ini lalu masuk lagi.",
+      "contactSupport": "Hubungi dukungan",
+      "resetPhone": "Reset ponsel ini dan masuk lagi",
+      "resetTitle": "Reset ponsel ini?",
+      "resetBody": "Anda akan keluar dan data Mera di ponsel ini akan dihapus, termasuk yang sudah Anda ceritakan kepada Mera. Akun Anda tidak dihapus, dan model AI yang sudah diunduh tetap ada. Jika Anda menggunakan cadangan, kode pemulihan Anda dapat mengembalikan data Anda.",
+      "resetConfirm": "Reset"
+    }
+  },
+  "it": {
+    "gate": {
+      "noEmailBody": "Qualcosa è andato storto durante l'accesso su questo telefono. Contatta l'assistenza oppure reimposta questo telefono e accedi di nuovo.",
+      "contactSupport": "Contatta l'assistenza",
+      "resetPhone": "Reimposta questo telefono e accedi di nuovo",
+      "resetTitle": "Reimpostare questo telefono?",
+      "resetBody": "Verrai disconnesso e i dati di Mera su questo telefono verranno cancellati, compreso quello che hai detto a Mera. Il tuo account non viene eliminato e i modelli di IA scaricati restano. Se usi il backup, il tuo codice di recupero riporta i tuoi dati.",
+      "resetConfirm": "Reimposta"
+    }
+  },
+  "ja": {
+    "gate": {
+      "noEmailBody": "この電話でのサインイン中に問題が発生しました。サポートに問い合わせるか、この電話をリセットしてもう一度サインインしてください。",
+      "contactSupport": "サポートに問い合わせる",
+      "resetPhone": "この電話をリセットしてサインインし直す",
+      "resetTitle": "この電話をリセットしますか？",
+      "resetBody": "サインアウトし、この電話にあるメラのデータを消去します。メラに伝えた内容も含まれます。アカウントは削除されず、ダウンロード済みのAIモデルは残ります。バックアップを使っている場合は、リカバリーコードでデータを元に戻せます。",
+      "resetConfirm": "リセット"
+    }
+  },
+  "ko": {
+    "gate": {
+      "noEmailBody": "이 휴대폰에서 로그인하는 중에 문제가 발생했습니다. 지원팀에 문의하거나 이 휴대폰을 초기화한 후 다시 로그인하세요.",
+      "contactSupport": "지원팀에 문의",
+      "resetPhone": "이 휴대폰 초기화 후 다시 로그인",
+      "resetTitle": "이 휴대폰을 초기화할까요?",
+      "resetBody": "로그아웃되고 이 휴대폰에 있는 메라 데이터가 삭제됩니다. 메라에게 알려 준 내용도 포함됩니다. 계정은 삭제되지 않으며 다운로드한 AI 모델은 그대로 남습니다. 백업을 사용 중이라면 복구 코드로 데이터를 되찾을 수 있습니다.",
+      "resetConfirm": "초기화"
+    }
+  },
+  "nl": {
+    "gate": {
+      "noEmailBody": "Er ging iets mis bij het inloggen op deze telefoon. Neem contact op met support, of reset deze telefoon en log opnieuw in.",
+      "contactSupport": "Contact opnemen met support",
+      "resetPhone": "Deze telefoon resetten en opnieuw inloggen",
+      "resetTitle": "Deze telefoon resetten?",
+      "resetBody": "Je wordt uitgelogd en de gegevens van Mera op deze telefoon worden gewist, ook wat je Mera hebt verteld. Je account wordt niet verwijderd en gedownloade AI-modellen blijven staan. Gebruik je back-ups, dan haal je je gegevens terug met je herstelcode.",
+      "resetConfirm": "Resetten"
+    }
+  },
+  "pl": {
+    "gate": {
+      "noEmailBody": "Coś poszło nie tak podczas logowania na tym telefonie. Skontaktuj się z pomocą albo zresetuj ten telefon i zaloguj się ponownie.",
+      "contactSupport": "Skontaktuj się z pomocą",
+      "resetPhone": "Zresetuj ten telefon i zaloguj się ponownie",
+      "resetTitle": "Zresetować ten telefon?",
+      "resetBody": "Nastąpi wylogowanie, a dane Mera na tym telefonie zostaną usunięte, w tym to, co przekazano Mera. Twoje konto nie zostanie usunięte, a pobrane modele AI zostaną. Jeśli korzystasz z kopii zapasowej, odzyskasz dane za pomocą kodu odzyskiwania.",
+      "resetConfirm": "Resetuj"
+    }
+  },
+  "pt-BR": {
+    "gate": {
+      "noEmailBody": "Algo deu errado ao entrar neste celular. Fale com o suporte ou redefina este celular e entre de novo.",
+      "contactSupport": "Falar com o suporte",
+      "resetPhone": "Redefinir este celular e entrar de novo",
+      "resetTitle": "Redefinir este celular?",
+      "resetBody": "Você vai sair da conta e os dados da Mera neste celular serão apagados, incluindo o que você contou à Mera. Sua conta não é excluída e os modelos de IA baixados continuam aqui. Se você usa backup, seu código de recuperação traz seus dados de volta.",
+      "resetConfirm": "Redefinir"
+    }
+  },
+  "ru": {
+    "gate": {
+      "noEmailBody": "При входе на этом телефоне что-то пошло не так. Свяжитесь с поддержкой или сбросьте этот телефон и войдите снова.",
+      "contactSupport": "Связаться с поддержкой",
+      "resetPhone": "Сбросить этот телефон и войти снова",
+      "resetTitle": "Сбросить этот телефон?",
+      "resetBody": "Вы выйдете из аккаунта, а данные Меры на этом телефоне будут удалены, включая то, что вы рассказали Мере. Ваш аккаунт не удаляется, а скачанные ИИ-модели останутся. Если вы пользуетесь резервным копированием, данные можно вернуть с помощью кода восстановления.",
+      "resetConfirm": "Сбросить"
+    }
+  },
+  "th": {
+    "gate": {
+      "noEmailBody": "เกิดข้อผิดพลาดขณะลงชื่อเข้าใช้บนโทรศัพท์เครื่องนี้ ติดต่อฝ่ายสนับสนุน หรือรีเซ็ตโทรศัพท์เครื่องนี้แล้วลงชื่อเข้าใช้อีกครั้ง",
+      "contactSupport": "ติดต่อฝ่ายสนับสนุน",
+      "resetPhone": "รีเซ็ตโทรศัพท์เครื่องนี้และลงชื่อเข้าใช้อีกครั้ง",
+      "resetTitle": "รีเซ็ตโทรศัพท์เครื่องนี้ใช่ไหม",
+      "resetBody": "คุณจะออกจากระบบ และข้อมูลของ เมร่า บนโทรศัพท์เครื่องนี้จะถูกล้าง รวมถึงสิ่งที่คุณเคยบอก เมร่า บัญชีของคุณจะไม่ถูกลบ และโมเดล AI ที่ดาวน์โหลดไว้จะยังอยู่ หากคุณใช้การสำรองข้อมูล คุณสามารถกู้คืนข้อมูลได้ด้วยรหัสกู้คืน",
+      "resetConfirm": "รีเซ็ต"
+    }
+  },
+  "tr": {
+    "gate": {
+      "noEmailBody": "Bu telefonda giriş yaparken bir sorun oluştu. Destekle iletişime geçin veya bu telefonu sıfırlayıp yeniden giriş yapın.",
+      "contactSupport": "Destekle iletişime geçin",
+      "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
+      "resetTitle": "Bu telefon sıfırlansın mı?",
+      "resetBody": "Oturumunuz kapatılır ve Mera'ya anlattıklarınız dahil bu telefondaki Mera verileri silinir. Hesabınız silinmez ve indirilen yapay zeka modelleri kalır. Yedekleme kullanıyorsanız verilerinizi kurtarma kodunuzla geri alabilirsiniz.",
+      "resetConfirm": "Sıfırla"
+    }
+  },
+  "uk": {
+    "gate": {
+      "noEmailBody": "Під час входу на цьому телефоні щось пішло не так. Зверніться до підтримки або скиньте цей телефон і увійдіть знову.",
+      "contactSupport": "Звернутися до підтримки",
+      "resetPhone": "Скинути цей телефон і увійти знову",
+      "resetTitle": "Скинути цей телефон?",
+      "resetBody": "Ви вийдете з облікового запису, а дані Мери на цьому телефоні буде видалено, зокрема те, що ви розповіли Мері. Ваш обліковий запис не видаляється, а завантажені ШІ-моделі залишаться. Якщо ви користуєтеся резервним копіюванням, дані можна повернути за допомогою коду відновлення.",
+      "resetConfirm": "Скинути"
+    }
+  },
+  "vi": {
+    "gate": {
+      "noEmailBody": "Đã xảy ra lỗi khi đăng nhập trên điện thoại này. Hãy liên hệ bộ phận hỗ trợ, hoặc đặt lại điện thoại này rồi đăng nhập lại.",
+      "contactSupport": "Liên hệ bộ phận hỗ trợ",
+      "resetPhone": "Đặt lại điện thoại này và đăng nhập lại",
+      "resetTitle": "Đặt lại điện thoại này?",
+      "resetBody": "Bạn sẽ bị đăng xuất và dữ liệu của Mera trên điện thoại này sẽ bị xóa, bao gồm cả những gì bạn đã kể với Mera. Tài khoản của bạn không bị xóa và các mô hình AI đã tải xuống vẫn được giữ lại. Nếu bạn dùng tính năng sao lưu, mã khôi phục sẽ giúp bạn lấy lại dữ liệu.",
+      "resetConfirm": "Đặt lại"
+    }
+  },
+  "zh-CN": {
+    "gate": {
+      "noEmailBody": "在这部手机上登录时出了问题。请联系支持团队，或重置这部手机后重新登录。",
+      "contactSupport": "联系支持团队",
+      "resetPhone": "重置这部手机并重新登录",
+      "resetTitle": "要重置这部手机吗？",
+      "resetBody": "这会让你退出登录，并清除梅拉在这部手机上的数据，包括你告诉梅拉的内容。你的账户不会被删除，已下载的 AI 模型也会保留。如果你使用了备份，可以用恢复代码找回数据。",
+      "resetConfirm": "重置"
+    }
+  },
+  "zh-TW": {
+    "gate": {
+      "noEmailBody": "在這支手機上登入時出了問題。請聯絡支援團隊，或重設這支手機後重新登入。",
+      "contactSupport": "聯絡支援團隊",
+      "resetPhone": "重設這支手機並重新登入",
+      "resetTitle": "要重設這支手機嗎？",
+      "resetBody": "這會讓你登出，並清除梅拉在這支手機上的資料，包括你告訴梅拉的內容。你的帳號不會被刪除，已下載的 AI 模型也會保留。如果你使用了備份，可以用復原代碼找回資料。",
+      "resetConfirm": "重設"
+    }
+  }
+}

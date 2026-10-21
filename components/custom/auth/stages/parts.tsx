@@ -40,31 +40,6 @@ function GateIcon({ name }: { name: React.ComponentProps<typeof MaterialIcons>['
     );
 }
 
-function IconAction({
-    icon,
-    label,
-    onPress,
-    testID,
-}: {
-    icon: React.ComponentProps<typeof MaterialIcons>['name'];
-    label: string;
-    onPress: () => void;
-    testID: string;
-}) {
-    const colors = useColors();
-    return (
-        <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityLabel={label}
-            style={[styles.iconAction, { borderColor: colors.line }]}
-            testID={testID}
-        >
-            <MaterialIcons name={icon} size={22} color={colors.ink2} />
-        </Pressable>
-    );
-}
-
 /** Email sign-in, demoted: a small grey link and the line saying who it is for. */
 function LegacyEmailLink({
     label,
@@ -127,4 +102,4 @@ function PhoneUnsupported({ testID }: { testID: string }) {
     );
 }
 
-export { BackArrow, GateIcon, IconAction, LegacyEmailLink, PhoneUnsupported };
+export { BackArrow, GateIcon, LegacyEmailLink, PhoneUnsupported };

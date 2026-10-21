@@ -54,8 +54,7 @@ type PhoneSignIn =
     | { kind: 'failed'; reason: DeviceSignInFailureReason };
 
 /**
- * ONE sign-in-with-this-phone path, used by Before you start and by the
- * no-email gate's Try again: sign in, compare with the account on this device
+ * ONE sign-in-with-this-phone path, used by Before you start: sign in, compare with the account on this device
  * BEFORE any bookkeeping, and only then complete. A mismatch writes nothing;
  * the caller takes holdAccountSwitch synchronously and asks (the session
  * cookie is already set, and the watcher, the onboarding gate and login.tsx's
@@ -258,6 +257,17 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true, now }:
         finishDeviceSignIn(pendingSwitch);
     };
 
+    // Reset this phone: cached_user_id is gone, so this screen is the sign-in
+    // track now. Set here as well as by the remount, which a replace onto the
+    // same route is not guaranteed to do.
+    const leaveGate = useCallback(() => {
+        setCachedEmail(null);
+        setCachedUserId(null);
+        setSupportId(null);
+        setForward(true);
+        setStage('intro');
+    }, []);
+
     // Declined: the phone's account signed in but nothing was recorded for
     // it. Sign it out through the one sign-out path and stay where we were.
     const handleSwitchKeep = async () => {
@@ -290,6 +300,7 @@ export function useAuthScreen({ onLoginSuccess, allowDeviceSignIn = true, now }:
         handleVerificationSuccess,
         handleSwitchContinue,
         handleSwitchKeep,
+        leaveGate,
     };
 }
 
