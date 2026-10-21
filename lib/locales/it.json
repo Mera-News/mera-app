@@ -177,7 +177,7 @@
         "downloading": "Scarico gli articoli",
         "grouping": "Raggruppo le notizie doppie",
         "analysing": "Analizzo la pertinenza",
-        "summarising": "Scrivo le tue note",
+        "summarising": "Scrivo i tuoi motivi",
         "preparing": "Preparo il tuo feed"
       },
       "downloadProgress": "{{done}} di {{total}} articoli scaricati",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Calcolo della rilevanza",
-      "reasonsTitle": "Scrittura delle note per te",
+      "reasonsTitle": "Scrittura dei motivi per te",
       "onDeviceTitle": "Punteggio sul tuo telefono",
       "completedTitle": "Tutto fatto",
       "completedMessage": "Il tuo feed è pronto"
@@ -206,15 +206,13 @@
     "statsRead_other": "e hai letto {{formatted}}.",
     "loadingA11y": "Caricamento del tuo feed",
     "translatingCaption": "Traduzione in corso…",
-    "reasonWritingA11y": "scrittura di una nota",
+    "reasonWritingA11y": "scrittura di un motivo",
     "findingStories": "Sto cercando le tue storie",
     "findingStoriesBody": "Compaiono qui appena sono pronte",
     "processingOffline": "Sei offline. Le tue storie arrivano appena torni online.",
     "forYouTitle": "Per te",
     "newStoriesBelowA11y": "Nuove storie qui sotto",
     "noFactsBody": "Tocca il pulsante Mera per dire a Mera cosa segui. Da lì nasce il tuo feed.",
-    "noteSuggestedMany": "Suggerito per i tuoi fatti:",
-    "noteSuggestedOne": "Suggerito per il tuo fatto: {{fact}}. Attendi mentre Mera scrive il motivo.",
     "noteWait": "Attendi mentre Mera scrive il motivo.",
     "opened": "Aperto",
     "statsSyncAnalysing_one": "{{formatted}} articolo è in analisi per te,",
@@ -269,8 +267,14 @@
       "bodyToday": "Mera ha usato la lettura di oggi. Mera legge di nuovo oggi alle {{time}}.",
       "bodyTomorrow": "Mera ha usato la lettura di oggi. Mera legge di nuovo domani alle {{time}}."
     },
-    "noteHeldToday": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di oggi.",
-    "noteHeldTomorrow": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di domani."
+    "noteHeldToday": "Mera ha usato la lettura di oggi, quindi scriverà questo motivo dopo le {{time}} di oggi.",
+    "noteHeldTomorrow": "Mera ha usato la lettura di oggi, quindi scriverà questo motivo dopo le {{time}} di domani.",
+    "noteState": {
+      "writing": "Scrittura del motivo",
+      "paused": "Motivi in pausa per oggi",
+      "off": "Motivi disattivati nelle Impostazioni",
+      "failed": "Impossibile scrivere il motivo"
+    }
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -503,7 +507,10 @@
     "whileClosed": "Mentre Mera è chiuso",
     "deleting": "Eliminazione in corso…",
     "onDeviceNeedsCloud": "Alcune funzioni della chat richiedono il «Cloud privato».",
-    "explainerOnPhoneLimits": "Su questo telefono, Mera non può cercare notizie o sul web, né verificare i fatti."
+    "explainerOnPhoneLimits": "Su questo telefono, Mera non può cercare notizie o sul web, né verificare i fatti.",
+    "notesGroup": "Motivi",
+    "skipNotesTitle": "Salta i motivi",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Cancella il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato sui server viene toccato, perché i server di Mera non hanno mai avuto questi dati.",
@@ -2489,7 +2496,7 @@
     "selectAll": "Seleziona tutto",
     "selectedCount": "{{count}} selezionati",
     "includeReason": "Includi il motivo di Mera",
-    "includeReasonHint": "La nota di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Gli articoli salvati singolarmente non ce l'hanno.",
+    "includeReasonHint": "Il motivo di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Gli articoli salvati singolarmente non ce l'hanno.",
     "formatMarkdown": "Elenco Markdown",
     "formatMarkdownHint": "Un elenco leggibile, ottimo per note e documenti.",
     "formatJson": "JSON",
@@ -2535,7 +2542,7 @@
   "storyExport": {
     "shareA11y": "Esporta questa storia",
     "shareDialogTitle": "Esporta storia",
-    "includeReasonHint": "La nota di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Alcuni articoli potrebbero non averla."
+    "includeReasonHint": "Il motivo di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Alcuni articoli potrebbero non averlo."
   },
   "systemCheck": {
     "title": "Controllo del telefono in corso",

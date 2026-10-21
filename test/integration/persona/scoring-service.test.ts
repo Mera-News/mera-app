@@ -34,6 +34,7 @@ import {
   decodeCloudBatchResults,
   decodeResults,
   processAllUnscored,
+  rependSkippedNotes,
   retryMissingReasons,
   runFeedVerifierPass,
 } from '@/lib/mera-protocol/scoring-service';
@@ -1279,5 +1280,90 @@ describe('retryMissingReasons - an ungrounded note', () => {
     await run(retryMissingReasons());
 
     expect(asked()).toBe(1);
+  });
+});
+
+// Skip reasons on this phone: the relevance pass is the whole pass. Rows end `complete` with no
+// reason (never `reason_skipped`, which the feed hides), and the reason sweep finalises instead of
+// writing. Turned off again, note-less rows at or above the gate are owed a reason again.
+describe('Skip reasons on this phone', () => {
+  const reasonCalls = () => llamaCalls().filter((c) => localSystemOf(c) === LOCAL_REASON_SYSTEM_PROMPT);
+
+  beforeEach(async () => {
+    await useMode('on-device');
+  });
+
+  afterEach(() => {
+    useMeraProtocolStore.getState().setSkipNotes(false);
+    jest.restoreAllMocks();
+  });
+
+  it('off (the default): the pass writes a reason as before', async () => {
+    installLocal();
+    await seed(['a']);
+
+    expect(await run(processAllUnscored())).toBe(1);
+
+    const row = (await stored()).a;
+    expect([row.status, row.reason]).toEqual(['complete', 'Local note on story a.']);
+    expect(reasonCalls()).toHaveLength(1);
+  });
+
+  it('on: relevance only, no reason call; the row is complete with its relevance and no reason', async () => {
+    useMeraProtocolStore.getState().setSkipNotes(true);
+    installLocal();
+    await seed(['a']);
+
+    expect(await run(processAllUnscored())).toBe(1);
+
+    const row = (await stored()).a;
+    expect(row.relevance).toBeGreaterThanOrEqual(0.4);
+    expect([row.status, row.reason ?? '']).toEqual(['complete', '']);
+    expect(llamaCalls().map(localSystemOf)).toEqual([LOCAL_RELEVANCE_SYSTEM_PROMPT]);
+  });
+
+  it('on: the sweep finalises rows still owed a reason and writes none', async () => {
+    installLocal();
+    await seedOwed(['a', 'b'], {}, 0.8);
+    useMeraProtocolStore.getState().setSkipNotes(true);
+
+    expect(await run(retryMissingReasons())).toBe(0);
+
+    const rows = await stored();
+    expect([rows.a.status, rows.b.status]).toEqual(['complete', 'complete']);
+    expect(llamaCalls()).toHaveLength(0);
+  });
+
+  it('turned on mid-sweep: the sweep stops at the next row and leaves the rest owed', async () => {
+    // The switch flips while the first reason is being written.
+    installLlama((call) => {
+      const id = LOCAL_TITLE.exec(localUserOf(call))?.[1] ?? '';
+      useMeraProtocolStore.getState().setSkipNotes(true);
+      return [`Local note on story ${id}.`];
+    });
+    await seedOwed(['top', 'next'], {}, 0.8);
+
+    expect(await run(retryMissingReasons())).toBe(1);
+
+    expect(reasonCalls()).toHaveLength(1);
+    const rows = await stored();
+    expect(Object.values(rows).map((r) => r.status).sort()).toEqual(['complete', 'reason_pending']);
+  });
+
+  it('off again: rows at or above the gate finalised without a reason are owed one, and the sweep writes them', async () => {
+    installLocal();
+    await seed(['high', 'low', 'noted']);
+    await saveScoringResult('high', { relevance: 0.8, reason: '', reasonSkipped: true });
+    await saveScoringResult('low', { relevance: 0.3, reason: '', reasonSkipped: true });
+    await saveScoringResult('noted', { relevance: 0.8, reason: 'Already explained, saga noted.', reasonSkipped: false });
+
+    expect(await rependSkippedNotes()).toBe(1);
+
+    let rows = await stored();
+    expect([rows.high.status, rows.low.status, rows.noted.status]).toEqual(['reason_pending', 'complete', 'complete']);
+
+    expect(await run(retryMissingReasons())).toBe(1);
+    rows = await stored();
+    expect([rows.high.status, rows.high.reason]).toEqual(['complete', 'Local note on story high.']);
   });
 });

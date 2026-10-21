@@ -149,7 +149,15 @@ export function isSectionMemberEligible(bucket: FeedBucket): boolean {
  * floor) while leaving Rule 1 — the sub-discardFloor exclusion — in force. That
  * is the intended one-line retreat if MEDIUM proves too aggressive.
  */
-export const SECTION_MIN_VIABLE_BUCKET: FeedBucket = 'MEDIUM';
+// Owner, 2026-10-21: "low should still show the section". An all-LOW fact section was hidden,
+// so the Sectioned view could go empty while Continuous showed the same stories. Rule 2 is off
+// for fact sections; Rule 1 (the discard floor) still applies.
+export const SECTION_MIN_VIABLE_BUCKET: FeedBucket = 'LOW';
+
+/** Headline (country / global) sections keep the MEDIUM floor: the owner's standing rule for
+ *  them is "if not relevant we're saving users time by not showing it", and the Sectioned view
+ *  does not show them. */
+export const HEADLINE_SECTION_MIN_VIABLE_BUCKET: FeedBucket = 'MEDIUM';
 
 /**
  * RULE 2 — a fact section must be backed by at least ONE member at
@@ -163,8 +171,11 @@ export const SECTION_MIN_VIABLE_BUCKET: FeedBucket = 'MEDIUM';
  * coverage, its LOW-bucket stories are kept, so genuinely active sections stay
  * as full as they are today. Only all-LOW sections disappear.
  */
-export function isFactSectionViable(buckets: readonly FeedBucket[]): boolean {
-  const floor = bucketRank(SECTION_MIN_VIABLE_BUCKET);
+export function isFactSectionViable(
+  buckets: readonly FeedBucket[],
+  minBucket: FeedBucket = SECTION_MIN_VIABLE_BUCKET,
+): boolean {
+  const floor = bucketRank(minBucket);
   for (const b of buckets) {
     if (bucketRank(b) >= floor) return true;
   }

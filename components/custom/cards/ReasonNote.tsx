@@ -1,20 +1,23 @@
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import MeraLogo from '@/components/custom/MeraLogo';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import { MaterialIcons } from '@expo/vector-icons';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips';
+import { factsLine } from '@/lib/algorithms/facts-line';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { MOTION, SPRING } from '@/lib/motion';
+import { MOTION } from '@/lib/motion';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
-import type { ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { noteBoxState, type NoteBoxState, type ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
 import { TYPE_SCALE } from '@/lib/algorithms/scale';
 import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInUp, FadeOutUp, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 export { notePendingMode, type ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
@@ -50,10 +53,6 @@ interface ReasonNoteProps {
 const BADGE_ROW_PADDING = 6;
 /** The priority chip's height at text scale 1 (11/16 text + 4pt padding). */
 const CHIP_HEIGHT = 24;
-/** The waiting logo: 0.7x of the 56pt the board first drew. */
-const WAIT_LOGO_SIZE = 39;
-/** At most this many facts are named in the waiting line. */
-const MAX_FACTS_NAMED = 3;
 /** FinalRead #3: 250 ms per word, 40 ms apart, the whole reveal under a
  *  second (a long note tightens the stagger). */
 const NOTE_REVEAL = { ...MOTION.noteReveal, total: 1000 } as const;
@@ -72,52 +71,6 @@ function useNoteLineHeight(): number {
     const lineHeight = scaledTypeStyle(NOTE_TOKEN, scale)?.lineHeight ?? TYPE_SCALE[NOTE_TOKEN].lineHeight;
     return lineHeight * (fontScale || 1);
 }
-
-/** The facts the waiting line names: deduped titles, at most three. */
-function useWaitingFacts(topicIds?: string[] | null): string[] {
-    const facts = useMatchedFacts(topicIds);
-    return [...new Set(facts.map((f) => primaryStatement(f.statement)))].slice(0, MAX_FACTS_NAMED);
-}
-
-/** The waiting line: the fact(s) that found the article, then the wait. */
-const WaitingLine: React.FC<{ facts: string[] }> = ({ facts }) => {
-    const { t } = useTranslation();
-    const ink = { color: useNoteInk().ink };
-    if (facts.length === 1) {
-        return (
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteSuggestedOne', { fact: facts[0] })}
-            </Text>
-        );
-    }
-    if (facts.length === 0) {
-        return (
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteWait')}
-            </Text>
-        );
-    }
-    return (
-        <View>
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteSuggestedMany')}
-            </Text>
-            {facts.map((f) => (
-                <Text key={f} size={NOTE_TOKEN} style={ink} numberOfLines={1}>
-                    {f}
-                </Text>
-            ))}
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteWait')}
-            </Text>
-        </View>
-    );
-};
-
-/** The waiting line for a suggestion's own facts (queried on mount). */
-const WaitingFacts: React.FC<{ topicIds?: string[] | null }> = ({ topicIds }) => (
-    <WaitingLine facts={useWaitingFacts(topicIds)} />
-);
 
 /** The note's words rising in one by one over the laid-out (hidden) note. */
 const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxHeight }) => {
@@ -150,19 +103,87 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
 /**
  * The AI note block, ONE layout for the Feed card and the detail screen.
  *
- *   writing   [moving logo]  Suggested for your fact: X. Please wait while
- *                            Mera writes the reason.
+ *   writing   [priority] .............. [edit] Writing the reason
+ *             Fact One · Fact Two
+ *   paused    [priority] ....... [pause] Reasons paused for today
+ *             Fact One · Fact Two
+ *             Today's reading is used up, so Mera will write this reason
+ *             after 01:00 tomorrow.
+ *   off       [priority] ........ [toggle] Reasons off in Settings   (Skip reasons)
+ *   failed    [priority] ...... [error] Couldn't write the reason
  *   note      [priority] ..................... [✦ AI-generated]
  *             Mera's note, full width.
- *   held      [priority] ...... Today's reading is used up, so Mera will
- *                               write this note after 01:00 tomorrow.
  *
- * No chip while the note is being written (the fact is what the reader learns
- * first). When the note lands in a MOUNTED box (never on mount, never on a
- * remount or a translation swap), the wait lifts away, the chip pops and the
- * words rise in one by one; Reduce Motion, Lite, a translated app and scripts
- * without spaces get the whole note fading in instead.
+ * The chip shows as soon as the row has a relevance, in every state (owner,
+ * 2026-10-20: a score that exists is shown, it does not wait for the note).
+ * When the note lands in a MOUNTED box (never on mount, never on a remount or
+ * a translation swap), the wait lifts away and the words rise in one by one;
+ * Reduce Motion, Lite, a translated app and scripts without spaces get the
+ * whole note fading in instead.
  */
+/** The caption's glyph per state, beside its words like the AI caption's sparkle. Decorative. */
+const NOTE_STATE_GLYPH: Record<NoteBoxState, keyof typeof MaterialIcons.glyphMap> = {
+    writing: 'edit',
+    paused: 'pause-circle-outline',
+    off: 'toggle-off',
+    failed: 'error-outline',
+};
+
+/**
+ * No AI note: the relevance chip with a caption saying why (writing, paused for
+ * the day, Skip notes on, or the note failed), then the matched facts as one
+ * Title Case line joined by middle dots (wraps, never cut). Paused also says
+ * when the note will come. Only an AI note carries the AI-generated caption.
+ */
+const FactsNote: React.FC<{
+    relevance: number;
+    topicIds?: string[] | null;
+    state: NoteBoxState;
+    heldLine?: string;
+    testID?: string;
+    hideSlot: object | null;
+}> = ({ relevance, topicIds, state, heldLine, testID, hideSlot }) => {
+    const { t } = useTranslation();
+    const note = useNoteInk();
+    const line = factsLine(useMatchedFacts(topicIds).map((f) => primaryStatement(f.statement)));
+    return (
+        <Box testID={testID} className="rounded-lg px-3 pb-3" style={{ backgroundColor: note.box, paddingTop: 12 - BADGE_ROW_PADDING }}>
+            <HStack
+                className="items-center justify-between"
+                space="md"
+                style={{ paddingVertical: BADGE_ROW_PADDING }}
+                testID={testID ? `${testID}-badge-row` : undefined}
+            >
+                <RelevanceChip relevance={relevance} />
+                <Animated.View
+                    exiting={state === 'writing' ? FadeOutUp.duration(180) : undefined}
+                    style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                    {...hideSlot}
+                >
+                    <MaterialIcons name={NOTE_STATE_GLYPH[state]} size={11} color={note.ai} {...DECORATIVE_ICON_A11Y} />
+                    <Text
+                        size="2xs"
+                        style={{ color: note.ai, textAlign: 'right', flexShrink: 1 }}
+                        testID={testID ? `${testID}-${state}` : undefined}
+                    >
+                        {t(`feed.noteState.${state}`)}
+                    </Text>
+                </Animated.View>
+            </HStack>
+            {line ? (
+                <Text size={NOTE_TOKEN} bold style={{ color: note.ink, marginTop: 4 }} testID={testID ? `${testID}-facts` : undefined}>
+                    {line}
+                </Text>
+            ) : null}
+            {state === 'paused' && heldLine ? (
+                <Text size={NOTE_TOKEN} style={{ color: note.ink, marginTop: 4 }} testID={testID ? `${testID}-held` : undefined}>
+                    {heldLine}
+                </Text>
+            ) : null}
+        </Box>
+    );
+};
+
 const ReasonNote: React.FC<ReasonNoteProps> = ({
     relevance,
     reason,
@@ -180,6 +201,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     const motion = useMotionAllowed();
     const note = useNoteInk();
     const pending = !reason ? pendingMode : undefined;
+    const skipNotes = useMeraProtocolStore((st) => st.skipNotes);
 
     // An in-mount transition only: a box first drawn with its note never
     // animates (virtualised remounts, a translation swap).
@@ -220,21 +242,17 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
         ...(boxHeight ? { height: boxHeight, overflow: 'hidden' as const } : null),
     };
 
-    if (pending === 'writing') {
+    // No AI note: the facts that found it, captioned with why.
+    if (!reason) {
         return (
-            <Box testID={testID} className="rounded-lg px-3 pb-3" style={boxStyle}>
-                <Animated.View
-                    exiting={FadeOutUp.duration(180)}
-                    style={{ flex: boxHeight ? 1 : undefined, flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: BADGE_ROW_PADDING }}
-                    testID={testID ? `${testID}-writing` : undefined}
-                    {...hideSlot}
-                >
-                    <MeraLogo size={WAIT_LOGO_SIZE} animated scrollCards color={note.ink} />
-                    <View style={{ flex: 1 }}>
-                        <WaitingFacts topicIds={topicIds} />
-                    </View>
-                </Animated.View>
-            </Box>
+            <FactsNote
+                relevance={relevance}
+                topicIds={topicIds}
+                state={noteBoxState(pending, skipNotes)}
+                heldLine={heldLine}
+                testID={testID}
+                hideSlot={hideSlot}
+            />
         );
     }
 
@@ -247,23 +265,8 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                 style={{ paddingVertical: BADGE_ROW_PADDING }}
                 testID={testID ? `${testID}-badge-row` : undefined}
             >
-                <Animated.View entering={revealing ? ZoomIn.springify().damping(SPRING.like.damping) : undefined}>
-                    <RelevanceChip relevance={relevance} />
-                </Animated.View>
-                {reason ? (
-                    <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
-                ) : pending === 'held' ? (
-                    <Animated.View
-                        entering={sawWriting ? FadeIn.duration(250) : undefined}
-                        style={{ flex: 1, alignItems: 'flex-end' }}
-                        testID={testID ? `${testID}-held` : undefined}
-                        {...hideSlot}
-                    >
-                        <Text size={NOTE_TOKEN} style={{ color: note.ink, textAlign: 'right' }}>
-                            {heldLine}
-                        </Text>
-                    </Animated.View>
-                ) : null}
+                <RelevanceChip relevance={relevance} />
+                <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
             </HStack>
             {reason ? (
                 <Animated.View

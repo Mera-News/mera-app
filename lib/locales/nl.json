@@ -177,7 +177,7 @@
         "downloading": "Artikelen downloaden",
         "grouping": "Dubbele verhalen groeperen",
         "analysing": "Relevantie analyseren",
-        "summarising": "Je notities schrijven",
+        "summarising": "Je redenen schrijven",
         "preparing": "Je feed klaarmaken"
       },
       "downloadProgress": "{{done}} van {{total}} artikelen gedownload",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Relevantie berekenen",
-      "reasonsTitle": "Notities voor jou schrijven",
+      "reasonsTitle": "Redenen voor jou schrijven",
       "onDeviceTitle": "Scoren op je telefoon",
       "completedTitle": "Alles klaar",
       "completedMessage": "Je feed is gereed"
@@ -206,15 +206,13 @@
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "loadingA11y": "Je feed wordt geladen",
     "translatingCaption": "Vertalen…",
-    "reasonWritingA11y": "notitie schrijven",
+    "reasonWritingA11y": "reden schrijven",
     "findingStories": "Je verhalen worden gezocht",
     "findingStoriesBody": "Ze verschijnen hier zodra ze klaar zijn",
     "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
     "forYouTitle": "Voor jou",
     "newStoriesBelowA11y": "Nieuwe verhalen hieronder",
     "noFactsBody": "Tik op de Mera-knop om te vertellen wat je volgt. Daaruit maakt Mera je feed.",
-    "noteSuggestedMany": "Voorgesteld voor je feiten:",
-    "noteSuggestedOne": "Voorgesteld voor je feit: {{fact}}. Even wachten terwijl Mera de reden schrijft.",
     "noteWait": "Even wachten terwijl Mera de reden schrijft.",
     "opened": "Geopend",
     "statsSyncAnalysing_one": "{{formatted}} artikel wordt voor je geanalyseerd,",
@@ -269,8 +267,14 @@
       "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
       "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
     },
-    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas vandaag na {{time}}.",
-    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}."
+    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas vandaag na {{time}}.",
+    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas morgen na {{time}}.",
+    "noteState": {
+      "writing": "Reden wordt geschreven",
+      "paused": "Redenen gepauzeerd voor vandaag",
+      "off": "Redenen uit in Instellingen",
+      "failed": "Kon de reden niet schrijven"
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -503,7 +507,10 @@
     "whileClosed": "Terwijl Mera gesloten is",
     "deleting": "Verwijderen…",
     "onDeviceNeedsCloud": "Sommige chatfuncties hebben Privécloud nodig.",
-    "explainerOnPhoneLimits": "Op deze telefoon kan Mera het nieuws en het web niet doorzoeken, en ook geen feiten controleren."
+    "explainerOnPhoneLimits": "Op deze telefoon kan Mera het nieuws en het web niet doorzoeken, en ook geen feiten controleren.",
+    "notesGroup": "Redenen",
+    "skipNotesTitle": "Redenen overslaan",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt, want de servers van Mera hebben deze gegevens nooit gehad.",
@@ -2489,7 +2496,7 @@
     "selectAll": "Alles selecteren",
     "selectedCount": "{{count}} geselecteerd",
     "includeReason": "Reden van Mera meenemen",
-    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
+    "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
     "formatMarkdown": "Markdown-lijst",
     "formatMarkdownHint": "Een leesbare lijst, handig voor notities en documenten.",
     "formatJson": "JSON",
@@ -2535,7 +2542,7 @@
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",
     "shareDialogTitle": "Verhaal exporteren",
-    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
+    "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
   },
   "systemCheck": {
     "title": "Je telefoon wordt gecontroleerd",

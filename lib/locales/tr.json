@@ -177,7 +177,7 @@
         "downloading": "Makaleler indiriliyor",
         "grouping": "Yinelenen haberler gruplanıyor",
         "analysing": "İlgililik analiz ediliyor",
-        "summarising": "Notlarınız yazılıyor",
+        "summarising": "Nedenleriniz yazılıyor",
         "preparing": "Akışınız hazırlanıyor"
       },
       "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",
-      "reasonsTitle": "Notlar yazılıyor",
+      "reasonsTitle": "Nedenler yazılıyor",
       "onDeviceTitle": "Telefonda puanlanıyor",
       "completedTitle": "Tamamlandı",
       "completedMessage": "Haber akışın hazır"
@@ -206,15 +206,13 @@
     "statsRead_other": "ve {{formatted}} tanesini okudun.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
-    "reasonWritingA11y": "not yazılıyor",
+    "reasonWritingA11y": "neden yazılıyor",
     "findingStories": "Hikayeleriniz aranıyor",
     "findingStoriesBody": "Hazır olur olmaz burada görünürler",
     "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
     "forYouTitle": "Sizin için",
     "newStoriesBelowA11y": "Aşağıda yeni haberler",
     "noFactsBody": "Takip ettiklerinizi Mera'ya anlatmak için Mera düğmesine dokunun. Mera bunu akışınıza dönüştürür.",
-    "noteSuggestedMany": "Bilgileriniz için önerilenler:",
-    "noteSuggestedOne": "Bilginiz için önerilen: {{fact}}. Mera nedenini yazarken lütfen bekleyin.",
     "noteWait": "Mera nedenini yazarken lütfen bekleyin.",
     "opened": "Açıldı",
     "statsSyncAnalysing_one": "{{formatted}} makale senin için analiz ediliyor,",
@@ -269,8 +267,14 @@
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
     },
-    "noteHeldToday": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu bugün {{time}} saatinde yazacak.",
-    "noteHeldTomorrow": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu yarın {{time}} saatinde yazacak."
+    "noteHeldToday": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni bugün {{time}} saatinde yazacak.",
+    "noteHeldTomorrow": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni yarın {{time}} saatinde yazacak.",
+    "noteState": {
+      "writing": "Neden yazılıyor",
+      "paused": "Nedenler bugünlük duraklatıldı",
+      "off": "Nedenler Ayarlar'da kapalı",
+      "failed": "Neden yazılamadı"
+    }
   },
   "relevance": {
     "emergency": "Acil",
@@ -503,7 +507,10 @@
     "whileClosed": "Mera kapalıyken",
     "deleting": "Siliniyor…",
     "onDeviceNeedsCloud": "Bazı sohbet özellikleri için “Özel bulut” gerekiyor.",
-    "explainerOnPhoneLimits": "“Bu telefonda” modunda Mera haberlerde ya da web'de arama yapamaz ve iddiaları kontrol edemez."
+    "explainerOnPhoneLimits": "“Bu telefonda” modunda Mera haberlerde ya da web'de arama yapamaz ve iddiaları kontrol edemez.",
+    "notesGroup": "Nedenler",
+    "skipNotesTitle": "Nedenleri atla",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",
@@ -2491,7 +2498,7 @@
     "selectAll": "Tümünü seç",
     "selectedCount": "{{count}} seçildi",
     "includeReason": "Mera'nın gerekçesini ekle",
-    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Tek tek kaydedilen makalelerde bu not bulunmaz.",
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Tek tek kaydedilen makalelerde bu neden bulunmaz.",
     "formatMarkdown": "Markdown listesi",
     "formatMarkdownHint": "Okunması kolay bir liste, notlar ve belgeler için uygun.",
     "formatJson": "JSON",
@@ -2537,7 +2544,7 @@
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",
     "shareDialogTitle": "Haberi dışa aktar",
-    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Bazı makalelerde bu neden bulunmayabilir."
   },
   "systemCheck": {
     "title": "Telefonunuz kontrol ediliyor",

@@ -161,7 +161,7 @@ describe('buildFactRows ownership', () => {
 
   // D4 (owner decision, reverses the no-empty-sections rule): an all-LOW fact
   // still gets NO STORIES, but it now gets an EMPTY section instead of none.
-  it('RULE 2: a fact whose every match is LOW shows no stories, as an EMPTY section', () => {
+  it('a fact whose every match is LOW still shows its stories (owner, 2026-10-21)', () => {
     const snap = snapshots(
       [['t-nl', { factId: 'f-nl' }]],
       [['f-nl', { statement: 'Learning Dutch' }]],
@@ -172,8 +172,7 @@ describe('buildFactRows ownership', () => {
     );
     const { rows } = buildFactRows(lows, snap, new Set(), NOW);
     const nl = rows.find((r) => r.factId === 'f-nl');
-    expect(nl?.groups).toEqual([]);
-    expect(nl?.emptyReason).toBeDefined();
+    expect(nl?.groups.length).toBeGreaterThan(0);
   });
 
   it('RULE 2: one MEDIUM story makes the section viable and its LOW stories are KEPT', () => {
@@ -189,7 +188,7 @@ describe('buildFactRows ownership', () => {
     expect(f1?.groups.map((g) => g.data._id).sort()).toEqual(['low', 'med']);
   });
 
-  it('an all-LOW fact becomes an empty section AFTER a sibling fact that has real coverage', () => {
+  it('an all-LOW fact section keeps its story beside a sibling fact with stronger coverage', () => {
     const snap = snapshots(
       [['t-nl', { factId: 'f-nl' }], ['t-ok', { factId: 'f-ok' }]],
       [['f-nl', { statement: 'Learning Dutch' }], ['f-ok', { statement: 'F1' }]],
@@ -197,8 +196,9 @@ describe('buildFactRows ownership', () => {
     const low = sugg({ _id: 'low', relevance: 0.4, matchedTopics: [{ topicId: 't-nl', text: 'nl' }] });
     const ok = sugg({ _id: 'ok', relevance: 0.8, matchedTopics: [{ topicId: 't-ok', text: 'f1' }] });
     const { rows } = buildFactRows([low, ok], snap, new Set(), NOW);
-    expect(rows.map((r) => r.factId)).toEqual(['f-ok', 'f-nl']);
-    expect(rows[1].groups).toEqual([]);
+    const byId = new Map(rows.map((r) => [r.factId, r]));
+    expect(byId.get('f-nl')?.groups.map((g) => g.data._id)).toEqual(['low']);
+    expect(byId.get('f-ok')?.groups.map((g) => g.data._id)).toEqual(['ok']);
   });
 
   it('EMERGENCY/HIGH buckets also make a section viable', () => {

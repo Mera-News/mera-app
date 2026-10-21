@@ -177,7 +177,7 @@
         "downloading": "Descargando artículos",
         "grouping": "Agrupando historias duplicadas",
         "analysing": "Analizando la relevancia",
-        "summarising": "Escribiendo tus notas",
+        "summarising": "Escribiendo tus motivos",
         "preparing": "Preparando tu feed"
       },
       "downloadProgress": "{{done}} de {{total}} artículos descargados",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Calculando relevancia",
-      "reasonsTitle": "Escribiendo notas para ti",
+      "reasonsTitle": "Escribiendo motivos para ti",
       "onDeviceTitle": "Puntuando en tu teléfono",
       "completedTitle": "Todo listo",
       "completedMessage": "Tu feed está listo"
@@ -206,15 +206,13 @@
     "statsRead_other": "y has leído {{formatted}}.",
     "loadingA11y": "Cargando tu feed",
     "translatingCaption": "Traduciendo…",
-    "reasonWritingA11y": "escribiendo una nota",
+    "reasonWritingA11y": "escribiendo un motivo",
     "findingStories": "Buscando tus historias",
     "findingStoriesBody": "Aparecerán aquí en cuanto estén listas",
     "processingOffline": "Sin conexión. Tus historias llegarán cuando vuelvas a conectarte.",
     "forYouTitle": "Para ti",
     "newStoriesBelowA11y": "Nuevas historias abajo",
     "noFactsBody": "Toca el botón de Mera para contarle lo que sigues. Con eso crea tu Feed.",
-    "noteSuggestedMany": "Sugerido para tus hechos:",
-    "noteSuggestedOne": "Sugerido para tu hecho: {{fact}}. Espera mientras Mera escribe el motivo.",
     "noteWait": "Espera mientras Mera escribe el motivo.",
     "opened": "Abierto",
     "statsSyncAnalysing_one": "{{formatted}} artículo se está analizando para ti,",
@@ -269,8 +267,14 @@
       "bodyToday": "Mera ha usado la lectura de hoy. Mera vuelve a leer hoy a las {{time}}.",
       "bodyTomorrow": "Mera ha usado la lectura de hoy. Mera vuelve a leer mañana a las {{time}}."
     },
-    "noteHeldToday": "Ya se ha usado la lectura de hoy, así que Mera escribirá esta nota después de las {{time}} de hoy.",
-    "noteHeldTomorrow": "Ya se ha usado la lectura de hoy, así que Mera escribirá esta nota después de las {{time}} de mañana."
+    "noteHeldToday": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de hoy.",
+    "noteHeldTomorrow": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de mañana.",
+    "noteState": {
+      "writing": "Escribiendo el motivo",
+      "paused": "Motivos en pausa por hoy",
+      "off": "Motivos desactivados en Ajustes",
+      "failed": "No se pudo escribir el motivo"
+    }
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -503,7 +507,10 @@
     "whileClosed": "Mientras Mera está cerrada",
     "deleting": "Eliminando…",
     "onDeviceNeedsCloud": "Algunas funciones del chat necesitan «Nube privada».",
-    "explainerOnPhoneLimits": "En este teléfono, Mera no puede buscar noticias ni en la web, ni comprobar datos."
+    "explainerOnPhoneLimits": "En este teléfono, Mera no puede buscar noticias ni en la web, ni comprobar datos.",
+    "notesGroup": "Motivos",
+    "skipNotesTitle": "Omitir motivos",
+    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Borra el registro local de artículos que has abierto. La tarjeta \"Publicaciones que has estado leyendo\" de la pestaña Fuentes y el historial por publicación se restablecerán a vacío. No se afecta nada más y no se toca ningún dato del servidor, ya que los servidores de Mera nunca tuvieron estos datos.",
@@ -2489,7 +2496,7 @@
     "selectAll": "Seleccionar todo",
     "selectedCount": "{{count}} seleccionados",
     "includeReason": "Incluir el motivo de Mera",
-    "includeReasonHint": "La nota breve que explica por qué cada artículo llegó a tu feed. Los artículos guardados por separado no la tienen.",
+    "includeReasonHint": "El motivo breve que explica por qué cada artículo llegó a tu feed. Los artículos guardados por separado no lo tienen.",
     "formatMarkdown": "Lista Markdown",
     "formatMarkdownHint": "Una lista fácil de leer, ideal para notas y documentos.",
     "formatJson": "JSON",
@@ -2535,7 +2542,7 @@
   "storyExport": {
     "shareA11y": "Exportar esta historia",
     "shareDialogTitle": "Exportar historia",
-    "includeReasonHint": "La nota breve que explica por qué cada artículo llegó a tu feed. Es posible que algunos artículos no la tengan."
+    "includeReasonHint": "El motivo breve que explica por qué cada artículo llegó a tu feed. Es posible que algunos artículos no lo tengan."
   },
   "systemCheck": {
     "title": "Revisando tu teléfono",

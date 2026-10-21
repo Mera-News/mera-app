@@ -7,7 +7,7 @@
 import { act, configure, renderHook, waitFor } from '@testing-library/react-native';
 import { useMeraProtocolSettings } from '@/components/custom/config-mera/useMeraProtocolSettings';
 import database from '@/lib/database';
-import { setSetting } from '@/lib/database/services/setting-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { isModelDownloaded } from '@/lib/mera-protocol-toolkit/core/modelManager';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -339,6 +339,56 @@ describe('Mera Protocol settings', () => {
 
             await expect(isModelDownloaded(protocol().selectedModelId)).resolves.toBe(false);
             expect(sent).toEqual([]);
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    describe('Skip reasons, shown in both modes', () => {
+        beforeEach(async () => {
+            await signInFixtureAccount();
+        });
+        afterEach(() => {
+            protocol().setSkipNotes(false);
+        });
+
+        it.each([ProcessingMode.OnDevice, ProcessingMode.Cloud])(
+            '%s: off by default; on flips the store and re-pends nothing; off re-pends rows finalised without a reason',
+            async (mode) => {
+                serverMode(mode);
+                await putModelOnDisk();
+                const scoring = require('@/lib/mera-protocol/scoring-service') as typeof import('@/lib/mera-protocol/scoring-service');
+                const pipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
+                const repend = jest.spyOn(scoring, 'rependSkippedNotes').mockResolvedValue(2);
+                const sweep = jest.spyOn(pipeline, 'enqueueOrphanedReasons').mockResolvedValue();
+                const { result } = await mountLoaded();
+                expect(protocol().processingMode).toBe(mode);
+                expect(result.current.skipNotes).toBe(false);
+
+                act(() => result.current.toggleSkipNotes());
+                expect(protocol().skipNotes).toBe(true);
+                expect(repend).not.toHaveBeenCalled();
+
+                act(() => result.current.toggleSkipNotes());
+                expect(protocol().skipNotes).toBe(false);
+                await waitFor(() => expect(repend).toHaveBeenCalledTimes(1));
+                // The cloud's orphaned-reasons sweep is kicked now; on this phone the next pass's reason sweep writes them.
+                if (mode === ProcessingMode.Cloud) await waitFor(() => expect(sweep).toHaveBeenCalledTimes(1));
+                else expect(sweep).not.toHaveBeenCalled();
+            },
+        );
+
+        it('the switch is stored under its own row, and a stored on survives a hydrate', async () => {
+            protocol().setSkipNotes(true);
+            await waitFor(async () => expect(await getSetting('mera_skip_notes')).toBe('true'));
+            useMeraProtocolStore.setState({ skipNotes: false });
+            await protocol().hydrateFromDb();
+            expect(protocol().skipNotes).toBe(true);
+        });
+
+        it('an absent row is off', async () => {
+            useMeraProtocolStore.setState({ skipNotes: true });
+            await protocol().hydrateFromDb();
+            expect(protocol().skipNotes).toBe(false);
         });
     });
 

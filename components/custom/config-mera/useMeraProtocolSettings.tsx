@@ -26,8 +26,11 @@ import {
     useModelState as useModelStateSelector,
     useProcessingMode,
     useSelectedModelId,
+    useSkipNotes,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
+import { rependSkippedNotes } from '@/lib/mera-protocol/scoring-service';
+import logger from '@/lib/logger';
 import { resolveCurrentUserId } from '@/lib/security/current-user';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +61,7 @@ export function useMeraProtocolSettings() {
     const downloadProgress = useDownloadProgress();
     const store = useMeraProtocolStore();
     const webSearchInChat = useWebSearchInChat();
+    const skipNotes = useSkipNotes();
 
     const currentModel = catalogEntry(selectedModelId);
     const inferenceStats = useInferenceStats();
@@ -126,6 +130,24 @@ export function useMeraProtocolSettings() {
             setBgRefreshEnabled(!next);
         });
     }, [bgRefreshEnabled]);
+
+    // Skip reasons, both modes. Turned off, rows finalised without a reason are owed one again;
+    // in the cloud the orphaned-reasons sweep is kicked now rather than at the next sync.
+    const toggleSkipNotes = useCallback(() => {
+        const next = !skipNotes;
+        useMeraProtocolStore.getState().setSkipNotes(next);
+        if (next) return;
+        void (async () => {
+            await rependSkippedNotes();
+            if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice) return;
+            // Lazy: the cloud pipeline reaches the database and the gateway at import.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const pipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
+            await pipeline.enqueueOrphanedReasons();
+        })().catch((err) =>
+            logger.captureException(err, { tags: { component: 'MeraProtocolSettings', method: 'rependSkippedNotes' } }),
+        );
+    }, [skipNotes]);
 
     useEffect(() => {
         loadSettings();
@@ -449,6 +471,8 @@ export function useMeraProtocolSettings() {
         onDeviceIntent,
         bgRefreshEnabled,
         toggleBgRefresh,
+        skipNotes,
+        toggleSkipNotes,
         handleDownloadModel,
         handleDeleteModel,
         confirmDeleteModel,

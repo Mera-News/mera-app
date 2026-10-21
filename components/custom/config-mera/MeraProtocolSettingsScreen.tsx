@@ -84,6 +84,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         onDeviceIntent,
         bgRefreshEnabled,
         toggleBgRefresh,
+        skipNotes,
+        toggleSkipNotes,
         handleDownloadModel,
         handleDeleteModel,
         confirmDeleteModel,
@@ -379,6 +381,25 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                 onToggle={toggleBgRefresh}
                                 size="md"
                                 testID="mera-protocol-bg-refresh-switch"
+                            />
+                        }
+                    />
+                </Group>
+            </View>
+
+            {/* Skip reasons: shown in both modes, off by default. */}
+            <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-notes">
+                <GroupLabel>{t('meraProtocol.notesGroup')}</GroupLabel>
+                <Group>
+                    <Row
+                        title={t('meraProtocol.skipNotesTitle')}
+                        subtitle={t('meraProtocol.skipNotesHelp')}
+                        trailing={
+                            <Switch
+                                value={skipNotes}
+                                onToggle={toggleSkipNotes}
+                                size="md"
+                                testID="mera-protocol-skip-notes-switch"
                             />
                         }
                     />

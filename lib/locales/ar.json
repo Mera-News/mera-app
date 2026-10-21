@@ -177,7 +177,7 @@
         "downloading": "تنزيل المقالات",
         "grouping": "تجميع القصص المكررة",
         "analysing": "تحليل مدى الصلة",
-        "summarising": "كتابة ملاحظاتك",
+        "summarising": "كتابة أسبابك",
         "preparing": "تجهيز موجزك"
       },
       "downloadProgress": "تم تنزيل {{done}} من {{total}} مقالا",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",
-      "reasonsTitle": "كتابة ملاحظات لك",
+      "reasonsTitle": "كتابة أسباب لك",
       "onDeviceTitle": "الترتيب على هاتفك",
       "completedTitle": "اكتمل",
       "completedMessage": "موجز أخبارك جاهز"
@@ -226,15 +226,13 @@
     "statsRead_other": "وقرأت {{formatted}}.",
     "loadingA11y": "جارٍ تحميل موجزك",
     "translatingCaption": "جارٍ الترجمة…",
-    "reasonWritingA11y": "جارٍ كتابة ملاحظة",
+    "reasonWritingA11y": "جارٍ كتابة سبب",
     "findingStories": "نبحث عن قصصك",
     "findingStoriesBody": "ستظهر هنا بمجرد أن تصبح جاهزة",
     "processingOffline": "أنت غير متصل. ستصلك قصصك عند عودة الاتصال.",
     "forYouTitle": "لك",
     "newStoriesBelowA11y": "قصص جديدة في الأسفل",
     "noFactsBody": "اضغط على زر ميرا لتخبره بما تتابعه. يحوّل ذلك إلى خلاصتك.",
-    "noteSuggestedMany": "مقترح لحقائقك:",
-    "noteSuggestedOne": "مقترح لحقيقتك: {{fact}}. يرجى الانتظار حتى يكتب ميرا السبب.",
     "noteWait": "يرجى الانتظار حتى يكتب ميرا السبب.",
     "opened": "مفتوح",
     "statsSyncAnalysing_zero": "يجري تحليل {{formatted}} مقالة لك،",
@@ -313,8 +311,14 @@
       "bodyToday": "استخدمت ميرا قراءة اليوم. ستقرأ ميرا مجددًا اليوم عند {{time}}.",
       "bodyTomorrow": "استخدمت ميرا قراءة اليوم. ستقرأ ميرا مجددًا غدًا عند {{time}}."
     },
-    "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذه الملاحظة بعد {{time}} اليوم.",
-    "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذه الملاحظة بعد {{time}} غدًا."
+    "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} اليوم.",
+    "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} غدًا.",
+    "noteState": {
+      "writing": "جارٍ كتابة السبب",
+      "paused": "الأسباب متوقفة مؤقتًا لليوم",
+      "off": "الأسباب متوقفة في الإعدادات",
+      "failed": "تعذّرت كتابة السبب"
+    }
   },
   "relevance": {
     "emergency": "طارئ",
@@ -551,7 +555,10 @@
     "whileClosed": "أثناء إغلاق ميرا",
     "deleting": "جارٍ الحذف…",
     "onDeviceNeedsCloud": "تحتاج بعض ميزات المحادثة إلى «السحابة الخاصة».",
-    "explainerOnPhoneLimits": "على هذا الهاتف، لا يستطيع ميرا البحث في الأخبار أو على الويب، ولا التحقق من الحقائق."
+    "explainerOnPhoneLimits": "على هذا الهاتف، لا يستطيع ميرا البحث في الأخبار أو على الويب، ولا التحقق من الحقائق.",
+    "notesGroup": "الأسباب",
+    "skipNotesTitle": "تخطي الأسباب",
+    "skipNotesHelp": "ميرا ranks your news without writing why each article is in your Feed. New articles show up faster."
   },
   "manageData": {
     "viewingHistoryModalDescription": "يمسح السجل المحلي للمقالات التي فتحتها. ستعود بطاقة \"المنشورات التي كنت تقرأها\" في تبويب المصادر وسجل كل منشور إلى الحالة الفارغة. لا يتأثر أي شيء آخر ولا تُمسّ أي بيانات على الخادم، لأن خوادم ميرا لم تحصل على هذه البيانات أصلًا.",
@@ -2615,7 +2622,7 @@
     "selectAll": "تحديد الكل",
     "selectedCount": "{{count}} محدد",
     "includeReason": "تضمين سبب ميرا",
-    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليها.",
+    "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليه.",
     "formatMarkdown": "قائمة Markdown",
     "formatMarkdownHint": "قائمة سهلة القراءة، مناسبة للملاحظات والمستندات.",
     "formatJson": "JSON",
@@ -2661,7 +2668,7 @@
   "storyExport": {
     "shareA11y": "تصدير هذه القصة",
     "shareDialogTitle": "تصدير القصة",
-    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليها."
+    "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليه."
   },
   "systemCheck": {
     "title": "جارٍ فحص هاتفك",

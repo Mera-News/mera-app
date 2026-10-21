@@ -177,7 +177,7 @@
         "downloading": "正在下載文章",
         "grouping": "正在合併重複報導",
         "analysing": "正在分析相關度",
-        "summarising": "正在撰寫你的摘要",
+        "summarising": "正在撰寫你的理由",
         "preparing": "正在準備你的資訊流"
       },
       "downloadProgress": "已下載 {{total}} 篇中的 {{done}} 篇",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "計算相關性",
-      "reasonsTitle": "為您撰寫摘要",
+      "reasonsTitle": "為您撰寫理由",
       "onDeviceTitle": "在您的手機上評分",
       "completedTitle": "全部完成",
       "completedMessage": "您的動態已準備就緒"
@@ -206,15 +206,13 @@
     "statsRelevant_one": "{{formatted}}篇看起來與你相關，",
     "loadingA11y": "正在載入你的動態",
     "translatingCaption": "正在翻譯…",
-    "reasonWritingA11y": "正在撰寫筆記",
+    "reasonWritingA11y": "正在撰寫理由",
     "findingStories": "正在為你尋找報導",
     "findingStoriesBody": "準備好後會立即顯示在這裡",
     "processingOffline": "你目前離線。恢復連線後，你的報導就會送達。",
     "forYouTitle": "為你推薦",
     "newStoriesBelowA11y": "下方有新報導",
     "noFactsBody": "點按梅拉按鈕，告訴梅拉你關注什麼。梅拉會把它整理成你的資訊流。",
-    "noteSuggestedMany": "為你的事實推薦：",
-    "noteSuggestedOne": "為你的事實推薦：{{fact}}。梅拉正在撰寫理由，請稍候。",
     "noteWait": "梅拉正在撰寫理由，請稍候。",
     "opened": "已開啟",
     "statsSyncAnalysing_one": "{{formatted}} 篇文章正在為你分析，",
@@ -266,8 +264,14 @@
       "bodyToday": "梅拉已用完今日的閱讀額度。梅拉將於今天 {{time}} 再次閱讀。",
       "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。"
     },
-    "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則說明。",
-    "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則說明。"
+    "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則理由。",
+    "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則理由。",
+    "noteState": {
+      "writing": "正在撰寫理由",
+      "paused": "今日理由已暫停",
+      "off": "已在設定中關閉理由",
+      "failed": "無法撰寫理由"
+    }
   },
   "relevance": {
     "emergency": "緊急",
@@ -500,7 +504,10 @@
     "whileClosed": "梅拉關閉時",
     "deleting": "正在刪除…",
     "onDeviceNeedsCloud": "部分聊天功能需要使用「私有雲」。",
-    "explainerOnPhoneLimits": "選擇「在這支手機上」時，梅拉無法搜尋新聞或網路，也無法查核事實。"
+    "explainerOnPhoneLimits": "選擇「在這支手機上」時，梅拉無法搜尋新聞或網路，也無法查核事實。",
+    "notesGroup": "理由",
+    "skipNotesTitle": "略過理由",
+    "skipNotesHelp": "梅拉 ranks your news without writing why each article is in your Feed. New articles show up faster."
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你已開啟文章的本機記錄。「來源」標籤中的「你正在閱讀的媒體」卡片及各媒體的歷史記錄將重設為空。其他資料不受影響，也不會動到任何伺服器資料，因為梅拉的伺服器從未有這份資料。",
@@ -2484,7 +2491,7 @@
     "selectAll": "全選",
     "selectedCount": "已選擇 {{count}} 篇",
     "includeReason": "加入梅拉的理由",
-    "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。單獨儲存的文章沒有這句話。",
+    "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句理由。單獨儲存的文章沒有這句理由。",
     "formatMarkdown": "Markdown 清單",
     "formatMarkdownHint": "易於閱讀的清單，適合筆記與文件。",
     "formatJson": "JSON",
@@ -2530,7 +2537,7 @@
   "storyExport": {
     "shareA11y": "匯出這篇報導",
     "shareDialogTitle": "匯出報導",
-    "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。部分文章可能沒有這句話。"
+    "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句理由。部分文章可能沒有這句理由。"
   },
   "systemCheck": {
     "title": "正在檢查你的手機",

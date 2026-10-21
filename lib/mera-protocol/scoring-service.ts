@@ -22,6 +22,8 @@ import {
 } from '@/lib/news-harness/prompts/prompts';
 import {
   batchMarkExcluded,
+  batchMarkReasonSkipped,
+  rependNotelessRows,
   saveReason,
   saveScoringResult,
 } from '../database/services/article-suggestion-scoring-writes';
@@ -80,6 +82,10 @@ const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
 const isOnDeviceMode = () =>
   useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
+
+/** Skip reasons: scoring is relevance only and no reason is written. Read live, so a switch
+ *  flipped mid-pass takes effect at the next row. */
+const skipReasons = () => useMeraProtocolStore.getState().skipNotes;
 
 // --- Re-exports (canonical homes moved to the harness) ---
 
@@ -395,6 +401,7 @@ export async function batchScoreAndReason(
     const r = scoreMap.get(c.id);
     return (
       typeof r === 'number' &&
+      !skipReasons() &&
       r >= ARTICLE_CFG.reasonRelevanceThreshold &&
       !reasonMap.has(c.id) &&
       !failedIds.has(c.id) &&
@@ -892,7 +899,8 @@ export async function processAllUnscored(
         // REASON_THRESHOLD = 0 → reasons generated for every row, including
         // sub-DISCARD-floor low-relevance ones. Skip flag now only fires if
         // phase-2 was bypassed entirely.
-        const reasonSkipped = relevance < REASON_THRESHOLD;
+        // Skip reasons on: `complete` with no reason, never `reason_skipped` (the feed hides it).
+        const reasonSkipped = skipReasons() || relevance < REASON_THRESHOLD;
         try {
           await saveScoringResult(candidate.id, {
             relevance,
@@ -974,6 +982,11 @@ export async function processAllUnscored(
  * Returns the count of rows whose reason was successfully populated.
  */
 export async function retryMissingReasons(batchSize = 10): Promise<number> {
+  // Skip reasons on: every row still owed a reason is finalised without one.
+  if (skipReasons()) {
+    await batchMarkReasonSkipped((await getScoredSuggestionsWithoutReasons()).map((c) => c.id));
+    return 0;
+  }
   const useOnDevice = isOnDeviceMode();
   let totalRecovered = 0;
   // saveReason drops an ungrounded note, so a row can stay owed after it was asked about. Each
@@ -997,6 +1010,8 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     if (useOnDevice) {
       // Local path — sequential.
       for (const candidate of batch) {
+        // Skip reasons turned on mid-sweep: stop; the next sweep finalises what is left.
+        if (skipReasons()) break;
         // isScorableCandidate covers both the text and the fact test. A pure
         // TOP-HEADLINE row is factless by design, so the old fact `continue`
         // stranded it in `reason_pending` forever once its first reason attempt
@@ -1114,8 +1129,18 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     );
 
     // If the whole batch came back empty, don't loop infinitely on the same rows.
-    if (reasonMap.size === 0) break;
+    if (reasonMap.size === 0 || skipReasons()) break;
   }
 
   return totalRecovered;
+}
+
+/**
+ * Skip reasons turned off: rows at or above the feed's gate that were finalised without a
+ * reason are owed one again (`reason_pending`). On this phone the reason sweep at the end of
+ * the next scoring pass writes them; in the cloud the orphaned-reasons sweep
+ * (`enqueueOrphanedReasons`). The cloud gate equals this one (REASON_RELEVANCE_THRESHOLD, 0.4).
+ */
+export function rependSkippedNotes(): Promise<number> {
+  return rependNotelessRows(ARTICLE_CFG.lowPriorityScore);
 }
