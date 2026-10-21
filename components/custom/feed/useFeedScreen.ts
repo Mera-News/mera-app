@@ -114,6 +114,7 @@ const SESSION_RESUME_AFTER_MS = 5 * 60 * 1000;
 // frozen rows for refresh + hydrate survival). Opened-exclusion happens only
 // for NEW ids inside `ingest`.
 const EMPTY_SET: Set<string> = new Set();
+const NO_ROWS: readonly FeedListItem[] = [];
 
 export function useFeedScreen({ isFocused, header }: { readonly isFocused: boolean; readonly header: PageHeaderBinding }) {
   const { t } = useTranslation();
@@ -525,9 +526,11 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // The Show filter (feed_show): Mera's picks, then the not-read tail; or the
   // discarded stories alone. The unfiltered lists (picks and tail) keep
   // feeding the pin (scored rows) and the empty chain.
+  // Only Discarded reads its rows, so opening the menu never rebuilds the list.
+  const discardedShown = show === 'discarded' ? discarded?.rows ?? NO_ROWS : NO_ROWS;
   const { rows: listData, picks: picksCount } = useMemo(
-    () => applyFeedShow(scoredRows, folded.tail, show, discarded?.rows ?? []),
-    [scoredRows, folded, show, discarded],
+    () => applyFeedShow(scoredRows, folded.tail, show, discardedShown),
+    [scoredRows, folded, show, discardedShown],
   );
   // The Show menu's counts, from the same segments (one source of truth);
   // Discarded's only while its stories are built.
