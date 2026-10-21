@@ -177,7 +177,7 @@
         "downloading": "Pobieram artykuły",
         "grouping": "Grupuję powtarzające się tematy",
         "analysing": "Analizuję trafność",
-        "summarising": "Piszę twoje notatki",
+        "summarising": "Piszę twoje uzasadnienia",
         "preparing": "Przygotowuję twój feed"
       },
       "downloadProgress": "Pobrano {{done}} z {{total}} artykułów",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Obliczanie trafności",
-      "reasonsTitle": "Pisanie notatek dla Ciebie",
+      "reasonsTitle": "Pisanie uzasadnień dla Ciebie",
       "onDeviceTitle": "Ocenianie na Twoim telefonie",
       "completedTitle": "Wszystko gotowe",
       "completedMessage": "Twój kanał jest gotowy"
@@ -216,7 +216,7 @@
     "statsRead_other": "i przeczytałeś {{formatted}}.",
     "loadingA11y": "Wczytywanie Twojego kanału",
     "translatingCaption": "Tłumaczenie…",
-    "reasonWritingA11y": "notatka jest pisana",
+    "reasonWritingA11y": "uzasadnienie jest pisane",
     "findingStories": "Szukamy Twoich historii",
     "findingStoriesBody": "Pojawią się tutaj, gdy tylko będą gotowe",
     "processingOffline": "Jesteś offline. Twoje historie pojawią się, gdy wrócisz do sieci.",
@@ -289,8 +289,8 @@
       "bodyToday": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta dzisiaj o {{time}}.",
       "bodyTomorrow": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta jutro o {{time}}."
     },
-    "noteHeldToday": "Mera napisze tę notatkę dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
-    "noteHeldTomorrow": "Mera napisze tę notatkę jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+    "noteHeldToday": "Mera napisze to uzasadnienie dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+    "noteHeldTomorrow": "Mera napisze to uzasadnienie jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
     "noteState": {
       "writing": "Piszę uzasadnienie",
       "failed": "Nie udało się napisać uzasadnienia",
@@ -2568,7 +2568,7 @@
     "selectAll": "Zaznacz wszystko",
     "selectedCount": "Zaznaczono: {{count}}",
     "includeReason": "Dołącz uzasadnienie Mery",
-    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Artykuły zapisane pojedynczo jej nie mają.",
+    "includeReasonHint": "Jednolinijkowe uzasadnienie wyjaśniające, dlaczego każdy artykuł trafił do Twojego kanału. Artykuły zapisane pojedynczo go nie mają.",
     "formatMarkdown": "Lista Markdown",
     "formatMarkdownHint": "Czytelna lista, dobra do notatek i dokumentów.",
     "formatJson": "JSON",
@@ -2614,7 +2614,7 @@
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",
     "shareDialogTitle": "Eksportuj historię",
-    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą jej nie mieć."
+    "includeReasonHint": "Jednolinijkowe uzasadnienie wyjaśniające, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą go nie mieć."
   },
   "systemCheck": {
     "title": "Sprawdzanie telefonu",

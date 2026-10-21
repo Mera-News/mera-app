@@ -177,7 +177,7 @@
         "downloading": "記事をダウンロード中",
         "grouping": "重複する記事をまとめています",
         "analysing": "関連度を分析中",
-        "summarising": "メモを作成中",
+        "summarising": "理由を作成中",
         "preparing": "フィードを準備中"
       },
       "downloadProgress": "{{total}}件中{{done}}件の記事をダウンロード済み",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "関連性を計算中",
-      "reasonsTitle": "あなたへのメモを作成中",
+      "reasonsTitle": "あなたへの理由を作成中",
       "onDeviceTitle": "端末でスコアリング中",
       "completedTitle": "完了しました",
       "completedMessage": "フィードの準備ができました"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "{{formatted}}件が関連しており、",
     "loadingA11y": "フィードを読み込んでいます",
     "translatingCaption": "翻訳中…",
-    "reasonWritingA11y": "メモ作成中",
+    "reasonWritingA11y": "理由作成中",
     "findingStories": "あなたのストーリーを探しています",
     "findingStoriesBody": "準備ができ次第、ここに表示されます",
     "processingOffline": "オフラインです。オンラインに戻るとストーリーが届きます。",
@@ -264,8 +264,8 @@
       "bodyToday": "メラは今日の読書を使い切りました。今日の{{time}}に、メラがまた読み始めます。",
       "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。"
     },
-    "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の解説を書きます。",
-    "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の解説を書きます。",
+    "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の理由を書きます。",
+    "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の理由を書きます。",
     "noteState": {
       "writing": "理由を作成中",
       "failed": "理由を作成できませんでした",
@@ -2500,7 +2500,7 @@
     "selectAll": "すべて選択",
     "selectedCount": "{{count}} 件選択中",
     "includeReason": "メラの理由を含める",
-    "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。単独で保存した記事にはありません。",
+    "includeReasonHint": "各記事がフィードに届いた理由を 1 行で説明したものです。単独で保存した記事にはありません。",
     "formatMarkdown": "Markdown リスト",
     "formatMarkdownHint": "読みやすいリストです。メモや文書に適しています。",
     "formatJson": "JSON",
@@ -2546,7 +2546,7 @@
   "storyExport": {
     "shareA11y": "このストーリーを書き出す",
     "shareDialogTitle": "ストーリーを書き出す",
-    "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。メモがない記事もあります。"
+    "includeReasonHint": "各記事がフィードに届いた理由を 1 行で説明したものです。理由がない記事もあります。"
   },
   "systemCheck": {
     "title": "電話を確認しています",

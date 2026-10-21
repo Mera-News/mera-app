@@ -177,7 +177,7 @@
         "downloading": "Téléchargement des articles",
         "grouping": "Regroupement des sujets en double",
         "analysing": "Analyse de la pertinence",
-        "summarising": "Rédaction de vos notes",
+        "summarising": "Rédaction de vos raisons",
         "preparing": "Préparation de votre fil"
       },
       "downloadProgress": "{{done}} sur {{total}} articles téléchargés",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Calcul de la pertinence",
-      "reasonsTitle": "Rédaction de notes pour vous",
+      "reasonsTitle": "Rédaction des raisons pour vous",
       "onDeviceTitle": "Tri sur votre téléphone",
       "completedTitle": "Tout est prêt",
       "completedMessage": "Votre fil est prêt"
@@ -211,7 +211,7 @@
     "statsRead_other": "et vous avez lu {{formatted}}.",
     "loadingA11y": "Chargement de votre fil",
     "translatingCaption": "Traduction…",
-    "reasonWritingA11y": "rédaction d'une note",
+    "reasonWritingA11y": "rédaction d'une raison",
     "findingStories": "Recherche de vos actualités",
     "findingStoriesBody": "Elles s'affichent ici dès qu'elles sont prêtes",
     "processingOffline": "Vous êtes hors connexion. Vos actualités arriveront une fois la connexion rétablie.",
@@ -272,8 +272,8 @@
       "bodyToday": "Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
       "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
     },
-    "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette note aujourd'hui après {{time}}.",
-    "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette note demain après {{time}}.",
+    "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison aujourd'hui après {{time}}.",
+    "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison demain après {{time}}.",
     "noteState": {
       "writing": "Rédaction de la raison",
       "failed": "Impossible d'écrire la raison",
@@ -2512,7 +2512,7 @@
     "selectAll": "Tout sélectionner",
     "selectedCount": "{{count}} sélectionnés",
     "includeReason": "Inclure la raison de Mera",
-    "includeReasonHint": "La note d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Les articles enregistrés seuls n'en ont pas.",
+    "includeReasonHint": "La raison d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Les articles enregistrés seuls n'en ont pas.",
     "formatMarkdown": "Liste Markdown",
     "formatMarkdownHint": "Une liste lisible, idéale pour les notes et les documents.",
     "formatJson": "JSON",
@@ -2558,7 +2558,7 @@
   "storyExport": {
     "shareA11y": "Exporter cette actualité",
     "shareDialogTitle": "Exporter l'actualité",
-    "includeReasonHint": "La note d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Certains articles peuvent ne pas en avoir."
+    "includeReasonHint": "La raison d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Certains articles peuvent ne pas en avoir."
   },
   "systemCheck": {
     "title": "Vérification de votre téléphone",

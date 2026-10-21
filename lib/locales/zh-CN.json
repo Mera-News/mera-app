@@ -177,7 +177,7 @@
         "downloading": "正在下载文章",
         "grouping": "正在合并重复报道",
         "analysing": "正在分析相关度",
-        "summarising": "正在写你的摘要",
+        "summarising": "正在撰写你的推荐理由",
         "preparing": "正在准备你的信息流"
       },
       "downloadProgress": "已下载 {{total}} 篇中的 {{done}} 篇",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "计算相关性",
-      "reasonsTitle": "为您撰写摘要",
+      "reasonsTitle": "为您撰写推荐理由",
       "onDeviceTitle": "在您的手机上评分",
       "completedTitle": "全部完成",
       "completedMessage": "您的资讯已准备就绪"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "有 {{formatted}} 篇与你相关，",
     "loadingA11y": "正在加载你的动态",
     "translatingCaption": "正在翻译…",
-    "reasonWritingA11y": "正在撰写笔记",
+    "reasonWritingA11y": "正在撰写推荐理由",
     "findingStories": "正在为你寻找报道",
     "findingStoriesBody": "准备好后会立即显示在这里",
     "processingOffline": "你已离线。恢复联网后，你的报道就会送达。",
@@ -264,8 +264,8 @@
       "bodyToday": "梅拉已用完今日阅读量。梅拉将于今天 {{time}} 再次阅读。",
       "bodyTomorrow": "梅拉已用完今日阅读量。梅拉将于明天 {{time}} 再次阅读。"
     },
-    "noteHeldToday": "今日阅读量已用完，梅拉将于今天 {{time}} 之后撰写这条说明。",
-    "noteHeldTomorrow": "今日阅读量已用完，梅拉将于明天 {{time}} 之后撰写这条说明。",
+    "noteHeldToday": "今日阅读量已用完，梅拉将于今天 {{time}} 之后撰写这条推荐理由。",
+    "noteHeldTomorrow": "今日阅读量已用完，梅拉将于明天 {{time}} 之后撰写这条推荐理由。",
     "noteState": {
       "writing": "正在撰写理由",
       "failed": "无法撰写理由",
@@ -2500,7 +2500,7 @@
     "selectAll": "全选",
     "selectedCount": "已选择 {{count}} 篇",
     "includeReason": "包含梅拉的理由",
-    "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句话。单独保存的文章没有这句话。",
+    "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句推荐理由。单独保存的文章没有这句推荐理由。",
     "formatMarkdown": "Markdown 列表",
     "formatMarkdownHint": "易于阅读的列表，适合笔记和文档。",
     "formatJson": "JSON",
@@ -2546,7 +2546,7 @@
   "storyExport": {
     "shareA11y": "导出这篇报道",
     "shareDialogTitle": "导出报道",
-    "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句话。部分文章可能没有这句话。"
+    "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句推荐理由。部分文章可能没有这句推荐理由。"
   },
   "systemCheck": {
     "title": "正在检查你的手机",

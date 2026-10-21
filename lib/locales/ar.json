@@ -177,7 +177,7 @@
         "downloading": "تنزيل المقالات",
         "grouping": "تجميع القصص المكررة",
         "analysing": "تحليل مدى الصلة",
-        "summarising": "كتابة ملاحظاتك",
+        "summarising": "كتابة أسبابك",
         "preparing": "تجهيز موجزك"
       },
       "downloadProgress": "تم تنزيل {{done}} من {{total}} مقالا",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",
-      "reasonsTitle": "كتابة ملاحظات لك",
+      "reasonsTitle": "كتابة أسباب لك",
       "onDeviceTitle": "الترتيب على هاتفك",
       "completedTitle": "اكتمل",
       "completedMessage": "موجز أخبارك جاهز"
@@ -226,7 +226,7 @@
     "statsRead_other": "وقرأت {{formatted}}.",
     "loadingA11y": "جارٍ تحميل موجزك",
     "translatingCaption": "جارٍ الترجمة…",
-    "reasonWritingA11y": "جارٍ كتابة ملاحظة",
+    "reasonWritingA11y": "جارٍ كتابة سبب",
     "findingStories": "نبحث عن قصصك",
     "findingStoriesBody": "ستظهر هنا بمجرد أن تصبح جاهزة",
     "processingOffline": "أنت غير متصل. ستصلك قصصك عند عودة الاتصال.",
@@ -311,8 +311,8 @@
       "bodyToday": "استخدمت ميرا قراءة اليوم. ستقرأ ميرا مجددًا اليوم عند {{time}}.",
       "bodyTomorrow": "استخدمت ميرا قراءة اليوم. ستقرأ ميرا مجددًا غدًا عند {{time}}."
     },
-    "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذه الملاحظة بعد {{time}} اليوم.",
-    "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذه الملاحظة بعد {{time}} غدًا.",
+    "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} اليوم.",
+    "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} غدًا.",
     "noteState": {
       "writing": "جارٍ كتابة السبب",
       "failed": "تعذّرت كتابة السبب",
@@ -2636,7 +2636,7 @@
     "selectAll": "تحديد الكل",
     "selectedCount": "{{count}} محدد",
     "includeReason": "تضمين سبب ميرا",
-    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليها.",
+    "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليه.",
     "formatMarkdown": "قائمة Markdown",
     "formatMarkdownHint": "قائمة سهلة القراءة، مناسبة للملاحظات والمستندات.",
     "formatJson": "JSON",
@@ -2682,7 +2682,7 @@
   "storyExport": {
     "shareA11y": "تصدير هذه القصة",
     "shareDialogTitle": "تصدير القصة",
-    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليها."
+    "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليه."
   },
   "systemCheck": {
     "title": "جارٍ فحص هاتفك",

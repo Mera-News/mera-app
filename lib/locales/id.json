@@ -177,7 +177,7 @@
         "downloading": "Mengunduh artikel",
         "grouping": "Mengelompokkan berita yang sama",
         "analysing": "Menganalisis relevansi",
-        "summarising": "Menulis catatan Anda",
+        "summarising": "Menulis alasan Anda",
         "preparing": "Menyiapkan feed Anda"
       },
       "downloadProgress": "{{done}} dari {{total}} artikel terunduh",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Menghitung relevansi",
-      "reasonsTitle": "Menulis catatan untuk Anda",
+      "reasonsTitle": "Menulis alasan untuk Anda",
       "onDeviceTitle": "Memberi skor di ponsel Anda",
       "completedTitle": "Selesai",
       "completedMessage": "Feed Anda sudah siap"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "{{formatted}} terlihat relevan,",
     "loadingA11y": "Memuat feed kamu",
     "translatingCaption": "Menerjemahkan…",
-    "reasonWritingA11y": "menulis catatan",
+    "reasonWritingA11y": "menulis alasan",
     "findingStories": "Mencari cerita untuk Anda",
     "findingStoriesBody": "Cerita akan muncul di sini begitu siap",
     "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
@@ -264,8 +264,8 @@
       "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
     },
-    "noteHeldToday": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
-    "noteHeldTomorrow": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
+    "noteHeldToday": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
+    "noteHeldTomorrow": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
     "noteState": {
       "writing": "Menulis alasan",
       "failed": "Tidak dapat menulis alasan",
@@ -2500,7 +2500,7 @@
     "selectAll": "Pilih semua",
     "selectedCount": "{{count}} dipilih",
     "includeReason": "Sertakan alasan Mera",
-    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Artikel yang disimpan sendiri tidak memilikinya.",
+    "includeReasonHint": "Alasan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Artikel yang disimpan sendiri tidak memilikinya.",
     "formatMarkdown": "Daftar Markdown",
     "formatMarkdownHint": "Daftar yang mudah dibaca, cocok untuk catatan dan dokumen.",
     "formatJson": "JSON",
@@ -2546,7 +2546,7 @@
   "storyExport": {
     "shareA11y": "Ekspor cerita ini",
     "shareDialogTitle": "Ekspor cerita",
-    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
+    "includeReasonHint": "Alasan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
   },
   "systemCheck": {
     "title": "Memeriksa ponsel Anda",

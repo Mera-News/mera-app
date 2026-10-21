@@ -177,7 +177,7 @@
         "downloading": "기사를 내려받는 중",
         "grouping": "중복 기사를 묶는 중",
         "analysing": "관련도를 분석하는 중",
-        "summarising": "메모를 작성하는 중",
+        "summarising": "이유를 작성하는 중",
         "preparing": "피드를 준비하는 중"
       },
       "downloadProgress": "{{total}}개 중 {{done}}개 기사를 내려받았습니다",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "관련성 계산 중",
-      "reasonsTitle": "메모 작성 중",
+      "reasonsTitle": "이유 작성 중",
       "onDeviceTitle": "기기에서 점수 계산 중",
       "completedTitle": "모두 완료",
       "completedMessage": "피드가 준비되었습니다"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "{{formatted}}개가 관련 있어 보이며,",
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
-    "reasonWritingA11y": "메모 작성 중",
+    "reasonWritingA11y": "이유 작성 중",
     "findingStories": "내 스토리를 찾는 중",
     "findingStoriesBody": "준비되는 대로 여기에 나타나요",
     "processingOffline": "오프라인 상태예요. 다시 온라인이 되면 스토리가 도착해요.",
@@ -264,8 +264,8 @@
       "bodyToday": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다."
     },
-    "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 오늘 {{time}} 이후에 작성합니다.",
-    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 내일 {{time}} 이후에 작성합니다.",
+    "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 오늘 {{time}} 이후에 작성합니다.",
+    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 내일 {{time}} 이후에 작성합니다.",
     "noteState": {
       "writing": "이유 작성 중",
       "failed": "이유를 작성하지 못했어요",
@@ -2500,7 +2500,7 @@
     "selectAll": "전체 선택",
     "selectedCount": "{{count}}개 선택됨",
     "includeReason": "메라의 이유 포함",
-    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 개별로 저장한 기사에는 없습니다.",
+    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 이유입니다. 개별로 저장한 기사에는 없습니다.",
     "formatMarkdown": "Markdown 목록",
     "formatMarkdownHint": "읽기 쉬운 목록으로, 메모와 문서에 적합합니다.",
     "formatJson": "JSON",
@@ -2546,7 +2546,7 @@
   "storyExport": {
     "shareA11y": "이 스토리 내보내기",
     "shareDialogTitle": "스토리 내보내기",
-    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 메모가 없는 기사도 있을 수 있습니다."
+    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 이유입니다. 이유가 없는 기사도 있을 수 있습니다."
   },
   "systemCheck": {
     "title": "휴대폰 확인 중",

@@ -177,7 +177,7 @@
         "downloading": "Baixando artigos",
         "grouping": "Agrupando matérias repetidas",
         "analysing": "Analisando a relevância",
-        "summarising": "Escrevendo suas notas",
+        "summarising": "Escrevendo seus motivos",
         "preparing": "Preparando seu feed"
       },
       "downloadProgress": "{{done}} de {{total}} artigos baixados",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Calculando relevância",
-      "reasonsTitle": "Escrevendo notas para você",
+      "reasonsTitle": "Escrevendo motivos para você",
       "onDeviceTitle": "Classificando no seu celular",
       "completedTitle": "Tudo pronto",
       "completedMessage": "Seu feed está pronto"
@@ -206,7 +206,7 @@
     "statsRead_other": "e você leu {{formatted}}.",
     "loadingA11y": "Carregando seu feed",
     "translatingCaption": "Traduzindo…",
-    "reasonWritingA11y": "nota sendo escrita",
+    "reasonWritingA11y": "motivo sendo escrito",
     "findingStories": "Buscando suas histórias",
     "findingStoriesBody": "Elas aparecem aqui assim que estiverem prontas",
     "processingOffline": "Você está off-line. Suas histórias chegam quando você voltar a ficar on-line.",
@@ -267,8 +267,8 @@
       "bodyToday": "O Mera já usou a leitura de hoje. O Mera volta a ler hoje às {{time}}.",
       "bodyTomorrow": "O Mera já usou a leitura de hoje. O Mera volta a ler amanhã às {{time}}."
     },
-    "noteHeldToday": "O Mera já usou a leitura de hoje, então vai escrever esta nota hoje depois das {{time}}.",
-    "noteHeldTomorrow": "O Mera já usou a leitura de hoje, então vai escrever esta nota amanhã depois das {{time}}.",
+    "noteHeldToday": "O Mera já usou a leitura de hoje, então vai escrever este motivo hoje depois das {{time}}.",
+    "noteHeldTomorrow": "O Mera já usou a leitura de hoje, então vai escrever este motivo amanhã depois das {{time}}.",
     "noteState": {
       "writing": "Escrevendo o motivo",
       "failed": "Não foi possível escrever o motivo",
@@ -2506,7 +2506,7 @@
     "selectAll": "Selecionar tudo",
     "selectedCount": "{{count}} selecionados",
     "includeReason": "Incluir o motivo de Mera",
-    "includeReasonHint": "A nota de uma linha que explica por que cada artigo chegou ao seu feed. Artigos salvos avulsos não têm essa nota.",
+    "includeReasonHint": "O motivo de uma linha que explica por que cada artigo chegou ao seu feed. Artigos salvos avulsos não têm esse motivo.",
     "formatMarkdown": "Lista Markdown",
     "formatMarkdownHint": "Uma lista fácil de ler, boa para notas e documentos.",
     "formatJson": "JSON",
@@ -2552,7 +2552,7 @@
   "storyExport": {
     "shareA11y": "Exportar esta história",
     "shareDialogTitle": "Exportar história",
-    "includeReasonHint": "A nota de uma linha que explica por que cada artigo chegou ao seu feed. Alguns artigos podem não ter essa nota."
+    "includeReasonHint": "O motivo de uma linha que explica por que cada artigo chegou ao seu feed. Alguns artigos podem não ter esse motivo."
   },
   "systemCheck": {
     "title": "Verificando seu celular",

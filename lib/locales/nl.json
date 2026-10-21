@@ -177,7 +177,7 @@
         "downloading": "Artikelen downloaden",
         "grouping": "Dubbele verhalen groeperen",
         "analysing": "Relevantie analyseren",
-        "summarising": "Je notities schrijven",
+        "summarising": "Je redenen schrijven",
         "preparing": "Je feed klaarmaken"
       },
       "downloadProgress": "{{done}} van {{total}} artikelen gedownload",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Relevantie berekenen",
-      "reasonsTitle": "Notities voor jou schrijven",
+      "reasonsTitle": "Redenen voor jou schrijven",
       "onDeviceTitle": "Scoren op je telefoon",
       "completedTitle": "Alles klaar",
       "completedMessage": "Je feed is gereed"
@@ -206,7 +206,7 @@
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "loadingA11y": "Je feed wordt geladen",
     "translatingCaption": "Vertalen…",
-    "reasonWritingA11y": "notitie schrijven",
+    "reasonWritingA11y": "reden schrijven",
     "findingStories": "Je verhalen worden gezocht",
     "findingStoriesBody": "Ze verschijnen hier zodra ze klaar zijn",
     "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
@@ -267,8 +267,8 @@
       "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
       "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
     },
-    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas vandaag na {{time}}.",
-    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}.",
+    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas vandaag na {{time}}.",
+    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas morgen na {{time}}.",
     "noteState": {
       "writing": "Reden wordt geschreven",
       "failed": "Kon de reden niet schrijven",
@@ -2506,7 +2506,7 @@
     "selectAll": "Alles selecteren",
     "selectedCount": "{{count}} geselecteerd",
     "includeReason": "Reden van Mera meenemen",
-    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
+    "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
     "formatMarkdown": "Markdown-lijst",
     "formatMarkdownHint": "Een leesbare lijst, handig voor notities en documenten.",
     "formatJson": "JSON",
@@ -2552,7 +2552,7 @@
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",
     "shareDialogTitle": "Verhaal exporteren",
-    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
+    "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
   },
   "systemCheck": {
     "title": "Je telefoon wordt gecontroleerd",
