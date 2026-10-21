@@ -213,8 +213,6 @@
     "forYouTitle": "Dành cho bạn",
     "newStoriesBelowA11y": "Có câu chuyện mới bên dưới",
     "noFactsBody": "Chạm vào nút Mera để kể cho Mera biết bạn theo dõi điều gì. Mera sẽ biến điều đó thành nguồn tin của bạn.",
-    "noteSuggestedMany": "Gợi ý cho các dữ kiện của bạn:",
-    "noteSuggestedOne": "Gợi ý cho dữ kiện của bạn: {{fact}}. Vui lòng đợi trong khi Mera viết lý do.",
     "noteWait": "Vui lòng đợi trong khi Mera viết lý do.",
     "opened": "Đã mở",
     "statsSyncAnalysing_one": "{{formatted}} bài viết đang được phân tích cho bạn,",

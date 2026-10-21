@@ -213,8 +213,6 @@
     "forYouTitle": "為你推薦",
     "newStoriesBelowA11y": "下方有新報導",
     "noFactsBody": "點按梅拉按鈕，告訴梅拉你關注什麼。梅拉會把它整理成你的資訊流。",
-    "noteSuggestedMany": "為你的事實推薦：",
-    "noteSuggestedOne": "為你的事實推薦：{{fact}}。梅拉正在撰寫理由，請稍候。",
     "noteWait": "梅拉正在撰寫理由，請稍候。",
     "opened": "已開啟",
     "statsSyncAnalysing_one": "{{formatted}} 篇文章正在為你分析，",

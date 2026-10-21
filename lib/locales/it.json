@@ -213,8 +213,6 @@
     "forYouTitle": "Per te",
     "newStoriesBelowA11y": "Nuove storie qui sotto",
     "noFactsBody": "Tocca il pulsante Mera per dire a Mera cosa segui. Da lì nasce il tuo feed.",
-    "noteSuggestedMany": "Suggerito per i tuoi fatti:",
-    "noteSuggestedOne": "Suggerito per il tuo fatto: {{fact}}. Attendi mentre Mera scrive il motivo.",
     "noteWait": "Attendi mentre Mera scrive il motivo.",
     "opened": "Aperto",
     "statsSyncAnalysing_one": "{{formatted}} articolo è in analisi per te,",

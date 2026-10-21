@@ -250,8 +250,6 @@
     "forYouTitle": "For you",
     "newStoriesBelowA11y": "New stories below",
     "noFactsBody": "Tap the Mera button to tell it what you follow. It turns that into your feed.",
-    "noteSuggestedMany": "Suggested for your facts:",
-    "noteSuggestedOne": "Suggested for your fact: {{fact}}. Please wait while Mera writes the reason.",
     "noteWait": "Please wait while Mera writes the reason.",
     "opened": "Opened",
     "statsSyncAnalysing_one": "{{formatted}} article is being analysed for you,",

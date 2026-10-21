@@ -223,8 +223,6 @@
     "forYouTitle": "Dla Ciebie",
     "newStoriesBelowA11y": "Nowe historie poniżej",
     "noFactsBody": "Stuknij przycisk Mera, aby powiedzieć, co śledzisz. Na tej podstawie powstanie Twój kanał.",
-    "noteSuggestedMany": "Zaproponowane dla Twoich faktów:",
-    "noteSuggestedOne": "Zaproponowane dla Twojego faktu: {{fact}}. Poczekaj, aż Mera napisze uzasadnienie.",
     "noteWait": "Poczekaj, aż Mera napisze uzasadnienie.",
     "opened": "Otwarte",
     "statsSyncAnalysing_one": "{{formatted}} artykuł jest dla Ciebie analizowany,",

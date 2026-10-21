@@ -29,7 +29,6 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
@@ -175,7 +174,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     // article-suggestion status state machine.
     const status = suggestion?.status;
     const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
-    const reasonReady = status === ArticleSuggestionStatus.Complete;
     const relevance = suggestion?.relevance ?? 0;
     const reason = relevanceReady ? suggestion?.reason ?? '' : '';
     // The detail screen reads the hold itself (one subscription per screen),
@@ -183,7 +181,9 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const readHeld = useReadHeld();
     const pendingMode = suggestion ? notePendingMode(suggestion, readHeld.held) : undefined;
     // A row with no note (Skip notes): the chip alone, the same rule as the Feed card.
-    const chipOnly = suggestion ? showsChipOnly(suggestion) : false;
+    const chipOnly = suggestion
+        ? showsChipOnly(suggestion) || (status === ArticleSuggestionStatus.ReasonSkipped && !(suggestion.reason ?? ''))
+        : false;
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || t('feed.newsCluster');
@@ -224,12 +224,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     );
 
-    // Same chips as the Feed card for a complete (or reason_skipped), note-less row.
-    const factChipsEl =
-        isSuggestion && (reasonReady || status === ArticleSuggestionStatus.ReasonSkipped) && !reason ? (
-        <FactChips topicIds={suggestion?.userTopicIds} />
-    ) : null;
-
     const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode || chipOnly) ? (
         <ReasonNote
             relevance={relevance}
@@ -269,7 +263,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                     <VStack className="p-4" space="sm">
                         {metaRow}
                         {titleEl}
-                        {factChipsEl}
                         {reasonBoxEl}
                     </VStack>
                 </Card>
@@ -331,7 +324,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 )}
                 {titleEl}
                 {aboveReason}
-                {factChipsEl}
                 {reasonBoxEl}
                 <ExtractedMetadataPanel
                     eventType={metaEventType}

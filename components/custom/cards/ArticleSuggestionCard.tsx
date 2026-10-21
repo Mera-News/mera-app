@@ -1,7 +1,6 @@
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
-import FactChips from '@/components/custom/cards/FactChips';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
@@ -235,7 +234,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
 
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
-  const reasonReady = status === ArticleSuggestionStatus.Complete;
   const relevance = suggestion.relevance ?? 0;
   const reason = relevanceReady ? suggestion.reason ?? '' : '';
 
@@ -263,9 +261,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : null;
 
-  // `reason_skipped` (the off-by-default v4 tag gate) has no pending state
-  // and gets the chips too.
-  const factChipsEl = (reasonReady || status === ArticleSuggestionStatus.ReasonSkipped) && !reason ? <FactChips topicIds={suggestion.userTopicIds} /> : null;
 
   // The note as displayed (it may be translated), for the card's spoken label.
   const [shownReason, setShownReason] = useState<string | null>(null);
@@ -274,7 +269,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // that pass no `noteHeldLine` (Saved, the fact feed) show writing.
   const pendingMode = notePendingMode(suggestion, noteHeldLine != null);
   // A row with no note (Skip notes): the chip alone, with no space held for a note that never comes.
-  const chipOnly = showsChipOnly(suggestion);
+  // `reason_skipped` (the off-by-default v4 tag gate) shows the same chip and fact chips.
+  const chipOnly = showsChipOnly(suggestion) || (status === ArticleSuggestionStatus.ReasonSkipped && !reason);
   const reasonBoxEl = relevanceReady && (reason || pendingMode || chipOnly) ? (
     <ReasonNote
       relevance={relevance}
@@ -356,7 +352,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       spokenTail={spokenTail}
     >
       {hardFilterLabelEl}
-      {factChipsEl}
       {reasonBoxEl}
     </ArticleCardBase>
     {onVerdict ? menu.element : null}

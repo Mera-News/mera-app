@@ -218,8 +218,6 @@
     "forYouTitle": "Pour vous",
     "newStoriesBelowA11y": "Nouvelles histoires ci-dessous",
     "noFactsBody": "Touchez le bouton Mera pour lui dire ce que vous suivez. Mera en fait votre fil d'actualité.",
-    "noteSuggestedMany": "Suggéré pour vos faits :",
-    "noteSuggestedOne": "Suggéré pour votre fait : {{fact}}. Veuillez patienter pendant que Mera rédige la raison.",
     "noteWait": "Veuillez patienter pendant que Mera rédige la raison.",
     "opened": "Ouvert",
     "statsSyncAnalysing_one": "{{formatted}} article est en cours d'analyse pour vous,",

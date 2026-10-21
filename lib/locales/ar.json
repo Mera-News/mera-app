@@ -233,8 +233,6 @@
     "forYouTitle": "لك",
     "newStoriesBelowA11y": "قصص جديدة في الأسفل",
     "noFactsBody": "اضغط على زر ميرا لتخبره بما تتابعه. يحوّل ذلك إلى خلاصتك.",
-    "noteSuggestedMany": "مقترح لحقائقك:",
-    "noteSuggestedOne": "مقترح لحقيقتك: {{fact}}. يرجى الانتظار حتى يكتب ميرا السبب.",
     "noteWait": "يرجى الانتظار حتى يكتب ميرا السبب.",
     "opened": "مفتوح",
     "statsSyncAnalysing_zero": "يجري تحليل {{formatted}} مقالة لك،",

@@ -213,8 +213,6 @@
     "forYouTitle": "회원님을 위해",
     "newStoriesBelowA11y": "아래에 새 스토리",
     "noFactsBody": "메라 버튼을 눌러 팔로우하는 것을 알려 주세요. 그러면 피드가 만들어집니다.",
-    "noteSuggestedMany": "회원님의 사실에 맞춘 추천:",
-    "noteSuggestedOne": "회원님의 사실 {{fact}}에 맞춘 추천입니다. 메라가 이유를 작성하는 동안 잠시 기다려 주세요.",
     "noteWait": "메라가 이유를 작성하는 동안 잠시 기다려 주세요.",
     "opened": "열람함",
     "statsSyncAnalysing_one": "기사 {{formatted}}개를 분석하고 있으며,",

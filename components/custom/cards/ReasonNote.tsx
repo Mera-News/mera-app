@@ -1,7 +1,7 @@
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { useMatchedFacts, useNoteInk } from '@/components/custom/cards/FactChips';
+import FactChips, { useNoteInk } from '@/components/custom/cards/FactChips';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -49,8 +49,6 @@ interface ReasonNoteProps {
 const BADGE_ROW_PADDING = 6;
 /** The priority chip's height at text scale 1 (11/16 text + 4pt padding). */
 const CHIP_HEIGHT = 24;
-/** At most this many facts are named in the waiting line. */
-const MAX_FACTS_NAMED = 3;
 /** FinalRead #3: 250 ms per word, 40 ms apart, the whole reveal under a
  *  second (a long note tightens the stagger). */
 const NOTE_REVEAL = { ...MOTION.noteReveal, total: 1000 } as const;
@@ -69,52 +67,6 @@ function useNoteLineHeight(): number {
     const lineHeight = scaledTypeStyle(NOTE_TOKEN, scale)?.lineHeight ?? TYPE_SCALE[NOTE_TOKEN].lineHeight;
     return lineHeight * (fontScale || 1);
 }
-
-/** The facts the waiting line names: deduped titles, at most three. */
-function useWaitingFacts(topicIds?: string[] | null): string[] {
-    const facts = useMatchedFacts(topicIds);
-    return [...new Set(facts.map((f) => primaryStatement(f.statement)))].slice(0, MAX_FACTS_NAMED);
-}
-
-/** The waiting line: the fact(s) that found the article, then the wait. */
-const WaitingLine: React.FC<{ facts: string[] }> = ({ facts }) => {
-    const { t } = useTranslation();
-    const ink = { color: useNoteInk().ink };
-    if (facts.length === 1) {
-        return (
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteSuggestedOne', { fact: facts[0] })}
-            </Text>
-        );
-    }
-    if (facts.length === 0) {
-        return (
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteWait')}
-            </Text>
-        );
-    }
-    return (
-        <View>
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteSuggestedMany')}
-            </Text>
-            {facts.map((f) => (
-                <Text key={f} size={NOTE_TOKEN} style={ink} numberOfLines={1}>
-                    {f}
-                </Text>
-            ))}
-            <Text size={NOTE_TOKEN} style={ink}>
-                {t('feed.noteWait')}
-            </Text>
-        </View>
-    );
-};
-
-/** The waiting line for a suggestion's own facts (queried on mount). */
-const WaitingFacts: React.FC<{ topicIds?: string[] | null }> = ({ topicIds }) => (
-    <WaitingLine facts={useWaitingFacts(topicIds)} />
-);
 
 /** The note's words rising in one by one over the laid-out (hidden) note. */
 const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxHeight }) => {
@@ -147,8 +99,9 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
 /**
  * The AI note block, ONE layout for the Feed card and the detail screen.
  *
- *   writing   [priority]  Suggested for your fact: X. Please wait while
- *                         Mera writes the reason.
+ *   writing   [priority] [fact] [fact]
+ *             Please wait while Mera writes the reason.
+ *   no note   [priority] [fact] [fact]          (Skip notes)
  *   note      [priority] ..................... [✦ AI-generated]
  *             Mera's note, full width.
  *   held      [priority] ...... Today's reading is used up, so Mera will
@@ -232,15 +185,20 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                     testID={testID ? `${testID}-badge-row` : undefined}
                 >
                     <RelevanceChip relevance={relevance} />
-                    <Animated.View
-                        exiting={FadeOutUp.duration(180)}
-                        style={{ flex: 1 }}
-                        testID={testID ? `${testID}-writing` : undefined}
-                        {...hideSlot}
-                    >
-                        <WaitingFacts topicIds={topicIds} />
-                    </Animated.View>
+                    <View style={{ flex: 1 }}>
+                        <FactChips topicIds={topicIds} />
+                    </View>
                 </HStack>
+                <Animated.View
+                    exiting={FadeOutUp.duration(180)}
+                    style={{ marginTop: 4 }}
+                    testID={testID ? `${testID}-writing` : undefined}
+                    {...hideSlot}
+                >
+                    <Text size={NOTE_TOKEN} style={{ color: note.ink }}>
+                        {t('feed.noteWait')}
+                    </Text>
+                </Animated.View>
             </Box>
         );
     }
@@ -257,7 +215,12 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                 <RelevanceChip relevance={relevance} />
                 {reason ? (
                     <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
-                ) : pending === 'held' ? (
+                ) : pending !== 'held' ? (
+                    // No note (Skip notes): the facts that found it, beside the chip.
+                    <View style={{ flex: 1 }}>
+                        <FactChips topicIds={topicIds} />
+                    </View>
+                ) : (
                     <Animated.View
                         entering={sawWriting ? FadeIn.duration(250) : undefined}
                         style={{ flex: 1, alignItems: 'flex-end' }}
@@ -268,7 +231,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                             {heldLine}
                         </Text>
                     </Animated.View>
-                ) : null}
+                )}
             </HStack>
             {reason ? (
                 <Animated.View

@@ -213,8 +213,6 @@
     "forYouTitle": "Voor jou",
     "newStoriesBelowA11y": "Nieuwe verhalen hieronder",
     "noFactsBody": "Tik op de Mera-knop om te vertellen wat je volgt. Daaruit maakt Mera je feed.",
-    "noteSuggestedMany": "Voorgesteld voor je feiten:",
-    "noteSuggestedOne": "Voorgesteld voor je feit: {{fact}}. Even wachten terwijl Mera de reden schrijft.",
     "noteWait": "Even wachten terwijl Mera de reden schrijft.",
     "opened": "Geopend",
     "statsSyncAnalysing_one": "{{formatted}} artikel wordt voor je geanalyseerd,",

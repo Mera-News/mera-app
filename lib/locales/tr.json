@@ -213,8 +213,6 @@
     "forYouTitle": "Sizin için",
     "newStoriesBelowA11y": "Aşağıda yeni haberler",
     "noFactsBody": "Takip ettiklerinizi Mera'ya anlatmak için Mera düğmesine dokunun. Mera bunu akışınıza dönüştürür.",
-    "noteSuggestedMany": "Bilgileriniz için önerilenler:",
-    "noteSuggestedOne": "Bilginiz için önerilen: {{fact}}. Mera nedenini yazarken lütfen bekleyin.",
     "noteWait": "Mera nedenini yazarken lütfen bekleyin.",
     "opened": "Açıldı",
     "statsSyncAnalysing_one": "{{formatted}} makale senin için analiz ediliyor,",

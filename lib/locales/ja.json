@@ -213,8 +213,6 @@
     "forYouTitle": "あなたへ",
     "newStoriesBelowA11y": "下に新しいストーリーがあります",
     "noFactsBody": "メラボタンをタップして、フォローしているものを伝えましょう。それをもとにフィードが作られます。",
-    "noteSuggestedMany": "あなたのファクトに基づく提案：",
-    "noteSuggestedOne": "あなたのファクトに基づく提案：{{fact}}。メラが理由を書いている間、お待ちください。",
     "noteWait": "メラが理由を書いている間、お待ちください。",
     "opened": "開いた",
     "statsSyncAnalysing_one": "{{formatted}}件の記事をあなたのために分析しています、",
