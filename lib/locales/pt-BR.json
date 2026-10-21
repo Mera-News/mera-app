@@ -279,7 +279,9 @@
       "off": "Motivos desativados nos Ajustes",
       "paused": "Motivos pausados por hoje",
       "discarded": "Abaixo do critério do Mera"
-    }
+    },
+    "readyForMore": "Pronto para ler mais?",
+    "refreshFeedAction": "Atualizar seu feed"
   },
   "relevance": {
     "emergency": "Emergência",

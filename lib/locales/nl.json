@@ -279,7 +279,9 @@
       "off": "Redenen uit in Instellingen",
       "paused": "Redenen gepauzeerd voor vandaag",
       "discarded": "Onder de lat van Mera"
-    }
+    },
+    "readyForMore": "Klaar om meer te lezen?",
+    "refreshFeedAction": "Ververs je feed"
   },
   "relevance": {
     "emergency": "Noodgeval",

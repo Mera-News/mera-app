@@ -316,7 +316,9 @@
       "off": "Reasons off in Settings",
       "paused": "Reasons paused for today",
       "discarded": "Below Mera's bar"
-    }
+    },
+    "readyForMore": "Are you ready to read more?",
+    "refreshFeedAction": "Refresh your feed"
   },
   "relevance": {
     "emergency": "Emergency",

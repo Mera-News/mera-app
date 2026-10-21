@@ -303,7 +303,9 @@
       "off": "Uzasadnienia wyłączone w Ustawieniach",
       "paused": "Uzasadnienia wstrzymane na dziś",
       "discarded": "Poniżej progu Mery"
-    }
+    },
+    "readyForMore": "Gotowy, żeby czytać dalej?",
+    "refreshFeedAction": "Odśwież swój kanał"
   },
   "relevance": {
     "emergency": "Pilne",

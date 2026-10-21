@@ -279,7 +279,9 @@
       "off": "Motivi disattivati nelle Impostazioni",
       "paused": "Motivi in pausa per oggi",
       "discarded": "Sotto la soglia di Mera"
-    }
+    },
+    "readyForMore": "Pronto a leggere altro?",
+    "refreshFeedAction": "Aggiorna il tuo feed"
   },
   "relevance": {
     "emergency": "Emergenza",

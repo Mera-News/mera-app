@@ -275,7 +275,9 @@
       "off": "已在設定中關閉理由",
       "paused": "今日理由已暫停",
       "discarded": "未達梅拉標準"
-    }
+    },
+    "readyForMore": "準備好讀更多了嗎？",
+    "refreshFeedAction": "重新整理你的資訊流"
   },
   "relevance": {
     "emergency": "緊急",

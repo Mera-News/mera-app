@@ -279,7 +279,9 @@
       "off": "Motivos desactivados en Ajustes",
       "paused": "Motivos en pausa por hoy",
       "discarded": "Por debajo del umbral de Mera"
-    }
+    },
+    "readyForMore": "¿Listo para leer más?",
+    "refreshFeedAction": "Actualizar tu feed"
   },
   "relevance": {
     "emergency": "Emergencia",

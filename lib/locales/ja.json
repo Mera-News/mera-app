@@ -275,7 +275,9 @@
       "off": "設定で理由はオフ",
       "paused": "今日は理由を一時停止中",
       "discarded": "メラの基準に満たない"
-    }
+    },
+    "readyForMore": "もっと読む準備はできましたか？",
+    "refreshFeedAction": "フィードを更新"
   },
   "relevance": {
     "emergency": "緊急",

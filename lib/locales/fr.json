@@ -284,7 +284,9 @@
       "off": "Raisons désactivées dans les Réglages",
       "paused": "Raisons en pause pour aujourd'hui",
       "discarded": "Sous le seuil de Mera"
-    }
+    },
+    "readyForMore": "Prêt à en lire davantage ?",
+    "refreshFeedAction": "Actualiser votre fil"
   },
   "relevance": {
     "emergency": "Urgence",
