@@ -279,7 +279,9 @@
       "discarded": "Abaixo do critério do Mera",
       "off": "Motivos desativados nos Ajustes",
       "failed": "Não foi possível escrever o motivo"
-    }
+    },
+    "readyForMore": "Pronto para ler mais?",
+    "refreshFeedAction": "Atualizar seu feed"
   },
   "relevance": {
     "emergency": "Emergência",

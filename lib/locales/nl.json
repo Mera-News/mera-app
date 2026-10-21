@@ -279,7 +279,9 @@
       "discarded": "Onder de lat van Mera",
       "off": "Redenen uit in Instellingen",
       "failed": "Kon de reden niet schrijven"
-    }
+    },
+    "readyForMore": "Klaar om meer te lezen?",
+    "refreshFeedAction": "Ververs je feed"
   },
   "relevance": {
     "emergency": "Noodgeval",

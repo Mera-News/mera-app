@@ -346,10 +346,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     () =>
       listData.length > 0 ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard />
+          <AllCaughtUpCard onRefresh={onRefresh} refreshing={refreshing} />
         </Box>
       ) : null,
-    [listData.length],
+    [listData.length, onRefresh, refreshing],
   );
 
 

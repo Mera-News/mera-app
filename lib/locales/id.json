@@ -275,7 +275,9 @@
       "discarded": "Di bawah batas Mera",
       "off": "Alasan dimatikan di Pengaturan",
       "failed": "Tidak dapat menulis alasan"
-    }
+    },
+    "readyForMore": "Siap membaca lebih banyak?",
+    "refreshFeedAction": "Muat ulang feed Anda"
   },
   "relevance": {
     "emergency": "Darurat",

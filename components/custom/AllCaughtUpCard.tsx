@@ -4,6 +4,7 @@ import {
     CardGlassPlate,
 } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import React, { useEffect, useState } from 'react';
@@ -24,9 +25,14 @@ interface AllCaughtUpCardProps {
     readonly title?: string;
     readonly body?: string;
     readonly testID?: string;
+    /** The footer only: "Are you ready to read more?" and a button that does exactly what
+     *  pull-to-refresh does (owner, 2026-10-21: after a cache clear the feed did not grow
+     *  until a pull, so the footer was a dead end). */
+    readonly onRefresh?: () => void;
+    readonly refreshing?: boolean;
 }
 
-const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID = 'all-caught-up-card' }) => {
+const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID = 'all-caught-up-card', onRefresh, refreshing = false }) => {
     const { t } = useTranslation();
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -67,6 +73,18 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID =
             >
                 {title ?? t('feed.allCaughtUp')}
             </Text>
+
+            {onRefresh ? (
+                <Box className="items-center mb-4" style={{ gap: 12 }}>
+                    <Text size="md" className="text-ink text-center">
+                        {t('feed.readyForMore')}
+                    </Text>
+                    <Button action="primary" onPress={onRefresh} isDisabled={refreshing} testID="all-caught-up-refresh">
+                        {refreshing ? <ButtonSpinner /> : null}
+                        <ButtonText>{t('feed.refreshFeedAction')}</ButtonText>
+                    </Button>
+                </Box>
+            ) : null}
 
             {/* Cycling mindfulness message — the "put the phone down" nudge. */}
             {bodyText ? (

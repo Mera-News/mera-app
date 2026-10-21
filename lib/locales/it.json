@@ -279,7 +279,9 @@
       "discarded": "Sotto la soglia di Mera",
       "off": "Motivi disattivati nelle Impostazioni",
       "failed": "Impossibile scrivere il motivo"
-    }
+    },
+    "readyForMore": "Pronto a leggere altro?",
+    "refreshFeedAction": "Aggiorna il tuo feed"
   },
   "relevance": {
     "emergency": "Emergenza",

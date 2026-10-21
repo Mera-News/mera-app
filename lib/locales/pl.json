@@ -303,7 +303,9 @@
       "discarded": "Poniżej progu Mery",
       "off": "Uzasadnienia wyłączone w Ustawieniach",
       "failed": "Nie udało się napisać uzasadnienia"
-    }
+    },
+    "readyForMore": "Gotowy, żeby czytać dalej?",
+    "refreshFeedAction": "Odśwież swój kanał"
   },
   "relevance": {
     "emergency": "Pilne",

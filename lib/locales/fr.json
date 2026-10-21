@@ -284,7 +284,9 @@
       "discarded": "Sous le seuil de Mera",
       "off": "Raisons désactivées dans les Réglages",
       "failed": "Impossible d'écrire la raison"
-    }
+    },
+    "readyForMore": "Prêt à en lire davantage ?",
+    "refreshFeedAction": "Actualiser votre fil"
   },
   "relevance": {
     "emergency": "Urgence",

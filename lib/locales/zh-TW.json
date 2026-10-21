@@ -275,7 +275,9 @@
       "discarded": "未達梅拉標準",
       "off": "已在設定中關閉理由",
       "failed": "無法撰寫理由"
-    }
+    },
+    "readyForMore": "準備好讀更多了嗎？",
+    "refreshFeedAction": "重新整理你的資訊流"
   },
   "relevance": {
     "emergency": "緊急",

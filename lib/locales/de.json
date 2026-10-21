@@ -279,7 +279,9 @@
       "discarded": "Unter Meras Schwelle",
       "off": "Gründe in den Einstellungen aus",
       "failed": "Grund konnte nicht geschrieben werden"
-    }
+    },
+    "readyForMore": "Bereit für mehr?",
+    "refreshFeedAction": "Feed aktualisieren"
   },
   "relevance": {
     "emergency": "Notfall",

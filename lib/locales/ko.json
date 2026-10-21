@@ -275,7 +275,9 @@
       "discarded": "메라 기준 미달",
       "off": "설정에서 이유 꺼짐",
       "failed": "이유를 작성하지 못했어요"
-    }
+    },
+    "readyForMore": "더 읽을 준비가 되셨나요?",
+    "refreshFeedAction": "피드 새로고침"
   },
   "relevance": {
     "emergency": "긴급",

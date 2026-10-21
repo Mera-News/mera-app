@@ -275,7 +275,9 @@
       "discarded": "メラの基準に満たない",
       "off": "設定で理由はオフ",
       "failed": "理由を作成できませんでした"
-    }
+    },
+    "readyForMore": "もっと読む準備はできましたか？",
+    "refreshFeedAction": "フィードを更新"
   },
   "relevance": {
     "emergency": "緊急",

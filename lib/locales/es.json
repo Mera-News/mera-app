@@ -279,7 +279,9 @@
       "discarded": "Por debajo del umbral de Mera",
       "off": "Motivos desactivados en Ajustes",
       "failed": "No se pudo escribir el motivo"
-    }
+    },
+    "readyForMore": "¿Listo para leer más?",
+    "refreshFeedAction": "Actualizar tu feed"
   },
   "relevance": {
     "emergency": "Emergencia",

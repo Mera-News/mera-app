@@ -275,7 +275,9 @@
       "discarded": "Dưới ngưỡng của Mera",
       "off": "Lý do đã tắt trong Cài đặt",
       "failed": "Không viết được lý do"
-    }
+    },
+    "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
+    "refreshFeedAction": "Làm mới bảng tin"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
