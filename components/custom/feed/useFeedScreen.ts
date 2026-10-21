@@ -27,8 +27,16 @@ import {
   isNewCard,
   type FeedEntry,
 } from './feed-entries';
-import { useFeedMinimap, useFeedShow } from './feed-view-prefs';
-import { applyFeedShow, foldNotReadTail, newNotReadTailSession, showsNotReadDivider, type NotReadTailSession } from './not-read-tail';
+import { FEED_SHOW_LABEL_KEY, setFeedShowCounts, useFeedMinimap, useFeedShow } from './feed-view-prefs';
+import {
+  applyFeedShow,
+  buildDiscardedStories,
+  feedShowCounts,
+  foldNotReadTail,
+  newNotReadTailSession,
+  showsNotReadDivider,
+  type NotReadTailSession,
+} from './not-read-tail';
 import { setNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { formatCount } from '@/lib/algorithms/format-count';
@@ -170,6 +178,15 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     () => foldNotReadTail(tailSessionRef.current, allCandidates),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allCandidates, sessionEpoch],
+  );
+  // The stories Mera discarded (Show: Discarded by Mera), never in the order
+  // store. Built even while another filter is on: the Show menu counts them.
+  // ponytail: a second story-grouping pass over the largest pool on every
+  // suggestions change; build it only while the menu or the filter is open if
+  // it shows up in a profile.
+  const discarded = useMemo(
+    () => buildDiscardedStories(suggestions, userGeoLanguageCtx),
+    [suggestions, userGeoLanguageCtx],
   );
   // What the order store sees: scored stories only, minus the ones the tail
   // holds this session (a story never shows twice).
@@ -494,13 +511,21 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   );
   scoredRowsRef.current = scoredRows;
 
-  // The Show filter (feed_show): Mera's picks, then the not-read tail. The
-  // unfiltered lists keep feeding the pin (scored rows) and the empty chain.
+  // The Show filter (feed_show): Mera's picks, then the not-read tail; or the
+  // discarded stories alone. The unfiltered lists (picks and tail) keep
+  // feeding the pin (scored rows) and the empty chain.
   const show = useFeedShow();
   const { rows: listData, picks: picksCount } = useMemo(
-    () => applyFeedShow(scoredRows, folded.tail, show),
-    [scoredRows, folded, show],
+    () => applyFeedShow(scoredRows, folded.tail, show, discarded.rows),
+    [scoredRows, folded, show, discarded],
   );
+  // The Show menu's counts, from the same segments (one source of truth).
+  useEffect(() => {
+    setFeedShowCounts(
+      feedShowCounts(scoredRows, folded.tail, folded.capped, discarded.rows, discarded.total > discarded.rows.length),
+    );
+  }, [scoredRows, folded, discarded]);
+  useEffect(() => () => setFeedShowCounts(null), []);
   const allRowsCount = scoredRows.length + folded.tail.length;
   // The divider says "below are articles Mera hasn't read yet": only while
   // one tail card still shows one (live rows, so a read lifts it at once).
@@ -535,7 +560,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
 
   // The counts card names the articles waiting below while the tail shows.
   useEffect(() => {
-    setNotReadWaiting(show === 'picks' ? null : folded.notReadArticles);
+    setNotReadWaiting(show === 'picks' || show === 'discarded' ? null : folded.notReadArticles);
   }, [show, folded]);
   useEffect(() => () => setNotReadWaiting(null), []);
 
@@ -819,7 +844,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     const switchedUnder = pendingShowAnnounceRef.current;
     if (!switchedUnder || switchedUnder === partitionSnapshot) return;
     pendingShowAnnounceRef.current = null;
-    const label = show === 'picks' ? t('feed.show.picks') : show === 'unread' ? t('feed.show.unread') : t('feed.show.all');
+    const label = t(FEED_SHOW_LABEL_KEY[show]);
     const count = listData.reduce((n, it) => n + it.memberCount, 0);
     AccessibilityInfo.announceForAccessibility(
       t('feed.show.announce', { show: label, count, formatted: formatCount(count, appLanguage) }),

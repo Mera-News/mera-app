@@ -30,7 +30,7 @@ import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
-import { showsChipOnly } from '@/components/custom/cards/note-pending-mode';
+import { showsBelowGate, showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { useReadHeld } from '@/components/custom/cards/use-read-held';
 import { noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-read-line';
@@ -184,6 +184,8 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const chipOnly = suggestion
         ? showsChipOnly(suggestion) || (status === ArticleSuggestionStatus.ReasonSkipped && !(suggestion.reason ?? ''))
         : false;
+    // Mera read it and scored it below its bar: no note is owed (the card's rule).
+    const belowGate = suggestion ? showsBelowGate(suggestion) : false;
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || t('feed.newsCluster');
@@ -224,7 +226,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     );
 
-    const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode || chipOnly) ? (
+    const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode || chipOnly || belowGate) ? (
         <ReasonNote
             relevance={relevance}
             reason={reason}
@@ -236,6 +238,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             }
             topicIds={suggestion?.userTopicIds}
             testID="detail-reason"
+            belowGate={belowGate}
         />
     ) : isSuggestion && suggestion && isNotRead(suggestion) ? (
         <Text size="sm" className="text-ink-3" testID="detail-not-read">

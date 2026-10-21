@@ -17,7 +17,7 @@
 // PURE: RN-free, no store or database imports beyond the pure selector module.
 
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { isWithinWindow, passesRenderGate } from '@/lib/stores/fact-rows-selector';
+import { isWithinWindow, passesRenderGate, relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /** A scored row whose note is still pending, inside the render gate and the
@@ -41,4 +41,23 @@ export function isNotRead(s: Pick<ForYouSuggestion, 'status'>): boolean {
  *  only (`buildFeedList`'s `includeUnscored`). Terminal states never pass. */
 export function isUnscoredVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
   return isNotRead(s) && isWithinWindow(s, cutoffMs);
+}
+
+/** Mera read this row and scored it below the render gate (its own gate,
+ *  `relevancePassesGate`): `complete` or `reason_skipped`, ineligible rows at
+ *  relevance 0 included. Never `excluded` (the reader's own hard filters and
+ *  culled headlines) or `already_read`. Such a row has no reason by design. */
+export function isReadBelowGate(
+  s: Pick<ForYouSuggestion, 'status' | 'relevance' | 'scoredWithV3'>,
+): boolean {
+  return (
+    (s.status === ArticleSuggestionStatus.Complete || s.status === ArticleSuggestionStatus.ReasonSkipped) &&
+    !relevancePassesGate(s)
+  );
+}
+
+/** A row Mera discarded, inside the publication window: the Show filter's
+ *  "Discarded by Mera" pool (`buildFeedList`'s `onlyDiscarded`). */
+export function isDiscardedVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
+  return isReadBelowGate(s) && isWithinWindow(s, cutoffMs);
 }

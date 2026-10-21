@@ -64,6 +64,9 @@ export interface ChoiceSection {
   readonly disabled?: boolean;
   /** A muted line under the title. */
   readonly note?: string;
+  /** A quieter number after a row's label ("30"), or undefined for none.
+   *  Visual only: `a11yLabelOf` says it. */
+  readonly countOf?: (option: string) => string | undefined;
 }
 
 export interface InlineChoiceChipProps<T extends string | number> {
@@ -171,6 +174,7 @@ export default function InlineChoiceChip<T extends string | number>({
     rowTestID: string | undefined,
     rowDisabled = false,
     icon?: keyof typeof MaterialIcons.glyphMap,
+    count?: string,
   ) => (
     <Pressable
       key={String(option)}
@@ -200,6 +204,17 @@ export default function InlineChoiceChip<T extends string | number>({
       >
         {label}
       </Text>
+      {count ? (
+        <Text
+          numberOfLines={1}
+          maxFontSizeMultiplier={1}
+          style={[styles.rowLabel, styles.rowCount, { color: colors.muted }]}
+          testID={rowTestID ? `${rowTestID}-count` : undefined}
+          {...HIDDEN}
+        >
+          {count}
+        </Text>
+      ) : null}
     </Pressable>
   );
   const rows = (live: boolean) =>
@@ -245,6 +260,8 @@ export default function InlineChoiceChip<T extends string | number>({
             () => sec.onChange(o),
             live ? `${sec.testID}-${o}` : undefined,
             sec.disabled,
+            undefined,
+            sec.countOf?.(o),
           ),
         )}
       </View>
@@ -447,4 +464,5 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   rowLabel: { fontSize: 15, lineHeight: 20 },
+  rowCount: { marginStart: 2, fontVariant: ['tabular-nums'] },
 });

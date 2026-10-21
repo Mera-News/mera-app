@@ -2,7 +2,7 @@ import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
-import { showsChipOnly } from '@/components/custom/cards/note-pending-mode';
+import { showsBelowGate, showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
@@ -271,7 +271,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // A row with no note (Skip notes): the chip alone, with no space held for a note that never comes.
   // `reason_skipped` (the off-by-default v4 tag gate) shows the same chip and fact chips.
   const chipOnly = showsChipOnly(suggestion) || (status === ArticleSuggestionStatus.ReasonSkipped && !reason);
-  const reasonBoxEl = relevanceReady && (reason || pendingMode || chipOnly) ? (
+  // Mera read it and scored it below its bar (Show: Discarded by Mera): the
+  // chip and a caption saying so, relevance 0 included. No note is owed.
+  const belowGate = showsBelowGate(suggestion);
+  const reasonBoxEl = relevanceReady && (reason || pendingMode || chipOnly || belowGate) ? (
     <ReasonNote
       relevance={relevance}
       reason={reason}
@@ -282,7 +285,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       pendingSpokenByHost
       topicIds={suggestion.userTopicIds}
       maxNoteLines={FEED_NOTE_LINES}
-      reserveNoteLines={reserveNoteSpace && !chipOnly ? FEED_NOTE_LINES : undefined}
+      reserveNoteLines={reserveNoteSpace && !chipOnly && !belowGate ? FEED_NOTE_LINES : undefined}
+      belowGate={belowGate}
     />
   ) : isNotRead(suggestion) ? (
     <Text size="sm" className="text-ink-3" testID="card-not-read">
@@ -296,6 +300,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const spokenTail = [
     hardFilterLabelEl && hardFilterLabel ? t('notInterested.cardExemptLabel', { filter: hardFilterLabel }) : null,
     isNotRead(suggestion) ? notReadLine ?? t('feed.notRead.a11y') : null,
+    belowGate ? t('feed.noteState.discarded') : null,
     reason ? t('aiDisclosure.short') : null,
     reason ? shownReason ?? reason : null,
     // The indicator is hidden from screen readers; the root says it instead.

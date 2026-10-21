@@ -47,6 +47,9 @@ interface ReasonNoteProps {
      *  note landing under the reader never changes the card's height. Omitted:
      *  natural height (the detail screen). */
     reserveNoteLines?: number;
+    /** Mera read the row and scored it below its bar (`showsBelowGate`): no
+     *  note is owed, so the caption says so instead of a failure. */
+    belowGate?: boolean;
 }
 
 /** Space above and below the badge row. */
@@ -127,11 +130,12 @@ const NOTE_STATE_GLYPH: Record<NoteBoxState, keyof typeof MaterialIcons.glyphMap
     paused: 'pause-circle-outline',
     off: 'toggle-off',
     failed: 'error-outline',
+    discarded: 'filter-alt',
 };
 
 /**
  * No AI note: the relevance chip with a caption saying why (writing, paused for
- * the day, Skip notes on, or the note failed), then the matched facts as one
+ * the day, Skip notes on, the note failed, or below Mera's bar), then the matched facts as one
  * Title Case line joined by middle dots (wraps, never cut). Paused also says
  * when the note will come. Only an AI note carries the AI-generated caption.
  */
@@ -195,6 +199,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     topicIds,
     maxNoteLines,
     reserveNoteLines,
+    belowGate = false,
 }) => {
     const { t, i18n } = useTranslation();
     const lineHeight = useNoteLineHeight();
@@ -248,7 +253,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
             <FactsNote
                 relevance={relevance}
                 topicIds={topicIds}
-                state={noteBoxState(pending, skipNotes)}
+                state={noteBoxState(pending, skipNotes, belowGate)}
                 heldLine={heldLine}
                 testID={testID}
                 hideSlot={hideSlot}

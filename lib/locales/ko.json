@@ -256,7 +256,10 @@
       "announce_other": "{{show}} 표시 중, 기사 {{formatted}}개",
       "emptyPicks": "메라가 아직 회원님을 위해 고른 기사가 없습니다.",
       "emptyUnread": "여기 있는 기사는 메라가 모두 읽었습니다.",
-      "showAll": "모든 기사 보기"
+      "showAll": "모든 기사 보기",
+      "discarded": "메라가 제외함",
+      "emptyDiscarded": "지난 48시간 동안 제외된 항목이 없어요.",
+      "optionA11y_other": "{{show}}, 스토리 {{formatted}}개"
     },
     "readHold": {
       "waitingToday_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
@@ -269,6 +272,7 @@
     "noteState": {
       "writing": "이유 작성 중",
       "paused": "오늘은 이유 일시 중지",
+      "discarded": "메라 기준 미달",
       "off": "설정에서 이유 꺼짐",
       "failed": "이유를 작성하지 못했어요"
     }

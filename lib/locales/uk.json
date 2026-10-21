@@ -275,7 +275,13 @@
       "announce_other": "Показано: {{show}}, {{formatted}} статті",
       "emptyPicks": "Мера ще нічого не вибрала для вас.",
       "emptyUnread": "Мера прочитала тут усе.",
-      "showAll": "Показати всі статті"
+      "showAll": "Показати всі статті",
+      "discarded": "Відхилено Мерою",
+      "emptyDiscarded": "За останні 48 годин нічого не відхилено.",
+      "optionA11y_one": "{{show}}, {{formatted}} історія",
+      "optionA11y_few": "{{show}}, {{formatted}} історії",
+      "optionA11y_many": "{{show}}, {{formatted}} історій",
+      "optionA11y_other": "{{show}}, {{formatted}} історії"
     },
     "readHold": {
       "waitingToday_one": "Мера вже використала сьогоднішнє читання. {{formatted}} стаття нижче ще не прочитана. Мера знову читатиме сьогодні о {{time}}.",
@@ -294,6 +300,7 @@
     "noteState": {
       "writing": "Пишу причину",
       "paused": "Причини призупинено на сьогодні",
+      "discarded": "Нижче порогу Мери",
       "off": "Причини вимкнено в налаштуваннях",
       "failed": "Не вдалося написати причину"
     }

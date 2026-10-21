@@ -257,7 +257,11 @@
       "announce_other": "{{show}} gösteriliyor, {{formatted}} makale",
       "emptyPicks": "Mera senin için henüz bir şey seçmedi.",
       "emptyUnread": "Mera buradaki her şeyi okudu.",
-      "showAll": "Tüm makaleleri göster"
+      "showAll": "Tüm makaleleri göster",
+      "discarded": "Mera tarafından elendi",
+      "emptyDiscarded": "Son 48 saatte hiçbir şey elenmedi.",
+      "optionA11y_one": "{{show}}, {{formatted}} haber",
+      "optionA11y_other": "{{show}}, {{formatted}} haber"
     },
     "readHold": {
       "waitingToday_one": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera bugün {{time}} saatinde yeniden okur.",
@@ -272,6 +276,7 @@
     "noteState": {
       "writing": "Neden yazılıyor",
       "paused": "Nedenler bugünlük duraklatıldı",
+      "discarded": "Mera'nın eşiğinin altında",
       "off": "Nedenler Ayarlar'da kapalı",
       "failed": "Neden yazılamadı"
     }

@@ -293,7 +293,15 @@
       "announce_other": "يُعرض {{show}}، {{formatted}} مقالة",
       "emptyPicks": "لم تختر ميرا شيئًا لك بعد.",
       "emptyUnread": "قرأت ميرا كل ما هنا.",
-      "showAll": "عرض كل المقالات"
+      "showAll": "عرض كل المقالات",
+      "discarded": "استبعدتها ميرا",
+      "emptyDiscarded": "لم يُستبعد أي شيء خلال آخر 48 ساعة.",
+      "optionA11y_zero": "{{show}}، {{formatted}} قصة",
+      "optionA11y_one": "{{show}}، {{formatted}} قصة",
+      "optionA11y_two": "{{show}}، {{formatted}} قصتان",
+      "optionA11y_few": "{{show}}، {{formatted}} قصص",
+      "optionA11y_many": "{{show}}، {{formatted}} قصة",
+      "optionA11y_other": "{{show}}، {{formatted}} قصة"
     },
     "readHold": {
       "waitingToday_zero": "استخدمت ميرا قراءة اليوم. {{formatted}} مقالة أدناه ما زالت غير مقروءة. ستقرأ ميرا مجددًا اليوم عند {{time}}.",
@@ -316,6 +324,7 @@
     "noteState": {
       "writing": "جارٍ كتابة السبب",
       "paused": "الأسباب متوقفة مؤقتًا لليوم",
+      "discarded": "دون معيار ميرا",
       "off": "الأسباب متوقفة في الإعدادات",
       "failed": "تعذّرت كتابة السبب"
     }

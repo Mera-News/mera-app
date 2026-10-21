@@ -36,7 +36,7 @@ import {
 } from './fact-rows-selector';
 import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import { makeRepCompare } from '@/lib/algorithms/representative-compare';
-import { isReasonPendingVisible, isUnscoredVisible } from '@/lib/feed-ordering/pending-visibility';
+import { isDiscardedVisible, isReasonPendingVisible, isUnscoredVisible } from '@/lib/feed-ordering/pending-visibility';
 import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from './for-you-store';
@@ -189,6 +189,11 @@ export interface BuildFeedListOptions {
    *  card fronted by an unscored row means EVERY member is unscored: that is
    *  a not-read card (feed/not-read-tail.ts). */
   includeUnscored?: boolean;
+  /** The Show filter's "Discarded by Mera" only: the pool is ONLY the rows
+   *  Mera read and scored below the gate, in the window
+   *  (`isDiscardedVisible`), grouped on their own. Every other option is
+   *  ignored. */
+  onlyDiscarded?: boolean;
 }
 
 /** Fronting rank inside a story: a member with its note, then one still
@@ -244,9 +249,11 @@ export function buildFeedList(
   //    screen excludes new ones, this catches rows scored before the mute).
   const visible = suggestions.filter(
     (s) =>
-      (isVisible(s, cutoffMs) ||
-        (includePending && isReasonPendingVisible(s, cutoffMs)) ||
-        (includeUnscored && isUnscoredVisible(s, cutoffMs))) &&
+      (opts.onlyDiscarded
+        ? isDiscardedVisible(s, cutoffMs)
+        : isVisible(s, cutoffMs) ||
+          (includePending && isReasonPendingVisible(s, cutoffMs)) ||
+          (includeUnscored && isUnscoredVisible(s, cutoffMs))) &&
       !isMutedPublication(s.publication_name, userCtx),
   );
   if (visible.length === 0) return [];
