@@ -1,0 +1,123 @@
+{
+  "_comment": "All caught up footer: a way to read more (owner, 2026-10-21).",
+  "ar": {
+    "feed": {
+      "readyForMore": "هل أنت مستعد لقراءة المزيد؟",
+      "refreshFeedAction": "حدّث موجزك"
+    }
+  },
+  "de": {
+    "feed": {
+      "readyForMore": "Bereit für mehr?",
+      "refreshFeedAction": "Feed aktualisieren"
+    }
+  },
+  "en": {
+    "feed": {
+      "readyForMore": "Are you ready to read more?",
+      "refreshFeedAction": "Refresh your feed"
+    }
+  },
+  "es": {
+    "feed": {
+      "readyForMore": "¿Listo para leer más?",
+      "refreshFeedAction": "Actualizar tu feed"
+    }
+  },
+  "fr": {
+    "feed": {
+      "readyForMore": "Prêt à en lire davantage ?",
+      "refreshFeedAction": "Actualiser votre fil"
+    }
+  },
+  "hi": {
+    "feed": {
+      "readyForMore": "क्या आप और पढ़ने के लिए तैयार हैं?",
+      "refreshFeedAction": "अपनी फ़ीड रीफ़्रेश करें"
+    }
+  },
+  "id": {
+    "feed": {
+      "readyForMore": "Siap membaca lebih banyak?",
+      "refreshFeedAction": "Muat ulang feed Anda"
+    }
+  },
+  "it": {
+    "feed": {
+      "readyForMore": "Pronto a leggere altro?",
+      "refreshFeedAction": "Aggiorna il tuo feed"
+    }
+  },
+  "ja": {
+    "feed": {
+      "readyForMore": "もっと読む準備はできましたか？",
+      "refreshFeedAction": "フィードを更新"
+    }
+  },
+  "ko": {
+    "feed": {
+      "readyForMore": "더 읽을 준비가 되셨나요?",
+      "refreshFeedAction": "피드 새로고침"
+    }
+  },
+  "nl": {
+    "feed": {
+      "readyForMore": "Klaar om meer te lezen?",
+      "refreshFeedAction": "Ververs je feed"
+    }
+  },
+  "pl": {
+    "feed": {
+      "readyForMore": "Gotowy, żeby czytać dalej?",
+      "refreshFeedAction": "Odśwież swój kanał"
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "readyForMore": "Pronto para ler mais?",
+      "refreshFeedAction": "Atualizar seu feed"
+    }
+  },
+  "ru": {
+    "feed": {
+      "readyForMore": "Готовы читать дальше?",
+      "refreshFeedAction": "Обновить ленту"
+    }
+  },
+  "th": {
+    "feed": {
+      "readyForMore": "พร้อมอ่านเพิ่มหรือยัง?",
+      "refreshFeedAction": "รีเฟรชฟีดของคุณ"
+    }
+  },
+  "tr": {
+    "feed": {
+      "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
+      "refreshFeedAction": "Akışınızı yenileyin"
+    }
+  },
+  "uk": {
+    "feed": {
+      "readyForMore": "Готові читати далі?",
+      "refreshFeedAction": "Оновити стрічку"
+    }
+  },
+  "vi": {
+    "feed": {
+      "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
+      "refreshFeedAction": "Làm mới bảng tin"
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "readyForMore": "准备好读更多了吗？",
+      "refreshFeedAction": "刷新你的信息流"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "readyForMore": "準備好讀更多了嗎？",
+      "refreshFeedAction": "重新整理你的資訊流"
+    }
+  }
+}

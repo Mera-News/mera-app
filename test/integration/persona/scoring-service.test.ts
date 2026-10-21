@@ -745,17 +745,15 @@ describe('batchScoreAndReason - on-device path', () => {
     expect(llamaCalls()).toHaveLength(0);
   });
 
-  it('a Kev failure leaves the math score standing', async () => {
+  it('a Kev failure marks the row failed, so it is not saved and stays unscored for the next pass', async () => {
     installLocal();
     installDecide({ error: 'native crash' });
     const [c] = await seedAndLoad(['a']);
 
-    const { scoreMap, failedIds } = await run(batchScoreAndReason([c]));
+    const { failedIds } = await run(batchScoreAndReason([c]));
 
     expect(decideCalls()).toHaveLength(1);
-    expect(failedIds.size).toBe(0);
-    expect(scoreMap.get('a')).toBeGreaterThan(0);
-    expect(scoreMap.get('a')).not.toBe(0.3);
+    expect(failedIds.has('a')).toBe(true);
   });
 
   it('falls back to FALLBACK_RELEVANCE and marks failedIds when the persona snapshot cannot be read', async () => {
@@ -1067,7 +1065,7 @@ describe('processAllUnscored - on-device pass', () => {
     }
   });
 
-  it('a Kev error about one article keeps that row on its math score and ranks the others', async () => {
+  it('a Kev error about one article leaves that row unscored and ranks the others', async () => {
     installLocal();
     queue();
     installDecide((call) => {
@@ -1076,15 +1074,62 @@ describe('processAllUnscored - on-device pass', () => {
     });
     await seed(['a', 'b', 'c']);
 
-    expect(await run(processAllUnscored())).toBe(3);
+    expect(await run(processAllUnscored())).toBe(2);
 
     const rows = await stored();
-    expect(rows.b.status).not.toBe('unscored');
-    // The math score: defined, and not Kev's top level (1).
-    expect(rows.b.rawScore).toBeGreaterThan(0);
-    expect(rows.b.rawScore).not.toBeCloseTo(1, 2);
+    expect(rows.b.status).toBe('unscored');
     expect(rows.a.rawScore).toBeCloseTo(1, 5);
     expect(rows.c.rawScore).toBeCloseTo(1, 5);
+  });
+
+  // Kev down for a whole pass (it answered none of the batch) is not one bad article: on the
+  // owner's phone a whole run kept its math scores, all LOW, and the Sectioned view went empty.
+  it('Kev failing on every article of a batch leaves the batch unscored, never on the math score, and the next pass ranks them', async () => {
+    installLocal();
+    queue();
+    installDecide({ error: 'native crash' });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(0);
+    for (const row of Object.values(await stored())) {
+      expect(row.status).toBe('unscored');
+      expect(row.rawScore ?? null).toBeNull();
+    }
+
+    installLocal();
+    expect(await run(processAllUnscored())).toBe(3);
+    for (const row of Object.values(await stored())) expect(row.rawScore).toBeCloseTo(1, 5);
+  });
+
+  // llama.rn errors can echo the prompt (the article and the reader's facts). Each per-article
+  // warn is scrubbed; the outage error that leaves scoreWithKev must not carry the raw text up
+  // to batchScoreAndReason's warn, which is a Sentry breadcrumb.
+  it('a Kev outage logs no article text: the error that leaves the scorer is not the raw llama.rn message', async () => {
+    installLocal();
+    queue();
+    installDecide((call) => {
+      const title = /Story \w+ saga\w+/.exec(JSON.stringify(call.request.state))?.[0] ?? '';
+      return { error: `bad state near ${title}` };
+    });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(0);
+    expect(JSON.stringify((logger.warn as jest.Mock).mock.calls)).not.toMatch(/saga/);
+  });
+
+  // Every article over n_ctx (a dense non-Latin fact bank) fails with llama_decode's 1 on every
+  // pass: that is about the prompts, not a Kev outage, so the rows keep their math scores
+  // rather than staying unscored forever.
+  it('Kev overflowing its context on every article of a batch leaves them all unscored, never on math scores', async () => {
+    installLocal();
+    queue();
+    installDecide({ error: 'failed to evaluate the decision prompt (error 1)' });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(0);
+    for (const row of Object.values(await stored())) {
+      expect(row.status).toBe('unscored');
+    }
   });
 
   it('saves a row below the 0.4 gate as reasonSkipped and writes it no note', async () => {

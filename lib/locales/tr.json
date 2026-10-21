@@ -177,7 +177,7 @@
         "downloading": "Makaleler indiriliyor",
         "grouping": "Yinelenen haberler gruplanıyor",
         "analysing": "İlgililik analiz ediliyor",
-        "summarising": "Notlarınız yazılıyor",
+        "summarising": "Nedenleriniz yazılıyor",
         "preparing": "Akışınız hazırlanıyor"
       },
       "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",
-      "reasonsTitle": "Notlar yazılıyor",
+      "reasonsTitle": "Nedenler yazılıyor",
       "onDeviceTitle": "Telefonda puanlanıyor",
       "completedTitle": "Tamamlandı",
       "completedMessage": "Haber akışın hazır"
@@ -206,7 +206,7 @@
     "statsRead_other": "ve {{formatted}} tanesini okudun.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
-    "reasonWritingA11y": "not yazılıyor",
+    "reasonWritingA11y": "neden yazılıyor",
     "findingStories": "Hikayeleriniz aranıyor",
     "findingStoriesBody": "Hazır olur olmaz burada görünürler",
     "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
@@ -257,7 +257,11 @@
       "announce_other": "{{show}} gösteriliyor, {{formatted}} makale",
       "emptyPicks": "Mera senin için henüz bir şey seçmedi.",
       "emptyUnread": "Mera buradaki her şeyi okudu.",
-      "showAll": "Tüm makaleleri göster"
+      "showAll": "Tüm makaleleri göster",
+      "discarded": "Mera tarafından elendi",
+      "emptyDiscarded": "Son 48 saatte hiçbir şey elenmedi.",
+      "optionA11y_one": "{{show}}, {{formatted}} haber",
+      "optionA11y_other": "{{show}}, {{formatted}} haber"
     },
     "readHold": {
       "waitingToday_one": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera bugün {{time}} saatinde yeniden okur.",
@@ -267,8 +271,17 @@
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
     },
-    "noteHeldToday": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu bugün {{time}} saatinde yazacak.",
-    "noteHeldTomorrow": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu yarın {{time}} saatinde yazacak."
+    "noteHeldToday": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni bugün {{time}} saatinde yazacak.",
+    "noteHeldTomorrow": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni yarın {{time}} saatinde yazacak.",
+    "noteState": {
+      "writing": "Neden yazılıyor",
+      "failed": "Neden yazılamadı",
+      "off": "Nedenler Ayarlar'da kapalı",
+      "paused": "Nedenler bugünlük duraklatıldı",
+      "discarded": "Mera tarafından elendi"
+    },
+    "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
+    "refreshFeedAction": "Akışınızı yenileyin"
   },
   "relevance": {
     "emergency": "Acil",
@@ -481,7 +494,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Nedenler: makale başına {{seconds}} sn",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -496,7 +509,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Sohbet yanıtlarını, nedenleri ve konuları yazar.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -505,8 +518,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Nedenler",
+    "skipNotesTitle": "Nedenleri atla",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
@@ -2502,7 +2515,7 @@
     "selectAll": "Tümünü seç",
     "selectedCount": "{{count}} seçildi",
     "includeReason": "Mera'nın gerekçesini ekle",
-    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Tek tek kaydedilen makalelerde bu not bulunmaz.",
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Tek tek kaydedilen makalelerde bu neden bulunmaz.",
     "formatMarkdown": "Markdown listesi",
     "formatMarkdownHint": "Okunması kolay bir liste, notlar ve belgeler için uygun.",
     "formatJson": "JSON",
@@ -2548,7 +2561,7 @@
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",
     "shareDialogTitle": "Haberi dışa aktar",
-    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık neden. Bazı makalelerde bu neden bulunmayabilir."
   },
   "systemCheck": {
     "title": "Telefonunuz kontrol ediliyor",

@@ -177,7 +177,7 @@
         "downloading": "Artikelen downloaden",
         "grouping": "Dubbele verhalen groeperen",
         "analysing": "Relevantie analyseren",
-        "summarising": "Je notities schrijven",
+        "summarising": "Je redenen schrijven",
         "preparing": "Je feed klaarmaken"
       },
       "downloadProgress": "{{done}} van {{total}} artikelen gedownload",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Relevantie berekenen",
-      "reasonsTitle": "Notities voor jou schrijven",
+      "reasonsTitle": "Redenen voor jou schrijven",
       "onDeviceTitle": "Scoren op je telefoon",
       "completedTitle": "Alles klaar",
       "completedMessage": "Je feed is gereed"
@@ -206,7 +206,7 @@
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "loadingA11y": "Je feed wordt geladen",
     "translatingCaption": "Vertalen…",
-    "reasonWritingA11y": "notitie schrijven",
+    "reasonWritingA11y": "reden schrijven",
     "findingStories": "Je verhalen worden gezocht",
     "findingStoriesBody": "Ze verschijnen hier zodra ze klaar zijn",
     "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
@@ -257,7 +257,11 @@
       "announce_other": "Toont {{show}}, {{formatted}} artikelen",
       "emptyPicks": "Mera heeft nog niets voor je gekozen.",
       "emptyUnread": "Mera heeft hier alles gelezen.",
-      "showAll": "Alle artikelen tonen"
+      "showAll": "Alle artikelen tonen",
+      "discarded": "Afgewezen door Mera",
+      "emptyDiscarded": "Niets afgewezen in de afgelopen 48 uur.",
+      "optionA11y_one": "{{show}}, {{formatted}} verhaal",
+      "optionA11y_other": "{{show}}, {{formatted}} verhalen"
     },
     "readHold": {
       "waitingToday_one": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikel hieronder is nog niet gelezen. Mera leest vandaag weer om {{time}}.",
@@ -267,8 +271,17 @@
       "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
       "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
     },
-    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas vandaag na {{time}}.",
-    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}."
+    "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas vandaag na {{time}}.",
+    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas morgen na {{time}}.",
+    "noteState": {
+      "writing": "Reden wordt geschreven",
+      "failed": "Kon de reden niet schrijven",
+      "off": "Redenen uit in Instellingen",
+      "paused": "Redenen gepauzeerd voor vandaag",
+      "discarded": "Afgewezen door Mera"
+    },
+    "readyForMore": "Klaar om meer te lezen?",
+    "refreshFeedAction": "Ververs je feed"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -481,7 +494,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Redenen: {{seconds}} s per artikel",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -496,7 +509,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Schrijft chatantwoorden, redenen en onderwerpen.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -505,8 +518,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Redenen",
+    "skipNotesTitle": "Redenen overslaan",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
@@ -2500,7 +2513,7 @@
     "selectAll": "Alles selecteren",
     "selectedCount": "{{count}} geselecteerd",
     "includeReason": "Reden van Mera meenemen",
-    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
+    "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
     "formatMarkdown": "Markdown-lijst",
     "formatMarkdownHint": "Een leesbare lijst, handig voor notities en documenten.",
     "formatJson": "JSON",
@@ -2546,7 +2559,7 @@
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",
     "shareDialogTitle": "Verhaal exporteren",
-    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
+    "includeReasonHint": "De korte reden die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
   },
   "systemCheck": {
     "title": "Je telefoon wordt gecontroleerd",

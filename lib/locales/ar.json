@@ -177,7 +177,7 @@
         "downloading": "تنزيل المقالات",
         "grouping": "تجميع القصص المكررة",
         "analysing": "تحليل مدى الصلة",
-        "summarising": "كتابة ملاحظاتك",
+        "summarising": "كتابة أسبابك",
         "preparing": "تجهيز موجزك"
       },
       "downloadProgress": "تم تنزيل {{done}} من {{total}} مقالا",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",
-      "reasonsTitle": "كتابة ملاحظات لك",
+      "reasonsTitle": "كتابة أسباب لك",
       "onDeviceTitle": "الترتيب على هاتفك",
       "completedTitle": "اكتمل",
       "completedMessage": "موجز أخبارك جاهز"
@@ -226,7 +226,7 @@
     "statsRead_other": "وقرأت {{formatted}}.",
     "loadingA11y": "جارٍ تحميل موجزك",
     "translatingCaption": "جارٍ الترجمة…",
-    "reasonWritingA11y": "جارٍ كتابة ملاحظة",
+    "reasonWritingA11y": "جارٍ كتابة سبب",
     "findingStories": "نبحث عن قصصك",
     "findingStoriesBody": "ستظهر هنا بمجرد أن تصبح جاهزة",
     "processingOffline": "أنت غير متصل. ستصلك قصصك عند عودة الاتصال.",
@@ -293,7 +293,15 @@
       "announce_other": "يُعرض {{show}}، {{formatted}} مقالة",
       "emptyPicks": "لم تختر ميرا شيئًا لك بعد.",
       "emptyUnread": "قرأت ميرا كل ما هنا.",
-      "showAll": "عرض كل المقالات"
+      "showAll": "عرض كل المقالات",
+      "discarded": "استبعدتها ميرا",
+      "emptyDiscarded": "لم يُستبعد أي شيء خلال آخر 48 ساعة.",
+      "optionA11y_zero": "{{show}}، {{formatted}} قصة",
+      "optionA11y_one": "{{show}}، {{formatted}} قصة",
+      "optionA11y_two": "{{show}}، {{formatted}} قصتان",
+      "optionA11y_few": "{{show}}، {{formatted}} قصص",
+      "optionA11y_many": "{{show}}، {{formatted}} قصة",
+      "optionA11y_other": "{{show}}، {{formatted}} قصة"
     },
     "readHold": {
       "waitingToday_zero": "استخدمت ميرا قراءة اليوم. {{formatted}} مقالة أدناه ما زالت غير مقروءة. ستقرأ ميرا مجددًا اليوم عند {{time}}.",
@@ -311,8 +319,17 @@
       "bodyToday": "استخدمت ميرا قراءة اليوم. ستقرأ ميرا مجددًا اليوم عند {{time}}.",
       "bodyTomorrow": "استخدمت ميرا قراءة اليوم. ستقرأ ميرا مجددًا غدًا عند {{time}}."
     },
-    "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذه الملاحظة بعد {{time}} اليوم.",
-    "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذه الملاحظة بعد {{time}} غدًا."
+    "noteHeldToday": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} اليوم.",
+    "noteHeldTomorrow": "استُخدمت قراءة اليوم، لذا ستكتب ميرا هذا السبب بعد {{time}} غدًا.",
+    "noteState": {
+      "writing": "جارٍ كتابة السبب",
+      "failed": "تعذّرت كتابة السبب",
+      "off": "الأسباب متوقفة في الإعدادات",
+      "paused": "الأسباب متوقفة مؤقتًا لليوم",
+      "discarded": "استبعدتها ميرا"
+    },
+    "readyForMore": "هل أنت مستعد لقراءة المزيد؟",
+    "refreshFeedAction": "حدّث موجزك"
   },
   "relevance": {
     "emergency": "طارئ",
@@ -529,7 +546,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "الأسباب: {{seconds}} ث لكل مقال",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -548,7 +565,7 @@
     "relevanceTitle": "ميرا relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "يكتب ردود الدردشة والأسباب والمواضيع.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -557,8 +574,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "الأسباب",
+    "skipNotesTitle": "تخطي الأسباب",
     "skipNotesHelp": "ميرا ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "ميرا uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then ميرا Protocol, to see why."
@@ -2630,7 +2647,7 @@
     "selectAll": "تحديد الكل",
     "selectedCount": "{{count}} محدد",
     "includeReason": "تضمين سبب ميرا",
-    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليها.",
+    "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليه.",
     "formatMarkdown": "قائمة Markdown",
     "formatMarkdownHint": "قائمة سهلة القراءة، مناسبة للملاحظات والمستندات.",
     "formatJson": "JSON",
@@ -2676,7 +2693,7 @@
   "storyExport": {
     "shareA11y": "تصدير هذه القصة",
     "shareDialogTitle": "تصدير القصة",
-    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليها."
+    "includeReasonHint": "السبب المختصر الذي يشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليه."
   },
   "systemCheck": {
     "title": "جارٍ فحص هاتفك",

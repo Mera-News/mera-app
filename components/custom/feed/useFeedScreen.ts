@@ -27,8 +27,23 @@ import {
   isNewCard,
   type FeedEntry,
 } from './feed-entries';
-import { useFeedMinimap, useFeedShow } from './feed-view-prefs';
-import { applyFeedShow, foldNotReadTail, newNotReadTailSession, showsNotReadDivider, type NotReadTailSession } from './not-read-tail';
+import {
+  FEED_SHOW_LABEL_KEY,
+  setFeedShowCounts,
+  useFeedMinimap,
+  useFeedShow,
+  useFeedShowCountsStore,
+  useFeedViewPrefs,
+} from './feed-view-prefs';
+import {
+  applyFeedShow,
+  buildDiscardedStories,
+  feedShowCounts,
+  foldNotReadTail,
+  newNotReadTailSession,
+  showsNotReadDivider,
+  type NotReadTailSession,
+} from './not-read-tail';
 import { setNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { formatCount } from '@/lib/algorithms/format-count';
@@ -99,6 +114,7 @@ const SESSION_RESUME_AFTER_MS = 5 * 60 * 1000;
 // frozen rows for refresh + hydrate survival). Opened-exclusion happens only
 // for NEW ids inside `ingest`.
 const EMPTY_SET: Set<string> = new Set();
+const NO_ROWS: readonly FeedListItem[] = [];
 
 export function useFeedScreen({ isFocused, header }: { readonly isFocused: boolean; readonly header: PageHeaderBinding }) {
   const { t } = useTranslation();
@@ -170,6 +186,17 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     () => foldNotReadTail(tailSessionRef.current, allCandidates),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allCandidates, sessionEpoch],
+  );
+  // The stories Mera discarded (Show: Discarded by Mera), never in the order
+  // store. Grouping the below-gate pool (the largest) costs ~10x the main
+  // list, so it runs only while that option is on or the Show menu is open
+  // (to count it); null otherwise.
+  const show = useFeedShow();
+  const showMenuOpen = useFeedShowCountsStore((s) => s.menuOpen);
+  const wantDiscarded = show === 'discarded' || showMenuOpen;
+  const discarded = useMemo(
+    () => (wantDiscarded ? buildDiscardedStories(suggestions, userGeoLanguageCtx) : null),
+    [wantDiscarded, suggestions, userGeoLanguageCtx],
   );
   // What the order store sees: scored stories only, minus the ones the tail
   // holds this session (a story never shows twice).
@@ -255,7 +282,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const onScreenIdsRef = useRef<ReadonlySet<string>>(new Set());
   const recomputeNewBelowRef = useRef(() => {});
   recomputeNewBelowRef.current = () => {
-    const since = newSinceRef.current;
+    // Discarded rows never get a seen-mark (they are not in the order), so
+    // under Discarded by Mera nothing counts as new.
+    const since = useFeedViewPrefs.getState().show === 'discarded' ? null : newSinceRef.current;
     let found = false;
     if (since !== null) {
       const rows = listDataRef.current;
@@ -494,13 +523,29 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   );
   scoredRowsRef.current = scoredRows;
 
-  // The Show filter (feed_show): Mera's picks, then the not-read tail. The
-  // unfiltered lists keep feeding the pin (scored rows) and the empty chain.
-  const show = useFeedShow();
+  // The Show filter (feed_show): Mera's picks, then the not-read tail; or the
+  // discarded stories alone. The unfiltered lists (picks and tail) keep
+  // feeding the pin (scored rows) and the empty chain.
+  // Only Discarded reads its rows, so opening the menu never rebuilds the list.
+  const discardedShown = show === 'discarded' ? discarded?.rows ?? NO_ROWS : NO_ROWS;
   const { rows: listData, picks: picksCount } = useMemo(
-    () => applyFeedShow(scoredRows, folded.tail, show),
-    [scoredRows, folded, show],
+    () => applyFeedShow(scoredRows, folded.tail, show, discardedShown),
+    [scoredRows, folded, show, discardedShown],
   );
+  // The Show menu's counts, from the same segments (one source of truth);
+  // Discarded's only while its stories are built.
+  useEffect(() => {
+    const counts = feedShowCounts(
+      scoredRows,
+      folded.tail,
+      folded.overflow,
+      discarded?.rows ?? [],
+      discarded?.total ?? 0,
+    );
+    const { discarded: _unbuilt, ...withoutDiscarded } = counts;
+    setFeedShowCounts(discarded ? counts : withoutDiscarded);
+  }, [scoredRows, folded, discarded]);
+  useEffect(() => () => setFeedShowCounts(null), []);
   const allRowsCount = scoredRows.length + folded.tail.length;
   // The divider says "below are articles Mera hasn't read yet": only while
   // one tail card still shows one (live rows, so a read lifts it at once).
@@ -535,7 +580,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
 
   // The counts card names the articles waiting below while the tail shows.
   useEffect(() => {
-    setNotReadWaiting(show === 'picks' ? null : folded.notReadArticles);
+    setNotReadWaiting(show === 'picks' || show === 'discarded' ? null : folded.notReadArticles);
   }, [show, folded]);
   useEffect(() => () => setNotReadWaiting(null), []);
 
@@ -819,7 +864,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     const switchedUnder = pendingShowAnnounceRef.current;
     if (!switchedUnder || switchedUnder === partitionSnapshot) return;
     pendingShowAnnounceRef.current = null;
-    const label = show === 'picks' ? t('feed.show.picks') : show === 'unread' ? t('feed.show.unread') : t('feed.show.all');
+    const label = t(FEED_SHOW_LABEL_KEY[show]);
     const count = listData.reduce((n, it) => n + it.memberCount, 0);
     AccessibilityInfo.announceForAccessibility(
       t('feed.show.announce', { show: label, count, formatted: formatCount(count, appLanguage) }),
@@ -920,7 +965,8 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     rowSessionRef,
     arrivingIdsRef,
     arrivalMotion,
-    newSince,
+    // No halo under Discarded by Mera: its rows can never be marked seen.
+    newSince: show === 'discarded' ? null : newSince,
     registerRow,
     viewabilityConfigCallbackPairs,
     onScrollToIndexFailed,

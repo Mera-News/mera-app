@@ -3,6 +3,7 @@
 // the sort and its tests can import it.
 
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { isReadBelowGate } from '@/lib/feed-ordering/pending-visibility';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /**
@@ -39,4 +40,38 @@ export function notePendingMode(
  */
 export function showsChipOnly(s: Pick<ForYouSuggestion, 'status' | 'reason' | 'relevance'>): boolean {
     return s.status === ArticleSuggestionStatus.Complete && !s.reason && (s.relevance ?? 0) > 0;
+}
+
+/**
+ * Why a note box shows the matched facts instead of an AI note, for its caption
+ * (owner, 2026-10-21):
+ *  - `writing`: a note is on its way (`reason_pending`).
+ *  - `paused`: the day's cloud reading is used up; the note waits for the reset.
+ *  - `off`: Skip notes is on, so no note is written.
+ *  - `failed`: a note was owed but none came (a refusal or an error).
+ *  - `discarded`: Mera read it and scored it below its bar, so no note is
+ *    owed (the Show filter's "Discarded by Mera").
+ */
+export type NoteBoxState = 'writing' | 'paused' | 'off' | 'failed' | 'discarded';
+
+export function noteBoxState(
+    pending: ReasonNotePendingMode | undefined,
+    skipNotes: boolean,
+    belowGate = false,
+): NoteBoxState {
+    if (pending === 'writing') return 'writing';
+    if (pending === 'held') return 'paused';
+    if (belowGate) return 'discarded';
+    return skipNotes ? 'off' : 'failed';
+}
+
+/**
+ * A row Mera read and scored below the render gate, with no note: the note box
+ * shows its chip and the `discarded` caption. Relevance 0 (ineligible) too,
+ * which `showsChipOnly` leaves out.
+ */
+export function showsBelowGate(
+    s: Pick<ForYouSuggestion, 'status' | 'reason' | 'relevance' | 'scoredWithV3'>,
+): boolean {
+    return !s.reason && isReadBelowGate(s);
 }

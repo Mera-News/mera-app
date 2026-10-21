@@ -177,7 +177,7 @@
         "downloading": "Artikel werden geladen",
         "grouping": "Doppelte Meldungen gruppieren",
         "analysing": "Relevanz wird analysiert",
-        "summarising": "Notizen werden geschrieben",
+        "summarising": "Gründe werden geschrieben",
         "preparing": "Feed wird vorbereitet"
       },
       "downloadProgress": "{{done}} von {{total}} Artikeln geladen",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Relevanz wird berechnet",
-      "reasonsTitle": "Notizen werden verfasst",
+      "reasonsTitle": "Gründe werden verfasst",
       "onDeviceTitle": "Bewertung auf deinem Telefon",
       "completedTitle": "Alles erledigt",
       "completedMessage": "Dein Feed ist bereit"
@@ -206,7 +206,7 @@
     "statsRead_other": "und du hast {{formatted}} gelesen.",
     "loadingA11y": "Dein Feed wird geladen",
     "translatingCaption": "Wird übersetzt…",
-    "reasonWritingA11y": "Notiz wird geschrieben",
+    "reasonWritingA11y": "Grund wird geschrieben",
     "findingStories": "Deine Geschichten werden gesucht",
     "findingStoriesBody": "Sie erscheinen hier, sobald sie fertig sind",
     "processingOffline": "Du bist offline. Deine Geschichten kommen, sobald du wieder online bist.",
@@ -257,7 +257,11 @@
       "announce_other": "Zeigt {{show}}, {{formatted}} Artikel",
       "emptyPicks": "Mera hat noch nichts für dich ausgewählt.",
       "emptyUnread": "Mera hat hier alles gelesen.",
-      "showAll": "Alle Artikel anzeigen"
+      "showAll": "Alle Artikel anzeigen",
+      "discarded": "Von Mera aussortiert",
+      "emptyDiscarded": "In den letzten 48 Stunden wurde nichts aussortiert.",
+      "optionA11y_one": "{{show}}, {{formatted}} Geschichte",
+      "optionA11y_other": "{{show}}, {{formatted}} Geschichten"
     },
     "readHold": {
       "waitingToday_one": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten ist noch ungelesen. Mera liest heute um {{time}} wieder.",
@@ -267,8 +271,17 @@
       "bodyToday": "Mera hat das heutige Lesekontingent genutzt. Mera liest heute um {{time}} wieder.",
       "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder."
     },
-    "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz heute ab {{time}}.",
-    "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz morgen ab {{time}}."
+    "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund heute ab {{time}}.",
+    "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund morgen ab {{time}}.",
+    "noteState": {
+      "writing": "Grund wird geschrieben",
+      "failed": "Grund konnte nicht geschrieben werden",
+      "off": "Gründe in den Einstellungen aus",
+      "paused": "Gründe für heute pausiert",
+      "discarded": "Von Mera aussortiert"
+    },
+    "readyForMore": "Bereit für mehr?",
+    "refreshFeedAction": "Feed aktualisieren"
   },
   "relevance": {
     "emergency": "Notfall",
@@ -481,7 +494,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Gründe: {{seconds}} s pro Artikel",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -496,7 +509,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Schreibt Chat-Antworten, Gründe und Themen.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -505,8 +518,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Gründe",
+    "skipNotesTitle": "Gründe überspringen",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
@@ -2500,7 +2513,7 @@
     "selectAll": "Alle auswählen",
     "selectedCount": "{{count}} ausgewählt",
     "includeReason": "Meras Begründung einbeziehen",
-    "includeReasonHint": "Der kurze Hinweis, warum jeder Artikel in deinen Feed gelangt ist. Einzeln gespeicherte Artikel haben keinen.",
+    "includeReasonHint": "Der kurze Grund, warum jeder Artikel in deinen Feed gelangt ist. Einzeln gespeicherte Artikel haben keinen.",
     "formatMarkdown": "Markdown-Liste",
     "formatMarkdownHint": "Eine gut lesbare Liste, ideal für Notizen und Dokumente.",
     "formatJson": "JSON",
@@ -2546,7 +2559,7 @@
   "storyExport": {
     "shareA11y": "Diese Story exportieren",
     "shareDialogTitle": "Story exportieren",
-    "includeReasonHint": "Der kurze Hinweis, warum jeder Artikel in deinen Feed gelangt ist. Manche Artikel haben keinen."
+    "includeReasonHint": "Der kurze Grund, warum jeder Artikel in deinen Feed gelangt ist. Manche Artikel haben keinen."
   },
   "systemCheck": {
     "title": "Dein Telefon wird geprüft",

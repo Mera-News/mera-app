@@ -211,8 +211,10 @@ export async function computeAndScore(
 
   if (scorable.length > 0 && opts.relevanceScorer) {
     // Injected scorer (Kev on-device): ONE call with every scorable candidate,
-    // no prompts, no batchComplete. It returns app-scale relevance (0..1); a
-    // missing id keeps the math score already in rawScoreMap.
+    // no prompts, no batchComplete. It returns app-scale relevance (0..1). A
+    // missing id gets NO score: it leaves rawScoreMap, so the caller leaves the
+    // row unscored for the next pass (the Feed shows unscored rows). A math
+    // score standing in for Kev put whole runs in the LOW band (owner, 2026-10-21).
     const scored = await opts.relevanceScorer(
       scorable.map((c) => c.legacy!),
       opts.factStatements ?? [],
@@ -220,6 +222,7 @@ export async function computeAndScore(
     for (const c of scorable) {
       const score = scored.get(c.input.id);
       if (score !== undefined) applyScore(c.input.id, score);
+      else rawScoreMap.delete(c.input.id);
     }
   } else if (scorable.length > 0) {
     const facts = opts.factStatements ?? [];

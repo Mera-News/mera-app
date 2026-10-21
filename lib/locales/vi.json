@@ -177,7 +177,7 @@
         "downloading": "Đang tải bài viết",
         "grouping": "Đang gộp các tin trùng nhau",
         "analysing": "Đang phân tích mức độ liên quan",
-        "summarising": "Đang viết ghi chú cho bạn",
+        "summarising": "Đang viết lý do cho bạn",
         "preparing": "Đang chuẩn bị bảng tin của bạn"
       },
       "downloadProgress": "Đã tải {{done}} trong {{total}} bài viết",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Đang tính mức độ liên quan",
-      "reasonsTitle": "Đang viết ghi chú cho bạn",
+      "reasonsTitle": "Đang viết lý do cho bạn",
       "onDeviceTitle": "Đang chấm điểm trên điện thoại",
       "completedTitle": "Hoàn tất",
       "completedMessage": "Bản tin của bạn đã sẵn sàng"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "{{formatted}} bài có vẻ phù hợp,",
     "loadingA11y": "Đang tải bảng tin của bạn",
     "translatingCaption": "Đang dịch…",
-    "reasonWritingA11y": "đang viết ghi chú",
+    "reasonWritingA11y": "đang viết lý do",
     "findingStories": "Đang tìm câu chuyện cho bạn",
     "findingStoriesBody": "Chúng sẽ hiện ở đây ngay khi sẵn sàng",
     "processingOffline": "Bạn đang ngoại tuyến. Các câu chuyện của bạn sẽ đến khi bạn có mạng trở lại.",
@@ -256,7 +256,10 @@
       "announce_other": "Đang hiển thị {{show}}, {{formatted}} bài viết",
       "emptyPicks": "Mera chưa chọn gì cho bạn.",
       "emptyUnread": "Mera đã đọc hết mọi thứ ở đây.",
-      "showAll": "Hiển thị tất cả bài viết"
+      "showAll": "Hiển thị tất cả bài viết",
+      "discarded": "Mera đã loại bỏ",
+      "emptyDiscarded": "Không có gì bị loại bỏ trong 48 giờ qua.",
+      "optionA11y_other": "{{show}}, {{formatted}} câu chuyện"
     },
     "readHold": {
       "waitingToday_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại hôm nay lúc {{time}}.",
@@ -264,8 +267,17 @@
       "bodyToday": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
     },
-    "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} hôm nay.",
-    "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} vào ngày mai."
+    "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} hôm nay.",
+    "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} vào ngày mai.",
+    "noteState": {
+      "writing": "Đang viết lý do",
+      "failed": "Không viết được lý do",
+      "off": "Lý do đã tắt trong Cài đặt",
+      "paused": "Lý do tạm dừng hôm nay",
+      "discarded": "Mera đã loại bỏ"
+    },
+    "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
+    "refreshFeedAction": "Làm mới bảng tin"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -478,7 +490,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Lý do: {{seconds}} giây mỗi bài",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -492,7 +504,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Viết câu trả lời trò chuyện, lý do và chủ đề.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -501,8 +513,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Lý do",
+    "skipNotesTitle": "Bỏ qua lý do",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
@@ -2494,7 +2506,7 @@
     "selectAll": "Chọn tất cả",
     "selectedCount": "Đã chọn {{count}}",
     "includeReason": "Kèm theo lý do của Mera",
-    "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Các bài lưu riêng lẻ không có ghi chú này.",
+    "includeReasonHint": "Lý do một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Các bài lưu riêng lẻ không có lý do này.",
     "formatMarkdown": "Danh sách Markdown",
     "formatMarkdownHint": "Danh sách dễ đọc, phù hợp với ghi chú và tài liệu.",
     "formatJson": "JSON",
@@ -2540,7 +2552,7 @@
   "storyExport": {
     "shareA11y": "Xuất câu chuyện này",
     "shareDialogTitle": "Xuất câu chuyện",
-    "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có ghi chú này."
+    "includeReasonHint": "Lý do một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có lý do này."
   },
   "systemCheck": {
     "title": "Đang kiểm tra điện thoại của bạn",

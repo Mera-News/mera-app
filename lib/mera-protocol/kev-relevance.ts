@@ -90,10 +90,10 @@ function scrubbed(error: unknown, state: ReturnType<typeof kevState>): string {
 const isKevBusy = (e: unknown) => (e as { code?: unknown } | null)?.code === 'ERR_AFM_BUSY';
 
 /**
- * Kev's relevance per article. An error about one article (its prompt too long, a template
- * failure) keeps that row on its math score. Busy (background, or a GPU that will not recover)
- * throws instead, so batchScoreAndReason marks the whole batch failed and its rows stay unscored
- * for the next pass, rather than landing on math scores Kev never saw.
+ * Kev's relevance per article. An article Kev does not answer (its prompt too long, a template
+ * failure, a dead context) is left out of the result, so computeAndScore leaves its row unscored
+ * for the next pass; it never falls back to a math score. Busy (background, or a GPU that will
+ * not recover) throws, so the whole batch waits for the next pass.
  */
 export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) => {
   const out = new Map<string, number>();

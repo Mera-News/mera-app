@@ -177,7 +177,7 @@
         "downloading": "기사를 내려받는 중",
         "grouping": "중복 기사를 묶는 중",
         "analysing": "관련도를 분석하는 중",
-        "summarising": "메모를 작성하는 중",
+        "summarising": "이유를 작성하는 중",
         "preparing": "피드를 준비하는 중"
       },
       "downloadProgress": "{{total}}개 중 {{done}}개 기사를 내려받았습니다",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "관련성 계산 중",
-      "reasonsTitle": "메모 작성 중",
+      "reasonsTitle": "이유 작성 중",
       "onDeviceTitle": "기기에서 점수 계산 중",
       "completedTitle": "모두 완료",
       "completedMessage": "피드가 준비되었습니다"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "{{formatted}}개가 관련 있어 보이며,",
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
-    "reasonWritingA11y": "메모 작성 중",
+    "reasonWritingA11y": "이유 작성 중",
     "findingStories": "내 스토리를 찾는 중",
     "findingStoriesBody": "준비되는 대로 여기에 나타나요",
     "processingOffline": "오프라인 상태예요. 다시 온라인이 되면 스토리가 도착해요.",
@@ -256,7 +256,10 @@
       "announce_other": "{{show}} 표시 중, 기사 {{formatted}}개",
       "emptyPicks": "메라가 아직 회원님을 위해 고른 기사가 없습니다.",
       "emptyUnread": "여기 있는 기사는 메라가 모두 읽었습니다.",
-      "showAll": "모든 기사 보기"
+      "showAll": "모든 기사 보기",
+      "discarded": "메라가 제외함",
+      "emptyDiscarded": "지난 48시간 동안 제외된 항목이 없어요.",
+      "optionA11y_other": "{{show}}, 스토리 {{formatted}}개"
     },
     "readHold": {
       "waitingToday_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
@@ -264,8 +267,17 @@
       "bodyToday": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다."
     },
-    "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 오늘 {{time}} 이후에 작성합니다.",
-    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 내일 {{time}} 이후에 작성합니다."
+    "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 오늘 {{time}} 이후에 작성합니다.",
+    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 내일 {{time}} 이후에 작성합니다.",
+    "noteState": {
+      "writing": "이유 작성 중",
+      "failed": "이유를 작성하지 못했어요",
+      "off": "설정에서 이유 꺼짐",
+      "paused": "오늘은 이유 일시 중지",
+      "discarded": "메라가 제외함"
+    },
+    "readyForMore": "더 읽을 준비가 되셨나요?",
+    "refreshFeedAction": "피드 새로고침"
   },
   "relevance": {
     "emergency": "긴급",
@@ -478,7 +490,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "이유: 기사당 {{seconds}}초",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -492,7 +504,7 @@
     "relevanceTitle": "메라 relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "채팅 답변, 이유, 토픽을 작성해요.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -501,8 +513,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "이유",
+    "skipNotesTitle": "이유 건너뛰기",
     "skipNotesHelp": "메라 ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "메라 uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then 메라 Protocol, to see why."
@@ -2494,7 +2506,7 @@
     "selectAll": "전체 선택",
     "selectedCount": "{{count}}개 선택됨",
     "includeReason": "메라의 이유 포함",
-    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 개별로 저장한 기사에는 없습니다.",
+    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 이유입니다. 개별로 저장한 기사에는 없습니다.",
     "formatMarkdown": "Markdown 목록",
     "formatMarkdownHint": "읽기 쉬운 목록으로, 메모와 문서에 적합합니다.",
     "formatJson": "JSON",
@@ -2540,7 +2552,7 @@
   "storyExport": {
     "shareA11y": "이 스토리 내보내기",
     "shareDialogTitle": "스토리 내보내기",
-    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 메모가 없는 기사도 있을 수 있습니다."
+    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 이유입니다. 이유가 없는 기사도 있을 수 있습니다."
   },
   "systemCheck": {
     "title": "휴대폰 확인 중",

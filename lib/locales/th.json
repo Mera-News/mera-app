@@ -177,7 +177,7 @@
         "downloading": "กำลังดาวน์โหลดบทความ",
         "grouping": "กำลังจัดกลุ่มข่าวที่ซ้ำกัน",
         "analysing": "กำลังวิเคราะห์ความเกี่ยวข้อง",
-        "summarising": "กำลังเขียนบันทึกให้คุณ",
+        "summarising": "กำลังเขียนเหตุผลให้คุณ",
         "preparing": "กำลังเตรียมฟีดของคุณ"
       },
       "downloadProgress": "ดาวน์โหลดแล้ว {{done}} จาก {{total}} บทความ",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "กำลังคำนวณความเกี่ยวข้อง",
-      "reasonsTitle": "กำลังเขียนบันทึกให้คุณ",
+      "reasonsTitle": "กำลังเขียนเหตุผลให้คุณ",
       "onDeviceTitle": "กำลังจัดเรียงบนโทรศัพท์",
       "completedTitle": "เสร็จสิ้นแล้ว",
       "completedMessage": "ฟีดของคุณพร้อมแล้ว"
@@ -206,7 +206,7 @@
     "statsRelevant_one": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
     "loadingA11y": "กำลังโหลดฟีดของคุณ",
     "translatingCaption": "กำลังแปล…",
-    "reasonWritingA11y": "กำลังเขียนบันทึก",
+    "reasonWritingA11y": "กำลังเขียนเหตุผล",
     "findingStories": "กำลังหาเรื่องราวของคุณ",
     "findingStoriesBody": "เรื่องราวจะปรากฏที่นี่ทันทีที่พร้อม",
     "processingOffline": "คุณออฟไลน์อยู่ เรื่องราวของคุณจะมาเมื่อกลับมาออนไลน์",
@@ -256,7 +256,10 @@
       "announce_other": "กำลังแสดง{{show}} {{formatted}} บทความ",
       "emptyPicks": "เมร่ายังไม่ได้เลือกอะไรให้คุณ",
       "emptyUnread": "เมร่าอ่านทุกอย่างที่นี่แล้ว",
-      "showAll": "แสดงบทความทั้งหมด"
+      "showAll": "แสดงบทความทั้งหมด",
+      "discarded": "คัดออกโดยเมร่า",
+      "emptyDiscarded": "ไม่มีรายการที่ถูกคัดออกใน 48 ชั่วโมงที่ผ่านมา",
+      "optionA11y_other": "{{show}} {{formatted}} เรื่อง"
     },
     "readHold": {
       "waitingToday_other": "เมร่าใช้การอ่านของวันนี้ไปแล้ว มี {{formatted}} บทความด้านล่างที่ยังไม่ได้อ่าน เมร่าจะกลับมาอ่านอีกครั้งวันนี้เวลา {{time}}",
@@ -264,8 +267,17 @@
       "bodyToday": "เมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะกลับมาอ่านอีกครั้งวันนี้เวลา {{time}}",
       "bodyTomorrow": "เมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะกลับมาอ่านอีกครั้งพรุ่งนี้เวลา {{time}}"
     },
-    "noteHeldToday": "เมร่ายังไม่ได้เขียนบันทึกนี้ เพราะเมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะเขียนบันทึกนี้หลังเวลา {{time}} ของวันนี้",
-    "noteHeldTomorrow": "เมร่ายังไม่ได้เขียนบันทึกนี้ เพราะเมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะเขียนบันทึกนี้หลังเวลา {{time}} ของวันพรุ่งนี้"
+    "noteHeldToday": "เมร่ายังไม่ได้เขียนเหตุผลนี้ เพราะเมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะเขียนเหตุผลนี้หลังเวลา {{time}} ของวันนี้",
+    "noteHeldTomorrow": "เมร่ายังไม่ได้เขียนเหตุผลนี้ เพราะเมร่าใช้การอ่านของวันนี้ไปแล้ว เมร่าจะเขียนเหตุผลนี้หลังเวลา {{time}} ของวันพรุ่งนี้",
+    "noteState": {
+      "writing": "กำลังเขียนเหตุผล",
+      "failed": "เขียนเหตุผลไม่ได้",
+      "off": "ปิดเหตุผลไว้ในการตั้งค่า",
+      "paused": "หยุดเหตุผลชั่วคราววันนี้",
+      "discarded": "คัดออกโดยเมร่า"
+    },
+    "readyForMore": "พร้อมอ่านเพิ่มหรือยัง?",
+    "refreshFeedAction": "รีเฟรชฟีดของคุณ"
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -478,7 +490,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "เหตุผล: {{seconds}} วินาทีต่อบทความ",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -492,7 +504,7 @@
     "relevanceTitle": "เมร่า relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "เขียนคำตอบแชต เหตุผล และหัวข้อ",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -501,8 +513,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "เหตุผล",
+    "skipNotesTitle": "ข้ามเหตุผล",
     "skipNotesHelp": "เมร่า ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "เมร่า uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then เมร่า Protocol, to see why."
@@ -2495,7 +2507,7 @@
     "selectAll": "เลือกทั้งหมด",
     "selectedCount": "เลือกแล้ว {{count}} รายการ",
     "includeReason": "รวมเหตุผลของ เมร่า",
-    "includeReasonHint": "ข้อความสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บทความที่บันทึกแยกจะไม่มีข้อความนี้",
+    "includeReasonHint": "เหตุผลสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บทความที่บันทึกแยกจะไม่มีเหตุผลนี้",
     "formatMarkdown": "รายการ Markdown",
     "formatMarkdownHint": "รายการที่อ่านง่าย เหมาะกับบันทึกและเอกสาร",
     "formatJson": "JSON",
@@ -2541,7 +2553,7 @@
   "storyExport": {
     "shareA11y": "ส่งออกเรื่องราวนี้",
     "shareDialogTitle": "ส่งออกเรื่องราว",
-    "includeReasonHint": "ข้อความสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บางบทความอาจไม่มีข้อความนี้"
+    "includeReasonHint": "เหตุผลสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บางบทความอาจไม่มีเหตุผลนี้"
   },
   "systemCheck": {
     "title": "กำลังตรวจสอบโทรศัพท์ของคุณ",

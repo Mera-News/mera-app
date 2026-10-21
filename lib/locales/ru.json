@@ -177,7 +177,7 @@
         "downloading": "Загружаем статьи",
         "grouping": "Объединяем повторяющиеся сюжеты",
         "analysing": "Анализируем релевантность",
-        "summarising": "Пишем ваши заметки",
+        "summarising": "Пишем ваши пояснения",
         "preparing": "Готовим вашу ленту"
       },
       "downloadProgress": "Загружено {{done}} из {{total}} статей",
@@ -216,7 +216,7 @@
     "statsRead_other": "и вы прочитали {{formatted}}.",
     "loadingA11y": "Загружаем вашу ленту",
     "translatingCaption": "Перевод…",
-    "reasonWritingA11y": "заметка пишется",
+    "reasonWritingA11y": "пояснение пишется",
     "findingStories": "Подбираем ваши истории",
     "findingStoriesBody": "Они появятся здесь, как только будут готовы",
     "processingOffline": "Вы не в сети. Истории появятся, когда соединение восстановится.",
@@ -275,7 +275,13 @@
       "announce_other": "Показано: {{show}}, {{formatted}} статьи",
       "emptyPicks": "Мера пока ничего не выбрала для вас.",
       "emptyUnread": "Мера прочитала всё здесь.",
-      "showAll": "Показать все статьи"
+      "showAll": "Показать все статьи",
+      "discarded": "Отклонено Мерой",
+      "emptyDiscarded": "За последние 48 часов ничего не отклонено.",
+      "optionA11y_one": "{{show}}, {{formatted}} история",
+      "optionA11y_few": "{{show}}, {{formatted}} истории",
+      "optionA11y_many": "{{show}}, {{formatted}} историй",
+      "optionA11y_other": "{{show}}, {{formatted}} истории"
     },
     "readHold": {
       "waitingToday_one": "Мера использовала сегодняшнее чтение. {{formatted}} статья ниже ещё не прочитана. Мера снова читает сегодня в {{time}}.",
@@ -289,8 +295,17 @@
       "bodyToday": "Мера использовала сегодняшнее чтение. Она снова читает сегодня в {{time}}.",
       "bodyTomorrow": "Мера использовала сегодняшнее чтение. Она снова читает завтра в {{time}}."
     },
-    "noteHeldToday": "Мера уже использовала сегодняшнее чтение, поэтому эту заметку она напишет сегодня после {{time}}.",
-    "noteHeldTomorrow": "Мера уже использовала сегодняшнее чтение, поэтому эту заметку она напишет завтра после {{time}}."
+    "noteHeldToday": "Мера уже использовала сегодняшнее чтение, поэтому это пояснение она напишет сегодня после {{time}}.",
+    "noteHeldTomorrow": "Мера уже использовала сегодняшнее чтение, поэтому это пояснение она напишет завтра после {{time}}.",
+    "noteState": {
+      "writing": "Пишу пояснение",
+      "failed": "Не удалось написать пояснение",
+      "off": "Пояснения отключены в настройках",
+      "paused": "Пояснения приостановлены на сегодня",
+      "discarded": "Отклонено Мерой"
+    },
+    "readyForMore": "Готовы читать дальше?",
+    "refreshFeedAction": "Обновить ленту"
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -505,7 +520,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Пояснения: {{seconds}} с на статью",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -522,7 +537,7 @@
     "relevanceTitle": "Мера relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Пишет ответы в чате, пояснения и темы.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -531,8 +546,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Пояснения",
+    "skipNotesTitle": "Пропускать пояснения",
     "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Мера uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Мера Protocol, to see why."
@@ -2562,7 +2577,7 @@
     "selectAll": "Выбрать все",
     "selectedCount": "Выбрано: {{count}}",
     "includeReason": "Включить объяснение Меры",
-    "includeReasonHint": "Короткая заметка о том, почему каждая статья попала в вашу ленту. У статей, сохранённых по отдельности, её нет.",
+    "includeReasonHint": "Короткое пояснение о том, почему каждая статья попала в вашу ленту. У статей, сохранённых по отдельности, его нет.",
     "formatMarkdown": "Список Markdown",
     "formatMarkdownHint": "Удобный для чтения список, подходит для заметок и документов.",
     "formatJson": "JSON",
@@ -2608,7 +2623,7 @@
   "storyExport": {
     "shareA11y": "Экспортировать эту историю",
     "shareDialogTitle": "Экспорт истории",
-    "includeReasonHint": "Короткая заметка о том, почему каждая статья попала в вашу ленту. У некоторых статей её может не быть."
+    "includeReasonHint": "Короткое пояснение о том, почему каждая статья попала в вашу ленту. У некоторых статей его может не быть."
   },
   "systemCheck": {
     "title": "Проверяем ваш телефон",

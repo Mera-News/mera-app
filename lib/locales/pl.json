@@ -177,7 +177,7 @@
         "downloading": "Pobieram artykuły",
         "grouping": "Grupuję powtarzające się tematy",
         "analysing": "Analizuję trafność",
-        "summarising": "Piszę twoje notatki",
+        "summarising": "Piszę twoje uzasadnienia",
         "preparing": "Przygotowuję twój feed"
       },
       "downloadProgress": "Pobrano {{done}} z {{total}} artykułów",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Obliczanie trafności",
-      "reasonsTitle": "Pisanie notatek dla Ciebie",
+      "reasonsTitle": "Pisanie uzasadnień dla Ciebie",
       "onDeviceTitle": "Ocenianie na Twoim telefonie",
       "completedTitle": "Wszystko gotowe",
       "completedMessage": "Twój kanał jest gotowy"
@@ -216,7 +216,7 @@
     "statsRead_other": "i przeczytałeś {{formatted}}.",
     "loadingA11y": "Wczytywanie Twojego kanału",
     "translatingCaption": "Tłumaczenie…",
-    "reasonWritingA11y": "notatka jest pisana",
+    "reasonWritingA11y": "uzasadnienie jest pisane",
     "findingStories": "Szukamy Twoich historii",
     "findingStoriesBody": "Pojawią się tutaj, gdy tylko będą gotowe",
     "processingOffline": "Jesteś offline. Twoje historie pojawią się, gdy wrócisz do sieci.",
@@ -275,7 +275,13 @@
       "announce_other": "Pokazywane: {{show}}, {{formatted}} artykułów",
       "emptyPicks": "Mera nie wybrała dla Ciebie jeszcze niczego.",
       "emptyUnread": "Mera przeczytała tutaj wszystko.",
-      "showAll": "Pokaż wszystkie artykuły"
+      "showAll": "Pokaż wszystkie artykuły",
+      "discarded": "Odrzucone przez Merę",
+      "emptyDiscarded": "Nic nie zostało odrzucone w ciągu ostatnich 48 godzin.",
+      "optionA11y_one": "{{show}}, {{formatted}} historia",
+      "optionA11y_few": "{{show}}, {{formatted}} historie",
+      "optionA11y_many": "{{show}}, {{formatted}} historii",
+      "optionA11y_other": "{{show}}, {{formatted}} historii"
     },
     "readHold": {
       "waitingToday_one": "Mera wykorzystała dzisiejsze czytanie. {{formatted}} artykuł poniżej jest nadal nieprzeczytany. Mera czyta ponownie dzisiaj o {{time}}.",
@@ -289,8 +295,17 @@
       "bodyToday": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta dzisiaj o {{time}}.",
       "bodyTomorrow": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta jutro o {{time}}."
     },
-    "noteHeldToday": "Mera napisze tę notatkę dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
-    "noteHeldTomorrow": "Mera napisze tę notatkę jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania."
+    "noteHeldToday": "Mera napisze to uzasadnienie dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+    "noteHeldTomorrow": "Mera napisze to uzasadnienie jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+    "noteState": {
+      "writing": "Piszę uzasadnienie",
+      "failed": "Nie udało się napisać uzasadnienia",
+      "off": "Uzasadnienia wyłączone w Ustawieniach",
+      "paused": "Uzasadnienia wstrzymane na dziś",
+      "discarded": "Odrzucone przez Merę"
+    },
+    "readyForMore": "Gotowy, żeby czytać dalej?",
+    "refreshFeedAction": "Odśwież swój kanał"
   },
   "relevance": {
     "emergency": "Pilne",
@@ -505,7 +520,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Uzasadnienia: {{seconds}} s na artykuł",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -522,7 +537,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Pisze odpowiedzi na czacie, uzasadnienia i tematy.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -531,8 +546,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Uzasadnienia",
+    "skipNotesTitle": "Pomiń uzasadnienia",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."
@@ -2562,7 +2577,7 @@
     "selectAll": "Zaznacz wszystko",
     "selectedCount": "Zaznaczono: {{count}}",
     "includeReason": "Dołącz uzasadnienie Mery",
-    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Artykuły zapisane pojedynczo jej nie mają.",
+    "includeReasonHint": "Jednolinijkowe uzasadnienie wyjaśniające, dlaczego każdy artykuł trafił do Twojego kanału. Artykuły zapisane pojedynczo go nie mają.",
     "formatMarkdown": "Lista Markdown",
     "formatMarkdownHint": "Czytelna lista, dobra do notatek i dokumentów.",
     "formatJson": "JSON",
@@ -2608,7 +2623,7 @@
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",
     "shareDialogTitle": "Eksportuj historię",
-    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą jej nie mieć."
+    "includeReasonHint": "Jednolinijkowe uzasadnienie wyjaśniające, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą go nie mieć."
   },
   "systemCheck": {
     "title": "Sprawdzanie telefonu",

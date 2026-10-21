@@ -67,6 +67,7 @@ import {
   bucketRank,
   isSectionMemberEligible,
   isFactSectionViable,
+  HEADLINE_SECTION_MIN_VIABLE_BUCKET,
   resolveOwningFactLenient,
   countryHeadlineSectionId,
   headlineSectionWeight,
@@ -795,12 +796,9 @@ export function buildFactRows(
   const isGroupUnread = (g: FactRowGroup) => !isSuggestionOpened(g.data, openedIds);
   const rows: FactRow[] = [];
   for (const row of factRows.values()) {
-    // RULE 2 (see feed-select/ownership): a section headed "News about: X" needs
-    // at least one story that is actually about X. When every surviving match is
-    // LOW, the fact has no coverage right now — only the tail of a similarity
-    // search — so the section is dropped rather than filled with articles whose
-    // own rationale disclaims the link. Sections WITH real coverage keep their
-    // LOW stories, so active sections are unchanged.
+    // RULE 2 (see feed-select/ownership): a fact section needs one story at
+    // SECTION_MIN_VIABLE_BUCKET, now LOW (owner, 2026-10-21: "low should still
+    // show the section"), so any visible story keeps its fact's section.
     if (!isFactSectionViable(row.groups.map((g) => g.bucket))) continue;
     row.groups.sort(cardCompare);
     row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
@@ -825,7 +823,7 @@ export function buildFactRows(
   //     permanent state of the feature rather than an occasional honest empty.
   //     Anyone tempted to restore it should first confirm the sections can fill.
   for (const row of headlineRows.values()) {
-    if (!isFactSectionViable(row.groups.map((g) => g.bucket))) continue;
+    if (!isFactSectionViable(row.groups.map((g) => g.bucket), HEADLINE_SECTION_MIN_VIABLE_BUCKET)) continue;
     row.groups.sort(cardCompare);
     row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
     row.unreadCount = row.groups.filter(isGroupUnread).length;

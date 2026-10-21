@@ -177,7 +177,7 @@
         "downloading": "Завантажуємо статті",
         "grouping": "Об'єднуємо повторювані сюжети",
         "analysing": "Аналізуємо релевантність",
-        "summarising": "Пишемо ваші нотатки",
+        "summarising": "Пишемо ваші причини",
         "preparing": "Готуємо вашу стрічку"
       },
       "downloadProgress": "Завантажено {{done}} із {{total}} статей",
@@ -188,7 +188,7 @@
     },
     "syncToast": {
       "relevanceTitle": "Обчислення релевантності",
-      "reasonsTitle": "Написання нотаток для вас",
+      "reasonsTitle": "Написання причин для вас",
       "onDeviceTitle": "Оцінювання на телефоні",
       "completedTitle": "Все готово",
       "completedMessage": "Ваша стрічка готова"
@@ -216,7 +216,7 @@
     "statsRead_other": "і ви прочитали {{formatted}}.",
     "loadingA11y": "Завантажуємо вашу стрічку",
     "translatingCaption": "Переклад…",
-    "reasonWritingA11y": "замітка пишеться",
+    "reasonWritingA11y": "причина пишеться",
     "findingStories": "Добираємо ваші історії",
     "findingStoriesBody": "Вони з'являться тут, щойно будуть готові",
     "processingOffline": "Ви офлайн. Історії з'являться, коли ви знову будете в мережі.",
@@ -275,7 +275,13 @@
       "announce_other": "Показано: {{show}}, {{formatted}} статті",
       "emptyPicks": "Мера ще нічого не вибрала для вас.",
       "emptyUnread": "Мера прочитала тут усе.",
-      "showAll": "Показати всі статті"
+      "showAll": "Показати всі статті",
+      "discarded": "Відхилено Мерою",
+      "emptyDiscarded": "За останні 48 годин нічого не відхилено.",
+      "optionA11y_one": "{{show}}, {{formatted}} історія",
+      "optionA11y_few": "{{show}}, {{formatted}} історії",
+      "optionA11y_many": "{{show}}, {{formatted}} історій",
+      "optionA11y_other": "{{show}}, {{formatted}} історії"
     },
     "readHold": {
       "waitingToday_one": "Мера вже використала сьогоднішнє читання. {{formatted}} стаття нижче ще не прочитана. Мера знову читатиме сьогодні о {{time}}.",
@@ -289,8 +295,17 @@
       "bodyToday": "Мера вже використала сьогоднішнє читання. Мера знову читатиме сьогодні о {{time}}.",
       "bodyTomorrow": "Мера вже використала сьогоднішнє читання. Мера знову читатиме завтра о {{time}}."
     },
-    "noteHeldToday": "Мера вже використала сьогоднішнє читання, тому напише це пояснення сьогодні після {{time}}.",
-    "noteHeldTomorrow": "Мера вже використала сьогоднішнє читання, тому напише це пояснення завтра після {{time}}."
+    "noteHeldToday": "Мера вже використала сьогоднішнє читання, тому напише цю причину сьогодні після {{time}}.",
+    "noteHeldTomorrow": "Мера вже використала сьогоднішнє читання, тому напише цю причину завтра після {{time}}.",
+    "noteState": {
+      "writing": "Пишу причину",
+      "failed": "Не вдалося написати причину",
+      "off": "Причини вимкнено в налаштуваннях",
+      "paused": "Причини призупинено на сьогодні",
+      "discarded": "Відхилено Мерою"
+    },
+    "readyForMore": "Готові читати далі?",
+    "refreshFeedAction": "Оновити стрічку"
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -505,7 +520,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Причини: {{seconds}} с на статтю",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -522,7 +537,7 @@
     "relevanceTitle": "Мера relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Пише відповіді в чаті, причини й теми.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -531,8 +546,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Причини",
+    "skipNotesTitle": "Пропускати причини",
     "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Мера uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Мера Protocol, to see why."
@@ -2566,7 +2581,7 @@
     "selectAll": "Вибрати все",
     "selectedCount": "Вибрано: {{count}}",
     "includeReason": "Додати пояснення Мери",
-    "includeReasonHint": "Короткий рядок про те, чому кожна стаття потрапила у вашу стрічку. Статті, збережені окремо, його не мають.",
+    "includeReasonHint": "Коротка причина того, чому кожна стаття потрапила у вашу стрічку. Статті, збережені окремо, її не мають.",
     "formatMarkdown": "Список Markdown",
     "formatMarkdownHint": "Зручний для читання список, добре пасує для нотаток і документів.",
     "formatJson": "JSON",
@@ -2612,7 +2627,7 @@
   "storyExport": {
     "shareA11y": "Експортувати цю історію",
     "shareDialogTitle": "Експорт історії",
-    "includeReasonHint": "Короткий рядок про те, чому кожна стаття потрапила у вашу стрічку. Деякі статті можуть його не мати."
+    "includeReasonHint": "Коротка причина того, чому кожна стаття потрапила у вашу стрічку. Деякі статті можуть її не мати."
   },
   "systemCheck": {
     "title": "Перевіряємо ваш телефон",

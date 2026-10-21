@@ -93,11 +93,13 @@ describe('computeAndScore with a relevanceScorer', () => {
     expect((await res).rawScoreMap.get('a')).toBe(0.77);
   });
 
-  it('keeps the math score for an id the scorer does not return', async () => {
+  it('gives an id the scorer does not return no score at all, never its math score', async () => {
     const { res } = run([cand('a'), cand('b')], persona(), async () => new Map([['a', 0.8]]));
     const out = await res;
     expect(out.rawScoreMap.get('a')).toBe(0.8);
-    expect(out.rawScoreMap.get('b')).toBe(out.computedScoreMap.get('b'));
+    expect(out.rawScoreMap.has('b')).toBe(false);
+    // The math score is still computed, for the audit columns.
+    expect(out.computedScoreMap.has('b')).toBe(true);
   });
 
   it('floors an exempt top headline at HEADLINE_BASE_FLOOR', async () => {
