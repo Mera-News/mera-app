@@ -276,7 +276,7 @@
     "noteState": {
       "writing": "Grund wird geschrieben",
       "paused": "Gründe für heute pausiert",
-      "discarded": "Unter Meras Schwelle",
+      "discarded": "Von Mera aussortiert",
       "off": "Gründe in den Einstellungen aus",
       "failed": "Grund konnte nicht geschrieben werden"
     },

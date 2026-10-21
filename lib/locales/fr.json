@@ -281,7 +281,7 @@
     "noteState": {
       "writing": "Rédaction de la raison",
       "paused": "Raisons en pause pour aujourd'hui",
-      "discarded": "Sous le seuil de Mera",
+      "discarded": "Écarté par Mera",
       "off": "Raisons désactivées dans les Réglages",
       "failed": "Impossible d'écrire la raison"
     },

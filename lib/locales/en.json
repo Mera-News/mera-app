@@ -313,7 +313,7 @@
     "noteState": {
       "writing": "Writing the reason",
       "paused": "Reasons paused for today",
-      "discarded": "Below Mera's bar",
+      "discarded": "Discarded by Mera",
       "off": "Reasons off in Settings",
       "failed": "Couldn't write the reason"
     },

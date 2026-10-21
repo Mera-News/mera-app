@@ -272,7 +272,7 @@
     "noteState": {
       "writing": "이유 작성 중",
       "paused": "오늘은 이유 일시 중지",
-      "discarded": "메라 기준 미달",
+      "discarded": "메라가 제외함",
       "off": "설정에서 이유 꺼짐",
       "failed": "이유를 작성하지 못했어요"
     },

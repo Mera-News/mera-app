@@ -272,7 +272,7 @@
     "noteState": {
       "writing": "Đang viết lý do",
       "paused": "Lý do tạm dừng hôm nay",
-      "discarded": "Dưới ngưỡng của Mera",
+      "discarded": "Mera đã loại bỏ",
       "off": "Lý do đã tắt trong Cài đặt",
       "failed": "Không viết được lý do"
     },

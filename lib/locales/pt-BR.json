@@ -276,7 +276,7 @@
     "noteState": {
       "writing": "Escrevendo o motivo",
       "paused": "Motivos pausados por hoje",
-      "discarded": "Abaixo do critério do Mera",
+      "discarded": "Descartados pelo Mera",
       "off": "Motivos desativados nos Ajustes",
       "failed": "Não foi possível escrever o motivo"
     },

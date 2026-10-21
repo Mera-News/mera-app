@@ -300,7 +300,7 @@
     "noteState": {
       "writing": "Piszę uzasadnienie",
       "paused": "Uzasadnienia wstrzymane na dziś",
-      "discarded": "Poniżej progu Mery",
+      "discarded": "Odrzucone przez Merę",
       "off": "Uzasadnienia wyłączone w Ustawieniach",
       "failed": "Nie udało się napisać uzasadnienia"
     },

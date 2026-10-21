@@ -276,7 +276,7 @@
     "noteState": {
       "writing": "Neden yazılıyor",
       "paused": "Nedenler bugünlük duraklatıldı",
-      "discarded": "Mera'nın eşiğinin altında",
+      "discarded": "Mera tarafından elendi",
       "off": "Nedenler Ayarlar'da kapalı",
       "failed": "Neden yazılamadı"
     },

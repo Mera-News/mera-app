@@ -538,9 +538,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     const counts = feedShowCounts(
       scoredRows,
       folded.tail,
-      folded.capped,
+      folded.overflow,
       discarded?.rows ?? [],
-      !!discarded && discarded.total > discarded.rows.length,
+      discarded?.total ?? 0,
     );
     const { discarded: _unbuilt, ...withoutDiscarded } = counts;
     setFeedShowCounts(discarded ? counts : withoutDiscarded);
