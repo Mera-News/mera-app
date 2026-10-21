@@ -29,6 +29,8 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
   act(() => setFeedShow('discarded'));
   await waitFor(() => expect(feed.ids().sort()).toEqual(['low', 'zero']));
   expect(feed.result.current.picksCount).toBe(0);
+  // Its rows can never be marked seen (not in the order), so none wears the new-card halo.
+  expect(feed.result.current.newSince).toBeNull();
   expect(useFeedOrderStore.getState().order).toEqual(['pick']);
 
   // Counts follow the feed live: a new discarded row lands in the list and the count.
