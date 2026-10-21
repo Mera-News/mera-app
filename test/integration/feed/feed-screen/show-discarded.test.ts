@@ -27,17 +27,17 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
   await waitFor(() => expect(feed.ids()).toEqual(['pick']));
   // The discarded stories are grouped only while the Show menu is open or the option is on.
   expect(counts()).toEqual({
-    all: { n: 1, capped: false },
-    picks: { n: 1, capped: false },
-    unread: { n: 0, capped: false },
+    all: { n: 1 },
+    picks: { n: 1 },
+    unread: { n: 0 },
   });
   act(() => setFeedShowMenuOpen(true));
   await waitFor(() =>
     expect(counts()).toEqual({
-      all: { n: 1, capped: false },
-      picks: { n: 1, capped: false },
-      unread: { n: 0, capped: false },
-      discarded: { n: 2, capped: false },
+      all: { n: 1 },
+      picks: { n: 1 },
+      unread: { n: 0 },
+      discarded: { n: 2 },
     }),
   );
   act(() => setFeedShowMenuOpen(false));

@@ -102,10 +102,10 @@ describe('buildDiscardedStories', () => {
     expect(total).toBe(1);
   });
 
-  it('is newest published first, capped, with the true count', () => {
+  it('is newest published first and uncapped, with the true count', () => {
     const pool = Array.from({ length: TAIL_RENDER_CAP + 3 }, (_, i) => sugg({ _id: `d${i}`, ageH: 1 + i * 0.1 }));
     const { rows, total } = buildDiscardedStories(pool, null, NOW);
-    expect(rows).toHaveLength(TAIL_RENDER_CAP);
+    expect(rows).toHaveLength(TAIL_RENDER_CAP + 3);
     expect(total).toBe(TAIL_RENDER_CAP + 3);
     expect(rows[0].id).toBe('d0');
     expect(rows[1].id).toBe('d1');
@@ -137,39 +137,50 @@ describe('the Show segments over one pool', () => {
   });
 
   it('each count is the number of rows that option renders', () => {
-    const counts = feedShowCounts(scored, folded.tail, folded.capped, discarded, false);
+    const counts = feedShowCounts(scored, folded.tail, folded.overflow, discarded);
     for (const show of FEED_SHOWS) {
       expect(counts[show].n).toBe(applyFeedShow(scored, folded.tail, show, discarded).rows.length);
     }
     expect(counts).toEqual({
-      all: { n: 2, capped: false },
-      picks: { n: 1, capped: false },
-      unread: { n: 1, capped: false },
-      discarded: { n: 2, capped: false },
+      all: { n: 2 },
+      picks: { n: 1 },
+      unread: { n: 1 },
+      discarded: { n: 2 },
     });
   });
 });
 
-describe('counts at the cap', () => {
-  it('a full not-read tail marks All and Not read as capped; the label reads "200+"', () => {
-    const many = Array.from({ length: TAIL_RENDER_CAP + 1 }, (_, i) =>
+describe('counts are exact (owner, 2026-10-21)', () => {
+  it('a not-read tail past the render cap still counts every not-read story, with no "+"', () => {
+    const many = Array.from({ length: TAIL_RENDER_CAP + 7 }, (_, i) =>
       sugg({ _id: `u${i}`, status: S.Unscored, relevance: 0, ageH: 1 + i * 0.1 }),
     );
     const candidates = buildFeedList(many, new Set(), NOW, null, { includeUnscored: true });
     const folded = foldNotReadTail(newNotReadTailSession(), candidates);
-    expect(folded.capped).toBe(true);
-    const counts = feedShowCounts([], folded.tail, folded.capped, [], false);
-    expect(formatShowCount(counts.unread, String)).toBe(`${TAIL_RENDER_CAP}+`);
-    expect(formatShowCount(counts.all, String)).toBe(`${TAIL_RENDER_CAP}+`);
+    expect(folded.tail).toHaveLength(TAIL_RENDER_CAP);
+    expect(folded.overflow).toBe(7);
+    const counts = feedShowCounts([], folded.tail, folded.overflow, []);
+    expect(formatShowCount(counts.unread, String)).toBe(String(TAIL_RENDER_CAP + 7));
+    expect(formatShowCount(counts.all, String)).toBe(String(TAIL_RENDER_CAP + 7));
     expect(formatShowCount(counts.picks, String)).toBe('0');
   });
 
-  it('a tail exactly at the cap with nothing left out is not capped', () => {
+  it('a tail exactly at the cap has no overflow', () => {
     const exact = Array.from({ length: TAIL_RENDER_CAP }, (_, i) =>
       sugg({ _id: `e${i}`, status: S.Unscored, relevance: 0, ageH: 1 + i * 0.1 }),
     );
     const candidates = buildFeedList(exact, new Set(), NOW, null, { includeUnscored: true });
-    expect(foldNotReadTail(newNotReadTailSession(), candidates).capped).toBe(false);
+    expect(foldNotReadTail(newNotReadTailSession(), candidates).overflow).toBe(0);
+  });
+
+  it('Discarded by Mera is uncapped: more than 200 discarded stories all render and all count', () => {
+    const lots = Array.from({ length: TAIL_RENDER_CAP + 25 }, (_, i) =>
+      sugg({ _id: `d${i}`, relevance: 0.1, ageH: 1 + i * 0.1 }),
+    );
+    const built = buildDiscardedStories(lots, null, NOW);
+    expect(built.rows.length).toBe(built.total);
+    const counts = feedShowCounts([], [], 0, built.rows, built.total);
+    expect(counts.discarded.n).toBe(built.total);
   });
 });
 

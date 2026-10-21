@@ -58,6 +58,8 @@ export interface FoldedTail {
   /** Articles Mera has not read among the candidates that would be tail
    *  rows: the TRUE count, never capped. */
   readonly notReadArticles: number;
+  /** Not-read stories past the render cap (0 when nothing was left out). */
+  readonly overflow: number;
   /** The tail is full and not-read stories were left out of it. */
   readonly capped: boolean;
 }
@@ -122,23 +124,26 @@ export function foldNotReadTail(
     const it = session.items.get(id);
     if (it) tail.push(it);
   }
-  const capped =
-    session.ids.length >= cap && candidates.some((it) => isNotRead(it.suggestion) && !inTail.has(it.id));
-  return { tail, withheld, notReadArticles, capped };
+  // Not-read stories past the cap: not rendered, but counted, so the Show menu's
+  // number is exact (owner, 2026-10-21: "write the exact number").
+  const overflow = candidates.filter((it) => isNotRead(it.suggestion) && !inTail.has(it.id)).length;
+  return { tail, withheld, notReadArticles, capped: overflow > 0, overflow };
 }
 
 /** The stories Mera discarded: rows it read and scored below the gate, in
  *  the 48h window, grouped like the main list, keeping only stories with no
  *  member the Feed shows (a pick's, a pending or a not-read sibling keeps the
- *  story out), newest published first, at most `cap` (`total` is the true
- *  story count). Not a session list: these rows are terminal, so only new
+ *  story out), newest published first, uncapped unless `cap` is given
+ *  (`total` is the true story count). Not a session list: these rows are terminal, so only new
  *  ones arrive. */
 export function buildDiscardedStories(
   suggestions: ForYouSuggestion[],
   userCtx: UserGeoLanguageContext | null,
   nowMs: number = Date.now(),
-  cap: number = TAIL_RENDER_CAP,
+  cap: number = Number.POSITIVE_INFINITY,
 ): { rows: FeedListItem[]; total: number } {
+  // Uncapped by default (owner, 2026-10-21): the menu shows the exact number and the list
+  // shows every one of them.
   const all = buildFeedList(suggestions, new Set(), nowMs, userCtx, { onlyDiscarded: true }).sort(newestFirst);
   return { rows: all.slice(0, cap), total: all.length };
 }
@@ -162,37 +167,37 @@ export function applyFeedShow(
   return { rows: [...scored, ...tail], picks: scored.length };
 }
 
-/** How many cards a filter shows: `n`, and `capped` when more were left out. */
+/** How many stories a filter holds: always the exact number (owner, 2026-10-21). */
 export interface FeedShowCount {
   readonly n: number;
-  readonly capped: boolean;
 }
 
-/** Every Show option's card count, from `applyFeedShow` itself so a count
- *  is always what that option renders. */
+/** Every Show option's exact story count, from `applyFeedShow` itself so a count
+ *  is what that option renders, plus the not-read stories past the tail's render
+ *  cap (`tailOverflow`), which exist but are not drawn. */
 export function feedShowCounts(
   scored: readonly FeedListItem[],
   tail: readonly FeedListItem[],
-  tailCapped: boolean,
+  tailOverflow: number,
   discarded: readonly FeedListItem[],
-  discardedCapped: boolean,
+  discardedTotal: number = discarded.length,
 ): Record<FeedShow, FeedShowCount> {
-  const capped: Record<FeedShow, boolean> = {
-    all: tailCapped,
-    picks: false,
-    unread: tailCapped,
-    discarded: discardedCapped,
+  const extra: Record<FeedShow, number> = {
+    all: tailOverflow,
+    picks: 0,
+    unread: tailOverflow,
+    discarded: Math.max(0, discardedTotal - discarded.length),
   };
   const out = {} as Record<FeedShow, FeedShowCount>;
   for (const show of FEED_SHOWS) {
-    out[show] = { n: applyFeedShow(scored, tail, show, discarded).rows.length, capped: capped[show] };
+    out[show] = { n: applyFeedShow(scored, tail, show, discarded).rows.length + extra[show] };
   }
   return out;
 }
 
-/** "30", or "200+" for a capped list; `format` localises the number. */
+/** The count as shown: the exact number, localised by `format`. */
 export function formatShowCount(c: FeedShowCount, format: (n: number) => string): string {
-  return c.capped ? `${format(c.n)}+` : format(c.n);
+  return format(c.n);
 }
 
 /** Whether the picks/not-read divider is true: at least one tail card still

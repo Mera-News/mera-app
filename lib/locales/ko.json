@@ -274,7 +274,7 @@
       "failed": "이유를 작성하지 못했어요",
       "off": "설정에서 이유 꺼짐",
       "paused": "오늘은 이유 일시 중지",
-      "discarded": "메라 기준 미달"
+      "discarded": "메라가 제외함"
     },
     "readyForMore": "더 읽을 준비가 되셨나요?",
     "refreshFeedAction": "피드 새로고침"
