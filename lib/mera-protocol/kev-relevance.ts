@@ -89,6 +89,9 @@ function scrubbed(error: unknown, state: ReturnType<typeof kevState>): string {
  *  or the GPU failed twice, so every later article would fail too. */
 const isKevBusy = (e: unknown) => (e as { code?: unknown } | null)?.code === 'ERR_AFM_BUSY';
 
+/** llama_decode's 1, no room in n_ctx: the prompt is too long. About the prompts, not Kev. */
+const PROMPT_OVERFLOW = /\(error 1\)/;
+
 /**
  * Kev's relevance per article. An error about one article (its prompt too long, a template
  * failure) keeps that row on its math score. Busy (background, or a GPU that will not recover)
@@ -97,7 +100,7 @@ const isKevBusy = (e: unknown) => (e as { code?: unknown } | null)?.code === 'ER
  */
 export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) => {
   const out = new Map<string, number>();
-  let lastError: unknown = null;
+  let outage = false;
   for (const c of candidates) {
     const state = kevState(c, factStatements);
     try {
@@ -105,7 +108,7 @@ export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) 
       out.set(c.id, kevToRelevance(result.answers.rel.score / LEVELS_MAX));
     } catch (e) {
       if (isKevBusy(e)) throw e;
-      lastError = e;
+      if (!(e instanceof Error && PROMPT_OVERFLOW.test(e.message))) outage = true;
       logger.warn('kev_decide_failed', {
         id: c.id,
         error: e instanceof Error ? e.name : typeof e,
@@ -116,9 +119,13 @@ export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) 
   }
   // Kev answered none of several articles: Kev is down (a failed load, a dead context), not one
   // bad article. Throw like busy, so the batch stays unscored for the next pass instead of a whole
-  // run landing on math scores, which without enrichment all sit in the LOW band.
-  // ponytail: a one-article batch in an outage still lands on math; count failures across
-  // batches if that shows up.
-  if (candidates.length > 1 && out.size === 0 && lastError !== null) throw lastError;
+  // run landing on math scores, which without enrichment all sit in the LOW band. A fixed message:
+  // the raw one can echo the prompt, and the caller logs it unscrubbed. Prompts over n_ctx fail
+  // the same way on every pass, so they are no outage and keep their math scores.
+  // ponytail: a one-article batch in an outage still lands on math, and an outage that never
+  // ends leaves the Feed unscored; count failed passes and fall back to math if either shows up.
+  if (candidates.length > 1 && out.size === 0 && outage) {
+    throw new Error(`Kev answered none of ${candidates.length} articles`);
+  }
   return out;
 };

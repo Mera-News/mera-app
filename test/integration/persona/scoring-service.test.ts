@@ -1106,6 +1106,39 @@ describe('processAllUnscored - on-device pass', () => {
     for (const row of Object.values(await stored())) expect(row.rawScore).toBeCloseTo(1, 5);
   });
 
+  // llama.rn errors can echo the prompt (the article and the reader's facts). Each per-article
+  // warn is scrubbed; the outage error that leaves scoreWithKev must not carry the raw text up
+  // to batchScoreAndReason's warn, which is a Sentry breadcrumb.
+  it('a Kev outage logs no article text: the error that leaves the scorer is not the raw llama.rn message', async () => {
+    installLocal();
+    queue();
+    installDecide((call) => {
+      const title = /Story \w+ saga\w+/.exec(JSON.stringify(call.request.state))?.[0] ?? '';
+      return { error: `bad state near ${title}` };
+    });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(0);
+    expect(JSON.stringify((logger.warn as jest.Mock).mock.calls)).not.toMatch(/saga/);
+  });
+
+  // Every article over n_ctx (a dense non-Latin fact bank) fails with llama_decode's 1 on every
+  // pass: that is about the prompts, not a Kev outage, so the rows keep their math scores
+  // rather than staying unscored forever.
+  it('Kev overflowing its context on every article of a batch keeps the math scores, as for one article', async () => {
+    installLocal();
+    queue();
+    installDecide({ error: 'failed to evaluate the decision prompt (error 1)' });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(3);
+    for (const row of Object.values(await stored())) {
+      expect(row.status).not.toBe('unscored');
+      expect(row.rawScore).toBeGreaterThan(0);
+      expect(row.rawScore).not.toBeCloseTo(1, 2);
+    }
+  });
+
   it('saves a row below the 0.4 gate as reasonSkipped and writes it no note', async () => {
     installLocal({ levels: { a: 0, b: 3 } });
     queue();
