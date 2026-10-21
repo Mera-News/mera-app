@@ -1,7 +1,12 @@
 // Show: Discarded by Mera, through useFeedScreen with the real stores and the in-memory DB. Seams:
 // the discarded list renders alone, never under All, never enters the order store, and the Show
 // menu's counts are published live from the same segments.
-import { setFeedShow, resetFeedViewPrefs, useFeedShowCountsStore } from '@/components/custom/feed/feed-view-prefs';
+import {
+  setFeedShow,
+  setFeedShowMenuOpen,
+  resetFeedViewPrefs,
+  useFeedShowCountsStore,
+} from '@/components/custom/feed/feed-view-prefs';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { setAppState } from '@/test/helpers';
 import { HIGH, act, arrive, hydrateSuggestions, renderFeed, resetFeedStores, seedComplete, waitFor } from './support';
@@ -9,6 +14,7 @@ import { HIGH, act, arrive, hydrateSuggestions, renderFeed, resetFeedStores, see
 beforeEach(async () => {
   setAppState('active');
   resetFeedViewPrefs();
+  useFeedShowCountsStore.setState({ counts: null, menuOpen: false });
   await resetFeedStores();
 });
 
@@ -19,12 +25,23 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
   await hydrateSuggestions();
   const feed = await renderFeed();
   await waitFor(() => expect(feed.ids()).toEqual(['pick']));
+  // The discarded stories are grouped only while the Show menu is open or the option is on.
   expect(counts()).toEqual({
     all: { n: 1, capped: false },
     picks: { n: 1, capped: false },
     unread: { n: 0, capped: false },
-    discarded: { n: 2, capped: false },
   });
+  act(() => setFeedShowMenuOpen(true));
+  await waitFor(() =>
+    expect(counts()).toEqual({
+      all: { n: 1, capped: false },
+      picks: { n: 1, capped: false },
+      unread: { n: 0, capped: false },
+      discarded: { n: 2, capped: false },
+    }),
+  );
+  act(() => setFeedShowMenuOpen(false));
+  await waitFor(() => expect(counts()?.discarded).toBeUndefined());
 
   act(() => setFeedShow('discarded'));
   await waitFor(() => expect(feed.ids().sort()).toEqual(['low', 'zero']));
@@ -35,7 +52,7 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
 
   // Counts follow the feed live: a new discarded row lands in the list and the count.
   await arrive([['low2', 0.1]]);
-  await waitFor(() => expect(counts()?.discarded.n).toBe(3));
+  await waitFor(() => expect(counts()?.discarded?.n).toBe(3));
   expect(feed.ids()).toContain('low2');
   expect(useFeedOrderStore.getState().order).not.toContain('low2');
 
@@ -47,7 +64,7 @@ it('the counts are withdrawn when the Continuous list unmounts', async () => {
   await seedComplete([['pick', HIGH]]);
   await hydrateSuggestions();
   const feed = await renderFeed();
-  await waitFor(() => expect(counts()?.picks.n).toBe(1));
+  await waitFor(() => expect(counts()?.picks?.n).toBe(1));
   feed.unmount();
   expect(counts()).toBeNull();
 });

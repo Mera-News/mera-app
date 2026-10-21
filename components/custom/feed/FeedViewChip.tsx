@@ -18,6 +18,7 @@ import {
   type FeedShow,
   type FeedView,
   setFeedShow,
+  setFeedShowMenuOpen,
   setFeedView,
   useFeedShow,
   useFeedShowCounts,
@@ -94,6 +95,7 @@ const FeedViewChip: React.FC<{ readonly pageIndex: number }> = ({ pageIndex }) =
         testID="feed-view-chip"
         rowRole="radio"
         marker={marker}
+        onOpenChange={setFeedShowMenuOpen}
         a11ySuffix={marker ? `, ${t('feed.show.a11y', { show: showLabel(show) })}` : ''}
         sections={[
           {

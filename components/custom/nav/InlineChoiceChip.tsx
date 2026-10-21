@@ -25,7 +25,7 @@ import { useColors } from '@/lib/theme/tokens';
 
 import { menuTop } from './menu-placement';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { I18nManager, Modal, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
@@ -99,6 +99,8 @@ export interface InlineChoiceChipProps<T extends string | number> {
   readonly marker?: boolean;
   /** Appended to the chip's spoken label only (not the rows'). */
   readonly a11ySuffix?: string;
+  /** Told true when the menu opens, false when it closes or the chip unmounts. */
+  readonly onOpenChange?: (open: boolean) => void;
 }
 
 /** A floating menu's surface: the same material as every modal and bottom
@@ -138,6 +140,7 @@ export default function InlineChoiceChip<T extends string | number>({
   rowRole = 'menuitem',
   marker = false,
   a11ySuffix = '',
+  onOpenChange,
 }: InlineChoiceChipProps<T>) {
   const colors = useColors();
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
@@ -164,6 +167,12 @@ export default function InlineChoiceChip<T extends string | number>({
     });
   }, [window.width]);
   const close = useCallback(() => setAnchor(null), []);
+  const isOpen = anchor !== null;
+  useEffect(() => {
+    if (!isOpen || !onOpenChange) return;
+    onOpenChange(true);
+    return () => onOpenChange(false);
+  }, [isOpen, onOpenChange]);
 
   const row = (
     option: string | number,
