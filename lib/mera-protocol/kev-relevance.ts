@@ -97,6 +97,7 @@ const isKevBusy = (e: unknown) => (e as { code?: unknown } | null)?.code === 'ER
  */
 export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) => {
   const out = new Map<string, number>();
+  let lastError: unknown = null;
   for (const c of candidates) {
     const state = kevState(c, factStatements);
     try {
@@ -104,6 +105,7 @@ export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) 
       out.set(c.id, kevToRelevance(result.answers.rel.score / LEVELS_MAX));
     } catch (e) {
       if (isKevBusy(e)) throw e;
+      lastError = e;
       logger.warn('kev_decide_failed', {
         id: c.id,
         error: e instanceof Error ? e.name : typeof e,
@@ -112,5 +114,11 @@ export const scoreWithKev: RelevanceScorer = async (candidates, factStatements) 
       });
     }
   }
+  // Kev answered none of several articles: Kev is down (a failed load, a dead context), not one
+  // bad article. Throw like busy, so the batch stays unscored for the next pass instead of a whole
+  // run landing on math scores, which without enrichment all sit in the LOW band.
+  // ponytail: a one-article batch in an outage still lands on math; count failures across
+  // batches if that shows up.
+  if (candidates.length > 1 && out.size === 0 && lastError !== null) throw lastError;
   return out;
 };

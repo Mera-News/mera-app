@@ -1087,6 +1087,25 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows.c.rawScore).toBeCloseTo(1, 5);
   });
 
+  // Kev down for a whole pass (it answered none of the batch) is not one bad article: on the
+  // owner's phone a whole run kept its math scores, all LOW, and the Sectioned view went empty.
+  it('Kev failing on every article of a batch leaves the batch unscored, never on the math score, and the next pass ranks them', async () => {
+    installLocal();
+    queue();
+    installDecide({ error: 'native crash' });
+    await seed(['a', 'b', 'c']);
+
+    expect(await run(processAllUnscored())).toBe(0);
+    for (const row of Object.values(await stored())) {
+      expect(row.status).toBe('unscored');
+      expect(row.rawScore ?? null).toBeNull();
+    }
+
+    installLocal();
+    expect(await run(processAllUnscored())).toBe(3);
+    for (const row of Object.values(await stored())) expect(row.rawScore).toBeCloseTo(1, 5);
+  });
+
   it('saves a row below the 0.4 gate as reasonSkipped and writes it no note', async () => {
     installLocal({ levels: { a: 0, b: 3 } });
     queue();
