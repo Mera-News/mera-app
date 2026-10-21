@@ -27,7 +27,14 @@ import {
   isNewCard,
   type FeedEntry,
 } from './feed-entries';
-import { FEED_SHOW_LABEL_KEY, setFeedShowCounts, useFeedMinimap, useFeedShow, useFeedViewPrefs } from './feed-view-prefs';
+import {
+  FEED_SHOW_LABEL_KEY,
+  setFeedShowCounts,
+  useFeedMinimap,
+  useFeedShow,
+  useFeedShowCountsStore,
+  useFeedViewPrefs,
+} from './feed-view-prefs';
 import {
   applyFeedShow,
   buildDiscardedStories,
@@ -180,13 +187,15 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     [allCandidates, sessionEpoch],
   );
   // The stories Mera discarded (Show: Discarded by Mera), never in the order
-  // store. Built even while another filter is on: the Show menu counts them.
-  // ponytail: a second story-grouping pass over the largest pool on every
-  // suggestions change; build it only while the menu or the filter is open if
-  // it shows up in a profile.
+  // store. Grouping the below-gate pool (the largest) costs ~10x the main
+  // list, so it runs only while that option is on or the Show menu is open
+  // (to count it); null otherwise.
+  const show = useFeedShow();
+  const showMenuOpen = useFeedShowCountsStore((s) => s.menuOpen);
+  const wantDiscarded = show === 'discarded' || showMenuOpen;
   const discarded = useMemo(
-    () => buildDiscardedStories(suggestions, userGeoLanguageCtx),
-    [suggestions, userGeoLanguageCtx],
+    () => (wantDiscarded ? buildDiscardedStories(suggestions, userGeoLanguageCtx) : null),
+    [wantDiscarded, suggestions, userGeoLanguageCtx],
   );
   // What the order store sees: scored stories only, minus the ones the tail
   // holds this session (a story never shows twice).
@@ -516,16 +525,22 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // The Show filter (feed_show): Mera's picks, then the not-read tail; or the
   // discarded stories alone. The unfiltered lists (picks and tail) keep
   // feeding the pin (scored rows) and the empty chain.
-  const show = useFeedShow();
   const { rows: listData, picks: picksCount } = useMemo(
-    () => applyFeedShow(scoredRows, folded.tail, show, discarded.rows),
+    () => applyFeedShow(scoredRows, folded.tail, show, discarded?.rows ?? []),
     [scoredRows, folded, show, discarded],
   );
-  // The Show menu's counts, from the same segments (one source of truth).
+  // The Show menu's counts, from the same segments (one source of truth);
+  // Discarded's only while its stories are built.
   useEffect(() => {
-    setFeedShowCounts(
-      feedShowCounts(scoredRows, folded.tail, folded.capped, discarded.rows, discarded.total > discarded.rows.length),
+    const counts = feedShowCounts(
+      scoredRows,
+      folded.tail,
+      folded.capped,
+      discarded?.rows ?? [],
+      !!discarded && discarded.total > discarded.rows.length,
     );
+    const { discarded: _unbuilt, ...withoutDiscarded } = counts;
+    setFeedShowCounts(discarded ? counts : withoutDiscarded);
   }, [scoredRows, folded, discarded]);
   useEffect(() => () => setFeedShowCounts(null), []);
   const allRowsCount = scoredRows.length + folded.tail.length;

@@ -46,14 +46,23 @@ export const useFeedMinimap = (): boolean => useFeedViewPrefs((s) => s.minimap);
 export const useFeedShow = (): FeedShow => useFeedViewPrefs((s) => s.show);
 
 /** Each Show option's card count, published by the mounted Continuous list
- *  for the View chip's menu (null while it is not mounted). Never stored. */
-export const useFeedShowCountsStore = create<{ counts: Record<FeedShow, FeedShowCount> | null }>()(() => ({
+ *  for the View chip's menu (null while it is not mounted). `discarded` is
+ *  there only while the menu is open (`menuOpen`) or that option is on: its
+ *  stories are grouped only then. Never stored. */
+export type FeedShowCounts = Partial<Record<FeedShow, FeedShowCount>>;
+export const useFeedShowCountsStore = create<{ counts: FeedShowCounts | null; menuOpen: boolean }>()(() => ({
   counts: null,
+  menuOpen: false,
 }));
-export const useFeedShowCounts = (): Record<FeedShow, FeedShowCount> | null => useFeedShowCountsStore((s) => s.counts);
+export const useFeedShowCounts = (): FeedShowCounts | null => useFeedShowCountsStore((s) => s.counts);
 
-export function setFeedShowCounts(counts: Record<FeedShow, FeedShowCount> | null): void {
+export function setFeedShowCounts(counts: FeedShowCounts | null): void {
   useFeedShowCountsStore.setState({ counts });
+}
+
+/** The View chip's menu is open (the Continuous list then counts Discarded). */
+export function setFeedShowMenuOpen(menuOpen: boolean): void {
+  useFeedShowCountsStore.setState({ menuOpen });
 }
 
 /** Unknown or absent reads as the default, so an older or newer row is safe. */
