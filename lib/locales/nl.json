@@ -269,7 +269,12 @@
     },
     "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas vandaag na {{time}}.",
     "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}.",
-    "matchesYourFacts": "Past bij je feiten"
+    "noteState": {
+      "writing": "Reden wordt geschreven",
+      "failed": "Kon de reden niet schrijven",
+      "off": "Redenen uit in Instellingen",
+      "paused": "Redenen gepauzeerd voor vandaag"
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -482,7 +487,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Redenen: {{seconds}} s per artikel",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -497,7 +502,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Schrijft chatantwoorden, redenen en onderwerpen.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -506,8 +511,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Redenen",
+    "skipNotesTitle": "Redenen overslaan",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."

@@ -306,7 +306,12 @@
     },
     "noteHeldToday": "Today's reading is used up, so Mera will write this note after {{time}} today.",
     "noteHeldTomorrow": "Today's reading is used up, so Mera will write this note after {{time}} tomorrow.",
-    "matchesYourFacts": "Matches your facts"
+    "noteState": {
+      "writing": "Writing the reason",
+      "failed": "Couldn't write the reason",
+      "off": "Reasons off in Settings",
+      "paused": "Reasons paused for today"
+    }
   },
   "relevance": {
     "emergency": "Emergency",
@@ -744,7 +749,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Reasons: {{seconds}} s per article",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -759,7 +764,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Writes chat replies, reasons and topics.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -768,8 +773,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Reasons",
+    "skipNotesTitle": "Skip reasons",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."

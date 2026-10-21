@@ -266,7 +266,12 @@
     },
     "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 오늘 {{time}} 이후에 작성합니다.",
     "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 내일 {{time}} 이후에 작성합니다.",
-    "matchesYourFacts": "회원님의 사실과 일치"
+    "noteState": {
+      "writing": "이유 작성 중",
+      "failed": "이유를 작성하지 못했어요",
+      "off": "설정에서 이유 꺼짐",
+      "paused": "오늘은 이유 일시 중지"
+    }
   },
   "relevance": {
     "emergency": "긴급",
@@ -479,7 +484,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "이유: 기사당 {{seconds}}초",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -493,7 +498,7 @@
     "relevanceTitle": "메라 relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "채팅 답변, 이유, 토픽을 작성해요.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -502,8 +507,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "이유",
+    "skipNotesTitle": "이유 건너뛰기",
     "skipNotesHelp": "메라 ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "메라 uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then 메라 Protocol, to see why."

@@ -266,7 +266,12 @@
     },
     "noteHeldToday": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
     "noteHeldTomorrow": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
-    "matchesYourFacts": "Cocok dengan fakta Anda"
+    "noteState": {
+      "writing": "Menulis alasan",
+      "failed": "Tidak dapat menulis alasan",
+      "off": "Alasan dimatikan di Pengaturan",
+      "paused": "Alasan dijeda untuk hari ini"
+    }
   },
   "relevance": {
     "emergency": "Darurat",
@@ -479,7 +484,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Alasan: {{seconds}} dtk per artikel",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -493,7 +498,7 @@
     "relevanceTitle": "Mera relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Menulis balasan chat, alasan, dan topik.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -502,8 +507,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Alasan",
+    "skipNotesTitle": "Lewati alasan",
     "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why."

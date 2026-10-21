@@ -8,7 +8,8 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { MOTION } from '@/lib/motion';
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
-import type { ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { noteBoxState, type NoteBoxState, type ReasonNotePendingMode } from '@/components/custom/cards/note-pending-mode';
 import { TYPE_SCALE } from '@/lib/algorithms/scale';
 import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
 import React, { useEffect, useState } from 'react';
@@ -118,18 +119,19 @@ const WordReveal: React.FC<{ text: string; maxHeight?: number }> = ({ text, maxH
  * whole note fading in instead.
  */
 /**
- * No note yet (writing) or none at all (Skip notes): the relevance chip with
- * "Matches your facts" opposite it, the matched facts as one Title Case line
- * joined by middle dots (wraps, never cut), and while a note is written the
- * wait line under it. Only the AI note carries the AI-generated caption.
+ * No AI note: the relevance chip with a caption saying why (writing, paused for
+ * the day, Skip notes on, or the note failed), then the matched facts as one
+ * Title Case line joined by middle dots (wraps, never cut). Paused also says
+ * when the note will come. Only an AI note carries the AI-generated caption.
  */
 const FactsNote: React.FC<{
     relevance: number;
     topicIds?: string[] | null;
-    writing: boolean;
+    state: NoteBoxState;
+    heldLine?: string;
     testID?: string;
     hideSlot: object | null;
-}> = ({ relevance, topicIds, writing, testID, hideSlot }) => {
+}> = ({ relevance, topicIds, state, heldLine, testID, hideSlot }) => {
     const { t } = useTranslation();
     const note = useNoteInk();
     const line = factsLine(useMatchedFacts(topicIds).map((f) => primaryStatement(f.statement)));
@@ -142,28 +144,25 @@ const FactsNote: React.FC<{
                 testID={testID ? `${testID}-badge-row` : undefined}
             >
                 <RelevanceChip relevance={relevance} />
-                {line ? (
-                    <Text size="2xs" style={{ color: note.ai, textAlign: 'right', flexShrink: 1 }} testID={testID ? `${testID}-facts-caption` : undefined}>
-                        {t('feed.matchesYourFacts')}
+                <Animated.View exiting={state === 'writing' ? FadeOutUp.duration(180) : undefined} style={{ flexShrink: 1 }} {...hideSlot}>
+                    <Text
+                        size="2xs"
+                        style={{ color: note.ai, textAlign: 'right' }}
+                        testID={testID ? `${testID}-${state}` : undefined}
+                    >
+                        {t(`feed.noteState.${state}`)}
                     </Text>
-                ) : null}
+                </Animated.View>
             </HStack>
             {line ? (
                 <Text size={NOTE_TOKEN} bold style={{ color: note.ink, marginTop: 4 }} testID={testID ? `${testID}-facts` : undefined}>
                     {line}
                 </Text>
             ) : null}
-            {writing ? (
-                <Animated.View
-                    exiting={FadeOutUp.duration(180)}
-                    style={{ marginTop: 4 }}
-                    testID={testID ? `${testID}-writing` : undefined}
-                    {...hideSlot}
-                >
-                    <Text size={NOTE_TOKEN} style={{ color: note.ink }}>
-                        {t('feed.noteWait')}
-                    </Text>
-                </Animated.View>
+            {state === 'paused' && heldLine ? (
+                <Text size={NOTE_TOKEN} style={{ color: note.ink, marginTop: 4 }} testID={testID ? `${testID}-held` : undefined}>
+                    {heldLine}
+                </Text>
             ) : null}
         </Box>
     );
@@ -186,6 +185,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     const motion = useMotionAllowed();
     const note = useNoteInk();
     const pending = !reason ? pendingMode : undefined;
+    const skipNotes = useMeraProtocolStore((st) => st.skipNotes);
 
     // An in-mount transition only: a box first drawn with its note never
     // animates (virtualised remounts, a translation swap).
@@ -226,9 +226,18 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
         ...(boxHeight ? { height: boxHeight, overflow: 'hidden' as const } : null),
     };
 
-    // No note yet, or none at all (Skip notes): the facts that found it.
-    if (!reason && pending !== 'held') {
-        return <FactsNote relevance={relevance} topicIds={topicIds} writing={pending === 'writing'} testID={testID} hideSlot={hideSlot} />;
+    // No AI note: the facts that found it, captioned with why.
+    if (!reason) {
+        return (
+            <FactsNote
+                relevance={relevance}
+                topicIds={topicIds}
+                state={noteBoxState(pending, skipNotes)}
+                heldLine={heldLine}
+                testID={testID}
+                hideSlot={hideSlot}
+            />
+        );
     }
 
     const noteStyle = { color: note.ink, ...(wordByWord ? { opacity: 0 } : null) };
@@ -241,20 +250,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                 testID={testID ? `${testID}-badge-row` : undefined}
             >
                 <RelevanceChip relevance={relevance} />
-                {reason ? (
-                    <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
-                ) : (
-                    <Animated.View
-                        entering={sawWriting ? FadeIn.duration(250) : undefined}
-                        style={{ flex: 1, alignItems: 'flex-end' }}
-                        testID={testID ? `${testID}-held` : undefined}
-                        {...hideSlot}
-                    >
-                        <Text size={NOTE_TOKEN} style={{ color: note.ink, textAlign: 'right' }}>
-                            {heldLine}
-                        </Text>
-                    </Animated.View>
-                )}
+                <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} color={note.ai} />
             </HStack>
             {reason ? (
                 <Animated.View

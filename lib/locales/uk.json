@@ -291,7 +291,12 @@
     },
     "noteHeldToday": "Мера вже використала сьогоднішнє читання, тому напише це пояснення сьогодні після {{time}}.",
     "noteHeldTomorrow": "Мера вже використала сьогоднішнє читання, тому напише це пояснення завтра після {{time}}.",
-    "matchesYourFacts": "Збігається з вашими фактами"
+    "noteState": {
+      "writing": "Пишу причину",
+      "failed": "Не вдалося написати причину",
+      "off": "Причини вимкнено в налаштуваннях",
+      "paused": "Причини призупинено на сьогодні"
+    }
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -506,7 +511,7 @@
     "errorFile": "Part of the download didn't arrive correctly. Try again.",
     "errorSpace": "Not enough space. Free up {{size}} and try again.",
     "speedRanking": "Ranking: {{seconds}} s per article",
-    "speedNotes": "Notes: {{seconds}} s per article",
+    "speedNotes": "Причини: {{seconds}} с на статтю",
     "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
     "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
     "nativeNotReady": "{{name}} is still getting ready. Try again later.",
@@ -523,7 +528,7 @@
     "relevanceTitle": "Мера relevance model",
     "relevanceHelp": "Ranks your news on this phone. On this phone always needs it.",
     "textTitle": "Text model",
-    "textHelp": "Writes chat replies, notes and topics.",
+    "textHelp": "Пише відповіді в чаті, причини й теми.",
     "modelReady": "Downloaded",
     "modelQueued": "Waiting to download",
     "deleteModelLabel": "Delete {{name}}",
@@ -532,8 +537,8 @@
     "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
     "builtInReady": "Ready on this phone",
     "builtInRequirement": "{{name}} on this phone",
-    "notesGroup": "Notes",
-    "skipNotesTitle": "Skip notes",
+    "notesGroup": "Причини",
+    "skipNotesTitle": "Пропускати причини",
     "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
     "fallbackNoticeTitle": "Мера uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Мера Protocol, to see why."

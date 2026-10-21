@@ -40,3 +40,19 @@ export function notePendingMode(
 export function showsChipOnly(s: Pick<ForYouSuggestion, 'status' | 'reason' | 'relevance'>): boolean {
     return s.status === ArticleSuggestionStatus.Complete && !s.reason && (s.relevance ?? 0) > 0;
 }
+
+/**
+ * Why a note box shows the matched facts instead of an AI note, for its caption
+ * (owner, 2026-10-21):
+ *  - `writing`: a note is on its way (`reason_pending`).
+ *  - `paused`: the day's cloud reading is used up; the note waits for the reset.
+ *  - `off`: Skip notes is on, so no note is written.
+ *  - `failed`: a note was owed but none came (a refusal or an error).
+ */
+export type NoteBoxState = 'writing' | 'paused' | 'off' | 'failed';
+
+export function noteBoxState(pending: ReasonNotePendingMode | undefined, skipNotes: boolean): NoteBoxState {
+    if (pending === 'writing') return 'writing';
+    if (pending === 'held') return 'paused';
+    return skipNotes ? 'off' : 'failed';
+}

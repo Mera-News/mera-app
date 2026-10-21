@@ -1,7 +1,7 @@
 // notePendingMode: the ONE rule for what a scored row with no note shows.
 // reason_pending always writes (the orphaned-reasons sweep always brings the
 // note); under the cloud reading hold it says when instead.
-import { notePendingMode, showsChipOnly } from '@/components/custom/cards/note-pending-mode';
+import { noteBoxState, notePendingMode, showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { ArticleSuggestionStatus as S } from '@/lib/database/article-suggestion-status';
 
 describe('notePendingMode', () => {
@@ -35,5 +35,18 @@ describe('showsChipOnly', () => {
     ['unscored', { status: S.Unscored, reason: '', relevance: 0 }],
   ])('is false for %s', (_name, row) => {
     expect(showsChipOnly(row as never)).toBe(false);
+  });
+});
+
+describe('noteBoxState', () => {
+  it.each([
+    ['writing', false, 'writing'],
+    ['writing', true, 'writing'],
+    ['held', false, 'paused'],
+    ['held', true, 'paused'],
+    [undefined, true, 'off'],
+    [undefined, false, 'failed'],
+  ] as const)('pending %p, skip notes %p -> %p', (pending, skip, state) => {
+    expect(noteBoxState(pending, skip)).toBe(state);
   });
 });
