@@ -268,7 +268,8 @@
       "bodyTomorrow": "Mera ha usato la lettura di oggi. Mera legge di nuovo domani alle {{time}}."
     },
     "noteHeldToday": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di oggi.",
-    "noteHeldTomorrow": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di domani."
+    "noteHeldTomorrow": "Mera ha usato la lettura di oggi, quindi scriverà questa nota dopo le {{time}} di domani.",
+    "matchesYourFacts": "Corrisponde ai tuoi fatti"
   },
   "relevance": {
     "emergency": "Emergenza",

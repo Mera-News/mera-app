@@ -268,7 +268,8 @@
       "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder."
     },
     "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz heute ab {{time}}.",
-    "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz morgen ab {{time}}."
+    "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diese Notiz morgen ab {{time}}.",
+    "matchesYourFacts": "Passt zu deinen Fakten"
   },
   "relevance": {
     "emergency": "Notfall",

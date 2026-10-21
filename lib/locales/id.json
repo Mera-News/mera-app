@@ -265,7 +265,8 @@
       "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
     },
     "noteHeldToday": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
-    "noteHeldTomorrow": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}."
+    "noteHeldTomorrow": "Mera belum menulis catatan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
+    "matchesYourFacts": "Cocok dengan fakta Anda"
   },
   "relevance": {
     "emergency": "Darurat",

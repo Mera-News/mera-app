@@ -265,7 +265,8 @@
       "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
     },
     "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} hôm nay.",
-    "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} vào ngày mai."
+    "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết ghi chú này sau {{time}} vào ngày mai.",
+    "matchesYourFacts": "Khớp với dữ kiện của bạn"
   },
   "relevance": {
     "emergency": "Khẩn cấp",

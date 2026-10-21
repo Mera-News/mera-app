@@ -268,7 +268,8 @@
       "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
     },
     "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas vandaag na {{time}}.",
-    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}."
+    "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze uitleg pas morgen na {{time}}.",
+    "matchesYourFacts": "Past bij je feiten"
   },
   "relevance": {
     "emergency": "Noodgeval",

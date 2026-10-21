@@ -273,7 +273,8 @@
       "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
     },
     "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette note aujourd'hui après {{time}}.",
-    "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette note demain après {{time}}."
+    "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette note demain après {{time}}.",
+    "matchesYourFacts": "Correspond à vos faits"
   },
   "relevance": {
     "emergency": "Urgence",

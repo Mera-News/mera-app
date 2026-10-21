@@ -290,7 +290,8 @@
       "bodyTomorrow": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta jutro o {{time}}."
     },
     "noteHeldToday": "Mera napisze tę notatkę dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
-    "noteHeldTomorrow": "Mera napisze tę notatkę jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania."
+    "noteHeldTomorrow": "Mera napisze tę notatkę jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
+    "matchesYourFacts": "Pasuje do twoich faktów"
   },
   "relevance": {
     "emergency": "Pilne",

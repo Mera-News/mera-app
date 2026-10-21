@@ -265,7 +265,8 @@
       "bodyTomorrow": "梅拉已用完今日阅读量。梅拉将于明天 {{time}} 再次阅读。"
     },
     "noteHeldToday": "今日阅读量已用完，梅拉将于今天 {{time}} 之后撰写这条说明。",
-    "noteHeldTomorrow": "今日阅读量已用完，梅拉将于明天 {{time}} 之后撰写这条说明。"
+    "noteHeldTomorrow": "今日阅读量已用完，梅拉将于明天 {{time}} 之后撰写这条说明。",
+    "matchesYourFacts": "与你的事实相符"
   },
   "relevance": {
     "emergency": "紧急",

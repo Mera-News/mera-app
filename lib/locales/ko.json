@@ -265,7 +265,8 @@
       "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다."
     },
     "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 오늘 {{time}} 이후에 작성합니다.",
-    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 내일 {{time}} 이후에 작성합니다."
+    "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 설명은 내일 {{time}} 이후에 작성합니다.",
+    "matchesYourFacts": "회원님의 사실과 일치"
   },
   "relevance": {
     "emergency": "긴급",

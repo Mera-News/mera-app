@@ -305,7 +305,8 @@
       "bodyTomorrow": "Mera has used today's reading. Mera reads again tomorrow at {{time}}."
     },
     "noteHeldToday": "Today's reading is used up, so Mera will write this note after {{time}} today.",
-    "noteHeldTomorrow": "Today's reading is used up, so Mera will write this note after {{time}} tomorrow."
+    "noteHeldTomorrow": "Today's reading is used up, so Mera will write this note after {{time}} tomorrow.",
+    "matchesYourFacts": "Matches your facts"
   },
   "relevance": {
     "emergency": "Emergency",

@@ -265,7 +265,8 @@
       "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。"
     },
     "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則說明。",
-    "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則說明。"
+    "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則說明。",
+    "matchesYourFacts": "與你的事實相符"
   },
   "relevance": {
     "emergency": "緊急",

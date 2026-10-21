@@ -268,7 +268,8 @@
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
     },
     "noteHeldToday": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu bugün {{time}} saatinde yazacak.",
-    "noteHeldTomorrow": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu yarın {{time}} saatinde yazacak."
+    "noteHeldTomorrow": "Mera bu notu henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu notu yarın {{time}} saatinde yazacak.",
+    "matchesYourFacts": "Bilgilerinizle eşleşiyor"
   },
   "relevance": {
     "emergency": "Acil",
