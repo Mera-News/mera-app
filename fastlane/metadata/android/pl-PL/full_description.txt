@@ -1,0 +1,64 @@
+Bezpłatny start. Bez reklam. Bez śledzenia.
+
+Wiadomości potrafią przytłaczać.
+
+Każdej godziny pojawiają się tysiące historii z różnych krajów, języków, wydawnictw i oficjalnych źródeł. Tradycyjne kanały wciągają w przewijanie, a nie wiesz, czy znalazłeś to, co ważne.
+
+POZNAJ MERA NEWS
+
+Przejrzysta aplikacja, w której AI dobiera wiadomości i za Ciebie obserwuje świat.
+
+Opowiedz aplikacji Mera o swoim zawodzie, miejscu zamieszkania, zainteresowaniach, firmach, rynkach, przepisach, planach podróży lub innych sprawach, które wpływają na Twoje życie. Mera czyta wiadomości z całego świata i układa historie według ich potencjalnego wpływu na Ciebie, abyś był na bieżąco bez ciągłego przewijania.
+
+CO POTRAFI MERA
+
+• Odkrywaj historie dobrane pod kątem ich trafności i potencjalnego wpływu na Twoje życie
+• Zobacz, dlaczego dana historia może być ważna i do których Twoich faktów pasuje, zanim ją otworzysz
+• Otwórz „Odrzucone przez Merę”, by zobaczyć historie, które Mera przeczytała i odłożyła
+• Buduj swój profil, opisując własnymi słowami, co jest dla Ciebie ważne
+• Dostosowuj priorytet każdego faktu i tematu w swoim profilu
+• Wybieraj preferowane lub obniżone w rankingu źródła i wykluczaj tematy, których nie chcesz widzieć
+• Pozwól aplikacji Mera zadawać głębsze pytania i dopasowywać profil, gdy Twoje zainteresowania się zmieniają
+• Przeglądaj istotne historie, śledzone tematy, zapisane artykuły, weryfikacje faktów i historię czytania w jednym panelu
+• Śledź wydarzenie lub szerszy problem, gdy w różnych wydawnictwach pojawiają się nowe doniesienia
+• Szukaj w internecie dodatkowego kontekstu do historii
+• Sprawdzaj twierdzenia za pomocą narzędzi do weryfikacji faktów
+• Czytaj publikacje ze 195 krajów w 109 językach i korzystaj z aplikacji w 20
+• Przeglądaj lokalne nagłówki kraj po kraju
+• Śledź regulatorów, ministerstwa, agencje cyberbezpieczeństwa, banki centralne, urzędy miast i inne pierwotne źródła
+• Zmieniaj rozmiar tekstu i rozmywaj zdjęcia, które mogą Cię niepokoić lub rozpraszać
+• Czytaj pełne artykuły na stronach wydawców
+
+PRYWATNOŚĆ I BEZPIECZEŃSTWO
+
+Spersonalizowane wiadomości nie powinny wymagać osobistej inwigilacji.
+
+• Twój profil wiadomości i historia czytania pozostają na Twoim telefonie, a nie na serwerach Mera
+• Mera nigdy nie prosi o adres e-mail. Logujesz się za pomocą telefonu
+• Ponieważ Mera nie ma tych informacji, nie może ich użyć do trenowania modeli AI ani sprzedać reklamodawcom i pośrednikom danych
+• Mera AI działa w formie zaszyfrowanej w „Prywatnej chmurze”, więc Mera nie może odczytać tego, co czyta dla Ciebie
+• Sprawdź w aplikacji atestację Trusted Execution Environment, by potwierdzić, że zabezpieczenia prywatności działają
+• Zabezpiecz aplikację opcjonalnym kodem PIN
+• Uzasadnienia napisane przez AI są zawsze wyraźnie oznaczone
+• Asystent przedstawia się jako AI, a nie jako człowiek
+• Wbudowane zabezpieczenia pomagają zapobiegać manipulacji i nadużyciom
+
+WSPIERAMY ORYGINALNE DZIENNIKARSTWO
+
+Dziennikarstwo wymaga czasu i pieniędzy. Mera pomaga je odkrywać, zamiast je zastępować. Wyjaśnia, dlaczego dana historia może być ważna, a potem kieruje Cię do oryginalnego wydawcy po pełną relację, kontekst i autorstwo.
+
+Wspieraj wydawnictwa, które cenisz: odwiedzaj strony, oglądaj reklamy, wykup subskrypcję, zostań członkiem lub wpłać darowiznę bezpośrednio. Mera respektuje zasady wydawców dotyczące reklam, rejestracji, plików cookie i paywalli.
+
+Jesteś wydawcą?
+https://mera.news/en/for-publishers
+
+Wymagania
+Mera loguje Cię za pomocą telefonu, więc potrzebny jest telefon z Androidem, Google Play i Google Play Protect. Telefony bez Google Play oraz telefony zrootowane lub zmodyfikowane nie są obsługiwane.
+
+Polityka prywatności
+https://mera.news/en/privacy
+
+Warunki korzystania z usługi
+https://mera.news/en/terms
+
+© 2026 Mera Labs B.V. Wszelkie prawa zastrzeżone.

@@ -1,0 +1,64 @@
+Kostenlos starten. Keine Werbung. Kein Tracking.
+
+Nachrichten sind überwältigend geworden.
+
+Jede Stunde erscheinen Tausende Geschichten in allen Ländern, Sprachen, Publikationen und offiziellen Quellen. Herkömmliche Feeds halten dich im Scrollen fest, ohne dass klar ist, ob du findest, was zählt.
+
+MERA NEWS KENNENLERNEN
+
+Eine transparente, KI-kuratierte App, die die Welt für dich im Blick behält.
+
+Erzähl Mera von Beruf, Wohnort, Interessen, Unternehmen, Märkten, Richtlinien, Reiseplänen oder allem, was dein Leben betrifft. Mera liest globale Nachrichten und ordnet Geschichten nach ihrer möglichen Auswirkung auf dich. So bleibst du informiert, ohne im Feed festzuhängen.
+
+WAS MERA KANN
+
+• Geschichten entdecken, die nach Relevanz und möglicher Wirkung auf dein Leben ausgewählt werden
+• Sehen, warum eine Geschichte wichtig sein kann und zu welchen deiner Angaben sie passt, bevor du sie öffnest
+• In „Von Mera aussortiert“ sehen, welche Geschichten Mera gelesen und beiseitegelegt hat
+• Dein Profil aufbauen, indem du Mera mit eigenen Worten erzählst, was dir wichtig ist
+• Die Priorität jeder Angabe und jedes Themas in deinem Profil anpassen
+• Bevorzugte oder zurückgestufte Quellen wählen und ungewollte Themen ausschließen
+• Mera tiefer nachfragen lassen und dein Profil anpassen, wenn sich deine Interessen ändern
+• Relevante Geschichten, verfolgte Themen, gespeicherte Artikel, Faktenchecks und Leseverlauf in einem Dashboard sehen
+• Ein Ereignis oder Thema verfolgen, während neue Verlagsberichte erscheinen
+• Im Web nach mehr Kontext zu einer Geschichte suchen
+• Behauptungen mit Faktencheck-Werkzeugen prüfen
+• Publikationen aus 195 Ländern in 109 Sprachen lesen und die App in 20 Sprachen nutzen
+• Lokale Schlagzeilen Land für Land durchsuchen
+• Aufsichtsbehörden, Ministerien, Cybersicherheitsbehörden, Zentralbanken, Rathäuser und andere Primärquellen verfolgen
+• Textgröße anpassen und belastende oder ablenkende Bilder unscharf stellen
+• Vollständige Artikel auf Verlagswebsites lesen
+
+DATENSCHUTZ UND SICHERHEIT
+
+Personalisierte Nachrichten sollten keine persönliche Überwachung erfordern.
+
+• Dein Nachrichtenprofil und dein Leseverlauf bleiben auf deinem Telefon, nicht auf Meras Servern
+• Mera fragt nie nach deiner E-Mail-Adresse. Du meldest dich mit deinem Telefon an
+• Da Mera diese Daten nicht hat, kann Mera sie weder für KI-Training nutzen noch an Werbetreibende und Datenhändler verkaufen
+• Mera AI läuft verschlüsselt in der „Private Cloud“, sodass Mera nicht lesen kann, was Mera AI für dich liest
+• Prüfe in der App die Attestierung des Trusted Execution Environment, um zu sehen, dass der Schutz aktiv ist
+• Schütze die App mit einer optionalen PIN
+• Von KI geschriebene Gründe sind immer klar gekennzeichnet
+• Der Assistent gibt sich als KI zu erkennen, nicht als Person
+• Eingebaute Schutzmaßnahmen helfen, Manipulation und Missbrauch zu verhindern
+
+ORIGINALJOURNALISMUS UNTERSTÜTZEN
+
+Journalismus kostet Zeit und Geld. Mera hilft dir, ihn zu finden, statt ihn zu ersetzen. Die App erklärt, warum eine Geschichte wichtig sein kann, und schickt dich dann zum Verlag für vollständige Berichte, Kontext und Quellenangabe.
+
+Unterstütze die Publikationen, die dir wichtig sind, indem du ihre Websites besuchst, ihre Werbung ansiehst, abonnierst, Mitglied wirst oder direkt beiträgst. Mera respektiert die Werbe-, Registrierungs-, Cookie- und Paywall-Regeln der Verlage.
+
+Bist du Verleger?
+https://mera.news/en/for-publishers
+
+Voraussetzungen
+Mera meldet dich mit deinem Telefon an. Dafür brauchst du ein Android-Telefon mit Google Play und Google Play Protect. Telefone ohne Google Play sowie gerootete oder veränderte Telefone werden nicht unterstützt.
+
+Datenschutzerklärung
+https://mera.news/en/privacy
+
+Nutzungsbedingungen
+https://mera.news/en/terms
+
+© 2026 Mera Labs B.V. Alle Rechte vorbehalten.

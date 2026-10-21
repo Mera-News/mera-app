@@ -1,0 +1,8 @@
+• Mera tarafından elendi: Mera'nın okuyup kenara koyduğu haberleri gör
+• Her haber neden önemli olabileceğini ve hangi bilgilerinle eşleştiğini gösterir
+• Daha sakin bir akış için “Nedenleri atla”
+• Mera'nın henüz okumadığı haberler artık onun seçtiklerinin ardından görünür
+• Planındaki günlük okuma için bir okuma sayacı
+• E-posta gerekmez: telefonunla giriş yap
+• Hepsini okuduğunda “Akışınızı yenileyin”
+• Hata düzeltmeleri ve hız iyileştirmeleri

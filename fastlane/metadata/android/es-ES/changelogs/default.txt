@@ -1,0 +1,8 @@
+• Descartados por Mera: consulta las historias que Mera ha leído y ha dejado a un lado
+• Cada historia muestra por qué puede importarte y con qué datos tuyos coincide
+• Omitir motivos, para un feed más tranquilo
+• Las historias que Mera aún no ha leído aparecen ahora después de su selección
+• Un indicador de la lectura diaria de tu plan
+• Sin correo electrónico: inicia sesión con tu teléfono
+• Actualiza tu feed cuando lo hayas visto todo
+• Corrección de errores y mejoras de velocidad

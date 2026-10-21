@@ -1,0 +1,64 @@
+Başlamak ücretsiz. Reklam yok. Takip yok.
+
+Haberler giderek bunaltıcı hale geldi.
+
+Ülkelerde, dillerde, yayınlarda ve resmi kaynaklarda her saat binlerce haber çıkıyor. Geleneksel akışlar seni kaydırmaya devam ettirir, ama önemli olanı bulup bulmadığını bilemezsin.
+
+MERA NEWS'İ TANI
+
+Dünyayı senin için izleyen, yapay zekayla derlenmiş şeffaf bir uygulama.
+
+Mera'ya mesleğini, konumunu, ilgi alanlarını, şirketlerini, piyasalarını, politikaları, seyahat planlarını ya da hayatını etkileyen başka her şeyi anlat. Mera küresel haberleri okur ve haberleri senin üzerindeki olası etkilerine göre sıralar. Böylece bir akışın içinde yaşamadan bilgili kalırsın.
+
+MERA NELER YAPABİLİR
+
+• Seninle ilgisine ve hayatına olası etkisine göre seçilmiş haberleri keşfet
+• Bir haberi açmadan önce neden önemli olabileceğini ve hangi bilgilerinle eşleştiğini gör
+• Mera'nın okuyup kenara koyduğu haberleri görmek için “Mera tarafından elendi” bölümünü aç
+• Profilini, neyin önemli olduğunu kendi sözlerinle anlatarak oluştur
+• Profilindeki her bilgi ve konunun önceliğini ayarla
+• Tercih ettiğin ya da daha az görmek istediğin kaynakları seç ve görmek istemediğin konuları dışarıda bırak
+• Mera'nın daha derin sorular sormasına ve ilgi alanların değiştikçe profilini ayarlamasına izin ver
+• İlgili haberleri, takip ettiğin konuları, kaydettiğin makaleleri, doğrulama sonuçlarını ve okuma geçmişini tek bir panoda gör
+• Yayıncılar arasında yeni haberler çıktıkça bir olayı ya da daha geniş bir konuyu takip et
+• Bir haberle ilgili daha fazla bağlam için web'de ara
+• İddiaları doğrulama araçlarıyla incele
+• 195 ülkeden yayınları 109 dilde oku ve uygulamayı 20 dilde kullan
+• Yerel manşetlere ülke ülke göz at
+• Düzenleyici kurumları, bakanlıkları, siber güvenlik ajanslarını, merkez bankalarını, belediyeleri ve diğer birincil kaynakları takip et
+• Metin boyutunu ayarla ve seni rahatsız edebilecek ya da dikkatini dağıtabilecek görselleri bulanıklaştır
+• Tam makaleleri yayıncıların web sitelerinde oku
+
+GİZLİLİK VE GÜVENLİK
+
+Kişiselleştirilmiş haberler kişisel gözetim gerektirmemelidir.
+
+• Haber profilin ve okuma geçmişin Mera'nın sunucularında değil, telefonunda kalır
+• Mera asla e-posta adresini istemez. Telefonunla giriş yaparsın
+• Mera bu bilgilere sahip olmadığı için bunları yapay zeka modellerini eğitmek ya da reklamcılara ve veri simsarlarına satmak için kullanamaz
+• Mera AI “Özel bulut”ta şifreli çalışır, böylece Mera senin için okuduklarını okuyamaz
+• Gizlilik korumalarının etkin olduğunu doğrulamak için uygulama içinde Güvenilir Yürütme Ortamı (TEE) tasdikini kontrol et
+• Uygulamayı isteğe bağlı bir PIN ile koru
+• Yapay zekanın yazdığı nedenler her zaman açıkça belirtilir
+• Asistan kendini bir insan değil, yapay zeka olarak tanıtır
+• Yerleşik güvenlik önlemleri manipülasyon ya da kötüye kullanımı önlemeye yardımcı olur
+
+ÖZGÜN GAZETECİLİĞE DESTEK
+
+Gazetecilik zaman ve para gerektirir. Mera, gazeteciliğin yerini almak yerine onu bulmana yardımcı olur. Bir haberin neden önemli olabileceğini açıklar, ardından tam haberciliği, bağlamı ve kaynak gösterimini görmen için seni özgün yayıncıya yönlendirir.
+
+Değer verdiğin yayınları web sitelerini ziyaret ederek, reklamlarını görüntüleyerek, abone olarak, üye olarak ya da doğrudan katkıda bulunarak destekle. Mera, yayıncıların reklam, kayıt, çerez ve ödeme duvarı politikalarına saygı gösterir.
+
+Yayıncı mısınız?
+https://mera.news/en/for-publishers
+
+Gereksinimler
+Mera seni telefonunla giriş yaptırdığı için Google Play ve Google Play Protect bulunan bir Android telefon gerekir. Google Play olmayan telefonlar ile rootlu ya da değiştirilmiş telefonlar desteklenmez.
+
+Gizlilik Politikası
+https://mera.news/en/privacy
+
+Kullanım Koşulları
+https://mera.news/en/terms
+
+© 2026 Mera Labs B.V. Tüm hakları saklıdır.

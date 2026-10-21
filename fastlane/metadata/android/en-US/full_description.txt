@@ -1,0 +1,64 @@
+Free to start. No ads. No tracking.
+
+News has become overwhelming.
+
+Thousands of stories appear every hour across countries, languages, publications and official sources. Traditional feeds keep you scrolling without knowing whether you found what matters.
+
+MEET MERA NEWS
+
+A transparent AI-curated app that monitors the world for you.
+
+Tell Mera about your profession, location, interests, companies, markets, policies, travel plans or anything else affecting your life. It reads global news and ranks stories by their potential impact on you, so you stay informed without living inside a feed.
+
+WHAT MERA CAN DO
+
+• Discover stories selected for their relevance and potential impact on your life
+• See why a story may matter and which of your facts it matches, before you open it
+• Open Discarded by Mera to see the stories Mera read and set aside
+• Build your profile by telling Mera what matters in your own words
+• Adjust the priority of every fact and topic in your profile
+• Choose preferred or deprioritised sources and exclude topics you do not want to see
+• Let Mera ask deeper questions and tune your profile as your interests change
+• View relevant stories, followed topics, saved articles, fact checks and reading history in one dashboard
+• Follow an event or broader issue as new reporting emerges across publishers
+• Search the web for more context on a story
+• Investigate claims with fact-checking tools
+• Read publications from 195 countries in 109 languages, and use the app in 20
+• Browse local headlines country by country
+• Follow regulators, ministries, cybersecurity agencies, central banks, city halls and other primary sources
+• Adjust text size and blur images you may find distressing or distracting
+• Read complete articles on publishers’ websites
+
+PRIVACY AND SAFETY
+
+Personalised news should not require personal surveillance.
+
+• Your news profile and reading history stay on your phone, not on Mera’s servers
+• Mera never asks for your email. You sign in with your phone
+• Because Mera does not have this information, it cannot use it to train AI models or sell it to advertisers and data brokers
+• Mera AI runs encrypted in Private cloud, so Mera can't read it
+• Verify Trusted Execution Environment attestation in the app to confirm the privacy safeguards are active
+• Protect the app with an optional PIN
+• AI-written reasons are always clearly marked
+• The assistant identifies itself as AI, not a person
+• Built-in safeguards help prevent manipulation or misuse
+
+SUPPORTING ORIGINAL JOURNALISM
+
+Journalism takes time and money. Mera helps you find it rather than replace it. It explains why a story may matter, then sends you to the original publisher for the full reporting, context and attribution.
+
+Support the publications you value by visiting their websites, viewing their advertising, subscribing, becoming a member or contributing directly. Mera respects publisher advertising, registration, cookie and paywall policies.
+
+Are you a publisher?
+https://mera.news/en/for-publishers
+
+Requirements
+Mera signs you in with your phone, so it needs an Android phone with Google Play and Google Play Protect. Phones without Google Play, and rooted or modified phones, aren't supported.
+
+Privacy Policy
+https://mera.news/en/privacy
+
+Terms of Service
+https://mera.news/en/terms
+
+© 2026 Mera Labs B.V. All rights reserved.

@@ -1,0 +1,8 @@
+• Écarté par Mera : voyez les articles que Mera a lus et mis de côté
+• Chaque article montre pourquoi il peut compter et à quels faits de votre profil il correspond
+• Ignorer les raisons, pour un fil plus calme
+• Les articles que Mera n'a pas encore lus apparaissent après ses choix
+• Un compteur pour la lecture quotidienne de votre forfait
+• Pas besoin d'e-mail : connectez-vous avec votre téléphone
+• Vous avez tout lu ? Touchez Actualiser votre fil
+• Corrections de bugs et gains de rapidité

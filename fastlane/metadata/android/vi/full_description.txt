@@ -1,0 +1,64 @@
+Miễn phí để bắt đầu. Không quảng cáo. Không theo dõi.
+
+Tin tức đang trở nên quá tải.
+
+Hàng nghìn câu chuyện xuất hiện mỗi giờ trên khắp các quốc gia, ngôn ngữ, báo chí và nguồn chính thức. Các bảng tin truyền thống khiến bạn cuộn mãi mà không biết mình đã thật sự tìm thấy điều quan trọng hay chưa.
+
+GIỚI THIỆU MERA NEWS
+
+Một ứng dụng minh bạch, do AI tuyển chọn, theo dõi thế giới thay bạn.
+
+Hãy kể cho Mera biết về nghề nghiệp, nơi bạn sống, mối quan tâm, công ty, thị trường, chính sách, kế hoạch du lịch hay bất cứ điều gì ảnh hưởng đến cuộc sống của bạn. Mera đọc tin tức toàn cầu và xếp hạng các câu chuyện theo tác động tiềm năng đến bạn, giúp bạn luôn nắm thông tin mà không phải sống trong một bảng tin.
+
+MERA LÀM ĐƯỢC GÌ
+
+• Khám phá những câu chuyện được chọn theo mức độ liên quan và tác động tiềm năng đến cuộc sống của bạn
+• Xem vì sao một câu chuyện có thể quan trọng và khớp với dữ kiện nào của bạn, trước khi mở
+• Mở “Mera đã loại bỏ” để xem những câu chuyện Mera đã đọc và gác lại
+• Xây dựng hồ sơ bằng cách kể cho Mera điều quan trọng với bạn bằng chính lời của bạn
+• Điều chỉnh mức độ ưu tiên của từng dữ kiện và chủ đề trong hồ sơ
+• Chọn nguồn ưu tiên hoặc nguồn bị hạ thấp, và loại trừ các chủ đề bạn không muốn xem
+• Để Mera đặt những câu hỏi sâu hơn và tinh chỉnh hồ sơ khi mối quan tâm của bạn thay đổi
+• Xem tin liên quan, chủ đề đang theo dõi, bài đã lưu, kiểm chứng sự kiện và lịch sử đọc trong một bảng điều khiển
+• Theo dõi một sự kiện hoặc vấn đề rộng hơn khi có thêm tin từ nhiều nhà xuất bản
+• Tìm kiếm trên web để có thêm bối cảnh cho một câu chuyện
+• Kiểm tra các tuyên bố bằng công cụ kiểm chứng sự kiện
+• Đọc báo từ 195 quốc gia bằng 109 ngôn ngữ, và dùng ứng dụng bằng 20 ngôn ngữ
+• Xem tin nổi bật địa phương theo từng quốc gia
+• Theo dõi cơ quan quản lý, bộ ngành, cơ quan an ninh mạng, ngân hàng trung ương, tòa thị chính và các nguồn chính thức khác
+• Điều chỉnh cỡ chữ và làm mờ hình ảnh mà bạn thấy gây khó chịu hoặc xao nhãng
+• Đọc toàn bộ bài viết trên trang web của nhà xuất bản
+
+QUYỀN RIÊNG TƯ VÀ AN TOÀN
+
+Cá nhân hóa tin tức không nên đòi hỏi phải giám sát đời tư.
+
+• Hồ sơ tin tức và lịch sử đọc của bạn nằm trên điện thoại, không nằm trên máy chủ của Mera
+• Mera không bao giờ hỏi email của bạn. Bạn đăng nhập bằng điện thoại
+• Vì Mera không giữ thông tin này, Mera không thể dùng nó để huấn luyện mô hình AI hay bán cho nhà quảng cáo và môi giới dữ liệu
+• Mera AI chạy ở dạng mã hóa trong Đám mây riêng, nên Mera không thể đọc những gì nó đọc cho bạn
+• Xác minh chứng thực Trusted Execution Environment trong ứng dụng để xác nhận các biện pháp bảo vệ quyền riêng tư đang hoạt động
+• Bảo vệ ứng dụng bằng mã PIN tùy chọn
+• Lý do do AI viết luôn được đánh dấu rõ ràng
+• Trợ lý tự nhận là AI, không phải người
+• Các biện pháp bảo vệ tích hợp giúp ngăn chặn thao túng hoặc lạm dụng
+
+HỖ TRỢ BÁO CHÍ GỐC
+
+Báo chí đòi hỏi thời gian và kinh phí. Mera giúp bạn tìm đến báo chí chứ không thay thế nó. Mera giải thích vì sao một câu chuyện có thể quan trọng, rồi đưa bạn đến nhà xuất bản gốc để đọc bài đầy đủ, bối cảnh và nguồn trích dẫn.
+
+Hãy ủng hộ những báo bạn trân trọng bằng cách truy cập trang web của họ, xem quảng cáo, đăng ký, trở thành thành viên hoặc đóng góp trực tiếp. Mera tôn trọng chính sách quảng cáo, đăng ký, cookie và tường phí của nhà xuất bản.
+
+Bạn là nhà xuất bản?
+https://mera.news/en/for-publishers
+
+Yêu cầu
+Bạn đăng nhập Mera bằng điện thoại, nên ứng dụng cần một điện thoại Android có Google Play và Google Play Protect. Ứng dụng không hỗ trợ điện thoại không có Google Play, cũng như điện thoại đã root hoặc bị chỉnh sửa.
+
+Chính sách bảo mật
+https://mera.news/en/privacy
+
+Điều khoản dịch vụ
+https://mera.news/en/terms
+
+© 2026 Mera Labs B.V. Bảo lưu mọi quyền.

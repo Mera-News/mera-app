@@ -1,0 +1,8 @@
+• Mera đã loại bỏ: xem những câu chuyện Mera đã đọc và gác lại
+• Mỗi câu chuyện cho biết vì sao nó có thể quan trọng và khớp với dữ kiện nào của bạn
+• Bỏ qua lý do để bảng tin yên tĩnh hơn
+• Câu chuyện Mera chưa đọc giờ xuất hiện sau các tin Mera chọn
+• Đồng hồ đọc hiển thị lượt đọc hằng ngày của gói
+• Không cần email: đăng nhập bằng điện thoại
+• Làm mới bảng tin khi bạn đã xem hết tin
+• Sửa lỗi và cải thiện tốc độ
