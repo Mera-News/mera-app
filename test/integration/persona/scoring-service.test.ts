@@ -745,17 +745,15 @@ describe('batchScoreAndReason - on-device path', () => {
     expect(llamaCalls()).toHaveLength(0);
   });
 
-  it('a Kev failure leaves the math score standing', async () => {
+  it('a Kev failure marks the row failed, so it is not saved and stays unscored for the next pass', async () => {
     installLocal();
     installDecide({ error: 'native crash' });
     const [c] = await seedAndLoad(['a']);
 
-    const { scoreMap, failedIds } = await run(batchScoreAndReason([c]));
+    const { failedIds } = await run(batchScoreAndReason([c]));
 
     expect(decideCalls()).toHaveLength(1);
-    expect(failedIds.size).toBe(0);
-    expect(scoreMap.get('a')).toBeGreaterThan(0);
-    expect(scoreMap.get('a')).not.toBe(0.3);
+    expect(failedIds.has('a')).toBe(true);
   });
 
   it('falls back to FALLBACK_RELEVANCE and marks failedIds when the persona snapshot cannot be read', async () => {
@@ -1067,7 +1065,7 @@ describe('processAllUnscored - on-device pass', () => {
     }
   });
 
-  it('a Kev error about one article keeps that row on its math score and ranks the others', async () => {
+  it('a Kev error about one article leaves that row unscored and ranks the others', async () => {
     installLocal();
     queue();
     installDecide((call) => {
@@ -1076,13 +1074,10 @@ describe('processAllUnscored - on-device pass', () => {
     });
     await seed(['a', 'b', 'c']);
 
-    expect(await run(processAllUnscored())).toBe(3);
+    expect(await run(processAllUnscored())).toBe(2);
 
     const rows = await stored();
-    expect(rows.b.status).not.toBe('unscored');
-    // The math score: defined, and not Kev's top level (1).
-    expect(rows.b.rawScore).toBeGreaterThan(0);
-    expect(rows.b.rawScore).not.toBeCloseTo(1, 2);
+    expect(rows.b.status).toBe('unscored');
     expect(rows.a.rawScore).toBeCloseTo(1, 5);
     expect(rows.c.rawScore).toBeCloseTo(1, 5);
   });
@@ -1125,17 +1120,15 @@ describe('processAllUnscored - on-device pass', () => {
   // Every article over n_ctx (a dense non-Latin fact bank) fails with llama_decode's 1 on every
   // pass: that is about the prompts, not a Kev outage, so the rows keep their math scores
   // rather than staying unscored forever.
-  it('Kev overflowing its context on every article of a batch keeps the math scores, as for one article', async () => {
+  it('Kev overflowing its context on every article of a batch leaves them all unscored, never on math scores', async () => {
     installLocal();
     queue();
     installDecide({ error: 'failed to evaluate the decision prompt (error 1)' });
     await seed(['a', 'b', 'c']);
 
-    expect(await run(processAllUnscored())).toBe(3);
+    expect(await run(processAllUnscored())).toBe(0);
     for (const row of Object.values(await stored())) {
-      expect(row.status).not.toBe('unscored');
-      expect(row.rawScore).toBeGreaterThan(0);
-      expect(row.rawScore).not.toBeCloseTo(1, 2);
+      expect(row.status).toBe('unscored');
     }
   });
 

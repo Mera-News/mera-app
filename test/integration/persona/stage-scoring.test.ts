@@ -215,7 +215,7 @@ describe('on-device relevance - Kev', () => {
     expect(stage.rawScoreMap.get('mid')).toBeGreaterThan(0.4);
   });
 
-  it('a Kev failure leaves the math score standing and logs a scrubbed message and the prompt size, never the article or a fact', async () => {
+  it('a Kev failure gives the article no score and logs a scrubbed message and the prompt size, never the article or a fact', async () => {
     installLlama([]);
     await addFact('Lives in Hoorn');
     installDecide({ error: 'system_one template failed to render: Story a sagaa / Lives in Hoorn / "x"' });
@@ -223,7 +223,7 @@ describe('on-device relevance - Kev', () => {
 
     const stage = await run(computeAndScoreForCandidates([c]));
 
-    expect(stage.rawScoreMap.get('a')).toBe(stage.computedScoreMap.get('a'));
+    expect(stage.rawScoreMap.has('a')).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith('kev_decide_failed', {
       id: 'a',
       error: 'Error',
