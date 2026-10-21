@@ -87,6 +87,21 @@ describe('buildDiscardedStories', () => {
     expect(rows.find((r) => r.memberIds.includes('a'))?.memberCount).toBe(2);
   });
 
+  it('never holds a story the Feed already shows: a sibling of a pick, a pending or a not-read article stays out', () => {
+    const pool = [
+      sugg({ _id: 'pick', relevance: 0.7, reason: 'why', clusters: [cluster('picked')] }),
+      sugg({ _id: 'pickSib', relevance: 0.2, clusters: [cluster('picked')] }),
+      sugg({ _id: 'pending', relevance: 0.6, status: S.ReasonPending, clusters: [cluster('writing')] }),
+      sugg({ _id: 'pendingSib', relevance: 0.1, clusters: [cluster('writing')] }),
+      sugg({ _id: 'unread', relevance: 0, status: S.Unscored, clusters: [cluster('tail')] }),
+      sugg({ _id: 'unreadSib', relevance: 0.2, clusters: [cluster('tail')] }),
+      sugg({ _id: 'alone', relevance: 0.2 }),
+    ];
+    const { rows, total } = buildDiscardedStories(pool, null, NOW);
+    expect(ids(rows)).toEqual(['alone']);
+    expect(total).toBe(1);
+  });
+
   it('is newest published first, capped, with the true count', () => {
     const pool = Array.from({ length: TAIL_RENDER_CAP + 3 }, (_, i) => sugg({ _id: `d${i}`, ageH: 1 + i * 0.1 }));
     const { rows, total } = buildDiscardedStories(pool, null, NOW);

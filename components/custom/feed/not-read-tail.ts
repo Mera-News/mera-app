@@ -128,9 +128,11 @@ export function foldNotReadTail(
 }
 
 /** The stories Mera discarded: rows it read and scored below the gate, in
- *  the 48h window, grouped like the main list but on their own, newest
- *  published first, at most `cap` (`total` is the true story count). Not a
- *  session list: these rows are terminal, so only new ones arrive. */
+ *  the 48h window, grouped like the main list, keeping only stories with no
+ *  member the Feed shows (a pick's, a pending or a not-read sibling keeps the
+ *  story out), newest published first, at most `cap` (`total` is the true
+ *  story count). Not a session list: these rows are terminal, so only new
+ *  ones arrive. */
 export function buildDiscardedStories(
   suggestions: ForYouSuggestion[],
   userCtx: UserGeoLanguageContext | null,

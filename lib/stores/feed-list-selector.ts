@@ -189,10 +189,11 @@ export interface BuildFeedListOptions {
    *  card fronted by an unscored row means EVERY member is unscored: that is
    *  a not-read card (feed/not-read-tail.ts). */
   includeUnscored?: boolean;
-  /** The Show filter's "Discarded by Mera" only: the pool is ONLY the rows
-   *  Mera read and scored below the gate, in the window
-   *  (`isDiscardedVisible`), grouped on their own. Every other option is
-   *  ignored. */
+  /** The Show filter's "Discarded by Mera" only: the rows Mera read and
+   *  scored below the gate, in the window (`isDiscardedVisible`). They are
+   *  grouped WITH the Feed's own pool (complete, pending, unscored) and only
+   *  stories made entirely of them are kept, so a story the Feed shows is
+   *  never also listed as discarded. Every other option is ignored. */
   onlyDiscarded?: boolean;
 }
 
@@ -250,7 +251,10 @@ export function buildFeedList(
   const visible = suggestions.filter(
     (s) =>
       (opts.onlyDiscarded
-        ? isDiscardedVisible(s, cutoffMs)
+        ? isDiscardedVisible(s, cutoffMs) ||
+          isVisible(s, cutoffMs) ||
+          isReasonPendingVisible(s, cutoffMs) ||
+          isUnscoredVisible(s, cutoffMs)
         : isVisible(s, cutoffMs) ||
           (includePending && isReasonPendingVisible(s, cutoffMs)) ||
           (includeUnscored && isUnscoredVisible(s, cutoffMs))) &&
@@ -282,6 +286,7 @@ export function buildFeedList(
   //    composite score at build time.
   const list: FeedListItem[] = [];
   for (const g of groups) {
+    if (opts.onlyDiscarded && !g.every((m) => isDiscardedVisible(m.s, cutoffMs))) continue;
     const rep = pickRepresentative(g, repCompareForGroups).s;
     if (isSuggestionOpened(rep, excludedIds)) continue;
     list.push({
