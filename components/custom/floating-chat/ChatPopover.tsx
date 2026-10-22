@@ -206,8 +206,8 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         if (isExpanded && (phase === 'closed' || phase === 'closing')) {
             // Earliest single hook on the expand path: warm the cloud-chat
             // critical path (attestation + JWT) the instant the panel starts
-            // opening, before MeraChatSession mounts. Idempotent + no-op on-device.
-            prewarmCloudChat();
+            // opening, before MeraChatSession mounts, and ask for the greeting: every open greets.
+            prewarmCloudChat({ greet: true });
             const { bubbleCenter } = useFloatingChatStore.getState();
             originX.value = bubbleCenter.x;
             originY.value = bubbleCenter.y;

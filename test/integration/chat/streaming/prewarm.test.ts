@@ -1,7 +1,7 @@
 // lib/llm/prewarm.ts against the gateway mock: what a launch really sends. Real attestation fetches,
-// real JWT, real limiter, real cloudComplete. The warm-up runs only after 10 minutes without a
-// BIG_MODEL call, kept in module state, so every test runs on its own fake date, three hours after
-// the last (a later date than any earlier test's, or the previous test's calls would still count).
+// real JWT, real limiter, real cloudComplete. A chat open (`greet`) asks for the greeting every time;
+// app launch (no `greet`) warms attestation and the JWT only. Every test runs on its own fake date,
+// three hours after the last, so no client cache carries over between tests.
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
@@ -74,7 +74,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     const bodies = captureChatBodies();
     server.use(...mockGateway(respond('Good evening, how can I help you?')));
 
-    expect(prewarmCloudChat()).toBeUndefined();
+    expect(prewarmCloudChat({ greet: true })).toBeUndefined();
     await settled();
 
     // Exactly the two primaries, which since 2026-09-16 are also each other's fallback.
@@ -112,7 +112,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     await drive(seedFacts(['Lives in Porto', 'Works as a nurse']));
     useAppLanguageStore.setState({ appLanguage: 'hi' });
     server.use(...mockGateway(respond('शुभ संध्या, मीरा आपकी क्या मदद कर सकती है?')));
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await settled();
     const [call] = gatewayCalls('chat');
     const sent = JSON.stringify(call.messages);
@@ -126,7 +126,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
 
   it('cleans the line before showing it: think tags, clause dashes, one line', async () => {
     server.use(...mockGateway(respond('<think>plan it</think>Good evening — how can\n I help you?  ')));
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await settled();
     expect(greeting()).toBe('Good evening, how can I help you?');
   });
@@ -143,7 +143,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     ['the Arabic question mark', 'مساء الخير، كيف يمكنني مساعدتك؟', 'مساء الخير، كيف يمكنني مساعدتك؟'],
   ])('%s: shown only as one short question', async (_, reply, shown) => {
     server.use(...mockGateway(respond(reply)));
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await settled();
     expect(gatewayCalls('chat')).toHaveLength(1);
     expect(greeting()).toBe(shown);
@@ -151,7 +151,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
 
   it('shows nothing for a reply that is only a think block', async () => {
     server.use(...mockGateway(respond('<think>only a trace</think>')));
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await settled();
     expect(gatewayCalls('chat')).toHaveLength(1);
     expect(greeting()).toBeNull();
@@ -159,44 +159,35 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
 
   it('drops a greeting that lands after the user already sent a message', async () => {
     server.use(...mockGateway(() => ({ chunks: ['Good morning, how can I help you?'], headerDelayMs: 5_000 })));
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
     dismissMeraGreeting();
     await quiet();
     expect(greeting()).toBeNull();
   });
 
-  it('warms only after 10 minutes without a BIG call, and concurrent callers fire once', async () => {
+  it('greets on every open, and concurrent opens fire once', async () => {
     server.use(...mockGateway(respond('ok')));
-    prewarmCloudChat();
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
+    prewarmCloudChat({ greet: true });
     await settled();
-    prewarmCloudChat();
-    await quiet();
-    // Attestation is cached, and the warm-up itself was the last BIG call.
     expect(gatewayCalls('chat')).toHaveLength(1);
-    expect(attestationRequests()).toBe(2);
 
-    await jest.advanceTimersByTimeAsync(11 * 60_000);
-    prewarmCloudChat();
-    await advanceUntil(() => gatewayCalls('chat').length === 2, 60_000);
-    await quiet();
-    expect(gatewayCalls('chat')).toHaveLength(2);
+    // A later open, even right after a chat turn, greets again.
+    await drive(collect(cloudChatStream({ messages: MESSAGES, model: BIG_MODEL })));
+    prewarmCloudChat({ greet: true });
+    await advanceUntil(() => gatewayCalls('chat').length === 3, 60_000);
+    expect(gatewayCalls('chat')[2].messages[1]).toEqual({ role: 'user', content: 'Greet me.' });
     expect(attestationRequests(BIG_MODEL)).toBe(1);
   });
 
-  it('a real chat turn on BIG counts as the last call: no warm-up within 10 minutes of it', async () => {
+  it('app launch (no greet) attests and mints a JWT but sends no model call', async () => {
     server.use(...mockGateway(respond('ok')));
-    await drive(collect(cloudChatStream({ messages: MESSAGES, model: BIG_MODEL })));
-    await jest.advanceTimersByTimeAsync(9 * 60_000);
     prewarmCloudChat();
     await quiet();
-    expect(gatewayCalls('chat')).toHaveLength(1);
-
-    await jest.advanceTimersByTimeAsync(2 * 60_000);
-    prewarmCloudChat();
-    await advanceUntil(() => gatewayCalls('chat').length === 2, 60_000);
-    expect(gatewayCalls('chat')[1].messages[1]).toEqual({ role: 'user', content: 'Greet me.' });
+    expect(gatewayCalls('chat')).toHaveLength(0);
+    expect(attestationRequests(BIG_MODEL)).toBe(1);
+    expect(greeting()).toBeNull();
   });
 
   it('swallows a failing secondary attestation: the primary is still warmed', async () => {
@@ -208,7 +199,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
       ),
       ...mockGateway(respond('ok')),
     );
-    expect(() => prewarmCloudChat()).not.toThrow();
+    expect(() => prewarmCloudChat({ greet: true })).not.toThrow();
     await settled();
     expect(attestationRequests(BIG_MODEL)).toBe(1);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([BIG_MODEL]);
@@ -220,7 +211,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     const onUnhandled = (r: unknown) => unhandled.push(r);
     process.on('unhandledRejection', onUnhandled);
     try {
-      expect(() => prewarmCloudChat()).not.toThrow();
+      expect(() => prewarmCloudChat({ greet: true })).not.toThrow();
       await quiet();
       jest.useRealTimers();
       await new Promise((r) => setTimeout(r, 20));
@@ -233,7 +224,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
 
   it('swallows a failing completion: nothing throws, and the window stays claimed', async () => {
     server.use(...mockGateway(respond({ status: 400, body: 'inference down' })));
-    expect(() => prewarmCloudChat()).not.toThrow();
+    expect(() => prewarmCloudChat({ greet: true })).not.toThrow();
     await settled();
     expect(gatewayCalls('chat')).toHaveLength(1);
     expect(greeting()).toBeNull();
@@ -247,7 +238,7 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
   it('sends nothing at all under on-device processing', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
     const requests = requestCounter();
-    expect(prewarmCloudChat()).toBeUndefined();
+    expect(prewarmCloudChat({ greet: true })).toBeUndefined();
     await quiet();
     expect(requests()).toBe(0);
     expect(gatewayCalls()).toEqual([]);
@@ -259,7 +250,7 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, chatInCloud: true });
     server.use(...mockGateway(respond('Good evening, how can I help you?')));
 
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await settled();
 
     expect(gatewayCalls('chat')).toHaveLength(1);
@@ -269,7 +260,7 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
   it('signed out: no gateway request, no throw, and the window is released for after sign-in', async () => {
     resetAuthState();
     invalidateJwtCache();
-    expect(() => prewarmCloudChat()).not.toThrow();
+    expect(() => prewarmCloudChat({ greet: true })).not.toThrow();
     await quiet();
     expect(gatewayCalls()).toEqual([]);
     expect(attestationRequests()).toBe(0);
@@ -277,7 +268,7 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
     // Auth now available: the released claim lets the next call warm.
     await drive(signInFixtureAccount());
     invalidateJwtCache();
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await settled();
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([BIG_MODEL]);
   });
@@ -286,7 +277,7 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
     invalidateJwtCache();
     server.use(http.get('*/api/auth/token', () => new HttpResponse('boom', { status: 500 })));
     await expect(drive(getJwtToken())).resolves.toBeNull();
-    expect(() => prewarmCloudChat()).not.toThrow();
+    expect(() => prewarmCloudChat({ greet: true })).not.toThrow();
     await quiet();
     expect(gatewayCalls()).toEqual([]);
     expect(attestationRequests()).toBe(0);

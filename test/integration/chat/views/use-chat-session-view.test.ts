@@ -235,7 +235,7 @@ describe('prewarm greeting', () => {
     useStrictClock(Date.now());
     server.use(...mockGateway(() => ({ chunks: [GREETING], headerDelayMs: 5_000 })));
     const { result } = mount();
-    prewarmCloudChat();
+    prewarmCloudChat({ greet: true });
     await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
     act(() => result.current.handleSend('hi'));
     await act(() => jest.advanceTimersByTimeAsync(10_000));

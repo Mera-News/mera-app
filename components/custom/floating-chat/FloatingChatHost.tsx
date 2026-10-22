@@ -25,8 +25,8 @@ const FloatingChatHost: React.FC = () => {
     // warm the cloud-chat path (attestation + JWT + a throwaway model
     // completion) ahead of the user ever opening the panel or tapping the
     // floating bubble. prewarmCloudChat is internally guarded (on-device
-    // no-op, JWT-gated) and deduped to a 30-min TTL, so re-firing this effect
-    // is cheap.
+    // no-op, JWT-gated), and with no `greet` it sends no model call, so
+    // re-firing this effect is cheap.
     //
     // The hook itself must still run unconditionally (React rules), so the
     // gate lives in the effect BODY rather than the hook call. Deliberately

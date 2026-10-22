@@ -6,8 +6,8 @@
 // (3) hit a possibly-COLD model (the dominant, multi-second cost the attestation
 // + JWT warming alone can't touch). (1) and (2) are cached client-side
 // (attestation ~30 min, JWT ~30 s); (3) has no client cache, so we ask BIG_MODEL
-// for one greeting question, shown in an empty thread, and only when
-// no BIG_MODEL call has left the app for WARM_GAP_MS.
+// for one greeting question, shown in an empty thread, on EVERY chat open
+// (owner, 2026-10-22). Only an open passes `greet`; app launch warms (1) and (2) only.
 //
 // Fire-and-forget and idempotent: repeated calls hit the underlying caches / the
 // warmup dedupe, so mounting several chat surfaces in one session costs at most
@@ -23,16 +23,11 @@ import { fetchModelPublicKey } from '../e2ee/e2ee-service';
 import logger from '../logger';
 import { brandRule, fixBrandSpelling, replaceClauseDashes } from '@/lib/mera-harness';
 import { chatRunsInCloud } from './chat-cloud';
-import { bigModelCalledAt, cloudComplete } from './cloudComplete';
+import { cloudComplete } from './cloudComplete';
 import { BIG_MODEL, SMALL_MODEL } from './constants';
 
-// Unlike attestation/JWT (client-cached), the warm-up hits the model, so it runs
-// only when NEAR has gone WARM_GAP_MS without a BIG_MODEL call from this app (any
-// chat turn counts, and so does the warm-up itself).
-const WARM_GAP_MS = 10 * 60_000;
 const GREETING_MAX_CHARS = 60;
-// Claims the warm-up between the gap check and cloudComplete stamping the call,
-// so concurrent callers don't double-fire.
+// One greeting call in flight at a time, so two open paths firing together send one.
 let warming = false;
 // Bumped by dismissMeraGreeting, so a greeting that lands after the user sent
 // something is dropped instead of shown in a later empty thread.
@@ -52,7 +47,7 @@ export function dismissMeraGreeting(): void {
  * the cloud persona-chat model. Returns immediately (void); all warming runs in
  * the background.
  */
-export function prewarmCloudChat(): void {
+export function prewarmCloudChat(opts: { greet?: boolean } = {}): void {
   // Chat on the phone never touches the gateway: nothing to warm.
   if (!chatRunsInCloud()) {
     logger.debug('[chat-timing] prewarm skipped (on-device)');
@@ -97,9 +92,8 @@ export function prewarmCloudChat(): void {
     },
   );
 
-  // Warm the MODEL itself (fire-and-forget, silent), only after WARM_GAP_MS of
-  // model silence so repeated surface mounts don't each pay for an inference.
-  void warmModel();
+  // Warm the MODEL itself (fire-and-forget, silent): only when a chat opens.
+  if (opts.greet) void warmModel();
 }
 
 /** Morning, afternoon or evening by the device's local clock; only the word leaves the device. */
@@ -128,13 +122,13 @@ function greetingLine(raw: string, lang: string): string | null {
  * completion would just 401-storm).
  */
 async function warmModel(): Promise<void> {
-  if (warming || Date.now() - bigModelCalledAt() < WARM_GAP_MS) return;
+  if (warming) return;
   warming = true;
   const gen = greetingGen;
   useMeraGreeting.setState({ text: null });
   try {
     const token = await getJwtToken();
-    // No auth yet: leave the gap unclaimed so a later call (post-login) can warm.
+    // No auth yet: nothing to greet with.
     if (!token) return;
     const lang = appLanguageName();
     const part = partOfDay();

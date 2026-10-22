@@ -14,7 +14,7 @@ import {
 } from '../e2ee/e2ee-service';
 import { getCachedAttestation, invalidateCachedAttestation } from '../e2ee/e2ee-cache';
 import logger from '../logger';
-import { BIG_MODEL, CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
+import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
 import { stripLeakedReasoning } from '../algorithms/reasoning-leak';
 import {
   APP_TOOL_FORMAT,
@@ -109,12 +109,6 @@ export const HEDGE_DELAY_MS = 10_000;
  *  and could engage the session fallback on a healthy primary. */
 export const BUFFERED_HEDGE_DELAY_MS = 30_000;
 
-// When a BIG_MODEL call last left this file, so prewarm can skip a warm-up while
-// NEAR is still warm. Kept here, not in prewarm, because both chat entry points
-// live in this file and prewarm already imports it: no cycle, no new module.
-let lastBigModelCallAt = 0;
-export const bigModelCalledAt = (): number => lastBigModelCallAt;
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -149,7 +143,6 @@ export async function cloudComplete(
   const primary = request.model ?? SMALL_MODEL;
   const model = resolveModel(primary);
   const maxTokens = request.maxTokens ?? request.maxCompletionTokens;
-  if (primary === BIG_MODEL) lastBigModelCallAt = Date.now();
 
   const systemTokens = estimateTokens(request.systemPrompt);
   const promptTokens = estimateTokens(request.prompt);
@@ -484,7 +477,6 @@ export async function* cloudChatStream(
 
   const primary = request.model ?? SMALL_MODEL;
   const model = resolveModel(primary);
-  if (primary === BIG_MODEL) lastBigModelCallAt = Date.now();
 
   // Token estimate — parallel to useLocalLLM's [LocalLLM:chat] Token estimate log.
   let totalInputTokens = 0;
