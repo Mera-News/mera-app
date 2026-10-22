@@ -16,7 +16,8 @@ import {
   type PromptInputHandle,
 } from '@/components/ui/chat-ai';
 import { hapticLight } from '@/lib/haptics';
-import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
+import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
+import { GLASS_EDGE, GlassPlate } from '@/components/custom/GlassSurface';
 import { stopChatTurn } from '@/lib/chat-session/chat-session';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import {
@@ -88,6 +89,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const styles = useStyles();
   const { t } = useTranslation();
   const colors = useColors();
+  const themeMode = useThemeMode();
   // The session's whole-turn busy mirror (not `status`): Send is Stop until it clears.
   const turnBusy = useFloatingChatStore((st) => st.isGenerating);
 
@@ -185,12 +187,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   // What Mera and the reader can do here. A centred card of plain text, so
   // VoiceOver reads it as text, never as a message from Mera.
+  // Glass (owner, 2026-10-22): one static surface, so real Liquid Glass on iOS 26 is affordable here
+  // (GlassSurface's chrome rule). The shadow sits on the outer frame: RN drops a shadow off a view
+  // that clips itself, and the glass needs a clipping parent to round it.
   const renderIntro = (text: string) => (
     <View style={styles.introFill}>
       <View style={styles.introCard}>
-        <Text size="sm" style={styles.introText} testID="chat-intro">
-          {text}
-        </Text>
+        <View className={GLASS_EDGE} style={styles.introGlass}>
+          <GlassPlate tint={themeMode === 'light' ? tint(colors.panel, 0.55) : undefined} />
+          <Text size="sm" style={styles.introText} testID="chat-intro">
+            {text}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -601,16 +609,16 @@ const useStyles = themedStyles((c, mode) => StyleSheet.create({
   introCard: {
     maxWidth: 360,
     borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 4,
-    ...(mode === 'light'
-      ? { backgroundColor: c.panel, borderWidth: StyleSheet.hairlineWidth, borderColor: c.panelBorder }
-      : { backgroundColor: c.surfaceRaised }),
+    shadowOpacity: mode === 'light' ? 0.18 : 0.4,
+    shadowRadius: 10,
+  },
+  introGlass: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
   },
   introText: {
     color: c.ink2,
