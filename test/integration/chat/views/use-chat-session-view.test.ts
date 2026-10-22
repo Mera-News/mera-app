@@ -213,7 +213,7 @@ describe('prewarm greeting', () => {
   it('sits before the intro in an empty cloud thread, and the starter chips still show', () => {
     useMeraGreeting.setState({ text: GREETING });
     const { result } = mount();
-    expect(messageIds(result.current.items)).toEqual(['greeting', 'intro']);
+    expect(messageIds(result.current.items)).toEqual(['intro', 'greeting']);
     expect(hasRealMessage(result.current.items)).toBe(false);
     expect(result.current.starterChips.length).toBeGreaterThan(0);
   });

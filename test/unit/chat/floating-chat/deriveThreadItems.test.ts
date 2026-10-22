@@ -157,10 +157,10 @@ describe('deriveThreadItems', () => {
     }
   });
 
-  it('shows the prewarm greeting as an assistant bubble above the intro while the thread is empty', () => {
+  it('shows the prewarm greeting as an assistant bubble below the intro while the thread is empty', () => {
     const items = deriveThreadItems(base({ greeting: 'Good evening! Mera is ready.', introMessage: 'Welcome!' }));
-    expect(keys(items)).toEqual(['live-greeting', 'live-intro']);
-    expect(items[0]).toMatchObject({
+    expect(keys(items)).toEqual(['live-intro', 'live-greeting']);
+    expect(items[1]).toMatchObject({
       kind: 'message',
       message: { id: 'greeting', role: 'assistant', content: 'Good evening! Mera is ready.' },
     });
