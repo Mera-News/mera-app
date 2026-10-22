@@ -345,16 +345,9 @@ function toConversationMessage(m: PersistedMessage): ConversationMessage {
 // Public API
 // ---------------------------------------------------------------------------
 
-/** True once the thread holds a real message: the greeting pseudo-message does not count (the starter chips gate). */
+/** True once the thread holds a real message: the intro and greeting pseudo-messages do not count (the starter chips gate). */
 export function hasRealMessage(items: ChatThreadItem[]): boolean {
-  return items.some((item) => item.kind === 'message' && item.message.id !== 'greeting');
-}
-
-/** The intro's text while the thread holds no real message, else null: ChatThread then draws the thread outside the inverted list. */
-export function emptyThreadIntro(items: ChatThreadItem[]): string | null {
-  if (hasRealMessage(items)) return null;
-  const intro = items.find((item) => item.kind === 'intro');
-  return intro?.kind === 'intro' ? intro.text : null;
+  return items.some((item) => item.kind === 'message' && item.message.id !== 'intro' && item.message.id !== 'greeting');
 }
 
 export function deriveThreadItems(opts: {
@@ -550,13 +543,17 @@ export function deriveThreadItems(opts: {
     if (persisted.id === lastUserId) typingAt = out.length;
   }
 
-  // --- Intro (static text, not a message): suppressed once the conversation
-  // has resumed messages (ChatSessionView already clears introMessage on the
-  // first send, so intro never coexists with a live message in practice). ---
+  // --- Intro pseudo-message: suppressed once the conversation has resumed
+  // messages (ChatSessionView already clears introMessage on the first send,
+  // so intro never coexists with a live message in practice). ---
   if (introMessage !== null && sortedResume.length === 0) {
-    out.push({ kind: 'intro', key: 'intro', text: introMessage });
+    out.push({
+      kind: 'message',
+      key: 'live-intro',
+      message: { id: 'intro', role: 'assistant', content: introMessage },
+    });
   }
-  // The greeting is the first message, so it reads below the intro.
+  // The greeting arrives after the intro is on screen, so it reads below it.
   if (opts.greeting && liveSequence.length === 0) {
     out.push({
       kind: 'message',

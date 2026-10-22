@@ -695,10 +695,10 @@
     "replyLeakFallback": "Anladım. Eklemek istediğiniz başka bir şey var mı?",
     "replyProcessFallback": "Özür dilerim, buna yetişemedim. Bir daha söyleyebilir misiniz?",
     "cloudOnlyNotice": "Bunun için Mera'nın “Özel bulut” modu gerekir. Ayarlar'da, Mera Protocol bölümünden geçiş yapılabilir.",
-    "onDeviceBetaNote": "“Bu telefonda” modu beta aşamasında, daha yavaş olabilir veya hata yapabilir."
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
-    "introMessage": "Bana kendinizden bahsedin, örneğin nerede yaşadığınızı ve neyi takip ettiğinizi. Sizin için önemli haberleri bulayım. Paylaştıklarınız sunucularımızda değil, cihazınızda saklanır."
+    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nBu seni biraz tereddüte düşürüyorsa, içgüdün doğru. Kişisel verilerini bir uygulama şirketine teslim etmek akıllıca değil. Mera farklı tasarlandı: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana bunun nasıl çalıştığını sorabilirsin ya da 'kurulumda bana yardım et' de, başlayalım."
   },
   "floatingChat": {
     "close": "Kapat",
@@ -758,8 +758,8 @@
     "thumbsDownMessage": "Bunun gibi makaleler istemiyorum: \"{{title}}\". Önerilerimi ayarlamama yardım et.",
     "likeLabel": "Beğendim",
     "dislikeLabel": "Bana göre değil",
-    "intro": "Bu öneriyi neden aldığınızı açıklayabilir ya da daha iyilerini almanıza yardım edebilirim.",
-    "introArticle": "Bu makaleye göre önerilerinizi ayarlayabilirim.",
+    "intro": "Senin için ne yapabilirim? Bu öneriyi neden aldığını açıklayabilir veya daha iyi öneriler almana yardımcı olabilirim.",
+    "introArticle": "Senin için ne yapabilirim? Bu makaleye dayanarak haber önerilerini ayarlamana yardımcı olabilirim.",
     "introLikeTuning": "Bu haberi beğendin: biraz daha anlat, akışını ayarlayayım.",
     "introDislikeTuning": "Bu haberi beğenmedin: nedenini anlat, akışını ayarlayayım.",
     "chipWhy": "Bu öneriyi neden aldım?",
@@ -1603,7 +1603,7 @@
     "continueAnyway": "Yine de devam et",
     "slideProgress": "Kart {{current}} / {{total}}",
     "askMera": "Mera'ya sor",
-    "chatIntro": "Bana bu rehberi sorun. Açıklayabilirim ama burada hiçbir şeyi değiştiremem.",
+    "chatIntro": "Mera'nın nasıl çalıştığı hakkında bana ne istersen sor. Açıklayabilirim ama buradan hiçbir şeyi değiştiremem.",
     "hintReveal": "Her birine dokun.",
     "hintRevealSome": "En az {{count}}'a dokun.",
     "hintChoose": "Birini seç.",
@@ -2875,21 +2875,21 @@
     "working": "Mera isteğiniz üzerinde çalışıyor"
   },
   "meraIntro": {
-    "feed": "Hangi konuda daha çok haber istediğinizi söyleyin ya da bana haberleri sorun.",
-    "interests": "Bana yeni bir ilgi alanı söyleyin ya da değiştirilecek veya kaldırılacak birini.",
-    "interest": "Bu ilgi alanını sizin için değiştirebilir veya kaldırabilirim.",
-    "world": "Bana bir manşeti sorun ya da haber istediğiniz ülkeyi söyleyin.",
-    "checks": "Bir iddia söyleyin, web'de kontrol edeyim.",
-    "checksNoWeb": "Web araması kapalı. İddiaları kontrol etmek için Ayarlar'dan açın.",
-    "library": "Bana haberleri sorun ya da ne okumayı sevdiğinizi söyleyin.",
-    "facts": "Gerçeklerinizde neyi değiştirmek istediğinizi söyleyin.",
+    "feed": "Akışınızdasınız. Daha fazla hangi haberi istediğinizi söyleyin ya da haberlerle ilgili her şeyi sorun.",
+    "interests": "Bunlar ilgi alanlarınız. Bana yeni bir tane söyleyin veya değiştirmek ya da kaldırmak istediğinizi.",
+    "interest": "Bu sayfa ilgi alanlarınızdan birini takip ediyor. Burada değiştirebilir veya kaldırabilirsiniz.",
+    "world": "Bana bir manşeti sorun veya haber istediğiniz bir ülkeyi söyleyin.",
+    "checks": "Gördüğünüz bir iddiayı söyleyin, ben de web'de arayayım.",
+    "checksNoWeb": "Sohbette web araması kapalı, bu yüzden şu an iddiaları arayamıyorum. Bunu Ayarlar'dan açabilirsiniz.",
+    "library": "Bana haberlerdeki herhangi bir şeyi sorun veya ne okumayı sevdiğinizi söyleyin.",
+    "facts": "Gerçeklerinize bakıyorsunuz. Neyi değiştirmek istersiniz?",
     "sources": "Bana bir yayını sorun veya neyi takip ettiğinizi söyleyin.",
-    "settings": "Neler yapabileceğimi ya da verilerinizin nasıl işlendiğini sorun.",
+    "settings": "Neler yapabileceğimi ya da Mera'nın verilerinizi nasıl ele aldığını sorun.",
     "onDevice": {
-      "feed": "Bana kendinizden bahsedin, Akışınızı ayarlayayım.",
-      "library": "Ne okumayı sevdiğinizi söyleyin, Akışınızı ayarlayayım.",
-      "world": "Hangi yerlerin sizin için önemli olduğunu söyleyin, Akışınızı ayarlayayım.",
-      "sources": "Neyi takip ettiğinizi söyleyin, Akışınızı ayarlayayım."
+      "feed": "Akışındasın. Bana kendinden biraz anlat, burada ne çıkacağını ayarlayayım.",
+      "library": "Bana ne okumayı sevdiğini anlat, bunu akışın için aklımda tutayım.",
+      "world": "Bana hangi yerlerin senin için önemli olduğunu anlat, bunu akışın için aklımda tutayım.",
+      "sources": "Bana neleri takip ettiğini anlat, bunu akışın için aklımda tutayım."
     }
   },
   "meraDraft": {

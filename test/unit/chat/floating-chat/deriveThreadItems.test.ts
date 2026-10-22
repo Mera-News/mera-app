@@ -1,7 +1,7 @@
 // Unit tests for deriveThreadItems — the pure thread-item derivation util.
 
 import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
-import { deriveThreadItems, emptyThreadIntro, hasRealMessage } from '@/components/custom/floating-chat/deriveThreadItems';
+import { deriveThreadItems, hasRealMessage } from '@/components/custom/floating-chat/deriveThreadItems';
 import { renderableTerminal } from '@/components/custom/floating-chat/types';
 import type { ChatThreadItem, PersistedMessage } from '@/components/custom/floating-chat/types';
 
@@ -145,26 +145,29 @@ describe('deriveThreadItems', () => {
     expect(items[1]).toMatchObject({ kind: 'message', key: 'live-a1' });
   });
 
-  it('emits the intro as static text, never a Mera message', () => {
+  it('emits the intro pseudo-message as the first live item when set', () => {
     const items = deriveThreadItems(
       base({ introMessage: 'Welcome!', live: [] }),
     );
 
-    expect(items).toEqual([{ kind: 'intro', key: 'intro', text: 'Welcome!' }]);
-    expect(items.some((i) => i.kind === 'message')).toBe(false);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ kind: 'message', key: 'live-intro' });
+    if (items[0].kind === 'message') {
+      expect(items[0].message).toMatchObject({ id: 'intro', role: 'assistant', content: 'Welcome!' });
+    }
   });
 
   it('shows the prewarm greeting as an assistant bubble below the intro while the thread is empty', () => {
-    const items = deriveThreadItems(base({ greeting: 'Good evening, how can I help you?', introMessage: 'Welcome!' }));
-    expect(keys(items)).toEqual(['intro', 'live-greeting']);
+    const items = deriveThreadItems(base({ greeting: 'Good evening! Mera is ready.', introMessage: 'Welcome!' }));
+    expect(keys(items)).toEqual(['live-intro', 'live-greeting']);
     expect(items[1]).toMatchObject({
       kind: 'message',
-      message: { id: 'greeting', role: 'assistant', content: 'Good evening, how can I help you?' },
+      message: { id: 'greeting', role: 'assistant', content: 'Good evening! Mera is ready.' },
     });
   });
 
   it('hides the greeting once the conversation has any message, live or resumed', () => {
-    const greeting = 'Good evening, how can I help you?';
+    const greeting = 'Good evening! Mera is ready.';
     expect(keys(deriveThreadItems(base({ greeting, live: [userMsg('u1')] })))).toEqual(['live-u1']);
     expect(
       keys(deriveThreadItems(base({ greeting, resume: [persisted('r1', 'c1', 'user', 'q', 1)] }))),
@@ -173,26 +176,16 @@ describe('deriveThreadItems', () => {
   });
 
   it('hasRealMessage ignores the greeting and intro, so the starter chips stay', () => {
-    const empty = deriveThreadItems(base({ greeting: 'Good evening, how can I help you?', introMessage: 'Welcome!' }));
+    const empty = deriveThreadItems(base({ greeting: 'Good evening! Mera is ready.', introMessage: 'Welcome!' }));
     expect(hasRealMessage(empty)).toBe(false);
     expect(hasRealMessage(deriveThreadItems(base({ live: [userMsg('u1')] })))).toBe(true);
-  });
-
-  it('emptyThreadIntro gives the intro text only while no real message is in the thread', () => {
-    const intro = 'Welcome!';
-    expect(emptyThreadIntro(deriveThreadItems(base({ introMessage: intro, greeting: 'Hi.' })))).toBe(intro);
-    // Revealed history is real: the intro then draws inline in the list.
-    expect(
-      emptyThreadIntro(deriveThreadItems(base({ introMessage: intro, history: [persisted('h1', 'c0', 'user', 'q', 1)] }))),
-    ).toBeNull();
-    expect(emptyThreadIntro(deriveThreadItems(base({ greeting: 'Hi.' })))).toBeNull();
   });
 
   it('places the intro before existing live messages', () => {
     const items = deriveThreadItems(
       base({ introMessage: 'Welcome!', live: [userMsg('u1')] }),
     );
-    expect(keys(items)).toEqual(['intro', 'live-u1']);
+    expect(keys(items)).toEqual(['live-intro', 'live-u1']);
   });
 
   it('emits a pinned article-context card FIRST when articleContext is provided', () => {
@@ -210,7 +203,7 @@ describe('deriveThreadItems', () => {
       suggestionId: 'sugg-1',
       title: 'A story',
     });
-    expect(keys(items)).toEqual(['article-context', 'intro', 'live-u1']);
+    expect(keys(items)).toEqual(['article-context', 'live-intro', 'live-u1']);
   });
 
   it('omits the pinned card when no articleContext is provided', () => {
@@ -493,7 +486,7 @@ describe('deriveThreadItems', () => {
     expect(new Set(allKeys).size).toBe(allKeys.length);
     expect(allKeys).toContain('hist-m1');
     expect(allKeys).toContain('div-live');
-    expect(allKeys).toContain('intro');
+    expect(allKeys).toContain('live-intro');
     expect(allKeys).toContain('card-a1-0');
   });
 

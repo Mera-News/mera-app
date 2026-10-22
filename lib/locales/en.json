@@ -1048,10 +1048,10 @@
     "replyLeakFallback": "Got it. Anything else you would like to add?",
     "replyProcessFallback": "Sorry, I didn't get to that. Could you say it again?",
     "cloudOnlyNotice": "This needs Mera's private cloud. You can switch in Settings, under Mera Protocol.",
-    "onDeviceBetaNote": "On this phone is in Beta and can be slower or make mistakes."
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
-    "introMessage": "Tell me about yourself, like where you live and what you follow, and I'll find news that matters to you. What you share is saved on your device, not our servers."
+    "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
   },
   "floatingChat": {
     "close": "Close",
@@ -1111,8 +1111,8 @@
     "dislikeLabel": "Not for me",
     "thumbsUpMessage": "I liked this article: \"{{title}}\". I'd like to see more suggestions like this.",
     "thumbsDownMessage": "I don't want articles like this: \"{{title}}\". Help me adjust my suggestions.",
-    "intro": "I can explain why you got this suggestion, or help you get better ones.",
-    "introArticle": "I can tune your suggestions based on this article.",
+    "intro": "What can I do for you? I can explain why you received this suggestion, or help you get better ones.",
+    "introArticle": "What can I do for you? I can help you tune your news suggestions based on this article.",
     "introLikeTuning": "You liked this story. Tell me more and I'll tune your feed.",
     "introDislikeTuning": "You didn't like this story. Tell me why and I'll tune your feed.",
     "chipWhy": "Why did I receive this suggestion?",
@@ -1720,7 +1720,7 @@
     "continueAnyway": "Continue anyway",
     "slideProgress": "Card {{current}} of {{total}}",
     "askMera": "Ask Mera",
-    "chatIntro": "Ask me about this guide. I can explain, but I can't change anything here.",
+    "chatIntro": "Ask me anything about how Mera works. I can explain, but I can't change anything from here.",
     "hintReveal": "Tap each one.",
     "hintRevealSome": "Tap at least {{count}}.",
     "hintChoose": "Pick one.",
@@ -2875,21 +2875,21 @@
     "working": "Mera is working on your request"
   },
   "meraIntro": {
-    "feed": "Tell me what you want more news about, or ask me about the news.",
-    "interests": "Tell me a new interest, or one to change or remove.",
-    "interest": "I can change or remove this interest for you.",
-    "world": "Ask me about a headline, or name a country you want news from.",
-    "checks": "Tell me a claim and I'll check it on the web.",
-    "checksNoWeb": "Web search is off. Turn it on in Settings to check claims.",
-    "library": "Ask me about the news, or tell me what you like to read.",
-    "facts": "Tell me what you'd like to change in your facts.",
+    "feed": "You're on your Feed. Tell me what you want more news about, or ask me anything in the news.",
+    "interests": "These are your interests. Tell me a new one, or one you want to change or remove.",
+    "interest": "This page follows one of your interests. You can change it or remove it here.",
+    "world": "Ask me about a headline, or tell me a country you want news from.",
+    "checks": "Tell me a claim you've seen and I'll look it up on the web.",
+    "checksNoWeb": "Web search in chat is off, so I can't look claims up right now. You can turn it on in Settings.",
+    "library": "Ask me about anything in the news, or tell me what you like to read.",
+    "facts": "You're looking at your facts. What would you like to change?",
     "sources": "Ask me about a publication, or tell me what you follow.",
-    "settings": "Ask me what I can do, or how your data is handled.",
+    "settings": "Ask me what I can do, or how Mera handles your data.",
     "onDevice": {
-      "feed": "Tell me about yourself and I'll tune your Feed.",
-      "library": "Tell me what you like to read and I'll tune your Feed.",
-      "world": "Tell me which places matter to you and I'll tune your Feed.",
-      "sources": "Tell me what you follow and I'll tune your Feed."
+      "feed": "You're on your Feed. Tell me about yourself and I'll tune what shows up here.",
+      "library": "Tell me what you like to read and I'll keep it in mind for your Feed.",
+      "world": "Tell me which places matter to you and I'll keep them in mind for your Feed.",
+      "sources": "Tell me what you follow and I'll keep it in mind for your Feed."
     }
   },
   "meraDraft": {

@@ -689,10 +689,10 @@
     "replyLeakFallback": "Baik. Ada lagi yang ingin Anda tambahkan?",
     "replyProcessFallback": "Maaf, saya belum menangkap maksud itu. Bisa diulangi?",
     "cloudOnlyNotice": "Ini memerlukan “Cloud pribadi” Mera. Anda bisa beralih di Pengaturan, di bagian Mera Protocol.",
-    "onDeviceBetaNote": "“Di ponsel ini” masih Beta dan bisa lebih lambat atau membuat kesalahan."
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
-    "introMessage": "Ceritakan tentang diri Anda, seperti tempat tinggal dan apa yang Anda ikuti, dan saya akan menemukan berita yang penting bagi Anda. Yang Anda bagikan disimpan di perangkat Anda, bukan di server kami."
+    "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
   },
   "floatingChat": {
     "close": "Tutup",
@@ -752,8 +752,8 @@
     "thumbsDownMessage": "Saya tidak ingin artikel seperti ini: \"{{title}}\". Bantu saya menyesuaikan saran saya.",
     "likeLabel": "Saya suka",
     "dislikeLabel": "Bukan untuk saya",
-    "intro": "Saya bisa menjelaskan mengapa Anda mendapat saran ini, atau membantu Anda mendapat saran yang lebih baik.",
-    "introArticle": "Saya bisa menyesuaikan saran Anda berdasarkan artikel ini.",
+    "intro": "Apa yang bisa saya bantu? Saya bisa menjelaskan mengapa kamu menerima saran ini, atau membantu kamu mendapatkan saran yang lebih baik.",
+    "introArticle": "Apa yang bisa saya bantu? Saya bisa membantu menyesuaikan saran berita kamu berdasarkan artikel ini.",
     "introLikeTuning": "Anda menyukai cerita ini. Beri tahu saya lebih lanjut dan saya akan menyesuaikan feed Anda.",
     "introDislikeTuning": "Anda tidak menyukai cerita ini: beri tahu saya alasannya dan saya akan menyesuaikan feed Anda.",
     "chipWhy": "Mengapa saya menerima saran ini?",
@@ -1594,7 +1594,7 @@
     "continueAnyway": "Lanjutkan saja",
     "slideProgress": "Kartu {{current}} dari {{total}}",
     "askMera": "Tanya Mera",
-    "chatIntro": "Tanyakan tentang panduan ini. Saya bisa menjelaskan, tetapi tidak bisa mengubah apa pun di sini.",
+    "chatIntro": "Tanyakan apa pun tentang cara kerja Mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
     "hintReveal": "Ketuk masing-masing.",
     "hintRevealSome": "Ketuk setidaknya {{count}}.",
     "hintChoose": "Pilih satu.",
@@ -2865,21 +2865,21 @@
     "working": "Mera sedang mengerjakan permintaan Anda"
   },
   "meraIntro": {
-    "feed": "Beri tahu saya berita apa yang ingin Anda baca lebih banyak, atau tanyakan tentang berita.",
-    "interests": "Beri tahu saya minat baru, atau minat yang ingin diubah atau dihapus.",
-    "interest": "Saya bisa mengubah atau menghapus minat ini untuk Anda.",
-    "world": "Tanyakan tentang berita utama, atau sebutkan negara yang beritanya Anda inginkan.",
-    "checks": "Sebutkan sebuah klaim dan saya akan memeriksanya di web.",
-    "checksNoWeb": "Pencarian web nonaktif. Aktifkan di Pengaturan untuk memeriksa klaim.",
-    "library": "Tanyakan tentang berita, atau beri tahu saya apa yang suka Anda baca.",
-    "facts": "Beri tahu saya apa yang ingin Anda ubah dari fakta Anda.",
+    "feed": "Anda sedang di Feed. Beri tahu saya berita apa yang ingin Anda baca lebih banyak, atau tanyakan apa saja tentang berita.",
+    "interests": "Ini minat Anda. Beri tahu saya yang baru, atau yang ingin Anda ubah atau hapus.",
+    "interest": "Halaman ini mengikuti salah satu minat Anda. Anda bisa mengubah atau menghapusnya di sini.",
+    "world": "Tanyakan tentang sebuah berita utama, atau sebutkan negara yang ingin Anda ikuti beritanya.",
+    "checks": "Sebutkan klaim yang pernah Anda lihat dan saya akan mencarinya di web.",
+    "checksNoWeb": "Pencarian web di chat sedang nonaktif, jadi saya tidak bisa mencari klaim saat ini. Anda bisa mengaktifkannya di Pengaturan.",
+    "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang suka Anda baca.",
+    "facts": "Anda sedang melihat fakta Anda. Apa yang ingin Anda ubah?",
     "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti.",
-    "settings": "Tanyakan apa yang bisa saya lakukan, atau bagaimana data Anda ditangani.",
+    "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda.",
     "onDevice": {
-      "feed": "Ceritakan tentang diri Anda dan saya akan menyesuaikan Feed Anda.",
-      "library": "Beri tahu saya apa yang suka Anda baca dan saya akan menyesuaikan Feed Anda.",
-      "world": "Beri tahu saya tempat yang penting bagi Anda dan saya akan menyesuaikan Feed Anda.",
-      "sources": "Beri tahu saya apa yang Anda ikuti dan saya akan menyesuaikan Feed Anda."
+      "feed": "Anda ada di Feed. Beri tahu saya tentang diri Anda, dan saya akan menyesuaikan apa yang muncul di sini.",
+      "library": "Beri tahu saya apa yang suka Anda baca, dan saya akan menyimpannya untuk Feed Anda.",
+      "world": "Beri tahu saya tempat mana yang penting bagi Anda, dan saya akan menyimpannya untuk Feed Anda.",
+      "sources": "Beri tahu saya apa yang Anda ikuti, dan saya akan menyimpannya untuk Feed Anda."
     }
   },
   "meraDraft": {

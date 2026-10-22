@@ -695,10 +695,10 @@
     "replyLeakFallback": "Alles klar. Möchtest du noch etwas hinzufügen?",
     "replyProcessFallback": "Tut mir leid, ich bin darauf nicht eingegangen. Kannst du es noch einmal sagen?",
     "cloudOnlyNotice": "Dafür braucht es Meras „Private Cloud“. Du kannst in den Einstellungen unter Mera Protocol wechseln.",
-    "onDeviceBetaNote": "„Auf diesem Telefon“ ist in der Beta und kann langsamer sein oder Fehler machen."
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
   },
   "personaChat": {
-    "introMessage": "Erzähl mir von dir, etwa wo du wohnst und was du verfolgst, dann finde ich Nachrichten, die dir wichtig sind. Was du teilst, wird auf deinem Gerät gespeichert, nicht auf unseren Servern."
+    "introMessage": "Hallo! Ich bin Mera, dein persönlicher Nachrichten-Assistent.\n\nUm Nachrichten zu finden, die wirklich zählen, brauche ich ein wenig über dich zu wissen. Wo du wohnst, was du beruflich machst, welchen Hobbys du nachgehst, welche Aktien du verfolgst, wo deine Familie lebt. Teile so viel oder so wenig mit, wie du möchtest.\n\nWenn dich das ins Grübeln bringt, gutes Gespür. Es ist nicht ratsam, persönliche Daten an eine App-Firma zu übergeben. Mera ist anders aufgebaut: Alles, was du mir erzählst, wird auf deinem Gerät gespeichert, nicht auf unseren Servern. Frag mich, wie das funktioniert, oder sag 'Hilf mir bei der Einrichtung' und wir können beginnen."
   },
   "floatingChat": {
     "close": "Schließen",
@@ -758,8 +758,8 @@
     "thumbsDownMessage": "Ich möchte keine Artikel wie diesen: \"{{title}}\". Hilf mir, meine Vorschläge anzupassen.",
     "likeLabel": "Gefällt mir",
     "dislikeLabel": "Nichts für mich",
-    "intro": "Ich kann erklären, warum du diesen Vorschlag bekommen hast, oder dir zu besseren verhelfen.",
-    "introArticle": "Ich kann deine Vorschläge anhand dieses Artikels anpassen.",
+    "intro": "Was kann ich für dich tun? Ich kann erklären, warum du diesen Vorschlag erhalten hast, oder dir helfen, bessere zu bekommen.",
+    "introArticle": "Was kann ich für dich tun? Ich kann dir helfen, deine Nachrichtenvorschläge anhand dieses Artikels anzupassen.",
     "introLikeTuning": "Dir hat diese Geschichte gefallen: Erzähl mir mehr, und ich optimiere deinen Feed.",
     "introDislikeTuning": "Dir hat diese Geschichte nicht gefallen: Sag mir, warum, und ich optimiere deinen Feed.",
     "chipWhy": "Warum habe ich diesen Vorschlag erhalten?",
@@ -1601,7 +1601,7 @@
     "continueAnyway": "Trotzdem fortfahren",
     "slideProgress": "Karte {{current}} von {{total}}",
     "askMera": "Frag Mera",
-    "chatIntro": "Frag mich zu dieser Anleitung. Ich kann erklären, aber hier nichts ändern.",
+    "chatIntro": "Frag mich alles über die Funktionsweise von Mera. Ich kann erklären, kann aber von hier aus nichts ändern.",
     "hintReveal": "Tippe auf jede.",
     "hintRevealSome": "Tippe auf mindestens {{count}}.",
     "hintChoose": "Wähle eine aus.",
@@ -2873,21 +2873,21 @@
     "working": "Mera arbeitet an deiner Anfrage"
   },
   "meraIntro": {
-    "feed": "Sag mir, worüber du mehr Nachrichten willst, oder frag mich zu den Nachrichten.",
-    "interests": "Nenne mir ein neues Interesse oder eines zum Ändern oder Entfernen.",
-    "interest": "Ich kann dieses Interesse für dich ändern oder entfernen.",
-    "world": "Frag mich zu einer Schlagzeile oder nenne ein Land, aus dem du Nachrichten willst.",
-    "checks": "Nenne mir eine Behauptung, und ich prüfe sie im Web.",
-    "checksNoWeb": "Die Websuche ist aus. Aktiviere sie in den Einstellungen, um Behauptungen zu prüfen.",
-    "library": "Frag mich zu den Nachrichten oder sag mir, was du gern liest.",
-    "facts": "Sag mir, was du an deinen Fakten ändern möchtest.",
+    "feed": "Du bist in deinem Feed. Sag mir, zu welchen Nachrichten du mehr willst, oder frag mich alles zu den Nachrichten.",
+    "interests": "Das sind deine Interessen. Nenne mir ein neues oder eines, das du ändern oder entfernen willst.",
+    "interest": "Diese Seite folgt einem deiner Interessen. Hier kannst du es ändern oder entfernen.",
+    "world": "Frag mich zu einer Schlagzeile oder nenne mir ein Land, aus dem du Nachrichten willst.",
+    "checks": "Nenne mir eine Behauptung, die du gesehen hast, und ich suche sie im Web.",
+    "checksNoWeb": "Die Websuche im Chat ist aus, daher kann ich Behauptungen gerade nicht nachschlagen. Du kannst sie in den Einstellungen aktivieren.",
+    "library": "Frag mich zu allem, was in den Nachrichten ist, oder sag mir, was du gern liest.",
+    "facts": "Du siehst deine Fakten. Was möchtest du ändern?",
     "sources": "Frag mich zu einem Medium oder sag mir, wem oder was du folgst.",
-    "settings": "Frag mich, was ich kann oder wie mit deinen Daten umgegangen wird.",
+    "settings": "Frag mich, was ich kann oder wie Mera mit deinen Daten umgeht.",
     "onDevice": {
-      "feed": "Erzähl mir von dir, dann passe ich deinen Feed an.",
-      "library": "Sag mir, was du gern liest, dann passe ich deinen Feed an.",
-      "world": "Sag mir, welche Orte dir wichtig sind, dann passe ich deinen Feed an.",
-      "sources": "Sag mir, wem oder was du folgst, dann passe ich deinen Feed an."
+      "feed": "Du bist in deinem Feed. Sag mir etwas über dich, dann passe ich an, was hier erscheint.",
+      "library": "Sag mir, was du gern liest, und ich merke es mir für deinen Feed.",
+      "world": "Sag mir, welche Orte dir wichtig sind, und ich merke sie mir für deinen Feed.",
+      "sources": "Sag mir, wem oder was du folgst, und ich merke es mir für deinen Feed."
     }
   },
   "meraDraft": {

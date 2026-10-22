@@ -35,7 +35,7 @@ describe('original welcome entry rule', () => {
 
   it('the original welcome and its four chips exist in en', () => {
     expect(
-      en.personaChat.introMessage.startsWith('Tell me about yourself'),
+      en.personaChat.introMessage.startsWith("Hi, I'm Mera, your personal news assistant."),
     ).toBe(true);
     expect([
       en.floatingChat.chipAddLocation,

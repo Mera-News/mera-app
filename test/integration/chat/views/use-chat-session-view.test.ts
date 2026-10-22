@@ -183,19 +183,16 @@ describe('intro message', () => {
   it('shows the persona intro until the first send, then null', () => {
     const { result, sendMessage } = mount();
     expect(result.current.introMessage).toBe(t('personaChat.introMessage'));
-    // Static text in the thread, never a Mera message.
-    expect(result.current.items).toEqual([{ kind: 'intro', key: 'intro', text: t('personaChat.introMessage') }]);
     act(() => result.current.handleSend('hello'));
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(result.current.introMessage).toBeNull();
-    expect(result.current.items.some((i) => i.kind === 'intro')).toBe(false);
   });
 
   it('on this phone, the intro says On this phone is Beta', () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
     const { result } = mount();
     expect(result.current.introMessage).toBe(`${t('personaChat.introMessage')}\n\n${t('chat.onDeviceBetaNote')}`);
-    expect(t('chat.onDeviceBetaNote')).toBe('On this phone is in Beta and can be slower or make mistakes.');
+    expect(t('chat.onDeviceBetaNote')).toBe('On this phone is in Beta, so replies can be slower or less accurate.');
   });
 
   it('picks articleFeedback.intro for a suggestion', () => {
@@ -210,14 +207,13 @@ describe('intro message', () => {
 });
 
 describe('prewarm greeting', () => {
-  const GREETING = 'Good evening, how can I help you?';
+  const GREETING = 'Good evening! Mera is ready.';
   const messageIds = (items: ChatThreadItem[]) => items.flatMap((i) => (i.kind === 'message' ? [i.message.id] : []));
 
-  it('is the one Mera message in an empty cloud thread, below the intro text, and the starter chips still show', () => {
+  it('sits before the intro in an empty cloud thread, and the starter chips still show', () => {
     useMeraGreeting.setState({ text: GREETING });
     const { result } = mount();
-    expect(result.current.items.map((i) => i.key)).toEqual(['intro', 'live-greeting']);
-    expect(messageIds(result.current.items)).toEqual(['greeting']);
+    expect(messageIds(result.current.items)).toEqual(['intro', 'greeting']);
     expect(hasRealMessage(result.current.items)).toBe(false);
     expect(result.current.starterChips.length).toBeGreaterThan(0);
   });
@@ -248,17 +244,17 @@ describe('prewarm greeting', () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
     useMeraGreeting.setState({ text: GREETING });
     const { result } = mount();
-    expect(messageIds(result.current.items)).toEqual([]);
+    expect(messageIds(result.current.items)).toEqual(['intro']);
   });
 
   it('shows none on a restricted account, live or persisted', async () => {
     useMeraGreeting.setState({ text: GREETING });
-    expect(messageIds(mount({ isBlocked: true }).result.current.items)).toEqual([]);
+    expect(messageIds(mount({ isBlocked: true }).result.current.items)).toEqual(['intro']);
 
     seedBlockedPersona('x');
     const { result } = mount();
     await waitFor(() => expect(result.current.effectiveBlocked).toBe(true));
-    expect(messageIds(result.current.items)).toEqual([]);
+    expect(messageIds(result.current.items)).toEqual(['intro']);
   });
 });
 
