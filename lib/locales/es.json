@@ -696,8 +696,8 @@
     "replyProcessFallback": "Perdona, no llegué a eso. ¿Podrías repetirlo?",
     "cloudOnlyNotice": "Esto necesita la «Nube privada» de Mera. Puedes cambiarlo en Ajustes, en Mera Protocol.",
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
-    "statusWarming": "Warming up",
-    "statusReady": "Ready",
+    "statusWarming": "Preparando",
+    "statusReady": "Listo",
     "statusError": "Error"
   },
   "personaChat": {
