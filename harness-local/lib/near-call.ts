@@ -405,12 +405,14 @@ export function createStreamAccumulator(
 
 export interface NearStreamResult extends NearResult {
   ttVisibleMs: number | null;
-  /** Stalled attempts that were retried (0 or 1). Absent on non-stream results. */
+  /** Stalled, timed-out or `fetch failed` attempts that were retried (0 or 1). Absent on non-stream results. */
   stallRetries?: number;
 }
 
 /** The error string of a call that stalled on both attempts. Greppable on purpose. */
 export const STALL_ERROR = 'stall';
+/** The error string of a call that hit the total timeout on both attempts. */
+export const TIMEOUT_ERROR = 'timeout';
 export const DEFAULT_STALL_TIMEOUT_MS = 45_000;
 
 export interface StreamOptions {
@@ -433,9 +435,11 @@ export async function postBodyStream(
   onDelta?: (d: { content?: string; reasoning?: string }) => void,
   opts: StreamOptions = {},
 ): Promise<NearStreamResult> {
-  // The same body object both times, so the request is byte-identical.
+  // The same body object both times, so the request is byte-identical. A failed
+  // leg returned nothing, so the caller's loop state has not moved: retrying is valid.
   const first = await streamAttempt(baseUrl, apiKey, body, timeoutMs, onDelta, opts);
-  if (first.error !== STALL_ERROR) return { ...first, stallRetries: 0 };
+  const retry = first.error === STALL_ERROR || first.error === TIMEOUT_ERROR || /^TypeError: fetch failed/.test(first.error ?? '');
+  if (!retry) return { ...first, stallRetries: 0 };
   const second = await streamAttempt(baseUrl, apiKey, body, timeoutMs, onDelta, opts);
   return { ...second, latencyMs: first.latencyMs + second.latencyMs, stallRetries: 1 };
 }
@@ -457,7 +461,8 @@ async function streamAttempt(
   let rejectDead!: (e: Error) => void;
   const dead = new Promise<never>((_, rej) => { rejectDead = rej; });
   dead.catch(() => undefined);
-  const total = setTimeout(() => { controller.abort(); rejectDead(new Error('total timeout')); }, timeoutMs);
+  let timedOut = false;
+  const total = setTimeout(() => { timedOut = true; controller.abort(); rejectDead(new Error('total timeout')); }, timeoutMs);
   let stallTimer: ReturnType<typeof setTimeout> | undefined;
   let stalled = false;
   const armStall = (): void => {
@@ -535,6 +540,7 @@ async function streamAttempt(
   } catch (err) {
     if (err instanceof SpendLimitError) throw err;
     if (stalled || err instanceof StallError) return fail(STALL_ERROR);
+    if (timedOut) return fail(TIMEOUT_ERROR);
     return fail(err instanceof Error ? `${err.name}: ${err.message}` : String(err));
   } finally {
     clearTimeout(total);

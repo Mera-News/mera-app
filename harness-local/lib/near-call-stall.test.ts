@@ -7,7 +7,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import type { AddressInfo } from 'node:net';
 import { test } from 'node:test';
 
-import { postBodyStream, SpendLimitError } from './near-call';
+import { postBodyStream, SpendLimitError, TIMEOUT_ERROR } from './near-call';
 
 const SSE = (text: string): string =>
   `data: ${JSON.stringify({ model: 'm', choices: [{ delta: { content: text }, finish_reason: null }] })}\n\n`;
@@ -84,5 +84,53 @@ test('a 4xx is recorded and never retried', async () => {
     assert.match(r.error ?? '', /^HTTP 400/);
     assert.equal(r.stallRetries, 0);
     assert.equal(bodies.length, 1);
+  });
+});
+
+// The 120 s total budget and a dropped socket are retried exactly like a stall.
+const TOTAL = { stallTimeoutMs: 0 };
+
+test('a total timeout is retried once, then reported as "timeout"', async () => {
+  await withServer(() => { /* never answers */ }, async (url, bodies) => {
+    const r = await postBodyStream(url, 'k', BODY, 150, undefined, TOTAL);
+    assert.equal(r.error, TIMEOUT_ERROR);
+    assert.equal(r.stallRetries, 1);
+    assert.equal(bodies.length, 2);
+    assert.equal(bodies[0], bodies[1]);
+  });
+});
+
+test('a total timeout followed by a good retry succeeds', async () => {
+  await withServer((_req, res, n) => {
+    if (n === 1) return; // never answers
+    sseHead(res); res.write(SSE('ok')); res.end(DONE);
+  }, async (url, bodies) => {
+    const r = await postBodyStream(url, 'k', BODY, 300, undefined, TOTAL);
+    assert.equal(r.error, null);
+    assert.equal(r.content, 'ok');
+    assert.equal(r.stallRetries, 1);
+    assert.equal(bodies.length, 2);
+  });
+});
+
+test('a fetch failed leg is retried once; a good retry succeeds', async () => {
+  await withServer((req, res, n) => {
+    if (n === 1) { req.socket.destroy(); return; }
+    sseHead(res); res.write(SSE('ok')); res.end(DONE);
+  }, async (url, bodies) => {
+    const r = await postBodyStream(url, 'k', BODY, 10_000, undefined, OPTS);
+    assert.equal(r.error, null);
+    assert.equal(r.content, 'ok');
+    assert.equal(r.stallRetries, 1);
+    assert.equal(bodies.length, 2);
+  });
+});
+
+test('a fetch failed on both attempts surfaces the error', async () => {
+  await withServer((req) => { req.socket.destroy(); }, async (url, bodies) => {
+    const r = await postBodyStream(url, 'k', BODY, 10_000, undefined, OPTS);
+    assert.match(r.error ?? '', /fetch failed/);
+    assert.equal(r.stallRetries, 1);
+    assert.equal(bodies.length, 2);
   });
 });

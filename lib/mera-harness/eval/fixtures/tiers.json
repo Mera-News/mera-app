@@ -1,0 +1,68 @@
+{
+  "facts": {
+    "good": [0, 1, 2, 3],
+    "confused": [0, 1, 2, 3],
+    "real-nieuw-west": [0, 1, 2, 3],
+    "real-software-engineer": [0, 1, 2],
+    "real-expat-india": [0],
+    "ux1-origin-and-move": [0],
+    "ux1-multi-fact": [0],
+    "ux1-fact-pick-device": [0],
+    "adversarial": [0, 1],
+    "backref": [4, 5, 6, 7],
+    "about-mera-hindi": [3]
+  },
+  "conversation": {
+    "backref": [0, 1, 2, 3, 8, 9],
+    "backref-hindi": [2, 3, 4, 5, 6, 7],
+    "backref-japanese": [2, 3],
+    "about-mera": [0, 1],
+    "about-mera-hindi": [2, 4],
+    "waiting-card": [1, 3, 4],
+    "adversarial": [2, 4]
+  },
+  "feed-tuning": {
+    "feed-tuning": [0, 1, 12, 13, 14, 17, 18],
+    "feed-tuning-hindi": [0, 4]
+  },
+  "decision": {
+    "good": [0, 1, 2, 3],
+    "confused": [0, 1, 2, 3],
+    "adversarial": [0, 1, 2, 4],
+    "real-nieuw-west": [0, 1, 2, 3],
+    "real-software-engineer": [0, 1, 2],
+    "real-expat-india": [0],
+    "ux1-origin-and-move": [0],
+    "ux1-multi-fact": [0],
+    "ux1-fact-pick-device": [0],
+    "backref": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "backref-hindi": [2, 3, 4, 5, 6, 7],
+    "backref-japanese": [2, 3],
+    "about-mera": [0, 1],
+    "about-mera-hindi": [2, 3, 4],
+    "feed-tuning": [0, 1, 12, 13, 14, 17, 18],
+    "feed-tuning-hindi": [0, 4],
+    "waiting-card": [1, 3, 4]
+  },
+  "full": {
+    "about-mera-hindi": [0, 1, 2, 3, 4],
+    "about-mera": [0, 1, 2, 3],
+    "adversarial": [0, 1, 2, 3, 4],
+    "backref-hindi": [0, 1, 2, 3, 4, 5, 6, 7],
+    "backref-japanese": [0, 1, 2, 3],
+    "backref": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "confused": [0, 1, 2, 3],
+    "feed-tuning-hindi": [0, 1, 4],
+    "feed-tuning": [0, 1, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    "good": [0, 1, 2, 3, 4, 5],
+    "real-expat-india": [0, 1, 2],
+    "real-nieuw-west": [0, 1, 2, 3],
+    "real-porto-santo": [0],
+    "real-software-engineer": [0, 1, 2],
+    "ux1-fact-pick-device": [0],
+    "ux1-move-country": [0],
+    "ux1-multi-fact": [0],
+    "ux1-origin-and-move": [0],
+    "waiting-card": [0, 1, 2, 3, 4]
+  }
+}

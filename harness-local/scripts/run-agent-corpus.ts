@@ -5,6 +5,7 @@
 //       --target staging --graphql-endpoint ... --auth-endpoint ... \
 //       --inference-endpoint ... --scripts lib/mera-harness/eval/fixtures/scripts \
 //       --variant baseline,null-control --repeat 3 [--dry-run]
+//       [--tier decision | --only backref:2,3 ...] [--lanes 4]
 //
 // WHAT LIVES WHERE. The eval loop, the fixtures, the fakes and every metric
 // are in lib/mera-harness/eval and are pure. This file supplies the four
@@ -24,6 +25,7 @@ import {
   requireStagingTarget,
 } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
+import { addOnly, erroredCells, loadTier, runPool, selectTurns, type TurnSelection } from '../lib/tiers';
 import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
@@ -128,6 +130,11 @@ interface Args {
   /** `--pairs variant+protocol,...`: exactly these arms, instead of every
    *  variant crossed with every protocol. */
   pairs: { variant: string; protocol: Args['toolProtocols'][number] }[] | null;
+  /** `--tier <name>` (tiers.json) or `--only script[:i,j]` (repeatable); null sends every turn. */
+  tier: string | null;
+  only: TurnSelection | null;
+  /** Jobs (one script, one arm, one repeat) in flight at once. */
+  lanes: number;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -143,6 +150,9 @@ function parseArgs(argv: string[]): Args {
     oneShotVariant: null,
     toolProtocols: ['native'],
     pairs: null,
+    tier: null,
+    only: null,
+    lanes: 1,
   };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
@@ -155,6 +165,13 @@ function parseArgs(argv: string[]): Args {
     else if (f === '--one-shot-variant') a.oneShotVariant = argv[++i] ?? null;
     else if (f === '--dry-run') a.dryRun = true;
     else if (f === '--stall-timeout-ms') a.stallTimeoutMs = Number(argv[++i]);
+    else if (f === '--tier') {
+      a.tier = argv[++i] ?? '';
+      // A bare `--tier` would silently send the full corpus, live and paid.
+      if (!a.tier || a.tier.startsWith('--')) throw new Error('harness-local: --tier needs a name from tiers.json.');
+    }
+    else if (f === '--only') addOnly((a.only ??= {}), argv[++i] ?? '');
+    else if (f === '--lanes') a.lanes = Number(argv[++i]);
     else if (f === '--tool-protocol') {
       const list = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
       for (const p of list) {
@@ -183,6 +200,8 @@ function parseArgs(argv: string[]): Args {
     console.warn(`\n!!  --repeat ${a.repeat} does not measure a noise floor. One comparison per cell is a coin flip.\n`);
   }
   if (a.variants.length === 0) throw new Error('harness-local: --variant resolved to nothing.');
+  if (a.tier && a.only) throw new Error('harness-local: pass --tier or --only, not both.');
+  if (!Number.isInteger(a.lanes) || a.lanes < 1) throw new Error('harness-local: --lanes must be 1 or more.');
   return a;
 }
 
@@ -333,7 +352,9 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  const scripts = loadScripts(args.scriptsDir);
+  const loaded = loadScripts(args.scriptsDir);
+  const selection = args.tier ? loadTier(args.tier) : args.only;
+  const scripts = selection ? selectTurns(loaded, selection) : loaded;
   const run = createRunWriter({ label: args.label });
   const rows = createJsonlWriter({ dir: run.dir });
   const runId = run.dir.split('/').pop() ?? args.label;
@@ -356,8 +377,10 @@ async function main(): Promise<number> {
     `run      : ${runId}\nrun dir  : ${run.dir}\ntarget   : ${env.target}` +
       `${overridden.length ? `\noverride : ${overridden.join(', ')}` : ''}` +
       `\nscripts  : ${scripts.map((s) => s.id).join(', ')}` +
+      `\nturns    : ${scripts.reduce((n, s) => n + s.turns.length, 0)}${args.tier ? ` (tier ${args.tier})` : args.only ? ' (--only)' : ''}` +
       `\nmodels   : ${args.models.join(', ')}\nrepeat   : ${args.repeat}` +
-      `\nvariants : ${args.variants.join(', ')} (interleaved per turn)` +
+      `\nvariants : ${args.variants.join(', ')} (per script, every arm before the next script; arm order rotates per repeat)` +
+      `\nlanes    : ${args.lanes}` +
       `\nprotocol : ${args.toolProtocols.join(', ')}` +
       `\nmode     : ${args.dryRun ? 'DRY RUN, no calls' : 'live, STREAMED'}\n`,
   );
@@ -388,107 +411,106 @@ async function main(): Promise<number> {
   const evalRowsPath = join(run.dir, 'eval-rows.jsonl');
   const evalRows = createWriteStream(evalRowsPath, { flags: 'a' });
 
-  // One entry per model call, shifted per emitted leg row (the loop emits a
-  // turn's rows in call order, after all its calls). Lets the eval row carry
-  // stallRetries without touching lib/mera-harness.
-  const stallQueue: number[] = [];
-  const emit = (row: EvalRow): void => {
-    collected.push(row);
-    rows.write(toRunRow(row, runId, catalog));
-    evalRows.write(`${JSON.stringify({ ...row, stallRetries: stallQueue.shift() ?? 0 })}\n`);
-  };
+  // One job per (repeat, script, arm, model), in that order: every arm of a
+  // script runs before the next script, side by side with --lanes, so twins
+  // share one time window (NEAR drifts enough between runs that a control arm
+  // which could not affect anything still moved a kept count by 7).
+  const combos = args.pairs ?? args.variants.flatMap((variant) => args.toolProtocols.map((protocol) => ({ variant, protocol })));
+  const jobs: { rep: number; script: AgentScript; variant: string; protocol: Args['toolProtocols'][number]; model: string }[] = [];
+  for (let rep = args.repeatStart; rep < args.repeatStart + args.repeat; rep++) {
+    // Rotated per repeat, so no arm (or pair of twins) always runs in the same
+    // slot and NEAR drift cannot move twins together.
+    const shift = rep % combos.length;
+    const rotated = [...combos.slice(shift), ...combos.slice(0, shift)];
+    for (const script of scripts) {
+      for (const { variant, protocol } of rotated) for (const model of args.models) jobs.push({ rep, script, variant, protocol, model });
+    }
+  }
 
   try {
-  for (let rep = args.repeatStart; rep < args.repeatStart + args.repeat; rep++) {
-    // Variants interleave with models so both arms sit in one run and one time
-    // window: NEAR drifts enough between runs that a control arm which could
-    // not affect anything still moved a kept count by 7.
-    const combos = args.pairs ?? args.variants.flatMap((variant) => args.toolProtocols.map((protocol) => ({ variant, protocol })));
-    // Rotated per repeat, so no arm (or pair of twins) always runs in the same
-    // slot of the repeat and NEAR drift cannot move twins together.
-    const shift = rep % combos.length;
-    for (const { variant, protocol } of [...combos.slice(shift), ...combos.slice(0, shift)]) {
-      {
-      for (const model of args.models) {
-        const dry = dryRunModel(rep);
-        const arm = `${model}@${variant}${protocol === 'native' ? '' : `+${protocol}`}`;
-        const callModel = async (req: EvalModelRequest): Promise<EvalModelResult> => {
-          planned.push({
-            model,
-            systemChars: req.systemPrompt.length,
-            promptChars: req.messages.reduce((n, m) => n + m.content.length, 0),
-            maxOutputTokens: req.maxTokens ?? 1024,
-          });
-          if (args.dryRun) { stallQueue.push(0); return dry(req); }
-          // AS THE APP SENDS IT: callModelViaCloud turns a tool result into a
-          // user turn, and the leg's own tool_choice is honoured ('required' on
-          // the forced leg). Both arms get both, so they differ in the wire only.
-          const toolChoice = (req as { toolChoice?: string }).toolChoice ?? 'auto';
-          const body: Record<string, unknown> = {
-            model,
-            messages: [
-              { role: 'system', content: req.systemPrompt },
-              ...req.messages.map((m) => (m.role === 'tool' ? { role: 'user', content: m.content } : m)),
-            ],
-            // An empty list is no tools (the closing leg): never `tools: []` on the wire.
-            ...(req.tools?.length ? { tools: req.tools, tool_choice: toolChoice } : {}),
-            ...(req.temperature !== undefined ? { temperature: req.temperature } : {}),
-            ...(req.maxTokens !== undefined ? { max_tokens: req.maxTokens } : {}),
-            chat_template_kwargs: { enable_thinking: req.enableThinking ?? false },
-          };
-          const forced = toolChoice === 'required';
-          // A CLOSING leg only: the about-mera answer leg is tool-free too.
-          const toolFree = isClosingLeg(req);
-          const stat = forcedLegs.get(arm) ?? { forced: 0, withCall: 0, reasked: 0 };
-          forcedLegs.set(arm, stat);
-          if (protocol !== 'native' && req.tools) {
-            const r = await postBodyStreamTextTools(
-              env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta,
-              protocol === 'text-xml' ? 'xml' : protocol === 'text-xml-first' ? 'xml-first' : protocol === 'text-xml-first-soft' ? 'xml-first-soft' : protocol === 'text-marker' ? 'marker' : 'hermes',
-              { stallTimeoutMs: args.stallTimeoutMs },
-            );
-            stallQueue.push(r.stallRetries ?? 0);
-            if (forced) {
-              stat.forced += 1;
-              if (r.toolCalls.length > 0) stat.withCall += 1;
-              if (r.reasked) stat.reasked += 1;
-            }
-            if (toolFree) {
-              const t = toolFreeLegs.get(arm) ?? { legs: 0, wroteCall: 0 };
-              t.legs += 1;
-              if (r.toolCalls.length > 0) t.wroteCall += 1;
-              toolFreeLegs.set(arm, t);
-            }
-            return { ...r, ttVisibleMs: r.ttVisibleMs };
-          }
-          const r = await postBodyStream(env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta, { stallTimeoutMs: args.stallTimeoutMs });
+    await runPool(jobs, args.lanes, async ({ rep, script, variant, protocol, model }) => {
+      const dry = dryRunModel(rep);
+      const arm = `${model}@${variant}${protocol === 'native' ? '' : `+${protocol}`}`;
+      // One entry per model call, shifted per emitted leg row (the loop emits
+      // a turn's rows in call order, after all its calls). PER JOB: with lanes,
+      // a shared queue would pair stall counts with another job's rows.
+      const stallQueue: number[] = [];
+      const emit = (row: EvalRow): void => {
+        collected.push(row);
+        rows.write(toRunRow(row, runId, catalog));
+        evalRows.write(`${JSON.stringify({ ...row, stallRetries: stallQueue.shift() ?? 0 })}\n`);
+      };
+      const callModel = async (req: EvalModelRequest): Promise<EvalModelResult> => {
+        planned.push({
+          model,
+          systemChars: req.systemPrompt.length,
+          promptChars: req.messages.reduce((n, m) => n + m.content.length, 0),
+          maxOutputTokens: req.maxTokens ?? 1024,
+        });
+        if (args.dryRun) { stallQueue.push(0); return dry(req); }
+        // AS THE APP SENDS IT: callModelViaCloud turns a tool result into a
+        // user turn, and the leg's own tool_choice is honoured ('required' on
+        // the forced leg). Both arms get both, so they differ in the wire only.
+        const toolChoice = (req as { toolChoice?: string }).toolChoice ?? 'auto';
+        const body: Record<string, unknown> = {
+          model,
+          messages: [
+            { role: 'system', content: req.systemPrompt },
+            ...req.messages.map((m) => (m.role === 'tool' ? { role: 'user', content: m.content } : m)),
+          ],
+          // An empty list is no tools (the closing leg): never `tools: []` on the wire.
+          ...(req.tools?.length ? { tools: req.tools, tool_choice: toolChoice } : {}),
+          ...(req.temperature !== undefined ? { temperature: req.temperature } : {}),
+          ...(req.maxTokens !== undefined ? { max_tokens: req.maxTokens } : {}),
+          chat_template_kwargs: { enable_thinking: req.enableThinking ?? false },
+        };
+        const forced = toolChoice === 'required';
+        // A CLOSING leg only: the about-mera answer leg is tool-free too.
+        const toolFree = isClosingLeg(req);
+        const stat = forcedLegs.get(arm) ?? { forced: 0, withCall: 0, reasked: 0 };
+        forcedLegs.set(arm, stat);
+        if (protocol !== 'native' && req.tools) {
+          const r = await postBodyStreamTextTools(
+            env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta,
+            protocol === 'text-xml' ? 'xml' : protocol === 'text-xml-first' ? 'xml-first' : protocol === 'text-xml-first-soft' ? 'xml-first-soft' : protocol === 'text-marker' ? 'marker' : 'hermes',
+            { stallTimeoutMs: args.stallTimeoutMs },
+          );
           stallQueue.push(r.stallRetries ?? 0);
           if (forced) {
             stat.forced += 1;
             if (r.toolCalls.length > 0) stat.withCall += 1;
+            if (r.reasked) stat.reasked += 1;
+          }
+          if (toolFree) {
+            const t = toolFreeLegs.get(arm) ?? { legs: 0, wroteCall: 0 };
+            t.legs += 1;
+            if (r.toolCalls.length > 0) t.wroteCall += 1;
+            toolFreeLegs.set(arm, t);
           }
           return { ...r, ttVisibleMs: r.ttVisibleMs };
-        };
-
-        for (const script of scripts) {
-          await runAgentScript(script, {
-            callModel,
-            sink: emit,
-            arm,
-            variant,
-            model,
-            repeat: rep,
-            skillIds: PERSONA_SKILL_IDS,
-            explainMera: realExplainMera,
-            onChoiceOptionMismatch: (d) =>
-              mismatches.push(`  ${script.id} turn ${d.turnIndex}: expected "${d.expected}", offered ${JSON.stringify(d.offered)}`),
-          });
         }
-      }
-      }
-    }
-  }
+        const r = await postBodyStream(env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta, { stallTimeoutMs: args.stallTimeoutMs });
+        stallQueue.push(r.stallRetries ?? 0);
+        if (forced) {
+          stat.forced += 1;
+          if (r.toolCalls.length > 0) stat.withCall += 1;
+        }
+        return { ...r, ttVisibleMs: r.ttVisibleMs };
+      };
 
+      await runAgentScript(script, {
+        callModel,
+        sink: emit,
+        arm,
+        variant,
+        model,
+        repeat: rep,
+        skillIds: PERSONA_SKILL_IDS,
+        explainMera: realExplainMera,
+        onChoiceOptionMismatch: (d) =>
+          mismatches.push(`  ${script.id} turn ${d.turnIndex}: expected "${d.expected}", offered ${JSON.stringify(d.offered)}`),
+      });
+    });
   } catch (err) {
     // A spend limit ends the run here rather than at the top level, so the
     // writer is closed and everything already paid for survives.
@@ -535,13 +557,19 @@ async function main(): Promise<number> {
   console.log(`\n${text}`);
   // PER ARM when there is more than one: the router, skill and proposal blocks
   // pool every row they are given, and a pooled number compares nothing.
-  const arms = [...new Set(collected.map((r) => r.arm))].sort();
-  if (arms.length <= 1) printAgentBlocks(collected, args.oneShotVariant, mismatches, scripts);
+  // COUNT-MATCHED: a (script, repeat) with an error row in ANY arm leaves every
+  // arm's blocks, so the arms are scored on the same cells (no re-run needed).
+  const excluded = erroredCells(collected);
+  const counted = collected.filter((r) => !excluded.has(`${r.scriptId}|${r.repeat}`));
+  // eslint-disable-next-line no-console
+  console.log(`\nEXCLUDED (script, repeat) cells, an error row in some arm, dropped for every arm  ${excluded.size}${[...excluded].sort().map((c) => `\n  ${c.replace('|', ' r')}`).join('')}`);
+  const arms = [...new Set(counted.map((r) => r.arm))].sort();
+  if (arms.length <= 1) printAgentBlocks(counted, args.oneShotVariant, mismatches, scripts);
   else {
     for (const arm of arms) {
       // eslint-disable-next-line no-console
       console.log(`\n======== ARM ${arm} ========`);
-      printAgentBlocks(collected.filter((r) => r.arm === arm), args.oneShotVariant, mismatches, scripts);
+      printAgentBlocks(counted.filter((r) => r.arm === arm), args.oneShotVariant, mismatches, scripts);
     }
   }
   // eslint-disable-next-line no-console
@@ -693,6 +721,13 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
       out.push(`    MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${m.detail} ${JSON.stringify(m.reply.slice(0, 120))}`);
     }
   }
+
+  // The rule of plans/ready_to_implement/E2EE_TOOL_STEPS_DEV_PORT.closing.py, over each turn's last row.
+  const last = turns.map((t) => t.legs[t.legs.length - 1]);
+  const finalReply = (r: EvalRow): string => (r.reply ?? '').trim();
+  const closed = last.filter((r) => finalReply(r) && !r.replyClaimUnfixed && !r.replyLeakUnfixed);
+  out.push(`\nCLOSING (final reply non-empty, no unfixed save claim or leak)  ${closed.length}/${last.length}  ` +
+    `ends '?' ${closed.filter((r) => finalReply(r).endsWith('?')).length}  claim kept ${last.filter((r) => r.replyClaimUnfixed).length}`);
 
   const tools = toolValidityReport(rows);
   out.push('\nTOOL CALLS (unparseable and schema-invalid are different findings, never one rate)');
