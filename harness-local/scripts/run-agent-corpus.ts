@@ -387,9 +387,10 @@ async function main(): Promise<number> {
   for (const w of warnings) console.warn(`!!  ${w}`);
 
   const collected: EvalRow[] = [];
-  /** Per arm: legs sent with tool_choice 'required', those that came back with
-   *  a call, and (text only) those that needed the one re-ask. */
-  const forcedLegs = new Map<string, { forced: number; withCall: number; reasked: number }>();
+  /** Per arm and (script, repeat) cell: legs sent with tool_choice 'required',
+   *  those that came back with a call, and (text only) those that needed the one
+   *  re-ask. Per cell so the report can drop the excluded cells. */
+  const forcedLegs = new Map<string, { arm: string; cell: string; forced: number; withCall: number; reasked: number }>();
   const mismatches: string[] = [];
   /** Per arm: legs sent with NO tools (the forced-offer-closing leg), and those
    *  on which the model wrote a call anyway (the loop drops it). */
@@ -467,8 +468,9 @@ async function main(): Promise<number> {
         const forced = toolChoice === 'required';
         // A CLOSING leg only: the about-mera answer leg is tool-free too.
         const toolFree = isClosingLeg(req);
-        const stat = forcedLegs.get(arm) ?? { forced: 0, withCall: 0, reasked: 0 };
-        forcedLegs.set(arm, stat);
+        const cell = `${script.id}|${rep}`;
+        const stat = forcedLegs.get(`${arm}|${cell}`) ?? { arm, cell, forced: 0, withCall: 0, reasked: 0 };
+        forcedLegs.set(`${arm}|${cell}`, stat);
         if (protocol !== 'native' && req.tools) {
           const r = await postBodyStreamTextTools(
             env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta,
@@ -573,8 +575,15 @@ async function main(): Promise<number> {
     }
   }
   // eslint-disable-next-line no-console
-  console.log('\nFORCED LEGS (tool_choice required; text re-asks once when no call came back)');
-  for (const [arm, f] of [...forcedLegs.entries()].sort()) {
+  console.log('\nFORCED LEGS (tool_choice required; text re-asks once when no call came back; excluded cells dropped)');
+  const forcedByArm = new Map<string, { forced: number; withCall: number; reasked: number }>();
+  for (const f of forcedLegs.values()) {
+    if (excluded.has(f.cell)) continue;
+    const s = forcedByArm.get(f.arm) ?? { forced: 0, withCall: 0, reasked: 0 };
+    s.forced += f.forced; s.withCall += f.withCall; s.reasked += f.reasked;
+    forcedByArm.set(f.arm, s);
+  }
+  for (const [arm, f] of [...forcedByArm.entries()].sort()) {
     // eslint-disable-next-line no-console
     console.log(`  ${arm.padEnd(40)} forced ${f.forced}  with a call ${f.withCall}  re-asked ${f.reasked}`);
   }

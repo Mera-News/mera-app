@@ -3,17 +3,20 @@
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/run-singleshot-corpus.ts --target staging \
 //       --graphql-endpoint ... --auth-endpoint ... [--repeat 3] [--dry-run]
+//       [--model <id>] [--arms on,on-twin,off,off-twin]
 //
 // WHAT IT MEASURES. One turn of FollowStoryAgent or ArticleFeedbackAgent the way
 // useCloudPersonaChat's single-shot path runs it: the agent's real system prompt,
 // context prepended to the last user message, the app's text tool wire (xml),
-// streamed, BIG_MODEL, a first pass and ONE continuation when a knowledge tool
+// streamed, BIG_MODEL (or --model), a first pass and ONE continuation when a knowledge tool
 // ran or no text came back. Tool results are canned per fixture, like the agent
 // corpus's fakes, so the arms differ only in the thinking gear.
 //
-// ARMS: `on` (shipped: thinking on, budget + reasoning headroom), `on-twin`
-// (byte-identical, the noise floor) and `off` (thinking off, no headroom).
-// The pass rule is printed before any call and judged on the turn's outcome.
+// ARMS: `on` (thinking on, budget + reasoning headroom), `on-twin`
+// (byte-identical, the noise floor), `off` (shipped: thinking off, no headroom)
+// and `off-twin` (byte-identical to `off`). --arms picks them (default
+// on,on-twin,off). The pass rule is printed before any call and judged on the
+// turn's outcome; the VERDICT needs `on`, `on-twin` and `off`.
 //
 // --engine afm|qwen-local|nano-proxy runs the ON-DEVICE flows instead
 // (lib/news-harness/on-device/follow-story and article-feedback): their prompts,
@@ -73,6 +76,7 @@ const ARMS: Arm[] = [
   { id: 'on', thinking: true },
   { id: 'on-twin', thinking: true },
   { id: 'off', thinking: false },
+  { id: 'off-twin', thinking: false },
 ];
 
 type Msg = { role: string; content: string; tool_calls?: unknown[]; tool_call_id?: string };
@@ -81,16 +85,38 @@ const FIXTURES = join(__dirname, '../../lib/mera-harness/eval/fixtures/singlesho
 // Fixed so prompts are byte-stable across arms and runs.
 const NOW_MS = Date.parse('2026-10-14T12:00:00Z');
 
-function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string } {
+export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[] } {
   let repeat = 3;
   let dryRun = false;
   let label = 'singleshot';
+  let model = BIG_MODEL;
+  let arms = ARMS.slice(0, 3);
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--repeat') repeat = Number(argv[++i]);
     else if (argv[i] === '--dry-run') dryRun = true;
     else if (argv[i] === '--label') label = argv[++i] ?? label;
+    else if (argv[i] === '--model') model = argv[++i] ?? model;
+    else if (argv[i] === '--arms') {
+      arms = (argv[++i] ?? '').split(',').map((id) => {
+        const arm = ARMS.find((a) => a.id === id);
+        if (!arm) throw new Error(`unknown arm "${id}" (known: ${ARMS.map((a) => a.id).join(',')})`);
+        return arm;
+      });
+      if (new Set(arms.map((a) => a.id)).size !== arms.length) throw new Error('duplicate arm in --arms');
+    }
   }
-  return { repeat, dryRun, label };
+  return { repeat, dryRun, label, model, arms };
+}
+
+/** COUNT-MATCHED: an error row drops its (fixture, repeat) for every arm, not the whole repeat. */
+export function countMatched<T extends { fixture: string; repeat: number; error: string | null }>(rows: T[], armCount: number): { valid: T[]; dropped: string[] } {
+  const cell = (x: T): string => `${x.fixture} r${x.repeat}`;
+  const dropped = new Set(rows.filter((x) => x.error).map(cell));
+  // A run cut mid-fixture (spend limit) leaves a cell with only some arms: drop it too.
+  const seen = new Map<string, number>();
+  for (const x of rows) seen.set(cell(x), (seen.get(cell(x)) ?? 0) + 1);
+  for (const [c, n] of seen) if (n < armCount) dropped.add(c);
+  return { valid: rows.filter((x) => !dropped.has(cell(x))), dropped: [...dropped].sort() };
 }
 
 function setup(f: Fixture): { system: string; tools: unknown[]; history: Msg[]; context: string } {
@@ -157,6 +183,8 @@ interface TurnRow {
   expect: Fixture['expect']; pass: boolean; why: string;
   passes: number; wallMs: number; firstVisibleMs: number | null;
   completionTokens: number; reasoningTokens: number; truncated: boolean; error: string | null;
+  /** Cloud: legs postBodyStreamTextTools retried (stall, total timeout, fetch failed). */
+  stallRetries?: number;
   calls: string[]; trackOptions: number; reply: string;
   /** The staged options as parsed by the executor, for score-option-quality. */
   options?: { label: string; search: string }[];
@@ -168,7 +196,7 @@ interface TurnRow {
 
 async function runTurn(
   env: { nearAiBaseUrl: string; nearAiApiKey: string },
-  f: Fixture, arm: Arm, repeat: number, dryRun: boolean,
+  f: Fixture, arm: Arm, model: string, repeat: number, dryRun: boolean,
 ): Promise<TurnRow | { dry: number }> {
   const { system, tools, history, context } = setup(f);
   const wire: Msg[] = [...history, { role: 'user', content: f.message }];
@@ -176,7 +204,7 @@ async function runTurn(
     const last = wire.map((m) => m.role).lastIndexOf('user');
     const msgs = wire.map((m, i) => (i === last ? { ...m, content: `${context}\n\n${m.content}` } : m));
     return {
-      model: BIG_MODEL,
+      model,
       messages: [{ role: 'system', content: system }, ...msgs],
       tools,
       tool_choice: 'auto',
@@ -196,6 +224,7 @@ async function runTurn(
   for (let pass = 0; pass < 2; pass++) {
     const r = await postBodyStreamTextTools(env.nearAiBaseUrl, env.nearAiApiKey, bodyFor(), 120_000, undefined, APP_TOOL_FORMAT);
     row.passes++;
+    row.stallRetries = (row.stallRetries ?? 0) + (r.stallRetries ?? 0);
     if (pass === 0) row.firstVisibleMs = r.ttVisibleMs;
     row.completionTokens += r.usage?.completionTokens ?? 0;
     row.reasoningTokens += r.usage?.reasoningTokens ?? 0;
@@ -310,7 +339,7 @@ async function runTurnOnDevice(engine: LocalEngine, f: Fixture, arm: string, rep
 
   if (row.error) {
     // A model outcome (guardrail, refusal, context, no JSON) is a FAIL the user would see;
-    // only a transport failure is an error row that drops its repeat.
+    // only a transport failure is an error row that drops its (fixture, repeat) for every arm.
     row.why = row.error;
     if (!isTransportError(row.error)) row.error = null;
     return row;
@@ -334,7 +363,7 @@ async function mainOnDevice(engine: LocalEngine, args: { repeat: number; label: 
     `fixtures ${fixtures.length} x arms ${arms.join(',')} x repeat ${args.repeat}, ON-DEVICE flows on ${engine}\n` +
       'PASS RULE (fixed before the run): proposeTrack = 3 or 4 staged options; proposeFactCheck and answer = intent answer,\n' +
       'a non-empty reply and no calls (fact checks are cloud-only). A guardrail, refusal, context or no-JSON outcome is a FAIL;\n' +
-      'only a transport failure is an error row, and it drops its repeat. The twin is the noise floor.',
+      'only a transport failure is an error row, and it drops its (fixture, repeat) for every arm. The twin is the noise floor.',
   );
   const run = createRunWriter({ label: args.label });
   const out = join(run.dir, 'rows.jsonl');
@@ -349,9 +378,8 @@ async function mainOnDevice(engine: LocalEngine, args: { repeat: number; label: 
       }
     }
   }
-  const badRepeats = new Set(rows.filter((x) => x.error).map((x) => x.repeat));
-  const valid = rows.filter((x) => !badRepeats.has(x.repeat));
-  console.log(`\nrun dir: ${run.dir}\ndropped repeats (transport errors): ${[...badRepeats].join(',') || 'none'}`);
+  const { valid, dropped } = countMatched(rows, arms.length);
+  console.log(`\nrun dir: ${run.dir}\ndropped (fixture, repeat) cells (transport errors): ${dropped.join(', ') || 'none'}`);
   const stats: Record<string, { pass: number; n: number; p50: number; p90: number; modelFails: number }> = {};
   for (const a of arms) {
     const xs = valid.filter((x) => x.arm === a);
@@ -366,7 +394,7 @@ async function mainOnDevice(engine: LocalEngine, args: { repeat: number; label: 
       console.log(`                 ${kind.padEnd(16)} ${k.filter((x) => x.pass).length}/${k.length}`);
     }
   }
-  run.writeJson('summary', { engine, stats, droppedRepeats: [...badRepeats] });
+  run.writeJson('summary', { engine, stats, droppedCells: dropped });
   return 0;
 }
 
@@ -389,19 +417,22 @@ async function main(): Promise<number> {
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
   const fixtures = JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[];
+  const missing = ['on', 'on-twin', 'off'].filter((id) => !args.arms.some((a) => a.id === id));
+  const noVerdict = `NO VERDICT: arm(s) ${missing.join(', ')} not in --arms; the pass rule needs on, on-twin and off.`;
 
   // eslint-disable-next-line no-console
   console.log(
-    `fixtures ${fixtures.length} x arms ${ARMS.map((a) => a.id).join(',')} x repeat ${args.repeat}, model ${BIG_MODEL}, format ${APP_TOOL_FORMAT}\n` +
+    `fixtures ${fixtures.length} x arms ${args.arms.map((a) => a.id).join(',')} x repeat ${args.repeat}, model ${args.model}, format ${APP_TOOL_FORMAT}\n` +
       'PASS RULE (fixed before the run): `off` passes if its turn pass count is >= `on` minus max(1, |on - on-twin|),\n' +
-      'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. Error rows invalidate their repeat for every arm.',
+      'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. An error row drops its (fixture, repeat) for every arm.',
   );
+  if (missing.length > 0) console.log(noVerdict);
 
   if (args.dryRun) {
     let chars = 0;
-    for (const f of fixtures) for (const a of ARMS) chars += ((await runTurn(env, f, a, 0, true)) as { dry: number }).dry;
+    for (const f of fixtures) for (const a of args.arms) chars += ((await runTurn(env, f, a, args.model, 0, true)) as { dry: number }).dry;
     const inTok = (chars / 4) * args.repeat * 1.6;
-    console.log(`DRY RUN: ~${Math.round(inTok / 1000)}k input tokens planned, est. cost < $${((inTok * 0.04 + fixtures.length * ARMS.length * args.repeat * 1500 * 1.35) / 1e6).toFixed(2)}`);
+    console.log(`DRY RUN: ~${Math.round(inTok / 1000)}k input tokens planned, est. cost < $${((inTok * 0.04 + fixtures.length * args.arms.length * args.repeat * 1500 * 1.35) / 1e6).toFixed(2)}`);
     return 0;
   }
 
@@ -411,9 +442,9 @@ async function main(): Promise<number> {
   try {
     for (let r = 0; r < args.repeat; r++) {
       for (const f of fixtures) {
-        const order = ARMS.map((_, i) => ARMS[(i + r) % ARMS.length]);
+        const order = args.arms.map((_, i) => args.arms[(i + r) % args.arms.length]);
         for (const arm of order) {
-          const row = (await runTurn(env, f, arm, r, false)) as TurnRow;
+          const row = (await runTurn(env, f, arm, args.model, r, false)) as TurnRow;
           rows.push(row);
           appendFileSync(out, `${JSON.stringify(row)}\n`);
           console.log(`r${r} ${arm.id.padEnd(7)} ${f.id.padEnd(24)} ${row.pass ? 'PASS' : 'FAIL'} ${String(row.wallMs).padStart(6)}ms think=${row.reasoningTokens} ${row.why}`);
@@ -425,11 +456,10 @@ async function main(): Promise<number> {
     else throw err;
   }
 
-  const badRepeats = new Set(rows.filter((x) => x.error).map((x) => x.repeat));
-  const valid = rows.filter((x) => !badRepeats.has(x.repeat));
-  console.log(`\nrun dir: ${run.dir}\ndropped repeats (error rows): ${[...badRepeats].join(',') || 'none'}`);
+  const { valid, dropped } = countMatched(rows, args.arms.length);
+  console.log(`\nrun dir: ${run.dir}\ndropped (fixture, repeat) cells (error rows): ${dropped.join(', ') || 'none'}`);
   const stats: Record<string, { pass: number; n: number; p50: number; p90: number; max: number; fv50: number; think: number }> = {};
-  for (const a of ARMS) {
+  for (const a of args.arms) {
     const xs = valid.filter((x) => x.arm === a.id);
     const fv = xs.map((x) => x.firstVisibleMs).filter((v): v is number => v !== null);
     stats[a.id] = {
@@ -444,13 +474,18 @@ async function main(): Promise<number> {
       console.log(`         ${kind.padEnd(16)} ${k.filter((x) => x.pass).length}/${k.length}`);
     }
   }
+  if (missing.length > 0) {
+    console.log(`\n${noVerdict}`);
+    run.writeJson('summary', { model: args.model, stats, verdict: null, droppedCells: dropped });
+    return 0;
+  }
   const noise = Math.max(1, Math.abs(stats.on.pass - stats['on-twin'].pass));
   const leaks = valid.filter((x) => x.arm === 'off' && x.why === 'leaked markup in reply').length;
   const qualityOk = stats.off.pass >= stats.on.pass - noise && leaks === 0;
   const faster = stats.off.p50 < stats.on.p50 && stats.off.p90 < stats.on.p90;
   const verdict = qualityOk && faster && valid.length > 0 ? 'PASS' : 'FAIL';
   console.log(`\nnoise floor ${noise}; off leaks ${leaks}; quality ${qualityOk ? 'ok' : 'WORSE'}; latency ${faster ? 'faster' : 'NOT faster'}\nVERDICT: ${verdict}`);
-  run.writeJson('summary', { stats, noise, leaks, qualityOk, faster, verdict, droppedRepeats: [...badRepeats] });
+  run.writeJson('summary', { model: args.model, stats, noise, leaks, qualityOk, faster, verdict, droppedCells: dropped });
   return verdict === 'PASS' ? 0 : 1;
 }
 

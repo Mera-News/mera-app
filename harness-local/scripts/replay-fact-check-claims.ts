@@ -3,6 +3,7 @@
 //
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/replay-fact-check-claims.ts --runs 3 --label v1
+//       [--model <id>] [--thinking on|off] [--only <fixture>]
 //
 // WHY THIS EXISTS. The deliverable of F1 is the PROMPT, and a prompt cannot be
 // judged by reading it. CLAUDE.md § Measuring a Change requires a NULL
@@ -22,10 +23,13 @@
 // batch TEXT completion and cannot express tool calling.
 //
 // WIRE PARITY with the production chat path (lib/hooks/useCloudPersonaChat.ts
-// :199-217 + lib/llm/cloudComplete.ts:1040-1051), because measuring a different
-// gear measures a prompt we do not ship:
-//   - model BIG_MODEL, max_tokens CHAT_MAX_OUTPUT_TOKENS, no temperature
-//   - chat_template_kwargs.enable_thinking = TRUE (the chat path hardcodes it)
+// cloudChatStream call + lib/llm/cloudComplete.ts cloudChatStream), because
+// measuring a different gear measures a prompt we do not ship:
+//   - model BIG_MODEL (--model to try another), no temperature
+//   - chat_template_kwargs.enable_thinking = ArticleFeedbackAgent.chatThinking,
+//     which is FALSE (--thinking on to measure the other gear)
+//   - max_tokens CHAT_MAX_OUTPUT_TOKENS, plus CHAT_REASONING_HEADROOM_TOKENS only
+//     when thinking is on, as cloudChatStream adds it
 //   - <context> is prepended to the LAST USER message, not sent as a system turn
 //   - tool_choice 'auto' — never 'required'. Forcing the call would mask a
 //     prompt that fails to call the tool, which is one of the real signals.
@@ -166,15 +170,23 @@ interface Args {
   runs: number;
   label: string;
   only: string | null;
+  model: string;
+  thinking: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { runs: 3, label: 'v1', only: null };
+  const args: Args = { runs: 3, label: 'v1', only: null, model: BIG_MODEL, thinking: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--runs') args.runs = Number(argv[++i] ?? args.runs);
     else if (a === '--label') args.label = argv[++i] ?? args.label;
     else if (a === '--only') args.only = argv[++i] ?? null;
+    else if (a === '--model') args.model = argv[++i] ?? args.model;
+    else if (a === '--thinking') {
+      const v = argv[++i];
+      if (v !== 'on' && v !== 'off') throw new Error(`--thinking takes on or off, got "${v}"`);
+      args.thinking = v === 'on';
+    }
   }
   return args;
 }
@@ -195,7 +207,7 @@ interface RunOutcome {
   error?: string;
 }
 
-async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string): Promise<RunOutcome> {
+async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string, args: Args): Promise<RunOutcome> {
   const system = buildArticleFeedbackSystemPrompt({
     needsToolFormat: false,
     languageName: fixture.languageName ?? 'English',
@@ -227,7 +239,7 @@ async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string): Promi
   const userTurn = fixture.userTurn ?? SEED;
 
   const body = {
-    model: BIG_MODEL,
+    model: args.model,
     messages: [
       { role: 'system', content: system },
       // Production injects <context> onto the LAST user message, not as its own
@@ -236,9 +248,9 @@ async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string): Promi
     ],
     tools: getArticleFeedbackToolDefinitions('CLOUD'),
     tool_choice: 'auto',
-    // cloudChatStream adds the reasoning headroom on top of the answer budget.
-    max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
-    chat_template_kwargs: { enable_thinking: true },
+    // cloudChatStream adds the reasoning headroom on top of the answer budget, only for a trace.
+    max_tokens: CHAT_MAX_OUTPUT_TOKENS + (args.thinking ? CHAT_REASONING_HEADROOM_TOKENS : 0),
+    chat_template_kwargs: { enable_thinking: args.thinking },
   };
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -367,7 +379,7 @@ async function main(): Promise<void> {
   const all: RunOutcome[] = [];
   for (const fixture of fixtures) {
     for (let run = 1; run <= args.runs; run++) {
-      const outcome = await runOnce(fixture, apiKey, baseUrl);
+      const outcome = await runOnce(fixture, apiKey, baseUrl, args);
       outcome.run = run;
       all.push(outcome);
       const called = outcome.toolsCalled.join(',') || '(none)';
@@ -402,7 +414,7 @@ async function main(): Promise<void> {
       + `distinct⇒same=${sameClaim(...DISTINCT)} (want false)`,
   );
 
-  console.log(`\n=== null-experiment summary (label=${args.label}, runs=${args.runs}) ===`);
+  console.log(`\n=== null-experiment summary (label=${args.label}, runs=${args.runs}, model=${args.model}, thinking=${args.thinking ? 'on' : 'off'}) ===`);
   console.log('fixture                  toolFired  options(per run)  sharedClaims  labelOverruns');
   const summary: Record<string, unknown>[] = [];
   for (const fixture of fixtures) {
@@ -417,7 +429,7 @@ async function main(): Promise<void> {
     );
     summary.push({ fixture: fixture.id, fired, counts, shared, overruns });
   }
-  fs.writeFileSync(path.join(outDir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
+  fs.writeFileSync(path.join(outDir, 'summary.json'), `${JSON.stringify({ model: args.model, thinking: args.thinking, fixtures: summary }, null, 2)}\n`);
 
   // The rater's input: options ONLY, with the article. No prompt, no rules, no
   // fixture rationale — a rater that can see the rules grades our intent.
