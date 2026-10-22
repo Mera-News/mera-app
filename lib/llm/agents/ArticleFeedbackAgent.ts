@@ -81,9 +81,9 @@ function brandNullable<T extends string | null | undefined>(
 export class ArticleFeedbackAgent implements IAgent {
   readonly id: string;
 
-  /** Thinking OFF. Measured 2026-10-22 on Qwen3.6-35B-A3B (run-singleshot-corpus,
-   *  article fixtures): off passed 11/12 with 0 of 48 rows cut off, against on
-   *  with turn p90 28.3s, reasoning p50 ~1.1k tokens and every token-cap cut. */
+  /** Thinking OFF. Measured 2026-10-22 (run-singleshot-corpus, article
+   *  fixtures): off kept the pass rate on both Qwen3.8 and Qwen3.6, and article
+   *  turns fell from p50 ~15s to ~2s. Also the cloudChatStream default now. */
   readonly chatThinking = false;
 
   constructor(

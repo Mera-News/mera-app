@@ -408,9 +408,10 @@ export type WireMessage =
 
 export interface CloudChatStreamRequest {
   messages: WireMessage[];
-  /** Defaults to TRUE. The agent loop passes false (the trace buys nothing on a
-   *  tool-routing leg), and so does a single-shot agent whose `chatThinking`
-   *  is false (follow a story). */
+  /** Defaults to FALSE (owner decision 2026-10-22, every chat call). Measured:
+   *  thinking off kept the single-shot pass rate on Qwen3.8 (30/32 vs 30/32) and
+   *  cut article-chat turns from p50 15s to 2.4s. A caller that needs the trace
+   *  passes true and gets CHAT_REASONING_HEADROOM_TOKENS on top. */
   enableThinking?: boolean;
   /** Defaults to TRUE. FALSE for a step nobody watches arrive: the answer is
    *  then ONE envelope, one decrypt, instead of one ECDH per token. Tool calls
@@ -536,7 +537,7 @@ export async function* cloudChatStream(
     const baseHeaders = await getAuthHeaders();
     logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
 
-    const thinking = request.enableThinking ?? true;
+    const thinking = request.enableThinking ?? false;
     const body: Record<string, unknown> = {
       messages,
       // Each streamed delta is its own E2EE envelope, so streaming and E2EE

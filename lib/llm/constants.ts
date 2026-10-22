@@ -49,10 +49,12 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   5.3 Flash is the fallback (tools + json_mode, $0.15/$0.50) and the only
  *   other TEE model that calls tools correctly.
  *
- *   THINKING STAYS ON for chat, and the budget carries headroom for it (see
- *   CHAT_REASONING_HEADROOM_TOKENS). Qwen3.8 honours `enable_thinking:false`
- *   but drops to 17/20 confirm and 3/10 composed facts without its trace, so
- *   the flag stays on. GLM's completion tokens include its trace: 7 of 60
+ *   THINKING IS OFF for every chat call since 2026-10-22 (owner decision).
+ *   The 2026-09-11 figure that kept it on (17/20 confirm and 3/10 composed
+ *   facts without the trace) predates the persona loop, which has sent thinking
+ *   off on every leg since; on 2026-10-22 the single-shot corpus passed 30/32
+ *   both ways on Qwen3.8, and thinking off cut article-chat turns from p50 15s
+ *   to 2.4s. GLM's completion tokens include its trace: 7 of 60
  *   turns used 800+ and 3 hit the 1024 cap, one of them truncating a tool
  *   call's arguments to `{}`; and thinking OFF is not an option on GLM at all:
  *   `enable_thinking:false` and `reasoning_effort:'none'` both return the trace
@@ -122,7 +124,7 @@ export const CHAT_MAX_OUTPUT_TOKENS = 1024;
 
 /**
  * Extra `max_tokens` the CLOUD chat stream adds on top of the caller's budget,
- * because the cloud chat gear is thinking ON and a reasoning model's trace is
+ * when a caller turns thinking ON (the default is off) and a reasoning model's trace is
  * billed and capped inside the same `max_tokens` as the visible answer.
  * Measured on GLM 5.3 Flash (the BIG fallback): trace median ~240 tokens, p90
  * ~830, and the 1024 budget alone truncated 3 of 60 turns (one lost a tool

@@ -86,7 +86,7 @@ export interface IAgent {
   getToolDefinitions?(): ToolDefinition[];
   /**
    * The thinking gear of this agent's single-shot cloud chat calls. Absent =
-   * on (cloudChatStream's default). Set false only on a pass of
+   * off (cloudChatStream's default). Set true only on a pass of
    * harness-local/scripts/run-singleshot-corpus.ts for this agent.
    */
   readonly chatThinking?: boolean;

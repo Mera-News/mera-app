@@ -210,13 +210,13 @@ describe('a provider tool call in CLEAR (never expected, never silently dropped)
 });
 
 describe('the request body', () => {
-  it('carries stream true and thinking on by default, on SMALL_MODEL, with none of the optional fields', async () => {
+  it('carries stream true and thinking off by default, on SMALL_MODEL, with none of the optional fields', async () => {
     const bodies = captureChatBodies();
     server.use(...mockGateway(respond('ok')));
     await run({ model: undefined });
     const body = JSON.parse(bodies[0]);
     expect(body.stream).toBe(true);
-    expect(body.chat_template_kwargs).toEqual({ enable_thinking: true });
+    expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
     expect(body.model).toBe(SMALL_MODEL);
     for (const k of ['temperature', 'max_tokens', 'max_completion_tokens', 'top_p', 'n', 'presence_penalty', 'frequency_penalty']) {
       expect(body).not.toHaveProperty(k);
@@ -224,10 +224,10 @@ describe('the request body', () => {
     expect(gatewayCalls('chat')[0]).toMatchObject({ model: SMALL_MODEL, stream: true });
   });
 
-  it('forwards the optional numeric fields, adding the reasoning headroom to the answer budget', async () => {
+  it('forwards the optional numeric fields, adding the reasoning headroom when thinking is on', async () => {
     const bodies = captureChatBodies();
     server.use(...mockGateway(respond('ok')));
-    await run({ temperature: 0.9, maxTokens: 256, topP: 0.95, presencePenalty: 0.1, frequencyPenalty: 0.2, n: 2 });
+    await run({ temperature: 0.9, maxTokens: 256, topP: 0.95, presencePenalty: 0.1, frequencyPenalty: 0.2, n: 2, enableThinking: true });
     const body = JSON.parse(bodies[0]);
     expect(body).toMatchObject({ temperature: 0.9, top_p: 0.95, presence_penalty: 0.1, frequency_penalty: 0.2, n: 2 });
     expect(body.max_tokens).toBe(256 + CHAT_REASONING_HEADROOM_TOKENS);
