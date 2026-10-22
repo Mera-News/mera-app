@@ -8,7 +8,8 @@
 //
 // WHAT RESTARTS, AND WHEN
 //   - a DOWNLOADED, PENDING OTA, on a true background -> active return
-//     (`OTASilentUpdater`, which owns that lifecycle)
+//     (`OTASilentUpdater`, which owns that lifecycle), or when the reader taps
+//     Restart on its toast or inbox row (`lib/ota-notice.ts`, reason 'update')
 //   - an RTL-crossing language change, and a completed backup restore
 //
 // A RETURN ON ITS OWN IS NOT A REASON TO RESTART. The app briefly restarted on
@@ -46,7 +47,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import logger from '@/lib/logger';
 
-export type RestartReason = 'ota' | 'language' | 'restore';
+export type RestartReason = 'ota' | 'update' | 'language' | 'restore';
 
 export type RestartContext = {
   /** This boot is a JS reload we asked for, not a real cold start. */
@@ -343,6 +344,12 @@ function blockedBy(): string | null {
   if (lastRestartAt > 0 && since < MIN_RESTART_INTERVAL_MS) return `cooldown:${since}ms`;
   const held = activeHolds();
   if (held.length > 0) return `hold:${held.join(',')}`;
+  const route = blockedRoute();
+  return route ? `route:${route}` : null;
+}
+
+/** The live route when it is in RESTART_BLOCKED_ROUTES, else null. */
+function blockedRoute(): string | null {
   // Lazy-required for the reason this file's header gives: `pin-store` and
   // `AppScheduler` import this module, and nav-state is cheap but the rule is
   // absolute. It mirrors the live route for exactly this kind of non-React read.
@@ -350,12 +357,21 @@ function blockedBy(): string | null {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getCurrentPathname } = require('@/lib/nav-state');
     const pathname: string = getCurrentPathname();
-    if (isRestartBlockedRoute(pathname)) return `route:${pathname}`;
+    if (isRestartBlockedRoute(pathname)) return pathname;
   } catch {
     // An unreadable route is not a reason to block a restart the user asked for
     // by changing their language or restoring a backup.
   }
   return null;
+}
+
+/**
+ * Whether the screen showing now can never restart (PIN lock, sign-in,
+ * onboarding), whatever else allows it. For the OTA toast, whose Restart would
+ * do nothing there.
+ */
+export function routeBlocksRestart(): boolean {
+  return blockedRoute() != null;
 }
 
 /**
@@ -410,9 +426,9 @@ export function restartWouldReload(): boolean {
 /**
  * Restart the app, if every gate allows it.
  *
- * Silent in every case: no prompt, no banner, no toast. The caller does not find
- * out whether it happened — see `restartIsAvailable()` for the one flow that
- * needs to know.
+ * Says nothing itself: no prompt, banner or toast here (the OTA notice is
+ * `lib/ota-notice.ts`'s). The caller does not find out whether it happened; see
+ * `restartIsAvailable()` for the one flow that needs to know.
  */
 export async function requestRestart(reason: RestartReason): Promise<void> {
   const blocker = blockedBy();
@@ -462,8 +478,9 @@ export async function requestRestart(reason: RestartReason): Promise<void> {
     // The departure stamp is only meaningful to the next boot for 'ota': by construction that is the
     // restart that fires on a background -> active return (OTASilentUpdater is its only caller, and
     // a blocked restart is deferred to the next return), so the stamp measures the trip that just
-    // ended. 'language' and 'restore' are in-app actions taken after the PIN gate, so the reader
-    // never left as far as the next boot is concerned: null, which pin-store reads as "never left".
+    // ended. 'update', 'language' and 'restore' are in-app taps made after the PIN gate, so the
+    // reader never left as far as the next boot is concerned: null, which pin-store reads as
+    // "never left". 'update' must not reuse 'ota': its stamp is from a trip that already ended.
     const payload: MarkerPayload = {
       reason,
       at: lastRestartAt,

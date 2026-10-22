@@ -1043,7 +1043,16 @@
     "ageNow": "Ngay",
     "ageMinutes": "{{n}}p",
     "ageHours": "{{n}}g",
-    "ageDays": "{{n}}ng"
+    "ageDays": "{{n}}ng",
+    "update": {
+      "availableTitle": "Bản cập nhật đã sẵn sàng",
+      "availableBody": "Khởi động lại Mera để dùng phiên bản mới nhất.",
+      "restart": "Khởi động lại",
+      "updatedTitle": "Mera đã được cập nhật",
+      "updatedBody": "Nhấn để xem có gì mới.",
+      "notesTitle": "Có gì mới",
+      "notesEmpty": "Sửa lỗi và cải tiến."
+    }
   },
   "settings": {
     "groupHelp": "Trợ giúp",

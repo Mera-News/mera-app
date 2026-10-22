@@ -1043,7 +1043,16 @@
     "ageNow": "지금",
     "ageMinutes": "{{n}}분",
     "ageHours": "{{n}}시간",
-    "ageDays": "{{n}}일"
+    "ageDays": "{{n}}일",
+    "update": {
+      "availableTitle": "업데이트 준비 완료",
+      "availableBody": "최신 버전을 사용하려면 메라를 다시 시작하세요.",
+      "restart": "다시 시작",
+      "updatedTitle": "메라가 업데이트되었습니다",
+      "updatedBody": "탭하여 새로운 기능을 확인하세요.",
+      "notesTitle": "새로운 기능",
+      "notesEmpty": "버그 수정 및 개선"
+    }
   },
   "settings": {
     "groupHelp": "도움말",

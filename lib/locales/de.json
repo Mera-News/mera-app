@@ -1049,7 +1049,16 @@
     "ageNow": "jetzt",
     "ageMinutes": "{{n}} Min.",
     "ageHours": "{{n}} Std.",
-    "ageDays": "{{n}} T."
+    "ageDays": "{{n}} T.",
+    "update": {
+      "availableTitle": "Update bereit",
+      "availableBody": "Starte Mera neu, um die neueste Version zu bekommen.",
+      "restart": "Neu starten",
+      "updatedTitle": "Mera wurde aktualisiert",
+      "updatedBody": "Tippe, um die Neuerungen zu sehen.",
+      "notesTitle": "Neuigkeiten",
+      "notesEmpty": "Fehlerbehebungen und Verbesserungen."
+    }
   },
   "settings": {
     "groupHelp": "Hilfe",

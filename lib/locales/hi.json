@@ -1051,7 +1051,16 @@
     "ageNow": "अभी",
     "ageMinutes": "{{n}} मि",
     "ageHours": "{{n}} घं",
-    "ageDays": "{{n}} दिन"
+    "ageDays": "{{n}} दिन",
+    "update": {
+      "availableTitle": "अपडेट तैयार है",
+      "availableBody": "नया वर्शन पाने के लिए मेरा ऐप को रीस्टार्ट करें।",
+      "restart": "रीस्टार्ट करें",
+      "updatedTitle": "मेरा ऐप अपडेट हो गया",
+      "updatedBody": "नया क्या है, यह देखने के लिए टैप करें।",
+      "notesTitle": "नया क्या है",
+      "notesEmpty": "गड़बड़ियां ठीक की गईं और सुधार किए गए।"
+    }
   },
   "settings": {
     "groupHelp": "सहायता",

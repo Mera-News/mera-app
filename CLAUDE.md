@@ -70,5 +70,5 @@ and most loose `lib/*.ts`. Read the code.
 
 ## Deeper docs
 
-- `NEWS_HARNESS.md`: AI feed flow. `COMMANDS.md`: npm, Expo, EAS, OTA (silent), version bump.
+- `NEWS_HARNESS.md`: AI feed flow. `COMMANDS.md`: npm, Expo, EAS, OTA (and what readers see), version bump.
 - `harness/README.md`, `harness/README-android.md`. Gluestack: https://v4.gluestack.io/ui/docs/components/

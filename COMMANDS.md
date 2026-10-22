@@ -149,10 +149,13 @@ eas build --profile production --platform ios --auto-submit
 
 OTA works for **JS/TS, styling, and GraphQL** changes only. A **new native build is required** for: native deps, SDK bumps, `app.json` native config, new native modules, or a `version` change (runtime version is `appVersion`).
 
-**OTA updates are silent.** Publishing does not notify, prompt or interrupt anyone. The app downloads
-the new bundle in the background (`OTASilentUpdater`) and expo-updates launches it at the user's next
-cold start, so a publish reaches an active user only once they fully quit and reopen the app. Budget
-for that lag; there is no way to hurry a specific user along.
+**What a reader sees.** The app downloads the new bundle in the background (`OTASilentUpdater`). Once it
+is pending, a toast says "Update ready" once per update id (not over the PIN lock, sign-in or onboarding, where Restart cannot work) and one inbox row (Feed > Notifications) keeps
+a Restart button; both restart through `lib/app-restart.ts`, so holds and blocked routes still apply. With
+no tap, the bundle loads on the next return from background or the next cold start. On the first launch
+of the new bundle that row becomes one "Mera was updated" row whose tap lists the `--message` of every
+update applied since the one that phone last ran. Nothing blocks the reader, and nothing about updates is
+sent anywhere.
 
 **There is exactly one way to block a user on an update, and it is not OTA.** Raise
 `APP_VERSION_IOS_MIN_SUPPORTED` / `APP_VERSION_ANDROID_MIN_SUPPORTED` in `mera-infra/cloud-run.tf` and
@@ -169,7 +172,7 @@ eas update --channel production  --message "Fix feed scoring edge case"
 eas update --channel preview     --message "QA: onboarding copy tweak"
 eas update --channel development  --message "WIP"
 
-# Auto-fill the message from the latest git commit
+# Auto-fill the message from the latest git commit (refused by npm run update:*)
 eas update --channel production --auto
 
 # Inspect / manage updates
@@ -181,10 +184,12 @@ eas branch:list
 
 > Because runtime version = `appVersion` (`1.2.0`), an OTA update is only delivered to installs whose native build has the **same** app version. After bumping `version` in `app.json`, ship a new native build before OTA updates reach it.
 
-**Always publish with `npm run update:*`, never a bare `eas update`.** `scripts/ota-publish.js` exports under the EAS environment of the same name (`eas env:exec <env> 'EXPO_NO_DOTENV=1 npx expo export ...'`, iOS + Android, source maps), refuses the bundle if any file holds a test-account token (the `mera_tsk_` prefix or any local `EXPO_PUBLIC_TEST_ACCOUNT_TOKEN` value, from the shell or a `.env*` file), then runs `eas update --skip-bundler --input-dir dist --environment <env>` and uploads the source maps to Sentry (`eas update` uploads none itself, and an unsymbolicated OTA mis-groups in Sentry). Each `update:*` script already passes `--environment` (development, preview, production); the script refuses a run with none or with two different ones. The export must run under `env:exec`: with `--skip-bundler`, `eas update --environment` only labels the update and never reaches the bundle, so a plain export would ship the local `.env` and none of the EAS-hosted keys. Extra `eas update` flags go after `--`:
+**Always publish with `npm run update:*`, never a bare `eas update`.** `scripts/ota-publish.js` exports under the EAS environment of the same name (`eas env:exec <env> 'EXPO_NO_DOTENV=1 npx expo export ...'`, iOS + Android, source maps), refuses the bundle if any file holds a test-account token (the `mera_tsk_` prefix or any local `EXPO_PUBLIC_TEST_ACCOUNT_TOKEN` value, from the shell or a `.env*` file), then runs `eas update --skip-bundler --input-dir dist --environment <env>` and uploads the source maps to Sentry (`eas update` uploads none itself, and an unsymbolicated OTA mis-groups in Sentry). Each `update:*` script already passes `--environment` (development, preview, production); the script refuses a run with none or with two different ones. The export must run under `env:exec`: with `--skip-bundler`, `eas update --environment` only labels the update and never reaches the bundle, so a plain export would ship the local `.env` and none of the EAS-hosted keys. Extra `eas update` flags go after `--`.
+
+**`--message` is required and readers see it** in the app's "What's new" card, so write it as user copy (short, no dashes); the script refuses a missing message, `--auto` and a message with an em or en dash. Before the export it reads the last 10 updates on the channel's branch and the `app.json` runtime (`eas update:list --json`, then `eas update:view <group> --json` per group, about 10 calls, since the list cuts the message and leaves out its date) and puts them in the bundle as `EXPO_PUBLIC_OTA_NOTES`, dropping any published before `NOTES_SINCE` in the script (older messages were internal text) or holding a dash; the export runs with `--clear` because Metro's cache key ignores env values.
 
 ```bash
-npm run update:production -- --message "..."   # same for development, preview
+npm run update:production -- --message "Faster feed loading"   # same for development, preview
 node scripts/ota-publish.js --scan dist        # the leak gate alone
 ```
 

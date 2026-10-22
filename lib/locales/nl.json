@@ -1049,7 +1049,16 @@
     "ageNow": "nu",
     "ageMinutes": "{{n}} min",
     "ageHours": "{{n}} u",
-    "ageDays": "{{n}} d"
+    "ageDays": "{{n}} d",
+    "update": {
+      "availableTitle": "Update klaar",
+      "availableBody": "Start Mera opnieuw om de nieuwste versie te krijgen.",
+      "restart": "Opnieuw starten",
+      "updatedTitle": "Mera is bijgewerkt",
+      "updatedBody": "Tik om te zien wat er nieuw is.",
+      "notesTitle": "Wat is er nieuw",
+      "notesEmpty": "Oplossingen en verbeteringen."
+    }
   },
   "settings": {
     "groupHelp": "Hulp",

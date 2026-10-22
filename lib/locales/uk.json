@@ -1089,7 +1089,16 @@
     "ageNow": "зараз",
     "ageMinutes": "{{n}} хв",
     "ageHours": "{{n}} год",
-    "ageDays": "{{n}} д"
+    "ageDays": "{{n}} д",
+    "update": {
+      "availableTitle": "Оновлення готове",
+      "availableBody": "Перезапустіть Меру, щоб отримати останню версію.",
+      "restart": "Перезапустити",
+      "updatedTitle": "Меру оновлено",
+      "updatedBody": "Торкніться, щоб побачити, що нового.",
+      "notesTitle": "Що нового",
+      "notesEmpty": "Виправлення та покращення."
+    }
   },
   "settings": {
     "groupHelp": "Довідка",

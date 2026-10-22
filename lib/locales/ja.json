@@ -1043,7 +1043,16 @@
     "ageNow": "今",
     "ageMinutes": "{{n}}分",
     "ageHours": "{{n}}時間",
-    "ageDays": "{{n}}日"
+    "ageDays": "{{n}}日",
+    "update": {
+      "availableTitle": "アップデートの準備ができました",
+      "availableBody": "最新バージョンにするにはメラを再起動してください。",
+      "restart": "再起動",
+      "updatedTitle": "メラがアップデートされました",
+      "updatedBody": "タップして新機能を確認できます。",
+      "notesTitle": "新機能",
+      "notesEmpty": "不具合の修正と改善。"
+    }
   },
   "settings": {
     "groupHelp": "ヘルプ",

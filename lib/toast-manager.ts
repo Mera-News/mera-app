@@ -27,6 +27,8 @@ export interface NotifiedToastOptions {
      * genuinely distinct event (default `false`, unchanged behaviour).
      */
     dedupeDaily?: boolean;
+    /** Plumbed straight through to `notify()`: row types this row replaces. */
+    replaces?: string[];
 }
 
 /**
@@ -317,6 +319,7 @@ class ToastManager {
                 actions: opts.actions ?? null,
                 source: opts.source,
                 dedupeDaily: opts.dedupeDaily,
+                replaces: opts.replaces,
             });
         } catch (err) {
             logger.captureException(err, {

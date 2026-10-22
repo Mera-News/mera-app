@@ -1085,7 +1085,16 @@
     "ageNow": "teraz",
     "ageMinutes": "{{n}} min",
     "ageHours": "{{n}} h",
-    "ageDays": "{{n}} d"
+    "ageDays": "{{n}} d",
+    "update": {
+      "availableTitle": "Aktualizacja gotowa",
+      "availableBody": "Uruchom ponownie aplikację Mera, aby mieć najnowszą wersję.",
+      "restart": "Uruchom ponownie",
+      "updatedTitle": "Aplikacja Mera została zaktualizowana",
+      "updatedBody": "Dotknij, aby zobaczyć nowości.",
+      "notesTitle": "Nowości",
+      "notesEmpty": "Poprawki i ulepszenia."
+    }
   },
   "settings": {
     "groupHelp": "Pomoc",

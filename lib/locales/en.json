@@ -593,7 +593,16 @@
     "ageNow": "now",
     "ageMinutes": "{{n}}m",
     "ageHours": "{{n}}h",
-    "ageDays": "{{n}}d"
+    "ageDays": "{{n}}d",
+    "update": {
+      "availableTitle": "Update ready",
+      "availableBody": "Restart Mera to get the latest version.",
+      "restart": "Restart",
+      "updatedTitle": "Mera was updated",
+      "updatedBody": "Tap to see what's new.",
+      "notesTitle": "What's new",
+      "notesEmpty": "Fixes and improvements."
+    }
   },
   "clusterDetail": {
     "notTranslatable": "This article is in {{language}}. Your device can't translate it. Use Google Translate to read it in your language.",

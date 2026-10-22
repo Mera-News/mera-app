@@ -118,6 +118,31 @@ describe('notify', () => {
       expect(await countRows('notifications')).toBe(3);
     });
   });
+
+  describe('replaces: the single-row pattern', () => {
+    it('deletes the listed types in the same write and keeps every other type', async () => {
+      const other = await notify(input({ type: 'hygiene' }));
+      await notify(input({ type: 'update_available' }));
+      await notify(input({ type: 'app_updated' }));
+      const writes = countWrites();
+
+      const row = await notify(input({ type: 'app_updated', replaces: ['update_available', 'app_updated'] }));
+
+      expect(writes).toHaveBeenCalledTimes(1);
+      const all = await getAll();
+      expect(all.map((n) => n.id).sort()).toEqual([other!.id, row!.id].sort());
+    });
+
+    it('a second update_available leaves one row, the newer one', async () => {
+      await notify(input({ type: 'update_available', replaces: ['update_available'] }));
+      tick();
+      const newer = await notify(input({ type: 'update_available', body: 'b2', replaces: ['update_available'] }));
+
+      const all = await getAll();
+      expect(all).toHaveLength(1);
+      expect(all[0].id).toBe(newer!.id);
+    });
+  });
 });
 
 describe('status changes', () => {

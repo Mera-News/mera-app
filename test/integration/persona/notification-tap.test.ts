@@ -12,6 +12,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { consumePendingNotificationRoute } from '@/lib/stores/pending-notification-route';
 import { initI18nEn } from '@/test/helpers';
 import { consumePendingPage, resetPendingPage } from '@/components/custom/nav/navigate-to-page';
+import { APP_UPDATED, useOpenUpdateNotes } from '@/lib/ota-notice';
 
 const nav = router as unknown as { push: jest.Mock; navigate: jest.Mock };
 
@@ -155,6 +156,27 @@ describe('tapNotification: rows with no action', () => {
         const row = await seed({ type: 'agent_note', body: 'You follow a lot of cricket', context: { n: 1 } });
         await tapNotification(row);
         expect(useFloatingChatStore.getState().pendingInitialMessage).toBe('You follow a lot of cricket');
+    });
+});
+
+describe('tapNotification: OTA update rows', () => {
+    beforeEach(() => useOpenUpdateNotes.setState({ open: false, notes: [] }));
+
+    it('an app_updated row opens its release notes and never the chat', async () => {
+        const notes = [{ at: '2026-10-23T09:00:00.000Z', message: 'Faster feed' }];
+        const row = await seed({ type: APP_UPDATED, context: { notes } });
+        await tapNotification(row);
+        expect(useOpenUpdateNotes.getState()).toEqual({ open: true, notes });
+        expect(useFloatingChatStore.getState().isExpanded).toBe(false);
+        // Actioned, not read: its notes were seen, so a newer update row does not carry them on.
+        expect(await statusOf(row.id)).toBe('actioned');
+    });
+
+    it('an app_updated row with unreadable notes opens the card empty', async () => {
+        const row = await seed({ type: APP_UPDATED, context: { notes: 'nope' } });
+        await tapNotification(row);
+        expect(useOpenUpdateNotes.getState()).toEqual({ open: true, notes: [] });
+        expect(useFloatingChatStore.getState().isExpanded).toBe(false);
     });
 });
 

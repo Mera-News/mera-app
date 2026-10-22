@@ -1043,7 +1043,16 @@
     "ageNow": "现在",
     "ageMinutes": "{{n}}分钟",
     "ageHours": "{{n}}小时",
-    "ageDays": "{{n}}天"
+    "ageDays": "{{n}}天",
+    "update": {
+      "availableTitle": "更新已就绪",
+      "availableBody": "重启梅拉即可使用最新版本。",
+      "restart": "重启",
+      "updatedTitle": "梅拉已更新",
+      "updatedBody": "点按查看新功能。",
+      "notesTitle": "新功能",
+      "notesEmpty": "问题修复和改进。"
+    }
   },
   "settings": {
     "groupHelp": "帮助",

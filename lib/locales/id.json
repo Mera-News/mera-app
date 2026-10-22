@@ -1043,7 +1043,16 @@
     "ageNow": "kini",
     "ageMinutes": "{{n}} mnt",
     "ageHours": "{{n}} j",
-    "ageDays": "{{n}} hr"
+    "ageDays": "{{n}} hr",
+    "update": {
+      "availableTitle": "Pembaruan siap",
+      "availableBody": "Mulai ulang Mera untuk mendapatkan versi terbaru.",
+      "restart": "Mulai ulang",
+      "updatedTitle": "Mera telah diperbarui",
+      "updatedBody": "Ketuk untuk melihat yang baru.",
+      "notesTitle": "Yang baru",
+      "notesEmpty": "Perbaikan dan peningkatan."
+    }
   },
   "settings": {
     "groupHelp": "Bantuan",

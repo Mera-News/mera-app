@@ -32,15 +32,39 @@ import logger from '@/lib/logger';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getAppVersion, getAppVersionLabel, getGitCommit } from '@/lib/version';
 import { mockGql, mockGqlError, server, setAppState, useFakeClock } from '@/test/helpers';
+import { getAll, markActioned, notify } from '@/lib/database/services/notification-service';
+import { tapNotification } from '@/components/custom/notifications/notification-actions';
+import { toastManager } from '@/lib/toast-manager';
+import {
+    __resetOtaNoticeForTests,
+    APP_UPDATED,
+    noticePendingUpdate,
+    OTA_LAST_RUNNING_KEY,
+    OTA_NOTICED_KEY,
+    restartForUpdate,
+    UPDATE_AVAILABLE,
+} from '@/lib/ota-notice';
 
 let mockUpdatesEnabled = true;
 const mockReloadAsync = jest.fn(async () => {});
 const mockCheckForUpdate = jest.fn(async () => ({ isAvailable: false }));
 const mockFetchUpdate = jest.fn(async () => ({ isNew: false }));
 let mockLatestContext: Record<string, unknown> = {};
+let mockUpdateId: string | null = null;
+let mockCreatedAt: Date | null = null;
+let mockEmbeddedLaunch = false;
 jest.mock('expo-updates', () => ({
     get isEnabled() {
         return mockUpdatesEnabled;
+    },
+    get updateId() {
+        return mockUpdateId;
+    },
+    get createdAt() {
+        return mockCreatedAt;
+    },
+    get isEmbeddedLaunch() {
+        return mockEmbeddedLaunch;
     },
     get latestContext() {
         return mockLatestContext;
@@ -77,6 +101,10 @@ describe('restarts and the version floor', () => {
         __resetAppRestartForTests();
         mockUpdatesEnabled = true;
         mockLatestContext = {};
+        mockUpdateId = null;
+        mockCreatedAt = null;
+        mockEmbeddedLaunch = false;
+        delete process.env.EXPO_PUBLIC_OTA_NOTES;
         mockCheckForUpdate.mockResolvedValue({ isAvailable: false });
         mockFetchUpdate.mockResolvedValue({ isNew: false });
         setAppState('active');
@@ -628,6 +656,243 @@ describe('restarts and the version floor', () => {
             await returnFromBackground();
             expect(mockReloadAsync).not.toHaveBeenCalled();
             await expect(getSetting(OTA_RESTART_GUARD_KEY)).resolves.toBeNull();
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    // The notice (lib/ota-notice.ts): a toast plus one inbox row per pending update, one "App updated"
+    // row on the first launch of a new update. Driven through the updater's lifecycle and the row tap.
+    describe('the OTA notice', () => {
+        const toastShow = jest.fn((_opts: unknown) => 'toast-1');
+        const pendingUpdate = (id = 'update-1') => {
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
+            mockFetchUpdate.mockResolvedValue({ isNew: true, manifest: { id } } as never);
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id } };
+        };
+        const mount = () => renderHook(() => OTASilentUpdater());
+        const flush = () => new Promise((r) => setTimeout(r, 50));
+        const returnFromBackground = async () => {
+            setAppState('background');
+            setAppState('active');
+            await flush();
+        };
+        const rowsOf = async (type: string) => (await getAll()).filter((n) => n.type === type);
+        const day = (d: number) => new Date(Date.UTC(2026, 9, d, 9));
+
+        beforeEach(() => {
+            asProductionBuild();
+            __resetOtaNoticeForTests();
+            toastManager.setToastInstance({ show: toastShow, close: jest.fn() } as never);
+        });
+        afterEach(() => toastManager.setToastInstance(null as never));
+
+        it('a fetched update on mount gets one toast and one row per id, and a later mount none', async () => {
+            pendingUpdate('update-1');
+            mount().unmount();
+            await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(1));
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            await expect(getSetting(OTA_NOTICED_KEY)).resolves.toBe('update-1');
+
+            mount();
+            await flush();
+            expect(toastShow).toHaveBeenCalledTimes(1);
+            const rows = await rowsOf(UPDATE_AVAILABLE);
+            expect(rows).toHaveLength(1);
+            expect(JSON.parse(rows[0].actionsJson!)).toEqual([{ id: 'restart-for-update', labelKey: 'notificationCenter.update.restart' }]);
+        });
+
+        it('a newer pending update replaces the row and toasts again', async () => {
+            pendingUpdate('update-1');
+            mount().unmount();
+            await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(1));
+            pendingUpdate('update-2');
+            mount();
+            await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(2));
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1);
+        });
+
+        it('a return that is about to reload shows no toast', async () => {
+            mount();
+            await flush();
+            pendingUpdate('update-1');
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            expect(toastShow).not.toHaveBeenCalled();
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
+        });
+
+        it('a return blocked by a hold toasts and writes the row instead', async () => {
+            mount();
+            await flush();
+            pendingUpdate('update-1');
+            const release = holdRestart('chat-stream');
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            expect(toastShow).toHaveBeenCalledTimes(1);
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1);
+            release();
+        });
+
+        it('the first launch of a new update writes ONE app_updated row with every note since the last one, and moves the marker', async () => {
+            await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-1', at: day(20).toISOString() }));
+            await notify({ type: UPDATE_AVAILABLE, title: 't', body: 'b', source: 'ota' });
+            await notify({ type: APP_UPDATED, title: 't', body: 'b', source: 'ota' });
+            mockUpdateId = 'update-3';
+            mockCreatedAt = day(22);
+            // update-2 was skipped; update-1's own note (equal to the marker) is not shown again.
+            const notes = [
+                { at: day(22).toISOString(), message: 'Three' },
+                { at: day(21).toISOString(), message: 'Two' },
+                { at: day(20).toISOString(), message: 'One' },
+            ];
+            process.env.EXPO_PUBLIC_OTA_NOTES = JSON.stringify(notes);
+
+            mount();
+            await flush();
+
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
+            const rows = await rowsOf(APP_UPDATED);
+            expect(rows).toHaveLength(1);
+            expect(rows[0].status).toBe('unread');
+            expect(JSON.parse(rows[0].contextJson!).notes).toEqual(notes.slice(0, 2));
+            expect(JSON.parse((await getSetting(OTA_LAST_RUNNING_KEY))!)).toEqual({ id: 'update-3', at: day(22).toISOString() });
+
+            // The same update on the next launch: nothing new.
+            mount();
+            await flush();
+            expect(await rowsOf(APP_UPDATED)).toHaveLength(1);
+        });
+
+        it('a first marker (fresh install, a wipe) only records the running update and drops a dead Update ready row', async () => {
+            await notify({ type: UPDATE_AVAILABLE, title: 't', body: 'b', source: 'ota' });
+            mockUpdateId = 'update-3';
+            mockCreatedAt = day(22);
+            mount();
+            await flush();
+            expect(await rowsOf(APP_UPDATED)).toHaveLength(0);
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
+            expect(JSON.parse((await getSetting(OTA_LAST_RUNNING_KEY))!).id).toBe('update-3');
+        });
+
+        it('an embedded launch (a store build, a rollback) only records the running update and drops a dead Update ready row', async () => {
+            await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-1', at: day(20).toISOString() }));
+            await notify({ type: UPDATE_AVAILABLE, title: 't', body: 'b', source: 'ota' });
+            mockUpdateId = 'embedded-1';
+            mockEmbeddedLaunch = true;
+            mount();
+            await flush();
+            expect(await rowsOf(APP_UPDATED)).toHaveLength(0);
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
+            expect(JSON.parse((await getSetting(OTA_LAST_RUNNING_KEY))!).id).toBe('embedded-1');
+        });
+
+        it('a download on the PIN lock writes the row but no toast, and a later return toasts', async () => {
+            setCurrentPathname('/pin-lock');
+            pendingUpdate('update-1');
+            mount();
+            await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
+            expect(toastShow).not.toHaveBeenCalled();
+            await expect(getSetting(OTA_NOTICED_KEY)).resolves.toBeNull();
+
+            setCurrentPathname(FEED);
+            const release = holdRestart('chat-stream');
+            await returnFromBackground();
+            expect(toastShow).toHaveBeenCalledTimes(1);
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1);
+            release();
+        });
+
+        it('the inbox holds one update row: an unopened App updated row is replaced, and its notes come back with the next one', async () => {
+            await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-1', at: day(20).toISOString() }));
+            const notes = [
+                { at: day(22).toISOString(), message: 'Three' },
+                { at: day(21).toISOString(), message: 'Two' },
+            ];
+            process.env.EXPO_PUBLIC_OTA_NOTES = JSON.stringify(notes);
+            mockUpdateId = 'update-2';
+            mockCreatedAt = day(21);
+            pendingUpdate('update-3');
+            mount().unmount();
+            await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(1));
+            expect((await getAll()).map((n) => n.type)).toEqual([UPDATE_AVAILABLE]);
+
+            // update-3 launches before anyone opened update-2's row: one row, both notes.
+            mockUpdateId = 'update-3';
+            mockCreatedAt = day(22);
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: false });
+            mockLatestContext = {};
+            mount();
+            await flush();
+            const rows = await getAll();
+            expect(rows.map((n) => n.type)).toEqual([APP_UPDATED]);
+            expect(JSON.parse(rows[0].contextJson!).notes).toEqual(notes);
+        });
+
+        it('an App updated row already opened passes nothing on', async () => {
+            await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-2', at: day(21).toISOString() }));
+            const opened = await notify({ type: APP_UPDATED, title: 't', body: 'b', source: 'ota', context: { notes: [], since: day(20).toISOString() } });
+            await markActioned(opened!.id);
+            process.env.EXPO_PUBLIC_OTA_NOTES = JSON.stringify([
+                { at: day(22).toISOString(), message: 'Three' },
+                { at: day(21).toISOString(), message: 'Two' },
+            ]);
+            mockUpdateId = 'update-3';
+            mockCreatedAt = day(22);
+            mount();
+            await flush();
+            const rows = await getAll();
+            expect(rows).toHaveLength(1);
+            expect(JSON.parse(rows[0].contextJson!).notes.map((n: { message: string }) => n.message)).toEqual(['Three']);
+        });
+
+        it("the row's Restart honours a hold: no reload, and the row stays", async () => {
+            pendingUpdate('update-1');
+            mount();
+            await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
+            const release = holdRestart('chat-stream');
+
+            await tapNotification((await rowsOf(UPDATE_AVAILABLE))[0]);
+
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            await expect(getSetting(OTA_RESTART_GUARD_KEY)).resolves.toBeNull();
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1);
+            release();
+        });
+
+        it('Restart reloads with no departure stamp (a tap must not PIN-lock) and spends the attempt first', async () => {
+            useFakeClock(NOW, { advanceTimers: true });
+            await initRestartContext();
+            setAppState('background');
+            jest.setSystemTime(NOW + 3_000);
+            setAppState('active');
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            let markerAtReload: string | null = null;
+            let guardAtReload: string | null = null;
+            mockReloadAsync.mockImplementationOnce(async () => {
+                markerAtReload = await getSetting(RESTART_MARKER_KEY);
+                guardAtReload = await getSetting(OTA_RESTART_GUARD_KEY);
+            });
+
+            await restartForUpdate();
+
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            expect(JSON.parse(markerAtReload as unknown as string)).toMatchObject({ reason: 'update', backgroundedAt: null });
+            expect(guardAtReload).toBe('update-1');
+        });
+
+        it('Restart works before the context catches up with the download it was told about', async () => {
+            mockLatestContext = {};
+            await noticePendingUpdate('update-1');
+
+            await restartForUpdate();
+
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            await expect(getSetting(OTA_RESTART_GUARD_KEY)).resolves.toBe('update-1');
+        });
+
+        it('Restart with nothing pending (an old row) does nothing', async () => {
+            await restartForUpdate();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
         });
     });
 

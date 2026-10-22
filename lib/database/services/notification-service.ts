@@ -35,6 +35,12 @@ export interface NotifyInput {
    * on the 60s scheduler re-arm).
    */
   dedupeDaily?: boolean;
+  /**
+   * Row types this row takes the place of: they are deleted in the same write
+   * the row is created in, so a single-row notice (the OTA update rows) never
+   * shows twice, even across a crash.
+   */
+  replaces?: string[];
 }
 
 /** Epoch-ms Date -> `YYYY-MM-DD` (UTC). */
@@ -88,7 +94,10 @@ export async function notify(input: NotifyInput): Promise<NotificationModel | nu
     return null;
   }
   return database.write(async () => {
-    return notificationsCollection.create((n) => {
+    const replaced = input.replaces?.length
+      ? await notificationsCollection.query(Q.where('type', Q.oneOf(input.replaces))).fetch()
+      : [];
+    const row = notificationsCollection.prepareCreate((n) => {
       n.type = input.type;
       n.title = input.title;
       n.body = input.body;
@@ -99,6 +108,8 @@ export async function notify(input: NotifyInput): Promise<NotificationModel | nu
       n.source = input.source;
       n.createdAt = new Date();
     });
+    await database.batch([...replaced.map((r) => r.prepareDestroyPermanently()), row]);
+    return row;
   });
 }
 
@@ -194,6 +205,23 @@ export async function deleteNotification(notificationId: string): Promise<void> 
   await database.write(async () => {
     await row.destroyPermanently();
   });
+}
+
+/** Rows of these types, newest first (the single-row OTA notices). */
+export async function getByTypes(types: string[]): Promise<NotificationModel[]> {
+  return notificationsCollection
+    .query(Q.where('type', Q.oneOf(types)), Q.sortBy('created_at', Q.desc))
+    .fetch();
+}
+
+/** Deletes every row of these types. Returns deleted count. */
+export async function deleteByTypes(types: string[]): Promise<number> {
+  const rows = await getByTypes(types);
+  if (rows.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(rows.map((r) => r.prepareDestroyPermanently()));
+  });
+  return rows.length;
 }
 
 /** Deletes notifications created before the cutoff. Returns deleted count. */

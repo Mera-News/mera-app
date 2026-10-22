@@ -1127,7 +1127,16 @@
     "ageNow": "الآن",
     "ageMinutes": "{{n}}د",
     "ageHours": "{{n}}س",
-    "ageDays": "{{n}}ي"
+    "ageDays": "{{n}}ي",
+    "update": {
+      "availableTitle": "التحديث جاهز",
+      "availableBody": "أعد تشغيل ميرا للحصول على أحدث إصدار.",
+      "restart": "إعادة التشغيل",
+      "updatedTitle": "تم تحديث ميرا",
+      "updatedBody": "انقر لمعرفة الجديد.",
+      "notesTitle": "ما الجديد",
+      "notesEmpty": "إصلاحات وتحسينات."
+    }
   },
   "settings": {
     "groupHelp": "المساعدة",

@@ -6,10 +6,20 @@
  *   node scripts/ota-publish.js --channel <name> --environment <eas env> [-- <extra eas update args>]
  *   node scripts/ota-publish.js --scan <dir>     (the leak gate alone; CI uses it)
  *
- * Publish = the export eas-cli would run (iOS and Android, source maps, asset
- * map) under `eas env:exec <env>` with EXPO_NO_DOTENV=1, then the leak gate
- * over `dist`, then `eas update --skip-bundler --input-dir dist --environment
- * <env>`, then the Sentry source-map upload.
+ * Publish = the release notes (below), then the export eas-cli would run (iOS
+ * and Android, source maps, asset map) under `eas env:exec <env>` with
+ * EXPO_NO_DOTENV=1, then the leak gate over `dist`, then `eas update
+ * --skip-bundler --input-dir dist --environment <env>`, then the Sentry
+ * source-map upload.
+ *
+ * RELEASE NOTES: `--message` is required and is text readers see in the app's
+ * "What's new" card, so `--auto` (a commit subject) and dashes are refused. The
+ * app cannot read an update's message at runtime, nor those of updates it
+ * skipped, so the bundle carries them: this message plus the last 10 on the
+ * same branch and runtime, as EXPO_PUBLIC_OTA_NOTES (inlined at export, so the
+ * export runs with --clear: Metro's cache key ignores env values).
+ * `update:list --json` cuts the message and has no date, so each group is read
+ * with `update:view --json`.
  *
  * WHY env:exec: with --skip-bundler, eas-cli applies --environment only to the
  * update's label, never to the bundle. A plain `expo export` would bundle the
@@ -95,15 +105,72 @@ function scan(dir) {
     return 1;
 }
 
-function run(cmd, args) {
-    const r = spawnSync(cmd, args, { cwd: ROOT, stdio: 'inherit' });
+function run(cmd, args, env = process.env) {
+    const r = spawnSync(cmd, args, { cwd: ROOT, stdio: 'inherit', env });
     if (r.status !== 0) {
         console.error(`ota-publish: ${cmd} ${args[0]} failed (exit ${r.status ?? r.signal})`);
         process.exit(r.status || 1);
     }
 }
 
-const EXPORT = 'npx expo export --output-dir dist --source-maps --dump-assetmap --platform ios --platform android';
+/** A command's JSON stdout; any failure stops the publish. */
+function runJson(cmd, args) {
+    const r = spawnSync(cmd, args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+    if (r.status !== 0) {
+        console.error(`ota-publish: ${cmd} ${args[0]} failed (exit ${r.status ?? r.signal})`);
+        process.exit(r.status || 1);
+    }
+    try {
+        return JSON.parse(r.stdout);
+    } catch {
+        console.error(`ota-publish: ${cmd} ${args[0]} printed no JSON`);
+        process.exit(1);
+    }
+}
+
+const EXPORT = 'npx expo export --output-dir dist --source-maps --dump-assetmap --platform ios --platform android --clear';
+
+/** The value of `--message <m>` or `--message=<m>`, or undefined. */
+function takeMessage(args) {
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--message') return args[i + 1];
+        if (args[i].startsWith('--message=')) return args[i].slice('--message='.length);
+    }
+    return undefined;
+}
+
+// Messages published before the release-notes rule were internal text (commit
+// subjects, plan names) and never reach readers. Move this forward if an update
+// is ever published after it without this script.
+const NOTES_SINCE = '2026-10-22T23:00:00.000Z';
+const DASH = /[\u2013\u2014]/;
+
+/** Text a reader may see: not blank, no dash. */
+function readable(message) {
+    return typeof message === 'string' && message.trim() !== '' && !DASH.test(message);
+}
+
+/** The notes the bundle carries: this update and the readable `prior` ones since NOTES_SINCE, newest first. */
+function releaseNotes(message, nowIso, prior) {
+    const since = Date.parse(NOTES_SINCE);
+    const kept = prior.filter((n) => readable(n.message) && Date.parse(n.at) >= since);
+    return [{ at: nowIso, message }, ...kept]
+        .filter((n) => readable(n.message) && !Number.isNaN(Date.parse(n.at)))
+        .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+/** The last 10 updates' notes on this branch and runtime, rollbacks left out. */
+function priorNotes(channel, runtime) {
+    // shortcut: branch = channel, switch to eas channel:view --json if they diverge
+    const list = runJson('eas', ['update:list', '--branch', channel, '--runtime-version', runtime, '--limit', '10', '--json', '--non-interactive']);
+    const groups = (list.currentPage ?? []).filter((g) => !g.isRollBackToEmbedded).map((g) => g.group);
+    return groups.map((group) => {
+        const rows = runJson('eas', ['update:view', group, '--json']);
+        // The earliest platform row: a device's own createdAt is never older, so its own update never shows again.
+        const at = rows.map((r) => r.createdAt).sort()[0];
+        return { at, message: rows[0]?.message ?? '' };
+    });
+}
 
 /** `--environment <v>` pulled out of `args`: the values found and the rest. */
 function takeEnvironment(args) {
@@ -137,10 +204,23 @@ function main(argv) {
         return process.exit(2);
     }
     const environment = envs[0];
+    const message = takeMessage(extra);
+    if (extra.includes('--auto') || !readable(message)) {
+        console.error(
+            'ota-publish: --message "<what changed>" is required, readers see it in "What\'s new".\n' +
+                '  --auto is refused (a commit subject would reach readers), and so is a dash in the message',
+        );
+        return process.exit(2);
+    }
+    const runtime = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8')).expo.version;
+    const notes = releaseNotes(message, new Date().toISOString(), priorNotes(channel, runtime));
     const dist = path.join(ROOT, 'dist');
 
     fs.rmSync(dist, { recursive: true, force: true });
-    run('eas', ['env:exec', environment, `EXPO_NO_DOTENV=1 ${EXPORT}`, '--non-interactive']);
+    run('eas', ['env:exec', environment, `EXPO_NO_DOTENV=1 ${EXPORT}`, '--non-interactive'], {
+        ...process.env,
+        EXPO_PUBLIC_OTA_NOTES: JSON.stringify(notes),
+    });
     const verdict = scan(dist);
     if (verdict !== 0) return process.exit(verdict);
     run('eas', ['update', '--skip-bundler', '--input-dir', 'dist', '--channel', channel, '--environment', environment, ...extra]);
@@ -149,4 +229,4 @@ function main(argv) {
 
 if (require.main === module) main(process.argv.slice(2));
 
-module.exports = { findLeaks, localTokenValues, TOKEN_PREFIX };
+module.exports = { findLeaks, localTokenValues, releaseNotes, TOKEN_PREFIX };

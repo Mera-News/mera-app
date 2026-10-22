@@ -1051,7 +1051,16 @@
     "ageNow": "şimdi",
     "ageMinutes": "{{n}} dk",
     "ageHours": "{{n}} sa",
-    "ageDays": "{{n}} gün"
+    "ageDays": "{{n}} gün",
+    "update": {
+      "availableTitle": "Güncelleme hazır",
+      "availableBody": "En yeni sürümü almak için Mera'yı yeniden başlatın.",
+      "restart": "Yeniden başlat",
+      "updatedTitle": "Mera güncellendi",
+      "updatedBody": "Yenilikleri görmek için dokunun.",
+      "notesTitle": "Yenilikler",
+      "notesEmpty": "Düzeltmeler ve iyileştirmeler."
+    }
   },
   "settings": {
     "groupHelp": "Yardım",

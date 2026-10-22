@@ -1044,7 +1044,16 @@
     "ageNow": "ตอนนี้",
     "ageMinutes": "{{n}} น.",
     "ageHours": "{{n}} ชม.",
-    "ageDays": "{{n}} วัน"
+    "ageDays": "{{n}} วัน",
+    "update": {
+      "availableTitle": "อัปเดตพร้อมแล้ว",
+      "availableBody": "รีสตาร์ท เมร่า เพื่อใช้เวอร์ชันล่าสุด",
+      "restart": "รีสตาร์ท",
+      "updatedTitle": "เมร่า อัปเดตแล้ว",
+      "updatedBody": "แตะเพื่อดูสิ่งใหม่",
+      "notesTitle": "มีอะไรใหม่",
+      "notesEmpty": "การแก้ไขข้อบกพร่องและการปรับปรุง"
+    }
   },
   "settings": {
     "groupHelp": "ความช่วยเหลือ",

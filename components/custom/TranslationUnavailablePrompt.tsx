@@ -23,8 +23,8 @@ import {
  * the read (see TranslatableDynamic).
  *
  * A persistent, non-modal toast where the whole surface IS the control. It is
- * now the only `duration: null` toast in the app (the OTA prompt was the other
- * one; OTA updates are silent and render nothing, see `OTASilentUpdater`).
+ * now the only `duration: null` toast in the app (the old OTA prompt was the
+ * other one; the OTA notice is now a timed notified toast, see `lib/ota-notice.ts`).
  * Deliberately NOT a bottom sheet — a bottom sheet that keeps appearing is the
  * bug being fixed here — and deliberately not a blocking dialog, because the
  * user is mid-article and nothing here needs an answer before they can carry

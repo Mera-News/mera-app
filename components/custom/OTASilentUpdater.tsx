@@ -10,22 +10,29 @@ import {
 } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
+import { noticeAppliedUpdate, noticePendingUpdate } from '@/lib/ota-notice';
 
 /**
- * Fetches OTA updates and shows the user NOTHING. Renders null by design.
+ * Fetches OTA updates, tells the reader once, and renders null.
  *
- * This is the whole OTA lifecycle: when to look, and when a downloaded bundle is
- * worth a restart. It is the app's only restart trigger that fires on its own.
+ * This is the whole OTA lifecycle: when to look, when a downloaded bundle is
+ * worth a restart, and when the reader is told (`lib/ota-notice.ts`). It is the
+ * app's only restart trigger that fires on its own.
  *
  * WHAT IT DOES, AND THE TWO CASES ARE DIFFERENT
- *   - ON MOUNT: check and fetch, and NEVER restart. expo-updates already
- *     launches a downloaded update at the next cold start via its own
- *     launch-time check, so reloading seconds into a launch buys nothing — and
- *     it is the one restart that can land on a credential screen during
- *     onboarding. Mounting is also when a device that stays open all day does
- *     its only check, which is why the fetch still happens here.
+ *   - ON MOUNT: record which update is running (an "App updated" row on the
+ *     first launch of a new one), then check and fetch, and NEVER restart.
+ *     expo-updates already launches a downloaded update at the next cold start
+ *     via its own launch-time check, so reloading seconds into a launch buys
+ *     nothing, and it is the one restart that can land on a credential screen
+ *     during onboarding. Mounting is also when a device that stays open all day
+ *     does its only check, which is why the fetch still happens here.
  *   - ON A TRUE `background` -> `active` RETURN: check, fetch, and restart only
  *     if an update is actually downloaded and pending.
+ * Either way, a pending bundle that is not about to reload gets the notified
+ * toast once per update id and one `update_available` inbox row, whose Restart
+ * goes through the same restart gates. No toast on a return that reloads: it
+ * would only flash before the reload.
  *
  * A RETURN ON ITS OWN IS NOT A REASON TO RESTART. The app briefly reloaded on
  * every true return whether or not anything had changed, and the owner rejected
@@ -33,14 +40,13 @@ import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
  * it's at the latest version". Nothing here may restart a reader who is already
  * on the current bundle.
  *
- * DO NOT REINTRODUCE A PROMPT HERE. This used to be a tappable toast, then a
- * non-dismissible takeover modal (`OTAUpdateModal`, deleted) that fired on
- * `isUpdatePending` — which meant every publish, including a copy tweak,
- * interrupted every user and demanded a tap before they could carry on. The
- * restart is the silent version of closing that gap, and it is not a licence to
- * ask again. There is exactly ONE non-dismissible update surface left in the app
- * and it is not this one: `NativeUpdateGate` -> `ForceUpdateScreen`, driven by
- * the server's `appVersionInfo.minSupportedVersion` floor.
+ * THE NOTICE NEVER BLOCKS. A non-dismissible takeover modal (`OTAUpdateModal`,
+ * deleted) once fired on `isUpdatePending` and demanded a tap on every publish.
+ * The toast leaves on its own and the row waits in the inbox; the reader who
+ * ignores both still gets the bundle on the next return or cold start. There is
+ * exactly ONE non-dismissible update surface in the app and it is not this one:
+ * `NativeUpdateGate` -> `ForceUpdateScreen`, driven by the server's
+ * `appVersionInfo.minSupportedVersion` floor.
  *
  * ARMS ON `background` ONLY, NEVER `!== 'active'`. iOS reports `inactive` for
  * the app switcher, a notification banner pulled down and a Control Centre
@@ -52,9 +58,8 @@ import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
  * Route blocking and the holds live in `lib/app-restart.ts`, applied to every
  * reason. They are not this file's business and must not be duplicated here.
  *
- * Since nothing is user-visible, confirm a rollout through Sentry: every event
- * carries `ota_update_id` / `ota_channel` / `runtime_version` from
- * `lib/observability/app-context.ts`.
+ * Confirm a rollout through Sentry: every event carries `ota_update_id` /
+ * `ota_channel` / `runtime_version` from `lib/observability/app-context.ts`.
  */
 
 /**
@@ -70,7 +75,7 @@ import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
  * (`UpdatesModule.swift` / `UpdatesModule.kt`). So it means "a download
  * completed", which is why it is only one half of the gate below.
  */
-function fetchedSomethingNew(result: Updates.UpdateFetchResult): boolean {
+function fetchedSomethingNew(result: Updates.UpdateFetchResult): result is Updates.UpdateFetchResultSuccess {
   return result.isNew === true;
 }
 
@@ -84,11 +89,8 @@ export default function OTASilentUpdater() {
     const checkForUpdate = async (mayRestart: boolean) => {
       try {
         const result = await Updates.checkForUpdateAsync();
-        let fetchedNew = false;
-        if (result.isAvailable) {
-          fetchedNew = fetchedSomethingNew(await Updates.fetchUpdateAsync());
-        }
-        if (!mayRestart) return;
+        const fetched = result.isAvailable ? await Updates.fetchUpdateAsync() : null;
+        const fetchedNew = fetched != null && fetchedSomethingNew(fetched);
 
         // THE DISJUNCTION, and both arms are load-bearing.
         //
@@ -116,12 +118,17 @@ export default function OTASilentUpdater() {
         // for as long as it keeps downloading. The 10s floor spaces that cycle;
         // this is what bounds it. Both arms carry the id as `manifest.id` — on
         // the context it is `downloadedManifest`, not the `downloadedUpdate`
-        // that `useUpdates()` exposes.
-        const updateId = context?.downloadedManifest?.id;
+        // that `useUpdates()` exposes. The fetch result's manifest comes first:
+        // the context may not have caught up with this download yet.
+        const updateId = (fetchedNew ? fetched.manifest?.id : undefined) ?? context?.downloadedManifest?.id;
         if (!updateId) {
           // Nothing to record an attempt against, so a restart here could not be
           // bounded. The update still launches at the next cold start.
           logger.debug('[ota] pending update with no id, leaving it for the next cold start');
+          return;
+        }
+        if (!mayRestart) {
+          await noticePendingUpdate(updateId);
           return;
         }
         if (await otaRestartAlreadyAttempted(updateId)) return;
@@ -152,6 +159,8 @@ export default function OTASilentUpdater() {
         // one: it still launches at the next cold start.
         if (restartWouldReload()) {
           await markOtaRestartAttempted(updateId);
+        } else {
+          await noticePendingUpdate(updateId);
         }
         await requestRestart('ota');
       } catch (error) {
@@ -175,7 +184,9 @@ export default function OTASilentUpdater() {
     // all, and a freshly published update would reach that device only via
     // expo-updates' own launch-time check on the NEXT cold start. The mount
     // check is what gets the bundle downloaded in time for that.
-    void checkForUpdate(false);
+    // After the applied-update row, which replaces `update_available`: the
+    // other order could delete the row this check is about to write.
+    void noticeAppliedUpdate().then(() => checkForUpdate(false));
 
     let armed = false;
     const handleAppStateChange = (state: AppStateStatus) => {

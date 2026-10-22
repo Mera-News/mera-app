@@ -6,6 +6,8 @@ import { requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { markActioned, markRead } from '@/lib/database/services/notification-service';
 import logger from '@/lib/logger';
+import { APP_UPDATED, RESTART_FOR_UPDATE, restartForUpdate, useOpenUpdateNotes } from '@/lib/ota-notice';
+import type { UpdateNote } from '@/lib/algorithms/update-notes';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
 import { router } from 'expo-router';
@@ -80,6 +82,16 @@ export async function openNotification(n: NotificationModel): Promise<void> {
         if (isFeedbackRequestId(id)) router.push({ pathname: '/logged-in/feedback-request', params: { id } });
         return;
     }
+    // Its context is the release notes, not something to ask chat about.
+    if (n.type === APP_UPDATED) {
+        // Actioned = its notes were seen; until then a newer update row carries them on.
+        await markActioned(n.id).catch((err) =>
+            logger.captureException(err, { tags: { component: 'notification-actions', method: 'markActioned' } }),
+        );
+        const notes = parseJson<{ notes?: UpdateNote[] }>(n.contextJson)?.notes;
+        useOpenUpdateNotes.setState({ open: true, notes: Array.isArray(notes) ? notes : [] });
+        return;
+    }
     if (!n.contextJson && !n.actionsJson) return; // informational: mark read only
     openChatWith(resolveText(n.body, parseJson<Record<string, unknown>>(n.contextJson) ?? undefined));
 }
@@ -109,6 +121,9 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
             return;
         case 'review-plan':
             useFloatingChatStore.getState().openOptimisationPlan();
+            return;
+        case RESTART_FOR_UPDATE:
+            await restartForUpdate();
             return;
         default:
             openChatWith(actionLabel(action));

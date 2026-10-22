@@ -1,4 +1,6 @@
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import { HelpModal } from '@/components/ui/help-modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type NotificationModel from '@/lib/database/models/Notification';
@@ -9,6 +11,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { useOpenUpdateNotes } from '@/lib/ota-notice';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -62,7 +65,8 @@ const TIME_COLUMN = 32;
  * line on what lands here, and the way to its settings.
  */
 const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, active }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const updateNotes = useOpenUpdateNotes();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<NotificationModel>>(null);
     usePageScrollTarget(listRef);
@@ -195,40 +199,65 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     );
 
     return (
-        <Animated.FlatList
-            ref={listRef}
-            testID="notifications-list"
-            data={items}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            itemLayoutAnimation={motion ? LinearTransition.duration(180) : undefined}
-            ListHeaderComponent={
-                suggestions.items.length > 0 ? (
-                    <View testID="hygiene-suggestions">
-                        {suggestions.items.map((item) => (
-                            <HygieneSuggestionCard
-                                key={item.id}
-                                item={item}
-                                busy={suggestions.actingId === item.id}
-                                onAccept={suggestions.accept}
-                                onDismiss={suggestions.dismiss}
-                            />
-                        ))}
-                    </View>
-                ) : null
-            }
-            ListEmptyComponent={suggestions.items.length > 0 ? null : empty}
-            initialNumToRender={12}
-            showsVerticalScrollIndicator={false}
-            onScroll={header.scrollHandler}
-            scrollEventThrottle={16}
-            // Rows that land with no scroll still need a tick to be measured
-            // (scroll-tick-coverage guard).
-            onContentSizeChange={() => {
-                if (active) notifyScrollTick();
-            }}
-            contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: endClearance }}
-        />
+        <>
+            <Animated.FlatList
+                ref={listRef}
+                testID="notifications-list"
+                data={items}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                itemLayoutAnimation={motion ? LinearTransition.duration(180) : undefined}
+                ListHeaderComponent={
+                    suggestions.items.length > 0 ? (
+                        <View testID="hygiene-suggestions">
+                            {suggestions.items.map((item) => (
+                                <HygieneSuggestionCard
+                                    key={item.id}
+                                    item={item}
+                                    busy={suggestions.actingId === item.id}
+                                    onAccept={suggestions.accept}
+                                    onDismiss={suggestions.dismiss}
+                                />
+                            ))}
+                        </View>
+                    ) : null
+                }
+                ListEmptyComponent={suggestions.items.length > 0 ? null : empty}
+                initialNumToRender={12}
+                showsVerticalScrollIndicator={false}
+                onScroll={header.scrollHandler}
+                scrollEventThrottle={16}
+                // Rows that land with no scroll still need a tick to be measured
+                // (scroll-tick-coverage guard).
+                onContentSizeChange={() => {
+                    if (active) notifyScrollTick();
+                }}
+                contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: endClearance }}
+            />
+            {/* An "App updated" row's tap: every release note since the update this
+                phone last ran. Messages are free text, so never through t(). */}
+            <HelpModal
+                open={active && updateNotes.open}
+                onClose={() => useOpenUpdateNotes.setState({ open: false })}
+                title={t('notificationCenter.update.notesTitle')}
+                testID="update-notes"
+            >
+                <View style={{ gap: 16 }}>
+                    {updateNotes.notes.length === 0 ? (
+                        <Text style={{ color: colors.ink, fontSize: 15, lineHeight: 21 }}>{t('notificationCenter.update.notesEmpty')}</Text>
+                    ) : (
+                        updateNotes.notes.map((note) => (
+                            <View key={note.at} style={{ gap: 4 }}>
+                                <Text style={{ color: colors.ink2, fontSize: 13 }}>
+                                    {new Date(note.at).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </Text>
+                                <TranslatableDynamic text={note.message} style={{ color: colors.ink, fontSize: 15, lineHeight: 21 }} />
+                            </View>
+                        ))
+                    )}
+                </View>
+            </HelpModal>
+        </>
     );
 };
 

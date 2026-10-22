@@ -1085,7 +1085,16 @@
     "ageNow": "сейчас",
     "ageMinutes": "{{n}} мин",
     "ageHours": "{{n}} ч",
-    "ageDays": "{{n}} дн"
+    "ageDays": "{{n}} дн",
+    "update": {
+      "availableTitle": "Обновление готово",
+      "availableBody": "Перезапустите Меру, чтобы получить последнюю версию.",
+      "restart": "Перезапустить",
+      "updatedTitle": "Мера обновлена",
+      "updatedBody": "Нажмите, чтобы посмотреть, что нового.",
+      "notesTitle": "Что нового",
+      "notesEmpty": "Исправления и улучшения."
+    }
   },
   "settings": {
     "groupHelp": "Помощь",
