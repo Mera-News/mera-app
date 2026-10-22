@@ -22,8 +22,7 @@ const FloatingChatHost: React.FC = () => {
 
     // This overlay is the always-mounted, single-instance chat surface (mounted
     // once by app/logged-in/_layout), so this effect is the earliest point to
-    // warm the cloud-chat path (attestation + JWT + a throwaway model
-    // completion) ahead of the user ever opening the panel or tapping the
+    // warm the cloud-chat path (attestation + JWT) ahead of the user ever opening the panel or tapping the
     // floating bubble. prewarmCloudChat is internally guarded (on-device
     // no-op, JWT-gated), and with no `ping` it sends no model call, so
     // re-firing this effect is cheap.

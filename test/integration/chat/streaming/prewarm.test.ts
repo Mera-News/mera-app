@@ -6,7 +6,7 @@ import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream } from '@/lib/llm/cloudComplete';
-import { prewarmCloudChat, useChatReadiness } from '@/lib/llm/prewarm';
+import { PING_DEADLINE_MS, prewarmCloudChat, useChatReadiness } from '@/lib/llm/prewarm';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -116,6 +116,16 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     expect(status()).toBe('warming');
     await advanceUntil(() => status() !== 'warming', 60_000);
     expect(status()).toBe('ready');
+  });
+
+  it('no reply within the deadline is an error, and a late reply still turns it ready', async () => {
+    server.use(...mockGateway(() => ({ chunks: ['ready'], headerDelayMs: PING_DEADLINE_MS + 30_000 })));
+    prewarmCloudChat({ ping: true });
+    await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
+    await advanceUntil(() => status() !== 'warming', PING_DEADLINE_MS + 5_000);
+    expect(status()).toBe('error');
+    await advanceUntil(() => status() === 'ready', 60_000);
+    expect(gatewayCalls('chat')).toHaveLength(1);
   });
 
   it('an empty reply is an error', async () => {

@@ -16,8 +16,8 @@
 //
 // THE ONE EXCEPTION is chat with cloud chat on (`chatInCloud`, lib/llm/chat-cloud):
 // a caller that passes `purpose: 'chat'` is let through. The purpose is always
-// explicit at the call site (cloudChatStream, the quick fact check, the prewarm
-// greeting), never inferred from the limiter lane, so every background caller
+// explicit at the call site (cloudChatStream, the quick fact check, the readiness
+// ping), never inferred from the limiter lane, so every background caller
 // stays blocked.
 //
 // Both requires are lazy: the store and the setting service build their

@@ -38,6 +38,9 @@ export function markChatReady(): void {
 
 // One ping in flight at a time, so two open paths firing together send one.
 let pinging = false;
+// The badge's own deadline: cloudComplete's timeouts and fallback can run for minutes.
+// A reply that lands later still turns it to ready.
+export const PING_DEADLINE_MS = 60_000;
 
 /**
  * Kick off the attestation + JWT fetches and, on a chat open (`ping`), the
@@ -97,7 +100,7 @@ export function prewarmCloudChat(opts: { ping?: boolean } = {}): void {
  * One fixed E2EE call to BIG_MODEL so the NEAR model is loaded before the
  * user's first real turn; its outcome drives the header badge. The request is
  * two constants: no user data, no language, no clock. Fully silent: no Sentry,
- * no toast. A timeout is cloudComplete's own bounded one, which throws.
+ * no toast. The badge says error after PING_DEADLINE_MS without a reply.
  */
 async function pingModel(): Promise<void> {
   if (pinging) return;
@@ -108,6 +111,9 @@ async function pingModel(): Promise<void> {
   }
   pinging = true;
   setReadiness('warming');
+  const deadline = setTimeout(() => {
+    if (useChatReadiness.getState().status === 'warming') setReadiness('error');
+  }, PING_DEADLINE_MS);
   try {
     const token = await getJwtToken();
     // Signed out: nothing to ping with, and no badge.
@@ -135,6 +141,7 @@ async function pingModel(): Promise<void> {
       error: String(err),
     });
   } finally {
+    clearTimeout(deadline);
     pinging = false;
   }
 }
