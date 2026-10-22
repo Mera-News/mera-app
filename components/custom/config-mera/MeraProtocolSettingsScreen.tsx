@@ -230,6 +230,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             action="negative"
                             variant="outline"
                             size="md"
+                            style={{ minHeight: 44 }}
                             onPress={() => { void handleCancelDownload(m.modelId); }}
                             accessibilityLabel={t('meraProtocol.cancelDownloadAction')}
                         >
@@ -241,6 +242,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         action="primary"
                         variant="solid"
                         size="md"
+                        style={{ minHeight: 44 }}
                         onPress={() => { void handleDownload(m.modelId); }}
                         // Not before the requirement check lands: a phone that can't run it never downloads.
                         isDisabled={m.storageShort || isDeletingModel || deviceSupported !== true}
@@ -506,7 +508,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 return { title: t('meraProtocol.notesGroup'), body: para(t('meraProtocol.skipNotesHelp')) };
             case 'bgRefresh':
                 return {
-                    title: t(BG_REFRESH_TITLE_KEY),
+                    title: t('meraProtocol.whileClosed'),
                     body: para(t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))),
                 };
         }

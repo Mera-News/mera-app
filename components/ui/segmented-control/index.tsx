@@ -511,7 +511,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        height: OPTION_HEIGHT,
+        // A 44pt touch frame around the 36pt pill; the negative margin keeps the track's size.
+        height: OPTION_HEIGHT + 8,
+        marginVertical: -4,
         paddingHorizontal: 14,
         flexShrink: 1,
     },
