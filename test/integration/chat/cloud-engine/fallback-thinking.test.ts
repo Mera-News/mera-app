@@ -1,5 +1,5 @@
-// The agent adapter forces thinking off while the session fallback is engaged, whatever the request
-// asked for, so a fallback leg never spends its budget on a trace.
+// The BIG fallback truncates persona turns with thinking on (12 of 19), so the agent adapter forces it
+// off while the session fallback is engaged, whatever the request asked for.
 import { makeAgentDeps } from '@/lib/chat-tools/agent-device-port';
 import { BIG_MODEL } from '@/lib/llm/constants';
 import { __resetForTests, isFallbackEngaged, reportModelFailure } from '@/lib/llm/model-fallback';

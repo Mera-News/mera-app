@@ -506,8 +506,8 @@ async function callModelOnce(
     maxTokens: req.maxTokens ?? CHAT_MAX_OUTPUT_TOKENS,
     // Thinking OFF on every agent call. Measured: the trace buys nothing here
     // and costs the whole budget on the topic path. Forced off again while the
-    // session fallback is engaged, so a skill that asks for thinking never
-    // spends a fallback leg's budget on a trace.
+    // session fallback is engaged: the BIG fallback truncates with thinking on
+    // (12 of 19 persona turns).
     enableThinking: isFallbackEngaged(modelId) ? false : (req.enableThinking ?? false),
     onPhase,
     signal: stop,

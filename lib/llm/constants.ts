@@ -1,11 +1,8 @@
-// Cloud inference model identifiers. ONE model serves both lanes since 2026-10-22.
+// Cloud inference model identifiers.
 // BIG  — persona-update chat (tool-calling, multi-turn) and quick fact-check synthesis.
 // SMALL — everything else: topic generation, relevance scoring, reason generation.
-//
-// Two names for one id on purpose: every call site still says which lane it is,
-// so splitting the lanes again is a one-line change here.
 
-export const BIG_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
+export const BIG_MODEL = 'Qwen/Qwen3.8-27B';
 export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
 /**
@@ -15,32 +12,94 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *
  * WHICH MODELS ARE EVEN ELIGIBLE. The E2EE path keys on
  * `model_attestations[0].signing_public_key` from `/v1/attestation/report`
- * (lib/e2ee/e2ee-service). Only NEAR's self-hosted TEE tier (`owned_by: nearai`)
- * returns that shape. The `attested 3p` tier (moonshotai/kimi-*,
- * deepseek/deepseek-v3.2, the lowercase qwen/* ids) answers 200 with
- * `e2e_pubkey` / `certificate_b64` and no `signing_public_key`, so the parser
- * throws before any request is sent. Ready self-hosted text models on
- * 2026-10-22: Qwen3.6-35B-A3B-FP8, Qwen3.8-27B, Qwen3-VL-30B-A3B (rejected as a
- * text model by product decision) and z-ai/glm-5.3-flash (closed: 0/6 parsed
- * with a leaked trace on every call, and it ignores `enable_thinking:false`).
- * Probe the attestation endpoint before adopting any other id.
+ * (lib/e2ee/e2ee-service). Only NEAR's self-hosted TEE tier returns that shape.
+ * The `attested 3p` tier (moonshotai/kimi-*, deepseek/deepseek-v3.2, the
+ * lowercase qwen/* ids) answers 200 with `e2e_pubkey` / `certificate_b64` and
+ * no `signing_public_key`, so the parser throws before any request is sent.
+ * The catalogue's "Private TEE" label and the id namespace say nothing about
+ * this: `z-ai/glm-5.3-flash` is self-hosted, `qwen/qwen3-32b` is not. Probe
+ * the attestation endpoint before adopting any id. Ready, non-deprecated,
+ * self-hosted text models on 2026-09-11: this file's three ids and nothing else
+ * (`z-ai/glm-5.2` carries the same deprecation date as GLM 5.1).
  *
- * WHY Qwen3.6 FOR BIG (owner decision 2026-10-22, for chat speed). It has ~3B
- * active parameters, so it decodes faster than the dense Qwen3.8-27B (NEAR
- * decoded Qwen3.8 at ~58 tok/s, so a 500-token answer took ~9.5s), and scoring
- * keeps it warm all day where the BIG-only Qwen3.8 saw cold first calls (5.7s
- * against 0.6s warm, n=1). Its old rejection (finish_reason=length on 12 of 19
- * persona turns) was measured with thinking ON; the persona loop now sends
- * thinking off on every leg. Thinking-ON single-shot chat (article chat,
- * tutorial help) is the shape still to re-measure on it.
+ * MEASURED 2026-09-11 (harness-local/scripts/replay-persona-chat.ts and
+ * replay-fact-extraction.ts, 20 and 10 runs per cell, the app's prompt, tool
+ * schema and thinking gear; `--model` selects the candidate, `--stream` times
+ * the SSE body the way cloudChatStream consumes it):
  *
- * Qwen3.8-27B is the one fallback for both lanes: clean on scoring (60/60
- * tiered parses, 0 leaks) and the previous BIG primary for chat. One shared
- * fallback means one dead model can take out both lanes; prewarm attests it on
- * every cold start so that is noticed before an outage needs it.
+ *                       confirm  decline  conv   facts  completion tokens (median / p90 / max)
+ *   DeepSeek-V4-Flash    20/20    20/20   20/20   9/10     29 /  43 /   58   (deprecated 2026-09-17)
+ *   z-ai/glm-5.3-flash   20/20    20/20   14/20  10/10    238 / 834 / 1024
+ *   Qwen/Qwen3.8-27B     20/20    20/20    2/20  10/10    195 / 274 /  742
+ *
+ *   First VISIBLE streamed delta, 15 runs (median / p90 / max):
+ *                       tool turn                 conversational turn
+ *   DeepSeek-V4-Flash    1.2s /  6.8s / 86s        1.2s / 10.0s / 75s
+ *   z-ai/glm-5.3-flash   4.0s / 10.7s / 47s        8.5s / 26.1s / 55s
+ *   Qwen/Qwen3.8-27B     3.3s /  4.5s /  8s        2.0s /  3.3s /  8s
+ *
+ *   BIG (persona chat) needs FUNCTION TOOL CALLING with schema-conformant
+ *   arguments. Both remaining models pass confirm, decline and fact extraction;
+ *   `conv` ("thanks!" after an invitation) is a behavioural difference, not a
+ *   schema failure — GLM asks for confirmation where DeepSeek staged the card,
+ *   Qwen moves on, so calibration needs an explicit yes. Qwen3.8-27B is the
+ *   primary because the SPEED TAIL decides chat UX: its worst turn is ~8s where
+ *   GLM's is 55s, since GLM thinks far longer on conversational prompts. It
+ *   costs $0.44/$3.30 per 1M, ~3x GLM per turn, on the low-volume path. GLM
+ *   5.3 Flash is the fallback (tools + json_mode, $0.15/$0.50) and the only
+ *   other TEE model that calls tools correctly.
+ *
+ *   THINKING STAYS ON for chat, and the budget carries headroom for it (see
+ *   CHAT_REASONING_HEADROOM_TOKENS). Qwen3.8 honours `enable_thinking:false`
+ *   but drops to 17/20 confirm and 3/10 composed facts without its trace, so
+ *   the flag stays on. GLM's completion tokens include its trace: 7 of 60
+ *   turns used 800+ and 3 hit the 1024 cap, one of them truncating a tool
+ *   call's arguments to `{}`; and thinking OFF is not an option on GLM at all:
+ *   `enable_thinking:false` and `reasoning_effort:'none'` both return the trace
+ *   INSIDE `content` as `trace</think>answer` (2/2 on a short prompt), which is
+ *   the prefill leak the local path already strips.
+ *
+ *   SMALL (scoring / topics / reasons) sends JSON-shaped prompts with thinking
+ *   off, never function tools.
+ *
+ *   z-ai/glm-5.3-flash is CLOSED, not merely replaced: re-measured 2026-09-16
+ *   against the same shipped scoring prompt it parsed 0/6 with a leaked
+ *   reasoning trace on EVERY call, and it cannot be told to stop thinking
+ *   (`enable_thinking:false` is sent and ignored). The 52/52 figure that
+ *   originally selected it does not reproduce under the same model id.
+ *
+ *   SMALL -> Qwen/Qwen3.8-27B. Screened on the article pipeline at production
+ *   budgets: 60/60 clean tiered parses, 0 band violations, 0 errors, 0 trace
+ *   leaks. Costs +93% and runs +25% slower on a projected sync, which is
+ *   acceptable for a path that only runs DURING AN OUTAGE. 262K context,
+ *   attested ed25519 on staging.
+ *   A vision-language candidate screened 36% cheaper and was rejected as the
+ *   text fallback by product decision, not by measurement.
+ *
+ *   BIG -> Qwen/Qwen3.6-35B-A3B-FP8, and this one is a DEGRADED fallback, not a
+ *   clean one. The chat path needs TOOLS, which rules out most of the
+ *   catalogue, and Qwen3.6 is the fleet's other proven self-hosted model. But
+ *   screened on the persona corpus at production budgets (good + adversarial,
+ *   19 turns) it returned `finish_reason: length` on 12 of 19, against 0 of 123
+ *   for the primary on the same prompts. Mechanism: Qwen3.6 is used as SMALL
+ *   with thinking OFF, while `cloudChatStream` hardcodes thinking ON, and its
+ *   trace does not fit CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS.
+ *   Tool arguments were well-formed on every call that produced them (0
+ *   malformed, 0 trace leaks), so what a truncated turn loses is the prose and
+ *   sometimes the tool call, not schema validity.
+ *   It is chosen because the alternatives are worse: GLM is closed outright, and
+ *   leaving a primary with NO fallback means a timeout has nowhere to go. Raising
+ *   the reasoning headroom for the fallback, or forcing thinking off on it, is
+ *   the open follow-up and needs its own measurement.
+ *
+ * The two primaries deliberately fall back to DIFFERENT models so one dead
+ * fallback cannot take out both lanes at once.
+ *
+ * This map is the single point to change if a different fallback is chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
-  [BIG_MODEL]: 'Qwen/Qwen3.8-27B',
+  [BIG_MODEL]: 'Qwen/Qwen3.6-35B-A3B-FP8',
+  [SMALL_MODEL]: 'Qwen/Qwen3.8-27B',
 };
 
 /**
@@ -65,7 +124,7 @@ export const CHAT_MAX_OUTPUT_TOKENS = 1024;
  * Extra `max_tokens` the CLOUD chat stream adds on top of the caller's budget,
  * because the cloud chat gear is thinking ON and a reasoning model's trace is
  * billed and capped inside the same `max_tokens` as the visible answer.
- * Measured on GLM 5.3 Flash (a former BIG fallback): trace median ~240 tokens, p90
+ * Measured on GLM 5.3 Flash (the BIG fallback): trace median ~240 tokens, p90
  * ~830, and the 1024 budget alone truncated 3 of 60 turns (one lost a tool
  * call's arguments); Qwen3.8-27B peaks at ~740. 2048 covers every trace seen;
  * a longer one still ends as `finish_reason: length` rather than being hidden. The visible answer is not lengthened by

@@ -10,7 +10,7 @@ describe('llm/constants', () => {
     });
 
     it('contains the expected model identifier', () => {
-      expect(BIG_MODEL).toBe('Qwen/Qwen3.6-35B-A3B-FP8');
+      expect(BIG_MODEL).toBe('Qwen/Qwen3.8-27B');
     });
 
     it('follows the provider/model-name pattern', () => {
@@ -32,8 +32,8 @@ describe('llm/constants', () => {
       expect(SMALL_MODEL).toMatch(/^[^/]+\/.+$/);
     });
 
-    it('is the same model as BIG_MODEL (one model for both lanes since 2026-10-22)', () => {
-      expect(SMALL_MODEL).toBe(BIG_MODEL);
+    it('is distinct from BIG_MODEL', () => {
+      expect(SMALL_MODEL).not.toBe(BIG_MODEL);
     });
   });
 

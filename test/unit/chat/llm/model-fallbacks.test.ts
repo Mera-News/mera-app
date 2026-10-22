@@ -5,9 +5,13 @@
 import { BIG_MODEL, MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
 
 describe('MODEL_FALLBACKS', () => {
-  // One model serves both lanes, so there is one entry: the old BIG primary.
-  it('pins the one entry', () => {
-    expect(MODEL_FALLBACKS).toEqual({ 'Qwen/Qwen3.6-35B-A3B-FP8': 'Qwen/Qwen3.8-27B' });
+  // BIG's entry is a DEGRADED fallback, pinned so the degradation stays visible:
+  // screened at 12/19 finish_reason=length against 0/123 for the primary. It is
+  // chosen because GLM is closed and no fallback at all is worse, not because it
+  // passed.
+  it('pins both entries', () => {
+    expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('Qwen/Qwen3.6-35B-A3B-FP8');
+    expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('Qwen/Qwen3.8-27B');
   });
 
   it('has an entry for every primary, or a timeout has nowhere to go', () => {
@@ -41,5 +45,11 @@ describe('MODEL_FALLBACKS', () => {
     for (const target of Object.values(MODEL_FALLBACKS)) {
       expect(target).not.toMatch(/-VL-|vision/i);
     }
+  });
+
+  it('the two primaries fall back to DIFFERENT models', () => {
+    // Not a correctness rule, a blast-radius one: one dead fallback should not
+    // take out both lanes at once.
+    expect(MODEL_FALLBACKS[BIG_MODEL]).not.toBe(MODEL_FALLBACKS[SMALL_MODEL]);
   });
 });
