@@ -16,7 +16,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { _resetNetworkTrackingForTests, useNetworkStore } from '@/lib/stores/network-store';
 import database from '@/lib/database';
 import * as settingService from '@/lib/database/services/setting-service';
-import { getReadHold, isReadHeld, resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
+import { getReadHold, isReadHeld, nextUtcMidnight, resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
 import { getPlanRaisedAt, resetPlanRiseForTests } from '@/lib/subscription/plan-rise';
 import * as authClient from '@/lib/auth-client';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
@@ -372,12 +372,23 @@ describe('billing and entitlement', () => {
             expect(getReadHold().used).toBe(1);
         });
 
-        it('a lower reading figure never ends a hold', async () => {
+        it('a lower reading figure for another day never ends a hold', async () => {
             await setReadHold({ resetAt: Date.now() + 3_600_000, used: 1 });
             setScenario({ tier: 'starter', readingUsed: 0.2 });
             await syncEntitlement({ force: true });
             await waitFor(() => expect(getReadHold().used).toBe(0.2));
             expect(isReadHeld()).toBe(true);
+        });
+
+        it('a lower reading figure for the held day ends the hold, with no tier rise seen in this process', async () => {
+            // The cold-start case: a plan granted while the app was closed. The
+            // server measures the day against the new plan and says it is not used up.
+            await setReadHold({ resetAt: nextUtcMidnight(Date.now()), used: 1 });
+            setScenario({ tier: 'professional', readingUsed: 0.05 });
+            await syncEntitlement({ force: true });
+            await waitFor(() => expect(isReadHeld()).toBe(false));
+            expect(getReadHold().used).toBe(0.05);
+            expect(getPlanRaisedAt()).toBeNull();
         });
 
         it('a tier that rises ends the hold and drops the cached JWT at once; the first read only records', async () => {

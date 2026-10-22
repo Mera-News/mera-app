@@ -3,7 +3,7 @@ import client from './apollo-client';
 import { UserBillingInfo } from './generated/graphql-types';
 import logger from './logger';
 import { noteBillingTier } from './subscription/plan-rise';
-import { setReadHold } from './subscription/read-hold';
+import { getReadHold, hydrateReadHold, setReadHold } from './subscription/read-hold';
 
 const GET_USER_BILLING = gql`
   query GetUserBilling {
@@ -108,8 +108,11 @@ export interface UserReading {
  *
  * `resetAt` is written ONLY when the day is used up: the server's
  * `readingResetAt` is the next reset whether or not anything is held, and
- * writing it unconditionally would hold every user. A lower `readingUsed`
- * never ends a hold either; only a tier rise does (plan-rise.ts).
+ * writing it unconditionally would hold every user. A lower `readingUsed` ends
+ * a hold only for the SAME day (equal reset instants): the server measures the
+ * day against the plan held now, so a plan granted while the app was closed
+ * lifts it here. A lower figure for another day leaves the hold to expire on
+ * its own jittered end, so phones do not all resume at 00:00 UTC.
  */
 export async function fetchUserReading(): Promise<UserReading | null> {
     try {
@@ -128,7 +131,10 @@ export async function fetchUserReading(): Promise<UserReading | null> {
         if (used != null && used >= 1 && Number.isFinite(resetAt)) {
             await setReadHold({ used, resetAt });
         } else if (used != null) {
-            await setReadHold({ used });
+            // The launch read can land before boot hydration; compare against the stored hold.
+            await hydrateReadHold();
+            const sameDay = getReadHold().resetAt === resetAt;
+            await setReadHold(sameDay ? { used, resetAt: null } : { used });
         }
         return reading;
     } catch {
