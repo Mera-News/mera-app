@@ -128,7 +128,7 @@ export interface CloudCompleteRequest {
   topP?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
-  /** 'chat' only for a call made inside a chat (quick fact check, prewarm greeting):
+  /** 'chat' only for a call made inside a chat (quick fact check, readiness ping):
    *  it then runs on device while cloud chat is on. Omitted means background. */
   purpose?: CloudPurpose;
 }
@@ -173,8 +173,8 @@ export async function cloudComplete(
           body: JSON.stringify({
             messages, stream: false, temperature, model: sendModel,
             chat_template_kwargs: { enable_thinking: false },
-            // Honor the caller's output cap: lets the prewarm greeting stay one
-            // short line instead of a full completion.
+            // Honor the caller's output cap: lets the readiness ping ask for one
+            // word instead of a full completion.
             ...(maxTokens !== undefined && { max_tokens: maxTokens }),
           }),
         } satisfies RequestInit,

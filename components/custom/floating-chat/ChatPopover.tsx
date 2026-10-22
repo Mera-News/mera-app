@@ -18,7 +18,11 @@ import { hapticLight } from '@/lib/haptics';
 import { EASE, MOTION } from '@/lib/motion';
 import { MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
-import { prewarmCloudChat } from '@/lib/llm/prewarm';
+import { Badge } from '@/components/custom/you/rows';
+import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
+import { prewarmCloudChat, useChatReadiness } from '@/lib/llm/prewarm';
+import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
@@ -72,6 +76,18 @@ interface ChatPopoverProps {
 const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     const { t } = useTranslation();
     const colors = useColors();
+    // The readiness ping's badge: cloud chat only, never on a restricted account.
+    const readiness = useChatReadiness((s) => s.status);
+    const chatInCloud = useChatRunsInCloud();
+    const blockedLive = useCloudChatStore((s) => s.isBlocked);
+    const blockedPersona = useUserStore((s) => !!s.userPersona?.blockedByLlm);
+    const badge = chatInCloud && !blockedLive && !blockedPersona && readiness !== 'idle'
+        ? {
+              warming: { label: t('chat.statusWarming'), tone: 'neutral' as const },
+              ready: { label: t('chat.statusReady'), tone: 'positive' as const },
+              error: { label: t('chat.statusError'), tone: 'negative' as const },
+          }[readiness]
+        : null;
     const reduceMotion = useReducedMotion();
     const insets = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -206,8 +222,8 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         if (isExpanded && (phase === 'closed' || phase === 'closing')) {
             // Earliest single hook on the expand path: warm the cloud-chat
             // critical path (attestation + JWT) the instant the panel starts
-            // opening, before MeraChatSession mounts, and ask for the greeting: every open greets.
-            prewarmCloudChat({ greet: true });
+            // opening, before MeraChatSession mounts, and ping the model: every open pings.
+            prewarmCloudChat({ ping: true });
             const { bubbleCenter } = useFloatingChatStore.getState();
             originX.value = bubbleCenter.x;
             originY.value = bubbleCenter.y;
@@ -343,14 +359,17 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                                 style={styles.titleBlock}
                                 accessible
                                 accessibilityRole="button"
-                                accessibilityLabel={`${t('floatingChat.title')}. ${t('floatingChat.aiSubtitle')}`}
+                                accessibilityLabel={`${t('floatingChat.title')}${badge ? `, ${badge.label}` : ''}. ${t('floatingChat.aiSubtitle')}`}
                                 accessibilityHint={t('floatingChat.aboutTitle')}
                                 accessibilityActions={[{ name: 'activate' }]}
                                 onAccessibilityAction={openAbout}
                                 onAccessibilityTap={openAbout}
                                 testID="chat-header-about"
                             >
-                                <Text style={[styles.title, { color: colors.ink }]}>{t('floatingChat.title')}</Text>
+                                <View style={styles.titleRow}>
+                                    <Text style={[styles.title, { color: colors.ink }]}>{t('floatingChat.title')}</Text>
+                                    {badge ? <Badge label={badge.label} tone={badge.tone} /> : null}
+                                </View>
                                 <Text style={[styles.subtitle, { color: colors.ink2 }]} testID="chat-header-ai-subtitle">
                                     {t('floatingChat.aiSubtitle')}
                                     {' '}
@@ -435,6 +454,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         minHeight: HEADER_ROW,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     title: {
         fontSize: 17,

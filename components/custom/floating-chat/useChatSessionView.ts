@@ -34,7 +34,6 @@ import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 import { renderableTerminal } from './types';
 import { HARNESS_TAP_ONLY } from '@/lib/chat-session/cloud-engine-helpers';
-import { dismissMeraGreeting, useMeraGreeting } from '@/lib/llm/prewarm';
 import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
 import type { ChatSessionViewProps } from './ChatSessionView';
 
@@ -139,22 +138,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   const [introCleared, setIntroCleared] = useState(false);
   const introMessage = introCleared ? null : introShown;
 
-  // --- Server-authoritative block state ---------------------------------
-  // The hook's `isBlocked` only flips mid-session (via an issueWarning side
-  // effect). To keep a block sticky across app restarts we ALSO seed from the
-  // persisted persona on mount, and let the refresh button re-derive it. The
-  // effective gate is the OR of the two: within a single session a user can only
-  // go unblocked→blocked, so a stale live flag is never a concern.
-  const [personaBlock, setPersonaBlock] = useState<{ blocked: boolean; reason: string | null }>({
-    blocked: false,
-    reason: null,
-  });
-
-  // The prewarm's greeting is cloud model text; on device nothing reached the cloud,
-  // and a restricted account cannot chat, so it is not told Mera is ready.
-  const warmGreeting = useMeraGreeting((st) => st.text);
-  const greeting = isOnDevice || isBlocked || personaBlock.blocked ? null : warmGreeting;
-
   // Lazily page in older history on scroll-up.
   const { history, loadOlder, hasOlder, isLoadingOlder } = useChatHistory(
     conversationId ?? undefined,
@@ -198,7 +181,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
         live: messages,
         history,
         introMessage,
-        greeting,
         isStreaming,
         earlierConversationLabel: t('floatingChat.earlierConversation'),
         resume,
@@ -219,7 +201,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       messages,
       history,
       introMessage,
-      greeting,
       isStreaming,
       t,
       resume,
@@ -402,6 +383,16 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     ];
   }, [t, tKey, context, isOnDevice, webSearch, originalWelcome, awaitingFacts]);
 
+  // --- Server-authoritative block state ---------------------------------
+  // The hook's `isBlocked` only flips mid-session (via an issueWarning side
+  // effect). To keep a block sticky across app restarts we ALSO seed from the
+  // persisted persona on mount, and let the refresh button re-derive it. The
+  // effective gate is the OR of the two: within a single session a user can only
+  // go unblocked→blocked, so a stale live flag is never a concern.
+  const [personaBlock, setPersonaBlock] = useState<{ blocked: boolean; reason: string | null }>({
+    blocked: false,
+    reason: null,
+  });
   const [unblockPending, setUnblockPending] = useState(false);
   const [unblockChecked, setUnblockChecked] = useState(false);
   const [isRefreshingBlockStatus, setIsRefreshingBlockStatus] = useState(false);
@@ -533,7 +524,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       if (unresolvedTopicPlans.length > 0) return;
       void hapticMedium();
       setIntroCleared(true);
-      dismissMeraGreeting();
       sendMessage(trimmed);
     },
     [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],

@@ -345,17 +345,10 @@ function toConversationMessage(m: PersistedMessage): ConversationMessage {
 // Public API
 // ---------------------------------------------------------------------------
 
-/** True once the thread holds a real message: the intro and greeting pseudo-messages do not count (the starter chips gate). */
-export function hasRealMessage(items: ChatThreadItem[]): boolean {
-  return items.some((item) => item.kind === 'message' && item.message.id !== 'intro' && item.message.id !== 'greeting');
-}
-
 export function deriveThreadItems(opts: {
   live: ConversationMessage[];
   history: PersistedMessage[];
   introMessage: string | null;
-  /** The prewarm's greeting line (model text, memory only), shown below the intro until the first message. */
-  greeting?: string | null;
   isStreaming: boolean;
   earlierConversationLabel: string;
   /**
@@ -551,14 +544,6 @@ export function deriveThreadItems(opts: {
       kind: 'message',
       key: 'live-intro',
       message: { id: 'intro', role: 'assistant', content: introMessage },
-    });
-  }
-  // The greeting arrives after the intro is on screen, so it reads below it.
-  if (opts.greeting && liveSequence.length === 0) {
-    out.push({
-      kind: 'message',
-      key: 'live-greeting',
-      message: { id: 'greeting', role: 'assistant', content: opts.greeting },
     });
   }
 

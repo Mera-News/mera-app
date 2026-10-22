@@ -5,52 +5,49 @@
 // gateway — an UNCACHED NEAR pass-through, the slow hop — (2) mint a JWT, and
 // (3) hit a possibly-COLD model (the dominant, multi-second cost the attestation
 // + JWT warming alone can't touch). (1) and (2) are cached client-side
-// (attestation ~30 min, JWT ~30 s); (3) has no client cache, so we ask BIG_MODEL
-// for one greeting question, shown in an empty thread, on EVERY chat open
-// (owner, 2026-10-22). Only an open passes `greet`; app launch warms (1) and (2) only.
+// (attestation ~30 min, JWT ~30 s); (3) has no client cache, so on EVERY chat
+// open (owner, 2026-10-22) we ping BIG_MODEL for the word "ready", and the chat
+// header shows how that went. Only an open passes `ping`; app launch warms (1) and (2) only.
 //
 // Fire-and-forget and idempotent: repeated calls hit the underlying caches / the
-// warmup dedupe, so mounting several chat surfaces in one session costs at most
+// in-flight ping, so mounting several chat surfaces in one session costs at most
 // one real fetch of each until the caches expire. No-op while chat runs on the
 // phone (no gateway hop). Errors are swallowed with a debug log — a failed
 // prewarm simply means the first real turn pays the original cost.
 
 import { create } from 'zustand';
-import { stripThinkTags } from '../algorithms/think-strip';
 import { getJwtToken } from '../auth-client';
-import { appLanguageName } from '../chat-tools/agent-device-port';
 import { fetchModelPublicKey } from '../e2ee/e2ee-service';
 import logger from '../logger';
-import { brandRule, fixBrandSpelling, replaceClauseDashes } from '@/lib/mera-harness';
+import { useCloudChatStore } from '../stores/cloud-chat-store';
+import { useUserStore } from '../stores/user-store';
 import { chatRunsInCloud } from './chat-cloud';
 import { cloudComplete } from './cloudComplete';
 import { BIG_MODEL, SMALL_MODEL } from './constants';
 
-const GREETING_MAX_CHARS = 60;
-// One greeting call in flight at a time, so two open paths firing together send one.
-let warming = false;
-// Bumped by dismissMeraGreeting, so a greeting that lands after the user sent
-// something is dropped instead of shown in a later empty thread.
-let greetingGen = 0;
+export type ChatReadiness = 'idle' | 'warming' | 'ready' | 'error';
 
-/** The warm-up's greeting line. Memory only: never persisted, never sent to a model. */
-export const useMeraGreeting = create<{ text: string | null }>(() => ({ text: null }));
+/** The chat header badge: how the last readiness ping went. Memory only; 'idle' shows nothing. */
+export const useChatReadiness = create<{ status: ChatReadiness }>(() => ({ status: 'idle' }));
+const setReadiness = (status: ChatReadiness) => useChatReadiness.setState({ status });
 
-/** The user sent a message: the greeting has had its moment. */
-export function dismissMeraGreeting(): void {
-  greetingGen += 1;
-  useMeraGreeting.setState({ text: null });
+/** A cloud chat turn came back: the model answers, whatever the ping said. */
+export function markChatReady(): void {
+  setReadiness('ready');
 }
 
+// One ping in flight at a time, so two open paths firing together send one.
+let pinging = false;
+
 /**
- * Kick off the attestation + JWT fetches AND a throwaway model completion for
- * the cloud persona-chat model. Returns immediately (void); all warming runs in
- * the background.
+ * Kick off the attestation + JWT fetches and, on a chat open (`ping`), the
+ * readiness ping. Returns immediately (void); all warming runs in the background.
  */
-export function prewarmCloudChat(opts: { greet?: boolean } = {}): void {
-  // Chat on the phone never touches the gateway: nothing to warm.
+export function prewarmCloudChat(opts: { ping?: boolean } = {}): void {
+  // Chat on the phone never touches the gateway: nothing to warm, no badge.
   if (!chatRunsInCloud()) {
     logger.debug('[chat-timing] prewarm skipped (on-device)');
+    setReadiness('idle');
     return;
   }
 
@@ -59,7 +56,7 @@ export function prewarmCloudChat(opts: { greet?: boolean } = {}): void {
   // the build for whichever leg actually needs one.
   //
   // Every gateway call now takes a limiter grant, and these are serialised
-  // behind it — so each extra prewarm fetch pushes warmModel(), the dominant
+  // behind it — so each extra prewarm fetch pushes pingModel(), the dominant
   // cold-start cost this file exists for, a further interval out. The old
   // three-fetch shape spent that on BIG, fallback(BIG) and fallback(SMALL)
   // while never warming SMALL_MODEL itself, which is what cloudChatStream
@@ -93,66 +90,51 @@ export function prewarmCloudChat(opts: { greet?: boolean } = {}): void {
   );
 
   // Warm the MODEL itself (fire-and-forget, silent): only when a chat opens.
-  if (opts.greet) void warmModel();
-}
-
-/** Morning, afternoon or evening by the device's local clock; only the word leaves the device. */
-function partOfDay(): string {
-  const hour = new Date().getHours();
-  return hour >= 5 && hour < 12 ? 'morning' : hour >= 12 && hour < 18 ? 'afternoon' : 'evening';
-}
-
-/** The model's reply when it is one short question (the asked-for greeting), else null. */
-function greetingLine(raw: string, lang: string): string | null {
-  const line = fixBrandSpelling(replaceClauseDashes(stripThinkTags(raw)), lang, '').replace(/\s+/g, ' ').trim()
-    // The prompt quotes the sentence, so a model often echoes the quotes back.
-    .replace(/^["'“”„«»「『]+|["'“”«»」』]+$/gu, '').trim();
-  // One sentence ending in a question mark (Latin, CJK or Arabic): a cut, a second sentence or chatter shows nothing.
-  // shortcut: a Thai line with no final mark is dropped too; return finish_reason from cloudComplete if that shows up.
-  return line.length <= GREETING_MAX_CHARS && /^[^.!?。！？।؟]+[?？؟]$/u.test(line) ? line : null;
+  if (opts.ping) void pingModel();
 }
 
 /**
- * Ask BIG_MODEL for "Good <part of day>, how can I help you?" in the app language
- * so the NEAR model is loaded before the user's first real turn, and show that
- * line while the thread is still empty.
- * The request carries no user data: the part of day and the app language only.
- * Fully silent: no Sentry, no toast; a failure just means no greeting and a
- * cold first turn. Only runs when a JWT is obtainable (an unauthenticated
- * completion would just 401-storm).
+ * One fixed E2EE call to BIG_MODEL so the NEAR model is loaded before the
+ * user's first real turn; its outcome drives the header badge. The request is
+ * two constants: no user data, no language, no clock. Fully silent: no Sentry,
+ * no toast. A timeout is cloudComplete's own bounded one, which throws.
  */
-async function warmModel(): Promise<void> {
-  if (warming) return;
-  warming = true;
-  const gen = greetingGen;
-  useMeraGreeting.setState({ text: null });
+async function pingModel(): Promise<void> {
+  if (pinging) return;
+  // A restricted account cannot chat, so it is never told Mera is ready.
+  if (useCloudChatStore.getState().isBlocked || useUserStore.getState().userPersona?.blockedByLlm) {
+    setReadiness('idle');
+    return;
+  }
+  pinging = true;
+  setReadiness('warming');
   try {
     const token = await getJwtToken();
-    // No auth yet: nothing to greet with.
-    if (!token) return;
-    const lang = appLanguageName();
-    const part = partOfDay();
+    // Signed out: nothing to ping with, and no badge.
+    if (!token) {
+      setReadiness('idle');
+      return;
+    }
+    // A plain reply, not a tool call: the app sends tools as text inside the
+    // sealed envelope, so a tool leg would only make the ping bigger.
     const reply = await cloudComplete({
-      systemPrompt:
-        `You are Mera, the user's news assistant. Translate this greeting for the ${part} into ${lang}: ` +
-        `"Good ${part}, how can I help you?" Reply with that one translated sentence only, ` +
-        'ending in a question mark. Nothing before or after it. No dashes, no emoji.' +
-        (brandRule(lang) && `\n${brandRule(lang)}`),
-      prompt: 'Greet me.',
+      systemPrompt: 'Reply with the single word "ready" and nothing else.',
+      prompt: 'ping',
       model: BIG_MODEL,
-      maxTokens: 64,
-      temperature: 0.1,
+      maxTokens: 8,
+      temperature: 0,
       purpose: 'chat',
     }, { lane: 'interactive' });
-    const text = greetingLine(reply, lang);
-    if (text && gen === greetingGen) useMeraGreeting.setState({ text });
-    logger.debug('[chat-timing] model warmup completion done');
+    // Any non-empty 2xx reply proves the model answers; the exact word is not required.
+    setReadiness(reply ? 'ready' : 'error');
+    logger.debug('[chat-timing] readiness ping done', { empty: !reply });
   } catch (err) {
+    setReadiness('error');
     // Best-effort only — swallow everything (no Sentry, no toast).
-    logger.debug('[chat-timing] model warmup failed (swallowed)', {
+    logger.debug('[chat-timing] readiness ping failed (swallowed)', {
       error: String(err),
     });
   } finally {
-    warming = false;
+    pinging = false;
   }
 }

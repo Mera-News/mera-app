@@ -83,7 +83,7 @@ export default function PersonaUpdateChatStep({
   // Warm the cloud-chat critical path (attestation + JWT) the moment the step
   // mounts, so the user's first message isn't gated on the cold fetches.
   useEffect(() => {
-    prewarmCloudChat({ greet: true });
+    prewarmCloudChat({ ping: true });
   }, []);
 
   // --- Init (once per mount): auth → userId, surface detection ---

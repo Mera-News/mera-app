@@ -8,6 +8,7 @@ import type { ChatEngine } from '@/lib/chat-session/engine';
 import logger from '../logger';
 import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
+import { markChatReady } from '../llm/prewarm';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import {
@@ -355,6 +356,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         // the user as whatever prose the last leg produced, and an empty one as
         // an empty bubble.
         cloud().setAgentTerminal(out.terminalReason);
+        // A turn that settled proves the model answers, so the header badge says so.
+        if (out.terminalReason === 'settled' || out.terminalReason === 'awaiting-user') markChatReady();
         // WHY A TURN PRODUCED WHAT IT DID, in one line. The abnormal-terminal
         // warn below fires only for a non-settled turn, so a turn that settled
         // having shown the user nothing logged nothing at all and could only be

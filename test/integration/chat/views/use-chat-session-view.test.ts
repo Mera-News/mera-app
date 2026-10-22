@@ -2,27 +2,16 @@
 // pending-message auto-send, the intro and chips, and the topic-plan discard reply.
 // Real stores, the in-memory DB and MSW; the engine callbacks are plain jest.fn props.
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { hasRealMessage } from '@/components/custom/floating-chat/deriveThreadItems';
 import { useChatSessionView } from '@/components/custom/floating-chat/useChatSessionView';
 import type { ChatSessionViewProps } from '@/components/custom/floating-chat/ChatSessionView';
-import type { ChatThreadItem } from '@/components/custom/floating-chat/types';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { prewarmCloudChat, useMeraGreeting } from '@/lib/llm/prewarm';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import i18n from '@/lib/i18n';
-import {
-  advanceUntil,
-  gatewayCalls,
-  initI18nEn,
-  mockGateway,
-  server,
-  signInFixtureAccount,
-  useStrictClock,
-} from '@/test/helpers';
+import { initI18nEn } from '@/test/helpers';
 
 const USER_ID = 'user-1';
 const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
@@ -42,7 +31,6 @@ beforeEach(() => {
   useCloudChatStore.getState().reset();
   useUserStore.setState({ userPersona: null });
   useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
-  useMeraGreeting.setState({ text: null });
 });
 
 function makeProps(over: Partial<ChatSessionViewProps> = {}) {
@@ -203,58 +191,6 @@ describe('intro message', () => {
   it('picks articleFeedback.introArticle for a plain article', () => {
     const { result } = mount({ context: { kind: 'article-suggestion', articleId: 'a1' } });
     expect(result.current.introMessage).toBe(t('articleFeedback.introArticle'));
-  });
-});
-
-describe('prewarm greeting', () => {
-  const GREETING = 'Good evening! Mera is ready.';
-  const messageIds = (items: ChatThreadItem[]) => items.flatMap((i) => (i.kind === 'message' ? [i.message.id] : []));
-
-  it('sits before the intro in an empty cloud thread, and the starter chips still show', () => {
-    useMeraGreeting.setState({ text: GREETING });
-    const { result } = mount();
-    expect(messageIds(result.current.items)).toEqual(['intro', 'greeting']);
-    expect(hasRealMessage(result.current.items)).toBe(false);
-    expect(result.current.starterChips.length).toBeGreaterThan(0);
-  });
-
-  it('the first send dismisses it', () => {
-    useMeraGreeting.setState({ text: GREETING });
-    const { result } = mount();
-    act(() => result.current.handleSend('hi'));
-    expect(useMeraGreeting.getState().text).toBeNull();
-    expect(messageIds(result.current.items)).not.toContain('greeting');
-  });
-
-  it('a greeting still in flight when the user sends is never shown', async () => {
-    await signInFixtureAccount();
-    useStrictClock(Date.now());
-    server.use(...mockGateway(() => ({ chunks: [GREETING], headerDelayMs: 5_000 })));
-    const { result } = mount();
-    prewarmCloudChat({ greet: true });
-    await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
-    act(() => result.current.handleSend('hi'));
-    await act(() => jest.advanceTimersByTimeAsync(10_000));
-    expect(gatewayCalls('chat')).toHaveLength(1);
-    expect(useMeraGreeting.getState().text).toBeNull();
-    expect(messageIds(result.current.items)).not.toContain('greeting');
-  });
-
-  it('shows none on this phone', () => {
-    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
-    useMeraGreeting.setState({ text: GREETING });
-    const { result } = mount();
-    expect(messageIds(result.current.items)).toEqual(['intro']);
-  });
-
-  it('shows none on a restricted account, live or persisted', async () => {
-    useMeraGreeting.setState({ text: GREETING });
-    expect(messageIds(mount({ isBlocked: true }).result.current.items)).toEqual(['intro']);
-
-    seedBlockedPersona('x');
-    const { result } = mount();
-    await waitFor(() => expect(result.current.effectiveBlocked).toBe(true));
-    expect(messageIds(result.current.items)).toEqual(['intro']);
   });
 });
 

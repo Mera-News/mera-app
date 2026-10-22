@@ -33,9 +33,6 @@ export { createAgentTurnState } from './core/types';
 // single-shot agents). Same rule the loop applies to its own replies.
 export { replaceClauseDashes } from './core/prose';
 
-// The app name's Hindi spelling, for model prose outside the loop (the prewarm greeting).
-export { brandRule, fixBrandSpelling } from './core/router-prompt';
-
 // The replacement card decides whether "Keep both" makes sense from the two
 // facts' attribute keys, with the same helpers the loop uses to gate a replace.
 export { attributeKey, isLocationKey, isRelationalStatement, mayReplaceKey, sameAttributeKey } from './core/fact-subject';

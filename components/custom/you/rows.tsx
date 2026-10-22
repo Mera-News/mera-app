@@ -130,17 +130,23 @@ export const Row: React.FC<RowProps> = ({
 };
 
 /** A small rounded count or label (Tidy up "1", a place's role); `positive`
- *  is the green privacy pill (Mera Protocol's value). */
+ *  is the green privacy pill (Mera Protocol's value), `negative` and `neutral`
+ *  the chat header's error and warming-up states. */
 export const Badge: React.FC<{
     readonly label: string;
     readonly icon?: keyof typeof MaterialIcons.glyphMap;
-    readonly tone?: 'accent' | 'positive';
+    readonly tone?: 'accent' | 'positive' | 'negative' | 'neutral';
 }> = ({ label, icon, tone = 'accent' }) => {
     const colors = useColors();
-    const ink = tone === 'positive' ? colors.positive : colors.accentText;
+    const [ink, fill] = {
+        accent: [colors.accentText, colors.accent],
+        positive: [colors.positive, colors.positive],
+        negative: [colors.negative, colors.negative],
+        neutral: [colors.ink2, colors.ink3],
+    }[tone];
     return (
         <View style={styles.badge}>
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: tone === 'positive' ? colors.positive : colors.accent, opacity: 0.16 }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: fill, opacity: 0.16 }]} />
             {icon ? <MaterialIcons name={icon} size={13} color={ink} /> : null}
             <Text scaleTier="chrome" style={{ color: ink, fontSize: 12, fontWeight: '600' }}>
                 {label}

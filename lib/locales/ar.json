@@ -755,7 +755,10 @@
     "replyLeakFallback": "حسنًا، فهمت. هل تود إضافة أي شيء آخر؟",
     "replyProcessFallback": "عذرًا، لم أتمكن من فهم ذلك. هل يمكنك قوله مرة أخرى؟",
     "cloudOnlyNotice": "يحتاج هذا إلى «السحابة الخاصة» من ميرا. يمكنك التبديل من الإعدادات، ضمن بروتوكول ميرا.",
-    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate."
+    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
+    "statusWarming": "Warming up",
+    "statusReady": "Ready",
+    "statusError": "Error"
   },
   "personaChat": {
     "introMessage": "مرحبا! أنا ميرا، مساعدتك الشخصية للأخبار.\n\nلإيجاد أخبار تهمك فعلا، أحتاج إلى معرفة بعض الأشياء عنك. أين تعيش، ما الذي تعمله، الهوايات التي تتابعها، الأسهم التي تراقبها، أين تعيش عائلتك. شارك ما تشاء أو اترك بعضه.\n\nإذا ترددت، فهذا غريزة سليمة. ليس من الحكمة تسليم بيانات شخصية لشركة تطبيقات. ميرا مبنية بطريقة مختلفة: كل ما تخبرني به يحفظ على جهازك، وليس على خوادمنا. اسأل كيف يعمل هذا، أو قل 'ساعدني في الإعداد' وسنبدأ."
