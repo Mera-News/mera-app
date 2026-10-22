@@ -46,6 +46,7 @@ import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
+import { hasRealMessage } from './deriveThreadItems';
 import type { ChatThreadItem, ChatThreadProps, StarterChip } from './types';
 
 // Short, snappy spring for freshly-arrived message bubbles. Applied ONLY to
@@ -112,16 +113,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   }, [pendingDraft]);
 
   // Starter chips show only when the thread has no real user/assistant messages
-  // (the intro pseudo-message, id 'intro', does not count). PAGE starters
+  // (the intro and greeting pseudo-messages do not count). PAGE starters
   // (draft chips) also show under a thread kept from another page, until the
   // first send of this open (navx amendment).
-  const hasRealMessage = items.some(
-    (item) => item.kind === 'message' && item.message.id !== 'intro',
-  );
+  const realMessage = hasRealMessage(items);
   const [sentThisOpen, setSentThisOpen] = useState(false);
   const draftChips = starterChips.some((c) => c.draft);
   const showChips =
-    starterChips.length > 0 && (draftChips ? !sentThisOpen : !hasRealMessage);
+    starterChips.length > 0 && (draftChips ? !sentThisOpen : !realMessage);
   const handleChip = useCallback(
     (chip: StarterChip) => {
       if (!chip.draft) {
@@ -421,9 +420,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           hasOlder={hasOlder}
           isLoadingOlder={isLoadingOlder}
           header={
-            showChips || !hasRealMessage ? (
+            showChips || !realMessage ? (
               <View style={styles.header}>
-                {!hasRealMessage && usageNotice && (
+                {!realMessage && usageNotice && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color={colors.ink3} />
                     <Text size="xs" style={styles.noticeText}>

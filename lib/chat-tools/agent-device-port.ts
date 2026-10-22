@@ -634,7 +634,7 @@ export function logAgentTurn(reason: string, unknownTools: string[]): void {
  * it the loop is told only to match the user's language, and a reader on a
  * Hindi app who types English, or whose question loads a skill, gets English.
  */
-function appLanguageName(): string {
+export function appLanguageName(): string {
   const code = canonicalizeLanguageCode(useAppLanguageStore.getState().appLanguage) ?? 'en';
   const match = SUPPORTED_LANGUAGES.find((l) => l.code === code)
     ?? SUPPORTED_LANGUAGES.find((l) => l.code === code.split('-')[0]);

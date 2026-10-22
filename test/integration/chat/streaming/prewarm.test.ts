@@ -1,11 +1,13 @@
 // lib/llm/prewarm.ts against the gateway mock: what a launch really sends. Real attestation fetches,
-// real JWT, real limiter, real cloudComplete. prewarm keeps a 30-minute dedupe in module state, so
-// every test runs on its own fake date, three hours after the last (a later date than any earlier
-// test's, or the previous test's warm-up would still be inside its window).
+// real JWT, real limiter, real cloudComplete. The warm-up runs only after 10 minutes without a
+// BIG_MODEL call, kept in module state, so every test runs on its own fake date, three hours after
+// the last (a later date than any earlier test's, or the previous test's calls would still count).
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
-import { prewarmCloudChat } from '@/lib/llm/prewarm';
+import { cloudChatStream } from '@/lib/llm/cloudComplete';
+import { dismissMeraGreeting, prewarmCloudChat, useMeraGreeting } from '@/lib/llm/prewarm';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {
   attestationRequests,
@@ -17,8 +19,17 @@ import {
   server,
   signInFixtureAccount,
 } from '@/test/helpers';
-import { useStrictClock } from '@/test/integration/chat/_helpers';
-import { advanceUntil, captureChatBodies, drive, installChatHooks, loggerSpies, respond } from './support';
+import { seedFacts, useStrictClock } from '@/test/integration/chat/_helpers';
+import {
+  advanceUntil,
+  captureChatBodies,
+  collect,
+  drive,
+  installChatHooks,
+  loggerSpies,
+  MESSAGES,
+  respond,
+} from './support';
 
 installChatHooks();
 
@@ -26,10 +37,19 @@ let clock = Date.UTC(2026, 9, 9);
 beforeEach(() => {
   clock += 3 * 3600_000;
   useStrictClock(clock);
+  useMeraGreeting.setState({ text: null });
 });
 afterEach(() => {
   useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
+  useAppLanguageStore.setState({ appLanguage: 'en' });
 });
+
+const greeting = () => useMeraGreeting.getState().text;
+/** The device's local part of day, the only clock fact the request may carry. */
+const partOfDay = () => {
+  const h = new Date().getHours();
+  return h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 18 ? 'afternoon' : 'evening';
+};
 
 /** Let everything prewarm started finish, then long enough for anything it should NOT send to show up. */
 async function settled(): Promise<void> {
@@ -50,9 +70,9 @@ const requestCounter = () => {
 };
 
 describe('prewarmCloudChat, cloud mode, signed in', () => {
-  it('attests BIG and SMALL once each and sends one tiny throwaway completion to BIG: nothing else', async () => {
+  it('attests BIG and SMALL once each and asks BIG for one greeting line: nothing else', async () => {
     const bodies = captureChatBodies();
-    server.use(...mockGateway(respond('ok')));
+    server.use(...mockGateway(respond('Good evening! Mera is ready for you.')));
 
     expect(prewarmCloudChat()).toBeUndefined();
     await settled();
@@ -65,32 +85,107 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     const [call] = gatewayCalls('chat');
     expect(call).toMatchObject({ model: BIG_MODEL, stream: false });
     expect(call.messages).toEqual([
-      { role: 'system', content: '' },
-      { role: 'user', content: 'hi' },
+      { role: 'system', content: expect.stringContaining(`greeting for the ${partOfDay()}, in English,`) },
+      { role: 'user', content: 'Greet me.' },
     ]);
     const body = JSON.parse(bodies[0]);
-    expect(body).toMatchObject({ model: BIG_MODEL, max_tokens: 1, temperature: 0 });
+    expect(body).toMatchObject({
+      model: BIG_MODEL,
+      max_tokens: 64,
+      temperature: 0.7,
+      chat_template_kwargs: { enable_thinking: false },
+    });
     // Sealed: the prompt is not on the wire in clear.
-    expect(body.messages.map((m: { content: string }) => m.content)).not.toContain('hi');
+    expect(bodies[0]).not.toContain('Greet me');
+    expect(bodies[0]).not.toContain('greeting');
+    expect(greeting()).toBe('Good evening! Mera is ready for you.');
+    // A logger.warn is a Sentry breadcrumb: the line never rides one.
+    expect(JSON.stringify(loggerSpies().addBreadcrumb.mock.calls)).not.toContain('Mera is ready');
   });
 
-  it('dedupes the model warm-up inside the 30-minute window, and warms again after it', async () => {
+  it('carries no user data: facts on file stay out, the app language comes in by name', async () => {
+    await drive(seedFacts(['Lives in Porto', 'Works as a nurse']));
+    useAppLanguageStore.setState({ appLanguage: 'hi' });
+    server.use(...mockGateway(respond('नमस्ते! मीरा आपके लिए तैयार है।')));
+    prewarmCloudChat();
+    await settled();
+    const [call] = gatewayCalls('chat');
+    const sent = JSON.stringify(call.messages);
+    expect(sent).toContain('in Hindi,');
+    // The app's own Hindi name, asked for in the prompt and enforced on the line.
+    expect(sent).toContain('मेरा ऐप');
+    expect(greeting()).toBe('नमस्ते! मेरा ऐप आपके लिए तैयार है।');
+    expect(sent).not.toMatch(/Porto|nurse|e2e-fixture/);
+    expect(call.messages).toHaveLength(2);
+  });
+
+  it('cleans the line before showing it: think tags, clause dashes, one line', async () => {
+    server.use(...mockGateway(respond('<think>plan it</think>Good evening — Mera is\n ready for you.  ')));
+    prewarmCloudChat();
+    await settled();
+    expect(greeting()).toBe('Good evening, Mera is ready for you.');
+  });
+
+  it.each([
+    ['a reply cut mid-sentence', 'Good evening! Mera is ready to help you catch up on', null],
+    ['a reply over 120 characters', `${Array.from({ length: 30 }, (_, i) => `word${i}`).join(' ')}.`, null],
+    ['a line that ends in an emoji', 'Good evening, Mera is ready 👋', 'Good evening, Mera is ready 👋'],
+  ])('%s: shown only when whole', async (_, reply, shown) => {
+    server.use(...mockGateway(respond(reply)));
+    prewarmCloudChat();
+    await settled();
+    expect(gatewayCalls('chat')).toHaveLength(1);
+    expect(greeting()).toBe(shown);
+  });
+
+  it('shows nothing for a reply that is only a think block', async () => {
+    server.use(...mockGateway(respond('<think>only a trace</think>')));
+    prewarmCloudChat();
+    await settled();
+    expect(gatewayCalls('chat')).toHaveLength(1);
+    expect(greeting()).toBeNull();
+  });
+
+  it('drops a greeting that lands after the user already sent a message', async () => {
+    server.use(...mockGateway(() => ({ chunks: ['Good morning! Mera is ready.'], headerDelayMs: 5_000 })));
+    prewarmCloudChat();
+    await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
+    dismissMeraGreeting();
+    await quiet();
+    expect(greeting()).toBeNull();
+  });
+
+  it('warms only after 10 minutes without a BIG call, and concurrent callers fire once', async () => {
     server.use(...mockGateway(respond('ok')));
+    prewarmCloudChat();
     prewarmCloudChat();
     await settled();
     prewarmCloudChat();
     await quiet();
-    // Attestation is cached, the completion is deduped to the same window.
+    // Attestation is cached, and the warm-up itself was the last BIG call.
     expect(gatewayCalls('chat')).toHaveLength(1);
     expect(attestationRequests()).toBe(2);
 
-    await jest.advanceTimersByTimeAsync(31 * 60_000);
+    await jest.advanceTimersByTimeAsync(11 * 60_000);
     prewarmCloudChat();
     await advanceUntil(() => gatewayCalls('chat').length === 2, 60_000);
     await quiet();
     expect(gatewayCalls('chat')).toHaveLength(2);
-    expect(attestationRequests(BIG_MODEL)).toBe(2);
-    expect(attestationRequests(SMALL_MODEL)).toBe(2);
+    expect(attestationRequests(BIG_MODEL)).toBe(1);
+  });
+
+  it('a real chat turn on BIG counts as the last call: no warm-up within 10 minutes of it', async () => {
+    server.use(...mockGateway(respond('ok')));
+    await drive(collect(cloudChatStream({ messages: MESSAGES, model: BIG_MODEL })));
+    await jest.advanceTimersByTimeAsync(9 * 60_000);
+    prewarmCloudChat();
+    await quiet();
+    expect(gatewayCalls('chat')).toHaveLength(1);
+
+    await jest.advanceTimersByTimeAsync(2 * 60_000);
+    prewarmCloudChat();
+    await advanceUntil(() => gatewayCalls('chat').length === 2, 60_000);
+    expect(gatewayCalls('chat')[1].messages[1]).toEqual({ role: 'user', content: 'Greet me.' });
   });
 
   it('swallows a failing secondary attestation: the primary is still warmed', async () => {
@@ -130,6 +225,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     expect(() => prewarmCloudChat()).not.toThrow();
     await settled();
     expect(gatewayCalls('chat')).toHaveLength(1);
+    expect(greeting()).toBeNull();
     // Silent: a failed warm-up is no Sentry event.
     expect(loggerSpies().captureException).not.toHaveBeenCalled();
     expect(loggerSpies().captureMessage).not.toHaveBeenCalled();
@@ -145,6 +241,7 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
     expect(requests()).toBe(0);
     expect(gatewayCalls()).toEqual([]);
     expect(attestationRequests()).toBe(0);
+    expect(greeting()).toBeNull();
   });
 
   it('signed out: no gateway request, no throw, and the window is released for after sign-in', async () => {

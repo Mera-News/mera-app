@@ -1,7 +1,7 @@
 // Unit tests for deriveThreadItems — the pure thread-item derivation util.
 
 import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
-import { deriveThreadItems } from '@/components/custom/floating-chat/deriveThreadItems';
+import { deriveThreadItems, hasRealMessage } from '@/components/custom/floating-chat/deriveThreadItems';
 import { renderableTerminal } from '@/components/custom/floating-chat/types';
 import type { ChatThreadItem, PersistedMessage } from '@/components/custom/floating-chat/types';
 
@@ -155,6 +155,30 @@ describe('deriveThreadItems', () => {
     if (items[0].kind === 'message') {
       expect(items[0].message).toMatchObject({ id: 'intro', role: 'assistant', content: 'Welcome!' });
     }
+  });
+
+  it('shows the prewarm greeting as an assistant bubble above the intro while the thread is empty', () => {
+    const items = deriveThreadItems(base({ greeting: 'Good evening! Mera is ready.', introMessage: 'Welcome!' }));
+    expect(keys(items)).toEqual(['live-greeting', 'live-intro']);
+    expect(items[0]).toMatchObject({
+      kind: 'message',
+      message: { id: 'greeting', role: 'assistant', content: 'Good evening! Mera is ready.' },
+    });
+  });
+
+  it('hides the greeting once the conversation has any message, live or resumed', () => {
+    const greeting = 'Good evening! Mera is ready.';
+    expect(keys(deriveThreadItems(base({ greeting, live: [userMsg('u1')] })))).toEqual(['live-u1']);
+    expect(
+      keys(deriveThreadItems(base({ greeting, resume: [persisted('r1', 'c1', 'user', 'q', 1)] }))),
+    ).toEqual(['hist-r1']);
+    expect(deriveThreadItems(base({ greeting: null }))).toEqual([]);
+  });
+
+  it('hasRealMessage ignores the greeting and intro, so the starter chips stay', () => {
+    const empty = deriveThreadItems(base({ greeting: 'Good evening! Mera is ready.', introMessage: 'Welcome!' }));
+    expect(hasRealMessage(empty)).toBe(false);
+    expect(hasRealMessage(deriveThreadItems(base({ live: [userMsg('u1')] })))).toBe(true);
   });
 
   it('places the intro before existing live messages', () => {
