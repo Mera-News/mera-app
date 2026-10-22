@@ -183,13 +183,15 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
   }
 
-  // What Mera and the reader can do here. Plain text, so VoiceOver reads it as
-  // text, never as a message from Mera.
+  // What Mera and the reader can do here. A centred card of plain text, so
+  // VoiceOver reads it as text, never as a message from Mera.
   const renderIntro = (text: string) => (
     <View style={styles.introFill}>
-      <Text size="sm" style={styles.introText} testID="chat-intro">
-        {text}
-      </Text>
+      <View style={styles.introCard}>
+        <Text size="sm" style={styles.introText} testID="chat-intro">
+          {text}
+        </Text>
+      </View>
     </View>
   );
 
@@ -564,7 +566,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   );
 };
 
-const useStyles = themedStyles((c) => StyleSheet.create({
+const useStyles = themedStyles((c, mode) => StyleSheet.create({
   listWrap: {
     flex: 1,
   },
@@ -594,13 +596,28 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
   },
+  // The bubble's surface and soft float (chat-ai bubble), card-shaped: centred,
+  // no avatar, no side.
+  introCard: {
+    maxWidth: 360,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 4,
+    ...(mode === 'light'
+      ? { backgroundColor: c.panel, borderWidth: StyleSheet.hairlineWidth, borderColor: c.panelBorder }
+      : { backgroundColor: c.surfaceRaised }),
+  },
   introText: {
     color: c.ink2,
     textAlign: 'center',
-    // The chat type scale (userText, the replies), at a reading measure.
-    fontSize: 15,
-    lineHeight: 21,
-    maxWidth: 360,
+    // 1.1x the chat type scale (userText, the replies: 15/21).
+    fontSize: 16.5,
+    lineHeight: 23,
   },
   stoppedLine: {
     color: c.ink3,

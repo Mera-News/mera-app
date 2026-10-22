@@ -70,9 +70,9 @@ const requestCounter = () => {
 };
 
 describe('prewarmCloudChat, cloud mode, signed in', () => {
-  it('attests BIG and SMALL once each and asks BIG for one greeting line: nothing else', async () => {
+  it('attests BIG and SMALL once each and asks BIG for the one greeting question: nothing else', async () => {
     const bodies = captureChatBodies();
-    server.use(...mockGateway(respond('Good evening! Mera is ready for you.')));
+    server.use(...mockGateway(respond('Good evening, how can I help you?')));
 
     expect(prewarmCloudChat()).toBeUndefined();
     await settled();
@@ -85,52 +85,63 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     const [call] = gatewayCalls('chat');
     expect(call).toMatchObject({ model: BIG_MODEL, stream: false });
     expect(call.messages).toEqual([
-      { role: 'system', content: expect.stringContaining(`greeting for the ${partOfDay()}, in English,`) },
+      {
+        role: 'system',
+        content: expect.stringContaining(
+          `greeting for the ${partOfDay()} into English: "Good ${partOfDay()}, how can I help you?"`,
+        ),
+      },
       { role: 'user', content: 'Greet me.' },
     ]);
     const body = JSON.parse(bodies[0]);
     expect(body).toMatchObject({
       model: BIG_MODEL,
       max_tokens: 64,
-      temperature: 0.7,
+      temperature: 0.1,
       chat_template_kwargs: { enable_thinking: false },
     });
     // Sealed: the prompt is not on the wire in clear.
     expect(bodies[0]).not.toContain('Greet me');
     expect(bodies[0]).not.toContain('greeting');
-    expect(greeting()).toBe('Good evening! Mera is ready for you.');
+    expect(greeting()).toBe('Good evening, how can I help you?');
     // A logger.warn is a Sentry breadcrumb: the line never rides one.
-    expect(JSON.stringify(loggerSpies().addBreadcrumb.mock.calls)).not.toContain('Mera is ready');
+    expect(JSON.stringify(loggerSpies().addBreadcrumb.mock.calls)).not.toContain('how can I help');
   });
 
   it('carries no user data: facts on file stay out, the app language comes in by name', async () => {
     await drive(seedFacts(['Lives in Porto', 'Works as a nurse']));
     useAppLanguageStore.setState({ appLanguage: 'hi' });
-    server.use(...mockGateway(respond('नमस्ते! मीरा आपके लिए तैयार है।')));
+    server.use(...mockGateway(respond('शुभ संध्या, मीरा आपकी क्या मदद कर सकती है?')));
     prewarmCloudChat();
     await settled();
     const [call] = gatewayCalls('chat');
     const sent = JSON.stringify(call.messages);
-    expect(sent).toContain('in Hindi,');
+    expect(sent).toContain('into Hindi:');
     // The app's own Hindi name, asked for in the prompt and enforced on the line.
     expect(sent).toContain('मेरा ऐप');
-    expect(greeting()).toBe('नमस्ते! मेरा ऐप आपके लिए तैयार है।');
+    expect(greeting()).toBe('शुभ संध्या, मेरा ऐप आपकी क्या मदद कर सकती है?');
     expect(sent).not.toMatch(/Porto|nurse|e2e-fixture/);
     expect(call.messages).toHaveLength(2);
   });
 
   it('cleans the line before showing it: think tags, clause dashes, one line', async () => {
-    server.use(...mockGateway(respond('<think>plan it</think>Good evening — Mera is\n ready for you.  ')));
+    server.use(...mockGateway(respond('<think>plan it</think>Good evening — how can\n I help you?  ')));
     prewarmCloudChat();
     await settled();
-    expect(greeting()).toBe('Good evening, Mera is ready for you.');
+    expect(greeting()).toBe('Good evening, how can I help you?');
   });
 
   it.each([
-    ['a reply cut mid-sentence', 'Good evening! Mera is ready to help you catch up on', null],
-    ['a reply over 120 characters', `${Array.from({ length: 30 }, (_, i) => `word${i}`).join(' ')}.`, null],
-    ['a line that ends in an emoji', 'Good evening, Mera is ready 👋', 'Good evening, Mera is ready 👋'],
-  ])('%s: shown only when whole', async (_, reply, shown) => {
+    ['a reply cut mid-sentence', 'Good evening, how can I', null],
+    ['a statement, not a question', 'Good evening, Mera is ready for you.', null],
+    ['a second sentence before the question', 'Good evening! How can I help you?', null],
+    ['a question over 60 characters', `Good evening, ${Array.from({ length: 10 }, (_, i) => `word${i}`).join(' ')}?`, null],
+    ['a line that ends in an emoji', 'Good evening, how can I help you? 👋', null],
+    ['the Japanese full-width question mark', 'こんばんは、何かお手伝いできますか？', 'こんばんは、何かお手伝いできますか？'],
+    ['the sentence echoed in its quotes', '"Guten Abend, wie kann ich Ihnen helfen?"', 'Guten Abend, wie kann ich Ihnen helfen?'],
+    ['the Japanese corner quotes', '「こんばんは、何かお手伝いできますか？」', 'こんばんは、何かお手伝いできますか？'],
+    ['the Arabic question mark', 'مساء الخير، كيف يمكنني مساعدتك؟', 'مساء الخير، كيف يمكنني مساعدتك؟'],
+  ])('%s: shown only as one short question', async (_, reply, shown) => {
     server.use(...mockGateway(respond(reply)));
     prewarmCloudChat();
     await settled();
@@ -147,7 +158,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
   });
 
   it('drops a greeting that lands after the user already sent a message', async () => {
-    server.use(...mockGateway(() => ({ chunks: ['Good morning! Mera is ready.'], headerDelayMs: 5_000 })));
+    server.use(...mockGateway(() => ({ chunks: ['Good morning, how can I help you?'], headerDelayMs: 5_000 })));
     prewarmCloudChat();
     await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
     dismissMeraGreeting();
@@ -246,13 +257,13 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
 
   it('warms and greets on device while cloud chat is on: the greeting is a chat call', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, chatInCloud: true });
-    server.use(...mockGateway(respond('Mera is ready.')));
+    server.use(...mockGateway(respond('Good evening, how can I help you?')));
 
     prewarmCloudChat();
     await settled();
 
     expect(gatewayCalls('chat')).toHaveLength(1);
-    expect(greeting()).toBe('Mera is ready.');
+    expect(greeting()).toBe('Good evening, how can I help you?');
   });
 
   it('signed out: no gateway request, no throw, and the window is released for after sign-in', async () => {

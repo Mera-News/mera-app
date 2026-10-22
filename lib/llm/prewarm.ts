@@ -6,7 +6,7 @@
 // (3) hit a possibly-COLD model (the dominant, multi-second cost the attestation
 // + JWT warming alone can't touch). (1) and (2) are cached client-side
 // (attestation ~30 min, JWT ~30 s); (3) has no client cache, so we ask BIG_MODEL
-// for one short greeting line, shown at the top of an empty thread, and only when
+// for one greeting question, shown in an empty thread, and only when
 // no BIG_MODEL call has left the app for WARM_GAP_MS.
 //
 // Fire-and-forget and idempotent: repeated calls hit the underlying caches / the
@@ -30,7 +30,7 @@ import { BIG_MODEL, SMALL_MODEL } from './constants';
 // only when NEAR has gone WARM_GAP_MS without a BIG_MODEL call from this app (any
 // chat turn counts, and so does the warm-up itself).
 const WARM_GAP_MS = 10 * 60_000;
-const GREETING_MAX_CHARS = 120;
+const GREETING_MAX_CHARS = 60;
 // Claims the warm-up between the gap check and cloudComplete stamping the call,
 // so concurrent callers don't double-fire.
 let warming = false;
@@ -108,17 +108,20 @@ function partOfDay(): string {
   return hour >= 5 && hour < 12 ? 'morning' : hour >= 12 && hour < 18 ? 'afternoon' : 'evening';
 }
 
-/** One display line from the model's reply, or null when nothing usable is left. */
+/** The model's reply when it is one short question (the asked-for greeting), else null. */
 function greetingLine(raw: string, lang: string): string | null {
-  const line = fixBrandSpelling(replaceClauseDashes(stripThinkTags(raw)), lang, '').replace(/\s+/g, ' ').trim();
-  // A reply cut at maxTokens (or one that ran long) ends mid-sentence: show nothing rather than a fragment.
+  const line = fixBrandSpelling(replaceClauseDashes(stripThinkTags(raw)), lang, '').replace(/\s+/g, ' ').trim()
+    // The prompt quotes the sentence, so a model often echoes the quotes back.
+    .replace(/^["'“”„«»「『]+|["'“”«»」』]+$/gu, '').trim();
+  // One sentence ending in a question mark (Latin, CJK or Arabic): a cut, a second sentence or chatter shows nothing.
   // shortcut: a Thai line with no final mark is dropped too; return finish_reason from cloudComplete if that shows up.
-  return line.length <= GREETING_MAX_CHARS && /[.!?。！？।؟…\p{Extended_Pictographic}]\uFE0F?$/u.test(line) ? line : null;
+  return line.length <= GREETING_MAX_CHARS && /^[^.!?。！？।؟]+[?？؟]$/u.test(line) ? line : null;
 }
 
 /**
- * Ask BIG_MODEL for one short greeting so the NEAR model is loaded before the
- * user's first real turn, and show that line while the thread is still empty.
+ * Ask BIG_MODEL for "Good <part of day>, how can I help you?" in the app language
+ * so the NEAR model is loaded before the user's first real turn, and show that
+ * line while the thread is still empty.
  * The request carries no user data: the part of day and the app language only.
  * Fully silent: no Sentry, no toast; a failure just means no greeting and a
  * cold first turn. Only runs when a JWT is obtainable (an unauthenticated
@@ -134,16 +137,17 @@ async function warmModel(): Promise<void> {
     // No auth yet: leave the gap unclaimed so a later call (post-login) can warm.
     if (!token) return;
     const lang = appLanguageName();
+    const part = partOfDay();
     const reply = await cloudComplete({
       systemPrompt:
-        `You are Mera, the user's news assistant. Write ONE short friendly greeting for the ${partOfDay()}, ` +
-        `in ${lang}, saying Mera is ready. Under 12 words. No dashes. ` +
-        'No emoji unless natural. Ask nothing about the user. Reply with the greeting only.' +
+        `You are Mera, the user's news assistant. Translate this greeting for the ${part} into ${lang}: ` +
+        `"Good ${part}, how can I help you?" Reply with that one translated sentence only, ` +
+        'ending in a question mark. Nothing before or after it. No dashes, no emoji.' +
         (brandRule(lang) && `\n${brandRule(lang)}`),
       prompt: 'Greet me.',
       model: BIG_MODEL,
       maxTokens: 64,
-      temperature: 0.7,
+      temperature: 0.1,
       purpose: 'chat',
     }, { lane: 'interactive' });
     const text = greetingLine(reply, lang);

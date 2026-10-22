@@ -195,7 +195,7 @@ describe('intro message', () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
     const { result } = mount();
     expect(result.current.introMessage).toBe(`${t('personaChat.introMessage')}\n\n${t('chat.onDeviceBetaNote')}`);
-    expect(t('chat.onDeviceBetaNote')).toBe('On this phone is in Beta, so replies can be slower or less accurate.');
+    expect(t('chat.onDeviceBetaNote')).toBe('On this phone is in Beta and can be slower or make mistakes.');
   });
 
   it('picks articleFeedback.intro for a suggestion', () => {
@@ -210,7 +210,7 @@ describe('intro message', () => {
 });
 
 describe('prewarm greeting', () => {
-  const GREETING = 'Good evening! Mera is ready.';
+  const GREETING = 'Good evening, how can I help you?';
   const messageIds = (items: ChatThreadItem[]) => items.flatMap((i) => (i.kind === 'message' ? [i.message.id] : []));
 
   it('is the one Mera message in an empty cloud thread, below the intro text, and the starter chips still show', () => {
