@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Boot-time retirement of on-device models (`retireLegacyModels`, `purgeAllBaseModels`): the retired ids' files,
+// Boot-time retirement of on-device models (`retireLegacyModels`, `purgeStaleModels`): the retired ids' files,
 // the Qwen text model among them (D37), are deleted for EVERY reader; a retired selection is remapped at hydrate;
 // an OnDevice user whose phone cannot run On this phone (Kev on disk AND the built-in model available) falls back to
 // Cloud LOCALLY ONLY with a visible notice, never silently (the server persona keeps the on-device intent); and the
@@ -129,19 +129,21 @@ describe('the Qwen file is deleted for every reader, whatever the mode', () => {
         await putModelOnDisk(KEV);
         useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
         personaMode(ProcessingMode.OnDevice);
-        await modelManager.purgeAllBaseModels();
+        await modelManager.purgeStaleModels();
         expect(modelDirExists(QWEN)).toBe(false);
         expect(modelDirExists(KEV)).toBe(true);
     });
 
-    it('Cloud with no on-device intent: the purge wipes every model file', async () => {
+    it('a Cloud boot keeps the current model and deletes retired and unknown files', async () => {
         await putModelOnDisk(QWEN);
         await putModelOnDisk(KEV);
+        await putModelOnDisk('some-unknown-model');
         useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
         personaMode(ProcessingMode.Cloud);
-        await modelManager.purgeAllBaseModels();
+        await modelManager.purgeStaleModels();
         expect(modelDirExists(QWEN)).toBe(false);
-        expect(modelDirExists(KEV)).toBe(false);
+        expect(modelDirExists('some-unknown-model')).toBe(false);
+        expect(modelDirExists(KEV)).toBe(true);
     });
 });
 
@@ -212,7 +214,7 @@ describe('the OnDevice rule: Kev on disk AND the built-in model available', () =
     });
 });
 
-describe('the boot purge (purgeAllBaseModels) after a local Cloud fallback', () => {
+describe('the boot purge (purgeStaleModels) after a local Cloud fallback', () => {
     const personaMode = (processingMode: ProcessingMode) =>
         useUserStore.setState({ userPersona: personaFor(Date.now(), { userId: FIXTURE_ACCOUNT.userId, processingMode }) });
 
@@ -224,7 +226,7 @@ describe('the boot purge (purgeAllBaseModels) after a local Cloud fallback', () 
         await retireLegacyModels();
         expect(store().processingMode).toBe(ProcessingMode.Cloud);
 
-        await modelManager.purgeAllBaseModels();
+        await modelManager.purgeStaleModels();
 
         expect(modelDirExists(KEV)).toBe(true);
     });

@@ -42,7 +42,7 @@ const EXPORTS: [string, Record<string, unknown>, string[]][] = [
         modelManager,
         [
             'downloadBaseModel', 'initBaseModel', 'disposeModel', 'resetContext', 'getModelState', 'isModelDownloaded',
-            'deleteBaseModel', 'purgeAllBaseModels', 'LocalModelsOffError',
+            'deleteBaseModel', 'purgeStaleModels', 'LocalModelsOffError',
         ],
     ],
     ['model catalogue', modelCatalog, ['MODEL_CATALOG', 'RELEVANCE_MODEL', 'DEFAULT_MODEL_ID', 'RETIRED_MODEL_IDS', 'isRetiredModelId']],
@@ -283,7 +283,7 @@ describe('Kev on llama.rn, the text on the built-in model, through the barrel', 
         placeDownloadedModel(KEV);
         await toolkit.decide(REQUEST);
         await expect(toolkit.deleteBaseModel(KEV)).rejects.toThrow('currently loaded');
-        await expect(toolkit.purgeAllBaseModels()).rejects.toThrow('while one is loaded');
+        await expect(toolkit.purgeStaleModels()).rejects.toThrow('while one is loaded');
 
         await modelManager.deleteDownloadedModel(KEV);
         expect(toolkit.getModelState()).toBeNull();
@@ -297,7 +297,7 @@ describe('Kev on llama.rn, the text on the built-in model, through the barrel', 
         try {
             placeDownloadedModel(KEV);
             placeDownloadedModel('mera-qwen3.5-4b-instruct');
-            await toolkit.purgeAllBaseModels();
+            await toolkit.purgeStaleModels();
             expect(await toolkit.isModelDownloaded('mera-qwen3.5-4b-instruct')).toBe(false);
             expect(await toolkit.isModelDownloaded(KEV)).toBe(true);
         } finally {

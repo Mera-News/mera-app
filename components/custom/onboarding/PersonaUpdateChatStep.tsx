@@ -39,7 +39,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { keyboardLift } from './keyboard-lift';
 import { useTranslation } from 'react-i18next';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
 
 const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
@@ -60,7 +60,8 @@ export default function PersonaUpdateChatStep({
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
   const colors = useColors();
-  const onDevice = useIsOnDeviceProcessing();
+  // Cloud chat while On this phone still runs this cloud chat.
+  const onDevice = !useChatRunsInCloud();
   const insets = useSafeAreaInsets();
   // Full-screen page, no panel: only this content area shrinks by the keyboard
   // (the wizard pads the inset itself), so the header stays put and the input

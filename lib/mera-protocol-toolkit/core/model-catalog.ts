@@ -51,7 +51,7 @@ export const DEFAULT_MODEL_ID = RELEVANCE_MODEL.modelId;
 /**
  * Ids no longer offered. A persisted selection naming one is remapped to the
  * default at hydrate, and its files are deleted at boot for every reader
- * (`retire-models.ts` on this phone, `purgeAllBaseModels` otherwise).
+ * (`retire-models.ts` on this phone, `purgeStaleModels` otherwise).
  * `mera-qwen3.5-4b-instruct` is the downloadable text model, retired by D37.
  */
 export const RETIRED_MODEL_IDS: readonly string[] = [

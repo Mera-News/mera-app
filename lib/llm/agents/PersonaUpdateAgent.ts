@@ -19,6 +19,7 @@ import logger from '../../logger';
 import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '@/lib/news-harness/prompts/prompts';
 import { useAppLanguageStore } from '../../stores/app-language-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
+import { chatRunsInCloud } from '../chat-cloud';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import {
@@ -69,6 +70,7 @@ export class PersonaUpdateAgent implements IAgent {
    *  without them, flipping a toggle mid-session would keep serving the prompt
    *  built before the flip. */
   private lastWebSearch: boolean | null = null;
+  private lastCanCalibrate: boolean | null = null;
 
   /**
    * This turn's FILTERS budget decision (not-interested P4a). Recomputed by
@@ -88,10 +90,12 @@ export class PersonaUpdateAgent implements IAgent {
     // user's settings rather than re-reading a store that could change mid-turn.
     const protocol = useMeraProtocolStore.getState();
     const mode: PersonaMode =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+      chatRunsInCloud() ? 'CLOUD' : 'LOCAL';
     // Prose about `webSearch` only makes sense where the tool is declared:
     // CLOUD, and only with the toggle on.
     const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
+    // Recalibration is a cloud scoring call: On this phone (cloud chat or not) it is not offered.
+    const canCalibrate = protocol.processingMode !== ProcessingMode.OnDevice;
 
     // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
     // so persona-agent-core calls THIS function reference rather than its own
@@ -115,6 +119,7 @@ export class PersonaUpdateAgent implements IAgent {
           // switch, and whatever an older build stored is not read.
           deepMode: true,
           ...(webSearch ? { webSearch: true } : {}),
+          ...(canCalibrate ? {} : { canCalibrate: false }),
         },
         buildPersonaUpdateStaticPrompt,
       );
@@ -134,6 +139,7 @@ export class PersonaUpdateAgent implements IAgent {
       && this.lastMode === mode
       && this.lastFilterTools === this.turnPlan.filterTools
       && this.lastWebSearch === webSearch
+      && this.lastCanCalibrate === canCalibrate
     ) {
       return this.cachedSystemPrompt;
     }
@@ -143,6 +149,7 @@ export class PersonaUpdateAgent implements IAgent {
     this.lastMode = mode;
     this.lastFilterTools = this.turnPlan.filterTools;
     this.lastWebSearch = webSearch;
+    this.lastCanCalibrate = canCalibrate;
     return this.cachedSystemPrompt;
   }
 
@@ -295,13 +302,14 @@ export class PersonaUpdateAgent implements IAgent {
     // The handler re-checks the toggle regardless; see chat-tools/web-search-handler.
     const protocol = useMeraProtocolStore.getState();
     const mode: PersonaMode =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+      chatRunsInCloud() ? 'CLOUD' : 'LOCAL';
     return getPersonaToolDefinitions(
       this.surface,
       buildToolDefinitions,
       this.turnPlan.filterTools,
       mode,
       protocol.webSearchInChat === true,
+      protocol.processingMode !== ProcessingMode.OnDevice,
     );
   }
 

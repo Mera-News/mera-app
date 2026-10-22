@@ -62,6 +62,8 @@ export interface SegmentedControlProps<T extends string> {
      * on a change (240 ms) instead of sliding. The host gives the haptic.
      */
     size?: 'default' | 'header';
+    /** Default size only: the track takes the full width and its options split it evenly. */
+    stretch?: boolean;
     /** Header size only: the width the host gives the track. */
     availableWidth?: number | null;
     /** Header size only: names alone when they all fit, no icons (fit.ts). */
@@ -100,6 +102,7 @@ function DefaultTrack<T extends string>({
     accessibilityLabel,
     style,
     testID,
+    stretch = false,
 }: SegmentedControlProps<T>) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
@@ -138,6 +141,7 @@ function DefaultTrack<T extends string>({
             style={[
                 styles.track,
                 { backgroundColor: colors.trackFill, borderColor: colors.trackBorder },
+                stretch ? styles.trackStretch : null,
                 style,
             ]}
         >
@@ -161,10 +165,14 @@ function DefaultTrack<T extends string>({
                             void hapticSelection();
                             onChange(o.value);
                         }}
-                        style={styles.option}
+                        style={[styles.option, stretch ? styles.optionStretch : null]}
                     >
                         {o.icon ? <MaterialIcons name={o.icon} size={16} color={ink} /> : null}
-                        <Text style={[styles.label, { color: ink }]} numberOfLines={1}>
+                        <Text
+                            style={[styles.label, { color: ink }]}
+                            numberOfLines={1}
+                            maxFontSizeMultiplier={MAX_FONT_SCALE.chrome}
+                        >
                             {o.label}
                         </Text>
                     </Pressable>
@@ -486,6 +494,7 @@ const styles = StyleSheet.create({
         borderWidth: BORDER,
         padding: PAD,
         alignSelf: 'flex-start',
+        maxWidth: '100%',
     },
     fill: {
         position: 'absolute',
@@ -495,6 +504,8 @@ const styles = StyleSheet.create({
         left: -BORDER,
         borderRadius: OPTION_HEIGHT / 2,
     },
+    // Long labels (a long locale, a large text size) ellipsize inside the gutter.
+    trackStretch: { alignSelf: 'stretch' },
     option: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -502,8 +513,10 @@ const styles = StyleSheet.create({
         gap: 6,
         height: OPTION_HEIGHT,
         paddingHorizontal: 14,
+        flexShrink: 1,
     },
-    label: { fontSize: 14, fontWeight: '600' },
+    optionStretch: { flex: 1 },
+    label: { fontSize: 14, fontWeight: '600', flexShrink: 1 },
     headerTrack: { alignSelf: 'center', padding: HEADER_PAD, borderRadius: (HEADER_OPTION_HEIGHT + HEADER_PAD * 2 + BORDER * 2) / 2 },
     headerOption: { height: HEADER_OPTION_HEIGHT, justifyContent: 'center', flexShrink: 0 },
     // Only the picked option gives way (its label ellipsizes) when even the

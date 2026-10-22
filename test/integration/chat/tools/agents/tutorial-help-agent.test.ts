@@ -36,6 +36,11 @@ describe('TutorialHelpAgent', () => {
     expect(new TutorialHelpAgent('u1', null).getToolDefinitions()).toEqual([]);
   });
 
+  it('offers webSearch on device while cloud chat is on', async () => {
+    await setProcessingMode('on-device+cloud-chat');
+    expect(toolNames(new TutorialHelpAgent('u1', null))).toEqual(['webSearch']);
+  });
+
   it('executes webSearch instead of refusing it: the query reaches the search route', async () => {
     const agent = new TutorialHelpAgent('u1', null);
 

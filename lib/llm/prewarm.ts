@@ -11,8 +11,8 @@
 //
 // Fire-and-forget and idempotent: repeated calls hit the underlying caches / the
 // warmup dedupe, so mounting several chat surfaces in one session costs at most
-// one real fetch of each until the caches expire. No-op under on-device
-// processing (no gateway hop). Errors are swallowed with a debug log — a failed
+// one real fetch of each until the caches expire. No-op while chat runs on the
+// phone (no gateway hop). Errors are swallowed with a debug log — a failed
 // prewarm simply means the first real turn pays the original cost.
 
 import { create } from 'zustand';
@@ -20,10 +20,9 @@ import { stripThinkTags } from '../algorithms/think-strip';
 import { getJwtToken } from '../auth-client';
 import { appLanguageName } from '../chat-tools/agent-device-port';
 import { fetchModelPublicKey } from '../e2ee/e2ee-service';
-import { ProcessingMode } from '../generated/graphql-types';
 import logger from '../logger';
 import { brandRule, fixBrandSpelling, replaceClauseDashes } from '@/lib/mera-harness';
-import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import { chatRunsInCloud } from './chat-cloud';
 import { bigModelCalledAt, cloudComplete } from './cloudComplete';
 import { BIG_MODEL, SMALL_MODEL } from './constants';
 
@@ -54,10 +53,8 @@ export function dismissMeraGreeting(): void {
  * the background.
  */
 export function prewarmCloudChat(): void {
-  // On-device processing never touches the gateway — nothing to warm.
-  if (
-    useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
-  ) {
+  // Chat on the phone never touches the gateway: nothing to warm.
+  if (!chatRunsInCloud()) {
     logger.debug('[chat-timing] prewarm skipped (on-device)');
     return;
   }
@@ -147,6 +144,7 @@ async function warmModel(): Promise<void> {
       model: BIG_MODEL,
       maxTokens: 64,
       temperature: 0.7,
+      purpose: 'chat',
     }, { lane: 'interactive' });
     const text = greetingLine(reply, lang);
     if (text && gen === greetingGen) useMeraGreeting.setState({ text });

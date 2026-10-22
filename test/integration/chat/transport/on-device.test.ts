@@ -42,6 +42,7 @@ afterEach(() => {
   spies.forEach((s) => s.mockRestore());
   spies = [];
   setStoreMode(ProcessingMode.Cloud);
+  useMeraProtocolStore.setState({ chatInCloud: false });
 });
 
 describe('isOnDeviceMode', () => {
@@ -158,5 +159,45 @@ describe('every cloud entry point refuses in on-device mode', () => {
     expect(result).toBe('from the cloud');
     expect(gatewayCalls('chat')).toHaveLength(1);
     expect((await chat.raw())[0]).not.toContain('SENTINEL');
+  });
+});
+
+describe('cloud chat while on device: only chat calls pass', () => {
+  beforeEach(() => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, chatInCloud: true });
+  });
+
+  it('a chat stream and the quick-check completion reach the gateway', async () => {
+    fakeClock();
+    server.use(...mockGateway(respond('from the cloud')));
+
+    const events: unknown[] = [];
+    await run((async () => {
+      for await (const e of cloudChatStream({ messages: [{ role: 'user', content: SENTINEL }] })) events.push(e);
+    })());
+    const quick = await run(cloudComplete({ systemPrompt: SENTINEL, prompt: SENTINEL, purpose: 'chat' }));
+
+    expect(events).toContainEqual({ type: 'text-delta', delta: 'from the cloud' });
+    expect(quick).toBe('from the cloud');
+    expect(gatewayCalls('chat')).toHaveLength(2);
+  });
+
+  it.each<[string, () => Promise<unknown>]>([
+    ['a background cloudComplete', () => cloudComplete({ systemPrompt: SENTINEL, prompt: SENTINEL })],
+    ['cloudBatchComplete', () => cloudBatchComplete([{ id: 'a', system: SENTINEL, prompt: SENTINEL, temperature: 0.3 }])],
+    ['a background prepareE2EEContext', () => prepareE2EEContext(SMALL_MODEL)],
+    ['rebuildE2EEContext', () => rebuildE2EEContext(SMALL_MODEL, 'ab'.repeat(32), 'ed25519')],
+  ])('%s still throws OnDeviceModeError', async (_name, call) => {
+    const err = await errorOf(call());
+
+    expect(err).toBeInstanceOf(OnDeviceModeError);
+    expect(attestationRequests()).toBe(0);
+    expect(gatewayCalls()).toEqual([]);
+  });
+
+  it('with cloud chat off, a chat call throws as before', async () => {
+    useMeraProtocolStore.setState({ chatInCloud: false });
+
+    expect(await errorOf(assertCloudAllowed('chat'))).toBeInstanceOf(OnDeviceModeError);
   });
 });

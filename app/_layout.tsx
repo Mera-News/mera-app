@@ -48,7 +48,6 @@ import logger from '@/lib/logger';
 import { ensurePushTokenRegistered, handleInitialNotification, setupNotifications } from '@/lib/notification-service';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { purgeAllBaseModels } from '@/lib/mera-protocol-toolkit';
 import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
 import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';

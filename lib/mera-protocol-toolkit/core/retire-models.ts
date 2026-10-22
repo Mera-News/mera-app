@@ -2,7 +2,7 @@
 //
 // Runs once after hydrateAllStores(), for OnDevice users only. Local Cloud
 // users go through the boot purge in use-app-root instead, which deletes every
-// model file only when the cached persona has no on-device intent either. Nothing
+// model file except the current catalogue model. Nothing
 // here may block boot: every failure is captured and swallowed.
 
 import { deleteSetting } from '@/lib/database/services/setting-service';

@@ -93,6 +93,8 @@ function buildQuestionBankText(deepMode: boolean): string {
 export function buildToolDefinitions(
   surface: 'ONBOARDING' | 'CONFIG',
   filterTools: FilterToolsVariant = 'full',
+  /** False On this phone: recalibration is a cloud scoring call, so it is not offered. */
+  canCalibrate: boolean = true,
 ): ToolDefinition[] {
   const tools: ToolDefinition[] = [
     {
@@ -286,7 +288,7 @@ export function buildToolDefinitions(
         },
       });
     }
-    tools.push({
+    if (canCalibrate) tools.push({
       type: 'function',
       function: {
         name: 'runCalibration',
@@ -341,10 +343,11 @@ function schemaTypeToString(schema: Record<string, unknown>): string {
 export function buildToolFormatSection(
   surface: 'ONBOARDING' | 'CONFIG',
   filterTools: FilterToolsVariant = 'full',
+  canCalibrate: boolean = true,
 ): string {
   const isOnboarding = surface === 'ONBOARDING';
 
-  const tools = buildToolDefinitions(surface, filterTools);
+  const tools = buildToolDefinitions(surface, filterTools, canCalibrate);
   const toolLines = tools
     .map((t) => `- ${t.function.name}: ${schemaToCompactSignature(t.function.parameters)}`)
     .join('\n');
@@ -443,6 +446,8 @@ export function buildPersonaUpdateStaticPrompt(params: {
   /** item 17 — swap in the deeper question bank. Applies to BOTH paths (the
    *  bank is smaller than the standard one, so LOCAL stays inside budget). */
   deepMode?: boolean;
+  /** False On this phone: no runCalibration tool and no line about it. Default true. */
+  canCalibrate?: boolean;
   /** item 13 — the user's "Web search in chat" toggle. CLOUD-only prose, and
    *  only when ON: an off toggle must cost zero prompt tokens. */
   webSearch?: boolean;
@@ -461,6 +466,7 @@ export function buildPersonaUpdateStaticPrompt(params: {
     deepMode = false,
     webSearch = false,
     promptVariant,
+    canCalibrate = true,
   } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
@@ -483,6 +489,7 @@ export function buildPersonaUpdateStaticPrompt(params: {
       languageName,
       filterTools,
       deepMode,
+      canCalibrate,
     });
   }
 
@@ -490,11 +497,11 @@ export function buildPersonaUpdateStaticPrompt(params: {
     ? `- LANGUAGE: User's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch languages even if the user writes in English, Chinese, or any other language; reply in ${languageName} regardless. Fact statements stay English (see Facts).`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English (see Facts).`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools, canCalibrate) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
-- DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
-- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.${filtersPromptSection(filterTools)}`;
+- DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.${canCalibrate ? `
+- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.` : ''}${filtersPromptSection(filterTools)}`;
 
   const conversationGuide = `## Rules
 ${languageRule}
@@ -568,17 +575,18 @@ function buildPersonaUpdateLocalPrompt(params: {
   languageName?: string;
   filterTools?: FilterToolsVariant;
   deepMode?: boolean;
+  canCalibrate?: boolean;
 }): string {
-  const { surface, includeToolFormat, languageName, filterTools = 'full', deepMode = false } = params;
+  const { surface, includeToolFormat, languageName, filterTools = 'full', deepMode = false, canCalibrate = true } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
     ? `ALWAYS reply in **${languageName}**, never switch — even if the user writes another language. Fact statements stay English.`
     : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools, canCalibrate) : '';
 
-  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Info on a DIFFERENT subject is NEVER a correction — saving one never deletes another. Match by attribute key; if unsure, ask.\n- runCalibration: only when the user was invited to recalibrate AND explicitly confirms; never unprompted.' + filtersPromptSection(filterTools);
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Info on a DIFFERENT subject is NEVER a correction — saving one never deletes another. Match by attribute key; if unsure, ask.' + (canCalibrate ? '\n- runCalibration: only when the user was invited to recalibrate AND explicitly confirms; never unprompted.' : '') + filtersPromptSection(filterTools);
 
   const rulesSection = `## Rules
 - ${languageRule}

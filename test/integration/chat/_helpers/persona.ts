@@ -21,10 +21,12 @@ export async function seedFacts(facts: (string | SeedFact)[]): Promise<Fact[]> {
 }
 
 /** Sets the processing mode the way the settings screen does, and waits for the persisted row
- *  (the store's own setter writes it fire-and-forget). */
-export async function setProcessingMode(mode: 'cloud' | 'on-device'): Promise<void> {
+ *  (the store's own setter writes it fire-and-forget). Cloud chat is on only for
+ *  'on-device+cloud-chat', so every call also resets it. */
+export async function setProcessingMode(mode: 'cloud' | 'on-device' | 'on-device+cloud-chat'): Promise<void> {
   const value = mode === 'cloud' ? ProcessingMode.Cloud : ProcessingMode.OnDevice;
   useMeraProtocolStore.getState().setProcessingMode(value);
+  useMeraProtocolStore.setState({ chatInCloud: mode === 'on-device+cloud-chat' });
   await setSetting('mera_processing_mode', value);
 }
 

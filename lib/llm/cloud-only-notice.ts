@@ -5,7 +5,7 @@
 // OS translator's native module at load).
 
 import { showDialog } from '../dialog';
-import { isOnDeviceMode } from './on-device-gate';
+import { cloudAllowed, type CloudPurpose } from './on-device-gate';
 
 /** The shared body line, in the reader's language. */
 export function cloudOnlyNoticeText(): string {
@@ -25,9 +25,10 @@ export async function showCloudOnlyNotice(): Promise<void> {
   });
 }
 
-/** True (after showing the notice) when the action must not run on-device. */
-export async function blockIfOnDevice(): Promise<boolean> {
-  if (!(await isOnDeviceMode())) return false;
+/** True (after showing the notice) when the action must not run on-device.
+ *  `purpose: 'chat'` lets it run while cloud chat is on. */
+export async function blockIfOnDevice(purpose?: CloudPurpose): Promise<boolean> {
+  if (await cloudAllowed(purpose)) return false;
   void showCloudOnlyNotice();
   return true;
 }

@@ -4,7 +4,7 @@
 // responses are decrypted locally. There is no plaintext path — if E2EE
 // fails, the call fails and the user sees an error.
 
-import { assertCloudAllowed } from './on-device-gate';
+import { assertCloudAllowed, type CloudPurpose } from './on-device-gate';
 import {
   decryptContent,
   encryptContent,
@@ -134,6 +134,9 @@ export interface CloudCompleteRequest {
   topP?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
+  /** 'chat' only for a call made inside a chat (quick fact check, prewarm greeting):
+   *  it then runs on device while cloud chat is on. Omitted means background. */
+  purpose?: CloudPurpose;
 }
 
 /** Single E2EE completion call (used for scoring). */
@@ -141,7 +144,7 @@ export async function cloudComplete(
   request: CloudCompleteRequest,
   options: CloudCallOptions = {},
 ): Promise<string> {
-  await assertCloudAllowed();
+  await assertCloudAllowed(request.purpose);
   const temperature = request.temperature ?? 0.3;
   const primary = request.model ?? SMALL_MODEL;
   const model = resolveModel(primary);
@@ -168,7 +171,7 @@ export async function cloudComplete(
         { role: 'system', content: request.systemPrompt },
         { role: 'user', content: request.prompt },
       ];
-      const attemptCtx = await encryptMessages(messages, sendModel, options.lane);
+      const attemptCtx = await encryptMessages(messages, sendModel, options.lane, request.purpose);
       const baseHeaders = await getAuthHeaders();
       return {
         init: {
@@ -468,7 +471,8 @@ export async function* cloudChatStream(
   request: CloudChatStreamRequest,
 ): AsyncGenerator<SseEvent> {
   logger.debug(`${TAG} cloudChatStream ENTER`, { messageCount: request.messages.length });
-  await assertCloudAllowed();
+  // Always chat: the stream's only callers are chat turns.
+  await assertCloudAllowed('chat');
 
   // ONE CALL, ONE MARK. An agent turn is a loop of up to MAX_AGENT_LEGS
   // sequential calls and each genuinely re-encrypts and re-sends, so the wait
@@ -534,7 +538,7 @@ export async function* cloudChatStream(
     );
     // INTERACTIVE all the way down: a cold attestation cache makes this a real
     // gateway request on the critical path of a user's turn.
-    const attemptCtx = await encryptMessages(messages, sendModel, 'interactive');
+    const attemptCtx = await encryptMessages(messages, sendModel, 'interactive', 'chat');
     // The fetched key has just sealed the message: a cold first build shows
     // both steps, never only the key fetch.
     if (cold) phase('securing');

@@ -374,9 +374,9 @@ export async function executeProposalActions(
           /* eslint-disable-next-line @typescript-eslint/no-require-imports */
           const { startFactCheckFromAction } =
             require('./quick-fact-check-handler') as typeof import('./quick-fact-check-handler');
-          // A fact check is a cloud call. A proposal staged in cloud mode can be
-          // confirmed after the switch: say so, once, and run nothing.
-          if (await blockIfOnDevice()) break;
+          // A fact check is a cloud chat call. A proposal staged in cloud mode can be
+          // confirmed after the switch: say so, once, and run nothing (unless cloud chat is on).
+          if (await blockIfOnDevice('chat')) break;
           // FIRE-AND-FORGET. It registers a running card in the thread up front
           // and settles it when the search finishes; awaiting here would hold the
           // Confirm button disabled for the length of a search round and leave

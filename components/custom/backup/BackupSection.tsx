@@ -458,7 +458,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       ) : null}
 
       {state === 'on' ? statusCard() : null}
-      {state !== 'off' ? <StepsAccordion testID="backup-steps" steps={backupSteps()} /> : null}
+      {state !== 'off' ? <StepsAccordion testID="backup-steps" steps={backupSteps()} doneLabel={t('common.done')} /> : null}
       {state === 'on' ? (
         <Group>
           <Row
@@ -492,7 +492,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         ) : (
           <>
             <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('backup.restoreReplaces')}</Text>
-            <StepsAccordion testID="restore-steps" steps={restoreSteps()} />
+            <StepsAccordion testID="restore-steps" steps={restoreSteps()} doneLabel={t('common.done')} />
             {rstep !== 'restoring' ? (
               <Pressable
                 testID="restore-cancel"

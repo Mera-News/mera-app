@@ -12,7 +12,7 @@
 // This is the thin RN adapter: prompt/context/tool construction all live in the
 // RN-free brain at lib/news-harness/follow-story.
 
-import { ProcessingMode } from '../../generated/graphql-types';
+import { chatRunsInCloud } from '../chat-cloud';
 import { handleSearchNews } from '../../chat-tools/news-search-handler';
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import { decideProposeTrack } from '../../news-harness/article-feedback/agent-core';
@@ -57,7 +57,7 @@ export class FollowStoryAgent implements IAgent {
   private searchGates(): { mode: 'CLOUD' | 'LOCAL'; canSearch: boolean; webSearch: boolean } {
     const protocol = useMeraProtocolStore.getState();
     const mode: 'CLOUD' | 'LOCAL' =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+      chatRunsInCloud() ? 'CLOUD' : 'LOCAL';
     return {
       mode,
       canSearch: mode === 'CLOUD',

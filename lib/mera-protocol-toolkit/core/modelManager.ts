@@ -20,12 +20,11 @@ import {
 import logger from '../../logger';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
-import { useUserStore } from '../../stores/user-store';
 import { LOCAL_CONTEXT_TOKENS } from './context-size';
 import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
 import { withLlamaLock } from './llama-lock';
-import { RELEVANCE_MODEL, RETIRED_MODEL_IDS } from './model-catalog';
+import { MODEL_CATALOG, RELEVANCE_MODEL } from './model-catalog';
 import { builtInAvailability } from './text-engine';
 import { prewarm as prewarmNative } from '@/modules/mera-on-device-llm';
 import type {
@@ -428,29 +427,22 @@ export function deleteDownloadedModel(modelId: string): Promise<void> {
 }
 
 /**
- * Wipes the whole `mera-models/` cache directory, every model id, for a reader
- * with no on-device intent. Used by the boot-time purge for Cloud users.
- *
- * While the cached persona says OnDevice (the local Cloud fallback, D6) only the
- * retired models' files go: the intent is kept and the current files must survive
- * so a retry fetches only what is missing. retireLegacyModels runs for OnDevice
- * phones only, so without this a phone in that split state kept retired files for
- * good. Refuses while a model is loaded.
+ * The boot purge for a phone not on OnDevice: deletes every entry in `mera-models/`
+ * that is not a catalogue model (retired ids and unknown leftovers). The current
+ * model stays, so a reader who flips back to Private cloud keeps the 3 GB file and
+ * the next switch to On this phone needs no download. Refuses while a model is loaded.
  */
-export function purgeAllBaseModels(): Promise<void> {
+export function purgeStaleModels(): Promise<void> {
   return withLlamaLock(async () => {
-    if (useUserStore.getState().userPersona?.processingMode === ProcessingMode.OnDevice) {
-      for (const modelId of RETIRED_MODEL_IDS) {
-        const dir = getModelDir(modelId);
-        if (dir.exists) await dir.delete();
-      }
-      return;
-    }
     if (llamaContext) {
       throw new Error('Cannot purge models while one is loaded. Dispose it first.');
     }
     const root = new Directory(Paths.cache, MODELS_DIR_NAME);
-    if (root.exists) await root.delete();
+    if (!root.exists) return;
+    const keep = new Set(MODEL_CATALOG.map((m) => m.modelId));
+    for (const entry of root.list()) {
+      if (!keep.has(entry.name)) await entry.delete();
+    }
   });
 }
 

@@ -14,6 +14,12 @@
 // A row that says on-device is never cached: the store may still be
 // unhydrated, so the row is read again until the store agrees.
 //
+// THE ONE EXCEPTION is chat with cloud chat on (`chatInCloud`, lib/llm/chat-cloud):
+// a caller that passes `purpose: 'chat'` is let through. The purpose is always
+// explicit at the call site (cloudChatStream, the quick fact check, the prewarm
+// greeting), never inferred from the limiter lane, so every background caller
+// stays blocked.
+//
 // Both requires are lazy: the store and the setting service build their
 // collections at module scope, and cloudComplete is imported by suites that
 // cannot construct a SQLiteAdapter.
@@ -39,15 +45,20 @@ export function __resetOnDeviceGateForTests(): void {
   persistedSaidCloud = false;
 }
 
-function storeMode(): string | null {
+/** Why a cloud call is made. Only chat has an exception; omitted means background. */
+export type CloudPurpose = 'chat';
+
+function storeState(): { processingMode: string; chatInCloud: boolean } | null {
   try {
     const { useMeraProtocolStore } =
       require('../stores/mera-protocol-store') as typeof import('../stores/mera-protocol-store');
-    return useMeraProtocolStore.getState().processingMode;
+    return useMeraProtocolStore.getState();
   } catch {
     return null;
   }
 }
+
+const storeMode = (): string | null => storeState()?.processingMode ?? null;
 
 /** True while the app is in on-device processing mode. */
 export async function isOnDeviceMode(): Promise<boolean> {
@@ -67,7 +78,13 @@ export async function isOnDeviceMode(): Promise<boolean> {
   return storeMode() === ON_DEVICE;
 }
 
-/** Throws OnDeviceModeError in on-device mode. The entry points' backstop. */
-export async function assertCloudAllowed(): Promise<void> {
-  if (await isOnDeviceMode()) throw new OnDeviceModeError();
+/** False in on-device mode, except a chat call while cloud chat is on. */
+export async function cloudAllowed(purpose?: CloudPurpose): Promise<boolean> {
+  if (!(await isOnDeviceMode())) return true;
+  return purpose === 'chat' && storeState()?.chatInCloud === true;
+}
+
+/** Throws OnDeviceModeError when `cloudAllowed` says no. The entry points' backstop. */
+export async function assertCloudAllowed(purpose?: CloudPurpose): Promise<void> {
+  if (!(await cloudAllowed(purpose))) throw new OnDeviceModeError();
 }

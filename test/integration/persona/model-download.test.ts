@@ -23,7 +23,7 @@ import {
     cancelActiveDownload,
     downloadBaseModel,
     isModelDownloaded,
-    purgeAllBaseModels,
+    purgeStaleModels,
 } from '@/lib/mera-protocol-toolkit/core/modelManager';
 import { MODEL_CATALOG, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
@@ -332,7 +332,7 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
             expect(completeBody(RELEVANCE_MODEL.modelId)).toBe('Mera uses Private cloud until Apple Intelligence is ready.');
 
             // The next cold boot sees local Cloud and runs the purge: the file stays.
-            await purgeAllBaseModels();
+            await purgeStaleModels();
             await expect(isModelDownloaded(RELEVANCE_MODEL.modelId)).resolves.toBe(true);
         }
     });
@@ -352,7 +352,7 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         expect(useUserStore.getState().userPersona?.processingMode).toBe(ProcessingMode.OnDevice);
 
         // The app dies here; the next cold boot is on Cloud locally and runs the purge.
-        await purgeAllBaseModels();
+        await purgeStaleModels();
         await expect(isModelDownloaded(SECOND.modelId)).resolves.toBe(true);
     });
 

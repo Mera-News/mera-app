@@ -13,7 +13,7 @@ import { loadSavedSuggestions } from '@/lib/database/services/saved-article-sugg
 import { clampVerdictToEvidence, MAX_EVIDENCE_IN_PROMPT, SYNTHESIS_DEADLINE_MS } from '@/lib/fact-check/fact-check-runner';
 import { BIG_MODEL } from '@/lib/llm/constants';
 import { advanceUntilDone, gatewayCalls, http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
-import { resetChatModules, useStrictClock as installStrictClock } from '@/test/integration/chat/_helpers';
+import { resetChatModules, setProcessingMode, useStrictClock as installStrictClock } from '@/test/integration/chat/_helpers';
 import { askedIds, HITS, manyHits, scriptQuick, serveChecks, watchRequests, type Hit, type QuickScript } from './kit';
 
 const CLAIM = 'Children in the United States receive 80 different vaccines by the age of 18.';
@@ -141,6 +141,18 @@ describe('the answered path', () => {
     const [body] = await chat.json();
     expect(body).toMatchObject({ model: BIG_MODEL, stream: false, temperature: 0, max_tokens: 1200 });
     expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
+  });
+
+  it('runs on device while cloud chat is on: the synthesis is a chat call', async () => {
+    await setProcessingMode('on-device+cloud-chat');
+    try {
+      const answer = await check({}, { answer: ANSWER });
+
+      expect(answer.outcome).toBe('answered');
+      expect(chatCalls()).toHaveLength(1);
+    } finally {
+      await setProcessingMode('cloud');
+    }
   });
 
   it('seals the prompt: the claim and the evidence reach the model decrypted and never in the clear', async () => {

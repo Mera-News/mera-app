@@ -40,11 +40,10 @@ import {
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
 import {
-  useIsOnDeviceProcessing,
   useMeraProtocolStore,
   useModelState,
 } from '@/lib/stores/mera-protocol-store';
-import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { chatRunsInCloud, useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import React, { useEffect, useRef, useState } from 'react';
@@ -76,7 +75,8 @@ export default function MeraChatSession() {
   const hasInitialized = useRef(false);
   const surfaceRef = useRef<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
 
-  const isOnDevice = useIsOnDeviceProcessing();
+  // Cloud chat while On this phone runs the cloud engine and skips the local model load.
+  const chatOnPhone = !useChatRunsInCloud();
   const modelState = useModelState();
   const context = useFloatingChatStore((state) => state.context);
 
@@ -128,9 +128,7 @@ export default function MeraChatSession() {
         surfaceRef.current = currentSurface;
 
         // For local path: load model into memory if downloaded but not yet ready
-        const isOnDeviceMode =
-          useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
-        if (isOnDeviceMode) {
+        if (!chatRunsInCloud()) {
           const downloaded = await isModelDownloaded();
           const currentModelState = useMeraProtocolStore.getState().modelState;
           if (downloaded && currentModelState !== 'ready' && currentModelState !== 'loading') {
@@ -212,7 +210,7 @@ export default function MeraChatSession() {
 
   // Show loading if model is loading for local path
   const isModelLoading =
-    isOnDevice &&
+    chatOnPhone &&
     modelState !== 'ready' &&
     modelState !== 'not_downloaded' &&
     modelState !== 'error';
@@ -277,7 +275,7 @@ export default function MeraChatSession() {
 
   // Key by conversationId so "New chat" fully remounts the inference hook and
   // its live state (fresh thread, intro + starter chips again).
-  return isOnDevice
+  return chatOnPhone
     ? <LocalPersonaChat key={conversationId} {...sharedProps} />
     : <CloudPersonaChat key={conversationId} {...sharedProps} />;
 }

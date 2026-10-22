@@ -24,6 +24,9 @@ class FakeFile {
   constructor(...parts: PathPart[]) {
     this.uri = join(parts);
   }
+  get name(): string {
+    return this.uri.split('/').pop() ?? '';
+  }
   get exists(): boolean {
     return files.has(this.uri);
   }
@@ -67,6 +70,9 @@ class FakeDirectory {
   readonly uri: string;
   constructor(...parts: PathPart[]) {
     this.uri = join(parts);
+  }
+  get name(): string {
+    return this.uri.split('/').pop() ?? '';
   }
   get exists(): boolean {
     const prefix = `${this.uri}/`;

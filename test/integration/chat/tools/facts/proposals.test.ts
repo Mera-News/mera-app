@@ -417,6 +417,16 @@ describe('run_calibration', () => {
     });
   });
 
+  it('on-device with cloud chat on: still blocked, calibration is not chat', async () => {
+    await setProcessingMode('on-device+cloud-chat');
+
+    const result = await run();
+
+    expect(gatewayCalls()).toHaveLength(0);
+    expect(result).toEqual(NOTHING);
+    expect(useDialogQueue.getState().queue).toHaveLength(1);
+  });
+
   it('recalibrates and says so when the model returns tweaks that are within bounds', async () => {
     server.use(...mockGateway(() => '{"deltas":{"W_TOPIC":0.05}}'));
 
@@ -472,6 +482,20 @@ describe('fact_check_claim', () => {
     expect(result).toEqual(NOTHING);
     expect(useFloatingChatStore.getState().quickFactChecks).toEqual([]);
     expect(useDialogQueue.getState().queue).toHaveLength(1);
+  });
+
+  it('on-device with cloud chat on: the check runs like in cloud mode, with no dialog', async () => {
+    await setProcessingMode('on-device+cloud-chat');
+
+    const result = await executeProposalActions([article], { confirmedByUser: true });
+
+    expect(result).toMatchObject({ applied: 1, errors: [] });
+    expect(useDialogQueue.getState().queue).toEqual([]);
+    const settled = await pollUntil(
+      async () => useFloatingChatStore.getState().quickFactChecks[0],
+      (c) => c?.status !== 'running',
+    );
+    expect(settled).toMatchObject({ mode: 'article', articleRequested: true });
   });
 
   it('a claim pill with an empty claim is an error', async () => {

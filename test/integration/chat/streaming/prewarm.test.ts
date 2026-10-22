@@ -40,7 +40,7 @@ beforeEach(() => {
   useMeraGreeting.setState({ text: null });
 });
 afterEach(() => {
-  useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
+  useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud, chatInCloud: false });
   useAppLanguageStore.setState({ appLanguage: 'en' });
 });
 
@@ -242,6 +242,17 @@ describe('prewarmCloudChat, the cases where it stays quiet', () => {
     expect(gatewayCalls()).toEqual([]);
     expect(attestationRequests()).toBe(0);
     expect(greeting()).toBeNull();
+  });
+
+  it('warms and greets on device while cloud chat is on: the greeting is a chat call', async () => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice, chatInCloud: true });
+    server.use(...mockGateway(respond('Mera is ready.')));
+
+    prewarmCloudChat();
+    await settled();
+
+    expect(gatewayCalls('chat')).toHaveLength(1);
+    expect(greeting()).toBe('Mera is ready.');
   });
 
   it('signed out: no gateway request, no throw, and the window is released for after sign-in', async () => {

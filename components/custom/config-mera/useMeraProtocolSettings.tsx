@@ -28,6 +28,7 @@ import {
 import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types';
 import { rependSkippedNotes } from '@/lib/mera-protocol/scoring-service';
 import {
+    useChatInCloud,
     useMeraProtocolStore,
     useSkipNotes,
     useProcessingMode,
@@ -70,19 +71,28 @@ export const NATIVE_REASON_KEYS = {
  */
 export const MODELS_SECTION_KEYS = [
     'meraProtocol.relevanceTitle',
-    'meraProtocol.relevanceHelp',
-    'meraProtocol.textTitle',
-    'meraProtocol.textHelp',
+    'meraProtocol.onPhoneIntro',
+    'meraProtocol.inUseCloud',
+    'meraProtocol.stepModelTitle',
+    'meraProtocol.stepOnTitle',
+    'meraProtocol.stepChatTitle',
+    'meraProtocol.turnOn',
+    'meraProtocol.chatInCloudTitle',
+    'meraProtocol.chatInCloudNote',
+    'meraProtocol.cantRun',
+    'meraProtocol.cantRunHelpTitle',
+    'meraProtocol.cantRunHelpIntro',
+    'meraProtocol.helpModesCloud',
+    'meraProtocol.helpModesPhone',
     'meraProtocol.builtInReady',
     'meraProtocol.builtInRequirement',
     'meraProtocol.notesGroup',
     'meraProtocol.skipNotesTitle',
+    'meraProtocol.skipNotesLine',
     'meraProtocol.skipNotesHelp',
     'meraProtocol.fallbackNoticeTitle',
     'meraProtocol.fallbackNoticeBody',
-    'meraProtocol.modelsHelp',
     'meraProtocol.modelsWaitingNative',
-    'meraProtocol.modelReady',
     'meraProtocol.modelQueued',
     'meraProtocol.modelRowReady',
     'meraProtocol.modelRowMissing',
@@ -91,7 +101,6 @@ export const MODELS_SECTION_KEYS = [
     'meraProtocol.downloadingOf',
     'meraProtocol.cancelDownloadAction',
     'meraProtocol.tryAgain',
-    'meraProtocol.deleteModelLabel',
     'meraProtocol.deleteModelTitle',
     'meraProtocol.deleteRelevanceBody',
     'meraProtocol.deleteFailedDescription',
@@ -153,7 +162,6 @@ export function useMeraProtocolSettings() {
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
-    const [showRequirements, setShowRequirements] = useState(false);
     const [isDeletingModel, setIsDeletingModel] = useState(false);
     // Each model on disk or not, and whether On this phone can run.
     const [status, setStatus] = useState<ModelsStatus | null>(null);
@@ -167,6 +175,8 @@ export function useMeraProtocolSettings() {
     const store = useMeraProtocolStore();
     const webSearchInChat = useWebSearchInChat();
     const skipNotes = useSkipNotes();
+    // Chat in Private cloud while On this phone runs the feed (lib/llm/chat-cloud.ts).
+    const chatInCloud = useChatInCloud();
     const inferenceStats = useInferenceStats();
     const downloads = useModelDownloads();
 
@@ -210,6 +220,8 @@ export function useMeraProtocolSettings() {
     }, [onDeviceIntent]);
     // Set for the whole delete: nothing may promote the phone while its files are being removed.
     const deletingRef = useRef(false);
+    // Whether the server persona holds On this phone, so looking back at Private cloud writes nothing.
+    const serverOnDeviceRef = useRef(false);
 
     // The built-in model writes the text: a status row with its availability reason, shown only on
     // its platform. It never needs a download.
@@ -347,6 +359,7 @@ export function useMeraProtocolSettings() {
             const { runnable: canRun } = await readStatus();
             if (userPersona?.processingMode) {
                 const wantsOnDevice = userPersona.processingMode === ProcessingMode.OnDevice;
+                serverOnDeviceRef.current = wantsOnDevice;
                 // A download started with the on-device intent is still that intent, even though the
                 // server says Cloud until a landing promotes the phone.
                 setOnDeviceIntent(wantsOnDevice || willPromoteWhenDone());
@@ -377,6 +390,12 @@ export function useMeraProtocolSettings() {
         // is already Private cloud in the split state (server on-device, files missing), so comparing
         // against it would never write the reader's choice to the server.
         const hadIntent = intentRef.current;
+        // Read before setPromoteWhenDone: a promoting download already wrote On this phone
+        // (saveIntentForDownload), and so did a landing that could not run yet (the cached persona).
+        const serverOnDevice =
+            serverOnDeviceRef.current ||
+            willPromoteWhenDone() ||
+            useUserStore.getState().userPersona?.processingMode === ProcessingMode.OnDevice;
 
         // Always reflect intent locally: it drives the help line and the download rows.
         setOnDeviceIntent(wantsOnDevice);
@@ -386,12 +405,15 @@ export function useMeraProtocolSettings() {
         // If on-device isn't runnable yet, the contextual UI we just revealed
         // is the feedback. Don't persist or toast.
         if (wantsOnDevice && !onDeviceAvailable) return;
+        // Back on Private cloud after only looking at the other tab: the server already holds it.
+        if (!wantsOnDevice && processingMode === ProcessingMode.Cloud && !serverOnDevice) return;
         if (mode === processingMode && wantsOnDevice === hadIntent) return;
 
         setIsUpdatingMode(true);
         try {
             const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, mode);
+            serverOnDeviceRef.current = wantsOnDevice;
             store.setProcessingMode(mode);
             cacheProcessingMode(mode);
 
@@ -459,6 +481,7 @@ export function useMeraProtocolSettings() {
         try {
             const userId = await resolveCurrentUserId();
             await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
+            serverOnDeviceRef.current = false;
             cacheProcessingMode(ProcessingMode.Cloud);
         } catch {
             // Server mutation failed. Still update locally so the UI reflects
@@ -510,8 +533,6 @@ export function useMeraProtocolSettings() {
         isLoading,
         isUpdatingMode,
         requirementsResult,
-        showRequirements,
-        setShowRequirements,
         isDeletingModel,
         processingMode,
         isOnDevice,
@@ -524,6 +545,8 @@ export function useMeraProtocolSettings() {
         toggleBgRefresh,
         skipNotes,
         toggleSkipNotes,
+        chatInCloud,
+        toggleChatInCloud: () => store.setChatInCloud(!chatInCloud),
         selectMode,
         refresh,
         runnable,

@@ -109,7 +109,8 @@ const defaultDeps: QuickFactCheckDeps = {
   searchWebBatch,
   // INTERACTIVE: the quick check runs inside a chat turn, with the user
   // watching a 90s synthesis deadline.
-  complete: (req) => cloudComplete(req, { lane: 'interactive' }),
+  // `purpose: 'chat'`: a chat call, so it runs while cloud chat is on in On this phone.
+  complete: (req) => cloudComplete({ ...req, purpose: 'chat' }, { lane: 'interactive' }),
   now: () => Date.now(),
 };
 

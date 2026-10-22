@@ -9,9 +9,9 @@ export interface ProtocolFocusInput {
   focus: string | undefined;
   /** Already focused during this mount. */
   done: boolean;
-  /** y of the "Where Mera reads" section within the ScrollView content. */
+  /** y of the "How Mera runs" section within the ScrollView content. */
   sectionY: number | null;
-  /** Native tag of the On this phone row, from its own layout event. */
+  /** Native tag of the section's heading, from its own layout event. */
   rowTag: number | null;
 }
 

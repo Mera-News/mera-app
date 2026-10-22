@@ -25,11 +25,14 @@ export interface AccordionStep {
 
 export interface StepsAccordionProps {
     steps: AccordionStep[];
+    /** Spoken after a done step's title ("Done"): the tick is hidden from screen readers. */
+    doneLabel?: string;
     style?: StyleProp<ViewStyle>;
     testID?: string;
 }
 
 const LAYOUT = LinearTransition.duration(220);
+const HIDDEN = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
 
 /**
  * Steps that open one below the other on one card (FinalBackup): the open step
@@ -37,7 +40,7 @@ const LAYOUT = LinearTransition.duration(220);
  * its summary and an action that reopens it, and later steps are not drawn.
  * The parent owns every status; this only draws them.
  */
-export function StepsAccordion({ steps, style, testID }: StepsAccordionProps) {
+export function StepsAccordion({ steps, doneLabel, style, testID }: StepsAccordionProps) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
     const visible = steps.filter((s) => s.status !== 'hidden');
@@ -59,17 +62,22 @@ export function StepsAccordion({ steps, style, testID }: StepsAccordionProps) {
                         style={[styles.step, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }]}
                     >
                         <View style={styles.head}>
+                            {/* The badge is drawn only: the title speaks its number or state. */}
                             {open ? (
-                                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                                <View {...HIDDEN} style={[styles.badge, { backgroundColor: colors.accent }]}>
                                     <Text style={[styles.badgeText, { color: colors.onAccent }]}>{number}</Text>
                                 </View>
                             ) : (
-                                <View style={[styles.badge, { backgroundColor: colors.surfaceRaised }]}>
+                                <View {...HIDDEN} style={[styles.badge, { backgroundColor: colors.surfaceRaised }]}>
                                     <MaterialIcons name="check" size={14} color={colors.positive} />
                                 </View>
                             )}
                             <View style={styles.titles}>
-                                <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                                <Text
+                                    accessibilityRole="header"
+                                    accessibilityLabel={open ? `${number}. ${step.title}` : doneLabel ? `${step.title}, ${doneLabel}` : step.title}
+                                    style={[styles.title, { color: colors.ink }]}
+                                >
                                     {step.title}
                                 </Text>
                                 {open && step.hint ? (

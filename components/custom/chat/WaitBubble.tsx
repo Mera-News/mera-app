@@ -7,7 +7,7 @@
 // only once it has held, a retry at once.
 
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { DEVICE_WORD_LINES, WAIT_ROW_WIDTH } from './chat-phases';
@@ -32,7 +32,7 @@ export const WaitBubble: React.FC<WaitBubbleProps> = ({
   ackShowing = false,
   engine: engineProp,
 }) => {
-  const onDevice = useIsOnDeviceProcessing();
+  const onDevice = !useChatRunsInCloud();
   const engine = engineProp ?? (onDevice ? 'local' : 'cloud');
   const local = engine === 'local';
   const minHeight = useWaitRowHeight(showWords, engine);

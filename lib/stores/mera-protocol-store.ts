@@ -36,6 +36,11 @@ interface MeraProtocolState {
   // are written exactly as before.
   skipNotes: boolean;
 
+  // Cloud chat while on this phone. On: chat runs in Private cloud (bigger
+  // model, web search, fact checks); the feed stays on the phone. Read it
+  // through lib/llm/chat-cloud, never alone: it only counts in OnDevice.
+  chatInCloud: boolean;
+
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -53,6 +58,7 @@ interface MeraProtocolState {
   setInjectNoise: (enabled: boolean) => void;
   setWebSearchInChat: (enabled: boolean) => void;
   setSkipNotes: (enabled: boolean) => void;
+  setChatInCloud: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -77,6 +83,8 @@ const SETTING_INJECT_NOISE = 'mera_inject_noise';
 const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
 /** Absent means off. Carried by backup: it is a preference the reader set. */
 export const SETTING_SKIP_NOTES = 'mera_skip_notes';
+/** Absent means off. Carried by backup, like skip notes. */
+export const SETTING_CHAT_IN_CLOUD = 'mera_chat_in_cloud';
 // RETIRED. Fact checking is part of the product now rather than an opt-in, so
 // this key is no longer READ — only swept, so a device that once stored 'false'
 // does not keep a row implying a preference the app no longer honours.
@@ -119,6 +127,7 @@ const initialState = {
   // existing device and the feature ships dark.
   webSearchInChat: true,
   skipNotes: false,
+  chatInCloud: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -150,6 +159,11 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setSkipNotes: (skipNotes) => {
     set({ skipNotes });
     setSetting(SETTING_SKIP_NOTES, skipNotes ? 'true' : 'false').catch(() => { });
+  },
+
+  setChatInCloud: (chatInCloud) => {
+    set({ chatInCloud });
+    setSetting(SETTING_CHAT_IN_CLOUD, chatInCloud ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -194,6 +208,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
     deleteSetting(SETTING_SKIP_NOTES).catch(() => { });
+    deleteSetting(SETTING_CHAT_IN_CLOUD).catch(() => { });
     // The marker goes too. A reset device is a fresh device, and a fresh device
     // gets the current default — leaving the marker behind would make the next
     // hydrate honour an absent row as "on" anyway, but leaving it AND a stale
@@ -216,6 +231,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         webSearchValue,
         webSearchForcedOnValue,
         skipNotesValue,
+        chatInCloudValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
@@ -224,6 +240,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_WEB_SEARCH_FORCED_ON),
         getSetting(SETTING_SKIP_NOTES),
+        getSetting(SETTING_CHAT_IN_CLOUD),
       ]);
       // One-shot cleanup: the retired v2 key is never read, just swept so it
       // doesn't linger.
@@ -279,6 +296,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         updates.webSearchInChat = webSearchValue !== 'false';
       }
       updates.skipNotes = skipNotesValue === 'true';
+      updates.chatInCloud = chatInCloudValue === 'true';
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -300,6 +318,9 @@ export const useWebSearchInChat = () =>
 
 export const useSkipNotes = () =>
   useMeraProtocolStore((state) => state.skipNotes);
+
+export const useChatInCloud = () =>
+  useMeraProtocolStore((state) => state.chatInCloud);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

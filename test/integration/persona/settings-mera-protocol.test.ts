@@ -320,6 +320,39 @@ describe('Mera Protocol settings', () => {
             expect(protocol().processingMode).toBe(ProcessingMode.Cloud);
             expect(toastTitles()).toEqual([]);
         });
+
+        it('looking at On this phone and back at Private cloud, with no model: nothing is sent and no toast', async () => {
+            resetFileSystem();
+            serverMode(ProcessingMode.Cloud);
+            const sent = recordModeUpdates();
+            const { result } = await mountLoaded();
+
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.OnDevice);
+            });
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.Cloud);
+            });
+
+            expect(result.current.onDeviceIntent).toBe(false);
+            expect(sent).toEqual([]);
+            expect(toastTitles()).toEqual([]);
+        });
+
+        it('back at Private cloud while a promoting download runs: CLOUD is written, since the download saved On this phone', async () => {
+            resetFileSystem();
+            serverMode(ProcessingMode.Cloud);
+            const sent = recordModeUpdates();
+            jest.spyOn(downloadService, 'willPromoteWhenDone').mockReturnValue(true);
+            const { result } = await mountLoaded();
+            expect(result.current.onDeviceIntent).toBe(true);
+
+            await act(async () => {
+                await result.current.selectMode(ProcessingMode.Cloud);
+            });
+
+            expect(sent.map((s) => s.mode)).toEqual(['CLOUD']);
+        });
     });
 
     // ---------------------------------------------------------------------------------------------

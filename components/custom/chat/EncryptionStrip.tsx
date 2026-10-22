@@ -11,7 +11,7 @@ import logger from '@/lib/logger';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { stripStateFor } from '@/lib/services/chat-phase';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useReducer, useRef, useState } from 'react';
@@ -57,7 +57,7 @@ export const EncryptionStrip: React.FC<EncryptionStripProps> = ({
   const colors = useColors();
   const scheme = useThemeMode();
   const motion = useMotionAllowed();
-  const engine = useIsOnDeviceProcessing() ? 'local' : 'cloud';
+  const engine = useChatRunsInCloud() ? 'cloud' : 'local';
   const view = useChatPhaseStore((s) => s.view);
   const deviceWork = useChatPhaseStore((s) => s.deviceWork);
   const sealedSeq = useChatPhaseStore((s) => s.sealedSeq);

@@ -19,12 +19,12 @@
  */
 import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
 
-import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import { Group, Row } from '@/components/custom/you/rows';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import {
@@ -122,46 +122,32 @@ export function AttestationVerificationRow() {
               ? t('meraProtocol.attestationVerdictVerified')
               : t('meraProtocol.attestationNotRunYet');
 
-  const summaryColor =
-    verdict === 'failed' || state.phase === 'error'
-      ? colors.negative
-      : verdict === 'verified'
-        ? colors.positive
-        : verdict === 'incomplete'
-          ? colors.warning
-          : colors.ink2;
-
+  // One row in the page's grouped look; what the check proves is in the modes help card.
   return (
-    <Box className="px-5 mb-6" testID="mera-protocol-attestation">
-      <Box className="p-4 rounded-lg border border-primary-400">
+    <View style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-attestation">
+      <Group>
         <Pressable
           onPress={() => setExpanded(prev => !prev)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          accessibilityLabel={`${t('meraProtocol.attestationTitle')}, ${summaryText}`}
           testID="mera-protocol-attestation-toggle"
         >
-          <HStack space="md" className="items-start">
-            <MaterialIcons name="verified-user" size={24} color={summaryColor} style={{ marginTop: 2 }} />
-            <VStack className="flex-1">
-              <Text className="text-ink-2 text-base font-semibold mb-1">
-                {t('meraProtocol.attestationTitle')}
-              </Text>
-              <Text className="text-ink-2 text-sm">
-                {t('meraProtocol.attestationSubtitle')}
-              </Text>
-              <Text className="text-sm mt-1 font-semibold" style={{ color: summaryColor }}>
-                {summaryText}
-              </Text>
-            </VStack>
-            <MaterialIcons
-              name={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-              size={24}
-              color={colors.ink2}
-              style={{ marginTop: 2 }}
-            />
-          </HStack>
+          <Row
+            title={t('meraProtocol.attestationTitle')}
+            subtitle={summaryText}
+            trailing={
+              <MaterialIcons
+                name={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                size={24}
+                color={colors.ink3}
+              />
+            }
+          />
         </Pressable>
 
         {expanded && (
-          <VStack space="sm" className="mt-4 pt-4 border-t" style={{ borderTopColor: colors.line }}>
+          <VStack space="sm" style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             {state.phase === 'done' &&
               CHECK_ORDER.map(id => {
                 const check = state.report.checks.find(c => c.id === id);
@@ -215,10 +201,12 @@ export function AttestationVerificationRow() {
             <Pressable
               onPress={run}
               disabled={state.phase === 'running'}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: state.phase === 'running' }}
               testID="mera-protocol-attestation-run"
-              className="mt-2"
+              style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}
             >
-              <Text className="text-primary-400 text-sm font-semibold">
+              <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>
                 {state.phase === 'running'
                   ? t('meraProtocol.attestationVerifying')
                   : state.phase === 'idle'
@@ -228,7 +216,7 @@ export function AttestationVerificationRow() {
             </Pressable>
           </VStack>
         )}
-      </Box>
-    </Box>
+      </Group>
+    </View>
   );
 }

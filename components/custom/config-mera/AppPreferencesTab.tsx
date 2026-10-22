@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text';
 import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useChatInCloud } from '@/lib/stores/mera-protocol-store';
 import { useColors } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
 import { maskEmail } from '@/lib/algorithms/mask-email';
@@ -82,6 +83,7 @@ const AppPreferencesTab: React.FC = () => {
         faqOpening,
         openFaq,
     } = useAppPreferences();
+    const chatInCloud = useChatInCloud();
     useFocusEffect(refreshOnFocus);
     // The move row is for accounts that still have an email (a displayed one, or the stored row / session).
     const [emailAccount, setEmailAccount] = useState(false);
@@ -153,7 +155,13 @@ const AppPreferencesTab: React.FC = () => {
                     trailing={
                         <Badge
                             tone="positive"
-                            label={processingMode === ProcessingMode.OnDevice ? t('you.settings.onThisPhone') : t('you.settings.privateCloud')}
+                            label={
+                                processingMode !== ProcessingMode.OnDevice
+                                    ? t('you.settings.privateCloud')
+                                    : chatInCloud
+                                      ? t('you.settings.onThisPhoneCloudChat')
+                                      : t('you.settings.onThisPhone')
+                            }
                         />
                     }
                     onPress={() => routerHook.push(youScreen('mera-protocol'))}

@@ -157,6 +157,8 @@ export interface PersonaSystemPromptInput {
   /** item 13 — the user's "Web search in chat" toggle. Adds one CLOUD-only
    *  prose line telling the model the tool exists. */
   webSearch?: boolean;
+  /** False On this phone, where recalibration (a cloud call) cannot run. */
+  canCalibrate?: boolean;
 }
 
 export type BuildStaticPromptFn = typeof buildPersonaUpdateStaticPrompt;
@@ -183,6 +185,7 @@ export function buildPersonaSystemPrompt(
     ...(input.filterTools ? { filterTools: input.filterTools } : {}),
     ...(input.deepMode ? { deepMode: true } : {}),
     ...(input.webSearch ? { webSearch: true } : {}),
+    ...(input.canCalibrate === false ? { canCalibrate: false } : {}),
   });
 }
 
@@ -840,8 +843,12 @@ export function getPersonaToolDefinitions(
   filterTools: FilterToolsVariant = 'full',
   mode: PersonaMode = 'CLOUD',
   webSearchEnabled: boolean = false,
+  // False On this phone: confirming a recalibration there could only ever be refused.
+  canCalibrate: boolean = true,
 ): ToolDefinition[] {
-  const built = buildDefs(surface).map(withStagedCalibrationDescription);
+  const built = buildDefs(surface)
+    .filter((d) => canCalibrate || d.function.name !== 'runCalibration')
+    .map(withStagedCalibrationDescription);
   // Both surfaces: "how do you handle my data?" gets asked in settings chat too.
   // searchNews rides along on both surfaces too — an onboarding user asking
   // "what's happening with X" should get real headlines, not a redirect.

@@ -15,7 +15,7 @@ import logger from '@/lib/logger';
 import { ensurePushTokenRegistered, handleInitialNotification, setupNotifications } from '@/lib/notification-service';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { purgeAllBaseModels } from '@/lib/mera-protocol-toolkit';
+import { purgeStaleModels } from '@/lib/mera-protocol-toolkit';
 import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
@@ -204,20 +204,12 @@ export function useAppRoot() {
           // Post-hydration tasks that need hydrated store state.
           applyLanguage(useAppLanguageStore.getState().appLanguage);
 
-          // If the user is on cloud processing, the downloaded base-model
-          // GGUF (~3 GB) shouldn't squat on disk. Wipe the `mera-models/`
-          // cache and reset the store's model-state so the UI reflects
-          // reality. Safe to call on cold start — no llama context can be
-          // loaded yet.
+          // On cloud processing, delete retired and unknown model files. The
+          // current model stays, so switching back to On this phone needs no
+          // 3 GB download. Safe on cold start: no llama context is loaded yet.
           const meraStore = useMeraProtocolStore.getState();
           if (meraStore.processingMode !== ProcessingMode.OnDevice) {
-            purgeAllBaseModels()
-              .then(() => {
-                if (meraStore.modelState !== 'not_downloaded') {
-                  meraStore.setModelState('not_downloaded');
-                  meraStore.setDownloadProgress(0);
-                }
-              })
+            purgeStaleModels()
               .catch((err) =>
                 logger.captureException(err, {
                   tags: { component: 'RootLayout', method: 'purge-disabled-models' },

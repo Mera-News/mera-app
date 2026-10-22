@@ -13,7 +13,7 @@
  *  fetchModelPublicKey) and threaded through the E2EEContext + persisted async
  *  jobs so response decryption picks the matching curve.
  */
-import { assertCloudAllowed } from '../llm/on-device-gate';
+import { assertCloudAllowed, type CloudPurpose } from '../llm/on-device-gate';
 import { ed25519, x25519 } from '@noble/curves/ed25519.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
@@ -444,8 +444,9 @@ export async function prepareE2EEContext(
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
   opts: AttestationFetchOptions = {},
+  purpose?: CloudPurpose,
 ): Promise<E2EEContext> {
-  await assertCloudAllowed();
+  await assertCloudAllowed(purpose);
   const attestation = await fetchModelPublicKey(model, lane, opts);
   const { algo } = attestation;
 
@@ -565,6 +566,7 @@ export async function encryptMessages(
   messages: { role: string; content: string;[k: string]: unknown }[],
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
+  purpose?: CloudPurpose,
 ): Promise<E2EEContext> {
   // The six tool keys keep their typed CleartextToolDataError (the chat guard's contract).
   assertNoCleartextToolFields(messages);
@@ -578,7 +580,7 @@ export async function encryptMessages(
       }
     }
   }
-  const ctx = await prepareE2EEContext(model, lane);
+  const ctx = await prepareE2EEContext(model, lane, {}, purpose);
   for (const msg of messages) {
     if (msg.content.length === 0) continue;
     msg.content = encryptContent(msg.content, ctx);

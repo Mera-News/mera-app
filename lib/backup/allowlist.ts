@@ -123,6 +123,7 @@ export const BACKUP_SETTING_KEYS: readonly string[] = [
   'explore_suppressed_scopes',
   'mera_selected_model_id',
   'mera_skip_notes',
+  'mera_chat_in_cloud',
   // Only World is arranged; Feed, Library and You have fixed pages.
   'nav_order_world',
   'feed_view',

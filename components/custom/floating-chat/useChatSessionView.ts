@@ -15,7 +15,8 @@ import {
   useFloatingChatTopicPlanTurnRequest,
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
-import { useIsOnDeviceProcessing, useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
+import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
+import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
 import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
@@ -84,7 +85,8 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // on-device mode would send a turn to an agent with no such tool, which is the
   // exact silent mis-wire the `generic` and `follow-story` branches below already
   // exist to prevent. Same signal the agent reads, so the three gates agree.
-  const isOnDevice = useIsOnDeviceProcessing();
+  // Where CHAT runs, not the feed: cloud chat while On this phone counts as cloud here.
+  const isOnDevice = !useChatRunsInCloud();
   // Computed keys from the page table, so `t` takes them untyped (the
   // en.json presence test in mera-button covers every one).
   const tKey = t as unknown as (key: string, opts?: Record<string, string>) => string;

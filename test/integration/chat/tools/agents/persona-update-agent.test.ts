@@ -285,6 +285,21 @@ describe('getToolDefinitions', () => {
     const names = toolNames(make('CONFIG'));
     expect(names).not.toContain('webSearch');
     expect(names).not.toContain('searchNews');
+
+    await setProcessingMode('on-device+cloud-chat');
+    expect(toolNames(make('CONFIG'))).toEqual(expect.arrayContaining(['webSearch', 'searchNews']));
+  });
+
+  // Recalibration is a cloud scoring call that On this phone always refuses: never offered there.
+  it('omits runCalibration, tool and prompt line, On this phone with or without cloud chat', async () => {
+    for (const mode of ['on-device', 'on-device+cloud-chat'] as const) {
+      await setProcessingMode(mode);
+      const agent = make('CONFIG');
+      expect(toolNames(agent)).not.toContain('runCalibration');
+      expect(await agent.buildSystemPrompt(true)).not.toContain('runCalibration');
+    }
+    await setProcessingMode('cloud');
+    expect(toolNames(make('CONFIG'))).toContain('runCalibration');
   });
 });
 

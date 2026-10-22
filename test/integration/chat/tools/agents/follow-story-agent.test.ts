@@ -91,6 +91,11 @@ describe('FollowStoryAgent: identity and prompt', () => {
     expect(toolNames(makeAgent())).toEqual(['proposeTrack', 'cancelProposal']);
   });
 
+  it('offers the cloud tools on device while cloud chat is on', async () => {
+    await setProcessingMode('on-device+cloud-chat');
+    expect(toolNames(makeAgent())).toEqual(['proposeTrack', 'cancelProposal', 'searchNews', 'webSearch']);
+  });
+
   // THE REGRESSION GUARD for "toggle on, still refuses": the prompt is cached, so if the toggle is
   // not part of the cache key the model keeps being told it cannot search while the tool payload
   // says it can.

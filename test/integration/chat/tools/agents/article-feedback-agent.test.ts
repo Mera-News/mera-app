@@ -249,6 +249,14 @@ describe('getToolDefinitions', () => {
     expect(toolNames(makeAgent())).toContain('webSearch');
   });
 
+  it('declares proposeFactCheck and webSearch on device while cloud chat is on', async () => {
+    await setProcessingMode('on-device+cloud-chat');
+    await setWebSearchInChat(true);
+    const names = toolNames(makeAgent());
+    expect(names).toContain('proposeFactCheck');
+    expect(names).toContain('webSearch');
+  });
+
   it('never declares webSearch in LOCAL mode, even with the toggle on', async () => {
     await setProcessingMode('on-device');
     await setWebSearchInChat(true);

@@ -2,22 +2,24 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { HStack } from '@/components/ui/hstack';
+import { HelpModal } from '@/components/ui/help-modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Spinner } from '@/components/ui/spinner';
+import { StepsAccordion, type AccordionStep } from '@/components/ui/steps-accordion';
+import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { BUILT_IN_MODEL_NAME } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import { averageMs, hasAnyStat } from '@/lib/mera-protocol-toolkit/core/inference-stats';
-import { Switch } from '@/components/ui/switch';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
-import { onDeviceSubtitleKind } from '@/components/custom/config-mera/on-device-subtitle';
 import BetaBadge from '@/components/custom/BetaBadge';
+import HelpButton from '@/components/custom/nav/HelpButton';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     AccessibilityInfo,
     findNodeHandle,
@@ -25,15 +27,15 @@ import {
     Linking,
     Platform,
     ScrollView,
-    StyleSheet,
     View,
 } from 'react-native';
 import { protocolFocusPlan } from './protocol-focus';
+import { onDeviceSteps } from './on-device-steps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
-import { tint, useColors } from '@/lib/theme/tokens';
+import { useColors } from '@/lib/theme/tokens';
 import {
     BG_REFRESH_TITLE_KEY,
     bgRefreshDescriptionKey,
@@ -41,10 +43,19 @@ import {
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { gbText, useMeraProtocolSettings, type ModelRowState } from './useMeraProtocolSettings';
 
-/** The downloadable model is Apache 2.0 (it ships no LICENSE file), so its row links the licence text. */
+/** The downloadable model is Apache 2.0 (it ships no LICENSE file), so the tab links the licence text. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 
 const secondsText = (ms: number): string => (ms / 1000).toFixed(1);
+
+/** An icon font's glyph is never read aloud: its accessible parent carries the words. */
+const HIDDEN = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
+
+/** What a "?" on this page explains (invariant 20: a HelpModal, never a sheet). */
+type HelpTopic = 'modes' | 'cantRun' | 'webSearch' | 'cloudChat' | 'reasons' | 'bgRefresh';
+
+/** The order checkRequirements runs its checks in: it stops at the first that fails. */
+const CHECK_ORDER = ['ram', 'os_version', 'chip', 'built_in'] as const;
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -60,11 +71,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         isLoading,
         isUpdatingMode,
         requirementsResult,
-        showRequirements,
-        setShowRequirements,
         isDeletingModel,
         processingMode,
-        isOnDevice,
         store,
         webSearchInChat,
         inferenceStats,
@@ -74,6 +82,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         toggleBgRefresh,
         skipNotes,
         toggleSkipNotes,
+        chatInCloud,
+        toggleChatInCloud,
         selectMode,
         refresh,
         runnable,
@@ -86,6 +96,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         handleDeleteModel,
     } = useMeraProtocolSettings();
     const insets = useSafeAreaInsets();
+    // The topic stays set while the card fades out, so its text never blanks mid-close.
+    const [help, setHelp] = useState<{ topic: HelpTopic; open: boolean } | null>(null);
+    const openHelp = (topic: HelpTopic) => setHelp({ topic, open: true });
 
     // Apple Intelligence can be switched on while the app runs: ask again on every focus.
     useFocusEffect(
@@ -94,19 +107,25 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         }, [refresh]),
     );
 
-    // `?focus=on-device` (the reading meter's "on this phone" link): once per
-    // mount, scroll the On this phone row into view and give it screen-reader focus.
+    // `?focus=on-device` (the reading meter's "Read on this phone" link): once per mount,
+    // open the On this phone tab, scroll the tabs into view and give their heading
+    // screen-reader focus. Until the phone can run it, the pick only records the intent.
     const { focus } = useLocalSearchParams<{ focus?: string }>();
+    const pickedRef = useRef(false);
+    useEffect(() => {
+        if (isLoading || focus !== 'on-device' || pickedRef.current) return;
+        pickedRef.current = true;
+        if (!onDeviceIntent) void selectMode(ProcessingMode.OnDevice);
+        // Once, when the load lands: selectMode is a fresh closure every render.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoading]);
     const scrollRef = useRef<ScrollView>(null);
-    // Two layout events feed protocolFocusPlan: the section's y within the scroll
-    // content, and the row's native tag from the row's OWN layout event (the kit
-    // Pressable's ref is not a native component, so it cannot be measured).
     const focusState = useRef<{ done: boolean; sectionY: number | null; rowTag: number | null }>({
         done: false,
         sectionY: null,
         rowTag: null,
     });
-    const tryFocusOnDeviceRow = () => {
+    const tryFocusModes = () => {
         const plan = protocolFocusPlan({ focus, ...focusState.current });
         if (!plan || !scrollRef.current) return;
         focusState.current.done = true;
@@ -115,10 +134,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     };
     const onSectionLayout = (e: LayoutChangeEvent) => {
         focusState.current.sectionY = e.nativeEvent.layout.y;
-        tryFocusOnDeviceRow();
+        tryFocusModes();
     };
-    const onDeviceRowLayout = (e: LayoutChangeEvent) => {
-        // The event's currentTarget is the row's native host; nativeEvent.target is its tag.
+    const onModesHeadLayout = (e: LayoutChangeEvent) => {
+        // The event's currentTarget is the heading's native host; nativeEvent.target is its tag.
         let tag: number | null = null;
         try {
             tag = findNodeHandle(e.currentTarget as never);
@@ -130,45 +149,33 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             tag = typeof target === 'number' ? target : null;
         }
         focusState.current.rowTag = tag;
-        tryFocusOnDeviceRow();
+        tryFocusModes();
     };
 
-    // "Where Mera reads your news" (FinalSettings #11): On this phone is
-    // always shown, for transparency, and disabled with the reason when the
-    // phone can't run it; Private cloud says what it is. On this phone carries
-    // the red Beta subtext, like every on-device row (D30).
-    const modeRow = (mode: ProcessingMode) => {
-        const onDevice = mode === ProcessingMode.OnDevice;
-        const selected = onDevice ? onDeviceIntent : !onDeviceIntent;
-        const cantRun = onDevice && deviceSupported === false;
-        const title = onDevice ? t('you.settings.onThisPhone') : t('you.settings.privateCloud');
-        const subtitle = onDevice
-            ? (onDeviceSubtitleKind(cantRun) === 'cantRun' ? t('meraProtocol.cantRun') : t('meraProtocol.onDeviceNeedsCloud'))
-            : t('meraProtocol.encrypted');
-        return (
-            <Pressable
-                key={mode}
-                onLayout={onDevice ? onDeviceRowLayout : undefined}
-                testID={onDevice ? 'mode-on-device' : 'mode-cloud'}
-                onPress={() => selectMode(mode)}
-                disabled={isUpdatingMode || isDeletingModel || cantRun}
-                accessibilityRole="radio"
-                accessibilityState={{ selected, checked: selected, disabled: isUpdatingMode || isDeletingModel || cantRun }}
-                accessibilityLabel={[title, onDevice ? t('common.beta') : null, subtitle].filter(Boolean).join(', ')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16, opacity: cantRun ? 0.45 : 1 }}
+    /** A group label with its "?" on the trailing side. The 44pt frame overhangs, so the label keeps its rhythm. */
+    const sectionHead = (label: string, topic: HelpTopic, onLayout?: (e: LayoutChangeEvent) => void, trailing?: React.ReactNode) => (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+            <View
+                style={{ flex: 1 }}
+                onLayout={onLayout}
+                accessible={onLayout ? true : undefined}
+                accessibilityRole={onLayout ? 'header' : undefined}
+                accessibilityLabel={onLayout ? label : undefined}
             >
-                <MaterialIcons name={selected ? 'radio-button-checked' : 'radio-button-unchecked'} size={22} color={selected ? colors.accent : colors.ink3} />
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.ink, fontSize: 16 }}>{title}</Text>
-                    {onDevice ? <BetaBadge variant="subtext" testID="mode-on-device-beta" /> : null}
-                    {subtitle ? <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{subtitle}</Text> : null}
-                </View>
-            </Pressable>
-        );
-    };
+                <GroupLabel>{label}</GroupLabel>
+            </View>
+            {trailing}
+            <HelpButton
+                onPress={() => openHelp(topic)}
+                label={t('meraProtocol.helpLabel', { topic: label })}
+                testID={`mera-protocol-help-${topic}`}
+                style={{ marginBottom: -8, marginEnd: -6 }}
+            />
+        </View>
+    );
 
-    // A downloadable model's state line, under its title: queued, downloading, failed, on disk, or its size.
-    const modelStatusLine = (m: ModelRowState): { text: string; negative: boolean } => {
+    // A step's progress, failure or storage line, under its title.
+    const modelStatusLine = (m: ModelRowState): { text: string; negative: boolean } | null => {
         const d = m.download;
         if (d?.status === 'queued') return { text: t('meraProtocol.modelQueued'), negative: false };
         if (d?.status === 'downloading') {
@@ -182,20 +189,36 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 negative: true,
             };
         }
-        if (m.onDisk) return { text: t('meraProtocol.modelReady'), negative: false };
         if (m.storageShort) return { text: t('meraProtocol.freeUpToDownload', { size: m.freeUpSize }), negative: true };
-        return { text: `${gbText(m.sizeBytes)} GB`, negative: false };
+        return null;
     };
 
-    // A downloadable model's controls, below its row: Download, progress and Cancel, Try again, or the
-    // trash once it is on disk, then its licence link. Siblings of the row, never inside it: a button
-    // nested in a row steals the row's accessibility activation.
-    const modelControls = (m: ModelRowState, name: string) => {
+    // Step 1's body: Download, progress and Cancel, Try again, or why this phone can't run it.
+    const modelBody = (m: ModelRowState, cantRun: boolean) => {
         const d = m.download;
         const size = `${gbText(m.sizeBytes)} GB`;
         const busy = d?.status === 'queued' || d?.status === 'downloading';
+        const line = modelStatusLine(m);
+        if (cantRun) {
+            return (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }} testID="mera-protocol-cant-run">
+                    <Text style={{ flex: 1, color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('meraProtocol.cantRun')}</Text>
+                    <HelpButton
+                        onPress={() => openHelp('cantRun')}
+                        label={t('meraProtocol.helpLabel', { topic: t('meraProtocol.cantRunHelpTitle') })}
+                        testID="mera-protocol-help-cantRun"
+                        style={{ marginVertical: -10, marginEnd: -6 }}
+                    />
+                </View>
+            );
+        }
         return (
-            <VStack space="sm" className="mt-2" testID={`model-controls-${m.modelId}`}>
+            <VStack space="sm" testID={`model-controls-${m.modelId}`}>
+                {line ? (
+                    <Text accessibilityLiveRegion="polite" style={{ color: line.negative ? colors.negative : colors.ink2, fontSize: 13, lineHeight: 18 }}>
+                        {line.text}
+                    </Text>
+                ) : null}
                 {busy ? (
                     <>
                         {d?.status === 'downloading' ? (
@@ -210,171 +233,365 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             onPress={() => { void handleCancelDownload(m.modelId); }}
                             accessibilityLabel={t('meraProtocol.cancelDownloadAction')}
                         >
-                            <MaterialIcons name="close" size={18} color={colors.negative} style={{ marginRight: 8 }} />
                             <ButtonText className="text-negative">{t('meraProtocol.cancelDownloadAction')}</ButtonText>
                         </Button>
                     </>
-                ) : !m.onDisk ? (
+                ) : (
                     <Button
                         action="primary"
                         variant="solid"
                         size="md"
                         onPress={() => { void handleDownload(m.modelId); }}
-                        isDisabled={m.storageShort || isDeletingModel}
+                        // Not before the requirement check lands: a phone that can't run it never downloads.
+                        isDisabled={m.storageShort || isDeletingModel || deviceSupported !== true}
                         testID={`model-download-${m.modelId}`}
                         accessibilityLabel={d?.status === 'failed' ? t('meraProtocol.tryAgain') : t('meraProtocol.downloadAction', { size })}
                     >
-                        <MaterialIcons name={d?.status === 'failed' ? 'refresh' : 'cloud-download'} size={18} color={colors.ink} style={{ marginRight: 8 }} />
                         <ButtonText>{d?.status === 'failed' ? t('meraProtocol.tryAgain') : t('meraProtocol.downloadAction', { size })}</ButtonText>
                     </Button>
-                ) : null}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Pressable
-                        testID={`model-license-${m.modelId}`}
-                        onPress={() => { void Linking.openURL(MODELS_LICENSE_URL); }}
-                        accessibilityRole="link"
-                        style={{ flex: 1, minHeight: 44, justifyContent: 'center', marginHorizontal: 4 }}
-                    >
-                        <Text size="xs" className="text-ink-3 underline">
-                            {t('meraProtocol.modelLicenseLink')}
-                        </Text>
-                    </Pressable>
-                    {m.onDisk && !busy ? (
-                        <View style={{ width: 44, height: 44 }}>
-                            {/* The visual is hidden and the labelled Pressable has no children,
-                                so a screen reader never reads the icon font's glyph. */}
-                            <View
-                                pointerEvents="none"
-                                accessibilityElementsHidden
-                                importantForAccessibility="no-hide-descendants"
-                                style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
-                            >
-                                <MaterialIcons name="delete-outline" size={22} color={colors.negative} />
-                            </View>
-                            <Pressable
-                                testID={`model-delete-${m.modelId}`}
-                                onPress={() => { void handleDeleteModel(m.modelId); }}
-                                disabled={isDeletingModel}
-                                accessibilityRole="button"
-                                accessibilityState={{ disabled: isDeletingModel }}
-                                accessibilityLabel={t('meraProtocol.deleteModelLabel', { name })}
-                                style={StyleSheet.absoluteFill}
-                            />
-                        </View>
-                    ) : null}
-                </View>
+                )}
             </VStack>
         );
     };
 
-    // The row itself: one accessible element (title, Beta, state) with a check once on disk.
-    const modelRowBody = (m: ModelRowState, name: string) => {
-        const line = modelStatusLine(m);
-        return (
+    // The built-in model's status, in step 2: name, Beta, ready or why not.
+    const builtInBody = () =>
+        builtInStatus ? (
             <View
-                testID={`model-row-${m.modelId}`}
+                testID="built-in-model-row"
                 accessible
-                accessibilityLabel={[
-                    t(m.onDisk ? 'meraProtocol.modelRowReady' : 'meraProtocol.modelRowMissing', { name, size: `${gbText(m.sizeBytes)} GB` }),
-                    t('common.beta'),
-                    m.onDisk ? null : line.text,
-                ].filter(Boolean).join(', ')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16 }}
+                accessibilityLabel={[builtInStatus.name, t('common.beta'), builtInStatus.reason ?? t('meraProtocol.builtInReady')].join(', ')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
             >
                 <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.ink, fontSize: 16 }}>{name}</Text>
-                    {m.beta ? <BetaBadge variant="subtext" /> : null}
-                    <Text style={{ color: line.negative ? colors.negative : colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{line.text}</Text>
+                    <Text style={{ color: colors.ink, fontSize: 15 }}>{builtInStatus.name}</Text>
+                    <BetaBadge variant="subtext" />
+                    <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>
+                        {builtInStatus.reason ?? t('meraProtocol.builtInReady')}
+                    </Text>
                 </View>
-                {m.onDisk ? (
-                    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 20, alignItems: 'center' }}>
+                {builtInStatus.available ? (
+                    <View {...HIDDEN}>
                         <MaterialIcons name="check" size={20} color={colors.positive} />
                     </View>
                 ) : null}
             </View>
+        ) : null;
+
+    const webSearchRow = () => (
+        <Row
+            testID="mera-protocol-web-search"
+            title={t('meraProtocol.webSearchTitle')}
+            subtitle={t('meraProtocol.webSearchLine')}
+            trailing={
+                <Switch
+                    value={webSearchInChat}
+                    onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
+                    size="md"
+                    testID="mera-protocol-web-search-switch"
+                />
+            }
+        />
+    );
+
+    const relevanceName = t('meraProtocol.relevanceTitle');
+    const modelSize = `${gbText(relevanceModel.sizeBytes)} GB`;
+    const steps = onDeviceSteps({
+        onDisk: relevanceModel.onDisk,
+        download: relevanceModel.download?.status ?? null,
+        deviceSupported,
+        onDevice: processingMode === ProcessingMode.OnDevice,
+        chatInCloud,
+    });
+
+    // Private cloud's row for a model left on the phone: its size or progress, and Delete or Cancel.
+    const keptModelRow = () => {
+        const busy = relevanceModel.download?.status === 'queued' || relevanceModel.download?.status === 'downloading';
+        const label = busy ? t('meraProtocol.cancelDownloadAction') : t('common.delete');
+        return (
+            <Row
+                testID="mera-protocol-kept-model"
+                title={t('meraProtocol.stepModelTitle')}
+                subtitle={modelStatusLine(relevanceModel)?.text ?? modelSize}
+                trailing={
+                    <Pressable
+                        onPress={() => {
+                            if (busy) void handleCancelDownload(relevanceModel.modelId);
+                            else void handleDeleteModel(relevanceModel.modelId);
+                        }}
+                        disabled={isDeletingModel}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${label}, ${t('meraProtocol.stepModelTitle')}`}
+                        testID="mera-protocol-kept-model-action"
+                        style={{ minHeight: 44, justifyContent: 'center' }}
+                    >
+                        <Text style={{ color: colors.negative, fontSize: 15, fontWeight: '600' }}>{label}</Text>
+                    </Pressable>
+                }
+            />
         );
     };
 
-    const showModels = onDeviceIntent && deviceSupported === true;
+    const onDeviceAccordion = (): AccordionStep[] => [
+        {
+            id: 'model',
+            title: t('meraProtocol.stepModelTitle'),
+            hint: steps.phase === 'cantRun' ? undefined : t('meraProtocol.modelRowMissing', { name: relevanceName, size: modelSize }),
+            summary: t('meraProtocol.modelRowReady', { name: relevanceName, size: modelSize }),
+            status: steps.model,
+            actionLabel: t('common.delete'),
+            onAction: isDeletingModel ? undefined : () => { void handleDeleteModel(relevanceModel.modelId); },
+            children: modelBody(relevanceModel, steps.phase === 'cantRun'),
+        },
+        {
+            id: 'on',
+            title: t('meraProtocol.stepOnTitle'),
+            hint: waitingLine ?? undefined,
+            summary: builtInName ? `${builtInName} · ${t('meraProtocol.builtInReady')}` : t('meraProtocol.builtInReady'),
+            status: steps.on,
+            children: (
+                <View style={{ gap: 12 }}>
+                    {builtInBody()}
+                    {runnable ? (
+                        <Button
+                            action="primary"
+                            variant="solid"
+                            size="md"
+                            onPress={() => { void selectMode(ProcessingMode.OnDevice); }}
+                            isDisabled={isUpdatingMode}
+                            testID="mera-protocol-turn-on"
+                        >
+                            <ButtonText>{t('meraProtocol.turnOn')}</ButtonText>
+                        </Button>
+                    ) : null}
+                </View>
+            ),
+        },
+        {
+            id: 'chat',
+            title: t('meraProtocol.stepChatTitle'),
+            status: steps.chat,
+            children: (
+                <View style={{ gap: 8 }}>
+                    <Group>
+                        <Row
+                            testID="mera-protocol-chat-in-cloud"
+                            title={t('meraProtocol.chatInCloudTitle')}
+                            trailing={
+                                <Switch
+                                    value={chatInCloud}
+                                    onToggle={toggleChatInCloud}
+                                    size="md"
+                                    testID="mera-protocol-chat-in-cloud-switch"
+                                />
+                            }
+                        />
+                        {steps.cloudChat ? webSearchRow() : null}
+                    </Group>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                        <View style={{ flex: 1 }}>
+                            <Help>{t('meraProtocol.chatInCloudNote')}</Help>
+                        </View>
+                        <HelpButton
+                            onPress={() => openHelp('cloudChat')}
+                            label={t('meraProtocol.helpLabel', { topic: t('meraProtocol.stepChatTitle') })}
+                            testID="mera-protocol-help-cloudChat"
+                            style={{ marginTop: -10, marginEnd: -6 }}
+                        />
+                    </View>
+                </View>
+            ),
+        },
+    ];
+
+    // Speed on this phone: in memory only, never stored or sent.
+    const speed = () =>
+        steps.phase === 'ready' && hasAnyStat(inferenceStats) ? (
+            <VStack space="xs" className="mt-2" testID="mera-protocol-speed">
+                <GroupLabel>{t('meraProtocol.speedTitle')}</GroupLabel>
+                {inferenceStats.loadMs != null && (
+                    <Help>{t('meraProtocol.speedLoad', { seconds: secondsText(inferenceStats.loadMs) })}</Help>
+                )}
+                {averageMs(inferenceStats.relevance) != null && (
+                    <Help>{t('meraProtocol.speedRanking', { seconds: secondsText(averageMs(inferenceStats.relevance) ?? 0) })}</Help>
+                )}
+                {averageMs(inferenceStats.reason) != null && (
+                    <Help>{t('meraProtocol.speedNotes', { seconds: secondsText(averageMs(inferenceStats.reason) ?? 0) })}</Help>
+                )}
+                {builtInName && inferenceStats.refused > 0 && (
+                    <Help>{t('meraProtocol.speedRefused', { name: builtInName, count: inferenceStats.refused })}</Help>
+                )}
+                <Help>{t('meraProtocol.speedResetNote')}</Help>
+            </VStack>
+        ) : null;
+
     // The built-in model this platform would use, for the requirements list even when this phone has none.
     const platformBuiltInName = builtInName ?? BUILT_IN_MODEL_NAME[Platform.OS === 'android' ? 'nano' : 'afm'];
 
+    // One requirement with this phone's own value; the mark is hidden, the words say its state.
+    // The check stops at the first failure, so the ones after it were never checked.
+    const requirement = (id: (typeof CHECK_ORDER)[number], label: string, value?: string | null) => {
+        const text = value ? `${label}. ${t('meraProtocol.thisPhoneValue', { value })}` : label;
+        const failedAt = (CHECK_ORDER as readonly string[]).indexOf(requirementsResult?.failedCheck ?? '');
+        const at = CHECK_ORDER.indexOf(id);
+        const met = failedAt < 0 || at < failedAt;
+        const failed = at === failedAt;
+        const word = t(met ? 'meraProtocol.checkMet' : failed ? 'meraProtocol.checkNotMet' : 'meraProtocol.attestationNotCheckedLabel');
+        return (
+            <View
+                key={id}
+                testID={`requirement-${id}`}
+                accessible
+                accessibilityLabel={`${text}, ${word}`}
+                style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}
+            >
+                <View {...HIDDEN} style={{ marginTop: 1 }}>
+                    <MaterialIcons
+                        name={met ? 'check-circle' : failed ? 'cancel' : 'remove'}
+                        size={18}
+                        color={met ? colors.positive : failed ? colors.negative : colors.ink3}
+                    />
+                </View>
+                <Text style={{ flex: 1, color: colors.ink, fontSize: 15, lineHeight: 21 }}>{text}</Text>
+            </View>
+        );
+    };
+
+    const helpBody = (topic: HelpTopic): { title: string; body: React.ReactNode } => {
+        const para = (text: string, key?: string) => (
+            <Text key={key} style={{ color: colors.ink2, fontSize: 15, lineHeight: 22 }}>{text}</Text>
+        );
+        switch (topic) {
+            case 'modes':
+                return {
+                    title: t('meraProtocol.howRuns'),
+                    body: [
+                        para(t('meraProtocol.helpModesCloud'), 'cloud'),
+                        para(t('meraProtocol.helpModesPhone'), 'phone'),
+                        para(t('meraProtocol.helpModesVerify'), 'verify'),
+                    ],
+                };
+            case 'cantRun': {
+                const info = requirementsResult?.deviceInfo;
+                return {
+                    title: t('meraProtocol.cantRunHelpTitle'),
+                    body: [
+                        para(t('meraProtocol.cantRunHelpIntro'), 'intro'),
+                        requirement('ram', t('meraProtocol.ramLabel'), info?.ramGB != null ? `${info.ramGB} GB` : null),
+                        requirement(
+                            'os_version',
+                            Platform.OS === 'ios' ? t('meraProtocol.iosVersion') : t('meraProtocol.androidVersion'),
+                            info?.osVersion,
+                        ),
+                        Platform.OS === 'ios' ? requirement('chip', t('meraProtocol.chipLabel')) : null,
+                        requirement('built_in', t('meraProtocol.builtInRequirement', { name: platformBuiltInName })),
+                    ],
+                };
+            }
+            case 'webSearch':
+                return {
+                    title: t('meraProtocol.webSearchTitle'),
+                    body: [para(t('meraProtocol.webSearchShort'), 'how'), para(t('meraProtocol.helpWebSearchOff'), 'off')],
+                };
+            case 'cloudChat':
+                return {
+                    title: t('meraProtocol.stepChatTitle'),
+                    body: [
+                        para(t('meraProtocol.chatInCloudNote'), 'chat'),
+                        para(t('meraProtocol.webSearchShort'), 'search'),
+                        para(t('meraProtocol.helpWebSearchOff'), 'off'),
+                    ],
+                };
+            case 'reasons':
+                return { title: t('meraProtocol.notesGroup'), body: para(t('meraProtocol.skipNotesHelp')) };
+            case 'bgRefresh':
+                return {
+                    title: t(BG_REFRESH_TITLE_KEY),
+                    body: para(t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))),
+                };
+        }
+    };
+
+    const onPhoneTab = onDeviceIntent;
+    // The tab is the mode the reader wants; until On this phone can run, Mera keeps running in Private cloud.
+    const runsInCloudMeanwhile = onPhoneTab && processingMode !== ProcessingMode.OnDevice;
+    // Said once, while step 1 is still to do: step 2 says it for the built-in model, and a phone that can't run it never will.
+    const settingUp = steps.phase === 'missing' || steps.phase === 'downloading' || steps.phase === 'failed';
+    // A model kept on disk (or still downloading) after a switch to Private cloud: its row, to delete or cancel it.
+    const keptModel = relevanceModel.onDisk || relevanceModel.download?.status === 'queued' || relevanceModel.download?.status === 'downloading';
+
     const renderContent = () => (
         <>
-            <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 20 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={{ flex: 1 }}>
-                        <GroupLabel>{t('meraProtocol.whereReads')}</GroupLabel>
+            <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 16 }}>
+                {sectionHead(t('meraProtocol.howRuns'), 'modes', onModesHeadLayout, isUpdatingMode ? <Spinner size="small" /> : null)}
+                <SegmentedControl<ProcessingMode>
+                    testID="mera-protocol-mode"
+                    accessibilityLabel={t('meraProtocol.howRuns')}
+                    value={onPhoneTab ? ProcessingMode.OnDevice : ProcessingMode.Cloud}
+                    onChange={(mode) => {
+                        if (isUpdatingMode || isDeletingModel) return;
+                        void selectMode(mode);
+                    }}
+                    options={[
+                        { value: ProcessingMode.Cloud, label: t('you.settings.privateCloud') },
+                        { value: ProcessingMode.OnDevice, label: t('you.settings.onThisPhone') },
+                    ]}
+                    stretch
+                />
+                {runsInCloudMeanwhile && settingUp ? (
+                    <View style={{ marginTop: 8 }} testID="mera-protocol-in-use-cloud">
+                        <Help>{t('meraProtocol.inUseCloud')}</Help>
                     </View>
-                    {isUpdatingMode ? <Spinner size="small" /> : null}
-                </View>
-                <Group>
-                    {modeRow(ProcessingMode.OnDevice)}
-                    {modeRow(ProcessingMode.Cloud)}
-                </Group>
-                <View style={{ marginTop: 8 }}>
-                    <Help>{deviceSupported === false ? t('meraProtocol.explainerCant') : `${t('meraProtocol.explainerCan')} ${t('meraProtocol.explainerOnPhoneLimits')}`}</Help>
-                </View>
+                ) : null}
             </View>
 
-            {/* Mera relevance model: always needed on this phone. Only relevant when the reader
-                wants on-device AND the phone can run it; otherwise it is detail. */}
-            {showModels && (
-                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-relevance">
-                    <GroupLabel>{t('meraProtocol.relevanceTitle')}</GroupLabel>
-                    <View style={{ marginBottom: 8 }}>
-                        <Help>
-                            {waitingLine ?? (runnable ? t('meraProtocol.relevanceHelp') : `${t('meraProtocol.relevanceHelp')} ${t('meraProtocol.modelsHelp')}`)}
-                        </Help>
+            {onPhoneTab ? (
+                <View style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-on-device-tab">
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, marginHorizontal: 4 }}>
+                        {steps.phase !== 'cantRun' ? (
+                            <Text style={{ flexShrink: 1, color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('meraProtocol.onPhoneIntro')}</Text>
+                        ) : null}
+                        <BetaBadge tone="negative" testID="mera-protocol-on-device-beta" />
                     </View>
-                    <Group>{modelRowBody(relevanceModel, t('meraProtocol.relevanceTitle'))}</Group>
-                    {modelControls(relevanceModel, t('meraProtocol.relevanceTitle'))}
-                </View>
-            )}
-
-            {/* Text model: the phone's built-in model writes chat replies, notes and topics (D37).
-                A status row with its availability reason; nothing to pick, nothing to download. */}
-            {showModels && builtInStatus && (
-                <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-text-model">
-                    <GroupLabel>{t('meraProtocol.textTitle')}</GroupLabel>
-                    <View style={{ marginBottom: 8 }}>
-                        <Help>{t('meraProtocol.textHelp')}</Help>
-                    </View>
-                    <Group>
-                        <View
-                            testID="built-in-model-row"
-                            accessible
-                            accessibilityLabel={[
-                                builtInStatus.name,
-                                t('common.beta'),
-                                builtInStatus.reason ?? t('meraProtocol.builtInReady'),
-                            ].join(', ')}
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 16 }}
+                    <StepsAccordion testID="mera-protocol-steps" steps={onDeviceAccordion()} doneLabel={t('common.done')} />
+                    {steps.phase !== 'cantRun' ? (
+                        <Pressable
+                            testID={`model-license-${relevanceModel.modelId}`}
+                            onPress={() => { void Linking.openURL(MODELS_LICENSE_URL); }}
+                            accessibilityRole="link"
+                            style={{ alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', marginHorizontal: 4 }}
                         >
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: colors.ink, fontSize: 16 }}>{builtInStatus.name}</Text>
-                                <BetaBadge variant="subtext" />
-                                <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>
-                                    {builtInStatus.reason ?? t('meraProtocol.builtInReady')}
-                                </Text>
-                            </View>
-                            {builtInStatus.available ? (
-                                <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 20, alignItems: 'center' }}>
-                                    <MaterialIcons name="check" size={20} color={colors.positive} />
-                                </View>
-                            ) : null}
-                        </View>
-                    </Group>
+                            <Text size="xs" className="text-ink-3 underline">{t('meraProtocol.modelLicenseLink')}</Text>
+                        </Pressable>
+                    ) : null}
+                    {speed()}
+                </View>
+            ) : (
+                <View style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-cloud-tab">
+                    <Help>{t('meraProtocol.encrypted')}</Help>
+                    {sectionHead(t('meraProtocol.chatGroup'), 'webSearch')}
+                    <Group>{webSearchRow()}</Group>
+                    {keptModel ? (
+                        <Group style={{ marginTop: 12 }}>{keptModelRow()}</Group>
+                    ) : null}
                 </View>
             )}
 
-            {/* Skip notes (D42): shown in both modes, off by default. */}
-            <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-notes">
-                <GroupLabel>{t('meraProtocol.notesGroup')}</GroupLabel>
+            {/* Verify attestation: whenever chat or the feed reaches the cloud. */}
+            {!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat ? (
+                <View style={{ marginTop: 12 }}>
+                    <AttestationVerificationRow />
+                </View>
+            ) : null}
+
+            {/* Common to both modes. */}
+            <View style={{ paddingHorizontal: 14, marginBottom: 6 }}>
+                {sectionHead(t('meraProtocol.notesGroup'), 'reasons')}
                 <Group>
                     <Row
+                        testID="mera-protocol-notes"
                         title={t('meraProtocol.skipNotesTitle')}
-                        subtitle={t('meraProtocol.skipNotesHelp')}
+                        subtitle={t('meraProtocol.skipNotesLine')}
                         trailing={
                             <Switch
                                 value={skipNotes}
@@ -385,46 +602,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         }
                     />
                 </Group>
-            </View>
-
-            {/* Speed on this device: in memory only, never stored or sent. */}
-            {showModels && hasAnyStat(inferenceStats) && (
-                <VStack space="xs" className="mb-5 px-[14px]" testID="mera-protocol-speed">
-                    <GroupLabel>{t('meraProtocol.speedTitle')}</GroupLabel>
-                    {inferenceStats.loadMs != null && (
-                        <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedLoad', { seconds: secondsText(inferenceStats.loadMs) })}
-                        </Text>
-                    )}
-                    {averageMs(inferenceStats.relevance) != null && (
-                        <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedRanking', { seconds: secondsText(averageMs(inferenceStats.relevance) ?? 0) })}
-                        </Text>
-                    )}
-                    {averageMs(inferenceStats.reason) != null && (
-                        <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedNotes', { seconds: secondsText(averageMs(inferenceStats.reason) ?? 0) })}
-                        </Text>
-                    )}
-                    {builtInName && inferenceStats.refused > 0 && (
-                        <Text size="xs" className="text-ink-2">
-                            {t('meraProtocol.speedRefused', { name: builtInName, count: inferenceStats.refused })}
-                        </Text>
-                    )}
-                    <Text size="xs" className="text-ink-3">
-                        {t('meraProtocol.speedResetNote')}
-                    </Text>
-                </VStack>
-            )}
-
-            {/* Background refresh. The copy follows the mode the run will
-                actually use. */}
-            <View style={{ paddingHorizontal: 14, marginBottom: 6 }} testID="mera-protocol-bg-refresh">
-                <GroupLabel>{t('meraProtocol.whileClosed')}</GroupLabel>
+                {sectionHead(t('meraProtocol.whileClosed'), 'bgRefresh')}
                 <Group>
                     <Row
+                        testID="mera-protocol-bg-refresh"
                         title={t(BG_REFRESH_TITLE_KEY)}
-                        subtitle={t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))}
+                        subtitle={t('meraProtocol.bgRefreshLine')}
                         trailing={
                             <Switch
                                 value={bgRefreshEnabled}
@@ -436,167 +619,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     />
                 </Group>
             </View>
-
-            {/* Web search in chat (item 13) — ON by default since the
-                web-search wave, and forced on once for every existing device
-                (see mera-protocol-store's SETTING_WEB_SEARCH_FORCED_ON). The
-                description states plainly that the query leaves the device, in
-                the toggle itself rather than buried in the privacy block below:
-                this is the one setting on this screen that sends anything to a
-                third party, so the disclosure has to be where the switch is —
-                and now that it is on by default, that disclosure is the only
-                thing standing between the user and a surprise.
-
-                It was also the one switch never gated by the free-tier
-                read-only flag, because turning a privacy setting OFF must never
-                sit behind a paywall. That flag is gone now, so the exception
-                has nothing left to be an exception to. */}
-            <View style={{ paddingHorizontal: 14, marginBottom: 20 }} testID="mera-protocol-web-search">
-                <GroupLabel>{t('meraProtocol.chatGroup')}</GroupLabel>
-                <Group>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, paddingHorizontal: 16 }}>
-                        <View style={{ flex: 1 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Text style={{ color: colors.ink, fontSize: 16 }}>{t('meraProtocol.webSearchTitle')}</Text>
-                                <BetaBadge />
-                            </View>
-                            <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18, marginTop: 2 }}>{t('meraProtocol.webSearchShort')}</Text>
-                        </View>
-                        <Switch
-                            value={webSearchInChat}
-                            onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
-                            size="md"
-                            testID="mera-protocol-web-search-switch"
-                        />
-                    </View>
-                </Group>
-            </View>
-
-            {/* Privacy Explainer */}
-            {/* Privacy shows in green (FinalSettings #11). */}
-            <View style={{ marginHorizontal: 14, marginBottom: 20, borderRadius: 16, padding: 16, gap: 4, overflow: 'hidden' }} testID="mera-protocol-private">
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.positive, opacity: 0.12 }]} />
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <MaterialIcons name="verified-user" size={18} color={colors.positive} />
-                    <Text style={{ color: colors.positive, fontSize: 16, fontWeight: '600' }}>{t('meraProtocol.staysPrivateTitle')}</Text>
-                </View>
-                <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('meraProtocol.staysPrivateBody')}</Text>
-            </View>
-
-            {/* Verify attestation — UNCONDITIONAL. This sits with the privacy
-                explainer rather than under the on-device section because it is
-                Cloud mode (the default) where attestation is what stands
-                between the user's prompts and the operator. Hiding it behind a
-                mode toggle would hide it from everyone it protects. */}
-            <AttestationVerificationRow />
-
-            {/* Device Capability Notice — only when the user has expressed intent
-                to run on-device on a device that can't support it. Cloud-mode
-                users (the default) never see this; Mera Protocol works fine for
-                them via the Cloud TEE LLM regardless of device specs. */}
-            {onDeviceIntent && requirementsResult && deviceSupported === false && (
-                <Box className="px-5 mb-6">
-                    <Box className="p-4 rounded-lg border bg-surface border-negative">
-                        <Pressable onPress={() => setShowRequirements(prev => !prev)}>
-                            <HStack space="md" className="items-start">
-                                <MaterialIcons
-                                    name="warning"
-                                    size={24}
-                                    color={colors.negative}
-                                    style={{ marginTop: 2 }}
-                                />
-                                <VStack className="flex-1">
-                                    <Text className="text-base font-semibold mb-1 text-negative">
-                                        {t('meraProtocol.deviceNotSupported')}
-                                    </Text>
-                                    <Text className="text-sm text-negative">
-                                        {t('meraProtocol.deviceNotSupportedDescription')}
-                                    </Text>
-                                </VStack>
-                                <MaterialIcons
-                                    name={showRequirements ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-                                    size={24}
-                                    color={colors.negative}
-                                    style={{ marginTop: 2 }}
-                                />
-                            </HStack>
-                        </Pressable>
-
-                        {/* System Requirements (accordion) */}
-                        {showRequirements && (
-                            <VStack space="sm" className="mt-4 pt-4 border-t" style={{ borderTopColor: tint(colors.negative, 0.4) }}>
-                                <HStack space="sm" className="items-center">
-                                    <MaterialIcons
-                                        name={requirementsResult.failedCheck === 'ram' ? 'cancel' : 'check-circle'}
-                                        size={16}
-                                        color={requirementsResult.failedCheck === 'ram' ? colors.negative : colors.positive}
-                                    />
-                                    <Text className="text-ink-2 text-sm">
-                                        {t('meraProtocol.ramLabel')}{requirementsResult.deviceInfo.ramGB != null ? ` (yours: ${requirementsResult.deviceInfo.ramGB}GB)` : ''}
-                                    </Text>
-                                </HStack>
-                                <HStack space="sm" className="items-center">
-                                    <MaterialIcons
-                                        name={requirementsResult.failedCheck === 'os_version' ? 'cancel' : 'check-circle'}
-                                        size={16}
-                                        color={requirementsResult.failedCheck === 'os_version' ? colors.negative : colors.positive}
-                                    />
-                                    <Text className="text-ink-2 text-sm">
-                                        {Platform.OS === 'ios' ? t('meraProtocol.iosVersion') : t('meraProtocol.androidVersion')}{requirementsResult.deviceInfo.osVersion ? ` (yours: ${requirementsResult.deviceInfo.osVersion})` : ''}
-                                    </Text>
-                                </HStack>
-                                {Platform.OS === 'ios' && (
-                                    <HStack space="sm" className="items-center">
-                                        <MaterialIcons
-                                            name={requirementsResult.failedCheck === 'chip' ? 'cancel' : 'check-circle'}
-                                            size={16}
-                                            color={requirementsResult.failedCheck === 'chip' ? colors.negative : colors.positive}
-                                        />
-                                        <Text className="text-ink-2 text-sm">{t('meraProtocol.chipLabel')}</Text>
-                                    </HStack>
-                                )}
-                                <HStack space="sm" className="items-center" testID="requirement-built-in">
-                                    <MaterialIcons
-                                        name={requirementsResult.failedCheck === 'built_in' ? 'cancel' : 'check-circle'}
-                                        size={16}
-                                        color={requirementsResult.failedCheck === 'built_in' ? colors.negative : colors.positive}
-                                    />
-                                    <Text className="text-ink-2 text-sm">
-                                        {t('meraProtocol.builtInRequirement', { name: platformBuiltInName })}
-                                    </Text>
-                                </HStack>
-                            </VStack>
-                        )}
-                    </Box>
-                </Box>
-            )}
-
         </>
     );
 
-    // Loading state
-    if (isLoading) {
-        return (
-            <GluestackUIProvider>
-                <Box className="flex-1">
-                    {/* Page background. Must be the FIRST child so it paints behind
-                        everything else on the page. */}
-                    <AbstractGradientBackdrop />
-
-                    <Box style={{ paddingTop: insets.top }}>
-                        <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
-                    </Box>
-                    <VStack className="flex-1 justify-center items-center">
-                        <Spinner size="large" />
-                    </VStack>
-                </Box>
-            </GluestackUIProvider>
-        );
-    }
-
-    // Preferences mode
-    // Keep `isOnDevice` referenced so eslint doesn't strip the selector.
-    void isOnDevice;
+    const shownHelp = help ? helpBody(help.topic) : null;
 
     return (
         <GluestackUIProvider>
@@ -609,10 +635,24 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
                 </Box>
 
-                <ScrollView ref={scrollRef} className="flex-1" contentContainerStyle={{ paddingBottom: endClearance }}>
-                    {renderContent()}
-                </ScrollView>
+                {isLoading ? (
+                    <VStack className="flex-1 justify-center items-center">
+                        <Spinner size="large" />
+                    </VStack>
+                ) : (
+                    <ScrollView ref={scrollRef} className="flex-1" contentContainerStyle={{ paddingBottom: endClearance }}>
+                        {renderContent()}
+                    </ScrollView>
+                )}
 
+                <HelpModal
+                    open={help?.open ?? false}
+                    onClose={() => setHelp((h) => (h ? { ...h, open: false } : h))}
+                    title={shownHelp?.title ?? ''}
+                    testID="mera-protocol-help"
+                >
+                    <View style={{ gap: 12 }}>{shownHelp?.body}</View>
+                </HelpModal>
             </Box>
         </GluestackUIProvider>
     );

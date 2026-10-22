@@ -20,7 +20,7 @@
 // this class is not offering is still refused below.
 
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
-import { ProcessingMode } from '../../generated/graphql-types';
+import { chatRunsInCloud } from '../chat-cloud';
 import {
   buildTutorialHelpContext,
   buildTutorialHelpPrompt,
@@ -55,7 +55,7 @@ export class TutorialHelpAgent implements IAgent {
   private webSearchEnabled(): boolean {
     const protocol = useMeraProtocolStore.getState();
     return (
-      protocol.processingMode !== ProcessingMode.OnDevice && protocol.webSearchInChat === true
+      chatRunsInCloud() && protocol.webSearchInChat === true
     );
   }
 

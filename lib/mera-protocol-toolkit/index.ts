@@ -24,7 +24,7 @@ export {
   getModelState,
   isModelDownloaded,
   deleteBaseModel,
-  purgeAllBaseModels,
+  purgeStaleModels,
   LocalModelsOffError,
 } from './core/modelManager';
 

@@ -24,7 +24,7 @@ import logger from '../../logger';
 import { useAppLanguageStore } from '../../stores/app-language-store';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
-import { ProcessingMode } from '../../generated/graphql-types';
+import { chatRunsInCloud } from '../chat-cloud';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import { isSubjectTracked } from '../../tracking/track-actions';
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
@@ -242,7 +242,7 @@ export class ArticleFeedbackAgent implements IAgent {
     // this turn agree with each other.
     const protocol = useMeraProtocolStore.getState();
     const mode: 'CLOUD' | 'LOCAL' =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+      chatRunsInCloud() ? 'CLOUD' : 'LOCAL';
     // Gates the SAME prose getToolDefinitions gates the tool declaration with —
     // see agent-core's buildArticleFeedbackSystemPrompt. Must be part of the
     // cache key: without it, a prompt built while the toggle was off (or CLOUD
@@ -289,7 +289,7 @@ export class ArticleFeedbackAgent implements IAgent {
     // place it must agree, because it decides how much of the article the claim
     // picker actually gets to read.
     const factCheck =
-      useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
+      chatRunsInCloud();
     const facts = await getFacts(); // newest-first (sorted created_at desc)
 
     const storeContext = useFloatingChatStore.getState().context;
@@ -347,7 +347,7 @@ export class ArticleFeedbackAgent implements IAgent {
     // for a persisted conversation replaying a call made while it was on.
     const protocol = useMeraProtocolStore.getState();
     const mode: 'CLOUD' | 'LOCAL' =
-      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+      chatRunsInCloud() ? 'CLOUD' : 'LOCAL';
     return getArticleFeedbackToolDefinitions(mode, protocol.webSearchInChat === true);
   }
 
