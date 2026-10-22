@@ -6,6 +6,7 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 import { setTabDot, useTabDot } from '@/components/custom/nav/current-surface';
+import { useStarredPublicationsSync } from '@/components/custom/cards/use-starred-publications-sync';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
 import { useChecksUnseen } from '@/lib/stores/fact-checks-store';
 import { useColors } from '@/lib/theme/tokens';
@@ -37,6 +38,8 @@ function tabA11y(label: string) {
 export default function AppLayout() {
     const { t } = useTranslation();
     const colors = useColors();
+    // The one writer of the publication-star set every card reads.
+    useStarredPublicationsSync();
     const dot = {
         feed: useTabDot('feed'),
         world: useTabDot('world'),

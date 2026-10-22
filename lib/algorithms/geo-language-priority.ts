@@ -68,6 +68,12 @@ export interface UserGeoLanguageContext {
      * Optional for the same reason as `preferredPublications`.
      */
     preferredCountriesAlpha3?: ReadonlySet<string>;
+    /**
+     * Publications the user SUBSCRIBES to, as normalized names. The related
+     * list's Best match puts these above `preferredPublications`. Optional for the
+     * same reason as the two sets above.
+     */
+    subscribedPublications?: ReadonlySet<string>;
 }
 
 /** The minimal geo/language tag a rankable item carries (decoupled from any model). */

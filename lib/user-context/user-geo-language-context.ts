@@ -149,6 +149,7 @@ export async function loadUserGeoLanguageContext(): Promise<RankingContext | nul
             appLanguageBase,
             ...(preferredPublications.size > 0 ? { preferredPublications } : {}),
             ...(preferredCountriesAlpha3.size > 0 ? { preferredCountriesAlpha3 } : {}),
+            ...(subscribed.size > 0 ? { subscribedPublications: subscribed } : {}),
             ...(publicationMultipliers.size > 0 ? { publicationMultipliers } : {}),
         };
     } catch {

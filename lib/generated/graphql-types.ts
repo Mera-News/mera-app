@@ -933,6 +933,8 @@ export type RelatedArticlesContextInput = {
   preferredCountriesAlpha3?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Publications the reader explicitly prefers, normalized names. */
   preferredPublications?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Publications the reader subscribes to, normalized names. Ranked above preferredPublications. */
+  subscribedPublications?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 /** One page of sibling coverage for an article, already ordered server-side. */
@@ -954,13 +956,13 @@ export type RelatedFacetCount = {
   count: Scalars['Int']['output'];
 };
 
-/** Ordering for relatedArticlesPage. RELEVANCE is the tiered country-block order; the two date modes are flat. */
+/** Ordering for relatedArticlesPage. RELEVANCE ranks the reader's publications and language; the two date modes are flat. */
 export enum RelatedSortMode {
   /** Flat publish-date descending. Undated rows sort last here too, so NEWEST is not the exact reverse of OLDEST. */
   Newest = 'NEWEST',
-  /** Flat publish-date ascending. Country blocking is bypassed entirely; undated rows sort last. */
+  /** Flat publish-date ascending. Undated rows sort last. */
   Oldest = 'OLDEST',
-  /** Default. Preferred sources, then the viewed article country, then other countries biggest-block-first, then countryless. The only mode that consults the reader context. */
+  /** Default. Subscribed publications, then preferred publications, then the reader app language, then newest first. Country is not a key. The only mode that consults the reader context. */
   Relevance = 'RELEVANCE'
 }
 

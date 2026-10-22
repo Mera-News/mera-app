@@ -11,6 +11,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
 import PublicationNameButton from '@/components/custom/cards/PublicationNameButton';
+import PublicationStar from '@/components/custom/cards/PublicationStar';
 import { composeSpokenLabel, useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
@@ -318,6 +319,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 style={{ marginTop: FOOTER_GAP, minWidth: 0, height: FOOTER_LINE_BOX }}
                 testID="compact-card-footer"
               >
+                {meta.publication ? <PublicationStar name={publicationName} /> : null}
                 {meta.publication && onPublicationPress ? (
                   // The target reaches up through the FOOTER_GAP (never into
                   // the headline's line box) and down short of the card's

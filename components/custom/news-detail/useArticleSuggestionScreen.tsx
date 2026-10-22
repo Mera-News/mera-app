@@ -239,7 +239,6 @@ export function useArticleSuggestionScreen({
         }));
         return orderRelatedArticles(
             entries,
-            suggestion.country_code ?? null,
             userCtx,
             relatedSortMode,
         );

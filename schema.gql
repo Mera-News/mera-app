@@ -895,6 +895,11 @@ input RelatedArticlesContextInput {
 
   """Publications the reader explicitly prefers, normalized names."""
   preferredPublications: [String!]
+
+  """
+  Publications the reader subscribes to, normalized names. Ranked above preferredPublications.
+  """
+  subscribedPublications: [String!]
 }
 
 """
@@ -925,7 +930,7 @@ type RelatedFacetCount {
 }
 
 """
-Ordering for relatedArticlesPage. RELEVANCE is the tiered country-block order; the two date modes are flat.
+Ordering for relatedArticlesPage. RELEVANCE ranks the reader's publications and language; the two date modes are flat.
 """
 enum RelatedSortMode {
   """
@@ -934,12 +939,12 @@ enum RelatedSortMode {
   NEWEST
 
   """
-  Flat publish-date ascending. Country blocking is bypassed entirely; undated rows sort last.
+  Flat publish-date ascending. Undated rows sort last.
   """
   OLDEST
 
   """
-  Default. Preferred sources, then the viewed article country, then other countries biggest-block-first, then countryless. The only mode that consults the reader context.
+  Default. Subscribed publications, then preferred publications, then the reader app language, then newest first. Country is not a key. The only mode that consults the reader context.
   """
   RELEVANCE
 }

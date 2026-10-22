@@ -42,6 +42,7 @@ function toContextInput(
         appLanguageBase: ctx.appLanguageBase,
         preferredPublications: Array.from(ctx.preferredPublications ?? []),
         preferredCountriesAlpha3: Array.from(ctx.preferredCountriesAlpha3 ?? []),
+        subscribedPublications: Array.from(ctx.subscribedPublications ?? []),
     };
 }
 

@@ -1,6 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import PublicationNameButton from '@/components/custom/cards/PublicationNameButton';
+import PublicationStar from '@/components/custom/cards/PublicationStar';
 import { SourceCountryFlag } from '@/components/custom/SourceCountryFlag';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
@@ -247,6 +248,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     testID="meta-publication-slot"
                 >
                     <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
+                    <PublicationStar name={publicationName} />
                     {publicationNameEl(
                         <Text
                             size="xs"
@@ -275,6 +277,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     testID="meta-publication-slot"
                 >
                     <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
+                    <PublicationStar name={publicationName} />
                     {publicationNameEl(
                         <Text
                             size="xs"
