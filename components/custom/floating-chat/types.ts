@@ -139,6 +139,9 @@ export type ChatThreadItem =
       suggestionId?: string;
       title: string;
     }
+  // The empty thread's opener: client-written, so plain centred text in the
+  // thread's free space, never a Mera bubble (owner, 2026-10-22).
+  | { kind: 'intro'; key: string; text: string }
   | {
       kind: 'message';
       key: string;

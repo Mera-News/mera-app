@@ -27,7 +27,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
@@ -46,7 +46,7 @@ import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
-import { hasRealMessage } from './deriveThreadItems';
+import { emptyThreadIntro, hasRealMessage } from './deriveThreadItems';
 import type { ChatThreadItem, ChatThreadProps, StarterChip } from './types';
 
 // Short, snappy spring for freshly-arrived message bubbles. Applied ONLY to
@@ -113,10 +113,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   }, [pendingDraft]);
 
   // Starter chips show only when the thread has no real user/assistant messages
-  // (the intro and greeting pseudo-messages do not count). PAGE starters
+  // (the greeting pseudo-message does not count; the intro is no message). PAGE starters
   // (draft chips) also show under a thread kept from another page, until the
   // first send of this open (navx amendment).
   const realMessage = hasRealMessage(items);
+  const introText = emptyThreadIntro(items);
   const [sentThisOpen, setSentThisOpen] = useState(false);
   const draftChips = starterChips.some((c) => c.draft);
   const showChips =
@@ -182,6 +183,16 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
   }
 
+  // What Mera and the reader can do here. Plain text, so VoiceOver reads it as
+  // text, never as a message from Mera.
+  const renderIntro = (text: string) => (
+    <View style={styles.introFill}>
+      <Text size="sm" style={styles.introText} testID="chat-intro">
+        {text}
+      </Text>
+    </View>
+  );
+
   const renderItem = (item: ChatThreadItem): React.ReactElement | null => {
     switch (item.kind) {
       case 'article-context-card':
@@ -192,6 +203,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             suggestionId={item.suggestionId}
           />
         );
+
+      case 'intro':
+        // Inline only beside revealed history; the empty thread draws it above (introText).
+        return renderIntro(item.text);
 
       case 'message': {
         const { message } = item;
@@ -403,40 +418,64 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
   };
 
+  const header =
+    showChips || !realMessage ? (
+      <View style={styles.header}>
+        {!realMessage && usageNotice && (
+          <View style={styles.noticeRow}>
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color={colors.ink3} />
+            <Text size="xs" style={styles.noticeText}>
+              {usageNotice}
+            </Text>
+          </View>
+        )}
+        {showChips && (
+          <StarterChips chips={starterChips} onChipPress={handleChip} />
+        )}
+      </View>
+    ) : null;
+
   return (
     <Conversation>
       <View style={styles.listWrap}>
-        <ConversationContent
-          items={displayItems}
-          listRef={listRef}
-          // Visibility ticks: TranslatableDynamic translates only once it
-          // measures itself on screen, and waits for a tick to re-measure.
-          // Without these, cards below the fold never translated.
-          onScroll={notifyScrollTick}
-          scrollEventThrottle={16}
-          onContentSizeChange={notifyScrollTick}
-          renderItem={renderItem}
-          onLoadOlder={onLoadOlder}
-          hasOlder={hasOlder}
-          isLoadingOlder={isLoadingOlder}
-          header={
-            showChips || !realMessage ? (
-              <View style={styles.header}>
-                {!realMessage && usageNotice && (
-                  <View style={styles.noticeRow}>
-                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color={colors.ink3} />
-                    <Text size="xs" style={styles.noticeText}>
-                      {usageNotice}
-                    </Text>
-                  </View>
-                )}
-                {showChips && (
-                  <StarterChips chips={starterChips} onChipPress={handleChip} />
-                )}
-              </View>
-            ) : null
-          }
-        />
+        {introText !== null ? (
+          // The empty thread is a plain column, not the inverted list: tree
+          // order is screen order, so a screen reader reads the intro before
+          // the greeting and chips, and an intro too tall for the panel opens
+          // at its first line. The intro takes the free space ABOVE the other
+          // rows, so the pinned card stays put when the first send swaps in
+          // the list.
+          <ScrollView
+            contentContainerStyle={styles.emptyContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            onScroll={notifyScrollTick}
+            scrollEventThrottle={16}
+            onContentSizeChange={notifyScrollTick}
+          >
+            {renderIntro(introText)}
+            {displayItems.map((item) =>
+              item.kind === 'intro' ? null : <React.Fragment key={item.key}>{renderItem(item)}</React.Fragment>,
+            )}
+            {header}
+          </ScrollView>
+        ) : (
+          <ConversationContent
+            items={displayItems}
+            listRef={listRef}
+            // Visibility ticks: TranslatableDynamic translates only once it
+            // measures itself on screen, and waits for a tick to re-measure.
+            // Without these, cards below the fold never translated.
+            onScroll={notifyScrollTick}
+            scrollEventThrottle={16}
+            onContentSizeChange={notifyScrollTick}
+            renderItem={renderItem}
+            onLoadOlder={onLoadOlder}
+            hasOlder={hasOlder}
+            isLoadingOlder={isLoadingOlder}
+            header={header}
+          />
+        )}
       </View>
 
       {blockedMessage && (
@@ -539,6 +578,29 @@ const useStyles = themedStyles((c) => StyleSheet.create({
   replyRow: {
     flexDirection: 'row',
     flexShrink: 1,
+  },
+  // ConversationContent's listContent, grown to the panel so the intro has free space to take.
+  emptyContent: {
+    flexGrow: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  // Takes the empty thread's free space and centres the text there.
+  introFill: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+  },
+  introText: {
+    color: c.ink2,
+    textAlign: 'center',
+    // The chat type scale (userText, the replies), at a reading measure.
+    fontSize: 15,
+    lineHeight: 21,
+    maxWidth: 360,
   },
   stoppedLine: {
     color: c.ink3,
