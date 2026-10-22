@@ -20,7 +20,7 @@ import { ProcessingMode } from '../generated/graphql-types';
 import logger from '../logger';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { cloudComplete } from './cloudComplete';
-import { BIG_MODEL, SMALL_MODEL } from './constants';
+import { BIG_MODEL, MODEL_FALLBACKS, SMALL_MODEL } from './constants';
 
 // Model-warmup dedupe: unlike attestation/JWT (client-cached), a throwaway
 // completion actually hits the model on every call, so gate it to the
@@ -44,25 +44,19 @@ export function prewarmCloudChat(): void {
   }
 
   const startMs = Date.now();
-  // THE TWO PRIMARIES ONLY. Fallback attestations are fetched lazily, inside
-  // the build for whichever leg actually needs one.
+  // EVERY MODEL THE APP CAN SEND, deduped: the primaries plus their fallbacks.
+  // Since 2026-10-22 both lanes are one model with one shared fallback, so that
+  // is two attestations, the same count as before. The fallback is attested on
+  // purpose: it is no longer also a primary, and a fallback nobody touches is
+  // silent until the primary stalls and the session has nowhere to go.
   //
-  // Every gateway call now takes a limiter grant, and these are serialised
-  // behind it — so each extra prewarm fetch pushes warmModel(), the dominant
-  // cold-start cost this file exists for, a further interval out. The old
-  // three-fetch shape spent that on BIG, fallback(BIG) and fallback(SMALL)
-  // while never warming SMALL_MODEL itself, which is what cloudChatStream
-  // defaults to and what every scoring call uses.
-  //
-  // Cost of going lazy, on the fallback path: a hedge leg that must attest
-  // cold pays one interactive grant plus one uncached attestation round trip
-  // before it can send. It only runs after 10s of total silence from the
-  // primary (HEDGE_DELAY_MS) and exists to rescue a stall, not to shave
-  // latency, so a second or two at the front of the rescue is the right trade
-  // for two fewer requests on every launch.
+  // Every gateway call takes a limiter grant and these are serialised behind
+  // it, so each extra fetch pushes warmModel(), the dominant cold-start cost
+  // this file exists for, a further interval out. Keep this set small.
   void Promise.allSettled([
-    fetchModelPublicKey(BIG_MODEL, 'interactive'),
-    fetchModelPublicKey(SMALL_MODEL, 'interactive'),
+    ...[...new Set([BIG_MODEL, SMALL_MODEL, ...Object.values(MODEL_FALLBACKS)])].map((m) =>
+      fetchModelPublicKey(m, 'interactive'),
+    ),
     getJwtToken(),
   ]).then(
     (results) => {

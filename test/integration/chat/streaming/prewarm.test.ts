@@ -4,7 +4,7 @@
 // test's, or the previous test's warm-up would still be inside its window).
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, MODEL_FALLBACKS } from '@/lib/llm/constants';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {
@@ -49,17 +49,19 @@ const requestCounter = () => {
   return () => n;
 };
 
+const FALLBACK = MODEL_FALLBACKS[BIG_MODEL];
+
 describe('prewarmCloudChat, cloud mode, signed in', () => {
-  it('attests BIG and SMALL once each and sends one tiny throwaway completion to BIG: nothing else', async () => {
+  it('attests the one primary and its fallback once each and sends one tiny throwaway completion to BIG: nothing else', async () => {
     const bodies = captureChatBodies();
     server.use(...mockGateway(respond('ok')));
 
     expect(prewarmCloudChat()).toBeUndefined();
     await settled();
 
-    // Exactly the two primaries, which since 2026-09-16 are also each other's fallback.
+    // BIG and SMALL are one model since 2026-10-22: one primary, one fallback.
     expect(attestationRequests(BIG_MODEL)).toBe(1);
-    expect(attestationRequests(SMALL_MODEL)).toBe(1);
+    expect(attestationRequests(FALLBACK)).toBe(1);
     expect(attestationRequests()).toBe(2);
     expect(gatewayCalls().map((c) => c.route)).toEqual(['chat']);
     const [call] = gatewayCalls('chat');
@@ -90,13 +92,13 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     await quiet();
     expect(gatewayCalls('chat')).toHaveLength(2);
     expect(attestationRequests(BIG_MODEL)).toBe(2);
-    expect(attestationRequests(SMALL_MODEL)).toBe(2);
+    expect(attestationRequests(FALLBACK)).toBe(2);
   });
 
   it('swallows a failing secondary attestation: the primary is still warmed', async () => {
     server.use(
       http.get('*/api/attestation/report', ({ request }) =>
-        new URL(request.url).searchParams.get('model') === SMALL_MODEL
+        new URL(request.url).searchParams.get('model') === FALLBACK
           ? new HttpResponse('nope', { status: 403 })
           : undefined,
       ),

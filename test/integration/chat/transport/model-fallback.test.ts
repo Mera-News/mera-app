@@ -2,6 +2,14 @@
 // through a spy) and the way cloudComplete / cloudBatchComplete drive it against the gateway mock.
 // A stalled primary is a reply held past a short per-attempt timeout, or a gateway 502.
 import { BIG_MODEL, MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
+
+// Both lanes run one model, so the shipped map has one primary. A second, test-only primary keeps
+// the per-model keying under test for the day the lanes split again.
+const SECOND_PRIMARY = 'test/second-primary';
+jest.mock('@/lib/llm/constants', () => {
+  const actual = jest.requireActual('@/lib/llm/constants');
+  return { ...actual, MODEL_FALLBACKS: { ...actual.MODEL_FALLBACKS, 'test/second-primary': 'test/second-fallback' } };
+});
 import { cloudBatchComplete, cloudComplete } from '@/lib/llm/cloudComplete';
 import {
   __resetForTests,
@@ -64,18 +72,11 @@ afterEach(() => {
 });
 
 describe('MODEL_FALLBACKS wiring', () => {
-  it('maps each primary to its class-appropriate TEE-served fallback', () => {
-    // The two primaries fall back to EACH OTHER: both are self-hosted tier, both attest, and BIG's
-    // needs tools, which Qwen3.6 has. Rationale and the measured figures live in constants.ts.
-    expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('Qwen/Qwen3.6-35B-A3B-FP8');
-    expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('Qwen/Qwen3.8-27B');
-  });
-
-  it('the two primaries fall back to each other, so no fallback is unwarmed', () => {
-    // prewarmCloudChat attests BIG and SMALL only; with the swap every fallback is also a primary,
-    // so it is attested every cold start and cannot rot unnoticed.
-    expect(MODEL_FALLBACKS[BIG_MODEL]).toBe(SMALL_MODEL);
-    expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe(BIG_MODEL);
+  it('both lanes run one model and share one TEE-served fallback', () => {
+    // Rationale and the measured figures live in constants.ts. prewarmCloudChat attests the
+    // fallback too, so it cannot rot unnoticed.
+    expect(BIG_MODEL).toBe(SMALL_MODEL);
+    expect(jest.requireActual('@/lib/llm/constants').MODEL_FALLBACKS).toEqual({ [BIG_MODEL]: 'Qwen/Qwen3.8-27B' });
   });
 
   it('never falls back to a model that is its own primary', () => {
@@ -98,7 +99,7 @@ describe('resolveModel', () => {
 
   it('engagement is per-model: other primaries are untouched', () => {
     reportModelFailure(SMALL_MODEL);
-    expect(resolveModel(BIG_MODEL)).toBe(BIG_MODEL);
+    expect(resolveModel(SECOND_PRIMARY)).toBe(SECOND_PRIMARY);
   });
 
   it('leaves a model with no configured fallback alone', () => {
@@ -130,7 +131,7 @@ describe('reportModelFailure', () => {
 
   it('reports separately for a second primary', () => {
     reportModelFailure(SMALL_MODEL);
-    reportModelFailure(BIG_MODEL);
+    reportModelFailure(SECOND_PRIMARY);
     expect(captured).toHaveBeenCalledTimes(2);
   });
 
@@ -195,7 +196,7 @@ describe('reportModelSlow', () => {
 
     __resetForTests();
     captured.mockClear();
-    reportModelSlow(BIG_MODEL);
+    reportModelSlow(SECOND_PRIMARY);
     const big = captured.mock.calls[0][1].fingerprint;
 
     expect(small).not.toEqual(big);
