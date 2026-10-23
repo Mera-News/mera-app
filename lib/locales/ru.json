@@ -1088,18 +1088,18 @@
     "ageDays": "{{n}} дн",
     "update": {
       "availableTitle": "Обновление готово",
-      "availableBody": "Перезапустите Меру, чтобы получить последнюю версию.",
+      "availableBody": "Перезапустите сейчас, или Мера обновится при следующем открытии.",
       "restart": "Перезапустить",
       "updatedTitle": "Мера обновлена",
       "updatedBody": "Нажмите, чтобы посмотреть, что нового.",
       "notesTitle": "Что нового",
       "notesEmpty": "Исправления и улучшения.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Мера will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Что нового",
+      "heldDraft": "Отправьте или удалите написанное и нажмите «Перезапустить».",
+      "heldReply": "Мера будет готова к перезапуску, когда ответ закончится.",
+      "heldBusy": "Закончите текущее дело и нажмите «Перезапустить».",
+      "storyGone": "Эта история больше недоступна.",
+      "publicationGone": "Это издание больше недоступно."
     }
   },
   "settings": {

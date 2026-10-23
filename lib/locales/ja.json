@@ -1046,18 +1046,18 @@
     "ageDays": "{{n}}日",
     "update": {
       "availableTitle": "アップデートの準備ができました",
-      "availableBody": "最新バージョンにするにはメラを再起動してください。",
+      "availableBody": "今すぐ再起動するか、次に開いたときにメラが更新されます。",
       "restart": "再起動",
       "updatedTitle": "メラがアップデートされました",
       "updatedBody": "タップして新機能を確認できます。",
       "notesTitle": "新機能",
       "notesEmpty": "不具合の修正と改善。",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "メラ will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "新機能を見る",
+      "heldDraft": "入力中の内容を送信するか消去してから、再起動をタップしてください。",
+      "heldReply": "この返信が終わったら、メラを再起動できます。",
+      "heldBusy": "作業を終えてから、再起動をタップしてください。",
+      "storyGone": "そのストーリーはもう利用できません。",
+      "publicationGone": "その媒体はもう利用できません。"
     }
   },
   "settings": {

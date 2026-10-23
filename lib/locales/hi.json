@@ -1054,18 +1054,18 @@
     "ageDays": "{{n}} दिन",
     "update": {
       "availableTitle": "अपडेट तैयार है",
-      "availableBody": "नया वर्शन पाने के लिए मेरा ऐप को रीस्टार्ट करें।",
+      "availableBody": "अभी रीस्टार्ट करें, या अगली बार खोलने पर मेरा ऐप अपने-आप अपडेट हो जाएगा।",
       "restart": "रीस्टार्ट करें",
       "updatedTitle": "मेरा ऐप अपडेट हो गया",
       "updatedBody": "नया क्या है, यह देखने के लिए टैप करें।",
       "notesTitle": "नया क्या है",
       "notesEmpty": "गड़बड़ियां ठीक की गईं और सुधार किए गए।",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "मेरा will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "नया क्या है, देखें",
+      "heldDraft": "जो लिखा है उसे भेजें या हटाएँ, फिर रीस्टार्ट दबाएँ।",
+      "heldReply": "यह जवाब पूरा होने पर मेरा ऐप रीस्टार्ट होने के लिए तैयार होगा।",
+      "heldBusy": "जो काम चल रहा है उसे पूरा करें, फिर रीस्टार्ट दबाएँ।",
+      "storyGone": "यह स्टोरी अब उपलब्ध नहीं है।",
+      "publicationGone": "यह प्रकाशन अब उपलब्ध नहीं है।"
     }
   },
   "settings": {

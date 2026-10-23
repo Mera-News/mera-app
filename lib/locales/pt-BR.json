@@ -1052,18 +1052,18 @@
     "ageDays": "{{n}}d",
     "update": {
       "availableTitle": "Atualização pronta",
-      "availableBody": "Reinicie o Mera para ter a versão mais recente.",
+      "availableBody": "Reinicie agora, ou o Mera será atualizado na próxima vez que você abri-lo.",
       "restart": "Reiniciar",
-      "updatedTitle": "O Mera foi atualizado",
+      "updatedTitle": "Mera foi atualizada",
       "updatedBody": "Toque para ver as novidades.",
       "notesTitle": "Novidades",
       "notesEmpty": "Correções e melhorias.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Mera will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Veja o que há de novo",
+      "heldDraft": "Envie ou apague o que você digitou e toque em Reiniciar.",
+      "heldReply": "A Mera vai estar pronta para reiniciar quando esta resposta terminar.",
+      "heldBusy": "Termine o que está fazendo e toque em Reiniciar.",
+      "storyGone": "Essa matéria não está mais disponível.",
+      "publicationGone": "Esse veículo não está mais disponível."
     }
   },
   "settings": {

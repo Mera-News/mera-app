@@ -1054,18 +1054,18 @@
     "ageDays": "{{n}} gün",
     "update": {
       "availableTitle": "Güncelleme hazır",
-      "availableBody": "En yeni sürümü almak için Mera'yı yeniden başlatın.",
+      "availableBody": "Şimdi yeniden başlatın ya da Mera bir sonraki açışınızda güncellensin.",
       "restart": "Yeniden başlat",
       "updatedTitle": "Mera güncellendi",
       "updatedBody": "Yenilikleri görmek için dokunun.",
       "notesTitle": "Yenilikler",
       "notesEmpty": "Düzeltmeler ve iyileştirmeler.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Mera will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Yeniliklere bak",
+      "heldDraft": "Yazdığınızı gönderin ya da silin, ardından Yeniden başlat'a dokunun.",
+      "heldReply": "Bu yanıt bittiğinde Mera yeniden başlatılmaya hazır olacak.",
+      "heldBusy": "Yaptığınız işi bitirin, ardından Yeniden başlat'a dokunun.",
+      "storyGone": "Bu haber artık mevcut değil.",
+      "publicationGone": "Bu yayın artık mevcut değil."
     }
   },
   "settings": {

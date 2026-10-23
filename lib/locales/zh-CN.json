@@ -1046,18 +1046,18 @@
     "ageDays": "{{n}}天",
     "update": {
       "availableTitle": "更新已就绪",
-      "availableBody": "重启梅拉即可使用最新版本。",
+      "availableBody": "立即重启，或等你下次打开梅拉时自动更新。",
       "restart": "重启",
       "updatedTitle": "梅拉已更新",
       "updatedBody": "点按查看新功能。",
       "notesTitle": "新功能",
       "notesEmpty": "问题修复和改进。",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "梅拉 will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "查看新内容",
+      "heldDraft": "发送或清除你输入的内容，然后点击重启。",
+      "heldReply": "这条回复结束后，梅拉即可重启。",
+      "heldBusy": "先完成当前操作，然后点击重启。",
+      "storyGone": "该新闻已不再提供。",
+      "publicationGone": "该媒体已不再提供。"
     }
   },
   "settings": {

@@ -1130,18 +1130,18 @@
     "ageDays": "{{n}}ي",
     "update": {
       "availableTitle": "التحديث جاهز",
-      "availableBody": "أعد تشغيل ميرا للحصول على أحدث إصدار.",
+      "availableBody": "أعد التشغيل الآن، أو ستُحدَّث ميرا في المرة القادمة التي تفتحها.",
       "restart": "إعادة التشغيل",
       "updatedTitle": "تم تحديث ميرا",
       "updatedBody": "انقر لمعرفة الجديد.",
       "notesTitle": "ما الجديد",
       "notesEmpty": "إصلاحات وتحسينات.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "ميرا will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "اطّلع على الجديد",
+      "heldDraft": "أرسل ما كتبته أو امسحه، ثم اضغط على إعادة التشغيل.",
+      "heldReply": "ستكون ميرا جاهزة لإعادة التشغيل عند انتهاء هذا الرد.",
+      "heldBusy": "أنهِ ما تفعله، ثم اضغط على إعادة التشغيل.",
+      "storyGone": "هذه القصة لم تعد متاحة.",
+      "publicationGone": "هذه الصحيفة لم تعد متاحة."
     }
   },
   "settings": {

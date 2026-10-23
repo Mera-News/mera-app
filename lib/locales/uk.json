@@ -1092,18 +1092,18 @@
     "ageDays": "{{n}} д",
     "update": {
       "availableTitle": "Оновлення готове",
-      "availableBody": "Перезапустіть Меру, щоб отримати останню версію.",
+      "availableBody": "Перезапустіть зараз або Мері оновиться під час наступного відкриття.",
       "restart": "Перезапустити",
-      "updatedTitle": "Меру оновлено",
+      "updatedTitle": "Мері оновлено",
       "updatedBody": "Торкніться, щоб побачити, що нового.",
       "notesTitle": "Що нового",
       "notesEmpty": "Виправлення та покращення.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Мера will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Що нового",
+      "heldDraft": "Надішліть або видаліть написане і натисніть «Перезапустити».",
+      "heldReply": "Мері буде готова до перезапуску, коли ця відповідь закінчиться.",
+      "heldBusy": "Завершіть свою справу і натисніть «Перезапустити».",
+      "storyGone": "Цю історію більше немає.",
+      "publicationGone": "Це видання більше недоступне."
     }
   },
   "settings": {

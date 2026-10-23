@@ -1047,18 +1047,18 @@
     "ageDays": "{{n}} วัน",
     "update": {
       "availableTitle": "อัปเดตพร้อมแล้ว",
-      "availableBody": "รีสตาร์ท เมร่า เพื่อใช้เวอร์ชันล่าสุด",
+      "availableBody": "รีสตาร์ทตอนนี้ หรือ เมร่าจะอัปเดตในครั้งถัดไปที่คุณเปิดแอป",
       "restart": "รีสตาร์ท",
-      "updatedTitle": "เมร่า อัปเดตแล้ว",
+      "updatedTitle": "เมร่าอัปเดตแล้ว",
       "updatedBody": "แตะเพื่อดูสิ่งใหม่",
       "notesTitle": "มีอะไรใหม่",
       "notesEmpty": "การแก้ไขข้อบกพร่องและการปรับปรุง",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "เมร่า will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "ดูสิ่งใหม่",
+      "heldDraft": "ส่งหรือลบข้อความที่พิมพ์ไว้ แล้วแตะรีสตาร์ท",
+      "heldReply": "เมร่าจะพร้อมรีสตาร์ทเมื่อคำตอบนี้เสร็จ",
+      "heldBusy": "ทำสิ่งที่กำลังทำให้เสร็จ แล้วแตะรีสตาร์ท",
+      "storyGone": "เรื่องนี้ไม่มีให้อ่านแล้ว",
+      "publicationGone": "สำนักข่าวนี้ไม่มีให้อ่านแล้ว"
     }
   },
   "settings": {

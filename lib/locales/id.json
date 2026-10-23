@@ -1046,18 +1046,18 @@
     "ageDays": "{{n}} hr",
     "update": {
       "availableTitle": "Pembaruan siap",
-      "availableBody": "Mulai ulang Mera untuk mendapatkan versi terbaru.",
+      "availableBody": "Mulai ulang sekarang, atau Mera akan diperbarui saat kamu membukanya lain kali.",
       "restart": "Mulai ulang",
-      "updatedTitle": "Mera telah diperbarui",
+      "updatedTitle": "Mera sudah diperbarui",
       "updatedBody": "Ketuk untuk melihat yang baru.",
       "notesTitle": "Yang baru",
       "notesEmpty": "Perbaikan dan peningkatan.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Mera will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Lihat yang baru",
+      "heldDraft": "Kirim atau hapus yang sudah kamu ketik, lalu ketuk Mulai ulang.",
+      "heldReply": "Mera siap dimulai ulang setelah balasan ini selesai.",
+      "heldBusy": "Selesaikan yang sedang kamu kerjakan, lalu ketuk Mulai ulang.",
+      "storyGone": "Cerita itu tidak lagi tersedia.",
+      "publicationGone": "Penerbit itu tidak lagi tersedia."
     }
   },
   "settings": {

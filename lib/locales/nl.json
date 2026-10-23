@@ -1052,18 +1052,18 @@
     "ageDays": "{{n}} d",
     "update": {
       "availableTitle": "Update klaar",
-      "availableBody": "Start Mera opnieuw om de nieuwste versie te krijgen.",
+      "availableBody": "Start nu opnieuw, of Mera wordt bijgewerkt de volgende keer dat je hem opent.",
       "restart": "Opnieuw starten",
       "updatedTitle": "Mera is bijgewerkt",
       "updatedBody": "Tik om te zien wat er nieuw is.",
       "notesTitle": "Wat is er nieuw",
       "notesEmpty": "Oplossingen en verbeteringen.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Mera will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Bekijk wat er nieuw is",
+      "heldDraft": "Verstuur of wis wat je hebt getypt en tik daarna op Opnieuw starten.",
+      "heldReply": "Mera kan opnieuw worden gestart zodra dit antwoord klaar is.",
+      "heldBusy": "Rond af wat je aan het doen bent en tik daarna op Opnieuw starten.",
+      "storyGone": "Dat verhaal is niet meer beschikbaar.",
+      "publicationGone": "Die bron is niet meer beschikbaar."
     }
   },
   "settings": {

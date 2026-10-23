@@ -1057,18 +1057,18 @@
     "ageDays": "{{n}} j",
     "update": {
       "availableTitle": "Mise à jour prête",
-      "availableBody": "Redémarrez Mera pour obtenir la dernière version.",
+      "availableBody": "Redémarrez maintenant, ou Mera se mettra à jour la prochaine fois que vous l'ouvrirez.",
       "restart": "Redémarrer",
       "updatedTitle": "Mera a été mis à jour",
       "updatedBody": "Touchez pour voir les nouveautés.",
       "notesTitle": "Nouveautés",
       "notesEmpty": "Corrections et améliorations.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Mera will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Voir les nouveautés",
+      "heldDraft": "Envoyez ou effacez ce que vous avez écrit, puis appuyez sur Redémarrer.",
+      "heldReply": "Mera pourra redémarrer dès que cette réponse sera terminée.",
+      "heldBusy": "Terminez ce que vous faites, puis appuyez sur Redémarrer.",
+      "storyGone": "Cet article n'est plus disponible.",
+      "publicationGone": "Cette publication n'est plus disponible."
     }
   },
   "settings": {

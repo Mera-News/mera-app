@@ -1088,18 +1088,18 @@
     "ageDays": "{{n}} d",
     "update": {
       "availableTitle": "Aktualizacja gotowa",
-      "availableBody": "Uruchom ponownie aplikację Mera, aby mieć najnowszą wersję.",
+      "availableBody": "Uruchom teraz ponownie, albo Mera zaktualizuje się przy następnym otwarciu.",
       "restart": "Uruchom ponownie",
-      "updatedTitle": "Aplikacja Mera została zaktualizowana",
+      "updatedTitle": "Mera została zaktualizowana",
       "updatedBody": "Dotknij, aby zobaczyć nowości.",
       "notesTitle": "Nowości",
       "notesEmpty": "Poprawki i ulepszenia.",
-      "seeWhatsNew": "See what's new",
-      "heldDraft": "Send or clear what you typed, then tap Restart.",
-      "heldReply": "Mera will be ready to restart when this reply finishes.",
-      "heldBusy": "Finish what you're doing, then tap Restart.",
-      "storyGone": "That story is no longer available.",
-      "publicationGone": "That publication is no longer available."
+      "seeWhatsNew": "Zobacz, co nowego",
+      "heldDraft": "Wyślij lub usuń to, co wpisałeś, i stuknij Uruchom ponownie.",
+      "heldReply": "Mera będzie gotowa do ponownego uruchomienia, gdy ta odpowiedź się zakończy.",
+      "heldBusy": "Dokończ, co robisz, i stuknij Uruchom ponownie.",
+      "storyGone": "Ta historia nie jest już dostępna.",
+      "publicationGone": "Ten wydawca nie jest już dostępny."
     }
   },
   "settings": {
