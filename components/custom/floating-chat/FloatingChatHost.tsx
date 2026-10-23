@@ -1,5 +1,6 @@
 import ChatPopover from '@/components/custom/floating-chat/ChatPopover';
 import MeraChatSession from '@/components/custom/floating-chat/MeraChatSession';
+import { useChatPanelHold } from '@/lib/chat-session/use-chat-session';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import React, { useEffect } from 'react';
@@ -19,6 +20,7 @@ import { StyleSheet, View } from 'react-native';
  */
 const FloatingChatHost: React.FC = () => {
     const aiAccess = useAiAccess();
+    useChatPanelHold();
 
     // This overlay is the always-mounted, single-instance chat surface (mounted
     // once by app/logged-in/_layout), so this effect is the earliest point to
