@@ -1138,7 +1138,7 @@ describe('restarts and the version floor', () => {
 
         it.each([
             [['draft:chat'], 'Send or clear what you typed, then tap Restart.'],
-            [['search-query'], 'Send or clear what you typed, then tap Restart.'],
+            [['draft:search'], 'Send or clear what you typed, then tap Restart.'],
             [['chat-stream'], 'Mera will be ready to restart when this reply finishes.'],
             [['purchase'], "Finish what you're doing, then tap Restart."],
             [['chat-stream', 'draft:show-less'], 'Send or clear what you typed, then tap Restart.'],

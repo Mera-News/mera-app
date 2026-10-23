@@ -16,6 +16,14 @@
 //
 // IT CAN NEVER HANG. A hard cap hides it regardless, so a missed release costs
 // a few seconds of splash, never a stuck app.
+//
+// A RESTORE BOOT (an update reload that rebuilds the reader's spot) keeps the
+// launch look over the whole rebuild, so the reader sees a launch and not the
+// startup tab, then a jump: on iOS the held splash ignores route changes while
+// the restore runs (`beginRestoreLook` / `endRestoreLook`), and on Android,
+// where nothing is held, `components/custom/launch/RestoreCover.tsx` paints the
+// same look. The cap grows on such a boot to cover the account check and the
+// rebuild.
 
 import * as SplashScreen from 'expo-splash-screen';
 import { usePathname } from 'expo-router';
@@ -24,6 +32,9 @@ import { Platform } from 'react-native';
 
 /** The most the splash may be held past JS start. */
 export const SPLASH_MAX_HOLD_MS = 4000;
+
+/** On a restore boot: the launch account check (8s cap) plus the gate's restore cap (3s). */
+export const RESTORE_LOOK_MAX_MS = 8_000 + 3_000;
 
 /**
  * iOS ONLY. On Android, holding and then manually hiding the splash left the
@@ -60,6 +71,66 @@ export function holdSplash(): void {
     // Already hidden or no native module: nothing is being held.
   });
   capTimer = setTimeout(() => releaseSplash('cap'), SPLASH_MAX_HOLD_MS);
+  void isRestoreBoot().then((restore) => {
+    if (!restore || released) return;
+    if (capTimer) clearTimeout(capTimer);
+    capTimer = setTimeout(() => releaseSplash('cap'), RESTORE_LOOK_MAX_MS);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// The restore look
+// ---------------------------------------------------------------------------
+
+type RestoreLook = 'none' | 'running' | 'done';
+let restoreLook: RestoreLook = 'none';
+let restoreBoot: Promise<boolean> | null = null;
+const lookListeners = new Set<() => void>();
+
+/**
+ * Whether this boot carries a spot to rebuild. Lazy: the marker read lives in
+ * lib/app-restart.ts, which this module must not pull in at import (the root
+ * layout imports this file first). Memoised; a failure reads as "no".
+ */
+export function isRestoreBoot(): Promise<boolean> {
+  if (restoreBoot == null) {
+    restoreBoot = (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { restartContext } = require('@/lib/app-restart');
+        const ctx = await restartContext();
+        return ctx.spot != null;
+      } catch {
+        return false;
+      }
+    })();
+  }
+  return restoreBoot;
+}
+
+function setRestoreLook(next: RestoreLook): void {
+  restoreLook = next;
+  lookListeners.forEach((l) => l());
+}
+
+/** The gate is about to rebuild the spot: the held splash ignores routes until `endRestoreLook`. */
+export function beginRestoreLook(): void {
+  setRestoreLook('running');
+}
+
+/** The rebuild finished, whatever its result: release what it held. */
+export function endRestoreLook(): void {
+  setRestoreLook('done');
+  releaseSplash('restore');
+}
+
+export function restoreLookState(): RestoreLook {
+  return restoreLook;
+}
+
+export function subscribeRestoreLook(listener: () => void): () => void {
+  lookListeners.add(listener);
+  return () => lookListeners.delete(listener);
 }
 
 /**
@@ -100,6 +171,8 @@ export function isPastStartupGates(pathname: string | null | undefined): boolean
 export function SplashReleaser(): null {
   const pathname = usePathname();
   useEffect(() => {
+    // The rebuild navigates through tabs and screens the reader is not meant to watch.
+    if (restoreLook === 'running') return;
     if (isPastStartupGates(pathname)) releaseSplash(`route:${pathname}`);
   }, [pathname]);
   return null;
@@ -109,6 +182,9 @@ export function SplashReleaser(): null {
 export function __resetSplashHoldForTests(): void {
   held = false;
   released = false;
+  restoreLook = 'none';
+  restoreBoot = null;
+  lookListeners.clear();
   if (capTimer) clearTimeout(capTimer);
   capTimer = null;
 }

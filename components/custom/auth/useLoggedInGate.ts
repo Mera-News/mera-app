@@ -34,6 +34,10 @@ import {
     startEntitlementWarmup,
 } from "@/lib/subscription/onboarding-paywall";
 import { router } from "expo-router";
+import { disableAutoReload, takeRestoreSpot } from "@/lib/app-restart";
+import { announceAppliedUpdate } from "@/lib/ota-notice";
+import { lastRestoreMissing, parseResumeSpot, restoreSpot, type RestoreResult } from "@/lib/navigation/resume-spot";
+import { beginRestoreLook, endRestoreLook } from "@/lib/splash-hold";
 import { useCallback, useEffect, useState } from "react";
 
 /** How long the start screen waits for the launch account check (nav-redesign-v2 plan #6/#7). */
@@ -52,6 +56,60 @@ async function openPendingNotificationRoute(
     markStartupGatePassed();
     const href = await consumePendingNotificationRoute(userId);
     if (href && !isCancelled()) router.push(href);
+}
+
+/** The gate's cap on rebuilding the reader's spot; `restoreSpot` bounds itself under it. */
+export const RESTORE_CAP_MS = 3_000;
+
+/**
+ * Puts the reader where the app opens, then opens a notification tap that
+ * booted or reloaded this process on top. On a boot an update reload started
+ * with a spot (lib/app-restart.ts), that is the spot, rebuilt behind the launch
+ * look; otherwise, and when the rebuild fails or runs past the cap, the startup
+ * tab. A failed rebuild switches automatic update reloads off for the session
+ * so it cannot repeat. The spot is taken ONCE: the gate re-runs (PIN, a
+ * reauth) and must not rebuild again. Then the one "Mera updated" toast, which
+ * itself checks this was an update boot.
+ */
+async function placeReader(startupTab: string, userId: string, isCancelled: () => boolean): Promise<void> {
+    const spot = parseResumeSpot(await takeRestoreSpot());
+    if (isCancelled()) return;
+    if (!spot) {
+        router.replace(`/logged-in/app_container/${startupTab}`);
+        void announceAppliedUpdate();
+        await openPendingNotificationRoute(userId, isCancelled);
+        return;
+    }
+    beginRestoreLook();
+    const controller = new AbortController();
+    let cap: ReturnType<typeof setTimeout> | undefined;
+    let result: RestoreResult = 'failed';
+    try {
+        result = await Promise.race([
+            restoreSpot(spot, { signal: controller.signal }),
+            new Promise<RestoreResult>((resolve) => {
+                cap = setTimeout(() => resolve('failed'), RESTORE_CAP_MS);
+            }),
+        ]);
+    } catch (error) {
+        logger.captureException(error, { tags: { component: 'LoggedInIndex', method: 'restoreSpot' } });
+        result = 'failed';
+    } finally {
+        clearTimeout(cap);
+    }
+    if (result === 'failed') {
+        // Past the cap the rebuild may still be running: it must push nothing more.
+        controller.abort();
+        disableAutoReload();
+        logger.warn('[gate] spot rebuild failed, automatic update reloads off until a cold start');
+        router.replace(`/logged-in/app_container/${startupTab}`);
+    }
+    endRestoreLook();
+    void announceAppliedUpdate(result === 'failed' ? undefined : lastRestoreMissing() ?? undefined);
+    // NOT the gate's `cancelled`: the rebuild's first navigation replaced this
+    // screen, which unmounted the gate and set it. A tap stashed during the
+    // rebuild still opens, on top of the rebuilt spot.
+    await openPendingNotificationRoute(userId, () => false);
 }
 
 /**
@@ -444,8 +502,7 @@ export function useLoggedInGate() {
                         loadFeedViewPrefs(),
                     ]);
                     if (cancelled) return;
-                    router.replace(`/logged-in/app_container/${startupTab}`);
-                    await openPendingNotificationRoute(userId, () => cancelled);
+                    await placeReader(startupTab, userId, () => cancelled);
                     return;
                 }
 

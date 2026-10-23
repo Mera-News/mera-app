@@ -214,7 +214,7 @@ export async function announceAppliedUpdate(missing?: 'story' | 'publication'): 
 
 /** Says why a Restart tap did nothing: typed text, a reply being written, or anything else held. */
 function explainHeldTap(labels: string[]): void {
-    const typed = labels.some((l) => l.startsWith('draft:') || l === 'search-query');
+    const typed = labels.some((l) => l.startsWith('draft:'));
     const key = typed
         ? 'notificationCenter.update.heldDraft'
         : labels.includes('chat-stream')

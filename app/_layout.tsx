@@ -54,6 +54,7 @@ import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { holdSplash, SplashReleaser } from '@/lib/splash-hold';
+import RestoreCover from '@/components/custom/launch/RestoreCover';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
 import {
@@ -170,6 +171,8 @@ function AppRoot() {
             <SplashReleaser />
             {/* Into the Feed: the launch logo flies into the Mera button. */}
             <LaunchLogoHandoff />
+            {/* Android only: the launch look over an update reload's rebuild of the reader's spot. Last, so it covers the stack. */}
+            <RestoreCover />
             </View>
           </ThemeProvider>
         </ApolloProvider>

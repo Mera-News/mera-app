@@ -72,6 +72,16 @@ import {
     signInFixtureAccount,
 } from '@/test/helpers';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
+import { RESTORE_CAP_MS } from '@/components/custom/auth/useLoggedInGate';
+import { __resetAppRestartForTests, autoReloadDisabled, RESTART_MARKER_KEY } from '@/lib/app-restart';
+import * as resumeSpot from '@/lib/navigation/resume-spot';
+import * as otaNotice from '@/lib/ota-notice';
+import logger from '@/lib/logger';
+import { __resetSplashHoldForTests, restoreLookState } from '@/lib/splash-hold';
+import {
+    __resetPendingNotificationRouteForTests,
+    stashPendingNotificationRoute,
+} from '@/lib/stores/pending-notification-route';
 
 const ME = FIXTURE_ACCOUNT.userId;
 const FOREIGN = '66e2e0000000000000000002';
@@ -308,6 +318,158 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         expect(router.dismissAll).toHaveBeenCalled();
         expect(await getSetting('cached_user_id')).toBeNull();
     });
+});
+
+// The spot an update reload carried (lib/app-restart.ts marker) is rebuilt by the feed's
+// restoreSpot, faked here at its seam: the gate's contract is the call order, the cap, the
+// single use and the fallback. restoreSpot itself is tested by the feed.
+describe('useLoggedInGate: an update reload puts the reader back', () => {
+    const SPOT = { v: 1, tab: 'feed', page: null, tabStack: [], rootStack: [], scroll: null };
+    const seedReload = (reason: string, spot: unknown = SPOT) =>
+        setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason, at: 1, backgroundedAt: null, lastForegroundAt: null, spot }));
+    const seedOnboarded = async () => {
+        await signIn();
+        await setSetting('cached_user_id', ME);
+        await markOnboardingDone();
+    };
+    let restore: jest.SpyInstance;
+    let announce: jest.SpyInstance;
+
+    beforeEach(() => {
+        __resetAppRestartForTests();
+        __resetSplashHoldForTests();
+        __resetPendingNotificationRouteForTests();
+        restore = jest.spyOn(resumeSpot, 'restoreSpot').mockResolvedValue('restored');
+        announce = jest.spyOn(otaNotice, 'announceAppliedUpdate').mockResolvedValue();
+        spies.push(restore, announce);
+    }, 30_000);
+
+    it('rebuilds the spot after the gates INSTEAD of the startup tab, then announces once', async () => {
+        await seedOnboarded();
+        await seedReload('ota');
+
+        mountGate();
+        await waitFor(() => expect(announce).toHaveBeenCalled(), { timeout: 8000 });
+        await drain();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(restore.mock.calls[0][0]).toEqual(SPOT);
+        expect(replaced()).toEqual([]);
+        expect(announce).toHaveBeenCalledWith(undefined);
+        expect(autoReloadDisabled()).toBe(false);
+        expect(restoreLookState()).toBe('done');
+    }, 30_000);
+
+    it('the gate running twice rebuilds once; the second run takes the startup tab', async () => {
+        await seedOnboarded();
+        await seedReload('update');
+
+        const first = mountGate();
+        await waitFor(() => expect(announce).toHaveBeenCalledTimes(1), { timeout: 8000 });
+        first.unmount();
+        // The gate mounts again (a PIN unlock, a reauth): it must not rebuild or announce again.
+        mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(replaced()).toEqual([[APP_ROUTE]]);
+    }, 30_000);
+
+    it('a cold launch never rebuilds', async () => {
+        await seedOnboarded();
+
+        mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(restore).not.toHaveBeenCalled();
+        expect(replaced()).toEqual([[APP_ROUTE]]);
+    }, 30_000);
+
+    it('a language restart carries no spot, so it never rebuilds', async () => {
+        await seedOnboarded();
+        await seedReload('language');
+
+        mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(restore).not.toHaveBeenCalled();
+    }, 30_000);
+
+    it('a failed rebuild lands on the startup tab and switches automatic reloads off', async () => {
+        await seedOnboarded();
+        await seedReload('ota');
+        restore.mockResolvedValue('failed');
+
+        mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(autoReloadDisabled()).toBe(true);
+        expect(restoreLookState()).toBe('done');
+    }, 30_000);
+
+    it('a rebuild that throws counts as failed', async () => {
+        await seedOnboarded();
+        await seedReload('ota');
+        restore.mockRejectedValue(new Error('nav not ready'));
+        spies.push(jest.spyOn(logger, 'captureException').mockImplementation(() => ''));
+
+        mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(autoReloadDisabled()).toBe(true);
+    }, 30_000);
+
+    it('a rebuild past the cap is aborted, so a late finish pushes nothing, and the startup tab wins', async () => {
+        await seedOnboarded();
+        await seedReload('ota');
+        let signal: AbortSignal | undefined;
+        restore.mockImplementation((_spot: unknown, opts?: { signal?: AbortSignal }) => {
+            signal = opts?.signal;
+            return new Promise(() => {});
+        });
+
+        mountGate();
+        await waitFor(() => expect(replaced()).toEqual([[APP_ROUTE]]), { timeout: 8000 + RESTORE_CAP_MS });
+        await drain();
+
+        expect(signal?.aborted).toBe(true);
+        expect(autoReloadDisabled()).toBe(true);
+    }, 30_000);
+
+    it('a restored story that is gone is announced as gone', async () => {
+        await seedOnboarded();
+        await seedReload('ota');
+        spies.push(jest.spyOn(resumeSpot, 'lastRestoreMissing').mockReturnValue('story'));
+
+        mountGate();
+        await waitFor(() => expect(announce).toHaveBeenCalled(), { timeout: 8000 });
+
+        expect(announce).toHaveBeenCalledWith('story');
+    }, 30_000);
+
+    it('a notification tap that arrives during the rebuild opens on top of it afterwards and does not fail it', async () => {
+        await seedOnboarded();
+        await seedReload('ota');
+        const tap = { pathname: '/logged-in/article-detail', params: { articleId: 'a-1' } } as const;
+        restore.mockImplementation(async () => {
+            await stashPendingNotificationRoute(tap, ME);
+            return 'restored';
+        });
+
+        mountGate();
+        await waitFor(() => expect(router.push).toHaveBeenCalledWith(tap), { timeout: 8000 });
+        await drain();
+
+        expect(replaced()).toEqual([]);
+        expect(autoReloadDisabled()).toBe(false);
+    }, 30_000);
 });
 
 describe('useLoggedInGate: account switch', () => {
