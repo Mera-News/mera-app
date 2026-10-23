@@ -32,6 +32,7 @@
 // identity in a dependency list once re-ran the load effect on every render
 // and snapped setup back to its first step.
 
+import { useRestartHold } from '@/lib/app-restart';
 import LottieView from 'lottie-react-native';
 import React from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
@@ -130,6 +131,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
     lookForBackup,
     restore,
   } = useBackupSection({ autoOpenRecover });
+  useRestartHold(typedCode.trim().length > 0, 'draft:backup-code', 'hard');
 
   // ── rendering ─────────────────────────────────────────────────────────────
   const choice = (

@@ -1,4 +1,5 @@
 'use client';
+import { useRestartHold } from '@/lib/app-restart';
 import React from 'react';
 import { View, Pressable, ScrollView, ViewStyle } from 'react-native';
 // See the note in components/ui/modal/index.tsx on reaching into
@@ -189,6 +190,7 @@ const Popover = React.forwardRef<
   { className, size = 'md', placement = 'bottom', ...props },
   ref
 ) {
+  useRestartHold(!!props.isOpen, 'overlay:popover', 'auto');
   return (
     <UIPopover
       ref={ref}

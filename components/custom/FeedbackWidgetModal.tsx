@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -72,6 +73,9 @@ const FeedbackWidgetModal: React.FC = () => {
     const c = useColors();
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
+    useRestartHold(visible, 'overlay:feedback', 'auto');
+    // The Sentry widget owns its text fields and exposes no change event, so the draft hold spans the open form.
+    useRestartHold(visible, 'draft:feedback', 'hard');
 
     // Local-first identity (the session is unreachable exactly when a bug is filed).
     // No email is read or prefilled: the optional field below starts empty.

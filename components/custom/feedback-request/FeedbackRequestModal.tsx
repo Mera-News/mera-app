@@ -26,6 +26,7 @@
 // push tap before the first sync) is fetched once; absent from the active
 // list means closed.
 
+import { useRestartHold } from '@/lib/app-restart';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,6 +61,7 @@ export interface FeedbackRequestModalProps {
 }
 
 const FeedbackRequestModal: React.FC<FeedbackRequestModalProps> = ({ id, onClose }) => {
+    useRestartHold(true, 'feedback-request', 'auto');
     const styles = useStyles();
     const { consent } = useFeedbackRequestConsent(onClose);
 
@@ -78,6 +80,7 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
     const {
         phase, question, answer, setAnswer, load, handleSubmit, showsTextArea, submitting, canSubmit, backdropCloses,
     } = useFeedbackRequestCard(id);
+    useRestartHold(answer.trim().length > 0, 'draft:feedback', 'hard');
 
     let message: string | null = null;
     if (phase.kind === 'thanks') message = t('feedbackRequest.thanks');

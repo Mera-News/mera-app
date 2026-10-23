@@ -1,4 +1,5 @@
 'use client';
+import { useRestartHold } from '@/lib/app-restart';
 import { createModal } from '@gluestack-ui/core/modal/creator';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
 import { tva, useStyleContext, withStyleContext } from '@gluestack-ui/utils/nativewind-utils';
@@ -146,15 +147,18 @@ type IModalCloseButtonProps = React.ComponentProps<typeof UIModal.CloseButton> &
   VariantProps<typeof modalCloseButtonStyle> & { className?: string };
 
 const Modal = React.forwardRef<React.ComponentRef<typeof UIModal>, IModalProps>(
-  ({ className, size = 'md', ...props }, ref) => (
-    <UIModal
-      ref={ref}
-      {...props}
-      pointerEvents="box-none"
-      className={modalStyle({ size, class: className })}
-      context={{ size }}
-    />
-  )
+  ({ className, size = 'md', ...props }, ref) => {
+    useRestartHold(!!props.isOpen, 'overlay:dialog', 'auto');
+    return (
+      <UIModal
+        ref={ref}
+        {...props}
+        pointerEvents="box-none"
+        className={modalStyle({ size, class: className })}
+        context={{ size }}
+      />
+    );
+  }
 );
 
 const ModalBackdrop = React.forwardRef<

@@ -11,6 +11,7 @@
 // markdown styles) rather than tva, while keeping the gluestack forwardRef /
 // context conventions for API compatibility.
 
+import { useRestartHold } from '@/lib/app-restart';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, {
   createContext,
@@ -340,6 +341,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   const colors = useColors();
   const styles = useStyles();
   const [text, setText] = useState('');
+  useRestartHold(text.trim().length > 0, 'draft:chat', 'hard');
   const inputRef = useRef<TextInput>(null);
 
   useImperativeHandle(ref, () => ({

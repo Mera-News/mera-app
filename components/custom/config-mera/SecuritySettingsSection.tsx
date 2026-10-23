@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
 import { Group, Help, Row } from '@/components/custom/you/rows';
@@ -42,6 +43,7 @@ const SecuritySettingsSection: React.FC = () => {
     const lockEnabled = usePinStore((s) => s.lockEnabled);
     const setLockEnabled = usePinStore((s) => s.setLockEnabled);
     const [flow, setFlow] = useState<Flow>('none');
+    useRestartHold(flow !== 'none', 'overlay:app-lock', 'auto');
     // Guards the switch against a second tap while the keychain write from the
     // first is still in flight.
     const [lockBusy, setLockBusy] = useState(false);

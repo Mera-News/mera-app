@@ -6,6 +6,7 @@
 // The flow itself (restart hold, local cleanup) lives in move-to-phone.ts.
 // Mounted once in app/logged-in/_layout.tsx.
 
+import { useRestartHold } from '@/lib/app-restart';
 import { Check, Circle, X } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Modal, Platform, Pressable, View } from 'react-native';
@@ -201,6 +202,7 @@ export default function MoveToPhoneHost() {
     }, [userId]);
 
     const open = view.kind !== 'idle';
+    useRestartHold(open, 'overlay:move-to-phone', 'auto');
     return (
         <Modal
             visible={open}

@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -53,6 +54,7 @@ const CLOSE_FRAME = 44;
  * into the card on open.
  */
 export function HelpModal({ open, onClose, onClosed, title, children, testID }: HelpModalProps) {
+    useRestartHold(open, 'overlay:help', 'auto');
     const { t } = useTranslation();
     const colors = useColors();
     const reduceMotion = useReducedMotion();

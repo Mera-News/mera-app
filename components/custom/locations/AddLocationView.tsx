@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -75,6 +76,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
     handleManualContinue,
     handleSave,
   } = useAddLocation({ onSaved });
+  useRestartHold([query, manualCity, countrySearch].some((v) => v.trim().length > 0), 'draft:location', 'hard');
 
   // ── Configure step ────────────────────────────────────────────────────────
   if (chosen) {

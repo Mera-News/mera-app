@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import { alpha3ToAlpha2, flagForAlpha2 } from '@/components/custom/locations/location-display';
 import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
@@ -33,6 +34,7 @@ const SourceSearch: React.FC<{
     const colors = useColors();
     const themeMode = useThemeMode();
     const [query, setQuery] = useState('');
+    useRestartHold(query.trim().length > 0, 'draft:source-search', 'hard');
     const debounced = useDebouncedValue(query, 300);
     const [results, setResults] = useState<PublisherSearchHit[]>([]);
     const [searching, setSearching] = useState(false);

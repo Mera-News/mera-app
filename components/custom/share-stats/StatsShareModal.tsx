@@ -14,6 +14,7 @@
 // with the picked palette (capture-and-share keeps its native imports
 // dynamic). Publication names only leave the phone through Most opened.
 
+import { useRestartHold } from '@/lib/app-restart';
 import { captureAndShare } from '@/components/custom/share-stats/capture-and-share';
 import { CARD_PALETTES, CardPaletteContext } from '@/components/custom/share-stats/card-theme';
 import { hostSizeForScale } from '@/components/custom/share-stats/card-shell';
@@ -75,6 +76,7 @@ function fitPortrait(maxW: number, maxH: number): { width: number; height: numbe
 }
 
 const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box }) => {
+    useRestartHold(open, 'overlay:share', 'auto');
     // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
     const motion = useMotionAllowed();
     const { t } = useTranslation();

@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -69,6 +70,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     onFinish,
     inSheet = false,
 }) => {
+    useRestartHold(true, 'tutorial', 'auto');
     const styles = useStyles();
     const colors = useColors();
     const t = useTutorialCopy();

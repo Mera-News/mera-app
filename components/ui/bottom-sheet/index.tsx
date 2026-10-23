@@ -1,3 +1,4 @@
+import { useRestartHold } from '@/lib/app-restart';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -59,6 +60,7 @@ const PRESENT_FALLBACK_MS = 150;
  * max height.
  */
 export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLabel, fullHeight }: BottomSheetProps) {
+    useRestartHold(open, 'overlay:sheet', 'auto');
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
