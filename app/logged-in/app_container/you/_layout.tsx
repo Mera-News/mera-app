@@ -5,12 +5,14 @@ import { View } from 'react-native';
 
 import { useReportTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { useRestoreInProgress } from '@/lib/navigation/use-screen-scroll-target';
 import { useColors } from '@/lib/theme/tokens';
 
 export default function StackLayout() {
   const colors = useColors();
   // Lite: pushes and pops are instant; the edge swipe still pops (lib/motion-gate.ts).
-  const motion = useMotionAllowed();
+  // A restore rebuilds the stacks with no animation.
+  const motion = useMotionAllowed() && !useRestoreInProgress();
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>

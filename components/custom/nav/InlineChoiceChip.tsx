@@ -19,6 +19,7 @@
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { useRestartHold } from '@/lib/app-restart';
 import { hapticSelection } from '@/lib/haptics';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useColors } from '@/lib/theme/tokens';
@@ -168,6 +169,7 @@ export default function InlineChoiceChip<T extends string | number>({
   }, [window.width]);
   const close = useCallback(() => setAnchor(null), []);
   const isOpen = anchor !== null;
+  useRestartHold(isOpen, 'overlay:sheet', 'auto');
   useEffect(() => {
     if (!isOpen || !onOpenChange) return;
     onOpenChange(true);

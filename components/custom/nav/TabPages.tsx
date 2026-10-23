@@ -30,6 +30,8 @@ import {
   type TabNavLike,
 } from './tab-press';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { noteActivePage, registerScrollTarget, type ResumeScrollTarget } from '@/lib/navigation/resume-spot';
+import { useRestoreHidden } from '@/lib/navigation/use-screen-scroll-target';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -47,6 +49,7 @@ import {
 } from './current-surface';
 import { consumePendingPage, usePendingPageRequest } from './navigate-to-page';
 import PageExplainerSheet from './PageExplainerSheet';
+import RestoreReveal from './RestoreReveal';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
 import { PageScrollContext, retapTarget, scrollListToTop, type PageScrollTarget, type RegisterPageScroll } from './page-scroll';
@@ -203,6 +206,33 @@ const TabPages: React.FC<TabPagesProps> = ({
   const route = useRoute();
   const retap = useRef({ activeId, arranging, reveal, motionAllowed });
   retap.current = { activeId, arranging, reveal, motionAllowed };
+
+  // ── The resume spot (lib/navigation/resume-spot.ts) ──
+  // The tab's ONE target delegates to the ACTIVE page's registered list, read
+  // at call time; a page that has not registered yet is a no-op (the landing
+  // loop retries each frame).
+  useEffect(() => {
+    if (activeId) noteActivePage(tab, activeId);
+  }, [tab, activeId]);
+  useEffect(() => {
+    const current = () => scrollTargets.current.get(retap.current.activeId as PageId);
+    const target: ResumeScrollTarget = {
+      getOffset: () => current()?.options.current?.getOffset?.() ?? 0,
+      scrollTo: (y) => {
+        const list = current()?.ref.current;
+        if (list?.scrollToOffset) list.scrollToOffset({ offset: y, animated: false });
+        else list?.scrollTo?.({ x: 0, y, animated: false });
+      },
+      getAnchor: () => current()?.options.current?.getAnchor?.() ?? null,
+      scrollToAnchor: (id, delta) => {
+        const page = current();
+        if (!page) return 'pending';
+        return page.options.current?.scrollToAnchor?.(id, delta) ?? 'missing';
+      },
+    };
+    return registerScrollTarget(route.key, target);
+  }, [route.key]);
+  const restoreHidden = useRestoreHidden(route.key);
   useEffect(() => {
     const own = navigation as unknown as TabNavLike;
     const tabs = findTabAncestor(own);
@@ -258,6 +288,7 @@ const TabPages: React.FC<TabPagesProps> = ({
       {/* The page background: FIRST, so it paints behind everything. */}
       <AbstractGradientBackdrop />
 
+      <RestoreReveal hidden={restoreHidden}>
       <PagePager
           index={index}
           count={ids.length}
@@ -269,6 +300,7 @@ const TabPages: React.FC<TabPagesProps> = ({
           progress={tabSwipeProgress(tab)}
           testID={testID ? `${testID}-pager` : undefined}
         />
+      </RestoreReveal>
 
       {/* Feed and Explore: a frosted header (HeaderGlass), status bar
           included, so content scrolling under it never makes it unreadable.

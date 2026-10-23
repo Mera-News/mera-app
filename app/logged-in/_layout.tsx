@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { useColors } from '@/lib/theme/tokens';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { useRestoreInProgress } from '@/lib/navigation/use-screen-scroll-target';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/FeedbackRequestAutoShowHost';
@@ -15,7 +16,8 @@ import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatche
 export default function LoggedInLayout() {
   const colors = useColors();
   // Lite: every push and pop is instant (no motion, owner rule).
-  const motion = useMotionAllowed();
+  // A restore rebuilds the stacks with no animation.
+  const motion = useMotionAllowed() && !useRestoreInProgress();
 
   return (
     <View style={{ flex: 1 }}>

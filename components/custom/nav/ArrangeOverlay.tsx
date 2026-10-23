@@ -64,6 +64,7 @@ import { alpha2OfPage, type PageId } from './page-registry';
 import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { useRestartHold } from '@/lib/app-restart';
 
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
@@ -257,6 +258,8 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
   const insets = useSafeAreaInsets();
   const rtl = I18nManager.isRTL;
   const still = !useMotionAllowed();
+  // Mounted only while open: an update reload cannot rebuild the draft.
+  useRestartHold(true, 'world-arrange', 'auto');
 
   const [state, setState] = useState<ArrangeState>(() => initialArrange(pages.map((p) => p.id)));
   const [query, setQuery] = useState('');
