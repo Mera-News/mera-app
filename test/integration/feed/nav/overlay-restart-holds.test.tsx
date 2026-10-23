@@ -20,7 +20,9 @@ describe('overlay restart holds', () => {
   });
 
   it.each([['world-arrange'], ['overlay:sheet']])('%s is held while open, gone after close and unmount', (label) => {
-    const h = renderHook(({ open }) => useRestartHold(open, label, 'auto'), { initialProps: { open: true } });
+    const h = renderHook(({ open }: { open: boolean }) => useRestartHold(open, label, 'auto'), {
+      initialProps: { open: true },
+    });
     expect(activeHolds()).toContain(label);
     h.rerender({ open: false });
     expect(activeHolds()).not.toContain(label);

@@ -124,15 +124,16 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         },
         [scrollViewRef],
     );
-    const { restoreHidden } = useScreenScrollTarget(
-        {
-            get current() {
-                const node = ownRef.current;
-                return node ? { scrollToOffset: ({ offset }: { offset: number }) => node.scrollTo(offset) } : null;
-            },
+    // ONE object for the screen's life: the hook re-registers whenever its ref changes.
+    const [scrollable] = React.useState(() => ({
+        get current() {
+            const node = ownRef.current;
+            return node ? { scrollToOffset: ({ offset }: { offset: number }) => node.scrollTo(offset) } : null;
         },
-        { getOffset: () => ownRef.current?.getScrollY() ?? 0 },
-    );
+    }));
+    const { restoreHidden } = useScreenScrollTarget(scrollable, {
+        getOffset: () => ownRef.current?.getScrollY() ?? 0,
+    });
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
     const article = 'article' in props ? props.article : undefined;
