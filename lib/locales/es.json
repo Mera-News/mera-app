@@ -1057,7 +1057,13 @@
       "updatedTitle": "Mera se actualizó",
       "updatedBody": "Toca para ver las novedades.",
       "notesTitle": "Novedades",
-      "notesEmpty": "Correcciones y mejoras."
+      "notesEmpty": "Correcciones y mejoras.",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "Mera will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

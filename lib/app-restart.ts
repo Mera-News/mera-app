@@ -7,10 +7,17 @@
 // uncoordinated `reloadAsync()` callers and no shared gate between them.
 //
 // WHAT RESTARTS, AND WHEN
-//   - a DOWNLOADED, PENDING OTA, on a true background -> active return
-//     (`OTASilentUpdater`, which owns that lifecycle), or when the reader taps
-//     Restart on its toast or inbox row (`lib/ota-notice.ts`, reason 'update')
+//   - an OTA that was ALREADY downloaded before a true background -> active
+//     return, and only when the reader's spot can be rebuilt after the reload
+//     (`OTASilentUpdater`, reason 'ota'). A download never reloads by itself.
+//   - the reader's Restart tap on the update toast or inbox row
+//     (`lib/ota-notice.ts`, reason 'update')
 //   - an RTL-crossing language change, and a completed backup restore
+//
+// THE SPOT rides in the marker: `requestRestart(reason, { spot })` writes it
+// and the gate takes it ONCE (`takeRestoreSpot()`) to rebuild the screens the
+// reader was on. Nothing is written at a departure; a process the OS kills in
+// the background comes back as a cold start, which never restores.
 //
 // A RETURN ON ITS OWN IS NOT A REASON TO RESTART. The app briefly restarted on
 // every true background -> active return regardless of whether anything had
@@ -33,16 +40,19 @@
 // tap made from the background returns through a restart. They dedupe on the
 // tap's persisted identifier instead (`handleInitialNotification` in
 // lib/notification-service.ts).
-// Money and credential paths hold the restart off instead, via `holdRestart()`.
+// Money, credential and typed-text paths hold every restart off via
+// `holdRestart()`; places that cannot be rebuilt (sheets, dialogs, the chat
+// panel) hold off only the automatic one via `holdAutoRestart()`.
 //
 // IMPORT DISCIPLINE. `lib/database/index.ts` opens SQLite at import time and the
 // damage travels to every downstream suite, so `setting-service`, the feed-order
 // store and `expo-updates` are all lazy-`require`d at their call sites. This
 // module is imported by `pin-store` and `AppScheduler`; a static import of any
 // of the three would drag the native DB adapter into both of their suites and
-// everything downstream of them. `AppState` stays static — it is universally
-// available and the module needs it to track departures.
+// everything downstream of them. `react` (for `useRestartHold`) and `AppState`
+// stay static: both are universally available, and departures need `AppState`.
 
+import { useEffect } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import logger from '@/lib/logger';
@@ -52,6 +62,10 @@ export type RestartReason = 'ota' | 'update' | 'language' | 'restore';
 export type RestartContext = {
   /** This boot is a JS reload we asked for, not a real cold start. */
   wasJsRestart: boolean;
+  /** Why the previous process reloaded, or null on a cold start. */
+  reason?: RestartReason | null;
+  /** The spot to rebuild (opaque here; `lib/navigation/resume-spot.ts` validates it), or null. */
+  spot?: unknown;
   /** When the app went to background before the restart, or null if it never did. */
   backgroundedAt: number | null;
   /** The pre-restart foreground stamp. */
@@ -176,7 +190,13 @@ type MarkerPayload = {
   at: number;
   backgroundedAt: number | null;
   lastForegroundAt: number | null;
+  /** 'ota' and 'update' only: where the reader was. */
+  spot?: unknown;
+  /** A restore failed earlier in this session: no automatic reload until a cold start. */
+  noAutoReload?: boolean;
 };
+
+const RESTART_REASONS: readonly RestartReason[] = ['ota', 'update', 'language', 'restore'];
 
 const EMPTY_CONTEXT: RestartContext = {
   wasJsRestart: false,
@@ -235,8 +255,12 @@ async function readAndClearMarker(): Promise<RestartContext> {
     const parsed = JSON.parse(raw) as Partial<MarkerPayload>;
     // A marker written by this process's predecessor bounds the next restart.
     if (typeof parsed.at === 'number') lastRestartAt = parsed.at;
+    if (parsed.noAutoReload === true) autoReloadOff = true;
+    const reason = RESTART_REASONS.includes(parsed.reason as RestartReason) ? (parsed.reason as RestartReason) : null;
     return {
       wasJsRestart: true,
+      reason,
+      spot: (reason === 'ota' || reason === 'update') && parsed.spot != null && typeof parsed.spot === 'object' ? parsed.spot : null,
       backgroundedAt: typeof parsed.backgroundedAt === 'number' ? parsed.backgroundedAt : null,
       lastForegroundAt:
         typeof parsed.lastForegroundAt === 'number' ? parsed.lastForegroundAt : null,
@@ -284,25 +308,68 @@ export function wasJsRestartSync(): boolean {
   return cachedContext.wasJsRestart;
 }
 
+let spotTaken = false;
+
+/**
+ * The spot this boot should rebuild, ONCE. The launch gate re-runs (PIN unlock,
+ * a reauth, the feedback-request route), and a second rebuild would drag the
+ * reader back to where they were a minute ago. Null on a cold start, on a
+ * language or restore restart, and on every call after the first.
+ */
+export async function takeRestoreSpot(): Promise<unknown> {
+  const ctx = await restartContext();
+  if (spotTaken) return null;
+  spotTaken = true;
+  return ctx.spot ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Automatic reload switch
+// ---------------------------------------------------------------------------
+
+let autoReloadOff = false;
+
+/**
+ * A rebuild of the reader's spot failed: no AUTOMATIC reload for any update
+ * until the next cold start, so a failed restore can never repeat. Carried
+ * across later reloads in the marker. A Restart tap still works.
+ */
+export function disableAutoReload(): void {
+  autoReloadOff = true;
+}
+
+export function autoReloadDisabled(): boolean {
+  return autoReloadOff;
+}
+
+/**
+ * The reader's spot right now, or null when it cannot be rebuilt. Lazy and
+ * total: the resume module reads navigation and stores, which this module must
+ * not import (see IMPORT DISCIPLINE), and a capture that throws means "not
+ * restorable", never a crash on the way out.
+ */
+export function captureResumeSpot(): unknown {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { captureSpot } = require('@/lib/navigation/resume-spot');
+    return captureSpot() ?? null;
+  } catch (err) {
+    logger.captureException(err, { tags: { module: 'app-restart', method: 'captureResumeSpot' } });
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Holds
 // ---------------------------------------------------------------------------
 
 let nextHoldId = 1;
-const holds = new Map<number, string>();
+/** `auto` holds block only the automatic reload (reason 'ota'); `hard` ones block every reason. */
+const holds = new Map<number, { label: string; kind: 'hard' | 'auto' }>();
 
-/**
- * Holds the restart off while something must not be interrupted — a purchase, a
- * credential write, a stream mid-flight. Returns an idempotent release.
- *
- * A BLOCKED RESTART IS DEFERRED TO THE NEXT UNBLOCKED background -> active
- * TRANSITION, AND IS NEVER RETRIED WHEN THE HOLD RELEASES. Releasing a 20s
- * purchase hold while the user is foregrounded mid-flow would restart them out
- * of the success state they just paid for. Do not add a release-triggered retry.
- */
-export function holdRestart(label: string): () => void {
+function addHold(label: string, kind: 'hard' | 'auto'): () => void {
   const id = nextHoldId++;
-  holds.set(id, label);
+  holds.set(id, { label, kind });
   let released = false;
   return () => {
     if (released) return;
@@ -311,9 +378,43 @@ export function holdRestart(label: string): () => void {
   };
 }
 
-/** Test seam: the labels currently holding a restart off. */
-export function activeHolds(): string[] {
-  return Array.from(holds.values());
+/**
+ * Holds EVERY restart off while something must not be interrupted — a purchase, a
+ * credential write, a stream mid-flight, text the reader typed. Returns an
+ * idempotent release.
+ *
+ * A BLOCKED RESTART IS DEFERRED TO THE NEXT UNBLOCKED background -> active
+ * TRANSITION, AND IS NEVER RETRIED WHEN THE HOLD RELEASES. Releasing a 20s
+ * purchase hold while the user is foregrounded mid-flow would restart them out
+ * of the success state they just paid for. Do not add a release-triggered retry.
+ */
+export function holdRestart(label: string): () => void {
+  return addHold(label, 'hard');
+}
+
+/**
+ * Holds off only the AUTOMATIC reload on a return (reason 'ota'): the reader's
+ * place could not be rebuilt (an open sheet, dialog, tutorial, the chat panel).
+ * A Restart tap, a language change and a backup restore still go through, so a
+ * dialog closing in the same tick as its confirm cannot swallow them.
+ */
+export function holdAutoRestart(label: string): () => void {
+  return addHold(label, 'auto');
+}
+
+/** A hold for as long as `active` is true, released on change and unmount. */
+export function useRestartHold(active: boolean, label: string, kind: 'hard' | 'auto' = 'auto'): void {
+  useEffect(() => {
+    if (!active) return undefined;
+    return addHold(label, kind);
+  }, [active, label, kind]);
+}
+
+/** The labels holding a restart off: every hold, or only those that block `reason`. */
+export function activeHolds(reason?: RestartReason): string[] {
+  return Array.from(holds.values())
+    .filter((h) => reason == null || reason === 'ota' || h.kind === 'hard')
+    .map((h) => h.label);
 }
 
 // ---------------------------------------------------------------------------
@@ -336,13 +437,13 @@ function restartDebugEnabled(): boolean {
   return process.env.EXPO_PUBLIC_RESTART_DEBUG === 'true';
 }
 
-/** Why this call cannot restart, or null if it can. */
-function blockedBy(): string | null {
+/** Why a restart for `reason` cannot happen now, or null if it can. */
+function blockedBy(reason: RestartReason): string | null {
   if (AppState.currentState !== 'active') return `appstate:${AppState.currentState}`;
   if (restartInFlight) return 'in-flight';
   const since = Date.now() - lastRestartAt;
   if (lastRestartAt > 0 && since < MIN_RESTART_INTERVAL_MS) return `cooldown:${since}ms`;
-  const held = activeHolds();
+  const held = activeHolds(reason);
   if (held.length > 0) return `hold:${held.join(',')}`;
   const route = blockedRoute();
   return route ? `route:${route}` : null;
@@ -417,10 +518,10 @@ export function restartIsAvailable(): boolean {
  * so a simulator pass can watch the decision on every return instead of seeing
  * it once and then silently never again.
  */
-export function restartWouldReload(): boolean {
+export function restartWouldReload(reason: RestartReason): boolean {
   if (restartDebugEnabled()) return false;
   if (!restartIsAvailable()) return false;
-  return blockedBy() == null;
+  return blockedBy(reason) == null;
 }
 
 /**
@@ -430,8 +531,8 @@ export function restartWouldReload(): boolean {
  * `lib/ota-notice.ts`'s). The caller does not find out whether it happened; see
  * `restartIsAvailable()` for the one flow that needs to know.
  */
-export async function requestRestart(reason: RestartReason): Promise<void> {
-  const blocker = blockedBy();
+export async function requestRestart(reason: RestartReason, opts?: { spot?: unknown }): Promise<void> {
+  const blocker = blockedBy(reason);
 
   // Ahead of the dev / isEnabled gate on purpose: the simulator is where the
   // decision logic gets exercised, and it is exactly where a reload cannot run.
@@ -486,6 +587,8 @@ export async function requestRestart(reason: RestartReason): Promise<void> {
       at: lastRestartAt,
       backgroundedAt: reason === 'ota' ? backgroundedAt : null,
       lastForegroundAt,
+      ...((reason === 'ota' || reason === 'update') && opts?.spot != null ? { spot: opts.spot } : {}),
+      ...(autoReloadOff ? { noAutoReload: true } : {}),
     };
     // AWAITED. An unawaited write races the reload and the next boot reads a
     // cold start, which is the PIN prompt on every return.
@@ -531,4 +634,6 @@ export function __resetAppRestartForTests(): void {
   backgroundedAt = null;
   lastForegroundAt = null;
   trackingInstalled = false;
+  spotTaken = false;
+  autoReloadOff = false;
 }

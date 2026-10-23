@@ -596,12 +596,18 @@
     "ageDays": "{{n}}d",
     "update": {
       "availableTitle": "Update ready",
-      "availableBody": "Restart Mera to get the latest version.",
+      "availableBody": "Restart now, or Mera will update the next time you open it.",
       "restart": "Restart",
-      "updatedTitle": "Mera was updated",
+      "updatedTitle": "Mera updated",
       "updatedBody": "Tap to see what's new.",
       "notesTitle": "What's new",
-      "notesEmpty": "Fixes and improvements."
+      "notesEmpty": "Fixes and improvements.",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "Mera will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "clusterDetail": {

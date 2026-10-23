@@ -1051,7 +1051,13 @@
       "updatedTitle": "메라가 업데이트되었습니다",
       "updatedBody": "탭하여 새로운 기능을 확인하세요.",
       "notesTitle": "새로운 기능",
-      "notesEmpty": "버그 수정 및 개선"
+      "notesEmpty": "버그 수정 및 개선",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "메라 will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

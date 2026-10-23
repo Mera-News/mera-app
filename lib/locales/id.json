@@ -1051,7 +1051,13 @@
       "updatedTitle": "Mera telah diperbarui",
       "updatedBody": "Ketuk untuk melihat yang baru.",
       "notesTitle": "Yang baru",
-      "notesEmpty": "Perbaikan dan peningkatan."
+      "notesEmpty": "Perbaikan dan peningkatan.",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "Mera will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

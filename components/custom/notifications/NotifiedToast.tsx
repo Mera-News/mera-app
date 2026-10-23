@@ -125,7 +125,8 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
         // which must not swallow a tap aimed at the chrome behind it.
         <Animated.View style={animatedStyle} pointerEvents="box-none">
             <Toast action={action} variant="solid" pointerEvents="box-none">
-                <ToastTitle>{title}</ToastTitle>
+                {/* The one announcement: title and body together, when this card is in front. */}
+                <ToastTitle announcement={body ? `${title}. ${body}` : title}>{title}</ToastTitle>
                 {body ? <ToastDescription>{body}</ToastDescription> : null}
                 {button ? (
                     <Pressable

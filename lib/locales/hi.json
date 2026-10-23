@@ -1059,7 +1059,13 @@
       "updatedTitle": "मेरा ऐप अपडेट हो गया",
       "updatedBody": "नया क्या है, यह देखने के लिए टैप करें।",
       "notesTitle": "नया क्या है",
-      "notesEmpty": "गड़बड़ियां ठीक की गईं और सुधार किए गए।"
+      "notesEmpty": "गड़बड़ियां ठीक की गईं और सुधार किए गए।",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "मेरा will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

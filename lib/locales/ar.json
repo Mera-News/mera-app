@@ -1135,7 +1135,13 @@
       "updatedTitle": "تم تحديث ميرا",
       "updatedBody": "انقر لمعرفة الجديد.",
       "notesTitle": "ما الجديد",
-      "notesEmpty": "إصلاحات وتحسينات."
+      "notesEmpty": "إصلاحات وتحسينات.",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "ميرا will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

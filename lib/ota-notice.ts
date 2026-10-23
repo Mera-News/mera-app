@@ -7,11 +7,21 @@
 // on whichever row replaces it. Rows and markers stay on this phone; nothing
 // about updates is sent anywhere.
 import * as Updates from 'expo-updates';
+import i18next from 'i18next';
+import { AppState } from 'react-native';
 import { create } from 'zustand';
 
 import { notesSince, parseUpdateNotes, type UpdateNote } from '@/lib/algorithms/update-notes';
-import { markOtaRestartAttempted, requestRestart, restartWouldReload, routeBlocksRestart } from '@/lib/app-restart';
-import { deleteByTypes, getByTypes, notify } from '@/lib/database/services/notification-service';
+import {
+    activeHolds,
+    captureResumeSpot,
+    markOtaRestartAttempted,
+    requestRestart,
+    restartContext,
+    restartWouldReload,
+    routeBlocksRestart,
+} from '@/lib/app-restart';
+import { deleteByTypes, getByTypes, markActioned, notify } from '@/lib/database/services/notification-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { toastManager } from '@/lib/toast-manager';
@@ -33,6 +43,16 @@ export const useOpenUpdateNotes = create<{ open: boolean; notes: UpdateNote[] }>
 /** The update this session downloaded: `latestContext` reports it pending only after a later native event. */
 let fetchedId: string | null = null;
 
+/**
+ * The update downloaded BEFORE now and waiting to launch, or null. Local state
+ * only (no network), so a return can decide at once.
+ */
+export function readyUpdateId(): string | null {
+    const context = Updates.latestContext;
+    const id = (context?.isUpdatePending ? context.downloadedManifest?.id : undefined) ?? fetchedId;
+    return id && id !== Updates.updateId ? id : null;
+}
+
 /** The notes starts the update rows still carry: a waiting "Update ready" row's, an unopened "App updated" row's. */
 async function carriedStarts(): Promise<string[]> {
     const rows = await getByTypes(UPDATE_ROWS);
@@ -50,9 +70,12 @@ async function carriedStarts(): Promise<string[]> {
 }
 
 /**
- * Toast plus the `update_available` row, once per downloaded update id. On a
- * screen that can never restart (PIN lock, sign-in, onboarding) only the row:
- * the toast's Restart would do nothing there, so it waits for a later return.
+ * Toast plus the `update_available` row, once per downloaded update id. Never
+ * a reload. Only the row, with the noticed key left unset so the next return
+ * that does not reload shows the toast: on a screen that can never restart
+ * (PIN lock, sign-in, onboarding), where the toast's Restart would do nothing,
+ * and while the app is in the background (the download finished after the
+ * reader left; a toast there would go unseen).
  */
 export async function noticePendingUpdate(id: string): Promise<void> {
     try {
@@ -69,7 +92,7 @@ export async function noticePendingUpdate(id: string): Promise<void> {
             context: since ? { since } : undefined,
             replaces: UPDATE_ROWS,
         };
-        if (routeBlocksRestart()) {
+        if (routeBlocksRestart() || AppState.currentState !== 'active') {
             await notify(row);
             return;
         }
@@ -82,6 +105,13 @@ export async function noticePendingUpdate(id: string): Promise<void> {
 
 type LastRunning = { id: string; at: string | null };
 
+/** The `app_updated` row this boot wrote, for the one "Mera updated" toast. */
+type AppliedRow = { id: string; notes: UpdateNote[] };
+let applied: Promise<AppliedRow | null> | null = null;
+let announced = false;
+/** After the restored screen settles, so a screen reader hears the toast once and over the right screen. */
+const ANNOUNCE_DELAY_MS = 500;
+
 /**
  * Once per boot: on the first launch of a new update id, the inbox gets ONE
  * `app_updated` row (replacing `update_available` and any older one), however
@@ -90,10 +120,16 @@ type LastRunning = { id: string; at: string | null };
  * rollback) only records where this device is, and drops a waiting "Update
  * ready" row: its bundle launched or was thrown away, so its Restart is dead.
  */
-export async function noticeAppliedUpdate(): Promise<void> {
+export function noticeAppliedUpdate(): Promise<boolean> {
+    applied = writeAppliedRow();
+    return applied.then((row) => row != null);
+}
+
+async function writeAppliedRow(): Promise<AppliedRow | null> {
+    let written: AppliedRow | null = null;
     try {
         const id = Updates.updateId;
-        if (!id) return;
+        if (!id) return null;
         const raw = await getSetting(OTA_LAST_RUNNING_KEY);
         let prev: LastRunning | null = null;
         try {
@@ -101,19 +137,21 @@ export async function noticeAppliedUpdate(): Promise<void> {
         } catch {
             prev = null;
         }
-        if (prev?.id === id) return;
+        if (prev?.id === id) return null;
         if (prev && !Updates.isEmbeddedLaunch) {
             const since = [...(await carriedStarts()), prev.at].filter((s): s is string => !!s).sort()[0] ?? null;
+            const notes = notesSince(parseUpdateNotes(process.env.EXPO_PUBLIC_OTA_NOTES), since);
             // The row first: it replaces older rows, so a crash before the marker
             // write repeats this same single row rather than adding a second one.
-            await notify({
+            const row = await notify({
                 type: APP_UPDATED,
                 source: SOURCE,
                 title: 'notificationCenter.update.updatedTitle',
                 body: 'notificationCenter.update.updatedBody',
-                context: { notes: notesSince(parseUpdateNotes(process.env.EXPO_PUBLIC_OTA_NOTES), since), since },
+                context: { notes, since },
                 replaces: UPDATE_ROWS,
             });
+            if (row) written = { id: row.id, notes };
         } else {
             await deleteByTypes([UPDATE_AVAILABLE]);
         }
@@ -122,24 +160,96 @@ export async function noticeAppliedUpdate(): Promise<void> {
     } catch (err) {
         logger.captureException(err, { tags: { module: 'ota-notice', method: 'noticeAppliedUpdate' } });
     }
+    return written;
 }
 
 /**
- * The toast's and the row's Restart. Holds and blocked routes still apply; a
- * blocked tap does nothing more and the row stays. Reason `'update'`, never
- * `'ota'`: the tap is made in the foreground, and the `'ota'` marker's departure
- * stamp would put the reader behind the PIN lock on the reload.
+ * Once per process, after the launch gate placed the reader: on a boot that
+ * an update reload ('ota' or a Restart tap) started, the "Mera updated" toast,
+ * shown only when this boot wrote the `app_updated` row. The toast writes no row
+ * of its own; its "See what's new" opens the notes and marks the row seen. A
+ * cold launch gets the row alone. `missing` replaces it when the restored story
+ * or publication no longer exists.
+ */
+export async function announceAppliedUpdate(missing?: 'story' | 'publication'): Promise<void> {
+    if (announced) return;
+    announced = true;
+    try {
+        const { reason } = await restartContext();
+        if (reason !== 'ota' && reason !== 'update') return;
+        const row = applied ? await applied : null;
+        if (!missing && !row) return;
+        await new Promise((r) => setTimeout(r, ANNOUNCE_DELAY_MS));
+        if (missing) {
+            toastManager.showNoticeToast({
+                title: i18next.t(
+                    missing === 'story' ? 'notificationCenter.update.storyGone' : 'notificationCenter.update.publicationGone',
+                ),
+            });
+            return;
+        }
+        if (!row) return;
+        const title = i18next.t('notificationCenter.update.updatedTitle');
+        if (row.notes.length === 0) {
+            toastManager.showNoticeToast({ title, body: i18next.t('notificationCenter.update.notesEmpty') });
+            return;
+        }
+        toastManager.showNoticeToast({
+            title,
+            button: {
+                label: i18next.t('notificationCenter.update.seeWhatsNew'),
+                onPress: () => {
+                    // Seen, as when the row itself is opened.
+                    markActioned(row.id).catch((err) =>
+                        logger.captureException(err, { tags: { module: 'ota-notice', method: 'seeWhatsNew' } }),
+                    );
+                    useOpenUpdateNotes.setState({ open: true, notes: row.notes });
+                },
+            },
+        });
+    } catch (err) {
+        logger.captureException(err, { tags: { module: 'ota-notice', method: 'announceAppliedUpdate' } });
+    }
+}
+
+/** Says why a Restart tap did nothing: typed text, a reply being written, or anything else held. */
+function explainHeldTap(labels: string[]): void {
+    const typed = labels.some((l) => l.startsWith('draft:') || l === 'search-query');
+    const key = typed
+        ? 'notificationCenter.update.heldDraft'
+        : labels.includes('chat-stream')
+          ? 'notificationCenter.update.heldReply'
+          : 'notificationCenter.update.heldBusy';
+    toastManager.showInfo(i18next.t(key));
+}
+
+/**
+ * The toast's and the row's Restart: reloads and rebuilds the reader's spot as
+ * it is at the tap (a tap in the inbox comes back to the inbox). A blocked
+ * route does nothing and the row stays. A hard hold (typed text, a reply being
+ * written, a purchase) does nothing either, and a short toast says why. Reason
+ * `'update'`, never `'ota'`: the tap is made in the foreground, and the `'ota'`
+ * marker's departure stamp would put the reader behind the PIN lock.
  */
 export async function restartForUpdate(): Promise<void> {
     const context = Updates.latestContext;
     const fetched = fetchedId != null && fetchedId !== Updates.updateId ? fetchedId : null;
     // An old row with nothing pending: the reader already runs the latest bundle.
     if (!context?.isUpdatePending && !fetched) return;
+    if (routeBlocksRestart()) return;
+    const held = activeHolds('update');
+    if (held.length > 0) {
+        explainHeldTap(held);
+        return;
+    }
     const id = context?.downloadedManifest?.id ?? fetched;
-    if (id && restartWouldReload()) await markOtaRestartAttempted(id);
-    await requestRestart('update');
+    const spot = captureResumeSpot();
+    if (id && restartWouldReload('update')) await markOtaRestartAttempted(id);
+    await requestRestart('update', { spot });
 }
 
 export function __resetOtaNoticeForTests(): void {
     fetchedId = null;
+    applied = null;
+    announced = false;
 }

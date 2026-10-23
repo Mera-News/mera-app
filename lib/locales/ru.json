@@ -1093,7 +1093,13 @@
       "updatedTitle": "Мера обновлена",
       "updatedBody": "Нажмите, чтобы посмотреть, что нового.",
       "notesTitle": "Что нового",
-      "notesEmpty": "Исправления и улучшения."
+      "notesEmpty": "Исправления и улучшения.",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "Мера will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

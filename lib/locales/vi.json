@@ -1051,7 +1051,13 @@
       "updatedTitle": "Mera đã được cập nhật",
       "updatedBody": "Nhấn để xem có gì mới.",
       "notesTitle": "Có gì mới",
-      "notesEmpty": "Sửa lỗi và cải tiến."
+      "notesEmpty": "Sửa lỗi và cải tiến.",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "Mera will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {

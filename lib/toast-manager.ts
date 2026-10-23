@@ -327,7 +327,39 @@ class ToastManager {
             });
         }
 
-        // 2. Show the transient toast.
+        // 2. Show the transient toast. Its one button runs the row's first action
+        // (one handler for both, components/custom/notifications/notification-actions.ts).
+        const first = opts.actions?.[0];
+        this.showNoticeToast({
+            title: this.resolveI18n(opts.title, opts.context),
+            body: this.resolveI18n(opts.body, opts.context),
+            action: opts.action,
+            button:
+                row && first
+                    ? {
+                          label: this.resolveI18n(first.labelKey ?? first.label ?? first.id),
+                          onPress: () => {
+                              // eslint-disable-next-line @typescript-eslint/no-require-imports
+                              const actions = require('@/components/custom/notifications/notification-actions');
+                              void actions.runNotificationAction(row, first);
+                          },
+                      }
+                    : undefined,
+        });
+    }
+
+    /**
+     * The notified toast's card with NO inbox row: for a notice whose row was
+     * already written (the "Mera updated" toast after an update applied).
+     * `title` and `body` are display text, already translated. The button
+     * closes the card after its own `onPress`.
+     */
+    showNoticeToast(opts: {
+        title: string;
+        body?: string;
+        action?: 'info' | 'success' | 'error';
+        button?: { label: string; onPress: () => void };
+    }) {
         if (!this.toastInstance) {
             logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
             return;
@@ -339,36 +371,25 @@ class ToastManager {
         const notifiedToastModule = require('@/components/custom/notifications/NotifiedToast');
         const NotifiedToast = notifiedToastModule.default;
 
-        // The row keeps the raw keys plus `context`, and the notification
-        // centre interpolates from that same context; the toast must too, or
-        // 'No published fact checks yet for "{{title}}".' shows its braces.
-        const title = this.resolveI18n(opts.title, opts.context);
-        const body = this.resolveI18n(opts.body, opts.context);
+        const { title, body = '' } = opts;
         const reduceMotion = this.reduceMotion;
-        // With a screen reader on, a notice is spoken when it appears and stays
-        // until dismissed: a timed exit can take it away mid-sentence.
+        // With a screen reader on, a notice stays until dismissed: a timed exit
+        // can take it away mid-sentence. The card's title speaks it, once.
         const persistent = this.screenReader;
-        if (persistent) AccessibilityInfo.announceForAccessibility(body ? `${title}. ${body}` : title);
         // Whether the toast will fly to You or just fade: the two legs have
         // different lengths, and the component derives the same flag.
         const canFly = !reduceMotion;
 
-        // The notice's one button runs its inbox row's first action (one handler
-        // for both, components/custom/notifications/notification-actions.ts).
-        const first = opts.actions?.[0];
         let toastId = '';
-        const button =
-            row && first
-                ? {
-                      label: this.resolveI18n(first.labelKey ?? first.label ?? first.id),
-                      onPress: () => {
-                          // eslint-disable-next-line @typescript-eslint/no-require-imports
-                          const actions = require('@/components/custom/notifications/notification-actions');
-                          void actions.runNotificationAction(row, first);
-                          if (toastId) this.toastInstance?.close(toastId);
-                      },
-                  }
-                : undefined;
+        const button = opts.button
+            ? {
+                  label: opts.button.label,
+                  onPress: () => {
+                      opts.button!.onPress();
+                      if (toastId) this.toastInstance?.close(toastId);
+                  },
+              }
+            : undefined;
 
         toastId = this.toastInstance.show({
             // Match the toast's lifetime to the animation EXACTLY. NotifiedToast

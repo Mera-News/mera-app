@@ -3,6 +3,8 @@ import { AppState, AppStateStatus } from 'react-native';
 import * as Updates from 'expo-updates';
 
 import {
+  autoReloadDisabled,
+  captureResumeSpot,
   markOtaRestartAttempted,
   otaRestartAlreadyAttempted,
   requestRestart,
@@ -10,50 +12,43 @@ import {
 } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
-import { noticeAppliedUpdate, noticePendingUpdate } from '@/lib/ota-notice';
+import { noticeAppliedUpdate, noticePendingUpdate, readyUpdateId } from '@/lib/ota-notice';
+import { BACKGROUND_LOCK_THRESHOLD_MS, shouldLockAfterBackground, usePinStore } from '@/lib/stores/pin-store';
 
 /**
- * Fetches OTA updates, tells the reader once, and renders null.
+ * Fetches OTA updates, tells the reader, and applies one by itself only when
+ * the reader can be put back exactly where they were. Renders null.
  *
- * This is the whole OTA lifecycle: when to look, when a downloaded bundle is
- * worth a restart, and when the reader is told (`lib/ota-notice.ts`). It is the
- * app's only restart trigger that fires on its own.
+ * A DOWNLOAD NEVER RELOADS. A check runs on mount and on every true return;
+ * when it downloads something the reader is told (`lib/ota-notice.ts`: toast
+ * once per update id plus the `update_available` row) and nothing moves. The
+ * reload that used to follow a download finishing during a return dropped the
+ * reader on the startup tab seconds after they came back.
  *
- * WHAT IT DOES, AND THE TWO CASES ARE DIFFERENT
- *   - ON MOUNT: record which update is running (an "App updated" row on the
- *     first launch of a new one), then check and fetch, and NEVER restart.
- *     expo-updates already launches a downloaded update at the next cold start
- *     via its own launch-time check, so reloading seconds into a launch buys
- *     nothing, and it is the one restart that can land on a credential screen
- *     during onboarding. Mounting is also when a device that stays open all day
- *     does its only check, which is why the fetch still happens here.
- *   - ON A TRUE `background` -> `active` RETURN: check, fetch, and restart only
- *     if an update is actually downloaded and pending.
- * Either way, a pending bundle that is not about to reload gets the notified
- * toast once per update id and one `update_available` inbox row, whose Restart
- * goes through the same restart gates. No toast on a return that reloads: it
- * would only flash before the reload.
+ * THE ONE AUTOMATIC RELOAD is decided at the instant of a true return, from
+ * local state only (no network, no awaited fetch): an update downloaded BEFORE
+ * this return, a spot captured at the departure (`captureResumeSpot`, null
+ * when the place cannot be rebuilt), no hold (`restartWouldReload('ota')`
+ * includes the auto-only holds: sheets, dialogs, the chat panel), no PIN lock
+ * possible on the reload, no restore failed earlier this session, and this
+ * update's one attempt unspent. Then the spot rides in the restart marker and
+ * the launch gate rebuilds it. Otherwise the reader is told (if not yet) and the
+ * update waits for the next return, a Restart tap or the next cold start.
  *
- * A RETURN ON ITS OWN IS NOT A REASON TO RESTART. The app briefly reloaded on
- * every true return whether or not anything had changed, and the owner rejected
- * it in production: "the app refreshes every time it's foregrounded, even if
- * it's at the latest version". Nothing here may restart a reader who is already
- * on the current bundle.
+ * AT MOST ONE AUTOMATIC RELOAD PER UPDATE ID (`markOtaRestartAttempted`,
+ * awaited before the request because a write after `reloadAsync()` never
+ * runs): it bounds a bundle that reloads and fails to launch.
  *
- * THE NOTICE NEVER BLOCKS. A non-dismissible takeover modal (`OTAUpdateModal`,
- * deleted) once fired on `isUpdatePending` and demanded a tap on every publish.
- * The toast leaves on its own and the row waits in the inbox; the reader who
- * ignores both still gets the bundle on the next return or cold start. There is
- * exactly ONE non-dismissible update surface in the app and it is not this one:
- * `NativeUpdateGate` -> `ForceUpdateScreen`, driven by the server's
- * `appVersionInfo.minSupportedVersion` floor.
+ * A RETURN ON ITS OWN IS NOT A REASON TO RESTART (owner, production): nothing
+ * here may restart a reader who already runs the current bundle.
+ *
+ * THE NOTICE NEVER BLOCKS. `NativeUpdateGate` -> `ForceUpdateScreen` is the
+ * app's only non-dismissible update surface.
  *
  * ARMS ON `background` ONLY, NEVER `!== 'active'`. iOS reports `inactive` for
- * the app switcher, a notification banner pulled down and a Control Centre
- * swipe, and none of those is a departure — arming on them would restart a user
- * who never left, mid-tap. `lib/subscriptions/subscribe-flow.ts` draws the same
- * line for the same reason. Note an `inactive` on the way OUT is part of the
- * normal iOS departure sequence and must not disarm what follows.
+ * the app switcher, a notification banner pulled down and Control Centre, and
+ * none of those is a departure. An `inactive` on the way OUT is part of the
+ * normal iOS departure and must not disarm what follows.
  *
  * Route blocking and the holds live in `lib/app-restart.ts`, applied to every
  * reason. They are not this file's business and must not be duplicated here.
@@ -63,140 +58,117 @@ import { noticeAppliedUpdate, noticePendingUpdate } from '@/lib/ota-notice';
  */
 
 /**
- * Whether a fetch result is the success arm of the union.
- *
- * `UpdateFetchResult` has three arms and only `UpdateFetchResultSuccess` carries
- * `isNew: true`; the failure arm and the `isRollBackToEmbedded` arm both report
- * false. Gating on "the call resolved" would restart on every check that found
- * nothing.
- *
- * `isNew` is NOT a comparison against the running bundle, despite its docstring:
- * natively it is hardcoded `true` on the loader's success arm
- * (`UpdatesModule.swift` / `UpdatesModule.kt`). So it means "a download
- * completed", which is why it is only one half of the gate below.
+ * Slack on the PIN threshold: the reload's boot decides the lock again a moment
+ * later against the same departure stamp, and a return just under the
+ * threshold must not become a lock screen over the rebuilt spot.
+ */
+const PIN_LOCK_MARGIN_MS = 30_000;
+
+/**
+ * Whether the reload could land on the PIN lock. An undecided gate (not read
+ * yet, or deferred from the background) counts as "could": the lock screen
+ * replaces the stack, so the rebuilt spot would be thrown away.
+ */
+function pinLockPossible(departedAt: number | null): boolean {
+  const pin = usePinStore.getState();
+  if (!pin.initialized || pin.unresolved || pin.locked) return true;
+  if (departedAt == null) return true;
+  return shouldLockAfterBackground(
+    departedAt - PIN_LOCK_MARGIN_MS,
+    Date.now(),
+    pin.pinSet,
+    pin.lockEnabled,
+  );
+}
+
+/**
+ * Whether a fetch result is the success arm of the union. `isNew` is NOT a
+ * comparison against the running bundle: natively it is hardcoded `true` on the
+ * loader's success arm, so it means "a download completed".
  */
 function fetchedSomethingNew(result: Updates.UpdateFetchResult): result is Updates.UpdateFetchResultSuccess {
   return result.isNew === true;
+}
+
+/** Check, download, tell. Never reloads. */
+async function checkAndFetch(): Promise<void> {
+  try {
+    const result = await Updates.checkForUpdateAsync();
+    const fetched = result.isAvailable ? await Updates.fetchUpdateAsync() : null;
+    const fetchedNew = fetched != null && fetchedSomethingNew(fetched);
+
+    // THE DISJUNCTION, and both arms are load-bearing. `fetchUpdateAsync()`
+    // writes nothing to `latestContext`; a later native event does. `isNew`
+    // catches a download that completed on this check before that event;
+    // `isUpdatePending` catches one downloaded in an earlier session.
+    const context = Updates.latestContext;
+    if (!fetchedNew && !context?.isUpdatePending) return;
+    // The fetch result's manifest first: the context may not have caught up.
+    const updateId = (fetchedNew ? fetched.manifest?.id : undefined) ?? context?.downloadedManifest?.id;
+    if (!updateId) {
+      logger.debug('[ota] pending update with no id, leaving it for the next cold start');
+      return;
+    }
+    await noticePendingUpdate(updateId);
+  } catch (error) {
+    // Best-effort: a lost connection is expected on mobile and recovers on the
+    // next return. Only genuinely unexpected failures are reported.
+    if (isTransientNetworkError(error)) return;
+    logger.captureException(error as Error, {
+      tags: { component: 'OTASilentUpdater', method: 'checkForUpdate' },
+    });
+  }
 }
 
 export default function OTASilentUpdater() {
   useEffect(() => {
     if (!Updates.isEnabled || __DEV__) return;
 
-    /**
-     * @param mayRestart false on the mount check. See the header.
-     */
-    const checkForUpdate = async (mayRestart: boolean) => {
-      try {
-        const result = await Updates.checkForUpdateAsync();
-        const fetched = result.isAvailable ? await Updates.fetchUpdateAsync() : null;
-        const fetchedNew = fetched != null && fetchedSomethingNew(fetched);
+    // After the applied-update row, which replaces `update_available`: the
+    // other order could delete the row this check is about to write. On mount
+    // a check never reloads: expo-updates launches a downloaded bundle at the
+    // next cold start, and a launch has no spot to rebuild.
+    void noticeAppliedUpdate().then(() => checkAndFetch());
 
-        // THE DISJUNCTION, and both arms are load-bearing.
-        //
-        // `fetchUpdateAsync()` awaits the native module and returns its result
-        // directly; NOTHING on that path writes `latestContext`. The context is
-        // written only by a separate asynchronous native event
-        // (`Expo.nativeUpdatesStateChangeEvent`), which is additionally dropped
-        // when its sequence number is not ahead of the last one. So the context
-        // is eventually correct, not synchronously correct.
-        //
-        //   - `isNew` catches a download that completed on THIS transition,
-        //     before that event landed.
-        //   - `isUpdatePending` catches an update downloaded in an EARLIER
-        //     session that never launched. It is already pending at boot and
-        //     needs no new fetch, so the `isNew` arm never sees it.
-        //
-        // No JS test can pin the ordering between them — the state machine is
-        // native — which is exactly why this is an OR and not a choice.
-        const context = Updates.latestContext;
-        if (!fetchedNew && !context?.isUpdatePending) return;
+    let departedAt: number | null = null;
+    let departureSpot: unknown = null;
 
-        // AT MOST ONE RESTART PER UPDATE ID. The OTA check is the only restart
-        // trigger left and it runs on every return, so a bundle that downloads,
-        // reloads and fails to launch would otherwise restart on every return
-        // for as long as it keeps downloading. The 10s floor spaces that cycle;
-        // this is what bounds it. Both arms carry the id as `manifest.id` — on
-        // the context it is `downloadedManifest`, not the `downloadedUpdate`
-        // that `useUpdates()` exposes. The fetch result's manifest comes first:
-        // the context may not have caught up with this download yet.
-        const updateId = (fetchedNew ? fetched.manifest?.id : undefined) ?? context?.downloadedManifest?.id;
-        if (!updateId) {
-          // Nothing to record an attempt against, so a restart here could not be
-          // bounded. The update still launches at the next cold start.
-          logger.debug('[ota] pending update with no id, leaving it for the next cold start');
+    const onReturn = async (spot: unknown, since: number | null) => {
+      const id = readyUpdateId();
+      if (id) {
+        const reload =
+          spot != null &&
+          !autoReloadDisabled() &&
+          !pinLockPossible(since) &&
+          !(await otaRestartAlreadyAttempted(id)) &&
+          // Last, after the await: the gate as close to the request as possible.
+          restartWouldReload('ota');
+        if (reload) {
+          await markOtaRestartAttempted(id);
+          await requestRestart('ota', { spot });
           return;
         }
-        if (!mayRestart) {
-          await noticePendingUpdate(updateId);
-          return;
-        }
-        if (await otaRestartAlreadyAttempted(updateId)) return;
-
-        // ONE RELOAD PER BUNDLE — not one request per bundle.
-        //
-        // The guard bounds "reloaded and failed to launch". A request that was
-        // BLOCKED never reloaded, so it cannot have failed to launch, and the
-        // next return SHOULD try it again: by then the hold has cleared or the
-        // reader has left the blocked route. Spending the attempt on it instead
-        // stranded the bundle for the reader mid-chat-stream, mid-checkout or on
-        // `/verify-otp` when the download finished — they would only ever get it
-        // at a cold start, and the reader who never cold-starts is the whole
-        // reason this exists.
-        //
-        // So mark only when it would genuinely reload. The mark is still AWAITED
-        // and still BEFORE the request, because a write after `reloadAsync()`
-        // never runs.
-        //
-        // `requestRestart` is called either way, so the blocker still reaches
-        // the log and a simulator pass can see which gate stopped it.
-        //
-        // RESIDUAL RACE, weighed and accepted: a hold can appear between the
-        // predicate and `reloadAsync()`, a few lines later, and that attempt is
-        // consumed. Closing it would mean `requestRestart` reporting its own
-        // outcome, which it cannot do on the path where it succeeds — the JS
-        // context dies mid-call. The cost is one deferred update, not a lost
-        // one: it still launches at the next cold start.
-        if (restartWouldReload()) {
-          await markOtaRestartAttempted(updateId);
-        } else {
-          await noticePendingUpdate(updateId);
-        }
-        await requestRestart('ota');
-      } catch (error) {
-        // The OTA check is best-effort — a timed-out / lost connection is
-        // expected on mobile and recovers on the next foreground. Don't report
-        // those (they were noisy `error`s); only surface genuinely unexpected
-        // failures.
-        if (isTransientNetworkError(error)) return;
-        logger.captureException(error as Error, {
-          tags: { component: 'OTASilentUpdater', method: 'checkForUpdate' },
-        });
+        // Told once per id; a reader who left before the download finished
+        // gets the toast now.
+        await noticePendingUpdate(id);
       }
+      await checkAndFetch();
     };
 
-    // CHECK ON MOUNT, not only on the next foreground.
-    //
-    // `AppState.addEventListener('change', …)` fires on a TRANSITION. At mount
-    // the app is already `active`, so no transition happens and a listener alone
-    // would not fire until the user backgrounded the app and came back. An app
-    // left open — the normal case for someone using it — would never check at
-    // all, and a freshly published update would reach that device only via
-    // expo-updates' own launch-time check on the NEXT cold start. The mount
-    // check is what gets the bundle downloaded in time for that.
-    // After the applied-update row, which replaces `update_available`: the
-    // other order could delete the row this check is about to write.
-    void noticeAppliedUpdate().then(() => checkForUpdate(false));
-
-    let armed = false;
     const handleAppStateChange = (state: AppStateStatus) => {
       if (state === 'background') {
-        armed = true;
+        departedAt = Date.now();
+        departureSpot = captureResumeSpot();
         return;
       }
-      if (state !== 'active' || !armed) return;
-      armed = false;
-      void checkForUpdate(true);
+      if (state !== 'active' || departedAt == null) return;
+      // Every return clears the departure: a spot is only ever the one this
+      // return came back to.
+      const spot = departureSpot;
+      const since = departedAt;
+      departureSpot = null;
+      departedAt = null;
+      void onReturn(spot, since);
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);

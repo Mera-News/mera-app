@@ -441,12 +441,14 @@ const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
 
 type IToastTitleProps = React.ComponentProps<typeof Text> & {
   className?: string;
+  /** What a screen reader hears (default: the title), e.g. title and body together. */
+  announcement?: string;
 } & VariantProps<typeof toastTitleStyle>;
 
 const ToastTitle = React.forwardRef<
   React.ComponentRef<typeof Text>,
   IToastTitleProps
->(function ToastTitle({ className, size = 'md', children, ...props }, ref) {
+>(function ToastTitle({ className, size = 'md', children, announcement, ...props }, ref) {
   const { variant: parentVariant, action: parentAction } =
     useStyleContext(SCOPE);
   const isFront = useIsToastFront();
@@ -458,8 +460,8 @@ const ToastTitle = React.forwardRef<
     if (!isFront) return;
     // Issue from react-native side
     // Hack for now, will fix this later
-    AccessibilityInfo.announceForAccessibility(children as string);
-  }, [children, isFront]);
+    AccessibilityInfo.announceForAccessibility(announcement ?? (children as string));
+  }, [announcement, children, isFront]);
 
   return (
     <Text

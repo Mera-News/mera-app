@@ -9,6 +9,9 @@ import { AppVersionService } from '@/lib/app-version-service';
 import {
     __resetAppRestartForTests,
     activeHolds,
+    autoReloadDisabled,
+    disableAutoReload,
+    holdAutoRestart,
     holdRestart,
     initRestartContext,
     isRestartBlockedRoute,
@@ -22,8 +25,10 @@ import {
     restartWouldReload,
     RESTART_BLOCKED_ROUTES,
     RESTART_MARKER_KEY,
+    takeRestoreSpot,
     wasJsRestartSync,
 } from '@/lib/app-restart';
+import { BACKGROUND_LOCK_THRESHOLD_MS, usePinStore } from '@/lib/stores/pin-store';
 import database from '@/lib/database';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import * as feedOrderStore from '@/lib/stores/feed-order-store';
@@ -31,19 +36,31 @@ import * as settingService from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getAppVersion, getAppVersionLabel, getGitCommit } from '@/lib/version';
-import { mockGql, mockGqlError, server, setAppState, useFakeClock } from '@/test/helpers';
+import { initI18nEn, mockGql, mockGqlError, server, setAppState, useFakeClock } from '@/test/helpers';
 import { getAll, markActioned, notify } from '@/lib/database/services/notification-service';
 import { tapNotification } from '@/components/custom/notifications/notification-actions';
 import { toastManager } from '@/lib/toast-manager';
 import {
     __resetOtaNoticeForTests,
+    announceAppliedUpdate,
     APP_UPDATED,
     noticePendingUpdate,
     OTA_LAST_RUNNING_KEY,
     OTA_NOTICED_KEY,
     restartForUpdate,
     UPDATE_AVAILABLE,
+    useOpenUpdateNotes,
 } from '@/lib/ota-notice';
+
+/** What `captureSpot()` returns: the reader's place, or null when it cannot be rebuilt. */
+const SPOT = { v: 1, tab: 'feed', page: 'for-you' };
+let mockSpot: unknown = SPOT;
+// Virtual until the feed module lands; the real one reads navigation state.
+jest.mock('@/lib/navigation/resume-spot', () => ({ captureSpot: () => mockSpot }), { virtual: true });
+
+/** A decided PIN gate with the lock off: the production state of most readers. */
+const pinGateOpen = () =>
+    usePinStore.setState({ initialized: true, unresolved: false, locked: false, pinSet: false, lockEnabled: false });
 
 let mockUpdatesEnabled = true;
 const mockReloadAsync = jest.fn(async () => {});
@@ -111,6 +128,9 @@ describe('restarts and the version floor', () => {
         setCurrentPathname(FEED);
         delete process.env.EXPO_PUBLIC_RESTART_DEBUG;
         (globalThis as { __DEV__?: boolean }).__DEV__ = true;
+        mockSpot = SPOT;
+        pinGateOpen();
+        __resetOtaNoticeForTests();
     });
 
     afterEach(async () => {
@@ -135,6 +155,8 @@ describe('restarts and the version floor', () => {
 
             await expect(restartContext()).resolves.toEqual({
                 wasJsRestart: true,
+                reason: 'ota',
+                spot: null,
                 backgroundedAt: NOW - 4_000,
                 lastForegroundAt: NOW - 90_000,
             });
@@ -160,7 +182,13 @@ describe('restarts and the version floor', () => {
 
         it('tolerates a marker missing its stamps', async () => {
             await setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason: 'restore' }));
-            await expect(restartContext()).resolves.toEqual({ wasJsRestart: true, backgroundedAt: null, lastForegroundAt: null });
+            await expect(restartContext()).resolves.toEqual({
+                wasJsRestart: true,
+                reason: 'restore',
+                spot: null,
+                backgroundedAt: null,
+                lastForegroundAt: null,
+            });
         });
 
         it('wasJsRestartSync is false before the context resolves and true after a restart boot', async () => {
@@ -462,21 +490,21 @@ describe('restarts and the version floor', () => {
     describe('restartWouldReload and restartIsAvailable', () => {
         it('is true on a production build with nothing in the way', () => {
             asProductionBuild();
-            expect(restartWouldReload()).toBe(true);
+            expect(restartWouldReload('ota')).toBe(true);
         });
 
         it('is false while a hold is live, on a blocked route, and when the app is not active', () => {
             asProductionBuild();
             const release = holdRestart('purchase');
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
             release();
 
             setCurrentPathname('/verify-otp');
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
             setCurrentPathname(FEED);
 
             setAppState('background');
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
         });
 
         it('is false inside the cooldown', async () => {
@@ -484,20 +512,20 @@ describe('restarts and the version floor', () => {
             useFakeClock(NOW, { advanceTimers: true });
             await requestRestart('ota');
             jest.setSystemTime(NOW + MIN_RESTART_INTERVAL_MS - 1);
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
         });
 
         // An inert build eating the attempt is the same bug in different clothes.
         it('is false in a dev build, when updates are disabled, and under EXPO_PUBLIC_RESTART_DEBUG', () => {
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
 
             asProductionBuild();
             mockUpdatesEnabled = false;
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
 
             asProductionBuild();
             process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
-            expect(restartWouldReload()).toBe(false);
+            expect(restartWouldReload('ota')).toBe(false);
         });
 
         it('agrees with requestRestart on every blocker', async () => {
@@ -512,7 +540,7 @@ describe('restarts and the version floor', () => {
                 setCurrentPathname(FEED);
                 setUp();
 
-                const predicted = restartWouldReload();
+                const predicted = restartWouldReload('ota');
                 await requestRestart('ota');
 
                 expect(predicted).toBe(false);
@@ -657,6 +685,141 @@ describe('restarts and the version floor', () => {
             expect(mockReloadAsync).not.toHaveBeenCalled();
             await expect(getSetting(OTA_RESTART_GUARD_KEY)).resolves.toBeNull();
         });
+
+        // Every negative case below runs in the production setup and flips ONE thing for a positive
+        // control in the same test: a blocked decision spends nothing, so the next return reloads.
+        it('a reload on a return carries the departure spot and reason ota in the marker', async () => {
+            pendingUpdate('update-1');
+            mount();
+            await flush();
+            let markerAtReload: string | null = null;
+            mockReloadAsync.mockImplementationOnce(async () => {
+                markerAtReload = await getSetting(RESTART_MARKER_KEY);
+            });
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            expect(JSON.parse(markerAtReload as unknown as string)).toMatchObject({ reason: 'ota', spot: SPOT });
+        });
+
+        it('a download that completes DURING a return never reloads: it is noticed, and the next return applies it', async () => {
+            mount();
+            await flush();
+            // Not pending before the return; the return's own check downloads it.
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
+            mockFetchUpdate.mockResolvedValue({ isNew: true, manifest: { id: 'update-1' } } as never);
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            expect((await getAll()).filter((n) => n.type === 'update_available')).toHaveLength(1);
+
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('a place that cannot be rebuilt (null spot) does not reload; a rebuildable one does', async () => {
+            pendingUpdate('update-1');
+            mount();
+            await flush();
+            mockSpot = null;
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            mockSpot = SPOT;
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('a capture that throws counts as not rebuildable', async () => {
+            pendingUpdate('update-1');
+            mount();
+            await flush();
+            jest.spyOn(logger, 'captureException').mockImplementation(() => '');
+            const real = jest.requireMock('@/lib/navigation/resume-spot') as { captureSpot: () => unknown };
+            const spy = jest.spyOn(real, 'captureSpot').mockImplementation(() => {
+                throw new Error('nav not ready');
+            });
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            spy.mockImplementation(() => SPOT);
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('an auto-only hold (an open sheet) stops the automatic reload until it is released', async () => {
+            pendingUpdate('update-1');
+            mount();
+            await flush();
+            const release = holdAutoRestart('overlay:sheet');
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            release();
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('after a failed restore no update reloads by itself until a cold start', async () => {
+            pendingUpdate('update-1');
+            mount();
+            await flush();
+            disableAutoReload();
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            // A cold start clears it.
+            __resetAppRestartForTests();
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('a return that could land on the PIN lock does not reload; a short one does', async () => {
+            useFakeClock(NOW, { advanceTimers: true });
+            usePinStore.setState({ pinSet: true, lockEnabled: true });
+            pendingUpdate('update-1');
+            mount();
+            await jest.advanceTimersByTimeAsync(100);
+
+            // Just under the threshold is inside the margin: the reload's own boot could lock.
+            setAppState('background');
+            jest.setSystemTime(Date.now() + BACKGROUND_LOCK_THRESHOLD_MS - 10_000);
+            setAppState('active');
+            await jest.advanceTimersByTimeAsync(100);
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            setAppState('background');
+            jest.setSystemTime(Date.now() + 3_000);
+            setAppState('active');
+            await jest.advanceTimersByTimeAsync(100);
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('an undecided PIN gate counts as a possible lock', async () => {
+            pendingUpdate('update-1');
+            mount();
+            await flush();
+            usePinStore.setState({ unresolved: true });
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            usePinStore.setState({ initialized: false, unresolved: false });
+            await returnFromBackground();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            pinGateOpen();
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('a departure writes nothing, and a return with nothing pending reads nothing', async () => {
+            mount();
+            await flush();
+            const write = jest.spyOn(settingService, 'setSetting');
+            const read = jest.spyOn(settingService, 'getSetting');
+            await returnFromBackground();
+            expect(write).not.toHaveBeenCalled();
+            expect(read).not.toHaveBeenCalled();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+        });
     });
 
     // ---------------------------------------------------------------------------------------------
@@ -679,6 +842,13 @@ describe('restarts and the version floor', () => {
         const rowsOf = async (type: string) => (await getAll()).filter((n) => n.type === type);
         const day = (d: number) => new Date(Date.UTC(2026, 9, d, 9));
 
+        // The toast card's module graph (Reanimated, the toast kit) takes seconds to load the first
+        // time; pay it here so the first test's waitFor measures the notice, not the require.
+        beforeAll(() => {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            require('@/components/custom/notifications/NotifiedToast');
+        }, 60_000);
+        beforeAll(() => initI18nEn());
         beforeEach(() => {
             asProductionBuild();
             __resetOtaNoticeForTests();
@@ -893,6 +1063,248 @@ describe('restarts and the version floor', () => {
         it('Restart with nothing pending (an old row) does nothing', async () => {
             await restartForUpdate();
             expect(mockReloadAsync).not.toHaveBeenCalled();
+        });
+
+        it('a download that finishes in the background writes the row with no toast; the next return that does not reload toasts once', async () => {
+            let finish: (v: unknown) => void = () => {};
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
+            mockFetchUpdate.mockImplementationOnce(() => new Promise((r) => (finish = r)) as never);
+            mount();
+            await flush();
+            mockSpot = null; // the place left cannot be rebuilt, so this return cannot reload
+            setAppState('background');
+            finish({ isNew: true, manifest: { id: 'update-1' } });
+            await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
+            expect(toastShow).not.toHaveBeenCalled();
+            await expect(getSetting(OTA_NOTICED_KEY)).resolves.toBeNull();
+
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: false });
+            setAppState('active');
+            await flush();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            expect(toastShow).toHaveBeenCalledTimes(1);
+            expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1);
+        });
+
+        it('a download that finishes in the background and is applied on the return shows no Update ready toast', async () => {
+            let finish: (v: unknown) => void = () => {};
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
+            mockFetchUpdate.mockImplementationOnce(() => new Promise((r) => (finish = r)) as never);
+            mount();
+            await flush();
+            setAppState('background');
+            finish({ isNew: true, manifest: { id: 'update-1' } });
+            await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
+
+            setAppState('active');
+            await flush();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            expect(toastShow).not.toHaveBeenCalled();
+        });
+
+        it('a Restart tap carries the spot at the tap in the marker', async () => {
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            mockSpot = { v: 1, tab: 'feed', page: 'notifications' };
+            let markerAtReload: string | null = null;
+            mockReloadAsync.mockImplementationOnce(async () => {
+                markerAtReload = await getSetting(RESTART_MARKER_KEY);
+            });
+            await restartForUpdate();
+            expect(JSON.parse(markerAtReload as unknown as string)).toMatchObject({
+                reason: 'update',
+                spot: { page: 'notifications' },
+            });
+        });
+
+        it('a Restart tap with nothing rebuildable still reloads, with no spot', async () => {
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            mockSpot = null;
+            let markerAtReload: string | null = null;
+            mockReloadAsync.mockImplementationOnce(async () => {
+                markerAtReload = await getSetting(RESTART_MARKER_KEY);
+            });
+            await restartForUpdate();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            expect(JSON.parse(markerAtReload as unknown as string).spot).toBeUndefined();
+        });
+
+        it('a Restart tap goes through an auto-only hold (an open sheet, the chat panel)', async () => {
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            const release = holdAutoRestart('chat-open');
+            await restartForUpdate();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            release();
+        });
+
+        it.each([
+            [['draft:chat'], 'Send or clear what you typed, then tap Restart.'],
+            [['search-query'], 'Send or clear what you typed, then tap Restart.'],
+            [['chat-stream'], 'Mera will be ready to restart when this reply finishes.'],
+            [['purchase'], "Finish what you're doing, then tap Restart."],
+            [['chat-stream', 'draft:show-less'], 'Send or clear what you typed, then tap Restart.'],
+        ])('a Restart tap held by %j does nothing and says why', async (labels, text) => {
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            const info = jest.spyOn(toastManager, 'showInfo').mockImplementation(() => {});
+            const releases = labels.map((l) => holdRestart(l));
+            await restartForUpdate();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            expect(info).toHaveBeenCalledWith(text);
+            releases.forEach((r) => r());
+
+            // Control: the same tap with the holds gone reloads.
+            await restartForUpdate();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+        });
+
+        it('a Restart tap on a blocked route does nothing and says nothing', async () => {
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            const info = jest.spyOn(toastManager, 'showInfo').mockImplementation(() => {});
+            setCurrentPathname('/pin-lock');
+            await restartForUpdate();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            expect(info).not.toHaveBeenCalled();
+        });
+
+        describe('the Mera updated toast', () => {
+            const notes = [{ at: day(22).toISOString(), message: 'Three' }];
+            /** A boot that a reload for `reason` started, running update-3 after update-1. */
+            const bootAfter = async (reason: string | null) => {
+                if (reason) await setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason, at: 1, backgroundedAt: null, lastForegroundAt: null }));
+                await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-1', at: day(20).toISOString() }));
+                process.env.EXPO_PUBLIC_OTA_NOTES = JSON.stringify(notes);
+                mockUpdateId = 'update-3';
+                mockCreatedAt = day(22);
+                mount();
+                await flush();
+            };
+            /** Past the announcement's delay (it waits for the restored screen to settle). */
+            const announce = async (missing?: 'story' | 'publication') => {
+                const p = announceAppliedUpdate(missing);
+                await new Promise((r) => setTimeout(r, 600));
+                await p;
+            };
+            const cardProps = (call = 0) =>
+                (toastShow.mock.calls[call][0] as unknown as { render: () => { props: Record<string, unknown> } }).render().props;
+
+            it.each(['ota', 'update'])('after a %s reload: one toast, no second row, and See what\'s new opens the notes and marks the row seen', async (reason) => {
+                await bootAfter(reason);
+                await announce();
+                expect(toastShow).toHaveBeenCalledTimes(1);
+                const props = cardProps();
+                expect(props.title).toBe('Mera updated');
+                expect((props.button as { label: string }).label).toBe("See what's new");
+                expect(await rowsOf(APP_UPDATED)).toHaveLength(1);
+
+                (props.button as { onPress: () => void }).onPress();
+                await flush();
+                expect(useOpenUpdateNotes.getState()).toMatchObject({ open: true, notes });
+                expect((await rowsOf(APP_UPDATED))[0].status).toBe('actioned');
+
+                // Once per process: the gate can run again.
+                await announceAppliedUpdate();
+                expect(toastShow).toHaveBeenCalledTimes(1);
+            });
+
+            it('a cold launch gets the row and no toast', async () => {
+                await bootAfter(null);
+                await announce();
+                expect(toastShow).not.toHaveBeenCalled();
+                expect(await rowsOf(APP_UPDATED)).toHaveLength(1);
+            });
+
+            it('a reload that did not change the running update (no row written) gets no toast', async () => {
+                await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-3', at: day(22).toISOString() }));
+                await setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason: 'ota', at: 1, backgroundedAt: null, lastForegroundAt: null }));
+                mockUpdateId = 'update-3';
+                mount();
+                await flush();
+                await announce();
+                expect(toastShow).not.toHaveBeenCalled();
+            });
+
+            it('with no notes the toast says so and has no button', async () => {
+                await bootAfter('update');
+                process.env.EXPO_PUBLIC_OTA_NOTES = '';
+                __resetOtaNoticeForTests();
+                await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-1', at: day(20).toISOString() }));
+                mount();
+                await flush();
+                await announce();
+                expect(cardProps().body).toBe('Fixes and improvements.');
+                expect(cardProps().button).toBeUndefined();
+            });
+
+            it('a restored story that is gone replaces the toast', async () => {
+                await bootAfter('ota');
+                await announce('story');
+                expect(toastShow).toHaveBeenCalledTimes(1);
+                expect(cardProps().title).toBe('That story is no longer available.');
+            });
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    describe('the spot in the marker, and the two hold kinds', () => {
+        const writeMarker = (payload: Record<string, unknown>) =>
+            setSetting(RESTART_MARKER_KEY, JSON.stringify({ at: 1, backgroundedAt: null, lastForegroundAt: null, ...payload }));
+
+        it('restartContext reads the reason and the spot, and takeRestoreSpot hands it out once', async () => {
+            await writeMarker({ reason: 'ota', spot: SPOT });
+            await expect(restartContext()).resolves.toMatchObject({ wasJsRestart: true, reason: 'ota', spot: SPOT });
+            await expect(takeRestoreSpot()).resolves.toEqual(SPOT);
+            await expect(takeRestoreSpot()).resolves.toBeNull();
+        });
+
+        it('a malformed spot, or one on a language or restore restart, is null', async () => {
+            await writeMarker({ reason: 'ota', spot: 'feed' });
+            await expect(takeRestoreSpot()).resolves.toBeNull();
+            __resetAppRestartForTests();
+            await writeMarker({ reason: 'language', spot: SPOT });
+            await expect(takeRestoreSpot()).resolves.toBeNull();
+            __resetAppRestartForTests();
+            await expect(takeRestoreSpot()).resolves.toBeNull(); // cold start
+        });
+
+        it('a failed restore is carried across a later reload, and seeds the next process', async () => {
+            asProductionBuild();
+            disableAutoReload();
+            let markerAtReload: string | null = null;
+            mockReloadAsync.mockImplementationOnce(async () => {
+                markerAtReload = await getSetting(RESTART_MARKER_KEY);
+            });
+            await requestRestart('update');
+            expect(JSON.parse(markerAtReload as unknown as string).noAutoReload).toBe(true);
+
+            __resetAppRestartForTests();
+            expect(autoReloadDisabled()).toBe(false);
+            await setSetting(RESTART_MARKER_KEY, markerAtReload as unknown as string);
+            await restartContext();
+            expect(autoReloadDisabled()).toBe(true);
+        });
+
+        it('an auto-only hold blocks only the automatic reload; a hard hold blocks every reason', () => {
+            asProductionBuild();
+            const releaseAuto = holdAutoRestart('overlay:dialog');
+            expect(restartWouldReload('ota')).toBe(false);
+            expect(restartWouldReload('update')).toBe(true);
+            expect(restartWouldReload('language')).toBe(true);
+            expect(restartWouldReload('restore')).toBe(true);
+            expect(activeHolds('update')).toEqual([]);
+            expect(activeHolds()).toEqual(['overlay:dialog']);
+            releaseAuto();
+
+            const releaseHard = holdRestart('draft:chat');
+            for (const reason of ['ota', 'update', 'language', 'restore'] as const) expect(restartWouldReload(reason)).toBe(false);
+            releaseHard();
+            expect(restartWouldReload('ota')).toBe(true);
+        });
+
+        it('a language restart confirmed while its dialog still holds goes through', async () => {
+            asProductionBuild();
+            const release = holdAutoRestart('overlay:dialog');
+            await requestRestart('language');
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            release();
         });
     });
 

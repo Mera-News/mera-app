@@ -1051,7 +1051,13 @@
       "updatedTitle": "梅拉已更新",
       "updatedBody": "点按查看新功能。",
       "notesTitle": "新功能",
-      "notesEmpty": "问题修复和改进。"
+      "notesEmpty": "问题修复和改进。",
+      "seeWhatsNew": "See what's new",
+      "heldDraft": "Send or clear what you typed, then tap Restart.",
+      "heldReply": "梅拉 will be ready to restart when this reply finishes.",
+      "heldBusy": "Finish what you're doing, then tap Restart.",
+      "storyGone": "That story is no longer available.",
+      "publicationGone": "That publication is no longer available."
     }
   },
   "settings": {
