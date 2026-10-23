@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import React from 'react';
+import React, { useRef } from 'react';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +17,8 @@ import NotificationTimes from './NotificationTimes';
 import { useNotificationSettings } from './useNotificationSettings';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { useColors } from '@/lib/theme/tokens';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { useListEndClearance, useTabContentBottomInset } from '@/lib/navigation/tab-bar';
 
 
@@ -54,6 +56,9 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     const insets = useSafeAreaInsets();
     const bottomInset = useTabContentBottomInset();
     const endClearance = useListEndClearance();
+    const listRef = useRef<ScrollView>(null);
+    const yRef = useRef(0);
+    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const {
         isLoading,
         saveState,
@@ -209,7 +214,11 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     );
 
     const body = () => notificationsEnabled ? enabledBody() : (
+        <RestoreReveal hidden={restoreHidden}>
         <ScrollView
+            ref={listRef}
+            onScroll={(e) => { yRef.current = e.nativeEvent.contentOffset.y; }}
+            scrollEventThrottle={16}
             testID="notifications-scroll"
             className="flex-1"
             contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance }}
@@ -219,6 +228,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 primary button. */}
             {isOnboarding ? turnOnButton() : pushRow()}
         </ScrollView>
+        </RestoreReveal>
     );
 
     // Onboarding: no provider, no header, no backdrop. The wizard draws its

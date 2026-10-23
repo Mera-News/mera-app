@@ -19,6 +19,7 @@ import { Badge, Group, Help, Row, ViewAll } from './rows';
 import { useActiveTopicTexts, useHubFacts, useHubPlaces } from './use-hub-data';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 /** Screens pushed inside the You (Settings) tab's stack. */
 type YouScreen = 'facts' | 'locations' | 'sources' | 'activity';
@@ -61,7 +62,8 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
     const { t } = useTranslation();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.ScrollView>(null);
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(header.scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const colors = useColors();
     const endClearance = useListEndClearance();
 
@@ -88,7 +90,7 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
             // The header's handler sends a tick per scroll; rows that land
             // with no scroll (data arriving) need one too, or they stay in
             // English (TranslatableDynamic measures on ticks).
-            onScroll={header.scrollHandler}
+            onScroll={tracked.onScroll}
             onContentSizeChange={() => {
                 if (active) notifyScrollTick();
             }}

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import ProfileHub from './ProfileHub';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 /** You > Settings: app settings only, plan card first. Ends above the tab bar
  *  and the Mera button. */
@@ -16,12 +17,13 @@ const SettingsPage: React.FC<{ readonly header: PageHeaderBinding }> = ({ header
     const endClearance = useListEndClearance();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.ScrollView>(null);
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(header.scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     return (
         <Animated.ScrollView
             ref={listRef}
             testID="settings-page"
-            onScroll={header.scrollHandler}
+            onScroll={tracked.onScroll}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: endClearance }}

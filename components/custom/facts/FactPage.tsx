@@ -31,11 +31,14 @@ import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, TextInput, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useRestartHold } from '@/lib/app-restart';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { filterStories, isLeftOut, type Story, type StoryFilter } from './fact-page-model';
 import AddTopicModal from './AddTopicModal';
 import { sentenceCase } from './sentence-case';
@@ -112,6 +115,11 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         taught,
         markRelevant,
     } = useFactPage({ factId, from, statement });
+    // An unsent "Show less of" phrase is lost to a reload.
+    useRestartHold(phrase.trim() !== '', 'draft:show-less', 'hard');
+    const listRef = useRef<FlatList>(null);
+    const yRef = useRef(0);
+    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
 
     // ── Header bottom for the Mera button's top corners ────────────────────
     const [headerBottom, setHeaderBottom] = useState(0);
@@ -410,7 +418,9 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                     }
                 />
             </View>
+            <RestoreReveal hidden={restoreHidden}>
             <FlatList
+                ref={listRef}
                 testID="fact-page-list"
                 data={data}
                 keyExtractor={(item) => (item.kind === 'topic' ? item.topic.id : item.story.data._id)}
@@ -428,7 +438,10 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                         {nextFooter}
                     </>
                 }
-                onScroll={notifyScrollTick}
+                onScroll={(e) => {
+                    yRef.current = e.nativeEvent.contentOffset.y;
+                    notifyScrollTick();
+                }}
                 scrollEventThrottle={16}
                 onContentSizeChange={() => {
                     if (active) notifyScrollTick();
@@ -438,6 +451,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 contentContainerStyle={{ paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 120 }}
                 showsVerticalScrollIndicator={false}
             />
+            </RestoreReveal>
 
             <BottomSheet
                 testID="fact-menu-sheet"

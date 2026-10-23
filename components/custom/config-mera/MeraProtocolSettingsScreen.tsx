@@ -17,6 +17,8 @@ import { averageMs, hasAnyStat } from '@/lib/mera-protocol-toolkit/core/inferenc
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import BetaBadge from '@/components/custom/BetaBadge';
 import HelpButton from '@/components/custom/nav/HelpButton';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -120,6 +122,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading]);
     const scrollRef = useRef<ScrollView>(null);
+    const yRef = useRef(0);
+    const { restoreHidden } = useScreenScrollTarget(scrollRef, { getOffset: () => yRef.current });
     const focusState = useRef<{ done: boolean; sectionY: number | null; rowTag: number | null }>({
         done: false,
         sectionY: null,
@@ -642,9 +646,17 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         <Spinner size="large" />
                     </VStack>
                 ) : (
-                    <ScrollView ref={scrollRef} className="flex-1" contentContainerStyle={{ paddingBottom: endClearance }}>
-                        {renderContent()}
-                    </ScrollView>
+                    <RestoreReveal hidden={restoreHidden}>
+                        <ScrollView
+                            ref={scrollRef}
+                            onScroll={(e) => { yRef.current = e.nativeEvent.contentOffset.y; }}
+                            scrollEventThrottle={16}
+                            className="flex-1"
+                            contentContainerStyle={{ paddingBottom: endClearance }}
+                        >
+                            {renderContent()}
+                        </ScrollView>
+                    </RestoreReveal>
                 )}
 
                 <HelpModal
