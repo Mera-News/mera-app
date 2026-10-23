@@ -24,6 +24,7 @@ import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 
 
@@ -81,7 +82,9 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     const { t } = useTranslation();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<StoredFactCheck>>(null);
-    usePageScrollTarget(listRef);
+    // The offset also feeds the resume spot (an update reload puts the reader back here).
+    const tracked = useTrackedScroll(scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const colors = useColors();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
     // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
@@ -209,7 +212,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 showsVerticalScrollIndicator={false}
                 // Embedded, the collapsible header's handler ticks; standalone,
                 // tick directly. At rest, a content change re-measures.
-                onScroll={scrollHandler ?? notifyScrollTick}
+                onScroll={scrollHandler ? tracked.onScroll : notifyScrollTick}
                 // Only the active panel feeds the translation scheduler.
                 onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
