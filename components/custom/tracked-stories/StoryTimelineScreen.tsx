@@ -18,10 +18,12 @@ import { timelineCardToArticle, type TimelineCard } from './merge-timeline';
 import { type TimelineRow, useStoryTimelineScreen } from './useStoryTimelineScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** A 44pt header button, numeric (never hitSlop). */
@@ -54,6 +56,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const appLanguage = i18n?.language ?? 'en';
     const insets = useSafeAreaInsets();
     const colors = useColors();
+    const listRef = useRef<FlatList>(null);
+    const yRef = useRef(0);
+    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const {
         headline,
         stableClusterId,
@@ -312,10 +317,15 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 fileBaseName="mera-story"
             />
 
+            <RestoreReveal hidden={restoreHidden}>
             <FlatList
+                ref={listRef}
                 // Rows below the first screen ask for their translation only
                 // when a scroll tick finds them on screen (lib/visibility-tick).
-                onScroll={notifyScrollTick}
+                onScroll={(e) => {
+                    yRef.current = e.nativeEvent.contentOffset.y;
+                    notifyScrollTick();
+                }}
                 scrollEventThrottle={16}
                 onContentSizeChange={notifyScrollTick}
                 data={rows}
@@ -341,6 +351,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 }}
                 showsVerticalScrollIndicator={false}
             />
+            </RestoreReveal>
         </Box>
     );
 };

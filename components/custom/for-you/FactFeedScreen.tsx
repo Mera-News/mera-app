@@ -45,6 +45,8 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Show the scroll-to-top FAB once the list is scrolled past this many px. */
@@ -221,6 +223,8 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   // No scroll-to-top button: the Mera button sits exactly there, and
   // re-tapping the Feed tab pops back to the pages.
   const listRef = useRef<FlatList<FactRowGroup>>(null);
+  const yRef = useRef(0);
+  const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
   const listEndClearance = useListEndClearance();
 
   // "A few seconds" must not promise forever: an interest still waiting for
@@ -434,6 +438,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           </View>
         </HStack>
       </Box>
+      <RestoreReveal hidden={restoreHidden}>
       <FlatList
         ref={listRef}
         data={groups}
@@ -444,12 +449,16 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         showsVerticalScrollIndicator={false}
         // Rows below the first screen ask for their translation only when a
         // tick finds them on screen (lib/visibility-tick).
-        onScroll={notifyScrollTick}
+        onScroll={(e) => {
+          yRef.current = e.nativeEvent.contentOffset.y;
+          notifyScrollTick();
+        }}
         onContentSizeChange={notifyScrollTick}
         scrollEventThrottle={16}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
       />
+      </RestoreReveal>
 
       </Animated.View>
     </Box>

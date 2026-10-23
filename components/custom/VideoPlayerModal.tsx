@@ -3,6 +3,7 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { useRestartHold } from '@/lib/app-restart';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEvent } from 'expo';
@@ -32,6 +33,7 @@ interface VideoPlayerModalProps {
  * don't hold a decoder while the modal is hidden).
  */
 const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClose }) => {
+    useRestartHold(visible, 'overlay:video', 'auto');
     // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
     const motion = useMotionAllowed();
     return (

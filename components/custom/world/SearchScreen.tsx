@@ -9,6 +9,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { NewsSearchHit } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
+import { useSearchDraftHold } from '@/components/custom/world/use-search-draft-hold';
 import { useNewsSearch } from '@/lib/news-search/use-news-search';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { router } from 'expo-router';
@@ -33,6 +34,7 @@ const SearchScreen: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const search = useNewsSearch();
+    useSearchDraftHold(search.query);
     const openArticle = useOpenArticle();
     const isConnected = useIsConnected();
     // The app-wide Mera button opens its generic chat here.
