@@ -53,7 +53,7 @@
 // stay static: both are universally available, and departures need `AppState`.
 
 import { useEffect } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState, DevSettings, type AppStateStatus } from 'react-native';
 
 import logger from '@/lib/logger';
 
@@ -476,6 +476,19 @@ export function routeBlocksRestart(): boolean {
 }
 
 /**
+ * DEV BUILDS ONLY: drive the real update-reload path on a simulator, where
+ * expo-updates is off and every restart is otherwise inert. With
+ * `EXPO_PUBLIC_DEV_RESTORE_TEST=1` in a dev build, a true return with a
+ * rebuildable spot reloads (Metro's `DevSettings.reload`) with the marker
+ * written exactly as in production, so the next boot runs the gate's rebuild
+ * and the "Mera updated" toast. `__DEV__` is false in a release bundle, so the
+ * flag can never act there.
+ */
+export function devRestoreTestEnabled(): boolean {
+  return __DEV__ && process.env.EXPO_PUBLIC_DEV_RESTORE_TEST === '1';
+}
+
+/**
  * Whether a restart could actually happen on this build.
  *
  * The two restore callers need this because their fallback is user-facing: when
@@ -486,7 +499,7 @@ export function routeBlocksRestart(): boolean {
  * over a restart that IS happening.
  */
 export function restartIsAvailable(): boolean {
-  if (__DEV__) return false;
+  if (__DEV__) return devRestoreTestEnabled();
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Updates = require('expo-updates');
@@ -551,7 +564,7 @@ export async function requestRestart(reason: RestartReason, opts?: { spot?: unkn
     return;
   }
 
-  if (__DEV__ || !restartIsAvailable()) {
+  if (!restartIsAvailable()) {
     logger.debug(`[app-restart] inert build, not restarting (${reason})`);
     return;
   }
@@ -602,6 +615,12 @@ export async function requestRestart(reason: RestartReason, opts?: { spot?: unkn
       lastForegroundAt,
     });
 
+    if (__DEV__) {
+      // Only reachable under devRestoreTestEnabled(): a dev client has no
+      // expo-updates reload, and the Metro reload keeps the settings table.
+      DevSettings.reload('restore test');
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Updates = require('expo-updates');
     await Updates.reloadAsync();

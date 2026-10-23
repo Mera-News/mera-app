@@ -5,6 +5,7 @@ import * as Updates from 'expo-updates';
 import {
   autoReloadDisabled,
   captureResumeSpot,
+  devRestoreTestEnabled,
   markOtaRestartAttempted,
   otaRestartAlreadyAttempted,
   requestRestart,
@@ -122,18 +123,26 @@ async function checkAndFetch(): Promise<void> {
 
 export default function OTASilentUpdater() {
   useEffect(() => {
-    if (!Updates.isEnabled || __DEV__) return;
+    const devTest = devRestoreTestEnabled();
+    if (!devTest && (!Updates.isEnabled || __DEV__)) return;
 
     // After the applied-update row, which replaces `update_available`: the
     // other order could delete the row this check is about to write. On mount
     // a check never reloads: expo-updates launches a downloaded bundle at the
     // next cold start, and a launch has no spot to rebuild.
-    void noticeAppliedUpdate().then(() => checkAndFetch());
+    if (!devTest) void noticeAppliedUpdate().then(() => checkAndFetch());
 
     let departedAt: number | null = null;
     let departureSpot: unknown = null;
 
     const onReturn = async (spot: unknown, since: number | null) => {
+      if (devTest) {
+        // No update, no fetch, no per-id guard: every eligible return reloads.
+        if (spot != null && !autoReloadDisabled() && !pinLockPossible(since) && restartWouldReload('ota')) {
+          await requestRestart('ota', { spot });
+        }
+        return;
+      }
       const id = readyUpdateId();
       if (id) {
         const reload =

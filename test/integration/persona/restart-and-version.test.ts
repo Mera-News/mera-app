@@ -35,6 +35,7 @@ import * as feedOrderStore from '@/lib/stores/feed-order-store';
 import * as settingService from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { setCurrentPathname } from '@/lib/nav-state';
+import { DevSettings } from 'react-native';
 import { getAppVersion, getAppVersionLabel, getGitCommit } from '@/lib/version';
 import { initI18nEn, mockGql, mockGqlError, server, setAppState, useFakeClock } from '@/test/helpers';
 import { getAll, markActioned, notify } from '@/lib/database/services/notification-service';
@@ -1305,6 +1306,73 @@ describe('restarts and the version floor', () => {
             await requestRestart('language');
             expect(mockReloadAsync).toHaveBeenCalledTimes(1);
             release();
+        });
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    // EXPO_PUBLIC_DEV_RESTORE_TEST: a dev build drives the real reload path on a simulator.
+    describe('the dev restore test', () => {
+        const mount = () => renderHook(() => OTASilentUpdater());
+        const flush = () => new Promise((r) => setTimeout(r, 50));
+        const returnFromBackground = async () => {
+            setAppState('background');
+            setAppState('active');
+            await flush();
+        };
+        let devReload: jest.SpyInstance;
+        beforeEach(() => {
+            mockUpdatesEnabled = false; // a dev client
+            devReload = jest.spyOn(DevSettings, 'reload').mockImplementation(() => {});
+        });
+        afterEach(() => {
+            delete process.env.EXPO_PUBLIC_DEV_RESTORE_TEST;
+        });
+
+        it('with the flag, a dev build reloads on a return with the marker written as in production', async () => {
+            process.env.EXPO_PUBLIC_DEV_RESTORE_TEST = '1';
+            mount();
+            await flush();
+            let markerAtReload: string | null = null;
+            devReload.mockImplementationOnce(() => {
+                void getSetting(RESTART_MARKER_KEY).then((m) => (markerAtReload = m));
+            });
+            await returnFromBackground();
+            await flush();
+            expect(devReload).toHaveBeenCalledTimes(1);
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+            expect(JSON.parse(markerAtReload as unknown as string)).toMatchObject({ reason: 'ota', spot: SPOT });
+            // Nothing is checked or fetched: there is no update server in a dev client.
+            expect(mockCheckForUpdate).not.toHaveBeenCalled();
+        });
+
+        it('with the flag, a place that cannot be rebuilt still does not reload', async () => {
+            process.env.EXPO_PUBLIC_DEV_RESTORE_TEST = '1';
+            mockSpot = null;
+            mount();
+            await flush();
+            await returnFromBackground();
+            expect(devReload).not.toHaveBeenCalled();
+        });
+
+        it('without the flag a dev build stays inert', async () => {
+            mount();
+            await flush();
+            await returnFromBackground();
+            expect(devReload).not.toHaveBeenCalled();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+        });
+
+        it('a release bundle ignores the flag and reloads through expo-updates', async () => {
+            process.env.EXPO_PUBLIC_DEV_RESTORE_TEST = '1';
+            asProductionBuild();
+            mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
+            mockFetchUpdate.mockResolvedValue({ isNew: true });
+            mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
+            mount();
+            await flush();
+            await returnFromBackground();
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            expect(devReload).not.toHaveBeenCalled();
         });
     });
 

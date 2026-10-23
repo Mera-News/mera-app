@@ -15,6 +15,7 @@ import { notesSince, parseUpdateNotes, type UpdateNote } from '@/lib/algorithms/
 import {
     activeHolds,
     captureResumeSpot,
+    devRestoreTestEnabled,
     markOtaRestartAttempted,
     requestRestart,
     restartContext,
@@ -177,7 +178,8 @@ export async function announceAppliedUpdate(missing?: 'story' | 'publication'): 
     try {
         const { reason } = await restartContext();
         if (reason !== 'ota' && reason !== 'update') return;
-        const row = applied ? await applied : null;
+        // The dev restore test applies no real update, so it announces one with no notes.
+        const row = applied ? await applied : devRestoreTestEnabled() ? { id: '', notes: [] } : null;
         if (!missing && !row) return;
         await new Promise((r) => setTimeout(r, ANNOUNCE_DELAY_MS));
         if (missing) {
