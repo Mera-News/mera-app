@@ -698,7 +698,7 @@ export function getArticleFeedbackToolDefinitions(
       function: {
         name: 'proposeTrack',
         description:
-          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic. Your message beside the card is one line: \"Pick the story to follow below.\" Never write the word \"scope\" to the user.",
+          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic. Your message beside the card is one line: \"Pick the story to follow below.\" (in the reply language). Never write the word \"scope\" to the user.",
         parameters: {
           type: 'object',
           properties: {

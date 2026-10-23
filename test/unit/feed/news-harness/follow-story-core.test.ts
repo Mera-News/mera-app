@@ -37,7 +37,7 @@ describe('follow-story card copy (F34)', () => {
 
   it('says the same in the cloud proposeTrack description', () => {
     const track = getFollowStoryToolDefinitions('CLOUD', false).find((t) => t.function.name === 'proposeTrack')!;
-    expect(track.function.description).toContain('"Pick the story to follow below."');
+    expect(track.function.description).toContain('"Pick the story to follow below." (in the reply language)');
     expect(track.function.description).toContain('Never write the word "scope" to the user');
   });
 });

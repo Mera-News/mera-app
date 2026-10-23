@@ -295,7 +295,7 @@ export function getFollowStoryToolDefinitions(
       function: {
         name: 'proposeTrack',
         description:
-          'Propose following the story the user described, as a durable topic. Never follows directly — stages a card the user taps. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground every option in what the USER said; there is no article in this conversation. Your message beside the card is one line: "Pick the story to follow below." Never write the word "scope" to the user.',
+          'Propose following the story the user described, as a durable topic. Never follows directly — stages a card the user taps. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground every option in what the USER said; there is no article in this conversation. Your message beside the card is one line: "Pick the story to follow below." (in the reply language). Never write the word "scope" to the user.',
         parameters: {
           type: 'object',
           properties: {

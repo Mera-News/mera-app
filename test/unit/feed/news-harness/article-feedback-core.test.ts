@@ -80,6 +80,7 @@ describe('article-feedback follow card copy (F34)', () => {
     expect(prompt).toContain('"Pick the story to follow below."');
     expect(prompt).toContain('Never use the word "scope" in anything the user reads');
     const track = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!;
+    expect(track.function.description).toContain('"Pick the story to follow below." (in the reply language)');
     expect(track.function.description).toContain('Never write the word "scope" to the user');
   });
 });
