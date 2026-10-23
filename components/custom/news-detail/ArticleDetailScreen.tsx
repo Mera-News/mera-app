@@ -1,5 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
+import { useReportRestoredScreen } from '@/lib/navigation/use-screen-scroll-target';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
@@ -137,6 +138,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isSaved,
         isLoading,
         error,
+        notFound,
         factCheckPhase,
         aiAccess,
         orphanFactChecks,
@@ -163,6 +165,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         handleToggleSave,
         handleArticleUrlPress,
     } = useArticleDetailScreen({ articleId, stableClusterId });
+    // A restored screen acts on this: gone for a definite 404, otherwise the
+    // article, an error or the offline state is what the reader gets back.
+    useReportRestoredScreen(isLoading ? 'loading' : notFound ? 'missing' : 'ready');
 
 
     if (isLoading) {

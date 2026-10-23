@@ -70,6 +70,8 @@ export function useArticleDetailScreen({
     const isSaved = savedOverride ?? savedFromDb;
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    // The server has no such article AND this device holds no snapshot: a definite 404, never a network failure.
+    const [notFound, setNotFound] = useState(false);
     // The tick's icon state — a pure observer of the stored rows, same hook
     // `FactCheckPanel` uses below. Two independent subscriptions to the same
     // WatermelonDB query, not a shared instance: unlike the old request-driving
@@ -182,6 +184,7 @@ export function useArticleDetailScreen({
         let cancelled = false;
         setIsLoading(true);
         setError(null);
+        setNotFound(false);
         setOfflineUnavailable(false);
         setSnapshotSource(null);
 
@@ -231,6 +234,7 @@ export function useArticleDetailScreen({
                         setArticle(snapshot.article);
                         setSnapshotSource(snapshot.source);
                     } else {
+                        setNotFound(true);
                         setError(t('articleDetail.articleUnavailable'));
                     }
                 })
@@ -425,6 +429,7 @@ export function useArticleDetailScreen({
         isSaved,
         isLoading,
         error,
+        notFound,
         factCheckPhase,
         aiAccess,
         orphanFactChecks,

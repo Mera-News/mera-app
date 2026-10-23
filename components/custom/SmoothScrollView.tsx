@@ -47,6 +47,8 @@ export interface SmoothScrollViewRef {
      *  lands at the bottom *as it was*, with more rows appearing below. */
     scrollToEnd: (animated?: boolean) => void;
     getScrollY: () => number;
+    /** Jump to an offset with no animation (a restored resume spot). */
+    scrollTo: (y: number) => void;
 }
 
 /**
@@ -139,6 +141,9 @@ const SmoothScrollView = forwardRef<SmoothScrollViewRef, SmoothScrollViewProps>(
             scrollViewRef.current?.scrollToEnd({ animated });
         },
         getScrollY: () => lastScrollY.current,
+        scrollTo: (y: number) => {
+            scrollViewRef.current?.scrollTo({ y, animated: false });
+        },
     }), []);
 
     // Expose scrollY to parent if needed

@@ -12,7 +12,7 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { ARTICLE_IDS } from '@/test/mock-backend/fixtures/articles';
-import { graphql, initI18nEn, signInFixtureAccount, server } from '@/test/helpers';
+import { graphql, HttpResponse, initI18nEn, signInFixtureAccount, server } from '@/test/helpers';
 import { seedSuggestion } from './seed';
 
 const SERVER_ID = ARTICLE_IDS[0];
@@ -111,6 +111,19 @@ describe('online', () => {
             expect(result.current.error).toBe(UNAVAILABLE);
             expect(result.current.article).toBeNull();
             expect(result.current.offlineUnavailable).toBe(false);
+            expect(result.current.notFound).toBe(true);
+        });
+
+        it('does not report notFound while loading or for a network failure', async () => {
+            server.use(
+                graphql.query('GetArticleById', () => HttpResponse.json({ errors: [{ message: 'boom' }] })),
+            );
+            const { result } = mount('net-fail');
+            expect(result.current.notFound).toBe(false);
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.error).not.toBeNull();
+            expect(result.current.error).not.toBe(UNAVAILABLE);
+            expect(result.current.notFound).toBe(false);
         });
     });
 });
