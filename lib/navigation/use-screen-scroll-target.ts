@@ -31,7 +31,10 @@ export interface ScreenScrollOptions {
 }
 
 /**
- * Register this screen's list. Returns `restoreHidden`: true while a restored
+ * Register a PUSHED screen's list (article, publication, story timeline, a
+ * You sub-page). Never a tab-root page: it keys by route key, which all pages
+ * of a tab share; a page passes `getOffset` to `usePageScrollTarget` instead.
+ * Returns `restoreHidden`: true while a restored
  * scroll is landing on it, so the screen draws the list at opacity 0 until it
  * lands (components/custom/nav RestoreReveal does the fade).
  */
