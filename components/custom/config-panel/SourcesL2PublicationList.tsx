@@ -6,6 +6,7 @@ import PublicationListRow from '@/components/custom/publication-page/Publication
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { hostOf } from '@/components/custom/publication-page/publication-format';
 import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
+import { appendNewPublishers } from '@/lib/algorithms/append-new-publishers';
 import { publisherPrefNames } from '@/lib/algorithms/publication-pref-level';
 import logger from '@/lib/logger';
 import type { NewsPublisher } from '@/lib/source-service';
@@ -59,7 +60,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 countryCode,
                 first: 5,
             });
-            setPublishers(response.newsPublishers);
+            setPublishers(appendNewPublishers([], response.newsPublishers));
             setEndCursor(response.pageInfo.endCursor ?? null);
             setHasNextPage(response.pageInfo.hasNextPage);
         } catch (error) {
@@ -82,7 +83,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 first: 5,
                 after: endCursor,
             });
-            setPublishers((prev) => [...prev, ...response.newsPublishers]);
+            setPublishers((prev) => appendNewPublishers(prev, response.newsPublishers));
             setEndCursor(response.pageInfo.endCursor ?? null);
             setHasNextPage(response.pageInfo.hasNextPage);
         } catch (error) {
