@@ -19,12 +19,12 @@ O QUE O MERA PODE FAZER
 • Ajustar a prioridade de cada fato e tema do seu perfil
 • Escolher fontes preferidas ou com menos prioridade e excluir temas que você não quer ver
 • Deixar o Mera fazer perguntas mais profundas e ajustar seu perfil conforme seus interesses mudam
-• Ver histórias relevantes, temas que você acompanha, artigos salvos, checagens de fatos e histórico de leitura em um painel
+• Guardar na Biblioteca artigos salvos, checagens, histórico e estatísticas de leitura, e exportar tudo
 • Acompanhar um evento ou tema mais amplo conforme novas reportagens surgem em diferentes veículos
 • Buscar mais contexto na web sobre uma história
-• Investigar afirmações com ferramentas de checagem de fatos
+• Ver o que agências de checagem reconhecidas já publicaram sobre uma história
 • Ler veículos de 195 países em 109 idiomas e usar o app em 20 idiomas
-• Navegar por manchetes locais, país por país
+• Navegar pelo Mundo, país por país, ordenado por matemática simples: sem IA e igual para todos
 • Acompanhar órgãos reguladores, ministérios, agências de cibersegurança, bancos centrais, prefeituras e outras fontes primárias
 • Ajustar o tamanho do texto e desfocar imagens que possam incomodar ou distrair você
 • Ler artigos completos nos sites dos veículos
@@ -36,7 +36,7 @@ Notícias personalizadas não deveriam exigir vigilância pessoal.
 • Seu perfil de notícias e seu histórico de leitura ficam no seu celular, não nos servidores do Mera
 • O Mera nunca pede seu e-mail. Você entra com seu celular
 • Como o Mera não tem essas informações, não pode usá-las para treinar modelos de IA nem vendê-las a anunciantes e corretores de dados
-• O Mera AI funciona criptografado na Nuvem privada, para que o Mera não consiga ler o que ele lê para você
+• O Mera AI funciona criptografado na Nuvem privada, para que nem a Mera Labs consiga ler o que ele lê para você
 • Verifique a atestação do Trusted Execution Environment no app para confirmar que as proteções estão ativas
 • Proteja o app com um PIN opcional
 • Os motivos escritos por IA são sempre claramente identificados

@@ -19,12 +19,12 @@ QUÉ PUEDE HACER MERA
 • Ajusta la prioridad de cada dato y tema de tu perfil
 • Elige fuentes preferidas o con menor prioridad y excluye los temas que no quieres ver
 • Deja que Mera te haga preguntas más profundas y ajuste tu perfil cuando cambien tus intereses
-• Consulta en un panel historias relevantes, temas que sigues, artículos guardados, verificaciones e historial de lectura
+• Guarda en tu Biblioteca artículos, verificaciones de hechos, historial y estadísticas, y expórtalos
 • Sigue un evento o un asunto más amplio a medida que distintos medios publican noticias
 • Busca en la web más contexto sobre una historia
-• Verifica afirmaciones con herramientas de comprobación de datos
+• Mira qué han publicado ya los verificadores de hechos reconocidos
 • Lee publicaciones de 195 países en 109 idiomas y usa la app en 20 idiomas
-• Explora titulares locales país por país
+• Explora Mundo por países, ordenado con matemáticas simples: sin IA e igual para todos
 • Sigue a reguladores, ministerios, agencias de ciberseguridad, bancos centrales, ayuntamientos y otras fuentes primarias
 • Ajusta el tamaño del texto y difumina imágenes que te resulten perturbadoras o te distraigan
 • Lee los artículos completos en los sitios de las publicaciones
@@ -36,7 +36,7 @@ Las noticias personalizadas no deberían requerir vigilancia personal.
 • Tu perfil de noticias y tu historial de lectura se quedan en tu teléfono, no en los servidores de Mera
 • Mera nunca te pide el correo electrónico. Inicias sesión con tu teléfono
 • Como Mera no posee esta información, no puede usarla para entrenar modelos de IA ni venderla a anunciantes o intermediarios de datos
-• Mera AI funciona cifrado en Nube privada, para que Mera no pueda leer lo que lee por ti
+• Mera AI funciona cifrado en Nube privada, para que ni Mera Labs pueda leer lo que lee por ti
 • Verifica en la app la atestación del Trusted Execution Environment para confirmar que las protecciones están activas
 • Protege la app con un PIN opcional
 • Los motivos escritos por IA siempre se identifican claramente

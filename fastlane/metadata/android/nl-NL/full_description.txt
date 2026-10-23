@@ -19,12 +19,12 @@ WAT MERA KAN DOEN
 • Pas de prioriteit aan van elk feit en elk onderwerp in je profiel
 • Kies voorkeursbronnen of bronnen met een lagere prioriteit, en sluit onderwerpen uit die je niet wilt zien
 • Laat Mera diepere vragen stellen en je profiel bijstellen als je interesses veranderen
-• Bekijk relevante verhalen, gevolgde onderwerpen, opgeslagen artikelen, factchecks en je leesgeschiedenis in één dashboard
+• Opgeslagen artikelen, feitchecks, leesgeschiedenis en statistieken in je Bibliotheek, te exporteren
 • Volg een gebeurtenis of breder onderwerp terwijl uitgevers nieuwe berichtgeving publiceren
 • Zoek op het web naar meer context bij een verhaal
-• Onderzoek beweringen met factchecktools
+• Zie wat gevestigde feitcheckers al over een verhaal publiceerden
 • Lees publicaties uit 195 landen in 109 talen, en gebruik de app in 20 talen
-• Blader land voor land door lokale koppen
+• Koppen in Wereld per land, gerangschikt met simpele wiskunde: zonder AI, voor iedereen gelijk
 • Volg toezichthouders, ministeries, cyberveiligheidsinstanties, centrale banken, gemeenten en andere primaire bronnen
 • Pas de tekstgrootte aan en vervaag afbeeldingen die je verontrustend of afleidend vindt
 • Lees volledige artikelen op de websites van uitgevers
@@ -36,7 +36,7 @@ Gepersonaliseerd nieuws hoeft geen bewaking te vereisen.
 • Je nieuwsprofiel en je leesgeschiedenis blijven op je telefoon, niet op de servers van Mera
 • Mera vraagt nooit om je e-mailadres. Je logt in met je telefoon
 • Omdat Mera deze gegevens niet heeft, kan het ze niet gebruiken om AI-modellen te trainen of verkopen aan adverteerders en datahandelaars
-• Mera AI draait versleuteld in Privécloud, zodat Mera niet kan lezen wat het voor je leest
+• Mera AI draait versleuteld in Privécloud, zodat zelfs Mera Labs niet kan lezen wat het voor je leest
 • Controleer in de app de Trusted Execution Environment-attestatie om te zien of de privacywaarborgen actief zijn
 • Beveilig de app met een optionele pincode
 • Redenen die door AI zijn geschreven, zijn altijd duidelijk gemarkeerd

@@ -19,12 +19,12 @@ APA YANG BISA DILAKUKAN MERA
 • Atur prioritas setiap fakta dan topik dalam profil Anda
 • Pilih sumber yang diutamakan atau dinomorduakan, dan kecualikan topik yang tidak ingin Anda lihat
 • Biarkan Mera bertanya lebih dalam dan menyesuaikan profil saat minat Anda berubah
-• Lihat cerita relevan, topik yang diikuti, artikel tersimpan, pemeriksaan fakta, dan riwayat bacaan dalam satu dasbor
+• Simpan artikel, pemeriksaan fakta, riwayat, dan statistik bacaan di Pustaka, lalu ekspor kapan saja
 • Ikuti peristiwa atau isu yang lebih luas saat pemberitaan baru muncul dari berbagai penerbit
 • Cari konteks tambahan sebuah cerita di web
-• Periksa klaim dengan alat pemeriksa fakta
+• Lihat temuan pemeriksa fakta ternama soal sebuah cerita
 • Baca publikasi dari 195 negara dalam 109 bahasa, dan gunakan aplikasi dalam 20 bahasa
-• Telusuri berita lokal negara demi negara
+• Telusuri berita Dunia per negara, diurutkan dengan hitungan murni: tanpa AI, sama untuk semua
 • Ikuti regulator, kementerian, badan keamanan siber, bank sentral, balai kota, dan sumber primer lainnya
 • Sesuaikan ukuran teks dan buramkan gambar yang mungkin meresahkan atau mengganggu
 • Baca artikel lengkap di situs penerbit
@@ -36,7 +36,7 @@ Berita yang dipersonalisasi seharusnya tidak memerlukan pengawasan atas diri And
 • Profil berita dan riwayat bacaan Anda tetap berada di ponsel Anda, bukan di server Mera
 • Mera tidak pernah meminta email Anda. Anda masuk dengan ponsel
 • Karena Mera tidak memiliki informasi ini, Mera tidak dapat menggunakannya untuk melatih model AI atau menjualnya kepada pengiklan dan pialang data
-• Mera AI berjalan terenkripsi di Cloud pribadi, sehingga Mera tidak bisa membaca apa yang dibacanya untuk Anda
+• Mera AI berjalan terenkripsi di Cloud pribadi, sehingga Mera Labs pun tidak bisa membaca apa yang dibacanya untuk Anda
 • Verifikasi atestasi Trusted Execution Environment di aplikasi untuk memastikan perlindungan privasi aktif
 • Lindungi aplikasi dengan PIN opsional
 • Alasan yang ditulis AI selalu ditandai dengan jelas

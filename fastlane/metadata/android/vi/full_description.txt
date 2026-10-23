@@ -19,12 +19,12 @@ MERA LÀM ĐƯỢC GÌ
 • Điều chỉnh mức độ ưu tiên của từng dữ kiện và chủ đề trong hồ sơ
 • Chọn nguồn ưu tiên hoặc nguồn bị hạ thấp, và loại trừ các chủ đề bạn không muốn xem
 • Để Mera đặt những câu hỏi sâu hơn và tinh chỉnh hồ sơ khi mối quan tâm của bạn thay đổi
-• Xem tin liên quan, chủ đề đang theo dõi, bài đã lưu, kiểm chứng sự kiện và lịch sử đọc trong một bảng điều khiển
+• Giữ bài đã lưu, kiểm chứng sự kiện, lịch sử và thống kê đọc trong Thư viện, xuất ra bất cứ lúc nào
 • Theo dõi một sự kiện hoặc vấn đề rộng hơn khi có thêm tin từ nhiều nhà xuất bản
 • Tìm kiếm trên web để có thêm bối cảnh cho một câu chuyện
-• Kiểm tra các tuyên bố bằng công cụ kiểm chứng sự kiện
+• Xem các tổ chức kiểm chứng sự kiện uy tín đã công bố gì về câu chuyện
 • Đọc báo từ 195 quốc gia bằng 109 ngôn ngữ, và dùng ứng dụng bằng 20 ngôn ngữ
-• Xem tin nổi bật địa phương theo từng quốc gia
+• Xem tin nổi bật Thế giới theo từng quốc gia, xếp hạng bằng phép tính đơn giản: không AI, như nhau với mọi người
 • Theo dõi cơ quan quản lý, bộ ngành, cơ quan an ninh mạng, ngân hàng trung ương, tòa thị chính và các nguồn chính thức khác
 • Điều chỉnh cỡ chữ và làm mờ hình ảnh mà bạn thấy gây khó chịu hoặc xao nhãng
 • Đọc toàn bộ bài viết trên trang web của nhà xuất bản
@@ -36,7 +36,7 @@ Cá nhân hóa tin tức không nên đòi hỏi phải giám sát đời tư.
 • Hồ sơ tin tức và lịch sử đọc của bạn nằm trên điện thoại, không nằm trên máy chủ của Mera
 • Mera không bao giờ hỏi email của bạn. Bạn đăng nhập bằng điện thoại
 • Vì Mera không giữ thông tin này, Mera không thể dùng nó để huấn luyện mô hình AI hay bán cho nhà quảng cáo và môi giới dữ liệu
-• Mera AI chạy ở dạng mã hóa trong Đám mây riêng, nên Mera không thể đọc những gì nó đọc cho bạn
+• Mera AI chạy ở dạng mã hóa trong Đám mây riêng, nên cả Mera Labs cũng không thể đọc những gì nó đọc cho bạn
 • Xác minh chứng thực Trusted Execution Environment trong ứng dụng để xác nhận các biện pháp bảo vệ quyền riêng tư đang hoạt động
 • Bảo vệ ứng dụng bằng mã PIN tùy chọn
 • Lý do do AI viết luôn được đánh dấu rõ ràng

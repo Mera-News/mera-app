@@ -19,12 +19,12 @@ WAS MERA KANN
 • Die Priorität jeder Angabe und jedes Themas in deinem Profil anpassen
 • Bevorzugte oder zurückgestufte Quellen wählen und ungewollte Themen ausschließen
 • Mera tiefer nachfragen lassen und dein Profil anpassen, wenn sich deine Interessen ändern
-• Relevante Geschichten, verfolgte Themen, gespeicherte Artikel, Faktenchecks und Leseverlauf in einem Dashboard sehen
+• Gespeicherte Artikel, Faktenchecks, Verlauf und Statistik in der Bibliothek, exportierbar
 • Ein Ereignis oder Thema verfolgen, während neue Verlagsberichte erscheinen
 • Im Web nach mehr Kontext zu einer Geschichte suchen
-• Behauptungen mit Faktencheck-Werkzeugen prüfen
+• Sehen, was etablierte Faktenchecker schon schrieben
 • Publikationen aus 195 Ländern in 109 Sprachen lesen und die App in 20 Sprachen nutzen
-• Lokale Schlagzeilen Land für Land durchsuchen
+• „Welt“ pro Land, rechnerisch sortiert: ohne KI, für alle gleich
 • Aufsichtsbehörden, Ministerien, Cybersicherheitsbehörden, Zentralbanken, Rathäuser und andere Primärquellen verfolgen
 • Textgröße anpassen und belastende oder ablenkende Bilder unscharf stellen
 • Vollständige Artikel auf Verlagswebsites lesen
@@ -36,7 +36,7 @@ Personalisierte Nachrichten sollten keine persönliche Überwachung erfordern.
 • Dein Nachrichtenprofil und dein Leseverlauf bleiben auf deinem Telefon, nicht auf Meras Servern
 • Mera fragt nie nach deiner E-Mail-Adresse. Du meldest dich mit deinem Telefon an
 • Da Mera diese Daten nicht hat, kann Mera sie weder für KI-Training nutzen noch an Werbetreibende und Datenhändler verkaufen
-• Mera AI läuft verschlüsselt in der „Private Cloud“, sodass Mera nicht lesen kann, was Mera AI für dich liest
+• Mera AI läuft verschlüsselt in der „Private Cloud“, sodass selbst Mera Labs nicht lesen kann, was Mera AI für dich liest
 • Prüfe in der App die Attestierung des Trusted Execution Environment, um zu sehen, dass der Schutz aktiv ist
 • Schütze die App mit einer optionalen PIN
 • Von KI geschriebene Gründe sind immer klar gekennzeichnet

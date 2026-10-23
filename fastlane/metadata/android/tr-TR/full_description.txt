@@ -19,12 +19,12 @@ MERA NELER YAPABİLİR
 • Profilindeki her bilgi ve konunun önceliğini ayarla
 • Tercih ettiğin ya da daha az görmek istediğin kaynakları seç ve görmek istemediğin konuları dışarıda bırak
 • Mera'nın daha derin sorular sormasına ve ilgi alanların değiştikçe profilini ayarlamasına izin ver
-• İlgili haberleri, takip ettiğin konuları, kaydettiğin makaleleri, doğrulama sonuçlarını ve okuma geçmişini tek bir panoda gör
+• Kaydedilenler, doğruluk kontrolleri, geçmiş ve istatistikler Kitaplık'ta, dışa aktarılabilir
 • Yayıncılar arasında yeni haberler çıktıkça bir olayı ya da daha geniş bir konuyu takip et
 • Bir haberle ilgili daha fazla bağlam için web'de ara
-• İddiaları doğrulama araçlarıyla incele
+• Köklü doğrulayıcıların yayımladıklarını gör
 • 195 ülkeden yayınları 109 dilde oku ve uygulamayı 20 dilde kullan
-• Yerel manşetlere ülke ülke göz at
+• “Dünya” ülke ülke, basit hesapla sıralı: yapay zekasız, herkese aynı
 • Düzenleyici kurumları, bakanlıkları, siber güvenlik ajanslarını, merkez bankalarını, belediyeleri ve diğer birincil kaynakları takip et
 • Metin boyutunu ayarla ve seni rahatsız edebilecek ya da dikkatini dağıtabilecek görselleri bulanıklaştır
 • Tam makaleleri yayıncıların web sitelerinde oku
@@ -36,7 +36,7 @@ Kişiselleştirilmiş haberler kişisel gözetim gerektirmemelidir.
 • Haber profilin ve okuma geçmişin Mera'nın sunucularında değil, telefonunda kalır
 • Mera asla e-posta adresini istemez. Telefonunla giriş yaparsın
 • Mera bu bilgilere sahip olmadığı için bunları yapay zeka modellerini eğitmek ya da reklamcılara ve veri simsarlarına satmak için kullanamaz
-• Mera AI “Özel bulut”ta şifreli çalışır, böylece Mera senin için okuduklarını okuyamaz
+• Mera AI “Özel bulut”ta şifreli çalışır, böylece Mera Labs bile senin için okuduklarını okuyamaz
 • Gizlilik korumalarının etkin olduğunu doğrulamak için uygulama içinde Güvenilir Yürütme Ortamı (TEE) tasdikini kontrol et
 • Uygulamayı isteğe bağlı bir PIN ile koru
 • Yapay zekanın yazdığı nedenler her zaman açıkça belirtilir

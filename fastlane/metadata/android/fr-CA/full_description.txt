@@ -19,12 +19,12 @@ CE QUE MERA PEUT FAIRE
 • Ajuster la priorité de chaque fait et sujet de votre profil
 • Choisir les sources à privilégier ou à reléguer, et exclure les sujets indésirables
 • Laisser Mera poser des questions approfondies et ajuster votre profil selon vos intérêts
-• Voir articles pertinents ou enregistrés, sujets suivis, vérifications de faits et historique de lecture dans un tableau de bord
+• Enregistrés, vérifications de faits, historique et statistiques en Bibliothèque, exportables
 • Suivre un événement ou un sujet plus large au fil des publications
 • Chercher sur le web plus de contexte sur un article
-• Vérifier des affirmations avec des outils de vérification des faits
+• Voir ce que des vérificateurs reconnus ont déjà publié
 • Lire des médias de 195 pays en 109 langues, et utiliser l'app en 20 langues
-• Parcourir les titres locaux pays par pays
+• Monde pays par pays, par simple calcul : sans IA, pareil pour tous
 • Suivre les régulateurs, ministères, agences de cybersécurité, banques centrales, mairies et autres sources primaires
 • Régler la taille du texte et flouter les images qui peuvent vous choquer ou distraire
 • Lire les articles complets sur les sites des éditeurs
@@ -36,7 +36,7 @@ Une actualité personnalisée ne devrait pas exiger de surveillance personnelle.
 • Votre profil d'actualités et votre historique de lecture restent sur votre téléphone, pas sur les serveurs de Mera
 • Mera ne demande jamais votre e-mail. Vous vous connectez avec votre téléphone
 • Ne détenant pas ces informations, Mera ne peut ni s'en servir pour entraîner des modèles d'IA, ni les vendre aux annonceurs ou à des courtiers en données
-• Mera AI fonctionne de façon chiffrée dans le Cloud privé, pour que Mera ne puisse pas voir ce qu'il lit pour vous
+• Mera AI fonctionne de façon chiffrée dans le Cloud privé, pour que même Mera Labs ne puisse pas voir ce qu'il lit pour vous
 • Vérifiez l'attestation Trusted Execution Environment dans l'app pour confirmer que les protections sont actives
 • Protégez l'application avec un code PIN facultatif
 • Les raisons rédigées par l'IA sont toujours clairement signalées

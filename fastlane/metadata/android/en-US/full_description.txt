@@ -19,12 +19,12 @@ WHAT MERA CAN DO
 • Adjust the priority of every fact and topic in your profile
 • Choose preferred or deprioritised sources and exclude topics you do not want to see
 • Let Mera ask deeper questions and tune your profile as your interests change
-• View relevant stories, followed topics, saved articles, fact checks and reading history in one dashboard
+• Keep saved articles, fact checks, reading history and your reading stats in your Library, and export them anytime
 • Follow an event or broader issue as new reporting emerges across publishers
 • Search the web for more context on a story
-• Investigate claims with fact-checking tools
+• See what established fact-checking organisations have already published about a story
 • Read publications from 195 countries in 109 languages, and use the app in 20
-• Browse local headlines country by country
+• Browse World headlines country by country, ranked by plain math: no AI, and the same for everyone
 • Follow regulators, ministries, cybersecurity agencies, central banks, city halls and other primary sources
 • Adjust text size and blur images you may find distressing or distracting
 • Read complete articles on publishers’ websites
@@ -36,7 +36,7 @@ Personalised news should not require personal surveillance.
 • Your news profile and reading history stay on your phone, not on Mera’s servers
 • Mera never asks for your email. You sign in with your phone
 • Because Mera does not have this information, it cannot use it to train AI models or sell it to advertisers and data brokers
-• Mera AI runs encrypted in Private cloud, so Mera can't read it
+• Mera AI runs encrypted in Private cloud, so even Mera Labs can't read it
 • Verify Trusted Execution Environment attestation in the app to confirm the privacy safeguards are active
 • Protect the app with an optional PIN
 • AI-written reasons are always clearly marked

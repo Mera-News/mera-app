@@ -19,12 +19,12 @@ CO POTRAFI MERA
 • Dostosowuj priorytet każdego faktu i tematu w swoim profilu
 • Wybieraj preferowane lub obniżone w rankingu źródła i wykluczaj tematy, których nie chcesz widzieć
 • Pozwól aplikacji Mera zadawać głębsze pytania i dopasowywać profil, gdy Twoje zainteresowania się zmieniają
-• Przeglądaj istotne historie, śledzone tematy, zapisane artykuły, weryfikacje faktów i historię czytania w jednym panelu
+• Zapisane artykuły, weryfikacje faktów, historia i statystyki w Bibliotece z eksportem
 • Śledź wydarzenie lub szerszy problem, gdy w różnych wydawnictwach pojawiają się nowe doniesienia
 • Szukaj w internecie dodatkowego kontekstu do historii
-• Sprawdzaj twierdzenia za pomocą narzędzi do weryfikacji faktów
+• Zobacz, co uznani weryfikatorzy faktów już ogłosili
 • Czytaj publikacje ze 195 krajów w 109 językach i korzystaj z aplikacji w 20
-• Przeglądaj lokalne nagłówki kraj po kraju
+• „Świat” kraj po kraju, ułożony prostą matematyką: bez AI, tak samo dla każdego
 • Śledź regulatorów, ministerstwa, agencje cyberbezpieczeństwa, banki centralne, urzędy miast i inne pierwotne źródła
 • Zmieniaj rozmiar tekstu i rozmywaj zdjęcia, które mogą Cię niepokoić lub rozpraszać
 • Czytaj pełne artykuły na stronach wydawców
@@ -36,7 +36,7 @@ Spersonalizowane wiadomości nie powinny wymagać osobistej inwigilacji.
 • Twój profil wiadomości i historia czytania pozostają na Twoim telefonie, a nie na serwerach Mera
 • Mera nigdy nie prosi o adres e-mail. Logujesz się za pomocą telefonu
 • Ponieważ Mera nie ma tych informacji, nie może ich użyć do trenowania modeli AI ani sprzedać reklamodawcom i pośrednikom danych
-• Mera AI działa w formie zaszyfrowanej w „Prywatnej chmurze”, więc Mera nie może odczytać tego, co czyta dla Ciebie
+• Mera AI działa w formie zaszyfrowanej w „Prywatnej chmurze”, więc nawet Mera Labs nie może odczytać tego, co czyta dla Ciebie
 • Sprawdź w aplikacji atestację Trusted Execution Environment, by potwierdzić, że zabezpieczenia prywatności działają
 • Zabezpiecz aplikację opcjonalnym kodem PIN
 • Uzasadnienia napisane przez AI są zawsze wyraźnie oznaczone
