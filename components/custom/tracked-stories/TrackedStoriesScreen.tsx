@@ -37,6 +37,7 @@ import { latestMember } from './merge-timeline';
 import { useTrackedStoriesScreen } from './useTrackedStoriesScreen';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 interface TrackedStoriesScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -58,7 +59,8 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     const { t } = useTranslation();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<TrackedStoryModel>>(null);
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const c = useColors();
     const listEndClearance = useListEndClearance();
     const {
@@ -212,7 +214,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     flexGrow: 1,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler ?? notifyScrollTick}
+                onScroll={scrollHandler ? tracked.onScroll : notifyScrollTick}
                 onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
             />

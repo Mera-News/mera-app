@@ -29,6 +29,7 @@ import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
 import { savedItemId } from './saved-item-id';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 interface SavedSuggestionsScreenProps {
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
@@ -125,7 +126,8 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
 
     const listRef = useRef<any>(null);
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const viewportH = useRef(0);
     const settleIfShort = useCallback(
         (_w: number, contentH: number) => {
@@ -177,7 +179,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     flexGrow: 1,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler ?? notifyScrollTick}
+                onScroll={scrollHandler ? tracked.onScroll : notifyScrollTick}
                 scrollEventThrottle={16}
             />
 

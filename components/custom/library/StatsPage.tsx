@@ -44,6 +44,7 @@ import { useTranslation } from 'react-i18next';
 import { BackHandler, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 const SHARE_H = 44;
 /** Under the page strip's pill track (safe area + 47): the preview's top. */
@@ -125,7 +126,8 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
     const themeMode = useThemeMode();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<StatsCardId>>(null);
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const c = useColors();
     const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
     const [isLoading, setIsLoading] = useState(true);
@@ -283,7 +285,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                     paddingBottom: listEndPadding,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler ?? notifyScrollTick}
+                onScroll={scrollHandler ? tracked.onScroll : notifyScrollTick}
                 onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
                 refreshControl={

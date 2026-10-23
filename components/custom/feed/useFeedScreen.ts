@@ -59,6 +59,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { anchorStep, firstOnScreenId, type AnchorLand } from './feed-anchor';
 import { PAGE_CONTENT_GAP } from '@/components/custom/nav/page-registry';
 import { useAnchorPastHeader } from '@/components/custom/feed/use-anchor-past-header';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
@@ -305,12 +306,14 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     setNewBelow((prev) => (prev === found ? prev : found));
   };
   // The minimap's frame: the index range on screen, as shared values.
+  const anchorIdRef = useRef<string | null>(null);
   const minimapFirst = useSharedValue(0);
   const minimapLast = useSharedValue(0);
   const onScreenChangedRef = useRef((ids: ReadonlySet<string>) => {
     onScreenIdsRef.current = ids;
     recomputeNewBelowRef.current();
     const order = renderedIdsRef.current;
+    anchorIdRef.current = firstOnScreenId(order, ids);
     let lo = Infinity;
     let hi = -1;
     for (const id of ids) {
@@ -799,8 +802,28 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // `onRefreshSync` and not the scheduler: routing around it would skip
   // flushSkips + the partition-snapshot refresh, and a scheduler-level call can
   // be swallowed by conditions that only gate the SCHEDULED path.
+  const anchorLandRef = useRef<AnchorLand>({ issuedFor: null, prev: null });
   usePageScrollTarget(listRef, {
     getOffset: () => lastOffsetShared.value,
+    getAnchor: () => (anchorIdRef.current ? { id: anchorIdRef.current, delta: 0 } : null),
+    scrollToAnchor: (id) => {
+      const step = anchorStep(
+        suggestionsHydrated && ingestedCandidates,
+        renderedIdsRef.current,
+        id,
+        lastOffsetShared.value,
+        anchorLandRef.current,
+      );
+      if (step.scrollToIndex !== null) {
+        listRef.current?.scrollToIndex({
+          index: step.scrollToIndex,
+          viewPosition: 0,
+          viewOffset: headerHeight + PAGE_CONTENT_GAP,
+          animated: false,
+        });
+      }
+      return step.result;
+    },
     onRefresh,
     isRefreshing: refreshing,
   });

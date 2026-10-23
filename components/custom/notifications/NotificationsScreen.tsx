@@ -28,6 +28,7 @@ import {
 } from './notification-actions';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 import { HygieneSuggestionCard, useHygieneSuggestions } from './HygieneSuggestionCard';
 
 /** "now" / "5m" / "2h" / "3d", as the board draws it, in the app language. */
@@ -69,7 +70,8 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     const updateNotes = useOpenUpdateNotes();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<NotificationModel>>(null);
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(header.scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const colors = useColors();
     const endClearance = useListEndClearance();
     // Lite / Reduce Motion: a deleted row leaves at once.
@@ -225,7 +227,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                 ListEmptyComponent={suggestions.items.length > 0 ? null : empty}
                 initialNumToRender={12}
                 showsVerticalScrollIndicator={false}
-                onScroll={header.scrollHandler}
+                onScroll={tracked.onScroll}
                 scrollEventThrottle={16}
                 // Rows that land with no scroll still need a tick to be measured
                 // (scroll-tick-coverage guard).

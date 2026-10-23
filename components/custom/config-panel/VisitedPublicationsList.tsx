@@ -31,6 +31,7 @@ import { I18nManager, type ListRenderItem, RefreshControl, StyleSheet, View } fr
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
+import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 const COL_VISITS = 56;
 const COL_LAST = 84;
@@ -95,7 +96,8 @@ const VisitedPublicationsList: React.FC<Props> = ({
     const tabClearance = useTabBarClearance();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<VisitedPublication>>(null);
-    usePageScrollTarget(listRef);
+    const tracked = useTrackedScroll(scrollHandler);
+    usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const { t, i18n } = useTranslation();
     const c = useColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
@@ -217,7 +219,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     paddingBottom: listEnd,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler ?? notifyScrollTick}
+                onScroll={scrollHandler ? tracked.onScroll : notifyScrollTick}
                 onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
                 refreshControl={
