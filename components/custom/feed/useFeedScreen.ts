@@ -802,7 +802,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // `onRefreshSync` and not the scheduler: routing around it would skip
   // flushSkips + the partition-snapshot refresh, and a scheduler-level call can
   // be swallowed by conditions that only gate the SCHEDULED path.
-  const anchorLandRef = useRef<AnchorLand>({ issuedFor: null, prev: null });
+  const anchorLandRef = useRef<AnchorLand>({ issuedFor: null, prev: null, frames: 0 });
   usePageScrollTarget(listRef, {
     getOffset: () => lastOffsetShared.value,
     getAnchor: () => (anchorIdRef.current ? { id: anchorIdRef.current, delta: 0 } : null),
