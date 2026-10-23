@@ -37,6 +37,8 @@ import {
   type WeightBucket,
 } from './location-display';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 
 interface Props {
   readonly onBack: () => void;
@@ -63,6 +65,9 @@ export const WEATHER_UI_ENABLED = false;
  */
 const LocationsScreen: React.FC<Props> = ({ onBack }) => {
   const endClearance = useListEndClearance();
+  const listRef = useRef<ScrollView>(null);
+  const yRef = useRef(0);
+  const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
   const { t } = useTranslation();
   const colors = useColors();
   const [locations, setLocations] = useState<LocationModel[]>([]);
@@ -201,8 +206,14 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
       );
     }
     return (
+      <RestoreReveal hidden={restoreHidden}>
       <ScrollView
+        ref={listRef}
         testID="places-list"
+        onScroll={(e) => {
+          yRef.current = e.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance, gap: 12 }}
       >
@@ -210,10 +221,11 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
         <Group>{locations.map(renderPlace)}</Group>
         <Help>{t('locations.footnote')}</Help>
       </ScrollView>
+      </RestoreReveal>
     );
     // renderPlace reads only state already in these deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, locations, colors, t]);
+  }, [isLoading, locations, colors, t, restoreHidden]);
 
   return (
     <View style={{ flex: 1 }}>

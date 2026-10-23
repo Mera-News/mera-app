@@ -13,7 +13,9 @@ import type { PublicationPrefKind } from '@/lib/database/services/publication-pr
 import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import logger from '@/lib/logger';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import React, { useCallback, useMemo, useState } from 'react';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
 import PublicationPrefRow from './PublicationPrefRow';
@@ -44,6 +46,9 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
     const { t } = useTranslation();
     const { publications, scopes, isLoading } = useAdjustedSources();
     const endClearance = useListEndClearance();
+    const listRef = useRef<FlatList>(null);
+    const yRef = useRef(0);
+    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const [searching, setSearching] = useState(false);
     // Keyed on `pref.id`, never the label: a scope "India" and a publication
     // called "India" must not lock each other.
@@ -139,7 +144,13 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     <Spinner size="large" />
                 </Box>
             ) : (
+                <RestoreReveal hidden={restoreHidden}>
                 <FlatList
+                    ref={listRef}
+                    onScroll={(e) => {
+                        yRef.current = e.nativeEvent.contentOffset.y;
+                    }}
+                    scrollEventThrottle={16}
                     data={items}
                     keyExtractor={(item) => (item.type === 'scope' ? item.scope.group.key : item.pub.key)}
                     renderItem={renderItem}
@@ -169,6 +180,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                         ) : null
                     }
                 />
+                </RestoreReveal>
             )}
         </Box>
     );

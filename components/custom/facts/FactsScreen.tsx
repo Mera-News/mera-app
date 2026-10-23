@@ -17,6 +17,8 @@ import { ScrollView, View } from 'react-native';
 import { openFactPage } from './open-fact-page';
 import { sentenceCase } from './sentence-case';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import RestoreReveal from '@/components/custom/nav/RestoreReveal';
+import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 
 const FactRow: React.FC<{ readonly fact: Fact }> = ({ fact }) => {
     const { t } = useTranslation();
@@ -43,6 +45,9 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const facts = useHubFacts();
+    const listRef = React.useRef<ScrollView>(null);
+    const yRef = React.useRef(0);
+    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const addFact = () => openMeraChat({ kind: 'persona' });
 
     return (
@@ -60,10 +65,15 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
                     action={{ label: t('nav.learnMore'), onPress: () => openTutorial('facts'), testID: 'facts-empty-learn' }}
                 />
             ) : (
+                <RestoreReveal hidden={restoreHidden}>
                 <ScrollView
+                    ref={listRef}
                     testID="facts-list"
                     showsVerticalScrollIndicator={false}
-                    onScroll={notifyScrollTick}
+                    onScroll={(e) => {
+                        yRef.current = e.nativeEvent.contentOffset.y;
+                        notifyScrollTick();
+                    }}
                     onContentSizeChange={notifyScrollTick}
                     scrollEventThrottle={16}
                     contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: bottomInset, gap: 14 }}
@@ -97,6 +107,7 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
                         <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('facts.addFact')}</Text>
                     </Pressable>
                 </ScrollView>
+                </RestoreReveal>
             )}
         </View>
     );
