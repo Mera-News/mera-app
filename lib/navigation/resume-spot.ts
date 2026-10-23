@@ -54,7 +54,8 @@ export interface ResumeScrollTarget {
   scrollTo(y: number): void;
   /** Feed only: the row at the top of the viewport. */
   getAnchor?(): { id: string; delta: number } | null;
-  /** Feed only: bring row `id` to the top. 'missing': it is not in the list. */
+  /** Feed only: bring row `id` to the top. 'missing': it is not in the list.
+   *  `getOffset` may return NaN while there is no list to read yet. */
   scrollToAnchor?(id: string, delta: number): 'done' | 'pending' | 'missing';
 }
 
@@ -221,7 +222,9 @@ export function captureSpot(): ResumeSpot | null {
 }
 
 function scrollOf(target: ResumeScrollTarget): SpotScroll | null {
-  const y = Math.max(0, Math.round(target.getOffset()));
+  // NaN: the target has no list to read yet (TabPages before its page mounts).
+  const raw = target.getOffset();
+  const y = Number.isFinite(raw) ? Math.max(0, Math.round(raw)) : 0;
   const anchor = target.getAnchor?.() ?? null;
   if (anchor) return { y, anchorId: anchor.id, anchorDelta: Math.round(anchor.delta) };
   return y > 0 ? { y } : null;

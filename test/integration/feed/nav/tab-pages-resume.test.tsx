@@ -6,6 +6,7 @@ import React, { useRef } from 'react';
 
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import TabPages from '@/components/custom/nav/TabPages';
+import { resetPendingPage, setPendingPage } from '@/components/custom/nav/navigate-to-page';
 import { __resetResumeSpotForTests, type ResumeScrollTarget } from '@/lib/navigation/resume-spot';
 
 const mockNote = jest.fn();
@@ -21,8 +22,9 @@ jest.mock('@/lib/navigation/resume-spot', () => {
     },
   };
 });
+let mockFocused = true;
 jest.mock('@react-navigation/native', () => ({
-  useIsFocused: () => true,
+  useIsFocused: () => mockFocused,
   useNavigation: () => ({ isFocused: () => true }),
   useRoute: () => ({ key: 'library-1' }),
 }));
@@ -87,6 +89,26 @@ describe('TabPages resume spot', () => {
     mockTarget = null;
     scrolled.saved = [];
     scrolled.checks = [];
+    resetPendingPage();
+  });
+
+  it('does not land on the page showing while a restore still asks this tab for another page', () => {
+    // The tab takes a request only once focused; until then the first page shows.
+    mockFocused = false;
+    setPendingPage('checks' as never);
+    render(
+      <TabPages
+        tab="library"
+        pages={pages}
+        renderPage={({ pageId }) => <Page id={pageId} offset={pageId === 'saved' ? 120 : 900} />}
+      />,
+    );
+    expect(mockTarget!.getOffset()).toBeNaN();
+    mockTarget!.scrollTo(300);
+    expect(mockTarget!.scrollToAnchor!('row', 0)).toBe('pending');
+    expect(scrolled.saved).toEqual([]);
+    expect(scrolled.checks).toEqual([]);
+    mockFocused = true;
   });
 
   it('notes the active page and delegates the offset and landing to it, not to the last mounted page', () => {

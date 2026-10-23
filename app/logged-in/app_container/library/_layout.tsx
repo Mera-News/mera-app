@@ -12,7 +12,11 @@ export default function StackLayout() {
   const colors = useColors();
   // Lite: pushes and pops are instant; the edge swipe still pops (lib/motion-gate.ts).
   // A restore rebuilds the stacks with no animation.
-  const motion = useMotionAllowed() && !useRestoreInProgress();
+  // Both hooks run on every render: `a() && b()` skips b when a is false (a
+  // hook-order change the moment Lite flips).
+  const motionAllowed = useMotionAllowed();
+  const restoring = useRestoreInProgress();
+  const motion = motionAllowed && !restoring;
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>

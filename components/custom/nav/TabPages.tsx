@@ -47,14 +47,14 @@ import {
   reportHeaderBottom,
   reportSurface,
 } from './current-surface';
-import { consumePendingPage, usePendingPageRequest } from './navigate-to-page';
+import { consumePendingPage, usePendingPageRequest, usePendingPageStore } from './navigate-to-page';
 import PageExplainerSheet from './PageExplainerSheet';
 import RestoreReveal from './RestoreReveal';
 import PagePager from './PagePager';
 import { survivingPage } from './tab-swipe';
 import { PageScrollContext, retapTarget, scrollListToTop, type PageScrollTarget, type RegisterPageScroll } from './page-scroll';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
-import { pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
+import { pageMeta, tabOfPage, TAB_LABEL_KEYS, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
@@ -209,15 +209,21 @@ const TabPages: React.FC<TabPagesProps> = ({
 
   // ── The resume spot (lib/navigation/resume-spot.ts) ──
   // The tab's ONE target delegates to the ACTIVE page's registered list, read
-  // at call time; a page that has not registered yet is a no-op (the landing
-  // loop retries each frame).
+  // at call time. Not ready while a page request for this tab is still
+  // unconsumed (a restore asks for the page and this registers before the tab
+  // takes it: the landing would scroll the page that was showing) or while the
+  // page has no list yet: offset NaN, no scroll, so the landing loop retries.
   useEffect(() => {
     if (activeId) noteActivePage(tab, activeId);
   }, [tab, activeId]);
   useEffect(() => {
-    const current = () => scrollTargets.current.get(retap.current.activeId as PageId);
+    const current = () => {
+      const req = usePendingPageStore.getState().request;
+      if (req && tabOfPage(req.page) === tab) return undefined;
+      return scrollTargets.current.get(retap.current.activeId as PageId);
+    };
     const target: ResumeScrollTarget = {
-      getOffset: () => current()?.options.current?.getOffset?.() ?? 0,
+      getOffset: () => current()?.options.current?.getOffset?.() ?? Number.NaN,
       scrollTo: (y) => {
         const list = current()?.ref.current;
         if (list?.scrollToOffset) list.scrollToOffset({ offset: y, animated: false });
@@ -231,7 +237,7 @@ const TabPages: React.FC<TabPagesProps> = ({
       },
     };
     return registerScrollTarget(route.key, target);
-  }, [route.key]);
+  }, [route.key, tab]);
   const restoreHidden = useRestoreHidden(route.key);
   useEffect(() => {
     const own = navigation as unknown as TabNavLike;

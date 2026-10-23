@@ -17,7 +17,11 @@ export default function LoggedInLayout() {
   const colors = useColors();
   // Lite: every push and pop is instant (no motion, owner rule).
   // A restore rebuilds the stacks with no animation.
-  const motion = useMotionAllowed() && !useRestoreInProgress();
+  // Both hooks run on every render: `a() && b()` skips b when a is false (a
+  // hook-order change the moment Lite flips).
+  const motionAllowed = useMotionAllowed();
+  const restoring = useRestoreInProgress();
+  const motion = motionAllowed && !restoring;
 
   return (
     <View style={{ flex: 1 }}>
