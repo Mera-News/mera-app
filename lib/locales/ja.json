@@ -205,7 +205,6 @@
     "statsRead_one": "あなたは{{formatted}}件を読みました。",
     "statsRelevant_one": "{{formatted}}件が関連しており、",
     "loadingA11y": "フィードを読み込んでいます",
-    "translatingCaption": "翻訳中…",
     "reasonWritingA11y": "理由作成中",
     "findingStories": "あなたのストーリーを探しています",
     "findingStoriesBody": "準備ができ次第、ここに表示されます",

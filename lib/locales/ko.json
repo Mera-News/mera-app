@@ -205,7 +205,6 @@
     "statsRead_one": "{{formatted}}개를 읽으셨습니다.",
     "statsRelevant_one": "{{formatted}}개가 관련 있어 보이며,",
     "loadingA11y": "피드를 불러오는 중",
-    "translatingCaption": "번역 중…",
     "reasonWritingA11y": "이유 작성 중",
     "findingStories": "내 스토리를 찾는 중",
     "findingStoriesBody": "준비되는 대로 여기에 나타나요",

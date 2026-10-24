@@ -205,7 +205,6 @@
     "statsRead_one": "你已读过 {{formatted}} 篇。",
     "statsRelevant_one": "有 {{formatted}} 篇与你相关，",
     "loadingA11y": "正在加载你的动态",
-    "translatingCaption": "正在翻译…",
     "reasonWritingA11y": "正在撰写推荐理由",
     "findingStories": "正在为你寻找报道",
     "findingStoriesBody": "准备好后会立即显示在这里",

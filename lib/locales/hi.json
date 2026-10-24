@@ -205,7 +205,6 @@
     "statsRead_one": "और आपने {{formatted}} पढ़ा है।",
     "statsRead_other": "और आपने {{formatted}} पढ़े हैं।",
     "loadingA11y": "आपकी फ़ीड लोड हो रही है",
-    "translatingCaption": "अनुवाद हो रहा है…",
     "reasonWritingA11y": "कारण लिखा जा रहा है",
     "findingStories": "आपकी स्टोरीज़ ढूंढी जा रही हैं",
     "findingStoriesBody": "तैयार होते ही वे यहां दिखेंगी",

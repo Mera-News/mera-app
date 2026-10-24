@@ -205,7 +205,6 @@
     "statsRead_one": "且你已閱讀{{formatted}}篇。",
     "statsRelevant_one": "{{formatted}}篇看起來與你相關，",
     "loadingA11y": "正在載入你的動態",
-    "translatingCaption": "正在翻譯…",
     "reasonWritingA11y": "正在撰寫理由",
     "findingStories": "正在為你尋找報導",
     "findingStoriesBody": "準備好後會立即顯示在這裡",

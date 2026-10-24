@@ -205,7 +205,6 @@
     "statsRead_one": "und du hast {{formatted}} gelesen.",
     "statsRead_other": "und du hast {{formatted}} gelesen.",
     "loadingA11y": "Dein Feed wird geladen",
-    "translatingCaption": "Wird übersetzt…",
     "reasonWritingA11y": "Grund wird geschrieben",
     "findingStories": "Deine Geschichten werden gesucht",
     "findingStoriesBody": "Sie erscheinen hier, sobald sie fertig sind",

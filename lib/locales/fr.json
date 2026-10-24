@@ -210,7 +210,6 @@
     "statsRead_many": "et vous avez lu {{formatted}}.",
     "statsRead_other": "et vous avez lu {{formatted}}.",
     "loadingA11y": "Chargement de votre fil",
-    "translatingCaption": "Traduction…",
     "reasonWritingA11y": "rédaction d'une raison",
     "findingStories": "Recherche de vos actualités",
     "findingStoriesBody": "Elles s'affichent ici dès qu'elles sont prêtes",

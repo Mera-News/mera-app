@@ -1,17 +1,27 @@
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { Heading } from '@/components/ui/heading';
+import { Popover, PopoverBackdrop, PopoverBody, PopoverContent } from '@/components/ui/popover';
 import { Pressable } from '@/components/ui/pressable';
+import { ShimmerText, useSweepAllowed } from '@/components/ui/shimmer';
 import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/algorithms/language-codes';
-import { translateTextDetailed, useTranslationSuppressed } from '@/lib/translation-service';
-import { subscribeTranslationEpoch, visibilityPriority } from '@/lib/translation-queue';
+import { TYPE_SCALE, tokenFromClassName, type TypeToken } from '@/lib/algorithms/scale';
+import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
+import {
+    translateTextDetailed,
+    useTranslationBlocked,
+    useTranslationSuppressed,
+} from '@/lib/translation-service';
+import { visibilityPriority } from '@/lib/translation-queue';
 import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { useTextScale } from '@/lib/typography/TextScaleContext';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dimensions, View } from 'react-native';
+import { Dimensions, View, useWindowDimensions } from 'react-native';
 
 type MeasurableNode = {
     measureInWindow?: (
@@ -27,25 +37,25 @@ export interface TranslatableDisplayState {
     readonly showingOriginal: boolean;
     readonly displayedText: string;
     /**
-     * Canonical language code of `displayedText`. Not derivable from
-     * `showingOriginal`: the original-language text is also what renders while
-     * a translation is pending and whenever the OS translator fails, and
-     * `showingOriginal` is false in both of those cases.
+     * Canonical language code of `displayedText`: the original's when it is
+     * shown, the app language for a translation, 'en' for the English
+     * fallback (pending, failed, blocked).
      */
     readonly displayedLanguage: string | null;
+    /** The failed glyph is showing: a card root appends the failure to its label. */
+    readonly translationFailed: boolean;
 }
 
 interface TranslatableProps {
     /** Translatable source. Assumed to be English. */
     readonly text: string;
     /**
-     * Original-language version (DB-stored). Shown when:
-     *  - the per-card "Show original" toggle (see `showToggle`) is on, or
-     *  - the original language already matches the user's app language, or
-     *  - a translation is still pending (so users see readable content
-     *    immediately instead of English flashing through).
-     * Falls back to `text` when not provided (e.g. LLM-generated strings
-     * that only exist in English).
+     * Original-language version (DB-stored). Shown ONLY when the per-card
+     * "Show original" toggle (see `showToggle`) is on or the original language
+     * already matches the user's app language. Pending and failed translations
+     * show the English `text`, never this: a language the reader may not read
+     * is worse than the English we hold. Used as a last resort when `text` is
+     * empty.
      */
     readonly originalText?: string;
     /** BCP-47-ish code of `originalText`'s language (e.g. `hi`, `pt`). When
@@ -73,6 +83,11 @@ interface TranslatableProps {
      * share sheet) mirror the exact title variant the user is looking at.
      */
     readonly onDisplayChange?: (state: TranslatableDisplayState) => void;
+    /**
+     * Detail screen only: a machine-translated text ends with a plain,
+     * decorative translate glyph. Cards never pass it.
+     */
+    readonly showTranslatedGlyph?: boolean;
 }
 
 /** Loose match so `hi-IN` ≈ `hi`, `zh-Hans` ≈ `zh-CN`, etc. */
@@ -82,8 +97,143 @@ function languagesMatch(a: string | null | undefined, b: string | null | undefin
     return a.split('-')[0].toLowerCase() === b.split('-')[0].toLowerCase();
 }
 
-/** How far the untranslated text dims while its translation is in flight. */
+/** How far the untranslated text dims while its translation is in flight, when
+ *  the shimmer cannot run (Lite, Reduce Motion, screen not looked at). */
 const TRANSLATING_OPACITY = 0.6;
+
+/** The smallest touch frame iOS asks for. */
+const TOUCH_FRAME = 44;
+
+/** Layout keys that belong on a temporary wrapper View, not on the Text inside it. */
+const LAYOUT_STYLE_KEYS = new Set([
+    'flex', 'flexGrow', 'flexShrink', 'flexBasis', 'alignSelf',
+    'width', 'minWidth', 'maxWidth',
+    'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
+    'marginHorizontal', 'marginVertical', 'marginStart', 'marginEnd',
+]);
+const LAYOUT_CLASS_RE = /^-?(m[trblxyse]?-|flex-(1|auto|none|initial)$|grow|shrink|basis-|w-|min-w-|max-w-|self-)/;
+
+/** Splits a caller's class and style into the wrapper's layout and the Text's typography. */
+function splitLayout(className: string | undefined, style: Record<string, unknown> | undefined) {
+    const classes = (className ?? '').split(/\s+/).filter(Boolean);
+    const outerStyle: Record<string, unknown> = {};
+    const innerStyle: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(style ?? {})) (LAYOUT_STYLE_KEYS.has(k) ? outerStyle : innerStyle)[k] = v;
+    return {
+        outerClass: classes.filter((c) => LAYOUT_CLASS_RE.test(c)).join(' ') || undefined,
+        innerClass: classes.filter((c) => !LAYOUT_CLASS_RE.test(c)).join(' ') || undefined,
+        outerStyle,
+        innerStyle,
+    };
+}
+
+/**
+ * The glyph at the end of a text: failed (slashed, tappable, tooltip) or
+ * translated (plain, decorative). Its own 44pt frame is pulled back by
+ * negative margins to the glyph's box, so it never moves the line it ends.
+ */
+function EndGlyph({
+    kind,
+    fontPx,
+    boxHeight,
+    inCard,
+}: {
+    kind: 'failed' | 'translated';
+    fontPx: number;
+    boxHeight: number;
+    inCard: boolean;
+}) {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const { width: screenWidth } = useWindowDimensions();
+    const [open, setOpen] = useState(false);
+    const close = useCallback(() => setOpen(false), []);
+    const icon =
+        kind === 'failed' ? (
+            <MaterialCommunityIcons name="translate-off" size={fontPx} color={colors.ink3} />
+        ) : (
+            <MaterialIcons name="translate" size={fontPx} color={colors.ink3} />
+        );
+    const box = { width: fontPx, height: boxHeight, marginLeft: Math.round(fontPx * 0.3) };
+    if (kind === 'translated') {
+        return (
+            <View testID="translatable-translated" style={[box, { alignItems: 'center', justifyContent: 'center' }]} {...DECORATIVE_ICON_A11Y}>
+                {icon}
+            </View>
+        );
+    }
+    const label = t('feed.translationFailed');
+    return (
+        <View style={box}>
+            <Popover
+                isOpen={open}
+                onClose={close}
+                placement="top"
+                offset={6}
+                size="sm"
+                // VoiceOver cannot reach portalled popover content; a native modal is on top.
+                useRNModal
+                trigger={(triggerProps) => (
+                    <Pressable
+                        {...triggerProps}
+                        testID="translatable-failed"
+                        onPress={() => setOpen(true)}
+                        // A card speaks the failure in its root label, so the glyph is hidden there.
+                        {...(inCard
+                            ? DECORATIVE_ICON_A11Y
+                            : { accessibilityRole: 'button' as const, accessibilityLabel: label })}
+                        style={{
+                            width: TOUCH_FRAME,
+                            height: TOUCH_FRAME,
+                            marginHorizontal: (fontPx - TOUCH_FRAME) / 2,
+                            marginVertical: (boxHeight - TOUCH_FRAME) / 2,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <View {...DECORATIVE_ICON_A11Y}>{icon}</View>
+                    </Pressable>
+                )}
+            >
+                <PopoverBackdrop />
+                <PopoverContent style={{ maxWidth: screenWidth - 32 }}>
+                    <PopoverBody testID="translatable-failed-tooltip" onAccessibilityEscape={close}>
+                        <Text size="sm" className="text-ink">
+                            {label}
+                        </Text>
+                    </PopoverBody>
+                </PopoverContent>
+            </Popover>
+        </View>
+    );
+}
+
+/** The in-flight text: shimmer when motion may run, else the old static dim. */
+function TranslatingText({
+    renderCopy,
+    outerClass,
+    outerStyle,
+}: {
+    renderCopy: (extra?: Record<string, unknown>) => React.ReactNode;
+    outerClass?: string;
+    outerStyle: Record<string, unknown>;
+}) {
+    const sweep = useSweepAllowed();
+    return (
+        <View
+            testID="translatable-pending"
+            className={outerClass}
+            style={outerStyle}
+            accessibilityState={{ busy: true }}
+        >
+            {sweep ? (
+                <ShimmerText renderText={(color) => renderCopy({ color })} />
+            ) : (
+                renderCopy({ opacity: TRANSLATING_OPACITY })
+            )}
+        </View>
+    );
+}
 
 /** Buffer (in px) around the viewport used to pre-translate items that are
  *  just off-screen, so they don't flash untranslated when scrolled in. */
@@ -123,14 +273,18 @@ function stripUnkTokens(value: string): string {
  * Use this for dynamic server-generated text (news titles, AI responses, reasons).
  * For static UI strings (buttons, labels, settings), use `t()` directly.
  *
- * Layout behavior: this component renders a single Text/Heading element (no
- * wrapping View), so it drops into any parent layout exactly as a Text would.
+ * Layout behavior: one Text/Heading element, so it drops into any parent layout
+ * exactly as a Text would, EXCEPT while a translation is in flight (a View
+ * holding the shimmer) and when a clamped text failed (a row: Text, then the
+ * glyph as a sibling, so an ellipsis can never hide it). Those wrappers take
+ * the caller's layout props; typography stays on the Text. Never nest this
+ * inside another Text.
  *
  * Translation behavior:
- * 1. If the per-card "Show original" toggle is on → render `originalText ?? text`, no translation.
- * 2. Else if `appLanguage === 'en'` → render `text` as-is.
- * 3. Else → translate `text` → `appLanguage` via the iOS translator, cached globally.
- *    Translation is deferred until the view is within (or near) the viewport.
+ * 1. "Show original" toggled, or the original is already in the app language → the original.
+ * 2. A cached translation → the translation (it wins over any earlier failure).
+ * 3. Otherwise → the English `text` (pending, failed, blocked, English app).
+ *    Translation is asked for once the view is within (or near) the viewport.
  */
 const TranslatableDynamic: React.FC<TranslatableProps> = ({
     text,
@@ -145,9 +299,11 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     italic,
     showToggle = false,
     onDisplayChange,
+    showTranslatedGlyph = false,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
+    const textScale = useTextScale();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
 
     // Keep the latest callback in a ref so the notify-effect can depend only on
@@ -167,36 +323,32 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const originalIsTargetLang =
         !!originalText && languagesMatch(originalLanguage, appLanguage);
 
-    // Nothing will be translated into this language right now — either the OS
-    // translator has given up on it (the breaker) or it has not been verified
-    // yet and the native-call gate is shut (see lib/translation-service).
-    //
-    // Fall back SILENTLY to the server-side English — `text` is already
-    // title_en / description_en, so there is nothing to fetch and nothing to
-    // translate. Note this is ENGLISH, never the source language: an article
-    // in a language the reader does not speak, left untranslated, is worse
-    // than the English we already hold. The source language renders only when
-    // it IS the reader's language (`originalIsTargetLang`) or they asked for
-    // it (`effectiveShowOriginal`). No banner, no alert, no interruption: the
-    // affordance for the failed state is the red translate icon on the article
-    // meta row, and one prompt minted per language elsewhere.
-    const translationSuppressed = useTranslationSuppressed(appLanguage);
-
-    const needsTranslation =
+    // The reader should see this text in their language.
+    const wantsTranslation =
         !effectiveShowOriginal
         && !!appLanguage
         && appLanguage !== 'en'
-        && !originalIsTargetLang
-        && !translationSuppressed;
+        && !originalIsTargetLang;
+
+    // Nothing will be translated into this language right now: the OS
+    // translator has given up on it (the breaker) or it is not verified yet and
+    // the native-call gate is shut (see lib/translation-service). No request
+    // goes out; the English `text` shows. Only the breaker block is a failure
+    // the reader is told about (the glyph); an unverified language is not.
+    const translationSuppressed = useTranslationSuppressed(appLanguage);
+    const translationBlocked = useTranslationBlocked(appLanguage) != null;
+
+    const needsTranslation = wantsTranslation && !translationSuppressed;
 
     // Per-key subscription (NOT the whole cache Map). The store mutates the
     // cache in place and bumps `cacheVersion`, so zustand re-runs this selector
     // on every translation completion — but Object.is on the returned string
     // means only the node whose key just landed actually re-renders. Selecting
     // the whole Map here would re-render every mounted TranslatableDynamic on
-    // every translation anywhere (2+ per feed card).
+    // every translation anywhere (2+ per feed card). Read even while
+    // suppressed: a translation already held always wins.
     const cachedTranslation = useAppLanguageStore((s) =>
-        needsTranslation ? s.cache.get(translationCacheKey(text)) : undefined,
+        wantsTranslation ? s.cache.get(translationCacheKey(text)) : undefined,
     );
     // A request for THIS text is in flight (same per-key subscription shape as
     // above: a boolean, so only this node re-renders when it flips).
@@ -224,12 +376,12 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
      */
     const lastYRef = useRef(0);
     /**
-     * True when the last request was DROPPED by the route-epoch sweep rather
-     * than failing. See the epoch-subscription effect below for why the
-     * distinction is load-bearing.
+     * How the last request for this text ended, when it did not translate.
+     * 'failed' draws the glyph; 'dropped' (the route moved on before the OS was
+     * asked) is the queue working and draws nothing. Both re-ask, see below.
      */
-    const wasDroppedRef = useRef(false);
-    /** Bumped to re-run the fire-effect after a drop. */
+    const [lastOutcome, setLastOutcome] = useState<'failed' | 'dropped' | null>(null);
+    /** Bumped to re-run the fire-effect for a re-ask. */
     const [retryToken, setRetryToken] = useState(0);
 
     // Measure the node's window-space position and flip `isOnScreen` if visible.
@@ -264,8 +416,8 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     useEffect(() => {
         setIsOnScreen(false);
         setLocalShowOriginal(false);
+        setLastOutcome(null);
         firedRef.current = null;
-        wasDroppedRef.current = false;
         // RETRY LADDER, not a single shot. Under Fabric, `measureInWindow` on a
         // freshly-mounted (or freshly-recycled) FlatList cell can return without
         // ever invoking its callback — the node has no committed shadow-tree
@@ -298,34 +450,34 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // behind the picker is exactly the set of nodes that were gated.
     const wasSuppressedRef = useRef(translationSuppressed);
     useEffect(() => {
-        if (wasSuppressedRef.current && !translationSuppressed) firedRef.current = null;
+        if (wasSuppressedRef.current && !translationSuppressed) {
+            firedRef.current = null;
+            setLastOutcome(null);
+        }
         wasSuppressedRef.current = translationSuppressed;
     }, [translationSuppressed]);
 
-    // RECOVERY FROM A ROUTE-EPOCH DROP — this is not optional bookkeeping.
-    //
-    // `firedRef` latches on (text, language) and is cleared only when the text
-    // changes or suppression lifts. Neither happens on a drop. Tabs stay mounted
-    // in this navigator, so without this effect: scroll the Feed, tap a card
-    // (the epoch bump drops the queued titles), come back — and those titles
-    // render English for the rest of the session. That is a worse bug than the
-    // latency the drop was fixing.
-    //
-    // The retry is deliberately keyed to the NEXT epoch change rather than fired
-    // the instant the drop lands. The screen that was dropped is still mounted
-    // and still measures at its real coordinates underneath the pushed screen,
-    // so an immediate retry would re-enqueue it to compete with the screen the
-    // user is actually looking at. Waiting for the next route change means the
-    // natural "go back" gesture is what re-arms it.
+    // RE-ASK. `firedRef` latches on (text, language), and neither changes on a
+    // drop or a failure, so without this a dropped title (tap a card, the route
+    // sweep drops the queued titles, come back) stays English for the session.
+    // Gated on the reader looking at this text: an immediate retry from a
+    // screen still mounted under a pushed one would compete with the screen in
+    // front. A drop re-asks whenever the gate is open; a failure only on the
+    // gate's RISING edge, because the service answers an exhausted text with
+    // 'failed' at once and re-asking while the gate stays open would loop.
+    // The per-text retry budget lives in the service, not here.
+    const askGate = useIsFocusedSafe();
+    const prevGateRef = useRef(askGate);
     useEffect(() => {
-        if (!needsTranslation) return;
-        return subscribeTranslationEpoch(() => {
-            if (!wasDroppedRef.current) return;
-            wasDroppedRef.current = false;
+        const rose = askGate && !prevGateRef.current;
+        prevGateRef.current = askGate;
+        if (!askGate || !needsTranslation) return;
+        if (lastOutcome === 'dropped' || (lastOutcome === 'failed' && rose)) {
             firedRef.current = null;
+            setLastOutcome(null);
             setRetryToken((n) => n + 1);
-        });
-    }, [needsTranslation]);
+        }
+    }, [askGate, lastOutcome, needsTranslation]);
 
     // Fire the translation request once we're on screen and still need one.
     useEffect(() => {
@@ -363,11 +515,11 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         translateTextDetailed(text, appLanguage, {
             priority: visibilityPriority(lastYRef.current),
         }).then((result) => {
+            useAppLanguageStore.getState().removePending(text);
             if (useAppLanguageStore.getState().appLanguage !== requestedLanguage) {
                 // Answer for a language the reader has left. Drop it entirely —
                 // caching it would mislabel it (see above), and the node has
                 // already re-fired for the new language.
-                useAppLanguageStore.getState().removePending(text);
                 return;
             }
             if (result.status === 'ok' && result.text) {
@@ -375,19 +527,18 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                 return;
             }
             if (result.status === 'dropped') {
-                // NOT a failure — the route moved on before we ever asked the
-                // OS. Un-latch so the next epoch change can ask again, and say
-                // nothing: this is the queue working, not translation breaking.
-                wasDroppedRef.current = true;
-                useAppLanguageStore.getState().removePending(text);
+                setLastOutcome('dropped');
                 return;
             }
-            logger.warn('[TranslatableDynamic] Translation unavailable, falling back to original text', {
-                textPreview: text.slice(0, 20),
-                originalLanguage,
-                appLanguage,
-            });
-            useAppLanguageStore.getState().removePending(text);
+            if (result.status === 'failed') {
+                logger.warn('[TranslatableDynamic] Translation failed, showing English', {
+                    textPreview: text.slice(0, 20),
+                    originalLanguage,
+                    appLanguage,
+                });
+                setLastOutcome('failed');
+            }
+            // Anything else (no native attempt was made) is not this text's failure.
         });
     }, [
         needsTranslation,
@@ -401,113 +552,131 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
 
     // `displayText` and `displayedLanguage` are assigned together, branch by
     // branch — deriving the language separately afterwards would drift from
-    // whichever variant actually rendered. Where the fallback is
-    // `originalText ?? text`, the language is the original's ONLY if
-    // `originalText` exists; otherwise `text` rendered, and `text` is English
-    // by this app's design (title_en, title_en_internal_only, reason).
+    // whichever variant actually rendered.
     let displayText: string;
     let displayedLanguage: string | null;
     const originalLanguageCanonical = canonicalizeLanguageCode(originalLanguage);
-    if (effectiveShowOriginal || originalIsTargetLang) {
+    const showingOriginal = effectiveShowOriginal || originalIsTargetLang;
+    const translated = wantsTranslation && cachedTranslation != null;
+    if (showingOriginal) {
         // User asked for the original, or it's already in their language.
         displayText = originalText ?? text;
         displayedLanguage = originalText ? originalLanguageCanonical : 'en';
-    } else if (needsTranslation && cachedTranslation != null) {
-        // Machine-translated cache hit.
+    } else if (translated) {
         displayText = cachedTranslation;
         displayedLanguage = appLanguage;
-    } else if (needsTranslation) {
-        // Translation still pending — prefer the original-language version
-        // over the English source so we never flash English at users who
-        // picked a non-English app language.
-        displayText = originalText ?? text;
-        displayedLanguage = originalText ? originalLanguageCanonical : 'en';
-    } else {
-        // appLanguage === 'en' or no translation needed — show the English
-        // `text` (which for server-provided articles is the server-side
-        // English translation of the original).
+    } else if (text) {
+        // English: an English app, or the translation is pending, failed or
+        // blocked. Never the original here: see `originalText`.
         displayText = text;
         displayedLanguage = 'en';
+    } else {
+        displayText = originalText ?? '';
+        displayedLanguage = originalText ? originalLanguageCanonical : 'en';
     }
     displayText = stripUnkTokens(displayText);
 
-    // Whether the text on screen is the original-language variant (user toggled
-    // to it, or it's already in their app language).
-    const showingOriginal = effectiveShowOriginal || originalIsTargetLang;
+    // A cached translation always wins over an earlier failure.
+    const failed = wantsTranslation && !translated && (lastOutcome === 'failed' || translationBlocked);
 
     // Notify the parent (in an effect, never during render) whenever the
     // effective displayed text changes.
     useEffect(() => {
-        onDisplayChangeRef.current?.({ showingOriginal, displayedText: displayText, displayedLanguage });
-    }, [showingOriginal, displayText, displayedLanguage]);
+        onDisplayChangeRef.current?.({
+            showingOriginal,
+            displayedText: displayText,
+            displayedLanguage,
+            translationFailed: failed,
+        });
+    }, [showingOriginal, displayText, displayedLanguage, failed]);
 
     // Show the toggle button when: showToggle is on and there is an original to switch to.
     const showToggleButton = showToggle && !!originalText && !originalIsTargetLang;
 
-    // N9: the text on screen is about to be replaced by its translation. Dim it
-    // and say so inline, so the swap (and the re-wrap it can cause) reads as a
+    // The text on screen is about to be replaced by its translation: the
+    // shimmer says so, so the swap (and the re-wrap it can cause) reads as a
     // translation arriving rather than as the card changing under the reader.
-    // Inline, not a new row: this component must stay ONE Text node so it drops
-    // into any parent layout exactly as a Text would.
-    const translating =
-        needsTranslation && cachedTranslation == null && translationPending && !showToggleButton;
+    const translating = needsTranslation && !translated && translationPending;
 
-    // No glyph before translated text (owner: the 文A mark is gone
-    // everywhere); the detail screen's "Show original" toggle remains the one
-    // place that says a text is translated.
+    const glyph: 'failed' | 'translated' | null = failed
+        ? 'failed'
+        : translated && showTranslatedGlyph
+            ? 'translated'
+            : null;
+    // A clamped text (cards) puts the glyph beside it, where an ellipsis cannot hide it.
+    const clamped = numberOfLines != null;
+    const needsWrapper = translating || (glyph != null && clamped);
+    const layout = needsWrapper ? splitLayout(className, style) : null;
 
-    const content = (
-        <>
-            {displayText}
-            {translating ? (
-                <Text
-                    size="xs"
-                    testID="translatable-pending"
-                    style={{ color: colors.ink2, fontWeight: '400', fontStyle: 'normal' }}
-                >
-                    {'  '}
-                    {t('feed.translatingCaption')}
-                </Text>
-            ) : null}
-        </>
-    );
+    const token: TypeToken = tokenFromClassName(className) ?? (size === 'md' ? 'base' : size);
+    const step = TYPE_SCALE[token];
+    const fontPx = Math.round(step.fontSize * textScale);
+    const linePx = Math.round(step.lineHeight * textScale);
 
-    // Line height comes from the size token's class now (see the note above),
-    // so the caller's style is passed straight through. Dimmed while a
-    // translation is in flight (N9).
-    const mergedStyle = translating
-        ? [style ?? {}, { opacity: TRANSLATING_OPACITY }]
-        : (style ?? {});
+    // English in a non-English app: tell the screen reader, and keep Latin LTR in Arabic.
+    const englishInForeignApp = displayedLanguage === 'en' && !!appLanguage && appLanguage !== 'en';
 
-    const sharedProps = {
-        ref: setNodeRef,
-        onLayout: checkVisibility,
-        className,
-        style: mergedStyle,
-        numberOfLines,
-        bold,
-        italic,
-    };
-
-    const renderTextNode = (children: React.ReactNode) => {
+    const renderTextNode = (children: React.ReactNode, extra?: Record<string, unknown>, measured = true) => {
+        const baseStyle = layout ? layout.innerStyle : (style ?? {});
+        const props = {
+            ...(measured ? { ref: setNodeRef, onLayout: checkVisibility } : null),
+            className: layout ? layout.innerClass : className,
+            style: [
+                baseStyle,
+                englishInForeignApp ? { writingDirection: 'ltr' as const } : null,
+                extra ?? null,
+            ],
+            numberOfLines,
+            bold,
+            italic,
+            ...(englishInForeignApp ? { accessibilityLanguage: 'en' } : null),
+        };
         if (as === 'heading') {
             return (
-                <Heading size={size} {...sharedProps}>
+                <Heading size={size} {...props}>
                     {children}
                 </Heading>
             );
         }
         return (
-            <Text size={size} {...sharedProps}>
+            <Text size={size} {...props}>
                 {children}
             </Text>
         );
     };
 
+    let body: React.ReactNode;
+    if (translating && layout) {
+        body = (
+            <TranslatingText
+                outerClass={layout.outerClass}
+                outerStyle={layout.outerStyle}
+                renderCopy={(extra) => renderTextNode(displayText, extra, !extra?.color || extra.color === colors.ink2)}
+            />
+        );
+    } else if (glyph && layout) {
+        body = (
+            <View className={layout.outerClass} style={[{ flexDirection: 'row', alignItems: 'flex-end' }, layout.outerStyle]}>
+                {renderTextNode(displayText, { flexShrink: 1 })}
+                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={linePx} inCard />
+            </View>
+        );
+    } else if (glyph) {
+        // Unclamped (detail): inline at the end of the text's own last line.
+        body = renderTextNode(
+            <>
+                {displayText}
+                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={fontPx} inCard={false} />
+            </>,
+        );
+    } else {
+        body = renderTextNode(displayText);
+    }
+
     if (showToggleButton) {
         return (
             <View>
-                {renderTextNode(displayText)}
+                {body}
                 <Pressable
                     onPress={() => setLocalShowOriginal((v) => !v)}
                     style={{
@@ -532,7 +701,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         );
     }
 
-    return renderTextNode(content);
+    return body;
 };
 
 export default TranslatableDynamic;

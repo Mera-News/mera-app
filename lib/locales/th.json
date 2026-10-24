@@ -205,7 +205,6 @@
     "statsRead_one": "และคุณได้อ่าน {{formatted}}.",
     "statsRelevant_one": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
     "loadingA11y": "กำลังโหลดฟีดของคุณ",
-    "translatingCaption": "กำลังแปล…",
     "reasonWritingA11y": "กำลังเขียนเหตุผล",
     "findingStories": "กำลังหาเรื่องราวของคุณ",
     "findingStoriesBody": "เรื่องราวจะปรากฏที่นี่ทันทีที่พร้อม",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View, type DimensionValue, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
     cancelAnimation,
@@ -19,8 +19,8 @@ import { useColors } from '@/lib/theme/tokens';
  * sweeps across, 1.6 s linear, only after the first 200 ms, and never under
  * Reduce Motion, Lite, or while the screen is not being looked at.
  *
- * Two uses only: grey placeholders (`Shimmer`) and the "Updating your feed"
- * status title (`ShimmerText`). Never on the card note.
+ * Three uses only: grey placeholders (`Shimmer`), the "Updating your feed"
+ * status title and a text whose translation is in flight (`ShimmerText`).
  *
  * Both move a transform on the UI thread; nothing is redrawn per frame.
  */
@@ -49,7 +49,8 @@ function useSweep(on: boolean) {
     return t;
 }
 
-function useSweepAllowed(): boolean {
+/** Whether the sweep may run: motion allowed and the screen being looked at. */
+export function useSweepAllowed(): boolean {
     const motion = useMotionAllowed();
     const active = useAnimationsActive();
     return motion && active;
@@ -95,7 +96,10 @@ export function Shimmer({ width = '100%', height = 16, radius = 6, style }: Shim
 }
 
 export interface ShimmerTextProps {
-    children: string;
+    children?: string;
+    /** Draws each copy itself, in the colour given, so a caller keeps its own
+     *  Text or Heading (size, class, line clamp). Replaces `children`. */
+    renderText?: (color: string) => ReactNode;
     /** Font, size and layout. The colour is the kit's: ink2 under, ink in the light. */
     style?: StyleProp<TextStyle>;
     numberOfLines?: number;
@@ -111,7 +115,7 @@ export interface ShimmerTextProps {
  * ponytail: the band has hard edges (no mask library in the binary); a soft
  * edge needs masked-view, a native change.
  */
-export function ShimmerText({ children, style, numberOfLines, testID }: ShimmerTextProps) {
+export function ShimmerText({ children, renderText, style, numberOfLines, testID }: ShimmerTextProps) {
     const colors = useColors();
     const [w, setW] = useState(0);
     const allowed = useSweepAllowed();
@@ -119,9 +123,17 @@ export function ShimmerText({ children, style, numberOfLines, testID }: ShimmerT
     const band = w * BAND;
     const bandStyle = useAnimatedStyle(() => ({ transform: [{ translateX: -band + t.value * (w + band) }] }));
     const counterStyle = useAnimatedStyle(() => ({ transform: [{ translateX: band - t.value * (w + band) }] }));
+    const copy = (color: string) =>
+        renderText ? renderText(color) : (
+            <Text numberOfLines={numberOfLines} style={[style, { color }]}>
+                {children}
+            </Text>
+        );
 
     if (!allowed) {
-        return (
+        return renderText ? (
+            <View testID={testID}>{renderText(colors.ink)}</View>
+        ) : (
             <Text testID={testID} numberOfLines={numberOfLines} style={[style, { color: colors.ink }]}>
                 {children}
             </Text>
@@ -129,9 +141,7 @@ export function ShimmerText({ children, style, numberOfLines, testID }: ShimmerT
     }
     return (
         <View testID={testID} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
-            <Text numberOfLines={numberOfLines} style={[style, { color: colors.ink2 }]}>
-                {children}
-            </Text>
+            {copy(colors.ink2)}
             {w > 0 ? (
                 <Animated.View
                     pointerEvents="none"
@@ -139,11 +149,7 @@ export function ShimmerText({ children, style, numberOfLines, testID }: ShimmerT
                     importantForAccessibility="no-hide-descendants"
                     style={[styles.textBand, { width: band }, bandStyle]}
                 >
-                    <Animated.View style={[{ width: w }, counterStyle]}>
-                        <Text numberOfLines={numberOfLines} style={[style, { color: colors.ink }]}>
-                            {children}
-                        </Text>
-                    </Animated.View>
+                    <Animated.View style={[{ width: w }, counterStyle]}>{copy(colors.ink)}</Animated.View>
                 </Animated.View>
             ) : null}
         </View>

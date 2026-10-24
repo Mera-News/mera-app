@@ -215,7 +215,6 @@
     "statsRead_many": "и вы прочитали {{formatted}}.",
     "statsRead_other": "и вы прочитали {{formatted}}.",
     "loadingA11y": "Загружаем вашу ленту",
-    "translatingCaption": "Перевод…",
     "reasonWritingA11y": "пояснение пишется",
     "findingStories": "Подбираем ваши истории",
     "findingStoriesBody": "Они появятся здесь, как только будут готовы",
