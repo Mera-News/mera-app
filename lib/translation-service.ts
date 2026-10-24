@@ -559,7 +559,14 @@ function runOwedRetry(key: string): void {
     if (!entry?.owed || !(interest.get(key)! > 0) || !isTranslationQueueActive()) return;
     entry.owed = false;
     const [text, targetLangCode] = keyParts(key);
-    void translateTextDetailed(text, targetLangCode, { priority: RETRY_PRIORITY }).then((result) => {
+    // Epoch-exempt: a retry's gate is interest, checked again at dispatch, not
+    // the route. A route change (a pop) would drop it while the row stays
+    // visible, and with interest unchanged nothing would ask again.
+    void translateTextDetailed(text, targetLangCode, {
+        priority: RETRY_PRIORITY,
+        epochScoped: false,
+        onlyWhile: () => (interest.get(key) ?? 0) > 0,
+    }).then((result) => {
         if (result.status === 'ok' && result.text != null) deliverLate(text, targetLangCode, result.text);
         else if (result.status === 'dropped' || result.status === 'skipped') {
             // Not an attempt: still owed, for the next rise of interest, return to
@@ -1270,6 +1277,12 @@ export interface TranslateOptions {
      * for ordinary calls; the probe is exempt automatically.
      */
     readonly epochScoped?: boolean;
+    /**
+     * Checked at DISPATCH: when it answers false the call is not made and the
+     * caller gets 'dropped'. The service's own retries use it so that their
+     * gate is the reader's interest, not the route.
+     */
+    readonly onlyWhile?: () => boolean;
 }
 
 /**
@@ -1340,6 +1353,7 @@ export function translateTextDetailed(
         // A failure that lands while the app is away, or on a call that spanned
         // a background, says nothing about the text: iOS tears translation
         // sessions down on backgrounding. It is a drop, and it never counts.
+        if (options.onlyWhile && !options.onlyWhile()) return DROPPED;
         const generation = getTranslationBackgroundGeneration();
         const wasAway = (): boolean =>
             !isProbe
@@ -1490,7 +1504,7 @@ export function translateTextDetailed(
     const epoch = isProbe || options.epochScoped === false ? null : getTranslationEpoch();
     const priority = isProbe ? PROBE_PRIORITY : (options.priority ?? 0);
     const label = `${targetLangCode}:${text.slice(0, 16)}`;
-    const batchItem: BatchItem = { text, epoch, priority, label, task };
+    const batchItem: BatchItem = { text, epoch, priority, label, task, onlyWhile: options.onlyWhile };
     const batch: TranslationBatchSpec<BatchItem> | undefined =
         isProbe || textAttempts.get(textKey(text, targetLangCode))?.noBatch
             ? undefined
@@ -1539,6 +1553,7 @@ interface BatchItem {
     readonly priority: number;
     readonly label: string;
     readonly task: (ctx: TranslationTaskContext) => Promise<unknown>;
+    readonly onlyWhile?: () => boolean;
 }
 
 /**
@@ -1557,6 +1572,22 @@ interface BatchItem {
  * answer by key. A failure while the app is away drops them all.
  */
 async function runTranslationBatch(
+    targetLangCode: string,
+    timeoutMs: number,
+    items: readonly BatchItem[],
+    ctx: TranslationTaskContext,
+): Promise<unknown[]> {
+    // A member whose dispatch condition no longer holds (a retry nobody is
+    // looking at) is dropped here, and the rest still go as one call.
+    const live = items.filter((item) => !item.onlyWhile || item.onlyWhile());
+    const answers = live.length === 0 ? [] : await runLiveBatch(targetLangCode, timeoutMs, live, ctx);
+    return items.map((item) => {
+        const at = live.indexOf(item);
+        return at === -1 ? DROPPED : answers[at];
+    });
+}
+
+async function runLiveBatch(
     targetLangCode: string,
     timeoutMs: number,
     items: readonly BatchItem[],

@@ -880,6 +880,45 @@ describe('the service retries a failed text in the one queue', () => {
         release();
     });
 
+    it('a queued retry survives a route change and dispatches with no change of interest', async () => {
+        await failOnce('Kept');
+        const release = retainTranslationInterest('Kept', 'fr');
+        const head = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => head.promise);
+        await jest.advanceTimersByTimeAsync(29_000);
+        void translateTextDetailed('Head', 'fr');
+        await jest.advanceTimersByTimeAsync(1_000);
+        // The retry is queued behind the head; the reader pops a screen.
+        bumpTranslationEpoch('/logged-in/app_container/feed');
+        head.resolve({ translatedTexts: 'tête' });
+        await jest.advanceTimersByTimeAsync(0);
+        await jest.advanceTimersByTimeAsync(0);
+        expect(mockOnTranslateTask.mock.calls.map(([a]) => a.input)).toEqual(['Head', 'Kept']);
+        expect(sinkCache.get('Kept')).toBe('fr:Kept');
+        release();
+    });
+
+    it('a queued retry whose interest is gone by dispatch goes back to owed, and runs when interest returns', async () => {
+        await failOnce('Fickle', 'Other fail');
+        const release = retainTranslationInterest('Fickle', 'fr');
+        const head = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => head.promise);
+        await jest.advanceTimersByTimeAsync(29_000);
+        void translateTextDetailed('Head', 'fr');
+        await jest.advanceTimersByTimeAsync(1_000);
+        release();
+        head.resolve({ translatedTexts: 'tête' });
+        await jest.advanceTimersByTimeAsync(0);
+        await jest.advanceTimersByTimeAsync(0);
+        expect(mockOnTranslateTask.mock.calls.map(([a]) => a.input)).toEqual(['Head']);
+
+        const again = retainTranslationInterest('Fickle', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(mockOnTranslateTask.mock.calls.map(([a]) => a.input)).toEqual(['Head', 'Fickle']);
+        expect(sinkCache.get('Fickle')).toBe('fr:Fickle');
+        again();
+    });
+
     it('backgrounded at the due time, the retry runs once the app is active again', async () => {
         await failOnce('Away');
         const release = retainTranslationInterest('Away', 'fr');
