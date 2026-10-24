@@ -1,4 +1,5 @@
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import { usePageActive } from '@/components/custom/nav/page-active';
 import { Heading } from '@/components/ui/heading';
 import { Popover, PopoverBackdrop, PopoverBody, PopoverContent } from '@/components/ui/popover';
 import { Pressable } from '@/components/ui/pressable';
@@ -460,16 +461,17 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // RE-ASK. `firedRef` latches on (text, language), and neither changes on a
     // drop or a failure, so without this a dropped title (tap a card, the route
     // sweep drops the queued titles, come back) stays English for the session.
-    // Gated on the reader looking at this text: an immediate retry from a
-    // screen still mounted under a pushed one would compete with the screen in
-    // front. A drop re-asks whenever the gate is open; a failure only on the
+    // Gated on the reader looking at this text (screen focused, its page the
+    // visible one, app in front): a retry from a screen mounted under a pushed
+    // one, or from a warm neighbour page, would compete with what is in front. A drop re-asks whenever the gate is open; a failure only on the
     // gate's RISING edge, because the service answers an exhausted text with
     // 'failed' at once and re-asking while the gate stays open would loop.
     // The per-text retry budget lives in the service, not here.
     // Both hooks called unconditionally: the React Compiler build crashes on a short-circuited hook.
     const focused = useIsFocusedSafe();
+    const pageActive = usePageActive();
     const queueActive = useTranslationQueueActive();
-    const askGate = focused && queueActive;
+    const askGate = focused && pageActive && queueActive;
     const prevGateRef = useRef(askGate);
     useEffect(() => {
         const rose = askGate && !prevGateRef.current;

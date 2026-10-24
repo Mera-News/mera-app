@@ -6,6 +6,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
+import { PageActiveContext } from '@/components/custom/nav/page-active';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { initI18nEn } from '@/test/helpers';
 
@@ -253,6 +254,17 @@ describe('re-asking', () => {
         await screen.findByTestId('translatable-failed');
         await settle();
         expect(mockTranslate).toHaveBeenCalledTimes(2);
+    });
+
+    it('a dropped text on a warm neighbour page waits until its page is the visible one', async () => {
+        let first = true;
+        mockNextOutcome = () => (first ? ((first = false), Promise.resolve({ status: 'dropped' as const })) : new Promise(() => {}));
+        const view = render(<PageActiveContext.Provider value={false}>{detail()}</PageActiveContext.Provider>);
+        await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(1));
+        await settle();
+        expect(mockTranslate).toHaveBeenCalledTimes(1);
+        view.rerender(<PageActiveContext.Provider value>{detail()}</PageActiveContext.Provider>);
+        await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(2));
     });
 
     it('a dropped text asks again once the gate opens', async () => {
