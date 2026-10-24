@@ -714,26 +714,6 @@ export function getTranslationFailure(targetLangCode: string): TranslationFailur
     return blockedLanguages.get(targetLangCode) ?? null;
 }
 
-/**
- * Arm exactly ONE further attempt for a language, in response to a deliberate
- * user action. The counter is left one short of the threshold rather than
- * reset to zero, so a failed retry re-blocks immediately instead of re-arming
- * the loop: one tap, one attempt, one sheet at most.
- *
- * NOTE: on iOS this only helps a language that is already VERIFIED. Clearing
- * the block on an unverified one changes nothing on its own, because the gate
- * still refuses every caller but the probe — so the user-facing retry path is
- * {@link probeTranslationLanguage}, not this. Kept for the verified case and
- * for Android, where there is no gate.
- */
-export function armTranslationRetry(targetLangCode: string): void {
-    const blocked = blockedLanguages.get(targetLangCode);
-    if (!blocked || blocked.permanent) return;
-    blockedLanguages.delete(targetLangCode);
-    failureCounts.set(targetLangCode, failureThresholdFor(targetLangCode) - 1);
-    notifyAvailabilityChanged();
-}
-
 /** Full reset — kept for tests and for a hard "start over" only. */
 export function clearTranslationFailures(): void {
     const hadBlocked = blockedLanguages.size > 0;
@@ -1264,8 +1244,7 @@ export async function probeTranslationLanguage(
     // Leaving it merely counted would put the app back in the state the user
     // reported: no sheet, no translation, and no explanation.
     //
-    // It is not a latch: the next probe clears it before it runs, and
-    // armTranslationRetry still offers a single in-place retry.
+    // It is not a latch: the next probe clears it before it runs.
     blockLanguage(targetLangCode, probeErrors.get(targetLangCode) ?? null, false);
     return probeTimedOut.get(targetLangCode) ? 'timeout' : 'failed';
 }

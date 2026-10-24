@@ -28,7 +28,6 @@ import {
     SUPPORTED_LANGUAGES,
     translateText,
     translateTexts,
-    armTranslationRetry,
     canTranslateIntoLanguage,
     clearTranslationFailures,
     clearTranslationFailuresFor,
@@ -841,41 +840,6 @@ describe('translation availability breaker', () => {
         mockOnTranslateTask.mockReset();
     }
 
-    it('armTranslationRetry allows exactly ONE attempt, then re-blocks', async () => {
-        await blockLanguage('de');
-
-        armTranslationRetry('de');
-        expect(isTranslationBlocked('de')).toBe(false);
-
-        mockOnTranslateTask.mockRejectedValue(new Error('still failing'));
-        const promises = [
-            translateText('a', 'de'),
-            translateText('b', 'de'),
-            translateText('c', 'de'),
-        ];
-        await jest.runAllTimersAsync();
-        await Promise.all(promises);
-
-        // One tap, one translateText — a failed retry must not re-arm the
-        // loop. A non-cancellation error is not retried, so that single
-        // attempt is one native call and then re-blocks; no sheet can appear
-        // for a language whose assets are installed.
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
-        expect(isTranslationBlocked('de')).toBe(true);
-    });
-
-    it('a successful retry unblocks the language for good', async () => {
-        await blockLanguage('de');
-
-        armTranslationRetry('de');
-        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Hallo' });
-        const p = translateText('a', 'de');
-        await jest.runAllTimersAsync();
-
-        expect(await p).toBe('Hallo');
-        expect(isTranslationBlocked('de')).toBe(false);
-    });
-
     it('clearTranslationFailures resets everything', async () => {
         await blockLanguage('de');
         clearTranslationFailures();
@@ -905,15 +869,6 @@ describe('translation availability breaker', () => {
         expect(await p).toBeNull();
         expect(mockOnTranslateTask).not.toHaveBeenCalled();
         expect(getTranslationFailure('sw')?.permanent).toBe(true);
-    });
-
-    it('refuses to arm a retry for a permanently unsupported language', async () => {
-        const p = translateText('Hello', 'sw');
-        await jest.runAllTimersAsync();
-        await p;
-
-        armTranslationRetry('sw');
-        expect(isTranslationBlocked('sw')).toBe(true);
     });
 });
 
