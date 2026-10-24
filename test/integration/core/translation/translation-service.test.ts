@@ -746,10 +746,12 @@ describe('translation availability breaker', () => {
 
         expect(results.every((r) => r === null)).toBe(true);
         expect(isTranslationBlocked('de')).toBe(true);
-        // Each translateText spends the full retry ladder before it counts as
+        // The first headline goes alone; the other 39 go out in five failing
+        // batches (8, 8, 8, 8, 7), which count nothing, and come back as
+        // singles. Each single spends the full retry ladder before it counts as
         // one failure, and the language blocks after the verified threshold.
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(
-            VERIFIED_TRANSLATION_FAILURE_THRESHOLD * 4,
+            VERIFIED_TRANSLATION_FAILURE_THRESHOLD * 4 + 5,
         );
     });
 
@@ -1071,8 +1073,9 @@ describe('translateTextDetailed + the route epoch', () => {
 
         const order: string[] = [];
         mockOnTranslateTask.mockImplementation((args: any) => {
-            order.push(args.input);
-            return Promise.resolve({ translatedTexts: 'x' });
+            // Both queued behind the head, so they go as one keyed batch, in priority order.
+            order.push(...Object.values(args.input as Record<string, string>));
+            return Promise.resolve({ translatedTexts: { 0: 'x', 1: 'y' } });
         });
         // Enqueued bottom-first on purpose: pure FIFO would translate the text
         // the reader has scrolled past before the one under their thumb.

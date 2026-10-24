@@ -30,13 +30,29 @@
 //     pure arrival order, so the text nearest the top of the viewport goes
 //     first. See {@link visibilityPriority}.
 //
-//  3. CONCURRENCY stays at ONE. See {@link TRANSLATION_CONCURRENCY}.
+//  3. CONCURRENCY stays at ONE. See {@link TRANSLATION_CONCURRENCY}. The slot
+//     is held past a task's answer while its abandoned native call is still
+//     running (`holdSlotUntil`; the service sets the ceiling).
+//
+//  4. BATCHING. When the slot frees, the head item takes up to
+//     TRANSLATION_BATCH_MAX queued items with the same batch key (the service
+//     keys by target language), in priority order and under
+//     TRANSLATION_BATCH_MAX_CHARS, into ONE task. There is no waiting window:
+//     a batch forms only from what queued behind the slot. The probe never
+//     batches. TRANSLATION_BATCH_MAX = 1 turns it off.
+//
+//  5. THE APP AWAY. Inactive holds dispatch; background drops everything but
+//     the probe; active resumes and bumps the epoch if anything was dropped.
+//     See setAppStateSource below.
+//
+// Page changes the reader makes (TabPages) bump the epoch like a route change.
 //
 // A dropped item resolves with {@link DROPPED} — never rejects, never throws.
 // Callers MUST distinguish it from a failure: a failure means "the OS could not
 // translate this", a drop means "we chose not to ask yet", and a caller that
 // conflates them will mark the text permanently un-translatable for the
-// session (see TranslatableDynamic's `firedRef`).
+// session. A node re-asks a dropped text once it is visible again, the app is
+// active (useTranslationQueueActive) and its page is the visible one.
 
 import { useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
@@ -113,8 +129,55 @@ interface PendingItem {
     readonly priority: number;
     readonly label: string;
     readonly run: (ctx: TranslationTaskContext) => Promise<unknown>;
+    readonly batch?: TranslationBatchSpec<unknown>;
     readonly resolve: (value: unknown) => void;
     readonly reject: (error: unknown) => void;
+}
+
+/**
+ * Most items one native call may carry, and most characters across them.
+ * `TRANSLATION_BATCH_MAX = 1` turns batching off entirely: every item then runs
+ * its own task, exactly as before batching existed. That is the revert switch.
+ */
+export const TRANSLATION_BATCH_MAX = 8;
+export const TRANSLATION_BATCH_MAX_CHARS = 1500;
+let batchMax = TRANSLATION_BATCH_MAX;
+
+/** Test seam for the revert switch. */
+export function __setTranslationBatchMaxForTests(max: number): void {
+    batchMax = max;
+}
+
+/**
+ * How an item may share a native call. Items with the same `key` batch
+ * together; the head item's `run` gets every member's `payload` in dispatch
+ * order and must answer an array aligned to it (a member's answer may itself
+ * be a promise, e.g. the member re-queued alone).
+ */
+export interface TranslationBatchSpec<P> {
+    readonly key: string;
+    readonly chars: number;
+    readonly payload: P;
+    readonly run: (payloads: P[], ctx: TranslationTaskContext) => Promise<unknown[]>;
+}
+
+const byDispatchOrder = (a: PendingItem, b: PendingItem): number =>
+    a.priority - b.priority || a.seq - b.seq;
+
+/** The head plus every queued item that may ride with it, removed from the queue. */
+function takeBatch(head: PendingItem): PendingItem[] {
+    const spec = head.batch;
+    if (!spec || batchMax <= 1) return [head];
+    const group = [head];
+    let chars = spec.chars;
+    for (const item of pending.filter((p) => p.batch?.key === spec.key).sort(byDispatchOrder)) {
+        if (group.length >= batchMax) break;
+        if (chars + item.batch!.chars > TRANSLATION_BATCH_MAX_CHARS) continue;
+        chars += item.batch!.chars;
+        group.push(item);
+    }
+    if (group.length > 1) pending = pending.filter((p) => !group.includes(p));
+    return group;
 }
 
 export interface TranslationQueueStats {
@@ -199,6 +262,8 @@ export interface EnqueueOptions {
     readonly priority?: number;
     /** Diagnostic only. */
     readonly label?: string;
+    /** Lets this item share one native call with queued items of the same key. */
+    readonly batch?: TranslationBatchSpec<any>;
 }
 
 /** Index of the next item to dispatch: lowest priority, then lowest seq. */
@@ -241,12 +306,14 @@ function pump(): void {
         const index = nextIndex();
         if (index === -1) return;
         const [item] = pending.splice(index, 1);
+        const group = takeBatch(item);
         inFlight += 1;
-        dispatchedCount += 1;
+        dispatchedCount += group.length;
         logger.debug('[TranslationQueue] Dispatch', {
             label: item.label,
             epoch: item.epoch,
             priority: item.priority,
+            batch: group.length,
             pending: pending.length,
         });
         const holds: Promise<unknown>[] = [];
@@ -257,14 +324,23 @@ function pump(): void {
         };
         let call: Promise<unknown>;
         try {
-            call = Promise.resolve(item.run(ctx));
+            call = group.length === 1
+                ? Promise.resolve(item.run(ctx))
+                : Promise.resolve(item.batch!.run(group.map((g) => g.batch!.payload), ctx));
         } catch (err) {
             call = Promise.reject(err);
         }
-        call.then(item.resolve, item.reject);
+        if (group.length === 1) {
+            call.then(item.resolve, item.reject);
+        } else {
+            call.then(
+                (answers) => group.forEach((g, i) => g.resolve((answers as unknown[])[i])),
+                (err) => group.forEach((g) => g.reject(err)),
+            );
+        }
         void call.then(noop, noop).then(() => Promise.all(holds)).then(() => {
             inFlight -= 1;
-            completedCount += 1;
+            completedCount += group.length;
             logger.debug('[TranslationQueue] Complete', {
                 label: item.label,
                 epoch: item.epoch,
@@ -296,6 +372,7 @@ export function enqueueTranslationTask<T>(
             priority,
             label,
             run: run as (ctx: TranslationTaskContext) => Promise<unknown>,
+            batch: options.batch,
             resolve: resolve as (value: unknown) => void,
             reject,
         });
@@ -414,6 +491,7 @@ export function __resetTranslationQueueForTests(): void {
     backgroundGeneration = 0;
     droppedWhileAway = false;
     epoch = 0;
+    batchMax = TRANSLATION_BATCH_MAX;
     seqCounter = 0;
     inFlight = 0;
     enqueuedCount = 0;

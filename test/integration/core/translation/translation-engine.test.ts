@@ -24,9 +24,13 @@ import {
     __resetTranslationStateForTests,
 } from '@/lib/translation-service';
 import {
+    __setTranslationBatchMaxForTests,
+    bumpTranslationEpoch,
     getTranslationEpoch,
     isTranslationQueueActive,
     setAppStateSource,
+    TRANSLATION_BATCH_MAX,
+    TRANSLATION_BATCH_MAX_CHARS,
     useTranslationQueueActive,
 } from '@/lib/translation-queue';
 import { act, renderHook } from '@testing-library/react-native';
@@ -323,5 +327,273 @@ describe('the app leaving the foreground', () => {
         expect(result.current).toBe(false);
         act(() => emit('active'));
         expect(result.current).toBe(true);
+    });
+});
+
+describe('batching a screenful into one native call', () => {
+    /**
+     * A fake native module shaped like the real bridges: a string answers a string; a keyed object
+     * answers by key, but with its keys written in REVERSE completion order; an array answers in a
+     * shuffled order (the Android bridge appends in completion order).
+     */
+    const fr = (t: string) => `fr:${t}`;
+    function nativeLikeTheBridges(args: { input: unknown }): Promise<{ translatedTexts: unknown }> {
+        const { input } = args;
+        if (typeof input === 'string') return Promise.resolve({ translatedTexts: fr(input) });
+        if (Array.isArray(input)) return Promise.resolve({ translatedTexts: [...input].reverse().map(fr) });
+        const out: Record<string, string> = {};
+        for (const key of Object.keys(input as object).reverse()) out[key] = fr((input as Record<string, string>)[key]);
+        return Promise.resolve({ translatedTexts: out });
+    }
+
+    /** Hold the one slot so everything asked next is still queued when it frees. */
+    async function holdSlot(): Promise<() => void> {
+        const head = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => head.promise);
+        void translateTextDetailed('Head', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        return () => head.resolve({ translatedTexts: 'tête' });
+    }
+
+    const batchCalls = () => mockOnTranslateTask.mock.calls.filter(([a]) => typeof a.input !== 'string');
+    const singleCalls = () => mockOnTranslateTask.mock.calls.filter(([a]) => typeof a.input === 'string');
+
+    beforeEach(async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockImplementation(nativeLikeTheBridges);
+    });
+
+    afterEach(() => {
+        __setTranslationBatchMaxForTests(TRANSLATION_BATCH_MAX);
+    });
+
+    it('sends 8 queued texts as ONE keyed call, in priority order, and gives each its own answer', async () => {
+        const release = await holdSlot();
+        const texts = Array.from({ length: 8 }, (_, i) => `Title ${i}`);
+        // Asked bottom first: priority, not arrival, orders the batch.
+        const results = texts.map((t, i) => translateTextDetailed(t, 'fr', { priority: 800 - i * 100 }));
+        release();
+        await jest.runAllTimersAsync();
+
+        expect(batchCalls()).toHaveLength(1);
+        const input = batchCalls()[0][0].input as Record<string, string>;
+        expect(Array.isArray(input)).toBe(false);
+        expect(Object.keys(input)).toEqual(['0', '1', '2', '3', '4', '5', '6', '7']);
+        expect(input['0']).toBe('Title 7');
+        for (let i = 0; i < 8; i++) {
+            expect(await results[i]).toEqual({ status: 'ok', text: fr(texts[i]) });
+        }
+    });
+
+    it('a failed batch sends each text alone, and only the bad text fails', async () => {
+        mockOnTranslateTask.mockImplementation((args: { input: unknown }) => {
+            if (typeof args.input !== 'string') return Promise.reject(new Error('Unable to Translate'));
+            if (args.input === 'Bad') return Promise.reject(new Error('Unable to Translate'));
+            return nativeLikeTheBridges(args);
+        });
+        const release = await holdSlot();
+        const texts = ['A', 'B', 'Bad', 'C'];
+        const results = texts.map((t) => translateTextDetailed(t, 'fr'));
+        release();
+        await jest.runAllTimersAsync();
+
+        expect(await results[0]).toEqual({ status: 'ok', text: 'fr:A' });
+        expect(await results[2]).toEqual({ status: 'failed', text: null });
+        expect(await results[3]).toEqual({ status: 'ok', text: 'fr:C' });
+        expect(batchCalls()).toHaveLength(1);
+        expect(isTranslationBlocked('fr')).toBe(false);
+
+        // A text that failed in a batch is never batched again.
+        mockOnTranslateTask.mockClear();
+        const release2 = await holdSlot();
+        const again = [translateTextDetailed('Bad', 'fr'), translateTextDetailed('D', 'fr'), translateTextDetailed('E', 'fr')];
+        release2();
+        await jest.runAllTimersAsync();
+        await Promise.all(again);
+        expect(singleCalls().map(([a]) => a.input)).toContain('Bad');
+        expect(batchCalls().map(([a]) => Object.values(a.input))).toEqual([['D', 'E']]);
+    });
+
+    it('a missing key sends just that text again alone', async () => {
+        mockOnTranslateTask.mockImplementation((args: { input: unknown }) => {
+            if (typeof args.input === 'string') return nativeLikeTheBridges(args);
+            return Promise.resolve({ translatedTexts: { 0: 'fr:A' } });
+        });
+        const release = await holdSlot();
+        const results = [translateTextDetailed('A', 'fr'), translateTextDetailed('B', 'fr')];
+        release();
+        await jest.runAllTimersAsync();
+        expect(await results[0]).toEqual({ status: 'ok', text: 'fr:A' });
+        expect(await results[1]).toEqual({ status: 'ok', text: 'fr:B' });
+        expect(singleCalls().map(([a]) => a.input)).toEqual(['Head', 'B']);
+    });
+
+    it('a batch that times out fails without a retry, keeps the breaker closed, and every late answer lands', async () => {
+        const sink = jest.fn();
+        setLateTranslationSink(sink);
+        const slow = deferredNative();
+        mockOnTranslateTask.mockImplementation((args: { input: unknown }) =>
+            typeof args.input === 'string' ? nativeLikeTheBridges(args) : slow.promise);
+        const release = await holdSlot();
+        const texts = Array.from({ length: 8 }, (_, i) => `Slow ${i}`);
+        const results = texts.map((t) => translateTextDetailed(t, 'fr'));
+        release();
+        await jest.advanceTimersByTimeAsync(20_100);
+        for (const r of results) expect(await r).toEqual({ status: 'failed', text: null });
+        expect(batchCalls()).toHaveLength(1);
+        expect(isTranslationBlocked('fr')).toBe(false);
+
+        const answers: Record<string, string> = {};
+        for (let i = 7; i >= 0; i--) answers[String(i)] = `fr:Slow ${i}`;
+        slow.resolve({ translatedTexts: answers });
+        await jest.advanceTimersByTimeAsync(0);
+        for (const t of texts) expect(sink).toHaveBeenCalledWith(t, 'fr', `fr:${t}`);
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+
+    it('caps a batch at TRANSLATION_BATCH_MAX_CHARS', async () => {
+        const release = await holdSlot();
+        const long = (c: string) => c.repeat(700);
+        void translateTextDetailed(long('a'), 'fr');
+        void translateTextDetailed(long('b'), 'fr');
+        void translateTextDetailed(long('c'), 'fr');
+        release();
+        await jest.runAllTimersAsync();
+        // 700 + 700 fits under 1500; the third would not, so it goes next, alone.
+        expect(batchCalls()).toHaveLength(1);
+        expect(Object.keys(batchCalls()[0][0].input)).toHaveLength(2);
+        expect(singleCalls().map(([a]) => a.input)).toEqual(['Head', long('c')]);
+        expect(TRANSLATION_BATCH_MAX_CHARS).toBe(1500);
+    });
+
+    it('the same text asked twice joins one call', async () => {
+        const release = await holdSlot();
+        const first = translateTextDetailed('Twice', 'fr');
+        const second = translateTextDetailed('Twice', 'fr');
+        void translateTextDetailed('Other', 'fr');
+        release();
+        await jest.runAllTimersAsync();
+        expect(await first).toEqual({ status: 'ok', text: 'fr:Twice' });
+        expect(await second).toEqual({ status: 'ok', text: 'fr:Twice' });
+        expect(Object.values(batchCalls()[0][0].input)).toEqual(['Twice', 'Other']);
+    });
+
+    it('never batches the probe', async () => {
+        const release = await holdSlot();
+        mockOnTranslateTask.mockImplementation(nativeLikeTheBridges);
+        const probe = probeTranslationLanguage('fr');
+        const a = translateTextDetailed('A', 'fr');
+        const b = translateTextDetailed('B', 'fr');
+        release();
+        await jest.runAllTimersAsync();
+        expect(await probe).toBe('success');
+        await Promise.all([a, b]);
+        expect(singleCalls().map(([x]) => x.input)).toEqual(['Head', 'Hello']);
+        expect(batchCalls().map(([x]) => Object.values(x.input))).toEqual([['A', 'B']]);
+    });
+
+    it('TRANSLATION_BATCH_MAX = 1 turns batching fully off', async () => {
+        __setTranslationBatchMaxForTests(1);
+        const release = await holdSlot();
+        const results = ['A', 'B', 'C'].map((t) => translateTextDetailed(t, 'fr'));
+        release();
+        await jest.runAllTimersAsync();
+        expect(batchCalls()).toHaveLength(0);
+        expect(singleCalls().map(([a]) => a.input)).toEqual(['Head', 'A', 'B', 'C']);
+        expect(await results[1]).toEqual({ status: 'ok', text: 'fr:B' });
+    });
+});
+
+// The invariant the reverted visible-first rewrite broke on device: whatever the reader does, every
+// node on screen ends translated. Nodes follow the render-surface contract: show the cache if it has
+// the text, else ask; re-ask a 'dropped' text (or a first 'failed' one) only while the app is active,
+// the node's screen is on top and its page is the visible one.
+describe('every visible node ends translated', () => {
+    it('after swipes, a background, a route push and pop', async () => {
+        await openGate('fr');
+        let emit: (mode: string) => void = () => {};
+        setAppStateSource({
+            currentState: 'active',
+            addEventListener: (_t, fn) => {
+                emit = fn;
+                return { remove: () => { emit = () => {}; } };
+            },
+        });
+        const cache = new Map<string, string>();
+        setLateTranslationSink((text, _lang, translated) => cache.set(text, translated));
+
+        // A native module that answers keyed batches out of order and is slow on every 7th call.
+        let calls = 0;
+        mockOnTranslateTask.mockImplementation(({ input }: { input: unknown }) => {
+            calls += 1;
+            const answer = typeof input === 'string'
+                ? `fr:${input}`
+                : Object.fromEntries(Object.entries(input as Record<string, string>).reverse().map(([k, v]) => [k, `fr:${v}`]));
+            // Every third batch fails outright, so its texts must go again alone.
+            if (typeof input !== 'string' && calls % 3 === 0) return Promise.reject(new Error('Unable to Translate'));
+            const delay = calls % 7 === 0 ? 25_000 : 300;
+            return new Promise((r) => setTimeout(() => r({ translatedTexts: answer }), delay));
+        });
+
+        type Screen = 'tabs' | 'detail';
+        const ui = { top: 'tabs' as Screen, page: 'feed' };
+        const nodes = [
+            ...Array.from({ length: 12 }, (_, i) => ({ text: `Feed ${i}`, screen: 'tabs' as Screen, page: 'feed' })),
+            ...Array.from({ length: 6 }, (_, i) => ({ text: `Story ${i}`, screen: 'tabs' as Screen, page: 'stories' })),
+            ...Array.from({ length: 4 }, (_, i) => ({ text: `Detail ${i}`, screen: 'detail' as Screen, page: 'detail' })),
+        ].map((n, i) => ({ ...n, y: i * 50, asking: false, failedOnce: false }));
+        const visible = (n: (typeof nodes)[number]) =>
+            n.screen === ui.top && (n.screen === 'detail' || n.page === ui.page);
+        const canAsk = (n: (typeof nodes)[number]) => isTranslationQueueActive() && visible(n);
+
+        function ask(n: (typeof nodes)[number]): void {
+            if (cache.has(n.text) || n.asking || !canAsk(n)) return;
+            n.asking = true;
+            void translateTextDetailed(n.text, 'fr', { priority: n.y }).then((r) => {
+                n.asking = false;
+                if (r.status === 'ok') cache.set(n.text, r.text!);
+                else if (r.status === 'dropped') ask(n);
+                else if (r.status === 'failed' && !n.failedOnce) {
+                    n.failedOnce = true;
+                    ask(n);
+                }
+            });
+        }
+        const askAll = () => nodes.forEach(ask);
+
+        askAll();
+        await jest.advanceTimersByTimeAsync(400);
+        // Swipe to Stories (TabPages' pick), then the app goes away mid-flight and comes back.
+        ui.page = 'stories';
+        bumpTranslationEpoch('page:stories');
+        askAll();
+        await jest.advanceTimersByTimeAsync(100);
+        emit('background');
+        await jest.advanceTimersByTimeAsync(2_000);
+        emit('active');
+        askAll();
+        await jest.advanceTimersByTimeAsync(200);
+        // Push a story, then pop back.
+        ui.top = 'detail';
+        bumpTranslationEpoch('/logged-in/news-detail/1');
+        askAll();
+        await jest.advanceTimersByTimeAsync(500);
+        ui.top = 'tabs';
+        bumpTranslationEpoch('/logged-in/app_container/feed');
+        askAll();
+        // Swipe back to the Feed.
+        await jest.advanceTimersByTimeAsync(100);
+        ui.page = 'feed';
+        bumpTranslationEpoch('page:feed');
+        askAll();
+        await jest.runAllTimersAsync();
+        // A node that timed out reads its late answer from the cache on its next render.
+        askAll();
+        await jest.runAllTimersAsync();
+
+        const shown = nodes.filter(visible);
+        expect(shown).toHaveLength(12);
+        for (const n of shown) expect(cache.get(n.text)).toBe(`fr:${n.text}`);
+        expect(isTranslationBlocked('fr')).toBe(false);
     });
 });
