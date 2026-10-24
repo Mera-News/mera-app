@@ -749,10 +749,10 @@ describe('translation availability breaker', () => {
         // batches (8, 8, 8, 8, 7), which count nothing, and come back as
         // singles. A non-cancellation error is not retried, so each single is
         // one call and one failure, and the language blocks after the
-        // verified threshold. Running every timer also runs the one quiet
-        // re-verify 5 minutes on, which fails too and leaves it blocked.
+        // verified threshold. Running every timer also runs the three quiet
+        // re-verifies (5, 15, 60 min on), which fail too and leave it blocked.
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(
-            VERIFIED_TRANSLATION_FAILURE_THRESHOLD + 5 + 1,
+            VERIFIED_TRANSLATION_FAILURE_THRESHOLD + 5 + 3,
         );
     });
 

@@ -27,6 +27,7 @@ import {
     isTextFailureExhausted,
     TRANSLATION_RETRY_BACKOFF_MS,
     VERIFIED_TRANSLATION_FAILURE_THRESHOLD,
+    TRANSLATION_REVERIFY_BACKOFF_MS,
     isTranslationBlocked,
     NATIVE_SETTLE_CEILING_MS,
     probeTranslationLanguage,
@@ -970,14 +971,33 @@ describe('the quiet re-verify of a breaker-blocked language', () => {
         expect(isTranslationBlocked('fr')).toBe(false);
     });
 
-    it('a failed re-verify stays blocked and never tries again', async () => {
+    it('retries the re-verify at 5, 15 and 60 minutes; the third succeeding unblocks', async () => {
         await blockVerified('fr');
-        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
-        await jest.advanceTimersByTimeAsync(5 * 60_000);
+        mockOnTranslateTask
+            .mockRejectedValueOnce(new Error('Unable to Translate'))
+            .mockRejectedValueOnce(new Error('Unable to Translate'))
+            .mockResolvedValueOnce({ translatedTexts: 'Bonjour' });
+        expect(TRANSLATION_REVERIFY_BACKOFF_MS).toEqual([300_000, 900_000, 3_600_000]);
+        await jest.advanceTimersByTimeAsync(300_000);
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        await jest.advanceTimersByTimeAsync(900_000 - 1_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        await jest.advanceTimersByTimeAsync(1_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
         expect(isTranslationBlocked('fr')).toBe(true);
         await jest.advanceTimersByTimeAsync(3_600_000);
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(3);
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+
+    it('three failed re-verifies, then no fourth', async () => {
+        await blockVerified('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        await jest.advanceTimersByTimeAsync(300_000 + 900_000 + 3_600_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(3);
+        expect(isTranslationBlocked('fr')).toBe(true);
+        await jest.advanceTimersByTimeAsync(24 * 3_600_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(3);
     });
 
     it('backgrounded at 5 minutes, it runs once the app is active', async () => {

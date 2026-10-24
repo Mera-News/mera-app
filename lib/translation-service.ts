@@ -618,26 +618,34 @@ function recordTranslationSuccess(targetLangCode: string): void {
 }
 
 /**
- * Once per language per session, 5 minutes after a NON-permanent block of a
- * language that has already translated this session, one quiet ordinary native
- * call on a short sample. Success lifts the block through the normal success
- * path (so `useTranslationSuppressed` lifts and nodes ask again); failure leaves
- * it blocked and nothing tries again. Never the probe path: the language is
- * verified, so no call can present Apple's sheet, and an unverified language is
- * never re-verified. It waits for the queue to be active.
+ * After a NON-permanent block of a language that has already translated this
+ * session, quiet re-verifies on a backoff: one ordinary native call on a short
+ * sample at +5 min, then +15, then +60 after each failure, then none for the
+ * rest of the session. Success lifts the block through the normal success
+ * path (so `useTranslationSuppressed` lifts, owed retries run and nodes ask
+ * again) and resets the schedule for a later block. Never the probe path: the
+ * language is verified, so no call can present Apple's sheet, and an
+ * unverified language is never re-verified. Each one waits for the queue to be
+ * active.
  */
-export const TRANSLATION_REVERIFY_DELAY_MS = 5 * 60_000;
+export const TRANSLATION_REVERIFY_BACKOFF_MS = [300_000, 900_000, 3_600_000] as const;
 const REVERIFY_SAMPLE = 'Hello';
-const reverifyScheduled = new Set<string>();
+/** Per language: the next step of its schedule. Present while a schedule is running or spent. */
+const reverifyStep = new Map<string, number>();
 const reverifyTimers = new Set<ReturnType<typeof setTimeout>>();
 
-function scheduleQuietReverify(targetLangCode: string): void {
-    if (reverifyScheduled.has(targetLangCode) || !verifiedLanguages.has(targetLangCode)) return;
-    reverifyScheduled.add(targetLangCode);
+function canQuietlyReverify(targetLangCode: string): boolean {
+    return verifiedLanguages.has(targetLangCode);
+}
+
+function scheduleQuietReverify(targetLangCode: string, step: number): void {
+    const wait = TRANSLATION_REVERIFY_BACKOFF_MS[step];
+    if (wait === undefined) return;
+    reverifyStep.set(targetLangCode, step);
     const timer = setTimeout(() => {
         reverifyTimers.delete(timer);
-        whenQueueActive(() => runQuietReverify(targetLangCode));
-    }, TRANSLATION_REVERIFY_DELAY_MS);
+        whenQueueActive(() => runQuietReverify(targetLangCode, step));
+    }, wait);
     reverifyTimers.add(timer);
 }
 
@@ -653,9 +661,13 @@ function whenQueueActive(run: () => void): void {
     });
 }
 
-function runQuietReverify(targetLangCode: string): void {
+function runQuietReverify(targetLangCode: string, step: number): void {
     const blocked = blockedLanguages.get(targetLangCode);
-    if (!blocked || blocked.permanent) return;
+    if (!blocked || blocked.permanent) {
+        // Lifted some other way: a later block starts a fresh schedule.
+        reverifyStep.delete(targetLangCode);
+        return;
+    }
     void enqueueTranslationTask(async (ctx) => {
         try {
             const raw = await callNativeWithTimeout(
@@ -665,13 +677,19 @@ function runQuietReverify(targetLangCode: string): void {
                 TRANSLATE_CALL_TIMEOUT_MS,
                 ctx,
             );
-            if (typeof raw === 'string') recordTranslationSuccess(targetLangCode);
+            if (typeof raw === 'string') {
+                reverifyStep.delete(targetLangCode);
+                recordTranslationSuccess(targetLangCode);
+                return;
+            }
         } catch (err) {
             logger.warn('[TranslationService] Quiet re-verify failed; the language stays blocked', {
                 targetLangCode,
+                step,
                 error: err instanceof Error ? err.message : String(err),
             });
         }
+        scheduleQuietReverify(targetLangCode, step + 1);
     }, { epoch: null, label: `${targetLangCode}:reverify` });
 }
 
@@ -682,7 +700,9 @@ function blockLanguage(
     deviceUnsupported = false,
 ): void {
     if (blockedLanguages.has(targetLangCode)) return;
-    if (!permanent) scheduleQuietReverify(targetLangCode);
+    if (!permanent && !reverifyStep.has(targetLangCode) && canQuietlyReverify(targetLangCode)) {
+        scheduleQuietReverify(targetLangCode, 0);
+    }
     blockedLanguages.set(targetLangCode, {
         targetLangCode,
         lastError: message,
@@ -801,7 +821,7 @@ export function __resetTranslationStateForTests(): void {
     textAttempts.clear();
     reverifyTimers.forEach(clearTimeout);
     reverifyTimers.clear();
-    reverifyScheduled.clear();
+    reverifyStep.clear();
     interest.clear();
     failedListeners.clear();
     joinable.clear();
