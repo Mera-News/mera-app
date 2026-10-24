@@ -16,6 +16,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import {
+    isTextFailureExhausted,
     isTranslationBlocked,
     NATIVE_SETTLE_CEILING_MS,
     probeTranslationLanguage,
@@ -595,5 +596,21 @@ describe('every visible node ends translated', () => {
         expect(shown).toHaveLength(12);
         for (const n of shown) expect(cache.get(n.text)).toBe(`fr:${n.text}`);
         expect(isTranslationBlocked('fr')).toBe(false);
+    });
+});
+
+describe('isTextFailureExhausted', () => {
+    it('is true exactly when the next ask would answer failed with no native call', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('nope'));
+        expect(isTextFailureExhausted('Bad', 'fr')).toBe(false);
+        for (let i = 0; i < 2; i++) {
+            const p = translateTextDetailed('Bad', 'fr');
+            await jest.runAllTimersAsync();
+            await p;
+        }
+        expect(isTextFailureExhausted('Bad', 'fr')).toBe(true);
+        expect(isTextFailureExhausted('Bad', 'de')).toBe(false);
+        expect(isTextFailureExhausted('Other', 'fr')).toBe(false);
     });
 });

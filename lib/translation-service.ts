@@ -419,6 +419,15 @@ const joinable = new Map<string, Promise<TranslationResult>>();
 export const TEXT_FAILED_BUDGET = 2;
 const textKey = (text: string, targetLangCode: string): string => `${targetLangCode}\u0000${text}`;
 
+/**
+ * True when this text's retry budget is spent: {@link translateTextDetailed}
+ * would answer 'failed' at once, with no native call. A render surface reads it
+ * to stop showing a pending state for a text that will not be asked again.
+ */
+export function isTextFailureExhausted(text: string, targetLangCode: string): boolean {
+    return (textAttempts.get(textKey(text, targetLangCode))?.failed ?? 0) >= TEXT_FAILED_BUDGET;
+}
+
 function attemptsFor(text: string, targetLangCode: string): TextAttempts {
     const key = textKey(text, targetLangCode);
     let entry = textAttempts.get(key);
@@ -1075,7 +1084,7 @@ export function translateTextDetailed(
     if (isProbe) {
         probeTimedOut.set(targetLangCode, false);
         probeErrors.set(targetLangCode, null);
-    } else if ((textAttempts.get(textKey(text, targetLangCode))?.failed ?? 0) >= TEXT_FAILED_BUDGET) {
+    } else if (isTextFailureExhausted(text, targetLangCode)) {
         return Promise.resolve({ status: 'failed', text: null });
     }
     // The same text asked again while its call is still queued or running
