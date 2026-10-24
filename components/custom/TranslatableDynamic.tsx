@@ -1,5 +1,5 @@
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
-import { usePageActive } from '@/components/custom/nav/page-active';
+import { usePageActiveSource } from '@/components/custom/nav/page-active';
 import { Heading } from '@/components/ui/heading';
 import { Popover, PopoverBackdrop, PopoverBody, PopoverContent } from '@/components/ui/popover';
 import { Pressable } from '@/components/ui/pressable';
@@ -7,20 +7,21 @@ import { ShimmerText, useSweepAllowed } from '@/components/ui/shimmer';
 import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/algorithms/language-codes';
 import { TYPE_SCALE, tokenFromClassName, type TypeToken } from '@/lib/algorithms/scale';
-import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import {
+    isTextFailureExhausted,
     translateTextDetailed,
     useTranslationBlocked,
     useTranslationSuppressed,
 } from '@/lib/translation-service';
-import { useTranslationQueueActive, visibilityPriority } from '@/lib/translation-queue';
+import { isTranslationQueueActive, subscribeQueueActive, visibilityPriority } from '@/lib/translation-queue';
 import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { NavigationContext } from '@react-navigation/native';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, View, useWindowDimensions } from 'react-native';
 
@@ -89,6 +90,17 @@ interface TranslatableProps {
      * decorative translate glyph. Cards never pass it.
      */
     readonly showTranslatedGlyph?: boolean;
+    /**
+     * How the failed glyph meets accessibility. `button` (default): a labelled
+     * button. `spokenByHost`: still tappable, hidden from the tree, because the
+     * host (a card root) speaks the failure in its own label. `decorative`:
+     * drawn only, for a text inside another control's visual (a band under an
+     * absoluteFill Pressable, a GlyphSafeButton); the host adds
+     * `translationFailed` to its own label.
+     */
+    readonly failedGlyph?: FailedGlyphMode;
+    /** Clamps the failed glyph's touch frame to the gaps around this text. */
+    readonly glyphReach?: GlyphReach;
 }
 
 /** Loose match so `hi-IN` ≈ `hi`, `zh-Hans` ≈ `zh-CN`, etc. */
@@ -128,44 +140,72 @@ function splitLayout(className: string | undefined, style: Record<string, unknow
     };
 }
 
+/** How the failed glyph meets accessibility (see `failedGlyph`). */
+export type FailedGlyphMode = 'button' | 'spokenByHost' | 'decorative';
+
+/** How far the failed glyph's touch frame may reach past its own box, per side. */
+export interface GlyphReach {
+    readonly above: number;
+    readonly below: number;
+    readonly end: number;
+}
+
 /**
- * The glyph at the end of a text: failed (slashed, tappable, tooltip) or
- * translated (plain, decorative). Its own 44pt frame is pulled back by
- * negative margins to the glyph's box, so it never moves the line it ends.
+ * The glyph at the end of a text: failed (slashed, tooltip on tap) or
+ * translated (plain, decorative). The visual is hidden from accessibility and
+ * a CHILDLESS Pressable lies over it, reaching past the glyph's box by absolute
+ * offsets, so the line never grows and the private-use glyph never surfaces as
+ * its own StaticText. The reach is TOUCH_FRAME by default, clamped per side by
+ * `reach`, and never back into the text.
  */
 function EndGlyph({
     kind,
     fontPx,
     boxHeight,
-    inCard,
+    mode,
+    reach,
 }: {
     kind: 'failed' | 'translated';
     fontPx: number;
     boxHeight: number;
-    inCard: boolean;
+    mode: FailedGlyphMode;
+    reach?: GlyphReach;
 }) {
     const { t } = useTranslation();
     const colors = useColors();
     const { width: screenWidth } = useWindowDimensions();
     const [open, setOpen] = useState(false);
     const close = useCallback(() => setOpen(false), []);
-    const icon =
-        kind === 'failed' ? (
-            <MaterialCommunityIcons name="translate-off" size={fontPx} color={colors.ink3} />
-        ) : (
-            <MaterialIcons name="translate" size={fontPx} color={colors.ink3} />
-        );
-    const box = { width: fontPx, height: boxHeight, marginLeft: Math.round(fontPx * 0.3) };
-    if (kind === 'translated') {
-        return (
-            <View testID="translatable-translated" style={[box, { alignItems: 'center', justifyContent: 'center' }]} {...DECORATIVE_ICON_A11Y}>
-                {icon}
-            </View>
-        );
-    }
+    const gap = Math.round(fontPx * 0.3);
+    const box = { width: fontPx, height: boxHeight, marginLeft: gap };
+    const visual = (
+        <View
+            testID={kind === 'translated' ? 'translatable-translated' : mode === 'decorative' ? 'translatable-failed' : undefined}
+            style={{ ...box, marginLeft: 0, alignItems: 'center', justifyContent: 'center' }}
+            {...DECORATIVE_ICON_A11Y}
+        >
+            {kind === 'failed' ? (
+                <MaterialCommunityIcons name="translate-off" size={fontPx} color={colors.ink3} />
+            ) : (
+                <MaterialIcons name="translate" size={fontPx} color={colors.ink3} />
+            )}
+        </View>
+    );
+    if (kind === 'translated' || mode === 'decorative') return <View style={box}>{visual}</View>;
+
     const label = t('feed.translationFailed');
+    const side = Math.max(0, (TOUCH_FRAME - fontPx) / 2);
+    const vert = Math.max(0, (TOUCH_FRAME - boxHeight) / 2);
+    const frame = {
+        position: 'absolute' as const,
+        top: -Math.min(vert, reach?.above ?? vert),
+        bottom: -Math.min(vert, reach?.below ?? vert),
+        left: -Math.min(side, gap),
+        right: -Math.min(side, reach?.end ?? side),
+    };
     return (
         <View style={box}>
+            {visual}
             <Popover
                 isOpen={open}
                 onClose={close}
@@ -179,21 +219,12 @@ function EndGlyph({
                         {...triggerProps}
                         testID="translatable-failed"
                         onPress={() => setOpen(true)}
-                        // A card speaks the failure in its root label, so the glyph is hidden there.
-                        {...(inCard
+                        // A host that speaks the failure in its own label keeps the glyph out of the tree.
+                        {...(mode === 'spokenByHost'
                             ? DECORATIVE_ICON_A11Y
                             : { accessibilityRole: 'button' as const, accessibilityLabel: label })}
-                        style={{
-                            width: TOUCH_FRAME,
-                            height: TOUCH_FRAME,
-                            marginHorizontal: (fontPx - TOUCH_FRAME) / 2,
-                            marginVertical: (boxHeight - TOUCH_FRAME) / 2,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <View {...DECORATIVE_ICON_A11Y}>{icon}</View>
-                    </Pressable>
+                        style={frame}
+                    />
                 )}
             >
                 <PopoverBackdrop />
@@ -221,12 +252,7 @@ function TranslatingText({
 }) {
     const sweep = useSweepAllowed();
     return (
-        <View
-            testID="translatable-pending"
-            className={outerClass}
-            style={outerStyle}
-            accessibilityState={{ busy: true }}
-        >
+        <View testID="translatable-pending" className={outerClass} style={outerStyle}>
             {sweep ? (
                 <ShimmerText renderText={(color) => renderCopy({ color })} />
             ) : (
@@ -234,6 +260,35 @@ function TranslatingText({
             )}
         </View>
     );
+}
+
+/**
+ * Calls `onChange(open, rose)` whenever "the reader is looking at this text"
+ * (screen focused, its page the visible one, app in front) changes, and once
+ * on enabling. Subscribes ONLY while `enabled`: read through listeners, not
+ * hooks, so a node with no re-ask owed never re-renders on a tab switch, a page
+ * swipe or an app-state change. Called unconditionally (hook order).
+ */
+function useReaskGate(enabled: boolean, onChange: (open: boolean, rose: boolean) => void) {
+    const navigation = useContext(NavigationContext);
+    const page = usePageActiveSource();
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+    useEffect(() => {
+        if (!enabled) return;
+        const read = () => (navigation ? navigation.isFocused() : true) && page.isActive() && isTranslationQueueActive();
+        let open = read();
+        onChangeRef.current(open, false);
+        const check = () => {
+            const next = read();
+            const rose = next && !open;
+            open = next;
+            onChangeRef.current(next, rose);
+        };
+        const offs = [page.subscribe(check), subscribeQueueActive(check)];
+        if (navigation) offs.push(navigation.addListener('focus', check), navigation.addListener('blur', check));
+        return () => offs.forEach((off) => off());
+    }, [enabled, navigation, page]);
 }
 
 /** Buffer (in px) around the viewport used to pre-translate items that are
@@ -301,6 +356,8 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     showToggle = false,
     onDisplayChange,
     showTranslatedGlyph = false,
+    failedGlyph = 'button',
+    glyphReach,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -337,7 +394,10 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // goes out; the English `text` shows. Only the breaker block is a failure
     // the reader is told about (the glyph); an unverified language is not.
     const translationSuppressed = useTranslationSuppressed(appLanguage);
-    const translationBlocked = useTranslationBlocked(appLanguage) != null;
+    // A PERMANENT block (unsupported language, no translator on the device) is
+    // explained by TranslationUnavailablePrompt; "Restart the app" would be false.
+    const blockState = useTranslationBlocked(appLanguage);
+    const translationBlocked = blockState != null && !blockState.permanent;
 
     const needsTranslation = wantsTranslation && !translationSuppressed;
 
@@ -384,6 +444,11 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const [lastOutcome, setLastOutcome] = useState<'failed' | 'dropped' | null>(null);
     /** Bumped to re-run the fire-effect for a re-ask. */
     const [retryToken, setRetryToken] = useState(0);
+
+    // A new app language owes nothing for the old one.
+    useEffect(() => {
+        setLastOutcome(null);
+    }, [appLanguage]);
 
     // Measure the node's window-space position and flip `isOnScreen` if visible.
     const checkVisibility = useCallback(() => {
@@ -463,26 +528,23 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // sweep drops the queued titles, come back) stays English for the session.
     // Gated on the reader looking at this text (screen focused, its page the
     // visible one, app in front): a retry from a screen mounted under a pushed
-    // one, or from a warm neighbour page, would compete with what is in front. A drop re-asks whenever the gate is open; a failure only on the
+    // one, or from a warm neighbour page, would compete with what is in front.
+    // A drop re-asks whenever the gate is open; a failure only on the
     // gate's RISING edge, because the service answers an exhausted text with
     // 'failed' at once and re-asking while the gate stays open would loop.
     // The per-text retry budget lives in the service, not here.
-    // Both hooks called unconditionally: the React Compiler build crashes on a short-circuited hook.
-    const focused = useIsFocusedSafe();
-    const pageActive = usePageActive();
-    const queueActive = useTranslationQueueActive();
-    const askGate = focused && pageActive && queueActive;
-    const prevGateRef = useRef(askGate);
-    useEffect(() => {
-        const rose = askGate && !prevGateRef.current;
-        prevGateRef.current = askGate;
-        if (!askGate || !needsTranslation) return;
-        if (lastOutcome === 'dropped' || (lastOutcome === 'failed' && rose)) {
-            firedRef.current = null;
-            setLastOutcome(null);
-            setRetryToken((n) => n + 1);
-        }
-    }, [askGate, lastOutcome, needsTranslation]);
+    // A failed text whose service budget is spent stays failed: re-asking would
+    // only flash the shimmer and answer 'failed' again.
+    useReaskGate(needsTranslation && lastOutcome != null, (open, rose) => {
+        if (!open) return;
+        const reask =
+            lastOutcome === 'dropped'
+            || (lastOutcome === 'failed' && rose && !isTextFailureExhausted(text, appLanguage));
+        if (!reask) return;
+        firedRef.current = null;
+        setLastOutcome(null);
+        setRetryToken((n) => n + 1);
+    });
 
     // Fire the translation request once we're on screen and still need one.
     useEffect(() => {
@@ -615,8 +677,12 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
 
     const token: TypeToken = tokenFromClassName(className) ?? (size === 'md' ? 'base' : size);
     const step = TYPE_SCALE[token];
-    const fontPx = Math.round(step.fontSize * textScale);
-    const linePx = Math.round(step.lineHeight * textScale);
+    // A caller's numeric fontSize / lineHeight wins, as it does on the Text, so
+    // the glyph row never grows taller than the text it ends.
+    const styleFont = typeof style?.fontSize === 'number' ? style.fontSize : null;
+    const styleLine = typeof style?.lineHeight === 'number' ? style.lineHeight : null;
+    const fontPx = Math.round(styleFont ?? step.fontSize * textScale);
+    const linePx = Math.round(styleLine ?? (styleFont != null ? styleFont * (step.lineHeight / step.fontSize) : step.lineHeight * textScale));
 
     // English in a non-English app: tell the screen reader, and keep Latin LTR in Arabic.
     const englishInForeignApp = displayedLanguage === 'en' && !!appLanguage && appLanguage !== 'en';
@@ -661,9 +727,18 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         );
     } else if (glyph && layout) {
         body = (
-            <View className={layout.outerClass} style={[{ flexDirection: 'row', alignItems: 'flex-end' }, layout.outerStyle]}>
+            <View
+                testID="translatable-row"
+                className={layout.outerClass}
+                style={[
+                    { flexDirection: 'row', alignItems: 'flex-end' },
+                    // English in an RTL app: keep the glyph after the English text, not mirrored before it.
+                    englishInForeignApp ? { direction: 'ltr' as const } : null,
+                    layout.outerStyle,
+                ]}
+            >
                 {renderTextNode(displayText, { flexShrink: 1 })}
-                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={linePx} inCard />
+                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={linePx} mode={failedGlyph} reach={glyphReach} />
             </View>
         );
     } else if (glyph) {
@@ -671,7 +746,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         body = renderTextNode(
             <>
                 {displayText}
-                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={fontPx} inCard={false} />
+                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={fontPx} mode={failedGlyph} reach={glyphReach} />
             </>,
         );
     } else {
