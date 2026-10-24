@@ -8,10 +8,11 @@ import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/algorithms/language-codes';
 import { TYPE_SCALE, tokenFromClassName, type TypeToken } from '@/lib/algorithms/scale';
 import {
-    isTextFailureExhausted,
+    retainTranslationInterest,
     translateTextDetailed,
     useTranslationBlocked,
     useTranslationSuppressed,
+    useTextTranslationFailed,
 } from '@/lib/translation-service';
 import { isTranslationQueueActive, subscribeQueueActive, visibilityPriority } from '@/lib/translation-queue';
 import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -276,7 +277,7 @@ function TranslatingText({
  * hooks, so a node with no re-ask owed never re-renders on a tab switch, a page
  * swipe or an app-state change. Called unconditionally (hook order).
  */
-function useReaskGate(enabled: boolean, onChange: (open: boolean, rose: boolean) => void) {
+function useReaskGate(enabled: boolean, onChange: (open: boolean, rose: boolean) => void, key = '') {
     const navigation = useContext(NavigationContext);
     const page = usePageActiveSource();
     const onChangeRef = useRef(onChange);
@@ -295,7 +296,35 @@ function useReaskGate(enabled: boolean, onChange: (open: boolean, rose: boolean)
         const offs = [page.subscribe(check), subscribeQueueActive(check)];
         if (navigation) offs.push(navigation.addListener('focus', check), navigation.addListener('blur', check));
         return () => offs.forEach((off) => off());
-    }, [enabled, navigation, page]);
+    }, [enabled, navigation, page, key]);
+}
+
+/**
+ * Holds the service's retry interest in a FAILED text while the reader is
+ * looking at it, and lets go otherwise: the service retries on its backoff,
+ * in the one queue, only while someone holds interest. No timer here.
+ */
+function useFailedTextInterest(enabled: boolean, text: string, lang: string) {
+    const releaseRef = useRef<(() => void) | null>(null);
+    const key = `${lang}::${text}`;
+    useReaskGate(
+        enabled,
+        (open) => {
+            if (open && !releaseRef.current) releaseRef.current = retainTranslationInterest(text, lang);
+            if (!open && releaseRef.current) {
+                releaseRef.current();
+                releaseRef.current = null;
+            }
+        },
+        key,
+    );
+    useEffect(() => {
+        if (!enabled) return;
+        return () => {
+            releaseRef.current?.();
+            releaseRef.current = null;
+        };
+    }, [enabled, key]);
 }
 
 /** Buffer (in px) around the viewport used to pre-translate items that are
@@ -405,6 +434,8 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // explained by TranslationUnavailablePrompt; "Restart the app" would be false.
     const blockState = useTranslationBlocked(appLanguage);
     const translationBlocked = blockState != null && !blockState.permanent;
+    // This text's own failure, kept by the service per (text, language).
+    const textFailed = useTextTranslationFailed(text, appLanguage);
 
     const needsTranslation = wantsTranslation && !translationSuppressed;
 
@@ -444,11 +475,12 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
      */
     const lastYRef = useRef(0);
     /**
-     * How the last request for this text ended, when it did not translate.
-     * 'failed' draws the glyph; 'dropped' (the route moved on before the OS was
-     * asked) is the queue working and draws nothing. Both re-ask, see below.
+     * The last request was DROPPED (the route moved on before the OS was
+     * asked): the queue working, no glyph, and this node asks again (below).
+     * A FAILURE is the service's state (`useTextTranslationFailed`), retried by
+     * the service, never re-asked from here.
      */
-    const [lastOutcome, setLastOutcome] = useState<'failed' | 'dropped' | null>(null);
+    const [dropped, setDropped] = useState(false);
     /** The failed glyph's tooltip, here so the Text's accessibility action can open it. */
     const [tooltipOpen, setTooltipOpen] = useState(false);
     /** Bumped to re-run the fire-effect for a re-ask. */
@@ -456,7 +488,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
 
     // A new app language owes nothing for the old one.
     useEffect(() => {
-        setLastOutcome(null);
+        setDropped(false);
     }, [appLanguage]);
 
     // Measure the node's window-space position and flip `isOnScreen` if visible.
@@ -491,7 +523,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     useEffect(() => {
         setIsOnScreen(false);
         setLocalShowOriginal(false);
-        setLastOutcome(null);
+        setDropped(false);
         firedRef.current = null;
         // RETRY LADDER, not a single shot. Under Fabric, `measureInWindow` on a
         // freshly-mounted (or freshly-recycled) FlatList cell can return without
@@ -527,31 +559,21 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     useEffect(() => {
         if (wasSuppressedRef.current && !translationSuppressed) {
             firedRef.current = null;
-            setLastOutcome(null);
+            setDropped(false);
         }
         wasSuppressedRef.current = translationSuppressed;
     }, [translationSuppressed]);
 
-    // RE-ASK. `firedRef` latches on (text, language), and neither changes on a
-    // drop or a failure, so without this a dropped title (tap a card, the route
+    // RE-ASK A DROP. `firedRef` latches on (text, language), and neither
+    // changes on a drop, so without this a dropped title (tap a card, the route
     // sweep drops the queued titles, come back) stays English for the session.
     // Gated on the reader looking at this text (screen focused, its page the
     // visible one, app in front): a retry from a screen mounted under a pushed
     // one, or from a warm neighbour page, would compete with what is in front.
-    // A drop re-asks whenever the gate is open; a failure only on the
-    // gate's RISING edge, because the service answers an exhausted text with
-    // 'failed' at once and re-asking while the gate stays open would loop.
-    // The per-text retry budget lives in the service, not here.
-    // A failed text whose service budget is spent stays failed: re-asking would
-    // only flash the shimmer and answer 'failed' again.
-    useReaskGate(needsTranslation && lastOutcome != null, (open, rose) => {
+    useReaskGate(needsTranslation && dropped, (open) => {
         if (!open) return;
-        const reask =
-            lastOutcome === 'dropped'
-            || (lastOutcome === 'failed' && rose && !isTextFailureExhausted(text, appLanguage));
-        if (!reask) return;
         firedRef.current = null;
-        setLastOutcome(null);
+        setDropped(false);
         setRetryToken((n) => n + 1);
     });
 
@@ -603,7 +625,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                 return;
             }
             if (result.status === 'dropped') {
-                setLastOutcome('dropped');
+                setDropped(true);
                 return;
             }
             if (result.status === 'failed') {
@@ -612,7 +634,6 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                     originalLanguage,
                     appLanguage,
                 });
-                setLastOutcome('failed');
             }
             // Anything else (no native attempt was made) is not this text's failure.
         });
@@ -653,7 +674,9 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     displayText = stripUnkTokens(displayText);
 
     // A cached translation always wins over an earlier failure.
-    const failed = wantsTranslation && !translated && (lastOutcome === 'failed' || translationBlocked);
+    const failed = wantsTranslation && !translated && (textFailed || translationBlocked);
+    // While it shows, the service may retry it (its backoff, its queue).
+    useFailedTextInterest(failed && textFailed, text, appLanguage);
 
     // Notify the parent (in an effect, never during render) whenever the
     // effective displayed text changes.

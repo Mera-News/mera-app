@@ -39,27 +39,67 @@ jest.mock('react-native-reanimated', () => {
 
 type Outcome = { status: 'ok' | 'failed' | 'dropped' | 'skipped'; text?: string };
 let mockNextOutcome: () => Promise<Outcome>;
-const mockTranslate = jest.fn((..._args: unknown[]) => mockNextOutcome());
+// The service's per-(text, lang) failure state and interest counts, faked at its edge.
+const mockFailed = new Set<string>();
+const mockFailedListeners = new Set<() => void>();
+const mockInterest = new Map<string, number>();
+const mockKey = (text: string, lang: string) => `${lang}::${text}`;
+const setTextFailed = (text: string, lang: string, failed: boolean) => {
+    if (failed) mockFailed.add(mockKey(text, lang));
+    else mockFailed.delete(mockKey(text, lang));
+    mockFailedListeners.forEach((l) => l());
+};
+const mockTranslate = jest.fn(async (text: string, lang: string) => {
+    const outcome = await mockNextOutcome();
+    // The service records a failure; the node reads it back.
+    if (outcome.status === 'failed') setTextFailed(text, lang, true);
+    return outcome;
+});
 let mockBlock: { permanent: boolean } | null = null;
-let mockExhausted = false;
 let mockGated = false;
-jest.mock('@/lib/translation-service', () => ({
-    ...jest.requireActual('@/lib/translation-service'),
-    translateTextDetailed: (...a: unknown[]) => mockTranslate(...a),
-    useTranslationSuppressed: () => mockBlock != null || mockGated,
-    useTranslationBlocked: () => mockBlock,
-    isTextFailureExhausted: () => mockExhausted,
-}));
+jest.mock('@/lib/translation-service', () => {
+    const { useSyncExternalStore } = require('react');
+    return {
+        ...jest.requireActual('@/lib/translation-service'),
+        translateTextDetailed: (text: string, lang: string) => mockTranslate(text, lang),
+        useTranslationSuppressed: () => mockBlock != null || mockGated,
+        useTranslationBlocked: () => mockBlock,
+        useTextTranslationFailed: (text: string, lang: string) =>
+            useSyncExternalStore(
+                (l: () => void) => {
+                    mockFailedListeners.add(l);
+                    return () => mockFailedListeners.delete(l);
+                },
+                () => mockFailed.has(mockKey(text, lang)),
+            ),
+        retainTranslationInterest: (text: string, lang: string) => {
+            const key = mockKey(text, lang);
+            mockInterest.set(key, (mockInterest.get(key) ?? 0) + 1);
+            let released = false;
+            return () => {
+                if (released) return;
+                released = true;
+                mockInterest.set(key, (mockInterest.get(key) ?? 1) - 1);
+            };
+        },
+    };
+});
+const interestIn = (text: string, lang = 'mr') => mockInterest.get(mockKey(text, lang)) ?? 0;
 
 // The app is in front (the queue is not paused).
 let mockQueueActive = true;
-const mockQueueListeners = new Set<() => void>();
+// A function declaration, hoisted with the mock: the engine subscribes at import, before any const.
+function mockQueueListenerSet(): Set<() => void> {
+    const g = globalThis as { __mockQueueListeners?: Set<() => void> };
+    return (g.__mockQueueListeners ??= new Set());
+}
+const mockQueueListeners = mockQueueListenerSet();
 jest.mock('@/lib/translation-queue', () => ({
     ...jest.requireActual('@/lib/translation-queue'),
     isTranslationQueueActive: () => mockQueueActive,
     subscribeQueueActive: (l: () => void) => {
-        mockQueueListeners.add(l);
-        return () => mockQueueListeners.delete(l);
+        mockQueueListenerSet().add(l);
+        return () => mockQueueListenerSet().delete(l);
     },
 }));
 const setQueueActive = (active: boolean) =>
@@ -126,7 +166,8 @@ beforeEach(() => {
     MockNativeMethods.measureInWindow.mockImplementation((cb: (...n: number[]) => void) => cb(0, 100, 300, 20));
     mockTranslate.mockClear();
     mockBlock = null;
-    mockExhausted = false;
+    mockFailed.clear();
+    mockInterest.clear();
     mockGated = false;
     focused = true;
     mockQueueActive = true;
@@ -243,34 +284,70 @@ describe('the glyph only where it belongs', () => {
 });
 
 describe('re-asking', () => {
-    it('a failed text asks once more when the app comes back to the front, not while it stays there', async () => {
+    it('a failed visible node holds retry interest, and lets go on blur, page change and background', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
-        mount(detail());
+        const view = mount(detail());
         await findFailed();
-        await settle();
-        expect(mockTranslate).toHaveBeenCalledTimes(1);
+        expect(interestIn(EN)).toBe(1);
+        setFocused(false);
+        expect(interestIn(EN)).toBe(0);
+        setFocused(true);
+        expect(interestIn(EN)).toBe(1);
+        act(() => page.set(false));
+        expect(interestIn(EN)).toBe(0);
+        act(() => page.set(true));
+        expect(interestIn(EN)).toBe(1);
         setQueueActive(false);
-        await settle();
-        expect(mockTranslate).toHaveBeenCalledTimes(1);
+        expect(interestIn(EN)).toBe(0);
         setQueueActive(true);
-        await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(2));
+        expect(interestIn(EN)).toBe(1);
+        view.unmount();
+        expect(interestIn(EN)).toBe(0);
     });
 
-    it('a failed text with the gate held open asks once; one rising edge asks exactly once more', async () => {
+    it('a failed node never re-asks itself: the service retries, and no shimmer shows while one is owed', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
         await findFailed();
-        await settle();
-        expect(mockTranslate).toHaveBeenCalledTimes(1);
-
         setFocused(false);
+        setFocused(true);
+        setQueueActive(false);
+        setQueueActive(true);
         await settle();
         expect(mockTranslate).toHaveBeenCalledTimes(1);
-        setFocused(true);
-        await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(2));
+        expect(screen.queryByTestId('translatable-pending')).toBeNull();
+        expect(getFailed()).toBeTruthy();
+    });
+
+    it('a retry landing in the cache clears the glyph and the interest', async () => {
+        mockNextOutcome = async () => ({ status: 'failed' });
+        mount(detail());
         await findFailed();
-        await settle();
-        expect(mockTranslate).toHaveBeenCalledTimes(2);
+        act(() => {
+            useAppLanguageStore.getState().cacheTranslation(EN, MR);
+            setTextFailed(EN, 'mr', false);
+        });
+        await waitFor(() => expect(screen.getByText(MR)).toBeTruthy());
+        expect(screen.queryByTestId('translatable-failed', { includeHiddenElements: true })).toBeNull();
+        expect(interestIn(EN)).toBe(0);
+    });
+
+    it('a translated node never holds interest', async () => {
+        mockNextOutcome = async () => ({ status: 'ok', text: MR });
+        mount(detail());
+        await waitFor(() => expect(screen.getByText(MR)).toBeTruthy());
+        expect(mockInterest.size).toBe(0);
+    });
+
+    it('a lifted breaker clears a glyph that was only the block', async () => {
+        mockBlock = { permanent: false };
+        const view = mount(detail());
+        expect(getFailed()).toBeTruthy();
+        mockBlock = null;
+        mockNextOutcome = async () => ({ status: 'ok', text: MR });
+        view.rerender(detail());
+        await waitFor(() => expect(screen.getByText(MR)).toBeTruthy());
+        expect(screen.queryByTestId('translatable-failed', { includeHiddenElements: true })).toBeNull();
     });
 
     it('a dropped text on a warm neighbour page waits until its page is the visible one', async () => {
@@ -318,18 +395,6 @@ describe('nothing owed, nothing heard', () => {
         setQueueActive(true);
         await settle();
         expect(renders).toBe(before);
-    });
-
-    it('a failed text whose retry budget is spent stays failed on a rising edge, asking nothing', async () => {
-        mockNextOutcome = async () => ({ status: 'failed' });
-        mount(detail());
-        await findFailed();
-        mockExhausted = true;
-        setFocused(false);
-        setFocused(true);
-        await settle();
-        expect(mockTranslate).toHaveBeenCalledTimes(1);
-        expect(getFailed()).toBeTruthy();
     });
 
     it('a new app language clears the old failure', async () => {
