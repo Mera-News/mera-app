@@ -64,6 +64,12 @@ const OptimisationPlanCard: React.FC = () => {
   // reviewChoice: fingerprint → chosen option index (default the LLM default).
   const [checkedAuto, setCheckedAuto] = useState<Record<string, boolean>>({});
   const [reviewChoice, setReviewChoice] = useState<Record<string, number>>({});
+  // Button texts whose translation failed; their glyph is decorative inside the button.
+  const [failedTexts, setFailedTexts] = useState<Record<string, boolean>>({});
+  const markFailed = (text: string, failed: boolean) =>
+    setFailedTexts((m) => (!!m[text] === failed ? m : { ...m, [text]: failed }));
+  const withFailure = (label: string, text: string) =>
+    failedTexts[text] ? `${label}, ${t('feed.translationFailed')}` : label;
 
   const [applying, setApplying] = useState(false);
   const [settledCount, setSettledCount] = useState<number | null>(null);
@@ -194,7 +200,7 @@ const OptimisationPlanCard: React.FC = () => {
                 key={a.fingerprint}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked }}
-                accessibilityLabel={a.summary}
+                accessibilityLabel={withFailure(a.summary, a.summary)}
                 onPress={() =>
                   setCheckedAuto((prev) => ({ ...prev, [a.fingerprint]: !checked }))
                 }
@@ -212,7 +218,13 @@ const OptimisationPlanCard: React.FC = () => {
                     the fallback option labels are the literals 'Apply'/'Skip'.
                     Display only — handleApply sends fingerprints and option
                     INDICES, never any of this text. */}
-                <TranslatableDynamic text={a.summary} size="sm" style={styles.rowLabel} />
+                <TranslatableDynamic
+                  text={a.summary}
+                  size="sm"
+                  style={styles.rowLabel}
+                  failedGlyph="decorative"
+                  onDisplayChange={(d) => markFailed(a.summary, d.translationFailed)}
+                />
               </GlyphSafeButton>
             );
           })}
@@ -271,7 +283,7 @@ const OptimisationPlanCard: React.FC = () => {
                       key={idx}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
-                      accessibilityLabel={genericOptionLabel(opt, tPlain) ?? opt.label}
+                      accessibilityLabel={genericOptionLabel(opt, tPlain) ?? withFailure(opt.label, opt.label)}
                       onPress={() =>
                         setReviewChoice((prev) => ({ ...prev, [item.fingerprint]: idx }))
                       }
@@ -292,7 +304,13 @@ const OptimisationPlanCard: React.FC = () => {
                           {genericOptionLabel(opt, tPlain)}
                         </Text>
                       ) : (
-                        <TranslatableDynamic text={opt.label} size="sm" style={styles.rowLabel} />
+                        <TranslatableDynamic
+                          text={opt.label}
+                          size="sm"
+                          style={styles.rowLabel}
+                          failedGlyph="decorative"
+                          onDisplayChange={(d) => markFailed(opt.label, d.translationFailed)}
+                        />
                       )}
                     </GlyphSafeButton>
                   );

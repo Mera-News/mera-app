@@ -29,7 +29,7 @@ interface ReasonNoteProps {
     reason: string;
     testID?: string;
     /** The note as displayed (it may be translated), for the card's spoken label. */
-    onNoteDisplayChange?: (text: string) => void;
+    onNoteDisplayChange?: (text: string, translationFailed: boolean) => void;
     /** The pending state (see {@link notePendingMode}). Applies only while
      *  `reason` is empty. */
     pendingMode?: ReasonNotePendingMode;
@@ -289,7 +289,9 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                         numberOfLines={maxNoteLines}
                         style={noteStyle}
                         showTranslatedGlyph={showTranslatedGlyph}
-                        onDisplayChange={onNoteDisplayChange ? (d) => onNoteDisplayChange(d.displayedText) : undefined}
+                        // A host that takes the displayed note (the Feed card) speaks the failure in its own label.
+                        failedGlyph={onNoteDisplayChange ? 'spokenByHost' : 'button'}
+                        onDisplayChange={onNoteDisplayChange ? (d) => onNoteDisplayChange(d.displayedText, d.translationFailed) : undefined}
                     />
                     {wordByWord ? (
                         <WordReveal text={reason} maxHeight={maxNoteLines ? maxNoteLines * lineHeight : undefined} />

@@ -114,6 +114,8 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // Index 0 is Mera's preferred reading, preselected — so the unambiguous case
   // (one option) really is one tap.
   const [selected, setSelected] = useState(0);
+  // Options whose translation failed; their glyph is decorative inside the button.
+  const [failedOptions, setFailedOptions] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   // The settled card's TITLE, not the card: focus needs an accessibility
   // element, and the card root is no longer one (ux2 batch 26).
@@ -371,7 +373,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
               accessibilityRole={single ? 'text' : 'radio'}
               accessibilityState={{ selected: isSel }}
               // The reading itself, never the radio glyph before it.
-              accessibilityLabel={option}
+              accessibilityLabel={failedOptions[option] ? `${option}, ${t('feed.translationFailed')}` : option}
               testID={`fact-choice-option-${groupIndex}-${idx}`}
               visualStyle={[styles.optionRow, isSel && !single && styles.optionRowSelected]}
             >
@@ -386,7 +388,14 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
               {/* Statements are English by the agent's LANGUAGE rule and are what
                   reaches addFact. Only the RENDERING is translated — the commit
                   reads `options[selected]`, never what is drawn here. */}
-              <TranslatableDynamic text={option} size="sm" style={styles.optionText} numberOfLines={3} />
+              <TranslatableDynamic
+                text={option}
+                size="sm"
+                style={styles.optionText}
+                numberOfLines={3}
+                failedGlyph="decorative"
+                onDisplayChange={(d) => setFailedOptions((m) => (!!m[option] === d.translationFailed ? m : { ...m, [option]: d.translationFailed }))}
+              />
             </GlyphSafeButton>
           );
         })}

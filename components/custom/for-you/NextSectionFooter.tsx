@@ -25,7 +25,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
@@ -62,6 +62,7 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
   // bare backdrop, so it takes the theme's ink; NEXT_FOOTER_INK (white) is only
   // for the next panel, which has the dark FOOTER_FILL under it.
   const colors = useColors();
+  const [titleFailed, setTitleFailed] = useState(false);
 
   if (props.kind === 'back') {
     return (
@@ -84,7 +85,7 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
   }
 
   const { factId, title, translateTitle, onPress } = props;
-  const label = t('forYou.nextSection', { title });
+  const label = `${t('forYou.nextSection', { title })}${translateTitle && titleFailed ? `, ${t('feed.translationFailed')}` : ''}`;
   return (
     <View className="mx-1 mt-4 mb-2">
       <View pointerEvents="none" {...HIDDEN}>
@@ -102,6 +103,8 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
                   bold
                   numberOfLines={2}
                   style={{ color: NEXT_FOOTER_INK }}
+                  failedGlyph="decorative"
+                  onDisplayChange={(d) => setTitleFailed(d.translationFailed)}
                 />
               ) : (
                 <Text size="lg" bold numberOfLines={2} style={{ color: NEXT_FOOTER_INK }}>

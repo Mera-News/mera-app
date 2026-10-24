@@ -264,6 +264,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
 
   // The note as displayed (it may be translated), for the card's spoken label.
   const [shownReason, setShownReason] = useState<string | null>(null);
+  // The note's glyph is hidden from VoiceOver on a card, so the label says it.
+  const [reasonFailed, setReasonFailed] = useState(false);
   // One rule with the detail screen (`notePendingMode`): a `reason_pending`
   // row is writing, or under the reading hold says when it will be. Surfaces
   // that pass no `noteHeldLine` (Saved, the fact feed) show writing.
@@ -279,7 +281,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       relevance={relevance}
       reason={reason}
       testID="card-reason"
-      onNoteDisplayChange={setShownReason}
+      onNoteDisplayChange={(text, failed) => {
+        setShownReason(text);
+        setReasonFailed(failed);
+      }}
       pendingMode={pendingMode}
       heldLine={noteHeldLine}
       pendingSpokenByHost
@@ -303,6 +308,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     belowGate ? t('feed.noteState.discarded') : null,
     reason ? t('aiDisclosure.short') : null,
     reason ? shownReason ?? reason : null,
+    reason && reasonFailed ? t('feed.translationFailed') : null,
     // The indicator is hidden from screen readers; the root says it instead.
     // No live region: the label simply reads the note once it has landed.
     pendingMode === 'writing' ? t('feed.reasonWritingA11y') : null,

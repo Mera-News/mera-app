@@ -90,6 +90,7 @@ function SectionLinkBand({
   const { t } = useTranslation();
   const c = useColors();
   const [shown, setShown] = useState(title);
+  const [titleFailed, setTitleFailed] = useState(false);
   const count = t('forYou.sectionStories', { count: total });
   return (
     <View>
@@ -100,7 +101,11 @@ function SectionLinkBand({
             bold
             numberOfLines={3}
             style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}
-            onDisplayChange={(d) => setShown(d.displayedText)}
+            failedGlyph="decorative"
+            onDisplayChange={(d) => {
+              setShown(d.displayedText);
+              setTitleFailed(d.translationFailed);
+            }}
           />
         ) : (
           <Text bold numberOfLines={3} style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}>
@@ -115,7 +120,7 @@ function SectionLinkBand({
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${content ? shown : title}, ${count}`}
+        accessibilityLabel={`${content ? shown : title}, ${count}${content && titleFailed ? `, ${t('feed.translationFailed')}` : ''}`}
         testID={`section-open-${factId}`}
         style={StyleSheet.absoluteFill}
       />

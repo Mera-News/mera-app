@@ -88,6 +88,8 @@ const HEADLINE_LINE_BOX = 24;
  *  in the footer; the publisher name is `text-xs` at 18. */
 const FOOTER_LINE_BOX = 21;
 const FOOTER_GAP = 12;
+/** Space between the text column and the image. */
+const COMPACT_IMAGE_GAP = 14;
 /** How far the publisher name's touch target reaches below its line: short of
  *  the `sm` Card's 10.5pt bottom padding, so it stays inside the card. */
 const PUBLICATION_HIT_BELOW = 10;
@@ -305,6 +307,10 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   // the class lets the `md` token's own 24px line box apply.
                   className="font-semibold text-ink"
                   numberOfLines={headlineLines}
+                  failedGlyph="spokenByHost"
+                  // The footer's targets own the FOOTER_GAP below and the title owns the
+                  // lines above, so the glyph reaches only sideways, into the image gap.
+                  glyphReach={{ above: 0, below: 0, end: showImage ? COMPACT_IMAGE_GAP : 0 }}
                   onDisplayChange={(d) => {
                     setShownTitle(d.displayedText);
                     setTitleFailed(d.translationFailed);
@@ -396,7 +402,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   width: COMPACT_IMAGE_SIZE,
                   height: COMPACT_IMAGE_SIZE,
                   borderRadius: 16,
-                  marginLeft: 14,
+                  marginLeft: COMPACT_IMAGE_GAP,
                   // F39: a quiet tile holds the square while the image
                   // decodes, instead of the picture popping into a blank hole.
                   backgroundColor: colors.surface,

@@ -271,6 +271,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               size="lg"
               className=""
               showToggle={false}
+              failedGlyph="spokenByHost"
               onDisplayChange={(d) => {
                 setShownTitle(d.displayedText);
                 setTitleFailed(d.translationFailed);

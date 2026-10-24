@@ -98,6 +98,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
+  const [factLineFailed, setFactLineFailed] = useState(false);
 
   const [rows, setRows] = useState<Chip[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -325,7 +326,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
           // here, in the header's own label.
           accessibilityLabel={`${statusWord}. ${
             expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
-          }`}
+          }${factLineFailed ? ` ${t('feed.translationFailed')}` : ''}`}
           testID={`chat-topics-header-${factId}`}
         >
           <View style={styles.headerRow} testID={`chat-topics-title-row-${factId}`}>
@@ -352,6 +353,8 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
               italic
               style={styles.factLine}
               numberOfLines={2}
+              failedGlyph="decorative"
+              onDisplayChange={(d) => setFactLineFailed(d.translationFailed)}
             />
 
             {/* Small and muted on purpose: a finished background job should be
