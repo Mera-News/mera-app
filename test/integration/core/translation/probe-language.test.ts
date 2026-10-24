@@ -82,8 +82,8 @@ test('tracks each probe from the call until it settles, newest first', async () 
     abandonNext();
     // The older probe left; the newer one is still open.
     expect(currentProbe()?.code).toBe('fr');
-    // The abandoned call still holds the one slot until the settle ceiling.
-    await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 20_000);
+    // The abandoned call still holds the one slot until the settle ceiling after its timeout.
+    await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS);
 
     await answerNext();
     await expect(fr).resolves.toBe('success');
@@ -127,7 +127,7 @@ test('a retry of the same language is a new probe', async () => {
     await expect(first).resolves.toBe('timeout');
     abandonNext();
     expect(currentProbe()).toBe(retryProbe);
-    await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 5_000);
+    await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS);
 
     await answerNext();
     await expect(retry).resolves.toBe('success');

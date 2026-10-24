@@ -711,13 +711,15 @@ function retryDelaysFor(targetLangCode: string): readonly number[] {
 const TRANSLATE_CALL_TIMEOUT_MS = 20_000;
 
 /**
- * How long, from dispatch, the queue's one slot stays held for a native call
- * that outlived its JS timeout. The caller is answered at the timeout (it shows
+ * How long AFTER its JS timeout the queue's one slot stays held for a native
+ * call that has not settled. The caller is answered at the timeout (it shows
  * English), but the call is still running on the module's shared
- * hostingController, and dispatching the next one would overwrite it. The slot
- * frees when the call settles or at this ceiling, whichever is first; the
- * ceiling exists because the vendored Swift can leak its continuation and never
- * settle. Set it to 0 to free the slot at the timeout again.
+ * hostingController, and dispatching the next one would overwrite it (a later
+ * dismiss of the old call removes the new one's controller). The slot frees
+ * when the call settles or at this ceiling, whichever is first; the ceiling
+ * exists because the vendored Swift can leak its continuation and never
+ * settle. Measured from the timeout, so a 90s probe is held too. Set it to 0
+ * to free the slot at the timeout again.
  */
 export const NATIVE_SETTLE_CEILING_MS = 45_000;
 
@@ -748,7 +750,7 @@ const PROBE_FAST_FAIL_RETRY_MS = 1000;
  * gesture that may need to hold the wait open for a real download. The
  * re-verify has none of that: it fires silently on mount, with
  * `TRANSLATION_CONCURRENCY = 1` meaning it holds the app's only native slot
- * the whole time (and past its timeout, up to NATIVE_SETTLE_CEILING_MS), so every on-screen `<TranslatableDynamic>` renders English
+ * the whole time (and past its timeout, up to NATIVE_SETTLE_CEILING_MS more), so every on-screen `<TranslatableDynamic>` renders English
  * for as long as this runs. A pack that doesn't finish in this window simply
  * isn't verified THIS session — the language falls back to English same as
  * any other unverified one, and a late success still marks it verified via
@@ -811,7 +813,6 @@ function callNativeWithTimeout(
     timeoutMs: number,
     ctx?: TranslationTaskContext,
 ): Promise<unknown> {
-    const startedAt = Date.now();
     const call = onTranslateTask({
         input,
         // The app's canonical code is NOT always what the native translator
@@ -862,9 +863,10 @@ function callNativeWithTimeout(
     const timeout = new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => {
             timedOut = true;
-            const left = NATIVE_SETTLE_CEILING_MS - (Date.now() - startedAt);
-            if (ctx && left > 0) {
-                ctx.holdSlotUntil(Promise.race([call, new Promise((r) => setTimeout(r, left))]));
+            if (ctx && NATIVE_SETTLE_CEILING_MS > 0) {
+                ctx.holdSlotUntil(
+                    Promise.race([call, new Promise((r) => setTimeout(r, NATIVE_SETTLE_CEILING_MS))]),
+                );
             }
             reject(new TranslationTimeoutError(timeoutMs));
         }, timeoutMs);
@@ -893,9 +895,10 @@ function nativeCallRefused(targetLangCode: string, isProbe: boolean): boolean {
     // in one effect flush, so all N calls are already queued before the
     // first failure lands; a call-time check would let every one of them
     // reach the native module and present its own sheet.
-    // Not for a probe: it cleared this language's block when it was asked,
-    // and an older probe that times out while it waits (the slot is held
-    // until that call settles) must not veto the reader's retry.
+    // Not for a probe: it cleared this language's block when it was asked.
+    // An older probe that timed out blocks the language while this one waits
+    // for the slot (held until that call settles, or NATIVE_SETTLE_CEILING_MS
+    // after its timeout), and that verdict must not veto the reader's retry.
     if (!isProbe && blockedLanguages.has(targetLangCode)) return true;
 
     // The two "this can never work" checks come BEFORE the gate, not

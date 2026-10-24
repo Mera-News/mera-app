@@ -184,7 +184,7 @@ describe('a native call that outlives its 20s timeout', () => {
 
         void translateTextDetailed('Wedged', 'fr');
         const second = translateTextDetailed('Next', 'fr');
-        await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 100);
+        await jest.advanceTimersByTimeAsync(20_000 + NATIVE_SETTLE_CEILING_MS - 100);
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
         await jest.advanceTimersByTimeAsync(200);
         expect(await second).toEqual({ status: 'ok', text: 'Suivant' });
@@ -638,5 +638,38 @@ describe('the breaker charges a text once', () => {
             expect(await p).toEqual({ status: 'failed', text: null });
         }
         expect(isTranslationBlocked('fr')).toBe(false);
+    });
+});
+
+describe('the settle hold is measured from the timeout', () => {
+    it('a 90s probe that times out keeps the slot until it settles, so a retry probe waits', async () => {
+        const first = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => first.promise);
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Hallo' }));
+        const timedOut = probeTranslationLanguage('de');
+        await jest.advanceTimersByTimeAsync(90_100);
+        expect(await timedOut).toBe('timeout');
+
+        const retry = probeTranslationLanguage('de');
+        await jest.advanceTimersByTimeAsync(10_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        first.resolve({ translatedTexts: 'Hallo' });
+        await jest.advanceTimersByTimeAsync(0);
+        await jest.runAllTimersAsync();
+        expect(await retry).toBe('success');
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
+    });
+
+    it('frees the slot NATIVE_SETTLE_CEILING_MS after a probe timeout when the call never settles', async () => {
+        mockOnTranslateTask.mockImplementationOnce(() => new Promise(() => {}));
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Hallo' }));
+        void probeTranslationLanguage('de');
+        await jest.advanceTimersByTimeAsync(90_000);
+        const retry = probeTranslationLanguage('de');
+        await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 100);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        await jest.advanceTimersByTimeAsync(200);
+        await jest.runAllTimersAsync();
+        expect(await retry).toBe('success');
     });
 });
