@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { delay, http, HttpResponse, type RequestHandler } from 'msw';
+import { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import { gunzipSync } from 'node:zlib';
 import { FORBIDDEN_TOOL_KEYS } from '../../../lib/llm/text-tool-protocol';
 import type {
@@ -126,15 +127,17 @@ function sseStream(
   reply: Exclude<GatewayReply, StatusReply | string>,
   clientPub: string,
   signal: AbortSignal,
-): ReadableStream<Uint8Array> {
+): NodeReadableStream<Uint8Array> {
   const enc = new TextEncoder();
   const seal = (t: string) => sealForClient(t, clientPub, call.algo);
   let cancelled = false;
   const live = () => !cancelled && !signal.aborted;
   const delta = (d: object) => ({ choices: [{ index: 0, delta: d }] });
 
-  // Pull-driven (highWaterMark 0): a chunk is produced only when the client reads, so an
-  // abrupt close lands AFTER the previous chunk was delivered (error() discards queued chunks).
+  // Pull-driven (highWaterMark 0): a frame is produced only when something reads. MSW's log
+  // clone tees the body, so production runs at most one frame ahead of a read the client has
+  // already received, and an abrupt close lands after the previous frame reached the client
+  // (error() discards queued frames). That holds only on Node's own stream class (below).
   async function* frames(): AsyncGenerator<unknown> {
     if (reply.reasoning) yield delta({ reasoning_content: seal('E2E fixture reasoning.') });
     for (let i = 0; i < reply.chunks.length; i++) {
@@ -168,7 +171,11 @@ function sseStream(
       /* the stream closed under us: the client went away */
     }
   };
-  return new ReadableStream<Uint8Array>(
+  // Node's own ReadableStream, never the global: under jest-expo the global is expo's
+  // web-streams polyfill, which undici's Response does not recognise, so it wraps it with
+  // ReadableStream.from(...).pipeThrough(...). That pipe reads one frame ahead, and an error
+  // on the next frame (closeAfter) discards the frame the client had not read yet.
+  return new NodeReadableStream<Uint8Array>(
     {
       async pull(controller) {
         let res: IteratorResult<unknown>;

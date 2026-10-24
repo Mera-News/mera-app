@@ -56,6 +56,15 @@ const text = (events: SseEvent[]) =>
   events.flatMap((e) => (e.type === 'text-delta' ? [e.delta] : [])).join('');
 const respond = (r: ReturnType<GatewayResponder>): GatewayResponder => () => r;
 
+// Each gateway call waits out the interactive limiter's 1 s spacing; on real time a
+// multi-call test (re-attest, retry, fallback) ran 3-4 s against Jest's 5 s timeout and
+// timed out under a loaded run. Every test that reaches the gateway through the app runs
+// on the strict fake clock, which steps through those waits.
+function onFakeClock<T>(run: () => Promise<T>): Promise<T> {
+  useFakeClock('2026-10-09T00:00:00Z');
+  return advanceUntilDone(run());
+}
+
 async function until(cond: () => boolean, ms = 2000): Promise<void> {
   for (let t = 0; t < ms && !cond(); t += 10) await new Promise((r) => setTimeout(r, 10));
   if (!cond()) throw new Error('until: condition not met');
@@ -75,7 +84,7 @@ afterEach(() => {
 });
 
 describe('chat: streamed', () => {
-  it.each(['ed25519', 'ecdsa'] as const)('%s: sealed both ways, one attestation', async (curve) => {
+  it.each(['ed25519', 'ecdsa'] as const)('%s: sealed both ways, one attestation', (curve) => onFakeClock(async () => {
     const rawBodies: string[] = [];
     server.events.on('request:start', ({ request }) => {
       if (request.url.endsWith('/v1/chat/completions')) void request.clone().text().then((t) => rawBodies.push(t));
@@ -103,9 +112,9 @@ describe('chat: streamed', () => {
     }
     expect(call.headers['x-model-pub-key']).toBe(TEST_MODEL_KEYS[curve].publicKeyHex);
     expect(gatewayViolations()).toEqual([]);
-  });
+  }));
 
-  it('the default responder answers the persona route leg with the load_skill XML', async () => {
+  it('the default responder answers the persona route leg with the load_skill XML', () => onFakeClock(async () => {
     const events = await collect(
       cloudChatStream({
         messages: [
@@ -121,33 +130,33 @@ describe('chat: streamed', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({ name: 'load_skill', argumentsDelta: '{"id":"conversation/question"}' });
     expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'tool_calls' });
-  });
+  }));
 
-  it('reasoning_content is signalled once and never shown', async () => {
+  it('reasoning_content is signalled once and never shown', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ chunks: ['Answer.'], reasoning: true })));
     const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
     expect(events.filter((e) => e.type === 'reasoning')).toHaveLength(1);
     expect(text(events)).toBe('Answer.');
-  });
+  }));
 
-  it('a body the upstream buffers (ignoreStream) is still decrypted', async () => {
+  it('a body the upstream buffers (ignoreStream) is still decrypted', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ chunks: ['Buffered ', 'answer.'], ignoreStream: true })));
     const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
     expect(text(events)).toBe('Buffered answer.');
-  });
+  }));
 });
 
 describe('chat: buffered', () => {
-  it('cloudComplete returns the decrypted completion', async () => {
+  it('cloudComplete returns the decrypted completion', () => onFakeClock(async () => {
     server.use(...mockGateway(respond('Buffered reply.')));
     await expect(cloudComplete({ systemPrompt: SECRET_SYSTEM, prompt: SECRET_USER, model: SMALL_MODEL })).resolves.toBe(
       'Buffered reply.',
     );
     expect(gatewayCalls('chat')[0]).toMatchObject({ stream: false });
     expect(gatewayCalls('chat')[0].messages.map((m) => m.content)).toEqual([SECRET_SYSTEM, SECRET_USER]);
-  });
+  }));
 
-  it('cloudBatchComplete seals every item', async () => {
+  it('cloudBatchComplete seals every item', () => onFakeClock(async () => {
     server.use(...mockGateway((c) => `echo:${c.messages[1].content}`));
     const out = await cloudBatchComplete(
       [
@@ -161,9 +170,9 @@ describe('chat: buffered', () => {
       { id: 'b', output: 'echo:two' },
     ]);
     expect(gatewayCalls('batch').map((c) => c.messages[1].content)).toEqual(['one', 'two']);
-  });
+  }));
 
-  it('a perItem status fails only that batch item', async () => {
+  it('a perItem status fails only that batch item', () => onFakeClock(async () => {
     server.use(
       ...mockGateway((c) =>
         c.messages[1].content === 'two'
@@ -184,7 +193,7 @@ describe('chat: buffered', () => {
       { id: 'b', output: '', error: 'upstream timed out' },
       { id: 'c', output: 'echo:three' },
     ]);
-  });
+  }));
 });
 
 describe('chat: faults', () => {
@@ -196,7 +205,7 @@ describe('chat: faults', () => {
           : 'recovered',
       ),
     );
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+    const events = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })));
     expect(text(events)).toBe('recovered');
     expect(gatewayCalls('chat')).toHaveLength(2);
     expect(attestationRequests(SMALL_MODEL)).toBe(2);
@@ -204,18 +213,18 @@ describe('chat: faults', () => {
 
   it('429 with Retry-After 1s on the interactive lane: one retry, then RateLimitedError', async () => {
     server.use(...mockGateway(respond({ status: 429, headers: { 'Retry-After': '1' } })));
-    const err = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e);
+    const err = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e));
     expect(err).toBeInstanceOf(RateLimitedError);
     expect(err).toMatchObject({ statusCode: 429, retryAfterMs: 1000 });
     expect(gatewayCalls('chat')).toHaveLength(2);
   });
 
-  it('429 with a long Retry-After is not waited out', async () => {
+  it('429 with a long Retry-After is not waited out', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ status: 429, headers: { 'Retry-After': '30' } })));
     const err = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e);
     expect(err).toBeInstanceOf(RateLimitedError);
     expect(gatewayCalls('chat')).toHaveLength(1);
-  });
+  }));
 
   it('the stream closes after one chunk: text arrived, so the error surfaces', async () => {
     server.use(...mockGateway(respond({ chunks: ['partial ', 'never'], closeAfter: 1 })));
@@ -225,14 +234,14 @@ describe('chat: faults', () => {
         if (e.type === 'text-delta') seen.push(e.delta);
       }
     };
-    await expect(run()).rejects.toThrow();
+    await expect(onFakeClock(run)).rejects.toThrow();
     expect(seen).toEqual(['partial ']);
     expect(gatewayCalls('chat')).toHaveLength(1);
   });
 
   it('502 surfaces as E2EE chat failed with the body on responseBody only', async () => {
     server.use(...mockGateway(respond({ status: 502, body: { error: 'upstream gone' } })));
-    const err = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e);
+    const err = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e));
     expect(err.message).toBe('E2EE chat failed: 502');
     expect(err.responseBody).toContain('upstream gone');
   });
@@ -292,7 +301,7 @@ describe('chat: hedge', () => {
 });
 
 describe('chat: abort', () => {
-  it('a caller abort mid-stream marks the recorded call aborted', async () => {
+  it('a caller abort mid-stream marks the recorded call aborted', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ chunks: ['one ', 'two'], stallAfter: 1 })));
     const stop = new AbortController();
     const run = (async () => {
@@ -303,7 +312,7 @@ describe('chat: abort', () => {
     await expect(run).rejects.toBeInstanceOf(CallerAbortError);
     await until(() => gatewayCalls('chat')[0]?.aborted === true);
     expect(gatewayCalls('chat')).toHaveLength(1);
-  });
+  }));
 });
 
 describe('async jobs', () => {
@@ -311,41 +320,43 @@ describe('async jobs', () => {
 
   it('submit, poll (pending first), decode: every relevance call decodes to 0.9s', async () => {
     server.use(...mockGateway((c) => (c.callId?.startsWith('score:') ? '[0.9,0.9]' : ''), { pendingPolls: 1 }));
-    // The default responder is covered below; this one pins the text so the decode is exact.
-    const ctx = await prepareE2EEContext(SMALL_MODEL);
-    const calls = [
-      { id: 'score:0', system: 'shared relevance system', prompt: `${article(1)}\n${article(2)}` },
-      { id: 'score:1', system: 'shared relevance system', prompt: `${article(3)}\n${article(4)}` },
-    ];
-    const sent = await sendInferenceRequest({
-      bundle: { calls } as never,
-      ctx,
-      token: null,
-      model: SMALL_MODEL,
-      context: 'foreground',
-      idempotencyKey: 'key-1',
-    });
-    if (sent.status !== 'ok') throw new Error(`submit ${sent.status}`);
-    expect(gatewayCalls('job').map((c) => c.callId)).toEqual(['score:0', 'score:1']);
-    // sharedSystem was hoisted and decrypted back into each call.
-    expect(gatewayCalls('job')[0].messages[0]).toEqual({ role: 'system', content: 'shared relevance system' });
+    await onFakeClock(async () => {
+      // The default responder is covered below; this one pins the text so the decode is exact.
+      const ctx = await prepareE2EEContext(SMALL_MODEL);
+      const calls = [
+        { id: 'score:0', system: 'shared relevance system', prompt: `${article(1)}\n${article(2)}` },
+        { id: 'score:1', system: 'shared relevance system', prompt: `${article(3)}\n${article(4)}` },
+      ];
+      const sent = await sendInferenceRequest({
+        bundle: { calls } as never,
+        ctx,
+        token: null,
+        model: SMALL_MODEL,
+        context: 'foreground',
+        idempotencyKey: 'key-1',
+      });
+      if (sent.status !== 'ok') throw new Error(`submit ${sent.status}`);
+      expect(gatewayCalls('job').map((c) => c.callId)).toEqual(['score:0', 'score:1']);
+      // sharedSystem was hoisted and decrypted back into each call.
+      expect(gatewayCalls('job')[0].messages[0]).toEqual({ role: 'system', content: 'shared relevance system' });
 
-    expect(await fetchResults(sent.requestId, 'foreground', sent.capabilityToken)).toBe('pending');
-    const results = (await fetchResults(sent.requestId, 'foreground', sent.capabilityToken)) as ServerResults;
-    for (const row of results.results) {
-      const { output } = toBatchResult(row, ctx.privateKey, ctx.algo);
-      expect(parseBatchRelevanceResponse(output, 2, row.id)).toEqual([0.9, 0.9]);
-    }
+      expect(await fetchResults(sent.requestId, 'foreground', sent.capabilityToken)).toBe('pending');
+      const results = (await fetchResults(sent.requestId, 'foreground', sent.capabilityToken)) as ServerResults;
+      for (const row of results.results) {
+        const { output } = toBatchResult(row, ctx.privateKey, ctx.algo);
+        expect(parseBatchRelevanceResponse(output, 2, row.id)).toEqual([0.9, 0.9]);
+      }
 
-    // A replay of the same Idempotency-Key is the same job.
-    const again = await sendInferenceRequest({
-      bundle: { calls } as never, ctx, token: null, model: SMALL_MODEL, context: 'foreground', idempotencyKey: 'key-1',
+      // A replay of the same Idempotency-Key is the same job.
+      const again = await sendInferenceRequest({
+        bundle: { calls } as never, ctx, token: null, model: SMALL_MODEL, context: 'foreground', idempotencyKey: 'key-1',
+      });
+      expect(again).toMatchObject({ status: 'ok', requestId: sent.requestId });
+      expect(gatewayCalls('job')).toHaveLength(2);
     });
-    expect(again).toMatchObject({ status: 'ok', requestId: sent.requestId });
-    expect(gatewayCalls('job')).toHaveLength(2);
   });
 
-  it('the default responder counts the article fences', async () => {
+  it('the default responder counts the article fences', () => onFakeClock(async () => {
     const ctx = await prepareE2EEContext(SMALL_MODEL);
     const sent = await sendInferenceRequest({
       bundle: { calls: [{ id: 'score:0', system: 's', prompt: [1, 2, 3].map(article).join('\n') }] } as never,
@@ -355,9 +366,9 @@ describe('async jobs', () => {
     const results = (await fetchResults(sent.requestId, 'foreground', sent.capabilityToken)) as ServerResults;
     const { output } = toBatchResult(results.results[0], ctx.privateKey, ctx.algo);
     expect(parseBatchRelevanceResponse(output, 3, 'score:0')).toEqual([0.9, 0.9, 0.9]);
-  });
+  }));
 
-  it('unknown id is not-found; a capability token for another job is unauthorized', async () => {
+  it('unknown id is not-found; a capability token for another job is unauthorized', () => onFakeClock(async () => {
     expect(await fetchResults('0'.repeat(24), 'foreground')).toBe('not-found');
     const ctx = await prepareE2EEContext(SMALL_MODEL);
     const sent = await sendInferenceRequest({
@@ -368,11 +379,11 @@ describe('async jobs', () => {
     expect(sent.status).toBe('ok');
     if (sent.status !== 'ok') return;
     expect(await fetchResults(sent.requestId, 'background', 'cap.000000000000000000000099')).toBe('unauthorized');
-  });
+  }));
 });
 
 describe('search routes', () => {
-  it('searchWeb and searchWebBatch get 2 default results per query', async () => {
+  it('searchWeb and searchWebBatch get 2 default results per query', () => onFakeClock(async () => {
     const one = await searchWeb('mera news');
     expect(one).toMatchObject({ ok: true });
     if (one.ok) expect(one.results).toHaveLength(2);
@@ -383,7 +394,7 @@ describe('search routes', () => {
       'first query',
       'second query',
     ]);
-  });
+  }));
 
   it('503 search-unavailable passes through and is not an empty result', async () => {
     server.use(...mockGateway(respond({ status: 503, body: { code: 'search-unavailable' } })));
