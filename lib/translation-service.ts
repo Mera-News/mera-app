@@ -896,13 +896,22 @@ export interface TranslateOptions {
 /**
  * Why a translation call ended.
  *
+ * `skipped` is NOT a failure either: no native call was made (gate, breaker,
+ * unsupported language or device), so nothing about this TEXT was learned.
+ *
  * `dropped` is NOT a failure and must never be treated as one: the route moved
  * on before the call was ever made, so the text is exactly as translatable as
  * it was a moment ago. A caller that latches on `dropped` (as a naive "we tried
  * and got nothing" would) leaves the node showing English for the rest of the
  * session — see TranslatableDynamic, which clears its fired-latch on it.
  */
-export type TranslationOutcome = 'ok' | 'failed' | 'dropped';
+export type TranslationOutcome = 'ok' | 'failed' | 'dropped' | 'skipped';
+
+/** No native attempt was made: the language is gated (unverified on iOS), unsupported, the device cannot
+ *  translate, or the breaker is open. Distinct from `failed`, which means a native attempt was made and its
+ *  final outcome failed; only `failed` is a per-text failure. */
+const SKIPPED = Symbol('mera.translation.skipped');
+type Skipped = typeof SKIPPED;
 
 export interface TranslationResult {
     readonly status: TranslationOutcome;
@@ -929,13 +938,13 @@ export function translateTextDetailed(
         probeErrors.set(targetLangCode, null);
     }
 
-    const task = async (): Promise<string | null> => {
+    const task = async (): Promise<string | null | Skipped> => {
         // Checked HERE, at the head of the queue — NOT when translateText was
         // called. A language switch fires every mounted <TranslatableDynamic>
         // in one effect flush, so all N calls are already queued before the
         // first failure lands; a call-time check would let every one of them
         // reach the native module and present its own sheet.
-        if (blockedLanguages.has(targetLangCode)) return null;
+        if (blockedLanguages.has(targetLangCode)) return SKIPPED;
 
         // The two "this can never work" checks come BEFORE the gate, not
         // after. Both are pure and free, and both need to RECORD their verdict
@@ -947,20 +956,20 @@ export function translateTextDetailed(
         // doomed attempt still costs the user a sheet before it fails.
         if (!canTranslateIntoLanguage(targetLangCode)) {
             blockLanguage(targetLangCode, 'unsupported-target-language', true);
-            return null;
+            return SKIPPED;
         }
 
         // Same reasoning, one level up: no translator on this device at all.
         if (!deviceCanTranslate()) {
             blockLanguage(targetLangCode, 'device-cannot-translate', true, true);
-            return null;
+            return SKIPPED;
         }
 
         // THE GATE. An unverified iOS language may only be reached by the
         // probe. Everything else falls back to the English it already has,
         // silently and without a native call — see the block comment above
         // isNativeCallGated.
-        if (!isProbe && isNativeCallGated(targetLangCode)) return null;
+        if (!isProbe && isNativeCallGated(targetLangCode)) return SKIPPED;
 
         const retryDelays = retryDelaysFor(targetLangCode);
         // Android's Kotlin bridge treats the literal string 'auto' as a
@@ -1087,6 +1096,7 @@ export function translateTextDetailed(
     }).then(
         (value): TranslationResult => {
             if (isDropped(value)) return { status: 'dropped', text: null };
+            if (value === SKIPPED) return { status: 'skipped', text: null };
             return value == null
                 ? { status: 'failed', text: null }
                 : { status: 'ok', text: value };

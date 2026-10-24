@@ -16,6 +16,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import {
+    isTranslationBlocked,
     probeTranslationLanguage,
     setLateTranslationSink,
     translateTextDetailed,
@@ -99,5 +100,33 @@ describe('a native answer that lands after the JS timeout', () => {
         second.resolve({ translatedTexts: 'Autre titre' });
         await jest.advanceTimersByTimeAsync(0);
         expect(useAppLanguageStore.getState().cache.get('Other title')).toBeUndefined();
+    });
+});
+
+describe("'skipped' versus 'failed'", () => {
+    it("is 'skipped' when the gate refuses an unverified iOS language, with no native call", async () => {
+        const p = translateTextDetailed('Hello', 'de');
+        await jest.runAllTimersAsync();
+        expect(await p).toEqual({ status: 'skipped', text: null });
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+    });
+
+    it("is 'skipped' while the breaker is open, and 'failed' only after a real native attempt", async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('nope'));
+        const first = translateTextDetailed('A', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await first).toEqual({ status: 'failed', text: null });
+
+        // A failed probe opens the breaker for the language.
+        const probe = probeTranslationLanguage('fr');
+        await jest.runAllTimersAsync();
+        expect(await probe).toBe('failed');
+        expect(isTranslationBlocked('fr')).toBe(true);
+        mockOnTranslateTask.mockReset();
+        const second = translateTextDetailed('B', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await second).toEqual({ status: 'skipped', text: null });
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
     });
 });
