@@ -8,8 +8,11 @@ import { getLanguageNameIn } from '@/lib/algorithms/language-names';
 import { sleep } from '@/lib/utils/sleep';
 import {
     __resetTranslationQueueForTests,
+    DROPPED,
     enqueueTranslationTask,
+    getTranslationBackgroundGeneration,
     isDropped,
+    isTranslationQueueActive,
     PROBE_PRIORITY,
     type TranslationTaskContext,
 } from '@/lib/translation-queue';
@@ -990,7 +993,15 @@ export function translateTextDetailed(
         return Promise.resolve({ status: 'failed', text: null });
     }
 
-    const task = async (ctx: TranslationTaskContext): Promise<string | null | Skipped> => {
+    const task = async (ctx: TranslationTaskContext): Promise<string | null | Skipped | typeof DROPPED> => {
+        // A failure that lands while the app is away, or on a call that spanned
+        // a background, says nothing about the text: iOS tears translation
+        // sessions down on backgrounding. It is a drop, and it never counts.
+        const generation = getTranslationBackgroundGeneration();
+        const wasAway = (): boolean =>
+            !isProbe
+            && (!isTranslationQueueActive() || getTranslationBackgroundGeneration() !== generation);
+
         // Checked HERE, at the head of the queue — NOT when translateText was
         // called. A language switch fires every mounted <TranslatableDynamic>
         // in one effect flush, so all N calls are already queued before the
@@ -1049,6 +1060,7 @@ export function translateTextDetailed(
                     timeoutMs,
                     ctx,
                 );
+                if (translated == null && wasAway()) return DROPPED;
                 if (translated == null) {
                     logger.warn('[TranslationService] Translation returned no text', {
                         textPreview: text.slice(0, 20),
@@ -1074,6 +1086,7 @@ export function translateTextDetailed(
                         probeTimedOut.set(targetLangCode, true);
                     }
                 }
+                if (wasAway()) return DROPPED;
                 logger.warn('[TranslationService] Translation attempt failed', {
                     textPreview: text.slice(0, 20),
                     sourceLangCode,

@@ -23,6 +23,13 @@ import {
     translateTextDetailed,
     __resetTranslationStateForTests,
 } from '@/lib/translation-service';
+import {
+    getTranslationEpoch,
+    isTranslationQueueActive,
+    setAppStateSource,
+    useTranslationQueueActive,
+} from '@/lib/translation-queue';
+import { act, renderHook } from '@testing-library/react-native';
 
 /** Open the iOS gate for a language the way production does: one successful probe. */
 async function openGate(code: string): Promise<void> {
@@ -200,5 +207,121 @@ describe('the per-text retry budget', () => {
         const other = translateTextDetailed('Good', 'fr');
         await jest.runAllTimersAsync();
         expect(await other).toEqual({ status: 'ok', text: 'Bon' });
+    });
+});
+
+describe('the app leaving the foreground', () => {
+    type Mode = 'active' | 'inactive' | 'background';
+    let emit: (mode: Mode) => void = () => {};
+    const fakeAppState = {
+        currentState: 'active',
+        addEventListener: (_type: 'change', fn: (mode: string) => void) => {
+            emit = fn;
+            return { remove: () => { emit = () => {}; } };
+        },
+    };
+
+    beforeEach(() => {
+        setAppStateSource(fakeAppState);
+    });
+
+    afterEach(() => {
+        emit('active');
+    });
+
+    it('background drops the queue, leaves the call in flight, and dispatches nothing until active', async () => {
+        await openGate('fr');
+        const head = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => head.promise);
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Plus tard' }));
+
+        const inFlight = translateTextDetailed('Head', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        const queued = translateTextDetailed('Queued', 'fr');
+        const epochBefore = getTranslationEpoch();
+
+        emit('background');
+        expect(await queued).toEqual({ status: 'dropped', text: null });
+        head.resolve({ translatedTexts: 'Tête' });
+        expect(await inFlight).toEqual({ status: 'ok', text: 'Tête' });
+
+        const asked = translateTextDetailed('Asked while away', 'fr');
+        await jest.advanceTimersByTimeAsync(1_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+
+        emit('active');
+        expect(getTranslationEpoch()).toBe(epochBefore + 1);
+        // Stamped before the bump, so it is dropped too: its node re-asks once active.
+        expect(await asked).toEqual({ status: 'dropped', text: null });
+        const again = translateTextDetailed('Asked while away', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await again).toEqual({ status: 'ok', text: 'Plus tard' });
+    });
+
+    it('inactive holds dispatch but keeps the queue, and bumps nothing', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Gardé' }));
+        emit('inactive');
+        const held = translateTextDetailed('Held', 'fr');
+        await jest.advanceTimersByTimeAsync(1_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        expect(isTranslationQueueActive()).toBe(false);
+
+        const epochBefore = getTranslationEpoch();
+        emit('active');
+        await jest.runAllTimersAsync();
+        expect(await held).toEqual({ status: 'ok', text: 'Gardé' });
+        expect(getTranslationEpoch()).toBe(epochBefore);
+    });
+
+    it('never drops the probe, but holds it until active', async () => {
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Hallo' }));
+        emit('background');
+        const probe = probeTranslationLanguage('de');
+        await jest.advanceTimersByTimeAsync(1_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        emit('active');
+        await jest.runAllTimersAsync();
+        expect(await probe).toBe('success');
+    });
+
+    it("a failure that settles while away is 'dropped' and costs the text and language nothing", async () => {
+        await openGate('fr');
+        const call = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => call.promise);
+        const p = translateTextDetailed('Interrupted', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        emit('background');
+        call.reject(new Error('The operation was cancelled.'));
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await p).toEqual({ status: 'dropped', text: null });
+
+        // A call that spanned a background is dropped even if it fails after the return.
+        emit('active');
+        const spanning = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => spanning.promise);
+        const q = translateTextDetailed('Spanning', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        emit('background');
+        emit('active');
+        spanning.reject(new Error('The operation was cancelled.'));
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await q).toEqual({ status: 'dropped', text: null });
+
+        // Neither counted: the budget still allows two real failures for each text.
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Enfin' });
+        const r = translateTextDetailed('Interrupted', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await r).toEqual({ status: 'ok', text: 'Enfin' });
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+
+    it('useTranslationQueueActive follows the app state', () => {
+        const { result } = renderHook(() => useTranslationQueueActive());
+        expect(result.current).toBe(true);
+        act(() => emit('inactive'));
+        expect(result.current).toBe(false);
+        act(() => emit('active'));
+        expect(result.current).toBe(true);
     });
 });

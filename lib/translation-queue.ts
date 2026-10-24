@@ -38,6 +38,8 @@
 // conflates them will mark the text permanently un-translatable for the
 // session (see TranslatableDynamic's `firedRef`).
 
+import { useSyncExternalStore } from 'react';
+import { AppState } from 'react-native';
 import logger from '@/lib/logger';
 
 /**
@@ -232,7 +234,7 @@ function sweepStale(): void {
 const noop = (): void => {};
 
 function pump(): void {
-    while (inFlight < TRANSLATION_CONCURRENCY) {
+    while (inFlight < TRANSLATION_CONCURRENCY && appMode === 'active') {
         // Belt and braces: `bumpTranslationEpoch` already swept, but an item can
         // be enqueued against an epoch that advances before it reaches the head.
         sweepStale();
@@ -319,10 +321,98 @@ export function getTranslationQueueStats(): TranslationQueueStats {
     };
 }
 
+// ── The app leaving the foreground ──
+//
+// `inactive` (Control Center, the app switcher, a system prompt) holds dispatch
+// and keeps the queue: the reader is usually back in a moment. `background`
+// drops every queued item except the probe, because the screen may be gone by
+// the time the app returns. Calls already in flight are untouched either way.
+// On `active`, dispatch resumes, and the epoch bumps only if something was
+// dropped, so dropped nodes re-ask. The probe is held, never dropped.
+
+/** What the queue needs from react-native's AppState. Injected so tests can drive it. */
+export interface AppStateSource {
+    readonly currentState?: string | null;
+    addEventListener(type: 'change', listener: (state: string) => void): { remove(): void };
+}
+
+type AppMode = 'active' | 'inactive' | 'background';
+let appMode: AppMode = 'active';
+/** Advanced on every move to background, so a call can tell it spanned one. */
+let backgroundGeneration = 0;
+let droppedWhileAway = false;
+let appStateSubscription: { remove(): void } | null = null;
+const activeListeners = new Set<() => void>();
+
+function modeOf(state: string | null | undefined): AppMode {
+    return state === 'background' ? 'background' : state === 'inactive' ? 'inactive' : 'active';
+}
+
+function applyAppState(state: string | null | undefined): void {
+    const next = modeOf(state);
+    if (next === appMode) return;
+    const wasActive = appMode === 'active';
+    appMode = next;
+    if (next === 'background') {
+        backgroundGeneration += 1;
+        const casualties = pending.filter((item) => item.epoch !== null);
+        if (casualties.length > 0) {
+            pending = pending.filter((item) => item.epoch === null);
+            droppedCount += casualties.length;
+            droppedWhileAway = true;
+            logger.debug('[TranslationQueue] Dropped queued items on background', { dropped: casualties.length });
+            for (const item of casualties) item.resolve(DROPPED);
+        }
+    }
+    if (next === 'active') {
+        if (droppedWhileAway) {
+            droppedWhileAway = false;
+            bumpTranslationEpoch('app-active');
+        }
+        pump();
+    }
+    if (wasActive !== (next === 'active')) activeListeners.forEach((listener) => listener());
+}
+
+/** Swap the AppState the queue listens to (tests). `null` stops listening and counts as active. */
+export function setAppStateSource(source: AppStateSource | null): void {
+    appStateSubscription?.remove();
+    appStateSubscription = null;
+    applyAppState(source?.currentState ?? 'active');
+    if (source) appStateSubscription = source.addEventListener('change', applyAppState);
+}
+
+/** False while the app is inactive or backgrounded: nothing dispatches then. */
+export function isTranslationQueueActive(): boolean {
+    return appMode === 'active';
+}
+
+/** Changes every time the app goes to the background. */
+export function getTranslationBackgroundGeneration(): number {
+    return backgroundGeneration;
+}
+
+function subscribeQueueActive(listener: () => void): () => void {
+    activeListeners.add(listener);
+    return () => {
+        activeListeners.delete(listener);
+    };
+}
+
+/** Reactive {@link isTranslationQueueActive}. A node re-asks a dropped text only while this is true. */
+export function useTranslationQueueActive(): boolean {
+    return useSyncExternalStore(subscribeQueueActive, isTranslationQueueActive, () => true);
+}
+
+setAppStateSource(AppState);
+
 /** Test seam — clears every module-level scheduler state. */
 export function __resetTranslationQueueForTests(): void {
     const casualties = pending;
     pending = [];
+    appMode = 'active';
+    backgroundGeneration = 0;
+    droppedWhileAway = false;
     epoch = 0;
     seqCounter = 0;
     inFlight = 0;
