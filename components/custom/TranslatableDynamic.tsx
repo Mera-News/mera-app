@@ -12,7 +12,7 @@ import {
     useTranslationBlocked,
     useTranslationSuppressed,
 } from '@/lib/translation-service';
-import { visibilityPriority } from '@/lib/translation-queue';
+import { useTranslationQueueActive, visibilityPriority } from '@/lib/translation-queue';
 import { translationCacheKey, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
@@ -466,7 +466,10 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // gate's RISING edge, because the service answers an exhausted text with
     // 'failed' at once and re-asking while the gate stays open would loop.
     // The per-text retry budget lives in the service, not here.
-    const askGate = useIsFocusedSafe();
+    // Both hooks called unconditionally: the React Compiler build crashes on a short-circuited hook.
+    const focused = useIsFocusedSafe();
+    const queueActive = useTranslationQueueActive();
+    const askGate = focused && queueActive;
     const prevGateRef = useRef(askGate);
     useEffect(() => {
         const rose = askGate && !prevGateRef.current;

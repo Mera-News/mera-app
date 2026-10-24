@@ -46,6 +46,26 @@ jest.mock('@/lib/translation-service', () => ({
     useTranslationBlocked: () => (mockBlocked ? { blockedAt: 0 } : null),
 }));
 
+// The app is in front (the queue is not paused).
+let mockQueueActive = true;
+jest.mock('@/lib/translation-queue', () => {
+    const { useEffect, useState } = require('react');
+    return {
+        ...jest.requireActual('@/lib/translation-queue'),
+        useTranslationQueueActive: () => {
+            const [, bump] = useState(0);
+            useEffect(() => {
+                const l = () => bump((n: number) => n + 1);
+                mockGateListeners.add(l);
+                return () => {
+                    mockGateListeners.delete(l);
+                };
+            }, []);
+            return mockQueueActive;
+        },
+    };
+});
+
 // The re-ask gate: is the reader looking at this text.
 let mockGate = true;
 const mockGateListeners = new Set<() => void>();
@@ -95,6 +115,7 @@ beforeEach(() => {
     mockTranslate.mockClear();
     mockBlocked = false;
     mockGate = true;
+    mockQueueActive = true;
     mockNextOutcome = () => new Promise(() => {});
     useAppLanguageStore.setState({ appLanguage: 'mr', cache: new Map(), pending: new Set() });
 });
@@ -198,6 +219,25 @@ describe('the glyph only where it belongs', () => {
 });
 
 describe('re-asking', () => {
+    it('a failed text asks once more when the app comes back to the front, not while it stays there', async () => {
+        mockNextOutcome = async () => ({ status: 'failed' });
+        render(detail());
+        await screen.findByTestId('translatable-failed');
+        await settle();
+        expect(mockTranslate).toHaveBeenCalledTimes(1);
+        act(() => {
+            mockQueueActive = false;
+            mockGateListeners.forEach((l) => l());
+        });
+        await settle();
+        expect(mockTranslate).toHaveBeenCalledTimes(1);
+        act(() => {
+            mockQueueActive = true;
+            mockGateListeners.forEach((l) => l());
+        });
+        await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(2));
+    });
+
     it('a failed text with the gate held open asks once; one rising edge asks exactly once more', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         render(detail());
