@@ -132,7 +132,11 @@ export default function OTASilentUpdater() {
     // next cold start, and a launch has no spot to rebuild.
     if (!devTest) void noticeAppliedUpdate().then(() => checkAndFetch());
 
-    let departedAt: number | null = null;
+    // A process iOS launched in the background (remote notification, background
+    // task) never sees a departure, so the reader's first open counts as a
+    // return. Its spot is taken at that open: nothing was on screen before it.
+    let launchedInBackground = AppState.currentState === 'background';
+    let departedAt: number | null = launchedInBackground ? Date.now() : null;
     let departureSpot: unknown = null;
 
     const onReturn = async (spot: unknown, since: number | null) => {
@@ -166,6 +170,7 @@ export default function OTASilentUpdater() {
 
     const handleAppStateChange = (state: AppStateStatus) => {
       if (state === 'background') {
+        launchedInBackground = false;
         departedAt = Date.now();
         departureSpot = captureResumeSpot();
         return;
@@ -173,7 +178,8 @@ export default function OTASilentUpdater() {
       if (state !== 'active' || departedAt == null) return;
       // Every return clears the departure: a spot is only ever the one this
       // return came back to.
-      const spot = departureSpot;
+      const spot = launchedInBackground ? captureResumeSpot() : departureSpot;
+      launchedInBackground = false;
       const since = departedAt;
       departureSpot = null;
       departedAt = null;

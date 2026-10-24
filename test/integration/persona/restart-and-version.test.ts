@@ -628,6 +628,35 @@ describe('restarts and the version floor', () => {
             expect(mockReloadAsync).not.toHaveBeenCalled();
         });
 
+        // iOS can launch the process in the background (remote notification, background task): no departure
+        // is ever seen, so the reader's first open must count as a return.
+        it('a process launched in the background applies a downloaded update on the first open', async () => {
+            pendingUpdate('update-1');
+            setAppState('background');
+            mount();
+            await flush();
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+
+            setAppState('active');
+            await flush();
+
+            expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+            await expect(getSetting(RESTART_MARKER_KEY)).resolves.toContain('"reason":"ota"');
+        });
+
+        it('a process launched in the background checks for an update on the first open', async () => {
+            setAppState('background');
+            mount();
+            await flush();
+            expect(mockCheckForUpdate).toHaveBeenCalledTimes(1);
+
+            setAppState('active');
+            await flush();
+
+            expect(mockCheckForUpdate).toHaveBeenCalledTimes(2);
+            expect(mockReloadAsync).not.toHaveBeenCalled();
+        });
+
         it('at most one restart per update id: a second return for the same bundle does not reload', async () => {
             useFakeClock(NOW, { advanceTimers: true });
             pendingUpdate('update-1');
