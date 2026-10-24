@@ -49,7 +49,7 @@ const SCROLL_THRESHOLD = 300;
 // can call it without violating hook ordering.
 export const toNewsArticle = (a: ArticleSummary): NewsArticle => ({
     _id: a._id,
-    title: a.title_en,
+    title: a.title_original ?? a.title_en,
     title_en_internal_only: a.title_en,
     description: a.description_en ?? undefined,
     description_en_internal_only: a.description_en ?? undefined,

@@ -71,6 +71,7 @@ type ArticleSummary {
   pubDate: DateTime!
   publication_name: String
   title_en: String!
+  title_original: String
 }
 
 """Article summary with cluster membership — used by Flow v2 hydration"""

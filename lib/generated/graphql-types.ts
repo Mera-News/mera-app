@@ -76,6 +76,7 @@ export type ArticleSummary = {
   pubDate: Scalars['DateTime']['output'];
   publication_name?: Maybe<Scalars['String']['output']>;
   title_en: Scalars['String']['output'];
+  title_original?: Maybe<Scalars['String']['output']>;
 };
 
 /** Article summary with cluster membership — used by Flow v2 hydration */

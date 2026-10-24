@@ -383,6 +383,7 @@ const GET_RELATED_ARTICLES_PAGE = gql`
       articles {
         _id
         title_en
+        title_original
         description_en
         article_url
         image_url
