@@ -3,6 +3,11 @@
 // timeout is not retried, a backgrounded app asks nothing, and a screenful goes as one call.
 const mockOnTranslateTask: jest.Mock = jest.requireMock('expo-translate-text').onTranslateTask;
 
+// A device that can translate, until a test says otherwise (the permanent-block case). An ES-module
+// mock, so the service's namespace import is this same object and sees a write to it.
+jest.mock('expo-device', () => ({ __esModule: true, ...jest.requireActual('expo-device'), isDevice: true }));
+const mockDevice = jest.requireMock('expo-device') as { isDevice: boolean };
+
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
     default: {
@@ -21,6 +26,7 @@ import {
     getRetryDueAt,
     isTextFailureExhausted,
     TRANSLATION_RETRY_BACKOFF_MS,
+    VERIFIED_TRANSLATION_FAILURE_THRESHOLD,
     isTranslationBlocked,
     NATIVE_SETTLE_CEILING_MS,
     probeTranslationLanguage,
@@ -885,5 +891,91 @@ describe('the service retries a failed text in the one queue', () => {
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
         expect(sinkCache.get('Away')).toBe('fr:Away');
         release();
+    });
+});
+
+describe('the quiet re-verify of a breaker-blocked language', () => {
+    let emit: (mode: string) => void = () => {};
+    beforeEach(() => {
+        setAppStateSource({
+            currentState: 'active',
+            addEventListener: (_t, fn) => {
+                emit = fn;
+                return { remove: () => { emit = () => {}; } };
+            },
+        });
+    });
+    afterEach(() => emit('active'));
+
+    /** Verify the language, then open its breaker with five texts that each fail once. */
+    async function blockVerified(code: string): Promise<void> {
+        await openGate(code);
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        for (let i = 0; i < VERIFIED_TRANSLATION_FAILURE_THRESHOLD; i++) {
+            const p = translateTextDetailed(`Bad ${i}`, code);
+            await jest.advanceTimersByTimeAsync(0);
+            await p;
+        }
+        expect(isTranslationBlocked(code)).toBe(true);
+        mockOnTranslateTask.mockReset();
+    }
+
+    it('one ordinary call 5 minutes after the block; success lifts the block', async () => {
+        await blockVerified('fr');
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bonjour' });
+        await jest.advanceTimersByTimeAsync(5 * 60_000 - 1_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        await jest.advanceTimersByTimeAsync(1_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(typeof mockOnTranslateTask.mock.calls[0][0].input).toBe('string');
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+
+    it('a failed re-verify stays blocked and never tries again', async () => {
+        await blockVerified('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        await jest.advanceTimersByTimeAsync(5 * 60_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(isTranslationBlocked('fr')).toBe(true);
+        await jest.advanceTimersByTimeAsync(3_600_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+    });
+
+    it('backgrounded at 5 minutes, it runs once the app is active', async () => {
+        await blockVerified('fr');
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bonjour' });
+        emit('background');
+        await jest.advanceTimersByTimeAsync(10 * 60_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        emit('active');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+
+    it('a permanent block never re-verifies', async () => {
+        await openGate('fr');
+        mockDevice.isDevice = false;
+        try {
+            const p = translateTextDetailed('Anything', 'fr');
+            await jest.advanceTimersByTimeAsync(0);
+            expect(await p).toEqual({ status: 'skipped', text: null });
+            expect(isTranslationBlocked('fr')).toBe(true);
+        } finally {
+            mockDevice.isDevice = true;
+        }
+        await jest.advanceTimersByTimeAsync(3_600_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+    });
+
+    it('an unverified language never re-verifies', async () => {
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        const probe = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+        expect(await probe).toBe('failed');
+        expect(isTranslationBlocked('de')).toBe(true);
+        const calls = mockOnTranslateTask.mock.calls.length;
+        await jest.advanceTimersByTimeAsync(3_600_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(calls);
     });
 });

@@ -610,6 +610,64 @@ function recordTranslationSuccess(targetLangCode: string): void {
     if (wasBlocked || newlyVerified) notifyAvailabilityChanged();
 }
 
+/**
+ * Once per language per session, 5 minutes after a NON-permanent block of a
+ * language that has already translated this session, one quiet ordinary native
+ * call on a short sample. Success lifts the block through the normal success
+ * path (so `useTranslationSuppressed` lifts and nodes ask again); failure leaves
+ * it blocked and nothing tries again. Never the probe path: the language is
+ * verified, so no call can present Apple's sheet, and an unverified language is
+ * never re-verified. It waits for the queue to be active.
+ */
+export const TRANSLATION_REVERIFY_DELAY_MS = 5 * 60_000;
+const REVERIFY_SAMPLE = 'Hello';
+const reverifyScheduled = new Set<string>();
+const reverifyTimers = new Set<ReturnType<typeof setTimeout>>();
+
+function scheduleQuietReverify(targetLangCode: string): void {
+    if (reverifyScheduled.has(targetLangCode) || !verifiedLanguages.has(targetLangCode)) return;
+    reverifyScheduled.add(targetLangCode);
+    const timer = setTimeout(() => {
+        reverifyTimers.delete(timer);
+        whenQueueActive(() => runQuietReverify(targetLangCode));
+    }, TRANSLATION_REVERIFY_DELAY_MS);
+    reverifyTimers.add(timer);
+}
+
+function whenQueueActive(run: () => void): void {
+    if (isTranslationQueueActive()) {
+        run();
+        return;
+    }
+    const unsubscribe = subscribeQueueActive(() => {
+        if (!isTranslationQueueActive()) return;
+        unsubscribe();
+        run();
+    });
+}
+
+function runQuietReverify(targetLangCode: string): void {
+    const blocked = blockedLanguages.get(targetLangCode);
+    if (!blocked || blocked.permanent) return;
+    void enqueueTranslationTask(async (ctx) => {
+        try {
+            const raw = await callNativeWithTimeout(
+                REVERIFY_SAMPLE,
+                nativeSourceLangCode(),
+                targetLangCode,
+                TRANSLATE_CALL_TIMEOUT_MS,
+                ctx,
+            );
+            if (typeof raw === 'string') recordTranslationSuccess(targetLangCode);
+        } catch (err) {
+            logger.warn('[TranslationService] Quiet re-verify failed; the language stays blocked', {
+                targetLangCode,
+                error: err instanceof Error ? err.message : String(err),
+            });
+        }
+    }, { epoch: null, label: `${targetLangCode}:reverify` });
+}
+
 function blockLanguage(
     targetLangCode: string,
     message: string | null,
@@ -617,6 +675,7 @@ function blockLanguage(
     deviceUnsupported = false,
 ): void {
     if (blockedLanguages.has(targetLangCode)) return;
+    if (!permanent) scheduleQuietReverify(targetLangCode);
     blockedLanguages.set(targetLangCode, {
         targetLangCode,
         lastError: message,
@@ -753,6 +812,9 @@ export function __resetTranslationStateForTests(): void {
     failureCounts.clear();
     for (const entry of textAttempts.values()) if (entry.timer) clearTimeout(entry.timer);
     textAttempts.clear();
+    reverifyTimers.forEach(clearTimeout);
+    reverifyTimers.clear();
+    reverifyScheduled.clear();
     interest.clear();
     failedListeners.clear();
     joinable.clear();
