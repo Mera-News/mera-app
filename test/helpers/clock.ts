@@ -24,9 +24,10 @@ export async function advanceUntilSettled(maxMs = 60_000, stepMs = 50): Promise<
   }
 }
 
-/** Advances fake time until `promise` settles (or maxMs), then returns it. Use it right after
- *  starting an async chain: advanceUntilSettled() would return at once while no timer is
- *  pending yet. */
+/** Advances fake time until `promise` settles (or maxMs plus a settle phase), then returns it. Use
+ *  it right after starting an async chain: advanceUntilSettled() would return at once while no
+ *  timer is pending yet. Past the budget nothing drives the clock, so a chain that reaches a
+ *  zero-delay fake timer late would hang to the Jest timeout without the settle phase. */
 export async function advanceUntilDone<T>(promise: Promise<T>, maxMs = 120_000, stepMs = 50): Promise<T> {
   let done = false;
   promise.then(() => (done = true), () => (done = true));
@@ -34,6 +35,7 @@ export async function advanceUntilDone<T>(promise: Promise<T>, maxMs = 120_000, 
     await jest.advanceTimersByTimeAsync(stepMs);
     await realTurn();
   }
+  await settle(() => done);
   return promise;
 }
 
@@ -46,6 +48,16 @@ const realTurn = () => new Promise<void>((resolve) => setImmediate(resolve));
 const SETTLE_TURNS = 500;
 const SETTLE_NS = 2_000_000_000n;
 
+/** Real turns without moving the clock (zero-delay fake timers still fire) until `done()`. */
+async function settle(done: () => boolean): Promise<void> {
+  // hrtime, not Date.now(): the fake clock owns Date.
+  const start = process.hrtime.bigint();
+  for (let turn = 0; turn < SETTLE_TURNS && !done() && process.hrtime.bigint() - start < SETTLE_NS; turn++) {
+    await jest.advanceTimersByTimeAsync(0);
+    await realTurn();
+  }
+}
+
 /** Advances fake time in small steps, with a real event-loop turn per step, until `cond()` holds;
  *  throws if it never does within maxMs of virtual time plus a settle phase.
  *  The budget is virtual but the work it waits on (MSW, E2EE, an abort reaching the mock) needs REAL
@@ -56,11 +68,6 @@ export async function advanceUntil(cond: () => boolean, maxMs = 120_000, stepMs 
     await jest.advanceTimersByTimeAsync(stepMs);
     await realTurn();
   }
-  // hrtime, not Date.now(): the fake clock owns Date.
-  const start = process.hrtime.bigint();
-  for (let turn = 0; turn < SETTLE_TURNS && !cond() && process.hrtime.bigint() - start < SETTLE_NS; turn++) {
-    await jest.advanceTimersByTimeAsync(0);
-    await realTurn();
-  }
-  if (!cond()) throw new Error(`advanceUntil: condition not met within ${maxMs}ms virtual: ${String(cond).slice(0, 200)}`);
+  await settle(cond);
+  if (!cond()) throw new Error(`advanceUntil: condition not met within ${maxMs}ms virtual: ${String(cond).replace(/\s+/g, ' ').slice(0, 200)}`);
 }
