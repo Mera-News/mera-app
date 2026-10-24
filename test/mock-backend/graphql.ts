@@ -271,6 +271,7 @@ const relatedPage = (c: Ctx) => {
     };
 };
 query<'relatedArticlesPage'>('GetRelatedArticlesPage', relatedPage);
+query<'relatedArticlesPage'>('GetRelatedArticlesPageLegacy', relatedPage);
 query<'relatedArticlesPage'>('GetRelatedArticlesPageFiltered', relatedPage);
 
 // ---- publishers, publications, search ------------------------------------------------

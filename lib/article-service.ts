@@ -402,6 +402,48 @@ const GET_RELATED_ARTICLES_PAGE = gql`
   }
 `;
 
+// The same page without `title_original`, for a server that predates it (see
+// relatedOriginalUnsupported): an unknown field fails the whole request.
+const GET_RELATED_ARTICLES_PAGE_LEGACY = gql`
+  query GetRelatedArticlesPageLegacy(
+    $articleId: ID!
+    $stableClusterId: String
+    $sortMode: RelatedSortMode
+    $context: RelatedArticlesContextInput
+    $excludeIds: [ID!]
+    $first: Int
+    $after: String
+  ) {
+    relatedArticlesPage(
+      articleId: $articleId
+      stableClusterId: $stableClusterId
+      sortMode: $sortMode
+      context: $context
+      excludeIds: $excludeIds
+      first: $first
+      after: $after
+    ) {
+      articles {
+        _id
+        title_en
+        description_en
+        article_url
+        image_url
+        country_code
+        publication_name
+        language_code
+        pubDate
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+      restarted
+    }
+  }
+`;
+
 
 /**
  * N10 related-coverage filters: THE switch. Flip to true only once the server's
@@ -684,6 +726,18 @@ let exploreWindowUnsupported = false;
 /** Test seam. */
 export function __resetExploreWindowSupport(): void {
     exploreWindowUnsupported = false;
+}
+
+/**
+ * True once the server rejected `ArticleSummary.title_original` on the related
+ * page: ask the legacy document for the rest of the session, so an app ahead of
+ * its server still lists related coverage (titles then fall back to English).
+ */
+let relatedOriginalUnsupported = false;
+
+/** Test seam. */
+export function __resetRelatedOriginalSupport(): void {
+    relatedOriginalUnsupported = false;
 }
 
 /** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
@@ -1073,16 +1127,30 @@ export class ArticleService {
                 after: input.after ?? null,
             };
             if (!filtersLive) {
-                const { data } = await client.query<{
-                    relatedArticlesPage: Omit<RelatedArticlesPage, 'facets'> | null;
-                }>({
-                    query: GET_RELATED_ARTICLES_PAGE,
+                type Page = { relatedArticlesPage: Omit<RelatedArticlesPage, 'facets'> | null };
+                const page = (data: Page | undefined): RelatedArticlesPageResult =>
+                    data?.relatedArticlesPage ? { ...data.relatedArticlesPage, facets: null } : empty;
+                if (!relatedOriginalUnsupported) {
+                    try {
+                        const { data } = await client.query<Page>({
+                            query: GET_RELATED_ARTICLES_PAGE,
+                            variables: base,
+                            fetchPolicy: 'no-cache',
+                            context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                        });
+                        return page(data);
+                    } catch (error) {
+                        if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) throw error;
+                        relatedOriginalUnsupported = true;
+                        logger.info('[ArticleService] server has no ArticleSummary.title_original; legacy related document this session');
+                    }
+                }
+                const { data } = await client.query<Page>({
+                    query: GET_RELATED_ARTICLES_PAGE_LEGACY,
                     variables: base,
                     fetchPolicy: 'no-cache',
                 });
-                return data?.relatedArticlesPage
-                    ? { ...data.relatedArticlesPage, facets: null }
-                    : empty;
+                return page(data);
             }
             const variables: RelatedPageFilteredVariables = {
                 ...base,
