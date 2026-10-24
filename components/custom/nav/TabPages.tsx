@@ -30,9 +30,10 @@ import {
   type TabNavLike,
 } from './tab-press';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { bumpTranslationEpoch } from '@/lib/translation-queue';
 import { noteActivePage, registerScrollTarget, type ResumeScrollTarget } from '@/lib/navigation/resume-spot';
 import { useRestoreHidden } from '@/lib/navigation/use-screen-scroll-target';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -58,6 +59,14 @@ import { pageMeta, tabOfPage, TAB_LABEL_KEYS, type PageId } from './page-registr
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
+
+// Whether the page a node sits in is the visible one. Warm neighbours stay
+// mounted one width to the side; a translatable node there must not re-ask.
+// True outside TabPages (a pushed screen is always the visible one).
+const PageActiveContext = createContext(true);
+export function usePageActive(): boolean {
+  return useContext(PageActiveContext);
+}
 
 const TabPages: React.FC<TabPagesProps> = ({
   tab,
@@ -110,9 +119,14 @@ const TabPages: React.FC<TabPagesProps> = ({
 
   // The reader moved to another page (pill tap or swipe): a selection tick.
   // Requests from elsewhere land silently.
+  // Only here, never in `select`: a page set in code (mount, restore, a page
+  // request) must not drop the translations its own page just queued.
   const pick = useCallback(
     (id: PageId) => {
-      if (id !== activeId) void hapticSelection();
+      if (id !== activeId) {
+        void hapticSelection();
+        bumpTranslationEpoch(`page:${id}`);
+      }
       select(id);
     },
     [activeId, select],
@@ -273,11 +287,13 @@ const TabPages: React.FC<TabPagesProps> = ({
   const renderPanel = useCallback(
     (i: number, pageActive: boolean) => (
       <PageScrollContext.Provider value={registerFor(ids[i])}>
-        {renderPage({
-          pageId: ids[i],
-          active: pageActive && focused && !arranging,
-          header: pageActive ? header : idleHeader,
-        })}
+        <PageActiveContext.Provider value={pageActive}>
+          {renderPage({
+            pageId: ids[i],
+            active: pageActive && focused && !arranging,
+            header: pageActive ? header : idleHeader,
+          })}
+        </PageActiveContext.Provider>
       </PageScrollContext.Provider>
     ),
     [renderPage, ids, focused, arranging, header, idleHeader, registerFor],
