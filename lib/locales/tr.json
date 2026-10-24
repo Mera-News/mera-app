@@ -393,8 +393,6 @@
     "restartDescription": "Dil değişikliğini uygulamak için uygulamanın yeniden başlatılması gerekiyor.",
     "restart": "Şimdi Yeniden Başlat",
     "later": "Daha Sonra",
-    "retry": "Tekrar Dene",
-    "translationUnavailableTapToRetry": "{{language}} dil paketi hâlâ indiriliyor olabilir. Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun.",
     "translationUnavailableTitle": "Çeviri kullanılamıyor",
     "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviri yapamıyor, bu yüzden İngilizce gösteriliyor. iOS'u güncellemek bunu etkinleştirir.",
     "downloadHintNowPrefix": "İndirmeyi başlatmak için aşağıdaki listede her dilin yanındaki",

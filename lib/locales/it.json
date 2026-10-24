@@ -393,8 +393,6 @@
     "restartDescription": "L'app deve essere riavviata per applicare la modifica della lingua.",
     "restart": "Riavvia ora",
     "later": "Più tardi",
-    "retry": "Riprova",
-    "translationUnavailableTapToRetry": "Il pacchetto linguistico {{language}} potrebbe essere ancora in download. Al momento viene mostrato l'inglese. Tocca per riprovare.",
     "translationUnavailableTitle": "Traduzione non disponibile",
     "translationUnsupportedOnThisIos": "La tua versione di iOS non può tradurre in {{language}}, quindi viene mostrato l'inglese. Aggiornando iOS potrai attivarla.",
     "downloadHintNowPrefix": "Tocca l'icona",

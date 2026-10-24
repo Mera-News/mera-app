@@ -393,8 +393,6 @@
     "restartDescription": "भाषा परिवर्तन लागू करने के लिए ऐप को पुनः आरंभ करना होगा।",
     "restart": "अभी पुनः आरंभ करें",
     "later": "बाद में",
-    "retry": "पुनः प्रयास करें",
-    "translationUnavailableTapToRetry": "हो सकता है {{language}} भाषा पैकेज अभी भी डाउनलोड हो रहा हो। फ़िलहाल अंग्रेज़ी दिखाई जा रही है। फिर से कोशिश करने के लिए टैप करें।",
     "translationUnavailableTitle": "अनुवाद उपलब्ध नहीं",
     "translationUnsupportedOnThisIos": "आपका iOS संस्करण {{language}} में अनुवाद नहीं कर सकता, इसलिए अभी अंग्रेज़ी दिखाई जा रही है। iOS अपडेट करने पर यह सुविधा चालू हो जाएगी।",
     "downloadHintNowPrefix": "नीचे दी गई शीट में हर भाषा के आगे बने",

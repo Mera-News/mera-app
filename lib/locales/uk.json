@@ -419,8 +419,6 @@
     "restartDescription": "Застосунок потрібно перезапустити, щоб застосувати зміну мови.",
     "restart": "Перезапустити зараз",
     "later": "Пізніше",
-    "retry": "Повторити",
-    "translationUnavailableTapToRetry": "Мовний пакет {{language}} ще може завантажуватися. Наразі показано англійську. Торкніться, щоб спробувати ще раз.",
     "translationUnavailableTitle": "Переклад недоступний",
     "translationUnsupportedOnThisIos": "Ваша версія iOS не може перекладати на {{language}}, тож показуємо англійську. Оновлення iOS це увімкне.",
     "downloadHintNowPrefix": "Натисніть на",

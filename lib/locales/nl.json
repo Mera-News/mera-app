@@ -393,8 +393,6 @@
     "restartDescription": "De app moet opnieuw worden gestart om de taalwijziging toe te passen.",
     "restart": "Nu herstarten",
     "later": "Later",
-    "retry": "Opnieuw proberen",
-    "translationUnavailableTapToRetry": "Het {{language}}-taalpakket wordt mogelijk nog steeds gedownload. Toont voorlopig Engels. Tik om het opnieuw te proberen.",
     "translationUnavailableTitle": "Vertaling niet beschikbaar",
     "translationUnsupportedOnThisIos": "Je iOS-versie kan niet naar {{language}} vertalen, dus je ziet nu Engels. Werk iOS bij om dit in te schakelen.",
     "downloadHintNowPrefix": "Tik op het",

@@ -389,8 +389,6 @@
     "restartDescription": "แอปต้องรีสตาร์ทเพื่อใช้การเปลี่ยนแปลงภาษา",
     "restart": "รีสตาร์ทตอนนี้",
     "later": "ภายหลัง",
-    "retry": "ลองใหม่",
-    "translationUnavailableTapToRetry": "แพ็กเกจภาษา {{language}} อาจยังดาวน์โหลดอยู่ ตอนนี้แสดงเป็นภาษาอังกฤษ แตะเพื่อลองใหม่",
     "translationUnavailableTitle": "การแปลภาษาไม่พร้อมใช้งาน",
     "translationUnsupportedOnThisIos": "เวอร์ชัน iOS ของคุณแปลเป็น {{language}} ไม่ได้ จึงแสดงภาษาอังกฤษแทน การอัปเดต iOS จะทำให้ใช้งานได้",
     "downloadHintNowPrefix": "แตะที่",

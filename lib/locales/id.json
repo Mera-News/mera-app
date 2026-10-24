@@ -389,8 +389,6 @@
     "restartDescription": "Aplikasi perlu dimulai ulang untuk menerapkan perubahan bahasa.",
     "restart": "Mulai Ulang Sekarang",
     "later": "Nanti",
-    "retry": "Coba Lagi",
-    "translationUnavailableTapToRetry": "Paket bahasa {{language}} mungkin masih diunduh. Menampilkan bahasa Inggris untuk saat ini. Ketuk untuk mencoba lagi.",
     "translationUnavailableTitle": "Terjemahan tidak tersedia",
     "translationUnsupportedOnThisIos": "Versi iOS Anda tidak bisa menerjemahkan ke {{language}}, jadi yang ditampilkan adalah bahasa Inggris. Memperbarui iOS akan mengaktifkannya.",
     "downloadHintNowPrefix": "Ketuk ikon",

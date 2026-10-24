@@ -419,8 +419,6 @@
     "restartDescription": "Aplikacja musi zostać uruchomiona ponownie, aby zastosować zmianę języka.",
     "restart": "Uruchom ponownie",
     "later": "Później",
-    "retry": "Ponów",
-    "translationUnavailableTapToRetry": "Pakiet językowy {{language}} może wciąż być pobierany. Obecnie wyświetlany jest angielski. Stuknij, aby spróbować ponownie.",
     "translationUnavailableTitle": "Tłumaczenie niedostępne",
     "translationUnsupportedOnThisIos": "Twoja wersja iOS nie potrafi tłumaczyć na {{language}}, więc pokazujemy angielski. Aktualizacja iOS to umożliwi.",
     "downloadHintNowPrefix": "Stuknij w",

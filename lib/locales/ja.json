@@ -389,8 +389,6 @@
     "restartDescription": "言語の変更を適用するにはアプリを再起動する必要があります。",
     "restart": "今すぐ再起動",
     "later": "後で",
-    "retry": "再試行",
-    "translationUnavailableTapToRetry": "{{language}}言語パックはまだダウンロード中の可能性があります。現在は英語を表示しています。もう一度試すにはタップしてください。",
     "translationUnavailableTitle": "翻訳は利用できません",
     "translationUnsupportedOnThisIos": "お使いのiOSのバージョンでは{{language}}への翻訳ができないため、代わりに英語を表示しています。iOSを更新すると利用できるようになります。",
     "downloadHintNowPrefix": "下のシートで各言語の横にある",

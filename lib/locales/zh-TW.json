@@ -389,8 +389,6 @@
     "restartDescription": "應用程式需要重新啟動以套用語言變更。",
     "restart": "立即重新啟動",
     "later": "稍後",
-    "retry": "重試",
-    "translationUnavailableTapToRetry": "{{language}}語言包可能仍在下載。目前顯示英文。點擊重試。",
     "translationUnavailableTitle": "翻譯無法使用",
     "translationUnsupportedOnThisIos": "你的 iOS 版本無法翻譯成 {{language}}，所以改為顯示英文。更新 iOS 後即可使用。",
     "downloadHintNowPrefix": "點一下下方清單中每種語言旁的",

@@ -445,8 +445,6 @@
     "restartDescription": "يحتاج التطبيق إلى إعادة التشغيل لتطبيق تغيير اللغة.",
     "restart": "إعادة التشغيل الآن",
     "later": "لاحقًا",
-    "retry": "إعادة المحاولة",
-    "translationUnavailableTapToRetry": "قد تكون حزمة اللغة {{language}} لا تزال قيد التنزيل. يتم عرض الإنجليزية الآن. اضغط لإعادة المحاولة.",
     "translationUnavailableTitle": "الترجمة غير متاحة",
     "translationUnsupportedOnThisIos": "إصدار iOS لديك لا يدعم الترجمة إلى {{language}}، لذا يُعرض المحتوى بالإنجليزية. سيتيح لك تحديث iOS ذلك.",
     "downloadHintNowPrefix": "اضغط على",

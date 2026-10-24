@@ -389,8 +389,6 @@
     "restartDescription": "Ứng dụng cần khởi động lại để áp dụng thay đổi ngôn ngữ.",
     "restart": "Khởi động lại ngay",
     "later": "Để sau",
-    "retry": "Thử lại",
-    "translationUnavailableTapToRetry": "Gói ngôn ngữ {{language}} có thể vẫn đang tải xuống. Hiện đang hiển thị tiếng Anh. Chạm để thử lại.",
     "translationUnavailableTitle": "Bản dịch không khả dụng",
     "translationUnsupportedOnThisIos": "Phiên bản iOS của bạn không thể dịch sang {{language}}, nên tiếng Anh sẽ được hiển thị. Cập nhật iOS sẽ bật tính năng này.",
     "downloadHintNowPrefix": "Nhấn vào",
