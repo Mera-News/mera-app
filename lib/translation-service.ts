@@ -7,6 +7,13 @@ import { canonicalizeLanguageCode, primarySubtag } from '@/lib/algorithms/langua
 import { getLanguageNameIn } from '@/lib/algorithms/language-names';
 import { sleep } from '@/lib/utils/sleep';
 import {
+    __resetDeviceVerifiedLanguagesForTests,
+    clearDeviceVerifiedLanguage,
+    isDeviceVerifiedLanguage,
+    loadDeviceVerifiedLanguages,
+    markDeviceVerifiedLanguage,
+} from '@/lib/translation-device-verified';
+import {
     __resetTranslationQueueForTests,
     DROPPED,
     enqueueTranslationTask,
@@ -607,6 +614,7 @@ function notifyAvailabilityChanged(): void {
 function recordTranslationSuccess(targetLangCode: string): void {
     const newlyVerified = !verifiedLanguages.has(targetLangCode);
     verifiedLanguages.add(targetLangCode);
+    if (newlyVerified) markDeviceVerifiedLanguage(targetLangCode);
     const wasBlocked = blockedLanguages.delete(targetLangCode);
     failureCounts.delete(targetLangCode);
     // Retries skipped while the breaker was open are owed: run them now.
@@ -634,8 +642,33 @@ const REVERIFY_SAMPLE = 'Hello';
 const reverifyStep = new Map<string, number>();
 const reverifyTimers = new Set<ReturnType<typeof setTimeout>>();
 
+// RESIDUAL RISK: a language verified on this device in an EARLIER launch is
+// eligible too. Its pack was installed then; if the OS has since evicted it, a
+// re-verify can present Apple's download sheet at that moment, unasked.
 function canQuietlyReverify(targetLangCode: string): boolean {
-    return verifiedLanguages.has(targetLangCode);
+    return verifiedLanguages.has(targetLangCode) || isDeviceVerifiedLanguage(targetLangCode);
+}
+
+void loadDeviceVerifiedLanguages();
+
+/**
+ * The once-per-launch re-verify of the saved language failed (not
+ * permanently). For a language this device has translated into before, keep
+ * the probe's NON-permanent breaker block, so text shows its failed glyph and
+ * the quiet re-verify backoff recovers it. For one it never has, lift the
+ * block: it stays gated (English, no glyph, no automatic calls) until the
+ * reader's own language-switch probe. The probe path is never re-run here.
+ */
+export async function noteLaunchVerifyFailed(targetLangCode: string): Promise<void> {
+    await loadDeviceVerifiedLanguages();
+    const blocked = blockedLanguages.get(targetLangCode);
+    if (blocked?.permanent) return;
+    if (!isDeviceVerifiedLanguage(targetLangCode)) {
+        clearTranslationFailuresFor(targetLangCode);
+        return;
+    }
+    if (!blocked) blockLanguage(targetLangCode, 'launch verify failed', false);
+    else if (!reverifyStep.has(targetLangCode)) scheduleQuietReverify(targetLangCode, 0);
 }
 
 function scheduleQuietReverify(targetLangCode: string, step: number): void {
@@ -822,6 +855,7 @@ export function __resetTranslationStateForTests(): void {
     reverifyTimers.forEach(clearTimeout);
     reverifyTimers.clear();
     reverifyStep.clear();
+    __resetDeviceVerifiedLanguagesForTests();
     interest.clear();
     failedListeners.clear();
     joinable.clear();
@@ -1236,11 +1270,13 @@ export async function probeTranslationLanguage(
 
     if (!canTranslateIntoLanguage(targetLangCode)) {
         blockLanguage(targetLangCode, 'unsupported-target-language', true);
+        clearDeviceVerifiedLanguage(targetLangCode);
         return 'language-unsupported';
     }
 
     if (!deviceCanTranslate()) {
         blockLanguage(targetLangCode, 'device-cannot-translate', true, true);
+        clearDeviceVerifiedLanguage(targetLangCode);
         return 'device-unsupported';
     }
 

@@ -3,19 +3,23 @@
 // language on this iOS, or none on the device) still shows its notice, the only explanation
 // those texts get. The toast host is faked at its edge.
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react-native';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
 import { initI18nEn } from '@/test/helpers';
 
 type Block = { permanent: boolean; deviceUnsupported: boolean } | null;
 let mockBlock: Block = null;
+let mockVerified = true;
+const mockNoteLaunchVerifyFailed = jest.fn(async (_code: string) => {});
 jest.mock('@/lib/translation-service', () => ({
     ...jest.requireActual('@/lib/translation-service'),
     useTranslationBlocked: () => mockBlock,
-    isTranslationVerified: () => true,
+    isTranslationVerified: () => mockVerified,
+    noteLaunchVerifyFailed: (code: string) => mockNoteLaunchVerifyFailed(code),
 }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguage: () => 'de' }));
-jest.mock('@/lib/hooks/use-language-switch', () => ({ probeLanguage: jest.fn(async () => {}) }));
+let mockProbeOutcome = 'success';
+jest.mock('@/lib/hooks/use-language-switch', () => ({ probeLanguage: jest.fn(async () => mockProbeOutcome) }));
 jest.mock('expo-router', () => ({ usePathname: () => '/logged-in' }));
 
 const mockShow = jest.fn();
@@ -38,6 +42,27 @@ beforeAll(initI18nEn);
 beforeEach(() => {
     mockShow.mockClear();
     mockBlock = null;
+    mockVerified = true;
+    mockProbeOutcome = 'success';
+    mockNoteLaunchVerifyFailed.mockClear();
+});
+
+it('hands a failed or timed-out launch re-verify to the service, and nothing else', async () => {
+    mockVerified = false;
+    mockProbeOutcome = 'timeout';
+    render(<TranslationUnavailablePrompt />);
+    await waitFor(() => expect(mockNoteLaunchVerifyFailed).toHaveBeenCalledWith('de'));
+});
+
+it('a successful launch re-verify does not touch the breaker', async () => {
+    mockVerified = false;
+    mockProbeOutcome = 'success';
+    const { probeLanguage } = jest.requireMock('@/lib/hooks/use-language-switch') as { probeLanguage: jest.Mock };
+    probeLanguage.mockClear();
+    render(<TranslationUnavailablePrompt />);
+    await waitFor(() => expect(probeLanguage).toHaveBeenCalled());
+    await new Promise((r) => setImmediate(r));
+    expect(mockNoteLaunchVerifyFailed).not.toHaveBeenCalled();
 });
 
 it('a breaker block (the pack may still be downloading) shows no notice', () => {

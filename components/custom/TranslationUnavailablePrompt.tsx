@@ -9,6 +9,7 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
     getNativeLanguageName,
     isTranslationVerified,
+    noteLaunchVerifyFailed,
     TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS,
     useTranslationBlocked,
 } from '@/lib/translation-service';
@@ -67,7 +68,14 @@ const TranslationUnavailablePrompt: React.FC = () => {
         if (blocked) return;
         startupProbedRef.current = appLanguage;
         const handle = InteractionManager.runAfterInteractions(() => {
+            // A non-permanent failure: a language this device has translated
+            // into before stays blocked and is quietly re-verified on a
+            // backoff; one it never has stays gated. The probe never re-runs.
             void probeLanguage(appLanguage, TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS)
+                .then((outcome) => {
+                    if (outcome === 'failed' || outcome === 'timeout') return noteLaunchVerifyFailed(appLanguage);
+                    return undefined;
+                })
                 .catch(() => {});
         });
         return () => handle.cancel();

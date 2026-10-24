@@ -21,6 +21,9 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import {
+    getTranslationFailure,
+    isTranslationVerified,
+    noteLaunchVerifyFailed,
     retainTranslationInterest,
     useTextTranslationFailed,
     getRetryDueAt,
@@ -46,6 +49,7 @@ import {
     useTranslationQueueActive,
 } from '@/lib/translation-queue';
 import { act, renderHook } from '@testing-library/react-native';
+import { DEVICE_VERIFIED_LANGUAGES_KEY, loadDeviceVerifiedLanguages } from '@/lib/translation-device-verified';
 
 /** Open the iOS gate for a language the way production does: one successful probe. */
 async function openGate(code: string): Promise<void> {
@@ -1036,5 +1040,69 @@ describe('the quiet re-verify of a breaker-blocked language', () => {
         const calls = mockOnTranslateTask.mock.calls.length;
         await jest.advanceTimersByTimeAsync(3_600_000);
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(calls);
+    });
+});
+
+describe('a language verified on this device in an earlier launch', () => {
+    const AsyncStorage = (jest.requireMock('@react-native-async-storage/async-storage') as {
+        default: {
+            getItem(k: string): Promise<string | null>;
+            setItem(k: string, v: string): Promise<void>;
+            removeItem(k: string): Promise<void>;
+        };
+    }).default;
+    const stored = async () => JSON.parse((await AsyncStorage.getItem(DEVICE_VERIFIED_LANGUAGES_KEY)) ?? '[]') as string[];
+
+    beforeEach(async () => {
+        await AsyncStorage.removeItem(DEVICE_VERIFIED_LANGUAGES_KEY);
+        await loadDeviceVerifiedLanguages();
+    });
+
+    it('is written on the first successful native translation into it', async () => {
+        await openGate('fr');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await stored()).toEqual(['fr']);
+    });
+
+    it('a launch verify failure leaves it blocked (not gated), and the 5 minute re-verify recovers it', async () => {
+        await AsyncStorage.setItem(DEVICE_VERIFIED_LANGUAGES_KEY, JSON.stringify(['fr']));
+        await loadDeviceVerifiedLanguages();
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        const probe = probeTranslationLanguage('fr', 20_000);
+        await jest.advanceTimersByTimeAsync(5_000);
+        expect(await probe).toBe('failed');
+        await noteLaunchVerifyFailed('fr');
+        expect(getTranslationFailure('fr')?.permanent).toBe(false);
+
+        mockOnTranslateTask.mockReset();
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bonjour' });
+        await jest.advanceTimersByTimeAsync(300_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(isTranslationBlocked('fr')).toBe(false);
+        expect(isTranslationVerified('fr')).toBe(true);
+    });
+
+    it('never verified on this device: a launch verify failure leaves it gated, unblocked, never re-verified', async () => {
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        const probe = probeTranslationLanguage('fr', 20_000);
+        await jest.advanceTimersByTimeAsync(5_000);
+        expect(await probe).toBe('failed');
+        await noteLaunchVerifyFailed('fr');
+        expect(isTranslationBlocked('fr')).toBe(false);
+
+        mockOnTranslateTask.mockReset();
+        const p = translateTextDetailed('Headline', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await p).toEqual({ status: 'skipped', text: null });
+        await jest.advanceTimersByTimeAsync(3 * 3_600_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+    });
+
+    it("a probe ending 'language-unsupported' clears the mark", async () => {
+        await AsyncStorage.setItem(DEVICE_VERIFIED_LANGUAGES_KEY, JSON.stringify(['sw', 'fr']));
+        await loadDeviceVerifiedLanguages();
+        expect(await probeTranslationLanguage('sw')).toBe('language-unsupported');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await stored()).toEqual(['fr']);
     });
 });
