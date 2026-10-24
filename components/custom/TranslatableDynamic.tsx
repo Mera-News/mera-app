@@ -164,18 +164,25 @@ function EndGlyph({
     boxHeight,
     mode,
     reach,
+    inline,
+    open,
+    setOpen,
 }: {
     kind: 'failed' | 'translated';
     fontPx: number;
     boxHeight: number;
     mode: FailedGlyphMode;
     reach?: GlyphReach;
+    /** Inside the Text: iOS reads an inline View as U+FFFC, never as its own
+     *  element, so the Text carries the label and the action instead. */
+    inline: boolean;
+    open: boolean;
+    setOpen: (open: boolean) => void;
 }) {
     const { t } = useTranslation();
     const colors = useColors();
     const { width: screenWidth } = useWindowDimensions();
-    const [open, setOpen] = useState(false);
-    const close = useCallback(() => setOpen(false), []);
+    const close = useCallback(() => setOpen(false), [setOpen]);
     const gap = Math.round(fontPx * 0.3);
     const box = { width: fontPx, height: boxHeight, marginLeft: gap };
     const visual = (
@@ -220,7 +227,7 @@ function EndGlyph({
                         testID="translatable-failed"
                         onPress={() => setOpen(true)}
                         // A host that speaks the failure in its own label keeps the glyph out of the tree.
-                        {...(mode === 'spokenByHost'
+                        {...(mode === 'spokenByHost' || inline
                             ? DECORATIVE_ICON_A11Y
                             : { accessibilityRole: 'button' as const, accessibilityLabel: label })}
                         style={frame}
@@ -442,6 +449,8 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
      * asked) is the queue working and draws nothing. Both re-ask, see below.
      */
     const [lastOutcome, setLastOutcome] = useState<'failed' | 'dropped' | null>(null);
+    /** The failed glyph's tooltip, here so the Text's accessibility action can open it. */
+    const [tooltipOpen, setTooltipOpen] = useState(false);
     /** Bumped to re-run the fire-effect for a re-ask. */
     const [retryToken, setRetryToken] = useState(0);
 
@@ -687,7 +696,12 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // English in a non-English app: tell the screen reader, and keep Latin LTR in Arabic.
     const englishInForeignApp = displayedLanguage === 'en' && !!appLanguage && appLanguage !== 'en';
 
-    const renderTextNode = (children: React.ReactNode, extra?: Record<string, unknown>, measured = true) => {
+    const renderTextNode = (
+        children: React.ReactNode,
+        extra?: Record<string, unknown>,
+        measured = true,
+        a11y?: Record<string, unknown>,
+    ) => {
         const baseStyle = layout ? layout.innerStyle : (style ?? {});
         const props = {
             ...(measured ? { ref: setNodeRef, onLayout: checkVisibility } : null),
@@ -701,6 +715,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
             bold,
             italic,
             ...(englishInForeignApp ? { accessibilityLanguage: 'en' } : null),
+            ...a11y,
         };
         if (as === 'heading') {
             return (
@@ -738,27 +753,66 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                 ]}
             >
                 {renderTextNode(displayText, { flexShrink: 1 })}
-                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={linePx} mode={failedGlyph} reach={glyphReach} />
+                <EndGlyph
+                    kind={glyph}
+                    fontPx={fontPx}
+                    boxHeight={linePx}
+                    mode={failedGlyph}
+                    reach={glyphReach}
+                    inline={false}
+                    open={tooltipOpen}
+                    setOpen={setTooltipOpen}
+                />
             </View>
         );
     } else if (glyph) {
-        // Unclamped (detail): inline at the end of the text's own last line.
+        // Unclamped (detail): inline at the end of the text's own last line. The
+        // glyph is hidden there, so the Text names itself (no U+FFFC) and, for a
+        // failure it speaks, offers the tooltip as an action.
+        const speaksFailure = glyph === 'failed' && failedGlyph === 'button';
+        const failedLabel = t('feed.translationFailed');
         body = renderTextNode(
             <>
                 {displayText}
-                <EndGlyph kind={glyph} fontPx={fontPx} boxHeight={fontPx} mode={failedGlyph} reach={glyphReach} />
+                <EndGlyph
+                    kind={glyph}
+                    fontPx={fontPx}
+                    boxHeight={fontPx}
+                    mode={failedGlyph}
+                    reach={glyphReach}
+                    inline
+                    open={tooltipOpen}
+                    setOpen={setTooltipOpen}
+                />
             </>,
+            undefined,
+            true,
+            {
+                accessibilityLabel: speaksFailure ? `${displayText}, ${failedLabel}` : displayText,
+                ...(speaksFailure
+                    ? {
+                        accessibilityActions: [{ name: 'translationFailed', label: failedLabel }],
+                        onAccessibilityAction: (e: { nativeEvent: { actionName: string } }) => {
+                            if (e.nativeEvent.actionName === 'translationFailed') setTooltipOpen(true);
+                        },
+                    }
+                    : null),
+            },
         );
     } else {
         body = renderTextNode(displayText);
     }
 
     if (showToggleButton) {
+        const toggleLabel = localShowOriginal ? t('clusterDetail.showTranslation') : t('clusterDetail.showOriginal');
         return (
             <View>
                 {body}
                 <Pressable
                     onPress={() => setLocalShowOriginal((v) => !v)}
+                    accessibilityRole="button"
+                    // The toggle text only: the icon is a private-use glyph.
+                    accessibilityLabel={toggleLabel}
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -770,11 +824,9 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                         backgroundColor: colors.surfaceRaised,
                     }}
                 >
-                    <MaterialIcons name="translate" size={12} color={colors.ink2} />
+                    <MaterialIcons name="translate" size={12} color={colors.ink2} {...DECORATIVE_ICON_A11Y} />
                     <Text size="xs" style={{ color: colors.ink2, marginLeft: 4 }}>
-                        {localShowOriginal
-                            ? t('clusterDetail.showTranslation')
-                            : t('clusterDetail.showOriginal')}
+                        {toggleLabel}
                     </Text>
                 </Pressable>
             </View>

@@ -113,6 +113,13 @@ const detail = (extra: Partial<React.ComponentProps<typeof TranslatableDynamic>>
     <TranslatableDynamic text={EN} originalText={HI} originalLanguage="hi" {...extra} />
 );
 const settle = () => act(async () => {});
+const findFailed = () => screen.findByTestId('translatable-failed', { includeHiddenElements: true });
+const getFailed = () => screen.getByTestId('translatable-failed', { includeHiddenElements: true });
+/** No private-use icon glyph and no U+FFFC (an inline View read by iOS) in a spoken label. */
+const expectCleanLabel = (label: unknown) => {
+    expect(typeof label).toBe('string');
+    expect(label as string).not.toMatch(/[\uE000-\uF8FF\uFFFC]/);
+};
 
 beforeAll(initI18nEn);
 beforeEach(() => {
@@ -151,21 +158,31 @@ describe('pending and failure fall back to English', () => {
         expect(last).toMatchObject({ displayedText: EN, displayedLanguage: 'en', translationFailed: true });
     });
 
-    it('a failed detail text has a labelled glyph button whose tap shows the tooltip', async () => {
+    it('a failed detail text speaks the failure on its own Text, with the tooltip as an action', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
-        const glyph = await screen.findByTestId('translatable-failed');
-        expect(glyph.props.accessibilityLabel).toBe(FAILED);
-        expect(glyph.props.accessibilityRole).toBe('button');
-        fireEvent.press(glyph);
+        // The inline glyph is not its own element on iOS (the Text reads it as U+FFFC): it is hidden.
+        const glyph = await findFailed();
+        expect(glyph.props.accessibilityLabel).toBeUndefined();
+        const textNode = screen.getByLabelText(`${EN}, ${FAILED}`);
+        expectCleanLabel(textNode.props.accessibilityLabel);
+        expect(textNode.props.accessibilityActions).toEqual([{ name: 'translationFailed', label: FAILED }]);
+        fireEvent(textNode, 'accessibilityAction', { nativeEvent: { actionName: 'translationFailed' } });
         await waitFor(() => expect(screen.getByTestId('translatable-failed-tooltip')).toBeTruthy());
         expect(screen.getByText(FAILED)).toBeTruthy();
+    });
+
+    it('a sighted tap on the hidden inline glyph still opens the tooltip', async () => {
+        mockNextOutcome = async () => ({ status: 'failed' });
+        mount(detail());
+        fireEvent.press(await findFailed());
+        await waitFor(() => expect(screen.getByTestId('translatable-failed-tooltip')).toBeTruthy());
     });
 
     it('a blocked language shows English and the failed glyph without asking', async () => {
         mockBlock = { permanent: false };
         mount(detail());
-        expect(screen.getByTestId('translatable-failed')).toBeTruthy();
+        expect(getFailed()).toBeTruthy();
         expect(screen.getByText(EN, { exact: false })).toBeTruthy();
         await settle();
         expect(mockTranslate).not.toHaveBeenCalled();
@@ -174,7 +191,7 @@ describe('pending and failure fall back to English', () => {
     it('a late cache write replaces a failure with the translation and no glyph', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         act(() => useAppLanguageStore.getState().cacheTranslation(EN, MR));
         await waitFor(() => expect(screen.getByText(MR)).toBeTruthy());
         expect(screen.queryByTestId('translatable-failed')).toBeNull();
@@ -202,7 +219,7 @@ describe('the glyph only where it belongs', () => {
     it('a failed detail text with showTranslatedGlyph shows the slashed glyph, not the plain one', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail({ showTranslatedGlyph: true }));
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         expect(screen.queryByTestId('translatable-translated', { includeHiddenElements: true })).toBeNull();
     });
 
@@ -229,7 +246,7 @@ describe('re-asking', () => {
     it('a failed text asks once more when the app comes back to the front, not while it stays there', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         await settle();
         expect(mockTranslate).toHaveBeenCalledTimes(1);
         setQueueActive(false);
@@ -242,7 +259,7 @@ describe('re-asking', () => {
     it('a failed text with the gate held open asks once; one rising edge asks exactly once more', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         await settle();
         expect(mockTranslate).toHaveBeenCalledTimes(1);
 
@@ -251,7 +268,7 @@ describe('re-asking', () => {
         expect(mockTranslate).toHaveBeenCalledTimes(1);
         setFocused(true);
         await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(2));
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         await settle();
         expect(mockTranslate).toHaveBeenCalledTimes(2);
     });
@@ -306,19 +323,19 @@ describe('nothing owed, nothing heard', () => {
     it('a failed text whose retry budget is spent stays failed on a rising edge, asking nothing', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         mockExhausted = true;
         setFocused(false);
         setFocused(true);
         await settle();
         expect(mockTranslate).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('translatable-failed')).toBeTruthy();
+        expect(getFailed()).toBeTruthy();
     });
 
     it('a new app language clears the old failure', async () => {
         mockNextOutcome = async () => ({ status: 'failed' });
         mount(detail());
-        await screen.findByTestId('translatable-failed');
+        await findFailed();
         // The new language is not verified yet: nothing is asked, so only the reset can clear it.
         mockGated = true;
         act(() => useAppLanguageStore.setState({ appLanguage: 'ta' }));
@@ -354,10 +371,12 @@ describe('who speaks the failure', () => {
         expect(screen.queryByTestId('translatable-failed-tooltip', { includeHiddenElements: true })).toBeNull();
     });
 
-    it('the button is a childless labelled Pressable: the glyph is not inside it', async () => {
+    it('a clamped button is a childless labelled Pressable: the glyph is not inside it', async () => {
         mockBlock = { permanent: false };
-        mount(detail());
+        mount(card({ failedGlyph: 'button' }));
         const glyph = screen.getByTestId('translatable-failed');
+        expect(glyph.props.accessibilityLabel).toBe(FAILED);
+        expect(glyph.props.accessibilityRole).toBe('button');
         expect(glyph.findAll((n: { props?: { name?: string } }) => n.props?.name === 'translate-off')).toHaveLength(0);
         expect(screen.UNSAFE_getAllByProps({ name: 'translate-off' }).length).toBeGreaterThan(0);
     });
@@ -379,5 +398,22 @@ describe('the clamped glyph row', () => {
         mount(card({ failedGlyph: 'spokenByHost', glyphReach: { above: 0, below: 0, end: 14 }, style: { fontSize: 16, lineHeight: 24 } }));
         const frame = screen.getByTestId('translatable-failed', { includeHiddenElements: true });
         expect(frame.props.style).toMatchObject({ top: -0, bottom: -0, right: -14, left: -5 });
+    });
+});
+
+describe('detail labels carry no icon characters', () => {
+    it('a translated detail text with the plain glyph is labelled by its text alone', async () => {
+        mockNextOutcome = async () => ({ status: 'ok', text: MR });
+        mount(detail({ showTranslatedGlyph: true }));
+        const node = await screen.findByLabelText(MR);
+        expectCleanLabel(node.props.accessibilityLabel);
+        expect(node.props.accessibilityActions).toBeUndefined();
+    });
+
+    it('the Show original toggle is labelled by its text, not its icon', async () => {
+        render(detail({ showToggle: true }), { wrapper: Wrapper });
+        const toggle = screen.getByRole('button', { name: 'Show original' });
+        expectCleanLabel(toggle.props.accessibilityLabel);
+        expect(toggle.props.accessibilityLabel).toBe('Show original');
     });
 });
