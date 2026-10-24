@@ -178,3 +178,27 @@ describe('a native call that outlives its 20s timeout', () => {
         expect(await second).toEqual({ status: 'ok', text: 'Suivant' });
     });
 });
+
+describe('the per-text retry budget', () => {
+    it("gives a text one retry after 'failed', then answers 'failed' with no native call", async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('nope'));
+
+        for (let i = 0; i < 2; i++) {
+            const p = translateTextDetailed('Bad', 'fr');
+            await jest.runAllTimersAsync();
+            expect(await p).toEqual({ status: 'failed', text: null });
+        }
+        const callsAfterTwo = mockOnTranslateTask.mock.calls.length;
+        const third = translateTextDetailed('Bad', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await third).toEqual({ status: 'failed', text: null });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(callsAfterTwo);
+
+        // The budget is per text: another string still asks the OS.
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bon' });
+        const other = translateTextDetailed('Good', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await other).toEqual({ status: 'ok', text: 'Bon' });
+    });
+});

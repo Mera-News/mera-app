@@ -397,6 +397,35 @@ export interface TranslationFailureState {
 }
 
 const failureCounts = new Map<string, number>();
+
+/**
+ * Per text, per language, this session: how many times a caller was answered
+ * 'failed', and whether the text failed inside a batch (it is then never batched
+ * again). The render surface never counts retries; this map is the budget.
+ */
+interface TextAttempts {
+    failed: number;
+    noBatch: boolean;
+}
+const textAttempts = new Map<string, TextAttempts>();
+/** A text gets ONE retry after a 'failed' outcome, then 'failed' comes back with no native call. */
+export const TEXT_FAILED_BUDGET = 2;
+const textKey = (text: string, targetLangCode: string): string => `${targetLangCode}\u0000${text}`;
+
+function attemptsFor(text: string, targetLangCode: string): TextAttempts {
+    const key = textKey(text, targetLangCode);
+    let entry = textAttempts.get(key);
+    if (!entry) {
+        entry = { failed: 0, noBatch: false };
+        textAttempts.set(key, entry);
+    }
+    return entry;
+}
+
+function forgetTextAttemptsFor(targetLangCode: string): void {
+    const prefix = `${targetLangCode}\u0000`;
+    for (const key of textAttempts.keys()) if (key.startsWith(prefix)) textAttempts.delete(key);
+}
 const blockedLanguages = new Map<string, TranslationFailureState>();
 /** Languages that have produced at least one successful translation this
  *  session — proof the assets are installed, so no sheet can appear for them. */
@@ -488,6 +517,7 @@ export function clearTranslationFailures(): void {
     const hadBlocked = blockedLanguages.size > 0;
     blockedLanguages.clear();
     failureCounts.clear();
+    textAttempts.clear();
     if (hadBlocked) notifyAvailabilityChanged();
 }
 
@@ -504,6 +534,7 @@ export function clearTranslationFailures(): void {
 export function clearTranslationFailuresFor(targetLangCode: string): void {
     const hadBlocked = blockedLanguages.delete(targetLangCode);
     failureCounts.delete(targetLangCode);
+    forgetTextAttemptsFor(targetLangCode);
     if (hadBlocked) notifyAvailabilityChanged();
 }
 
@@ -554,6 +585,7 @@ export function useTranslationSuppressed(targetLangCode: string): boolean {
 /** Test seam — clears every module-level translation state. */
 export function __resetTranslationStateForTests(): void {
     failureCounts.clear();
+    textAttempts.clear();
     blockedLanguages.clear();
     verifiedLanguages.clear();
     availabilityListeners.clear();
@@ -954,6 +986,8 @@ export function translateTextDetailed(
     if (isProbe) {
         probeTimedOut.set(targetLangCode, false);
         probeErrors.set(targetLangCode, null);
+    } else if ((textAttempts.get(textKey(text, targetLangCode))?.failed ?? 0) >= TEXT_FAILED_BUDGET) {
+        return Promise.resolve({ status: 'failed', text: null });
     }
 
     const task = async (ctx: TranslationTaskContext): Promise<string | null | Skipped> => {
@@ -1125,9 +1159,9 @@ export function translateTextDetailed(
         (value): TranslationResult => {
             if (isDropped(value)) return { status: 'dropped', text: null };
             if (value === SKIPPED) return { status: 'skipped', text: null };
-            return value == null
-                ? { status: 'failed', text: null }
-                : { status: 'ok', text: value };
+            if (value != null) return { status: 'ok', text: value };
+            if (!isProbe) attemptsFor(text, targetLangCode).failed += 1;
+            return { status: 'failed', text: null };
         },
         // The task body catches everything already; this is the last net so a
         // caller can never be handed a rejected promise.
