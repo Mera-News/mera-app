@@ -5,6 +5,11 @@
 import { suggestionToNewsArticle, toNewsArticle } from '@/components/custom/news-detail/useArticleSuggestionScreen';
 import type { ArticleSummary } from '@/lib/generated/graphql-types';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { renderHook, waitFor } from '@testing-library/react-native';
+import { useArticleDetailScreen } from '@/components/custom/news-detail/useArticleDetailScreen';
+import { useNetworkStore } from '@/lib/stores/network-store';
+import { ARTICLE_IDS } from '@/test/mock-backend/fixtures/articles';
+import { initI18nEn, mockGql, server, signInFixtureAccount } from '@/test/helpers';
 
 const hindiSuggestion = {
     articleId: 'a1',
@@ -28,15 +33,15 @@ describe('related rows keep the original headline', () => {
     });
 });
 
-describe('server related rows keep the original headline', () => {
-    const summary = {
-        _id: 's1',
-        title_en: 'Election results announced',
-        title_original: '選挙結果が発表された',
-        language_code: 'ja',
-        pubDate: '2026-10-24T00:00:00Z',
-    } as unknown as ArticleSummary;
+const summary = {
+    _id: 's1',
+    title_en: 'Election results announced',
+    title_original: '選挙結果が発表された',
+    language_code: 'ja',
+    pubDate: '2026-10-24T00:00:00Z',
+} as unknown as ArticleSummary;
 
+describe('server related rows keep the original headline', () => {
     it('a Japanese summary keeps title_original as the card title, English as the internal title', () => {
         const a = toNewsArticle(summary);
         expect(a.title).toBe('選挙結果が発表された');
@@ -46,5 +51,30 @@ describe('server related rows keep the original headline', () => {
 
     it('a server that predates title_original falls back to English', () => {
         expect(toNewsArticle({ ...summary, title_original: undefined }).title).toBe('Election results announced');
+    });
+});
+
+describe('the article-detail route maps its related rows the same way', () => {
+    beforeAll(initI18nEn);
+    beforeEach(async () => {
+        await signInFixtureAccount();
+        useNetworkStore.setState({ isConnected: true });
+    });
+
+    it('a Japanese related row keeps title_original as the card title', async () => {
+        server.use(
+            mockGql('GetRelatedArticlesPage', {
+                relatedArticlesPage: {
+                    __typename: 'RelatedArticlesPage',
+                    articles: [{ __typename: 'ArticleSummary', ...summary, article_url: null, image_url: null, country_code: 'JPN', publication_name: 'Asahi', description_en: null }],
+                    pageInfo: { __typename: 'PageInfo', endCursor: null, hasNextPage: false, pageSize: 1 },
+                    restarted: false,
+                },
+            }),
+        );
+        const { result } = renderHook(() => useArticleDetailScreen({ articleId: ARTICLE_IDS[0] }));
+        await waitFor(() => expect(result.current.relatedRows.length).toBe(1));
+        expect(result.current.relatedRows[0].article.title).toBe('選挙結果が発表された');
+        expect(result.current.relatedRows[0].article.title_en_internal_only).toBe('Election results announced');
     });
 });

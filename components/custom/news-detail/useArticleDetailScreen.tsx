@@ -15,7 +15,7 @@ import {
     isSuggestionSaved,
     saveStandaloneArticle,
 } from '@/lib/database/services/saved-article-suggestion-service';
-import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
+import type { NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useSavedOverride } from '@/lib/saved-state';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
@@ -30,28 +30,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStoredFactCheck } from '@/lib/fact-check/use-stored-fact-check';
 
+// Related rows map through the suggestion route's one mapper (original title as `title`).
+import { toNewsArticle } from './useArticleSuggestionScreen';
+
 const SCROLL_THRESHOLD = 300;
 
-// Map a sibling ArticleSummary to the NewsArticle shape ArticleStandaloneCompactCard
-// expects (same mapping the suggestion-detail screen uses).
-const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
-    _id: a._id,
-    title: a.title_en,
-    title_en_internal_only: a.title_en,
-    description: a.description_en ?? undefined,
-    description_en_internal_only: a.description_en ?? undefined,
-    pubDate: a.pubDate,
-    article_url: a.article_url ?? undefined,
-    image_url: a.image_url ?? undefined,
-    original_language_code: a.language_code ?? undefined,
-    publicationSource: a.publication_name || a.country_code
-        ? ({
-            _id: a._id,
-            publication_name: a.publication_name,
-            country_code: a.country_code,
-        } as NewsArticle['publicationSource'])
-        : undefined,
-} as NewsArticle);
 
 export function useArticleDetailScreen({
     articleId,
@@ -151,7 +134,7 @@ export function useArticleDetailScreen({
     // Server order is final, no client re-sort; the hook dedupes by `_id` on
     // every page, so the id alone is a unique key.
     const relatedRows = useMemo(
-        () => related.map((entry) => ({ id: entry._id, article: summaryToNewsArticle(entry) })),
+        () => related.map((entry) => ({ id: entry._id, article: toNewsArticle(entry) })),
         [related],
     );
 
