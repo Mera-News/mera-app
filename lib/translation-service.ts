@@ -603,6 +603,7 @@ export function __resetTranslationStateForTests(): void {
     failureCounts.clear();
     textAttempts.clear();
     joinable.clear();
+    abandoned.clear();
     blockedLanguages.clear();
     verifiedLanguages.clear();
     availabilityListeners.clear();
@@ -806,6 +807,28 @@ function keyedAnswer(raw: unknown, key: string): string | null {
     return typeof value === 'string' ? value : null;
 }
 
+/**
+ * Native calls abandoned at their JS timeout but still open, per (text,
+ * language), each resolving to that text's answer or null when the call
+ * settles or the ceiling passes. A re-ask awaits it rather than putting a
+ * second call on the shared controller.
+ */
+const abandoned = new Map<string, Promise<string | null>>();
+
+function rememberAbandoned(input: NativeInput, targetLangCode: string, settled: Promise<unknown>): void {
+    const texts: [string, (raw: unknown) => string | null][] = typeof input === 'string'
+        ? [[input, (raw) => (typeof raw === 'string' ? raw : null)]]
+        : Object.keys(input).map((key) => [input[key], (raw) => keyedAnswer(raw, key)]);
+    for (const [text, answerOf] of texts) {
+        const key = textKey(text, targetLangCode);
+        const answer = settled.then(answerOf);
+        abandoned.set(key, answer);
+        void answer.then(() => {
+            if (abandoned.get(key) === answer) abandoned.delete(key);
+        });
+    }
+}
+
 function callNativeWithTimeout(
     input: NativeInput,
     sourceLangCode: string,
@@ -864,9 +887,13 @@ function callNativeWithTimeout(
         timer = setTimeout(() => {
             timedOut = true;
             if (ctx && NATIVE_SETTLE_CEILING_MS > 0) {
-                ctx.holdSlotUntil(
-                    Promise.race([call, new Promise((r) => setTimeout(r, NATIVE_SETTLE_CEILING_MS))]),
-                );
+                // `undefined` when the call failed or the ceiling passed first.
+                const settled: Promise<unknown> = Promise.race([
+                    call.then((r) => r?.translatedTexts, () => undefined),
+                    new Promise((r) => setTimeout(() => r(undefined), NATIVE_SETTLE_CEILING_MS)),
+                ]);
+                ctx.holdSlotUntil(settled);
+                rememberAbandoned(input, targetLangCode, settled);
             }
             reject(new TranslationTimeoutError(timeoutMs));
         }, timeoutMs);
@@ -1095,6 +1122,13 @@ export function translateTextDetailed(
     const joinKey = isProbe ? null : textKey(text, targetLangCode);
     const joined = joinKey ? joinable.get(joinKey) : undefined;
     if (joined) return joined;
+    // Its last call was abandoned at the timeout but is still open: take that
+    // call's answer. A null answer is not a new attempt, so it costs no budget.
+    const open = joinKey ? abandoned.get(joinKey) : undefined;
+    if (open) {
+        return open.then((answer): TranslationResult =>
+            answer == null ? { status: 'failed', text: null } : { status: 'ok', text: answer });
+    }
 
     const task = async (ctx: TranslationTaskContext): Promise<string | null | Skipped | typeof DROPPED> => {
         // A failure that lands while the app is away, or on a call that spanned

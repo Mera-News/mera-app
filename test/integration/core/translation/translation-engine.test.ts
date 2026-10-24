@@ -673,3 +673,38 @@ describe('the settle hold is measured from the timeout', () => {
         expect(await retry).toBe('success');
     });
 });
+
+describe('a re-ask while the abandoned native call is still open', () => {
+    it('awaits that call instead of making a second one', async () => {
+        await openGate('fr');
+        const slow = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => slow.promise);
+        const first = translateTextDetailed('Slow title', 'fr');
+        await jest.advanceTimersByTimeAsync(20_100);
+        expect(await first).toEqual({ status: 'failed', text: null });
+
+        const again = translateTextDetailed('Slow title', 'fr');
+        await jest.advanceTimersByTimeAsync(5_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        slow.resolve({ translatedTexts: 'Titre lent' });
+        expect(await again).toEqual({ status: 'ok', text: 'Titre lent' });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+    });
+
+    it("answers 'failed' at the ceiling when the call never settles, then a new ask calls native", async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockImplementationOnce(() => new Promise(() => {}));
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Enfin' }));
+        const first = translateTextDetailed('Wedged title', 'fr');
+        await jest.advanceTimersByTimeAsync(20_100);
+        await first;
+        const again = translateTextDetailed('Wedged title', 'fr');
+        await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS);
+        expect(await again).toEqual({ status: 'failed', text: null });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+
+        const third = translateTextDetailed('Wedged title', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await third).toEqual({ status: 'ok', text: 'Enfin' });
+    });
+});
