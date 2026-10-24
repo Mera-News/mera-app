@@ -94,13 +94,23 @@ export function visibilityPriority(y: number): number {
     return y >= 0 ? y : 100_000 - y;
 }
 
+/**
+ * Handed to every task. `holdSlotUntil` keeps the slot busy after the task has
+ * resolved its caller: a native call abandoned at its JS timeout is still
+ * running on the module's one shared view controller, and a second call
+ * dispatched now would overwrite it.
+ */
+export interface TranslationTaskContext {
+    holdSlotUntil(settled: Promise<unknown>): void;
+}
+
 interface PendingItem {
     readonly seq: number;
     /** null ⇒ exempt from epoch drops (the probe). */
     readonly epoch: number | null;
     readonly priority: number;
     readonly label: string;
-    readonly run: () => Promise<unknown>;
+    readonly run: (ctx: TranslationTaskContext) => Promise<unknown>;
     readonly resolve: (value: unknown) => void;
     readonly reject: (error: unknown) => void;
 }
@@ -219,6 +229,8 @@ function sweepStale(): void {
     for (const item of casualties) item.resolve(DROPPED);
 }
 
+const noop = (): void => {};
+
 function pump(): void {
     while (inFlight < TRANSLATION_CONCURRENCY) {
         // Belt and braces: `bumpTranslationEpoch` already swept, but an item can
@@ -235,17 +247,20 @@ function pump(): void {
             priority: item.priority,
             pending: pending.length,
         });
+        const holds: Promise<unknown>[] = [];
+        const ctx: TranslationTaskContext = {
+            holdSlotUntil: (settled) => {
+                holds.push(settled.then(noop, noop));
+            },
+        };
         let call: Promise<unknown>;
         try {
-            call = Promise.resolve(item.run());
+            call = Promise.resolve(item.run(ctx));
         } catch (err) {
             call = Promise.reject(err);
         }
         call.then(item.resolve, item.reject);
-        void call.then(
-            () => {},
-            () => {},
-        ).then(() => {
+        void call.then(noop, noop).then(() => Promise.all(holds)).then(() => {
             inFlight -= 1;
             completedCount += 1;
             logger.debug('[TranslationQueue] Complete', {
@@ -263,7 +278,7 @@ function pump(): void {
  * {@link DROPPED} if the route moved on before it was ever dispatched.
  */
 export function enqueueTranslationTask<T>(
-    run: () => Promise<T>,
+    run: (ctx: TranslationTaskContext) => Promise<T>,
     options: EnqueueOptions = {},
 ): Promise<T | Dropped> {
     const itemEpoch = options.epoch === undefined ? epoch : options.epoch;
@@ -278,7 +293,7 @@ export function enqueueTranslationTask<T>(
             epoch: itemEpoch,
             priority,
             label,
-            run: run as () => Promise<unknown>,
+            run: run as (ctx: TranslationTaskContext) => Promise<unknown>,
             resolve: resolve as (value: unknown) => void,
             reject,
         });

@@ -17,6 +17,7 @@ jest.mock('@/lib/logger', () => ({
 
 import {
     isTranslationBlocked,
+    NATIVE_SETTLE_CEILING_MS,
     probeTranslationLanguage,
     setLateTranslationSink,
     translateTextDetailed,
@@ -128,5 +129,52 @@ describe("'skipped' versus 'failed'", () => {
         await jest.runAllTimersAsync();
         expect(await second).toEqual({ status: 'skipped', text: null });
         expect(mockOnTranslateTask).not.toHaveBeenCalled();
+    });
+});
+
+describe('a native call that outlives its 20s timeout', () => {
+    it('is not retried, and never counts toward the breaker', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockImplementation(() => new Promise(() => {}));
+        // More timeouts than the verified threshold (5).
+        for (let i = 0; i < 7; i++) {
+            const p = translateTextDetailed(`Slow ${i}`, 'fr');
+            await jest.runAllTimersAsync();
+            expect(await p).toEqual({ status: 'failed', text: null });
+        }
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(7);
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+
+    it('answers its caller at the timeout but holds the slot until the native call settles', async () => {
+        await openGate('fr');
+        const slow = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => slow.promise);
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Suivant' }));
+
+        const first = translateTextDetailed('Slow', 'fr');
+        const second = translateTextDetailed('Next', 'fr');
+        await jest.advanceTimersByTimeAsync(20_100);
+        expect(await first).toEqual({ status: 'failed', text: null });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+
+        await jest.advanceTimersByTimeAsync(10_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        slow.resolve({ translatedTexts: 'Lent' });
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await second).toEqual({ status: 'ok', text: 'Suivant' });
+    });
+
+    it('frees the slot at the ceiling when the native call never settles', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockImplementationOnce(() => new Promise(() => {}));
+        mockOnTranslateTask.mockImplementation(async () => ({ translatedTexts: 'Suivant' }));
+
+        void translateTextDetailed('Wedged', 'fr');
+        const second = translateTextDetailed('Next', 'fr');
+        await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 100);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        await jest.advanceTimersByTimeAsync(200);
+        expect(await second).toEqual({ status: 'ok', text: 'Suivant' });
     });
 });

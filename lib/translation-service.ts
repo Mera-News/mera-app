@@ -11,6 +11,7 @@ import {
     enqueueTranslationTask,
     isDropped,
     PROBE_PRIORITY,
+    type TranslationTaskContext,
 } from '@/lib/translation-queue';
 
 /**
@@ -646,6 +647,17 @@ function retryDelaysFor(targetLangCode: string): readonly number[] {
 const TRANSLATE_CALL_TIMEOUT_MS = 20_000;
 
 /**
+ * How long, from dispatch, the queue's one slot stays held for a native call
+ * that outlived its JS timeout. The caller is answered at the timeout (it shows
+ * English), but the call is still running on the module's shared
+ * hostingController, and dispatching the next one would overwrite it. The slot
+ * frees when the call settles or at this ceiling, whichever is first; the
+ * ceiling exists because the vendored Swift can leak its continuation and never
+ * settle. Set it to 0 to free the slot at the timeout again.
+ */
+export const NATIVE_SETTLE_CEILING_MS = 45_000;
+
+/**
  * Ceiling on a probe. Much longer, because a probe legitimately holds the
  * native call open for as long as Apple's sheet is up AND the pack is
  * downloading — that whole wait happens inside the one call.
@@ -723,7 +735,9 @@ function callNativeWithTimeout(
     sourceLangCode: string,
     targetLangCode: string,
     timeoutMs: number,
+    ctx?: TranslationTaskContext,
 ): Promise<string | null> {
+    const startedAt = Date.now();
     const call = onTranslateTask({
         input: text,
         // The app's canonical code is NOT always what the native translator
@@ -767,6 +781,10 @@ function callNativeWithTimeout(
     const timeout = new Promise<never>((_resolve, reject) => {
         timer = setTimeout(() => {
             timedOut = true;
+            const left = NATIVE_SETTLE_CEILING_MS - (Date.now() - startedAt);
+            if (ctx && left > 0) {
+                ctx.holdSlotUntil(Promise.race([call, new Promise((r) => setTimeout(r, left))]));
+            }
             reject(new TranslationTimeoutError(timeoutMs));
         }, timeoutMs);
     });
@@ -938,13 +956,16 @@ export function translateTextDetailed(
         probeErrors.set(targetLangCode, null);
     }
 
-    const task = async (): Promise<string | null | Skipped> => {
+    const task = async (ctx: TranslationTaskContext): Promise<string | null | Skipped> => {
         // Checked HERE, at the head of the queue — NOT when translateText was
         // called. A language switch fires every mounted <TranslatableDynamic>
         // in one effect flush, so all N calls are already queued before the
         // first failure lands; a call-time check would let every one of them
         // reach the native module and present its own sheet.
-        if (blockedLanguages.has(targetLangCode)) return SKIPPED;
+        // Not for a probe: it cleared this language's block when it was asked,
+        // and an older probe that times out while it waits (the slot is held
+        // until that call settles) must not veto the reader's retry.
+        if (!isProbe && blockedLanguages.has(targetLangCode)) return SKIPPED;
 
         // The two "this can never work" checks come BEFORE the gate, not
         // after. Both are pure and free, and both need to RECORD their verdict
@@ -992,6 +1013,7 @@ export function translateTextDetailed(
                     sourceLangCode,
                     targetLangCode,
                     timeoutMs,
+                    ctx,
                 );
                 if (translated == null) {
                     logger.warn('[TranslationService] Translation returned no text', {
@@ -1025,7 +1047,9 @@ export function translateTextDetailed(
                     attempt,
                     error: err instanceof Error ? err.message : String(err),
                 });
-                if (attempt < retryDelays.length) {
+                // No retry after a timeout: the abandoned call is still running
+                // on the shared controller and a retry would overlap it.
+                if (attempt < retryDelays.length && !(err instanceof TranslationTimeoutError)) {
                     await sleep(retryDelays[attempt]);
                 } else {
                     const message = err instanceof Error ? err.message : String(err);
@@ -1042,6 +1066,10 @@ export function translateTextDetailed(
                             targetLangCode,
                             isProbe,
                         });
+                        // A timeout never counts toward the breaker: the call may
+                        // still succeed (late sink), and a slow pack is not a
+                        // broken one.
+                        return null;
                     } else if (/cancelled/i.test(message)) {
                         // The native bridge's "operation was cancelled" is NOT the
                         // user's cancel button — that path (useLanguageSwitch.cancel)

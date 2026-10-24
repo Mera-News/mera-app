@@ -6,7 +6,7 @@
 import { setAppState } from '@/test/helpers';
 import { currentProbe, probeLanguage, probeSawSheet } from '@/lib/hooks/use-language-switch';
 import * as translationService from '@/lib/translation-service';
-import { __resetTranslationStateForTests, PROBE_FAST_FAIL_MS } from '@/lib/translation-service';
+import { __resetTranslationStateForTests, NATIVE_SETTLE_CEILING_MS, PROBE_FAST_FAIL_MS } from '@/lib/translation-service';
 
 const mockOnTranslateTask: jest.Mock = jest.requireMock('expo-translate-text').onTranslateTask;
 
@@ -82,6 +82,8 @@ test('tracks each probe from the call until it settles, newest first', async () 
     abandonNext();
     // The older probe left; the newer one is still open.
     expect(currentProbe()?.code).toBe('fr');
+    // The abandoned call still holds the one slot until the settle ceiling.
+    await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 20_000);
 
     await answerNext();
     await expect(fr).resolves.toBe('success');
@@ -125,6 +127,7 @@ test('a retry of the same language is a new probe', async () => {
     await expect(first).resolves.toBe('timeout');
     abandonNext();
     expect(currentProbe()).toBe(retryProbe);
+    await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS - 5_000);
 
     await answerNext();
     await expect(retry).resolves.toBe('success');
