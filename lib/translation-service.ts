@@ -15,6 +15,7 @@ import {
     isDropped,
     isTranslationQueueActive,
     PROBE_PRIORITY,
+    subscribeQueueActive,
     type TranslationBatchSpec,
     type TranslationTaskContext,
 } from '@/lib/translation-queue';
@@ -404,43 +405,187 @@ export interface TranslationFailureState {
 const failureCounts = new Map<string, number>();
 
 /**
- * Per text, per language, this session: how many times a caller was answered
- * 'failed', and whether the text failed inside a batch (it is then never batched
- * again). The render surface never counts retries; this map is the budget.
+ * Per text, per language, this session: its failures and its retry schedule.
+ * After a 'failed' outcome the text may be asked again at +30s, then +2min,
+ * then +10min after each successive failure; after the third retry fails it is
+ * exhausted for the session. The SERVICE runs the retries: at the due time it
+ * puts the text back into the one queue, at the lowest priority, but only while
+ * some node has declared interest ({@link retainTranslationInterest}); with no
+ * interest the retry is owed and goes the moment interest rises. A render
+ * surface never counts retries and keeps no timers. `noBatch` marks a text that
+ * failed inside a batch: it retries alone.
  */
 interface TextAttempts {
     failed: number;
     noBatch: boolean;
+    /** When the next attempt is allowed; null when none is scheduled. */
+    dueAt: number | null;
+    /** The last outcome was 'failed' (retrying or exhausted). */
+    lastFailed: boolean;
+    /** Due, but nobody was looking: runs when interest rises. */
+    owed: boolean;
+    timer: ReturnType<typeof setTimeout> | null;
 }
 const textAttempts = new Map<string, TextAttempts>();
 /** Calls still queued or running, by (text, language), for joining. */
 const joinable = new Map<string, Promise<TranslationResult>>();
-/** A text gets ONE retry after a 'failed' outcome, then 'failed' comes back with no native call. */
-export const TEXT_FAILED_BUDGET = 2;
+/** Waits after the 1st, 2nd and 3rd failure. After the 4th failure (3 retries) the text is exhausted. */
+export const TRANSLATION_RETRY_BACKOFF_MS = [30_000, 120_000, 600_000] as const;
+/** Behind every fresh request (visibilityPriority tops out near 1e5 plus the offset). */
+const RETRY_PRIORITY = 1e12;
 const textKey = (text: string, targetLangCode: string): string => `${targetLangCode}\u0000${text}`;
+const keyParts = (key: string): [string, string] => {
+    const cut = key.indexOf('\u0000');
+    return [key.slice(cut + 1), key.slice(0, cut)];
+};
+
+/** Nodes visibly showing this text as failed, with their gate open. */
+const interest = new Map<string, number>();
+const failedListeners = new Map<string, Set<() => void>>();
+
+function notifyFailed(key: string): void {
+    failedListeners.get(key)?.forEach((listener) => listener());
+}
 
 /**
- * True when this text's retry budget is spent: {@link translateTextDetailed}
- * would answer 'failed' at once, with no native call. A render surface reads it
- * to stop showing a pending state for a text that will not be asked again.
+ * True when this text's retries are spent: {@link translateTextDetailed} would
+ * answer 'failed' at once, with no native call, for the rest of the session.
  */
 export function isTextFailureExhausted(text: string, targetLangCode: string): boolean {
-    return (textAttempts.get(textKey(text, targetLangCode))?.failed ?? 0) >= TEXT_FAILED_BUDGET;
+    return (textAttempts.get(textKey(text, targetLangCode))?.failed ?? 0) > TRANSLATION_RETRY_BACKOFF_MS.length;
+}
+
+/** When the next attempt is allowed (epoch ms); null when the text has not failed or is exhausted. */
+export function getRetryDueAt(text: string, targetLangCode: string): number | null {
+    const entry = textAttempts.get(textKey(text, targetLangCode));
+    if (!entry?.lastFailed || isTextFailureExhausted(text, targetLangCode)) return null;
+    return entry.dueAt;
+}
+
+/** True while the text's last outcome is 'failed', whether it is waiting to retry or exhausted. */
+export function useTextTranslationFailed(text: string, targetLangCode: string): boolean {
+    const key = textKey(text, targetLangCode);
+    return useSyncExternalStore(
+        (listener) => {
+            let set = failedListeners.get(key);
+            if (!set) {
+                set = new Set();
+                failedListeners.set(key, set);
+            }
+            set.add(listener);
+            return () => {
+                set!.delete(listener);
+                if (set!.size === 0) failedListeners.delete(key);
+            };
+        },
+        () => textAttempts.get(key)?.lastFailed ?? false,
+        () => false,
+    );
+}
+
+/**
+ * Declare that a node is visibly showing this FAILED text with its gate open
+ * (focused, page active, queue active). Ref-counted; the returned function
+ * releases. An owed retry goes into the queue the moment interest rises.
+ */
+export function retainTranslationInterest(text: string, targetLangCode: string): () => void {
+    const key = textKey(text, targetLangCode);
+    interest.set(key, (interest.get(key) ?? 0) + 1);
+    runOwedRetry(key);
+    let released = false;
+    return () => {
+        if (released) return;
+        released = true;
+        const left = (interest.get(key) ?? 1) - 1;
+        if (left > 0) interest.set(key, left);
+        else interest.delete(key);
+    };
 }
 
 function attemptsFor(text: string, targetLangCode: string): TextAttempts {
     const key = textKey(text, targetLangCode);
     let entry = textAttempts.get(key);
     if (!entry) {
-        entry = { failed: 0, noBatch: false };
+        entry = { failed: 0, noBatch: false, dueAt: null, lastFailed: false, owed: false, timer: null };
         textAttempts.set(key, entry);
     }
     return entry;
 }
 
+/** A request for this text is about to make a real attempt: any scheduled retry is now moot. */
+function startAttempt(key: string): void {
+    const entry = textAttempts.get(key);
+    if (!entry) return;
+    if (entry.timer) clearTimeout(entry.timer);
+    entry.timer = null;
+    entry.owed = false;
+}
+
+/** A real attempt ended 'failed': count it and schedule the next step, if any. */
+function recordTextFailure(text: string, targetLangCode: string): void {
+    const key = textKey(text, targetLangCode);
+    const entry = attemptsFor(text, targetLangCode);
+    entry.failed += 1;
+    entry.lastFailed = true;
+    if (entry.timer) clearTimeout(entry.timer);
+    entry.timer = null;
+    entry.owed = false;
+    const wait = TRANSLATION_RETRY_BACKOFF_MS[entry.failed - 1];
+    if (wait === undefined) {
+        entry.dueAt = null;
+    } else {
+        entry.dueAt = Date.now() + wait;
+        entry.timer = setTimeout(() => {
+            entry.timer = null;
+            entry.owed = true;
+            runOwedRetry(key);
+        }, wait);
+    }
+    notifyFailed(key);
+}
+
+function recordTextSuccess(text: string, targetLangCode: string): void {
+    const key = textKey(text, targetLangCode);
+    const entry = textAttempts.get(key);
+    if (!entry || (!entry.lastFailed && entry.failed === 0)) return;
+    if (entry.timer) clearTimeout(entry.timer);
+    Object.assign(entry, { failed: 0, dueAt: null, lastFailed: false, owed: false, timer: null });
+    notifyFailed(key);
+}
+
+/** Put an owed retry into the queue, if someone is looking and the app is in front. */
+function runOwedRetry(key: string): void {
+    const entry = textAttempts.get(key);
+    if (!entry?.owed || !(interest.get(key)! > 0) || !isTranslationQueueActive()) return;
+    entry.owed = false;
+    const [text, targetLangCode] = keyParts(key);
+    void translateTextDetailed(text, targetLangCode, { priority: RETRY_PRIORITY }).then((result) => {
+        if (result.status === 'ok' && result.text != null) deliverLate(text, targetLangCode, result.text);
+        else if (result.status === 'dropped' || result.status === 'skipped') {
+            // Not an attempt: still owed, for the next rise of interest, return to
+            // the front, or lift of the breaker.
+            const again = textAttempts.get(key);
+            if (again?.lastFailed) again.owed = true;
+        }
+    });
+}
+
+function runAllOwedRetries(): void {
+    for (const key of textAttempts.keys()) runOwedRetry(key);
+}
+
+subscribeQueueActive(() => {
+    if (isTranslationQueueActive()) runAllOwedRetries();
+});
+
 function forgetTextAttemptsFor(targetLangCode: string): void {
     const prefix = `${targetLangCode}\u0000`;
-    for (const key of textAttempts.keys()) if (key.startsWith(prefix)) textAttempts.delete(key);
+    for (const [key, entry] of textAttempts) {
+        if (!key.startsWith(prefix)) continue;
+        if (entry.timer) clearTimeout(entry.timer);
+        textAttempts.delete(key);
+        notifyFailed(key);
+    }
 }
 const blockedLanguages = new Map<string, TranslationFailureState>();
 /** Languages that have produced at least one successful translation this
@@ -457,6 +602,8 @@ function recordTranslationSuccess(targetLangCode: string): void {
     verifiedLanguages.add(targetLangCode);
     const wasBlocked = blockedLanguages.delete(targetLangCode);
     failureCounts.delete(targetLangCode);
+    // Retries skipped while the breaker was open are owed: run them now.
+    if (wasBlocked) queueMicrotask(runAllOwedRetries);
     // Verification is a state change every surface cares about: it is what
     // opens the native-call gate below, so the nodes that were rendering
     // English need to hear about it, not just the ones that were blocked.
@@ -533,7 +680,10 @@ export function clearTranslationFailures(): void {
     const hadBlocked = blockedLanguages.size > 0;
     blockedLanguages.clear();
     failureCounts.clear();
+    for (const entry of textAttempts.values()) if (entry.timer) clearTimeout(entry.timer);
+    const keys = [...textAttempts.keys()];
     textAttempts.clear();
+    keys.forEach(notifyFailed);
     if (hadBlocked) notifyAvailabilityChanged();
 }
 
@@ -601,7 +751,10 @@ export function useTranslationSuppressed(targetLangCode: string): boolean {
 /** Test seam — clears every module-level translation state. */
 export function __resetTranslationStateForTests(): void {
     failureCounts.clear();
+    for (const entry of textAttempts.values()) if (entry.timer) clearTimeout(entry.timer);
     textAttempts.clear();
+    interest.clear();
+    failedListeners.clear();
     joinable.clear();
     abandoned.clear();
     blockedLanguages.clear();
@@ -1121,8 +1274,13 @@ export function translateTextDetailed(
     if (isProbe) {
         probeTimedOut.set(targetLangCode, false);
         probeErrors.set(targetLangCode, null);
-    } else if (isTextFailureExhausted(text, targetLangCode)) {
-        return Promise.resolve({ status: 'failed', text: null });
+    } else {
+        // Exhausted, or asked before its retry is due: failed at once, no
+        // native call, and the schedule does not move.
+        const entry = textAttempts.get(textKey(text, targetLangCode));
+        if (entry?.lastFailed && (entry.dueAt == null || Date.now() < entry.dueAt)) {
+            return Promise.resolve({ status: 'failed', text: null });
+        }
     }
     // The same text asked again while its call is still queued or running
     // joins that call instead of queueing a second one.
@@ -1302,12 +1460,16 @@ export function translateTextDetailed(
                 run: (items, ctx) => runTranslationBatch(targetLangCode, timeoutMs, items, ctx),
             };
 
+    if (joinKey) startAttempt(joinKey);
     const result = enqueueTranslationTask(task, { epoch, priority, label, batch }).then(
         (value): TranslationResult => {
             if (isDropped(value)) return { status: 'dropped', text: null };
             if (value === SKIPPED) return { status: 'skipped', text: null };
-            if (typeof value === 'string') return { status: 'ok', text: value };
-            if (!isProbe) attemptsFor(text, targetLangCode).failed += 1;
+            if (typeof value === 'string') {
+                if (!isProbe) recordTextSuccess(text, targetLangCode);
+                return { status: 'ok', text: value };
+            }
+            if (!isProbe) recordTextFailure(text, targetLangCode);
             return { status: 'failed', text: null };
         },
         // The task body catches everything already; this is the last net so a

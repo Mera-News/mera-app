@@ -16,7 +16,11 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import {
+    retainTranslationInterest,
+    useTextTranslationFailed,
+    getRetryDueAt,
     isTextFailureExhausted,
+    TRANSLATION_RETRY_BACKOFF_MS,
     isTranslationBlocked,
     NATIVE_SETTLE_CEILING_MS,
     probeTranslationLanguage,
@@ -191,27 +195,56 @@ describe('a native call that outlives its 20s timeout', () => {
     });
 });
 
-describe('the per-text retry budget', () => {
-    it("gives a text one retry after 'failed', then answers 'failed' with no native call", async () => {
+describe('the per-text retry schedule', () => {
+    it('allows a failed text again at +30s, +2min, +10min, then never, and an early ask costs nothing', async () => {
         await openGate('fr');
         mockOnTranslateTask.mockRejectedValue(new Error('nope'));
-
-        for (let i = 0; i < 2; i++) {
+        const ask = async () => {
             const p = translateTextDetailed('Bad', 'fr');
-            await jest.runAllTimersAsync();
-            expect(await p).toEqual({ status: 'failed', text: null });
-        }
-        const callsAfterTwo = mockOnTranslateTask.mock.calls.length;
-        const third = translateTextDetailed('Bad', 'fr');
-        await jest.runAllTimersAsync();
-        expect(await third).toEqual({ status: 'failed', text: null });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(callsAfterTwo);
+            await jest.advanceTimersByTimeAsync(0);
+            return p;
+        };
+        expect(getRetryDueAt('Bad', 'fr')).toBeNull();
+        expect(await ask()).toEqual({ status: 'failed', text: null });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
 
-        // The budget is per text: another string still asks the OS.
+        for (const [n, wait] of TRANSLATION_RETRY_BACKOFF_MS.entries()) {
+            const due = getRetryDueAt('Bad', 'fr');
+            expect(due).toBe(Date.now() + wait);
+            // Early: failed at once, no native call, and the due time does not move.
+            await jest.advanceTimersByTimeAsync(wait - 1_000);
+            expect(await ask()).toEqual({ status: 'failed', text: null });
+            expect(mockOnTranslateTask).toHaveBeenCalledTimes(n + 1);
+            expect(getRetryDueAt('Bad', 'fr')).toBe(due);
+            // Due: one real attempt.
+            await jest.advanceTimersByTimeAsync(1_000);
+            expect(await ask()).toEqual({ status: 'failed', text: null });
+            expect(mockOnTranslateTask).toHaveBeenCalledTimes(n + 2);
+        }
+        expect(isTextFailureExhausted('Bad', 'fr')).toBe(true);
+        expect(getRetryDueAt('Bad', 'fr')).toBeNull();
+        await jest.advanceTimersByTimeAsync(3_600_000);
+        expect(await ask()).toEqual({ status: 'failed', text: null });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
+
+        // Per text: another string still asks the OS.
         mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bon' });
-        const other = translateTextDetailed('Good', 'fr');
-        await jest.runAllTimersAsync();
-        expect(await other).toEqual({ status: 'ok', text: 'Bon' });
+        expect(await translateTextDetailed('Good', 'fr')).toEqual({ status: 'ok', text: 'Bon' });
+    });
+
+    it('a retry that succeeds clears the schedule', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValueOnce(new Error('nope'));
+        const p = translateTextDetailed('Flaky', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        await p;
+        await jest.advanceTimersByTimeAsync(30_000);
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Instable' });
+        const q = translateTextDetailed('Flaky', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(await q).toEqual({ status: 'ok', text: 'Instable' });
+        expect(getRetryDueAt('Flaky', 'fr')).toBeNull();
+        expect(isTextFailureExhausted('Flaky', 'fr')).toBe(false);
     });
 });
 
@@ -599,22 +632,6 @@ describe('every visible node ends translated', () => {
     });
 });
 
-describe('isTextFailureExhausted', () => {
-    it('is true exactly when the next ask would answer failed with no native call', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockRejectedValue(new Error('nope'));
-        expect(isTextFailureExhausted('Bad', 'fr')).toBe(false);
-        for (let i = 0; i < 2; i++) {
-            const p = translateTextDetailed('Bad', 'fr');
-            await jest.runAllTimersAsync();
-            await p;
-        }
-        expect(isTextFailureExhausted('Bad', 'fr')).toBe(true);
-        expect(isTextFailureExhausted('Bad', 'de')).toBe(false);
-        expect(isTextFailureExhausted('Other', 'fr')).toBe(false);
-    });
-});
-
 describe('the breaker charges a text once', () => {
     it('five texts that each failed once do not block the language when they all retry in a row', async () => {
         await openGate('fr');
@@ -683,6 +700,8 @@ describe('a re-ask while the abandoned native call is still open', () => {
         await jest.advanceTimersByTimeAsync(20_100);
         expect(await first).toEqual({ status: 'failed', text: null });
 
+        // Once its retry is due (30s), still inside the 45s the call is held open.
+        await jest.advanceTimersByTimeAsync(30_000);
         const again = translateTextDetailed('Slow title', 'fr');
         await jest.advanceTimersByTimeAsync(5_000);
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
@@ -698,6 +717,7 @@ describe('a re-ask while the abandoned native call is still open', () => {
         const first = translateTextDetailed('Wedged title', 'fr');
         await jest.advanceTimersByTimeAsync(20_100);
         await first;
+        await jest.advanceTimersByTimeAsync(30_000);
         const again = translateTextDetailed('Wedged title', 'fr');
         await jest.advanceTimersByTimeAsync(NATIVE_SETTLE_CEILING_MS);
         expect(await again).toEqual({ status: 'failed', text: null });
@@ -736,11 +756,12 @@ describe('the fast-error ladder retries only a cancellation', () => {
         expect(await fine).toEqual({ status: 'ok', text: 'fr:Fine' });
         expect(callsWithRefused()).toBe(2);
 
+        // Asked again once its retry is due.
+        await jest.advanceTimersByTimeAsync(30_000);
         const reAsk = translateTextDetailed('Refused', 'fr');
-        await jest.runAllTimersAsync();
+        await jest.advanceTimersByTimeAsync(0);
         expect(await reAsk).toEqual({ status: 'failed', text: null });
         expect(callsWithRefused()).toBe(3);
-        expect(isTextFailureExhausted('Refused', 'fr')).toBe(true);
     });
 
     it('a cancellation still runs the 200, 600, 1800 ladder', async () => {
@@ -750,5 +771,119 @@ describe('the fast-error ladder retries only a cancellation', () => {
         await jest.runAllTimersAsync();
         expect(await p).toEqual({ status: 'failed', text: null });
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
+    });
+});
+
+describe('the service retries a failed text in the one queue', () => {
+    let emit: (mode: string) => void = () => {};
+    const sinkCache = new Map<string, string>();
+    beforeEach(async () => {
+        setAppStateSource({
+            currentState: 'active',
+            addEventListener: (_t, fn) => {
+                emit = fn;
+                return { remove: () => { emit = () => {}; } };
+            },
+        });
+        sinkCache.clear();
+        setLateTranslationSink((text, _lang, translated) => sinkCache.set(text, translated));
+        await openGate('fr');
+    });
+    afterEach(() => emit('active'));
+
+    /** Fail these texts once, one at a time, so each retries alone or batches by the test's choice. */
+    async function failOnce(...texts: string[]): Promise<void> {
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        for (const t of texts) {
+            const p = translateTextDetailed(t, 'fr');
+            await jest.advanceTimersByTimeAsync(0);
+            expect(await p).toEqual({ status: 'failed', text: null });
+        }
+        mockOnTranslateTask.mockReset();
+        mockOnTranslateTask.mockImplementation(async ({ input }: { input: unknown }) => ({
+            translatedTexts: typeof input === 'string'
+                ? `fr:${input}`
+                : Object.fromEntries(Object.entries(input as Record<string, string>).map(([k, v]) => [k, `fr:${v}`])),
+        }));
+    }
+
+    it('with no interest makes no call at the due time, then one as soon as interest rises', async () => {
+        await failOnce('Late');
+        const { result } = renderHook(() => useTextTranslationFailed('Late', 'fr'));
+        expect(result.current).toBe(true);
+
+        await jest.advanceTimersByTimeAsync(60_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+
+        let release!: () => void;
+        await act(async () => {
+            release = retainTranslationInterest('Late', 'fr');
+            await jest.advanceTimersByTimeAsync(0);
+        });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(sinkCache.get('Late')).toBe('fr:Late');
+        expect(result.current).toBe(false);
+        release();
+    });
+
+    it('two nodes showing the same text produce one retry', async () => {
+        await failOnce('Shared');
+        const a = retainTranslationInterest('Shared', 'fr');
+        const b = retainTranslationInterest('Shared', 'fr');
+        await jest.advanceTimersByTimeAsync(30_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(sinkCache.get('Shared')).toBe('fr:Shared');
+        a();
+        b();
+    });
+
+    it('goes behind fresh work queued at the same moment, and batches with other retries', async () => {
+        await failOnce('Retry A', 'Retry B');
+        const releases = [retainTranslationInterest('Retry A', 'fr'), retainTranslationInterest('Retry B', 'fr')];
+        // Hold the slot across the due time so the retries and fresh work queue together.
+        const head = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => head.promise);
+        await jest.advanceTimersByTimeAsync(29_000);
+        void translateTextDetailed('Head', 'fr');
+        await jest.advanceTimersByTimeAsync(1_000);
+        void translateTextDetailed('Fresh', 'fr', { priority: 900 });
+        head.resolve({ translatedTexts: 'tête' });
+        await jest.advanceTimersByTimeAsync(0);
+        await jest.advanceTimersByTimeAsync(0);
+
+        const inputs = mockOnTranslateTask.mock.calls.map(([a]) => a.input);
+        // Head alone, then ONE batch: fresh first, the retries after it.
+        expect(inputs[1]).toEqual({ 0: 'Fresh', 1: 'Retry A', 2: 'Retry B' });
+        expect(sinkCache.get('Retry B')).toBe('fr:Retry B');
+        releases.forEach((r) => r());
+    });
+
+    it('three failed retries, then nothing', async () => {
+        await failOnce('Doomed');
+        mockOnTranslateTask.mockRejectedValue(new Error('Unable to Translate'));
+        const release = retainTranslationInterest('Doomed', 'fr');
+        await jest.advanceTimersByTimeAsync(30_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        await jest.advanceTimersByTimeAsync(120_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
+        await jest.advanceTimersByTimeAsync(600_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(3);
+        expect(isTextFailureExhausted('Doomed', 'fr')).toBe(true);
+        await jest.advanceTimersByTimeAsync(3_600_000);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(3);
+        release();
+    });
+
+    it('backgrounded at the due time, the retry runs once the app is active again', async () => {
+        await failOnce('Away');
+        const release = retainTranslationInterest('Away', 'fr');
+        emit('background');
+        await jest.advanceTimersByTimeAsync(40_000);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        emit('active');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(sinkCache.get('Away')).toBe('fr:Away');
+        release();
     });
 });
