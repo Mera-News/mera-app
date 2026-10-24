@@ -221,6 +221,7 @@ export function articleSummary(a: FixtureArticle, ctx: BuildContext): ArticleSum
         __typename: 'ArticleSummary',
         _id: a.id,
         title_en: a.title,
+        title_original: a.title,
         description_en: a.description,
         article_url: a.url,
         image_url: imageUrl(a, ctx),
