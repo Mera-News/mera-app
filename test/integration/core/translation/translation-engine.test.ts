@@ -614,3 +614,29 @@ describe('isTextFailureExhausted', () => {
         expect(isTextFailureExhausted('Other', 'fr')).toBe(false);
     });
 });
+
+describe('the breaker charges a text once', () => {
+    it('five texts that each failed once do not block the language when they all retry in a row', async () => {
+        await openGate('fr');
+        const bad = ['B0', 'B1', 'B2', 'B3', 'B4'];
+        mockOnTranslateTask.mockImplementation(async ({ input }: { input: string }) => {
+            if (bad.includes(input)) throw new Error('Unable to Translate');
+            return { translatedTexts: `fr:${input}` };
+        });
+        // Asked one at a time, so nothing batches.
+        for (const t of bad) {
+            const p = translateTextDetailed(t, 'fr');
+            await jest.runAllTimersAsync();
+            expect(await p).toEqual({ status: 'failed', text: null });
+            const ok = translateTextDetailed(`Good after ${t}`, 'fr');
+            await jest.runAllTimersAsync();
+            expect((await ok).status).toBe('ok');
+        }
+        for (const t of bad) {
+            const p = translateTextDetailed(t, 'fr');
+            await jest.runAllTimersAsync();
+            expect(await p).toEqual({ status: 'failed', text: null });
+        }
+        expect(isTranslationBlocked('fr')).toBe(false);
+    });
+});

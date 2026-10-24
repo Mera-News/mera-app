@@ -1104,6 +1104,15 @@ export function translateTextDetailed(
 
         if (nativeCallRefused(targetLangCode, isProbe)) return SKIPPED;
 
+        // The breaker is charged once per text, on its first failure: a text
+        // retried after failing must not count again, or a few bad strings
+        // retried in a row would block the whole language for the session.
+        const chargeBreaker = (message: string | null): void => {
+            if (isProbe || (textAttempts.get(textKey(text, targetLangCode))?.failed ?? 0) === 0) {
+                recordTranslationFailure(targetLangCode, message);
+            }
+        };
+
         const retryDelays = retryDelaysFor(targetLangCode);
         // Android's Kotlin bridge treats the literal string 'auto' as a
         // signal to run its own silent language-ID step first — no user-
@@ -1139,7 +1148,7 @@ export function translateTextDetailed(
                     // Counts as a failure: the caller gets nothing back, so
                     // repeating it for the next 40 strings helps no one.
                     if (isProbe) probeErrors.set(targetLangCode, 'translator returned no text');
-                    recordTranslationFailure(targetLangCode, 'translator returned no text');
+                    chargeBreaker('translator returned no text');
                 } else {
                     recordTranslationSuccess(targetLangCode);
                 }
@@ -1218,7 +1227,7 @@ export function translateTextDetailed(
                             targetLangCode,
                         });
                     }
-                    recordTranslationFailure(targetLangCode, message);
+                    chargeBreaker(message);
                     return null;
                 }
             }
