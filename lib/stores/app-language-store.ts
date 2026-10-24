@@ -6,7 +6,7 @@ import {
     rememberTranslation,
     sweepTranslationCache,
 } from '@/lib/database/services/translation-cache-service';
-import { clearTranslationFailuresFor, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { clearTranslationFailuresFor, setLateTranslationSink, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { bumpTranslationEpoch } from '@/lib/translation-queue';
 import { applyLanguage } from '@/lib/i18n';
 
@@ -224,5 +224,10 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         // Apple's system sheet.
     },
 }));
+
+// A translation that outlived its timeout still lands in the cache, unless the reader switched language since.
+setLateTranslationSink((text, target, translated) => {
+    if (useAppLanguageStore.getState().appLanguage === target) useAppLanguageStore.getState().cacheTranslation(text, translated);
+});
 
 export const useAppLanguage = () => useAppLanguageStore((s) => s.appLanguage);

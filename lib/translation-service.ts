@@ -682,6 +682,27 @@ const PROBE_FAST_FAIL_RETRY_MS = 1000;
  */
 export const TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS = 20_000;
 
+/**
+ * Where a translation that lands AFTER its JS timeout goes. The caller already
+ * got `failed`, but the OS did the work, so the text is kept rather than
+ * thrown away. A setter, not an import: `app-language-store` (which owns the
+ * cache) imports this module, so importing it back would close a cycle.
+ */
+export type LateTranslationSink = (text: string, targetLangCode: string, translated: string) => void;
+let lateTranslationSink: LateTranslationSink | null = null;
+
+export function setLateTranslationSink(sink: LateTranslationSink | null): void {
+    lateTranslationSink = sink;
+}
+
+function deliverLate(text: string, targetLangCode: string, translated: string): void {
+    try {
+        lateTranslationSink?.(text, targetLangCode, translated);
+    } catch {
+        // a cache write must never break the native completion path
+    }
+}
+
 class TranslationTimeoutError extends Error {
     constructor(ms: number) {
         super(`Translation call exceeded ${ms}ms`);
@@ -693,10 +714,9 @@ class TranslationTimeoutError extends Error {
  * Race one native call against a timeout.
  *
  * A timed-out call is ABANDONED, not cancelled — nothing can cancel it. So the
- * original promise keeps a handler attached: if the pack finishes downloading
- * a minute after we gave up, that late success still marks the language
- * verified, and the user's next attempt succeeds instantly instead of paying
- * for the same download again.
+ * original promise keeps a handler attached: a late success still marks the
+ * language verified, and its text goes to the late sink
+ * ({@link setLateTranslationSink}) instead of being dropped.
  */
 function callNativeWithTimeout(
     text: string,
@@ -729,12 +749,14 @@ function callNativeWithTimeout(
             // BEFORE the race settles, and that check logged every instant
             // success as late.
             if (!timedOut) return;
-            // Landed after we gave up. Record the verification, drop the text.
+            // Landed after we gave up. Record the verification and hand the
+            // text to the sink, so the next render reads it from the cache.
             if (typeof result?.translatedTexts === 'string') {
                 logger.info('[TranslationService] Late translation success after timeout', {
                     targetLangCode,
                 });
                 recordTranslationSuccess(targetLangCode);
+                deliverLate(text, targetLangCode, result.translatedTexts);
             }
         },
         () => {
