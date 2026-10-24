@@ -277,7 +277,8 @@
       "discarded": "Dibuang oleh Mera"
     },
     "readyForMore": "Siap membaca lebih banyak?",
-    "refreshFeedAction": "Muat ulang feed Anda"
+    "refreshFeedAction": "Muat ulang feed Anda",
+    "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi."
   },
   "relevance": {
     "emergency": "Darurat",
@@ -499,7 +500,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Alasan",
     "skipNotesTitle": "Lewati alasan",
-    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Mera mengurutkan berita Anda tanpa menulis alasan mengapa setiap artikel ada di Feed Anda. Artikel baru muncul lebih cepat.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why.",
     "howRuns": "Cara Mera berjalan",

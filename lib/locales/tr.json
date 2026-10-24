@@ -281,7 +281,8 @@
       "discarded": "Mera tarafından elendi"
     },
     "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
-    "refreshFeedAction": "Akışınızı yenileyin"
+    "refreshFeedAction": "Akışınızı yenileyin",
+    "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın."
   },
   "relevance": {
     "emergency": "Acil",
@@ -504,7 +505,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Nedenler",
     "skipNotesTitle": "Nedenleri atla",
-    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Mera haberleri sıralar ama her makalenin Akışınızda neden olduğunu yazmaz. Yeni makaleler daha hızlı görünür.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why.",
     "howRuns": "Mera nasıl çalışır",

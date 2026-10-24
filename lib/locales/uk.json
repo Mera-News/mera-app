@@ -305,7 +305,8 @@
       "discarded": "Відхилено Мерою"
     },
     "readyForMore": "Готові читати далі?",
-    "refreshFeedAction": "Оновити стрічку"
+    "refreshFeedAction": "Оновити стрічку",
+    "translationFailed": "Не вдалося перекласти. Перезапустіть застосунок."
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -532,7 +533,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Причини",
     "skipNotesTitle": "Пропускати причини",
-    "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Мера сортує новини, але не пише, чому кожна стаття є у вашій стрічці. Нові статті з'являються швидше.",
     "fallbackNoticeTitle": "Мера uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Мера Protocol, to see why.",
     "howRuns": "Як працює Мера",

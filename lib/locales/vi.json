@@ -277,7 +277,8 @@
       "discarded": "Mera đã loại bỏ"
     },
     "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
-    "refreshFeedAction": "Làm mới bảng tin"
+    "refreshFeedAction": "Làm mới bảng tin",
+    "translationFailed": "Dịch thất bại. Hãy khởi động lại ứng dụng."
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -499,7 +500,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Lý do",
     "skipNotesTitle": "Bỏ qua lý do",
-    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Mera xếp hạng tin tức của bạn mà không viết lý do vì sao mỗi bài viết có trong Bảng tin của bạn. Bài viết mới xuất hiện nhanh hơn.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why.",
     "howRuns": "Cách Mera hoạt động",

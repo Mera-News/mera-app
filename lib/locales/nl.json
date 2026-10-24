@@ -281,7 +281,8 @@
       "discarded": "Afgewezen door Mera"
     },
     "readyForMore": "Klaar om meer te lezen?",
-    "refreshFeedAction": "Ververs je feed"
+    "refreshFeedAction": "Ververs je feed",
+    "translationFailed": "Vertaling mislukt. Start de app opnieuw."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -504,7 +505,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Redenen",
     "skipNotesTitle": "Redenen overslaan",
-    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Mera rangschikt je nieuws zonder op te schrijven waarom elk artikel in je Feed staat. Nieuwe artikelen verschijnen sneller.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why.",
     "howRuns": "Zo werkt Mera",

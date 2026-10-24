@@ -277,7 +277,8 @@
       "discarded": "梅拉已排除"
     },
     "readyForMore": "準備好讀更多了嗎？",
-    "refreshFeedAction": "重新整理你的資訊流"
+    "refreshFeedAction": "重新整理你的資訊流",
+    "translationFailed": "翻譯失敗。請重新啟動應用程式。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -499,7 +500,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "理由",
     "skipNotesTitle": "略過理由",
-    "skipNotesHelp": "梅拉 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "梅拉會為新聞排序，但不會寫下每篇文章在你動態中的理由。新文章會更快出現。",
     "fallbackNoticeTitle": "梅拉 uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then 梅拉 Protocol, to see why.",
     "howRuns": "梅拉如何執行",

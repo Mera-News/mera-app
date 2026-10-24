@@ -277,7 +277,8 @@
       "discarded": "メラが除外した"
     },
     "readyForMore": "もっと読む準備はできましたか？",
-    "refreshFeedAction": "フィードを更新"
+    "refreshFeedAction": "フィードを更新",
+    "translationFailed": "翻訳に失敗しました。アプリを再起動してください。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -499,7 +500,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "理由",
     "skipNotesTitle": "理由をスキップ",
-    "skipNotesHelp": "メラ ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "メラは、記事がフィードに表示される理由を書かずにニュースを順位付けします。新しい記事が早く表示されます。",
     "fallbackNoticeTitle": "メラ uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then メラ Protocol, to see why.",
     "howRuns": "メラの動作",

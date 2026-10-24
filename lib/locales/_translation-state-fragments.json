@@ -1,0 +1,163 @@
+{
+  "_comment": "translation-state: failed-translation tooltip; skipNotesHelp retranslated (was English in 19 locales).",
+  "en": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster."
+    },
+    "feed": {
+      "translationFailed": "Translation failed. Restart the app."
+    }
+  },
+  "ar": {
+    "meraProtocol": {
+      "skipNotesHelp": "تُرتّب ميرا أخبارك دون أن تكتب سبب ظهور كل مقال في خلاصتك. تظهر المقالات الجديدة أسرع."
+    },
+    "feed": {
+      "translationFailed": "فشلت الترجمة. أعد تشغيل التطبيق."
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera sortiert deine Nachrichten, ohne zu schreiben, warum jeder Artikel in deinem Feed steht. Neue Artikel erscheinen schneller."
+    },
+    "feed": {
+      "translationFailed": "Übersetzung fehlgeschlagen. Starte die App neu."
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera ordena tus noticias sin escribir por qué cada artículo está en tu Feed. Los artículos nuevos aparecen antes."
+    },
+    "feed": {
+      "translationFailed": "La traducción falló. Reinicia la app."
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera classe vos actualités sans expliquer pourquoi chaque article se trouve dans votre fil. Les nouveaux articles arrivent plus vite."
+    },
+    "feed": {
+      "translationFailed": "La traduction a échoué. Redémarrez l'application."
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "skipNotesHelp": "मेरा आपकी खबरों को रैंक करता है, लेकिन यह नहीं लिखता कि हर लेख आपकी फ़ीड में क्यों है। नए लेख जल्दी दिखते हैं।"
+    },
+    "feed": {
+      "translationFailed": "अनुवाद नहीं हो सका। ऐप दोबारा शुरू करें।"
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera mengurutkan berita Anda tanpa menulis alasan mengapa setiap artikel ada di Feed Anda. Artikel baru muncul lebih cepat."
+    },
+    "feed": {
+      "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi."
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera classifica le notizie senza scrivere perché ogni articolo è nel tuo Feed. I nuovi articoli arrivano prima."
+    },
+    "feed": {
+      "translationFailed": "Traduzione non riuscita. Riavvia l'app."
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "skipNotesHelp": "メラは、記事がフィードに表示される理由を書かずにニュースを順位付けします。新しい記事が早く表示されます。"
+    },
+    "feed": {
+      "translationFailed": "翻訳に失敗しました。アプリを再起動してください。"
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "skipNotesHelp": "메라는 각 기사가 피드에 있는 이유를 적지 않고 뉴스 순위를 매깁니다. 새 기사가 더 빨리 표시됩니다."
+    },
+    "feed": {
+      "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요."
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera rangschikt je nieuws zonder op te schrijven waarom elk artikel in je Feed staat. Nieuwe artikelen verschijnen sneller."
+    },
+    "feed": {
+      "translationFailed": "Vertaling mislukt. Start de app opnieuw."
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera układa Twoje wiadomości, nie pisząc, dlaczego każdy artykuł znalazł się w Twoim kanale. Nowe artykuły pojawiają się szybciej."
+    },
+    "feed": {
+      "translationFailed": "Tłumaczenie się nie udało. Uruchom aplikację ponownie."
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "skipNotesHelp": "O Mera ordena suas notícias sem explicar por que cada artigo aparece no seu Feed. Os artigos novos aparecem mais rápido."
+    },
+    "feed": {
+      "translationFailed": "A tradução falhou. Reinicie o app."
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "skipNotesHelp": "Мера сортирует новости, но не пишет, почему каждая статья попала в ленту. Новые статьи появляются быстрее."
+    },
+    "feed": {
+      "translationFailed": "Не удалось выполнить перевод. Перезапустите приложение."
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "skipNotesHelp": "เมร่าจัดอันดับข่าวให้คุณโดยไม่เขียนเหตุผลว่าทำไมแต่ละบทความจึงอยู่ในฟีดของคุณ บทความใหม่แสดงเร็วขึ้น"
+    },
+    "feed": {
+      "translationFailed": "แปลไม่สำเร็จ กรุณารีสตาร์ทแอป"
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera haberleri sıralar ama her makalenin Akışınızda neden olduğunu yazmaz. Yeni makaleler daha hızlı görünür."
+    },
+    "feed": {
+      "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın."
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "skipNotesHelp": "Мера сортує новини, але не пише, чому кожна стаття є у вашій стрічці. Нові статті з'являються швидше."
+    },
+    "feed": {
+      "translationFailed": "Не вдалося перекласти. Перезапустіть застосунок."
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "skipNotesHelp": "Mera xếp hạng tin tức của bạn mà không viết lý do vì sao mỗi bài viết có trong Bảng tin của bạn. Bài viết mới xuất hiện nhanh hơn."
+    },
+    "feed": {
+      "translationFailed": "Dịch thất bại. Hãy khởi động lại ứng dụng."
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "skipNotesHelp": "梅拉为你的新闻排序，但不写出每篇文章出现在动态中的原因。新文章会更快出现。"
+    },
+    "feed": {
+      "translationFailed": "翻译失败。请重启应用。"
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "skipNotesHelp": "梅拉會為新聞排序，但不會寫下每篇文章在你動態中的理由。新文章會更快出現。"
+    },
+    "feed": {
+      "translationFailed": "翻譯失敗。請重新啟動應用程式。"
+    }
+  }
+}

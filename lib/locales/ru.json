@@ -305,7 +305,8 @@
       "discarded": "Отклонено Мерой"
     },
     "readyForMore": "Готовы читать дальше?",
-    "refreshFeedAction": "Обновить ленту"
+    "refreshFeedAction": "Обновить ленту",
+    "translationFailed": "Не удалось выполнить перевод. Перезапустите приложение."
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -532,7 +533,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Пояснения",
     "skipNotesTitle": "Пропускать пояснения",
-    "skipNotesHelp": "Мера ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Мера сортирует новости, но не пишет, почему каждая статья попала в ленту. Новые статьи появляются быстрее.",
     "fallbackNoticeTitle": "Мера uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Мера Protocol, to see why.",
     "howRuns": "Как работает Мера",

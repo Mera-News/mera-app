@@ -277,7 +277,8 @@
       "discarded": "메라가 제외함"
     },
     "readyForMore": "더 읽을 준비가 되셨나요?",
-    "refreshFeedAction": "피드 새로고침"
+    "refreshFeedAction": "피드 새로고침",
+    "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요."
   },
   "relevance": {
     "emergency": "긴급",
@@ -499,7 +500,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "이유",
     "skipNotesTitle": "이유 건너뛰기",
-    "skipNotesHelp": "메라 ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "메라는 각 기사가 피드에 있는 이유를 적지 않고 뉴스 순위를 매깁니다. 새 기사가 더 빨리 표시됩니다.",
     "fallbackNoticeTitle": "메라 uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then 메라 Protocol, to see why.",
     "howRuns": "메라 실행 방식",

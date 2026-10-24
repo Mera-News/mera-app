@@ -277,7 +277,8 @@
       "discarded": "คัดออกโดยเมร่า"
     },
     "readyForMore": "พร้อมอ่านเพิ่มหรือยัง?",
-    "refreshFeedAction": "รีเฟรชฟีดของคุณ"
+    "refreshFeedAction": "รีเฟรชฟีดของคุณ",
+    "translationFailed": "แปลไม่สำเร็จ กรุณารีสตาร์ทแอป"
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -499,7 +500,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "เหตุผล",
     "skipNotesTitle": "ข้ามเหตุผล",
-    "skipNotesHelp": "เมร่า ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "เมร่าจัดอันดับข่าวให้คุณโดยไม่เขียนเหตุผลว่าทำไมแต่ละบทความจึงอยู่ในฟีดของคุณ บทความใหม่แสดงเร็วขึ้น",
     "fallbackNoticeTitle": "เมร่า uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then เมร่า Protocol, to see why.",
     "howRuns": "วิธีที่ เมร่า ทำงาน",

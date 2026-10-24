@@ -281,7 +281,8 @@
       "discarded": "Scartati da Mera"
     },
     "readyForMore": "Pronto a leggere altro?",
-    "refreshFeedAction": "Aggiorna il tuo feed"
+    "refreshFeedAction": "Aggiorna il tuo feed",
+    "translationFailed": "Traduzione non riuscita. Riavvia l'app."
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -504,7 +505,7 @@
     "builtInRequirement": "{{name}} on this phone",
     "notesGroup": "Motivi",
     "skipNotesTitle": "Salta i motivi",
-    "skipNotesHelp": "Mera ranks your news without writing why each article is in your Feed. New articles show up faster.",
+    "skipNotesHelp": "Mera classifica le notizie senza scrivere perché ogni articolo è nel tuo Feed. I nuovi articoli arrivano prima.",
     "fallbackNoticeTitle": "Mera uses Private cloud for now",
     "fallbackNoticeBody": "On this phone isn't available right now. Open Settings, then Mera Protocol, to see why.",
     "howRuns": "Come funziona Mera",
