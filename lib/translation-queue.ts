@@ -469,7 +469,8 @@ export function getTranslationBackgroundGeneration(): number {
     return backgroundGeneration;
 }
 
-function subscribeQueueActive(listener: () => void): () => void {
+/** Subscribe to {@link isTranslationQueueActive} flips. */
+export function subscribeQueueActive(listener: () => void): () => void {
     activeListeners.add(listener);
     return () => {
         activeListeners.delete(listener);
