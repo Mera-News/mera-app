@@ -33,7 +33,7 @@ import { useMotionAllowed } from '@/lib/motion-gate';
 import { bumpTranslationEpoch } from '@/lib/translation-queue';
 import { noteActivePage, registerScrollTarget, type ResumeScrollTarget } from '@/lib/navigation/resume-spot';
 import { useRestoreHidden } from '@/lib/navigation/use-screen-scroll-target';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -52,6 +52,7 @@ import { consumePendingPage, usePendingPageRequest, usePendingPageStore } from '
 import PageExplainerSheet from './PageExplainerSheet';
 import RestoreReveal from './RestoreReveal';
 import PagePager from './PagePager';
+import { PageActiveContext } from './page-active';
 import { survivingPage } from './tab-swipe';
 import { PageScrollContext, retapTarget, scrollListToTop, type PageScrollTarget, type RegisterPageScroll } from './page-scroll';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
@@ -59,14 +60,6 @@ import { pageMeta, tabOfPage, TAB_LABEL_KEYS, type PageId } from './page-registr
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
-
-// Whether the page a node sits in is the visible one. Warm neighbours stay
-// mounted one width to the side; a translatable node there must not re-ask.
-// True outside TabPages (a pushed screen is always the visible one).
-const PageActiveContext = createContext(true);
-export function usePageActive(): boolean {
-  return useContext(PageActiveContext);
-}
 
 const TabPages: React.FC<TabPagesProps> = ({
   tab,

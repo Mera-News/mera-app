@@ -5,7 +5,8 @@
 import { act, render } from '@testing-library/react-native';
 import React from 'react';
 
-import TabPages, { usePageActive } from '@/components/custom/nav/TabPages';
+import TabPages from '@/components/custom/nav/TabPages';
+import { usePageActive } from '@/components/custom/nav/page-active';
 import { resetPendingPage, setPendingPage } from '@/components/custom/nav/navigate-to-page';
 import {
     __resetTranslationQueueForTests,
