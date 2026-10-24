@@ -47,7 +47,7 @@ const SCROLL_THRESHOLD = 300;
 // (the existing card type works against NewsArticle fields). Hoisted to module
 // scope so the merged-entries `useMemo` (which runs before the early returns)
 // can call it without violating hook ordering.
-const toNewsArticle = (a: ArticleSummary): NewsArticle => ({
+export const toNewsArticle = (a: ArticleSummary): NewsArticle => ({
     _id: a._id,
     title: a.title_en,
     title_en_internal_only: a.title_en,
@@ -69,9 +69,9 @@ const toNewsArticle = (a: ArticleSummary): NewsArticle => ({
 // Map a local ForYouSuggestion → NewsArticle-shaped object for
 // ArticleStandaloneCompactCard (mirrors toNewsArticle above). `_id` is the
 // ARTICLE id so dedupe against server related rows works by article id.
-const suggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
+export const suggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
     _id: s.articleId,
-    title: s.title_en ?? s.title_original ?? '',
+    title: s.title_original ?? s.title_en ?? '',
     title_en_internal_only: s.title_en ?? undefined,
     description: s.description_en ?? undefined,
     description_en_internal_only: s.description_en ?? undefined,
