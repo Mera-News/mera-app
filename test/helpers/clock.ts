@@ -42,12 +42,25 @@ export async function advanceUntilDone<T>(promise: Promise<T>, maxMs = 120_000, 
 // wait could otherwise be stepped through before the network ever replied.
 const realTurn = () => new Promise<void>((resolve) => setImmediate(resolve));
 
+// After the virtual budget, real turns with the clock still: up to this many, or this much wall time.
+const SETTLE_TURNS = 500;
+const SETTLE_NS = 2_000_000_000n;
+
 /** Advances fake time in small steps, with a real event-loop turn per step, until `cond()` holds;
- *  throws if it never does within maxMs of virtual time. */
+ *  throws if it never does within maxMs of virtual time plus a settle phase.
+ *  The budget is virtual but the work it waits on (MSW, E2EE, an abort reaching the mock) needs REAL
+ *  turns, and a loaded machine can spend the whole budget before that work lands. So the settle
+ *  phase yields real turns without moving the clock, and only then gives up. */
 export async function advanceUntil(cond: () => boolean, maxMs = 120_000, stepMs = 50): Promise<void> {
   for (let elapsed = 0; elapsed < maxMs && !cond(); elapsed += stepMs) {
     await jest.advanceTimersByTimeAsync(stepMs);
     await realTurn();
   }
-  if (!cond()) throw new Error('advanceUntil: condition not met');
+  // hrtime, not Date.now(): the fake clock owns Date.
+  const start = process.hrtime.bigint();
+  for (let turn = 0; turn < SETTLE_TURNS && !cond() && process.hrtime.bigint() - start < SETTLE_NS; turn++) {
+    await jest.advanceTimersByTimeAsync(0);
+    await realTurn();
+  }
+  if (!cond()) throw new Error(`advanceUntil: condition not met within ${maxMs}ms virtual: ${String(cond).slice(0, 200)}`);
 }
