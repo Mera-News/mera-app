@@ -52,7 +52,7 @@ import { consumePendingPage, usePendingPageRequest, usePendingPageStore } from '
 import PageExplainerSheet from './PageExplainerSheet';
 import RestoreReveal from './RestoreReveal';
 import PagePager from './PagePager';
-import { PageActiveContext } from './page-active';
+import { createPageActiveSource, PageActiveContext } from './page-active';
 import { survivingPage } from './tab-swipe';
 import { PageScrollContext, retapTarget, scrollListToTop, type PageScrollTarget, type RegisterPageScroll } from './page-scroll';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
@@ -277,10 +277,28 @@ const TabPages: React.FC<TabPagesProps> = ({
     });
   }, [navigation, route.key, tab]);
 
+  // One stable page-active source per page, flipped in an effect: a new
+  // context value would re-render every card under every panel.
+  const activeSources = useRef(new Map<PageId, ReturnType<typeof createPageActiveSource>>());
+  const activeSourceFor = useCallback(
+    (id: PageId) => {
+      let source = activeSources.current.get(id);
+      if (!source) {
+        source = createPageActiveSource(id === activeId);
+        activeSources.current.set(id, source);
+      }
+      return source;
+    },
+    [activeId],
+  );
+  useEffect(() => {
+    activeSources.current.forEach((source, id) => source.set(id === activeId));
+  }, [activeId]);
+
   const renderPanel = useCallback(
     (i: number, pageActive: boolean) => (
       <PageScrollContext.Provider value={registerFor(ids[i])}>
-        <PageActiveContext.Provider value={pageActive}>
+        <PageActiveContext.Provider value={activeSourceFor(ids[i])}>
           {renderPage({
             pageId: ids[i],
             active: pageActive && focused && !arranging,
@@ -289,7 +307,7 @@ const TabPages: React.FC<TabPagesProps> = ({
         </PageActiveContext.Provider>
       </PageScrollContext.Provider>
     ),
-    [renderPage, ids, focused, arranging, header, idleHeader, registerFor],
+    [renderPage, ids, focused, arranging, header, idleHeader, registerFor, activeSourceFor],
   );
 
   const tabLabel = t(TAB_LABEL_KEYS[tab]);

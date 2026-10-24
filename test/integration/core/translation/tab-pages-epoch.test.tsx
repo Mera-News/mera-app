@@ -6,7 +6,7 @@ import { act, render } from '@testing-library/react-native';
 import React from 'react';
 
 import TabPages from '@/components/custom/nav/TabPages';
-import { usePageActive } from '@/components/custom/nav/page-active';
+import { usePageActive, usePageActiveSource } from '@/components/custom/nav/page-active';
 import { resetPendingPage, setPendingPage } from '@/components/custom/nav/navigate-to-page';
 import {
     __resetTranslationQueueForTests,
@@ -67,9 +67,17 @@ jest.mock('@/components/custom/nav/PagePager', () => ({
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const seen: Record<string, boolean> = {};
+const sourceRenders: Record<string, number> = {};
+const sources: Record<string, unknown> = {};
+// Memoized with no props: only a context VALUE change can re-render it.
+const SourceOnly = React.memo(function SourceOnly({ id }: { id: string }) {
+    sources[id] = usePageActiveSource();
+    sourceRenders[id] = (sourceRenders[id] ?? 0) + 1;
+    return null;
+});
 function Page({ id }: { id: string }) {
     seen[id] = usePageActive();
-    return null;
+    return <SourceOnly id={id} />;
 }
 
 const pages = [
@@ -123,5 +131,26 @@ describe('usePageActive', () => {
 
         render(<Page id="loose" />);
         expect(seen.loose).toBe(true);
+        const loose = sources.loose as { isActive(): boolean };
+        expect(loose.isActive()).toBe(true);
+    });
+
+    it('a page switch never re-renders a consumer that only holds the source', () => {
+        renderTabs();
+        const renders = { ...sourceRenders };
+        const savedSource = sources.saved as { isActive(): boolean };
+        expect(savedSource.isActive()).toBe(true);
+
+        act(() => mockSwipeTo(1));
+        expect(sourceRenders).toEqual(renders);
+        expect(sources.saved).toBe(savedSource);
+        expect(savedSource.isActive()).toBe(false);
+        expect((sources.checks as { isActive(): boolean }).isActive()).toBe(true);
+
+        const heard = jest.fn();
+        const unsubscribe = (sources.saved as { subscribe(l: () => void): () => void }).subscribe(heard);
+        act(() => mockSwipeTo(0));
+        expect(heard).toHaveBeenCalled();
+        unsubscribe();
     });
 });
