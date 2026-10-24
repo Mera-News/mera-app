@@ -6,6 +6,7 @@
 // that errors the body, a silent gap before the first chunk). They seal with the mock's own
 // `sealForClient`, so the app still decrypts for real; the mock simply does not record those calls.
 import { http, HttpResponse } from 'msw';
+import { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import type { SseEvent } from '@/lib/llm/cloudComplete';
 import logger from '@/lib/logger';
 import { assertNoGatewayViolations, server, signInFixtureAccount, type GatewayResponder } from '@/test/helpers';
@@ -133,7 +134,10 @@ export function rawChat(script: (seal: Seal) => RawItem[], opts: { once?: boolea
           } else throw item.fail;
         }
       })();
-      const stream = new ReadableStream<Uint8Array>(
+      // Node's own ReadableStream, never the global (expo's web-streams polyfill under jest-expo):
+      // undici bridges the polyfill with a pipe that reads one frame ahead, so a `{ fail }` right
+      // behind a chunk errored the body before the app read that chunk.
+      const stream = new NodeReadableStream<Uint8Array>(
         {
           async pull(controller) {
             try {
