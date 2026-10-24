@@ -198,9 +198,12 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   // (", 12h ago, Medium priority"). Reuses the strings the row shows, in the
   // order it is read: headline, publication, age, priority, language.
   const [shownTitle, setShownTitle] = React.useState<string | null>(null);
+  // Its translation failed: the glyph is hidden from VoiceOver, so the label says it.
+  const [titleFailed, setTitleFailed] = React.useState(false);
   const meta = useArticleMetaStrings(pubDate, languageCode, publicationName);
   const spokenLabel = composeSpokenLabel([
     shownTitle ?? displayTitle,
+    titleFailed ? t('feed.translationFailed') : null,
     meta.publication,
     timeLabel ?? meta.age,
     spokenPriority,
@@ -302,7 +305,10 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   // the class lets the `md` token's own 24px line box apply.
                   className="font-semibold text-ink"
                   numberOfLines={headlineLines}
-                  onDisplayChange={(d) => setShownTitle(d.displayedText)}
+                  onDisplayChange={(d) => {
+                    setShownTitle(d.displayedText);
+                    setTitleFailed(d.translationFailed);
+                  }}
                 />
               </Box>
 

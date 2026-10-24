@@ -50,6 +50,8 @@ interface ReasonNoteProps {
     /** Mera read the row and scored it below its bar (`showsBelowGate`): no
      *  note is owed, so the caption says so instead of a failure. */
     belowGate?: boolean;
+    /** Detail screen only: a translated note ends with the plain translate glyph. */
+    showTranslatedGlyph?: boolean;
 }
 
 /** Space above and below the badge row. */
@@ -199,6 +201,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     maxNoteLines,
     reserveNoteLines,
     belowGate = false,
+    showTranslatedGlyph = false,
 }) => {
     const { t, i18n } = useTranslation();
     const lineHeight = useNoteLineHeight();
@@ -285,6 +288,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                         className="text-left"
                         numberOfLines={maxNoteLines}
                         style={noteStyle}
+                        showTranslatedGlyph={showTranslatedGlyph}
                         onDisplayChange={onNoteDisplayChange ? (d) => onNoteDisplayChange(d.displayedText) : undefined}
                     />
                     {wordByWord ? (

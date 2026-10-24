@@ -166,6 +166,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   // The headline exactly as displayed (it may be the original or a
   // translation), for the root's spoken label.
   const [shownTitle, setShownTitle] = React.useState<string | null>(null);
+  // Its translation failed: the glyph is hidden from VoiceOver, so the label says it.
+  const [titleFailed, setTitleFailed] = React.useState(false);
   const meta = useArticleMetaStrings(pubDate, languageCode, publicationName);
   // The root's EXPLICIT label. Without one VoiceOver read all the card's text
   // run together: the headline twice (the hero's alt, then the title), icon
@@ -174,6 +176,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   // then what the children say.
   const spokenLabel = composeSpokenLabel([
     shownTitle ?? displayTitle,
+    titleFailed ? t('feed.translationFailed') : null,
     meta.publication,
     showRecency ? meta.age : null,
     spokenPriority,
@@ -268,7 +271,10 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               size="lg"
               className=""
               showToggle={false}
-              onDisplayChange={(d) => setShownTitle(d.displayedText)}
+              onDisplayChange={(d) => {
+                setShownTitle(d.displayedText);
+                setTitleFailed(d.translationFailed);
+              }}
             />
           ) : (
             <Heading size="lg">{displayTitle}</Heading>

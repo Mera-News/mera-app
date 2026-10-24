@@ -246,6 +246,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             className={isCard ? '' : 'text-ink'}
             style={isCard ? undefined : { paddingTop: 8 }}
             showToggle={!isCard}
+            showTranslatedGlyph={!isCard}
             onDisplayChange={onTitleDisplayChange}
         />
     );
@@ -263,6 +264,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             topicIds={suggestion?.userTopicIds}
             testID="detail-reason"
             belowGate={belowGate}
+            showTranslatedGlyph={!isCard}
         />
     ) : isSuggestion && suggestion && isNotRead(suggestion) ? (
         <Text size="sm" className="text-ink-3" testID="detail-not-read">
