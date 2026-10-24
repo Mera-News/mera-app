@@ -511,10 +511,10 @@ describe('translateText', () => {
         );
     });
 
-    it('retries on failure and succeeds on second attempt (verified language)', async () => {
+    it('retries a cancellation and succeeds on second attempt (verified language)', async () => {
         await openGate('fr');
         mockOnTranslateTask
-            .mockRejectedValueOnce(new Error('session busy'))
+            .mockRejectedValueOnce(new Error('The operation was cancelled.'))
             .mockResolvedValueOnce({ translatedTexts: 'Bonjour' });
 
         const promise = translateText('Hello', 'fr');
@@ -609,9 +609,9 @@ describe('translateText', () => {
         expect(await p).toBe('Welt');
     });
 
-    it('retries up to 3 times then returns null after all retries exhausted', async () => {
+    it('fails a non-cancellation error at once, with no retry', async () => {
         await openGate('fr');
-        // 4 calls total (1 initial + 3 retries) all fail → null
+        // Deterministic for this text: one call, then null.
         mockOnTranslateTask.mockRejectedValue(new Error('always fails'));
 
         const promise = translateText('Hello', 'fr');
@@ -619,7 +619,7 @@ describe('translateText', () => {
         const result = await promise;
 
         expect(result).toBeNull();
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
         expect((logger.error as jest.Mock)).toHaveBeenCalledWith(
             expect.stringContaining('Translation failed'),
             expect.any(Error),
@@ -748,10 +748,11 @@ describe('translation availability breaker', () => {
         expect(isTranslationBlocked('de')).toBe(true);
         // The first headline goes alone; the other 39 go out in five failing
         // batches (8, 8, 8, 8, 7), which count nothing, and come back as
-        // singles. Each single spends the full retry ladder before it counts as
-        // one failure, and the language blocks after the verified threshold.
+        // singles. A non-cancellation error is not retried, so each single is
+        // one call and one failure, and the language blocks after the
+        // verified threshold.
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(
-            VERIFIED_TRANSLATION_FAILURE_THRESHOLD * 4 + 5,
+            VERIFIED_TRANSLATION_FAILURE_THRESHOLD + 5,
         );
     });
 
@@ -855,10 +856,10 @@ describe('translation availability breaker', () => {
         await Promise.all(promises);
 
         // One tap, one translateText — a failed retry must not re-arm the
-        // loop. The language is verified here, so that single attempt spends
-        // the in-call retry ladder (4 native calls) and then re-blocks; no
-        // sheet can appear for a language whose assets are installed.
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
+        // loop. A non-cancellation error is not retried, so that single
+        // attempt is one native call and then re-blocks; no sheet can appear
+        // for a language whose assets are installed.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
         expect(isTranslationBlocked('de')).toBe(true);
     });
 

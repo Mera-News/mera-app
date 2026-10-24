@@ -678,18 +678,25 @@ export function deviceCanTranslate(): boolean {
 //  - skipped: no native call (gate, breaker, unsupported language or device).
 //  - dropped: never asked, or it failed while the app was away. Costs nothing.
 
-// Delays (ms) between retry attempts. The OS translator throws transiently
-// when the translation session is busy; a short pause is enough to recover.
+// Delays (ms) between retry attempts, for a CANCELLED call only (the shared
+// controller overwritten, or the session torn down): a short pause is enough to
+// recover. Any other error is deterministic for that text and fails at once.
 // Never after a timeout: the abandoned call is still running, and a retry
 // would overlap it on the shared controller.
 const TRANSLATE_RETRY_DELAYS_MS = [200, 600, 1800] as const;
 
 // No in-call retries. Used on iOS for a language we have never successfully
 // translated into, because there every attempt against missing assets
-// re-presents Apple's download sheet. The transient "session busy" case the
+// re-presents Apple's download sheet. The transient cancellation the
 // ladder exists for still recovers: a single failure is below
 // TRANSLATION_FAILURE_THRESHOLD, so the next request gets a clean second try.
 const NO_RETRY_DELAYS_MS = [] as const;
+
+/** The one error worth retrying inside the slot. A timeout is not one. */
+function isTransientTranslationError(err: unknown): boolean {
+    if (err instanceof TranslationTimeoutError) return false;
+    return /cancel/i.test(err instanceof Error ? err.message : String(err));
+}
 
 function retryDelaysFor(targetLangCode: string): readonly number[] {
     if (Platform.OS === 'ios' && !verifiedLanguages.has(targetLangCode)) {
@@ -1208,9 +1215,12 @@ export function translateTextDetailed(
                     attempt,
                     error: err instanceof Error ? err.message : String(err),
                 });
-                // No retry after a timeout: the abandoned call is still running
-                // on the shared controller and a retry would overlap it.
-                if (attempt < retryDelays.length && !(err instanceof TranslationTimeoutError)) {
+                // Only a cancellation is retried: the shared controller being
+                // overwritten, or iOS tearing the session down. Any other error is
+                // the translator's answer for this text and fails at once, and a
+                // timeout is never retried (the abandoned call is still running
+                // on the shared controller and a retry would overlap it).
+                if (attempt < retryDelays.length && isTransientTranslationError(err)) {
                     await sleep(retryDelays[attempt]);
                 } else {
                     const message = err instanceof Error ? err.message : String(err);

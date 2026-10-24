@@ -708,3 +708,47 @@ describe('a re-ask while the abandoned native call is still open', () => {
         expect(await third).toEqual({ status: 'ok', text: 'Enfin' });
     });
 });
+
+describe('the fast-error ladder retries only a cancellation', () => {
+    it('a deterministic refusal on a batched text costs 2 native calls, and 3 with the one re-ask', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockImplementation(async ({ input }: { input: unknown }) => {
+            const texts = typeof input === 'string' ? [input] : Object.values(input as Record<string, string>);
+            if (texts.includes('Refused')) throw new Error('Unable to Translate');
+            return {
+                translatedTexts: typeof input === 'string'
+                    ? `fr:${input}`
+                    : Object.fromEntries(Object.entries(input as Record<string, string>).map(([k, v]) => [k, `fr:${v}`])),
+            };
+        });
+        const head = deferredNative();
+        mockOnTranslateTask.mockImplementationOnce(() => head.promise);
+        void translateTextDetailed('Head', 'fr');
+        await jest.advanceTimersByTimeAsync(0);
+        const refused = translateTextDetailed('Refused', 'fr');
+        const fine = translateTextDetailed('Fine', 'fr');
+        head.resolve({ translatedTexts: 'tête' });
+        await jest.runAllTimersAsync();
+
+        const callsWithRefused = () => mockOnTranslateTask.mock.calls.filter(([a]) =>
+            (typeof a.input === 'string' ? [a.input] : Object.values(a.input)).includes('Refused')).length;
+        expect(await refused).toEqual({ status: 'failed', text: null });
+        expect(await fine).toEqual({ status: 'ok', text: 'fr:Fine' });
+        expect(callsWithRefused()).toBe(2);
+
+        const reAsk = translateTextDetailed('Refused', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await reAsk).toEqual({ status: 'failed', text: null });
+        expect(callsWithRefused()).toBe(3);
+        expect(isTextFailureExhausted('Refused', 'fr')).toBe(true);
+    });
+
+    it('a cancellation still runs the 200, 600, 1800 ladder', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('The operation was cancelled.'));
+        const p = translateTextDetailed('Cancelled', 'fr');
+        await jest.runAllTimersAsync();
+        expect(await p).toEqual({ status: 'failed', text: null });
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
+    });
+});
