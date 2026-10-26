@@ -27,6 +27,8 @@ beforeEach(async () => {
 
 /** Six same-band rows, so only the pin (not relevance) decides where an arrival may land. */
 const SIX = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].map((id) => [id, MEDIUM] as const);
+/** Two past the initial pin of six, so a dynamic region exists. */
+const EIGHT = [...SIX, ['r7', MEDIUM], ['r8', MEDIUM]] as const;
 
 /** Mount with `rows` stored and wait until the pin has seeded (the list is non-empty and stable). */
 async function mountWith(rows: readonly (readonly [string, number])[]) {
@@ -74,27 +76,27 @@ describe('ingest is insert-only', () => {
 });
 
 describe('pinned prefix', () => {
-  it('a higher-relevance arrival lands below the first four rows, not above the reader', async () => {
-    const feed = await mountWith(SIX);
+  it('a higher-relevance arrival lands below the first six rows, not above the reader', async () => {
+    const feed = await mountWith(EIGHT);
     const before = feed.ids();
 
     await arrive([['hot', HIGH]]);
     await waitFor(() => expect(feed.ids()).toContain('hot'));
 
-    // Four pinned (floor of 2, +2), then the arrival leads the dynamic region on band alone.
-    expect(feed.ids().slice(0, 4)).toEqual(before.slice(0, 4));
-    expect(feed.ids()[4]).toBe('hot');
-    expect(feed.ids().slice(5)).toEqual(before.slice(4));
+    // Six pinned (floor of 2, + PIN_SLACK 4), then the arrival leads the dynamic region on band alone.
+    expect(feed.ids().slice(0, 6)).toEqual(before.slice(0, 6));
+    expect(feed.ids()[6]).toBe('hot');
+    expect(feed.ids().slice(7)).toEqual(before.slice(6));
   });
 
-  it('grows to cover the deepest row the reader has seen, plus one card of slack', async () => {
-    const feed = await mountWith([...SIX, ['r7', MEDIUM], ['r8', MEDIUM]]);
+  it('grows to cover the deepest row the reader has seen, plus three cards of slack', async () => {
+    const feed = await mountWith(EIGHT);
     const before = feed.ids();
 
-    // The Feed's 75% viewability pair reports the sixth row (index 5) as viewable.
+    // The Feed's 75% viewability pair reports the fourth row (index 3) as viewable: 3 + 4 pins seven.
     act(() =>
       feed.result.current.viewabilityConfigCallbackPairs[0].onViewableItemsChanged({
-        changed: [{ key: before[5], isViewable: true }],
+        changed: [{ key: before[3], isViewable: true }],
       } as never),
     );
     await arrive([['hot', HIGH]]);
@@ -107,10 +109,10 @@ describe('pinned prefix', () => {
 
 describe('partition snapshot', () => {
   it('a card marked viewed mid-session does not move until the list is reset', async () => {
-    const feed = await mountWith(SIX);
+    const feed = await mountWith(EIGHT);
     const before = feed.ids();
     const pinnedRow = before[0];
-    const dynamicRow = before[4];
+    const dynamicRow = before[6];
 
     act(() => {
       useFeedOrderStore.getState().markViewed(pinnedRow);
@@ -122,10 +124,10 @@ describe('partition snapshot', () => {
 
   it('pull-to-refresh re-freezes it: viewed cards sink below the unviewed ones', async () => {
     await signInFixtureAccount();
-    const feed = await mountWith(SIX);
+    const feed = await mountWith(EIGHT);
     const before = feed.ids();
     const pinnedRow = before[0];
-    const dynamicRow = before[4];
+    const dynamicRow = before[6];
 
     act(() => {
       useFeedOrderStore.getState().markViewed(pinnedRow);
