@@ -75,6 +75,24 @@ export function nonTerminalCandidateIds(run: PipelineRun): Set<string> {
   return s;
 }
 
+/**
+ * Every article a live batch answers for: its candidates plus the siblings it
+ * stands in for (`coveredIds`, written at enqueue). The GATE excludes these, so a
+ * sibling held back behind an in-flight representative is not elected and scored
+ * again before the representative's score lands. Post-results propagation keeps
+ * {@link nonTerminalCandidateIds}: its own batch is still live then, and this set
+ * would hide exactly the siblings it exists to fill. A batch that fails or is
+ * abandoned goes terminal and releases its siblings to the next gate.
+ */
+export function nonTerminalCoveredIds(run: PipelineRun): Set<string> {
+  const s = nonTerminalCandidateIds(run);
+  for (const b of run.batches) {
+    if (isTerminal(b.phase)) continue;
+    for (const id of b.coveredIds ?? []) s.add(id);
+  }
+  return s;
+}
+
 // ---------------------------------------------------------------------------
 // For-You header progress — collapse the per-batch pipeline into the existing
 // two-phase ('relevance' | 'reasons') header model the store already renders.

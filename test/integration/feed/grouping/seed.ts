@@ -16,6 +16,7 @@ export interface GroupRowSpec {
   firstPubDateMs?: number;
   countryCode?: string | null;
   languageCode?: string | null;
+  storyKey?: string | null;
 }
 
 // Every description shares the content words "reason" and "old" with the reasons these tests
@@ -38,6 +39,7 @@ function toArticle(spec: GroupRowSpec): ArticleWithClusters {
     country_code: spec.countryCode ?? null,
     language_code: spec.languageCode ?? null,
     clusters: spec.clusters ?? SHARED_CLUSTER,
+    story_key: spec.storyKey ?? null,
   } as unknown as ArticleWithClusters;
 }
 

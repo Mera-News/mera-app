@@ -395,6 +395,41 @@ describe('gateUnscoredForScoring: in-flight + edge cases', () => {
 // propagateToUnscoredSiblings: propagation only, no election
 // ===========================================================================
 
+// Titles share no token and every row has its own cluster: only the story key can join them.
+describe('story key: a propagation-grade edge', () => {
+  const copy = (id: string, title: string, storyKey: string | null) =>
+    lone(id, { title, storyKey });
+
+  it('copies relevance AND note across a shared key (grounding is one shared token, not a guard)', async () => {
+    await seedScored(copy('donor', 'Koningin Maxima bezoekt Utrecht', 'K1'), {
+      relevance: 0.8,
+      reason: 'old reason',
+    });
+    await seedUnscored(copy('c1', 'Royal visit draws crowds', 'K1'), copy('c2', 'Monarch tours city hall', 'K1'));
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    const expected = { relevance: 0.8, reason: 'old reason', status: ArticleSuggestionStatus.Complete };
+    await expect(scoreOf('c1')).resolves.toEqual(expected);
+    await expect(scoreOf('c2')).resolves.toEqual(expected);
+    expect(result.enqueueIds).toEqual([]);
+  });
+
+  it('never joins null or empty keys', async () => {
+    await seedScored(copy('donor', 'Koningin Maxima bezoekt Utrecht', null), {
+      relevance: 0.8,
+      reason: 'old reason',
+    });
+    await seedUnscored(copy('c1', 'Royal visit draws crowds', null), copy('c2', 'Monarch tours city hall', ''));
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    await expect(scoreOf('c1')).resolves.toEqual(UNSCORED);
+    await expect(scoreOf('c2')).resolves.toEqual(UNSCORED);
+    expect([...result.enqueueIds].sort()).toEqual(['c1', 'c2']);
+  });
+});
+
 describe('propagateToUnscoredSiblings', () => {
   it('copies a fresh donor score onto unscored siblings and returns the count', async () => {
     await seedUnscored({ id: 'cand-1' }, { id: 'cand-2' });

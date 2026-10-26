@@ -115,6 +115,40 @@ describe('enqueueUnscoredEligible — headline admission (P8 site 1b)', () => {
   });
 });
 
+// One story, one model read: copies share a story key (titles disjoint, no clusters), so only the
+// story key groups them.
+describe('enqueueUnscoredEligible: one representative per story', () => {
+  const sameStory = { extra: { story_key: 'K' } };
+
+  it('does not elect a held-back sibling again while its representative\'s batch is live', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['R', 'S1', 'S2'], sameStory);
+
+    await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    const [first] = await batches();
+    expect(first.candidateIds).toHaveLength(1);
+    expect([...(first.coveredIds ?? [])].sort()).toEqual(['R', 'S1', 'S2']);
+
+    // The next pass (another hydration chunk, the next background cycle) sends nothing for it.
+    const again = await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    expect(again.enqueued).toBe(0);
+    expect((await batches()).flatMap((b) => b.candidateIds)).toEqual(first.candidateIds);
+  });
+
+  it('elects a scorable copy when the preferred one is unscorable, and tombstones the unscorable one', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['S1'], sameStory);
+    // Newest, so election prefers it; no fact and no headline scope, so it can never be scored.
+    await seedArticles(['R'], { factless: true, extra: { story_key: 'K', pubDate: '2026-10-09T09:00:00.000Z' } });
+
+    const res = await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+
+    expect(res.enqueued).toBe(1);
+    expect((await batches())[0].candidateIds).toEqual(['S1']);
+    expect((await rows()).R).toMatchObject({ status: 'complete', relevance: 0 });
+  });
+});
+
 describe('model-key validation fail-fast (MERA-APP-39)', () => {
   // The run keypair is minted on a valid ecdsa attestation; the batch stays `queued` because
   // minting took the limiter slot. The attestation then turns bad (an off-curve secp256k1 key),

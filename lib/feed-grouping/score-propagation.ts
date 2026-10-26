@@ -62,6 +62,13 @@
  * Neither entry point reaches into the sweep itself — that would breach the
  * import-cycle rule above.
  *
+ * SOFT FILTERS LEAK, ACCEPTED: a representative's score already has the
+ * reader's soft-suppression penalty subtracted (publication and place kinds
+ * included), and its siblings inherit that number, so "fewer from AD.nl" on an
+ * elected AD.nl copy also sinks the Volkskrant copy of the same story. Story-key
+ * groups span publishers, which widens it. Owner default: accept. The fix, if
+ * wanted, is to donate the pre-penalty score.
+ *
  * STATELESS + SELF-HEALING: nothing about "held back" is persisted anywhere.
  * Candidates are recomputed each call as ALL unscored rows minus the in-flight
  * set, so a sibling missed by a failed batch or an app kill is simply
@@ -209,6 +216,13 @@ async function runOnPropagated(
 // fringe article really belongs to it — and that is precisely the article you
 // must not hand someone else's relevance verdict to. Same asymmetry as the two
 // display edges above. Do not "unify" these options.
+//
+// The story-key edge (same non-null server `story_key`) is also always on, with
+// no option to turn it off here. A story-key join copies the relevance AND the
+// note: `groundedReasonFor` passes on one shared token, which any near-copy
+// clears, so it does not guard this edge. The server's HAMMING_BAR, calibrated
+// for precision at the bar, is the only guard. Do not loosen that bar for
+// display.
 const PROPAGATION_OPTIONS = {
     titleJaccardThreshold: TITLE_JACCARD_PROPAGATION_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
