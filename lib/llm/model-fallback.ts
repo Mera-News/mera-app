@@ -68,8 +68,10 @@ function engage(model: string, cause: 'timeout' | 'hedge'): void {
   // ONE issue forever.
   const fingerprint = ['near-model-fallback', cause, model];
   if (cause === 'timeout') {
+    // Warning, not error: the fallback usually answers. A turn that still fails
+    // reports on its own as `sendMessage failed` (MERA-APP-7E / 8S).
     logger.captureMessage('NEAR primary model failing — session fallback engaged', {
-      level: 'error',
+      level: 'warning',
       tags: { model, fallback },
       fingerprint,
     });
