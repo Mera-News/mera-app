@@ -5,11 +5,11 @@ import { decideTabPressAction, tabRouteKeyContaining, tabRouteKeyFor, TAB_PRESS_
 describe('retapTarget', () => {
   const targets = new Map<PageId, string>([
     ['saved', 'saved-list'],
-    ['visited', 'visited-list'],
+    ['checks', 'checks-list'],
   ]);
 
   it('sends the re-tap to the visible page only', () => {
-    expect(retapTarget(targets, 'visited', false)).toBe('visited-list');
+    expect(retapTarget(targets, 'checks', false)).toBe('checks-list');
     expect(retapTarget(targets, 'saved', false)).toBe('saved-list');
   });
 

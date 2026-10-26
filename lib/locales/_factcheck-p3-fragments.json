@@ -1,0 +1,766 @@
+{
+  "_comment": "Fact-check redesign: list card, article panel, Fact check again, Share and export (library-factcheck P3).",
+  "ar": {
+    "library": {
+      "checks": {
+        "checkedAge": "تم التحقق {{age}}",
+        "askedAge": "طُلب {{age}}",
+        "moreOrganisations": "+{{count}} أخرى"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "التحقق من الحقائق",
+      "publishedHeading": "تحققات منشورة",
+      "meraFoundHeading": "ما وجدته ميرا",
+      "sourcesCount_zero": "{{count}} مصدر",
+      "sourcesCount_one": "مصدر واحد",
+      "sourcesCount_two": "مصدران",
+      "sourcesCount_few": "{{count}} مصادر",
+      "sourcesCount_many": "{{count}} مصدرًا",
+      "sourcesCount_other": "{{count}} مصدر",
+      "showMoreSources": "عرض {{count}} أخرى",
+      "again": "تحقق مجددًا",
+      "checkedRecently": "تم التحقق مؤخرًا",
+      "againHint": "غالبًا ما ينشر مدققو الحقائق بعد أيام قليلة من نشر الخبر. التحقق مجددًا يبحث عن أي جديد.",
+      "share": {
+        "aiSummary": "ملخص ميرا بالذكاء الاصطناعي (كتبه الذكاء الاصطناعي وقد يكون خاطئًا)",
+        "sources": "المصادر",
+        "rated": "تقييم {{organisation}}: {{rating}}",
+        "ratedSaid": "تقييم {{organisation}}: {{rating}}. «{{summary}}»",
+        "footer": "تم التحقق في {{date}}. تمت المشاركة عبر {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "تصدير التحققات",
+      "step1Heading": "اختر التحققات",
+      "includeIntro": "يتضمن كل تصدير دائمًا العنوان والناشر ورابط المقال وكل تقييم من مدققي الحقائق مع رابطه.",
+      "includeClaimsHint": "كل ادعاء مع تقييمه.",
+      "includeSummary": "ملخص ميرا بالذكاء الاصطناعي",
+      "includeSummaryHint": "موسوم في الملف بأنه مكتوب بالذكاء الاصطناعي.",
+      "includeSourcesHint": "كل رابط استخدمه البحث.",
+      "stillChecking": "لا يزال قيد التحقق",
+      "shareDialogTitle": "تصدير التحققات"
+    }
+  },
+  "de": {
+    "library": {
+      "checks": {
+        "checkedAge": "Geprüft {{age}}",
+        "askedAge": "Angefragt {{age}}",
+        "moreOrganisations": "+{{count}} weitere"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Faktencheck",
+      "publishedHeading": "Veröffentlichte Faktenchecks",
+      "meraFoundHeading": "Was Mera gefunden hat",
+      "sourcesCount_one": "{{count}} Quelle",
+      "sourcesCount_other": "{{count}} Quellen",
+      "showMoreSources": "{{count}} weitere anzeigen",
+      "again": "Erneut prüfen",
+      "checkedRecently": "Kürzlich geprüft",
+      "againHint": "Faktenprüfer veröffentlichen oft erst ein paar Tage nach einer Meldung. Eine neue Prüfung sucht nach allem, was neu dazugekommen ist.",
+      "share": {
+        "aiSummary": "Meras KI-Zusammenfassung (von KI geschrieben, kann falsch sein)",
+        "sources": "Quellen",
+        "rated": "Bewertung von {{organisation}}: {{rating}}",
+        "ratedSaid": "Bewertung von {{organisation}}: {{rating}}. „{{summary}}“",
+        "footer": "Geprüft am {{date}}. Geteilt über {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Faktenchecks exportieren",
+      "step1Heading": "Faktenchecks auswählen",
+      "includeIntro": "Jeder Export enthält immer die Schlagzeile, das Medium, den Artikellink und jede Bewertung der Faktenprüfer mit Link.",
+      "includeClaimsHint": "Jede Behauptung mit ihrer Einschätzung.",
+      "includeSummary": "Meras KI-Zusammenfassung",
+      "includeSummaryHint": "In der Datei als von KI geschrieben gekennzeichnet.",
+      "includeSourcesHint": "Jeder Link, den die Suche genutzt hat.",
+      "stillChecking": "Wird noch geprüft",
+      "shareDialogTitle": "Faktenchecks exportieren"
+    }
+  },
+  "en": {
+    "library": {
+      "checks": {
+        "checkedAge": "Checked {{age}}",
+        "askedAge": "Asked {{age}}",
+        "moreOrganisations": "+{{count}} more"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Fact check",
+      "publishedHeading": "Published fact checks",
+      "meraFoundHeading": "What Mera found",
+      "sourcesCount_one": "{{count}} source",
+      "sourcesCount_other": "{{count}} sources",
+      "showMoreSources": "Show {{count}} more",
+      "again": "Fact check again",
+      "checkedRecently": "Checked recently",
+      "againHint": "Fact-checkers often publish a few days after a story. Checking again looks for anything new.",
+      "share": {
+        "aiSummary": "Mera's AI summary (written by AI, can be wrong)",
+        "sources": "Sources",
+        "rated": "{{organisation}} rated it {{rating}}",
+        "ratedSaid": "{{organisation}} rated it {{rating}}: “{{summary}}”",
+        "footer": "Checked {{date}}. Shared via {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Export fact checks",
+      "step1Heading": "Choose fact checks",
+      "includeIntro": "Each export always has the headline, publication, article link and every fact-checker's rating with its link.",
+      "includeClaimsHint": "Each claim with its assessment.",
+      "includeSummary": "Mera's AI summary",
+      "includeSummaryHint": "Labelled as written by AI in the file.",
+      "includeSourcesHint": "Every link the search used.",
+      "stillChecking": "Still checking",
+      "shareDialogTitle": "Export fact checks"
+    }
+  },
+  "es": {
+    "library": {
+      "checks": {
+        "checkedAge": "Verificado {{age}}",
+        "askedAge": "Solicitado {{age}}",
+        "moreOrganisations": "+{{count}} más"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Verificación",
+      "publishedHeading": "Verificaciones publicadas",
+      "meraFoundHeading": "Lo que encontró Mera",
+      "sourcesCount_one": "{{count}} fuente",
+      "sourcesCount_other": "{{count}} fuentes",
+      "showMoreSources": "Mostrar {{count}} más",
+      "again": "Verificar de nuevo",
+      "checkedRecently": "Verificado hace poco",
+      "againHint": "Los verificadores suelen publicar unos días después de una noticia. Verificar de nuevo busca cualquier novedad.",
+      "share": {
+        "aiSummary": "Resumen con IA de Mera (escrito por IA, puede tener errores)",
+        "sources": "Fuentes",
+        "rated": "Calificación de {{organisation}}: {{rating}}",
+        "ratedSaid": "Calificación de {{organisation}}: {{rating}}. «{{summary}}»",
+        "footer": "Verificado el {{date}}. Compartido a través de {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Exportar verificaciones",
+      "step1Heading": "Elige verificaciones",
+      "includeIntro": "Cada exportación incluye siempre el titular, el medio, el enlace del artículo y cada calificación de los verificadores con su enlace.",
+      "includeClaimsHint": "Cada afirmación con su evaluación.",
+      "includeSummary": "Resumen con IA de Mera",
+      "includeSummaryHint": "Marcado en el archivo como escrito por IA.",
+      "includeSourcesHint": "Cada enlace que usó la búsqueda.",
+      "stillChecking": "Aún verificando",
+      "shareDialogTitle": "Exportar verificaciones"
+    }
+  },
+  "fr": {
+    "library": {
+      "checks": {
+        "checkedAge": "Vérifié {{age}}",
+        "askedAge": "Demandé {{age}}",
+        "moreOrganisations": "+{{count}} autres"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Vérification des faits",
+      "publishedHeading": "Vérifications publiées",
+      "meraFoundHeading": "Ce que Mera a trouvé",
+      "sourcesCount_one": "{{count}} source",
+      "sourcesCount_other": "{{count}} sources",
+      "showMoreSources": "Afficher {{count}} de plus",
+      "again": "Vérifier à nouveau",
+      "checkedRecently": "Vérifié récemment",
+      "againHint": "Les vérificateurs publient souvent quelques jours après un article. Une nouvelle vérification cherche ce qui a paru depuis.",
+      "share": {
+        "aiSummary": "Résumé IA de Mera (rédigé par l'IA, peut être inexact)",
+        "sources": "Sources",
+        "rated": "Note de {{organisation}} : {{rating}}",
+        "ratedSaid": "Note de {{organisation}} : {{rating}}. « {{summary}} »",
+        "footer": "Vérifié le {{date}}. Partagé via {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Exporter les vérifications",
+      "step1Heading": "Choisir les vérifications",
+      "includeIntro": "Chaque export contient toujours le titre, le média, le lien de l'article et chaque note des vérificateurs avec son lien.",
+      "includeClaimsHint": "Chaque affirmation avec son évaluation.",
+      "includeSummary": "Résumé IA de Mera",
+      "includeSummaryHint": "Indiqué comme rédigé par l'IA dans le fichier.",
+      "includeSourcesHint": "Chaque lien utilisé par la recherche.",
+      "stillChecking": "Vérification en cours",
+      "shareDialogTitle": "Exporter les vérifications"
+    }
+  },
+  "hi": {
+    "library": {
+      "checks": {
+        "checkedAge": "{{age}} जाँचा गया",
+        "askedAge": "{{age}} अनुरोध किया गया",
+        "moreOrganisations": "+{{count}} और"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "तथ्य-जाँच",
+      "publishedHeading": "प्रकाशित तथ्य-जाँचें",
+      "meraFoundHeading": "मेरा ऐप को क्या मिला",
+      "sourcesCount_one": "{{count}} स्रोत",
+      "sourcesCount_other": "{{count}} स्रोत",
+      "showMoreSources": "{{count}} और दिखाएँ",
+      "again": "फिर से जाँचें",
+      "checkedRecently": "हाल ही में जाँचा गया",
+      "againHint": "तथ्य-जाँचकर्ता अक्सर किसी खबर के कुछ दिन बाद प्रकाशित करते हैं। फिर से जाँचने पर कुछ भी नया खोजा जाता है।",
+      "share": {
+        "aiSummary": "मेरा ऐप का AI सारांश (AI ने लिखा है, गलत हो सकता है)",
+        "sources": "स्रोत",
+        "rated": "{{organisation}} की रेटिंग: {{rating}}",
+        "ratedSaid": "{{organisation}} की रेटिंग: {{rating}}। “{{summary}}”",
+        "footer": "{{date}} को जाँचा गया। {{downloadUrl}} के ज़रिए साझा किया गया"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "तथ्य-जाँचें एक्सपोर्ट करें",
+      "step1Heading": "तथ्य-जाँचें चुनें",
+      "includeIntro": "हर एक्सपोर्ट में हमेशा हेडलाइन, प्रकाशन, लेख का लिंक और हर तथ्य-जाँचकर्ता की रेटिंग उसके लिंक के साथ होती है।",
+      "includeClaimsHint": "हर दावा उसके आकलन के साथ।",
+      "includeSummary": "मेरा ऐप का AI सारांश",
+      "includeSummaryHint": "फ़ाइल में AI द्वारा लिखा गया बताया गया है।",
+      "includeSourcesHint": "सर्च ने जो भी लिंक इस्तेमाल किए।",
+      "stillChecking": "अभी जाँच जारी है",
+      "shareDialogTitle": "तथ्य-जाँचें एक्सपोर्ट करें"
+    }
+  },
+  "id": {
+    "library": {
+      "checks": {
+        "checkedAge": "Diperiksa {{age}}",
+        "askedAge": "Diminta {{age}}",
+        "moreOrganisations": "+{{count}} lagi"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Pemeriksaan fakta",
+      "publishedHeading": "Pemeriksaan fakta yang terbit",
+      "meraFoundHeading": "Yang ditemukan Mera",
+      "sourcesCount_other": "{{count}} sumber",
+      "showMoreSources": "Tampilkan {{count}} lagi",
+      "again": "Periksa lagi",
+      "checkedRecently": "Baru saja diperiksa",
+      "againHint": "Pemeriksa fakta sering menerbitkan beberapa hari setelah sebuah berita. Memeriksa lagi mencari apa pun yang baru.",
+      "share": {
+        "aiSummary": "Ringkasan AI Mera (ditulis oleh AI, bisa salah)",
+        "sources": "Sumber",
+        "rated": "Penilaian {{organisation}}: {{rating}}",
+        "ratedSaid": "Penilaian {{organisation}}: {{rating}}. “{{summary}}”",
+        "footer": "Diperiksa {{date}}. Dibagikan melalui {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Ekspor pemeriksaan fakta",
+      "step1Heading": "Pilih pemeriksaan fakta",
+      "includeIntro": "Setiap ekspor selalu memuat judul, media, tautan artikel, dan setiap penilaian pemeriksa fakta beserta tautannya.",
+      "includeClaimsHint": "Setiap klaim beserta penilaiannya.",
+      "includeSummary": "Ringkasan AI Mera",
+      "includeSummaryHint": "Ditandai di file sebagai ditulis oleh AI.",
+      "includeSourcesHint": "Setiap tautan yang dipakai pencarian.",
+      "stillChecking": "Masih diperiksa",
+      "shareDialogTitle": "Ekspor pemeriksaan fakta"
+    }
+  },
+  "it": {
+    "library": {
+      "checks": {
+        "checkedAge": "Verificato {{age}}",
+        "askedAge": "Richiesto {{age}}",
+        "moreOrganisations": "+{{count}} altri"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Verifica dei fatti",
+      "publishedHeading": "Verifiche pubblicate",
+      "meraFoundHeading": "Cosa ha trovato Mera",
+      "sourcesCount_one": "{{count}} fonte",
+      "sourcesCount_other": "{{count}} fonti",
+      "showMoreSources": "Mostra altri {{count}}",
+      "again": "Verifica di nuovo",
+      "checkedRecently": "Verificato di recente",
+      "againHint": "Chi verifica i fatti spesso pubblica qualche giorno dopo una notizia. Una nuova verifica cerca qualsiasi novità.",
+      "share": {
+        "aiSummary": "Riepilogo IA di Mera (scritto dall'IA, può essere sbagliato)",
+        "sources": "Fonti",
+        "rated": "Valutazione di {{organisation}}: {{rating}}",
+        "ratedSaid": "Valutazione di {{organisation}}: {{rating}}. «{{summary}}»",
+        "footer": "Verificato il {{date}}. Condiviso tramite {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Esporta verifiche",
+      "step1Heading": "Scegli le verifiche",
+      "includeIntro": "Ogni esportazione include sempre il titolo, la testata, il link all'articolo e ogni valutazione dei verificatori con il suo link.",
+      "includeClaimsHint": "Ogni affermazione con la sua valutazione.",
+      "includeSummary": "Riepilogo IA di Mera",
+      "includeSummaryHint": "Indicato nel file come scritto dall'IA.",
+      "includeSourcesHint": "Ogni link usato dalla ricerca.",
+      "stillChecking": "Verifica in corso",
+      "shareDialogTitle": "Esporta verifiche"
+    }
+  },
+  "ja": {
+    "library": {
+      "checks": {
+        "checkedAge": "{{age}}に確認",
+        "askedAge": "{{age}}にリクエスト",
+        "moreOrganisations": "+{{count}}件"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "ファクトチェック",
+      "publishedHeading": "公開されたファクトチェック",
+      "meraFoundHeading": "メラが見つけたこと",
+      "sourcesCount_other": "{{count}}件の情報源",
+      "showMoreSources": "さらに{{count}}件を表示",
+      "again": "もう一度チェック",
+      "checkedRecently": "最近チェック済み",
+      "againHint": "ファクトチェック機関は記事の数日後に公開することがよくあります。もう一度チェックすると新しい情報を探します。",
+      "share": {
+        "aiSummary": "メラのAI要約（AIが作成。誤りを含む場合があります）",
+        "sources": "情報源",
+        "rated": "{{organisation}}の評価: {{rating}}",
+        "ratedSaid": "{{organisation}}の評価: {{rating}}。「{{summary}}」",
+        "footer": "{{date}}に確認。{{downloadUrl}}経由で共有"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "ファクトチェックを書き出す",
+      "step1Heading": "ファクトチェックを選択",
+      "includeIntro": "書き出しには常に見出し、媒体、記事のリンク、各ファクトチェック機関の評価とリンクが含まれます。",
+      "includeClaimsHint": "各主張とその評価。",
+      "includeSummary": "メラのAI要約",
+      "includeSummaryHint": "ファイル内でAIが作成したと明記されます。",
+      "includeSourcesHint": "検索で使われたすべてのリンク。",
+      "stillChecking": "チェック中",
+      "shareDialogTitle": "ファクトチェックを書き出す"
+    }
+  },
+  "ko": {
+    "library": {
+      "checks": {
+        "checkedAge": "{{age}} 확인",
+        "askedAge": "{{age}} 요청",
+        "moreOrganisations": "+{{count}}곳 더"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "팩트체크",
+      "publishedHeading": "공개된 팩트체크",
+      "meraFoundHeading": "메라가 찾은 내용",
+      "sourcesCount_other": "출처 {{count}}개",
+      "showMoreSources": "{{count}}개 더 보기",
+      "again": "다시 팩트체크",
+      "checkedRecently": "최근에 확인함",
+      "againHint": "팩트체크 기관은 보도 며칠 뒤에 결과를 내는 경우가 많습니다. 다시 확인하면 새로운 내용을 찾습니다.",
+      "share": {
+        "aiSummary": "메라의 AI 요약 (AI가 작성, 틀릴 수 있음)",
+        "sources": "출처",
+        "rated": "{{organisation}} 평가: {{rating}}",
+        "ratedSaid": "{{organisation}} 평가: {{rating}}. “{{summary}}”",
+        "footer": "{{date}} 확인. {{downloadUrl}}를 통해 공유됨"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "팩트체크 내보내기",
+      "step1Heading": "팩트체크 선택",
+      "includeIntro": "모든 내보내기에는 제목, 매체, 기사 링크, 각 팩트체크 기관의 평가와 링크가 항상 포함됩니다.",
+      "includeClaimsHint": "각 주장과 그 평가.",
+      "includeSummary": "메라의 AI 요약",
+      "includeSummaryHint": "파일에 AI가 작성했다고 표시됩니다.",
+      "includeSourcesHint": "검색에 사용된 모든 링크.",
+      "stillChecking": "아직 확인 중",
+      "shareDialogTitle": "팩트체크 내보내기"
+    }
+  },
+  "nl": {
+    "library": {
+      "checks": {
+        "checkedAge": "Gecontroleerd {{age}}",
+        "askedAge": "Gevraagd {{age}}",
+        "moreOrganisations": "+{{count}} meer"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Feitencheck",
+      "publishedHeading": "Gepubliceerde feitenchecks",
+      "meraFoundHeading": "Wat Mera vond",
+      "sourcesCount_one": "{{count}} bron",
+      "sourcesCount_other": "{{count}} bronnen",
+      "showMoreSources": "Nog {{count}} tonen",
+      "again": "Opnieuw checken",
+      "checkedRecently": "Onlangs gecheckt",
+      "againHint": "Factcheckers publiceren vaak een paar dagen na een bericht. Opnieuw checken zoekt naar alles wat nieuw is.",
+      "share": {
+        "aiSummary": "Mera's AI-samenvatting (geschreven door AI, kan fout zijn)",
+        "sources": "Bronnen",
+        "rated": "Oordeel van {{organisation}}: {{rating}}",
+        "ratedSaid": "Oordeel van {{organisation}}: {{rating}}. “{{summary}}”",
+        "footer": "Gecheckt op {{date}}. Gedeeld via {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Feitenchecks exporteren",
+      "step1Heading": "Kies feitenchecks",
+      "includeIntro": "Elke export bevat altijd de kop, het medium, de artikellink en elk oordeel van de factcheckers met de link.",
+      "includeClaimsHint": "Elke bewering met haar beoordeling.",
+      "includeSummary": "Mera's AI-samenvatting",
+      "includeSummaryHint": "In het bestand gemarkeerd als geschreven door AI.",
+      "includeSourcesHint": "Elke link die de zoekopdracht gebruikte.",
+      "stillChecking": "Nog bezig",
+      "shareDialogTitle": "Feitenchecks exporteren"
+    }
+  },
+  "pl": {
+    "library": {
+      "checks": {
+        "checkedAge": "Sprawdzono {{age}}",
+        "askedAge": "Zlecono {{age}}",
+        "moreOrganisations": "+{{count}} więcej"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Weryfikacja faktów",
+      "publishedHeading": "Opublikowane weryfikacje",
+      "meraFoundHeading": "Co znalazła Mera",
+      "sourcesCount_one": "{{count}} źródło",
+      "sourcesCount_few": "{{count}} źródła",
+      "sourcesCount_many": "{{count}} źródeł",
+      "sourcesCount_other": "{{count}} źródła",
+      "showMoreSources": "Pokaż jeszcze {{count}}",
+      "again": "Sprawdź ponownie",
+      "checkedRecently": "Sprawdzono niedawno",
+      "againHint": "Weryfikatorzy często publikują kilka dni po artykule. Ponowne sprawdzenie szuka wszystkiego, co nowe.",
+      "share": {
+        "aiSummary": "Podsumowanie AI od Mery (napisane przez AI, może być błędne)",
+        "sources": "Źródła",
+        "rated": "Ocena {{organisation}}: {{rating}}",
+        "ratedSaid": "Ocena {{organisation}}: {{rating}}. „{{summary}}”",
+        "footer": "Sprawdzono {{date}}. Udostępniono przez {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Eksportuj weryfikacje",
+      "step1Heading": "Wybierz weryfikacje",
+      "includeIntro": "Każdy eksport zawsze zawiera nagłówek, medium, link do artykułu i każdą ocenę weryfikatorów z linkiem.",
+      "includeClaimsHint": "Każde twierdzenie z jego oceną.",
+      "includeSummary": "Podsumowanie AI od Mery",
+      "includeSummaryHint": "Oznaczone w pliku jako napisane przez AI.",
+      "includeSourcesHint": "Każdy link użyty przez wyszukiwanie.",
+      "stillChecking": "Nadal sprawdzamy",
+      "shareDialogTitle": "Eksportuj weryfikacje"
+    }
+  },
+  "pt-BR": {
+    "library": {
+      "checks": {
+        "checkedAge": "Verificado {{age}}",
+        "askedAge": "Solicitado {{age}}",
+        "moreOrganisations": "+{{count}} mais"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Checagem",
+      "publishedHeading": "Checagens publicadas",
+      "meraFoundHeading": "O que o Mera encontrou",
+      "sourcesCount_one": "{{count}} fonte",
+      "sourcesCount_other": "{{count}} fontes",
+      "showMoreSources": "Mostrar mais {{count}}",
+      "again": "Checar de novo",
+      "checkedRecently": "Checado recentemente",
+      "againHint": "Checadores costumam publicar alguns dias depois de uma notícia. Checar de novo procura qualquer novidade.",
+      "share": {
+        "aiSummary": "Resumo de IA do Mera (escrito por IA, pode estar errado)",
+        "sources": "Fontes",
+        "rated": "Classificação de {{organisation}}: {{rating}}",
+        "ratedSaid": "Classificação de {{organisation}}: {{rating}}. “{{summary}}”",
+        "footer": "Checado em {{date}}. Compartilhado via {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Exportar checagens",
+      "step1Heading": "Escolha as checagens",
+      "includeIntro": "Toda exportação sempre inclui o título, o veículo, o link da matéria e cada classificação dos checadores com seu link.",
+      "includeClaimsHint": "Cada afirmação com sua avaliação.",
+      "includeSummary": "Resumo de IA do Mera",
+      "includeSummaryHint": "Identificado no arquivo como escrito por IA.",
+      "includeSourcesHint": "Cada link usado na busca.",
+      "stillChecking": "Ainda checando",
+      "shareDialogTitle": "Exportar checagens"
+    }
+  },
+  "ru": {
+    "library": {
+      "checks": {
+        "checkedAge": "Проверено {{age}}",
+        "askedAge": "Запрошено {{age}}",
+        "moreOrganisations": "+{{count}} ещё"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Проверка фактов",
+      "publishedHeading": "Опубликованные проверки",
+      "meraFoundHeading": "Что нашла Мера",
+      "sourcesCount_one": "{{count}} источник",
+      "sourcesCount_few": "{{count}} источника",
+      "sourcesCount_many": "{{count}} источников",
+      "sourcesCount_other": "{{count}} источника",
+      "showMoreSources": "Показать ещё {{count}}",
+      "again": "Проверить снова",
+      "checkedRecently": "Проверено недавно",
+      "againHint": "Фактчекеры часто публикуют материалы через несколько дней после новости. Повторная проверка ищет всё новое.",
+      "share": {
+        "aiSummary": "ИИ-сводка Меры (написана ИИ, может быть неточной)",
+        "sources": "Источники",
+        "rated": "Оценка {{organisation}}: {{rating}}",
+        "ratedSaid": "Оценка {{organisation}}: {{rating}}. «{{summary}}»",
+        "footer": "Проверено {{date}}. Отправлено через {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Экспорт проверок",
+      "step1Heading": "Выберите проверки",
+      "includeIntro": "В каждом экспорте всегда есть заголовок, издание, ссылка на статью и каждая оценка фактчекеров со ссылкой.",
+      "includeClaimsHint": "Каждое утверждение с его оценкой.",
+      "includeSummary": "ИИ-сводка Меры",
+      "includeSummaryHint": "В файле отмечена как написанная ИИ.",
+      "includeSourcesHint": "Каждая ссылка, которую использовал поиск.",
+      "stillChecking": "Ещё проверяется",
+      "shareDialogTitle": "Экспорт проверок"
+    }
+  },
+  "th": {
+    "library": {
+      "checks": {
+        "checkedAge": "ตรวจสอบเมื่อ {{age}}",
+        "askedAge": "ขอเมื่อ {{age}}",
+        "moreOrganisations": "+อีก {{count}}"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "การตรวจสอบข้อเท็จจริง",
+      "publishedHeading": "ผลตรวจสอบที่เผยแพร่แล้ว",
+      "meraFoundHeading": "สิ่งที่ เมร่า พบ",
+      "sourcesCount_other": "{{count}} แหล่งข้อมูล",
+      "showMoreSources": "แสดงอีก {{count}}",
+      "again": "ตรวจสอบอีกครั้ง",
+      "checkedRecently": "เพิ่งตรวจสอบ",
+      "againHint": "ผู้ตรวจสอบข้อเท็จจริงมักเผยแพร่หลังข่าวออกไปไม่กี่วัน การตรวจสอบอีกครั้งจะหาสิ่งที่ใหม่",
+      "share": {
+        "aiSummary": "สรุปโดย AI ของ เมร่า (เขียนโดย AI อาจผิดพลาดได้)",
+        "sources": "แหล่งข้อมูล",
+        "rated": "การประเมินของ {{organisation}}: {{rating}}",
+        "ratedSaid": "การประเมินของ {{organisation}}: {{rating}} “{{summary}}”",
+        "footer": "ตรวจสอบเมื่อ {{date}} แชร์ผ่าน {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "ส่งออกผลตรวจสอบ",
+      "step1Heading": "เลือกผลตรวจสอบ",
+      "includeIntro": "ทุกการส่งออกมีพาดหัว สำนักข่าว ลิงก์บทความ และการประเมินของผู้ตรวจสอบทุกรายพร้อมลิงก์เสมอ",
+      "includeClaimsHint": "แต่ละข้อกล่าวอ้างพร้อมการประเมิน",
+      "includeSummary": "สรุปโดย AI ของ เมร่า",
+      "includeSummaryHint": "ระบุในไฟล์ว่าเขียนโดย AI",
+      "includeSourcesHint": "ทุกลิงก์ที่การค้นหาใช้",
+      "stillChecking": "ยังตรวจสอบอยู่",
+      "shareDialogTitle": "ส่งออกผลตรวจสอบ"
+    }
+  },
+  "tr": {
+    "library": {
+      "checks": {
+        "checkedAge": "{{age}} kontrol edildi",
+        "askedAge": "{{age}} istendi",
+        "moreOrganisations": "+{{count}} daha"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Doğruluk kontrolü",
+      "publishedHeading": "Yayımlanan doğruluk kontrolleri",
+      "meraFoundHeading": "Mera'nın bulduğu",
+      "sourcesCount_one": "{{count}} kaynak",
+      "sourcesCount_other": "{{count}} kaynak",
+      "showMoreSources": "{{count}} tane daha göster",
+      "again": "Yeniden kontrol et",
+      "checkedRecently": "Yakın zamanda kontrol edildi",
+      "againHint": "Doğruluk kontrolcüleri çoğu zaman bir haberden birkaç gün sonra yayımlar. Yeniden kontrol, yeni olan her şeyi arar.",
+      "share": {
+        "aiSummary": "Mera'nın yapay zeka özeti (yapay zeka yazdı, yanlış olabilir)",
+        "sources": "Kaynaklar",
+        "rated": "{{organisation}} değerlendirmesi: {{rating}}",
+        "ratedSaid": "{{organisation}} değerlendirmesi: {{rating}}. “{{summary}}”",
+        "footer": "{{date}} tarihinde kontrol edildi. {{downloadUrl}} üzerinden paylaşıldı"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Doğruluk kontrollerini dışa aktar",
+      "step1Heading": "Doğruluk kontrollerini seç",
+      "includeIntro": "Her dışa aktarımda başlık, yayın, makale bağlantısı ve her doğruluk kontrolcüsünün bağlantılı değerlendirmesi her zaman bulunur.",
+      "includeClaimsHint": "Her iddia ve değerlendirmesi.",
+      "includeSummary": "Mera'nın yapay zeka özeti",
+      "includeSummaryHint": "Dosyada yapay zeka tarafından yazıldığı belirtilir.",
+      "includeSourcesHint": "Aramanın kullandığı her bağlantı.",
+      "stillChecking": "Hâlâ kontrol ediliyor",
+      "shareDialogTitle": "Doğruluk kontrollerini dışa aktar"
+    }
+  },
+  "uk": {
+    "library": {
+      "checks": {
+        "checkedAge": "Перевірено {{age}}",
+        "askedAge": "Запитано {{age}}",
+        "moreOrganisations": "+{{count}} ще"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Перевірка фактів",
+      "publishedHeading": "Опубліковані перевірки",
+      "meraFoundHeading": "Що знайшла Мера",
+      "sourcesCount_one": "{{count}} джерело",
+      "sourcesCount_few": "{{count}} джерела",
+      "sourcesCount_many": "{{count}} джерел",
+      "sourcesCount_other": "{{count}} джерела",
+      "showMoreSources": "Показати ще {{count}}",
+      "again": "Перевірити знову",
+      "checkedRecently": "Перевірено нещодавно",
+      "againHint": "Фактчекери часто публікують матеріали за кілька днів після новини. Повторна перевірка шукає все нове.",
+      "share": {
+        "aiSummary": "ШІ-підсумок Мери (написаний ШІ, може бути хибним)",
+        "sources": "Джерела",
+        "rated": "Оцінка {{organisation}}: {{rating}}",
+        "ratedSaid": "Оцінка {{organisation}}: {{rating}}. «{{summary}}»",
+        "footer": "Перевірено {{date}}. Надіслано через {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Експортувати перевірки",
+      "step1Heading": "Виберіть перевірки",
+      "includeIntro": "Кожен експорт завжди містить заголовок, видання, посилання на статтю і кожну оцінку фактчекерів із посиланням.",
+      "includeClaimsHint": "Кожне твердження з його оцінкою.",
+      "includeSummary": "ШІ-підсумок Мери",
+      "includeSummaryHint": "У файлі позначено як написане ШІ.",
+      "includeSourcesHint": "Кожне посилання, яке використав пошук.",
+      "stillChecking": "Ще перевіряється",
+      "shareDialogTitle": "Експортувати перевірки"
+    }
+  },
+  "vi": {
+    "library": {
+      "checks": {
+        "checkedAge": "Đã kiểm tra {{age}}",
+        "askedAge": "Đã yêu cầu {{age}}",
+        "moreOrganisations": "+{{count}} khác"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "Kiểm chứng",
+      "publishedHeading": "Kết quả kiểm chứng đã đăng",
+      "meraFoundHeading": "Những gì Mera tìm thấy",
+      "sourcesCount_other": "{{count}} nguồn",
+      "showMoreSources": "Hiện thêm {{count}}",
+      "again": "Kiểm chứng lại",
+      "checkedRecently": "Vừa kiểm chứng",
+      "againHint": "Bên kiểm chứng thường đăng bài vài ngày sau một tin tức. Kiểm chứng lại sẽ tìm mọi thông tin mới.",
+      "share": {
+        "aiSummary": "Tóm tắt AI của Mera (do AI viết, có thể sai)",
+        "sources": "Nguồn",
+        "rated": "Đánh giá của {{organisation}}: {{rating}}",
+        "ratedSaid": "Đánh giá của {{organisation}}: {{rating}}. “{{summary}}”",
+        "footer": "Đã kiểm chứng ngày {{date}}. Chia sẻ qua {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "Xuất kết quả kiểm chứng",
+      "step1Heading": "Chọn kết quả kiểm chứng",
+      "includeIntro": "Mỗi bản xuất luôn có tiêu đề, nguồn tin, liên kết bài viết và mọi đánh giá của bên kiểm chứng kèm liên kết.",
+      "includeClaimsHint": "Mỗi khẳng định kèm đánh giá.",
+      "includeSummary": "Tóm tắt AI của Mera",
+      "includeSummaryHint": "Được ghi rõ trong tệp là do AI viết.",
+      "includeSourcesHint": "Mọi liên kết mà tìm kiếm đã dùng.",
+      "stillChecking": "Vẫn đang kiểm chứng",
+      "shareDialogTitle": "Xuất kết quả kiểm chứng"
+    }
+  },
+  "zh-CN": {
+    "library": {
+      "checks": {
+        "checkedAge": "{{age}}核查",
+        "askedAge": "{{age}}请求",
+        "moreOrganisations": "+{{count}} 家"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "事实核查",
+      "publishedHeading": "已发布的事实核查",
+      "meraFoundHeading": "梅拉的发现",
+      "sourcesCount_other": "{{count}} 个来源",
+      "showMoreSources": "再显示 {{count}} 个",
+      "again": "重新核查",
+      "checkedRecently": "最近已核查",
+      "againHint": "事实核查机构通常在报道发布几天后才发表结果。重新核查会查找任何新内容。",
+      "share": {
+        "aiSummary": "梅拉的 AI 摘要（由 AI 撰写，可能有误）",
+        "sources": "来源",
+        "rated": "{{organisation}} 的评级：{{rating}}",
+        "ratedSaid": "{{organisation}} 的评级：{{rating}}。“{{summary}}”",
+        "footer": "于 {{date}} 核查。分享自 {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "导出事实核查",
+      "step1Heading": "选择事实核查",
+      "includeIntro": "每次导出都会包含标题、媒体、文章链接，以及每家事实核查机构的评级和链接。",
+      "includeClaimsHint": "每条主张及其评估。",
+      "includeSummary": "梅拉的 AI 摘要",
+      "includeSummaryHint": "在文件中标注为 AI 撰写。",
+      "includeSourcesHint": "搜索用到的每个链接。",
+      "stillChecking": "仍在核查",
+      "shareDialogTitle": "导出事实核查"
+    }
+  },
+  "zh-TW": {
+    "library": {
+      "checks": {
+        "checkedAge": "{{age}}查核",
+        "askedAge": "{{age}}請求",
+        "moreOrganisations": "+{{count}} 家"
+      }
+    },
+    "factCheck": {
+      "panelTitle": "事實查核",
+      "publishedHeading": "已發布的事實查核",
+      "meraFoundHeading": "梅拉的發現",
+      "sourcesCount_other": "{{count}} 個來源",
+      "showMoreSources": "再顯示 {{count}} 個",
+      "again": "重新查核",
+      "checkedRecently": "最近已查核",
+      "againHint": "事實查核機構通常在報導發布幾天後才發表結果。重新查核會尋找任何新內容。",
+      "share": {
+        "aiSummary": "梅拉的 AI 摘要（由 AI 撰寫，可能有誤）",
+        "sources": "來源",
+        "rated": "{{organisation}} 的評等：{{rating}}",
+        "ratedSaid": "{{organisation}} 的評等：{{rating}}。「{{summary}}」",
+        "footer": "於 {{date}} 查核。分享自 {{downloadUrl}}"
+      }
+    },
+    "factCheckExport": {
+      "openA11y": "匯出事實查核",
+      "step1Heading": "選擇事實查核",
+      "includeIntro": "每次匯出都會包含標題、媒體、文章連結，以及每家事實查核機構的評等和連結。",
+      "includeClaimsHint": "每則主張及其評估。",
+      "includeSummary": "梅拉的 AI 摘要",
+      "includeSummaryHint": "在檔案中標註為 AI 撰寫。",
+      "includeSourcesHint": "搜尋用到的每個連結。",
+      "stillChecking": "仍在查核",
+      "shareDialogTitle": "匯出事實查核"
+    }
+  }
+}

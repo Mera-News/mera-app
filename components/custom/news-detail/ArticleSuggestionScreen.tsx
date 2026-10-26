@@ -155,7 +155,17 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // once for a check the reader just asked for (no progress delay, and no
     // toast: the panel is right under the tick).
     const factCheckPanel = (
-        <FactCheckPanel articleId={suggestion.articleId} startedByReader={factCheckAsked} />
+        <FactCheckPanel
+            articleId={suggestion.articleId}
+            startedByReader={factCheckAsked}
+            article={{
+                title: titleDisplay?.text ?? suggestion.title_en,
+                language: titleDisplay?.language ?? null,
+                publication: suggestion.publication_name ?? null,
+                pubDate: suggestion.firstPubDate ?? suggestion.createdAt,
+                url: articleUrl,
+            }}
+        />
     );
 
     return (

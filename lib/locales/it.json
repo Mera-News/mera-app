@@ -1487,7 +1487,6 @@
     "claimsHeading": "Affermazioni controllate",
     "citationsHeading": "Fonti consultate",
     "noCitations": "Questo controllo non ha citato pagine specifiche. Non è una ricerca fallita, tratta il riepilogo con un po' più di cautela senza fonti a cui riferirsi.",
-    "sourceFallback": "Fonte {{index}}",
     "disclaimer": "Questa è la propria lettura di Mera di una ricerca web, scritta da IA. Può essere errata o incompleta, quindi leggi le fonti prima di affidarti ad essa.",
     "verdict": {
       "supported": {
@@ -1522,18 +1521,14 @@
       "unverifiable": "Non è stato possibile confermare",
       "unknown": "Non chiaro"
     },
-    "checkedByHeading": "Verifiche dei fatti trovate",
     "dashboard": {
       "deleteA11y": "Elimina questa verifica dei fatti",
       "listTitle": "Verifiche dei fatti",
-      "pending": "Verifica in corso con i fact checker",
       "untitled": "Storia senza titolo",
       "openA11y": "Apri questo articolo",
       "articleGone": "L'articolo è scaduto, quindi non può essere aperto. La verifica dei fatti che abbiamo trovato è conservata qui.",
       "couldNotCheck": "Non siamo riusciti a verificare chi ha pubblicato su questo. Tocca per vedere cosa ha trovato la ricerca.",
-      "noneFound": "Nessuna verifica dei fatti pubblicata trovata",
-      "factChecksFound_one": "{{count}} verifica dei fatti trovata. Tocca per leggere",
-      "factChecksFound_other": "{{count}} verifiche dei fatti trovate. Tocca per leggere"
+      "noneFound": "Nessuna verifica dei fatti pubblicata trovata"
     },
     "explainer": "Mera non verifica i fatti della notizia stessa. Cerca quello che le organizzazioni di verifica dei fatti ufficialmente riconosciute hanno già pubblicato su questa storia.",
     "noCheckedBy": "Non abbiamo trovato una verifica dei fatti pubblicata su questa storia. Ciò non rende la storia sbagliata. La maggior parte delle storie non viene mai verificata.",
@@ -1541,7 +1536,6 @@
     "queued": "Questo controllo continua in background. Non devi aspettare qui, puoi tranquillamente lasciare l'articolo.",
     "queuedHint": "Il risultato appare sotto Controlli di fatto sul tuo Dashboard quando è pronto.",
     "citationA11y": "Apri la fonte {{source}} nel browser in-app",
-    "noLink": "Nessun link disponibile",
     "actionA11yPending": "Controllo di fatto richiesto, verifica il risultato",
     "actionA11yDone": "Controllo di fatto pronto, il risultato è mostrato sotto",
     "checkedByUnavailable": "Non siamo riusciti a verificare se un'organizzazione di fact-checking ha pubblicato su questa storia. È diverso dal fatto che nessuno abbia pubblicato. Qui sotto trovi quello che ha trovato la ricerca più ampia.",
@@ -1561,11 +1555,9 @@
     "quickNothingFound": "La ricerca non ha trovato nulla su questo argomento. Questo non significa che sia falso, potrebbe semplicemente essere nuovo, di nicchia, o non ampiamente coperto online.",
     "quickRunning": "Ricerca sul web in corso…",
     "stillChecking": "Sta richiedendo più tempo del solito. È ancora in fase di verifica in background, controlla più tardi, o guarda sotto Verifiche di fatto sul tuo Dashboard.",
-    "checkedByMultipleNote": "Si tratta di valutazioni indipendenti, ciascuna secondo la scala propria di quell'organizzazione, non sempre concordano tra loro.",
     "collapseA11y": "Nascondi questa verifica",
     "expandA11y": "Mostra questa verifica",
     "checkedByRelatedNote": "Queste provengono da una ricerca per parole chiave e potrebbero riguardare una storia diversa. Apri una per verificare.",
-    "searchFoundHeading": "Ciò che la ricerca ha trovato",
     "searchFoundEmpty": "Non c'era abbastanza dalla ricerca per Mera riassumere qui.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1577,6 +1569,22 @@
       "bodyFoundUntitled": "I fact checker hanno pubblicato sull'articolo che hai chiesto.",
       "bodyNoneUntitled": "Ancora nessun fact check pubblicato sull'articolo che hai chiesto.",
       "bodyUnavailableUntitled": "Mera non è riuscita a completare la verifica dell'articolo che hai chiesto."
+    },
+    "panelTitle": "Verifica dei fatti",
+    "publishedHeading": "Verifiche pubblicate",
+    "meraFoundHeading": "Cosa ha trovato Mera",
+    "sourcesCount_one": "{{count}} fonte",
+    "sourcesCount_other": "{{count}} fonti",
+    "showMoreSources": "Mostra altri {{count}}",
+    "again": "Verifica di nuovo",
+    "checkedRecently": "Verificato di recente",
+    "againHint": "Chi verifica i fatti spesso pubblica qualche giorno dopo una notizia. Una nuova verifica cerca qualsiasi novità.",
+    "share": {
+      "aiSummary": "Riepilogo IA di Mera (scritto dall'IA, può essere sbagliato)",
+      "sources": "Fonti",
+      "rated": "Valutazione di {{organisation}}: {{rating}}",
+      "ratedSaid": "Valutazione di {{organisation}}: {{rating}}. «{{summary}}»",
+      "footer": "Verificato il {{date}}. Condiviso tramite {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2642,7 +2650,7 @@
     "page": {
       "stories": "Storie",
       "saved": "Salvati",
-      "stats": "Statistiche"
+      "stats": "Attività"
     },
     "rearrangeA11y": "Riordina le pagine di {{tab}}",
     "pillA11y": "{{label}}, {{index}} di {{count}}",
@@ -2718,14 +2726,15 @@
     },
     "checks": {
       "emptyTitle": "Nessuna verifica dei fatti per ora",
-      "checkedAgo": "verificato {{age}} fa",
       "checking": "Verifica di questo con i fact checker",
-      "claim": "L'affermazione",
       "count_one": "{{count}} verifica dei fatti",
       "count_other": "{{count}} verifiche dei fatti",
       "emptyBodyMenu": "Su qualsiasi articolo apri il menu ••• e tocca Verifica dei fatti. Oppure chiedi a Mera di verificare un'affermazione. I risultati arrivano qui.",
       "learn": "Scopri le Verifiche dei fatti",
-      "new": "Nuova"
+      "new": "Nuova",
+      "checkedAge": "Verificato {{age}}",
+      "askedAge": "Richiesto {{age}}",
+      "moreOrganisations": "+{{count}} altri"
     },
     "visited": {
       "emptyTitle": "Ancora nessuna testata"
@@ -2773,6 +2782,37 @@
       "intro": "Dalla fonte, negli ultimi 30 giorni, più visitate in cima. Conservato su questo telefono.",
       "learn": "Scopri la Cronologia",
       "title": "Pubblicazioni che hai aperto"
+    },
+    "activity": {
+      "supportTitle": "Il giornalismo che conta per te",
+      "supportBody": "Questi sono gli editori su cui conti di più. Le notizie possono essere gratis da leggere, ma non sono mai gratis da raccontare. Se vuoi che continuino a informarti, valuta di abbonarti a quelli che lo offrono. Grazie.",
+      "countriesTitle": "Dove leggi",
+      "countriesHint": "Tocca un paese per vedere le sue pubblicazioni.",
+      "colCountry": "Paese",
+      "colArticles": "Articoli",
+      "logTitle": "Cosa hai aperto",
+      "showAllDays": "Mostra tutti i giorni",
+      "freshIntro": "Quanto era vecchio ogni articolo quando l'hai aperto.",
+      "freshNoteAll": "Misura quanto era nuova una notizia, non quanto a lungo l'hai letta.",
+      "band": {
+        "hour": "Meno di un'ora",
+        "sixHours": "Da 1 a 6 ore",
+        "day": "Da 6 a 24 ore",
+        "threeDays": "Da 1 a 3 giorni",
+        "older": "Più vecchi"
+      },
+      "allPublications_one": "La {{count}} pubblicazione che hai aperto",
+      "allPublications_other": "Tutte le {{count}} pubblicazioni che hai aperto",
+      "visits_one": "{{count}} visita",
+      "visits_other": "{{count}} visite",
+      "articles_one": "{{count}} articolo",
+      "articles_other": "{{count}} articoli",
+      "languagesIntro_one": "La {{count}} lingua di ciò che hai aperto negli ultimi 30 giorni. Toccala per vedere quegli articoli.",
+      "languagesIntro_other": "Le {{count}} lingue di ciò che hai aperto negli ultimi 30 giorni. Toccane una per vedere quegli articoli.",
+      "logIntro_one": "{{count}} articolo alla fonte negli ultimi 30 giorni. Tocca un giorno per vedere solo quel giorno.",
+      "logIntro_other": "{{count}} articoli alla fonte negli ultimi 30 giorni. Tocca un giorno per vedere solo quel giorno.",
+      "freshNote_one": "Conta {{sampled}} del tuo {{count}} articolo: gli altri {{missing}} non avevano un orario di pubblicazione. Misura quanto era nuova una notizia, non quanto a lungo l'hai letta.",
+      "freshNote_other": "Conta {{sampled}} dei tuoi {{count}} articoli: gli altri {{missing}} non avevano un orario di pubblicazione. Misura quanto era nuova una notizia, non quanto a lungo l'hai letta."
     }
   },
   "you": {
@@ -3011,5 +3051,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Esporta verifiche",
+    "step1Heading": "Scegli le verifiche",
+    "includeIntro": "Ogni esportazione include sempre il titolo, la testata, il link all'articolo e ogni valutazione dei verificatori con il suo link.",
+    "includeClaimsHint": "Ogni affermazione con la sua valutazione.",
+    "includeSummary": "Riepilogo IA di Mera",
+    "includeSummaryHint": "Indicato nel file come scritto dall'IA.",
+    "includeSourcesHint": "Ogni link usato dalla ricerca.",
+    "stillChecking": "Verifica in corso",
+    "shareDialogTitle": "Esporta verifiche"
   }
 }

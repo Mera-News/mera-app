@@ -35,24 +35,25 @@ describe('applyPageOrder against DEFAULT_PAGE_ORDER', () => {
   const library = DEFAULT_PAGE_ORDER.library;
 
   it('returns the defaults when nothing is stored', () => {
-    expect(applyPageOrder(null, library)).toEqual(['saved', 'checks', 'visited', 'stats']);
-    expect(applyPageOrder(undefined, library)).toEqual(['saved', 'checks', 'visited', 'stats']);
+    expect(applyPageOrder(null, library)).toEqual(['saved', 'checks', 'stats']);
+    expect(applyPageOrder(undefined, library)).toEqual(['saved', 'checks', 'stats']);
   });
 
   it('applies a stored order', () => {
-    expect(applyPageOrder(['stats', 'visited', 'checks', 'saved'], library)).toEqual(['stats', 'visited', 'checks', 'saved']);
+    expect(applyPageOrder(['stats', 'checks', 'saved'], library)).toEqual(['stats', 'checks', 'saved']);
   });
 
   it('drops unknown ids and appends missing ones in default order', () => {
-    expect(applyPageOrder(['visited', 'country:DE', 'gone', 'saved'], library)).toEqual(['visited', 'saved', 'checks', 'stats']);
+    // `visited` (History) left the pills: an old order naming it drops it.
+    expect(applyPageOrder(['visited', 'country:DE', 'gone', 'saved'], library)).toEqual(['saved', 'checks', 'stats']);
   });
 
   it('appends a page added since an old order was saved', () => {
-    expect(applyPageOrder(['saved', 'checks', 'visited'], library)).toEqual(['saved', 'checks', 'visited', 'stats']);
+    expect(applyPageOrder(['saved', 'checks'], library)).toEqual(['saved', 'checks', 'stats']);
   });
 
   it('drops duplicates', () => {
-    expect(applyPageOrder(['visited', 'visited', 'saved'], library)).toEqual(['visited', 'saved', 'checks', 'stats']);
+    expect(applyPageOrder(['checks', 'checks', 'saved'], library)).toEqual(['checks', 'saved', 'stats']);
   });
 
   it('an empty stored list reads as the defaults', () => {

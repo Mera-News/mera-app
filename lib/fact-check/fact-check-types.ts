@@ -131,4 +131,7 @@ export interface FactCheckRow {
     readonly model?: string | null;
     /** Provider calls issued for this row (the crash-loop guard's counter). */
     readonly attempts?: number | null;
+    /** When "Fact check again" may run; in the future means checked recently.
+     *  Absent on a row from a server or build before the field. See `recheckState`. */
+    readonly recheckAvailableAt?: string | number | null;
 }

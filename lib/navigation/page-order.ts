@@ -29,7 +29,6 @@ export type StaticPageId =
   | 'stories'
   | 'saved'
   | 'checks'
-  | 'visited'
   | 'stats'
   | 'profile'
   | 'settings'
@@ -44,7 +43,7 @@ export type StaticTabId = Exclude<TabId, 'world'>;
  *  run time (lib/explore/world-pages.ts), with `world` first. */
 export const DEFAULT_PAGE_ORDER: Readonly<Record<StaticTabId, readonly StaticPageId[]>> = {
   feed: ['feed', 'stories', 'notifications'],
-  library: ['saved', 'checks', 'visited', 'stats'],
+  library: ['saved', 'checks', 'stats'],
   you: ['profile', 'settings'],
 };
 

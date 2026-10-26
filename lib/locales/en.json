@@ -386,35 +386,27 @@
     "queuedHint": "The result appears under Fact checks on your Dashboard once it's ready.",
     "stillChecking": "This is taking longer than usual. It's still running in the background, so check back later under Fact checks on your Dashboard.",
     "blocked": "This story couldn't be searched.",
-    "checkedByHeading": "Fact checks the search found",
     "checkedByRelatedNote": "These come from a keyword search and may be about a different story. Open one to check.",
     "noCheckedBy": "We didn't find a published fact check about this story. That doesn't make the story wrong. Most stories are never fact-checked.",
     "checkedByUnavailable": "We couldn't check whether a fact-checking organisation has published on this story. That's different from nobody having published. Below is what the wider search found.",
-    "checkedByMultipleNote": "These are independent ratings, each on that organisation's own scale, and they don't always agree.",
-    "searchFoundHeading": "What our search found",
     "searchFoundEmpty": "There wasn't enough from the search for Mera to summarise here.",
     "organisationA11y": "Open {{organisation}}'s fact check, rated {{rating}}, in the in-app browser",
     "citationA11y": "Open the source {{source}} in the in-app browser",
-    "noLink": "No link available",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "actionA11yPending": "Fact check requested. Check for the result",
     "actionA11yDone": "Fact check ready. The result is shown below",
     "claimsHeading": "Claims checked",
     "citationsHeading": "Sources consulted",
     "noCitations": "This check didn't cite any specific pages. That's not a failed search, but treat the summary with more caution.",
-    "sourceFallback": "Source {{index}}",
     "disclaimer": "This is Mera's own reading of a web search, written by AI. It can be wrong or incomplete, so read the sources before relying on it.",
     "dashboard": {
-      "pending": "Checking with fact checkers",
       "listTitle": "Fact checks",
       "untitled": "Untitled story",
       "deleteA11y": "Delete this fact check",
       "openA11y": "Open this article",
       "articleGone": "The article has expired, so it can't be opened. The fact check we found is kept here.",
       "couldNotCheck": "We couldn't check who has published on this. Tap to see what the search did find.",
-      "noneFound": "No published fact checks found",
-      "factChecksFound_one": "{{count}} fact check found. Tap to read",
-      "factChecksFound_other": "{{count}} fact checks found. Tap to read"
+      "noneFound": "No published fact checks found"
     },
     "verdict": {
       "supported": {
@@ -460,6 +452,22 @@
       "bodyFoundUntitled": "Fact checkers have published on the article you asked about.",
       "bodyNoneUntitled": "No published fact checks yet for the article you asked about.",
       "bodyUnavailableUntitled": "Mera couldn't finish checking the article you asked about."
+    },
+    "panelTitle": "Fact check",
+    "publishedHeading": "Published fact checks",
+    "meraFoundHeading": "What Mera found",
+    "sourcesCount_one": "{{count}} source",
+    "sourcesCount_other": "{{count}} sources",
+    "showMoreSources": "Show {{count}} more",
+    "again": "Fact check again",
+    "checkedRecently": "Checked recently",
+    "againHint": "Fact-checkers often publish a few days after a story. Checking again looks for anything new.",
+    "share": {
+      "aiSummary": "Mera's AI summary (written by AI, can be wrong)",
+      "sources": "Sources",
+      "rated": "{{organisation}} rated it {{rating}}",
+      "ratedSaid": "{{organisation}} rated it {{rating}}: “{{summary}}”",
+      "footer": "Checked {{date}}. Shared via {{downloadUrl}}"
     }
   },
   "sources": {
@@ -2644,7 +2652,7 @@
     "page": {
       "stories": "Stories",
       "saved": "Saved",
-      "stats": "Stats"
+      "stats": "Activity"
     },
     "rearrangeA11y": "Rearrange {{tab}} pages",
     "pillA11y": "{{label}}, {{index}} of {{count}}",
@@ -2720,14 +2728,15 @@
     },
     "checks": {
       "emptyTitle": "No fact checks yet",
-      "checkedAgo": "checked {{age}}",
       "checking": "Checking this with fact checkers",
-      "claim": "The claim",
       "count_one": "{{count}} fact check",
       "count_other": "{{count}} fact checks",
       "emptyBodyMenu": "On any article, open the ••• menu and tap Fact check. Or ask Mera to check a claim. Results land here.",
       "learn": "Learn about Fact checks",
-      "new": "New"
+      "new": "New",
+      "checkedAge": "Checked {{age}}",
+      "askedAge": "Asked {{age}}",
+      "moreOrganisations": "+{{count}} more"
     },
     "visited": {
       "emptyTitle": "No publications yet"
@@ -2775,6 +2784,37 @@
       "intro": "At the source, in the last 30 days, most visited first. Kept on this phone.",
       "learn": "Learn about History",
       "title": "Publications you opened"
+    },
+    "activity": {
+      "supportTitle": "The reporting that matters to you",
+      "supportBody": "These are the publishers you rely on most. News can be free to read, but it is never free to report. If you want them to keep reporting for you, consider subscribing to the ones that offer it. Thank you.",
+      "countriesTitle": "Where you read",
+      "countriesHint": "Tap a country to see its publications.",
+      "colCountry": "Country",
+      "colArticles": "Articles",
+      "logTitle": "What you opened",
+      "showAllDays": "Show all days",
+      "freshIntro": "How old each article was when you opened it.",
+      "freshNoteAll": "This is how new a story was, not how long you read it.",
+      "band": {
+        "hour": "Under an hour old",
+        "sixHours": "1 to 6 hours",
+        "day": "6 to 24 hours",
+        "threeDays": "1 to 3 days",
+        "older": "Older"
+      },
+      "allPublications_one": "The {{count}} publication you opened",
+      "allPublications_other": "All {{count}} publications you opened",
+      "visits_one": "{{count}} visit",
+      "visits_other": "{{count}} visits",
+      "articles_one": "{{count}} article",
+      "articles_other": "{{count}} articles",
+      "languagesIntro_one": "The {{count}} language of what you opened in the last 30 days. Tap it to see those articles.",
+      "languagesIntro_other": "The {{count}} languages of what you opened in the last 30 days. Tap one to see those articles.",
+      "logIntro_one": "{{count}} article at the source in the last 30 days. Tap a day to see only that day.",
+      "logIntro_other": "{{count}} articles at the source in the last 30 days. Tap a day to see only that day.",
+      "freshNote_one": "Counts {{sampled}} of your {{count}} article: the other {{missing}} had no publish time. This is how new a story was, not how long you read it.",
+      "freshNote_other": "Counts {{sampled}} of your {{count}} articles: the other {{missing}} had no publish time. This is how new a story was, not how long you read it."
     }
   },
   "you": {
@@ -3013,5 +3053,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Export fact checks",
+    "step1Heading": "Choose fact checks",
+    "includeIntro": "Each export always has the headline, publication, article link and every fact-checker's rating with its link.",
+    "includeClaimsHint": "Each claim with its assessment.",
+    "includeSummary": "Mera's AI summary",
+    "includeSummaryHint": "Labelled as written by AI in the file.",
+    "includeSourcesHint": "Every link the search used.",
+    "stillChecking": "Still checking",
+    "shareDialogTitle": "Export fact checks"
   }
 }

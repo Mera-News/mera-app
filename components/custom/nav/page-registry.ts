@@ -10,7 +10,7 @@
 // import components); this file re-exports them so shell code has one import.
 //
 // Page ids are stable strings used everywhere (order rows, hints, focus):
-// feed, stories, world, country:<ALPHA2>, saved, checks, visited, stats, profile,
+// feed, stories, world, country:<ALPHA2>, saved, checks, stats, profile,
 // settings, notifications. A country page id is ALWAYS alpha-2; the explore
 // scope ids stay `country:<ALPHA3>` and only lib/explore/world-pages.ts
 // converts between the two.
@@ -118,7 +118,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   },
   saved: { tab: 'library', labelKey: 'nav.page.saved', keepMounted: false, explainer: null },
   checks: { tab: 'library', labelKey: 'factCheck.dashboard.listTitle', keepMounted: false, explainer: null },
-  visited: { tab: 'library', labelKey: 'publicationPage.history', keepMounted: false, explainer: null },
+  // The pill reads Activity; the id stays `stats`.
   stats: { tab: 'library', labelKey: 'nav.page.stats', keepMounted: false, explainer: null },
   profile: { tab: 'you', labelKey: 'tabs.profile', keepMounted: false, explainer: null },
   settings: { tab: 'you', labelKey: 'tabs.settings', keepMounted: false, explainer: null },
@@ -191,6 +191,7 @@ export type SurfaceId =
   | 'locations'
   | 'sources'
   | 'activity'
+  | LibraryScreen
   | 'settings:display'
   | 'settings:mera-protocol'
   | 'settings:notifications'
@@ -213,11 +214,18 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
   'settings:backup',
 ]);
 
+/** The screens pushed in the Library stack (`app_container/library/<screen>`),
+ *  each its own surface: History and the Activity page's detail screens. */
+export const LIBRARY_SCREENS = ['history', 'where-you-read', 'languages', 'reading-log', 'freshness'] as const;
+export type LibraryScreen = (typeof LIBRARY_SCREENS)[number];
+const LIBRARY_STACK_SURFACES: ReadonlySet<string> = new Set(LIBRARY_SCREENS);
+
 /** The tab a surface lives in, or null for a root push (Search, an article). */
 export function tabForSurface(surface: SurfaceId): TabId | null {
   if (surface === 'search' || surface === 'article') return null;
   if (surface.startsWith('interest:')) return 'feed';
   if (YOU_STACK_SURFACES.has(surface)) return 'you';
+  if (LIBRARY_STACK_SURFACES.has(surface)) return 'library';
   return tabOfPage(surface as PageId);
 }
 

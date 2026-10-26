@@ -299,7 +299,17 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // once for a check the reader just asked for (no progress delay, and no
     // toast: the panel is right under the tick).
     const factCheckPanel = (
-        <FactCheckPanel articleId={article._id ?? articleId} startedByReader={factCheckAsked} />
+        <FactCheckPanel
+            articleId={article._id ?? articleId}
+            startedByReader={factCheckAsked}
+            article={{
+                title: titleDisplay?.text ?? article.title_en_internal_only ?? article.title,
+                language: titleDisplay?.language ?? null,
+                publication: article.publicationSource?.publication_name ?? null,
+                pubDate: article.pubDate ?? null,
+                url: articleUrl,
+            }}
+        />
     );
 
     return (

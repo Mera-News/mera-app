@@ -42,7 +42,7 @@ import {
     keepArticleForFactCheck,
     type FactCheckKeepInput,
 } from '../database/services/saved-article-suggestion-service';
-import { FACT_CHECK_FIELDS } from './fact-check-fields';
+import { FACT_CHECK_FIELDS, FACT_CHECK_FIELDS_LEGACY } from './fact-check-fields';
 import { isTerminalStatus } from './fact-check-state';
 import type { FactCheckRow } from './fact-check-types';
 import {
@@ -58,6 +58,76 @@ const GET_FACT_CHECK = gql`
     }
   }
 `;
+
+const GET_FACT_CHECK_LEGACY = gql`
+  query GetFactCheckLegacy($articleId: ID!) {
+    factCheck(articleId: $articleId) {
+      ${FACT_CHECK_FIELDS_LEGACY}
+    }
+  }
+`;
+
+/** "Fact check again". The server re-runs a complete/failed row older than a
+ *  day and answers it `pending`; sooner, it answers the row unchanged with a
+ *  future `recheckAvailableAt`. */
+const REQUEST_FACT_CHECK_AGAIN = gql`
+  mutation RequestFactCheckAgain($articleId: ID!) {
+    requestFactCheck(articleId: $articleId, recheck: true) {
+      ${FACT_CHECK_FIELDS}
+    }
+  }
+`;
+
+/** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
+function graphQLErrorCodes(err: unknown): string[] {
+    if (!err || typeof err !== 'object') return [];
+    const list = (err as { errors?: unknown }).errors ?? (err as { graphQLErrors?: unknown }).graphQLErrors;
+    if (!Array.isArray(list)) return [];
+    return list
+        .map((e) => (e as { extensions?: { code?: unknown } })?.extensions?.code)
+        .filter((c): c is string => typeof c === 'string');
+}
+
+const isValidationFailure = (err: unknown) => graphQLErrorCodes(err).includes('GRAPHQL_VALIDATION_FAILED');
+
+/** Set once a server rejects `recheckAvailableAt` (deployed before it): the
+ *  session then reads with the legacy documents and offers no recheck call. */
+let recheckUnsupported = false;
+
+/** Test seam: forget what an earlier test learned about the server. */
+export function resetFactCheckSchemaForTest(): void {
+    recheckUnsupported = false;
+}
+
+/** One fact-check read, current document first, the legacy one after a
+ *  validation failure (and for the rest of the session). Throws otherwise. */
+async function readFactCheck<K extends 'factCheck' | 'cachedFactCheck'>(
+    key: K,
+    query: ReturnType<typeof gql>,
+    legacy: ReturnType<typeof gql>,
+    articleId: string,
+): Promise<FactCheckRow | null> {
+    if (!recheckUnsupported) {
+        try {
+            const { data } = await client.query<Record<K, FactCheckRow | null>>({
+                query,
+                variables: { articleId },
+                fetchPolicy: 'no-cache',
+                context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+            });
+            return data?.[key] ?? null;
+        } catch (err) {
+            if (!isValidationFailure(err)) throw err;
+            recheckUnsupported = true;
+        }
+    }
+    const { data } = await client.query<Record<K, FactCheckRow | null>>({
+        query: legacy,
+        variables: { articleId },
+        fetchPolicy: 'no-cache',
+    });
+    return data?.[key] ?? null;
+}
 
 /**
  * Retain the checked article like a saved one, so the check stays openable
@@ -134,12 +204,7 @@ export interface FactCheckQueryOutcome {
  * check had failed).
  */
 export async function fetchFactCheck(articleId: string): Promise<FactCheckQueryOutcome> {
-    const { data } = await client.query<{ factCheck: FactCheckRow | null }>({
-        query: GET_FACT_CHECK,
-        variables: { articleId },
-        fetchPolicy: 'no-cache',
-    });
-    const row = data?.factCheck ?? null;
+    const row = await readFactCheck('factCheck', GET_FACT_CHECK, GET_FACT_CHECK_LEGACY, articleId);
     return { terminal: !!row && isTerminalStatus(row.status), row };
 }
 
@@ -225,6 +290,52 @@ const GET_CACHED_FACT_CHECK = gql`
   }
 `;
 
+const GET_CACHED_FACT_CHECK_LEGACY = gql`
+  query GetCachedFactCheckLegacy($articleId: ID!) {
+    cachedFactCheck(articleId: $articleId) {
+      ${FACT_CHECK_FIELDS_LEGACY}
+    }
+  }
+`;
+
+/**
+ * "Fact check again" on the article panel, the reader's own tap. Records the
+ * ask first (so the panel polls and the reader is told when it settles), then
+ * stores whatever the server answers through the one store. A pending answer
+ * still carries the PREVIOUS verdict fields: every renderer keys on status.
+ *
+ * Never throws. Returns false when nothing was asked: a server without the
+ * option (validation failure) or a failed request.
+ */
+export async function requestFactCheckAgain(
+    articleId: string,
+    articleTitle?: string | null,
+): Promise<boolean> {
+    if (recheckUnsupported) return false;
+    try {
+        await recordFactCheckAsked({ articleId, suggestionId: null, title: articleTitle ?? null });
+        const { data } = await client.mutate<{ requestFactCheck: FactCheckRow | null }>({
+            mutation: REQUEST_FACT_CHECK_AGAIN,
+            variables: { articleId },
+            context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+        });
+        const row = data?.requestFactCheck ?? null;
+        if (row) await storeServerFactCheck(articleId, row, articleTitle);
+        if (row && !isTerminalStatus(row.status)) ensureAskedFactCheckPoller();
+        return !!row;
+    } catch (err) {
+        if (isValidationFailure(err)) {
+            recheckUnsupported = true;
+        } else {
+            logger.captureException(err, {
+                tags: { service: 'fact-check-graphql-client', method: 'requestFactCheckAgain' },
+                extra: { articleId },
+            });
+        }
+        return false;
+    }
+}
+
 /** One read-only re-read through `cachedFactCheck`, stored through the one
  *  store. Never throws; returns the settled-or-not state it saw, or null
  *  when the read failed or the server has no row. */
@@ -233,12 +344,9 @@ async function rereadFactCheck(
     articleTitle?: string | null,
 ): Promise<{ terminal: boolean } | null> {
     try {
-        const { data } = await client.query<{ cachedFactCheck: FactCheckRow | null }>({
-            query: GET_CACHED_FACT_CHECK,
-            variables: { articleId },
-            fetchPolicy: 'no-cache',
-        });
-        const row = data?.cachedFactCheck ?? null;
+        const row = await readFactCheck(
+            'cachedFactCheck', GET_CACHED_FACT_CHECK, GET_CACHED_FACT_CHECK_LEGACY, articleId,
+        );
         if (!row) return null;
         await storeServerFactCheck(articleId, row, articleTitle);
         return { terminal: isTerminalStatus(row.status) };

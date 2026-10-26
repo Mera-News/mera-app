@@ -1480,7 +1480,6 @@
     "claimsHeading": "Các khẳng định được kiểm chứng",
     "citationsHeading": "Các nguồn được tham khảo",
     "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại, hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
-    "sourceFallback": "Nguồn {{index}}",
     "disclaimer": "Đây là cách đọc của Mera từ tìm kiếm web, được viết bởi AI. Nó có thể sai hoặc không hoàn chỉnh, vì vậy vui lòng đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
       "supported": {
@@ -1515,18 +1514,14 @@
       "unverifiable": "Không thể xác nhận",
       "unknown": "Không rõ"
     },
-    "checkedByHeading": "Các kiểm chứng được tìm thấy",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
       "listTitle": "Kiểm chứng sự kiện",
-      "pending": "Đang kiểm chứng với các tổ chức kiểm chứng",
       "untitled": "Câu chuyện không có tiêu đề",
       "openA11y": "Mở bài viết này",
       "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây.",
       "couldNotCheck": "Chúng tôi không kiểm tra được ai đã đăng về việc này. Chạm để xem kết quả tìm kiếm.",
-      "noneFound": "Không tìm thấy kiểm chứng được công bố",
-      "factChecksFound_one": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc",
-      "factChecksFound_other": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc"
+      "noneFound": "Không tìm thấy kiểm chứng được công bố"
     },
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
     "noCheckedBy": "Chúng tôi không tìm thấy bất kỳ kiểm chứng nào được công bố về câu chuyện này. Điều đó không có nghĩa là câu chuyện sai. Phần lớn các câu chuyện không bao giờ được kiểm chứng.",
@@ -1534,7 +1529,6 @@
     "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây, có thể rời khỏi bài viết.",
     "queuedHint": "Kết quả sẽ xuất hiện dưới mục Kiểm tra sự thật trên Dashboard khi sẵn sàng.",
     "citationA11y": "Mở nguồn {{source}} trong trình duyệt trong ứng dụng",
-    "noLink": "Không có liên kết",
     "actionA11yPending": "Kiểm tra sự thật được yêu cầu, kiểm tra kết quả",
     "actionA11yDone": "Kiểm tra sự thật sẵn sàng, kết quả được hiển thị bên dưới",
     "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem có tổ chức kiểm chứng sự thật nào đã đăng về câu chuyện này hay không. Điều đó khác với việc không ai đăng cả. Dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
@@ -1554,11 +1548,9 @@
     "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai, nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
     "quickRunning": "Đang tìm kiếm web…",
     "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra, quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
-    "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó, chúng không phải lúc nào cũng thống nhất với nhau.",
     "collapseA11y": "Ẩn phần kiểm chứng này",
     "expandA11y": "Hiện phần kiểm chứng này",
     "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
-    "searchFoundHeading": "Những gì tìm kiếm của chúng tôi tìm thấy",
     "searchFoundEmpty": "Tìm kiếm không cung cấp đủ thông tin để Mera tóm tắt tại đây.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1570,6 +1562,21 @@
       "bodyFoundUntitled": "Các bên kiểm chứng đã công bố về bài viết bạn hỏi.",
       "bodyNoneUntitled": "Chưa có kết quả kiểm chứng nào được công bố cho bài viết bạn hỏi.",
       "bodyUnavailableUntitled": "Mera không thể hoàn tất việc kiểm tra bài viết bạn hỏi."
+    },
+    "panelTitle": "Kiểm chứng",
+    "publishedHeading": "Kết quả kiểm chứng đã đăng",
+    "meraFoundHeading": "Những gì Mera tìm thấy",
+    "sourcesCount_other": "{{count}} nguồn",
+    "showMoreSources": "Hiện thêm {{count}}",
+    "again": "Kiểm chứng lại",
+    "checkedRecently": "Vừa kiểm chứng",
+    "againHint": "Bên kiểm chứng thường đăng bài vài ngày sau một tin tức. Kiểm chứng lại sẽ tìm mọi thông tin mới.",
+    "share": {
+      "aiSummary": "Tóm tắt AI của Mera (do AI viết, có thể sai)",
+      "sources": "Nguồn",
+      "rated": "Đánh giá của {{organisation}}: {{rating}}",
+      "ratedSaid": "Đánh giá của {{organisation}}: {{rating}}. “{{summary}}”",
+      "footer": "Đã kiểm chứng ngày {{date}}. Chia sẻ qua {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2635,7 +2642,7 @@
     "page": {
       "stories": "Câu chuyện",
       "saved": "Đã lưu",
-      "stats": "Thống kê"
+      "stats": "Hoạt động"
     },
     "rearrangeA11y": "Sắp xếp lại các trang của {{tab}}",
     "pillA11y": "{{label}}, {{index}} trên {{count}}",
@@ -2710,14 +2717,15 @@
     },
     "checks": {
       "emptyTitle": "Chưa có lần kiểm chứng sự kiện nào",
-      "checkedAgo": "đã kiểm tra {{age}}",
       "checking": "Đang kiểm chứng việc này với các tổ chức kiểm chứng",
-      "claim": "Nhận định",
       "count_one": "{{count}} lần kiểm chứng sự kiện",
       "count_other": "{{count}} lần kiểm chứng sự kiện",
       "emptyBodyMenu": "Với bất kỳ bài viết nào, mở menu ••• và chạm Kiểm chứng sự kiện. Hoặc nhờ Mera kiểm tra một nhận định. Kết quả sẽ hiện ở đây.",
       "learn": "Tìm hiểu về Kiểm chứng sự kiện",
-      "new": "Mới"
+      "new": "Mới",
+      "checkedAge": "Đã kiểm tra {{age}}",
+      "askedAge": "Đã yêu cầu {{age}}",
+      "moreOrganisations": "+{{count}} khác"
     },
     "visited": {
       "emptyTitle": "Chưa có ấn phẩm nào"
@@ -2765,6 +2773,37 @@
       "intro": "Tại nguồn, trong 30 ngày qua, xếp theo lượt mở nhiều nhất. Được lưu trên điện thoại này.",
       "learn": "Tìm hiểu về Lịch sử",
       "title": "Các nguồn bạn đã mở"
+    },
+    "activity": {
+      "supportTitle": "Những bài báo quan trọng với bạn",
+      "supportBody": "Đây là những nhà xuất bản bạn tin cậy nhất. Tin tức có thể được đọc miễn phí, nhưng việc đưa tin thì không bao giờ miễn phí. Nếu bạn muốn họ tiếp tục đưa tin cho bạn, hãy cân nhắc đăng ký những nơi có cung cấp gói đăng ký. Cảm ơn bạn.",
+      "countriesTitle": "Nơi bạn đọc",
+      "countriesHint": "Chạm vào một quốc gia để xem các nguồn của quốc gia đó.",
+      "colCountry": "Quốc gia",
+      "colArticles": "Bài viết",
+      "logTitle": "Những gì bạn đã mở",
+      "showAllDays": "Hiện tất cả các ngày",
+      "freshIntro": "Mỗi bài viết đã đăng được bao lâu khi bạn mở.",
+      "freshNoteAll": "Đây là độ mới của tin, không phải thời gian bạn đọc.",
+      "band": {
+        "hour": "Dưới một giờ",
+        "sixHours": "1 đến 6 giờ",
+        "day": "6 đến 24 giờ",
+        "threeDays": "1 đến 3 ngày",
+        "older": "Cũ hơn"
+      },
+      "allPublications_one": "Tất cả {{count}} nguồn bạn đã mở",
+      "allPublications_other": "Tất cả {{count}} nguồn bạn đã mở",
+      "visits_one": "{{count}} lượt mở",
+      "visits_other": "{{count}} lượt mở",
+      "articles_one": "{{count}} bài viết",
+      "articles_other": "{{count}} bài viết",
+      "languagesIntro_one": "{{count}} ngôn ngữ trong những gì bạn đã mở 30 ngày qua. Chạm vào một ngôn ngữ để xem các bài đó.",
+      "languagesIntro_other": "{{count}} ngôn ngữ trong những gì bạn đã mở 30 ngày qua. Chạm vào một ngôn ngữ để xem các bài đó.",
+      "logIntro_one": "{{count}} bài viết tại nguồn trong 30 ngày qua. Chạm vào một ngày để chỉ xem ngày đó.",
+      "logIntro_other": "{{count}} bài viết tại nguồn trong 30 ngày qua. Chạm vào một ngày để chỉ xem ngày đó.",
+      "freshNote_one": "Tính {{sampled}} trong {{count}} bài viết của bạn: {{missing}} bài còn lại không có thời gian đăng. Đây là độ mới của tin, không phải thời gian bạn đọc.",
+      "freshNote_other": "Tính {{sampled}} trong {{count}} bài viết của bạn: {{missing}} bài còn lại không có thời gian đăng. Đây là độ mới của tin, không phải thời gian bạn đọc."
     }
   },
   "you": {
@@ -3003,5 +3042,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Xuất kết quả kiểm chứng",
+    "step1Heading": "Chọn kết quả kiểm chứng",
+    "includeIntro": "Mỗi bản xuất luôn có tiêu đề, nguồn tin, liên kết bài viết và mọi đánh giá của bên kiểm chứng kèm liên kết.",
+    "includeClaimsHint": "Mỗi khẳng định kèm đánh giá.",
+    "includeSummary": "Tóm tắt AI của Mera",
+    "includeSummaryHint": "Được ghi rõ trong tệp là do AI viết.",
+    "includeSourcesHint": "Mọi liên kết mà tìm kiếm đã dùng.",
+    "stillChecking": "Vẫn đang kiểm chứng",
+    "shareDialogTitle": "Xuất kết quả kiểm chứng"
   }
 }

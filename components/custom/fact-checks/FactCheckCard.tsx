@@ -1,31 +1,33 @@
-// One stored fact check (FinalLibrary #5, #6): the article it came from and
-// when it was checked, a New pill until the Library's Fact checks page has
-// been seen since, the title, the claim in its own box, then ONE ROW PER
-// ORGANISATION with that organisation's own rating in its own words. A check
-// still running says so in the same place.
+// One stored fact check in the Library list: a SUMMARY, never the check. The
+// publication and when it was checked (or asked, while it runs), a New pill
+// until the Fact checks page has been seen since, the headline, then ONE line:
+// the first organisation and its own rating, "+N more" for the rest. Claims,
+// sources and Mera's reading live on the article page (FactCheckPanel).
 //
-// EXTERNALS ARE THE AUTHORITY (invariant 13): every rating here is an
-// established fact-checking organisation's own, verbatim when we do not know
-// the token. Mera's own verdict is never shown, in any state.
+// KEYED ON STATUS: a row being re-checked is `pending` but still carries the
+// previous verdict, so anything not finished shows the checking line.
 //
 // The delete control is a SIBLING of the tappable body, absolutely positioned
-// over its top-right corner, never a child: nested, a delete could also
-// navigate. Its 44pt frame is the frame itself, never hitSlop (QA measures a
-// hitSlop target as its glyph box). The header row keeps clear of it.
+// over the meta row, never a child: nested, a delete could also navigate. Its
+// 44pt frame is the frame itself, never hitSlop (QA measures a hitSlop target
+// as its glyph box). The meta row keeps clear of it.
 
+import { useNoteInk } from '@/components/custom/cards/FactChips';
 import { useTapGuard } from '@/components/custom/cards/use-tap-guard';
-import { GLASS_EDGE, GlassPlate } from '@/components/custom/GlassSurface';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
+import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
-import { describeCheckedBy, describeOrganisationVerdict } from '@/lib/fact-check/fact-check-state';
-import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
+import {
+    describeCheckedBy,
+    describeExternalChecks,
+    describeOrganisationVerdict,
+} from '@/lib/fact-check/fact-check-state';
+import type { FactCheckRow } from '@/lib/fact-check/fact-check-types';
 import { isFactCheckDone } from '@/lib/stores/fact-checks-store';
 import { useColors } from '@/lib/theme/tokens';
-import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -44,8 +46,8 @@ interface FactCheckCardProps {
 }
 
 const DELETE_FRAME = 44;
-const LINE = { fontSize: 14, lineHeight: 20 } as const;
-const SMALL = { fontSize: 12, lineHeight: 17 } as const;
+const PAD = 16;
+const META_LINE = 18;
 
 const FactCheckCard: React.FC<FactCheckCardProps> = ({
     item,
@@ -56,18 +58,23 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
 }) => {
     const { t } = useTranslation();
     const c = useColors();
+    const note = useNoteInk();
     // Opens on a TAP only: a release after a sideways drag is not a press.
     const tap = useTapGuard(onPress ? () => onPress(item) : undefined);
     const done = isFactCheckDone(item);
 
-    const payload = item.payload as { checkedBy?: FactCheckedByEntry[]; publicationName?: string | null } | null;
+    const payload = item.payload as FactCheckRow | null;
     const organisations = describeCheckedBy(payload?.checkedBy);
+    const outcome = describeExternalChecks(item.status, organisations.length, payload?.checkedByStatus);
     const publication = payload?.publicationName?.trim() || null;
-    const checkedAt = item.resolvedAt ?? item.requestedAt;
-    const meta = [publication, t('library.checks.checkedAgo', { age: formatTimeAgo(t, checkedAt) })]
-        .filter(Boolean)
-        .join(' · ');
-    const toneInk = { positive: c.positive, caution: c.accentText, neutral: c.ink2 } as const;
+    const age = formatTimeAgo(t, done ? (item.resolvedAt ?? item.requestedAt) : item.requestedAt);
+    const meta = { fontSize: 12, lineHeight: META_LINE, fontWeight: '700' as const, color: c.ink2 };
+    const lead = organisations[0];
+    const leadRating = (() => {
+        const info = describeOrganisationVerdict(lead?.verdict);
+        return info.isKey ? t(info.label as never) : info.label;
+    })();
+    const factIcon = <MaterialIcons name="fact-check" size={16} color={c.accent} {...DECORATIVE_ICON_A11Y} />;
 
     return (
         <View testID={`${testIDPrefix}-${item.id}`}>
@@ -78,85 +85,86 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 accessibilityRole={onPress ? 'button' : undefined}
                 accessibilityLabel={onPress ? t('factCheck.dashboard.openA11y') : undefined}
                 testID={`${testIDPrefix}-open-${item.id}`}
-                // Unpadded and clipping: GlassPlate is an absolute fill.
-                className={`rounded-lg overflow-hidden ${GLASS_EDGE}`}
+                style={[styles.card, { backgroundColor: c.surface, borderColor: c.line }]}
             >
-                <GlassPlate />
-                <VStack space="sm" className="p-3">
-                    <HStack className="items-center" style={{ paddingRight: onDelete ? DELETE_FRAME - 8 : 0, gap: 8 }}>
-                        <Text numberOfLines={1} style={[SMALL, { color: c.ink3, flex: 1 }]}>
-                            {meta}
-                        </Text>
-                        {isNew ? (
-                            <View style={[styles.newPill, { backgroundColor: c.accent }]} testID={`${testIDPrefix}-new-${item.id}`}>
-                                <Text style={[SMALL, { color: c.onAccent, fontWeight: '700' }]}>{t('library.checks.new')}</Text>
-                            </View>
-                        ) : null}
-                    </HStack>
-
-                    {item.articleTitle?.trim() ? (
-                        <TranslatableDynamic
-                            text={item.articleTitle.trim()}
-                            size="md"
-                            className="font-semibold"
-                            style={{ color: c.ink }}
-                            numberOfLines={3}
-                        />
-                    ) : (
-                        <Text size="md" className="font-semibold" style={{ color: c.ink }} numberOfLines={3}>
-                            {t('factCheck.dashboard.untitled')}
-                        </Text>
-                    )}
-
-                    {item.claim ? (
-                        <View style={[styles.box, { backgroundColor: c.surface, borderColor: c.line }]}>
-                            <Text style={[SMALL, { color: c.ink3, fontWeight: '600' }]}>{t('library.checks.claim')}</Text>
-                            <TranslatableDynamic text={item.claim} size="sm" style={{ color: c.ink2 }} numberOfLines={3} />
+                <View style={[styles.row, { gap: 6, paddingRight: onDelete ? DELETE_FRAME - 12 : 0 }]}>
+                    {publication ? (
+                        <>
+                            <MaterialIcons name="newspaper" size={12} color={c.ink2} {...DECORATIVE_ICON_A11Y} />
+                            <Text numberOfLines={1} style={[meta, { flexShrink: 1 }]}>{publication}</Text>
+                        </>
+                    ) : null}
+                    <MaterialIcons
+                        name="schedule"
+                        size={12}
+                        color={c.ink2}
+                        style={publication ? { marginLeft: 10 } : undefined}
+                        {...DECORATIVE_ICON_A11Y}
+                    />
+                    <Text numberOfLines={1} style={[meta, { flex: 1 }]}>
+                        {t(done ? 'library.checks.checkedAge' : 'library.checks.askedAge', { age })}
+                    </Text>
+                    {isNew ? (
+                        <View style={[styles.newPill, { backgroundColor: c.accent }]} testID={`${testIDPrefix}-new-${item.id}`}>
+                            <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: '700', color: c.onAccent }}>
+                                {t('library.checks.new')}
+                            </Text>
                         </View>
                     ) : null}
+                </View>
 
-                    {!done ? (
-                        <View style={[styles.box, { backgroundColor: c.surface, borderColor: c.line }]} testID={`${testIDPrefix}-checking-${item.id}`}>
-                            <Text style={[LINE, { color: c.ink2 }]}>{t('library.checks.checking')}</Text>
-                        </View>
+                {item.articleTitle?.trim() ? (
+                    <TranslatableDynamic text={item.articleTitle.trim()} size="xl" bold style={{ color: c.ink }} numberOfLines={3} />
+                ) : (
+                    <Text size="xl" bold style={{ color: c.ink }} numberOfLines={3}>
+                        {t('factCheck.dashboard.untitled')}
+                    </Text>
+                )}
+
+                <View style={[styles.summary, { backgroundColor: note.box }]} testID={`${testIDPrefix}-summary-${item.id}`}>
+                    {outcome === 'pending' ? (
+                        <>
+                            <View style={[styles.dot, { backgroundColor: c.accent }]} testID={`${testIDPrefix}-checking-${item.id}`} />
+                            <Text size="sm" style={{ color: c.ink2, flex: 1 }}>{`${t('library.checks.checking')}…`}</Text>
+                        </>
+                    ) : outcome === 'published' && lead ? (
+                        <>
+                            {factIcon}
+                            <Text size="sm" bold numberOfLines={1} style={{ color: c.ink, flex: 1 }} testID={`${testIDPrefix}-org-${item.id}`}>
+                                {lead.organisation.trim()}
+                            </Text>
+                            <View style={[styles.pill, { backgroundColor: c.surfaceRaised }]}>
+                                <Text numberOfLines={1} style={[styles.pillText, { color: c.ink }]}>{leadRating}</Text>
+                            </View>
+                            {organisations.length > 1 ? (
+                                <Text style={[styles.pillText, { color: c.ink3 }]} testID={`${testIDPrefix}-more-${item.id}`}>
+                                    {t('library.checks.moreOrganisations', { count: organisations.length - 1 })}
+                                </Text>
+                            ) : null}
+                        </>
                     ) : (
-                        organisations.map((entry, index) => {
-                            // Verbatim when unrecognised: a rating is the
-                            // organisation's own editorial copy (never translated).
-                            const info = describeOrganisationVerdict(entry.verdict);
-                            const rating = info.isKey ? (t as unknown as (k: string) => string)(info.label) : info.label;
-                            return (
-                                <HStack
-                                    key={`${entry.organisation}-${index}`}
-                                    className="items-center justify-between"
-                                    style={{ gap: 12 }}
-                                    testID={`${testIDPrefix}-org-${item.id}-${index}`}
-                                >
-                                    <Text numberOfLines={1} style={[LINE, { color: c.ink2, flexShrink: 1 }]}>
-                                        {entry.organisation.trim()}
-                                    </Text>
-                                    <Text numberOfLines={1} style={[LINE, { color: toneInk[info.tone], fontWeight: '600', maxWidth: '55%' }]}>
-                                        {rating}
-                                    </Text>
-                                </HStack>
-                            );
-                        })
+                        <>
+                            {factIcon}
+                            <Text size="sm" numberOfLines={2} style={{ color: c.ink2, flex: 1 }}>
+                                {t(
+                                    outcome === 'blocked'
+                                        ? 'factCheck.blocked'
+                                        : outcome === 'unavailable'
+                                          ? 'factCheck.dashboard.couldNotCheck'
+                                          : 'factCheck.dashboard.noneFound',
+                                )}
+                            </Text>
+                        </>
                     )}
-                </VStack>
+                </View>
             </Pressable>
 
             {onDelete ? (
                 // A childless labelled button over the glyph (the glyph-leak
-                // pattern), the 44pt frame being the box itself.
+                // pattern), the 44pt frame being the box itself, centred on
+                // the meta row.
                 <View style={styles.deleteFrame}>
-                    <MaterialIcons
-                        name="delete-outline"
-                        size={20}
-                        color={c.ink3}
-                        accessible={false}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                    />
+                    <MaterialIcons name="delete-outline" size={20} color={c.ink3} {...DECORATIVE_ICON_A11Y} />
                     <Pressable
                         onPress={() => onDelete(item.id)}
                         accessibilityRole="button"
@@ -171,12 +179,17 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
 };
 
 const styles = StyleSheet.create({
+    card: { borderRadius: 16, borderWidth: 1, padding: PAD, gap: 8 },
+    row: { flexDirection: 'row', alignItems: 'center' },
     newPill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 },
-    box: { borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, padding: 10, gap: 2 },
+    summary: { borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    pill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2, flexShrink: 0, maxWidth: '50%' },
+    pillText: { fontSize: 12, lineHeight: 18, fontWeight: '600' },
     deleteFrame: {
         position: 'absolute',
-        top: 0,
-        right: 0,
+        top: PAD + (META_LINE - DELETE_FRAME) / 2,
+        right: PAD - 12,
         width: DELETE_FRAME,
         height: DELETE_FRAME,
         alignItems: 'center',

@@ -1,4 +1,3 @@
-import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
 import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
 import { pageMeta } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
@@ -12,16 +11,16 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
- * The Library tab (static things): Saved, Fact checks, History, Stats, a fixed
- * group. Page ids `saved`, `checks`, `visited`, `stats`. The inbox is the Feed
- * tab's (FeedPages).
+ * The Library tab (static things): Saved, Fact checks, Activity, a fixed group.
+ * Page ids `saved`, `checks`, `stats` (the Activity pill). History and the
+ * Activity detail screens are pushed in the Library stack (`activity-ui`).
+ * The inbox is the Feed tab's (FeedPages).
  * The ? in the tab header opens the active page's explainer.
  */
 /** Each page's icon on the track (outline MaterialIcons on both platforms). */
 const ICONS: Readonly<Record<string, NonNullable<PagePill['icon']>>> = {
     saved: 'bookmark-border',
     checks: 'fact-check',
-    visited: 'history',
     stats: 'bar-chart',
 };
 
@@ -68,15 +67,6 @@ export function LibraryPages() {
                 case 'checks':
                     return (
                         <FactChecksPanel
-                            active={active}
-                            scrollHandler={header.scrollHandler}
-                            headerHeight={header.headerHeight}
-                            listEndPadding={listEnd}
-                        />
-                    );
-                case 'visited':
-                    return (
-                        <VisitedPublicationsList
                             active={active}
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}

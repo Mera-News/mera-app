@@ -1,7 +1,7 @@
-// Old route: this is a page of the Library tab now. Kept so old links and
-// restored screens still open it there.
-import { PageRedirect } from '@/components/custom/nav/LegacyRedirect';
+// Old route: History is a screen in the Library stack now. Kept so old links
+// and restored screens still open it there.
+import { TabScreenRedirect } from '@/components/custom/nav/LegacyRedirect';
 
 export default function LegacyRoute() {
-  return <PageRedirect page="visited" />;
+  return <TabScreenRedirect tab="library" screen="history" />;
 }

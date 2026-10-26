@@ -14,7 +14,8 @@ describe('normalizeLegacyHref', () => {
     // The Stats live under History now; an old card id has nowhere to land.
     ['/logged-in/share-stats?card=keep', { pathname: `${TABS}/library`, page: 'stats' }],
     ['/logged-in/saved-suggestions', { pathname: `${TABS}/library`, page: 'saved' }],
-    ['/logged-in/visited-publications', { pathname: `${TABS}/library`, page: 'visited' }],
+    // History is a screen in the Library stack, not a page.
+    ['/logged-in/visited-publications', { pathname: `${TABS}/library/history` }],
     ['/logged-in/notifications', { pathname: `${TABS}/feed`, page: 'notifications' }],
     ['/logged-in/profile-advanced', { pathname: `${TABS}/you`, page: 'profile' }],
     ['/logged-in/config-panel', { pathname: `${TABS}/you`, page: 'profile' }],

@@ -245,22 +245,6 @@ export function describeExternalChecks(
     return checkedByStatus === 'unavailable' ? 'unavailable' : 'none-published';
 }
 
-/**
- * Whether to show the "these are independent, not a consensus" caveat above
- * the `checkedBy` list.
- *
- * Two or more organisations can rate the SAME claim differently, on scales
- * that are not comparable to each other (see `describeOrganisationVerdict`) —
- * nothing here ever averages, ranks or picks a "majority" verdict among them,
- * and the list itself already renders each rating independently. This is
- * purely a comprehension aid: without it, a reader skimming a list of two or
- * three named organisations could reasonably assume they agree just because
- * they are grouped under one heading.
- */
-export function shouldShowMultipleOrganisationsCaveat(checkedByCount: number): boolean {
-    return checkedByCount > 1;
-}
-
 const ASSESSMENTS: ReadonlySet<string> = new Set([
     'supported', 'disputed', 'unsupported', 'unverifiable',
 ]);
@@ -373,5 +357,32 @@ export function describeOrganisationVerdict(raw: string | null | undefined): {
             tone: ASSESSMENT_TONE[key as FactCheckAssessment],
         };
     }
-    return { label: trimmed, isKey: false, tone: 'neutral' };
+    return { label: sentenceCaseShouted(trimmed), isKey: false, tone: 'neutral' };
+}
+
+/** "PANTS ON FIRE" -> "Pants on fire": a rating written wholly in capitals is
+ *  shown sentence-cased, anything else exactly as the organisation wrote it.
+ *  Organisation NAMES never come through here (FACTLY stays FACTLY). */
+function sentenceCaseShouted(text: string): string {
+    if (text !== text.toUpperCase() || text === text.toLowerCase()) return text;
+    return text.toLowerCase().replace(/\p{L}/u, (first) => first.toUpperCase());
+}
+
+/**
+ * What "Fact check again" can do for one stored row. The server enforces once
+ * a day per article; this only reflects `recheckAvailableAt`, which it sets on
+ * complete/failed rows. A row stored before that field existed has none and
+ * reads as `available`: the server answers a too-early recheck with the row
+ * unchanged and a future `recheckAvailableAt`, which then disables the button.
+ */
+export type RecheckState = 'available' | 'recent' | 'unavailable';
+
+export function recheckState(
+    status: string | null | undefined,
+    recheckAvailableAt: string | number | null | undefined,
+    now: number = Date.now(),
+): RecheckState {
+    if (typeof status !== 'string' || status.trim().toLowerCase() !== 'complete') return 'unavailable';
+    const at = recheckAvailableAt == null ? NaN : new Date(recheckAvailableAt).getTime();
+    return Number.isFinite(at) && at > now ? 'recent' : 'available';
 }

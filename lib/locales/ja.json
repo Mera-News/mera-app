@@ -1480,7 +1480,6 @@
     "claimsHeading": "チェックされたクレーム",
     "citationsHeading": "参照されたソース",
     "noCitations": "このチェックでは具体的なページが引用されていません。これは検索失敗ではなく、参照元がない場合は要約をより慎重に扱ってください。",
-    "sourceFallback": "ソース{{index}}",
     "disclaimer": "これは、メラがウェブ検索の結果をAIで読み解いたものです。間違っていたり不完全だったりすることがあるので、頼る前に情報源を確認してください。",
     "verdict": {
       "supported": {
@@ -1515,18 +1514,14 @@
       "unverifiable": "確認できませんでした",
       "unknown": "不明"
     },
-    "checkedByHeading": "検索で見つかったファクトチェック",
     "dashboard": {
       "deleteA11y": "このファクトチェックを削除",
       "listTitle": "ファクトチェック",
-      "pending": "ファクトチェック機関に確認中",
       "untitled": "タイトルなしのストーリー",
       "openA11y": "この記事を開く",
       "articleGone": "この記事は期限切れです。開くことができません。検出されたファクトチェックはここに保持されています。",
       "couldNotCheck": "誰が公開しているかを確認できませんでした。検索で見つかった内容はタップしてご覧ください。",
-      "noneFound": "公開されたファクトチェックは見つかりません",
-      "factChecksFound_one": "{{count}}件のファクトチェックが見つかりました。タップして読む",
-      "factChecksFound_other": "{{count}}件のファクトチェックが見つかりました。タップして読む"
+      "noneFound": "公開されたファクトチェックは見つかりません"
     },
     "explainer": "メラはニュース自体をファクトチェックするわけではありません。信頼できるファクトチェック機関が、このストーリーについてすでに公開している内容を検索します。",
     "noCheckedBy": "このストーリーについてファクトチェック機関が公開している内容は見つかりませんでした。これはストーリーが間違っているということではなく、ほとんどのストーリーはファクトチェックされていません。",
@@ -1534,7 +1529,6 @@
     "queued": "このチェックはバックグラウンドで実行中です。ここで待つ必要はありません。記事を離れても構いません。",
     "queuedHint": "結果は準備できたらダッシュボードの「ファクトチェック」に表示されます。",
     "citationA11y": "ソース{{source}}をアプリ内ブラウザで開く",
-    "noLink": "リンクが利用できません",
     "actionA11yPending": "ファクトチェックをリクエストしました。結果を確認してください",
     "actionA11yDone": "ファクトチェックの準備ができました。結果は下に表示されています",
     "checkedByUnavailable": "ファクトチェック機関がこのストーリーについて公表したかどうかを確認できませんでした。これは誰も公表していないのとは異なります。以下は、より広い検索で見つかったものです。",
@@ -1554,11 +1548,9 @@
     "quickNothingFound": "この件について何も見つかりませんでした。これは偽りということを意味しません。新しい情報、ニッチなトピック、またはオンラインで広く報道されていないものかもしれません。",
     "quickRunning": "ウェブを検索中…",
     "stillChecking": "これはいつもより時間がかかっています。バックグラウンドでチェック中です。後で確認するか、ダッシュボードの「ファクトチェック」を確認してください。",
-    "checkedByMultipleNote": "これらはそれぞれ独立した評価で、各団体が独自の基準で判定しています。評価が一致しないこともあります。",
     "collapseA11y": "このファクトチェックを隠す",
     "expandA11y": "このファクトチェックを表示",
     "checkedByRelatedNote": "これらはキーワード検索から取得したものであり、別のストーリーについても該当する可能性があります。確認するために1つを開いてください。",
-    "searchFoundHeading": "検索で見つかった内容",
     "searchFoundEmpty": "検索から要約するのに十分な情報がありませんでした。",
     "headerA11y": "{{title}}。{{status}}。{{action}}",
     "notify": {
@@ -1570,6 +1562,21 @@
       "bodyFoundUntitled": "お問い合わせの記事について、ファクトチェッカーが公開しています。",
       "bodyNoneUntitled": "お問い合わせの記事について公開されたファクトチェックはまだありません。",
       "bodyUnavailableUntitled": "メラは、リクエストされた記事のチェックを完了できませんでした。"
+    },
+    "panelTitle": "ファクトチェック",
+    "publishedHeading": "公開されたファクトチェック",
+    "meraFoundHeading": "メラが見つけたこと",
+    "sourcesCount_other": "{{count}}件の情報源",
+    "showMoreSources": "さらに{{count}}件を表示",
+    "again": "もう一度チェック",
+    "checkedRecently": "最近チェック済み",
+    "againHint": "ファクトチェック機関は記事の数日後に公開することがよくあります。もう一度チェックすると新しい情報を探します。",
+    "share": {
+      "aiSummary": "メラのAI要約（AIが作成。誤りを含む場合があります）",
+      "sources": "情報源",
+      "rated": "{{organisation}}の評価: {{rating}}",
+      "ratedSaid": "{{organisation}}の評価: {{rating}}。「{{summary}}」",
+      "footer": "{{date}}に確認。{{downloadUrl}}経由で共有"
     }
   },
   "consent": {
@@ -2635,7 +2642,7 @@
     "page": {
       "stories": "ストーリー",
       "saved": "保存済み",
-      "stats": "統計"
+      "stats": "アクティビティ"
     },
     "rearrangeA11y": "{{tab}}のページを並べ替える",
     "pillA11y": "{{label}}、{{count}}件中{{index}}件目",
@@ -2710,14 +2717,15 @@
     },
     "checks": {
       "emptyTitle": "まだファクトチェックはありません",
-      "checkedAgo": "{{age}}に確認",
       "checking": "ファクトチェック機関で確認中です",
-      "claim": "主張",
       "count_one": "{{count}}件のファクトチェック",
       "count_other": "{{count}}件のファクトチェック",
       "emptyBodyMenu": "任意の記事で、•••メニューを開いて「ファクトチェック」をタップしてください。または、メラに主張の確認を依頼してください。結果はここに届きます。",
       "learn": "ファクトチェックについて",
-      "new": "新着"
+      "new": "新着",
+      "checkedAge": "{{age}}に確認",
+      "askedAge": "{{age}}にリクエスト",
+      "moreOrganisations": "+{{count}}件"
     },
     "visited": {
       "emptyTitle": "メディアはまだありません"
@@ -2765,6 +2773,37 @@
       "intro": "元のサイトで、過去30日間に最もよく訪問したものから順に表示します。この電話に残ります。",
       "learn": "履歴について",
       "title": "開いた公開元"
+    },
+    "activity": {
+      "supportTitle": "あなたにとって大切な報道",
+      "supportBody": "あなたが最も頼りにしている公開元です。ニュースは無料で読めても、取材が無料になることはありません。これからも報道を続けてほしいなら、購読できるところは購読を検討してください。ありがとうございます。",
+      "countriesTitle": "どこで読んだか",
+      "countriesHint": "国をタップすると、その国の公開元が表示されます。",
+      "colCountry": "国",
+      "colArticles": "記事",
+      "logTitle": "開いた記事",
+      "showAllDays": "すべての日を表示",
+      "freshIntro": "開いたときに各記事が公開からどれくらい経っていたか。",
+      "freshNoteAll": "これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。",
+      "band": {
+        "hour": "1時間未満",
+        "sixHours": "1〜6時間",
+        "day": "6〜24時間",
+        "threeDays": "1〜3日",
+        "older": "それ以前"
+      },
+      "allPublications_one": "開いた{{count}}件の公開元すべて",
+      "allPublications_other": "開いた{{count}}件の公開元すべて",
+      "visits_one": "{{count}}回",
+      "visits_other": "{{count}}回",
+      "articles_one": "{{count}}件",
+      "articles_other": "{{count}}件",
+      "languagesIntro_one": "過去30日間に開いた記事の言語は{{count}}種類です。タップするとその記事が表示されます。",
+      "languagesIntro_other": "過去30日間に開いた記事の言語は{{count}}種類です。タップするとその記事が表示されます。",
+      "logIntro_one": "過去30日間に公開元で開いた記事は{{count}}件です。日付をタップすると、その日だけが表示されます。",
+      "logIntro_other": "過去30日間に公開元で開いた記事は{{count}}件です。日付をタップすると、その日だけが表示されます。",
+      "freshNote_one": "{{count}}件中{{sampled}}件を集計しています。残りの{{missing}}件には公開時刻がありませんでした。これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。",
+      "freshNote_other": "{{count}}件中{{sampled}}件を集計しています。残りの{{missing}}件には公開時刻がありませんでした。これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。"
     }
   },
   "you": {
@@ -3003,5 +3042,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "ファクトチェックを書き出す",
+    "step1Heading": "ファクトチェックを選択",
+    "includeIntro": "書き出しには常に見出し、媒体、記事のリンク、各ファクトチェック機関の評価とリンクが含まれます。",
+    "includeClaimsHint": "各主張とその評価。",
+    "includeSummary": "メラのAI要約",
+    "includeSummaryHint": "ファイル内でAIが作成したと明記されます。",
+    "includeSourcesHint": "検索で使われたすべてのリンク。",
+    "stillChecking": "チェック中",
+    "shareDialogTitle": "ファクトチェックを書き出す"
   }
 }

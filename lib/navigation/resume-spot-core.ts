@@ -65,7 +65,13 @@ export const ROOT_ROUTES: Readonly<Record<string, ParamSchema>> = {
 export const TAB_ROUTES: Readonly<Record<TabId, Readonly<Record<string, ParamSchema>>>> = {
   feed: { interest: { required: ['factId'], optional: ['statement', 'via'] } },
   world: {},
-  library: {},
+  library: {
+    history: { required: [], optional: ['country'] },
+    'where-you-read': NO_PARAMS,
+    languages: NO_PARAMS,
+    'reading-log': { required: [], optional: ['day', 'language'] },
+    freshness: NO_PARAMS,
+  },
   you: {
     fact: { required: ['factId'], optional: ['statement'] },
     facts: NO_PARAMS,

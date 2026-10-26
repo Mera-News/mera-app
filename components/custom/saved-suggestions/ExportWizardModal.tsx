@@ -45,6 +45,10 @@ export interface ExportWizardRow {
     title: string;
     titleOriginal?: string;
     language?: string;
+    /** A second line under the title (the fact-check export's publication and rating). */
+    subtitle?: string;
+    /** Shown but not pickable, and left out of Select all (a check still running). */
+    disabled?: boolean;
 }
 
 /** The reader's step-2 answers. The article's language is not a choice: every
@@ -54,7 +58,17 @@ export interface ExportContentOptions {
     includeImage: boolean;
 }
 
-interface ExportWizardModalProps {
+/** One step-2 checkbox: `key` is the option it sets for `buildContent`, `id`
+ *  names its testID (`{prefix}-include-{id}`). */
+export interface ExportToggle<O> {
+    id: string;
+    key: keyof O & string;
+    label: string;
+    hint: string;
+    defaultOn: boolean;
+}
+
+interface ExportWizardModalProps<O extends object> {
     isOpen: boolean;
     onClose: () => void;
     /** Must be referentially stable while the wizard is open (memoize it). */
@@ -62,7 +76,7 @@ interface ExportWizardModalProps {
     /** Serialises the chosen rows, in `rows` order. May read local data first. */
     buildContent: (
         chosenIds: string[],
-        options: ExportContentOptions,
+        options: O,
         format: ExportFormat,
     ) => string | Promise<string>;
     /** Raised when the export could not be handed off at all. The host owns
@@ -70,8 +84,15 @@ interface ExportWizardModalProps {
     onFailed: () => void;
     dialogTitle: string;
     /** Step 2's hint under "Include Mera's reason": which rows lack one differs
-     *  per surface, so the host states it. */
-    reasonHint: string;
+     *  per surface, so the host states it. Only read without `toggles`. */
+    reasonHint?: string;
+    /** Step 2's checkboxes. Defaults to the article exports' pair: Mera's
+     *  reason (on) and the image link (off). */
+    toggles?: readonly ExportToggle<O>[];
+    /** Step 1's heading. Defaults to "Choose articles". */
+    step1Heading?: string;
+    /** A line above step 2's checkboxes: what every export carries anyway. */
+    includeIntro?: string;
     /** Required, no default: a defaulted testID on a reusable primitive makes
      *  two surfaces answer to the same query. `{prefix}-row-<id>`,
      *  `{prefix}-next`, and so on. */
@@ -96,38 +117,49 @@ const CheckGlyph: React.FC<{ checked: boolean }> = ({ checked }) => {
 };
 
 /**
- * The three-step export wizard: choose articles, include Mera's reason and/or
- * the image link, pick a format, then the OS share sheet. Shared by the Saved tab (`SavedExportModal`)
- * and a followed story's timeline, which differ only in their rows, their
- * serialiser and their copy.
+ * The three-step export wizard: choose rows, pick what to include, pick a
+ * format, then the OS share sheet. Shared by the Saved tab (`SavedExportModal`),
+ * a followed story's timeline and the Fact checks page (`FactCheckExportModal`),
+ * which differ only in their rows, their step-2 toggles, their serialiser and
+ * their copy.
  */
-const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
+function ExportWizardModal<O extends object = ExportContentOptions>({
     isOpen,
     onClose,
     rows,
     buildContent,
     onFailed,
     dialogTitle,
-    reasonHint,
+    reasonHint = '',
+    toggles: togglesProp,
+    step1Heading,
+    includeIntro,
     testIDPrefix,
     initiallyAllSelected = false,
     fileBaseName,
-}) => {
+}: ExportWizardModalProps<O>): React.ReactElement {
     const { t } = useTranslation();
     const colors = useColors();
     const { height: windowHeight } = useWindowDimensions();
 
+    const toggles: readonly ExportToggle<O>[] = togglesProp ?? ([
+        { id: 'reason', key: 'includeReason', label: t('savedExport.includeReason'), hint: reasonHint, defaultOn: true },
+        { id: 'image', key: 'includeImage', label: t('savedExport.includeImage'), hint: t('savedExport.includeImageHint'), defaultOn: false },
+    ] as unknown as ExportToggle<O>[]);
+
     const [step, setStep] = useState(1);
     const [selected, setSelected] = useState<Set<string>>(new Set());
-    const [includeReason, setIncludeReason] = useState(true);
-    const [includeImage, setIncludeImage] = useState(false);
+    const [options, setOptions] = useState<Record<string, boolean>>({});
     const [sharingFormat, setSharingFormat] = useState<ExportFormat | null>(null);
 
-    // Read through a ref so the reset below stays keyed on `isOpen` alone. With
+    // Read through refs so the reset below stays keyed on `isOpen` alone. With
     // `rows` in its deps, a host that re-renders while the wizard is open would
     // re-tick every row and silently undo the reader's unticks.
     const rowsRef = useRef(rows);
     rowsRef.current = rows;
+    const togglesRef = useRef(toggles);
+    togglesRef.current = toggles;
+    const pickable = useMemo(() => rows.filter((r) => !r.disabled), [rows]);
 
     // Reset on OPEN, not on close. Resetting on close would wipe the state
     // while the modal is still animating out, and the reader would watch their
@@ -136,20 +168,21 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
         if (!isOpen) return;
         setStep(1);
         setSelected(
-            initiallyAllSelected ? new Set(rowsRef.current.map((r) => r.id)) : new Set(),
+            initiallyAllSelected
+                ? new Set(rowsRef.current.filter((r) => !r.disabled).map((r) => r.id))
+                : new Set(),
         );
-        setIncludeReason(true);
-        setIncludeImage(false);
+        setOptions(Object.fromEntries(togglesRef.current.map((x) => [x.key, x.defaultOn])));
         setSharingFormat(null);
     }, [isOpen, initiallyAllSelected]);
 
-    const allSelected = rows.length > 0 && selected.size === rows.length;
+    const allSelected = pickable.length > 0 && selected.size === pickable.length;
 
     const toggleAll = useCallback(() => {
         setSelected((prev) =>
-            prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.id)),
+            prev.size === pickable.length ? new Set() : new Set(pickable.map((r) => r.id)),
         );
-    }, [rows]);
+    }, [pickable]);
 
     const toggleOne = useCallback((id: string) => {
         setSelected((prev) => {
@@ -170,11 +203,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
             if (sharingFormat) return;
             setSharingFormat(format);
             try {
-                const content = await buildContent(
-                    chosenIds,
-                    { includeReason, includeImage },
-                    format,
-                );
+                const content = await buildContent(chosenIds, options as unknown as O, format);
 
                 const result = await exportAndShare({
                     content,
@@ -215,8 +244,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
             chosenIds,
             dialogTitle,
             fileBaseName,
-            includeImage,
-            includeReason,
+            options,
             onClose,
             onFailed,
             sharingFormat,
@@ -231,9 +259,11 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                 <Pressable
                     testID={`${testIDPrefix}-row-${item.id}`}
                     onPress={() => toggleOne(item.id)}
+                    disabled={item.disabled}
                     accessibilityRole="checkbox"
-                    accessibilityState={{ checked }}
+                    accessibilityState={{ checked, disabled: !!item.disabled }}
                     className="flex-row items-center py-3 px-1 border-b border-line"
+                    style={item.disabled ? { opacity: 0.45 } : undefined}
                 >
                     <Box className="flex-1 pr-3">
                         {/* No title at all: the app's own fallback copy, already
@@ -249,6 +279,11 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                         ) : (
                             <Text size="sm">{t('feed.newsCluster')}</Text>
                         )}
+                        {item.subtitle ? (
+                            <Text size="xs" className="text-ink-3 mt-0.5" numberOfLines={1}>
+                                {item.subtitle}
+                            </Text>
+                        ) : null}
                     </Box>
                     <CheckGlyph checked={checked} />
                 </Pressable>
@@ -261,7 +296,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
 
     const stepHeading =
         step === 1
-            ? t('savedExport.step1Heading')
+            ? (step1Heading ?? t('savedExport.step1Heading'))
             : step === 2
               ? t('savedExport.step2Heading')
               : t('savedExport.step3Heading');
@@ -402,40 +437,36 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                         <Box testID={`${testIDPrefix}-modal`}>
                             {step === 2 ? (
                                 <>
-                                <Pressable
-                                    testID={`${testIDPrefix}-include-reason`}
-                                    onPress={() => setIncludeReason((v) => !v)}
-                                    accessibilityRole="checkbox"
-                                    accessibilityState={{ checked: includeReason }}
-                                    className="flex-row items-center py-3 px-1"
-                                >
-                                    <VStack className="flex-1 pr-3">
-                                        <Text size="sm" className="text-ink">
-                                            {t('savedExport.includeReason')}
-                                        </Text>
-                                        <Text size="xs" className="text-ink-3 mt-0.5">
-                                            {reasonHint}
-                                        </Text>
-                                    </VStack>
-                                    <CheckGlyph checked={includeReason} />
-                                </Pressable>
-                                <Pressable
-                                    testID={`${testIDPrefix}-include-image`}
-                                    onPress={() => setIncludeImage((v) => !v)}
-                                    accessibilityRole="checkbox"
-                                    accessibilityState={{ checked: includeImage }}
-                                    className="flex-row items-center py-3 px-1"
-                                >
-                                    <VStack className="flex-1 pr-3">
-                                        <Text size="sm" className="text-ink">
-                                            {t('savedExport.includeImage')}
-                                        </Text>
-                                        <Text size="xs" className="text-ink-3 mt-0.5">
-                                            {t('savedExport.includeImageHint')}
-                                        </Text>
-                                    </VStack>
-                                    <CheckGlyph checked={includeImage} />
-                                </Pressable>
+                                {includeIntro ? (
+                                    <Text size="sm" className="text-ink-2 px-1 pb-1">
+                                        {includeIntro}
+                                    </Text>
+                                ) : null}
+                                {toggles.map((toggle) => {
+                                    const on = options[toggle.key] === true;
+                                    return (
+                                        <Pressable
+                                            key={toggle.id}
+                                            testID={`${testIDPrefix}-include-${toggle.id}`}
+                                            onPress={() =>
+                                                setOptions((prev) => ({ ...prev, [toggle.key]: !prev[toggle.key] }))
+                                            }
+                                            accessibilityRole="checkbox"
+                                            accessibilityState={{ checked: on }}
+                                            className="flex-row items-center py-3 px-1"
+                                        >
+                                            <VStack className="flex-1 pr-3">
+                                                <Text size="sm" className="text-ink">
+                                                    {toggle.label}
+                                                </Text>
+                                                <Text size="xs" className="text-ink-3 mt-0.5">
+                                                    {toggle.hint}
+                                                </Text>
+                                            </VStack>
+                                            <CheckGlyph checked={on} />
+                                        </Pressable>
+                                    );
+                                })}
                                 </>
                             ) : null}
 
@@ -495,6 +526,6 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
             </ModalContent>
         </Modal>
     );
-};
+}
 
 export default ExportWizardModal;

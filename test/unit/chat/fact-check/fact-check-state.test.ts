@@ -16,7 +16,7 @@ import {
     POLL_CEILING_MS,
     POLL_INTERVAL_MS,
     PROGRESS_DELAY_MS,
-    shouldShowMultipleOrganisationsCaveat,
+    recheckState,
     shouldShowProgress,
 } from '@/lib/fact-check/fact-check-state';
 
@@ -213,6 +213,20 @@ describe('describeOrganisationVerdict', () => {
         }
     });
 
+    it.each([
+        ['MISLEADING', 'Misleading'],
+        ['PANTS ON FIRE', 'Pants on fire'],
+        ['FALSE.', 'False.'],
+        ['"FAKE"', '"Fake"'],
+        ['FALSCH', 'Falsch'],
+    ])('sentence-cases a rating written wholly in capitals: %s', (raw, shown) => {
+        expect(describeOrganisationVerdict(raw)).toEqual({ label: shown, isKey: false, tone: 'neutral' });
+    });
+
+    it.each(['Mostly FALSE', 'False', 'NDTV Fact', '100%', 'असत्य'])('leaves a mixed-case or caseless rating as written: %s', (raw) => {
+        expect(describeOrganisationVerdict(raw).label).toBe(raw);
+    });
+
     it('never assigns a tone it cannot justify to an unrecognised rating', () => {
         // "False" reads as damning, but we have no way to know an unknown
         // vocabulary's polarity — neutral is the only honest tone.
@@ -300,14 +314,22 @@ describe('describeExternalChecks', () => {
     });
 });
 
-describe('shouldShowMultipleOrganisationsCaveat', () => {
-    it('is false for zero or one organisation — nothing to disambiguate', () => {
-        expect(shouldShowMultipleOrganisationsCaveat(0)).toBe(false);
-        expect(shouldShowMultipleOrganisationsCaveat(1)).toBe(false);
+describe('recheckState', () => {
+    const NOW = Date.UTC(2026, 9, 26, 12);
+    const iso = (offsetMs: number) => new Date(NOW + offsetMs).toISOString();
+
+    it('is recent while recheckAvailableAt is in the future', () => {
+        expect(recheckState('complete', iso(60_000), NOW)).toBe('recent');
     });
 
-    it('is true for two or more — never invent a consensus among them', () => {
-        expect(shouldShowMultipleOrganisationsCaveat(2)).toBe(true);
-        expect(shouldShowMultipleOrganisationsCaveat(5)).toBe(true);
+    it('is available once recheckAvailableAt has passed, and when the field is absent (an older row)', () => {
+        expect(recheckState('complete', iso(-1), NOW)).toBe('available');
+        expect(recheckState('complete', null, NOW)).toBe('available');
+        expect(recheckState('complete', undefined, NOW)).toBe('available');
+        expect(recheckState('complete', 'not a date', NOW)).toBe('available');
+    });
+
+    it.each(['pending', 'running', 'processing', 'blocked', 'failed'])('is unavailable on a %s row', (status) => {
+        expect(recheckState(status, iso(-1), NOW)).toBe('unavailable');
     });
 });

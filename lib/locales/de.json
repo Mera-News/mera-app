@@ -1487,7 +1487,6 @@
     "claimsHeading": "Überprüfte Behauptungen",
     "citationsHeading": "Konsultierte Quellen",
     "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche, behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
-    "sourceFallback": "Quelle {{index}}",
     "disclaimer": "Dies ist Meras eigene Auswertung einer Websuche, geschrieben von KI. Es kann falsch oder unvollständig sein, daher lies die Quellen, bevor du dich darauf verlässt.",
     "verdict": {
       "supported": {
@@ -1522,18 +1521,14 @@
       "unverifiable": "Konnte nicht bestätigt werden",
       "unknown": "Unklar"
     },
-    "checkedByHeading": "Faktenchecks aus der Suche",
     "dashboard": {
       "deleteA11y": "Diesen Factencheck löschen",
       "listTitle": "Faktenchecks",
-      "pending": "Wird mit Faktenprüfern abgeglichen",
       "untitled": "Unbenannte Story",
       "openA11y": "Diesen Artikel öffnen",
       "articleGone": "Der Artikel ist abgelaufen und kann nicht mehr geöffnet werden. Die gefundene Faktenprüfung wird hier beibehalten.",
       "couldNotCheck": "Wir konnten nicht prüfen, wer dazu etwas veröffentlicht hat. Tippe, um zu sehen, was die Suche gefunden hat.",
-      "noneFound": "Keine veröffentlichten Faktenchecks gefunden",
-      "factChecksFound_one": "{{count}} Faktencheck gefunden. Tippen zum Lesen",
-      "factChecksFound_other": "{{count}} Faktenchecks gefunden. Tippen zum Lesen"
+      "noneFound": "Keine veröffentlichten Faktenchecks gefunden"
     },
     "explainer": "Mera überprüft keine Nachrichten selbst. Es sucht nach dem, was etablierte Fact-Check-Organisationen bereits über diese Story veröffentlicht haben.",
     "noCheckedBy": "Wir haben keinen veröffentlichten Faktencheck über diese Geschichte gefunden. Das macht die Geschichte nicht falsch. Die meisten Geschichten werden niemals überprüft.",
@@ -1541,7 +1536,6 @@
     "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten, es ist völlig in Ordnung, den Artikel zu verlassen.",
     "queuedHint": "Das Ergebnis findest du auf deinem Dashboard unter \"Faktenchecks\", sobald es verfügbar ist.",
     "citationA11y": "Quelle {{source}} im integrierten Browser öffnen",
-    "noLink": "Kein Link verfügbar",
     "actionA11yPending": "Faktencheck angefordert, überprüfe das Ergebnis",
     "actionA11yDone": "Faktencheck abgeschlossen, das Ergebnis wird unten angezeigt",
     "checkedByUnavailable": "Wir konnten nicht prüfen, ob eine Faktencheck-Organisation zu dieser Geschichte etwas veröffentlicht hat. Die Suche ist fehlgeschlagen. Das ist etwas anderes, als wenn niemand etwas veröffentlicht hat. Unten siehst du, was die weitere Suche gefunden hat.",
@@ -1561,11 +1555,9 @@
     "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist, es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
     "quickRunning": "Suche im Web läuft…",
     "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft, schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
-    "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation, sie stimmen nicht immer miteinander überein.",
     "collapseA11y": "Diesen Faktencheck ausblenden",
     "expandA11y": "Diesen Faktencheck anzeigen",
     "checkedByRelatedNote": "Diese stammen aus einer Schlüsselwortsuche und können sich auf eine andere Geschichte beziehen. Öffne einen, um zu überprüfen.",
-    "searchFoundHeading": "Was unsere Suche gefunden hat",
     "searchFoundEmpty": "Die Suche hat nicht genug für Mera gefunden, um dies zusammenzufassen.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1577,6 +1569,22 @@
       "bodyFoundUntitled": "Faktenchecker haben zu dem Artikel veröffentlicht, nach dem du gefragt hast.",
       "bodyNoneUntitled": "Zu dem Artikel, nach dem du gefragt hast, gibt es noch keine veröffentlichten Faktenchecks.",
       "bodyUnavailableUntitled": "Mera konnte die Prüfung des Artikels, nach dem du gefragt hast, nicht abschließen."
+    },
+    "panelTitle": "Faktencheck",
+    "publishedHeading": "Veröffentlichte Faktenchecks",
+    "meraFoundHeading": "Was Mera gefunden hat",
+    "sourcesCount_one": "{{count}} Quelle",
+    "sourcesCount_other": "{{count}} Quellen",
+    "showMoreSources": "{{count}} weitere anzeigen",
+    "again": "Erneut prüfen",
+    "checkedRecently": "Kürzlich geprüft",
+    "againHint": "Faktenprüfer veröffentlichen oft erst ein paar Tage nach einer Meldung. Eine neue Prüfung sucht nach allem, was neu dazugekommen ist.",
+    "share": {
+      "aiSummary": "Meras KI-Zusammenfassung (von KI geschrieben, kann falsch sein)",
+      "sources": "Quellen",
+      "rated": "Bewertung von {{organisation}}: {{rating}}",
+      "ratedSaid": "Bewertung von {{organisation}}: {{rating}}. „{{summary}}“",
+      "footer": "Geprüft am {{date}}. Geteilt über {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2642,7 +2650,7 @@
     "page": {
       "stories": "Geschichten",
       "saved": "Gespeichert",
-      "stats": "Statistik"
+      "stats": "Aktivität"
     },
     "rearrangeA11y": "Seiten von {{tab}} neu anordnen",
     "pillA11y": "{{label}}, {{index}} von {{count}}",
@@ -2718,14 +2726,15 @@
     },
     "checks": {
       "emptyTitle": "Noch keine Faktenchecks",
-      "checkedAgo": "geprüft {{age}}",
       "checking": "Dies wird mit Faktenprüfern abgeglichen",
-      "claim": "Die Behauptung",
       "count_one": "{{count}} Faktencheck",
       "count_other": "{{count}} Faktenchecks",
       "emptyBodyMenu": "Öffne bei jedem Artikel das •••-Menü und tippe auf Faktencheck. Oder bitte Mera, eine Behauptung zu prüfen. Die Ergebnisse landen hier.",
       "learn": "Mehr über Faktenchecks erfahren",
-      "new": "Neu"
+      "new": "Neu",
+      "checkedAge": "Geprüft {{age}}",
+      "askedAge": "Angefragt {{age}}",
+      "moreOrganisations": "+{{count}} weitere"
     },
     "visited": {
       "emptyTitle": "Noch keine Medien"
@@ -2773,6 +2782,37 @@
       "intro": "Bei der Quelle, in den letzten 30 Tagen, die am häufigsten besuchten zuerst. Bleibt auf diesem Telefon gespeichert.",
       "learn": "Mehr über den Verlauf erfahren",
       "title": "Veröffentlichungen, die du geöffnet hast"
+    },
+    "activity": {
+      "supportTitle": "Die Berichterstattung, die dir wichtig ist",
+      "supportBody": "Auf diese Verlage verlässt du dich am meisten. Nachrichten können kostenlos zu lesen sein, aber die Recherche dahinter ist nie kostenlos. Wenn sie weiter für dich berichten sollen, überleg dir, die zu abonnieren, die ein Abo anbieten. Danke.",
+      "countriesTitle": "Wo du liest",
+      "countriesHint": "Tippe auf ein Land, um seine Veröffentlichungen zu sehen.",
+      "colCountry": "Land",
+      "colArticles": "Artikel",
+      "logTitle": "Was du geöffnet hast",
+      "showAllDays": "Alle Tage zeigen",
+      "freshIntro": "Wie alt jeder Artikel war, als du ihn geöffnet hast.",
+      "freshNoteAll": "Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast.",
+      "band": {
+        "hour": "Jünger als eine Stunde",
+        "sixHours": "1 bis 6 Stunden",
+        "day": "6 bis 24 Stunden",
+        "threeDays": "1 bis 3 Tage",
+        "older": "Älter"
+      },
+      "allPublications_one": "Die {{count}} Veröffentlichung, die du geöffnet hast",
+      "allPublications_other": "Alle {{count}} Veröffentlichungen, die du geöffnet hast",
+      "visits_one": "{{count}} Besuch",
+      "visits_other": "{{count}} Besuche",
+      "articles_one": "{{count}} Artikel",
+      "articles_other": "{{count}} Artikel",
+      "languagesIntro_one": "Die {{count}} Sprache dessen, was du in den letzten 30 Tagen geöffnet hast. Tippe darauf, um diese Artikel zu sehen.",
+      "languagesIntro_other": "Die {{count}} Sprachen dessen, was du in den letzten 30 Tagen geöffnet hast. Tippe auf eine, um diese Artikel zu sehen.",
+      "logIntro_one": "{{count}} Artikel bei der Quelle in den letzten 30 Tagen. Tippe auf einen Tag, um nur diesen Tag zu sehen.",
+      "logIntro_other": "{{count}} Artikel bei der Quelle in den letzten 30 Tagen. Tippe auf einen Tag, um nur diesen Tag zu sehen.",
+      "freshNote_one": "Gezählt werden {{sampled}} von {{count}} Artikel: Die anderen {{missing}} hatten keine Veröffentlichungszeit. Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast.",
+      "freshNote_other": "Gezählt werden {{sampled}} von deinen {{count}} Artikeln: Die anderen {{missing}} hatten keine Veröffentlichungszeit. Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast."
     }
   },
   "you": {
@@ -3011,5 +3051,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Faktenchecks exportieren",
+    "step1Heading": "Faktenchecks auswählen",
+    "includeIntro": "Jeder Export enthält immer die Schlagzeile, das Medium, den Artikellink und jede Bewertung der Faktenprüfer mit Link.",
+    "includeClaimsHint": "Jede Behauptung mit ihrer Einschätzung.",
+    "includeSummary": "Meras KI-Zusammenfassung",
+    "includeSummaryHint": "In der Datei als von KI geschrieben gekennzeichnet.",
+    "includeSourcesHint": "Jeder Link, den die Suche genutzt hat.",
+    "stillChecking": "Wird noch geprüft",
+    "shareDialogTitle": "Faktenchecks exportieren"
   }
 }

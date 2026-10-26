@@ -1,4 +1,9 @@
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
+import FactCheckExportModal from '@/components/custom/fact-checks/FactCheckExportModal';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { Text } from '@/components/ui/text';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Box } from '@/components/ui/box';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
@@ -19,7 +24,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
 import { ShieldCheck } from 'lucide-react-native';
-import { RefreshControl, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
@@ -139,6 +144,21 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const toast = useToast();
+    const [exportOpen, setExportOpen] = useState(false);
+    const handleExportFailed = useCallback(() => {
+        toast.show({
+            placement: 'top',
+            duration: 4000,
+            render: ({ id }: { id: string }) => (
+                <Toast nativeID={id} action="error" variant="solid">
+                    <ToastTitle>{t('savedExport.failedTitle')}</ToastTitle>
+                    <ToastDescription>{t('savedExport.failedMessage')}</ToastDescription>
+                </Toast>
+            ),
+        });
+    }, [toast, t]);
+
     const handleDelete = useCallback((id: string) => {
         void hapticLight();
         void remove(id);
@@ -173,6 +193,12 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
 
     return (
         <Box className="flex-1" testID="fact-checks-panel">
+            <FactCheckExportModal
+                isOpen={exportOpen}
+                onClose={() => setExportOpen(false)}
+                items={items}
+                onFailed={handleExportFailed}
+            />
             <Animated.FlatList
                 ref={listRef}
                 data={items}
@@ -183,7 +209,27 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 ListHeaderComponent={
                     items.length > 0 ? (
                         <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                            <PageTitleRow title={t('library.checks.count', { count: items.length })} testID="fact-checks-title-row" />
+                            <PageTitleRow
+                                title={t('library.checks.count', { count: items.length })}
+                                trailing={
+                                    // The outlined pill (the Activity boards' Share), 36pt drawn in a 44pt frame.
+                                    <Pressable
+                                        onPress={() => setExportOpen(true)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t('factCheckExport.openA11y')}
+                                        testID="fact-checks-export"
+                                        style={styles.pillFrame}
+                                    >
+                                        <View style={[styles.pill, { borderColor: colors.edge }]}>
+                                            <MaterialIcons name="ios-share" size={16} color={colors.ink} {...DECORATIVE_ICON_A11Y} />
+                                            <Text scaleTier="chrome" style={[styles.pillLabel, { color: colors.ink }]}>
+                                                {t('library.saved.export')}
+                                            </Text>
+                                        </View>
+                                    </Pressable>
+                                }
+                                testID="fact-checks-title-row"
+                            />
                         </View>
                     ) : null
                 }
@@ -239,5 +285,19 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
         </Box>
     );
 };
+
+const styles = StyleSheet.create({
+    pillFrame: { minHeight: 44, justifyContent: 'center', flexShrink: 0 },
+    pill: {
+        minHeight: 36,
+        paddingHorizontal: 14,
+        borderRadius: 999,
+        borderWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    pillLabel: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
+});
 
 export default FactChecksPanel;

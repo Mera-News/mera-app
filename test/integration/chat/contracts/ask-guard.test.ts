@@ -49,6 +49,13 @@ it('only the tap paths and the asked-only poll call requestFactCheck', () => {
   ]);
 });
 
+it('only the article panel button asks for a recheck', () => {
+  expect(filesMatching(/\brequestFactCheckAgain\(/).filter((f) => f !== CLIENT)).toEqual([
+    'components/custom/news-detail/FactCheckPanel.tsx',
+  ]);
+  expect(filesMatching(/\brecheck:\s*true/)).toEqual([CLIENT]);
+});
+
 it('the tap paths ask explicitly; the poll does not', () => {
   const text = (rel: string) => ALL.find((f) => f.rel === rel)!.text;
   expect(text('lib/fact-check/request-article-fact-check.ts')).toMatch(
