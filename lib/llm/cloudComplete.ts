@@ -194,7 +194,10 @@ export async function cloudComplete(
     });
   }
 
-  const data = await response.json() as ChatCompletionResponse;
+  // Same guard as consumeBufferedChat: an empty 2xx is EmptyReplyError, not a SyntaxError.
+  const raw = await response.text();
+  if (!raw.trim()) throw new EmptyReplyError();
+  const data = JSON.parse(raw) as ChatCompletionResponse;
   const msg = data.choices?.[0]?.message;
   // Fail loud, like the batch path: a trace that exhausts max_tokens leaves
   // `content` empty, and handing `reasoning_content` back as the answer made
@@ -751,8 +754,10 @@ export async function* cloudChatStream(
     if (err instanceof CleartextToolCallError) throw err;
     if (textYielded) throw err;
     // Already on the fallback (session-engaged, or a hedge winner) — there is
-    // no healthier model left to try.
-    if (sentModel !== primary) throw err;
+    // no healthier model left to try. An empty 2xx is the exception: it is
+    // usually a one-off, so it gets the one fresh attempt on that same model
+    // (MERA-APP-8X), bounded by the shared `retried` latch below.
+    if (sentModel !== primary && !(err instanceof EmptyReplyError)) throw err;
     // Only an abort-class death (idle stall, cancelled body) or an empty 2xx
     // reply is model-evidence. A decrypt failure is NOT: model-fallback.ts is
     // explicit that "4xx, auth, E2EE/decrypt and plain network errors say

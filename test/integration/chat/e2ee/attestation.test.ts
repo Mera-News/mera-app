@@ -380,6 +380,12 @@ describe('fetchModelPublicKey: HTTP failures', () => {
     expect(seen).toHaveLength(1);
   });
 
+  it('an empty 2xx body is a NearAttestationError with its status, not a JSON parse error', async () => {
+    serveText('', 200);
+    const err = await errorOf(fetchModelPublicKey(MODEL));
+    expect(err).toMatchObject({ name: 'NearAttestationError', statusCode: 200 });
+  });
+
   it('truncates the body in the message to 200 characters', async () => {
     serveText('x'.repeat(500), 403);
     const err = await errorOf(fetchModelPublicKey(MODEL));

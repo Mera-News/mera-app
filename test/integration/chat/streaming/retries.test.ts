@@ -11,7 +11,8 @@ import { http, HttpResponse } from 'msw';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream, STREAM_IDLE_TIMEOUT_MS, UPSTREAM_ALIGNED_TIMEOUT_MS } from '@/lib/llm/cloudComplete';
-import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import { EmptyReplyError } from '@/lib/llm/gateway-fetch';
+import { isFallbackEngaged, reportModelFailure } from '@/lib/llm/model-fallback';
 import {
   attestationRequests,
   gatewayCalls,
@@ -192,6 +193,40 @@ describe('the stream dies', () => {
     expect(empties).toBe(1);
     expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([FALLBACK]);
+  });
+
+  describe('as an empty 2xx body with the session already on the fallback (MERA-APP-8X)', () => {
+    const emptyThen = (empties: number) => {
+      let served = 0;
+      server.use(
+        http.post('*/v1/chat/completions', () => {
+          if (served >= empties) return undefined; // fall through to the gateway mock
+          served += 1;
+          return new HttpResponse('', { status: 200, headers: { 'content-type': 'application/json' } });
+        }),
+        ...mockGateway(respond('second try')),
+      );
+      return () => served;
+    };
+
+    it('gets ONE fresh request on the same fallback model, and the turn succeeds', async () => {
+      reportModelFailure(SMALL_MODEL);
+      const served = emptyThen(1);
+      const events = await run();
+
+      expect(textOf(events)).toBe('second try');
+      expect(served()).toBe(1);
+      expect(gatewayCalls('chat').map((c) => c.model)).toEqual([FALLBACK]);
+    });
+
+    it('a second empty reply surfaces as EmptyReplyError, with no third request', async () => {
+      reportModelFailure(SMALL_MODEL);
+      const served = emptyThen(3);
+      const err = await fail(run());
+
+      expect(err).toBeInstanceOf(EmptyReplyError);
+      expect(served()).toBe(2);
+    });
   });
 
   it('a corrupt chunk (decrypt failure) before any text retries on the PRIMARY and never engages the fallback', async () => {
