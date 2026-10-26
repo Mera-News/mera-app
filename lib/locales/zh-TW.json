@@ -1480,7 +1480,6 @@
     "claimsHeading": "已檢查的聲明",
     "citationsHeading": "參考來源",
     "noCitations": "這次查核沒有引用任何特定頁面。這不代表搜尋失敗，但請對摘要保持更謹慎的態度。",
-    "sourceFallback": "來源{{index}}",
     "disclaimer": "這是梅拉根據網路搜尋所做的解讀，由 AI 撰寫。內容可能有誤或不完整，請先閱讀來源再做判斷。",
     "verdict": {
       "supported": {
@@ -1515,18 +1514,14 @@
       "unverifiable": "無法確認",
       "unknown": "不確定"
     },
-    "checkedByHeading": "搜尋發現的事實查證",
     "dashboard": {
       "deleteA11y": "刪除此事實查證",
       "listTitle": "事實查證",
-      "pending": "正在向事實查核機構查詢",
       "untitled": "未命名的故事",
       "openA11y": "開啟這篇文章",
       "articleGone": "該文章已過期，因此無法打開。我們找到的事實查核保存在此處。",
       "couldNotCheck": "我們無法確認有誰就此發表過查核。點按可查看搜尋到的內容。",
-      "noneFound": "未發現已發佈的事實查證",
-      "factChecksFound_one": "找到 {{count}} 項事實查證。點按以閱讀",
-      "factChecksFound_other": "找到 {{count}} 項事實查證。點按以閱讀"
+      "noneFound": "未發現已發佈的事實查證"
     },
     "explainer": "梅拉本身不會查證新聞。它會搜尋既有的事實查核機構，已經針對這則報導發表過什麼。",
     "noCheckedBy": "我們未能找到關於此故事的已發佈事實查證。這不表示故事有誤。大多數故事都未曾被事實查證過。",
@@ -1534,7 +1529,6 @@
     "queued": "這項查核會在背景持續進行。你可以離開這篇文章。",
     "queuedHint": "結果準備好後，將出現在您儀表板上的「事實查證」下。",
     "citationA11y": "在應用內瀏覽器中開啟來源 {{source}}",
-    "noLink": "無可用連結",
     "actionA11yPending": "已要求事實查核，請留意結果",
     "actionA11yDone": "事實查核已完成，結果顯示在下方",
     "checkedByUnavailable": "我們無法確認是否有事實查核機構發表過這則報導。這和「沒有人發表」不同。以下是更廣泛搜尋的結果。",
@@ -1554,11 +1548,9 @@
     "quickNothingFound": "搜尋沒有找到這方面的相關內容。這並不代表它是假的，可能只是新聞、冷門，或在網路上報導不多。",
     "quickRunning": "正在搜尋網路…",
     "stillChecking": "這花的時間比平常久。查核仍在背景進行，請稍後到你儀表板的「事實查核」下方再看。",
-    "checkedByMultipleNote": "這些是各自獨立的評等，各機構採用自己的標準，結果不一定一致。",
     "collapseA11y": "隱藏此項事實查核",
     "expandA11y": "顯示此項事實查核",
     "checkedByRelatedNote": "這些來自關鍵字搜尋，可能與不同的故事有關。打開其中一個進行檢查。",
-    "searchFoundHeading": "搜尋發現的內容",
     "searchFoundEmpty": "搜尋結果不足，梅拉無法在這裡為你整理摘要。",
     "headerA11y": "{{title}}。{{status}}。{{action}}",
     "notify": {
@@ -1570,6 +1562,21 @@
       "bodyFoundUntitled": "事實查核機構已就你詢問的文章發布了結果。",
       "bodyNoneUntitled": "你詢問的文章尚無已發布的事實查核。",
       "bodyUnavailableUntitled": "梅拉無法完成你詢問的這篇文章的查核。"
+    },
+    "panelTitle": "事實查核",
+    "publishedHeading": "已發布的事實查核",
+    "meraFoundHeading": "梅拉的發現",
+    "sourcesCount_other": "{{count}} 個來源",
+    "showMoreSources": "再顯示 {{count}} 個",
+    "again": "重新查核",
+    "checkedRecently": "最近已查核",
+    "againHint": "事實查核機構通常在報導發布幾天後才發表結果。重新查核會尋找任何新內容。",
+    "share": {
+      "aiSummary": "梅拉的 AI 摘要（由 AI 撰寫，可能有誤）",
+      "sources": "來源",
+      "rated": "{{organisation}} 的評等：{{rating}}",
+      "ratedSaid": "{{organisation}} 的評等：{{rating}}。「{{summary}}」",
+      "footer": "於 {{date}} 查核。分享自 {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2710,14 +2717,15 @@
     },
     "checks": {
       "emptyTitle": "還沒有事實查核",
-      "checkedAgo": "{{age}}前查核",
       "checking": "正在向事實查核機構查詢此內容",
-      "claim": "該說法",
       "count_one": "{{count}} 則事實查核",
       "count_other": "{{count}} 則事實查核",
       "emptyBodyMenu": "在任何文章上打開 ••• 選單，然後點按「事實查核」。或請梅拉查核某個說法。結果會顯示在這裡。",
       "learn": "了解事實查核",
-      "new": "新"
+      "new": "新",
+      "checkedAge": "{{age}}查核",
+      "askedAge": "{{age}}請求",
+      "moreOrganisations": "+{{count}} 家"
     },
     "visited": {
       "emptyTitle": "還沒有出版物"
@@ -3034,5 +3042,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "匯出事實查核",
+    "step1Heading": "選擇事實查核",
+    "includeIntro": "每次匯出都會包含標題、媒體、文章連結，以及每家事實查核機構的評等和連結。",
+    "includeClaimsHint": "每則主張及其評估。",
+    "includeSummary": "梅拉的 AI 摘要",
+    "includeSummaryHint": "在檔案中標註為 AI 撰寫。",
+    "includeSourcesHint": "搜尋用到的每個連結。",
+    "stillChecking": "仍在查核",
+    "shareDialogTitle": "匯出事實查核"
   }
 }

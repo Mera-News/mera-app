@@ -1480,7 +1480,6 @@
     "claimsHeading": "Klaim yang diperiksa",
     "citationsHeading": "Sumber yang dikonsultasi",
     "noCitations": "Pemeriksaan ini tidak mengutip halaman tertentu. Itu bukan pencarian yang gagal, perlakukan ringkasan dengan sedikit lebih hati-hati tanpa sumber untuk ditunjuk.",
-    "sourceFallback": "Sumber {{index}}",
     "disclaimer": "Ini adalah bacaan Mera sendiri dari pencarian web, ditulis oleh AI. Dapat salah atau tidak lengkap, jadi baca sumbernya sebelum mengandalkannya.",
     "verdict": {
       "supported": {
@@ -1515,18 +1514,14 @@
       "unverifiable": "Tidak dapat dikonfirmasi",
       "unknown": "Tidak jelas"
     },
-    "checkedByHeading": "Pemeriksaan fakta yang ditemukan pencarian",
     "dashboard": {
       "deleteA11y": "Hapus pemeriksaan fakta ini",
       "listTitle": "Pemeriksaan fakta",
-      "pending": "Memeriksa dengan pemeriksa fakta",
       "untitled": "Cerita tanpa judul",
       "openA11y": "Buka artikel ini",
       "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini.",
       "couldNotCheck": "Kami tidak bisa memeriksa siapa yang sudah menerbitkan soal ini. Ketuk untuk melihat hasil pencariannya.",
-      "noneFound": "Tidak ada pemeriksaan fakta yang dipublikasikan ditemukan",
-      "factChecksFound_one": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca",
-      "factChecksFound_other": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca"
+      "noneFound": "Tidak ada pemeriksaan fakta yang dipublikasikan ditemukan"
     },
     "explainer": "Mera tidak memeriksa fakta berita itu sendiri. Mera mencari apa yang telah dipublikasikan organisasi pemeriksa fakta yang sudah mapan tentang cerita ini.",
     "noCheckedBy": "Kami tidak menemukan pemeriksaan fakta yang dipublikasikan tentang cerita ini. Ini tidak berarti cerita tersebut salah. Sebagian besar cerita tidak pernah diperiksa.",
@@ -1534,7 +1529,6 @@
     "queued": "Pemeriksaan ini tetap berjalan di latar belakang. Anda tidak perlu menunggu di sini, tidak masalah meninggalkan artikel.",
     "queuedHint": "Hasil muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
     "citationA11y": "Buka sumber {{source}} di browser dalam aplikasi",
-    "noLink": "Tidak ada tautan yang tersedia",
     "actionA11yPending": "Pemeriksaan fakta diminta, periksa hasilnya",
     "actionA11yDone": "Pemeriksaan fakta siap, hasilnya ditampilkan di bawah",
     "checkedByUnavailable": "Kami tidak dapat memeriksa apakah ada organisasi pemeriksa fakta yang sudah menerbitkan tentang cerita ini. Itu berbeda dengan belum ada yang menerbitkan. Di bawah ini hasil pencarian yang lebih luas.",
@@ -1554,11 +1548,9 @@
     "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah, mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
     "quickRunning": "Mencari di web…",
     "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang, periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
-    "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri, sehingga tidak selalu sejalan satu sama lain.",
     "collapseA11y": "Sembunyikan cek fakta ini",
     "expandA11y": "Tampilkan cek fakta ini",
     "checkedByRelatedNote": "Ini berasal dari pencarian kata kunci dan mungkin tentang cerita yang berbeda. Buka salah satu untuk memeriksa.",
-    "searchFoundHeading": "Apa yang ditemukan pencarian kami",
     "searchFoundEmpty": "Pencarian tidak memberikan cukup informasi bagi Mera untuk dirangkum di sini.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1570,6 +1562,21 @@
       "bodyFoundUntitled": "Pemeriksa fakta telah menerbitkan tentang artikel yang Anda tanyakan.",
       "bodyNoneUntitled": "Belum ada cek fakta yang diterbitkan untuk artikel yang Anda tanyakan.",
       "bodyUnavailableUntitled": "Mera tidak dapat menyelesaikan pemeriksaan artikel yang Anda tanyakan."
+    },
+    "panelTitle": "Pemeriksaan fakta",
+    "publishedHeading": "Pemeriksaan fakta yang terbit",
+    "meraFoundHeading": "Yang ditemukan Mera",
+    "sourcesCount_other": "{{count}} sumber",
+    "showMoreSources": "Tampilkan {{count}} lagi",
+    "again": "Periksa lagi",
+    "checkedRecently": "Baru saja diperiksa",
+    "againHint": "Pemeriksa fakta sering menerbitkan beberapa hari setelah sebuah berita. Memeriksa lagi mencari apa pun yang baru.",
+    "share": {
+      "aiSummary": "Ringkasan AI Mera (ditulis oleh AI, bisa salah)",
+      "sources": "Sumber",
+      "rated": "Penilaian {{organisation}}: {{rating}}",
+      "ratedSaid": "Penilaian {{organisation}}: {{rating}}. “{{summary}}”",
+      "footer": "Diperiksa {{date}}. Dibagikan melalui {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2710,14 +2717,15 @@
     },
     "checks": {
       "emptyTitle": "Belum ada pemeriksaan fakta",
-      "checkedAgo": "diperiksa {{age}} lalu",
       "checking": "Memeriksa ini dengan pemeriksa fakta",
-      "claim": "Klaimnya",
       "count_one": "{{count}} pemeriksaan fakta",
       "count_other": "{{count}} pemeriksaan fakta",
       "emptyBodyMenu": "Pada artikel mana pun, buka menu ••• dan ketuk Pemeriksaan fakta. Atau minta Mera memeriksa sebuah klaim. Hasilnya muncul di sini.",
       "learn": "Pelajari tentang Pemeriksaan fakta",
-      "new": "Baru"
+      "new": "Baru",
+      "checkedAge": "Diperiksa {{age}}",
+      "askedAge": "Diminta {{age}}",
+      "moreOrganisations": "+{{count}} lagi"
     },
     "visited": {
       "emptyTitle": "Belum ada publikasi"
@@ -3034,5 +3042,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Ekspor pemeriksaan fakta",
+    "step1Heading": "Pilih pemeriksaan fakta",
+    "includeIntro": "Setiap ekspor selalu memuat judul, media, tautan artikel, dan setiap penilaian pemeriksa fakta beserta tautannya.",
+    "includeClaimsHint": "Setiap klaim beserta penilaiannya.",
+    "includeSummary": "Ringkasan AI Mera",
+    "includeSummaryHint": "Ditandai di file sebagai ditulis oleh AI.",
+    "includeSourcesHint": "Setiap tautan yang dipakai pencarian.",
+    "stillChecking": "Masih diperiksa",
+    "shareDialogTitle": "Ekspor pemeriksaan fakta"
   }
 }

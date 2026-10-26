@@ -1487,7 +1487,6 @@
     "claimsHeading": "Afirmações verificadas",
     "citationsHeading": "Fontes consultadas",
     "noCitations": "Esta verificação não citou nenhuma página específica. Isso não é uma busca mal-sucedida, trate o resumo com um pouco mais de cautela sem fontes para apontar.",
-    "sourceFallback": "Fonte {{index}}",
     "disclaimer": "Esta é a leitura própria do Mera de uma busca na web, escrita por IA. Pode estar incorreta ou incompleta, portanto leia as fontes antes de confiar nela.",
     "verdict": {
       "supported": {
@@ -1522,18 +1521,14 @@
       "unverifiable": "Não foi possível confirmar",
       "unknown": "Não claro"
     },
-    "checkedByHeading": "Verificações de fatos encontradas na busca",
     "dashboard": {
       "deleteA11y": "Excluir essa verificação de fatos",
       "listTitle": "Verificações de fatos",
-      "pending": "Consultando agências de checagem",
       "untitled": "História sem título",
       "openA11y": "Abrir este artigo",
       "articleGone": "O artigo expirou, então não pode ser aberto. A verificação de fatos que encontramos é mantida aqui.",
       "couldNotCheck": "Não conseguimos verificar quem publicou sobre isso. Toque para ver o que a busca encontrou.",
-      "noneFound": "Nenhuma verificação de fatos publicada encontrada",
-      "factChecksFound_one": "{{count}} verificação de fatos encontrada. Toque para ler",
-      "factChecksFound_other": "{{count}} verificações de fatos encontradas. Toque para ler"
+      "noneFound": "Nenhuma verificação de fatos publicada encontrada"
     },
     "explainer": "Mera não verifica os fatos das notícias em si. Ela pesquisa o que organizações de verificação de fatos estabelecidas já publicaram sobre essa história.",
     "noCheckedBy": "Não encontramos uma verificação de fatos publicada sobre esta história. Isso não significa que a história esteja errada. A maioria das histórias nunca é verificada.",
@@ -1541,7 +1536,6 @@
     "queued": "Esta verificação continua em execução em segundo plano. Você não precisa esperar aqui, é seguro sair do artigo.",
     "queuedHint": "O resultado aparece em Verificações de fatos no seu Painel assim que estiver pronto.",
     "citationA11y": "Abrir a fonte {{source}} no navegador do aplicativo",
-    "noLink": "Nenhum link disponível",
     "actionA11yPending": "Verificação de fatos solicitada, verifique o resultado",
     "actionA11yDone": "Verificação de fatos pronta, o resultado é mostrado abaixo",
     "checkedByUnavailable": "Não conseguimos verificar se uma organização de checagem de fatos publicou sobre esta história. Isso é diferente de ninguém ter publicado. Abaixo está o que a busca mais ampla encontrou.",
@@ -1561,11 +1555,9 @@
     "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso, pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
     "quickRunning": "Buscando na web…",
     "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano, verifique depois ou procure em Verificações de fatos no seu Painel.",
-    "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização, nem sempre concordam entre si.",
     "collapseA11y": "Ocultar esta checagem",
     "expandA11y": "Mostrar esta checagem",
     "checkedByRelatedNote": "Vêm de uma busca por palavras-chave e podem ser sobre uma história diferente. Abra uma para verificar.",
-    "searchFoundHeading": "O que nossa busca encontrou",
     "searchFoundEmpty": "A busca não forneceu informação suficiente para Mera resumir aqui.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1577,6 +1569,22 @@
       "bodyFoundUntitled": "Checadores publicaram sobre o artigo que você pediu.",
       "bodyNoneUntitled": "Ainda não há checagens publicadas sobre o artigo que você pediu.",
       "bodyUnavailableUntitled": "A Mera não conseguiu concluir a checagem do artigo que você pediu."
+    },
+    "panelTitle": "Checagem",
+    "publishedHeading": "Checagens publicadas",
+    "meraFoundHeading": "O que o Mera encontrou",
+    "sourcesCount_one": "{{count}} fonte",
+    "sourcesCount_other": "{{count}} fontes",
+    "showMoreSources": "Mostrar mais {{count}}",
+    "again": "Checar de novo",
+    "checkedRecently": "Checado recentemente",
+    "againHint": "Checadores costumam publicar alguns dias depois de uma notícia. Checar de novo procura qualquer novidade.",
+    "share": {
+      "aiSummary": "Resumo de IA do Mera (escrito por IA, pode estar errado)",
+      "sources": "Fontes",
+      "rated": "Classificação de {{organisation}}: {{rating}}",
+      "ratedSaid": "Classificação de {{organisation}}: {{rating}}. “{{summary}}”",
+      "footer": "Checado em {{date}}. Compartilhado via {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2718,14 +2726,15 @@
     },
     "checks": {
       "emptyTitle": "Nenhuma checagem ainda",
-      "checkedAgo": "verificado {{age}}",
       "checking": "Verificando isto com agências de checagem",
-      "claim": "A afirmação",
       "count_one": "{{count}} checagem",
       "count_other": "{{count}} checagens",
       "emptyBodyMenu": "Em qualquer artigo, abra o menu ••• e toque em Procurar checagens. Ou peça à Mera para checar uma afirmação. Os resultados aparecem aqui.",
       "learn": "Saiba mais sobre Checagens",
-      "new": "Novo"
+      "new": "Novo",
+      "checkedAge": "Verificado {{age}}",
+      "askedAge": "Solicitado {{age}}",
+      "moreOrganisations": "+{{count}} mais"
     },
     "visited": {
       "emptyTitle": "Nenhuma publicação ainda"
@@ -3042,5 +3051,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Exportar checagens",
+    "step1Heading": "Escolha as checagens",
+    "includeIntro": "Toda exportação sempre inclui o título, o veículo, o link da matéria e cada classificação dos checadores com seu link.",
+    "includeClaimsHint": "Cada afirmação com sua avaliação.",
+    "includeSummary": "Resumo de IA do Mera",
+    "includeSummaryHint": "Identificado no arquivo como escrito por IA.",
+    "includeSourcesHint": "Cada link usado na busca.",
+    "stillChecking": "Ainda checando",
+    "shareDialogTitle": "Exportar checagens"
   }
 }

@@ -1489,7 +1489,6 @@
     "claimsHeading": "Denetlenen iddialar",
     "citationsHeading": "Danışılan kaynaklar",
     "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil, kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
-    "sourceFallback": "Kaynak {{index}}",
     "disclaimer": "Bu, yapay zeka tarafından yazılan bir web aramasının Mera'nın kendi okumasıdır. Hatalı veya eksik olabilir, bu nedenle ona güvenmeden önce kaynakları okuyun.",
     "verdict": {
       "supported": {
@@ -1524,18 +1523,14 @@
       "unverifiable": "Doğrulanamadı",
       "unknown": "Belirsiz"
     },
-    "checkedByHeading": "Aramanın bulduğu gerçek kontrolleri",
     "dashboard": {
       "deleteA11y": "Bu doğruluk kontrolünü sil",
       "listTitle": "Doğruluk kontroller",
-      "pending": "Doğruluk kontrolü yapan kuruluşlarla kontrol ediliyor",
       "untitled": "Başlıksız haber",
       "openA11y": "Bu makaleyi aç",
       "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz.",
       "couldNotCheck": "Bu konuda kimin yayın yaptığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokunun.",
-      "noneFound": "Yayınlanmış gerçek kontrolü bulunamadı",
-      "factChecksFound_one": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun",
-      "factChecksFound_other": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun"
+      "noneFound": "Yayınlanmış gerçek kontrolü bulunamadı"
     },
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
     "noCheckedBy": "Bu hikaye hakkında yayınlanmış bir gerçek kontrolü bulamadık. Bu hikayelenin yanlış olduğu anlamına gelmez. Çoğu hikaye hiçbir zaman kontrol edilmez.",
@@ -1543,7 +1538,6 @@
     "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok, makaleyi terk etseniz bile sorun değil.",
     "queuedHint": "Sonuç hazır olduğunda Panoda Gerçek Kontroller altında görüntülenir.",
     "citationA11y": "{{source}} kaynağını uygulama içinde aç",
-    "noLink": "Bağlantı mevcut değil",
     "actionA11yPending": "Gerçek kontrol talep edildi, sonuç için kontrol edin",
     "actionA11yDone": "Gerçek kontrol hazır, sonuç aşağıda gösterilir",
     "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik. Bu, kimsenin yayın yapmadığı anlamına gelmez. Aşağıda daha geniş aramanın bulduklarını görebilirsiniz.",
@@ -1563,11 +1557,9 @@
     "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez, sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
     "quickRunning": "Web aranıyor…",
     "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor, daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
-    "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir, her zaman birbiriyle uyuşmayabilir.",
     "collapseA11y": "Bu doğrulamayı gizle",
     "expandA11y": "Bu doğrulamayı göster",
     "checkedByRelatedNote": "Bunlar anahtar sözcük aramasından gelir ve farklı bir hikaye hakkında olabilir. Kontrol etmek için birini açın.",
-    "searchFoundHeading": "Aramamızın bulduğu",
     "searchFoundEmpty": "Arama, Mera'nın burada özet yapabileceği kadar bilgi sağlamadı.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1579,6 +1571,22 @@
       "bodyFoundUntitled": "Doğruluk kontrolcüleri sorduğun makale hakkında yayın yaptı.",
       "bodyNoneUntitled": "Sorduğun makale için henüz yayımlanmış bir doğruluk kontrolü yok.",
       "bodyUnavailableUntitled": "Mera sorduğun makalenin kontrolünü tamamlayamadı."
+    },
+    "panelTitle": "Doğruluk kontrolü",
+    "publishedHeading": "Yayımlanan doğruluk kontrolleri",
+    "meraFoundHeading": "Mera'nın bulduğu",
+    "sourcesCount_one": "{{count}} kaynak",
+    "sourcesCount_other": "{{count}} kaynak",
+    "showMoreSources": "{{count}} tane daha göster",
+    "again": "Yeniden kontrol et",
+    "checkedRecently": "Yakın zamanda kontrol edildi",
+    "againHint": "Doğruluk kontrolcüleri çoğu zaman bir haberden birkaç gün sonra yayımlar. Yeniden kontrol, yeni olan her şeyi arar.",
+    "share": {
+      "aiSummary": "Mera'nın yapay zeka özeti (yapay zeka yazdı, yanlış olabilir)",
+      "sources": "Kaynaklar",
+      "rated": "{{organisation}} değerlendirmesi: {{rating}}",
+      "ratedSaid": "{{organisation}} değerlendirmesi: {{rating}}. “{{summary}}”",
+      "footer": "{{date}} tarihinde kontrol edildi. {{downloadUrl}} üzerinden paylaşıldı"
     }
   },
   "consent": {
@@ -2720,14 +2728,15 @@
     },
     "checks": {
       "emptyTitle": "Henüz doğruluk kontrolü yok",
-      "checkedAgo": "{{age}} önce kontrol edildi",
       "checking": "Bu, doğruluk kontrolü yapan kuruluşlarla kontrol ediliyor",
-      "claim": "İddia",
       "count_one": "{{count}} doğruluk kontrolü",
       "count_other": "{{count}} doğruluk kontrolü",
       "emptyBodyMenu": "Herhangi bir makalede ••• menüsünü açın ve Doğruluk kontrolü'ne dokunun. Ya da Mera'dan bir iddiayı kontrol etmesini isteyin. Sonuçlar buraya düşer.",
       "learn": "Doğruluk kontrolleri hakkında bilgi edinin",
-      "new": "Yeni"
+      "new": "Yeni",
+      "checkedAge": "{{age}} kontrol edildi",
+      "askedAge": "{{age}} istendi",
+      "moreOrganisations": "+{{count}} daha"
     },
     "visited": {
       "emptyTitle": "Henüz yayın yok"
@@ -3044,5 +3053,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Doğruluk kontrollerini dışa aktar",
+    "step1Heading": "Doğruluk kontrollerini seç",
+    "includeIntro": "Her dışa aktarımda başlık, yayın, makale bağlantısı ve her doğruluk kontrolcüsünün bağlantılı değerlendirmesi her zaman bulunur.",
+    "includeClaimsHint": "Her iddia ve değerlendirmesi.",
+    "includeSummary": "Mera'nın yapay zeka özeti",
+    "includeSummaryHint": "Dosyada yapay zeka tarafından yazıldığı belirtilir.",
+    "includeSourcesHint": "Aramanın kullandığı her bağlantı.",
+    "stillChecking": "Hâlâ kontrol ediliyor",
+    "shareDialogTitle": "Doğruluk kontrollerini dışa aktar"
   }
 }

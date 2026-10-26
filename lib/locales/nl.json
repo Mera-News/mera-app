@@ -1487,7 +1487,6 @@
     "claimsHeading": "Gecontroleerde beweringen",
     "citationsHeading": "Geraadpleegde bronnen",
     "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt, wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
-    "sourceFallback": "Bron {{index}}",
     "disclaimer": "Dit is Mera's eigen kijk op een websearch, geschreven door AI. Het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je het vertrouwt.",
     "verdict": {
       "supported": {
@@ -1522,18 +1521,14 @@
       "unverifiable": "Kon niet bevestigen",
       "unknown": "Onduidelijk"
     },
-    "checkedByHeading": "Feitchecks gevonden in de zoeking",
     "dashboard": {
       "deleteA11y": "Deze feitcheck verwijderen",
       "listTitle": "Feitchecks",
-      "pending": "Bezig met controleren bij feitencontroleurs",
       "untitled": "Naamloos artikel",
       "openA11y": "Dit artikel openen",
       "articleGone": "Het artikel is verlopen en kan niet worden geopend. De feitencontrole die we hebben gevonden, blijft hier behouden.",
       "couldNotCheck": "We konden niet nagaan wie hierover iets heeft gepubliceerd. Tik om te zien wat de zoekopdracht wel vond.",
-      "noneFound": "Geen gepubliceerde feitchecks gevonden",
-      "factChecksFound_one": "{{count}} feitencheck gevonden. Tik om te lezen",
-      "factChecksFound_other": "{{count}} feitchecks gevonden. Tik om te lezen"
+      "noneFound": "Geen gepubliceerde feitchecks gevonden"
     },
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
     "noCheckedBy": "We hebben geen gepubliceerde feitencheck over dit artikel gevonden. Dat maakt het artikel niet onwaar. De meeste artikelen worden nooit feitgecheckt.",
@@ -1541,7 +1536,6 @@
     "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten, je kunt het artikel gerust verlaten.",
     "queuedHint": "Het resultaat verschijnt onder Feitenchecks op je Dashboard zodra het klaar is.",
     "citationA11y": "Open bron {{source}} in de in-app browser",
-    "noLink": "Geen link beschikbaar",
     "actionA11yPending": "Feitencheck aangevraagd, controleer op het resultaat",
     "actionA11yDone": "Feitencheck gereed, het resultaat wordt hieronder weergegeven",
     "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit verhaal heeft gepubliceerd. Dat is iets anders dan dat niemand heeft gepubliceerd. Hieronder zie je wat de bredere zoekopdracht wel heeft gevonden.",
@@ -1561,11 +1555,9 @@
     "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is, het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
     "quickRunning": "Het web wordt doorzocht…",
     "stillChecking": "Dit duurt langer dan normaal. Het loopt nog op de achtergrond, dus kijk later onder Feitencontroles op je Dashboard.",
-    "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie, ze zijn het niet altijd met elkaar eens.",
     "collapseA11y": "Deze factcheck verbergen",
     "expandA11y": "Deze factcheck tonen",
     "checkedByRelatedNote": "Deze zijn afkomstig van een trefwoord zoeking en kunnen over een ander artikel gaan. Open er een om te controleren.",
-    "searchFoundHeading": "Wat onze zoeking gevonden heeft",
     "searchFoundEmpty": "Er was niet genoeg uit de zoeking voor Mera om dit samen te vatten.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -1577,6 +1569,22 @@
       "bodyFoundUntitled": "Factcheckers hebben gepubliceerd over het artikel waarnaar je vroeg.",
       "bodyNoneUntitled": "Nog geen gepubliceerde factchecks voor het artikel waarnaar je vroeg.",
       "bodyUnavailableUntitled": "Mera kon de controle van het artikel waarnaar je vroeg niet afronden."
+    },
+    "panelTitle": "Feitencheck",
+    "publishedHeading": "Gepubliceerde feitenchecks",
+    "meraFoundHeading": "Wat Mera vond",
+    "sourcesCount_one": "{{count}} bron",
+    "sourcesCount_other": "{{count}} bronnen",
+    "showMoreSources": "Nog {{count}} tonen",
+    "again": "Opnieuw checken",
+    "checkedRecently": "Onlangs gecheckt",
+    "againHint": "Factcheckers publiceren vaak een paar dagen na een bericht. Opnieuw checken zoekt naar alles wat nieuw is.",
+    "share": {
+      "aiSummary": "Mera's AI-samenvatting (geschreven door AI, kan fout zijn)",
+      "sources": "Bronnen",
+      "rated": "Oordeel van {{organisation}}: {{rating}}",
+      "ratedSaid": "Oordeel van {{organisation}}: {{rating}}. “{{summary}}”",
+      "footer": "Gecheckt op {{date}}. Gedeeld via {{downloadUrl}}"
     }
   },
   "consent": {
@@ -2718,14 +2726,15 @@
     },
     "checks": {
       "emptyTitle": "Nog geen feitencontroles",
-      "checkedAgo": "gecontroleerd {{age}}",
       "checking": "Dit wordt bij feitencontroleurs gecontroleerd",
-      "claim": "De bewering",
       "count_one": "{{count}} feitencontrole",
       "count_other": "{{count}} feitencontroles",
       "emptyBodyMenu": "Open bij elk artikel het ••• menu en tik op Feitencontrole. Of vraag Mera een bewering te controleren. Resultaten komen hier terecht.",
       "learn": "Meer over Feitencontroles",
-      "new": "Nieuw"
+      "new": "Nieuw",
+      "checkedAge": "Gecontroleerd {{age}}",
+      "askedAge": "Gevraagd {{age}}",
+      "moreOrganisations": "+{{count}} meer"
     },
     "visited": {
       "emptyTitle": "Nog geen uitgevers"
@@ -3042,5 +3051,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Feitenchecks exporteren",
+    "step1Heading": "Kies feitenchecks",
+    "includeIntro": "Elke export bevat altijd de kop, het medium, de artikellink en elk oordeel van de factcheckers met de link.",
+    "includeClaimsHint": "Elke bewering met haar beoordeling.",
+    "includeSummary": "Mera's AI-samenvatting",
+    "includeSummaryHint": "In het bestand gemarkeerd als geschreven door AI.",
+    "includeSourcesHint": "Elke link die de zoekopdracht gebruikte.",
+    "stillChecking": "Nog bezig",
+    "shareDialogTitle": "Feitenchecks exporteren"
   }
 }
