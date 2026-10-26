@@ -460,6 +460,22 @@
       "bodyFoundUntitled": "Fact checkers have published on the article you asked about.",
       "bodyNoneUntitled": "No published fact checks yet for the article you asked about.",
       "bodyUnavailableUntitled": "Mera couldn't finish checking the article you asked about."
+    },
+    "panelTitle": "Fact check",
+    "publishedHeading": "Published fact checks",
+    "meraFoundHeading": "What Mera found",
+    "sourcesCount_one": "{{count}} source",
+    "sourcesCount_other": "{{count}} sources",
+    "showMoreSources": "Show {{count}} more",
+    "again": "Fact check again",
+    "checkedRecently": "Checked recently",
+    "againHint": "Fact-checkers often publish a few days after a story. Checking again looks for anything new.",
+    "share": {
+      "aiSummary": "Mera's AI summary (written by AI, can be wrong)",
+      "sources": "Sources",
+      "rated": "{{organisation}} rated it {{rating}}",
+      "ratedSaid": "{{organisation}} rated it {{rating}}: “{{summary}}”",
+      "footer": "Checked {{date}}. Shared via {{downloadUrl}}"
     }
   },
   "sources": {
@@ -2727,7 +2743,10 @@
       "count_other": "{{count}} fact checks",
       "emptyBodyMenu": "On any article, open the ••• menu and tap Fact check. Or ask Mera to check a claim. Results land here.",
       "learn": "Learn about Fact checks",
-      "new": "New"
+      "new": "New",
+      "checkedAge": "Checked {{age}}",
+      "askedAge": "Asked {{age}}",
+      "moreOrganisations": "+{{count}} more"
     },
     "visited": {
       "emptyTitle": "No publications yet"
@@ -3044,5 +3063,16 @@
       "followFailed": "Which story would you like to follow?",
       "changeCard": "Tap the card to confirm the change."
     }
+  },
+  "factCheckExport": {
+    "openA11y": "Export fact checks",
+    "step1Heading": "Choose fact checks",
+    "includeIntro": "Each export always has the headline, publication, article link and every fact-checker's rating with its link.",
+    "includeClaimsHint": "Each claim with its assessment.",
+    "includeSummary": "Mera's AI summary",
+    "includeSummaryHint": "Labelled as written by AI in the file.",
+    "includeSourcesHint": "Every link the search used.",
+    "stillChecking": "Still checking",
+    "shareDialogTitle": "Export fact checks"
   }
 }
