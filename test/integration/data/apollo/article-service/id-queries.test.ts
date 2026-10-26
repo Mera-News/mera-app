@@ -2,6 +2,7 @@
 // count, per-topic ids, persona ids (both chunked at 150 topics), and the two hydration reads
 // (quota-charged and quota-exempt), chunked at 50 ids.
 import ArticleService from '@/lib/article-service';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import type { PersonaQueryInput, TopicPaginationInput } from '@/lib/generated/graphql-types';
 import { advanceUntilDone, mockGql, mockGqlError, server, useFakeClock } from '@/test/helpers';
 import {
@@ -347,6 +348,40 @@ const hydrate = (op: string, key: string, over: (asked: string[]) => Record<stri
             },
         };
     });
+
+// A server without ArticleWithClusters.story_key answers the real graphql-response+json 400.
+describe.each([
+    ['getArticlesForTopicsByIds', 'GetArticlesForTopicsByIds'],
+    ['getArticlesForStories', 'GetArticlesForStories'],
+] as const)('%s on a server without story_key', (method, op) => {
+    const reject = () =>
+        mockGqlError(op, 'GRAPHQL_VALIDATION_FAILED', {
+            httpStatus: 400,
+            headers: { 'Content-Type': 'application/graphql-response+json' },
+        });
+
+    it('falls back to the Legacy document once, latches, and neither captures nor raises the sync banner', async () => {
+        const logs = spyLogger();
+        server.use(reject());
+        const sent = recordOps();
+        const wanted = ARTICLE_IDS.slice(0, 2);
+        const result = await ArticleService[method]([...wanted]);
+        await ArticleService[method]([...wanted]);
+        expect((await sentOf(sent)).map((c) => c.op)).toEqual([op, `${op}Legacy`, `${op}Legacy`]);
+        expect(result.articles.map((a) => a._id).sort()).toEqual([...wanted].sort());
+        expect(logs.capture).not.toHaveBeenCalled();
+        expect(useForYouStore.getState().syncStatusMessage).toBeNull();
+    });
+
+    it('any other error is rethrown and does not latch', async () => {
+        server.use(mockGqlError(op, 'INTERNAL_SERVER_ERROR'));
+        await expect(ArticleService[method]([ARTICLE_IDS[0]])).rejects.toThrow();
+        server.resetHandlers();
+        const sent = recordOps();
+        await ArticleService[method]([ARTICLE_IDS[0]]);
+        expect((await sentOf(sent)).map((c) => c.op)).toEqual([op]);
+    });
+});
 
 describe('getArticlesForTopicsByIds', () => {
     const echo = () => hydrate('GetArticlesForTopicsByIds', 'articlesForTopicsByIds');

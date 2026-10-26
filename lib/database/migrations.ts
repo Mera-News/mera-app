@@ -1570,5 +1570,20 @@ export default schemaMigrations({
         ),
       ],
     },
+    {
+      // article_suggestions.story_key: the server's story id, so near-duplicate
+      // copies group on-device. Optional, write-once at insert; NULL rows just
+      // lack the edge. addColumns, never a recreate (the donor pool).
+      // ROLL-FORWARD ONLY: WatermelonDB resets the whole database when it opens
+      // a version newer than the bundle's schema, so never republish a v55
+      // bundle over upgraded devices.
+      toVersion: 56,
+      steps: [
+        addColumns({
+          table: 'article_suggestions',
+          columns: [{ name: 'story_key', type: 'string', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

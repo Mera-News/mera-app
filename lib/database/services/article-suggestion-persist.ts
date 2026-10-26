@@ -251,6 +251,7 @@ export async function persistAndLinkV2Suggestions(
         r.category = a.category ?? null;
         r.maxClusterSize = a.maxClusterSize ?? null;
         r.stableClusterId = stableId;
+        r.storyKey = a.story_key ?? null;
         r.headlineScope = scope;
         r.headlineCountryCode = scopeCountry;
         r.matchedTopicsJson = personaMeta ? buildMatchedTopicsJson(matched) : null;

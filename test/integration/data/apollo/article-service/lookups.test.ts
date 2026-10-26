@@ -1,22 +1,30 @@
 // ArticleService's single-article and list reads: related coverage (behind the N10 switch), one
 // article, a country's articles, and the cluster reads. Real Apollo client against MSW.
 import ArticleService, { RELATED_FILTERS_LIVE } from '@/lib/article-service';
+import { __resetRelatedOriginalSupport } from '@/lib/article-service';
 import { mockGql, mockGqlError, server } from '@/test/helpers';
 import { ARTICLE_IDS } from '@/test/mock-backend/fixtures/articles';
 import { expectNoServiceCapture, recordOps, resetServiceState, sentOf, spyLogger } from './kit';
 
-beforeEach(resetServiceState);
+beforeEach(() => {
+    resetServiceState();
+    __resetRelatedOriginalSupport();
+});
 
 const emptyPage = { articles: [], pageInfo: { endCursor: null, hasNextPage: false, pageSize: 0 }, restarted: false };
 
 describe('getRelatedArticlesPage', () => {
-    it('ships with the N10 filters switched off', () => {
-        expect(RELATED_FILTERS_LIVE).toBe(false);
+    it('ships with the N10 filters on, behind the unsupported-server latch', () => {
+        expect(RELATED_FILTERS_LIVE).toBe(true);
     });
+
+    // The default document is what a latched or switched-off session sends: `false` is the injected switch.
+    const defaultDoc = (input: Parameters<typeof ArticleService.getRelatedArticlesPage>[0]) =>
+        ArticleService.getRelatedArticlesPage(input, false);
 
     it('returns the served page with facets null: the default document does not ask for them', async () => {
         const sent = recordOps();
-        const result = await ArticleService.getRelatedArticlesPage({ articleId: ARTICLE_IDS[0] });
+        const result = await defaultDoc({ articleId: ARTICLE_IDS[0] });
         expect(result.articles.length).toBeGreaterThan(0);
         expect(result.articles.map((a) => a._id)).not.toContain(ARTICLE_IDS[0]);
         expect(result.restarted).toBe(false);
@@ -27,7 +35,7 @@ describe('getRelatedArticlesPage', () => {
 
     it('returns an empty CLOSED page when the field is null', async () => {
         server.use(mockGql('GetRelatedArticlesPage', { relatedArticlesPage: null }));
-        const result = await ArticleService.getRelatedArticlesPage({ articleId: 'art-1' });
+        const result = await defaultDoc({ articleId: 'art-1' });
         // hasNextPage false matters more than the empty array: a caller that kept paging on a null
         // response would loop.
         expect(result).toEqual({ ...emptyPage, facets: null });
@@ -35,13 +43,13 @@ describe('getRelatedArticlesPage', () => {
 
     it('surfaces the restarted flag so the caller can replace instead of append', async () => {
         server.use(mockGql('GetRelatedArticlesPage', { relatedArticlesPage: { ...emptyPage, restarted: true } }));
-        const result = await ArticleService.getRelatedArticlesPage({ articleId: 'art-1', after: 'a-dead-cursor' });
+        const result = await defaultDoc({ articleId: 'art-1', after: 'a-dead-cursor' });
         expect(result.restarted).toBe(true);
     });
 
     it('sends every paging variable, nulling the ones not supplied', async () => {
         const sent = recordOps();
-        await ArticleService.getRelatedArticlesPage({
+        await defaultDoc({
             articleId: 'the-article-id',
             stableClusterId: 'stable-1',
             first: 10,
@@ -61,7 +69,7 @@ describe('getRelatedArticlesPage', () => {
 
     it('while the switch is off, never sends the filter arguments or asks for facets, even when asked', async () => {
         const sent = recordOps();
-        const result = await ArticleService.getRelatedArticlesPage({
+        const result = await defaultDoc({
             articleId: 'art-1',
             filter: { countries: ['DEU'], languages: ['de'] },
         });
@@ -97,10 +105,52 @@ describe('getRelatedArticlesPage', () => {
         expect(result.facets).not.toBeNull();
     });
 
-    it('rethrows with a breadcrumb that names the article, and no capture of its own', async () => {
+        it('sends the filtered document by default and asks for the same article fields as the default one', async () => {
+        const sent = recordOps();
+        const result = await ArticleService.getRelatedArticlesPage({ articleId: ARTICLE_IDS[0] });
+        const [call] = await sentOf(sent, 'GetRelatedArticlesPageFiltered');
+        expect(call.query).toMatch(/facets/);
+        expect(call.query).toMatch(/title_original/);
+        expect(result.facets).not.toBeNull();
+    });
+
+    describe('on a server without the filters (400 graphql-response+json)', () => {
+        const reject = () =>
+            mockGqlError('GetRelatedArticlesPageFiltered', 'GRAPHQL_VALIDATION_FAILED', {
+                httpStatus: 400,
+                headers: { 'Content-Type': 'application/graphql-response+json' },
+            });
+
+        it('latches for the session: retries the default document once, then never sends the filtered one again', async () => {
+            const logs = spyLogger();
+            server.use(reject());
+            const sent = recordOps();
+            const first = await ArticleService.getRelatedArticlesPage({ articleId: ARTICLE_IDS[0] });
+            await ArticleService.getRelatedArticlesPage({ articleId: ARTICLE_IDS[0] });
+            expect((await sentOf(sent)).map((c) => c.op)).toEqual([
+                'GetRelatedArticlesPageFiltered',
+                'GetRelatedArticlesPage',
+                'GetRelatedArticlesPage',
+            ]);
+            expect(first.facets).toBeNull();
+            expect(first.articles.length).toBeGreaterThan(0);
+            expectNoServiceCapture(logs.capture, 0);
+        });
+
+        it('any other error is rethrown and does not latch', async () => {
+            server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
+            await expect(ArticleService.getRelatedArticlesPage({ articleId: 'art-1' })).rejects.toThrow();
+            server.resetHandlers();
+            const sent = recordOps();
+            await ArticleService.getRelatedArticlesPage({ articleId: 'art-1' });
+            expect((await sentOf(sent)).map((c) => c.op)).toEqual(['GetRelatedArticlesPageFiltered']);
+        });
+    });
+
+it('rethrows with a breadcrumb that names the article, and no capture of its own', async () => {
         const logs = spyLogger();
         server.use(mockGqlError('GetRelatedArticlesPage', 'INTERNAL_SERVER_ERROR', { message: 'related articles failed' }));
-        await expect(ArticleService.getRelatedArticlesPage({ articleId: 'art-1' })).rejects.toThrow(
+        await expect(defaultDoc({ articleId: 'art-1' })).rejects.toThrow(
             'related articles failed',
         );
         expectNoServiceCapture(logs.capture);

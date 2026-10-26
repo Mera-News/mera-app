@@ -46,7 +46,7 @@ function servePages(pages: Record<string, PageSpec | ((v: Vars) => Promise<PageS
     server.use(
         // Not mockGql: a page may be answered late, and mockGql does not await its responder.
         graphql.operation(async ({ operationName, variables }) => {
-            if (operationName !== 'GetRelatedArticlesPage') return undefined;
+            if (operationName !== 'GetRelatedArticlesPageFiltered') return undefined;
             seen.push(variables);
             const spec = pages[variables.after ?? 'first'];
             return HttpResponse.json({ data: pageData(typeof spec === 'function' ? await spec(variables) : spec) });
@@ -199,7 +199,7 @@ describe('useRelatedPagination', () => {
         afterEach(() => log.restore());
 
         it('sets error when page 1 fails, and retry fetches page 1 again', async () => {
-            server.use(mockGqlError('GetRelatedArticlesPage', 'INTERNAL_SERVER_ERROR'));
+            server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
             const r = mount();
             await waitFor(() => expect(r.result.current.error).toBe(true));
             expect(r.result.current.entries).toEqual([]);
@@ -215,7 +215,7 @@ describe('useRelatedPagination', () => {
             servePages();
             const r = mount();
             await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
-            server.use(mockGqlError('GetRelatedArticlesPage', 'INTERNAL_SERVER_ERROR'));
+            server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
             act(() => r.result.current.loadMore());
             await waitFor(() => expect(r.result.current.error).toBe(true));
             expect(ids(r)).toEqual(['a1', 'a2', 'a3']);

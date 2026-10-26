@@ -94,6 +94,7 @@ type ArticleWithClusters {
   pubDate: DateTime!
   publication_name: String
   significance: Int
+  story_key: String
   title: String
   title_en: String!
   tone: String

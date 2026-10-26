@@ -249,11 +249,12 @@ export async function getUnscoredGroupingRows(): Promise<SuggestionGroupingRow[]
 }
 
 /**
- * Score donors for sibling propagation: status != Unscored, relevance > 0, AND
- * (scored_at >= sinceMs OR created_at >= sinceMs). The relevance > 0 filter
- * excludes the ineligible tombstones written by `batchMarkAsScoredByIds`
- * (relevance=0), which carry no real scoring signal and would otherwise look
- * like a confident "not relevant" donor.
+ * Score donors for sibling propagation: status not Unscored, Excluded or
+ * AlreadyRead, a verdict (relevance > 0 OR scored_at set), AND
+ * (scored_at >= sinceMs OR created_at >= sinceMs). The verdict clause drops the
+ * verdict-less zeros written by `batchMarkAsScoredByIds` (relevance 0, scored_at
+ * null), not a REAL zero verdict: a story's representative scored 0 donates, so
+ * its siblings are not re-elected and re-scored every sync.
  *
  * BUG FIX (was `created_at >= sinceMs` only): prod logs showed
  * `propagated 0, held back N` every cycle — a row scored minutes ago but
@@ -281,7 +282,9 @@ export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGro
       // that HAS a reason, but that is a preference: a group whose only donor is
       // gated would still propagate. This is the guarantee.
       Q.where('status', Q.notEq(ArticleSuggestionStatus.ReasonSkipped)),
-      Q.where('relevance', Q.gt(0)),
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.Excluded)),
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.AlreadyRead)),
+      Q.or(Q.where('relevance', Q.gt(0)), Q.where('scored_at', Q.notEq(null))),
       Q.or(
         Q.where('scored_at', Q.gte(sinceMs)),
         Q.where('created_at', Q.gte(sinceMs)),
@@ -294,7 +297,9 @@ export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGro
       (r) =>
         r.status !== ArticleSuggestionStatus.Unscored &&
         r.status !== ArticleSuggestionStatus.ReasonSkipped &&
-        r.relevance > 0 &&
+        r.status !== ArticleSuggestionStatus.Excluded &&
+        r.status !== ArticleSuggestionStatus.AlreadyRead &&
+        (r.relevance > 0 || r.scoredAt != null) &&
         ((typeof r.scoredAt === 'number' && r.scoredAt >= sinceMs) ||
           r.createdAt.getTime() >= sinceMs),
     )

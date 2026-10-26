@@ -4,7 +4,7 @@ import { _getBreakerState, _resetForTests as resetAuthBreaker } from '@/lib/auth
 import logger from '@/lib/logger';
 import { _resetNetworkTrackingForTests, useNetworkStore } from '@/lib/stores/network-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
-import { __resetExploreWindowSupport, __resetPublisherOrderSupport } from '@/lib/article-service';
+import { __resetExploreWindowSupport, __resetPublisherOrderSupport, __resetStoryKeySupport } from '@/lib/article-service';
 import { graphql, HttpResponse, server } from '@/test/helpers';
 
 export interface Sent {
@@ -23,6 +23,7 @@ afterEach(() => {
 export function resetServiceState(): void {
     __resetPublisherOrderSupport();
     __resetExploreWindowSupport();
+    __resetStoryKeySupport();
     resetAuthBreaker();
     _resetNetworkTrackingForTests();
     useNetworkStore.setState({ isConnected: true, serverReachable: true, serverSlow: false, internetReachable: true });

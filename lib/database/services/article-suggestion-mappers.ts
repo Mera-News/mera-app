@@ -142,6 +142,8 @@ export interface SuggestionGroupingRow {
    *  so it must inherit the gate that relevance was calibrated for too.
    *  Optional so the existing grouping-row fixtures keep compiling. */
   scoredWithV3?: boolean | null;
+  /** Server story id (schema v56); null = no dedup edge. */
+  storyKey?: string | null;
 }
 
 export function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
@@ -159,6 +161,7 @@ export function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRo
     languageCode: row.languageCode,
     // Normalised like the `loadSuggestions` mapper: SQLite returns 0/1.
     scoredWithV3: row.scoredWithV3 === true || (row.scoredWithV3 as unknown) === 1,
+    storyKey: row.storyKey ?? null,
   };
 }
 
@@ -335,6 +338,7 @@ export function toForYouSuggestion(
     // Persona v3 fields for the fact-sectioned feed selector (nullable).
     rawScore: row.rawScore,
     eventType: row.eventType,
+    storyKey: row.storyKey ?? null,
     // Same parse shape as `buildStageCandidateInput` above, so story-grouping's
     // entity edge and the scorer see byte-identical entity lists.
     entities: parseJsonArray<string>(row.entitiesJson).filter(

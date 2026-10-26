@@ -212,6 +212,8 @@ export function articleWithClusters(a: FixtureArticle, ctx: BuildContext): Artic
         event_type: a.eventType,
         category: a.category,
         maxClusterSize: clusterMembers(a).length,
+        // Own id: every fixture article is its own story, so no dedup edge joins them.
+        story_key: a.id,
     };
 }
 

@@ -100,6 +100,7 @@ export type ArticleWithClusters = {
   pubDate: Scalars['DateTime']['output'];
   publication_name?: Maybe<Scalars['String']['output']>;
   significance?: Maybe<Scalars['Int']['output']>;
+  story_key?: Maybe<Scalars['String']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   title_en: Scalars['String']['output'];
   tone?: Maybe<Scalars['String']['output']>;

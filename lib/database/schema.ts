@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 55,
+  version: 56,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -104,6 +104,9 @@ export default appSchema({
         // headlines apart from their Dutch ones (schema v48).
         { name: 'headline_country_code', type: 'string', isOptional: true },
         { name: 'matched_topics_json', type: 'string', isOptional: true },
+        // Server-assigned story id shared by near-duplicate copies (schema v56).
+        // Write-once at insert; NULL for rows served before assignment.
+        { name: 'story_key', type: 'string', isOptional: true },
         // Deterministic engine raw score (pre-judge) — audit.
         { name: 'computed_score', type: 'number', isOptional: true },
         // Final post-judge raw score used for within-section ordering.

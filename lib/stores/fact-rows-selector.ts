@@ -512,6 +512,8 @@ function countryLocationWeight(
 }
 
 interface GroupItem extends GroupableItem {
+  // Until GroupableItem carries it (P4 swaps this literal for groupableOf).
+  storyKey?: string | null;
   s: ForYouSuggestion;
 }
 
@@ -635,6 +637,7 @@ export function buildFactRows(
     clusters: s.clusters,
     entities: s.entities,
     eventType: s.eventType,
+    storyKey: s.storyKey ?? null,
     s,
   }));
   // `entityJaccardThreshold` enables the entity-overlap edge — DISPLAY-only by
