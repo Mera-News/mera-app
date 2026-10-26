@@ -329,7 +329,13 @@
     },
     "readyForMore": "هل أنت مستعد لقراءة المزيد؟",
     "refreshFeedAction": "حدّث موجزك",
-    "translationFailed": "فشلت الترجمة. أعد تشغيل التطبيق."
+    "translationFailed": "فشلت الترجمة. أعد تشغيل التطبيق.",
+    "similarArticles_zero": "{{count}} مقالة مشابهة",
+    "similarArticles_one": "{{count}} مقالة مشابهة",
+    "similarArticles_two": "{{count}} مقالتان مشابهتان",
+    "similarArticles_few": "{{count}} مقالات مشابهة",
+    "similarArticles_many": "{{count}} مقالة مشابهة",
+    "similarArticles_other": "{{count}} مقالة مشابهة"
   },
   "relevance": {
     "emergency": "طارئ",

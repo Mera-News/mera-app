@@ -1,0 +1,125 @@
+{
+  "en": {
+    "feed": {
+      "similarArticles_one": "{{count}} similar article",
+      "similarArticles_other": "{{count}} similar articles"
+    }
+  },
+  "ar": {
+    "feed": {
+      "similarArticles_zero": "{{count}} مقالة مشابهة",
+      "similarArticles_one": "{{count}} مقالة مشابهة",
+      "similarArticles_two": "{{count}} مقالتان مشابهتان",
+      "similarArticles_few": "{{count}} مقالات مشابهة",
+      "similarArticles_many": "{{count}} مقالة مشابهة",
+      "similarArticles_other": "{{count}} مقالة مشابهة"
+    }
+  },
+  "de": {
+    "feed": {
+      "similarArticles_one": "{{count}} ähnlicher Artikel",
+      "similarArticles_other": "{{count}} ähnliche Artikel"
+    }
+  },
+  "es": {
+    "feed": {
+      "similarArticles_one": "{{count}} artículo similar",
+      "similarArticles_other": "{{count}} artículos similares"
+    }
+  },
+  "fr": {
+    "feed": {
+      "similarArticles_one": "{{count}} article similaire",
+      "similarArticles_other": "{{count}} articles similaires"
+    }
+  },
+  "hi": {
+    "feed": {
+      "similarArticles_one": "{{count}} मिलता-जुलता लेख",
+      "similarArticles_other": "{{count}} मिलते-जुलते लेख"
+    }
+  },
+  "id": {
+    "feed": {
+      "similarArticles_other": "{{count}} artikel serupa"
+    }
+  },
+  "it": {
+    "feed": {
+      "similarArticles_one": "{{count}} articolo simile",
+      "similarArticles_other": "{{count}} articoli simili"
+    }
+  },
+  "ja": {
+    "feed": {
+      "similarArticles_other": "同じ話題の他の記事 {{count}} 件"
+    }
+  },
+  "ko": {
+    "feed": {
+      "similarArticles_other": "비슷한 기사 {{count}}개"
+    }
+  },
+  "nl": {
+    "feed": {
+      "similarArticles_one": "{{count}} vergelijkbaar artikel",
+      "similarArticles_other": "{{count}} vergelijkbare artikelen"
+    }
+  },
+  "pl": {
+    "feed": {
+      "similarArticles_one": "{{count}} podobny artykuł",
+      "similarArticles_few": "{{count}} podobne artykuły",
+      "similarArticles_many": "{{count}} podobnych artykułów",
+      "similarArticles_other": "{{count}} podobnego artykułu"
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "similarArticles_one": "{{count}} artigo semelhante",
+      "similarArticles_other": "{{count}} artigos semelhantes"
+    }
+  },
+  "ru": {
+    "feed": {
+      "similarArticles_one": "ещё {{count}} похожая статья",
+      "similarArticles_few": "ещё {{count}} похожие статьи",
+      "similarArticles_many": "ещё {{count}} похожих статей",
+      "similarArticles_other": "ещё {{count}} похожей статьи"
+    }
+  },
+  "th": {
+    "feed": {
+      "similarArticles_other": "บทความที่คล้ายกัน {{count}} ชิ้น"
+    }
+  },
+  "tr": {
+    "feed": {
+      "similarArticles_one": "{{count}} benzer haber",
+      "similarArticles_other": "{{count}} benzer haber"
+    }
+  },
+  "uk": {
+    "feed": {
+      "similarArticles_one": "{{count}} схожа стаття",
+      "similarArticles_few": "{{count}} схожі статті",
+      "similarArticles_many": "{{count}} схожих статей",
+      "similarArticles_other": "{{count}} схожої статті"
+    }
+  },
+  "vi": {
+    "feed": {
+      "similarArticles_other": "{{count}} bài viết tương tự"
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "similarArticles_other": "另有 {{count}} 篇相似文章"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "similarArticles_other": "另有 {{count}} 篇類似報導"
+    }
+  }
+}

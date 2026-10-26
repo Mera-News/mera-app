@@ -281,7 +281,9 @@
     },
     "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
     "refreshFeedAction": "Akışınızı yenileyin",
-    "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın."
+    "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın.",
+    "similarArticles_one": "{{count}} benzer haber",
+    "similarArticles_other": "{{count}} benzer haber"
   },
   "relevance": {
     "emergency": "Acil",

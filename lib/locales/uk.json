@@ -305,7 +305,11 @@
     },
     "readyForMore": "Готові читати далі?",
     "refreshFeedAction": "Оновити стрічку",
-    "translationFailed": "Не вдалося перекласти. Перезапустіть застосунок."
+    "translationFailed": "Не вдалося перекласти. Перезапустіть застосунок.",
+    "similarArticles_one": "{{count}} схожа стаття",
+    "similarArticles_few": "{{count}} схожі статті",
+    "similarArticles_many": "{{count}} схожих статей",
+    "similarArticles_other": "{{count}} схожої статті"
   },
   "relevance": {
     "emergency": "Надзвичайна подія",

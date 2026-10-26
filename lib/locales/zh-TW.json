@@ -277,7 +277,8 @@
     },
     "readyForMore": "準備好讀更多了嗎？",
     "refreshFeedAction": "重新整理你的資訊流",
-    "translationFailed": "翻譯失敗。請重新啟動應用程式。"
+    "translationFailed": "翻譯失敗。請重新啟動應用程式。",
+    "similarArticles_other": "另有 {{count}} 篇類似報導"
   },
   "relevance": {
     "emergency": "緊急",
