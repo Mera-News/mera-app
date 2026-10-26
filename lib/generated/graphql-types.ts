@@ -186,6 +186,8 @@ export type FactCheck = {
   /** Model that answered, after failover. */
   model?: Maybe<Scalars['String']['output']>;
   publicationName?: Maybe<Scalars['String']['output']>;
+  /** When `requestFactCheck(recheck: true)` will run a fresh check for this article (24h after it was last resolved or claimed, per article, for everyone). In the future means "checked recently": a recheck now returns this row unchanged. Null while pending/running, and for `blocked`, which is never re-run. */
+  recheckAvailableAt?: Maybe<Scalars['DateTime']['output']>;
   /** Lifecycle: pending | running | complete | failed | blocked. `complete` and `blocked` are terminal. */
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
@@ -291,7 +293,7 @@ export type Mutation = {
   advanceOnboardingStage: UserPersona;
   deleteExpoPushToken: UserPersona;
   issueLlmWarning: UserPersona;
-  /** Create or find the cached fact check for an article. Idempotent — an existing check is returned as-is and costs nothing. Poll `factCheck` until status leaves pending/running. New clients need only `factCheck`, which creates on a miss by itself. */
+  /** Create or find the cached fact check for an article. Idempotent — an existing check is returned as-is and costs nothing. Poll `factCheck` until status leaves pending/running. New clients need only `factCheck`, which creates on a miss by itself. `recheck: true` ("Fact check again") runs a fresh check when the stored one is complete/failed and older than 24h for this article; otherwise the row comes back unchanged with `recheckAvailableAt` in the future. */
   requestFactCheck: FactCheck;
   requestUnblock: UnblockRequest;
   submitFeedbackResponse: SubmitFeedbackResponseResult;
@@ -321,6 +323,7 @@ export type MutationIssueLlmWarningArgs = {
 
 export type MutationRequestFactCheckArgs = {
   articleId: Scalars['ID']['input'];
+  recheck?: Scalars['Boolean']['input'];
 };
 
 
