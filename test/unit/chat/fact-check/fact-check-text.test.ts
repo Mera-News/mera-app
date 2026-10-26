@@ -10,6 +10,7 @@ import {
   buildFactChecksJson,
   buildFactChecksMarkdown,
   factCheckContent,
+  sourceDomain,
   toFactCheckExportRows,
   type FactCheckTextLabels,
 } from '@/lib/fact-check/fact-check-text';
@@ -71,6 +72,12 @@ function stored(id: string, over: Partial<StoredFactCheck<FactCheckRow>> = {}): 
     ...over,
   };
 }
+
+it('labels a source by its domain, without www', () => {
+  expect(sourceDomain('https://www.thefederal.com/news/x?y=1')).toBe('thefederal.com');
+  expect(sourceDomain('https://en.wikipedia.org/wiki/CJP')).toBe('en.wikipedia.org');
+  expect(sourceDomain('not a url')).toBe('not a url');
+});
 
 describe('factCheckContent', () => {
   it('keeps named organisations, secure links only, and one-line text', () => {

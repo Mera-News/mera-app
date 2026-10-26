@@ -11,7 +11,8 @@
 
 import { isSecureUrl } from '../algorithms/secure-url';
 import type { StoredFactCheck } from '../database/services/fact-check-record-service';
-import { describeCheckedBy, isTerminalStatus } from './fact-check-state';
+import type { TFunction } from 'i18next';
+import { describeAssessment, describeCheckedBy, describeOrganisationVerdict, isTerminalStatus } from './fact-check-state';
 import type { FactCheckRow } from './fact-check-types';
 
 export interface FactCheckTextLabels {
@@ -27,6 +28,48 @@ export interface FactCheckTextLabels {
     /** A claim's raw assessment as the reader sees it. */
     assessment: (raw: string) => string;
     rated: (organisation: string, rating: string, summary: string | null) => string;
+}
+
+/** The labels in one language (`lng`, else the app's): Share writes them in the
+ *  language of the headline it shares, like `useShareArticle`'s footer. */
+export function factCheckTextLabels(t: TFunction, lng?: string): FactCheckTextLabels {
+    const tr = (key: string, opts: Record<string, unknown> = {}): string =>
+        (t as unknown as (k: string, o: object) => string)(key, { ...opts, lng });
+    return {
+        factChecks: tr('factCheck.title'),
+        claims: tr('factCheck.claimsHeading'),
+        aiSummary: tr('factCheck.share.aiSummary'),
+        sources: tr('factCheck.share.sources'),
+        noneFound: tr('factCheck.dashboard.noneFound'),
+        rating: (raw) => {
+            const info = describeOrganisationVerdict(raw);
+            return info.isKey ? tr(info.label) : info.label;
+        },
+        assessment: (raw) => tr(describeAssessment(raw).labelKey),
+        rated: (organisation, rating, summary) =>
+            summary
+                ? tr('factCheck.share.ratedSaid', { organisation, rating, summary })
+                : tr('factCheck.share.rated', { organisation, rating }),
+    };
+}
+
+/** "24 Oct 2026" in `lng`; null for no date or one that does not parse. */
+export function shareDate(value: string | number | null | undefined, lng?: string): string | null {
+    if (value === null || value === undefined || value === '') return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    const opts = { day: 'numeric', month: 'short', year: 'numeric' } as const;
+    try {
+        return date.toLocaleDateString(lng, opts);
+    } catch {
+        // RangeError on a malformed tag: never throw out of a share.
+        return date.toLocaleDateString(undefined, opts);
+    }
+}
+
+/** "https://www.thefederal.com/x" -> "thefederal.com", the label of a source row. */
+export function sourceDomain(uri: string): string {
+    return uri.match(/^https?:\/\/(?:www\.)?([^/?#]+)/i)?.[1] ?? uri;
 }
 
 export interface FactCheckContent {

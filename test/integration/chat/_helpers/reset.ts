@@ -4,7 +4,7 @@ import { __resetAppRestartForTests } from '@/lib/app-restart';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { resetChatSession } from '@/lib/chat-session/chat-session';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
-import { stopAskedFactCheckPollerForTest } from '@/lib/fact-check/fact-check-graphql-client';
+import { resetFactCheckSchemaForTest, stopAskedFactCheckPollerForTest } from '@/lib/fact-check/fact-check-graphql-client';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
@@ -20,6 +20,7 @@ export function resetChatModules(): void {
   clearAttestationCache();
   invalidateJwtCache();
   stopAskedFactCheckPollerForTest();
+  resetFactCheckSchemaForTest();
   // Disposes the live engine, empties the cloud and on-device chat stores, drops the restart hold.
   resetChatSession();
   // Restart holds (the chat session's 'chat-stream', model loads, local inference).
