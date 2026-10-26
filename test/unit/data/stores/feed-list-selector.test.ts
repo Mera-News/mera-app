@@ -51,6 +51,7 @@ function sugg(o: Partial<ForYouSuggestion> = {}): ForYouSuggestion {
     matchedTopics: o.matchedTopics ?? [],
     factIds: o.factIds ?? [],
     scoredAt: o.scoredAt ?? null,
+    storyKey: o.storyKey ?? null,
   };
 }
 
@@ -218,6 +219,14 @@ describe('buildFeedList — grouping + exclusion', () => {
     // `hasImage` key above pubDate ties.
     expect(list[0].suggestion._id).toBe('a');
     expect(list[0].id).toBe('art-a');
+  });
+
+  it('collapses copies that share only a story key (disjoint titles, no clusters)', () => {
+    const a = sugg({ _id: 'a', title_en: 'Koningin Maxima bezoekt Utrecht', storyKey: 'K1' });
+    const b = sugg({ _id: 'b', title_en: 'Royal visit draws crowds downtown', storyKey: 'K1' });
+    const c = sugg({ _id: 'c', title_en: 'Unrelated harbour strike', storyKey: null });
+    const list = buildFeedList([a, b, c], new Set(), NOW);
+    expect(list.map((i) => i.memberCount).sort()).toEqual([1, 2]);
   });
 
   it('populates memberIds with every grouped member articleId (not _id)', () => {

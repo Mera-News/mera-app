@@ -13,8 +13,11 @@ import {
     titleJaccard,
     weightedTitleJaccard,
     buildStoryGroups,
+    DISPLAY_GROUPING_OPTIONS,
+    groupableOf,
     pickRepresentative,
 } from '../story-grouping';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 type ClusterMembership = {
     clusterId: string;
@@ -651,6 +654,47 @@ describe('buildStoryGroups — stable-cluster edge: ungated for DISPLAY, gated f
             item('b', B, [{ clusterId: 'c2', confidence: 1e-38 }]),
         ];
         expect(buildStoryGroups(items, DISPLAY_OPTS)).toHaveLength(2);
+    });
+});
+
+// --- story-key edge ----------------------------------------------------------
+
+describe('buildStoryGroups — story-key edge (always on, both layers)', () => {
+    // Disjoint titles and no clusters or entities: only the story key can join them.
+    const keyed = (id: string, title: string, storyKey: string | null | undefined): TestItem => ({
+        ...item(id, title),
+        storyKey,
+    });
+
+    it('joins equal non-null keys on display and propagation alike', () => {
+        const items = [
+            keyed('a', 'Koningin Maxima bezoekt Utrecht', 'K1'),
+            keyed('b', 'Royal visit draws crowds downtown', 'K1'),
+            keyed('c', 'Unrelated harbour strike', 'K2'),
+        ];
+        for (const opts of [DISPLAY_OPTS, PROPAGATION_OPTS, DISPLAY_GROUPING_OPTIONS]) {
+            const groups = buildStoryGroups(items, opts);
+            expect(groups.map((g) => g.map((m) => m.id))).toEqual([['a', 'b'], ['c']]);
+        }
+    });
+
+    it('never joins null, absent or empty keys', () => {
+        const items = [
+            keyed('a', 'Koningin Maxima bezoekt Utrecht', null),
+            keyed('b', 'Royal visit draws crowds downtown', null),
+            keyed('c', 'Unrelated harbour strike', ''),
+            keyed('d', 'Parliament budget vote delayed', ''),
+            keyed('e', 'Football final tickets sold out', undefined),
+        ];
+        expect(buildStoryGroups(items, DISPLAY_GROUPING_OPTIONS)).toHaveLength(5);
+    });
+
+    it('groupableOf carries the store row\'s story key, null when absent', () => {
+        const row = (over: Partial<ForYouSuggestion>) =>
+            ({ _id: 'x', title_en: 't', title_original: null, clusters: [], ...over }) as ForYouSuggestion;
+        expect(groupableOf(row({ storyKey: 'K1' })).storyKey).toBe('K1');
+        expect(groupableOf(row({})).storyKey).toBeNull();
+        expect(groupableOf(row({ clusters: undefined as never })).clusters).toEqual([]);
     });
 });
 

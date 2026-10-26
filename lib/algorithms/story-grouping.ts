@@ -47,7 +47,8 @@
  * further 13 same-story pairs the raw title bar missed.
  */
 
-import type { ClusterMembership } from '@/lib/stores/for-you-store';
+// Type-only: a value import would pull the store, and with it the DB, into the pure `unit` project.
+import type { ClusterMembership, ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 export interface GroupableItem {
     id: string;
@@ -68,6 +69,12 @@ export interface GroupableItem {
      * `sameEventType`).
      */
     eventType?: string | null;
+    /**
+     * Server-assigned write-once story id (`article_suggestions.story_key`, v56).
+     * Equal non-null keys are the same story on BOTH layers (edge 0a). Null, absent
+     * or '' forms no edge, so rows stored before v56 group exactly as before.
+     */
+    storyKey?: string | null;
 }
 
 export interface StoryGroupingOptions {
@@ -509,6 +516,21 @@ export function buildStoryGroups<T extends GroupableItem>(
         parent[i] = i;
     }
 
+    // --- 0a. Story-key edges (server story id) --------------------------------
+    // The server's write-once `story_key`: copies of one report (an edition on
+    // eight regional sites, two paths on one site, a near-copy under the server's
+    // calibrated Hamming bar) share it. Always on for display AND propagation, so
+    // the phone scores one copy and the rest inherit; see PROPAGATION_OPTIONS in
+    // score-propagation for why that is safe. Falsy keys never join.
+    const keyToIndex = new Map<string, number>();
+    for (let i = 0; i < n; i += 1) {
+        const key = items[i].storyKey;
+        if (!key) continue;
+        const first = keyToIndex.get(key);
+        if (first === undefined) keyToIndex.set(key, i);
+        else union(parent, first, i);
+    }
+
     // --- 0. Stable-cluster edges (STRONGEST — cross-run story identity) ------
     // Two items sharing the same non-null `stableClusterId` are the SAME story
     // even when their per-run `clusterId`s differ (server wipes+reinserts cluster
@@ -823,4 +845,29 @@ export function pickRepresentative<T extends GroupableItem>(
         }
     }
     return best;
+}
+
+/** The one display option set: the Feed, the Sectioned view, the fact page and
+ *  the article page's local siblings must collapse a story identically, or a copy
+ *  the feed folded is reachable from nowhere. */
+export const DISPLAY_GROUPING_OPTIONS: StoryGroupingOptions = {
+    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
+    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    ungateStableClusterEdge: true,
+};
+
+/** A store suggestion as a grouping item, the suggestion itself on `.s`. The one
+ *  mapper every display call site uses, so a new grouping field reaches them all. */
+export function groupableOf(s: ForYouSuggestion): GroupableItem & { s: ForYouSuggestion } {
+    return {
+        id: s._id,
+        title: s.title_en ?? s.title_original ?? null,
+        clusters: s.clusters ?? [],
+        entities: s.entities,
+        eventType: s.eventType,
+        storyKey: s.storyKey ?? null,
+        s,
+    };
 }

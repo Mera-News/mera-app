@@ -36,6 +36,7 @@ import {
   stableClusterIdOf,
   type FeedListItem,
 } from './feed-list-selector';
+import { groupableOf } from '@/lib/algorithms/story-grouping';
 import {
   grayBandSweep,
   type DedupCandidate,
@@ -635,9 +636,7 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
   // on the Observability refresh path only.
   const sidecars = input.vectorSidecarsById;
   const dedupItems: DedupCandidate[] = input.suggestions.map((s) => ({
-    id: s._id,
-    title: s.title_en ?? s.title_original ?? null,
-    clusters: s.clusters ?? [],
+    ...groupableOf(s),
     vectorSidecarPacked: sidecars ? (sidecars[s.articleId] ?? null) : null,
   }));
   const { counters: dedup } = grayBandSweep(dedupItems);

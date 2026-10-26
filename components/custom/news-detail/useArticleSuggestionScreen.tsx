@@ -20,10 +20,8 @@ import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-stor
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import {
     buildStoryGroups,
-    CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-    TITLE_JACCARD_DISPLAY_THRESHOLD,
-    WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-    ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    DISPLAY_GROUPING_OPTIONS,
+    groupableOf,
 } from '@/lib/algorithms/story-grouping';
 import {
     orderRelatedArticles,
@@ -162,27 +160,7 @@ export function useArticleSuggestionScreen({
         const pool = suggestions.some((x) => x._id === suggestion._id)
             ? suggestions
             : [...suggestions, suggestion];
-        const groups = buildStoryGroups(
-            pool.map((s) => ({
-                id: s._id,
-                title: s.title_en ?? s.title_original,
-                clusters: s.clusters,
-                entities: s.entities,
-                eventType: s.eventType,
-                s,
-            })),
-            // Must stay in lock-step with the two feed selectors' DISPLAY option
-            // set — including `entityJaccardThreshold`. If the feed collapses
-            // A+B+C behind "+2 sources" via an edge this screen does not have,
-            // B and C are reachable from nowhere in the app.
-            {
-                titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-                clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-                weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-                entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
-                ungateStableClusterEdge: true,
-            },
-        );
+        const groups = buildStoryGroups(pool.map(groupableOf), DISPLAY_GROUPING_OPTIONS);
         const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));
         return (mine ?? [])
             .filter((m) => m.id !== suggestion._id)

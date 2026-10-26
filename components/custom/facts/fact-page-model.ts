@@ -7,11 +7,9 @@
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import {
     buildStoryGroups,
-    CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-    ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    DISPLAY_GROUPING_OPTIONS,
+    groupableOf,
     pickRepresentative,
-    TITLE_JACCARD_DISPLAY_THRESHOLD,
-    WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/algorithms/story-grouping';
 import { FEED_WINDOW_MS, isWithinWindow, relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { FactRowGroup } from '@/lib/stores/fact-rows-selector';
@@ -48,23 +46,7 @@ export function leftOutStories(suggestions: readonly ForYouSuggestion[], factId:
         (s) => (s.factIds ?? []).includes(factId) && isWithinWindow(s, cutoff) && isLeftOut(s),
     );
     if (pool.length === 0) return [];
-    const groups = buildStoryGroups(
-        pool.map((s) => ({
-            id: s._id,
-            title: s.title_en ?? s.title_original ?? null,
-            clusters: s.clusters ?? [],
-            entities: s.entities,
-            eventType: s.eventType,
-            s,
-        })),
-        {
-            titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-            clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-            weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-            entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
-            ungateStableClusterEdge: true,
-        },
-    );
+    const groups = buildStoryGroups(pool.map(groupableOf), DISPLAY_GROUPING_OPTIONS);
     return groups
         .map((g) => {
             const rep = pickRepresentative(g, (a, b) => pubMs(b.s) - pubMs(a.s)).s;
