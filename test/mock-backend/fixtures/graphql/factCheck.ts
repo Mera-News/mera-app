@@ -25,6 +25,8 @@ export function factCheckFor(articleId: string, now: number): FactCheck {
         publicationName: 'Fixtureville Courier',
         model: 'fixture-model',
         attempts: 1,
+        // A day after it completed: "Checked recently" until then.
+        recheckAvailableAt: new Date(now - 60_000 + 86_400_000).toISOString(),
     };
 }
 

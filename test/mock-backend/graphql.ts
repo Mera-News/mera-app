@@ -336,6 +336,19 @@ query<'factCheck'>('GetFactCheck', (c) => ({
 query<'cachedFactCheck'>('GetCachedFactCheck', (c) => ({
     cachedFactCheck: factCheckFor(c.variables.articleId ?? ARTICLE_IDS[0], c.now),
 }));
+// The legacy documents (no recheckAvailableAt) answer the same row; the client
+// only sends them after a server rejects the field.
+query<'factCheck'>('GetFactCheckLegacy', (c) => ({
+    factCheck: factCheckFor(c.variables.articleId ?? ARTICLE_IDS[0], c.now),
+}));
+query<'cachedFactCheck'>('GetCachedFactCheckLegacy', (c) => ({
+    cachedFactCheck: factCheckFor(c.variables.articleId ?? ARTICLE_IDS[0], c.now),
+}));
+// "Fact check again" on the fixture's minute-old check: within the day, so the
+// server answers it unchanged with recheckAvailableAt still ahead.
+mutation<'requestFactCheck'>('RequestFactCheckAgain', (c) => ({
+    requestFactCheck: factCheckFor(c.variables.articleId ?? ARTICLE_IDS[0], c.now),
+}));
 
 // ---- account, billing, config -------------------------------------------------------
 
