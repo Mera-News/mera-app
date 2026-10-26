@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Geen code gekregen? Kies \"Inloggen met deze telefoon\"."
     },
     "emailLegacyHint": "Alleen voor mensen die eerder met e-mail zijn ingelogd. Nieuwe gebruikers kunnen niet meer met e-mail inloggen.",
-    "phoneCheckTemporary": "We konden deze telefoon niet controleren. Controleer je verbinding en probeer het opnieuw.",
+    "phoneCheckTemporary": "We konden deze telefoon nu niet controleren. Probeer het over een minuut opnieuw.",
     "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",
     "phoneUnsupportedIos": "Deze iPhone kan niet inloggen met een telefoonnummer.",
     "supportedPhones": "Ondersteunde telefoons",
@@ -279,6 +279,7 @@
       "paused": "Redenen gepauzeerd voor vandaag",
       "discarded": "Afgewezen door Mera"
     },
+    "noteMatchedFacts": "Komt overeen met je feiten: {{facts}}",
     "readyForMore": "Klaar om meer te lezen?",
     "refreshFeedAction": "Ververs je feed",
     "translationFailed": "Vertaling mislukt. Start de app opnieuw."

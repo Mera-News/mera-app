@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Kod nie przyszedł? Użyj przycisku „Zaloguj się tym telefonem”."
     },
     "emailLegacyHint": "Tylko dla osób, które wcześniej logowały się e-mailem. Nowi użytkownicy nie mogą już logować się e-mailem.",
-    "phoneCheckTemporary": "Nie udało się sprawdzić tego telefonu. Sprawdź połączenie i spróbuj ponownie.",
+    "phoneCheckTemporary": "Nie udało się teraz sprawdzić tego telefonu. Spróbuj ponownie za minutę.",
     "phoneUnsupportedAndroid": "Mera potrzebuje Google Play na tym telefonie, żeby Cię zalogować. Telefony bez niego nie są obsługiwane.",
     "phoneUnsupportedIos": "Ten iPhone nie może logować się telefonem.",
     "supportedPhones": "Obsługiwane telefony",
@@ -303,6 +303,7 @@
       "paused": "Uzasadnienia wstrzymane na dziś",
       "discarded": "Odrzucone przez Merę"
     },
+    "noteMatchedFacts": "Pasuje do Twoich faktów: {{facts}}",
     "readyForMore": "Gotowy, żeby czytać dalej?",
     "refreshFeedAction": "Odśwież swój kanał",
     "translationFailed": "Tłumaczenie się nie udało. Uruchom aplikację ponownie."

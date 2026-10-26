@@ -84,7 +84,7 @@
       "noCodeUsePhone": "没有收到验证码？请点按“用这部手机登录”。"
     },
     "emailLegacyHint": "仅适用于之前用邮箱登录过的人。新用户已无法再用邮箱登录。",
-    "phoneCheckTemporary": "无法检查这部手机。请检查网络连接后重试。",
+    "phoneCheckTemporary": "暂时无法检查这部手机。请一分钟后重试。",
     "phoneUnsupportedAndroid": "梅拉需要这部手机上有 Google Play 才能为你登录。没有 Google Play 的手机不受支持。",
     "phoneUnsupportedIos": "这部 iPhone 无法使用手机登录。",
     "supportedPhones": "支持的手机",
@@ -275,6 +275,7 @@
       "paused": "今日理由已暂停",
       "discarded": "梅拉已排除"
     },
+    "noteMatchedFacts": "匹配你的事实：{{facts}}",
     "readyForMore": "准备好读更多了吗？",
     "refreshFeedAction": "刷新你的信息流",
     "translationFailed": "翻译失败。请重启应用。"

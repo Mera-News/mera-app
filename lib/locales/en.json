@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
     },
     "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
-    "phoneCheckTemporary": "Couldn't check this phone. Check your connection and try again.",
+    "phoneCheckTemporary": "We couldn't check this phone right now. Try again in a minute.",
     "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
     "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
     "supportedPhones": "Supported phones",
@@ -316,6 +316,7 @@
       "paused": "Reasons paused for today",
       "discarded": "Discarded by Mera"
     },
+    "noteMatchedFacts": "Matched your facts: {{facts}}",
     "readyForMore": "Are you ready to read more?",
     "refreshFeedAction": "Refresh your feed",
     "translationFailed": "Translation failed. Restart the app."

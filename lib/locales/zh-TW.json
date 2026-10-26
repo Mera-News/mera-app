@@ -84,7 +84,7 @@
       "noCodeUsePhone": "沒有收到驗證碼？請點選「使用這支手機登入」。"
     },
     "emailLegacyHint": "只適用於之前用電子郵件登入的人。新使用者已無法再用電子郵件登入。",
-    "phoneCheckTemporary": "無法檢查這支手機。請檢查網路連線後再試一次。",
+    "phoneCheckTemporary": "暫時無法檢查這支手機。請一分鐘後再試。",
     "phoneUnsupportedAndroid": "梅拉需要這支手機上有 Google Play 才能為你登入。不支援沒有 Google Play 的手機。",
     "phoneUnsupportedIos": "這支 iPhone 無法使用手機登入。",
     "supportedPhones": "支援的手機",
@@ -275,6 +275,7 @@
       "paused": "今日理由已暫停",
       "discarded": "梅拉已排除"
     },
+    "noteMatchedFacts": "符合你的事實：{{facts}}",
     "readyForMore": "準備好讀更多了嗎？",
     "refreshFeedAction": "重新整理你的資訊流",
     "translationFailed": "翻譯失敗。請重新啟動應用程式。"

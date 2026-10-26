@@ -62,17 +62,22 @@ export { relevanceBandRank };
 export type FeedEntry = FeedListItem;
 
 /** How many rows are pinned before the user has scrolled at all. Expressed as a
- *  floor on the deepest-seen INDEX, so `+ 2` below yields 4 pinned rows: three
- *  are visible on a phone screen (one whole, two partial) and the fourth is the
- *  slack card. */
+ *  floor on the deepest-seen INDEX, so `+ PIN_SLACK` below yields 6 pinned rows:
+ *  three are visible on a phone screen (one whole, two partial) and the rest
+ *  are slack. */
 export const INITIAL_VISIBLE_FLOOR = 2;
+
+/** Added to the deepest seen index to get the pinned count, so three cards of
+ *  slack sit below the reader. New arrivals land past them instead of at the
+ *  next swipe. */
+export const PIN_SLACK = 4;
 
 /**
  * Extend the PINNED PREFIX — the static region the user has already read past.
  *
  * The rule: pin every story down to the deepest one the user has actually seen,
- * plus one card of slack. Three rows visible ⇒ four pinned ⇒ the fifth card is
- * the first dynamic slot.
+ * plus three cards of slack (the count is deepest index + PIN_SLACK). Three rows visible ⇒ six pinned ⇒ the seventh
+ * card is the first dynamic slot.
  *
  * MONOTONIC: the prefix only ever grows within a session (a shorter `want`
  * returns `prev` by IDENTITY, so React skips the re-render). Scrolling back up
@@ -95,7 +100,7 @@ export function extendPinnedIds(
   deepestSeenId: string | null,
 ): string[] {
   const found = deepestSeenId ? sorted.findIndex((it) => it.id === deepestSeenId) : -1;
-  const want = Math.max(found, INITIAL_VISIBLE_FLOOR) + 2;
+  const want = Math.max(found, INITIAL_VISIBLE_FLOOR) + PIN_SLACK;
   const n = Math.min(Math.max(want, prev.length), sorted.length);
   if (n <= prev.length) return prev as string[];
   return sorted.slice(0, n).map((it) => it.id);

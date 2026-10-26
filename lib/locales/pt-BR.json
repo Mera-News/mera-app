@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Não recebeu o código? Use “Entrar com este celular”."
     },
     "emailLegacyHint": "Só para quem entrou com e-mail antes. Novos usuários não podem mais entrar com e-mail.",
-    "phoneCheckTemporary": "Não foi possível verificar este celular. Verifique sua conexão e tente novamente.",
+    "phoneCheckTemporary": "Não foi possível verificar este celular agora. Tente novamente em um minuto.",
     "phoneUnsupportedAndroid": "A Mera precisa do Google Play neste celular para entrar com você. Celulares sem ele não são compatíveis.",
     "phoneUnsupportedIos": "Este iPhone não pode usar o login por celular.",
     "supportedPhones": "Celulares compatíveis",
@@ -279,6 +279,7 @@
       "paused": "Motivos pausados por hoje",
       "discarded": "Descartados pelo Mera"
     },
+    "noteMatchedFacts": "Combina com seus fatos: {{facts}}",
     "readyForMore": "Pronto para ler mais?",
     "refreshFeedAction": "Atualizar seu feed",
     "translationFailed": "A tradução falhou. Reinicie o app."

@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Kod gelmedi mi? \"Bu telefonla giriş yap\"ı kullan."
     },
     "emailLegacyHint": "Yalnızca daha önce e-postayla giriş yapanlar için. Yeni kullanıcılar artık e-posta ile devam edemez.",
-    "phoneCheckTemporary": "Bu telefon kontrol edilemedi. Bağlantını kontrol edip tekrar dene.",
+    "phoneCheckTemporary": "Bu telefon şu anda kontrol edilemedi. Bir dakika sonra tekrar dene.",
     "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
     "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
     "supportedPhones": "Desteklenen telefonlar",
@@ -279,6 +279,7 @@
       "paused": "Nedenler bugünlük duraklatıldı",
       "discarded": "Mera tarafından elendi"
     },
+    "noteMatchedFacts": "Gerçeklerinle eşleşti: {{facts}}",
     "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
     "refreshFeedAction": "Akışınızı yenileyin",
     "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın."

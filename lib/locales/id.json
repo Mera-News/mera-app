@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Tidak menerima kode? Gunakan “Masuk dengan ponsel ini”."
     },
     "emailLegacyHint": "Hanya untuk yang dulu masuk dengan email. Pengguna baru tidak bisa lagi masuk dengan email.",
-    "phoneCheckTemporary": "Ponsel ini tidak bisa diperiksa. Periksa koneksi Anda lalu coba lagi.",
+    "phoneCheckTemporary": "Kami tidak bisa memeriksa ponsel ini sekarang. Coba lagi sebentar lagi.",
     "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",
     "phoneUnsupportedIos": "iPhone ini tidak bisa memakai masuk dengan ponsel.",
     "supportedPhones": "Ponsel yang didukung",
@@ -275,6 +275,7 @@
       "paused": "Alasan dijeda untuk hari ini",
       "discarded": "Dibuang oleh Mera"
     },
+    "noteMatchedFacts": "Cocok dengan fakta Anda: {{facts}}",
     "readyForMore": "Siap membaca lebih banyak?",
     "refreshFeedAction": "Muat ulang feed Anda",
     "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi."

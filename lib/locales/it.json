@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Non hai ricevuto il codice? Usa «Accedi con questo telefono»."
     },
     "emailLegacyHint": "Solo per chi ha già effettuato l'accesso con l'email. I nuovi utenti non possono più accedere con l'email.",
-    "phoneCheckTemporary": "Impossibile verificare questo telefono. Controlla la connessione e riprova.",
+    "phoneCheckTemporary": "Non è stato possibile verificare questo telefono ora. Riprova tra un minuto.",
     "phoneUnsupportedAndroid": "Mera ha bisogno di Google Play su questo telefono per farti accedere. I telefoni senza Google Play non sono supportati.",
     "phoneUnsupportedIos": "Questo iPhone non può usare l'accesso con il telefono.",
     "supportedPhones": "Telefoni supportati",
@@ -279,6 +279,7 @@
       "paused": "Motivi in pausa per oggi",
       "discarded": "Scartati da Mera"
     },
+    "noteMatchedFacts": "Corrisponde ai tuoi fatti: {{facts}}",
     "readyForMore": "Pronto a leggere altro?",
     "refreshFeedAction": "Aggiorna il tuo feed",
     "translationFailed": "Traduzione non riuscita. Riavvia l'app."
