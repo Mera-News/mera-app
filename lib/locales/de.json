@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Keinen Code bekommen? Tippe auf „Mit diesem Telefon anmelden“."
     },
     "emailLegacyHint": "Nur für Personen, die sich früher mit E-Mail angemeldet haben. Neue Nutzer können sich nicht mehr mit E-Mail anmelden.",
-    "phoneCheckTemporary": "Dieses Telefon konnte nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.",
+    "phoneCheckTemporary": "Wir konnten dieses Telefon gerade nicht prüfen. Versuche es in einer Minute erneut.",
     "phoneUnsupportedAndroid": "Mera braucht Google Play auf diesem Telefon, um dich anzumelden. Telefone ohne Google Play werden nicht unterstützt.",
     "phoneUnsupportedIos": "Dieses iPhone kann die Anmeldung mit Telefon nicht nutzen.",
     "supportedPhones": "Unterstützte Telefone",
@@ -279,6 +279,7 @@
       "paused": "Gründe für heute pausiert",
       "discarded": "Von Mera aussortiert"
     },
+    "noteMatchedFacts": "Passt zu deinen Fakten: {{facts}}",
     "readyForMore": "Bereit für mehr?",
     "refreshFeedAction": "Feed aktualisieren",
     "translationFailed": "Übersetzung fehlgeschlagen. Starte die App neu."

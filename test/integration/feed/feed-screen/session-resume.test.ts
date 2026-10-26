@@ -27,19 +27,19 @@ beforeEach(async () => {
   await resetFeedStores();
 });
 
-/** Six rows mounted, r5 viewed (the snapshot is stale), then a HIGH arrival below the pin.
+/** Eight rows mounted, r7 viewed (the snapshot is stale), then a HIGH arrival below the pin.
  *  Returns the list as the reader sees it now. */
 async function readerMidFeed() {
-  await seedComplete(['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].map((id) => [id, MEDIUM] as const));
+  await seedComplete(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'].map((id) => [id, MEDIUM] as const));
   await hydrateSuggestions();
   const feed = await renderFeed();
-  await waitFor(() => expect(feed.ids()).toHaveLength(6));
+  await waitFor(() => expect(feed.ids()).toHaveLength(8));
   await act(async () => {});
-  act(() => useFeedOrderStore.getState().markViewed('r5'));
+  act(() => useFeedOrderStore.getState().markViewed('r7'));
   await arrive([['newH', HIGH]]);
   await waitFor(() => expect(feed.ids()).toContain('newH'));
-  // Pin of four, the HIGH arrival leads the dynamic region, r5 still counts as unviewed.
-  expect(feed.ids()).toEqual(['r1', 'r2', 'r3', 'r4', 'newH', 'r5', 'r6']);
+  // Pin of six, the HIGH arrival leads the dynamic region, r7 still counts as unviewed.
+  expect(feed.ids()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'newH', 'r7', 'r8']);
   return feed;
 }
 
@@ -74,8 +74,10 @@ describe('background then active', () => {
     useStrictClock();
     awayFor(awayMs);
 
-    // r5 (viewed) sinks to tier 1; HIGH leads; the old pin no longer holds r1..r4 in place.
-    await waitFor(() => expect(feed.ids()).toEqual(['newH', 'r1', 'r2', 'r3', 'r4', 'r6', 'r5']));
+    // r7 (viewed) sinks to tier 1; HIGH leads; the old pin no longer holds r1..r6 in place.
+    await waitFor(() =>
+      expect(feed.ids()).toEqual(['newH', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r8', 'r7']),
+    );
   });
 
   it('only a background stamp counts: an app-switcher "inactive" is not an absence', async () => {
@@ -98,7 +100,7 @@ describe('background then active', () => {
     jest.setSystemTime(Date.now() + 10 * 60_000); // time spent in the foreground does not add up
     awayFor(4 * 60_000);
     await act(async () => {});
-    expect(feed.ids()).toEqual(['r1', 'r2', 'r3', 'r4', 'newH', 'r5', 'r6']);
+    expect(feed.ids()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'newH', 'r7', 'r8']);
   });
 });
 

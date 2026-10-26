@@ -674,6 +674,8 @@ function classify(error: unknown): DeviceSignInResult {
  * CALLER records the returned userId via `recordAuthenticatedUser` exactly the
  * way the OTP view does.
  */
+const TRANSIENT_INTEGRITY_RETRY_MS = 1500;
+
 export async function signInWithDevice(): Promise<DeviceSignInResult> {
   try {
     const flow = await pickFlow({ kind: 'sign-in' });
@@ -702,18 +704,26 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
     try {
       parsed = await runFlow();
     } catch (error) {
-      // REFUSAL RECOVERY (S10): a stored credential the server refuses with a
-      // 403 is dead (bound user gone, account deleted, or a key the server no
-      // longer has a record for, which is what an account deletion leaves) —
-      // sever everything and re-enroll fresh, ONCE. Mirrors the ERR_ATTEST_INVALID_KEY shape.
-      // 400/503/network never clear credentials, and a fresh install has
-      // nothing to recover.
-      if (!hadStoredCredentials || !isServerRefusal(error)) throw error;
-      logger.warn('[device-auth] stored credential refused; severing and re-enrolling once', {
-        code: (error as ServerRejection).code,
-      });
-      await clearDeviceAuthCredentials();
-      parsed = await runFlow();
+      // MERA-APP-8F: Google's side failed for now. One retry a moment later,
+      // with a fresh nonce, usually passes; a second failure is classified.
+      if (isIntegrityTransientError(error)) {
+        logger.warn('[device-auth] transient Play Integrity error; retrying once');
+        await new Promise((resolve) => setTimeout(resolve, TRANSIENT_INTEGRITY_RETRY_MS));
+        parsed = await runFlow();
+      } else {
+        // REFUSAL RECOVERY (S10): a stored credential the server refuses with a
+        // 403 is dead (bound user gone, account deleted, or a key the server no
+        // longer has a record for, which is what an account deletion leaves) —
+        // sever everything and re-enroll fresh, ONCE. Mirrors the ERR_ATTEST_INVALID_KEY shape.
+        // 400/503/network never clear credentials, and a fresh install has
+        // nothing to recover.
+        if (!hadStoredCredentials || !isServerRefusal(error)) throw error;
+        logger.warn('[device-auth] stored credential refused; severing and re-enrolling once', {
+          code: (error as ServerRejection).code,
+        });
+        await clearDeviceAuthCredentials();
+        parsed = await runFlow();
+      }
     }
 
     // Best-effort session-atom refresh. The recorder is what routing trusts.
@@ -793,10 +803,11 @@ export async function convertWithDevice(
     if (!flow) return { status: 'unsupported' };
     return parseConvert((await flow()).data);
   } catch (error) {
-    // A server without the route yet (deploys land server first, same day):
-    // temporary, retried, and not worth a Sentry event.
-    if (error instanceof ServerRejection && error.status === 404) {
-      logger.warn('[device-auth] convert route missing', { path: error.path });
+    // 404: a server without the route yet (deploys land server first, same
+    // day). 401: the session died ("no valid session"). Both temporary,
+    // retried next launch, and not worth a Sentry event.
+    if (error instanceof ServerRejection && (error.status === 404 || error.status === 401)) {
+      logger.warn('[device-auth] convert not possible now', { path: error.path, httpStatus: error.status });
       return { status: 'failed', reason: 'attestation-unavailable', step };
     }
     const result = classifyFailure(error, 'convert');

@@ -656,6 +656,25 @@ describe('translateText', () => {
         // regression signal for a future native-side fix), just off the
         // default error triage and grouped under one fingerprint regardless of
         // Hermes' unreliable culprit.
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('The operation was cancelled.'));
+
+        const promise = translateText('Hello', 'fr');
+        await jest.runAllTimersAsync();
+        await promise;
+
+        expect(logger.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                level: 'warning',
+                fingerprint: ['translation-native-cancelled'],
+            }),
+        );
+        expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    // MERA-APP-7G: a cancelled probe is the reader dismissing Apple's download sheet.
+    it('leaves a breadcrumb, not an issue, for a cancelled language probe', async () => {
         mockOnTranslateTask.mockRejectedValue(new Error('The operation was cancelled.'));
 
         const promise = probeTranslationLanguage('fr');
@@ -663,12 +682,10 @@ describe('translateText', () => {
         const outcome = await promise;
 
         expect(outcome).toBe('failed');
-        expect(logger.captureException).toHaveBeenCalledWith(
-            expect.any(Error),
-            expect.objectContaining({
-                level: 'warning',
-                fingerprint: ['translation-native-cancelled'],
-            }),
+        expect(logger.captureException).not.toHaveBeenCalled();
+        expect(logger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('probe cancelled'),
+            expect.objectContaining({ targetLangCode: 'fr' }),
         );
         expect(logger.error).not.toHaveBeenCalled();
     });

@@ -200,24 +200,25 @@ describe('sortFeedEntries', () => {
 });
 
 describe('extendPinnedIds', () => {
-  const sorted = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => item(id));
+  const sorted = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'].map((id) => item(id));
 
-  it('pins 4 rows before the user has scrolled (deepestSeenId null)', () => {
-    expect(extendPinnedIds([], sorted, null)).toEqual(['a', 'b', 'c', 'd']);
+  it('pins 6 rows before the user has scrolled (deepestSeenId null)', () => {
+    expect(extendPinnedIds([], sorted, null)).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
   });
 
-  it('pins deepest-seen + 1 slack card: 3 rows visible ⇒ 4 pinned ⇒ 5th is dynamic', () => {
-    // Rows 0,1,2 visible, row 2 deepest ⇒ indices 0..3 pinned.
-    expect(extendPinnedIds([], sorted, 'c')).toEqual(['a', 'b', 'c', 'd']);
-    expect(extendPinnedIds([], sorted, 'c')).toHaveLength(INITIAL_VISIBLE_FLOOR + 2);
+  it('pins 3 slack cards below the deepest seen (+4 in count): new arrivals land well below the reader', () => {
+    // Row 2 deepest ⇒ indices 0..5 pinned (6 rows); the 7th is the first dynamic slot.
+    expect(extendPinnedIds([], sorted, 'c')).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+    expect(extendPinnedIds([], sorted, 'c')).toHaveLength(2 + 4);
+    expect(extendPinnedIds([], sorted, null)).toHaveLength(INITIAL_VISIBLE_FLOOR + 4);
   });
 
   it('grows as the user scrolls deeper', () => {
-    expect(extendPinnedIds([], sorted, 'e')).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+    expect(extendPinnedIds([], sorted, 'e')).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
   });
 
   it('is MONOTONIC and returns prev by IDENTITY when nothing new is covered', () => {
-    const prev = extendPinnedIds([], sorted, 'e'); // 6 long
+    const prev = extendPinnedIds([], sorted, 'e'); // 8 long
     // Scrolling back up to row 1 must not shrink the pin...
     const next = extendPinnedIds(prev, sorted, 'b');
     expect(next).toBe(prev); // identity — no re-render
@@ -225,11 +226,11 @@ describe('extendPinnedIds', () => {
 
   it('falls back to the floor (never collapses) when the anchor row is gone', () => {
     // The anchor was dropped by hydrate/removeIds and is not in `sorted`.
-    expect(extendPinnedIds([], sorted, 'vanished')).toEqual(['a', 'b', 'c', 'd']);
+    expect(extendPinnedIds([], sorted, 'vanished')).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
   });
 
   it('a dropped anchor cannot shrink an existing pin', () => {
-    const prev = extendPinnedIds([], sorted, 'f'); // 7 long
+    const prev = extendPinnedIds([], sorted, 'f'); // 9 long
     expect(extendPinnedIds(prev, sorted, 'vanished')).toBe(prev);
   });
 

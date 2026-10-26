@@ -122,7 +122,7 @@ describe('reportModelFailure', () => {
 
     expect(captured).toHaveBeenCalledTimes(1);
     expect(captured).toHaveBeenCalledWith('NEAR primary model failing — session fallback engaged', {
-      level: 'error',
+      level: 'warning',
       tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL },
       fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL],
     });
@@ -218,7 +218,7 @@ describe('reportModelSlow', () => {
     reportModelSlow(SMALL_MODEL);
 
     expect(captured).toHaveBeenCalledTimes(1);
-    expect(captured.mock.calls[0][1].level).toBe('warning');
+    expect(captured.mock.calls[0][1].fingerprint).toEqual(['near-model-fallback', 'hedge', SMALL_MODEL]);
   });
 
   it('dedupes with reportModelFailure: failure then slow is ONE event', () => {
@@ -226,7 +226,7 @@ describe('reportModelSlow', () => {
     reportModelSlow(SMALL_MODEL);
 
     expect(captured).toHaveBeenCalledTimes(1);
-    expect(captured.mock.calls[0][1].level).toBe('error');
+    expect(captured.mock.calls[0][1].fingerprint).toEqual(['near-model-fallback', 'timeout', SMALL_MODEL]);
   });
 });
 
@@ -476,7 +476,7 @@ describe('through cloudComplete and cloudBatchComplete', () => {
 
     expect(captured).toHaveBeenCalledTimes(1);
     expect(captured).toHaveBeenCalledWith('NEAR primary model failing — session fallback engaged', {
-      level: 'error',
+      level: 'warning',
       tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL },
       fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL],
     });

@@ -186,7 +186,7 @@ describe('when a leg fails', () => {
     expect(loggerSpies().captureMessage).toHaveBeenCalledTimes(1);
     expect(loggerSpies().captureMessage).toHaveBeenCalledWith(
       'NEAR primary model failing — session fallback engaged',
-      expect.objectContaining({ level: 'error', fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL] }),
+      expect.objectContaining({ level: 'warning', fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL] }),
     );
   });
 

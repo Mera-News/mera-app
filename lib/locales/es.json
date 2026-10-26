@@ -84,7 +84,7 @@
       "noCodeUsePhone": "¿No recibiste un código? Usa \"Iniciar sesión con este teléfono\"."
     },
     "emailLegacyHint": "Solo para quienes iniciaron sesión con correo antes. Los usuarios nuevos ya no pueden iniciar sesión con correo.",
-    "phoneCheckTemporary": "No pudimos comprobar este teléfono. Revisa tu conexión e inténtalo de nuevo.",
+    "phoneCheckTemporary": "No pudimos comprobar este teléfono ahora. Inténtalo de nuevo en un minuto.",
     "phoneUnsupportedAndroid": "Mera necesita Google Play en este teléfono para iniciar tu sesión. Los teléfonos sin Google Play no son compatibles.",
     "phoneUnsupportedIos": "Este iPhone no puede usar el inicio de sesión con teléfono.",
     "supportedPhones": "Teléfonos compatibles",
@@ -279,6 +279,7 @@
       "paused": "Motivos en pausa por hoy",
       "discarded": "Descartados por Mera"
     },
+    "noteMatchedFacts": "Coincide con tus datos: {{facts}}",
     "readyForMore": "¿Listo para leer más?",
     "refreshFeedAction": "Actualizar tu feed",
     "translationFailed": "La traducción falló. Reinicia la app."

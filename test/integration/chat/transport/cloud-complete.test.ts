@@ -10,8 +10,10 @@ import {
   UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS,
   UPSTREAM_ALIGNED_TIMEOUT_MS,
 } from '@/lib/llm/cloudComplete';
+import { EmptyReplyError } from '@/lib/llm/gateway-fetch';
 import { isFallbackEngaged } from '@/lib/llm/model-fallback';
 import logger from '@/lib/logger';
+import { http, HttpResponse } from 'msw';
 import { attestationRequests, gatewayCalls, mockGateway, server, signInFixtureAccount } from '@/test/helpers';
 import {
   BATCH_PATH,
@@ -150,6 +152,11 @@ describe('cloudComplete', () => {
   ])('returns an empty string when %s', async (_label, body) => {
     serveJson(CHAT_PATH, () => body);
     expect(await run(cloudComplete(REQUEST))).toBe('');
+  });
+
+  it('an empty 2xx body throws EmptyReplyError, not a JSON parse error', async () => {
+    server.use(http.post(`*${CHAT_PATH}`, () => new HttpResponse('', { status: 200 })));
+    expect(await run(errorOf(cloudComplete(REQUEST)))).toBeInstanceOf(EmptyReplyError);
   });
 
   it('throws on a non-ok reply, naming the status and the body, and does not retry a 4xx', async () => {

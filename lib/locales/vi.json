@@ -84,7 +84,7 @@
       "noCodeUsePhone": "Chưa nhận được mã? Hãy dùng “Đăng nhập bằng điện thoại này”."
     },
     "emailLegacyHint": "Chỉ dành cho những người từng đăng nhập bằng email. Người dùng mới không thể đăng nhập bằng email nữa.",
-    "phoneCheckTemporary": "Không thể kiểm tra điện thoại này. Hãy kiểm tra kết nối và thử lại.",
+    "phoneCheckTemporary": "Hiện chưa thể kiểm tra điện thoại này. Hãy thử lại sau một phút.",
     "phoneUnsupportedAndroid": "Mera cần Google Play trên điện thoại này để đăng nhập cho bạn. Điện thoại không có Google Play chưa được hỗ trợ.",
     "phoneUnsupportedIos": "iPhone này không thể dùng đăng nhập bằng điện thoại.",
     "supportedPhones": "Điện thoại được hỗ trợ",
@@ -275,6 +275,7 @@
       "paused": "Lý do tạm dừng hôm nay",
       "discarded": "Mera đã loại bỏ"
     },
+    "noteMatchedFacts": "Khớp với dữ kiện của bạn: {{facts}}",
     "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
     "refreshFeedAction": "Làm mới bảng tin",
     "translationFailed": "Dịch thất bại. Hãy khởi động lại ứng dụng."

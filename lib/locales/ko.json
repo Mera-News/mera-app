@@ -84,7 +84,7 @@
       "noCodeUsePhone": "코드를 받지 못하셨나요? '이 휴대폰으로 로그인'을 누르세요."
     },
     "emailLegacyHint": "이메일로 전에 로그인했던 분만 해당합니다. 새 사용자는 더 이상 이메일로 로그인할 수 없습니다.",
-    "phoneCheckTemporary": "이 휴대폰을 확인할 수 없습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.",
+    "phoneCheckTemporary": "지금은 이 휴대폰을 확인할 수 없습니다. 1분 뒤에 다시 시도해 주세요.",
     "phoneUnsupportedAndroid": "메라에 로그인하려면 이 휴대폰에 Google Play가 필요합니다. Google Play가 없는 휴대폰은 지원되지 않습니다.",
     "phoneUnsupportedIos": "이 iPhone에서는 휴대폰 로그인을 사용할 수 없습니다.",
     "supportedPhones": "지원되는 휴대폰",
@@ -275,6 +275,7 @@
       "paused": "오늘은 이유 일시 중지",
       "discarded": "메라가 제외함"
     },
+    "noteMatchedFacts": "내 사실과 일치: {{facts}}",
     "readyForMore": "더 읽을 준비가 되셨나요?",
     "refreshFeedAction": "피드 새로고침",
     "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요."

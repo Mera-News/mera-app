@@ -295,7 +295,10 @@ async function fetchModelPublicKeyUncached(
     const body = await res.text().catch(() => '');
     throw new NearAttestationError(res.status, body);
   }
-  const data = (await res.json()) as Record<string, unknown>;
+  // An empty 2xx would otherwise surface as an untyped JSON SyntaxError.
+  const raw = await res.text();
+  if (!raw.trim()) throw new NearAttestationError(res.status, 'empty body');
+  const data = JSON.parse(raw) as Record<string, unknown>;
   const mas = data.model_attestations as Record<string, unknown>[] | undefined;
   const pub = mas?.[0]?.signing_public_key as string | undefined;
   if (!pub) {

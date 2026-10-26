@@ -6,8 +6,8 @@
 // `feed-order-store.order`, but `order` position is only a tie-break WITHIN a
 // relevance band — where a row may actually render is decided here, by the
 // PINNED PREFIX (`pinnedIds`). The prefix covers every story down to the deepest
-// one the user has seen, plus one card of slack: three rows visible ⇒ four
-// pinned ⇒ the fifth card is the first dynamic slot. Anything new lands at index
+// one the user has seen, plus three cards of slack: three rows visible ⇒ six
+// pinned ⇒ the seventh card is the first dynamic slot. Anything new lands at index
 // >= that boundary, sorted among the dynamic region by priority. So the list
 // "zips": what you have read stays put in the order you read it, and everything
 // below you keeps re-ranking as news arrives. Nothing is ever inserted above the

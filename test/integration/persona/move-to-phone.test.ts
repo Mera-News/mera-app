@@ -16,6 +16,7 @@ import {
 } from '@/components/custom/auth/move-to-phone';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { signInWithDevice } from '@/lib/device-auth';
+import logger from '@/lib/logger';
 import { __resetStoreSyncForTests, configureRevenueCat, loginRevenueCat } from '@/lib/revenuecat';
 import { useUserStore } from '@/lib/stores/user-store';
 import { __resetDeviceAttestForTests } from '@/modules/mera-device-attest';
@@ -176,6 +177,17 @@ describe('moveToPhone', () => {
 
         await expect(moveToPhone(() => {})).resolves.toEqual({ kind: 'failed', step: 'linking' });
         await expect(getSetting('cached_user_email')).resolves.toBe(EMAIL);
+    });
+
+    // MERA-APP-90: the server answers 401 when the session died; the launch bind retries next launch.
+    it('a dead session (401) is a quiet temporary failure, never a Sentry event', async () => {
+        const captured = jest.spyOn(logger, 'captureMessage');
+        convertAnswers(fail(401, 'UNAUTHORIZED'));
+
+        await expect(moveToPhone(() => {})).resolves.toEqual({ kind: 'failed', step: 'linking' });
+        expect(captured).not.toHaveBeenCalled();
+        await expect(getSetting('cached_user_email')).resolves.toBe(EMAIL);
+        captured.mockRestore();
     });
 
     it('a phone that cannot attest is unsupported, with no network and nothing changed', async () => {

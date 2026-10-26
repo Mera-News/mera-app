@@ -21,7 +21,16 @@ import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/
 import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 import { __resetDeviceAttestForTests } from '@/modules/mera-device-attest';
-import { FIXTURE_ACCOUNT, HttpResponse, failSecureStore, http, secureStoreDump, server } from '@/test/helpers';
+import {
+    FIXTURE_ACCOUNT,
+    HttpResponse,
+    advanceUntilDone,
+    failSecureStore,
+    http,
+    secureStoreDump,
+    server,
+    useFakeClock,
+} from '@/test/helpers';
 
 // The attestation SDK wrapper is the device edge. Its error classifiers stay real, because the
 // code mapping under test lives in them.
@@ -324,15 +333,47 @@ describe('Play Integrity classification', () => {
     );
 
     it.each([-8, -12, -17, -100])('code %i is retryable attestation-unavailable, captured as a warning', async (code) => {
+        useFakeClock(Date.now());
         mockAttest.requestIntegrityToken.mockRejectedValue(integrityRejection(code));
 
-        const result = await signInWithDevice();
+        const result = await advanceUntilDone(signInWithDevice());
 
         expect(result).toEqual({ status: 'failed', reason: 'attestation-unavailable' });
+        // The one automatic retry ran and failed too.
+        expect(mockAttest.requestIntegrityToken).toHaveBeenCalledTimes(2);
         expect(log.captureException).toHaveBeenCalledWith(
             expect.any(Error),
             expect.objectContaining({ level: 'warning', fingerprint: ['play-integrity-transient'] }),
         );
+    });
+
+    // MERA-APP-8F: a transient code fails one attempt; a second one a moment later usually passes.
+    it('a transient code retries once, after a pause, with a fresh nonce, and is not captured', async () => {
+        useFakeClock(Date.now());
+        const at: number[] = [];
+        mockAttest.requestIntegrityToken.mockImplementation(async () => {
+            at.push(Date.now());
+            if (at.length === 1) throw integrityRejection(-12);
+            return 'integrity-token';
+        });
+
+        const result = await advanceUntilDone(signInWithDevice());
+
+        expect(result).toMatchObject({ status: 'success', userId: ME });
+        expect(at).toHaveLength(2);
+        expect(at[1] - at[0]).toBeGreaterThanOrEqual(1500);
+        expect(await noncePurposes()).toEqual(['integrity', 'integrity']);
+        const [first, second] = mockAttest.requestIntegrityToken.mock.calls.map((c) => c[0]);
+        expect(first).not.toBe(second);
+        expect(log.captureException).not.toHaveBeenCalled();
+    });
+
+    it('a non-transient code is never retried', async () => {
+        mockAttest.requestIntegrityToken.mockRejectedValue(integrityRejection(-3));
+
+        await signInWithDevice();
+
+        expect(mockAttest.requestIntegrityToken).toHaveBeenCalledTimes(1);
     });
 
     it('NETWORK_ERROR (-3) and misuse codes keep the retryable unknown failure, captured', async () => {

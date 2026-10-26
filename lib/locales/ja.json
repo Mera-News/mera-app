@@ -84,7 +84,7 @@
       "noCodeUsePhone": "コードが届きませんか？「この電話でサインイン」を使ってください。"
     },
     "emailLegacyHint": "メールでサインインしたことがある方だけが対象です。新しく登録する方は、もうメールでサインインできません。",
-    "phoneCheckTemporary": "この電話を確認できませんでした。接続を確認して、もう一度お試しください。",
+    "phoneCheckTemporary": "今はこの電話を確認できませんでした。1分ほどしてからもう一度お試しください。",
     "phoneUnsupportedAndroid": "メラでサインインするには、この電話にGoogle Playが必要です。Google Playがない電話は対応していません。",
     "phoneUnsupportedIos": "このiPhoneでは電話でのサインインを使えません。",
     "supportedPhones": "対応端末",
@@ -275,6 +275,7 @@
       "paused": "今日は理由を一時停止中",
       "discarded": "メラが除外した"
     },
+    "noteMatchedFacts": "あなたの事実に一致: {{facts}}",
     "readyForMore": "もっと読む準備はできましたか？",
     "refreshFeedAction": "フィードを更新",
     "translationFailed": "翻訳に失敗しました。アプリを再起動してください。"

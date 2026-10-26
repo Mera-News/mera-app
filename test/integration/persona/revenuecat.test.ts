@@ -572,6 +572,42 @@ describe('syncRevenueCatAttributes', () => {
     expect(Purchases.setAttributes).toHaveBeenCalledTimes(2);
   });
 
+  // MERA-APP-8H: Play's SERVICE_UNAVAILABLE arrives as STORE_PROBLEM_ERROR ("2"); the next tick retries.
+  it.each([['store problem', '2'], ['network', '10']])(
+    'warns instead of capturing a %s error, and still retries',
+    async (_label, code) => {
+      const { rc, Purchases } = loadWithContext();
+      const logger = require('@/lib/logger').default;
+      const capture = jest.spyOn(logger, 'captureException').mockReturnValue('');
+      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      rc.configureRevenueCat();
+      Purchases.syncAttributesAndOfferingsIfNeeded.mockRejectedValueOnce(
+        Object.assign(new Error('SERVICE_UNAVAILABLE'), { code }),
+      );
+
+      await rc.syncRevenueCatAttributes();
+      await rc.syncRevenueCatAttributes();
+
+      expect(capture).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(Purchases.setAttributes).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('still captures any other sync error', async () => {
+    const { rc, Purchases } = loadWithContext();
+    const logger = require('@/lib/logger').default;
+    const capture = jest.spyOn(logger, 'captureException').mockReturnValue('');
+    rc.configureRevenueCat();
+    Purchases.syncAttributesAndOfferingsIfNeeded.mockRejectedValueOnce(
+      Object.assign(new Error('bad config'), { code: '23' }),
+    );
+
+    await rc.syncRevenueCatAttributes();
+
+    expect(capture).toHaveBeenCalledTimes(1);
+  });
+
   it('re-sends when a value actually changed', async () => {
     const { rc, Purchases, useSubscriptionStore } = loadWithContext();
     rc.configureRevenueCat();
