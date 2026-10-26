@@ -2635,7 +2635,7 @@
     "page": {
       "stories": "ストーリー",
       "saved": "保存済み",
-      "stats": "統計"
+      "stats": "アクティビティ"
     },
     "rearrangeA11y": "{{tab}}のページを並べ替える",
     "pillA11y": "{{label}}、{{count}}件中{{index}}件目",
@@ -2765,6 +2765,37 @@
       "intro": "元のサイトで、過去30日間に最もよく訪問したものから順に表示します。この電話に残ります。",
       "learn": "履歴について",
       "title": "開いた公開元"
+    },
+    "activity": {
+      "supportTitle": "あなたにとって大切な報道",
+      "supportBody": "あなたが最も頼りにしている公開元です。ニュースは無料で読めても、取材が無料になることはありません。これからも報道を続けてほしいなら、購読できるところは購読を検討してください。ありがとうございます。",
+      "countriesTitle": "どこで読んだか",
+      "countriesHint": "国をタップすると、その国の公開元が表示されます。",
+      "colCountry": "国",
+      "colArticles": "記事",
+      "logTitle": "開いた記事",
+      "showAllDays": "すべての日を表示",
+      "freshIntro": "開いたときに各記事が公開からどれくらい経っていたか。",
+      "freshNoteAll": "これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。",
+      "band": {
+        "hour": "1時間未満",
+        "sixHours": "1〜6時間",
+        "day": "6〜24時間",
+        "threeDays": "1〜3日",
+        "older": "それ以前"
+      },
+      "allPublications_one": "開いた{{count}}件の公開元すべて",
+      "allPublications_other": "開いた{{count}}件の公開元すべて",
+      "visits_one": "{{count}}回",
+      "visits_other": "{{count}}回",
+      "articles_one": "{{count}}件",
+      "articles_other": "{{count}}件",
+      "languagesIntro_one": "過去30日間に開いた記事の言語は{{count}}種類です。タップするとその記事が表示されます。",
+      "languagesIntro_other": "過去30日間に開いた記事の言語は{{count}}種類です。タップするとその記事が表示されます。",
+      "logIntro_one": "過去30日間に公開元で開いた記事は{{count}}件です。日付をタップすると、その日だけが表示されます。",
+      "logIntro_other": "過去30日間に公開元で開いた記事は{{count}}件です。日付をタップすると、その日だけが表示されます。",
+      "freshNote_one": "{{count}}件中{{sampled}}件を集計しています。残りの{{missing}}件には公開時刻がありませんでした。これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。",
+      "freshNote_other": "{{count}}件中{{sampled}}件を集計しています。残りの{{missing}}件には公開時刻がありませんでした。これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。"
     }
   },
   "you": {

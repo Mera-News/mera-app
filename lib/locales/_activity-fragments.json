@@ -1,0 +1,863 @@
+{
+  "_comment": "Library Activity redesign: the Stats pill reads Activity, History and the four detail screens (library-factcheck P2).",
+  "ar": {
+    "nav": {
+      "page": {
+        "stats": "النشاط"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "التقارير التي تهمك",
+        "supportBody": "هذه هي جهات النشر التي تعتمد عليها أكثر من غيرها. قد تكون قراءة الأخبار مجانية، لكن إعدادها ليس مجانيًا أبدًا. إذا أردت أن تواصل تقديم الأخبار لك، ففكّر في الاشتراك في تلك التي توفّر اشتراكًا. شكرًا لك.",
+        "countriesTitle": "أين تقرأ",
+        "countriesHint": "اضغط على بلد لترى منشوراته.",
+        "colCountry": "البلد",
+        "colArticles": "المقالات",
+        "logTitle": "ما فتحته",
+        "showAllDays": "عرض كل الأيام",
+        "freshIntro": "كم كان عمر كل مقالة عندما فتحتها.",
+        "freshNoteAll": "هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته.",
+        "band": {
+          "hour": "أقل من ساعة",
+          "sixHours": "من ساعة إلى 6 ساعات",
+          "day": "من 6 إلى 24 ساعة",
+          "threeDays": "من يوم إلى 3 أيام",
+          "older": "أقدم"
+        },
+        "allPublications_zero": "كل المنشورات التي فتحتها ({{count}})",
+        "allPublications_one": "كل المنشورات التي فتحتها ({{count}})",
+        "allPublications_two": "كل المنشورات التي فتحتها ({{count}})",
+        "allPublications_few": "كل المنشورات التي فتحتها ({{count}})",
+        "allPublications_many": "كل المنشورات التي فتحتها ({{count}})",
+        "allPublications_other": "كل المنشورات التي فتحتها ({{count}})",
+        "visits_zero": "{{count}} زيارة",
+        "visits_one": "{{count}} زيارة",
+        "visits_two": "زيارتان",
+        "visits_few": "{{count}} زيارات",
+        "visits_many": "{{count}} زيارة",
+        "visits_other": "{{count}} زيارة",
+        "articles_zero": "{{count}} مقالة",
+        "articles_one": "مقالة واحدة",
+        "articles_two": "مقالتان",
+        "articles_few": "{{count}} مقالات",
+        "articles_many": "{{count}} مقالة",
+        "articles_other": "{{count}} مقالة",
+        "languagesIntro_zero": "لغات ما فتحته خلال آخر 30 يومًا: {{count}}. اضغط على لغة لترى تلك المقالات.",
+        "languagesIntro_one": "لغات ما فتحته خلال آخر 30 يومًا: {{count}}. اضغط على لغة لترى تلك المقالات.",
+        "languagesIntro_two": "لغات ما فتحته خلال آخر 30 يومًا: {{count}}. اضغط على لغة لترى تلك المقالات.",
+        "languagesIntro_few": "لغات ما فتحته خلال آخر 30 يومًا: {{count}}. اضغط على لغة لترى تلك المقالات.",
+        "languagesIntro_many": "لغات ما فتحته خلال آخر 30 يومًا: {{count}}. اضغط على لغة لترى تلك المقالات.",
+        "languagesIntro_other": "لغات ما فتحته خلال آخر 30 يومًا: {{count}}. اضغط على لغة لترى تلك المقالات.",
+        "logIntro_zero": "مقالات من المصدر خلال آخر 30 يومًا: {{count}}. اضغط على يوم لترى ذلك اليوم فقط.",
+        "logIntro_one": "مقالات من المصدر خلال آخر 30 يومًا: {{count}}. اضغط على يوم لترى ذلك اليوم فقط.",
+        "logIntro_two": "مقالات من المصدر خلال آخر 30 يومًا: {{count}}. اضغط على يوم لترى ذلك اليوم فقط.",
+        "logIntro_few": "مقالات من المصدر خلال آخر 30 يومًا: {{count}}. اضغط على يوم لترى ذلك اليوم فقط.",
+        "logIntro_many": "مقالات من المصدر خلال آخر 30 يومًا: {{count}}. اضغط على يوم لترى ذلك اليوم فقط.",
+        "logIntro_other": "مقالات من المصدر خلال آخر 30 يومًا: {{count}}. اضغط على يوم لترى ذلك اليوم فقط.",
+        "freshNote_zero": "يحسب {{sampled}} من أصل {{count}} من مقالاتك: لم يكن لـ {{missing}} الأخرى وقت نشر. هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته.",
+        "freshNote_one": "يحسب {{sampled}} من أصل {{count}} من مقالاتك: لم يكن لـ {{missing}} الأخرى وقت نشر. هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته.",
+        "freshNote_two": "يحسب {{sampled}} من أصل {{count}} من مقالاتك: لم يكن لـ {{missing}} الأخرى وقت نشر. هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته.",
+        "freshNote_few": "يحسب {{sampled}} من أصل {{count}} من مقالاتك: لم يكن لـ {{missing}} الأخرى وقت نشر. هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته.",
+        "freshNote_many": "يحسب {{sampled}} من أصل {{count}} من مقالاتك: لم يكن لـ {{missing}} الأخرى وقت نشر. هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته.",
+        "freshNote_other": "يحسب {{sampled}} من أصل {{count}} من مقالاتك: لم يكن لـ {{missing}} الأخرى وقت نشر. هذا يبيّن مدى حداثة الخبر، لا المدة التي قضيتها في قراءته."
+      }
+    }
+  },
+  "de": {
+    "nav": {
+      "page": {
+        "stats": "Aktivität"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Die Berichterstattung, die dir wichtig ist",
+        "supportBody": "Auf diese Verlage verlässt du dich am meisten. Nachrichten können kostenlos zu lesen sein, aber die Recherche dahinter ist nie kostenlos. Wenn sie weiter für dich berichten sollen, überleg dir, die zu abonnieren, die ein Abo anbieten. Danke.",
+        "countriesTitle": "Wo du liest",
+        "countriesHint": "Tippe auf ein Land, um seine Veröffentlichungen zu sehen.",
+        "colCountry": "Land",
+        "colArticles": "Artikel",
+        "logTitle": "Was du geöffnet hast",
+        "showAllDays": "Alle Tage zeigen",
+        "freshIntro": "Wie alt jeder Artikel war, als du ihn geöffnet hast.",
+        "freshNoteAll": "Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast.",
+        "band": {
+          "hour": "Jünger als eine Stunde",
+          "sixHours": "1 bis 6 Stunden",
+          "day": "6 bis 24 Stunden",
+          "threeDays": "1 bis 3 Tage",
+          "older": "Älter"
+        },
+        "allPublications_one": "Die {{count}} Veröffentlichung, die du geöffnet hast",
+        "allPublications_other": "Alle {{count}} Veröffentlichungen, die du geöffnet hast",
+        "visits_one": "{{count}} Besuch",
+        "visits_other": "{{count}} Besuche",
+        "articles_one": "{{count}} Artikel",
+        "articles_other": "{{count}} Artikel",
+        "languagesIntro_one": "Die {{count}} Sprache dessen, was du in den letzten 30 Tagen geöffnet hast. Tippe darauf, um diese Artikel zu sehen.",
+        "languagesIntro_other": "Die {{count}} Sprachen dessen, was du in den letzten 30 Tagen geöffnet hast. Tippe auf eine, um diese Artikel zu sehen.",
+        "logIntro_one": "{{count}} Artikel bei der Quelle in den letzten 30 Tagen. Tippe auf einen Tag, um nur diesen Tag zu sehen.",
+        "logIntro_other": "{{count}} Artikel bei der Quelle in den letzten 30 Tagen. Tippe auf einen Tag, um nur diesen Tag zu sehen.",
+        "freshNote_one": "Gezählt werden {{sampled}} von {{count}} Artikel: Die anderen {{missing}} hatten keine Veröffentlichungszeit. Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast.",
+        "freshNote_other": "Gezählt werden {{sampled}} von deinen {{count}} Artikeln: Die anderen {{missing}} hatten keine Veröffentlichungszeit. Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast."
+      }
+    }
+  },
+  "en": {
+    "nav": {
+      "page": {
+        "stats": "Activity"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "The reporting that matters to you",
+        "supportBody": "These are the publishers you rely on most. News can be free to read, but it is never free to report. If you want them to keep reporting for you, consider subscribing to the ones that offer it. Thank you.",
+        "countriesTitle": "Where you read",
+        "countriesHint": "Tap a country to see its publications.",
+        "colCountry": "Country",
+        "colArticles": "Articles",
+        "logTitle": "What you opened",
+        "showAllDays": "Show all days",
+        "freshIntro": "How old each article was when you opened it.",
+        "freshNoteAll": "This is how new a story was, not how long you read it.",
+        "band": {
+          "hour": "Under an hour old",
+          "sixHours": "1 to 6 hours",
+          "day": "6 to 24 hours",
+          "threeDays": "1 to 3 days",
+          "older": "Older"
+        },
+        "allPublications_one": "The {{count}} publication you opened",
+        "allPublications_other": "All {{count}} publications you opened",
+        "visits_one": "{{count}} visit",
+        "visits_other": "{{count}} visits",
+        "articles_one": "{{count}} article",
+        "articles_other": "{{count}} articles",
+        "languagesIntro_one": "The {{count}} language of what you opened in the last 30 days. Tap it to see those articles.",
+        "languagesIntro_other": "The {{count}} languages of what you opened in the last 30 days. Tap one to see those articles.",
+        "logIntro_one": "{{count}} article at the source in the last 30 days. Tap a day to see only that day.",
+        "logIntro_other": "{{count}} articles at the source in the last 30 days. Tap a day to see only that day.",
+        "freshNote_one": "Counts {{sampled}} of your {{count}} article: the other {{missing}} had no publish time. This is how new a story was, not how long you read it.",
+        "freshNote_other": "Counts {{sampled}} of your {{count}} articles: the other {{missing}} had no publish time. This is how new a story was, not how long you read it."
+      }
+    }
+  },
+  "es": {
+    "nav": {
+      "page": {
+        "stats": "Actividad"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "El periodismo que te importa",
+        "supportBody": "Estos son los medios en los que más confías. Las noticias pueden ser gratis de leer, pero nunca son gratis de hacer. Si quieres que sigan informándote, piensa en suscribirte a los que lo ofrecen. Gracias.",
+        "countriesTitle": "Dónde lees",
+        "countriesHint": "Toca un país para ver sus publicaciones.",
+        "colCountry": "País",
+        "colArticles": "Artículos",
+        "logTitle": "Lo que abriste",
+        "showAllDays": "Mostrar todos los días",
+        "freshIntro": "Qué antigüedad tenía cada artículo cuando lo abriste.",
+        "freshNoteAll": "Esto mide lo nueva que era una noticia, no cuánto tiempo la leíste.",
+        "band": {
+          "hour": "Menos de una hora",
+          "sixHours": "De 1 a 6 horas",
+          "day": "De 6 a 24 horas",
+          "threeDays": "De 1 a 3 días",
+          "older": "Más antiguos"
+        },
+        "allPublications_one": "La {{count}} publicación que abriste",
+        "allPublications_other": "Las {{count}} publicaciones que abriste",
+        "visits_one": "{{count}} visita",
+        "visits_other": "{{count}} visitas",
+        "articles_one": "{{count}} artículo",
+        "articles_other": "{{count}} artículos",
+        "languagesIntro_one": "El {{count}} idioma de lo que abriste en los últimos 30 días. Tócalo para ver esos artículos.",
+        "languagesIntro_other": "Los {{count}} idiomas de lo que abriste en los últimos 30 días. Toca uno para ver esos artículos.",
+        "logIntro_one": "{{count}} artículo en la fuente en los últimos 30 días. Toca un día para ver solo ese día.",
+        "logIntro_other": "{{count}} artículos en la fuente en los últimos 30 días. Toca un día para ver solo ese día.",
+        "freshNote_one": "Cuenta {{sampled}} de tu {{count}} artículo: los otros {{missing}} no tenían hora de publicación. Esto mide lo nueva que era una noticia, no cuánto tiempo la leíste.",
+        "freshNote_other": "Cuenta {{sampled}} de tus {{count}} artículos: los otros {{missing}} no tenían hora de publicación. Esto mide lo nueva que era una noticia, no cuánto tiempo la leíste."
+      }
+    }
+  },
+  "fr": {
+    "nav": {
+      "page": {
+        "stats": "Activité"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Le journalisme qui compte pour vous",
+        "supportBody": "Voici les éditeurs sur lesquels vous comptez le plus. L'information peut être gratuite à lire, mais elle n'est jamais gratuite à produire. Si vous voulez qu'ils continuent à vous informer, pensez à vous abonner à ceux qui le proposent. Merci.",
+        "countriesTitle": "Où vous lisez",
+        "countriesHint": "Touchez un pays pour voir ses publications.",
+        "colCountry": "Pays",
+        "colArticles": "Articles",
+        "logTitle": "Ce que vous avez ouvert",
+        "showAllDays": "Afficher tous les jours",
+        "freshIntro": "L'âge de chaque article quand vous l'avez ouvert.",
+        "freshNoteAll": "Cela mesure la fraîcheur d'une info, pas le temps passé à la lire.",
+        "band": {
+          "hour": "Moins d'une heure",
+          "sixHours": "De 1 à 6 heures",
+          "day": "De 6 à 24 heures",
+          "threeDays": "De 1 à 3 jours",
+          "older": "Plus ancien"
+        },
+        "allPublications_one": "La {{count}} publication que vous avez ouverte",
+        "allPublications_other": "Les {{count}} publications que vous avez ouvertes",
+        "visits_one": "{{count}} visite",
+        "visits_other": "{{count}} visites",
+        "articles_one": "{{count}} article",
+        "articles_other": "{{count}} articles",
+        "languagesIntro_one": "La {{count}} langue de ce que vous avez ouvert ces 30 derniers jours. Touchez-la pour voir ces articles.",
+        "languagesIntro_other": "Les {{count}} langues de ce que vous avez ouvert ces 30 derniers jours. Touchez-en une pour voir ces articles.",
+        "logIntro_one": "{{count}} article à la source ces 30 derniers jours. Touchez un jour pour ne voir que celui-ci.",
+        "logIntro_other": "{{count}} articles à la source ces 30 derniers jours. Touchez un jour pour ne voir que celui-ci.",
+        "freshNote_one": "Compte {{sampled}} de votre {{count}} article : les {{missing}} autres n'avaient pas d'heure de publication. Cela mesure la fraîcheur d'une info, pas le temps passé à la lire.",
+        "freshNote_other": "Compte {{sampled}} de vos {{count}} articles : les {{missing}} autres n'avaient pas d'heure de publication. Cela mesure la fraîcheur d'une info, pas le temps passé à la lire."
+      }
+    }
+  },
+  "hi": {
+    "nav": {
+      "page": {
+        "stats": "गतिविधि"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "वह पत्रकारिता जो आपके लिए मायने रखती है",
+        "supportBody": "ये वे प्रकाशक हैं जिन पर आप सबसे ज़्यादा भरोसा करते हैं। ख़बरें पढ़ना मुफ़्त हो सकता है, लेकिन उन्हें जुटाना कभी मुफ़्त नहीं होता। अगर आप चाहते हैं कि वे आपके लिए रिपोर्टिंग करते रहें, तो जो सदस्यता देते हैं उनकी सदस्यता लेने पर विचार करें। धन्यवाद।",
+        "countriesTitle": "आप कहां पढ़ते हैं",
+        "countriesHint": "किसी देश के प्रकाशन देखने के लिए उस पर टैप करें।",
+        "colCountry": "देश",
+        "colArticles": "लेख",
+        "logTitle": "आपने क्या खोला",
+        "showAllDays": "सभी दिन दिखाएं",
+        "freshIntro": "खोलते समय हर लेख कितना पुराना था।",
+        "freshNoteAll": "यह बताता है कि ख़बर कितनी नई थी, यह नहीं कि आपने उसे कितनी देर पढ़ा।",
+        "band": {
+          "hour": "एक घंटे से कम पुराना",
+          "sixHours": "1 से 6 घंटे",
+          "day": "6 से 24 घंटे",
+          "threeDays": "1 से 3 दिन",
+          "older": "इससे पुराना"
+        },
+        "allPublications_one": "आपके खोले गए {{count}} प्रकाशन",
+        "allPublications_other": "आपके खोले गए सभी {{count}} प्रकाशन",
+        "visits_one": "{{count}} विज़िट",
+        "visits_other": "{{count}} विज़िट",
+        "articles_one": "{{count}} लेख",
+        "articles_other": "{{count}} लेख",
+        "languagesIntro_one": "पिछले 30 दिनों में आपने जो खोला, उसकी {{count}} भाषा। वे लेख देखने के लिए उस पर टैप करें।",
+        "languagesIntro_other": "पिछले 30 दिनों में आपने जो खोला, उसकी {{count}} भाषाएं। वे लेख देखने के लिए किसी एक पर टैप करें।",
+        "logIntro_one": "पिछले 30 दिनों में स्रोत पर {{count}} लेख। सिर्फ़ उस दिन के लेख देखने के लिए किसी दिन पर टैप करें।",
+        "logIntro_other": "पिछले 30 दिनों में स्रोत पर {{count}} लेख। सिर्फ़ उस दिन के लेख देखने के लिए किसी दिन पर टैप करें।",
+        "freshNote_one": "आपके {{count}} लेख में से {{sampled}} गिने गए: बाकी {{missing}} का प्रकाशन समय नहीं था। यह बताता है कि ख़बर कितनी नई थी, यह नहीं कि आपने उसे कितनी देर पढ़ा।",
+        "freshNote_other": "आपके {{count}} लेखों में से {{sampled}} गिने गए: बाकी {{missing}} का प्रकाशन समय नहीं था। यह बताता है कि ख़बर कितनी नई थी, यह नहीं कि आपने उसे कितनी देर पढ़ा।"
+      }
+    }
+  },
+  "id": {
+    "nav": {
+      "page": {
+        "stats": "Aktivitas"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Liputan yang penting bagi Anda",
+        "supportBody": "Inilah penerbit yang paling Anda andalkan. Berita bisa gratis dibaca, tetapi tidak pernah gratis untuk diliput. Jika Anda ingin mereka terus meliput untuk Anda, pertimbangkan untuk berlangganan pada yang menyediakannya. Terima kasih.",
+        "countriesTitle": "Tempat Anda membaca",
+        "countriesHint": "Ketuk sebuah negara untuk melihat publikasinya.",
+        "colCountry": "Negara",
+        "colArticles": "Artikel",
+        "logTitle": "Yang Anda buka",
+        "showAllDays": "Tampilkan semua hari",
+        "freshIntro": "Seberapa lama setiap artikel sudah terbit saat Anda membukanya.",
+        "freshNoteAll": "Ini menunjukkan seberapa baru sebuah berita, bukan berapa lama Anda membacanya.",
+        "band": {
+          "hour": "Kurang dari satu jam",
+          "sixHours": "1 sampai 6 jam",
+          "day": "6 sampai 24 jam",
+          "threeDays": "1 sampai 3 hari",
+          "older": "Lebih lama"
+        },
+        "allPublications_one": "Semua {{count}} publikasi yang Anda buka",
+        "allPublications_other": "Semua {{count}} publikasi yang Anda buka",
+        "visits_one": "{{count}} kunjungan",
+        "visits_other": "{{count}} kunjungan",
+        "articles_one": "{{count}} artikel",
+        "articles_other": "{{count}} artikel",
+        "languagesIntro_one": "{{count}} bahasa dari yang Anda buka dalam 30 hari terakhir. Ketuk salah satu untuk melihat artikelnya.",
+        "languagesIntro_other": "{{count}} bahasa dari yang Anda buka dalam 30 hari terakhir. Ketuk salah satu untuk melihat artikelnya.",
+        "logIntro_one": "{{count}} artikel di sumbernya dalam 30 hari terakhir. Ketuk sebuah hari untuk melihat hari itu saja.",
+        "logIntro_other": "{{count}} artikel di sumbernya dalam 30 hari terakhir. Ketuk sebuah hari untuk melihat hari itu saja.",
+        "freshNote_one": "Menghitung {{sampled}} dari {{count}} artikel Anda: {{missing}} lainnya tidak punya waktu terbit. Ini menunjukkan seberapa baru sebuah berita, bukan berapa lama Anda membacanya.",
+        "freshNote_other": "Menghitung {{sampled}} dari {{count}} artikel Anda: {{missing}} lainnya tidak punya waktu terbit. Ini menunjukkan seberapa baru sebuah berita, bukan berapa lama Anda membacanya."
+      }
+    }
+  },
+  "it": {
+    "nav": {
+      "page": {
+        "stats": "Attività"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Il giornalismo che conta per te",
+        "supportBody": "Questi sono gli editori su cui conti di più. Le notizie possono essere gratis da leggere, ma non sono mai gratis da raccontare. Se vuoi che continuino a informarti, valuta di abbonarti a quelli che lo offrono. Grazie.",
+        "countriesTitle": "Dove leggi",
+        "countriesHint": "Tocca un paese per vedere le sue pubblicazioni.",
+        "colCountry": "Paese",
+        "colArticles": "Articoli",
+        "logTitle": "Cosa hai aperto",
+        "showAllDays": "Mostra tutti i giorni",
+        "freshIntro": "Quanto era vecchio ogni articolo quando l'hai aperto.",
+        "freshNoteAll": "Misura quanto era nuova una notizia, non quanto a lungo l'hai letta.",
+        "band": {
+          "hour": "Meno di un'ora",
+          "sixHours": "Da 1 a 6 ore",
+          "day": "Da 6 a 24 ore",
+          "threeDays": "Da 1 a 3 giorni",
+          "older": "Più vecchi"
+        },
+        "allPublications_one": "La {{count}} pubblicazione che hai aperto",
+        "allPublications_other": "Tutte le {{count}} pubblicazioni che hai aperto",
+        "visits_one": "{{count}} visita",
+        "visits_other": "{{count}} visite",
+        "articles_one": "{{count}} articolo",
+        "articles_other": "{{count}} articoli",
+        "languagesIntro_one": "La {{count}} lingua di ciò che hai aperto negli ultimi 30 giorni. Toccala per vedere quegli articoli.",
+        "languagesIntro_other": "Le {{count}} lingue di ciò che hai aperto negli ultimi 30 giorni. Toccane una per vedere quegli articoli.",
+        "logIntro_one": "{{count}} articolo alla fonte negli ultimi 30 giorni. Tocca un giorno per vedere solo quel giorno.",
+        "logIntro_other": "{{count}} articoli alla fonte negli ultimi 30 giorni. Tocca un giorno per vedere solo quel giorno.",
+        "freshNote_one": "Conta {{sampled}} del tuo {{count}} articolo: gli altri {{missing}} non avevano un orario di pubblicazione. Misura quanto era nuova una notizia, non quanto a lungo l'hai letta.",
+        "freshNote_other": "Conta {{sampled}} dei tuoi {{count}} articoli: gli altri {{missing}} non avevano un orario di pubblicazione. Misura quanto era nuova una notizia, non quanto a lungo l'hai letta."
+      }
+    }
+  },
+  "ja": {
+    "nav": {
+      "page": {
+        "stats": "アクティビティ"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "あなたにとって大切な報道",
+        "supportBody": "あなたが最も頼りにしている公開元です。ニュースは無料で読めても、取材が無料になることはありません。これからも報道を続けてほしいなら、購読できるところは購読を検討してください。ありがとうございます。",
+        "countriesTitle": "どこで読んだか",
+        "countriesHint": "国をタップすると、その国の公開元が表示されます。",
+        "colCountry": "国",
+        "colArticles": "記事",
+        "logTitle": "開いた記事",
+        "showAllDays": "すべての日を表示",
+        "freshIntro": "開いたときに各記事が公開からどれくらい経っていたか。",
+        "freshNoteAll": "これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。",
+        "band": {
+          "hour": "1時間未満",
+          "sixHours": "1〜6時間",
+          "day": "6〜24時間",
+          "threeDays": "1〜3日",
+          "older": "それ以前"
+        },
+        "allPublications_one": "開いた{{count}}件の公開元すべて",
+        "allPublications_other": "開いた{{count}}件の公開元すべて",
+        "visits_one": "{{count}}回",
+        "visits_other": "{{count}}回",
+        "articles_one": "{{count}}件",
+        "articles_other": "{{count}}件",
+        "languagesIntro_one": "過去30日間に開いた記事の言語は{{count}}種類です。タップするとその記事が表示されます。",
+        "languagesIntro_other": "過去30日間に開いた記事の言語は{{count}}種類です。タップするとその記事が表示されます。",
+        "logIntro_one": "過去30日間に公開元で開いた記事は{{count}}件です。日付をタップすると、その日だけが表示されます。",
+        "logIntro_other": "過去30日間に公開元で開いた記事は{{count}}件です。日付をタップすると、その日だけが表示されます。",
+        "freshNote_one": "{{count}}件中{{sampled}}件を集計しています。残りの{{missing}}件には公開時刻がありませんでした。これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。",
+        "freshNote_other": "{{count}}件中{{sampled}}件を集計しています。残りの{{missing}}件には公開時刻がありませんでした。これは記事がどれだけ新しかったかであり、どれだけ長く読んだかではありません。"
+      }
+    }
+  },
+  "ko": {
+    "nav": {
+      "page": {
+        "stats": "활동"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "내게 중요한 보도",
+        "supportBody": "가장 많이 의지하는 매체들입니다. 뉴스는 무료로 읽을 수 있어도 취재는 결코 무료가 아닙니다. 앞으로도 계속 보도해 주길 바란다면 구독을 제공하는 곳은 구독을 고려해 보세요. 감사합니다.",
+        "countriesTitle": "읽은 곳",
+        "countriesHint": "국가를 탭하면 그 국가의 매체를 볼 수 있습니다.",
+        "colCountry": "국가",
+        "colArticles": "기사",
+        "logTitle": "열어 본 기사",
+        "showAllDays": "모든 날짜 보기",
+        "freshIntro": "열었을 때 각 기사가 얼마나 지난 것이었는지 보여 줍니다.",
+        "freshNoteAll": "기사가 얼마나 새로웠는지를 나타내며, 얼마나 오래 읽었는지가 아닙니다.",
+        "band": {
+          "hour": "1시간 미만",
+          "sixHours": "1~6시간",
+          "day": "6~24시간",
+          "threeDays": "1~3일",
+          "older": "그 이전"
+        },
+        "allPublications_one": "열어 본 매체 {{count}}곳 모두",
+        "allPublications_other": "열어 본 매체 {{count}}곳 모두",
+        "visits_one": "{{count}}회 방문",
+        "visits_other": "{{count}}회 방문",
+        "articles_one": "기사 {{count}}개",
+        "articles_other": "기사 {{count}}개",
+        "languagesIntro_one": "지난 30일 동안 열어 본 기사의 언어 {{count}}개입니다. 하나를 탭하면 해당 기사를 볼 수 있습니다.",
+        "languagesIntro_other": "지난 30일 동안 열어 본 기사의 언어 {{count}}개입니다. 하나를 탭하면 해당 기사를 볼 수 있습니다.",
+        "logIntro_one": "지난 30일 동안 출처에서 연 기사 {{count}}개입니다. 날짜를 탭하면 그날만 볼 수 있습니다.",
+        "logIntro_other": "지난 30일 동안 출처에서 연 기사 {{count}}개입니다. 날짜를 탭하면 그날만 볼 수 있습니다.",
+        "freshNote_one": "기사 {{count}}개 중 {{sampled}}개를 집계했습니다. 나머지 {{missing}}개는 게시 시각이 없었습니다. 기사가 얼마나 새로웠는지를 나타내며, 얼마나 오래 읽었는지가 아닙니다.",
+        "freshNote_other": "기사 {{count}}개 중 {{sampled}}개를 집계했습니다. 나머지 {{missing}}개는 게시 시각이 없었습니다. 기사가 얼마나 새로웠는지를 나타내며, 얼마나 오래 읽었는지가 아닙니다."
+      }
+    }
+  },
+  "nl": {
+    "nav": {
+      "page": {
+        "stats": "Activiteit"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "De journalistiek die voor jou telt",
+        "supportBody": "Dit zijn de uitgevers waar je het meest op vertrouwt. Nieuws kan gratis te lezen zijn, maar het is nooit gratis om te maken. Wil je dat ze voor je blijven berichten, overweeg dan een abonnement bij de uitgevers die er een aanbieden. Dank je.",
+        "countriesTitle": "Waar je leest",
+        "countriesHint": "Tik op een land om de publicaties ervan te zien.",
+        "colCountry": "Land",
+        "colArticles": "Artikelen",
+        "logTitle": "Wat je hebt geopend",
+        "showAllDays": "Alle dagen tonen",
+        "freshIntro": "Hoe oud elk artikel was toen je het opende.",
+        "freshNoteAll": "Dit gaat over hoe nieuw een verhaal was, niet hoe lang je het las.",
+        "band": {
+          "hour": "Jonger dan een uur",
+          "sixHours": "1 tot 6 uur",
+          "day": "6 tot 24 uur",
+          "threeDays": "1 tot 3 dagen",
+          "older": "Ouder"
+        },
+        "allPublications_one": "De {{count}} publicatie die je opende",
+        "allPublications_other": "Alle {{count}} publicaties die je opende",
+        "visits_one": "{{count}} bezoek",
+        "visits_other": "{{count}} bezoeken",
+        "articles_one": "{{count}} artikel",
+        "articles_other": "{{count}} artikelen",
+        "languagesIntro_one": "De {{count}} taal van wat je de afgelopen 30 dagen opende. Tik erop om die artikelen te zien.",
+        "languagesIntro_other": "De {{count}} talen van wat je de afgelopen 30 dagen opende. Tik op een taal om die artikelen te zien.",
+        "logIntro_one": "{{count}} artikel bij de bron in de afgelopen 30 dagen. Tik op een dag om alleen die dag te zien.",
+        "logIntro_other": "{{count}} artikelen bij de bron in de afgelopen 30 dagen. Tik op een dag om alleen die dag te zien.",
+        "freshNote_one": "Telt {{sampled}} van je {{count}} artikel: de andere {{missing}} hadden geen publicatietijd. Dit gaat over hoe nieuw een verhaal was, niet hoe lang je het las.",
+        "freshNote_other": "Telt {{sampled}} van je {{count}} artikelen: de andere {{missing}} hadden geen publicatietijd. Dit gaat over hoe nieuw een verhaal was, niet hoe lang je het las."
+      }
+    }
+  },
+  "pl": {
+    "nav": {
+      "page": {
+        "stats": "Aktywność"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Dziennikarstwo, które jest dla ciebie ważne",
+        "supportBody": "To wydawcy, na których polegasz najbardziej. Wiadomości mogą być darmowe w czytaniu, ale ich zdobywanie nigdy nie jest darmowe. Jeśli chcesz, żeby dalej dla ciebie pisali, rozważ subskrypcję u tych, którzy ją oferują. Dziękujemy.",
+        "countriesTitle": "Gdzie czytasz",
+        "countriesHint": "Dotknij kraju, aby zobaczyć jego wydawców.",
+        "colCountry": "Kraj",
+        "colArticles": "Artykuły",
+        "logTitle": "Otwarte artykuły",
+        "showAllDays": "Pokaż wszystkie dni",
+        "freshIntro": "Jak stary był każdy artykuł w chwili otwarcia.",
+        "freshNoteAll": "To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+        "band": {
+          "hour": "Poniżej godziny",
+          "sixHours": "Od 1 do 6 godzin",
+          "day": "Od 6 do 24 godzin",
+          "threeDays": "Od 1 do 3 dni",
+          "older": "Starsze"
+        },
+        "allPublications_one": "{{count}} otwarty wydawca",
+        "allPublications_few": "Wszyscy {{count}} otwarci wydawcy",
+        "allPublications_many": "Wszystkich {{count}} otwartych wydawców",
+        "allPublications_other": "Wszystkich {{count}} otwartych wydawców",
+        "visits_one": "{{count}} wizyta",
+        "visits_few": "{{count}} wizyty",
+        "visits_many": "{{count}} wizyt",
+        "visits_other": "{{count}} wizyty",
+        "articles_one": "{{count}} artykuł",
+        "articles_few": "{{count}} artykuły",
+        "articles_many": "{{count}} artykułów",
+        "articles_other": "{{count}} artykułu",
+        "languagesIntro_one": "{{count}} język otwartych artykułów z ostatnich 30 dni. Dotknij go, aby zobaczyć te artykuły.",
+        "languagesIntro_few": "{{count}} języki otwartych artykułów z ostatnich 30 dni. Dotknij jednego, aby zobaczyć te artykuły.",
+        "languagesIntro_many": "{{count}} języków otwartych artykułów z ostatnich 30 dni. Dotknij jednego, aby zobaczyć te artykuły.",
+        "languagesIntro_other": "{{count}} języka otwartych artykułów z ostatnich 30 dni. Dotknij jednego, aby zobaczyć te artykuły.",
+        "logIntro_one": "{{count}} artykuł u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+        "logIntro_few": "{{count}} artykuły u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+        "logIntro_many": "{{count}} artykułów u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+        "logIntro_other": "{{count}} artykułu u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+        "freshNote_one": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+        "freshNote_few": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+        "freshNote_many": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+        "freshNote_other": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano."
+      }
+    }
+  },
+  "pt-BR": {
+    "nav": {
+      "page": {
+        "stats": "Atividade"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "O jornalismo que importa para você",
+        "supportBody": "Estes são os veículos em que você mais confia. Notícias podem ser de graça para ler, mas nunca são de graça para apurar. Se você quer que eles continuem informando você, pense em assinar os que oferecem assinatura. Obrigado.",
+        "countriesTitle": "Onde você lê",
+        "countriesHint": "Toque em um país para ver os veículos dele.",
+        "colCountry": "País",
+        "colArticles": "Artigos",
+        "logTitle": "O que você abriu",
+        "showAllDays": "Mostrar todos os dias",
+        "freshIntro": "Quão antigo cada artigo era quando você o abriu.",
+        "freshNoteAll": "Isso mostra quão nova era a notícia, não por quanto tempo você leu.",
+        "band": {
+          "hour": "Menos de uma hora",
+          "sixHours": "De 1 a 6 horas",
+          "day": "De 6 a 24 horas",
+          "threeDays": "De 1 a 3 dias",
+          "older": "Mais antigos"
+        },
+        "allPublications_one": "O {{count}} veículo que você abriu",
+        "allPublications_other": "Todos os {{count}} veículos que você abriu",
+        "visits_one": "{{count}} visita",
+        "visits_other": "{{count}} visitas",
+        "articles_one": "{{count}} artigo",
+        "articles_other": "{{count}} artigos",
+        "languagesIntro_one": "O {{count}} idioma do que você abriu nos últimos 30 dias. Toque nele para ver esses artigos.",
+        "languagesIntro_other": "Os {{count}} idiomas do que você abriu nos últimos 30 dias. Toque em um para ver esses artigos.",
+        "logIntro_one": "{{count}} artigo na fonte nos últimos 30 dias. Toque em um dia para ver só aquele dia.",
+        "logIntro_other": "{{count}} artigos na fonte nos últimos 30 dias. Toque em um dia para ver só aquele dia.",
+        "freshNote_one": "Conta {{sampled}} do seu {{count}} artigo: os outros {{missing}} não tinham horário de publicação. Isso mostra quão nova era a notícia, não por quanto tempo você leu.",
+        "freshNote_other": "Conta {{sampled}} dos seus {{count}} artigos: os outros {{missing}} não tinham horário de publicação. Isso mostra quão nova era a notícia, não por quanto tempo você leu."
+      }
+    }
+  },
+  "ru": {
+    "nav": {
+      "page": {
+        "stats": "Активность"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Журналистика, которая важна для вас",
+        "supportBody": "Это издания, на которые вы полагаетесь больше всего. Читать новости можно бесплатно, но собирать их никогда не бесплатно. Если хотите, чтобы они и дальше писали для вас, подумайте о подписке на те, что её предлагают. Спасибо.",
+        "countriesTitle": "Где вы читаете",
+        "countriesHint": "Нажмите на страну, чтобы увидеть её издания.",
+        "colCountry": "Страна",
+        "colArticles": "Статьи",
+        "logTitle": "Что вы открывали",
+        "showAllDays": "Показать все дни",
+        "freshIntro": "Насколько старой была каждая статья, когда вы её открыли.",
+        "freshNoteAll": "Это показывает, насколько свежей была новость, а не сколько вы её читали.",
+        "band": {
+          "hour": "Меньше часа",
+          "sixHours": "От 1 до 6 часов",
+          "day": "От 6 до 24 часов",
+          "threeDays": "От 1 до 3 дней",
+          "older": "Старше"
+        },
+        "allPublications_one": "{{count}} издание, которое вы открывали",
+        "allPublications_few": "Все {{count}} издания, которые вы открывали",
+        "allPublications_many": "Все {{count}} изданий, которые вы открывали",
+        "allPublications_other": "Все {{count}} издания, которые вы открывали",
+        "visits_one": "{{count}} визит",
+        "visits_few": "{{count}} визита",
+        "visits_many": "{{count}} визитов",
+        "visits_other": "{{count}} визита",
+        "articles_one": "{{count}} статья",
+        "articles_few": "{{count}} статьи",
+        "articles_many": "{{count}} статей",
+        "articles_other": "{{count}} статьи",
+        "languagesIntro_one": "{{count}} язык того, что вы открывали за последние 30 дней. Нажмите на него, чтобы увидеть эти статьи.",
+        "languagesIntro_few": "{{count}} языка того, что вы открывали за последние 30 дней. Нажмите на один, чтобы увидеть эти статьи.",
+        "languagesIntro_many": "{{count}} языков того, что вы открывали за последние 30 дней. Нажмите на один, чтобы увидеть эти статьи.",
+        "languagesIntro_other": "{{count}} языка того, что вы открывали за последние 30 дней. Нажмите на один, чтобы увидеть эти статьи.",
+        "logIntro_one": "{{count}} статья у источника за последние 30 дней. Нажмите на день, чтобы увидеть только его.",
+        "logIntro_few": "{{count}} статьи у источника за последние 30 дней. Нажмите на день, чтобы увидеть только его.",
+        "logIntro_many": "{{count}} статей у источника за последние 30 дней. Нажмите на день, чтобы увидеть только его.",
+        "logIntro_other": "{{count}} статьи у источника за последние 30 дней. Нажмите на день, чтобы увидеть только его.",
+        "freshNote_one": "Учтено {{sampled}} из {{count}} ваших статей: у остальных {{missing}} не было времени публикации. Это показывает, насколько свежей была новость, а не сколько вы её читали.",
+        "freshNote_few": "Учтено {{sampled}} из {{count}} ваших статей: у остальных {{missing}} не было времени публикации. Это показывает, насколько свежей была новость, а не сколько вы её читали.",
+        "freshNote_many": "Учтено {{sampled}} из {{count}} ваших статей: у остальных {{missing}} не было времени публикации. Это показывает, насколько свежей была новость, а не сколько вы её читали.",
+        "freshNote_other": "Учтено {{sampled}} из {{count}} ваших статей: у остальных {{missing}} не было времени публикации. Это показывает, насколько свежей была новость, а не сколько вы её читали."
+      }
+    }
+  },
+  "th": {
+    "nav": {
+      "page": {
+        "stats": "กิจกรรม"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "ข่าวที่สำคัญสำหรับคุณ",
+        "supportBody": "นี่คือสำนักข่าวที่คุณพึ่งพามากที่สุด ข่าวอาจอ่านได้ฟรี แต่การรายงานข่าวไม่เคยฟรี หากคุณอยากให้พวกเขารายงานข่าวให้คุณต่อไป ลองพิจารณาสมัครสมาชิกสำนักข่าวที่เปิดให้สมัคร ขอบคุณ",
+        "countriesTitle": "ที่ที่คุณอ่าน",
+        "countriesHint": "แตะประเทศเพื่อดูสำนักข่าวของประเทศนั้น",
+        "colCountry": "ประเทศ",
+        "colArticles": "บทความ",
+        "logTitle": "สิ่งที่คุณเปิด",
+        "showAllDays": "แสดงทุกวัน",
+        "freshIntro": "แต่ละบทความเผยแพร่มานานเท่าไรตอนที่คุณเปิด",
+        "freshNoteAll": "นี่คือความใหม่ของข่าว ไม่ใช่เวลาที่คุณใช้อ่าน",
+        "band": {
+          "hour": "ไม่ถึงหนึ่งชั่วโมง",
+          "sixHours": "1 ถึง 6 ชั่วโมง",
+          "day": "6 ถึง 24 ชั่วโมง",
+          "threeDays": "1 ถึง 3 วัน",
+          "older": "เก่ากว่านั้น"
+        },
+        "allPublications_one": "สำนักข่าวทั้ง {{count}} แห่งที่คุณเปิด",
+        "allPublications_other": "สำนักข่าวทั้ง {{count}} แห่งที่คุณเปิด",
+        "visits_one": "{{count}} ครั้ง",
+        "visits_other": "{{count}} ครั้ง",
+        "articles_one": "{{count}} บทความ",
+        "articles_other": "{{count}} บทความ",
+        "languagesIntro_one": "{{count}} ภาษาของสิ่งที่คุณเปิดใน 30 วันที่ผ่านมา แตะภาษาหนึ่งเพื่อดูบทความเหล่านั้น",
+        "languagesIntro_other": "{{count}} ภาษาของสิ่งที่คุณเปิดใน 30 วันที่ผ่านมา แตะภาษาหนึ่งเพื่อดูบทความเหล่านั้น",
+        "logIntro_one": "{{count}} บทความที่แหล่งข่าวใน 30 วันที่ผ่านมา แตะวันหนึ่งเพื่อดูเฉพาะวันนั้น",
+        "logIntro_other": "{{count}} บทความที่แหล่งข่าวใน 30 วันที่ผ่านมา แตะวันหนึ่งเพื่อดูเฉพาะวันนั้น",
+        "freshNote_one": "นับ {{sampled}} จาก {{count}} บทความของคุณ อีก {{missing}} บทความไม่มีเวลาเผยแพร่ นี่คือความใหม่ของข่าว ไม่ใช่เวลาที่คุณใช้อ่าน",
+        "freshNote_other": "นับ {{sampled}} จาก {{count}} บทความของคุณ อีก {{missing}} บทความไม่มีเวลาเผยแพร่ นี่คือความใหม่ของข่าว ไม่ใช่เวลาที่คุณใช้อ่าน"
+      }
+    }
+  },
+  "tr": {
+    "nav": {
+      "page": {
+        "stats": "Etkinlik"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Senin için önemli olan haberler",
+        "supportBody": "Bunlar en çok güvendiğin yayıncılar. Haber okumak ücretsiz olabilir ama haber yapmak asla ücretsiz değildir. Senin için haber yapmaya devam etmelerini istiyorsan, abonelik sunanlara abone olmayı düşün. Teşekkürler.",
+        "countriesTitle": "Nerede okuyorsun",
+        "countriesHint": "Yayınlarını görmek için bir ülkeye dokun.",
+        "colCountry": "Ülke",
+        "colArticles": "Makale",
+        "logTitle": "Açtıkların",
+        "showAllDays": "Tüm günleri göster",
+        "freshIntro": "Her makale açtığında ne kadar eskiydi.",
+        "freshNoteAll": "Bu, bir haberin ne kadar yeni olduğunu gösterir, ne kadar süre okuduğunu değil.",
+        "band": {
+          "hour": "Bir saatten yeni",
+          "sixHours": "1 ila 6 saat",
+          "day": "6 ila 24 saat",
+          "threeDays": "1 ila 3 gün",
+          "older": "Daha eski"
+        },
+        "allPublications_one": "Açtığın {{count}} yayının tümü",
+        "allPublications_other": "Açtığın {{count}} yayının tümü",
+        "visits_one": "{{count}} ziyaret",
+        "visits_other": "{{count}} ziyaret",
+        "articles_one": "{{count}} makale",
+        "articles_other": "{{count}} makale",
+        "languagesIntro_one": "Son 30 günde açtıklarının {{count}} dili. O makaleleri görmek için birine dokun.",
+        "languagesIntro_other": "Son 30 günde açtıklarının {{count}} dili. O makaleleri görmek için birine dokun.",
+        "logIntro_one": "Son 30 günde kaynağında {{count}} makale. Yalnızca o günü görmek için bir güne dokun.",
+        "logIntro_other": "Son 30 günde kaynağında {{count}} makale. Yalnızca o günü görmek için bir güne dokun.",
+        "freshNote_one": "{{count}} makalenden {{sampled}} tanesi sayıldı: kalan {{missing}} tanesinin yayın zamanı yoktu. Bu, bir haberin ne kadar yeni olduğunu gösterir, ne kadar süre okuduğunu değil.",
+        "freshNote_other": "{{count}} makalenden {{sampled}} tanesi sayıldı: kalan {{missing}} tanesinin yayın zamanı yoktu. Bu, bir haberin ne kadar yeni olduğunu gösterir, ne kadar süre okuduğunu değil."
+      }
+    }
+  },
+  "uk": {
+    "nav": {
+      "page": {
+        "stats": "Активність"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Журналістика, яка важлива для вас",
+        "supportBody": "Це видання, на які ви покладаєтеся найбільше. Читати новини можна безкоштовно, але збирати їх ніколи не безкоштовно. Якщо хочете, щоб вони й далі писали для вас, подумайте про передплату тих, що її пропонують. Дякуємо.",
+        "countriesTitle": "Де ви читаєте",
+        "countriesHint": "Торкніться країни, щоб побачити її видання.",
+        "colCountry": "Країна",
+        "colArticles": "Статті",
+        "logTitle": "Що ви відкривали",
+        "showAllDays": "Показати всі дні",
+        "freshIntro": "Наскільки старою була кожна стаття, коли ви її відкрили.",
+        "freshNoteAll": "Це показує, наскільки свіжою була новина, а не скільки ви її читали.",
+        "band": {
+          "hour": "Менше години",
+          "sixHours": "Від 1 до 6 годин",
+          "day": "Від 6 до 24 годин",
+          "threeDays": "Від 1 до 3 днів",
+          "older": "Старіші"
+        },
+        "allPublications_one": "{{count}} видання, яке ви відкривали",
+        "allPublications_few": "Усі {{count}} видання, які ви відкривали",
+        "allPublications_many": "Усі {{count}} видань, які ви відкривали",
+        "allPublications_other": "Усі {{count}} видання, які ви відкривали",
+        "visits_one": "{{count}} візит",
+        "visits_few": "{{count}} візити",
+        "visits_many": "{{count}} візитів",
+        "visits_other": "{{count}} візиту",
+        "articles_one": "{{count}} стаття",
+        "articles_few": "{{count}} статті",
+        "articles_many": "{{count}} статей",
+        "articles_other": "{{count}} статті",
+        "languagesIntro_one": "{{count}} мова того, що ви відкривали за останні 30 днів. Торкніться її, щоб побачити ці статті.",
+        "languagesIntro_few": "{{count}} мови того, що ви відкривали за останні 30 днів. Торкніться однієї, щоб побачити ці статті.",
+        "languagesIntro_many": "{{count}} мов того, що ви відкривали за останні 30 днів. Торкніться однієї, щоб побачити ці статті.",
+        "languagesIntro_other": "{{count}} мови того, що ви відкривали за останні 30 днів. Торкніться однієї, щоб побачити ці статті.",
+        "logIntro_one": "{{count}} стаття на джерелі за останні 30 днів. Торкніться дня, щоб побачити лише його.",
+        "logIntro_few": "{{count}} статті на джерелі за останні 30 днів. Торкніться дня, щоб побачити лише його.",
+        "logIntro_many": "{{count}} статей на джерелі за останні 30 днів. Торкніться дня, щоб побачити лише його.",
+        "logIntro_other": "{{count}} статті на джерелі за останні 30 днів. Торкніться дня, щоб побачити лише його.",
+        "freshNote_one": "Враховано {{sampled}} із {{count}} ваших статей: решта {{missing}} не мали часу публікації. Це показує, наскільки свіжою була новина, а не скільки ви її читали.",
+        "freshNote_few": "Враховано {{sampled}} із {{count}} ваших статей: решта {{missing}} не мали часу публікації. Це показує, наскільки свіжою була новина, а не скільки ви її читали.",
+        "freshNote_many": "Враховано {{sampled}} із {{count}} ваших статей: решта {{missing}} не мали часу публікації. Це показує, наскільки свіжою була новина, а не скільки ви її читали.",
+        "freshNote_other": "Враховано {{sampled}} із {{count}} ваших статей: решта {{missing}} не мали часу публікації. Це показує, наскільки свіжою була новина, а не скільки ви її читали."
+      }
+    }
+  },
+  "vi": {
+    "nav": {
+      "page": {
+        "stats": "Hoạt động"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "Những bài báo quan trọng với bạn",
+        "supportBody": "Đây là những nhà xuất bản bạn tin cậy nhất. Tin tức có thể được đọc miễn phí, nhưng việc đưa tin thì không bao giờ miễn phí. Nếu bạn muốn họ tiếp tục đưa tin cho bạn, hãy cân nhắc đăng ký những nơi có cung cấp gói đăng ký. Cảm ơn bạn.",
+        "countriesTitle": "Nơi bạn đọc",
+        "countriesHint": "Chạm vào một quốc gia để xem các nguồn của quốc gia đó.",
+        "colCountry": "Quốc gia",
+        "colArticles": "Bài viết",
+        "logTitle": "Những gì bạn đã mở",
+        "showAllDays": "Hiện tất cả các ngày",
+        "freshIntro": "Mỗi bài viết đã đăng được bao lâu khi bạn mở.",
+        "freshNoteAll": "Đây là độ mới của tin, không phải thời gian bạn đọc.",
+        "band": {
+          "hour": "Dưới một giờ",
+          "sixHours": "1 đến 6 giờ",
+          "day": "6 đến 24 giờ",
+          "threeDays": "1 đến 3 ngày",
+          "older": "Cũ hơn"
+        },
+        "allPublications_one": "Tất cả {{count}} nguồn bạn đã mở",
+        "allPublications_other": "Tất cả {{count}} nguồn bạn đã mở",
+        "visits_one": "{{count}} lượt mở",
+        "visits_other": "{{count}} lượt mở",
+        "articles_one": "{{count}} bài viết",
+        "articles_other": "{{count}} bài viết",
+        "languagesIntro_one": "{{count}} ngôn ngữ trong những gì bạn đã mở 30 ngày qua. Chạm vào một ngôn ngữ để xem các bài đó.",
+        "languagesIntro_other": "{{count}} ngôn ngữ trong những gì bạn đã mở 30 ngày qua. Chạm vào một ngôn ngữ để xem các bài đó.",
+        "logIntro_one": "{{count}} bài viết tại nguồn trong 30 ngày qua. Chạm vào một ngày để chỉ xem ngày đó.",
+        "logIntro_other": "{{count}} bài viết tại nguồn trong 30 ngày qua. Chạm vào một ngày để chỉ xem ngày đó.",
+        "freshNote_one": "Tính {{sampled}} trong {{count}} bài viết của bạn: {{missing}} bài còn lại không có thời gian đăng. Đây là độ mới của tin, không phải thời gian bạn đọc.",
+        "freshNote_other": "Tính {{sampled}} trong {{count}} bài viết của bạn: {{missing}} bài còn lại không có thời gian đăng. Đây là độ mới của tin, không phải thời gian bạn đọc."
+      }
+    }
+  },
+  "zh-CN": {
+    "nav": {
+      "page": {
+        "stats": "活动"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "对你重要的报道",
+        "supportBody": "这些是你最依赖的媒体。新闻可以免费阅读，但报道从来都不是免费的。如果你希望他们继续为你报道，可以考虑订阅提供订阅的媒体。谢谢。",
+        "countriesTitle": "你在哪里阅读",
+        "countriesHint": "点按一个国家，查看它的媒体。",
+        "colCountry": "国家",
+        "colArticles": "文章",
+        "logTitle": "你打开过的文章",
+        "showAllDays": "显示所有日期",
+        "freshIntro": "你打开时每篇文章已发布多久。",
+        "freshNoteAll": "这表示新闻有多新，而不是你读了多久。",
+        "band": {
+          "hour": "不到一小时",
+          "sixHours": "1 到 6 小时",
+          "day": "6 到 24 小时",
+          "threeDays": "1 到 3 天",
+          "older": "更早"
+        },
+        "allPublications_one": "你打开过的全部 {{count}} 家媒体",
+        "allPublications_other": "你打开过的全部 {{count}} 家媒体",
+        "visits_one": "{{count}} 次访问",
+        "visits_other": "{{count}} 次访问",
+        "articles_one": "{{count}} 篇文章",
+        "articles_other": "{{count}} 篇文章",
+        "languagesIntro_one": "过去 30 天你打开的内容涉及 {{count}} 种语言。点按一种语言查看这些文章。",
+        "languagesIntro_other": "过去 30 天你打开的内容涉及 {{count}} 种语言。点按一种语言查看这些文章。",
+        "logIntro_one": "过去 30 天在来源处打开了 {{count}} 篇文章。点按某一天，只看那一天。",
+        "logIntro_other": "过去 30 天在来源处打开了 {{count}} 篇文章。点按某一天，只看那一天。",
+        "freshNote_one": "统计了你 {{count}} 篇文章中的 {{sampled}} 篇：其余 {{missing}} 篇没有发布时间。这表示新闻有多新，而不是你读了多久。",
+        "freshNote_other": "统计了你 {{count}} 篇文章中的 {{sampled}} 篇：其余 {{missing}} 篇没有发布时间。这表示新闻有多新，而不是你读了多久。"
+      }
+    }
+  },
+  "zh-TW": {
+    "nav": {
+      "page": {
+        "stats": "活動"
+      }
+    },
+    "library": {
+      "activity": {
+        "supportTitle": "對你重要的報導",
+        "supportBody": "這些是你最仰賴的出版物。新聞可以免費閱讀，但報導從來不是免費的。如果你希望他們繼續為你報導，可以考慮訂閱有提供訂閱的出版物。謝謝。",
+        "countriesTitle": "你在哪裡閱讀",
+        "countriesHint": "點一下國家，查看它的出版物。",
+        "colCountry": "國家",
+        "colArticles": "文章",
+        "logTitle": "你開啟過的文章",
+        "showAllDays": "顯示所有日期",
+        "freshIntro": "你開啟時每篇文章已發布多久。",
+        "freshNoteAll": "這表示新聞有多新，而不是你讀了多久。",
+        "band": {
+          "hour": "不到一小時",
+          "sixHours": "1 到 6 小時",
+          "day": "6 到 24 小時",
+          "threeDays": "1 到 3 天",
+          "older": "更早"
+        },
+        "allPublications_one": "你開啟過的全部 {{count}} 個出版物",
+        "allPublications_other": "你開啟過的全部 {{count}} 個出版物",
+        "visits_one": "{{count}} 次造訪",
+        "visits_other": "{{count}} 次造訪",
+        "articles_one": "{{count}} 篇文章",
+        "articles_other": "{{count}} 篇文章",
+        "languagesIntro_one": "過去 30 天你開啟的內容涵蓋 {{count}} 種語言。點一下某種語言，查看這些文章。",
+        "languagesIntro_other": "過去 30 天你開啟的內容涵蓋 {{count}} 種語言。點一下某種語言，查看這些文章。",
+        "logIntro_one": "過去 30 天在來源開啟了 {{count}} 篇文章。點一下某一天，只看那一天。",
+        "logIntro_other": "過去 30 天在來源開啟了 {{count}} 篇文章。點一下某一天，只看那一天。",
+        "freshNote_one": "計算了你 {{count}} 篇文章中的 {{sampled}} 篇：其餘 {{missing}} 篇沒有發布時間。這表示新聞有多新，而不是你讀了多久。",
+        "freshNote_other": "計算了你 {{count}} 篇文章中的 {{sampled}} 篇：其餘 {{missing}} 篇沒有發布時間。這表示新聞有多新，而不是你讀了多久。"
+      }
+    }
+  }
+}

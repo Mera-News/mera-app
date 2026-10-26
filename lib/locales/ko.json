@@ -2635,7 +2635,7 @@
     "page": {
       "stories": "스토리",
       "saved": "저장됨",
-      "stats": "통계"
+      "stats": "활동"
     },
     "rearrangeA11y": "{{tab}} 페이지 순서 바꾸기",
     "pillA11y": "{{label}}, {{count}}개 중 {{index}}번째",
@@ -2765,6 +2765,37 @@
       "intro": "출처에서 열린 기사를 지난 30일 기준으로, 많이 방문한 순서대로 보여 줍니다. 이 휴대폰에 보관됩니다.",
       "learn": "기록 알아보기",
       "title": "열어 본 매체"
+    },
+    "activity": {
+      "supportTitle": "내게 중요한 보도",
+      "supportBody": "가장 많이 의지하는 매체들입니다. 뉴스는 무료로 읽을 수 있어도 취재는 결코 무료가 아닙니다. 앞으로도 계속 보도해 주길 바란다면 구독을 제공하는 곳은 구독을 고려해 보세요. 감사합니다.",
+      "countriesTitle": "읽은 곳",
+      "countriesHint": "국가를 탭하면 그 국가의 매체를 볼 수 있습니다.",
+      "colCountry": "국가",
+      "colArticles": "기사",
+      "logTitle": "열어 본 기사",
+      "showAllDays": "모든 날짜 보기",
+      "freshIntro": "열었을 때 각 기사가 얼마나 지난 것이었는지 보여 줍니다.",
+      "freshNoteAll": "기사가 얼마나 새로웠는지를 나타내며, 얼마나 오래 읽었는지가 아닙니다.",
+      "band": {
+        "hour": "1시간 미만",
+        "sixHours": "1~6시간",
+        "day": "6~24시간",
+        "threeDays": "1~3일",
+        "older": "그 이전"
+      },
+      "allPublications_one": "열어 본 매체 {{count}}곳 모두",
+      "allPublications_other": "열어 본 매체 {{count}}곳 모두",
+      "visits_one": "{{count}}회 방문",
+      "visits_other": "{{count}}회 방문",
+      "articles_one": "기사 {{count}}개",
+      "articles_other": "기사 {{count}}개",
+      "languagesIntro_one": "지난 30일 동안 열어 본 기사의 언어 {{count}}개입니다. 하나를 탭하면 해당 기사를 볼 수 있습니다.",
+      "languagesIntro_other": "지난 30일 동안 열어 본 기사의 언어 {{count}}개입니다. 하나를 탭하면 해당 기사를 볼 수 있습니다.",
+      "logIntro_one": "지난 30일 동안 출처에서 연 기사 {{count}}개입니다. 날짜를 탭하면 그날만 볼 수 있습니다.",
+      "logIntro_other": "지난 30일 동안 출처에서 연 기사 {{count}}개입니다. 날짜를 탭하면 그날만 볼 수 있습니다.",
+      "freshNote_one": "기사 {{count}}개 중 {{sampled}}개를 집계했습니다. 나머지 {{missing}}개는 게시 시각이 없었습니다. 기사가 얼마나 새로웠는지를 나타내며, 얼마나 오래 읽었는지가 아닙니다.",
+      "freshNote_other": "기사 {{count}}개 중 {{sampled}}개를 집계했습니다. 나머지 {{missing}}개는 게시 시각이 없었습니다. 기사가 얼마나 새로웠는지를 나타내며, 얼마나 오래 읽었는지가 아닙니다."
     }
   },
   "you": {

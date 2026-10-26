@@ -2644,7 +2644,7 @@
     "page": {
       "stories": "Haberler",
       "saved": "Kaydedilenler",
-      "stats": "İstatistik"
+      "stats": "Etkinlik"
     },
     "rearrangeA11y": "{{tab}} sayfalarını yeniden düzenle",
     "pillA11y": "{{label}}, {{count}} içinde {{index}}",
@@ -2775,6 +2775,37 @@
       "intro": "Kaynağında, son 30 gün, en çok ziyaret edilen üstte. Bu telefonda saklanır.",
       "learn": "Geçmiş hakkında bilgi edinin",
       "title": "Açtığınız yayınlar"
+    },
+    "activity": {
+      "supportTitle": "Senin için önemli olan haberler",
+      "supportBody": "Bunlar en çok güvendiğin yayıncılar. Haber okumak ücretsiz olabilir ama haber yapmak asla ücretsiz değildir. Senin için haber yapmaya devam etmelerini istiyorsan, abonelik sunanlara abone olmayı düşün. Teşekkürler.",
+      "countriesTitle": "Nerede okuyorsun",
+      "countriesHint": "Yayınlarını görmek için bir ülkeye dokun.",
+      "colCountry": "Ülke",
+      "colArticles": "Makale",
+      "logTitle": "Açtıkların",
+      "showAllDays": "Tüm günleri göster",
+      "freshIntro": "Her makale açtığında ne kadar eskiydi.",
+      "freshNoteAll": "Bu, bir haberin ne kadar yeni olduğunu gösterir, ne kadar süre okuduğunu değil.",
+      "band": {
+        "hour": "Bir saatten yeni",
+        "sixHours": "1 ila 6 saat",
+        "day": "6 ila 24 saat",
+        "threeDays": "1 ila 3 gün",
+        "older": "Daha eski"
+      },
+      "allPublications_one": "Açtığın {{count}} yayının tümü",
+      "allPublications_other": "Açtığın {{count}} yayının tümü",
+      "visits_one": "{{count}} ziyaret",
+      "visits_other": "{{count}} ziyaret",
+      "articles_one": "{{count}} makale",
+      "articles_other": "{{count}} makale",
+      "languagesIntro_one": "Son 30 günde açtıklarının {{count}} dili. O makaleleri görmek için birine dokun.",
+      "languagesIntro_other": "Son 30 günde açtıklarının {{count}} dili. O makaleleri görmek için birine dokun.",
+      "logIntro_one": "Son 30 günde kaynağında {{count}} makale. Yalnızca o günü görmek için bir güne dokun.",
+      "logIntro_other": "Son 30 günde kaynağında {{count}} makale. Yalnızca o günü görmek için bir güne dokun.",
+      "freshNote_one": "{{count}} makalenden {{sampled}} tanesi sayıldı: kalan {{missing}} tanesinin yayın zamanı yoktu. Bu, bir haberin ne kadar yeni olduğunu gösterir, ne kadar süre okuduğunu değil.",
+      "freshNote_other": "{{count}} makalenden {{sampled}} tanesi sayıldı: kalan {{missing}} tanesinin yayın zamanı yoktu. Bu, bir haberin ne kadar yeni olduğunu gösterir, ne kadar süre okuduğunu değil."
     }
   },
   "you": {

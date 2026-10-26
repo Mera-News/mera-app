@@ -2708,7 +2708,7 @@
     "page": {
       "stories": "Historie",
       "saved": "Zapisane",
-      "stats": "Statystyki"
+      "stats": "Aktywność"
     },
     "rearrangeA11y": "Zmień kolejność stron w {{tab}}",
     "pillA11y": "{{label}}, {{index}} z {{count}}",
@@ -2861,6 +2861,49 @@
       "intro": "U źródła, z ostatnich 30 dni, najczęściej odwiedzane na górze. Zostaje na tym telefonie.",
       "learn": "Dowiedz się o Historii",
       "title": "Wydawcy, których otworzyłeś"
+    },
+    "activity": {
+      "supportTitle": "Dziennikarstwo, które jest dla ciebie ważne",
+      "supportBody": "To wydawcy, na których polegasz najbardziej. Wiadomości mogą być darmowe w czytaniu, ale ich zdobywanie nigdy nie jest darmowe. Jeśli chcesz, żeby dalej dla ciebie pisali, rozważ subskrypcję u tych, którzy ją oferują. Dziękujemy.",
+      "countriesTitle": "Gdzie czytasz",
+      "countriesHint": "Dotknij kraju, aby zobaczyć jego wydawców.",
+      "colCountry": "Kraj",
+      "colArticles": "Artykuły",
+      "logTitle": "Otwarte artykuły",
+      "showAllDays": "Pokaż wszystkie dni",
+      "freshIntro": "Jak stary był każdy artykuł w chwili otwarcia.",
+      "freshNoteAll": "To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+      "band": {
+        "hour": "Poniżej godziny",
+        "sixHours": "Od 1 do 6 godzin",
+        "day": "Od 6 do 24 godzin",
+        "threeDays": "Od 1 do 3 dni",
+        "older": "Starsze"
+      },
+      "allPublications_one": "{{count}} otwarty wydawca",
+      "allPublications_few": "Wszyscy {{count}} otwarci wydawcy",
+      "allPublications_many": "Wszystkich {{count}} otwartych wydawców",
+      "allPublications_other": "Wszystkich {{count}} otwartych wydawców",
+      "visits_one": "{{count}} wizyta",
+      "visits_few": "{{count}} wizyty",
+      "visits_many": "{{count}} wizyt",
+      "visits_other": "{{count}} wizyty",
+      "articles_one": "{{count}} artykuł",
+      "articles_few": "{{count}} artykuły",
+      "articles_many": "{{count}} artykułów",
+      "articles_other": "{{count}} artykułu",
+      "languagesIntro_one": "{{count}} język otwartych artykułów z ostatnich 30 dni. Dotknij go, aby zobaczyć te artykuły.",
+      "languagesIntro_few": "{{count}} języki otwartych artykułów z ostatnich 30 dni. Dotknij jednego, aby zobaczyć te artykuły.",
+      "languagesIntro_many": "{{count}} języków otwartych artykułów z ostatnich 30 dni. Dotknij jednego, aby zobaczyć te artykuły.",
+      "languagesIntro_other": "{{count}} języka otwartych artykułów z ostatnich 30 dni. Dotknij jednego, aby zobaczyć te artykuły.",
+      "logIntro_one": "{{count}} artykuł u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+      "logIntro_few": "{{count}} artykuły u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+      "logIntro_many": "{{count}} artykułów u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+      "logIntro_other": "{{count}} artykułu u źródła z ostatnich 30 dni. Dotknij dnia, aby zobaczyć tylko ten dzień.",
+      "freshNote_one": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+      "freshNote_few": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+      "freshNote_many": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano.",
+      "freshNote_other": "Liczy {{sampled}} z {{count}} twoich artykułów: pozostałe {{missing}} nie miały godziny publikacji. To pokazuje, jak nowa była wiadomość, a nie jak długo ją czytano."
     }
   },
   "you": {

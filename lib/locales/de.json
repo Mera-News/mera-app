@@ -2642,7 +2642,7 @@
     "page": {
       "stories": "Geschichten",
       "saved": "Gespeichert",
-      "stats": "Statistik"
+      "stats": "Aktivität"
     },
     "rearrangeA11y": "Seiten von {{tab}} neu anordnen",
     "pillA11y": "{{label}}, {{index}} von {{count}}",
@@ -2773,6 +2773,37 @@
       "intro": "Bei der Quelle, in den letzten 30 Tagen, die am häufigsten besuchten zuerst. Bleibt auf diesem Telefon gespeichert.",
       "learn": "Mehr über den Verlauf erfahren",
       "title": "Veröffentlichungen, die du geöffnet hast"
+    },
+    "activity": {
+      "supportTitle": "Die Berichterstattung, die dir wichtig ist",
+      "supportBody": "Auf diese Verlage verlässt du dich am meisten. Nachrichten können kostenlos zu lesen sein, aber die Recherche dahinter ist nie kostenlos. Wenn sie weiter für dich berichten sollen, überleg dir, die zu abonnieren, die ein Abo anbieten. Danke.",
+      "countriesTitle": "Wo du liest",
+      "countriesHint": "Tippe auf ein Land, um seine Veröffentlichungen zu sehen.",
+      "colCountry": "Land",
+      "colArticles": "Artikel",
+      "logTitle": "Was du geöffnet hast",
+      "showAllDays": "Alle Tage zeigen",
+      "freshIntro": "Wie alt jeder Artikel war, als du ihn geöffnet hast.",
+      "freshNoteAll": "Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast.",
+      "band": {
+        "hour": "Jünger als eine Stunde",
+        "sixHours": "1 bis 6 Stunden",
+        "day": "6 bis 24 Stunden",
+        "threeDays": "1 bis 3 Tage",
+        "older": "Älter"
+      },
+      "allPublications_one": "Die {{count}} Veröffentlichung, die du geöffnet hast",
+      "allPublications_other": "Alle {{count}} Veröffentlichungen, die du geöffnet hast",
+      "visits_one": "{{count}} Besuch",
+      "visits_other": "{{count}} Besuche",
+      "articles_one": "{{count}} Artikel",
+      "articles_other": "{{count}} Artikel",
+      "languagesIntro_one": "Die {{count}} Sprache dessen, was du in den letzten 30 Tagen geöffnet hast. Tippe darauf, um diese Artikel zu sehen.",
+      "languagesIntro_other": "Die {{count}} Sprachen dessen, was du in den letzten 30 Tagen geöffnet hast. Tippe auf eine, um diese Artikel zu sehen.",
+      "logIntro_one": "{{count}} Artikel bei der Quelle in den letzten 30 Tagen. Tippe auf einen Tag, um nur diesen Tag zu sehen.",
+      "logIntro_other": "{{count}} Artikel bei der Quelle in den letzten 30 Tagen. Tippe auf einen Tag, um nur diesen Tag zu sehen.",
+      "freshNote_one": "Gezählt werden {{sampled}} von {{count}} Artikel: Die anderen {{missing}} hatten keine Veröffentlichungszeit. Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast.",
+      "freshNote_other": "Gezählt werden {{sampled}} von deinen {{count}} Artikeln: Die anderen {{missing}} hatten keine Veröffentlichungszeit. Das zeigt, wie neu eine Meldung war, nicht wie lange du sie gelesen hast."
     }
   },
   "you": {

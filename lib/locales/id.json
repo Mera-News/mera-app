@@ -2635,7 +2635,7 @@
     "page": {
       "stories": "Cerita",
       "saved": "Tersimpan",
-      "stats": "Statistik"
+      "stats": "Aktivitas"
     },
     "rearrangeA11y": "Atur ulang halaman {{tab}}",
     "pillA11y": "{{label}}, {{index}} dari {{count}}",
@@ -2765,6 +2765,37 @@
       "intro": "Di sumbernya, dalam 30 hari terakhir, yang paling sering dikunjungi di urutan pertama. Disimpan di ponsel ini.",
       "learn": "Pelajari tentang Riwayat",
       "title": "Publikasi yang Anda buka"
+    },
+    "activity": {
+      "supportTitle": "Liputan yang penting bagi Anda",
+      "supportBody": "Inilah penerbit yang paling Anda andalkan. Berita bisa gratis dibaca, tetapi tidak pernah gratis untuk diliput. Jika Anda ingin mereka terus meliput untuk Anda, pertimbangkan untuk berlangganan pada yang menyediakannya. Terima kasih.",
+      "countriesTitle": "Tempat Anda membaca",
+      "countriesHint": "Ketuk sebuah negara untuk melihat publikasinya.",
+      "colCountry": "Negara",
+      "colArticles": "Artikel",
+      "logTitle": "Yang Anda buka",
+      "showAllDays": "Tampilkan semua hari",
+      "freshIntro": "Seberapa lama setiap artikel sudah terbit saat Anda membukanya.",
+      "freshNoteAll": "Ini menunjukkan seberapa baru sebuah berita, bukan berapa lama Anda membacanya.",
+      "band": {
+        "hour": "Kurang dari satu jam",
+        "sixHours": "1 sampai 6 jam",
+        "day": "6 sampai 24 jam",
+        "threeDays": "1 sampai 3 hari",
+        "older": "Lebih lama"
+      },
+      "allPublications_one": "Semua {{count}} publikasi yang Anda buka",
+      "allPublications_other": "Semua {{count}} publikasi yang Anda buka",
+      "visits_one": "{{count}} kunjungan",
+      "visits_other": "{{count}} kunjungan",
+      "articles_one": "{{count}} artikel",
+      "articles_other": "{{count}} artikel",
+      "languagesIntro_one": "{{count}} bahasa dari yang Anda buka dalam 30 hari terakhir. Ketuk salah satu untuk melihat artikelnya.",
+      "languagesIntro_other": "{{count}} bahasa dari yang Anda buka dalam 30 hari terakhir. Ketuk salah satu untuk melihat artikelnya.",
+      "logIntro_one": "{{count}} artikel di sumbernya dalam 30 hari terakhir. Ketuk sebuah hari untuk melihat hari itu saja.",
+      "logIntro_other": "{{count}} artikel di sumbernya dalam 30 hari terakhir. Ketuk sebuah hari untuk melihat hari itu saja.",
+      "freshNote_one": "Menghitung {{sampled}} dari {{count}} artikel Anda: {{missing}} lainnya tidak punya waktu terbit. Ini menunjukkan seberapa baru sebuah berita, bukan berapa lama Anda membacanya.",
+      "freshNote_other": "Menghitung {{sampled}} dari {{count}} artikel Anda: {{missing}} lainnya tidak punya waktu terbit. Ini menunjukkan seberapa baru sebuah berita, bukan berapa lama Anda membacanya."
     }
   },
   "you": {

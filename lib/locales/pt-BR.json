@@ -2642,7 +2642,7 @@
     "page": {
       "stories": "Histórias",
       "saved": "Salvos",
-      "stats": "Estatísticas"
+      "stats": "Atividade"
     },
     "rearrangeA11y": "Reorganizar as páginas de {{tab}}",
     "pillA11y": "{{label}}, {{index}} de {{count}}",
@@ -2773,6 +2773,37 @@
       "intro": "Na fonte, nos últimos 30 dias, os mais visitados primeiro. Guardado neste celular.",
       "learn": "Saiba mais sobre Histórico",
       "title": "Veículos que você abriu"
+    },
+    "activity": {
+      "supportTitle": "O jornalismo que importa para você",
+      "supportBody": "Estes são os veículos em que você mais confia. Notícias podem ser de graça para ler, mas nunca são de graça para apurar. Se você quer que eles continuem informando você, pense em assinar os que oferecem assinatura. Obrigado.",
+      "countriesTitle": "Onde você lê",
+      "countriesHint": "Toque em um país para ver os veículos dele.",
+      "colCountry": "País",
+      "colArticles": "Artigos",
+      "logTitle": "O que você abriu",
+      "showAllDays": "Mostrar todos os dias",
+      "freshIntro": "Quão antigo cada artigo era quando você o abriu.",
+      "freshNoteAll": "Isso mostra quão nova era a notícia, não por quanto tempo você leu.",
+      "band": {
+        "hour": "Menos de uma hora",
+        "sixHours": "De 1 a 6 horas",
+        "day": "De 6 a 24 horas",
+        "threeDays": "De 1 a 3 dias",
+        "older": "Mais antigos"
+      },
+      "allPublications_one": "O {{count}} veículo que você abriu",
+      "allPublications_other": "Todos os {{count}} veículos que você abriu",
+      "visits_one": "{{count}} visita",
+      "visits_other": "{{count}} visitas",
+      "articles_one": "{{count}} artigo",
+      "articles_other": "{{count}} artigos",
+      "languagesIntro_one": "O {{count}} idioma do que você abriu nos últimos 30 dias. Toque nele para ver esses artigos.",
+      "languagesIntro_other": "Os {{count}} idiomas do que você abriu nos últimos 30 dias. Toque em um para ver esses artigos.",
+      "logIntro_one": "{{count}} artigo na fonte nos últimos 30 dias. Toque em um dia para ver só aquele dia.",
+      "logIntro_other": "{{count}} artigos na fonte nos últimos 30 dias. Toque em um dia para ver só aquele dia.",
+      "freshNote_one": "Conta {{sampled}} do seu {{count}} artigo: os outros {{missing}} não tinham horário de publicação. Isso mostra quão nova era a notícia, não por quanto tempo você leu.",
+      "freshNote_other": "Conta {{sampled}} dos seus {{count}} artigos: os outros {{missing}} não tinham horário de publicação. Isso mostra quão nova era a notícia, não por quanto tempo você leu."
     }
   },
   "you": {

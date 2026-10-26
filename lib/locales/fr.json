@@ -2648,7 +2648,7 @@
     "page": {
       "stories": "Actualités",
       "saved": "Enregistrés",
-      "stats": "Statistiques"
+      "stats": "Activité"
     },
     "rearrangeA11y": "Réorganiser les pages de {{tab}}",
     "pillA11y": "{{label}}, {{index}} sur {{count}}",
@@ -2779,6 +2779,37 @@
       "intro": "À la source, au cours des 30 derniers jours, les plus visitées en premier. Conservé sur ce téléphone.",
       "learn": "En savoir plus sur l'historique",
       "title": "Publications que vous avez ouvertes"
+    },
+    "activity": {
+      "supportTitle": "Le journalisme qui compte pour vous",
+      "supportBody": "Voici les éditeurs sur lesquels vous comptez le plus. L'information peut être gratuite à lire, mais elle n'est jamais gratuite à produire. Si vous voulez qu'ils continuent à vous informer, pensez à vous abonner à ceux qui le proposent. Merci.",
+      "countriesTitle": "Où vous lisez",
+      "countriesHint": "Touchez un pays pour voir ses publications.",
+      "colCountry": "Pays",
+      "colArticles": "Articles",
+      "logTitle": "Ce que vous avez ouvert",
+      "showAllDays": "Afficher tous les jours",
+      "freshIntro": "L'âge de chaque article quand vous l'avez ouvert.",
+      "freshNoteAll": "Cela mesure la fraîcheur d'une info, pas le temps passé à la lire.",
+      "band": {
+        "hour": "Moins d'une heure",
+        "sixHours": "De 1 à 6 heures",
+        "day": "De 6 à 24 heures",
+        "threeDays": "De 1 à 3 jours",
+        "older": "Plus ancien"
+      },
+      "allPublications_one": "La {{count}} publication que vous avez ouverte",
+      "allPublications_other": "Les {{count}} publications que vous avez ouvertes",
+      "visits_one": "{{count}} visite",
+      "visits_other": "{{count}} visites",
+      "articles_one": "{{count}} article",
+      "articles_other": "{{count}} articles",
+      "languagesIntro_one": "La {{count}} langue de ce que vous avez ouvert ces 30 derniers jours. Touchez-la pour voir ces articles.",
+      "languagesIntro_other": "Les {{count}} langues de ce que vous avez ouvert ces 30 derniers jours. Touchez-en une pour voir ces articles.",
+      "logIntro_one": "{{count}} article à la source ces 30 derniers jours. Touchez un jour pour ne voir que celui-ci.",
+      "logIntro_other": "{{count}} articles à la source ces 30 derniers jours. Touchez un jour pour ne voir que celui-ci.",
+      "freshNote_one": "Compte {{sampled}} de votre {{count}} article : les {{missing}} autres n'avaient pas d'heure de publication. Cela mesure la fraîcheur d'une info, pas le temps passé à la lire.",
+      "freshNote_other": "Compte {{sampled}} de vos {{count}} articles : les {{missing}} autres n'avaient pas d'heure de publication. Cela mesure la fraîcheur d'une info, pas le temps passé à la lire."
     }
   },
   "you": {

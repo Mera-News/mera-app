@@ -2642,7 +2642,7 @@
     "page": {
       "stories": "Verhalen",
       "saved": "Opgeslagen",
-      "stats": "Statistieken"
+      "stats": "Activiteit"
     },
     "rearrangeA11y": "Pagina's van {{tab}} herschikken",
     "pillA11y": "{{label}}, {{index}} van {{count}}",
@@ -2773,6 +2773,37 @@
       "intro": "Bij de bron, in de afgelopen 30 dagen, het vaakst bezocht bovenaan. Bewaard op deze telefoon.",
       "learn": "Meer over Geschiedenis",
       "title": "Publicaties die je hebt geopend"
+    },
+    "activity": {
+      "supportTitle": "De journalistiek die voor jou telt",
+      "supportBody": "Dit zijn de uitgevers waar je het meest op vertrouwt. Nieuws kan gratis te lezen zijn, maar het is nooit gratis om te maken. Wil je dat ze voor je blijven berichten, overweeg dan een abonnement bij de uitgevers die er een aanbieden. Dank je.",
+      "countriesTitle": "Waar je leest",
+      "countriesHint": "Tik op een land om de publicaties ervan te zien.",
+      "colCountry": "Land",
+      "colArticles": "Artikelen",
+      "logTitle": "Wat je hebt geopend",
+      "showAllDays": "Alle dagen tonen",
+      "freshIntro": "Hoe oud elk artikel was toen je het opende.",
+      "freshNoteAll": "Dit gaat over hoe nieuw een verhaal was, niet hoe lang je het las.",
+      "band": {
+        "hour": "Jonger dan een uur",
+        "sixHours": "1 tot 6 uur",
+        "day": "6 tot 24 uur",
+        "threeDays": "1 tot 3 dagen",
+        "older": "Ouder"
+      },
+      "allPublications_one": "De {{count}} publicatie die je opende",
+      "allPublications_other": "Alle {{count}} publicaties die je opende",
+      "visits_one": "{{count}} bezoek",
+      "visits_other": "{{count}} bezoeken",
+      "articles_one": "{{count}} artikel",
+      "articles_other": "{{count}} artikelen",
+      "languagesIntro_one": "De {{count}} taal van wat je de afgelopen 30 dagen opende. Tik erop om die artikelen te zien.",
+      "languagesIntro_other": "De {{count}} talen van wat je de afgelopen 30 dagen opende. Tik op een taal om die artikelen te zien.",
+      "logIntro_one": "{{count}} artikel bij de bron in de afgelopen 30 dagen. Tik op een dag om alleen die dag te zien.",
+      "logIntro_other": "{{count}} artikelen bij de bron in de afgelopen 30 dagen. Tik op een dag om alleen die dag te zien.",
+      "freshNote_one": "Telt {{sampled}} van je {{count}} artikel: de andere {{missing}} hadden geen publicatietijd. Dit gaat over hoe nieuw een verhaal was, niet hoe lang je het las.",
+      "freshNote_other": "Telt {{sampled}} van je {{count}} artikelen: de andere {{missing}} hadden geen publicatietijd. Dit gaat over hoe nieuw een verhaal was, niet hoe lang je het las."
     }
   },
   "you": {

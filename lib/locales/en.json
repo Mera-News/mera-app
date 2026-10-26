@@ -2644,7 +2644,7 @@
     "page": {
       "stories": "Stories",
       "saved": "Saved",
-      "stats": "Stats"
+      "stats": "Activity"
     },
     "rearrangeA11y": "Rearrange {{tab}} pages",
     "pillA11y": "{{label}}, {{index}} of {{count}}",
@@ -2775,6 +2775,37 @@
       "intro": "At the source, in the last 30 days, most visited first. Kept on this phone.",
       "learn": "Learn about History",
       "title": "Publications you opened"
+    },
+    "activity": {
+      "supportTitle": "The reporting that matters to you",
+      "supportBody": "These are the publishers you rely on most. News can be free to read, but it is never free to report. If you want them to keep reporting for you, consider subscribing to the ones that offer it. Thank you.",
+      "countriesTitle": "Where you read",
+      "countriesHint": "Tap a country to see its publications.",
+      "colCountry": "Country",
+      "colArticles": "Articles",
+      "logTitle": "What you opened",
+      "showAllDays": "Show all days",
+      "freshIntro": "How old each article was when you opened it.",
+      "freshNoteAll": "This is how new a story was, not how long you read it.",
+      "band": {
+        "hour": "Under an hour old",
+        "sixHours": "1 to 6 hours",
+        "day": "6 to 24 hours",
+        "threeDays": "1 to 3 days",
+        "older": "Older"
+      },
+      "allPublications_one": "The {{count}} publication you opened",
+      "allPublications_other": "All {{count}} publications you opened",
+      "visits_one": "{{count}} visit",
+      "visits_other": "{{count}} visits",
+      "articles_one": "{{count}} article",
+      "articles_other": "{{count}} articles",
+      "languagesIntro_one": "The {{count}} language of what you opened in the last 30 days. Tap it to see those articles.",
+      "languagesIntro_other": "The {{count}} languages of what you opened in the last 30 days. Tap one to see those articles.",
+      "logIntro_one": "{{count}} article at the source in the last 30 days. Tap a day to see only that day.",
+      "logIntro_other": "{{count}} articles at the source in the last 30 days. Tap a day to see only that day.",
+      "freshNote_one": "Counts {{sampled}} of your {{count}} article: the other {{missing}} had no publish time. This is how new a story was, not how long you read it.",
+      "freshNote_other": "Counts {{sampled}} of your {{count}} articles: the other {{missing}} had no publish time. This is how new a story was, not how long you read it."
     }
   },
   "you": {

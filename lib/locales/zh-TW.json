@@ -2635,7 +2635,7 @@
     "page": {
       "stories": "報導",
       "saved": "已儲存",
-      "stats": "統計"
+      "stats": "活動"
     },
     "rearrangeA11y": "重新排列{{tab}}的頁面",
     "pillA11y": "{{label}}，第 {{index}} 個，共 {{count}} 個",
@@ -2765,6 +2765,37 @@
       "intro": "在來源網站，過去 30 天內，依造訪次數由多到少排列。保存在這支手機上。",
       "learn": "了解造訪過",
       "title": "你開啟過的出版物"
+    },
+    "activity": {
+      "supportTitle": "對你重要的報導",
+      "supportBody": "這些是你最仰賴的出版物。新聞可以免費閱讀，但報導從來不是免費的。如果你希望他們繼續為你報導，可以考慮訂閱有提供訂閱的出版物。謝謝。",
+      "countriesTitle": "你在哪裡閱讀",
+      "countriesHint": "點一下國家，查看它的出版物。",
+      "colCountry": "國家",
+      "colArticles": "文章",
+      "logTitle": "你開啟過的文章",
+      "showAllDays": "顯示所有日期",
+      "freshIntro": "你開啟時每篇文章已發布多久。",
+      "freshNoteAll": "這表示新聞有多新，而不是你讀了多久。",
+      "band": {
+        "hour": "不到一小時",
+        "sixHours": "1 到 6 小時",
+        "day": "6 到 24 小時",
+        "threeDays": "1 到 3 天",
+        "older": "更早"
+      },
+      "allPublications_one": "你開啟過的全部 {{count}} 個出版物",
+      "allPublications_other": "你開啟過的全部 {{count}} 個出版物",
+      "visits_one": "{{count}} 次造訪",
+      "visits_other": "{{count}} 次造訪",
+      "articles_one": "{{count}} 篇文章",
+      "articles_other": "{{count}} 篇文章",
+      "languagesIntro_one": "過去 30 天你開啟的內容涵蓋 {{count}} 種語言。點一下某種語言，查看這些文章。",
+      "languagesIntro_other": "過去 30 天你開啟的內容涵蓋 {{count}} 種語言。點一下某種語言，查看這些文章。",
+      "logIntro_one": "過去 30 天在來源開啟了 {{count}} 篇文章。點一下某一天，只看那一天。",
+      "logIntro_other": "過去 30 天在來源開啟了 {{count}} 篇文章。點一下某一天，只看那一天。",
+      "freshNote_one": "計算了你 {{count}} 篇文章中的 {{sampled}} 篇：其餘 {{missing}} 篇沒有發布時間。這表示新聞有多新，而不是你讀了多久。",
+      "freshNote_other": "計算了你 {{count}} 篇文章中的 {{sampled}} 篇：其餘 {{missing}} 篇沒有發布時間。這表示新聞有多新，而不是你讀了多久。"
     }
   },
   "you": {
