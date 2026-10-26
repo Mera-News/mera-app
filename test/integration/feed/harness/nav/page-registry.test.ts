@@ -8,6 +8,7 @@ import {
   pageMeta,
   tabForSurface,
   tabOfPage,
+  LIBRARY_SCREENS,
   type FixedPageId,
 } from '@/components/custom/nav/page-registry';
 
@@ -34,7 +35,8 @@ describe('page-registry', () => {
 
   it('keeps the inbox last in the Feed, Library static and Settings in You', () => {
     expect(DEFAULT_PAGE_ORDER.feed).toEqual(['feed', 'stories', 'notifications']);
-    expect(DEFAULT_PAGE_ORDER.library).toEqual(['saved', 'checks', 'visited', 'stats']);
+    // History left the pills (a pushed screen now); Stats reads Activity.
+    expect(DEFAULT_PAGE_ORDER.library).toEqual(['saved', 'checks', 'stats']);
     expect(DEFAULT_PAGE_ORDER.you).toEqual(['profile', 'settings']);
     expect(tabOfPage('notifications')).toBe('feed');
   });
@@ -62,7 +64,14 @@ describe('page-registry', () => {
     expect(tabForSurface('settings:notifications')).toBe('you');
     expect(tabForSurface('settings:backup')).toBe('you');
     expect(tabForSurface('checks')).toBe('library');
+    for (const screen of LIBRARY_SCREENS) expect(tabForSurface(screen)).toBe('library');
     expect(tabForSurface('country:NL')).toBe('world');
+  });
+
+  it('labels the Stats pill Activity', () => {
+    const en = require('@/lib/locales/en.json');
+    expect(PAGE_META.stats.labelKey).toBe('nav.page.stats');
+    expect(en.nav.page.stats).toBe('Activity');
   });
 
   it('orders tabs Feed, World, Library, You', () => {

@@ -40,7 +40,8 @@ const RULES: Readonly<Record<string, Rule>> = {
   // The six root stubs.
   '/logged-in/share-stats': () => ({ pathname: `${TABS}/library`, page: 'stats' }),
   '/logged-in/saved-suggestions': () => ({ pathname: `${TABS}/library`, page: 'saved' }),
-  '/logged-in/visited-publications': () => ({ pathname: `${TABS}/library`, page: 'visited' }),
+  // History left the Library's pills: it is a screen in the Library stack.
+  '/logged-in/visited-publications': () => ({ pathname: `${TABS}/library/history` }),
   '/logged-in/notifications': () => ({ pathname: `${TABS}/feed`, page: 'notifications' }),
   '/logged-in/profile-advanced': () => ({ pathname: `${TABS}/you`, page: 'profile' }),
   '/logged-in/config-panel': () => ({ pathname: `${TABS}/you`, page: 'profile' }),
