@@ -416,7 +416,7 @@ export function availableCards(stats: ReadingStats): StatsCardId[] {
  * late-evening read on tomorrow for every reader east of Greenwich, and an
  * early-morning one on yesterday for every reader west of it).
  */
-function localDateKey(ms: number): string {
+export function localDateKey(ms: number): string {
   return new Date(ms).toLocaleDateString('en-CA', {
     year: 'numeric',
     month: '2-digit',
