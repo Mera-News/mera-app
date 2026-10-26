@@ -279,7 +279,6 @@
       "paused": "Nedenler bugünlük duraklatıldı",
       "discarded": "Mera tarafından elendi"
     },
-    "noteMatchedFacts": "Gerçeklerinle eşleşti: {{facts}}",
     "readyForMore": "Daha fazlasını okumaya hazır mısınız?",
     "refreshFeedAction": "Akışınızı yenileyin",
     "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın."

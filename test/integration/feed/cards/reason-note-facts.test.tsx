@@ -1,6 +1,6 @@
-// The reason box keeps the matched facts under the model sentence: the sentence often names no fact,
-// and a reader who sees only it asks "why is this recommended?". The only fake is the facts query.
-import { render, waitFor } from '@testing-library/react-native';
+// The matched-facts line is for a row WITHOUT a reason only (owner): once the reason is written it
+// says why on its own, and a facts line under it repeats it. The only fake is the facts query.
+import { act, render } from '@testing-library/react-native';
 import React from 'react';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { initI18nEn } from '@/test/helpers';
@@ -13,25 +13,14 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 
 beforeAll(initI18nEn);
 
-const fact = (statement: string) => ({ statement });
-
 describe('ReasonNote with a reason', () => {
-    it('shows the reason and the matched facts line under it', async () => {
-        mockFacts.mockResolvedValue([fact('follows arsenal'), fact('lives in amsterdam')]);
-        const { getByTestId, getByText } = render(
+    it('shows the reason and no matched facts line', async () => {
+        mockFacts.mockResolvedValue([{ statement: 'follows arsenal' }]);
+        const { getByText, queryByText } = render(
             <ReasonNote relevance={0.8} reason="A transfer story." topicIds={['t-1']} testID="note" maxNoteLines={4} />,
         );
+        await act(async () => {});
         expect(getByText('A transfer story.')).toBeTruthy();
-        await waitFor(() => expect(getByTestId('note-facts')).toBeTruthy());
-        expect(getByTestId('note-facts').props.children).toBe('Matched your facts: Follows Arsenal · Lives In Amsterdam');
-        expect(getByTestId('note-facts').props.numberOfLines).toBe(1);
-    });
-
-    it('renders no facts line when nothing matched', async () => {
-        mockFacts.mockResolvedValue([]);
-        const { queryByTestId, getByText } = render(<ReasonNote relevance={0.8} reason="A transfer story." topicIds={['t-2']} testID="note" />);
-        await waitFor(() => expect(mockFacts).toHaveBeenCalled());
-        expect(getByText('A transfer story.')).toBeTruthy();
-        expect(queryByTestId('note-facts')).toBeNull();
+        expect(queryByText(/Follows Arsenal/)).toBeNull();
     });
 });

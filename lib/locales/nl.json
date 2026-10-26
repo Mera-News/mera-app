@@ -279,7 +279,6 @@
       "paused": "Redenen gepauzeerd voor vandaag",
       "discarded": "Afgewezen door Mera"
     },
-    "noteMatchedFacts": "Komt overeen met je feiten: {{facts}}",
     "readyForMore": "Klaar om meer te lezen?",
     "refreshFeedAction": "Ververs je feed",
     "translationFailed": "Vertaling mislukt. Start de app opnieuw."

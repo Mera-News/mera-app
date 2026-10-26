@@ -275,7 +275,6 @@
       "paused": "Alasan dijeda untuk hari ini",
       "discarded": "Dibuang oleh Mera"
     },
-    "noteMatchedFacts": "Cocok dengan fakta Anda: {{facts}}",
     "readyForMore": "Siap membaca lebih banyak?",
     "refreshFeedAction": "Muat ulang feed Anda",
     "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi."

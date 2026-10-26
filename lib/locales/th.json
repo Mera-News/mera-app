@@ -275,7 +275,6 @@
       "paused": "หยุดเหตุผลชั่วคราววันนี้",
       "discarded": "คัดออกโดยเมร่า"
     },
-    "noteMatchedFacts": "ตรงกับข้อเท็จจริงของคุณ: {{facts}}",
     "readyForMore": "พร้อมอ่านเพิ่มหรือยัง?",
     "refreshFeedAction": "รีเฟรชฟีดของคุณ",
     "translationFailed": "แปลไม่สำเร็จ กรุณารีสตาร์ทแอป"
