@@ -2,8 +2,9 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useIsToastFront } from '@/components/ui/toast';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useColors } from '@/lib/theme/tokens';
 import React, { useEffect } from 'react';
-import { Dimensions, I18nManager } from 'react-native';
+import { Dimensions, I18nManager, View } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import Animated, {
     useAnimatedStyle,
@@ -46,6 +47,8 @@ export interface NotifiedToastProps {
     persistent?: boolean;
     /** The notice's one button (its row's first action), when it has one. */
     button?: { readonly label: string; readonly onPress: () => void };
+    /** false: no flight or fade of its own; the deck's default exit closes it. */
+    fly?: boolean;
 }
 
 /**
@@ -66,7 +69,9 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     reduceMotion,
     persistent = false,
     button,
+    fly = true,
 }) => {
+    const colors = useColors();
     const progress = useSharedValue(0);
     // The deck can hold this card BEHIND another one. Its lifetime is sized to
     // this animation exactly (`notifiedToastDurationMs`), and the queue only
@@ -92,7 +97,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const deltaY = canFly ? target.y - startY : 0;
 
     useEffect(() => {
-        if (!isFront || persistent) return;
+        if (!fly || !isFront || persistent) return;
         // HOLD fully opaque first so the notification is actually readable, then
         // leave: fly to You (translate + shrink + fade), or a plain slower fade
         // when motion is reduced.
@@ -102,7 +107,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
                 duration: canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS,
             }),
         );
-    }, [progress, canFly, isFront, persistent]);
+    }, [progress, canFly, isFront, persistent, fly]);
 
     const animatedStyle = useAnimatedStyle(() => {
         const p = progress.value;
@@ -125,20 +130,33 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
         // which must not swallow a tap aimed at the chrome behind it.
         <Animated.View style={animatedStyle} pointerEvents="box-none">
             <Toast action={action} variant="solid" pointerEvents="box-none">
-                {/* The one announcement: title and body together, when this card is in front. */}
-                <ToastTitle announcement={body ? `${title}. ${body}` : title}>{title}</ToastTitle>
-                {body ? <ToastDescription>{body}</ToastDescription> : null}
-                {button ? (
-                    <Pressable
-                        testID="notified-toast-button"
-                        onPress={button.onPress}
-                        accessibilityRole="button"
-                        accessibilityLabel={button.label}
-                        style={{ alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' }}
-                    >
-                        <Text style={{ fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' }}>{button.label}</Text>
-                    </Pressable>
-                ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    {/* flexShrink, never flex: 1: the toast sizes to its content, and a
+                        flex-basis-0 column measures zero wide. */}
+                    <View style={{ flexShrink: 1, gap: 4 }}>
+                        {/* The one announcement: title and body together, when this card is in front. */}
+                        <ToastTitle announcement={body ? `${title}. ${body}` : title}>{title}</ToastTitle>
+                        {body ? <ToastDescription>{body}</ToastDescription> : null}
+                    </View>
+                    {button ? (
+                        <Pressable
+                            testID="notified-toast-button"
+                            onPress={button.onPress}
+                            accessibilityRole="button"
+                            accessibilityLabel={button.label}
+                            hitSlop={6}
+                            style={{
+                                minHeight: 32,
+                                paddingHorizontal: 14,
+                                borderRadius: 999,
+                                backgroundColor: colors.accent,
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Text style={{ color: colors.onAccent, fontSize: 14, fontWeight: '700' }}>{button.label}</Text>
+                        </Pressable>
+                    ) : null}
+                </View>
             </Toast>
         </Animated.View>
     );
