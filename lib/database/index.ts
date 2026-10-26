@@ -31,18 +31,50 @@ import FactCheckRecord from './models/FactCheckRecord';
 import UserPublicationSubscription from './models/UserPublicationSubscription';
 import DeclinedTopic from './models/DeclinedTopic';
 
-const adapter = new SQLiteAdapter({
-  schema,
-  migrations,
-  jsi: true,
-  onSetUpError: (error) => {
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.error('[WMDB setup error]', error, (error as any)?.message, (error as any)?.stack);
+const LOCKED_RETRIES = 3;
+const LOCKED_WAIT_MS = 200;
+
+/**
+ * With JSI the SQLiteAdapter constructor opens SQLite synchronously, and the
+ * native open runs `journal_mode = WAL` BEFORE `busy_timeout`, so a lock the
+ * previous JS runtime still holds (an OTA reload) throws at once instead of
+ * waiting. Retry a "database is locked" a few times; rethrow anything else.
+ * shortcut: a JS retry around the native open; the real fix is a native patch
+ * setting busy_timeout before WAL, at the next native build.
+ */
+export function createAdapterWithRetry<T>(factory: () => T): T {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return factory();
+    } catch (error) {
+      const locked = /database is locked/i.test(error instanceof Error ? error.message : String(error));
+      if (!locked || attempt >= LOCKED_RETRIES) throw error;
+      logger.warn('[database] locked at open, retrying', { attempt: attempt + 1 });
+      // A busy-wait, because this runs at module load: every importer needs
+      // the database synchronously, so there is nothing to await.
+      const until = Date.now() + LOCKED_WAIT_MS;
+      while (Date.now() < until) {
+        // spin
+      }
     }
-    logger.captureException(error, { tags: { source: 'watermelondb', method: 'onSetUpError' } });
-  },
-});
+  }
+}
+
+const adapter = createAdapterWithRetry(
+  () =>
+    new SQLiteAdapter({
+      schema,
+      migrations,
+      jsi: true,
+      onSetUpError: (error) => {
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.error('[WMDB setup error]', error, (error as any)?.message, (error as any)?.stack);
+        }
+        logger.captureException(error, { tags: { source: 'watermelondb', method: 'onSetUpError' } });
+      },
+    }),
+);
 
 const database = new Database({
   adapter,
