@@ -762,7 +762,10 @@ export async function* cloudChatStream(
     // reply is model-evidence. A decrypt failure is NOT: model-fallback.ts is
     // explicit that "4xx, auth, E2EE/decrypt and plain network errors say
     // nothing about the model".
+    // Only a failure OF the primary is evidence against it: an empty reply from
+    // a hedge-winning fallback must not engage the session fallback.
     if (
+      sentModel === primary &&
       (isAbortLike(err) || err instanceof StreamIdleError || err instanceof EmptyReplyError) &&
       !isCallerAbort(err)
     ) {
