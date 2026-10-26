@@ -1510,6 +1510,13 @@ export function translateTextDetailed(
                         // still succeed (late sink), and a slow pack is not a
                         // broken one.
                         return null;
+                    } else if (isProbe && /cancelled/i.test(message)) {
+                        // A cancelled probe is the reader dismissing Apple's
+                        // download sheet: their choice, not a defect.
+                        logger.warn('[TranslationService] Language probe cancelled', {
+                            sourceLangCode,
+                            targetLangCode,
+                        });
                     } else if (/cancelled/i.test(message)) {
                         // The native bridge's "operation was cancelled" is NOT the
                         // user's cancel button — that path (useLanguageSwitch.cancel)
@@ -1533,7 +1540,6 @@ export function translateTextDetailed(
                                 textPreview: text.slice(0, 20),
                                 sourceLangCode,
                                 targetLangCode,
-                                isProbe,
                             },
                         });
                     } else {
