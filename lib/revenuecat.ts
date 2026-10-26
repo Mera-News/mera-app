@@ -264,12 +264,22 @@ export async function syncRevenueCatAttributes(
     // down) is retried on the next foreground rather than being remembered as
     // delivered forever.
     lastAttributesSignature = null;
+    // A store outage (Play's SERVICE_UNAVAILABLE) or a network blip is retried
+    // by the next tick, so it is not an error worth an issue.
+    if (TRANSIENT_SYNC_ERROR_CODES.has(String((e as { code?: unknown })?.code))) {
+      logger.warn('[revenuecat] attribute sync failed, retrying next tick', describeError(e));
+      return;
+    }
     logger.captureException(e, {
       tags: { module: 'revenuecat', method: 'syncAttributes' },
       extra: describeError(e),
     });
   }
 }
+
+// PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR and NETWORK_ERROR, by value: the
+// shared Jest mock of react-native-purchases does not carry the enum.
+const TRANSIENT_SYNC_ERROR_CODES = new Set(['2', '10']);
 
 /**
  * Identify the RevenueCat customer as our better-auth user so the webhook's
