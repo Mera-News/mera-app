@@ -3272,6 +3272,13 @@ async function asTaskStep<T>(busy: T, fn: () => Promise<T>): Promise<T> {
 function reportTaskError(err: unknown, step: string): BackgroundStopReason {
   if (isCancellationError(err)) return 'deadline';
   if (err instanceof NoCredentialError || err instanceof TaskNoAuthError) return 'no-auth';
+  // An upstream 5xx is an outage, not a defect: the batch stays queued and the
+  // next run retries it, so a breadcrumb is enough (MERA-APP-8W).
+  const statusCode = (err as { statusCode?: number } | null)?.statusCode;
+  if (statusCode !== undefined && statusCode >= 500) {
+    logger.warn(`${TAG} ${step} upstream ${statusCode}`, { statusCode, error: String(err) });
+    return 'error';
+  }
   logger.captureException(err, { tags: { service: 'scoring-pipeline', step } });
   return 'error';
 }

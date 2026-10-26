@@ -7,6 +7,7 @@
 // wall time, so a step that touches three batches takes seconds: the file raises the test timeout.
 // A slow download is a results GET that moves the clock (`slowResults`), the way a real one eats the
 // window.
+import logger from '@/lib/logger';
 import * as pipeline from '@/lib/services/scoring-pipeline';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { http, HttpResponse, server, setAppState } from '@/test/helpers';
@@ -260,6 +261,21 @@ describe('submitScoringForBackground (step b)', () => {
     const b = (await batches())[0];
     expect(b.phase).toBe('queued');
     expect(b.attempt).toBe(0);
+  });
+
+  it('a 5xx attestation (MERA-APP-8W) stops the step with a breadcrumb, not a Sentry event (the next run retries)', async () => {
+    gateway({}, { pendingPolls: 999 });
+    await seedArticles(['n0']);
+    server.use(http.get('*/api/attestation/report', () => new HttpResponse('Upstream request failed', { status: 502 })));
+
+    const out = await drive(submitScoringForBackground({ deadlineAt: deadline(), articleIds: ['n0'] }));
+
+    expect(out.stoppedBy).toBe('error');
+    expect(logger.captureException).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('bg-submit'),
+      expect.objectContaining({ statusCode: 502 }),
+    );
   });
 
   it('submits nothing inside the POST reserve', async () => {
