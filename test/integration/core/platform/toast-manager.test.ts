@@ -21,7 +21,7 @@ import { TOAST_MIN_DURATION_MS, toastManager } from '@/lib/toast-manager';
 import { closeAll, resetToastQueue, show, toastApi, useToastQueue } from '@/lib/toast/toast-queue';
 import { Toast } from '@/components/ui/toast';
 import UndoToast from '@/components/custom/toast/UndoToast';
-import NotifiedToast from '@/components/custom/notifications/NotifiedToast';
+import NotifiedToast, { NOTIFIED_TOAST_HOLD_MS } from '@/components/custom/notifications/NotifiedToast';
 import { initI18nEn, useStrictClock } from '@/test/helpers';
 import { getAll as getNotifications } from '@/lib/database/services/notification-service';
 
@@ -302,6 +302,18 @@ describe('showNotifiedToast', () => {
     expect(el.props.title).toBe('Fact check ready');
     expect(el.props.body).toBe('No published fact checks yet for "Budget vote delayed".');
     expect(el.props.body).not.toMatch(/\{\{/);
+  });
+
+  it('fly: false skips the flight: the card only holds, then the deck fades it like any toast', async () => {
+    await toastManager.showNotifiedToast({
+      type: 'update_available',
+      source: 'ota',
+      title: 'notificationCenter.update.availableTitle',
+      body: 'notificationCenter.update.availableBody',
+      fly: false,
+    });
+    expect(frontEl().props.fly).toBe(false);
+    expect(entries()[0].duration).toBe(NOTIFIED_TOAST_HOLD_MS);
   });
 
   it('persists the row with the RAW keys and the context, so the inbox can re-resolve them', async () => {

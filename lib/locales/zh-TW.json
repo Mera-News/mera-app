@@ -275,7 +275,6 @@
       "paused": "今日理由已暫停",
       "discarded": "梅拉已排除"
     },
-    "noteMatchedFacts": "符合你的事實：{{facts}}",
     "readyForMore": "準備好讀更多了嗎？",
     "refreshFeedAction": "重新整理你的資訊流",
     "translationFailed": "翻譯失敗。請重新啟動應用程式。"

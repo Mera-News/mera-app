@@ -279,7 +279,6 @@
       "paused": "Motivos en pausa por hoy",
       "discarded": "Descartados por Mera"
     },
-    "noteMatchedFacts": "Coincide con tus datos: {{facts}}",
     "readyForMore": "¿Listo para leer más?",
     "refreshFeedAction": "Actualizar tu feed",
     "translationFailed": "La traducción falló. Reinicia la app."

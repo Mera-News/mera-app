@@ -98,7 +98,8 @@ export async function noticePendingUpdate(id: string): Promise<void> {
             return;
         }
         await setSetting(OTA_NOTICED_KEY, id);
-        await toastManager.showNotifiedToast(row);
+        // Update toasts fade like any toast; the flight to the inbox read as the card sliding down.
+        await toastManager.showNotifiedToast({ ...row, fly: false });
     } catch (err) {
         logger.captureException(err, { tags: { module: 'ota-notice', method: 'noticePendingUpdate' } });
     }
@@ -184,6 +185,7 @@ export async function announceAppliedUpdate(missing?: 'story' | 'publication'): 
         await new Promise((r) => setTimeout(r, ANNOUNCE_DELAY_MS));
         if (missing) {
             toastManager.showNoticeToast({
+                fly: false,
                 title: i18next.t(
                     missing === 'story' ? 'notificationCenter.update.storyGone' : 'notificationCenter.update.publicationGone',
                 ),
@@ -193,11 +195,12 @@ export async function announceAppliedUpdate(missing?: 'story' | 'publication'): 
         if (!row) return;
         const title = i18next.t('notificationCenter.update.updatedTitle');
         if (row.notes.length === 0) {
-            toastManager.showNoticeToast({ title, body: i18next.t('notificationCenter.update.notesEmpty') });
+            toastManager.showNoticeToast({ title, body: i18next.t('notificationCenter.update.notesEmpty'), fly: false });
             return;
         }
         toastManager.showNoticeToast({
             title,
+            fly: false,
             button: {
                 label: i18next.t('notificationCenter.update.seeWhatsNew'),
                 onPress: () => {

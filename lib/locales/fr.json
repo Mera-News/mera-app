@@ -284,7 +284,6 @@
       "paused": "Raisons en pause pour aujourd'hui",
       "discarded": "Écarté par Mera"
     },
-    "noteMatchedFacts": "Correspond à vos faits : {{facts}}",
     "readyForMore": "Prêt à en lire davantage ?",
     "refreshFeedAction": "Actualiser votre fil",
     "translationFailed": "La traduction a échoué. Redémarrez l'application."

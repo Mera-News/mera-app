@@ -275,7 +275,6 @@
       "paused": "오늘은 이유 일시 중지",
       "discarded": "메라가 제외함"
     },
-    "noteMatchedFacts": "내 사실과 일치: {{facts}}",
     "readyForMore": "더 읽을 준비가 되셨나요?",
     "refreshFeedAction": "피드 새로고침",
     "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요."

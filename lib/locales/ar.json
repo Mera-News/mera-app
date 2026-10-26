@@ -327,7 +327,6 @@
       "paused": "الأسباب متوقفة مؤقتًا لليوم",
       "discarded": "استبعدتها ميرا"
     },
-    "noteMatchedFacts": "مطابقة لمعلوماتك: {{facts}}",
     "readyForMore": "هل أنت مستعد لقراءة المزيد؟",
     "refreshFeedAction": "حدّث موجزك",
     "translationFailed": "فشلت الترجمة. أعد تشغيل التطبيق."

@@ -209,8 +209,6 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
     const note = useNoteInk();
     const pending = !reason ? pendingMode : undefined;
     const skipNotes = useMeraProtocolStore((st) => st.skipNotes);
-    // Before any early return (rules of hooks); the reason box shows the facts under the model sentence too.
-    const matchedLine = factsLine(useMatchedFacts(topicIds).map((f) => primaryStatement(f.statement)));
 
     // An in-mount transition only: a box first drawn with its note never
     // animates (virtualised remounts, a translation swap).
@@ -288,8 +286,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                         size={NOTE_TOKEN}
                         bold
                         className="text-left"
-                        // The facts line takes one of the card's lines, so the card keeps its height.
-                        numberOfLines={maxNoteLines && matchedLine ? Math.max(1, maxNoteLines - 1) : maxNoteLines}
+                        numberOfLines={maxNoteLines}
                         style={noteStyle}
                         showTranslatedGlyph={showTranslatedGlyph}
                         // A host that takes the displayed note (the Feed card) speaks the failure in its own label.
@@ -300,16 +297,6 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                         <WordReveal text={reason} maxHeight={maxNoteLines ? maxNoteLines * lineHeight : undefined} />
                     ) : null}
                 </Animated.View>
-            ) : null}
-            {matchedLine ? (
-                <Text
-                    size={NOTE_TOKEN}
-                    style={{ color: note.ink, marginTop: 4 }}
-                    numberOfLines={maxNoteLines ? 1 : undefined}
-                    testID={testID ? `${testID}-facts` : undefined}
-                >
-                    {t('feed.noteMatchedFacts', { facts: matchedLine })}
-                </Text>
             ) : null}
         </Box>
     );

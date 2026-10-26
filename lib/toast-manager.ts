@@ -29,6 +29,8 @@ export interface NotifiedToastOptions {
     dedupeDaily?: boolean;
     /** Plumbed straight through to `notify()`: row types this row replaces. */
     replaces?: string[];
+    /** false: the toast leaves with the deck's default fade, not the flight to the inbox. */
+    fly?: boolean;
 }
 
 /**
@@ -334,6 +336,7 @@ class ToastManager {
             title: this.resolveI18n(opts.title, opts.context),
             body: this.resolveI18n(opts.body, opts.context),
             action: opts.action,
+            fly: opts.fly,
             button:
                 row && first
                     ? {
@@ -359,6 +362,7 @@ class ToastManager {
         body?: string;
         action?: 'info' | 'success' | 'error';
         button?: { label: string; onPress: () => void };
+        fly?: boolean;
     }) {
         if (!this.toastInstance) {
             logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
@@ -396,7 +400,12 @@ class ToastManager {
             // holds fully opaque (so it can be READ) and only then leaves. Too
             // short and it is torn off mid-flight; too long and an invisible
             // toast stays mounted over the UI after the animation has finished.
-            duration: persistent ? null : notifiedToastModule.notifiedToastDurationMs(canFly),
+            // No flight: it only holds, and the deck's own exit fades it.
+            duration: persistent
+                ? null
+                : opts.fly === false
+                  ? notifiedToastModule.NOTIFIED_TOAST_HOLD_MS
+                  : notifiedToastModule.notifiedToastDurationMs(canFly),
             render: () =>
                 React.createElement(NotifiedToast, {
                     title,
@@ -405,6 +414,7 @@ class ToastManager {
                     reduceMotion,
                     persistent,
                     button,
+                    fly: opts.fly !== false,
                 }),
         });
     }
