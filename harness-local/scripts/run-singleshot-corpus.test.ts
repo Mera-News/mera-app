@@ -9,7 +9,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { countMatched, liveSystem, loadPrePrompts, parseArgs, prePostVerdict } from './run-singleshot-corpus';
+import { countMatched, harnessVerdict, liveSystem, loadPrePrompts, parseArgs, prePostVerdict, runTurnHarness, type HarnessCaller } from './run-singleshot-corpus';
 import { BIG_MODEL } from '../../lib/llm/constants';
 
 test('defaults: BIG_MODEL and the on, on-twin, off arms', () => {
@@ -82,4 +82,37 @@ test('verdict: per-kind spread; track within max(1, spread), other kinds within 
   assert.equal(v([5, 3, 3], [5, 1, 3], [5, 1, 3]).verdict, 'FAIL'); // fc moved 2 > max(1, 0)
   assert.equal(v([5, 3, 3], [5, 1, 3], [5, 3, 3]).verdict, 'PASS'); // fc spread 2 allows it
   assert.deepEqual(v([5, 3, 3], [4, 2, 3], [5, 3, 1]).spread, { proposeTrack: 1, proposeFactCheck: 1, answer: 2 });
+});
+
+test('the harness arm parses and runs a fake caller\'s proposeTrack through the real loop', async () => {
+  assert.deepEqual(parseArgs(['--arms', 'off,off-twin,harness']).arms.map((x) => x.id), ['off', 'off-twin', 'harness']);
+  const names = (tools: unknown): string[] =>
+    Array.isArray(tools) ? tools.map((t) => (t as { function?: { name?: string } }).function?.name ?? '') : [];
+  let proposed = false;
+  const caller: HarnessCaller = async (req) => {
+    const offered = names(req.tools);
+    const base = { content: '', finishReason: 'stop', truncated: false, usage: null, modelSent: null, latencyMs: 1, error: null };
+    if (offered.includes('load_skill')) return { ...base, toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'conversation/follow-story' }) }] };
+    if (offered.includes('proposeTrack') && !proposed) {
+      proposed = true;
+      const options = [{ label: 'Dutch Cabinet Talks', search: 'Dutch cabinet formation talks' }, { label: 'Dutch Politics', search: 'Netherlands coalition politics' }, { label: 'EU Coalitions', search: 'European coalition governments' }];
+      return { ...base, toolCalls: [{ name: 'proposeTrack', argumentsRaw: JSON.stringify({ options }) }] };
+    }
+    return { ...base, content: 'Pick the stories to follow below.', toolCalls: [] };
+  };
+  const row = await runTurnHarness(caller, { id: 'f', agent: 'follow-story', message: 'the dutch cabinet formation talks', expect: 'proposeTrack', search: ['a'] }, 'm', 0);
+  assert.equal(row.arm, 'harness');
+  assert.equal(row.trackOptions, 3);
+  assert.equal(row.pass, true, row.why);
+  assert.ok(row.legTools?.flat().includes('proposeTrack'));
+  assert.equal(typeof row.closingLegFired, 'boolean');
+});
+
+test('harness verdict: quality within max(1, spread) of off and p90 within 2x', () => {
+  const rows = (arm: string, pass: number, ms: number) => Array.from({ length: 6 }, (_, i) => ({ arm, expect: 'proposeTrack' as const, pass: i < pass, wallMs: ms + i }));
+  const v = (off: number, twin: number, h: number, hms: number) => harnessVerdict([...rows('off', off, 1000), ...rows('off-twin', twin, 1000), ...rows('harness', h, hms)]);
+  assert.equal(v(5, 5, 4, 1500).verdict, 'PASS');
+  assert.equal(v(5, 5, 3, 1500).verdict, 'FAIL'); // two below, spread 0
+  assert.equal(v(5, 5, 5, 2100).verdict, 'FAIL'); // p90 above 2 x off p90 (1005)
+  assert.equal(v(5, 3, 3, 1500).verdict, 'PASS'); // spread 2 widens the band
 });
