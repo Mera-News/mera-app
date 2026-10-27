@@ -54,8 +54,10 @@ type SkillId = (typeof SKILL_IDS)[number];
 // next router change buys tokens rather than trimming the tie-break ladder,
 // which is the part doing the work with thinking off. It rose because the body
 // is now actually SENT: for three corpus runs it was generated and never
-// reached a model, so its size cost nothing and bought nothing.
-const BUDGET: Record<string, number> = { router: 2000 };
+// reached a model, so its size cost nothing and bought nothing. 2,162 is the
+// measured size of the feed_tuning and back-reference rows (onemera S1/S1.5),
+// shipped after staging moved see-less routing 8/60 to 48/60.
+const BUDGET: Record<string, number> = { router: 2162 };
 const DEFAULT_BUDGET = 1200;
 
 /**

@@ -306,9 +306,11 @@ describe('per-skill tools and thinking', () => {
 
 describe('the hideSkills arm (a step\'s control)', () => {
   it('drops the skill from the index and answers a load of it as unknown', async () => {
-    registerAgentArm({ id: 'pre-cards', description: 'control', hideSkills: ['conversation/feed-tuning'] });
+    // A router body that does not name the skill, so only the index could.
+    registerAgentArm({ id: 'pre-cards', description: 'control', hideSkills: ['conversation/feed-tuning'], routerBody: 'PROCEDURE' });
+    registerAgentArm({ id: 'with-cards', description: 'candidate', routerBody: 'PROCEDURE' });
     expect(buildRouterPrompt({ surface: 'CONFIG', arm: 'pre-cards' })).not.toContain('conversation/feed-tuning');
-    expect(buildRouterPrompt({ surface: 'CONFIG' })).toContain('conversation/feed-tuning');
+    expect(buildRouterPrompt({ surface: 'CONFIG', arm: 'with-cards' })).toContain('conversation/feed-tuning');
 
     const { deps } = harness([
       res({ toolCalls: [tc('load_skill', { id: 'conversation/feed-tuning' })] }),

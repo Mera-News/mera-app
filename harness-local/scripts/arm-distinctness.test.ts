@@ -11,7 +11,7 @@ import { ensureOnemeraArms } from '../../lib/mera-harness/eval/onemera-arms';
 
 ensureOnemeraArms();
 
-for (const [control, twin, candidate] of [['pre-S1', 'pre-S1-twin', 'S1'], ['pre-S1.5', 'pre-S1.5-twin', 'S1.5']]) {
+for (const [control, twin, candidate] of [['pre-S3', 'pre-S3-twin', 'S3']]) {
   test(`${control}: the control and its twin match, ${candidate} differs, and the run's arms pass`, () => {
     const { hashes, failures } = leg0Collisions([control, twin, candidate]);
     assert.deepEqual(failures, []);
@@ -19,10 +19,6 @@ for (const [control, twin, candidate] of [['pre-S1', 'pre-S1-twin', 'S1'], ['pre
     assert.notEqual(hashes[control], hashes[candidate]);
   });
 }
-
-test('S1 and pre-S1.5 build one router prompt (pre-S1.5 is S1 with the recent block off): never one run', () => {
-  assert.deepEqual(leg0Collisions(['S1', 'pre-S1.5']).failures, ['S1 == pre-S1.5']);
-});
 
 test('two arms with one leg-0 prompt that are not twins fail', () => {
   // forced-offer-ungrounded changes the loop only, so its leg 0 is baseline's.
