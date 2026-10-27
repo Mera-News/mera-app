@@ -229,4 +229,26 @@ describe('copies of one story fold into one entry', () => {
     expect(row?.memberSnapshots.map((s) => s.articleId)).toEqual(['m1']);
     expect(row?.memberArticleIds).toEqual(expect.arrayContaining(['m1', 'm2', 'm3']));
   });
+
+  it('disowning a head with two copies removes all three from the row, none written back by a stale list', async () => {
+    const { storyId } = await seedStory();
+    await applyUpdates(storyId, { newMemberIds: ['m4'], newSnapshots: [snap('m4', 3)] });
+    await trackedStoryService.backfillSnapshotSource(
+      storyId,
+      new Map([
+        ['m2', { storyKey: 'K' }],
+        ['m3', { storyKey: 'K' }],
+        ['m4', { storyKey: 'K' }],
+      ]),
+    );
+    const { result } = open(storyId);
+    await focus(result);
+    await waitFor(() => expect(result.current.entries).toHaveLength(2));
+    act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.copies.length === 2)!));
+    await act(async () => {
+      await result.current.handleConfirmRemove();
+    });
+    const row = await getTrackedStoryById(storyId);
+    expect(row?.memberSnapshots.map((s) => s.articleId)).toEqual(['m1']);
+  });
 });

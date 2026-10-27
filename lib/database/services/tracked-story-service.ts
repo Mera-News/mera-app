@@ -481,10 +481,14 @@ export async function removeMemberSnapshot(id: string, articleId: string): Promi
     const rows = await collection.query(Q.where('id', id)).fetch();
     const record = rows.find((r) => r.id === id);
     if (!record) return true; // story gone, so the member is too
-    const current = record.memberSnapshots;
-    const next = current.filter((s) => s?.articleId !== target);
-    if (next.length === current.length) return true; // not a member: nothing to write
+    const isMember = () => record.memberSnapshots.some((s) => s?.articleId === target);
+    if (!isMember()) return true; // not a member: nothing to write
+    // Filter INSIDE the writer: parallel callers (a folded entry disowns every
+    // copy at once) each filtering a list read before the queue would let the
+    // last write put back a copy an earlier one removed.
     await database.write(async () => {
+      if (!isMember()) return;
+      const next = record.memberSnapshots.filter((s) => s?.articleId !== target);
       await record.update((m) => {
         m.memberSnapshots = next;
       });
