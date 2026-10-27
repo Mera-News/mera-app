@@ -33,12 +33,18 @@ export interface BottomSheetProps {
     /** The scrim's screen-reader label. Defaults to Cancel. */
     scrimLabel?: string;
     /** Fill the screen to just under the status bar (the first-launch tour,
-     *  FinalJourney #15); children get the whole height with `flex: 1`. */
+     *  FinalJourney #15); children get the whole height with `flex: 1` and the
+     *  whole width (no 20pt sides: the player keeps its own gutters). */
     fullHeight?: boolean;
 }
 
-const SHEET_INSET = 8;
-const SHEET_RADIUS = 28;
+/** Sheet board: edge to edge, top corners only, 20pt content sides. */
+const SHEET_RADIUS = 24;
+const CONTENT_SIDE = 20;
+/** Below the safe-area bottom inset. */
+const CONTENT_BOTTOM = 8;
+/** A full-height sheet stops this far under the status bar. */
+const FULL_HEIGHT_TOP_GAP = 8;
 
 /** Drag this far, or flick this fast, to dismiss. */
 const DISMISS_DISTANCE = 120;
@@ -74,7 +80,12 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
     const drag = useSharedValue(0);
     const rose = useRef(false);
     const onClosedRef = useRef(onClosed);
-    onClosedRef.current = onClosed;
+    // Synced after commit, never during render (a render-time ref write makes
+    // the React Compiler skip the whole component). onClosed only ever fires
+    // after a commit, so it always reads the latest.
+    useLayoutEffect(() => {
+        onClosedRef.current = onClosed;
+    }, [onClosed]);
 
     useEffect(() => {
         if (!open || presented || !laidOut) return;
@@ -88,11 +99,15 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
         setShown(true);
         if (!presented || !laidOut) return;
         rose.current = true;
-        drag.value = 0;
-        progress.value = withTiming(1, {
-            duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.open,
-            easing: EASE.arrive,
-        });
+        drag.set(0);
+        // `.set`, not `.value =`: the React Compiler rejects assigning to a
+        // hook's return value and would skip the component.
+        progress.set(
+            withTiming(1, {
+                duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.open,
+                easing: EASE.arrive,
+            }),
+        );
         void hapticLight();
     }, [open, presented, laidOut, reduceMotion, progress, drag]);
 
@@ -104,7 +119,7 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
         if (Platform.OS !== 'ios') onClosedRef.current?.();
     }, []);
 
-    // Fall: only when `open` itself turns false.
+    // Fall: when `open` turns false.
     useLayoutEffect(() => {
         if (open) return;
         if (!rose.current) {
@@ -112,29 +127,32 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
             return;
         }
         rose.current = false;
-        progress.value = withTiming(
-            0,
-            { duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.close, easing: EASE.across },
-            (finished) => {
-                if (finished) runOnJS(finish)();
-            },
+        progress.set(
+            withTiming(
+                0,
+                { duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.close, easing: EASE.across },
+                (finished) => {
+                    if (finished) runOnJS(finish)();
+                },
+            ),
         );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open]);
+        // A re-run while `open` stays false finds `rose` false: at most it ends a
+        // fall early (Reduce Motion flipped mid-close), never starts a second one.
+    }, [open, shown, finish, progress, reduceMotion]);
 
     const pan = Gesture.Pan()
         .enabled(open)
         .activeOffsetY(10)
         .failOffsetX([-20, 20])
         .onUpdate((e) => {
-            drag.value = Math.max(0, e.translationY);
+            drag.set(Math.max(0, e.translationY));
         })
         .onEnd((e) => {
             if (e.translationY > DISMISS_DISTANCE || e.velocityY > DISMISS_VELOCITY) {
                 runOnJS(onClose)();
                 return;
             }
-            drag.value = withSpring(0, SPRING.settle);
+            drag.set(withSpring(0, SPRING.settle));
         });
 
     const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
@@ -170,26 +188,35 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
                     testID={testID ? `${testID}-scrim` : undefined}
                 />
                 <GestureDetector gesture={pan}>
-                    {/* Two layers: the outer one casts the shadow (a view that
-                        clips drops its shadow), the inner one clips the material
-                        to the 28pt corners. */}
+                    {/* Two layers: the outer one moves, the inner one clips the
+                        material to the top corners. */}
                     <Animated.View
                         testID={testID}
                         accessibilityViewIsModal
                         onLayout={() => setLaidOut(true)}
                         style={[
-                            styles.sheet,
-                            { marginBottom: SHEET_INSET },
-                            fullHeight && { height: windowHeight - insets.top - 2 * SHEET_INSET },
+                            fullHeight && { height: windowHeight - insets.top - FULL_HEIGHT_TOP_GAP },
                             sheetStyle,
                         ]}
                     >
-                        <View style={[styles.sheetClip, fullHeight && styles.grow, { borderColor: colors.line }]}>
+                        <View
+                            testID={testID ? `${testID}-surface` : undefined}
+                            style={[styles.sheetClip, fullHeight && styles.grow, { borderTopColor: colors.line }]}
+                        >
                             <ModalMaterial />
                             <View style={styles.handleRow}>
-                                <View style={[styles.handle, { backgroundColor: colors.ink3 }]} />
+                                <View
+                                    testID={testID ? `${testID}-handle` : undefined}
+                                    style={[styles.handle, { backgroundColor: colors.ink3 }]}
+                                />
                             </View>
-                            <View style={[fullHeight && styles.grow, { paddingBottom: Math.max(insets.bottom - SHEET_INSET, 0) + 12 }]}>
+                            <View
+                                testID={testID ? `${testID}-content` : undefined}
+                                style={[
+                                    fullHeight ? styles.grow : styles.contentSides,
+                                    { paddingBottom: insets.bottom + CONTENT_BOTTOM },
+                                ]}
+                            >
                                 {children}
                             </View>
                         </View>
@@ -202,23 +229,16 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
 
 const styles = StyleSheet.create({
     fill: { flex: 1, justifyContent: 'flex-end' },
-    // Modals #1 / FinalWorld #7: 8pt from the sides and the bottom, 28pt
-    // corners all round, a 1pt edge and a soft drop shadow.
-    sheet: {
-        marginHorizontal: SHEET_INSET,
-        borderRadius: SHEET_RADIUS,
-        shadowColor: '#000',
-        shadowOpacity: 0.6,
-        shadowRadius: 20,
-        shadowOffset: { width: 0, height: 18 },
-        elevation: 16,
-    },
+    // Sheet board: full width, square to the screen's bottom edge, 24pt top
+    // corners and a 1pt top hairline; the ModalMaterial glass stays.
     sheetClip: {
-        borderRadius: SHEET_RADIUS,
-        borderWidth: 1,
+        borderTopLeftRadius: SHEET_RADIUS,
+        borderTopRightRadius: SHEET_RADIUS,
+        borderTopWidth: 1,
         overflow: 'hidden',
     },
     handleRow: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },
-    handle: { width: 36, height: 5, borderRadius: 3 },
+    handle: { width: 40, height: 5, borderRadius: 2.5 },
+    contentSides: { paddingHorizontal: CONTENT_SIDE },
     grow: { flex: 1 },
 });

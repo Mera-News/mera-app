@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
         marginTop: 24,
         marginBottom: 16,
     },
-    sheet: { paddingHorizontal: 20, paddingTop: 4, gap: 12 },
+    sheet: { paddingTop: 4, gap: 12 },
     sheetTitle: { fontSize: 20, fontWeight: '700' },
     // Stacked, full width: side by side, a long label ("Remove and continue",
     // longer in German) was clipped mid-word. Same order as ConfirmDialog.

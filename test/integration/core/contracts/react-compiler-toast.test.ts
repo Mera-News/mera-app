@@ -13,6 +13,7 @@ const FILES = [
     'components/custom/notifications/NotificationSheetHost.tsx',
     'components/custom/notifications/NotificationRow.tsx',
     'components/custom/toast/MeraToast.tsx',
+    'components/ui/bottom-sheet/index.tsx',
 ];
 
 function compileErrors(file: string): string[] {

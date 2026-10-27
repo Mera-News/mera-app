@@ -88,7 +88,7 @@ export default function NotificationSheet({
             }}
             testID={testID}
         >
-            <View style={{ paddingHorizontal: 20, paddingTop: 16, gap: 20 }}>
+            <View style={{ paddingTop: 16, gap: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
                     <ToneBadge tone={tone} icon={icon} size={40} />
                     <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
