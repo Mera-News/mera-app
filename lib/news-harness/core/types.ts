@@ -91,7 +91,8 @@ export interface ScoringCandidate {
    *  foreign even with no country field at all. */
   languageCode?: string | null;
   userTopicIds: string[];
-  relatedFacts: { id: string; statement: string }[];
+  /** `places`: the fact's places as NAMES (`describeFactPlaces`), never codes. */
+  relatedFacts: { id: string; statement: string; places?: string }[];
   /** Already-persisted relevance. Populated only by the reason-retry query
    *  (where the row was scored previously but the reason came back empty);
    *  omitted for the unscored-candidates query. */
@@ -504,4 +505,32 @@ export interface FeedbackContextInput {
    *  user tapped before opening chat (e.g. ["Not a good suggestion", "Wrong
    *  topic"]). Rendered as a `TAPPED OPTIONS` line. Absent/empty when none. */
   tappedOptions?: string[];
+  /** The v6 feedback sheet's answers and the screen Tell Mera was tapped on.
+   *  When present it replaces USER VERDICT / TAPPED OPTIONS. */
+  feedbackAnswers?: FeedbackAnswersHandoff;
+  /** Mistakes the reader marked as Mera's (cause 'system'), newest first.
+   *  Context only: they never change the persona. */
+  mistakes?: SystemMistakeView[];
+}
+
+export type FeedbackCause = 'config' | 'system' | 'source';
+
+/** What the feedback sheet hands the chat (`ChatContext.feedbackAnswers`).
+ *  `question` and `answer` are the localized labels the reader saw. */
+export interface FeedbackAnswersHandoff {
+  answers: { cause: FeedbackCause; question: string; answer?: string }[];
+  /** The screen the reader was on when they tapped Tell Mera. */
+  screen: string;
+  /** The matched fact statement the sheet asked about. */
+  fact?: string;
+}
+
+/** One on-device "Mera's mistake" (`getRecentSystemMistakes`). */
+export interface SystemMistakeView {
+  reason: string;
+  factId: string | null;
+  country: string | null;
+  language: string | null;
+  publication: string | null;
+  at: number;
 }
