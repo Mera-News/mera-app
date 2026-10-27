@@ -109,10 +109,12 @@ export function WorldPages() {
 
     const reportFacets = useCallback(
         (pageId: string) =>
-            (facets: readonly CanonicalTopicFacet[], supported: boolean, active: boolean) => {
+            (facets: readonly CanonicalTopicFacet[] | null, supported: boolean, active: boolean) => {
+                // Active first: a page still loading must not show the last page's counts.
+                if (active) setActiveId(pageId);
+                if (!facets) return;
                 if (!supported) return setLatched(true);
                 setPageFacets((prev) => (prev[pageId] === facets ? prev : { ...prev, [pageId]: facets }));
-                if (active) setActiveId(pageId);
             },
         [],
     );
@@ -166,8 +168,9 @@ export function WorldPages() {
     // );
 
     const activeFacets = activeId ? pageFacets[activeId] : undefined;
+    // A set pick keeps the pill (and its ✕) while the next page loads.
     const showPill =
-        online && !latched && topics.length > 0 && !!activeFacets && (activeFacets.some((f) => f.count > 0) || !!pick);
+        online && !latched && topics.length > 0 && (!!pick || !!activeFacets?.some((f) => f.count > 0));
 
     return (
         <>
@@ -181,8 +184,8 @@ export function WorldPages() {
             // renderTitleChip={renderTitleChip}
             testID="world-pages"
         />
-        {showPill && activeFacets ? (
-            <WorldTopicPill topics={topics} facets={activeFacets} pick={pick} onPick={setPick} />
+        {showPill ? (
+            <WorldTopicPill topics={topics} facets={activeFacets ?? []} pick={pick} onPick={setPick} />
         ) : null}
         </>
     );

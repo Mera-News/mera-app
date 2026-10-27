@@ -128,8 +128,9 @@ interface ScopeArticleListProps {
     /** The reader's pick, by label, for the header line. With `topicId` set the
      *  line counts its stories; with `topicId` null it says the page fell back to all. */
     readonly pickLabel?: string | null;
-    /** Reports this page's facets once its first answer is in (never while loading or failed). */
-    readonly onFacets?: (facets: readonly CanonicalTopicFacet[], topicsSupported: boolean, active: boolean) => void;
+    /** Reports whether this page is the active one, and its facets once its answer is in
+     *  (null while loading or failed, so the host never shows another page's counts). */
+    readonly onFacets?: (facets: readonly CanonicalTopicFacet[] | null, topicsSupported: boolean, active: boolean) => void;
 }
 
 /**
@@ -201,7 +202,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
 
     const answered = enabled && !isLoading && !loadFailed;
     useEffect(() => {
-        if (answered) onFacets?.(facets, topicsSupported, active);
+        onFacets?.(answered ? facets : null, topicsSupported, active);
     }, [answered, facets, topicsSupported, active, onFacets]);
 
     const renderItem: ListRenderItem<TopHeadline> = useCallback(

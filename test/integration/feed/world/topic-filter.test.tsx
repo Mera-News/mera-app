@@ -196,3 +196,23 @@ it('is hidden when every facet is zero', async () => {
     await act(async () => {});
     expect(screen.queryByTestId('world-topic-pill')).toBeNull();
 });
+
+it('a page still loading never shows the previous page counts', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    server.use(
+        graphql.operation(async ({ operationName, variables }) => {
+            if (operationName !== 'GetWorldHeadlines' || variables.countryCode !== 'NLD') return undefined;
+            await gate;
+            return undefined; // fall through to install()'s handler
+        }),
+    );
+    render(<WorldPages />);
+    await screen.findByTestId('world-topic-pill');
+    fireEvent.press(screen.getByTestId('go-country:NL'));
+    await waitFor(() => expect(screen.queryByTestId('world-topic-pill')).toBeNull());
+    await act(async () => release());
+    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    expect(await screen.findByTestId('world-topic-row-sports')).toBeTruthy();
+    expect(screen.queryByTestId('world-topic-row-politics')).toBeNull();
+});

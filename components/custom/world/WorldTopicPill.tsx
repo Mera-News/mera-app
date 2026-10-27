@@ -127,8 +127,9 @@ function Row({ label, count, selected, onPress, testID }: { label: string; count
             accessibilityLabel={`${label}, ${count}`}
             style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 8 }}
         >
-            <Text style={{ flex: 1, color: c.ink, fontSize: 16 }}>{label}</Text>
-            <Text style={{ color: c.ink3, fontSize: 14 }}>{count}</Text>
+            {/* fontSize with its lineHeight: Text keeps its token's smaller lineHeight otherwise and clips. */}
+            <Text style={{ flex: 1, color: c.ink, fontSize: 16, lineHeight: 22 }}>{label}</Text>
+            <Text style={{ color: c.ink3, fontSize: 14, lineHeight: 20 }}>{count}</Text>
             {selected ? <MaterialIcons name="check" size={20} color={c.accent} /> : null}
         </Pressable>
     );
