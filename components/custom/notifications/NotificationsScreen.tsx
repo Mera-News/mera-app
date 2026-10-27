@@ -1,45 +1,23 @@
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { HelpModal } from '@/components/ui/help-modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type NotificationModel from '@/lib/database/models/Notification';
-import { deleteNotification, markAllRead, observeAll } from '@/lib/database/services/notification-service';
-import { hapticLight } from '@/lib/haptics';
+import { markAllRead, observeAll } from '@/lib/database/services/notification-service';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import logger from '@/lib/logger';
 import { useMotionAllowed } from '@/lib/motion-gate';
-import { useOpenUpdateNotes } from '@/lib/ota-notice';
-import { MaterialIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
-import {
-    FEEDBACK_REQUEST,
-    NOT_KEPT_NOTICE_TYPES,
-    tapNotification,
-    parseJson,
-    resolveText,
-} from './notification-actions';
+import { View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { NOT_KEPT_NOTICE_TYPES } from './notification-actions';
+import NotificationRow from './NotificationRow';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 import { HygieneSuggestionCard, useHygieneSuggestions } from './HygieneSuggestionCard';
-
-/** "now" / "5m" / "2h" / "3d", as the board draws it, in the app language. */
-function relativeTime(t: TFunction<'translation'>, date: Date): string {
-    const mins = Math.floor((Date.now() - date.getTime()) / 60_000);
-    if (mins < 1) return t('notificationCenter.ageNow');
-    if (mins < 60) return t('notificationCenter.ageMinutes', { n: mins });
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('notificationCenter.ageHours', { n: hours });
-    return t('notificationCenter.ageDays', { n: Math.floor(hours / 24) });
-}
 
 interface NotificationsScreenProps {
     /** The Library tab's shell header (scroll handler, header height). */
@@ -48,26 +26,18 @@ interface NotificationsScreenProps {
     readonly active: boolean;
 }
 
-/** The delete control's hit area and glyph (the Settings row icon size). */
-const DELETE_FRAME = 44;
-const DELETE_GLYPH = 20;
-/** One line, at least this tall. */
-const ROW_MIN_HEIGHT = 48;
-/** The time column's floor: the widest English short form ("23h", "now"). */
-const TIME_COLUMN = 32;
-
 /**
- * Feed > Notifications: a plain list in one grouped panel (the Settings list
- * idiom, you/rows), ONE line per row: the age in a fixed column, the title
- * (semibold while unread; the body's first line when there is no title), and
- * a delete at the end. A tap opens the row as before; delete removes it
- * from this phone at once, no confirm. Seeing the page clears both dots (the
- * Library tab's, unless a fact check also lit it, and this pill), and the seen state never leaves this phone. Empty: one
- * line on what lands here, and the way to its settings.
+ * Feed > Notifications: one grouped plate of rows (NotificationRow: tone
+ * badge, title and age, a two-line preview, delete at the end). A tap does the
+ * row's one obvious thing, or opens its sheet when there is a choice or more
+ * to read (NotificationSheetHost, mounted in the logged-in layout); delete
+ * removes it from this phone at once, no confirm. Seeing the page clears both
+ * dots (the Library tab's, unless a fact check also lit it, and this pill),
+ * and the seen state never leaves this phone. Empty: one line on what lands
+ * here, and the way to its settings.
  */
 const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, active }) => {
-    const { t, i18n } = useTranslation();
-    const updateNotes = useOpenUpdateNotes();
+    const { t } = useTranslation();
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<NotificationModel>>(null);
     const tracked = useTrackedScroll(header.scrollHandler);
@@ -81,9 +51,6 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     // profile" notice row (still written, for the toast and the dot) is hidden.
     const items = useMemo(() => rows.filter((n) => n.type !== 'hygiene'), [rows]);
     const suggestions = useHygieneSuggestions();
-    // Every row's time column is as wide as the widest age laid out so far, so a
-    // longer localized short form never clips and the titles still line up.
-    const [timeWidth, setTimeWidth] = useState(TIME_COLUMN);
     // Newest first. Rows of types no longer kept (written before Y11, alive
     // for 90 days) stay hidden.
     useEffect(() => {
@@ -102,87 +69,10 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     }, [active, hasUnread]);
 
     const renderItem = useCallback(
-        ({ item: n, index }: { item: NotificationModel; index: number }) => {
-            const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
-            // Just the title; a row without one shows its body's first line, so
-            // a row is never blank. A feedback request's body is free text:
-            // never through t(), whose separators would mangle a question.
-            const body = n.type === FEEDBACK_REQUEST ? n.body : resolveText(n.body, params);
-            const title = resolveText(n.title, params).trim() || (body ?? '').split('\n')[0].trim();
-            const age = relativeTime(t, n.createdAt);
-            const unread = n.status === 'unread';
-            const first = index === 0;
-            const last = index === items.length - 1;
-            return (
-                <Animated.View
-                    exiting={motion ? FadeOut.duration(180) : undefined}
-                    style={{
-                        marginHorizontal: PAGE_SIDE_INSET,
-                        backgroundColor: colors.surface,
-                        borderColor: colors.line,
-                        borderLeftWidth: 1,
-                        borderRightWidth: 1,
-                        borderTopWidth: first ? 1 : StyleSheet.hairlineWidth,
-                        borderBottomWidth: last ? 1 : 0,
-                        borderTopLeftRadius: first ? 16 : 0,
-                        borderTopRightRadius: first ? 16 : 0,
-                        borderBottomLeftRadius: last ? 16 : 0,
-                        borderBottomRightRadius: last ? 16 : 0,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Pressable
-                        testID={`notification-row-${n.id}`}
-                        onPress={() => {
-                            void hapticLight();
-                            void tapNotification(n);
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${title}, ${age}`}
-                        style={{ flex: 1, minHeight: ROW_MIN_HEIGHT, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, gap: 12 }}
-                    >
-                        {/* Time first, in a shared column so the titles line up. */}
-                        <Text
-                            style={{ minWidth: timeWidth, color: colors.ink3, fontSize: 13, fontVariant: ['tabular-nums'] }}
-                            numberOfLines={1}
-                            onLayout={(e) => {
-                                const w = Math.ceil(e.nativeEvent.layout.width);
-                                setTimeWidth((cur) => Math.max(cur, w));
-                            }}
-                        >
-                            {age}
-                        </Text>
-                        {/* Unread reads as a semibold title; read is regular. */}
-                        <Text
-                            testID={unread ? `notification-unread-${n.id}` : undefined}
-                            style={{ flex: 1, color: colors.ink, fontSize: 16, fontWeight: unread ? '600' : '400' }}
-                            numberOfLines={1}
-                        >
-                            {title}
-                        </Text>
-                    </Pressable>
-                    {/* A sibling of the row's press area, never inside it, so a
-                        delete never opens the row. */}
-                    <Pressable
-                        testID={`notification-delete-${n.id}`}
-                        onPress={() => {
-                            void hapticLight();
-                            deleteNotification(n.id).catch((err: unknown) =>
-                                logger.captureException(err, { tags: { component: 'NotificationsScreen', method: 'delete' } }),
-                            );
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('common.delete')}
-                        // The 20pt glyph centred 16pt from the edge, as a Settings row.
-                        style={{ width: DELETE_FRAME, height: DELETE_FRAME, marginRight: 16 - (DELETE_FRAME - DELETE_GLYPH) / 2, alignItems: 'center', justifyContent: 'center' }}
-                    >
-                        <MaterialIcons name="delete-outline" size={DELETE_GLYPH} color={colors.ink3} />
-                    </Pressable>
-                </Animated.View>
-            );
-        },
-        [colors, t, items.length, motion, timeWidth],
+        ({ item, index }: { item: NotificationModel; index: number }) => (
+            <NotificationRow n={item} first={index === 0} last={index === items.length - 1} motion={motion} />
+        ),
+        [items.length, motion],
     );
 
     const empty = (
@@ -236,29 +126,6 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                 }}
                 contentContainerStyle={{ paddingTop: header.headerHeight + PAGE_CONTENT_GAP, paddingBottom: endClearance }}
             />
-            {/* An "App updated" row's tap: every release note since the update this
-                phone last ran. Messages are free text, so never through t(). */}
-            <HelpModal
-                open={active && updateNotes.open}
-                onClose={() => useOpenUpdateNotes.setState({ open: false })}
-                title={t('notificationCenter.update.notesTitle')}
-                testID="update-notes"
-            >
-                <View style={{ gap: 16 }}>
-                    {updateNotes.notes.length === 0 ? (
-                        <Text style={{ color: colors.ink, fontSize: 15, lineHeight: 21 }}>{t('notificationCenter.update.notesEmpty')}</Text>
-                    ) : (
-                        updateNotes.notes.map((note) => (
-                            <View key={note.at} style={{ gap: 4 }}>
-                                <Text style={{ color: colors.ink2, fontSize: 13 }}>
-                                    {new Date(note.at).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
-                                </Text>
-                                <TranslatableDynamic text={note.message} style={{ color: colors.ink, fontSize: 15, lineHeight: 21 }} />
-                            </View>
-                        ))
-                    )}
-                </View>
-            </HelpModal>
         </>
     );
 };
