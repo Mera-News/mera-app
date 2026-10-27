@@ -304,6 +304,29 @@ describe('per-skill tools and thinking', () => {
   });
 });
 
+describe('a card staged with no sentence beside it (device pass 12)', () => {
+  it('drops the acknowledgement: beside an unconfirmed card it reads as done', async () => {
+    const { deps } = harness([
+      res({ content: 'Got it, nothing about Bollywood in your feed.', toolCalls: [tc('load_skill', { id: 'conversation/feed-tuning' })] }),
+      res({ toolCalls: [tc('proposeChanges', MUTE)] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'Do not show me anything about Bollywood', deps });
+    expect(out.stagedSomething).toBe(true);
+    expect(out.reply).toBe('');
+    expect(out.acknowledgement).toBe('');
+  });
+
+  it('keeps it when the card leg wrote its own sentence (that sentence is the bubble)', async () => {
+    const { deps } = harness([
+      res({ content: 'Got it, Bollywood.', toolCalls: [tc('load_skill', { id: 'conversation/feed-tuning' })] }),
+      res({ content: 'Tap the card to hide Bollywood stories.', toolCalls: [tc('proposeChanges', MUTE)] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'Do not show me anything about Bollywood', deps });
+    expect(out.reply).toBe('Tap the card to hide Bollywood stories.');
+    expect(out.acknowledgement).toBe('Got it, Bollywood.');
+  });
+});
+
 describe('the hideSkills arm (a step\'s control)', () => {
   it('drops the skill from the index and answers a load of it as unknown', async () => {
     // A router body that does not name the skill, so only the index could.

@@ -2493,6 +2493,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   if (leaksInternals(acknowledgement) || narratesProcess(acknowledgement)) {
     acknowledgement = '';
   }
+  // A CARD STAGED WITH NO SENTENCE BESIDE IT SHOWS ALONE. The acknowledgement
+  // restates the request ("Got it, nothing about Bollywood in your feed."), and
+  // beside a card nobody has confirmed it reads as done; the card says what it
+  // will do. No detector catches a claim made without a verb (device pass).
+  if (cardThisTurn === 'staged' && !cleanProse(reply).trim()) {
+    acknowledgement = '';
+  }
 
   // ---- A RESOLVED PLACE THE TURN NEVER OFFERED -----------------------------
   await offerResolvedPlaceAtEnd();
