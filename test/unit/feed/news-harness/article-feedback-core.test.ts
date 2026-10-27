@@ -13,6 +13,7 @@ import {
 import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 import { SUPPRESSION_KINDS } from '@/lib/news-harness/core/types';
+import { TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
 import type {
   ActiveSuppressionView,
   Fact,
@@ -82,6 +83,64 @@ describe('article-feedback follow card copy (F34)', () => {
     const track = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!;
     expect(track.function.description).toContain('"Pick the story to follow below." (in the reply language)');
     expect(track.function.description).toContain('Never write the word "scope" to the user');
+  });
+});
+
+// D8: a follow card is multi-select now, so "tap ONE" is false for it. Every
+// other choose-one string keeps its old bytes.
+describe('article-feedback follow card is multi-select (D8)', () => {
+  const trackCard = (labels: string[]): StagedProposal => ({
+    id: 'p-track',
+    explanation: '',
+    expectedEffects: '',
+    ...(labels.length > 1 ? { chooseOne: true } : {}),
+    actions: labels.map((label) => ({
+      type: 'track_story' as const,
+      label,
+      searchText: label,
+      subject: { origin: 'article' as const, surface: 'detail', articleId: 'a1', title: 't' },
+    })),
+  });
+  const ctxFor = (proposal: StagedProposal) =>
+    buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: scoredContext(), fallbackTitle: undefined, proposal });
+
+  it('tells the model the user taps the ones they want on a multi-option follow card', () => {
+    const ctx = ctxFor(trackCard(['Bridge repairs', 'City roadworks']));
+    expect(ctx).toContain(
+      `These are follow options: the user must ${TRACK_CARD_TAP_PHRASE} — do NOT call applyProposal. If they decline call cancelProposal.`,
+    );
+    expect(ctx).not.toContain('ALTERNATIVES');
+  });
+
+  it('keeps the plain confirm line for a one-option follow card (typed yes applies it)', () => {
+    expect(ctxFor(trackCard(['Bridge repairs']))).toContain(
+      'If the user confirms call applyProposal; if they decline call cancelProposal.',
+    );
+  });
+
+  it('keeps the choose-one line byte-identical for every other card', () => {
+    const ctx = ctxFor({
+      id: 'p-choose',
+      explanation: 'Pick how far to go.',
+      expectedEffects: 'One of these.',
+      chooseOne: true,
+      actions: [
+        { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+        { type: 'retire_topic', topicText: 'cricket' },
+      ],
+    });
+    expect(ctx).toContain(
+      'These are ALTERNATIVES: the user must TAP the one they want — do NOT call applyProposal. If they decline call cancelProposal.',
+    );
+  });
+
+  it('says so in the system prompt and the proposeTrack description, and keeps the choose_one rule', () => {
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
+    expect(prompt).toContain(TRACK_CARD_TAP_PHRASE);
+    expect(prompt).toContain('a card offering ALTERNATIVES (choose_one): the user must TAP the option they want.');
+    const track = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!;
+    expect(track.function.description).toContain(TRACK_CARD_TAP_PHRASE);
+    expect(track.function.description).not.toContain('picks one label');
   });
 });
 

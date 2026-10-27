@@ -18,6 +18,7 @@
 // Everything that touches WatermelonDB, Zustand, the logger or any expo/RN
 // module stays in lib/llm/agents/FollowStoryAgent.ts.
 
+import { TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import type { StagedProposal, ToolDefinition, TrackFeedbackSubject } from '../core/types';
 
 /** Target ceilings mirrored from the article path's scope pills (prompt
@@ -124,7 +125,7 @@ Rules:
 - Mera can only follow a story here. If the user asks for something genuinely different (feed tuning, facts, settings) say plainly that this chat only starts a followed story. Naming a story you have not heard of is NOT one of those cases.
 
 ## The confirm card
-The card the user sees IS the plan: it lists the scopes and they tap ONE. You never apply it for them — a scope is chosen by tapping, never by typing "yes". If they decline, call cancelProposal. If they ask for different scopes, call proposeTrack again.
+The card the user sees IS the plan: it lists the scopes and they ${TRACK_CARD_TAP_PHRASE}. You never apply it for them — a scope is chosen by tapping, never by typing "yes". If they decline, call cancelProposal. If they ask for different scopes, call proposeTrack again.
 
 Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
 }
@@ -196,7 +197,7 @@ export function buildFollowStoryContext(input: FollowStoryContextInput): string 
     blocks.push(
       '## PENDING SCOPE CARD\n'
         + `The user is looking at a card offering: ${labels.join('; ')}.\n`
-        + 'They pick one by TAPPING it — do not apply it yourself and do not say the story is being followed yet. If they decline, call cancelProposal.',
+        + `They ${TRACK_CARD_TAP_PHRASE} — do not apply it yourself and do not say the story is being followed yet. If they decline, call cancelProposal.`,
     );
   }
 

@@ -9,6 +9,7 @@ import {
   makeFollowStorySubject,
 } from '@/lib/news-harness/follow-story';
 import type { StagedProposal } from '@/lib/news-harness/core/types';
+import { TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
 
 const NOW = Date.parse('2026-08-07T11:00:00.000Z');
 
@@ -43,6 +44,14 @@ describe('follow-story card copy (F34)', () => {
 });
 
 describe('buildFollowStorySystemPrompt', () => {
+  it('says the user taps the ones they want on the card, never ONE (D8)', () => {
+    for (const needsToolFormat of [false, true]) {
+      const prompt = buildFollowStorySystemPrompt({ needsToolFormat, canSearch: true });
+      expect(prompt).toContain(`they ${TRACK_CARD_TAP_PHRASE}`);
+      expect(prompt).not.toContain('tap ONE');
+    }
+  });
+
   it('states the article-less framing and the 3–4 widening scopes rule', () => {
     const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false });
 
@@ -119,6 +128,17 @@ describe('buildFollowStoryContext', () => {
     expect(context).toContain('PENDING SCOPE CARD');
     expect(context).toContain('Ukraine War; European Security');
     expect(context).toContain('cancelProposal');
+  });
+
+  // D8: the follow card is multi-select, so the pending line must not say "one".
+  it('says the user taps the ones they want, never that they pick one', () => {
+    const context = buildFollowStoryContext({
+      nowMs: NOW,
+      proposal: trackProposal(['Ukraine War', 'European Security']),
+    });
+
+    expect(context).toContain(`They ${TRACK_CARD_TAP_PHRASE}`);
+    expect(context).not.toMatch(/pick one/i);
   });
 
   it('ignores a proposal that stages no actions', () => {
