@@ -954,6 +954,42 @@
       "label12": "12 sa",
       "a11y6": "Son 6 saatin haberleri",
       "a11y12": "Son 12 saatin haberleri"
+    },
+    "topicFilter": {
+      "pill": "Tümü",
+      "pillA11y": "Konu filtresi, {{topic}}. Değiştirmek için iki kez dokunun.",
+      "clearA11y": "Konu filtresini kaldır",
+      "sheetTitle": "Şu konudaki haberleri göster",
+      "all": "Tüm konular",
+      "fallback": "Şu anda burada {{topic}} konusunda haber yok, bu yüzden tüm konular gösteriliyor.",
+      "count_one": "{{topic}} konusunda {{count}} haber",
+      "count_other": "{{topic}} konusunda {{count}} haber"
+    },
+    "topic": {
+      "arts_entertainment": "Sanat ve eğlence",
+      "autos_vehicles": "Otomobil ve araçlar",
+      "beauty_fitness": "Güzellik ve fitness",
+      "books_literature": "Kitap ve edebiyat",
+      "business_industrial": "İş dünyası",
+      "computers_electronics": "Bilgisayar ve elektronik",
+      "finance": "Finans",
+      "food_drink": "Yeme içme",
+      "games": "Oyunlar",
+      "health": "Sağlık",
+      "hobbies_leisure": "Hobiler ve boş zaman",
+      "home_garden": "Ev ve bahçe",
+      "internet_telecom": "İnternet ve telekom",
+      "jobs_education": "İş ve eğitim",
+      "law_government": "Siyaset ve hükümet",
+      "news": "Genel haberler",
+      "people_society": "İnsanlar ve toplum",
+      "pets_animals": "Evcil hayvanlar ve hayvanlar",
+      "real_estate": "Emlak",
+      "science": "Bilim",
+      "sensitive_subjects": "Çatışmalar ve afetler",
+      "shopping": "Alışveriş",
+      "sports": "Spor",
+      "travel_transportation": "Seyahat ve ulaşım"
     }
   },
   "forYou": {

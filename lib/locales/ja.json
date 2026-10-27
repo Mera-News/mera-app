@@ -947,6 +947,41 @@
       "label12": "12時間",
       "a11y6": "過去6時間のニュース",
       "a11y12": "過去12時間のニュース"
+    },
+    "topicFilter": {
+      "pill": "すべて",
+      "pillA11y": "トピックのフィルター、{{topic}}。変更するにはダブルタップします。",
+      "clearA11y": "トピックのフィルターを解除",
+      "sheetTitle": "表示するトピック",
+      "all": "すべてのトピック",
+      "fallback": "現在、ここには{{topic}}のニュースがないため、すべてのトピックを表示しています。",
+      "count_other": "{{topic}}のニュース {{count}}件"
+    },
+    "topic": {
+      "arts_entertainment": "アート・エンタメ",
+      "autos_vehicles": "車・乗り物",
+      "beauty_fitness": "美容・フィットネス",
+      "books_literature": "本・文学",
+      "business_industrial": "ビジネス",
+      "computers_electronics": "パソコン・家電",
+      "finance": "金融",
+      "food_drink": "食べ物・飲み物",
+      "games": "ゲーム",
+      "health": "健康",
+      "hobbies_leisure": "趣味・余暇",
+      "home_garden": "住まい・ガーデン",
+      "internet_telecom": "インターネット・通信",
+      "jobs_education": "仕事・教育",
+      "law_government": "政治・行政",
+      "news": "一般ニュース",
+      "people_society": "人・社会",
+      "pets_animals": "ペット・動物",
+      "real_estate": "不動産",
+      "science": "科学",
+      "sensitive_subjects": "紛争・災害",
+      "shopping": "ショッピング",
+      "sports": "スポーツ",
+      "travel_transportation": "旅行・交通"
     }
   },
   "forYou": {

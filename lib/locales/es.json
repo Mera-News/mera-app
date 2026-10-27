@@ -954,6 +954,43 @@
       "label12": "12 h",
       "a11y6": "Noticias de las últimas 6 horas",
       "a11y12": "Noticias de las últimas 12 horas"
+    },
+    "topicFilter": {
+      "pill": "Todos",
+      "pillA11y": "Filtro de tema, {{topic}}. Toca dos veces para cambiar.",
+      "clearA11y": "Quitar el filtro de tema",
+      "sheetTitle": "Mostrar noticias sobre",
+      "all": "Todos los temas",
+      "fallback": "Ahora no hay noticias sobre {{topic}} aquí, así que se muestran todos los temas.",
+      "count_one": "{{count}} noticia sobre {{topic}}",
+      "count_many": "{{count}} de noticias sobre {{topic}}",
+      "count_other": "{{count}} noticias sobre {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Arte y entretenimiento",
+      "autos_vehicles": "Coches y vehículos",
+      "beauty_fitness": "Belleza y forma física",
+      "books_literature": "Libros y literatura",
+      "business_industrial": "Negocios",
+      "computers_electronics": "Informática y electrónica",
+      "finance": "Finanzas",
+      "food_drink": "Comida y bebida",
+      "games": "Juegos",
+      "health": "Salud",
+      "hobbies_leisure": "Aficiones y ocio",
+      "home_garden": "Casa y jardín",
+      "internet_telecom": "Internet y telecomunicaciones",
+      "jobs_education": "Empleo y educación",
+      "law_government": "Política y gobierno",
+      "news": "Noticias generales",
+      "people_society": "Personas y sociedad",
+      "pets_animals": "Mascotas y animales",
+      "real_estate": "Inmobiliaria",
+      "science": "Ciencia",
+      "sensitive_subjects": "Conflictos y desastres",
+      "shopping": "Compras",
+      "sports": "Deportes",
+      "travel_transportation": "Viajes y transporte"
     }
   },
   "forYou": {

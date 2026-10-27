@@ -947,6 +947,41 @@
       "label12": "12시간",
       "a11y6": "지난 6시간의 뉴스",
       "a11y12": "지난 12시간의 뉴스"
+    },
+    "topicFilter": {
+      "pill": "전체",
+      "pillA11y": "주제 필터, {{topic}}. 바꾸려면 두 번 탭하세요.",
+      "clearA11y": "주제 필터 해제",
+      "sheetTitle": "다음 주제의 기사 보기",
+      "all": "모든 주제",
+      "fallback": "지금은 {{topic}} 관련 기사가 없어서 모든 주제를 보여 드려요.",
+      "count_other": "{{topic}} 관련 기사 {{count}}개"
+    },
+    "topic": {
+      "arts_entertainment": "예술·연예",
+      "autos_vehicles": "자동차·교통수단",
+      "beauty_fitness": "뷰티·피트니스",
+      "books_literature": "도서·문학",
+      "business_industrial": "비즈니스",
+      "computers_electronics": "컴퓨터·전자",
+      "finance": "금융",
+      "food_drink": "음식·음료",
+      "games": "게임",
+      "health": "건강",
+      "hobbies_leisure": "취미·여가",
+      "home_garden": "집·정원",
+      "internet_telecom": "인터넷·통신",
+      "jobs_education": "구직·교육",
+      "law_government": "정치·행정",
+      "news": "일반 뉴스",
+      "people_society": "사람·사회",
+      "pets_animals": "반려동물·동물",
+      "real_estate": "부동산",
+      "science": "과학",
+      "sensitive_subjects": "분쟁·재난",
+      "shopping": "쇼핑",
+      "sports": "스포츠",
+      "travel_transportation": "여행·교통"
     }
   },
   "forYou": {

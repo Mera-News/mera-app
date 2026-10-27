@@ -947,6 +947,41 @@
       "label12": "12 giờ",
       "a11y6": "Tin trong 6 giờ qua",
       "a11y12": "Tin trong 12 giờ qua"
+    },
+    "topicFilter": {
+      "pill": "Tất cả",
+      "pillA11y": "Bộ lọc chủ đề, {{topic}}. Nhấn đúp để thay đổi.",
+      "clearA11y": "Xóa bộ lọc chủ đề",
+      "sheetTitle": "Hiện tin về",
+      "all": "Tất cả chủ đề",
+      "fallback": "Hiện chưa có tin về {{topic}} ở đây, nên đang hiện tất cả chủ đề.",
+      "count_other": "{{count}} tin về {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Nghệ thuật và giải trí",
+      "autos_vehicles": "Ô tô và phương tiện",
+      "beauty_fitness": "Làm đẹp và thể hình",
+      "books_literature": "Sách và văn học",
+      "business_industrial": "Kinh doanh",
+      "computers_electronics": "Máy tính và điện tử",
+      "finance": "Tài chính",
+      "food_drink": "Ăn uống",
+      "games": "Trò chơi",
+      "health": "Sức khỏe",
+      "hobbies_leisure": "Sở thích và thư giãn",
+      "home_garden": "Nhà và vườn",
+      "internet_telecom": "Internet và viễn thông",
+      "jobs_education": "Việc làm và giáo dục",
+      "law_government": "Chính trị và chính phủ",
+      "news": "Tin tổng hợp",
+      "people_society": "Con người và xã hội",
+      "pets_animals": "Thú cưng và động vật",
+      "real_estate": "Bất động sản",
+      "science": "Khoa học",
+      "sensitive_subjects": "Xung đột và thảm họa",
+      "shopping": "Mua sắm",
+      "sports": "Thể thao",
+      "travel_transportation": "Du lịch và giao thông"
     }
   },
   "forYou": {

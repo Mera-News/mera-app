@@ -509,6 +509,42 @@
       "label12": "12h",
       "a11y6": "Stories from the last 6 hours",
       "a11y12": "Stories from the last 12 hours"
+    },
+    "topicFilter": {
+      "pill": "All",
+      "pillA11y": "Topic filter, {{topic}}. Double tap to change.",
+      "clearA11y": "Clear topic filter",
+      "sheetTitle": "Show stories about",
+      "all": "All topics",
+      "fallback": "No {{topic}} stories here right now, so this shows all topics.",
+      "count_one": "{{count}} story about {{topic}}",
+      "count_other": "{{count}} stories about {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Arts and entertainment",
+      "autos_vehicles": "Cars and vehicles",
+      "beauty_fitness": "Beauty and fitness",
+      "books_literature": "Books and literature",
+      "business_industrial": "Business",
+      "computers_electronics": "Computers and electronics",
+      "finance": "Finance",
+      "food_drink": "Food and drink",
+      "games": "Games",
+      "health": "Health",
+      "hobbies_leisure": "Hobbies and leisure",
+      "home_garden": "Home and garden",
+      "internet_telecom": "Internet and telecom",
+      "jobs_education": "Jobs and education",
+      "law_government": "Politics and government",
+      "news": "General news",
+      "people_society": "People and society",
+      "pets_animals": "Pets and animals",
+      "real_estate": "Real estate",
+      "science": "Science",
+      "sensitive_subjects": "Conflict and disasters",
+      "shopping": "Shopping",
+      "sports": "Sports",
+      "travel_transportation": "Travel and transport"
     }
   },
   "forYou": {

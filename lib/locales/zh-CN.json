@@ -947,6 +947,41 @@
       "label12": "12小时",
       "a11y6": "过去 6 小时的新闻",
       "a11y12": "过去 12 小时的新闻"
+    },
+    "topicFilter": {
+      "pill": "全部",
+      "pillA11y": "主题筛选：{{topic}}。双击可更改。",
+      "clearA11y": "清除主题筛选",
+      "sheetTitle": "显示以下主题的报道",
+      "all": "所有主题",
+      "fallback": "目前这里没有关于{{topic}}的报道，所以显示全部主题。",
+      "count_other": "{{count}} 篇关于{{topic}}的报道"
+    },
+    "topic": {
+      "arts_entertainment": "艺术与娱乐",
+      "autos_vehicles": "汽车与交通工具",
+      "beauty_fitness": "美容与健身",
+      "books_literature": "图书与文学",
+      "business_industrial": "商业",
+      "computers_electronics": "电脑与电子产品",
+      "finance": "财经",
+      "food_drink": "美食与饮品",
+      "games": "游戏",
+      "health": "健康",
+      "hobbies_leisure": "兴趣与休闲",
+      "home_garden": "家居与园艺",
+      "internet_telecom": "互联网与电信",
+      "jobs_education": "求职与教育",
+      "law_government": "政治与政府",
+      "news": "综合新闻",
+      "people_society": "人物与社会",
+      "pets_animals": "宠物与动物",
+      "real_estate": "房地产",
+      "science": "科学",
+      "sensitive_subjects": "冲突与灾难",
+      "shopping": "购物",
+      "sports": "体育",
+      "travel_transportation": "旅行与交通"
     }
   },
   "forYou": {

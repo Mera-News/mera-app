@@ -959,6 +959,43 @@
       "label12": "12 h",
       "a11y6": "Actualités des dernières 6 heures",
       "a11y12": "Actualités des dernières 12 heures"
+    },
+    "topicFilter": {
+      "pill": "Tous",
+      "pillA11y": "Filtre de sujet, {{topic}}. Touchez deux fois pour changer.",
+      "clearA11y": "Retirer le filtre de sujet",
+      "sheetTitle": "Afficher les actualités sur",
+      "all": "Tous les sujets",
+      "fallback": "Aucune actualité sur {{topic}} pour le moment, voici donc tous les sujets.",
+      "count_one": "{{count}} actualité sur {{topic}}",
+      "count_many": "{{count}} d’actualités sur {{topic}}",
+      "count_other": "{{count}} actualités sur {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Arts et spectacles",
+      "autos_vehicles": "Voitures et véhicules",
+      "beauty_fitness": "Beauté et forme",
+      "books_literature": "Livres et littérature",
+      "business_industrial": "Économie et entreprises",
+      "computers_electronics": "Informatique et électronique",
+      "finance": "Finance",
+      "food_drink": "Cuisine et boissons",
+      "games": "Jeux",
+      "health": "Santé",
+      "hobbies_leisure": "Loisirs",
+      "home_garden": "Maison et jardin",
+      "internet_telecom": "Internet et télécoms",
+      "jobs_education": "Emploi et éducation",
+      "law_government": "Politique et gouvernement",
+      "news": "Actualités générales",
+      "people_society": "Personnes et société",
+      "pets_animals": "Animaux de compagnie et animaux",
+      "real_estate": "Immobilier",
+      "science": "Sciences",
+      "sensitive_subjects": "Conflits et catastrophes",
+      "shopping": "Shopping",
+      "sports": "Sport",
+      "travel_transportation": "Voyages et transports"
     }
   },
   "forYou": {

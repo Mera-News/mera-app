@@ -947,6 +947,41 @@
       "label12": "12小時",
       "a11y6": "過去 6 小時的新聞",
       "a11y12": "過去 12 小時的新聞"
+    },
+    "topicFilter": {
+      "pill": "全部",
+      "pillA11y": "主題篩選：{{topic}}。連按兩下即可變更。",
+      "clearA11y": "清除主題篩選",
+      "sheetTitle": "顯示以下主題的報導",
+      "all": "所有主題",
+      "fallback": "目前這裡沒有關於{{topic}}的報導，所以顯示全部主題。",
+      "count_other": "{{count}} 則關於{{topic}}的報導"
+    },
+    "topic": {
+      "arts_entertainment": "藝術與娛樂",
+      "autos_vehicles": "汽車與交通工具",
+      "beauty_fitness": "美容與健身",
+      "books_literature": "書籍與文學",
+      "business_industrial": "商業",
+      "computers_electronics": "電腦與電子產品",
+      "finance": "財經",
+      "food_drink": "美食與飲品",
+      "games": "遊戲",
+      "health": "健康",
+      "hobbies_leisure": "興趣與休閒",
+      "home_garden": "居家與園藝",
+      "internet_telecom": "網際網路與電信",
+      "jobs_education": "求職與教育",
+      "law_government": "政治與政府",
+      "news": "綜合新聞",
+      "people_society": "人物與社會",
+      "pets_animals": "寵物與動物",
+      "real_estate": "房地產",
+      "science": "科學",
+      "sensitive_subjects": "衝突與災難",
+      "shopping": "購物",
+      "sports": "體育",
+      "travel_transportation": "旅遊與交通"
     }
   },
   "forYou": {

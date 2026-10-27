@@ -947,6 +947,41 @@
       "label12": "12 jam",
       "a11y6": "Berita 6 jam terakhir",
       "a11y12": "Berita 12 jam terakhir"
+    },
+    "topicFilter": {
+      "pill": "Semua",
+      "pillA11y": "Filter topik, {{topic}}. Ketuk dua kali untuk mengubah.",
+      "clearA11y": "Hapus filter topik",
+      "sheetTitle": "Tampilkan berita tentang",
+      "all": "Semua topik",
+      "fallback": "Saat ini belum ada berita tentang {{topic}} di sini, jadi semua topik ditampilkan.",
+      "count_other": "{{count}} berita tentang {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Seni dan hiburan",
+      "autos_vehicles": "Mobil dan kendaraan",
+      "beauty_fitness": "Kecantikan dan kebugaran",
+      "books_literature": "Buku dan sastra",
+      "business_industrial": "Bisnis",
+      "computers_electronics": "Komputer dan elektronik",
+      "finance": "Keuangan",
+      "food_drink": "Makanan dan minuman",
+      "games": "Permainan",
+      "health": "Kesehatan",
+      "hobbies_leisure": "Hobi dan waktu luang",
+      "home_garden": "Rumah dan taman",
+      "internet_telecom": "Internet dan telekomunikasi",
+      "jobs_education": "Pekerjaan dan pendidikan",
+      "law_government": "Politik dan pemerintahan",
+      "news": "Berita umum",
+      "people_society": "Orang dan masyarakat",
+      "pets_animals": "Hewan peliharaan dan hewan",
+      "real_estate": "Properti",
+      "science": "Sains",
+      "sensitive_subjects": "Konflik dan bencana",
+      "shopping": "Belanja",
+      "sports": "Olahraga",
+      "travel_transportation": "Perjalanan dan transportasi"
     }
   },
   "forYou": {

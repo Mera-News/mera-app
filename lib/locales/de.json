@@ -954,6 +954,42 @@
       "label12": "12 Std.",
       "a11y6": "Nachrichten der letzten 6 Stunden",
       "a11y12": "Nachrichten der letzten 12 Stunden"
+    },
+    "topicFilter": {
+      "pill": "Alle",
+      "pillA11y": "Themenfilter, {{topic}}. Doppeltippen zum Ändern.",
+      "clearA11y": "Themenfilter entfernen",
+      "sheetTitle": "Zeig mir Geschichten zu",
+      "all": "Alle Themen",
+      "fallback": "Gerade keine Geschichten zu {{topic}}, deshalb siehst du alle Themen.",
+      "count_one": "{{count}} Geschichte zu {{topic}}",
+      "count_other": "{{count}} Geschichten zu {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Kunst und Unterhaltung",
+      "autos_vehicles": "Autos und Fahrzeuge",
+      "beauty_fitness": "Schönheit und Fitness",
+      "books_literature": "Bücher und Literatur",
+      "business_industrial": "Wirtschaft",
+      "computers_electronics": "Computer und Elektronik",
+      "finance": "Finanzen",
+      "food_drink": "Essen und Trinken",
+      "games": "Spiele",
+      "health": "Gesundheit",
+      "hobbies_leisure": "Hobbys und Freizeit",
+      "home_garden": "Haus und Garten",
+      "internet_telecom": "Internet und Telekommunikation",
+      "jobs_education": "Jobs und Bildung",
+      "law_government": "Politik und Regierung",
+      "news": "Allgemeine Nachrichten",
+      "people_society": "Menschen und Gesellschaft",
+      "pets_animals": "Haustiere und Tiere",
+      "real_estate": "Immobilien",
+      "science": "Wissenschaft",
+      "sensitive_subjects": "Konflikte und Katastrophen",
+      "shopping": "Einkaufen",
+      "sports": "Sport",
+      "travel_transportation": "Reisen und Verkehr"
     }
   },
   "forYou": {

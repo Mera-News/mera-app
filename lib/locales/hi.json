@@ -954,6 +954,42 @@
       "label12": "12 घं.",
       "a11y6": "पिछले 6 घंटों की ख़बरें",
       "a11y12": "पिछले 12 घंटों की ख़बरें"
+    },
+    "topicFilter": {
+      "pill": "सभी",
+      "pillA11y": "विषय फ़िल्टर, {{topic}}। बदलने के लिए दो बार टैप करें।",
+      "clearA11y": "विषय फ़िल्टर हटाएँ",
+      "sheetTitle": "इस विषय की ख़बरें दिखाएँ",
+      "all": "सभी विषय",
+      "fallback": "अभी यहाँ {{topic}} की कोई ख़बर नहीं है, इसलिए सभी विषय दिख रहे हैं।",
+      "count_one": "{{topic}} की {{count}} ख़बर",
+      "count_other": "{{topic}} की {{count}} ख़बरें"
+    },
+    "topic": {
+      "arts_entertainment": "कला और मनोरंजन",
+      "autos_vehicles": "कारें और वाहन",
+      "beauty_fitness": "सौंदर्य और फ़िटनेस",
+      "books_literature": "किताबें और साहित्य",
+      "business_industrial": "कारोबार",
+      "computers_electronics": "कंप्यूटर और इलेक्ट्रॉनिक्स",
+      "finance": "वित्त",
+      "food_drink": "खान-पान",
+      "games": "खेल और गेम",
+      "health": "स्वास्थ्य",
+      "hobbies_leisure": "शौक और फ़ुर्सत",
+      "home_garden": "घर और बगीचा",
+      "internet_telecom": "इंटरनेट और दूरसंचार",
+      "jobs_education": "नौकरी और शिक्षा",
+      "law_government": "राजनीति और सरकार",
+      "news": "आम ख़बरें",
+      "people_society": "लोग और समाज",
+      "pets_animals": "पालतू जानवर और पशु",
+      "real_estate": "रियल एस्टेट",
+      "science": "विज्ञान",
+      "sensitive_subjects": "संघर्ष और आपदाएँ",
+      "shopping": "खरीदारी",
+      "sports": "खेल-कूद",
+      "travel_transportation": "यात्रा और परिवहन"
     }
   },
   "forYou": {

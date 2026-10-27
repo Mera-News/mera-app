@@ -954,6 +954,42 @@
       "label12": "12 u",
       "a11y6": "Nieuws van de afgelopen 6 uur",
       "a11y12": "Nieuws van de afgelopen 12 uur"
+    },
+    "topicFilter": {
+      "pill": "Alles",
+      "pillA11y": "Onderwerpfilter, {{topic}}. Tik twee keer om te wijzigen.",
+      "clearA11y": "Onderwerpfilter wissen",
+      "sheetTitle": "Toon verhalen over",
+      "all": "Alle onderwerpen",
+      "fallback": "Er zijn nu geen verhalen over {{topic}}, dus je ziet alle onderwerpen.",
+      "count_one": "{{count}} verhaal over {{topic}}",
+      "count_other": "{{count}} verhalen over {{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "Kunst en entertainment",
+      "autos_vehicles": "Auto’s en voertuigen",
+      "beauty_fitness": "Schoonheid en fitness",
+      "books_literature": "Boeken en literatuur",
+      "business_industrial": "Zakelijk",
+      "computers_electronics": "Computers en elektronica",
+      "finance": "Financiën",
+      "food_drink": "Eten en drinken",
+      "games": "Games",
+      "health": "Gezondheid",
+      "hobbies_leisure": "Hobby’s en vrije tijd",
+      "home_garden": "Huis en tuin",
+      "internet_telecom": "Internet en telecom",
+      "jobs_education": "Werk en onderwijs",
+      "law_government": "Politiek en overheid",
+      "news": "Algemeen nieuws",
+      "people_society": "Mensen en maatschappij",
+      "pets_animals": "Huisdieren en dieren",
+      "real_estate": "Vastgoed",
+      "science": "Wetenschap",
+      "sensitive_subjects": "Conflicten en rampen",
+      "shopping": "Winkelen",
+      "sports": "Sport",
+      "travel_transportation": "Reizen en vervoer"
     }
   },
   "forYou": {

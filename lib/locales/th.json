@@ -948,6 +948,41 @@
       "label12": "12 ชม.",
       "a11y6": "ข่าวใน 6 ชั่วโมงที่ผ่านมา",
       "a11y12": "ข่าวใน 12 ชั่วโมงที่ผ่านมา"
+    },
+    "topicFilter": {
+      "pill": "ทั้งหมด",
+      "pillA11y": "ตัวกรองหัวข้อ {{topic}} แตะสองครั้งเพื่อเปลี่ยน",
+      "clearA11y": "ล้างตัวกรองหัวข้อ",
+      "sheetTitle": "แสดงข่าวเกี่ยวกับ",
+      "all": "ทุกหัวข้อ",
+      "fallback": "ตอนนี้ยังไม่มีข่าวเกี่ยวกับ{{topic}} จึงแสดงทุกหัวข้อให้แทน",
+      "count_other": "{{count}} ข่าวเกี่ยวกับ{{topic}}"
+    },
+    "topic": {
+      "arts_entertainment": "ศิลปะและความบันเทิง",
+      "autos_vehicles": "รถยนต์และยานพาหนะ",
+      "beauty_fitness": "ความงามและฟิตเนส",
+      "books_literature": "หนังสือและวรรณกรรม",
+      "business_industrial": "ธุรกิจ",
+      "computers_electronics": "คอมพิวเตอร์และอิเล็กทรอนิกส์",
+      "finance": "การเงิน",
+      "food_drink": "อาหารและเครื่องดื่ม",
+      "games": "เกม",
+      "health": "สุขภาพ",
+      "hobbies_leisure": "งานอดิเรกและยามว่าง",
+      "home_garden": "บ้านและสวน",
+      "internet_telecom": "อินเทอร์เน็ตและโทรคมนาคม",
+      "jobs_education": "งานและการศึกษา",
+      "law_government": "การเมืองและรัฐบาล",
+      "news": "ข่าวทั่วไป",
+      "people_society": "ผู้คนและสังคม",
+      "pets_animals": "สัตว์เลี้ยงและสัตว์",
+      "real_estate": "อสังหาริมทรัพย์",
+      "science": "วิทยาศาสตร์",
+      "sensitive_subjects": "ความขัดแย้งและภัยพิบัติ",
+      "shopping": "ช้อปปิ้ง",
+      "sports": "กีฬา",
+      "travel_transportation": "การเดินทางและขนส่ง"
     }
   },
   "forYou": {
