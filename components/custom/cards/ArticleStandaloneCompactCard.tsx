@@ -28,6 +28,8 @@ interface ArticleStandaloneCompactCardProps {
   timeLabel?: string | null;
   /** A short state after the publisher ("Opened", "You came from here"). */
   statusLabel?: string | null;
+  /** Other copies of the story (World: cluster size minus one; timeline: copies). */
+  similarCount?: number;
 }
 
 /**
@@ -50,6 +52,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   testID,
   timeLabel,
   statusLabel,
+  similarCount,
 }) => {
   const publisherName =
     article.publicationSource?.publication_name ||
@@ -147,6 +150,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         onAccessibilityAction={menu.onAccessibilityAction}
         timeLabel={timeLabel}
         statusLabel={statusLabel}
+        similarCount={similarCount}
       />
       {menu.element}
     </>

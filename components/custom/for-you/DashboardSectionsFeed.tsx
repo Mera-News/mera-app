@@ -297,6 +297,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
               <ArticleSuggestionCompactCard
                 key={group.data._id}
                 suggestion={group.data}
+                similarCount={group.members.length}
                 onPress={onPressSuggestion}
                 surface="sectioned"
                 read={isSuggestionOpened(group.data, openedIds)}

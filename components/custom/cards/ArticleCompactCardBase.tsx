@@ -24,6 +24,7 @@ import type { AccessibilityActionEvent } from 'react-native';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { useColors } from '@/lib/theme/tokens';
+import SimilarArticlesRow from '@/components/custom/cards/SimilarArticlesRow';
 
 /**
  * ArticleCompactCardBase — the compact card CHROME. Purely presentational:
@@ -163,6 +164,10 @@ interface ArticleCompactCardBaseProps {
   statusLabel?: string | null;
   /** Replaces the age in the meta row ("Opened today" on a History row). */
   timeLabel?: string | null;
+  /** Other copies of this story. >= 1 adds the "N similar articles" row UNDER
+   *  the existing row, full width (under the image too), right-aligned. The
+   *  row never changes the image arithmetic above. Absent/0: no row. */
+  similarCount?: number;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -190,6 +195,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   spokenPriority,
   statusLabel,
   timeLabel,
+  similarCount,
 }) => {
   const { t } = useTranslation();
   const colors = useColors();
@@ -211,6 +217,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
     spokenPriority,
     meta.language,
     statusLabel,
+    similarCount != null && similarCount >= 1 ? t('feed.similarArticles', { count: similarCount }) : null,
   ]);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // The same line count the image is sized against — see COMPACT_IMAGE_SIZE.
@@ -424,6 +431,11 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               </Box>
             ) : null}
           </Box>
+          {similarCount != null && similarCount >= 1 ? (
+            <Box style={{ marginTop: 8 }}>
+              <SimilarArticlesRow count={similarCount} />
+            </Box>
+          ) : null}
         </Box>
       </Card>
   );

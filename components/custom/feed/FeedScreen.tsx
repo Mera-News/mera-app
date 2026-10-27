@@ -148,6 +148,7 @@ const FeedRow = React.memo(function FeedRow({
   notReadLine,
   suggestion,
   reserveNoteSpace,
+  similarCount,
   onPress,
   onVerdict,
   onAskMera,
@@ -173,6 +174,8 @@ const FeedRow = React.memo(function FeedRow({
   suggestion: ForYouSuggestion;
   /** Reserve the note area's height: this row was pending this session. */
   reserveNoteSpace: boolean;
+  /** `FeedRowDisplay.similar`'s count, or null for no row. */
+  similarCount: number | null;
   onPress: (suggestion: ForYouSuggestion) => void;
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   onAskMera: (suggestion: ForYouSuggestion) => void;
@@ -218,6 +221,7 @@ const FeedRow = React.memo(function FeedRow({
       noteHeldLine={noteHeldLine}
       notReadLine={notReadLine}
       reserveNoteSpace={reserveNoteSpace}
+      similarCount={similarCount}
       onPress={onPress}
       // No age label and no NEW badge on this screen. "2h ago" and a green NEW
       // pill are both answers to "has something arrived?", which is the
@@ -316,6 +320,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
         notReadLine={notReadLine}
         suggestion={display.suggestion}
         reserveNoteSpace={display.reserveNoteSpace}
+        similarCount={display.similar ? display.similar.count : null}
         onPress={openSuggestion}
         onVerdict={onVerdict}
         onAskMera={onAskMera}

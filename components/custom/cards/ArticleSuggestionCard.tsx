@@ -91,6 +91,9 @@ interface ArticleCardProps {
   /** A new card's halo (FinalMotion "Signals"): on while the card is unseen,
    *  fades away when it turns false. Omitted: no halo. */
   halo?: boolean;
+  /** The Feed only: other copies of the story (`FeedRowDisplay.similar`).
+   *  Null/omitted: no row. */
+  similarCount?: number | null;
 }
 
 export type { ArticleCardProps };
@@ -127,6 +130,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   reserveNoteSpace = false,
   notReadLine,
   halo,
+  similarCount,
 }) => {
   const { t } = useTranslation();
 
@@ -357,6 +361,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       flat={flat}
       onPress={() => onPress(suggestion)}
       halo={halo}
+      similarCount={similarCount}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
       spokenPriority={spokenPriority}
