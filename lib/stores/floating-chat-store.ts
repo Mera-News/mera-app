@@ -533,6 +533,10 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     requestNewChat: () =>
         set({
             conversationId: null,
+            // Like every other fresh-thread path: a card left waiting must not
+            // follow the reader into the new chat, where nothing shows it but
+            // the next turn's state line still says one is waiting.
+            proposal: null,
             quickFactChecks: [],
             topicPlanNotes: [],
             topicPlanTurnRequest: null,
