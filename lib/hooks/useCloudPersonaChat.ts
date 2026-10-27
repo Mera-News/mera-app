@@ -1003,8 +1003,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     moreAbort = ctl;
     try {
       const id = agentRef.current.id;
+      // A COPY: this is not a conversation turn, so the loop's writes to turn
+      // state must not reach the next real turn. A JSON round trip, not
+      // structuredClone, which Hermes is not known to provide; AgentState is
+      // plain data (strings, numbers, arrays, place objects).
       const state: AgentState = agentStateRef.current
-        ? structuredClone(agentStateRef.current)
+        ? (JSON.parse(JSON.stringify(agentStateRef.current)) as AgentState)
         : createAgentState(await buildAgentPersona(id));
       state.surfaceContext = surfaceFor();
       state.followedInChat = followedInChatLabels(cloud().messages);

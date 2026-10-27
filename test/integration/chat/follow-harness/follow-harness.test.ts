@@ -227,6 +227,33 @@ describe('More options', () => {
     expect(cloud().wireMessages).toEqual([]);
   });
 
+  it('works without structuredClone (Hermes) and leaves the conversation turn state alone', async () => {
+    let turn = 0;
+    server.use(
+      ...mockGateway((call) => {
+        if (call.route !== 'chat') return '';
+        turn += 1;
+        if (turn === 1) return reply('The Dutch cabinet talks.', toolCall('load_skill', { id: 'conversation/follow-story' }));
+        if (turn === 2) return reply('Pick the stories to follow below.', toolCall('proposeTrack', { options: OPTIONS }));
+        return reply('', toolCall('proposeTrack', { options: [{ label: 'Dutch Budget Fight', search: 'dutch budget fight' }] }));
+      }),
+    );
+    const { engine } = await attachCloud(followAgent());
+    engine.send('the dutch cabinet formation talks');
+    await turnDone();
+    const before = JSON.stringify(cloud().agentTurnState);
+    const saved = globalThis.structuredClone;
+    // @ts-expect-error: simulating a runtime without it
+    delete globalThis.structuredClone;
+    try {
+      const res = await requestMoreOptions('track-1', shown);
+      expect(res.actions.map((a) => a.label)).toEqual(['Dutch Budget Fight']);
+    } finally {
+      globalThis.structuredClone = saved;
+    }
+    expect(JSON.stringify(cloud().agentTurnState)).toBe(before);
+  });
+
   it('answers none when nothing new came back', async () => {
     server.use(...mockGateway(() => reply('', toolCall('proposeTrack', { options: [OPTIONS[0]] }))));
     await attachCloud(followAgent());
