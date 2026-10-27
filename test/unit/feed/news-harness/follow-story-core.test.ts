@@ -137,8 +137,9 @@ describe('buildFollowStoryContext', () => {
       proposal: trackProposal(['Ukraine War', 'European Security']),
     });
 
-    expect(context).toContain(`They ${TRACK_CARD_TAP_PHRASE}`);
+    expect(context).toContain(`They ${TRACK_CARD_TAP_PHRASE}. Do not apply it yourself`);
     expect(context).not.toMatch(/pick one/i);
+    expect(context.split('PENDING SCOPE CARD')[1]).not.toMatch(/[\u2013\u2014]/);
   });
 
   it('ignores a proposal that stages no actions', () => {

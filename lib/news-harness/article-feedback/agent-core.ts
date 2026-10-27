@@ -542,7 +542,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
       + (!proposalRequiresUserChoice(proposal)
         ? 'If the user confirms call applyProposal; if they decline call cancelProposal.'
         : isTrackCard(proposal)
-          ? `These are follow options: the user must ${TRACK_CARD_TAP_PHRASE} — do NOT call applyProposal. If they decline call cancelProposal.`
+          ? `These are follow options: the user must ${TRACK_CARD_TAP_PHRASE}. Do NOT call applyProposal. If they decline call cancelProposal.`
           : 'These are ALTERNATIVES: the user must TAP the one they want — do NOT call applyProposal. If they decline call cancelProposal.')
     : null;
 

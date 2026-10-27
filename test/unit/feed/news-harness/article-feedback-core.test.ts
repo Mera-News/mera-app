@@ -107,9 +107,11 @@ describe('article-feedback follow card is multi-select (D8)', () => {
   it('tells the model the user taps the ones they want on a multi-option follow card', () => {
     const ctx = ctxFor(trackCard(['Bridge repairs', 'City roadworks']));
     expect(ctx).toContain(
-      `These are follow options: the user must ${TRACK_CARD_TAP_PHRASE} — do NOT call applyProposal. If they decline call cancelProposal.`,
+      `These are follow options: the user must ${TRACK_CARD_TAP_PHRASE}. Do NOT call applyProposal. If they decline call cancelProposal.`,
     );
     expect(ctx).not.toContain('ALTERNATIVES');
+    // New prompt text carries no em or en dash: the model copies them into replies.
+    expect(ctx.split('These are follow options')[1]).not.toMatch(/[\u2013\u2014]/);
   });
 
   it('keeps the plain confirm line for a one-option follow card (typed yes applies it)', () => {

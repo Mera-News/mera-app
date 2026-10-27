@@ -197,7 +197,7 @@ export function buildFollowStoryContext(input: FollowStoryContextInput): string 
     blocks.push(
       '## PENDING SCOPE CARD\n'
         + `The user is looking at a card offering: ${labels.join('; ')}.\n`
-        + `They ${TRACK_CARD_TAP_PHRASE} — do not apply it yourself and do not say the story is being followed yet. If they decline, call cancelProposal.`,
+        + `They ${TRACK_CARD_TAP_PHRASE}. Do not apply it yourself and do not say the story is being followed yet. If they decline, call cancelProposal.`,
     );
   }
 
