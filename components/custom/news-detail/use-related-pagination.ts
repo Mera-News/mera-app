@@ -3,6 +3,7 @@ import { ArticleService } from '@/lib/article-service';
 import {
     RelatedSortMode as GqlRelatedSortMode,
     type ArticleSummary,
+    type RelatedArticleFacets,
     type RelatedArticlesContextInput,
 } from '@/lib/generated/graphql-types';
 import type { RelatedSortMode } from '@/lib/algorithms/related-articles-sort';
@@ -77,6 +78,12 @@ interface UseRelatedPagination {
     error: boolean;
     /** Re-run the failed fetch. */
     retry: () => void;
+    /** The latest page's facet counts, computed server-side over the exclusion
+     *  set that call carried; null before the first page, after a reset, and
+     *  on a server without facets. */
+    facets: RelatedArticleFacets | null;
+    /** The exclusion key `facets` were fetched under. */
+    facetsExcludeKey: string;
 }
 
 /**
@@ -111,6 +118,7 @@ export function useRelatedPagination({
     const [isLoadingInitial, setIsLoadingInitial] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState(false);
+    const [facetState, setFacetState] = useState<{ facets: RelatedArticleFacets; key: string } | null>(null);
 
     const generationRef = useRef(0);
     /** Pages appended since the last reset. The settle refetch below must never
@@ -130,6 +138,7 @@ export function useRelatedPagination({
     const fetchPage = useCallback(
         async (after: string | null, generation: number) => {
             if (!articleId) return;
+            const requestKey = relatedExcludeKey(excludeRef.current);
             try {
                 const page = await ArticleService.getRelatedArticlesPage({
                     articleId,
@@ -152,6 +161,9 @@ export function useRelatedPagination({
                     // otherwise render twice under the same React key.
                     return dedupeById(prev, page.articles);
                 });
+                // Every page carries facets for the exclusion set IT was sent
+                // with, so a later page heals a set that grew after page 1.
+                if (page.facets) setFacetState({ facets: page.facets, key: requestKey });
                 setEndCursor(page.pageInfo.endCursor ?? null);
                 setHasNextPage(page.pageInfo.hasNextPage);
                 setError(false);
@@ -178,6 +190,7 @@ export function useRelatedPagination({
         generationRef.current = generation;
         pagesLoadedRef.current = 0;
         setEntries([]);
+        setFacetState(null);
         setEndCursor(null);
         setHasNextPage(false);
         setIsLoadingMore(false);
@@ -220,7 +233,7 @@ export function useRelatedPagination({
     // empty to non-empty transition counts; and never once the reader has
     // loaded a second page, because that would yank the list out from under
     // them. The caller's dedupe stays as the safety net for that case.
-    const excludeKey = excludeIds && excludeIds.length > 0 ? [...excludeIds].sort().join(' ') : '';
+    const excludeKey = relatedExcludeKey(excludeIds);
     const lastExcludeKeyRef = useRef(excludeKey);
     useEffect(() => {
         const previous = lastExcludeKeyRef.current;
@@ -257,7 +270,22 @@ export function useRelatedPagination({
         });
     }, [entries.length, endCursor, startFromTop, fetchPage]);
 
-    return { entries, isLoadingInitial, isLoadingMore, hasNextPage, loadMore, error, retry };
+    return {
+        entries,
+        isLoadingInitial,
+        isLoadingMore,
+        hasNextPage,
+        loadMore,
+        error,
+        retry,
+        facets: facetState?.facets ?? null,
+        facetsExcludeKey: facetState?.key ?? '',
+    };
+}
+
+/** The exclusion set as a comparable key ('' when empty). */
+export function relatedExcludeKey(ids: readonly string[] | undefined): string {
+    return ids && ids.length > 0 ? [...ids].sort().join(' ') : '';
 }
 
 /** `prev` followed by the rows of `next` whose `_id` is not already present. */

@@ -10,6 +10,7 @@ import database from '../index';
 import type TrackedStoryModel from '../models/TrackedStory';
 import type { TrackedStoryMemberSnapshot } from '../models/TrackedStory';
 import logger from '../../logger';
+import { foldKeysOf } from '../../tracking/story-fold-key';
 
 export type { TrackedStoryMemberSnapshot } from '../models/TrackedStory';
 
@@ -396,9 +397,23 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
         const watermark = m.seenPubWatermarkMs;
         if (snapshots && snapshots.length > 0 && watermark != null) {
           // Watermark-gated: only members newer than the last-seen watermark.
-          m.unseenCount =
-            (m.unseenCount ?? 0) +
-            snapshots.filter((s) => (s.pubDateMs ?? 0) > watermark).length;
+          // Counts STORIES, not copies: a snapshot sharing a fold key with a
+          // member already on the row, or with an earlier new one, adds 0.
+          const seen = new Set<string>();
+          for (const s of m.memberSnapshots ?? []) for (const k of foldKeysOf(s)) seen.add(k);
+          for (const s of snapshots) {
+            if ((s.pubDateMs ?? 0) <= watermark) for (const k of foldKeysOf(s)) seen.add(k);
+          }
+          let fresh = 0;
+          const above = snapshots
+            .filter((s) => (s.pubDateMs ?? 0) > watermark)
+            .sort((a, b) => (a.pubDateMs ?? 0) - (b.pubDateMs ?? 0));
+          for (const s of above) {
+            const keys = foldKeysOf(s);
+            if (!keys.some((k) => seen.has(k))) fresh++;
+            for (const k of keys) seen.add(k);
+          }
+          m.unseenCount = (m.unseenCount ?? 0) + fresh;
         } else {
           // Legacy path — no per-member pubDate, or never opened yet.
           m.unseenCount = (m.unseenCount ?? 0) + newIds.length;
@@ -486,10 +501,12 @@ export interface SnapshotSourcePatch {
   languageCode?: string;
   countryCode?: string;
   publicationName?: string;
+  storyKey?: string;
+  titleOriginal?: string;
 }
 
 /**
- * Fill in `languageCode` / `countryCode` / `publicationName` on member snapshots
+ * Fill in `languageCode` / `countryCode` / `publicationName` / `storyKey` / `titleOriginal` on member snapshots
  * that predate those fields (or were seeded from a source that never carried
  * them, e.g. the originating article of a freshly-followed story). The timeline
  * screen resolves them from the local `article_suggestions` rows and persists
@@ -517,10 +534,14 @@ export async function backfillSnapshotSource(
       if (!merged.countryCode && p.countryCode) merged.countryCode = p.countryCode;
       if (!merged.publicationName && p.publicationName)
         merged.publicationName = p.publicationName;
+      if (!merged.storyKey && p.storyKey) merged.storyKey = p.storyKey;
+      if (!merged.titleOriginal && p.titleOriginal) merged.titleOriginal = p.titleOriginal;
       if (
         merged.languageCode === s.languageCode &&
         merged.countryCode === s.countryCode &&
-        merged.publicationName === s.publicationName
+        merged.publicationName === s.publicationName &&
+        merged.storyKey === s.storyKey &&
+        merged.titleOriginal === s.titleOriginal
       ) {
         return s;
       }

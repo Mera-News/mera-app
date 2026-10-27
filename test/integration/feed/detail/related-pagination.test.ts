@@ -262,3 +262,48 @@ describe('useRelatedPagination', () => {
         });
     });
 });
+
+describe('useRelatedPagination: facets', () => {
+    beforeEach(async () => {
+        await signInFixtureAccount();
+    });
+
+    /** Page 1 answers facets of 9, page 2 facets of 7 (the exclusion set grew in between). */
+    function serveFacets() {
+        server.use(
+            graphql.operation(({ operationName, variables }) => {
+                if (operationName !== 'GetRelatedArticlesPageFiltered') return undefined;
+                const second = variables.after === 'c1';
+                const data = pageData(second ? PAGES.c1 : PAGES.first);
+                const n = second ? 7 : 9;
+                return HttpResponse.json({
+                    data: {
+                        relatedArticlesPage: {
+                            ...data.relatedArticlesPage,
+                            facets: {
+                                __typename: 'RelatedArticleFacets',
+                                countries: [{ __typename: 'RelatedFacetCount', code: 'NLD', count: n }],
+                                languages: [{ __typename: 'RelatedFacetCount', code: 'en', count: n }],
+                            },
+                        },
+                    },
+                });
+            }),
+        );
+    }
+
+    it('takes facets from every page, tagged with the exclusion set that page was sent with', async () => {
+        serveFacets();
+        const r = mount();
+        await waitFor(() => expect(r.result.current.facets?.countries[0].count).toBe(9));
+        expect(r.result.current.facetsExcludeKey).toBe('');
+
+        r.rerender({ ...BASE, excludeIds: ['x1', 'x2'] });
+        await act(async () => {});
+        // Page 1 is not refetched mid-list, so the stale facets keep their old key...
+        act(() => r.result.current.loadMore());
+        await waitFor(() => expect(r.result.current.facets?.countries[0].count).toBe(7));
+        // ...until the next page heals them under the key now in force.
+        expect(r.result.current.facetsExcludeKey).toBe('x1 x2');
+    });
+});

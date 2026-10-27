@@ -20,7 +20,10 @@ import logger from '@/lib/logger';
 import { useSavedOverride } from '@/lib/saved-state';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { useRelatedPagination } from './use-related-pagination';
+import { relatedExcludeKey, useRelatedPagination } from './use-related-pagination';
+import { relatedHeadingCount } from './related-count';
+import { useTrackedStoryCopies } from './use-tracked-story-copies';
+import { timelineCardToArticle } from '@/components/custom/tracked-stories/merge-timeline';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
@@ -39,9 +42,13 @@ const SCROLL_THRESHOLD = 300;
 export function useArticleDetailScreen({
     articleId,
     stableClusterId,
+    trackedStoryId,
 }: {
     readonly articleId: string;
     readonly stableClusterId?: string;
+    /** Set when opened from a followed story's timeline: the story's other
+     *  copies of this article lead Related coverage as a local block. */
+    readonly trackedStoryId?: string;
 }) {
     const { t } = useTranslation();
     const toast = useToast();
@@ -112,6 +119,11 @@ export function useArticleDetailScreen({
     const [retryNonce, setRetryNonce] = useState(0);
     const hadOfflineFailureRef = useRef(false);
 
+    // The followed story's other copies of this article (empty unless opened
+    // from its timeline). Rendered here, so the server must not send them again.
+    const storyCopies = useTrackedStoryCopies(trackedStoryId, article?._id ?? articleId, userCtx);
+    const excludeIds = useMemo(() => storyCopies.map((c) => c.articleId), [storyCopies]);
+
     // Related coverage, ordered and paged BY THE SERVER, 10 rows at a time.
     // The ordering cannot live here any more: country blocks are ranked by their
     // size across the whole candidate set, so a page's order depends on rows
@@ -124,19 +136,36 @@ export function useArticleDetailScreen({
         loadMore: loadMoreRelated,
         error: relatedError,
         retry: retryRelated,
+        hasNextPage: relatedHasNext,
+        facets: relatedFacets,
+        facetsExcludeKey,
     } = useRelatedPagination({
         articleId: article?._id ?? null,
         stableClusterId,
         sortMode: relatedSortMode,
         ctx: userCtx,
+        excludeIds,
         isConnected,
     });
     // Server order is final, no client re-sort; the hook dedupes by `_id` on
     // every page, so the id alone is a unique key.
     const relatedRows = useMemo(
-        () => related.map((entry) => ({ id: entry._id, article: toNewsArticle(entry) })),
-        [related],
+        () => [
+            ...storyCopies.map((c) => ({ id: c.articleId, article: timelineCardToArticle(c) })),
+            ...related.map((entry) => ({ id: entry._id, article: toNewsArticle(entry) })),
+        ],
+        [storyCopies, related],
     );
+    const relatedCount = relatedHeadingCount({
+        local: storyCopies.length,
+        served: related.length,
+        hasNextPage: relatedHasNext,
+        error: relatedError,
+        loading: isLoadingRelated,
+        facets: relatedFacets,
+        facetsExcludeKey,
+        excludeKey: relatedExcludeKey(excludeIds),
+    });
 
     // What the Mera button asks about. Stable per article, so the button's
     // chat context is not rebuilt on every render.
@@ -422,6 +451,7 @@ export function useArticleDetailScreen({
         titleDisplay,
         handleTitleDisplayChange,
         relatedRows,
+        relatedCount,
         isLoadingRelated,
         isLoadingMoreRelated,
         loadMoreRelated,

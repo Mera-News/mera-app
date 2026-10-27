@@ -3,7 +3,7 @@
 // LOCAL member snapshots (a followed story is a topic; there is no server
 // archive anymore).
 
-import { buildTimeline, type TimelineCard } from '@/components/custom/tracked-stories/merge-timeline';
+import { buildTimeline, foldTimeline, type TimelineCard } from '@/components/custom/tracked-stories/merge-timeline';
 import type { TrackedStoryMemberSnapshot } from '@/lib/database/models/TrackedStory';
 
 function local(
@@ -137,5 +137,66 @@ describe('latestMember', () => {
   it('is null with no current member', () => {
     expect(latestMember([snap('a', 1)], [])).toBeNull();
     expect(latestMember(undefined, undefined)).toBeNull();
+  });
+});
+
+describe('foldTimeline', () => {
+  const DAY = Date.UTC(2026, 9, 1, 12);
+  const card = (o: Partial<TimelineCard> & { articleId: string }): TimelineCard => ({
+    title: '',
+    pubDateMs: DAY,
+    ...o,
+  });
+  const heads = (e: ReturnType<typeof foldTimeline>) => e.map((x) => x.head.articleId);
+
+  it('folds copies that share a storyKey into one entry, newest head first', () => {
+    const out = foldTimeline(
+      [
+        card({ articleId: 'a', storyKey: 'K', title: 'One', pubDateMs: DAY }),
+        card({ articleId: 'b', storyKey: 'K', title: 'Two', pubDateMs: DAY + 5 }),
+        card({ articleId: 'c', title: 'Other', pubDateMs: DAY + 10 }),
+      ],
+      null,
+    );
+    expect(out).toHaveLength(2);
+    expect(heads(out)).toEqual(['c', 'a']); // null ctx: the oldest copy fronts
+    expect(out[1].copies.map((c) => c.articleId)).toEqual(['b']);
+  });
+
+  it('folds an English-only seed with an original-language copy of the same headline on the same day', () => {
+    const out = foldTimeline(
+      [
+        card({ articleId: 'seed', title: 'Cabinet falls after budget vote' }),
+        card({ articleId: 'nl', title: 'Cabinet falls after budget vote', titleOriginal: 'Kabinet valt na begrotingsstemming' }),
+        card({ articleId: 'nl2', title: 'x', titleOriginal: 'Cabinet falls after budget vote' }),
+      ],
+      null,
+    );
+    expect(out).toHaveLength(1);
+  });
+
+  it('keeps two storyKeys apart even when a title joins them', () => {
+    const same = 'Cabinet falls after budget vote';
+    const out = foldTimeline(
+      [
+        card({ articleId: 'a', storyKey: 'K1', title: same }),
+        card({ articleId: 'b', storyKey: 'K2', title: same }),
+      ],
+      null,
+    );
+    expect(out).toHaveLength(2);
+  });
+
+  it('does not fold short titles, or the same title on another UTC day', () => {
+    expect(
+      foldTimeline([card({ articleId: 'a', title: 'Short one' }), card({ articleId: 'b', title: 'Short one' })], null),
+    ).toHaveLength(2);
+    const t = 'Morning briefing for the whole region';
+    expect(
+      foldTimeline(
+        [card({ articleId: 'a', title: t }), card({ articleId: 'b', title: t, pubDateMs: DAY + 86_400_000 })],
+        null,
+      ),
+    ).toHaveLength(2);
   });
 });

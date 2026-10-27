@@ -45,6 +45,8 @@ interface ArticleDetailScreenProps {
     /** Stable story id from nav params, when the caller already knows it. When
      *  absent, the track flow resolves it lazily via getNewsClusterForArticle. */
     stableClusterId?: string;
+    /** The followed story this page was opened from (its timeline). */
+    trackedStoryId?: string;
     /** The article this page was opened from (a Related row): its own Related
      *  list leads with it. */
     fromArticleId?: string;
@@ -128,6 +130,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     onBack,
     backIcon = 'back',
     stableClusterId,
+    trackedStoryId,
     fromArticleId,
 }) => {
     const { t } = useTranslation();
@@ -148,6 +151,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         titleDisplay,
         handleTitleDisplayChange,
         relatedRows,
+        relatedCount,
         isLoadingRelated,
         isLoadingMoreRelated,
         loadMoreRelated,
@@ -164,7 +168,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         handleStartFactCheck,
         handleToggleSave,
         handleArticleUrlPress,
-    } = useArticleDetailScreen({ articleId, stableClusterId });
+    } = useArticleDetailScreen({ articleId, stableClusterId, trackedStoryId });
     // A restored screen acts on this: gone for a definite 404, otherwise the
     // article, an error or the offline state is what the reader gets back.
     useReportRestoredScreen(isLoading ? 'loading' : notFound ? 'missing' : 'ready');
@@ -465,6 +469,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
                         <RelatedCoverage
                             rows={relatedRows}
+                            count={relatedCount}
                             selfArticleId={article._id ?? articleId}
                             fromArticleId={fromArticleId}
                             loading={isLoadingRelated}

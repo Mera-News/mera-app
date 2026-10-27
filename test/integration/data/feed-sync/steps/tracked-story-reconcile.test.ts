@@ -366,3 +366,37 @@ describe('the reconcile as the feed sync runs it', () => {
     );
   });
 });
+
+describe('followed stories fold copies by story key', () => {
+  const at = (hours: number) => new Date(SEED_PUB_MS + hours * 3_600_000).toISOString();
+
+  it('the follow-time seed carries the local row\'s storyKey and original title, and no publication', async () => {
+    await stored([{ id: 'seed', topicIds: [], over: { story_key: 'K1', title: 'Kabinet valt', title_en: 'Cabinet falls' } }]);
+
+    const { storyId } = await follow('seed', 'dutch cabinet');
+
+    const [seed] = await snapshots(storyId);
+    expect(seed).toMatchObject({ articleId: 'seed', storyKey: 'K1', titleOriginal: 'Kabinet valt' });
+    expect(seed.publicationName).toBeUndefined();
+  });
+
+  it('a reconcile snapshot keeps its storyKey through the sanitizer, and a copy of a seen story adds 0 unseen', async () => {
+    await stored([{ id: 'seed', topicIds: [], over: { story_key: 'K1', pubDate: at(0) } }]);
+    const { storyId, topicId } = await follow('seed', 'dutch cabinet');
+    await trackedStoryService.advanceSeenWatermark(storyId, SEED_PUB_MS);
+    await stored([
+      { id: 'copy', topicIds: [topicId], over: { story_key: 'K1', title: 'Totally different words here', pubDate: at(1) } },
+    ]);
+
+    await reconcileTrackedStories();
+
+    expect((await snapshots(storyId)).find((s) => s.articleId === 'copy')?.storyKey).toBe('K1');
+    expect((await getTrackedStoryById(storyId))!.unseenCount).toBe(0);
+
+    await stored([{ id: 'other', topicIds: [topicId], over: { story_key: 'K2', pubDate: at(2) } }]);
+    await reconcileTrackedStories();
+    expect((await getTrackedStoryById(storyId))!.unseenCount).toBe(1);
+    expect(await members(storyId)).toEqual(expect.arrayContaining(['seed', 'copy', 'other']));
+  });
+});
+

@@ -11,6 +11,7 @@ import {
   trackStory,
   type TrackedStoryMemberSnapshot,
 } from '@/lib/database/services/tracked-story-service';
+import * as trackedStoryService from '@/lib/database/services/tracked-story-service';
 import { createTopics, getAllByNormalizedText } from '@/lib/database/services/topic-service';
 
 const T0 = Date.UTC(2026, 9, 1, 12, 0, 0);
@@ -123,7 +124,7 @@ describe('disowning a member ("not part of this story")', () => {
     await focus(result);
     await waitFor(() => expect(result.current.cards).toHaveLength(3));
 
-    act(() => result.current.setConfirmRemove(result.current.cards.find((c) => c.articleId === 'm2')!));
+    act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.head.articleId === 'm2')!));
     await act(async () => {
       await result.current.handleConfirmRemove();
     });
@@ -187,5 +188,45 @@ describe('export', () => {
     const { storyId } = await seedStory();
     const { result } = open(storyId);
     expect(result.current.exportRows).toEqual([]);
+  });
+});
+
+describe('copies of one story fold into one entry', () => {
+  /** m2 and m3 are two publishers' copies of one story (same storyKey); m1 is another story. */
+  async function seedFolded() {
+    const { storyId } = await seedStory();
+    await trackedStoryService.backfillSnapshotSource(
+      storyId,
+      new Map([
+        ['m2', { storyKey: 'K' }],
+        ['m3', { storyKey: 'K' }],
+      ]),
+    );
+    return storyId;
+  }
+
+  it('shows one entry for the two copies, counts it as one article, and exports its head only', async () => {
+    const storyId = await seedFolded();
+    const { result } = open(storyId);
+    await focus(result);
+    await waitFor(() => expect(result.current.entries).toHaveLength(2));
+    const folded = result.current.entries.find((e) => e.copies.length === 1)!;
+    expect([folded.head.articleId, folded.copies[0].articleId].sort()).toEqual(['m2', 'm3']);
+    expect(result.current.exportRows.map((r) => r.id).sort()).toEqual(['m1', folded.head.articleId].sort());
+  });
+
+  it('disowning the entry disowns every copy, and the ledger keeps the ids', async () => {
+    const storyId = await seedFolded();
+    const { result } = open(storyId);
+    await focus(result);
+    await waitFor(() => expect(result.current.entries).toHaveLength(2));
+    act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.copies.length === 1)!));
+    await act(async () => {
+      await result.current.handleConfirmRemove();
+    });
+    expect(result.current.entries.map((e) => e.head.articleId)).toEqual(['m1']);
+    const row = await getTrackedStoryById(storyId);
+    expect(row?.memberSnapshots.map((s) => s.articleId)).toEqual(['m1']);
+    expect(row?.memberArticleIds).toEqual(expect.arrayContaining(['m1', 'm2', 'm3']));
   });
 });
