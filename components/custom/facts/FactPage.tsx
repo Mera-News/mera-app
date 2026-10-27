@@ -39,8 +39,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RestoreReveal from '@/components/custom/nav/RestoreReveal';
 import { useRestartHold } from '@/lib/app-restart';
 import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
-import { filterStories, isLeftOut, type Story, type StoryFilter } from './fact-page-model';
+import { filterStories, type Story, type StoryFilter } from './fact-page-model';
 import AddTopicModal from './AddTopicModal';
+import { FactPlacesRow } from './FactPlacesRow';
 import { sentenceCase } from './sentence-case';
 import { INFLUENCE_MAX, INFLUENCE_MIN, INFLUENCE_STEP, useFactPage, type TopicRow } from './useFactPage';
 
@@ -112,8 +113,6 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         addPhrase,
         openedIds,
         openSuggestion,
-        taught,
-        markRelevant,
     } = useFactPage({ factId, from, statement });
     // An unsent "Show less of" phrase is lost to a reload.
     useRestartHold(phrase.trim() !== '', 'draft:show-less', 'hard');
@@ -180,31 +179,10 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                         surface="sectioned"
                         read={isSuggestionOpened(s, openedIds)}
                     />
-                    {item.left && isLeftOut(s) ? (
-                        <Pressable
-                            testID={`fact-relevant-${s._id}`}
-                            onPress={() => markRelevant(item.story as Story)}
-                            disabled={taught.has(s._id)}
-                            accessibilityRole="button"
-                            accessibilityState={{ disabled: taught.has(s._id) }}
-                            style={{
-                                alignSelf: 'flex-start',
-                                marginLeft: 12,
-                                marginBottom: 10,
-                                minHeight: 44,
-                                justifyContent: 'center',
-                                opacity: taught.has(s._id) ? 0.5 : 1,
-                            }}
-                        >
-                            <View style={{ borderRadius: 999, borderWidth: 1, borderColor: colors.trackBorder, paddingHorizontal: 14, paddingVertical: 7 }}>
-                                <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600' }}>{t('facts.page.thisWasRelevant')}</Text>
-                            </View>
-                        </Pressable>
-                    ) : null}
                 </View>
             );
         },
-        [knownIds, reduceMotion, topicStories, colors, t, openSuggestion, openedIds, taught, markRelevant, askDeleteTopic],
+        [knownIds, reduceMotion, topicStories, colors, t, openSuggestion, openedIds, askDeleteTopic],
     );
 
     const header = (
@@ -215,6 +193,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 </Text>
                 <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('facts.page.reach', { count: total })}</Text>
             </View>
+            {fact ? <FactPlacesRow factId={factId} fact={fact} /> : null}
             <Group>
                 <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
                     <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('facts.page.howMuch')}</Text>

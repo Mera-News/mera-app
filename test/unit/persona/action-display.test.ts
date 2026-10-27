@@ -12,6 +12,11 @@ describe('persona-audit action-display', () => {
         }
     });
 
+    it('gives the fact-places actions their own labels', () => {
+        expect(actionDisplay(ACTION_NAMES.SET_FACT_PLACES).labelKey).toBe('setFactPlaces');
+        expect(actionDisplay(ACTION_NAMES.SET_FACT_NEWS_STOPPED).labelKey).toBe('setFactNewsStopped');
+    });
+
     it('falls back to a history icon for an unknown action_type', () => {
         const d = actionDisplay('some_future_action');
         expect(d.icon).toBe('history');
