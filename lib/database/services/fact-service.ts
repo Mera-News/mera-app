@@ -656,7 +656,10 @@ export async function setFactPlaces(
 
   const same = prevPlaces.length === next.length && prevPlaces.every((p) => next.includes(p));
   if (same) {
-    if (current.metadata?.places_source !== source) await patchMetadata(factId, { places_source: source });
+    // An unchanged answer refreshes the source and settles a wrong-place mark, or the sweep re-sends it forever.
+    if (current.metadata?.places_source !== source || current.metadata?.places_wrong !== undefined) {
+      await patchMetadata(factId, { places_source: source, places_wrong: undefined });
+    }
     return { applied: false };
   }
 

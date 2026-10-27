@@ -111,6 +111,17 @@ describe('markFactPlacesWrong', () => {
     expect(await markFactPlacesWrong(mine.id)).toBe(false);
     expect((await meta(mine.id)).places_wrong).toBeUndefined();
   });
+
+  it('the sweep repeating the same answer settles the mark, so it is not re-sent forever', async () => {
+    const { fact } = await seedFact('Follows cricket');
+    await set(fact.id, ['IN'], 'sweep', { regenerate: false });
+    await markFactPlacesWrong(fact.id);
+
+    expect(await set(fact.id, ['IN'], 'sweep', { regenerate: false })).toEqual({ applied: false });
+    const m = await meta(fact.id);
+    expect(m.places_wrong).toBeUndefined();
+    expect(typeof m.places_source).toBe('string');
+  });
 });
 
 describe('stopNewsForFact', () => {

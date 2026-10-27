@@ -789,7 +789,7 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
   const finalized: DigestCandidate[] = [];
   for (const m of byFingerprint.values()) {
     if (rejected.has(m.fingerprint)) continue;
-        const entityContext = entityContextFor(m.sourceRowIds);
+    const entityContext = entityContextFor(m.sourceRowIds);
     const confidence: 'auto' | 'review' = REMOVAL_KINDS.has(m.kind) ? 'review' : 'auto';
     finalized.push({
       fingerprint: m.fingerprint,
