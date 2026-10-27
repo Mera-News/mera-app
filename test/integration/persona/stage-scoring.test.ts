@@ -3,7 +3,8 @@
 // and the on-device lane through the real completeLocal with only llama.rn scripted. Replaces
 // stage-scoring.test.ts, stage-scoring-local.test.ts, headline-exemption-math-stage.test.ts and
 // stage-subscription-read.test.ts (and the relevance-v4 half that reaches this module).
-import { addFact } from '@/lib/database/services/fact-service';
+import { addFact, setFactPlaces } from '@/lib/database/services/fact-service';
+import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import {
   getUnscoredSuggestionsWithFacts,
@@ -34,6 +35,7 @@ import {
   effectiveHarnessConfig,
   getScoringLlmPort,
   loadPersonaScoringContext,
+  rescoreLocationCaught,
 } from '@/lib/mera-protocol/stage-scoring';
 import { runSubscriptionReadStage } from '@/lib/mera-protocol/stage-subscription-read';
 import { ARTICLE_METADATA_PREFIX } from '@/lib/news-harness/article-pipeline/tag-prompt';
@@ -976,5 +978,86 @@ describe('runSubscriptionReadStage', () => {
     it('runs at temperature 0 so the same inputs give the same read', () => {
       expect(body.temperature).toBe(0);
     });
+  });
+});
+
+// ===========================================================================
+// the location rule, wired: persona snapshot -> math stage -> rescore
+// ===========================================================================
+
+describe('location rule - stage wiring and rescoreLocationCaught', () => {
+  async function seedPension(): Promise<string> {
+    const fact = await addFact('Pensioner in India');
+    await setFactPlaces(fact.id, ['IN'], 'user', { regenerate: false });
+    const [t] = await createTopics([{ factId: fact.id, text: 'pension reform', weight: 1 }]);
+    const fetched = [
+      ['ro', 'ROU'],
+      ['in', 'IND'],
+    ].map(
+      ([id, cc]) =>
+        ({
+          _id: id,
+          title: `Pension age to rise ${id}`,
+          title_en: `Pension age to rise ${id}`,
+          description_en: 'The government confirmed the change on Tuesday.',
+          language_code: 'en',
+          country_code: cc,
+          pubDate: '2026-10-09T08:00:00.000Z',
+          clusters: [],
+        }) as unknown as ArticleWithClusters,
+    );
+    await persistAndLinkV2Suggestions(fetched, new Map(), {
+      matchedTopics: new Map(['ro', 'in'].map((id) => [id, [{ topicId: t.id, text: t.text }]])),
+      headlineScope: new Map(),
+      stableClusterId: new Map(),
+    });
+    return fact.id;
+  }
+
+  it('catches the foreign story out of the stage, keeps its marked audit, and passes the domestic one', async () => {
+    await seedPension();
+    const math = await computeMathStage(await load(['ro', 'in']));
+    expect([...math.locationCaughtIds]).toEqual(['ro']);
+    expect(math.stage.map((c) => c.input.id)).toEqual(['in']);
+    expect(math.componentsMap.get('ro')?.locationCaught).toBe(true);
+    expect(math.computedScoreMap.has('ro')).toBe(true);
+  });
+
+  it('a fact with no places catches nothing', async () => {
+    const fact = await addFact('Pensioner in India');
+    const [t] = await createTopics([{ factId: fact.id, text: 'pension reform', weight: 1 }]);
+    await persistAndLinkV2Suggestions(
+      [{ _id: 'ro', title: 'Pension', title_en: 'Pension', description_en: 'x', language_code: 'en', country_code: 'ROU', pubDate: '2026-10-09T08:00:00.000Z', clusters: [] } as unknown as ArticleWithClusters],
+      new Map(),
+      { matchedTopics: new Map([['ro', [{ topicId: t.id, text: t.text }]]]), headlineScope: new Map(), stableClusterId: new Map() },
+    );
+    const math = await computeMathStage(await load(['ro']));
+    expect(math.locationCaughtIds.size).toBe(0);
+  });
+
+  it('rescoreLocationCaught sends only the marked rows of that fact back to unscored', async () => {
+    const factId = await seedPension();
+    const math = await computeMathStage(await load(['ro', 'in']));
+    await saveScoringResult('ro', {
+      relevance: 0,
+      reason: '',
+      reasonSkipped: true,
+      rawScore: 0,
+      scoreComponentsJson: JSON.stringify(math.componentsMap.get('ro')),
+    });
+    await saveScoringResult('in', {
+      relevance: 0,
+      reason: '',
+      reasonSkipped: true,
+      rawScore: 0,
+      scoreComponentsJson: JSON.stringify(math.componentsMap.get('in')),
+    });
+
+    expect(await rescoreLocationCaught(factId)).toBe(1);
+    const status = async (id: string) =>
+      (await database.get<ArticleSuggestionModel>('article_suggestions').find(id)).status;
+    expect(await status('ro')).toBe('unscored');
+    expect(await status('in')).toBe('complete');
+    expect(await rescoreLocationCaught('no-such-fact')).toBe(0);
   });
 });

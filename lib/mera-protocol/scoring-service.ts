@@ -420,9 +420,7 @@ export async function batchScoreAndReason(
   // computed-vs-judge deltas into CalibrationCases and handing them to
   // `recordOverrides` — went with the judge. It was the calibration loop's ONLY
   // input; see the note at `buildCalibrationCase`.)
-  // shortcut: structural read until the scorer's StageResult type carries the field, drop the cast then.
-  locationCaughtIds =
-    (stage as { locationCaughtIds?: Set<string> }).locationCaughtIds ?? new Set<string>();
+  locationCaughtIds = stage.locationCaughtIds;
   for (const c of active) {
     if (locationCaughtIds.has(c.id)) {
       // Never sent to Kev, so no rawScoreMap entry: score 0 (not a failure), components kept.
@@ -947,6 +945,7 @@ async function scoreUnscoredRows(
       componentsJsonMap,
       excludedIds,
       culledHeadlineIds,
+      locationCaughtIds,
     } = await batchScoreAndReason(batch);
 
     // Snapshot RAW (post-judge) scores before bucketing — persisted as
@@ -997,9 +996,12 @@ async function scoreUnscoredRows(
         // On this phone a note costs seconds, so a row below the feed's gate (0.4) is never
         // written one, and with Skip notes on no row is: `complete` with no note, never
         // `reason_skipped`, which the feed does not show.
-        const reasonSkipped = isOnDeviceMode()
-          ? !notesOn() || relevance < ARTICLE_CFG.lowPriorityScore
-          : relevance < REASON_THRESHOLD;
+        // A location-caught row is owed no note on either lane (REASON_THRESHOLD is 0).
+        const reasonSkipped =
+          locationCaughtIds.has(candidate.id) ||
+          (isOnDeviceMode()
+            ? !notesOn() || relevance < ARTICLE_CFG.lowPriorityScore
+            : relevance < REASON_THRESHOLD);
         try {
           await saveScoringResult(candidate.id, {
             relevance,

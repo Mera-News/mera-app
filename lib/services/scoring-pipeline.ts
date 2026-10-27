@@ -1348,9 +1348,7 @@ async function doSubmitRelevance(
 
   // Location-caught rows: persisted at relevance 0 (shown only under Discarded) and never
   // submitted. `math.stage` already omits them, so `active` keeps only the ids still in it.
-  // shortcut: structural read until MathStageResult carries the field, drop the cast then.
-  const caughtIds =
-    (math as { locationCaughtIds?: Set<string> }).locationCaughtIds ?? new Set<string>();
+  const caughtIds = math.locationCaughtIds;
   if (caughtIds.size > 0) {
     for (const id of caughtIds) {
       const comps = math.componentsMap.get(id);
