@@ -272,6 +272,25 @@ describe('More options', () => {
     await until(idle, 10_000, 'turn ends');
   });
 
+  it('no turn starts while it runs: a send is refused and a hidden turn waits for it', async () => {
+    server.use(
+      ...mockGateway((call) => (call.route === 'chat' && gatewayCalls('chat').length <= 1
+        ? reply('', toolCall('proposeTrack', { options: [{ label: 'Dutch Budget Fight', search: 'dutch budget fight' }] }))
+        : reply('Noted.'))),
+    );
+    const { engine } = await attachCloud(followAgent());
+    const pending = requestMoreOptions('track-1', shown);
+    engine.send('the dutch cabinet formation talks');
+    engine.sendHidden('a hidden note');
+    expect(cloud().messages).toEqual([]);
+    await expect(pending).resolves.toMatchObject({ actions: [expect.objectContaining({ label: 'Dutch Budget Fight' })] });
+    expect(gatewayCalls('chat')).toHaveLength(1);
+    // The hidden turn was queued, not dropped: it runs once More options is over.
+    await until(() => gatewayCalls('chat').length > 1, 15_000, 'hidden turn after More options');
+    await until(idle, 15_000, 'hidden turn ends');
+    expect(cloud().messages.filter((m) => m.role === 'user')).toEqual([]);
+  });
+
   it('is stopped by the Stop button, which shows while it runs', async () => {
     server.use(...mockGateway(() => ({ chunks: ['One moment '], stallAfter: 1 })));
     await attachCloud(followAgent());

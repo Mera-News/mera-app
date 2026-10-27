@@ -859,13 +859,17 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     });
   };
 
+  /** The Stop button's handle on a More options call in flight. While set, no
+   *  turn starts: its loop and a turn's would share the card and the wire. */
+  let moreAbort: AbortController | null = null;
+
   const startTurn = (text: string, visible: boolean) => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // A turn started while one runs would push a `user` wire message between
       // an `assistant(tool_calls)` and its `tool` replies, which most
       // OpenAI-compatible endpoints reject.
-      if (turnBusyRef.current || isStreamingRef.current || store.isBlocked) {
+      if (turnBusyRef.current || isStreamingRef.current || store.isBlocked || moreAbort !== null) {
         if (!visible) {
           // Queued rather than dropped: the user tapped Discard and is owed a
           // reply, so it fires when the current work settles.
@@ -994,9 +998,6 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
   startTurnRef.current = startTurn;
 
-  /** The Stop button's handle on a More options call in flight. */
-  let moreAbort: AbortController | null = null;
-
   const moreOptions = async (req: MoreOptionsRequest): Promise<MoreOptionsResult> => {
     if (turnBusyRef.current || isStreamingRef.current) return { actions: [], reason: 'busy' };
     const ctl = new AbortController();
@@ -1052,6 +1053,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       return { actions: [], reason: 'failed' };
     } finally {
       if (moreAbort === ctl) moreAbort = null;
+      // A hidden turn that arrived meanwhile was queued, not dropped.
+      flushPendingHiddenTurn();
     }
   };
 
