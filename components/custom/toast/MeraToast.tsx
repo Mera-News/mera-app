@@ -55,6 +55,8 @@ const SIDE_GUTTER = 16;
 const TARGET_PT = 44;
 const PILL_HEIGHT = 36;
 const BADGE = 32;
+/** The light board's primary pill: a deeper orange than the accent token, under white text. */
+const LIGHT_PRIMARY_FILL = '#C4602A';
 
 /** The toast's width on a window this wide. */
 export function toastWidth(windowWidth: number): number {
@@ -162,11 +164,13 @@ export default function MeraToast({
                 }}
             >
                 <View
+                    testID="mera-toast-row"
                     style={{
                         flexDirection: 'row',
                         gap: 12,
                         alignItems: compact ? 'center' : 'flex-start',
-                        minHeight: compact ? TARGET_PT : undefined,
+                        // Only an inline action needs the 44pt row; title alone is the 32pt badge (54 tall card).
+                        minHeight: inline ? TARGET_PT : undefined,
                     }}
                 >
                     <ToneBadge tone={tone} icon={icon} />
@@ -239,12 +243,16 @@ export default function MeraToast({
                                         justifyContent: 'center',
                                         borderWidth: action.primary ? 0 : 1,
                                         borderColor: tint(c.ink, 0.18),
-                                        backgroundColor: action.primary ? c.accent : tint(c.ink, 0.06),
+                                        backgroundColor: action.primary
+                                            ? light
+                                                ? LIGHT_PRIMARY_FILL
+                                                : c.accent
+                                            : tint(c.ink, 0.06),
                                     }}
                                 >
                                     <Text
                                         style={{
-                                            color: action.primary ? c.onAccent : c.ink,
+                                            color: action.primary ? (light ? '#FFFFFF' : c.onAccent) : c.ink,
                                             fontSize: 15,
                                             lineHeight: 20,
                                             fontWeight: '600',

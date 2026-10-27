@@ -64,6 +64,8 @@ type ToastFunction = {
 
 /** How long the Undo toast shows "Change undone" before it leaves (design: 1.4 s). */
 export const UNDONE_HOLD_MS = 1400;
+/** How long the Undo toast waits for an undo in flight before its own timer may end it. */
+const UNDO_PENDING_MS = 10000;
 
 class ToastManager {
     private toastInstance: ToastFunction | null = null;
@@ -254,6 +256,8 @@ class ToastManager {
                     onUndo: async () => {
                         if (pressed) return false;
                         pressed = true;
+                        // Hold the card while the undo runs: a late tap must still end on "Change undone".
+                        rearm(id, UNDO_PENDING_MS);
                         let done: void | boolean = false;
                         try {
                             done = await opts.onUndo();

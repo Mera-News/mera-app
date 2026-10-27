@@ -1,17 +1,10 @@
 import { ToastFrontProvider } from '@/components/ui/toast';
-import { SPRING } from '@/lib/motion';
-import { useColors } from '@/lib/theme/tokens';
+import { tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 import { close as closeToast, rearm, useToastQueue, type ToastEntry } from '@/lib/toast/toast-queue';
 import React, { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
-} from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { EASE_LEAVE, EASE_SETTLE, REDUCED_FADE, TOAST_MOTION, dragOffset, swipeDismisses } from './deck-motion';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { markExited, takeExited } from './exited-cards';
@@ -21,8 +14,8 @@ import { FullWindowOverlay } from 'react-native-screens';
 /**
  * THE TOAST DECK — the single host for every in-app notification, and the
  * app's ONLY toast mechanism. It is one stack at the TOP of the screen. There
- * is no bottom deck: every `show()` joins this stack behind the card already
- * showing, whatever placement the caller names.
+ * is no bottom deck and no placement option: every `show()` joins this stack
+ * behind the card already showing.
  *
  * It replaces gluestack's `ToastList`, which laid toasts out as a plain flex
  * column: a second toast rendered BELOW the first, a third below that, 4pt
@@ -46,8 +39,8 @@ import { FullWindowOverlay } from 'react-native-screens';
 const VISIBLE_DEPTH = 3;
 
 /**
- * How much of each card behind the front one shows, in points, by depth (Motion
- * board: the first strip hangs 10pt below the card, the second 8pt below that).
+ * How much of each card behind the front one shows, in points, by depth (States
+ * board: the first strip hangs 12pt below the card, the second 8pt below that).
  * A buried card is drawn as ONLY this strip, hanging below the card in front
  * of it; nothing of it lies over the front card's box.
  *
@@ -57,7 +50,7 @@ const VISIBLE_DEPTH = 3;
  * front's text measured 244 -> 160 brightness the moment a second toast queued.
  * Geometry that cannot overlap does not depend on paint order at all.
  */
-const PEEK_PT = [0, 10, 8];
+const PEEK_PT = [0, 12, 8];
 /** Where depth d's strip starts below the front card's bottom edge. */
 const STRIP_TOP = [0, 0, PEEK_PT[1]];
 /** Each strip is inset this much a side from the front card: it reads as a deck. */
@@ -67,8 +60,9 @@ const STRIP_INSET = [0, 14, 28];
 const STRIP_BODY = 28;
 const STRIP_RADIUS = 16;
 /** Opaque strips, each a step darker than the card (the board's #1B1A1E and
- *  #18171A under a #1F1E22 card), so content never shows through them. */
-const STRIP_SHADE = [0, 0.13, 0.23];
+ *  #18171A under a #1F1E22 card), so content never shows through them. Light
+ *  steps are fainter: the dark steps on white read as a heavy mid-grey. */
+const STRIP_SHADE = { dark: [0, 0.13, 0.23], light: [0, 0.03, 0.06] };
 
 interface SlotProps {
     entry: ToastEntry;
@@ -91,6 +85,7 @@ function ToastSlot({ entry, depth, reduced, frontSize, onFrontSize, leaving = fa
     const isFront = isTop && !leaving;
     // Also re-renders the cards on a theme change, so `entry.render` repaints.
     const c = useColors();
+    const mode = useThemeMode();
     const translateY = useSharedValue(0);
     const scale = useSharedValue(1);
     const opacity = useSharedValue(0);
@@ -214,7 +209,8 @@ function ToastSlot({ entry, depth, reduced, frontSize, onFrontSize, leaving = fa
                 opacity.value = withTiming(0, leave, done);
                 return;
             }
-            dragY.value = withSpring(0, SPRING.settle);
+            // Ease-out with no overshoot (Motion board): a spring bounced past the rest point.
+            dragY.value = withTiming(0, { duration: TOAST_MOTION.snapBack.ms, easing: EASE_SETTLE });
         });
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -289,6 +285,7 @@ function ToastSlot({ entry, depth, reduced, frontSize, onFrontSize, leaving = fa
                             }}
                         >
                             <View
+                                testID="toast-strip-body"
                                 style={{
                                     marginTop: PEEK_PT[d] - STRIP_BODY,
                                     height: STRIP_BODY,
@@ -298,13 +295,14 @@ function ToastSlot({ entry, depth, reduced, frontSize, onFrontSize, leaving = fa
                                     backgroundColor: c.panel,
                                     borderWidth: 1,
                                     borderTopWidth: 0,
-                                    borderColor: c.line,
+                                    borderColor: mode === 'light' ? tint(c.ink, 0.06) : c.line,
                                 }}
                             >
                                 <View
+                                    testID="toast-strip-shade"
                                     style={{
                                         ...StyleSheet.absoluteFillObject,
-                                        backgroundColor: `rgba(0,0,0,${STRIP_SHADE[d]})`,
+                                        backgroundColor: `rgba(0,0,0,${STRIP_SHADE[mode][d]})`,
                                     }}
                                 />
                             </View>

@@ -30,7 +30,9 @@ export const TOAST_MOTION = {
     /** The Undo face swapping in: from translateY(4), opacity 0. */
     swap: { ms: 220, fromY: 4 },
     reduced: { ms: 180 },
-    /** Past this upward travel a released swipe dismisses; less springs back. */
+    /** A swipe short of dismissing returns to rest: ease-out, no bounce. */
+    snapBack: { ms: 240 },
+    /** Past this upward travel a released swipe dismisses; less snaps back. */
     dismissPt: 36,
     /** A fast upward flick dismisses whatever the distance (pt/s). */
     dismissVelocity: 600,

@@ -11,6 +11,7 @@ import MeraToast, { TOAST_TONES, toastWidth, toneColor } from '@/components/cust
 import { toastManager } from '@/lib/toast-manager';
 import { closeAll, resetToastQueue, toastApi, useToastQueue } from '@/lib/toast/toast-queue';
 import { COLORS, tint } from '@/lib/theme/tokens';
+import { useThemeStore } from '@/lib/theme/theme-store';
 import { initI18nEn, useStrictClock } from '@/test/helpers';
 
 const c = COLORS.dark;
@@ -34,7 +35,10 @@ beforeEach(() => {
   resetToastQueue();
   toastManager.setToastInstance(toastApi);
 });
-afterEach(() => closeAll());
+afterEach(() => {
+  closeAll();
+  useThemeStore.setState({ mode: 'dark' });
+});
 
 describe('width', () => {
   it('is the screen less 16 on each side, capped at 440, never the text width', () => {
@@ -66,6 +70,32 @@ describe('actions', () => {
     expect(flat('retry').minHeight).toBe(44);
     fireEvent.press(screen.getByTestId('retry'));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('title only with no action is one 32pt row: no 44pt minimum (10+32+10 plus border = 54)', () => {
+    render(<MeraToast tone="neutral" title="Saved to your Library" />);
+    expect(flat('mera-toast-row').minHeight).toBeUndefined();
+    expect(flat('mera-toast-badge')).toMatchObject({ width: 32, height: 32 });
+  });
+
+  it('title only with an inline action keeps the 44pt row for the tap target', () => {
+    render(<MeraToast tone="success" title="Saved" actions={[{ label: 'Undo', onPress: () => {} }]} />);
+    expect(flat('mera-toast-row').minHeight).toBe(44);
+  });
+
+  it('light mode: the primary pill is the deep orange #C4602A with white text (Light board); dark is unchanged', () => {
+    const pill = () => (
+      <MeraToast tone="info" title="Update ready" body="B" actions={[{ label: 'Restart', onPress: () => {}, primary: true, testID: 'p' }]} />
+    );
+    useThemeStore.setState({ mode: 'light' });
+    const light = render(pill());
+    expect(flat('p-pill').backgroundColor).toBe('#C4602A');
+    expect(StyleSheet.flatten(screen.getByText('Restart').props.style).color).toBe('#FFFFFF');
+    light.unmount();
+    useThemeStore.setState({ mode: 'dark' });
+    render(pill());
+    expect(flat('p-pill').backgroundColor).toBe(c.accent);
+    expect(StyleSheet.flatten(screen.getByText('Restart').props.style).color).toBe(c.onAccent);
   });
 
   it('with a body, actions are pills under the text, secondary then primary, at most two', () => {
@@ -160,6 +190,25 @@ describe('the undo toast', () => {
     expect(ids()).toHaveLength(1);
     // A fresh mount (the deck's exit clone) shows the swapped content too.
     expect(entries()[0].render({ id: entries()[0].id })).toMatchObject({ props: { undone: true } });
+    await act(() => jest.advanceTimersByTimeAsync(1399));
+    expect(ids()).toHaveLength(1);
+    await act(() => jest.advanceTimersByTimeAsync(1));
+    expect(ids()).toEqual([]);
+  });
+
+  it('a late tap whose undo takes a while still shows "Change undone" for its full 1.4 s', async () => {
+    const onUndo = jest.fn(() => new Promise<boolean>((r) => setTimeout(() => r(true), 300)));
+    show(onUndo);
+    await act(() => jest.advanceTimersByTimeAsync(5900));
+    mountFront();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('article-menu-undo'));
+      await flush();
+    });
+    // The card's own 6 s would end here; the undo in flight holds it.
+    await act(() => jest.advanceTimersByTimeAsync(300));
+    expect(ids()).toHaveLength(1);
+    expect(screen.getByText('Change undone')).toBeTruthy();
     await act(() => jest.advanceTimersByTimeAsync(1399));
     expect(ids()).toHaveLength(1);
     await act(() => jest.advanceTimersByTimeAsync(1));

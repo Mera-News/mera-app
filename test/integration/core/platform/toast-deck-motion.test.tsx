@@ -18,6 +18,8 @@ import { notifiedToastDurationMs } from '@/components/custom/notifications/Notif
 import { toastManager } from '@/lib/toast-manager';
 import { toastApi } from '@/lib/toast/toast-queue';
 import { initI18nEn, useStrictClock } from '@/test/helpers';
+import { useThemeStore } from '@/lib/theme/theme-store';
+import { COLORS, tint } from '@/lib/theme/tokens';
 
 type Anim = { kind: 'timing' | 'spring' | 'delay'; to: unknown; duration?: number; easing?: unknown; reduceMotion?: unknown };
 const mockAnims: Anim[] = [];
@@ -112,6 +114,7 @@ beforeEach(() => {
 afterEach(() => {
     closeAll();
     setSystemReduced(false);
+    useThemeStore.setState({ mode: 'dark' });
 });
 
 describe('full motion', () => {
@@ -184,7 +187,7 @@ describe('full motion', () => {
         expect(timings(320).map((a) => a.to).sort()).toEqual([0, 1]);
     });
 
-    it('strips hang below the front, never over it: 10 then 8 pt, inset 14 and 28 a side', () => {
+    it('strips hang below the front, never over it: 12 then 8 pt, inset 14 and 28 a side', () => {
         toast('a');
         toast('b');
         toast('c');
@@ -194,9 +197,52 @@ describe('full motion', () => {
         const strips = screen.getAllByTestId('toast-buried-panel', { includeHiddenElements: true });
         expect(strips).toHaveLength(2);
         const [two, one] = strips.map((s) => StyleSheet.flatten(s.props.style));
-        expect(one).toMatchObject({ marginTop: H, height: 10, width: W - 28 });
-        expect(two).toMatchObject({ marginTop: H + 10, height: 8, width: W - 56 });
+        expect(one).toMatchObject({ marginTop: H, height: 12, width: W - 28 });
+        expect(two).toMatchObject({ marginTop: H + 12, height: 8, width: W - 56 });
         expect(flat('toast-slot-0').zIndex).toBeGreaterThan(flat('toast-slot-1').zIndex);
+    });
+
+    it('light mode strips stay close to the white card: a faint shade and a light edge', () => {
+        useThemeStore.setState({ mode: 'light' });
+        toast('a');
+        toast('b');
+        toast('c');
+        render(<ToastDeck />);
+        layoutFront();
+        const shades = screen
+            .getAllByTestId('toast-strip-shade', { includeHiddenElements: true })
+            .map((s) => StyleSheet.flatten(s.props.style).backgroundColor);
+        expect(shades.sort()).toEqual(['rgba(0,0,0,0.03)', 'rgba(0,0,0,0.06)']);
+        const edges = screen
+            .getAllByTestId('toast-strip-body', { includeHiddenElements: true })
+            .map((s) => StyleSheet.flatten(s.props.style).borderColor);
+        expect(edges).toEqual([tint(COLORS.light.ink, 0.06), tint(COLORS.light.ink, 0.06)]);
+    });
+
+    it('dark mode strips keep the board shades (#1B1A1E, #18171A under the card)', () => {
+        toast('a');
+        toast('b');
+        toast('c');
+        render(<ToastDeck />);
+        layoutFront();
+        const shades = screen
+            .getAllByTestId('toast-strip-shade', { includeHiddenElements: true })
+            .map((s) => StyleSheet.flatten(s.props.style).backgroundColor);
+        expect(shades.sort()).toEqual(['rgba(0,0,0,0.13)', 'rgba(0,0,0,0.23)']);
+    });
+
+    it('an inline action inside the deck (under the swipe detector) still takes a tap', async () => {
+        toastManager.setToastInstance(toastApi);
+        const onUndo = jest.fn(() => true);
+        toastManager.showUndoToast({ title: 'Showing fewer from AD.nl', undoLabel: 'Undo', undoneTitle: 'Change undone', onUndo });
+        render(<ToastDeck />);
+        layoutFront();
+        await act(async () => {
+            fireEvent.press(screen.getByTestId('feedback-undo'));
+            await Promise.resolve();
+        });
+        expect(onUndo).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Change undone')).toBeTruthy();
     });
 });
 
@@ -230,14 +276,15 @@ describe('swipe', () => {
         expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
     });
 
-    it('less than 36 pt springs back', () => {
+    it('less than 36 pt snaps back over 240 ms ease-out, with no spring overshoot', () => {
         toast('a');
         render(<ToastDeck />);
         layoutFront();
         clear();
         swipe(-30);
         expect(ids()).toEqual(['a']);
-        expect(mockAnims).toContainEqual(expect.objectContaining({ kind: 'spring', to: 0 }));
+        expect(mockAnims.filter((a) => a.kind === 'spring')).toEqual([]);
+        expect(timings(240)).toEqual([expect.objectContaining({ to: 0, easing: SETTLE })]);
     });
 
     it('a downward pull moves the card a fifth of the finger', () => {
@@ -272,15 +319,29 @@ describe('reduced: Lite or system Reduce Motion fades only, 180 ms', () => {
         expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
     });
 
-    it('the progress bar stands still', () => {
-        setSystemReduced(true);
+    const showBar = () =>
         show({
             id: 'p',
             duration: null,
             render: () => <MeraToast tone="neutral" title="Updating" body="b" progress progressTestID="bar" />,
         });
+
+    it('the progress bar stands still, drawn as a segment parked mid-track', () => {
+        setSystemReduced(true);
+        showBar();
         render(<ToastDeck />);
+        layoutFront();
+        expect(screen.getByTestId('bar', { includeHiddenElements: true })).toBeTruthy();
+        expect(screen.getByTestId('bar-segment', { includeHiddenElements: true })).toBeTruthy();
         expect(mockAnims.some((a) => a.duration === 1400)).toBe(false);
+    });
+
+    it('with motion on, the same bar sweeps (the control for the still case)', () => {
+        showBar();
+        render(<ToastDeck />);
+        layoutFront();
+        expect(screen.getByTestId('bar-segment', { includeHiddenElements: true })).toBeTruthy();
+        expect(timings(1400)).toEqual([expect.objectContaining({ easing: 'linear' })]);
     });
 });
 
