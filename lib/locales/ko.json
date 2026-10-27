@@ -1056,8 +1056,10 @@
       "heldReply": "이 답변이 끝나면 메라를 다시 시작할 수 있습니다.",
       "heldBusy": "하던 작업을 마친 다음 다시 시작을 누르세요.",
       "storyGone": "그 기사는 더 이상 제공되지 않습니다.",
-      "publicationGone": "그 매체는 더 이상 제공되지 않습니다."
-    }
+      "publicationGone": "그 매체는 더 이상 제공되지 않습니다.",
+      "notNow": "나중에"
+    },
+    "rowUnreadA11y": "{{title}}, 읽지 않음, {{age}}"
   },
   "settings": {
     "groupHelp": "도움말",

@@ -1056,8 +1056,10 @@
       "heldReply": "Mera siap dimulai ulang setelah balasan ini selesai.",
       "heldBusy": "Selesaikan yang sedang kamu kerjakan, lalu ketuk Mulai ulang.",
       "storyGone": "Cerita itu tidak lagi tersedia.",
-      "publicationGone": "Penerbit itu tidak lagi tersedia."
-    }
+      "publicationGone": "Penerbit itu tidak lagi tersedia.",
+      "notNow": "Nanti saja"
+    },
+    "rowUnreadA11y": "{{title}}, belum dibaca, {{age}}"
   },
   "settings": {
     "groupHelp": "Bantuan",

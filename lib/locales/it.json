@@ -1063,8 +1063,10 @@
       "heldReply": "Mera potrà riavviarsi quando questa risposta sarà finita.",
       "heldBusy": "Termina quello che stai facendo, poi tocca Riavvia.",
       "storyGone": "Questa storia non è più disponibile.",
-      "publicationGone": "Questa testata non è più disponibile."
-    }
+      "publicationGone": "Questa testata non è più disponibile.",
+      "notNow": "Non ora"
+    },
+    "rowUnreadA11y": "{{title}}, non letto, {{age}}"
   },
   "settings": {
     "groupHelp": "Aiuto",

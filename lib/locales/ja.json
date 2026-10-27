@@ -1056,8 +1056,10 @@
       "heldReply": "この返信が終わったら、メラを再起動できます。",
       "heldBusy": "作業を終えてから、再起動をタップしてください。",
       "storyGone": "そのストーリーはもう利用できません。",
-      "publicationGone": "その媒体はもう利用できません。"
-    }
+      "publicationGone": "その媒体はもう利用できません。",
+      "notNow": "後で"
+    },
+    "rowUnreadA11y": "{{title}}、未読、{{age}}"
   },
   "settings": {
     "groupHelp": "ヘルプ",

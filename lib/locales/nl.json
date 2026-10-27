@@ -1063,8 +1063,10 @@
       "heldReply": "Mera kan opnieuw worden gestart zodra dit antwoord klaar is.",
       "heldBusy": "Rond af wat je aan het doen bent en tik daarna op Opnieuw starten.",
       "storyGone": "Dat verhaal is niet meer beschikbaar.",
-      "publicationGone": "Die bron is niet meer beschikbaar."
-    }
+      "publicationGone": "Die bron is niet meer beschikbaar.",
+      "notNow": "Niet nu"
+    },
+    "rowUnreadA11y": "{{title}}, ongelezen, {{age}}"
   },
   "settings": {
     "groupHelp": "Hulp",

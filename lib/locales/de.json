@@ -1063,8 +1063,10 @@
       "heldReply": "Mera ist bereit zum Neustart, sobald diese Antwort fertig ist.",
       "heldBusy": "Beende, was du gerade tust, und tippe dann auf Neu starten.",
       "storyGone": "Diese Geschichte ist nicht mehr verfügbar.",
-      "publicationGone": "Dieses Medium ist nicht mehr verfügbar."
-    }
+      "publicationGone": "Dieses Medium ist nicht mehr verfügbar.",
+      "notNow": "Nicht jetzt"
+    },
+    "rowUnreadA11y": "{{title}}, ungelesen, {{age}}"
   },
   "settings": {
     "groupHelp": "Hilfe",

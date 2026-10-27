@@ -1056,8 +1056,10 @@
       "heldReply": "Mera sẽ sẵn sàng khởi động lại khi câu trả lời này kết thúc.",
       "heldBusy": "Hoàn tất việc đang làm, rồi chạm Khởi động lại.",
       "storyGone": "Bài viết này không còn khả dụng.",
-      "publicationGone": "Nguồn tin này không còn khả dụng."
-    }
+      "publicationGone": "Nguồn tin này không còn khả dụng.",
+      "notNow": "Để sau"
+    },
+    "rowUnreadA11y": "{{title}}, chưa đọc, {{age}}"
   },
   "settings": {
     "groupHelp": "Trợ giúp",

@@ -1068,8 +1068,10 @@
       "heldReply": "Mera pourra redémarrer dès que cette réponse sera terminée.",
       "heldBusy": "Terminez ce que vous faites, puis appuyez sur Redémarrer.",
       "storyGone": "Cet article n'est plus disponible.",
-      "publicationGone": "Cette publication n'est plus disponible."
-    }
+      "publicationGone": "Cette publication n'est plus disponible.",
+      "notNow": "Pas maintenant"
+    },
+    "rowUnreadA11y": "{{title}}, non lu, {{age}}"
   },
   "settings": {
     "groupHelp": "Aide",

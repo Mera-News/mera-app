@@ -1056,8 +1056,10 @@
       "heldReply": "這則回覆結束後，梅拉即可重新啟動。",
       "heldBusy": "先完成目前的操作，然後點選重新啟動。",
       "storyGone": "該則新聞已無法再查看。",
-      "publicationGone": "該媒體已無法再查看。"
-    }
+      "publicationGone": "該媒體已無法再查看。",
+      "notNow": "稍後再說"
+    },
+    "rowUnreadA11y": "{{title}}，未讀，{{age}}"
   },
   "settings": {
     "groupHelp": "說明",

@@ -1,0 +1,162 @@
+{
+  "ar": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}، غير مقروء، {{age}}",
+      "update": {
+        "notNow": "ليس الآن"
+      }
+    }
+  },
+  "de": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, ungelesen, {{age}}",
+      "update": {
+        "notNow": "Nicht jetzt"
+      }
+    }
+  },
+  "en": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, unread, {{age}}",
+      "update": {
+        "notNow": "Not now"
+      }
+    }
+  },
+  "es": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, sin leer, {{age}}",
+      "update": {
+        "notNow": "Ahora no"
+      }
+    }
+  },
+  "fr": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, non lu, {{age}}",
+      "update": {
+        "notNow": "Pas maintenant"
+      }
+    }
+  },
+  "hi": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, अपठित, {{age}}",
+      "update": {
+        "notNow": "अभी नहीं"
+      }
+    }
+  },
+  "id": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, belum dibaca, {{age}}",
+      "update": {
+        "notNow": "Nanti saja"
+      }
+    }
+  },
+  "it": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, non letto, {{age}}",
+      "update": {
+        "notNow": "Non ora"
+      }
+    }
+  },
+  "ja": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}、未読、{{age}}",
+      "update": {
+        "notNow": "後で"
+      }
+    }
+  },
+  "ko": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, 읽지 않음, {{age}}",
+      "update": {
+        "notNow": "나중에"
+      }
+    }
+  },
+  "nl": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, ongelezen, {{age}}",
+      "update": {
+        "notNow": "Niet nu"
+      }
+    }
+  },
+  "pl": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, nieprzeczytane, {{age}}",
+      "update": {
+        "notNow": "Nie teraz"
+      }
+    }
+  },
+  "pt-BR": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, não lido, {{age}}",
+      "update": {
+        "notNow": "Agora não"
+      }
+    }
+  },
+  "ru": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, не прочитано, {{age}}",
+      "update": {
+        "notNow": "Не сейчас"
+      }
+    }
+  },
+  "th": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, ยังไม่ได้อ่าน, {{age}}",
+      "update": {
+        "notNow": "ไว้ก่อน"
+      }
+    }
+  },
+  "tr": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, okunmamış, {{age}}",
+      "update": {
+        "notNow": "Şimdi değil"
+      }
+    }
+  },
+  "uk": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, не прочитано, {{age}}",
+      "update": {
+        "notNow": "Не зараз"
+      }
+    }
+  },
+  "vi": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}, chưa đọc, {{age}}",
+      "update": {
+        "notNow": "Để sau"
+      }
+    }
+  },
+  "zh-CN": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}，未读，{{age}}",
+      "update": {
+        "notNow": "暂不"
+      }
+    }
+  },
+  "zh-TW": {
+    "notificationCenter": {
+      "rowUnreadA11y": "{{title}}，未讀，{{age}}",
+      "update": {
+        "notNow": "稍後再說"
+      }
+    }
+  }
+}

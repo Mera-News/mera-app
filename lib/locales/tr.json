@@ -1065,8 +1065,10 @@
       "heldReply": "Bu yanıt bittiğinde Mera yeniden başlatılmaya hazır olacak.",
       "heldBusy": "Yaptığınız işi bitirin, ardından Yeniden başlat'a dokunun.",
       "storyGone": "Bu haber artık mevcut değil.",
-      "publicationGone": "Bu yayın artık mevcut değil."
-    }
+      "publicationGone": "Bu yayın artık mevcut değil.",
+      "notNow": "Şimdi değil"
+    },
+    "rowUnreadA11y": "{{title}}, okunmamış, {{age}}"
   },
   "settings": {
     "groupHelp": "Yardım",
