@@ -1,0 +1,201 @@
+{
+  "_doc": "Fact-places tuning set. Each fact's expect.place is stored-encoding (GLOBAL | Bloc | CC | CC|Region | CC|Region|City); alsoOk lists other answers a reasonable reader would accept. Reader places use locations-row shape. Labels are a DRAFT until the owner signs off the per-case table.",
+  "version": 1,
+  "personas": [
+    {
+      "id": "p01-bhopal-pensioner",
+      "places": [{ "countryCode": "IN", "region": "Madhya Pradesh", "city": "Bhopal", "role": "home" }],
+      "facts": [
+        { "id": "p01-1", "statement": "Pensioner", "expect": { "level": "country", "place": "IN" }, "note": "pensions are national" },
+        { "id": "p01-2", "statement": "Worried about water cuts", "expect": { "level": "city", "place": "IN|Madhya Pradesh|Bhopal" } },
+        { "id": "p01-3", "statement": "State government jobs", "expect": { "level": "region", "place": "IN|Madhya Pradesh" } },
+        { "id": "p01-4", "statement": "Follows climate science", "expect": { "level": "global", "place": "GLOBAL" } },
+        { "id": "p01-5", "statement": "Daughter studies in London", "expect": { "level": "city", "place": "GB||London" } },
+        { "id": "p01-6", "statement": "Diabetic, follows insulin prices", "expect": { "level": "country", "place": "IN" } }
+      ]
+    },
+    {
+      "id": "p02-amsterdam-lawyer",
+      "places": [{ "countryCode": "NL", "region": "North Holland", "city": "Amsterdam", "role": "home" }],
+      "facts": [
+        { "id": "p02-1", "statement": "Works in EU trade law", "expect": { "level": "bloc", "place": "EU" } },
+        { "id": "p02-2", "statement": "Renting an apartment", "expect": { "level": "city", "place": "NL|North Holland|Amsterdam" }, "alsoOk": ["NL"] },
+        { "id": "p02-3", "statement": "Follows Formula 1", "expect": { "level": "global", "place": "GLOBAL" } },
+        { "id": "p02-4", "statement": "Learning Dutch", "expect": { "level": "country", "place": "NL" }, "alsoOk": ["GLOBAL"] },
+        { "id": "p02-5", "statement": "Interested in AI regulation", "expect": { "level": "bloc", "place": "EU" }, "alsoOk": ["GLOBAL"] }
+      ]
+    },
+    {
+      "id": "p03-lagos-baker",
+      "places": [{ "countryCode": "NG", "region": "Lagos", "city": "Lagos", "role": "home" }],
+      "facts": [
+        { "id": "p03-1", "statement": "Runs a small bakery", "expect": { "level": "country", "place": "NG" }, "alsoOk": ["NG|Lagos|Lagos", "NG|Lagos"] },
+        { "id": "p03-2", "statement": "Worried about fuel prices", "expect": { "level": "country", "place": "NG" } },
+        { "id": "p03-3", "statement": "Supports Arsenal", "expect": { "level": "country", "place": "GB" }, "alsoOk": ["GB||London", "GB|England|London"] },
+        { "id": "p03-4", "statement": "Has two kids in primary school", "expect": { "level": "region", "place": "NG|Lagos" }, "alsoOk": ["NG", "NG|Lagos|Lagos"] },
+        { "id": "p03-5", "statement": "Follows Afrobeats music", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["NG"] }
+      ]
+    },
+    {
+      "id": "p04-austin-nurse",
+      "places": [{ "countryCode": "US", "region": "Texas", "city": "Austin", "role": "home" }],
+      "facts": [
+        { "id": "p04-1", "statement": "Works as a nurse", "expect": { "level": "country", "place": "US" }, "alsoOk": ["US|Texas"] },
+        { "id": "p04-2", "statement": "Worried about property taxes", "expect": { "level": "region", "place": "US|Texas" }, "alsoOk": ["US|Texas|Austin"] },
+        { "id": "p04-3", "statement": "Follows the Dallas Cowboys", "expect": { "level": "city", "place": "US|Texas|Dallas" }, "alsoOk": ["US|Texas", "US"] },
+        { "id": "p04-4", "statement": "Grew up in Georgia", "expect": { "level": "region", "place": "US|Georgia" }, "note": "trap: the US state, not the country" },
+        { "id": "p04-5", "statement": "Mother lives in Jordan", "expect": { "level": "country", "place": "JO" }, "note": "trap: the country, not a name" },
+        { "id": "p04-6", "statement": "Interested in space exploration", "expect": { "level": "global", "place": "GLOBAL" } }
+      ]
+    },
+    {
+      "id": "p05-munich-retiree",
+      "places": [{ "countryCode": "DE", "region": "Bavaria", "city": "Munich", "role": "home" }],
+      "facts": [
+        { "id": "p05-1", "statement": "Retired teacher", "expect": { "level": "country", "place": "DE" }, "alsoOk": ["DE|Bavaria"] },
+        { "id": "p05-2", "statement": "Hikes in the Alps", "expect": { "level": "bloc", "place": "Europe" }, "alsoOk": ["DE|Bavaria"] },
+        { "id": "p05-3", "statement": "Loves Thai food", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["DE|Bavaria|Munich"], "note": "trap: a cuisine, not Thailand" },
+        { "id": "p05-4", "statement": "Follows Bayern Munich", "expect": { "level": "city", "place": "DE|Bavaria|Munich" }, "alsoOk": ["DE"] },
+        { "id": "p05-5", "statement": "Grandchildren live in Toronto", "expect": { "level": "city", "place": "CA|Ontario|Toronto" } }
+      ]
+    },
+    {
+      "id": "p06-tokyo-commuter",
+      "places": [{ "countryCode": "JP", "region": "Tokyo", "city": "Tokyo", "role": "home" }],
+      "facts": [
+        { "id": "p06-1", "statement": "Commutes by train", "expect": { "level": "city", "place": "JP|Tokyo|Tokyo" }, "alsoOk": ["JP|Tokyo"] },
+        { "id": "p06-2", "statement": "Invests in index funds", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["JP"] },
+        { "id": "p06-3", "statement": "Follows sumo", "expect": { "level": "country", "place": "JP" } },
+        { "id": "p06-4", "statement": "Worried about earthquakes", "expect": { "level": "country", "place": "JP" }, "alsoOk": ["JP|Tokyo|Tokyo", "JP|Tokyo"] },
+        { "id": "p06-5", "statement": "Studies English", "expect": { "level": "global", "place": "GLOBAL" } }
+      ]
+    },
+    {
+      "id": "p07-saopaulo-student",
+      "places": [{ "countryCode": "BR", "region": "São Paulo", "city": "São Paulo", "role": "home" }],
+      "facts": [
+        { "id": "p07-1", "statement": "University student in economics", "expect": { "level": "country", "place": "BR" }, "alsoOk": ["GLOBAL"] },
+        { "id": "p07-2", "statement": "Follows Corinthians", "expect": { "level": "city", "place": "BR|São Paulo|São Paulo" }, "alsoOk": ["BR"] },
+        { "id": "p07-3", "statement": "Interested in Amazon deforestation", "expect": { "level": "country", "place": "BR" }, "alsoOk": ["South America"] },
+        { "id": "p07-4", "statement": "Plays video games", "expect": { "level": "global", "place": "GLOBAL" } },
+        { "id": "p07-5", "statement": "Looking for an internship", "expect": { "level": "city", "place": "BR|São Paulo|São Paulo" }, "alsoOk": ["BR"] }
+      ]
+    },
+    {
+      "id": "p08-sydney-miner",
+      "places": [{ "countryCode": "AU", "region": "New South Wales", "city": "Sydney", "role": "home" }],
+      "facts": [
+        { "id": "p08-1", "statement": "Works in mining", "expect": { "level": "country", "place": "AU" } },
+        { "id": "p08-2", "statement": "Renovating a house", "expect": { "level": "region", "place": "AU|New South Wales" }, "alsoOk": ["AU", "AU|New South Wales|Sydney"] },
+        { "id": "p08-3", "statement": "Surfs on weekends", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["AU|New South Wales|Sydney", "AU"] },
+        { "id": "p08-4", "statement": "Worried about bushfires", "expect": { "level": "region", "place": "AU|New South Wales" }, "alsoOk": ["AU"] },
+        { "id": "p08-5", "statement": "Follows the Sydney Swans", "expect": { "level": "city", "place": "AU|New South Wales|Sydney" } }
+      ]
+    },
+    {
+      "id": "p09-nakuru-farmer",
+      "places": [{ "countryCode": "KE", "region": "Nakuru County", "city": "Nakuru", "role": "home" }],
+      "facts": [
+        { "id": "p09-1", "statement": "Grows maize", "expect": { "level": "country", "place": "KE" } },
+        { "id": "p09-2", "statement": "Worried about rainfall this season", "expect": { "level": "region", "place": "KE|Nakuru County" }, "alsoOk": ["KE|Nakuru County|Nakuru", "KE"] },
+        { "id": "p09-3", "statement": "Sells milk to a cooperative", "expect": { "level": "country", "place": "KE" }, "alsoOk": ["KE|Nakuru County"] },
+        { "id": "p09-4", "statement": "Follows East African politics", "expect": { "level": "bloc", "place": "Africa" }, "alsoOk": ["KE"] },
+        { "id": "p09-5", "statement": "Son works in Dubai", "expect": { "level": "city", "place": "AE||Dubai" }, "alsoOk": ["AE|Dubai|Dubai", "AE"] }
+      ]
+    },
+    {
+      "id": "p10-paris-parent",
+      "places": [{ "countryCode": "FR", "region": "Île-de-France", "city": "Paris", "role": "home" }],
+      "facts": [
+        { "id": "p10-1", "statement": "Two children in lycée", "expect": { "level": "country", "place": "FR" } },
+        { "id": "p10-2", "statement": "Uses the metro daily", "expect": { "level": "city", "place": "FR|Île-de-France|Paris" } },
+        { "id": "p10-3", "statement": "Follows the Champions League", "expect": { "level": "bloc", "place": "Europe" }, "alsoOk": ["GLOBAL"] },
+        { "id": "p10-4", "statement": "Works in fashion", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["FR"] },
+        { "id": "p10-5", "statement": "Worried about pension reform", "expect": { "level": "country", "place": "FR" } }
+      ]
+    },
+    {
+      "id": "p11-lisbon-remote",
+      "places": [{ "countryCode": "PT", "region": "Lisbon", "city": "Lisbon", "role": "home" }],
+      "facts": [
+        { "id": "p11-1", "statement": "Software developer working remotely for a US company", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["US"] },
+        { "id": "p11-2", "statement": "Needs to renew a Portuguese visa", "expect": { "level": "country", "place": "PT" } },
+        { "id": "p11-3", "statement": "Follows crypto", "expect": { "level": "global", "place": "GLOBAL" } },
+        { "id": "p11-4", "statement": "Surfs in Ericeira", "expect": { "level": "city", "place": "PT|Lisbon|Ericeira" }, "alsoOk": ["PT||Ericeira", "PT"] },
+        { "id": "p11-5", "statement": "Worried about rents going up", "expect": { "level": "city", "place": "PT|Lisbon|Lisbon" }, "alsoOk": ["PT"] }
+      ]
+    },
+    {
+      "id": "p12-bangalore-engineer",
+      "places": [
+        { "countryCode": "IN", "region": "Karnataka", "city": "Bangalore", "role": "home" },
+        { "countryCode": "IN", "region": "Kerala", "city": null, "role": "family" }
+      ],
+      "facts": [
+        { "id": "p12-1", "statement": "Software engineer", "expect": { "level": "global", "place": "GLOBAL" }, "alsoOk": ["IN"] },
+        { "id": "p12-2", "statement": "Stuck in traffic every day", "expect": { "level": "city", "place": "IN|Karnataka|Bangalore" } },
+        { "id": "p12-3", "statement": "Parents live in Kerala", "expect": { "level": "region", "place": "IN|Kerala" } },
+        { "id": "p12-4", "statement": "Follows the IPL", "expect": { "level": "country", "place": "IN" } },
+        { "id": "p12-5", "statement": "Pays income tax", "expect": { "level": "country", "place": "IN" } },
+        { "id": "p12-6", "statement": "Interested in startups", "expect": { "level": "country", "place": "IN" }, "alsoOk": ["GLOBAL", "IN|Karnataka|Bangalore"] }
+      ]
+    },
+    {
+      "id": "p13-toronto-newcomer",
+      "places": [
+        { "countryCode": "CA", "region": "Ontario", "city": "Toronto", "role": "home" },
+        { "countryCode": "IN", "region": "Tamil Nadu", "city": "Chennai", "role": "family" }
+      ],
+      "facts": [
+        { "id": "p13-1", "statement": "Applying for permanent residence", "expect": { "level": "country", "place": "CA" } },
+        { "id": "p13-2", "statement": "Family in Chennai", "expect": { "level": "city", "place": "IN|Tamil Nadu|Chennai" } },
+        { "id": "p13-3", "statement": "Looking for a job in healthcare", "expect": { "level": "city", "place": "CA|Ontario|Toronto" }, "alsoOk": ["CA|Ontario", "CA"] },
+        { "id": "p13-4", "statement": "Follows Bollywood", "expect": { "level": "country", "place": "IN" }, "alsoOk": ["GLOBAL"] },
+        { "id": "p13-5", "statement": "Worried about the cost of groceries", "expect": { "level": "country", "place": "CA" }, "alsoOk": ["CA|Ontario"] }
+      ]
+    },
+    {
+      "id": "p14-dubai-expat",
+      "places": [{ "countryCode": "AE", "region": "Dubai", "city": "Dubai", "role": "home" }],
+      "facts": [
+        { "id": "p14-1", "statement": "Works in construction", "expect": { "level": "country", "place": "AE" }, "alsoOk": ["AE|Dubai|Dubai", "AE|Dubai"] },
+        { "id": "p14-2", "statement": "Sends money home to the Philippines", "expect": { "level": "country", "place": "PH" } },
+        { "id": "p14-3", "statement": "Follows the Premier League", "expect": { "level": "country", "place": "GB" }, "alsoOk": ["GLOBAL", "Europe"] },
+        { "id": "p14-4", "statement": "Interested in oil prices", "expect": { "level": "global", "place": "GLOBAL" } },
+        { "id": "p14-5", "statement": "Visa depends on the employer", "expect": { "level": "country", "place": "AE" } }
+      ]
+    },
+    {
+      "id": "p15-edinburgh-nurse",
+      "places": [{ "countryCode": "GB", "region": "Scotland", "city": "Edinburgh", "role": "home" }],
+      "facts": [
+        { "id": "p15-1", "statement": "Works for the NHS", "expect": { "level": "region", "place": "GB|Scotland" }, "alsoOk": ["GB"], "note": "NHS Scotland is run by the Scottish government" },
+        { "id": "p15-2", "statement": "Supports Scottish independence", "expect": { "level": "region", "place": "GB|Scotland" } },
+        { "id": "p15-3", "statement": "Follows Brexit fallout", "expect": { "level": "country", "place": "GB" }, "alsoOk": ["EU"] },
+        { "id": "p15-4", "statement": "Takes the train to Glasgow for work", "expect": { "level": "region", "place": "GB|Scotland" }, "alsoOk": ["GB|Scotland|Glasgow"] },
+        { "id": "p15-5", "statement": "Interested in North Sea oil", "expect": { "level": "country", "place": "GB" }, "alsoOk": ["Europe", "GB|Scotland"] }
+      ]
+    },
+    {
+      "id": "p16-mexicocity-shopkeeper",
+      "places": [{ "countryCode": "MX", "region": "Mexico City", "city": "Mexico City", "role": "home" }],
+      "facts": [
+        { "id": "p16-1", "statement": "Owns a small shop", "expect": { "level": "country", "place": "MX" }, "alsoOk": ["MX|Mexico City|Mexico City"] },
+        { "id": "p16-2", "statement": "Worried about water shortages", "expect": { "level": "city", "place": "MX|Mexico City|Mexico City" } },
+        { "id": "p16-3", "statement": "Follows Liga MX", "expect": { "level": "country", "place": "MX" } },
+        { "id": "p16-4", "statement": "Brother works in Chicago", "expect": { "level": "city", "place": "US|Illinois|Chicago" } },
+        { "id": "p16-5", "statement": "Follows US immigration policy", "expect": { "level": "country", "place": "US" } }
+      ]
+    },
+    {
+      "id": "p17-no-places",
+      "places": [],
+      "facts": [
+        { "id": "p17-1", "statement": "Follows climate science", "expect": { "level": "global", "place": "GLOBAL" } },
+        { "id": "p17-2", "statement": "Interested in Indian politics", "expect": { "level": "country", "place": "IN" } },
+        { "id": "p17-3", "statement": "Lives in Warsaw", "expect": { "level": "city", "place": "PL||Warsaw" }, "alsoOk": ["PL|Masovia|Warsaw", "PL|Masovian|Warsaw"] },
+        { "id": "p17-4", "statement": "Loves Italian cooking", "expect": { "level": "global", "place": "GLOBAL" }, "note": "trap: a cuisine" }
+      ]
+    }
+  ]
+}
