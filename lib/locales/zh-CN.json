@@ -2627,7 +2627,8 @@
     "sourceSub": "关于，减少来自{{source}}的内容",
     "support": "支持",
     "supportSub": "报告问题、实时聊天、常见问题、教程",
-    "tutorial": "教程"
+    "tutorial": "教程",
+    "fewerFromAlready": "已减少显示来自 {{source}} 的内容"
   },
   "storyExport": {
     "shareA11y": "导出这篇报道",

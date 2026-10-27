@@ -2639,7 +2639,8 @@
     "sourceSub": "Over, minder van {{source}}",
     "support": "Support",
     "supportSub": "Een bug melden, live chat, FAQ, tutorial",
-    "tutorial": "Tutorial"
+    "tutorial": "Tutorial",
+    "fewerFromAlready": "Je ziet al minder van {{source}}"
   },
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",

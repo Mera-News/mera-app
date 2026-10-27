@@ -222,6 +222,33 @@ describe('useArticleMenu', () => {
         expect(await getPreferenceKind('De Volkskrant')).toBe('deprioritize');
     });
 
+    /** The props of the front toast's rendered card. */
+    const frontToastProps = () => {
+        const toast = useToastQueue.getState().entries[0];
+        return (toast.render({ id: toast.id }) as React.ReactElement<Record<string, unknown>>).props;
+    };
+
+    it('a real change shows the Undo toast', async () => {
+        const { run } = await mount('menu-fewer-undo', 'De Volkskrant');
+        await run('fewer-from');
+        await waitFor(() => expect(toastCount()).toBe(1));
+        const props = frontToastProps();
+        expect(props.title).toBe("You'll see less from De Volkskrant.");
+        expect(typeof props.onUndo).toBe('function');
+    });
+
+    it('Fewer from on a publication already fewer shows a title-only toast with no Undo', async () => {
+        await setSourcePrefFromUi({ kind: 'publisher', names: ['De Volkskrant'] }, 'deprioritised');
+        const { run } = await mount('menu-fewer-already', 'De Volkskrant');
+        await run('fewer-from');
+        await waitFor(() => expect(toastCount()).toBe(1));
+        const props = frontToastProps();
+        expect(props.title).toBe('Already showing fewer from De Volkskrant');
+        expect(props.body).toBeUndefined();
+        expect(props.onUndo).toBeUndefined();
+        expect(await getPreferenceKind('De Volkskrant')).toBe('deprioritize');
+    });
+
     it('Undo reverts every row the press wrote', async () => {
         rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'Hindu Business Line']);
         const { run } = await mount('menu-undo');

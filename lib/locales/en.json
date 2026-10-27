@@ -2641,7 +2641,8 @@
     "sourceSub": "About, fewer from {{source}}",
     "support": "Support",
     "supportSub": "Report a bug, live chat, FAQ, tutorial",
-    "tutorial": "Tutorial"
+    "tutorial": "Tutorial",
+    "fewerFromAlready": "Already showing fewer from {{source}}"
   },
   "storyExport": {
     "shareA11y": "Export this story",

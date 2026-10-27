@@ -2627,7 +2627,8 @@
     "sourceSub": "Giới thiệu, ít tin hơn từ {{source}}",
     "support": "Hỗ trợ",
     "supportSub": "Báo lỗi, trò chuyện trực tiếp, câu hỏi thường gặp, hướng dẫn",
-    "tutorial": "Hướng dẫn"
+    "tutorial": "Hướng dẫn",
+    "fewerFromAlready": "Đã hiển thị ít tin hơn từ {{source}}"
   },
   "storyExport": {
     "shareA11y": "Xuất câu chuyện này",

@@ -2627,7 +2627,8 @@
     "sourceSub": "Tentang, lebih sedikit dari {{source}}",
     "support": "Dukungan",
     "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
-    "tutorial": "Tutorial"
+    "tutorial": "Tutorial",
+    "fewerFromAlready": "Sudah menampilkan lebih sedikit dari {{source}}"
   },
   "storyExport": {
     "shareA11y": "Ekspor cerita ini",

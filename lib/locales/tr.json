@@ -2641,7 +2641,8 @@
     "sourceSub": "Hakkında, {{source}} kaynağından daha az",
     "support": "Destek",
     "supportSub": "Hata bildir, canlı sohbet, SSS, eğitim",
-    "tutorial": "Eğitim"
+    "tutorial": "Eğitim",
+    "fewerFromAlready": "Zaten {{source}} kaynağından daha az haber gösteriliyor"
   },
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",

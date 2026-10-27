@@ -23,7 +23,6 @@ const BACK_LINK_STYLE = { minHeight: 44, flexDirection: 'row', alignItems: 'cent
 const CANCEL_STYLE = {
     minHeight: 48,
     marginTop: 8,
-    marginHorizontal: 8,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -276,7 +275,7 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
             }}
             testID="article-menu-sheet"
         >
-            <Box className="px-2" testID="article-menu">
+            <Box testID="article-menu">
                 {/* The level viewport CLIPS: on a push to a shorter level the
                     sheet shrinks to the new height while the outgoing rows are
                     still sliding, and unclipped they spill over Cancel. */}
@@ -307,8 +306,8 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                     accessibilityLabel={closeLabel ?? t('common.cancel')}
                     onPress={onClose}
                 >
-                    {/* A visible full-width button inside the sheet's inset,
-                        label centred. */}
+                    {/* A visible button the full width of the sheet's 20pt
+                        content sides, label centred. */}
                     <View testID="article-menu-cancel-plate" style={[CANCEL_STYLE, { backgroundColor: colors.surfaceRaised }]}>
                         <Text className="text-ink" style={{ fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
                             {closeLabel ?? t('common.cancel')}

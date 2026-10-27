@@ -346,6 +346,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // The app's one undo toast. Required at call time, like the writer.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
+            // Already fewer: nothing was written, so an Undo would undo nothing.
+            if (!res.changeLogIds?.length) {
+                toastManager.showInfo(t('articleMenu.fewerFromAlready', { source: shownAs }));
+                return true;
+            }
             toastManager.showUndoToast({
                 title: t('articleMenu.fewerFromDone', { source: shownAs }),
                 undoLabel: t('articleMenu.undo'),

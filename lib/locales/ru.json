@@ -2711,7 +2711,8 @@
     "sourceSub": "Об источнике, меньше от {{source}}",
     "support": "Поддержка",
     "supportSub": "Сообщить об ошибке, живой чат, FAQ, обучение",
-    "tutorial": "Обучение"
+    "tutorial": "Обучение",
+    "fewerFromAlready": "Уже показываем меньше от {{source}}"
   },
   "storyExport": {
     "shareA11y": "Экспортировать эту историю",

@@ -2789,7 +2789,8 @@
     "sourceSub": "عن المصدر، وعدد أقل من {{source}}",
     "support": "الدعم",
     "supportSub": "الإبلاغ عن خطأ، محادثة مباشرة، الأسئلة الشائعة، الشرح",
-    "tutorial": "الشرح"
+    "tutorial": "الشرح",
+    "fewerFromAlready": "تعرض بالفعل أخباراً أقل من {{source}}"
   },
   "storyExport": {
     "shareA11y": "تصدير هذه القصة",

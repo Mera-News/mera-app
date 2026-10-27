@@ -2711,7 +2711,8 @@
     "sourceSub": "O źródle, mniej z {{source}}",
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
-    "tutorial": "Samouczek"
+    "tutorial": "Samouczek",
+    "fewerFromAlready": "Już pokazujemy mniej z {{source}}"
   },
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",
