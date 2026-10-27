@@ -81,13 +81,10 @@ import {
 } from '@/lib/news-harness/feed-select/ownership';
 import {
   buildStoryGroups,
+  DISPLAY_GROUPING_OPTIONS,
+  groupableOf,
   pickRepresentative,
-  TITLE_JACCARD_DISPLAY_THRESHOLD,
-  CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-  WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-  ENTITY_JACCARD_DISPLAY_THRESHOLD,
   SCORE_PROPAGATION_LOOKBACK_MS,
-  type GroupableItem,
 } from '@/lib/algorithms/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -511,10 +508,6 @@ function countryLocationWeight(
   return best;
 }
 
-interface GroupItem extends GroupableItem {
-  s: ForYouSuggestion;
-}
-
 // Representative election (`makeRepCompare`) lives in
 // `@/lib/algorithms/representative-compare`, shared with
 // `feed-list-selector`, so the Dashboard and the Feed cannot drift apart on
@@ -629,23 +622,7 @@ export function buildFactRows(
   }
 
   // 2. Story-group the visible pool (display thresholds incl. the weighted edge).
-  const items: GroupItem[] = visible.map((s) => ({
-    id: s._id,
-    title: s.title_en ?? s.title_original ?? null,
-    clusters: s.clusters,
-    entities: s.entities,
-    eventType: s.eventType,
-    s,
-  }));
-  // `entityJaccardThreshold` enables the entity-overlap edge — DISPLAY-only by
-  // design (score-propagation deliberately omits it; see PROPAGATION_OPTIONS).
-  const groups = buildStoryGroups(items, {
-    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-    entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
-    ungateStableClusterEdge: true,
-  });
+  const groups = buildStoryGroups(visible.map(groupableOf), DISPLAY_GROUPING_OPTIONS);
 
   // 3. Per group: pick a representative (newest member) + collapse members.
   const breaking: BreakingCardData[] = [];

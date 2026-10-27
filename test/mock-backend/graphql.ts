@@ -162,6 +162,23 @@ query<'articlesForStories'>('GetArticlesForStories', (c) => ({
     },
 }));
 
+// Pre-story_key documents, sent only after a server answered GRAPHQL_VALIDATION_FAILED.
+query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIdsLegacy', (c) => ({
+    articlesForTopicsByIds: {
+        __typename: 'ArticlesForTopicsByIdsResponse',
+        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
+        dailyLimitReached: false,
+        resetAt: null,
+    },
+}));
+query<'articlesForStories'>('GetArticlesForStoriesLegacy', (c) => ({
+    articlesForStories: {
+        __typename: 'ArticlesForTopicsByIdsResponse',
+        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
+        dailyLimitReached: false,
+    },
+}));
+
 query<'articleById'>('GetArticleById', (c) => {
     const a = articleById(c.variables.id);
     return { articleById: a ? newsArticle(a, c) : null };

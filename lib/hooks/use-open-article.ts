@@ -49,6 +49,9 @@ export interface OpenArticleOptions {
    *  that route accepts only `articleSuggestionId`, and ArticleSuggestionScreen
    *  derives its own siblings (buildStoryGroups + relatedArticles). */
   readonly stableClusterId?: string | null;
+  /** A followed story the article is opened from: rides on BOTH routes so the page
+   *  can list the story's other copies from its snapshots and retention rows. */
+  readonly trackedStoryId?: string | null;
   /** Test seam — see REASON_LOOKUP_TIMEOUT_MS. */
   readonly timeoutMs?: number;
 }
@@ -64,10 +67,18 @@ function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   });
 }
 
-function pushArticle(articleId: string, stableClusterId?: string | null): void {
+function pushArticle(
+  articleId: string,
+  stableClusterId?: string | null,
+  trackedStoryId?: string | null,
+): void {
   router.push({
     pathname: '/logged-in/article-detail',
-    params: stableClusterId ? { articleId, stableClusterId } : { articleId },
+    params: {
+      articleId,
+      ...(stableClusterId ? { stableClusterId } : {}),
+      ...(trackedStoryId ? { trackedStoryId } : {}),
+    },
   });
 }
 
@@ -80,6 +91,7 @@ function pushArticle(articleId: string, stableClusterId?: string | null): void {
 export async function openArticle({
   articleId,
   stableClusterId,
+  trackedStoryId,
   timeoutMs = REASON_LOOKUP_TIMEOUT_MS,
 }: OpenArticleOptions): Promise<void> {
   let suggestionId: string | null = null;
@@ -100,11 +112,13 @@ export async function openArticle({
   if (suggestionId) {
     router.push({
       pathname: '/logged-in/suggestion-detail',
-      params: { articleSuggestionId: suggestionId },
+      params: trackedStoryId
+        ? { articleSuggestionId: suggestionId, trackedStoryId }
+        : { articleSuggestionId: suggestionId },
     });
     return;
   }
-  pushArticle(articleId, stableClusterId);
+  pushArticle(articleId, stableClusterId, trackedStoryId);
 }
 
 /**

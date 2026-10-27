@@ -277,7 +277,8 @@
     },
     "readyForMore": "พร้อมอ่านเพิ่มหรือยัง?",
     "refreshFeedAction": "รีเฟรชฟีดของคุณ",
-    "translationFailed": "แปลไม่สำเร็จ กรุณารีสตาร์ทแอป"
+    "translationFailed": "แปลไม่สำเร็จ กรุณารีสตาร์ทแอป",
+    "similarArticles_other": "บทความที่คล้ายกัน {{count}} ชิ้น"
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",

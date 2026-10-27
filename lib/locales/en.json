@@ -318,7 +318,9 @@
     },
     "readyForMore": "Are you ready to read more?",
     "refreshFeedAction": "Refresh your feed",
-    "translationFailed": "Translation failed. Restart the app."
+    "translationFailed": "Translation failed. Restart the app.",
+    "similarArticles_one": "{{count}} similar article",
+    "similarArticles_other": "{{count}} similar articles"
   },
   "relevance": {
     "emergency": "Emergency",

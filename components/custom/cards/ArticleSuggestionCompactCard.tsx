@@ -27,6 +27,8 @@ interface ArticleSuggestionCompactCardProps {
   read?: boolean;
   /** Renders the green "NEW" pill in the meta row (Dashboard section cards). */
   isNew?: boolean;
+  /** Other copies of the story (group members minus the one shown). */
+  similarCount?: number;
 }
 
 /**
@@ -47,6 +49,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   dimmed = false,
   read = false,
   isNew = false,
+  similarCount,
 }) => {
   const { t } = useTranslation();
   const status = suggestion.status;
@@ -131,6 +134,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         onPublicationPress={suggestion.publication_name ? menu.openPublication : undefined}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
+        similarCount={similarCount}
       />
       {menu.element}
     </>

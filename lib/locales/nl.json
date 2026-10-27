@@ -281,7 +281,9 @@
     },
     "readyForMore": "Klaar om meer te lezen?",
     "refreshFeedAction": "Ververs je feed",
-    "translationFailed": "Vertaling mislukt. Start de app opnieuw."
+    "translationFailed": "Vertaling mislukt. Start de app opnieuw.",
+    "similarArticles_one": "{{count}} vergelijkbaar artikel",
+    "similarArticles_other": "{{count}} vergelijkbare artikelen"
   },
   "relevance": {
     "emergency": "Noodgeval",

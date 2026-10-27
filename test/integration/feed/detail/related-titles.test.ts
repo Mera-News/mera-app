@@ -63,7 +63,7 @@ describe('the article-detail route maps its related rows the same way', () => {
 
     it('a Japanese related row keeps title_original as the card title', async () => {
         server.use(
-            mockGql('GetRelatedArticlesPage', {
+            mockGql('GetRelatedArticlesPageFiltered', {
                 relatedArticlesPage: {
                     __typename: 'RelatedArticlesPage',
                     articles: [{ __typename: 'ArticleSummary', ...summary, article_url: null, image_url: null, country_code: 'JPN', publication_name: 'Asahi', description_en: null }],

@@ -305,7 +305,11 @@
     },
     "readyForMore": "Gotowy, żeby czytać dalej?",
     "refreshFeedAction": "Odśwież swój kanał",
-    "translationFailed": "Tłumaczenie się nie udało. Uruchom aplikację ponownie."
+    "translationFailed": "Tłumaczenie się nie udało. Uruchom aplikację ponownie.",
+    "similarArticles_one": "{{count}} podobny artykuł",
+    "similarArticles_few": "{{count}} podobne artykuły",
+    "similarArticles_many": "{{count}} podobnych artykułów",
+    "similarArticles_other": "{{count}} podobnego artykułu"
   },
   "relevance": {
     "emergency": "Pilne",

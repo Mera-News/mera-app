@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql, type DocumentNode } from '@apollo/client';
 import client from './apollo-client';
 import {
     ArticleIdsForTopicsResponse,
@@ -446,15 +446,15 @@ const GET_RELATED_ARTICLES_PAGE_LEGACY = gql`
 
 
 /**
- * N10 related-coverage filters: THE switch. Flip to true only once the server's
- * `countries` / `languages` arguments and `facets` field on
- * `relatedArticlesPage` are live on `mera-server` main (prod): an unknown
- * argument or field fails the WHOLE request there, and `mera-app` ships only to
- * production. While false, `getRelatedArticlesPage` sends the default document
- * whatever the caller passes, and the filter chips should read this to decide
- * whether to render at all.
+ * N10 related-coverage filters: THE switch. The server's `countries` /
+ * `languages` arguments and `facets` field may be absent on an older server, and
+ * an unknown argument or field fails the WHOLE request, so a validation failure
+ * on the filtered document latches `relatedFiltersUnsupported` for the session
+ * and the default document is sent instead (facets null). While false,
+ * `getRelatedArticlesPage` sends the default document whatever the caller
+ * passes, and the filter chips should read this to decide whether to render.
  */
-export const RELATED_FILTERS_LIVE = false;
+export const RELATED_FILTERS_LIVE = true;
 
 /** A reader's related-coverage filter. Absent or empty list means "All". */
 export interface RelatedArticlesFilter {
@@ -514,6 +514,7 @@ const GET_RELATED_ARTICLES_PAGE_FILTERED = gql`
       articles {
         _id
         title_en
+        title_original
         description_en
         article_url
         image_url
@@ -575,10 +576,7 @@ const GET_ARTICLE_IDS_FOR_TOPICS = gql`
 // per-cluster membership confidence for the For-You feed's collapse logic.
 // A server that still caps downloads answers with fewer articles, never an
 // error. Its `dailyLimitReached`/`resetAt` are not selected: nothing reads them.
-const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
-  query GetArticlesForTopicsByIds($articleIds: [ID!]!) {
-    articlesForTopicsByIds(articleIds: $articleIds) {
-      articles {
+const ARTICLE_HYDRATION_FIELDS = `
         _id
         clusters {
           clusterId
@@ -603,6 +601,26 @@ const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
         event_type
         category
         maxClusterSize
+`;
+
+const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
+  query GetArticlesForTopicsByIds($articleIds: [ID!]!) {
+    articlesForTopicsByIds(articleIds: $articleIds) {
+      articles {
+        ${ARTICLE_HYDRATION_FIELDS}
+        story_key
+      }
+    }
+  }
+`;
+
+// The same page without `story_key`, for a server that predates it (see
+// storyKeyUnsupported): an unknown field fails the whole request.
+const GET_ARTICLES_FOR_TOPICS_BY_IDS_LEGACY = gql`
+  query GetArticlesForTopicsByIdsLegacy($articleIds: [ID!]!) {
+    articlesForTopicsByIds(articleIds: $articleIds) {
+      articles {
+        ${ARTICLE_HYDRATION_FIELDS}
       }
     }
   }
@@ -615,30 +633,18 @@ const GET_ARTICLES_FOR_STORIES = gql`
   query GetArticlesForStories($articleIds: [ID!]!) {
     articlesForStories(articleIds: $articleIds) {
       articles {
-        _id
-        clusters {
-          clusterId
-          confidence
-          stableClusterId
-        }
-        title_en
-        title
-        description_en
-        article_url
-        image_url
-        country_code
-        publication_name
-        language_code
-        pubDate
-        geo_tags {
-          city
-          region
-          countryCode
-        }
-        entities
-        event_type
-        category
-        maxClusterSize
+        ${ARTICLE_HYDRATION_FIELDS}
+        story_key
+      }
+    }
+  }
+`;
+
+const GET_ARTICLES_FOR_STORIES_LEGACY = gql`
+  query GetArticlesForStoriesLegacy($articleIds: [ID!]!) {
+    articlesForStories(articleIds: $articleIds) {
+      articles {
+        ${ARTICLE_HYDRATION_FIELDS}
       }
     }
   }
@@ -738,6 +744,53 @@ let relatedOriginalUnsupported = false;
 /** Test seam. */
 export function __resetRelatedOriginalSupport(): void {
     relatedOriginalUnsupported = false;
+    relatedFiltersUnsupported = false;
+}
+
+/** True once the server rejected the filtered related document: default document for the session. */
+let relatedFiltersUnsupported = false;
+
+/**
+ * True once the server rejected `ArticleWithClusters.story_key`: hydrate with
+ * the Legacy documents for the rest of the session (rows then persist a null
+ * story_key, which only drops the dedup edge and ages out in 48h).
+ */
+let storyKeyUnsupported = false;
+
+/** Test seam. */
+export function __resetStoryKeySupport(): void {
+    storyKeyUnsupported = false;
+}
+
+/** One hydration chunk. Concurrent workers that fail before the latch lands each fall back on their own, which is harmless. */
+async function hydrateBatch(
+    field: 'articlesForTopicsByIds' | 'articlesForStories',
+    doc: DocumentNode,
+    legacyDoc: DocumentNode,
+    articleIds: string[],
+): Promise<ArticleWithClusters[]> {
+    type Data = Partial<Record<typeof field, ArticlesForTopicsByIdsResponse>>;
+    if (!storyKeyUnsupported) {
+        try {
+            const { data } = await client.query<Data>({
+                query: doc,
+                variables: { articleIds },
+                fetchPolicy: 'no-cache',
+                context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+            });
+            return data?.[field]?.articles ?? [];
+        } catch (error) {
+            if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) throw error;
+            storyKeyUnsupported = true;
+            logger.info('[ArticleService] server has no ArticleWithClusters.story_key; legacy hydration documents this session');
+        }
+    }
+    const { data } = await client.query<Data>({
+        query: legacyDoc,
+        variables: { articleIds },
+        fetchPolicy: 'no-cache',
+    });
+    return data?.[field]?.articles ?? [];
 }
 
 /** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
@@ -984,14 +1037,12 @@ export class ArticleService {
                         const idx = nextIndex++;
                         if (idx >= batches.length) return;
                         const batch = batches[idx];
-                        const { data } = await client.query<{
-                            articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
-                        }>({
-                            query: GET_ARTICLES_FOR_TOPICS_BY_IDS,
-                            variables: { articleIds: batch },
-                            fetchPolicy: 'no-cache',
-                        });
-                        const rows = data?.articlesForTopicsByIds?.articles ?? [];
+                        const rows = await hydrateBatch(
+                            'articlesForTopicsByIds',
+                            GET_ARTICLES_FOR_TOPICS_BY_IDS,
+                            GET_ARTICLES_FOR_TOPICS_BY_IDS_LEGACY,
+                            batch,
+                        );
                         if (rows.length) results.push(...rows);
                         completedIds += batch.length;
                         onProgress?.(completedIds, articleIds.length);
@@ -1055,14 +1106,12 @@ export class ArticleService {
                         const idx = nextIndex++;
                         if (idx >= batches.length) return;
                         const batch = batches[idx];
-                        const { data } = await client.query<{
-                            articlesForStories: ArticlesForTopicsByIdsResponse;
-                        }>({
-                            query: GET_ARTICLES_FOR_STORIES,
-                            variables: { articleIds: batch },
-                            fetchPolicy: 'no-cache',
-                        });
-                        const rows = data?.articlesForStories?.articles ?? [];
+                        const rows = await hydrateBatch(
+                            'articlesForStories',
+                            GET_ARTICLES_FOR_STORIES,
+                            GET_ARTICLES_FOR_STORIES_LEGACY,
+                            batch,
+                        );
                         if (rows.length) results.push(...rows);
                         completedIds += batch.length;
                         onProgress?.(completedIds, articleIds.length);
@@ -1126,7 +1175,36 @@ export class ArticleService {
                 first: input.first ?? null,
                 after: input.after ?? null,
             };
-            if (!filtersLive) {
+            const sendFiltered = async (): Promise<RelatedArticlesPageResult | null> => {
+                const variables: RelatedPageFilteredVariables = {
+                    ...base,
+                    countries: filterList(input.filter?.countries),
+                    languages: filterList(input.filter?.languages),
+                };
+                try {
+                    const { data } = await client.query<{
+                        relatedArticlesPage: RelatedArticlesPage | null;
+                    }>({
+                        query: GET_RELATED_ARTICLES_PAGE_FILTERED,
+                        variables,
+                        fetchPolicy: 'no-cache',
+                        context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                    });
+                    return data?.relatedArticlesPage
+                        ? { ...data.relatedArticlesPage, facets: data.relatedArticlesPage.facets ?? null }
+                        : empty;
+                } catch (error) {
+                    if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) throw error;
+                    relatedFiltersUnsupported = true;
+                    logger.info('[ArticleService] server has no related filters or facets; default related document this session');
+                    return null;
+                }
+            };
+            if (filtersLive && !relatedFiltersUnsupported) {
+                const filtered = await sendFiltered();
+                if (filtered) return filtered;
+            }
+            {
                 type Page = { relatedArticlesPage: Omit<RelatedArticlesPage, 'facets'> | null };
                 const page = (data: Page | undefined): RelatedArticlesPageResult =>
                     data?.relatedArticlesPage ? { ...data.relatedArticlesPage, facets: null } : empty;
@@ -1152,21 +1230,6 @@ export class ArticleService {
                 });
                 return page(data);
             }
-            const variables: RelatedPageFilteredVariables = {
-                ...base,
-                countries: filterList(input.filter?.countries),
-                languages: filterList(input.filter?.languages),
-            };
-            const { data } = await client.query<{
-                relatedArticlesPage: RelatedArticlesPage | null;
-            }>({
-                query: GET_RELATED_ARTICLES_PAGE_FILTERED,
-                variables,
-                fetchPolicy: 'no-cache',
-            });
-            return data?.relatedArticlesPage
-                ? { ...data.relatedArticlesPage, facets: data.relatedArticlesPage.facets ?? null }
-                : empty;
         } catch (error) {
             this.reportQueryError('getRelatedArticlesPage', error, {
                 articleId: input.articleId,

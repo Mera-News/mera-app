@@ -281,7 +281,9 @@
     },
     "readyForMore": "Bereit für mehr?",
     "refreshFeedAction": "Feed aktualisieren",
-    "translationFailed": "Übersetzung fehlgeschlagen. Starte die App neu."
+    "translationFailed": "Übersetzung fehlgeschlagen. Starte die App neu.",
+    "similarArticles_one": "{{count}} ähnlicher Artikel",
+    "similarArticles_other": "{{count}} ähnliche Artikel"
   },
   "relevance": {
     "emergency": "Notfall",

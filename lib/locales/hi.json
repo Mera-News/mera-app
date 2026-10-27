@@ -281,7 +281,9 @@
     },
     "readyForMore": "क्या आप और पढ़ने के लिए तैयार हैं?",
     "refreshFeedAction": "अपनी फ़ीड रीफ़्रेश करें",
-    "translationFailed": "अनुवाद नहीं हो सका। ऐप दोबारा शुरू करें।"
+    "translationFailed": "अनुवाद नहीं हो सका। ऐप दोबारा शुरू करें।",
+    "similarArticles_one": "{{count}} मिलता-जुलता लेख",
+    "similarArticles_other": "{{count}} मिलते-जुलते लेख"
   },
   "relevance": {
     "emergency": "आपातकालीन",

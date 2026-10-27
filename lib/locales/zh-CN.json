@@ -277,7 +277,8 @@
     },
     "readyForMore": "准备好读更多了吗？",
     "refreshFeedAction": "刷新你的信息流",
-    "translationFailed": "翻译失败。请重启应用。"
+    "translationFailed": "翻译失败。请重启应用。",
+    "similarArticles_other": "另有 {{count}} 篇相似文章"
   },
   "relevance": {
     "emergency": "紧急",

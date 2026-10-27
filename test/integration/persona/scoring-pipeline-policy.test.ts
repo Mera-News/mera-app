@@ -13,6 +13,8 @@ import {
   derivePipelineChunkStates,
   derivePipelineUiState,
   deriveStaleRunVerdict,
+  nonTerminalCandidateIds,
+  nonTerminalCoveredIds,
   pendingPollKey,
   rampedBatchCap,
 } from '@/lib/algorithms/scoring-pipeline-policy';
@@ -371,11 +373,26 @@ describe('reasons in flight', () => {
       batches: [
         { batchId: 0, phase: 'waiting-reasons', candidateIds: ['a', 'b'], reasonCandidateIds: ['a'], coveredByRep: { a: ['a2'] }, attempt: 0 },
         { batchId: 1, phase: 'waiting-relevance', candidateIds: ['c'], attempt: 0 },
-        { batchId: 2, phase: 'queued', reasonsOnly: true, candidateIds: ['d'], attempt: 0 },
+        { batchId: 2, phase: 'queued', reasonsOnly: true, candidateIds: ['d'], coveredByRep: { d: ['d2'] }, attempt: 0 },
         { batchId: 3, phase: 'done', candidateIds: ['e'], reasonCandidateIds: ['e'], attempt: 0 },
       ],
     } as unknown as PipelineRun;
-    expect([...deriveReasonsInFlightIds(r)].sort()).toEqual(['a', 'a2', 'd']);
+    expect([...deriveReasonsInFlightIds(r)].sort()).toEqual(['a', 'a2', 'd', 'd2']);
+  });
+});
+
+describe('gate in-flight sets', () => {
+  it('the covered set adds every live batch\'s covered siblings; the candidate set does not', () => {
+    const r = {
+      schema: 3, runId: 'r', startedAt: NOW, algo: 'ed25519', expoPushToken: null, version: 1,
+      batches: [
+        { batchId: 0, phase: 'queued', candidateIds: ['R'], coveredIds: ['R', 'S1', 'S2'], attempt: 0 },
+        { batchId: 1, phase: 'waiting-relevance', candidateIds: ['c'], attempt: 0 },
+        { batchId: 2, phase: 'failed', candidateIds: ['f'], coveredIds: ['f', 'f2'], attempt: 0 },
+      ],
+    } as unknown as PipelineRun;
+    expect([...nonTerminalCoveredIds(r)].sort()).toEqual(['R', 'S1', 'S2', 'c']);
+    expect([...nonTerminalCandidateIds(r)].sort()).toEqual(['R', 'c']);
   });
 });
 

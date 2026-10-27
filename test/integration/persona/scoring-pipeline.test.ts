@@ -115,6 +115,58 @@ describe('enqueueUnscoredEligible — headline admission (P8 site 1b)', () => {
   });
 });
 
+// One story, one model read: copies share a story key (titles disjoint, no clusters), so only the
+// story key groups them.
+describe('enqueueUnscoredEligible: one representative per story', () => {
+  const sameStory = { extra: { story_key: 'K' } };
+
+  it('does not elect a held-back sibling again while its representative\'s batch is live', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['R', 'S1', 'S2'], sameStory);
+
+    await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    const [first] = await batches();
+    expect(first.candidateIds).toHaveLength(1);
+    expect([...(first.coveredIds ?? [])].sort()).toEqual(['R', 'S1', 'S2']);
+
+    // The next pass (another hydration chunk, the next background cycle) sends nothing for it.
+    const again = await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    expect(again.enqueued).toBe(0);
+    expect((await batches()).flatMap((b) => b.candidateIds)).toEqual(first.candidateIds);
+  });
+
+  it('elects a scorable copy when the preferred one is unscorable, and tombstones the unscorable one', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['S1'], sameStory);
+    // Newest, so election prefers it; no fact and no headline scope, so it can never be scored.
+    await seedArticles(['R'], { factless: true, extra: { story_key: 'K', pubDate: '2026-10-09T09:00:00.000Z' } });
+
+    const res = await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+
+    expect(res.enqueued).toBe(1);
+    expect((await batches())[0].candidateIds).toEqual(['S1']);
+    expect((await rows()).R).toMatchObject({ status: 'complete', relevance: 0 });
+  });
+
+  it('leaves a row saved after the eligibility read unscored, never tombstones it', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['A']);
+    const real = articleService.getUnscoredSuggestionsWithFacts;
+    // A concurrent hydration saves LATE between the caller's read and the gate's.
+    const spy = jest.spyOn(articleService, 'getUnscoredSuggestionsWithFacts').mockImplementationOnce(async () => {
+      const seen = await real();
+      await seedArticles(['LATE']);
+      return seen;
+    });
+
+    await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    spy.mockRestore();
+
+    expect((await batches()).flatMap((b) => b.candidateIds)).toEqual(['A']);
+    expect((await rows()).LATE).toMatchObject({ status: 'unscored' });
+  });
+});
+
 describe('model-key validation fail-fast (MERA-APP-39)', () => {
   // The run keypair is minted on a valid ecdsa attestation; the batch stays `queued` because
   // minting took the limiter slot. The attestation then turns bad (an off-curve secp256k1 key),
@@ -469,6 +521,66 @@ describe('enqueueCandidates: MIN_DISPATCH floor / MAX_BATCH_ARTICLES ceiling', (
     const bs = await batches();
     expect(bs).toHaveLength(1);
     expect(bs[0].reasonsOnly).toBe(true);
+  });
+});
+
+// One note per story (titles disjoint, no clusters: only the story key groups the copies).
+describe('enqueueOrphanedReasons: one note per story', () => {
+  const owe = async (id: string, relevance = 0.8) =>
+    saveScoringResult(id, { relevance, reason: '', reasonSkipped: false });
+
+  it('sends one copy per story and covers the rest with it', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['R', 'S1', 'S3'], { extra: { story_key: 'K' } });
+    for (const id of ['R', 'S1', 'S3']) await owe(id);
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    const [b] = await batches();
+    expect(b).toMatchObject({ reasonsOnly: true, candidateIds: ['R'], coveredByRep: { R: ['S1', 'S3'] } });
+    expect([...(b.coveredIds ?? [])].sort()).toEqual(['R', 'S1', 'S3']);
+  });
+
+  it('a story owed notes at two relevances sends two copies, never one note for both', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['A', 'B', 'C'], { extra: { story_key: 'K' } });
+    await owe('A', 0.8);
+    await owe('B', 0.8);
+    await owe('C', 0.6);
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    const [b] = await batches();
+    expect([...b.candidateIds].sort()).toEqual(['A', 'C']);
+    expect(b.coveredByRep).toEqual({ A: ['B'] });
+  });
+
+  it('never sends an unscorable copy for the story; a scorable sibling goes instead', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['S1'], { extra: { story_key: 'K' } });
+    // Newest, so election would prefer it; no fact and no headline scope, so no prompt can carry it.
+    await seedArticles(['R'], { factless: true, extra: { story_key: 'K', pubDate: '2026-10-09T09:00:00.000Z' } });
+    await owe('S1');
+    await owe('R');
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    expect((await batches())[0]).toMatchObject({ candidateIds: ['S1'], coveredByRep: { S1: ['R'] } });
+  });
+
+  it('sends nothing for a sibling a live relevance batch covers, even before its phase moves on', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['R', 'S1'], { extra: { story_key: 'K' } });
+    await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    const [live] = await batches();
+    expect([...(live.coveredIds ?? [])].sort()).toEqual(['R', 'S1']);
+    // Propagation wrote the sibling reason_pending before the batch reached needs-reasons-submit.
+    await owe(live.candidateIds[0] === 'R' ? 'S1' : 'R');
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    expect(await batches()).toHaveLength(1);
+    expect((await batches())[0].reasonsOnly).toBeUndefined();
   });
 });
 

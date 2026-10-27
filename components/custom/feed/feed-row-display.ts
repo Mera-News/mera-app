@@ -16,7 +16,13 @@
 //    reserves two lines for its note, so the note landing does not grow it. A
 //    card already complete at first render keeps its natural height.
 //
-// Both sets are SESSION state: FeedScreen replaces the whole object in
+// 3. THE "N SIMILAR ARTICLES" ROW IS DECIDED ONCE. A row that had other copies
+//    when it first rendered keeps its footer row for the session, and the
+//    count follows the live group; a drop to 0 hides the label and keeps the
+//    row's height, so the card never shrinks under the reader. A story that
+//    gains its first copy mid-session shows the row from the next session.
+//
+// All the sets are SESSION state: FeedScreen replaces the whole object in
 // `resetSession`, the same moment the partition and the pin reset and the list
 // returns to the top, which is what makes re-electing safe.
 //
@@ -35,10 +41,12 @@ export interface FeedRowSession {
   readonly rowBySuggestion: Map<string, string>;
   /** Row ids whose card was pending at any point this session. */
   readonly wasPending: Set<string>;
+  /** Row ids that carried other copies when first resolved. */
+  readonly hasSimilar: Set<string>;
 }
 
 export function newFeedRowSession(): FeedRowSession {
-  return { frozenRep: new Map(), rowBySuggestion: new Map(), wasPending: new Set() };
+  return { frozenRep: new Map(), rowBySuggestion: new Map(), wasPending: new Set(), hasSimilar: new Set() };
 }
 
 export interface FeedRowDisplay {
@@ -47,6 +55,9 @@ export interface FeedRowDisplay {
   suggestion: ForYouSuggestion;
   /** Reserve the note area's height (the row was pending this session). */
   reserveNoteSpace: boolean;
+  /** The "N similar articles" row: null = no row; else the count of OTHER
+   *  copies (0 keeps the row's height with the label hidden). */
+  similar: { count: number } | null;
 }
 
 /**
@@ -83,8 +94,13 @@ export function resolveFeedRowDisplay(
   if (!session.frozenRep.has(item.id)) {
     session.frozenRep.set(item.id, item.suggestion);
     session.rowBySuggestion.set(item.suggestion._id, item.id);
+    if (item.memberCount > 1) session.hasSimilar.add(item.id);
   }
   const suggestion = displayedSuggestionOf(item, liveById, session);
   if (suggestion.status !== ArticleSuggestionStatus.Complete) session.wasPending.add(item.id);
-  return { suggestion, reserveNoteSpace: session.wasPending.has(item.id) };
+  return {
+    suggestion,
+    reserveNoteSpace: session.wasPending.has(item.id),
+    similar: session.hasSimilar.has(item.id) ? { count: Math.max(0, item.memberCount - 1) } : null,
+  };
 }

@@ -8,6 +8,7 @@ import React from 'react';
 export default function SuggestionDetail() {
     const params = useLocalSearchParams<{
         articleSuggestionId?: string;
+        trackedStoryId?: string;
         from?: string;
     }>();
 
@@ -38,6 +39,7 @@ export default function SuggestionDetail() {
                 <ArticleSuggestionScreen
                     key={articleSuggestionId}
                     articleSuggestionId={articleSuggestionId}
+                    trackedStoryId={typeof params.trackedStoryId === 'string' ? params.trackedStoryId : undefined}
                     onBack={handleBack}
                     backIcon={canGoBack ? 'back' : 'home'}
                     fromArticleId={typeof params.from === 'string' ? params.from : undefined}

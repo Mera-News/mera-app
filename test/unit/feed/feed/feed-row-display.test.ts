@@ -140,3 +140,31 @@ describe('displayedSuggestionOf: the article the card shows, for the sort', () =
     expect(displayedSuggestionOf(row('art-a', b), live(b), session)).toBe(a);
   });
 });
+
+describe('resolveFeedRowDisplay: the similar-articles row', () => {
+  const withCount = (id: string, rep: ForYouSuggestion, memberCount: number): FeedListItem => ({
+    ...row(id, rep),
+    memberCount,
+  });
+
+  it('counts the other copies and follows a rise', () => {
+    const session = newFeedRowSession();
+    const a = sugg({ _id: 'a' });
+    expect(resolveFeedRowDisplay(withCount('r', a, 3), live(a), session).similar).toEqual({ count: 2 });
+    expect(resolveFeedRowDisplay(withCount('r', a, 4), live(a), session).similar).toEqual({ count: 3 });
+  });
+
+  it('a story with one copy at first sight shows no row for the session, even after it gains one', () => {
+    const session = newFeedRowSession();
+    const a = sugg({ _id: 'a' });
+    expect(resolveFeedRowDisplay(withCount('r', a, 1), live(a), session).similar).toBeNull();
+    expect(resolveFeedRowDisplay(withCount('r', a, 2), live(a), session).similar).toBeNull();
+  });
+
+  it('keeps the row at count 0 when members leave the pool, so the card does not shrink', () => {
+    const session = newFeedRowSession();
+    const a = sugg({ _id: 'a' });
+    resolveFeedRowDisplay(withCount('r', a, 3), live(a), session);
+    expect(resolveFeedRowDisplay(withCount('r', a, 1), live(a), session).similar).toEqual({ count: 0 });
+  });
+});

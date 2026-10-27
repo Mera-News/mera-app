@@ -305,7 +305,11 @@
     },
     "readyForMore": "Готовы читать дальше?",
     "refreshFeedAction": "Обновить ленту",
-    "translationFailed": "Не удалось выполнить перевод. Перезапустите приложение."
+    "translationFailed": "Не удалось выполнить перевод. Перезапустите приложение.",
+    "similarArticles_one": "ещё {{count}} похожая статья",
+    "similarArticles_few": "ещё {{count}} похожие статьи",
+    "similarArticles_many": "ещё {{count}} похожих статей",
+    "similarArticles_other": "ещё {{count}} похожей статьи"
   },
   "relevance": {
     "emergency": "Экстренное",

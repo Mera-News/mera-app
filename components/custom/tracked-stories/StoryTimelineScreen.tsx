@@ -14,7 +14,7 @@ import { VStack } from '@/components/ui/vstack';
 import { hapticLight } from '@/lib/haptics';
 import { formatDayMonth } from '@/lib/stats/visited-publications';
 import { useColors } from '@/lib/theme/tokens';
-import { timelineCardToArticle, type TimelineCard } from './merge-timeline';
+import { timelineCardToArticle, type TimelineEntry } from './merge-timeline';
 import { type TimelineRow, useStoryTimelineScreen } from './useStoryTimelineScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -62,7 +62,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const {
         headline,
         stableClusterId,
-        cards,
+        entries,
         isLoading,
         refreshing,
         emptyReason,
@@ -95,16 +95,18 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
 
 
     const renderCard = useCallback(
-        (item: TimelineCard) => {
+        (entry: TimelineEntry) => {
+            const item = entry.head;
             const article = timelineCardToArticle(item);
             const askRemove = () => {
                 hapticLight();
-                setConfirmRemove(item);
+                setConfirmRemove(entry);
             };
             return (
                 <ArticleStandaloneCompactCard
                     testID={`story-timeline-card-${item.articleId}`}
                     article={article}
+                    similarCount={entry.copies.length}
                     onPress={() => handleArticlePress(item.articleId, stableClusterId)}
                     // Disowning a card: long-press (kept, matching the
                     // Followed-stories list one screen up) and the ••• menu's
@@ -139,14 +141,14 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     {item.label}
                 </Text>
             ) : (
-                renderCard(item.card)
+                renderCard(item.entry)
             ),
         [renderCard, colors.ink3],
     );
 
     const keyExtractor = useCallback(
         (item: TimelineRow, index: number) =>
-            item.kind === 'day' ? item.key : item.card.articleId || `snap-${index}`,
+            item.kind === 'day' ? item.key : item.entry.head.articleId || `snap-${index}`,
         [],
     );
 
@@ -208,7 +210,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                         {/* Followed since, article and new counts. No "Headlines written
                             by Mera" here (owner); the Stories list carries the AI line, and
                             an export still labels AI headlines. Wraps, never truncates. */}
-                        {followedSinceMs || cards.length > 0 ? (
+                        {followedSinceMs || entries.length > 0 ? (
                             <Text size="xs" style={{ color: colors.ink3, marginTop: 2 }}>
                                 {[
                                     followedSinceMs
@@ -216,7 +218,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                               date: formatDayMonth(followedSinceMs, appLanguage),
                                           })
                                         : null,
-                                    cards.length > 0 ? t('trackedStories.articlesCount', { count: cards.length }) : null,
+                                    entries.length > 0 ? t('trackedStories.articlesCount', { count: entries.length }) : null,
                                     newAtOpen > 0 ? t('trackedStories.updatesBadge', { count: newAtOpen }) : null,
                                 ]
                                     .filter(Boolean)
@@ -332,7 +334,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmpty}
-                ListFooterComponent={cards.length > 0 ? nextNote : null}
+                ListFooterComponent={entries.length > 0 ? nextNote : null}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}

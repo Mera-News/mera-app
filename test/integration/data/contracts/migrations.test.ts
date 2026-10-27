@@ -310,6 +310,14 @@ describe('specific migration versions', () => {
     expect(touching).toHaveLength(0);
   });
 
+  it('v56 additively adds exactly the optional story_key to article_suggestions', () => {
+    const steps = byVersion.get(56)!.steps as any[];
+    expect(steps).toHaveLength(1);
+    expect(steps[0].type).toBe('add_columns');
+    expect(steps[0].table).toBe('article_suggestions');
+    expect(steps[0].columns).toEqual([{ name: 'story_key', type: 'string', isOptional: true }]);
+  });
+
   it('v55 backfills ONLY what is observable and leaves the rest NULL', () => {
     const m = byVersion.get(55);
     const sqlSteps = m!.steps.filter((s: any) => s && s.type === 'sql');

@@ -5,7 +5,7 @@ import type {
 } from '@/components/custom/saved-suggestions/ExportWizardModal';
 import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { ArticleService } from '@/lib/article-service';
-import { getGroupingRowsByIds } from '@/lib/database/services/article-suggestion-reads';
+import { getSuggestionByArticleId } from '@/lib/database/services/article-suggestion-reads';
 import { getSavedSuggestionByServerId } from '@/lib/database/services/saved-article-suggestion-service';
 import {
     advanceSeenWatermark,
@@ -15,7 +15,7 @@ import {
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import { calendarDaysAgo, formatDayMonth } from '@/lib/stats/visited-publications';
-import { useOpenArticle } from '@/lib/hooks/use-open-article';
+import { openArticle } from '@/lib/hooks/use-open-article';
 import { exportDay } from '@/lib/saved-articles-export';
 import {
     buildStoryJson,
@@ -25,21 +25,25 @@ import {
 } from '@/lib/story-export';
 import { deleteTrackedStoryById, disownStoryMember } from '@/lib/tracking/track-actions';
 import { toastManager } from '@/lib/toast-manager';
-import { buildTimeline, type TimelineCard } from './merge-timeline';
+import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { buildTimeline, foldTimeline, type TimelineCard, type TimelineEntry } from './merge-timeline';
 import logger from '@/lib/logger';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** The list: a date heading over each day's coverage, even for one item
  *  (FinalRead #16). Export reads `cards`, never these rows. */
-type TimelineRow = { kind: 'day'; key: string; label: string } | { kind: 'card'; card: TimelineCard };
+type TimelineRow = { kind: 'day'; key: string; label: string } | { kind: 'card'; entry: TimelineEntry };
 
 /** Cap on the quota-free per-article title lookups fired to backfill blank-title
  *  cards from pre-fix archives (Part E stopgap). */
 const MAX_TITLE_BACKFILL = 6;
 
+/** Cap on the local row reads that fill a bare card's source fields. */
+const MAX_SOURCE_HYDRATE = 30;
+
 /**
- * Fill in the language / country / publisher a card is missing from the local
+ * Fill in the language / country / story key / original title a card is missing from the local
  * `article_suggestions` row of the same article, and persist what we resolve
  * back into the story's snapshots.
  *
@@ -57,19 +61,28 @@ async function hydrateSource(
     trackedStoryId: string,
     cards: TimelineCard[],
 ): Promise<TimelineCard[]> {
-    const bare = cards.filter((c) => c.articleId && (!c.languageCode || !c.countryCode));
+    const bare = cards
+        .filter(
+            (c) =>
+                c.articleId &&
+                (!c.languageCode || !c.countryCode || !c.storyKey || !c.titleOriginal),
+        )
+        .slice(0, MAX_SOURCE_HYDRATE);
     if (bare.length === 0) return cards;
 
     try {
-        const rows = await getGroupingRowsByIds(bare.map((c) => c.articleId));
+        const rows = await Promise.all(bare.map((c) => getSuggestionByArticleId(c.articleId)));
         const patches = new Map<string, SnapshotSourcePatch>();
-        for (const r of rows) {
+        rows.forEach((r, i) => {
+            if (!r) return;
             const patch: SnapshotSourcePatch = {
-                languageCode: r.languageCode ?? undefined,
-                countryCode: r.countryCode ?? undefined,
+                languageCode: r.language_code ?? undefined,
+                countryCode: r.country_code ?? undefined,
+                storyKey: r.storyKey ?? undefined,
+                titleOriginal: r.title_original ?? undefined,
             };
-            if (patch.languageCode || patch.countryCode) patches.set(r.id, patch);
-        }
+            if (Object.values(patch).some(Boolean)) patches.set(bare[i].articleId, patch);
+        });
         if (patches.size === 0) return cards;
 
         void backfillSnapshotSource(trackedStoryId, patches);
@@ -81,6 +94,8 @@ async function hydrateSource(
                 ...c,
                 languageCode: c.languageCode ?? p.languageCode,
                 countryCode: c.countryCode ?? p.countryCode,
+                storyKey: c.storyKey ?? p.storyKey,
+                titleOriginal: c.titleOriginal ?? p.titleOriginal,
             };
         });
     } catch (err) {
@@ -106,6 +121,11 @@ export function useStoryTimelineScreen({
     const [isLlmHeadline, setIsLlmHeadline] = useState(false);
     const [stableClusterId, setStableClusterId] = useState<string | null>(null);
     const [cards, setCards] = useState<TimelineCard[]>([]);
+    // The fold is a memo over the unfolded cards and the reader's context, never
+    // part of the async load: the context arrives after the first load and the
+    // head must be re-elected when it does.
+    const userCtx = useUserGeoLanguageContext();
+    const entries = useMemo(() => foldTimeline(cards, userCtx), [cards, userCtx]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     // Why the list is empty, when it is not simply "no coverage yet". A load
@@ -119,7 +139,7 @@ export function useStoryTimelineScreen({
     const [confirmDelete, setConfirmDelete] = useState(false);
     // The card the user long-pressed and is being asked about. Holding the CARD
     // (not just its id) keeps the confirm addressable after the list re-renders.
-    const [confirmRemove, setConfirmRemove] = useState<TimelineCard | null>(null);
+    const [confirmRemove, setConfirmRemove] = useState<TimelineEntry | null>(null);
     const [exportOpen, setExportOpen] = useState(false);
     // Export was picked in the ••• sheet: it opens once the sheet has gone.
     const exportPicked = useRef(false);
@@ -167,22 +187,24 @@ export function useStoryTimelineScreen({
      * The alternative (dropping the id) resurrects the card, which is worse.
      */
     const handleConfirmRemove = useCallback(async () => {
-        const card = confirmRemove;
+        const entry = confirmRemove;
         setConfirmRemove(null);
-        if (!card?.articleId) return;
-        let removedAt = -1;
-        setCards((prev) => {
-            removedAt = prev.findIndex((c) => c.articleId === card.articleId);
-            return prev.filter((c) => c.articleId !== card.articleId);
-        });
-        const removed = await disownStoryMember(trackedStoryId, card.articleId);
-        if (!removed) {
-            // Roll the optimistic removal back into its old slot.
+        if (!entry?.head.articleId) return;
+        // A folded entry is ONE story to the reader, so "not part of this story"
+        // disowns every copy: left behind, the next copy would come back as head.
+        const members = [entry.head, ...entry.copies];
+        const gone = new Set(members.map((c) => c.articleId));
+        setCards((prev) => prev.filter((c) => !gone.has(c.articleId)));
+        const results = await Promise.all(
+            members.map((c) => disownStoryMember(trackedStoryId, c.articleId)),
+        );
+        // Put back exactly the copies whose write failed.
+        const failed = new Set(members.filter((_, i) => !results[i]).map((c) => c.articleId));
+        if (failed.size > 0) {
             setCards((prev) => {
-                if (prev.some((c) => c.articleId === card.articleId)) return prev;
-                const next = prev.slice();
-                next.splice(removedAt < 0 ? next.length : Math.min(removedAt, next.length), 0, card);
-                return next;
+                const have = new Set(prev.map((c) => c.articleId));
+                const back = members.filter((c) => failed.has(c.articleId) && !have.has(c.articleId));
+                return [...prev, ...back].sort((a, b) => b.pubDateMs - a.pubDateMs);
             });
             toastManager.showError(t('errors.somethingWentWrong'), t('trackedStories.removeFailed'));
         }
@@ -296,13 +318,13 @@ export function useStoryTimelineScreen({
         };
     }, [trackedStoryId, load]);
 
-    // Opens the reason view when Mera scored this article (see use-open-article).
-    const openArticle = useOpenArticle();
+    // Opens the reason view when Mera scored this article, carrying the story
+    // so the page lists its other copies (see use-open-article).
     const handleArticlePress = useCallback(
         (articleId: string, stableClusterId: string | null) => {
-            openArticle({ articleId, stableClusterId });
+            void openArticle({ articleId, stableClusterId, trackedStoryId });
         },
-        [openArticle],
+        [trackedStoryId],
     );
 
     // Export: the same wizard as the Saved tab, every article ticked. Memoized
@@ -310,20 +332,22 @@ export function useStoryTimelineScreen({
     // unticked (the wizard resets on open only).
     const exportRows = useMemo<ExportWizardRow[]>(
         () =>
-            cards
+            entries
+                .map((e) => e.head)
                 .filter((c) => !!c.articleId)
                 .map((c) => ({
                     id: c.articleId,
                     title: c.title,
                     language: c.languageCode,
                 })),
-        [cards],
+        [entries],
     );
 
     const buildExport = useCallback(
         async (chosenIds: string[], options: ExportContentOptions, format: ExportFormat) => {
             const chosen = new Set(chosenIds);
-            const members = cards.filter((c) => chosen.has(c.articleId));
+            // Heads only: what the reader sees. A folded copy is not exported.
+            const members = entries.map((e) => e.head).filter((c) => chosen.has(c.articleId));
             // Links and notes live on the story's retention rows, not its
             // snapshots (see lib/story-export.ts). Local reads only, at most
             // one per member.
@@ -351,7 +375,7 @@ export function useStoryTimelineScreen({
                       options,
                   );
         },
-        [cards, headline, isLlmHeadline, t, appLanguage],
+        [entries, headline, isLlmHeadline, t, appLanguage],
     );
 
     const handleExportFailed = useCallback(() => {
@@ -362,7 +386,8 @@ export function useStoryTimelineScreen({
         const now = Date.now();
         const out: TimelineRow[] = [];
         let lastLabel = '';
-        cards.forEach((card, i) => {
+        entries.forEach((entry, i) => {
+            const card = entry.head;
             if (card.pubDateMs) {
                 const days = calendarDaysAgo(card.pubDateMs, now);
                 const label =
@@ -376,16 +401,17 @@ export function useStoryTimelineScreen({
                     lastLabel = label;
                 }
             }
-            out.push({ kind: 'card', card });
+            out.push({ kind: 'card', entry });
         });
         return out;
-    }, [cards, t, appLanguage]);
+    }, [entries, t, appLanguage]);
 
     return {
         headline,
         isLlmHeadline,
         stableClusterId,
         cards,
+        entries,
         isLoading,
         refreshing,
         emptyReason,

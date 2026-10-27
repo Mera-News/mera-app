@@ -175,6 +175,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 <View style={{ marginHorizontal: 8 }}>
                     <ArticleSuggestionCompactCard
                         suggestion={s}
+                        similarCount={item.story.members.length}
                         onPress={openSuggestion}
                         surface="sectioned"
                         read={isSuggestionOpened(s, openedIds)}

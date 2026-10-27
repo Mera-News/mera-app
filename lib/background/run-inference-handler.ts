@@ -23,7 +23,6 @@ import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/algorithms/transient-error';
 import { getUnscoredSuggestionsWithFacts } from '@/lib/database/services/article-suggestion-reads';
 import { buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
-import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { contextForCycleReason } from '@/lib/llm/execution-context';
 
@@ -110,8 +109,9 @@ export async function runBackgroundCycle(
       // Build the user's geo/language context once for this pass so election
       // honors country/language priority. Fails open to null (legacy behavior).
       const userCtx = await loadUserGeoLanguageContext();
-      const inFlight = await pipeline.getNonTerminalCandidateIds();
-      const gate = await gateUnscoredForScoring(inFlight, userCtx);
+      // Excludes siblings covered by a live batch, and elects only scorable reps.
+      const unscorable = new Set(candidates.filter((c) => !eligibleIds.has(c.id)).map((c) => c.id));
+      const gate = await pipeline.gateScorableForScoring(eligibleIds, unscorable, userCtx);
       // Propagated rows are now terminal `Complete` — surface them immediately.
       if (gate.propagatedCount > 0) {
         // P9: they were written WITHOUT ever meeting the scoring stage's hard
@@ -129,7 +129,7 @@ export async function runBackgroundCycle(
         const svc = require('@/lib/services/SuggestionSyncService') as typeof import('@/lib/services/SuggestionSyncService');
         await svc.requestSuggestionsRefresh();
       }
-      const toEnqueue = gate.enqueueIds.filter((id) => eligibleIds.has(id));
+      const toEnqueue = gate.enqueueIds;
       if (toEnqueue.length > 0) {
         await pipeline.enqueueCandidates(toEnqueue, false, gate.coveredIdsByRep);
       }

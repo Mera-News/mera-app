@@ -20,16 +20,17 @@ import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-stor
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import {
     buildStoryGroups,
-    CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-    TITLE_JACCARD_DISPLAY_THRESHOLD,
-    WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-    ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    DISPLAY_GROUPING_OPTIONS,
+    groupableOf,
 } from '@/lib/algorithms/story-grouping';
 import {
     orderRelatedArticles,
     type RelatedSortable,
 } from '@/lib/algorithms/related-articles-sort';
-import { useRelatedPagination } from './use-related-pagination';
+import { relatedExcludeKey, useRelatedPagination } from './use-related-pagination';
+import { relatedHeadingCount } from './related-count';
+import { useTrackedStoryCopies } from './use-tracked-story-copies';
+import { timelineCardToArticle } from '@/components/custom/tracked-stories/merge-timeline';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
@@ -109,8 +110,12 @@ interface RelatedEntry extends RelatedSortable {
 
 export function useArticleSuggestionScreen({
     articleSuggestionId,
+    trackedStoryId,
 }: {
     readonly articleSuggestionId: string;
+    /** Set when opened from a followed story's timeline: the story's other
+     *  copies lead Related coverage with the local siblings. */
+    readonly trackedStoryId?: string;
 }) {
     const { t } = useTranslation();
     const toast = useToast();
@@ -162,27 +167,7 @@ export function useArticleSuggestionScreen({
         const pool = suggestions.some((x) => x._id === suggestion._id)
             ? suggestions
             : [...suggestions, suggestion];
-        const groups = buildStoryGroups(
-            pool.map((s) => ({
-                id: s._id,
-                title: s.title_en ?? s.title_original,
-                clusters: s.clusters,
-                entities: s.entities,
-                eventType: s.eventType,
-                s,
-            })),
-            // Must stay in lock-step with the two feed selectors' DISPLAY option
-            // set — including `entityJaccardThreshold`. If the feed collapses
-            // A+B+C behind "+2 sources" via an edge this screen does not have,
-            // B and C are reachable from nowhere in the app.
-            {
-                titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-                clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-                weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-                entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
-                ungateStableClusterEdge: true,
-            },
-        );
+        const groups = buildStoryGroups(pool.map(groupableOf), DISPLAY_GROUPING_OPTIONS);
         const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));
         return (mine ?? [])
             .filter((m) => m.id !== suggestion._id)
@@ -226,9 +211,24 @@ export function useArticleSuggestionScreen({
     // blocks over what it serves. A country holding both local and server rows
     // therefore appears in two places — the same shape the tier-P head block has
     // always had (see related-articles-sort.ts), not a new anomaly.
+    // The followed story's copies live on the phone but may have left the store
+    // pool (the 48h sweep) or sit outside the display grouping; they join the
+    // local block, deduped against the live siblings.
+    const storyCopies = useTrackedStoryCopies(trackedStoryId, suggestion?.articleId ?? null, userCtx);
     const localEntries = useMemo<RelatedEntry[]>(() => {
         if (!suggestion) return [];
-        const entries: RelatedEntry[] = localSiblings.map((s) => ({
+        const liveIds = new Set(localSiblings.map((s) => s.articleId));
+        const copyEntries: RelatedEntry[] = storyCopies
+            .filter((c) => !liveIds.has(c.articleId))
+            .map((c) => ({
+                id: c.articleId,
+                languageCode: c.languageCode ?? null,
+                countryCodeAlpha3: c.countryCode ?? null,
+                publicationName: c.publicationName ?? null,
+                pubDateMs: c.pubDateMs,
+                article: timelineCardToArticle(c),
+            }));
+        const entries: RelatedEntry[] = [...copyEntries, ...localSiblings.map((s) => ({
             id: s.articleId,
             languageCode: s.language_code,
             countryCodeAlpha3: s.country_code,
@@ -236,13 +236,13 @@ export function useArticleSuggestionScreen({
             pubDateMs: toPubDateMs(s.firstPubDate ?? s.createdAt),
             article: suggestionToNewsArticle(s),
             suggestionId: s._id,
-        }));
+        }))];
         return orderRelatedArticles(
             entries,
             userCtx,
             relatedSortMode,
         );
-    }, [localSiblings, suggestion, userCtx, relatedSortMode]);
+    }, [localSiblings, storyCopies, suggestion, userCtx, relatedSortMode]);
 
     // Excluded SERVER-side, before ordering. Filtering the dedupe client-side
     // after the server counted these toward `first: 10` would short-change every
@@ -260,6 +260,9 @@ export function useArticleSuggestionScreen({
         loadMore: loadMoreRelated,
         error: relatedError,
         retry: retryRelated,
+        hasNextPage: relatedHasNext,
+        facets: relatedFacets,
+        facetsExcludeKey,
     } = useRelatedPagination({
         articleId: suggestion?.articleId ?? null,
         sortMode: relatedSortMode,
@@ -285,6 +288,17 @@ export function useArticleSuggestionScreen({
         () => mergeRelatedEntries(localEntries, serverEntries, suggestion?.articleId),
         [localEntries, serverEntries, suggestion?.articleId],
     );
+    // Locals are excluded server-side, so the sum never counts a row twice.
+    const relatedCount = relatedHeadingCount({
+        local: localEntries.length,
+        served: serverEntries.length,
+        hasNextPage: relatedHasNext,
+        error: relatedError,
+        loading: isLoadingRelated,
+        facets: relatedFacets,
+        facetsExcludeKey,
+        excludeKey: relatedExcludeKey(excludeIds),
+    });
 
     // What the Mera button asks about. Stable per article, so the button's
     // chat context is not rebuilt on every render.
@@ -495,6 +509,7 @@ export function useArticleSuggestionScreen({
         titleDisplay,
         handleTitleDisplayChange,
         relatedEntries,
+        relatedCount,
         isLoadingRelated,
         isLoadingMoreRelated,
         loadMoreRelated,

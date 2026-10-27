@@ -9,6 +9,7 @@ export default function ArticleDetail() {
     const params = useLocalSearchParams<{
         articleId?: string;
         stableClusterId?: string;
+        trackedStoryId?: string;
         from?: string;
     }>();
 
@@ -42,6 +43,7 @@ export default function ArticleDetail() {
                     key={articleId}
                     articleId={articleId}
                     stableClusterId={stableClusterId}
+                    trackedStoryId={typeof params.trackedStoryId === 'string' ? params.trackedStoryId : undefined}
                     onBack={handleBack}
                     backIcon={canGoBack ? 'back' : 'home'}
                     fromArticleId={typeof params.from === 'string' ? params.from : undefined}

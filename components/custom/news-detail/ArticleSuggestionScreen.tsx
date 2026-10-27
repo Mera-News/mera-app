@@ -30,6 +30,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ArticleSuggestionScreenProps {
     articleSuggestionId: string;
+    /** The followed story this page was opened from (its timeline). */
+    trackedStoryId?: string;
     onBack: () => void;
     backIcon?: 'back' | 'home';
     /** The article this page was opened from (a Related row): its own Related
@@ -66,6 +68,7 @@ const ABOVE_MERA_BUTTON = LIST_END_ABOVE_MERA - 20;
  */
 const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     articleSuggestionId,
+    trackedStoryId,
     onBack,
     backIcon = 'back',
     fromArticleId,
@@ -85,6 +88,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         titleDisplay,
         handleTitleDisplayChange,
         relatedEntries,
+        relatedCount,
         isLoadingRelated,
         isLoadingMoreRelated,
         loadMoreRelated,
@@ -100,7 +104,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         handleStartFactCheck,
         handleToggleSave,
         handleArticleUrlPress,
-    } = useArticleSuggestionScreen({ articleSuggestionId });
+    } = useArticleSuggestionScreen({ articleSuggestionId, trackedStoryId });
 
     if (isLoading) {
         return (
@@ -309,6 +313,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             one. */}
                         <RelatedCoverage
                             rows={relatedEntries}
+                            count={relatedCount}
                             selfArticleId={suggestion.articleId}
                             fromArticleId={fromArticleId}
                             loading={isLoadingRelated}

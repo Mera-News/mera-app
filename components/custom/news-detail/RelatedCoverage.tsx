@@ -75,6 +75,9 @@ interface RelatedCoverageProps {
     onRetry: () => void;
     /** Drawn at the end of the heading row: the sort chip (InlineChoiceChip). */
     headerAccessory?: React.ReactNode;
+    /** How many articles the story has (`relatedHeadingCount`), shown as a
+     *  separate number beside the heading. Null/0: none. */
+    count?: number | null;
 }
 
 /**
@@ -93,11 +96,13 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
     error,
     onRetry,
     headerAccessory,
+    count,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const colors = useColors();
     const [, rerender] = useReducer((n: number) => n + 1, 0);
     if (!loading && rows.length === 0 && !error) return null;
+    const shownCount = count && count > 0 ? new Intl.NumberFormat(i18n.language).format(count) : null;
 
     const open = (row: RelatedRow) => {
         if (row.id === fromArticleId) {
@@ -133,9 +138,17 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
             >
                 <Text
                     accessibilityRole="header"
+                    accessibilityLabel={
+                        shownCount ? `${t('articleDetail.relatedArticles')}, ${shownCount}` : undefined
+                    }
                     style={{ flexShrink: 1, color: colors.ink3, fontSize: 13, fontWeight: '600' }}
                 >
                     {t('articleDetail.relatedArticles')}
+                    {shownCount ? (
+                        <Text testID="related-count" style={{ color: colors.ink3, fontSize: 13, fontWeight: '400' }}>
+                            {`  ${shownCount}`}
+                        </Text>
+                    ) : null}
                 </Text>
                 {headerAccessory}
             </View>

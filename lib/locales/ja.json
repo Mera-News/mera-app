@@ -277,7 +277,8 @@
     },
     "readyForMore": "もっと読む準備はできましたか？",
     "refreshFeedAction": "フィードを更新",
-    "translationFailed": "翻訳に失敗しました。アプリを再起動してください。"
+    "translationFailed": "翻訳に失敗しました。アプリを再起動してください。",
+    "similarArticles_other": "同じ話題の他の記事 {{count}} 件"
   },
   "relevance": {
     "emergency": "緊急",

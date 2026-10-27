@@ -281,7 +281,9 @@
     },
     "readyForMore": "Pronto para ler mais?",
     "refreshFeedAction": "Atualizar seu feed",
-    "translationFailed": "A tradução falhou. Reinicie o app."
+    "translationFailed": "A tradução falhou. Reinicie o app.",
+    "similarArticles_one": "{{count}} artigo semelhante",
+    "similarArticles_other": "{{count}} artigos semelhantes"
   },
   "relevance": {
     "emergency": "Emergência",

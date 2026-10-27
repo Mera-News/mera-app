@@ -68,8 +68,18 @@ describe('getGroupingRowsByIds', () => {
         countryCode: 'DEU',
         languageCode: 'de',
         scoredWithV3: false,
+        storyKey: null,
       },
     ]);
+  });
+
+  it('carries the story key the article was persisted with', async () => {
+    await seed([article('s1', { story_key: 'K1' } as never), article('s2')]);
+
+    const byId = new Map((await getGroupingRowsByIds(['s1', 's2'])).map((r) => [r.id, r.storyKey]));
+
+    expect(byId.get('s1')).toBe('K1');
+    expect(byId.get('s2')).toBeNull();
   });
 
   it('falls back to the original title when there is no english one', async () => {
@@ -150,11 +160,12 @@ describe('getScoredDonorRows(sinceMs)', () => {
     await withVintage('createdAtBoundary', 0.5, null);
     at(T0);
     await toComplete('viaScored', 0.6);
-    await seed(['viaCreated', 'unscored', 'skipped', 'zero', 'excluded', 'read'].map((id) => article(id)));
+    await seed(['viaCreated', 'unscored', 'skipped', 'zero', 'realZero', 'excluded', 'read'].map((id) => article(id)));
     await withVintage('viaCreated', 0.5, true, '');
     await toComplete('skipped', 0.8);
     await toReasonSkipped('skipped');
     await batchMarkAsScoredByIds(['zero']);
+    await toComplete('realZero', 0);
     await toExcluded('excluded');
     await toAlreadyRead('read');
   }
@@ -164,6 +175,7 @@ describe('getScoredDonorRows(sinceMs)', () => {
 
     expect(ids(await getScoredDonorRows(since))).toEqual([
       'createdAtBoundary',
+      'realZero',
       'scoredAtBoundary',
       'viaCreated',
       'viaScored',
@@ -172,6 +184,15 @@ describe('getScoredDonorRows(sinceMs)', () => {
 
   // The ineligible tombstones carry relevance 0, the gated row carries a real score and NO note, and an
   // unscored row has no verdict at all: none may donate.
+  it('takes a scored zero (a real verdict) but never a relevance-0 tombstone', async () => {
+    await seedWindow();
+
+    const donors = ids(await getScoredDonorRows(since));
+
+    expect(donors).toContain('realZero');
+    expect(donors).not.toContain('zero');
+  });
+
   it('never takes an unscored row, a reason_skipped row, a relevance-0 tombstone or a terminal row', async () => {
     await seedWindow();
 

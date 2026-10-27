@@ -21,6 +21,7 @@ import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
 import { recordHeroLoad } from '@/lib/images/image-resolution-stats';
 import { useTranslation } from 'react-i18next';
+import SimilarArticlesRow from '@/components/custom/cards/SimilarArticlesRow';
 
 /**
  * ArticleCardBase — the full-size feed card CHROME, extracted verbatim from
@@ -118,6 +119,10 @@ interface ArticleCardBaseProps {
   /** The new-card halo: an orange shadow while unseen, fading when it turns
    *  false. Drawn by the `flat` surface only (the Feed's). */
   halo?: boolean;
+  /** Other copies of this story (Feed card only). Non-null draws the
+   *  "N similar articles" row under the footer; 0 keeps its height with the
+   *  label hidden. Null/undefined: no row. */
+  similarCount?: number | null;
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -151,6 +156,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   spokenPriority,
   spokenTail,
   halo,
+  similarCount,
 }) => {
   const { t } = useTranslation();
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -182,6 +188,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
     spokenPriority,
     meta.language,
     ...(spokenTail ?? []),
+    similarCount != null && similarCount >= 1 ? t('feed.similarArticles', { count: similarCount }) : null,
   ]);
   // Unchanged meaning: a real image, not the placeholder. The h-48/h-28 band
   // split and metaRowRightReserve depend on it.
@@ -283,7 +290,12 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
           {children}
         </VStack>
       </Box>
-      {footer ? <Box className="px-4 pb-4 pt-2">{footer}</Box> : null}
+      {footer ? <Box className={similarCount != null ? 'px-4 pt-2' : 'px-4 pb-4 pt-2'}>{footer}</Box> : null}
+      {similarCount != null ? (
+        <Box className="px-4 pb-4 pt-1">
+          <SimilarArticlesRow count={similarCount} />
+        </Box>
+      ) : null}
     </>
   );
 

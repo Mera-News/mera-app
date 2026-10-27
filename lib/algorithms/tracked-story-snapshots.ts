@@ -22,6 +22,9 @@ export interface TrackedStoryMemberSnapshot {
   languageCode?: string;
   /** Publisher country — renders the timeline row's source flag. Same caveat. */
   countryCode?: string;
+  /** The server's story key (copies of one story share it). The fold's first
+   *  key; absent on older snapshots and on a follow with no local row. */
+  storyKey?: string;
 }
 
 /** Coerce the persisted member-snapshot JSON column into a clean array. */
@@ -50,6 +53,10 @@ export const sanitizeSnapshots = (raw: unknown): TrackedStoryMemberSnapshot[] =>
           countryCode:
             typeof (x as any).countryCode === 'string'
               ? (x as any).countryCode
+              : undefined,
+          storyKey:
+            typeof (x as any).storyKey === 'string' && (x as any).storyKey
+              ? (x as any).storyKey
               : undefined,
         }))
         .filter((x) => x.articleId.length > 0)

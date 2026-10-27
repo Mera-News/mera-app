@@ -327,10 +327,12 @@ export interface PropagateEntry {
   scoredWithV3?: boolean | null;
 }
 
+/** Returns the ids it left `reason_pending` (an empty or ungrounded note on an
+ *  above-gate score), so a caller can send them for their own note. */
 export async function batchPropagateScores(
   entries: PropagateEntry[],
-): Promise<void> {
-  if (entries.length === 0) return;
+): Promise<string[]> {
+  if (entries.length === 0) return [];
   // Delete-tolerant (see batchMarkAsScoredByIds): skip entries whose row was
   // deleted mid-flight rather than rejecting the whole batch.
   const entryById = new Map(entries.map((e) => [e.id, e]));
@@ -339,7 +341,8 @@ export async function batchPropagateScores(
       entries.map((e) => articleSuggestionsCol.find(e.id).catch(() => null)),
     )
   ).filter((r): r is ArticleSuggestionModel => r != null);
-  if (rows.length === 0) return;
+  if (rows.length === 0) return [];
+  const leftPending: string[] = [];
   await database.write(async () => {
     await database.batch(
       rows.filter((row) => !isTerminalStatus(row.status)).map((row) => {
@@ -356,7 +359,7 @@ export async function batchPropagateScores(
         // caught. A rejected donor leaves the row exactly where a reason-less
         // donor leaves it: `reason_pending`, owed its own call.
         const grounded = groundedReasonFor(row, propagatedReason, 'propagation');
-        return row.prepareUpdate((r) => {
+        const update = row.prepareUpdate((r) => {
           r.relevance = entry.relevance;
           // The gate is chosen by the scorer that produced the SCORE, and this
           // row's score is the donor's. Leaving the recipient's own vintage in
@@ -374,9 +377,12 @@ export async function batchPropagateScores(
             r.status = ArticleSuggestionStatus.ReasonPending;
           }
         });
+        if (grounded.length === 0 && entry.relevance >= REASON_RELEVANCE_THRESHOLD) leftPending.push(row.id);
+        return update;
       }),
     );
   });
+  return leftPending;
 }
 
 /**

@@ -277,7 +277,8 @@
     },
     "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
     "refreshFeedAction": "Làm mới bảng tin",
-    "translationFailed": "Dịch thất bại. Hãy khởi động lại ứng dụng."
+    "translationFailed": "Dịch thất bại. Hãy khởi động lại ứng dụng.",
+    "similarArticles_other": "{{count}} bài viết tương tự"
   },
   "relevance": {
     "emergency": "Khẩn cấp",

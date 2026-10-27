@@ -44,7 +44,6 @@ import {
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
   getStageRowsByIds,
-  getGroupingRowsByIds,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-reads';
 import {
@@ -53,9 +52,8 @@ import {
   batchMarkExcluded,
   batchMarkGateSkipped,
   batchMarkReasonSkipped,
-  batchPropagateScores,
+  batchMarkAsScoredByIds,
 } from '@/lib/database/services/article-suggestion-scoring-writes';
-import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
 // selection the shim's builders run.
@@ -112,7 +110,10 @@ import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';
 // so there is no cycle (this module already statically imports the same DB
 // service). In-flight ids are passed IN, so it never reaches back here.
 import {
+  copyNoteToSiblings,
   gateUnscoredForScoring,
+  planStoryNotes,
+  noteStoryNoteFailure,
   propagateToUnscoredSiblings,
 } from '@/lib/feed-grouping/score-propagation';
 // The cold-start predicate reuses the SAME 48h donor lookback the score
@@ -136,6 +137,7 @@ import {
   isWaiting,
   latestActivityAt,
   nonTerminalCandidateIds,
+  nonTerminalCoveredIds,
   pendingPollKey,
   rampedBatchCap,
   type PipelineBatchProgress,
@@ -547,6 +549,50 @@ export async function getNonTerminalCandidateIds(): Promise<Set<string>> {
   return snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
 }
 
+/** The in-flight set the GATE takes: candidates plus the siblings they cover
+ *  ({@link nonTerminalCoveredIds}). Post-results propagation keeps
+ *  {@link getNonTerminalCandidateIds}. */
+export async function getNonTerminalCoveredIds(): Promise<Set<string>> {
+  const snap = await getPipeline();
+  return snap ? nonTerminalCoveredIds(snap.run) : new Set<string>();
+}
+
+/** Bound on re-runs: each one tombstones at least one row, so this only caps a
+ *  story whose first few elected copies are all unscorable. */
+const GATE_SCORABLE_PASSES = 3;
+
+/**
+ * The gate, run so every id it hands back is scorable. Election reads grouping
+ * rows, which carry no facts, so it can elect a representative `isScorableCandidate`
+ * rejects; dropped after the fact, its whole story was held back with nothing sent.
+ * Elected ids the caller judged unscorable are tombstoned (`batchMarkAsScoredByIds`,
+ * the write feed-sync gives ineligible rows) and the gate re-runs, electing among
+ * the rest. An elected id in NEITHER set was saved after the caller's read (a
+ * concurrent hydration): it is only left out of this pass, never tombstoned.
+ * `enqueueIds` and `coveredIdsByRep` are the last pass's; `propagatedCount` sums
+ * every pass, since each one may have written.
+ */
+export async function gateScorableForScoring(
+  eligible: ReadonlySet<string>,
+  unscorable: ReadonlySet<string>,
+  userCtx: Parameters<typeof gateUnscoredForScoring>[1],
+): Promise<Awaited<ReturnType<typeof gateUnscoredForScoring>>> {
+  let propagatedCount = 0;
+  for (let pass = 1; ; pass += 1) {
+    const gate = await gateUnscoredForScoring(await getNonTerminalCoveredIds(), userCtx);
+    propagatedCount += gate.propagatedCount;
+    const toTombstone = gate.enqueueIds.filter((id) => unscorable.has(id));
+    if (toTombstone.length === 0 || pass === GATE_SCORABLE_PASSES) {
+      return {
+        ...gate,
+        enqueueIds: gate.enqueueIds.filter((id) => eligible.has(id)),
+        propagatedCount,
+      };
+    }
+    await batchMarkAsScoredByIds(toTombstone);
+  }
+}
+
 /**
  * P9 hard-filter reconcile for score propagation. A propagated row is written
  * terminal `complete` with the donor's relevance and NEVER passes through
@@ -826,8 +872,10 @@ export async function enqueueOrphanedReasons(): Promise<void> {
   const scored = await getScoredSuggestionsWithoutReasons();
   const snap = await getPipeline();
 
+  // Covered, not candidate-only: a sibling a live batch stands in for is owed
+  // that batch's note, including in the window before its phase moves on.
   const covered = snap
-    ? nonTerminalCandidateIds(snap.run)
+    ? nonTerminalCoveredIds(snap.run)
     : new Set<string>();
   // Rows stranded below the reason threshold by the old 0.3/0.4 gap (see
   // KEEP_RELEVANCE_THRESHOLD): they will never get a reason, so finalize them
@@ -862,7 +910,18 @@ export async function enqueueOrphanedReasons(): Promise<void> {
     }
     return;
   }
-  if (qualified.length === 0) {
+  // One note per story: fill from a reasoned sibling at equal relevance, hold
+  // behind a note already coming, else send one scorable copy per partition.
+  const plan =
+    qualified.length === 0
+      ? { repIds: [], coveredByRep: {}, filled: 0 }
+      : await planStoryNotes(
+          qualified.map((c) => c.id),
+          covered,
+          new Set(qualified.filter(isScorableCandidate).map((c) => c.id)),
+        );
+  if (plan.filled > 0) await refreshUi();
+  if (plan.repIds.length === 0) {
     if (snap) {
       await drain('foreground');
       ensurePoller();
@@ -870,21 +929,18 @@ export async function enqueueOrphanedReasons(): Promise<void> {
     return;
   }
 
-  const chunks = chunkIds(
-    qualified.map((c) => c.id),
-    BATCH_SIZE,
-  );
+  const chunks = chunkIds(plan.repIds, BATCH_SIZE);
   logger.debug(
-    `${TAG} enqueueOrphanedReasons: ${qualified.length} rows → ${chunks.length} reasonsOnly batch(es)`,
+    `${TAG} enqueueOrphanedReasons: ${qualified.length} rows → ${plan.repIds.length} notes in ${chunks.length} reasonsOnly batch(es)`,
   );
 
   if (!snap) {
     await createRunWithBatches((base) =>
-      chunks.map((c, i) => makeQueuedBatch(base + i, c, true)),
+      chunks.map((c, i) => makeQueuedBatch(base + i, c, true, plan.coveredByRep)),
     );
   } else {
     await appendBatches((base) =>
-      chunks.map((c, i) => makeQueuedBatch(base + i, c, true)),
+      chunks.map((c, i) => makeQueuedBatch(base + i, c, true, plan.coveredByRep)),
     );
   }
 
@@ -2203,15 +2259,13 @@ async function applyV3NoteResults(
 }
 
 /**
- * Give a rep's fresh note to the same-story siblings the gate held back behind
- * it. Those siblings inherited the rep's SCORE at relevance time, when the rep
- * had no note yet, so they sit in `reason_pending` and no batch would ever
- * write theirs (only the orphaned-reasons sweep, on a later foreground). Each
- * sibling keeps its own relevance and scorer vintage; `batchPropagateScores`
- * checks the note against the sibling's OWN article and leaves a mismatch in
- * `reason_pending`, owed its own call, exactly as score propagation does.
- * Reps that were rescored in pass 2 are skipped: their note may explain a
- * score the sibling does not carry. Never throws.
+ * Give a rep's fresh note to the same-story siblings it stands in for: those the
+ * gate held back (they inherited the rep's SCORE at relevance time, with no note
+ * yet) and, on a reasons-only batch, the partition `planStoryNotes` covered with
+ * it. Without this they sit in `reason_pending` until a later sweep. See
+ * `copyNoteToSiblings` for the per-sibling grounding check. Reps that were
+ * rescored in pass 2 are skipped: their note may explain a score the sibling does
+ * not carry. Never throws.
  */
 async function propagateNotesToCoveredSiblings(
   batch: PipelineBatch,
@@ -2219,24 +2273,13 @@ async function propagateNotesToCoveredSiblings(
 ): Promise<void> {
   const byRep = batch.coveredByRep;
   if (!byRep || notesByRep.size === 0) return;
-  const noteFor = new Map<string, string>();
-  for (const [rep, note] of notesByRep) {
-    for (const sibling of byRep[rep] ?? []) {
-      if (sibling !== rep && !noteFor.has(sibling)) noteFor.set(sibling, note);
-    }
-  }
-  if (noteFor.size === 0) return;
+  const given = new Set<string>();
   try {
-    const rows = await getGroupingRowsByIds([...noteFor.keys()]);
-    const entries = rows
-      .filter((r) => r.status === ArticleSuggestionStatus.ReasonPending)
-      .map((r) => ({
-        id: r.id,
-        relevance: r.relevance,
-        reason: noteFor.get(r.id) ?? '',
-        scoredWithV3: r.scoredWithV3,
-      }));
-    if (entries.length > 0) await batchPropagateScores(entries);
+    for (const [rep, note] of notesByRep) {
+      const siblings = (byRep[rep] ?? []).filter((s) => s !== rep && !given.has(s));
+      for (const s of siblings) given.add(s);
+      await copyNoteToSiblings(siblings, note);
+    }
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'propagate-sibling-notes' },
@@ -2319,6 +2362,13 @@ async function handleReasonResults(
       );
     }
     await propagateNotesToCoveredSiblings(batch, siblingNotes);
+    // A rep standing for copies that got no note: do not elect it again, fall back per id.
+    for (const [rep, covered] of Object.entries(batch.coveredByRep ?? {})) {
+      const note = reasonMap.get(rep);
+      if (covered.length > 1 && (failedIds.has(rep) || !note || note.trim().length === 0)) {
+        noteStoryNoteFailure(rep, covered);
+      }
+    }
   }
 
   // Rescored rows are handed to `discardLowRelevance` at their NEW score, not
@@ -2830,16 +2880,15 @@ export async function enqueueUnscoredEligible(
     candidates.filter(isScorableCandidate).map((c) => c.id),
   );
   if (eligible.size === 0) return { enqueued: 0 };
+  const unscorable = new Set(candidates.filter((c) => !eligible.has(c.id)).map((c) => c.id));
 
-  const inFlight = await getNonTerminalCandidateIds();
-  const gate = await gateUnscoredForScoring(inFlight, await loadGateUserContext());
+  const gate = await gateScorableForScoring(eligible, unscorable, await loadGateUserContext());
 
   if (gate.propagatedCount > 0) await reconcileAfterGatePropagation();
 
-  // Only elected representatives, and only the ones this path is allowed to
-  // score. `flushRemainder` semantics are unchanged — it is still the caller's
-  // "no more rows are coming" signal, passed straight through.
-  const toEnqueue = gate.enqueueIds.filter((id) => eligible.has(id));
+  // Only elected representatives, all scorable. `flushRemainder` semantics are
+  // unchanged — it is still the caller's "no more rows are coming" signal.
+  const toEnqueue = gate.enqueueIds;
   logger.debug(
     `${TAG} enqueueUnscoredEligible: ${eligible.size} eligible → gate propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueue ${toEnqueue.length}`,
   );
@@ -3405,10 +3454,10 @@ export async function submitScoringForBackground(opts: {
       const candidates = await getUnscoredSuggestionsWithFacts();
       const eligible = new Set(candidates.filter(isScorableCandidate).map((c) => c.id));
       if (eligible.size > 0) {
-        const inFlight = await getNonTerminalCandidateIds();
-        const gate = await gateUnscoredForScoring(inFlight, await loadGateUserContext());
+        const unscorable = new Set(candidates.filter((c) => !eligible.has(c.id)).map((c) => c.id));
+        const gate = await gateScorableForScoring(eligible, unscorable, await loadGateUserContext());
         if (gate.propagatedCount > 0) await reconcileAfterGatePropagation('task');
-        const elected = gate.enqueueIds.filter((id) => eligible.has(id));
+        const elected = gate.enqueueIds;
         const firstIds = new Set(opts.articleIds);
         const ordered = [
           ...elected.filter((id) => firstIds.has(id)),

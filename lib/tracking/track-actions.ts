@@ -38,6 +38,7 @@ import { inferenceQueue } from '../inference/InferenceQueue';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import type { FeedbackSubject } from '../../components/custom/cards/feedback-subject';
+import type { ForYouSuggestion } from '../stores/for-you-store';
 import logger from '../logger';
 
 /** Seed weight for a topic minted from "Track story" — high enough to retrieve
@@ -133,6 +134,13 @@ export async function trackStoryWithProposal(
     logger.warn('[track-actions] topic mint failed', { error: String(err) });
   }
 
+  // The local row, read once: it supplies the seed's fold keys (the subject
+  // carries neither the original title nor the story key) and the retention
+  // below. A follow from World or Search has no row and folds on the title key
+  // alone. The seed keeps no publicationName or languageCode (owner rule), and
+  // its pubDate stays the subject's, so the unseen watermark is unchanged.
+  const row = await getSuggestionByArticleId(subject.articleId);
+
   // 2. Create the local story row: display LABEL as the headline, SEARCH text as
   //    the tracked topic, seeded with the tapped article snapshot.
   await trackStory({
@@ -143,7 +151,11 @@ export async function trackStoryWithProposal(
     topicId,
     topicText: searchText,
     llmHeadline: label || searchText,
-    initialSnapshot: snapshotFromSubject(subject),
+    initialSnapshot: {
+      ...snapshotFromSubject(subject),
+      titleOriginal: row?.title_original || undefined,
+      storyKey: row?.storyKey || undefined,
+    },
   });
 
   // 3. Retain the seed article on device, the way a save does.
@@ -157,10 +169,11 @@ export async function trackStoryWithProposal(
   // carries neither the description nor the article URL, and the URL is the
   // whole point: without it the detail screen renders a header with no Read
   // button. Degrade to the subject only when the row is genuinely gone.
-  await retainStoryMember(subject.articleId, {
-    title: subject.title,
-    publicationName: subject.publicationName,
-  });
+  await retainStoryMember(
+    subject.articleId,
+    { title: subject.title, publicationName: subject.publicationName },
+    row,
+  );
 
   // 4. Fetch the story's coverage now rather than at the next 5-minute tick.
   if (topicId) void syncFollowedStoryNow();
@@ -206,11 +219,13 @@ async function syncFollowedStoryNow(): Promise<void> {
 export async function retainStoryMember(
   articleId: string,
   fallback?: { title?: string | null; publicationName?: string | null },
+  /** The local row when the caller already read it (saves a second read). */
+  known?: ForYouSuggestion | null,
 ): Promise<void> {
   const id = (articleId ?? '').trim();
   if (!id) return;
   try {
-    const suggestion = await getSuggestionByArticleId(id);
+    const suggestion = known ?? (await getSuggestionByArticleId(id));
     if (suggestion) {
       await keepArticleForTrackedStory({ articleId: id, suggestion });
       return;

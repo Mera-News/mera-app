@@ -190,6 +190,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         ({ item }) => (
             <ArticleStandaloneCompactCard
                 article={item.article}
+                similarCount={Math.max(0, item.clusterSize - 1)}
                 onPress={() => handlePress(item.article, item.stableClusterId)}
                 subjectExtras={{
                     origin: 'article',

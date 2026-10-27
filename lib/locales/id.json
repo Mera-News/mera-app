@@ -277,7 +277,8 @@
     },
     "readyForMore": "Siap membaca lebih banyak?",
     "refreshFeedAction": "Muat ulang feed Anda",
-    "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi."
+    "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi.",
+    "similarArticles_other": "{{count}} artikel serupa"
   },
   "relevance": {
     "emergency": "Darurat",

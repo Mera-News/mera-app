@@ -46,7 +46,7 @@ function servePages(pages: Record<string, PageSpec | ((v: Vars) => Promise<PageS
     server.use(
         // Not mockGql: a page may be answered late, and mockGql does not await its responder.
         graphql.operation(async ({ operationName, variables }) => {
-            if (operationName !== 'GetRelatedArticlesPage') return undefined;
+            if (operationName !== 'GetRelatedArticlesPageFiltered') return undefined;
             seen.push(variables);
             const spec = pages[variables.after ?? 'first'];
             return HttpResponse.json({ data: pageData(typeof spec === 'function' ? await spec(variables) : spec) });
@@ -199,7 +199,7 @@ describe('useRelatedPagination', () => {
         afterEach(() => log.restore());
 
         it('sets error when page 1 fails, and retry fetches page 1 again', async () => {
-            server.use(mockGqlError('GetRelatedArticlesPage', 'INTERNAL_SERVER_ERROR'));
+            server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
             const r = mount();
             await waitFor(() => expect(r.result.current.error).toBe(true));
             expect(r.result.current.entries).toEqual([]);
@@ -215,7 +215,7 @@ describe('useRelatedPagination', () => {
             servePages();
             const r = mount();
             await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
-            server.use(mockGqlError('GetRelatedArticlesPage', 'INTERNAL_SERVER_ERROR'));
+            server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
             act(() => r.result.current.loadMore());
             await waitFor(() => expect(r.result.current.error).toBe(true));
             expect(ids(r)).toEqual(['a1', 'a2', 'a3']);
@@ -260,5 +260,50 @@ describe('useRelatedPagination', () => {
             await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
             expect(seen.map((v) => v.after)).toEqual([null]);
         });
+    });
+});
+
+describe('useRelatedPagination: facets', () => {
+    beforeEach(async () => {
+        await signInFixtureAccount();
+    });
+
+    /** Page 1 answers facets of 9, page 2 facets of 7 (the exclusion set grew in between). */
+    function serveFacets() {
+        server.use(
+            graphql.operation(({ operationName, variables }) => {
+                if (operationName !== 'GetRelatedArticlesPageFiltered') return undefined;
+                const second = variables.after === 'c1';
+                const data = pageData(second ? PAGES.c1 : PAGES.first);
+                const n = second ? 7 : 9;
+                return HttpResponse.json({
+                    data: {
+                        relatedArticlesPage: {
+                            ...data.relatedArticlesPage,
+                            facets: {
+                                __typename: 'RelatedArticleFacets',
+                                countries: [{ __typename: 'RelatedFacetCount', code: 'NLD', count: n }],
+                                languages: [{ __typename: 'RelatedFacetCount', code: 'en', count: n }],
+                            },
+                        },
+                    },
+                });
+            }),
+        );
+    }
+
+    it('takes facets from every page, tagged with the exclusion set that page was sent with', async () => {
+        serveFacets();
+        const r = mount();
+        await waitFor(() => expect(r.result.current.facets?.countries[0].count).toBe(9));
+        expect(r.result.current.facetsExcludeKey).toBe('');
+
+        r.rerender({ ...BASE, excludeIds: ['x1', 'x2'] });
+        await act(async () => {});
+        // Page 1 is not refetched mid-list, so the stale facets keep their old key...
+        act(() => r.result.current.loadMore());
+        await waitFor(() => expect(r.result.current.facets?.countries[0].count).toBe(7));
+        // ...until the next page heals them under the key now in force.
+        expect(r.result.current.facetsExcludeKey).toBe('x1 x2');
     });
 });

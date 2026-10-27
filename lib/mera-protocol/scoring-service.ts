@@ -79,6 +79,27 @@ import type {
 } from '@/lib/news-harness/article-pipeline/scoring';
 import { computeAndScoreForCandidates } from './stage-scoring';
 import { yieldToInteractions } from '@/lib/scheduler/idle';
+import {
+  copyNoteToSiblings,
+  gateUnscoredForScoring,
+  planStoryNotes,
+  noteStoryNoteFailure,
+} from '@/lib/feed-grouping/score-propagation';
+
+/** A propagated row is written `complete` without the scoring stage's hard screen
+ *  (P9), so sweep the live hard filters after the gate propagates, as feed-sync does.
+ *  Lazy: suppression-sweep reaches the database at import. Never fails the pass. */
+async function reconcilePropagatedHardFilters(): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+    await sweep.purgeHardFilteredSuggestions();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-service', step: 'reconcile-hard-filters' },
+    });
+  }
+}
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
@@ -871,10 +892,33 @@ async function scoreUnscoredRows(
   }
 
   let totalProcessed = 0;
+  // Rows that left `unscored` without a Kev call (a copy inherited its story's score,
+  // or the reader already opened the story): progress only, never the returned count.
+  let settledByGate = 0;
+  // Copies Kev did not answer this pass: out of the election and the batch, so the
+  // gate elects a sibling instead of the same copy every loop.
+  const failedThisPass = new Set<string>();
+  let retriedLoneFailure = false;
   onProgress?.(0, totalUnscored);
 
   while (true) {
-    const batch = await getUnscoredSuggestionsWithFacts(batchSize);
+    // One Kev read per story. Each pass the gate copies fresh scores onto same-story
+    // copies (so it propagates after every batch) and elects one copy per story still
+    // unscored. Rows this lane cannot score stay out of the election, or an elected one
+    // would hand its fixed low score to the whole story; they go after the elected ones.
+    const unscored = await getUnscoredSuggestionsWithFacts();
+    if (unscored.length === 0) break;
+    const unscorable = new Set(unscored.filter((c) => !isEligible(c)).map((c) => c.id));
+    const gate = await gateUnscoredForScoring(new Set([...unscorable, ...failedThisPass]));
+    if (gate.propagatedCount > 0) await reconcilePropagatedHardFilters();
+    settledByGate += gate.propagatedCount + gate.readCount;
+    const elected = new Set(gate.enqueueIds);
+    const batch = [
+      ...unscored.filter((c) => elected.has(c.id)),
+      ...unscored.filter((c) => unscorable.has(c.id)),
+    ]
+      .filter((c) => !failedThisPass.has(c.id))
+      .slice(0, batchSize);
     if (batch.length === 0) break;
 
     const {
@@ -955,11 +999,17 @@ async function scoreUnscoredRows(
     );
 
     if (succeeded.length > 0 && onBatchComplete) onBatchComplete(succeeded);
+    for (const id of failedIds) failedThisPass.add(id);
 
     totalProcessed += succeeded.length;
-    onProgress?.(totalProcessed, totalUnscored);
+    onProgress?.(totalProcessed + settledByGate, totalUnscored);
 
-    if (succeeded.length === 0) {
+    // A whole failed batch means Kev is down, except a batch that was ONE copy with
+    // siblings left (a lone story): try a sibling once before stopping.
+    const loneCopy = batch.length === 1 && (gate.coveredIdsByRep[batch[0].id]?.length ?? 0) > 1;
+    if (succeeded.length === 0 && loneCopy && !retriedLoneFailure) {
+      retriedLoneFailure = true;
+    } else if (succeeded.length === 0) {
       logger.warn('[processAllUnscored] entire batch failed — stopping to retry next cycle', {
         failedCount: failedIds.size,
       });
@@ -972,7 +1022,7 @@ async function scoreUnscoredRows(
     await yieldToInteractions();
   }
 
-  onProgress?.(totalProcessed, totalUnscored);
+  onProgress?.(totalProcessed + settledByGate, totalUnscored);
 
   // After scoring fresh rows, sweep any previously-scored rows whose reason
   // generation failed (reason_generation_completed = false). Non-fatal.
@@ -1024,10 +1074,19 @@ async function writeNotesOnDevice(): Promise<number> {
   const below = all.filter((c) => typeof c.relevance === 'number' && c.relevance < gate).map((c) => c.id);
   if (below.length > 0) await batchMarkReasonSkipped(below);
   const owed = all.filter((c) => typeof c.relevance !== 'number' || c.relevance >= gate);
-  owed.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
+  // One note per story x relevance: the rest are filled from a reasoned sibling
+  // now, or get the rep's note copied as it lands.
+  const plan = await planStoryNotes(
+    owed.map((c) => c.id),
+    new Set(),
+    new Set(owed.filter(isScorableCandidate).map((c) => c.id)),
+  );
+  const reps = new Set(plan.repIds);
+  const toWrite = owed.filter((c) => reps.has(c.id));
+  toWrite.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
   const fullUserContext = buildUserContext(await loadAllFactStatements());
-  let written = 0;
-  for (const candidate of owed) {
+  let written = plan.filled;
+  for (const candidate of toWrite) {
     // Skip notes turned on mid-sweep: stop; the next sweep finalises what is left.
     if (!notesOn()) break;
     // isScorableCandidate covers both the text and the fact test. A pure TOP-HEADLINE row is
@@ -1039,14 +1098,20 @@ async function writeNotesOnDevice(): Promise<number> {
         fullUserContext,
         candidate.relevance ?? 0.7,
       );
-      if (!reason) continue;
+      if (!reason) {
+        noteStoryNoteFailure(candidate.id, plan.coveredByRep[candidate.id] ?? []);
+        continue;
+      }
       await saveReason(candidate.id, reason);
       written += 1;
+      const siblings = (plan.coveredByRep[candidate.id] ?? []).filter((id) => id !== candidate.id);
+      written += await copyNoteToSiblings(siblings, reason);
     } catch (err) {
       // The built-in model is busy (quota, background) or gone: every next
       // note would fail the same way. Stop; the rest stay reason_pending for
       // the next sweep.
       if (isOnDeviceDeferrable(err)) break;
+      noteStoryNoteFailure(candidate.id, plan.coveredByRep[candidate.id] ?? []);
       logger.warn('[writeNotesOnDevice] note failed', {
         id: candidate.id,
         error: err instanceof Error ? err.message : String(err),

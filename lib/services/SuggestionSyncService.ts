@@ -328,6 +328,7 @@ function suggestionsDisplayEqual(a: ForYouSuggestion, b: ForYouSuggestion): bool
     a.firstPubDate === b.firstPubDate &&
     a.rawScore === b.rawScore &&
     a.eventType === b.eventType &&
+    (a.storyKey ?? null) === (b.storyKey ?? null) &&
     a.headlineScope === b.headlineScope &&
     // Load-bearing: the Dashboard's per-country headline sections key on this,
     // so a country code arriving on a later sync must mark the row CHANGED —

@@ -277,7 +277,8 @@
     },
     "readyForMore": "더 읽을 준비가 되셨나요?",
     "refreshFeedAction": "피드 새로고침",
-    "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요."
+    "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요.",
+    "similarArticles_other": "비슷한 기사 {{count}}개"
   },
   "relevance": {
     "emergency": "긴급",
