@@ -128,6 +128,34 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     expect(gatewayCalls('chat')).toHaveLength(1);
   });
 
+  it("a failed turn's banner clears when the next open's ping answers: Mera is reachable again", async () => {
+    useCloudChatStore.getState().setError('Cloud chat failed: empty reply');
+    server.use(...mockGateway(respond('ready')));
+    prewarmCloudChat({ ping: true });
+    await settled();
+    expect(status()).toBe('ready');
+    expect(useCloudChatStore.getState().error).toBeNull();
+  });
+
+  it('a failure that lands while the ping is in flight is kept: it is newer than the proof', async () => {
+    server.use(...mockGateway(() => ({ chunks: ['ready'], headerDelayMs: 5_000 })));
+    prewarmCloudChat({ ping: true });
+    await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
+    useCloudChatStore.getState().setError('Cloud chat failed: 502');
+    await advanceUntil(() => status() !== 'warming', 60_000);
+    expect(status()).toBe('ready');
+    expect(useCloudChatStore.getState().error).toBe('Cloud chat failed: 502');
+  });
+
+  it('a failed ping leaves a failed turn\'s banner up', async () => {
+    useCloudChatStore.getState().setError('Cloud chat failed: empty reply');
+    server.use(...mockGateway(respond('')));
+    prewarmCloudChat({ ping: true });
+    await settled();
+    expect(status()).toBe('error');
+    expect(useCloudChatStore.getState().error).toBe('Cloud chat failed: empty reply');
+  });
+
   it('an empty reply is an error', async () => {
     server.use(...mockGateway(respond('')));
     prewarmCloudChat({ ping: true });

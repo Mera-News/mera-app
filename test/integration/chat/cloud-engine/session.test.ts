@@ -7,6 +7,7 @@ import { attachChatSession, resetChatSession } from '@/lib/chat-session/chat-ses
 import { appendMessage, createConversation, fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
+import { useChatReadiness } from '@/lib/llm/prewarm';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, mockGateway, server, signInFixtureAccount } from '@/test/helpers';
 import { isRouteLeg, resetChatModules, systemOf, until } from '@/test/integration/chat/_helpers';
@@ -236,6 +237,17 @@ describe('a transport error', () => {
     expect(cloud().status).toBe('idle');
     expect(streamHolds()).toBe(0);
     expect(useFloatingChatStore.getState().isGenerating).toBe(false);
+  });
+
+  it('turns the header badge to error, so it never says Ready beside the failure banner', async () => {
+    useChatReadiness.setState({ status: 'ready' });
+    server.use(...mockGateway(() => ({ status: 502 })));
+    const { engine } = await attachCloud(articleAgent());
+    engine.send('hello');
+    await turnDone(50_000);
+
+    expect(cloud().error).toMatch(/^Cloud chat failed:/);
+    expect(useChatReadiness.getState().status).toBe('error');
   });
 });
 

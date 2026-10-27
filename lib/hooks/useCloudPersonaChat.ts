@@ -8,7 +8,7 @@ import type { ChatEngine } from '@/lib/chat-session/engine';
 import logger from '../logger';
 import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
-import { markChatReady } from '../llm/prewarm';
+import { markChatFailed, markChatReady } from '../llm/prewarm';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import {
@@ -931,6 +931,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
             logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
             cloud().setError(msg);
+            markChatFailed();
           }
         } finally {
           if (turnStop.signal.aborted) {
