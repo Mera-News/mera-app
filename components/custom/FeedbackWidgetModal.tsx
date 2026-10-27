@@ -3,8 +3,6 @@ import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import React, { useEffect, useRef } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -105,8 +103,17 @@ const FeedbackWidgetModal: React.FC = () => {
     }
 
     return (
-        <BottomSheet open={visible} onClose={hide} onClosed={unmount} testID="feedback-sheet" scrimLabel={t('feedback.cancelButtonLabel')}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        // `avoidKeyboard` lifts the whole sheet above the iOS keyboard; a
+        // KeyboardAvoidingView inside the sheet never moved the sheet itself.
+        <BottomSheet
+            open={visible}
+            onClose={hide}
+            onClosed={unmount}
+            avoidKeyboard
+            testID="feedback-sheet"
+            scrimLabel={t('feedback.cancelButtonLabel')}
+        >
+            <View>
                 <View style={styles.header}>
                     <MeraLogo size={30} />
                     <Text accessibilityRole="header" style={styles.title}>
@@ -181,7 +188,7 @@ const FeedbackWidgetModal: React.FC = () => {
                         <Text style={styles.cancelText}>{t('feedback.cancelButtonLabel')}</Text>
                     </View>
                 </Pressable>
-            </KeyboardAvoidingView>
+            </View>
         </BottomSheet>
     );
 };
