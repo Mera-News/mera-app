@@ -54,7 +54,9 @@ type SkillId = (typeof SKILL_IDS)[number];
 // which is the part doing the work with thinking off. It rose because the body
 // is now actually SENT: for three corpus runs it was generated and never
 // reached a model, so its size cost nothing and bought nothing.
-const BUDGET: Record<string, number> = { router: 2000 };
+// topics/generic bought the Place rule (a fact's place at its level) with
+// tokens rather than by trimming its measured examples.
+const BUDGET: Record<string, number> = { router: 2000, 'topics/generic': 1300 };
 const DEFAULT_BUDGET = 1200;
 
 /**

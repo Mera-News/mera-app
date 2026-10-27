@@ -52,6 +52,8 @@ more means unrelated facts have been mashed together, so drop the topic.
 - Good: "Bhopal elder care", "AI copyright rulings".
 - Bad: "Amsterdam cricket festival music tech".
 
+Read it aloud. If it would not appear as a section heading in a real publication, drop it.
+
 ## News shape, not service shape
 Every topic reads like something a journalist reports: policy, debate, a government decision, a
 court ruling, a demographic or economic trend, sector news, an incident. Never something a person
@@ -70,6 +72,8 @@ prefix, as are a bare "press freedom news" and "media ethics". They name a field
 as in "Amsterdam festival permits", never a field's festivals. Carry a concrete bridge instead: a
 place, a named organisation, a policy or law, or a specific event or action.
 
+- Bad: "AI industry trends", "Dutch journalism awards", "European journalism festivals".
+- Good: "EU media freedom act", "newsroom AI adoption", "AI copyright ruling".
 
 ## Exclusions
 Emit none of the persona's existing topics and none of their declined topics, and emit nothing that
@@ -88,7 +92,8 @@ No em dash and no en dash anywhere. No filler openers. Plain words.
 A JSON array of strings. Each topic is 2 to 5 words and reads the way a newsroom labels a desk.
 `[]` is a valid answer and is the right one whenever the fact yields nothing honest.
 
-Do not explain your choices, restate the fact or wrap the array in a code fence. A sentence around
-the array makes the answer unparseable and the run is discarded.
+Do not explain your choices. Do not restate the fact, do not name the rules you applied, and do not
+wrap the array in a code fence. A sentence around the array makes the whole answer unparseable, and
+the run is discarded rather than degraded.
 
 Reply with the JSON array and nothing else. No sentence before it, none after.
