@@ -17,9 +17,10 @@ import { runArticleKevTurn } from '../../../news-harness/on-device/article-feedb
 import { describePending } from '../../../news-harness/on-device/shared';
 import { proposalRequiresUserChoice } from '../../../news-harness/core/proposals';
 import { getSuggestionFeedbackContext } from '../../../database/services/article-suggestion-reads';
+import { getRecentSystemMistakes } from '../../../database/services/article-feedback-service';
 import { ArticleSuggestionStatus } from '../../../database/article-suggestion-status';
 import { ArticleService } from '../../../article-service';
-import type { SystemMistakeView, TrackFeedbackSubject } from '../../../news-harness/core/types';
+import type { TrackFeedbackSubject } from '../../../news-harness/core/types';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { isSubjectTracked } from '../../../tracking/track-actions';
 import { ArticleFeedbackAgent } from '../ArticleFeedbackAgent';
@@ -54,7 +55,7 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
     userId: string,
     private readonly target: { articleId?: string; suggestionId?: string },
     private readonly trackSubject?: TrackFeedbackSubject | null,
-    private readonly opts: OnDeviceAgentOptions & { mistakes?: SystemMistakeView[] } = {},
+    private readonly opts: OnDeviceAgentOptions = {},
   ) {
     this.cloud = new ArticleFeedbackAgent(userId, target, trackSubject);
     this.id = this.cloud.id;
@@ -95,9 +96,11 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
   }
 
   private async context(): Promise<ArticleChatContext> {
-    const [ctx, relatedCoverage] = await Promise.all([
+    const [ctx, relatedCoverage, mistakes] = await Promise.all([
       getSuggestionFeedbackContext(this.target),
       this.getRelatedCoverage(),
+      // Read every turn; the reader never throws.
+      getRecentSystemMistakes(3),
     ]);
     const store = useFloatingChatStore.getState();
     const chat = store.context.kind === 'article-suggestion' ? store.context : null;
@@ -127,9 +130,7 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
           : `${a.question}${a.answer ? `: ${a.answer}` : ''} (applied)`,
       ),
       screen: chat?.feedbackAnswers?.screen,
-      mistakes: this.opts.mistakes
-        ?.slice(0, 3)
-        .map((m) => `${m.reason}; story from ${m.publication ?? 'a publication'}${part(m.country)}${part(m.language)}`),
+      mistakes: mistakes.map((m) => `${m.reason}; story from ${m.publication ?? 'a publication'}${part(m.country)}${part(m.language)}`),
     };
   }
 
