@@ -8,7 +8,8 @@
 import { patchMessageToolCallResult } from '@/lib/database/services/conversation-service';
 import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
 import logger from '@/lib/logger';
-import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { requestMoreOptions } from '@/lib/chat-session/chat-session';
+import { useFloatingChatStore, type TrackMoreState } from '@/lib/stores/floating-chat-store';
 import {
   mergeTrackOptions,
   normaliseTrackText,
@@ -79,6 +80,30 @@ export function recordTrackOutcome(source: Source, label: string, outcome: Track
   patchTrackCard(source, (current) => ({
     followed: { ...readTrackOutcomes(current.followed), [normaliseTrackText(label)]: outcome },
   }));
+}
+
+/**
+ * More options: one engine call built from the card, merged into it. The
+ * request state lives in the store (`trackMore`), so a card that unmounts
+ * mid-request comes back showing it. A second tap while one runs does nothing.
+ * Stopped clears the state (no message); busy or failed reads as failed.
+ */
+export async function loadMoreTrackOptions(
+  source: Source,
+  proposal: StagedProposal,
+): Promise<{ added: number; state: TrackMoreState | null }> {
+  if (useFloatingChatStore.getState().trackMore[proposal.id] === 'loading') return { added: 0, state: 'loading' };
+  useFloatingChatStore.getState().setTrackMore(proposal.id, 'loading');
+  const res = await requestMoreOptions(proposal.id, proposal.actions);
+  const added = res.actions.length > 0 ? growTrackCard(source, proposal, res.actions) : 0;
+  const state: TrackMoreState | null =
+    added > 0 || res.reason === 'stopped'
+      ? null
+      : res.reason === 'failed' || res.reason === 'busy'
+        ? 'failed'
+        : 'none';
+  useFloatingChatStore.getState().setTrackMore(proposal.id, state);
+  return { added, state };
 }
 
 /** Not now: persisted, and the store's waiting proposal (if this card) is cancelled. */

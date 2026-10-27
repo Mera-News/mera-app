@@ -13,9 +13,11 @@ import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
 import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
 import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import * as chatSession from '@/lib/chat-session/chat-session';
 import {
   dismissTrackCard,
   growTrackCard,
+  loadMoreTrackOptions,
   recordTrackOutcome,
 } from '@/components/custom/floating-chat/track-card-actions';
 import { deriveThreadItems } from '@/components/custom/floating-chat/deriveThreadItems';
@@ -26,7 +28,7 @@ import { pollUntil } from './kit';
 
 const MSG = 'asst-track';
 const subject = makeFollowStorySubject();
-const action = (label: string): ProposalAction => ({ type: 'track_story', label, searchText: label.toLowerCase(), subject });
+const action = (label: string): Extract<ProposalAction, { type: 'track_story' }> => ({ type: 'track_story', label, searchText: label.toLowerCase(), subject });
 
 /** Stages a proposeTrack exactly as the agent does, shows it, and persists the assistant row. */
 async function stage(labels: string[]) {
@@ -59,6 +61,7 @@ async function resumed(conversationId: string) {
 const labels = (p: StagedProposal) => p.actions.map((a) => (a as { label: string }).label);
 
 beforeEach(() => resetChatModules());
+afterEach(() => jest.restoreAllMocks());
 
 describe('growing the card', () => {
   it('the first grow on an empty store keeps the staged options and persists the whole list', async () => {
@@ -145,5 +148,52 @@ describe('outcomes and Not now', () => {
     expect(useFloatingChatStore.getState().resolvedProposals[proposal.id]).toBe('cancelled');
     const c = await pollUntil(() => resumed(conversationId), (r) => r.track?.dismissed === true, 2000);
     expect(c.track?.dismissed).toBe(true);
+  });
+});
+
+describe('More options', () => {
+  type Answer = Awaited<ReturnType<typeof chatSession.requestMoreOptions>>;
+  const answer = (a: Answer) => jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue(a);
+  const more = () => useFloatingChatStore.getState().trackMore;
+
+  it('asks from the card alone, grows it and clears the request', async () => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    const spy = answer({ actions: [action('Moon race')] });
+
+    const res = await loadMoreTrackOptions(source, proposal);
+
+    expect(spy).toHaveBeenCalledWith(proposal.id, proposal.actions);
+    expect(res).toEqual({ added: 1, state: null });
+    expect(labels(useFloatingChatStore.getState().proposal!)).toEqual(['Artemis II launch', 'Moon race']);
+    expect(more()[proposal.id]).toBeUndefined();
+  });
+
+  it('shows loading while the engine works, and a second tap sends nothing', async () => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    let release!: (a: Answer) => void;
+    const spy = jest.spyOn(chatSession, 'requestMoreOptions').mockReturnValue(new Promise<Answer>((r) => (release = r)));
+
+    const first = loadMoreTrackOptions(source, proposal);
+    expect(more()[proposal.id]).toBe('loading');
+    expect(await loadMoreTrackOptions(source, proposal)).toEqual({ added: 0, state: 'loading' });
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    release({ actions: [], reason: 'stopped' });
+    expect(await first).toEqual({ added: 0, state: null });
+    expect(more()[proposal.id]).toBeUndefined();
+  });
+
+  it.each([
+    ['an empty answer', { actions: [], reason: 'none' as const }, 'none'],
+    ['only repeats of shown options', { actions: [action('artemis ii launch')] }, 'none'],
+    ['a failed call', { actions: [], reason: 'failed' as const }, 'failed'],
+    ['a busy engine', { actions: [], reason: 'busy' as const }, 'failed'],
+  ])('%s leaves the card as it was and says so', async (_what, a, state) => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    answer(a);
+
+    expect(await loadMoreTrackOptions(source, proposal)).toEqual({ added: 0, state });
+    expect(more()[proposal.id]).toBe(state);
+    expect(useFloatingChatStore.getState().proposal).toBe(proposal);
   });
 });
