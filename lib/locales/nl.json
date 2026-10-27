@@ -1185,21 +1185,9 @@
     "actionRecalibrate": "Relevantie scoren opnieuw afstellen"
   },
   "feedbackTree": {
-    "title": "Vertel ons meer",
-    "back": "Terug",
-    "dismiss": "Sluiten",
-    "empty": "Geen opties beschikbaar",
-    "cancel": "Annuleren",
-    "confirm": "Bevestigen",
     "confirmMuteTitle": "Deze publicatie nooit meer tonen?",
     "confirmMuteBody": "Je ziet geen artikelen meer van {{publication}}. Je kunt dit altijd ongedaan maken.",
-    "appliedTitle": "Gelukt: feed bijgewerkt",
-    "undo": "Ongedaan maken",
     "undoneTitle": "Wijziging ongedaan gemaakt",
-    "thanks": "Bedankt voor je feedback",
-    "seenAck": "Begrepen: we tonen minder artikelen die je al hebt gezien",
-    "nudgeSubscribe": "Abonneren op {{publication}} ontgrendelt volledige artikelen",
-    "nudgeBrowse": "Zoek naar gerelateerde berichtgeving van andere bronnen",
     "followStory": "Dit verhaal volgen",
     "confirmMuteBodyUnnamed": "Je ziet artikelen van deze publicatie niet meer. Dit kun je altijd ongedaan maken.",
     "menu": {

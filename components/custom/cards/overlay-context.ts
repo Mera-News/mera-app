@@ -16,6 +16,7 @@ import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
+import { pickMatchedFact } from '@/components/custom/feedback-tree/pick-fact';
 
 const firstNonBlank = (xs: readonly (string | null | undefined)[]): string | null =>
   xs.map((x) => x?.trim()).find((x) => !!x) ?? null;
@@ -83,11 +84,29 @@ export async function buildOverlayContext(
   const entity = firstNonBlank(rowEntities) ?? firstNonBlank(subject.entities ?? []) ?? fallback?.entity ?? null;
   const placeValue = rowPlaceValue ?? fallback?.placeValue ?? null;
 
+  // The reader's fact the story matched (v6 rows quote it). Its own topics are
+  // the only ones a "less for this" answer may move.
+  const matchedTopics = subject.matchedTopics ?? [];
+  const topicIds = matchedTopics.map((m) => m.topicId).filter((id): id is string => !!id);
+  let fact: LocalFeedbackContext['fact'] = null;
+  if (topicIds.length > 0) {
+    try {
+      // Required at call time, like the suggestion reads above.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getFactsForTopicTexts } = require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
+      fact = pickMatchedFact(await getFactsForTopicTexts(topicIds), topicIds);
+    } catch (err) {
+      logger.captureException(err, { tags: { component: 'buildOverlayContext', method: 'fact' } });
+    }
+  }
+  const factTopics = fact ? new Set(fact.topicIds) : null;
+
   return {
     publicationName: subject.publicationName,
     countryCode: subject.countryCode,
     articleTitle: subject.title,
-    matchedTopics: subject.matchedTopics ?? [],
+    matchedTopics: factTopics ? matchedTopics.filter((m) => !!m.topicId && factTopics.has(m.topicId)) : matchedTopics,
+    fact,
     publicationVisits,
     ...(category ? { category } : {}),
     ...(subject.eventType ? { eventType: subject.eventType } : {}),

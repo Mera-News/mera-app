@@ -1191,21 +1191,9 @@
     "actionRecalibrate": "Réajuster l'évaluation de pertinence"
   },
   "feedbackTree": {
-    "title": "Dites-nous en plus",
-    "back": "Retour",
-    "dismiss": "Ignorer",
-    "empty": "Aucune option ici",
-    "cancel": "Annuler",
-    "confirm": "Confirmer",
     "confirmMuteTitle": "Ne plus jamais afficher cette publication ?",
     "confirmMuteBody": "Vous ne verrez plus d'articles de {{publication}}. Vous pouvez annuler cela à tout moment.",
-    "appliedTitle": "Compris : fil mis à jour",
-    "undo": "Annuler",
     "undoneTitle": "Modification annulée",
-    "thanks": "Merci pour votre retour",
-    "seenAck": "Compris : nous en montrerons moins que vous avez déjà vus",
-    "nudgeSubscribe": "S'abonner à {{publication}} débloque les articles complets",
-    "nudgeBrowse": "Cherchez une couverture connexe auprès d'autres sources",
     "followStory": "Suivre cette actualité",
     "confirmMuteBodyUnnamed": "Vous ne verrez plus d'articles de cette publication. Vous pouvez annuler cela à tout moment.",
     "menu": {

@@ -8,7 +8,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, Easing, LayoutAnimation, Platform, Pressable, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, I18nManager, LayoutAnimation, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** One slide between levels, both ways (FinalRead #15). */
@@ -19,6 +19,7 @@ const ROW_STYLE = { minHeight: 48, justifyContent: 'center' } as const;
  *  overlay's labels rendered at about a fifth of normal brightness). */
 const SHEET_ROW_LABEL_CLASS = 'text-ink';
 const SHEET_ROW_LABEL_STYLE = { fontSize: 15, fontWeight: '600' } as const;
+const BACK_LINK_STYLE = { minHeight: 44, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', paddingRight: 8 } as const;
 const CANCEL_STYLE = {
     minHeight: 48,
     marginTop: 8,
@@ -145,6 +146,12 @@ interface ActionSheetProps {
     direction: 'push' | 'pop' | 'none';
     /** Draw a "← Back" row on top (a pushed level). */
     onBack?: () => void;
+    /** The bottom plate's label; Cancel when absent (the feedback sheet says
+     *  Done once the reader has answered). */
+    closeLabel?: string;
+    /** Back as an accent "‹ Back" link above a level that draws its own
+     *  heading (the feedback sheet), instead of a row. */
+    backAsLink?: boolean;
     children: React.ReactNode;
 }
 
@@ -177,11 +184,13 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     levelKey,
     direction,
     onBack,
+    closeLabel,
+    backAsLink,
     children,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
-    const { width } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
     // Lite or Reduce Motion: levels swap in place, no slide, no height ease.
     const motion = useMotionAllowed();
 
@@ -194,12 +203,23 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     const shown = useRef<{ key: string; content: React.ReactNode } | null>(null);
     const [outgoing, setOutgoing] = useState<{ key: string; content: React.ReactNode } | null>(null);
 
+    const backControl = !onBack ? null : backAsLink ? (
+        <Pressable testID="sheet-back" accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onBack}>
+            <View style={BACK_LINK_STYLE}>
+                <MaterialIcons name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'} size={22} color={colors.accentText} />
+                <Text style={{ color: colors.accentText, fontSize: 17, lineHeight: 22 }}>{t('common.back')}</Text>
+            </View>
+        </Pressable>
+    ) : (
+        <ActionSheetRow testID="sheet-back" label={t('common.back')} icon="arrow-back" onPress={onBack} />
+    );
+    // A tall level scrolls; the close plate below stays put.
     const content = (
         <VStack space="xs">
-            {onBack ? (
-                <ActionSheetRow testID="sheet-back" label={t('common.back')} icon="arrow-back" onPress={onBack} />
-            ) : null}
-            {children}
+            {backControl}
+            <ScrollView style={{ maxHeight: height * 0.62 }} bounces={false} keyboardShouldPersistTaps="handled">
+                {children}
+            </ScrollView>
         </VStack>
     );
 
@@ -284,14 +304,14 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                 <Pressable
                     testID="article-menu-cancel"
                     accessibilityRole="button"
-                    accessibilityLabel={t('common.cancel')}
+                    accessibilityLabel={closeLabel ?? t('common.cancel')}
                     onPress={onClose}
                 >
                     {/* A visible full-width button inside the sheet's inset,
                         label centred. */}
                     <View testID="article-menu-cancel-plate" style={[CANCEL_STYLE, { backgroundColor: colors.surfaceRaised }]}>
                         <Text className="text-ink" style={{ fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
-                            {t('common.cancel')}
+                            {closeLabel ?? t('common.cancel')}
                         </Text>
                     </View>
                 </Pressable>

@@ -1225,21 +1225,9 @@
     "actionRecalibrate": "Ponownie dostroić punktowanie trafności"
   },
   "feedbackTree": {
-    "title": "Powiedz nam więcej",
-    "back": "Wstecz",
-    "dismiss": "Zamknij",
-    "empty": "Brak opcji",
-    "cancel": "Anuluj",
-    "confirm": "Potwierdź",
     "confirmMuteTitle": "Nigdy więcej nie pokazywać tej publikacji?",
     "confirmMuteBody": "Nie zobaczysz już artykułów z {{publication}}. Możesz to cofnąć w dowolnym momencie.",
-    "appliedTitle": "Gotowe: kanał zaktualizowany",
-    "undo": "Cofnij",
     "undoneTitle": "Zmiana cofnięta",
-    "thanks": "Dziękujemy za opinię",
-    "seenAck": "Rozumiem: pokażemy mniej artykułów, które już widziałeś",
-    "nudgeSubscribe": "Subskrypcja {{publication}} odblokowuje pełne artykuły",
-    "nudgeBrowse": "Poszukaj powiązanych relacji z innych źródeł",
     "followStory": "Obserwuj tę historię",
     "confirmMuteBodyUnnamed": "Nie zobaczysz już artykułów z tej publikacji. Możesz to cofnąć w dowolnym momencie.",
     "menu": {

@@ -1185,21 +1185,9 @@
     "actionRecalibrate": "Relevanzwertung neu abstimmen"
   },
   "feedbackTree": {
-    "title": "Mehr erzählen",
-    "back": "Zurück",
-    "dismiss": "Verwerfen",
-    "empty": "Keine Optionen vorhanden",
-    "cancel": "Abbrechen",
-    "confirm": "Bestätigen",
     "confirmMuteTitle": "Diese Publikation nie mehr anzeigen?",
     "confirmMuteBody": "Du siehst keine Artikel von {{publication}} mehr. Du kannst dies jederzeit rückgängig machen.",
-    "appliedTitle": "Erledigt: Feed aktualisiert",
-    "undo": "Rückgängig machen",
     "undoneTitle": "Änderung rückgängig gemacht",
-    "thanks": "Danke für dein Feedback",
-    "seenAck": "Erledigt: wir zeigen weniger bereits Gesehenes",
-    "nudgeSubscribe": "Ein Abonnement von {{publication}} schaltet vollständige Artikel frei",
-    "nudgeBrowse": "Suche nach verwandter Berichterstattung von anderen Quellen",
     "followStory": "Dieser Story folgen",
     "confirmMuteBodyUnnamed": "Du siehst keine Artikel von dieser Publikation mehr. Das kannst du jederzeit rückgängig machen.",
     "menu": {

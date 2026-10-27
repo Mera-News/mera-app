@@ -1187,21 +1187,9 @@
     "actionRecalibrate": "Alaka düzeyini yeniden hesapla"
   },
   "feedbackTree": {
-    "title": "Bize daha fazlasını anlat",
-    "back": "Geri",
-    "dismiss": "Kapat",
-    "empty": "Burada seçenek yok",
-    "cancel": "İptal",
-    "confirm": "Onayla",
     "confirmMuteTitle": "Bu yayın bir daha gösterilmesin mi?",
     "confirmMuteBody": "{{publication}} kaynağından bir daha makale görmeyeceksin. Bunu istediğin zaman geri alabilirsin.",
-    "appliedTitle": "Tamam, akış güncellendi",
-    "undo": "Geri al",
     "undoneTitle": "Değişiklik geri alındı",
-    "thanks": "Geri bildirim için teşekkürler",
-    "seenAck": "Tamam, gördüklerinden daha azını göstereceğiz",
-    "nudgeSubscribe": "{{publication}}'a abone olmak makalelerin tamamının kilidini açar",
-    "nudgeBrowse": "Diğer kaynaklardan ilgili haberlere göz at",
     "followStory": "Bu hikayeyi takip et",
     "confirmMuteBodyUnnamed": "Bu yayından bir daha makale görmeyeceksiniz. Bunu istediğiniz zaman geri alabilirsiniz.",
     "menu": {

@@ -52,6 +52,11 @@ import database from '../index';
 import logger from '../../logger';
 import { revertChange } from './persona-change-log-service';
 import type ArticleFeedbackModel from '../models/ArticleFeedback';
+import {
+  mistakeFromContext,
+  type FeedbackAnswer,
+} from '../../news-harness/persona-management/feedback-digest';
+import type { SystemMistakeView } from '../../news-harness/core/types';
 
 const articleFeedbackCol = database.get<ArticleFeedbackModel>('article_feedback');
 
@@ -551,5 +556,122 @@ export async function getArticleVerdict(
       tags: { service: 'article-feedback', method: 'getArticleVerdict' },
     });
     return { verdict: null, path: [] };
+  }
+}
+
+// ── v6 feedback answers ──────────────────────────────────────────────────────
+// One dislike row carries every answer the reader gave in the feedback sheet,
+// under `context_json.answers` (persona's `parseFeedbackAnswers` reads it), with
+// `treePath` kept as the FIRST answer's path: a row with no treePath is reaped
+// at write, so the digest would never see it.
+
+/** Parse, change and write back a verdict row's `context_json`, and set its
+ *  `processed_at` from what the change returns. No-op without a row. */
+async function rewriteSnapshot(
+  articleId: string,
+  sentiment: VerdictSentiment,
+  change: (snapshot: Record<string, unknown>) => { processed: boolean },
+  method: string,
+): Promise<void> {
+  const id = (articleId ?? '').trim();
+  if (!id) return;
+  try {
+    const rows = await articleFeedbackCol
+      .query(Q.where('article_id', id), Q.where('sentiment', sentiment))
+      .fetch();
+    if (rows.length === 0) return;
+    await database.write(async () => {
+      for (const row of rows) {
+        let snapshot: Record<string, unknown> = {};
+        try {
+          const parsed = row.contextJson ? JSON.parse(row.contextJson) : null;
+          if (parsed && typeof parsed === 'object') snapshot = parsed as Record<string, unknown>;
+        } catch {
+          /* corrupt json — start a fresh snapshot */
+        }
+        const { processed } = change(snapshot);
+        await row.update((r) => {
+          r.contextJson = JSON.stringify(snapshot);
+          r.processedAt = processed ? Date.now() : null;
+        });
+      }
+    });
+  } catch (error) {
+    logger.captureException(error, { tags: { service: 'article-feedback', method } });
+  }
+}
+
+/**
+ * Appends one answer to the article's dislike row. `applied` says the answer
+ * changed the persona at the tap: such a row is stamped processed and STAYS
+ * processed for every later answer (`answersApplied` is sticky), so the digest
+ * never applies a tap a second time. A row whose answers applied nothing stays
+ * open for the digest, which reads only `cause === 'config'`.
+ */
+export async function recordFeedbackAnswer(
+  articleId: string,
+  answer: FeedbackAnswer,
+  opts: { applied: boolean; factId?: string | null },
+): Promise<void> {
+  await rewriteSnapshot(
+    articleId,
+    'dislike',
+    (snapshot) => {
+      const answers = Array.isArray(snapshot.answers) ? snapshot.answers : [];
+      snapshot.answers = [...answers, answer];
+      const path = Array.isArray(snapshot.treePath) ? snapshot.treePath : [];
+      if (path.length === 0) snapshot.treePath = answer.path;
+      snapshot.committed = true;
+      if (opts.factId) snapshot.fact_id = opts.factId;
+      if (opts.applied) snapshot.answersApplied = true;
+      return { processed: snapshot.answersApplied === true };
+    },
+    'recordAnswer',
+  );
+}
+
+/**
+ * Removes the last `count` answers (the summary toast's Undo: the session's
+ * answers go, the verdict stays). With none left the row is a bare verdict
+ * again and is reaped, like any verdict with no reason.
+ */
+export async function dropLastFeedbackAnswers(articleId: string, count: number): Promise<void> {
+  if (count <= 0) return;
+  await rewriteSnapshot(
+    articleId,
+    'dislike',
+    (snapshot) => {
+      const answers = Array.isArray(snapshot.answers) ? snapshot.answers : [];
+      const kept = answers.slice(0, Math.max(0, answers.length - count));
+      if (kept.length === 0) {
+        for (const k of ['answers', 'treePath', 'committed', 'answersApplied', 'fact_id']) delete snapshot[k];
+        return { processed: true };
+      }
+      snapshot.answers = kept;
+      snapshot.treePath = (kept[0] as FeedbackAnswer).path;
+      return { processed: snapshot.answersApplied === true };
+    },
+    'dropAnswers',
+  );
+}
+
+/** The reader's recent "Mera's mistake" answers, newest first, as context for
+ *  the chat and the sweep. They never change the persona. */
+export async function getRecentSystemMistakes(limit = 20): Promise<SystemMistakeView[]> {
+  try {
+    const rows = await articleFeedbackCol
+      .query(Q.where('sentiment', 'dislike'), Q.sortBy('created_at', Q.desc), Q.take(200))
+      .fetch();
+    const out: SystemMistakeView[] = [];
+    for (const row of rows) {
+      const m = mistakeFromContext(row.contextJson);
+      if (!m) continue;
+      out.push({ ...m, at: row.createdAt.getTime() });
+      if (out.length >= limit) break;
+    }
+    return out;
+  } catch (error) {
+    logger.captureException(error, { tags: { service: 'article-feedback', method: 'recentMistakes' } });
+    return [];
   }
 }

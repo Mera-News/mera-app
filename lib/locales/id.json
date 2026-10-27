@@ -1177,21 +1177,9 @@
     "actionRecalibrate": "Sesuaikan ulang penilaian relevansi"
   },
   "feedbackTree": {
-    "title": "Beri tahu kami lebih lanjut",
-    "back": "Kembali",
-    "dismiss": "Tutup",
-    "empty": "Tidak ada opsi di sini",
-    "cancel": "Batal",
-    "confirm": "Konfirmasi",
     "confirmMuteTitle": "Jangan pernah tampilkan publikasi ini?",
     "confirmMuteBody": "Anda tidak akan melihat artikel dari {{publication}} lagi. Anda dapat membatalkan ini kapan saja.",
-    "appliedTitle": "Dimengerti, feed diperbarui",
-    "undo": "Urungkan",
     "undoneTitle": "Perubahan dibatalkan",
-    "thanks": "Terima kasih atas masukannya",
-    "seenAck": "Dimengerti, kami akan menampilkan lebih sedikit yang sudah Anda lihat",
-    "nudgeSubscribe": "Berlangganan {{publication}} membuka artikel lengkap",
-    "nudgeBrowse": "Cari liputan terkait dari sumber lain",
     "followStory": "Ikuti cerita ini",
     "confirmMuteBodyUnnamed": "Anda tidak akan melihat artikel dari publikasi ini lagi. Anda bisa membatalkannya kapan saja.",
     "menu": {

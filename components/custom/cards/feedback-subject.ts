@@ -36,6 +36,8 @@ export interface FeedbackSubject {
   pubDate?: string | null;
   publicationName?: string | null;
   countryCode?: string | null;
+  /** The article's language code, for a "Mera's mistake" record. */
+  languageCode?: string | null;
   /** Article category label (e.g. "Politics"), when the source data carries one
    *  (standalone `NewsArticle.category`; `ForYouSuggestion` has no category
    *  field, so suggestion-origin subjects leave this unset). Feeds the
@@ -78,6 +80,10 @@ export function buildContextJson(subject: FeedbackSubject): string | null {
   // feedback-digest's DigestSignalContext / optimisation-plan-service reader
   // already expect.
   if (subject.publicationName) snapshot.publication = subject.publicationName;
+  // Top-level `country` / `language`: persona's `mistakeFromContext` reads them
+  // for a "Mera's mistake" record kept on device.
+  if (subject.countryCode) snapshot.country = subject.countryCode;
+  if (subject.languageCode) snapshot.language = subject.languageCode;
   if (typeof subject.relevance === 'number') snapshot.relevance = subject.relevance;
   if (subject.matchedTopics && subject.matchedTopics.length > 0) {
     snapshot.matchedTopics = subject.matchedTopics;
@@ -114,6 +120,7 @@ export function feedbackSubjectFromSuggestion(
     pubDate: suggestion.firstPubDate ?? null,
     publicationName: suggestion.publication_name,
     countryCode: suggestion.country_code,
+    languageCode: suggestion.language_code,
     stableClusterId:
       suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? undefined,
     eventType: suggestion.eventType ?? undefined,

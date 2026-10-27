@@ -1186,21 +1186,9 @@
     "actionRecalibrate": "Reajustar a pontuação de relevância"
   },
   "feedbackTree": {
-    "title": "Conte mais",
-    "back": "Voltar",
-    "dismiss": "Dispensar",
-    "empty": "Nenhuma opção aqui",
-    "cancel": "Cancelar",
-    "confirm": "Confirmar",
     "confirmMuteTitle": "Nunca mais mostrar esta publicação?",
     "confirmMuteBody": "Você não verá mais artigos de {{publication}}. Você pode desfazer isso a qualquer momento.",
-    "appliedTitle": "Feito: feed atualizado",
-    "undo": "Desfazer",
     "undoneTitle": "Alteração desfeita",
-    "thanks": "Obrigado pelo feedback",
-    "seenAck": "Entendido: vamos mostrar menos artigos que você já viu",
-    "nudgeSubscribe": "Assinar {{publication}} desbloqueia artigos completos",
-    "nudgeBrowse": "Procure cobertura relacionada de outras fontes",
     "followStory": "Seguir esta história",
     "confirmMuteBodyUnnamed": "Você não verá mais artigos desta publicação. Você pode desfazer isso a qualquer momento.",
     "menu": {

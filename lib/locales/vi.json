@@ -1177,21 +1177,9 @@
     "actionRecalibrate": "Tinh chỉnh lại điểm số liên quan"
   },
   "feedbackTree": {
-    "title": "Cho chúng tôi biết thêm",
-    "back": "Quay lại",
-    "dismiss": "Bỏ qua",
-    "empty": "Không có tùy chọn nào ở đây",
-    "cancel": "Hủy",
-    "confirm": "Xác nhận",
     "confirmMuteTitle": "Không bao giờ hiện ấn phẩm này nữa?",
     "confirmMuteBody": "Bạn sẽ không còn thấy bài viết từ {{publication}} nữa. Bạn có thể hoàn tác bất cứ lúc nào.",
-    "appliedTitle": "Đã hiểu, bản tin đã được cập nhật",
-    "undo": "Hoàn tác",
     "undoneTitle": "Đã hoàn tác thay đổi",
-    "thanks": "Cảm ơn phản hồi của bạn",
-    "seenAck": "Đã hiểu, chúng tôi sẽ hiện ít bài bạn đã xem hơn",
-    "nudgeSubscribe": "Đăng ký {{publication}} để mở khóa toàn bộ bài viết",
-    "nudgeBrowse": "Tìm các bài đưa tin liên quan từ nguồn khác",
     "followStory": "Theo dõi câu chuyện này",
     "confirmMuteBodyUnnamed": "Bạn sẽ không thấy bài viết từ ấn phẩm này nữa. Bạn có thể hoàn tác bất cứ lúc nào.",
     "menu": {

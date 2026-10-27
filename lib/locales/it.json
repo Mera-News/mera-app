@@ -1186,21 +1186,9 @@
     "actionRecalibrate": "Risintonizza la valutazione della rilevanza"
   },
   "feedbackTree": {
-    "title": "Dicci di più",
-    "back": "Indietro",
-    "dismiss": "Ignora",
-    "empty": "Nessuna opzione qui",
-    "cancel": "Annulla",
-    "confirm": "Conferma",
     "confirmMuteTitle": "Non mostrare mai più questa pubblicazione?",
     "confirmMuteBody": "Non vedrai più articoli da {{publication}}. Puoi annullare questa scelta in qualsiasi momento.",
-    "appliedTitle": "Fatto, feed aggiornato",
-    "undo": "Annulla",
     "undoneTitle": "Modifica annullata",
-    "thanks": "Grazie per il feedback",
-    "seenAck": "Fatto, ne mostreremo meno di quelli che hai già visto",
-    "nudgeSubscribe": "Abbonarti a {{publication}} sblocca gli articoli completi",
-    "nudgeBrowse": "Cerca copertura correlata da altre fonti",
     "followStory": "Segui questa storia",
     "confirmMuteBodyUnnamed": "Non vedrai più articoli di questa testata. Puoi annullare in qualsiasi momento.",
     "menu": {
