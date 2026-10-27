@@ -277,14 +277,21 @@
       "index": 7,
       "user": "ठीक है, इसे फॉलो करो",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "follow-story",
+        "skill": "conversation/follow-story",
         "tools": [
-          "load_skill"
+          "load_skill",
+          "proposeTrack"
         ],
-        "legs": 2,
-        "endedOn": "settled",
         "noOffer": true,
+        "track": {
+          "staged": true,
+          "labelMatches": [
+            "delhi",
+            "pollution",
+            "air"
+          ]
+        },
         "replyScript": "devanagari"
       }
     }

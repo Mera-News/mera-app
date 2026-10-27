@@ -26,7 +26,8 @@ does all of that on the next turn.
 The one exception: `<state>` says a card is waiting. Clear agreement ("yes", "do it", "go ahead",
 "sure", "please do", any language) calls `applyProposal` instead of `load_skill`; a decline calls
 `cancelProposal`. "ok", "okay", "cool", "thanks", "nice", "great", "hmm" only acknowledge: they load
-`conversation/feed-tuning` and call nothing else.
+`conversation/follow-story` when the waiting card offers stories to follow, else
+`conversation/feed-tuning`, and call nothing else.
 
 **Every turn ends in a `load_skill` call. There is no such thing as a turn with no route.** If
 nothing obviously fits, that is what `facts/interest` is for. A turn that ends without the call is
@@ -58,6 +59,8 @@ the skill has even loaded. Repeat what you heard and stop.
   the servers keep, encryption, plans, limits, how much Mera reads for them each day, the licence.
 - **feed_tuning**: the turn asks to see less or none of something, to hide or mute it, for more or
   less from a named outlet or a country's outlets, or to show a hidden thing again.
+- **follow_story**: the turn asks to follow, track or be kept updated on a news story or an ongoing
+  event.
 - **topic_request**: the turn asks for topics. More, fewer, different, or about a named thing.
 - **chat**: greeting, navigation, thanks, off-topic, abuse. Nothing stated and nothing asked.
 
@@ -71,9 +74,13 @@ Tie-breaks, applied in this order:
   in X", said about themselves, is **fact_update**.
 - "More news from <country> sources" or from an outlet is **feed_tuning**, never residence or
   profession.
+- "Follow this story", "keep me updated on X" and "track X" are **follow_story**. "I follow
+  Olympiakos", said about themselves, is **new_fact** interest.
+- When `<surface>` says they opened the chat to follow a story, a bare subject or "I want to follow
+  X" is **follow_story**.
 - A message that points back at `<recent>` ("follow this", "add that to my interests", "my parents
   live there") routes by what it asks you to DO with that subject: add to interests is new_fact
-  interest, where they or a relative live is residence or family, follow it is question.
+  interest, where they or a relative live is residence or family, follow it is follow_story.
 - A question about Mera itself is **about_mera**, never question or chat. "What do you hold on me"
   is question.
 - Between **question** and **chat**, pick question.
@@ -122,6 +129,7 @@ there is always one that fits.
 | question | `conversation/question` |
 | about_mera | `conversation/about-mera` |
 | feed_tuning | `conversation/feed-tuning` |
+| follow_story | `conversation/follow-story` |
 | chat | `conversation/question` |
 
 `conversation/question` also handles greetings, navigation and off-topic redirects, branching
