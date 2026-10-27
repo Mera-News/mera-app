@@ -1,0 +1,662 @@
+{
+  "en": {
+    "trackedStories": {
+      "cardTitle": "Choose stories to follow",
+      "moreOptions": "More options",
+      "moreOptionsLoading": "Finding more options",
+      "moreOptionsAdded_one": "Added 1 more option",
+      "moreOptionsAdded_other": "Added {{count}} more options",
+      "moreOptionsNone": "No new options for this story",
+      "moreOptionsFailed": "Couldn't load more options. Try again.",
+      "follow": "Follow",
+      "followTicked_one": "Follow 1 story",
+      "followTicked_other": "Follow {{count}} stories",
+      "tryAgain": "Try again",
+      "rowFollowing": "Following",
+      "rowAlready": "Already following",
+      "rowFailed": "Couldn't follow",
+      "followingAll_one": "Following 1 story",
+      "followingAll_other": "Following {{count}} stories",
+      "followingSome_one": "Following {{done}} of {{count}} story",
+      "followingSome_other": "Following {{done}} of {{count}} stories",
+      "followFailedAll": "Couldn't follow these stories. Check your connection and try again.",
+      "optionsExpired": "Options expired"
+    },
+    "chat": {
+      "turnNoAnswer": "I couldn't do that. Try asking another way.",
+      "turnFailed": "That didn't finish. Try again."
+    },
+    "skillPhrase": {
+      "followStory": "the story to follow"
+    }
+  },
+  "ar": {
+    "trackedStories": {
+      "cardTitle": "اختر القصص التي تريد متابعتها",
+      "moreOptions": "خيارات أخرى",
+      "moreOptionsLoading": "جارٍ البحث عن خيارات أخرى",
+      "moreOptionsAdded_zero": "تمت إضافة {{count}} خيارات جديدة",
+      "moreOptionsAdded_one": "تمت إضافة خيار جديد",
+      "moreOptionsAdded_two": "تمت إضافة خيارين جديدين",
+      "moreOptionsAdded_few": "تمت إضافة {{count}} خيارات جديدة",
+      "moreOptionsAdded_many": "تمت إضافة {{count}} خيارًا جديدًا",
+      "moreOptionsAdded_other": "تمت إضافة {{count}} خيار جديد",
+      "moreOptionsNone": "لا توجد خيارات جديدة لهذه القصة",
+      "moreOptionsFailed": "تعذّر تحميل خيارات أخرى. حاول مرة أخرى.",
+      "follow": "متابعة",
+      "followTicked_zero": "متابعة {{count}} قصة",
+      "followTicked_one": "متابعة قصة واحدة",
+      "followTicked_two": "متابعة قصتين",
+      "followTicked_few": "متابعة {{count}} قصص",
+      "followTicked_many": "متابعة {{count}} قصة",
+      "followTicked_other": "متابعة {{count}} قصة",
+      "tryAgain": "إعادة المحاولة",
+      "rowFollowing": "تمت المتابعة",
+      "rowAlready": "تتابعها بالفعل",
+      "rowFailed": "تعذّرت المتابعة",
+      "followingAll_zero": "تتابع الآن {{count}} قصة",
+      "followingAll_one": "تتابع الآن قصة واحدة",
+      "followingAll_two": "تتابع الآن قصتين",
+      "followingAll_few": "تتابع الآن {{count}} قصص",
+      "followingAll_many": "تتابع الآن {{count}} قصة",
+      "followingAll_other": "تتابع الآن {{count}} قصة",
+      "followingSome_zero": "تتابع {{done}} من {{count}} قصة",
+      "followingSome_one": "تتابع {{done}} من {{count}} قصة",
+      "followingSome_two": "تتابع {{done}} من القصتين",
+      "followingSome_few": "تتابع {{done}} من {{count}} قصص",
+      "followingSome_many": "تتابع {{done}} من {{count}} قصة",
+      "followingSome_other": "تتابع {{done}} من {{count}} قصة",
+      "followFailedAll": "تعذّرت متابعة هذه القصص. تحقق من اتصالك وحاول مرة أخرى.",
+      "optionsExpired": "انتهت صلاحية الخيارات"
+    },
+    "chat": {
+      "turnNoAnswer": "لم أستطع فعل ذلك. جرّب أن تسألني بطريقة أخرى.",
+      "turnFailed": "لم يكتمل ردّي. حاول مرة أخرى."
+    },
+    "skillPhrase": {
+      "followStory": "القصة التي تريد متابعتها"
+    }
+  },
+  "de": {
+    "trackedStories": {
+      "cardTitle": "Geschichten zum Folgen auswählen",
+      "moreOptions": "Mehr Optionen laden",
+      "moreOptionsLoading": "Weitere Optionen werden gesucht",
+      "moreOptionsAdded_one": "1 weitere Option hinzugefügt",
+      "moreOptionsAdded_other": "{{count}} weitere Optionen hinzugefügt",
+      "moreOptionsNone": "Keine neuen Optionen für diese Geschichte",
+      "moreOptionsFailed": "Weitere Optionen konnten nicht geladen werden. Versuch es erneut.",
+      "follow": "Geschichten folgen",
+      "followTicked_one": "1 Geschichte folgen",
+      "followTicked_other": "{{count}} Geschichten folgen",
+      "tryAgain": "Erneut versuchen",
+      "rowFollowing": "Gefolgt",
+      "rowAlready": "Bereits gefolgt",
+      "rowFailed": "Folgen fehlgeschlagen",
+      "followingAll_one": "Du folgst jetzt 1 Geschichte",
+      "followingAll_other": "Du folgst jetzt {{count}} Geschichten",
+      "followingSome_one": "Du folgst jetzt {{done}} von {{count}} Geschichte",
+      "followingSome_other": "Du folgst jetzt {{done}} von {{count}} Geschichten",
+      "followFailedAll": "Diesen Geschichten konnte nicht gefolgt werden. Prüf deine Verbindung und versuch es erneut.",
+      "optionsExpired": "Optionen sind abgelaufen"
+    },
+    "chat": {
+      "turnNoAnswer": "Das konnte ich nicht. Frag noch einmal anders.",
+      "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut."
+    },
+    "skillPhrase": {
+      "followStory": "der Geschichte, der du folgen möchtest"
+    }
+  },
+  "es": {
+    "trackedStories": {
+      "cardTitle": "Elige historias para seguir",
+      "moreOptions": "Más opciones",
+      "moreOptionsLoading": "Buscando más opciones",
+      "moreOptionsAdded_one": "Se añadió 1 opción más",
+      "moreOptionsAdded_other": "Se añadieron {{count}} opciones más",
+      "moreOptionsNone": "No hay opciones nuevas para esta historia",
+      "moreOptionsFailed": "No se pudieron cargar más opciones. Inténtalo de nuevo.",
+      "follow": "Seguir",
+      "followTicked_one": "Seguir 1 historia",
+      "followTicked_other": "Seguir {{count}} historias",
+      "tryAgain": "Reintentar",
+      "rowFollowing": "Siguiendo",
+      "rowAlready": "Ya la seguías",
+      "rowFailed": "No se pudo seguir",
+      "followingAll_one": "Ahora sigues 1 historia",
+      "followingAll_other": "Ahora sigues {{count}} historias",
+      "followingSome_one": "Ahora sigues {{done}} de {{count}} historia",
+      "followingSome_other": "Ahora sigues {{done}} de {{count}} historias",
+      "followFailedAll": "No se pudieron seguir estas historias. Revisa tu conexión e inténtalo de nuevo.",
+      "optionsExpired": "Opciones caducadas"
+    },
+    "chat": {
+      "turnNoAnswer": "No pude hacer eso. Prueba a pedirlo de otra forma.",
+      "turnFailed": "Esa respuesta no terminó. Inténtalo de nuevo."
+    },
+    "skillPhrase": {
+      "followStory": "la historia que quieres seguir"
+    }
+  },
+  "fr": {
+    "trackedStories": {
+      "cardTitle": "Choisissez les actualités à suivre",
+      "moreOptions": "Plus d'options",
+      "moreOptionsLoading": "Recherche d'autres options",
+      "moreOptionsAdded_one": "1 option de plus ajoutée",
+      "moreOptionsAdded_other": "{{count}} options de plus ajoutées",
+      "moreOptionsNone": "Aucune nouvelle actualité trouvée",
+      "moreOptionsFailed": "Impossible de charger d'autres options. Réessayez.",
+      "follow": "Suivre",
+      "followTicked_one": "Suivre 1 actualité",
+      "followTicked_other": "Suivre {{count}} actualités",
+      "tryAgain": "Réessayer",
+      "rowFollowing": "Suivie",
+      "rowAlready": "Déjà suivie",
+      "rowFailed": "Échec du suivi",
+      "followingAll_one": "Vous suivez 1 actualité",
+      "followingAll_other": "Vous suivez {{count}} actualités",
+      "followingSome_one": "Vous suivez {{done}} sur {{count}} actualité",
+      "followingSome_other": "Vous suivez {{done}} sur {{count}} actualités",
+      "followFailedAll": "Impossible de suivre ces actualités. Vérifiez votre connexion et réessayez.",
+      "optionsExpired": "Options expirées"
+    },
+    "chat": {
+      "turnNoAnswer": "Je n'ai pas pu faire ça. Essaie de me le demander autrement.",
+      "turnFailed": "Ma réponse ne s'est pas terminée. Réessaie."
+    },
+    "skillPhrase": {
+      "followStory": "l'actualité à suivre"
+    }
+  },
+  "hi": {
+    "trackedStories": {
+      "cardTitle": "फ़ॉलो करने के लिए स्टोरीज़ चुनें",
+      "moreOptions": "और विकल्प",
+      "moreOptionsLoading": "और विकल्प खोजे जा रहे हैं",
+      "moreOptionsAdded_one": "1 और विकल्प जोड़ा गया",
+      "moreOptionsAdded_other": "{{count}} और विकल्प जोड़े गए",
+      "moreOptionsNone": "इस स्टोरी के लिए कोई नया विकल्प नहीं है",
+      "moreOptionsFailed": "और विकल्प लोड नहीं हो सके। फिर से कोशिश करें।",
+      "follow": "फ़ॉलो करें",
+      "followTicked_one": "1 स्टोरी फ़ॉलो करें",
+      "followTicked_other": "{{count}} स्टोरीज़ फ़ॉलो करें",
+      "tryAgain": "फिर से कोशिश करें",
+      "rowFollowing": "फ़ॉलो कर रहे हैं",
+      "rowAlready": "पहले से फ़ॉलो कर रहे हैं",
+      "rowFailed": "फ़ॉलो नहीं हो सका",
+      "followingAll_one": "अब 1 स्टोरी फ़ॉलो कर रहे हैं",
+      "followingAll_other": "अब {{count}} स्टोरीज़ फ़ॉलो कर रहे हैं",
+      "followingSome_one": "{{count}} में से {{done}} स्टोरी अब फ़ॉलो कर रहे हैं",
+      "followingSome_other": "{{count}} में से {{done}} स्टोरीज़ अब फ़ॉलो कर रहे हैं",
+      "followFailedAll": "ये स्टोरीज़ फ़ॉलो नहीं हो सकीं। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+      "optionsExpired": "विकल्प समाप्त हो गए"
+    },
+    "chat": {
+      "turnNoAnswer": "मैं यह नहीं कर सका। किसी और तरीके से पूछकर देखें।",
+      "turnFailed": "वह जवाब पूरा नहीं हो सका। फिर से कोशिश करें।"
+    },
+    "skillPhrase": {
+      "followStory": "फ़ॉलो की जाने वाली स्टोरी"
+    }
+  },
+  "id": {
+    "trackedStories": {
+      "cardTitle": "Pilih cerita untuk diikuti",
+      "moreOptions": "Opsi lainnya",
+      "moreOptionsLoading": "Mencari opsi lainnya",
+      "moreOptionsAdded_one": "1 opsi lain ditambahkan",
+      "moreOptionsAdded_other": "{{count}} opsi lain ditambahkan",
+      "moreOptionsNone": "Tidak ada cerita baru untuk ini",
+      "moreOptionsFailed": "Tidak dapat memuat opsi lainnya. Coba lagi.",
+      "follow": "Ikuti",
+      "followTicked_one": "Ikuti 1 cerita",
+      "followTicked_other": "Ikuti {{count}} cerita",
+      "tryAgain": "Coba Lagi",
+      "rowFollowing": "Mengikuti",
+      "rowAlready": "Sudah diikuti",
+      "rowFailed": "Gagal mengikuti",
+      "followingAll_one": "Mengikuti 1 cerita",
+      "followingAll_other": "Mengikuti {{count}} cerita",
+      "followingSome_one": "Mengikuti {{done}} dari {{count}} cerita",
+      "followingSome_other": "Mengikuti {{done}} dari {{count}} cerita",
+      "followFailedAll": "Tidak dapat mengikuti cerita-cerita ini. Periksa koneksi Anda lalu coba lagi.",
+      "optionsExpired": "Opsi sudah kedaluwarsa"
+    },
+    "chat": {
+      "turnNoAnswer": "Saya tidak bisa melakukan itu. Coba tanyakan dengan cara lain.",
+      "turnFailed": "Jawaban saya belum selesai. Coba lagi."
+    },
+    "skillPhrase": {
+      "followStory": "cerita yang akan diikuti"
+    }
+  },
+  "it": {
+    "trackedStories": {
+      "cardTitle": "Scegli le storie da seguire",
+      "moreOptions": "Altre opzioni",
+      "moreOptionsLoading": "Cerco altre opzioni",
+      "moreOptionsAdded_one": "Aggiunta 1 altra opzione",
+      "moreOptionsAdded_other": "Aggiunte {{count}} altre opzioni",
+      "moreOptionsNone": "Nessuna nuova opzione per questa storia",
+      "moreOptionsFailed": "Non è stato possibile caricare altre opzioni. Riprova.",
+      "follow": "Segui",
+      "followTicked_one": "Segui 1 storia",
+      "followTicked_other": "Segui {{count}} storie",
+      "tryAgain": "Riprova",
+      "rowFollowing": "Seguita",
+      "rowAlready": "Già seguita",
+      "rowFailed": "Impossibile seguirla",
+      "followingAll_one": "Ora segui 1 storia",
+      "followingAll_other": "Ora segui {{count}} storie",
+      "followingSome_one": "Ora segui {{done}} di {{count}} storia",
+      "followingSome_other": "Ora segui {{done}} di {{count}} storie",
+      "followFailedAll": "Non è stato possibile seguire queste storie. Controlla la connessione e riprova.",
+      "optionsExpired": "Opzioni scadute"
+    },
+    "chat": {
+      "turnNoAnswer": "Non sono riuscito a farlo. Prova a chiedermelo in un altro modo.",
+      "turnFailed": "Quella risposta non è terminata. Riprova."
+    },
+    "skillPhrase": {
+      "followStory": "la storia da seguire"
+    }
+  },
+  "ja": {
+    "trackedStories": {
+      "cardTitle": "フォローするストーリーを選んでください",
+      "moreOptions": "候補をさらに表示",
+      "moreOptionsLoading": "候補を探しています",
+      "moreOptionsAdded_one": "候補を1件追加しました",
+      "moreOptionsAdded_other": "候補を{{count}}件追加しました",
+      "moreOptionsNone": "このストーリーの新しい候補はありません",
+      "moreOptionsFailed": "候補を読み込めませんでした。もう一度お試しください。",
+      "follow": "フォローする",
+      "followTicked_one": "1件のストーリーをフォロー",
+      "followTicked_other": "{{count}}件のストーリーをフォロー",
+      "tryAgain": "もう一度お試しください",
+      "rowFollowing": "フォロー中",
+      "rowAlready": "すでにフォロー中",
+      "rowFailed": "フォローできませんでした",
+      "followingAll_one": "1件のストーリーをフォロー中です",
+      "followingAll_other": "{{count}}件のストーリーをフォロー中です",
+      "followingSome_one": "選んだ{{count}}件のストーリーのうち{{done}}件をフォロー中です",
+      "followingSome_other": "選んだ{{count}}件のストーリーのうち{{done}}件をフォロー中です",
+      "followFailedAll": "これらのストーリーをフォローできませんでした。接続を確認して、もう一度お試しください。",
+      "optionsExpired": "この候補は期限切れです"
+    },
+    "chat": {
+      "turnNoAnswer": "私にはそれができませんでした。別の聞き方でお試しください。",
+      "turnFailed": "その返信は完了しませんでした。もう一度お試しください。"
+    },
+    "skillPhrase": {
+      "followStory": "フォローするストーリー"
+    }
+  },
+  "ko": {
+    "trackedStories": {
+      "cardTitle": "팔로우할 스토리를 고르세요",
+      "moreOptions": "더 많은 옵션",
+      "moreOptionsLoading": "옵션을 찾는 중",
+      "moreOptionsAdded_one": "옵션 1개를 추가했습니다",
+      "moreOptionsAdded_other": "옵션 {{count}}개를 추가했습니다",
+      "moreOptionsNone": "이 스토리에 새 옵션이 없습니다",
+      "moreOptionsFailed": "옵션을 더 불러오지 못했습니다. 다시 시도하세요.",
+      "follow": "팔로우",
+      "followTicked_one": "스토리 1개 팔로우",
+      "followTicked_other": "스토리 {{count}}개 팔로우",
+      "tryAgain": "다시 시도",
+      "rowFollowing": "팔로우 중",
+      "rowAlready": "이미 팔로우 중",
+      "rowFailed": "팔로우하지 못함",
+      "followingAll_one": "스토리 1개를 팔로우 중입니다",
+      "followingAll_other": "스토리 {{count}}개를 팔로우 중입니다",
+      "followingSome_one": "선택한 스토리 {{count}}개 중 {{done}}개를 팔로우 중입니다",
+      "followingSome_other": "선택한 스토리 {{count}}개 중 {{done}}개를 팔로우 중입니다",
+      "followFailedAll": "이 스토리들을 팔로우하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+      "optionsExpired": "옵션이 만료되었습니다"
+    },
+    "chat": {
+      "turnNoAnswer": "제가 그 일을 할 수 없었어요. 다른 방식으로 물어봐 주세요.",
+      "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요."
+    },
+    "skillPhrase": {
+      "followStory": "팔로우할 스토리"
+    }
+  },
+  "nl": {
+    "trackedStories": {
+      "cardTitle": "Kies verhalen om te volgen",
+      "moreOptions": "Meer opties",
+      "moreOptionsLoading": "Meer opties zoeken",
+      "moreOptionsAdded_one": "Er is 1 optie toegevoegd",
+      "moreOptionsAdded_other": "Er zijn {{count}} opties toegevoegd",
+      "moreOptionsNone": "Geen nieuwe verhalen gevonden",
+      "moreOptionsFailed": "Meer opties laden is mislukt. Probeer het opnieuw.",
+      "follow": "Volgen",
+      "followTicked_one": "1 verhaal volgen",
+      "followTicked_other": "{{count}} verhalen volgen",
+      "tryAgain": "Probeer het opnieuw",
+      "rowFollowing": "Wordt gevolgd",
+      "rowAlready": "Al gevolgd",
+      "rowFailed": "Volgen mislukt",
+      "followingAll_one": "Je volgt nu 1 verhaal",
+      "followingAll_other": "Je volgt nu {{count}} verhalen",
+      "followingSome_one": "Je volgt nu {{done}} van de {{count}} verhaal",
+      "followingSome_other": "Je volgt nu {{done}} van de {{count}} verhalen",
+      "followFailedAll": "Deze verhalen konden niet worden gevolgd. Controleer je verbinding en probeer het opnieuw.",
+      "optionsExpired": "Opties verlopen"
+    },
+    "chat": {
+      "turnNoAnswer": "Dat lukte me niet. Probeer het op een andere manier te vragen.",
+      "turnFailed": "Dat is niet afgerond. Probeer het opnieuw."
+    },
+    "skillPhrase": {
+      "followStory": "het verhaal dat je wilt volgen"
+    }
+  },
+  "pl": {
+    "trackedStories": {
+      "cardTitle": "Wybierz historie do śledzenia",
+      "moreOptions": "Więcej opcji",
+      "moreOptionsLoading": "Szukam więcej opcji",
+      "moreOptionsAdded_one": "Dodano 1 opcję",
+      "moreOptionsAdded_few": "Dodano {{count}} opcje",
+      "moreOptionsAdded_many": "Dodano {{count}} opcji",
+      "moreOptionsAdded_other": "Dodano {{count}} opcji",
+      "moreOptionsNone": "Brak nowych opcji dla tej historii",
+      "moreOptionsFailed": "Nie udało się wczytać więcej opcji. Spróbuj ponownie.",
+      "follow": "Śledź",
+      "followTicked_one": "Śledź 1 historię",
+      "followTicked_few": "Śledź {{count}} historie",
+      "followTicked_many": "Śledź {{count}} historii",
+      "followTicked_other": "Śledź {{count}} historii",
+      "tryAgain": "Spróbuj ponownie",
+      "rowFollowing": "Śledzisz",
+      "rowAlready": "Już śledzisz",
+      "rowFailed": "Nie udało się",
+      "followingAll_one": "Śledzisz 1 historię",
+      "followingAll_few": "Śledzisz {{count}} historie",
+      "followingAll_many": "Śledzisz {{count}} historii",
+      "followingAll_other": "Śledzisz {{count}} historii",
+      "followingSome_one": "Śledzisz {{done}} z {{count}} historii",
+      "followingSome_few": "Śledzisz {{done}} z {{count}} historii",
+      "followingSome_many": "Śledzisz {{done}} z {{count}} historii",
+      "followingSome_other": "Śledzisz {{done}} z {{count}} historii",
+      "followFailedAll": "Nie udało się śledzić tych historii. Sprawdź połączenie i spróbuj ponownie.",
+      "optionsExpired": "Opcje wygasły"
+    },
+    "chat": {
+      "turnNoAnswer": "Nie udało mi się tego zrobić. Spróbuj zapytać inaczej.",
+      "turnFailed": "Ta odpowiedź się nie dokończyła. Spróbuj ponownie."
+    },
+    "skillPhrase": {
+      "followStory": "historię do śledzenia"
+    }
+  },
+  "pt-BR": {
+    "trackedStories": {
+      "cardTitle": "Escolha histórias para seguir",
+      "moreOptions": "Mais opções",
+      "moreOptionsLoading": "Buscando mais opções",
+      "moreOptionsAdded_one": "1 nova opção adicionada",
+      "moreOptionsAdded_other": "{{count}} novas opções adicionadas",
+      "moreOptionsNone": "Nenhuma opção nova para esta história",
+      "moreOptionsFailed": "Não foi possível carregar mais opções. Tente novamente.",
+      "follow": "Seguir",
+      "followTicked_one": "Seguir 1 história",
+      "followTicked_other": "Seguir {{count}} histórias",
+      "tryAgain": "Tentar novamente",
+      "rowFollowing": "Seguindo",
+      "rowAlready": "Já seguindo",
+      "rowFailed": "Não foi possível seguir",
+      "followingAll_one": "Seguindo 1 história",
+      "followingAll_other": "Seguindo {{count}} histórias",
+      "followingSome_one": "Seguindo {{done}} de {{count}} história",
+      "followingSome_other": "Seguindo {{done}} de {{count}} histórias",
+      "followFailedAll": "Não foi possível seguir essas histórias. Verifique sua conexão e tente novamente.",
+      "optionsExpired": "Opções expiradas"
+    },
+    "chat": {
+      "turnNoAnswer": "Não consegui fazer isso. Tente perguntar de outro jeito.",
+      "turnFailed": "Essa resposta não terminou. Tente novamente."
+    },
+    "skillPhrase": {
+      "followStory": "a história para seguir"
+    }
+  },
+  "ru": {
+    "trackedStories": {
+      "cardTitle": "Выберите истории для отслеживания",
+      "moreOptions": "Ещё варианты",
+      "moreOptionsLoading": "Ищем другие варианты",
+      "moreOptionsAdded_one": "Добавлен {{count}} вариант",
+      "moreOptionsAdded_few": "Добавлено {{count}} варианта",
+      "moreOptionsAdded_many": "Добавлено {{count}} вариантов",
+      "moreOptionsAdded_other": "Добавлено {{count}} варианта",
+      "moreOptionsNone": "Новых вариантов для этой истории нет",
+      "moreOptionsFailed": "Не удалось загрузить другие варианты. Попробуйте ещё раз.",
+      "follow": "Отслеживать",
+      "followTicked_one": "Отслеживать {{count}} историю",
+      "followTicked_few": "Отслеживать {{count}} истории",
+      "followTicked_many": "Отслеживать {{count}} историй",
+      "followTicked_other": "Отслеживать {{count}} истории",
+      "tryAgain": "Повторить",
+      "rowFollowing": "Отслеживается",
+      "rowAlready": "Уже отслеживается",
+      "rowFailed": "Не удалось отслеживать",
+      "followingAll_one": "Теперь вы отслеживаете {{count}} историю",
+      "followingAll_few": "Теперь вы отслеживаете {{count}} истории",
+      "followingAll_many": "Теперь вы отслеживаете {{count}} историй",
+      "followingAll_other": "Теперь вы отслеживаете {{count}} истории",
+      "followingSome_one": "Теперь вы отслеживаете {{done}} из {{count}} истории",
+      "followingSome_few": "Теперь вы отслеживаете {{done}} из {{count}} истории",
+      "followingSome_many": "Теперь вы отслеживаете {{done}} из {{count}} историй",
+      "followingSome_other": "Теперь вы отслеживаете {{done}} из {{count}} истории",
+      "followFailedAll": "Не удалось отслеживать эти истории. Проверьте подключение и попробуйте ещё раз.",
+      "optionsExpired": "Варианты устарели"
+    },
+    "chat": {
+      "turnNoAnswer": "Этого сделать не получилось. Попробуйте спросить по-другому.",
+      "turnFailed": "Ответ не завершился. Попробуйте ещё раз."
+    },
+    "skillPhrase": {
+      "followStory": "историю для отслеживания"
+    }
+  },
+  "th": {
+    "trackedStories": {
+      "cardTitle": "เลือกเรื่องราวที่ต้องการติดตาม",
+      "moreOptions": "ตัวเลือกเพิ่มเติม",
+      "moreOptionsLoading": "กำลังหาตัวเลือกเพิ่มเติม",
+      "moreOptionsAdded_one": "เพิ่มตัวเลือก 1 รายการแล้ว",
+      "moreOptionsAdded_other": "เพิ่มตัวเลือก {{count}} รายการแล้ว",
+      "moreOptionsNone": "ไม่มีตัวเลือกใหม่สำหรับเรื่องนี้",
+      "moreOptionsFailed": "โหลดตัวเลือกเพิ่มเติมไม่ได้ ลองอีกครั้ง",
+      "follow": "ติดตาม",
+      "followTicked_one": "ติดตาม 1 เรื่องราว",
+      "followTicked_other": "ติดตาม {{count}} เรื่องราว",
+      "tryAgain": "ลองอีกครั้ง",
+      "rowFollowing": "กำลังติดตาม",
+      "rowAlready": "ติดตามอยู่แล้ว",
+      "rowFailed": "ติดตามไม่ได้",
+      "followingAll_one": "กำลังติดตาม 1 เรื่องราว",
+      "followingAll_other": "กำลังติดตาม {{count}} เรื่องราว",
+      "followingSome_one": "กำลังติดตาม {{done}} จาก {{count}} เรื่องราว",
+      "followingSome_other": "กำลังติดตาม {{done}} จาก {{count}} เรื่องราว",
+      "followFailedAll": "ติดตามเรื่องราวเหล่านี้ไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      "optionsExpired": "ตัวเลือกหมดอายุแล้ว"
+    },
+    "chat": {
+      "turnNoAnswer": "ฉันทำแบบนั้นไม่ได้ ลองถามด้วยวิธีอื่นดู",
+      "turnFailed": "คำตอบของ เมร่า ยังไม่เสร็จ ลองอีกครั้ง"
+    },
+    "skillPhrase": {
+      "followStory": "เรื่องราวที่จะติดตาม"
+    }
+  },
+  "tr": {
+    "trackedStories": {
+      "cardTitle": "Takip etmek istediğin haberleri seç",
+      "moreOptions": "Daha fazla seçenek",
+      "moreOptionsLoading": "Daha fazla seçenek bulunuyor",
+      "moreOptionsAdded_one": "1 seçenek daha eklendi",
+      "moreOptionsAdded_other": "{{count}} seçenek daha eklendi",
+      "moreOptionsNone": "Bu haber için yeni seçenek yok",
+      "moreOptionsFailed": "Daha fazla seçenek yüklenemedi. Tekrar dene.",
+      "follow": "Takip et",
+      "followTicked_one": "1 haberi takip et",
+      "followTicked_other": "{{count}} haberi takip et",
+      "tryAgain": "Tekrar dene",
+      "rowFollowing": "Takip ediliyor",
+      "rowAlready": "Zaten takip ediliyor",
+      "rowFailed": "Takip edilemedi",
+      "followingAll_one": "1 haber takip ediliyor",
+      "followingAll_other": "{{count}} haber takip ediliyor",
+      "followingSome_one": "{{count}} haberden {{done}} tanesi takip ediliyor",
+      "followingSome_other": "{{count}} haberden {{done}} tanesi takip ediliyor",
+      "followFailedAll": "Bu haberler takip edilemedi. Bağlantını kontrol et ve tekrar dene.",
+      "optionsExpired": "Seçenekler süresi doldu"
+    },
+    "chat": {
+      "turnNoAnswer": "Bunu yapamadım. Başka bir şekilde sormayı dene.",
+      "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene."
+    },
+    "skillPhrase": {
+      "followStory": "takip edilecek haberi"
+    }
+  },
+  "uk": {
+    "trackedStories": {
+      "cardTitle": "Оберіть історії для відстеження",
+      "moreOptions": "Більше варіантів",
+      "moreOptionsLoading": "Шукаю більше варіантів",
+      "moreOptionsAdded_one": "Додано 1 варіант",
+      "moreOptionsAdded_few": "Додано {{count}} варіанти",
+      "moreOptionsAdded_many": "Додано {{count}} варіантів",
+      "moreOptionsAdded_other": "Додано {{count}} варіанти",
+      "moreOptionsNone": "Нових історій не знайдено",
+      "moreOptionsFailed": "Не вдалося завантажити більше варіантів. Спробуйте ще раз.",
+      "follow": "Відстежувати",
+      "followTicked_one": "Відстежувати 1 історію",
+      "followTicked_few": "Відстежувати {{count}} історії",
+      "followTicked_many": "Відстежувати {{count}} історій",
+      "followTicked_other": "Відстежувати {{count}} історії",
+      "tryAgain": "Повторити",
+      "rowFollowing": "Відстежується",
+      "rowAlready": "Уже відстежується",
+      "rowFailed": "Не вдалося відстежити",
+      "followingAll_one": "Тепер відстежується 1 історія",
+      "followingAll_few": "Тепер відстежуються {{count}} історії",
+      "followingAll_many": "Тепер відстежуються {{count}} історій",
+      "followingAll_other": "Тепер відстежуються {{count}} історії",
+      "followingSome_one": "Тепер відстежується {{done}} з {{count}} історії",
+      "followingSome_few": "Тепер відстежується {{done}} з {{count}} історій",
+      "followingSome_many": "Тепер відстежується {{done}} з {{count}} історій",
+      "followingSome_other": "Тепер відстежується {{done}} з {{count}} історій",
+      "followFailedAll": "Не вдалося відстежити ці історії. Перевірте з'єднання та спробуйте ще раз.",
+      "optionsExpired": "Варіанти застаріли"
+    },
+    "chat": {
+      "turnNoAnswer": "Я не змогла це зробити. Спробуйте запитати інакше.",
+      "turnFailed": "Ця відповідь не завершилася. Спробуйте ще раз."
+    },
+    "skillPhrase": {
+      "followStory": "історію, яку ви хочете відстежувати"
+    }
+  },
+  "vi": {
+    "trackedStories": {
+      "cardTitle": "Chọn câu chuyện để theo dõi",
+      "moreOptions": "Xem thêm lựa chọn",
+      "moreOptionsLoading": "Đang tìm thêm lựa chọn",
+      "moreOptionsAdded_one": "Đã thêm 1 lựa chọn",
+      "moreOptionsAdded_other": "Đã thêm {{count}} lựa chọn",
+      "moreOptionsNone": "Không có lựa chọn mới cho câu chuyện này",
+      "moreOptionsFailed": "Không tải được thêm lựa chọn. Hãy thử lại.",
+      "follow": "Theo dõi",
+      "followTicked_one": "Theo dõi 1 câu chuyện",
+      "followTicked_other": "Theo dõi {{count}} câu chuyện",
+      "tryAgain": "Thử lại",
+      "rowFollowing": "Đang theo dõi",
+      "rowAlready": "Đã theo dõi từ trước",
+      "rowFailed": "Không theo dõi được",
+      "followingAll_one": "Đang theo dõi 1 câu chuyện",
+      "followingAll_other": "Đang theo dõi {{count}} câu chuyện",
+      "followingSome_one": "Đang theo dõi {{done}} trong số {{count}} câu chuyện",
+      "followingSome_other": "Đang theo dõi {{done}} trong số {{count}} câu chuyện",
+      "followFailedAll": "Không theo dõi được các câu chuyện này. Hãy kiểm tra kết nối và thử lại.",
+      "optionsExpired": "Lựa chọn đã hết hạn"
+    },
+    "chat": {
+      "turnNoAnswer": "Mình không làm được điều đó. Hãy thử hỏi theo cách khác.",
+      "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại."
+    },
+    "skillPhrase": {
+      "followStory": "câu chuyện cần theo dõi"
+    }
+  },
+  "zh-CN": {
+    "trackedStories": {
+      "cardTitle": "选择要关注的报道",
+      "moreOptions": "更多选项",
+      "moreOptionsLoading": "正在查找更多选项",
+      "moreOptionsAdded_one": "已添加 1 个选项",
+      "moreOptionsAdded_other": "已添加 {{count}} 个选项",
+      "moreOptionsNone": "这则报道没有新的选项",
+      "moreOptionsFailed": "无法加载更多选项。请重试。",
+      "follow": "关注",
+      "followTicked_one": "关注 1 则报道",
+      "followTicked_other": "关注 {{count}} 则报道",
+      "tryAgain": "请重试",
+      "rowFollowing": "已关注",
+      "rowAlready": "之前已关注",
+      "rowFailed": "无法关注",
+      "followingAll_one": "你现在关注 1 则报道",
+      "followingAll_other": "你现在关注 {{count}} 则报道",
+      "followingSome_one": "你选的 {{count}} 则报道中，你现在关注了 {{done}} 则",
+      "followingSome_other": "你选的 {{count}} 则报道中，你现在关注了 {{done}} 则",
+      "followFailedAll": "无法关注这些报道。请检查网络连接，然后重试。",
+      "optionsExpired": "选项已过期"
+    },
+    "chat": {
+      "turnNoAnswer": "我没能做到。请换个方式再问我。",
+      "turnFailed": "这条回复没有完成。请重试。"
+    },
+    "skillPhrase": {
+      "followStory": "你要关注的报道"
+    }
+  },
+  "zh-TW": {
+    "trackedStories": {
+      "cardTitle": "選擇要追蹤的報導",
+      "moreOptions": "更多選項",
+      "moreOptionsLoading": "正在尋找更多選項",
+      "moreOptionsAdded_one": "已新增 1 則報導",
+      "moreOptionsAdded_other": "已新增 {{count}} 則報導",
+      "moreOptionsNone": "沒有找到新的報導",
+      "moreOptionsFailed": "無法載入更多選項。請再試一次。",
+      "follow": "追蹤",
+      "followTicked_one": "追蹤 1 則報導",
+      "followTicked_other": "追蹤 {{count}} 則報導",
+      "tryAgain": "請再試一次",
+      "rowFollowing": "追蹤中",
+      "rowAlready": "已在追蹤",
+      "rowFailed": "無法追蹤",
+      "followingAll_one": "你正在追蹤 1 則報導",
+      "followingAll_other": "你正在追蹤 {{count}} 則報導",
+      "followingSome_one": "已追蹤你選的 {{count}} 則報導中的 {{done}} 則",
+      "followingSome_other": "已追蹤你選的 {{count}} 則報導中的 {{done}} 則",
+      "followFailedAll": "無法追蹤這些報導。請檢查網路連線，然後再試一次。",
+      "optionsExpired": "選項已過期"
+    },
+    "chat": {
+      "turnNoAnswer": "我無法做到。請換個方式問我。",
+      "turnFailed": "這個回覆沒有完成。請再試一次。"
+    },
+    "skillPhrase": {
+      "followStory": "你想追蹤的報導"
+    }
+  }
+}

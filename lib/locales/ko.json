@@ -691,7 +691,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "준비 중",
     "statusReady": "준비됨",
-    "statusError": "오류"
+    "statusError": "오류",
+    "turnNoAnswer": "제가 그 일을 할 수 없었어요. 다른 방식으로 물어봐 주세요.",
+    "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요."
   },
   "personaChat": {
     "introMessage": "안녕하세요! 저는 메라, 당신의 개인 뉴스 어시스턴트입니다.\n\n당신에게 정말 중요한 뉴스를 찾으려면 당신에 대해 조금 알아야 합니다. 어디에 사시는지, 무엇을 하시는지, 따르시는 취미, 추적하시는 주식, 가족이 어디에 사시는지. 편한 만큼 공유해 주세요.\n\n만약 이것이 조금 불안하다면, 그것은 좋은 직감입니다. 개인 데이터를 앱 개발 회사에 맡기는 것은 현명하지 않습니다. 메라는 다르게 만들어졌습니다. 당신이 제게 말씀하시는 모든 것은 당신의 기기에 저장되며, 저희 서버에는 저장되지 않습니다. 어떻게 작동하는지 물어보세요, 또는 '설정 도와줘'라고 말씀해 주시면 시작합니다."
@@ -731,7 +733,6 @@
     "topicGenFailed": "이 주제에 대한 토픽을 생성할 수 없습니다.",
     "topicGenRetry": "재시도",
     "aiUsageNoticeGeneral": "메라도 실수할 수 있으니 중요한 내용은 확인하세요.",
-    "trackChooseHint": "팔로우할 항목을 고르세요",
     "factDeletePendingTitle": "프로필에서 제거될 예정",
     "saveAsWritten": "쓴 그대로 저장",
     "factDeleteRemove": "삭제",
@@ -993,7 +994,6 @@
     "endedLabel": "종료됨",
     "emptyCta": "피드로 이동",
     "trackChatSeed": "이 스토리를 팔로우하고 싶어요.",
-    "trackProposalTitle": "이 스토리를 팔로우할까요?",
     "alreadyTrackingTitle": "이미 팔로우 중입니다",
     "alreadyTrackingBody": "같은 스토리를 두 번 팔로우할 수 없습니다. 팔로우를 취소하면 이 스토리에 저장된 모든 내용이 삭제됩니다.",
     "goToStoryAction": "스토리로 이동",
@@ -1013,7 +1013,27 @@
     "stopFollowingConfirmTitle": "이 스토리를 팔로우 취소할까요?",
     "updatedAgo": "{{time}}에 업데이트됨",
     "articlesCount_one": "기사 {{count}}개",
-    "articlesCount_other": "기사 {{count}}개"
+    "articlesCount_other": "기사 {{count}}개",
+    "cardTitle": "팔로우할 스토리를 고르세요",
+    "moreOptions": "더 많은 옵션",
+    "moreOptionsLoading": "옵션을 찾는 중",
+    "moreOptionsAdded_one": "옵션 1개를 추가했습니다",
+    "moreOptionsAdded_other": "옵션 {{count}}개를 추가했습니다",
+    "moreOptionsNone": "이 스토리에 새 옵션이 없습니다",
+    "moreOptionsFailed": "옵션을 더 불러오지 못했습니다. 다시 시도하세요.",
+    "follow": "팔로우",
+    "followTicked_one": "스토리 1개 팔로우",
+    "followTicked_other": "스토리 {{count}}개 팔로우",
+    "tryAgain": "다시 시도",
+    "rowFollowing": "팔로우 중",
+    "rowAlready": "이미 팔로우 중",
+    "rowFailed": "팔로우하지 못함",
+    "followingAll_one": "스토리 1개를 팔로우 중입니다",
+    "followingAll_other": "스토리 {{count}}개를 팔로우 중입니다",
+    "followingSome_one": "선택한 스토리 {{count}}개 중 {{done}}개를 팔로우 중입니다",
+    "followingSome_other": "선택한 스토리 {{count}}개 중 {{done}}개를 팔로우 중입니다",
+    "followFailedAll": "이 스토리들을 팔로우하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+    "optionsExpired": "옵션이 만료되었습니다"
   },
   "whatsNew": {
     "gotIt": "확인",
@@ -2484,7 +2504,8 @@
     "interests": "관심사",
     "origin": "출신지",
     "family": "가족",
-    "feedTuning": "맞춤 피드"
+    "feedTuning": "맞춤 피드",
+    "followStory": "팔로우할 스토리"
   },
   "askChoice": {
     "answeredA11y": "이미 답변함",

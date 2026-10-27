@@ -553,7 +553,6 @@
     "endedLabel": "Ended",
     "emptyCta": "Go to Feed",
     "trackChatSeed": "I want to follow this story.",
-    "trackProposalTitle": "Follow this story?",
     "alreadyTrackingTitle": "You're already following this",
     "alreadyTrackingBody": "You can't follow this story twice. Untracking it would delete everything saved for it.",
     "goToStoryAction": "Go to story",
@@ -574,7 +573,27 @@
     "articlesCount_one": "{{count}} article",
     "articlesCount_other": "{{count}} articles",
     "updatesBadge_one": "{{count}} new",
-    "updatesBadge_other": "{{count}} new"
+    "updatesBadge_other": "{{count}} new",
+    "cardTitle": "Choose stories to follow",
+    "moreOptions": "More options",
+    "moreOptionsLoading": "Finding more options",
+    "moreOptionsAdded_one": "Added 1 more option",
+    "moreOptionsAdded_other": "Added {{count}} more options",
+    "moreOptionsNone": "No new options for this story",
+    "moreOptionsFailed": "Couldn't load more options. Try again.",
+    "follow": "Follow",
+    "followTicked_one": "Follow 1 story",
+    "followTicked_other": "Follow {{count}} stories",
+    "tryAgain": "Try again",
+    "rowFollowing": "Following",
+    "rowAlready": "Already following",
+    "rowFailed": "Couldn't follow",
+    "followingAll_one": "Following 1 story",
+    "followingAll_other": "Following {{count}} stories",
+    "followingSome_one": "Following {{done}} of {{count}} story",
+    "followingSome_other": "Following {{done}} of {{count}} stories",
+    "followFailedAll": "Couldn't follow these stories. Check your connection and try again.",
+    "optionsExpired": "Options expired"
   },
   "whatsNew": {
     "gotIt": "Got it",
@@ -1076,7 +1095,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Warming up",
     "statusReady": "Ready",
-    "statusError": "Error"
+    "statusError": "Error",
+    "turnNoAnswer": "I couldn't do that. Try asking another way.",
+    "turnFailed": "That didn't finish. Try again."
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
@@ -1116,7 +1137,6 @@
     "topicGenFailed": "Couldn't generate topics for this.",
     "topicGenRetry": "Retry",
     "aiUsageNoticeGeneral": "Mera can make mistakes, so check anything important.",
-    "trackChooseHint": "Choose what to follow",
     "factDeletePendingTitle": "Will be removed from your persona",
     "saveAsWritten": "Save as I wrote it",
     "factDeleteRemove": "Remove",
@@ -2495,7 +2515,8 @@
     "interests": "your interests",
     "origin": "where you're from",
     "family": "your family",
-    "feedTuning": "your feed"
+    "feedTuning": "your feed",
+    "followStory": "the story to follow"
   },
   "askChoice": {
     "answeredA11y": "already answered",

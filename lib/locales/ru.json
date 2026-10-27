@@ -730,7 +730,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Подготовка",
     "statusReady": "Готово",
-    "statusError": "Ошибка"
+    "statusError": "Ошибка",
+    "turnNoAnswer": "Этого сделать не получилось. Попробуйте спросить по-другому.",
+    "turnFailed": "Ответ не завершился. Попробуйте ещё раз."
   },
   "personaChat": {
     "introMessage": "Привет! Я Мера, ваш персональный новостной помощник.\n\nЧтобы находить новости, которые действительно важны для вас, мне нужно знать о вас немного больше. Где вы живёте, чем занимаетесь, какие у вас увлечения, какие акции вы отслеживаете, где живёт ваша семья. Делитесь столько, сколько захотите.\n\nЕсли это вас насторожило, у вас правильное чутьё. Отдавать личные данные компании-разработчику приложения не стоит. Мера устроена иначе: всё, что вы мне рассказываете, сохраняется на вашем устройстве, а не на наших серверах. Спросите, как это работает, или скажите «помогите настроить», и мы начнём."
@@ -770,7 +772,6 @@
     "topicGenFailed": "Не удалось сгенерировать темы для этого.",
     "topicGenRetry": "Повторить",
     "aiUsageNoticeGeneral": "Мера может ошибаться, поэтому проверяйте всё важное.",
-    "trackChooseHint": "Выбери, за чем следить",
     "factDeletePendingTitle": "Будет удалено из вашего профиля",
     "saveAsWritten": "Сохранить так, как я написал",
     "factDeleteRemove": "Удалить",
@@ -1036,7 +1037,6 @@
     "endedLabel": "Завершено",
     "emptyCta": "Перейти в ленту",
     "trackChatSeed": "Я хочу отслеживать эту историю.",
-    "trackProposalTitle": "Отслеживать эту историю?",
     "alreadyTrackingTitle": "Вы уже отслеживаете это",
     "alreadyTrackingBody": "Вы не можете отслеживать одну и ту же историю дважды. Если перестать отслеживать, всё сохранённое для неё будет удалено.",
     "goToStoryAction": "Перейти к истории",
@@ -1058,7 +1058,35 @@
     "articlesCount_one": "{{count}} статья",
     "articlesCount_few": "{{count}} статьи",
     "articlesCount_many": "{{count}} статей",
-    "articlesCount_other": "{{count}} статьи"
+    "articlesCount_other": "{{count}} статьи",
+    "cardTitle": "Выберите истории для отслеживания",
+    "moreOptions": "Ещё варианты",
+    "moreOptionsLoading": "Ищем другие варианты",
+    "moreOptionsAdded_one": "Добавлен {{count}} вариант",
+    "moreOptionsAdded_few": "Добавлено {{count}} варианта",
+    "moreOptionsAdded_many": "Добавлено {{count}} вариантов",
+    "moreOptionsAdded_other": "Добавлено {{count}} варианта",
+    "moreOptionsNone": "Новых вариантов для этой истории нет",
+    "moreOptionsFailed": "Не удалось загрузить другие варианты. Попробуйте ещё раз.",
+    "follow": "Отслеживать",
+    "followTicked_one": "Отслеживать {{count}} историю",
+    "followTicked_few": "Отслеживать {{count}} истории",
+    "followTicked_many": "Отслеживать {{count}} историй",
+    "followTicked_other": "Отслеживать {{count}} истории",
+    "tryAgain": "Повторить",
+    "rowFollowing": "Отслеживается",
+    "rowAlready": "Уже отслеживается",
+    "rowFailed": "Не удалось отслеживать",
+    "followingAll_one": "Теперь вы отслеживаете {{count}} историю",
+    "followingAll_few": "Теперь вы отслеживаете {{count}} истории",
+    "followingAll_many": "Теперь вы отслеживаете {{count}} историй",
+    "followingAll_other": "Теперь вы отслеживаете {{count}} истории",
+    "followingSome_one": "Теперь вы отслеживаете {{done}} из {{count}} истории",
+    "followingSome_few": "Теперь вы отслеживаете {{done}} из {{count}} истории",
+    "followingSome_many": "Теперь вы отслеживаете {{done}} из {{count}} историй",
+    "followingSome_other": "Теперь вы отслеживаете {{done}} из {{count}} истории",
+    "followFailedAll": "Не удалось отслеживать эти истории. Проверьте подключение и попробуйте ещё раз.",
+    "optionsExpired": "Варианты устарели"
   },
   "whatsNew": {
     "gotIt": "Понятно",
@@ -2559,7 +2587,8 @@
     "interests": "ваши интересы",
     "origin": "откуда вы родом",
     "family": "вашу семью",
-    "feedTuning": "вашу Ленту"
+    "feedTuning": "вашу Ленту",
+    "followStory": "историю для отслеживания"
   },
   "askChoice": {
     "answeredA11y": "уже отвечено",

@@ -698,7 +698,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Hazırlanıyor",
     "statusReady": "Hazır",
-    "statusError": "Hata"
+    "statusError": "Hata",
+    "turnNoAnswer": "Bunu yapamadım. Başka bir şekilde sormayı dene.",
+    "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene."
   },
   "personaChat": {
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nBu seni biraz tereddüte düşürüyorsa, içgüdün doğru. Kişisel verilerini bir uygulama şirketine teslim etmek akıllıca değil. Mera farklı tasarlandı: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana bunun nasıl çalıştığını sorabilirsin ya da 'kurulumda bana yardım et' de, başlayalım."
@@ -738,7 +740,6 @@
     "topicGenFailed": "Bu için konular oluşturulamadı.",
     "topicGenRetry": "Tekrar Dene",
     "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
-    "trackChooseHint": "Neyi takip edeceğini seç",
     "factDeletePendingTitle": "Profilinden kaldırılacak",
     "saveAsWritten": "Yazdığım gibi kaydet",
     "factDeleteRemove": "Kaldır",
@@ -1002,7 +1003,6 @@
     "endedLabel": "Sona erdi",
     "emptyCta": "Akışa Git",
     "trackChatSeed": "Bu haberi takip etmek istiyorum.",
-    "trackProposalTitle": "Bu haberi takip et?",
     "alreadyTrackingTitle": "Bunu zaten takip ediyorsun",
     "alreadyTrackingBody": "Bu haberi iki kez takip edemezsin. Takibi bırakmak, bunun için kaydedilmiş her şeyi silecektir.",
     "goToStoryAction": "Haberi aç",
@@ -1022,7 +1022,27 @@
     "stopFollowingConfirmTitle": "Bu haberin takibi bırakılsın mı?",
     "updatedAgo": "{{time}} güncellendi",
     "articlesCount_one": "{{count}} makale",
-    "articlesCount_other": "{{count}} makale"
+    "articlesCount_other": "{{count}} makale",
+    "cardTitle": "Takip etmek istediğin haberleri seç",
+    "moreOptions": "Daha fazla seçenek",
+    "moreOptionsLoading": "Daha fazla seçenek bulunuyor",
+    "moreOptionsAdded_one": "1 seçenek daha eklendi",
+    "moreOptionsAdded_other": "{{count}} seçenek daha eklendi",
+    "moreOptionsNone": "Bu haber için yeni seçenek yok",
+    "moreOptionsFailed": "Daha fazla seçenek yüklenemedi. Tekrar dene.",
+    "follow": "Takip et",
+    "followTicked_one": "1 haberi takip et",
+    "followTicked_other": "{{count}} haberi takip et",
+    "tryAgain": "Tekrar dene",
+    "rowFollowing": "Takip ediliyor",
+    "rowAlready": "Zaten takip ediliyor",
+    "rowFailed": "Takip edilemedi",
+    "followingAll_one": "1 haber takip ediliyor",
+    "followingAll_other": "{{count}} haber takip ediliyor",
+    "followingSome_one": "{{count}} haberden {{done}} tanesi takip ediliyor",
+    "followingSome_other": "{{count}} haberden {{done}} tanesi takip ediliyor",
+    "followFailedAll": "Bu haberler takip edilemedi. Bağlantını kontrol et ve tekrar dene.",
+    "optionsExpired": "Seçenekler süresi doldu"
   },
   "whatsNew": {
     "gotIt": "Anladım",
@@ -2495,7 +2515,8 @@
     "interests": "ilgi alanlarını",
     "origin": "nereli olduğunu",
     "family": "aileni",
-    "feedTuning": "akışını"
+    "feedTuning": "akışını",
+    "followStory": "takip edilecek haberi"
   },
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı",

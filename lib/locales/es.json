@@ -698,7 +698,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Preparando",
     "statusReady": "Listo",
-    "statusError": "Error"
+    "statusError": "Error",
+    "turnNoAnswer": "No pude hacer eso. Prueba a pedirlo de otra forma.",
+    "turnFailed": "Esa respuesta no terminó. Inténtalo de nuevo."
   },
   "personaChat": {
     "introMessage": "¡Hola! Soy Mera, tu asistente personal de noticias.\n\nPara encontrar noticias que realmente te importan, necesito saber algo sobre ti. Dónde vives, a qué te dedicas, qué aficiones tienes, qué acciones sigues, dónde vive tu familia. Comparte lo que quieras o tan poco como prefieras.\n\nSi esto te genera dudas, buen instinto. No es prudente entregar datos personales a una empresa de aplicaciones. Mera está construida de forma diferente: todo lo que me dices se guarda en tu dispositivo, no en nuestros servidores. Pregúntame cómo funciona, o di 'Ayúdame a configurar' y comenzaremos."
@@ -738,7 +740,6 @@
     "topicGenFailed": "No se pudo generar temas.",
     "topicGenRetry": "Reintentar",
     "aiUsageNoticeGeneral": "Mera puede equivocarse, así que comprueba lo importante.",
-    "trackChooseHint": "Elige qué seguir",
     "factDeletePendingTitle": "Se eliminará de tu perfil",
     "saveAsWritten": "Guardar tal como lo escribí",
     "factDeleteRemove": "Eliminar",
@@ -999,7 +1000,6 @@
     "updatesBadge": "{{count}} nuevo",
     "endedLabel": "Finalizada",
     "trackChatSeed": "Quiero seguir esta historia.",
-    "trackProposalTitle": "¿Seguir esta historia?",
     "alreadyTrackingTitle": "Ya estás siguiendo esto",
     "alreadyTrackingBody": "No puedes seguir esta historia dos veces. Dejar de seguirla eliminaría todo lo guardado para ella.",
     "goToStoryAction": "Ir a la historia",
@@ -1020,7 +1020,27 @@
     "stopFollowingConfirmTitle": "¿Dejar de seguir esta historia?",
     "updatedAgo": "actualizada {{time}}",
     "articlesCount_one": "{{count}} artículo",
-    "articlesCount_other": "{{count}} artículos"
+    "articlesCount_other": "{{count}} artículos",
+    "cardTitle": "Elige historias para seguir",
+    "moreOptions": "Más opciones",
+    "moreOptionsLoading": "Buscando más opciones",
+    "moreOptionsAdded_one": "Se añadió 1 opción más",
+    "moreOptionsAdded_other": "Se añadieron {{count}} opciones más",
+    "moreOptionsNone": "No hay opciones nuevas para esta historia",
+    "moreOptionsFailed": "No se pudieron cargar más opciones. Inténtalo de nuevo.",
+    "follow": "Seguir",
+    "followTicked_one": "Seguir 1 historia",
+    "followTicked_other": "Seguir {{count}} historias",
+    "tryAgain": "Reintentar",
+    "rowFollowing": "Siguiendo",
+    "rowAlready": "Ya la seguías",
+    "rowFailed": "No se pudo seguir",
+    "followingAll_one": "Ahora sigues 1 historia",
+    "followingAll_other": "Ahora sigues {{count}} historias",
+    "followingSome_one": "Ahora sigues {{done}} de {{count}} historia",
+    "followingSome_other": "Ahora sigues {{done}} de {{count}} historias",
+    "followFailedAll": "No se pudieron seguir estas historias. Revisa tu conexión e inténtalo de nuevo.",
+    "optionsExpired": "Opciones caducadas"
   },
   "whatsNew": {
     "gotIt": "Entendido",
@@ -2493,7 +2513,8 @@
     "interests": "tus intereses",
     "origin": "de dónde eres",
     "family": "tu familia",
-    "feedTuning": "tu Feed"
+    "feedTuning": "tu Feed",
+    "followStory": "la historia que quieres seguir"
   },
   "askChoice": {
     "answeredA11y": "ya respondido",

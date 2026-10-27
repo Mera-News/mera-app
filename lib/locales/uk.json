@@ -730,7 +730,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Підготовка",
     "statusReady": "Готово",
-    "statusError": "Помилка"
+    "statusError": "Помилка",
+    "turnNoAnswer": "Я не змогла це зробити. Спробуйте запитати інакше.",
+    "turnFailed": "Ця відповідь не завершилася. Спробуйте ще раз."
   },
   "personaChat": {
     "introMessage": "Привіт! Я Мера, ваша особиста новинна помічниця.\n\nЩоб знайти новини, які насправді важливі для вас, мені потрібно трохи про вас дізнатися. Де ви живете, чим займаєтеся, які захоплення вам цікаві, за якими акціями стежите, де живе ваша родина. Діліться стільки, скільки хочете.\n\nЯкщо це вас насторожує, це розумно. Не варто довіряти особисті дані компанії, що розробляє застосунки. Мера працює інакше: все, що ви мені розповідаєте, зберігається на вашому пристрої, а не на наших серверах. Запитайте мене, як це працює, або напишіть «допоможи налаштувати», і ми почнемо."
@@ -770,7 +772,6 @@
     "topicGenFailed": "Не вдалося створити теми для цього.",
     "topicGenRetry": "Повторити",
     "aiUsageNoticeGeneral": "Мера може помилятися, тож перевіряйте все важливе.",
-    "trackChooseHint": "Обери, за чим стежити",
     "factDeletePendingTitle": "Буде видалено з вашого профілю",
     "saveAsWritten": "Зберегти так, як я написав",
     "factDeleteRemove": "Видалити",
@@ -1040,7 +1041,6 @@
     "endedLabel": "Завершено",
     "emptyCta": "Перейти до стрічки",
     "trackChatSeed": "Я хочу відстежувати цю історію.",
-    "trackProposalTitle": "Відстежувати цю історю?",
     "alreadyTrackingTitle": "Ви вже відстежуєте це",
     "alreadyTrackingBody": "Ви не можете відстежувати цю історію двічі. Припинення відстеження видалить усе збережене для цієї історії.",
     "goToStoryAction": "Перейти до історії",
@@ -1062,7 +1062,35 @@
     "articlesCount_one": "{{count}} стаття",
     "articlesCount_few": "{{count}} статті",
     "articlesCount_many": "{{count}} статей",
-    "articlesCount_other": "{{count}} статті"
+    "articlesCount_other": "{{count}} статті",
+    "cardTitle": "Оберіть історії для відстеження",
+    "moreOptions": "Більше варіантів",
+    "moreOptionsLoading": "Шукаю більше варіантів",
+    "moreOptionsAdded_one": "Додано 1 варіант",
+    "moreOptionsAdded_few": "Додано {{count}} варіанти",
+    "moreOptionsAdded_many": "Додано {{count}} варіантів",
+    "moreOptionsAdded_other": "Додано {{count}} варіанти",
+    "moreOptionsNone": "Нових історій не знайдено",
+    "moreOptionsFailed": "Не вдалося завантажити більше варіантів. Спробуйте ще раз.",
+    "follow": "Відстежувати",
+    "followTicked_one": "Відстежувати 1 історію",
+    "followTicked_few": "Відстежувати {{count}} історії",
+    "followTicked_many": "Відстежувати {{count}} історій",
+    "followTicked_other": "Відстежувати {{count}} історії",
+    "tryAgain": "Повторити",
+    "rowFollowing": "Відстежується",
+    "rowAlready": "Уже відстежується",
+    "rowFailed": "Не вдалося відстежити",
+    "followingAll_one": "Тепер відстежується 1 історія",
+    "followingAll_few": "Тепер відстежуються {{count}} історії",
+    "followingAll_many": "Тепер відстежуються {{count}} історій",
+    "followingAll_other": "Тепер відстежуються {{count}} історії",
+    "followingSome_one": "Тепер відстежується {{done}} з {{count}} історії",
+    "followingSome_few": "Тепер відстежується {{done}} з {{count}} історій",
+    "followingSome_many": "Тепер відстежується {{done}} з {{count}} історій",
+    "followingSome_other": "Тепер відстежується {{done}} з {{count}} історій",
+    "followFailedAll": "Не вдалося відстежити ці історії. Перевірте з'єднання та спробуйте ще раз.",
+    "optionsExpired": "Варіанти застаріли"
   },
   "whatsNew": {
     "gotIt": "Зрозуміло",
@@ -2563,7 +2591,8 @@
     "interests": "ваші інтереси",
     "origin": "звідки ви родом",
     "family": "вашу сім'ю",
-    "feedTuning": "вашу стрічку"
+    "feedTuning": "вашу стрічку",
+    "followStory": "історію, яку ви хочете відстежувати"
   },
   "askChoice": {
     "answeredA11y": "уже відповіли",
