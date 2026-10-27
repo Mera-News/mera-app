@@ -320,6 +320,10 @@ export interface BatchScoreResult {
    *  terminally `excluded`. Computed here (not by the caller) because this is
    *  where the eligible/failed split lives; see collectCulledHeadlineIds. */
   culledHeadlineIds: Set<string>;
+  /** Rows the scorer's location screen caught: never read by Kev, scored 0, kept
+   *  (not excluded, not culled) so they show only under Discarded. The caller
+   *  saves them through saveScoringResult like any other relevance-0 row. */
+  locationCaughtIds: Set<string>;
 }
 
 /**
@@ -347,6 +351,7 @@ export async function batchScoreAndReason(
   let excludedIds = new Set<string>();
   let excludedValueById = new Map<string, string>();
   let culledHeadlineIds = new Set<string>();
+  let locationCaughtIds = new Set<string>();
 
   // Ineligible ones get a fixed low score, never hit the engine/LLM.
   const eligible: ScoringCandidate[] = [];
@@ -364,6 +369,7 @@ export async function batchScoreAndReason(
       excludedIds,
       excludedValueById,
       culledHeadlineIds,
+      locationCaughtIds,
     };
   }
 
@@ -389,6 +395,7 @@ export async function batchScoreAndReason(
       excludedIds,
       excludedValueById,
       culledHeadlineIds,
+      locationCaughtIds,
     };
   }
 
@@ -413,7 +420,17 @@ export async function batchScoreAndReason(
   // computed-vs-judge deltas into CalibrationCases and handing them to
   // `recordOverrides` — went with the judge. It was the calibration loop's ONLY
   // input; see the note at `buildCalibrationCase`.)
+  // shortcut: structural read until the scorer's StageResult type carries the field, drop the cast then.
+  locationCaughtIds =
+    (stage as { locationCaughtIds?: Set<string> }).locationCaughtIds ?? new Set<string>();
   for (const c of active) {
+    if (locationCaughtIds.has(c.id)) {
+      // Never sent to Kev, so no rawScoreMap entry: score 0 (not a failure), components kept.
+      scoreMap.set(c.id, 0);
+      const caughtComps = stage.componentsMap.get(c.id);
+      if (caughtComps) componentsJsonMap.set(c.id, JSON.stringify(caughtComps));
+      continue;
+    }
     const raw = stage.rawScoreMap.get(c.id);
     if (raw === undefined) {
       scoreMap.set(c.id, FALLBACK_RELEVANCE);
@@ -435,7 +452,7 @@ export async function batchScoreAndReason(
   const bucketedForCull = new Map(scoreMap);
   bucketScores(bucketedForCull);
   culledHeadlineIds = collectCulledHeadlineIds(
-    active.filter((c) => !failedIds.has(c.id)),
+    active.filter((c) => !failedIds.has(c.id) && !locationCaughtIds.has(c.id)),
     bucketedForCull,
   );
 
@@ -497,6 +514,7 @@ export async function batchScoreAndReason(
     excludedIds,
     excludedValueById,
     culledHeadlineIds,
+    locationCaughtIds,
   };
 }
 

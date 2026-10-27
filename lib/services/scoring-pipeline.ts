@@ -1346,6 +1346,34 @@ async function doSubmitRelevance(
     active = subset.filter((c) => !excludedIds.has(c.id));
   }
 
+  // Location-caught rows: persisted at relevance 0 (shown only under Discarded) and never
+  // submitted. `math.stage` already omits them, so `active` keeps only the ids still in it.
+  // shortcut: structural read until MathStageResult carries the field, drop the cast then.
+  const caughtIds =
+    (math as { locationCaughtIds?: Set<string> }).locationCaughtIds ?? new Set<string>();
+  if (caughtIds.size > 0) {
+    for (const id of caughtIds) {
+      const comps = math.componentsMap.get(id);
+      try {
+        await saveScoringResult(id, {
+          relevance: 0,
+          reason: '',
+          reasonSkipped: true,
+          rawScore: 0,
+          computedScore: math.computedScoreMap.get(id),
+          scoreComponentsJson: comps ? JSON.stringify(comps) : undefined,
+        });
+      } catch (err) {
+        logger.warn(`${TAG} batch ${batch.batchId} location-caught save failed for ${id}`, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    await refreshUi(context);
+    const live = new Set(math.stage.map((c) => c.input.id));
+    active = active.filter((c) => live.has(c.id));
+  }
+
   // Every candidate in the batch was filtered out — nothing left to submit.
   // Terminal transition inside the drain loop (doDrain's maybeFinalize handles
   // the run finalize); without this the batch would wedge in
