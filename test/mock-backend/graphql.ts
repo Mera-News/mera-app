@@ -224,6 +224,43 @@ const headlinesPage = (c: Ctx) => {
 query<'topHeadlinesForCountry'>('GetTopHeadlinesForCountry', headlinesPage);
 query<'topHeadlinesForCountry'>('GetTopHeadlinesForCountryWindowed', headlinesPage);
 
+// World topic filter: one canonical topic ('ct-politics') that every fixture story rolls up to.
+// Any other id matches nothing, as on the real server. Not in schema.gql yet, so pushed untyped.
+ops.push({
+    kind: 'query',
+    name: 'GetCanonicalTopics',
+    resolve: () => ({
+        canonicalTopics: [
+            { __typename: 'CanonicalTopic', id: 'ct-politics', path: 'politics', label: 'Politics', level: 1, parentId: null },
+        ],
+    }),
+});
+ops.push({
+    kind: 'query',
+    name: 'GetWorldHeadlines',
+    resolve: (c) => {
+        const ids: string[] = c.variables.canonicalTopicIds ?? [];
+        const all = storyLeaders(articlesForCountry(c.variables.countryCode));
+        const base = headlinesPage(c).topHeadlinesForCountry;
+        const matches = ids.length === 0 || ids.includes('ct-politics');
+        const page = pageOf(isEmpty(c) || !matches ? [] : all, c.variables.first, c.variables.after);
+        return {
+            worldHeadlines: {
+                __typename: 'WorldHeadlinesResponse',
+                headlines: page.items.map((a) => ({
+                    __typename: 'TopHeadline',
+                    stableClusterId: stableClusterId(a),
+                    clusterSize: clusterSize(a),
+                    article: newsArticle(a, c),
+                })),
+                pageInfo: page.pageInfo,
+                editionBuiltAt: base.editionBuiltAt,
+                facets: isEmpty(c) ? [] : [{ __typename: 'CanonicalTopicFacet', topicId: 'ct-politics', count: all.length }],
+            },
+        };
+    },
+});
+
 // The publisher's own articles (three per fixture outlet), newest first unless the
 // caller asks for TOP_HEADLINES, which ranks by story size.
 const publisherPage = (c: Ctx) => {

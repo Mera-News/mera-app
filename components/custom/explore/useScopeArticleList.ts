@@ -1,4 +1,4 @@
-import ArticleService from '@/lib/article-service';
+import ArticleService, { type CanonicalTopicFacet } from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
@@ -55,10 +55,13 @@ export function useScopeArticleList({
     scope,
     enabled,
     windowHours,
+    topicId,
 }: {
     scope: ExploreScope;
     enabled: boolean;
     windowHours?: number;
+    /** A canonical topic to filter by; the caller keys the list by it, like windowHours. Never logged. */
+    topicId?: string | null;
 }) {
     const isOnline = useIsOnline();
     // `isOnline` (device link + Mera reachable) already gates the empty state
@@ -82,6 +85,9 @@ export function useScopeArticleList({
         const id = setTimeout(() => setLoadHung(true), HUNG_LOAD_MS);
         return () => clearTimeout(id);
     }, [isLoading, enabled]);
+    const [facets, setFacets] = useState<CanonicalTopicFacet[]>([]);
+    // False until the first answer says otherwise, and after an old-server fallback: the pill hides.
+    const [topicsSupported, setTopicsSupported] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
@@ -99,18 +105,23 @@ export function useScopeArticleList({
     const loadFrom = useCallback(
         async (after?: string): Promise<{ rows: TopHeadline[]; cursor: string | null; more: boolean }> => {
             const fetchArg = scope.countryCodeAlpha3 ?? 'GLOBAL';
-            const page = await ArticleService.getTopHeadlinesForCountry(fetchArg, {
+            const page = await ArticleService.getWorldHeadlines(fetchArg, {
                 first: PAGE_SIZE,
                 after,
                 windowHours,
+                canonicalTopicIds: topicId ? [topicId] : undefined,
             });
+            if (!after) {
+                setFacets(page.facets);
+                setTopicsSupported(page.topicsSupported);
+            }
             return {
                 rows: page.headlines,
                 cursor: page.pageInfo.endCursor ?? null,
                 more: page.pageInfo.hasNextPage,
             };
         },
-        [scope, windowHours],
+        [scope, windowHours, topicId],
     );
 
     useEffect(() => {
@@ -266,5 +277,7 @@ export function useScopeArticleList({
         loadMore,
         handlePress,
         firstLoad,
+        facets,
+        topicsSupported,
     };
 }

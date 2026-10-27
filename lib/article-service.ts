@@ -161,6 +161,61 @@ ${TOP_HEADLINES_SELECTION}    }
   }
 `;
 
+// ---- World topic filter (app ahead of the server schema) --------------------------
+// These two documents are built with the CALL form `gql(`...`)` on purpose:
+// scripts/check-schema.js only scans the tag form, and schema.gql does not have
+// canonicalTopics / worldHeadlines until the server ships. Switch both to the
+// tag form (and delete the local types) once codegen carries them.
+export interface CanonicalTopic {
+    id: string;
+    path: string;
+    label: string;
+    level: number;
+    parentId?: string | null;
+}
+export interface CanonicalTopicFacet {
+    topicId: string;
+    count: number;
+}
+export type WorldHeadlinesPage = Pick<TopHeadlinesForCountryResponse, 'headlines' | 'pageInfo' | 'editionBuiltAt'> & {
+    facets: CanonicalTopicFacet[];
+    /** False when this answer came from the pre-topic document (old server). */
+    topicsSupported: boolean;
+};
+
+const GET_CANONICAL_TOPICS = gql(`
+  query GetCanonicalTopics($level: Int) {
+    canonicalTopics(level: $level) {
+      id
+      path
+      label
+      level
+      parentId
+    }
+  }
+`);
+
+const GET_WORLD_HEADLINES = gql(`
+  query GetWorldHeadlines($countryCode: String, $first: Int, $after: String, $windowHours: Int, $canonicalTopicIds: [ID!]) {
+    worldHeadlines(countryCode: $countryCode, first: $first, after: $after, windowHours: $windowHours, canonicalTopicIds: $canonicalTopicIds) {
+${TOP_HEADLINES_SELECTION}      facets {
+        topicId
+        count
+      }
+    }
+  }
+`);
+
+/** True once the server rejected worldHeadlines / canonicalTopics as unknown: the old documents serve the list for the session. */
+let worldTopicsUnsupported = false;
+let canonicalTopicsCache: Promise<CanonicalTopic[]> | null = null;
+
+/** Test seam. */
+export function __resetWorldTopicsSupport(): void {
+    worldTopicsUnsupported = false;
+    canonicalTopicsCache = null;
+}
+
 // A publisher's articles across all its feeds, one page. The selection is
 // shared by the two documents below; `check:schema` inlines it.
 const PUBLISHER_ARTICLE_FIELDS = `
@@ -1346,6 +1401,77 @@ export class ArticleService {
             this.reportQueryError('getTopHeadlinesForCountry', error, { countryCode });
             throw error;
         }
+    }
+
+    /** Level-1 canonical topics, fetched once per app session. [] on a server without them. */
+    static getCanonicalTopics(): Promise<CanonicalTopic[]> {
+        if (worldTopicsUnsupported) return Promise.resolve([]);
+        if (!canonicalTopicsCache) {
+            const pending = client
+                .query<{ canonicalTopics: CanonicalTopic[] }>({
+                    query: GET_CANONICAL_TOPICS,
+                    variables: { level: 1 },
+                    fetchPolicy: 'no-cache',
+                    context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                })
+                .then(({ data }) => data?.canonicalTopics ?? [])
+                .catch((error) => {
+                    canonicalTopicsCache = null; // retry next time
+                    if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) {
+                        this.reportQueryError('getCanonicalTopics', error, {});
+                        throw error;
+                    }
+                    worldTopicsUnsupported = true;
+                    return [];
+                });
+            canonicalTopicsCache = pending;
+        }
+        return canonicalTopicsCache;
+    }
+
+    /**
+     * A World / country headlines page with topic facets. `canonicalTopicIds`
+     * filters; facets always count the unfiltered page+window. A server without
+     * `worldHeadlines` answers GRAPHQL_VALIDATION_FAILED: latched for the
+     * session, and the list comes from the current windowed country document
+     * with `topicsSupported: false` and no facets, so the list keeps working.
+     */
+    static async getWorldHeadlines(
+        countryCode: string | null | undefined,
+        options: { first?: number; after?: string; windowHours?: number; canonicalTopicIds?: string[] }
+    ): Promise<WorldHeadlinesPage> {
+        if (!worldTopicsUnsupported) {
+            try {
+                const { data } = await client.query<{ worldHeadlines: Omit<WorldHeadlinesPage, 'topicsSupported'> }>({
+                    query: GET_WORLD_HEADLINES,
+                    variables: {
+                        countryCode: countryCode === 'GLOBAL' ? null : countryCode,
+                        first: options.first ?? 20,
+                        after: options.after,
+                        windowHours: options.windowHours,
+                        canonicalTopicIds: options.canonicalTopicIds?.length ? options.canonicalTopicIds : undefined,
+                    },
+                    fetchPolicy: 'no-cache',
+                    context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                });
+                if (data?.worldHeadlines) return { ...data.worldHeadlines, topicsSupported: true };
+            } catch (error) {
+                if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) {
+                    this.reportQueryError('getWorldHeadlines', error, { countryCode });
+                    throw error;
+                }
+                worldTopicsUnsupported = true;
+                logger.info('[ArticleService] server has no worldHeadlines; country document this session');
+            }
+        }
+        const page = await this.getTopHeadlinesForCountry(countryCode, options);
+        return {
+            headlines: page.headlines,
+            pageInfo: page.pageInfo,
+            editionBuiltAt: page.editionBuiltAt,
+            facets: [],
+            topicsSupported: false,
+        };
     }
 
     /**
