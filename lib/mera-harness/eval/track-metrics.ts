@@ -64,7 +64,9 @@ export interface TrackReport {
   refused: number;
   /** Staged cards by option count. */
   histogram: Record<number, number>;
-  /** proposeTrack attempts on turns of a non-follow cohort. The bar is 0. */
+  /** proposeTrack attempts on a non-follow cohort's turn that does not expect a
+   *  card (no expect.track, or staged false). The bar is 0. A turn that expects
+   *  one ("follow this" in backref) is scored by expect.track instead. */
   offCohortAttempts: number;
   expected: number;
   met: number;
@@ -82,15 +84,15 @@ export function trackReport(
   for (const t of turns) {
     if (t.legs.some((l) => l.moreOptions)) continue; // scored by moreOptionsReport
     const k = trackTurn(t);
+    const want = expectFor(t.scriptId, t.turnIndex)?.track;
     if (k.attempted) {
       out.attempted += 1;
       if (k.staged) {
         out.staged += 1;
         out.histogram[k.options.length] = (out.histogram[k.options.length] ?? 0) + 1;
       } else out.refused += 1;
-      if (!isFollowCohort(t.cohort)) out.offCohortAttempts += 1;
+      if (!isFollowCohort(t.cohort) && !want?.staged) out.offCohortAttempts += 1;
     }
-    const want = expectFor(t.scriptId, t.turnIndex)?.track;
     if (!want || t.endedOn === 'transport_error') continue;
     out.expected += 1;
     const why: string[] = [];

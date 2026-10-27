@@ -84,7 +84,13 @@
       "expect": {
         "tools": [
           "load_skill"
-        ]
+        ],
+        "track": {
+          "staged": true,
+          "labelMatches": [
+            "ai act"
+          ]
+        }
       },
       "pendingCards": [
         "Works in data protection compliance"

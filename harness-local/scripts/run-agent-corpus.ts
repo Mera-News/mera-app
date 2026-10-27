@@ -729,7 +729,7 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push('\nTRACK (follow cards, proposeTrack; a More options turn is scored in its own block)');
   out.push(`  proposeTrack attempted ${track.attempted}  staged ${track.staged}  refused ${track.refused}`);
   out.push(`  options per staged card  ${Object.entries(track.histogram).map(([n, c]) => `${n}: ${c}`).join(', ') || 'none'}`);
-  out.push(`  proposeTrack on non-follow cohorts (bar 0)  ${track.offCohortAttempts}`);
+  out.push(`  proposeTrack on non-follow turns that expect no card (bar 0)  ${track.offCohortAttempts}`);
   out.push(`  expect.track met ${track.met}/${track.expected}`);
   for (const m of track.misses.slice(0, 8)) out.push(`    MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${m.detail}`);
 

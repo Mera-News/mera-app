@@ -1,7 +1,7 @@
 {
   "id": "waiting-card",
   "cohort": "waiting-card",
-  "note": "stagefix P1b. A fact card is still waiting on screen (pendingCards). An ack, a plain yes and thanks never save or apply anything and point at the card; 'follow this' after an answer whose subject is already on the waiting card points at that card instead of re-offering it. No turn carries routeKind, skill, legs or tools: none of them was ever measured here, so the card turns are scored on noOffer, card.noApply and replyMatches, and the Artemis question on noOffer.",
+  "note": "stagefix P1b. A fact card is still waiting on screen (pendingCards). An ack, a plain yes and thanks never save or apply anything and point at the card; 'follow this' after an answer stages a follow card on that subject (onemera S3), never a second fact card. No turn carries routeKind, skill, legs or tools: none of them was ever measured here, so the card turns are scored on noOffer, card.noApply and replyMatches, and the Artemis question on noOffer.",
   "persona": {
     "facts": [
       {
@@ -97,12 +97,12 @@
       "expect": {
         "endedOn": "settled",
         "noOffer": true,
-        "card": {
-          "noApply": true
-        },
-        "replyMatches": [
-          "card"
-        ]
+        "track": {
+          "staged": true,
+          "labelMatches": [
+            "artemis"
+          ]
+        }
       }
     }
   ]

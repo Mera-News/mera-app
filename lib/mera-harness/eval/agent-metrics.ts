@@ -580,6 +580,8 @@ export function silentTurnReport(turns: readonly TurnRows[]): SilentTurnReport {
   for (const t of turns) {
     const last = t.legs[t.legs.length - 1];
     if (!last || last.terminalReason == null) continue;
+    // A More options turn writes nothing to the thread by design; MORE OPTIONS scores it.
+    if (t.legs.some((l) => l.moreOptions)) continue;
     out.turns += 1;
     if (last.closingLegFired) out.closingFired += 1;
     if (last.noAnswerFallbackUsed) out.cannedFired += 1;

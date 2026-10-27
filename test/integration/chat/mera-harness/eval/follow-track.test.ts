@@ -137,6 +137,9 @@ describe('runner and TRACK report', () => {
     const rep = trackReport(groupTurns(rows), () => null, (c) => c === 'never');
     expect(rep.offCohortAttempts).toBe(rep.attempted);
     expect(rep.attempted).toBeGreaterThan(0);
+    // A turn that expects the card (backref's "follow this") is not off-cohort noise.
+    const expecting = trackReport(groupTurns(rows), () => ({ tools: [], track: { staged: true } }), (c) => c === 'never');
+    expect(expecting.offCohortAttempts).toBe(0);
   });
 });
 

@@ -65,5 +65,7 @@ describe('silent turns in the eval', () => {
     expect(silentTurnReport(groupTurns([row])).silent).toEqual([{ scriptId: 's', turnIndex: 0, repeat: 0, arm: 'a' }]);
     expect(silentTurnReport(groupTurns([{ ...row, terminalReason: 'no-proposal' } as EvalRow])).silent).toEqual([]);
     expect(silentTurnReport(groupTurns([{ ...row, stagedSomething: true } as EvalRow])).silent).toEqual([]);
+    // u6b2: a More options turn with no card is a MORE OPTIONS miss, not a silent chat turn.
+    expect(silentTurnReport(groupTurns([{ ...row, moreOptions: true } as EvalRow]))).toMatchObject({ turns: 0, silent: [] });
   });
 });
