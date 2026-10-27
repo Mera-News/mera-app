@@ -257,17 +257,28 @@ export async function untrackStory(id: string): Promise<boolean> {
 export interface TrackedMatchQuery {
   stableClusterId?: string | null;
   articleId?: string | null;
+  /** Scope search text. Set only by the follow executor: two scopes of one story
+   *  are two follows. Omitted (the track button, isTracked) means "any scope". */
+  searchText?: string | null;
 }
 
-/** Trimmed, non-empty form of a {@link TrackedMatchQuery}; null when neither key
- *  carries a usable value (nothing can match). */
-function normalizeTrackedQuery(
-  query: TrackedMatchQuery,
-): { stableClusterId: string | null; articleId: string | null } | null {
+interface NormalizedTrackedQuery {
+  stableClusterId: string | null;
+  articleId: string | null;
+  searchText: string | null;
+}
+
+const normalizeScopeText = (text: string | null | undefined): string =>
+  (text ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+/** Trimmed, non-empty form of a {@link TrackedMatchQuery}; null when no key
+ *  (id or search text) carries a usable value (nothing can match). */
+function normalizeTrackedQuery(query: TrackedMatchQuery): NormalizedTrackedQuery | null {
   const stableClusterId = query.stableClusterId?.trim() || null;
   const articleId = query.articleId?.trim() || null;
-  if (!stableClusterId && !articleId) return null;
-  return { stableClusterId, articleId };
+  const searchText = normalizeScopeText(query.searchText) || null;
+  if (!stableClusterId && !articleId && !searchText) return null;
+  return { stableClusterId, articleId, searchText };
 }
 
 /**
@@ -275,13 +286,19 @@ function normalizeTrackedQuery(
  * `observeTracked`, and `findActiveTrackedId` — must agree exactly: the reactive
  * observer answering differently from the one-shot read is precisely the drift
  * that would put the track button back out of sync with reality.
+ *
+ * With a searchText, an id match also needs the same scope; a row with no
+ * topicText (legacy) matches any scope of its article. Without ids, the scope
+ * text alone matches (free-text follows).
  */
-function matchesTrackedQuery(
-  row: TrackedStoryModel,
-  norm: { stableClusterId: string | null; articleId: string | null },
-): boolean {
-  if (norm.stableClusterId && row.stableClusterId === norm.stableClusterId) return true;
-  if (norm.articleId && (row.memberArticleIds ?? []).includes(norm.articleId)) return true;
+function matchesTrackedQuery(row: TrackedStoryModel, norm: NormalizedTrackedQuery): boolean {
+  const rowScope = normalizeScopeText(row.topicText);
+  const scopeOk = !norm.searchText || !rowScope || rowScope === norm.searchText;
+  const idMatch =
+    (!!norm.stableClusterId && row.stableClusterId === norm.stableClusterId) ||
+    (!!norm.articleId && (row.memberArticleIds ?? []).includes(norm.articleId));
+  if (idMatch) return scopeOk;
+  if (!norm.stableClusterId && !norm.articleId) return !!norm.searchText && rowScope === norm.searchText;
   return false;
 }
 export async function isTracked(query: TrackedMatchQuery): Promise<boolean> {

@@ -92,12 +92,13 @@ function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapsh
 export async function trackStoryWithProposal(
   subject: FeedbackSubject,
   scope: AcceptedTrackScope,
-): Promise<void> {
+  opts: { syncFeed?: boolean } = {},
+): Promise<'followed' | 'already' | 'skipped'> {
   const label = (scope.label ?? '').trim();
   const searchText = (scope.searchText ?? '').trim();
   // The search text is what actually retrieves articles — without it there is
   // nothing to follow.
-  if (!searchText) return;
+  if (!searchText) return 'skipped';
 
   // IDEMPOTENCE. This ran unconditionally, so every confirmed proposal minted a
   // fresh topic AND a fresh tracked_stories row — the duplicate followed stories
@@ -108,12 +109,13 @@ export async function trackStoryWithProposal(
   const existing = await findActiveTrackedId({
     stableClusterId: subject.stableClusterId ?? null,
     articleId: subject.articleId,
+    searchText,
   });
   if (existing) {
     logger.info('[track-actions] story already tracked — skipping duplicate mint', {
       id: existing,
     });
-    return;
+    return 'already';
   }
 
   // 1. Mint the topic keyed on the SEARCH text. Continue even if this fails; the
@@ -176,7 +178,8 @@ export async function trackStoryWithProposal(
   );
 
   // 4. Fetch the story's coverage now rather than at the next 5-minute tick.
-  if (topicId) void syncFollowedStoryNow();
+  if (topicId && opts.syncFeed !== false) void syncFollowedStoryNow();
+  return 'followed';
 }
 
 /**
@@ -184,7 +187,7 @@ export async function trackStoryWithProposal(
  * topics before this one existed, so wait it out and run once more. Story ids
  * are quota-exempt, so this costs the reader nothing. Never throws.
  */
-async function syncFollowedStoryNow(): Promise<void> {
+export async function syncFollowedStoryNow(): Promise<void> {
   try {
     // Call-time requires: the scheduler pulls the WatermelonDB singleton and
     // every task module, which must stay out of this module's import graph.

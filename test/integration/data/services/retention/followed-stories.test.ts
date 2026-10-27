@@ -257,17 +257,28 @@ describe('trackStoryWithProposal', () => {
     });
   });
 
-  it('does not mint a second topic or row when the story is already followed', async () => {
+  it('does not mint a second topic or row when the same scope is followed again', async () => {
     const a = freshId();
     const first = await follow(a, 'gaza ceasefire', { stableClusterId: 'clu-9' });
 
-    await trackStoryWithProposal(subject(a), { label: 'Again', searchText: 'gaza ceasefire talks' });
+    await trackStoryWithProposal(subject(a), { label: 'Again', searchText: 'gaza ceasefire' });
     // a different article of the SAME cluster is the same story
-    await trackStoryWithProposal(subject(freshId(), { stableClusterId: 'clu-9' }), { label: 'Again', searchText: 'gaza ceasefire talks 2' });
+    await trackStoryWithProposal(subject(freshId(), { stableClusterId: 'clu-9' }), { label: 'Again', searchText: ' Gaza  Ceasefire ' });
 
     expect((await observeAll()).map((r) => r.id)).toEqual([first]);
-    expect(await getAllByNormalizedText('gaza ceasefire talks')).toEqual([]);
-    expect(await getAllByNormalizedText('gaza ceasefire talks 2')).toEqual([]);
+    expect(await getAllByNormalizedText('gaza ceasefire')).toHaveLength(1);
+  });
+
+  it('follows a different scope of the same cluster as its own row', async () => {
+    const a = freshId();
+    const first = await follow(a, 'gaza ceasefire', { stableClusterId: 'clu-9' });
+
+    await trackStoryWithProposal(subject(freshId(), { stableClusterId: 'clu-9' }), { label: 'Talks', searchText: 'gaza ceasefire talks' });
+
+    const ids = (await observeAll()).map((r) => r.id);
+    expect(ids).toHaveLength(2);
+    expect(ids).toContain(first);
+    expect(await getAllByNormalizedText('gaza ceasefire talks')).toHaveLength(1);
   });
 
   it('mints for a different story', async () => {

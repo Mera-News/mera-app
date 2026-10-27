@@ -20,14 +20,17 @@ import {
   type PersonaAction,
 } from '../database/services/persona-action-executor';
 import { ACTION_NAMES } from '../news-harness/persona-management/action-names';
-import { trackStoryWithProposal } from '../tracking/track-actions';
+import { trackStoryWithProposal, syncFollowedStoryNow } from '../tracking/track-actions';
 import type { FeedbackSubject } from '../../components/custom/cards/feedback-subject';
 import logger from '../logger';
 
 /** Outcome of one executed proposal — richer than a bare count so the chat can
  *  render "what changed" and offer undo (changeLogIds power `revert_change`). */
 export interface ExecuteProposalResult {
+  /** Actions done, including follows that were already in place. */
   applied: number;
+  /** Of `applied`, the follows that already existed. */
+  alreadyFollowed: number;
   errors: string[];
   /** Human-readable summaries of every APPLIED rails-backed mutation. */
   summaries: string[];
@@ -90,6 +93,8 @@ export interface ExecuteProposalOptions {
    * request. Never set this from a tool handler.
    */
   confirmedByUser?: boolean;
+  /** False skips the one feed sync after new follows (the caller syncs). */
+  syncFeed?: boolean;
 }
 
 export async function executeProposalActions(
@@ -100,6 +105,8 @@ export async function executeProposalActions(
   const summaries: string[] = [];
   const changeLogIds: string[] = [];
   let applied = 0;
+  let alreadyFollowed = 0;
+  let followedNew = false;
 
   const actions = options.confirmedByUser
     ? allActions
@@ -338,11 +345,19 @@ export async function executeProposalActions(
             errors.push('track_story: empty searchText');
             break;
           }
-          await trackStoryWithProposal(action.subject as FeedbackSubject, {
-            label,
-            searchText,
-          });
-          summaries.push(`Following "${label || searchText}"`);
+          // One feed sync for the whole call, after the loop.
+          const outcome = await trackStoryWithProposal(
+            action.subject as FeedbackSubject,
+            { label, searchText },
+            { syncFeed: false },
+          );
+          if (outcome === 'already') {
+            alreadyFollowed++;
+            summaries.push(`Already following "${label || searchText}"`);
+          } else {
+            if (outcome === 'followed') followedNew = true;
+            summaries.push(`Following "${label || searchText}"`);
+          }
           applied++;
           break;
         }
@@ -431,5 +446,7 @@ export async function executeProposalActions(
 
   useFloatingChatStore.getState().notifyFactMutation();
 
-  return { applied, errors, summaries, changeLogIds };
+  if (followedNew && options.syncFeed !== false) void syncFollowedStoryNow();
+
+  return { applied, alreadyFollowed, errors, summaries, changeLogIds };
 }
