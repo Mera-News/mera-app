@@ -113,6 +113,7 @@ import {
   copyNoteToSiblings,
   gateUnscoredForScoring,
   planStoryNotes,
+  noteStoryNoteFailure,
   propagateToUnscoredSiblings,
 } from '@/lib/feed-grouping/score-propagation';
 // The cold-start predicate reuses the SAME 48h donor lookback the score
@@ -2361,6 +2362,13 @@ async function handleReasonResults(
       );
     }
     await propagateNotesToCoveredSiblings(batch, siblingNotes);
+    // A rep standing for copies that got no note: do not elect it again, fall back per id.
+    for (const [rep, covered] of Object.entries(batch.coveredByRep ?? {})) {
+      const note = reasonMap.get(rep);
+      if (covered.length > 1 && (failedIds.has(rep) || !note || note.trim().length === 0)) {
+        noteStoryNoteFailure(rep, covered);
+      }
+    }
   }
 
   // Rescored rows are handed to `discardLowRelevance` at their NEW score, not

@@ -2,6 +2,8 @@ import {
   landStep,
   parseResumeSpot,
   planRestore,
+  cleanParams,
+  ROOT_ROUTES,
   readNavShape,
   SCROLL_LAND_MAX_MS,
   spotFromShape,
@@ -161,5 +163,16 @@ describe('landStep', () => {
     expect(landStep(800, 797, 0)).toBe('landed');
     expect(landStep(800, 400, 100)).toBe('continue');
     expect(landStep(800, 400, SCROLL_LAND_MAX_MS)).toBe('give-up');
+  });
+});
+
+describe('cleanParams keeps trackedStoryId on both detail routes', () => {
+  it.each(['article-detail', 'suggestion-detail'])('%s', (route) => {
+    const schema = ROOT_ROUTES[route];
+    const required = route === 'article-detail' ? { articleId: 'a1' } : { articleSuggestionId: 's1' };
+    expect(cleanParams(schema, { ...required, trackedStoryId: 't1', junk: 'x' })).toEqual({
+      ...required,
+      trackedStoryId: 't1',
+    });
   });
 });

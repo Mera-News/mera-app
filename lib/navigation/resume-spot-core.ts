@@ -51,8 +51,8 @@ const NO_PARAMS: ParamSchema = { required: [], optional: [] };
 
 /** Screens pushed above `app_container` (app/logged-in/<route>.tsx). */
 export const ROOT_ROUTES: Readonly<Record<string, ParamSchema>> = {
-  'article-detail': { required: ['articleId'], optional: ['stableClusterId', 'from'] },
-  'suggestion-detail': { required: ['articleSuggestionId'], optional: ['from'] },
+  'article-detail': { required: ['articleId'], optional: ['stableClusterId', 'trackedStoryId', 'from'] },
+  'suggestion-detail': { required: ['articleSuggestionId'], optional: ['trackedStoryId', 'from'] },
   publication: { required: [], optional: ['publisherId', 'name', 'country', 'order'], anyOf: ['publisherId', 'name'] },
   'story-timeline': { required: ['trackedStoryId'], optional: [] },
   'persona-articles': { required: ['topicTexts'], optional: ['factStatement'] },

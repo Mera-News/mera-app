@@ -15,7 +15,7 @@ import {
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import { calendarDaysAgo, formatDayMonth } from '@/lib/stats/visited-publications';
-import { openStoryMember } from '@/lib/tracking/open-story-member';
+import { openArticle } from '@/lib/hooks/use-open-article';
 import { exportDay } from '@/lib/saved-articles-export';
 import {
     buildStoryJson,
@@ -319,10 +319,10 @@ export function useStoryTimelineScreen({
     }, [trackedStoryId, load]);
 
     // Opens the reason view when Mera scored this article, carrying the story
-    // so the page lists its other copies (see open-story-member).
+    // so the page lists its other copies (see use-open-article).
     const handleArticlePress = useCallback(
         (articleId: string, stableClusterId: string | null) => {
-            void openStoryMember({ articleId, stableClusterId, trackedStoryId });
+            void openArticle({ articleId, stableClusterId, trackedStoryId });
         },
         [trackedStoryId],
     );

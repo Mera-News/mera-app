@@ -521,6 +521,18 @@ export async function copyNoteToSiblings(siblingIds: string[], note: string): Pr
     return entries.length - leftPending.length;
 }
 
+// Ids whose story-level note attempt (a rep standing for its copies) came back empty or
+// failed. Election skips them, so a rep is not re-elected forever; once a whole partition is
+// here nothing is electable and its copies go per id, as before story-level notes.
+// shortcut: process memory, not persisted; a relaunch gives each story one more attempt.
+const failedStoryNotes = new Set<string>();
+
+/** Record a failed story-level attempt: the rep and the copies it stood for. */
+export function noteStoryNoteFailure(repId: string, covered: readonly string[]): void {
+    failedStoryNotes.add(repId);
+    for (const id of covered) failedStoryNotes.add(id);
+}
+
 export interface StoryNotePlan {
     /** One id per story x relevance partition to send for a note, plus every owed
      *  row of a partition with no electable member, each on its own. */
@@ -560,6 +572,7 @@ export async function planStoryNotes(
     if (owedIds.length === 0) return plan;
     try {
         const owed = new Set(owedIds);
+        for (const id of failedStoryNotes) if (!owed.has(id)) failedStoryNotes.delete(id);
         const donors = await getScoredDonorRows(Date.now() - SCORE_PROPAGATION_LOOKBACK_MS);
         const rows = await getGroupingRowsByIds([...owedIds, ...inFlight]);
         // Donors first: an owed row is itself a donor (reason_pending, scored).
@@ -567,7 +580,7 @@ export async function planStoryNotes(
         for (const r of [...donors, ...rows]) if (!byId.has(r.id)) byId.set(r.id, r);
 
         const elect = (members: SuggestionGroupingRow[]) => {
-            const candidates = members.filter((m) => electable.has(m.id));
+            const candidates = members.filter((m) => electable.has(m.id) && !failedStoryNotes.has(m.id));
             if (candidates.length === 0) return sendAlone(members.map((m) => m.id));
             const rep = electRepresentative(candidates, null).id;
             plan.repIds.push(rep);

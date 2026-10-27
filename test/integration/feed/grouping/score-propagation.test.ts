@@ -7,6 +7,7 @@ import { recordOpen } from '@/lib/database/services/story-impression-service';
 import {
   gateUnscoredForScoring,
   planStoryNotes,
+  noteStoryNoteFailure,
   propagateToUnscoredSiblings,
 } from '@/lib/feed-grouping/score-propagation';
 import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
@@ -496,6 +497,38 @@ describe('planStoryNotes', () => {
 
     expect([...plan.repIds].sort()).toEqual(['o1', 'o2']);
     expect(plan.coveredByRep).toEqual({ o1: ['o1'], o2: ['o2'] });
+  });
+});
+
+describe('planStoryNotes after a failed story-level attempt', () => {
+  const k = (id: string, title: string) => lone(id, { title, storyKey: 'K2' });
+  const owe = (id: string, title: string) => seedScored(k(id, title), { relevance: 0.8, reason: '', pending: true });
+
+  it('does not re-elect a rep whose note came back empty: the other copy is elected', async () => {
+    await owe('o1', 'Royal visit draws crowds');
+    await owe('o2', 'Monarch tours city hall');
+    const first = await planStoryNotes(['o1', 'o2'], new Set(), new Set(['o1', 'o2']));
+    expect(first.repIds).toHaveLength(1);
+    const rep = first.repIds[0];
+    noteStoryNoteFailure(rep, []);
+
+    const second = await planStoryNotes(['o1', 'o2'], new Set(), new Set(['o1', 'o2']));
+
+    expect(second.repIds).toHaveLength(1);
+    expect(second.repIds[0]).not.toBe(rep);
+  });
+
+  it('sends every copy on its own once the story-level attempt failed for the whole partition', async () => {
+    await owe('o1', 'Royal visit draws crowds');
+    await owe('o2', 'Monarch tours city hall');
+    const first = await planStoryNotes(['o1', 'o2'], new Set(), new Set(['o1', 'o2']));
+    const rep = first.repIds[0];
+    noteStoryNoteFailure(rep, first.coveredByRep[rep]);
+
+    const second = await planStoryNotes(['o1', 'o2'], new Set(), new Set(['o1', 'o2']));
+
+    expect([...second.repIds].sort()).toEqual(['o1', 'o2']);
+    expect(second.coveredByRep).toEqual({ o1: ['o1'], o2: ['o2'] });
   });
 });
 

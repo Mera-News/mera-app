@@ -83,6 +83,7 @@ import {
   copyNoteToSiblings,
   gateUnscoredForScoring,
   planStoryNotes,
+  noteStoryNoteFailure,
 } from '@/lib/feed-grouping/score-propagation';
 
 /** A propagated row is written `complete` without the scoring stage's hard screen
@@ -1097,7 +1098,10 @@ async function writeNotesOnDevice(): Promise<number> {
         fullUserContext,
         candidate.relevance ?? 0.7,
       );
-      if (!reason) continue;
+      if (!reason) {
+        noteStoryNoteFailure(candidate.id, plan.coveredByRep[candidate.id] ?? []);
+        continue;
+      }
       await saveReason(candidate.id, reason);
       written += 1;
       const siblings = (plan.coveredByRep[candidate.id] ?? []).filter((id) => id !== candidate.id);
@@ -1107,6 +1111,7 @@ async function writeNotesOnDevice(): Promise<number> {
       // note would fail the same way. Stop; the rest stay reason_pending for
       // the next sweep.
       if (isOnDeviceDeferrable(err)) break;
+      noteStoryNoteFailure(candidate.id, plan.coveredByRep[candidate.id] ?? []);
       logger.warn('[writeNotesOnDevice] note failed', {
         id: candidate.id,
         error: err instanceof Error ? err.message : String(err),

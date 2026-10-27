@@ -92,6 +92,7 @@ export async function persistAndLinkV2Suggestions(
     row: ArticleSuggestionModel;
     nextClusterJson?: string;
     nextMatchedTopicsJson?: string;
+    nextStoryKey?: string;
   }[] = [];
   for (const a of deduped) {
     const row = existingById.get(a._id);
@@ -100,6 +101,7 @@ export async function persistAndLinkV2Suggestions(
       row: ArticleSuggestionModel;
       nextClusterJson?: string;
       nextMatchedTopicsJson?: string;
+      nextStoryKey?: string;
     } = { row };
     let hasUpdate = false;
 
@@ -124,6 +126,12 @@ export async function persistAndLinkV2Suggestions(
         update.nextMatchedTopicsJson = buildMatchedTopicsJson(matched);
         hasUpdate = true;
       }
+    }
+
+    // Write-once: fill a null story_key from the incoming article, never replace one.
+    if (row.storyKey == null && a.story_key) {
+      update.nextStoryKey = a.story_key;
+      hasUpdate = true;
     }
 
     if (hasUpdate) existingUpdates.push(update);
@@ -182,12 +190,13 @@ export async function persistAndLinkV2Suggestions(
       ).map((r) => r.id),
     );
 
-    for (const { row, nextClusterJson, nextMatchedTopicsJson } of existingUpdates) {
+    for (const { row, nextClusterJson, nextMatchedTopicsJson, nextStoryKey } of existingUpdates) {
       if (!stillThere.has(row.id)) continue;
       ops.push(
         row.prepareUpdate((r) => {
           if (nextClusterJson !== undefined) r.clusterMembershipsJson = nextClusterJson;
           if (nextMatchedTopicsJson !== undefined) r.matchedTopicsJson = nextMatchedTopicsJson;
+          if (nextStoryKey !== undefined) r.storyKey = nextStoryKey;
         }),
       );
     }

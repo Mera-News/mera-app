@@ -890,7 +890,7 @@ describe('batchPropagateScores', () => {
         { id: 'sug-1', relevance: 0.72, reason: GROUNDED_REASON },
         { id: 'sug-gone', relevance: 0.72, reason: GROUNDED_REASON },
       ]),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual([]); // ids left reason_pending: none (grounded note)
 
     expect(database.write).toHaveBeenCalledTimes(1);
     const batchArgs = (database.batch as jest.Mock).mock.calls[0][0];
@@ -1620,7 +1620,7 @@ describe('getScoredDonorRows', () => {
     expect(rows).toEqual([]);
   });
 
-  it('is not a donor when relevance is 0, even with scored_at recent', async () => {
+  it('is a donor when relevance is a real 0 verdict with scored_at set', async () => {
     db._setRows('article_suggestions', [
       makeSuggestion({
         id: 's1',
@@ -1628,6 +1628,20 @@ describe('getScoredDonorRows', () => {
         relevance: 0,
         createdAt: new Date(sinceMs - 3 * 24 * 60 * 60 * 1000),
         scoredAt: sinceMs + 1000,
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['s1']);
+  });
+
+  it('is not a donor when relevance is 0 and scored_at is null (tombstone)', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'complete',
+        relevance: 0,
+        createdAt: new Date(sinceMs + 1000),
+        scoredAt: null,
       }),
     ]);
     const rows = await getScoredDonorRows(sinceMs);
