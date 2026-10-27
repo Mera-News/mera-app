@@ -5,6 +5,7 @@ import {
     ArticlesForPublicationSourceResponse,
     ArticlesForTopicsByIdsResponse,
     ArticleWithClusters,
+    CanonicalTopic,
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
@@ -17,6 +18,7 @@ import {
     RelatedSortMode,
     TopHeadlinesForCountryResponse,
     TopicPaginationInput,
+    WorldHeadlinesResponse,
 } from './generated/graphql-types';
 import logger from './logger';
 
@@ -161,29 +163,14 @@ ${TOP_HEADLINES_SELECTION}    }
   }
 `;
 
-// ---- World topic filter (app ahead of the server schema) --------------------------
-// These two documents are built with the CALL form `gql(`...`)` on purpose:
-// scripts/check-schema.js only scans the tag form, and schema.gql does not have
-// canonicalTopics / worldHeadlines until the server ships. Switch both to the
-// tag form (and delete the local types) once codegen carries them.
-export interface CanonicalTopic {
-    id: string;
-    path: string;
-    label: string;
-    level: number;
-    parentId?: string | null;
-}
-export interface CanonicalTopicFacet {
-    topicId: string;
-    count: number;
-}
-export type WorldHeadlinesPage = Pick<TopHeadlinesForCountryResponse, 'headlines' | 'pageInfo' | 'editionBuiltAt'> & {
-    facets: CanonicalTopicFacet[];
-    /** False when this answer came from the pre-topic document (old server). */
+// ---- World topic filter -------------------------------------------------------
+/** A World page from `worldHeadlines`, or from the country document on an old
+ *  server (`topicsSupported: false`, no facets). */
+export type WorldHeadlinesPage = Pick<WorldHeadlinesResponse, 'headlines' | 'pageInfo' | 'editionBuiltAt' | 'facets'> & {
     topicsSupported: boolean;
 };
 
-const GET_CANONICAL_TOPICS = gql(`
+const GET_CANONICAL_TOPICS = gql`
   query GetCanonicalTopics($level: Int) {
     canonicalTopics(level: $level) {
       id
@@ -193,9 +180,9 @@ const GET_CANONICAL_TOPICS = gql(`
       parentId
     }
   }
-`);
+`;
 
-const GET_WORLD_HEADLINES = gql(`
+const GET_WORLD_HEADLINES = gql`
   query GetWorldHeadlines($countryCode: String, $first: Int, $after: String, $windowHours: Int, $canonicalTopicIds: [ID!]) {
     worldHeadlines(countryCode: $countryCode, first: $first, after: $after, windowHours: $windowHours, canonicalTopicIds: $canonicalTopicIds) {
 ${TOP_HEADLINES_SELECTION}      facets {
@@ -204,7 +191,7 @@ ${TOP_HEADLINES_SELECTION}      facets {
       }
     }
   }
-`);
+`;
 
 /** True once the server rejected worldHeadlines / canonicalTopics as unknown: the old documents serve the list for the session. */
 let worldTopicsUnsupported = false;

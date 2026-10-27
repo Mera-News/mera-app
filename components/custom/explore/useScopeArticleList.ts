@@ -1,6 +1,6 @@
-import ArticleService, { type CanonicalTopicFacet } from '@/lib/article-service';
+import ArticleService from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
-import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
+import type { CanonicalTopicFacet, NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import logger from '@/lib/logger';

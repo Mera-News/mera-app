@@ -123,6 +123,19 @@ type ArticlesForTopicsByIdsResponse {
   resetAt: String
 }
 
+type CanonicalTopic {
+  id: ID!
+  label: String!
+  level: Int!
+  parentId: ID
+  path: String!
+}
+
+type CanonicalTopicFacet {
+  count: Int!
+  topicId: ID!
+}
+
 input ChatMessageInput {
   content: String!
   createdAt: String!
@@ -731,6 +744,9 @@ type Query {
   """
   cachedFactCheck(articleId: ID!): FactCheck
 
+  """The seeded canonical category tree, optionally one level."""
+  canonicalTopics(level: Int): [CanonicalTopic!]!
+
   """
   Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call.
   """
@@ -874,6 +890,11 @@ type Query {
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
   weatherAuthToken: WeatherAuthToken!
+
+  """
+  Edition headlines for a country (null or "GLOBAL" spans all), optionally filtered to canonical topics (OR, descendants included), with per-topic facets over the unfiltered edition. No edition: the live fallback page (editionBuiltAt null) and no facets, or no headlines when filtered.
+  """
+  worldHeadlines(after: String, canonicalTopicIds: [ID!], countryCode: String, first: Int = 20, windowHours: Int = 24): WorldHeadlinesResponse!
 }
 
 """
@@ -1139,4 +1160,15 @@ type WeatherAuthToken {
   ES256 JWT for the WeatherKit REST API. Send it as `Authorization: Bearer <token>` on the call to weatherkit.apple.com. Mint one per refresh rather than caching it across sessions; minting is a signature with no I/O and no storage on either side.
   """
   token: String!
+}
+
+type WorldHeadlinesResponse {
+  editionBuiltAt: DateTime
+
+  """
+  Story counts per canonical topic over the whole edition (ignores the filter), descendants rolled up, nonzero only.
+  """
+  facets: [CanonicalTopicFacet!]!
+  headlines: [TopHeadline!]!
+  pageInfo: CursorPageInfo!
 }
