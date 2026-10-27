@@ -54,6 +54,29 @@ export const S3_ROUTER_BODY = [
   ['| feed_tuning | `conversation/feed-tuning` |\n', '| feed_tuning | `conversation/feed-tuning` |\n| follow_story | `conversation/follow-story` |\n'],
 ].reduce((body, [from, to]) => swap(body, from, to), S1_5_ROUTER_BODY);
 
+/** The S3b candidate (chatfix u6b2): follow_story by a literal test. S3 sent
+ *  "yes" and "thanks" beside a waiting card, "What is happening with Artemis?",
+ *  "Try P" and "Any news about rail strikes would be useful" to the follow
+ *  guideline, and missed bare subjects on the Followed stories page ("rent rules
+ *  for housing in amsterdam"). The router runs thinking off, so the rules are
+ *  word tests, not judgements. */
+export const S3B_ROUTER_BODY = [
+  [
+    '- **follow_story**: the turn asks to follow, track or be kept updated on a news story or an ongoing\n'
+      + '  event.\n',
+    '- **follow_story**: the message itself says follow, track, keep me updated, updates on or keep an\n'
+      + '  eye on (or the same in any language) about a news story, or the surface rule below applies. A\n'
+      + '  question about what is happening, a yes, a thanks or a single word is never follow_story.\n',
+  ],
+  [
+    '- When `<surface>` says they opened the chat to follow a story, a bare subject or "I want to follow\n'
+      + '  X" is **follow_story**.\n',
+    '- When `<surface>` says they opened the chat to follow a story, a message that asks nothing and says\n'
+      + '  nothing about themselves (no I, my, me or we) is **follow_story**: a bare place, event or\n'
+      + '  subject ("floods in the north", "rent rules in the capital") is the story to follow.\n',
+  ],
+].reduce((body, [from, to]) => swap(body, from, to), S3_ROUTER_BODY);
+
 export function ensureOnemeraArms(): void {
   const have = new Set(agentArmIds());
   const add = (arm: Parameters<typeof registerAgentArm>[0]): void => {
@@ -64,4 +87,6 @@ export function ensureOnemeraArms(): void {
   add({ id: 'pre-S3', description: 'S3 control: follow-story hidden, S1.5 router.', hideSkills: S3_SKILLS, routerBody: S1_5_ROUTER_BODY });
   add({ id: 'pre-S3-twin', description: 'Twin of pre-S3, for the noise floor.', hideSkills: S3_SKILLS, routerBody: S1_5_ROUTER_BODY });
   add({ id: 'S3', description: 'S3 candidate: follow-story and its router row.', routerBody: S3_ROUTER_BODY });
+  // S3b: against router.md (S3) and its twin null-control, in one run.
+  add({ id: 'S3b', description: 'S3b candidate: follow_story by a literal follow-word and surface test.', routerBody: S3B_ROUTER_BODY });
 }

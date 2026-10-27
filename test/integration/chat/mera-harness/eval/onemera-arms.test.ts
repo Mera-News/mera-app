@@ -41,3 +41,10 @@ it('the S3 control routes with the router S1.5 shipped, byte for byte', () => {
   const { S1_5_ROUTER_BODY, S3_ROUTER_BODY } = require('@/lib/mera-harness/eval/onemera-arms') as typeof import('@/lib/mera-harness/eval/onemera-arms');
   expect([S1_5_ROUTER_BODY.trim(), S3_ROUTER_BODY.trim()]).toContain(loadSkill('router')?.trim());
 });
+
+it('S3b is a distinct candidate with the literal follow_story rules', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { S3B_ROUTER_BODY } = require('@/lib/mera-harness/eval/onemera-arms') as typeof import('@/lib/mera-harness/eval/onemera-arms');
+  expect(leg0('S3b')).not.toBe(leg0('S3'));
+  expect(S3B_ROUTER_BODY).toContain('a yes, a thanks or a single word is never follow_story');
+});
