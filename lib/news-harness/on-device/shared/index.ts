@@ -2,7 +2,7 @@
 // token budget and the conversation renderer. Pure and RN-free, so the harness
 // builds exactly the prompts the phone sends.
 
-import { proposalRequiresUserChoice } from '../../core/proposals';
+import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '../../core/proposals';
 import type { StagedProposal } from '../../core/types';
 import { asUntrusted } from '../../prompts/untrusted-text';
 
@@ -141,6 +141,9 @@ export function describePending(proposal: StagedProposal | null | undefined): st
   if (!proposal || proposal.actions.length === 0) return null;
   const labels = proposal.actions.map((a) => (a.type === 'track_story' ? a.label : '')).filter(Boolean);
   const what = asUntrusted(labels.length > 0 ? labels.join('; ') : proposal.explanation, 400);
+  if (isTrackCard(proposal) && proposalRequiresUserChoice(proposal)) {
+    return `A card on screen offers: ${what}. The user must ${TRACK_CARD_TAP_PHRASE} on the card; a typed yes cannot apply it.`;
+  }
   return proposalRequiresUserChoice(proposal)
     ? `A card on screen offers: ${what}. The user picks one by tapping it; a typed yes cannot apply it.`
     : `A change is waiting for the user's yes or no: ${what}`;

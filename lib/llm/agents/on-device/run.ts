@@ -8,6 +8,8 @@ import { getFacts } from '../../../database/services/fact-service';
 import i18n from '../../../i18n';
 import logger from '../../../logger';
 import { resolveDeleteTargets } from '../../../mera-harness/core/fact-normalise';
+import type { MoreOptionsRequest } from '../../../chat-session/engine';
+import { runMoreTrackOptions } from '../../../news-harness/on-device/follow-story/more-options';
 import { ASK_CHOICE_AWAITING, ASK_CHOICE_TOOL, type KevPorts } from '../../../news-harness/on-device/kev';
 import {
   ON_DEVICE_CHAT_MAX_TOKENS,
@@ -78,6 +80,14 @@ export function routeOf(flow: OnDeviceChatFlow, opts: OnDeviceAgentOptions): OnD
 
 export function kevPorts(opts: OnDeviceAgentOptions): KevPorts {
   return { ...appKevPorts(), ...opts.ports };
+}
+
+/** "More options" for a follow card: the one writer call, on the app's ports. */
+export function moreTrackOptions(req: MoreOptionsRequest, opts: OnDeviceAgentOptions, articleTitle?: string) {
+  return runMoreTrackOptions(
+    { today: today(), shown: req.shown, room: req.room, subject: req.subject, articleTitle },
+    kevPorts(opts),
+  );
 }
 
 /**

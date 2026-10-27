@@ -148,7 +148,7 @@ describe('follow a story', () => {
     engine.send('what is the difference?');
     await turnDone();
 
-    expect(lastCall().prompt).toContain('A card on screen offers: The Wider Story; The Broad Theme. The user picks one by tapping it');
+    expect(lastCall().prompt).toContain('A card on screen offers: The Wider Story; The Broad Theme. The user must tap the ones they want on the card; a typed yes cannot apply it.');
   });
 });
 
@@ -308,13 +308,22 @@ async function oneTurnOfEachFlow(): Promise<OnDeviceLlmCall[]> {
   await run(personaAgent('CONFIG'), { reply: 'Hi.', save: [] });
   await run(personaAgent('ONBOARDING'), { reply: 'Hi.', save: [] });
   await run(tutorialAgent(), ['Hi.']);
+  // "More options" is not a turn: call it directly so its prompt joins the sweep.
+  installOnDeviceLlm({ reply: JSON.stringify({ options: [] }) });
+  await new FollowStoryOnDeviceAgent(USER, SINGLE).moreOptions({
+    proposalId: 'p1',
+    shown: [{ label: 'Shown Story', searchText: 'shown story' }],
+    room: 4,
+    subject: { origin: 'article', surface: 'detail', articleId: 'a1', title: 'Some title' },
+  });
+  calls.push(...onDeviceLlmCalls());
   return calls;
 }
 
 describe('every on-device prompt', () => {
   it('opens with the identity line and keeps its instructions under 150 words', async () => {
     const calls = await oneTurnOfEachFlow();
-    expect(calls).toHaveLength(5);
+    expect(calls).toHaveLength(6);
     for (const { instructions } of calls) {
       expect(instructions.startsWith(IDENTITY_LINE)).toBe(true);
       expect(instructions.split(/\s+/).filter(Boolean).length).toBeLessThan(150);

@@ -15,12 +15,14 @@ import { describePending } from '../../../news-harness/on-device/shared';
 import { proposalRequiresUserChoice } from '../../../news-harness/core/proposals';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { FollowStoryAgent } from '../FollowStoryAgent';
+import type { MoreOptionsRequest } from '../../../chat-session/engine';
 import type { ConversationMessage } from '../../types';
 import type { OnDeviceAgent } from './types';
 import {
   appLanguageName,
   chatTurns,
   kevPorts,
+  moreTrackOptions,
   onDeviceTool,
   respondStructured,
   routeOf,
@@ -65,6 +67,10 @@ export class FollowStoryOnDeviceAgent implements OnDeviceAgent {
       (budget) => buildFollowStoryPrompt({ today: today(), pending }, chatTurns(messages), budget),
     );
     return followStoryTurn(value);
+  }
+
+  moreOptions(req: MoreOptionsRequest) {
+    return moreTrackOptions(req, this.opts);
   }
 
   async executeTool(name: string, input: unknown) {
