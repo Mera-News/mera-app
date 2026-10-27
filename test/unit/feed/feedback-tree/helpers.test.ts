@@ -37,7 +37,9 @@ describe('summaryToast', () => {
     expect(summaryToast(t, [])).toBeNull();
     expect(summaryToast(t, [c, c, o])).toBe('feedbackTree.menu.toastChanges|{"count":2}');
     expect(summaryToast(t, [s])).toBe('feedbackTree.menu.toastMistakes|{"count":1}');
-    expect(summaryToast(t, [c, s, s])).toBe('feedbackTree.menu.toastBoth|{"changes":1,"mistakes":2}');
+    expect(summaryToast(t, [c, s, s])).toBe(
+      'feedbackTree.menu.toastBoth|{"changes":"feedbackTree.menu.toastChanges|{\\"count\\":1}","mistakes":"feedbackTree.menu.toastMistakeCount|{\\"count\\":2}"}',
+    );
     expect(summaryToast(t, [o])).toBe('feedbackTree.menu.toastSaved');
   });
 });

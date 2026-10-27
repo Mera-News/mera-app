@@ -803,7 +803,6 @@
     "updateCta": "Perbarui"
   },
   "feedback": {
-    "formTitle": "Laporkan Bug",
     "submitButtonLabel": "Kirim",
     "cancelButtonLabel": "Batal",
     "messageLabel": "Deskripsi",
@@ -1240,12 +1239,13 @@
       "sheetNot": "Tidak disertakan: beritanya, fakta kamu, atau akunmu.",
       "toastChanges_other": "{{count}} perubahan tersimpan",
       "toastMistakes_other": "{{count}} kesalahan Mera dicatat",
-      "toastBoth": "Perubahan tersimpan: {{changes}} · Kesalahan Mera dicatat: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Lebih sedikit untuk ini",
       "answerBigOnly": "Hanya berita besar",
       "answerStopped": "Tidak ada berita lagi untuk ini",
       "answerPaywalled": "Berbayar",
-      "answerSent": "{{answer}} · Dikirim ke Mera Labs"
+      "answerSent": "{{answer}} · Dikirim ke Mera Labs",
+      "toastMistakeCount_other": "{{count}} kesalahan dicatat"
     }
   },
   "topicPlan": {

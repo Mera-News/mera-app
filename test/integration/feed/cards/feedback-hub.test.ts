@@ -2,7 +2,7 @@
 // answers apply at the tap, the verdict is written on the first answer, every answer lands on
 // the dislike row (treePath = the first answer's path), and one toast sums up the session.
 // Rows are driven through the drawn level's props; persona's fact writes are spied at the module.
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react-native';
 import type React from 'react';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import type { HubRow } from '@/components/custom/feedback-tree/FeedbackHubLevel';
@@ -19,6 +19,8 @@ import { toastManager } from '@/lib/toast-manager';
 import { resetToastQueue, toastApi, useToastQueue } from '@/lib/toast/toast-queue';
 import i18n from 'i18next';
 import { initI18nEn } from '@/test/helpers';
+
+jest.mock('@/components/custom/MeraLogo', () => () => null);
 
 const ARTICLE = 'hub-article';
 const PUB = 'Realitatea';
@@ -150,7 +152,7 @@ describe('an answer', () => {
 
         expect((await ctxOf()).answers[0]).toMatchObject({ leafId: 'not_about_fact', cause: 'system', value: 'fact-1' });
         expect(await feedbackService.getRecentSystemMistakes()).toEqual([
-            expect.objectContaining({ reason: 'not_about_fact', factId: 'fact-1', country: 'RO', language: 'ro', publication: PUB }),
+            expect.objectContaining({ factId: 'fact-1', country: 'RO', language: 'ro', publication: PUB }),
         ]);
         const root = level(ROOT);
         expect(root.heading).toBe('Anything else?');
@@ -159,6 +161,29 @@ describe('an answer', () => {
             answered: true,
             subtitle: "Noted as Mera's mistake",
         });
+    });
+
+    it('a mistake reaches the chat as the sentence the reader tapped, with the fact filled in', async () => {
+        const fact = await factService.addFact('Pensioner in India; Lives in Bhopal', { topics: ['pensions India'] });
+        const { tap } = mount({
+            context: { publicationName: PUB, fact: { id: fact.id, statement: 'Pensioner in India', topicTexts: [] } },
+        });
+        await tap(ROOT, 'tree-row-not_about_fact');
+        await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(1));
+        const [m] = await feedbackService.getRecentSystemMistakes();
+        // Never the leaf id: the model reads this as context.
+        expect(m.reason).toBe('This story isn\'t about "Pensioner in India"');
+    });
+
+    it('an answered row reads "<row>, answered: <answer>", the answer once', async () => {
+        const { hook, tap } = mount();
+        await tap(ROOT, 'tree-row-not_about_fact');
+        render(hook.result.current.renderLevel(ROOT) as React.ReactElement);
+        expect(screen.getByTestId('tree-row-not_about_fact').props.accessibilityLabel).toBe(
+            'This story isn\'t about "Pensioner in India", answered: Noted as Mera\'s mistake',
+        );
+        // A row with a hint still reads label and hint.
+        expect(screen.getByTestId('feedback-tell-mera').props.accessibilityLabel).toBe('Tell Mera, Say it in your own words');
     });
 
     it('a later unapplied answer keeps a row that applied something processed', async () => {
@@ -234,6 +259,19 @@ describe('the session toast', () => {
         const after = await ctxOf();
         expect(after.answers).toBeUndefined();
         expect((await row())?.sentiment).toBe('dislike');
+    });
+
+    it('a change and a mistake read "1 change saved · 1 mistake noted", two of each in the plural', async () => {
+        jest.spyOn(factService, 'stopNewsForFact').mockResolvedValue({ changeLogIds: [] });
+        const { hook, tap } = mount();
+        await tap({ kind: 'tree', pathIds: ['profile_change', 'matters_less'] }, 'tree-row-stop_news');
+        await tap(ROOT, 'tree-row-not_about_fact');
+        act(() => hook.result.current.onSheetGone());
+        expect(toastTitles()).toEqual(['1 change saved · 1 mistake noted']);
+        expect(i18n.t('feedbackTree.menu.toastBoth', {
+            changes: i18n.t('feedbackTree.menu.toastChanges', { count: 2 }),
+            mistakes: i18n.t('feedbackTree.menu.toastMistakeCount', { count: 2 }),
+        })).toBe('2 changes saved · 2 mistakes noted');
     });
 
     it('Done with no answer shows nothing and writes nothing', async () => {

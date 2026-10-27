@@ -3,6 +3,7 @@
 // last row, and an optional note under the plate. Presentational only: the
 // rows, their answered state and what a tap does come from useFeedbackHub.
 
+import { SHEET } from '@/components/custom/cards/sheet-metrics';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
@@ -14,7 +15,8 @@ export interface HubRow {
     key: string;
     testID: string;
     label: string;
-    /** The full label when `label` clamps the fact (VoiceOver reads this). */
+    /** What VoiceOver reads, WHOLE when given (the full fact, or "<row>,
+     *  answered: <answer>"); absent: the label and subtitle. */
     a11yLabel?: string;
     /** A second line: Tell Mera's hint, or an answered row's answer. */
     subtitle?: string;
@@ -38,8 +40,16 @@ export interface FeedbackHubLevelProps {
     focusKey?: number;
 }
 
-/** Rows hold 60pt and 17pt text (the canvas); the plate is one grouped surface. */
-const ROW = { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 12 } as const;
+/** The ••• sheet's row rhythm (SHEET), on one grouped plate. A row that
+ *  wraps (a quoted fact) grows past the 48pt minimum. */
+const ROW = {
+    minHeight: SHEET.controlHeight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SHEET.rowIconGap,
+    paddingHorizontal: SHEET.rowInset,
+    paddingVertical: 10,
+} as const;
 
 const FeedbackHubLevel: React.FC<FeedbackHubLevelProps> = ({
     heading,
@@ -59,14 +69,14 @@ const FeedbackHubLevel: React.FC<FeedbackHubLevelProps> = ({
     }, [focusKey]);
 
     return (
-        <View style={{ gap: 14, paddingHorizontal: 8 }} testID="feedback-hub-level">
-            <View style={{ gap: 2, marginHorizontal: 4 }}>
+        <View style={{ gap: SHEET.section }} testID="feedback-hub-level">
+            <View style={{ gap: 4 }}>
                 <Text
                     ref={headingRef}
                     accessibilityRole="header"
                     accessibilityLabel={headingA11y}
                     testID="feedback-hub-heading"
-                    style={{ color: c.ink, fontSize: 22, lineHeight: 30, fontWeight: '700' }}
+                    style={{ color: c.ink, ...SHEET.title }}
                 >
                     {heading}
                 </Text>
@@ -75,7 +85,7 @@ const FeedbackHubLevel: React.FC<FeedbackHubLevelProps> = ({
                         numberOfLines={3}
                         accessibilityLabel={subtitleA11y}
                         testID="feedback-hub-subtitle"
-                        style={{ color: c.ink2, fontSize: 15, lineHeight: 22 }}
+                        style={{ color: c.ink2, ...SHEET.body }}
                     >
                         {subtitle}
                     </Text>
@@ -83,7 +93,7 @@ const FeedbackHubLevel: React.FC<FeedbackHubLevelProps> = ({
             </View>
             <View
                 style={{
-                    borderRadius: 16,
+                    borderRadius: SHEET.radius,
                     borderWidth: 1,
                     borderColor: c.line,
                     backgroundColor: c.surfaceRaised,
@@ -95,47 +105,40 @@ const FeedbackHubLevel: React.FC<FeedbackHubLevelProps> = ({
                         key={row.key}
                         testID={row.testID}
                         accessibilityRole="button"
-                        accessibilityLabel={
-                            (row.a11yLabel ?? row.label) + (row.subtitle ? `, ${row.subtitle}` : '')
-                        }
+                        accessibilityLabel={row.a11yLabel ?? (row.subtitle ? `${row.label}, ${row.subtitle}` : row.label)}
                         onPress={row.onPress}
                     >
                         {/* Layout on an inner View with a STATIC style: a function style on a
                             Pressable is dropped on device. */}
                         <View style={[ROW, i > 0 ? { borderTopWidth: 1, borderTopColor: c.line } : null]}>
                             {row.answered ? (
-                                <MaterialIcons name="check-circle" size={24} color={c.accent} />
+                                <MaterialIcons name="check-circle" size={SHEET.iconSize} color={c.accent} />
                             ) : row.icon === 'mera' ? (
-                                <MeraLogo size={26} />
+                                <MeraLogo size={SHEET.iconSize + 2} />
                             ) : (
                                 <MaterialIcons
                                     name={row.icon}
-                                    size={24}
+                                    size={SHEET.iconSize}
                                     color={row.destructive ? c.negative : c.ink2}
                                 />
                             )}
                             <View style={{ flex: 1, gap: 2 }}>
                                 <Text
-                                    style={{
-                                        color: row.destructive ? c.negative : c.ink,
-                                        fontSize: 17,
-                                        lineHeight: 24,
-                                        fontWeight: '500',
-                                    }}
+                                    style={{ color: row.destructive ? c.negative : c.ink, ...SHEET.label }}
                                 >
                                     {row.label}
                                 </Text>
                                 {row.subtitle ? (
-                                    <Text style={{ color: c.ink2, fontSize: 14, lineHeight: 20 }}>{row.subtitle}</Text>
+                                    <Text style={{ color: c.ink3, ...SHEET.caption }}>{row.subtitle}</Text>
                                 ) : null}
                             </View>
-                            {row.opensLevel ? <MaterialIcons name="chevron-right" size={24} color={c.ink3} /> : null}
+                            {row.opensLevel ? <MaterialIcons name="chevron-right" size={SHEET.iconSize} color={c.ink} /> : null}
                         </View>
                     </Pressable>
                 ))}
             </View>
             {note ? (
-                <Text testID="feedback-hub-note" style={{ marginHorizontal: 4, color: c.ink2, fontSize: 14, lineHeight: 21 }}>
+                <Text testID="feedback-hub-note" style={{ color: c.ink3, ...SHEET.caption }}>
                     {note}
                 </Text>
             ) : null}

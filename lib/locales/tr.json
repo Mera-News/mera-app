@@ -810,7 +810,6 @@
     "updateCta": "Güncelle"
   },
   "feedback": {
-    "formTitle": "Hata Bildir",
     "submitButtonLabel": "Gönder",
     "cancelButtonLabel": "İptal",
     "messageLabel": "Açıklama",
@@ -1252,12 +1251,14 @@
       "toastChanges_other": "{{count}} değişiklik kaydedildi",
       "toastMistakes_one": "Mera'nın hatası not edildi",
       "toastMistakes_other": "Mera'nın {{count}} hatası not edildi",
-      "toastBoth": "Kaydedilen değişiklikler: {{changes}} · Mera'nın not edilen hataları: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Bununla ilgili daha az",
       "answerBigOnly": "Yalnızca büyük haberler",
       "answerStopped": "Bununla ilgili haber yok",
       "answerPaywalled": "Ücretli erişim",
-      "answerSent": "{{answer}} · Mera Labs'e gönderildi"
+      "answerSent": "{{answer}} · Mera Labs'e gönderildi",
+      "toastMistakeCount_one": "{{count}} hata not edildi",
+      "toastMistakeCount_other": "{{count}} hata not edildi"
     }
   },
   "topicPlan": {

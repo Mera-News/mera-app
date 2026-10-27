@@ -803,7 +803,6 @@
     "updateCta": "アップデート"
   },
   "feedback": {
-    "formTitle": "バグを報告",
     "submitButtonLabel": "送信",
     "cancelButtonLabel": "キャンセル",
     "messageLabel": "説明",
@@ -1240,12 +1239,13 @@
       "sheetNot": "含まれないもの: 記事そのもの、あなたの情報、アカウント。",
       "toastChanges_other": "{{count}}件の変更を保存しました",
       "toastMistakes_other": "メラの間違い{{count}}件を記録しました",
-      "toastBoth": "保存した変更: {{changes}}件 · 記録したメラの間違い: {{mistakes}}件",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "これは少なめに",
       "answerBigOnly": "大きなニュースのみ",
       "answerStopped": "これのニュースは停止",
       "answerPaywalled": "有料記事",
-      "answerSent": "{{answer}} · メラ・ラボに送信済み"
+      "answerSent": "{{answer}} · メラ・ラボに送信済み",
+      "toastMistakeCount_other": "{{count}}件の間違いを記録しました"
     }
   },
   "topicPlan": {

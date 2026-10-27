@@ -844,7 +844,6 @@
     "updateCta": "Оновити"
   },
   "feedback": {
-    "formTitle": "Повідомити про помилку",
     "submitButtonLabel": "Надіслати",
     "cancelButtonLabel": "Скасувати",
     "messageLabel": "Опис",
@@ -1298,12 +1297,16 @@
       "toastMistakes_few": "Позначено помилок Мери: {{count}}",
       "toastMistakes_many": "Позначено помилок Мери: {{count}}",
       "toastMistakes_other": "Позначено помилок Мери: {{count}}",
-      "toastBoth": "Збережено змін: {{changes}} · Позначено помилок Мери: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Менше про це",
       "answerBigOnly": "Лише важливі новини",
       "answerStopped": "Більше жодних новин про це",
       "answerPaywalled": "Платний доступ",
-      "answerSent": "{{answer}} · Надіслано в Мера Лабс"
+      "answerSent": "{{answer}} · Надіслано в Мера Лабс",
+      "toastMistakeCount_one": "Позначено помилку: {{count}}",
+      "toastMistakeCount_few": "Позначено помилок: {{count}}",
+      "toastMistakeCount_many": "Позначено помилок: {{count}}",
+      "toastMistakeCount_other": "Позначено помилок: {{count}}"
     }
   },
   "topicPlan": {

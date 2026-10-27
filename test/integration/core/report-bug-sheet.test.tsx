@@ -108,6 +108,23 @@ it('has no email field and seeds the message from a prefill', () => {
     expect(screen.getByTestId('feedback-cancel')).toBeTruthy();
 });
 
+it('a prefilled draft says the app wrote it and what is left out; an ordinary report does not', () => {
+    render(<FeedbackWidgetModal />);
+    act(() => feedback.showFeedback({ prefill: 'Mera showed me a story that does not fit.' }));
+    expect(screen.getByText('Report a bug')).toBeTruthy();
+    expect(screen.getByText('We filled this in for you. Change anything, then tap Send.')).toBeTruthy();
+    expect(screen.getByTestId('feedback-not-included').props.children).toBe(
+        'Not included: the story itself, your facts, or your account.',
+    );
+    act(() => store.getState().hide());
+
+    act(() => feedback.showFeedback());
+    expect(screen.getByText('Report a bug')).toBeTruthy();
+    expect(screen.queryByText('We filled this in for you. Change anything, then tap Send.')).toBeNull();
+    expect(screen.queryByTestId('feedback-not-included')).toBeNull();
+    act(() => store.getState().hide());
+});
+
 it('wipes an unsent prefilled draft once the sheet is gone, and keeps an ordinary draft', () => {
     render(<FeedbackWidgetModal />);
     act(() => feedback.showFeedback({ prefill: 'prefilled text' }));

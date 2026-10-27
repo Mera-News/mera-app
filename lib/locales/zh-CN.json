@@ -803,7 +803,6 @@
     "updateCta": "更新"
   },
   "feedback": {
-    "formTitle": "报告问题",
     "submitButtonLabel": "发送",
     "cancelButtonLabel": "取消",
     "messageLabel": "问题描述",
@@ -1240,12 +1239,13 @@
       "sheetNot": "不包含：新闻本身、你的资料或你的账号。",
       "toastChanges_other": "已保存 {{count}} 项更改",
       "toastMistakes_other": "已记录 {{count}} 个梅拉的错误",
-      "toastBoth": "已保存的更改：{{changes}} 项 · 已记录的梅拉错误：{{mistakes}} 个",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "少看这类",
       "answerBigOnly": "只看大新闻",
       "answerStopped": "不再推送这类新闻",
       "answerPaywalled": "需付费",
-      "answerSent": "{{answer}} · 已发送给梅拉实验室"
+      "answerSent": "{{answer}} · 已发送给梅拉实验室",
+      "toastMistakeCount_other": "已记录 {{count}} 个错误"
     }
   },
   "topicPlan": {

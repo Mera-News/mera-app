@@ -205,7 +205,7 @@ describe('the article chat', () => {
     answer({ intent: 'answer', reply: 'Noted.' });
     await turn(agent, 'why did I get this?');
 
-    expect(lastCall().prompt).toContain('- not_about_fact; story from <site>, XA, xa');
+    expect(lastCall().prompt).toContain('- This story isn\'t about the interest it was shown for; story from <site>, XA, xa');
   });
 
   it('track: stages the options against this article', async () => {

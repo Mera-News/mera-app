@@ -224,7 +224,7 @@ describe('buildContext', () => {
     const ctx = await makeAgent({ suggestionId }).buildContext();
 
     expect(ctx).toContain("## MERA'S RECENT MISTAKES");
-    expect(ctx).toContain('- not_about_fact (fact [fact-1]; <site>, XA, xa)');
+    expect(ctx).toContain('- This story isn\'t about the interest it was shown for (fact [fact-1]; <site>, XA, xa)');
   });
 
   it('lists the ACTIVE filters, so the agent can offer to remove one', async () => {

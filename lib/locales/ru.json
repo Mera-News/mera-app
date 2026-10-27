@@ -844,7 +844,6 @@
     "updateCta": "Обновить"
   },
   "feedback": {
-    "formTitle": "Сообщить об ошибке",
     "submitButtonLabel": "Отправить",
     "cancelButtonLabel": "Отмена",
     "messageLabel": "Описание",
@@ -1294,12 +1293,16 @@
       "toastMistakes_few": "Отмечено ошибок Меры: {{count}}",
       "toastMistakes_many": "Отмечено ошибок Меры: {{count}}",
       "toastMistakes_other": "Отмечено ошибок Меры: {{count}}",
-      "toastBoth": "Сохранено изменений: {{changes}} · Отмечено ошибок Меры: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Меньше об этом",
       "answerBigOnly": "Только важные новости",
       "answerStopped": "Больше никаких новостей об этом",
       "answerPaywalled": "Платный доступ",
-      "answerSent": "{{answer}} · Отправлено в Мера Лабс"
+      "answerSent": "{{answer}} · Отправлено в Мера Лабс",
+      "toastMistakeCount_one": "Отмечена ошибка: {{count}}",
+      "toastMistakeCount_few": "Отмечено ошибок: {{count}}",
+      "toastMistakeCount_many": "Отмечено ошибок: {{count}}",
+      "toastMistakeCount_other": "Отмечено ошибок: {{count}}"
     }
   },
   "topicPlan": {

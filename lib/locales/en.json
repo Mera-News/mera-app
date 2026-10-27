@@ -1230,7 +1230,6 @@
     "updateCta": "Update"
   },
   "feedback": {
-    "formTitle": "Report a Bug",
     "submitButtonLabel": "Send",
     "cancelButtonLabel": "Cancel",
     "messageLabel": "Description",
@@ -1446,12 +1445,14 @@
       "toastChanges_other": "{{count}} changes saved",
       "toastMistakes_one": "Mera's mistake noted",
       "toastMistakes_other": "{{count}} of Mera's mistakes noted",
-      "toastBoth": "Changes saved: {{changes}} · Mera's mistakes noted: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Less for this",
       "answerBigOnly": "Big news only",
       "answerStopped": "No more news for this",
       "answerPaywalled": "Paywalled",
-      "answerSent": "{{answer}} · Sent to Mera Labs"
+      "answerSent": "{{answer}} · Sent to Mera Labs",
+      "toastMistakeCount_one": "{{count}} mistake noted",
+      "toastMistakeCount_other": "{{count}} mistakes noted"
     }
   },
   "topicPlan": {

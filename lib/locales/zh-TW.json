@@ -803,7 +803,6 @@
     "updateCta": "更新"
   },
   "feedback": {
-    "formTitle": "回報問題",
     "submitButtonLabel": "傳送",
     "cancelButtonLabel": "取消",
     "messageLabel": "問題描述",
@@ -1240,12 +1239,13 @@
       "sheetNot": "不包含：新聞本身、你的資料或你的帳號。",
       "toastChanges_other": "已儲存 {{count}} 項變更",
       "toastMistakes_other": "已記錄 {{count}} 個梅拉的錯誤",
-      "toastBoth": "已儲存的變更：{{changes}} 項 · 已記錄的梅拉錯誤：{{mistakes}} 個",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "少看這類",
       "answerBigOnly": "只看大新聞",
       "answerStopped": "不再推送這類新聞",
       "answerPaywalled": "需付費",
-      "answerSent": "{{answer}} · 已傳送給梅拉實驗室"
+      "answerSent": "{{answer}} · 已傳送給梅拉實驗室",
+      "toastMistakeCount_other": "已記錄 {{count}} 個錯誤"
     }
   },
   "topicPlan": {

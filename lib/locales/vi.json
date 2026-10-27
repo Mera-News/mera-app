@@ -803,7 +803,6 @@
     "updateCta": "Cập nhật"
   },
   "feedback": {
-    "formTitle": "Báo cáo lỗi",
     "submitButtonLabel": "Gửi",
     "cancelButtonLabel": "Hủy",
     "messageLabel": "Mô tả",
@@ -1240,12 +1239,13 @@
       "sheetNot": "Không bao gồm: bản tin, các thông tin của bạn hoặc tài khoản của bạn.",
       "toastChanges_other": "Đã lưu {{count}} thay đổi",
       "toastMistakes_other": "Đã ghi nhận {{count}} lỗi của Mera",
-      "toastBoth": "Thay đổi đã lưu: {{changes}} · Lỗi của Mera đã ghi nhận: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Ít hơn về điều này",
       "answerBigOnly": "Chỉ tin lớn",
       "answerStopped": "Không còn tin về điều này",
       "answerPaywalled": "Có tường phí",
-      "answerSent": "{{answer}} · Đã gửi cho Mera Labs"
+      "answerSent": "{{answer}} · Đã gửi cho Mera Labs",
+      "toastMistakeCount_other": "Đã ghi nhận {{count}} lỗi"
     }
   },
   "topicPlan": {

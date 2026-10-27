@@ -655,21 +655,55 @@ export async function dropLastFeedbackAnswers(articleId: string, count: number):
   );
 }
 
+/** A mistake's leaf as the sentence the reader tapped, in English with the
+ *  fact filled in (the chat model reads it as context; a leaf id told it
+ *  nothing). Falls back to the leaf id for a leaf the bundled tree lacks. */
+function mistakeSentence(leafId: string, factStatement: string | null, publication: string | null): string {
+  // Required at call time: a plain data module, kept off this service's load path.
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  const { BUNDLED_FEEDBACK_TREE } = require('../../algorithms/feedback-tree-snapshot') as typeof import('../../algorithms/feedback-tree-snapshot');
+  const { primaryStatement } = require('../../stores/fact-rows-selector') as typeof import('../../stores/fact-rows-selector');
+  /* eslint-enable @typescript-eslint/no-require-imports */
+  type N = { id: string; labelDefault: string; children?: N[] };
+  const find = (nodes: N[]): N | null => {
+    for (const n of nodes) {
+      if (n.id === leafId) return n;
+      const hit = n.children ? find(n.children) : null;
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const node = find(BUNDLED_FEEDBACK_TREE.root);
+  if (!node) return leafId;
+  const label = factStatement
+    ? node.labelDefault.replace(/\{\{fact\}\}/g, primaryStatement(factStatement))
+    : node.labelDefault.replace(/"?\{\{fact\}\}"?/g, 'the interest it was shown for');
+  return label.replace(/\{\{site\}\}/g, publication ?? 'this site');
+}
+
 /** The reader's recent "Mera's mistake" answers, newest first, as context for
- *  the chat and the sweep. They never change the persona. */
+ *  the chat and the sweep. They never change the persona. `reason` is the
+ *  sentence the reader tapped, never the leaf id. */
 export async function getRecentSystemMistakes(limit = 20): Promise<SystemMistakeView[]> {
   try {
     const rows = await articleFeedbackCol
       .query(Q.where('sentiment', 'dislike'), Q.sortBy('created_at', Q.desc), Q.take(200))
       .fetch();
-    const out: SystemMistakeView[] = [];
+    const mistakes: SystemMistakeView[] = [];
     for (const row of rows) {
       const m = mistakeFromContext(row.contextJson);
       if (!m) continue;
-      out.push({ ...m, at: row.createdAt.getTime() });
-      if (out.length >= limit) break;
+      mistakes.push({ ...m, at: row.createdAt.getTime() });
+      if (mistakes.length >= limit) break;
     }
-    return out;
+    if (mistakes.length === 0) return mistakes;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getFacts } = require('./fact-service') as typeof import('./fact-service');
+    const statements = new Map((await getFacts()).map((f) => [f.id, f.statement]));
+    return mistakes.map((m) => ({
+      ...m,
+      reason: mistakeSentence(m.reason, m.factId ? statements.get(m.factId) ?? null : null, m.publication),
+    }));
   } catch (error) {
     logger.captureException(error, { tags: { service: 'article-feedback', method: 'recentMistakes' } });
     return [];

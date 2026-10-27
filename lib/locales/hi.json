@@ -810,7 +810,6 @@
     "updateCta": "अपडेट करें"
   },
   "feedback": {
-    "formTitle": "बग की रिपोर्ट करें",
     "submitButtonLabel": "भेजें",
     "cancelButtonLabel": "रद्द करें",
     "messageLabel": "विवरण",
@@ -1252,12 +1251,14 @@
       "toastChanges_other": "{{count}} बदलाव सहेजे गए",
       "toastMistakes_one": "मेरा की गलती दर्ज की गई",
       "toastMistakes_other": "मेरा की {{count}} गलतियाँ दर्ज की गईं",
-      "toastBoth": "सहेजे गए बदलाव: {{changes}} · मेरा की दर्ज गलतियाँ: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "इसके लिए कम",
       "answerBigOnly": "सिर्फ़ बड़ी खबरें",
       "answerStopped": "इसके लिए अब कोई खबर नहीं",
       "answerPaywalled": "पेवॉल वाली",
-      "answerSent": "{{answer}} · मेरा लैब्स को भेजा गया"
+      "answerSent": "{{answer}} · मेरा लैब्स को भेजा गया",
+      "toastMistakeCount_one": "{{count}} गलती दर्ज की गई",
+      "toastMistakeCount_other": "{{count}} गलतियाँ दर्ज की गईं"
     }
   },
   "topicPlan": {

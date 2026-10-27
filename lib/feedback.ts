@@ -54,7 +54,7 @@ export function showFeedback(opts?: { prefill?: string }): void {
     prefilledReportOpen = false;
     setPrefilledReportPending(false);
   }
-  useFeedbackStore.getState().show();
+  useFeedbackStore.getState().show({ prefilled: !!prefill });
 }
 
 const FEATURE_REQUEST_PREFIX = '[Feature Request] ';

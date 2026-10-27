@@ -9,7 +9,10 @@ interface FeedbackState {
     visible: boolean;
     /** The widget is in the tree: open, or closing and not yet gone. */
     mounted: boolean;
-    show: () => void;
+    /** Opened with a draft the app wrote (the feedback sheet's "Also tell
+     *  Mera Labs"): the sheet says so and what is left out. */
+    prefilled: boolean;
+    show: (opts?: { prefilled?: boolean }) => void;
     hide: () => void;
     /** The sheet has fully gone: unmount the widget. */
     unmount: () => void;
@@ -18,7 +21,8 @@ interface FeedbackState {
 export const useFeedbackStore = create<FeedbackState>((set) => ({
     visible: false,
     mounted: false,
-    show: () => set({ visible: true, mounted: true }),
+    prefilled: false,
+    show: (opts) => set({ visible: true, mounted: true, prefilled: !!opts?.prefilled }),
     hide: () => set({ visible: false }),
     unmount: () => set({ mounted: false }),
 }));

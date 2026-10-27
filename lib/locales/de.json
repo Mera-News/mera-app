@@ -810,7 +810,6 @@
     "updateCta": "Aktualisieren"
   },
   "feedback": {
-    "formTitle": "Fehler melden",
     "submitButtonLabel": "Senden",
     "cancelButtonLabel": "Abbrechen",
     "messageLabel": "Beschreibung",
@@ -1250,12 +1249,14 @@
       "toastChanges_other": "{{count}} Änderungen gespeichert",
       "toastMistakes_one": "Fehler von Mera vermerkt",
       "toastMistakes_other": "{{count}} Fehler von Mera vermerkt",
-      "toastBoth": "Gespeicherte Änderungen: {{changes}} · Vermerkte Fehler von Mera: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Weniger dazu",
       "answerBigOnly": "Nur große Nachrichten",
       "answerStopped": "Keine Nachrichten mehr dazu",
       "answerPaywalled": "Bezahlschranke",
-      "answerSent": "{{answer}} · An Mera Labs gesendet"
+      "answerSent": "{{answer}} · An Mera Labs gesendet",
+      "toastMistakeCount_one": "{{count}} Fehler vermerkt",
+      "toastMistakeCount_other": "{{count}} Fehler vermerkt"
     }
   },
   "topicPlan": {

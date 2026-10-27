@@ -810,7 +810,6 @@
     "updateCta": "Bijwerken"
   },
   "feedback": {
-    "formTitle": "Bug Melden",
     "submitButtonLabel": "Verzenden",
     "cancelButtonLabel": "Annuleren",
     "messageLabel": "Beschrijving",
@@ -1250,12 +1249,14 @@
       "toastChanges_other": "{{count}} wijzigingen opgeslagen",
       "toastMistakes_one": "Fout van Mera genoteerd",
       "toastMistakes_other": "{{count}} fouten van Mera genoteerd",
-      "toastBoth": "Opgeslagen wijzigingen: {{changes}} · Genoteerde fouten van Mera: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Minder hierover",
       "answerBigOnly": "Alleen groot nieuws",
       "answerStopped": "Geen nieuws meer hierover",
       "answerPaywalled": "Betaalmuur",
-      "answerSent": "{{answer}} · Verstuurd naar Mera Labs"
+      "answerSent": "{{answer}} · Verstuurd naar Mera Labs",
+      "toastMistakeCount_one": "{{count}} fout genoteerd",
+      "toastMistakeCount_other": "{{count}} fouten genoteerd"
     }
   },
   "topicPlan": {

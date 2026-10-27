@@ -810,7 +810,6 @@
     "updateCta": "Actualizar"
   },
   "feedback": {
-    "formTitle": "Reportar un error",
     "submitButtonLabel": "Enviar",
     "cancelButtonLabel": "Cancelar",
     "messageLabel": "Descripción",
@@ -1253,12 +1252,15 @@
       "toastMistakes_one": "Error de Mera anotado",
       "toastMistakes_many": "{{count}} errores de Mera anotados",
       "toastMistakes_other": "{{count}} errores de Mera anotados",
-      "toastBoth": "Cambios guardados: {{changes}} · Errores de Mera anotados: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "Menos sobre esto",
       "answerBigOnly": "Solo noticias importantes",
       "answerStopped": "Sin más noticias sobre esto",
       "answerPaywalled": "De pago",
-      "answerSent": "{{answer}} · Enviado a Mera Labs"
+      "answerSent": "{{answer}} · Enviado a Mera Labs",
+      "toastMistakeCount_one": "{{count}} error anotado",
+      "toastMistakeCount_many": "{{count}} errores anotados",
+      "toastMistakeCount_other": "{{count}} errores anotados"
     }
   },
   "topicPlan": {

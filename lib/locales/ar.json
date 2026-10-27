@@ -878,7 +878,6 @@
     "updateCta": "تحديث"
   },
   "feedback": {
-    "formTitle": "الإبلاغ عن خطأ",
     "submitButtonLabel": "إرسال",
     "cancelButtonLabel": "إلغاء",
     "messageLabel": "الوصف",
@@ -1344,12 +1343,18 @@
       "toastMistakes_few": "سُجّلت {{count}} أخطاء من ميرا",
       "toastMistakes_many": "سُجّل {{count}} خطأً من ميرا",
       "toastMistakes_other": "سُجّل {{count}} خطأ من ميرا",
-      "toastBoth": "التغييرات المحفوظة: {{changes}} · أخطاء ميرا المسجلة: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "أقل لهذا",
       "answerBigOnly": "الأخبار الكبيرة فقط",
       "answerStopped": "لا مزيد من الأخبار لهذا",
       "answerPaywalled": "خلف جدار دفع",
-      "answerSent": "{{answer}} · أُرسل إلى ميرا لابز"
+      "answerSent": "{{answer}} · أُرسل إلى ميرا لابز",
+      "toastMistakeCount_zero": "لم يُسجَّل أي خطأ",
+      "toastMistakeCount_one": "سُجّل خطأ واحد",
+      "toastMistakeCount_two": "سُجّل خطآن",
+      "toastMistakeCount_few": "سُجّلت {{count}} أخطاء",
+      "toastMistakeCount_many": "سُجّل {{count}} خطأً",
+      "toastMistakeCount_other": "سُجّل {{count}} خطأ"
     }
   },
   "topicPlan": {

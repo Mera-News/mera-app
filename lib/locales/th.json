@@ -804,7 +804,6 @@
     "updateCta": "อัปเดต"
   },
   "feedback": {
-    "formTitle": "รายงานปัญหา",
     "submitButtonLabel": "ส่ง",
     "cancelButtonLabel": "ยกเลิก",
     "messageLabel": "รายละเอียด",
@@ -1241,12 +1240,13 @@
       "sheetNot": "ไม่รวม: ตัวข่าว ข้อมูลของคุณ หรือบัญชีของคุณ",
       "toastChanges_other": "บันทึกการเปลี่ยนแปลง {{count}} รายการแล้ว",
       "toastMistakes_other": "บันทึกข้อผิดพลาดของ เมร่า {{count}} รายการแล้ว",
-      "toastBoth": "การเปลี่ยนแปลงที่บันทึก: {{changes}} · ข้อผิดพลาดของ เมร่า ที่บันทึก: {{mistakes}}",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "น้อยลงสำหรับเรื่องนี้",
       "answerBigOnly": "เฉพาะข่าวใหญ่",
       "answerStopped": "ไม่มีข่าวเรื่องนี้อีก",
       "answerPaywalled": "ต้องจ่ายเงิน",
-      "answerSent": "{{answer}} · ส่งให้ เมร่า แล็บส์ แล้ว"
+      "answerSent": "{{answer}} · ส่งให้ เมร่า แล็บส์ แล้ว",
+      "toastMistakeCount_other": "บันทึกข้อผิดพลาด {{count}} รายการแล้ว"
     }
   },
   "topicPlan": {

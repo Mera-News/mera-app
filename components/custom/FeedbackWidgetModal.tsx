@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import MeraLogo from '@/components/custom/MeraLogo';
+import { SHEET } from '@/components/custom/cards/sheet-metrics';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { finishPrefilledReport } from '@/lib/feedback';
 import { authClient } from '@/lib/auth-client';
@@ -68,6 +68,7 @@ const FeedbackWidgetModal: React.FC = () => {
     const mounted = useFeedbackStore((s) => s.mounted);
     const hide = useFeedbackStore((s) => s.hide);
     const unmount = useFeedbackStore((s) => s.unmount);
+    const prefilled = useFeedbackStore((s) => s.prefilled);
     const sent = useRef(false);
     useRestartHold(visible, 'overlay:feedback', 'auto');
     // The Sentry widget owns its text fields and exposes no change event, so the draft hold spans the open form.
@@ -114,11 +115,13 @@ const FeedbackWidgetModal: React.FC = () => {
             scrimLabel={t('feedback.cancelButtonLabel')}
         >
             <View>
+                {/* One frame with the feedback hub: a title (and, for a draft the app
+                    wrote, what it is), no mark, the same left edge as the form. */}
                 <View style={styles.header}>
-                    <MeraLogo size={30} />
                     <Text accessibilityRole="header" style={styles.title}>
-                        {t('feedback.formTitle')}
+                        {t('articleMenu.reportBug')}
                     </Text>
+                    {prefilled ? <Text style={styles.hint}>{t('feedbackTree.menu.sheetHint')}</Text> : null}
                 </View>
 
                 <ScrollView
@@ -155,10 +158,10 @@ const FeedbackWidgetModal: React.FC = () => {
                             submitText: styles.submitText,
                         }}
                         // Localized labels.
-                        formTitle={t('feedback.formTitle')}
+                        formTitle={t('articleMenu.reportBug')}
                         submitButtonLabel={t('feedback.submitButtonLabel')}
                         cancelButtonLabel={t('feedback.cancelButtonLabel')}
-                        messageLabel={t('feedback.messageLabel')}
+                        messageLabel={prefilled ? t('feedbackTree.menu.sheetWhat') : t('feedback.messageLabel')}
                         messagePlaceholder={t('feedback.messagePlaceholder')}
                         isRequiredLabel={t('feedback.isRequiredLabel')}
                         successMessageText={t('feedback.successMessageText')}
@@ -188,77 +191,60 @@ const FeedbackWidgetModal: React.FC = () => {
                         <Text style={styles.cancelText}>{t('feedback.cancelButtonLabel')}</Text>
                     </View>
                 </Pressable>
+                {prefilled ? (
+                    <Text testID="feedback-not-included" style={styles.note}>
+                        {t('feedbackTree.menu.sheetNot')}
+                    </Text>
+                ) : null}
             </View>
         </BottomSheet>
     );
 };
 
+// Every number comes from SHEET, the scale the ••• sheet and the feedback hub
+// use: SHEET.gap between controls, SHEET.section between the header, the
+// field and the buttons, every button SHEET.controlHeight. The widget's own
+// margins are all replaced (it REPLACES each style it is given).
+const BUTTON = {
+    minHeight: SHEET.controlHeight,
+    borderRadius: SHEET.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+} as const;
+
 const useStyles = themedStyles((c) => StyleSheet.create({
-    header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 8 },
-    title: { flex: 1, color: c.ink, fontSize: 20, lineHeight: 26, fontWeight: '700' },
-    cancelPlate: {
-        minHeight: 48,
-        marginTop: 8,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: c.surfaceRaised,
-    },
-    cancelText: { color: c.ink, fontSize: 15, fontWeight: '600', textAlign: 'center' },
+    header: { gap: 4 },
+    title: { color: c.ink, ...SHEET.title },
+    hint: { color: c.ink2, ...SHEET.body },
+    // The ••• sheet's bottom plate, verbatim.
+    cancelPlate: { ...BUTTON, marginTop: SHEET.gap, backgroundColor: c.surfaceRaised },
+    cancelText: { color: c.ink, textAlign: 'center', ...SHEET.label },
+    note: { marginTop: SHEET.gap, color: c.ink3, ...SHEET.caption },
     // The widget's root: no flex (it would collapse inside the ScrollView),
-    // transparent so the material shows, the dialog's 24pt padding.
-    widgetContainer: {
-        paddingTop: 12,
-        paddingBottom: 12,
-        backgroundColor: 'transparent',
-    },
+    // transparent so the material shows, no side padding (the kit's sides).
+    widgetContainer: { paddingTop: SHEET.section, backgroundColor: 'transparent' },
     hidden: { display: 'none' },
-    label: { marginBottom: 6, fontSize: 15, color: c.ink2 },
+    label: { marginBottom: SHEET.gap, color: c.ink2, ...SHEET.body },
     input: {
-        minHeight: 48,
+        minHeight: SHEET.controlHeight,
         borderColor: c.trackBorder,
         borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        marginBottom: 16,
-        fontSize: 16,
+        borderRadius: SHEET.radius,
+        paddingHorizontal: SHEET.rowInset,
+        marginBottom: SHEET.section,
         color: c.ink,
         backgroundColor: c.surface,
+        ...SHEET.body,
     },
     textArea: { height: 110, paddingTop: 12, textAlignVertical: 'top', color: c.ink },
-    // The outlined secondary of ConfirmDialog.
-    outlineButton: {
-        flex: 1,
-        minHeight: 44,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: c.edge,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 16,
-    },
-    takeScreenshotButton: {
-        minHeight: 44,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: c.edge,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 16,
-        marginTop: -4,
-        marginBottom: 16,
-    },
-    outlineText: { color: c.ink, fontSize: 15, fontWeight: '600' },
-    // The primary of ConfirmDialog: the accent pill at 44pt.
-    submitButton: {
-        minHeight: 44,
-        borderRadius: 999,
-        backgroundColor: c.accent,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 16,
-    },
-    submitText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
+    // "Add a screenshot" (with an image picker) and "Take a screenshot": the
+    // outlined secondary, same height and corners as every other button.
+    outlineButton: { ...BUTTON, flex: 1, borderWidth: 1, borderColor: c.edge },
+    takeScreenshotButton: { ...BUTTON, borderWidth: 1, borderColor: c.edge, marginBottom: SHEET.gap },
+    outlineText: { color: c.ink, ...SHEET.label },
+    submitButton: { ...BUTTON, backgroundColor: c.accent },
+    submitText: { color: c.onAccent, ...SHEET.label },
 }));
 
 export default FeedbackWidgetModal;

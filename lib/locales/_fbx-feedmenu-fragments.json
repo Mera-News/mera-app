@@ -61,12 +61,14 @@
         "toastChanges_other": "{{count}} changes saved",
         "toastMistakes_one": "Mera's mistake noted",
         "toastMistakes_other": "{{count}} of Mera's mistakes noted",
-        "toastBoth": "Changes saved: {{changes}} · Mera's mistakes noted: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Less for this",
         "answerBigOnly": "Big news only",
         "answerStopped": "No more news for this",
         "answerPaywalled": "Paywalled",
-        "answerSent": "{{answer}} · Sent to Mera Labs"
+        "answerSent": "{{answer}} · Sent to Mera Labs",
+        "toastMistakeCount_one": "{{count}} mistake noted",
+        "toastMistakeCount_other": "{{count}} mistakes noted"
       }
     }
   },
@@ -132,12 +134,14 @@
         "toastChanges_other": "{{count}} Änderungen gespeichert",
         "toastMistakes_one": "Fehler von Mera vermerkt",
         "toastMistakes_other": "{{count}} Fehler von Mera vermerkt",
-        "toastBoth": "Gespeicherte Änderungen: {{changes}} · Vermerkte Fehler von Mera: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Weniger dazu",
         "answerBigOnly": "Nur große Nachrichten",
         "answerStopped": "Keine Nachrichten mehr dazu",
         "answerPaywalled": "Bezahlschranke",
-        "answerSent": "{{answer}} · An Mera Labs gesendet"
+        "answerSent": "{{answer}} · An Mera Labs gesendet",
+        "toastMistakeCount_one": "{{count}} Fehler vermerkt",
+        "toastMistakeCount_other": "{{count}} Fehler vermerkt"
       }
     }
   },
@@ -205,12 +209,15 @@
         "toastMistakes_one": "Erreur de Mera notée",
         "toastMistakes_many": "{{count}} erreurs de Mera notées",
         "toastMistakes_other": "{{count}} erreurs de Mera notées",
-        "toastBoth": "Modifications enregistrées : {{changes}} · Erreurs de Mera notées : {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Moins sur ce sujet",
         "answerBigOnly": "Seulement les grandes nouvelles",
         "answerStopped": "Plus d'actualités sur ce sujet",
         "answerPaywalled": "Payant",
-        "answerSent": "{{answer}} · Envoyé à Mera Labs"
+        "answerSent": "{{answer}} · Envoyé à Mera Labs",
+        "toastMistakeCount_one": "{{count}} erreur notée",
+        "toastMistakeCount_many": "{{count}} erreurs notées",
+        "toastMistakeCount_other": "{{count}} erreurs notées"
       }
     }
   },
@@ -278,12 +285,15 @@
         "toastMistakes_one": "Error de Mera anotado",
         "toastMistakes_many": "{{count}} errores de Mera anotados",
         "toastMistakes_other": "{{count}} errores de Mera anotados",
-        "toastBoth": "Cambios guardados: {{changes}} · Errores de Mera anotados: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Menos sobre esto",
         "answerBigOnly": "Solo noticias importantes",
         "answerStopped": "Sin más noticias sobre esto",
         "answerPaywalled": "De pago",
-        "answerSent": "{{answer}} · Enviado a Mera Labs"
+        "answerSent": "{{answer}} · Enviado a Mera Labs",
+        "toastMistakeCount_one": "{{count}} error anotado",
+        "toastMistakeCount_many": "{{count}} errores anotados",
+        "toastMistakeCount_other": "{{count}} errores anotados"
       }
     }
   },
@@ -351,12 +361,15 @@
         "toastMistakes_one": "Errore di Mera segnato",
         "toastMistakes_many": "{{count}} errori di Mera segnati",
         "toastMistakes_other": "{{count}} errori di Mera segnati",
-        "toastBoth": "Modifiche salvate: {{changes}} · Errori di Mera segnati: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Meno su questo",
         "answerBigOnly": "Solo notizie importanti",
         "answerStopped": "Niente più notizie su questo",
         "answerPaywalled": "A pagamento",
-        "answerSent": "{{answer}} · Inviato a Mera Labs"
+        "answerSent": "{{answer}} · Inviato a Mera Labs",
+        "toastMistakeCount_one": "{{count}} errore segnato",
+        "toastMistakeCount_many": "{{count}} errori segnati",
+        "toastMistakeCount_other": "{{count}} errori segnati"
       }
     }
   },
@@ -424,12 +437,15 @@
         "toastMistakes_one": "Erro da Mera anotado",
         "toastMistakes_many": "{{count}} erros da Mera anotados",
         "toastMistakes_other": "{{count}} erros da Mera anotados",
-        "toastBoth": "Alterações salvas: {{changes}} · Erros da Mera anotados: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Menos sobre isso",
         "answerBigOnly": "Só notícias importantes",
         "answerStopped": "Sem mais notícias sobre isso",
         "answerPaywalled": "Com paywall",
-        "answerSent": "{{answer}} · Enviado à Mera Labs"
+        "answerSent": "{{answer}} · Enviado à Mera Labs",
+        "toastMistakeCount_one": "{{count}} erro anotado",
+        "toastMistakeCount_many": "{{count}} erros anotados",
+        "toastMistakeCount_other": "{{count}} erros anotados"
       }
     }
   },
@@ -495,12 +511,14 @@
         "toastChanges_other": "{{count}} wijzigingen opgeslagen",
         "toastMistakes_one": "Fout van Mera genoteerd",
         "toastMistakes_other": "{{count}} fouten van Mera genoteerd",
-        "toastBoth": "Opgeslagen wijzigingen: {{changes}} · Genoteerde fouten van Mera: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Minder hierover",
         "answerBigOnly": "Alleen groot nieuws",
         "answerStopped": "Geen nieuws meer hierover",
         "answerPaywalled": "Betaalmuur",
-        "answerSent": "{{answer}} · Verstuurd naar Mera Labs"
+        "answerSent": "{{answer}} · Verstuurd naar Mera Labs",
+        "toastMistakeCount_one": "{{count}} fout genoteerd",
+        "toastMistakeCount_other": "{{count}} fouten genoteerd"
       }
     }
   },
@@ -570,12 +588,16 @@
         "toastMistakes_few": "Отмечено ошибок Меры: {{count}}",
         "toastMistakes_many": "Отмечено ошибок Меры: {{count}}",
         "toastMistakes_other": "Отмечено ошибок Меры: {{count}}",
-        "toastBoth": "Сохранено изменений: {{changes}} · Отмечено ошибок Меры: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Меньше об этом",
         "answerBigOnly": "Только важные новости",
         "answerStopped": "Больше никаких новостей об этом",
         "answerPaywalled": "Платный доступ",
-        "answerSent": "{{answer}} · Отправлено в Мера Лабс"
+        "answerSent": "{{answer}} · Отправлено в Мера Лабс",
+        "toastMistakeCount_one": "Отмечена ошибка: {{count}}",
+        "toastMistakeCount_few": "Отмечено ошибок: {{count}}",
+        "toastMistakeCount_many": "Отмечено ошибок: {{count}}",
+        "toastMistakeCount_other": "Отмечено ошибок: {{count}}"
       }
     }
   },
@@ -645,12 +667,16 @@
         "toastMistakes_few": "Позначено помилок Мери: {{count}}",
         "toastMistakes_many": "Позначено помилок Мери: {{count}}",
         "toastMistakes_other": "Позначено помилок Мери: {{count}}",
-        "toastBoth": "Збережено змін: {{changes}} · Позначено помилок Мери: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Менше про це",
         "answerBigOnly": "Лише важливі новини",
         "answerStopped": "Більше жодних новин про це",
         "answerPaywalled": "Платний доступ",
-        "answerSent": "{{answer}} · Надіслано в Мера Лабс"
+        "answerSent": "{{answer}} · Надіслано в Мера Лабс",
+        "toastMistakeCount_one": "Позначено помилку: {{count}}",
+        "toastMistakeCount_few": "Позначено помилок: {{count}}",
+        "toastMistakeCount_many": "Позначено помилок: {{count}}",
+        "toastMistakeCount_other": "Позначено помилок: {{count}}"
       }
     }
   },
@@ -720,12 +746,16 @@
         "toastMistakes_few": "Zapisano błędy Mery: {{count}}",
         "toastMistakes_many": "Zapisano błędy Mery: {{count}}",
         "toastMistakes_other": "Zapisano błędy Mery: {{count}}",
-        "toastBoth": "Zapisane zmiany: {{changes}} · Zapisane błędy Mery: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Mniej o tym",
         "answerBigOnly": "Tylko ważne wiadomości",
         "answerStopped": "Bez wiadomości o tym",
         "answerPaywalled": "Płatny dostęp",
-        "answerSent": "{{answer}} · Wysłano do Mera Labs"
+        "answerSent": "{{answer}} · Wysłano do Mera Labs",
+        "toastMistakeCount_one": "Zapisano {{count}} błąd",
+        "toastMistakeCount_few": "Zapisano {{count}} błędy",
+        "toastMistakeCount_many": "Zapisano {{count}} błędów",
+        "toastMistakeCount_other": "Zapisano {{count}} błędu"
       }
     }
   },
@@ -791,12 +821,14 @@
         "toastChanges_other": "{{count}} değişiklik kaydedildi",
         "toastMistakes_one": "Mera'nın hatası not edildi",
         "toastMistakes_other": "Mera'nın {{count}} hatası not edildi",
-        "toastBoth": "Kaydedilen değişiklikler: {{changes}} · Mera'nın not edilen hataları: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Bununla ilgili daha az",
         "answerBigOnly": "Yalnızca büyük haberler",
         "answerStopped": "Bununla ilgili haber yok",
         "answerPaywalled": "Ücretli erişim",
-        "answerSent": "{{answer}} · Mera Labs'e gönderildi"
+        "answerSent": "{{answer}} · Mera Labs'e gönderildi",
+        "toastMistakeCount_one": "{{count}} hata not edildi",
+        "toastMistakeCount_other": "{{count}} hata not edildi"
       }
     }
   },
@@ -860,12 +892,13 @@
         "sheetNot": "Tidak disertakan: beritanya, fakta kamu, atau akunmu.",
         "toastChanges_other": "{{count}} perubahan tersimpan",
         "toastMistakes_other": "{{count}} kesalahan Mera dicatat",
-        "toastBoth": "Perubahan tersimpan: {{changes}} · Kesalahan Mera dicatat: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Lebih sedikit untuk ini",
         "answerBigOnly": "Hanya berita besar",
         "answerStopped": "Tidak ada berita lagi untuk ini",
         "answerPaywalled": "Berbayar",
-        "answerSent": "{{answer}} · Dikirim ke Mera Labs"
+        "answerSent": "{{answer}} · Dikirim ke Mera Labs",
+        "toastMistakeCount_other": "{{count}} kesalahan dicatat"
       }
     }
   },
@@ -929,12 +962,13 @@
         "sheetNot": "Không bao gồm: bản tin, các thông tin của bạn hoặc tài khoản của bạn.",
         "toastChanges_other": "Đã lưu {{count}} thay đổi",
         "toastMistakes_other": "Đã ghi nhận {{count}} lỗi của Mera",
-        "toastBoth": "Thay đổi đã lưu: {{changes}} · Lỗi của Mera đã ghi nhận: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "Ít hơn về điều này",
         "answerBigOnly": "Chỉ tin lớn",
         "answerStopped": "Không còn tin về điều này",
         "answerPaywalled": "Có tường phí",
-        "answerSent": "{{answer}} · Đã gửi cho Mera Labs"
+        "answerSent": "{{answer}} · Đã gửi cho Mera Labs",
+        "toastMistakeCount_other": "Đã ghi nhận {{count}} lỗi"
       }
     }
   },
@@ -998,12 +1032,13 @@
         "sheetNot": "ไม่รวม: ตัวข่าว ข้อมูลของคุณ หรือบัญชีของคุณ",
         "toastChanges_other": "บันทึกการเปลี่ยนแปลง {{count}} รายการแล้ว",
         "toastMistakes_other": "บันทึกข้อผิดพลาดของ เมร่า {{count}} รายการแล้ว",
-        "toastBoth": "การเปลี่ยนแปลงที่บันทึก: {{changes}} · ข้อผิดพลาดของ เมร่า ที่บันทึก: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "น้อยลงสำหรับเรื่องนี้",
         "answerBigOnly": "เฉพาะข่าวใหญ่",
         "answerStopped": "ไม่มีข่าวเรื่องนี้อีก",
         "answerPaywalled": "ต้องจ่ายเงิน",
-        "answerSent": "{{answer}} · ส่งให้ เมร่า แล็บส์ แล้ว"
+        "answerSent": "{{answer}} · ส่งให้ เมร่า แล็บส์ แล้ว",
+        "toastMistakeCount_other": "บันทึกข้อผิดพลาด {{count}} รายการแล้ว"
       }
     }
   },
@@ -1067,12 +1102,13 @@
         "sheetNot": "포함되지 않는 것: 기사 자체, 내 사실 정보, 내 계정.",
         "toastChanges_other": "변경 {{count}}건을 저장했어요",
         "toastMistakes_other": "메라의 실수 {{count}}건을 기록했어요",
-        "toastBoth": "저장한 변경: {{changes}}건 · 기록한 메라의 실수: {{mistakes}}건",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "이 관심사는 덜 보기",
         "answerBigOnly": "큰 뉴스만",
         "answerStopped": "이 관심사 뉴스 중단",
         "answerPaywalled": "유료 기사",
-        "answerSent": "{{answer}} · 메라 랩스에 보냄"
+        "answerSent": "{{answer}} · 메라 랩스에 보냄",
+        "toastMistakeCount_other": "실수 {{count}}건을 기록했어요"
       }
     }
   },
@@ -1136,12 +1172,13 @@
         "sheetNot": "含まれないもの: 記事そのもの、あなたの情報、アカウント。",
         "toastChanges_other": "{{count}}件の変更を保存しました",
         "toastMistakes_other": "メラの間違い{{count}}件を記録しました",
-        "toastBoth": "保存した変更: {{changes}}件 · 記録したメラの間違い: {{mistakes}}件",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "これは少なめに",
         "answerBigOnly": "大きなニュースのみ",
         "answerStopped": "これのニュースは停止",
         "answerPaywalled": "有料記事",
-        "answerSent": "{{answer}} · メラ・ラボに送信済み"
+        "answerSent": "{{answer}} · メラ・ラボに送信済み",
+        "toastMistakeCount_other": "{{count}}件の間違いを記録しました"
       }
     }
   },
@@ -1205,12 +1242,13 @@
         "sheetNot": "不包含：新闻本身、你的资料或你的账号。",
         "toastChanges_other": "已保存 {{count}} 项更改",
         "toastMistakes_other": "已记录 {{count}} 个梅拉的错误",
-        "toastBoth": "已保存的更改：{{changes}} 项 · 已记录的梅拉错误：{{mistakes}} 个",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "少看这类",
         "answerBigOnly": "只看大新闻",
         "answerStopped": "不再推送这类新闻",
         "answerPaywalled": "需付费",
-        "answerSent": "{{answer}} · 已发送给梅拉实验室"
+        "answerSent": "{{answer}} · 已发送给梅拉实验室",
+        "toastMistakeCount_other": "已记录 {{count}} 个错误"
       }
     }
   },
@@ -1274,12 +1312,13 @@
         "sheetNot": "不包含：新聞本身、你的資料或你的帳號。",
         "toastChanges_other": "已儲存 {{count}} 項變更",
         "toastMistakes_other": "已記錄 {{count}} 個梅拉的錯誤",
-        "toastBoth": "已儲存的變更：{{changes}} 項 · 已記錄的梅拉錯誤：{{mistakes}} 個",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "少看這類",
         "answerBigOnly": "只看大新聞",
         "answerStopped": "不再推送這類新聞",
         "answerPaywalled": "需付費",
-        "answerSent": "{{answer}} · 已傳送給梅拉實驗室"
+        "answerSent": "{{answer}} · 已傳送給梅拉實驗室",
+        "toastMistakeCount_other": "已記錄 {{count}} 個錯誤"
       }
     }
   },
@@ -1345,12 +1384,14 @@
         "toastChanges_other": "{{count}} बदलाव सहेजे गए",
         "toastMistakes_one": "मेरा की गलती दर्ज की गई",
         "toastMistakes_other": "मेरा की {{count}} गलतियाँ दर्ज की गईं",
-        "toastBoth": "सहेजे गए बदलाव: {{changes}} · मेरा की दर्ज गलतियाँ: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "इसके लिए कम",
         "answerBigOnly": "सिर्फ़ बड़ी खबरें",
         "answerStopped": "इसके लिए अब कोई खबर नहीं",
         "answerPaywalled": "पेवॉल वाली",
-        "answerSent": "{{answer}} · मेरा लैब्स को भेजा गया"
+        "answerSent": "{{answer}} · मेरा लैब्स को भेजा गया",
+        "toastMistakeCount_one": "{{count}} गलती दर्ज की गई",
+        "toastMistakeCount_other": "{{count}} गलतियाँ दर्ज की गईं"
       }
     }
   },
@@ -1424,12 +1465,18 @@
         "toastMistakes_few": "سُجّلت {{count}} أخطاء من ميرا",
         "toastMistakes_many": "سُجّل {{count}} خطأً من ميرا",
         "toastMistakes_other": "سُجّل {{count}} خطأ من ميرا",
-        "toastBoth": "التغييرات المحفوظة: {{changes}} · أخطاء ميرا المسجلة: {{mistakes}}",
+        "toastBoth": "{{changes}} · {{mistakes}}",
         "answerLess": "أقل لهذا",
         "answerBigOnly": "الأخبار الكبيرة فقط",
         "answerStopped": "لا مزيد من الأخبار لهذا",
         "answerPaywalled": "خلف جدار دفع",
-        "answerSent": "{{answer}} · أُرسل إلى ميرا لابز"
+        "answerSent": "{{answer}} · أُرسل إلى ميرا لابز",
+        "toastMistakeCount_zero": "لم يُسجَّل أي خطأ",
+        "toastMistakeCount_one": "سُجّل خطأ واحد",
+        "toastMistakeCount_two": "سُجّل خطآن",
+        "toastMistakeCount_few": "سُجّلت {{count}} أخطاء",
+        "toastMistakeCount_many": "سُجّل {{count}} خطأً",
+        "toastMistakeCount_other": "سُجّل {{count}} خطأ"
       }
     }
   }

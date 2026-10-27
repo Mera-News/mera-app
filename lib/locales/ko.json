@@ -803,7 +803,6 @@
     "updateCta": "업데이트"
   },
   "feedback": {
-    "formTitle": "버그 신고",
     "submitButtonLabel": "보내기",
     "cancelButtonLabel": "취소",
     "messageLabel": "설명",
@@ -1240,12 +1239,13 @@
       "sheetNot": "포함되지 않는 것: 기사 자체, 내 사실 정보, 내 계정.",
       "toastChanges_other": "변경 {{count}}건을 저장했어요",
       "toastMistakes_other": "메라의 실수 {{count}}건을 기록했어요",
-      "toastBoth": "저장한 변경: {{changes}}건 · 기록한 메라의 실수: {{mistakes}}건",
+      "toastBoth": "{{changes}} · {{mistakes}}",
       "answerLess": "이 관심사는 덜 보기",
       "answerBigOnly": "큰 뉴스만",
       "answerStopped": "이 관심사 뉴스 중단",
       "answerPaywalled": "유료 기사",
-      "answerSent": "{{answer}} · 메라 랩스에 보냄"
+      "answerSent": "{{answer}} · 메라 랩스에 보냄",
+      "toastMistakeCount_other": "실수 {{count}}건을 기록했어요"
     }
   },
   "topicPlan": {
