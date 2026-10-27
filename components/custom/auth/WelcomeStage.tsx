@@ -8,7 +8,8 @@ import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHeading';
 import LanguageDownloadNotice, { useLanguageDownloadNotice } from '@/components/custom/auth/LanguageDownloadNotice';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { languageCheckStatus } from '@/lib/algorithms/system-check';
@@ -62,10 +63,7 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                 id,
                 placement: 'top',
                 render: () => (
-                    <Toast action="info" variant="solid">
-                        <ToastTitle>{title}</ToastTitle>
-                        <ToastDescription>{body}</ToastDescription>
-                    </Toast>
+                    <MeraToast tone="info" title={title} body={body} />
                 ),
             });
         },

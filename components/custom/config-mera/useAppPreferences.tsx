@@ -1,4 +1,5 @@
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { authClient } from '@/lib/auth-client';
 import { backupCadence, backupProviderId } from '@/lib/backup/backup-settings';
 import { FAQ_URL } from '@/lib/config/branding';
@@ -80,20 +81,22 @@ export function useAppPreferences() {
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('preferences.signedOutTitle')}</ToastTitle>
-                        <ToastDescription>{t('preferences.signedOutDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="success"
+                        title={t('preferences.signedOutTitle')}
+                        body={t('preferences.signedOutDescription')}
+                    />
                 ),
             });
         } catch {
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('preferences.logoutFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('preferences.logoutFailedDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('preferences.logoutFailedTitle')}
+                        body={t('preferences.logoutFailedDescription')}
+                    />
                 ),
             });
         } finally {

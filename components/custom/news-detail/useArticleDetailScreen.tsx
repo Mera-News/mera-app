@@ -3,7 +3,9 @@ import { requestArticleFactCheck } from '@/lib/fact-check/request-article-fact-c
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { useReportArticleSurface } from '@/components/custom/nav/current-surface';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { Bookmark, BookmarkMinus } from 'lucide-react-native';
+import { useToast } from '@/components/ui/toast';
 import { ArticleService } from '@/lib/article-service';
 import {
     findLocalArticleSnapshot,
@@ -342,15 +344,13 @@ export function useArticleDetailScreen({
             toast.show({
                 placement: 'top',
                 duration: 3000,
-                render: ({ id }: { id: string }) => (
-                    <Toast nativeID={id} action="success" variant="solid">
-                        <ToastTitle>
-                            {t(removed
-                                ? 'savedSuggestions.removedToastTitle'
-                                : 'savedSuggestions.savedToastTitle')}
-                        </ToastTitle>
-                        <ToastDescription>{message}</ToastDescription>
-                    </Toast>
+                render: () => (
+                    <MeraToast
+                        tone="neutral"
+                        icon={removed ? BookmarkMinus : Bookmark}
+                        title={t(removed ? 'savedSuggestions.removedToastTitle' : 'savedSuggestions.savedToastTitle')}
+                        body={message}
+                    />
                 ),
             });
         },

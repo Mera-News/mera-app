@@ -8,7 +8,8 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import logger from '@/lib/logger';
 import { usePinStore } from '@/lib/stores/pin-store';
 import React, { useRef, useState } from 'react';
@@ -54,10 +55,7 @@ const SecuritySettingsSection: React.FC = () => {
         toast.show({
             placement: 'top',
             render: () => (
-                <Toast action="success" variant="solid">
-                    <ToastTitle>{title}</ToastTitle>
-                    <ToastDescription>{description}</ToastDescription>
-                </Toast>
+                <MeraToast tone="success" title={title} body={description} />
             ),
         });
     };

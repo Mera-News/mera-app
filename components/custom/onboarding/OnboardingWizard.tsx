@@ -10,7 +10,8 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { Toast, ToastDescription, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
 import { authClient } from '@/lib/auth-client';
 import { observeFacts } from '@/lib/database/services/fact-service';
@@ -194,13 +195,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 toast.show({
                     placement: 'top',
                     render: () => (
-                        <Toast action="warning" variant="solid">
-                            <ToastDescription>
-                                {unresolvedCounts.factChoices > 0
+                        <MeraToast
+                            tone="warning"
+                            title={
+                                unresolvedCounts.factChoices > 0
                                     ? t('factChoice.resolveBeforeContinuing')
-                                    : t('topicPlan.resolveBeforeContinuing')}
-                            </ToastDescription>
-                        </Toast>
+                                    : t('topicPlan.resolveBeforeContinuing')
+                            }
+                        />
                     ),
                 });
                 return;

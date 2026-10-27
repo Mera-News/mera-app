@@ -23,15 +23,10 @@ jest.mock('@/lib/hooks/use-language-switch', () => ({ probeLanguage: jest.fn(asy
 jest.mock('expo-router', () => ({ usePathname: () => '/logged-in' }));
 
 const mockShow = jest.fn();
-jest.mock('@/components/ui/toast', () => {
-    const { Text, View } = require('react-native');
-    return {
-        Toast: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-        ToastTitle: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
-        ToastDescription: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
-        useToast: () => ({ show: mockShow, close: jest.fn(), isActive: () => false }),
-    };
-});
+jest.mock('@/components/ui/toast', () => ({
+    useToast: () => ({ show: mockShow, close: jest.fn(), isActive: () => false }),
+    useIsToastFront: () => true,
+}));
 
 const shown = () => {
     const opts = mockShow.mock.calls.at(-1)?.[0] as { render: () => React.ReactElement };

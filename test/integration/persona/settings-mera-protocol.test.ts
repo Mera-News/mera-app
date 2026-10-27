@@ -104,10 +104,7 @@ function recordModeUpdates(): { userId: string; mode: string }[] {
 }
 
 const toastTitles = () =>
-    useToastQueue.getState().entries.map((e) => {
-        const first = (e.render({ id: e.id }) as { props: { children: { props: { children: unknown } }[] } }).props.children[0];
-        return String(first.props.children);
-    });
+    useToastQueue.getState().entries.map((e) => String((e.render({ id: e.id }) as { props: { title: unknown } }).props.title));
 
 /** Seeds the cached server persona the boot purge and restoreOnDeviceIfRunnable read. */
 function cachePersonaMode(mode: ProcessingMode): void {

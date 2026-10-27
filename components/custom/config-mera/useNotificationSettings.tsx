@@ -1,4 +1,5 @@
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
 import { hasUserDeniedPermissions, setVisibleNotificationsEnabled } from '@/lib/notification-service';
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
@@ -93,10 +94,11 @@ export function useNotificationSettings({
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('notifications.loadFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('notifications.loadFailedDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('notifications.loadFailedTitle')}
+                        body={t('notifications.loadFailedDescription')}
+                    />
                 ),
             });
         } finally {
@@ -125,12 +127,11 @@ export function useNotificationSettings({
                         toast.show({
                             placement: 'top',
                             render: () => (
-                                <Toast action="error" variant="solid">
-                                    <ToastTitle>{t('notifications.permissionRequiredTitle')}</ToastTitle>
-                                    <ToastDescription>
-                                        {t('notifications.permissionRequiredDescription')}
-                                    </ToastDescription>
-                                </Toast>
+                                <MeraToast
+                                    tone="error"
+                                    title={t('notifications.permissionRequiredTitle')}
+                                    body={t('notifications.permissionRequiredDescription')}
+                                />
                             ),
                         });
                     }
@@ -138,12 +139,11 @@ export function useNotificationSettings({
                     toast.show({
                         placement: 'top',
                         render: () => (
-                            <Toast action="error" variant="solid">
-                                <ToastTitle>{t('notifications.setupFailedTitle')}</ToastTitle>
-                                <ToastDescription>
-                                    {t('notifications.setupFailedDescription')}
-                                </ToastDescription>
-                            </Toast>
+                            <MeraToast
+                                tone="error"
+                                title={t('notifications.setupFailedTitle')}
+                                body={t('notifications.setupFailedDescription')}
+                            />
                         ),
                     });
                 }
@@ -156,24 +156,22 @@ export function useNotificationSettings({
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('notifications.enabledTitle')}</ToastTitle>
-                        <ToastDescription>
-                            {t('notifications.enabledDescription')}
-                        </ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="success"
+                        title={t('notifications.enabledTitle')}
+                        body={t('notifications.enabledDescription')}
+                    />
                 ),
             });
         } catch {
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('notifications.setupFailedTitle')}</ToastTitle>
-                        <ToastDescription>
-                            {t('notifications.setupFailedDescription')}
-                        </ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('notifications.setupFailedTitle')}
+                        body={t('notifications.setupFailedDescription')}
+                    />
                 ),
             });
         } finally {
@@ -216,24 +214,22 @@ export function useNotificationSettings({
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('notifications.disabledTitle')}</ToastTitle>
-                        <ToastDescription>
-                            {t('notifications.disabledDescription')}
-                        </ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="success"
+                        title={t('notifications.disabledTitle')}
+                        body={t('notifications.disabledDescription')}
+                    />
                 ),
             });
         } catch {
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('notifications.updateFailedTitle')}</ToastTitle>
-                        <ToastDescription>
-                            {t('notifications.updateFailedDescription')}
-                        </ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('notifications.updateFailedTitle')}
+                        body={t('notifications.updateFailedDescription')}
+                    />
                 ),
             });
         } finally {
@@ -281,10 +277,11 @@ export function useNotificationSettings({
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('notifications.saveFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('notifications.saveFailedDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('notifications.saveFailedTitle')}
+                        body={t('notifications.saveFailedDescription')}
+                    />
                 ),
             });
         }
