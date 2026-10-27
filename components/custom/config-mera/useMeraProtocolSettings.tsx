@@ -372,7 +372,6 @@ export function useMeraProtocolSettings() {
             }
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"
@@ -420,7 +419,6 @@ export function useMeraProtocolSettings() {
             cacheProcessingMode(mode);
 
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="success"
@@ -433,7 +431,6 @@ export function useMeraProtocolSettings() {
             // The server still holds what it held: the intent goes back with it.
             setOnDeviceIntent(hadIntent);
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"
@@ -508,7 +505,6 @@ export function useMeraProtocolSettings() {
                 await deleteDownloadedModel(modelId);
             } catch {
                 toast.show({
-                    placement: 'top',
                     render: () => (
                         <MeraToast
                             tone="error"

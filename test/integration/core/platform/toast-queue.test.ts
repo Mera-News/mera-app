@@ -43,12 +43,6 @@ describe('order', () => {
         expect(Object.keys(useToastQueue.getState())).toEqual(['entries']);
     });
 
-    it("joins a stray 'bottom' placement to the one stack, behind the card showing", () => {
-        const showing = show({ render });
-        const stray = show({ placement: 'bottom', render });
-        expect(ids()).toEqual([showing, stray]);
-    });
-
     it('sorts a persistent card behind every transient one', () => {
         const banner = show({ duration: null, render });
         expect(ids()).toEqual([banner]);
@@ -171,7 +165,7 @@ describe('close', () => {
 
     it('closeAll empties the stack', () => {
         show({ render });
-        show({ placement: 'bottom', render });
+        show({ render });
         closeAll();
         expect(ids()).toEqual([]);
     });

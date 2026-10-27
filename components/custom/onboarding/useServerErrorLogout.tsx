@@ -19,7 +19,6 @@ export function useServerErrorLogout(setShowServerError: (v: boolean) => void) {
             await signOutAndWipe();
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"

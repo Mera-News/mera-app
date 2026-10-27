@@ -79,7 +79,6 @@ export function useDeleteAccount(): () => Promise<void> {
             await finishAccountDeletion();
 
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="success"
@@ -91,7 +90,6 @@ export function useDeleteAccount(): () => Promise<void> {
         } catch {
             if (!serverDeleteSucceeded) {
                 toast.show({
-                    placement: 'top',
                     render: () => (
                         <MeraToast
                             tone="error"

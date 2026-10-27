@@ -193,7 +193,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         if (currentStep === 0) {
             if (hasUnresolvedTopicPlans) {
                 toast.show({
-                    placement: 'top',
                     render: () => (
                         <MeraToast
                             tone="warning"

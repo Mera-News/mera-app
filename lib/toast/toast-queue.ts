@@ -67,8 +67,6 @@ export interface ToastShowOptions {
      * one.
      */
     id?: string;
-    /** Ignored. Kept for signature compatibility; every card joins the top stack. */
-    placement?: 'top' | 'bottom';
     /** `null` means "until something closes it" — see the persistent lane below. */
     duration?: number | null;
     /**

@@ -149,7 +149,6 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     const [exportOpen, setExportOpen] = useState(false);
     const handleExportFailed = useCallback(() => {
         toast.show({
-            placement: 'top',
             duration: 4000,
             render: () => (
                 <MeraToast

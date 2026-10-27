@@ -79,7 +79,6 @@ export function useAppPreferences() {
             await signOutAndWipe();
 
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="success"
@@ -90,7 +89,6 @@ export function useAppPreferences() {
             });
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"

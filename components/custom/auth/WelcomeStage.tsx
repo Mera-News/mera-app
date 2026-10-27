@@ -61,7 +61,6 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
             if (toast.isActive(id)) return;
             toast.show({
                 id,
-                placement: 'top',
                 render: () => (
                     <MeraToast tone="info" title={title} body={body} />
                 ),

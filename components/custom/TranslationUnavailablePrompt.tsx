@@ -116,7 +116,6 @@ const TranslationUnavailablePrompt: React.FC = () => {
 
         toast.show({
             id,
-            placement: 'top',
             duration: null,
             render: () => body,
         });

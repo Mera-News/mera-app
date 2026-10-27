@@ -294,7 +294,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const showFailure = useCallback(
         (retry: () => void) => {
             toast.show({
-                placement: 'top',
                 duration: 5000,
                 render: ({ id }: { id: string }) => (
                     <MeraToast

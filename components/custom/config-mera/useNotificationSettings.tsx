@@ -92,7 +92,6 @@ export function useNotificationSettings({
             }
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"
@@ -125,7 +124,6 @@ export function useNotificationSettings({
                     // Coming back from Settings the info box is already on screen.
                     if (!fromSettingsReturn) {
                         toast.show({
-                            placement: 'top',
                             render: () => (
                                 <MeraToast
                                     tone="error"
@@ -137,7 +135,6 @@ export function useNotificationSettings({
                     }
                 } else {
                     toast.show({
-                        placement: 'top',
                         render: () => (
                             <MeraToast
                                 tone="error"
@@ -154,7 +151,6 @@ export function useNotificationSettings({
             setNotificationsEnabled(true);
 
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="success"
@@ -165,7 +161,6 @@ export function useNotificationSettings({
             });
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"
@@ -212,7 +207,6 @@ export function useNotificationSettings({
             setNotificationsEnabled(false);
 
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="success"
@@ -223,7 +217,6 @@ export function useNotificationSettings({
             });
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"
@@ -275,7 +268,6 @@ export function useNotificationSettings({
             if (!mountedRef.current) return;
             setSaveState('error');
             toast.show({
-                placement: 'top',
                 render: () => (
                     <MeraToast
                         tone="error"

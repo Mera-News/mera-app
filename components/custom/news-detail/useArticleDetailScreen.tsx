@@ -342,7 +342,6 @@ export function useArticleDetailScreen({
     const showSavedToast = useCallback(
         (message: string, removed: boolean = false) => {
             toast.show({
-                placement: 'top',
                 duration: 3000,
                 render: () => (
                     <MeraToast

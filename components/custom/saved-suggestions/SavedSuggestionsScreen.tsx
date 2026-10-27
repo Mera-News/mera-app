@@ -102,7 +102,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
 
     const handleExportFailed = useCallback(() => {
         toast.show({
-            placement: 'top',
             duration: 4000,
             render: () => (
                 <MeraToast

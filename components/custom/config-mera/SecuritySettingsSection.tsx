@@ -53,7 +53,6 @@ const SecuritySettingsSection: React.FC = () => {
 
     const showToast = (title: string, description: string) => {
         toast.show({
-            placement: 'top',
             render: () => (
                 <MeraToast tone="success" title={title} body={description} />
             ),
