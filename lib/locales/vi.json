@@ -1245,7 +1245,8 @@
       "answerStopped": "Không còn tin về điều này",
       "answerPaywalled": "Có tường phí",
       "answerSent": "{{answer}} · Đã gửi cho Mera Labs",
-      "toastMistakeCount_other": "Đã ghi nhận {{count}} lỗi"
+      "toastMistakeCount_other": "Đã ghi nhận {{count}} lỗi",
+      "prefillReasonNotAbout": "Tin này không liên quan đến mối quan tâm đã khiến nó được hiển thị"
     }
   },
   "topicPlan": {

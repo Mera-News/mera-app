@@ -1260,7 +1260,8 @@
       "answerSent": "{{answer}} · Enviado à Mera Labs",
       "toastMistakeCount_one": "{{count}} erro anotado",
       "toastMistakeCount_many": "{{count}} erros anotados",
-      "toastMistakeCount_other": "{{count}} erros anotados"
+      "toastMistakeCount_other": "{{count}} erros anotados",
+      "prefillReasonNotAbout": "A notícia não combina com o interesse pelo qual foi mostrada"
     }
   },
   "topicPlan": {

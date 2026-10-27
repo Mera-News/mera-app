@@ -1258,7 +1258,8 @@
       "answerPaywalled": "पेवॉल वाली",
       "answerSent": "{{answer}} · मेरा लैब्स को भेजा गया",
       "toastMistakeCount_one": "{{count}} गलती दर्ज की गई",
-      "toastMistakeCount_other": "{{count}} गलतियाँ दर्ज की गईं"
+      "toastMistakeCount_other": "{{count}} गलतियाँ दर्ज की गईं",
+      "prefillReasonNotAbout": "यह खबर उस रुचि से मेल नहीं खाती जिसके लिए इसे दिखाया गया"
     }
   },
   "topicPlan": {

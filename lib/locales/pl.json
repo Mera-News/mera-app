@@ -1302,7 +1302,8 @@
       "toastMistakeCount_one": "Zapisano {{count}} błąd",
       "toastMistakeCount_few": "Zapisano {{count}} błędy",
       "toastMistakeCount_many": "Zapisano {{count}} błędów",
-      "toastMistakeCount_other": "Zapisano {{count}} błędu"
+      "toastMistakeCount_other": "Zapisano {{count}} błędu",
+      "prefillReasonNotAbout": "Wiadomość nie pasuje do zainteresowania, dla którego ją pokazano"
     }
   },
   "topicPlan": {

@@ -1245,7 +1245,8 @@
       "answerStopped": "これのニュースは停止",
       "answerPaywalled": "有料記事",
       "answerSent": "{{answer}} · メラ・ラボに送信済み",
-      "toastMistakeCount_other": "{{count}}件の間違いを記録しました"
+      "toastMistakeCount_other": "{{count}}件の間違いを記録しました",
+      "prefillReasonNotAbout": "この記事は、表示された理由の関心ごとに合っていません"
     }
   },
   "topicPlan": {

@@ -1452,7 +1452,8 @@
       "answerPaywalled": "Paywalled",
       "answerSent": "{{answer}} · Sent to Mera Labs",
       "toastMistakeCount_one": "{{count}} mistake noted",
-      "toastMistakeCount_other": "{{count}} mistakes noted"
+      "toastMistakeCount_other": "{{count}} mistakes noted",
+      "prefillReasonNotAbout": "The story doesn't fit the interest it was shown for"
     }
   },
   "topicPlan": {

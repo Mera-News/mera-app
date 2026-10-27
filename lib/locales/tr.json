@@ -1258,7 +1258,8 @@
       "answerPaywalled": "Ücretli erişim",
       "answerSent": "{{answer}} · Mera Labs'e gönderildi",
       "toastMistakeCount_one": "{{count}} hata not edildi",
-      "toastMistakeCount_other": "{{count}} hata not edildi"
+      "toastMistakeCount_other": "{{count}} hata not edildi",
+      "prefillReasonNotAbout": "Haber, gösterildiği ilgi alanıyla uyuşmuyor"
     }
   },
   "topicPlan": {

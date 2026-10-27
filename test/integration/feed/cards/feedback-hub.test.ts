@@ -282,6 +282,51 @@ describe('the session toast', () => {
     });
 });
 
+describe('Also tell Mera Labs', () => {
+    const LONG_FACT = 'Follows the Ranji Trophy cricket season in Madhya Pradesh';
+    const URL = 'https://www.bhaskar.com/local/mp/bhopal/news/ranji-123';
+    /** Every 10-character window of the fact: none may reach the report. */
+    const windows = (s: string) => Array.from({ length: s.length - 9 }, (_, i) => s.slice(i, i + 10));
+
+    it('a mistake`s prefilled report carries no fact wording, no title and no link', async () => {
+        const feedback = require('@/lib/feedback') as typeof import('@/lib/feedback');
+        const show = jest.spyOn(feedback, 'showFeedback').mockImplementation(() => {});
+        const { tap } = mount({
+            subject: { ...SUBJECT, title: 'Ranji Trophy: Madhya Pradesh reach the final' },
+            context: {
+                publicationName: PUB,
+                countryCode: 'RO',
+                articleTitle: 'Ranji Trophy: Madhya Pradesh reach the final',
+                fact: { id: 'fact-long', statement: LONG_FACT, topicTexts: [] },
+            },
+        });
+        await tap(ROOT, 'tree-row-not_about_fact');
+        // The root's "Also tell Mera Labs" and the report level's Yes share one path.
+        await tap({ kind: 'report' }, 'feedback-report-yes');
+
+        expect(show).toHaveBeenCalledTimes(1);
+        const prefill = show.mock.calls[0][0]!.prefill!;
+        expect(prefill).toContain(PUB);
+        for (const w of windows(LONG_FACT)) expect(prefill).not.toContain(w);
+        expect(prefill).not.toContain('Ranji');
+        expect(prefill).not.toContain(URL);
+        expect(prefill).not.toMatch(/https?:/);
+        expect(prefill).toContain("The story doesn't fit the interest it was shown for");
+    });
+
+    it('a site answer`s prefilled report names the reason and the site', async () => {
+        const feedback = require('@/lib/feedback') as typeof import('@/lib/feedback');
+        const show = jest.spyOn(feedback, 'showFeedback').mockImplementation(() => {});
+        const { tap } = mount();
+        await tap({ kind: 'tree', pathIds: ['publication_issue'] }, 'tree-row-paywall');
+        await tap({ kind: 'report' }, 'feedback-report-yes');
+        const prefill = show.mock.calls[0][0]!.prefill!;
+        expect(prefill).toContain("I can't read it, it's paywalled");
+        expect(prefill).toContain(PUB);
+        for (const w of windows(FACT.statement)) expect(prefill).not.toContain(w);
+    });
+});
+
 describe('Tell Mera', () => {
     it('hands the host every answer, the screen and the fact', async () => {
         const onFeedbackChat = jest.fn();

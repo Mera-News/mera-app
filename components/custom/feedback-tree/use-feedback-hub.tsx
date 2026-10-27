@@ -100,6 +100,15 @@ function placeLabel(t: TFunction, o: FactPlaceOption): string {
     return o.label;
 }
 
+/** The reason a prefilled report gives. Never the reader's fact: a row label
+ *  that quotes it ("This story isn't about \"…\"") is replaced by a sentence
+ *  without it. Site names are allowed (the report names the site anyway). */
+function prefillReason(t: TFunction, node: FeedbackTreeNode | null, fallback: string, site: string): string {
+    if (!node) return fallback;
+    if (node.labelDefault.includes('{{fact}}')) return t('feedbackTree.menu.prefillReasonNotAbout');
+    return t(node.labelKey, { defaultValue: node.labelDefault, site }) as string;
+}
+
 /** A country name from either code form the app stores (alpha-2 or alpha-3). */
 function countryNameOf(code: string | null | undefined): string | null {
     if (!code) return null;
@@ -303,7 +312,7 @@ export function useFeedbackHub(d: FeedbackHubDeps) {
         /* eslint-enable @typescript-eslint/no-require-imports */
         const s = depsRef.current.subject;
         const prefill = buildBugPrefill(t, {
-            reason: node ? label(node) : target.answer,
+            reason: prefillReason(t, node, target.answer, site),
             site,
             countryName: countryNameOf(s.countryCode) ?? '',
             languageName: getLanguageNameIn(s.languageCode, i18n.language) ?? '',

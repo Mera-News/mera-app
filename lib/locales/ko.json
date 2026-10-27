@@ -1245,7 +1245,8 @@
       "answerStopped": "이 관심사 뉴스 중단",
       "answerPaywalled": "유료 기사",
       "answerSent": "{{answer}} · 메라 랩스에 보냄",
-      "toastMistakeCount_other": "실수 {{count}}건을 기록했어요"
+      "toastMistakeCount_other": "실수 {{count}}건을 기록했어요",
+      "prefillReasonNotAbout": "이 기사는 표시된 이유인 관심사와 맞지 않아요"
     }
   },
   "topicPlan": {

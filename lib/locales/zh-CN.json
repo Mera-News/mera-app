@@ -1245,7 +1245,8 @@
       "answerStopped": "不再推送这类新闻",
       "answerPaywalled": "需付费",
       "answerSent": "{{answer}} · 已发送给梅拉实验室",
-      "toastMistakeCount_other": "已记录 {{count}} 个错误"
+      "toastMistakeCount_other": "已记录 {{count}} 个错误",
+      "prefillReasonNotAbout": "这条新闻与推荐它时依据的兴趣不符"
     }
   },
   "topicPlan": {

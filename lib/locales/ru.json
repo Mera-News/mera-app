@@ -1302,7 +1302,8 @@
       "toastMistakeCount_one": "Отмечена ошибка: {{count}}",
       "toastMistakeCount_few": "Отмечено ошибок: {{count}}",
       "toastMistakeCount_many": "Отмечено ошибок: {{count}}",
-      "toastMistakeCount_other": "Отмечено ошибок: {{count}}"
+      "toastMistakeCount_other": "Отмечено ошибок: {{count}}",
+      "prefillReasonNotAbout": "Новость не соответствует интересу, по которому её показали"
     }
   },
   "topicPlan": {

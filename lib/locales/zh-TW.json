@@ -1245,7 +1245,8 @@
       "answerStopped": "不再推送這類新聞",
       "answerPaywalled": "需付費",
       "answerSent": "{{answer}} · 已傳送給梅拉實驗室",
-      "toastMistakeCount_other": "已記錄 {{count}} 個錯誤"
+      "toastMistakeCount_other": "已記錄 {{count}} 個錯誤",
+      "prefillReasonNotAbout": "這則新聞與推薦它時依據的興趣不符"
     }
   },
   "topicPlan": {

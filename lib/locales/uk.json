@@ -1306,7 +1306,8 @@
       "toastMistakeCount_one": "Позначено помилку: {{count}}",
       "toastMistakeCount_few": "Позначено помилок: {{count}}",
       "toastMistakeCount_many": "Позначено помилок: {{count}}",
-      "toastMistakeCount_other": "Позначено помилок: {{count}}"
+      "toastMistakeCount_other": "Позначено помилок: {{count}}",
+      "prefillReasonNotAbout": "Новина не відповідає інтересу, за яким її показали"
     }
   },
   "topicPlan": {

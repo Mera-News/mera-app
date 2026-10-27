@@ -1354,7 +1354,8 @@
       "toastMistakeCount_two": "سُجّل خطآن",
       "toastMistakeCount_few": "سُجّلت {{count}} أخطاء",
       "toastMistakeCount_many": "سُجّل {{count}} خطأً",
-      "toastMistakeCount_other": "سُجّل {{count}} خطأ"
+      "toastMistakeCount_other": "سُجّل {{count}} خطأ",
+      "prefillReasonNotAbout": "هذا الخبر لا يطابق الاهتمام الذي عُرض بسببه"
     }
   },
   "topicPlan": {

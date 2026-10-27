@@ -1245,7 +1245,8 @@
       "answerStopped": "Tidak ada berita lagi untuk ini",
       "answerPaywalled": "Berbayar",
       "answerSent": "{{answer}} · Dikirim ke Mera Labs",
-      "toastMistakeCount_other": "{{count}} kesalahan dicatat"
+      "toastMistakeCount_other": "{{count}} kesalahan dicatat",
+      "prefillReasonNotAbout": "Berita ini tidak sesuai dengan minat yang membuatnya ditampilkan"
     }
   },
   "topicPlan": {

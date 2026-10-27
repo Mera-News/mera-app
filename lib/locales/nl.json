@@ -1256,7 +1256,8 @@
       "answerPaywalled": "Betaalmuur",
       "answerSent": "{{answer}} · Verstuurd naar Mera Labs",
       "toastMistakeCount_one": "{{count}} fout genoteerd",
-      "toastMistakeCount_other": "{{count}} fouten genoteerd"
+      "toastMistakeCount_other": "{{count}} fouten genoteerd",
+      "prefillReasonNotAbout": "Het verhaal past niet bij de interesse waarvoor het werd getoond"
     }
   },
   "topicPlan": {

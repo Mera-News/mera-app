@@ -1256,7 +1256,8 @@
       "answerPaywalled": "Bezahlschranke",
       "answerSent": "{{answer}} · An Mera Labs gesendet",
       "toastMistakeCount_one": "{{count}} Fehler vermerkt",
-      "toastMistakeCount_other": "{{count}} Fehler vermerkt"
+      "toastMistakeCount_other": "{{count}} Fehler vermerkt",
+      "prefillReasonNotAbout": "Die Meldung passt nicht zu dem Interesse, für das sie gezeigt wurde"
     }
   },
   "topicPlan": {

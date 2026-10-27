@@ -1246,7 +1246,8 @@
       "answerStopped": "ไม่มีข่าวเรื่องนี้อีก",
       "answerPaywalled": "ต้องจ่ายเงิน",
       "answerSent": "{{answer}} · ส่งให้ เมร่า แล็บส์ แล้ว",
-      "toastMistakeCount_other": "บันทึกข้อผิดพลาด {{count}} รายการแล้ว"
+      "toastMistakeCount_other": "บันทึกข้อผิดพลาด {{count}} รายการแล้ว",
+      "prefillReasonNotAbout": "ข่าวนี้ไม่ตรงกับความสนใจที่ทำให้มันถูกแสดง"
     }
   },
   "topicPlan": {
