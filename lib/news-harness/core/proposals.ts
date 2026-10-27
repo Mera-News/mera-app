@@ -27,8 +27,10 @@ export interface AwaitingUserTapResult extends Record<string, unknown> {
 }
 
 /**
- * True when the staged card is SINGLE-SELECT: its actions are mutually-exclusive
- * alternatives and only the user's tap knows which one they meant.
+ * True when typed agreement must NOT apply the card: a single-select card whose
+ * actions are mutually-exclusive alternatives (only the user's tap knows which
+ * one they meant), or a follow card holding 2 or more options (see
+ * `proposalAllowsMultiSelect`; pass its effective count once it has grown).
  *
  * `chooseOne` with a lone action is NOT a choice — ProposalCard renders it as a
  * plain confirm — so this returns false there and the proposal stays applicable
@@ -36,8 +38,40 @@ export interface AwaitingUserTapResult extends Record<string, unknown> {
  */
 export function proposalRequiresUserChoice(
   proposal: Pick<StagedProposal, 'actions'> & { chooseOne?: boolean },
+  effectiveOptionCount?: number,
 ): boolean {
-  return proposal.chooseOne === true && proposal.actions.length > 1;
+  return (
+    (proposal.chooseOne === true && proposal.actions.length > 1)
+    || proposalAllowsMultiSelect(proposal, effectiveOptionCount)
+  );
+}
+
+/** The phrase every follow-card instruction uses, cloud prompts and the
+ *  on-device pending line alike, so the model is told the same thing on both
+ *  engines (the parity test greps for it). */
+export const TRACK_CARD_TAP_PHRASE = 'tap the ones they want';
+
+/** A FOLLOW card: every action is `track_story`. It always draws as a checkbox
+ *  card, even with one option. */
+export function isTrackCard(proposal: Pick<StagedProposal, 'actions'>): boolean {
+  return proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'track_story');
+}
+
+/**
+ * True when the user may tick SEVERAL options: a follow card with 2 or more
+ * options. Every other choose-one card stays single-pick.
+ *
+ * `effectiveOptionCount` is the card's option count after More options grew it
+ * (the card keeps grown options in its own tool-result override, not in the
+ * staged proposal); omit it when the proposal's actions are the whole card.
+ * Such a card is also tap-only: `proposalRequiresUserChoice` folds this in, so
+ * typed agreement applies a follow card only while it holds exactly 1 option.
+ */
+export function proposalAllowsMultiSelect(
+  proposal: Pick<StagedProposal, 'actions'>,
+  effectiveOptionCount: number = proposal.actions.length,
+): boolean {
+  return isTrackCard(proposal) && effectiveOptionCount >= 2;
 }
 
 /**
@@ -45,7 +79,18 @@ export function proposalRequiresUserChoice(
  * what the user asked" — on the Track surface a typed "yes" against a 3-pill
  * card would mint three topics AND three followed stories. Consent is the tap.
  */
-export function chooseOneRefusal(): AwaitingUserTapResult {
+export function chooseOneRefusal(
+  proposal?: Pick<StagedProposal, 'actions'>,
+): AwaitingUserTapResult {
+  if (proposal && isTrackCard(proposal)) {
+    return {
+      applied: 0,
+      awaitingUserConfirmation: true,
+      message:
+        `These are stories to follow: the user must ${TRACK_CARD_TAP_PHRASE} on the card and then tap Follow. `
+        + 'Tell them the options are ready; do not claim anything was followed.',
+    };
+  }
   return {
     applied: 0,
     awaitingUserConfirmation: true,
