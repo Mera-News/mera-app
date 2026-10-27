@@ -851,6 +851,28 @@ describe('turn terminals reach the steps box', () => {
     expect(box?.terminal).toBe('no-route');
   });
 
+  it('turn-failed rides a box that has tool rows', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', '', [tc])],
+        turnActive: false,
+        agentTerminal: 'turn-failed',
+      }),
+    );
+    expect(box?.terminal).toBe('turn-failed');
+  });
+
+  it('turn-failed with no tool rows adds no box', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', '')],
+        turnActive: false,
+        agentTerminal: 'turn-failed',
+      }),
+    );
+    expect(box).toBeUndefined();
+  });
+
   it('is null for a turn that settled normally', () => {
     const box = boxFor(
       base({ live: [userMsg('u1'), assistantMsg('a1', 'Done.', [tc])], turnActive: true }),

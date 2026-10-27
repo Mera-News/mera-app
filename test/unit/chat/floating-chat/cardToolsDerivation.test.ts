@@ -55,7 +55,7 @@ describe('labels for the card tools', () => {
     expect(phrase('facts/interest')).toBe('skillPhrase.interests');
     expect(phrase('conversation/feed-tuning')).toBe('skillPhrase.feedTuning');
     // Skill ids that never existed under lib/mera-harness/skills fall back too.
-    for (const dead of ['facts/work', 'facts/interests', 'facts/new', 'topics/generate', 'conversation/follow-story', 'conversation/fact-check']) {
+    for (const dead of ['facts/work', 'facts/interests', 'facts/new', 'topics/generate', 'conversation/fact-check']) {
       expect(labelForToolCall('load_skill', { id: dead })).toEqual({ labelKey: 'agentSteps.loadSkillGeneric' });
     }
   });

@@ -144,8 +144,11 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     'no-proposal': 'agentSteps.noProposalSentence',
     'unknown-tool': 'agentSteps.unknownToolSentence',
     'malformed-choice': 'agentSteps.malformedChoiceSentence',
-  } as const satisfies Record<AgentTerminal, string>;
-  const summary = terminal
+  } as const satisfies Record<Exclude<AgentTerminal, 'turn-failed'>, string>;
+  // chat.turnFailed is spliced into the dictionaries later: cast until it is typed.
+  const summary = terminal === 'turn-failed'
+    ? (t as unknown as (key: string) => string)('chat.turnFailed')
+    : terminal
     ? t(TERMINAL_KEY[terminal])
     : interrupted
       ? t('agentSteps.interrupted')

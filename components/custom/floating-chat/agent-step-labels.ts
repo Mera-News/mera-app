@@ -63,6 +63,7 @@ const SKILL_PHRASE_KEY: Record<string, string> = {
   'facts/origin': 'skillPhrase.origin',
   'facts/family': 'skillPhrase.family',
   'conversation/feed-tuning': 'skillPhrase.feedTuning',
+  'conversation/follow-story': 'skillPhrase.followStory',
 };
 
 /** What a failed step cost. Keyed by tool; everything else gets the generic. */
@@ -272,6 +273,8 @@ export function stepTables(t: TFn) {
     'skillPhrase.origin': t('skillPhrase.origin'),
     'skillPhrase.family': t('skillPhrase.family'),
     'skillPhrase.feedTuning': t('skillPhrase.feedTuning'),
+    // Not in the dictionaries yet (spliced later): cast until it is typed.
+    'skillPhrase.followStory': (t as unknown as (key: string) => string)('skillPhrase.followStory'),
   };
 
   const CONSEQUENCE: Record<string, string> = {

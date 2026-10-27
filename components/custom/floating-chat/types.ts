@@ -77,7 +77,10 @@ export type AgentTerminal =
   | 'no-route'
   | 'no-proposal'
   | 'unknown-tool'
-  | 'malformed-choice';
+  | 'malformed-choice'
+  // Client-side only: the turn threw after tool rows were written (set by
+  // useChatSessionView from the session error, never by the loop).
+  | 'turn-failed';
 
 /**
  * EVERY terminal the loop can produce, classified exhaustively.
