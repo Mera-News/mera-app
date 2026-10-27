@@ -16,11 +16,16 @@ import { RESTART_FOR_UPDATE, UPDATE_AVAILABLE, useOpenUpdateNotes } from '@/lib/
 import { COLORS } from '@/lib/theme/tokens';
 import { initI18nEn } from '@/test/helpers';
 
+/** The latest Modal's onDismiss: iOS's "the sheet has gone", fired by the test when it chooses. */
+let mockDismiss: (() => void) | undefined;
 jest.mock('react-native/Libraries/Modal/Modal', () => {
     const { View } = jest.requireActual('react-native');
     return {
         __esModule: true,
-        default: ({ visible, children }: { visible?: boolean; children?: React.ReactNode }) => (visible ? <View>{children}</View> : null),
+        default: ({ visible, children, onDismiss }: { visible?: boolean; children?: React.ReactNode; onDismiss?: () => void }) => {
+            if (visible) mockDismiss = onDismiss;
+            return visible ? <View>{children}</View> : null;
+        },
     };
 });
 // The shared Reanimated mock has no useReducedMotion, which the sheet reads.
@@ -109,15 +114,18 @@ describe('Update ready', () => {
         });
     });
 
-    it('Restart closes the sheet first and runs the restart once it has gone', async () => {
+    it('Restart closes the sheet first and runs the restart only once it has gone', async () => {
         render(<NotificationSheetHost />);
         const row = await seedUpdate();
         await act(() => tapNotification(row));
         fireEvent.press(screen.getByTestId('update-ready-restart'));
         expect(useNotificationSheet.getState().updateReadyOpen).toBe(false);
-        // Still read while the sheet leaves: nothing ran on the tap itself.
+        // Long enough for an action started on the tap to land, well short of the 1200 ms fallback.
+        await act(() => new Promise((r) => setTimeout(r, 300)));
         expect(await statusOf(row.id)).toBe('read');
-        await waitFor(async () => expect(await statusOf(row.id)).toBe('actioned'));
+        // The sheet reports it has gone: now, and only now, the restart runs.
+        act(() => mockDismiss?.());
+        await waitFor(async () => expect(await statusOf(row.id)).toBe('actioned'), { timeout: 600 });
     });
 
     it('Not now closes it and runs nothing', async () => {

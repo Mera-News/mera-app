@@ -62,9 +62,6 @@ export default function NotificationSheet({
     const c = useColors();
     const pending = useRef<(() => void) | null>(null);
     const fallback = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const onClosedRef = useRef(onClosed);
-    onClosedRef.current = onClosed;
-
     const flush = useCallback(() => {
         if (fallback.current) clearTimeout(fallback.current);
         fallback.current = null;
@@ -87,7 +84,7 @@ export default function NotificationSheet({
             onClose={onClose}
             onClosed={() => {
                 flush();
-                onClosedRef.current?.();
+                onClosed?.();
             }}
             testID={testID}
         >
