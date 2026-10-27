@@ -57,6 +57,7 @@ export function FactPlacesRow({ factId, fact }: { factId: string; fact: FactPlac
                 <Pressable
                     testID="fact-place-add"
                     accessibilityRole="button"
+                    accessibilityLabel={t('you.fact.places.addCountry')}
                     onPress={() => setPicking(true)}
                     style={{ minHeight: 44, justifyContent: 'center' }}
                 >

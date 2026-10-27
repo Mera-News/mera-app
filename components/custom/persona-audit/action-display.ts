@@ -25,7 +25,7 @@ const ACTION_DISPLAY: Record<string, ActionDisplay> = {
     [ACTION_NAMES.SET_FACT_WEIGHT]: { icon: 'tune', labelKey: 'setFactWeight' },
     [ACTION_NAMES.SET_LOCATION_WEIGHT]: { icon: 'place', labelKey: 'setLocationWeight' },
     [ACTION_NAMES.ADD_TOPIC]: { icon: 'add-circle-outline', labelKey: 'addTopic' },
-    [ACTION_NAMES.ADD_NEGATIVE_TOPIC]: { icon: 'block', labelKey: 'setFactNewsStopped' },
+    [ACTION_NAMES.ADD_NEGATIVE_TOPIC]: { icon: 'block', labelKey: 'addNegativeTopic' },
     [ACTION_NAMES.RETIRE_TOPIC]: { icon: 'remove-circle-outline', labelKey: 'retireTopic' },
     [ACTION_NAMES.SUPPRESS_TOPIC]: { icon: 'visibility-off', labelKey: 'suppressTopic' },
     [ACTION_NAMES.ADD_SUPPRESSION]: { icon: 'visibility-off', labelKey: 'addSuppression' },
