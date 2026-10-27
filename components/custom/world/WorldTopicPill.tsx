@@ -7,9 +7,9 @@ import type { CanonicalTopic, CanonicalTopicFacet } from '@/lib/generated/graphq
 import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_EDGE, MERA_BUTTON_SIZE, useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 
 interface Props {
     readonly topics: readonly CanonicalTopic[];
@@ -20,6 +20,11 @@ interface Props {
 }
 
 const PILL_HEIGHT = 44;
+/** The kit sheet never caps its height: the rows scroll inside this share of the window,
+ *  as the ••• menu's do, so the title and "All topics" stay on screen with 25 topics. */
+const LIST_MAX_SHARE = 0.62;
+/** Apply a pick this long after the tap if the sheet never reports it has gone (closeThen's fallback). */
+const CLOSE_FALLBACK_MS = 1200;
 
 /** The World topic filter: a pill above the Mera button and the sheet it opens. */
 export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) {
@@ -27,9 +32,17 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
     const c = useColors();
     const corner = useMeraCorner();
     const clearance = useTabBarClearance();
+    const { height: windowHeight } = useWindowDimensions();
     const [open, setOpen] = useState(false);
     // Applied on the sheet's onClosed: a list remount under a leaving Modal is jank.
     const pending = useRef<{ id: string | null } | null>(null);
+    const fallback = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(
+        () => () => {
+            if (fallback.current) clearTimeout(fallback.current);
+        },
+        [],
+    );
 
     const rows = visibleTopics(topics, facets);
     const total = facets.reduce((n, f) => n + f.count, 0);
@@ -38,14 +51,23 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
     const base = clearance + MERA_BUTTON_BAR_GAP;
     const bottom = corner === 'br' ? base + MERA_BUTTON_SIZE + 12 : base;
 
-    const choose = (id: string | null) => {
-        pending.current = { id };
-        setOpen(false);
-    };
     const onClosed = () => {
+        if (fallback.current) clearTimeout(fallback.current);
+        fallback.current = null;
         const p = pending.current;
         pending.current = null;
         if (p) onPick(p.id);
+    };
+    const choose = (id: string | null) => {
+        pending.current = { id };
+        setOpen(false);
+        fallback.current = setTimeout(onClosed, CLOSE_FALLBACK_MS);
+    };
+    // Scrim, drag or back on an open sheet: close, pick nothing.
+    const dismiss = () => {
+        if (!open) return;
+        pending.current = null;
+        setOpen(false);
     };
 
     const fg = pickedName ? c.onAccent : c.ink;
@@ -96,21 +118,23 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
                     ) : null}
                 </View>
             </View>
-            <BottomSheet testID="world-topic-sheet" open={open} onClose={() => setOpen(false)} onClosed={onClosed}>
+            <BottomSheet testID="world-topic-sheet" open={open} onClose={dismiss} onClosed={onClosed}>
                 <Text style={{ color: c.ink, fontSize: 17, fontWeight: '600', lineHeight: 24, paddingVertical: 8 }}>
                     {t('explore.topicFilter.sheetTitle')}
                 </Text>
-                <Row testID="world-topic-row-all" label={t('explore.topicFilter.all')} count={total} selected={!pick} onPress={() => choose(null)} />
-                {rows.map(({ topic, count }) => (
-                    <Row
-                        key={topic.id}
-                        testID={`world-topic-row-${topicSlug(topic.path)}`}
-                        label={topicLabel(t, topic)}
-                        count={count}
-                        selected={topic.id === pick}
-                        onPress={() => choose(topic.id)}
-                    />
-                ))}
+                <ScrollView testID="world-topic-list" style={{ maxHeight: windowHeight * LIST_MAX_SHARE }} bounces={false}>
+                    <Row testID="world-topic-row-all" label={t('explore.topicFilter.all')} count={total} selected={!pick} onPress={() => choose(null)} />
+                    {rows.map(({ topic, count }) => (
+                        <Row
+                            key={topic.id}
+                            testID={`world-topic-row-${topicSlug(topic.path)}`}
+                            label={topicLabel(t, topic)}
+                            count={count}
+                            selected={topic.id === pick}
+                            onPress={() => choose(topic.id)}
+                        />
+                    ))}
+                </ScrollView>
             </BottomSheet>
         </>
     );

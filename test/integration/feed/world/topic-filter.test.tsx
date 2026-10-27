@@ -1,19 +1,21 @@
 // The World topic pill and sheet. Real: WorldPages, WorldTopicPill, ScopeArticleList header, the
 // hook, ArticleService, Apollo and MSW. Faked at the edges: the pager (TabPages renders the chosen
 // page), the sheet primitive (its onClosed is fired by the test), the pages list, reanimated, cards.
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import React from 'react';
 import { graphql, HttpResponse, initI18nEn, mockGql, server } from '@/test/helpers';
 import { __resetExploreWindowSupport, __resetWorldTopicsSupport } from '@/lib/article-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
 
 let mockClosed: (() => void) | undefined;
+let mockClose: (() => void) | undefined;
 jest.mock('@/components/ui/bottom-sheet', () => {
     const { View } = jest.requireActual('react-native');
     const R = jest.requireActual('react');
     return {
-        BottomSheet: ({ open, onClosed, children, testID }: any) => {
+        BottomSheet: ({ open, onClose, onClosed, children, testID }: any) => {
             mockClosed = onClosed;
+            mockClose = onClose;
             return open ? R.createElement(View, { testID }, children) : null;
         },
     };
@@ -104,6 +106,7 @@ beforeEach(() => {
     __resetWorldTopicsSupport();
     sent = [];
     mockClosed = undefined;
+    mockClose = undefined;
     useNetworkStore.setState({ isConnected: true, serverReachable: true } as never);
     facetsFor = (code) =>
         code === 'NLD' ? [facet('ct-sports', 3)] : [facet('ct-politics', 4), facet('ct-sports', 2), facet('ct-ref', 9)];
@@ -215,4 +218,35 @@ it('a page still loading never shows the previous page counts', async () => {
     fireEvent.press(await screen.findByTestId('world-topic-pill'));
     expect(await screen.findByTestId('world-topic-row-sports')).toBeTruthy();
     expect(screen.queryByTestId('world-topic-row-politics')).toBeNull();
+});
+
+it('the topic rows scroll inside a capped list, so a tall sheet keeps All topics on screen', async () => {
+    render(<WorldPages />);
+    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    const list = await screen.findByTestId('world-topic-list');
+    expect(list.type).toBe('RCTScrollView');
+    const style = Object.assign({}, ...[list.props.style].flat(Infinity).filter(Boolean));
+    expect(style.maxHeight).toBeGreaterThan(0);
+    expect(style.maxHeight).toBeLessThan(874);
+    expect(within(list).getByTestId('world-topic-row-all')).toBeTruthy();
+    expect(within(list).getByTestId('world-topic-row-politics')).toBeTruthy();
+});
+
+it('a scrim tap or drag closes without picking', async () => {
+    render(<WorldPages />);
+    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await screen.findByTestId('world-topic-row-politics');
+    act(() => mockClose?.());
+    act(() => mockClosed?.());
+    await act(async () => {});
+    expect(screen.queryByTestId('world-topic-clear')).toBeNull();
+    expect(sent.some((x) => x.ids?.length)).toBe(false);
+});
+
+it('a picked row applies even if the sheet never reports it has gone', async () => {
+    render(<WorldPages />);
+    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    fireEvent.press(await screen.findByTestId('world-topic-row-politics'));
+    await waitFor(() => expect(sent.at(-1)?.ids).toEqual(['ct-politics']), { timeout: 3000 });
+    expect(await screen.findByTestId('world-topic-clear')).toBeTruthy();
 });
