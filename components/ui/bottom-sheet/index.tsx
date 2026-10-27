@@ -10,7 +10,7 @@ import Animated, {
     withSpring,
     withTiming,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import ModalMaterial from '@/components/custom/ModalMaterial';
@@ -51,6 +51,15 @@ const CONTENT_BOTTOM = 8;
 /** A full-height sheet stops this far under the status bar. */
 const FULL_HEIGHT_TOP_GAP = 8;
 
+/**
+ * How far a keyboard-avoiding sheet rises: the keyboard minus the bottom safe
+ * area, which the keyboard covers and the content already pads for (lifting by
+ * the whole keyboard left that padding as an empty band above it).
+ */
+export function keyboardLiftFor(keyboardHeight: number, bottomInset: number): number {
+    return Math.max(0, keyboardHeight - bottomInset);
+}
+
 /** Drag this far, or flick this fast, to dismiss. */
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 800;
@@ -75,6 +84,10 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
+    // The Modal covers the tab bar, but a sheet mounted in a tab screen reads that screen's
+    // insets, whose bottom includes the bar (~83pt): Cancel sat 88pt above the edge. Pad for
+    // the window's own home indicator.
+    const bottomInset = initialWindowMetrics?.insets.bottom ?? insets.bottom;
     const { height: windowHeight } = useWindowDimensions();
     const reduceMotion = useReducedMotion();
     // How far the keyboard covers the screen, animated with it. RN's own Keyboard events, not
@@ -84,7 +97,7 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
         // shortcut: iOS only; an Android Modal window resizes for the keyboard itself (adjustResize). Lift there too if an emulator capture shows the field covered.
         if (!avoidKeyboard || !open || Platform.OS !== 'ios') return;
         const show = Keyboard.addListener('keyboardWillShow', (e) => {
-            keyboardLift.set(withTiming(e.endCoordinates.height, { duration: e.duration || 250 }));
+            keyboardLift.set(withTiming(keyboardLiftFor(e.endCoordinates.height, bottomInset), { duration: e.duration || 250 }));
         });
         const hide = Keyboard.addListener('keyboardWillHide', (e) => {
             keyboardLift.set(withTiming(0, { duration: e.duration || 250 }));
@@ -94,7 +107,7 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
             hide.remove();
             keyboardLift.set(0);
         };
-    }, [avoidKeyboard, open, keyboardLift]);
+    }, [avoidKeyboard, open, keyboardLift, bottomInset]);
 
     const [shown, setShown] = useState(open);
     const [presented, setPresented] = useState(false);
@@ -238,7 +251,7 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
                                 testID={testID ? `${testID}-content` : undefined}
                                 style={[
                                     fullHeight ? styles.grow : styles.contentSides,
-                                    { paddingBottom: insets.bottom + CONTENT_BOTTOM },
+                                    { paddingBottom: bottomInset + CONTENT_BOTTOM },
                                 ]}
                             >
                                 {children}

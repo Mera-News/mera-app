@@ -21,9 +21,11 @@ jest.mock('react-native-reanimated', () => {
     const actual = jest.requireActual('react-native-reanimated');
     return { ...actual, __esModule: true, default: actual.default ?? actual, useReducedMotion: () => true };
 });
+// The sheet pads for the WINDOW's bottom inset (initialWindowMetrics), not the mounting screen's.
 jest.mock('react-native-safe-area-context', () => ({
     ...jest.requireActual('react-native-safe-area-context/jest/mock').default,
     useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
+    initialWindowMetrics: { insets: { top: 47, bottom: 34, left: 0, right: 0 }, frame: { x: 0, y: 0, width: 390, height: 844 } },
 }));
 
 beforeAll(initI18nEn);
