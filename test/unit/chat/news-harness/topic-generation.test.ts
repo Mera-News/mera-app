@@ -57,6 +57,14 @@ describe('buildBaseUserPrompt', () => {
     expect(p).toBe('Fact: "Works in AI"');
   });
 
+  it('names the fact place right after the fact, only when set', () => {
+    const p = buildBaseUserPrompt(
+      { factStatement: 'Pensioner', factPlace: 'India', userLocation: null, otherFacts: [] },
+      false,
+    );
+    expect(p).toBe('Fact: "Pensioner"\nFact place: India');
+  });
+
   it('includes user location when present', () => {
     const p = buildBaseUserPrompt(
       { factStatement: 'Music festivals', userLocation: 'Amsterdam', otherFacts: [] },
