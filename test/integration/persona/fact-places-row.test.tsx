@@ -1,6 +1,7 @@
 /** The fact page's About row at its component seam: chips, remove, Anywhere, and the country picker. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { KeyboardAvoidingView, TextInput } from 'react-native';
 import { FactPlacesRow } from '@/components/custom/facts/FactPlacesRow';
 import { setFactPlaces } from '@/lib/database/services/fact-service';
 import { initI18nEn } from '@/test/helpers';
@@ -37,6 +38,14 @@ describe('FactPlacesRow', () => {
         expect(setFactPlaces).toHaveBeenCalledWith('f1', ['GLOBAL'], 'user');
         view.rerender(<FactPlacesRow factId="f1" fact={fact(['GLOBAL'])} />);
         expect(screen.queryByTestId('fact-place-anywhere')).toBeNull();
+    });
+
+    it('the picker search sits inside a keyboard-avoiding wrapper, so the keyboard never covers it', () => {
+        mount(['IN']);
+        fireEvent.press(screen.getByTestId('fact-place-add'));
+        const avoider = screen.UNSAFE_getByType(KeyboardAvoidingView);
+        expect(avoider.props.behavior).toBe('padding'); // jest runs as iOS
+        expect(avoider.findAllByType(TextInput)).toHaveLength(1);
     });
 
     it('a picked country joins the places and replaces GLOBAL', () => {
