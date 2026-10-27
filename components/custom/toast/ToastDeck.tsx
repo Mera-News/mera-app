@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { EASE_LEAVE, EASE_SETTLE, REDUCED_FADE, TOAST_MOTION, dragOffset, swipeDismisses } from './deck-motion';
 import { useMotionAllowed } from '@/lib/motion-gate';
+import { markExited, takeExited } from './exited-cards';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FullWindowOverlay } from 'react-native-screens';
 
@@ -68,20 +69,6 @@ const STRIP_RADIUS = 16;
 /** Opaque strips, each a step darker than the card (the board's #1B1A1E and
  *  #18171A under a #1F1E22 card), so content never shows through them. */
 const STRIP_SHADE = [0, 0.13, 0.23];
-
-/**
- * Ids already flown off screen by a swipe.
- *
- * Without this the exit clone below would mount a fresh copy at rest position
- * and fade it in place, immediately after the card the user just flicked away —
- * the card would appear to come back. Consumed (and deleted) by the column that
- * notices the id leave the queue.
- */
-const swipeDismissed = new Set<string>();
-
-function markSwipeDismissed(id: string): void {
-    swipeDismissed.add(id);
-}
 
 interface SlotProps {
     entry: ToastEntry;
@@ -210,7 +197,7 @@ function ToastSlot({ entry, depth, reduced, frontSize, onFrontSize, leaving = fa
         })
         .onEnd((event) => {
             if (swipeDismisses(event.translationY, event.velocityY)) {
-                runOnJS(markSwipeDismissed)(entry.id);
+                runOnJS(markExited)(entry.id);
                 const done = (finished?: boolean) => {
                     'worklet';
                     if (finished) runOnJS(closeToast)(entry.id);
@@ -344,15 +331,9 @@ function DeckColumn({ entries }: { entries: ToastEntry[] }) {
         previous.current = entries;
         if (gone.length === 0) return;
 
-        // A card the user flicked away is already off screen; replaying an exit
-        // for it would look like it came back.
-        const fading = gone.filter(({ entry }) => {
-            if (swipeDismissed.has(entry.id)) {
-                swipeDismissed.delete(entry.id);
-                return false;
-            }
-            return true;
-        });
+        // A card that played its own exit (flicked away, a notice's flight or
+        // fade) is already gone; replaying an exit would look like it came back.
+        const fading = gone.filter(({ entry }) => !takeExited(entry.id));
         if (fading.length === 0) return;
 
         setLeaving((current) => [...current, ...fading]);

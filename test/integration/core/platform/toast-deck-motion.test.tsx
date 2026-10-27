@@ -14,9 +14,12 @@ import UndoToast from '@/components/custom/toast/UndoToast';
 import { closeAll, resetToastQueue, show, useToastQueue } from '@/lib/toast/toast-queue';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import MeraToast from '@/components/custom/toast/MeraToast';
+import { notifiedToastDurationMs } from '@/components/custom/notifications/NotifiedToast';
+import { toastManager } from '@/lib/toast-manager';
+import { toastApi } from '@/lib/toast/toast-queue';
 import { initI18nEn, useStrictClock } from '@/test/helpers';
 
-type Anim = { kind: 'timing' | 'spring'; to: number; duration?: number; easing?: unknown; reduceMotion?: unknown };
+type Anim = { kind: 'timing' | 'spring' | 'delay'; to: unknown; duration?: number; easing?: unknown; reduceMotion?: unknown };
 const mockAnims: Anim[] = [];
 const mockWrites: unknown[] = [];
 /** The system Reduce Motion launch flag, which `useMotionAllowed` reads (as Reanimated's `useReducedMotion` does). */
@@ -63,6 +66,10 @@ jest.mock('react-native-reanimated', () => {
         useSharedValue,
         withTiming: anim('timing'),
         withSpring: anim('spring'),
+        withDelay: (ms: number, next: unknown, reduceMotion?: unknown) => {
+            mockAnims.push({ kind: 'delay', to: next, duration: ms, reduceMotion });
+            return next;
+        },
         Easing: { ...base.Easing, bezier: (...p: number[]) => `bezier(${p.join(',')})`, linear: 'linear' },
     };
 });
@@ -274,6 +281,56 @@ describe('reduced: Lite or system Reduce Motion fades only, 180 ms', () => {
         });
         render(<ToastDeck />);
         expect(mockAnims.some((a) => a.duration === 1400)).toBe(false);
+    });
+});
+
+describe('a notified toast', () => {
+    const notice = () => {
+        toastManager.setToastInstance(toastApi);
+        toastManager.showNoticeToast({ title: 'Calibrated', body: 'b', type: 'calibration' });
+    };
+
+    it.each([
+        ['system Reduce Motion', () => setSystemReduced(true)],
+        ['Lite', () => useDisplayPrefsStore.setState({ liteMode: true })],
+    ])('%s: holds 4 s, then fades over 180 ms, and neither leg is cut', (_name, enable) => {
+        enable();
+        notice();
+        expect(useToastQueue.getState().entries[0].duration).toBe(4000 + 180);
+        render(<ToastDeck />);
+        layoutFront();
+        const delay = mockAnims.find((a) => a.kind === 'delay');
+        expect(delay).toMatchObject({ duration: 4000, reduceMotion: 'never' });
+        expect(delay?.to).toBe(1);
+        expect(timings(180)).toContainEqual(expect.objectContaining({ to: 1, reduceMotion: 'never' }));
+        expect(timings(450)).toEqual([]);
+    });
+
+    it.each([
+        ['full motion', () => undefined, true],
+        ['Lite', () => useDisplayPrefsStore.setState({ liteMode: true }), false],
+    ])('%s: once its own leave has played, the deck replays no exit clone', (_name, enable, canFly) => {
+        enable();
+        notice();
+        render(<ToastDeck />);
+        layoutFront();
+        advance(notifiedToastDurationMs(canFly));
+        expect(ids()).toEqual([]);
+        expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
+    });
+
+    it('closed by its button during the hold, it still lifts off like any toast', () => {
+        toastManager.setToastInstance(toastApi);
+        toastManager.showNoticeToast({
+            title: 'Update ready',
+            type: 'update_available',
+            button: { label: 'Restart', onPress: () => undefined },
+        });
+        render(<ToastDeck />);
+        layoutFront();
+        fireEvent.press(screen.getByTestId('notified-toast-button'));
+        expect(ids()).toEqual([]);
+        expect(screen.getByTestId('toast-slot-leaving')).toBeTruthy();
     });
 });
 

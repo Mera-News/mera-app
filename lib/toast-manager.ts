@@ -369,9 +369,12 @@ class ToastManager {
         // With a screen reader on, a notice stays until dismissed: a timed exit
         // can take it away mid-sentence. The card's title speaks it, once.
         const persistent = this.screenReader;
-        // Whether the toast will fly to You or just fade: the two legs have
-        // different lengths, and the component derives the same flag.
-        const canFly = !reduceMotion;
+        // Whether the toast will fly to the inbox or just fade: the two legs have
+        // different lengths, and the component derives the same flag (Lite and
+        // the launch flag through the motion gate, plus the live OS setting).
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { motionAllowed } = require('@/lib/motion-gate') as typeof import('@/lib/motion-gate');
+        const canFly = motionAllowed() && !reduceMotion;
 
         let toastId = '';
         const button = opts.button
@@ -397,6 +400,8 @@ class ToastManager {
                   : notifiedToastModule.notifiedToastDurationMs(canFly),
             render: () =>
                 React.createElement(NotifiedToast, {
+                    // Set by show() before the deck first renders the card.
+                    toastId,
                     title,
                     body,
                     tone: look.tone,

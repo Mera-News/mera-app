@@ -1,11 +1,15 @@
 import MeraToast, { type ToastTone } from '@/components/custom/toast/MeraToast';
+import { REDUCED_FADE, TOAST_MOTION } from '@/components/custom/toast/deck-motion';
+import { markExited } from '@/components/custom/toast/exited-cards';
 import { useIsToastFront } from '@/components/ui/toast';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import type { LucideIcon } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { Dimensions, I18nManager } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import Animated, {
+    ReduceMotion,
     useAnimatedStyle,
     useSharedValue,
     withDelay,
@@ -27,8 +31,8 @@ export const NOTIFIED_TOAST_FLY_MS = 450;
 /** Shrink and fade only in the flight's last 30%: a near miss on the Feed icon
  *  (the floating bar, RTL) is then invisible. */
 const FADE_FROM = 0.7;
-/** Plain fade-out leg (reduce motion). */
-export const NOTIFIED_TOAST_FADE_MS = 1500;
+/** Plain fade-out leg (Lite or Reduce Motion): the deck's reduced fade. */
+export const NOTIFIED_TOAST_FADE_MS = TOAST_MOTION.reduced.ms;
 
 /** Total on-screen lifetime, so the caller can size the toast's `duration` to
  *  match exactly — an over-long duration would leave an invisible toast mounted
@@ -43,6 +47,9 @@ export interface NotifiedToastProps {
     /** From the notice's type (`notice-tone.ts`). */
     tone: ToastTone;
     icon?: LucideIcon;
+    /** The queue id, marked as exited once this card's own leave starts. */
+    toastId?: string;
+    /** The live OS setting; Lite and the launch flag come from the motion gate. */
     reduceMotion: boolean;
     /** Screen reader on: no timed exit; it leaves only when dismissed. */
     persistent?: boolean;
@@ -57,7 +64,10 @@ export interface NotifiedToastProps {
  * the Feed tab icon while scaling down and fading out: the notice now lives in
  * Feed > Notifications.
  *
- * Reduce motion: a plain fade with no translate.
+ * Lite or Reduce Motion: the same hold, then the deck's 180 ms fade. Both legs
+ * pass `ReduceMotion.Never`: LiteMotionConfig (and the OS flag) otherwise make
+ * Reanimated skip the delay and land the fade at once, so the notice vanished
+ * on mount.
  *
  * The toast's true start position is unknown to this component (it's placed by
  * the toast overlay), so the fly translate is approximated from the top-center
@@ -68,6 +78,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     body,
     tone,
     icon,
+    toastId,
     reduceMotion,
     persistent = false,
     button,
@@ -86,7 +97,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
     const startX = screenWidth / 2;
     const startY = 80;
-    const canFly = !reduceMotion;
+    const canFly = useMotionAllowed() && !reduceMotion;
     const target = inboxTabTarget(
         screenWidth,
         screenHeight,
@@ -100,15 +111,21 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     useEffect(() => {
         if (!fly || !isFront || persistent) return;
         // HOLD fully opaque first so the notification is actually readable, then
-        // leave: fly to You (translate + shrink + fade), or a plain slower fade
-        // when motion is reduced.
+        // leave: fly to the inbox (translate + shrink + fade), or the reduced fade.
         progress.value = withDelay(
             NOTIFIED_TOAST_HOLD_MS,
-            withTiming(1, {
-                duration: canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS,
-            }),
+            withTiming(
+                1,
+                canFly ? { duration: NOTIFIED_TOAST_FLY_MS, reduceMotion: ReduceMotion.Never } : REDUCED_FADE,
+            ),
+            ReduceMotion.Never,
         );
-    }, [progress, canFly, isFront, persistent, fly]);
+        // From the leave on, this card's exit is its own: the deck must not
+        // replay one from rest. Before it (a button press) the deck's exit runs.
+        if (!toastId) return;
+        const handle = setTimeout(() => markExited(toastId), NOTIFIED_TOAST_HOLD_MS);
+        return () => clearTimeout(handle);
+    }, [progress, canFly, isFront, persistent, fly, toastId]);
 
     const animatedStyle = useAnimatedStyle(() => {
         const p = progress.value;
