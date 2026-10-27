@@ -1146,7 +1146,9 @@
       "retireSuppression": "Een filter verwijderd",
       "setSourceScopePref": "Een bronbereik aangepast",
       "migrateFact": "Een interesse overgezet",
-      "setScoringOverride": "Heeft aangepast hoe je verhalen worden gerangschikt"
+      "setScoringOverride": "Heeft aangepast hoe je verhalen worden gerangschikt",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "{{name}} toegevoegd",
@@ -1164,7 +1166,9 @@
       "fewerSourcesFrom": "Minder bronnen van {{name}}",
       "clearedSourcesFrom": "Je instelling voor bronnen van {{name}} is gewist",
       "carriedOver": "{{name}} overgezet",
-      "undone": "Ongedaan gemaakt: {{change}}"
+      "undone": "Ongedaan gemaakt: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2944,6 +2948,30 @@
       "when": "Wanneer Mera je mag melden",
       "offLine": "Mera stuurt je niets. Zet dit aan om te kiezen wanneer het dat kan.",
       "zeroTimes": "Kies een tijd, anders stuurt Mera geen meldingen."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

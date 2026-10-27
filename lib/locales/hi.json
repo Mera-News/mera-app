@@ -1148,7 +1148,9 @@
       "retireSuppression": "कोई फ़िल्टर हटाया",
       "setSourceScopePref": "कोई स्रोत स्कोप समायोजित किया",
       "migrateFact": "एक रुचि आगे ले जाई गई",
-      "setScoringOverride": "स्टोरीज़ की रैंकिंग का तरीका ट्यून किया गया"
+      "setScoringOverride": "स्टोरीज़ की रैंकिंग का तरीका ट्यून किया गया",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "{{name}} जोड़ा गया",
@@ -1166,7 +1168,9 @@
       "fewerSourcesFrom": "{{name}} के कम स्रोत",
       "clearedSourcesFrom": "{{name}} के स्रोतों के लिए आपकी सेटिंग हटाई गई",
       "carriedOver": "{{name}} आगे ले जाया गया",
-      "undone": "वापस लिया गया: {{change}}"
+      "undone": "वापस लिया गया: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2946,6 +2950,30 @@
       "when": "मेरा ऐप आपको कब सूचना दे सकता है",
       "offLine": "मेरा ऐप आपको कुछ नहीं भेजेगा। कब भेजा जा सकता है, यह चुनने के लिए इसे चालू करें।",
       "zeroTimes": "कोई समय चुनें, वरना मेरा ऐप कोई सूचना नहीं भेजेगा।"
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

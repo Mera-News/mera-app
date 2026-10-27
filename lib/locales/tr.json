@@ -1148,7 +1148,9 @@
       "retireSuppression": "Filtre kaldırıldı",
       "setSourceScopePref": "Kaynak kapsamı ayarlandı",
       "migrateFact": "Bir ilgi alanı taşındı",
-      "setScoringOverride": "Hikayelerinizin sıralanmasını ayarladı"
+      "setScoringOverride": "Hikayelerinizin sıralanmasını ayarladı",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "{{name}} eklendi",
@@ -1166,7 +1168,9 @@
       "fewerSourcesFrom": "{{name}} kaynaklarından daha az",
       "clearedSourcesFrom": "{{name}} kaynakları için ayarınız temizlendi",
       "carriedOver": "{{name}} aktarıldı",
-      "undone": "Geri alındı: {{change}}"
+      "undone": "Geri alındı: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2946,6 +2950,30 @@
       "when": "Mera size ne zaman bildirim gönderebilir",
       "offLine": "Mera size hiçbir şey göndermez. Mümkün olduğunda ne zaman gönderebileceğini seçmek için bunu açın.",
       "zeroTimes": "Bir saat seçin, yoksa Mera hiç bildirim göndermez."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

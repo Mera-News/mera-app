@@ -1186,7 +1186,9 @@
       "retireSuppression": "Filtr został usunięty",
       "setSourceScopePref": "Dostosowano kraj źródła",
       "migrateFact": "Przeniesiono zainteresowanie",
-      "setScoringOverride": "Dostrojono, jak układane są Twoje historie"
+      "setScoringOverride": "Dostrojono, jak układane są Twoje historie",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "Dodano {{name}}",
@@ -1204,7 +1206,9 @@
       "fewerSourcesFrom": "Mniej źródeł od {{name}}",
       "clearedSourcesFrom": "Usunięto Twoje ustawienie dla źródeł od {{name}}",
       "carriedOver": "Przeniesiono {{name}}",
-      "undone": "Cofnięto: {{change}}"
+      "undone": "Cofnięto: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -3056,6 +3060,30 @@
       "when": "Kiedy Mera może Ci powiadamiać",
       "offLine": "Mera nic Ci nie wyśle. Włącz to, aby wybrać porę, w której może.",
       "zeroTimes": "Wybierz godzinę, inaczej Mera nie wyśle żadnych powiadomień."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

@@ -1138,7 +1138,9 @@
       "retireSuppression": "Đã xóa bộ lọc",
       "setSourceScopePref": "Đã điều chỉnh phạm vi nguồn",
       "migrateFact": "Đã chuyển một mối quan tâm",
-      "setScoringOverride": "Đã chỉnh cách xếp hạng các câu chuyện của bạn"
+      "setScoringOverride": "Đã chỉnh cách xếp hạng các câu chuyện của bạn",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "Đã thêm {{name}}",
@@ -1156,7 +1158,9 @@
       "fewerSourcesFrom": "Bớt nguồn từ {{name}}",
       "clearedSourcesFrom": "Đã xóa cài đặt của bạn cho các nguồn từ {{name}}",
       "carriedOver": "Đã chuyển {{name}}",
-      "undone": "Đã hoàn tác: {{change}}"
+      "undone": "Đã hoàn tác: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2931,6 +2935,30 @@
       "when": "Khi nào Mera có thể thông báo cho bạn",
       "offLine": "Mera sẽ không gửi bất cứ điều gì cho bạn. Bật lên để chọn thời điểm có thể gửi.",
       "zeroTimes": "Hãy chọn một giờ, nếu không Mera sẽ không gửi thông báo nào."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

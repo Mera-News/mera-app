@@ -1139,7 +1139,9 @@
       "retireSuppression": "ลบตัวกรองแล้ว",
       "setSourceScopePref": "ปรับขอบเขตแหล่งแล้ว",
       "migrateFact": "ย้ายความสนใจมาแล้ว",
-      "setScoringOverride": "ปรับวิธีจัดอันดับเรื่องราวของคุณแล้ว"
+      "setScoringOverride": "ปรับวิธีจัดอันดับเรื่องราวของคุณแล้ว",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "เพิ่ม {{name}} แล้ว",
@@ -1157,7 +1159,9 @@
       "fewerSourcesFrom": "ลดแหล่งข่าวจาก {{name}}",
       "clearedSourcesFrom": "ล้างการตั้งค่าของคุณสำหรับแหล่งข่าวจาก {{name}} แล้ว",
       "carriedOver": "ย้าย {{name}} มาแล้ว",
-      "undone": "ยกเลิกแล้ว: {{change}}"
+      "undone": "ยกเลิกแล้ว: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2932,6 +2936,30 @@
       "when": "เมื่อไรที่ เมร่า แจ้งเตือนคุณได้",
       "offLine": "เมร่า จะไม่ส่งอะไรถึงคุณ เปิดการใช้งานนี้เพื่อเลือกเวลาที่จะส่งได้",
       "zeroTimes": "เลือกเวลา ไม่เช่นนั้น เมร่า จะไม่ส่งการแจ้งเตือนใด ๆ"
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

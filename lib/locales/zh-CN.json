@@ -1138,7 +1138,9 @@
       "retireSuppression": "移除了一个过滤",
       "setSourceScopePref": "调整了来源范围",
       "migrateFact": "已转入一项兴趣",
-      "setScoringOverride": "调整了你的报道排序方式"
+      "setScoringOverride": "调整了你的报道排序方式",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "已添加 {{name}}",
@@ -1156,7 +1158,9 @@
       "fewerSourcesFrom": "减少来自 {{name}} 的来源",
       "clearedSourcesFrom": "已清除你对来自 {{name}} 的来源的设置",
       "carriedOver": "已带入 {{name}}",
-      "undone": "已撤销：{{change}}"
+      "undone": "已撤销：{{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2931,6 +2935,30 @@
       "when": "梅拉何时可以通知你",
       "offLine": "梅拉不会向你发送任何内容。开启此功能，即可选择它可以发送通知的时间。",
       "zeroTimes": "请选择一个时间，否则梅拉不会发送任何通知。"
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

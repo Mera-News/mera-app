@@ -1342,7 +1342,9 @@
       "retireSuppression": "Removed a filter",
       "setSourceScopePref": "Adjusted a source scope",
       "migrateFact": "Carried over an interest",
-      "setScoringOverride": "Tuned how your stories are ranked"
+      "setScoringOverride": "Tuned how your stories are ranked",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "Added {{name}}",
@@ -1360,7 +1362,9 @@
       "fewerSourcesFrom": "Fewer sources from {{name}}",
       "clearedSourcesFrom": "Cleared your setting for sources from {{name}}",
       "carriedOver": "Carried over {{name}}",
-      "undone": "Undone: {{change}}"
+      "undone": "Undone: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2946,6 +2950,30 @@
       "when": "When Mera can notify you",
       "offLine": "Mera won't send you anything. Turn this on to pick when it can.",
       "zeroTimes": "Pick a time, or Mera won't send any notices."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

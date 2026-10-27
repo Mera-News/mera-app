@@ -1138,7 +1138,9 @@
       "retireSuppression": "Filter dihapus",
       "setSourceScopePref": "Cakupan sumber disesuaikan",
       "migrateFact": "Sebuah minat dipindahkan",
-      "setScoringOverride": "Mengatur cara cerita Anda diurutkan"
+      "setScoringOverride": "Mengatur cara cerita Anda diurutkan",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "Menambahkan {{name}}",
@@ -1156,7 +1158,9 @@
       "fewerSourcesFrom": "Lebih sedikit sumber dari {{name}}",
       "clearedSourcesFrom": "Pengaturan Anda untuk sumber dari {{name}} dihapus",
       "carriedOver": "Memindahkan {{name}}",
-      "undone": "Dibatalkan: {{change}}"
+      "undone": "Dibatalkan: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2931,6 +2935,30 @@
       "when": "Kapan Mera boleh memberi notifikasi",
       "offLine": "Mera tidak akan mengirim apa pun kepada Anda. Aktifkan ini untuk memilih kapan Mera bisa mengirim.",
       "zeroTimes": "Pilih satu waktu, atau Mera tidak akan mengirim pemberitahuan apa pun."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

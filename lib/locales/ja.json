@@ -1138,7 +1138,9 @@
       "retireSuppression": "フィルターを削除しました",
       "setSourceScopePref": "ソーススコープを調整しました",
       "migrateFact": "興味の項目を引き継ぎました",
-      "setScoringOverride": "ストーリーのランキング方法を調整しました"
+      "setScoringOverride": "ストーリーのランキング方法を調整しました",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "{{name}}を追加しました",
@@ -1156,7 +1158,9 @@
       "fewerSourcesFrom": "{{name}}のソースを減らします",
       "clearedSourcesFrom": "{{name}}のソースの設定を解除しました",
       "carriedOver": "{{name}}を引き継ぎました",
-      "undone": "取り消しました：{{change}}"
+      "undone": "取り消しました：{{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -2931,6 +2935,30 @@
       "when": "メラが通知できる時間",
       "offLine": "メラは何も送りません。オンにすると、送信してよい時間帯を選べます。",
       "zeroTimes": "時間を選んでください。選ばないと、メラは通知を送りません。"
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {

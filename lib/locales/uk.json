@@ -1190,7 +1190,9 @@
       "retireSuppression": "Фільтр вилучено",
       "setSourceScopePref": "Область джерел коригована",
       "migrateFact": "Перенесено інтерес",
-      "setScoringOverride": "Налаштовано, як ранжуються ваші історії"
+      "setScoringOverride": "Налаштовано, як ранжуються ваші історії",
+      "setFactPlaces": "Changed where news comes from",
+      "setFactNewsStopped": "Stopped news for an interest"
     },
     "summary": {
       "added": "Додано {{name}}",
@@ -1208,7 +1210,9 @@
       "fewerSourcesFrom": "Менше джерел від {{name}}",
       "clearedSourcesFrom": "Скасовано ваше налаштування для джерел від {{name}}",
       "carriedOver": "Перенесено {{name}}",
-      "undone": "Відмінено: {{change}}"
+      "undone": "Відмінено: {{change}}",
+      "placesSet": "Changed where news comes from for {{name}}",
+      "newsStopped": "Stopped news for {{name}}"
     }
   },
   "calibration": {
@@ -3060,6 +3064,30 @@
       "when": "Коли Мера може сповіщати вас",
       "offLine": "Мера нічого не надсилатиме. Увімкніть, щоб вибрати, коли це можливо.",
       "zeroTimes": "Оберіть час, інакше Мера не надсилатиме сповіщень."
+    },
+    "fact": {
+      "places": {
+        "about": "About",
+        "notSet": "Not set yet",
+        "addCountry": "Add a country",
+        "anywhere": "Anywhere",
+        "remove": "Remove {{place}}",
+        "search": "Search countries",
+        "noCountry": "No country found",
+        "blocs": {
+          "EU": "European Union",
+          "EEA": "European Economic Area",
+          "EFTA": "European Free Trade Association",
+          "UK": "United Kingdom",
+          "Europe": "Europe",
+          "Asia": "Asia",
+          "Africa": "Africa",
+          "North America": "North America",
+          "South America": "South America",
+          "Oceania": "Oceania",
+          "Antarctica": "Antarctica"
+        }
+      }
     }
   },
   "meraHints": {
