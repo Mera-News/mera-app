@@ -1,4 +1,5 @@
-import { TOAST_RADIUS, ToastFrontProvider } from '@/components/ui/toast';
+import { ToastFrontProvider } from '@/components/ui/toast';
+import { TOAST_RADIUS } from './MeraToast';
 import { useColors } from '@/lib/theme/tokens';
 import { close as closeToast, useToastQueue, type ToastEntry } from '@/lib/toast/toast-queue';
 import React, { useEffect, useRef, useState } from 'react';
@@ -236,14 +237,10 @@ function ToastSlot({
 
     return (
         <Animated.View
-            // FULL WIDTH and absolutely positioned, with the card as an
-            // intrinsic-width child. This reproduces exactly what gluestack's
-            // `POSITIONS.top` + `alignItems: 'center'` did, and it is
-            // load-bearing: `Toast` sizes itself with `flexShrink: 1` (never
-            // `flex: 1`) under a 60%-of-screen `maxWidth`, so anything that
-            // measures it at zero collapses every toast to an icon-only sliver.
-            // An absolutely positioned child is NOT centered by a parent's
-            // `alignItems`, so the transform has to live out here.
+            // FULL WIDTH and absolutely positioned, the card centred inside it
+            // (MeraToast carries its own fixed width). An absolutely positioned
+            // child is NOT centred by a parent's `alignItems`, so the transform
+            // has to live out here.
             testID={leaving ? 'toast-slot-leaving' : `toast-slot-${depth}`}
             style={[
                 {
@@ -289,7 +286,7 @@ function ToastSlot({
                         flies to the bell — until it is the card being read. */}
                     {isTop ? (
                         // `value={isFront}` matters on the exit clone: false
-                        // stops `ToastTitle` announcing the message a second
+                        // stops `MeraToast` announcing the message a second
                         // time and stops `NotifiedToast` restarting its flight,
                         // while this slot's own opacity carries the fade.
                         <ToastFrontProvider value={isFront}>
@@ -299,14 +296,10 @@ function ToastSlot({
                         <View
                             testID="toast-buried-panel"
                             style={{
-                                // Starts at the front card's bottom edge (the
-                                // 4pt is `Toast`'s own `m-1`, which the measured
-                                // box includes), less this slot's own offset.
-                                marginTop: Math.max(0, frontSize.height - 4 - PEEK_PT),
-                                width: Math.max(
-                                    0,
-                                    (frontSize.width - 8) * DEPTH_WIDTH[Math.min(depth, DEPTH_WIDTH.length - 1)],
-                                ),
+                                // Starts at the front card's bottom edge, less
+                                // this slot's own offset.
+                                marginTop: Math.max(0, frontSize.height - PEEK_PT),
+                                width: frontSize.width * DEPTH_WIDTH[Math.min(depth, DEPTH_WIDTH.length - 1)],
                                 height: PEEK_PT,
                                 borderBottomLeftRadius: TOAST_RADIUS,
                                 borderBottomRightRadius: TOAST_RADIUS,

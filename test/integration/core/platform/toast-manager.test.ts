@@ -1,7 +1,7 @@
 /**
  * toastManager and the toast queue as one mechanism. Every manager method lands in the single top
  * stack, BEHIND whatever card is already showing (FIFO, owner decision), and each toast carries its
- * title, body, action and lifetime. Driven through the public toastManager API into the real queue
+ * tone, title, body and lifetime. Driven through the public toastManager API into the real queue
  * (`lib/toast/toast-queue.ts`); nothing is mounted. The queue entry's `render()` returns the React
  * element the deck would paint, and its props are read as data (no component runs).
  *
@@ -19,7 +19,7 @@ jest.mock('@/lib/logger', () => {
 import logger from '@/lib/logger';
 import { TOAST_MIN_DURATION_MS, toastManager } from '@/lib/toast-manager';
 import { closeAll, resetToastQueue, show, toastApi, useToastQueue } from '@/lib/toast/toast-queue';
-import { Toast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
 import UndoToast from '@/components/custom/toast/UndoToast';
 import NotifiedToast, { NOTIFIED_TOAST_HOLD_MS } from '@/components/custom/notifications/NotifiedToast';
 import { initI18nEn, useStrictClock } from '@/test/helpers';
@@ -32,9 +32,9 @@ const entries = () => useToastQueue.getState().entries;
 const ids = () => entries().map((entry) => entry.id);
 /** What the deck would paint for the front card, as an element tree. */
 const frontEl = () => entries()[0].render({ id: entries()[0].id }) as unknown as El;
-// The simple toasts are [<Text>{title}</Text>, <Text>{body}</Text> | null] inside a Toast.
-const titleOf = (el: El) => el.props.children[0]?.props.children;
-const bodyOf = (el: El) => el.props.children[1]?.props.children;
+// The simple toasts are a MeraToast whose props carry the text.
+const titleOf = (el: El) => el.props.title;
+const bodyOf = (el: El) => el.props.body;
 const warn = logger.warn as jest.Mock;
 const info = logger.info as jest.Mock;
 
@@ -85,12 +85,11 @@ describe('showNetworkError', () => {
     expect(bodyOf(el)).toBe(en.errors.networkErrorBody);
   });
 
-  it('is an error toast in the solid variant, rooted in the Toast primitive', () => {
+  it('is an error MeraToast', () => {
     toastManager.showNetworkError();
     const el = frontEl();
-    expect(el.type).toBe(Toast);
-    expect(el.props.action).toBe('error');
-    expect(el.props.variant).toBe('solid');
+    expect(el.type).toBe(MeraToast);
+    expect(el.props.tone).toBe('error');
   });
 
   it('uses a custom message when provided', () => {
@@ -129,7 +128,7 @@ describe('showError', () => {
     toastManager.showError('My Error', 'My Message');
     expect(entries()[0].duration).toBe(4000);
     const el = frontEl();
-    expect(el.props.action).toBe('error');
+    expect(el.props.tone).toBe('error');
     expect(titleOf(el)).toBe('My Error');
     expect(bodyOf(el)).toBe('My Message');
   });
@@ -147,7 +146,7 @@ describe('showSuccess', () => {
     toastManager.showSuccess('Great Job!', 'Everything is fine');
     expect(entries()[0].duration).toBe(3000);
     const el = frontEl();
-    expect(el.props.action).toBe('success');
+    expect(el.props.tone).toBe('success');
     expect(titleOf(el)).toBe('Great Job!');
     expect(bodyOf(el)).toBe('Everything is fine');
   });
@@ -165,13 +164,13 @@ describe('showInfo', () => {
     // Derived, not hardcoded: this used to be 1500ms, which read as a flicker.
     expect(entries()[0].duration).toBe(TOAST_MIN_DURATION_MS);
     const el = frontEl();
-    expect(el.props.action).toBe('info');
+    expect(el.props.tone).toBe('info');
     expect(titleOf(el)).toBe('For You');
   });
 
   it('omits the body when no message is given, and shows it when one is', () => {
     toastManager.showInfo('For You');
-    expect(frontEl().props.children[1]).toBeNull();
+    expect(frontEl().props.body).toBeUndefined();
     closeAll();
     toastManager.showInfo('For You', 'Long-press hint');
     expect(bodyOf(frontEl())).toBe('Long-press hint');
@@ -255,7 +254,7 @@ describe('the undo toast', () => {
     expect(frontEl().props.undoTestID).toBe('article-menu-undo');
   });
 
-  it('closes itself on Undo, and follows up only when given an undone title', async () => {
+  it('closes itself on Undo when there is no undone title to swap to', async () => {
     const onUndo = jest.fn();
     toastManager.showUndoToast(undoOpts({ title: 'Less from AD.nl', undoneTitle: undefined, onUndo }));
     frontEl().props.onUndo();
@@ -264,19 +263,27 @@ describe('the undo toast', () => {
     expect(ids()).toEqual([]);
   });
 
-  it('shows NO undone follow-up when onUndo resolves false (a newer change owns the value)', async () => {
-    toastManager.showUndoToast(undoOpts({ onUndo: async () => false }));
-    frontEl().props.onUndo();
+  it.each([
+    ['resolves false (a newer change owns the value)', async () => false],
+    ['throws', async () => Promise.reject(new Error('revert failed'))],
+  ])('claims nothing and closes when onUndo %s', async (_case, onUndo) => {
+    toastManager.showUndoToast(undoOpts({ onUndo }));
+    const id = ids()[0];
+    await expect(frontEl().props.onUndo()).resolves.toBe(false);
     await flush();
-    expect(ids()).toEqual([]);
+    expect(ids()).not.toContain(id);
   });
 
-  it.each([true, undefined])('shows the undone follow-up when onUndo returns %s', async (result) => {
+  it.each([true, undefined])('swaps the SAME card to "Change undone" when onUndo returns %s, then leaves 1.4 s later', async (result) => {
     toastManager.showUndoToast(undoOpts({ onUndo: () => result }));
-    frontEl().props.onUndo();
-    await flush();
-    expect(ids()).toHaveLength(1);
-    expect(titleOf(frontEl())).toBe('Change undone');
+    const id = ids()[0];
+    await expect(frontEl().props.onUndo()).resolves.toBe(true);
+    expect(ids()).toEqual([id]);
+    expect(frontEl().props).toMatchObject({ undone: true, undoneTitle: 'Change undone' });
+    await jest.advanceTimersByTimeAsync(1399);
+    expect(ids()).toEqual([id]);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(ids()).toEqual([]);
   });
 });
 
@@ -302,6 +309,19 @@ describe('showNotifiedToast', () => {
     expect(el.props.title).toBe('Fact check ready');
     expect(el.props.body).toBe('No published fact checks yet for "Budget vote delayed".');
     expect(el.props.body).not.toMatch(/\{\{/);
+  });
+
+  it.each([
+    ['update_available', undefined, 'info'],
+    ['calibration', undefined, 'info'],
+    ['on-device-fallback', undefined, 'warning'],
+    ['fact_check_done', { outcome: 'found' }, 'success'],
+    ['fact_check_done', { outcome: 'unavailable' }, 'warning'],
+    ['something_new', undefined, 'neutral'],
+  ])('takes its tone from the notice type (%s %j -> %s)', async (type, context, tone) => {
+    await toastManager.showNotifiedToast({ type, source: 'test', title: 'T', body: 'B', context });
+    expect(frontEl().props.tone).toBe(tone);
+    expect(frontEl().props.icon).toBeDefined();
   });
 
   it('fly: false skips the flight: the card only holds, then the deck fades it like any toast', async () => {

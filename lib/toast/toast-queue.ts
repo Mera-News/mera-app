@@ -213,6 +213,17 @@ export function close(id: string): void {
     syncTimer();
 }
 
+/**
+ * Give the FRONT card a fresh `ms` from now (the Undo toast's "Change undone"
+ * hold, which must last its full 1.4 s however late in the card's own time the
+ * tap came). A card that is not the timed front is left alone.
+ */
+export function rearm(id: string, ms: number): void {
+    if (timer?.id !== id) return;
+    clearTimer();
+    timer = { id, handle: setTimeout(() => close(id), ms) };
+}
+
 export function closeAll(): void {
     clearTimer();
     useToastQueue.setState({ entries: [] });

@@ -185,6 +185,7 @@ export async function announceAppliedUpdate(missing?: 'story' | 'publication'): 
         await new Promise((r) => setTimeout(r, ANNOUNCE_DELAY_MS));
         if (missing) {
             toastManager.showNoticeToast({
+                type: APP_UPDATED,
                 fly: false,
                 title: i18next.t(
                     missing === 'story' ? 'notificationCenter.update.storyGone' : 'notificationCenter.update.publicationGone',
@@ -195,10 +196,16 @@ export async function announceAppliedUpdate(missing?: 'story' | 'publication'): 
         if (!row) return;
         const title = i18next.t('notificationCenter.update.updatedTitle');
         if (row.notes.length === 0) {
-            toastManager.showNoticeToast({ title, body: i18next.t('notificationCenter.update.notesEmpty'), fly: false });
+            toastManager.showNoticeToast({
+                type: APP_UPDATED,
+                title,
+                body: i18next.t('notificationCenter.update.notesEmpty'),
+                fly: false,
+            });
             return;
         }
         toastManager.showNoticeToast({
+            type: APP_UPDATED,
             title,
             fly: false,
             button: {

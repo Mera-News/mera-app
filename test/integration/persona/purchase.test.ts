@@ -117,12 +117,15 @@ function countBillingReads(): () => number {
     return () => n;
 }
 
-/** The text of the toasts queued: their plain RN Text children. */
+/** The text of the toasts queued: title then body. */
 const textOf = (node: unknown): string[] => {
     if (node == null || typeof node === 'boolean') return [];
     if (typeof node === 'string' || typeof node === 'number') return [String(node)];
     if (Array.isArray(node)) return node.flatMap(textOf);
-    return textOf((node as { props?: { children?: unknown } }).props?.children);
+    const props = (node as { props?: { title?: unknown; body?: unknown; children?: unknown } }).props;
+    // A MeraToast carries its text as props.
+    if (typeof props?.title === 'string') return [props.title, ...(typeof props.body === 'string' ? [props.body] : [])];
+    return textOf(props?.children);
 };
 const toastTitles = () => useToastQueue.getState().entries.map((e) => textOf(e.render({ id: e.id }))[0]);
 
@@ -175,7 +178,7 @@ describe('purchase', () => {
         // seconds (more under machine load) and would otherwise be charged to whichever test confirms a
         // purchase first, timing it out. Pay it once here, outside any test.
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('@/components/ui/toast');
+        require('@/components/custom/toast/MeraToast');
     }, 60_000);
 
     beforeEach(() => {

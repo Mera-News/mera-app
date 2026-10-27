@@ -31,13 +31,13 @@ const ARTICLE = 'article-1';
 const PUB = 'The Hindu';
 const PATH = ['not_interested', 'fewer_from_pub'];
 
-/** The shown toasts as { title, body, onUndo }, read off the queue's rendered cards. The Undo card carries
- *  its text as props; an info toast carries its title as the first child's text. */
+/** The shown toasts as { title, body, onUndo }, read off the queue's rendered cards' props. An Undo card
+ *  that swapped in place reads as its undone title. */
 const toasts = () =>
     useToastQueue.getState().entries.map((e) => {
         const props = (e.render({ id: e.id }) as { props: Record<string, any> }).props;
         return {
-            title: String(props.title ?? props.children?.[0]?.props?.children),
+            title: String(props.undone ? props.undoneTitle : props.title),
             body: props.body as string | undefined,
             onUndo: props.onUndo as (() => void) | undefined,
         };
@@ -167,7 +167,7 @@ describe('a leaf with persona actions', () => {
         expect(minted).toMatchObject({ weight: -0.6, provenance: 'feedback' });
     });
 
-    it('Undo restores the preference, marks the log row reverted and confirms with a second toast', async () => {
+    it('Undo restores the preference, marks the log row reverted and swaps the card to Change undone', async () => {
         const d = deps();
         performFeedbackLeaf(pubLeaf('mute'), PATH, d);
         await pickedAfter(d);

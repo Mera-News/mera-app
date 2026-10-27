@@ -18,15 +18,15 @@ const SEGMENT_SHARE = 0.35;
 
 export interface IndeterminateBarProps {
     /**
-     * REQUIRED and explicit, in points. A toast sizes to its content with
-     * `flexShrink: 1`, so a bar asking for `width: '100%'` or `flex: 1` has
-     * nothing to resolve against and measures zero (the same collapse that once
-     * shrank every toast to an icon).
+     * REQUIRED and explicit, in points: the transform sweep needs the track's
+     * length, and a `%` width would only be known after layout.
      */
     width: number;
     height?: number;
     /** The moving segment's colour. Default: the toast's body ink. */
     color?: string;
+    /** The track's colour. Default: the raised surface. */
+    trackColor?: string;
     /** No default: a reusable primitive's shared id would collide. The moving
      *  segment takes `${testID}-segment`. */
     testID?: string;
@@ -39,7 +39,7 @@ export interface IndeterminateBarProps {
  * and the segment holds still in the middle of the track, which still reads as
  * "a bar" rather than an empty box. Lite mode holds it still the same way.
  */
-export default function IndeterminateBar({ width, height = 3, color, testID }: IndeterminateBarProps) {
+export default function IndeterminateBar({ width, height = 3, color, trackColor, testID }: IndeterminateBarProps) {
     const c = useColors();
     const reduceMotion = !useMotionAllowed();
     const segment = Math.round(width * SEGMENT_SHARE);
@@ -69,7 +69,7 @@ export default function IndeterminateBar({ width, height = 3, color, testID }: I
                 height,
                 borderRadius: height / 2,
                 overflow: 'hidden',
-                backgroundColor: c.surfaceRaised,
+                backgroundColor: trackColor ?? c.surfaceRaised,
             }}
         >
             <Animated.View

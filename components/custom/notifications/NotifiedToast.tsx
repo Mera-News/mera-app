@@ -1,10 +1,9 @@
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useIsToastFront } from '@/components/ui/toast';
+import MeraToast, { type ToastTone } from '@/components/custom/toast/MeraToast';
+import { useIsToastFront } from '@/components/ui/toast';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
-import { useColors } from '@/lib/theme/tokens';
+import type { LucideIcon } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { Dimensions, I18nManager, View } from 'react-native';
+import { Dimensions, I18nManager } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import Animated, {
     useAnimatedStyle,
@@ -41,7 +40,9 @@ export function notifiedToastDurationMs(canFly: boolean): number {
 export interface NotifiedToastProps {
     title: string;
     body: string;
-    action?: 'info' | 'success' | 'error';
+    /** From the notice's type (`notice-tone.ts`). */
+    tone: ToastTone;
+    icon?: LucideIcon;
     reduceMotion: boolean;
     /** Screen reader on: no timed exit; it leaves only when dismissed. */
     persistent?: boolean;
@@ -65,13 +66,13 @@ export interface NotifiedToastProps {
 const NotifiedToast: React.FC<NotifiedToastProps> = ({
     title,
     body,
-    action = 'info',
+    tone,
+    icon,
     reduceMotion,
     persistent = false,
     button,
     fly = true,
 }) => {
-    const colors = useColors();
     const progress = useSharedValue(0);
     // The deck can hold this card BEHIND another one. Its lifetime is sized to
     // this animation exactly (`notifiedToastDurationMs`), and the queue only
@@ -126,38 +127,14 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     });
 
     return (
-        // Self-dismissing: only its one button takes a touch, never the body,
-        // which must not swallow a tap aimed at the chrome behind it.
-        <Animated.View style={animatedStyle} pointerEvents="box-none">
-            <Toast action={action} variant="solid" pointerEvents="box-none">
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    {/* flexShrink, never flex: 1: the toast sizes to its content, and a
-                        flex-basis-0 column measures zero wide. */}
-                    <View style={{ flexShrink: 1, gap: 4 }}>
-                        {/* The one announcement: title and body together, when this card is in front. */}
-                        <ToastTitle announcement={body ? `${title}. ${body}` : title}>{title}</ToastTitle>
-                        {body ? <ToastDescription>{body}</ToastDescription> : null}
-                    </View>
-                    {button ? (
-                        <Pressable
-                            testID="notified-toast-button"
-                            onPress={button.onPress}
-                            accessibilityRole="button"
-                            accessibilityLabel={button.label}
-                            hitSlop={6}
-                            style={{
-                                minHeight: 32,
-                                paddingHorizontal: 14,
-                                borderRadius: 999,
-                                backgroundColor: colors.accent,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={{ color: colors.onAccent, fontSize: 14, fontWeight: '700' }}>{button.label}</Text>
-                        </Pressable>
-                    ) : null}
-                </View>
-            </Toast>
+        <Animated.View style={animatedStyle}>
+            <MeraToast
+                tone={tone}
+                icon={icon}
+                title={title}
+                body={body || undefined}
+                actions={button ? [{ label: button.label, onPress: button.onPress, primary: true, testID: 'notified-toast-button' }] : []}
+            />
         </Animated.View>
     );
 };
