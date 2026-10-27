@@ -18,6 +18,15 @@
 // on,on-twin,off). The pass rule is printed before any call and judged on the
 // turn's outcome; the VERDICT needs `on`, `on-twin` and `off`.
 //
+// PROMPT-VERSION ARMS (D8): `pre`, `post` and `post-twin`, all thinking off as shipped.
+// `post` and `post-twin` use the live prompt builders; `pre` uses the exact shipped strings and
+// tool arrays from a JSON snapshot passed with --pre-prompts <path> (keys followStory,
+// followStoryTools, article, articleTools; required when `pre` is in --arms). The run throws if
+// the snapshot's system prompts are byte-equal to the live ones (the arm would measure nothing).
+// With exactly --arms pre,post,post-twin the verdict is: spread = |post - post-twin| passes;
+// PASS when post proposeTrack passes >= pre - max(1, spread), and the proposeFactCheck and
+// answer fixtures move no more than spread (post vs pre). No on/off verdict is printed.
+//
 // --engine afm|qwen-local|nano-proxy runs the ON-DEVICE flows instead
 // (lib/news-harness/on-device/follow-story and article-feedback): their prompts,
 // schemas and turn mappers, through lib/engine.ts. Arms are `<engine>` and its
@@ -71,13 +80,18 @@ interface Fixture {
   article?: { title: string; publication: string; description: string; related: string[] };
 }
 
-interface Arm { id: string; thinking: boolean }
+interface Arm { id: string; thinking: boolean; prompts?: 'pre' }
 const ARMS: Arm[] = [
   { id: 'on', thinking: true },
   { id: 'on-twin', thinking: true },
   { id: 'off', thinking: false },
   { id: 'off-twin', thinking: false },
+  { id: 'pre', thinking: false, prompts: 'pre' },
+  { id: 'post', thinking: false },
+  { id: 'post-twin', thinking: false },
 ];
+
+export interface PrePrompts { followStory: string; followStoryTools: unknown[]; article: string; articleTools: unknown[] }
 
 type Msg = { role: string; content: string; tool_calls?: unknown[]; tool_call_id?: string };
 
@@ -85,17 +99,19 @@ const FIXTURES = join(__dirname, '../../lib/mera-harness/eval/fixtures/singlesho
 // Fixed so prompts are byte-stable across arms and runs.
 const NOW_MS = Date.parse('2026-10-14T12:00:00Z');
 
-export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[] } {
+export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[]; prePrompts?: string } {
   let repeat = 3;
   let dryRun = false;
   let label = 'singleshot';
   let model = BIG_MODEL;
   let arms = ARMS.slice(0, 3);
+  let prePrompts: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--repeat') repeat = Number(argv[++i]);
     else if (argv[i] === '--dry-run') dryRun = true;
     else if (argv[i] === '--label') label = argv[++i] ?? label;
     else if (argv[i] === '--model') model = argv[++i] ?? model;
+    else if (argv[i] === '--pre-prompts') prePrompts = argv[++i];
     else if (argv[i] === '--arms') {
       arms = (argv[++i] ?? '').split(',').map((id) => {
         const arm = ARMS.find((a) => a.id === id);
@@ -105,8 +121,36 @@ export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; la
       if (new Set(arms.map((a) => a.id)).size !== arms.length) throw new Error('duplicate arm in --arms');
     }
   }
-  return { repeat, dryRun, label, model, arms };
+  if (arms.some((a) => a.prompts === 'pre') && !prePrompts) throw new Error('arm "pre" needs --pre-prompts <path>');
+  return { repeat, dryRun, label, model, arms, prePrompts };
 }
+
+export const liveSystem = (agent: Fixture['agent']): string =>
+  setup({ agent, article: { title: '', publication: '', description: '', related: [] } } as Fixture).system;
+
+/** Loads the shipped-prompt snapshot; throws when it is malformed or equals the live prompts. */
+export function loadPrePrompts(path: string): PrePrompts {
+  const j = JSON.parse(readFileSync(path, 'utf8')) as Partial<PrePrompts>;
+  for (const k of ['followStory', 'article'] as const) if (typeof j[k] !== 'string' || !j[k]) throw new Error(`--pre-prompts: "${k}" must be a non-empty string`);
+  for (const k of ['followStoryTools', 'articleTools'] as const) if (!Array.isArray(j[k])) throw new Error(`--pre-prompts: "${k}" must be an array`);
+  const pre = j as PrePrompts;
+  if (pre.followStory === liveSystem('follow-story') || pre.article === liveSystem('article')) {
+    throw new Error('--pre-prompts: snapshot equals the live system prompt, so the pre arm would measure nothing');
+  }
+  return pre;
+}
+
+interface VerdictRow { arm: string; expect: Fixture['expect']; pass: boolean }
+/** D8 rule: see the header. Counts are over the count-matched rows. */
+export function prePostVerdict(rows: VerdictRow[]): { spread: number; trackOk: boolean; othersOk: boolean; verdict: 'PASS' | 'FAIL' } {
+  const n = (arm: string, expect?: Fixture['expect']): number => rows.filter((x) => x.arm === arm && x.pass && (!expect || x.expect === expect)).length;
+  const spread = Math.abs(n('post') - n('post-twin'));
+  const trackOk = n('post', 'proposeTrack') >= n('pre', 'proposeTrack') - Math.max(1, spread);
+  const othersOk = (['proposeFactCheck', 'answer'] as const).every((k) => Math.abs(n('post', k) - n('pre', k)) <= spread);
+  return { spread, trackOk, othersOk, verdict: trackOk && othersOk ? 'PASS' : 'FAIL' };
+}
+
+const isPrePostSet = (arms: Arm[]): boolean => arms.map((a) => a.id).join(',') === 'pre,post,post-twin';
 
 /** COUNT-MATCHED: an error row drops its (fixture, repeat) for every arm, not the whole repeat. */
 export function countMatched<T extends { fixture: string; repeat: number; error: string | null }>(rows: T[], armCount: number): { valid: T[]; dropped: string[] } {
@@ -119,11 +163,11 @@ export function countMatched<T extends { fixture: string; repeat: number; error:
   return { valid: rows.filter((x) => !dropped.has(cell(x))), dropped: [...dropped].sort() };
 }
 
-function setup(f: Fixture): { system: string; tools: unknown[]; history: Msg[]; context: string } {
+function setup(f: Fixture, arm?: Arm, pre?: PrePrompts): { system: string; tools: unknown[]; history: Msg[]; context: string } {
   if (f.agent === 'follow-story') {
     return {
-      system: buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'English', canSearch: true, webSearch: true }),
-      tools: getFollowStoryToolDefinitions('CLOUD', true),
+      system: arm?.prompts === 'pre' ? pre!.followStory : buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'English', canSearch: true, webSearch: true }),
+      tools: arm?.prompts === 'pre' ? pre!.followStoryTools : getFollowStoryToolDefinitions('CLOUD', true),
       history: [
         { role: 'user', content: 'I want to follow a story' },
         { role: 'assistant', content: 'What story or subject should Mera follow?' },
@@ -133,8 +177,8 @@ function setup(f: Fixture): { system: string; tools: unknown[]; history: Msg[]; 
   }
   const a = f.article!;
   return {
-    system: buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true, factCheck: true }),
-    tools: getArticleFeedbackToolDefinitions('CLOUD', true),
+    system: arm?.prompts === 'pre' ? pre!.article : buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true, factCheck: true }),
+    tools: arm?.prompts === 'pre' ? pre!.articleTools : getArticleFeedbackToolDefinitions('CLOUD', true),
     history: [],
     context: buildFeedbackContext({
       nowMs: NOW_MS,
@@ -196,9 +240,9 @@ interface TurnRow {
 
 async function runTurn(
   env: { nearAiBaseUrl: string; nearAiApiKey: string },
-  f: Fixture, arm: Arm, model: string, repeat: number, dryRun: boolean,
+  f: Fixture, arm: Arm, model: string, repeat: number, dryRun: boolean, pre?: PrePrompts,
 ): Promise<TurnRow | { dry: number }> {
-  const { system, tools, history, context } = setup(f);
+  const { system, tools, history, context } = setup(f, arm, pre);
   const wire: Msg[] = [...history, { role: 'user', content: f.message }];
   const bodyFor = (): Record<string, unknown> => {
     const last = wire.map((m) => m.role).lastIndexOf('user');
@@ -417,20 +461,25 @@ async function main(): Promise<number> {
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
   const fixtures = JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[];
-  const missing = ['on', 'on-twin', 'off'].filter((id) => !args.arms.some((a) => a.id === id));
+  const pre = args.prePrompts ? loadPrePrompts(args.prePrompts) : undefined;
+  const prePost = isPrePostSet(args.arms);
+  const missing = prePost ? [] : ['on', 'on-twin', 'off'].filter((id) => !args.arms.some((a) => a.id === id));
   const noVerdict = `NO VERDICT: arm(s) ${missing.join(', ')} not in --arms; the pass rule needs on, on-twin and off.`;
 
   // eslint-disable-next-line no-console
   console.log(
     `fixtures ${fixtures.length} x arms ${args.arms.map((a) => a.id).join(',')} x repeat ${args.repeat}, model ${args.model}, format ${APP_TOOL_FORMAT}\n` +
-      'PASS RULE (fixed before the run): `off` passes if its turn pass count is >= `on` minus max(1, |on - on-twin|),\n' +
-      'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. An error row drops its (fixture, repeat) for every arm.',
+      (prePost
+        ? 'PASS RULE (fixed before the run): spread = |post - post-twin| passes; PASS when post proposeTrack passes >= pre - max(1, spread)\n' +
+          'and the proposeFactCheck and answer fixtures move no more than spread (post vs pre). An error row drops its (fixture, repeat) for every arm.'
+        : 'PASS RULE (fixed before the run): `off` passes if its turn pass count is >= `on` minus max(1, |on - on-twin|),\n' +
+          'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. An error row drops its (fixture, repeat) for every arm.'),
   );
   if (missing.length > 0) console.log(noVerdict);
 
   if (args.dryRun) {
     let chars = 0;
-    for (const f of fixtures) for (const a of args.arms) chars += ((await runTurn(env, f, a, args.model, 0, true)) as { dry: number }).dry;
+    for (const f of fixtures) for (const a of args.arms) chars += ((await runTurn(env, f, a, args.model, 0, true, pre)) as { dry: number }).dry;
     const inTok = (chars / 4) * args.repeat * 1.6;
     console.log(`DRY RUN: ~${Math.round(inTok / 1000)}k input tokens planned, est. cost < $${((inTok * 0.04 + fixtures.length * args.arms.length * args.repeat * 1500 * 1.35) / 1e6).toFixed(2)}`);
     return 0;
@@ -444,7 +493,7 @@ async function main(): Promise<number> {
       for (const f of fixtures) {
         const order = args.arms.map((_, i) => args.arms[(i + r) % args.arms.length]);
         for (const arm of order) {
-          const row = (await runTurn(env, f, arm, args.model, r, false)) as TurnRow;
+          const row = (await runTurn(env, f, arm, args.model, r, false, pre)) as TurnRow;
           rows.push(row);
           appendFileSync(out, `${JSON.stringify(row)}\n`);
           console.log(`r${r} ${arm.id.padEnd(7)} ${f.id.padEnd(24)} ${row.pass ? 'PASS' : 'FAIL'} ${String(row.wallMs).padStart(6)}ms think=${row.reasoningTokens} ${row.why}`);
@@ -478,6 +527,12 @@ async function main(): Promise<number> {
     console.log(`\n${noVerdict}`);
     run.writeJson('summary', { model: args.model, stats, verdict: null, droppedCells: dropped });
     return 0;
+  }
+  if (prePost) {
+    const v = prePostVerdict(valid);
+    console.log(`\nspread ${v.spread}; proposeTrack ${v.trackOk ? 'ok' : 'WORSE'}; proposeFactCheck/answer ${v.othersOk ? 'ok' : 'MOVED'}\nVERDICT: ${v.verdict}`);
+    run.writeJson('summary', { model: args.model, stats, ...v, droppedCells: dropped });
+    return v.verdict === 'PASS' ? 0 : 1;
   }
   const noise = Math.max(1, Math.abs(stats.on.pass - stats['on-twin'].pass));
   const leaks = valid.filter((x) => x.arm === 'off' && x.why === 'leaked markup in reply').length;
