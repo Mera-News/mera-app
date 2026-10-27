@@ -7,6 +7,7 @@ import {
 } from '@/lib/news-harness/core/types';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { asRecord, toStringArray } from './derive-fact-cards';
+import { readCardOptions } from './track-options';
 
 // ---------------------------------------------------------------------------
 // Proposal-card derivation
@@ -277,12 +278,15 @@ export function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | 
 
   // Rebuild the scope pills from input.options (result.options as fallback), or a
   // legacy `track` string. Same parser as the live path → identical actions.
+  // The card's own list wins once More options grew it (`cardOptions`, written
+  // to the override by track-card-actions): it can hold up to 8, past the
+  // staging parser's cap of 4.
   const rawOptions =
     (Array.isArray(input.options) && input.options) ||
     (Array.isArray(result?.options) && result.options) ||
     (typeof input.track === 'string' && input.track.trim() ? [input.track] : []) ||
     [];
-  const options = parseTrackScopeOptions(rawOptions);
+  const options = readCardOptions(result?.cardOptions) ?? parseTrackScopeOptions(rawOptions);
   if (options.length === 0) return null;
 
   const echoedId = typeof result?.proposalId === 'string' ? result.proposalId : null;

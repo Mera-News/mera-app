@@ -10,6 +10,7 @@ import type { AgentTurnResult } from '@/lib/mera-harness';
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
+import type { TrackOutcome } from './track-options';
 
 // ---------------------------------------------------------------------------
 // PersistedMessage
@@ -31,7 +32,21 @@ export interface SaveAsWrittenOffer {
   entry: { statement: string; questionnaire_attribute?: string; topic_skill_id?: string };
 }
 
-export type FactCardAction = 'saved' | 'deleted' | 'deletePending' | 'deleteKept' | 'updated';
+/**
+ * Where a follow card's state lives: the proposeTrack call's override key, its
+ * staged result (the merge base on the first write, the override store holds
+ * overrides only), and what the override already says.
+ */
+export interface TrackCardSource {
+  resultKey: string;
+  baseResult: Record<string, unknown>;
+  outcomes: Record<string, TrackOutcome>;
+  dismissed: boolean;
+  /** A newer proposeTrack card exists further down the thread. */
+  superseded: boolean;
+}
+
+export type FactCardAction ='saved' | 'deleted' | 'deletePending' | 'deleteKept' | 'updated';
 
 /** What a pending removal card's Remove / Keep acts on (ux2 M6). */
 export interface PendingDelete {
@@ -163,7 +178,7 @@ export type ChatThreadItem =
       /** A live pending removal: the card shows Remove and Keep. */
       pendingDelete?: PendingDelete;
     }
-  | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
+  | { kind: 'proposal-card'; key: string; proposal: StagedProposal; track?: TrackCardSource }
   // A change applied because the reader TYPED yes (applyProposal), with the
   // change-log rows that undo it. `undoable` is false once a later user
   // message exists or the row is from an earlier conversation.

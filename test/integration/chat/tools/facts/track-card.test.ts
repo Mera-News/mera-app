@@ -1,0 +1,149 @@
+// chatfix P2: the follow card's override. Grown options and per-row outcomes
+// persist through setToolCallResult + patchMessageToolCallResult, a resumed
+// thread redraws them, and a grown card is never applied by a typed yes.
+// Real stores and the in-memory database; the store starts EMPTY, as at runtime.
+import {
+  appendMessage,
+  createConversation,
+  fetchMessagesForConversation,
+} from '@/lib/database/services/conversation-service';
+import { decideProposeTrack } from '@/lib/news-harness/article-feedback/agent-core';
+import { makeFollowStorySubject } from '@/lib/news-harness/follow-story';
+import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
+import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
+import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
+import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import {
+  dismissTrackCard,
+  growTrackCard,
+  recordTrackOutcome,
+} from '@/components/custom/floating-chat/track-card-actions';
+import { deriveThreadItems } from '@/components/custom/floating-chat/deriveThreadItems';
+import type { ChatThreadItem } from '@/components/custom/floating-chat/types';
+import '@/test/helpers';
+import { resetChatModules } from '@/test/integration/chat/_helpers';
+import { pollUntil } from './kit';
+
+const MSG = 'asst-track';
+const subject = makeFollowStorySubject();
+const action = (label: string): ProposalAction => ({ type: 'track_story', label, searchText: label.toLowerCase(), subject });
+
+/** Stages a proposeTrack exactly as the agent does, shows it, and persists the assistant row. */
+async function stage(labels: string[]) {
+  const staged = decideProposeTrack({ options: labels.map((l) => ({ label: l, search: l.toLowerCase() })) }, subject);
+  const proposal = staged.sideEffects!.proposal!;
+  useFloatingChatStore.getState().setProposal(proposal);
+  const tc = { id: 'tc-0', name: 'proposeTrack', status: 'done' as const, input: {}, result: staged.result };
+  const conversationId = await createConversation('CONFIG');
+  await appendMessage(conversationId, { role: 'assistant', content: 'Pick below.', toolCalls: [tc] }, MSG);
+  return { proposal, tc, conversationId, source: { resultKey: `${MSG}::0`, baseResult: staged.result } };
+}
+
+function card(items: ChatThreadItem[]) {
+  return items.find((i): i is Extract<ChatThreadItem, { kind: 'proposal-card' }> => i.kind === 'proposal-card')!;
+}
+
+/** The thread as a resumed chat draws it: persisted rows only, no store. */
+async function resumed(conversationId: string) {
+  return card(
+    deriveThreadItems({
+      live: [],
+      history: await fetchMessagesForConversation(conversationId),
+      introMessage: null,
+      isStreaming: false,
+      earlierConversationLabel: 'Earlier',
+    }),
+  );
+}
+
+const labels = (p: StagedProposal) => p.actions.map((a) => (a as { label: string }).label);
+
+beforeEach(() => resetChatModules());
+
+describe('growing the card', () => {
+  it('the first grow on an empty store keeps the staged options and persists the whole list', async () => {
+    const { proposal, conversationId, source } = await stage(['Artemis II launch', 'NASA Artemis program']);
+
+    const added = growTrackCard(source, proposal, [action('Moon race'), action('artemis ii LAUNCH')]);
+
+    expect(added).toBe(1);
+    const c = await pollUntil(() => resumed(conversationId), (r) => r.proposal.actions.length === 3, 2000);
+    expect(labels(c.proposal)).toEqual(['Artemis II launch', 'NASA Artemis program', 'Moon race']);
+  });
+
+  it('grows the waiting proposal too, keeping its id, so a one-option card turns tap-only', async () => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    expect(proposalRequiresUserChoice(useFloatingChatStore.getState().proposal!)).toBe(false);
+    expect(pendingProposalView()?.appliable).toBe(true);
+
+    growTrackCard(source, proposal, [action('Moon race')]);
+
+    const grown = useFloatingChatStore.getState().proposal!;
+    expect(grown.id).toBe(proposal.id);
+    expect(labels(grown)).toEqual(['Artemis II launch', 'Moon race']);
+    expect(proposalRequiresUserChoice(grown)).toBe(true);
+    expect(pendingProposalView()?.appliable).toBe(false);
+  });
+
+  it('a resumed grown card has nothing a typed yes could apply', async () => {
+    const { proposal, conversationId, source } = await stage(['Artemis II launch']);
+    growTrackCard(source, proposal, [action('Moon race')]);
+    const c = await pollUntil(() => resumed(conversationId), (r) => r.proposal.actions.length === 2, 2000);
+
+    resetChatModules();
+
+    expect(pendingProposalView()).toBeNull();
+    expect(c.proposal.chooseOne).toBe(true);
+  });
+
+  it('adds and writes nothing when every option is already on the card', async () => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    expect(growTrackCard(source, proposal, [action('Artemis II Launch')])).toBe(0);
+    expect(useFloatingChatStore.getState().toolCallResults[source.resultKey]).toBeUndefined();
+  });
+
+  it('leaves the store alone when another proposal has replaced this card', async () => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    const other: StagedProposal = { id: 'other', explanation: '', expectedEffects: '', actions: [action('X')] };
+    useFloatingChatStore.getState().setProposal(other);
+
+    growTrackCard(source, proposal, [action('Moon race')]);
+
+    expect(useFloatingChatStore.getState().proposal).toBe(other);
+  });
+});
+
+describe('outcomes and Not now', () => {
+  it('two outcomes in a row both survive, in memory and on the resumed card', async () => {
+    const { conversationId, source } = await stage(['Artemis II launch', 'Moon race']);
+
+    recordTrackOutcome(source, 'Artemis II launch', 'following');
+    recordTrackOutcome(source, 'Moon race', 'failed');
+
+    const expected = { 'artemis ii launch': 'following', 'moon race': 'failed' };
+    expect(useFloatingChatStore.getState().toolCallResults[source.resultKey].followed).toEqual(expected);
+    const c = await pollUntil(() => resumed(conversationId), (r) => Object.keys(r.track?.outcomes ?? {}).length === 2, 2000);
+    expect(c.track?.outcomes).toEqual(expected);
+  });
+
+  it('an outcome after a grow keeps the grown list', async () => {
+    const { proposal, conversationId, source } = await stage(['Artemis II launch']);
+    growTrackCard(source, proposal, [action('Moon race')]);
+    recordTrackOutcome(source, 'Moon race', 'following');
+
+    const c = await pollUntil(() => resumed(conversationId), (r) => r.track?.outcomes['moon race'] !== undefined, 2000);
+    expect(labels(c.proposal)).toEqual(['Artemis II launch', 'Moon race']);
+    expect(c.track?.outcomes).toEqual({ 'moon race': 'following' });
+  });
+
+  it('Not now persists and cancels the waiting proposal', async () => {
+    const { proposal, conversationId, source } = await stage(['Artemis II launch']);
+
+    dismissTrackCard(source, proposal.id);
+
+    expect(useFloatingChatStore.getState().proposal).toBeNull();
+    expect(useFloatingChatStore.getState().resolvedProposals[proposal.id]).toBe('cancelled');
+    const c = await pollUntil(() => resumed(conversationId), (r) => r.track?.dismissed === true, 2000);
+    expect(c.track?.dismissed).toBe(true);
+  });
+});
