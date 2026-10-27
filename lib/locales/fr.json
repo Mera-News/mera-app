@@ -763,8 +763,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "Je ne veux pas d'articles comme celui-ci : \"{{title}}\". Aidez-moi à ajuster mes suggestions.",
-    "likeLabel": "J'aime",
-    "dislikeLabel": "Pas pour moi",
     "intro": "Que puis-je faire pour vous ? Je peux vous expliquer pourquoi vous avez reçu cette suggestion, ou vous aider à en obtenir de meilleures.",
     "introArticle": "Que puis-je faire pour vous ? Je peux vous aider à ajuster vos suggestions d'actualités en fonction de cet article.",
     "introLikeTuning": "Vous avez aimé cette histoire : dites-m'en plus et j'ajusterai votre fil.",
@@ -941,8 +939,6 @@
   },
   "swipeFeed": {
     "askMera": "Demander à Mera",
-    "chatHandoffLike": "J'ai aimé cette histoire, plus comme ceci : {{path}}.",
-    "chatHandoffLikeNoPath": "J'ai aimé cette histoire. J'aimerais en voir plus comme ceci.",
     "chatHandoffDislike": "Je n'ai pas aimé cette histoire, {{path}}.",
     "chatHandoffDislikeNoPath": "Je n'ai pas aimé cette histoire. Aidez-moi à en voir moins comme ceci."
   },

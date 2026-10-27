@@ -60,8 +60,8 @@ import {
   type FeedListItem,
 } from './feed-list-selector';
 
-/** The only verdict left: the feedback sheet's first answer. An old 'like' is
- *  not a Verdict, so a stored one reads as none. */
+/** The only verdict left: the feedback sheet's first answer. Verdicts are
+ *  session-only here, so no pre-v6 like survives a restart. */
 export type Verdict = 'dislike';
 
 export interface VerdictRecord {

@@ -751,8 +751,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "Saya tidak ingin artikel seperti ini: \"{{title}}\". Bantu saya menyesuaikan saran saya.",
-    "likeLabel": "Saya suka",
-    "dislikeLabel": "Bukan untuk saya",
     "intro": "Apa yang bisa saya bantu? Saya bisa menjelaskan mengapa kamu menerima saran ini, atau membantu kamu mendapatkan saran yang lebih baik.",
     "introArticle": "Apa yang bisa saya bantu? Saya bisa membantu menyesuaikan saran berita kamu berdasarkan artikel ini.",
     "introLikeTuning": "Anda menyukai cerita ini. Beri tahu saya lebih lanjut dan saya akan menyesuaikan feed Anda.",
@@ -929,8 +927,6 @@
   },
   "swipeFeed": {
     "askMera": "Tanya Mera",
-    "chatHandoffLike": "Saya suka cerita ini, lebih banyak seperti ini: {{path}}.",
-    "chatHandoffLikeNoPath": "Saya suka cerita ini. Saya ingin lebih banyak seperti ini.",
     "chatHandoffDislike": "Saya tidak suka cerita ini, {{path}}.",
     "chatHandoffDislikeNoPath": "Saya tidak suka cerita ini. Bantu saya agar mendapat lebih sedikit yang seperti ini."
   },

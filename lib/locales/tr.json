@@ -758,8 +758,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "Bunun gibi makaleler istemiyorum: \"{{title}}\". Önerilerimi ayarlamama yardım et.",
-    "likeLabel": "Beğendim",
-    "dislikeLabel": "Bana göre değil",
     "intro": "Senin için ne yapabilirim? Bu öneriyi neden aldığını açıklayabilir veya daha iyi öneriler almana yardımcı olabilirim.",
     "introArticle": "Senin için ne yapabilirim? Bu makaleye dayanarak haber önerilerini ayarlamana yardımcı olabilirim.",
     "introLikeTuning": "Bu haberi beğendin: biraz daha anlat, akışını ayarlayayım.",
@@ -936,8 +934,6 @@
   },
   "swipeFeed": {
     "askMera": "Mera'ya Sor",
-    "chatHandoffLike": "Bu haberi beğendim, bunun gibi daha fazlası: {{path}}.",
-    "chatHandoffLikeNoPath": "Bu haberi beğendim, bunun gibi daha fazlasını istiyorum.",
     "chatHandoffDislike": "Bu haberi beğenmedim, {{path}}.",
     "chatHandoffDislikeNoPath": "Bu haberi beğenmedim. Bunun gibi daha azını görmeme yardım et."
   },

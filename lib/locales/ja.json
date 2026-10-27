@@ -751,8 +751,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "このような記事は見たくありません:「{{title}}」。提案の調整を手伝ってください。",
-    "likeLabel": "いいね",
-    "dislikeLabel": "興味なし",
     "intro": "何をお手伝いしましょうか?この提案が表示された理由を説明したり、より良い提案を得るお手伝いができます。",
     "introArticle": "何をお手伝いしましょうか?この記事に基づいてニュースの提案を調整するお手伝いができます。",
     "introLikeTuning": "このストーリーを気に入っていただけたんですね。もう少し教えていただければ、フィードを調整します。",
@@ -929,8 +927,6 @@
   },
   "swipeFeed": {
     "askMera": "メラに聞く",
-    "chatHandoffLike": "このストーリーが気に入りました。こういうものをもっと見たいです：{{path}}。",
-    "chatHandoffLikeNoPath": "このストーリーが気に入りました。こういうものをもっと見たいです。",
     "chatHandoffDislike": "このストーリーは好みではありませんでした：{{path}}。",
     "chatHandoffDislikeNoPath": "このストーリーは気に入りませんでした。こういうのを減らすのを手伝ってください。"
   },

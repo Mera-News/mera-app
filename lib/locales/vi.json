@@ -751,8 +751,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "Tôi không muốn bài viết như thế này: \"{{title}}\". Hãy giúp tôi điều chỉnh gợi ý của mình.",
-    "likeLabel": "Tôi thích",
-    "dislikeLabel": "Không dành cho tôi",
     "intro": "Tôi có thể giúp gì cho bạn? Tôi có thể giải thích tại sao bạn nhận được gợi ý này, hoặc giúp bạn có được gợi ý tốt hơn.",
     "introArticle": "Tôi có thể giúp gì cho bạn? Tôi có thể giúp điều chỉnh gợi ý tin tức của bạn dựa trên bài viết này.",
     "introLikeTuning": "Bạn đã thích câu chuyện này: hãy nói thêm để mình tinh chỉnh bản tin của bạn.",
@@ -929,8 +927,6 @@
   },
   "swipeFeed": {
     "askMera": "Hỏi Mera",
-    "chatHandoffLike": "Tôi thích câu chuyện này, thêm nội dung như: {{path}}.",
-    "chatHandoffLikeNoPath": "Tôi thích câu chuyện này, tôi muốn xem thêm nội dung như thế này.",
     "chatHandoffDislike": "Tôi không thích câu chuyện này, {{path}}.",
     "chatHandoffDislikeNoPath": "Tôi không thích câu chuyện này. Hãy giúp tôi giảm bớt nội dung như thế này."
   },

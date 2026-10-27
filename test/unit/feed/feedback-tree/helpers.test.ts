@@ -7,16 +7,26 @@ const t = ((k: string, o?: Record<string, unknown>) =>
   o ? `${k}|${JSON.stringify(o)}` : k) as unknown as TFunction;
 
 describe('pickMatchedFact', () => {
-  it('picks the fact with the most topics and uses its primary statement', () => {
-    const r = pickMatchedFact([
-      { id: 'a', statement: 'One', metadata: { topics: ['t1'] } },
-      { id: 'b', statement: 'Two; Extra', metadata: { topics: ['t1', 't2'] } },
-    ]);
+  it('picks the fact with the most of the story`s matched topics and uses its primary statement', () => {
+    const r = pickMatchedFact(
+      [
+        { id: 'a', statement: 'One', metadata: { topics: ['t1', 't8', 't9'] } },
+        { id: 'b', statement: 'Two; Extra', metadata: { topics: ['t1', 't2'] } },
+      ],
+      ['t1', 't2'],
+    );
     expect(r).toEqual({ id: 'b', statement: 'Two', topicIds: ['t1', 't2'] });
   });
+  it('a tie goes to the first fact', () => {
+    const facts = [
+      { id: 'a', statement: 'One', metadata: { topics: ['t1'] } },
+      { id: 'b', statement: 'Two', metadata: { topics: ['t1'] } },
+    ];
+    expect(pickMatchedFact(facts, ['t1'])?.id).toBe('a');
+  });
   it('returns null with no facts or no matched topics', () => {
-    expect(pickMatchedFact([])).toBeNull();
-    expect(pickMatchedFact([{ id: 'a', statement: 'x', metadata: { topics: [] } }])).toBeNull();
+    expect(pickMatchedFact([], ['t1'])).toBeNull();
+    expect(pickMatchedFact([{ id: 'a', statement: 'x', metadata: { topics: ['t2'] } }], ['t1'])).toBeNull();
   });
 });
 

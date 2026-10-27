@@ -758,8 +758,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "Ik wil geen artikelen zoals dit: \"{{title}}\". Help me mijn suggesties aan te passen.",
-    "likeLabel": "Ik vind het leuk",
-    "dislikeLabel": "Niets voor mij",
     "intro": "Wat kan ik voor je doen? Ik kan uitleggen waarom je deze suggestie hebt gekregen, of je helpen betere suggesties te krijgen.",
     "introArticle": "Wat kan ik voor je doen? Ik kan je helpen je nieuwssuggesties aan te passen op basis van dit artikel.",
     "introLikeTuning": "Je vond dit verhaal leuk. Vertel me meer en ik pas je feed aan.",
@@ -936,8 +934,6 @@
   },
   "swipeFeed": {
     "askMera": "Vraag het Mera",
-    "chatHandoffLike": "Ik vond dit verhaal leuk, meer zoals dit: {{path}}.",
-    "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk. Ik wil graag meer zoals dit.",
     "chatHandoffDislike": "Ik vond dit verhaal niet leuk, {{path}}.",
     "chatHandoffDislikeNoPath": "Ik vond dit verhaal niet leuk. Help me minder van dit soort verhalen te krijgen."
   },

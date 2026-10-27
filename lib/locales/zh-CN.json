@@ -751,8 +751,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "我不想要这样的文章:「{{title}}」。请帮我调整我的推荐。",
-    "likeLabel": "喜欢",
-    "dislikeLabel": "不适合我",
     "intro": "我能为你做些什么?我可以解释你为什么收到这个推荐,或者帮你获得更好的推荐。",
     "introArticle": "我能为你做些什么?我可以根据这篇文章帮你调整新闻推荐。",
     "introLikeTuning": "你喜欢这篇报道。告诉我更多，我会帮你调整信息流。",
@@ -929,8 +927,6 @@
   },
   "swipeFeed": {
     "askMera": "问梅拉",
-    "chatHandoffLike": "我喜欢这篇报道。多看这类内容：{{path}}。",
-    "chatHandoffLikeNoPath": "我喜欢这篇报道。我想多看这类内容。",
     "chatHandoffDislike": "我不喜欢这篇报道：{{path}}。",
     "chatHandoffDislikeNoPath": "我不喜欢这篇报道。帮我减少这类内容。"
   },

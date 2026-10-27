@@ -444,12 +444,12 @@ describe('feed-order-store', () => {
   });
 
   describe('verdict mirror', () => {
-    it('sets and paths verdicts; a flip keeps the existing path', async () => {
+    it('sets and paths verdicts; setting it again keeps the existing path', async () => {
       await hydrated([item('a')]);
-      store().setVerdict('a', 'like');
-      expect(store().verdicts.a).toEqual({ verdict: 'like', path: [] });
+      store().setVerdict('a', 'dislike');
+      expect(store().verdicts.a).toEqual({ verdict: 'dislike', path: [] });
       store().setPath('a', ['too-much']);
-      expect(store().verdicts.a).toEqual({ verdict: 'like', path: ['too-much'] });
+      expect(store().verdicts.a).toEqual({ verdict: 'dislike', path: ['too-much'] });
       store().setVerdict('a', 'dislike');
       expect(store().verdicts.a).toEqual({ verdict: 'dislike', path: ['too-much'] });
     });
@@ -460,7 +460,7 @@ describe('feed-order-store', () => {
     });
 
     it('clearVerdict drops the verdict and its path (the un-vote path)', () => {
-      store().setVerdict('a', 'like');
+      store().setVerdict('a', 'dislike');
       store().setPath('a', ['too-much']);
       store().clearVerdict('a');
       expect(store().verdicts.a).toBeUndefined();
@@ -476,24 +476,24 @@ describe('feed-order-store', () => {
       store().setCommitted('ghost', true);
       expect(store().verdicts.ghost).toBeUndefined();
 
-      store().setVerdict('a', 'like');
+      store().setVerdict('a', 'dislike');
       store().setCommitted('a', true);
-      expect(store().verdicts.a).toEqual({ verdict: 'like', path: [], committed: true });
+      expect(store().verdicts.a).toEqual({ verdict: 'dislike', path: [], committed: true });
 
       store().setCommitted('a', false);
       // an uncommitted record keeps the exact shape it had before the field existed
-      expect(store().verdicts.a).toEqual({ verdict: 'like', path: [] });
+      expect(store().verdicts.a).toEqual({ verdict: 'dislike', path: [] });
       expect('committed' in store().verdicts.a).toBe(false);
     });
 
     it('verdicts are session-only: they are not in either persisted row', async () => {
       await hydrated([item('a')]);
-      store().setVerdict('a', 'like');
+      store().setVerdict('a', 'dislike');
       store().markViewed('a', NOW);
       await jest.advanceTimersByTimeAsync(DEBOUNCE_MS);
       const card = await rowAppears(FEED_CARD_STATE_SETTING_KEY);
-      expect(card).not.toContain('like');
-      expect(await getSetting(FEED_ORDER_SETTING_KEY)).not.toContain('like');
+      expect(card).not.toContain('dislike');
+      expect(await getSetting(FEED_ORDER_SETTING_KEY)).not.toContain('dislike');
     });
   });
 
@@ -745,7 +745,7 @@ describe('feed-order-store', () => {
   describe('reset', () => {
     it('clears state, deletes BOTH rows and leaves the store hydrated-and-empty', async () => {
       await hydrated([item('a'), item('b')]);
-      store().setVerdict('a', 'like');
+      store().setVerdict('a', 'dislike');
       store().markSkipped(['a'], NOW);
       store().flushPersist();
       await rowAppears(FEED_CARD_STATE_SETTING_KEY);

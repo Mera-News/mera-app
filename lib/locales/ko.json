@@ -751,8 +751,6 @@
   },
   "articleFeedback": {
     "thumbsDownMessage": "이런 기사는 원하지 않아요: \"{{title}}\". 추천을 조정하도록 도와주세요.",
-    "likeLabel": "좋아요",
-    "dislikeLabel": "관심 없어요",
     "intro": "무엇을 도와드릴까요? 이 추천을 받은 이유를 설명하거나, 더 나은 추천을 받도록 도와드릴 수 있어요.",
     "introArticle": "무엇을 도와드릴까요? 이 기사를 바탕으로 뉴스 추천을 조정하도록 도와드릴 수 있어요.",
     "introLikeTuning": "이 소식이 마음에 드셨군요. 더 알려주시면 피드를 조정해 드릴게요.",
@@ -929,8 +927,6 @@
   },
   "swipeFeed": {
     "askMera": "메라에게 묻기",
-    "chatHandoffLike": "이 소식이 마음에 들었어요. 이런 소식 더 보고 싶어요: {{path}}.",
-    "chatHandoffLikeNoPath": "이 소식이 마음에 들었어요. 이런 소식을 더 보고 싶어요.",
     "chatHandoffDislike": "이 소식이 마음에 들지 않았어요: {{path}}.",
     "chatHandoffDislikeNoPath": "이 소식이 마음에 들지 않았어요. 이런 소식을 줄이도록 도와주세요."
   },
