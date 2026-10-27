@@ -1009,6 +1009,15 @@ Never fabricate a connection. The sentence must match the article — if it's ab
 
 Output: single plain string, no prefixes.`;
 
+
+/** A related fact's statement is capped here (raw chars, as before places existed). */
+export const RELATED_FACT_MAX_CHARS = 200;
+/** The " (news from: ...)" suffix `relatedFactLine` appends after the capped statement. */
+export const RELATED_FACT_PLACES_MAX_CHARS = 180;
+/** The whole line's cap in the builders: never cuts the suffix, so a long statement
+ *  cannot cut a place name ("news from: " is 13 chars, plus the closing paren). */
+const RELATED_FACT_LINE_MAX_CHARS = RELATED_FACT_MAX_CHARS + 14 + RELATED_FACT_PLACES_MAX_CHARS;
+
 /**
  * Renders one article as a nonce-fenced block.
  *
@@ -1048,7 +1057,7 @@ function buildFencedArticleBlock(
   const publication = asUntrusted(article.publication ?? '', 120);
   const publicationLine = publication.length > 0 ? `\nPublication: ${publication}` : '';
   const related = (article.relatedFacts ?? [])
-    .map((f) => asUntrusted(f, 200))
+    .map((f) => asUntrusted(f, RELATED_FACT_LINE_MAX_CHARS))
     .filter((f) => f.length > 0)
     .join('; ') || 'none';
   // Passing `undefined` through hits asUntrusted's own default parameter, so
@@ -1292,7 +1301,7 @@ function buildFencedReasonBody(params: {
     ? `\n\nArticle Country (publication's country — use as the article's scope ONLY when the title/description names no location): ${country}`
     : '';
   const related = (relatedFacts ?? [])
-    .map((f) => asUntrusted(f, 200))
+    .map((f) => asUntrusted(f, RELATED_FACT_LINE_MAX_CHARS))
     .filter((f) => f.length > 0)
     .join('; ') || 'none';
   const publication = asUntrusted(pubRaw ?? '', 120);

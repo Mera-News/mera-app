@@ -139,11 +139,12 @@ const SCORE_BATCH_MAX_TOKENS = ARTICLE_CFG.scoreBatchMaxTokens;
 
 // --- Fact loading ---
 
-async function loadAllFactStatements(): Promise<string[]> {
+/** The fact bank. Cloud prompts get place-named lines; the on-device note keeps plain statements. */
+async function loadAllFactStatements(withPlaces = true): Promise<string[]> {
   const facts = await getFacts();
   return facts
-    .map((f) => factLineWithPlaces(f))
-    .filter((s) => typeof s === 'string' && s.trim().length > 0);
+    .filter((f) => typeof f.statement === 'string' && f.statement.trim().length > 0)
+    .map((f) => (withPlaces ? factLineWithPlaces(f) : f.statement));
 }
 
 // --- Batch scoring + reason generation ---
@@ -1106,7 +1107,7 @@ async function writeNotesOnDevice(): Promise<number> {
   const reps = new Set(plan.repIds);
   const toWrite = owed.filter((c) => reps.has(c.id));
   toWrite.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
-  const fullUserContext = buildUserContext(await loadAllFactStatements());
+  const fullUserContext = buildUserContext(await loadAllFactStatements(false));
   let written = plan.filled;
   for (const candidate of toWrite) {
     // Skip notes turned on mid-sweep: stop; the next sweep finalises what is left.

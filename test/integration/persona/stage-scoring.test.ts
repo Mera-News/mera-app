@@ -1023,6 +1023,25 @@ describe('location rule - stage wiring and rescoreLocationCaught', () => {
     expect(math.computedScoreMap.has('ro')).toBe(true);
   });
 
+  it('the read fills places by name; the cloud call shows them, Kev does not', async () => {
+    await seedPension();
+    const [ro, inRow] = await load(['ro', 'in']);
+    expect(inRow.relatedFacts).toEqual([expect.objectContaining({ statement: 'Pensioner in India', places: 'India' })]);
+
+    server.use(...mockGateway(scoreAll(0.9)));
+    await run(computeAndScoreForCandidates([ro, inRow]));
+    const user = userOf(gatewayCalls('batch')[0]);
+    expect(user).toContain('Related User Fact: Pensioner in India (news from: India)');
+    expect(user).toContain('[User facts] Pensioner in India (news from: India).');
+    expect(user).not.toContain('Pension age to rise ro'); // caught: never sent
+
+    mode('on-device');
+    installLlama([]);
+    installDecide({ scores: { rel: 3 } });
+    await run(computeAndScoreForCandidates([inRow]));
+    expect(JSON.stringify(decideCalls()[0].request)).not.toContain('news from');
+  });
+
   it('a fact with no places catches nothing', async () => {
     const fact = await addFact('Pensioner in India');
     const [t] = await createTopics([{ factId: fact.id, text: 'pension reform', weight: 1 }]);

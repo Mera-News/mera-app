@@ -19,6 +19,7 @@ import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
 import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 import { getFacts } from './fact-service';
+import { describeFactPlaces } from '@/lib/news-harness/persona-management/fact-places';
 import logger from '../../logger';
 import { parseJsonArray, toForYouSuggestion, toStageRow, toGroupingRow, hasReadableReason, parseTopicIds, geoTextFromTags, placeValueFromTags } from './article-suggestion-mappers';
 import type { SuggestionGroupingRow } from './article-suggestion-mappers';
@@ -101,6 +102,13 @@ import type { ScoringCandidate } from '@/lib/news-harness/core/types';
 
 export type { ScoringCandidate };
 
+/** A matched fact for scoring. `places` (names) reaches only the cloud prompts, through
+ *  relatedFactLine; Kev and the on-device note read `statement` alone. */
+function relatedFactOf(fact: FactModel): ScoringCandidate['relatedFacts'][number] {
+  const places = describeFactPlaces({ statement: fact.statement, metadata: fact.metadata });
+  return places ? { id: fact.id, statement: fact.statement, places } : { id: fact.id, statement: fact.statement };
+}
+
 /** Unscored rows, newest published first: what scoring reads next, so the day
  *  after a reading hold goes to today's news. Never gated by the hold (the
  *  dispatch site is); bookkeeping callers need every row. */
@@ -127,12 +135,12 @@ export async function getUnscoredSuggestionsWithFacts(
     : [];
   const factById = new Map(facts.map((f) => [f.id, f]));
 
-  const factsBySuggestionId = new Map<string, { id: string; statement: string }[]>();
+  const factsBySuggestionId = new Map<string, ScoringCandidate['relatedFacts']>();
   for (const link of links) {
     const fact = factById.get(link.factId);
     if (!fact) continue;
     const bucket = factsBySuggestionId.get(link.articleSuggestionId) ?? [];
-    bucket.push({ id: fact.id, statement: fact.statement });
+    bucket.push(relatedFactOf(fact));
     factsBySuggestionId.set(link.articleSuggestionId, bucket);
   }
 
@@ -202,12 +210,12 @@ export async function getScoredSuggestionsWithoutReasons(
     : [];
   const factById = new Map(facts.map((f) => [f.id, f]));
 
-  const factsBySuggestionId = new Map<string, { id: string; statement: string }[]>();
+  const factsBySuggestionId = new Map<string, ScoringCandidate['relatedFacts']>();
   for (const link of links) {
     const fact = factById.get(link.factId);
     if (!fact) continue;
     const bucket = factsBySuggestionId.get(link.articleSuggestionId) ?? [];
-    bucket.push({ id: fact.id, statement: fact.statement });
+    bucket.push(relatedFactOf(fact));
     factsBySuggestionId.set(link.articleSuggestionId, bucket);
   }
 

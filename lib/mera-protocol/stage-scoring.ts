@@ -53,7 +53,7 @@ import {
   toAlpha2,
   type LocationRuleContext,
 } from '@/lib/news-harness/scoring-engine/location-rule';
-import { factPlaces } from '@/lib/news-harness/persona-management/fact-places';
+import { factLineWithPlaces, factPlaces } from '@/lib/news-harness/persona-management/fact-places';
 import { countriesInBloc } from '@/lib/place-service';
 import { Q } from '@nozbe/watermelondb';
 import database from '@/lib/database';
@@ -66,7 +66,6 @@ import {
   type TopicWeightInfo,
 } from '@/lib/database/services/article-suggestion-mappers';
 import { getFactWeightById } from '@/lib/database/services/article-suggestion-reads';
-import { describeFactPlaces } from '@/lib/news-harness/persona-management/fact-places';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
@@ -317,22 +316,12 @@ export function buildStageCandidates(
   }));
 }
 
-async function withFactPlaces(candidates: ScoringCandidate[]): Promise<ScoringCandidate[]> {
-  const byId = new Map((await getFacts()).map((f) => [f.id, describeFactPlaces(f)]));
-  return candidates.map((c) => ({
-    ...c,
-    relatedFacts: c.relatedFacts.map((f) => {
-      const places = byId.get(f.id);
-      return places ? { ...f, places } : f;
-    }),
-  }));
-}
-
-async function loadAllFactStatements(): Promise<string[]> {
+/** The fact bank: plain statements for Kev, place-named lines for the cloud prompts. */
+async function loadAllFactStatements(withPlaces: boolean): Promise<string[]> {
   const facts = await getFacts();
   return facts
-    .map((f) => f.statement)
-    .filter((s) => typeof s === 'string' && s.trim().length > 0);
+    .filter((f) => typeof f.statement === 'string' && f.statement.trim().length > 0)
+    .map((f) => (withPlaces ? factLineWithPlaces(f) : f.statement));
 }
 
 /**
@@ -460,14 +449,15 @@ export async function computeAndScoreForCandidates(
   candidates: ScoringCandidate[],
   opts?: { skipLlm?: boolean; nowMs?: number },
 ): Promise<StageResult> {
+  // Cloud prompts name each fact's places; Kev (on-device) keeps plain statements. The
+  // candidates' relatedFacts carry `places` from the read; Kev reads `statement` only.
+  const onDevice = isOnDeviceMode();
   const [{ persona, topicWeights }, factStatements, config] = await Promise.all([
     loadPersonaScoringContext(opts?.nowMs),
-    loadAllFactStatements(),
+    loadAllFactStatements(!onDevice),
     effectiveHarnessConfig(),
   ]);
-  const onDevice = isOnDeviceMode();
-  // Cloud prompts name each related fact's places; Kev (on-device) keeps plain statements.
-  const stage = buildStageCandidates(onDevice ? candidates : await withFactPlaces(candidates), topicWeights);
+  const stage = buildStageCandidates(candidates, topicWeights);
   return computeAndScore(
     stage,
     persona,
