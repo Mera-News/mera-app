@@ -5,7 +5,9 @@
 // lose each other, then patch the persisted row fire-and-forget (a row not
 // written yet picks the override up at write time, see lib/chat-session).
 
+import { executeProposalActions } from '@/lib/chat-tools/proposal-handlers';
 import { patchMessageToolCallResult } from '@/lib/database/services/conversation-service';
+import { syncFollowedStoryNow } from '@/lib/tracking/track-actions';
 import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
 import logger from '@/lib/logger';
 import { requestMoreOptions } from '@/lib/chat-session/chat-session';
@@ -14,6 +16,8 @@ import {
   mergeTrackOptions,
   normaliseTrackText,
   readTrackOutcomes,
+  trackCardStatus,
+  type TrackCardStatus,
   type TrackOption,
   type TrackOutcome,
 } from './track-options';
@@ -80,6 +84,41 @@ export function recordTrackOutcome(source: Source, label: string, outcome: Track
   patchTrackCard(source, (current) => ({
     followed: { ...readTrackOutcomes(current.followed), [normaliseTrackText(label)]: outcome },
   }));
+}
+
+/**
+ * Follow: the ticked rows in card order, one executor call each, so every row
+ * gets its own outcome, written as soon as that row settles (a crash mid-batch
+ * keeps the rows already done). One feed sync after the batch, not one per
+ * follow. A card left resolved settles the store's waiting proposal.
+ */
+export async function followTickedOptions(
+  source: Source & Pick<TrackCardSource, 'dismissed' | 'superseded'>,
+  proposal: StagedProposal,
+  tickedLabels: readonly string[],
+): Promise<{ outcomes: Record<string, TrackOutcome>; status: TrackCardStatus }> {
+  const ticked = new Set(tickedLabels.map(normaliseTrackText));
+  let followedNew = false;
+  for (const action of trackActions(proposal.actions)) {
+    if (!ticked.has(normaliseTrackText(action.label))) continue;
+    let outcome: TrackOutcome = 'failed';
+    try {
+      const r = await executeProposalActions([action], { confirmedByUser: true, syncFeed: false });
+      if (r.applied > 0 && r.errors.length === 0) outcome = r.alreadyFollowed > 0 ? 'already' : 'following';
+    } catch {
+      // The executor never throws; a failed row is still the honest answer.
+    }
+    if (outcome === 'following') followedNew = true;
+    recordTrackOutcome(source, action.label, outcome);
+  }
+  if (followedNew) void syncFollowedStoryNow();
+
+  const store = useFloatingChatStore.getState();
+  const current = store.toolCallResults[source.resultKey] ?? source.baseResult;
+  const outcomes = readTrackOutcomes(current.followed);
+  const status = trackCardStatus({ outcomes, dismissed: source.dismissed, superseded: source.superseded });
+  if (status === 'followed' && store.proposal?.id === proposal.id) store.resolveProposal('applied');
+  return { outcomes, status };
 }
 
 /**

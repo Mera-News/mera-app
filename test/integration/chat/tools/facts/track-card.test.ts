@@ -14,8 +14,14 @@ import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
 import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import * as chatSession from '@/lib/chat-session/chat-session';
+import * as trackActions from '@/lib/tracking/track-actions';
+import { observeActive } from '@/lib/database/services/tracked-story-service';
+import { firstValueFrom } from 'rxjs';
+
+const getActive = () => firstValueFrom(observeActive());
 import {
   dismissTrackCard,
+  followTickedOptions,
   growTrackCard,
   loadMoreTrackOptions,
   recordTrackOutcome,
@@ -195,5 +201,67 @@ describe('More options', () => {
     expect(await loadMoreTrackOptions(source, proposal)).toEqual({ added: 0, state });
     expect(more()[proposal.id]).toBe(state);
     expect(useFloatingChatStore.getState().proposal).toBe(proposal);
+  });
+});
+
+describe('Follow', () => {
+  const sync = () => jest.spyOn(trackActions, 'syncFollowedStoryNow').mockResolvedValue();
+  const card = (source: { resultKey: string; baseResult: Record<string, unknown> }) => ({ ...source, dismissed: false, superseded: false });
+
+  it('follows each ticked row under its own label and search, records each, syncs the feed once', async () => {
+    const { proposal, source } = await stage(['Artemis II launch', 'NASA Artemis program', 'Moon race']);
+    const synced = sync();
+
+    const res = await followTickedOptions(card(source), proposal, ['Artemis II launch', 'moon race']);
+
+    expect(res).toEqual({ outcomes: { 'artemis ii launch': 'following', 'moon race': 'following' }, status: 'followed' });
+    const rows = await getActive();
+    expect(rows.map((r) => [r.llmHeadline, r.topicText]).sort()).toEqual([
+      ['Artemis II launch', 'artemis ii launch'],
+      ['Moon race', 'moon race'],
+    ]);
+    expect(synced).toHaveBeenCalledTimes(1);
+    expect(useFloatingChatStore.getState().resolvedProposals[proposal.id]).toBe('applied');
+  });
+
+  it('a story already followed is a done row, and nothing new means no feed sync', async () => {
+    const first = await stage(['Artemis II launch']);
+    sync();
+    await followTickedOptions(card(first.source), first.proposal, ['Artemis II launch']);
+    resetChatModules();
+    const again = await stage(['Artemis II launch']);
+    const synced = sync();
+    synced.mockClear(); // the same spy as the first follow's
+
+    const res = await followTickedOptions(card(again.source), again.proposal, ['Artemis II launch']);
+
+    expect(res).toEqual({ outcomes: { 'artemis ii launch': 'already' }, status: 'followed' });
+    expect(synced).not.toHaveBeenCalled();
+    expect(await getActive()).toHaveLength(1);
+  });
+
+  it('a failed row keeps the card pending and its proposal waiting, while the rows done stay recorded', async () => {
+    const { proposal, conversationId, source } = await stage(['Artemis II launch', 'Moon race']);
+    sync();
+    const real = trackActions.trackStoryWithProposal;
+    jest
+      .spyOn(trackActions, 'trackStoryWithProposal')
+      .mockImplementation((subj, scope, opts) =>
+        scope.label === 'Moon race' ? Promise.reject(new Error('db down')) : real(subj, scope, opts),
+      );
+
+    const res = await followTickedOptions(card(source), proposal, ['Artemis II launch', 'Moon race']);
+
+    expect(res).toEqual({ outcomes: { 'artemis ii launch': 'following', 'moon race': 'failed' }, status: 'pending' });
+    expect(useFloatingChatStore.getState().proposal?.id).toBe(proposal.id);
+    const c = await pollUntil(() => resumed(conversationId), (r) => Object.keys(r.track?.outcomes ?? {}).length === 2, 2000);
+    expect(c.track?.outcomes).toEqual(res.outcomes);
+  });
+
+  it('follows nothing when nothing is ticked', async () => {
+    const { proposal, source } = await stage(['Artemis II launch']);
+    const res = await followTickedOptions(card(source), proposal, []);
+    expect(res).toEqual({ outcomes: {}, status: 'pending' });
+    expect(await getActive()).toHaveLength(0);
   });
 });
