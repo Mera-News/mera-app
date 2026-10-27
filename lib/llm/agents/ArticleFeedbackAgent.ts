@@ -332,6 +332,8 @@ export class ArticleFeedbackAgent implements IAgent {
       relatedCoverage,
       verdict,
       tappedOptions,
+      feedbackAnswers:
+        storeContext.kind === 'article-suggestion' ? storeContext.feedbackAnswers : undefined,
       activeSuppressions,
       factCheck,
     });

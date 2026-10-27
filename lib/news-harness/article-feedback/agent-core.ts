@@ -13,6 +13,7 @@ import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { SUPPRESSION_KINDS } from '../core/types';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { proposalRequiresUserChoice } from '../core/proposals';
+import { factLineWithPlaces } from '../persona-management/fact-places';
 import {
   PROPOSE_FACT_CHECK_TOOL,
   PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE,
@@ -62,6 +63,9 @@ const RELATED_COVERAGE_TITLE_TRUNC = 120;
  *  ARTICLE + FACTS + COVERAGE payload. */
 const MAX_ACTIVE_FILTERS = 8;
 const SUPPRESSION_PATTERN_TRUNC = 60;
+/** Recent "Mera's mistake" answers shown as context. */
+const MAX_MISTAKES = 5;
+const FEEDBACK_LABEL_TRUNC = 160;
 // Drop the (largest) ALL-FACTS block first if the assembled context exceeds
 // this — keeps the local path's ~3072-token input budget comfortable.
 const CONTEXT_TOKEN_BUDGET = 1800;
@@ -426,7 +430,7 @@ ${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions, factCheck } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions, factCheck, feedbackAnswers, mistakes } = input;
   const descTrunc = factCheck ? ARTICLE_DESC_TRUNC_FACT_CHECK : ARTICLE_DESC_TRUNC;
 
   // Injected clock (never read here) — anchors the agent to the present so
@@ -478,18 +482,23 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     + (matchedTopics.length > 0 ? matchedTopics.map((t) => `- ${t}`).join('\n') : 'None.');
 
   // --- FACTS THAT PRODUCED THEM ---
+  // Places ride as NAMES on every fact line; the linked facts carry no
+  // metadata, so they borrow the full fact's.
+  const metadataById = new Map(facts.map((f) => [f.id, f.metadata]));
+  const factLine = (id: string, statement: string) =>
+    factLineWithPlaces({ statement: trunc(statement, FACT_STATEMENT_TRUNC), metadata: metadataById.get(id) });
   const producingFacts = ctx?.linkedFacts.slice(0, MAX_PRODUCING_FACTS) ?? [];
   const producingBlock =
     '## FACTS THAT PRODUCED THEM\n'
     + (producingFacts.length > 0
-      ? producingFacts.map((f) => `- [${f.id}] ${trunc(f.statement, FACT_STATEMENT_TRUNC)}`).join('\n')
+      ? producingFacts.map((f) => `- [${f.id}] ${factLine(f.id, f.statement)}`).join('\n')
       : 'None.');
 
   // --- ALL YOUR FACTS (largest block — dropped first if over budget) ---
   const allFactsRows = facts.slice(0, MAX_ALL_FACTS).map((f) => {
     const topics = (f.metadata?.topics ?? []).slice(0, TOPICS_PER_FACT_PREVIEW);
     const topicsSuffix = topics.length > 0 ? ` (topics: ${topics.join(', ')})` : '';
-    return `- [${f.id}] ${trunc(f.statement, FACT_STATEMENT_TRUNC)}${topicsSuffix}`;
+    return `- [${f.id}] ${factLine(f.id, f.statement)}${topicsSuffix}`;
   });
   const allFactsBlock =
     '## ALL YOUR FACTS\n' + (allFactsRows.length > 0 ? allFactsRows.join('\n') : 'Nothing yet.');
@@ -544,9 +553,21 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
         : 'If the user confirms call applyProposal; if they decline call cancelProposal.')
     : null;
 
-  // --- USER VERDICT (Feed-tab handoff) — grounds the proposal ---
+  // --- FEEDBACK GIVEN (the v6 sheet's answers) — replaces USER VERDICT ---
+  // Config and source answers were applied when tapped, so the agent must not
+  // stage them again; a system answer is Mera's mistake and changes nothing.
   let verdictBlock: string | null = null;
-  if (verdict) {
+  if (feedbackAnswers && feedbackAnswers.answers.length > 0) {
+    const lines = ['## FEEDBACK GIVEN (already saved: never propose these again)'];
+    if (feedbackAnswers.fact) lines.push(`About the fact: ${untrustedTrunc(feedbackAnswers.fact, FACT_STATEMENT_TRUNC)}`);
+    for (const a of feedbackAnswers.answers) {
+      const answer = a.answer ? `: ${untrustedTrunc(a.answer, FEEDBACK_LABEL_TRUNC)}` : '';
+      const outcome = a.cause === 'system' ? "marked as Mera's mistake, changes nothing" : 'applied';
+      lines.push(`- ${untrustedTrunc(a.question, FEEDBACK_LABEL_TRUNC)}${answer} (${outcome})`);
+    }
+    if (feedbackAnswers.screen) lines.push(`Opened from: ${untrustedTrunc(feedbackAnswers.screen, FEEDBACK_LABEL_TRUNC)}`);
+    verdictBlock = lines.join('\n');
+  } else if (verdict) {
     const lines = [
       `## USER VERDICT\n${verdict === 'like' ? 'The user LIKED this story — they want MORE like it.' : "The user DISLIKED this story — they want FEWER like it."}`,
     ];
@@ -569,17 +590,33 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
   if (filtersBlock) alwaysBlocks.push(filtersBlock);
   const trailing = pendingBlock ? [pendingBlock] : [];
 
-  const withAllFacts = [...alwaysBlocks, allFactsBlock, ...trailing];
-  const assembled = `<context>\n${withAllFacts.join('\n\n')}\n</context>`;
+  // --- MERA'S RECENT MISTAKES (on-device "not about this fact" answers) ---
+  // Context only: the reader already said these were Mera's error, so they
+  // explain a pattern and never justify a persona change.
+  const mistakeRows = (mistakes ?? []).slice(0, MAX_MISTAKES).map((m) => {
+    const where = [m.publication, m.country, m.language].filter(Boolean).map((v) => untrustedTrunc(v as string, 80));
+    const fact = m.factId ? `fact [${m.factId}]` : '';
+    const detail = [fact, where.join(', ')].filter(Boolean).join('; ');
+    return `- ${untrustedTrunc(m.reason, FEEDBACK_LABEL_TRUNC)}${detail ? ` (${detail})` : ''}`;
+  });
+  const mistakesBlock =
+    mistakeRows.length > 0
+      ? "## MERA'S RECENT MISTAKES (context only: never change the profile because of these)\n" + mistakeRows.join('\n')
+      : null;
 
-  if (estimateTokens(assembled) <= CONTEXT_TOKEN_BUDGET) {
-    return assembled;
+  // Over budget, drop the ALL-FACTS block first (largest, and least essential
+  // for an already-diagnosed article), then the mistakes.
+  const tiers = [
+    [...alwaysBlocks, ...(mistakesBlock ? [mistakesBlock] : []), allFactsBlock, ...trailing],
+    [...alwaysBlocks, ...(mistakesBlock ? [mistakesBlock] : []), ...trailing],
+    [...alwaysBlocks, ...trailing],
+  ];
+  const render = (blocks: string[]) => `<context>\n${blocks.join('\n\n')}\n</context>`;
+  for (const blocks of tiers.slice(0, -1)) {
+    const assembled = render(blocks);
+    if (estimateTokens(assembled) <= CONTEXT_TOKEN_BUDGET) return assembled;
   }
-
-  // Over budget — drop the ALL-FACTS block (largest, and least essential for
-  // an already-diagnosed article).
-  const trimmed = [...alwaysBlocks, ...trailing];
-  return `<context>\n${trimmed.join('\n\n')}\n</context>`;
+  return render(tiers[tiers.length - 1]);
 }
 
 // ---------------------------------------------------------------------------
