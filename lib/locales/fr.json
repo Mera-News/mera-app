@@ -2594,7 +2594,8 @@
     "sourceSub": "À propos, moins de {{source}}",
     "support": "Assistance",
     "supportSub": "Signaler un bug, chat en direct, FAQ, tutoriel",
-    "tutorial": "Tutoriel"
+    "tutorial": "Tutoriel",
+    "fewerFromAlready": "Déjà moins d'articles de {{source}}"
   },
   "storyExport": {
     "shareA11y": "Exporter cette actualité",

@@ -2579,7 +2579,8 @@
     "sourceSub": "정보, {{source}}의 기사는 덜 보기",
     "support": "지원",
     "supportSub": "버그 신고, 실시간 채팅, 자주 묻는 질문, 튜토리얼",
-    "tutorial": "튜토리얼"
+    "tutorial": "튜토리얼",
+    "fewerFromAlready": "{{source}} 기사는 이미 적게 표시되고 있어요"
   },
   "storyExport": {
     "shareA11y": "이 스토리 내보내기",

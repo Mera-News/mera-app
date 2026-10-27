@@ -2588,7 +2588,8 @@
     "sourceSub": "Info, meno da {{source}}",
     "support": "Assistenza",
     "supportSub": "Segnala un bug, chat dal vivo, FAQ, guida",
-    "tutorial": "Guida"
+    "tutorial": "Guida",
+    "fewerFromAlready": "Vedi già meno notizie da {{source}}"
   },
   "storyExport": {
     "shareA11y": "Esporta questa storia",

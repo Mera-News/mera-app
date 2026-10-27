@@ -2658,7 +2658,8 @@
     "sourceSub": "Про видання, менше від {{source}}",
     "support": "Підтримка",
     "supportSub": "Повідомити про помилку, живий чат, FAQ, навчання",
-    "tutorial": "Навчання"
+    "tutorial": "Навчання",
+    "fewerFromAlready": "Уже показуємо менше від {{source}}"
   },
   "storyExport": {
     "shareA11y": "Експортувати цю історію",

@@ -2588,7 +2588,8 @@
     "sourceSub": "Über, weniger von {{source}}",
     "support": "Support",
     "supportSub": "Fehler melden, Live-Chat, FAQ, Anleitung",
-    "tutorial": "Anleitung"
+    "tutorial": "Anleitung",
+    "fewerFromAlready": "Du siehst bereits weniger von {{source}}"
   },
   "storyExport": {
     "shareA11y": "Diese Story exportieren",

@@ -2579,7 +2579,8 @@
     "sourceSub": "關於此來源，減少來自{{source}}的內容",
     "support": "支援",
     "supportSub": "回報問題、即時聊天、常見問題、教學",
-    "tutorial": "教學"
+    "tutorial": "教學",
+    "fewerFromAlready": "已設定為較少顯示 {{source}}"
   },
   "storyExport": {
     "shareA11y": "匯出這篇報導",

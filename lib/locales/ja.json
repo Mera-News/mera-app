@@ -2579,7 +2579,8 @@
     "sourceSub": "概要と、{{source}}の記事を減らす",
     "support": "サポート",
     "supportSub": "バグの報告、ライブチャット、よくある質問、チュートリアル",
-    "tutorial": "チュートリアル"
+    "tutorial": "チュートリアル",
+    "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています"
   },
   "storyExport": {
     "shareA11y": "このストーリーを書き出す",
