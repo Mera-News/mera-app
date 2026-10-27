@@ -7,14 +7,20 @@ import { create } from 'zustand';
 // without prop drilling through the tab tree.
 interface FeedbackState {
     visible: boolean;
+    /** The widget is in the tree: open, or closing and not yet gone. */
+    mounted: boolean;
     show: () => void;
     hide: () => void;
+    /** The sheet has fully gone: unmount the widget. */
+    unmount: () => void;
 }
 
 export const useFeedbackStore = create<FeedbackState>((set) => ({
     visible: false,
-    show: () => set({ visible: true }),
+    mounted: false,
+    show: () => set({ visible: true, mounted: true }),
     hide: () => set({ visible: false }),
+    unmount: () => set({ mounted: false }),
 }));
 
 export const useFeedbackVisible = () => useFeedbackStore((state) => state.visible);
