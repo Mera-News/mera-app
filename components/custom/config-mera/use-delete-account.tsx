@@ -1,4 +1,5 @@
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import { showDialog } from '@/lib/dialog';
@@ -78,23 +79,23 @@ export function useDeleteAccount(): () => Promise<void> {
             await finishAccountDeletion();
 
             toast.show({
-                placement: 'top',
                 render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('preferences.accountDeletionScheduledTitle')}</ToastTitle>
-                        <ToastDescription>{t('preferences.accountDeletionScheduledDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="success"
+                        title={t('preferences.accountDeletionScheduledTitle')}
+                        body={t('preferences.accountDeletionScheduledDescription')}
+                    />
                 ),
             });
         } catch {
             if (!serverDeleteSucceeded) {
                 toast.show({
-                    placement: 'top',
                     render: () => (
-                        <Toast action="error" variant="solid">
-                            <ToastTitle>{t('preferences.deletionFailedTitle')}</ToastTitle>
-                            <ToastDescription>{t('preferences.deletionFailedDescription')}</ToastDescription>
-                        </Toast>
+                        <MeraToast
+                            tone="error"
+                            title={t('preferences.deletionFailedTitle')}
+                            body={t('preferences.deletionFailedDescription')}
+                        />
                     ),
                 });
             }

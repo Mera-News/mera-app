@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { signOutAndWipe } from '@/lib/security/local-wipe';
 
 export function useServerErrorLogout(setShowServerError: (v: boolean) => void) {
@@ -18,12 +19,12 @@ export function useServerErrorLogout(setShowServerError: (v: boolean) => void) {
             await signOutAndWipe();
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('onboarding.logoutFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('onboarding.logoutFailedDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('onboarding.logoutFailedTitle')}
+                        body={t('onboarding.logoutFailedDescription')}
+                    />
                 ),
             });
         } finally {

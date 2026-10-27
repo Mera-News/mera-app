@@ -1056,8 +1056,10 @@
       "heldReply": "この返信が終わったら、メラを再起動できます。",
       "heldBusy": "作業を終えてから、再起動をタップしてください。",
       "storyGone": "そのストーリーはもう利用できません。",
-      "publicationGone": "その媒体はもう利用できません。"
-    }
+      "publicationGone": "その媒体はもう利用できません。",
+      "notNow": "後で"
+    },
+    "rowUnreadA11y": "{{title}}、未読、{{age}}"
   },
   "settings": {
     "groupHelp": "ヘルプ",
@@ -2577,7 +2579,8 @@
     "sourceSub": "概要と、{{source}}の記事を減らす",
     "support": "サポート",
     "supportSub": "バグの報告、ライブチャット、よくある質問、チュートリアル",
-    "tutorial": "チュートリアル"
+    "tutorial": "チュートリアル",
+    "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています"
   },
   "storyExport": {
     "shareA11y": "このストーリーを書き出す",

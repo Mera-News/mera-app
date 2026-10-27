@@ -1063,8 +1063,10 @@
       "heldReply": "Mera estará listo para reiniciarse cuando termine esta respuesta.",
       "heldBusy": "Termina lo que estás haciendo y luego toca Reiniciar.",
       "storyGone": "Esa historia ya no está disponible.",
-      "publicationGone": "Esa publicación ya no está disponible."
-    }
+      "publicationGone": "Esa publicación ya no está disponible.",
+      "notNow": "Ahora no"
+    },
+    "rowUnreadA11y": "{{title}}, sin leer, {{age}}"
   },
   "settings": {
     "groupHelp": "Ayuda",
@@ -2586,7 +2588,8 @@
     "sourceSub": "Información, menos de {{source}}",
     "support": "Soporte",
     "supportSub": "Informar de un error, chat en vivo, preguntas frecuentes, tutorial",
-    "tutorial": "Tutorial"
+    "tutorial": "Tutorial",
+    "fewerFromAlready": "Ya se muestran menos de {{source}}"
   },
   "storyExport": {
     "shareA11y": "Exportar esta historia",

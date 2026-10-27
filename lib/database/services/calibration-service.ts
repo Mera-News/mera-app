@@ -148,7 +148,6 @@ async function fireCalibrationNotification(count: number): Promise<void> {
     title: 'calibration.notificationTitle',
     body: 'calibration.notificationBody',
     icon: 'tune',
-    action: 'info',
     context: { count },
     actions: [{ id: 'recalibrate', labelKey: 'calibration.recalibrateChip' }],
   });

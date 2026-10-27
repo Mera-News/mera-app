@@ -13,7 +13,8 @@ import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { loadSavedItems, type SavedItem } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
@@ -101,13 +102,13 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
 
     const handleExportFailed = useCallback(() => {
         toast.show({
-            placement: 'top',
             duration: 4000,
-            render: ({ id }: { id: string }) => (
-                <Toast nativeID={id} action="error" variant="solid">
-                    <ToastTitle>{t('savedExport.failedTitle')}</ToastTitle>
-                    <ToastDescription>{t('savedExport.failedMessage')}</ToastDescription>
-                </Toast>
+            render: () => (
+                <MeraToast
+                    tone="error"
+                    title={t('savedExport.failedTitle')}
+                    body={t('savedExport.failedMessage')}
+                />
             ),
         });
     }, [toast, t]);

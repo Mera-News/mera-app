@@ -39,7 +39,7 @@ import { DevSettings } from 'react-native';
 import { getAppVersion, getAppVersionLabel, getGitCommit } from '@/lib/version';
 import { initI18nEn, mockGql, mockGqlError, server, setAppState, useFakeClock } from '@/test/helpers';
 import { getAll, markActioned, notify } from '@/lib/database/services/notification-service';
-import { tapNotification } from '@/components/custom/notifications/notification-actions';
+import { runNotificationAction } from '@/components/custom/notifications/notification-actions';
 import { toastManager } from '@/lib/toast-manager';
 import {
     __resetOtaNoticeForTests,
@@ -48,6 +48,7 @@ import {
     noticePendingUpdate,
     OTA_LAST_RUNNING_KEY,
     OTA_NOTICED_KEY,
+    RESTART_FOR_UPDATE,
     restartForUpdate,
     UPDATE_AVAILABLE,
     useOpenUpdateNotes,
@@ -1045,13 +1046,13 @@ describe('restarts and the version floor', () => {
             expect(JSON.parse(rows[0].contextJson!).notes.map((n: { message: string }) => n.message)).toEqual(['Three']);
         });
 
-        it("the row's Restart honours a hold: no reload, and the row stays", async () => {
+        it("Restart (the row's sheet, the toast's pill) honours a hold: no reload, and the row stays", async () => {
             pendingUpdate('update-1');
             mount();
             await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
             const release = holdRestart('chat-stream');
 
-            await tapNotification((await rowsOf(UPDATE_AVAILABLE))[0]);
+            await runNotificationAction((await rowsOf(UPDATE_AVAILABLE))[0], { id: RESTART_FOR_UPDATE });
 
             expect(mockReloadAsync).not.toHaveBeenCalled();
             await expect(getSetting(OTA_RESTART_GUARD_KEY)).resolves.toBeNull();

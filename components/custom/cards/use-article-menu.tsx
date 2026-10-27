@@ -9,9 +9,9 @@ import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject
 import type { InlineAccessibilityAction } from '@/components/custom/cards/use-article-actions';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
-import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { FAQ_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
@@ -294,24 +294,22 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const showFailure = useCallback(
         (retry: () => void) => {
             toast.show({
-                placement: 'top',
                 duration: 5000,
                 render: ({ id }: { id: string }) => (
-                    <Toast nativeID={id} action="error" variant="solid">
-                        <ToastTitle>{t('articleMenu.actionFailed')}</ToastTitle>
-                        <Pressable
-                            testID="article-menu-retry"
-                            accessibilityRole="button"
-                            accessibilityLabel={t('common.retry')}
-                            hitSlop={12}
-                            onPress={() => {
-                                toast.close(id);
-                                retry();
-                            }}
-                        >
-                            <Text className="font-semibold text-white">{t('common.retry')}</Text>
-                        </Pressable>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('articleMenu.actionFailed')}
+                        actions={[
+                            {
+                                label: t('common.retry'),
+                                testID: 'article-menu-retry',
+                                onPress: () => {
+                                    toast.close(id);
+                                    retry();
+                                },
+                            },
+                        ]}
+                    />
                 ),
             });
         },
@@ -351,6 +349,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // The app's one undo toast. Required at call time, like the writer.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
+            // Already fewer: nothing was written, so an Undo would undo nothing.
+            if (!res.changeLogIds?.length) {
+                toastManager.showInfo(t('articleMenu.fewerFromAlready', { source: shownAs }));
+                return true;
+            }
             toastManager.showUndoToast({
                 title: t('articleMenu.fewerFromDone', { source: shownAs }),
                 undoLabel: t('articleMenu.undo'),
@@ -665,12 +668,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             toast.show({
                 duration: 2500,
                 render: () => (
-                    <Toast action="info" variant="solid">
-                        <VStack>
-                            <ToastTitle>{title}</ToastTitle>
-                            {body ? <ToastDescription>{body}</ToastDescription> : null}
-                        </VStack>
-                    </Toast>
+                    <MeraToast tone="info" title={title} body={body} />
                 ),
             });
         },

@@ -6,12 +6,13 @@ import { requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { markActioned, markRead } from '@/lib/database/services/notification-service';
 import logger from '@/lib/logger';
-import { APP_UPDATED, RESTART_FOR_UPDATE, restartForUpdate, useOpenUpdateNotes } from '@/lib/ota-notice';
+import { APP_UPDATED, RESTART_FOR_UPDATE, UPDATE_AVAILABLE, restartForUpdate, useOpenUpdateNotes } from '@/lib/ota-notice';
 import type { UpdateNote } from '@/lib/algorithms/update-notes';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
 import { router } from 'expo-router';
 import i18next from 'i18next';
+import { create } from 'zustand';
 
 export type NotificationAction = { id: string; labelKey?: string; label?: string };
 
@@ -27,6 +28,19 @@ export const FEEDBACK_REQUEST = 'feedback_request';
  * hides them.
  */
 export const NOT_KEPT_NOTICE_TYPES: ReadonlySet<string> = new Set(['feed_info', 'sync_event', 'migration_done']);
+
+/**
+ * The notification sheets (NotificationSheetHost, mounted once in the logged-in
+ * layout). `updateReady` is the row an Update ready sheet acts on; it stays set
+ * while the sheet slides away. `notesAt` is the App updated row's time for the
+ * What's new sheet; null when the notes came from the "Mera updated" toast.
+ * What's new itself opens through ota-notice's `useOpenUpdateNotes`.
+ */
+export const useNotificationSheet = create<{
+    updateReady: NotificationModel | null;
+    updateReadyOpen: boolean;
+    notesAt: Date | null;
+}>(() => ({ updateReady: null, updateReadyOpen: false, notesAt: null }));
 
 /** Safe JSON.parse to an object; null on failure or empty. */
 export function parseJson<T>(raw: string | null): T | null {
@@ -89,6 +103,7 @@ export async function openNotification(n: NotificationModel): Promise<void> {
             logger.captureException(err, { tags: { component: 'notification-actions', method: 'markActioned' } }),
         );
         const notes = parseJson<{ notes?: UpdateNote[] }>(n.contextJson)?.notes;
+        useNotificationSheet.setState({ notesAt: n.createdAt });
         useOpenUpdateNotes.setState({ open: true, notes: Array.isArray(notes) ? notes : [] });
         return;
     }
@@ -131,12 +146,21 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
 }
 
 /**
- * An inbox row tap: exactly what the row's button did when rows were cards
- * (its FIRST action: hygiene opens the inbox's suggestions, calibration the recalibration
- * chat, a finished fact check its article, an optimisation plan the plan);
- * a row with no action (a feedback question) opens as before.
+ * An inbox row tap: one obvious action runs at once, the row's FIRST action
+ * (hygiene opens the inbox's suggestions, calibration the recalibration chat, a
+ * finished fact check its article, an optimisation plan the plan); a row with
+ * no action (a feedback question, What's new) opens as before. A row that holds
+ * a CHOICE opens a sheet instead: Update ready offers Restart or Not now. Its
+ * toast's Restart pill still restarts directly (runNotificationAction).
  */
 export async function tapNotification(n: NotificationModel): Promise<void> {
+    if (n.type === UPDATE_AVAILABLE) {
+        await markRead(n.id).catch((err: unknown) =>
+            logger.captureException(err, { tags: { component: 'notification-actions', method: 'markRead' } }),
+        );
+        useNotificationSheet.setState({ updateReady: n, updateReadyOpen: true });
+        return;
+    }
     const action = (parseJson<NotificationAction[]>(n.actionsJson) ?? [])[0];
     if (action) {
         await runNotificationAction(n, action);

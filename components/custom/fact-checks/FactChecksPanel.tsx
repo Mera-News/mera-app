@@ -1,6 +1,7 @@
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
 import FactCheckExportModal from '@/components/custom/fact-checks/FactCheckExportModal';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { Text } from '@/components/ui/text';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -148,13 +149,13 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     const [exportOpen, setExportOpen] = useState(false);
     const handleExportFailed = useCallback(() => {
         toast.show({
-            placement: 'top',
             duration: 4000,
-            render: ({ id }: { id: string }) => (
-                <Toast nativeID={id} action="error" variant="solid">
-                    <ToastTitle>{t('savedExport.failedTitle')}</ToastTitle>
-                    <ToastDescription>{t('savedExport.failedMessage')}</ToastDescription>
-                </Toast>
+            render: () => (
+                <MeraToast
+                    tone="error"
+                    title={t('savedExport.failedTitle')}
+                    body={t('savedExport.failedMessage')}
+                />
             ),
         });
     }, [toast, t]);

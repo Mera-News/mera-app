@@ -3,7 +3,8 @@ import { useEffect, useRef } from 'react';
 import { InteractionManager } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { probeLanguage } from '@/lib/hooks/use-language-switch';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
@@ -100,26 +101,21 @@ const TranslationUnavailablePrompt: React.FC = () => {
         const language = getNativeLanguageName(appLanguage) ?? appLanguage;
 
         const body = (
-            // `persistent` marks the `duration: null` below — this banner stays
-            // until something closes it. It no longer changes the surface (every
-            // toast is a flat panel now); see the prop's doc in
-            // components/ui/toast.
-            <Toast nativeID={id} action="info" variant="solid" persistent>
-                <ToastTitle>{t('language.translationUnavailableTitle')}</ToastTitle>
-                <ToastDescription>
-                    {blocked?.deviceUnsupported
-                        // Distinct from the iOS-version case on purpose:
-                        // telling someone to update iOS would be a lie when
-                        // the device has no translator at all.
-                        ? t('language.translationUnavailableOnThisDevice', { language })
-                        : t('language.translationUnsupportedOnThisIos', { language })}
-                </ToastDescription>
-            </Toast>
+            <MeraToast
+                tone="info"
+                title={t('language.translationUnavailableTitle')}
+                body={
+                    blocked?.deviceUnsupported
+                        ? // Distinct from the iOS-version case on purpose: telling someone to
+                          // update iOS would be a lie when the device has no translator at all.
+                          t('language.translationUnavailableOnThisDevice', { language })
+                        : t('language.translationUnsupportedOnThisIos', { language })
+                }
+            />
         );
 
         toast.show({
             id,
-            placement: 'top',
             duration: null,
             render: () => body,
         });

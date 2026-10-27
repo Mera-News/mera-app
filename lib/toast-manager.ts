@@ -2,8 +2,8 @@ import i18next from 'i18next';
 import { AccessibilityInfo } from 'react-native';
 import type React from 'react';
 import logger from './logger';
-import { TOAST_MIN_DURATION_MS } from './toast/toast-queue';
-import { toastBodyColor, toastTitleColor } from '@/components/custom/toast/toast-text';
+import { TOAST_MIN_DURATION_MS, rearm } from './toast/toast-queue';
+import type { ToastTone } from '@/components/custom/toast/MeraToast';
 
 // The readable floor for any toast's lifetime lives with the queue.
 // Re-exported so this module stays its public home.
@@ -15,7 +15,7 @@ export interface NotifiedToastOptions {
     source: string;
     title: string;
     body: string;
-    action?: 'info' | 'success' | 'error';
+    /** Stored on the row only (MaterialIcons name); the toast's glyph comes from `type`. */
     icon?: string;
     context?: Record<string, unknown>;
     actions?: { id: string; labelKey?: string; label?: string }[];
@@ -62,7 +62,10 @@ type ToastFunction = {
     isActive: (id: string) => boolean;
 };
 
-// Toast text colours: see components/custom/toast/toast-text.ts.
+/** How long the Undo toast shows "Change undone" before it leaves (design: 1.4 s). */
+export const UNDONE_HOLD_MS = 1400;
+/** How long the Undo toast waits for an undo in flight before its own timer may end it. */
+const UNDO_PENDING_MS = 10000;
 
 class ToastManager {
     private toastInstance: ToastFunction | null = null;
@@ -149,40 +152,14 @@ class ToastManager {
         this.showPlainToast('error', i18next.t('errors.networkErrorTitle'), message, 4000);
     }
 
-    /**
-     * Shared renderer for the simple title+body toasts. Plain RN `Text` with
-     * explicit styles, NOT ToastTitle/ToastDescription — see the note on
-     * toastTitleColor() above (createElement bypasses className styling).
-     */
-    private showPlainToast(
-        action: 'error' | 'success' | 'info',
-        title: string,
-        message: string | undefined,
-        duration: number,
-    ) {
+    /** Shared renderer for the simple title (+ body) toasts. Required at call time, like every toast module here. */
+    private showPlainToast(tone: ToastTone, title: string, message: string | undefined, duration: number) {
         const React = require('react');
-        const { Toast } = require('@/components/ui/toast');
-        const { Text } = require('react-native');
-
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const MeraToast = require('@/components/custom/toast/MeraToast').default;
         this.toastInstance!.show({
             duration,
-            render: () =>
-                React.createElement(
-                    Toast,
-                    { action, variant: 'solid' },
-                    React.createElement(
-                        Text,
-                        { style: { color: toastTitleColor(), fontWeight: '700', fontSize: 15 } },
-                        title,
-                    ),
-                    message
-                        ? React.createElement(
-                              Text,
-                              { style: { color: toastBodyColor(), fontSize: 13, paddingTop: 2 } },
-                              message,
-                          )
-                        : null,
-                ),
+            render: () => React.createElement(MeraToast, { tone, title, body: message || undefined }),
         });
     }
 
@@ -238,10 +215,11 @@ class ToastManager {
      * the caller need not be a React component, and so the toast modules are
      * `require`d only when a toast is actually shown.
      *
-     * Undo closes this card; `undoneTitle`, when given, follows with a short
-     * info toast. `onUndo` may return (or resolve to) `false` to say the undo
-     * was REFUSED (a newer change owns the value): then no follow-up shows,
-     * since "Change undone" would be a false claim. `true` or nothing shows it.
+     * Undo swaps this card in place to `undoneTitle` and holds it
+     * `UNDONE_HOLD_MS`, then it leaves; with no `undoneTitle` it just closes.
+     * `onUndo` may return (or resolve to) `false` to say the undo was REFUSED
+     * (a newer change owns the value), and a throw counts as refused: the card
+     * closes and claims nothing, since "Change undone" would be false.
      * Not debounced: each applied change is a distinct event.
      */
     showUndoToast(opts: {
@@ -262,27 +240,36 @@ class ToastManager {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const UndoToast = require('@/components/custom/toast/UndoToast').default;
 
-        this.toastInstance.show({
+        // The swap outlives any one mount: the deck's exit clone is a fresh render.
+        let undone = false;
+        let pressed = false;
+        const id = this.toastInstance.show({
             duration: 6000,
-            render: ({ id }: { id: string }) =>
+            render: () =>
                 React.createElement(UndoToast, {
                     title: opts.title,
                     body: opts.body,
                     undoLabel: opts.undoLabel,
+                    undoneTitle: opts.undoneTitle,
                     undoTestID: opts.undoTestID ?? 'feedback-undo',
-                    onUndo: () => {
-                        this.toastInstance?.close(id);
-                        void (async () => {
-                            let done: void | boolean = undefined;
-                            try {
-                                done = await opts.onUndo();
-                            } catch (err) {
-                                logger.captureException(err, {
-                                    tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
-                                });
-                            }
-                            if (opts.undoneTitle && done !== false) this.showInfo(opts.undoneTitle);
-                        })();
+                    undone,
+                    onUndo: async () => {
+                        if (pressed) return false;
+                        pressed = true;
+                        // Hold the card while the undo runs: a late tap must still end on "Change undone".
+                        rearm(id, UNDO_PENDING_MS);
+                        let done: void | boolean = false;
+                        try {
+                            done = await opts.onUndo();
+                        } catch (err) {
+                            logger.captureException(err, {
+                                tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
+                            });
+                        }
+                        undone = !!opts.undoneTitle && done !== false;
+                        if (undone) rearm(id, UNDONE_HOLD_MS);
+                        else this.toastInstance?.close(id);
+                        return undone;
                     },
                 }),
         });
@@ -335,7 +322,8 @@ class ToastManager {
         this.showNoticeToast({
             title: this.resolveI18n(opts.title, opts.context),
             body: this.resolveI18n(opts.body, opts.context),
-            action: opts.action,
+            type: opts.type,
+            context: opts.context,
             fly: opts.fly,
             button:
                 row && first
@@ -354,13 +342,15 @@ class ToastManager {
     /**
      * The notified toast's card with NO inbox row: for a notice whose row was
      * already written (the "Mera updated" toast after an update applied).
-     * `title` and `body` are display text, already translated. The button
-     * closes the card after its own `onPress`.
+     * `title` and `body` are display text, already translated; `type` (and a
+     * fact check's `context`) picks the tone and glyph (`notice-tone.ts`). The
+     * button closes the card after its own `onPress`.
      */
     showNoticeToast(opts: {
         title: string;
         body?: string;
-        action?: 'info' | 'success' | 'error';
+        type: string;
+        context?: Record<string, unknown> | null;
         button?: { label: string; onPress: () => void };
         fly?: boolean;
     }) {
@@ -374,15 +364,21 @@ class ToastManager {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const notifiedToastModule = require('@/components/custom/notifications/NotifiedToast');
         const NotifiedToast = notifiedToastModule.default;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { noticeLook } = require('@/components/custom/toast/notice-tone') as typeof import('@/components/custom/toast/notice-tone');
+        const look = noticeLook(opts.type, opts.context);
 
         const { title, body = '' } = opts;
         const reduceMotion = this.reduceMotion;
         // With a screen reader on, a notice stays until dismissed: a timed exit
         // can take it away mid-sentence. The card's title speaks it, once.
         const persistent = this.screenReader;
-        // Whether the toast will fly to You or just fade: the two legs have
-        // different lengths, and the component derives the same flag.
-        const canFly = !reduceMotion;
+        // Whether the toast will fly to the inbox or just fade: the two legs have
+        // different lengths, and the component derives the same flag (Lite and
+        // the launch flag through the motion gate, plus the live OS setting).
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { motionAllowed } = require('@/lib/motion-gate') as typeof import('@/lib/motion-gate');
+        const canFly = motionAllowed() && !reduceMotion;
 
         let toastId = '';
         const button = opts.button
@@ -408,9 +404,12 @@ class ToastManager {
                   : notifiedToastModule.notifiedToastDurationMs(canFly),
             render: () =>
                 React.createElement(NotifiedToast, {
+                    // Set by show() before the deck first renders the card.
+                    toastId,
                     title,
                     body,
-                    action: opts.action ?? 'info',
+                    tone: look.tone,
+                    icon: look.icon,
                     reduceMotion,
                     persistent,
                     button,

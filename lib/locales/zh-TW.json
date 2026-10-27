@@ -1056,8 +1056,10 @@
       "heldReply": "這則回覆結束後，梅拉即可重新啟動。",
       "heldBusy": "先完成目前的操作，然後點選重新啟動。",
       "storyGone": "該則新聞已無法再查看。",
-      "publicationGone": "該媒體已無法再查看。"
-    }
+      "publicationGone": "該媒體已無法再查看。",
+      "notNow": "稍後再說"
+    },
+    "rowUnreadA11y": "{{title}}，未讀，{{age}}"
   },
   "settings": {
     "groupHelp": "說明",
@@ -2577,7 +2579,8 @@
     "sourceSub": "關於此來源，減少來自{{source}}的內容",
     "support": "支援",
     "supportSub": "回報問題、即時聊天、常見問題、教學",
-    "tutorial": "教學"
+    "tutorial": "教學",
+    "fewerFromAlready": "已設定為較少顯示 {{source}}"
   },
   "storyExport": {
     "shareA11y": "匯出這篇報導",

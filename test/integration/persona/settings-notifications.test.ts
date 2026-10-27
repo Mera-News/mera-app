@@ -71,10 +71,7 @@ function recordMutation(name: string, field: string): Record<string, unknown>[] 
 }
 
 const toastTitles = () =>
-    useToastQueue.getState().entries.map((e) => {
-        const first = (e.render({ id: e.id }) as { props: { children: { props: { children: unknown } }[] } }).props.children[0];
-        return String(first.props.children);
-    });
+    useToastQueue.getState().entries.map((e) => String((e.render({ id: e.id }) as { props: { title: unknown } }).props.title));
 
 type Options = Partial<Parameters<typeof useNotificationSettings>[0]>;
 async function mount(options: Options = {}) {

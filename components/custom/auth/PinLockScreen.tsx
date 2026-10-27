@@ -182,7 +182,7 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           }}
           testID="pin-forgot-sheet"
         >
-          <VStack className="px-5 pt-2" space="md">
+          <VStack className="pt-2" space="md">
             <Text className="text-xl font-semibold text-ink" accessibilityRole="header">
               {t('pin.forgotTitle')}
             </Text>

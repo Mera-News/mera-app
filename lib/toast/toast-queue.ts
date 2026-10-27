@@ -67,8 +67,6 @@ export interface ToastShowOptions {
      * one.
      */
     id?: string;
-    /** Ignored. Kept for signature compatibility; every card joins the top stack. */
-    placement?: 'top' | 'bottom';
     /** `null` means "until something closes it" — see the persistent lane below. */
     duration?: number | null;
     /**
@@ -211,6 +209,17 @@ export function close(id: string): void {
     if (timer?.id === id) clearTimer();
     useToastQueue.setState({ entries: queue.filter((entry) => entry.id !== id) });
     syncTimer();
+}
+
+/**
+ * Give the FRONT card a fresh `ms` from now (the Undo toast's "Change undone"
+ * hold, which must last its full 1.4 s however late in the card's own time the
+ * tap came). A card that is not the timed front is left alone.
+ */
+export function rearm(id: string, ms: number): void {
+    if (timer?.id !== id) return;
+    clearTimer();
+    timer = { id, handle: setTimeout(() => close(id), ms) };
 }
 
 export function closeAll(): void {

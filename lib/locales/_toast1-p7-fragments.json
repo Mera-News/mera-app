@@ -1,0 +1,102 @@
+{
+  "ar": {
+    "articleMenu": {
+      "fewerFromAlready": "تعرض بالفعل أخباراً أقل من {{source}}"
+    }
+  },
+  "de": {
+    "articleMenu": {
+      "fewerFromAlready": "Du siehst bereits weniger von {{source}}"
+    }
+  },
+  "en": {
+    "articleMenu": {
+      "fewerFromAlready": "Already showing fewer from {{source}}"
+    }
+  },
+  "es": {
+    "articleMenu": {
+      "fewerFromAlready": "Ya se muestran menos de {{source}}"
+    }
+  },
+  "fr": {
+    "articleMenu": {
+      "fewerFromAlready": "Déjà moins d'articles de {{source}}"
+    }
+  },
+  "hi": {
+    "articleMenu": {
+      "fewerFromAlready": "{{source}} से पहले ही कम खबरें दिखाई जा रही हैं"
+    }
+  },
+  "id": {
+    "articleMenu": {
+      "fewerFromAlready": "Sudah menampilkan lebih sedikit dari {{source}}"
+    }
+  },
+  "it": {
+    "articleMenu": {
+      "fewerFromAlready": "Vedi già meno notizie da {{source}}"
+    }
+  },
+  "ja": {
+    "articleMenu": {
+      "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています"
+    }
+  },
+  "ko": {
+    "articleMenu": {
+      "fewerFromAlready": "{{source}} 기사는 이미 적게 표시되고 있어요"
+    }
+  },
+  "nl": {
+    "articleMenu": {
+      "fewerFromAlready": "Je ziet al minder van {{source}}"
+    }
+  },
+  "pl": {
+    "articleMenu": {
+      "fewerFromAlready": "Już pokazujemy mniej z {{source}}"
+    }
+  },
+  "pt-BR": {
+    "articleMenu": {
+      "fewerFromAlready": "Já estamos mostrando menos de {{source}}"
+    }
+  },
+  "ru": {
+    "articleMenu": {
+      "fewerFromAlready": "Уже показываем меньше от {{source}}"
+    }
+  },
+  "th": {
+    "articleMenu": {
+      "fewerFromAlready": "แสดงข่าวจาก {{source}} น้อยลงอยู่แล้ว"
+    }
+  },
+  "tr": {
+    "articleMenu": {
+      "fewerFromAlready": "Zaten {{source}} kaynağından daha az haber gösteriliyor"
+    }
+  },
+  "uk": {
+    "articleMenu": {
+      "fewerFromAlready": "Уже показуємо менше від {{source}}"
+    }
+  },
+  "vi": {
+    "articleMenu": {
+      "fewerFromAlready": "Đã hiển thị ít tin hơn từ {{source}}"
+    }
+  },
+  "zh-CN": {
+    "articleMenu": {
+      "fewerFromAlready": "已减少显示来自 {{source}} 的内容"
+    }
+  },
+  "zh-TW": {
+    "articleMenu": {
+      "fewerFromAlready": "已設定為較少顯示 {{source}}"
+    }
+  }
+}

@@ -24,10 +24,7 @@
 //
 // `toastManager` rather than `useToast()`: `presentFreeTierPaywall` is a plain
 // module, not a component, and this must behave identically from every site.
-// Placement/variant match the sign-out toast in AppPreferencesTab
-// (`placement: 'top'`, `action="success"`, `variant="solid"`) — showSuccess is
-// that same shape. See toast-manager.ts's toastTitleColor() note for why it
-// builds plain RN `Text` instead of ToastTitle/ToastDescription.
+// showSuccess is the same success MeraToast as the sign-out toast in AppPreferencesTab.
 
 import i18next from 'i18next';
 import { Platform } from 'react-native';

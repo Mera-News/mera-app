@@ -1063,8 +1063,10 @@
       "heldReply": "A Mera vai estar pronta para reiniciar quando esta resposta terminar.",
       "heldBusy": "Termine o que está fazendo e toque em Reiniciar.",
       "storyGone": "Essa matéria não está mais disponível.",
-      "publicationGone": "Esse veículo não está mais disponível."
-    }
+      "publicationGone": "Esse veículo não está mais disponível.",
+      "notNow": "Agora não"
+    },
+    "rowUnreadA11y": "{{title}}, não lido, {{age}}"
   },
   "settings": {
     "groupHelp": "Ajuda",
@@ -2586,7 +2588,8 @@
     "sourceSub": "Sobre, menos de {{source}}",
     "support": "Suporte",
     "supportSub": "Relatar um bug, chat ao vivo, perguntas frequentes, tutorial",
-    "tutorial": "Tutorial"
+    "tutorial": "Tutorial",
+    "fewerFromAlready": "Já estamos mostrando menos de {{source}}"
   },
   "storyExport": {
     "shareA11y": "Exportar esta história",

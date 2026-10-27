@@ -1101,8 +1101,10 @@
       "heldReply": "Mera będzie gotowa do ponownego uruchomienia, gdy ta odpowiedź się zakończy.",
       "heldBusy": "Dokończ, co robisz, i stuknij Uruchom ponownie.",
       "storyGone": "Ta historia nie jest już dostępna.",
-      "publicationGone": "Ten wydawca nie jest już dostępny."
-    }
+      "publicationGone": "Ten wydawca nie jest już dostępny.",
+      "notNow": "Nie teraz"
+    },
+    "rowUnreadA11y": "{{title}}, nieprzeczytane, {{age}}"
   },
   "settings": {
     "groupHelp": "Pomoc",
@@ -2652,7 +2654,8 @@
     "sourceSub": "O źródle, mniej z {{source}}",
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
-    "tutorial": "Samouczek"
+    "tutorial": "Samouczek",
+    "fewerFromAlready": "Już pokazujemy mniej z {{source}}"
   },
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",

@@ -1,4 +1,5 @@
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import MeraToast from '@/components/custom/toast/MeraToast';
+import { useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
 import { showDialog } from '@/lib/dialog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
@@ -371,12 +372,12 @@ export function useMeraProtocolSettings() {
             }
         } catch {
             toast.show({
-                placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('meraProtocol.loadFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('meraProtocol.loadFailedDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('meraProtocol.loadFailedTitle')}
+                        body={t('meraProtocol.loadFailedDescription')}
+                    />
                 ),
             });
         } finally {
@@ -418,32 +419,24 @@ export function useMeraProtocolSettings() {
             cacheProcessingMode(mode);
 
             toast.show({
-                placement: 'top',
                 render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>
-                            {wantsOnDevice
-                                ? t('meraProtocol.modeUpdatedOnDeviceTitle')
-                                : t('meraProtocol.modeUpdatedCloudTitle')}
-                        </ToastTitle>
-                        <ToastDescription>
-                            {wantsOnDevice
-                                ? t('meraProtocol.modeUpdatedOnDeviceDescription')
-                                : t('meraProtocol.modeUpdatedCloudDescription')}
-                        </ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="success"
+                        title={wantsOnDevice ? t('meraProtocol.modeUpdatedOnDeviceTitle') : t('meraProtocol.modeUpdatedCloudTitle')}
+                        body={wantsOnDevice ? t('meraProtocol.modeUpdatedOnDeviceDescription') : t('meraProtocol.modeUpdatedCloudDescription')}
+                    />
                 ),
             });
         } catch {
             // The server still holds what it held: the intent goes back with it.
             setOnDeviceIntent(hadIntent);
             toast.show({
-                placement: 'top',
                 render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('meraProtocol.settingUpdateFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('meraProtocol.settingUpdateFailedDescription')}</ToastDescription>
-                    </Toast>
+                    <MeraToast
+                        tone="error"
+                        title={t('meraProtocol.settingUpdateFailedTitle')}
+                        body={t('meraProtocol.settingUpdateFailedDescription')}
+                    />
                 ),
             });
         } finally {
@@ -512,12 +505,12 @@ export function useMeraProtocolSettings() {
                 await deleteDownloadedModel(modelId);
             } catch {
                 toast.show({
-                    placement: 'top',
                     render: () => (
-                        <Toast action="error" variant="solid">
-                            <ToastTitle>{t('meraProtocol.deleteFailedTitle')}</ToastTitle>
-                            <ToastDescription>{t('meraProtocol.deleteFailedDescription')}</ToastDescription>
-                        </Toast>
+                        <MeraToast
+                            tone="error"
+                            title={t('meraProtocol.deleteFailedTitle')}
+                            body={t('meraProtocol.deleteFailedDescription')}
+                        />
                     ),
                 });
             } finally {

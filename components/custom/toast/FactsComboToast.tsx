@@ -1,32 +1,26 @@
-import { Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
 import logger from '@/lib/logger';
 import { close, isActive, show } from '@/lib/toast/toast-queue';
+import { LoaderCircle } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import IndeterminateBar from './IndeterminateBar';
+import MeraToast from './MeraToast';
 import { observeActiveComboJobCount } from './facts-combo-source';
 
 export const FACTS_COMBO_TOAST_ID = 'facts-combo';
 
-/** Explicit: see `IndeterminateBar`'s width note. */
-const BAR_WIDTH = 160;
-
 function FactsComboToastBody() {
     const { t } = useTranslation();
+    // A CONSTANT title and body: the card announces whenever its text changes,
+    // so no count or stage ever goes in either.
     return (
-        <Toast action="muted" variant="solid">
-            {/* A CONSTANT title: `ToastTitle` announces whenever its text
-                changes, so no count or stage ever goes in it. The English
-                defaults cover the window before the ux2 fragment is spliced
-                (lib/locales/_ux2-facts-combo-toast-fragments.json); they can
-                go once both keys are in en.json. */}
-            <ToastTitle>{t('profile.updatingAllFacts', { defaultValue: 'Updating all facts' })}</ToastTitle>
-            <ToastDescription size="sm">{t('profile.pleaseWait', { defaultValue: 'Please wait' })}</ToastDescription>
-            <View style={{ paddingTop: 6 }}>
-                <IndeterminateBar width={BAR_WIDTH} testID="facts-combo-progress" />
-            </View>
-        </Toast>
+        <MeraToast
+            tone="neutral"
+            icon={LoaderCircle}
+            title={t('profile.updatingAllFacts')}
+            body={t('profile.pleaseWait')}
+            progress
+            progressTestID="facts-combo-progress"
+        />
     );
 }
 

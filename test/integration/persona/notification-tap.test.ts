@@ -5,14 +5,14 @@
 import { t } from 'i18next';
 import { router } from 'expo-router';
 import { __resetMoveToPhoneForTests, subscribeMoveToPhone } from '@/components/custom/auth/move-to-phone';
-import { tapNotification, NOT_KEPT_NOTICE_TYPES } from '@/components/custom/notifications/notification-actions';
+import { tapNotification, NOT_KEPT_NOTICE_TYPES, useNotificationSheet } from '@/components/custom/notifications/notification-actions';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { deleteNotification, getAll, notify, type NotifyInput } from '@/lib/database/services/notification-service';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { consumePendingNotificationRoute } from '@/lib/stores/pending-notification-route';
 import { initI18nEn } from '@/test/helpers';
 import { consumePendingPage, resetPendingPage } from '@/components/custom/nav/navigate-to-page';
-import { APP_UPDATED, useOpenUpdateNotes } from '@/lib/ota-notice';
+import { APP_UPDATED, RESTART_FOR_UPDATE, UPDATE_AVAILABLE, useOpenUpdateNotes } from '@/lib/ota-notice';
 
 const nav = router as unknown as { push: jest.Mock; navigate: jest.Mock };
 
@@ -160,7 +160,30 @@ describe('tapNotification: rows with no action', () => {
 });
 
 describe('tapNotification: OTA update rows', () => {
-    beforeEach(() => useOpenUpdateNotes.setState({ open: false, notes: [] }));
+    beforeEach(() => {
+        useOpenUpdateNotes.setState({ open: false, notes: [] });
+        useNotificationSheet.setState({ updateReady: null, updateReadyOpen: false, notesAt: null });
+    });
+
+    it('an update_available row opens the Update ready sheet and runs nothing: Restart is the sheet\'s choice', async () => {
+        const row = await seed({
+            type: UPDATE_AVAILABLE,
+            actions: [{ id: RESTART_FOR_UPDATE, labelKey: 'notificationCenter.update.restart' }],
+        });
+        await tapNotification(row);
+        const sheet = useNotificationSheet.getState();
+        expect(sheet.updateReadyOpen).toBe(true);
+        expect(sheet.updateReady?.id).toBe(row.id);
+        // Read, not actioned: the first action did not run.
+        expect(await statusOf(row.id)).toBe('read');
+        expect(useFloatingChatStore.getState().isExpanded).toBe(false);
+    });
+
+    it('an app_updated row hands its own time to the What\'s new sheet', async () => {
+        const row = await seed({ type: APP_UPDATED, context: { notes: [] } });
+        await tapNotification(row);
+        expect(useNotificationSheet.getState().notesAt?.getTime()).toBe(row.createdAt.getTime());
+    });
 
     it('an app_updated row opens its release notes and never the chat', async () => {
         const notes = [{ at: '2026-10-23T09:00:00.000Z', message: 'Faster feed' }];

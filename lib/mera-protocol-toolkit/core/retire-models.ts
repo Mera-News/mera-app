@@ -62,7 +62,6 @@ async function showFallbackNotice(): Promise<void> {
       source: 'mera-protocol',
       title: 'meraProtocol.fallbackNoticeTitle',
       body: 'meraProtocol.fallbackNoticeBody',
-      action: 'info',
       dedupeDaily: true,
     });
   } catch (err) {

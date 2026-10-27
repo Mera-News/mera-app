@@ -1,12 +1,15 @@
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useIsToastFront } from '@/components/ui/toast';
+import MeraToast, { type ToastTone } from '@/components/custom/toast/MeraToast';
+import { REDUCED_FADE, TOAST_MOTION } from '@/components/custom/toast/deck-motion';
+import { markExited } from '@/components/custom/toast/exited-cards';
+import { useIsToastFront } from '@/components/ui/toast';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
-import { useColors } from '@/lib/theme/tokens';
+import type { LucideIcon } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { Dimensions, I18nManager, View } from 'react-native';
+import { Dimensions, I18nManager } from 'react-native';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import Animated, {
+    ReduceMotion,
     useAnimatedStyle,
     useSharedValue,
     withDelay,
@@ -28,8 +31,8 @@ export const NOTIFIED_TOAST_FLY_MS = 450;
 /** Shrink and fade only in the flight's last 30%: a near miss on the Feed icon
  *  (the floating bar, RTL) is then invisible. */
 const FADE_FROM = 0.7;
-/** Plain fade-out leg (reduce motion). */
-export const NOTIFIED_TOAST_FADE_MS = 1500;
+/** Plain fade-out leg (Lite or Reduce Motion): the deck's reduced fade. */
+export const NOTIFIED_TOAST_FADE_MS = TOAST_MOTION.reduced.ms;
 
 /** Total on-screen lifetime, so the caller can size the toast's `duration` to
  *  match exactly — an over-long duration would leave an invisible toast mounted
@@ -41,7 +44,12 @@ export function notifiedToastDurationMs(canFly: boolean): number {
 export interface NotifiedToastProps {
     title: string;
     body: string;
-    action?: 'info' | 'success' | 'error';
+    /** From the notice's type (`notice-tone.ts`). */
+    tone: ToastTone;
+    icon?: LucideIcon;
+    /** The queue id, marked as exited once this card's own leave starts. */
+    toastId?: string;
+    /** The live OS setting; Lite and the launch flag come from the motion gate. */
     reduceMotion: boolean;
     /** Screen reader on: no timed exit; it leaves only when dismissed. */
     persistent?: boolean;
@@ -56,7 +64,10 @@ export interface NotifiedToastProps {
  * the Feed tab icon while scaling down and fading out: the notice now lives in
  * Feed > Notifications.
  *
- * Reduce motion: a plain fade with no translate.
+ * Lite or Reduce Motion: the same hold, then the deck's 180 ms fade. Both legs
+ * pass `ReduceMotion.Never`: LiteMotionConfig (and the OS flag) otherwise make
+ * Reanimated skip the delay and land the fade at once, so the notice vanished
+ * on mount.
  *
  * The toast's true start position is unknown to this component (it's placed by
  * the toast overlay), so the fly translate is approximated from the top-center
@@ -65,13 +76,14 @@ export interface NotifiedToastProps {
 const NotifiedToast: React.FC<NotifiedToastProps> = ({
     title,
     body,
-    action = 'info',
+    tone,
+    icon,
+    toastId,
     reduceMotion,
     persistent = false,
     button,
     fly = true,
 }) => {
-    const colors = useColors();
     const progress = useSharedValue(0);
     // The deck can hold this card BEHIND another one. Its lifetime is sized to
     // this animation exactly (`notifiedToastDurationMs`), and the queue only
@@ -85,7 +97,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
     const startX = screenWidth / 2;
     const startY = 80;
-    const canFly = !reduceMotion;
+    const canFly = useMotionAllowed() && !reduceMotion;
     const target = inboxTabTarget(
         screenWidth,
         screenHeight,
@@ -99,15 +111,21 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     useEffect(() => {
         if (!fly || !isFront || persistent) return;
         // HOLD fully opaque first so the notification is actually readable, then
-        // leave: fly to You (translate + shrink + fade), or a plain slower fade
-        // when motion is reduced.
+        // leave: fly to the inbox (translate + shrink + fade), or the reduced fade.
         progress.value = withDelay(
             NOTIFIED_TOAST_HOLD_MS,
-            withTiming(1, {
-                duration: canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS,
-            }),
+            withTiming(
+                1,
+                canFly ? { duration: NOTIFIED_TOAST_FLY_MS, reduceMotion: ReduceMotion.Never } : REDUCED_FADE,
+            ),
+            ReduceMotion.Never,
         );
-    }, [progress, canFly, isFront, persistent, fly]);
+        // From the leave on, this card's exit is its own: the deck must not
+        // replay one from rest. Before it (a button press) the deck's exit runs.
+        if (!toastId) return;
+        const handle = setTimeout(() => markExited(toastId), NOTIFIED_TOAST_HOLD_MS);
+        return () => clearTimeout(handle);
+    }, [progress, canFly, isFront, persistent, fly, toastId]);
 
     const animatedStyle = useAnimatedStyle(() => {
         const p = progress.value;
@@ -126,38 +144,14 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     });
 
     return (
-        // Self-dismissing: only its one button takes a touch, never the body,
-        // which must not swallow a tap aimed at the chrome behind it.
-        <Animated.View style={animatedStyle} pointerEvents="box-none">
-            <Toast action={action} variant="solid" pointerEvents="box-none">
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    {/* flexShrink, never flex: 1: the toast sizes to its content, and a
-                        flex-basis-0 column measures zero wide. */}
-                    <View style={{ flexShrink: 1, gap: 4 }}>
-                        {/* The one announcement: title and body together, when this card is in front. */}
-                        <ToastTitle announcement={body ? `${title}. ${body}` : title}>{title}</ToastTitle>
-                        {body ? <ToastDescription>{body}</ToastDescription> : null}
-                    </View>
-                    {button ? (
-                        <Pressable
-                            testID="notified-toast-button"
-                            onPress={button.onPress}
-                            accessibilityRole="button"
-                            accessibilityLabel={button.label}
-                            hitSlop={6}
-                            style={{
-                                minHeight: 32,
-                                paddingHorizontal: 14,
-                                borderRadius: 999,
-                                backgroundColor: colors.accent,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={{ color: colors.onAccent, fontSize: 14, fontWeight: '700' }}>{button.label}</Text>
-                        </Pressable>
-                    ) : null}
-                </View>
-            </Toast>
+        <Animated.View style={animatedStyle}>
+            <MeraToast
+                tone={tone}
+                icon={icon}
+                title={title}
+                body={body || undefined}
+                actions={button ? [{ label: button.label, onPress: button.onPress, primary: true, testID: 'notified-toast-button' }] : []}
+            />
         </Animated.View>
     );
 };
