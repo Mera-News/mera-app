@@ -166,7 +166,7 @@ describe('resolveTreeLevel', () => {
 
 describe('resolveTreeLevel: the shipped v6 hub', () => {
     const { BUNDLED_FEEDBACK_TREE } = require('@/lib/algorithms/feedback-tree-snapshot');
-    const FACT = { id: 'f1', statement: 'Pensioner in India', topicIds: ['t1'] };
+    const FACT = { id: 'f1', statement: 'Pensioner in India', topicTexts: ['pensions India'] };
     const FULL: LocalFeedbackContext = {
         matchedTopics: [{ topicId: 't1', text: 'pensions India' }],
         publicationName: 'Realitatea',

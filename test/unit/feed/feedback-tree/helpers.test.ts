@@ -7,26 +7,25 @@ const t = ((k: string, o?: Record<string, unknown>) =>
   o ? `${k}|${JSON.stringify(o)}` : k) as unknown as TFunction;
 
 describe('pickMatchedFact', () => {
-  it('picks the fact with the most of the story`s matched topics and uses its primary statement', () => {
+  it('picks the candidate holding the most of the story`s matched topic TEXTS, primary statement only', () => {
     const r = pickMatchedFact(
       [
-        { id: 'a', statement: 'One', metadata: { topics: ['t1', 't8', 't9'] } },
-        { id: 'b', statement: 'Two; Extra', metadata: { topics: ['t1', 't2'] } },
+        { id: 'a', statement: 'One', metadata: { topics: ['pensions India', 'cricket', 'tennis'] } },
+        { id: 'b', statement: 'Two; Extra', metadata: { topics: ['pensions India', 'Bhopal news'] } },
       ],
-      ['t1', 't2'],
+      ['pensions India', 'Bhopal news'],
     );
-    expect(r).toEqual({ id: 'b', statement: 'Two', topicIds: ['t1', 't2'] });
+    expect(r).toEqual({ id: 'b', statement: 'Two', topicTexts: ['pensions India', 'Bhopal news'] });
   });
-  it('a tie goes to the first fact', () => {
+  it('a tie, or a linked fact whose topics changed since, goes to the first candidate', () => {
     const facts = [
-      { id: 'a', statement: 'One', metadata: { topics: ['t1'] } },
-      { id: 'b', statement: 'Two', metadata: { topics: ['t1'] } },
+      { id: 'a', statement: 'One', metadata: { topics: ['old topic'] } },
+      { id: 'b', statement: 'Two', metadata: { topics: ['other'] } },
     ];
-    expect(pickMatchedFact(facts, ['t1'])?.id).toBe('a');
+    expect(pickMatchedFact(facts, ['Bhopal news'])?.id).toBe('a');
   });
-  it('returns null with no facts or no matched topics', () => {
-    expect(pickMatchedFact([], ['t1'])).toBeNull();
-    expect(pickMatchedFact([{ id: 'a', statement: 'x', metadata: { topics: ['t2'] } }], ['t1'])).toBeNull();
+  it('returns null with no candidates', () => {
+    expect(pickMatchedFact([], ['Bhopal news'])).toBeNull();
   });
 });
 

@@ -1,5 +1,7 @@
-// The reader's fact a story matched: the one with the most of the story's
-// matched topics (ties: the first). A fact's own topic count says nothing.
+// The reader's fact a story matched, among the CANDIDATES the caller found
+// (the story's linked facts, else the facts holding its topic texts): the one
+// holding the most of the story's matched topic texts, ties to the first.
+// Compare TEXTS: a fact's metadata.topics holds texts, never topic ids.
 // Pure: the fact shape is declared here so no store or DB is imported.
 import { primaryStatement } from '@/lib/stores/fact-rows-selector';
 
@@ -11,13 +13,13 @@ export interface PickableFact {
 
 export function pickMatchedFact(
   facts: readonly PickableFact[],
-  matchedTopicIds: readonly string[],
-): { id: string; statement: string; topicIds: string[] } | null {
-  const matched = new Set(matchedTopicIds);
+  matchedTopicTexts: readonly string[],
+): { id: string; statement: string; topicTexts: string[] } | null {
+  const matched = new Set(matchedTopicTexts);
   let best: PickableFact | null = null;
-  let bestCount = 0;
+  let bestCount = -1;
   for (const f of facts) {
-    const n = (f.metadata?.topics ?? []).filter((id) => matched.has(id)).length;
+    const n = (f.metadata?.topics ?? []).filter((text) => matched.has(text)).length;
     if (n > bestCount) {
       best = f;
       bestCount = n;
@@ -27,6 +29,6 @@ export function pickMatchedFact(
   return {
     id: best.id,
     statement: primaryStatement(best.statement),
-    topicIds: [...(best.metadata?.topics ?? [])],
+    topicTexts: [...(best.metadata?.topics ?? [])],
   };
 }

@@ -50,6 +50,8 @@ export async function buildOverlayContext(
   let geoText: string | null = null;
   let rowEntities: string[] = [];
   let rowPlaceValue: string | null = null;
+  let rowTopicTexts: string[] = [];
+  let linkedFactIds: string[] = [];
   try {
     // Required at call time: the suggestion service reaches the WatermelonDB
     // singleton, and this module is reached from every card, which has no
@@ -67,6 +69,8 @@ export async function buildOverlayContext(
       geoText = fb.geoText ?? null;
       rowEntities = fb.entities ?? [];
       rowPlaceValue = fb.placeValue ?? null;
+      rowTopicTexts = fb.matchedTopicTexts ?? [];
+      linkedFactIds = fb.linkedFacts.map((f) => f.id);
     }
   } catch (err) {
     logger.captureException(err, {
@@ -84,28 +88,35 @@ export async function buildOverlayContext(
   const entity = firstNonBlank(rowEntities) ?? firstNonBlank(subject.entities ?? []) ?? fallback?.entity ?? null;
   const placeValue = rowPlaceValue ?? fallback?.placeValue ?? null;
 
-  // The reader's fact the story matched (v6 rows quote it). Its own topics are
-  // the only ones a "less for this" answer may move.
+  // The reader's fact the story matched (v6 rows quote it): among the facts
+  // the row is LINKED to (`article_suggestion_facts`), else, with no local row,
+  // the facts holding its matched topic TEXTS. A fact's metadata.topics holds
+  // texts; comparing topic ids there never matched anything.
   const matchedTopics = subject.matchedTopics ?? [];
-  const topicIds = matchedTopics.map((m) => m.topicId).filter((id): id is string => !!id);
+  const texts = [...new Set([...matchedTopics.map((m) => m.text), ...rowTopicTexts].filter(Boolean))];
   let fact: LocalFeedbackContext['fact'] = null;
-  if (topicIds.length > 0) {
+  if (linkedFactIds.length > 0 || texts.length > 0) {
     try {
       // Required at call time, like the suggestion reads above.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { getFactsForTopicTexts } = require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
-      fact = pickMatchedFact(await getFactsForTopicTexts(topicIds), topicIds);
+      const { getFacts, getFactsForTopicTexts } = require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
+      const linked = new Set(linkedFactIds);
+      const candidates = linked.size > 0
+        ? (await getFacts()).filter((f) => linked.has(f.id))
+        : await getFactsForTopicTexts(texts);
+      fact = pickMatchedFact(candidates, texts);
     } catch (err) {
       logger.captureException(err, { tags: { component: 'buildOverlayContext', method: 'fact' } });
     }
   }
-  const factTopics = fact ? new Set(fact.topicIds) : null;
+  const factTexts = fact ? new Set(fact.topicTexts) : null;
 
   return {
     publicationName: subject.publicationName,
     countryCode: subject.countryCode,
     articleTitle: subject.title,
-    matchedTopics: factTopics ? matchedTopics.filter((m) => !!m.topicId && factTopics.has(m.topicId)) : matchedTopics,
+    // "Less for this" moves only the fact's own matched topics (by id).
+    matchedTopics: factTexts ? matchedTopics.filter((m) => factTexts.has(m.text)) : matchedTopics,
     fact,
     publicationVisits,
     ...(category ? { category } : {}),

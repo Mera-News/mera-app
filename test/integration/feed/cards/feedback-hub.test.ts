@@ -22,7 +22,7 @@ import { initI18nEn } from '@/test/helpers';
 
 const ARTICLE = 'hub-article';
 const PUB = 'Realitatea';
-const FACT = { id: 'fact-1', statement: 'Pensioner in India', topicIds: ['t1'] };
+const FACT = { id: 'fact-1', statement: 'Pensioner in India', topicTexts: ['pensions India'] };
 const SUBJECT: FeedbackSubject = {
     origin: 'suggestion',
     surface: 'for_you',

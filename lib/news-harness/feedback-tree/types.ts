@@ -193,9 +193,10 @@ export interface LocalFeedbackContext {
   publicationVisits?: number;
   /** Whether the article's geo mismatches the user's (visibleIf has_geo_mismatch). */
   hasGeoMismatch?: boolean;
-  /** v6: the reader's fact this story matched (the one with the most matched
-   *  topics). `statement` is the full text; rows clamp it for display. */
-  fact?: { id: string; statement: string; topicIds: string[] } | null;
+  /** v6: the reader's fact this story matched (the linked fact with the most
+   *  of the story's matched topics). `statement` is its primary statement;
+   *  rows clamp it for display. `topicTexts` are the fact's topic TEXTS. */
+  fact?: { id: string; statement: string; topicTexts: string[] } | null;
 }
 
 /**

@@ -264,6 +264,21 @@ describe('useArticleMenu', () => {
         expect(levelKey(result.current.element)).toMatch(/:follow-tracked$/);
     });
 
+    it('a tap that lands while the sheet is closing does not open it again', async () => {
+        const { result } = await mount('menu-closing');
+        const sheet = () => (result.current.element as React.ReactElement<{ visible: boolean; onClose: () => void }>).props;
+        act(() => result.current.open());
+        expect(sheet().visible).toBe(true);
+        act(() => sheet().onClose());
+        expect(sheet().visible).toBe(false);
+        // The dismissal has not been reported yet: a stray feedback or ••• tap is ignored, or the
+        // sheet comes back over whatever the closing item navigates to.
+        act(() => result.current.openFeedback());
+        act(() => result.current.open());
+        await act(async () => {});
+        expect(sheet().visible).toBe(false);
+    });
+
     it('Follow stays untracked for a story nobody follows', async () => {
         const { result } = await mount('menu-nofollow');
         act(() => result.current.open());

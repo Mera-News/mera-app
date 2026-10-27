@@ -218,11 +218,16 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const [mounted, setMounted] = useState(false);
     const visibleRef = useRef(false);
     visibleRef.current = visible;
+    // Between a close and its reported dismissal. A ••• or feedback tap that
+    // lands then is ignored: reopening the sheet put it back over whatever the
+    // closing item navigated to (the Facts page), until Cancel.
+    const closingRef = useRef(false);
     const [treeContext, setTreeContext] = useState<LocalFeedbackContext>({ articleTitle: subject.title });
 
     /** Show a level: pushed on top when the sheet is open, else the sheet opens
      *  straight at it (no Back row). */
     const showLevel = useCallback((level: SheetLevel) => {
+        if (closingRef.current) return;
         setEngaged(true);
         if (visibleRef.current) {
             setDirection('push');
@@ -536,6 +541,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // while the menu's Modal host is still mounted, and nothing reports it.
     const runAfterUnmountRef = useRef(false);
     const onDismissed = useCallback(() => {
+        closingRef.current = false;
         if (fallbackRef.current) {
             clearTimeout(fallbackRef.current);
             fallbackRef.current = null;
@@ -554,11 +560,17 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         });
     }, [mounted, flushPending]);
 
-    const close = useCallback(() => setVisible(false), []);
+    const close = useCallback(() => {
+        closingRef.current = true;
+        setVisible(false);
+    }, []);
     /** Close the sheet, then run `after` once it has gone (native UI, a
      *  screen push, a chat, a toast). */
     const closeThen = useCallback(
         (after?: () => void) => {
+            // A second pick while closing would replace the first one's item.
+            if (closingRef.current) return;
+            closingRef.current = true;
             pendingRef.current = after ? { key: 'after', label: '', icon: null, testID: '', run: after } : null;
             setVisible(false);
             if (fallbackRef.current) clearTimeout(fallbackRef.current);
@@ -776,6 +788,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
 
     return {
         open: useCallback(() => {
+            if (closingRef.current) return;
             setEngaged(true);
             prepareTree();
             setDirection('none');
