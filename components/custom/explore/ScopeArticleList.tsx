@@ -6,12 +6,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type { ExploreScope } from '@/lib/explore/scopes';
-import type { TopHeadline } from '@/lib/generated/graphql-types';
+import type { CanonicalTopicFacet, TopHeadline } from '@/lib/generated/graphql-types';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, View, type ListRenderItem } from 'react-native';
 import Animated, { runOnJS, useAnimatedScrollHandler, useComposedEventHandler } from 'react-native-reanimated';
@@ -122,6 +122,14 @@ interface ScopeArticleListProps {
     readonly onWindowChange?: (next: ExploreWindowHours) => void;
     /** List-end clear space from the host. Default: the tab bar plus a tail. */
     readonly bottomClearance?: number;
+    /** World topic filter: the canonical topic this page asks for (the parent
+     *  keys the list by it, so a change is a fresh first page). */
+    readonly topicId?: string | null;
+    /** The reader's pick, by label, for the header line. With `topicId` set the
+     *  line counts its stories; with `topicId` null it says the page fell back to all. */
+    readonly pickLabel?: string | null;
+    /** Reports this page's facets once its first answer is in (never while loading or failed). */
+    readonly onFacets?: (facets: readonly CanonicalTopicFacet[], topicsSupported: boolean, active: boolean) => void;
 }
 
 /**
@@ -163,6 +171,9 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     windowHours,
     onWindowChange,
     bottomClearance,
+    topicId,
+    pickLabel,
+    onFacets,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -184,7 +195,14 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         loadMore,
         handlePress,
         firstLoad,
-    } = useScopeArticleList({ scope, enabled, windowHours });
+        facets,
+        topicsSupported,
+    } = useScopeArticleList({ scope, enabled, windowHours, topicId });
+
+    const answered = enabled && !isLoading && !loadFailed;
+    useEffect(() => {
+        if (answered) onFacets?.(facets, topicsSupported, active);
+    }, [answered, facets, topicsSupported, active, onFacets]);
 
     const renderItem: ListRenderItem<TopHeadline> = useCallback(
         ({ item }) => (
@@ -221,14 +239,28 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // On a country page's first load, its bar: INSIDE the list
     // (react-native-screens walks `subviews[0]` for the scroll view). The
     // title and the window chip live in the tab header (WorldPages).
+    const topicLine = useMemo(() => {
+        if (!pickLabel || !answered) return null;
+        if (!topicId) return t('explore.topicFilter.fallback', { topic: pickLabel });
+        const count = facets.find((f) => f.topicId === topicId)?.count ?? headlines.length;
+        return t('explore.topicFilter.count', { count, topic: pickLabel });
+    }, [pickLabel, answered, topicId, facets, headlines.length, t]);
+
     const ListHeaderComponent = useMemo(
         () =>
-            countryName && firstLoad && !loadHung ? (
+            (countryName && firstLoad && !loadHung) || topicLine ? (
                 <View style={{ marginBottom: PAGE_TITLE_GAP }}>
-                    <GatheringBar label={t('world.gathering', { country: countryName })} />
+                    {countryName && firstLoad && !loadHung ? (
+                        <GatheringBar label={t('world.gathering', { country: countryName })} />
+                    ) : null}
+                    {topicLine ? (
+                        <Text size="sm" style={{ color: colors.ink2 }} testID="world-topic-line">
+                            {topicLine}
+                        </Text>
+                    ) : null}
                 </View>
             ) : null,
-        [firstLoad, countryName, loadHung, t],
+        [firstLoad, countryName, loadHung, topicLine, colors.ink2, t],
     );
 
     // Skeleton-or-empty-state, decided INSIDE the list. Previously these were two

@@ -11,8 +11,13 @@ import { addWorldCountry, removeWorldCountry, useWorldPages } from '@/lib/explor
 import { setWorldPageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { router } from 'expo-router';
-import React, { useCallback, useMemo /* , useState */ } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArticleService } from '@/lib/article-service';
+import { effectivePick, topicLabel } from '@/lib/explore/topic-filter';
+import type { CanonicalTopic, CanonicalTopicFacet } from '@/lib/generated/graphql-types';
+import { useIsOnline } from '@/lib/stores/network-store';
+import WorldTopicPill from './WorldTopicPill';
 import { allCountryOptions, commitWorldDraft, searchCountryOptions } from './world-arrange';
 
 const DEFAULT_WINDOW: ExploreWindowHours = 24;
@@ -41,6 +46,27 @@ export function WorldPages() {
     const { t } = useTranslation();
     const { pages, loaded } = useWorldPages();
     const listEndClearance = useListEndClearance();
+    const online = useIsOnline();
+
+    // Topic filter. The pick is tab-session state only: never stored, never in a URL, never logged.
+    const [pick, setPick] = useState<string | null>(null);
+    const [topics, setTopics] = useState<readonly CanonicalTopic[]>([]);
+    const [pageFacets, setPageFacets] = useState<Readonly<Record<string, readonly CanonicalTopicFacet[]>>>({});
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const [latched, setLatched] = useState(false);
+    useEffect(() => {
+        let live = true;
+        ArticleService.getCanonicalTopics().then(
+            (r) => live && setTopics(r),
+            () => live && setTopics([]),
+        );
+        return () => {
+            live = false;
+        };
+    }, []);
+    useEffect(() => {
+        if (latched) setPick(null);
+    }, [latched]);
 
     // Window chip off (owner): every page is DEFAULT_WINDOW. Restore with the chip below.
     // // Session-only, per page; a page keeps its window while warm in the pager.
@@ -81,16 +107,34 @@ export function WorldPages() {
 
     const openSearch = useCallback(() => router.push('/logged-in/search'), []);
 
+    const reportFacets = useCallback(
+        (pageId: string) =>
+            (facets: readonly CanonicalTopicFacet[], supported: boolean, active: boolean) => {
+                if (!supported) return setLatched(true);
+                setPageFacets((prev) => (prev[pageId] === facets ? prev : { ...prev, [pageId]: facets }));
+                if (active) setActiveId(pageId);
+            },
+        [],
+    );
+    const pickTopic = topics.find((tp) => tp.id === pick);
+    const pickName = pickTopic ? topicLabel(t, pickTopic) : null;
+
     const renderPage = useCallback(
         ({ pageId, active, header }: PageRenderProps) => {
             const page = pages.find((p) => p.id === pageId);
             if (!page) return null;
             const hours = DEFAULT_WINDOW; // windows[pageId] ?? DEFAULT_WINDOW;
+            // A page not yet answered has no facets: ask with the pick as is.
+            const facets = pageFacets[pageId];
+            const topicId = facets ? effectivePick(pick, facets) : pick;
             return (
                 <ScopeArticleList
-                    // A window change is a fresh list: new first page, cursor
+                    // A window or topic change is a fresh list: new first page, cursor
                     // and generation. The pager keys the panel by page id.
-                    key={hours}
+                    key={`${hours}:${topicId ?? ''}`}
+                    topicId={topicId}
+                    pickLabel={pickName}
+                    onFacets={reportFacets(pageId)}
                     scope={page.scope}
                     windowHours={hours}
                     // onWindowChange={(next) => setWindowFor(pageId, next)}
@@ -104,7 +148,7 @@ export function WorldPages() {
                 />
             );
         },
-        [pages, /* windows, setWindowFor, */ loaded, listEndClearance],
+        [pages, /* windows, setWindowFor, */ loaded, listEndClearance, pageFacets, pick, pickName, reportFacets],
     );
 
     // const renderTitleChip = useCallback(
@@ -121,7 +165,12 @@ export function WorldPages() {
     //     [windows, setWindowFor, t],
     // );
 
+    const activeFacets = activeId ? pageFacets[activeId] : undefined;
+    const showPill =
+        online && !latched && topics.length > 0 && !!activeFacets && (activeFacets.some((f) => f.count > 0) || !!pick);
+
     return (
+        <>
         <TabPages
             tab="world"
             pages={pills}
@@ -132,6 +181,10 @@ export function WorldPages() {
             // renderTitleChip={renderTitleChip}
             testID="world-pages"
         />
+        {showPill && activeFacets ? (
+            <WorldTopicPill topics={topics} facets={activeFacets} pick={pick} onPick={setPick} />
+        ) : null}
+        </>
     );
 }
 
