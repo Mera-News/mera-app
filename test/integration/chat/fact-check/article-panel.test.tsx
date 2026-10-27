@@ -8,7 +8,8 @@ import { Share } from 'react-native';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import { upsertFactCheck } from '@/lib/database/services/fact-check-record-service';
 import type { FactCheckRow } from '@/lib/fact-check/fact-check-types';
-import { initI18nEn, mockGql, server, signInFixtureAccount } from '@/test/helpers';
+import { toastManager } from '@/lib/toast-manager';
+import { initI18nEn, mockGql, mockGqlError, server, signInFixtureAccount } from '@/test/helpers';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
 import { askedIds, checkRow, serveChecks } from './kit';
 
@@ -145,6 +146,21 @@ describe('the article fact-check card', () => {
     await waitFor(() => expect(within(panel.getByTestId('fact-check-0-again')).getByText('Checked recently')).toBeTruthy());
     expect(panel.getByText('Misleading')).toBeTruthy();
     expect(await askedIds()).toEqual([]);
+  });
+
+  it('says the article is no longer available when the server no longer holds it (MERA-APP-92)', async () => {
+    await seed(published());
+    server.use(mockGqlError('RequestFactCheckAgain', 'NOT_FOUND', { message: 'Article not found: a1', statusCode: 404 }));
+    const info = jest.spyOn(toastManager, 'showInfo');
+    const panel = renderPanel();
+    await waitFor(() => expect(panel.getByTestId('fact-check-0-again')).toBeTruthy());
+
+    fireEvent.press(panel.getByTestId('fact-check-0-again'));
+
+    await waitFor(() => expect(info).toHaveBeenCalledWith('This article is no longer available'));
+    expect(panel.getByText('Misleading')).toBeTruthy();
+    expect(await askedIds()).toEqual([]);
+    info.mockRestore();
   });
 
   it('offers no recheck on a blocked check', async () => {

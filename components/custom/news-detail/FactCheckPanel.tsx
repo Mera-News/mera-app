@@ -28,6 +28,7 @@ import type { FactCheckRow } from '@/lib/fact-check/fact-check-types';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
+import { toastManager } from '@/lib/toast-manager';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useColors } from '@/lib/theme/tokens';
 import { resolveUiLocale } from '@/lib/translation-service';
@@ -226,7 +227,11 @@ const FactCheckResult: React.FC<{
         // Never throws. A pending answer flips this row out of `terminalRows`
         // and the panel shows the working state; a too-early one comes back
         // with a future recheckAvailableAt and this button reads "Checked recently".
-        await requestFactCheckAgain(row.articleId, row.articleTitle);
+        // The server no longer holds this article, so it can never be checked again: say so,
+        // or the tap reads as nothing happening (MERA-APP-92).
+        if ((await requestFactCheckAgain(row.articleId, row.articleTitle)) === 'gone') {
+            toastManager.showInfo(t('articleDetail.articleUnavailable'));
+        }
         setAsking(false);
     };
 
