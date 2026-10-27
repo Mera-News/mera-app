@@ -1,7 +1,6 @@
 /** The fact page's About row at its component seam: chips, remove, Anywhere, and the country picker. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { KeyboardAvoidingView, TextInput } from 'react-native';
 import { FactPlacesRow } from '@/components/custom/facts/FactPlacesRow';
 import { setFactPlaces } from '@/lib/database/services/fact-service';
 import { initI18nEn } from '@/test/helpers';
@@ -9,8 +8,12 @@ import { initI18nEn } from '@/test/helpers';
 jest.mock('@/lib/database/services/fact-service', () => ({ setFactPlaces: jest.fn().mockResolvedValue({ applied: true }) }));
 
 // The kit sheet is a Modal plus Reanimated motion; the seam here is what the picker puts in it.
+const sheetProps: { avoidKeyboard?: boolean }[] = [];
 jest.mock('@/components/ui/bottom-sheet', () => ({
-    BottomSheet: ({ open, children }: { open: boolean; children: React.ReactNode }) => (open ? <>{children}</> : null),
+    BottomSheet: ({ open, children, ...rest }: { open: boolean; children: React.ReactNode; avoidKeyboard?: boolean }) => {
+        sheetProps.push(rest);
+        return open ? <>{children}</> : null;
+    },
 }));
 
 const fact = (places: string[]) => ({ statement: 'Follows Bhopal news', metadata: { places } });
@@ -40,12 +43,9 @@ describe('FactPlacesRow', () => {
         expect(screen.queryByTestId('fact-place-anywhere')).toBeNull();
     });
 
-    it('the picker search sits inside a keyboard-avoiding wrapper, so the keyboard never covers it', () => {
+    it('the picker rides above the keyboard, so its search is never covered', () => {
         mount(['IN']);
-        fireEvent.press(screen.getByTestId('fact-place-add'));
-        const avoider = screen.UNSAFE_getByType(KeyboardAvoidingView);
-        expect(avoider.props.behavior).toBe('padding'); // jest runs as iOS
-        expect(avoider.findAllByType(TextInput)).toHaveLength(1);
+        expect(sheetProps.at(-1)?.avoidKeyboard).toBe(true);
     });
 
     it('a picked country joins the places and replaces GLOBAL', () => {

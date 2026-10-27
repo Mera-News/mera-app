@@ -1,6 +1,6 @@
 import { useRestartHold } from '@/lib/app-restart';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
     runOnJS,
@@ -35,6 +35,11 @@ export interface BottomSheetProps {
     /** Fill the screen to just under the status bar (the first-launch tour,
      *  FinalJourney #15); children get the whole height with `flex: 1`. */
     fullHeight?: boolean;
+    /** Ride above the software keyboard. Opt in for a sheet holding a text
+     *  field: a KeyboardAvoidingView inside the sheet cannot lift the sheet
+     *  itself, so the field ended up under the keyboard. Keep the content short
+     *  enough to fit above it (a ScrollView with a max height). */
+    avoidKeyboard?: boolean;
 }
 
 const SHEET_INSET = 8;
@@ -59,13 +64,31 @@ const PRESENT_FALLBACK_MS = 150;
  * Content does not scroll for you: wrap a long body in a ScrollView with a
  * max height.
  */
-export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLabel, fullHeight }: BottomSheetProps) {
+export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLabel, fullHeight, avoidKeyboard }: BottomSheetProps) {
     useRestartHold(open, 'overlay:sheet', 'auto');
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
     const { height: windowHeight } = useWindowDimensions();
     const reduceMotion = useReducedMotion();
+    // How far the keyboard covers the screen, animated with it. RN's own Keyboard events, not
+    // react-native-keyboard-controller: the kit loads in every Jest suite, which has no native module.
+    const keyboardLift = useSharedValue(0);
+    useEffect(() => {
+        // shortcut: iOS only; an Android Modal window resizes for the keyboard itself (adjustResize). Lift there too if an emulator capture shows the field covered.
+        if (!avoidKeyboard || !open || Platform.OS !== 'ios') return;
+        const show = Keyboard.addListener('keyboardWillShow', (e) => {
+            keyboardLift.value = withTiming(e.endCoordinates.height, { duration: e.duration || 250 });
+        });
+        const hide = Keyboard.addListener('keyboardWillHide', (e) => {
+            keyboardLift.value = withTiming(0, { duration: e.duration || 250 });
+        });
+        return () => {
+            show.remove();
+            hide.remove();
+            keyboardLift.value = 0;
+        };
+    }, [avoidKeyboard, open, keyboardLift]);
 
     const [shown, setShown] = useState(open);
     const [presented, setPresented] = useState(false);
@@ -138,14 +161,15 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
         });
 
     const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
-    const sheetStyle = useAnimatedStyle(() =>
-        reduceMotion
-            ? { opacity: laidOut ? progress.value : 0 }
+    const sheetStyle = useAnimatedStyle(() => {
+        const lift = -keyboardLift.value;
+        return reduceMotion
+            ? { opacity: laidOut ? progress.value : 0, transform: [{ translateY: lift }] }
             : {
                   opacity: laidOut ? 1 : 0,
-                  transform: [{ translateY: (1 - progress.value) * windowHeight + drag.value }],
-              },
-    );
+                  transform: [{ translateY: (1 - progress.value) * windowHeight + drag.value + lift }],
+              };
+    });
 
     return (
         <Modal
