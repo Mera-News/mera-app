@@ -53,6 +53,14 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     (global as any).__DEV__ = true;
   });
 
+  it('leaves native hang and crash capture at their defaults', () => {
+    process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/123';
+    require('@/lib/sentry-init');
+    const cfg = mockSentryInit.mock.calls[0][0];
+    expect(cfg).not.toHaveProperty('enableAppHangTracking');
+    expect(cfg).not.toHaveProperty('enableNativeCrashHandling');
+  });
+
   it('calls Sentry.init with sendDefaultPii: false', () => {
     process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/123';
     process.env.EXPO_PUBLIC_AUTH_ENDPOINT = 'https://auth.test';
@@ -367,6 +375,28 @@ describe('sentry-init (dev path: __DEV__ = true)', () => {
   it('does NOT call Sentry.init in dev mode', () => {
     require('@/lib/sentry-init');
     expect(mockSentryInit).not.toHaveBeenCalled();
+  });
+
+  describe('with EXPO_PUBLIC_SENTRY_IN_DEV=true (feedback only)', () => {
+    let config: any;
+    beforeEach(() => {
+      process.env.EXPO_PUBLIC_SENTRY_IN_DEV = 'true';
+      process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';
+      mockSentryInit.mockImplementation((c: any) => {
+        config = c;
+      });
+      require('@/lib/sentry-init');
+    });
+
+    it('drops error and message events in beforeSend', () => {
+      expect(config.beforeSend({ exception: { values: [{ value: 'boom' }] } })).toBeNull();
+      expect(config.beforeSend({ message: 'hello' })).toBeNull();
+    });
+
+    it('turns off native app-hang and crash capture', () => {
+      expect(config.enableAppHangTracking).toBe(false);
+      expect(config.enableNativeCrashHandling).toBe(false);
+    });
   });
 });
 
