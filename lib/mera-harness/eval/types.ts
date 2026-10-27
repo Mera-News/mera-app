@@ -6,7 +6,7 @@
 // run under a CLI, under jest, or against a fake model with zero calls, and it
 // is why `runAgentCorpus` can be dry-run to completion for free.
 
-import type { FactKind, LookupPlaceResult, SimilarFactCandidate } from './contract';
+import type { FactKind, LookupPlaceResult, SimilarFactCandidate, SurfaceContext } from './contract';
 
 // ---------------------------------------------------------------------------
 // Ports
@@ -134,6 +134,8 @@ export interface EvalRow {
   modelSent: string | null;
   /** Set on the last leg of a turn; null on every earlier leg. */
   endedOn: TurnEnd | null;
+  /** true on every row of a More options turn (no user message, no route leg). */
+  moreOptions?: true;
   /** Route legs re-asked this turn after producing no route. */
   formatRetries: number | null;
   /** Reply-gate counters, on the turn's LAST row only. Null on every other row,
@@ -242,6 +244,9 @@ export interface ScriptExpect {
   /** Lowercase substrings no fact OFFERED this turn may contain: the leak
    *  guard (an earlier subject must never ride into an unrelated fact). */
   offerExcludes?: string[];
+  /** Checks on the follow card this turn staged (TRACK block). Absent means the
+   *  turn is not scored on follow cards. */
+  track?: ExpectedTrack;
   /** true: this turn offers no fact at all ("follow this" before following
    *  exists in this chat must not become an interest fact). */
   noOffer?: true;
@@ -266,6 +271,19 @@ export interface ExpectedCard {
   applied?: boolean;
   /** true: NO applyProposal call at all this turn, executed or refused. */
   noApply?: true;
+}
+
+export interface ExpectedTrack {
+  /** true: a proposeTrack call staged a card this turn. false: none staged
+   *  (an attempt the port refused still counts as not staged). */
+  staged: boolean;
+  /** Bounds on the staged card's option count. Only read when `staged`. */
+  minOptions?: number;
+  maxOptions?: number;
+  /** Lowercase substrings, at least ONE label must contain one. */
+  labelMatches?: string[];
+  /** Lowercase substrings NO label may contain. */
+  labelExcludes?: string[];
 }
 
 export type ReplyScript = 'devanagari';
@@ -295,10 +313,19 @@ export interface FakeSimilarFactsAnswer {
   returns: { candidates: SimilarFactCandidate[] };
 }
 
+/** What the follow card shows when the user taps More options. */
+export interface ScriptMoreOptions {
+  shown: { label: string; searchText: string }[];
+  room: number;
+}
+
 export interface ScriptTurn {
   index: number;
-  /** Free text, or absent when this is a choice reply. */
+  /** Free text, or absent when this is a choice reply or a More options tap. */
   user?: string;
+  /** A More options tap instead of a message: run on a COPY of the state, so the
+   *  script's own state does not advance. Exactly one of user, chooses, moreOptions. */
+  moreOptions?: ScriptMoreOptions;
   /** A choice reply. Must equal one of the options the PREVIOUS turn offered;
    *  a mismatch is counted, never followed, so every arm keeps answering the
    *  same question and stays comparable. */
@@ -314,7 +341,15 @@ export interface ScriptTurn {
     /** What a web search returns this turn, so the turn really names a subject.
      *  Matched by `query` substring (lowercase, absent = any query). */
     webSearch?: FakeWebSearchAnswer[];
+    /** What Mera's own news index returns this turn (headlines only). Matched by
+     *  `query` substring (lowercase, absent = any query). */
+    searchNews?: FakeSearchNewsAnswer[];
   };
+}
+
+export interface FakeSearchNewsAnswer {
+  query?: string;
+  headlines: string[];
 }
 
 export interface FakeWebSearchAnswer {
@@ -330,8 +365,12 @@ export interface AgentScript {
    *  fixtures where they fit, so there is one copy of each persona. */
   persona: ScriptPersona;
   declinedTopics: string[];
+  /** Where the chat is opened, fed to the loop as `state.surfaceContext` on
+   *  every turn. Absent: no surface (the Mera button on a plain page). */
+  surface?: SurfaceContext;
   turns: ScriptTurn[];
 }
+
 
 export interface ScriptPersona {
   facts: {

@@ -16,6 +16,7 @@ export const TWINS: ReadonlySet<string> = new Set([
   'forced-offer-closing', 'forced-offer-closing-twin',
   'pre-S1', 'pre-S1-twin',
   'pre-S1.5', 'pre-S1.5-twin',
+  'pre-S3', 'pre-S3-twin',
 ]);
 
 /** The leg-0 router prompt an arm builds, for both surfaces, as a short hash.

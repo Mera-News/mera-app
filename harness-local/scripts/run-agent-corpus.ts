@@ -59,7 +59,8 @@ try {
   if ((err as { code?: string }).code !== 'MODULE_NOT_FOUND') throw err;
 }
 
-import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
+import { PERSONA_SKILL_IDS, PERSONA_SKILL_INDEX } from '../../lib/mera-harness/skills/index.generated';
+import { moreOptionsReport, trackReport } from '../../lib/mera-harness/eval/track-metrics';
 import { routeKindsFor } from '../../lib/mera-harness/eval/contract';
 import { parseScript } from '../../lib/mera-harness/eval/script';
 import { runAgentScript } from '../../lib/mera-harness/eval/run-agent-corpus';
@@ -231,13 +232,30 @@ function loadScripts(dir: string): AgentScript[] {
 // repeats 1 and 2. A detector that has only ever seen clean input cannot fail,
 // and this repo has already had a control go silent unnoticed once.
 
-function dryRunModel(repeat: number): (req: EvalModelRequest) => Promise<EvalModelResult> {
+function dryRunModel(repeat: number, scriptId: string): (req: EvalModelRequest) => Promise<EvalModelResult> {
   let call = 0;
   return async (req: EvalModelRequest): Promise<EvalModelResult> => {
     call += 1;
     const damaged = repeat === 0;
     const isRoute = req.role === 'route';
-    const toolCalls = isRoute
+    const offers = (name: string): boolean =>
+      Array.isArray(req.tools) && req.tools.some((t) => (t as { function?: { name?: string } })?.function?.name === name);
+    // Follow scripts: repeat 0 routes to the follow skill so a skill leg is offered
+    // proposeTrack, which is then planted (one card of two options) on every such leg.
+    const followRoute = damaged && isRoute && scriptId.startsWith('follow') && offers('load_skill');
+    const toolCalls = followRoute
+      ? [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'conversation/follow-story' }) }]
+      : damaged && offers('proposeTrack')
+      ? [{
+          name: 'proposeTrack',
+          argumentsRaw: JSON.stringify({
+            options: [
+              { label: 'Planted Option One', search: 'Planted One Search' },
+              { label: 'Planted Option Two', search: 'planted lowercase search 2019' },
+            ],
+          }),
+        }]
+      : isRoute
       ? [
           {
             name: damaged && call === 1 ? 'teleport' : 'lookup_place',
@@ -247,7 +265,7 @@ function dryRunModel(repeat: number): (req: EvalModelRequest) => Promise<EvalMod
         ]
       : [];
     return {
-      content: isRoute ? '' : damaged ? 'A reply — with an em dash.' : 'A plain reply.',
+      content: isRoute || (!damaged && offers('proposeTrack')) ? '' : damaged ? 'A reply — with an em dash.' : 'A plain reply.',
       toolCalls,
       finishReason: damaged && !isRoute ? 'length' : 'stop',
       truncated: damaged && !isRoute,
@@ -431,7 +449,7 @@ async function main(): Promise<number> {
 
   try {
     await runPool(jobs, args.lanes, async ({ rep, script, variant, protocol, model }) => {
-      const dry = dryRunModel(rep);
+      const dry = dryRunModel(rep, script.id);
       const arm = `${model}@${variant}${protocol === 'native' ? '' : `+${protocol}`}`;
       // One entry per model call, shifted per emitted leg row (the loop emits
       // a turn's rows in call order, after all its calls). PER JOB: with lanes,
@@ -703,6 +721,30 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push(`\nOFFER GUARDS (noOffer and offerExcludes; the leak guard must be ${guards.checked}/${guards.checked})  ${guards.passed}/${guards.checked}`);
   for (const m of guards.misses.slice(0, 8)) {
     out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: offered ${JSON.stringify(m.offered)}`);
+  }
+
+  const expectOf = (id: string, idx: number) =>
+    scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.expect ?? null;
+  const track = trackReport(turns, expectOf);
+  out.push('\nTRACK (follow cards, proposeTrack; a More options turn is scored in its own block)');
+  out.push(`  proposeTrack attempted ${track.attempted}  staged ${track.staged}  refused ${track.refused}`);
+  out.push(`  options per staged card  ${Object.entries(track.histogram).map(([n, c]) => `${n}: ${c}`).join(', ') || 'none'}`);
+  out.push(`  proposeTrack on non-follow cohorts (bar 0)  ${track.offCohortAttempts}`);
+  out.push(`  expect.track met ${track.met}/${track.expected}`);
+  for (const m of track.misses.slice(0, 8)) out.push(`    MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${m.detail}`);
+
+  const examples = PERSONA_SKILL_INDEX.find((e) => e.id === 'conversation/follow-story')?.examples ?? [];
+  const more = moreOptionsReport(
+    turns,
+    (id, idx) => scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.moreOptions ?? null,
+    { examples, nowYear: new Date().getFullYear() },
+  );
+  out.push('\nMORE OPTIONS (pass: >= 1 new option, each with label Jaccard < 0.6 against every shown label and a different search text)');
+  out.push(`  passed ${more.passed}/${more.turns.length}  new options ${more.options}  too close to a shown one ${more.repeated}`);
+  out.push(`  grounding flags  copied-example ${more.flags['copied-example']}  ended-season ${more.flags['ended-season']}  no-entity ${more.flags['no-entity']}`);
+  out.push(`  turns that wrote prose (discarded by the loop) ${more.proseWritten}`);
+  for (const m of more.turns.filter((x) => !x.passed || x.flags.length > 0).slice(0, 8)) {
+    out.push(`    ${m.passed ? 'FLAG' : 'MISS'} ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${JSON.stringify(m.options.map((o) => o.label))}${m.flags.length ? ` ${m.flags.map((f) => `${f.flag}(${f.option})`).join(', ')}` : ''}`);
   }
 
   const cards = cardReport(turns, (id, idx) =>

@@ -120,6 +120,10 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
       schemaValid = Array.isArray(parsed.actions) && parsed.actions.length >= 1;
     } else if (name === 'explainMera') {
       schemaValid = Array.isArray(parsed.topics) && parsed.topics.length >= 1;
+    } else if (name === 'proposeTrack') {
+      schemaValid = Array.isArray(parsed.options) && parsed.options.length >= 1;
+    } else if (name === 'searchNews') {
+      schemaValid = typeof parsed.query === 'string';
     }
   }
   return { name, argumentsRaw, parsed, schemaValid, unknownTool: !knownTools.has(name), result };
@@ -138,7 +142,7 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
 const KNOWN_TOOLS = new Set([
   'load_skill', 'find_similar_facts', 'findSimilarFacts', 'lookup_place', 'lookupPlace',
   'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch', 'explainMera',
-  'proposeChanges', 'applyProposal', 'cancelProposal',
+  'proposeChanges', 'applyProposal', 'cancelProposal', 'proposeTrack', 'searchNews',
   // Loop-written, never the model's: the "Save as I wrote it" chip (ux2 D9).
   'saveAsWritten',
 ]);
@@ -237,9 +241,11 @@ export async function runAgentScript(
   const skillIds = opts.skillIds ?? [];
   const fakes: FakeToolsHandle = createFakeTools(script);
   const state: AgentState = createAgentState(personaFor(script));
+  state.surfaceContext = script.surface ?? null;
 
   for (const turn of script.turns) {
-    const userMessage = resolveUserMessage(turn, state.turn, script, opts);
+    const isMoreOptions = turn.moreOptions !== undefined;
+    const userMessage = isMoreOptions ? '' : resolveUserMessage(turn, state.turn, script, opts);
     fakes.beginTurn(turn, state.turn);
     // The card slot and the filters live in the fake across turns, like the
     // device's screen: a card staged on turn N is still waiting on turn N+1.
@@ -285,13 +291,18 @@ export async function runAgentScript(
       );
     }
 
+    // A More options tap is not a conversation turn: it runs on a COPY, so the
+    // script's state (and the next turn) never sees it. The fake card slot is the
+    // one thing it shares, so a script mixes it with other turns at its own risk.
+    const turnState: AgentState = isMoreOptions ? structuredClone(state) : state;
     const result = await runAgentTurn({
-      state,
+      state: turnState,
       userMessage,
       deps,
       maxLegs: opts.maxLegs,
       promptVariant: opts.promptVariant ?? opts.variant,
       model: opts.model,
+      ...(isMoreOptions ? { mode: 'moreOptions' as const, moreOptions: turn.moreOptions } : {}),
     });
 
     const lastError = result.legs.length > 0 ? result.legs[result.legs.length - 1].result.error : null;
@@ -310,6 +321,7 @@ export async function runAgentScript(
         repeat: opts.repeat,
         arm: opts.arm,
         variant: opts.variant,
+        ...(isMoreOptions ? { moreOptions: true as const } : {}),
         callType: ROLE_TO_CALL_TYPE[leg.role] ?? 'agent-tool',
         // THE TURN, never the leg. Leg counts are ragged across repeats and
         // the one-shot control arm has no leg above 0, so a leg-level group
@@ -348,7 +360,7 @@ export async function runAgentScript(
         noAnswerFallbackUsed: isLast ? result.noAnswerFallbackUsed : null,
         closingClaim: isLast ? result.closingClaim : null,
         stagedSomething: isLast ? result.stagedSomething : null,
-        choicePending: isLast ? state.turn.pendingChoice !== null : null,
+        choicePending: isLast ? turnState.turn.pendingChoice !== null : null,
         awaitingUser: isLast && endedOn === 'awaiting_user',
         routeKind: result.routeKind,
         skillLoaded: result.skillLoaded,

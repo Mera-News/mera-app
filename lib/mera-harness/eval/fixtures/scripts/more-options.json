@@ -1,0 +1,37 @@
+{
+  "id": "more-options",
+  "cohort": "more-options",
+  "note": "chatfix S3, More options on a card already showing three Assam options with room for five more. Each new option must differ from every shown one (label Jaccard < 0.6, different search text) and stay grounded: no copied skill example, no ended season, a named entity in the search. The loop discards prose.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "surface": {
+    "kind": "follow-story",
+    "hint": "They opened this chat from their Followed stories page to follow a news story.",
+    "context": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "moreOptions": {
+        "shown": [
+          {
+            "label": "Assam Flood Relief",
+            "searchText": "Assam flood relief funds Centre"
+          },
+          {
+            "label": "Brahmaputra Water Levels",
+            "searchText": "Brahmaputra river water level Assam"
+          },
+          {
+            "label": "Kaziranga Flooding",
+            "searchText": "Kaziranga National Park flooding animals Assam"
+          }
+        ],
+        "room": 5
+      }
+    }
+  ]
+}

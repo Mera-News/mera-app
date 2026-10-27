@@ -1,0 +1,264 @@
+{
+  "id": "follow-story",
+  "cohort": "follow-story",
+  "note": "chatfix S3. The ten follow subjects of the single-shot corpus on the Followed stories page: each is its own conversation of one turn (a turn per fixture here, state carried, which is harmless: nothing is followed). searchNews is scripted from the single-shot search lists. Every turn must stage a card of 2 or more options. One single-shot subject is swapped for the Red Sea, because the original is a skill example. follow-red-sea-shipping and the rotterdam strike (no coverage) are the two hard ones.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "surface": {
+    "kind": "follow-story",
+    "hint": "They opened this chat from their Followed stories page to follow a news story.",
+    "context": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "user": "the dutch cabinet formation talks",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Dutch coalition talks stall over asylum policy",
+              "Informateur hands report to Dutch parliament",
+              "Netherlands parties agree on outline coalition deal",
+              "Dutch election winner seeks fourth coalition partner"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "I want to follow the gaza ceasefire negotiations",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Mediators press Israel and Hamas on second phase of ceasefire",
+              "Cairo hosts new round of Gaza truce talks",
+              "Aid convoys enter Gaza as ceasefire holds"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "EU AI act enforcement",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "EU AI Office publishes guidance for general-purpose AI models",
+              "Brussels opens first AI Act compliance review",
+              "Tech firms lobby to delay AI Act high-risk rules"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "follow PSV in the champions league this season",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "PSV draw with Juventus in Champions League league phase",
+              "PSV coach names squad for Champions League trip",
+              "Champions League standings after matchday three"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "the floods in assam",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Assam floods displace thousands as Brahmaputra rises",
+              "Kaziranga park flooded, animals move to higher ground",
+              "Centre releases relief funds for flood-hit northeast"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "user": "us government shutdown",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "US government shutdown enters second week",
+              "Senate vote on stopgap funding bill fails again",
+              "Federal workers miss paychecks as shutdown drags on"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "user": "rent rules for housing in amsterdam",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Amsterdam landlords sell rental homes after new rent law",
+              "Dutch housing minister proposes changes to rent cap",
+              "Amsterdam mid-rent supply falls, data shows"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "user": "shipping through the red sea",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Container lines reroute around Cape of Good Hope again",
+              "Houthi attack disrupts tanker traffic in Red Sea",
+              "Suez Canal revenue falls as ships avoid the route"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "user": "bitcoin etf inflows",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Bitcoin ETFs record largest weekly inflow this year",
+              "BlackRock bitcoin fund passes new asset milestone",
+              "SEC weighs new crypto ETF applications"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 9,
+      "user": "the strike at the port of rotterdam",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": []
+          }
+        ]
+      }
+    }
+  ]
+}

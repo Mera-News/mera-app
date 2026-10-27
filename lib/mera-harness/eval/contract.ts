@@ -37,6 +37,7 @@ export type {
   PendingProposalView,
   Place,
   SimilarFactCandidate,
+  SurfaceContext,
 } from '../core/types';
 
 export { createAgentTurnState } from '../core/types';

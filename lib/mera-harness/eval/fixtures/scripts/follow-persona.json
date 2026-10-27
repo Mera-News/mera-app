@@ -1,0 +1,137 @@
+{
+  "id": "follow-persona",
+  "cohort": "follow-persona",
+  "note": "chatfix S3, the Mera button with no surface. Follow wishes stage a card; 'follow this' after a web answer follows the subject of that answer; 'I follow PSV' is a statement about the user (an interest fact), never a card.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I want to follow the DPDP law, Indian government wants to bring",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "India's data protection rules move closer to notification",
+              "Draft DPDP rules draw comments from tech firms",
+              "Data Protection Board of India to be set up under the law"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "keep me updated on the EU AI Act",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "EU AI Office publishes guidance for general-purpose AI models",
+              "Brussels opens first AI Act compliance review",
+              "Tech firms lobby to delay AI Act high-risk rules"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "What is going on with the Assam floods?",
+      "expect": {
+        "tools": [
+          "webSearch"
+        ],
+        "track": {
+          "staged": false
+        }
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "query": "assam",
+            "results": [
+              {
+                "title": "Assam floods displace thousands as Brahmaputra rises",
+                "url": "https://example.com/0",
+                "snippet": "Assam floods displace thousands as Brahmaputra rises"
+              },
+              {
+                "title": "Kaziranga park flooded, animals move to higher ground",
+                "url": "https://example.com/1",
+                "snippet": "Kaziranga park flooded, animals move to higher ground"
+              },
+              {
+                "title": "Centre releases relief funds for flood-hit northeast",
+                "url": "https://example.com/2",
+                "snippet": "Centre releases relief funds for flood-hit northeast"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "okay, follow this",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2,
+          "labelMatches": [
+            "assam"
+          ]
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Assam floods displace thousands as Brahmaputra rises",
+              "Kaziranga park flooded, animals move to higher ground",
+              "Centre releases relief funds for flood-hit northeast"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "I follow PSV",
+      "expect": {
+        "routeKind": "interest",
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    }
+  ]
+}

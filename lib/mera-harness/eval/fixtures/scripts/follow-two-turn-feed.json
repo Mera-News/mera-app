@@ -1,0 +1,47 @@
+{
+  "id": "follow-two-turn-feed",
+  "cohort": "follow-two-turn-feed",
+  "note": "chatfix S3. 'I want to follow a story' names no subject: one short question, no card. The next turn names it and a card is staged. Same two turns from the Mera button, with no surface.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I want to follow a story",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "the floods in assam",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        }
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Assam floods displace thousands as Brahmaputra rises",
+              "Kaziranga park flooded, animals move to higher ground",
+              "Centre releases relief funds for flood-hit northeast"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
