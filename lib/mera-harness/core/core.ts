@@ -596,7 +596,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       resumedSkill = true;
       skillsLoaded.push(FOLLOW_STORY_SKILL);
     }
-    maxLegsThisTurn = 1;
+    // Two at most: a lookup leg (the skill says to search first, and the model
+    // does, whatever the leg declares) and the card. Measured u6b2: 4 of 6
+    // misses were a leg that only called searchNews.
+    maxLegsThisTurn = 2;
   }
   /** The note a More options leg ends on: the options on the card, escaped
    *  (labels are model text), and the room left. */
@@ -1990,11 +1993,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
     params.onLeg?.(leg);
 
-    // MORE OPTIONS IS ONE LEG, whatever it returned: its prose is discarded,
-    // and a re-ask or a closing leg would spend calls on words nobody reads.
+    // MORE OPTIONS: a card ends it; a leg that only looked the story up gets
+    // the one more forced leg; anything else ends it. Prose is discarded, and a
+    // re-ask or a closing leg would spend calls on words nobody reads.
     if (moreOptionsMode) {
-      if (terminatedByCard) terminalReason = 'awaiting-user';
       reply = '';
+      if (terminatedByCard) {
+        terminalReason = 'awaiting-user';
+        break;
+      }
+      if (sawContinuationTool && index === 0) continue;
       break;
     }
 

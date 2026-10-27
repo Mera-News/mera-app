@@ -177,6 +177,28 @@ describe('More options', () => {
     expect(out.closingLegFired).toBe(false);
   });
 
+  it('a leg that only looks the story up gets one more forced leg for the card (u6b2 more-options r0-r2)', async () => {
+    // Replayed: the More options leg called searchNews (and webSearch) instead of proposeTrack.
+    const h = harness([
+      res({ content: '\n', toolCalls: [tc('searchNews', { query: 'Assam floods relief' })] }),
+      res({ toolCalls: [tc('proposeTrack', OPTIONS)] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: '', deps: h.deps, mode: 'moreOptions', moreOptions: MORE });
+    expect(h.requests).toHaveLength(2);
+    expect(names(h.requests[1])).toEqual(['proposeTrack']);
+    expect(h.requests[1].toolChoice).toBe('required');
+    expect(text(h.requests[1])).toContain('Assam floods displace thousands');
+    expect(h.port.proposeTrack).toHaveBeenCalledWith(OPTIONS);
+    expect(out.stagedSomething).toBe(true);
+  });
+
+  it('two lookup legs and still no card: it stops at two legs', async () => {
+    const h = harness([res({ toolCalls: [tc('searchNews', { query: 'Assam floods' })] }), res({ toolCalls: [tc('searchNews', { query: 'Assam monsoon' })] })]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: '', deps: h.deps, mode: 'moreOptions', moreOptions: MORE });
+    expect(h.requests).toHaveLength(2);
+    expect(h.port.proposeTrack).not.toHaveBeenCalled();
+  });
+
   it('a leg with no call ends there: no re-ask, no closing leg, no canned line', async () => {
     const h = harness([res({ content: 'Nothing else comes to mind.' })]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: '', deps: h.deps, mode: 'moreOptions', moreOptions: MORE });
