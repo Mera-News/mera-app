@@ -8,11 +8,9 @@ import { swipeCallbacks } from '@/components/custom/feed/swipe-callbacks';
 import * as feedbackTreeService from '@/lib/services/feedback-tree-service';
 import logger from '@/lib/logger';
 import {
-  changeSwipeVerdict,
   openArticleChat,
   openFeedbackChatWithPath,
   recordSwipeVerdict,
-  removeSwipeVerdict,
   wireSwipeCallbacks,
 } from '@/lib/services/swipe-feedback';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -86,14 +84,14 @@ afterEach(() => {
 
 describe('recordSwipeVerdict', () => {
   it('records a verdict with origin/surface + context snapshot', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
+    await recordSwipeVerdict(makeSuggestion(), 'dislike');
 
     const rows = await feedbackRows();
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       articleId: 'art-1',
       suggestionId: 'sugg-1',
-      sentiment: 'like',
+      sentiment: 'dislike',
       title: 'A story',
       origin: 'suggestion',
       surface: 'swipe',
@@ -105,59 +103,9 @@ describe('recordSwipeVerdict', () => {
     expect(rows[0].processedAt).not.toBeNull();
   });
 
-  it('is latest-wins: a dislike replaces an earlier like on the same article', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-
-    expect(await sentiments()).toEqual(['dislike']);
-  });
-
   it('recording the same verdict twice keeps one row', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-
-    expect(await sentiments()).toEqual(['like']);
-  });
-});
-
-describe('changeSwipeVerdict', () => {
-  it('removes the old sentiment and records the new one', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-
-    await changeSwipeVerdict(makeSuggestion(), 'like', 'dislike');
-
-    expect(await sentiments()).toEqual(['dislike']);
-  });
-
-  it('no-ops when from === to', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-    const before = (await feedbackRows())[0];
-
-    await changeSwipeVerdict(makeSuggestion(), 'like', 'like');
-
-    const rows = await feedbackRows();
-    expect(rows.map((r) => r.id)).toEqual([before.id]);
-  });
-
-  it('no-op on a card that has no verdict stored writes nothing', async () => {
-    await changeSwipeVerdict(makeSuggestion(), 'like', 'like');
-    expect(await feedbackRows()).toEqual([]);
-  });
-});
-
-describe('removeSwipeVerdict', () => {
-  it('destroys the stored feedback row for the un-voted sentiment', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-
-    await removeSwipeVerdict(makeSuggestion(), 'like');
-
-    expect(await feedbackRows()).toEqual([]);
-  });
-
-  it('leaves the other sentiment alone', async () => {
     await recordSwipeVerdict(makeSuggestion(), 'dislike');
-
-    await removeSwipeVerdict(makeSuggestion(), 'like');
+    await recordSwipeVerdict(makeSuggestion(), 'dislike');
 
     expect(await sentiments()).toEqual(['dislike']);
   });
@@ -259,27 +207,9 @@ describe('wireSwipeCallbacks', () => {
   it('installs real implementations onto the swipe-callbacks contract', async () => {
     wireSwipeCallbacks();
 
-    swipeCallbacks.onVerdict(makeSuggestion(), 'like');
-
-    await eventually(async () => expect(await sentiments()).toEqual(['like']));
-  });
-
-  it('wires onVerdictChanged to flip the stored verdict', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-    wireSwipeCallbacks();
-
-    swipeCallbacks.onVerdictChanged(makeSuggestion(), 'like', 'dislike');
+    swipeCallbacks.onVerdict(makeSuggestion(), 'dislike');
 
     await eventually(async () => expect(await sentiments()).toEqual(['dislike']));
-  });
-
-  it('wires onVerdictRemoved to destroy the stored feedback row', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-    wireSwipeCallbacks();
-
-    swipeCallbacks.onVerdictRemoved(makeSuggestion(), 'like');
-
-    await eventually(async () => expect(await feedbackRows()).toEqual([]));
   });
 
   it('wires onInvokeMera to the primed verdict + path handoff', async () => {

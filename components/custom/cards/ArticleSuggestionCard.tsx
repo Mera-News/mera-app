@@ -44,8 +44,8 @@ interface ArticleCardProps {
   // FLAT, memo-safe props so a row re-renders only when its own verdict flips.
   /** The card's currently-stored verdict (null when undecided). */
   verdict?: Verdict | null;
-  /** A thumb was tapped — the host records the verdict; the card then opens
-   *  the ••• sheet at that verdict's tree root. */
+  /** Present on surfaces with an action row (the Saved list passes none). The
+   *  sheet records the verdict itself; this is only the discriminator. */
   onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** The Mera glyph on the rationale block was tapped — open the default article
    *  chat. Absent ⇒ no Ask-Mera affordance renders (e.g. the Saved list). */
@@ -186,12 +186,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // the feedback root (no Back row). Nothing is recorded until the reader
   // answers: the sheet writes the verdict and reports it (owner).
   const menuRef = React.useRef<{ openFeedback: () => void } | null>(null);
-  const tapThumb = (v: Verdict) => {
-    if (!onVerdict) return;
-    if (v === 'like') {
-      onVerdict(suggestion, v);
-      return;
-    }
+  const tapFeedback = () => {
     hapticLight();
     menuRef.current?.openFeedback();
   };
@@ -200,8 +195,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const inlineActions = onVerdict
     ? inlineAccessibilityActions(t, {
         saved,
-        onLike: () => tapThumb('like'),
-        onDislike: () => tapThumb('dislike'),
+        onFeedback: tapFeedback,
         onToggleSave: handleToggleSave,
         onShare: suggestion.article_url ? () => void handleShare() : undefined,
       })
@@ -325,8 +319,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       // A recorded verdict is filled at once (see CardActionBar's header).
       verdict={verdict}
       saved={saved}
-      onLike={() => tapThumb('like')}
-      onDislike={() => tapThumb('dislike')}
+      onFeedback={tapFeedback}
       onAskMera={() => onAskMera?.(suggestion)}
       onToggleSave={handleToggleSave}
       onShare={suggestion.article_url ? () => void handleShare() : undefined}

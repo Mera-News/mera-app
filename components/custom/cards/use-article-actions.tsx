@@ -145,7 +145,7 @@ export interface InlineAccessibilityAction {
 }
 
 /**
- * The four inline actions (like, not for me, save, share) as VoiceOver custom
+ * The inline actions (feedback, save, share) as VoiceOver custom
  * actions. A card's root Pressable is ONE accessibility element on iOS, which
  * hides the buttons drawn inside it, so without these a screen-reader user
  * could reach the ••• items but not the row's own buttons.
@@ -154,15 +154,13 @@ export function inlineAccessibilityActions(
   t: TFunction,
   a: {
     saved: boolean;
-    onLike: () => void;
-    onDislike: () => void;
+    onFeedback: () => void;
     onToggleSave?: () => void;
     onShare?: () => void;
   },
 ): InlineAccessibilityAction[] {
   const list: InlineAccessibilityAction[] = [
-    { key: 'like', label: t('articleFeedback.likeLabel'), run: a.onLike },
-    { key: 'dislike', label: t('articleFeedback.dislikeLabel'), run: a.onDislike },
+    { key: 'dislike', label: t('feedbackTree.menu.iconLabel'), run: a.onFeedback },
   ];
   if (a.onToggleSave) {
     list.push({

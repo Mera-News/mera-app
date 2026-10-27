@@ -1,17 +1,14 @@
-// use-feedback-sheet — the shared plumbing behind a card's like/dislike action,
+// use-feedback-sheet — the shared plumbing behind a card's feedback button,
 // extracted so BOTH the For You feed (FeedScreen) and the fact feed
 // (FactFeedScreen) drive feedback identically.
 //
-// A thumb tap records the verdict here; the card then opens the shared ••• sheet
-// straight at that verdict's tree root (useArticleMenu.openFeedback), the same
-// sheet and tree every other surface uses. This hook owns only the (stable)
-// card-action handlers:
-//   • a thumb tap records the verdict (fresh / flipped) and the thumb fills at
-//     once; the tree is optional refinement. A bare verdict never reaches the
-//     digest (D15). The row's COMMITTED flag is set only when a terminal leaf
-//     settles (or the user escalates to Mera), never by the tree path (F2);
-//   • re-tapping the SAME thumb REMOVES the verdict and all its feedback;
-//   • a picked leaf persists its path, and commits when the leaf says so.
+// The feedback button opens the shared ••• sheet at its root
+// (useArticleMenu.openFeedback), the same sheet and tree every other surface
+// uses. The sheet records the dislike on the reader's first answer and reports
+// it through `onVerdictRecorded`. This hook owns only the (stable) card-action
+// handlers. A bare verdict never reaches the digest (D15). The row's COMMITTED
+// flag is set only when a terminal leaf settles (or the user escalates to
+// Mera), never by the tree path (F2).
 //
 // The one thing that differs per surface is WHERE verdicts live. That is behind
 // the `VerdictStoreAdapter`: FeedScreen backs it with the persisted
@@ -107,7 +104,8 @@ export interface UseFeedbackSheetOptions {
 }
 
 export interface UseFeedbackSheet {
-  /** Card action: a thumb was tapped — record / flip / un-vote. */
+  /** Record a dislike for the card. Its presence also tells the card it is on a
+   *  surface with an action row (the Saved list passes none). */
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** Card action: the Mera icon was tapped — open the default article chat. */
   onAskMera: (suggestion: ForYouSuggestion) => void;
@@ -134,28 +132,10 @@ export function useFeedbackSheet(
     const a = adapterRef.current;
     const key = a.keyFor(suggestion);
     if (!key) return;
-    const existing = a.getVerdict(key);
-    if (existing === next) {
-      // Re-tap of the same thumb — un-vote: drop the verdict + its feedback.
-      a.setVerdict(key, null);
-      a.setPath(key, []);
-      a.setCommitted(key, false);
-      swipeCallbacks.onVerdictRemoved(suggestion, next);
-    } else if (existing != null) {
-      // Flip like↔dislike — reset the path; the card opens the new tree. The
-      // old sentiment's row (and its commitment) is destroyed by
-      // `changeSwipeVerdict`, so the new one starts uncommitted.
-      a.setVerdict(key, next);
-      a.setPath(key, []);
-      a.setCommitted(key, false);
-      swipeCallbacks.onVerdictChanged(suggestion, existing, next);
-      markSuggestionRead(suggestion);
-    } else {
-      // Fresh verdict — record; the card opens its tree.
-      a.setVerdict(key, next);
-      swipeCallbacks.onVerdict(suggestion, next);
-      markSuggestionRead(suggestion);
-    }
+    if (a.getVerdict(key) === next) return;
+    a.setVerdict(key, next);
+    swipeCallbacks.onVerdict(suggestion, next);
+    markSuggestionRead(suggestion);
   }, []);
 
   const onAskMera = useCallback((suggestion: ForYouSuggestion) => {

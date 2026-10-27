@@ -16,7 +16,7 @@ import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedbac
 import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
-import { getArticleVerdict, hasLiked, recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
+import { getArticleVerdict, recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
 import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -61,19 +61,18 @@ const feedAdapter: VerdictStoreAdapter = {
 const record = (id: string) => useFeedOrderStore.getState().verdicts[id];
 
 describe('useFeedbackSheet: the verdict on a Feed card', () => {
-    it('records a like, then a dislike flips it: one verdict row, latest wins', async () => {
-        const s = await seedSuggestion({ _id: 'fs-flip' });
+    it('records a dislike: one verdict row, kept under the key', async () => {
+        const s = await seedSuggestion({ _id: 'fs-dislike' });
         const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
 
-        act(() => result.current.onVerdict(s, 'like'));
-        expect(record('fs-flip')?.verdict).toBe('like');
-        await waitFor(async () => expect(await verdictOf('fs-flip')).toBe('like'));
-
         act(() => result.current.onVerdict(s, 'dislike'));
-        expect(record('fs-flip')).toMatchObject({ verdict: 'dislike', path: [] });
-        await waitFor(async () => expect(await verdictOf('fs-flip')).toBe('dislike'));
-        // A like row left behind would win the read (getArticleVerdict prefers like).
-        expect(await hasLiked('fs-flip')).toBe(false);
+        expect(record('fs-dislike')).toMatchObject({ verdict: 'dislike', path: [] });
+        await waitFor(async () => expect(await verdictOf('fs-dislike')).toBe('dislike'));
+
+        // The verdict is not a toggle: a second call changes nothing.
+        act(() => result.current.onVerdict(s, 'dislike'));
+        expect(record('fs-dislike')).toMatchObject({ verdict: 'dislike', path: [] });
+        expect(await verdictOf('fs-dislike')).toBe('dislike');
     });
 
     it('the sheet recording a verdict fills the card and marks it read', async () => {
@@ -84,21 +83,10 @@ describe('useFeedbackSheet: the verdict on a Feed card', () => {
         expect(useOpenedStoriesStore.getState().articleIds.has(s.articleId)).toBe(true);
     });
 
-    it('the same thumb again removes the verdict and its row', async () => {
-        const s = await seedSuggestion({ _id: 'fs-unvote' });
-        const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
-        act(() => result.current.onVerdict(s, 'dislike'));
-        await waitFor(async () => expect(await verdictOf('fs-unvote')).toBe('dislike'));
-
-        act(() => result.current.onVerdict(s, 'dislike'));
-        expect(record('fs-unvote')).toBeUndefined();
-        await waitFor(async () => expect(await verdictOf('fs-unvote')).toBeNull());
-    });
-
     it('a verdict on a card with no key records nothing', async () => {
         const s = await seedSuggestion({ _id: 'fs-nokey' });
         const { result } = renderHook(() => useFeedbackSheet({ ...feedAdapter, keyFor: () => null }));
-        act(() => result.current.onVerdict(s, 'like'));
+        act(() => result.current.onVerdict(s, 'dislike'));
         // Nothing to wait for: give a write the chance to land, then look.
         await act(async () => {});
         expect(await verdictOf('fs-nokey')).toBeNull();

@@ -6,16 +6,12 @@
 import { Box } from '@/components/ui/box';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
-import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
+import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 
-import {
-    getArticleVerdict,
-    recordVerdictFeedback,
-    removeArticleFeedback,
-} from '@/lib/database/services/article-feedback-service';
+import { getArticleVerdict } from '@/lib/database/services/article-feedback-service';
 import { resolveDetailFeedbackSubject, type DetailFeedbackContext } from '@/components/custom/news-detail/detail-feedback-context';
 import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
-import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
+import { hapticLight, hapticMedium } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
 import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
@@ -69,18 +65,15 @@ interface ArticleFeedbackPromptProps {
  * article detail screens. The row is `CardActionBar` — the SAME borderless,
  * backgroundless row the feed cards use. It was a bespoke row of 48pt round,
  * primary-orange-outlined buttons until the user asked for card parity; see
- * CardActionBar's header for why a liked article reads green here instead of
- * orange.
+ * CardActionBar's header for the icon's colours.
  *
  * This component owns the STATE; CardActionBar is purely presentational:
- *   - Like / Dislike → records the verdict (latest-wins, mutually exclusive),
- *     fills the thumb at once, then opens the shared ••• sheet at that
- *     verdict's tree root, with no Back row, as optional refinement: the same
- *     sheet and tree as every other surface (owner: one behaviour). Cancel
- *     keeps the verdict. Re-tapping the same thumb removes it and opens
- *     nothing. A bare verdict is stored and shown but never reaches the digest
- *     (D15); a terminal tree leaf applies its persona actions on the spot
- *     (D16).
+ *   - Feedback → opens the shared ••• sheet at its root: the same sheet and
+ *     tree as every other surface (owner: one behaviour). The sheet records
+ *     the dislike on the reader's first answer and reports it, which lights
+ *     the icon. A bare verdict is stored and shown but never reaches the
+ *     digest (D15); a terminal tree leaf applies its persona actions on the
+ *     spot (D16).
  *
  * The feedback CONTEXT is resolved here, not passed in. See
  * news-detail/detail-feedback-context: the old `feedbackContext` prop was a
@@ -126,7 +119,8 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         getArticleVerdict(articleId)
             .then(({ verdict: v }) => {
                 if (cancelled) return;
-                setVerdict(v);
+                // An old like never lights the icon.
+                setVerdict(v === 'dislike' ? 'dislike' : null);
             })
             .catch(() => {
                 /* non-fatal — default to no verdict */
@@ -160,33 +154,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         resolvingRef.current = null;
         void ensureResolved();
     }, [ensureResolved]);
-
-    // Record / flip / un-vote — mirrors the feed's onVerdict.
-    const onVerdict = useCallback(
-        (next: Verdict) => {
-            if (verdict === next) {
-                hapticLight();
-                setVerdict(null);
-                void removeArticleFeedback(articleId, next);
-                return;
-            }
-            hapticSuccess();
-            setVerdict(next);
-            void (async () => {
-                const ctx = await ensureResolved();
-                await recordVerdictFeedback({
-                    articleId,
-                    suggestionId: ctx.subject.suggestionId,
-                    sentiment: next,
-                    title,
-                    origin: ctx.subject.origin,
-                    surface: ctx.subject.surface,
-                    contextJson: buildContextJson(ctx.subject),
-                });
-            })();
-        },
-        [verdict, articleId, suggestionId, title, ensureResolved],
-    );
 
     // Tell Mera: the feedback chat, with every answer given so far.
     const handleFeedbackChat = useCallback(
@@ -229,15 +196,10 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
 
     // The feedback button opens the sheet at its root; the sheet records the
     // verdict on the reader's first answer.
-    const tapThumb = useCallback(
-        (next: Verdict) => {
-            if (next === 'like') onVerdict(next);
-            else menu.openFeedback();
-        },
-        [onVerdict, menu],
-    );
-    const handleLike = useCallback(() => tapThumb('like'), [tapThumb]);
-    const handleDislike = useCallback(() => tapThumb('dislike'), [tapThumb]);
+    const handleFeedback = useCallback(() => {
+        hapticLight();
+        menu.openFeedback();
+    }, [menu]);
 
     const handleChatPress = useCallback(() => {
         hapticMedium();
@@ -268,8 +230,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             <CardActionBar
                 verdict={verdict}
                 saved={!!save?.saved}
-                onLike={handleLike}
-                onDislike={handleDislike}
+                onFeedback={handleFeedback}
                 onAskMera={handleChatPress}
                 onToggleSave={save?.onToggle}
                 onShare={share?.url ? handleSharePress : undefined}

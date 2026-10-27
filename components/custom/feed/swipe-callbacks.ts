@@ -18,15 +18,6 @@ export type { Verdict };
 export interface SwipeCallbacks {
   /** A verdict was recorded for a card (quick swipe OR a VerdictBar pill tap). */
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
-  /** A revisited card's verdict was flipped from one pill to the other. */
-  onVerdictChanged: (
-    suggestion: ForYouSuggestion,
-    from: Verdict,
-    to: Verdict,
-  ) => void;
-  /** A card's verdict was removed (re-tapping the same thumb un-votes it) —
-   *  destroys the stored feedback row (verdict + any tree path). */
-  onVerdictRemoved: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** Tell Mera from a card's feedback sheet: the chat opens primed with
    *  every answer the reader gave so far. */
   onInvokeMera: (
@@ -43,8 +34,6 @@ export interface SwipeCallbacks {
 /** Live contract object. No-op defaults this phase; P4 fills the members. */
 export const swipeCallbacks: SwipeCallbacks = {
   onVerdict: () => {},
-  onVerdictChanged: () => {},
-  onVerdictRemoved: () => {},
   onInvokeMera: () => {},
   onOpenArticleChat: () => {},
 };

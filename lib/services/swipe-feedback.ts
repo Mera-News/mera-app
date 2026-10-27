@@ -14,10 +14,7 @@ import {
 } from '@/components/custom/cards/feedback-subject';
 import { swipeCallbacks, type Verdict } from '@/components/custom/feed/swipe-callbacks';
 import i18n from '@/lib/i18n';
-import {
-  recordVerdictFeedback,
-  removeArticleFeedback,
-} from '@/lib/database/services/article-feedback-service';
+import { recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
 import { getFeedbackTree } from '@/lib/services/feedback-tree-service';
 import logger from '@/lib/logger';
 import type { FeedbackTreeNode } from '@/lib/news-harness/feedback-tree/types';
@@ -30,7 +27,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 // 'swipe' deliberately — renaming it would fragment the live feedback analytics.
 const SURFACE = 'swipe';
 
-/** Records a fresh verdict (latest-wins: removes the opposite-sentiment row). */
+/** Records a fresh verdict. */
 export async function recordSwipeVerdict(
   suggestion: ForYouSuggestion,
   verdict: Verdict,
@@ -45,37 +42,6 @@ export async function recordSwipeVerdict(
     surface: SURFACE,
     contextJson: buildContextJson(subject),
   });
-}
-
-/** Flips a revisited card's verdict: drop the old sentiment, record the new. */
-export async function changeSwipeVerdict(
-  suggestion: ForYouSuggestion,
-  from: Verdict,
-  to: Verdict,
-): Promise<void> {
-  if (from === to) return;
-  const subject = feedbackSubjectFromSuggestion(suggestion, SURFACE);
-  await removeArticleFeedback(subject.articleId, from);
-  await recordVerdictFeedback({
-    articleId: subject.articleId,
-    suggestionId: subject.suggestionId,
-    sentiment: to,
-    title: subject.title,
-    origin: 'suggestion',
-    surface: SURFACE,
-    contextJson: buildContextJson(subject),
-  });
-}
-
-/** Removes a card's verdict entirely (re-tapping the same thumb un-votes it):
- *  destroys the stored `article_feedback` row, dropping the verdict + any tree
- *  path recorded on it. */
-export async function removeSwipeVerdict(
-  suggestion: ForYouSuggestion,
-  verdict: Verdict,
-): Promise<void> {
-  const subject = feedbackSubjectFromSuggestion(suggestion, SURFACE);
-  await removeArticleFeedback(subject.articleId, verdict);
 }
 
 /**
@@ -128,13 +94,9 @@ export async function openFeedbackChatWithPath(
   const breadcrumb = labels.join(' → ');
   const hasPath = breadcrumb.length > 0;
   const initialMessage = (
-    verdict === 'like'
-      ? hasPath
-        ? i18n.t('swipeFeed.chatHandoffLike', { path: breadcrumb })
-        : i18n.t('swipeFeed.chatHandoffLikeNoPath')
-      : hasPath
-        ? i18n.t('swipeFeed.chatHandoffDislike', { path: breadcrumb })
-        : i18n.t('swipeFeed.chatHandoffDislikeNoPath')
+    hasPath
+      ? i18n.t('swipeFeed.chatHandoffDislike', { path: breadcrumb })
+      : i18n.t('swipeFeed.chatHandoffDislikeNoPath')
   ) as string;
 
   useFloatingChatStore.getState().openArticleFeedback(
@@ -174,12 +136,6 @@ export function openArticleChat(suggestion: ForYouSuggestion): void {
 export function wireSwipeCallbacks(): void {
   swipeCallbacks.onVerdict = (suggestion, verdict) => {
     void recordSwipeVerdict(suggestion, verdict);
-  };
-  swipeCallbacks.onVerdictChanged = (suggestion, from, to) => {
-    void changeSwipeVerdict(suggestion, from, to);
-  };
-  swipeCallbacks.onVerdictRemoved = (suggestion, verdict) => {
-    void removeSwipeVerdict(suggestion, verdict);
   };
   swipeCallbacks.onInvokeMera = (suggestion, verdict, path, answers) => {
     void openFeedbackChatWithPath(suggestion, verdict, path, answers);
