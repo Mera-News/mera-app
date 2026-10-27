@@ -4,7 +4,11 @@
 import database from '@/lib/database';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
-import { gateUnscoredForScoring, propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagation';
+import {
+  gateUnscoredForScoring,
+  planStoryNotes,
+  propagateToUnscoredSiblings,
+} from '@/lib/feed-grouping/score-propagation';
 import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import logger from '@/lib/logger';
 import {
@@ -427,6 +431,71 @@ describe('story key: a propagation-grade edge', () => {
     await expect(scoreOf('c1')).resolves.toEqual(UNSCORED);
     await expect(scoreOf('c2')).resolves.toEqual(UNSCORED);
     expect([...result.enqueueIds].sort()).toEqual(['c1', 'c2']);
+  });
+});
+
+// planStoryNotes: one note per story. Rows share a story key, nothing else (titles disjoint, own clusters).
+describe('planStoryNotes', () => {
+  const k = (id: string, title: string) => lone(id, { title, storyKey: 'K1' });
+  const owe = (id: string, title: string, relevance = 0.8) =>
+    seedScored(k(id, title), { relevance, reason: '', pending: true });
+  const all = (...ids: string[]) => new Set(ids);
+
+  it('fills an owed copy from a reasoned copy at the same relevance, with no call', async () => {
+    await seedScored(k('done', 'Koningin Maxima bezoekt Utrecht'), { relevance: 0.8, reason: 'old reason' });
+    await owe('o1', 'Royal visit draws crowds');
+
+    const plan = await planStoryNotes(['o1'], new Set(), all('o1'));
+
+    expect(plan).toEqual({ repIds: [], coveredByRep: {}, filled: 1 });
+    await expect(scoreOf('o1')).resolves.toEqual({
+      relevance: 0.8,
+      reason: 'old reason',
+      status: ArticleSuggestionStatus.Complete,
+    });
+  });
+
+  it('never fills across relevances: a 0.6 copy of a 0.8 note is elected for its own', async () => {
+    await seedScored(k('done', 'Koningin Maxima bezoekt Utrecht'), { relevance: 0.8, reason: 'old reason' });
+    await owe('o1', 'Royal visit draws crowds', 0.6);
+
+    const plan = await planStoryNotes(['o1'], new Set(), all('o1'));
+
+    expect(plan).toEqual({ repIds: ['o1'], coveredByRep: { o1: ['o1'] }, filled: 0 });
+  });
+
+  it('holds the story while one of its copies has a note in flight', async () => {
+    await owe('o1', 'Royal visit draws crowds');
+    await owe('live', 'Monarch tours city hall');
+
+    const plan = await planStoryNotes(['o1'], new Set(['live']), all('o1'));
+
+    expect(plan.repIds).toEqual([]);
+    await expect(scoreOf('o1')).resolves.toMatchObject({ status: ArticleSuggestionStatus.ReasonPending });
+  });
+
+  it('elects a copy whose fill the grounding check rejected, in the same pass', async () => {
+    await seedScored(k('done', 'Koningin Maxima bezoekt Utrecht'), {
+      relevance: 0.8,
+      // Grounded on its own article (the title), on nothing the recipient carries.
+      reason: 'Utrecht welcomes Koningin Maxima',
+    });
+    expect((await scoreOf('done')).reason).toBe('Utrecht welcomes Koningin Maxima');
+    await owe('o1', 'Royal visit draws crowds');
+
+    const plan = await planStoryNotes(['o1'], new Set(), all('o1'));
+
+    expect(plan).toEqual({ repIds: ['o1'], coveredByRep: { o1: ['o1'] }, filled: 0 });
+  });
+
+  it('sends a partition with no electable copy per id, as before', async () => {
+    await owe('o1', 'Royal visit draws crowds');
+    await owe('o2', 'Monarch tours city hall');
+
+    const plan = await planStoryNotes(['o1', 'o2'], new Set(), new Set());
+
+    expect([...plan.repIds].sort()).toEqual(['o1', 'o2']);
+    expect(plan.coveredByRep).toEqual({ o1: ['o1'], o2: ['o2'] });
   });
 });
 

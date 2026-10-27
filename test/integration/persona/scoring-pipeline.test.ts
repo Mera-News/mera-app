@@ -506,6 +506,66 @@ describe('enqueueCandidates: MIN_DISPATCH floor / MAX_BATCH_ARTICLES ceiling', (
   });
 });
 
+// One note per story (titles disjoint, no clusters: only the story key groups the copies).
+describe('enqueueOrphanedReasons: one note per story', () => {
+  const owe = async (id: string, relevance = 0.8) =>
+    saveScoringResult(id, { relevance, reason: '', reasonSkipped: false });
+
+  it('sends one copy per story and covers the rest with it', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['R', 'S1', 'S3'], { extra: { story_key: 'K' } });
+    for (const id of ['R', 'S1', 'S3']) await owe(id);
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    const [b] = await batches();
+    expect(b).toMatchObject({ reasonsOnly: true, candidateIds: ['R'], coveredByRep: { R: ['S1', 'S3'] } });
+    expect([...(b.coveredIds ?? [])].sort()).toEqual(['R', 'S1', 'S3']);
+  });
+
+  it('a story owed notes at two relevances sends two copies, never one note for both', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['A', 'B', 'C'], { extra: { story_key: 'K' } });
+    await owe('A', 0.8);
+    await owe('B', 0.8);
+    await owe('C', 0.6);
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    const [b] = await batches();
+    expect([...b.candidateIds].sort()).toEqual(['A', 'C']);
+    expect(b.coveredByRep).toEqual({ A: ['B'] });
+  });
+
+  it('never sends an unscorable copy for the story; a scorable sibling goes instead', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['S1'], { extra: { story_key: 'K' } });
+    // Newest, so election would prefer it; no fact and no headline scope, so no prompt can carry it.
+    await seedArticles(['R'], { factless: true, extra: { story_key: 'K', pubDate: '2026-10-09T09:00:00.000Z' } });
+    await owe('S1');
+    await owe('R');
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    expect((await batches())[0]).toMatchObject({ candidateIds: ['S1'], coveredByRep: { S1: ['R'] } });
+  });
+
+  it('sends nothing for a sibling a live relevance batch covers, even before its phase moves on', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['R', 'S1'], { extra: { story_key: 'K' } });
+    await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    const [live] = await batches();
+    expect([...(live.coveredIds ?? [])].sort()).toEqual(['R', 'S1']);
+    // Propagation wrote the sibling reason_pending before the batch reached needs-reasons-submit.
+    await owe(live.candidateIds[0] === 'R' ? 'S1' : 'R');
+
+    await drive(pipeline.enqueueOrphanedReasons());
+
+    expect(await batches()).toHaveLength(1);
+    expect((await batches())[0].reasonsOnly).toBeUndefined();
+  });
+});
+
 describe('cold-start predicate (P7d isFeedCold)', () => {
   const scoreDonor = async (id = 'donor') => {
     await seedArticles([id]);

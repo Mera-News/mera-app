@@ -144,7 +144,7 @@ describe('terminal rows stay out of every sweep and queue read', () => {
 // while its scoring batch is in flight, then the decode calls these. The writers that only shift the
 // status (relevance stays 0) are the DA12 block below.
 describe('DA12: a terminal row is not moved back by a late score or propagated verdict', () => {
-  const late: Record<string, (id: string) => Promise<void>> = {
+  const late: Record<string, (id: string) => Promise<unknown>> = {
     saveScoringResult: (id) => saveScoringResult(id, { relevance: 0.9, reason: GROUNDED, reasonSkipped: false }),
     batchPropagateScores: (id) => batchPropagateScores([{ id, relevance: 0.9, reason: GROUNDED }]),
   };

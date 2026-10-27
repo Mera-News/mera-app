@@ -1082,6 +1082,34 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows.c.rawScore).toBeCloseTo(1, 5);
   });
 
+  // Copies share a story key and nothing else (titles disjoint, no clusters).
+  it('Kev reads one copy per story and the others inherit its score and its note', async () => {
+    installLocal();
+    queue();
+    await seed(['a', 'b', 'c'], { extra: { story_key: 'K' } });
+
+    expect(await run(processAllUnscored())).toBe(1);
+
+    expect(events.filter((e) => e.startsWith('decide:'))).toHaveLength(1);
+    expect(events.filter((e) => e.startsWith('note:'))).toHaveLength(1);
+    const rows = Object.values(await stored());
+    expect(new Set(rows.map((r) => `${r.status}|${r.relevance}|${r.reason}`)).size).toBe(1);
+    expect(rows[0].status).toBe('complete');
+  });
+
+  it('never elects a copy Kev cannot read; a readable copy of the story is read instead', async () => {
+    installLocal();
+    queue();
+    await seed(['s'], { extra: { story_key: 'K' } });
+    // Newest, so election would prefer it; no fact and no headline scope.
+    await seed(['r'], { factless: true, extra: { story_key: 'K', pubDate: '2026-10-09T09:00:00.000Z' } });
+
+    await run(processAllUnscored());
+
+    expect(events.filter((e) => e.startsWith('decide:'))).toEqual(['decide:s']);
+    expect((await stored()).s.rawScore).toBeCloseTo(1, 5);
+  });
+
   // Kev down for a whole pass (it answered none of the batch) is not one bad article: on the
   // owner's phone a whole run kept its math scores, all LOW, and the Sectioned view went empty.
   it('Kev failing on every article of a batch leaves the batch unscored, never on the math score, and the next pass ranks them', async () => {
@@ -1498,6 +1526,17 @@ describe('retryMissingReasons - on-device path', () => {
     expect(await run(retryMissingReasons(1))).toBe(3);
 
     expect(events).toEqual(['note:top', 'note:mid', 'note:low']);
+  });
+
+  it('writes one note per story and copies it onto the story\'s other copies', async () => {
+    installLocal();
+    await seedOwed(['a', 'b'], { extra: { story_key: 'K' } });
+
+    expect(await run(retryMissingReasons())).toBe(2);
+
+    expect(events).toEqual(['note:a']);
+    const rows = await stored();
+    expect([rows.b.status, rows.b.reason]).toEqual(['complete', 'Local note on story a.']);
   });
 
   it('finalizes a row owed a note below the 0.4 gate instead of writing it one', async () => {

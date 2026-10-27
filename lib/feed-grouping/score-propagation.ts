@@ -85,9 +85,11 @@ import {
   type PropagateEntry,
 } from '@/lib/database/services/article-suggestion-scoring-writes';
 import {
+  getGroupingRowsByIds,
   getScoredDonorRows,
   getUnscoredGroupingRows,
 } from '@/lib/database/services/article-suggestion-reads';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { type SuggestionGroupingRow } from '@/lib/database/services/article-suggestion-mappers';
 import {
     repPriorityTier,
@@ -500,5 +502,118 @@ export async function propagateToUnscoredSiblings(
     } catch (err) {
         logger.captureException(err, { tags: { module: 'score-propagation' } });
         return 0;
+    }
+}
+
+/**
+ * Give siblings a note their story's representative just got. Each keeps its own
+ * relevance and scorer vintage; `batchPropagateScores` checks the note against the
+ * sibling's OWN article, so a mismatch stays `reason_pending`, owed its own call.
+ * Only rows still `reason_pending` are touched. Returns how many got the note.
+ */
+export async function copyNoteToSiblings(siblingIds: string[], note: string): Promise<number> {
+    if (siblingIds.length === 0 || note.trim().length === 0) return 0;
+    const entries = (await getGroupingRowsByIds(siblingIds))
+        .filter((r) => r.status === ArticleSuggestionStatus.ReasonPending)
+        .map((r) => ({ id: r.id, relevance: r.relevance, reason: note, scoredWithV3: r.scoredWithV3 }));
+    if (entries.length === 0) return 0;
+    const leftPending = (await batchPropagateScores(entries)) ?? [];
+    return entries.length - leftPending.length;
+}
+
+export interface StoryNotePlan {
+    /** One id per story x relevance partition to send for a note, plus every owed
+     *  row of a partition with no electable member, each on its own. */
+    repIds: string[];
+    /** Rep id -> its whole partition, the rep INCLUDED (the gate's shape, which
+     *  `makeQueuedBatch` reads for `coveredIds` and `coveredByRep`). */
+    coveredByRep: Record<string, string[]>;
+    /** Owed rows filled from a reasoned sibling at equal relevance, no call. */
+    filled: number;
+}
+
+/**
+ * One note per story. Groups the owed rows (`reason_pending`, above the reason
+ * gate) with the 48h donors at the propagation edges, then per story, per
+ * relevance partition of its owed rows:
+ *   - fill from a reasoned member at the SAME relevance (a note must not explain a
+ *     score the row does not carry);
+ *   - else hold, if any member of the story is in `inFlight` (its note is coming;
+ *     the next sweep fills or elects);
+ *   - else elect one `electable` member to be sent, covering the partition.
+ *     A partition with no electable member is sent per id, as before.
+ * A fill the grounding check rejects is elected in the same pass (or held with its
+ * story), so a bad fill can never park a row for good. Fails open to every owed id on its own.
+ */
+export async function planStoryNotes(
+    owedIds: string[],
+    inFlight: ReadonlySet<string>,
+    electable: ReadonlySet<string>,
+): Promise<StoryNotePlan> {
+    const plan: StoryNotePlan = { repIds: [], coveredByRep: {}, filled: 0 };
+    const sendAlone = (ids: string[]) => {
+        for (const id of ids) {
+            plan.repIds.push(id);
+            plan.coveredByRep[id] = [id];
+        }
+    };
+    if (owedIds.length === 0) return plan;
+    try {
+        const owed = new Set(owedIds);
+        const donors = await getScoredDonorRows(Date.now() - SCORE_PROPAGATION_LOOKBACK_MS);
+        const rows = await getGroupingRowsByIds([...owedIds, ...inFlight]);
+        // Donors first: an owed row is itself a donor (reason_pending, scored).
+        const byId = new Map<string, SuggestionGroupingRow>();
+        for (const r of [...donors, ...rows]) if (!byId.has(r.id)) byId.set(r.id, r);
+
+        const elect = (members: SuggestionGroupingRow[]) => {
+            const candidates = members.filter((m) => electable.has(m.id));
+            if (candidates.length === 0) return sendAlone(members.map((m) => m.id));
+            const rep = electRepresentative(candidates, null).id;
+            plan.repIds.push(rep);
+            plan.coveredByRep[rep] = members.map((m) => m.id);
+        };
+
+        const fills: PropagateEntry[] = [];
+        const filledPartitions: { members: SuggestionGroupingRow[]; held: boolean }[] = [];
+        for (const group of buildStoryGroups([...byId.values()], PROPAGATION_OPTIONS)) {
+            const owedMembers = group.filter((r) => owed.has(r.id));
+            if (owedMembers.length === 0) continue;
+            const storyInFlight = group.some((r) => inFlight.has(r.id));
+            const partitions = new Map<number, SuggestionGroupingRow[]>();
+            for (const m of owedMembers) partitions.set(m.relevance, [...(partitions.get(m.relevance) ?? []), m]);
+            for (const [relevance, members] of partitions) {
+                const donor = group.find(
+                    (d) =>
+                        !owed.has(d.id) &&
+                        d.status === ArticleSuggestionStatus.Complete &&
+                        d.relevance === relevance &&
+                        (d.reason ?? '').trim().length > 0,
+                );
+                if (donor) {
+                    for (const m of members) {
+                        fills.push({ id: m.id, relevance: m.relevance, reason: donor.reason, scoredWithV3: m.scoredWithV3 });
+                    }
+                    filledPartitions.push({ members, held: storyInFlight });
+                } else if (!storyInFlight) {
+                    elect(members);
+                }
+            }
+        }
+
+        const rejected = new Set((await batchPropagateScores(fills)) ?? []);
+        plan.filled = fills.length - rejected.size;
+        for (const { members, held } of filledPartitions) {
+            const left = members.filter((m) => rejected.has(m.id));
+            if (left.length > 0 && !held) elect(left);
+        }
+        return plan;
+    } catch (err) {
+        logger.captureException(err, { tags: { module: 'score-propagation', step: 'plan-story-notes' } });
+        plan.repIds = [];
+        plan.coveredByRep = {};
+        plan.filled = 0;
+        sendAlone(owedIds);
+        return plan;
     }
 }

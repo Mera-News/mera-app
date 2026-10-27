@@ -271,7 +271,7 @@ describe('a batch whose rows were all deleted underneath it', () => {
     await expect(batchMarkGateSkipped(['a1', 'a2'])).resolves.toBeUndefined();
     await expect(batchMarkExcluded(['a1', 'a2'])).resolves.toBeUndefined();
     await expect(batchMarkAsScoredByIds(['a1', 'a2'])).resolves.toBeUndefined();
-    await expect(batchPropagateScores([{ id: 'a1', relevance: 0.5, reason: GROUNDED }])).resolves.toBeUndefined();
+    await expect(batchPropagateScores([{ id: 'a1', relevance: 0.5, reason: GROUNDED }])).resolves.toEqual([]);
   });
 });
 
@@ -358,6 +358,19 @@ describe('batchPropagateScores', () => {
     }
   });
 
+  it('returns the ids it left owing a note, and only those', async () => {
+    await seed([article('a1'), article('a2'), article('a3')]);
+
+    const left = await batchPropagateScores([
+      { id: 'a1', relevance: 0.72, reason: GROUNDED },
+      { id: 'a2', relevance: 0.72, reason: '' },
+      // Below the reason gate: finalized, never owed.
+      { id: 'a3', relevance: 0.2, reason: '' },
+    ]);
+
+    expect(left).toEqual(['a2']);
+  });
+
   it('never clears a note the row already had: reason-presence is monotonic', async () => {
     await seed([article('a1')]);
     await toComplete('a1', 0.6, 'Its own harbour note.');
@@ -391,9 +404,9 @@ describe('batchPropagateScores', () => {
         { id: 'a1', relevance: 0.72, reason: GROUNDED },
         { id: 'gone', relevance: 0.72, reason: GROUNDED },
       ]),
-    ).resolves.toBeUndefined();
-    await expect(batchPropagateScores([])).resolves.toBeUndefined();
-    await expect(batchPropagateScores([{ id: 'gone', relevance: 0.5, reason: 'x' }])).resolves.toBeUndefined();
+    ).resolves.toEqual([]);
+    await expect(batchPropagateScores([])).resolves.toEqual([]);
+    await expect(batchPropagateScores([{ id: 'gone', relevance: 0.5, reason: 'x' }])).resolves.toEqual([]);
 
     expect((await snapshot('a1')).status).toBe('complete');
   });

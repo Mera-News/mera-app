@@ -299,7 +299,11 @@ export function deriveReasonsInFlightIds(run: PipelineRun): Set<string> {
   for (const b of run.batches) {
     if (isTerminal(b.phase)) continue;
     if (b.reasonsOnly) {
-      for (const id of b.reasonCandidateIds ?? b.candidateIds) ids.add(id);
+      for (const id of b.reasonCandidateIds ?? b.candidateIds) {
+        ids.add(id);
+        // The partition planStoryNotes covered with this rep gets its note.
+        for (const sibling of b.coveredByRep?.[id] ?? []) ids.add(sibling);
+      }
       continue;
     }
     if (
