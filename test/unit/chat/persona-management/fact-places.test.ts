@@ -81,6 +81,11 @@ describe('names, never codes', () => {
     expect(placeFromNames({ level: 'country', country: 'Narnia' })).toBeNull();
     expect(placeFromNames({ level: 'region', country: 'India' })).toBeNull();
     expect(placeFromNames({ level: 'planet', country: 'India' })).toBeNull();
+    // A part of a continent is never a subdivision.
+    expect(placeFromNames({ level: 'region', country: 'Kenya', region: 'East Africa' })).toBe('Africa');
+    expect(placeFromNames({ level: 'bloc', bloc: 'East Africa' })).toBe('Africa');
+    expect(placeFromNames({ level: 'bloc', bloc: 'Middle Earth' })).toBeNull();
+    expect(placeFromNames({ level: 'region', country: 'Netherlands', region: 'North Holland' })).toBe('NL|North Holland');
   });
 });
 

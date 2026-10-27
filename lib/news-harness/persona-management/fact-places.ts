@@ -283,7 +283,8 @@ export function placeFromNames(names: {
   if (level === 'anywhere' || level === 'global') return PLACE_GLOBAL;
   if (level === 'bloc') {
     const name = str(names.bloc).toLowerCase();
-    const bloc = BLOC_BY_NAME.get(name);
+    // A part of a continent ("East Africa") is read as its continent.
+    const bloc = BLOC_BY_NAME.get(name) ?? blocNamedIn(str(names.bloc))[0];
     if (bloc) return bloc === 'UK' ? 'GB' : bloc;
     return null;
   }
@@ -292,6 +293,9 @@ export function placeFromNames(names: {
   if (!cc) return null;
   if (level === 'country') return cc;
   const region = str(names.region).replace(/\|/g, ' ');
+  // A "region" that names a bloc ("East Africa") is part of a continent, not a subdivision.
+  const regionBloc = level === 'region' ? blocNamedIn(region)[0] : undefined;
+  if (regionBloc) return regionBloc;
   if (level === 'region') return region ? `${cc}|${region}` : null;
   const city = str(names.city).replace(/\|/g, ' ');
   return city ? `${cc}|${region}|${city}` : null;
