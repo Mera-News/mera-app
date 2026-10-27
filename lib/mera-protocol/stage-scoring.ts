@@ -66,6 +66,7 @@ import {
   type TopicWeightInfo,
 } from '@/lib/database/services/article-suggestion-mappers';
 import { getFactWeightById } from '@/lib/database/services/article-suggestion-reads';
+import { describeFactPlaces } from '@/lib/news-harness/persona-management/fact-places';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
@@ -316,6 +317,17 @@ export function buildStageCandidates(
   }));
 }
 
+async function withFactPlaces(candidates: ScoringCandidate[]): Promise<ScoringCandidate[]> {
+  const byId = new Map((await getFacts()).map((f) => [f.id, describeFactPlaces(f)]));
+  return candidates.map((c) => ({
+    ...c,
+    relatedFacts: c.relatedFacts.map((f) => {
+      const places = byId.get(f.id);
+      return places ? { ...f, places } : f;
+    }),
+  }));
+}
+
 async function loadAllFactStatements(): Promise<string[]> {
   const facts = await getFacts();
   return facts
@@ -453,8 +465,9 @@ export async function computeAndScoreForCandidates(
     loadAllFactStatements(),
     effectiveHarnessConfig(),
   ]);
-  const stage = buildStageCandidates(candidates, topicWeights);
   const onDevice = isOnDeviceMode();
+  // Cloud prompts name each related fact's places; Kev (on-device) keeps plain statements.
+  const stage = buildStageCandidates(onDevice ? candidates : await withFactPlaces(candidates), topicWeights);
   return computeAndScore(
     stage,
     persona,

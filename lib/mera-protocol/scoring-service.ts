@@ -35,6 +35,7 @@ import {
   getUnscoredSuggestionsWithFacts,
   type ScoringCandidate,
 } from '../database/services/article-suggestion-reads';
+import { factLineWithPlaces } from '@/lib/news-harness/persona-management/fact-places';
 import { getFacts } from '../database/services/fact-service';
 import { isCulledHeadlineRelevance } from '../feed-ordering/importance-filter';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -48,6 +49,7 @@ import {
   buildPublicationLabel,
   buildUserContext,
   isEligible,
+  relatedFactLine,
   isScorableCandidate,
   chunk,
   bucketScore,
@@ -140,7 +142,7 @@ const SCORE_BATCH_MAX_TOKENS = ARTICLE_CFG.scoreBatchMaxTokens;
 async function loadAllFactStatements(): Promise<string[]> {
   const facts = await getFacts();
   return facts
-    .map((f) => f.statement)
+    .map((f) => factLineWithPlaces(f))
     .filter((s) => typeof s === 'string' && s.trim().length > 0);
 }
 
@@ -181,7 +183,7 @@ function buildScoreCallForChunk(
         c.publicationName ?? c.meta?.publicationName,
         c.languageCode,
       ),
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     })),
   });
   return {
@@ -247,7 +249,7 @@ async function generateReasonForCandidate(
       candidate.languageCode,
     ),
     relevance,
-    relatedFacts: candidate.relatedFacts.map((f) => f.statement),
+    relatedFacts: candidate.relatedFacts.map(relatedFactLine),
   });
   const output = onDevice
     ? await completeLocal({
@@ -551,7 +553,7 @@ export function buildReasonCallsForSurvivors(
         c.languageCode,
       ),
       relevance,
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     });
     const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
@@ -726,7 +728,7 @@ export async function buildReasonCallsForSubset(
         c.languageCode,
       ),
       relevance: relevanceMap[c.id],
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     });
     const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
@@ -1202,7 +1204,7 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
             candidate.languageCode,
           ),
           relevance: candidate.relevance ?? 0.7,
-          relatedFacts: candidate.relatedFacts.map((f) => f.statement),
+          relatedFacts: candidate.relatedFacts.map(relatedFactLine),
         });
         const reasonId = `reason:${candidate.id}`;
         promptsById.set(reasonId, reasonPrompt);
