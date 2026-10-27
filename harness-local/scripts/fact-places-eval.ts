@@ -142,6 +142,10 @@ async function main(): Promise<number> {
 
   const cases: EvalCase[] = [];
   const answers = new Map<string, (string | null)[]>();
+  // A failed or cut-off call scores its facts as misses; counted so a broken
+  // run is never read as a weak model.
+  let failedCalls = 0;
+  let truncatedCalls = 0;
   for (const p of personas) {
     const context = p.facts.map((f) => f.statement);
     for (const f of p.facts) { cases.push(f); answers.set(f.id, []); }
@@ -162,6 +166,11 @@ async function main(): Promise<number> {
             maxTokens: FACT_PLACES_CALL.maxTokens,
             enableThinking: false,
           });
+          if (res.error) {
+            failedCalls += 1;
+            console.warn(`[fact-places-eval] ${p.id} repeat ${r + 1}: call failed: ${res.error}`);
+          }
+          if (res.truncated) truncatedCalls += 1;
           decoded = new Map(
             decodeFactPlaces(res.content, batch, allowed).map((d) => [d.factId, d.places[0]] as [string, string]),
           );
@@ -175,10 +184,12 @@ async function main(): Promise<number> {
   const scores = cases.map((c) => scoreCase(c, answers.get(c.id)!));
   const report = formatReport(cases, scores);
   console.log(report);
+  console.log(`calls failed ${failedCalls}, cut off at the token cap ${truncatedCalls}`);
   const run = createRunWriter({ label });
   run.writeJson('scores', scores);
   run.writeJson('rates', summarize(scores));
-  run.finish({ model: SMALL_MODEL, repeat, rates: summarize(scores) });
+  run.finish({ model: SMALL_MODEL, repeat, rates: summarize(scores), failedCalls, truncatedCalls });
+  if (failedCalls > 0) return 1;
   return summarize(scores).pass ? 0 : 2;
 }
 
