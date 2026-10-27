@@ -28,129 +28,23 @@
     }
   ],
   "items": [
-    {
-      "id": "router",
-      "scenario": "route one turn to one skill",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "facts/generic",
-      "scenario": "shared fact rules, and an interest fact",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "facts/residence",
-      "scenario": "where the user lives",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "facts/origin",
-      "scenario": "where the user is from, composed with residence",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "facts/profession",
-      "scenario": "role, employer, field",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "facts/family",
-      "scenario": "relatives, their places, life events",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "topics/generic",
-      "scenario": "shared topic rules, and an interest fact",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "topics/residence",
-      "scenario": "the place chain and the daily round",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "topics/origin",
-      "scenario": "diaspora shapes, no domestic ladder",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "topics/profession",
-      "scenario": "field generic, then national and bloc",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "topics/family",
-      "scenario": "stay exactly where the fact put you",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "conversation/question",
-      "scenario": "answer, or handle small talk",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "conversation/correction",
-      "scenario": "fix one thing, extract nothing",
-      "status": "done",
-      "session": 1
-    },
-    {
-      "id": "facts/origin#ux1-split",
-      "scenario": "origin and a named current city are two facts; an origin never replaces a home fact; an origin correction sets replaces directly",
-      "status": "done",
-      "eval_label": "20260923-215626-ux1-origin",
-      "result": "2/3 repeats offered origin and the Berlin move (replaces f1) as two cards, 0 errors, $0.0038. The model abbreviates the keys ('origin', 'location') instead of the exact strings; rep 2 set replaces on the home fact from the origin element, which mayReplaceKey demotes",
-      "completed_at": "2026-09-23",
-      "skip_reason": null
-    },
-    {
-      "id": "facts/residence#ux1-card-consent",
-      "scenario": "a same-key move sets replaces with no replacement chip; the place chip only for an ambiguous place",
-      "status": "done",
-      "eval_label": "20260923-215626-ux1-origin",
-      "result": "the move set replaces on the home fact with no replacement chip in 2/3 repeats; no ask_choice was issued for an unambiguous place",
-      "completed_at": "2026-09-23",
-      "skip_reason": null
-    },
-    {
-      "id": "conversation/about-mera",
-      "scenario": "a question about Mera itself (how it works, data, encryption, plans, licence, gaps) is answered from explainMera, never redirected to a page or menu",
-      "status": "done",
-      "eval_label": "20261016-124234-hfE-after, 20261016-124551-hfE-after, 20261016-124853-hfE-after (before twin d8599d89: 20261016-124118/124442/124724-hfE-before, interleaved per repeat)",
-      "result": "Qwen3.8-27B, text-xml, repeat 3, 0 errors, 0 402s, $0.032 (before $0.021). English about-mera: route+skill+explainMera 9/9, no menu redirect 12/12 (before 6/12), plan answer names MB 3/3 (before 0/3). Hindi with languageName Hindi: route+skill+explainMera 9/9; Devanagari reply 8/13 (before 0/13; 2 card-only Delhi turns had no reply); no redirect 12/12 (before 8/12); MB 2/3 (before 0/3). Same Hindi turns with no languageName (pre-A3 device): Devanagari 3/13, mostly English replies. Open: replies drift into Hinglish or English on long answers (t1/t2 shares 0.30-0.39), and one Delhi turn shipped internal narration in English.",
-      "completed_at": "2026-10-16",
-      "skip_reason": null
-    },
-    {
-      "id": "conversation/feed-tuning",
-      "scenario": "stop showing me X, show X again, mute or prefer an outlet or a country's sources: staged on a card the user confirms; a reply that agrees to or declines a waiting card applies or drops it",
-      "status": "in_progress",
-      "eval_label": null,
-      "result": null,
-      "completed_at": null,
-      "skip_reason": null
-    },
-    {
-      "id": "conversation/follow-story",
-      "scenario": "follow this story / keep me updated on X / a bare subject on the Followed stories page: searchNews (and webSearch) on one leg, then one proposeTrack card of 3 or 4 options the user ticks; More options is one forced proposeTrack leg",
-      "status": "in_progress",
-      "session": 5,
-      "eval_label": null,
-      "result": null,
-      "completed_at": null,
-      "skip_reason": null
-    }
+    { "id": "router", "scenario": "route one turn to one skill", "status": "done", "session": 1 },
+    { "id": "facts/generic", "scenario": "shared fact rules, and an interest fact", "status": "done", "session": 1 },
+    { "id": "facts/residence", "scenario": "where the user lives", "status": "done", "session": 1 },
+    { "id": "facts/origin", "scenario": "where the user is from, composed with residence", "status": "done", "session": 1 },
+    { "id": "facts/profession", "scenario": "role, employer, field", "status": "done", "session": 1 },
+    { "id": "facts/family", "scenario": "relatives, their places, life events", "status": "done", "session": 1 },
+    { "id": "topics/generic", "scenario": "shared topic rules, and an interest fact", "status": "done", "session": 1 },
+    { "id": "topics/residence", "scenario": "the place chain and the daily round", "status": "done", "session": 1 },
+    { "id": "topics/origin", "scenario": "diaspora shapes, no domestic ladder", "status": "done", "session": 1 },
+    { "id": "topics/profession", "scenario": "field generic, then national and bloc", "status": "done", "session": 1 },
+    { "id": "topics/family", "scenario": "stay exactly where the fact put you", "status": "done", "session": 1 },
+    { "id": "conversation/question", "scenario": "answer, or handle small talk", "status": "done", "session": 1 },
+    { "id": "conversation/correction", "scenario": "fix one thing, extract nothing", "status": "done", "session": 1 },
+    { "id": "facts/origin#ux1-split", "scenario": "origin and a named current city are two facts; an origin never replaces a home fact; an origin correction sets replaces directly", "status": "done", "eval_label": "20260923-215626-ux1-origin", "result": "2/3 repeats offered origin and the Berlin move (replaces f1) as two cards, 0 errors, $0.0038. The model abbreviates the keys ('origin', 'location') instead of the exact strings; rep 2 set replaces on the home fact from the origin element, which mayReplaceKey demotes", "completed_at": "2026-09-23", "skip_reason": null },
+    { "id": "facts/residence#ux1-card-consent", "scenario": "a same-key move sets replaces with no replacement chip; the place chip only for an ambiguous place", "status": "done", "eval_label": "20260923-215626-ux1-origin", "result": "the move set replaces on the home fact with no replacement chip in 2/3 repeats; no ask_choice was issued for an unambiguous place", "completed_at": "2026-09-23", "skip_reason": null },
+    { "id": "conversation/about-mera", "scenario": "a question about Mera itself (how it works, data, encryption, plans, licence, gaps) is answered from explainMera, never redirected to a page or menu", "status": "done", "eval_label": "20261016-124234-hfE-after, 20261016-124551-hfE-after, 20261016-124853-hfE-after (before twin d8599d89: 20261016-124118/124442/124724-hfE-before, interleaved per repeat)", "result": "Qwen3.8-27B, text-xml, repeat 3, 0 errors, 0 402s, $0.032 (before $0.021). English about-mera: route+skill+explainMera 9/9, no menu redirect 12/12 (before 6/12), plan answer names MB 3/3 (before 0/3). Hindi with languageName Hindi: route+skill+explainMera 9/9; Devanagari reply 8/13 (before 0/13; 2 card-only Delhi turns had no reply); no redirect 12/12 (before 8/12); MB 2/3 (before 0/3). Same Hindi turns with no languageName (pre-A3 device): Devanagari 3/13, mostly English replies. Open: replies drift into Hinglish or English on long answers (t1/t2 shares 0.30-0.39), and one Delhi turn shipped internal narration in English.", "completed_at": "2026-10-16", "skip_reason": null },
+    { "id": "conversation/feed-tuning", "scenario": "stop showing me X, show X again, mute or prefer an outlet or a country's sources: staged on a card the user confirms; a reply that agrees to or declines a waiting card applies or drops it", "status": "in_progress", "eval_label": null, "result": null, "completed_at": null, "skip_reason": null },
+    { "id": "conversation/follow-story", "scenario": "follow this story / keep me updated on X / a bare subject on the Followed stories page: searchNews (and webSearch) on one leg, then one proposeTrack card of 3 or 4 options the user ticks; More options is one forced proposeTrack leg", "status": "in_progress", "session": 5, "eval_label": null, "result": null, "completed_at": null, "skip_reason": null }
   ]
 }
