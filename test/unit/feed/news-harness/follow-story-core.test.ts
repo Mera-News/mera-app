@@ -44,12 +44,14 @@ describe('follow-story card copy (F34)', () => {
 });
 
 describe('buildFollowStorySystemPrompt', () => {
-  it('says the user taps the ones they want on the card, never ONE (D8)', () => {
-    for (const needsToolFormat of [false, true]) {
-      const prompt = buildFollowStorySystemPrompt({ needsToolFormat, canSearch: true });
-      expect(prompt).toContain(`they ${TRACK_CARD_TAP_PHRASE}`);
-      expect(prompt).not.toContain('tap ONE');
-    }
+  // D8 MEASURED: changing this one line to "they tap the ones they want" cost
+  // follow-story first turns 7 of 55 proposeTrack passes on staging (refusals
+  // and re-asks; pre/post/twin, repeat 5). The multi-select truth lives in the
+  // pending line, which exists only while the card does; this line stays.
+  it('keeps the shipped confirm-card sentence (the multi-select wording is in the pending line)', () => {
+    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false, canSearch: true });
+    expect(prompt).toContain('it lists the scopes and they tap ONE.');
+    expect(prompt).not.toContain(TRACK_CARD_TAP_PHRASE);
   });
 
   it('states the article-less framing and the 3–4 widening scopes rule', () => {

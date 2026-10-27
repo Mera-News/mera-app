@@ -1,14 +1,14 @@
 // track-card-tap-parity.test.ts — A15: the cloud prompts and the on-device
 // pending line tell the model the SAME thing about a follow card, so the two
 // engines cannot drift apart on whether the user picks one or several.
+// The cloud SYSTEM prompts are deliberately not carriers: the wording there
+// measured worse on staging (D8), so they keep their shipped bytes and the
+// multi-select truth reaches the model only while a card is on screen.
 
-import { TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
+import { chooseOneRefusal, TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
 import type { StagedProposal } from '@/lib/news-harness/core/types';
-import { buildFollowStoryContext, buildFollowStorySystemPrompt } from '@/lib/news-harness/follow-story';
-import {
-  buildArticleFeedbackSystemPrompt,
-  buildFeedbackContext,
-} from '@/lib/news-harness/article-feedback/agent-core';
+import { buildFollowStoryContext } from '@/lib/news-harness/follow-story';
+import { buildFeedbackContext } from '@/lib/news-harness/article-feedback/agent-core';
 import { describePending } from '@/lib/news-harness/on-device/shared';
 
 const trackCard: StagedProposal = {
@@ -26,9 +26,7 @@ const trackCard: StagedProposal = {
 
 describe('follow card wording parity (A15)', () => {
   it.each([
-    ['cloud follow system prompt', () => buildFollowStorySystemPrompt({ needsToolFormat: false, canSearch: true })],
     ['cloud follow pending line', () => buildFollowStoryContext({ nowMs: 0, proposal: trackCard })],
-    ['cloud article system prompt', () => buildArticleFeedbackSystemPrompt({ needsToolFormat: false })],
     [
       'cloud article pending line',
       () =>
@@ -41,6 +39,7 @@ describe('follow card wording parity (A15)', () => {
         }),
     ],
     ['on-device pending line', () => describePending(trackCard) ?? ''],
+    ['applyProposal refusal', () => chooseOneRefusal(trackCard).message],
   ])('%s carries the tap phrase', (_where, build) => {
     expect(build()).toContain(TRACK_CARD_TAP_PHRASE);
   });

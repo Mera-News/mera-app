@@ -136,13 +136,17 @@ describe('article-feedback follow card is multi-select (D8)', () => {
     );
   });
 
-  it('says so in the system prompt and the proposeTrack description, and keeps the choose_one rule', () => {
+  // D8 MEASURED: the system-prompt and tool-description edits ran worse on
+  // staging (pre/post/twin, repeat 5), so both keep their shipped bytes and the
+  // multi-select truth lives only in the pending line above and the refusal.
+  it('keeps the shipped EXCEPTION rule and proposeTrack description', () => {
     const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
-    expect(prompt).toContain(TRACK_CARD_TAP_PHRASE);
-    expect(prompt).toContain('a card offering ALTERNATIVES (choose_one): the user must TAP the option they want.');
+    expect(prompt).toContain(
+      '- EXCEPTION — a card offering ALTERNATIVES (choose_one, or the track options): the user must TAP the option they want.',
+    );
+    expect(prompt).not.toContain(TRACK_CARD_TAP_PHRASE);
     const track = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!;
-    expect(track.function.description).toContain(TRACK_CARD_TAP_PHRASE);
-    expect(track.function.description).not.toContain('picks one label');
+    expect(track.function.description).toContain('The user picks one label;');
   });
 });
 

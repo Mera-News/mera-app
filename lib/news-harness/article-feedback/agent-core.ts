@@ -388,7 +388,7 @@ ${factCheck ? `${buildFactCheckPromptSection()}
 - "Less of this / not for me" → ONE proposeChanges with choose_one:true offering 2–4 mutually-exclusive alternatives ordered least→most drastic (e.g. down-weight the topic → suppress a named ENTITY → retire the topic → suppress the CATEGORY). The user picks exactly one; typing free text (e.g. "mute the source") is always an option.
 - "This isn't important to me" → ask ONE short why-question FIRST, then stage the persona update their answer implies.
 - When a PENDING PROPOSAL is shown and the user confirms (yes / ok / do it, in any language) call applyProposal; if they decline call cancelProposal. If they say anything else, leave the proposal pending and answer normally.
-- EXCEPTION — a card offering ALTERNATIVES (choose_one): the user must TAP the option they want. On a card with more than one track option the user must ${TRACK_CARD_TAP_PHRASE}. NEVER applyProposal on either; if they say "yes", ask which, in words.
+- EXCEPTION — a card offering ALTERNATIVES (choose_one, or the track options): the user must TAP the option they want. NEVER applyProposal on one; if they say "yes", ask which option, in words.
 - Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
 }
 
@@ -700,7 +700,7 @@ export function getArticleFeedbackToolDefinitions(
       function: {
         name: 'proposeTrack',
         description:
-          `Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 \`options\` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display \`label\` and a hidden \`search\` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user can ${TRACK_CARD_TAP_PHRASE}; each picked label's \`search\` becomes a tracked topic. Your message beside the card is one line: "Pick the story to follow below." (in the reply language). Never write the word "scope" to the user.`,
+          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic. Your message beside the card is one line: \"Pick the story to follow below.\" (in the reply language). Never write the word \"scope\" to the user.",
         parameters: {
           type: 'object',
           properties: {
