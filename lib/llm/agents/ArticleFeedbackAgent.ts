@@ -273,6 +273,7 @@ export class ArticleFeedbackAgent implements IAgent {
       // part of the cache key below for the same reason webSearch is: a prompt
       // built in one mode must not keep serving after the user switches.
       factCheck: mode === 'CLOUD',
+      factPlaces: mode === 'CLOUD',
     });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;

@@ -139,6 +139,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
       needsToolFormat: false,
       languageName: 'English',
       factCheck: true,
+      factPlaces: true,
     });
 
     expect(local).not.toContain('proposeFactCheck');
@@ -812,6 +813,8 @@ describe('getArticleFeedbackToolDefinitions', () => {
       'retire_suppression',
       'set_high_priority',
       'retire_topic',
+      // fbx: where a fact's news comes from, names in and codes out.
+      'set_fact_places',
     ]);
   });
 
@@ -1446,5 +1449,57 @@ describe('decideProposeChanges — retire_suppression', () => {
       .sideEffects!.proposal!;
     const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, proposal });
     expect(ctx).toContain('remove the filter "celebrity gossip"');
+  });
+});
+
+describe('decideProposeChanges — set_fact_places', () => {
+  it('is offered in the prompt on CLOUD only, so the local prompt keeps its bytes', () => {
+    expect(buildArticleFeedbackSystemPrompt({ needsToolFormat: false, factPlaces: true })).toContain('set_fact_places');
+    expect(buildArticleFeedbackSystemPrompt({ needsToolFormat: true })).not.toContain('set_fact_places');
+  });
+
+  const stage = (action: Record<string, unknown>) =>
+    decideProposeChanges({ explanation: 'x', expected_effects: 'y', actions: [action] }, new Set(['f1']));
+
+  it('decodes place names into codes and keeps the names for the card', () => {
+    const result = stage({
+      type: 'set_fact_places',
+      fact_id: 'f1',
+      places: [
+        { level: 'city', country: 'India', region: 'Madhya Pradesh', city: 'Bhopal' },
+        { level: 'country', country: 'Netherlands' },
+      ],
+    });
+    expect(result.sideEffects?.proposal?.actions).toEqual([
+      {
+        type: 'set_fact_places',
+        fact_id: 'f1',
+        places: ['IN|Madhya Pradesh|Bhopal', 'NL'],
+        label: 'Bhopal, Madhya Pradesh, India; Netherlands',
+      },
+    ]);
+  });
+
+  it('takes anywhere in the world on its own', () => {
+    const result = stage({ type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'anywhere' }] });
+    expect(result.sideEffects?.proposal?.actions[0]).toMatchObject({ places: ['GLOBAL'], label: 'anywhere in the world' });
+  });
+
+  it('refuses a code, an unknown name, an unknown fact and an empty list', () => {
+    for (const action of [
+      { type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'IN' }] },
+      { type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'Atlantis' }] },
+      { type: 'set_fact_places', fact_id: 'f9', places: [{ level: 'country', country: 'India' }] },
+      { type: 'set_fact_places', fact_id: 'f1', places: [] },
+    ]) {
+      expect(typeof (stage(action).result as { error?: unknown }).error).toBe('string');
+    }
+  });
+
+  it('renders a pending change by names, never codes', () => {
+    const proposal = stage({ type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'India' }] })
+      .sideEffects!.proposal!;
+    const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, fallbackTitle: 't', proposal });
+    expect(ctx).toContain('news for [f1] from "India"');
   });
 });

@@ -327,6 +327,11 @@ export type ProposalAction =
       label: string;
       publicationPref: 'boost' | 'deprioritize';
     }
+  /** Where news for one fact should come from (fbx, feedback chat only). The
+   *  model names places; the sanitizer decodes them through `placeFromNames`,
+   *  so `places` holds codes and `label` the names the card shows. Applied
+   *  through `setFactPlaces(..., 'chat')`. */
+  | { type: 'set_fact_places'; fact_id: string; places: string[]; label: string }
   /** Add a soft/hard suppression rule (a "not interested" filter).
    *  `suppressionKind` + `suppressionValue` make it STRUCTURED (exact match on
    *  one article field); absent ⇒ a keyword filter over `suppressionPattern` /

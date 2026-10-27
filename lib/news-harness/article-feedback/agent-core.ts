@@ -13,7 +13,13 @@ import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { SUPPRESSION_KINDS } from '../core/types';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { proposalRequiresUserChoice } from '../core/proposals';
-import { factLineWithPlaces } from '../persona-management/fact-places';
+import {
+  PLACE_GLOBAL,
+  describePlace,
+  factLineWithPlaces,
+  normalizePlaces,
+  placeFromNames,
+} from '../persona-management/fact-places';
 import {
   PROPOSE_FACT_CHECK_TOOL,
   PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE,
@@ -87,6 +93,8 @@ const VALID_ACTION_TYPES = new Set([
   'retire_suppression',
   'set_high_priority',
   'retire_topic',
+  // fbx: where a fact's news comes from (names in, codes out).
+  'set_fact_places',
 ]);
 
 /** Action enum shared by the JSON-Schema tool def and its test (single source). */
@@ -104,7 +112,11 @@ const PROPOSAL_ACTION_ENUM = [
   'retire_suppression',
   'set_high_priority',
   'retire_topic',
+  'set_fact_places',
 ] as const;
+
+/** A fact rarely needs more places than this; more reads as a guess. */
+const MAX_FACT_PLACES = 3;
 
 /**
  * The suppression kinds the ARTICLE context can corroborate a value against
@@ -321,8 +333,14 @@ export function buildArticleFeedbackSystemPrompt(params: {
    * Off (default) costs zero prompt bytes.
    */
   factCheck?: boolean;
+  /** CLOUD mode: offer `set_fact_places`. The on-device flows never stage it,
+   *  and off it costs zero bytes, so the local prompt keeps its budget. */
+  factPlaces?: boolean;
 }): string {
-  const { needsToolFormat, languageName, webSearch = false, factCheck = false } = params;
+  const { needsToolFormat, languageName, webSearch = false, factCheck = false, factPlaces = false } = params;
+  const factPlacesLine = factPlaces
+    ? '\n- set_fact_places: news for a fact should come from another place (fact_id, places as NAMES, never codes).'
+    : '';
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS write conversational text in **${languageName}**, with no exceptions — even if the user writes in another language. Fact statements stay English.`
@@ -365,7 +383,7 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - add_suppression — filter something out (suppressionPattern = the phrase; suppressionStrength 0.9 = never show it, 0.5 = just less of it). For an EXACT filter also send suppressionKind + suppressionValue, and COPY THE VALUE VERBATIM from <context>: category ← Category, entity ← Entities, publication ← Publication, topic ← MATCHED TOPICS. A value you paraphrase or invent matches NOTHING. So: with "Category: Entertainment" → {"suppressionKind":"category","suppressionValue":"Entertainment"}; your own words "celebrity stuff" → {"suppressionPattern":"celebrity"} with NO kind/value.
 - retire_suppression — the user wants an existing filter GONE ("stop hiding X", "show me X again"): suppressionId = an [id] from YOUR FILTERS in <context>. Never invent an id; if it isn't listed, say you can't find that filter.
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
-- retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).
+- retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).${factPlacesLine}
 - submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
 
 ## Following a story (the proposeTrack tool)
@@ -721,6 +739,21 @@ export function getArticleFeedbackToolDefinitions(
                       'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
                   },
                   highPriority: { type: 'boolean', description: 'set_high_priority: true to pin the topic, false to unpin.' },
+                  places: {
+                    type: 'array',
+                    description: `set_fact_places: 1 to ${MAX_FACT_PLACES} places for fact_id, as English NAMES, never codes. "anywhere" stands alone.`,
+                    items: {
+                      type: 'object',
+                      properties: {
+                        level: { type: 'string', enum: ['anywhere', 'bloc', 'country', 'region', 'city'] },
+                        bloc: { type: 'string', description: 'bloc level: e.g. "European Union".' },
+                        country: { type: 'string', description: 'country, region and city levels: the country name, e.g. "India".' },
+                        region: { type: 'string', description: 'region and city levels: e.g. "Madhya Pradesh".' },
+                        city: { type: 'string', description: 'city level: e.g. "Bhopal".' },
+                      },
+                      required: ['level'],
+                    },
+                  },
                 },
                 required: ['type'],
               },
@@ -836,6 +869,8 @@ function describeAction(a: ProposalAction): string {
       return `${a.highPriority ? 'pin' : 'unpin'} topic "${trunc(a.topicText, 60)}"`;
     case 'retire_topic':
       return `retire topic "${trunc(a.topicText, 60)}"`;
+    case 'set_fact_places':
+      return `news for [${a.fact_id}] from "${trunc(a.label, 80)}"`;
     case 'track_story':
       return `follow "${trunc(a.label, 80)}"`;
     // Staged only by the FACT-CHECK surface, but this switch is the shared
@@ -1024,6 +1059,24 @@ function validateAction(
       const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
       if (topicText.length === 0) return { error: 'retire_topic requires a non-empty topicText' };
       return { action: { type: 'retire_topic', topicText } };
+    }
+    case 'set_fact_places': {
+      if (typeof o.fact_id !== 'string' || !factIds.has(o.fact_id)) {
+        return { error: 'set_fact_places requires a fact_id from <context>' };
+      }
+      const raw = Array.isArray(o.places) ? o.places.slice(0, MAX_FACT_PLACES) : [];
+      // Any unresolved name refuses the whole action: a partial set would
+      // silently narrow what the user asked for.
+      const decoded = raw.map((p) => (p && typeof p === 'object' ? placeFromNames(p as Record<string, unknown>) : null));
+      if (decoded.length === 0 || decoded.some((p) => p === null)) {
+        return { error: 'set_fact_places needs places written as names (e.g. {"level":"country","country":"India"}); a code or an unknown name is refused' };
+      }
+      const places = normalizePlaces(decoded);
+      if (places.includes(PLACE_GLOBAL) && decoded.length > 1) {
+        return { error: 'set_fact_places: "anywhere" stands alone' };
+      }
+      const label = places.map(describePlace).filter(Boolean).join('; ');
+      return { action: { type: 'set_fact_places', fact_id: o.fact_id, places, label } };
     }
     case 'submit_feature_request': {
       const title = typeof o.title === 'string' ? o.title.trim() : '';

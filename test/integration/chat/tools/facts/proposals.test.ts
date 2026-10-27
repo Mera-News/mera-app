@@ -98,6 +98,27 @@ describe('fact actions', () => {
     expect(result).toEqual({ ...NOTHING, applied: 1 });
   });
 
+  it('set_fact_places writes the codes as a chat choice and returns its undo handle', async () => {
+    const [fact] = await seedFacts(['Pensioner']);
+
+    const result = await executeProposalActions([
+      { type: 'set_fact_places', fact_id: fact.id, places: ['IN'], label: 'India' },
+    ]);
+
+    const [after] = await getFacts();
+    expect(after.metadata).toMatchObject({ places: ['IN'], places_by: 'chat' });
+    expect(result.applied).toBe(1);
+    expect(result.changeLogIds).toHaveLength(1);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('set_fact_places on an unknown fact is an error and writes nothing', async () => {
+    const result = await executeProposalActions([
+      { type: 'set_fact_places', fact_id: 'missing', places: ['IN'], label: 'India' },
+    ]);
+    expect(result).toEqual({ ...NOTHING, errors: ['set_fact_places: fact missing not found'] });
+  });
+
   it('add_topics merges and dedupes onto the fact metadata', async () => {
     const fact = await factService.addFact('s', { topics: ['a', 'b'] });
 
