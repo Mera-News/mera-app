@@ -15,7 +15,7 @@
 //     topic / event-type aggregate into a nudge / retire / suppression candidate.
 //
 // For every removal / suppression candidate we also surface the liked stories it
-// would collaterally affect (conflictsWith) so the plan can ask before applying.
+// would collaterally affect; saved stories protect their topics from retirement.
 //
 // No imports of lib/database, lib/stores, expo, react-native, or watermelondb.
 // Config lives HERE (colocated with the only reader) — promote to core/config if
@@ -176,6 +176,17 @@ export interface DigestSignal {
   context: DigestSignalContext;
   /** Inline feedback-tree node-id breadcrumb, when the user drilled in. */
   treePath?: string[];
+  /** v6 menu answers (context_json.answers). Only `config` answers are persona
+   *  signals; a row whose answers are all system/source is ignored entirely. */
+  answers?: FeedbackAnswer[];
+  /** context_json top-level fact_id: the fact the card was shown under. */
+  factId?: string;
+}
+
+/** A story the reader saved: its topics are protected from retirement. */
+export interface DigestSavedStory {
+  title: string;
+  topicTexts: string[];
 }
 
 /** Narrow persona-topic snapshot — enough to resolve a matched-topic text to a
@@ -193,6 +204,8 @@ export interface DigestAnalyzeInput {
   signals: DigestSignal[];
   topics: DigestTopicInput[];
   now: number;
+  /** The reader's saved stories (user saves only, never retention rows). */
+  saved?: DigestSavedStory[];
   /** Candidate fingerprints the user already declined — never re-proposed. */
   rejectedFingerprints?: string[];
   constants?: DigestConstants;
@@ -203,6 +216,7 @@ export interface DigestAnalyzeInput {
 export type DigestCandidateKind =
   | 'topic_up'
   | 'topic_down'
+  | 'fact_down'
   | 'retire_topic'
   | 'suppress'
   | 'publication_up'
@@ -216,6 +230,7 @@ export interface DigestPersonaAction {
   action_type: ActionName;
   topicId?: string;
   topicText?: string;
+  factId?: string;
   delta?: number;
   weight?: number;
   publicationId?: string;
@@ -336,11 +351,6 @@ interface MutableCandidate {
   summary: string;
   op: DigestPersonaAction;
   sourceRowIds: Set<string>;
-  /** Conflict-scan descriptor (removal/suppression kinds only). */
-  conflictTopicKey?: string;
-  conflictEventType?: string;
-  conflictCategory?: string;
-  conflictPublication?: string;
 }
 
 /** Merge a freshly-built candidate into the map: union source rows, and for
@@ -408,7 +418,6 @@ function suppressionCandidate(
   summary: string,
   rowId: string,
   c: DigestConstants,
-  conflict: { eventType?: string; category?: string },
   structured?: { kind: SuppressionKindName; value: string },
 ): MutableCandidate {
   return {
@@ -425,8 +434,6 @@ function suppressionCandidate(
         : {}),
     },
     sourceRowIds: new Set([rowId]),
-    conflictEventType: conflict.eventType,
-    conflictCategory: conflict.category,
   };
 }
 
@@ -447,7 +454,6 @@ function publicationCandidate(
       publicationPref: pref,
     },
     sourceRowIds: new Set([rowId]),
-    ...(up ? {} : { conflictPublication: publicationId }),
   };
 }
 
@@ -461,6 +467,43 @@ function pathCandidates(
 ): MutableCandidate[] {
   const leaf = leafOf(signal.treePath);
   if (!leaf) return [];
+  return leafCandidates(leaf, signal, index, c);
+}
+
+/** v6: every config answer's leaf, else (legacy rows) the treePath leaf. */
+function signalCandidates(
+  signal: DigestSignal,
+  index: TopicIndex,
+  c: DigestConstants,
+): MutableCandidate[] {
+  if (!signal.answers?.length) return pathCandidates(signal, index, c);
+  const out: MutableCandidate[] = [];
+  for (const a of signal.answers) {
+    if (a.cause !== 'config') continue;
+    // too_many / not_important on a fact-level card nudge the FACT, not its topics.
+    const delta =
+      a.leafId === 'too_many' ? c.pathLowerStrong : a.leafId === 'not_important' ? c.pathLowerMild : null;
+    if (delta !== null && signal.factId) {
+      out.push({
+        fingerprint: `fact_down:${signal.factId}`,
+        kind: 'fact_down',
+        summary: 'Show less about this interest',
+        op: { action_type: ACTION_NAMES.SET_FACT_WEIGHT, factId: signal.factId, delta },
+        sourceRowIds: new Set([signal.id]),
+      });
+    } else {
+      out.push(...leafCandidates(a.leafId, signal, index, c));
+    }
+  }
+  return out;
+}
+
+function leafCandidates(
+  leaf: string,
+  signal: DigestSignal,
+  index: TopicIndex,
+  c: DigestConstants,
+): MutableCandidate[] {
   const matched = signal.context.matchedTopics ?? [];
   const out: MutableCandidate[] = [];
 
@@ -514,7 +557,6 @@ function pathCandidates(
             `Fewer "${shorten(evt)}" stories`,
             signal.id,
             c,
-            { eventType: evt },
             { kind: 'event_type', value: evt },
           ),
         );
@@ -535,7 +577,6 @@ function pathCandidates(
             `Fewer "${shorten(cat)}" stories`,
             signal.id,
             c,
-            { category: cat },
             { kind: 'category', value: cat },
           ),
         );
@@ -571,6 +612,7 @@ interface TopicTally {
 function aggregateCandidates(
   signals: DigestSignal[],
   index: TopicIndex,
+  savedTopics: ReadonlySet<string>,
   c: DigestConstants,
 ): MutableCandidate[] {
   const tallies = new Map<string, TopicTally>();
@@ -616,7 +658,9 @@ function aggregateCandidates(
   for (const tally of tallies.values()) {
     const { topic } = tally;
     // ≥3 dislikes, all low relevance → retire candidate (strongest signal wins).
+    // A topic on a saved story is never retired; it falls through to a down-weight.
     if (
+      !savedTopics.has(normalize(topic.text)) &&
       tally.dislikeRows.length >= c.minDislikesForRetire &&
       tally.dislikeRelevances.every((r) => r < c.retireRelevanceMax)
     ) {
@@ -630,7 +674,6 @@ function aggregateCandidates(
           topicText: topic.text,
         },
         sourceRowIds: new Set(tally.dislikeRows),
-        conflictTopicKey: topic.key,
       });
     } else if (tally.dislikeRows.length >= c.minDislikesForLower) {
       const cand = topicWeightCandidate(topic, c.aggregateDislikeDelta, tally.dislikeRows[0]);
@@ -657,7 +700,6 @@ function aggregateCandidates(
       `Fewer "${shorten(b.label)}" stories`,
       b.rows[0],
       c,
-      { eventType: b.label },
       { kind: 'event_type', value: b.label },
     );
     for (const id of b.rows) cand.sourceRowIds.add(id);
@@ -674,48 +716,12 @@ function aggregateCandidates(
       `Fewer "${shorten(b.label)}" stories`,
       b.rows[0],
       c,
-      { category: b.label },
       { kind: 'category', value: b.label },
     );
     for (const id of b.rows) cand.sourceRowIds.add(id);
     out.push(cand);
   }
 
-  return out;
-}
-
-// ── Conflict detection ────────────────────────────────────────────────────────
-
-/** For a removal/suppression candidate, list the liked stories it would also
- *  affect (shared matched-topic / event-type / category / publication). */
-function conflictsFor(cand: MutableCandidate, signals: DigestSignal[]): DigestConflict[] {
-  const out: DigestConflict[] = [];
-  const seen = new Set<string>();
-  for (const s of signals) {
-    if (s.sentiment !== 'like') continue;
-    let hit = false;
-    if (cand.conflictTopicKey) {
-      for (const ref of s.context.matchedTopics ?? []) {
-        if (ref.topicId === cand.conflictTopicKey || normalize(ref.text) === cand.conflictTopicKey) {
-          hit = true;
-          break;
-        }
-      }
-    }
-    if (!hit && cand.conflictEventType && s.context.eventType) {
-      hit = normalize(s.context.eventType) === normalize(cand.conflictEventType);
-    }
-    if (!hit && cand.conflictCategory && s.context.category) {
-      hit = normalize(s.context.category) === normalize(cand.conflictCategory);
-    }
-    if (!hit && cand.conflictPublication && s.context.publication) {
-      hit = s.context.publication === cand.conflictPublication;
-    }
-    if (hit && !seen.has(s.title)) {
-      seen.add(s.title);
-      out.push({ title: shorten(s.title, 60), reason: 'You liked this story' });
-    }
-  }
   return out;
 }
 
@@ -732,13 +738,21 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
   const rejected = new Set(input.rejectedFingerprints ?? []);
   const index = buildTopicIndex(input.topics);
 
+  // A row answered only with system/source causes is not a persona signal.
+  const signals = input.signals.filter(
+    (s) => !s.answers?.length || s.answers.some((a) => a.cause === 'config'),
+  );
+  const savedTopics = new Set(
+    (input.saved ?? []).flatMap((s) => s.topicTexts.map(normalize)),
+  );
+
   const byFingerprint = new Map<string, MutableCandidate>();
   // Path-mapped first — they carry the user's explicit intent, so they win any
   // fingerprint collision with a verdict aggregate on the same target.
-  for (const signal of input.signals) {
-    for (const cand of pathCandidates(signal, index, c)) mergeCandidate(byFingerprint, cand);
+  for (const signal of signals) {
+    for (const cand of signalCandidates(signal, index, c)) mergeCandidate(byFingerprint, cand);
   }
-  for (const cand of aggregateCandidates(input.signals, index, c)) {
+  for (const cand of aggregateCandidates(signals, index, savedTopics, c)) {
     mergeCandidate(byFingerprint, cand);
   }
 
@@ -746,7 +760,7 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
   // rather than in each of the ~8 candidate builders: every builder already
   // records `sourceRowIds`, so one lookup here covers all of them and cannot
   // drift between kinds.
-  const signalById = new Map(input.signals.map((sig) => [sig.id, sig]));
+  const signalById = new Map(signals.map((sig) => [sig.id, sig]));
   const entityContextFor = (
     rowIds: Iterable<string>,
   ): { liked: string[]; disliked: string[] } | undefined => {
@@ -775,10 +789,8 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
   const finalized: DigestCandidate[] = [];
   for (const m of byFingerprint.values()) {
     if (rejected.has(m.fingerprint)) continue;
-    const conflictsWith = REMOVAL_KINDS.has(m.kind) ? conflictsFor(m, input.signals) : [];
-    const entityContext = entityContextFor(m.sourceRowIds);
-    const confidence: 'auto' | 'review' =
-      REMOVAL_KINDS.has(m.kind) || conflictsWith.length > 0 ? 'review' : 'auto';
+        const entityContext = entityContextFor(m.sourceRowIds);
+    const confidence: 'auto' | 'review' = REMOVAL_KINDS.has(m.kind) ? 'review' : 'auto';
     finalized.push({
       fingerprint: m.fingerprint,
       kind: m.kind,
@@ -786,7 +798,7 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
       ops: [m.op],
       sourceRowIds: Array.from(m.sourceRowIds).sort(),
       confidence,
-      conflictsWith,
+      conflictsWith: [],
       ...(entityContext ? { entityContext } : {}),
     });
   }
