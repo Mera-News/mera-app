@@ -58,7 +58,7 @@ describe('every action name has exactly one fate', () => {
   const SUGGESTIONS = [A.NUDGE_SUBSCRIBE_PUBLICATION, A.NUDGE_BROWSE_RELATED];
   const UNSUPPORTED = [
     A.SUPPRESS_TOPIC, A.REASSIGN_TOPIC, A.MERGE_FACTS, A.HYGIENE_DELETE_FACT, A.ADD_LOCATION,
-    A.DELETE_LOCATION, A.REVERT_CHANGE,
+    A.DELETE_LOCATION, A.REVERT_CHANGE, A.SET_FACT_PLACES, A.SET_FACT_NEWS_STOPPED,
   ];
 
   it('the three groups cover ACTION_NAMES exactly, so a new name fails here until it is classified', () => {

@@ -54,6 +54,9 @@ const ACTION_DISPLAY: Record<string, ActionDisplay> = {
     [ACTION_NAMES.DISCARD_FACT]: { icon: 'delete-outline', labelKey: 'hygieneDeleteFact' },
     [ACTION_NAMES.ADD_LOCATION]: { icon: 'add-location-alt', labelKey: 'addLocation' },
     [ACTION_NAMES.DELETE_LOCATION]: { icon: 'wrong-location', labelKey: 'deleteLocation' },
+    // shortcut: no dedicated actionLabels keys yet, so both reuse existing ones; add keys with the P-copy unit.
+    [ACTION_NAMES.SET_FACT_PLACES]: { icon: 'place', labelKey: 'addLocation' },
+    [ACTION_NAMES.SET_FACT_NEWS_STOPPED]: { icon: 'block', labelKey: 'addNegativeTopic' },
     [ACTION_NAMES.REVERT_CHANGE]: { icon: 'undo', labelKey: 'revertChange' },
     // Written outside ACTION_NAMES: the v3 persona migration and calibration.
     // Neither has an inverse in persona-change-log-service, so both are deny-listed below.

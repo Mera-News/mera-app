@@ -111,6 +111,11 @@ export function changeSummary(t: Translate, row: ChangeRow, ctx: ChangeContext):
         case ACTION_NAMES.DISCARD_FACT:
         case ACTION_NAMES.HYGIENE_DELETE_FACT:
             return named('removed', str(a.statement) || lookedUp);
+        // shortcut: placeholder wording from existing summary keys until the copy unit adds its own.
+        case ACTION_NAMES.SET_FACT_PLACES:
+            return label;
+        case ACTION_NAMES.SET_FACT_NEWS_STOPPED:
+            return named('muted', lookedUp);
         case 'migrate_fact':
             return named('carriedOver', lookedUp);
         case ACTION_NAMES.REVERT_CHANGE: {

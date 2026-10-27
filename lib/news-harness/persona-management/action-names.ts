@@ -53,6 +53,10 @@ export const ACTION_NAMES = {
   // See action-display.isRevertible + persona-change-log-service (no inverse).
   ADD_LOCATION: 'add_location',
   DELETE_LOCATION: 'delete_location',
+  // Fact places (fbx P1). Both invertible: SET_FACT_PLACES restores places, places_by
+  // and places_source; SET_FACT_NEWS_STOPPED clears metadata.news_stopped.
+  SET_FACT_PLACES: 'set_fact_places',
+  SET_FACT_NEWS_STOPPED: 'set_fact_news_stopped',
   REVERT_CHANGE: 'revert_change',
 } as const;
 

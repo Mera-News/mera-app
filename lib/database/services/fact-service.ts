@@ -9,6 +9,16 @@ import type FactModel from '../models/Fact';
 import type { FactTopicsStatus } from '../models/Fact';
 import type TopicModel from '../models/Topic';
 import type { Fact } from '../../mera-protocol-toolkit/types';
+import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
+import {
+  RESIDENCE_ROLES,
+  factPlaces,
+  factPlacesBy,
+  normalizePlaces,
+  parsePlace,
+  placesSourceHash,
+  type PlacesBy,
+} from '../../news-harness/persona-management/fact-places';
 
 const factsCollection = database.get<FactModel>('facts');
 
@@ -547,3 +557,207 @@ export async function getFactsForTopicTexts(topicTexts: string[]): Promise<Fact[
   );
 }
 
+
+// --- Fact places (fbx P1) ---
+//
+// All metadata writes below read and merge INSIDE one database.write: `updateFact`
+// replaces `metadata` wholesale and would drop `topics`.
+
+type LooseMetadata = Record<string, unknown>;
+
+/** Merge into one fact's metadata in a single write; `undefined` deletes a key. Returns the metadata BEFORE. */
+async function patchMetadata(factId: string, patch: LooseMetadata): Promise<LooseMetadata | null> {
+  return database.write(async () => {
+    let record: FactModel;
+    try {
+      record = await factsCollection.find(factId);
+    } catch {
+      return null;
+    }
+    const before = { ...((record.metadata ?? {}) as LooseMetadata) };
+    const next: LooseMetadata = { ...before, ...patch };
+    for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+    await record.update((f) => {
+      f.metadata = next as Record<string, string[]>;
+      f.updatedAt = new Date();
+    });
+    return before;
+  });
+}
+
+/** A place's coverage key: the country (any depth), the bloc, or GLOBAL. */
+function coverageKeys(places: readonly string[]): string {
+  // shortcut: a bloc is its own key, not expanded to member countries; upgrade if bloc to country moves must not regenerate.
+  const keys = places.map((p) => {
+    const parsed = parsePlace(p);
+    return parsed?.country ?? parsed?.bloc ?? 'GLOBAL';
+  });
+  return [...new Set(keys)].sort().join(',');
+}
+
+async function residenceReaderPlaces() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { getAll } = require('./location-service') as typeof import('./location-service');
+  const rows = await getAll();
+  return rows
+    .filter((l) => RESIDENCE_ROLES.has(l.role))
+    .map((l) => ({ countryCode: l.countryCode, region: l.region, city: l.city, role: l.role as string }));
+}
+
+let warnedNoRescore = false;
+async function rescoreLocationCaught(factId: string): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@/lib/mera-protocol/stage-scoring') as { rescoreLocationCaught?: (id: string) => Promise<unknown> };
+    if (typeof mod.rescoreLocationCaught === 'function') await mod.rescoreLocationCaught(factId);
+    else if (!warnedNoRescore) {
+      warnedNoRescore = true;
+      logger.warn('[fact-places] rescoreLocationCaught is not exported yet; skipping');
+    }
+  } catch (error) {
+    logger.warn('[fact-places] rescoreLocationCaught failed', { factId, error: String(error) });
+  }
+}
+
+async function regenerate(factId: string): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { regenerateTopicsForFact } = require('./topic-replacement-service') as typeof import('./topic-replacement-service');
+    await regenerateTopicsForFact(factId);
+  } catch (error) {
+    logger.warn('[fact-places] topic regeneration failed', { factId, error: String(error) });
+  }
+}
+
+const LOG_SOURCE = { sweep: 'llm', user: 'user', chat: 'chat' } as const;
+
+/**
+ * Set where a fact's news comes from. Always refreshes `places_source`; an equal
+ * place set writes nothing else. A sweep never overwrites a user's choice.
+ */
+export async function setFactPlaces(
+  factId: string,
+  places: readonly string[],
+  by: PlacesBy,
+  opts?: { regenerate?: boolean },
+): Promise<{ applied: boolean; changeLogId?: string }> {
+  const next = normalizePlaces(places);
+  let record: FactModel;
+  try {
+    record = await factsCollection.find(factId);
+  } catch {
+    return { applied: false };
+  }
+  const source = placesSourceHash(record.statement, await residenceReaderPlaces());
+  const current = { metadata: record.metadata as LooseMetadata | undefined, statement: record.statement };
+  const prevPlaces = factPlaces(current);
+  const prevBy = factPlacesBy(current);
+  if (by === 'sweep' && prevBy === 'user') return { applied: false };
+
+  const same = prevPlaces.length === next.length && prevPlaces.every((p) => next.includes(p));
+  if (same) {
+    if (current.metadata?.places_source !== source) await patchMetadata(factId, { places_source: source });
+    return { applied: false };
+  }
+
+  const before = await patchMetadata(factId, {
+    places: next,
+    places_by: by,
+    places_source: source,
+    places_wrong: undefined,
+  });
+  if (!before) return { applied: false };
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const changeLog = require('./persona-change-log-service') as typeof import('./persona-change-log-service');
+  const row = await changeLog.append({
+    actionType: ACTION_NAMES.SET_FACT_PLACES,
+    action: {
+      targetId: factId,
+      before: { places: prevPlaces, by: prevBy, source: (before.places_source as string | undefined) ?? null },
+      after: { places: next, by },
+    },
+    source: LOG_SOURCE[by],
+    summary: 'Set where a fact\'s news comes from',
+  });
+
+  await rescoreLocationCaught(factId);
+  if (opts?.regenerate !== false && coverageKeys(prevPlaces) !== coverageKeys(next)) await regenerate(factId);
+  return { applied: true, changeLogId: row.id };
+}
+
+/** Undo of set_fact_places: put places, places_by and places_source back, then regenerate. */
+export async function restoreFactPlaces(
+  factId: string,
+  before: { places: string[]; by: PlacesBy | null; source: string | null },
+  expectedNow: readonly string[],
+): Promise<boolean> {
+  const record = await factsCollection.find(factId);
+  const now = factPlaces({ statement: record.statement, metadata: record.metadata as LooseMetadata });
+  // Compare-and-set: a newer places write owns the value.
+  if (now.length !== expectedNow.length || !now.every((p) => expectedNow.includes(p))) return false;
+  await patchMetadata(factId, {
+    places: before.places.length > 0 ? before.places : undefined,
+    places_by: before.by ?? undefined,
+    places_source: before.source ?? undefined,
+    places_wrong: undefined,
+  });
+  await rescoreLocationCaught(factId);
+  await regenerate(factId);
+  return true;
+}
+
+/** The sweep's answer was wrong for this fact: flag it and force a re-decide. A user's choice stays. */
+export async function markFactPlacesWrong(factId: string): Promise<boolean> {
+  let record: FactModel;
+  try {
+    record = await factsCollection.find(factId);
+  } catch {
+    return false;
+  }
+  if (factPlacesBy({ statement: record.statement, metadata: record.metadata as LooseMetadata }) === 'user') return false;
+  await patchMetadata(factId, { places_wrong: true, places_source: undefined });
+  return true;
+}
+
+/** Stamp the places the fact's current topics were generated for. */
+export async function stampPlacesTopicsFor(factId: string, places: readonly string[]): Promise<void> {
+  await patchMetadata(factId, { places_topics_for: [...places] });
+}
+
+export async function setFactNewsStopped(factId: string, stopped: boolean): Promise<void> {
+  await patchMetadata(factId, { news_stopped: stopped ? true : undefined });
+}
+
+export function isNewsStopped(fact: { metadata?: Record<string, unknown> | null }): boolean {
+  return fact.metadata?.news_stopped === true;
+}
+
+/** Retire the fact's active non-tracked topics (one logged, undoable retire_topic row each), then flag the fact. */
+export async function stopNewsForFact(factId: string): Promise<{ changeLogIds: string[] }> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const topicService = require('./topic-service') as typeof import('./topic-service');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const changeLog = require('./persona-change-log-service') as typeof import('./persona-change-log-service');
+  const changeLogIds: string[] = [];
+  const topics = (await topicService.getByFact(factId)).filter((t) => t.status === 'active' && t.provenance !== 'tracked');
+  for (const t of topics) {
+    await topicService.retire(t.id);
+    const row = await changeLog.append({
+      actionType: ACTION_NAMES.RETIRE_TOPIC,
+      action: { targetId: t.id },
+      source: 'user',
+      summary: 'Retired topic',
+    });
+    changeLogIds.push(row.id);
+  }
+  await setFactNewsStopped(factId, true);
+  const row = await changeLog.append({
+    actionType: ACTION_NAMES.SET_FACT_NEWS_STOPPED,
+    action: { targetId: factId, before: false, after: true },
+    source: 'user',
+    summary: 'Stopped news for a fact',
+  });
+  changeLogIds.push(row.id);
+  return { changeLogIds };
+}
