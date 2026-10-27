@@ -67,15 +67,19 @@ test('a snapshot byte-equal to the live prompts is refused', () => {
   assert.throws(() => loadPrePrompts(bad), /measure nothing/);
 });
 
-test('verdict: post within max(1, spread) of pre on proposeTrack, other kinds within spread', () => {
+test('verdict: per-kind spread; track within max(1, spread), other kinds within max(1, spread_k)', () => {
   const rows = (arm: string, track: number, fc: number, ans: number) => [
     ...Array.from({ length: 6 }, (_, i) => ({ arm, expect: 'proposeTrack' as const, pass: i < track })),
     ...Array.from({ length: 3 }, (_, i) => ({ arm, expect: 'proposeFactCheck' as const, pass: i < fc })),
     ...Array.from({ length: 3 }, (_, i) => ({ arm, expect: 'answer' as const, pass: i < ans })),
   ];
   const mk = (pre: number[], post: number[], twin: number[]) => [...rows('pre', pre[0], pre[1], pre[2]), ...rows('post', post[0], post[1], post[2]), ...rows('post-twin', twin[0], twin[1], twin[2])];
-  assert.equal(prePostVerdict(mk([5, 3, 3], [4, 3, 3], [4, 3, 3])).verdict, 'PASS'); // one below pre, floor 1
-  assert.equal(prePostVerdict(mk([5, 3, 3], [3, 3, 3], [3, 3, 3])).verdict, 'FAIL'); // two below, spread 0
-  assert.equal(prePostVerdict(mk([5, 3, 3], [5, 2, 3], [5, 3, 3])).verdict, 'PASS'); // fc moved 1 <= spread 1
-  assert.equal(prePostVerdict(mk([5, 3, 3], [5, 1, 3], [5, 1, 3])).verdict, 'FAIL'); // fc moved 2 > spread 0
+  const v = (pre: number[], post: number[], twin: number[]) => prePostVerdict(mk(pre, post, twin));
+  assert.equal(v([5, 3, 3], [4, 3, 3], [4, 3, 3]).verdict, 'PASS'); // track one below pre, floor 1
+  assert.equal(v([5, 3, 3], [3, 3, 3], [3, 3, 3]).verdict, 'FAIL'); // track two below, spread 0
+  assert.equal(v([5, 3, 3], [3, 3, 3], [5, 3, 3]).verdict, 'PASS'); // track spread 2 widens the band
+  assert.equal(v([5, 3, 3], [5, 2, 3], [5, 2, 3]).verdict, 'PASS'); // fc moved 1, floor 1 at spread 0
+  assert.equal(v([5, 3, 3], [5, 1, 3], [5, 1, 3]).verdict, 'FAIL'); // fc moved 2 > max(1, 0)
+  assert.equal(v([5, 3, 3], [5, 1, 3], [5, 3, 3]).verdict, 'PASS'); // fc spread 2 allows it
+  assert.deepEqual(v([5, 3, 3], [4, 2, 3], [5, 3, 1]).spread, { proposeTrack: 1, proposeFactCheck: 1, answer: 2 });
 });

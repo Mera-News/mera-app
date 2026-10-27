@@ -23,9 +23,9 @@
 // tool arrays from a JSON snapshot passed with --pre-prompts <path> (keys followStory,
 // followStoryTools, article, articleTools; required when `pre` is in --arms). The run throws if
 // the snapshot's system prompts are byte-equal to the live ones (the arm would measure nothing).
-// With exactly --arms pre,post,post-twin the verdict is: spread = |post - post-twin| passes;
-// PASS when post proposeTrack passes >= pre - max(1, spread), and the proposeFactCheck and
-// answer fixtures move no more than spread (post vs pre). No on/off verdict is printed.
+// With exactly --arms pre,post,post-twin the verdict is, per fixture kind k: spread_k = |post_k - post-twin_k| passes;
+// PASS when post proposeTrack passes >= pre - max(1, spread), and proposeFactCheck and
+// answer each have |post_k - pre_k| <= max(1, spread_k). No on/off verdict is printed.
 //
 // --engine afm|qwen-local|nano-proxy runs the ON-DEVICE flows instead
 // (lib/news-harness/on-device/follow-story and article-feedback): their prompts,
@@ -142,11 +142,13 @@ export function loadPrePrompts(path: string): PrePrompts {
 
 interface VerdictRow { arm: string; expect: Fixture['expect']; pass: boolean }
 /** D8 rule: see the header. Counts are over the count-matched rows. */
-export function prePostVerdict(rows: VerdictRow[]): { spread: number; trackOk: boolean; othersOk: boolean; verdict: 'PASS' | 'FAIL' } {
-  const n = (arm: string, expect?: Fixture['expect']): number => rows.filter((x) => x.arm === arm && x.pass && (!expect || x.expect === expect)).length;
-  const spread = Math.abs(n('post') - n('post-twin'));
-  const trackOk = n('post', 'proposeTrack') >= n('pre', 'proposeTrack') - Math.max(1, spread);
-  const othersOk = (['proposeFactCheck', 'answer'] as const).every((k) => Math.abs(n('post', k) - n('pre', k)) <= spread);
+/** D8 rule: see the header. Counts are over the count-matched rows; spread is per fixture kind. */
+export function prePostVerdict(rows: VerdictRow[]): { spread: Record<Fixture['expect'], number>; trackOk: boolean; othersOk: boolean; verdict: 'PASS' | 'FAIL' } {
+  const n = (arm: string, k: Fixture['expect']): number => rows.filter((x) => x.arm === arm && x.pass && x.expect === k).length;
+  const kinds = ['proposeTrack', 'proposeFactCheck', 'answer'] as const;
+  const spread = Object.fromEntries(kinds.map((k) => [k, Math.abs(n('post', k) - n('post-twin', k))])) as Record<Fixture['expect'], number>;
+  const trackOk = n('post', 'proposeTrack') >= n('pre', 'proposeTrack') - Math.max(1, spread.proposeTrack);
+  const othersOk = (['proposeFactCheck', 'answer'] as const).every((k) => Math.abs(n('post', k) - n('pre', k)) <= Math.max(1, spread[k]));
   return { spread, trackOk, othersOk, verdict: trackOk && othersOk ? 'PASS' : 'FAIL' };
 }
 
@@ -470,8 +472,8 @@ async function main(): Promise<number> {
   console.log(
     `fixtures ${fixtures.length} x arms ${args.arms.map((a) => a.id).join(',')} x repeat ${args.repeat}, model ${args.model}, format ${APP_TOOL_FORMAT}\n` +
       (prePost
-        ? 'PASS RULE (fixed before the run): spread = |post - post-twin| passes; PASS when post proposeTrack passes >= pre - max(1, spread)\n' +
-          'and the proposeFactCheck and answer fixtures move no more than spread (post vs pre). An error row drops its (fixture, repeat) for every arm.'
+        ? 'PASS RULE (fixed before the run): per kind k, spread_k = |post_k - post-twin_k| passes; PASS when post proposeTrack >= pre - max(1, spread_proposeTrack)\n' +
+          'and proposeFactCheck and answer each satisfy |post_k - pre_k| <= max(1, spread_k). An error row drops its (fixture, repeat) for every arm.'
         : 'PASS RULE (fixed before the run): `off` passes if its turn pass count is >= `on` minus max(1, |on - on-twin|),\n' +
           'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. An error row drops its (fixture, repeat) for every arm.'),
   );
@@ -530,7 +532,7 @@ async function main(): Promise<number> {
   }
   if (prePost) {
     const v = prePostVerdict(valid);
-    console.log(`\nspread ${v.spread}; proposeTrack ${v.trackOk ? 'ok' : 'WORSE'}; proposeFactCheck/answer ${v.othersOk ? 'ok' : 'MOVED'}\nVERDICT: ${v.verdict}`);
+    console.log(`\nspread track ${v.spread.proposeTrack} factCheck ${v.spread.proposeFactCheck} answer ${v.spread.answer}; proposeTrack ${v.trackOk ? 'ok' : 'WORSE'}; proposeFactCheck/answer ${v.othersOk ? 'ok' : 'MOVED'}\nVERDICT: ${v.verdict}`);
     run.writeJson('summary', { model: args.model, stats, ...v, droppedCells: dropped });
     return v.verdict === 'PASS' ? 0 : 1;
   }
