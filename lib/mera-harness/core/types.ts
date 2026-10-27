@@ -404,6 +404,16 @@ export interface AgentTurnResult {
    *  narrated the loop's own process or leaked internals. The app renders it as
    *  its own bubble above the reply. */
   acknowledgement: string;
+  /** The turn would have ended silent (no reply, nothing staged, no question)
+   *  and ran its one tool-free closing leg. */
+  closingLegFired: boolean;
+  /** The closing leg wrote nothing usable, so the canned line was shown. */
+  noAnswerFallbackUsed: boolean;
+  /** The closing leg's own text claimed a save or a change (it was replaced). */
+  closingClaim: boolean;
+  /** Something is on screen for the user to act on: a staged card, a removal
+   *  card, an apply or cancel, or the loop's own chip. */
+  stagedSomething: boolean;
   /** Final replies re-asked because they narrated the loop's process or
    *  promised a step the turn never took. Its own budget. */
   processRetries: number;

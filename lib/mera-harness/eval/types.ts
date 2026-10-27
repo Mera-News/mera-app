@@ -145,6 +145,14 @@ export interface EvalRow {
    *  the acknowledgement when it is empty). LAST row only. Score a closing
    *  sentence from this, never from a leg's rawOutput. */
   reply?: string | null;
+  /** The loop's own terminal, the closing-leg counters and what was on screen.
+   *  LAST row only, null elsewhere. */
+  terminalReason?: string | null;
+  closingLegFired?: boolean | null;
+  noAnswerFallbackUsed?: boolean | null;
+  closingClaim?: boolean | null;
+  stagedSomething?: boolean | null;
+  choicePending?: boolean | null;
   awaitingUser: boolean;
   /**
    * THE TURN'S ROUTING VERDICT, repeated on every leg of the turn.

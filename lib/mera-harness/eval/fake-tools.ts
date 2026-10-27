@@ -175,7 +175,9 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
         });
         accepted.push(statement);
       }
-      return { accepted, rejected };
+      // `pendingFacts` like the device: the loop counts a proposal only when
+      // something was staged.
+      return { accepted, rejected, pendingFacts: accepted.map((s) => ({ options: [s] })) };
     },
 
     // Deterministic and offline: the eval never reaches the web. A turn may

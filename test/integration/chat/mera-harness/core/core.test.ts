@@ -569,7 +569,9 @@ describe('the bounded loop', () => {
       modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Utrecht' })] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
-    expect(out.legs).toHaveLength(MAX_AGENT_LEGS);
+    // The budget's legs, plus the one tool-free closing leg a silent turn gets.
+    expect(out.legs).toHaveLength(MAX_AGENT_LEGS + 1);
+    expect(out.closingLegFired).toBe(true);
     expect(out.legBudgetHit).toBe(true);
     // A facts turn's last leg is the forced offer; with nothing offered the
     // turn is `no-proposal`, a terminal the UI still renders.

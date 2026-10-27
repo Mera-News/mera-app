@@ -79,6 +79,7 @@ import {
   cardReport,
   offerGuardReport,
   replyCheckReport,
+  silentTurnReport,
   thinkingGearReport,
   toolValidityReport,
 } from '../../lib/mera-harness/eval/agent-metrics';
@@ -730,6 +731,11 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
       out.push(`    MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: ${m.detail} ${JSON.stringify(m.reply.slice(0, 120))}`);
     }
   }
+
+  const st = silentTurnReport(turns);
+  out.push(`\nSILENT TURNS (no reply, nothing on screen, no ending sentence; must be 0)  ${st.silent.length}/${st.turns}`);
+  out.push(`  closing leg fired ${st.closingFired}  canned line shown ${st.cannedFired}  closing sentence claimed a change ${st.closingClaims} (must be 0)`);
+  for (const m of st.silent.slice(0, 8)) out.push(`  SILENT ${m.arm} ${m.scriptId} turn ${m.turnIndex} r${m.repeat}`);
 
   // The rule of plans/ready_to_implement/E2EE_TOOL_STEPS_DEV_PORT.closing.py, over each turn's last row.
   const last = turns.map((t) => t.legs[t.legs.length - 1]);

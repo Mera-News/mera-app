@@ -71,6 +71,7 @@ import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-c
 import type {
   PendingProposalView,
   AgentDeps,
+  AgentModelRequest,
   AgentLeg,
   AgentModelResult,
   AgentProposal,
@@ -257,6 +258,17 @@ export const MAX_PROCESS_RETRIES = 1;
  *  simply dropped. */
 export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you say it again?";
 
+/** The last resort for a skill turn that would end silent: its closing leg
+ *  wrote nothing usable either. The app passes the reader-language line. */
+export const REPLY_NO_ANSWER_FALLBACK = "I couldn't do that. Try asking another way.";
+
+/** The closing leg of a turn that would otherwise end with no reply, no card
+ *  and no question. Nothing was staged on such a turn by definition. */
+const NO_ANSWER_NOTE =
+  'Nothing was offered, saved or changed this turn. '
+  + 'Write ONE short sentence, in the language of their message, that tells them what you understood and that nothing changed. '
+  + 'Do not say anything was saved, added, muted, hidden, followed or changed. Do not call a tool.';
+
 /** Mirrors lib/algorithms/estimate-tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
 export function estimateTokens(text: string): number {
@@ -380,7 +392,7 @@ export interface RunAgentTurnParams {
   /** The two lines a reply is REPLACED with (leak, narration), in the reader's
    *  language. The harness cannot import i18n, so the app translates them at the
    *  call site; omitted (the eval), the English constants are used. */
-  fallbacks?: { leak: string; process: string };
+  fallbacks?: { leak: string; process: string; noAnswer?: string };
 }
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
@@ -389,6 +401,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const model = params.model ?? 'BIG';
   const leakFallback = params.fallbacks?.leak ?? REPLY_LEAK_FALLBACK;
   const processFallback = params.fallbacks?.process ?? REPLY_PROCESS_FALLBACK;
+  const noAnswerFallback = params.fallbacks?.noAnswer ?? REPLY_NO_ANSWER_FALLBACK;
   /** Skills the arm hides behave as if they did not exist (a step's control). */
   const hiddenSkills = resolveAgentArm(params.promptVariant).hideSkills ?? [];
   const loadSkillFn = (id: string): string | null =>
@@ -612,6 +625,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** An unverified home was held back because it would replace the verified
    *  home on file; the chip offers the user's own words instead. */
   let heldBackUnverifiedHome = false;
+  /** The loop put the "Save as I wrote it" chip on screen. */
+  let saveAsWrittenOffered = false;
 
   /**
    * "SAVE AS I WROTE IT" (owner ruling ux2 D9): the user's own sentence, as a
@@ -1712,7 +1727,6 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           proposedStatements.add(statement.toLowerCase());
           offeredThisTurn.push(statement.toLowerCase());
         }
-        if (sanitised.length > 0) proposedSomething = true;
         // THE OFFER IS ALREADY A CARD ON SCREEN ("follow this" after the card
         // that offers it). The port is not called: its empty-list answer reads
         // as `staged: true`, and the next leg said "I'm on it". The model is
@@ -1744,6 +1758,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           extracted_user_information: sanitised,
           proposals,
         });
+        // A PROPOSAL IS A CARD THE DEVICE STAGED, not entries sent: the device
+        // drops what it judges a duplicate or meta, and a turn that counted
+        // those as proposed ended with nothing on screen. No `pendingFacts`
+        // field means the port does not report it, and the entries count.
+        if (sanitised.length > 0 && (!Array.isArray(out?.pendingFacts) || out.pendingFacts.length > 0)) {
+          proposedSomething = true;
+        }
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         continue;
@@ -2341,22 +2362,6 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // break. A card on screen needs no words; otherwise one plain line.
     reply = proposedSomething ? '' : processFallback;
     replyProcessUnfixed = true;
-  } else if (
-    // NEVER SILENT ON A QUESTION (ux2 batch 26 D6). A conversation leg that
-    // neither answers nor calls a tool is re-run to the cap and ends with an
-    // empty reply, and the acknowledgement ("One moment.") was then the
-    // whole turn on screen. A facts turn has its own closing UI (a card, the
-    // no-proposal line, the save-as-written chip); a conversation turn has
-    // nothing but this line.
-    !cleanProse(reply).trim()
-    && !proposedSomething
-    && turn.pendingChoice === null
-    && terminalReason !== 'transport-error'
-    && skillLoaded !== null
-    && skillLoaded.startsWith('conversation/')
-  ) {
-    reply = processFallback;
-    replyProcessUnfixed = true;
   }
   // The acknowledgement is rendered too, so it gets the same two checks. It is
   // dropped rather than replaced: the reply below it carries the turn.
@@ -2401,12 +2406,70 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       synthetic: true,
     };
     legs.push(leg);
+    saveAsWrittenOffered = true;
     if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
     params.onLeg?.(leg);
   }
 
   // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
   const combinedRewriteOffered = await offerCombinedFactSplit();
+
+  // ---- NEVER SILENT -------------------------------------------------------
+  // A skill turn with no reply, nothing staged and no question waiting showed
+  // the acknowledgement, the tool rows and then nothing (chatfix, replayed
+  // from staging: "Do not show me anything about Bollywood"). Branches that
+  // count on "the next leg writes the sentence" reach the budget's last leg
+  // with no next leg. ONE rule, after every end-of-turn offer: one tool-free
+  // closing leg, and the canned line if that is empty or claims a change.
+  // Never on a stopped or failed turn: the app shows those itself.
+  let closingLegFired = false;
+  let noAnswerFallbackUsed = false;
+  let closingClaim = false;
+  /** The terminals the thread renders as a sentence of their own. */
+  const renderableTerminal = ['leg-cap', 'no-proposal', 'unknown-tool', 'malformed-choice'].includes(terminalReason)
+    ? terminalReason
+    : null;
+  if (
+    skillLoaded !== null
+    && !cleanProse(reply).trim()
+    && !proposedSomething
+    && !saveAsWrittenOffered
+    && turn.pendingChoice === null
+    && terminalReason !== 'transport-error'
+  ) {
+    closingLegFired = true;
+    const last = [...legs].reverse().find((l) => !l.synthetic);
+    const messages: AgentModelRequest['messages'] = [
+      ...((last?.messages ?? []) as AgentModelRequest['messages']),
+      ...(last?.toolResults ?? []).map((tr) => ({
+        role: 'tool' as const,
+        content: `${tr.name}: ${escapeUntrusted(JSON.stringify(tr.result), 4000)}`,
+      })),
+      { role: 'user' as const, content: NO_ANSWER_NOTE },
+    ];
+    const called = await deps.callModel({
+      role: 'tool', model, systemPrompt, messages, tools: [], toolChoice: 'auto', enableThinking: false,
+    });
+    const leg: AgentLeg = {
+      index: legs.length, role: 'tool', systemPrompt, messages, toolCalls: [], toolResults: [],
+      rawOutput: called.content, result: { ...called, toolCalls: [] },
+      inputTokens: estimateTokens(systemPrompt) + messages.reduce((n: number, m) => n + estimateTokens(m.content), 0),
+    };
+    legs.push(leg);
+    params.onLeg?.(leg);
+    const text = called.error ? '' : cleanProse(called.truncated ? endAtLastSentence(called.content) : called.content);
+    closingClaim = claimsSaveHappened(text) || claimsChangeHappened(text);
+    if (text.trim() && !closingClaim && !leaksInternals(text) && !narratesProcess(text)) {
+      reply = text;
+      // The turn answered: running out of legs or offering nothing is no
+      // longer the news, and the box would say so beside the answer.
+      if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
+    } else if (renderableTerminal === null) {
+      reply = noAnswerFallback;
+      noAnswerFallbackUsed = true;
+    }
+    // else: the box already says why the turn ended; a second line repeats it.
+  }
 
   turn.turnActive = false;
   turn.offeredStatements = resumedSkill
@@ -2459,6 +2522,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // by prompt alone: 25% of measured prose rows carried one despite the ban.
     reply: cleanProse(reply),
     acknowledgement,
+    closingLegFired,
+    noAnswerFallbackUsed,
+    closingClaim,
+    stagedSomething: proposedSomething || saveAsWrittenOffered,
     processRetries,
     replyProcessUnfixed,
     typedYesResume,

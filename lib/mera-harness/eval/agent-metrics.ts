@@ -557,6 +557,48 @@ export function proseReport(rows: readonly EvalRow[]): ProseReport {
 }
 
 // ---------------------------------------------------------------------------
+// Silent turns (chatfix): no reply, nothing on screen, no ending sentence
+// ---------------------------------------------------------------------------
+
+/** Terminals the thread renders as a sentence of their own. */
+const RENDERED_TERMINALS = new Set(['leg-cap', 'no-proposal', 'unknown-tool', 'malformed-choice', 'no-route']);
+
+export interface SilentTurnReport {
+  turns: number;
+  /** No reply, nothing staged, no question, no rendered terminal, not errored. Bar: 0. */
+  silent: { scriptId: string; turnIndex: number; repeat: number; arm: string }[];
+  closingFired: number;
+  /** The canned line was shown: the closing leg wrote nothing usable. Bar: about 0. */
+  cannedFired: number;
+  /** A closing sentence that claimed a save or a change (it was replaced). Bar: 0. */
+  closingClaims: number;
+}
+
+/** Read from the turn's last row; rows written before these fields existed are skipped. */
+export function silentTurnReport(turns: readonly TurnRows[]): SilentTurnReport {
+  const out: SilentTurnReport = { turns: 0, silent: [], closingFired: 0, cannedFired: 0, closingClaims: 0 };
+  for (const t of turns) {
+    const last = t.legs[t.legs.length - 1];
+    if (!last || last.terminalReason == null) continue;
+    out.turns += 1;
+    if (last.closingLegFired) out.closingFired += 1;
+    if (last.noAnswerFallbackUsed) out.cannedFired += 1;
+    if (last.closingClaim) out.closingClaims += 1;
+    const errored = last.terminalReason === 'transport-error' || t.legs.some((l) => l.error !== null);
+    if (
+      !errored
+      && !(last.reply ?? '').trim()
+      && !last.stagedSomething
+      && !last.choicePending
+      && !RENDERED_TERMINALS.has(last.terminalReason)
+    ) {
+      out.silent.push({ scriptId: t.scriptId, turnIndex: t.turnIndex, repeat: t.repeat, arm: t.arm });
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Reply checks (replyScript / replyExcludes / replyMatches)
 // ---------------------------------------------------------------------------
 
