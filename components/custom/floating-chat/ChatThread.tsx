@@ -38,6 +38,8 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard, { AppliedByTypingCard } from './ProposalCard';
+import TrackStoryCard from './TrackStoryCard';
+import { isTrackCard } from '@/lib/news-harness/core/proposals';
 import QuickFactCheckCard from './QuickFactCheckCard';
 import FactChoiceCard from './FactChoiceCard';
 import FactChoiceBulkRow from './FactChoiceBulkRow';
@@ -164,6 +166,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       animated: true,
     });
   }, [displayItems]);
+
+  // A card that grew keeps its bottom on screen. Reads the latest items through a ref:
+  // the call comes after the re-render, from a closure drawn before it.
+  const displayItemsRef = useRef(displayItems);
+  displayItemsRef.current = displayItems;
+  const scrollCardIntoView = useCallback((itemKey: string) => {
+    const list = displayItemsRef.current;
+    const at = list.findIndex((it) => it.key === itemKey);
+    if (at === -1) return;
+    // Reversed data; viewPosition 0 puts the item's end (its bottom) at the visible bottom.
+    listRef.current?.scrollToIndex({ index: list.length - 1 - at, viewPosition: 0, animated: true });
+  }, []);
 
   // Every topic-plan card in the thread — TopicPlanSaveAllRow filters these
   // against the settled map itself, keeping this component store-free.
@@ -307,7 +321,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         return <OptimisationPlanCard />;
 
       case 'proposal-card':
-        return <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />;
+        return item.track && isTrackCard(item.proposal) ? (
+          <TrackStoryCard proposal={item.proposal} source={item.track} onGrown={() => scrollCardIntoView(item.key)} />
+        ) : (
+          <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />
+        );
 
       case 'applied-by-typing':
         return <AppliedByTypingCard changeLogIds={item.changeLogIds} undoable={item.undoable} />;
