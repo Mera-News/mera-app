@@ -70,6 +70,76 @@ export const DIGEST_CONSTANTS = {
 
 export type DigestConstants = typeof DIGEST_CONSTANTS;
 
+// ── Feedback answers (v6 menu; the row's context_json) ───────────────────────
+
+/** Why the reader answered: their profile needs a change (config), Mera got it
+ *  wrong (system), or the site is the problem (source). Only config answers are
+ *  persona signals; a missing cause (legacy rows) counts as config. */
+export type FeedbackCause = 'config' | 'system' | 'source';
+
+export interface FeedbackAnswer {
+  leafId: string;
+  path: string[];
+  cause: FeedbackCause;
+  /** wrong_place: the place code; not_about_fact: the fact id. */
+  value?: string;
+}
+
+function parseJsonObject(raw: unknown): Record<string, unknown> | null {
+  let v = raw;
+  if (typeof v === 'string') {
+    try {
+      v = JSON.parse(v);
+    } catch {
+      return null;
+    }
+  }
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+/** `context_json.answers` (string or parsed object) → valid answers only. */
+export function parseFeedbackAnswers(contextJson: unknown): FeedbackAnswer[] {
+  const rows = parseJsonObject(contextJson)?.answers;
+  if (!Array.isArray(rows)) return [];
+  const out: FeedbackAnswer[] = [];
+  for (const row of rows) {
+    const rec = parseJsonObject(row);
+    const leafId = typeof rec?.leafId === 'string' ? rec.leafId : '';
+    if (!rec || !leafId) continue;
+    const cause: FeedbackCause =
+      rec.cause === 'system' || rec.cause === 'source' ? rec.cause : 'config';
+    const path = Array.isArray(rec.path) ? rec.path.filter((p): p is string => typeof p === 'string') : [];
+    out.push({ leafId, path, cause, ...(typeof rec.value === 'string' ? { value: rec.value } : {}) });
+  }
+  return out;
+}
+
+/** A Mera mistake kept on device as context for chat and the sweep. Never a
+ *  persona signal. */
+export interface FeedbackMistake {
+  reason: string;
+  factId: string | null;
+  country: string | null;
+  language: string | null;
+  publication: string | null;
+}
+
+/** The row's first system answer as a mistake, or null. Reads top-level
+ *  `fact_id`, `country`, `language`, `publication` from context_json. */
+export function mistakeFromContext(contextJson: unknown): FeedbackMistake | null {
+  const ctx = parseJsonObject(contextJson);
+  const answer = parseFeedbackAnswers(ctx).find((a) => a.cause === 'system');
+  if (!ctx || !answer) return null;
+  const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+  return {
+    reason: answer.leafId,
+    factId: str(ctx.fact_id),
+    country: str(ctx.country),
+    language: str(ctx.language),
+    publication: str(ctx.publication),
+  };
+}
+
 // ── Input projections (plain; no DB/RN) ──────────────────────────────────────
 
 /** One matched-topic reference off a feedback row's context snapshot. */

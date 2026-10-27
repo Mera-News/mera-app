@@ -48,6 +48,7 @@ import {
   MIGRATION_ROLE_WEIGHTS,
   type MigrationLocationRole,
 } from './persona-migration';
+import { DEMONYMS } from './fact-places';
 
 countries.registerLocale(enCountryNames);
 
@@ -87,36 +88,7 @@ export type GeoOp =
 
 // ── Tier-1 vocabulary ─────────────────────────────────────────────────────
 
-/**
- * Nationality/adjectival forms → alpha-2. The curated country-name map only
- * matches nouns, so "Follows Brazilian football" resolves nothing without this.
- * Hand-curated, therefore allowed in a free position.
- */
-const DEMONYMS: Record<string, string> = {
-  'dutch': 'NL', 'german': 'DE', 'french': 'FR', 'spanish': 'ES',
-  'portuguese': 'PT', 'italian': 'IT', 'belgian': 'BE', 'austrian': 'AT',
-  'swiss': 'CH', 'british': 'GB', 'english': 'GB', 'scottish': 'GB',
-  'welsh': 'GB', 'irish': 'IE', 'polish': 'PL', 'ukrainian': 'UA',
-  'russian': 'RU', 'czech': 'CZ', 'slovak': 'SK', 'hungarian': 'HU',
-  'romanian': 'RO', 'bulgarian': 'BG', 'greek': 'GR', 'turkish': 'TR',
-  'swedish': 'SE', 'norwegian': 'NO', 'danish': 'DK', 'finnish': 'FI',
-  'icelandic': 'IS', 'estonian': 'EE', 'latvian': 'LV', 'lithuanian': 'LT',
-  'croatian': 'HR', 'serbian': 'RS', 'slovenian': 'SI',
-  'american': 'US', 'canadian': 'CA', 'mexican': 'MX', 'brazilian': 'BR',
-  'argentine': 'AR', 'argentinian': 'AR', 'chilean': 'CL', 'colombian': 'CO',
-  'peruvian': 'PE', 'uruguayan': 'UY',
-  'indian': 'IN', 'chinese': 'CN', 'japanese': 'JP', 'korean': 'KR',
-  'south korean': 'KR', 'indonesian': 'ID', 'thai': 'TH', 'vietnamese': 'VN',
-  'filipino': 'PH', 'philippine': 'PH', 'malaysian': 'MY', 'singaporean': 'SG',
-  'taiwanese': 'TW', 'pakistani': 'PK', 'bangladeshi': 'BD',
-  'sri lankan': 'LK', 'nepali': 'NP', 'nepalese': 'NP',
-  'israeli': 'IL', 'saudi': 'SA', 'emirati': 'AE', 'qatari': 'QA',
-  'kuwaiti': 'KW', 'jordanian': 'JO', 'lebanese': 'LB', 'iranian': 'IR',
-  'iraqi': 'IQ', 'egyptian': 'EG', 'nigerian': 'NG', 'south african': 'ZA',
-  'kenyan': 'KE', 'ethiopian': 'ET', 'ghanaian': 'GH', 'moroccan': 'MA',
-  'tunisian': 'TN', 'algerian': 'DZ', 'tanzanian': 'TZ', 'ugandan': 'UG',
-  'australian': 'AU', 'new zealander': 'NZ',
-};
+// DEMONYMS lives in fact-places.ts (shared with countriesNamedIn).
 
 /**
  * Country names that are ALSO a common English noun, a US state, or a common
