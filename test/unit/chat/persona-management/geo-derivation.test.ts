@@ -5,12 +5,14 @@
 
 import {
   deriveCountriesFromFacts,
-  buildGeoLlmRequest,
-  parseGeoLlmResponse,
+  buildFactPlacesRequest,
+  decodeFactPlaces,
+  selectFactsForPlaces,
   reconcileGeoPlan,
   type ExistingGeoRow,
   type GeoCandidate,
 } from '@/lib/news-harness/persona-management/geo-derivation';
+import { placesSourceHash, type ReaderPlace } from '@/lib/news-harness/persona-management/fact-places';
 
 const ALLOWED = new Set(['NL', 'IN', 'BR', 'US', 'DE', 'GB', 'KZ']);
 
@@ -122,109 +124,118 @@ describe('deriveCountriesFromFacts — the position rule (ambiguity guards)', ()
   });
 });
 
-describe('buildGeoLlmRequest', () => {
-  it('emits one id-tagged line per unresolved fact', () => {
-    const { systemPrompt, prompt } = buildGeoLlmRequest(
-      [fact('f1', 'Works at a startup in Bangalore'), fact('f2', 'Enjoys hiking')],
-      ALLOWED,
-    );
-    expect(prompt).toBe('[f1] Works at a startup in Bangalore\n[f2] Enjoys hiking');
-    expect(systemPrompt).toContain('STRICT JSON');
-    expect(systemPrompt).toContain('alpha-2');
+describe('selectFactsForPlaces', () => {
+  const home: ReaderPlace = { countryCode: 'IN', region: 'Madhya Pradesh', city: 'Bhopal', role: 'home' };
+  const stamped = (id: string, statement: string, extra: Record<string, unknown> = {}) => ({
+    id,
+    statement,
+    metadata: { places: ['IN'], places_source: placesSourceHash(statement, [home]), ...extra },
   });
 
-  it('inlines a short allowed enum but not a long one', () => {
-    const short = buildGeoLlmRequest([fact('f1', 'x')], new Set(['NL', 'IN']));
-    expect(short.systemPrompt).toContain('Valid codes: IN, NL');
+  it('takes unplaced, changed and wrong-marked facts, never a user choice', () => {
+    const facts = [
+      { id: 'new', statement: 'Pensioner', metadata: {} },
+      stamped('same', 'Follows cricket'),
+      { ...stamped('edited', 'Follows cricket'), statement: 'Follows hockey' },
+      stamped('wrong', 'Water cuts', { places_wrong: true }),
+      { id: 'mine', statement: 'Pensioner', metadata: { places_by: 'user' } },
+    ];
+    expect(selectFactsForPlaces(facts, [home])).toEqual(['new', 'edited', 'wrong']);
+  });
 
-    const long = new Set(
-      Array.from({ length: 60 }, (_, i) => `X${String(i).padStart(1, '0')}`),
-    );
-    expect(buildGeoLlmRequest([fact('f1', 'x')], long).systemPrompt).not.toContain(
-      'Valid codes',
-    );
+  it('re-selects every fact when the reader moves home, not when they plan a trip', () => {
+    const facts = [stamped('a', 'Pensioner')];
+    const trip: ReaderPlace = { countryCode: 'FR', region: null, city: 'Paris', role: 'travel' };
+    expect(selectFactsForPlaces(facts, [home, trip])).toEqual([]);
+    expect(selectFactsForPlaces(facts, [{ ...home, city: 'Indore' }])).toEqual(['a']);
   });
 });
 
-describe('parseGeoLlmResponse', () => {
-  const unresolved = [
-    fact('f1', 'Works at a startup in Bangalore'),
-    fact('f2', 'Sails out of Rotterdam'),
+describe('buildFactPlacesRequest', () => {
+  const req = buildFactPlacesRequest({
+    batch: [
+      { id: 'f1', statement: 'Pensioner', rejected: [] },
+      { id: 'f2', statement: 'Worried about water cuts', rejected: ['IN'] },
+    ],
+    otherFacts: ['Lives in Bhopal', 'Pensioner'],
+    readerPlaces: [{ countryCode: 'IN', region: 'Madhya Pradesh', city: 'Bhopal', role: 'home' }],
+  });
+
+  it('names places and never shows a code', () => {
+    expect(req.prompt).toContain('- Bhopal, Madhya Pradesh, India (home)');
+    expect(req.prompt).toContain('[f1] Pensioner\n');
+    expect(req.prompt).toContain('[f2] Worried about water cuts (the reader said this place is wrong: India)');
+    expect(req.prompt).not.toMatch(/\b(IN|GB|NL)\b/);
+    expect(req.systemPrompt).toContain('STRICT JSON');
+    expect(req.systemPrompt).toContain('never as a code');
+  });
+});
+
+describe('decodeFactPlaces', () => {
+  const batch = [
+    { id: 'pension', statement: 'Pensioner', rejected: [] },
+    { id: 'water', statement: 'Worried about water cuts', rejected: [] },
+    { id: 'jobs', statement: 'State government jobs', rejected: [] },
+    { id: 'climate', statement: 'Follows climate science', rejected: [] },
+    { id: 'trade', statement: 'Works in EU trade law', rejected: [] },
+    { id: 'daughter', statement: 'Daughter studies in London', rejected: [] },
   ];
-
-  it('the prompt offers the work role', () => {
-    const { systemPrompt } = buildGeoLlmRequest([fact('f1', 'x')], new Set());
-    expect(systemPrompt).toContain('"work" (works there)');
+  const reply = JSON.stringify({
+    facts: [
+      { id: 'pension', level: 'country', country: 'India', role: null },
+      { id: 'water', level: 'city', country: 'India', region: 'Madhya Pradesh', city: 'Bhopal' },
+      { id: 'jobs', level: 'region', country: 'India', region: 'Madhya Pradesh' },
+      { id: 'climate', level: 'anywhere' },
+      { id: 'trade', level: 'bloc', bloc: 'European Union' },
+      { id: 'daughter', level: 'city', country: 'United Kingdom', city: 'London', role: 'family' },
+    ],
   });
 
-  it('decodes a work row with the work seed weight', () => {
-    const out = parseGeoLlmResponse(
-      '{"locations":[{"id":"f1","country":"IN","city":"Bangalore","role":"work"}]}',
-      unresolved,
-      ALLOWED,
-    );
-    expect(out).toEqual([
-      { countryCode: 'IN', city: 'Bangalore', region: null, role: 'work', weight: 0.8, sourceFactId: 'f1' },
+  it('decodes the six plan examples to codes', () => {
+    const out = decodeFactPlaces(`Sure!\n${reply}`, batch, ALLOWED);
+    expect(Object.fromEntries(out.map((o) => [o.factId, o.places]))).toEqual({
+      pension: ['IN'],
+      water: ['IN|Madhya Pradesh|Bhopal'],
+      jobs: ['IN|Madhya Pradesh'],
+      climate: ['GLOBAL'],
+      trade: ['EU'],
+      daughter: ['GB||London'],
+    });
+  });
+
+  it('makes a location candidate only when the fact names the place and the server has the country', () => {
+    const out = decodeFactPlaces(reply, batch, ALLOWED);
+    expect(out.filter((o) => o.location).map((o) => o.location)).toEqual([
+      { countryCode: 'GB', city: 'London', region: null, role: 'family', weight: 0.7, sourceFactId: 'daughter' },
     ]);
+    expect(decodeFactPlaces(reply, batch, new Set(['IN'])).some((o) => o.location)).toBe(false);
   });
 
-  it('decodes valid rows and fills the role weight', () => {
-    const out = parseGeoLlmResponse(
-      'Sure!\n{"locations":[{"id":"f1","country":"in","city":"Bangalore","role":"home"}]}',
-      unresolved,
+  it('drops codes, unknown names, unknown and repeated ids; a rejected place decodes to none', () => {
+    const out = decodeFactPlaces(
+      JSON.stringify({
+        facts: [
+          { id: 'pension', level: 'country', country: 'IN' },
+          { id: 'water', level: 'country', country: 'Narnia' },
+          { id: 'nope', level: 'country', country: 'India' },
+          { id: 'jobs', level: 'country', country: 'India' },
+          { id: 'jobs', level: 'anywhere' },
+          { id: 'trade', level: 'country', country: 'Germany' },
+        ],
+      }),
+      [...batch.slice(0, 4), { id: 'trade', statement: 'Works in EU trade law', rejected: ['DE'] }],
       ALLOWED,
     );
-    expect(out).toEqual([
-      {
-        countryCode: 'IN',
-        city: 'Bangalore',
-        region: null,
-        role: 'home',
-        weight: 1.0,
-        sourceFactId: 'f1',
-      },
+    expect(out.map((o) => [o.factId, o.places])).toEqual([
+      ['jobs', ['IN']],
+      ['trade', []],
     ]);
-  });
-
-  it('drops every code outside allowedAlpha2', () => {
-    const out = parseGeoLlmResponse(
-      '{"locations":[{"id":"f1","country":"IN"},{"id":"f2","country":"FR"}]}',
-      unresolved,
-      ALLOWED,
-    );
-    expect(out.map((c) => c.countryCode)).toEqual(['IN']);
-  });
-
-  it('drops unknown ids, malformed codes and duplicate ids', () => {
-    const out = parseGeoLlmResponse(
-      '{"locations":[' +
-        '{"id":"nope","country":"NL"},' +
-        '{"id":"f1","country":"INDIA"},' +
-        '{"id":"f2","country":"NL"},' +
-        '{"id":"f2","country":"US"}]}',
-      unresolved,
-      ALLOWED,
-    );
-    expect(out).toHaveLength(1);
-    expect(out[0]).toMatchObject({ sourceFactId: 'f2', countryCode: 'NL' });
-  });
-
-  it('falls back to the inferred role when the model omits or invents one', () => {
-    const out = parseGeoLlmResponse(
-      '{"locations":[{"id":"f1","country":"IN","role":"vacation-home"}]}',
-      unresolved,
-      ALLOWED,
-    );
-    // "Works at a startup in Bangalore" → inferLocationRole → 'work'.
-    expect(out[0].role).toBe('work');
-    expect(out[0].weight).toBe(0.8);
   });
 
   it('returns [] for prose, broken JSON or a missing array', () => {
-    expect(parseGeoLlmResponse('I cannot help with that.', unresolved, ALLOWED)).toEqual([]);
-    expect(parseGeoLlmResponse('{"locations":[', unresolved, ALLOWED)).toEqual([]);
-    expect(parseGeoLlmResponse('{"other":[]}', unresolved, ALLOWED)).toEqual([]);
-    expect(parseGeoLlmResponse('', unresolved, ALLOWED)).toEqual([]);
+    expect(decodeFactPlaces('I cannot help with that.', batch, ALLOWED)).toEqual([]);
+    expect(decodeFactPlaces('{"facts":[', batch, ALLOWED)).toEqual([]);
+    expect(decodeFactPlaces('{"locations":[]}', batch, ALLOWED)).toEqual([]);
   });
 });
 

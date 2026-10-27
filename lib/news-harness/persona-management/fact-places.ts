@@ -377,6 +377,17 @@ export function placesCoverCountry(
   );
 }
 
+/** What a fact's topics depend on: its countries (at any depth), blocs or
+ *  GLOBAL. Topics regenerate only when this changes. shortcut: a bloc is its
+ *  own key, not its members; upgrade if a bloc-to-country move must not regenerate. */
+export function placesCoverageKey(places: readonly string[]): string {
+  const keys = normalizePlaces(places).map((p) => {
+    const parsed = parsePlace(p);
+    return parsed?.country ?? parsed?.bloc ?? PLACE_GLOBAL;
+  });
+  return [...new Set(keys)].sort().join(',');
+}
+
 const LEVEL_RANK: Record<PlaceLevel, number> = { global: 1, bloc: 1, country: 1, region: 2, city: 3 };
 
 /**

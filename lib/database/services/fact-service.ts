@@ -15,7 +15,7 @@ import {
   factPlaces,
   factPlacesBy,
   normalizePlaces,
-  parsePlace,
+  placesCoverageKey,
   placesSourceHash,
   type PlacesBy,
 } from '../../news-harness/persona-management/fact-places';
@@ -585,16 +585,6 @@ async function patchMetadata(factId: string, patch: LooseMetadata): Promise<Loos
   });
 }
 
-/** A place's coverage key: the country (any depth), the bloc, or GLOBAL. */
-function coverageKeys(places: readonly string[]): string {
-  // shortcut: a bloc is its own key, not expanded to member countries; upgrade if bloc to country moves must not regenerate.
-  const keys = places.map((p) => {
-    const parsed = parsePlace(p);
-    return parsed?.country ?? parsed?.bloc ?? 'GLOBAL';
-  });
-  return [...new Set(keys)].sort().join(',');
-}
-
 async function residenceReaderPlaces() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { getAll } = require('./location-service') as typeof import('./location-service');
@@ -685,7 +675,7 @@ export async function setFactPlaces(
   });
 
   await rescoreLocationCaught(factId);
-  if (opts?.regenerate !== false && coverageKeys(prevPlaces) !== coverageKeys(next)) await regenerate(factId);
+  if (opts?.regenerate !== false && placesCoverageKey(prevPlaces) !== placesCoverageKey(next)) await regenerate(factId);
   return { applied: true, changeLogId: row.id };
 }
 
