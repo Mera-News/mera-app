@@ -110,7 +110,8 @@ export async function runBackgroundCycle(
       // honors country/language priority. Fails open to null (legacy behavior).
       const userCtx = await loadUserGeoLanguageContext();
       // Excludes siblings covered by a live batch, and elects only scorable reps.
-      const gate = await pipeline.gateScorableForScoring(eligibleIds, userCtx);
+      const unscorable = new Set(candidates.filter((c) => !eligibleIds.has(c.id)).map((c) => c.id));
+      const gate = await pipeline.gateScorableForScoring(eligibleIds, unscorable, userCtx);
       // Propagated rows are now terminal `Complete` — surface them immediately.
       if (gate.propagatedCount > 0) {
         // P9: they were written WITHOUT ever meeting the scoring stage's hard

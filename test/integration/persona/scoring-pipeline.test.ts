@@ -147,6 +147,24 @@ describe('enqueueUnscoredEligible: one representative per story', () => {
     expect((await batches())[0].candidateIds).toEqual(['S1']);
     expect((await rows()).R).toMatchObject({ status: 'complete', relevance: 0 });
   });
+
+  it('leaves a row saved after the eligibility read unscored, never tombstones it', async () => {
+    gateway({}, { pendingPolls: 99 });
+    await seedArticles(['A']);
+    const real = articleService.getUnscoredSuggestionsWithFacts;
+    // A concurrent hydration saves LATE between the caller's read and the gate's.
+    const spy = jest.spyOn(articleService, 'getUnscoredSuggestionsWithFacts').mockImplementationOnce(async () => {
+      const seen = await real();
+      await seedArticles(['LATE']);
+      return seen;
+    });
+
+    await drive(pipeline.enqueueUnscoredEligible({ flushRemainder: true }));
+    spy.mockRestore();
+
+    expect((await batches()).flatMap((b) => b.candidateIds)).toEqual(['A']);
+    expect((await rows()).LATE).toMatchObject({ status: 'unscored' });
+  });
 });
 
 describe('model-key validation fail-fast (MERA-APP-39)', () => {

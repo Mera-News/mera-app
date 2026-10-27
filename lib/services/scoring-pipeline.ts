@@ -564,28 +564,31 @@ const GATE_SCORABLE_PASSES = 3;
  * The gate, run so every id it hands back is scorable. Election reads grouping
  * rows, which carry no facts, so it can elect a representative `isScorableCandidate`
  * rejects; dropped after the fact, its whole story was held back with nothing sent.
- * Ineligible elected ids are tombstoned (`batchMarkAsScoredByIds`, the write
- * feed-sync gives ineligible rows) and the gate re-runs, electing among the rest.
+ * Elected ids the caller judged unscorable are tombstoned (`batchMarkAsScoredByIds`,
+ * the write feed-sync gives ineligible rows) and the gate re-runs, electing among
+ * the rest. An elected id in NEITHER set was saved after the caller's read (a
+ * concurrent hydration): it is only left out of this pass, never tombstoned.
  * `enqueueIds` and `coveredIdsByRep` are the last pass's; `propagatedCount` sums
  * every pass, since each one may have written.
  */
 export async function gateScorableForScoring(
   eligible: ReadonlySet<string>,
+  unscorable: ReadonlySet<string>,
   userCtx: Parameters<typeof gateUnscoredForScoring>[1],
 ): Promise<Awaited<ReturnType<typeof gateUnscoredForScoring>>> {
   let propagatedCount = 0;
   for (let pass = 1; ; pass += 1) {
     const gate = await gateUnscoredForScoring(await getNonTerminalCoveredIds(), userCtx);
     propagatedCount += gate.propagatedCount;
-    const unscorable = gate.enqueueIds.filter((id) => !eligible.has(id));
-    if (unscorable.length === 0 || pass === GATE_SCORABLE_PASSES) {
+    const toTombstone = gate.enqueueIds.filter((id) => unscorable.has(id));
+    if (toTombstone.length === 0 || pass === GATE_SCORABLE_PASSES) {
       return {
         ...gate,
         enqueueIds: gate.enqueueIds.filter((id) => eligible.has(id)),
         propagatedCount,
       };
     }
-    await batchMarkAsScoredByIds(unscorable);
+    await batchMarkAsScoredByIds(toTombstone);
   }
 }
 
@@ -2869,8 +2872,9 @@ export async function enqueueUnscoredEligible(
     candidates.filter(isScorableCandidate).map((c) => c.id),
   );
   if (eligible.size === 0) return { enqueued: 0 };
+  const unscorable = new Set(candidates.filter((c) => !eligible.has(c.id)).map((c) => c.id));
 
-  const gate = await gateScorableForScoring(eligible, await loadGateUserContext());
+  const gate = await gateScorableForScoring(eligible, unscorable, await loadGateUserContext());
 
   if (gate.propagatedCount > 0) await reconcileAfterGatePropagation();
 
@@ -3442,7 +3446,8 @@ export async function submitScoringForBackground(opts: {
       const candidates = await getUnscoredSuggestionsWithFacts();
       const eligible = new Set(candidates.filter(isScorableCandidate).map((c) => c.id));
       if (eligible.size > 0) {
-        const gate = await gateScorableForScoring(eligible, await loadGateUserContext());
+        const unscorable = new Set(candidates.filter((c) => !eligible.has(c.id)).map((c) => c.id));
+        const gate = await gateScorableForScoring(eligible, unscorable, await loadGateUserContext());
         if (gate.propagatedCount > 0) await reconcileAfterGatePropagation('task');
         const elected = gate.enqueueIds;
         const firstIds = new Set(opts.articleIds);
