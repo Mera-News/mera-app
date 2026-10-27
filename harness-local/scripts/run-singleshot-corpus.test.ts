@@ -106,6 +106,18 @@ test('the harness arm parses and runs a fake caller\'s proposeTrack through the 
   assert.equal(row.pass, true, row.why);
   assert.ok(row.legTools?.flat().includes('proposeTrack'));
   assert.equal(typeof row.closingLegFired, 'boolean');
+
+  // One rule for off and harness: a 2-option proposeTrack fails.
+  proposed = false;
+  const two: HarnessCaller = async (req) => {
+    const r = await caller(req);
+    return r.toolCalls[0]?.name === 'proposeTrack'
+      ? { ...r, toolCalls: [{ name: 'proposeTrack', argumentsRaw: JSON.stringify({ options: ['Dutch Cabinet Talks', 'Dutch Politics'] }) }] }
+      : r;
+  };
+  const short = await runTurnHarness(two, { id: 'f', agent: 'follow-story', message: 'the dutch cabinet formation talks', expect: 'proposeTrack', search: ['a'] }, 'm', 0);
+  assert.equal(short.trackOptions, 2);
+  assert.equal(short.pass, false);
 });
 
 test('harness verdict: quality within max(1, spread) of off and p90 within 2x', () => {

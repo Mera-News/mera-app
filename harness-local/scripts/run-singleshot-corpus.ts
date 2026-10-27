@@ -33,7 +33,7 @@
 // `harness` is in --arms, article fixtures are skipped for every arm (and the run says so).
 // With exactly --arms off,off-twin,harness the verdict is: spread = |off - off-twin| proposeTrack
 // passes; PASS when harness proposeTrack passes >= off - max(1, spread) AND harness p90 turn
-// time <= 2 x off p90. A harness row passes on >= 2 options parseTrackScopeOptions accepts. No on/off verdict is printed.
+// time <= 2 x off p90. A harness row is scored by the off rule: 3 or 4 options parseTrackScopeOptions accepts. No on/off verdict is printed.
 //
 // --engine afm|qwen-local|nano-proxy runs the ON-DEVICE flows instead
 // (lib/news-harness/on-device/follow-story and article-feedback): their prompts,
@@ -340,7 +340,7 @@ export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model
   if (row.error) row.why = 'error';
   else if (/<\/?think>|<tool_call>|<function=/.test(row.reply)) row.why = 'leaked markup in reply';
   else if (f.expect === 'proposeTrack') {
-    row.pass = row.trackOptions >= 2;
+    row.pass = row.trackOptions >= 3 && row.trackOptions <= 4;
     row.why = row.pass ? 'ok' : `proposeTrack options=${row.trackOptions}`;
   } else {
     row.pass = staged.length === 0 && !result.stagedSomething;
@@ -600,7 +600,7 @@ async function main(): Promise<number> {
     `fixtures ${fixtures.length} x arms ${args.arms.map((a) => a.id).join(',')} x repeat ${args.repeat}, model ${args.model}, format ${APP_TOOL_FORMAT}\n` +
       (harnessSet
         ? 'PASS RULE (fixed before the run): spread = |off - off-twin| proposeTrack passes; PASS when harness proposeTrack passes >= off - max(1, spread)\n' +
-          'AND harness p90 turn time <= 2 x off p90. A harness row passes on >= 2 options parseTrackScopeOptions accepts. An error row drops its (fixture, repeat) for every arm.'
+          'AND harness p90 turn time <= 2 x off p90. A harness row is scored by the off rule: 3 or 4 options parseTrackScopeOptions accepts. An error row drops its (fixture, repeat) for every arm.'
         : prePost
         ? 'PASS RULE (fixed before the run): per kind k, spread_k = |post_k - post-twin_k| passes; PASS when post proposeTrack >= pre - max(1, spread_proposeTrack)\n' +
           'and proposeFactCheck and answer each satisfy |post_k - pre_k| <= max(1, spread_k). An error row drops its (fixture, repeat) for every arm.'
