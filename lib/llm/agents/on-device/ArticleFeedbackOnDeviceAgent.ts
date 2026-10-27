@@ -19,7 +19,7 @@ import { proposalRequiresUserChoice } from '../../../news-harness/core/proposals
 import { getSuggestionFeedbackContext } from '../../../database/services/article-suggestion-reads';
 import { ArticleSuggestionStatus } from '../../../database/article-suggestion-status';
 import { ArticleService } from '../../../article-service';
-import type { TrackFeedbackSubject } from '../../../news-harness/core/types';
+import type { SystemMistakeView, TrackFeedbackSubject } from '../../../news-harness/core/types';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { isSubjectTracked } from '../../../tracking/track-actions';
 import { ArticleFeedbackAgent } from '../ArticleFeedbackAgent';
@@ -37,6 +37,8 @@ import {
   type OnDeviceAgentOptions,
 } from './run';
 
+const part = (v: string | null | undefined) => (v ? `, ${v}` : '');
+
 function day(raw: string | null | undefined): string | null {
   const ms = raw ? Date.parse(raw) : NaN;
   return Number.isFinite(ms) ? today(ms) : null;
@@ -52,7 +54,7 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
     userId: string,
     private readonly target: { articleId?: string; suggestionId?: string },
     private readonly trackSubject?: TrackFeedbackSubject | null,
-    private readonly opts: OnDeviceAgentOptions = {},
+    private readonly opts: OnDeviceAgentOptions & { mistakes?: SystemMistakeView[] } = {},
   ) {
     this.cloud = new ArticleFeedbackAgent(userId, target, trackSubject);
     this.id = this.cloud.id;
@@ -119,6 +121,15 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
       alreadyFollowing,
       verdict: chat?.verdict ?? null,
       pending: describePending(store.proposal),
+      answers: chat?.feedbackAnswers?.answers.map((a) =>
+        a.cause === 'system'
+          ? `${a.question} (Mera's mistake, changes nothing)`
+          : `${a.question}${a.answer ? `: ${a.answer}` : ''} (applied)`,
+      ),
+      screen: chat?.feedbackAnswers?.screen,
+      mistakes: this.opts.mistakes
+        ?.slice(0, 3)
+        .map((m) => `${m.reason}; story from ${m.publication ?? 'a publication'}${part(m.country)}${part(m.language)}`),
     };
   }
 
