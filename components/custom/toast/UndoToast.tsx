@@ -1,5 +1,8 @@
 import { Undo } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { EASE_SETTLE, REDUCED_FADE, TOAST_MOTION } from './deck-motion';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import MeraToast from './MeraToast';
 
 /**
@@ -28,7 +31,14 @@ export interface UndoToastProps {
 
 export default function UndoToast({ title, body, undoLabel, undoneTitle, undoTestID, undone = false, onUndo }: UndoToastProps) {
     const [swapped, setSwapped] = useState(undone);
-    if ((swapped || undone) && undoneTitle) return <MeraToast tone="neutral" icon={Undo} title={undoneTitle} />;
+    if ((swapped || undone) && undoneTitle) {
+        return (
+            // A fresh mount of an already-swapped card (the exit clone) shows it still.
+            <SwapIn still={undone}>
+                <MeraToast tone="neutral" icon={Undo} title={undoneTitle} />
+            </SwapIn>
+        );
+    }
     return (
         <MeraToast
             tone="success"
@@ -47,4 +57,25 @@ export default function UndoToast({ title, body, undoLabel, undoneTitle, undoTes
             ]}
         />
     );
+}
+
+/** The undone face swapping in place: up from 4pt and in over 220 ms (Motion board); a 180 ms fade when reduced. */
+function SwapIn({ still, children }: { still: boolean; children: React.ReactNode }) {
+    const reduced = !useMotionAllowed();
+    const opacity = useSharedValue(still ? 1 : 0);
+    const translateY = useSharedValue(0);
+    useEffect(() => {
+        if (still) return;
+        if (reduced) {
+            opacity.value = withTiming(1, REDUCED_FADE);
+            return;
+        }
+        const settle = { duration: TOAST_MOTION.swap.ms, easing: EASE_SETTLE };
+        translateY.value = TOAST_MOTION.swap.fromY;
+        translateY.value = withTiming(0, settle);
+        opacity.value = withTiming(1, settle);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on mount
+    }, []);
+    const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: translateY.value }] }));
+    return <Animated.View style={style}>{children}</Animated.View>;
 }
