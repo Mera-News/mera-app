@@ -330,6 +330,12 @@ export function selectFactsForPlaces(
     .map((f) => f.id);
 }
 
+/** The place call's gear, shared by the sweep and the tuning eval so they
+ *  cannot drift. Output is bounded BY CONSTRUCTION: one named answer is ~50
+ *  tokens, so perCall * 50 stays under maxTokens; a truncated reply loses the
+ *  whole call and its facts stay due. */
+export const FACT_PLACES_CALL = { perCall: 10, maxTokens: 700, temperature: 0.2 } as const;
+
 const MAX_CONTEXT_FACTS = 40;
 const MAX_CONTEXT_CHARS = 160;
 
