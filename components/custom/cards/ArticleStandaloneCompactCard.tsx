@@ -92,15 +92,12 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   // are VoiceOver custom actions too).
   const rowActions = useMemo(
     () => ({
-      liked: actions.likeState !== 'none',
-      disliked: actions.dislikeState !== 'none',
+      answered: actions.answered,
       saved: actions.saved,
-      onLike: actions.onLike,
-      onDislike: actions.onDislike,
       onToggleSave: actions.onToggleSave,
       onShare: actions.onShare,
     }),
-    [actions.likeState, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
+    [actions.answered, actions.saved, actions.onToggleSave, actions.onShare],
   );
   const menu = useArticleMenu({
     subject,
@@ -117,7 +114,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     },
     extraItems: menuExtraItems,
     rowActions,
-    onLeafPicked: actions.onLeafPicked,
+    onVerdictRecorded: actions.onVerdictRecorded,
   });
 
   const metaAccessory =

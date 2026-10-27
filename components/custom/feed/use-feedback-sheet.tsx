@@ -31,6 +31,7 @@ import { recordOpen } from '@/lib/database/services/story-impression-service';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
 import { useCallback, useMemo, useRef } from 'react';
 import { normalizeKeyOrEmpty } from '@/lib/algorithms/normalize-key';
 
@@ -85,20 +86,11 @@ export interface VerdictStoreAdapter {
  * stays stable across renders — the memoized card rows bail out unchanged.
  */
 export interface CardFeedbackHandlers {
-  /** A tree leaf settled (see useArticleMenu.onLeafPicked). `committed` is
-   *  the leaf's own word: a seenOnly leaf stores its path and commits nothing. */
-  onLeafPicked: (
-    s: ForYouSuggestion,
-    v: Verdict,
-    pathIds: string[],
-    appliedCount: number,
-    committed: boolean,
-  ) => void;
-  /** An openChat leaf — hand off to the chat with the verdict and breadcrumb. */
-  onInvokeMera: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
-  /** The `browse_related` nudge — the related coverage is on the detail
-   *  screen, so open it. */
-  onBrowseRelated: (s: ForYouSuggestion) => void;
+  /** The card's sheet wrote this suggestion's verdict (the reader's first
+   *  answer): light the card's feedback icon and mark it read. */
+  onVerdictRecorded: (s: ForYouSuggestion) => void;
+  /** Tell Mera: hand off to the feedback chat with every answer so far. */
+  onInvokeMera: (s: ForYouSuggestion, pathIds: string[], answers: FeedbackAnswersHandoff) => void;
 }
 
 /**
@@ -172,35 +164,18 @@ export function useFeedbackSheet(
 
   const feedbackHandlers = useMemo<CardFeedbackHandlers>(
     () => ({
-      onLeafPicked: (s, v, pathIds, appliedCount, committed) => {
-        const key = adapterRef.current.keyFor(s);
-        if (key) adapterRef.current.setPath(key, pathIds);
-        if (!committed) {
-          // seenOnly: nothing changed, so nothing may fill the thumb.
-          swipeCallbacks.onTreePathChanged(s, v, pathIds);
-          return;
-        }
-        // The last input in the tree — this, and only this, fills the thumb.
-        swipeCallbacks.onLeafCommitted(s, v, pathIds, appliedCount);
-        if (key) adapterRef.current.setCommitted(key, true);
+      onVerdictRecorded: (s) => {
+        const a = adapterRef.current;
+        const key = a.keyFor(s);
+        if (!key) return;
+        // The sheet already wrote the row; this is the card's own state.
+        const fresh = a.getVerdict(key) !== 'dislike';
+        a.setVerdict(key, 'dislike');
+        a.setCommitted(key, true);
+        if (fresh) markSuggestionRead(s);
       },
-      onInvokeMera: (s, v, pathIds) => {
-        // Escalating to the chat is context the user supplied, so it COMMITS
-        // (the design lists it alongside picking a reason). Note this is a
-        // forward promise: the chat stamps the row only once the user confirms
-        // the agent's proposals.
-        swipeCallbacks.onLeafCommitted(s, v, pathIds);
-        swipeCallbacks.onInvokeMera(s, v, pathIds);
-        const key = adapterRef.current.keyFor(s);
-        if (key) {
-          adapterRef.current.setPath(key, pathIds);
-          adapterRef.current.setCommitted(key, true);
-        }
-      },
-      onBrowseRelated: (s) => {
-        // The leaf already committed through `onLeafPicked`; all that is left
-        // is to take the user to the related coverage on the detail screen.
-        optionsRef.current?.onOpenSuggestion?.(s);
+      onInvokeMera: (s, pathIds, answers) => {
+        swipeCallbacks.onInvokeMera(s, 'dislike', pathIds, answers);
       },
     }),
     [],

@@ -184,16 +184,6 @@ export function useArticleDetailScreen({
         scrollViewRef.current?.scrollToTop(true);
     }, []);
 
-    // The feedback tree's "Show related coverage" nudge. The related articles
-    // are this page's footer, so the answer is to scroll there, not to navigate.
-    // Landing at the bottom trips `onEndReached` -> `loadMoreRelated`, so the
-    // list grows underneath: the reader arrives at what WAS the bottom with more
-    // coverage appearing below. That is the intended reading of the nudge, not a
-    // mis-scroll — same behaviour the suggestion route has always had.
-    const scrollToRelated = useCallback(() => {
-        scrollViewRef.current?.scrollToEnd(true);
-    }, []);
-
     useEffect(() => {
         let cancelled = false;
         setIsLoading(true);
@@ -462,7 +452,6 @@ export function useArticleDetailScreen({
         openedIds,
         handleScrollPositionChange,
         scrollToTop,
-        scrollToRelated,
         factCheckAsked,
         handleStartFactCheck,
         handleToggleSave,

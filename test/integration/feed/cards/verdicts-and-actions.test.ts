@@ -16,7 +16,10 @@ import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedbac
 import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
-import { getArticleVerdict, hasLiked } from '@/lib/database/services/article-feedback-service';
+import { getArticleVerdict, hasLiked, recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
+import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
+import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { getPreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import { __clearPublisherSourceNames, rememberPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
@@ -73,19 +76,12 @@ describe('useFeedbackSheet: the verdict on a Feed card', () => {
         expect(await hasLiked('fs-flip')).toBe(false);
     });
 
-    it('a flip clears the old verdict’s committed flag', async () => {
-        const s = await seedSuggestion({ _id: 'fs-flip-committed' });
+    it('the sheet recording a verdict fills the card and marks it read', async () => {
+        const s = await seedSuggestion({ _id: 'fs-recorded' });
         const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
-        act(() => result.current.onVerdict(s, 'like'));
-        await waitFor(async () => expect(await verdictOf('fs-flip-committed')).toBe('like'));
-        act(() => result.current.feedbackHandlers.onLeafPicked(s, 'like', ['more'], 1, true));
-        expect(record('fs-flip-committed')?.committed).toBe(true);
-        await waitFor(async () => expect((await getArticleVerdict('fs-flip-committed')).committed).toBe(true));
-
-        act(() => result.current.onVerdict(s, 'dislike'));
-        expect(record('fs-flip-committed')?.committed).toBeUndefined();
-        await waitFor(async () => expect(await verdictOf('fs-flip-committed')).toBe('dislike'));
-        expect((await getArticleVerdict('fs-flip-committed')).committed).toBe(false);
+        act(() => result.current.feedbackHandlers.onVerdictRecorded(s));
+        expect(record('fs-recorded')).toMatchObject({ verdict: 'dislike', committed: true });
+        expect(useOpenedStoriesStore.getState().articleIds.has(s.articleId)).toBe(true);
     });
 
     it('the same thumb again removes the verdict and its row', async () => {
@@ -108,36 +104,18 @@ describe('useFeedbackSheet: the verdict on a Feed card', () => {
         expect(await verdictOf('fs-nokey')).toBeNull();
     });
 
-    it('a leaf that is not committed stores the path and does not commit', async () => {
-        const s = await seedSuggestion({ _id: 'fs-leaf-open' });
+    it('Tell Mera hands every answer to the feedback chat', async () => {
+        const s = await seedSuggestion({ _id: 'fs-tell' });
         const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
-        act(() => result.current.onVerdict(s, 'dislike'));
-        await waitFor(async () => expect(await verdictOf('fs-leaf-open')).toBe('dislike'));
-
-        act(() => result.current.feedbackHandlers.onLeafPicked(s, 'dislike', ['less', 'topic'], 0, false));
-        expect(record('fs-leaf-open')).toMatchObject({ verdict: 'dislike', path: ['less', 'topic'] });
-        expect(record('fs-leaf-open')?.committed).toBeUndefined();
-        await waitFor(async () => expect((await getArticleVerdict('fs-leaf-open')).path).toEqual(['less', 'topic']));
-        expect((await getArticleVerdict('fs-leaf-open')).committed).toBe(false);
-    });
-
-    it('a committed leaf commits the verdict, in the store and on the row', async () => {
-        const s = await seedSuggestion({ _id: 'fs-leaf-done' });
-        const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
-        act(() => result.current.onVerdict(s, 'like'));
-        await waitFor(async () => expect(await verdictOf('fs-leaf-done')).toBe('like'));
-
-        act(() => result.current.feedbackHandlers.onLeafPicked(s, 'like', ['more', 'topic'], 1, true));
-        expect(record('fs-leaf-done')).toMatchObject({ path: ['more', 'topic'], committed: true });
-        await waitFor(async () => expect((await getArticleVerdict('fs-leaf-done')).committed).toBe(true));
-    });
-
-    it('browse related opens the suggestion through the host callback', async () => {
-        const s = await seedSuggestion({ _id: 'fs-browse' });
-        const onOpenSuggestion = jest.fn();
-        const { result } = renderHook(() => useFeedbackSheet(feedAdapter, { onOpenSuggestion }));
-        act(() => result.current.feedbackHandlers.onBrowseRelated(s));
-        expect(onOpenSuggestion).toHaveBeenCalledWith(s);
+        wireSwipeCallbacks();
+        const answers = {
+            answers: [{ cause: 'source' as const, question: 'Problem with NOS', answer: 'Paywalled' }],
+            screen: 'About NOS',
+        };
+        act(() => result.current.feedbackHandlers.onInvokeMera(s, ['publication_issue', 'paywall'], answers));
+        await waitFor(() =>
+            expect(useFloatingChatStore.getState().context).toMatchObject({ verdict: 'dislike', feedbackAnswers: answers }),
+        );
     });
 });
 
@@ -152,50 +130,24 @@ describe('useArticleActions: the inline actions of a standalone card', () => {
         return renderHook(() => useArticleActions({ subject, suggestion, share: opts.share }));
     };
 
-    it('like then dislike: the thumbs are exclusive and the row follows', async () => {
-        const { result } = await mount('aa-excl');
-        act(() => result.current.onLike());
-        expect(result.current).toMatchObject({ likeState: 'provisional', dislikeState: 'none' });
-        await waitFor(async () => expect(await verdictOf('aa-excl')).toBe('like'));
+    it('answered comes back from a stored dislike, never from an old like', async () => {
+        const disliked = await seedSuggestion({ _id: 'aa-disliked' });
+        await recordVerdictFeedback({ articleId: disliked.articleId, sentiment: 'dislike', title: 't' });
+        const a = mountSeeded(disliked);
+        await waitFor(() => expect(a.result.current.answered).toBe(true));
 
-        act(() => result.current.onDislike());
-        expect(result.current).toMatchObject({ likeState: 'none', dislikeState: 'provisional' });
-        await waitFor(async () => expect(await verdictOf('aa-excl')).toBe('dislike'));
-        expect(await hasLiked('aa-excl')).toBe(false);
+        const liked = await seedSuggestion({ _id: 'aa-liked' });
+        await recordVerdictFeedback({ articleId: liked.articleId, sentiment: 'like', title: 't' });
+        const b = mountSeeded(liked);
+        await act(async () => {});
+        expect(b.result.current.answered).toBe(false);
     });
 
-    it('the same thumb again removes the verdict row', async () => {
-        const { result } = await mount('aa-toggle');
-        act(() => result.current.onLike());
-        await waitFor(async () => expect(await verdictOf('aa-toggle')).toBe('like'));
-        act(() => result.current.onLike());
-        expect(result.current.likeState).toBe('none');
-        await waitFor(async () => expect(await verdictOf('aa-toggle')).toBeNull());
-    });
-
-    it('a committed leaf fills the thumb, and the state survives a remount', async () => {
-        const suggestion = await seedSuggestion({ _id: 'aa-commit' });
-        const first = mountSeeded(suggestion);
-        act(() => first.result.current.onDislike());
-        await waitFor(async () => expect(await verdictOf('aa-commit')).toBe('dislike'));
-        act(() => first.result.current.onLeafPicked('dislike', ['less', 'x'], 0, true));
-        expect(first.result.current.dislikeState).toBe('committed');
-        await waitFor(async () => expect((await getArticleVerdict('aa-commit')).committed).toBe(true));
-        first.unmount();
-
-        const second = mountSeeded(suggestion);
-        await waitFor(() => expect(second.result.current.dislikeState).toBe('committed'));
-        expect(second.result.current.likeState).toBe('none');
-    });
-
-    it('a leaf that is not committed leaves the thumb as recorded', async () => {
-        const { result } = await mount('aa-open');
-        act(() => result.current.onLike());
-        await waitFor(async () => expect(await verdictOf('aa-open')).toBe('like'));
-        act(() => result.current.onLeafPicked('like', ['more'], 0, false));
-        expect(result.current.likeState).toBe('provisional');
-        await waitFor(async () => expect((await getArticleVerdict('aa-open')).path).toEqual(['more']));
-        expect((await getArticleVerdict('aa-open')).committed).toBe(false);
+    it('the sheet recording a verdict marks the row answered', async () => {
+        const { result } = await mount('aa-recorded');
+        expect(result.current.answered).toBe(false);
+        act(() => result.current.onVerdictRecorded());
+        expect(result.current.answered).toBe(true);
     });
 
     it('save and unsave write the saved row and flip the state', async () => {

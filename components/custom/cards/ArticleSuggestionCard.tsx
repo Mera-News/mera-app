@@ -182,18 +182,18 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     titleOriginal: suggestion.title_original,
     sourceLanguage: suggestion.language_code,
   });
-  // A thumb records the verdict, then opens the SAME ••• sheet as the menu,
-  // straight at that verdict's tree root (no Back row): one feedback
-  // behaviour across the app (owner). A second tap on the recorded thumb
-  // removes the verdict and opens nothing. `menuRef` because the menu is
-  // built below with these very actions.
-  const menuRef = React.useRef<{ openFeedback: (v: Verdict) => void } | null>(null);
+  // The feedback button opens the SAME ••• sheet as the menu, straight at
+  // the feedback root (no Back row). Nothing is recorded until the reader
+  // answers: the sheet writes the verdict and reports it (owner).
+  const menuRef = React.useRef<{ openFeedback: () => void } | null>(null);
   const tapThumb = (v: Verdict) => {
     if (!onVerdict) return;
-    const opensTree = verdict !== v && !!feedbackHandlers;
-    if (verdict !== v) hapticLight();
-    onVerdict(suggestion, v);
-    if (opensTree) menuRef.current?.openFeedback(v);
+    if (v === 'like') {
+      onVerdict(suggestion, v);
+      return;
+    }
+    hapticLight();
+    menuRef.current?.openFeedback();
   };
   // The action row's own buttons, as VoiceOver custom actions on the card: the
   // card root is one accessibility element, which hides the row inside it.
@@ -225,11 +225,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       return asked;
     },
     inlineActions,
-    onLeafPicked: feedbackHandlers
-      ? (v, pathIds, applied, committed) => feedbackHandlers.onLeafPicked(suggestion, v, pathIds, applied, committed)
+    onVerdictRecorded: feedbackHandlers ? () => feedbackHandlers.onVerdictRecorded(suggestion) : undefined,
+    onFeedbackChat: feedbackHandlers
+      ? (pathIds, answers) => feedbackHandlers.onInvokeMera(suggestion, pathIds, answers)
       : undefined,
-    onFeedbackChat: feedbackHandlers ? (v, pathIds) => feedbackHandlers.onInvokeMera(suggestion, v, pathIds) : undefined,
-    onBrowseRelated: feedbackHandlers ? () => feedbackHandlers.onBrowseRelated(suggestion) : undefined,
   });
   menuRef.current = menu;
   const aboutSourceActions = menu.accessibilityActions.filter((a) => a.name === 'about-source');

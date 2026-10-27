@@ -9,12 +9,6 @@ import {
   resetFeedbackTreeMemo,
 } from '@/lib/services/feedback-tree-service';
 import { APP_FEEDBACK_SCHEMA, BUNDLED_FEEDBACK_TREE } from '@/lib/algorithms/feedback-tree-snapshot';
-// The tree schema this unit targets: the constant and bundled version are pinned here so the
-// selection rules stay testable independent of which tree ships.
-jest.mock('@/lib/algorithms/feedback-tree-snapshot', () => {
-  const actual = jest.requireActual('@/lib/algorithms/feedback-tree-snapshot');
-  return { ...actual, APP_FEEDBACK_SCHEMA: 6, BUNDLED_FEEDBACK_TREE: { ...actual.BUNDLED_FEEDBACK_TREE, version: 6 } };
-});
 import { mockGqlError, server } from '@/test/helpers';
 import { failTransport, resetNetworkMemory, serve, spyLogger, underClock } from './kit';
 
@@ -39,8 +33,6 @@ const serverTree = (version: number, extra: Record<string, unknown> = {}) =>
     root: [{ id: 'x', labelKey: 'k', labelDefault: 'X', leaf: { seenOnly: true } }],
     ...extra,
   });
-
-const likeRoot = [{ id: 'like_x', labelKey: 'k', labelDefault: 'X', leaf: { openChat: true } }];
 
 /** Answers FeedbackTree and records the variables of each request. */
 function serveTree(resp: { version: number; minAppSchema: number; treeJson: string } | null) {
@@ -112,19 +104,6 @@ describe('getFeedbackTree', () => {
     ['a bare number', '7'],
   ])('falls back to bundled for %s', async (_name, json) => {
     await setSetting(KEY_JSON, json);
-    expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
-  });
-
-  it('accepts a cached tree carrying a valid likeRoot', async () => {
-    await setSetting(KEY_JSON, serverTree(7, { likeRoot }));
-    await setSetting(KEY_MIN_SCHEMA, '6');
-    expect((await getFeedbackTree()).likeRoot).toEqual(likeRoot);
-  });
-
-  it('falls back to bundled when the cached likeRoot is malformed', async () => {
-    // likeRoot present but not an array of valid nodes (missing `id`).
-    await setSetting(KEY_JSON, serverTree(7, { likeRoot: [{ labelKey: 'k', labelDefault: 'X' }] }));
-    await setSetting(KEY_MIN_SCHEMA, '6');
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
 });
@@ -245,7 +224,7 @@ describe('refreshFeedbackTree', () => {
   });
 
   it('ACCEPTS a tree whose minAppSchema exactly equals the app schema', async () => {
-    const json = serverTree(7, { likeRoot });
+    const json = serverTree(7);
     serveTree({ version: 7, minAppSchema: APP_FEEDBACK_SCHEMA, treeJson: json });
 
     await refreshFeedbackTree({ force: true });
@@ -253,7 +232,6 @@ describe('refreshFeedbackTree', () => {
     expect(await getSetting(KEY_JSON)).toBe(json);
     const tree = await getFeedbackTree();
     expect(tree.version).toBe(7);
-    expect(tree.likeRoot).toHaveLength(1);
   });
 
   // Pinned to APP_FEEDBACK_SCHEMA + 1 rather than a literal: this is about the COMPARISON, and a
@@ -267,8 +245,8 @@ describe('refreshFeedbackTree', () => {
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
 
-  it('rejects (does not persist) a server tree with a malformed likeRoot', async () => {
-    serveTree({ version: 7, minAppSchema: 6, treeJson: serverTree(7, { likeRoot: 'not-an-array' }) });
+  it('rejects (does not persist) a server tree with a node missing its id', async () => {
+    serveTree({ version: 7, minAppSchema: 6, treeJson: JSON.stringify({ version: 7, root: [{ labelKey: 'k' }] }) });
 
     await refreshFeedbackTree({ force: true });
 

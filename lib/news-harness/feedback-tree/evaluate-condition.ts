@@ -40,6 +40,12 @@ export function evaluateCondition(
   if (visibleIf.has_entity === true) {
     if (!ctx.entity?.trim()) return false;
   }
+  if (visibleIf.has_fact === true) {
+    if (!ctx.fact?.id) return false;
+  }
+  if (visibleIf.has_publication === true) {
+    if (!ctx.publicationName?.trim()) return false;
+  }
 
   return true;
 }

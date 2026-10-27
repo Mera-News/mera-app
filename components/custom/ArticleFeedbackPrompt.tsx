@@ -10,16 +10,15 @@ import { buildContextJson, type FeedbackSubject } from '@/components/custom/card
 
 import {
     getArticleVerdict,
-    markFeedbackProcessedFor,
     recordVerdictFeedback,
     removeArticleFeedback,
-    updateFeedbackContextPath,
 } from '@/lib/database/services/article-feedback-service';
 import { resolveDetailFeedbackSubject, type DetailFeedbackContext } from '@/components/custom/news-detail/detail-feedback-context';
 import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
+import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -45,11 +44,6 @@ interface ArticleFeedbackPromptProps {
      *  time via `getNewsClusterForArticle`. */
     track?: FeedbackSubject;
     share?: ShareArticleParams;
-    /** The feedback tree's 'browse_related' nudge ("Show related coverage" on
-     *  the paywall branch) fired. On a detail screen the related coverage is
-     *  already on the page — its footer — so the host scrolls there rather than
-     *  navigating anywhere. Omitted ⇒ the nudge just closes the sheet. */
-    onBrowseRelated?: () => void;
     /** The fact-check tick. `onStart` asks the SERVER for a check on this
      *  article (`requestArticleFactCheck`); the result lands in the detail
      *  screen's own `FactCheckPanel`, in place. It used to open the floating
@@ -105,7 +99,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     save,
     track,
     share,
-    onBrowseRelated,
     factCheck,
     publicationName,
 }) => {
@@ -195,28 +188,16 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         [verdict, articleId, suggestionId, title, ensureResolved],
     );
 
-    // A tree leaf settled. ORDER MATTERS: a committed path write re-opens the
-    // row for the digest (processed_at = null) and lands AFTER applyLeafActions
-    // stamped it spent, so re-stamp after the write when the leaf applied
-    // something, or the 3-hourly digest applies it twice.
-    const handleLeafPicked = useCallback(
-        (v: Verdict, pathIds: string[], appliedCount: number, leafCommitted: boolean) => {
-            void (async () => {
-                await updateFeedbackContextPath(articleId, v, pathIds, leafCommitted);
-                if (appliedCount > 0) await markFeedbackProcessedFor(articleId, v);
-            })();
-        },
-        [articleId],
-    );
-    // An openChat leaf. Escalating counts as context supplied, so it commits:
-    // a forward promise, the chat stamps the row once its proposals are
-    // confirmed. The hand-off carries the verdict and the tapped breadcrumb.
+    // Tell Mera: the feedback chat, with every answer given so far.
     const handleFeedbackChat = useCallback(
-        (v: Verdict, pathIds: string[]) => {
-            void updateFeedbackContextPath(articleId, v, pathIds, true);
-            void ensureResolved().then((ctx) => openFeedbackChatWithPath(ctx.suggestion, v, pathIds));
+        (pathIds: string[], answers: FeedbackAnswersHandoff) => {
+            void ensureResolved().then((ctx) => openFeedbackChatWithPath(ctx.suggestion, 'dislike', pathIds, answers));
         },
-        [articleId, ensureResolved],
+        [ensureResolved],
+    );
+    const resolveVerdictSubject = useCallback(
+        () => ensureResolved().then((ctx) => ctx.subject),
+        [ensureResolved],
     );
     // The tree gates and resolves against the SAME resolved subject the verdict
     // row persists, plus what only the standalone article knows (its place).
@@ -240,21 +221,20 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                       return true;
                   }
                 : undefined,
-        onLeafPicked: handleLeafPicked,
+        onVerdictRecorded: () => setVerdict('dislike'),
+        resolveVerdictSubject,
         onFeedbackChat: handleFeedbackChat,
-        onBrowseRelated: onBrowseRelated ? () => onBrowseRelated() : undefined,
         resolveTreeContext,
     });
 
-    // A thumb records the verdict, then opens the sheet at that tree's root.
-    // A second tap on the recorded thumb only removes it.
+    // The feedback button opens the sheet at its root; the sheet records the
+    // verdict on the reader's first answer.
     const tapThumb = useCallback(
         (next: Verdict) => {
-            const opensTree = verdict !== next;
-            onVerdict(next);
-            if (opensTree) menu.openFeedback(next);
+            if (next === 'like') onVerdict(next);
+            else menu.openFeedback();
         },
-        [verdict, onVerdict, menu],
+        [onVerdict, menu],
     );
     const handleLike = useCallback(() => tapThumb('like'), [tapThumb]);
     const handleDislike = useCallback(() => tapThumb('dislike'), [tapThumb]);

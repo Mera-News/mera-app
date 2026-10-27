@@ -27,28 +27,24 @@ import {
 import { suppressionMatchesCandidate } from '@/lib/news-harness/scoring-engine/suppression';
 import type { SoftSuppression } from '@/lib/news-harness/scoring-engine/persona-context';
 import type { ScoredCandidateInput } from '@/lib/news-harness/scoring-engine/relevance';
-import { BUNDLED_FEEDBACK_TREE } from '@/lib/algorithms/feedback-tree-snapshot';
 import { resolveLeafActions } from '@/lib/news-harness/feedback-tree/resolve-leaf-actions';
-import type { FeedbackTreeNode, LocalFeedbackContext, ResolvedPersonaAction } from '@/lib/news-harness/feedback-tree/types';
+import type { FeedbackTreeLeaf, LocalFeedbackContext, ResolvedPersonaAction } from '@/lib/news-harness/feedback-tree/types';
 
 type GeoTag = { city?: string; region?: string; countryCode: string };
 
-function findNodeSafe(nodes: FeedbackTreeNode[], id: string): FeedbackTreeNode | null {
-  for (const n of nodes) {
-    if (n.id === id) return n;
-    const hit = n.children ? findNodeSafe(n.children, id) : null;
-    if (hit) return hit;
-  }
-  return null;
-}
-
-/** Throwing lookup — a missing node means the tree moved under this test, which
- *  must fail loudly rather than skip the round trip it exists to run. */
-function findNode(nodes: FeedbackTreeNode[], id: string): FeedbackTreeNode {
-  const hit = findNodeSafe(nodes, id);
-  if (!hit) throw new Error(`node ${id} not in the bundled tree`);
-  return hit;
-}
+/** The v5 tag leaves, verbatim. v6 no longer offers them (owner), but a
+ *  suppression one of them minted is still on devices and still filters, so the
+ *  round trip from leaf to filter stays pinned here. */
+const V5_TAG_LEAVES: Record<string, FeedbackTreeLeaf> = {
+  less_place: { actions: [{ type: 'add_suppression', pattern: 'from_context_place', kind: 'place', strength: 0.5 }] },
+  less_entity: { actions: [{ type: 'add_suppression', pattern: 'from_context_entity', kind: 'entity', strength: 0.5 }] },
+  this_kind_of_event: {
+    actions: [{ type: 'add_suppression', pattern: 'from_context_eventType', kind: 'event_type', strength: 0.5 }],
+  },
+  this_category: {
+    actions: [{ type: 'add_suppression', pattern: 'from_context_category', kind: 'category', strength: 0.5 }],
+  },
+};
 
 /** The scorer-side row `applyPersonaActions` ultimately persists and the
  *  persona loader hands back — reconstructed from the resolved action. */
@@ -74,7 +70,7 @@ function candidate(over: Partial<ScoredCandidateInput> = {}): ScoredCandidateInp
 
 /** Resolve a shipped leaf against a context and return its ONE suppression. */
 function filterFor(id: string, ctx: LocalFeedbackContext): SoftSuppression {
-  const actions = resolveLeafActions(findNode(BUNDLED_FEEDBACK_TREE.root, id).leaf, ctx);
+  const actions = resolveLeafActions(V5_TAG_LEAVES[id], ctx);
   expect(actions).toHaveLength(1);
   return asSuppression(actions[0]);
 }

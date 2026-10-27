@@ -5,13 +5,13 @@
 // shape: a node is a branch (`children`) OR a leaf (`leaf`); abstract leaf
 // actions carry placeholders the app fills from local (on-device) context.
 //
-// v2 adds `likeRoot` — a second, sibling tree for the LIKE side of the new
-// verdict bar ("More like this" / "Less like this"). Same node/leaf shape as
-// `root` (the dislike tree); leaves lean positive (boost values, positive
-// deltas) instead of negative.
+// v6 drops the like tree (thumbs up is gone from every surface) and makes the
+// dislike tree a hub: every root row is one reason, and a reader can answer
+// several. Each leaf carries its `cause` so only config answers ever reach the
+// persona digest.
 
 import type { ActionName } from '../persona-management/action-names';
-import type { SuppressionKindName } from '../core/types';
+import type { FeedbackCause, SuppressionKindName } from '../core/types';
 
 /** visibleIf gate keys understood by this app schema. Server may add more — an
  *  unknown key is IGNORED (does not hide the node) for forward-compat. */
@@ -39,6 +39,11 @@ export interface FeedbackTreeCondition {
    *  whatever the server tree says), which matters because an UNKNOWN gate key
    *  is ignored rather than enforced — a typo here fails OPEN. */
   has_entity?: boolean;
+  /** v6: true hides the node unless the story matched one of the reader's
+   *  facts (`LocalFeedbackContext.fact`). Every fact-naming row needs it. */
+  has_fact?: boolean;
+  /** v6: true hides the node unless the article names its publication. */
+  has_publication?: boolean;
   // Forward-compat: server may add gate keys this app doesn't know.
   [key: string]: unknown;
 }
@@ -78,7 +83,16 @@ export interface FeedbackTreeAbstractAction {
 /** The closed set of HOST INTENTS a `nudge` leaf can carry. Exported so every
  *  surface that forwards one spells it the same way — the union used to be
  *  re-typed inline in five components, and widening it meant finding all five. */
-type FeedbackNudge = 'subscribe' | 'browse_related' | 'manage_publication';
+type FeedbackNudge =
+  | 'subscribe'
+  | 'browse_related'
+  | 'manage_publication'
+  /** v6: open the matched fact's page in the You tab. */
+  | 'open_fact'
+  /** v6: push the place picker for the matched fact (persona's options). */
+  | 'place_picker'
+  /** v6: stop news for the matched fact (persona's `stopNewsForFact`). */
+  | 'stop_news';
 
 /** Terminal node payload. Exactly one flavor is meaningful per leaf. */
 export interface FeedbackTreeLeaf {
@@ -96,6 +110,11 @@ export interface FeedbackTreeLeaf {
   confirm?: boolean;
   /** "I've seen this" — acknowledge only; no persona mutation. */
   seenOnly?: boolean;
+  /** v6: why the reader picked it. `config` is about their profile and is the
+   *  only cause the digest may learn from; `system` is Mera's mistake, kept on
+   *  device as context and never applied; `source` is about the publisher.
+   *  Absent reads as `config` (pre-v6 trees). */
+  cause?: FeedbackCause;
 }
 
 /** A tree node: a branch (`children`) OR a leaf (`leaf`). */
@@ -112,6 +131,10 @@ export interface FeedbackTreeNode {
    *  404 to `descDefault` on every locale shipping only the base key. */
   descKey?: string;
   descDefault?: string;
+  /** v6: the short answer an answered root row shows ("Less for this").
+   *  Absent: the node's label. Resolved like the label. */
+  answerKey?: string;
+  answerDefault?: string;
   icon?: string;
   visibleIf?: FeedbackTreeCondition;
   children?: FeedbackTreeNode[];
@@ -121,10 +144,6 @@ export interface FeedbackTreeNode {
 export interface FeedbackTree {
   version: number;
   root: FeedbackTreeNode[];
-  /** v2: the LIKE-side tree for the verdict bar's "More like this". Optional
-   *  for forward/backward-compat — a tree seeded before v2 (or a stale cached
-   *  payload) simply has no like options. */
-  likeRoot?: FeedbackTreeNode[];
 }
 
 /**
@@ -174,6 +193,9 @@ export interface LocalFeedbackContext {
   publicationVisits?: number;
   /** Whether the article's geo mismatches the user's (visibleIf has_geo_mismatch). */
   hasGeoMismatch?: boolean;
+  /** v6: the reader's fact this story matched (the one with the most matched
+   *  topics). `statement` is the full text; rows clamp it for display. */
+  fact?: { id: string; statement: string; topicIds: string[] } | null;
 }
 
 /**

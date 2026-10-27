@@ -7,7 +7,7 @@
 
 import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
 import { feedbackLabelVars, feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
-import { resolveTreeLevel, type FeedbackTreeRoot } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
+import { resolveTreeLevel } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import { Text } from '@/components/ui/text';
 import type { FeedbackTree, FeedbackTreeNode } from '@/lib/news-harness/feedback-tree/types';
 import type { MaterialIcons } from '@expo/vector-icons';
@@ -20,7 +20,6 @@ export interface FeedbackTreeLevelProps {
      *  a level, so the level draws its final rows on its first render: rows
      *  arriving later made the sheet grow after it landed (batch 12). */
     tree: FeedbackTree;
-    root: FeedbackTreeRoot;
     /** The branch ids opened so far (empty = the tree's root level). */
     pathIds: readonly string[];
     /** Gates the rows and fills their labels; `publicationDisplayName` is
@@ -44,7 +43,6 @@ function useChrome() {
 
 const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
     tree,
-    root,
     pathIds,
     context,
     onDescend,
@@ -54,7 +52,7 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
     const c = useChrome();
     const colors = useColors();
     // Synchronous: the level's rows are final on its first render.
-    const { nodes: currentChildren, hasVisibleChildren } = resolveTreeLevel(tree, root, pathIds, context);
+    const { nodes: currentChildren, hasVisibleChildren } = resolveTreeLevel(tree, pathIds, context);
 
     const label = useCallback((node: FeedbackTreeNode) => feedbackNodeLabel(t, node, context), [t, context]);
     const desc = useCallback(
@@ -83,14 +81,6 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
         );
     };
 
-    const atRoot = pathIds.length === 0;
-    // D15: said at the tree's root only, and gone once the reader goes deeper.
-    const caption = atRoot ? (
-        <Text testID="feedback-caption" size="2xs" className="px-4 pt-1" style={{ color: colors.ink2 }}>
-            {t('swipeFeed.feedbackCaption')}
-        </Text>
-    ) : null;
-
     return (
         <>
             {currentChildren.length > 0 ? (
@@ -100,7 +90,6 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
                     {c('empty', 'No options here')}
                 </Text>
             )}
-            {caption}
         </>
     );
 };

@@ -9,12 +9,10 @@ import * as feedbackTreeService from '@/lib/services/feedback-tree-service';
 import logger from '@/lib/logger';
 import {
   changeSwipeVerdict,
-  commitFeedbackTreePath,
   openArticleChat,
   openFeedbackChatWithPath,
   recordSwipeVerdict,
   removeSwipeVerdict,
-  updateFeedbackTreePath,
   wireSwipeCallbacks,
 } from '@/lib/services/swipe-feedback';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -165,68 +163,9 @@ describe('removeSwipeVerdict', () => {
   });
 });
 
-describe('updateFeedbackTreePath', () => {
-  it('stores the path on the verdict row and commits nothing', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-
-    await updateFeedbackTreePath(makeSuggestion(), 'dislike', ['a', 'b']);
-
-    const ctx = await contextOf('dislike');
-    expect(ctx.treePath).toEqual(['a', 'b']);
-    expect(ctx.committed).toBeUndefined();
-    // Navigation is not context: the row stays out of the digest.
-    expect((await feedbackRows())[0].processedAt).not.toBeNull();
-  });
-
-  it('keeps the snapshot written at record time', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-    await updateFeedbackTreePath(makeSuggestion(), 'dislike', ['a']);
-
-    expect(await contextOf('dislike')).toMatchObject({ relevance: 0.8, publication: 'The Hindu', treePath: ['a'] });
-  });
-
-  it('writes nothing when the card has no verdict row', async () => {
-    await updateFeedbackTreePath(makeSuggestion(), 'dislike', ['a']);
-    expect(await feedbackRows()).toEqual([]);
-  });
-});
-
-// A committed path write re-opens the row for the digest (processed_at = null), and it lands after
-// applyLeafActions stamped the row spent. When a leaf applied something, the commit must stamp it
-// again, AFTER the write.
-describe('commitFeedbackTreePath', () => {
-  it('commits the path, then re-stamps the row spent when the leaf applied something', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-
-    await commitFeedbackTreePath(makeSuggestion(), 'dislike', ['a'], 2);
-
-    const ctx = await contextOf('dislike');
-    expect(ctx).toMatchObject({ treePath: ['a'], committed: true });
-    // Re-stamped after the write: had the stamp come first, the commit would have cleared it.
-    expect((await feedbackRows())[0].processedAt).not.toBeNull();
-  });
-
-  it('leaves the row open for the digest when nothing applied', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-
-    await commitFeedbackTreePath(makeSuggestion(), 'dislike', ['a'], 0);
-
-    expect(await contextOf('dislike')).toMatchObject({ treePath: ['a'], committed: true });
-    expect((await feedbackRows())[0].processedAt).toBeNull();
-  });
-
-  it('defaults appliedCount to 0', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'like');
-
-    await commitFeedbackTreePath(makeSuggestion(), 'like', ['more_about_topic']);
-
-    expect((await feedbackRows())[0].processedAt).toBeNull();
-  });
-});
-
 describe('openFeedbackChatWithPath', () => {
-  it('resolves like-root path labels + opens chat with verdict + label breadcrumb', async () => {
-    await openFeedbackChatWithPath(makeSuggestion(), 'like', ['more_about_topic', 'a_lot_more']);
+  it('opens chat with the verdict + label breadcrumb', async () => {
+    await openFeedbackChatWithPath(makeSuggestion(), 'dislike', ['publication_issue', 'paywall']);
 
     const chat = useFloatingChatStore.getState();
     expect(chat.isExpanded).toBe(true);
@@ -235,31 +174,33 @@ describe('openFeedbackChatWithPath', () => {
       articleId: 'art-1',
       suggestionId: 'sugg-1',
       articleTitle: 'A story',
-      verdict: 'like',
-      treePath: ['More about this topic', 'A lot more'],
+      verdict: 'dislike',
+      treePath: ['Problem with The Hindu', "I can't read it, it's paywalled"],
     });
-    expect(chat.pendingInitialMessage).toBe(
-      'I liked this story. More like this: More about this topic → A lot more.',
-    );
   });
 
-  it('resolves dislike-root path labels from the dislike tree', async () => {
-    await openFeedbackChatWithPath(makeSuggestion(), 'dislike', ['publication_issue', 'paywall']);
+  it('hands over every answer, and builds the breadcrumb from what the reader saw', async () => {
+    const answers = {
+      answers: [
+        { cause: 'config' as const, question: 'My profile needs a change', answer: 'Less for this' },
+        { cause: 'system' as const, question: 'This story isn\'t about "Pensioner in India"' },
+      ],
+      screen: 'Problem with Realitatea',
+      fact: 'Pensioner in India',
+    };
+    await openFeedbackChatWithPath(makeSuggestion(), 'dislike', ['profile_change'], answers);
 
     const chat = useFloatingChatStore.getState();
-    expect(chat.context).toMatchObject({
-      verdict: 'dislike',
-      treePath: ['Issue with this publication', "It's paywalled"],
-    });
+    expect(chat.context).toMatchObject({ feedbackAnswers: answers });
     expect(chat.pendingInitialMessage).toBe(
-      "I didn't like this story: Issue with this publication → It's paywalled.",
+      'I didn\'t like this story: Less for this → This story isn\'t about "Pensioner in India".',
     );
   });
 
   it('stops at the first id that does not resolve', async () => {
-    await openFeedbackChatWithPath(makeSuggestion(), 'like', ['more_about_topic', 'not_a_node', 'a_lot_more']);
+    await openFeedbackChatWithPath(makeSuggestion(), 'dislike', ['publication_issue', 'not_a_node', 'paywall']);
 
-    expect(useFloatingChatStore.getState().context).toMatchObject({ treePath: ['More about this topic'] });
+    expect(useFloatingChatStore.getState().context).toMatchObject({ treePath: ['Problem with The Hindu'] });
   });
 
   it('uses the no-path message when the path is empty', async () => {
@@ -270,30 +211,22 @@ describe('openFeedbackChatWithPath', () => {
     expect(chat.pendingInitialMessage).toBe("I didn't like this story. Help me get fewer like it.");
   });
 
-  it('uses the like no-path message when the like path is empty', async () => {
-    await openFeedbackChatWithPath(makeSuggestion(), 'like', []);
-
-    expect(useFloatingChatStore.getState().pendingInitialMessage).toBe(
-      "I liked this story. I'd like more like this.",
-    );
-  });
-
   it('still opens the chat, without labels, when the tree cannot be read', async () => {
     const capture = jest.spyOn(logger, 'captureException').mockImplementation(() => '');
     jest.spyOn(feedbackTreeService, 'getFeedbackTree').mockRejectedValueOnce(new Error('tree unavailable'));
 
-    await openFeedbackChatWithPath(makeSuggestion(), 'like', ['more_about_topic']);
+    await openFeedbackChatWithPath(makeSuggestion(), 'dislike', ['publication_issue']);
 
     expect(capture).toHaveBeenCalledWith(expect.any(Error), {
       tags: { service: 'swipe-feedback', method: 'openChat.labels' },
     });
     const chat = useFloatingChatStore.getState();
     expect(chat.context).toMatchObject({ treePath: [] });
-    expect(chat.pendingInitialMessage).toBe("I liked this story. I'd like more like this.");
+    expect(chat.pendingInitialMessage).toBe("I didn't like this story. Help me get fewer like it.");
   });
 
   it('opens with an empty title when the suggestion has none', async () => {
-    await openFeedbackChatWithPath(makeSuggestion({ title_en: null }), 'like', []);
+    await openFeedbackChatWithPath(makeSuggestion({ title_en: null }), 'dislike', []);
     expect(useFloatingChatStore.getState().context).toMatchObject({ articleTitle: '' });
   });
 });
@@ -349,42 +282,17 @@ describe('wireSwipeCallbacks', () => {
     await eventually(async () => expect(await feedbackRows()).toEqual([]));
   });
 
-  it('wires onTreePathChanged to store the path without committing', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-    wireSwipeCallbacks();
-
-    swipeCallbacks.onTreePathChanged(makeSuggestion(), 'dislike', ['x']);
-
-    await eventually(async () => expect(await contextOf('dislike')).toMatchObject({ treePath: ['x'] }));
-    expect((await contextOf('dislike')).committed).toBeUndefined();
-  });
-
-  it('wires onLeafCommitted to commit the path and re-stamp when the leaf applied something', async () => {
-    await recordSwipeVerdict(makeSuggestion(), 'dislike');
-    wireSwipeCallbacks();
-
-    swipeCallbacks.onLeafCommitted(makeSuggestion(), 'dislike', ['x'], 1);
-
-    await eventually(async () => {
-      expect(await contextOf('dislike')).toMatchObject({ treePath: ['x'], committed: true });
-      expect((await feedbackRows())[0].processedAt).not.toBeNull();
-    });
-  });
-
   it('wires onInvokeMera to the primed verdict + path handoff', async () => {
     wireSwipeCallbacks();
 
-    swipeCallbacks.onInvokeMera(makeSuggestion(), 'like', ['more_about_topic']);
+    swipeCallbacks.onInvokeMera(makeSuggestion(), 'dislike', ['publication_issue', 'paywall']);
 
     await eventually(() => {
       expect(useFloatingChatStore.getState().context).toMatchObject({
-        verdict: 'like',
-        treePath: ['More about this topic'],
+        verdict: 'dislike',
+        treePath: ['Problem with The Hindu', "I can't read it, it's paywalled"],
       });
     });
-    expect(useFloatingChatStore.getState().pendingInitialMessage).toBe(
-      'I liked this story. More like this: More about this topic.',
-    );
   });
 
   it('wires the VerdictBar Mera icon to the plain article chat (no prime)', () => {

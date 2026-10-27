@@ -11,6 +11,7 @@
 
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
 
 export type { Verdict };
 
@@ -26,32 +27,13 @@ export interface SwipeCallbacks {
   /** A card's verdict was removed (re-tapping the same thumb un-votes it) —
    *  destroys the stored feedback row (verdict + any tree path). */
   onVerdictRemoved: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
-  /** A leaf that commits nothing (seenOnly) settled: store its path only.
-   *  See `onLeafCommitted` for the write that may fill a thumb. */
-  onTreePathChanged: (
-    suggestion: ForYouSuggestion,
-    verdict: Verdict,
-    path: string[],
-  ) => void;
-  /** A TERMINAL leaf settled (or the user escalated to Mera along the path) —
-   *  the only signal that marks a verdict COMMITTED. Without this the feed had
-   *  no DB write distinguishing "navigated" from "committed", so an abandoned
-   *  branch descent rendered as a real vote (F2). */
-  onLeafCommitted: (
-    suggestion: ForYouSuggestion,
-    verdict: Verdict,
-    path: string[],
-    /** How many persona actions the leaf applied; > 0 re-stamps the row
-     *  spent after the commit write (see commitFeedbackTreePath). */
-    appliedCount?: number,
-  ) => void;
-  /** The user asked to continue the feedback with Mera from a card — a
-   *  verdict+path-primed handoff ("convert my taps into a conversation"). Used by
-   *  the ••• sheet's openChat tree leaves. */
+  /** Tell Mera from a card's feedback sheet: the chat opens primed with
+   *  every answer the reader gave so far. */
   onInvokeMera: (
     suggestion: ForYouSuggestion,
     verdict: Verdict,
     path: string[],
+    answers?: FeedbackAnswersHandoff,
   ) => void;
   /** The VerdictBar's Mera icon was tapped — open the DEFAULT article chat
    *  (pinned card + starter chips, NO verdict/path, NO auto-sent message). */
@@ -63,8 +45,6 @@ export const swipeCallbacks: SwipeCallbacks = {
   onVerdict: () => {},
   onVerdictChanged: () => {},
   onVerdictRemoved: () => {},
-  onTreePathChanged: () => {},
-  onLeafCommitted: () => {},
   onInvokeMera: () => {},
   onOpenArticleChat: () => {},
 };

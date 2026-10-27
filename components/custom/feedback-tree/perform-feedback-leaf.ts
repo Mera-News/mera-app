@@ -26,13 +26,15 @@ export interface FeedbackLeafDeps {
     /** The verdict row this leaf spends. applyLeafActions stamps it processed
      *  and records the change-log ids, so removing or flipping the verdict
      *  reverts exactly what the leaf applied. */
-    spend: { articleId: string; sentiment: 'like' | 'dislike' };
+    spend: { articleId: string; sentiment: 'dislike' };
     /** Host chat hand-off for an `openChat` leaf (the Feed and detail thumbs
      *  carry the verdict and breadcrumb). Omitted: the generic hand-off. */
     openChat?: () => void;
-    /** Host destination for the `browse_related` nudge (the detail screen's
-     *  related coverage). Omitted: a toast. */
+    /** Host destination for the `browse_related` nudge. Omitted: a toast. */
     browseRelated?: () => void;
+    /** The sheet's own nudges (`place_picker`, `stop_news`): the host pushes
+     *  or applies them. Omitted: the sheet just closes. */
+    hostNudge?: (nudge: 'place_picker' | 'stop_news', pathIds: string[]) => void;
     /** Close the sheet, then run `after` once it has gone. */
     closeThen: (after?: () => void) => void;
     /** A terminal leaf settled: persist the path. `committed` is explicit:
@@ -65,8 +67,25 @@ export function performFeedbackLeaf(node: FeedbackTreeNode, pathIds: string[], d
     }
 
     // Nudge: a SUGGESTION, not a persona mutation.
+    if (leaf.nudge === 'place_picker' || leaf.nudge === 'stop_news') {
+        // The host records the answer once the reader has actually picked.
+        if (d.hostNudge) d.hostNudge(leaf.nudge, pathIds);
+        else d.closeThen();
+        return;
+    }
     if (leaf.nudge) {
         d.onLeafPicked(pathIds, 0, true);
+        if (leaf.nudge === 'open_fact') {
+            const fact = d.context.fact;
+            d.closeThen(() => {
+                if (!fact) return;
+                // Required at call time: the fact page pulls in expo-router screens.
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const { openFactPage } = require('@/components/custom/facts/open-fact-page') as typeof import('@/components/custom/facts/open-fact-page');
+                openFactPage(fact);
+            });
+            return;
+        }
         if (leaf.nudge === 'manage_publication') {
             d.closeThen(() => openPublicationPreferences());
         } else if (leaf.nudge === 'subscribe') {
