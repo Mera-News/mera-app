@@ -6,7 +6,12 @@ import type { WireMessage } from '@/lib/llm/cloudComplete';
 import type { ConversationMessage } from '../llm/types';
 import type { AgentDeps, AgentState, PendingProposalView } from '../mera-harness';
 import type { ToolExecutionResult } from '../news-harness/core/types';
-import { proposalRequiresUserChoice } from '../news-harness/core/proposals';
+import { proposalAllowsMultiSelect, proposalRequiresUserChoice } from '../news-harness/core/proposals';
+import {
+  normaliseTrackText,
+  readCardOptions,
+  readTrackOutcomes,
+} from '@/components/custom/floating-chat/track-options';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { unresolvedGroups } from '../chat-tools/fact-choice-resolution';
@@ -76,6 +81,44 @@ export function pendingCardStatements(messages: ConversationMessage[]): string[]
   return out;
 }
 
+/** The agents the harness loop drives: the persona chat and the follow-a-story chat. */
+export function runsOnHarness(agentId: string): boolean {
+  return agentId.startsWith('persona-') || agentId.startsWith('follow-story-');
+}
+
+/** The route leg's one line when the chat was opened to follow a story. */
+export const FOLLOW_STORY_HINT = 'They opened this chat from their Followed stories page to follow a news story.';
+
+/**
+ * Labels of the stories the user followed from follow cards in this thread, in
+ * order, deduped. Reads the card's override (`cardOptions`, `followed`) else
+ * the staged result; only rows that settled `following` or `already` count, so
+ * an unticked grown option never appears.
+ */
+export function followedInChatLabels(messages: ConversationMessage[]): string[] {
+  const overrides = useFloatingChatStore.getState().toolCallResults;
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const m of messages) {
+    if (m.role !== 'assistant' || !m.toolCalls) continue;
+    m.toolCalls.forEach((tc, idx) => {
+      if (tc.name !== 'proposeTrack') return;
+      const result = (overrides[`${m.id}::${idx}`] ?? tc.result ?? {}) as Record<string, unknown>;
+      const outcomes = readTrackOutcomes(result.followed);
+      const shown = readCardOptions(result.cardOptions) ?? readCardOptions(result.options) ?? [];
+      for (const { label } of shown) {
+        const key = normaliseTrackText(label);
+        const outcome = outcomes[key];
+        if ((outcome === 'following' || outcome === 'already') && !seen.has(key)) {
+          seen.add(key);
+          out.push(label);
+        }
+      }
+    });
+  }
+  return out;
+}
+
 /**
  * What a tool's execution asks the chat to do: block it, stage a card, settle
  * the waiting card. ONE place for both the single-shot path and the harness
@@ -121,6 +164,7 @@ export function pendingProposalView(): PendingProposalView | null {
     id: p.id,
     summary: p.explanation || p.actions.map((a) => (a as { label?: string }).label ?? a.type).join(', '),
     chooseOne,
+    multiSelect: proposalAllowsMultiSelect(p),
     appliable: !chooseOne && !p.actions.some((a) => HARNESS_TAP_ONLY.has(a.type)),
   };
 }

@@ -1,7 +1,6 @@
 // The live tool row and the strip's phone work, through the real cloud engine: a real persona turn
-// (the loop and the device port), a real single-shot turn, the gateway mock (real E2EE both ways)
+// (the loop and the device port), the gateway mock (real E2EE both ways)
 // and GraphQL held open in MSW, so the store is sampled while the tool genuinely runs.
-import { FollowStoryAgent } from '@/lib/llm/agents/FollowStoryAgent';
 import { BIG_MODEL } from '@/lib/llm/constants';
 import { useChatPhaseStore, type LiveTool } from '@/lib/llm/chat-phase-store';
 import { mockGateway, mockGql, server, signInFixtureAccount } from '@/test/helpers';
@@ -85,18 +84,21 @@ describe('persona turn: the tool the phone runs is the live row', () => {
   });
 });
 
-describe('single-shot turn: the tool batch is phone work', () => {
-  it('a held searchNews holds deviceWork with no live row, and clears it after', async () => {
+describe('persona turn: searchNews from the Mera button', () => {
+  it('a held searchNews is a live row with deviceWork, and clears after', async () => {
     const news = hold('SearchNews', { searchNews: [] });
-    server.use(...mockGateway((c) =>
-      c.index === 0 ? reply('', toolCall('searchNews', { query: 'Sporting CP' })) : 'Nothing new on that yet.'));
-    const { engine } = await attachCloud(new FollowStoryAgent('user-1'));
+    server.use(...mockGateway((c) => {
+      if (c.index === 0) return reply('One moment.', toolCall('load_skill', { id: 'conversation/follow-story' }));
+      if (c.index === 1) return reply('', toolCall('searchNews', { query: 'Sporting CP' }));
+      return 'Nothing new on that yet.';
+    }));
+    const { engine } = await attachCloud(personaAgent());
 
     engine.send('follow Sporting CP');
     await until(news.reached, 30_000, 'searchNews on the wire');
 
+    expect(phase().liveTool).toEqual({ kind: 'working', toolName: 'searchNews', args: { query: 'Sporting CP' } });
     expect(phase().deviceWork).toBe(true);
-    expect(phase().liveTool).toBeNull();
 
     news.release();
     await turnDone();

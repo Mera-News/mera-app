@@ -238,27 +238,44 @@ describe('FollowStoryAgent: declining and the apply guard', () => {
     await expectNothingFollowed();
   });
 
-  // A typed "yes" must not follow anything: only the card knows WHICH pill was chosen, so an
-  // agent-side apply would mint every scope at once.
-  it('refuses a model-invented applyProposal instead of executing the actions', async () => {
+  const trackAction = (label: string): ProposalAction => ({
+    type: 'track_story' as const,
+    label,
+    searchText: label,
+    subject: { origin: 'article' as const, surface: FOLLOW_STORY_SURFACE, articleId: '', title: '' },
+  });
+
+  // A typed "yes" applies a card with ONE option; two or more are the ticks and the Follow tap.
+  it('refuses a typed yes on a card with several options, with the track wording', async () => {
     setProposal({
       id: 'p-3',
       explanation: '',
       expectedEffects: '',
       chooseOne: true,
-      actions: ['a story', 'b story', 'c story'].map((label) => ({
-        type: 'track_story' as const,
-        label,
-        searchText: label,
-        subject: { origin: 'article' as const, surface: FOLLOW_STORY_SURFACE, articleId: '', title: '' },
-      })),
+      actions: ['a story', 'b story', 'c story'].map(trackAction),
     });
 
     const result = await makeAgent().executeTool('applyProposal', {});
 
-    expect((result.result as { error?: string }).error).toBeTruthy();
+    expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+    expect((result.result as { message: string }).message).toContain('tap the ones they want');
     expect(result.sideEffects).toBeUndefined();
     await expectNothingFollowed();
+  });
+
+  it('applies a card with a single option and resolves it', async () => {
+    setProposal({ id: 'p-1', explanation: '', expectedEffects: '', actions: [trackAction('a story')] });
+
+    const result = await makeAgent().executeTool('applyProposal', {});
+
+    expect(result.result).toMatchObject({ applied: 1, errors: [] });
+    expect(result.sideEffects?.proposalResolved).toBe('applied');
+    expect(await trackedStoryCount()).toBe(1);
+  });
+
+  it('answers no pending proposal when nothing is waiting', async () => {
+    const result = await makeAgent().executeTool('applyProposal', {});
+    expect(result.result).toEqual({ error: 'no pending proposal' });
   });
 
   it('reports an unknown tool without executing anything', async () => {

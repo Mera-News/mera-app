@@ -39,6 +39,9 @@ interface Live {
 let live: Live | null = null;
 let release: (() => void) | null = null;
 let wired = false;
+/** A More options call is running. Counts as busy so Stop shows; deliberately
+ *  NOT `agentTurnState.turnActive`, which would reopen the last steps box. */
+let moreOptionsInFlight = false;
 
 /** Engine factories, required lazily: they pull in the inference stack. The
  *  view pairs the kind with its agent (createAgentForContext). */
@@ -56,6 +59,7 @@ function busyNow(): boolean {
     const cloud = useCloudChatStore.getState();
     const local = useLocalChatStore.getState();
     return (
+        moreOptionsInFlight ||
         cloud.status === 'streaming' ||
         cloud.agentTurnState?.turnActive === true ||
         local.status === 'streaming' ||
@@ -178,6 +182,8 @@ export async function requestMoreOptions(
     const room = MAX_FOLLOW_OPTIONS - tracks.length;
     const engine = live?.engine;
     if (tracks.length === 0 || room < 1 || !engine?.moreOptions) return { actions: [], reason: 'none' };
+    moreOptionsInFlight = true;
+    sync();
     try {
         return await engine.moreOptions({
             proposalId,
@@ -188,6 +194,9 @@ export async function requestMoreOptions(
     } catch (err) {
         logger.warn('[chat-session] moreOptions threw', { error: String(err) });
         return { actions: [], reason: 'failed' };
+    } finally {
+        moreOptionsInFlight = false;
+        sync();
     }
 }
 
