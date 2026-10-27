@@ -1097,6 +1097,28 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows[0].status).toBe('complete');
   });
 
+  it('a copy Kev fails on is not elected again in the pass: a sibling is read instead', async () => {
+    installLocal();
+    queue();
+    let failedId: string | null = null;
+    installDecide((call) => {
+      const id = /Story (\w+) saga/.exec(JSON.stringify(call.request.state))?.[1] ?? '';
+      events.push(`decide:${id}`);
+      failedId ??= id;
+      return id === failedId ? { error: 'failed to evaluate the decision prompt (error 1)' } : { scores: { rel: 3 } };
+    });
+    await seed(['a', 'b', 'c'], { extra: { story_key: 'K' } });
+
+    await run(processAllUnscored());
+
+    const decided = events.filter((e) => e.startsWith('decide:'));
+    expect(decided).toHaveLength(2);
+    expect(decided[1]).not.toBe(`decide:${failedId}`);
+    const rows = await stored();
+    expect(rows[failedId!].status).toBe('unscored');
+    expect(Object.values(rows).filter((r) => r.status === 'complete')).toHaveLength(2);
+  });
+
   it('never elects a copy Kev cannot read; a readable copy of the story is read instead', async () => {
     installLocal();
     queue();

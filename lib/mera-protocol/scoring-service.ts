@@ -894,6 +894,10 @@ async function scoreUnscoredRows(
   // Rows that left `unscored` without a Kev call (a copy inherited its story's score,
   // or the reader already opened the story): progress only, never the returned count.
   let settledByGate = 0;
+  // Copies Kev did not answer this pass: out of the election and the batch, so the
+  // gate elects a sibling instead of the same copy every loop.
+  const failedThisPass = new Set<string>();
+  let retriedLoneFailure = false;
   onProgress?.(0, totalUnscored);
 
   while (true) {
@@ -904,14 +908,16 @@ async function scoreUnscoredRows(
     const unscored = await getUnscoredSuggestionsWithFacts();
     if (unscored.length === 0) break;
     const unscorable = new Set(unscored.filter((c) => !isEligible(c)).map((c) => c.id));
-    const gate = await gateUnscoredForScoring(unscorable);
+    const gate = await gateUnscoredForScoring(new Set([...unscorable, ...failedThisPass]));
     if (gate.propagatedCount > 0) await reconcilePropagatedHardFilters();
     settledByGate += gate.propagatedCount + gate.readCount;
     const elected = new Set(gate.enqueueIds);
     const batch = [
       ...unscored.filter((c) => elected.has(c.id)),
       ...unscored.filter((c) => unscorable.has(c.id)),
-    ].slice(0, batchSize);
+    ]
+      .filter((c) => !failedThisPass.has(c.id))
+      .slice(0, batchSize);
     if (batch.length === 0) break;
 
     const {
@@ -992,11 +998,17 @@ async function scoreUnscoredRows(
     );
 
     if (succeeded.length > 0 && onBatchComplete) onBatchComplete(succeeded);
+    for (const id of failedIds) failedThisPass.add(id);
 
     totalProcessed += succeeded.length;
     onProgress?.(totalProcessed + settledByGate, totalUnscored);
 
-    if (succeeded.length === 0) {
+    // A whole failed batch means Kev is down, except a batch that was ONE copy with
+    // siblings left (a lone story): try a sibling once before stopping.
+    const loneCopy = batch.length === 1 && (gate.coveredIdsByRep[batch[0].id]?.length ?? 0) > 1;
+    if (succeeded.length === 0 && loneCopy && !retriedLoneFailure) {
+      retriedLoneFailure = true;
+    } else if (succeeded.length === 0) {
       logger.warn('[processAllUnscored] entire batch failed — stopping to retry next cycle', {
         failedCount: failedIds.size,
       });
