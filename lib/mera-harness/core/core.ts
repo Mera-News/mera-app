@@ -67,7 +67,7 @@ function namesSomethingSaid(statement: string, text: string): boolean {
 const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill, skillThinking, skillTools } from './skill-loader';
-import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
+import { CONTINUATION_TOOLS, PROPOSE_TRACK_TOOL, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
   PendingProposalView,
   AgentDeps,
@@ -78,6 +78,7 @@ import type {
   AgentTurnResult,
   AgentTurnState,
   Place,
+  SurfaceContext,
 } from './types';
 import { createAgentTurnState } from './types';
 
@@ -306,6 +307,12 @@ export interface AgentState {
   /** The user's active filters, set by the driver before each turn. Listed on
    *  legs that can stage a card, so `retire_suppression` names a real id. */
   activeFilters?: { id: string; pattern: string }[];
+  /** Where the chat was opened, set by the driver (S2a): a `<surface>` message
+   *  after the known facts, the hint alone on the route leg. */
+  surfaceContext?: SurfaceContext | null;
+  /** Stories the user followed from cards in this chat, in order, set by the
+   *  driver. Every leg reads them, so a later turn does not offer them again. */
+  followedInChat?: string[];
 }
 
 export function createAgentState(persona: AgentPersona): AgentState {
@@ -376,6 +383,14 @@ function routeKindFromSkill(skillId: string): string | null {
   return leaf && leaf !== 'generic' ? leaf : null;
 }
 
+/** The `<surface>` message: the hint alone on the route leg, hint and context
+ *  on a skill leg, nothing when there is neither. */
+function surfaceBlock(surface: SurfaceContext | null, skillLeg: boolean): { role: 'user'; content: string }[] {
+  if (!surface) return [];
+  const lines = [surface.hint, skillLeg ? surface.context : null].filter((l): l is string => !!l && l.trim().length > 0);
+  return lines.length > 0 ? [{ role: 'user', content: `<surface>\n${lines.join('\n')}\n</surface>` }] : [];
+}
+
 export interface RunAgentTurnParams {
   state: AgentState;
   userMessage: string;
@@ -393,7 +408,17 @@ export interface RunAgentTurnParams {
    *  language. The harness cannot import i18n, so the app translates them at the
    *  call site; omitted (the eval), the English constants are used. */
   fallbacks?: { leak: string; process: string; noAnswer?: string };
+  /** 'moreOptions': "More options" on a follow card. No route leg, one forced
+   *  proposeTrack leg on conversation/follow-story, prose discarded, no closing
+   *  leg and no end-of-turn offers. The driver passes a COPY of its state and
+   *  throws it away: this is not a conversation turn. */
+  mode?: 'turn' | 'moreOptions';
+  /** Required with mode 'moreOptions': what the card shows and how many it can take. */
+  moreOptions?: { shown: { label: string; searchText: string }[]; room: number };
 }
+
+/** The follow skill: the only one with the follow tools, and the one More options runs. */
+export const FOLLOW_STORY_SKILL = 'conversation/follow-story';
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
   const { state, userMessage, deps } = params;
@@ -559,6 +584,29 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       skillsLoaded.push(turn.lastSkill);
     }
   }
+  // MORE OPTIONS: the follow skill directly, one leg. Like a resume, so the
+  // first leg is a skill leg and never a route.
+  const moreOptionsMode = params.mode === 'moreOptions';
+  if (moreOptionsMode) {
+    const body = loadSkillFn(FOLLOW_STORY_SKILL);
+    if (body !== null) {
+      skillLoaded = FOLLOW_STORY_SKILL;
+      routeKind = routeKindFromSkill(FOLLOW_STORY_SKILL);
+      systemPrompt = skillPrompt(body);
+      resumedSkill = true;
+      skillsLoaded.push(FOLLOW_STORY_SKILL);
+    }
+    maxLegsThisTurn = 1;
+  }
+  /** The note a More options leg ends on: the options on the card, escaped
+   *  (labels are model text), and the room left. */
+  const moreOptionsNote = moreOptionsMode && params.moreOptions
+    ? 'The user tapped More options on the follow card above. It already shows: '
+      + params.moreOptions.shown.map((o) => `"${escapeUntrusted(o.label, 80)}" (${escapeUntrusted(o.searchText, 120)})`).join('; ')
+      + `. Call proposeTrack with up to ${Math.max(1, params.moreOptions.room)} NEW options about the same story, each `
+      + 'different from every one shown: a narrower angle, a related thread or a wider frame. Never reword a shown one. '
+      + 'Write nothing else.'
+    : null;
   // A place the chip resolved, carried for as long as the asking skill keeps
   // resuming. Any other turn starts clean.
   const tappedPlace = placeFromPayload(turn.resolvedChoice?.payload);
@@ -854,7 +902,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
       pendingCards: pendingCardList,
       pendingCard: pendingCard && (skillLoaded !== null ? stagesCards() : cardIsNewest)
-        ? { summary: pendingCard.summary, chooseOne: pendingCard.chooseOne, appliable: pendingCard.appliable }
+        ? { summary: pendingCard.summary, chooseOne: pendingCard.chooseOne, appliable: pendingCard.appliable, multiSelect: pendingCard.multiSelect }
         : null,
       cardThisTurn,
       finerArea: finerArea?.words ?? null,
@@ -875,6 +923,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const messages: { role: 'system' | 'user' | 'assistant' | 'tool'; content: string }[] = [
       { role: 'user', content: `<state>${stateLine}</state>` },
       { role: 'user', content: `<known_facts>\n${formatKnownFacts(state.persona.facts)}\n</known_facts>` },
+      // WHERE THE CHAT WAS OPENED (S2a): the hint only on the route leg, hint
+      // and context on skill legs. Verbatim: the driver escaped its fields.
+      ...(surfaceBlock(state.surfaceContext ?? null, skillLoaded !== null)),
+      // STORIES ALREADY FOLLOWED from cards in this chat (labels are model text).
+      ...((state.followedInChat ?? []).length > 0
+        ? [{
+            role: 'user' as const,
+            content: `user followed: ${(state.followedInChat ?? []).slice(0, 12).map((l) => escapeUntrusted(l, 80)).join(', ')}`,
+          }]
+        : []),
+      // TODAY, on the follow leg: a scope never names an ended year or season.
+      ...(skillLoaded === FOLLOW_STORY_SKILL
+        ? [{ role: 'user' as const, content: `Today: ${new Date((deps.now ?? Date.now)()).toISOString().slice(0, 10)}` }]
+        : []),
       // THE USER'S FILTERS, on legs that can stage a card only:
       // `retire_suppression` must name a real id, and nothing else needs them.
       ...(stagesCards() && (state.activeFilters ?? []).length > 0
@@ -944,7 +1006,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             },
           ]
         : []),
-      { role: 'user', content: escapeUntrusted(userMessage, 2000) },
+      ...(moreOptionsMode ? [] : [{ role: 'user' as const, content: escapeUntrusted(userMessage, 2000) }]),
     ];
     // LAST, so it is the final thing read before the model answers. Not
     // escaped: the harness wrote it, and it is the one message in the turn that
@@ -968,6 +1030,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Once the reference text is in, every later leg of the turn is the answer.
     const answerLegNow = skillLoaded === 'conversation/about-mera' && explainedFrom(toolResultsThisTurn);
     if (answerLegNow) messages.push({ role: 'user', content: aboutMeraAnswerNote(userMessage, state.persona.languageName) });
+    if (moreOptionsNote !== null) messages.push({ role: 'user', content: moreOptionsNote });
 
     const inputTokens =
       estimateTokens(systemPrompt) + messages.reduce((n, m) => n + estimateTokens(m.content), 0);
@@ -992,7 +1055,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // re-load at leg 3 after the other tools had already run. Withholding the
       // tool is stronger than answering it, because a tool the model cannot
       // see is one it cannot spend a leg on.
-      tools: closingLegNow || answerLegNow ? [] : toolsForLeg({
+      tools: moreOptionsMode
+        ? (deps.tools.proposeTrack ? [PROPOSE_TRACK_TOOL] : [])
+        : closingLegNow || answerLegNow ? [] : toolsForLeg({
         skillLoaded,
         forcingProposal: forcingProposalNow,
         wideRouteLeg: !enforceRoute,
@@ -1003,10 +1068,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         explainMera: typeof deps.tools.explainMera === 'function',
         skillTools: skillLoaded === null ? null : skillTools(skillLoaded),
         cards: cardsOffered,
+        tracks: typeof deps.tools.proposeTrack === 'function',
+        searchNews: typeof deps.tools.searchNews === 'function',
         pendingCard: cardThisTurn === null && pendingCard ? { appliable: pendingCard.appliable } : null,
         cardOnRouteLeg: cardIsNewest && index === 0 && !resumedSkill,
       }) as unknown[],
-      toolChoice: forcingProposalNow ? 'required' : 'auto',
+      // More options was asked for by a tap: a card is the answer, and staging
+      // it changes nothing until the user ticks and taps Follow.
+      toolChoice: forcingProposalNow || moreOptionsMode ? 'required' : 'auto',
       // OFF unless the loaded skill says `thinking: true`, and always off on the
       // route leg: measured, thinking on returned empty content on 8 of 10
       // route probes at 8-10s against 0.8-1.0s and a valid answer every time.
@@ -1211,6 +1280,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ? await deps.tools.webSearch({ queries })
             : { error: 'queries must be a non-empty array of strings', searched: false }
           : { error: 'web search is not available', searched: false };
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
+        continue;
+      }
+
+      if (call.name === 'searchNews') {
+        // Mera's own index, from the device. No port method: not declared, so
+        // a call is answered, never run.
+        const query = typeof args.query === 'string' ? args.query.trim().slice(0, 200) : '';
+        if (query) subjectsThisTurn.push(query);
+        const out = deps.tools.searchNews
+          ? query
+            ? await deps.tools.searchNews({ query })
+            : { error: 'query must be a non-empty string' }
+          : { error: 'searchNews is not available' };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1832,6 +1920,34 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
 
+      // ---- FOLLOW A STORY: a card of stories to follow ----------------------
+      // Staged by the device (its parser decides what the card holds); followed
+      // only by the user's ticks and Follow tap, or by a typed yes to a card
+      // with one option. Same one-card-per-turn rule as proposeChanges.
+      if (call.name === 'proposeTrack') {
+        const out: Record<string, unknown> = !deps.tools.proposeTrack
+          ? { error: 'proposeTrack is not available' }
+          : terminatedByChoice || deleteCardOffered || cardThisTurn !== null
+            ? { error: 'One card or question per turn. Ask nothing more.' }
+            : await deps.tools.proposeTrack(args);
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (typeof out.error !== 'string') {
+          proposedSomething = true;
+          cardThisTurn = 'staged';
+          for (const o of Array.isArray(args.options) ? (args.options as Record<string, unknown>[]) : []) {
+            if (typeof o?.label === 'string') subjectsThisTurn.push(o.label);
+          }
+          terminatedByCard = true;
+          turn.lastCard = {
+            proposalId: typeof out.proposalId === 'string' ? out.proposalId : null,
+            skill: skillLoaded ?? FOLLOW_STORY_SKILL,
+            turn: turn.turnNumber,
+          };
+        }
+        continue;
+      }
+
       if (call.name === 'applyProposal' || call.name === 'cancelProposal') {
         const applying: boolean = call.name === 'applyProposal';
         const run = applying ? deps.tools.applyProposal : deps.tools.cancelProposal;
@@ -1873,6 +1989,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
 
     params.onLeg?.(leg);
+
+    // MORE OPTIONS IS ONE LEG, whatever it returned: its prose is discarded,
+    // and a re-ask or a closing leg would spend calls on words nobody reads.
+    if (moreOptionsMode) {
+      if (terminatedByCard) terminalReason = 'awaiting-user';
+      reply = '';
+      break;
+    }
 
     if (terminatedByChoice || terminatedByCard) {
       if (terminalReason === 'settled') terminalReason = 'awaiting-user';
@@ -2151,6 +2275,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    * country you originally come from?" with no card.
    */
   async function offerResolvedPlaceAtEnd(): Promise<void> {
+    if (moreOptionsMode) return;
     if (terminalReason === 'transport-error' || terminalReason === 'awaiting-user') return;
     if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn || askedAboutHome) return;
     if (!aboutOwnHome) return;
@@ -2227,7 +2352,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   }
 
   async function offerCombinedFactSplit(): Promise<string | null> {
-    if (terminalReason === 'transport-error') return null;
+    if (moreOptionsMode || terminalReason === 'transport-error') return null;
     // Never while a question is waiting: the split card used to land under
     // "Which Porto did you mean?" before the move itself was settled (ux1 C1).
     // The resumed turn that answers the question offers it instead.
@@ -2430,7 +2555,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     ? terminalReason
     : null;
   if (
-    skillLoaded !== null
+    !moreOptionsMode
+    && skillLoaded !== null
     && !cleanProse(reply).trim()
     && !proposedSomething
     && !saveAsWrittenOffered

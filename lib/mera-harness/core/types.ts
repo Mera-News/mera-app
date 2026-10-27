@@ -253,6 +253,18 @@ export interface PendingProposalView {
   chooseOne: boolean;
   /** Typed agreement may apply it: one option and no tap-only action. */
   appliable: boolean;
+  /** A follow card with 2 or more options: the user ticks the ones they want. */
+  multiSelect?: boolean;
+}
+
+/** Where the chat was opened and what the user probably wants there. Rendered
+ *  verbatim as `<surface>`: the driver escapes every dynamic field. */
+export interface SurfaceContext {
+  kind: 'persona' | 'article' | 'follow-story' | 'tutorial' | 'optimisation-plan' | 'onboarding';
+  /** One line: the route leg sees only this. */
+  hint: string | null;
+  /** The rest, for skill legs. */
+  context: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -333,6 +345,11 @@ export interface AgentToolPort {
   applyProposal?(): Promise<Record<string, unknown>>;
   /** Drop the waiting card: the user declined. */
   cancelProposal?(): Promise<Record<string, unknown>>;
+  /** Stage a follow card from `options` [{label, search}]. Result carries
+   *  `proposalId`, or `error` when nothing could be staged. */
+  proposeTrack?(args: Record<string, unknown>): Promise<Record<string, unknown>>;
+  /** Mera's own news index for a story the user named. */
+  searchNews?(args: { query: string }): Promise<Record<string, unknown>>;
 }
 
 export interface AgentDeps {

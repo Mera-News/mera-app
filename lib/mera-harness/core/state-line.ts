@@ -50,7 +50,7 @@ export interface StateLineInput {
   /** Several subjects in one message: this leg handles one of them. */
   segmentScope?: { mine: string; others: string[]; questionPending: boolean } | null;
   /** The card waiting for the user, and whether this leg can answer it. */
-  pendingCard?: { summary: string; chooseOne: boolean; appliable: boolean } | null;
+  pendingCard?: { summary: string; chooseOne: boolean; appliable: boolean; multiSelect?: boolean } | null;
   /** A card was staged or answered earlier in THIS turn: the model cannot see
    *  its own earlier calls, so the line says so. */
   cardThisTurn?: 'staged' | 'applied' | 'cancelled' | null;
@@ -171,7 +171,13 @@ export function buildStateLine(input: StateLineInput): string {
     // measured "cool" applying it 4 of 5 and "ok" 5 of 5 when this line said
     // only "agrees to it". The two lists are the literal test.
     parts.push(
-      input.pendingCard.appliable
+      input.pendingCard.multiSelect
+        // A FOLLOW CARD WITH SEVERAL OPTIONS: only their ticks and the Follow
+        // tap follow anything. The phrase matches the follow prompts.
+        ? `${card} It offers stories to follow: the user must tap the ones they want on the card and then tap Follow. `
+          + 'If they agree, say "Tick the ones you want on the card above, then tap Follow." If they decline, call '
+          + 'cancelProposal. Never say anything is followed.'
+        : input.pendingCard.appliable
         ? `${card} Clear agreement applies it: "yes", "do it", "go ahead", "sure", "please do", or the same in `
           + 'any language. Then call applyProposal. "ok", "okay", "cool", "thanks", "nice", "great", "hmm" and the '
           + 'same in any language only acknowledge: call nothing and say "Tap the card above, or say yes to do it." '

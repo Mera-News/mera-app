@@ -103,6 +103,7 @@ const ROUTER_ESCAPE_HATCH = [
 export const KNOWN_SKILL_TOOLS = [
   'find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
   'webSearch', 'explainMera', 'proposeChanges', 'applyProposal', 'cancelProposal',
+  'proposeTrack', 'searchNews',
 ] as const;
 
 /** Router and fact skills run thinking off, so no phrasing that invites a trace. */
