@@ -27,7 +27,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
@@ -142,6 +142,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   // the card up the list.
   const listRef = useRef<FlatList<ChatThreadItem>>(null);
   const displayItems = showHistoryButton ? [HISTORY_ITEM, ...items] : items;
+  // shortcut: a live OS text-size change left every row clipped at its old
+  // height until the chat reopened, so the list remounts on a new font scale
+  // (it lands back at the newest message). Upgrade if rows re-measure in place.
+  const { fontScale } = useWindowDimensions();
   const revealPendingRef = useRef(false);
   const send = useCallback(
     (text: string) => {
@@ -426,6 +430,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     <Conversation>
       <View style={styles.listWrap}>
         <ConversationContent
+          key={`font-${fontScale}`}
           items={displayItems}
           listRef={listRef}
           // Visibility ticks: TranslatableDynamic translates only once it
