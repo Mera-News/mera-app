@@ -28,9 +28,6 @@ import { dismissTrackCard, followTickedOptions, loadMoreTrackOptions } from './t
 import { MAX_TRACK_CARD_OPTIONS, normaliseTrackText, trackCardStatus, type TrackOutcome } from './track-options';
 import type { TrackCardSource } from './types';
 
-// The new copy is not in the typed dictionaries until the locale splice lands: cast.
-type Tk = (key: string, options?: Record<string, unknown>) => string;
-
 // A touch frame is a NUMBER: a NativeWind class like h-11 renders ~38pt here.
 const FRAME = 44;
 const STACK_FONT_SCALE = 1.3;
@@ -49,7 +46,7 @@ const isDone = (o: TrackOutcome | undefined) => o === 'following' || o === 'alre
 const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const styles = useStyles();
   const colors = useColors();
-  const tk = useTranslation().t as unknown as Tk;
+  const { t } = useTranslation();
   const isGenerating = useFloatingChatIsGenerating();
   const storedTicks = useFloatingChatStore((s) => s.trackTicks[proposal.id]);
   const moreState = useFloatingChatStore((s) => s.trackMore[proposal.id]);
@@ -96,16 +93,16 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     const done = ticked.filter((r) => isDone(result?.outcomes[r.key])).length;
     const line =
       done === labels.length
-        ? tk('trackedStories.followingAll', { count: done })
+        ? t('trackedStories.followingAll', { count: done })
         : done > 0
-          ? tk('trackedStories.followingSome', { done, count: labels.length })
-          : tk('trackedStories.followFailedAll');
+          ? t('trackedStories.followingSome', { done, count: labels.length })
+          : t('trackedStories.followFailedAll');
     AccessibilityInfo.announceForAccessibility(line);
     if (done > 0) void hapticSuccess();
   };
 
   const more = async () => {
-    AccessibilityInfo.announceForAccessibility(tk('trackedStories.moreOptionsLoading'));
+    AccessibilityInfo.announceForAccessibility(t('trackedStories.moreOptionsLoading'));
     const before = rows.length;
     const res = await loadMoreTrackOptions(source, proposal);
     // The grown proposal arrives with the next render: focus the first new row there.
@@ -124,7 +121,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
     onGrown?.();
     // After the focus change has spoken the row: an announcement sent with it is cut off.
-    const added = tk('trackedStories.moreOptionsAdded', { count: pendingGrow.added });
+    const added = t('trackedStories.moreOptionsAdded', { count: pendingGrow.added });
     setTimeout(() => AccessibilityInfo.announceForAccessibility(added), ANNOUNCE_AFTER_FOCUS_MS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingGrow, rows.length]);
@@ -135,7 +132,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
         <View style={styles.headerRow}>
           <MaterialIcons {...DECORATIVE_ICON_A11Y} name="cancel" size={16} color={colors.ink3} />
           <Text size="sm" style={styles.mutedText}>
-            {tk('articleFeedback.proposalCancel')}
+            {t('articleFeedback.proposalCancel')}
           </Text>
         </View>
       </View>
@@ -153,10 +150,10 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
 
   const followLabel =
     ticked.length === 0
-      ? tk('trackedStories.follow')
+      ? t('trackedStories.follow')
       : anyFailed
-        ? tk('trackedStories.tryAgain')
-        : tk('trackedStories.followTicked', { count: ticked.length });
+        ? t('trackedStories.tryAgain')
+        : t('trackedStories.followTicked', { count: ticked.length });
   const followDisabled = ticked.length === 0;
   const stacked =
     PixelRatio.getFontScale() >= STACK_FONT_SCALE || wrapped.follow === true || wrapped.cancel === true;
@@ -173,15 +170,15 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const labelText = (r: { label: string; key: string }) =>
     shown[r.key] ?? r.label;
   const spoken = (r: { label: string; key: string }) =>
-    shownFailed[r.key] ? `${labelText(r)}. ${tk('feed.translationFailed')}` : labelText(r);
+    shownFailed[r.key] ? `${labelText(r)}. ${t('feed.translationFailed')}` : labelText(r);
 
   const outcomeText = (o: TrackOutcome | undefined) =>
     o === 'following'
-      ? tk('trackedStories.rowFollowing')
+      ? t('trackedStories.rowFollowing')
       : o === 'already'
-        ? tk('trackedStories.rowAlready')
+        ? t('trackedStories.rowAlready')
         : o === 'failed'
-          ? tk('trackedStories.rowFailed')
+          ? t('trackedStories.rowFailed')
           : null;
 
   const labelNode = (r: { label: string; key: string }, muted: boolean) => (
@@ -207,7 +204,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
           onPress={() => toggle(r.key)}
           accessibilityRole="checkbox"
           accessibilityState={{ checked }}
-          accessibilityLabel={failed ? `${spoken(r)}. ${tk('trackedStories.rowFailed')}` : spoken(r)}
+          accessibilityLabel={failed ? `${spoken(r)}. ${t('trackedStories.rowFailed')}` : spoken(r)}
           style={styles.frame}
           visualStyle={styles.row}
         >
@@ -222,7 +219,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
             {labelNode(r, false)}
             {failed && (
               <Text size="xs" style={styles.failedText}>
-                {tk('trackedStories.rowFailed')}
+                {t('trackedStories.rowFailed')}
               </Text>
             )}
           </View>
@@ -254,12 +251,12 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   };
 
   const footer = (() => {
-    if (expired) return { icon: null, text: tk('trackedStories.optionsExpired') };
+    if (expired) return { icon: null, text: t('trackedStories.optionsExpired') };
     if (!hasOutcomes) return null;
-    if (doneCount === 0) return { icon: 'error-outline' as const, text: tk('trackedStories.followFailedAll') };
+    if (doneCount === 0) return { icon: 'error-outline' as const, text: t('trackedStories.followFailedAll') };
     if (failedCount > 0)
-      return { icon: 'info-outline' as const, text: tk('trackedStories.followingSome', { done: doneCount, count: doneCount + failedCount }) };
-    return { icon: 'check-circle' as const, text: tk('trackedStories.followingAll', { count: doneCount }) };
+      return { icon: 'info-outline' as const, text: t('trackedStories.followingSome', { done: doneCount, count: doneCount + failedCount }) };
+    return { icon: 'check-circle' as const, text: t('trackedStories.followingAll', { count: doneCount }) };
   })();
 
   const followButton = (
@@ -294,7 +291,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
         style={styles.secondaryLabel}
         onTextLayout={noteWrap('cancel')}
       >
-        {tk('articleFeedback.proposalCancel')}
+        {t('articleFeedback.proposalCancel')}
       </Text>
     </Pressable>
   );
@@ -304,7 +301,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
       <View style={styles.headerRow}>
         <MaterialIcons {...DECORATIVE_ICON_A11Y} name="track-changes" size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>
-          {tk('trackedStories.cardTitle')}
+          {t('trackedStories.cardTitle')}
         </Text>
       </View>
 
@@ -318,13 +315,13 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
           onPress={more}
           accessibilityRole="button"
           accessibilityState={{ disabled: false }}
-          accessibilityLabel={tk('trackedStories.moreOptions')}
+          accessibilityLabel={t('trackedStories.moreOptions')}
           style={styles.frame}
           visualStyle={styles.moreRow}
         >
           <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-circle-outline" size={18} color={colors.accentText} />
           <Text size="sm" style={styles.moreText}>
-            {tk('trackedStories.moreOptions')}
+            {t('trackedStories.moreOptions')}
           </Text>
         </GlyphSafeButton>
       )}
@@ -332,24 +329,24 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
         <View
           testID="track-more-loading"
           accessible
-          accessibilityLabel={tk('trackedStories.moreOptionsLoading')}
+          accessibilityLabel={t('trackedStories.moreOptionsLoading')}
           accessibilityState={{ busy: true }}
           style={[styles.frame, styles.moreRow]}
         >
           <ActivityIndicator size="small" color={colors.accentMark} />
           <Text size="sm" style={styles.mutedText}>
-            {tk('trackedStories.moreOptionsLoading')}
+            {t('trackedStories.moreOptionsLoading')}
           </Text>
         </View>
       )}
       {pending && moreState === 'none' && (
         <Text size="xs" style={styles.mutedText}>
-          {tk('trackedStories.moreOptionsNone')}
+          {t('trackedStories.moreOptionsNone')}
         </Text>
       )}
       {pending && moreState === 'failed' && (
         <Text size="xs" style={styles.mutedText}>
-          {tk('trackedStories.moreOptionsFailed')}
+          {t('trackedStories.moreOptionsFailed')}
         </Text>
       )}
 

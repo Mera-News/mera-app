@@ -273,8 +273,7 @@ export function stepTables(t: TFn) {
     'skillPhrase.origin': t('skillPhrase.origin'),
     'skillPhrase.family': t('skillPhrase.family'),
     'skillPhrase.feedTuning': t('skillPhrase.feedTuning'),
-    // Not in the dictionaries yet (spliced later): cast until it is typed.
-    'skillPhrase.followStory': (t as unknown as (key: string) => string)('skillPhrase.followStory'),
+    'skillPhrase.followStory': t('skillPhrase.followStory'),
   };
 
   const CONSEQUENCE: Record<string, string> = {
