@@ -1209,7 +1209,8 @@
     "actionUnpinTopic": "Unpin a topic",
     "actionRetireTopic": "Retire a topic",
     "actionRetireSuppression": "Remove a filter",
-    "chooseOneHint": "Pick one option"
+    "chooseOneHint": "Pick one option",
+    "actionSetFactPlaces": "Change where news for this comes from"
   },
   "publicationVisits": {
     "badge_one": "You've visited {{publication}} once in the last 30 days",

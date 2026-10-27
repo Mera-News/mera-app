@@ -796,7 +796,8 @@
     "actionUnpinTopic": "Desafixar um tópico",
     "actionRetireTopic": "Encerrar um tópico",
     "actionRetireSuppression": "Remover um filtro",
-    "chooseOneHint": "Escolha uma opção"
+    "chooseOneHint": "Escolha uma opção",
+    "actionSetFactPlaces": "Mudar de onde vêm as notícias sobre isso"
   },
   "publicationVisits": {
     "badge_one": "Você visitou {{publication}} uma vez nos últimos 30 dias",

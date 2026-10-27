@@ -796,7 +796,8 @@
     "actionUnpinTopic": "Dejar de fijar un tema",
     "actionRetireTopic": "Retirar un tema",
     "actionRetireSuppression": "Quitar un filtro",
-    "chooseOneHint": "Elige una opción"
+    "chooseOneHint": "Elige una opción",
+    "actionSetFactPlaces": "Cambiar de dónde vienen las noticias sobre esto"
   },
   "publicationVisits": {
     "badge_one": "Has visitado {{publication}} una vez en los últimos 30 días",

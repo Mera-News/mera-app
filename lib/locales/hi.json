@@ -796,7 +796,8 @@
     "actionUnpinTopic": "किसी विषय को अनपिन करें",
     "actionRetireTopic": "किसी विषय को रिटायर करें",
     "actionRetireSuppression": "कोई फ़िल्टर हटाएं",
-    "chooseOneHint": "एक विकल्प चुनें"
+    "chooseOneHint": "एक विकल्प चुनें",
+    "actionSetFactPlaces": "बदलें कि इसकी खबरें कहां से आती हैं"
   },
   "publicationVisits": {
     "badge_one": "आपने पिछले 30 दिनों में {{publication}} एक बार देखा",

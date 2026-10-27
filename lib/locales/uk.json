@@ -828,7 +828,8 @@
     "actionUnpinTopic": "Відкріпити тему",
     "actionRetireTopic": "Деактивувати тему",
     "actionRetireSuppression": "Вилучити фільтр",
-    "chooseOneHint": "Оберіть один варіант"
+    "chooseOneHint": "Оберіть один варіант",
+    "actionSetFactPlaces": "Змінити, звідки надходять новини про це"
   },
   "publicationVisits": {
     "badge_one": "Ви відвідали {{publication}} один раз за останні 30 днів",

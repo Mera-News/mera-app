@@ -801,7 +801,8 @@
     "actionUnpinTopic": "Désépingler un sujet",
     "actionRetireTopic": "Retirer un sujet",
     "actionRetireSuppression": "Supprimer un filtre",
-    "chooseOneHint": "Choisissez une option"
+    "chooseOneHint": "Choisissez une option",
+    "actionSetFactPlaces": "Changer d'où viennent les actualités sur ce sujet"
   },
   "publicationVisits": {
     "badge_one": "Vous avez visité {{publication}} une fois ces 30 derniers jours",

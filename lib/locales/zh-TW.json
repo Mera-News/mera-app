@@ -789,7 +789,8 @@
     "actionUnpinTopic": "取消釘選某個主題",
     "actionRetireTopic": "停用某個主題",
     "actionRetireSuppression": "移除一個篩選",
-    "chooseOneHint": "請選擇一項"
+    "chooseOneHint": "請選擇一項",
+    "actionSetFactPlaces": "變更此內容的新聞來源地區"
   },
   "publicationVisits": {
     "badge_one": "過去 30 天內您造訪了 {{publication}} 1 次",

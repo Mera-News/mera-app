@@ -789,7 +789,8 @@
     "actionUnpinTopic": "Bỏ ghim một chủ đề",
     "actionRetireTopic": "Ngừng theo dõi một chủ đề",
     "actionRetireSuppression": "Xóa bộ lọc",
-    "chooseOneHint": "Chọn một tùy chọn"
+    "chooseOneHint": "Chọn một tùy chọn",
+    "actionSetFactPlaces": "Đổi nơi lấy tin về điều này"
   },
   "publicationVisits": {
     "badge_one": "Bạn đã ghé thăm {{publication}} một lần trong 30 ngày qua",

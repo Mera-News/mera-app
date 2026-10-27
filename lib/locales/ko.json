@@ -789,7 +789,8 @@
     "actionUnpinTopic": "주제 고정 해제",
     "actionRetireTopic": "주제 제거",
     "actionRetireSuppression": "필터 제거",
-    "chooseOneHint": "옵션 하나 선택"
+    "chooseOneHint": "옵션 하나 선택",
+    "actionSetFactPlaces": "이 소식의 지역 변경"
   },
   "publicationVisits": {
     "badge_one": "지난 30일 동안 {{publication}}을(를) {{count}}회 방문하셨습니다",

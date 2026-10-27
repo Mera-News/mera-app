@@ -796,7 +796,8 @@
     "actionUnpinTopic": "Een onderwerp losmaken",
     "actionRetireTopic": "Een onderwerp verwijderen",
     "actionRetireSuppression": "Een filter verwijderen",
-    "chooseOneHint": "Kies één optie"
+    "chooseOneHint": "Kies één optie",
+    "actionSetFactPlaces": "Wijzig waar het nieuws hierover vandaan komt"
   },
   "publicationVisits": {
     "badge_one": "Je hebt {{publication}} één keer bezocht in de afgelopen 30 dagen",

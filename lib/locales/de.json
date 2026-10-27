@@ -796,7 +796,8 @@
     "actionUnpinTopic": "Ein Thema loslösen",
     "actionRetireTopic": "Ein Thema stilllegen",
     "actionRetireSuppression": "Eine Filterung entfernen",
-    "chooseOneHint": "Eine Option auswählen"
+    "chooseOneHint": "Eine Option auswählen",
+    "actionSetFactPlaces": "Ändern, woher die Nachrichten dazu kommen"
   },
   "publicationVisits": {
     "badge_one": "Du hast {{publication}} in den letzten 30 Tagen einmal besucht",

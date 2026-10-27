@@ -790,7 +790,8 @@
     "actionUnpinTopic": "เลิกปักหมุดหัวข้อ",
     "actionRetireTopic": "ปิดใช้งานหัวข้อ",
     "actionRetireSuppression": "ลบตัวกรอง",
-    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก"
+    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก",
+    "actionSetFactPlaces": "เปลี่ยนแหล่งที่มาของข่าวเรื่องนี้"
   },
   "publicationVisits": {
     "badge_one": "คุณเยี่ยมชม {{publication}} หนึ่งครั้งในช่วง 30 วันที่ผ่านมา",

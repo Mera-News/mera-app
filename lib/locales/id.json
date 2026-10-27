@@ -789,7 +789,8 @@
     "actionUnpinTopic": "Lepas sematan suatu topik",
     "actionRetireTopic": "Hentikan suatu topik",
     "actionRetireSuppression": "Hapus filter",
-    "chooseOneHint": "Pilih salah satu opsi"
+    "chooseOneHint": "Pilih salah satu opsi",
+    "actionSetFactPlaces": "Ubah asal berita untuk ini"
   },
   "publicationVisits": {
     "badge_one": "Anda mengunjungi {{publication}} sekali dalam 30 hari terakhir",

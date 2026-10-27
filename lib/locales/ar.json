@@ -860,7 +860,8 @@
     "actionUnpinTopic": "إلغاء تثبيت موضوع",
     "actionRetireTopic": "إنهاء موضوع",
     "actionRetireSuppression": "إزالة مرشح",
-    "chooseOneHint": "اختر خيارًا واحدًا"
+    "chooseOneHint": "اختر خيارًا واحدًا",
+    "actionSetFactPlaces": "تغيير مصدر الأخبار لهذا"
   },
   "publicationVisits": {
     "badge_one": "زرت {{publication}} مرة واحدة في آخر 30 يومًا",

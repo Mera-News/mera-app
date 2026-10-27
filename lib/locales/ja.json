@@ -789,7 +789,8 @@
     "actionUnpinTopic": "トピックのピン留めを解除する",
     "actionRetireTopic": "トピックを停止する",
     "actionRetireSuppression": "フィルターを削除",
-    "chooseOneHint": "1つ選んでください"
+    "chooseOneHint": "1つ選んでください",
+    "actionSetFactPlaces": "このニュースの対象地域を変更"
   },
   "publicationVisits": {
     "badge_one": "過去30日間に{{publication}}を1回訪問しました",

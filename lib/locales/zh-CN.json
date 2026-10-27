@@ -789,7 +789,8 @@
     "actionUnpinTopic": "取消置顶某个主题",
     "actionRetireTopic": "停用某个主题",
     "actionRetireSuppression": "移除一个过滤",
-    "chooseOneHint": "请选择一项"
+    "chooseOneHint": "请选择一项",
+    "actionSetFactPlaces": "更改此内容的新闻来源地区"
   },
   "publicationVisits": {
     "badge_one": "过去30天内您访问了 {{publication}} 1次",

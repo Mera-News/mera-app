@@ -828,7 +828,8 @@
     "actionUnpinTopic": "Открепить тему",
     "actionRetireTopic": "Отключить тему",
     "actionRetireSuppression": "Убрать фильтр",
-    "chooseOneHint": "Выберите один вариант"
+    "chooseOneHint": "Выберите один вариант",
+    "actionSetFactPlaces": "Изменить, откуда приходят новости об этом"
   },
   "publicationVisits": {
     "badge_one": "Вы посетили {{publication}} один раз за последние 30 дней",

@@ -796,7 +796,8 @@
     "actionUnpinTopic": "Konunun sabitini kaldır",
     "actionRetireTopic": "Konuyu emekliye ayır",
     "actionRetireSuppression": "Filtreyi kaldır",
-    "chooseOneHint": "Bir seçenek seç"
+    "chooseOneHint": "Bir seçenek seç",
+    "actionSetFactPlaces": "Bununla ilgili haberlerin nereden geleceğini değiştir"
   },
   "publicationVisits": {
     "badge_one": "Son 30 günde {{publication}} yayınını bir kez ziyaret ettin",

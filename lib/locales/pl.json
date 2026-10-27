@@ -828,7 +828,8 @@
     "actionUnpinTopic": "Odepnij temat",
     "actionRetireTopic": "Wycofaj temat",
     "actionRetireSuppression": "Usunę filtr",
-    "chooseOneHint": "Wybierz jedną opcję"
+    "chooseOneHint": "Wybierz jedną opcję",
+    "actionSetFactPlaces": "Zmień, skąd pochodzą wiadomości na ten temat"
   },
   "publicationVisits": {
     "badge_one": "Odwiedziłeś {{publication}} raz w ciągu ostatnich 30 dni",
