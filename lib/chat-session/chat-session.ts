@@ -22,7 +22,8 @@ import type { ChatAgent, OnDeviceAgent } from '@/lib/llm/agents/on-device/types'
 import logger from '@/lib/logger';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import type { ChatEngine } from './engine';
+import type { ProposalAction } from '@/lib/news-harness/core/types';
+import { MAX_FOLLOW_OPTIONS, type ChatEngine, type MoreOptionsResult } from './engine';
 import { resetLocalChat, useLocalChatStore } from './local-chat-store';
 import { toPersist } from './persist';
 
@@ -156,6 +157,38 @@ export function attachChatSession(opts: AttachOptions): ChatEngine {
 export function stopChatTurn(): void {
     if (!live || !busyNow()) return;
     live.engine.stop();
+}
+
+/** The live engine can grow a follow card. The card hides "More options" when not. */
+export function canRequestMoreOptions(): boolean {
+    return typeof live?.engine.moreOptions === 'function';
+}
+
+/**
+ * "More options" on a follow card, built from the card alone: its effective
+ * options (grown ones included) and their subject. Never throws.
+ */
+export async function requestMoreOptions(
+    proposalId: string,
+    cardActions: readonly ProposalAction[],
+): Promise<MoreOptionsResult> {
+    const tracks = cardActions.filter(
+        (a): a is Extract<ProposalAction, { type: 'track_story' }> => a.type === 'track_story',
+    );
+    const room = MAX_FOLLOW_OPTIONS - tracks.length;
+    const engine = live?.engine;
+    if (tracks.length === 0 || room < 1 || !engine?.moreOptions) return { actions: [], reason: 'none' };
+    try {
+        return await engine.moreOptions({
+            proposalId,
+            shown: tracks.map((a) => ({ label: a.label, searchText: a.searchText })),
+            room,
+            subject: tracks[0].subject,
+        });
+    } catch (err) {
+        logger.warn('[chat-session] moreOptions threw', { error: String(err) });
+        return { actions: [], reason: 'failed' };
+    }
 }
 
 /**
