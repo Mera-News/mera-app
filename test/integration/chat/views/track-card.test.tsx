@@ -6,7 +6,7 @@
 // test registers a bundle whose every string is its own key; assertions read keys.
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 import React from 'react';
-import { AccessibilityInfo, StyleSheet } from 'react-native';
+import { AccessibilityInfo, PixelRatio, StyleSheet } from 'react-native';
 import { growTrackCard } from '@/components/custom/floating-chat/track-card-actions';
 import TrackStoryCard from '@/components/custom/floating-chat/TrackStoryCard';
 import { deriveThreadItems } from '@/components/custom/floating-chat/deriveThreadItems';
@@ -204,7 +204,7 @@ describe('More options', () => {
     expect(frameHeight(view.getByTestId('track-more-loading'))).toBeGreaterThanOrEqual(44);
   });
 
-  it('new options land unticked, focus moves to the first, then it announces and scrolls', async () => {
+  it('new options land unticked, focus moves to the first and it scrolls, then it announces after the focus has spoken', async () => {
     const order: string[] = [];
     const focus = jest.spyOn(AccessibilityInfo, 'setAccessibilityFocus').mockImplementation(() => void order.push('focus'));
     (AccessibilityInfo.announceForAccessibility as jest.Mock).mockImplementation((s: string) => void order.push(s));
@@ -221,7 +221,8 @@ describe('More options', () => {
     expect(checked(view, 2)).toBe(false);
     await waitFor(() => expect(onGrown).toHaveBeenCalled());
     expect(focus).toHaveBeenCalledWith(77);
-    expect(order.filter((o) => o !== key('moreOptionsLoading'))).toEqual(['focus', 'trackedStories.moreOptionsAdded_other:2', 'grown']);
+    await waitFor(() => expect(order).toContain('trackedStories.moreOptionsAdded_other:2'), { timeout: 2000 });
+    expect(order.filter((o) => o !== key('moreOptionsLoading'))).toEqual(['focus', 'grown', 'trackedStories.moreOptionsAdded_other:2']);
   });
 
   it.each([
@@ -306,5 +307,20 @@ describe('accessibility and touch frames', () => {
     for (const id of ['track-option-0', 'track-option-1', 'track-more', 'track-follow', 'track-not-now']) {
       expect(frameHeight(view.getByTestId(id))).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  it('buttons stack once a label wraps and stay stacked when the stacked label fits', async () => {
+    // The jest preset reports a font scale of 2, which stacks on its own.
+    jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(1);
+    const { view } = await mount(['Artemis II launch', 'Moon race']);
+    // Side by side, each button takes half the row (flex 1); stacked, it does not.
+    const sideBySide = () => (flatten(view.getByTestId('track-follow')) as { flex?: number }).flex === 1;
+    const label = () => view.getByText('trackedStories.followTicked_one:1');
+    expect(sideBySide()).toBe(true);
+
+    fireEvent(label(), 'textLayout', { nativeEvent: { lines: [{}, {}] } });
+    expect(sideBySide()).toBe(false);
+    fireEvent(label(), 'textLayout', { nativeEvent: { lines: [{}] } });
+    expect(sideBySide()).toBe(false);
   });
 });

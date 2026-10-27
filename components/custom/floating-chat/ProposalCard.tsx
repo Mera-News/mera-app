@@ -443,7 +443,6 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       >
         {proposal.actions.map((action, idx) => {
           const row = actionToRow(action);
-          const showLabel = true;
           const selected = chooseOne && idx === selectedIndex;
           const rowIcon: keyof typeof MaterialIcons.glyphMap = chooseOne
             ? selected
@@ -454,11 +453,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             <>
               <MaterialIcons {...DECORATIVE_ICON_A11Y} name={rowIcon} size={16} color={colors.accentMark} style={styles.actionIcon} />
               <View style={styles.actionBody}>
-                {showLabel && (
-                  <Text size="xs" bold style={styles.actionLabel}>
-                    {t(row.labelKey as TKey)}
-                  </Text>
-                )}
+                <Text size="xs" bold style={styles.actionLabel}>
+                  {t(row.labelKey as TKey)}
+                </Text>
                 {row.heading &&
                   (row.translateHeading ? (
                     <TranslatableDynamic
@@ -508,7 +505,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
                 accessibilityLabel={[
-                  showLabel ? t(row.labelKey as TKey) : null,
+                  t(row.labelKey as TKey),
                   row.heading ? (shownText[`h${idx}`] ?? row.heading) : null,
                   row.chip ? t(row.chip.key as TKey) : null,
                   row.detail ? (shownText[`d${idx}`] ?? row.detail) : null,

@@ -34,6 +34,8 @@ type Tk = (key: string, options?: Record<string, unknown>) => string;
 // A touch frame is a NUMBER: a NativeWind class like h-11 renders ~38pt here.
 const FRAME = 44;
 const STACK_FONT_SCALE = 1.3;
+/** shortcut: a fixed wait for VoiceOver to read the focused row; tune from the device capture. */
+const ANNOUNCE_AFTER_FOCUS_MS = 700;
 
 interface Props {
   proposal: StagedProposal;
@@ -120,8 +122,10 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     setPendingGrow(null);
     const tag = findNodeHandle(node as never);
     if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
-    AccessibilityInfo.announceForAccessibility(tk('trackedStories.moreOptionsAdded', { count: pendingGrow.added }));
     onGrown?.();
+    // After the focus change has spoken the row: an announcement sent with it is cut off.
+    const added = tk('trackedStories.moreOptionsAdded', { count: pendingGrow.added });
+    setTimeout(() => AccessibilityInfo.announceForAccessibility(added), ANNOUNCE_AFTER_FOCUS_MS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingGrow, rows.length]);
 
@@ -156,6 +160,11 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const followDisabled = ticked.length === 0;
   const stacked =
     PixelRatio.getFontScale() >= STACK_FONT_SCALE || wrapped.follow === true || wrapped.cancel === true;
+  // LATCHED: once a label wrapped side by side the buttons stay stacked. Unlatched,
+  // the stacked label fits on one line, unstacks, wraps again and flips every layout.
+  const noteWrap = (which: 'follow' | 'cancel') => (e: { nativeEvent: { lines: unknown[] } }) => {
+    if (e.nativeEvent.lines.length > 1) setWrapped((p) => (p[which] ? p : { ...p, [which]: true }));
+  };
 
   const noteShown = (key: string) => (st: { displayedText: string; translationFailed: boolean }) => {
     setShown((p) => (p[key] === st.displayedText ? p : { ...p, [key]: st.displayedText }));
@@ -259,14 +268,14 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
       onPress={follow}
       disabled={followDisabled || busy}
       accessibilityRole="button"
-      accessibilityState={{ disabled: followDisabled }}
+      accessibilityState={{ disabled: followDisabled || busy }}
       style={[styles.button, followDisabled ? styles.buttonDisabled : styles.buttonPrimary, !stacked && styles.buttonFlex]}
     >
       <Text
         size="sm"
         bold
         style={followDisabled ? styles.disabledLabel : styles.primaryLabel}
-        onTextLayout={(e) => setWrapped((p) => ({ ...p, follow: e.nativeEvent.lines.length > 1 }))}
+        onTextLayout={noteWrap('follow')}
       >
         {followLabel}
       </Text>
@@ -283,7 +292,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
       <Text
         size="sm"
         style={styles.secondaryLabel}
-        onTextLayout={(e) => setWrapped((p) => ({ ...p, cancel: e.nativeEvent.lines.length > 1 }))}
+        onTextLayout={noteWrap('cancel')}
       >
         {tk('articleFeedback.proposalCancel')}
       </Text>
