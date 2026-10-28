@@ -11,8 +11,13 @@ jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-devic
 jest.mock('@dr.pogodin/react-native-fs', () => ({
   getFSInfo: (...args: any[]) => mockGetFSInfo(...args),
 }));
+jest.mock('expo-file-system/legacy', () => ({
+  getFreeDiskStorageAsync: (...args: any[]) => mockGetFreeDiskStorage(...args),
+}));
 
 const mockGetFSInfo = jest.fn();
+// The volume's capacity for important usage: what iOS will free for a download.
+const mockGetFreeDiskStorage = jest.fn();
 
 const mockDevice = {
   totalMemory: 8 * 1024 * 1024 * 1024, // 8 GB
@@ -53,6 +58,7 @@ describe('checkRequirements', () => {
     mockDevice.osVersion = '17.0';
     mockDevice.modelId = 'iPhone15,2';
     mockDevice.platformApiLevel = null;
+    mockGetFreeDiskStorage.mockResolvedValue(ENOUGH_STORAGE);
     mockGetFSInfo.mockResolvedValue({ freeSpace: ENOUGH_STORAGE });
     installOnDeviceLlm({ availability: { available: true, reason: null } });
   });
@@ -127,7 +133,7 @@ describe('checkRequirements', () => {
     });
 
     it('includes deviceInfo with freeStorageGB', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: 4 * GB });
+      mockGetFreeDiskStorage.mockResolvedValue(4 * GB);
       const result = await checkRequirements();
       expect(result.deviceInfo.freeStorageGB).toBeCloseTo(4, 0);
     });
@@ -274,7 +280,7 @@ describe('checkRequirements', () => {
 
   describe('storage check (only the bytes still to download count)', () => {
     it('fails when free storage is below what is missing plus the 0.5 GB margin, in decimal GB', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: 3_000_000_000 });
+      mockGetFreeDiskStorage.mockResolvedValue(3_000_000_000);
       const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
       expect(result.supported).toBe(false);
       expect(result.failedCheck).toBe('storage');
@@ -283,19 +289,28 @@ describe('checkRequirements', () => {
     });
 
     it('passes with exactly what is missing plus the margin', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: KEV_ONLY + 500_000_000 });
+      mockGetFreeDiskStorage.mockResolvedValue(KEV_ONLY + 500_000_000);
       const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
       expect(result.failedCheck).not.toBe('storage');
     });
 
     it('never fails on storage once nothing is left to download, however full the phone is', async () => {
-      mockGetFSInfo.mockResolvedValue({ freeSpace: 1_000 });
+      mockGetFreeDiskStorage.mockResolvedValue(1_000);
       expect((await checkRequirements()).supported).toBe(true);
       expect((await checkRequirements({ bytesToDownload: 0 })).supported).toBe(true);
     });
 
-    it('skips storage check when getFSInfo throws', async () => {
-      mockGetFSInfo.mockRejectedValue(new Error('FS unavailable'));
+    it('counts space iOS would free for a download, not only the plain free space (MERA-APP-93)', async () => {
+      // NSFileSystemFreeSize leaves out purgeable space: a phone with hundreds of GB available read as full.
+      mockGetFSInfo.mockResolvedValue({ freeSpace: 1_000_000_000 });
+      mockGetFreeDiskStorage.mockResolvedValue(300_000_000_000);
+      const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
+      expect(result.failedCheck).not.toBe('storage');
+      expect(result.deviceInfo.freeStorageGB).toBe(300);
+    });
+
+    it('skips storage check when the free-space read throws', async () => {
+      mockGetFreeDiskStorage.mockRejectedValue(new Error('FS unavailable'));
       const result = await checkRequirements({ bytesToDownload: KEV_ONLY });
       expect(result.deviceInfo.freeStorageGB).toBeNull();
       expect(result.failedCheck).not.toBe('storage');

@@ -703,7 +703,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Préparation",
     "statusReady": "Prêt",
-    "statusError": "Erreur"
+    "statusError": "Erreur",
+    "turnNoAnswer": "Je n'ai pas pu faire ça. Essaie de me le demander autrement.",
+    "turnFailed": "Ma réponse ne s'est pas terminée. Réessaie."
   },
   "personaChat": {
     "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle.\n\nPour trouver des actualités qui vous intéressent vraiment, j'ai besoin de connaître quelques détails vous concernant. Où vous vivez, ce que vous faites, les loisirs que vous aimez, les actions que vous suivez, où vit votre famille. Partagez ce que vous voulez, un peu ou beaucoup.\n\nSi cela vous fait hésiter, c'est un bon instinct. Il n'est pas judicieux de confier des données personnelles à une société d'applications. Mera est construite différemment : tout ce que vous me dites est enregistré sur votre appareil, pas sur nos serveurs. Demandez-moi comment cela fonctionne, ou dites « Aidez-moi à configurer » et nous commencerons."
@@ -743,7 +745,6 @@
     "topicGenFailed": "Impossible de générer les sujets.",
     "topicGenRetry": "Réessayer",
     "aiUsageNoticeGeneral": "Mera peut se tromper, alors vérifie tout ce qui est important.",
-    "trackChooseHint": "Choisis ce que tu veux suivre",
     "factDeletePendingTitle": "Sera supprimé de votre profil",
     "saveAsWritten": "Enregistrer tel que je l'ai écrit",
     "factDeleteRemove": "Supprimer",
@@ -1032,7 +1033,6 @@
     "updatesBadge": "{{count}} nouveau(x)",
     "endedLabel": "Terminée",
     "trackChatSeed": "Je veux suivre cette actualité.",
-    "trackProposalTitle": "Suivre cette actualité ?",
     "alreadyTrackingTitle": "Vous suivez déjà ceci",
     "alreadyTrackingBody": "Vous ne pouvez pas suivre cette actualité deux fois. L'arrêter supprimerait tout ce qui est enregistré pour elle.",
     "goToStoryAction": "Aller à l'actualité",
@@ -1053,7 +1053,27 @@
     "stopFollowingConfirmTitle": "Arrêter de suivre cette histoire ?",
     "updatedAgo": "mis à jour {{time}}",
     "articlesCount_one": "{{count}} article",
-    "articlesCount_other": "{{count}} articles"
+    "articlesCount_other": "{{count}} articles",
+    "cardTitle": "Choisissez les actualités à suivre",
+    "moreOptions": "Plus d'options",
+    "moreOptionsLoading": "Recherche d'autres options",
+    "moreOptionsAdded_one": "1 option de plus ajoutée",
+    "moreOptionsAdded_other": "{{count}} options de plus ajoutées",
+    "moreOptionsNone": "Aucune nouvelle actualité trouvée",
+    "moreOptionsFailed": "Impossible de charger d'autres options. Réessayez.",
+    "follow": "Suivre",
+    "followTicked_one": "Suivre 1 actualité",
+    "followTicked_other": "Suivre {{count}} actualités",
+    "tryAgain": "Réessayer",
+    "rowFollowing": "Suivie",
+    "rowAlready": "Déjà suivie",
+    "rowFailed": "Échec du suivi",
+    "followingAll_one": "Vous suivez 1 actualité",
+    "followingAll_other": "Vous suivez {{count}} actualités",
+    "followingSome_one": "Vous suivez {{done}} sur {{count}} actualité",
+    "followingSome_other": "Vous suivez {{done}} sur {{count}} actualités",
+    "followFailedAll": "Impossible de suivre ces actualités. Vérifiez votre connexion et réessayez.",
+    "optionsExpired": "Options expirées"
   },
   "whatsNew": {
     "gotIt": "Compris",
@@ -2558,7 +2578,8 @@
     "interests": "tes centres d'intérêt",
     "origin": "d'où tu viens",
     "family": "ta famille",
-    "feedTuning": "votre fil"
+    "feedTuning": "votre fil",
+    "followStory": "l'actualité à suivre"
   },
   "askChoice": {
     "answeredA11y": "déjà répondu",
@@ -3040,7 +3061,8 @@
   },
   "meraDraft": {
     "changeInterest": "Changer mon centre d'intérêt \"{{statement}}\" en ",
-    "removeInterest": "Supprimer mon centre d'intérêt \"{{statement}}\""
+    "removeInterest": "Supprimer mon centre d'intérêt \"{{statement}}\"",
+    "followStory": "Tiens-moi au courant de "
   },
   "appLock": {
     "forgot": "Vous avez oublié votre code PIN ? Reconnectez-vous et définissez un nouveau code PIN.",

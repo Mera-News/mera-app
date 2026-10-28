@@ -1,0 +1,52 @@
+{
+  "id": "follow-empty-search",
+  "cohort": "follow-empty-search",
+  "note": "chatfix device pass 11: a named, real subject gets a follow card from the user's own words when Mera's own news and the web both come back empty. On device the skill said it found no coverage and asked for an angle.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Pune, Maharashtra, India, Asia",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "English"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I want to follow the DPDP law, Indian government wants to bring",
+      "expect": {
+        "tools": [
+          "load_skill",
+          "searchNews",
+          "proposeTrack"
+        ],
+        "noOffer": true,
+        "track": {
+          "staged": true,
+          "minOptions": 2,
+          "labelMatches": [
+            "dpdp",
+            "data protection",
+            "privacy"
+          ]
+        },
+        "replyExcludes": [
+          "48",
+          "index"
+        ]
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": []
+          }
+        ]
+      }
+    }
+  ]
+}

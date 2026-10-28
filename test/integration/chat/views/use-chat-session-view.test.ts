@@ -298,6 +298,41 @@ describe('unmount', () => {
   });
 });
 
+describe('turn-failed sentence', () => {
+  const rows = [
+    { id: 'u1', role: 'user', content: 'hi' },
+    {
+      id: 'a1',
+      role: 'assistant',
+      content: '',
+      toolCalls: [{ id: 't1', name: 'load_skill', input: { id: 'facts/residence' }, status: 'done' }],
+    },
+  ] as never;
+  const boxOf = (items: { kind: string }[]) =>
+    items.find((i) => i.kind === 'agent-steps') as { terminal: string | null } | undefined;
+
+  it('a throw after tool rows were written shows the sentence', () => {
+    const { result } = mount({ messages: rows, error: 'Cloud chat failed: boom' });
+    expect(boxOf(result.current.items)?.terminal).toBe('turn-failed');
+  });
+
+  it('a Stop never sets error, so the box carries no sentence', () => {
+    const { result } = mount({ messages: rows, error: null });
+    expect(boxOf(result.current.items)?.terminal).toBeNull();
+  });
+
+  it('a throw with no tool rows adds no box', () => {
+    const { result } = mount({
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi' },
+        { id: 'a1', role: 'assistant', content: '' },
+      ],
+      error: 'Cloud chat failed: boom',
+    });
+    expect(boxOf(result.current.items)).toBeUndefined();
+  });
+});
+
 describe('typing item inputs', () => {
   const typing = (items: { kind: string }[]) =>
     items.find((i) => i.kind === 'typing') as

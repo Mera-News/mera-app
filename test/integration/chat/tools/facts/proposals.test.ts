@@ -29,7 +29,7 @@ jest.mock('@/lib/sentry-init', () => ({
 
 jest.setTimeout(30_000);
 
-const NOTHING = { applied: 0, errors: [], summaries: [], changeLogIds: [] };
+const NOTHING = { applied: 0, alreadyFollowed: 0, errors: [], summaries: [], changeLogIds: [] };
 const factVersion = () => useFloatingChatStore.getState().factMutationVersion;
 
 beforeEach(async () => {

@@ -67,16 +67,18 @@ function namesSomethingSaid(statement: string, text: string): boolean {
 const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill, skillThinking, skillTools } from './skill-loader';
-import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
+import { CONTINUATION_TOOLS, PROPOSE_TRACK_TOOL, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
   PendingProposalView,
   AgentDeps,
+  AgentModelRequest,
   AgentLeg,
   AgentModelResult,
   AgentProposal,
   AgentTurnResult,
   AgentTurnState,
   Place,
+  SurfaceContext,
 } from './types';
 import { createAgentTurnState } from './types';
 
@@ -257,6 +259,17 @@ export const MAX_PROCESS_RETRIES = 1;
  *  simply dropped. */
 export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you say it again?";
 
+/** The last resort for a skill turn that would end silent: its closing leg
+ *  wrote nothing usable either. The app passes the reader-language line. */
+export const REPLY_NO_ANSWER_FALLBACK = "I couldn't do that. Try asking another way.";
+
+/** The closing leg of a turn that would otherwise end with no reply, no card
+ *  and no question. Nothing was staged on such a turn by definition. */
+const NO_ANSWER_NOTE =
+  'Nothing was offered, saved or changed this turn. '
+  + 'Write ONE short sentence, in the language of their message, that tells them what you understood and that nothing changed. '
+  + 'Do not say anything was saved, added, muted, hidden, followed or changed. Do not call a tool.';
+
 /** Mirrors lib/algorithms/estimate-tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
 export function estimateTokens(text: string): number {
@@ -296,6 +309,12 @@ export interface AgentState {
   /** The user's active filters, set by the driver before each turn. Listed on
    *  legs that can stage a card, so `retire_suppression` names a real id. */
   activeFilters?: { id: string; pattern: string }[];
+  /** Where the chat was opened, set by the driver (S2a): a `<surface>` message
+   *  after the known facts, the hint alone on the route leg. */
+  surfaceContext?: SurfaceContext | null;
+  /** Stories the user followed from cards in this chat, in order, set by the
+   *  driver. Every leg reads them, so a later turn does not offer them again. */
+  followedInChat?: string[];
 }
 
 export function createAgentState(persona: AgentPersona): AgentState {
@@ -366,6 +385,14 @@ function routeKindFromSkill(skillId: string): string | null {
   return leaf && leaf !== 'generic' ? leaf : null;
 }
 
+/** The `<surface>` message: the hint alone on the route leg, hint and context
+ *  on a skill leg, nothing when there is neither. */
+function surfaceBlock(surface: SurfaceContext | null, skillLeg: boolean): { role: 'user'; content: string }[] {
+  if (!surface) return [];
+  const lines = [surface.hint, skillLeg ? surface.context : null].filter((l): l is string => !!l && l.trim().length > 0);
+  return lines.length > 0 ? [{ role: 'user', content: `<surface>\n${lines.join('\n')}\n</surface>` }] : [];
+}
+
 export interface RunAgentTurnParams {
   state: AgentState;
   userMessage: string;
@@ -382,8 +409,18 @@ export interface RunAgentTurnParams {
   /** The two lines a reply is REPLACED with (leak, narration), in the reader's
    *  language. The harness cannot import i18n, so the app translates them at the
    *  call site; omitted (the eval), the English constants are used. */
-  fallbacks?: { leak: string; process: string };
+  fallbacks?: { leak: string; process: string; noAnswer?: string };
+  /** 'moreOptions': "More options" on a follow card. No route leg, one forced
+   *  proposeTrack leg on conversation/follow-story, prose discarded, no closing
+   *  leg and no end-of-turn offers. The driver passes a COPY of its state and
+   *  throws it away: this is not a conversation turn. */
+  mode?: 'turn' | 'moreOptions';
+  /** Required with mode 'moreOptions': what the card shows and how many it can take. */
+  moreOptions?: { shown: { label: string; searchText: string }[]; room: number };
 }
+
+/** The follow skill: the only one with the follow tools, and the one More options runs. */
+export const FOLLOW_STORY_SKILL = 'conversation/follow-story';
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
   const { state, userMessage, deps } = params;
@@ -391,6 +428,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const model = params.model ?? 'BIG';
   const leakFallback = params.fallbacks?.leak ?? REPLY_LEAK_FALLBACK;
   const processFallback = params.fallbacks?.process ?? REPLY_PROCESS_FALLBACK;
+  const noAnswerFallback = params.fallbacks?.noAnswer ?? REPLY_NO_ANSWER_FALLBACK;
   /** Skills the arm hides behave as if they did not exist (a step's control). */
   const hiddenSkills = resolveAgentArm(params.promptVariant).hideSkills ?? [];
   const loadSkillFn = (id: string): string | null =>
@@ -548,6 +586,32 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       skillsLoaded.push(turn.lastSkill);
     }
   }
+  // MORE OPTIONS: the follow skill directly, one leg. Like a resume, so the
+  // first leg is a skill leg and never a route.
+  const moreOptionsMode = params.mode === 'moreOptions';
+  if (moreOptionsMode) {
+    const body = loadSkillFn(FOLLOW_STORY_SKILL);
+    if (body !== null) {
+      skillLoaded = FOLLOW_STORY_SKILL;
+      routeKind = routeKindFromSkill(FOLLOW_STORY_SKILL);
+      systemPrompt = skillPrompt(body);
+      resumedSkill = true;
+      skillsLoaded.push(FOLLOW_STORY_SKILL);
+    }
+    // Two at most: a lookup leg (the skill says to search first, and the model
+    // does, whatever the leg declares) and the card. Measured u6b2: 4 of 6
+    // misses were a leg that only called searchNews.
+    maxLegsThisTurn = 2;
+  }
+  /** The note a More options leg ends on: the options on the card, escaped
+   *  (labels are model text), and the room left. */
+  const moreOptionsNote = moreOptionsMode && params.moreOptions
+    ? 'The user tapped More options on the follow card above. It already shows: '
+      + params.moreOptions.shown.map((o) => `"${escapeUntrusted(o.label, 80)}" (${escapeUntrusted(o.searchText, 120)})`).join('; ')
+      + `. Call proposeTrack with up to ${Math.max(1, params.moreOptions.room)} NEW options about the same story, each `
+      + 'different from every one shown: a narrower angle, a related thread or a wider frame. Never reword a shown one. '
+      + 'Write nothing else.'
+    : null;
   // A place the chip resolved, carried for as long as the asking skill keeps
   // resuming. Any other turn starts clean.
   const tappedPlace = placeFromPayload(turn.resolvedChoice?.payload);
@@ -614,6 +678,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** An unverified home was held back because it would replace the verified
    *  home on file; the chip offers the user's own words instead. */
   let heldBackUnverifiedHome = false;
+  /** The loop put the "Save as I wrote it" chip on screen. */
+  let saveAsWrittenOffered = false;
 
   /**
    * "SAVE AS I WROTE IT" (owner ruling ux2 D9): the user's own sentence, as a
@@ -841,7 +907,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
       pendingCards: pendingCardList,
       pendingCard: pendingCard && (skillLoaded !== null ? stagesCards() : cardIsNewest)
-        ? { summary: pendingCard.summary, chooseOne: pendingCard.chooseOne, appliable: pendingCard.appliable }
+        ? { summary: pendingCard.summary, chooseOne: pendingCard.chooseOne, appliable: pendingCard.appliable, multiSelect: pendingCard.multiSelect }
         : null,
       cardThisTurn,
       finerArea: finerArea?.words ?? null,
@@ -862,6 +928,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const messages: { role: 'system' | 'user' | 'assistant' | 'tool'; content: string }[] = [
       { role: 'user', content: `<state>${stateLine}</state>` },
       { role: 'user', content: `<known_facts>\n${formatKnownFacts(state.persona.facts)}\n</known_facts>` },
+      // WHERE THE CHAT WAS OPENED (S2a): the hint only on the route leg, hint
+      // and context on skill legs. Verbatim: the driver escaped its fields.
+      ...(surfaceBlock(state.surfaceContext ?? null, skillLoaded !== null)),
+      // STORIES ALREADY FOLLOWED from cards in this chat (labels are model text).
+      ...((state.followedInChat ?? []).length > 0
+        ? [{
+            role: 'user' as const,
+            content: `user followed: ${(state.followedInChat ?? []).slice(0, 12).map((l) => escapeUntrusted(l, 80)).join(', ')}`,
+          }]
+        : []),
+      // TODAY, on the follow leg: a scope never names an ended year or season.
+      ...(skillLoaded === FOLLOW_STORY_SKILL
+        ? [{ role: 'user' as const, content: `Today: ${new Date((deps.now ?? Date.now)()).toISOString().slice(0, 10)}` }]
+        : []),
       // THE USER'S FILTERS, on legs that can stage a card only:
       // `retire_suppression` must name a real id, and nothing else needs them.
       ...(stagesCards() && (state.activeFilters ?? []).length > 0
@@ -931,7 +1011,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             },
           ]
         : []),
-      { role: 'user', content: escapeUntrusted(userMessage, 2000) },
+      ...(moreOptionsMode ? [] : [{ role: 'user' as const, content: escapeUntrusted(userMessage, 2000) }]),
     ];
     // LAST, so it is the final thing read before the model answers. Not
     // escaped: the harness wrote it, and it is the one message in the turn that
@@ -955,6 +1035,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Once the reference text is in, every later leg of the turn is the answer.
     const answerLegNow = skillLoaded === 'conversation/about-mera' && explainedFrom(toolResultsThisTurn);
     if (answerLegNow) messages.push({ role: 'user', content: aboutMeraAnswerNote(userMessage, state.persona.languageName) });
+    if (moreOptionsNote !== null) messages.push({ role: 'user', content: moreOptionsNote });
 
     const inputTokens =
       estimateTokens(systemPrompt) + messages.reduce((n, m) => n + estimateTokens(m.content), 0);
@@ -979,7 +1060,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // re-load at leg 3 after the other tools had already run. Withholding the
       // tool is stronger than answering it, because a tool the model cannot
       // see is one it cannot spend a leg on.
-      tools: closingLegNow || answerLegNow ? [] : toolsForLeg({
+      tools: moreOptionsMode
+        ? (deps.tools.proposeTrack ? [PROPOSE_TRACK_TOOL] : [])
+        : closingLegNow || answerLegNow ? [] : toolsForLeg({
         skillLoaded,
         forcingProposal: forcingProposalNow,
         wideRouteLeg: !enforceRoute,
@@ -990,10 +1073,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         explainMera: typeof deps.tools.explainMera === 'function',
         skillTools: skillLoaded === null ? null : skillTools(skillLoaded),
         cards: cardsOffered,
+        tracks: typeof deps.tools.proposeTrack === 'function',
+        searchNews: typeof deps.tools.searchNews === 'function',
         pendingCard: cardThisTurn === null && pendingCard ? { appliable: pendingCard.appliable } : null,
         cardOnRouteLeg: cardIsNewest && index === 0 && !resumedSkill,
       }) as unknown[],
-      toolChoice: forcingProposalNow ? 'required' : 'auto',
+      // More options was asked for by a tap: a card is the answer, and staging
+      // it changes nothing until the user ticks and taps Follow.
+      toolChoice: forcingProposalNow || moreOptionsMode ? 'required' : 'auto',
       // OFF unless the loaded skill says `thinking: true`, and always off on the
       // route leg: measured, thinking on returned empty content on 8 of 10
       // route probes at 8-10s against 0.8-1.0s and a valid answer every time.
@@ -1198,6 +1285,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ? await deps.tools.webSearch({ queries })
             : { error: 'queries must be a non-empty array of strings', searched: false }
           : { error: 'web search is not available', searched: false };
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
+        continue;
+      }
+
+      if (call.name === 'searchNews') {
+        // Mera's own index, from the device. No port method: not declared, so
+        // a call is answered, never run.
+        const query = typeof args.query === 'string' ? args.query.trim().slice(0, 200) : '';
+        if (query) subjectsThisTurn.push(query);
+        const out = deps.tools.searchNews
+          ? query
+            ? await deps.tools.searchNews({ query })
+            : { error: 'query must be a non-empty string' }
+          : { error: 'searchNews is not available' };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1714,7 +1820,6 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           proposedStatements.add(statement.toLowerCase());
           offeredThisTurn.push(statement.toLowerCase());
         }
-        if (sanitised.length > 0) proposedSomething = true;
         // THE OFFER IS ALREADY A CARD ON SCREEN ("follow this" after the card
         // that offers it). The port is not called: its empty-list answer reads
         // as `staged: true`, and the next leg said "I'm on it". The model is
@@ -1746,6 +1851,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           extracted_user_information: sanitised,
           proposals,
         });
+        // A PROPOSAL IS A CARD THE DEVICE STAGED, not entries sent: the device
+        // drops what it judges a duplicate or meta, and a turn that counted
+        // those as proposed ended with nothing on screen. No `pendingFacts`
+        // field means the port does not report it, and the entries count.
+        if (sanitised.length > 0 && (!Array.isArray(out?.pendingFacts) || out.pendingFacts.length > 0)) {
+          proposedSomething = true;
+        }
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         continue;
@@ -1813,6 +1925,34 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
 
+      // ---- FOLLOW A STORY: a card of stories to follow ----------------------
+      // Staged by the device (its parser decides what the card holds); followed
+      // only by the user's ticks and Follow tap, or by a typed yes to a card
+      // with one option. Same one-card-per-turn rule as proposeChanges.
+      if (call.name === 'proposeTrack') {
+        const out: Record<string, unknown> = !deps.tools.proposeTrack
+          ? { error: 'proposeTrack is not available' }
+          : terminatedByChoice || deleteCardOffered || cardThisTurn !== null
+            ? { error: 'One card or question per turn. Ask nothing more.' }
+            : await deps.tools.proposeTrack(args);
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (typeof out.error !== 'string') {
+          proposedSomething = true;
+          cardThisTurn = 'staged';
+          for (const o of Array.isArray(args.options) ? (args.options as Record<string, unknown>[]) : []) {
+            if (typeof o?.label === 'string') subjectsThisTurn.push(o.label);
+          }
+          terminatedByCard = true;
+          turn.lastCard = {
+            proposalId: typeof out.proposalId === 'string' ? out.proposalId : null,
+            skill: skillLoaded ?? FOLLOW_STORY_SKILL,
+            turn: turn.turnNumber,
+          };
+        }
+        continue;
+      }
+
       if (call.name === 'applyProposal' || call.name === 'cancelProposal') {
         const applying: boolean = call.name === 'applyProposal';
         const run = applying ? deps.tools.applyProposal : deps.tools.cancelProposal;
@@ -1854,6 +1994,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
 
     params.onLeg?.(leg);
+
+    // MORE OPTIONS: a card ends it; a leg that only looked the story up gets
+    // the one more forced leg; anything else ends it. Prose is discarded, and a
+    // re-ask or a closing leg would spend calls on words nobody reads.
+    if (moreOptionsMode) {
+      reply = '';
+      if (terminatedByCard) {
+        terminalReason = 'awaiting-user';
+        break;
+      }
+      if (sawContinuationTool && index === 0) continue;
+      break;
+    }
 
     if (terminatedByChoice || terminatedByCard) {
       if (terminalReason === 'settled') terminalReason = 'awaiting-user';
@@ -2132,6 +2285,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    * country you originally come from?" with no card.
    */
   async function offerResolvedPlaceAtEnd(): Promise<void> {
+    if (moreOptionsMode) return;
     if (terminalReason === 'transport-error' || terminalReason === 'awaiting-user') return;
     if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn || askedAboutHome) return;
     if (!aboutOwnHome) return;
@@ -2208,7 +2362,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   }
 
   async function offerCombinedFactSplit(): Promise<string | null> {
-    if (terminalReason === 'transport-error') return null;
+    if (moreOptionsMode || terminalReason === 'transport-error') return null;
     // Never while a question is waiting: the split card used to land under
     // "Which Porto did you mean?" before the move itself was settled (ux1 C1).
     // The resumed turn that answers the question offers it instead.
@@ -2343,26 +2497,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // break. A card on screen needs no words; otherwise one plain line.
     reply = proposedSomething ? '' : processFallback;
     replyProcessUnfixed = true;
-  } else if (
-    // NEVER SILENT ON A QUESTION (ux2 batch 26 D6). A conversation leg that
-    // neither answers nor calls a tool is re-run to the cap and ends with an
-    // empty reply, and the acknowledgement ("One moment.") was then the
-    // whole turn on screen. A facts turn has its own closing UI (a card, the
-    // no-proposal line, the save-as-written chip); a conversation turn has
-    // nothing but this line.
-    !cleanProse(reply).trim()
-    && !proposedSomething
-    && turn.pendingChoice === null
-    && terminalReason !== 'transport-error'
-    && skillLoaded !== null
-    && skillLoaded.startsWith('conversation/')
-  ) {
-    reply = processFallback;
-    replyProcessUnfixed = true;
   }
   // The acknowledgement is rendered too, so it gets the same two checks. It is
   // dropped rather than replaced: the reply below it carries the turn.
   if (leaksInternals(acknowledgement) || narratesProcess(acknowledgement)) {
+    acknowledgement = '';
+  }
+  // A CARD STAGED WITH NO SENTENCE BESIDE IT SHOWS ALONE. The acknowledgement
+  // restates the request ("Got it, nothing about Bollywood in your feed."), and
+  // beside a card nobody has confirmed it reads as done; the card says what it
+  // will do. No detector catches a claim made without a verb (device pass).
+  if (cardThisTurn === 'staged' && !cleanProse(reply).trim()) {
     acknowledgement = '';
   }
 
@@ -2403,12 +2548,71 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       synthetic: true,
     };
     legs.push(leg);
+    saveAsWrittenOffered = true;
     if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
     params.onLeg?.(leg);
   }
 
   // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
   const combinedRewriteOffered = await offerCombinedFactSplit();
+
+  // ---- NEVER SILENT -------------------------------------------------------
+  // A skill turn with no reply, nothing staged and no question waiting showed
+  // the acknowledgement, the tool rows and then nothing (chatfix, replayed
+  // from staging: "Do not show me anything about Bollywood"). Branches that
+  // count on "the next leg writes the sentence" reach the budget's last leg
+  // with no next leg. ONE rule, after every end-of-turn offer: one tool-free
+  // closing leg, and the canned line if that is empty or claims a change.
+  // Never on a stopped or failed turn: the app shows those itself.
+  let closingLegFired = false;
+  let noAnswerFallbackUsed = false;
+  let closingClaim = false;
+  /** The terminals the thread renders as a sentence of their own. */
+  const renderableTerminal = ['leg-cap', 'no-proposal', 'unknown-tool', 'malformed-choice'].includes(terminalReason)
+    ? terminalReason
+    : null;
+  if (
+    !moreOptionsMode
+    && skillLoaded !== null
+    && !cleanProse(reply).trim()
+    && !proposedSomething
+    && !saveAsWrittenOffered
+    && turn.pendingChoice === null
+    && terminalReason !== 'transport-error'
+  ) {
+    closingLegFired = true;
+    const last = [...legs].reverse().find((l) => !l.synthetic);
+    const messages: AgentModelRequest['messages'] = [
+      ...((last?.messages ?? []) as AgentModelRequest['messages']),
+      ...(last?.toolResults ?? []).map((tr) => ({
+        role: 'tool' as const,
+        content: `${tr.name}: ${escapeUntrusted(JSON.stringify(tr.result), 4000)}`,
+      })),
+      { role: 'user' as const, content: NO_ANSWER_NOTE },
+    ];
+    const called = await deps.callModel({
+      role: 'tool', model, systemPrompt, messages, tools: [], toolChoice: 'auto', enableThinking: false,
+    });
+    const leg: AgentLeg = {
+      index: legs.length, role: 'tool', systemPrompt, messages, toolCalls: [], toolResults: [],
+      rawOutput: called.content, result: { ...called, toolCalls: [] },
+      inputTokens: estimateTokens(systemPrompt) + messages.reduce((n: number, m) => n + estimateTokens(m.content), 0),
+    };
+    legs.push(leg);
+    params.onLeg?.(leg);
+    const text = called.error ? '' : cleanProse(called.truncated ? endAtLastSentence(called.content) : called.content);
+    closingClaim = claimsSaveHappened(text) || claimsChangeHappened(text);
+    if (text.trim() && !closingClaim && !leaksInternals(text) && !narratesProcess(text)) {
+      reply = text;
+      // The turn answered: running out of legs or offering nothing is no
+      // longer the news, and the box would say so beside the answer.
+      if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
+    } else if (renderableTerminal === null) {
+      reply = noAnswerFallback;
+      noAnswerFallbackUsed = true;
+    }
+    // else: the box already says why the turn ended; a second line repeats it.
+  }
 
   turn.turnActive = false;
   turn.offeredStatements = resumedSkill
@@ -2461,6 +2665,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // by prompt alone: 25% of measured prose rows carried one despite the ban.
     reply: cleanProse(reply),
     acknowledgement,
+    closingLegFired,
+    noAnswerFallbackUsed,
+    closingClaim,
+    stagedSomething: proposedSomething || saveAsWrittenOffered,
     processRetries,
     replyProcessUnfixed,
     typedYesResume,

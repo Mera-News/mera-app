@@ -1,7 +1,7 @@
 {
   "id": "backref",
   "cohort": "backref",
-  "note": "onemera S1.5. A message that points back at the previous answer acts on that answer's subject (follow this before S3 offers nothing and says so; add this to my interests; my parents live there; update my places with it). LEAK GUARD: after an answer about X, an unrelated fact never names X.",
+  "note": "onemera S1.5. A message that points back at the previous answer acts on that answer's subject (follow this stages a follow card on the subject (S3); add this to my interests; my parents live there; update my places with it). LEAK GUARD: after an answer about X, an unrelated fact never names X.",
   "persona": {
     "facts": [
       {
@@ -47,14 +47,21 @@
       "index": 1,
       "user": "okay, I want to follow this",
       "expect": {
-        "routeKind": "question",
-        "skill": "conversation/question",
+        "routeKind": "follow-story",
+        "skill": "conversation/follow-story",
         "tools": [
-          "load_skill"
+          "load_skill",
+          "proposeTrack"
         ],
-        "legs": 2,
-        "endedOn": "settled",
-        "noOffer": true
+        "noOffer": true,
+        "track": {
+          "staged": true,
+          "labelMatches": [
+            "coalition",
+            "dutch",
+            "cabinet"
+          ]
+        }
       }
     },
     {

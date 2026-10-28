@@ -4,11 +4,12 @@
 // being closed. State is in cloud-chat-store; the turn bookkeeping is closure
 // state here.
 
-import type { ChatEngine } from '@/lib/chat-session/engine';
+import type { ChatEngine, MoreOptionsRequest, MoreOptionsResult } from '@/lib/chat-session/engine';
+import { FollowStoryAgent } from '../llm/agents/FollowStoryAgent';
 import logger from '../logger';
 import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
-import { markChatReady } from '../llm/prewarm';
+import { markChatFailed, markChatReady } from '../llm/prewarm';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import {
@@ -21,8 +22,8 @@ import {
 } from '../mera-harness';
 import {
   buildAgentPersona,
-  isPersonaAgent,
   makeAgentDeps,
+  type CardToolDeps,
   type ToolSignal,
 } from '../chat-tools/agent-device-port';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
@@ -32,6 +33,9 @@ import { useFloatingChatStore } from '../stores/floating-chat-store';
 import {
   detachedCopy,
   finalizeToolCalls,
+  followedInChatLabels,
+  FOLLOW_STORY_HINT,
+  runsOnHarness,
   i18nInstance,
   parseToolArgs,
   pendingCardStatements,
@@ -45,6 +49,8 @@ import {
   type CloudState,
   type ToolCallAccumulator,
 } from '@/lib/chat-session/cloud-engine-helpers';
+import { normaliseTrackText } from '@/components/custom/floating-chat/track-options';
+import type { ProposalAction } from '../news-harness/core/types';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
 import {
@@ -116,6 +122,26 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
   const agentRef = { current: initialAgent };
 
+  /** proposeTrack and searchNews run on the follow-story agent. On any other
+   *  harness chat a lazy one stands in: its executeTool ignores the user id. */
+  let delegate: FollowStoryAgent | null = null;
+  const cardTools = (): CardToolDeps => ({
+    execute: (name, args) => {
+      if (name !== 'proposeTrack' && name !== 'searchNews') return agentRef.current.executeTool(name, args);
+      if (agentRef.current.id.startsWith('follow-story-')) return agentRef.current.executeTool(name, args);
+      delegate ??= new FollowStoryAgent('delegate');
+      return delegate.executeTool(name, args);
+    },
+    onSideEffects: (se) => applyToolSideEffects(se, { alive, cloud: cloud() }),
+    pending: pendingProposalView,
+  });
+  /** Where the chat was opened, for the loop's `<surface>` block. */
+  const surfaceFor = (): AgentState['surfaceContext'] =>
+    agentRef.current.id.startsWith('follow-story-')
+      ? { kind: 'follow-story', hint: FOLLOW_STORY_HINT, context: null }
+      : null;
+  const noAnswerLine = (): string => i18nInstance().t('chat.turnNoAnswer');
+
   /** The loop's state, threaded turn to turn. In a ref rather than rebuilt per
    *  turn: `pendingChoice` has to survive to the turn that answers it, or a tap
    *  arrives as a bare display string and the place is looked up twice. */
@@ -157,6 +183,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       // can settle the card and `retire_suppression` names a real id.
       agentStateRef.current.pendingProposal = pendingProposalView();
       agentStateRef.current.activeFilters = await activeFiltersView();
+      agentStateRef.current.surfaceContext = surfaceFor();
+      agentStateRef.current.followedInChat = followedInChatLabels(store.messages);
 
       // TWO BUBBLES PER TURN. The acknowledgement streams into its own bubble
       // and is never replaced; the answer lands in the second one, which also
@@ -272,11 +300,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             },
             (signal) => phaseSinkRef.current?.(signal),
             stopRef.current.signal,
-            {
-              execute: (name, args) => agentRef.current.executeTool(name, args),
-              onSideEffects: (se) => applyToolSideEffects(se, { alive, cloud: cloud() }),
-              pending: pendingProposalView,
-            },
+            cardTools(),
             onTool,
           )),
           onLeg,
@@ -284,6 +308,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           fallbacks: {
             leak: i18nInstance().t('chat.replyLeakFallback'),
             process: i18nInstance().t('chat.replyProcessFallback'),
+            noAnswer: noAnswerLine(),
           },
         });
         if (queued) flush();
@@ -834,13 +859,17 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     });
   };
 
+  /** The Stop button's handle on a More options call in flight. While set, no
+   *  turn starts: its loop and a turn's would share the card and the wire. */
+  let moreAbort: AbortController | null = null;
+
   const startTurn = (text: string, visible: boolean) => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // A turn started while one runs would push a `user` wire message between
       // an `assistant(tool_calls)` and its `tool` replies, which most
       // OpenAI-compatible endpoints reject.
-      if (turnBusyRef.current || isStreamingRef.current || store.isBlocked) {
+      if (turnBusyRef.current || isStreamingRef.current || store.isBlocked || moreAbort !== null) {
         if (!visible) {
           // Queued rather than dropped: the user tapped Discard and is owed a
           // reply, so it fires when the current work settles.
@@ -888,7 +917,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       void (async () => {
         try {
-          if (isPersonaAgent(agentRef.current.id)) {
+          if (runsOnHarness(agentRef.current.id)) {
             // THE SHIPPED PATH for the persona agent. No flag: a loop behind a
             // flag is a loop nobody runs, which is exactly how the device pass
             // found the old single-shot prompt still live.
@@ -917,6 +946,9 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
                 logger.warn(`${TAG} buildContext failed, proceeding without context`, { error: String(err) });
               }
             }
+            // A8: the stories the user followed from cards, so the model does not offer them again.
+            const followed = followedInChatLabels(cloud().messages);
+            if (followed.length > 0) context = `${context}\nuser followed: ${followed.join(', ')}`.trim();
             // Push only the RAW user text into wireMessages. Context is re-injected
             // fresh onto the last user message in runSingleShot — never persisted,
             // so multi-turn chats don't accumulate N copies of the facts/guide block.
@@ -931,12 +963,13 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
             logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
             cloud().setError(msg);
+            markChatFailed();
           }
         } finally {
           if (turnStop.signal.aborted) {
             // The single-shot agents read history from the wire: the visible
             // partial reply belongs there (the persona loop keeps its own state).
-            if (!isPersonaAgent(agentRef.current.id)) {
+            if (!runsOnHarness(agentRef.current.id)) {
               const state = cloud();
               const partial = state.messages.find((m) => m.id === assistantId)?.content.trim();
               // Only when nothing of this turn reached the wire yet (it still
@@ -965,10 +998,71 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
   startTurnRef.current = startTurn;
 
+  const moreOptions = async (req: MoreOptionsRequest): Promise<MoreOptionsResult> => {
+    if (turnBusyRef.current || isStreamingRef.current) return { actions: [], reason: 'busy' };
+    const ctl = new AbortController();
+    moreAbort = ctl;
+    try {
+      const id = agentRef.current.id;
+      // A COPY: this is not a conversation turn, so the loop's writes to turn
+      // state must not reach the next real turn. A JSON round trip, not
+      // structuredClone, which Hermes is not known to provide; AgentState is
+      // plain data (strings, numbers, arrays, place objects).
+      const state: AgentState = agentStateRef.current
+        ? (JSON.parse(JSON.stringify(agentStateRef.current)) as AgentState)
+        : createAgentState(await buildAgentPersona(id));
+      state.surfaceContext = surfaceFor();
+      state.followedInChat = followedInChatLabels(cloud().messages);
+      // CAPTURE the staged card; this is not a turn, so nothing reaches the store.
+      let staged: ProposalAction[] = [];
+      const deps = makeAgentDeps('', () => {}, undefined, ctl.signal, {
+        ...cardTools(),
+        onSideEffects: (se) => {
+          staged = se?.proposal?.actions ?? staged;
+        },
+      });
+      await runAgentTurn({
+        state,
+        userMessage: '',
+        deps,
+        mode: 'moreOptions',
+        moreOptions: { shown: req.shown, room: req.room },
+        fallbacks: {
+          leak: i18nInstance().t('chat.replyLeakFallback'),
+          process: i18nInstance().t('chat.replyProcessFallback'),
+          noAnswer: noAnswerLine(),
+        },
+      });
+      if (ctl.signal.aborted) return { actions: [], reason: 'stopped' };
+      const seenLabels = new Set(req.shown.map((o) => normaliseTrackText(o.label)));
+      const seenSearch = new Set(req.shown.map((o) => normaliseTrackText(o.searchText)));
+      const actions: MoreOptionsResult['actions'] = [];
+      for (const a of staged) {
+        if (a.type !== 'track_story' || actions.length >= req.room) continue;
+        const label = normaliseTrackText(a.label);
+        const search = normaliseTrackText(a.searchText);
+        if (seenLabels.has(label) || seenSearch.has(search)) continue;
+        seenLabels.add(label);
+        seenSearch.add(search);
+        actions.push({ ...a, subject: req.subject });
+      }
+      return { actions, reason: actions.length > 0 ? undefined : 'none' };
+    } catch (err) {
+      if (ctl.signal.aborted) return { actions: [], reason: 'stopped' };
+      logger.warn(`${TAG} moreOptions failed`, { error: String(err) });
+      return { actions: [], reason: 'failed' };
+    } finally {
+      if (moreAbort === ctl) moreAbort = null;
+      // A hidden turn that arrived meanwhile was queued, not dropped.
+      flushPendingHiddenTurn();
+    }
+  };
+
   return {
     send: (text) => {
       if (alive) startTurn(text, true);
     },
+    moreOptions,
     sendHidden: (text) => {
       if (alive) startTurn(text, false);
     },
@@ -979,6 +1073,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       // A hidden turn queued behind the running one is part of the same stop.
       pendingHiddenTurnRef.current = null;
       stopRef.current.abort();
+      moreAbort?.abort();
     },
     dispose: () => {
       detached = detachedCopy(useCloudChatStore.getState());

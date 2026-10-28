@@ -124,6 +124,11 @@ function takeAsked(articleId: string): Promise<AskedFactCheck | null> {
   });
 }
 
+/** Drops an ask whose article the server no longer holds: nothing can ever settle it. */
+export async function forgetFactCheckAsked(articleId: string): Promise<void> {
+  await takeAsked(articleId);
+}
+
 /** Which of the three notification bodies a settled check gets. */
 export function outcomeFor(row: Pick<FactCheckRow, 'status' | 'checkedBy' | 'checkedByStatus'>): FactCheckOutcome {
   const external = describeExternalChecks(

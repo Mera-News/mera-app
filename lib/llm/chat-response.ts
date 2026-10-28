@@ -157,7 +157,9 @@ async function* consumeChatResponseRaw(
 ): AsyncGenerator<SseEvent> {
   const handle = takeStreamHandle(response);
   const contentType = response.headers?.get('content-type') ?? '';
-  if (!response.body || !contentType.includes('text/event-stream')) {
+  // Content-type first: reading expo/fetch's `.body` starts native streaming and empties the
+  // buffer text() reads (MERA-APP-8X).
+  if (!contentType.includes('text/event-stream') || !response.body) {
     // The gateway relays NEAR's content-type verbatim, so JSON here means the
     // upstream ignored `stream: true`. Buffered handling, unchanged.
     handle?.release();

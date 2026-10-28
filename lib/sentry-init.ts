@@ -209,6 +209,9 @@ export function keepBreadcrumb<T extends ScrubbableCrumb & { type?: string }>(cr
 // User Feedback widget (showFeedbackWidget) and other Sentry UI from `expo start`.
 // The feedback helper (lib/feedback.ts) reads this same flag so both gates lift
 // together.
+// Dev builds report user feedback only (beforeSend below drops every error and
+// message; feedback events skip beforeSend; native hang/crash capture is off),
+// so agent simulators do not file dev noise into the production project.
 /** Pure mapping, exported for tests. `__DEV__` is development; otherwise the
  *  expo-updates channel names the environment (a dev-client release build runs
  *  on the `development` channel and must not report as production). An empty
@@ -287,6 +290,7 @@ if (SENTRY_ENABLED) {
     enableNativeFramesTracking: false,
     enableStallTracking: false,
     enableUserInteractionTracing: false,
+    ...(__DEV__ ? { enableAppHangTracking: false, enableNativeCrashHandling: false } : {}),
     // iOS-only native keys, absent from the RN option types; the native SDK
     // reads them from the same options dictionary. They stop UI, lifecycle and
     // network crumbs recorded natively, which never pass through JS.
@@ -324,6 +328,9 @@ if (SENTRY_ENABLED) {
       return keepBreadcrumb(breadcrumb);
     },
     beforeSend(event) {
+      // beforeSend only sees error/message events; feedback has type 'feedback'
+      // and bypasses it, so dropping all here leaves feedback as the only output.
+      if (__DEV__) return null;
       // Keep `user.id` (the join key — see the sendDefaultPii note above) and
       // discard every other user field, whether the SDK attached it or a future
       // contributor set it. Allowlisting rather than deleting known-bad keys

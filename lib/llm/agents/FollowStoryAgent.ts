@@ -15,6 +15,8 @@
 import { chatRunsInCloud } from '../chat-cloud';
 import { handleSearchNews } from '../../chat-tools/news-search-handler';
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
+import { executeProposalActions } from '../../chat-tools/proposal-handlers';
+import { chooseOneRefusal, proposalRequiresUserChoice } from '../../news-harness/core/proposals';
 import { decideProposeTrack } from '../../news-harness/article-feedback/agent-core';
 import {
   buildFollowStoryContext,
@@ -143,17 +145,19 @@ export class FollowStoryAgent implements IAgent {
       case 'webSearch':
         return { result: await handleWebSearch(args) };
 
-      case 'applyProposal':
-        // NOT offered in getToolDefinitions, and refused here even if a model
-        // invents the name. The staged card is single-select: only
-        // ProposalCard.handleConfirm knows WHICH scope the user picked, so an
-        // agent-side apply would run every action and mint three topics plus
-        // three followed stories from one typed "yes". Consent is the tap.
+      case 'applyProposal': {
+        // A typed "yes" applies only a card holding ONE option (a plain confirm).
+        // Two or more are the user's ticks and the Follow tap, so they are refused.
+        const proposal = useFloatingChatStore.getState().proposal;
+        if (!proposal) return { result: { error: 'no pending proposal' } };
+        if (proposalRequiresUserChoice(proposal)) return { result: chooseOneRefusal(proposal) };
+        const { applied, errors, summaries, changeLogIds } = await executeProposalActions(proposal.actions);
         return {
-          result: {
-            error: 'the user must tap a scope on the card — this cannot be applied from chat',
-          },
+          result: { applied, errors, summaries, changeLogIds },
+          // Already followed counts as applied; a failure keeps the card for a retry.
+          ...(errors.length === 0 ? { sideEffects: { proposalResolved: 'applied' as const } } : {}),
         };
+      }
 
       default:
         logger.warn('[FollowStoryAgent] Unknown tool', { name });

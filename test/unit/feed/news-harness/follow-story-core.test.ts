@@ -9,6 +9,7 @@ import {
   makeFollowStorySubject,
 } from '@/lib/news-harness/follow-story';
 import type { StagedProposal } from '@/lib/news-harness/core/types';
+import { TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
 
 const NOW = Date.parse('2026-08-07T11:00:00.000Z');
 
@@ -43,6 +44,16 @@ describe('follow-story card copy (F34)', () => {
 });
 
 describe('buildFollowStorySystemPrompt', () => {
+  // D8 MEASURED: changing this one line to "they tap the ones they want" cost
+  // follow-story first turns 7 of 55 proposeTrack passes on staging (refusals
+  // and re-asks; pre/post/twin, repeat 5). The multi-select truth lives in the
+  // pending line, which exists only while the card does; this line stays.
+  it('keeps the shipped confirm-card sentence (the multi-select wording is in the pending line)', () => {
+    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false, canSearch: true });
+    expect(prompt).toContain('it lists the scopes and they tap ONE.');
+    expect(prompt).not.toContain(TRACK_CARD_TAP_PHRASE);
+  });
+
   it('states the article-less framing and the 3–4 widening scopes rule', () => {
     const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false });
 
@@ -119,6 +130,18 @@ describe('buildFollowStoryContext', () => {
     expect(context).toContain('PENDING SCOPE CARD');
     expect(context).toContain('Ukraine War; European Security');
     expect(context).toContain('cancelProposal');
+  });
+
+  // D8: the follow card is multi-select, so the pending line must not say "one".
+  it('says the user taps the ones they want, never that they pick one', () => {
+    const context = buildFollowStoryContext({
+      nowMs: NOW,
+      proposal: trackProposal(['Ukraine War', 'European Security']),
+    });
+
+    expect(context).toContain(`They ${TRACK_CARD_TAP_PHRASE}. Do not apply it yourself`);
+    expect(context).not.toMatch(/pick one/i);
+    expect(context.split('PENDING SCOPE CARD')[1]).not.toMatch(/[\u2013\u2014]/);
   });
 
   it('ignores a proposal that stages no actions', () => {

@@ -46,6 +46,7 @@ const SKILL_IDS = [
   'conversation/correction',
   'conversation/about-mera',
   'conversation/feed-tuning',
+  'conversation/follow-story',
 ] as const;
 type SkillId = (typeof SKILL_IDS)[number];
 
@@ -53,10 +54,13 @@ type SkillId = (typeof SKILL_IDS)[number];
 // next router change buys tokens rather than trimming the tie-break ladder,
 // which is the part doing the work with thinking off. It rose because the body
 // is now actually SENT: for three corpus runs it was generated and never
-// reached a model, so its size cost nothing and bought nothing.
+// reached a model, so its size cost nothing and bought nothing. 2,162 is the
+// measured size of the feed_tuning and back-reference rows (onemera S1/S1.5),
+// shipped after staging moved see-less routing 8/60 to 48/60; 2,376 is the
+// follow_story intent with its literal follow-word and surface tests (S3b).
 // topics/generic bought the Place rule (a fact's place at its level) with
 // tokens rather than by trimming its measured examples.
-const BUDGET: Record<string, number> = { router: 2000, 'topics/generic': 1300 };
+const BUDGET: Record<string, number> = { router: 2376, 'topics/generic': 1300 };
 const DEFAULT_BUDGET = 1200;
 
 /**
@@ -105,6 +109,7 @@ const ROUTER_ESCAPE_HATCH = [
 export const KNOWN_SKILL_TOOLS = [
   'find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
   'webSearch', 'explainMera', 'proposeChanges', 'applyProposal', 'cancelProposal',
+  'proposeTrack', 'searchNews',
 ] as const;
 
 /** Router and fact skills run thinking off, so no phrasing that invites a trace. */

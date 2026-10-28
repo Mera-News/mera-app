@@ -1,0 +1,275 @@
+{
+  "id": "follow-story-hindi",
+  "cohort": "follow-story-hindi",
+  "note": "chatfix S3, Hindi phone. The same ten subjects in Hindi; the reply beside the card must be Devanagari. searchNews headlines stay English: Mera's index is searched in English.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "surface": {
+    "kind": "follow-story",
+    "hint": "They opened this chat from their Followed stories page to follow a news story.",
+    "context": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "user": "डच कैबिनेट गठन की बातचीत",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Dutch coalition talks stall over asylum policy",
+              "Informateur hands report to Dutch parliament",
+              "Netherlands parties agree on outline coalition deal",
+              "Dutch election winner seeks fourth coalition partner"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "मैं गाज़ा सीज़फ़ायर वार्ता को फ़ॉलो करना चाहता हूँ",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Mediators press Israel and Hamas on second phase of ceasefire",
+              "Cairo hosts new round of Gaza truce talks",
+              "Aid convoys enter Gaza as ceasefire holds"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "यूरोपीय संघ का एआई एक्ट लागू करना",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "EU AI Office publishes guidance for general-purpose AI models",
+              "Brussels opens first AI Act compliance review",
+              "Tech firms lobby to delay AI Act high-risk rules"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "इस सीज़न चैंपियंस लीग में PSV को फ़ॉलो करो",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "PSV draw with Juventus in Champions League league phase",
+              "PSV coach names squad for Champions League trip",
+              "Champions League standings after matchday three"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "असम की बाढ़",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Assam floods displace thousands as Brahmaputra rises",
+              "Kaziranga park flooded, animals move to higher ground",
+              "Centre releases relief funds for flood-hit northeast"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "user": "अमेरिकी सरकार का शटडाउन",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "US government shutdown enters second week",
+              "Senate vote on stopgap funding bill fails again",
+              "Federal workers miss paychecks as shutdown drags on"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "user": "एम्स्टर्डम में किराए के नियम",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Amsterdam landlords sell rental homes after new rent law",
+              "Dutch housing minister proposes changes to rent cap",
+              "Amsterdam mid-rent supply falls, data shows"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "user": "लाल सागर से होने वाला जहाज़ी व्यापार",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Container lines reroute around Cape of Good Hope again",
+              "Houthi attack disrupts tanker traffic in Red Sea",
+              "Suez Canal revenue falls as ships avoid the route"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "user": "बिटकॉइन ईटीएफ में निवेश",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": [
+              "Bitcoin ETFs record largest weekly inflow this year",
+              "BlackRock bitcoin fund passes new asset milestone",
+              "SEC weighs new crypto ETF applications"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 9,
+      "user": "रॉटरडैम बंदरगाह पर हड़ताल",
+      "expect": {
+        "tools": [
+          "searchNews",
+          "proposeTrack"
+        ],
+        "track": {
+          "staged": true,
+          "minOptions": 2
+        },
+        "replyScript": "devanagari"
+      },
+      "fakeTools": {
+        "searchNews": [
+          {
+            "headlines": []
+          }
+        ]
+      }
+    }
+  ]
+}

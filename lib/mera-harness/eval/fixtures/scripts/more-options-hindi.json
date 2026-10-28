@@ -1,0 +1,38 @@
+{
+  "id": "more-options-hindi",
+  "cohort": "more-options-hindi",
+  "note": "chatfix S3, More options on a Hindi phone: labels shown in Hindi, search text English.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "surface": {
+    "kind": "follow-story",
+    "hint": "They opened this chat from their Followed stories page to follow a news story.",
+    "context": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "moreOptions": {
+        "shown": [
+          {
+            "label": "असम बाढ़ राहत",
+            "searchText": "Assam flood relief funds Centre"
+          },
+          {
+            "label": "ब्रह्मपुत्र जलस्तर",
+            "searchText": "Brahmaputra river water level Assam"
+          },
+          {
+            "label": "काज़ीरंगा में बाढ़",
+            "searchText": "Kaziranga National Park flooding animals Assam"
+          }
+        ],
+        "room": 5
+      }
+    }
+  ]
+}

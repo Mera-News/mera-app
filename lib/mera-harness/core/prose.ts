@@ -287,7 +287,7 @@ const INTERNALS = new RegExp(
     '|known_facts' +
     '|load_skill|saveExtractedFacts|find_similar_facts|lookup_place|ask_choice|deleteUserFacts|explainMera|proposeChanges|applyProposal|cancelProposal|searchNews|proposeTrack|proposeFactCheck' +
     '|\\bfacts/(?:residence|interest|origin|family|profession|generic)\\b' +
-    '|\\bconversation/(?:question|correction|about-mera)\\b' +
+    '|\\bconversation/(?:question|correction|about-mera|feed-tuning|follow-story)\\b' +
     '|\\btopics/(?:residence|interest|origin|family|profession|generic)\\b' +
     '|the state (?:notes|line|says|tells|block)' +
     '|\\[assistant thinking\\]' +

@@ -698,7 +698,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Avvio",
     "statusReady": "Pronto",
-    "statusError": "Errore"
+    "statusError": "Errore",
+    "turnNoAnswer": "Non sono riuscito a farlo. Prova a chiedermelo in un altro modo.",
+    "turnFailed": "Quella risposta non è terminata. Riprova."
   },
   "personaChat": {
     "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie.\n\nPer trovare notizie che contano davvero per te, ho bisogno di conoscerti un po'. Dove vivi, di cosa ti occupi, hobby che segui, azioni che monitori, dove vive la tua famiglia. Condividi tutto o poco, come preferisci.\n\nSe questo ti preoccupa, è un buon istinto. Non è saggio affidare dati personali a una società che sviluppa app. Mera è costruita diversamente: tutto quello che mi dici viene salvato sul tuo dispositivo, non sui nostri server. Chiedimi come funziona, o di' semplicemente 'aiutami a configurarlo' e iniziamo."
@@ -738,7 +740,6 @@
     "topicGenFailed": "Impossibile generare gli argomenti.",
     "topicGenRetry": "Riprova",
     "aiUsageNoticeGeneral": "Mera può sbagliare, quindi verifica le cose importanti.",
-    "trackChooseHint": "Scegli cosa seguire",
     "factDeletePendingTitle": "Verrà rimosso dal tuo profilo",
     "saveAsWritten": "Salva come l'ho scritto",
     "factDeleteRemove": "Rimuovi",
@@ -1027,7 +1028,6 @@
     "updatesBadge": "{{count}} nuovi",
     "endedLabel": "Conclusa",
     "trackChatSeed": "Voglio seguire questa storia.",
-    "trackProposalTitle": "Seguire questa storia?",
     "alreadyTrackingTitle": "Stai già seguendo questo",
     "alreadyTrackingBody": "Non puoi seguire questa storia due volte. Smettere di seguirla eliminerebbe tutto ciò che è salvato per essa.",
     "goToStoryAction": "Vai alla storia",
@@ -1048,7 +1048,27 @@
     "stopFollowingConfirmTitle": "Smettere di seguire questa storia?",
     "updatedAgo": "aggiornata {{time}}",
     "articlesCount_one": "{{count}} articolo",
-    "articlesCount_other": "{{count}} articoli"
+    "articlesCount_other": "{{count}} articoli",
+    "cardTitle": "Scegli le storie da seguire",
+    "moreOptions": "Altre opzioni",
+    "moreOptionsLoading": "Cerco altre opzioni",
+    "moreOptionsAdded_one": "Aggiunta 1 altra opzione",
+    "moreOptionsAdded_other": "Aggiunte {{count}} altre opzioni",
+    "moreOptionsNone": "Nessuna nuova opzione per questa storia",
+    "moreOptionsFailed": "Non è stato possibile caricare altre opzioni. Riprova.",
+    "follow": "Segui",
+    "followTicked_one": "Segui 1 storia",
+    "followTicked_other": "Segui {{count}} storie",
+    "tryAgain": "Riprova",
+    "rowFollowing": "Seguita",
+    "rowAlready": "Già seguita",
+    "rowFailed": "Impossibile seguirla",
+    "followingAll_one": "Ora segui 1 storia",
+    "followingAll_other": "Ora segui {{count}} storie",
+    "followingSome_one": "Ora segui {{done}} di {{count}} storia",
+    "followingSome_other": "Ora segui {{done}} di {{count}} storie",
+    "followFailedAll": "Non è stato possibile seguire queste storie. Controlla la connessione e riprova.",
+    "optionsExpired": "Opzioni scadute"
   },
   "whatsNew": {
     "gotIt": "Capito",
@@ -2552,7 +2572,8 @@
     "interests": "i tuoi interessi",
     "origin": "da dove vieni",
     "family": "la tua famiglia",
-    "feedTuning": "il tuo Feed"
+    "feedTuning": "il tuo Feed",
+    "followStory": "la storia da seguire"
   },
   "askChoice": {
     "answeredA11y": "già risposto",
@@ -3034,7 +3055,8 @@
   },
   "meraDraft": {
     "changeInterest": "Cambia il mio interesse \"{{statement}}\" in ",
-    "removeInterest": "Rimuovi il mio interesse \"{{statement}}\""
+    "removeInterest": "Rimuovi il mio interesse \"{{statement}}\"",
+    "followStory": "Tienimi aggiornato su "
   },
   "appLock": {
     "forgot": "Hai dimenticato il PIN? Accedi di nuovo e impostane uno nuovo.",

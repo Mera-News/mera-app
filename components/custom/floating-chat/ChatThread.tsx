@@ -27,7 +27,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
@@ -38,6 +38,8 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard, { AppliedByTypingCard } from './ProposalCard';
+import TrackStoryCard from './TrackStoryCard';
+import { isTrackCard } from '@/lib/news-harness/core/proposals';
 import QuickFactCheckCard from './QuickFactCheckCard';
 import FactChoiceCard from './FactChoiceCard';
 import FactChoiceBulkRow from './FactChoiceBulkRow';
@@ -140,6 +142,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   // the card up the list.
   const listRef = useRef<FlatList<ChatThreadItem>>(null);
   const displayItems = showHistoryButton ? [HISTORY_ITEM, ...items] : items;
+  // shortcut: a live OS text-size change left every row clipped at its old
+  // height until the chat reopened, so the list remounts on a new font scale
+  // (it lands back at the newest message). Upgrade if rows re-measure in place.
+  const { fontScale } = useWindowDimensions();
   const revealPendingRef = useRef(false);
   const send = useCallback(
     (text: string) => {
@@ -164,6 +170,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       animated: true,
     });
   }, [displayItems]);
+
+  // A card that grew keeps its bottom on screen. Reads the latest items through a ref:
+  // the call comes after the re-render, from a closure drawn before it.
+  const displayItemsRef = useRef(displayItems);
+  displayItemsRef.current = displayItems;
+  const scrollCardIntoView = useCallback((itemKey: string) => {
+    const list = displayItemsRef.current;
+    const at = list.findIndex((it) => it.key === itemKey);
+    if (at === -1) return;
+    // Reversed data; viewPosition 0 puts the item's end (its bottom) at the visible bottom.
+    listRef.current?.scrollToIndex({ index: list.length - 1 - at, viewPosition: 0, animated: true });
+  }, []);
 
   // Every topic-plan card in the thread — TopicPlanSaveAllRow filters these
   // against the settled map itself, keeping this component store-free.
@@ -307,7 +325,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         return <OptimisationPlanCard />;
 
       case 'proposal-card':
-        return <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />;
+        return item.track && isTrackCard(item.proposal) ? (
+          <TrackStoryCard proposal={item.proposal} source={item.track} onGrown={() => scrollCardIntoView(item.key)} />
+        ) : (
+          <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />
+        );
 
       case 'applied-by-typing':
         return <AppliedByTypingCard changeLogIds={item.changeLogIds} undoable={item.undoable} />;
@@ -408,6 +430,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     <Conversation>
       <View style={styles.listWrap}>
         <ConversationContent
+          key={`font-${fontScale}`}
           items={displayItems}
           listRef={listRef}
           // Visibility ticks: TranslatableDynamic translates only once it

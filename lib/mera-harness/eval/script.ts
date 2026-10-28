@@ -14,7 +14,10 @@ import { CARD_ACTION_KINDS } from './types';
 import type {
   AgentScript,
   ExpectedCard,
+  ExpectedTrack,
+  FakeSearchNewsAnswer,
   FakeSimilarFactsAnswer,
+  ScriptMoreOptions,
   FakeLookupPlaceAnswer,
   ReplyScript,
   ScriptPersona,
@@ -33,6 +36,8 @@ export interface ParseOptions {
 }
 
 const REPLY_SCRIPTS: readonly ReplyScript[] = ['devanagari'];
+
+const SURFACE_KINDS = ['persona', 'article', 'follow-story', 'tutorial', 'optimisation-plan', 'onboarding'] as const;
 
 const FACT_KINDS: readonly FactKind[] = [
   'residence',
@@ -98,7 +103,62 @@ export function parseScript(raw: unknown, opts: ParseOptions): AgentScript {
 
   assertEveryFakeAnswerIsReachable(id, turns);
 
-  return { id, cohort, note: typeof root.note === 'string' ? root.note : undefined, persona, declinedTopics, turns };
+  return {
+    id,
+    cohort,
+    note: typeof root.note === 'string' ? root.note : undefined,
+    persona,
+    declinedTopics,
+    ...(root.surface !== undefined ? { surface: parseSurface(id, root.surface) } : {}),
+    turns,
+  };
+}
+
+function parseSurface(scriptId: string, raw: unknown): NonNullable<AgentScript['surface']> {
+  const r = asRecord(raw);
+  const kind = r?.kind;
+  if (!r || !SURFACE_KINDS.includes(kind as never)) {
+    fail(scriptId, `surface needs a kind, one of: ${SURFACE_KINDS.join(', ')}.`);
+  }
+  for (const f of ['hint', 'context'] as const) {
+    if (r[f] !== null && typeof r[f] !== 'string') fail(scriptId, `surface.${f} must be a string or null.`);
+  }
+  return { kind: kind as (typeof SURFACE_KINDS)[number], hint: r.hint as string | null, context: r.context as string | null };
+}
+
+function parseMoreOptions(scriptId: string, i: number, raw: unknown): ScriptMoreOptions {
+  const r = asRecord(raw);
+  const shown = r && Array.isArray(r.shown) ? r.shown : null;
+  const ok = shown && shown.length > 0 && shown.every((o) => {
+    const or = asRecord(o);
+    return !!or && typeof or.label === 'string' && or.label !== '' && typeof or.searchText === 'string';
+  });
+  if (!r || !ok) fail(scriptId, `turn ${i} moreOptions needs a non-empty shown list of { label, searchText }.`);
+  if (typeof r.room !== 'number' || !Number.isInteger(r.room) || r.room < 1) {
+    fail(scriptId, `turn ${i} moreOptions.room must be an integer of 1 or more.`);
+  }
+  return { shown: shown as ScriptMoreOptions['shown'], room: r.room };
+}
+
+function parseTrack(scriptId: string, i: number, raw: unknown): ExpectedTrack | undefined {
+  if (raw === undefined) return undefined;
+  const t = asRecord(raw);
+  if (!t || typeof t.staged !== 'boolean') fail(scriptId, `turn ${i} expect.track needs a boolean staged.`);
+  for (const f of ['minOptions', 'maxOptions'] as const) {
+    if (t[f] !== undefined && (typeof t[f] !== 'number' || !Number.isInteger(t[f]) || (t[f] as number) < 1)) {
+      fail(scriptId, `turn ${i} expect.track.${f} must be an integer of 1 or more.`);
+    }
+  }
+  if (typeof t.minOptions === 'number' && typeof t.maxOptions === 'number' && t.minOptions > t.maxOptions) {
+    fail(scriptId, `turn ${i} expect.track.minOptions is above maxOptions.`);
+  }
+  return {
+    staged: t.staged,
+    ...(t.minOptions !== undefined ? { minOptions: t.minOptions as number } : {}),
+    ...(t.maxOptions !== undefined ? { maxOptions: t.maxOptions as number } : {}),
+    ...(t.labelMatches !== undefined ? { labelMatches: parseNeedles(scriptId, i, 'track.labelMatches', t.labelMatches) } : {}),
+    ...(t.labelExcludes !== undefined ? { labelExcludes: parseNeedles(scriptId, i, 'track.labelExcludes', t.labelExcludes) } : {}),
+  };
 }
 
 function parsePersona(scriptId: string, raw: unknown): ScriptPersona {
@@ -159,8 +219,9 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
   if (!rec) fail(scriptId, `turn ${i} is not an object.`);
   const user = typeof rec.user === 'string' ? rec.user : undefined;
   const chooses = typeof rec.chooses === 'string' ? rec.chooses : undefined;
-  if ((user === undefined) === (chooses === undefined)) {
-    fail(scriptId, `turn ${i} must carry exactly one of 'user' or 'chooses'.`);
+  const moreOptions = rec.moreOptions === undefined ? undefined : parseMoreOptions(scriptId, i, rec.moreOptions);
+  if ([user, chooses, moreOptions].filter((v) => v !== undefined).length !== 1) {
+    fail(scriptId, `turn ${i} must carry exactly one of 'user', 'chooses' or 'moreOptions'.`);
   }
 
   const pendingCards = rec.pendingCards;
@@ -171,7 +232,8 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     fail(scriptId, `turn ${i} pendingCards must be an array of non-empty statements, or absent.`);
   }
 
-  const ex = asRecord(rec.expect);
+  // A More options tap is scored by its own block, so it may leave `expect` out.
+  const ex = asRecord(rec.expect) ?? (moreOptions ? {} : null);
   if (!ex) fail(scriptId, `turn ${i} has no expect block.`);
 
   // routeKind, skill and legs are optional; a value that IS written must be real.
@@ -203,6 +265,7 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     index: typeof rec.index === 'number' ? rec.index : i,
     user,
     chooses,
+    ...(moreOptions ? { moreOptions } : {}),
     ...(pendingCards !== undefined ? { pendingCards: pendingCards as string[] } : {}),
     expect: {
       ...(routeKind !== undefined ? { routeKind } : {}),
@@ -215,6 +278,7 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
       replyExcludes: parseNeedles(scriptId, i, 'replyExcludes', ex.replyExcludes),
       replyMatches: parseNeedles(scriptId, i, 'replyMatches', ex.replyMatches),
       card: parseCard(scriptId, i, ex.card),
+      track: parseTrack(scriptId, i, ex.track),
       offerExcludes: parseNeedles(scriptId, i, 'offerExcludes', ex.offerExcludes),
       ...(ex.noOffer === true ? { noOffer: true as const } : {}),
     },
@@ -292,6 +356,18 @@ function parseFakeTools(scriptId: string, i: number, raw: unknown): ScriptTurn['
       results: results as { title: string; url: string; snippet: string }[],
     };
   });
+  const news = Array.isArray(rec.searchNews) ? rec.searchNews : [];
+  const newsAnswers: FakeSearchNewsAnswer[] = news.map((a, j) => {
+    const ar = asRecord(a);
+    const headlines = ar && Array.isArray(ar.headlines) ? ar.headlines : null;
+    if (!ar || !headlines || headlines.some((h) => typeof h !== 'string' || h === '')) {
+      fail(scriptId, `turn ${i} searchNews answer ${j} needs headlines, a list of non-empty strings.`);
+    }
+    if (ar.query !== undefined && (typeof ar.query !== 'string' || ar.query !== ar.query.toLowerCase())) {
+      fail(scriptId, `turn ${i} searchNews answer ${j} query must be a lowercase string, or absent.`);
+    }
+    return { ...(typeof ar.query === 'string' ? { query: ar.query } : {}), headlines: headlines as string[] };
+  });
   const similar = Array.isArray(rec.find_similar_facts) ? rec.find_similar_facts : [];
 
   const lookupAnswers: FakeLookupPlaceAnswer[] = lookup.map((a, j) => {
@@ -332,6 +408,7 @@ function parseFakeTools(scriptId: string, i: number, raw: unknown): ScriptTurn['
     lookup_place: lookupAnswers.length > 0 ? lookupAnswers : undefined,
     find_similar_facts: similarAnswers.length > 0 ? similarAnswers : undefined,
     webSearch: webAnswers.length > 0 ? webAnswers : undefined,
+    searchNews: newsAnswers.length > 0 ? newsAnswers : undefined,
   };
 }
 
@@ -349,6 +426,13 @@ function assertEveryFakeAnswerIsReachable(scriptId: string, turns: ScriptTurn[])
       fail(
         scriptId,
         `turn ${turn.index} scripts ${ft.lookup_place.length} lookup_place answer(s) but does not ` +
+          'expect that tool, so no call can ever reach them.',
+      );
+    }
+    if (ft.searchNews && !turn.expect.tools.includes('searchNews')) {
+      fail(
+        scriptId,
+        `turn ${turn.index} scripts ${ft.searchNews.length} searchNews answer(s) but does not ` +
           'expect that tool, so no call can ever reach them.',
       );
     }

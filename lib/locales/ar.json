@@ -762,7 +762,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "جارٍ التجهيز",
     "statusReady": "جاهز",
-    "statusError": "خطأ"
+    "statusError": "خطأ",
+    "turnNoAnswer": "لم أستطع فعل ذلك. جرّب أن تسألني بطريقة أخرى.",
+    "turnFailed": "لم يكتمل ردّي. حاول مرة أخرى."
   },
   "personaChat": {
     "introMessage": "مرحبا! أنا ميرا، مساعدتك الشخصية للأخبار.\n\nلإيجاد أخبار تهمك فعلا، أحتاج إلى معرفة بعض الأشياء عنك. أين تعيش، ما الذي تعمله، الهوايات التي تتابعها، الأسهم التي تراقبها، أين تعيش عائلتك. شارك ما تشاء أو اترك بعضه.\n\nإذا ترددت، فهذا غريزة سليمة. ليس من الحكمة تسليم بيانات شخصية لشركة تطبيقات. ميرا مبنية بطريقة مختلفة: كل ما تخبرني به يحفظ على جهازك، وليس على خوادمنا. اسأل كيف يعمل هذا، أو قل 'ساعدني في الإعداد' وسنبدأ."
@@ -802,7 +804,6 @@
     "topicGenFailed": "تعذّر إنشاء الموضوعات لهذا.",
     "topicGenRetry": "إعادة المحاولة",
     "aiUsageNoticeGeneral": "قد يخطئ ميرا، لذا تحقّق من أي شيء مهم.",
-    "trackChooseHint": "اختر ما تريد متابعته",
     "factDeletePendingTitle": "ستتم إزالته من ملفك الشخصي",
     "saveAsWritten": "احفظ كما كتبته",
     "factDeleteRemove": "إزالة",
@@ -1109,7 +1110,6 @@
     "endedLabel": "انتهت",
     "emptyCta": "الذهاب إلى الخلاصة",
     "trackChatSeed": "أريد متابعة هذه القصة.",
-    "trackProposalTitle": "متابعة هذه القصة؟",
     "alreadyTrackingTitle": "أنت تتابع هذه القصة بالفعل",
     "alreadyTrackingBody": "لا يمكنك متابعة هذه القصة مرتين. إلغاء المتابعة سيحذف كل شيء محفوظ عنها.",
     "goToStoryAction": "الذهاب إلى القصة",
@@ -1133,7 +1133,43 @@
     "articlesCount_two": "مقالان",
     "articlesCount_few": "{{count}} مقالات",
     "articlesCount_many": "{{count}} مقالًا",
-    "articlesCount_other": "{{count}} مقالة"
+    "articlesCount_other": "{{count}} مقالة",
+    "cardTitle": "اختر القصص التي تريد متابعتها",
+    "moreOptions": "خيارات أخرى",
+    "moreOptionsLoading": "جارٍ البحث عن خيارات أخرى",
+    "moreOptionsAdded_zero": "تمت إضافة {{count}} خيارات جديدة",
+    "moreOptionsAdded_one": "تمت إضافة خيار جديد",
+    "moreOptionsAdded_two": "تمت إضافة خيارين جديدين",
+    "moreOptionsAdded_few": "تمت إضافة {{count}} خيارات جديدة",
+    "moreOptionsAdded_many": "تمت إضافة {{count}} خيارًا جديدًا",
+    "moreOptionsAdded_other": "تمت إضافة {{count}} خيار جديد",
+    "moreOptionsNone": "لا توجد خيارات جديدة لهذه القصة",
+    "moreOptionsFailed": "تعذّر تحميل خيارات أخرى. حاول مرة أخرى.",
+    "follow": "متابعة",
+    "followTicked_zero": "متابعة {{count}} قصة",
+    "followTicked_one": "متابعة قصة واحدة",
+    "followTicked_two": "متابعة قصتين",
+    "followTicked_few": "متابعة {{count}} قصص",
+    "followTicked_many": "متابعة {{count}} قصة",
+    "followTicked_other": "متابعة {{count}} قصة",
+    "tryAgain": "إعادة المحاولة",
+    "rowFollowing": "تمت المتابعة",
+    "rowAlready": "تتابعها بالفعل",
+    "rowFailed": "تعذّرت المتابعة",
+    "followingAll_zero": "تتابع الآن {{count}} قصة",
+    "followingAll_one": "تتابع الآن قصة واحدة",
+    "followingAll_two": "تتابع الآن قصتين",
+    "followingAll_few": "تتابع الآن {{count}} قصص",
+    "followingAll_many": "تتابع الآن {{count}} قصة",
+    "followingAll_other": "تتابع الآن {{count}} قصة",
+    "followingSome_zero": "تتابع {{done}} من {{count}} قصة",
+    "followingSome_one": "تتابع {{done}} من {{count}} قصة",
+    "followingSome_two": "تتابع {{done}} من القصتين",
+    "followingSome_few": "تتابع {{done}} من {{count}} قصص",
+    "followingSome_many": "تتابع {{done}} من {{count}} قصة",
+    "followingSome_other": "تتابع {{done}} من {{count}} قصة",
+    "followFailedAll": "تعذّرت متابعة هذه القصص. تحقق من اتصالك وحاول مرة أخرى.",
+    "optionsExpired": "انتهت صلاحية الخيارات"
   },
   "whatsNew": {
     "gotIt": "فهمت",
@@ -2702,7 +2738,8 @@
     "interests": "اهتماماتك",
     "origin": "من أين أنت",
     "family": "عائلتك",
-    "feedTuning": "خلاصتك"
+    "feedTuning": "خلاصتك",
+    "followStory": "القصة التي تريد متابعتها"
   },
   "askChoice": {
     "answeredA11y": "تمت الإجابة بالفعل",
@@ -3264,7 +3301,8 @@
   },
   "meraDraft": {
     "changeInterest": "غيّر اهتمامي \"{{statement}}\" إلى ",
-    "removeInterest": "أزل اهتمامي \"{{statement}}\""
+    "removeInterest": "أزل اهتمامي \"{{statement}}\"",
+    "followStory": "أبقني على اطلاع بشأن "
   },
   "appLock": {
     "forgot": "نسيت رمز PIN؟ سجّل الدخول مجددًا واختر رمزًا جديدًا.",

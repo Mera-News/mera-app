@@ -253,6 +253,18 @@ export interface PendingProposalView {
   chooseOne: boolean;
   /** Typed agreement may apply it: one option and no tap-only action. */
   appliable: boolean;
+  /** A follow card with 2 or more options: the user ticks the ones they want. */
+  multiSelect?: boolean;
+}
+
+/** Where the chat was opened and what the user probably wants there. Rendered
+ *  verbatim as `<surface>`: the driver escapes every dynamic field. */
+export interface SurfaceContext {
+  kind: 'persona' | 'article' | 'follow-story' | 'tutorial' | 'optimisation-plan' | 'onboarding';
+  /** One line: the route leg sees only this. */
+  hint: string | null;
+  /** The rest, for skill legs. */
+  context: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -333,6 +345,11 @@ export interface AgentToolPort {
   applyProposal?(): Promise<Record<string, unknown>>;
   /** Drop the waiting card: the user declined. */
   cancelProposal?(): Promise<Record<string, unknown>>;
+  /** Stage a follow card from `options` [{label, search}]. Result carries
+   *  `proposalId`, or `error` when nothing could be staged. */
+  proposeTrack?(args: Record<string, unknown>): Promise<Record<string, unknown>>;
+  /** Mera's own news index for a story the user named. */
+  searchNews?(args: { query: string }): Promise<Record<string, unknown>>;
 }
 
 export interface AgentDeps {
@@ -404,6 +421,16 @@ export interface AgentTurnResult {
    *  narrated the loop's own process or leaked internals. The app renders it as
    *  its own bubble above the reply. */
   acknowledgement: string;
+  /** The turn would have ended silent (no reply, nothing staged, no question)
+   *  and ran its one tool-free closing leg. */
+  closingLegFired: boolean;
+  /** The closing leg wrote nothing usable, so the canned line was shown. */
+  noAnswerFallbackUsed: boolean;
+  /** The closing leg's own text claimed a save or a change (it was replaced). */
+  closingClaim: boolean;
+  /** Something is on screen for the user to act on: a staged card, a removal
+   *  card, an apply or cancel, or the loop's own chip. */
+  stagedSomething: boolean;
   /** Final replies re-asked because they narrated the loop's process or
    *  promised a step the turn never took. Its own budget. */
   processRetries: number;

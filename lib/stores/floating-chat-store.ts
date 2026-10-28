@@ -203,6 +203,11 @@ interface FloatingChatState {
     // watches — unlike an edge-triggered nonce it can't be swallowed by mount
     // order (the session unmounts while the popover is closed).
     conversationId: string | null;
+    // A follow card's ticked rows (normalised labels) and its More options
+    // state, keyed by proposal id. Memory only and kept here, not in the card,
+    // so a card that unmounts (the chat closed mid-request) comes back as it was.
+    trackTicks: Record<string, string[]>;
+    trackMore: Record<string, TrackMoreState>;
 
     // Actions
     expand: (context?: ChatContext, opts?: { draft?: string }) => void;
@@ -217,6 +222,8 @@ interface FloatingChatState {
     setUnresolvedTopicPlanCount: (count: number) => void;
     setUnresolvedFactChoiceCount: (count: number) => void;
     setToolCallResult: (key: string, result: Record<string, unknown>) => void;
+    setTrackTicks: (proposalId: string, keys: string[]) => void;
+    setTrackMore: (proposalId: string, state: TrackMoreState | null) => void;
     addTopicPlanNote: (note: TopicPlanNote) => void;
     requestTopicPlanTurn: () => void;
     clearTopicPlanTurnRequest: () => void;
@@ -237,6 +244,9 @@ interface FloatingChatState {
     requestNewChat: () => void;
     reset: () => void;
 }
+
+/** A follow card's More options request: running, or how the last one ended. */
+export type TrackMoreState = 'loading' | 'none' | 'failed';
 
 const DEFAULT_CONTEXT: ChatContext = { kind: 'persona' };
 
@@ -267,6 +277,8 @@ const initialState = {
     topicPlanTurnInFlight: false,
     quickFactChecks: [] as QuickFactCheckEntry[],
     conversationId: null as string | null,
+    trackTicks: {} as Record<string, string[]>,
+    trackMore: {} as Record<string, TrackMoreState>,
 };
 
 /** The open must keep the current thread: a turn is busy or its answer is
@@ -454,6 +466,17 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     setToolCallResult: (key, result) =>
         set((state) => ({ toolCallResults: { ...state.toolCallResults, [key]: result } })),
 
+    setTrackTicks: (proposalId, keys) =>
+        set((state) => ({ trackTicks: { ...state.trackTicks, [proposalId]: keys } })),
+
+    setTrackMore: (proposalId, more) =>
+        set((state) => {
+            const next = { ...state.trackMore };
+            if (more) next[proposalId] = more;
+            else delete next[proposalId];
+            return { trackMore: next };
+        }),
+
     addTopicPlanNote: (note) =>
         set((state) => ({
             topicPlanNotes: [...state.topicPlanNotes, note].slice(-MAX_TOPIC_PLAN_NOTES),
@@ -515,6 +538,10 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     requestNewChat: () =>
         set({
             conversationId: null,
+            // Like every other fresh-thread path: a card left waiting must not
+            // follow the reader into the new chat, where nothing shows it but
+            // the next turn's state line still says one is waiting.
+            proposal: null,
             quickFactChecks: [],
             topicPlanNotes: [],
             topicPlanTurnRequest: null,

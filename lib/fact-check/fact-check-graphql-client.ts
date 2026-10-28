@@ -46,6 +46,7 @@ import { FACT_CHECK_FIELDS, FACT_CHECK_FIELDS_LEGACY } from './fact-check-fields
 import { isTerminalStatus } from './fact-check-state';
 import type { FactCheckRow } from './fact-check-types';
 import {
+    forgetFactCheckAsked,
     listAskedFactChecks,
     noteFactCheckStored,
     recordFactCheckAsked,
@@ -89,6 +90,9 @@ function graphQLErrorCodes(err: unknown): string[] {
 }
 
 const isValidationFailure = (err: unknown) => graphQLErrorCodes(err).includes('GRAPHQL_VALIDATION_FAILED');
+/** The server no longer holds the article (pruned or removed). An answer, not a failure: re-asking
+ *  can never succeed, so the ask is dropped and nothing reaches Sentry (MERA-APP-11). */
+const isArticleGone = (err: unknown) => graphQLErrorCodes(err).includes('NOT_FOUND');
 
 /** Set once a server rejects `recheckAvailableAt` (deployed before it): the
  *  session then reads with the legacy documents and offers no recheck call. */
@@ -113,7 +117,7 @@ async function readFactCheck<K extends 'factCheck' | 'cachedFactCheck'>(
                 query,
                 variables: { articleId },
                 fetchPolicy: 'no-cache',
-                context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED', 'NOT_FOUND'] },
             });
             return data?.[key] ?? null;
         } catch (err) {
@@ -125,6 +129,7 @@ async function readFactCheck<K extends 'factCheck' | 'cachedFactCheck'>(
         query: legacy,
         variables: { articleId },
         fetchPolicy: 'no-cache',
+        context: { expectedErrorCodes: ['NOT_FOUND'] },
     });
     return data?.[key] ?? null;
 }
@@ -274,6 +279,10 @@ export async function requestFactCheck(
         await keepCheckedArticle(articleId, keep, outcome.row, articleTitle);
         return outcome;
     } catch (err) {
+        if (isArticleGone(err)) {
+            await forgetFactCheckAsked(articleId);
+            return { terminal: true, row: null };
+        }
         logger.captureException(err, {
             tags: { service: 'fact-check-graphql-client', method: 'requestFactCheck' },
             extra: { articleId },
@@ -304,26 +313,31 @@ const GET_CACHED_FACT_CHECK_LEGACY = gql`
  * stores whatever the server answers through the one store. A pending answer
  * still carries the PREVIOUS verdict fields: every renderer keys on status.
  *
- * Never throws. Returns false when nothing was asked: a server without the
- * option (validation failure) or a failed request.
+ * Never throws. `gone`: the server no longer holds the article, so it can never
+ * be checked again (the panel says so). `not-asked`: a server without the option
+ * (validation failure) or a failed request.
  */
 export async function requestFactCheckAgain(
     articleId: string,
     articleTitle?: string | null,
-): Promise<boolean> {
-    if (recheckUnsupported) return false;
+): Promise<'asked' | 'gone' | 'not-asked'> {
+    if (recheckUnsupported) return 'not-asked';
     try {
         await recordFactCheckAsked({ articleId, suggestionId: null, title: articleTitle ?? null });
         const { data } = await client.mutate<{ requestFactCheck: FactCheckRow | null }>({
             mutation: REQUEST_FACT_CHECK_AGAIN,
             variables: { articleId },
-            context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+            context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED', 'NOT_FOUND'] },
         });
         const row = data?.requestFactCheck ?? null;
         if (row) await storeServerFactCheck(articleId, row, articleTitle);
         if (row && !isTerminalStatus(row.status)) ensureAskedFactCheckPoller();
-        return !!row;
+        return row ? 'asked' : 'not-asked';
     } catch (err) {
+        if (isArticleGone(err)) {
+            await forgetFactCheckAsked(articleId);
+            return 'gone';
+        }
         if (isValidationFailure(err)) {
             recheckUnsupported = true;
         } else {
@@ -332,7 +346,7 @@ export async function requestFactCheckAgain(
                 extra: { articleId },
             });
         }
-        return false;
+        return 'not-asked';
     }
 }
 
@@ -351,6 +365,10 @@ async function rereadFactCheck(
         await storeServerFactCheck(articleId, row, articleTitle);
         return { terminal: isTerminalStatus(row.status) };
     } catch (err) {
+        if (isArticleGone(err)) {
+            await forgetFactCheckAsked(articleId);
+            return { terminal: true };
+        }
         logger.captureException(err, {
             tags: { service: 'fact-check-graphql-client', method: 'rereadFactCheck' },
             extra: { articleId },

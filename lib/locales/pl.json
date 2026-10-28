@@ -730,7 +730,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Uruchamianie",
     "statusReady": "Gotowe",
-    "statusError": "Błąd"
+    "statusError": "Błąd",
+    "turnNoAnswer": "Nie udało mi się tego zrobić. Spróbuj zapytać inaczej.",
+    "turnFailed": "Ta odpowiedź się nie dokończyła. Spróbuj ponownie."
   },
   "personaChat": {
     "introMessage": "Cześć! Jestem Mera, Twój osobisty asystent wiadomości.\n\nAby znaleźć wiadomości, które Cię naprawdę dotyczą, muszę wiedzieć o Tobie trochę więcej. Gdzie mieszkasz, czym się zajmujesz, jakie masz hobby, które akcje śledzisz, gdzie mieszka Twoja rodzina. Możesz udostępnić tyle lub mało, ile chcesz.\n\nJeśli to Cię niepokoi, masz rację. Nie jest mądrze oddawać dane osobiste firmie, która tworzy aplikacje. Mera jest zbudowana inaczej: wszystko, co mi powiesz, jest zapisywane na Twoim urządzeniu, a nie na naszych serwerach. Zapytaj mnie, jak to działa, lub powiedz 'pomóż mi w konfiguracji' i zaczniemy."
@@ -770,7 +772,6 @@
     "topicGenFailed": "Nie udało się wygenerować tematy dla tego.",
     "topicGenRetry": "Ponów",
     "aiUsageNoticeGeneral": "Mera może się mylić, więc sprawdzaj ważne rzeczy.",
-    "trackChooseHint": "Wybierz, co obserwować",
     "factDeletePendingTitle": "Zostanie usunięte z Twojego profilu",
     "saveAsWritten": "Zapisz tak, jak napisałem",
     "factDeleteRemove": "Usuń",
@@ -1065,7 +1066,6 @@
     "endedLabel": "Zakończona",
     "emptyCta": "Przejdź do Strumienia",
     "trackChatSeed": "Chcę śledzić tę historię.",
-    "trackProposalTitle": "Śledzić tę historię?",
     "alreadyTrackingTitle": "Już śledzisz to",
     "alreadyTrackingBody": "Nie możesz śledzić tej historii dwukrotnie. Usunięcie jej ze śledzenia skasowałoby wszystko, co dla niej zapisano.",
     "goToStoryAction": "Przejdź do historii",
@@ -1087,7 +1087,35 @@
     "articlesCount_one": "{{count}} artykuł",
     "articlesCount_few": "{{count}} artykuły",
     "articlesCount_many": "{{count}} artykułów",
-    "articlesCount_other": "{{count}} artykułu"
+    "articlesCount_other": "{{count}} artykułu",
+    "cardTitle": "Wybierz historie do śledzenia",
+    "moreOptions": "Więcej opcji",
+    "moreOptionsLoading": "Szukam więcej opcji",
+    "moreOptionsAdded_one": "Dodano 1 opcję",
+    "moreOptionsAdded_few": "Dodano {{count}} opcje",
+    "moreOptionsAdded_many": "Dodano {{count}} opcji",
+    "moreOptionsAdded_other": "Dodano {{count}} opcji",
+    "moreOptionsNone": "Brak nowych opcji dla tej historii",
+    "moreOptionsFailed": "Nie udało się wczytać więcej opcji. Spróbuj ponownie.",
+    "follow": "Śledź",
+    "followTicked_one": "Śledź 1 historię",
+    "followTicked_few": "Śledź {{count}} historie",
+    "followTicked_many": "Śledź {{count}} historii",
+    "followTicked_other": "Śledź {{count}} historii",
+    "tryAgain": "Spróbuj ponownie",
+    "rowFollowing": "Śledzisz",
+    "rowAlready": "Już śledzisz",
+    "rowFailed": "Nie udało się",
+    "followingAll_one": "Śledzisz 1 historię",
+    "followingAll_few": "Śledzisz {{count}} historie",
+    "followingAll_many": "Śledzisz {{count}} historii",
+    "followingAll_other": "Śledzisz {{count}} historii",
+    "followingSome_one": "Śledzisz {{done}} z {{count}} historii",
+    "followingSome_few": "Śledzisz {{done}} z {{count}} historii",
+    "followingSome_many": "Śledzisz {{done}} z {{count}} historii",
+    "followingSome_other": "Śledzisz {{done}} z {{count}} historii",
+    "followFailedAll": "Nie udało się śledzić tych historii. Sprawdź połączenie i spróbuj ponownie.",
+    "optionsExpired": "Opcje wygasły"
   },
   "whatsNew": {
     "gotIt": "Rozumiem",
@@ -2622,7 +2650,8 @@
     "interests": "twoje zainteresowania",
     "origin": "skąd pochodzisz",
     "family": "twoją rodzinę",
-    "feedTuning": "twój Kanał"
+    "feedTuning": "twój Kanał",
+    "followStory": "historię do śledzenia"
   },
   "askChoice": {
     "answeredA11y": "już odpowiedziano",
@@ -3144,7 +3173,8 @@
   },
   "meraDraft": {
     "changeInterest": "Zmień moje zainteresowanie „{{statement}}” na ",
-    "removeInterest": "Usuń moje zainteresowanie „{{statement}}”"
+    "removeInterest": "Usuń moje zainteresowanie „{{statement}}”",
+    "followStory": "Informuj mnie na bieżąco o "
   },
   "appLock": {
     "forgot": "Zapomniałeś PIN-u? Zaloguj się ponownie i ustaw nowy.",

@@ -22,6 +22,8 @@ interface HintDef {
   readonly key: string;
   readonly web?: true;
   readonly cloud?: true;
+  /** What the tap puts in the composer, when it is not the hint's own text. */
+  readonly draft?: string;
 }
 
 const ASK_NEWS: HintDef = { key: 'meraHints.askNews', web: true };
@@ -29,7 +31,13 @@ const ASK_NEWS: HintDef = { key: 'meraHints.askNews', web: true };
 // No `profile` entry: Profile opens with the original welcome and its own chips
 // (floating-chat/profile-welcome.ts).
 const POOLS: Partial<Record<MeraPageKey, readonly HintDef[]>> = {
-  feed: [{ key: 'meraHints.feed.moreNews' }, { key: 'meraHints.feed.addHome' }, ASK_NEWS],
+  feed: [
+    { key: 'meraHints.feed.moreNews' },
+    { key: 'meraHints.feed.addHome' },
+    // Any cloud chat follows a story (onemera S3); on device only Stories can.
+    // It took ASK_NEWS's place (Library keeps that one) so the pool stays at 3.
+    { key: 'meraHints.stories.follow', cloud: true, draft: 'meraDraft.followStory' },
+  ],
   interest: [{ key: 'meraHints.interest.change' }, { key: 'meraHints.interest.remove' }],
   stories: [{ key: 'meraHints.stories.follow' }, { key: 'meraHints.stories.name' }],
   world: [
@@ -93,11 +101,13 @@ export function interestFactId(surface: string | null | undefined): string | nul
   return id.length > 0 ? id : null;
 }
 
+function hintDefs(page: MeraPageKey, webSearch: boolean, onDevice: boolean): readonly HintDef[] {
+  return (POOLS[page] ?? []).filter((h) => !(h.cloud && onDevice) && (!h.web || (webSearch && !onDevice)));
+}
+
 /** The page's starter keys, minus what this engine cannot do. */
 export function hintKeys(page: MeraPageKey, webSearch: boolean, onDevice = false): string[] {
-  return (POOLS[page] ?? [])
-    .filter((h) => !(h.cloud && onDevice) && (!h.web || (webSearch && !onDevice)))
-    .map((h) => h.key);
+  return hintDefs(page, webSearch, onDevice).map((h) => h.key);
 }
 
 /** The chat the button opens. `subject` is the fact statement on One interest. */
@@ -147,7 +157,7 @@ export function pageStarters(
   subject?: string,
   onDevice = false,
 ): PageStarter[] {
-  return hintKeys(page, webSearch, onDevice).map((labelKey) => {
+  return hintDefs(page, webSearch, onDevice).map(({ key: labelKey, draft }) => {
     if (page === 'interest' && subject) {
       const draftKey =
         labelKey === 'meraHints.interest.remove'
@@ -155,14 +165,19 @@ export function pageStarters(
           : 'meraDraft.changeInterest';
       return { labelKey, draftKey, draftOptions: { statement: subject } };
     }
-    return { labelKey, draftKey: labelKey };
+    return { labelKey, draftKey: draft ?? labelKey };
   });
 }
 
 /** Every i18n key this module can return, for the en.json presence test. */
 export function allKeys(): string[] {
   const keys = new Set<string>();
-  for (const pool of Object.values(POOLS)) for (const h of pool ?? []) keys.add(h.key);
+  for (const pool of Object.values(POOLS)) {
+    for (const h of pool ?? []) {
+      keys.add(h.key);
+      if (h.draft) keys.add(h.draft);
+    }
+  }
   for (const page of Object.keys(POOLS) as MeraPageKey[]) {
     keys.add(introKeyFor(page, true));
     keys.add(introKeyFor(page, false));

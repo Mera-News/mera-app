@@ -32,7 +32,7 @@ it('reads through the legacy document after a validation failure, and asks no re
   expect((await storedFor('a1'))[0]).toMatchObject({ status: 'complete' });
 
   await requestFactCheck('a2', 'Title', undefined, true);
-  expect(await requestFactCheckAgain('a1', 'Title')).toBe(false);
+  expect(await requestFactCheckAgain('a1', 'Title')).toBe('not-asked');
 
   const fetchOps = ops.filter((o) => o.startsWith('GetFactCheck') || o === 'RequestFactCheckAgain');
   expect(fetchOps).toEqual(['GetFactCheck', 'GetFactCheckLegacy', 'GetFactCheckLegacy']);
@@ -46,7 +46,7 @@ it('asks for a recheck on a server that has the option', async () => {
       return { requestFactCheck: checkRow({ status: 'pending' }) };
     }),
   );
-  expect(await requestFactCheckAgain('a1', 'Title')).toBe(true);
+  expect(await requestFactCheckAgain('a1', 'Title')).toBe('asked');
   expect(asked).toEqual([{ articleId: 'a1' }]);
   expect((await storedFor('a1'))[0]).toMatchObject({ status: 'pending' });
 });

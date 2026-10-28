@@ -318,6 +318,61 @@ export const CANCEL_PROPOSAL_TOOL: ToolDefinition = {
   },
 };
 
+/** Put stories to follow on a card. Declared here because the harness imports
+ *  nothing from news-harness; the device's staging (`decideProposeTrack`)
+ *  parses the same `options` shape. A quoted line carries "(in the reply
+ *  language)": a quoted English line in a tool description beats the
+ *  system prompt's language rule. */
+export const PROPOSE_TRACK_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'proposeTrack',
+    description:
+      'Put stories to follow on a card. Nothing is followed until the user ticks the ones they want and taps Follow. '
+      + 'Give 3 or 4 options from the narrow event to the broad ongoing story, each grounded in what the user said and '
+      + 'what your searches returned. Your sentence beside the card is one line, like "Pick the stories to follow below." '
+      + '(in the reply language). This ENDS your turn.',
+    parameters: {
+      type: 'object',
+      properties: {
+        options: {
+          type: 'array',
+          description: 'The options, narrow to broad.',
+          items: {
+            type: 'object',
+            properties: {
+              label: { type: 'string', description: 'What the user reads: 5 words or fewer, Title Case, no trailing punctuation.' },
+              search: {
+                type: 'string',
+                description: 'Hidden search text: 8 words or fewer with the who, what and where, proper nouns keeping their capitals, no year or season.',
+              },
+            },
+            required: ['label', 'search'],
+          },
+        },
+      },
+      required: ['options'],
+    },
+  },
+};
+
+/** Mera's own news index, from the device (GraphQL, not inference): the
+ *  coverage a followed story will actually match. */
+export const SEARCH_NEWS_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'searchNews',
+    description:
+      "Search Mera's own news index (the last 48 hours) for a story the user named. Returns headlines only. "
+      + 'Use the names in them when you write the options.',
+    parameters: {
+      type: 'object',
+      properties: { query: { type: 'string', description: 'Search words, in English.' } },
+      required: ['query'],
+    },
+  },
+};
+
 /** What the driver says about the card waiting for the user, for the tools a
  *  leg may carry. */
 export interface PendingCardTools {
@@ -330,6 +385,7 @@ export interface PendingCardTools {
 export const SKILL_TOOL_ORDER = [
   'find_similar_facts', 'lookup_place', 'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
   'webSearch', 'explainMera', 'proposeChanges', 'applyProposal', 'cancelProposal',
+  'proposeTrack', 'searchNews',
 ] as const;
 
 const SKILL_TOOL_DEFS: Record<(typeof SKILL_TOOL_ORDER)[number], ToolDefinition> = {
@@ -343,6 +399,8 @@ const SKILL_TOOL_DEFS: Record<(typeof SKILL_TOOL_ORDER)[number], ToolDefinition>
   proposeChanges: PROPOSE_CHANGES_TOOL,
   applyProposal: APPLY_PROPOSAL_TOOL,
   cancelProposal: CANCEL_PROPOSAL_TOOL,
+  proposeTrack: PROPOSE_TRACK_TOOL,
+  searchNews: SEARCH_NEWS_TOOL,
 };
 
 /**
@@ -359,6 +417,7 @@ function fallbackSkillTools(skillId: string): readonly string[] {
   }
   if (skillId === 'conversation/question') return ['find_similar_facts', 'lookup_place', 'ask_choice', 'webSearch'];
   if (skillId === 'conversation/about-mera') return ['find_similar_facts', 'lookup_place', 'ask_choice', 'explainMera'];
+  if (skillId === 'conversation/follow-story') return ['webSearch', 'applyProposal', 'cancelProposal', 'proposeTrack', 'searchNews'];
   return ['find_similar_facts', 'lookup_place', 'ask_choice'];
 }
 
@@ -395,6 +454,10 @@ export function toolsForLeg(opts: {
   explainMera?: boolean;
   /** The device offers the card tools. */
   cards?: boolean;
+  /** The device can stage a follow card. */
+  tracks?: boolean;
+  /** The device can search Mera's own index. */
+  searchNews?: boolean;
   /** The card waiting for the user, or null. */
   pendingCard?: PendingCardTools | null;
   /** The waiting card is the most recent ask, so the route leg may answer it. */
@@ -415,6 +478,8 @@ export function toolsForLeg(opts: {
     if (name === 'webSearch') return opts.webSearch === true;
     if (name === 'explainMera') return opts.explainMera === true;
     if (name === 'proposeChanges') return opts.cards === true;
+    if (name === 'proposeTrack') return opts.tracks === true;
+    if (name === 'searchNews') return opts.searchNews === true;
     if (name === 'applyProposal') return opts.cards === true && opts.pendingCard?.appliable === true;
     if (name === 'cancelProposal') return opts.cards === true && !!opts.pendingCard;
     return true;

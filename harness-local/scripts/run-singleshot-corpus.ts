@@ -18,6 +18,23 @@
 // on,on-twin,off). The pass rule is printed before any call and judged on the
 // turn's outcome; the VERDICT needs `on`, `on-twin` and `off`.
 //
+// PROMPT-VERSION ARMS (D8): `pre`, `post` and `post-twin`, all thinking off as shipped.
+// `post` and `post-twin` use the live prompt builders; `pre` uses the exact shipped strings and
+// tool arrays from a JSON snapshot passed with --pre-prompts <path> (keys followStory,
+// followStoryTools, article, articleTools; required when `pre` is in --arms). The run throws if
+// the snapshot's system prompts are byte-equal to the live ones (the arm would measure nothing).
+// With exactly --arms pre,post,post-twin the verdict is, per fixture kind k: spread_k = |post_k - post-twin_k| passes;
+// PASS when post proposeTrack passes >= pre - max(1, spread), and proposeFactCheck and
+// answer each have |post_k - pre_k| <= max(1, spread_k).
+//
+// HARNESS ARM (S3): `harness` runs the cloud persona loop (runAgentTurn from lib/mera-harness)
+// on the follow-story surface, with the same NEAR text-xml transport and canned offline tools,
+// against the shipped single-shot follow brain (`off`). Follow-story fixtures only: when
+// `harness` is in --arms, article fixtures are skipped for every arm (and the run says so).
+// With exactly --arms off,off-twin,harness the verdict is: spread = |off - off-twin| proposeTrack
+// passes; PASS when harness proposeTrack passes >= off - max(1, spread) AND harness p90 turn
+// time <= 2 x off p90. A harness row is scored by the off rule: 3 or 4 options parseTrackScopeOptions accepts. No on/off verdict is printed.
+//
 // --engine afm|qwen-local|nano-proxy runs the ON-DEVICE flows instead
 // (lib/news-harness/on-device/follow-story and article-feedback): their prompts,
 // schemas and turn mappers, through lib/engine.ts. Arms are `<engine>` and its
@@ -42,6 +59,15 @@ import {
   getArticleFeedbackToolDefinitions,
   parseTrackScopeOptions,
 } from '../../lib/news-harness/article-feedback/agent-core';
+import {
+  createAgentState,
+  loadSkill,
+  runAgentTurn,
+  type AgentModelRequest,
+  type AgentModelResult,
+  type AgentToolPort,
+} from '../../lib/mera-harness';
+import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
 import { KNOWLEDGE_TOOL_NAMES } from '../../lib/news-harness/persona-management/persona-agent-core';
 import { asUntrusted } from '../../lib/news-harness/prompts/untrusted-text';
 import { jsonCandidates } from '../../lib/mera-protocol-toolkit/core/structured-json';
@@ -71,13 +97,19 @@ interface Fixture {
   article?: { title: string; publication: string; description: string; related: string[] };
 }
 
-interface Arm { id: string; thinking: boolean }
+interface Arm { id: string; thinking: boolean; prompts?: 'pre' }
 const ARMS: Arm[] = [
   { id: 'on', thinking: true },
   { id: 'on-twin', thinking: true },
   { id: 'off', thinking: false },
   { id: 'off-twin', thinking: false },
+  { id: 'pre', thinking: false, prompts: 'pre' },
+  { id: 'post', thinking: false },
+  { id: 'post-twin', thinking: false },
+  { id: 'harness', thinking: false },
 ];
+
+export interface PrePrompts { followStory: string; followStoryTools: unknown[]; article: string; articleTools: unknown[] }
 
 type Msg = { role: string; content: string; tool_calls?: unknown[]; tool_call_id?: string };
 
@@ -85,17 +117,19 @@ const FIXTURES = join(__dirname, '../../lib/mera-harness/eval/fixtures/singlesho
 // Fixed so prompts are byte-stable across arms and runs.
 const NOW_MS = Date.parse('2026-10-14T12:00:00Z');
 
-export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[] } {
+export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[]; prePrompts?: string } {
   let repeat = 3;
   let dryRun = false;
   let label = 'singleshot';
   let model = BIG_MODEL;
   let arms = ARMS.slice(0, 3);
+  let prePrompts: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--repeat') repeat = Number(argv[++i]);
     else if (argv[i] === '--dry-run') dryRun = true;
     else if (argv[i] === '--label') label = argv[++i] ?? label;
     else if (argv[i] === '--model') model = argv[++i] ?? model;
+    else if (argv[i] === '--pre-prompts') prePrompts = argv[++i];
     else if (argv[i] === '--arms') {
       arms = (argv[++i] ?? '').split(',').map((id) => {
         const arm = ARMS.find((a) => a.id === id);
@@ -105,7 +139,51 @@ export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; la
       if (new Set(arms.map((a) => a.id)).size !== arms.length) throw new Error('duplicate arm in --arms');
     }
   }
-  return { repeat, dryRun, label, model, arms };
+  if (arms.some((a) => a.prompts === 'pre') && !prePrompts) throw new Error('arm "pre" needs --pre-prompts <path>');
+  return { repeat, dryRun, label, model, arms, prePrompts };
+}
+
+export const liveSystem = (agent: Fixture['agent']): string =>
+  setup({ agent, article: { title: '', publication: '', description: '', related: [] } } as Fixture).system;
+
+/** Loads the shipped-prompt snapshot; throws when it is malformed or equals the live prompts. */
+export function loadPrePrompts(path: string): PrePrompts {
+  const j = JSON.parse(readFileSync(path, 'utf8')) as Partial<PrePrompts>;
+  for (const k of ['followStory', 'article'] as const) if (typeof j[k] !== 'string' || !j[k]) throw new Error(`--pre-prompts: "${k}" must be a non-empty string`);
+  for (const k of ['followStoryTools', 'articleTools'] as const) if (!Array.isArray(j[k])) throw new Error(`--pre-prompts: "${k}" must be an array`);
+  const pre = j as PrePrompts;
+  if (pre.followStory === liveSystem('follow-story') || pre.article === liveSystem('article')) {
+    throw new Error('--pre-prompts: snapshot equals the live system prompt, so the pre arm would measure nothing');
+  }
+  return pre;
+}
+
+interface VerdictRow { arm: string; expect: Fixture['expect']; pass: boolean }
+/** D8 rule: see the header. Counts are over the count-matched rows. */
+/** D8 rule: see the header. Counts are over the count-matched rows; spread is per fixture kind. */
+export function prePostVerdict(rows: VerdictRow[]): { spread: Record<Fixture['expect'], number>; trackOk: boolean; othersOk: boolean; verdict: 'PASS' | 'FAIL' } {
+  const n = (arm: string, k: Fixture['expect']): number => rows.filter((x) => x.arm === arm && x.pass && x.expect === k).length;
+  const kinds = ['proposeTrack', 'proposeFactCheck', 'answer'] as const;
+  const spread = Object.fromEntries(kinds.map((k) => [k, Math.abs(n('post', k) - n('post-twin', k))])) as Record<Fixture['expect'], number>;
+  const trackOk = n('post', 'proposeTrack') >= n('pre', 'proposeTrack') - Math.max(1, spread.proposeTrack);
+  const othersOk = (['proposeFactCheck', 'answer'] as const).every((k) => Math.abs(n('post', k) - n('pre', k)) <= Math.max(1, spread[k]));
+  return { spread, trackOk, othersOk, verdict: trackOk && othersOk ? 'PASS' : 'FAIL' };
+}
+
+const isPrePostSet = (arms: Arm[]): boolean => arms.map((a) => a.id).join(',') === 'pre,post,post-twin';
+const isHarnessSet = (arms: Arm[]): boolean => arms.map((a) => a.id).join(',') === 'off,off-twin,harness';
+
+interface HarnessRow { arm: string; expect: Fixture['expect']; pass: boolean; wallMs: number }
+/** S3 rule: see the header. Rows are the count-matched ones. */
+export function harnessVerdict(rows: HarnessRow[]): { spread: number; quality: boolean; latency: boolean; harnessP90: number; offP90: number; verdict: 'PASS' | 'FAIL' } {
+  const n = (arm: string): number => rows.filter((x) => x.arm === arm && x.pass && x.expect === 'proposeTrack').length;
+  const p90 = (arm: string): number => pct(rows.filter((x) => x.arm === arm).map((x) => x.wallMs), 90);
+  const spread = Math.abs(n('off') - n('off-twin'));
+  const quality = n('harness') >= n('off') - Math.max(1, spread);
+  const harnessP90 = p90('harness');
+  const offP90 = p90('off');
+  const latency = harnessP90 <= 2 * offP90;
+  return { spread, quality, latency, harnessP90, offP90, verdict: quality && latency ? 'PASS' : 'FAIL' };
 }
 
 /** COUNT-MATCHED: an error row drops its (fixture, repeat) for every arm, not the whole repeat. */
@@ -119,11 +197,11 @@ export function countMatched<T extends { fixture: string; repeat: number; error:
   return { valid: rows.filter((x) => !dropped.has(cell(x))), dropped: [...dropped].sort() };
 }
 
-function setup(f: Fixture): { system: string; tools: unknown[]; history: Msg[]; context: string } {
+function setup(f: Fixture, arm?: Arm, pre?: PrePrompts): { system: string; tools: unknown[]; history: Msg[]; context: string } {
   if (f.agent === 'follow-story') {
     return {
-      system: buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'English', canSearch: true, webSearch: true }),
-      tools: getFollowStoryToolDefinitions('CLOUD', true),
+      system: arm?.prompts === 'pre' ? pre!.followStory : buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'English', canSearch: true, webSearch: true }),
+      tools: arm?.prompts === 'pre' ? pre!.followStoryTools : getFollowStoryToolDefinitions('CLOUD', true),
       history: [
         { role: 'user', content: 'I want to follow a story' },
         { role: 'assistant', content: 'What story or subject should Mera follow?' },
@@ -133,8 +211,8 @@ function setup(f: Fixture): { system: string; tools: unknown[]; history: Msg[]; 
   }
   const a = f.article!;
   return {
-    system: buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true, factCheck: true }),
-    tools: getArticleFeedbackToolDefinitions('CLOUD', true),
+    system: arm?.prompts === 'pre' ? pre!.article : buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true, factCheck: true }),
+    tools: arm?.prompts === 'pre' ? pre!.articleTools : getArticleFeedbackToolDefinitions('CLOUD', true),
     history: [],
     context: buildFeedbackContext({
       nowMs: NOW_MS,
@@ -192,13 +270,102 @@ interface TurnRow {
   rawOptionCount?: number;
   /** On-device article chat: the intent the model picked. */
   intent?: string;
+  /** Harness arm: model legs, the tools each leg called, and whether the closing leg ran. */
+  legs?: number;
+  legTools?: string[][];
+  closingLegFired?: boolean;
+}
+
+export type HarnessCaller = (req: AgentModelRequest) => Promise<AgentModelResult>;
+
+/** The same transport as the off arms (NEAR, text-xml, streamed), shaped as the loop's callModel. */
+function nearCaller(env: { nearAiBaseUrl: string; nearAiApiKey: string }, model: string): HarnessCaller {
+  return (req) => {
+    const toolChoice = req.toolChoice ?? 'auto';
+    const body: Record<string, unknown> = {
+      model,
+      messages: [
+        { role: 'system', content: req.systemPrompt },
+        ...req.messages.map((m) => (m.role === 'tool' ? { role: 'user', content: m.content } : m)),
+      ],
+      ...(req.tools?.length ? { tools: req.tools, tool_choice: toolChoice } : {}),
+      ...(req.temperature !== undefined ? { temperature: req.temperature } : {}),
+      ...(req.maxTokens !== undefined ? { max_tokens: req.maxTokens } : {}),
+      chat_template_kwargs: { enable_thinking: req.enableThinking ?? false },
+    };
+    return postBodyStreamTextTools(env.nearAiBaseUrl, env.nearAiApiKey, body, 120_000, req.onDelta, APP_TOOL_FORMAT);
+  };
+}
+
+/** One follow-story turn through the real cloud loop with canned, offline tools. */
+export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model: string, repeat: number): Promise<TurnRow> {
+  const state = createAgentState({ facts: [], surface: 'CONFIG', languageName: 'English' });
+  state.surfaceContext = { kind: 'follow-story', hint: 'They opened this chat from their Followed stories page to follow a news story.', context: null };
+  const staged: unknown[] = [];
+  const empty = async (): Promise<never> => ({}) as never;
+  const tools: AgentToolPort = {
+    findSimilarFacts: empty, lookupPlace: empty, saveExtractedFacts: empty, deleteUserFacts: empty,
+    webSearch: async () => ({ searched: true, results: [] }),
+    searchNews: async ({ query }) => ({ query, results: f.search.map((title) => ({ title })) }),
+    proposeTrack: async (args) => { staged.push(args.options); return { staged: true, proposalId: 'track-1' }; },
+  };
+  const row: TurnRow = {
+    fixture: f.id, arm: 'harness', repeat, at: new Date().toISOString(), expect: f.expect, pass: false, why: '',
+    passes: 0, wallMs: 0, firstVisibleMs: null, completionTokens: 0, reasoningTokens: 0, truncated: false,
+    error: null, calls: [], trackOptions: 0, reply: '',
+  };
+  const started = Date.now();
+  const result = await runAgentTurn({
+    state, userMessage: f.message, model,
+    deps: { callModel, tools, loadSkill, skillIds: () => PERSONA_SKILL_IDS, now: Date.now },
+  });
+  row.wallMs = Date.now() - started;
+  row.legs = result.legs.length;
+  row.passes = result.legs.length;
+  row.legTools = result.legs.map((l) => l.toolCalls.map((t) => t.name));
+  row.closingLegFired = result.closingLegFired;
+  row.calls = row.legTools.flat();
+  row.reply = result.reply;
+  for (const l of result.legs) {
+    row.completionTokens += l.result.usage?.completionTokens ?? 0;
+    row.reasoningTokens += l.result.usage?.reasoningTokens ?? 0;
+    row.truncated ||= l.result.truncated;
+    row.error ??= l.result.error;
+  }
+  for (const o of staged) {
+    const options = parseTrackScopeOptions(o);
+    if (options.length >= row.trackOptions) row.options = options;
+    row.trackOptions = Math.max(row.trackOptions, options.length);
+  }
+  if (row.error) row.why = 'error';
+  else if (/<\/?think>|<tool_call>|<function=/.test(row.reply)) row.why = 'leaked markup in reply';
+  else if (f.expect === 'proposeTrack') {
+    row.pass = row.trackOptions >= 3 && row.trackOptions <= 4;
+    row.why = row.pass ? 'ok' : `proposeTrack options=${row.trackOptions}`;
+  } else {
+    row.pass = staged.length === 0 && !result.stagedSomething;
+    row.why = row.pass ? 'ok' : 'staged a card on an answer turn';
+  }
+  return row;
 }
 
 async function runTurn(
   env: { nearAiBaseUrl: string; nearAiApiKey: string },
-  f: Fixture, arm: Arm, model: string, repeat: number, dryRun: boolean,
+  f: Fixture, arm: Arm, model: string, repeat: number, dryRun: boolean, pre?: PrePrompts,
 ): Promise<TurnRow | { dry: number }> {
-  const { system, tools, history, context } = setup(f);
+  if (arm.id === 'harness') {
+    if (dryRun) {
+      let chars = 0;
+      const dryCaller: HarnessCaller = async (req) => {
+        chars += req.systemPrompt.length + req.messages.reduce((n, m) => n + m.content.length, 0);
+        return { content: '', toolCalls: [], finishReason: 'stop', truncated: false, usage: null, modelSent: null, latencyMs: 0, error: null };
+      };
+      await runTurnHarness(dryCaller, f, model, repeat);
+      return { dry: chars };
+    }
+    return runTurnHarness(nearCaller(env, model), f, model, repeat);
+  }
+  const { system, tools, history, context } = setup(f, arm, pre);
   const wire: Msg[] = [...history, { role: 'user', content: f.message }];
   const bodyFor = (): Record<string, unknown> => {
     const last = wire.map((m) => m.role).lastIndexOf('user');
@@ -416,21 +583,35 @@ async function main(): Promise<number> {
   }
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
-  const fixtures = JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[];
-  const missing = ['on', 'on-twin', 'off'].filter((id) => !args.arms.some((a) => a.id === id));
+  let fixtures = JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[];
+  if (args.arms.some((a) => a.id === 'harness')) {
+    const before = fixtures.length;
+    fixtures = fixtures.filter((f) => f.agent === 'follow-story');
+    console.log(`harness arm: follow-story fixtures only; skipped ${before - fixtures.length} article fixtures for every arm.`);
+  }
+  const pre = args.prePrompts ? loadPrePrompts(args.prePrompts) : undefined;
+  const prePost = isPrePostSet(args.arms);
+  const harnessSet = isHarnessSet(args.arms);
+  const missing = prePost || harnessSet ? [] : ['on', 'on-twin', 'off'].filter((id) => !args.arms.some((a) => a.id === id));
   const noVerdict = `NO VERDICT: arm(s) ${missing.join(', ')} not in --arms; the pass rule needs on, on-twin and off.`;
 
   // eslint-disable-next-line no-console
   console.log(
     `fixtures ${fixtures.length} x arms ${args.arms.map((a) => a.id).join(',')} x repeat ${args.repeat}, model ${args.model}, format ${APP_TOOL_FORMAT}\n` +
-      'PASS RULE (fixed before the run): `off` passes if its turn pass count is >= `on` minus max(1, |on - on-twin|),\n' +
-      'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. An error row drops its (fixture, repeat) for every arm.',
+      (harnessSet
+        ? 'PASS RULE (fixed before the run): spread = |off - off-twin| proposeTrack passes; PASS when harness proposeTrack passes >= off - max(1, spread)\n' +
+          'AND harness p90 turn time <= 2 x off p90. A harness row is scored by the off rule: 3 or 4 options parseTrackScopeOptions accepts. An error row drops its (fixture, repeat) for every arm.'
+        : prePost
+        ? 'PASS RULE (fixed before the run): per kind k, spread_k = |post_k - post-twin_k| passes; PASS when post proposeTrack >= pre - max(1, spread_proposeTrack)\n' +
+          'and proposeFactCheck and answer each satisfy |post_k - pre_k| <= max(1, spread_k). An error row drops its (fixture, repeat) for every arm.'
+        : 'PASS RULE (fixed before the run): `off` passes if its turn pass count is >= `on` minus max(1, |on - on-twin|),\n' +
+          'it leaks no markup, and its p50 AND p90 turn wall time are below `on`. An error row drops its (fixture, repeat) for every arm.'),
   );
   if (missing.length > 0) console.log(noVerdict);
 
   if (args.dryRun) {
     let chars = 0;
-    for (const f of fixtures) for (const a of args.arms) chars += ((await runTurn(env, f, a, args.model, 0, true)) as { dry: number }).dry;
+    for (const f of fixtures) for (const a of args.arms) chars += ((await runTurn(env, f, a, args.model, 0, true, pre)) as { dry: number }).dry;
     const inTok = (chars / 4) * args.repeat * 1.6;
     console.log(`DRY RUN: ~${Math.round(inTok / 1000)}k input tokens planned, est. cost < $${((inTok * 0.04 + fixtures.length * args.arms.length * args.repeat * 1500 * 1.35) / 1e6).toFixed(2)}`);
     return 0;
@@ -444,7 +625,7 @@ async function main(): Promise<number> {
       for (const f of fixtures) {
         const order = args.arms.map((_, i) => args.arms[(i + r) % args.arms.length]);
         for (const arm of order) {
-          const row = (await runTurn(env, f, arm, args.model, r, false)) as TurnRow;
+          const row = (await runTurn(env, f, arm, args.model, r, false, pre)) as TurnRow;
           rows.push(row);
           appendFileSync(out, `${JSON.stringify(row)}\n`);
           console.log(`r${r} ${arm.id.padEnd(7)} ${f.id.padEnd(24)} ${row.pass ? 'PASS' : 'FAIL'} ${String(row.wallMs).padStart(6)}ms think=${row.reasoningTokens} ${row.why}`);
@@ -478,6 +659,18 @@ async function main(): Promise<number> {
     console.log(`\n${noVerdict}`);
     run.writeJson('summary', { model: args.model, stats, verdict: null, droppedCells: dropped });
     return 0;
+  }
+  if (harnessSet) {
+    const v = harnessVerdict(valid);
+    console.log(`\nspread ${v.spread}; quality ${v.quality ? 'ok' : 'WORSE'}; latency harness p90 ${v.harnessP90}ms vs 2 x off p90 ${2 * v.offP90}ms ${v.latency ? 'ok' : 'TOO SLOW'}\nVERDICT: ${v.verdict}`);
+    run.writeJson('summary', { model: args.model, stats, ...v, droppedCells: dropped });
+    return v.verdict === 'PASS' ? 0 : 1;
+  }
+  if (prePost) {
+    const v = prePostVerdict(valid);
+    console.log(`\nspread track ${v.spread.proposeTrack} factCheck ${v.spread.proposeFactCheck} answer ${v.spread.answer}; proposeTrack ${v.trackOk ? 'ok' : 'WORSE'}; proposeFactCheck/answer ${v.othersOk ? 'ok' : 'MOVED'}\nVERDICT: ${v.verdict}`);
+    run.writeJson('summary', { model: args.model, stats, ...v, droppedCells: dropped });
+    return v.verdict === 'PASS' ? 0 : 1;
   }
   const noise = Math.max(1, Math.abs(stats.on.pass - stats['on-twin'].pass));
   const leaks = valid.filter((x) => x.arm === 'off' && x.why === 'leaked markup in reply').length;

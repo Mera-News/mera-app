@@ -51,6 +51,8 @@ export function createLocalEngine(initialAgent: OnDeviceAgent): ChatEngine<OnDev
   const setError = (error: string | null): void => put({ error });
 
   const agentRef = { current: initialAgent };
+  /** Stop pressed while a More options call ran: its answer is discarded. */
+  let moreStopped = false;
   const isStreamingRef = { current: false };
   /** THE STOP BUTTON, for the turn in flight. Read by the text sink and at the
    *  early-exit points before a completion starts. */
@@ -267,7 +269,16 @@ export function createLocalEngine(initialAgent: OnDeviceAgent): ChatEngine<OnDev
     setAgent: (agent) => {
       agentRef.current = agent;
     },
+    moreOptions: async (req) => {
+      const agent = agentRef.current;
+      if (!agent.moreOptions) return { actions: [], reason: 'none' };
+      if (isStreamingRef.current || st().turnBusy) return { actions: [], reason: 'busy' };
+      moreStopped = false;
+      const result = await agent.moreOptions(req).catch(() => ({ actions: [], reason: 'failed' as const }));
+      return moreStopped ? { actions: [], reason: 'stopped' } : result;
+    },
     stop: () => {
+      moreStopped = true;
       stopRef.requested = true;
       abortRef.current.abort();
     },

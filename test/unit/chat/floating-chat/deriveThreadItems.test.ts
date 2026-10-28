@@ -851,6 +851,28 @@ describe('turn terminals reach the steps box', () => {
     expect(box?.terminal).toBe('no-route');
   });
 
+  it('turn-failed rides a box that has tool rows', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', '', [tc])],
+        turnActive: false,
+        agentTerminal: 'turn-failed',
+      }),
+    );
+    expect(box?.terminal).toBe('turn-failed');
+  });
+
+  it('turn-failed with no tool rows adds no box', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', '')],
+        turnActive: false,
+        agentTerminal: 'turn-failed',
+      }),
+    );
+    expect(box).toBeUndefined();
+  });
+
   it('is null for a turn that settled normally', () => {
     const box = boxFor(
       base({ live: [userMsg('u1'), assistantMsg('a1', 'Done.', [tc])], turnActive: true }),
@@ -1069,5 +1091,61 @@ describe('agent-steps answered flag', () => {
     expect(ok.find((i) => i.kind === 'agent-steps')).toMatchObject({ answered: true });
     const capped = deriveThreadItems(base({ live, turnActive: false, agentTerminal: 'leg-cap' }));
     expect(capped.find((i) => i.kind === 'agent-steps')).toMatchObject({ answered: false });
+  });
+});
+
+describe('follow card override (chatfix: grown options, outcomes, superseded)', () => {
+  const subject = { origin: 'article', surface: 'follow-story', articleId: '', title: '', stableClusterId: null, publicationName: null };
+  const staged = (proposalId: string, labels: string[]): ToolCallRecord => ({
+    id: `tc-${proposalId}`,
+    name: 'proposeTrack',
+    status: 'done',
+    input: { options: labels.map((l) => ({ label: l, search: l.toLowerCase() })) },
+    result: { staged: true, proposalId, chooseOne: labels.length >= 2 || undefined, options: labels.map((l) => ({ label: l, search: l.toLowerCase() })), subject },
+  });
+  const trackCards = (items: ChatThreadItem[]) =>
+    items.filter((i): i is Extract<ChatThreadItem, { kind: 'proposal-card' }> => i.kind === 'proposal-card');
+
+  it('carries its override key, staged result and an empty state on a fresh card', () => {
+    const tc = staged('p1', ['A', 'B']);
+    const [card] = trackCards(deriveThreadItems(base({ live: [assistantMsg('a1', 'Pick below.', [tc])] })));
+    expect(card.track).toEqual({ resultKey: 'a1::0', baseResult: tc.result, outcomes: {}, dismissed: false, superseded: false });
+  });
+
+  it('redraws a card grown past four options from cardOptions, with every option following the staged subject', () => {
+    const tc = staged('p1', ['A']);
+    const cardOptions = ['A', 'B', 'C', 'D', 'E', 'F'].map((l) => ({ label: l, search: l.toLowerCase() }));
+    const items = deriveThreadItems(
+      base({ live: [assistantMsg('a1', 'Pick below.', [tc])], toolCallResults: { 'a1::0': { ...tc.result, cardOptions } } }),
+    );
+    const [card] = trackCards(items);
+    expect(card.proposal.actions.map((a) => (a as { label: string }).label)).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+    expect(card.proposal.actions.every((a) => (a as { subject: unknown }).subject !== undefined)).toBe(true);
+    // A grown card is tap-only even though it was staged with one option.
+    expect(card.proposal.chooseOne).toBe(true);
+    // The staged result stays the merge base, never the override.
+    expect(card.track?.baseResult).toBe(tc.result);
+  });
+
+  it('reads persisted outcomes and Not now from a resumed row', () => {
+    const tc = staged('p1', ['A', 'B']);
+    const resumed = { ...tc, result: { ...tc.result, followed: { a: 'following', b: 'failed' }, dismissed: true } };
+    const items = deriveThreadItems(
+      base({ history: [persisted('h1', 'c1', 'assistant', 'Pick below.', 1, [resumed])] }),
+    );
+    expect(trackCards(items)[0].track).toMatchObject({ outcomes: { a: 'following', b: 'failed' }, dismissed: true });
+  });
+
+  it('marks every follow card but the newest superseded, and leaves other proposals alone', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [
+          assistantMsg('a1', 'Pick below.', [staged('p1', ['A', 'B'])]),
+          userMsg('u1', 'other options'),
+          assistantMsg('a2', 'Pick below.', [staged('p2', ['C', 'D'])]),
+        ],
+      }),
+    );
+    expect(trackCards(items).map((c) => c.track?.superseded)).toEqual([true, false]);
   });
 });

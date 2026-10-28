@@ -361,14 +361,6 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   // "is this single-select?" reading cannot drift between the card and the model.
   const chooseOne = proposalRequiresUserChoice(proposal);
 
-  // A "follow this story" proposal (every action is track_story, single or
-  // multi-scope) gets its own header wording; other proposals keep the generic
-  // "Proposed changes".
-  const isTrackProposal =
-    proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'track_story');
-  /** Every row is the same kind, so the title already names it. */
-  const allSameKind = isTrackProposal;
-
   // A "fact-check a claim" proposal (every action is fact_check_claim, single
   // typed claim or 3–4 extracted ones) gets its own header wording and icon, for
   // the same reason as the track card: "Proposed changes" over a list of claims
@@ -421,30 +413,20 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       <View style={styles.headerRow}>
         <MaterialIcons
           {...DECORATIVE_ICON_A11Y}
-          name={
-            isTrackProposal
-              ? 'track-changes'
-              : isFactCheckProposal
-                ? 'fact-check'
-                : 'auto-fix-high'
-          }
+          name={isFactCheckProposal ? 'fact-check' : 'auto-fix-high'}
           size={18}
           color={colors.accentMark}
         />
         <Text size="sm" bold style={styles.title}>
-          {isTrackProposal
-            ? t('trackedStories.trackProposalTitle')
-            : isFactCheckProposal
-              ? t('factCheck.claimProposalTitle')
-              : t('articleFeedback.proposalTitle')}
+          {isFactCheckProposal
+            ? t('factCheck.claimProposalTitle')
+            : t('articleFeedback.proposalTitle')}
         </Text>
       </View>
 
       {chooseOne && (
         <Text size="xs" style={styles.hint}>
-          {isTrackProposal
-            ? t('floatingChat.trackChooseHint')
-            : t('articleFeedback.chooseOneHint')}
+          {t('articleFeedback.chooseOneHint')}
         </Text>
       )}
 
@@ -470,11 +452,6 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       >
         {proposal.actions.map((action, idx) => {
           const row = actionToRow(action);
-          // The category line says what an option IS. When every option is the
-          // same kind (three "Follow story" rows), the title already says it,
-          // and repeating it on each row buried the part the reader picks
-          // between (audit F34).
-          const showLabel = !allSameKind;
           const selected = chooseOne && idx === selectedIndex;
           const rowIcon: keyof typeof MaterialIcons.glyphMap = chooseOne
             ? selected
@@ -485,11 +462,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             <>
               <MaterialIcons {...DECORATIVE_ICON_A11Y} name={rowIcon} size={16} color={colors.accentMark} style={styles.actionIcon} />
               <View style={styles.actionBody}>
-                {showLabel && (
-                  <Text size="xs" bold style={styles.actionLabel}>
-                    {t(row.labelKey as TKey)}
-                  </Text>
-                )}
+                <Text size="xs" bold style={styles.actionLabel}>
+                  {t(row.labelKey as TKey)}
+                </Text>
                 {row.heading &&
                   (row.translateHeading ? (
                     <TranslatableDynamic
@@ -539,7 +514,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
                 accessibilityLabel={[
-                  showLabel ? t(row.labelKey as TKey) : null,
+                  t(row.labelKey as TKey),
                   row.heading ? (shownText[`h${idx}`] ?? row.heading) : null,
                   row.chip ? t(row.chip.key as TKey) : null,
                   row.detail ? (shownText[`d${idx}`] ?? row.detail) : null,

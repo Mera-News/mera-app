@@ -38,6 +38,7 @@ describe('steps box tables', () => {
     ['facts/profession', 'skillPhrase.work'],
     ['facts/interest', 'skillPhrase.interests'],
     ['conversation/feed-tuning', 'skillPhrase.feedTuning'],
+    ['conversation/follow-story', 'skillPhrase.followStory'],
   ])('load_skill %s shows %s, not the generic line', (id, phrase) => {
     expect(textOf('load_skill', { id })).toBe(`[agentSteps.loadSkill]([${phrase}])`);
   });
@@ -51,7 +52,7 @@ describe('steps box tables', () => {
   });
 
   it('the dead skill phrases are gone from the table', () => {
-    for (const dead of ['skillPhrase.newFact', 'skillPhrase.topics', 'skillPhrase.followStory', 'skillPhrase.factCheck']) {
+    for (const dead of ['skillPhrase.newFact', 'skillPhrase.topics', 'skillPhrase.factCheck']) {
       expect(tables.SKILL_PHRASE[dead]).toBeUndefined();
     }
   });

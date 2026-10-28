@@ -1,0 +1,102 @@
+{
+  "en": {
+    "meraDraft": {
+      "followStory": "Keep me updated on "
+    }
+  },
+  "ar": {
+    "meraDraft": {
+      "followStory": "أبقني على اطلاع بشأن "
+    }
+  },
+  "de": {
+    "meraDraft": {
+      "followStory": "Halte mich auf dem Laufenden über "
+    }
+  },
+  "es": {
+    "meraDraft": {
+      "followStory": "Mantenme al día sobre "
+    }
+  },
+  "fr": {
+    "meraDraft": {
+      "followStory": "Tiens-moi au courant de "
+    }
+  },
+  "hi": {
+    "meraDraft": {
+      "followStory": "इस बारे में मुझे अपडेट देते रहें: "
+    }
+  },
+  "id": {
+    "meraDraft": {
+      "followStory": "Beri saya kabar terbaru tentang "
+    }
+  },
+  "it": {
+    "meraDraft": {
+      "followStory": "Tienimi aggiornato su "
+    }
+  },
+  "ja": {
+    "meraDraft": {
+      "followStory": "このニュースの続報を知らせて: "
+    }
+  },
+  "ko": {
+    "meraDraft": {
+      "followStory": "이 소식을 계속 알려 줄래요: "
+    }
+  },
+  "nl": {
+    "meraDraft": {
+      "followStory": "Houd me op de hoogte van "
+    }
+  },
+  "pl": {
+    "meraDraft": {
+      "followStory": "Informuj mnie na bieżąco o "
+    }
+  },
+  "pt-BR": {
+    "meraDraft": {
+      "followStory": "Me mantenha atualizado sobre "
+    }
+  },
+  "ru": {
+    "meraDraft": {
+      "followStory": "Держи меня в курсе: "
+    }
+  },
+  "th": {
+    "meraDraft": {
+      "followStory": "อัปเดตข่าวเรื่องนี้ให้ฉันด้วย: "
+    }
+  },
+  "tr": {
+    "meraDraft": {
+      "followStory": "Şu konuda beni güncel tut: "
+    }
+  },
+  "uk": {
+    "meraDraft": {
+      "followStory": "Тримай мене в курсі: "
+    }
+  },
+  "vi": {
+    "meraDraft": {
+      "followStory": "Cập nhật cho tôi về "
+    }
+  },
+  "zh-CN": {
+    "meraDraft": {
+      "followStory": "持续告诉我这件事的最新进展："
+    }
+  },
+  "zh-TW": {
+    "meraDraft": {
+      "followStory": "持續告訴我這件事的最新進展："
+    }
+  }
+}

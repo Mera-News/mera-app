@@ -62,6 +62,11 @@ jest.mock('@dr.pogodin/react-native-fs', () => ({
     stopDownload: jest.fn(),
 }));
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
+// The storage check reads free space here (systemRequirements), not from getFSInfo.
+jest.mock('expo-file-system/legacy', () => ({
+    ...jest.requireActual('expo-file-system/legacy'),
+    getFreeDiskStorageAsync: jest.fn(() => Promise.resolve(mockFreeBytes)),
+}));
 jest.mock('@/modules/mera-on-device-llm', () => require('@/test/helpers/on-device-llm').onDeviceLlmModule);
 
 // MSW answers on real I/O while the fake clock ticks, so the default one-second wait is too tight.

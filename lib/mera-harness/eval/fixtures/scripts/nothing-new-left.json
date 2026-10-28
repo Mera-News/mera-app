@@ -1,0 +1,53 @@
+{
+  "id": "nothing-new-left",
+  "cohort": "more-options",
+  "note": "chatfix S3. Seven options already cover a narrow story; room for one more. There may be nothing grounded left to add: the bar is ZERO ungrounded options (no flags), and a refusal or a thin extra option is better than an invented one. Read the grounding flags, not the pass count.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "surface": {
+    "kind": "follow-story",
+    "hint": "They opened this chat from their Followed stories page to follow a news story.",
+    "context": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "moreOptions": {
+        "shown": [
+          {
+            "label": "Rotterdam Port Strike",
+            "searchText": "Rotterdam port strike dockworkers"
+          },
+          {
+            "label": "Dockworkers Pay Dispute",
+            "searchText": "Rotterdam dockworkers pay dispute union"
+          },
+          {
+            "label": "Container Terminal Delays",
+            "searchText": "Rotterdam container terminal delays strike"
+          },
+          {
+            "label": "Strike Talks Mediation",
+            "searchText": "Rotterdam port strike mediation talks"
+          },
+          {
+            "label": "Shipping Lines Reroute",
+            "searchText": "shipping lines reroute Rotterdam strike Antwerp"
+          },
+          {
+            "label": "Employers Union Offer",
+            "searchText": "Rotterdam port employers union offer"
+          },
+          {
+            "label": "Port Strike Costs",
+            "searchText": "Rotterdam port strike economic cost"
+          }
+        ],
+        "room": 1
+      }
+    }
+  ]
+}

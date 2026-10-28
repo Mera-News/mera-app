@@ -24,12 +24,14 @@ import type { TrackFeedbackSubject } from '../../../news-harness/core/types';
 import { useFloatingChatStore } from '../../../stores/floating-chat-store';
 import { isSubjectTracked } from '../../../tracking/track-actions';
 import { ArticleFeedbackAgent } from '../ArticleFeedbackAgent';
+import type { MoreOptionsRequest } from '../../../chat-session/engine';
 import type { ConversationMessage } from '../../types';
 import type { OnDeviceAgent } from './types';
 import {
   appLanguageName,
   chatTurns,
   kevPorts,
+  moreTrackOptions,
   onDeviceTool,
   respondStructured,
   routeOf,
@@ -161,6 +163,12 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
       publication: context.publication ?? null,
       hasPending: context.pending != null,
     });
+  }
+
+  moreOptions(req: MoreOptionsRequest) {
+    const chat = useFloatingChatStore.getState().context;
+    const title = (chat.kind === 'article-suggestion' ? chat.articleTitle : undefined) ?? req.subject.title;
+    return moreTrackOptions(req, this.opts, title || undefined);
   }
 
   async executeTool(name: string, input: unknown) {

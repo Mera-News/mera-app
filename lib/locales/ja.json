@@ -691,7 +691,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "準備中",
     "statusReady": "準備完了",
-    "statusError": "エラー"
+    "statusError": "エラー",
+    "turnNoAnswer": "私にはそれができませんでした。別の聞き方でお試しください。",
+    "turnFailed": "その返信は完了しませんでした。もう一度お試しください。"
   },
   "personaChat": {
     "introMessage": "こんにちは、メラです。あなたの個人ニュースアシスタントです。\n\nあなたにとって本当に大切なニュースを見つけるために、あなたのことを少し知る必要があります。どこに住んでいるか、何をしているか、どんな趣味をフォローしているか、どんな銘柄を追っているか、ご家族がどこに住んでいるか。どれくらい話すかは自由です。\n\nもし少し迷うなら、それは良い感覚です。個人データをアプリ会社に預けるのは、賢明とは言えません。メラは違う作りになっています。あなたが話してくれたことはすべて、サーバーではなくあなたの端末に保存されます。仕組みを知りたければ聞いてください。「セットアップを手伝って」と言ってもらえれば、すぐに始めましょう。"
@@ -731,7 +733,6 @@
     "topicGenFailed": "このトピックを生成できませんでした。",
     "topicGenRetry": "再試行",
     "aiUsageNoticeGeneral": "メラは間違えることがあります。重要なことは確認してください。",
-    "trackChooseHint": "フォローする対象を選んでください",
     "factDeletePendingTitle": "プロフィールから削除されます",
     "saveAsWritten": "書いたとおりに保存",
     "factDeleteRemove": "削除",
@@ -1019,7 +1020,6 @@
     "endedLabel": "終了",
     "emptyCta": "フィードに移動",
     "trackChatSeed": "このストーリーをフォローしたいです。",
-    "trackProposalTitle": "このストーリーをフォローしますか？",
     "alreadyTrackingTitle": "このストーリーをすでにフォロー中です",
     "alreadyTrackingBody": "同じストーリーを2回フォローすることはできません。フォローを解除すると、このストーリーのすべての保存内容が削除されます。",
     "goToStoryAction": "ストーリーに移動",
@@ -1039,7 +1039,27 @@
     "stopFollowingConfirmTitle": "このストーリーのフォローをやめますか？",
     "updatedAgo": "{{time}}に更新",
     "articlesCount_one": "{{count}}件の記事",
-    "articlesCount_other": "{{count}}件の記事"
+    "articlesCount_other": "{{count}}件の記事",
+    "cardTitle": "フォローするストーリーを選んでください",
+    "moreOptions": "候補をさらに表示",
+    "moreOptionsLoading": "候補を探しています",
+    "moreOptionsAdded_one": "候補を1件追加しました",
+    "moreOptionsAdded_other": "候補を{{count}}件追加しました",
+    "moreOptionsNone": "このストーリーの新しい候補はありません",
+    "moreOptionsFailed": "候補を読み込めませんでした。もう一度お試しください。",
+    "follow": "フォローする",
+    "followTicked_one": "1件のストーリーをフォロー",
+    "followTicked_other": "{{count}}件のストーリーをフォロー",
+    "tryAgain": "もう一度お試しください",
+    "rowFollowing": "フォロー中",
+    "rowAlready": "すでにフォロー中",
+    "rowFailed": "フォローできませんでした",
+    "followingAll_one": "1件のストーリーをフォロー中です",
+    "followingAll_other": "{{count}}件のストーリーをフォロー中です",
+    "followingSome_one": "選んだ{{count}}件のストーリーのうち{{done}}件をフォロー中です",
+    "followingSome_other": "選んだ{{count}}件のストーリーのうち{{done}}件をフォロー中です",
+    "followFailedAll": "これらのストーリーをフォローできませんでした。接続を確認して、もう一度お試しください。",
+    "optionsExpired": "この候補は期限切れです"
   },
   "whatsNew": {
     "gotIt": "わかりました",
@@ -2535,7 +2555,8 @@
     "interests": "ご興味",
     "origin": "ご出身",
     "family": "ご家族",
-    "feedTuning": "あなたのフィード"
+    "feedTuning": "あなたのフィード",
+    "followStory": "フォローするストーリー"
   },
   "askChoice": {
     "answeredA11y": "回答済み",
@@ -3016,7 +3037,8 @@
   },
   "meraDraft": {
     "changeInterest": "関心「{{statement}}」を次に変更: ",
-    "removeInterest": "関心「{{statement}}」を削除"
+    "removeInterest": "関心「{{statement}}」を削除",
+    "followStory": "このニュースの続報を知らせて: "
   },
   "appLock": {
     "forgot": "PINを忘れましたか？もう一度サインインして、新しいPINを設定してください。",

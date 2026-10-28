@@ -1,0 +1,133 @@
+{
+  "id": "silent-turns",
+  "cohort": "silent-turns",
+  "note": "chatfix. Turns that ended with an acknowledgement, tool rows and nothing else on staging (20261027-200933, real-expat-india t2 2/3): see-less requests reaching a facts skill, a waiting card beside a message that points back, an acknowledgement. Scored by SILENT TURNS (must be 0), with the closing-leg and canned-line counts apart.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Pune, Maharashtra, India, Asia",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      },
+      {
+        "id": "o",
+        "statement": "From India",
+        "questionnaireAttribute": "background: country of origin",
+        "kind": "origin"
+      },
+      {
+        "id": "i",
+        "statement": "Follows Indian politics",
+        "questionnaireAttribute": "topics: general interests",
+        "kind": "generic"
+      }
+    ],
+    "topics": [],
+    "languageName": "English"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Do not show me anything about Bollywood",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "stop showing me celebrity gossip",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "no more cricket please",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "What is going on with the EU AI Act?",
+      "expect": {
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ]
+      },
+      "fakeTools": {
+        "webSearch": [
+          {
+            "results": [
+              {
+                "title": "EU AI Act: general purpose model rules take effect",
+                "url": "https://news.example.org/1",
+                "snippet": "Obligations for general purpose AI models started applying, with fines up to 3% of turnover."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "keep me updated on it",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ],
+        "track": {
+          "staged": true,
+          "labelMatches": [
+            "ai act"
+          ]
+        }
+      },
+      "pendingCards": [
+        "Works in data protection compliance"
+      ]
+    },
+    {
+      "index": 5,
+      "user": "ok",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ]
+      },
+      "pendingCards": [
+        "Works in data protection compliance"
+      ]
+    },
+    {
+      "index": 6,
+      "user": "I don't want to see crypto news anymore",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ]
+      },
+      "pendingCards": [
+        "Works in data protection compliance"
+      ]
+    },
+    {
+      "index": 7,
+      "user": "thanks",
+      "expect": {
+        "tools": [
+          "load_skill"
+        ]
+      }
+    }
+  ]
+}

@@ -692,7 +692,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "กำลังเตรียม",
     "statusReady": "พร้อม",
-    "statusError": "ข้อผิดพลาด"
+    "statusError": "ข้อผิดพลาด",
+    "turnNoAnswer": "ฉันทำแบบนั้นไม่ได้ ลองถามด้วยวิธีอื่นดู",
+    "turnFailed": "คำตอบของ เมร่า ยังไม่เสร็จ ลองอีกครั้ง"
   },
   "personaChat": {
     "introMessage": "สวัสดี! ฉันคือ เมร่า ผู้ช่วยข่าวส่วนตัวของคุณ\n\nเพื่อหาข่าวที่สำคัญกับคุณจริง ๆ ฉันต้องรู้เกี่ยวกับคุณบ้าง อยู่ที่ไหน ทำงานอะไร งานอดิเรก หุ้นที่ติดตาม ครอบครัวอยู่ที่ไหน แชร์เท่าไหร่ก็ได้ หรือน้อยก็ได้\n\nถ้าเรื่องนี้ทำให้คุณสงสัย สัญชาตญาณของคุณถูก ไม่ฉลาดที่จะให้ข้อมูลส่วนตัวแก่บริษัทที่สร้างแอป เมร่า สร้างต่างออกไป ทุกสิ่งที่คุณบอกฉันถูกบันทึกบนอุปกรณ์ของคุณ ไม่ใช่บนเซิร์ฟเวอร์ของเรา ถามฉันว่ามันทำงานยังไง หรือพูดว่า 'ช่วยตั้งค่าให้หน่อย' แล้วเราจะเริ่ม"
@@ -732,7 +734,6 @@
     "topicGenFailed": "ไม่สามารถสร้างหัวข้อได้",
     "topicGenRetry": "ลองใหม่",
     "aiUsageNoticeGeneral": "เมร่า อาจผิดพลาดได้ จึงควรตรวจสอบเรื่องสำคัญ",
-    "trackChooseHint": "เลือกสิ่งที่จะติดตาม",
     "factDeletePendingTitle": "จะถูกลบออกจากโปรไฟล์ของคุณ",
     "saveAsWritten": "บันทึกตามที่ฉันเขียน",
     "factDeleteRemove": "ลบ",
@@ -1020,7 +1021,6 @@
     "endedLabel": "สิ้นสุดแล้ว",
     "emptyCta": "ไปยัง ฟีด",
     "trackChatSeed": "ฉันต้องการติดตามเรื่องราวนี้",
-    "trackProposalTitle": "ติดตามเรื่องราวนี้?",
     "alreadyTrackingTitle": "คุณกำลังติดตามนี้อยู่แล้ว",
     "alreadyTrackingBody": "คุณไม่สามารถติดตามเรื่องราวนี้สองครั้งได้ การเลิกติดตามจะลบทุกอย่างที่บันทึกไว้สำหรับเรื่องนี้",
     "goToStoryAction": "ไปที่เรื่องราว",
@@ -1040,7 +1040,27 @@
     "stopFollowingConfirmTitle": "เลิกติดตามเรื่องนี้ใช่ไหม",
     "updatedAgo": "อัปเดต {{time}}",
     "articlesCount_one": "{{count}} บทความ",
-    "articlesCount_other": "{{count}} บทความ"
+    "articlesCount_other": "{{count}} บทความ",
+    "cardTitle": "เลือกเรื่องราวที่ต้องการติดตาม",
+    "moreOptions": "ตัวเลือกเพิ่มเติม",
+    "moreOptionsLoading": "กำลังหาตัวเลือกเพิ่มเติม",
+    "moreOptionsAdded_one": "เพิ่มตัวเลือก 1 รายการแล้ว",
+    "moreOptionsAdded_other": "เพิ่มตัวเลือก {{count}} รายการแล้ว",
+    "moreOptionsNone": "ไม่มีตัวเลือกใหม่สำหรับเรื่องนี้",
+    "moreOptionsFailed": "โหลดตัวเลือกเพิ่มเติมไม่ได้ ลองอีกครั้ง",
+    "follow": "ติดตาม",
+    "followTicked_one": "ติดตาม 1 เรื่องราว",
+    "followTicked_other": "ติดตาม {{count}} เรื่องราว",
+    "tryAgain": "ลองอีกครั้ง",
+    "rowFollowing": "กำลังติดตาม",
+    "rowAlready": "ติดตามอยู่แล้ว",
+    "rowFailed": "ติดตามไม่ได้",
+    "followingAll_one": "กำลังติดตาม 1 เรื่องราว",
+    "followingAll_other": "กำลังติดตาม {{count}} เรื่องราว",
+    "followingSome_one": "กำลังติดตาม {{done}} จาก {{count}} เรื่องราว",
+    "followingSome_other": "กำลังติดตาม {{done}} จาก {{count}} เรื่องราว",
+    "followFailedAll": "ติดตามเรื่องราวเหล่านี้ไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+    "optionsExpired": "ตัวเลือกหมดอายุแล้ว"
   },
   "whatsNew": {
     "gotIt": "รับทราบ",
@@ -2536,7 +2556,8 @@
     "interests": "ความสนใจของคุณ",
     "origin": "ถิ่นกำเนิดของคุณ",
     "family": "ครอบครัวของคุณ",
-    "feedTuning": "ฟีดของคุณ"
+    "feedTuning": "ฟีดของคุณ",
+    "followStory": "เรื่องราวที่จะติดตาม"
   },
   "askChoice": {
     "answeredA11y": "ตอบแล้ว",
@@ -3017,7 +3038,8 @@
   },
   "meraDraft": {
     "changeInterest": "เปลี่ยนความสนใจ \"{{statement}}\" ของฉันเป็น ",
-    "removeInterest": "ลบความสนใจ \"{{statement}}\" ของฉัน"
+    "removeInterest": "ลบความสนใจ \"{{statement}}\" ของฉัน",
+    "followStory": "อัปเดตข่าวเรื่องนี้ให้ฉันด้วย: "
   },
   "appLock": {
     "forgot": "ลืม PIN ใช่ไหม ลงชื่อเข้าใช้อีกครั้งและตั้ง PIN ใหม่",

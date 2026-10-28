@@ -691,7 +691,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Đang khởi động",
     "statusReady": "Sẵn sàng",
-    "statusError": "Lỗi"
+    "statusError": "Lỗi",
+    "turnNoAnswer": "Mình không làm được điều đó. Hãy thử hỏi theo cách khác.",
+    "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại."
   },
   "personaChat": {
     "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nĐể tìm những tin tức thực sự quan trọng với bạn, mình cần biết một chút về bạn. Bạn sống ở đâu, làm nghề gì, những sở thích nào, theo dõi những cổ phiếu nào, gia đình sống ở đâu. Chia sẻ bao nhiêu hay bao ít tùy bạn.\n\nNếu điều này khiến bạn do dự, đó là bản năng tốt. Không nên trao dữ liệu cá nhân cho một công ty làm ứng dụng. Mera được xây dựng khác: mọi thứ bạn kể cho mình đều được lưu trên thiết bị của bạn, không phải trên máy chủ của chúng mình. Hỏi mình cách nó hoạt động, hoặc nói 'giúp mình thiết lập' và chúng ta sẽ bắt đầu."
@@ -731,7 +733,6 @@
     "topicGenFailed": "Không thể tạo chủ đề cho điều này.",
     "topicGenRetry": "Thử lại",
     "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
-    "trackChooseHint": "Chọn nội dung để theo dõi",
     "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn",
     "saveAsWritten": "Lưu đúng như tôi đã viết",
     "factDeleteRemove": "Xóa",
@@ -1019,7 +1020,6 @@
     "endedLabel": "Đã kết thúc",
     "emptyCta": "Đi tới Bảng tin",
     "trackChatSeed": "Tôi muốn theo dõi câu chuyện này.",
-    "trackProposalTitle": "Theo dõi câu chuyện này?",
     "alreadyTrackingTitle": "Bạn đã theo dõi điều này",
     "alreadyTrackingBody": "Bạn không thể theo dõi câu chuyện này hai lần. Ngừng theo dõi sẽ xóa mọi thứ được lưu cho câu chuyện này.",
     "goToStoryAction": "Đi tới câu chuyện",
@@ -1039,7 +1039,27 @@
     "stopFollowingConfirmTitle": "Ngừng theo dõi câu chuyện này?",
     "updatedAgo": "cập nhật {{time}}",
     "articlesCount_one": "{{count}} bài viết",
-    "articlesCount_other": "{{count}} bài viết"
+    "articlesCount_other": "{{count}} bài viết",
+    "cardTitle": "Chọn câu chuyện để theo dõi",
+    "moreOptions": "Xem thêm lựa chọn",
+    "moreOptionsLoading": "Đang tìm thêm lựa chọn",
+    "moreOptionsAdded_one": "Đã thêm 1 lựa chọn",
+    "moreOptionsAdded_other": "Đã thêm {{count}} lựa chọn",
+    "moreOptionsNone": "Không có lựa chọn mới cho câu chuyện này",
+    "moreOptionsFailed": "Không tải được thêm lựa chọn. Hãy thử lại.",
+    "follow": "Theo dõi",
+    "followTicked_one": "Theo dõi 1 câu chuyện",
+    "followTicked_other": "Theo dõi {{count}} câu chuyện",
+    "tryAgain": "Thử lại",
+    "rowFollowing": "Đang theo dõi",
+    "rowAlready": "Đã theo dõi từ trước",
+    "rowFailed": "Không theo dõi được",
+    "followingAll_one": "Đang theo dõi 1 câu chuyện",
+    "followingAll_other": "Đang theo dõi {{count}} câu chuyện",
+    "followingSome_one": "Đang theo dõi {{done}} trong số {{count}} câu chuyện",
+    "followingSome_other": "Đang theo dõi {{done}} trong số {{count}} câu chuyện",
+    "followFailedAll": "Không theo dõi được các câu chuyện này. Hãy kiểm tra kết nối và thử lại.",
+    "optionsExpired": "Lựa chọn đã hết hạn"
   },
   "whatsNew": {
     "gotIt": "Đã hiểu",
@@ -2535,7 +2555,8 @@
     "interests": "sở thích của bạn",
     "origin": "nơi bạn đến từ",
     "family": "gia đình bạn",
-    "feedTuning": "nguồn tin của bạn"
+    "feedTuning": "nguồn tin của bạn",
+    "followStory": "câu chuyện cần theo dõi"
   },
   "askChoice": {
     "answeredA11y": "đã trả lời",
@@ -3016,7 +3037,8 @@
   },
   "meraDraft": {
     "changeInterest": "Đổi mối quan tâm \"{{statement}}\" của tôi thành ",
-    "removeInterest": "Xóa mối quan tâm \"{{statement}}\" của tôi"
+    "removeInterest": "Xóa mối quan tâm \"{{statement}}\" của tôi",
+    "followStory": "Cập nhật cho tôi về "
   },
   "appLock": {
     "forgot": "Quên mã PIN? Hãy đăng nhập lại và đặt mã PIN mới.",

@@ -121,7 +121,7 @@ export function buildTurnBoxes(
       t.toolStepCount > 0
       // A turn with no tools still needs a box to carry its terminal
       // sentence, or a `no-route` turn ends in silence.
-      || (t === lastTurn && agentTerminal !== null && t.firstAssistantId !== null),
+      || (t === lastTurn && agentTerminal !== null && agentTerminal !== 'turn-failed' && t.firstAssistantId !== null),
   );
 
   const out = new Map<string, AgentStepsItem>();

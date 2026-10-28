@@ -691,7 +691,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "准备中",
     "statusReady": "就绪",
-    "statusError": "出错"
+    "statusError": "出错",
+    "turnNoAnswer": "我没能做到。请换个方式再问我。",
+    "turnFailed": "这条回复没有完成。请重试。"
   },
   "personaChat": {
     "introMessage": "你好！我是梅拉，你的个人新闻助手。\n\n为了找到真正对你重要的新闻，我需要了解一些关于你的情况。你住在哪里、做什么工作、关注的兴趣是什么、追踪哪些股票、家人住在哪里。随你愿意分享多少。\n\n如果这让你有些顾虑，那是很好的本能。把个人数据交给做应用的公司并不明智。梅拉的构建方式不同：你告诉我的一切都保存在你的设备上，而不是在我们的服务器上。问我它如何工作，或者说「帮我设置一下」，我们就开始吧。"
@@ -731,7 +733,6 @@
     "topicGenFailed": "无法为此生成主题。",
     "topicGenRetry": "重试",
     "aiUsageNoticeGeneral": "梅拉可能会出错，重要内容请自行核实。",
-    "trackChooseHint": "选择要关注的内容",
     "factDeletePendingTitle": "将从你的档案中移除",
     "saveAsWritten": "按我写的保存",
     "factDeleteRemove": "移除",
@@ -1019,7 +1020,6 @@
     "endedLabel": "已结束",
     "emptyCta": "前往信息流",
     "trackChatSeed": "我想关注这则报道。",
-    "trackProposalTitle": "关注这则报道？",
     "alreadyTrackingTitle": "你已在关注此报道",
     "alreadyTrackingBody": "你不能关注同一则报道两次。取消关注会删除为此报道保存的所有内容。",
     "goToStoryAction": "前往报道",
@@ -1039,7 +1039,27 @@
     "stopFollowingConfirmTitle": "取消关注这条报道？",
     "updatedAgo": "{{time}}更新",
     "articlesCount_one": "{{count}} 篇文章",
-    "articlesCount_other": "{{count}} 篇文章"
+    "articlesCount_other": "{{count}} 篇文章",
+    "cardTitle": "选择要关注的报道",
+    "moreOptions": "更多选项",
+    "moreOptionsLoading": "正在查找更多选项",
+    "moreOptionsAdded_one": "已添加 1 个选项",
+    "moreOptionsAdded_other": "已添加 {{count}} 个选项",
+    "moreOptionsNone": "这则报道没有新的选项",
+    "moreOptionsFailed": "无法加载更多选项。请重试。",
+    "follow": "关注",
+    "followTicked_one": "关注 1 则报道",
+    "followTicked_other": "关注 {{count}} 则报道",
+    "tryAgain": "请重试",
+    "rowFollowing": "已关注",
+    "rowAlready": "之前已关注",
+    "rowFailed": "无法关注",
+    "followingAll_one": "你现在关注 1 则报道",
+    "followingAll_other": "你现在关注 {{count}} 则报道",
+    "followingSome_one": "你选的 {{count}} 则报道中，你现在关注了 {{done}} 则",
+    "followingSome_other": "你选的 {{count}} 则报道中，你现在关注了 {{done}} 则",
+    "followFailedAll": "无法关注这些报道。请检查网络连接，然后重试。",
+    "optionsExpired": "选项已过期"
   },
   "whatsNew": {
     "gotIt": "知道了",
@@ -2535,7 +2555,8 @@
     "interests": "你的兴趣",
     "origin": "你来自哪里",
     "family": "你的家人",
-    "feedTuning": "你的信息流"
+    "feedTuning": "你的信息流",
+    "followStory": "你要关注的报道"
   },
   "askChoice": {
     "answeredA11y": "已回答",
@@ -3016,7 +3037,8 @@
   },
   "meraDraft": {
     "changeInterest": "将我的兴趣“{{statement}}”改为 ",
-    "removeInterest": "移除我的兴趣“{{statement}}”"
+    "removeInterest": "移除我的兴趣“{{statement}}”",
+    "followStory": "持续告诉我这件事的最新进展："
   },
   "appLock": {
     "forgot": "忘记 PIN？请重新登录并设置新的 PIN。",

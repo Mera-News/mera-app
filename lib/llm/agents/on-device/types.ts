@@ -1,6 +1,7 @@
 // The on-device agent contract, kept beside the on-device agents so the cloud
 // IAgent (lib/llm/types.ts) stays untouched.
 
+import type { MoreOptionsRequest, MoreOptionsResult } from '../../../chat-session/engine';
 import type { OnDeviceTurnResult } from '../../../news-harness/on-device/shared';
 import type { ConversationMessage, IAgent, ToolExecutionResult } from '../../types';
 
@@ -20,6 +21,8 @@ export interface OnDeviceAgent {
     io: { signal: AbortSignal; onText: (delta: string) => void },
   ): Promise<OnDeviceTurnResult>;
   executeTool(name: string, input: unknown): Promise<ToolExecutionResult>;
+  /** New options for a follow card: one built-in call, nothing added to the thread. Never throws. */
+  moreOptions?(req: MoreOptionsRequest): Promise<MoreOptionsResult>;
 }
 
 /** What a chat view hands the chat session: a cloud agent or an on-device one, by engine kind. */

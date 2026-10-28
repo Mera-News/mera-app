@@ -34,6 +34,7 @@ import {
   deriveProposal,
   deriveTrackProposal,
 } from './derive-proposals';
+import { readTrackOutcomes } from './track-options';
 import {
   bubbleCarries,
   buildTurnBoxes,
@@ -133,10 +134,22 @@ function emitMessage(
       const proposal =
         deriveProposal(tc) ?? deriveTrackProposal(tc) ?? deriveFactCheckProposal(tc);
       if (proposal) {
+        const result = asRecord(tc.result);
         cards.push({
           kind: 'proposal-card',
           key: `proposal-${message.id}-${idx}`,
           proposal,
+          ...(tc.name === 'proposeTrack'
+            ? {
+                track: {
+                  resultKey: `${message.id}::${idx}`,
+                  baseResult: asRecord(tc0.result) ?? {},
+                  outcomes: readTrackOutcomes(result?.followed),
+                  dismissed: result?.dismissed === true,
+                  superseded: false,
+                },
+              }
+            : {}),
         });
         return;
       }
@@ -600,5 +613,18 @@ export function deriveThreadItems(opts: {
     out.push({ kind: 'quick-fact-check-card', key: `qfc-${entry.id}`, entry });
   }
 
-  return placeProposalCardsLast(out);
+  return placeProposalCardsLast(markSupersededTrackCards(out));
+}
+
+/** Every follow card but the newest is superseded: a later proposeTrack replaced it. */
+function markSupersededTrackCards(items: ChatThreadItem[]): ChatThreadItem[] {
+  let newest = -1;
+  items.forEach((it, i) => {
+    if (it.kind === 'proposal-card' && it.track) newest = i;
+  });
+  return items.map((it, i) =>
+    it.kind === 'proposal-card' && it.track && i !== newest
+      ? { ...it, track: { ...it.track, superseded: true } }
+      : it,
+  );
 }

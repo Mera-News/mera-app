@@ -1,6 +1,6 @@
 // Cards on the cloud persona loop, driven the way the app drives them: a scripted gateway, the real
 // engine, the real PersonaUpdateAgent executing proposeChanges / applyProposal / cancelProposal.
-import { stopChatTurn } from '@/lib/chat-session/chat-session';
+import { resetChatSession, stopChatTurn } from '@/lib/chat-session/chat-session';
 import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
 import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -75,6 +75,24 @@ describe('cards on the persona loop', () => {
     // The loop was told a card waits, and that a typed yes may apply it.
     const skillLeg = gatewayCalls('chat').filter((c) => personMessage(c) === 'yes' && !isRouteLeg(c))[0];
     expect(systemOf(skillLeg)).toContain('<name>applyProposal</name>');
+  });
+
+  it('a card left waiting does not follow the reader into a New chat (device pass d12)', async () => {
+    server.use(...mockGateway(stage));
+    const first = await attachCloud();
+    first.engine.send('stop showing me celebrity gossip');
+    await turnDone();
+    expect(store().proposal).not.toBeNull();
+
+    // The header's New chat: the store asks for a conversation, the session resets, a new one attaches.
+    store().requestNewChat();
+    resetChatSession();
+    const { engine } = await attachCloud();
+    expect(pendingProposalView()).toBeNull();
+    engine.send('do not show me anything about Bollywood');
+    await turnDone();
+    const route = gatewayCalls('chat').filter((c) => personMessage(c) === 'do not show me anything about Bollywood' && isRouteLeg(c))[0];
+    expect(JSON.stringify(route.messages)).not.toContain('A card is waiting');
   });
 
   it('Stop on the staging turn clears that turn\'s card', async () => {

@@ -36,6 +36,11 @@ export function markChatReady(): void {
   setReadiness('ready');
 }
 
+/** A cloud chat turn failed: the badge must not say Ready beside the failure banner. */
+export function markChatFailed(): void {
+  setReadiness('error');
+}
+
 // One ping in flight at a time, so two open paths firing together send one.
 let pinging = false;
 // The badge's own deadline: cloudComplete's timeouts and fallback can run for minutes.
@@ -111,6 +116,8 @@ async function pingModel(): Promise<void> {
   }
   pinging = true;
   setReadiness('warming');
+  // A failed turn's banner is stale once this ping answers; one that lands mid-ping is newer than the proof.
+  const errorBefore = useCloudChatStore.getState().error;
   const deadline = setTimeout(() => {
     if (useChatReadiness.getState().status === 'warming') setReadiness('error');
   }, PING_DEADLINE_MS);
@@ -133,6 +140,8 @@ async function pingModel(): Promise<void> {
     }, { lane: 'interactive' });
     // Any non-empty 2xx reply proves the model answers; the exact word is not required.
     setReadiness(reply ? 'ready' : 'error');
+    const chat = useCloudChatStore.getState();
+    if (reply && errorBefore !== null && chat.error === errorBefore) chat.setError(null);
     logger.debug('[chat-timing] readiness ping done', { empty: !reply });
   } catch (err) {
     setReadiness('error');

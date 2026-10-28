@@ -698,7 +698,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "तैयार हो रहा है",
     "statusReady": "तैयार",
-    "statusError": "त्रुटि"
+    "statusError": "त्रुटि",
+    "turnNoAnswer": "मैं यह नहीं कर सका। किसी और तरीके से पूछकर देखें।",
+    "turnFailed": "वह जवाब पूरा नहीं हो सका। फिर से कोशिश करें।"
   },
   "personaChat": {
     "introMessage": "नमस्ते! मेरा ऐप आपका निजी समाचार सहायक है।\n\nआपके लिए सचमुच मायने रखने वाली खबरें खोजने के लिए मुझे आपके बारे में कुछ जानना होगा। आप कहाँ रहते हैं, क्या काम करते हैं, किन शौक़ों को फ़ॉलो करते हैं, कौन से शेयर देखते हैं, और आपका परिवार कहाँ रहता है। जितना चाहें बताएं, या बहुत कम।\n\nअगर इससे आपको झिझक हो रही है, तो यह सही सोच है। किसी ऐप कंपनी को निजी डेटा सौंपना समझदारी नहीं है। मेरा ऐप को अलग तरह से बनाया गया है: आप जो भी मुझे बताते हैं, वह आपके डिवाइस पर सहेजा जाता है, हमारे सर्वर पर नहीं। पूछें कि यह कैसे काम करता है, या कहें 'सेटअप में मदद करो', और हम शुरू कर देंगे।"
@@ -738,7 +740,6 @@
     "topicGenFailed": "इसके लिए विषय तैयार नहीं हो सके।",
     "topicGenRetry": "पुनः प्रयास करें",
     "aiUsageNoticeGeneral": "मेरा ऐप गलती कर सकता है, इसलिए ज़रूरी बातें जाँच लें।",
-    "trackChooseHint": "चुनें कि क्या फ़ॉलो करना है",
     "factDeletePendingTitle": "आपके प्रोफ़ाइल से हटाया जाएगा",
     "saveAsWritten": "जैसा मैंने लिखा वैसे सेव करें",
     "factDeleteRemove": "हटाएं",
@@ -1029,7 +1030,6 @@
     "endedLabel": "समाप्त",
     "emptyCta": "फ़ीड पर जाएं",
     "trackChatSeed": "मैं इस स्टोरी को फ़ॉलो करना चाहता हूँ।",
-    "trackProposalTitle": "इस स्टोरी को फ़ॉलो करें?",
     "alreadyTrackingTitle": "आप पहले से इसे फ़ॉलो कर रहे हैं",
     "alreadyTrackingBody": "आप एक स्टोरी को दो बार फ़ॉलो नहीं कर सकते। इसे अनफ़ॉलो करने से इसके लिए सहेजी गई सभी चीज़ें हट जाएंगी।",
     "goToStoryAction": "स्टोरी पर जाएं",
@@ -1049,7 +1049,27 @@
     "stopFollowingConfirmTitle": "इस स्टोरी को फ़ॉलो करना बंद करें?",
     "updatedAgo": "{{time}} अपडेट किया गया",
     "articlesCount_one": "{{count}} लेख",
-    "articlesCount_other": "{{count}} लेख"
+    "articlesCount_other": "{{count}} लेख",
+    "cardTitle": "फ़ॉलो करने के लिए स्टोरीज़ चुनें",
+    "moreOptions": "और विकल्प",
+    "moreOptionsLoading": "और विकल्प खोजे जा रहे हैं",
+    "moreOptionsAdded_one": "1 और विकल्प जोड़ा गया",
+    "moreOptionsAdded_other": "{{count}} और विकल्प जोड़े गए",
+    "moreOptionsNone": "इस स्टोरी के लिए कोई नया विकल्प नहीं है",
+    "moreOptionsFailed": "और विकल्प लोड नहीं हो सके। फिर से कोशिश करें।",
+    "follow": "फ़ॉलो करें",
+    "followTicked_one": "1 स्टोरी फ़ॉलो करें",
+    "followTicked_other": "{{count}} स्टोरीज़ फ़ॉलो करें",
+    "tryAgain": "फिर से कोशिश करें",
+    "rowFollowing": "फ़ॉलो कर रहे हैं",
+    "rowAlready": "पहले से फ़ॉलो कर रहे हैं",
+    "rowFailed": "फ़ॉलो नहीं हो सका",
+    "followingAll_one": "अब 1 स्टोरी फ़ॉलो कर रहे हैं",
+    "followingAll_other": "अब {{count}} स्टोरीज़ फ़ॉलो कर रहे हैं",
+    "followingSome_one": "{{count}} में से {{done}} स्टोरी अब फ़ॉलो कर रहे हैं",
+    "followingSome_other": "{{count}} में से {{done}} स्टोरीज़ अब फ़ॉलो कर रहे हैं",
+    "followFailedAll": "ये स्टोरीज़ फ़ॉलो नहीं हो सकीं। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+    "optionsExpired": "विकल्प समाप्त हो गए"
   },
   "whatsNew": {
     "gotIt": "समझ गया",
@@ -2550,7 +2570,8 @@
     "interests": "आपकी रुचियाँ",
     "origin": "आप कहाँ से हैं",
     "family": "आपका परिवार",
-    "feedTuning": "आपकी फ़ीड"
+    "feedTuning": "आपकी फ़ीड",
+    "followStory": "फ़ॉलो की जाने वाली स्टोरी"
   },
   "askChoice": {
     "answeredA11y": "पहले ही उत्तर दिया गया",
@@ -3032,7 +3053,8 @@
   },
   "meraDraft": {
     "changeInterest": "मेरी रुचि \"{{statement}}\" को बदलकर ये करें ",
-    "removeInterest": "मेरी रुचि \"{{statement}}\" हटाएं"
+    "removeInterest": "मेरी रुचि \"{{statement}}\" हटाएं",
+    "followStory": "इस बारे में मुझे अपडेट देते रहें: "
   },
   "appLock": {
     "forgot": "PIN भूल गए? फिर से साइन इन करें और नया PIN सेट करें।",

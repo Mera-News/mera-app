@@ -691,7 +691,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "準備中",
     "statusReady": "就緒",
-    "statusError": "錯誤"
+    "statusError": "錯誤",
+    "turnNoAnswer": "我無法做到。請換個方式問我。",
+    "turnFailed": "這個回覆沒有完成。請再試一次。"
   },
   "personaChat": {
     "introMessage": "嗨，我是梅拉，你的個人新聞助理。\n\n為了找到真正對你重要的新聞，我需要了解你一些事情。你住在哪裡、從事什麼工作、追蹤哪些興趣、持有哪些股票、家人住在哪裡。你願意分享多少都可以。\n\n如果這讓你有些猶豫，那是很好的直覺。把個人資料交給應用程式公司並不明智。梅拉的設計不一樣：你告訴我的所有內容都儲存在你的裝置上，而不是我們的伺服器。想知道它怎麼運作，可以問我，或是說「幫我設定」，我們就開始。"
@@ -731,7 +733,6 @@
     "topicGenFailed": "無法為此產生主題。",
     "topicGenRetry": "重試",
     "aiUsageNoticeGeneral": "梅拉可能會出錯，所以重要的內容請自行查證。",
-    "trackChooseHint": "選擇要追蹤的內容",
     "factDeletePendingTitle": "將從你的檔案中移除",
     "saveAsWritten": "照我寫的儲存",
     "factDeleteRemove": "移除",
@@ -1019,7 +1020,6 @@
     "endedLabel": "已結束",
     "emptyCta": "前往資訊流",
     "trackChatSeed": "我想追蹤這則報導。",
-    "trackProposalTitle": "追蹤這則報導？",
     "alreadyTrackingTitle": "你已在追蹤此報導",
     "alreadyTrackingBody": "你不能追蹤同一則報導兩次。取消追蹤會刪除為此報導保存的所有內容。",
     "goToStoryAction": "前往報導",
@@ -1039,7 +1039,27 @@
     "stopFollowingConfirmTitle": "要取消追蹤這則報導嗎？",
     "updatedAgo": "{{time}}更新",
     "articlesCount_one": "{{count}} 篇文章",
-    "articlesCount_other": "{{count}} 篇文章"
+    "articlesCount_other": "{{count}} 篇文章",
+    "cardTitle": "選擇要追蹤的報導",
+    "moreOptions": "更多選項",
+    "moreOptionsLoading": "正在尋找更多選項",
+    "moreOptionsAdded_one": "已新增 1 則報導",
+    "moreOptionsAdded_other": "已新增 {{count}} 則報導",
+    "moreOptionsNone": "沒有找到新的報導",
+    "moreOptionsFailed": "無法載入更多選項。請再試一次。",
+    "follow": "追蹤",
+    "followTicked_one": "追蹤 1 則報導",
+    "followTicked_other": "追蹤 {{count}} 則報導",
+    "tryAgain": "請再試一次",
+    "rowFollowing": "追蹤中",
+    "rowAlready": "已在追蹤",
+    "rowFailed": "無法追蹤",
+    "followingAll_one": "你正在追蹤 1 則報導",
+    "followingAll_other": "你正在追蹤 {{count}} 則報導",
+    "followingSome_one": "已追蹤你選的 {{count}} 則報導中的 {{done}} 則",
+    "followingSome_other": "已追蹤你選的 {{count}} 則報導中的 {{done}} 則",
+    "followFailedAll": "無法追蹤這些報導。請檢查網路連線，然後再試一次。",
+    "optionsExpired": "選項已過期"
   },
   "whatsNew": {
     "gotIt": "知道了",
@@ -2535,7 +2555,8 @@
     "interests": "你的興趣",
     "origin": "你來自哪裡",
     "family": "你的家人",
-    "feedTuning": "你的資訊流"
+    "feedTuning": "你的資訊流",
+    "followStory": "你想追蹤的報導"
   },
   "askChoice": {
     "answeredA11y": "已回答",
@@ -3016,7 +3037,8 @@
   },
   "meraDraft": {
     "changeInterest": "將我的興趣「{{statement}}」改為 ",
-    "removeInterest": "移除我的興趣「{{statement}}」"
+    "removeInterest": "移除我的興趣「{{statement}}」",
+    "followStory": "持續告訴我這件事的最新進展："
   },
   "appLock": {
     "forgot": "忘記 PIN 碼了嗎？請重新登入並設定新的 PIN 碼。",

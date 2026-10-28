@@ -18,6 +18,7 @@
 // Everything that touches WatermelonDB, Zustand, the logger or any expo/RN
 // module stays in lib/llm/agents/FollowStoryAgent.ts.
 
+import { TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import type { StagedProposal, ToolDefinition, TrackFeedbackSubject } from '../core/types';
 
 /** Target ceilings mirrored from the article path's scope pills (prompt
@@ -196,7 +197,7 @@ export function buildFollowStoryContext(input: FollowStoryContextInput): string 
     blocks.push(
       '## PENDING SCOPE CARD\n'
         + `The user is looking at a card offering: ${labels.join('; ')}.\n`
-        + 'They pick one by TAPPING it — do not apply it yourself and do not say the story is being followed yet. If they decline, call cancelProposal.',
+        + `They ${TRACK_CARD_TAP_PHRASE}. Do not apply it yourself and do not say the story is being followed yet. If they decline, call cancelProposal.`,
     );
   }
 

@@ -12,7 +12,7 @@
 import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { SUPPRESSION_KINDS } from '../core/types';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
-import { proposalRequiresUserChoice } from '../core/proposals';
+import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import {
   PLACE_GLOBAL,
   describePlace,
@@ -566,9 +566,11 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     ? '## PENDING PROPOSAL\n'
       + `${proposal.explanation}\n`
       + `Actions: ${proposal.actions.map(describeAction).join('; ')}\n`
-      + (proposalRequiresUserChoice(proposal)
-        ? 'These are ALTERNATIVES: the user must TAP the one they want — do NOT call applyProposal. If they decline call cancelProposal.'
-        : 'If the user confirms call applyProposal; if they decline call cancelProposal.')
+      + (!proposalRequiresUserChoice(proposal)
+        ? 'If the user confirms call applyProposal; if they decline call cancelProposal.'
+        : isTrackCard(proposal)
+          ? `These are follow options: the user must ${TRACK_CARD_TAP_PHRASE}. Do NOT call applyProposal. If they decline call cancelProposal.`
+          : 'These are ALTERNATIVES: the user must TAP the one they want — do NOT call applyProposal. If they decline call cancelProposal.')
     : null;
 
   // --- FEEDBACK GIVEN (the v6 sheet's answers) — replaces USER VERDICT ---

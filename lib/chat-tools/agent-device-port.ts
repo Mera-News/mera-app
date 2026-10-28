@@ -362,6 +362,8 @@ export function makeAgentToolPort(
     ...(cards
       ? {
           proposeChanges: (args: Record<string, unknown>) => runCard('proposeChanges', args),
+          proposeTrack: (args: Record<string, unknown>) => runCard('proposeTrack', args),
+          searchNews: (args: { query: string }) => live('searchNews', args, () => runCard('searchNews', args)),
           // A card that only a tap may apply is refused here, before the agent is asked.
           applyProposal: async (): Promise<Record<string, unknown>> =>
             cards.pending()?.appliable ? runCard('applyProposal', {}) : userTapOnlyRefusal(),
@@ -615,6 +617,8 @@ function haltable(port: AgentToolPort, stop: AbortSignal): AgentToolPort {
     ...(port.webSearch ? { webSearch: (a: { queries: string[] }) => halted(() => port.webSearch!(a)) } : {}),
     ...(port.explainMera ? { explainMera: (a: { topics: string[] }) => halted(() => port.explainMera!(a)) } : {}),
     ...(port.proposeChanges ? { proposeChanges: (a: Record<string, unknown>) => halted(() => port.proposeChanges!(a)) } : {}),
+    ...(port.proposeTrack ? { proposeTrack: (a: Record<string, unknown>) => halted(() => port.proposeTrack!(a)) } : {}),
+    ...(port.searchNews ? { searchNews: (a: { query: string }) => halted(() => port.searchNews!(a)) } : {}),
     ...(port.applyProposal ? { applyProposal: () => halted(() => port.applyProposal!()) } : {}),
     ...(port.cancelProposal ? { cancelProposal: () => halted(() => port.cancelProposal!()) } : {}),
   };
@@ -667,10 +671,4 @@ export async function buildAgentPersona(
     surface: agentId.endsWith('ONBOARDING') ? 'ONBOARDING' : 'CONFIG',
     languageName,
   };
-}
-
-/** The persona agent is the only one the loop drives; the article-feedback and
- *  tutorial agents keep their own single-shot flow. */
-export function isPersonaAgent(agentId: string): boolean {
-  return agentId.startsWith('persona-');
 }

@@ -3,7 +3,7 @@
 
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
-import * as RNFS from '@dr.pogodin/react-native-fs';
+import { getFreeDiskStorageAsync } from 'expo-file-system/legacy';
 
 import type { SystemRequirementsResult, RequirementCheckId } from '../types';
 import { builtInAvailability, CANNOT_RUN_REASONS } from './text-engine';
@@ -101,11 +101,13 @@ export async function checkRequirements(
   let freeStorageGB: number | null = null;
   let freeBytes: number | null = null;
   try {
-    const fsInfo = await RNFS.getFSInfo();
-    freeBytes = fsInfo.freeSpace;
-    freeStorageGB = Math.round((fsInfo.freeSpace / 1e9) * 10) / 10;
+    // iOS: volumeAvailableCapacityForImportantUsage, which counts purgeable space iOS frees for a
+    // download. react-native-fs's getFSInfo reads NSFileSystemFreeSize, which leaves that out and
+    // told a phone with hundreds of GB available it was full (MERA-APP-93).
+    freeBytes = await getFreeDiskStorageAsync();
+    freeStorageGB = Math.round((freeBytes / 1e9) * 10) / 10;
   } catch {
-    // getFSInfo can fail on some devices — skip storage check
+    // The read can fail on some devices: skip the storage check
   }
 
   const deviceInfo = {

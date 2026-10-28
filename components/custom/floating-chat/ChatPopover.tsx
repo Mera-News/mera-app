@@ -51,6 +51,9 @@ const HEADER_PAD_TOP = 14;
 const HEADER_PAD_LEFT = 16;
 /** The header row is as tall as its 44pt buttons. */
 const HEADER_ROW = 44;
+/** At this OS text size the header's buttons move to a second row, so the title
+ *  block (and its Art. 50 line) gets the full width. */
+const HEADER_STACK_FONT_SCALE = 1.3;
 /** The button's logo at rest (MeraButton draws it at 38 pt). */
 const BUTTON_LOGO = 38;
 const PANEL_INSET = 10;
@@ -137,7 +140,11 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         : null;
     const reduceMotion = useReducedMotion();
     const insets = useSafeAreaInsets();
-    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+    const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
+    // The title wrapping beside the buttons also stacks them. LATCHED per font
+    // scale: stacked, the title fits again, and unlatched it would flip back.
+    const [titleWrappedAt, setTitleWrappedAt] = useState<number | null>(null);
+    const stackedHeader = fontScale >= HEADER_STACK_FONT_SCALE || titleWrappedAt === fontScale;
     const isExpanded = useFloatingChatIsExpanded();
     // Frame-by-frame keyboard geometry on the UI thread. `height` is negative
     // while the keyboard is visible (it's authored as a translateY), so the
@@ -383,12 +390,15 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                 {/* The header arrives WITH the panel, on the panel's own morph.
                     A separate reveal after the morph settled made it pop in
                     220ms after the body (audit F10). */}
-                <View style={[styles.header, { borderBottomColor: colors.line }]}>
+                <View
+                    style={[styles.header, stackedHeader && styles.headerStacked, { borderBottomColor: colors.line }]}
+                    testID="chat-header"
+                >
                     {/* Grab zone (avatar slot + title): pans down to close.
                         Kept off the buttons so a swipe never eats a tap. The
                         slot is empty: the riding mark sits over it. */}
                     <GestureDetector gesture={headerGesture}>
-                        <View style={styles.headerGrab}>
+                        <View style={[styles.headerGrab, stackedHeader && styles.headerGrabStacked]}>
                             <View style={styles.avatarSlot} />
                             {/* EU AI Act Art. 50(1) interaction notice, fixed
                                 chrome: this block is always on screen while the
@@ -413,7 +423,14 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                                 onAccessibilityTap={openAbout}
                                 testID="chat-header-about"
                             >
-                                <Text style={[styles.title, { color: colors.ink }]}>{t('floatingChat.title')}</Text>
+                                <Text
+                                    style={[styles.title, { color: colors.ink }]}
+                                    onTextLayout={(e) => {
+                                        if (e.nativeEvent.lines.length > 1 && titleWrappedAt !== fontScale) setTitleWrappedAt(fontScale);
+                                    }}
+                                >
+                                    {t('floatingChat.title')}
+                                </Text>
                                 <Text style={[styles.subtitle, { color: colors.ink2 }]} testID="chat-header-ai-subtitle">
                                     {t('floatingChat.aiSubtitle')}
                                     {' '}
@@ -425,21 +442,23 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                     {/* Real 44pt frames (ux2 batch 26): a childless labelled
                         Pressable sized by NUMBER with the icon laid over it, or
                         the icon surfaces as its own StaticText. */}
-                    {badge ? <ReadinessBadge {...badge} spinning={readiness === 'warming'} /> : null}
-                    <GlyphSafeIconButton
-                        onPress={onNewChatPress}
-                        accessibilityLabel={t('floatingChat.newChat')}
-                        testID="chat-header-new-chat"
-                    >
-                        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-comment" size={22} color={colors.ink} />
-                    </GlyphSafeIconButton>
-                    <GlyphSafeIconButton
-                        onPress={onClosePress}
-                        accessibilityLabel={t('floatingChat.close')}
-                        testID="chat-header-close"
-                    >
-                        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={22} color={colors.ink} />
-                    </GlyphSafeIconButton>
+                    <View style={[styles.headerButtons, stackedHeader && styles.headerButtonsStacked]} testID="chat-header-buttons">
+                        {badge ? <ReadinessBadge {...badge} spinning={readiness === 'warming'} /> : null}
+                        <GlyphSafeIconButton
+                            onPress={onNewChatPress}
+                            accessibilityLabel={t('floatingChat.newChat')}
+                            testID="chat-header-new-chat"
+                        >
+                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-comment" size={22} color={colors.ink} />
+                        </GlyphSafeIconButton>
+                        <GlyphSafeIconButton
+                            onPress={onClosePress}
+                            accessibilityLabel={t('floatingChat.close')}
+                            testID="chat-header-close"
+                        >
+                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={22} color={colors.ink} />
+                        </GlyphSafeIconButton>
+                    </View>
                 </View>
 
                 {/* The panel itself shrinks above the keyboard (see panelStyle), so
@@ -487,14 +506,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: StyleSheet.hairlineWidth,
         zIndex: 2, // keep header (and its tappable X) above the body content
     },
+    // Stacked: a column, the title row on top at full width, the buttons below.
+    headerStacked: { flexDirection: 'column', alignItems: 'stretch' },
     headerGrab: {
         flex: 1,
         minHeight: HEADER_ROW,
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 10,
     },
-    avatarSlot: { width: AVATAR, height: AVATAR },
+    headerGrabStacked: { flex: 0 },
+    headerButtons: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    headerButtonsStacked: { alignSelf: 'flex-end' },
+    // Pinned to the first line, centred in a 44pt row: the riding mark lands on
+    // HEADER_PAD_TOP + HEADER_ROW / 2 whatever height the title block grows to.
+    avatarSlot: { width: AVATAR, height: AVATAR, marginTop: (HEADER_ROW - AVATAR) / 2 },
     titleBlock: {
         flex: 1,
         justifyContent: 'center',
@@ -504,7 +530,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        height: 22,
+        // A minimum, never a height: a fixed 22 clipped the label at any large text size.
+        minHeight: 22,
+        paddingVertical: 2,
         paddingHorizontal: 8,
         borderRadius: 999,
         overflow: 'hidden',

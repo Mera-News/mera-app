@@ -54,6 +54,8 @@ export interface FakeToolLog {
   appliedCards: { proposalId: string; actions: Record<string, unknown>[] }[];
   savedFacts: { statement: string; replaces: string | null; place: unknown }[];
   deleted: string[];
+  /** The option lists proposeTrack was called with (trimmed), staged or not. */
+  trackOptions: { label: string; search: string }[][];
 }
 
 export function freshLog(): FakeToolLog {
@@ -66,6 +68,7 @@ export function freshLog(): FakeToolLog {
     appliedCards: [],
     savedFacts: [],
     deleted: [],
+    trackOptions: [],
   };
 }
 
@@ -175,7 +178,9 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
         });
         accepted.push(statement);
       }
-      return { accepted, rejected };
+      // `pendingFacts` like the device: the loop counts a proposal only when
+      // something was staged.
+      return { accepted, rejected, pendingFacts: accepted.map((s) => ({ options: [s] })) };
     },
 
     // Deterministic and offline: the eval never reaches the web. A turn may
@@ -262,6 +267,49 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
       // All four kinds are applicable by typing and none is an alternative.
       card = { view: { id: proposalId, summary, chooseOne: false, appliable: true }, actions };
       return { staged: true, proposalId, actions };
+    },
+
+    // FOLLOW CARD. Mirrors the device's staging rule an eval needs: options are
+    // trimmed and a blank label drops out. One option is appliable by typing; two
+    // or more are tap-only (the user ticks), as `multiSelect` tells the loop.
+    async proposeTrack(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+      count('proposeTrack');
+      const raw = Array.isArray(args.options) ? args.options : [];
+      const options: { label: string; search: string }[] = [];
+      for (const o of raw) {
+        const rec = o && typeof o === 'object' ? (o as Record<string, unknown>) : null;
+        const label = typeof rec?.label === 'string' ? rec.label.trim() : '';
+        const search = typeof rec?.search === 'string' ? rec.search.trim() : '';
+        if (label) options.push({ label, search });
+      }
+      if (options.length === 0) return { error: 'options is required' };
+      log.trackOptions.push(options.map((o) => ({ ...o })));
+      cardCount += 1;
+      const proposalId = `track-${cardCount}`;
+      card = {
+        view: {
+          id: proposalId,
+          summary: options.map((o) => o.label).join(', '),
+          chooseOne: options.length >= 2,
+          appliable: options.length === 1,
+          multiSelect: options.length >= 2,
+        },
+        actions: options.map((o) => ({ type: 'track_story', label: o.label, search: o.search })),
+      };
+      return { staged: true, proposalId, options };
+    },
+
+    // Mera's own index, offline: scripted per turn like webSearch. Unscripted is
+    // an honestly-labelled empty answer.
+    async searchNews(args: { query: string }): Promise<Record<string, unknown>> {
+      count('searchNews');
+      const query = args.query;
+      const hit = (turn?.fakeTools?.searchNews ?? []).find(
+        (a) => a.query === undefined || query.toLowerCase().includes(a.query),
+      );
+      return hit && hit.headlines.length > 0
+        ? { query, results: hit.headlines.map((title) => ({ title })) }
+        : { query, results: [], note: 'Mera found no recent coverage for this query.' };
     },
 
     async applyProposal(): Promise<Record<string, unknown>> {

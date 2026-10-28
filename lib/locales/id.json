@@ -691,7 +691,9 @@
     "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
     "statusWarming": "Menyiapkan",
     "statusReady": "Siap",
-    "statusError": "Gagal"
+    "statusError": "Gagal",
+    "turnNoAnswer": "Saya tidak bisa melakukan itu. Coba tanyakan dengan cara lain.",
+    "turnFailed": "Jawaban saya belum selesai. Coba lagi."
   },
   "personaChat": {
     "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
@@ -731,7 +733,6 @@
     "topicGenFailed": "Tidak dapat membuat topik untuk ini.",
     "topicGenRetry": "Coba Lagi",
     "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
-    "trackChooseHint": "Pilih yang ingin diikuti",
     "factDeletePendingTitle": "Akan dihapus dari profil Anda",
     "saveAsWritten": "Simpan seperti yang saya tulis",
     "factDeleteRemove": "Hapus",
@@ -1019,7 +1020,6 @@
     "endedLabel": "Berakhir",
     "emptyCta": "Ke Umpan",
     "trackChatSeed": "Saya ingin mengikuti cerita ini.",
-    "trackProposalTitle": "Ikuti cerita ini?",
     "alreadyTrackingTitle": "Anda sudah mengikuti ini",
     "alreadyTrackingBody": "Anda tidak dapat mengikuti cerita ini dua kali. Berhenti mengikutinya akan menghapus semua yang tersimpan untuknya.",
     "goToStoryAction": "Buka cerita",
@@ -1039,7 +1039,27 @@
     "stopFollowingConfirmTitle": "Berhenti mengikuti cerita ini?",
     "updatedAgo": "diperbarui {{time}}",
     "articlesCount_one": "{{count}} artikel",
-    "articlesCount_other": "{{count}} artikel"
+    "articlesCount_other": "{{count}} artikel",
+    "cardTitle": "Pilih cerita untuk diikuti",
+    "moreOptions": "Opsi lainnya",
+    "moreOptionsLoading": "Mencari opsi lainnya",
+    "moreOptionsAdded_one": "1 opsi lain ditambahkan",
+    "moreOptionsAdded_other": "{{count}} opsi lain ditambahkan",
+    "moreOptionsNone": "Tidak ada cerita baru untuk ini",
+    "moreOptionsFailed": "Tidak dapat memuat opsi lainnya. Coba lagi.",
+    "follow": "Ikuti",
+    "followTicked_one": "Ikuti 1 cerita",
+    "followTicked_other": "Ikuti {{count}} cerita",
+    "tryAgain": "Coba Lagi",
+    "rowFollowing": "Mengikuti",
+    "rowAlready": "Sudah diikuti",
+    "rowFailed": "Gagal mengikuti",
+    "followingAll_one": "Mengikuti 1 cerita",
+    "followingAll_other": "Mengikuti {{count}} cerita",
+    "followingSome_one": "Mengikuti {{done}} dari {{count}} cerita",
+    "followingSome_other": "Mengikuti {{done}} dari {{count}} cerita",
+    "followFailedAll": "Tidak dapat mengikuti cerita-cerita ini. Periksa koneksi Anda lalu coba lagi.",
+    "optionsExpired": "Opsi sudah kedaluwarsa"
   },
   "whatsNew": {
     "gotIt": "Mengerti",
@@ -2535,7 +2555,8 @@
     "interests": "minatmu",
     "origin": "asalmu",
     "family": "keluargamu",
-    "feedTuning": "feed Anda"
+    "feedTuning": "feed Anda",
+    "followStory": "cerita yang akan diikuti"
   },
   "askChoice": {
     "answeredA11y": "sudah dijawab",
@@ -3016,7 +3037,8 @@
   },
   "meraDraft": {
     "changeInterest": "Ubah minat saya \"{{statement}}\" menjadi ",
-    "removeInterest": "Hapus minat saya \"{{statement}}\""
+    "removeInterest": "Hapus minat saya \"{{statement}}\"",
+    "followStory": "Beri saya kabar terbaru tentang "
   },
   "appLock": {
     "forgot": "Lupa PIN? Masuk lagi dan atur PIN baru.",

@@ -26,6 +26,7 @@ import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { chatRunsInCloud } from '../chat-cloud';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
+import { isTracked } from '../../database/services/tracked-story-service';
 import { isSubjectTracked } from '../../tracking/track-actions';
 import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import {
@@ -33,6 +34,7 @@ import {
   buildFeedbackContext,
   decideProposeChanges,
   decideProposeTrack,
+  parseTrackScopeOptions,
   getArticleFeedbackToolDefinitions,
 } from '../../news-harness/article-feedback/agent-core';
 import {
@@ -383,7 +385,21 @@ export class ArticleFeedbackAgent implements IAgent {
           return { result: { error: 'no article to follow in this context' } };
         }
         try {
-          if (await isSubjectTracked(subject as FeedbackSubject)) {
+          // Stage when at least one proposed option is not yet followed for this
+          // article: two scopes of one story are two follows.
+          const options = parseTrackScopeOptions(Array.isArray(args.options) ? args.options : []);
+          const followed = await Promise.all(
+            options.map((o) =>
+              isTracked({
+                stableClusterId: subject.stableClusterId ?? null,
+                articleId: subject.articleId,
+                searchText: o.search,
+              }),
+            ),
+          );
+          const allFollowed =
+            options.length > 0 ? followed.every(Boolean) : await isSubjectTracked(subject as FeedbackSubject);
+          if (allFollowed) {
             return {
               result: { alreadyTracked: true, message: 'Already following this story.' },
             };
@@ -435,7 +451,7 @@ export class ArticleFeedbackAgent implements IAgent {
         // pills remain tappable, and the message gives the model something true
         // to say instead of stranding the user in silence.
         if (proposalRequiresUserChoice(proposal)) {
-          return { result: chooseOneRefusal() };
+          return { result: chooseOneRefusal(proposal) };
         }
 
         // UI-ONLY actions are stripped before the executor sees them (which
