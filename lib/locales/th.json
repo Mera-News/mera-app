@@ -402,7 +402,8 @@
     "switchingCancel": "หยุดการสลับภาษา",
     "switchingNudge": "อุปกรณ์ของคุณกำลังเตรียมชุดข้อมูลแปลภาษา {{language}} กรุณาเปิดหน้าจอนี้ค้างไว้จนกว่าจะเสร็จ หากออกตอนนี้ บทความข่าวจะยังคงเป็นภาษาอังกฤษต่อไป",
     "switchingTitle": "กำลังตั้งค่า {{language}}…",
-    "translationUnavailableOnThisDevice": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็น {{language}} ได้ จึงแสดงเป็นภาษาอังกฤษแทน"
+    "translationUnavailableOnThisDevice": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็น {{language}} ได้ จึงแสดงเป็นภาษาอังกฤษแทน",
+    "phoneGuideLink": "แสดงวิธีเปลี่ยนภาษาของโทรศัพท์"
   },
   "meraProtocol": {
     "title": "เมร่า โปรโตคอล",

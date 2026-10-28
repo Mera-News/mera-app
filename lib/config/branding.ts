@@ -18,11 +18,18 @@ export const WEBSITE_URL =
   process.env.EXPO_PUBLIC_WEBSITE_URL || 'https://mera.news';
 export const GITHUB_URL =
   process.env.EXPO_PUBLIC_GITHUB_URL || 'https://github.com/Mera-News/mera-app';
-export const TRANSLATION_GUIDE_URL =
-  process.env.EXPO_PUBLIC_TRANSLATION_GUIDE_URL ||
-  `https://mera.news/assets/translation-guide-${
-    Platform.OS === 'android' ? 'android' : 'ios'
-  }.mp4`;
+// How-to videos: one per kind, platform and app language, named
+// <kind>-<ios|android>-<app language code>.mp4 (built in mera-social, hosted in
+// mera-infra's guides bucket). A function, not a constant, so the language is
+// the one the reader has when the guide opens.
+export type GuideVideoKind = 'translate' | 'phone-language';
+const GUIDE_VIDEO_BASE_URL =
+  process.env.EXPO_PUBLIC_GUIDE_VIDEO_BASE_URL ||
+  'https://storage.googleapis.com/mera-news-prod-guides';
+export function guideVideoUrl(kind: GuideVideoKind, appLanguage: string): string {
+  const platform = Platform.OS === 'android' ? 'android' : 'ios';
+  return `${GUIDE_VIDEO_BASE_URL}/${kind}-${platform}-${appLanguage}.mp4`;
+}
 
 // utm_source value appended to publisher article URLs so publishers can
 // attribute the visit to us. Derived from WEBSITE_URL's host (e.g. mera.news)

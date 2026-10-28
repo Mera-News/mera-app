@@ -2,7 +2,7 @@ import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HelpModal } from '@/components/ui/help-modal';
 import { Text } from '@/components/ui/text';
-import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
+import { guideVideoUrl } from '@/lib/config/branding';
 import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { useColors } from '@/lib/theme/tokens';
 import type { ArticleTranslationSupport } from '@/lib/translation-service';
@@ -101,7 +101,7 @@ const AboutTranslationModal: React.FC<AboutTranslationModalProps> = ({
                         </Button>
                     </View>
             </HelpModal>
-            <VideoPlayerModal visible={guideOpen} uri={TRANSLATION_GUIDE_URL} onClose={() => setGuideOpen(false)} />
+            <VideoPlayerModal visible={guideOpen} uri={guideVideoUrl('translate', appLanguage)} onClose={() => setGuideOpen(false)} />
         </>
     );
 };

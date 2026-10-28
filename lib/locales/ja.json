@@ -402,7 +402,8 @@
     "switchingCancel": "言語の切り替えを中止",
     "switchingNudge": "お使いの端末が{{language}}の翻訳パックを準備しています。完了するまでこの画面を閉じずにお待ちください。今ここを離れると、記事は英語のまま表示されてしまいます。",
     "switchingTitle": "{{language}}を設定中…",
-    "translationUnavailableOnThisDevice": "この端末はニュース記事を{{language}}に翻訳できません。代わりに英語で表示しています。"
+    "translationUnavailableOnThisDevice": "この端末はニュース記事を{{language}}に翻訳できません。代わりに英語で表示しています。",
+    "phoneGuideLink": "スマホの言語を変更する方法を教えてください"
   },
   "meraProtocol": {
     "title": "メラ・プロトコル",
