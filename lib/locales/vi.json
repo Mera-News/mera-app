@@ -2964,7 +2964,8 @@
   },
   "meraDraft": {
     "changeInterest": "Đổi mối quan tâm \"{{statement}}\" của tôi thành ",
-    "removeInterest": "Xóa mối quan tâm \"{{statement}}\" của tôi"
+    "removeInterest": "Xóa mối quan tâm \"{{statement}}\" của tôi",
+    "followStory": "Cập nhật cho tôi về "
   },
   "appLock": {
     "forgot": "Quên mã PIN? Hãy đăng nhập lại và đặt mã PIN mới.",

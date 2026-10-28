@@ -2964,7 +2964,8 @@
   },
   "meraDraft": {
     "changeInterest": "내 관심사 \"{{statement}}\"을(를) 다음으로 바꿀래요: ",
-    "removeInterest": "내 관심사 \"{{statement}}\" 제거"
+    "removeInterest": "내 관심사 \"{{statement}}\" 제거",
+    "followStory": "이 소식을 계속 알려 줄래요: "
   },
   "appLock": {
     "forgot": "PIN을 잊으셨나요? 다시 로그인해서 새 PIN을 설정하세요.",

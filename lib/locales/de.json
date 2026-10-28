@@ -2974,7 +2974,8 @@
   },
   "meraDraft": {
     "changeInterest": "Ändere mein Interesse „{{statement}}“ in ",
-    "removeInterest": "Entferne mein Interesse „{{statement}}“"
+    "removeInterest": "Entferne mein Interesse „{{statement}}“",
+    "followStory": "Halte mich auf dem Laufenden über "
   },
   "appLock": {
     "forgot": "PIN vergessen? Melde dich erneut an und lege eine neue PIN fest.",

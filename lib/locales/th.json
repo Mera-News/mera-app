@@ -2965,7 +2965,8 @@
   },
   "meraDraft": {
     "changeInterest": "เปลี่ยนความสนใจ \"{{statement}}\" ของฉันเป็น ",
-    "removeInterest": "ลบความสนใจ \"{{statement}}\" ของฉัน"
+    "removeInterest": "ลบความสนใจ \"{{statement}}\" ของฉัน",
+    "followStory": "อัปเดตข่าวเรื่องนี้ให้ฉันด้วย: "
   },
   "appLock": {
     "forgot": "ลืม PIN ใช่ไหม ลงชื่อเข้าใช้อีกครั้งและตั้ง PIN ใหม่",

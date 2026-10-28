@@ -2976,7 +2976,8 @@
   },
   "meraDraft": {
     "changeInterest": "Change my interest \"{{statement}}\" to ",
-    "removeInterest": "Remove my interest \"{{statement}}\""
+    "removeInterest": "Remove my interest \"{{statement}}\"",
+    "followStory": "Keep me updated on "
   },
   "appLock": {
     "forgot": "Forgot your PIN? Sign in again and set a new PIN.",

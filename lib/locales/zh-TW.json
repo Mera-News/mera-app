@@ -2964,7 +2964,8 @@
   },
   "meraDraft": {
     "changeInterest": "將我的興趣「{{statement}}」改為 ",
-    "removeInterest": "移除我的興趣「{{statement}}」"
+    "removeInterest": "移除我的興趣「{{statement}}」",
+    "followStory": "持續告訴我這件事的最新進展："
   },
   "appLock": {
     "forgot": "忘記 PIN 碼了嗎？請重新登入並設定新的 PIN 碼。",

@@ -2964,7 +2964,8 @@
   },
   "meraDraft": {
     "changeInterest": "Ubah minat saya \"{{statement}}\" menjadi ",
-    "removeInterest": "Hapus minat saya \"{{statement}}\""
+    "removeInterest": "Hapus minat saya \"{{statement}}\"",
+    "followStory": "Beri saya kabar terbaru tentang "
   },
   "appLock": {
     "forgot": "Lupa PIN? Masuk lagi dan atur PIN baru.",

@@ -3208,7 +3208,8 @@
   },
   "meraDraft": {
     "changeInterest": "غيّر اهتمامي \"{{statement}}\" إلى ",
-    "removeInterest": "أزل اهتمامي \"{{statement}}\""
+    "removeInterest": "أزل اهتمامي \"{{statement}}\"",
+    "followStory": "أبقني على اطلاع بشأن "
   },
   "appLock": {
     "forgot": "نسيت رمز PIN؟ سجّل الدخول مجددًا واختر رمزًا جديدًا.",

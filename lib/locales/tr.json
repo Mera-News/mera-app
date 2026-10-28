@@ -2976,7 +2976,8 @@
   },
   "meraDraft": {
     "changeInterest": "\"{{statement}}\" ilgi alanımı şuna değiştir: ",
-    "removeInterest": "\"{{statement}}\" ilgi alanımı kaldır"
+    "removeInterest": "\"{{statement}}\" ilgi alanımı kaldır",
+    "followStory": "Şu konuda beni güncel tut: "
   },
   "appLock": {
     "forgot": "PIN'inizi mi unuttunuz? Tekrar giriş yapın ve yeni bir PIN belirleyin.",

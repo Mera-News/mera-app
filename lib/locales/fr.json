@@ -2980,7 +2980,8 @@
   },
   "meraDraft": {
     "changeInterest": "Changer mon centre d'intérêt \"{{statement}}\" en ",
-    "removeInterest": "Supprimer mon centre d'intérêt \"{{statement}}\""
+    "removeInterest": "Supprimer mon centre d'intérêt \"{{statement}}\"",
+    "followStory": "Tiens-moi au courant de "
   },
   "appLock": {
     "forgot": "Vous avez oublié votre code PIN ? Reconnectez-vous et définissez un nouveau code PIN.",

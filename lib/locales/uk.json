@@ -3092,7 +3092,8 @@
   },
   "meraDraft": {
     "changeInterest": "Змінити мій інтерес «{{statement}}» на ",
-    "removeInterest": "Видалити мій інтерес «{{statement}}»"
+    "removeInterest": "Видалити мій інтерес «{{statement}}»",
+    "followStory": "Тримай мене в курсі: "
   },
   "appLock": {
     "forgot": "Забули PIN? Увійдіть знову й встановіть новий PIN.",

@@ -2964,7 +2964,8 @@
   },
   "meraDraft": {
     "changeInterest": "関心「{{statement}}」を次に変更: ",
-    "removeInterest": "関心「{{statement}}」を削除"
+    "removeInterest": "関心「{{statement}}」を削除",
+    "followStory": "このニュースの続報を知らせて: "
   },
   "appLock": {
     "forgot": "PINを忘れましたか？もう一度サインインして、新しいPINを設定してください。",

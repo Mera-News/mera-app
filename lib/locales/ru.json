@@ -3088,7 +3088,8 @@
   },
   "meraDraft": {
     "changeInterest": "Изменить мой интерес «{{statement}}» на ",
-    "removeInterest": "Удалить мой интерес «{{statement}}»"
+    "removeInterest": "Удалить мой интерес «{{statement}}»",
+    "followStory": "Держи меня в курсе: "
   },
   "appLock": {
     "forgot": "Забыли PIN-код? Войдите снова и задайте новый PIN-код.",

@@ -2976,7 +2976,8 @@
   },
   "meraDraft": {
     "changeInterest": "मेरी रुचि \"{{statement}}\" को बदलकर ये करें ",
-    "removeInterest": "मेरी रुचि \"{{statement}}\" हटाएं"
+    "removeInterest": "मेरी रुचि \"{{statement}}\" हटाएं",
+    "followStory": "इस बारे में मुझे अपडेट देते रहें: "
   },
   "appLock": {
     "forgot": "PIN भूल गए? फिर से साइन इन करें और नया PIN सेट करें।",
