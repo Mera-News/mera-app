@@ -316,11 +316,11 @@
     "relatedFromSubscriptions": "購読中のメディアから",
     "relatedLoadFailed": "関連記事を読み込めませんでした。",
     "translateBlockedNote": "Google 翻訳をブロックするサイトがあります。ページが開かない場合はサイトで開いてください。",
-    "aboutTranslation": "翻訳について",
-    "aboutTranslationBody": "この記事は{{language}}で書かれています。読んでいる間、お使いの電話で翻訳できます。",
-    "aboutTranslationFallback": "うまくいかない場合は、Google 翻訳で開いてください。その場合はGoogleを経由して閲覧することになります。",
     "translateBlockedOn": "一部のサイトはGoogle 翻訳をブロックします。読み込めない場合は、{{publication}}で開いてください。",
-    "youCameFromHere": "ここから来ました"
+    "youCameFromHere": "ここから来ました",
+    "howToTranslate": "翻訳のしかた",
+    "aboutGoogleTranslate": "Google 翻訳について",
+    "googleTranslateBody": "Google 翻訳はこの記事を{{language}}で表示します。ページは Google を経由して開くため、どの記事を読んでいるかが Google に伝わります。"
   },
   "sources": {
     "publishers": "出版社",
@@ -331,10 +331,7 @@
     "badgeRegulator": "公式機関"
   },
   "clusterDetail": {
-    "notTranslatable": "この記事は{{language}}で書かれています。端末では翻訳できません。ご自身の言語で読むにはGoogle 翻訳をご利用ください。",
-    "notTranslatableOsOutdated": "この記事は{{language}}で書かれています。端末上での翻訳にはiOS {{requiredVersion}}が必要ですが、現在のバージョンはiOS {{currentVersion}}です。iOSをアップデートするか、ご自身の言語で読むにはGoogle 翻訳をご利用ください。",
     "unknownLanguage": "別の言語",
-    "translationGuideLink": "記事の翻訳方法を教えてください",
     "showOriginal": "原文を表示",
     "showTranslation": "翻訳を表示"
   },

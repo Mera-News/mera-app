@@ -316,11 +316,11 @@
     "relatedFromSubscriptions": "구독 중인 매체에서",
     "relatedLoadFailed": "관련 기사를 불러오지 못했어요.",
     "translateBlockedNote": "일부 사이트는 Google 번역을 차단해요. 페이지가 열리지 않으면 사이트에서 여세요.",
-    "aboutTranslation": "번역 정보",
-    "aboutTranslationBody": "이 기사는 {{language}}(으)로 작성되었습니다. 읽는 동안 휴대폰이 번역해 드릴 수 있습니다.",
-    "aboutTranslationFallback": "그래도 안 되면 구글 번역으로 여세요. 구글을 통해 열람하게 됩니다.",
     "translateBlockedOn": "일부 사이트는 구글 번역을 차단합니다. 열리지 않으면 {{publication}}에서 여세요.",
-    "youCameFromHere": "여기서 오셨습니다"
+    "youCameFromHere": "여기서 오셨습니다",
+    "howToTranslate": "번역하는 방법",
+    "aboutGoogleTranslate": "Google 번역 정보",
+    "googleTranslateBody": "Google 번역은 이 기사를 {{language}}(으)로 보여줘요. 페이지가 Google을 거쳐 열리기 때문에 Google이 어떤 기사를 읽는지 알 수 있어요."
   },
   "sources": {
     "publishers": "발행사",
@@ -331,10 +331,7 @@
     "badgeRegulator": "공식 기관"
   },
   "clusterDetail": {
-    "notTranslatable": "이 기사는 {{language}}(으)로 작성되었어요. 이 기기는 번역할 수 없으니 구글 번역을 이용해 내 언어로 읽어 보세요.",
-    "notTranslatableOsOutdated": "이 기사는 {{language}}(으)로 작성되었어요. 기기 내 번역에는 iOS {{requiredVersion}}이(가) 필요한데, 현재 iOS {{currentVersion}}을(를) 사용 중이에요. iOS를 업데이트하거나 구글 번역을 이용해 내 언어로 읽어 보세요.",
     "unknownLanguage": "다른 언어",
-    "translationGuideLink": "기사 번역 방법 알아보기",
     "showOriginal": "원문 보기",
     "showTranslation": "번역 보기"
   },

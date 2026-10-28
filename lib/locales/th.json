@@ -316,11 +316,11 @@
     "relatedFromSubscriptions": "จากการสมัครสมาชิกของคุณ",
     "relatedLoadFailed": "โหลดบทความที่เกี่ยวข้องไม่ได้",
     "translateBlockedNote": "บางเว็บไซต์บล็อก Google แปลภาษา หากหน้าไม่โหลด ให้เปิดบนเว็บไซต์",
-    "aboutTranslation": "เกี่ยวกับการแปล",
-    "aboutTranslationBody": "บทความนี้เป็นภาษา{{language}} โทรศัพท์ของคุณแปลให้ได้ขณะอ่าน",
-    "aboutTranslationFallback": "หากใช้ไม่ได้ ให้เปิดในแอป Google Translate ซึ่งหมายถึงการเรียกดูผ่าน Google",
     "translateBlockedOn": "บางเว็บไซต์บล็อก Google Translate หากโหลดไม่ขึ้น ให้เปิดที่ {{publication}}",
-    "youCameFromHere": "คุณมาจากตรงนี้"
+    "youCameFromHere": "คุณมาจากตรงนี้",
+    "howToTranslate": "วิธีแปล",
+    "aboutGoogleTranslate": "เกี่ยวกับ Google แปลภาษา",
+    "googleTranslateBody": "Google แปลภาษาจะแสดงบทความนี้เป็น {{language}} หน้าเว็บจะเปิดผ่าน Google ดังนั้น Google จึงเห็นได้ว่าคุณอ่านบทความใด"
   },
   "sources": {
     "publishers": "สำนักพิมพ์",
@@ -331,10 +331,7 @@
     "badgeRegulator": "หน่วยงานอย่างเป็นทางการ"
   },
   "clusterDetail": {
-    "notTranslatable": "บทความนี้เป็นภาษา {{language}} อุปกรณ์ของคุณแปลไม่ได้ ใช้ Google Translate เพื่ออ่านในภาษาของคุณ",
-    "notTranslatableOsOutdated": "บทความนี้เป็นภาษา {{language}} การแปลบนอุปกรณ์ต้องใช้ iOS {{requiredVersion}} แต่คุณใช้ iOS {{currentVersion}} อยู่ กรุณาอัปเดต iOS หรือใช้ Google Translate เพื่ออ่านเป็นภาษาของคุณ",
     "unknownLanguage": "ภาษาอื่น",
-    "translationGuideLink": "แสดงวิธีแปลบทความ",
     "showOriginal": "แสดงต้นฉบับ",
     "showTranslation": "แสดงคำแปล"
   },

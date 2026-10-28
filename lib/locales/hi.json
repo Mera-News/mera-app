@@ -321,11 +321,11 @@
     "relatedFromSubscriptions": "आपकी सदस्यताओं से",
     "relatedLoadFailed": "संबंधित लेख लोड नहीं हो सके।",
     "translateBlockedNote": "कुछ साइटें Google Translate को ब्लॉक करती हैं। अगर पेज न खुले, तो उसे साइट पर खोलें।",
-    "aboutTranslation": "अनुवाद के बारे में",
-    "aboutTranslationBody": "यह लेख {{language}} में है। आपका फ़ोन पढ़ते समय इसका अनुवाद कर सकता है।",
-    "aboutTranslationFallback": "अगर यह काम न करे, तो इसे Google Translate में खोलें। इसका मतलब है Google के ज़रिए ब्राउज़ करना।",
     "translateBlockedOn": "कुछ साइटें Google Translate को रोकती हैं। अगर यह लोड न हो, तो इसे {{publication}} पर खोलें।",
-    "youCameFromHere": "आप यहीं से आए थे"
+    "youCameFromHere": "आप यहीं से आए थे",
+    "howToTranslate": "अनुवाद कैसे करें",
+    "aboutGoogleTranslate": "Google Translate के बारे में",
+    "googleTranslateBody": "Google Translate यह लेख {{language}} में दिखाता है। पेज Google के ज़रिए खुलता है, इसलिए Google देख सकता है कि आप कौन सा लेख पढ़ रहे हैं।"
   },
   "sources": {
     "publishers": "प्रकाशक",
@@ -336,10 +336,7 @@
     "badgeRegulator": "आधिकारिक एजेंसी"
   },
   "clusterDetail": {
-    "notTranslatable": "यह लेख {{language}} में है। आपका डिवाइस इसका अनुवाद नहीं कर सकता। अपनी भाषा में पढ़ने के लिए Google Translate इस्तेमाल करें।",
-    "notTranslatableOsOutdated": "यह लेख {{language}} में है। डिवाइस पर अनुवाद के लिए iOS {{requiredVersion}} चाहिए: आप iOS {{currentVersion}} पर हैं। iOS अपडेट करें, या अपनी भाषा में पढ़ने के लिए Google Translate का इस्तेमाल करें।",
     "unknownLanguage": "कोई अन्य भाषा",
-    "translationGuideLink": "मुझे लेख अनुवाद करने का तरीका बताएं",
     "showOriginal": "मूल दिखाएं",
     "showTranslation": "अनुवाद दिखाएं"
   },

@@ -316,11 +316,11 @@
     "relatedFromSubscriptions": "Từ gói đăng ký của bạn",
     "relatedLoadFailed": "Không tải được các bài liên quan.",
     "translateBlockedNote": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên trang gốc.",
-    "aboutTranslation": "Về bản dịch",
-    "aboutTranslationBody": "Bài viết này bằng {{language}}. Điện thoại của bạn có thể dịch trong lúc bạn đọc.",
-    "aboutTranslationFallback": "Nếu cách đó không được, hãy mở bài bằng Google Dịch, tức là đọc qua Google.",
     "translateBlockedOn": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên {{publication}}.",
-    "youCameFromHere": "Bạn đến từ đây"
+    "youCameFromHere": "Bạn đến từ đây",
+    "howToTranslate": "Cách dịch",
+    "aboutGoogleTranslate": "Về Google Dịch",
+    "googleTranslateBody": "Google Dịch hiển thị bài viết này bằng {{language}}. Trang được mở qua Google, nên Google có thể biết bạn đang đọc bài viết nào."
   },
   "sources": {
     "publishers": "Nhà xuất bản",
@@ -331,10 +331,7 @@
     "badgeRegulator": "Cơ quan chính thức"
   },
   "clusterDetail": {
-    "notTranslatable": "Bài viết này bằng {{language}}. Thiết bị của bạn không thể dịch bài này. Hãy dùng Google Dịch để đọc bằng ngôn ngữ của bạn.",
-    "notTranslatableOsOutdated": "Bài viết này bằng {{language}}. Tính năng dịch trên thiết bị cần iOS {{requiredVersion}}: bạn đang dùng iOS {{currentVersion}}. Hãy cập nhật iOS, hoặc dùng Google Dịch để đọc bằng ngôn ngữ của bạn.",
     "unknownLanguage": "ngôn ngữ khác",
-    "translationGuideLink": "Hướng dẫn tôi cách dịch bài viết",
     "showOriginal": "Hiển thị bản gốc",
     "showTranslation": "Hiển thị bản dịch"
   },

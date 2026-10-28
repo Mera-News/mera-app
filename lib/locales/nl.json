@@ -321,11 +321,11 @@
     "relatedFromSubscriptions": "Uit je abonnementen",
     "relatedLoadFailed": "Gerelateerde artikelen konden niet worden geladen.",
     "translateBlockedNote": "Sommige sites blokkeren Google Translate. Laadt de pagina niet, open hem dan op de site.",
-    "aboutTranslation": "Over vertalen",
-    "aboutTranslationBody": "Dit artikel is in {{language}}. Je telefoon kan het vertalen terwijl je leest.",
-    "aboutTranslationFallback": "Werkt dat niet? Open het dan in Google Translate. Zo lees je het via Google.",
     "translateBlockedOn": "Sommige sites blokkeren Google Translate. Laadt het niet? Open het dan op {{publication}}.",
-    "youCameFromHere": "Je kwam hiervandaan"
+    "youCameFromHere": "Je kwam hiervandaan",
+    "howToTranslate": "Zo vertaal je",
+    "aboutGoogleTranslate": "Over Google Translate",
+    "googleTranslateBody": "Google Translate toont dit artikel in het {{language}}. De pagina opent via Google, dus Google kan zien welk artikel je leest."
   },
   "sources": {
     "publishers": "Uitgevers",
@@ -336,10 +336,7 @@
     "badgeRegulator": "Officiële instelling"
   },
   "clusterDetail": {
-    "notTranslatable": "Dit artikel is in {{language}}. Je toestel kan het niet vertalen. Gebruik Google Translate om het in je eigen taal te lezen.",
-    "notTranslatableOsOutdated": "Dit artikel is in {{language}}. Vertalen op het toestel vereist iOS {{requiredVersion}}: jij gebruikt iOS {{currentVersion}}. Werk iOS bij, of gebruik Google Translate om het in je eigen taal te lezen.",
     "unknownLanguage": "een andere taal",
-    "translationGuideLink": "Laat me zien hoe ik het artikel kan vertalen",
     "showOriginal": "Origineel tonen",
     "showTranslation": "Vertaling tonen"
   },

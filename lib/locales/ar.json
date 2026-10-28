@@ -373,11 +373,11 @@
     "relatedFromSubscriptions": "من اشتراكاتك",
     "relatedLoadFailed": "تعذر تحميل المقالات ذات الصلة.",
     "translateBlockedNote": "بعض المواقع تحظر ترجمة Google. إذا لم تُفتح الصفحة، افتحها على الموقع.",
-    "aboutTranslation": "عن الترجمة",
-    "aboutTranslationBody": "هذا المقال بلغة {{language}}. يستطيع هاتفك ترجمته أثناء القراءة.",
-    "aboutTranslationFallback": "إذا لم ينجح ذلك، افتحه في ترجمة Google، أي تصفحه عبر Google.",
     "translateBlockedOn": "بعض المواقع تمنع ترجمة Google. إذا لم يُحمَّل الموقع، افتحه على {{publication}}.",
-    "youCameFromHere": "أتيت من هنا"
+    "youCameFromHere": "أتيت من هنا",
+    "howToTranslate": "طريقة الترجمة",
+    "aboutGoogleTranslate": "عن ترجمة Google",
+    "googleTranslateBody": "تعرض ترجمة Google هذه المقالة بلغة {{language}}. تُفتح الصفحة عبر Google، لذلك يمكن لـ Google معرفة المقالة التي تقرؤها."
   },
   "sources": {
     "publishers": "الناشرون",
@@ -388,10 +388,7 @@
     "badgeRegulator": "جهة رسمية"
   },
   "clusterDetail": {
-    "notTranslatable": "هذا المقال مكتوب بلغة {{language}}. لا يستطيع جهازك ترجمته. استخدم Google Translate لقراءته بلغتك.",
-    "notTranslatableOsOutdated": "هذا المقال مكتوب بلغة {{language}}. تتطلب الترجمة على الجهاز إصدار iOS {{requiredVersion}}: أنت تستخدم iOS {{currentVersion}}. حدّث iOS، أو استخدم Google Translate لقراءته بلغتك.",
     "unknownLanguage": "لغة أخرى",
-    "translationGuideLink": "أرني كيفية ترجمة المقال",
     "showOriginal": "عرض النص الأصلي",
     "showTranslation": "عرض الترجمة"
   },
