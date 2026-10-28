@@ -35,7 +35,7 @@ const iconOf = (v: FeedView) => VIEW_ICON[v];
 
 /** How visible the chip is with the Feed tab's pager at `progress`: whole on
  *  the Feed page (`at`), gone one page away. */
-function chipOpacity(progress: number, at: number): number {
+export function chipOpacity(progress: number, at: number): number {
   'worklet';
   return Math.max(0, 1 - Math.abs(progress - at));
 }

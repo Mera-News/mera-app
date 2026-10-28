@@ -84,7 +84,6 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
     const asyncTotal = useForYouAsyncJobTotalCount();
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
     const scoringError = useForYouScoringError();
-    const styles = useStyles();
 
     const isSyncActive =
         syncStatusMessage !== null &&
@@ -119,15 +118,9 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
     return (
         <VStack className="pt-2" testID="feed-status-details">
             <StatRow label={t('feedStatus.stage')} value={stageMessage} testID="feed-status-stage-row" />
+            {/* The bar itself is the Feed header's bottom edge (FeedHeaderProgress). */}
             {cloud ? (
-                <>
-                    <StatRow label={t('feedStatus.cloudProgress')} value={`${fmt(cloud.done)} / ${fmt(cloud.total)}`} />
-                    <View style={styles.track}>
-                        <View
-                            style={[styles.bar, { width: `${Math.min(100, (cloud.done / cloud.total) * 100)}%` }]}
-                        />
-                    </View>
-                </>
+                <StatRow label={t('feedStatus.cloudProgress')} value={`${fmt(cloud.done)} / ${fmt(cloud.total)}`} />
             ) : null}
             {deviceTotalCount > 0 ? (
                 <StatRow
@@ -244,8 +237,6 @@ export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({
 };
 
 const useStyles = themedStyles((c) => StyleSheet.create({
-    track: { height: 4, borderRadius: 2, backgroundColor: c.line, marginBottom: 4 },
-    bar: { height: 4, borderRadius: 2, backgroundColor: c.accent },
     // A 44pt frame around a 30pt pill, margins given back so the row keeps its
     // height (never hitSlop: QA measures a hitSlop target as its glyph box).
     pillFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -7 },
