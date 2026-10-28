@@ -1,30 +1,24 @@
-// TabPages and the resume spot: it notes the active page, and its one scroll target delegates to the ACTIVE
-// page's list (not the last one mounted). The pager, header and native/animation edges are faked; TabPages,
-// page-scroll and resume-spot are real.
+// TabPages and the resume spot: it notes the active page and never scrolls one (owner: the spot restores the
+// path only). The pager, header and native/animation edges are faked; TabPages, page-scroll and resume-spot
+// are real.
 import { render } from '@testing-library/react-native';
 import React, { useRef } from 'react';
 
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import TabPages from '@/components/custom/nav/TabPages';
-import { resetPendingPage, setPendingPage } from '@/components/custom/nav/navigate-to-page';
-import { __resetResumeSpotForTests, type ResumeScrollTarget } from '@/lib/navigation/resume-spot';
+import { resetPendingPage } from '@/components/custom/nav/navigate-to-page';
+import { __resetResumeSpotForTests } from '@/lib/navigation/resume-spot';
 
 const mockNote = jest.fn();
-let mockTarget: ResumeScrollTarget | null = null;
 jest.mock('@/lib/navigation/resume-spot', () => {
   const actual = jest.requireActual('@/lib/navigation/resume-spot');
   return {
     ...actual,
     noteActivePage: (...a: unknown[]) => mockNote(...a),
-    registerScrollTarget: (key: string, t: ResumeScrollTarget) => {
-      mockTarget = t;
-      return actual.registerScrollTarget(key, t);
-    },
   };
 });
-let mockFocused = true;
 jest.mock('@react-navigation/native', () => ({
-  useIsFocused: () => mockFocused,
+  useIsFocused: () => true,
   useNavigation: () => ({ isFocused: () => true }),
   useRoute: () => ({ key: 'library-1' }),
 }));
@@ -57,7 +51,6 @@ jest.mock('@/components/custom/nav/PageStrip', () => ({
 }));
 jest.mock('@/components/custom/nav/PageExplainerSheet', () => () => null);
 jest.mock('@/components/custom/nav/ArrangeOverlay', () => () => null);
-jest.mock('@/components/custom/nav/RestoreReveal', () => ({ children }: { children: React.ReactNode }) => children);
 jest.mock('@/components/custom/nav/PagePager', () => ({
   __esModule: true,
   default: ({ count, index, renderPanel }: { count: number; index: number; renderPanel: (i: number, a: boolean) => React.ReactNode }) => {
@@ -86,32 +79,12 @@ describe('TabPages resume spot', () => {
   beforeEach(() => {
     __resetResumeSpotForTests();
     mockNote.mockClear();
-    mockTarget = null;
     scrolled.saved = [];
     scrolled.checks = [];
     resetPendingPage();
   });
 
-  it('does not land on the page showing while a restore still asks this tab for another page', () => {
-    // The tab takes a request only once focused; until then the first page shows.
-    mockFocused = false;
-    setPendingPage('checks' as never);
-    render(
-      <TabPages
-        tab="library"
-        pages={pages}
-        renderPage={({ pageId }) => <Page id={pageId} offset={pageId === 'saved' ? 120 : 900} />}
-      />,
-    );
-    expect(mockTarget!.getOffset()).toBeNaN();
-    mockTarget!.scrollTo(300);
-    expect(mockTarget!.scrollToAnchor!('row', 0)).toBe('pending');
-    expect(scrolled.saved).toEqual([]);
-    expect(scrolled.checks).toEqual([]);
-    mockFocused = true;
-  });
-
-  it('notes the active page and delegates the offset and landing to it, not to the last mounted page', () => {
+  it('notes the active page and scrolls no page', () => {
     render(
       <TabPages
         tab="library"
@@ -120,10 +93,7 @@ describe('TabPages resume spot', () => {
       />,
     );
     expect(mockNote).toHaveBeenCalledWith('library', 'saved');
-    expect(mockTarget).not.toBeNull();
-    expect(mockTarget!.getOffset()).toBe(120);
-    mockTarget!.scrollTo(300);
-    expect(scrolled.saved).toEqual([300]);
+    expect(scrolled.saved).toEqual([]);
     expect(scrolled.checks).toEqual([]);
   });
 });

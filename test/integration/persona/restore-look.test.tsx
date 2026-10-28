@@ -25,7 +25,7 @@ jest.mock('expo-splash-screen', () => ({ preventAutoHideAsync: jest.fn(async () 
 // The cover reads the marker through the settings table; a loaded machine needs the room.
 jest.setTimeout(30_000);
 
-const SPOT = { v: 1, tab: 'feed', page: null, tabStack: [], rootStack: [], scroll: null };
+const SPOT = { v: 1, tab: 'feed', page: null, tabStack: [], rootStack: [] };
 const seedReload = () =>
     setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason: 'ota', at: 1, backgroundedAt: null, lastForegroundAt: null, spot: SPOT }));
 /** The cover is hidden from assistive tech (it is decoration), so queries must include hidden elements. */

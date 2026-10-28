@@ -11,11 +11,9 @@ import { showDialog } from '@/lib/dialog';
 import { toastManager } from '@/lib/toast-manager';
 import { Q } from '@nozbe/watermelondb';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
-import RestoreReveal from '@/components/custom/nav/RestoreReveal';
-import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExportHistory } from './use-export-history';
@@ -44,9 +42,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
     // Ends above the tab bar and the Mera button (lib/navigation/tab-bar.ts LIST_END_RESERVE).
     const endClearance = useListEndClearance();
-    const listRef = useRef<ScrollView>(null);
-    const yRef = useRef(0);
-    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const { t } = useTranslation();
     const [isProcessing, setIsProcessing] = useState(false);
     const { exporting, exportHistory } = useExportHistory('ManageDataScreen');
@@ -120,11 +115,8 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             <View style={{ paddingTop: insets.top }}>
                 <DrillDownHeader title={t('you.settings.yourData')} onBack={onBack} />
             </View>
-            <RestoreReveal hidden={restoreHidden}>
+            <View style={{ flex: 1 }}>
             <ScrollView
-                ref={listRef}
-                onScroll={(e) => { yRef.current = e.nativeEvent.contentOffset.y; }}
-                scrollEventThrottle={16}
                 contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: endClearance }}
             >
                 <Help>{t('manageData.intro')}</Help>
@@ -180,7 +172,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     />
                 </Group>
             </ScrollView>
-            </RestoreReveal>
+            </View>
         </View>
     );
 };

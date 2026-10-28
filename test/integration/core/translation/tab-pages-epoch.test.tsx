@@ -49,7 +49,6 @@ jest.mock('@/components/custom/nav/PageStrip', () => ({
 }));
 jest.mock('@/components/custom/nav/PageExplainerSheet', () => () => null);
 jest.mock('@/components/custom/nav/ArrangeOverlay', () => () => null);
-jest.mock('@/components/custom/nav/RestoreReveal', () => ({ children }: { children: React.ReactNode }) => children);
 let mockSwipeTo: (i: number) => void = () => {};
 jest.mock('@/components/custom/nav/PagePager', () => ({
     __esModule: true,

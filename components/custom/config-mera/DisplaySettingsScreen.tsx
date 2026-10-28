@@ -20,12 +20,10 @@ import { useColors, type ThemeMode } from '@/lib/theme/tokens';
 import { TEXT_SCALE_LABEL_KEYS, TEXT_SCALE_STEPS, type TextScale } from '@/lib/algorithms/scale';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import RestoreReveal from '@/components/custom/nav/RestoreReveal';
-import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 
 /** Index-aligned with `TEXT_SCALE_STEPS` / `TEXT_SCALE_LABEL_KEYS`, written out
@@ -62,9 +60,6 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   const minimap = useFeedMinimap();
   const appearance = useAppearanceSetting();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const listRef = useRef<ScrollView>(null);
-  const yRef = useRef(0);
-  const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
 
   const activeIndex = Math.max(0, TEXT_SCALE_STEPS.indexOf(textScale as never));
   const toggle = (value: boolean, onToggle: (on: boolean) => void, testID: string) => (
@@ -78,11 +73,8 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       <AbstractGradientBackdrop />
       <View style={{ flex: 1, paddingTop: insets.top }}>
         <DrillDownHeader title={t('display.screenTitle')} onBack={onBack} backTestID="display-back" />
-        <RestoreReveal hidden={restoreHidden}>
+        <View style={{ flex: 1 }}>
         <ScrollView
-          ref={listRef}
-          onScroll={(e) => { yRef.current = e.nativeEvent.contentOffset.y; }}
-          scrollEventThrottle={16}
           className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: endClearance }}
@@ -211,7 +203,7 @@ const DisplaySettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             />
           </Group>
         </ScrollView>
-        </RestoreReveal>
+        </View>
       </View>
 
       <BottomSheet testID="startup-tab-sheet" open={pickerOpen} onClose={() => setPickerOpen(false)}>

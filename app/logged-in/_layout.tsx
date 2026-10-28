@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { useColors } from '@/lib/theme/tokens';
 import { useMotionAllowed } from '@/lib/motion-gate';
-import { useRestoreInProgress } from '@/lib/navigation/use-screen-scroll-target';
+import { useRestoreInProgress } from '@/lib/navigation/use-restore-state';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/FeedbackRequestAutoShowHost';

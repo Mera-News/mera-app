@@ -13,14 +13,12 @@ import logger from '@/lib/logger';
 import { useColors } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
 import { formatTimeAgo } from '@/lib/algorithms/time-ago';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, View } from 'react-native';
 import { isRevertible, sourceLabelKey } from './action-display';
 import { changeSummary, type ChangeContext } from './change-summary';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import RestoreReveal from '@/components/custom/nav/RestoreReveal';
-import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 
 interface PersonaAuditScreenProps {
     readonly onBack: () => void;
@@ -50,9 +48,6 @@ function dayLabel(date: Date, today: string, language: string | undefined): stri
  */
 const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
     const endClearance = useListEndClearance();
-    const listRef = useRef<FlatList>(null);
-    const yRef = useRef(0);
-    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const { t, i18n } = useTranslation();
     const colors = useColors();
     const [rows, setRows] = useState<PersonaChangeLogModel[]>([]);
@@ -205,20 +200,15 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     {t('personaAudit.empty')}
                 </Text>
             ) : (
-                <RestoreReveal hidden={restoreHidden}>
+                <View style={{ flex: 1 }}>
                 <FlatList
-                    ref={listRef}
-                    onScroll={(e) => {
-                        yRef.current = e.nativeEvent.contentOffset.y;
-                    }}
-                    scrollEventThrottle={16}
                     data={days}
                     keyExtractor={(day) => day.label}
                     renderItem={renderDay}
                     contentContainerStyle={{ paddingBottom: endClearance }}
                     showsVerticalScrollIndicator={false}
                 />
-                </RestoreReveal>
+                </View>
             )}
         </View>
     );

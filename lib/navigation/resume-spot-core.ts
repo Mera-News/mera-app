@@ -3,8 +3,9 @@
 // database, so the restart marker's parser and every test can load it.
 //
 // A spot is where the reader is: the tab, the page inside it, every screen
-// pushed in that tab's stack and above the tab container, and the scroll of the
-// top screen. It is rebuilt after an update reload (`resume-spot.ts`).
+// pushed in that tab's stack and above the tab container. It is rebuilt after an
+// update reload (`resume-spot.ts`). Never a scroll position (owner): a restored
+// list opens at its top.
 //
 // The route lists below are an ALLOWLIST. A screen that is not on it makes the
 // whole spot null (not restorable), so a new pushed screen is never restorable
@@ -19,16 +20,6 @@ export interface SpotScreen {
   readonly params: Readonly<Record<string, string>>;
 }
 
-export interface SpotScroll {
-  /** The top screen's offset, pt. */
-  readonly y: number;
-  /** Feed only: the row at the top of the viewport. When it is gone after the
-   *  reload the Feed lands at its top (its order is per session). */
-  readonly anchorId?: string;
-  /** How far the anchor row's top sits above the viewport's top, pt. */
-  readonly anchorDelta?: number;
-}
-
 export interface ResumeSpot {
   readonly v: typeof RESUME_SPOT_VERSION;
   readonly tab: TabId;
@@ -37,7 +28,6 @@ export interface ResumeSpot {
   readonly tabStack: readonly SpotScreen[];
   /** Screens pushed above the tab container, bottom to top. */
   readonly rootStack: readonly SpotScreen[];
-  readonly scroll: SpotScroll | null;
 }
 
 interface ParamSchema {
@@ -120,20 +110,8 @@ function cleanScreens(
   return out;
 }
 
-function cleanScroll(raw: unknown): SpotScroll | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const r = raw as Record<string, unknown>;
-  if (typeof r.y !== 'number' || !Number.isFinite(r.y) || r.y < 0) return null;
-  const out: { y: number; anchorId?: string; anchorDelta?: number } = { y: Math.round(r.y) };
-  if (typeof r.anchorId === 'string' && r.anchorId.length > 0) {
-    out.anchorId = r.anchorId;
-    out.anchorDelta = typeof r.anchorDelta === 'number' && Number.isFinite(r.anchorDelta) ? r.anchorDelta : 0;
-  }
-  return out;
-}
-
 /** A spot from untrusted JSON (the restart marker), or null when it is not a
- *  valid spot of THIS version. */
+ *  valid spot of THIS version. An older bundle's `scroll` key is dropped. */
 export function parseResumeSpot(raw: unknown): ResumeSpot | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
@@ -148,7 +126,6 @@ export function parseResumeSpot(raw: unknown): ResumeSpot | null {
     page: (r.page as PageId | null) ?? null,
     tabStack,
     rootStack,
-    scroll: r.scroll == null ? null : cleanScroll(r.scroll),
   };
 }
 
@@ -231,7 +208,6 @@ export function topRouteKey(shape: NavShape): string | null {
 export function spotFromShape(
   shape: NavShape | null,
   page: PageId | null,
-  scroll: SpotScroll | null,
 ): ResumeSpot | null {
   if (!shape || !isTab(shape.tab)) return null;
   const tab = shape.tab;
@@ -243,7 +219,6 @@ export function spotFromShape(
     page,
     tabStack: toScreens(shape.tabStack),
     rootStack: toScreens(shape.rootStack),
-    scroll,
   });
 }
 
@@ -291,15 +266,13 @@ export function planRestore(spot: ResumeSpot): RestoreStep[] {
   return steps;
 }
 
-/** `spot` with its screens cut from index `at` of tabStack ++ rootStack, and
- *  no scroll (the top screen changed). */
+/** `spot` with its screens cut from index `at` of tabStack ++ rootStack. */
 export function truncateSpot(spot: ResumeSpot, at: number): ResumeSpot {
   const t = spot.tabStack.length;
   return {
     ...spot,
     tabStack: spot.tabStack.slice(0, Math.min(at, t)),
     rootStack: at <= t ? [] : spot.rootStack.slice(0, at - t),
-    scroll: null,
   };
 }
 
@@ -316,19 +289,3 @@ export function missingKindOf(route: string): MissingKind | null {
  *  is gone (it reports through `reportRestoredScreen`). */
 export const SCREEN_REPORTED_ROUTES: ReadonlySet<string> = new Set(['article-detail', 'publication']);
 
-// ── Landing the scroll ──
-
-/** Within this many pt of the goal counts as landed. */
-export const SCROLL_LANDED_PT = 4;
-/** The top list is hidden at most this long while its scroll lands (owner). */
-export const SCROLL_LAND_MAX_MS = 1200;
-
-export type LandOutcome = 'landed' | 'continue' | 'give-up';
-
-/** One frame of the landing loop for an offset goal. A long list grows as it
- *  renders toward the offset, so the scroll is re-applied each frame until it
- *  holds or time runs out; then it stays wherever it got (near the goal). */
-export function landStep(goal: number, offset: number, elapsedMs: number): LandOutcome {
-  if (Math.abs(offset - goal) <= SCROLL_LANDED_PT) return 'landed';
-  return elapsedMs >= SCROLL_LAND_MAX_MS ? 'give-up' : 'continue';
-}

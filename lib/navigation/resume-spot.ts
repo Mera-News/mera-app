@@ -16,9 +16,7 @@ import type { PageId, TabId } from '@/lib/navigation/page-order';
 
 import {
   SCREEN_REPORTED_ROUTES,
-  SCROLL_LAND_MAX_MS,
   chainStartsWith,
-  landStep,
   missingKindOf,
   planRestore,
   readNavShape,
@@ -30,10 +28,9 @@ import {
   type NavStateLike,
   type ResumeSpot,
   type SpotScreen,
-  type SpotScroll,
 } from './resume-spot-core';
 
-export type { MissingKind, ResumeSpot, SpotScreen, SpotScroll } from './resume-spot-core';
+export type { MissingKind, ResumeSpot, SpotScreen } from './resume-spot-core';
 export { parseResumeSpot, RESUME_SPOT_VERSION } from './resume-spot-core';
 
 export type RestoreResult = 'restored' | 'fallback' | 'failed';
@@ -48,19 +45,7 @@ const SETTLE_FRAMES = 30;
 
 // ── Registries screens write to ──
 
-/** A scroller a screen offers for capture and for the restored landing. */
-export interface ResumeScrollTarget {
-  getOffset(): number;
-  scrollTo(y: number): void;
-  /** Feed only: the row at the top of the viewport. */
-  getAnchor?(): { id: string; delta: number } | null;
-  /** Feed only: bring row `id` to the top. 'missing': it is not in the list.
-   *  `getOffset` may return NaN while there is no list to read yet. */
-  scrollToAnchor?(id: string, delta: number): 'done' | 'pending' | 'missing';
-}
-
 const activePages = new Map<TabId, PageId>();
-const scrollTargets = new Map<string, ResumeScrollTarget>();
 const screenReports = new Map<string, 'ready' | 'missing'>();
 /** Restored screens that may still report missing after the rebuild resolved. */
 const lateWatch = new Set<string>();
@@ -68,15 +53,6 @@ const lateWatch = new Set<string>();
 /** TabPages: the page its tab shows now. A plain write, no render. */
 export function noteActivePage(tab: TabId, page: PageId): void {
   activePages.set(tab, page);
-}
-
-/** Register the scroller of the screen whose route key is `routeKey`. */
-export function registerScrollTarget(routeKey: string, target: ResumeScrollTarget): () => void {
-  scrollTargets.set(routeKey, target);
-  if (pendingScroll?.routeKey === routeKey) startLanding(target);
-  return () => {
-    if (scrollTargets.get(routeKey) === target) scrollTargets.delete(routeKey);
-  };
 }
 
 /** An article or publication screen: whether its entity exists. Only a restored
@@ -95,13 +71,11 @@ export function reportRestoredScreen(routeKey: string, status: 'ready' | 'missin
   }
 }
 
-// ── Restore-in-progress and the hidden top list, for the few readers outside ──
+// ── Restore-in-progress, for the few readers outside ──
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 let restoring = false;
-let pendingScroll: { routeKey: string; scroll: SpotScroll } | null = null;
-let revealKey: string | null = null;
 let lastMissing: MissingKind | null = null;
 
 function emit(): void {
@@ -116,11 +90,6 @@ export function subscribeResumeSpot(l: Listener): () => void {
 /** True while restoreSpot runs (stack layouts push with no animation). */
 export function isRestoreInProgress(): boolean {
   return restoring;
-}
-
-/** True while `routeKey`'s list waits for its restored scroll to land. */
-export function isRestoreHidden(routeKey: string | null | undefined): boolean {
-  return !!routeKey && revealKey === routeKey;
 }
 
 /** What the last rebuild found gone, for the reader's toast; null when nothing
@@ -213,21 +182,10 @@ export function captureSpot(): ResumeSpot | null {
     if (!nav?.isReady() || d.arrangeOpen()) return null;
     const shape = readNavShape(nav.getRootState() as NavStateLike);
     if (!shape) return null;
-    const key = topRouteKey(shape);
-    const target = key ? scrollTargets.get(key) : undefined;
-    return spotFromShape(shape, activePages.get(shape.tab as TabId) ?? null, target ? scrollOf(target) : null);
+    return spotFromShape(shape, activePages.get(shape.tab as TabId) ?? null);
   } catch {
     return null;
   }
-}
-
-function scrollOf(target: ResumeScrollTarget): SpotScroll | null {
-  // NaN: the target has no list to read yet (TabPages before its page mounts).
-  const raw = target.getOffset();
-  const y = Number.isFinite(raw) ? Math.max(0, Math.round(raw)) : 0;
-  const anchor = target.getAnchor?.() ?? null;
-  if (anchor) return { y, anchorId: anchor.id, anchorDelta: Math.round(anchor.delta) };
-  return y > 0 ? { y } : null;
 }
 
 // ── Restore ──
@@ -242,8 +200,7 @@ class Aborted extends Error {}
  * threw or did not land, the budget ran out, or `signal` aborted); the caller
  * opens the startup tab. After an abort nothing more is pushed.
  *
- * Resolves once the screens are in place; the top screen's scroll lands after,
- * with that list hidden until it does (at most SCROLL_LAND_MAX_MS).
+ * Resolves once the screens are in place. Every list opens at its top.
  */
 export async function restoreSpot(spot: ResumeSpot, opts: { signal?: AbortSignal } = {}): Promise<RestoreResult> {
   const d = deps();
@@ -304,7 +261,6 @@ export async function restoreSpot(spot: ResumeSpot, opts: { signal?: AbortSignal
       if (!screenReports.has(topKey)) lateWatch.add(topKey);
     }
 
-    if (target.scroll && topKey) armScroll(topKey, target.scroll);
     return result;
   } catch {
     return 'failed';
@@ -325,64 +281,6 @@ async function settle(d: ResumeSpotDeps, chain: readonly string[], check: () => 
   throw new Error('navigation did not settle');
 }
 
-// ── The restored scroll ──
-
-let revealTimer: ReturnType<typeof setTimeout> | null = null;
-
-function armScroll(routeKey: string, scroll: SpotScroll): void {
-  pendingScroll = { routeKey, scroll };
-  revealKey = routeKey;
-  emit();
-  if (revealTimer) clearTimeout(revealTimer);
-  // The list shows after SCROLL_LAND_MAX_MS even if it never registers.
-  revealTimer = setTimeout(() => reveal(routeKey), SCROLL_LAND_MAX_MS + 100);
-  const target = scrollTargets.get(routeKey);
-  if (target) startLanding(target);
-}
-
-function reveal(routeKey: string): void {
-  if (pendingScroll?.routeKey === routeKey) pendingScroll = null;
-  if (revealKey !== routeKey) return;
-  revealKey = null;
-  if (revealTimer) clearTimeout(revealTimer);
-  revealTimer = null;
-  emit();
-}
-
-function startLanding(target: ResumeScrollTarget): void {
-  const armed = pendingScroll;
-  if (!armed) return;
-  pendingScroll = null;
-  void land(target, armed.routeKey, armed.scroll);
-}
-
-async function land(target: ResumeScrollTarget, routeKey: string, scroll: SpotScroll): Promise<void> {
-  const d = deps();
-  const start = d.now();
-  try {
-    for (;;) {
-      const elapsed = d.now() - start;
-      if (scroll.anchorId) {
-        // The Feed's order is per session: no row, no offset guess, the top.
-        const r = target.scrollToAnchor ? target.scrollToAnchor(scroll.anchorId, scroll.anchorDelta ?? 0) : 'missing';
-        if (r === 'missing') {
-          target.scrollTo(0);
-          break;
-        }
-        if (r === 'done' || elapsed >= SCROLL_LAND_MAX_MS) break;
-      } else {
-        target.scrollTo(scroll.y);
-        if (landStep(scroll.y, target.getOffset(), elapsed) !== 'continue') break;
-      }
-      await d.nextFrame();
-    }
-  } catch {
-    // A list that unmounted mid-landing: nothing to show.
-  } finally {
-    reveal(routeKey);
-  }
-}
-
 // ── Tests ──
 
 export function __setResumeSpotDepsForTests(next: Partial<ResumeSpotDeps> | null): void {
@@ -392,14 +290,9 @@ export function __setResumeSpotDepsForTests(next: Partial<ResumeSpotDeps> | null
 export function __resetResumeSpotForTests(): void {
   testDeps = null;
   activePages.clear();
-  scrollTargets.clear();
   screenReports.clear();
   lateWatch.clear();
   restoring = false;
-  pendingScroll = null;
-  revealKey = null;
   lastMissing = null;
-  if (revealTimer) clearTimeout(revealTimer);
-  revealTimer = null;
   listeners.clear();
 }
