@@ -66,6 +66,7 @@ const TabPages: React.FC<TabPagesProps> = ({
   onSearch,
   arrange,
   leading,
+  headerEdge,
   namesFirst,
   iconsOnly,
   title,
@@ -354,6 +355,12 @@ const TabPages: React.FC<TabPagesProps> = ({
             onEdit={arrange && !arranging ? () => openArrange(null) : undefined}
           />
         </View>
+        {/* Absolute, so neither the header height nor stripHeight counts it. */}
+        {headerEdge ? (
+          <View pointerEvents="none" style={styles.headerEdge}>
+            {headerEdge}
+          </View>
+        ) : null}
       </Animated.View>
 
       <PageExplainerSheet
@@ -388,6 +395,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
+  headerEdge: { position: 'absolute', left: 0, right: 0, bottom: 0 },
 });
 
 export default TabPages;

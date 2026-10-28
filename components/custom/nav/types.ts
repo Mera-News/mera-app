@@ -79,8 +79,11 @@ export interface TabPagesProps {
   readonly onSearch?: () => void;
   /** World: a long press on a page name opens the overlay. Absent: fixed pages. */
   readonly arrange?: ArrangeConfig;
-  /** Drawn at the header row's start (the Feed's status icon). */
+  /** Drawn at the header row's start (the Feed's View chip). */
   readonly leading?: React.ReactNode;
+  /** Drawn along the header's bottom edge, full width, over its last points:
+   *  never part of the measured header height (the Feed's scoring progress). */
+  readonly headerEdge?: React.ReactNode;
   /** The track shows its page NAMES alone when they all fit (Library, You). */
   readonly namesFirst?: boolean;
   /** The track shows ICONS only, plus the selected page's name, whatever the

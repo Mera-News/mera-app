@@ -4,10 +4,10 @@
 // (`iconsOnly`), whatever the width. The Feed page is keep-mounted in the pager (PAGE_META), so
 // its reading session survives any swipe or reorder.
 //
-// The status icon sits in the header's leading slot on every page of the tab;
-// a tap brings the Feed page forward, reveals the header and opens the ONE
-// counts card in the Feed page's header accessory (feed-status-card.ts).
+// The Feed page's header carries the View chip in its leading slot and the
+// scoring progress along its bottom edge; both fade out on the other pages.
 
+import FeedHeaderProgress from '@/components/custom/feed/FeedHeaderProgress';
 import FeedPage from '@/components/custom/feed/FeedPage';
 import FeedViewChip from '@/components/custom/feed/FeedViewChip';
 import { PAGE_META } from '@/components/custom/nav/page-registry';
@@ -124,10 +124,12 @@ export function FeedPages() {
     }
   }, [t]);
 
-  // The View chip in the header's left slot, the Feed page's only (it fades
-  // out with the swipe to Stories and Notifications).
+  // The View chip in the header's left slot and the scoring progress along its
+  // bottom edge, the Feed page's only (both fade out with the swipe to Stories
+  // and Notifications).
   const feedIndex = Math.max(0, pills.findIndex((p) => p.id === 'feed'));
   const leading = useMemo(() => <FeedViewChip pageIndex={feedIndex} />, [feedIndex]);
+  const headerEdge = useMemo(() => <FeedHeaderProgress pageIndex={feedIndex} />, [feedIndex]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -136,6 +138,7 @@ export function FeedPages() {
         pages={pills}
         renderPage={renderPage}
         leading={leading}
+        headerEdge={headerEdge}
         iconsOnly
         testID="feed-pages"
       />
