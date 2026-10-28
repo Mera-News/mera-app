@@ -54,8 +54,8 @@ it('interestFactId reads the fact id', () => {
 
 describe('hintKeys', () => {
   it('drops web-search hints while web search is off', () => {
-    expect(hintKeys('feed', true)).toContain('meraHints.askNews');
-    expect(hintKeys('feed', false)).not.toContain('meraHints.askNews');
+    expect(hintKeys('library', true)).toContain('meraHints.askNews');
+    expect(hintKeys('library', false)).not.toContain('meraHints.askNews');
   });
 
   it('an all-web pool empties when web search is off (no tooltip)', () => {
@@ -106,8 +106,8 @@ it('Checks says so when web search is off', () => {
 
 describe('per engine', () => {
   it('web hints show only on cloud with web search on', () => {
-    expect(hintKeys('feed', true, false)).toContain('meraHints.askNews');
-    expect(hintKeys('feed', true, true)).not.toContain('meraHints.askNews');
+    expect(hintKeys('library', true, false)).toContain('meraHints.askNews');
+    expect(hintKeys('library', true, true)).not.toContain('meraHints.askNews');
     expect(hintKeys('checks', true, true)).toEqual([]);
     expect(pageStarters('library', true, undefined, true).map((s) => s.labelKey)).toEqual([
       'meraHints.library.likeToRead',
@@ -139,6 +139,18 @@ describe('pageStarters', () => {
       { labelKey: 'meraHints.facts.change', draftKey: 'meraHints.facts.change' },
       { labelKey: 'meraHints.facts.remove', draftKey: 'meraHints.facts.remove' },
     ]);
+  });
+
+  it('Feed offers to follow a story on cloud, drafting the start of the request', () => {
+    expect(pageStarters('feed', true)).toContainEqual({
+      labelKey: 'meraHints.stories.follow',
+      draftKey: 'meraDraft.followStory',
+    });
+    expect(hintKeys('feed', false, false)).toContain('meraHints.stories.follow');
+  });
+
+  it('Feed hides the follow hint on device, where no chat but Stories can follow', () => {
+    expect(hintKeys('feed', true, true)).not.toContain('meraHints.stories.follow');
   });
 
   it('One interest drafts name the fact', () => {
