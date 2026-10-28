@@ -7,19 +7,6 @@ import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { leg0Collisions } from '../lib/arm-distinctness';
-import { ensureOnemeraArms } from '../../lib/mera-harness/eval/onemera-arms';
-
-ensureOnemeraArms();
-
-for (const [control, twin, candidate] of [['pre-S3', 'pre-S3-twin', 'S3']]) {
-  test(`${control}: the control and its twin match, ${candidate} differs, and the run's arms pass`, () => {
-    const { hashes, failures } = leg0Collisions([control, twin, candidate]);
-    assert.deepEqual(failures, []);
-    assert.equal(hashes[control], hashes[twin]);
-    assert.notEqual(hashes[control], hashes[candidate]);
-  });
-}
-
 test('two arms with one leg-0 prompt that are not twins fail', () => {
   // forced-offer-ungrounded changes the loop only, so its leg 0 is baseline's.
   assert.deepEqual(leg0Collisions(['baseline', 'forced-offer-ungrounded']).failures, ['baseline == forced-offer-ungrounded']);

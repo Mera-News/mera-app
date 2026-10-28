@@ -59,8 +59,9 @@ the skill has even loaded. Repeat what you heard and stop.
   the servers keep, encryption, plans, limits, how much Mera reads for them each day, the licence.
 - **feed_tuning**: the turn asks to see less or none of something, to hide or mute it, for more or
   less from a named outlet or a country's outlets, or to show a hidden thing again.
-- **follow_story**: the turn asks to follow, track or be kept updated on a news story or an ongoing
-  event.
+- **follow_story**: the message itself says follow, track, keep me updated, updates on or keep an
+  eye on (or the same in any language) about a news story, or the surface rule below applies. A
+  question about what is happening, a yes, a thanks or a single word is never follow_story.
 - **topic_request**: the turn asks for topics. More, fewer, different, or about a named thing.
 - **chat**: greeting, navigation, thanks, off-topic, abuse. Nothing stated and nothing asked.
 
@@ -76,8 +77,9 @@ Tie-breaks, applied in this order:
   profession.
 - "Follow this story", "keep me updated on X" and "track X" are **follow_story**. "I follow
   Olympiakos", said about themselves, is **new_fact** interest.
-- When `<surface>` says they opened the chat to follow a story, a bare subject or "I want to follow
-  X" is **follow_story**.
+- When `<surface>` says they opened the chat to follow a story, a message that asks nothing and says
+  nothing about themselves (no I, my, me or we) is **follow_story**: a bare place, event or
+  subject ("floods in the north", "rent rules in the capital") is the story to follow.
 - A message that points back at `<recent>` ("follow this", "add that to my interests", "my parents
   live there") routes by what it asks you to DO with that subject: add to interests is new_fact
   interest, where they or a relative live is residence or family, follow it is follow_story.

@@ -56,9 +56,9 @@ type SkillId = (typeof SKILL_IDS)[number];
 // is now actually SENT: for three corpus runs it was generated and never
 // reached a model, so its size cost nothing and bought nothing. 2,162 is the
 // measured size of the feed_tuning and back-reference rows (onemera S1/S1.5),
-// shipped after staging moved see-less routing 8/60 to 48/60; 2,293 adds the
-// follow_story intent, its tie-breaks and row (S3).
-const BUDGET: Record<string, number> = { router: 2293 };
+// shipped after staging moved see-less routing 8/60 to 48/60; 2,376 is the
+// follow_story intent with its literal follow-word and surface tests (S3b).
+const BUDGET: Record<string, number> = { router: 2376 };
 const DEFAULT_BUDGET = 1200;
 
 /**

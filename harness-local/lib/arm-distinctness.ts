@@ -14,7 +14,6 @@ import { buildRouterPrompt } from '../../lib/mera-harness/core/router-prompt';
 export const TWINS: ReadonlySet<string> = new Set([
   'baseline', 'null-control',
   'forced-offer-closing', 'forced-offer-closing-twin',
-  'pre-S3', 'pre-S3-twin',
 ]);
 
 /** The leg-0 router prompt an arm builds, for both surfaces, as a short hash.
