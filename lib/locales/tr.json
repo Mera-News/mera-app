@@ -405,7 +405,8 @@
     "switchingNudge": "Cihazınız {{language}} çeviri paketini hazırlıyor. İşlem bitene kadar lütfen bu ekranı açık tutun. Şimdi ayrılırsanız haberler İngilizce kalmaya devam eder.",
     "switchingTitle": "{{language}} dili ayarlanıyor…",
     "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor.",
-    "phoneGuideLink": "Telefonumun dilini nasıl değiştireceğimi göster"
+    "phoneGuideBody": "Makaleler dilinize çevrilemiyor mu? Önce dili telefonunuzun ayarlarından ekleyin.",
+    "phoneGuideWatch": "İzle"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

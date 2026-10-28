@@ -400,7 +400,8 @@
     "switchingNudge": "你的裝置正在準備 {{language}} 翻譯套件。請保持此畫面開啟，直到完成。如果現在離開，新聞文章會維持英文。",
     "switchingTitle": "正在設定{{language}}…",
     "translationUnavailableOnThisDevice": "這台裝置無法將新聞文章翻譯成{{language}},將改用英文顯示。",
-    "phoneGuideLink": "教我如何變更手機語言"
+    "phoneGuideBody": "無法將文章翻譯成你的語言？請先在手機設定中加入該語言。",
+    "phoneGuideWatch": "觀看"
   },
   "meraProtocol": {
     "title": "梅拉協定",
