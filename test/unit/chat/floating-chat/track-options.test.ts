@@ -30,6 +30,22 @@ describe('mergeTrackOptions', () => {
     expect(options.map((o) => o.label)).toEqual(['A', 'C']);
   });
 
+  it('drops a near-copy label (content-word Jaccard >= 0.6) of a shown or earlier-kept one', () => {
+    const shown = [opt('Rotterdam Port Strike', 'a')];
+    const { options } = mergeTrackOptions(shown, [
+      opt('Rotterdam port strike updates', 'b'),
+      opt('Shipping Lines Reroute', 'c'),
+      opt('Shipping Lines Reroute plan', 'e'),
+    ]);
+    expect(options.map((o) => o.label)).toEqual(['Rotterdam Port Strike', 'Shipping Lines Reroute']);
+  });
+
+  it('keeps a label at Jaccard 0.5', () => {
+    // {rotterdam, port} vs {rotterdam, port, strike, union}: 2/4
+    const { added } = mergeTrackOptions([opt('Rotterdam port', 'a')], [opt('Rotterdam port strike union', 'b')]);
+    expect(added).toBe(1);
+  });
+
   it('stops at the cap', () => {
     const shown = Array.from({ length: 6 }, (_, i) => opt(`S${i}`));
     const { options, added } = mergeTrackOptions(shown, [opt('N1'), opt('N2'), opt('N3')]);

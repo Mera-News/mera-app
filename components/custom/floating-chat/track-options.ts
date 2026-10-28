@@ -6,6 +6,8 @@
 // reads them here, so a resumed chat redraws the card the reader left.
 
 import { MAX_FOLLOW_OPTIONS } from '@/lib/chat-session/engine';
+// The eval's own "too close" rule (eval/track-metrics.ts): one tokenizer, pure.
+import { contentJaccard, DETECT_JACCARD } from '@/lib/mera-harness';
 
 /** A card never grows past this: the engine contract's own cap. */
 export const MAX_TRACK_CARD_OPTIONS = MAX_FOLLOW_OPTIONS;
@@ -25,8 +27,8 @@ export function normaliseTrackText(s: string): string {
 /**
  * New options appended after the shown ones. An incoming option is a duplicate
  * when its label OR its search text matches one already on the card (or one
- * earlier in the same answer), so a reworded label over the same search adds
- * nothing.
+ * earlier in the same answer), or its label is a near-copy of one (content-word
+ * Jaccard >= 0.6), so a reworded label adds nothing.
  */
 export function mergeTrackOptions(
   shown: readonly TrackOption[],
@@ -41,6 +43,7 @@ export function mergeTrackOptions(
     const label = normaliseTrackText(o.label);
     const search = normaliseTrackText(o.search);
     if (!label || labels.has(label) || (search && searches.has(search))) continue;
+    if (options.some((k) => contentJaccard(o.label, k.label) >= DETECT_JACCARD)) continue;
     labels.add(label);
     if (search) searches.add(search);
     options.push(o);
