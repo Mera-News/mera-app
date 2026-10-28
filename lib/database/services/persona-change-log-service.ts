@@ -195,6 +195,8 @@ async function retireMintedTopic(row: PersonaChangeLogModel, topicId: string): P
  *   suppress_topic     → reactivate the topic (forward-compat)
  *   set_publication_pref → restore the prior pref kind (or clear if it was none)
  *   set_source_scope_pref → the same, for a country scope
+ *   set_fact_places    → restore places, places_by, places_source (compare-and-set), re-run regeneration
+ *   set_fact_news_stopped → clear metadata.news_stopped
  * Returns whether the inverse was applied: false when the row was already
  * reverted, or (source preferences only, compare-and-set) when a newer action
  * owns the value. Weights and suppressions still revert unconditionally.
@@ -381,6 +383,31 @@ export async function revertChange(changeLogId: string): Promise<boolean> {
         before as PublicationPrefKind | 'none',
         label,
       );
+      break;
+    }
+    case ACTION_NAMES.SET_FACT_PLACES: {
+      const targetId = requireTargetId(action, row.id);
+      const b = action.before as { places?: unknown; by?: unknown; source?: unknown } | undefined;
+      const a = action.after as { places?: unknown } | undefined;
+      if (!b || !Array.isArray(b.places) || !a || !Array.isArray(a.places)) {
+        throw new Error(`persona_change_log ${row.id}: before/after must carry places for set_fact_places`);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { restoreFactPlaces } = require('./fact-service') as typeof import('./fact-service');
+      const by = b.by === 'sweep' || b.by === 'user' || b.by === 'chat' ? b.by : null;
+      const ok = await restoreFactPlaces(
+        targetId,
+        { places: b.places as string[], by, source: typeof b.source === 'string' ? b.source : null },
+        a.places as string[],
+      );
+      if (!ok) return false;
+      break;
+    }
+    case ACTION_NAMES.SET_FACT_NEWS_STOPPED: {
+      const targetId = requireTargetId(action, row.id);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { setFactNewsStopped } = require('./fact-service') as typeof import('./fact-service');
+      await setFactNewsStopped(targetId, false);
       break;
     }
     default:

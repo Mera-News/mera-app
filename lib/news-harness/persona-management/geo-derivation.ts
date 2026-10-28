@@ -27,10 +27,12 @@
 //     anchored and still means the US state far more often than the country).
 //     Every blocked case simply falls through to tier 2, which IS gated.
 //
-//   • TIER 2 — one batched LLM call over whatever tier 1 could not resolve
-//     (cities like "Bangalore", leagues, employers). Every code it returns is
-//     validated against the server's allowed-country enum and silently dropped
-//     otherwise, so the model cannot invent a country we have no feeds for.
+//   • TIER 2 — batched LLM calls over the facts whose PLACE is due
+//     (`selectFactsForPlaces`) plus whatever tier 1 could not resolve. Names in,
+//     names out: each answer is a fact place (level + names), and, when the fact
+//     names the place itself, a `locations` candidate whose country must be in
+//     the server's allowed-country enum, so the model cannot invent a country
+//     we have no feeds for.
 //
 // Reconciliation is ADDITIVE ONLY: it never emits a delete and never emits any
 // op against a row the user owns (`provenance` 'user' or 'feedback').
@@ -48,6 +50,17 @@ import {
   MIGRATION_ROLE_WEIGHTS,
   type MigrationLocationRole,
 } from './persona-migration';
+import {
+  DEMONYMS,
+  describePlace,
+  factPlacesBy,
+  normalizePlaces,
+  parsePlace,
+  placeFromNames,
+  placesSourceHash,
+  type FactPlacesInput,
+  type ReaderPlace,
+} from './fact-places';
 
 countries.registerLocale(enCountryNames);
 
@@ -87,36 +100,7 @@ export type GeoOp =
 
 // ── Tier-1 vocabulary ─────────────────────────────────────────────────────
 
-/**
- * Nationality/adjectival forms → alpha-2. The curated country-name map only
- * matches nouns, so "Follows Brazilian football" resolves nothing without this.
- * Hand-curated, therefore allowed in a free position.
- */
-const DEMONYMS: Record<string, string> = {
-  'dutch': 'NL', 'german': 'DE', 'french': 'FR', 'spanish': 'ES',
-  'portuguese': 'PT', 'italian': 'IT', 'belgian': 'BE', 'austrian': 'AT',
-  'swiss': 'CH', 'british': 'GB', 'english': 'GB', 'scottish': 'GB',
-  'welsh': 'GB', 'irish': 'IE', 'polish': 'PL', 'ukrainian': 'UA',
-  'russian': 'RU', 'czech': 'CZ', 'slovak': 'SK', 'hungarian': 'HU',
-  'romanian': 'RO', 'bulgarian': 'BG', 'greek': 'GR', 'turkish': 'TR',
-  'swedish': 'SE', 'norwegian': 'NO', 'danish': 'DK', 'finnish': 'FI',
-  'icelandic': 'IS', 'estonian': 'EE', 'latvian': 'LV', 'lithuanian': 'LT',
-  'croatian': 'HR', 'serbian': 'RS', 'slovenian': 'SI',
-  'american': 'US', 'canadian': 'CA', 'mexican': 'MX', 'brazilian': 'BR',
-  'argentine': 'AR', 'argentinian': 'AR', 'chilean': 'CL', 'colombian': 'CO',
-  'peruvian': 'PE', 'uruguayan': 'UY',
-  'indian': 'IN', 'chinese': 'CN', 'japanese': 'JP', 'korean': 'KR',
-  'south korean': 'KR', 'indonesian': 'ID', 'thai': 'TH', 'vietnamese': 'VN',
-  'filipino': 'PH', 'philippine': 'PH', 'malaysian': 'MY', 'singaporean': 'SG',
-  'taiwanese': 'TW', 'pakistani': 'PK', 'bangladeshi': 'BD',
-  'sri lankan': 'LK', 'nepali': 'NP', 'nepalese': 'NP',
-  'israeli': 'IL', 'saudi': 'SA', 'emirati': 'AE', 'qatari': 'QA',
-  'kuwaiti': 'KW', 'jordanian': 'JO', 'lebanese': 'LB', 'iranian': 'IR',
-  'iraqi': 'IQ', 'egyptian': 'EG', 'nigerian': 'NG', 'south african': 'ZA',
-  'kenyan': 'KE', 'ethiopian': 'ET', 'ghanaian': 'GH', 'moroccan': 'MA',
-  'tunisian': 'TN', 'algerian': 'DZ', 'tanzanian': 'TZ', 'ugandan': 'UG',
-  'australian': 'AU', 'new zealander': 'NZ',
-};
+// DEMONYMS lives in fact-places.ts (shared with countriesNamedIn).
 
 /**
  * Country names that are ALSO a common English noun, a US state, or a common
@@ -309,48 +293,126 @@ export function deriveCountriesFromFacts(facts: GeoFactSnapshot[]): {
   return { resolved, unresolved };
 }
 
-// ── Tier 2 — LLM for the leftovers ────────────────────────────────────────
+// ── Tier 2 — one LLM call that places every due fact (names only) ─────────
+//
+// The call decides, per fact, WHERE its news should come from and at which
+// level (fact places), and, when the fact itself names a place, how that place
+// relates to the reader (a `locations` candidate, the old tier 2). Names in,
+// names out: the model never sees or writes a code; `placeFromNames` decodes.
 
-/** Inline the allowed enum only when it is short enough to be worth the tokens.
- *  The real gate is parse-side (`parseGeoLlmResponse`), so a long list would
- *  burn ~600 tokens of a 4096-token context for nothing. */
-const ALLOWED_ENUM_INLINE_MAX = 30;
+/** One fact sent to the model. `rejected` are places the reader called wrong. */
+export interface FactPlacesBatchFact {
+  id: string;
+  statement: string;
+  rejected: string[];
+}
 
-const GEO_SYSTEM_PROMPT_LINES = [
-  'You infer which COUNTRY each short personal fact refers to.',
-  'The facts describe ONE person. A fact may name a city, a region, an employer,',
-  'a sports league or a nationality — infer the country it implies.',
-  '',
-  'Rules:',
-  '  • One entry per fact you are confident about. SKIP a fact entirely when it',
-  '    implies no specific country (e.g. "Enjoys hiking"). Skipping is correct.',
-  '  • "country" MUST be an ISO 3166-1 alpha-2 code (two uppercase letters).',
-  '  • "role" is how the place relates to the person: "home" (lives there),',
-  '    "work" (works there), "family" (relatives there), "partner_family",',
-  '    "travel" (visits), or "interest" (follows it from afar). Use "interest"',
-  '    when unsure.',
-  '  • "city" is a city named in the fact, otherwise null.',
-  '  • Reuse the given ids EXACTLY. Never invent an id and never invent a fact.',
+export interface DecodedFactPlace {
+  factId: string;
+  /** [] when the model answered with a place the reader rejected or with nothing usable. */
+  places: string[];
+  location: GeoCandidate | null;
+}
+
+/** Facts whose place must be (re)decided: never a user's choice; a changed
+ *  statement or residence (places_source), or a wrong-place mark. */
+export function selectFactsForPlaces(
+  facts: readonly (FactPlacesInput & { id: string })[],
+  locations: readonly ReaderPlace[],
+): string[] {
+  return facts
+    .filter((f) => factPlacesBy(f) !== 'user')
+    .filter(
+      (f) =>
+        f.metadata?.places_wrong !== undefined ||
+        f.metadata?.places_source !== placesSourceHash(f.statement, locations),
+    )
+    .map((f) => f.id);
+}
+
+/** The place call's gear, shared by the sweep and the tuning eval so they
+ *  cannot drift. Output is bounded BY CONSTRUCTION: one named answer is ~50
+ *  tokens, so perCall * 50 stays under maxTokens; a truncated reply loses the
+ *  whole call and its facts stay due. */
+export const FACT_PLACES_CALL = { perCall: 10, maxTokens: 700, temperature: 0.2 } as const;
+
+const MAX_CONTEXT_FACTS = 40;
+const MAX_CONTEXT_CHARS = 160;
+
+const FACT_PLACES_SYSTEM_PROMPT = [
+  'You decide where the news for each of a reader\'s interests should come from.',
+  'You get the places the reader lives and works, everything they told Mera, and a numbered list of facts.',
+  'For each fact pick ONE place and its level:',
+  '  • "anywhere": the subject is the same news wherever you read it: a science, a technology, a field or',
+  '    profession followed for its own sake, a hobby, a cuisine, world markets. "Follows climate science": anywhere.',
+  '  • "bloc": a group of countries: European Union, Europe, Asia, Africa, North America, South America or Oceania.',
+  '    A part of a continent ("West Africa", "Southeast Asia") is a bloc too. "Works in EU trade law": European Union.',
+  '  • "country": the subject is decided by one country: its laws, taxes, prices, wages, pensions, benefits,',
+  '    schools, health care, visas, national industries and jobs whose pay and rules the country sets, a national league.',
+  '    "Pensioner" for a reader in Bhopal: India.',
+  '  • "region": decided by a state, province or county government. "State government jobs" for a reader in Bhopal:',
+  '    Madhya Pradesh. A region is always a subdivision INSIDE the country, never part of a continent.',
+  '  • "city": the subject physically happens in one town: its water, power, transport, traffic, rents, weather,',
+  '    a local club. "Worried about water cuts" for a reader in Bhopal: Bhopal.',
+  'How to choose:',
+  '  1. A place the fact names itself wins: "Daughter studies in London" is London even when the reader lives elsewhere.',
+  '  2. Otherwise first ask whether the subject is the same news everywhere. If so, answer anywhere, wherever the reader lives.',
+  '  3. If it is local to the reader, use the reader\'s own place at the level where the subject is DECIDED, not where the',
+  '     reader happens to live: a job, a farm, a school, a visa or a shop is decided by the country unless the fact says more.',
+  '     When unsure between two levels, pick the wider one.',
+  '  4. A nationality or cuisine used as an adjective ("Greek cooking", "Japanese films") does not name a place. Working',
+  '     for a foreign or remote employer does not move the subject.',
+  '  5. A team, league or competition is news where it plays: a club\'s city, a league\'s country, a contest between',
+  '     countries of one bloc is that bloc.',
+  'Never pick a place the reader said was wrong for that fact.',
+  'Write every place as its English name, never as a code. Fill "country" for city and region; "region" may be null for a city.',
+  '"role" only when the fact itself names the place: "home", "work", "family", "partner_family", "travel" or "interest". Otherwise null.',
+  'Answer every fact once and reuse the given ids exactly.',
   '',
   'Respond with STRICT JSON only, no prose:',
-  '{"locations":[{"id":"<id>","country":"NL","city":"Amsterdam","role":"home"}]}',
-];
+  '{"facts":[{"id":"<id>","level":"city","bloc":null,"country":"India","region":"Madhya Pradesh","city":"Bhopal","role":null}]}',
+].join('\n');
 
-/**
- * Builds the single batched call for the unresolved facts. `allowedAlpha2` is
- * inlined only for a short enum; it is ENFORCED in `parseGeoLlmResponse`.
- */
-export function buildGeoLlmRequest(
-  unresolved: GeoFactSnapshot[],
-  allowedAlpha2: ReadonlySet<string>,
-): { systemPrompt: string; prompt: string } {
-  const lines = [...GEO_SYSTEM_PROMPT_LINES];
-  if (allowedAlpha2.size > 0 && allowedAlpha2.size <= ALLOWED_ENUM_INLINE_MAX) {
-    lines.push('', `Valid codes: ${Array.from(allowedAlpha2).sort().join(', ')}`);
-  }
+function readerPlaceName(l: ReaderPlace): string | null {
+  const cc = (l.countryCode ?? '').trim().toUpperCase();
+  const city = (l.city ?? '').trim();
+  const region = (l.region ?? '').trim();
+  const code = city ? `${cc}|${region}|${city}` : region ? `${cc}|${region}` : cc;
+  return describePlace(code);
+}
+
+/** The single batched request. Places travel as names; ids are fact ids. */
+export function buildFactPlacesRequest(input: {
+  batch: readonly FactPlacesBatchFact[];
+  otherFacts: readonly string[];
+  readerPlaces: readonly ReaderPlace[];
+}): { systemPrompt: string; prompt: string } {
+  const placeLines = input.readerPlaces
+    .map((l) => {
+      const name = readerPlaceName(l);
+      return name ? `- ${name} (${l.role})` : null;
+    })
+    .filter((l): l is string => !!l);
+  const contextLines = input.otherFacts
+    .slice(0, MAX_CONTEXT_FACTS)
+    .map((s) => `- ${s.trim().slice(0, MAX_CONTEXT_CHARS)}`);
+  const factLines = input.batch.map((f) => {
+    const rejected = f.rejected.map(describePlace).filter((n): n is string => !!n);
+    const note = rejected.length > 0 ? ` (the reader said this place is wrong: ${rejected.join('; ')})` : '';
+    return `[${f.id}] ${f.statement}${note}`;
+  });
   return {
-    systemPrompt: lines.join('\n'),
-    prompt: unresolved.map((f) => `[${f.id}] ${f.statement}`).join('\n'),
+    systemPrompt: FACT_PLACES_SYSTEM_PROMPT,
+    prompt: [
+      'Reader\'s places:',
+      ...(placeLines.length > 0 ? placeLines : ['- none known']),
+      '',
+      'Everything the reader told Mera:',
+      ...(contextLines.length > 0 ? contextLines : ['- nothing else']),
+      '',
+      'Facts to place:',
+      ...factLines,
+    ].join('\n'),
   };
 }
 
@@ -364,21 +426,17 @@ function asRecord(v: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function asNullableString(v: unknown): string | null {
-  return typeof v === 'string' && v.trim() ? v.trim() : null;
-}
-
 /**
- * Defensively decodes the model's JSON. Any malformed response → `[]` (tier-1
- * only). Entries are dropped when the id was not in the batch, when the code is
- * not two letters, or when the code is not in `allowedAlpha2` — the model can
- * never introduce a country the server has no feeds for.
+ * Decodes the model's JSON. A malformed reply → []. Rows with an id outside the
+ * batch, a repeated id, or names that do not resolve are dropped. A rejected
+ * place decodes to `places: []`. A `locations` candidate needs a named role and
+ * a country inside `allowedAlpha2`.
  */
-export function parseGeoLlmResponse(
+export function decodeFactPlaces(
   raw: string,
-  unresolved: GeoFactSnapshot[],
+  batch: readonly FactPlacesBatchFact[],
   allowedAlpha2: ReadonlySet<string>,
-): GeoCandidate[] {
+): DecodedFactPlace[] {
   const match = (raw ?? '').trim().match(/\{[\s\S]*\}/);
   if (!match) return [];
   let root: Record<string, unknown> | null;
@@ -387,47 +445,35 @@ export function parseGeoLlmResponse(
   } catch {
     return [];
   }
-  if (!root) return [];
-
-  const rows = Array.isArray(root.locations)
-    ? root.locations
-    : Array.isArray(root.results)
-      ? root.results
-      : null;
+  const rows = root && Array.isArray(root.facts) ? root.facts : null;
   if (!rows) return [];
 
-  const byId = new Map(unresolved.map((f) => [f.id, f.statement]));
-  const seen = new Set<string>();
-  const out: GeoCandidate[] = [];
-
+  const byId = new Map(batch.map((f) => [f.id, f]));
+  const out: DecodedFactPlace[] = [];
   for (const row of rows) {
     const rec = asRecord(row);
-    if (!rec) continue;
-    const id = typeof rec.id === 'string' ? rec.id : null;
-    if (!id || seen.has(id)) continue;
-    const statement = byId.get(id);
-    if (statement === undefined) continue;
+    const id = typeof rec?.id === 'string' ? rec.id : null;
+    const fact = id ? byId.get(id) : undefined;
+    if (!rec || !id || !fact || out.some((o) => o.factId === id)) continue;
+    const place = placeFromNames(rec);
+    if (!place) continue;
+    const rejected = normalizePlaces(fact.rejected).includes(place);
 
-    const rawCode = typeof rec.country === 'string' ? rec.country.trim().toUpperCase() : '';
-    if (!/^[A-Z]{2}$/.test(rawCode)) continue;
-    if (!allowedAlpha2.has(rawCode)) continue;
-
-    const rawRole = typeof rec.role === 'string' ? rec.role.trim().toLowerCase() : '';
-    const role: GeoRole = VALID_ROLES.has(rawRole)
-      ? (rawRole as GeoRole)
-      : inferLocationRole(statement);
-
-    seen.add(id);
-    out.push({
-      countryCode: rawCode,
-      city: asNullableString(rec.city),
-      region: asNullableString(rec.region),
-      role,
-      weight: MIGRATION_ROLE_WEIGHTS[role],
-      sourceFactId: id,
-    });
+    let location: GeoCandidate | null = null;
+    const parsed = parsePlace(place);
+    const role = typeof rec.role === 'string' ? rec.role.trim().toLowerCase() : '';
+    if (!rejected && parsed?.country && VALID_ROLES.has(role) && allowedAlpha2.has(parsed.country)) {
+      location = {
+        countryCode: parsed.country,
+        city: parsed.city ?? null,
+        region: parsed.region ?? null,
+        role: role as GeoRole,
+        weight: MIGRATION_ROLE_WEIGHTS[role as GeoRole],
+        sourceFactId: id,
+      };
+    }
+    out.push({ factId: id, places: rejected ? [] : [place], location });
   }
-
   return out;
 }
 

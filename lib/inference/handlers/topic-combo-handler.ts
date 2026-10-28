@@ -41,7 +41,8 @@ import {
 import { parseTopicsFromOutput } from '../../news-harness/persona-management/topic-generation';
 import { planTopupTopicRows } from '../../news-harness/persona-management/topic-topup';
 import { isDeferrableError } from '../job-defer';
-import { namesFact } from '@/lib/mera-harness';
+import { describeFactPlaces } from '../../news-harness/persona-management/fact-places';
+import { capitalizePlaceNames, namesFact } from '@/lib/mera-harness';
 import logger from '../../logger';
 import type { JobContext } from '../InferenceQueue';
 
@@ -95,7 +96,7 @@ export async function handleTopicComboJob(
       calls.push({
         id: w.jobId,
         system: COMBO_PASS_TOPIC_SYSTEM_PROMPT,
-        prompt: buildComboPassUserMessage(fact.statement, supporting, COMBO_PASS_MAX_TOPICS),
+        prompt: buildComboPassUserMessage(fact.statement, supporting, COMBO_PASS_MAX_TOPICS, describeFactPlaces(fact)),
         temperature: COMBO_TEMPERATURE,
         maxTokens: COMBO_MAX_TOKENS,
         enableThinking: false,
@@ -128,7 +129,7 @@ export async function handleTopicComboJob(
       // Every combination topic names its own fact (ux2 F6): the prompt says
       // so, and this drops the ones that still do not.
       const aboutFact = parseTopicsFromOutput(result!.output, statement).filter((t) => namesFact(t, statement));
-      const texts = planTopupTopicRows(seen, aboutFact, normalizeTopicText)
+      const texts = planTopupTopicRows(seen, capitalizePlaceNames(aboutFact, describeFactPlaces(byId.get(w.factId)!)), normalizeTopicText)
         .map((row) => row.text)
         .slice(0, COMBO_PASS_MAX_TOPICS);
       for (const t of texts) seen.add(normalizeTopicText(t));

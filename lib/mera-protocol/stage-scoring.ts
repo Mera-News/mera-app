@@ -49,6 +49,19 @@ import {
 } from '@/lib/news-harness/scoring-engine/persona-context';
 import { screenHardSuppressionsDetailed } from '@/lib/news-harness/scoring-engine/suppression';
 import {
+  screenLocationRule,
+  toAlpha2,
+  type LocationRuleContext,
+} from '@/lib/news-harness/scoring-engine/location-rule';
+import { factLineWithPlaces, factPlaces } from '@/lib/news-harness/persona-management/fact-places';
+import { countriesInBloc } from '@/lib/place-service';
+import { Q } from '@nozbe/watermelondb';
+import database from '@/lib/database';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import type ArticleSuggestionModel from '@/lib/database/models/ArticleSuggestion';
+import type ArticleSuggestionFactModel from '@/lib/database/models/ArticleSuggestionFact';
+import { batchResetToUnscored } from '@/lib/database/services/article-suggestion-scoring-writes';
+import {
   buildStageCandidateInput,
   type TopicWeightInfo,
 } from '@/lib/database/services/article-suggestion-mappers';
@@ -131,7 +144,7 @@ export interface PersonaScoringSnapshot {
 export async function loadPersonaScoringContext(
   nowMs: number = Date.now(),
 ): Promise<PersonaScoringSnapshot> {
-  const [topics, locations, pubPrefRows, suppressions, factWeights, seenStoryIds] =
+  const [topics, locations, pubPrefRows, suppressions, factWeights, seenStoryIds, facts] =
     await Promise.all([
       getActiveTopics(),
       getAllLocations(),
@@ -139,6 +152,7 @@ export async function loadPersonaScoringContext(
       getActiveSuppressions(nowMs),
       getFactWeightById(),
       getOpenedSeenSet(),
+      getFacts(),
     ]);
 
   const topicWeights = new Map<string, TopicWeightInfo>();
@@ -232,8 +246,18 @@ export async function loadPersonaScoringContext(
     });
   }
 
+  const location: LocationRuleContext = {
+    factPlacesById: new Map(facts.map((f) => [f.id, factPlaces(f)])),
+    readerCountries: new Set(
+      personaLocations.map((l) => toAlpha2(l.countryCode)).filter((c): c is string => !!c),
+    ),
+    trackedTopicIds: new Set(topics.filter((t) => t.provenance === 'tracked').map((t) => t.id)),
+    countriesInBloc,
+  };
+
   const persona: PersonaScoringContext = {
     locations: personaLocations,
+    location,
     pubPrefs,
     softSuppressions,
     hardSuppressions,
@@ -292,11 +316,12 @@ export function buildStageCandidates(
   }));
 }
 
-async function loadAllFactStatements(): Promise<string[]> {
+/** The fact bank: plain statements for Kev, place-named lines for the cloud prompts. */
+async function loadAllFactStatements(withPlaces: boolean): Promise<string[]> {
   const facts = await getFacts();
   return facts
-    .map((f) => f.statement)
-    .filter((s) => typeof s === 'string' && s.trim().length > 0);
+    .filter((f) => typeof f.statement === 'string' && f.statement.trim().length > 0)
+    .map((f) => (withPlaces ? factLineWithPlaces(f) : f.statement));
 }
 
 /**
@@ -341,6 +366,10 @@ export interface MathStageResult {
    *  exclusion → that filter's display value. They ARE in `stage` and in every
    *  map above, scored and demoted; this is the label the card shows. */
   exemptedValueById: Map<string, string>;
+  /** Caught by the location rule: NOT in `stage` (never submitted), but in
+   *  `computedScoreMap` / `componentsMap` (marked `locationCaught`) so the caller
+   *  saves them at relevance 0 with their audit. */
+  locationCaughtIds: Set<string>;
 }
 
 /**
@@ -369,25 +398,34 @@ export async function computeMathStage(
       persona.hardSuppressions,
     );
   const excludedIds = new Set(excludedValueById.keys());
-  const stage =
+  const screened =
     excludedIds.size > 0
       ? allStage.filter((c) => !excludedIds.has(c.input.id))
       : allStage;
+  // The location rule, same as computeAndScore's step 0b: caught rows leave the stage.
+  const locationCaughtIds = persona.location
+    ? screenLocationRule(screened, persona.location)
+    : new Set<string>();
 
   const computedScoreMap = new Map<string, number>();
   const componentsMap = new Map<string, RelevanceComponents>();
   const modeMap = new Map<string, ScoringMode>();
-  for (const c of stage) {
+  for (const c of screened) {
     const r = computeRelevance(
       c.input,
       persona,
       config.scoringEngine,
       nowMs,
     );
+    const caught = locationCaughtIds.has(c.input.id);
     computedScoreMap.set(c.input.id, r.score);
-    componentsMap.set(c.input.id, r.components);
+    componentsMap.set(c.input.id, caught ? { ...r.components, locationCaught: true } : r.components);
     modeMap.set(c.input.id, r.mode);
   }
+  const stage =
+    locationCaughtIds.size > 0
+      ? screened.filter((c) => !locationCaughtIds.has(c.input.id))
+      : screened;
   return {
     persona,
     stage,
@@ -397,6 +435,7 @@ export async function computeMathStage(
     excludedIds,
     excludedValueById,
     exemptedValueById,
+    locationCaughtIds,
   };
 }
 
@@ -410,13 +449,15 @@ export async function computeAndScoreForCandidates(
   candidates: ScoringCandidate[],
   opts?: { skipLlm?: boolean; nowMs?: number },
 ): Promise<StageResult> {
+  // Cloud prompts name each fact's places; Kev (on-device) keeps plain statements. The
+  // candidates' relatedFacts carry `places` from the read; Kev reads `statement` only.
+  const onDevice = isOnDeviceMode();
   const [{ persona, topicWeights }, factStatements, config] = await Promise.all([
     loadPersonaScoringContext(opts?.nowMs),
-    loadAllFactStatements(),
+    loadAllFactStatements(!onDevice),
     effectiveHarnessConfig(),
   ]);
   const stage = buildStageCandidates(candidates, topicWeights);
-  const onDevice = isOnDeviceMode();
   return computeAndScore(
     stage,
     persona,
@@ -430,4 +471,37 @@ export async function computeAndScoreForCandidates(
       skipLlm: opts?.skipLlm,
     },
   );
+}
+
+/**
+ * A fact's places changed: send the rows the location rule caught for it back to
+ * `unscored`, so the next scoring pass judges them under the new places. Rows the
+ * reader opened (`already_read`) are left alone by the writer. Returns how many.
+ * Persona calls this after `setFactPlaces`.
+ */
+export async function rescoreLocationCaught(factId: string): Promise<number> {
+  const links = await database
+    .get<ArticleSuggestionFactModel>('article_suggestion_facts')
+    .query(Q.where('fact_id', factId))
+    .fetch();
+  const ids = [...new Set(links.map((l) => l.articleSuggestionId))];
+  if (ids.length === 0) return 0;
+  const rows = await database
+    .get<ArticleSuggestionModel>('article_suggestions')
+    .query(
+      Q.where('id', Q.oneOf(ids)),
+      Q.where('status', ArticleSuggestionStatus.Complete),
+    )
+    .fetch();
+  const caught = rows
+    .filter((r) => {
+      try {
+        return (JSON.parse(r.scoreComponentsJson ?? 'null') as RelevanceComponents | null)?.locationCaught === true;
+      } catch {
+        return false;
+      }
+    })
+    .map((r) => r.id);
+  await batchResetToUnscored(caught);
+  return caught.length;
 }

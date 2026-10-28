@@ -30,6 +30,9 @@ export interface RealTopicGenInputs {
   totalCount?: number;
   /** Existing topics the model must not regenerate (used by "generate more"). */
   excludeTopics?: string[];
+  /** The fact's place as names (`describeFactPlaces`), never codes. Absent
+   *  keeps the prompt byte-identical to the pinned golden. */
+  factPlace?: string | null;
 }
 
 const TOPIC_CFG = DEFAULT_HARNESS_CONFIG.topicGen;
@@ -46,11 +49,14 @@ export interface TopicGenSystemPrompts {
 export function buildBaseUserPrompt(
   inputs: Pick<
     RealTopicGenInputs,
-    'factStatement' | 'userLocation' | 'otherFacts' | 'excludeTopics'
+    'factStatement' | 'userLocation' | 'otherFacts' | 'excludeTopics' | 'factPlace'
   >,
   includeOthers: boolean,
 ): string {
   let prompt = `Fact: "${asUntrusted(inputs.factStatement)}"`;
+  if (inputs.factPlace) {
+    prompt += `\nFact place: ${asUntrusted(inputs.factPlace)}`;
+  }
   if (inputs.userLocation) {
     prompt += `\nUser location: ${asUntrusted(inputs.userLocation)}`;
   }

@@ -321,16 +321,6 @@ export function useArticleSuggestionScreen({
         scrollViewRef.current?.scrollToTop(true);
     }, []);
 
-    // The feedback tree's "Show related coverage" nudge. The related articles
-    // are this page's footer, so the answer is to scroll there, not to navigate.
-    // Landing at the bottom trips `onEndReached` → `loadMoreRelated`, so the
-    // list grows underneath: the user arrives at what WAS the bottom with more
-    // coverage appearing below. That is the intended reading of the nudge, not a
-    // mis-scroll.
-    const scrollToRelated = useCallback(() => {
-        scrollViewRef.current?.scrollToEnd(true);
-    }, []);
-
     // The id this screen already purged, so a re-run of the load effect (it
     // also depends on `storeSuggestion` and `t`) cannot delete twice.
     const purgedIdRef = useRef<string | null>(null);
@@ -519,7 +509,6 @@ export function useArticleSuggestionScreen({
         scrollViewRef,
         handleScrollPositionChange,
         scrollToTop,
-        scrollToRelated,
         factCheckAsked,
         handleStartFactCheck,
         handleToggleSave,

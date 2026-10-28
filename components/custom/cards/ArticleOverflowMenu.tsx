@@ -1,6 +1,6 @@
+import { SHEET } from '@/components/custom/cards/sheet-metrics';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { inlineSign, MOTION } from '@/lib/motion';
@@ -8,21 +8,28 @@ import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, Easing, LayoutAnimation, Platform, Pressable, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, I18nManager, LayoutAnimation, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** One slide between levels, both ways (FinalRead #15). */
 const SHEET_SLIDE_MS = MOTION.supportSubList.duration;
-const ROW_STYLE = { minHeight: 48, justifyContent: 'center' } as const;
+const ROW_STYLE = {
+    minHeight: SHEET.controlHeight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SHEET.rowIconGap,
+    paddingHorizontal: SHEET.rowInset,
+} as const;
 /** The row label: the SAME class and style on every level of every sheet, so a
  *  pushed level cannot drift from the main ••• rows (batch 11: the old tree
  *  overlay's labels rendered at about a fifth of normal brightness). */
 const SHEET_ROW_LABEL_CLASS = 'text-ink';
-const SHEET_ROW_LABEL_STYLE = { fontSize: 15, fontWeight: '600' } as const;
+const SHEET_ROW_LABEL_STYLE = SHEET.label;
+const BACK_LINK_STYLE = { minHeight: 44, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', paddingRight: 8 } as const;
 const CANCEL_STYLE = {
-    minHeight: 48,
-    marginTop: 8,
-    borderRadius: 16,
+    minHeight: SHEET.controlHeight,
+    marginTop: SHEET.gap,
+    borderRadius: SHEET.radius,
     alignItems: 'center',
     justifyContent: 'center',
 } as const;
@@ -91,34 +98,32 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
             {/* Layout on an inner View with a STATIC style: a function `style` on
                 a Pressable is dropped on device (the css-interop wrapper). */}
             <View style={ROW_STYLE}>
-                <HStack className="items-center px-4" space="md">
-                    {typeof icon === 'string' ? (
-                        <MaterialIcons name={icon as keyof typeof MaterialIcons.glyphMap} size={22} color={color} />
-                    ) : (
-                        icon
-                    )}
-                    <VStack className="flex-1">
-                        <Text
-                            className={SHEET_ROW_LABEL_CLASS}
-                            style={destructive ? [SHEET_ROW_LABEL_STYLE, { color: colors.negative }] : SHEET_ROW_LABEL_STYLE}
-                        >
-                            {label}
+                {typeof icon === 'string' ? (
+                    <MaterialIcons name={icon as keyof typeof MaterialIcons.glyphMap} size={SHEET.iconSize} color={color} />
+                ) : (
+                    icon
+                )}
+                <View style={{ flex: 1 }}>
+                    <Text
+                        className={SHEET_ROW_LABEL_CLASS}
+                        style={destructive ? [SHEET_ROW_LABEL_STYLE, { color: colors.negative }] : SHEET_ROW_LABEL_STYLE}
+                    >
+                        {label}
+                    </Text>
+                    {subtitle ? (
+                        <Text numberOfLines={1} style={{ color: colors.ink3, ...SHEET.caption }}>
+                            {subtitle}
                         </Text>
-                        {subtitle ? (
-                            <Text size="xs" numberOfLines={1} style={{ color: colors.ink3 }}>
-                                {subtitle}
-                            </Text>
-                        ) : null}
-                    </VStack>
-                    {opensLevel ? <MaterialIcons name="chevron-right" size={22} color={colors.ink} /> : null}
-                </HStack>
+                    ) : null}
+                </View>
+                {opensLevel ? <MaterialIcons name="chevron-right" size={SHEET.iconSize} color={colors.ink} /> : null}
             </View>
         </Pressable>
     );
     if (!description) return row;
     return (
         <VStack space="xs">
-            <Text size="xs" className="px-4" style={{ color: colors.ink3 }}>
+            <Text style={{ color: colors.ink3, paddingHorizontal: SHEET.rowInset, ...SHEET.caption }}>
                 {description}
             </Text>
             {row}
@@ -144,6 +149,12 @@ interface ActionSheetProps {
     direction: 'push' | 'pop' | 'none';
     /** Draw a "← Back" row on top (a pushed level). */
     onBack?: () => void;
+    /** The bottom plate's label; Cancel when absent (the feedback sheet says
+     *  Done once the reader has answered). */
+    closeLabel?: string;
+    /** Back as an accent "‹ Back" link above a level that draws its own
+     *  heading (the feedback sheet), instead of a row. */
+    backAsLink?: boolean;
     children: React.ReactNode;
 }
 
@@ -176,11 +187,13 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     levelKey,
     direction,
     onBack,
+    closeLabel,
+    backAsLink,
     children,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
-    const { width } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
     // Lite or Reduce Motion: levels swap in place, no slide, no height ease.
     const motion = useMotionAllowed();
 
@@ -193,12 +206,23 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     const shown = useRef<{ key: string; content: React.ReactNode } | null>(null);
     const [outgoing, setOutgoing] = useState<{ key: string; content: React.ReactNode } | null>(null);
 
+    const backControl = !onBack ? null : backAsLink ? (
+        <Pressable testID="sheet-back" accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onBack}>
+            <View style={BACK_LINK_STYLE}>
+                <MaterialIcons name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'} size={SHEET.iconSize} color={colors.accentText} />
+                <Text style={{ color: colors.accentText, fontSize: 17, lineHeight: 22 }}>{t('common.back')}</Text>
+            </View>
+        </Pressable>
+    ) : (
+        <ActionSheetRow testID="sheet-back" label={t('common.back')} icon="arrow-back" onPress={onBack} />
+    );
+    // A tall level scrolls; the close plate below stays put.
     const content = (
         <VStack space="xs">
-            {onBack ? (
-                <ActionSheetRow testID="sheet-back" label={t('common.back')} icon="arrow-back" onPress={onBack} />
-            ) : null}
-            {children}
+            {backControl}
+            <ScrollView style={{ maxHeight: height * 0.62 }} bounces={false} keyboardShouldPersistTaps="handled">
+                {children}
+            </ScrollView>
         </VStack>
     );
 
@@ -283,14 +307,14 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                 <Pressable
                     testID="article-menu-cancel"
                     accessibilityRole="button"
-                    accessibilityLabel={t('common.cancel')}
+                    accessibilityLabel={closeLabel ?? t('common.cancel')}
                     onPress={onClose}
                 >
                     {/* A visible button the full width of the sheet's 20pt
                         content sides, label centred. */}
                     <View testID="article-menu-cancel-plate" style={[CANCEL_STYLE, { backgroundColor: colors.surfaceRaised }]}>
-                        <Text className="text-ink" style={{ fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
-                            {t('common.cancel')}
+                        <Text className="text-ink" style={{ textAlign: 'center', ...SHEET.label }}>
+                            {closeLabel ?? t('common.cancel')}
                         </Text>
                     </View>
                 </Pressable>

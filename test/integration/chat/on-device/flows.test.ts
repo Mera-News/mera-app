@@ -14,6 +14,7 @@ import type { OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import { FOLLOW_STORY_SURFACE } from '@/lib/news-harness/follow-story';
 import { countTokens, IDENTITY_LINE } from '@/lib/news-harness/on-device/shared';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
 import { FIXTURE_ACCOUNT } from '@/test/helpers';
 import { installOnDeviceLlm, onDeviceLlmCalls, type OnDeviceLlmCall } from '@/test/helpers/on-device-llm';
 import { resetFileSystem, setProcessingMode } from '@/test/integration/chat/_helpers';
@@ -184,6 +185,27 @@ describe('the article chat', () => {
     expect(prompt).toContain('- Lives in <place>');
     expect(instructions).toContain('Fact checks and web searches need Private cloud');
     expect(lastAssistant()).toMatchObject({ content: 'It matches where you live.', toolCalls: [] });
+  });
+
+  it("reads the reader's recent mistakes on every turn, newest included", async () => {
+    const agent = await articleAgent();
+    await recordVerdictFeedback({
+      articleId: 'art-9',
+      sentiment: 'dislike',
+      title: 'Another story',
+      contextJson: JSON.stringify({
+        treePath: ['not_about_fact'],
+        answers: [{ leafId: 'not_about_fact', path: ['not_about_fact'], cause: 'system', value: 'fact-1' }],
+        fact_id: 'fact-1',
+        country: 'XA',
+        language: 'xa',
+        publication: '<site>',
+      }),
+    });
+    answer({ intent: 'answer', reply: 'Noted.' });
+    await turn(agent, 'why did I get this?');
+
+    expect(lastCall().prompt).toContain('- This story isn\'t about the interest it was shown for; story from <site>, XA, xa');
   });
 
   it('track: stages the options against this article', async () => {

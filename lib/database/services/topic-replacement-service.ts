@@ -19,10 +19,12 @@ import {
   planTopupTopicRows,
 } from '../../news-harness/persona-management/topic-topup';
 import { parseTopicsFromOutput } from '../../news-harness/persona-management/topic-generation';
-import { getFacts } from './fact-service';
-import { appendFactMetadataTopics } from './fact-service';
+import { appendFactMetadataTopics, getFacts, isNewsStopped, stampPlacesTopicsFor } from './fact-service';
+import { factLineWithPlaces, factPlaces } from '../../news-harness/persona-management/fact-places';
+import { ProcessingMode } from '../../generated/graphql-types';
 import {
   getAllNormalizedTexts,
+  getByFact,
   getTopupTopicSnapshots,
   normalizeTopicText,
   replaceTopicsForFact,
@@ -65,6 +67,8 @@ export async function generateAndReplace(
   factId: string,
   fillTo: number,
   retireTopicIds: string[],
+  /** Checked after generation, before anything commits; false discards the result. */
+  shouldCommit?: () => Promise<boolean>,
 ): Promise<ReplaceOutcome> {
   try {
     const [facts, topicRows, globalTexts] = await Promise.all([
@@ -80,7 +84,8 @@ export async function generateAndReplace(
     const [candidate] = selectTopupCandidates(
       facts.map((f) => ({
         id: f.id,
-        statement: f.statement,
+        // The line carries the fact's places, so a place change changes the prompt (unchanged without places).
+        statement: factLineWithPlaces(f),
         // Fact.createdAt is an ISO string (mera-protocol-toolkit types), not a
         // Date — unlike the WatermelonDB models. NaN would poison the ordering,
         // so an unparseable value degrades to 0 (treated as oldest).
@@ -126,6 +131,8 @@ export async function generateAndReplace(
       appHarnessLogger,
     );
 
+    if (shouldCommit && !(await shouldCommit())) return FAILED;
+
     const planned = planTopupTopicRows(globalTexts, texts, normalizeTopicText);
 
     const res = await replaceTopicsForFact(factId, planned, retireTopicIds);
@@ -148,6 +155,43 @@ export async function generateAndReplace(
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'topic-replacement-service', method: 'generateAndReplace' },
+    });
+    return FAILED;
+  }
+}
+
+const samePlaces = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((p) => b.includes(p));
+
+/**
+ * Rebuild a fact's topics for its current places: retire the active non-tracked
+ * ones and generate replacements (the existing floor applies). Cloud only;
+ * skipped for a fact whose news is stopped. Discarded when the places change
+ * while the call runs. Never throws.
+ */
+export async function regenerateTopicsForFact(factId: string): Promise<ReplaceOutcome> {
+  try {
+    // shortcut: on-device regeneration is skipped (no cloud batch call), upgrade with an on-device topic path.
+    // Lazy: the store pulls in a wide graph.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useMeraProtocolStore } = require('../../stores/mera-protocol-store') as typeof import('../../stores/mera-protocol-store');
+    if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice) return FAILED;
+
+    const fact = (await getFacts()).find((f) => f.id === factId);
+    if (!fact || isNewsStopped(fact)) return FAILED;
+    const snapshot = factPlaces(fact);
+
+    const owned = (await getByFact(factId)).filter((t) => t.status === 'active');
+    const retireIds = owned.filter((t) => t.provenance !== 'tracked').map((t) => t.id);
+    const outcome = await generateAndReplace(factId, Math.max(1, owned.length), retireIds, async () => {
+      const now = (await getFacts()).find((f) => f.id === factId);
+      return !!now && !isNewsStopped(now) && samePlaces(factPlaces(now), snapshot);
+    });
+    if (outcome.ok) await stampPlacesTopicsFor(factId, snapshot);
+    return outcome;
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'topic-replacement-service', method: 'regenerateTopicsForFact' },
     });
     return FAILED;
   }

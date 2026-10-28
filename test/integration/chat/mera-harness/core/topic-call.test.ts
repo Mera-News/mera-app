@@ -1,6 +1,7 @@
 import {
   MAX_TOPICS_PER_FACT,
   buildTopicUserMessage,
+  capitalizePlaceNames,
   generateTopicsForFact,
   parseTopics,
   parseTopicsDetailed,
@@ -341,5 +342,28 @@ describe('ux2 F6 fix 3: the exclusion list is a dedupe list, never a source of s
       fact: FACT, existingTopics: [], declinedTopics: ['Poland news'], deps: { callModel: jest.fn() },
     });
     expect(msg).toContain('Poland news');
+  });
+});
+
+describe('fbx U3: the Place line and place capitalization', () => {
+  const fact = (places?: string) => ({ statement: 'Interested in water supply', ...(places ? { places } : {}) });
+  const msg = (places?: string) => buildTopicUserMessage({ fact: fact(places), deps: { callModel: jest.fn() } } as never);
+
+  it('adds a Place line only when places are set', () => {
+    expect(msg('Bhopal, Madhya Pradesh, India')).toContain('Place: Bhopal, Madhya Pradesh, India');
+    expect(msg()).not.toContain('Place:');
+  });
+
+  it('capitalizes whole-word place names only', () => {
+    expect(capitalizePlaceNames(['bhopal water cuts', 'bhopali food', 'the european union rules', 'india tax'], 'Bhopal, Madhya Pradesh, India; the European Union'))
+      .toEqual(['Bhopal water cuts', 'bhopali food', 'the European Union rules', 'India tax']);
+    expect(capitalizePlaceNames(['world cup news'], 'anywhere in the world')).toEqual(['world cup news']);
+    expect(capitalizePlaceNames(['x'], null)).toEqual(['x']);
+  });
+
+  it('applies it to the generated topics', async () => {
+    const deps = depsReturning('["bhopal water cuts"]');
+    const out = await generateTopicsForFact({ fact: fact('Bhopal, Madhya Pradesh, India'), deps });
+    expect(out.topics).toEqual(['Bhopal water cuts']);
   });
 });

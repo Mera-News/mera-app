@@ -163,7 +163,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         openedIds,
         handleScrollPositionChange,
         scrollToTop,
-        scrollToRelated,
         factCheckAsked,
         handleStartFactCheck,
         handleToggleSave,
@@ -415,7 +414,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     // act on — the gap this wave closed.
                                     article={article}
                                     publicationName={article.publicationSource?.publication_name ?? null}
-                                    onBrowseRelated={scrollToRelated}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'article',

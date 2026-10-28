@@ -196,6 +196,9 @@ export interface RelevanceComponents {
    *  compiling; absent reads as false. The UI labels such a card so a filtered
    *  subject on screen is never a surprise. */
   hardFilterExempt?: boolean;
+  /** The location rule caught this row (`location-rule.ts`): never read by a
+   *  model, scored 0. `rescoreLocationCaught` finds the rows to re-queue by it. */
+  locationCaught?: boolean;
   /** WHICH PATH SCORED THIS ROW — the same value as `RelevanceResult.mode`,
    *  carried inside the components so it survives into the persisted
    *  `score_components_json` audit (both persist sites JSON-stringify this

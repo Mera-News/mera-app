@@ -179,6 +179,8 @@ const STAGE: Record<ProposalAction['type'], () => ToolCallRecord> = {
   retire_suppression: () => viaPersona({ type: 'retire_suppression', suppressionId: 's1' }),
   set_high_priority: () => viaArticle({ type: 'set_high_priority', topicText: 'cricket', highPriority: true }),
   retire_topic: () => viaArticle({ type: 'retire_topic', topicText: 'cricket' }),
+  set_fact_places: () =>
+    viaArticle({ type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'India' }] }),
   // PersonaUpdateAgent.runCalibration stages a literal proposal; its card is a proposeChanges card.
   run_calibration: () => {
     const proposal: StagedProposal = { id: 'p-cal', explanation: 'x', expectedEffects: 'y', actions: [{ type: 'run_calibration' }] };

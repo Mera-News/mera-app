@@ -76,6 +76,14 @@ describe('cloud: the skill core, isolated', () => {
     expect(user.content).not.toMatch(/Alkmaar|India|Other user facts|User location/);
   });
 
+  it('reads the fact places at RUN time and sends them as a Place line', async () => {
+    const fact = await addFact('Interested in water supply', { places: ['IN|Madhya Pradesh|Bhopal'] }, undefined, { topicsStatus: 'pending' });
+    reply('["bhopal water cuts"]');
+    const out = await run({ factId: fact.id, factStatement: fact.statement, useCloud: true });
+    expect(gatewayCalls('chat')[0].messages[1].content).toContain('Place: Bhopal, Madhya Pradesh, India');
+    expect(out.topics).toEqual(['Bhopal water cuts']);
+  });
+
   it('settles done and mints the topics as active, weighted rows, and tells the fact UI', async () => {
     const fact = await pendingFact(JOB, 'profession: job role and industry');
     reply('["Paediatric nursing pay", "Paediatric ward staffing"]');

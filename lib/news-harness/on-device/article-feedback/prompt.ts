@@ -34,6 +34,12 @@ export interface ArticleChatContext {
   alreadyFollowing?: boolean;
   verdict?: 'like' | 'dislike' | null;
   pending?: string | null;
+  /** Feedback sheet answers, already worded: "question: answer (applied)" or "question (Mera's mistake, changes nothing)". */
+  answers?: string[];
+  /** The screen the reader tapped Tell Mera on. */
+  screen?: string;
+  /** Recent "Mera's mistake" reports, at most 3: "reason; story from <publication>, <country>, <language>". */
+  mistakes?: string[];
 }
 
 const u = (value: string, max: number) => asUntrusted(value, max);
@@ -59,6 +65,8 @@ export function articleChatContext(c: ArticleChatContext): string {
   if (c.alreadyFollowing) blocks.push('The user already follows this story, so do not offer options again.');
   if (c.verdict) blocks.push(c.verdict === 'like' ? 'The user liked this article.' : 'The user disliked this article.');
   if (c.pending) blocks.push(c.pending);
+  if (c.answers?.length) blocks.push(`The user's feedback${c.screen ? ` on the ${u(c.screen, 40)} screen` : ''}:\n${list(c.answers, 6, 200)}`);
+  if (c.mistakes?.length) blocks.push(`Recent mistakes the user reported:\n${list(c.mistakes, 3, 200)}`);
   return blocks.join('\n\n');
 }
 

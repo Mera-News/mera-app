@@ -17,6 +17,7 @@ import { runArticleKevTurn } from '../../../news-harness/on-device/article-feedb
 import { describePending } from '../../../news-harness/on-device/shared';
 import { proposalRequiresUserChoice } from '../../../news-harness/core/proposals';
 import { getSuggestionFeedbackContext } from '../../../database/services/article-suggestion-reads';
+import { getRecentSystemMistakes } from '../../../database/services/article-feedback-service';
 import { ArticleSuggestionStatus } from '../../../database/article-suggestion-status';
 import { ArticleService } from '../../../article-service';
 import type { TrackFeedbackSubject } from '../../../news-harness/core/types';
@@ -36,6 +37,8 @@ import {
   tryKev,
   type OnDeviceAgentOptions,
 } from './run';
+
+const part = (v: string | null | undefined) => (v ? `, ${v}` : '');
 
 function day(raw: string | null | undefined): string | null {
   const ms = raw ? Date.parse(raw) : NaN;
@@ -93,9 +96,11 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
   }
 
   private async context(): Promise<ArticleChatContext> {
-    const [ctx, relatedCoverage] = await Promise.all([
+    const [ctx, relatedCoverage, mistakes] = await Promise.all([
       getSuggestionFeedbackContext(this.target),
       this.getRelatedCoverage(),
+      // Read every turn; the reader never throws.
+      getRecentSystemMistakes(3),
     ]);
     const store = useFloatingChatStore.getState();
     const chat = store.context.kind === 'article-suggestion' ? store.context : null;
@@ -119,6 +124,13 @@ export class ArticleFeedbackOnDeviceAgent implements OnDeviceAgent {
       alreadyFollowing,
       verdict: chat?.verdict ?? null,
       pending: describePending(store.proposal),
+      answers: chat?.feedbackAnswers?.answers.map((a) =>
+        a.cause === 'system'
+          ? `${a.question} (Mera's mistake, changes nothing)`
+          : `${a.question}${a.answer ? `: ${a.answer}` : ''} (applied)`,
+      ),
+      screen: chat?.feedbackAnswers?.screen,
+      mistakes: mistakes.map((m) => `${m.reason}; story from ${m.publication ?? 'a publication'}${part(m.country)}${part(m.language)}`),
     };
   }
 

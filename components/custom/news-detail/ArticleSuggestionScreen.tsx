@@ -99,7 +99,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         scrollViewRef,
         handleScrollPositionChange,
         scrollToTop,
-        scrollToRelated,
         factCheckAsked,
         handleStartFactCheck,
         handleToggleSave,
@@ -241,7 +240,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // articleId), which carries strictly more
                                     // than this screen could hand it — category,
                                     // event type, cluster size and place.
-                                    onBrowseRelated={scrollToRelated}
                                     publicationName={suggestion.publication_name ?? null}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{

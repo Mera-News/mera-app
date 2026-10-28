@@ -14,6 +14,7 @@ import { failTransport, resetNetworkMemory, serve, spyLogger, underClock } from 
 
 const KEY_JSON = 'feedback_tree.json';
 const KEY_VERSION = 'feedback_tree.version';
+const KEY_MIN_SCHEMA = 'feedback_tree.min_schema';
 const KEY_FETCHED_AT = 'feedback_tree.fetched_at';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -33,8 +34,6 @@ const serverTree = (version: number, extra: Record<string, unknown> = {}) =>
     ...extra,
   });
 
-const likeRoot = [{ id: 'like_x', labelKey: 'k', labelDefault: 'X', leaf: { openChat: true } }];
-
 /** Answers FeedbackTree and records the variables of each request. */
 function serveTree(resp: { version: number; minAppSchema: number; treeJson: string } | null) {
   return serve('FeedbackTree', () => ({
@@ -48,24 +47,28 @@ describe('getFeedbackTree', () => {
   });
 
   it('returns the cached tree when a valid one is persisted', async () => {
-    await setSetting(KEY_JSON, serverTree(2));
-    expect((await getFeedbackTree()).version).toBe(2);
+    await setSetting(KEY_JSON, serverTree(7));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    expect((await getFeedbackTree()).version).toBe(7);
   });
 
   it('answers from the memo: a later change to the persisted row is not re-read', async () => {
-    await setSetting(KEY_JSON, serverTree(2));
-    expect((await getFeedbackTree()).version).toBe(2);
+    await setSetting(KEY_JSON, serverTree(7));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    expect((await getFeedbackTree()).version).toBe(7);
 
-    await setSetting(KEY_JSON, serverTree(3));
-    expect((await getFeedbackTree()).version).toBe(2);
+    await setSetting(KEY_JSON, serverTree(8));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    expect((await getFeedbackTree()).version).toBe(7);
 
     resetFeedbackTreeMemo();
-    expect((await getFeedbackTree()).version).toBe(3);
+    expect((await getFeedbackTree()).version).toBe(8);
   });
 
   it('memoises the bundled fallback too: a cache row written afterwards waits for a memo reset', async () => {
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
-    await setSetting(KEY_JSON, serverTree(2));
+    await setSetting(KEY_JSON, serverTree(7));
+    await setSetting(KEY_MIN_SCHEMA, '6');
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
 
@@ -95,51 +98,88 @@ describe('getFeedbackTree', () => {
 
   it.each([
     ['a version that is not a number', JSON.stringify({ version: '2', root: [] })],
-    ['a root that is not an array', JSON.stringify({ version: 2, root: {} })],
-    ['a root node without an id', JSON.stringify({ version: 2, root: [{ labelKey: 'k' }] })],
+    ['a root that is not an array', JSON.stringify({ version: 7, root: {} })],
+    ['a root node without an id', JSON.stringify({ version: 7, root: [{ labelKey: 'k' }] })],
     ['JSON null', 'null'],
     ['a bare number', '7'],
   ])('falls back to bundled for %s', async (_name, json) => {
     await setSetting(KEY_JSON, json);
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
+});
 
-  it('accepts a cached tree carrying a valid likeRoot', async () => {
-    await setSetting(KEY_JSON, serverTree(2, { likeRoot }));
-    expect((await getFeedbackTree()).likeRoot).toEqual(likeRoot);
+describe('newest eligible tree', () => {
+  it('prefers the bundled v6 over a cached v5 built for schema 6', async () => {
+    await setSetting(KEY_JSON, serverTree(5));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
 
-  it('falls back to bundled when the cached likeRoot is malformed', async () => {
-    // likeRoot present but not an array of valid nodes (missing `id`).
-    await setSetting(KEY_JSON, serverTree(2, { likeRoot: [{ labelKey: 'k', labelDefault: 'X' }] }));
+  it('treats a cached tree stored without min_schema as below 6, even when newer', async () => {
+    await setSetting(KEY_JSON, serverTree(9));
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
+  });
+
+  it('prefers a cached tree equal in version to the bundled one', async () => {
+    await setSetting(KEY_JSON, serverTree(6, { marker: 1 }));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    expect(await getFeedbackTree()).toMatchObject({ marker: 1 });
+  });
+
+  it('picks a served v7 built for schema 6 and stores its min_schema', async () => {
+    serveTree({ version: 7, minAppSchema: 6, treeJson: serverTree(7) });
+    await refreshFeedbackTree({ force: true });
+    expect(await getSetting(KEY_MIN_SCHEMA)).toBe('6');
+    expect((await getFeedbackTree()).version).toBe(7);
+  });
+
+  it('drops a served tree needing schema 7', async () => {
+    serveTree({ version: 8, minAppSchema: 7, treeJson: serverTree(8) });
+    await refreshFeedbackTree({ force: true });
+    expect(await getSetting(KEY_JSON)).toBeNull();
+    expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
+  });
+
+  it('ignores a served tree built for schema 5 even at a higher version', async () => {
+    serveTree({ version: 9, minAppSchema: 5, treeJson: serverTree(9) });
+    await refreshFeedbackTree({ force: true });
+    expect(await getSetting(KEY_JSON)).toBeNull();
+    expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
+  });
+
+  it('sends no current version while the cache is ineligible', async () => {
+    await setSetting(KEY_VERSION, '5');
+    const seen = serveTree(null);
+    await refreshFeedbackTree({ force: true });
+    expect(seen).toEqual([{ currentVersion: null }]);
   });
 });
 
 describe('refreshFeedbackTree', () => {
   it('persists a newer tree, stamps the version and updates the memo', async () => {
-    serveTree({ version: 2, minAppSchema: 1, treeJson: serverTree(2) });
+    serveTree({ version: 7, minAppSchema: 6, treeJson: serverTree(7) });
 
     await refreshFeedbackTree({ force: true });
 
-    expect(await getSetting(KEY_JSON)).toBe(serverTree(2));
-    expect(await getSetting(KEY_VERSION)).toBe('2');
+    expect(await getSetting(KEY_JSON)).toBe(serverTree(7));
+    expect(await getSetting(KEY_VERSION)).toBe('7');
     // memo updated: the next read is the new tree without touching the row
-    expect((await getFeedbackTree()).version).toBe(2);
+    expect((await getFeedbackTree()).version).toBe(7);
   });
 
   it('replaces a cached tree with a newer server tree and sends the cached version', async () => {
-    await setSetting(KEY_JSON, serverTree(2));
-    await setSetting(KEY_VERSION, '2');
-    expect((await getFeedbackTree()).version).toBe(2);
-    const seen = serveTree({ version: 3, minAppSchema: 1, treeJson: serverTree(3) });
+    await setSetting(KEY_JSON, serverTree(7));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    await setSetting(KEY_VERSION, '7');
+    expect((await getFeedbackTree()).version).toBe(7);
+    const seen = serveTree({ version: 8, minAppSchema: 6, treeJson: serverTree(8) });
 
     await refreshFeedbackTree({ force: true });
 
-    expect(seen).toEqual([{ currentVersion: 2 }]);
-    expect(await getSetting(KEY_JSON)).toBe(serverTree(3));
-    expect(await getSetting(KEY_VERSION)).toBe('3');
-    expect((await getFeedbackTree()).version).toBe(3);
+    expect(seen).toEqual([{ currentVersion: 7 }]);
+    expect(await getSetting(KEY_JSON)).toBe(serverTree(8));
+    expect(await getSetting(KEY_VERSION)).toBe('8');
+    expect((await getFeedbackTree()).version).toBe(8);
   });
 
   it('sends a null current version when nothing is cached', async () => {
@@ -150,7 +190,8 @@ describe('refreshFeedbackTree', () => {
 
   it('sends the cached version and no-ops on not-modified (empty treeJson)', async () => {
     await setSetting(KEY_VERSION, '5');
-    const seen = serveTree({ version: 5, minAppSchema: 1, treeJson: '' });
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    const seen = serveTree({ version: 5, minAppSchema: 6, treeJson: '' });
 
     await refreshFeedbackTree({ force: true });
 
@@ -171,37 +212,26 @@ describe('refreshFeedbackTree', () => {
   });
 
   it('keeps a cached tree when the server tree needs a newer app schema', async () => {
-    await setSetting(KEY_JSON, serverTree(2));
-    await setSetting(KEY_VERSION, '2');
+    await setSetting(KEY_JSON, serverTree(7));
+    await setSetting(KEY_MIN_SCHEMA, '6');
+    await setSetting(KEY_VERSION, '7');
     serveTree({ version: 9, minAppSchema: APP_FEEDBACK_SCHEMA + 1, treeJson: serverTree(9) });
 
     await refreshFeedbackTree({ force: true });
 
-    expect(await getSetting(KEY_JSON)).toBe(serverTree(2));
-    expect((await getFeedbackTree()).version).toBe(2);
+    expect(await getSetting(KEY_JSON)).toBe(serverTree(7));
+    expect((await getFeedbackTree()).version).toBe(7);
   });
 
   it('ACCEPTS a tree whose minAppSchema exactly equals the app schema', async () => {
-    const json = serverTree(2, { likeRoot });
-    serveTree({ version: 2, minAppSchema: APP_FEEDBACK_SCHEMA, treeJson: json });
+    const json = serverTree(7);
+    serveTree({ version: 7, minAppSchema: APP_FEEDBACK_SCHEMA, treeJson: json });
 
     await refreshFeedbackTree({ force: true });
 
     expect(await getSetting(KEY_JSON)).toBe(json);
     const tree = await getFeedbackTree();
-    expect(tree.version).toBe(2);
-    expect(tree.likeRoot).toHaveLength(1);
-  });
-
-  // Pins APP_FEEDBACK_SCHEMA itself: the live server tree (v3) publishes minAppSchema 4, which
-  // behaves differently at 3 and at 4. Every other case here is indifferent to a botched bump.
-  it('ACCEPTS a tree requiring app schema 4 (the desc-carrying server tree)', async () => {
-    serveTree({ version: 3, minAppSchema: 4, treeJson: serverTree(3) });
-
-    await refreshFeedbackTree({ force: true });
-
-    expect(await getSetting(KEY_JSON)).toBe(serverTree(3));
-    expect((await getFeedbackTree()).version).toBe(3);
+    expect(tree.version).toBe(7);
   });
 
   // Pinned to APP_FEEDBACK_SCHEMA + 1 rather than a literal: this is about the COMPARISON, and a
@@ -215,8 +245,8 @@ describe('refreshFeedbackTree', () => {
     expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
 
-  it('rejects (does not persist) a server tree with a malformed likeRoot', async () => {
-    serveTree({ version: 2, minAppSchema: 2, treeJson: serverTree(2, { likeRoot: 'not-an-array' }) });
+  it('rejects (does not persist) a server tree with a node missing its id', async () => {
+    serveTree({ version: 7, minAppSchema: 6, treeJson: JSON.stringify({ version: 7, root: [{ labelKey: 'k' }] }) });
 
     await refreshFeedbackTree({ force: true });
 
@@ -234,7 +264,7 @@ describe('refreshFeedbackTree', () => {
   });
 
   it('logs and persists nothing for a treeJson that is not JSON', async () => {
-    serveTree({ version: 2, minAppSchema: 1, treeJson: '{not json' });
+    serveTree({ version: 7, minAppSchema: 6, treeJson: '{not json' });
 
     await expect(refreshFeedbackTree({ force: true })).resolves.toBeUndefined();
 
@@ -266,7 +296,7 @@ describe('refreshFeedbackTree', () => {
   describe('the 24h throttle', () => {
     it('skips the request when the last check was recent', async () => {
       await setSetting(KEY_FETCHED_AT, String(Date.now()));
-      const seen = serveTree({ version: 2, minAppSchema: 1, treeJson: serverTree(2) });
+      const seen = serveTree({ version: 7, minAppSchema: 6, treeJson: serverTree(7) });
 
       await refreshFeedbackTree();
 
@@ -276,12 +306,12 @@ describe('refreshFeedbackTree', () => {
 
     it('asks again once the last check is a day old', async () => {
       await setSetting(KEY_FETCHED_AT, String(Date.now() - DAY_MS - 1000));
-      const seen = serveTree({ version: 2, minAppSchema: 1, treeJson: serverTree(2) });
+      const seen = serveTree({ version: 7, minAppSchema: 6, treeJson: serverTree(7) });
 
       await refreshFeedbackTree();
 
       expect(seen).toHaveLength(1);
-      expect(await getSetting(KEY_JSON)).toBe(serverTree(2));
+      expect(await getSetting(KEY_JSON)).toBe(serverTree(7));
     });
 
     it('asks on the first run, when there is no stamp', async () => {

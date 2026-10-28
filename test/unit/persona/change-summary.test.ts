@@ -77,4 +77,14 @@ describe('changeSummary', () => {
         );
         expect(changeSummary(t, { id: 'x', actionType: 'mystery', actionJson: '{' }, ctx())).toBe('personaAudit.actionLabels.unknown');
     });
+
+    it('words the fact-places and news-stopped rows with their own keys', () => {
+        const targets = new Map([['f1', { text: 'Follows cricket' }]]);
+        expect(changeSummary(t, row('set_fact_places', { targetId: 'f1' }), ctx({ targets }))).toBe(
+            'personaAudit.summary.placesSet {"name":"Follows cricket"}',
+        );
+        expect(changeSummary(t, row('set_fact_news_stopped', { targetId: 'f1' }), ctx({ targets }))).toBe(
+            'personaAudit.summary.newsStopped {"name":"Follows cricket"}',
+        );
+    });
 });

@@ -60,7 +60,8 @@ export function collectDocuments(): AppDocument[] {
   for (const dir of SCAN_DIRS) {
     for (const file of sourceFiles(path.join(ROOT, dir))) {
       const source = fs.readFileSync(file, 'utf8');
-      const opener = /\bgql`/g;
+      // The call form gql(`...`) counts too: a document kept out of check:schema is still sent.
+      const opener = /\bgql\(?`/g;
       while (opener.exec(source) !== null) {
         const end = source.indexOf('`', opener.lastIndex);
         const body = source.slice(opener.lastIndex, end).trim();

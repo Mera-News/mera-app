@@ -139,6 +139,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
       needsToolFormat: false,
       languageName: 'English',
       factCheck: true,
+      factPlaces: true,
     });
 
     expect(local).not.toContain('proposeFactCheck');
@@ -420,6 +421,77 @@ describe('buildFeedbackContext', () => {
     expect(ctx).toContain('## USER VERDICT');
     expect(ctx).toContain('DISLIKED');
     expect(ctx).toContain('TAPPED OPTIONS: Not a good suggestion → Wrong topic');
+  });
+
+  it('renders FEEDBACK GIVEN in place of USER VERDICT when the sheet handed answers', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+      verdict: 'dislike',
+      tappedOptions: ['Not a good suggestion'],
+      feedbackAnswers: {
+        answers: [
+          { cause: 'config', question: 'Wrong place for me', answer: 'India' },
+          { cause: 'system', question: "This story isn't about \"Pensioner\"" },
+          { cause: 'source', question: 'Problem with realitatea.net', answer: 'Show fewer from this site' },
+        ],
+        screen: 'Anything else?',
+        fact: 'Pensioner',
+      },
+    });
+    expect(ctx).toContain('## FEEDBACK GIVEN');
+    expect(ctx).toContain('- Wrong place for me: India (applied)');
+    expect(ctx).toContain('- This story isn\'t about "Pensioner" (marked as Mera\'s mistake, changes nothing)');
+    expect(ctx).toContain('- Problem with realitatea.net: Show fewer from this site (applied)');
+    expect(ctx).toContain('About the fact: Pensioner');
+    expect(ctx).toContain('Opened from: Anything else?');
+    expect(ctx).not.toContain('## USER VERDICT');
+    expect(ctx).not.toContain('TAPPED OPTIONS');
+  });
+
+  it('renders recent mistakes as context only, capped at five', () => {
+    const mistakes = Array.from({ length: 7 }, (_, i) => ({
+      reason: `reason ${i}`,
+      factId: 'f1',
+      country: 'RO',
+      language: i === 0 ? null : 'ro',
+      publication: 'realitatea.net',
+      at: NOW_MS - i,
+    }));
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+      mistakes,
+    });
+    expect(ctx).toContain("## MERA'S RECENT MISTAKES");
+    expect(ctx).toContain('never change the profile');
+    expect(ctx).toContain('- reason 0 (fact [f1]; realitatea.net, RO)');
+    expect(ctx).toContain('- reason 1 (fact [f1]; realitatea.net, RO, ro)');
+    expect(ctx).toContain('reason 4');
+    expect(ctx).not.toContain('reason 5');
+  });
+
+  it('writes each fact with its places as names, never codes', () => {
+    const placed: Fact = {
+      ...fact('f1', 'Senior ML engineer at DeepMind'),
+      metadata: { places: ['IN|Madhya Pradesh|Bhopal'] },
+    };
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [placed],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).toContain('- [f1] Senior ML engineer at DeepMind (news from: Bhopal, Madhya Pradesh, India)');
+    expect(ctx.match(/news from: Bhopal/g)).toHaveLength(2); // producing facts and all facts
+    expect(ctx).not.toContain('IN|');
   });
 
   it('omits the USER VERDICT block when no verdict is present', () => {
@@ -741,6 +813,8 @@ describe('getArticleFeedbackToolDefinitions', () => {
       'retire_suppression',
       'set_high_priority',
       'retire_topic',
+      // fbx: where a fact's news comes from, names in and codes out.
+      'set_fact_places',
     ]);
   });
 
@@ -1375,5 +1449,57 @@ describe('decideProposeChanges — retire_suppression', () => {
       .sideEffects!.proposal!;
     const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, proposal });
     expect(ctx).toContain('remove the filter "celebrity gossip"');
+  });
+});
+
+describe('decideProposeChanges — set_fact_places', () => {
+  it('is offered in the prompt on CLOUD only, so the local prompt keeps its bytes', () => {
+    expect(buildArticleFeedbackSystemPrompt({ needsToolFormat: false, factPlaces: true })).toContain('set_fact_places');
+    expect(buildArticleFeedbackSystemPrompt({ needsToolFormat: true })).not.toContain('set_fact_places');
+  });
+
+  const stage = (action: Record<string, unknown>) =>
+    decideProposeChanges({ explanation: 'x', expected_effects: 'y', actions: [action] }, new Set(['f1']));
+
+  it('decodes place names into codes and keeps the names for the card', () => {
+    const result = stage({
+      type: 'set_fact_places',
+      fact_id: 'f1',
+      places: [
+        { level: 'city', country: 'India', region: 'Madhya Pradesh', city: 'Bhopal' },
+        { level: 'country', country: 'Netherlands' },
+      ],
+    });
+    expect(result.sideEffects?.proposal?.actions).toEqual([
+      {
+        type: 'set_fact_places',
+        fact_id: 'f1',
+        places: ['IN|Madhya Pradesh|Bhopal', 'NL'],
+        label: 'Bhopal, Madhya Pradesh, India; Netherlands',
+      },
+    ]);
+  });
+
+  it('takes anywhere in the world on its own', () => {
+    const result = stage({ type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'anywhere' }] });
+    expect(result.sideEffects?.proposal?.actions[0]).toMatchObject({ places: ['GLOBAL'], label: 'anywhere in the world' });
+  });
+
+  it('refuses a code, an unknown name, an unknown fact and an empty list', () => {
+    for (const action of [
+      { type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'IN' }] },
+      { type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'Atlantis' }] },
+      { type: 'set_fact_places', fact_id: 'f9', places: [{ level: 'country', country: 'India' }] },
+      { type: 'set_fact_places', fact_id: 'f1', places: [] },
+    ]) {
+      expect(typeof (stage(action).result as { error?: unknown }).error).toBe('string');
+    }
+  });
+
+  it('renders a pending change by names, never codes', () => {
+    const proposal = stage({ type: 'set_fact_places', fact_id: 'f1', places: [{ level: 'country', country: 'India' }] })
+      .sideEffects!.proposal!;
+    const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, fallbackTitle: 't', proposal });
+    expect(ctx).toContain('news for [f1] from "India"');
   });
 });

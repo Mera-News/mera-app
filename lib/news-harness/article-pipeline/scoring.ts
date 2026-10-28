@@ -15,6 +15,8 @@ import {
   buildBatchScoringUserMessage,
   buildFeedVerifierUserMessage,
   buildReasonUserMessage,
+  RELATED_FACT_MAX_CHARS,
+  RELATED_FACT_PLACES_MAX_CHARS,
 } from '../prompts/prompts';
 import {
   DEFAULT_HARNESS_CONFIG,
@@ -206,6 +208,16 @@ export function buildUserContext(
   return `[User facts] ${statements.join('. ')}.`;
 }
 
+/** A related fact as the cloud prompts show it: the statement, plus where its news should
+ *  come from when `places` (names, built by describeFactPlaces) is set. Kev never uses this. */
+export function relatedFactLine(f: { statement: string; places?: string }): string {
+  // The statement takes the builders' old 200-char cap; the suffix comes after it whole.
+  const statement = f.statement.slice(0, RELATED_FACT_MAX_CHARS);
+  return f.places
+    ? `${statement} (news from: ${f.places.slice(0, RELATED_FACT_PLACES_MAX_CHARS)})`
+    : statement;
+}
+
 export function isEligible(c: ScoringCandidate): boolean {
   return Boolean(c.titleEn && c.descriptionEn && c.relatedFacts.length > 0);
 }
@@ -337,7 +349,7 @@ export function buildScoreCallForChunk(
         c.publicationName ?? c.meta?.publicationName,
         c.languageCode,
       ),
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     })),
     promptVariant,
   });
@@ -475,7 +487,7 @@ export function buildReasonCallsForSubset(
       articleDescription: c.descriptionEn ?? '',
       articleCountry: resolveCountryName(c.countryCode),
       relevance: relevanceMap[c.id],
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
       publication: buildPublicationLabel(
         c.publicationName ?? c.meta?.publicationName,
         c.languageCode,
@@ -556,7 +568,7 @@ export function buildFeedVerifierCalls(
         title: c.titleEn ?? '',
         description: c.descriptionEn ?? '',
         country: resolveCountryName(c.countryCode),
-        relatedFacts: c.relatedFacts.map((f) => f.statement),
+        relatedFacts: c.relatedFacts.map(relatedFactLine),
       })),
     });
     const verifyId = `verify:${idx}`;

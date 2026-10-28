@@ -1,0 +1,102 @@
+{
+  "ar": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "تغيير مصدر الأخبار لهذا"
+    }
+  },
+  "de": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Ändern, woher die Nachrichten dazu kommen"
+    }
+  },
+  "en": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Change where news for this comes from"
+    }
+  },
+  "es": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Cambiar de dónde vienen las noticias sobre esto"
+    }
+  },
+  "fr": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Changer d'où viennent les actualités sur ce sujet"
+    }
+  },
+  "hi": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "बदलें कि इसकी खबरें कहां से आती हैं"
+    }
+  },
+  "id": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Ubah asal berita untuk ini"
+    }
+  },
+  "it": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Cambia da dove arrivano le notizie su questo"
+    }
+  },
+  "ja": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "このニュースの対象地域を変更"
+    }
+  },
+  "ko": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "이 소식의 지역 변경"
+    }
+  },
+  "nl": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Wijzig waar het nieuws hierover vandaan komt"
+    }
+  },
+  "pl": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Zmień, skąd pochodzą wiadomości na ten temat"
+    }
+  },
+  "pt-BR": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Mudar de onde vêm as notícias sobre isso"
+    }
+  },
+  "ru": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Изменить, откуда приходят новости об этом"
+    }
+  },
+  "th": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "เปลี่ยนแหล่งที่มาของข่าวเรื่องนี้"
+    }
+  },
+  "tr": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Bununla ilgili haberlerin nereden geleceğini değiştir"
+    }
+  },
+  "uk": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Змінити, звідки надходять новини про це"
+    }
+  },
+  "vi": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "Đổi nơi lấy tin về điều này"
+    }
+  },
+  "zh-CN": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "更改此内容的新闻来源地区"
+    }
+  },
+  "zh-TW": {
+    "articleFeedback": {
+      "actionSetFactPlaces": "變更此內容的新聞來源地區"
+    }
+  }
+}

@@ -15,7 +15,7 @@
 
 import { getFacts } from '../../database/services/fact-service';
 import { getSuggestionFeedbackContext } from '../../database/services/article-suggestion-reads';
-import { markFeedbackProcessedFor } from '../../database/services/article-feedback-service';
+import { getRecentSystemMistakes, markFeedbackProcessedFor } from '../../database/services/article-feedback-service';
 import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { ArticleService } from '../../article-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
@@ -273,6 +273,7 @@ export class ArticleFeedbackAgent implements IAgent {
       // part of the cache key below for the same reason webSearch is: a prompt
       // built in one mode must not keep serving after the user switches.
       factCheck: mode === 'CLOUD',
+      factPlaces: mode === 'CLOUD',
     });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
@@ -317,6 +318,8 @@ export class ArticleFeedbackAgent implements IAgent {
     const relatedCoverage = await this.getRelatedCoverage();
     // Active filters so the agent can offer to REMOVE one (D6 chat-first parity).
     const activeSuppressions = await this.loadActiveSuppressions();
+    // Read every turn so a mistake marked mid-chat shows; the reader never throws.
+    const mistakes = await getRecentSystemMistakes(5);
 
     return buildFeedbackContext({
       // The real clock lives HERE (the adapter), never inside the pure builder —
@@ -332,7 +335,10 @@ export class ArticleFeedbackAgent implements IAgent {
       relatedCoverage,
       verdict,
       tappedOptions,
+      feedbackAnswers:
+        storeContext.kind === 'article-suggestion' ? storeContext.feedbackAnswers : undefined,
       activeSuppressions,
+      mistakes,
       factCheck,
     });
   }

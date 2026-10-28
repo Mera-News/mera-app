@@ -25,6 +25,7 @@ import {
   countUnprocessedFeedback,
   markFeedbackProcessed,
 } from './article-feedback-service';
+import { loadSavedSuggestions } from './saved-article-suggestion-service';
 import { getAllTopicSnapshots, getAllByNormalizedText } from './topic-service';
 import { applyPersonaAction, type PersonaAction } from './persona-action-executor';
 import { cloudComplete } from '../../llm/cloudComplete';
@@ -35,6 +36,7 @@ import logger from '../../logger';
 import { ACTION_NAMES, type ActionName } from '../../news-harness/persona-management/action-names';
 import {
   analyzeFeedback,
+  parseFeedbackAnswers,
   type DigestCandidate,
   type DigestConflict,
   type DigestPersonaAction,
@@ -179,15 +181,20 @@ export async function getPendingPlan(): Promise<PendingPlan | null> {
 
 /** Parse an article_feedback row's `context_json` into the digest context +
  *  tree path (the two are stored merged on the same snapshot). */
-function parseContext(raw: string | null): { context: DigestSignalContext; treePath?: string[] } {
-  if (!raw) return { context: {} };
+function parseContext(raw: string | null): {
+  context: DigestSignalContext;
+  treePath?: string[];
+  answers: DigestSignal['answers'];
+  factId?: string;
+} {
+  if (!raw) return { context: {}, answers: [] };
   let parsed: Record<string, unknown>;
   try {
     const p = JSON.parse(raw);
-    if (!p || typeof p !== 'object') return { context: {} };
+    if (!p || typeof p !== 'object') return { context: {}, answers: [] };
     parsed = p as Record<string, unknown>;
   } catch {
-    return { context: {} };
+    return { context: {}, answers: [] };
   }
   const context: DigestSignalContext = {};
   if (Array.isArray(parsed.matchedTopics)) {
@@ -221,7 +228,12 @@ function parseContext(raw: string | null): { context: DigestSignalContext; treeP
   const treePath = Array.isArray(parsed.treePath)
     ? parsed.treePath.filter((n): n is string => typeof n === 'string')
     : undefined;
-  return { context, treePath: treePath && treePath.length > 0 ? treePath : undefined };
+  return {
+    context,
+    treePath: treePath && treePath.length > 0 ? treePath : undefined,
+    answers: parseFeedbackAnswers(parsed),
+    factId: typeof parsed.fact_id === 'string' && parsed.fact_id ? parsed.fact_id : undefined,
+  };
 }
 
 // ── The daily cycle ───────────────────────────────────────────────────────────
@@ -258,15 +270,16 @@ export async function runOptimisationCycle(opts?: {
     return { ran: false, reason: 'too_few_signals', autoCount: 0, reviewCount: 0 };
   }
 
-  const [rows, topicSnapshots, rejected] = await Promise.all([
+  const [rows, topicSnapshots, rejected, savedRows] = await Promise.all([
     getUnprocessedFeedback(), // newest-first
     getAllTopicSnapshots(),
     readRejected(),
+    loadSavedSuggestions(),
   ]);
 
   const capped = rows.slice(0, MAX_SIGNALS_PER_RUN);
   const signals: DigestSignal[] = capped.map((r) => {
-    const { context, treePath } = parseContext(r.contextJson);
+    const { context, treePath, answers, factId } = parseContext(r.contextJson);
     return {
       id: r.id,
       sentiment: r.sentiment === 'like' ? 'like' : 'dislike',
@@ -274,6 +287,8 @@ export async function runOptimisationCycle(opts?: {
       createdAtMs: r.createdAt instanceof Date ? r.createdAt.getTime() : now,
       context,
       ...(treePath ? { treePath } : {}),
+      ...(answers?.length ? { answers } : {}),
+      ...(factId ? { factId } : {}),
     };
   });
 
@@ -286,7 +301,13 @@ export async function runOptimisationCycle(opts?: {
     highPriority: false, // unused by the analyzer; snapshot lacks it
   }));
 
-  const candidates = analyzeFeedback({ signals, topics, now, rejectedFingerprints: rejected });
+  const candidates = analyzeFeedback({
+    signals,
+    topics,
+    now,
+    saved: savedRows.map((r) => ({ title: r.title_en ?? '', topicTexts: r.userTopicIds ?? [] })),
+    rejectedFingerprints: rejected,
+  });
 
   // Stamp the run regardless of outcome so the cooldown holds.
   await setSetting(LAST_RUN_KEY, String(now));

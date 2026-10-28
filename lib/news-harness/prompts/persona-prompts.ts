@@ -966,10 +966,12 @@ export function buildComboPassUserMessage(
   fact: string,
   supporting: readonly string[],
   ceiling: number = COMBO_PASS_MAX_TOPICS,
+  places?: string | null,
 ): string {
   const clean = (t: string) => asUntrusted(t, t.length);
   return [
     `Fact: "${clean(fact)}"`,
+    ...(places ? [`Place: ${clean(places)}`] : []),
     `Other user facts: ${supporting.map(clean).join('; ')}`,
     `Generate at most ${ceiling} topics`,
   ].join('\n');

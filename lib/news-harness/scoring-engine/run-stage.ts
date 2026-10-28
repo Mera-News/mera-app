@@ -6,6 +6,9 @@
 //   0. HARD "not interested" screen (persona.hardSuppressions) — matching
 //      candidates are dropped here and returned in `excludedIds`; they never
 //      reach the math, the LLM score or the reason pass.
+//  0b. LOCATION rule (persona.location, location-rule.ts) — a story from a
+//      country none of its matched facts point at is scored 0, its components
+//      marked `locationCaught`, and it reaches no model.
 //   1. computeRelevance() per candidate (on-device math) → computed score +
 //      components + mode. The math score is the FALLBACK that stands if the LLM
 //      call fails, and it is what carries the SOFT suppression penalty.
@@ -43,6 +46,7 @@ import {
 } from './relevance';
 import type { PersonaScoringContext } from './persona-context';
 import { screenHardSuppressionsDetailed } from './suppression';
+import { screenLocationRule } from './location-rule';
 
 /** One candidate for the stage. `input` carries the rich metadata the math +
  *  math needs; `legacy` is the ScoringCandidate shape the tiered LLM prompt
@@ -78,6 +82,10 @@ export interface StageResult {
    *  (demoted, floored at HEADLINE_BASE_FLOOR) and DO appear in every map above;
    *  the value is what the card's "you filtered this" label names. */
   exemptedValueById: Map<string, string>;
+  /** Caught by the location rule (`persona.location`): math components kept and
+   *  marked `locationCaught`, raw score 0, never sent to the scorer. Empty when
+   *  the persona carries no location context. */
+  locationCaughtIds: Set<string>;
 }
 
 /** Scores every candidate in ONE call; returns app-scale relevance (0..1) per
@@ -159,23 +167,32 @@ export async function computeAndScore(
     });
   }
 
+  // --- 0b. location rule: caught rows are scored 0 here and reach no model ---
+  const locationCaughtIds = persona.location
+    ? screenLocationRule(active, persona.location)
+    : new Set<string>();
+
   // --- 1. math for every active candidate ------------------------------------
   // No partition any more: with the judge gone there is nowhere else to send a
   // candidate, so `mode` is recorded for the Observability funnel and nothing
   // branches on it.
   for (const c of active) {
     const r = computeRelevance(c.input, persona, eng, nowMs);
+    const caught = locationCaughtIds.has(c.input.id);
     computedScoreMap.set(c.input.id, r.score);
-    componentsMap.set(c.input.id, r.components);
+    componentsMap.set(c.input.id, caught ? { ...r.components, locationCaught: true } : r.components);
     modeMap.set(c.input.id, r.mode);
-    rawScoreMap.set(c.input.id, r.score); // fail-open default; the LLM overwrites
+    // fail-open default; the LLM overwrites. A caught row stays at 0.
+    rawScoreMap.set(c.input.id, caught ? 0 : r.score);
   }
 
   // --- 2. score for EVERY active candidate ------------------------------------
   // `c.legacy` is the ScoringCandidate the tiered prompt needs; math-only
   // callers (the offline eval) omit it and get the math score untouched, which
   // is also what `skipLlm` buys.
-  const scorable = opts.skipLlm ? [] : active.filter((c) => c.legacy);
+  const scorable = opts.skipLlm
+    ? []
+    : active.filter((c) => c.legacy && !locationCaughtIds.has(c.input.id));
 
   // The LLM (or injected scorer) knows nothing about the user's filters, so its
   // score REPLACES the math score that carried them. Re-apply the SAME
@@ -275,5 +292,6 @@ export async function computeAndScore(
     excludedIds,
     excludedValueById,
     exemptedValueById,
+    locationCaughtIds,
   };
 }
