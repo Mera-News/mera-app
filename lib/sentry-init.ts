@@ -234,6 +234,30 @@ function sentryEnvironment(): string {
 export const SENTRY_ENABLED =
   !__DEV__ || process.env.EXPO_PUBLIC_SENTRY_IN_DEV === 'true';
 
+// A report opened with a prefilled draft (lib/feedback.ts showFeedback({ prefill }))
+// is sent anonymously: no user, breadcrumbs or tags. beforeSend does NOT run for
+// feedback events, so the strip is an event processor (an integration's
+// processEvent, which the tests' partial Sentry mocks tolerate), and it consumes
+// the flag once because processing is async and may finish after the sheet closes.
+let prefilledReportPending = false;
+export function setPrefilledReportPending(value: boolean): void {
+  prefilledReportPending = value;
+}
+
+const anonymisePrefilledFeedback = {
+  name: 'AnonymisePrefilledFeedback',
+  setupOnce() {},
+  processEvent<T extends { type?: string; user?: unknown; breadcrumbs?: unknown; tags?: unknown }>(event: T): T {
+    if (event.type === 'feedback' && prefilledReportPending) {
+      delete event.user;
+      delete event.breadcrumbs;
+      delete event.tags;
+      prefilledReportPending = false;
+    }
+    return event;
+  },
+};
+
 if (SENTRY_ENABLED) {
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -285,6 +309,7 @@ if (SENTRY_ENABLED) {
       // (showName, enableTakeScreenshot, …) live on the component. Dark-mode-only
       // app; the accent colors style the submit button to brand purple
       // (Mera orange, primary-400 = rgb(231,138,83)).
+      anonymisePrefilledFeedback,
       Sentry.feedbackIntegration({
         colorScheme: 'dark',
         themeDark: {

@@ -18,6 +18,7 @@ import {
   failTopicGeneration,
   markTopicGenerationSettled,
 } from '../../database/services/topic-generation-status-service';
+import { describeFactPlaces } from '../../news-harness/persona-management/fact-places';
 import { generateTopicsForFact as generateViaSkill, topicSkillForAttribute } from '@/lib/mera-harness';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
@@ -118,7 +119,12 @@ async function runSkillGuided(
   declined: Set<string>,
 ): Promise<{ topics: string[]; dropped: { veto: number; filter: number } }> {
   const out = await generateViaSkill({
-    fact: { statement: fact.statement, questionnaireAttribute: fact.questionnaireAttribute ?? null },
+    // Places are read from the fact now, never from the job payload.
+    fact: {
+      statement: fact.statement,
+      questionnaireAttribute: fact.questionnaireAttribute ?? null,
+      ...(describeFactPlaces(fact) ? { places: describeFactPlaces(fact)! } : {}),
+    },
     skillId: payload.skillId ?? topicSkillForAttribute(fact.questionnaireAttribute),
     existingTopics: ownTopics,
     declinedTopics: [...declined],

@@ -4,6 +4,7 @@
 import countries from 'i18n-iso-countries';
 import {
   blocFor,
+  countriesInBloc,
   lookupPlace,
   PLACE_CANDIDATE_LIMIT,
   PLACE_SEARCH_MIN_CHARS,
@@ -249,5 +250,18 @@ describe('blocFor', () => {
     expect(blocFor('nl')).toBe('EU');
     expect(blocFor('ZZ')).toBeNull();
     expect(blocFor('')).toBeNull();
+  });
+});
+
+describe('countriesInBloc', () => {
+  it('widens the one-bloc-per-country map to what each bloc name means', () => {
+    expect(countriesInBloc('EU')).toHaveLength(27);
+    expect(countriesInBloc('EU')).not.toContain('NO');
+    expect(countriesInBloc('EEA')).toEqual(expect.arrayContaining(['DE', 'IS', 'LI', 'NO']));
+    expect(countriesInBloc('EFTA')).toEqual(['CH', 'IS', 'LI', 'NO']);
+    const europe = countriesInBloc('Europe');
+    for (const cc of ['DE', 'NO', 'CH', 'GB', 'RU', 'UA']) expect(europe).toContain(cc);
+    expect(europe).not.toContain('TR');
+    expect(countriesInBloc('Asia')).toContain('IN');
   });
 });

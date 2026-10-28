@@ -556,3 +556,53 @@ describe('golden — reason prompts never teach the rubric labels as prose', () 
     }
   });
 });
+
+describe('golden — related fact places', () => {
+  const withPlaces = (id: string): ScoringCandidate => ({
+    ...candidate(id),
+    relatedFacts: [
+      { id: `f-${id}`, statement: `related fact ${id}`, places: 'Bhopal, Madhya Pradesh, India' },
+      { id: `g-${id}`, statement: 'second fact' },
+    ],
+  });
+
+  it('shim and harness render "(news from: ...)" in score and reason prompts, identically', async () => {
+    const candidates = [withPlaces('a')];
+    const shim = await shimBuildRelevanceCalls(candidates);
+    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    const [shimPrompt] = stripNonces(shim.calls.map((c) => c.prompt));
+    expect(shimPrompt).toEqual(stripNonces(harness.calls.map((c) => c.prompt))[0]);
+    expect(shimPrompt).toContain(
+      'Related User Fact: related fact a (news from: Bhopal, Madhya Pradesh, India); second fact',
+    );
+
+    const shimR = await shimBuildReasonCallsForSubset(candidates, { a: 0.8 }, 0.3);
+    const harnessR = harnessBuildReasonCallsForSubset(candidates, { a: 0.8 }, 0.3, FACT_STATEMENTS);
+    expect(stripNonces(shimR.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(harnessR.calls.map((c) => c.prompt)),
+    );
+    expect(shimR.calls[0].prompt).toContain('(news from: Bhopal, Madhya Pradesh, India)');
+  });
+
+  it('a long statement is capped before the suffix, so a place name is never cut', async () => {
+    const long = 'x'.repeat(260);
+    const c: ScoringCandidate = {
+      ...candidate('a'),
+      relatedFacts: [{ id: 'f-a', statement: long, places: 'Bhopal, Madhya Pradesh, India' }],
+    };
+    const shim = await shimBuildRelevanceCalls([c]);
+    const harness = harnessBuildRelevanceCalls([c], FACT_STATEMENTS);
+    const [shimPrompt] = stripNonces(shim.calls.map((x) => x.prompt));
+    expect(shimPrompt).toEqual(stripNonces(harness.calls.map((x) => x.prompt))[0]);
+    expect(shimPrompt).toContain(`Related User Fact: ${'x'.repeat(200)} (news from: Bhopal, Madhya Pradesh, India)\n`);
+    // Without places the old 200-char cap holds.
+    const plain = await shimBuildRelevanceCalls([{ ...c, relatedFacts: [{ id: 'f-a', statement: long }] }]);
+    expect(plain.calls[0].prompt).toContain(`Related User Fact: ${'x'.repeat(200)}\n`);
+  });
+
+  it('a fact with no places renders exactly its statement', async () => {
+    const shim = await shimBuildRelevanceCalls([candidate('a')]);
+    expect(shim.calls[0].prompt).toContain('Related User Fact: related fact a\n');
+    expect(shim.calls[0].prompt).not.toContain('news from');
+  });
+});

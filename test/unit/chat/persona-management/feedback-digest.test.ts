@@ -1,6 +1,7 @@
 import {
   analyzeFeedback,
   DIGEST_CONSTANTS,
+  parseFeedbackAnswers,
   type DigestAnalyzeInput,
   type DigestSignal,
 } from '@/lib/news-harness/persona-management/feedback-digest';
@@ -223,21 +224,76 @@ describe('verdict-only aggregation', () => {
   });
 });
 
-describe('conflict detection', () => {
-  it('a retire candidate lists liked stories sharing the topic → review', () => {
+describe('saved stories guard retirement', () => {
+  const dislikes = [
+    signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.2 }),
+    signal('r2', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.1 }),
+    signal('r3', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.3 }),
+  ];
+  it('retires a topic nobody saved', () => {
+    expect(run({ signals: dislikes }).map((x) => x.kind)).toEqual(['retire_topic']);
+  });
+  it('a saved story on the topic blocks the retirement and leaves a down-weight', () => {
+    const c = run({ signals: dislikes, saved: [{ title: 'AI research', topicTexts: ['ai'] }] });
+    expect(c.map((x) => x.kind)).toEqual(['topic_down']);
+  });
+  it('a like no longer guards anything', () => {
+    const c = run({ signals: [...dislikes, signal('r4', 'like', { topics: [{ topicId: 't1', text: 'AI' }] })] });
+    expect(c.find((x) => x.kind === 'retire_topic')!.conflictsWith).toEqual([]);
+  });
+});
+
+describe('v6 answers', () => {
+  const ans = (leafId: string, cause?: string) => ({ leafId, path: [leafId], cause: (cause ?? 'config') as 'config' });
+  const topics = [{ topicId: 't1', text: 'Cricket' }];
+
+  it('system-only and source-only rows yield no candidates and are not aggregated', () => {
     const c = run({
       signals: [
-        signal('r1', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.2 }),
-        signal('r2', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.1 }),
-        signal('r3', 'dislike', { topics: [{ topicId: 't1', text: 'AI' }], relevance: 0.3 }),
-        signal('r4', 'like', { title: 'A breakthrough in AI research', topics: [{ topicId: 't1', text: 'AI' }] }),
+        { ...signal('r1', 'dislike', { topics, relevance: 0.1 }), answers: [ans('not_about_fact', 'system')] },
+        { ...signal('r2', 'dislike', { topics, relevance: 0.1 }), answers: [ans('site_slow', 'source')] },
+        { ...signal('r3', 'dislike', { topics, relevance: 0.1 }), answers: [ans('x', 'system')] },
       ],
     });
-    const retire = c.find((x) => x.kind === 'retire_topic');
-    expect(retire).toBeDefined();
-    expect(retire!.conflictsWith.length).toBe(1);
-    expect(retire!.conflictsWith[0].title).toContain('AI research');
-    expect(retire!.confidence).toBe('review');
+    expect(c).toEqual([]);
+  });
+
+  it('a missing cause counts as config', () => {
+    const c = run({
+      signals: [
+        { ...signal('r1', 'dislike', { topics }), answers: parseFeedbackAnswers({ answers: [{ leafId: 'wrong_topic' }] }) },
+      ],
+    });
+    expect(c[0].ops[0]).toMatchObject({ action_type: ACTION_NAMES.SET_TOPIC_WEIGHT, delta: DIGEST_CONSTANTS.pathLowerTopic });
+  });
+
+  it('too_many and not_important with a factId nudge the fact', () => {
+    const c = run({
+      signals: [
+        { ...signal('r1', 'dislike', { topics }), answers: [ans('too_many')], factId: 'f1' },
+        { ...signal('r2', 'dislike', { topics }), answers: [ans('not_important')], factId: 'f2' },
+      ],
+    });
+    expect(c.map((x) => x.ops[0])).toEqual(
+      expect.arrayContaining([
+        { action_type: ACTION_NAMES.SET_FACT_WEIGHT, factId: 'f1', delta: -0.3 },
+        { action_type: ACTION_NAMES.SET_FACT_WEIGHT, factId: 'f2', delta: -0.15 },
+      ]),
+    );
+  });
+
+  it('stop_news yields no candidate', () => {
+    const c = run({ signals: [{ ...signal('r1', 'dislike', { topics }), answers: [ans('stop_news')], factId: 'f1' }] });
+    expect(c).toEqual([]);
+  });
+
+  it('a mixed row keeps only its config answers', () => {
+    const c = run({
+      signals: [
+        { ...signal('r1', 'dislike', { topics }), answers: [ans('not_about_fact', 'system'), ans('too_many')], factId: 'f1' },
+      ],
+    });
+    expect(c.map((x) => x.kind)).toEqual(['fact_down']);
   });
 });
 

@@ -671,10 +671,27 @@ describe('what the model is told about a candidate', () => {
     const lines = promptLines(gatewayCalls()[0]);
     expect(lines).toContain(`[topic_up:${climate.id}] topic_up | Show more about "Climate" | about — liked: Greta Thunberg, IPCC`);
     const suppress = lines.find((l) => l.startsWith('[suppress:evt:obituary]'))!;
-    expect(suppress).toContain('| conflicts: Story e2');
+    expect(suppress).not.toContain('| conflicts:');
     expect(suppress).toContain('| about — disliked: Local mayor');
-    // A removal that would hit a liked story is always a review item, and carries the conflict.
-    expect((await getPendingPlan())!.reviewItems[0].conflictsWith).toEqual([{ title: 'Story e2', reason: 'You liked this story' }]);
+    // A like no longer guards a removal; only a save does.
+    expect((await getPendingPlan())!.reviewItems[0].conflictsWith).toEqual([]);
+  });
+});
+
+describe('v6 feedback answers', () => {
+  it('reads answers and fact_id from context_json: a config answer nudges the fact, system rows are dropped', async () => {
+    const { fact } = await seedFact('Follows cricket', [{ text: 'Cricket', weight: 0.5 }]);
+    const at = T0 - DAY;
+    await verdict('v1', 'dislike', { fact_id: fact.id, treePath: ['too_many'], answers: [{ leafId: 'too_many', path: ['too_many'], cause: 'config' }] }, at);
+    await verdict('v2', 'dislike', { fact_id: fact.id, treePath: ['not_about_fact'], answers: [{ leafId: 'not_about_fact', path: [], cause: 'system' }] }, at + 1000);
+    await verdict('v3', 'dislike', { eventType: 'obituary', treePath: TREE.seenOnly }, at + 2000);
+
+    await cycle();
+
+    const plan = (await getPendingPlan())!;
+    expect(Object.keys(plan.candidates)).toEqual([`fact_down:${fact.id}`]);
+    expect(plan.candidates[`fact_down:${fact.id}`].ops[0]).toMatchObject({ factId: fact.id, delta: -0.3 });
+    expect(plan.candidates[`fact_down:${fact.id}`].sourceRowIds).toEqual([(await getUnprocessedFeedback()).find((r) => r.title === 'Story v1')!.id]);
   });
 });
 

@@ -38,6 +38,12 @@ describe('buildComboPassUserMessage', () => {
     );
   });
 
+  it('adds a Place line after the Fact only when places are given', () => {
+    const msg = buildComboPassUserMessage('Works as a nurse', ['From India'], 4, 'Bhopal, Madhya Pradesh, India');
+    expect(msg.split('\n')[1]).toBe('Place: Bhopal, Madhya Pradesh, India');
+    expect(buildComboPassUserMessage('Works as a nurse', ['From India'], 4, null)).not.toContain('Place:');
+  });
+
   it('escapes what it interpolates', () => {
     expect(buildComboPassUserMessage('a <<b>>', ['c'])).not.toContain('<<');
   });

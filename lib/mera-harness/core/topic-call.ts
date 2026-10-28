@@ -33,6 +33,9 @@ export interface TopicCallFact {
   statement: string;
   questionnaireAttribute?: string | null;
   placeChain?: PlaceChain | null;
+  /** The fact's places as NAMES ("Bhopal, Madhya Pradesh, India"), never codes.
+   *  Read at RUN time by the caller, never stored in a job payload. */
+  places?: string;
 }
 
 export interface GenerateTopicsParams {
@@ -126,6 +129,7 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
   if (p.fact.questionnaireAttribute) {
     lines.push(`Attribute: ${escapeUntrusted(p.fact.questionnaireAttribute, 120)}`);
   }
+  if (p.fact.places) lines.push(`Place: ${escapeUntrusted(p.fact.places, 200)}`);
   // A DEDUPE LIST, NOT CONTEXT (ux2 F6, measured): the model read the list as
   // facts about the person, and a school fact whose list held "Poland news"
   // came back with six Poland school topics. So this fact's own topics are
@@ -142,6 +146,26 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
   }
   lines.push(`Generate at most ${p.ceiling ?? MAX_TOPICS_PER_FACT} topics — fewer is correct.`);
   return lines.join('\n');
+}
+
+/**
+ * Capitalizes whole-word occurrences of the fact's place names ("bhopal water
+ * cuts" -> "Bhopal water cuts"). `names` is the `Place:` string: segments split
+ * on "," and ";", a leading "the " dropped. Never touches part of a word.
+ */
+export function capitalizePlaceNames(topics: string[], names: string | null | undefined): string[] {
+  const segs = [...new Set(
+    (names ?? '').split(/[;,]/).flatMap((n) => {
+      const t = n.trim();
+      return [t, t.replace(/^the\s+/i, '')];
+    }).filter((n) => n.length >= 2 && !/^anywhere in the world$/i.test(n)),
+  )].sort((a, b) => b.length - a.length);
+  if (segs.length === 0) return topics;
+  const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])(${segs.map(esc).join('|')})(?![\\p{L}\\p{N}])`, 'giu');
+  return topics.map((t) =>
+    t.replace(re, (m) => segs.find((n) => n.toLowerCase() === m.toLowerCase()) ?? m),
+  );
 }
 
 function asStringArray(parsed: unknown): string[] | null {
@@ -292,7 +316,7 @@ export async function generateTopicsForFact(
   // THE USER'S OWN PLACE TERM (ux2 D13c): "Porto Santo" resolved to Vila
   // Baleira, and without a topic in the user's words no Porto Santo news is
   // ever found. The guideline asks for it; this makes sure of it.
-  let topics = deduped.kept.slice(0, ceiling);
+  let topics = capitalizePlaceNames(deduped.kept.slice(0, ceiling), params.fact.places);
   const term =
     params.skillId === 'topics/residence' || params.skillId === 'topics/family'
       ? userPlaceTerm(params.fact.statement)

@@ -123,15 +123,13 @@ export function useChatSessionView(props: ChatSessionViewProps) {
               // this line is only ever briefly visible.
               t('tutorials.chatIntro')
             : context.kind === 'article-suggestion'
-              ? context.verdict === 'like'
-                ? t('articleFeedback.introLikeTuning')
-                : context.verdict === 'dislike'
-                  ? t('articleFeedback.introDislikeTuning')
-                  : t(
-                      context.suggestionId
-                        ? 'articleFeedback.intro'
-                        : 'articleFeedback.introArticle',
-                    )
+              ? context.verdict === 'dislike'
+                ? t('articleFeedback.introDislikeTuning')
+                : t(
+                    context.suggestionId
+                      ? 'articleFeedback.intro'
+                      : 'articleFeedback.introArticle',
+                  )
               : t('personaChat.introMessage');
 
   // On this phone is Beta (D30), and its intro says so in words: a chat bubble cannot draw the badge.

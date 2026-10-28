@@ -123,6 +123,21 @@ export type ArticlesForTopicsByIdsResponse = {
   resetAt?: Maybe<Scalars['String']['output']>;
 };
 
+export type CanonicalTopic = {
+  __typename?: 'CanonicalTopic';
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  level: Scalars['Int']['output'];
+  parentId?: Maybe<Scalars['ID']['output']>;
+  path: Scalars['String']['output'];
+};
+
+export type CanonicalTopicFacet = {
+  __typename?: 'CanonicalTopicFacet';
+  count: Scalars['Int']['output'];
+  topicId: Scalars['ID']['output'];
+};
+
 export type ChatMessageInput = {
   content: Scalars['String']['input'];
   createdAt: Scalars['String']['input'];
@@ -667,6 +682,8 @@ export type Query = {
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
   /** The cached fact check for an article, or null when none exists. READ-ONLY: never creates one, never starts a job, never spends. Null also means "not entitled". Use `factCheck` to ASK for a check. */
   cachedFactCheck?: Maybe<FactCheck>;
+  /** The seeded canonical category tree, optionally one level. */
+  canonicalTopics: Array<CanonicalTopic>;
   /** Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call. */
   embedPhrases: PhraseEmbeddingResult;
   /** The fact check for an article. Returns the cached row instantly when one exists (in any state); creates a `pending` one and starts the job when none does. Poll until `status` is complete / blocked / failed. Null means no check exists and none could be started (the article is no longer servable). Always read `checkedBy` together with `checkedByStatus` — an empty list only means "nobody has published" when the status is `searched`. */
@@ -704,6 +721,8 @@ export type Query = {
   userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
   weatherAuthToken: WeatherAuthToken;
+  /** Edition headlines for a country (null or "GLOBAL" spans all), optionally filtered to canonical topics (OR, descendants included), with per-topic facets over the unfiltered edition. No edition: the live fallback page (editionBuiltAt null) and no facets, or no headlines when filtered. */
+  worldHeadlines: WorldHeadlinesResponse;
 };
 
 
@@ -767,6 +786,11 @@ export type QueryArticlesForTopicsByIdsArgs = {
 
 export type QueryCachedFactCheckArgs = {
   articleId: Scalars['ID']['input'];
+};
+
+
+export type QueryCanonicalTopicsArgs = {
+  level?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -917,6 +941,15 @@ export type QueryUnblockRequestStatusArgs = {
 
 export type QueryUserPersonaByUserIdArgs = {
   userId: Scalars['ID']['input'];
+};
+
+
+export type QueryWorldHeadlinesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  canonicalTopicIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  countryCode?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  windowHours?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** Country and language counts over the related set. Each dimension is counted with the filter of the other dimension applied. */
@@ -1127,4 +1160,13 @@ export type WeatherAuthToken = {
   expiresAt: Scalars['String']['output'];
   /** ES256 JWT for the WeatherKit REST API. Send it as `Authorization: Bearer <token>` on the call to weatherkit.apple.com. Mint one per refresh rather than caching it across sessions; minting is a signature with no I/O and no storage on either side. */
   token: Scalars['String']['output'];
+};
+
+export type WorldHeadlinesResponse = {
+  __typename?: 'WorldHeadlinesResponse';
+  editionBuiltAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Story counts per canonical topic over the whole edition (ignores the filter), descendants rolled up, nonzero only. */
+  facets: Array<CanonicalTopicFacet>;
+  headlines: Array<TopHeadline>;
+  pageInfo: CursorPageInfo;
 };

@@ -1,5 +1,5 @@
-// Daily persona geo-derivation sweep. Derives `locations` rows from persona
-// facts on an ONGOING basis — before this task the only fact→location writer
+// Daily persona geo-derivation sweep. Derives `locations` rows and each fact's
+// place (metadata.places) from persona facts on an ONGOING basis — before this task the only fact→location writer
 // was the run-once persona-v3 migration, so on a device where that migration
 // had already completed no new fact ever produced a country again.
 //
@@ -42,7 +42,8 @@ AppScheduler.register({
       return;
     }
     ctx.log(
-      `geo derivation complete — ${result.added} added, ${result.reweighted} reweighted`,
+      `geo derivation complete — ${result.added} added, ${result.reweighted} reweighted, ` +
+        `${result.placed} placed, ${result.regenerated} regenerated`,
     );
   },
 });

@@ -17,18 +17,16 @@
 // `place` is deliberately `geoText` — DISPLAY prose, with a supranational code
 // resolved to "Middle East". The `place` FILTER that the same leaf mints reads
 // `placeValue` (the tag's verbatim field) instead; see resolve-leaf-actions.
+//
+// `fact` is the matched fact as a row shows it inside quotes: clamped to
+// FACT_LABEL_MAX characters with an ellipsis. A row's accessibility label uses
+// the full statement (`feedbackLabelVars(ctx, { fullFact: true })`).
 
 import type { TFunction } from 'i18next';
-import { resolveTopicLabel } from '@/lib/news-harness/feedback-tree/resolve-topic-label';
 import {
   type FeedbackTreeNode,
   type LocalFeedbackContext,
 } from '@/lib/news-harness/feedback-tree/types';
-
-/** The one node whose label names the article's matched topic ("More about:
- *  Formula 1") instead of the unnamed "More about this topic": its "A lot
- *  more" / "A bit more" leaves really move that topic's weight (D16). */
-const TOPIC_NAMED_NODE_ID = 'more_about_topic';
 
 export interface FeedbackLabelVars {
   publication: string;
@@ -40,6 +38,17 @@ export interface FeedbackLabelVars {
   eventType: string;
   entity: string;
   place: string;
+  /** The publication as the v6 rows name it ("Problem with {{site}}"). */
+  site: string;
+  fact: string;
+}
+
+/** Owner rule: a quoted fact in a row is clamped to 60 characters. */
+export const FACT_LABEL_MAX = 60;
+
+function clampFact(statement: string): string {
+  const s = statement.trim();
+  return s.length <= FACT_LABEL_MAX ? s : `${s.slice(0, FACT_LABEL_MAX - 1).trimEnd()}…`;
 }
 
 /** The tree context as LABELS read it: plus the publication's display name
@@ -50,41 +59,38 @@ export type FeedbackLabelContext = LocalFeedbackContext & {
   publicationDisplayName?: string | null;
 };
 
-export function feedbackLabelVars(context: FeedbackLabelContext): FeedbackLabelVars {
+export function feedbackLabelVars(
+  context: FeedbackLabelContext,
+  opts?: { fullFact?: boolean },
+): FeedbackLabelVars {
+  const publication = context.publicationDisplayName || context.publicationName || '';
+  const statement = context.fact?.statement ?? '';
   return {
-    publication: context.publicationDisplayName || context.publicationName || '',
+    publication,
     visits: context.publicationVisits ?? 0,
     eventType: context.eventType ?? '',
     entity: context.entity ?? '',
     place: context.geoText ?? '',
+    site: publication,
+    fact: opts?.fullFact ? statement : clampFact(statement),
   };
 }
 
-/**
- * A tree node's display label, the SAME string wherever it is shown (the
- * sheet's row, the Undo toast's summary): the full variable bag, plus the
- * matched-topic naming for `more_about_topic`. Falls back to the generic label
- * when there is no real topic to name, never an empty "More about: ".
- */
-export function feedbackNodeLabel(t: TFunction, node: FeedbackTreeNode, context: FeedbackLabelContext): string {
-  if (node.id === TOPIC_NAMED_NODE_ID) {
-    const choice = resolveTopicLabel(context);
-    if (choice) {
-      return (
-        choice.extraCount > 0
-          ? t('feedbackTree.moreAboutTopicNamedWithCount', {
-              defaultValue: 'More about: {{topic}} and {{extra}} more',
-              topic: choice.text,
-              // NOT `count`: see FeedbackLabelVars.visits.
-              extra: choice.extraCount,
-            })
-          : t('feedbackTree.moreAboutTopicNamed', {
-              defaultValue: 'More about: {{topic}}',
-              topic: choice.text,
-            })
-      ) as string;
-    }
-  }
-  return t(node.labelKey, { defaultValue: node.labelDefault, ...feedbackLabelVars(context) }) as string;
+/** A tree node's display label, the SAME string wherever it is shown (the
+ *  sheet's row, an answered row, the chat hand-off). `fullFact` is for the
+ *  row's accessibility label. */
+export function feedbackNodeLabel(
+  t: TFunction,
+  node: FeedbackTreeNode,
+  context: FeedbackLabelContext,
+  opts?: { fullFact?: boolean },
+): string {
+  return t(node.labelKey, { defaultValue: node.labelDefault, ...feedbackLabelVars(context, opts) }) as string;
 }
 
+/** The short answer an answered row shows ("Less for this"); the label when
+ *  the node has none. */
+export function feedbackNodeAnswer(t: TFunction, node: FeedbackTreeNode, context: FeedbackLabelContext): string {
+  if (!node.answerKey && !node.answerDefault) return feedbackNodeLabel(t, node, context);
+  return t(node.answerKey ?? '', { defaultValue: node.answerDefault ?? '', ...feedbackLabelVars(context) }) as string;
+}

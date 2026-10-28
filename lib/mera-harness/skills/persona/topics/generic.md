@@ -40,6 +40,11 @@ Bloc map: NL, DE and FR to the EU. US, CA and MX to North America. IN, JP and ID
 to South America. EG and NG to Africa. AU and NZ to Oceania. Pick the aptest: EU, GCC, ASEAN,
 Schengen.
 
+## A place-bound topic names its Place
+With a `Place:` line, a place-bound topic names that Place as a proper noun at its own level, never
+narrower. "anywhere in the world" means name no place. A residence fact may widen from its Place:
+city, region, country, bloc.
+
 ## Two entities per topic
 A place, an organisation, a sport, a profession, an industry and a hobby each count as one. Three or
 more means unrelated facts have been mashed together, so drop the topic.

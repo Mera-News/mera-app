@@ -44,8 +44,8 @@ interface ArticleCardProps {
   // FLAT, memo-safe props so a row re-renders only when its own verdict flips.
   /** The card's currently-stored verdict (null when undecided). */
   verdict?: Verdict | null;
-  /** A thumb was tapped — the host records the verdict; the card then opens
-   *  the ••• sheet at that verdict's tree root. */
+  /** Present on surfaces with an action row (the Saved list passes none). The
+   *  sheet records the verdict itself; this is only the discriminator. */
   onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** The Mera glyph on the rationale block was tapped — open the default article
    *  chat. Absent ⇒ no Ask-Mera affordance renders (e.g. the Saved list). */
@@ -182,26 +182,20 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     titleOriginal: suggestion.title_original,
     sourceLanguage: suggestion.language_code,
   });
-  // A thumb records the verdict, then opens the SAME ••• sheet as the menu,
-  // straight at that verdict's tree root (no Back row): one feedback
-  // behaviour across the app (owner). A second tap on the recorded thumb
-  // removes the verdict and opens nothing. `menuRef` because the menu is
-  // built below with these very actions.
-  const menuRef = React.useRef<{ openFeedback: (v: Verdict) => void } | null>(null);
-  const tapThumb = (v: Verdict) => {
-    if (!onVerdict) return;
-    const opensTree = verdict !== v && !!feedbackHandlers;
-    if (verdict !== v) hapticLight();
-    onVerdict(suggestion, v);
-    if (opensTree) menuRef.current?.openFeedback(v);
+  // The feedback button opens the SAME ••• sheet as the menu, straight at
+  // the feedback root (no Back row). Nothing is recorded until the reader
+  // answers: the sheet writes the verdict and reports it (owner).
+  const menuRef = React.useRef<{ openFeedback: () => void } | null>(null);
+  const tapFeedback = () => {
+    hapticLight();
+    menuRef.current?.openFeedback();
   };
   // The action row's own buttons, as VoiceOver custom actions on the card: the
   // card root is one accessibility element, which hides the row inside it.
   const inlineActions = onVerdict
     ? inlineAccessibilityActions(t, {
         saved,
-        onLike: () => tapThumb('like'),
-        onDislike: () => tapThumb('dislike'),
+        onFeedback: tapFeedback,
         onToggleSave: handleToggleSave,
         onShare: suggestion.article_url ? () => void handleShare() : undefined,
       })
@@ -225,11 +219,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       return asked;
     },
     inlineActions,
-    onLeafPicked: feedbackHandlers
-      ? (v, pathIds, applied, committed) => feedbackHandlers.onLeafPicked(suggestion, v, pathIds, applied, committed)
+    onVerdictRecorded: feedbackHandlers ? () => feedbackHandlers.onVerdictRecorded(suggestion) : undefined,
+    onFeedbackChat: feedbackHandlers
+      ? (pathIds, answers) => feedbackHandlers.onInvokeMera(suggestion, pathIds, answers)
       : undefined,
-    onFeedbackChat: feedbackHandlers ? (v, pathIds) => feedbackHandlers.onInvokeMera(suggestion, v, pathIds) : undefined,
-    onBrowseRelated: feedbackHandlers ? () => feedbackHandlers.onBrowseRelated(suggestion) : undefined,
   });
   menuRef.current = menu;
   const aboutSourceActions = menu.accessibilityActions.filter((a) => a.name === 'about-source');
@@ -326,8 +319,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       // A recorded verdict is filled at once (see CardActionBar's header).
       verdict={verdict}
       saved={saved}
-      onLike={() => tapThumb('like')}
-      onDislike={() => tapThumb('dislike')}
+      onFeedback={tapFeedback}
       onAskMera={() => onAskMera?.(suggestion)}
       onToggleSave={handleToggleSave}
       onShare={suggestion.article_url ? () => void handleShare() : undefined}

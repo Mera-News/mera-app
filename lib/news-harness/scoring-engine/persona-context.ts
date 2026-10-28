@@ -8,6 +8,8 @@
 // country codes upper-cased) so on-device geo/entity/pub matching lines up with
 // the tags Gemini produced server-side.
 
+import type { LocationRuleContext } from './location-rule';
+
 /** Lower-cased, trimmed matching key (city, region, entity, publication). */
 export function normText(v: string | null | undefined): string {
   return (v ?? '').trim().toLowerCase();
@@ -88,6 +90,8 @@ export interface PersonaScoringContext {
   entityInterest?: Map<string, number>;
   /** Article ids OR stable-cluster ids already seen → seenPenalty. */
   seenStoryIds?: Set<string>;
+  /** The location rule's inputs. Absent ⇒ the rule does not run (eval, harness-local). */
+  location?: LocationRuleContext;
 }
 
 /** Normalize a location snapshot's matching keys in place-safe fashion. */

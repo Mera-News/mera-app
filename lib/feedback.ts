@@ -13,16 +13,48 @@
 import * as Sentry from '@sentry/react-native';
 
 import { useFeedbackStore } from './stores/feedback-store';
-import { SENTRY_ENABLED } from './sentry-init';
+import { SENTRY_ENABLED, setPrefilledReportPending } from './sentry-init';
 
-export function showFeedback(): void {
+// Sentry RN 7.11 keeps the unsent draft in a TS-private static. A spec pins that
+// it exists, so an SDK change fails loudly instead of silently dropping the prefill.
+export type FeedbackWidgetInternals = {
+  _savedState: { description: string };
+  reset: () => void;
+};
+export const feedbackWidgetInternals = () => Sentry.FeedbackWidget as unknown as FeedbackWidgetInternals;
+
+// True from showFeedback({ prefill }) until that report is sent or abandoned.
+let prefilledReportOpen = false;
+
+/** The prefilled sheet has fully closed. An unsent draft is wiped (after the
+ *  widget unmounted: its unmount saves the draft back); a sent one leaves the
+ *  Sentry-side flag for the event processor to consume. */
+export function finishPrefilledReport(sent: boolean): void {
+  if (!prefilledReportOpen) return;
+  prefilledReportOpen = false;
+  if (!sent) {
+    feedbackWidgetInternals().reset();
+    setPrefilledReportPending(false);
+  }
+}
+
+export function showFeedback(opts?: { prefill?: string }): void {
   if (!SENTRY_ENABLED) {
     console.warn(
       '[feedback] Sentry is disabled; set EXPO_PUBLIC_SENTRY_IN_DEV=true to test the feedback widget in a dev build.',
     );
     return;
   }
-  useFeedbackStore.getState().show();
+  const prefill = opts?.prefill;
+  if (prefill) {
+    feedbackWidgetInternals()._savedState.description = prefill;
+    prefilledReportOpen = true;
+    setPrefilledReportPending(true);
+  } else {
+    prefilledReportOpen = false;
+    setPrefilledReportPending(false);
+  }
+  useFeedbackStore.getState().show({ prefilled: !!prefill });
 }
 
 const FEATURE_REQUEST_PREFIX = '[Feature Request] ';

@@ -1,108 +1,36 @@
-// applyLeafActions — the ONE path from a terminal feedback-tree leaf to applied
-// persona mutations plus an Undo toast.
+// applyLeafActions: the ONE path from a feedback-tree leaf's resolved actions
+// to applied persona mutations. The feedback sheet (useFeedbackHub) records the
+// answer, keeps the change-log ids and shows one toast with Undo for every
+// answer when it closes, so this applies and reports, nothing else.
 //
-// Called by perform-feedback-leaf for every tree leaf in the ••• sheet, the one
-// place the tree is shown. Before leaves were applied on the spot, the entire
-// like-side tree (authored with real `set_topic_weight` /
-// `set_publication_pref` actions) had never once run.
-//
-// Deliberately a PLAIN async function, not a hook, and with a module graph of
-// exactly one runtime import (the logger):
-//   • the persona executor / change log / i18n / toast are all REQUIRED AT
-//     CALL TIME (not `await import()`, which jest cannot run), behind the
-//     `actions.length === 0` guard, so a surface that
-//     merely renders the tree never drags the DB, the native translation module
-//     or the ESM-only gluestack toast entry into its import graph;
-//   • the toast goes through the global `toastManager` (initialized once at the
-//     root layout), which lazily `require`s the gluestack toast components —
-//     `useToast` would force a static import and make this a hook again.
+// A plain async function whose only runtime import is the logger: the persona
+// executor is REQUIRED AT CALL TIME (not `await import()`, which jest cannot
+// run), so a surface that merely renders the tree never pulls the database
+// into its import graph.
 
 import logger from '@/lib/logger';
 import type { ResolvedPersonaAction } from '@/lib/news-harness/feedback-tree/types';
 
-/**
- * Apply a leaf's resolved persona actions and offer an Undo.
- *
- * @param actions the concrete mutations from `resolveLeafActions`.
- * @param summary the tapped leaf's label — the toast's body line.
- * @param spend   the verdict row this leaf just consumed. When something is
- *                actually applied the row is stamped processed, so the 3-hourly
- *                digest can never apply a second helping of the same signal
- *                (D16). Owned here rather than by each caller so "applied" and
- *                "spent" can't drift apart.
- * @returns how many actions actually landed (0 = nothing changed, so callers
- *          must not claim otherwise to the user).
- */
+/** How many actions landed (0: nothing changed, so a caller must not claim
+ *  otherwise) and the change-log ids an Undo reverts. */
 export async function applyLeafActions(
   actions: ResolvedPersonaAction[],
-  summary: string,
-  spend?: { articleId: string; sentiment: 'like' | 'dislike' },
-): Promise<number> {
-  if (actions.length === 0) return 0;
+): Promise<{ applied: number; changeLogIds: string[] }> {
+  if (actions.length === 0) return { applied: 0, changeLogIds: [] };
   try {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { hapticSuccess } = require('@/lib/haptics') as typeof import('@/lib/haptics');
-    const i18n = (require('@/lib/i18n') as typeof import('@/lib/i18n')).default;
-    const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
     const { applyPersonaActions } = require('@/lib/database/services/persona-action-executor') as typeof import('@/lib/database/services/persona-action-executor');
     /* eslint-enable @typescript-eslint/no-require-imports */
-    /** i18n chrome helper — always supplies an English default so it renders
-     *  pre-merge (mirrors FeedbackTreeLevel's `useChrome`). */
-    const c = (key: string, def: string): string =>
-      i18n.t(`feedbackTree.${key}`, { defaultValue: def }) as string;
-
     hapticSuccess();
     // ResolvedPersonaAction is structurally a PersonaAction subset.
-    const results = await applyPersonaActions(actions, 'feedback');
-    const applied = results.filter((r) => r.applied);
-    if (applied.length === 0) return 0;
-
-    const changeLogIds = applied
-      .filter((r) => r.changeLogId)
-      .map((r) => r.changeLogId as string);
-
-    // The toast goes up the moment the persona write has landed. The spend
-    // bookkeeping below is housekeeping the reader cannot see; making the
-    // toast wait for it is what delayed "Got it" by seconds (batch 16).
-    toastManager.showUndoToast({
-      title: c('appliedTitle', 'Got it: feed updated'),
-      body: summary,
-      undoLabel: c('undo', 'Undo'),
-      undoneTitle: c('undoneTitle', 'Change undone'),
-      // Resolves to whether ANYTHING was reverted. A compare-and-set revert
-      // refused because a newer change owns the value returns false, and the
-      // toast then claims nothing.
-      onUndo: async () => {
-        if (changeLogIds.length === 0) return false;
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { revertChange } = require('@/lib/database/services/persona-change-log-service') as typeof import('@/lib/database/services/persona-change-log-service');
-        let any = false;
-        for (const cid of changeLogIds) {
-          try {
-            if (await revertChange(cid)) any = true;
-          } catch (err) {
-            logger.captureException(err, {
-              tags: { component: 'applyLeafActions', method: 'undo' },
-            });
-          }
-        }
-        return any;
-      },
-    });
-
-    if (spend) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { markFeedbackProcessedFor, recordFeedbackChangeLogIds } = require('@/lib/database/services/article-feedback-service') as typeof import('@/lib/database/services/article-feedback-service');
-      // Stamp the signal spent, and remember WHAT it changed: un-voting reverts
-      // exactly these ids, so "unfilled" can never mean "still in force".
-      await recordFeedbackChangeLogIds(spend.articleId, spend.sentiment, changeLogIds);
-      await markFeedbackProcessedFor(spend.articleId, spend.sentiment);
-    }
-    return applied.length;
+    const applied = (await applyPersonaActions(actions, 'feedback')).filter((r) => r.applied);
+    return {
+      applied: applied.length,
+      changeLogIds: applied.map((r) => r.changeLogId).filter((id): id is string => !!id),
+    };
   } catch (err) {
-    logger.captureException(err, {
-      tags: { component: 'applyLeafActions', method: 'apply' },
-    });
-    return 0;
+    logger.captureException(err, { tags: { component: 'applyLeafActions', method: 'apply' } });
+    return { applied: 0, changeLogIds: [] };
   }
 }

@@ -14,6 +14,13 @@ import { SUPPRESSION_KINDS } from '../core/types';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import {
+  PLACE_GLOBAL,
+  describePlace,
+  factLineWithPlaces,
+  normalizePlaces,
+  placeFromNames,
+} from '../persona-management/fact-places';
+import {
   PROPOSE_FACT_CHECK_TOOL,
   PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE,
   buildFactCheckPromptSection,
@@ -62,6 +69,9 @@ const RELATED_COVERAGE_TITLE_TRUNC = 120;
  *  ARTICLE + FACTS + COVERAGE payload. */
 const MAX_ACTIVE_FILTERS = 8;
 const SUPPRESSION_PATTERN_TRUNC = 60;
+/** Recent "Mera's mistake" answers shown as context. */
+const MAX_MISTAKES = 5;
+const FEEDBACK_LABEL_TRUNC = 160;
 // Drop the (largest) ALL-FACTS block first if the assembled context exceeds
 // this — keeps the local path's ~3072-token input budget comfortable.
 const CONTEXT_TOKEN_BUDGET = 1800;
@@ -83,6 +93,8 @@ const VALID_ACTION_TYPES = new Set([
   'retire_suppression',
   'set_high_priority',
   'retire_topic',
+  // fbx: where a fact's news comes from (names in, codes out).
+  'set_fact_places',
 ]);
 
 /** Action enum shared by the JSON-Schema tool def and its test (single source). */
@@ -100,7 +112,11 @@ const PROPOSAL_ACTION_ENUM = [
   'retire_suppression',
   'set_high_priority',
   'retire_topic',
+  'set_fact_places',
 ] as const;
+
+/** A fact rarely needs more places than this; more reads as a guess. */
+const MAX_FACT_PLACES = 3;
 
 /**
  * The suppression kinds the ARTICLE context can corroborate a value against
@@ -317,8 +333,14 @@ export function buildArticleFeedbackSystemPrompt(params: {
    * Off (default) costs zero prompt bytes.
    */
   factCheck?: boolean;
+  /** CLOUD mode: offer `set_fact_places`. The on-device flows never stage it,
+   *  and off it costs zero bytes, so the local prompt keeps its budget. */
+  factPlaces?: boolean;
 }): string {
-  const { needsToolFormat, languageName, webSearch = false, factCheck = false } = params;
+  const { needsToolFormat, languageName, webSearch = false, factCheck = false, factPlaces = false } = params;
+  const factPlacesLine = factPlaces
+    ? '\n- set_fact_places: news for a fact should come from another place (fact_id, places as NAMES, never codes).'
+    : '';
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS write conversational text in **${languageName}**, with no exceptions — even if the user writes in another language. Fact statements stay English.`
@@ -361,7 +383,7 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - add_suppression — filter something out (suppressionPattern = the phrase; suppressionStrength 0.9 = never show it, 0.5 = just less of it). For an EXACT filter also send suppressionKind + suppressionValue, and COPY THE VALUE VERBATIM from <context>: category ← Category, entity ← Entities, publication ← Publication, topic ← MATCHED TOPICS. A value you paraphrase or invent matches NOTHING. So: with "Category: Entertainment" → {"suppressionKind":"category","suppressionValue":"Entertainment"}; your own words "celebrity stuff" → {"suppressionPattern":"celebrity"} with NO kind/value.
 - retire_suppression — the user wants an existing filter GONE ("stop hiding X", "show me X again"): suppressionId = an [id] from YOUR FILTERS in <context>. Never invent an id; if it isn't listed, say you can't find that filter.
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
-- retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).
+- retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).${factPlacesLine}
 - submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
 
 ## Following a story (the proposeTrack tool)
@@ -426,7 +448,7 @@ ${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions, factCheck } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions, factCheck, feedbackAnswers, mistakes } = input;
   const descTrunc = factCheck ? ARTICLE_DESC_TRUNC_FACT_CHECK : ARTICLE_DESC_TRUNC;
 
   // Injected clock (never read here) — anchors the agent to the present so
@@ -478,18 +500,23 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     + (matchedTopics.length > 0 ? matchedTopics.map((t) => `- ${t}`).join('\n') : 'None.');
 
   // --- FACTS THAT PRODUCED THEM ---
+  // Places ride as NAMES on every fact line; the linked facts carry no
+  // metadata, so they borrow the full fact's.
+  const metadataById = new Map(facts.map((f) => [f.id, f.metadata]));
+  const factLine = (id: string, statement: string) =>
+    factLineWithPlaces({ statement: trunc(statement, FACT_STATEMENT_TRUNC), metadata: metadataById.get(id) });
   const producingFacts = ctx?.linkedFacts.slice(0, MAX_PRODUCING_FACTS) ?? [];
   const producingBlock =
     '## FACTS THAT PRODUCED THEM\n'
     + (producingFacts.length > 0
-      ? producingFacts.map((f) => `- [${f.id}] ${trunc(f.statement, FACT_STATEMENT_TRUNC)}`).join('\n')
+      ? producingFacts.map((f) => `- [${f.id}] ${factLine(f.id, f.statement)}`).join('\n')
       : 'None.');
 
   // --- ALL YOUR FACTS (largest block — dropped first if over budget) ---
   const allFactsRows = facts.slice(0, MAX_ALL_FACTS).map((f) => {
     const topics = (f.metadata?.topics ?? []).slice(0, TOPICS_PER_FACT_PREVIEW);
     const topicsSuffix = topics.length > 0 ? ` (topics: ${topics.join(', ')})` : '';
-    return `- [${f.id}] ${trunc(f.statement, FACT_STATEMENT_TRUNC)}${topicsSuffix}`;
+    return `- [${f.id}] ${factLine(f.id, f.statement)}${topicsSuffix}`;
   });
   const allFactsBlock =
     '## ALL YOUR FACTS\n' + (allFactsRows.length > 0 ? allFactsRows.join('\n') : 'Nothing yet.');
@@ -546,9 +573,21 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
           : 'These are ALTERNATIVES: the user must TAP the one they want — do NOT call applyProposal. If they decline call cancelProposal.')
     : null;
 
-  // --- USER VERDICT (Feed-tab handoff) — grounds the proposal ---
+  // --- FEEDBACK GIVEN (the v6 sheet's answers) — replaces USER VERDICT ---
+  // Config and source answers were applied when tapped, so the agent must not
+  // stage them again; a system answer is Mera's mistake and changes nothing.
   let verdictBlock: string | null = null;
-  if (verdict) {
+  if (feedbackAnswers && feedbackAnswers.answers.length > 0) {
+    const lines = ['## FEEDBACK GIVEN (already saved: never propose these again)'];
+    if (feedbackAnswers.fact) lines.push(`About the fact: ${untrustedTrunc(feedbackAnswers.fact, FACT_STATEMENT_TRUNC)}`);
+    for (const a of feedbackAnswers.answers) {
+      const answer = a.answer ? `: ${untrustedTrunc(a.answer, FEEDBACK_LABEL_TRUNC)}` : '';
+      const outcome = a.cause === 'system' ? "marked as Mera's mistake, changes nothing" : 'applied';
+      lines.push(`- ${untrustedTrunc(a.question, FEEDBACK_LABEL_TRUNC)}${answer} (${outcome})`);
+    }
+    if (feedbackAnswers.screen) lines.push(`Opened from: ${untrustedTrunc(feedbackAnswers.screen, FEEDBACK_LABEL_TRUNC)}`);
+    verdictBlock = lines.join('\n');
+  } else if (verdict) {
     const lines = [
       `## USER VERDICT\n${verdict === 'like' ? 'The user LIKED this story — they want MORE like it.' : "The user DISLIKED this story — they want FEWER like it."}`,
     ];
@@ -571,17 +610,33 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
   if (filtersBlock) alwaysBlocks.push(filtersBlock);
   const trailing = pendingBlock ? [pendingBlock] : [];
 
-  const withAllFacts = [...alwaysBlocks, allFactsBlock, ...trailing];
-  const assembled = `<context>\n${withAllFacts.join('\n\n')}\n</context>`;
+  // --- MERA'S RECENT MISTAKES (on-device "not about this fact" answers) ---
+  // Context only: the reader already said these were Mera's error, so they
+  // explain a pattern and never justify a persona change.
+  const mistakeRows = (mistakes ?? []).slice(0, MAX_MISTAKES).map((m) => {
+    const where = [m.publication, m.country, m.language].filter(Boolean).map((v) => untrustedTrunc(v as string, 80));
+    const fact = m.factId ? `fact [${m.factId}]` : '';
+    const detail = [fact, where.join(', ')].filter(Boolean).join('; ');
+    return `- ${untrustedTrunc(m.reason, FEEDBACK_LABEL_TRUNC)}${detail ? ` (${detail})` : ''}`;
+  });
+  const mistakesBlock =
+    mistakeRows.length > 0
+      ? "## MERA'S RECENT MISTAKES (context only: never change the profile because of these)\n" + mistakeRows.join('\n')
+      : null;
 
-  if (estimateTokens(assembled) <= CONTEXT_TOKEN_BUDGET) {
-    return assembled;
+  // Over budget, drop the ALL-FACTS block first (largest, and least essential
+  // for an already-diagnosed article), then the mistakes.
+  const tiers = [
+    [...alwaysBlocks, ...(mistakesBlock ? [mistakesBlock] : []), allFactsBlock, ...trailing],
+    [...alwaysBlocks, ...(mistakesBlock ? [mistakesBlock] : []), ...trailing],
+    [...alwaysBlocks, ...trailing],
+  ];
+  const render = (blocks: string[]) => `<context>\n${blocks.join('\n\n')}\n</context>`;
+  for (const blocks of tiers.slice(0, -1)) {
+    const assembled = render(blocks);
+    if (estimateTokens(assembled) <= CONTEXT_TOKEN_BUDGET) return assembled;
   }
-
-  // Over budget — drop the ALL-FACTS block (largest, and least essential for
-  // an already-diagnosed article).
-  const trimmed = [...alwaysBlocks, ...trailing];
-  return `<context>\n${trimmed.join('\n\n')}\n</context>`;
+  return render(tiers[tiers.length - 1]);
 }
 
 // ---------------------------------------------------------------------------
@@ -686,6 +741,21 @@ export function getArticleFeedbackToolDefinitions(
                       'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
                   },
                   highPriority: { type: 'boolean', description: 'set_high_priority: true to pin the topic, false to unpin.' },
+                  places: {
+                    type: 'array',
+                    description: `set_fact_places: 1 to ${MAX_FACT_PLACES} places for fact_id, as English NAMES, never codes. "anywhere" stands alone.`,
+                    items: {
+                      type: 'object',
+                      properties: {
+                        level: { type: 'string', enum: ['anywhere', 'bloc', 'country', 'region', 'city'] },
+                        bloc: { type: 'string', description: 'bloc level: e.g. "European Union".' },
+                        country: { type: 'string', description: 'country, region and city levels: the country name, e.g. "India".' },
+                        region: { type: 'string', description: 'region and city levels: e.g. "Madhya Pradesh".' },
+                        city: { type: 'string', description: 'city level: e.g. "Bhopal".' },
+                      },
+                      required: ['level'],
+                    },
+                  },
                 },
                 required: ['type'],
               },
@@ -801,6 +871,8 @@ function describeAction(a: ProposalAction): string {
       return `${a.highPriority ? 'pin' : 'unpin'} topic "${trunc(a.topicText, 60)}"`;
     case 'retire_topic':
       return `retire topic "${trunc(a.topicText, 60)}"`;
+    case 'set_fact_places':
+      return `news for [${a.fact_id}] from "${trunc(a.label, 80)}"`;
     case 'track_story':
       return `follow "${trunc(a.label, 80)}"`;
     // Staged only by the FACT-CHECK surface, but this switch is the shared
@@ -989,6 +1061,24 @@ function validateAction(
       const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
       if (topicText.length === 0) return { error: 'retire_topic requires a non-empty topicText' };
       return { action: { type: 'retire_topic', topicText } };
+    }
+    case 'set_fact_places': {
+      if (typeof o.fact_id !== 'string' || !factIds.has(o.fact_id)) {
+        return { error: 'set_fact_places requires a fact_id from <context>' };
+      }
+      const raw = Array.isArray(o.places) ? o.places.slice(0, MAX_FACT_PLACES) : [];
+      // Any unresolved name refuses the whole action: a partial set would
+      // silently narrow what the user asked for.
+      const decoded = raw.map((p) => (p && typeof p === 'object' ? placeFromNames(p as Record<string, unknown>) : null));
+      if (decoded.length === 0 || decoded.some((p) => p === null)) {
+        return { error: 'set_fact_places needs places written as names (e.g. {"level":"country","country":"India"}); a code or an unknown name is refused' };
+      }
+      const places = normalizePlaces(decoded);
+      if (places.includes(PLACE_GLOBAL) && decoded.length > 1) {
+        return { error: 'set_fact_places: "anywhere" stands alone' };
+      }
+      const label = places.map(describePlace).filter(Boolean).join('; ');
+      return { action: { type: 'set_fact_places', fact_id: o.fact_id, places, label } };
     }
     case 'submit_feature_request': {
       const title = typeof o.title === 'string' ? o.title.trim() : '';

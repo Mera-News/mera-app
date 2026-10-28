@@ -6,6 +6,7 @@ import {
   addFact,
   deleteFact,
   getFacts,
+  setFactPlaces,
   updateFact,
 } from '../database/services/fact-service';
 import type { Fact } from '../mera-protocol-toolkit/types';
@@ -331,6 +332,23 @@ export async function executeProposalActions(
             { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId },
             'retire_topic',
           );
+          break;
+        }
+        case 'set_fact_places': {
+          if (!factsById.has(action.fact_id)) {
+            errors.push(`set_fact_places: fact ${action.fact_id} not found`);
+            break;
+          }
+          // The sanitizer already decoded names to codes; setFactPlaces logs
+          // the change (undoable) and regenerates the fact's topics.
+          const r = await setFactPlaces(action.fact_id, action.places, 'chat');
+          if (r.applied) {
+            applied++;
+            summaries.push(`News for this fact now comes from ${action.label}`);
+            if (r.changeLogId) changeLogIds.push(r.changeLogId);
+          } else {
+            errors.push('set_fact_places: nothing changed');
+          }
           break;
         }
         case 'track_story': {

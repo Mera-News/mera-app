@@ -1,16 +1,8 @@
 // swipe-feedback — the Feed-tab signal-persistence layer (Round-4 P4).
 //
-// Turns a verdict tap/swipe on the Feed into a persisted `article_feedback`
-// row (surface 'swipe'), stores the tree path of the leaf the user picked in
-// the ••• sheet, and converts a verdict + tapped path into a Mera chat handoff.
-//
-// No persona mutation happens in THIS module, but a verdict is no longer inert:
-//   • a BARE verdict is written and shown (filled), but reaped at write so it
-//     never reaches the digest (D15, see article-feedback-service);
-//   • a tapped tree path re-opens the row for the digest, and a terminal leaf
-//     applies its persona actions immediately (D16, perform-feedback-leaf);
-//   • a chat escalation still applies via the agent's confirmed proposals,
-//     which stamps the row processed.
+// Verdict writes for the Feed's legacy verdict callbacks, and the Tell Mera
+// chat hand-off. The feedback sheet (useArticleMenu) writes the verdict row
+// itself on the reader's first answer, and the tree path with it.
 //
 // This is the wiring module for `swipe-callbacks.ts` — `wireSwipeCallbacks()`
 // (called once by SwipeFeedScreen) replaces the no-op contract members with the
@@ -22,15 +14,11 @@ import {
 } from '@/components/custom/cards/feedback-subject';
 import { swipeCallbacks, type Verdict } from '@/components/custom/feed/swipe-callbacks';
 import i18n from '@/lib/i18n';
-import {
-  markFeedbackProcessedFor,
-  recordVerdictFeedback,
-  removeArticleFeedback,
-  updateFeedbackContextPath,
-} from '@/lib/database/services/article-feedback-service';
+import { recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
 import { getFeedbackTree } from '@/lib/services/feedback-tree-service';
 import logger from '@/lib/logger';
 import type { FeedbackTreeNode } from '@/lib/news-harness/feedback-tree/types';
+import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
@@ -39,7 +27,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 // 'swipe' deliberately — renaming it would fragment the live feedback analytics.
 const SURFACE = 'swipe';
 
-/** Records a fresh verdict (latest-wins: removes the opposite-sentiment row). */
+/** Records a fresh verdict. */
 export async function recordSwipeVerdict(
   suggestion: ForYouSuggestion,
   verdict: Verdict,
@@ -56,76 +44,21 @@ export async function recordSwipeVerdict(
   });
 }
 
-/** Flips a revisited card's verdict: drop the old sentiment, record the new. */
-export async function changeSwipeVerdict(
-  suggestion: ForYouSuggestion,
-  from: Verdict,
-  to: Verdict,
-): Promise<void> {
-  if (from === to) return;
-  const subject = feedbackSubjectFromSuggestion(suggestion, SURFACE);
-  await removeArticleFeedback(subject.articleId, from);
-  await recordVerdictFeedback({
-    articleId: subject.articleId,
-    suggestionId: subject.suggestionId,
-    sentiment: to,
-    title: subject.title,
-    origin: 'suggestion',
-    surface: SURFACE,
-    contextJson: buildContextJson(subject),
-  });
-}
-
-/** Removes a card's verdict entirely (re-tapping the same thumb un-votes it):
- *  destroys the stored `article_feedback` row, dropping the verdict + any tree
- *  path recorded on it. */
-export async function removeSwipeVerdict(
-  suggestion: ForYouSuggestion,
-  verdict: Verdict,
-): Promise<void> {
-  const subject = feedbackSubjectFromSuggestion(suggestion, SURFACE);
-  await removeArticleFeedback(subject.articleId, verdict);
-}
-
-/** Merges the inline-tree node-id path into the stored verdict row. Records
- *  NAVIGATION only — a branch descent lands here and commits nothing. */
-export async function updateFeedbackTreePath(
-  suggestion: ForYouSuggestion,
-  verdict: Verdict,
-  path: string[],
-): Promise<void> {
-  await updateFeedbackContextPath(suggestion.articleId, verdict, path);
-}
-
-/** Marks the stored verdict row COMMITTED — a terminal leaf settled, or the user
- *  escalated to Mera along this path. This is the write a filled thumb is allowed
- *  to read, and it is what makes the fill survive a process restart.
- *
- *  A committed write re-opens the row for the digest (processed_at = null), and
- *  it lands AFTER applyLeafActions stamped the row spent. So when the leaf
- *  applied something, stamp it again after the write, or the 3-hourly digest
- *  applies a second helping of the same signal. */
-export async function commitFeedbackTreePath(
-  suggestion: ForYouSuggestion,
-  verdict: Verdict,
-  path: string[],
-  appliedCount = 0,
-): Promise<void> {
-  await updateFeedbackContextPath(suggestion.articleId, verdict, path, true);
-  if (appliedCount > 0) await markFeedbackProcessedFor(suggestion.articleId, verdict);
-}
-
 /**
  * Walks the tree along `pathIds`, resolving each tapped node to its localized
  * label. Stops at the first id that doesn't resolve (graceful degradation).
  */
-function resolvePathLabels(rootNodes: FeedbackTreeNode[], pathIds: string[]): string[] {
+function resolvePathLabels(
+  rootNodes: FeedbackTreeNode[],
+  pathIds: string[],
+  vars: Record<string, string>,
+): string[] {
   const labels: string[] = [];
   let level = rootNodes;
   for (const id of pathIds) {
     const node = level.find((n) => n.id === id);
     if (!node) break;
-    labels.push(i18n.t(node.labelKey, { defaultValue: node.labelDefault }) as string);
+    labels.push(i18n.t(node.labelKey, { defaultValue: node.labelDefault, ...vars }) as string);
     level = node.children ?? [];
   }
   return labels;
@@ -142,28 +75,28 @@ export async function openFeedbackChatWithPath(
   suggestion: ForYouSuggestion,
   verdict: Verdict,
   path: string[],
+  answers?: FeedbackAnswersHandoff,
 ): Promise<void> {
-  let labels: string[] = [];
-  try {
-    const tree = await getFeedbackTree();
-    const rootNodes = verdict === 'like' ? tree.likeRoot ?? [] : tree.root;
-    labels = resolvePathLabels(rootNodes, path);
-  } catch (err) {
-    logger.captureException(err, {
-      tags: { service: 'swipe-feedback', method: 'openChat.labels' },
-    });
+  // With answers, the breadcrumb is what the reader saw (labels rendered with
+  // the fact and site filled in); a bare tree label would show its braces.
+  let labels: string[] = answers ? answers.answers.map((a) => a.answer ?? a.question) : [];
+  if (!answers) {
+    try {
+      const tree = await getFeedbackTree();
+      labels = resolvePathLabels(tree.root, path, { site: suggestion.publication_name ?? '' });
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'swipe-feedback', method: 'openChat.labels' },
+      });
+    }
   }
 
   const breadcrumb = labels.join(' → ');
   const hasPath = breadcrumb.length > 0;
   const initialMessage = (
-    verdict === 'like'
-      ? hasPath
-        ? i18n.t('swipeFeed.chatHandoffLike', { path: breadcrumb })
-        : i18n.t('swipeFeed.chatHandoffLikeNoPath')
-      : hasPath
-        ? i18n.t('swipeFeed.chatHandoffDislike', { path: breadcrumb })
-        : i18n.t('swipeFeed.chatHandoffDislikeNoPath')
+    hasPath
+      ? i18n.t('swipeFeed.chatHandoffDislike', { path: breadcrumb })
+      : i18n.t('swipeFeed.chatHandoffDislikeNoPath')
   ) as string;
 
   useFloatingChatStore.getState().openArticleFeedback(
@@ -176,6 +109,7 @@ export async function openFeedbackChatWithPath(
       // treePath carries the human-readable breadcrumb LABELS (not ids) so the
       // agent's <context> and intro can use them directly without re-resolving.
       treePath: labels,
+      ...(answers ? { feedbackAnswers: answers } : {}),
     },
     initialMessage,
   );
@@ -203,20 +137,8 @@ export function wireSwipeCallbacks(): void {
   swipeCallbacks.onVerdict = (suggestion, verdict) => {
     void recordSwipeVerdict(suggestion, verdict);
   };
-  swipeCallbacks.onVerdictChanged = (suggestion, from, to) => {
-    void changeSwipeVerdict(suggestion, from, to);
-  };
-  swipeCallbacks.onVerdictRemoved = (suggestion, verdict) => {
-    void removeSwipeVerdict(suggestion, verdict);
-  };
-  swipeCallbacks.onTreePathChanged = (suggestion, verdict, path) => {
-    void updateFeedbackTreePath(suggestion, verdict, path);
-  };
-  swipeCallbacks.onLeafCommitted = (suggestion, verdict, path, appliedCount) => {
-    void commitFeedbackTreePath(suggestion, verdict, path, appliedCount);
-  };
-  swipeCallbacks.onInvokeMera = (suggestion, verdict, path) => {
-    void openFeedbackChatWithPath(suggestion, verdict, path);
+  swipeCallbacks.onInvokeMera = (suggestion, verdict, path, answers) => {
+    void openFeedbackChatWithPath(suggestion, verdict, path, answers);
   };
   swipeCallbacks.onOpenArticleChat = (suggestion) => {
     openArticleChat(suggestion);

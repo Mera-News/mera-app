@@ -1,7 +1,7 @@
 // The feedback tree's ONE visibility rule and its level resolver.
 //
 // `resolveTreeLevel` resolves one level SYNCHRONOUSLY from a loaded tree, a
-// root, a branch path and the context. The ••• sheet's tree levels
+// branch path and the context. The ••• sheet's tree levels
 // (FeedbackTreeLevel) are its only renderer; the sheet host (useArticleMenu)
 // loads the tree and keeps its navigation stack. Leaf handling lives in
 // perform-feedback-leaf. The file keeps its old name: the stateful engine hook
@@ -15,8 +15,6 @@ import {
   type FeedbackTreeNode,
   type LocalFeedbackContext,
 } from '@/lib/news-harness/feedback-tree/types';
-
-export type FeedbackTreeRoot = 'like' | 'dislike';
 
 /** A leaf that DECLARES persona actions but whose actions all resolve to nothing
  *  under this article's context is inert: tapping it applies nothing and shows
@@ -73,16 +71,8 @@ function isVisibleNode(node: FeedbackTreeNode, context: LocalFeedbackContext): b
   return !isDeadBranch(node, context);
 }
 
-/** The dislike tree's one-tap reason, lifted to the head of the dislike root
- *  (owner: every option on the first level, no "Tell me more") and dropped
- *  from the branch that holds it, so it shows once. Found BY ID, so it holds
- *  on any tree version: prod serves v4 (it sits under `suggestion`), the
- *  bundle is v5 (same). Only a LEAF is lifted: a branch there would open a
- *  level instead of answering in one tap. */
-export const DISLIKE_PROMOTED_ID = 'not_important';
-
 /**
- * One level of the tree, resolved SYNCHRONOUSLY from a loaded tree, a root, a
+ * One level of the tree, resolved SYNCHRONOUSLY from a loaded tree, a
  * branch path and the context: the visible nodes at that depth, plus the two
  * helpers a level renderer needs. Pure, so a sheet level can draw its final
  * rows on its very first render (no async restore, no height change after the
@@ -90,7 +80,6 @@ export const DISLIKE_PROMOTED_ID = 'not_important';
  */
 export function resolveTreeLevel(
   tree: FeedbackTree,
-  root: FeedbackTreeRoot,
   pathIds: readonly string[],
   context: LocalFeedbackContext,
 ): {
@@ -98,8 +87,7 @@ export function resolveTreeLevel(
   findNode: (id: string) => FeedbackTreeNode | null;
   hasVisibleChildren: (node: FeedbackTreeNode) => boolean;
 } {
-  const rootNodes = root === 'like' ? tree.likeRoot ?? [] : tree.root;
-  let level: FeedbackTreeNode[] = rootNodes;
+  let level: FeedbackTreeNode[] = tree.root;
   for (const id of pathIds) {
     const node = level.find((n) => n.id === id);
     if (!node || !node.children || node.children.length === 0) break;
@@ -114,21 +102,12 @@ export function resolveTreeLevel(
       }
       return null;
     };
-    return walk(rootNodes);
+    return walk(tree.root);
   };
-  // The lifted leaf, when this tree has one below its root.
-  const promoted =
-    root === 'dislike' && !rootNodes.some((n) => n.id === DISLIKE_PROMOTED_ID)
-      ? findNode(DISLIKE_PROMOTED_ID)
-      : null;
-  const lifted = promoted && promoted.leaf && isVisibleNode(promoted, context) ? promoted : null;
-  const shown = (n: FeedbackTreeNode) => isVisibleNode(n, context) && !(lifted && n.id === lifted.id);
-  const visible = level.filter(shown);
+  const shown = (n: FeedbackTreeNode) => isVisibleNode(n, context);
   return {
-    nodes: lifted && pathIds.length === 0 ? [lifted, ...visible] : visible,
+    nodes: level.filter(shown),
     findNode,
-    // Excludes the lifted leaf too: a branch whose only option moved to the
-    // root would otherwise open an empty level.
     hasVisibleChildren: (node) => (node.children ?? []).some(shown),
   };
 }

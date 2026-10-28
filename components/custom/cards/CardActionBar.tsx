@@ -1,5 +1,5 @@
 // CardActionBar — the Instagram-style action row under a story card. Borderless
-// icons, no pills, no backgrounds: Mera · thumb-up · thumb-down · bookmark ·
+// icons, no pills, no backgrounds: Mera · feedback · bookmark ·
 // (optional) track · (optional) share, distributed EVENLY across the row.
 //
 // THE one action row. Consumers:
@@ -8,12 +8,12 @@
 //   - ArticleFeedbackPrompt — the article + suggestion DETAIL screens.
 // ArticleFeedbackPrompt used to hand-roll its own row of 48pt round,
 // primary-orange-outlined buttons. It was converted to this component
-// for card parity. A picked Like and a picked Not for me both fill the
-// app's orange (FinalMotion "Touch"), and pop once to 118% as they do.
+// for card parity. A given answer turns the feedback icon the
+// app's orange (FinalMotion "Touch"), and it pops once to 118%.
 //
-// A recorded verdict is FILLED at once, on every surface (owner: one
-// behaviour). There is no hollow "no reason yet" state: the feedback tree the
-// tap opens is optional refinement. D15 is a LEARNING rule, not a display
+// A recorded verdict colours the icon at once, on every surface (owner: one
+// behaviour). The tap only opens the sheet; the sheet records the verdict on the
+// first answer. D15 is a LEARNING rule, not a display
 // one: a bare verdict is stored and shown, but stamped processed at write so
 // it never reaches the digest (article-feedback-service).
 //
@@ -35,8 +35,8 @@ import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
-import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share, Share2, SearchCheck, Ellipsis } from 'lucide-react-native';
-import { Platform } from 'react-native';
+import { MessageSquareWarning, Bookmark, Crosshair, Share, Share2, SearchCheck, Ellipsis } from 'lucide-react-native';
+import { Platform, ToastAndroid } from 'react-native';
 import React, { useEffect, useRef } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { SPRING } from '@/lib/motion';
@@ -67,8 +67,8 @@ const STROKE = 1.8;
 interface CardActionBarProps {
   verdict: Verdict | null;
   saved: boolean;
-  onLike: () => void;
-  onDislike: () => void;
+  /** Opens the feedback sheet. Never records anything itself. */
+  onFeedback: () => void;
   /** Ask Mera. The SAME handler the rationale block's glyph calls. */
   onAskMera: () => void;
   /** Optional — omitted ⇒ no bookmark at all, same contract as `onShare`.
@@ -108,7 +108,7 @@ interface CardActionBarProps {
    *  doubling the horizontal padding. */
   horizontalPadding?: number;
   /** D3: opens the shared ••• menu. When set, the row is the four inline
-   *  actions (like, not for me, save, share) plus •••, and Ask Mera, Follow and
+   *  actions (feedback, save, share) plus •••, and Ask Mera, Follow and
    *  Check for fact checks live in the menu instead of inline. Absent: the row
    *  renders exactly as before, for any host not yet on the menu. */
   onOverflow?: () => void;
@@ -117,8 +117,7 @@ interface CardActionBarProps {
 const CardActionBar: React.FC<CardActionBarProps> = ({
   verdict,
   saved,
-  onLike,
-  onDislike,
+  onFeedback,
   onAskMera,
   onToggleSave,
   onTrack,
@@ -132,18 +131,13 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   const { t } = useTranslation();
   const colors = useColors();
   const WHITE = colors.ink;
-  /** Like, Not for me, Save, Follow: one picked colour, the app's orange. */
+  /** Feedback given, Save, Follow: one picked colour, the app's orange. */
   const SAVE_ACCENT = colors.accent;
-  const LIKE = SAVE_ACCENT;
-  const DISLIKE = SAVE_ACCENT;
   /** Disabled ink for a control that has already done its job. */
   const MUTED = colors.ink3;
   const iconSize = ICON_SIZE;
-  const liked = verdict === 'like';
-  const disliked = verdict === 'dislike';
-  // A recorded verdict is coloured AND filled, at once (see the header).
-  const likeFill = liked ? LIKE : 'none';
-  const dislikeFill = disliked ? DISLIKE : 'none';
+  const answered = verdict === 'dislike';
+  const feedbackLabel = t(answered ? 'feedbackTree.menu.iconGiven' : 'feedbackTree.menu.iconLabel');
 
   return (
     <HStack
@@ -167,28 +161,17 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       )}
 
       <Pressable
-        testID="card-action-like"
-        onPress={onLike}
-        style={FRAME}
-        accessibilityRole="button"
-        accessibilityState={{ selected: liked }}
-        accessibilityLabel={t('articleFeedback.likeLabel')}
-      >
-        <Pop on={liked}>
-          <ThumbsUp size={iconSize} strokeWidth={STROKE} color={liked ? LIKE : WHITE} fill={likeFill} />
-        </Pop>
-      </Pressable>
-
-      <Pressable
         testID="card-action-dislike"
-        onPress={onDislike}
+        onPress={onFeedback}
+        // Android has no hover: a long press names the icon, like the system's tooltip.
+        onLongPress={Platform.OS === 'android' ? () => ToastAndroid.show(feedbackLabel, ToastAndroid.SHORT) : undefined}
         style={FRAME}
         accessibilityRole="button"
-        accessibilityState={{ selected: disliked }}
-        accessibilityLabel={t('articleFeedback.dislikeLabel')}
+        accessibilityState={{ selected: answered }}
+        accessibilityLabel={feedbackLabel}
       >
-        <Pop on={disliked}>
-          <ThumbsDown size={iconSize} strokeWidth={STROKE} color={disliked ? DISLIKE : WHITE} fill={dislikeFill} />
+        <Pop on={answered}>
+          <MessageSquareWarning size={iconSize} strokeWidth={STROKE} color={answered ? SAVE_ACCENT : WHITE} />
         </Pop>
       </Pressable>
 

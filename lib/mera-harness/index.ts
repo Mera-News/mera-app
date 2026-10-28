@@ -57,6 +57,7 @@ export {
   TOPIC_CALL_TEMPERATURE,
   buildTopicUserMessage,
   generateTopicsForFact,
+  capitalizePlaceNames,
   normalizeTopicText,
   parseTopics,
   topicSkillForAttribute,

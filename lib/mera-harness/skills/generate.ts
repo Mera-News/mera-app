@@ -58,7 +58,9 @@ type SkillId = (typeof SKILL_IDS)[number];
 // measured size of the feed_tuning and back-reference rows (onemera S1/S1.5),
 // shipped after staging moved see-less routing 8/60 to 48/60; 2,376 is the
 // follow_story intent with its literal follow-word and surface tests (S3b).
-const BUDGET: Record<string, number> = { router: 2376 };
+// topics/generic bought the Place rule (a fact's place at its level) with
+// tokens rather than by trimming its measured examples.
+const BUDGET: Record<string, number> = { router: 2376, 'topics/generic': 1300 };
 const DEFAULT_BUDGET = 1200;
 
 /**

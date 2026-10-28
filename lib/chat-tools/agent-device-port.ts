@@ -34,6 +34,7 @@ import { useAppLanguageStore } from '../stores/app-language-store';
 import { SUPPORTED_LANGUAGES } from '../translation-service';
 import { canonicalizeLanguageCode } from '../algorithms/language-codes';
 import type { AgentPersona } from '@/lib/mera-harness';
+import { describeFactPlaces } from '../news-harness/persona-management/fact-places';
 import logger from '../logger';
 import { isFallbackEngaged } from '../llm/model-fallback';
 import { userTapOnlyRefusal } from '../news-harness/core/proposals';
@@ -665,6 +666,7 @@ export async function buildAgentPersona(
       id: f.id,
       statement: f.statement,
       attribute: f.questionnaireAttribute ?? null,
+      places: describeFactPlaces(f) ?? undefined,
     })),
     surface: agentId.endsWith('ONBOARDING') ? 'ONBOARDING' : 'CONFIG',
     languageName,

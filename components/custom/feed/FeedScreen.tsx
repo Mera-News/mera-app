@@ -59,9 +59,9 @@
 // on `partitionSnapshot`), because scrolling before the commit just lets
 // `maintainVisibleContentPosition` re-anchor and land mid-list again.
 //
-// Each card carries a small borderless action bar (like / dislike / save /
-// share); Ask-Mera lives on the card's rationale block. Tapping a thumb records
-// a verdict and opens the shared ••• sheet at that verdict's feedback tree.
+// Each card carries a small borderless action bar (feedback / save /
+// share); Ask-Mera lives on the card's rationale block. The feedback button
+// opens the shared ••• sheet, which records the verdict on the first answer.
 // Every one of those interactions — plus opening the card — marks it `viewed`.
 // This screen is a place you read, not one you check for arrivals: nothing on
 // it counts or announces new stories (no progress bar, no counts sentence, no
@@ -234,7 +234,7 @@ const FeedRow = React.memo(function FeedRow({
       onSaveToggled={onSaveToggled}
       feedbackHandlers={feedbackHandlers}
       // Seen stories get ONLY the eye indicator (`read`) — no dimming.
-      // Dimming is reserved for a recorded verdict (like/dislike).
+      // Dimming is reserved for a recorded verdict (a dislike).
       dimmed={verdict != null}
       read={seen}
       halo={isNew}

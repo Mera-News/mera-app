@@ -737,7 +737,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     getVerdict: (key) => useFeedOrderStore.getState().verdicts[key]?.verdict ?? null,
     setVerdict: (key, v) => {
       const store = useFeedOrderStore.getState();
-      // One line covers all four verdict paths — fresh, flip, and un-vote — so
+      // One line covers a fresh verdict and a clear, so
       // `use-feedback-sheet` (shared with FactFeedScreen) needs no change.
       store.markViewed(key);
       if (v == null) store.clearVerdict(key);

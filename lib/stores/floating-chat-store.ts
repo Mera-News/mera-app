@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import type { StagedProposal } from '../llm/types';
 import type { QuickFactCheckAnswer } from '../chat-tools/quick-fact-check-handler';
-import type { TrackFeedbackSubject } from '../news-harness/core/types';
+import type { FeedbackAnswersHandoff, TrackFeedbackSubject } from '../news-harness/core/types';
 import {
     MAX_TOPIC_PLAN_NOTES,
     type TopicPlanNote,
@@ -82,6 +82,10 @@ export type ChatContext =
           // and prebuilds the auto-sent message.
           verdict?: 'like' | 'dislike';
           treePath?: string[];
+          // The v6 sheet's answers plus the screen Tell Mera was tapped on.
+          // When present the agent renders FEEDBACK GIVEN in place of the two
+          // fields above.
+          feedbackAnswers?: FeedbackAnswersHandoff;
       }
     // Round-4 C5: open the popover showing the pending daily optimisation plan.
     // No target ids — the OptimisationPlanCard loads the plan from the service.
@@ -302,7 +306,8 @@ function contextDiffers(a: ChatContext, b: ChatContext): boolean {
             a.articleId !== b.articleId ||
             a.suggestionId !== b.suggestionId ||
             a.verdict !== b.verdict ||
-            (a.treePath ?? []).join('') !== (b.treePath ?? []).join('')
+            (a.treePath ?? []).join('') !== (b.treePath ?? []).join('') ||
+            JSON.stringify(a.feedbackAnswers ?? null) !== JSON.stringify(b.feedbackAnswers ?? null)
         );
     }
     return false;

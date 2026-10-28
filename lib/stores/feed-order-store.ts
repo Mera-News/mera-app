@@ -60,7 +60,9 @@ import {
   type FeedListItem,
 } from './feed-list-selector';
 
-export type Verdict = 'like' | 'dislike';
+/** The only verdict left: the feedback sheet's first answer. Verdicts are
+ *  session-only here, so no pre-v6 like survives a restart. */
+export type Verdict = 'dislike';
 
 export interface VerdictRecord {
   verdict: Verdict;

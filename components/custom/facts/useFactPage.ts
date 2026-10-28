@@ -1,7 +1,6 @@
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
-import { recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
 import { deleteFact, observeFact } from '@/lib/database/services/fact-service';
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import { addSuppression, getActive as getActiveSuppressions, retireSuppression } from '@/lib/database/services/suppression-service';
@@ -9,7 +8,6 @@ import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDeclin
 import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
 import { createTopics, normalizeTopicText, observeByFact, reactivate, retire } from '@/lib/database/services/topic-service';
 import { showDialog } from '@/lib/dialog';
-import { hapticSuccess } from '@/lib/haptics';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import logger from '@/lib/logger';
@@ -316,21 +314,7 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         }
     }, [phrase, factId]);
 
-    // ── Opening articles, "This was relevant" ──────────────────────────────
     const openSuggestion = useOpenSuggestion('sectioned');
-    const [taught, setTaught] = useState<Set<string>>(new Set());
-    const markRelevant = useCallback((story: Story) => {
-        const s = story.data;
-        setTaught((prev) => new Set(prev).add(s._id));
-        void hapticSuccess();
-        void recordVerdictFeedback({
-            articleId: s.articleId,
-            suggestionId: s._id,
-            sentiment: 'like',
-            title: s.title_en ?? s.title_original ?? '',
-            surface: 'sectioned',
-        });
-    }, []);
 
     return {
         tab,
@@ -377,8 +361,6 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         addPhrase,
         openedIds,
         openSuggestion,
-        taught,
-        markRelevant,
     };
 }
 

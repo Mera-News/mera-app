@@ -35,6 +35,7 @@ import {
   getUnscoredSuggestionsWithFacts,
   type ScoringCandidate,
 } from '../database/services/article-suggestion-reads';
+import { factLineWithPlaces } from '@/lib/news-harness/persona-management/fact-places';
 import { getFacts } from '../database/services/fact-service';
 import { isCulledHeadlineRelevance } from '../feed-ordering/importance-filter';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -48,6 +49,7 @@ import {
   buildPublicationLabel,
   buildUserContext,
   isEligible,
+  relatedFactLine,
   isScorableCandidate,
   chunk,
   bucketScore,
@@ -137,11 +139,12 @@ const SCORE_BATCH_MAX_TOKENS = ARTICLE_CFG.scoreBatchMaxTokens;
 
 // --- Fact loading ---
 
-async function loadAllFactStatements(): Promise<string[]> {
+/** The fact bank. Cloud prompts get place-named lines; the on-device note keeps plain statements. */
+async function loadAllFactStatements(withPlaces = true): Promise<string[]> {
   const facts = await getFacts();
   return facts
-    .map((f) => f.statement)
-    .filter((s) => typeof s === 'string' && s.trim().length > 0);
+    .filter((f) => typeof f.statement === 'string' && f.statement.trim().length > 0)
+    .map((f) => (withPlaces ? factLineWithPlaces(f) : f.statement));
 }
 
 // --- Batch scoring + reason generation ---
@@ -181,7 +184,7 @@ function buildScoreCallForChunk(
         c.publicationName ?? c.meta?.publicationName,
         c.languageCode,
       ),
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     })),
   });
   return {
@@ -247,7 +250,7 @@ async function generateReasonForCandidate(
       candidate.languageCode,
     ),
     relevance,
-    relatedFacts: candidate.relatedFacts.map((f) => f.statement),
+    relatedFacts: candidate.relatedFacts.map(relatedFactLine),
   });
   const output = onDevice
     ? await completeLocal({
@@ -320,6 +323,10 @@ export interface BatchScoreResult {
    *  terminally `excluded`. Computed here (not by the caller) because this is
    *  where the eligible/failed split lives; see collectCulledHeadlineIds. */
   culledHeadlineIds: Set<string>;
+  /** Rows the scorer's location screen caught: never read by Kev, scored 0, kept
+   *  (not excluded, not culled) so they show only under Discarded. The caller
+   *  saves them through saveScoringResult like any other relevance-0 row. */
+  locationCaughtIds: Set<string>;
 }
 
 /**
@@ -347,6 +354,7 @@ export async function batchScoreAndReason(
   let excludedIds = new Set<string>();
   let excludedValueById = new Map<string, string>();
   let culledHeadlineIds = new Set<string>();
+  let locationCaughtIds = new Set<string>();
 
   // Ineligible ones get a fixed low score, never hit the engine/LLM.
   const eligible: ScoringCandidate[] = [];
@@ -364,6 +372,7 @@ export async function batchScoreAndReason(
       excludedIds,
       excludedValueById,
       culledHeadlineIds,
+      locationCaughtIds,
     };
   }
 
@@ -389,6 +398,7 @@ export async function batchScoreAndReason(
       excludedIds,
       excludedValueById,
       culledHeadlineIds,
+      locationCaughtIds,
     };
   }
 
@@ -413,7 +423,15 @@ export async function batchScoreAndReason(
   // computed-vs-judge deltas into CalibrationCases and handing them to
   // `recordOverrides` — went with the judge. It was the calibration loop's ONLY
   // input; see the note at `buildCalibrationCase`.)
+  locationCaughtIds = stage.locationCaughtIds;
   for (const c of active) {
+    if (locationCaughtIds.has(c.id)) {
+      // Never sent to Kev, so no rawScoreMap entry: score 0 (not a failure), components kept.
+      scoreMap.set(c.id, 0);
+      const caughtComps = stage.componentsMap.get(c.id);
+      if (caughtComps) componentsJsonMap.set(c.id, JSON.stringify(caughtComps));
+      continue;
+    }
     const raw = stage.rawScoreMap.get(c.id);
     if (raw === undefined) {
       scoreMap.set(c.id, FALLBACK_RELEVANCE);
@@ -435,7 +453,7 @@ export async function batchScoreAndReason(
   const bucketedForCull = new Map(scoreMap);
   bucketScores(bucketedForCull);
   culledHeadlineIds = collectCulledHeadlineIds(
-    active.filter((c) => !failedIds.has(c.id)),
+    active.filter((c) => !failedIds.has(c.id) && !locationCaughtIds.has(c.id)),
     bucketedForCull,
   );
 
@@ -497,6 +515,7 @@ export async function batchScoreAndReason(
     excludedIds,
     excludedValueById,
     culledHeadlineIds,
+    locationCaughtIds,
   };
 }
 
@@ -535,7 +554,7 @@ export function buildReasonCallsForSurvivors(
         c.languageCode,
       ),
       relevance,
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     });
     const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
@@ -710,7 +729,7 @@ export async function buildReasonCallsForSubset(
         c.languageCode,
       ),
       relevance: relevanceMap[c.id],
-      relatedFacts: c.relatedFacts.map((f) => f.statement),
+      relatedFacts: c.relatedFacts.map(relatedFactLine),
     });
     const reasonId = `reason:${calls.length}`;
     promptsById.set(reasonId, reasonPrompt);
@@ -929,6 +948,7 @@ async function scoreUnscoredRows(
       componentsJsonMap,
       excludedIds,
       culledHeadlineIds,
+      locationCaughtIds,
     } = await batchScoreAndReason(batch);
 
     // Snapshot RAW (post-judge) scores before bucketing — persisted as
@@ -979,9 +999,12 @@ async function scoreUnscoredRows(
         // On this phone a note costs seconds, so a row below the feed's gate (0.4) is never
         // written one, and with Skip notes on no row is: `complete` with no note, never
         // `reason_skipped`, which the feed does not show.
-        const reasonSkipped = isOnDeviceMode()
-          ? !notesOn() || relevance < ARTICLE_CFG.lowPriorityScore
-          : relevance < REASON_THRESHOLD;
+        // A location-caught row is owed no note on either lane (REASON_THRESHOLD is 0).
+        const reasonSkipped =
+          locationCaughtIds.has(candidate.id) ||
+          (isOnDeviceMode()
+            ? !notesOn() || relevance < ARTICLE_CFG.lowPriorityScore
+            : relevance < REASON_THRESHOLD);
         try {
           await saveScoringResult(candidate.id, {
             relevance,
@@ -1084,7 +1107,7 @@ async function writeNotesOnDevice(): Promise<number> {
   const reps = new Set(plan.repIds);
   const toWrite = owed.filter((c) => reps.has(c.id));
   toWrite.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0));
-  const fullUserContext = buildUserContext(await loadAllFactStatements());
+  const fullUserContext = buildUserContext(await loadAllFactStatements(false));
   let written = plan.filled;
   for (const candidate of toWrite) {
     // Skip notes turned on mid-sweep: stop; the next sweep finalises what is left.
@@ -1182,7 +1205,7 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
             candidate.languageCode,
           ),
           relevance: candidate.relevance ?? 0.7,
-          relatedFacts: candidate.relatedFacts.map((f) => f.statement),
+          relatedFacts: candidate.relatedFacts.map(relatedFactLine),
         });
         const reasonId = `reason:${candidate.id}`;
         promptsById.set(reasonId, reasonPrompt);

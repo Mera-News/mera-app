@@ -305,6 +305,15 @@ export function actionToRow(action: ProposalAction): ActionRow {
         detail: action.topicText,
         translateDetail: true,
       };
+    // fbx. The label is English place names rebuilt from the stored codes, so
+    // translating it for display cannot change the places that get saved.
+    case 'set_fact_places':
+      return {
+        icon: 'place',
+        labelKey: 'articleFeedback.actionSetFactPlaces',
+        detail: action.label,
+        translateDetail: true,
+      };
     case 'retire_topic':
       return {
         icon: 'do-not-disturb-on',

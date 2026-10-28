@@ -1,0 +1,762 @@
+{
+  "en": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "de": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "es": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "fr": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "it": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "pt-BR": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "nl": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "pl": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "ru": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "uk": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "tr": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "ar": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "hi": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "id": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "vi": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "th": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "ja": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "ko": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "zh-CN": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  },
+  "zh-TW": {
+    "you": {
+      "fact": {
+        "places": {
+          "about": "About",
+          "notSet": "Not set yet",
+          "addCountry": "Add a country",
+          "anywhere": "Anywhere",
+          "remove": "Remove {{place}}",
+          "search": "Search countries",
+          "noCountry": "No country found",
+          "blocs": {
+            "EU": "European Union",
+            "EEA": "European Economic Area",
+            "EFTA": "European Free Trade Association",
+            "UK": "United Kingdom",
+            "Europe": "Europe",
+            "Asia": "Asia",
+            "Africa": "Africa",
+            "North America": "North America",
+            "South America": "South America",
+            "Oceania": "Oceania",
+            "Antarctica": "Antarctica"
+          }
+        }
+      }
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactPlaces": "Changed where news comes from",
+        "setFactNewsStopped": "Stopped news for an interest"
+      },
+      "summary": {
+        "placesSet": "Changed where news comes from for {{name}}",
+        "newsStopped": "Stopped news for {{name}}"
+      }
+    }
+  }
+}

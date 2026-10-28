@@ -163,6 +163,29 @@ export function blocFor(alpha2: string): Bloc | null {
 }
 
 /**
+ * Members of a bloc, as alpha-2. Built from the same map as `blocFor`, which
+ * gives each country ONE bloc, so membership is widened here to what the names
+ * mean: EEA = EU + EEA, EFTA = EEA + EFTA rows (IS, LI, NO, CH), and Europe is
+ * the whole continent (Europe + EU + EEA + EFTA + UK). Fact places read blocs
+ * through this, injected into harness code as a function.
+ */
+const BLOC_WIDENS: Readonly<Partial<Record<Bloc, readonly Bloc[]>>> = {
+  EEA: ['EU', 'EEA'],
+  EFTA: ['EEA', 'EFTA'],
+  Europe: ['Europe', 'EU', 'EEA', 'EFTA', 'UK'],
+};
+const membersCache = new Map<Bloc, readonly string[]>();
+
+export function countriesInBloc(bloc: Bloc): readonly string[] {
+  const cached = membersCache.get(bloc);
+  if (cached) return cached;
+  const parts = new Set<Bloc>(BLOC_WIDENS[bloc] ?? [bloc]);
+  const members = Object.keys(BLOC_BY_ALPHA2).filter((cc) => parts.has(BLOC_BY_ALPHA2[cc])).sort();
+  membersCache.set(bloc, members);
+  return members;
+}
+
+/**
  * Country name from an ALPHA-2 code.
  *
  * Not `country-utils.getCountryName`, which takes ALPHA-3 and returns the code

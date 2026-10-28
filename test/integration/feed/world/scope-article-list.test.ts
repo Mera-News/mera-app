@@ -13,7 +13,7 @@ import {
 import { act, waitFor } from '@testing-library/react-native';
 import { useScopeArticleList } from '@/components/custom/explore/useScopeArticleList';
 import { HUNG_LOAD_MS } from '@/components/custom/explore/useScopeArticleList';
-import { __resetExploreWindowSupport } from '@/lib/article-service';
+import { __resetExploreWindowSupport, __resetWorldTopicsSupport } from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import { articlesForCountry, newsArticle, pageOf, stableClusterId } from '@/test/mock-backend/fixtures/articles';
 
@@ -83,8 +83,12 @@ async function settleUntil(cond: () => boolean, steps = 200): Promise<void> {
   if (!cond()) throw new Error('settleUntil: condition not met');
 }
 
+// Everything below except the topic-filter block runs against a server without worldHeadlines,
+// so these tests keep pinning the country/windowed documents the old-server fallback sends.
 beforeEach(() => {
   __resetExploreWindowSupport();
+  __resetWorldTopicsSupport();
+  server.use(mockGqlError('GetWorldHeadlines', 'GRAPHQL_VALIDATION_FAILED', { message: 'Cannot query field "worldHeadlines"' }));
 });
 
 describe('first page', () => {
@@ -281,5 +285,41 @@ describe('Explore window (windowHours)', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed']);
     expect(result.current.loadFailed).toBe(true);
+  });
+});
+
+describe('topic filter (worldHeadlines)', () => {
+  beforeEach(() => {
+    server.resetHandlers(); // drop the old-server handler above: the mock backend serves worldHeadlines
+  });
+
+  it('returns the facets and marks topics supported', async () => {
+    const { result } = render(WORLD, 24);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.topicsSupported).toBe(true);
+    expect(result.current.facets).toEqual([{ __typename: 'CanonicalTopicFacet', topicId: 'ct-politics', count: WORLD_LEADERS.length }]);
+    expect(ids(result)).toHaveLength(10);
+  });
+
+  it('sends the picked topic id and lists only its stories', async () => {
+    const sent = record('GetWorldHeadlines');
+    const { result } = renderHookInScreen(() => useScopeArticleList({ scope: WORLD, enabled: true, topicId: 'ct-politics' }));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(sent[0].vars.canonicalTopicIds).toEqual(['ct-politics']);
+    expect(ids(result)).toHaveLength(10);
+  });
+
+  it('an id the server does not know matches nothing', async () => {
+    const { result } = renderHookInScreen(() => useScopeArticleList({ scope: WORLD, enabled: true, topicId: 'nope' }));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(ids(result)).toEqual([]);
+    expect(result.current.loadFailed).toBe(false);
+  });
+
+  it('sends no canonicalTopicIds without a pick', async () => {
+    const sent = record('GetWorldHeadlines');
+    const { result } = render(WORLD);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(sent[0].vars.canonicalTopicIds ?? null).toBeNull();
   });
 });

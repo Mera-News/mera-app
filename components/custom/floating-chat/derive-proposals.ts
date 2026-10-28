@@ -6,6 +6,7 @@ import {
   type SuppressionKindName,
 } from '@/lib/news-harness/core/types';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
+import { describePlace, normalizePlaces } from '@/lib/news-harness/persona-management/fact-places';
 import { asRecord, toStringArray } from './derive-fact-cards';
 import { readCardOptions } from './track-options';
 
@@ -102,6 +103,14 @@ export function parseProposalAction(value: unknown): ProposalAction | null {
       return publicationId && (pref === 'boost' || pref === 'deprioritize' || pref === 'mute')
         ? { type: 'set_publication_pref', publicationId, publicationPref: pref }
         : null;
+    }
+    case 'set_fact_places': {
+      // The echo holds codes; the label is rebuilt from them so a resumed card
+      // can never show names the codes do not mean.
+      const factId = typeof rec.fact_id === 'string' ? rec.fact_id : '';
+      const places = normalizePlaces(Array.isArray(rec.places) ? rec.places : []);
+      const label = places.map(describePlace).filter(Boolean).join('; ');
+      return factId && places.length > 0 && label ? { type: 'set_fact_places', fact_id: factId, places, label } : null;
     }
     case 'set_source_scope_pref': {
       // source-pref v47 (D2/D6). The PERSISTED args carry what the model said

@@ -205,6 +205,28 @@ describe('buildContext', () => {
     expect(ctx).toContain('## ARTICLE');
   });
 
+  it("lists the reader's recent mistakes as context only", async () => {
+    const { suggestionId } = await seedSuggestion({ articleId: 'art-1' });
+    await recordVerdictFeedback({
+      articleId: 'art-9',
+      sentiment: 'dislike',
+      title: 'Another story',
+      contextJson: JSON.stringify({
+        treePath: ['not_about_fact'],
+        answers: [{ leafId: 'not_about_fact', path: ['not_about_fact'], cause: 'system', value: 'fact-1' }],
+        fact_id: 'fact-1',
+        country: 'XA',
+        language: 'xa',
+        publication: '<site>',
+      }),
+    });
+
+    const ctx = await makeAgent({ suggestionId }).buildContext();
+
+    expect(ctx).toContain("## MERA'S RECENT MISTAKES");
+    expect(ctx).toContain('- This story isn\'t about the interest it was shown for (fact [fact-1]; <site>, XA, xa)');
+  });
+
   it('lists the ACTIVE filters, so the agent can offer to remove one', async () => {
     const { suggestionId } = await seedSuggestion({ articleId: 'art-1' });
     const filter = await addSuppression({ pattern: 'celebrity gossip', strength: 0.9, source: 'chat' as never });

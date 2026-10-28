@@ -85,3 +85,29 @@ it('an expand without a draft clears a stale one', () => {
   store().expand({ kind: 'persona', page: 'facts' });
   expect(store().pendingDraft).toBeNull();
 });
+
+describe('feedback answers are part of the article context', () => {
+  const article = (answer: string) => ({
+    kind: 'article-suggestion' as const,
+    articleId: 'a1',
+    feedbackAnswers: { answers: [{ cause: 'system' as const, question: 'Wrong fact', answer }], screen: 'Anything else?' },
+  });
+  function openThenClose(answer: string) {
+    store().expand(article(answer));
+    store().setConversationId('c1');
+    store().collapse();
+    jest.advanceTimersByTime(KEEP_THREAD_MS + 1);
+  }
+
+  it('new answers on the same article start a fresh thread', () => {
+    openThenClose('first');
+    store().expand(article('second'));
+    expect(store().conversationId).toBeNull();
+  });
+
+  it('the same answers keep the thread', () => {
+    openThenClose('first');
+    store().expand(article('first'));
+    expect(store().conversationId).toBe('c1');
+  });
+});

@@ -1,9 +1,8 @@
 import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
-import FeedbackTreeLevel from '@/components/custom/feedback-tree/FeedbackTreeLevel';
-import { feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
-import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
-import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
-import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
+import type { FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
+import { useFeedbackHub, type HubLevel } from '@/components/custom/feedback-tree/use-feedback-hub';
+import type { FeedbackTree, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
+import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
 import type { VisitInput } from '@/components/custom/cards/article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import type { InlineAccessibilityAction } from '@/components/custom/cards/use-article-actions';
@@ -46,32 +45,28 @@ export interface UseArticleMenuInput {
      *  unreachable with VoiceOver. */
     inlineActions?: readonly InlineAccessibilityAction[];
     /** COMPACT rows only: they draw no inline action row (owner review), so
-     *  like, not for me, save and share lead the menu instead. Surfaces with an
-     *  inline row (Feed card, detail) leave this out. */
+     *  "What's wrong with this story?", save and share lead the menu instead.
+     *  Surfaces with an inline row (Feed card, detail) leave this out. */
     rowActions?: {
-        /** A like is recorded: the item shows the filled glyph and reads
-         *  "Remove like"; a tap removes it. */
-        liked: boolean;
-        /** A dislike is recorded: "Remove not for me", filled glyph. Never
-         *  true together with `liked` (latest wins). */
-        disliked?: boolean;
+        /** The reader has answered the feedback sheet for this article: the
+         *  item shows the filled glyph. */
+        answered: boolean;
         saved: boolean;
-        onLike: () => void;
-        onDislike: () => void;
         onToggleSave: () => void;
         /** Undefined when there is nothing to share. */
         onShare?: () => void;
     };
-    /** A feedback-tree leaf settled (see useArticleActions.onLeafPicked). */
-    onLeafPicked?: (sentiment: VerdictSentiment, pathIds: string[], appliedCount: number, committed: boolean) => void;
-    /** Replaces the generic chat hand-off for an `openChat` tree leaf. The Feed
-     *  card and the detail screen pass theirs, which carries the verdict and
-     *  the tapped breadcrumb. Runs after the sheet has gone. */
-    onFeedbackChat?: (sentiment: VerdictSentiment, pathIds: string[]) => void;
-    /** Where the `browse_related` nudge goes (the Feed opens the detail
-     *  screen, the detail screen scrolls to its related coverage). Runs after
-     *  the sheet has gone. Omitted: a toast. */
-    onBrowseRelated?: (sentiment: VerdictSentiment) => void;
+    /** The sheet recorded this article's verdict (on the reader's FIRST
+     *  answer, never on open): the host fills its feedback icon. The row
+     *  itself is written here. */
+    onVerdictRecorded?: () => void;
+    /** The subject the verdict row is written with, when the host resolves a
+     *  richer one than `subject` (the detail screen). */
+    resolveVerdictSubject?: () => Promise<FeedbackSubject>;
+    /** Replaces the generic chat hand-off for Tell Mera. The Feed card and the
+     *  detail screen pass theirs (`openFeedbackChatWithPath`). Runs after the
+     *  sheet has gone. */
+    onFeedbackChat?: (pathIds: string[], answers: FeedbackAnswersHandoff) => void;
     /** Replaces the card-level tree context (`buildOverlayContext(subject)`)
      *  for a host that resolves a richer subject itself (the detail screen). */
     resolveTreeContext?: () => Promise<LocalFeedbackContext>;
@@ -101,22 +96,22 @@ type SheetLevel =
     | { kind: 'main' }
     | { kind: 'source' }
     | { kind: 'support' }
-    | { kind: 'tree'; root: VerdictSentiment; pathIds: string[] }
-    | { kind: 'tree-confirm'; root: VerdictSentiment; node: FeedbackTreeNode; pathIds: string[] }
+    | HubLevel
     | { kind: 'follow-tracked' }
     | { kind: 'follow-locked' };
 
 function levelKey(depth: number, l: SheetLevel): string {
-    if (l.kind === 'tree') return `${depth}:tree:${l.root}:${l.pathIds.join('/')}`;
+    if (l.kind === 'tree') return `${depth}:tree:${l.pathIds.join('/')}`;
     if (l.kind === 'tree-confirm') return `${depth}:confirm:${l.node.id}`;
+    if (l.kind === 'place') return `${depth}:place`;
     return `${depth}:${l.kind}`;
 }
 
 export interface UseArticleMenu {
     open: () => void;
-    /** Open the sheet straight at a feedback tree's root (no Back row): an
-     *  inline thumb outside the ••• menu. */
-    openFeedback: (root: VerdictSentiment) => void;
+    /** Open the sheet straight at the feedback root (no Back row): the inline
+     *  feedback button outside the ••• menu. Records nothing by itself. */
+    openFeedback: () => void;
     /** What an inline Follow button does: start the proposal flow, or open
      *  the sheet at the "already following" / free-tier level. */
     openFollow: () => void;
@@ -192,11 +187,13 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         extraItems,
         inlineActions,
         rowActions,
-        onLeafPicked,
         onFeedbackChat,
-        onBrowseRelated,
         followLive,
     } = input;
+    const onVerdictRecordedRef = useRef(input.onVerdictRecorded);
+    onVerdictRecordedRef.current = input.onVerdictRecorded;
+    const resolveVerdictSubjectRef = useRef(input.resolveVerdictSubject);
+    resolveVerdictSubjectRef.current = input.resolveVerdictSubject;
     const resolveTreeContextRef = useRef(input.resolveTreeContext);
     resolveTreeContextRef.current = input.resolveTreeContext;
     const follow = useTrackButton(subject, engaged || !!followLive);
@@ -221,11 +218,16 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const [mounted, setMounted] = useState(false);
     const visibleRef = useRef(false);
     visibleRef.current = visible;
+    // Between a close and its reported dismissal. A ••• or feedback tap that
+    // lands then is ignored: reopening the sheet put it back over whatever the
+    // closing item navigated to (the Facts page), until Cancel.
+    const closingRef = useRef(false);
     const [treeContext, setTreeContext] = useState<LocalFeedbackContext>({ articleTitle: subject.title });
 
     /** Show a level: pushed on top when the sheet is open, else the sheet opens
      *  straight at it (no Back row). */
     const showLevel = useCallback((level: SheetLevel) => {
+        if (closingRef.current) return;
         setEngaged(true);
         if (visibleRef.current) {
             setDirection('push');
@@ -237,11 +239,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         setMounted(true);
         setVisible(true);
     }, []);
-    const back = useCallback(() => {
-        setDirection('pop');
-        setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
-    }, []);
-
     // The tree AND its gating context are resolved BEFORE a tree level is
     // pushed, so the level lands with its final rows. Pushing first and
     // resolving after drew one row, then grew the sheet ~1.2s later when the
@@ -282,8 +279,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     }, [subject]);
 
     const enterTree = useCallback(
-        (root: VerdictSentiment) => {
-            const level: SheetLevel = { kind: 'tree', root, pathIds: [] };
+        () => {
+            const level: SheetLevel = { kind: 'tree', pathIds: [] };
             const prep = prepareTree();
             if (prep.done) showLevel(level);
             else void prep.promise.then(() => showLevel(level));
@@ -377,37 +374,13 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         if (rowActions) {
             list.push(
                 {
-                    key: 'like',
-                    // Once liked the item says what a tap does now (it removes
-                    // the like), instead of repeating "I like it".
-                    label: rowActions.liked ? t('articleMenu.removeLike') : t('articleFeedback.likeLabel'),
-                    icon: rowActions.liked ? 'thumb-up' : 'thumb-up-off-alt',
-                    testID: 'menu-like',
+                    key: 'whats-wrong',
+                    label: t('feedbackTree.menu.title'),
+                    icon: rowActions.answered ? 'feedback' : 'chat-bubble-outline',
+                    testID: 'menu-whats-wrong',
                     staysOpen: true,
-                    opensLevel: !rowActions.liked,
-                    // Recording a like opens its tree as a level of this sheet.
-                    // Removing one needs nothing more, so the sheet closes.
-                    run: () => {
-                        const wasLiked = rowActions.liked;
-                        rowActions.onLike();
-                        if (!wasLiked) enterTree('like');
-                        else if (visibleRef.current) closeRef.current();
-                    },
-                },
-                {
-                    key: 'dislike',
-                    // Mirrors Like: once disliked it says a tap removes it.
-                    label: rowActions.disliked ? t('articleMenu.removeDislike') : t('articleFeedback.dislikeLabel'),
-                    icon: rowActions.disliked ? 'thumb-down' : 'thumb-down-off-alt',
-                    testID: 'menu-dislike',
-                    staysOpen: true,
-                    opensLevel: !rowActions.disliked,
-                    run: () => {
-                        const wasDisliked = !!rowActions.disliked;
-                        rowActions.onDislike();
-                        if (!wasDisliked) enterTree('dislike');
-                        else if (visibleRef.current) closeRef.current();
-                    },
+                    opensLevel: true,
+                    run: () => enterTree(),
                 },
                 {
                     key: 'save',
@@ -573,6 +546,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // while the menu's Modal host is still mounted, and nothing reports it.
     const runAfterUnmountRef = useRef(false);
     const onDismissed = useCallback(() => {
+        closingRef.current = false;
         if (fallbackRef.current) {
             clearTimeout(fallbackRef.current);
             fallbackRef.current = null;
@@ -584,14 +558,24 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     useEffect(() => {
         if (mounted || !runAfterUnmountRef.current) return;
         runAfterUnmountRef.current = false;
-        requestAnimationFrame(() => flushPending());
+        requestAnimationFrame(() => {
+            flushPending();
+            // One summary toast for the feedback answers, now the sheet is gone.
+            hubRef.current.onSheetGone();
+        });
     }, [mounted, flushPending]);
 
-    const close = useCallback(() => setVisible(false), []);
+    const close = useCallback(() => {
+        closingRef.current = true;
+        setVisible(false);
+    }, []);
     /** Close the sheet, then run `after` once it has gone (native UI, a
      *  screen push, a chat, a toast). */
     const closeThen = useCallback(
         (after?: () => void) => {
+            // A second pick while closing would replace the first one's item.
+            if (closingRef.current) return;
+            closingRef.current = true;
             pendingRef.current = after ? { key: 'after', label: '', icon: null, testID: '', run: after } : null;
             setVisible(false);
             if (fallbackRef.current) clearTimeout(fallbackRef.current);
@@ -658,22 +642,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     );
 
     // ── The levels ─────────────────────────────────────────────────────────
-    const chrome = useCallback(
-        (key: string, def: string, vars?: Record<string, unknown>) =>
-            t(`feedbackTree.${key}`, { defaultValue: def, ...vars }) as string,
-        [t],
-    );
-    const showInfo = useCallback(
-        (title: string, body?: string) => {
-            toast.show({
-                duration: 2500,
-                render: () => (
-                    <MeraToast tone="info" title={title} body={body} />
-                ),
-            });
-        },
-        [toast],
-    );
     // What the tree's rows SAY: the context plus the publication's display
     // name for {{publication}}. The leaf actions keep `treeContext`, whose
     // `publicationName` stays the raw key a publication filter matches on.
@@ -682,36 +650,63 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         () => ({ ...treeContext, publicationDisplayName: treePublicationShown || null }),
         [treeContext, treePublicationShown],
     );
-    // The Undo toast names the leaf exactly as its row did (vars filled).
-    const treeLabel = useCallback(
-        (node: FeedbackTreeNode) => feedbackNodeLabel(t, node, labelContext),
-        [t, labelContext],
-    );
-    const performLeaf = useCallback(
-        (root: VerdictSentiment, node: FeedbackTreeNode, pathIds: string[]) =>
-            performFeedbackLeaf(node, pathIds, {
-                context: treeContext,
-                chatContext: {
-                    kind: 'article-suggestion',
-                    articleId: subject.articleId,
-                    suggestionId: subject.suggestionId,
-                    articleTitle: subject.title,
-                },
-                chatMessage: t(
-                    root === 'like' ? 'articleFeedback.thumbsUpMessage' : 'articleFeedback.thumbsDownMessage',
-                    { title: subject.title },
-                ),
-                label: treeLabel(node),
-                spend: { articleId: subject.articleId, sentiment: root },
-                openChat: onFeedbackChat ? () => onFeedbackChat(root, pathIds) : undefined,
-                browseRelated: onBrowseRelated ? () => onBrowseRelated(root) : undefined,
-                closeThen,
-                onLeafPicked: (p, applied, committed) => onLeafPicked?.(root, p, applied, committed),
-                showInfo,
-                chrome,
-            }),
-        [treeContext, subject, t, treeLabel, closeThen, onLeafPicked, onFeedbackChat, onBrowseRelated, showInfo, chrome],
-    );
+    // The verdict row is written on the reader's FIRST answer, never on open
+    // (owner): Done with no answer changes nothing. Idempotent per article, so
+    // a second answer, or a sheet opened again, reuses the row.
+    const verdictRef = useRef<{ articleId: string; promise: Promise<void> } | null>(null);
+    const ensureVerdict = useCallback((): Promise<void> => {
+        if (verdictRef.current?.articleId === subject.articleId) return verdictRef.current.promise;
+        const promise = (async () => {
+            // Required at call time: the service reaches the database, and this
+            // hook sits under every card.
+            /* eslint-disable @typescript-eslint/no-require-imports */
+            const { recordVerdictFeedback } = require('@/lib/database/services/article-feedback-service') as typeof import('@/lib/database/services/article-feedback-service');
+            const { buildContextJson } = require('@/components/custom/cards/feedback-subject') as typeof import('@/components/custom/cards/feedback-subject');
+            /* eslint-enable @typescript-eslint/no-require-imports */
+            const resolve = resolveVerdictSubjectRef.current;
+            const s = resolve ? await resolve().catch(() => subject) : subject;
+            await recordVerdictFeedback({
+                articleId: s.articleId,
+                suggestionId: s.suggestionId,
+                sentiment: 'dislike',
+                title: s.title,
+                origin: s.origin,
+                surface: s.surface,
+                contextJson: buildContextJson(s),
+            });
+            onVerdictRecordedRef.current?.();
+        })();
+        verdictRef.current = { articleId: subject.articleId, promise };
+        return promise;
+    }, [subject]);
+    const backToRoot = useCallback(() => {
+        setDirection('pop');
+        setStack((s) => {
+            const i = s.findIndex((l) => l.kind === 'tree' && l.pathIds.length === 0);
+            return i >= 0 ? s.slice(0, i + 1) : s;
+        });
+    }, []);
+    const hub = useFeedbackHub({
+        t,
+        subject,
+        context: labelContext,
+        tree,
+        ensureVerdict,
+        push: showLevel,
+        backToRoot,
+        closeThen,
+        onFeedbackChat,
+    });
+    const hubRef = useRef(hub);
+    hubRef.current = hub;
+    const stackTopRef = useRef<SheetLevel | undefined>(undefined);
+    stackTopRef.current = stack[stack.length - 1];
+    const back = useCallback(() => {
+        // Leaving the place screen with no pick is an answer too (persona re-checks it).
+        if (stackTopRef.current?.kind === 'place') hubRef.current.leavePlace();
+        setDirection('pop');
+        setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
+    }, []);
 
     const top = stack[stack.length - 1];
     const rows = (list: ArticleMenuItem[]) =>
@@ -735,51 +730,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             case 'support':
                 return rows(supportItems);
             case 'tree':
-                return tree ? (
-                    <FeedbackTreeLevel
-                        tree={tree}
-                        root={level.root}
-                        pathIds={level.pathIds}
-                        context={labelContext}
-                        onDescend={(node) =>
-                            showLevel({ ...level, pathIds: [...level.pathIds, node.id] })
-                        }
-                        onLeaf={(node, pathIds) =>
-                            leafNeedsConfirm(node)
-                                ? showLevel({ kind: 'tree-confirm', root: level.root, node, pathIds })
-                                : performLeaf(level.root, node, pathIds)
-                        }
-                    />
-                ) : null;
             case 'tree-confirm':
-                return (
-                    <>
-                        <SheetNote
-                            title={chrome('confirmMuteTitle', 'Never show this publication?')}
-                            // Unnamed: its own whole sentence, never an English
-                            // phrase spliced into a translated one.
-                            body={
-                                treePublicationShown
-                                    ? chrome(
-                                          'confirmMuteBody',
-                                          "You won't see articles from {{publication}} again. You can undo this anytime.",
-                                          { publication: treePublicationShown },
-                                      )
-                                    : chrome(
-                                          'confirmMuteBodyUnnamed',
-                                          "You won't see articles from this publication again. You can undo this anytime.",
-                                      )
-                            }
-                        />
-                        <ActionSheetRow
-                            testID="tree-confirm-destructive"
-                            label={treeLabel(level.node)}
-                            icon="block"
-                            destructive
-                            onPress={() => performLeaf(level.root, level.node, level.pathIds)}
-                        />
-                    </>
-                );
+            case 'place':
+            case 'report':
+                return hub.renderLevel(level);
             case 'follow-tracked':
                 return (
                     <>
@@ -822,13 +776,24 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             levelKey={top ? levelKey(stack.length, top) : 'none'}
             direction={direction}
             onBack={stack.length > 1 ? back : undefined}
+            closeLabel={hub.answered ? t('common.done') : undefined}
+            backAsLink={!!top && (top.kind === 'tree' || top.kind === 'tree-confirm' || top.kind === 'place' || top.kind === 'report')}
         >
             {top ? renderLevel(top) : null}
         </ActionSheet>
     );
+    const elementWithPicker = hub.element ? (
+        <>
+            {element}
+            {hub.element}
+        </>
+    ) : (
+        element
+    );
 
     return {
         open: useCallback(() => {
+            if (closingRef.current) return;
             setEngaged(true);
             prepareTree();
             setDirection('none');
@@ -840,7 +805,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         openFollow,
         tracked,
         openPublication,
-        element,
+        element: elementWithPicker,
         accessibilityActions,
         onAccessibilityAction,
     };

@@ -282,6 +282,8 @@ export interface AgentPersonaFact {
   id: string;
   statement: string;
   attribute?: string | null;
+  /** Place names the fact's news comes from ("India; Mumbai"), shown beside the statement only. */
+  places?: string;
 }
 
 export interface AgentPersona {
@@ -328,7 +330,7 @@ export function formatKnownFacts(facts: AgentPersonaFact[]): string {
   if (facts.length === 0) return 'Nothing yet.';
   return facts
     .slice(0, MAX_FACTS_IN_CONTEXT)
-    .map((f) => `- [${f.id}] '${escapeUntrusted(f.attribute ?? 'other', 60)}': ${escapeUntrusted(f.statement, 300)}`)
+    .map((f) => `- [${f.id}] '${escapeUntrusted(f.attribute ?? 'other', 60)}': ${escapeUntrusted(f.statement, 300)}${f.places ? ` (news from: ${escapeUntrusted(f.places, 120)})` : ''}`)
     .join('\n');
 }
 

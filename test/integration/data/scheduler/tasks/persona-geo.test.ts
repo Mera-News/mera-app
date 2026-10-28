@@ -9,7 +9,9 @@ import '@/lib/scheduler/tasks/persona-geo-task';
 import { addFact } from '@/lib/database/services/fact-service';
 import { getAll as getLocations } from '@/lib/database/services/location-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useDatabaseStore } from '@/lib/stores/database-store';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 
 import {
   DAY,
@@ -62,7 +64,10 @@ describe('registration', () => {
 });
 
 describe('the handler', () => {
+  // On-device, so the sweep has no place call to make: in the cloud it also asks the model where each
+  // fact's news comes from (covered in geo-derivation.test.ts), and a call that cannot run stamps nothing.
   it('derives a country from a fact, with no model call, and stamps lastRun (store and persisted)', async () => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
     await addFact(AMSTERDAM);
 
     expect(await runTask(TASK)).toBe('ran');

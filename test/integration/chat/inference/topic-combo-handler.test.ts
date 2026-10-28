@@ -110,6 +110,18 @@ describe('one batched call', () => {
     expect(rows.filter((r) => r?.status === 'pending' && r.attempts === 0)).toHaveLength(2);
   });
 
+  it('reads the fact places at run time into a Place line', async () => {
+    const support = await addFact(PORTO);
+    await tick(5);
+    const fact = await addFact('Interested in water supply', { places: ['IN|Madhya Pradesh|Bhopal'] });
+    const { jobOf } = await queuePass([fact.id]);
+
+    await runHead(jobOf(fact.id), fact.id);
+
+    expect(support.id).toBeTruthy();
+    expect(gatewayCalls('batch')[0].messages[1].content).toContain('\nPlace: Bhopal, Madhya Pradesh, India\n');
+  });
+
   it('caps the supporting facts at 25, newest first', async () => {
     const facts = await seed(['Fact zero', ...Array.from({ length: 30 }, (_, i) => `Support ${i}`)]);
     const { jobOf } = await queuePass([facts[0].id]);
