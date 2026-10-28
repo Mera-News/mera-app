@@ -321,11 +321,11 @@
     "relatedFromSubscriptions": "Das suas assinaturas",
     "relatedLoadFailed": "Não foi possível carregar os artigos relacionados.",
     "translateBlockedNote": "Alguns sites bloqueiam o Google Tradutor. Se a página não carregar, abra no site.",
-    "aboutTranslation": "Sobre a tradução",
-    "aboutTranslationBody": "Este artigo está em {{language}}. Seu celular pode traduzi-lo enquanto você lê.",
-    "aboutTranslationFallback": "Se não funcionar, abra no Google Tradutor, que navega pelo site através do Google.",
     "translateBlockedOn": "Alguns sites bloqueiam o Google Tradutor. Se não carregar, abra em {{publication}}.",
-    "youCameFromHere": "Você veio daqui"
+    "youCameFromHere": "Você veio daqui",
+    "howToTranslate": "Como traduzir",
+    "aboutGoogleTranslate": "Sobre o Google Tradutor",
+    "googleTranslateBody": "O Google Tradutor mostra este artigo em {{language}}. A página abre pelo Google, então o Google pode ver qual artigo você lê."
   },
   "sources": {
     "publishers": "Publicadores",
@@ -336,10 +336,7 @@
     "badgeRegulator": "Agência oficial"
   },
   "clusterDetail": {
-    "notTranslatable": "Este artigo está em {{language}}. Seu dispositivo não consegue traduzi-lo. Use o Google Translate para lê-lo no seu idioma.",
-    "notTranslatableOsOutdated": "Este artigo está em {{language}}. A tradução no dispositivo exige iOS {{requiredVersion}}: você está na versão iOS {{currentVersion}}. Atualize o iOS ou use o Google Translate para lê-lo no seu idioma.",
     "unknownLanguage": "outro idioma",
-    "translationGuideLink": "Mostre-me como traduzir o artigo",
     "showOriginal": "Ver original",
     "showTranslation": "Ver tradução"
   },

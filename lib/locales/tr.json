@@ -321,11 +321,11 @@
     "relatedFromSubscriptions": "Aboneliklerinizden",
     "relatedLoadFailed": "İlgili makaleler yüklenemedi.",
     "translateBlockedNote": "Bazı siteler Google Çeviri'yi engeller. Sayfa açılmazsa siteden aç.",
-    "aboutTranslation": "Çeviri hakkında",
-    "aboutTranslationBody": "Bu makale {{language}} dilinde. Telefonunuz okurken çevirebilir.",
-    "aboutTranslationFallback": "Bu işe yaramazsa, makaleyi Google Çeviri'de açın. Bu, makaleyi Google üzerinden okumak anlamına gelir.",
     "translateBlockedOn": "Bazı siteler Google Çeviri'yi engeller. Yüklenmezse, {{publication}} üzerinden açın.",
-    "youCameFromHere": "Buradan geldiniz"
+    "youCameFromHere": "Buradan geldiniz",
+    "howToTranslate": "Nasıl çevrilir",
+    "aboutGoogleTranslate": "Google Çeviri hakkında",
+    "googleTranslateBody": "Google Çeviri bu makaleyi {{language}} olarak gösterir. Sayfa Google üzerinden açıldığı için Google hangi makaleyi okuduğunu görebilir."
   },
   "sources": {
     "publishers": "Yayıncılar",
@@ -336,10 +336,7 @@
     "badgeRegulator": "Resmi kurum"
   },
   "clusterDetail": {
-    "notTranslatable": "Bu makale {{language}} dilinde. Cihazınız onu çeviremiyor. Kendi dilinizde okumak için Google Çeviri'yi kullanın.",
-    "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor: sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle ya da kendi dilinde okumak için Google Translate'i kullan.",
     "unknownLanguage": "başka bir dil",
-    "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
     "showOriginal": "Orijinali göster",
     "showTranslation": "Çeviriyi göster"
   },

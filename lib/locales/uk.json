@@ -347,11 +347,11 @@
     "relatedFromSubscriptions": "З ваших передплат",
     "relatedLoadFailed": "Не вдалося завантажити схожі статті.",
     "translateBlockedNote": "Деякі сайти блокують Google Перекладач. Якщо сторінка не відкривається, відкрийте її на сайті.",
-    "aboutTranslation": "Про переклад",
-    "aboutTranslationBody": "Ця стаття мовою: {{language}}. Ваш телефон може перекласти її, поки ви читаєте.",
-    "aboutTranslationFallback": "Якщо це не спрацювало, відкрийте статтю в Google Перекладачі. Так ви читатимете її через Google.",
     "translateBlockedOn": "Деякі сайти блокують Google Перекладач. Якщо сторінка не завантажується, відкрийте її на {{publication}}.",
-    "youCameFromHere": "Ви прийшли звідси"
+    "youCameFromHere": "Ви прийшли звідси",
+    "howToTranslate": "Як перекласти",
+    "aboutGoogleTranslate": "Про Google Перекладач",
+    "googleTranslateBody": "Google Перекладач показує цю статтю мовою: {{language}}. Сторінка відкривається через Google, тому Google бачить, яку статтю ви читаєте."
   },
   "sources": {
     "publishers": "Видавці",
@@ -362,10 +362,7 @@
     "badgeRegulator": "Офіційна агенція"
   },
   "clusterDetail": {
-    "notTranslatable": "Мова цієї статті: {{language}}. Ваш пристрій не може її перекласти. Скористайтеся Google Translate, щоб прочитати статтю вашою мовою.",
-    "notTranslatableOsOutdated": "Мова цієї статті: {{language}}. Переклад на пристрої потребує iOS {{requiredVersion}}, а у вас iOS {{currentVersion}}. Оновіть iOS або скористайтеся Google Translate, щоб прочитати статтю вашою мовою.",
     "unknownLanguage": "іншою мовою",
-    "translationGuideLink": "Покажи, як перекласти статтю",
     "showOriginal": "Показати оригінал",
     "showTranslation": "Показати переклад"
   },

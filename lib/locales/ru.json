@@ -347,11 +347,11 @@
     "relatedFromSubscriptions": "Из ваших подписок",
     "relatedLoadFailed": "Не удалось загрузить похожие статьи.",
     "translateBlockedNote": "Некоторые сайты блокируют Google Переводчик. Если страница не открывается, откройте её на сайте.",
-    "aboutTranslation": "О переводе",
-    "aboutTranslationBody": "Язык статьи: {{language}}. Ваш телефон может перевести её во время чтения.",
-    "aboutTranslationFallback": "Если это не помогает, откройте статью в Google Translate. Тогда вы будете читать её через Google.",
     "translateBlockedOn": "Некоторые сайты блокируют Google Translate. Если страница не открывается, откройте её на {{publication}}.",
-    "youCameFromHere": "Вы пришли отсюда"
+    "youCameFromHere": "Вы пришли отсюда",
+    "howToTranslate": "Как перевести",
+    "aboutGoogleTranslate": "О Google Переводчике",
+    "googleTranslateBody": "Google Переводчик показывает эту статью на языке: {{language}}. Страница открывается через Google, поэтому Google видит, какую статью вы читаете."
   },
   "sources": {
     "publishers": "Издатели",
@@ -362,10 +362,7 @@
     "badgeRegulator": "Официальное учреждение"
   },
   "clusterDetail": {
-    "notTranslatable": "Язык статьи: {{language}}. Ваше устройство не может её перевести. Используйте Google Translate, чтобы прочитать её на вашем языке.",
-    "notTranslatableOsOutdated": "Язык статьи: {{language}}. Перевод на устройстве требует iOS {{requiredVersion}}, а у вас iOS {{currentVersion}}. Обновите iOS или используйте Google Translate, чтобы прочитать статью на вашем языке.",
     "unknownLanguage": "другом языке",
-    "translationGuideLink": "Показать, как перевести статью",
     "showOriginal": "Показать оригинал",
     "showTranslation": "Показать перевод"
   },

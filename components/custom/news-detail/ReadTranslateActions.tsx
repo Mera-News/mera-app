@@ -1,5 +1,7 @@
 import AboutTranslationModal from '@/components/custom/news-detail/AboutTranslationModal';
+import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { Text } from '@/components/ui/text';
+import { guideVideoUrl } from '@/lib/config/branding';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useColors } from '@/lib/theme/tokens';
 import {
@@ -21,8 +23,8 @@ const PILL_HEIGHT = 40;
 const TOUCH_TARGET = 44;
 const FRAME_BLEED = (TOUCH_TARGET - PILL_HEIGHT) / 2;
 const ICON_SIZE = 18;
-/** The About translation line: 20pt of layout inside a 44pt touch frame. */
-const ABOUT_LINE = 20;
+/** A text line (How to translate, About Google Translate): 20pt of layout inside a 44pt touch frame. */
+const TEXT_LINE = 20;
 const HIDDEN = {
     accessible: false,
     accessibilityElementsHidden: true,
@@ -69,8 +71,9 @@ interface ReadTranslateActionsProps {
  *   ( ↗ Read on <publication>      )     green when the reader can read it (same
  *                                         language, or this phone translates it),
  *                                         else the ink outline
+ *          (▶) How to translate            another language only: the guide video
  *   ( G文 Read on Google Translate  )     green outline, another language only
- *          (?) About translation           muted text button, opens the sheet
+ *          (?) About Google Translate      muted text button, opens the sheet
  *
  * Render order is VoiceOver order. Each visual is hidden under a childless
  * labelled button (an icon glyph inside a button surfaces on iOS as its own
@@ -86,6 +89,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const colors = useColors();
     const appLanguage = useAppLanguage();
     const [aboutOpen, setAboutOpen] = useState(false);
+    const [guideOpen, setGuideOpen] = useState(false);
 
     const support = getArticleTranslationSupport(sourceLanguage, appLanguage);
     // Wrap the article URL with Mera's UTM referrer params BEFORE handing it to
@@ -143,6 +147,40 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
         </View>
     );
 
+    // A text line sits 12pt under the pill above it (the block's 10pt gap,
+    // then this frame's own bleed) and 10pt over the next.
+    const textLine = (
+        testID: string,
+        icon: keyof typeof MaterialIcons.glyphMap,
+        label: string,
+        onPress: () => void,
+        ink: string,
+    ) => (
+        <View
+            style={{
+                height: TOUCH_TARGET,
+                marginTop: 12 - 10 - (TOUCH_TARGET - TEXT_LINE) / 2,
+                marginBottom: -(TOUCH_TARGET - TEXT_LINE) / 2,
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
+        >
+            <View pointerEvents="none" {...HIDDEN} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialIcons name={icon} size={16} color={ink} {...HIDDEN} />
+                <Text scaleTier="chrome" style={{ color: ink, fontSize: 14, lineHeight: TEXT_LINE }}>
+                    {label}
+                </Text>
+            </View>
+            <Pressable
+                testID={testID}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                onPress={onPress}
+                style={StyleSheet.absoluteFill}
+            />
+        </View>
+    );
+
     return (
         // 13pt here + the screen VStack's ~11pt gap: about 24pt under the
         // action row, as in the old build.
@@ -156,6 +194,13 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
             )}
             {sameLanguage ? null : (
                 <>
+                    {textLine(
+                        'detail-how-to-translate',
+                        'play-circle-outline',
+                        t('articleDetail.howToTranslate'),
+                        () => setGuideOpen(true),
+                        colors.muted,
+                    )}
                     {route(
                         'detail-read-google-translate',
                         'g-translate',
@@ -163,45 +208,22 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                         () => openInAppBrowser(googleTranslateUrl),
                         colors.positive,
                     )}
-                    <View
-                        style={{
-                            height: TOUCH_TARGET,
-                            // The text sits 12pt under the last pill (the
-                            // block's 10pt gap, then this frame's own bleed).
-                            marginTop: 12 - 10 - (TOUCH_TARGET - ABOUT_LINE) / 2,
-                            marginBottom: -(TOUCH_TARGET - ABOUT_LINE) / 2,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <View
-                            pointerEvents="none"
-                            {...HIDDEN}
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                        >
-                            <MaterialIcons name="help-outline" size={16} color={colors.muted} {...HIDDEN} />
-                            <Text scaleTier="chrome" style={{ color: colors.muted, fontSize: 14, lineHeight: ABOUT_LINE }}>
-                                {t('articleDetail.aboutTranslation')}
-                            </Text>
-                        </View>
-                        <Pressable
-                            testID="detail-about-translation"
-                            accessibilityRole="button"
-                            accessibilityLabel={t('articleDetail.aboutTranslation')}
-                            onPress={() => setAboutOpen(true)}
-                            style={StyleSheet.absoluteFill}
-                        />
-                    </View>
+                    {textLine(
+                        'detail-about-translation',
+                        'help-outline',
+                        t('articleDetail.aboutGoogleTranslate'),
+                        () => setAboutOpen(true),
+                        colors.muted,
+                    )}
                 </>
             )}
             <AboutTranslationModal
                 open={aboutOpen}
                 onClose={() => setAboutOpen(false)}
-                support={support}
-                sourceLanguage={sourceLanguage}
                 appLanguage={appLanguage}
                 publication={publication}
             />
+            <VideoPlayerModal visible={guideOpen} uri={guideVideoUrl('translate', appLanguage)} onClose={() => setGuideOpen(false)} />
         </View>
     );
 };

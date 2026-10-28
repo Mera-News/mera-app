@@ -316,11 +316,11 @@
     "relatedFromSubscriptions": "來自您的訂閱",
     "relatedLoadFailed": "無法載入相關文章。",
     "translateBlockedNote": "有些網站會封鎖 Google 翻譯。如果頁面無法載入，請在原網站開啟。",
-    "aboutTranslation": "關於翻譯",
-    "aboutTranslationBody": "這篇文章是{{language}}內容。你的手機可以在你閱讀時為你翻譯。",
-    "aboutTranslationFallback": "如果無法使用，請用 Google 翻譯開啟，這表示你會透過 Google 瀏覽內容。",
     "translateBlockedOn": "有些網站會封鎖 Google 翻譯。如果無法載入，請到{{publication}}開啟。",
-    "youCameFromHere": "你是從這裡來的"
+    "youCameFromHere": "你是從這裡來的",
+    "howToTranslate": "如何翻譯",
+    "aboutGoogleTranslate": "關於 Google 翻譯",
+    "googleTranslateBody": "Google 翻譯會以{{language}}顯示這篇文章。頁面會透過 Google 開啟，因此 Google 能看到你在讀哪篇文章。"
   },
   "sources": {
     "publishers": "出版商",
@@ -331,10 +331,7 @@
     "badgeRegulator": "官方機構"
   },
   "clusterDetail": {
-    "notTranslatable": "這篇文章是 {{language}} 的內容。你的裝置無法翻譯。請使用 Google 翻譯，以你的語言閱讀。",
-    "notTranslatableOsOutdated": "這篇文章是{{language}}內容。裝置端翻譯需要 iOS {{requiredVersion}},你目前是 iOS {{currentVersion}}。請更新 iOS,或使用 Google 翻譯以你的語言閱讀。",
     "unknownLanguage": "另一種語言",
-    "translationGuideLink": "告訴我如何翻譯這篇文章",
     "showOriginal": "顯示原文",
     "showTranslation": "顯示譯文"
   },
