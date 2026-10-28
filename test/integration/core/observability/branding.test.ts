@@ -30,7 +30,7 @@ describe('config/branding — default values (iOS)', () => {
     delete process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
     delete process.env.EXPO_PUBLIC_WEBSITE_URL;
     delete process.env.EXPO_PUBLIC_GITHUB_URL;
-    delete process.env.EXPO_PUBLIC_TRANSLATION_GUIDE_URL;
+    delete process.env.EXPO_PUBLIC_GUIDE_VIDEO_BASE_URL;
     mockPlatformBranding.OS = 'ios';
   });
 
@@ -69,17 +69,19 @@ describe('config/branding — default values (iOS)', () => {
     expect(GITHUB_URL).toBe('https://github.com/Mera-News/mera-app');
   });
 
-  it('TRANSLATION_GUIDE_URL includes "ios" suffix on iOS', () => {
+  // Object names are <kind>-<platform>-<app language>.mp4, uploaded for every
+  // app language code (zh-Hans, zh-Hant and pt included, not zh-CN or pt-BR).
+  it('guideVideoUrl names the kind, the platform and the app language on iOS', () => {
     mockPlatformBranding.OS = 'ios';
-    const { TRANSLATION_GUIDE_URL } = require('@/lib/config/branding');
-    expect(TRANSLATION_GUIDE_URL).toMatch(/ios\.mp4$/);
-    expect(TRANSLATION_GUIDE_URL).not.toContain('android');
+    const { guideVideoUrl } = require('@/lib/config/branding');
+    expect(guideVideoUrl('translate', 'en')).toBe('https://storage.googleapis.com/mera-news-prod-guides/translate-ios-en.mp4');
+    expect(guideVideoUrl('phone-language', 'zh-Hant')).toBe('https://storage.googleapis.com/mera-news-prod-guides/phone-language-ios-zh-Hant.mp4');
   });
 
-  it('TRANSLATION_GUIDE_URL includes "android" suffix on Android', () => {
+  it('guideVideoUrl names android on Android', () => {
     mockPlatformBranding.OS = 'android';
-    const { TRANSLATION_GUIDE_URL } = require('@/lib/config/branding');
-    expect(TRANSLATION_GUIDE_URL).toMatch(/android\.mp4$/);
+    const { guideVideoUrl } = require('@/lib/config/branding');
+    expect(guideVideoUrl('translate', 'pt')).toBe('https://storage.googleapis.com/mera-news-prod-guides/translate-android-pt.mp4');
   });
 });
 
@@ -96,7 +98,7 @@ describe('config/branding — env overrides', () => {
     delete process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
     delete process.env.EXPO_PUBLIC_WEBSITE_URL;
     delete process.env.EXPO_PUBLIC_GITHUB_URL;
-    delete process.env.EXPO_PUBLIC_TRANSLATION_GUIDE_URL;
+    delete process.env.EXPO_PUBLIC_GUIDE_VIDEO_BASE_URL;
   });
 
   it('PRIVACY_URL uses env override when set', () => {
@@ -135,9 +137,10 @@ describe('config/branding — env overrides', () => {
     expect(GITHUB_URL).toBe('https://github.com/custom/fork');
   });
 
-  it('TRANSLATION_GUIDE_URL uses env override (platform-independent)', () => {
-    process.env.EXPO_PUBLIC_TRANSLATION_GUIDE_URL = 'https://custom.example/guide.mp4';
-    const { TRANSLATION_GUIDE_URL } = require('@/lib/config/branding');
-    expect(TRANSLATION_GUIDE_URL).toBe('https://custom.example/guide.mp4');
+  it('guideVideoUrl uses the env base URL override', () => {
+    mockPlatformBranding.OS = 'ios';
+    process.env.EXPO_PUBLIC_GUIDE_VIDEO_BASE_URL = 'https://custom.example/guides';
+    const { guideVideoUrl } = require('@/lib/config/branding');
+    expect(guideVideoUrl('translate', 'ar')).toBe('https://custom.example/guides/translate-ios-ar.mp4');
   });
 });

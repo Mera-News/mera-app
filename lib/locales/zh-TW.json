@@ -402,7 +402,8 @@
     "switchingCancel": "停止切換語言",
     "switchingNudge": "你的裝置正在準備 {{language}} 翻譯套件。請保持此畫面開啟，直到完成。如果現在離開，新聞文章會維持英文。",
     "switchingTitle": "正在設定{{language}}…",
-    "translationUnavailableOnThisDevice": "這台裝置無法將新聞文章翻譯成{{language}},將改用英文顯示。"
+    "translationUnavailableOnThisDevice": "這台裝置無法將新聞文章翻譯成{{language}},將改用英文顯示。",
+    "phoneGuideLink": "教我如何變更手機語言"
   },
   "meraProtocol": {
     "title": "梅拉協定",

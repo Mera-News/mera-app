@@ -402,7 +402,8 @@
     "switchingCancel": "Hentikan pergantian bahasa",
     "switchingNudge": "Perangkat Anda sedang menyiapkan paket terjemahan {{language}}. Tetap buka layar ini sampai selesai. Jika Anda keluar sekarang, artikel berita akan tetap dalam bahasa Inggris.",
     "switchingTitle": "Menyiapkan {{language}}…",
-    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris."
+    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris.",
+    "phoneGuideLink": "Tunjukkan cara mengubah bahasa ponsel saya"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

@@ -463,7 +463,8 @@
     "switchingCancel": "إيقاف تغيير اللغة",
     "switchingNudge": "يجهّز جهازك حزمة ترجمة {{language}}. أبقِ هذه الشاشة مفتوحة حتى تكتمل. إذا غادرتها الآن، فستبقى المقالات الإخبارية بالإنجليزية.",
     "switchingTitle": "جارٍ إعداد {{language}}…",
-    "translationUnavailableOnThisDevice": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى {{language}}. سيتم عرضها بالإنجليزية بدلاً من ذلك."
+    "translationUnavailableOnThisDevice": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى {{language}}. سيتم عرضها بالإنجليزية بدلاً من ذلك.",
+    "phoneGuideLink": "أرني كيفية تغيير لغة هاتفي"
   },
   "meraProtocol": {
     "title": "بروتوكول ميرا",

@@ -402,7 +402,8 @@
     "switchingCancel": "Dừng chuyển ngôn ngữ",
     "switchingNudge": "Thiết bị của bạn đang chuẩn bị gói dịch {{language}}. Vui lòng giữ màn hình này mở cho đến khi hoàn tất. Nếu bạn rời đi bây giờ, các bài viết tin tức sẽ vẫn hiển thị bằng tiếng Anh.",
     "switchingTitle": "Đang thiết lập {{language}}…",
-    "translationUnavailableOnThisDevice": "Thiết bị này không thể dịch bài viết tin tức sang {{language}}. Đang hiển thị bằng tiếng Anh thay thế."
+    "translationUnavailableOnThisDevice": "Thiết bị này không thể dịch bài viết tin tức sang {{language}}. Đang hiển thị bằng tiếng Anh thay thế.",
+    "phoneGuideLink": "Chỉ tôi cách đổi ngôn ngữ điện thoại"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

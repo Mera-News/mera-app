@@ -10,8 +10,12 @@ import { requestRestart } from '@/lib/app-restart';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
-import React, { useCallback, useMemo } from 'react';
-import { View } from 'react-native';
+import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
+import { Text } from '@/components/ui/text';
+import { guideVideoUrl } from '@/lib/config/branding';
+import { useColors } from '@/lib/theme/tokens';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { showDialog } from '@/lib/dialog';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +34,8 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     const { t } = useTranslation();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const phone = useMemo(() => phoneLanguage(), []);
+    const colors = useColors();
+    const [guideOpen, setGuideOpen] = useState(false);
 
     // Only fires on a language that was actually applied, so a failed attempt
     // can never prompt for a restart the user did not ask for.
@@ -150,9 +156,28 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                         testIDPrefix="language-option"
                         keepCurrent
                     />
+                    {/* The only place the phone-language guide lives: pages translate
+                        into the phone's language, not the app's. */}
+                    <Pressable
+                        testID="language-phone-guide"
+                        accessibilityRole="link"
+                        accessibilityLabel={t('language.phoneGuideLink')}
+                        disabled={busy}
+                        onPress={() => setGuideOpen(true)}
+                        style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 }}
+                    >
+                        <Text style={{ color: colors.accentText, fontSize: 16, fontWeight: '600' }}>
+                            {t('language.phoneGuideLink')}
+                        </Text>
+                    </Pressable>
                 </View>
                 {/* Last, so it paints over the page while Apple's sheet is up. */}
                 <LanguageDownloadNotice code={noticeCode} top={insets.top + 8} />
+                <VideoPlayerModal
+                    visible={guideOpen}
+                    uri={guideVideoUrl('phone-language', appLanguage)}
+                    onClose={() => setGuideOpen(false)}
+                />
             </Box>
         </GluestackUIProvider>
     );

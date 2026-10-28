@@ -407,7 +407,8 @@
     "switchingCancel": "Dil değiştirmeyi durdur",
     "switchingNudge": "Cihazınız {{language}} çeviri paketini hazırlıyor. İşlem bitene kadar lütfen bu ekranı açık tutun. Şimdi ayrılırsanız haberler İngilizce kalmaya devam eder.",
     "switchingTitle": "{{language}} dili ayarlanıyor…",
-    "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor."
+    "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor.",
+    "phoneGuideLink": "Telefonumun dilini nasıl değiştireceğimi göster"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

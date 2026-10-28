@@ -1,0 +1,22 @@
+{
+  "ar": { "language": { "phoneGuideLink": "أرني كيفية تغيير لغة هاتفي" } },
+  "de": { "language": { "phoneGuideLink": "Zeig mir, wie ich die Sprache meines Telefons ändere" } },
+  "en": { "language": { "phoneGuideLink": "Show me how to change my phone's language" } },
+  "es": { "language": { "phoneGuideLink": "Muéstrame cómo cambiar el idioma de mi teléfono" } },
+  "fr": { "language": { "phoneGuideLink": "Montrez-moi comment changer la langue de mon téléphone" } },
+  "hi": { "language": { "phoneGuideLink": "मुझे फ़ोन की भाषा बदलने का तरीका बताएं" } },
+  "id": { "language": { "phoneGuideLink": "Tunjukkan cara mengubah bahasa ponsel saya" } },
+  "it": { "language": { "phoneGuideLink": "Mostrami come cambiare la lingua del telefono" } },
+  "ja": { "language": { "phoneGuideLink": "スマホの言語を変更する方法を教えてください" } },
+  "ko": { "language": { "phoneGuideLink": "휴대폰 언어를 바꾸는 방법 보기" } },
+  "nl": { "language": { "phoneGuideLink": "Laat zien hoe ik de taal van mijn telefoon wijzig" } },
+  "pl": { "language": { "phoneGuideLink": "Pokaż, jak zmienić język telefonu" } },
+  "pt-BR": { "language": { "phoneGuideLink": "Mostre como mudar o idioma do meu celular" } },
+  "ru": { "language": { "phoneGuideLink": "Покажите, как сменить язык телефона" } },
+  "th": { "language": { "phoneGuideLink": "แสดงวิธีเปลี่ยนภาษาของโทรศัพท์" } },
+  "tr": { "language": { "phoneGuideLink": "Telefonumun dilini nasıl değiştireceğimi göster" } },
+  "uk": { "language": { "phoneGuideLink": "Покажіть, як змінити мову телефона" } },
+  "vi": { "language": { "phoneGuideLink": "Chỉ tôi cách đổi ngôn ngữ điện thoại" } },
+  "zh-CN": { "language": { "phoneGuideLink": "教我如何更改手机语言" } },
+  "zh-TW": { "language": { "phoneGuideLink": "教我如何變更手機語言" } }
+}
