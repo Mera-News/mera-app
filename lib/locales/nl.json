@@ -405,7 +405,8 @@
     "switchingNudge": "Je toestel bereidt het vertaalpakket voor {{language}} voor. Laat dit scherm open staan tot het klaar is. Als je nu weggaat, blijven nieuwsartikelen in het Engels.",
     "switchingTitle": "{{language}} instellen…",
     "translationUnavailableOnThisDevice": "Dit toestel kan nieuwsartikelen niet naar {{language}} vertalen. In plaats daarvan tonen we Engels.",
-    "phoneGuideLink": "Laat zien hoe ik de taal van mijn telefoon wijzig"
+    "phoneGuideBody": "Kun je artikelen niet naar je taal vertalen? Voeg de taal eerst toe in de instellingen van je telefoon.",
+    "phoneGuideWatch": "Bekijken"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

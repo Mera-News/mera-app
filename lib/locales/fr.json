@@ -410,7 +410,8 @@
     "switchingNudge": "Votre appareil prépare le pack de traduction {{language}}. Gardez cet écran ouvert jusqu'à la fin. Si vous le quittez maintenant, les articles resteront en anglais.",
     "switchingTitle": "Configuration de {{language}}…",
     "translationUnavailableOnThisDevice": "Cet appareil ne peut pas traduire les articles d'actualité en {{language}}. Affichage en anglais à la place.",
-    "phoneGuideLink": "Montrez-moi comment changer la langue de mon téléphone"
+    "phoneGuideBody": "Impossible de traduire les articles dans votre langue ? Ajoutez d'abord la langue dans les réglages de votre téléphone.",
+    "phoneGuideWatch": "Regarder"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

@@ -405,7 +405,8 @@
     "switchingNudge": "Dein Gerät bereitet gerade das Übersetzungspaket für {{language}} vor. Lass diesen Bildschirm geöffnet, bis es fertig ist. Wenn du ihn jetzt verlässt, bleiben die Nachrichtenartikel auf Englisch.",
     "switchingTitle": "{{language}} wird eingerichtet …",
     "translationUnavailableOnThisDevice": "Dieses Gerät kann Nachrichtenartikel nicht in {{language}} übersetzen. Es wird stattdessen Englisch angezeigt.",
-    "phoneGuideLink": "Zeig mir, wie ich die Sprache meines Telefons ändere"
+    "phoneGuideBody": "Artikel lassen sich nicht in deine Sprache übersetzen? Füge die Sprache zuerst in den Einstellungen deines Telefons hinzu.",
+    "phoneGuideWatch": "Ansehen"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

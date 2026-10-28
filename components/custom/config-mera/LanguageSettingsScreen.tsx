@@ -161,13 +161,17 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                     <Pressable
                         testID="language-phone-guide"
                         accessibilityRole="link"
-                        accessibilityLabel={t('language.phoneGuideLink')}
+                        accessibilityLabel={`${t('language.phoneGuideBody')} ${t('language.phoneGuideWatch')}`}
                         disabled={busy}
                         onPress={() => setGuideOpen(true)}
                         style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 }}
                     >
-                        <Text style={{ color: colors.accentText, fontSize: 16, fontWeight: '600' }}>
-                            {t('language.phoneGuideLink')}
+                        {/* The whole line opens the video; "Watch" is what reads as the link. */}
+                        <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 20 }}>
+                            {t('language.phoneGuideBody')}{' '}
+                            <Text style={{ color: colors.accentText, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>
+                                {t('language.phoneGuideWatch')}
+                            </Text>
                         </Text>
                     </Pressable>
                 </View>

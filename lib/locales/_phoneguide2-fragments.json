@@ -1,0 +1,22 @@
+{
+  "ar": { "language": { "phoneGuideBody": "لا يمكنك ترجمة المقالات إلى لغتك؟ أضف اللغة أولًا في إعدادات هاتفك.", "phoneGuideWatch": "شاهد" } },
+  "de": { "language": { "phoneGuideBody": "Artikel lassen sich nicht in deine Sprache übersetzen? Füge die Sprache zuerst in den Einstellungen deines Telefons hinzu.", "phoneGuideWatch": "Ansehen" } },
+  "en": { "language": { "phoneGuideBody": "Unable to translate articles into your language? First add the language in your phone's settings.", "phoneGuideWatch": "Watch" } },
+  "es": { "language": { "phoneGuideBody": "¿No puedes traducir artículos a tu idioma? Primero añade el idioma en los ajustes de tu teléfono.", "phoneGuideWatch": "Ver" } },
+  "fr": { "language": { "phoneGuideBody": "Impossible de traduire les articles dans votre langue ? Ajoutez d'abord la langue dans les réglages de votre téléphone.", "phoneGuideWatch": "Regarder" } },
+  "hi": { "language": { "phoneGuideBody": "लेखों का आपकी भाषा में अनुवाद नहीं हो रहा? पहले अपने फ़ोन की सेटिंग्स में भाषा जोड़ें।", "phoneGuideWatch": "देखें" } },
+  "id": { "language": { "phoneGuideBody": "Tidak bisa menerjemahkan artikel ke bahasa Anda? Tambahkan dulu bahasanya di pengaturan ponsel Anda.", "phoneGuideWatch": "Tonton" } },
+  "it": { "language": { "phoneGuideBody": "Non riesci a tradurre gli articoli nella tua lingua? Prima aggiungi la lingua nelle impostazioni del telefono.", "phoneGuideWatch": "Guarda" } },
+  "ja": { "language": { "phoneGuideBody": "記事を自分の言語に翻訳できない場合は、まずスマホの設定でその言語を追加してください。", "phoneGuideWatch": "動画を見る" } },
+  "ko": { "language": { "phoneGuideBody": "기사가 내 언어로 번역되지 않나요? 먼저 휴대폰 설정에서 언어를 추가하세요.", "phoneGuideWatch": "보기" } },
+  "nl": { "language": { "phoneGuideBody": "Kun je artikelen niet naar je taal vertalen? Voeg de taal eerst toe in de instellingen van je telefoon.", "phoneGuideWatch": "Bekijken" } },
+  "pl": { "language": { "phoneGuideBody": "Nie możesz przetłumaczyć artykułów na swój język? Najpierw dodaj język w ustawieniach telefonu.", "phoneGuideWatch": "Obejrzyj" } },
+  "pt-BR": { "language": { "phoneGuideBody": "Não consegue traduzir artigos para o seu idioma? Primeiro adicione o idioma nas configurações do celular.", "phoneGuideWatch": "Assistir" } },
+  "ru": { "language": { "phoneGuideBody": "Не получается перевести статьи на ваш язык? Сначала добавьте язык в настройках телефона.", "phoneGuideWatch": "Смотреть" } },
+  "th": { "language": { "phoneGuideBody": "แปลบทความเป็นภาษาของคุณไม่ได้ใช่ไหม ให้เพิ่มภาษาในการตั้งค่าโทรศัพท์ก่อน", "phoneGuideWatch": "ดูวิดีโอ" } },
+  "tr": { "language": { "phoneGuideBody": "Makaleler dilinize çevrilemiyor mu? Önce dili telefonunuzun ayarlarından ekleyin.", "phoneGuideWatch": "İzle" } },
+  "uk": { "language": { "phoneGuideBody": "Не вдається перекласти статті вашою мовою? Спочатку додайте мову в налаштуваннях телефона.", "phoneGuideWatch": "Дивитися" } },
+  "vi": { "language": { "phoneGuideBody": "Không dịch được bài viết sang ngôn ngữ của bạn? Trước tiên, hãy thêm ngôn ngữ trong phần cài đặt điện thoại.", "phoneGuideWatch": "Xem" } },
+  "zh-CN": { "language": { "phoneGuideBody": "无法将文章翻译成你的语言？请先在手机设置中添加该语言。", "phoneGuideWatch": "观看" } },
+  "zh-TW": { "language": { "phoneGuideBody": "無法將文章翻譯成你的語言？請先在手機設定中加入該語言。", "phoneGuideWatch": "觀看" } }
+}

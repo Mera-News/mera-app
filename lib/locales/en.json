@@ -744,7 +744,8 @@
     "switchUnsupportedBody": "This version of iOS can't translate into {{language}}, so you're still using {{previous}}.",
     "switchDeviceUnsupportedBody": "This device can't translate news articles into any language, so the app is using English. {{language}} would leave articles untranslated.",
     "translationUnavailableOnThisDevice": "This device can't translate news articles into {{language}}. Showing English instead.",
-    "phoneGuideLink": "Show me how to change my phone's language"
+    "phoneGuideBody": "Unable to translate articles into your language? First add the language in your phone's settings.",
+    "phoneGuideWatch": "Watch"
   },
   "meraProtocol": {
     "attestationTitle": "Verify attestation",
