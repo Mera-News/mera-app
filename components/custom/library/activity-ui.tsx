@@ -4,21 +4,19 @@
 // every one of those screens draws (back, title row, intro, one list).
 
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import RestoreReveal from '@/components/custom/nav/RestoreReveal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { getCountryName } from '@/lib/algorithms/country-utils';
 import { WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { buildActivityShareText } from '@/lib/stats/activity';
 import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { TFunction } from 'i18next';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type FlatListProps, Share, StyleSheet, View } from 'react-native';
 
@@ -117,9 +115,6 @@ export function ActivityScreen<T>({
 }: ActivityScreenProps<T>): React.ReactElement {
     const c = useColors();
     const endClearance = useListEndClearance();
-    const listRef = useRef<FlatList<T>>(null);
-    const yRef = useRef(0);
-    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     const header = (
         <View style={styles.header}>
             <View style={styles.titleRow}>
@@ -143,20 +138,16 @@ export function ActivityScreen<T>({
     return (
         <View style={{ flex: 1 }} testID={testID}>
             <DrillDownHeader title={title} titleContent={<View />} onBack={onBack} backTestID={`${testID}-back`} />
-            <RestoreReveal hidden={restoreHidden}>
+            <View style={{ flex: 1 }}>
                 <FlatList
-                    ref={listRef}
                     {...list}
                     ListHeaderComponent={header}
                     contentContainerStyle={{ paddingHorizontal: SIDE, paddingBottom: endClearance }}
                     showsVerticalScrollIndicator={false}
-                    onScroll={(e) => {
-                        yRef.current = e.nativeEvent.contentOffset.y;
-                        notifyScrollTick();
-                    }}
+                    onScroll={notifyScrollTick}
                     scrollEventThrottle={16}
                 />
-            </RestoreReveal>
+            </View>
         </View>
     );
 }

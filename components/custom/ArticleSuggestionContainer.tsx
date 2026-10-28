@@ -8,8 +8,6 @@
 // text right-aligned and non-italic. A Mera glyph briefly lived in this block as
 // the Ask-Mera affordance; it was removed again — the action row's Mera button
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
-import RestoreReveal from '@/components/custom/nav/RestoreReveal';
-import { useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMetadataPanel';
@@ -39,7 +37,7 @@ import { noteHeldLineKey, notReadLineKey } from '@/components/custom/cards/not-r
 import { limitUnlockTime } from '@/components/custom/cards/reset-time';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import React, { useCallback, useRef } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 type ArticleSuggestionContainerVariant = 'card' | 'screen';
@@ -112,28 +110,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         read = false,
         onTitleDisplayChange,
     } = props;
-
-    // Own ref beside the caller's, so the resume spot can read and land the offset
-    // on both detail screens. A callback ref sets both; the prop behaves as before.
-    const ownRef = useRef<SmoothScrollViewRef | null>(null);
-    const setScrollRef = useCallback(
-        (node: SmoothScrollViewRef | null) => {
-            ownRef.current = node;
-            if (typeof scrollViewRef === 'function') scrollViewRef(node);
-            else if (scrollViewRef) (scrollViewRef as React.MutableRefObject<SmoothScrollViewRef | null>).current = node;
-        },
-        [scrollViewRef],
-    );
-    // ONE object for the screen's life: the hook re-registers whenever its ref changes.
-    const [scrollable] = React.useState(() => ({
-        get current() {
-            const node = ownRef.current;
-            return node ? { scrollToOffset: ({ offset }: { offset: number }) => node.scrollTo(offset) } : null;
-        },
-    }));
-    const { restoreHidden } = useScreenScrollTarget(scrollable, {
-        getOffset: () => ownRef.current?.getScrollY() ?? 0,
-    });
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
     const article = 'article' in props ? props.article : undefined;
@@ -300,9 +276,9 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     }
 
     return (
-        <RestoreReveal hidden={restoreHidden}>
+        <Box className="flex-1">
         <SmoothScrollView
-            ref={setScrollRef}
+            ref={scrollViewRef}
             style={{ flex: 1 }}
             // M7: a hero starts at the very top, under the status-bar scrim;
             // the inset only pads a screen with no hero.
@@ -364,7 +340,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 <Box style={{ height: contentBottomInset }} />
             </VStack>
         </SmoothScrollView>
-        </RestoreReveal>
+        </Box>
     );
 };
 

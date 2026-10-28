@@ -1,6 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
-import { useReportRestoredScreen } from '@/lib/navigation/use-screen-scroll-target';
+import { useReportRestoredScreen } from '@/lib/navigation/use-restore-state';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';

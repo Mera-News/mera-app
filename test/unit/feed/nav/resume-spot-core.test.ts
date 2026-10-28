@@ -1,11 +1,9 @@
 import {
-  landStep,
   parseResumeSpot,
   planRestore,
   cleanParams,
   ROOT_ROUTES,
   readNavShape,
-  SCROLL_LAND_MAX_MS,
   spotFromShape,
   topRouteKey,
   truncateSpot,
@@ -43,7 +41,7 @@ describe('readNavShape + spotFromShape', () => {
   it('reads a tab root with its page', () => {
     const shape = readNavShape(state({ tab: 'library' }));
     expect(topRouteKey(shape!)).toBe('tabroot');
-    expect(spotFromShape(shape, 'saved', null)).toEqual({ v: 1, tab: 'library', page: 'saved', tabStack: [], rootStack: [], scroll: null });
+    expect(spotFromShape(shape, 'saved')).toEqual({ v: 1, tab: 'library', page: 'saved', tabStack: [], rootStack: [] });
   });
 
   it('reads a topic feed in the Feed stack with an article on top, keeping only schema params', () => {
@@ -55,18 +53,17 @@ describe('readNavShape + spotFromShape', () => {
       }),
     );
     expect(topRouteKey(shape!)).toBe('r0');
-    expect(spotFromShape(shape, 'feed', { y: 120 })).toEqual({
+    expect(spotFromShape(shape, 'feed')).toEqual({
       v: 1,
       tab: 'feed',
       page: 'feed',
       tabStack: [{ route: 'interest', params: { factId: 'f1', statement: 'Rain' } }],
       rootStack: [{ route: 'article-detail', params: { articleId: 'a1' } }],
-      scroll: { y: 120 },
     });
   });
 
   it('ignores the gate route left under the tab container', () => {
-    expect(spotFromShape(readNavShape(state({ tab: 'world', gateFirst: true })), 'world', null)?.tab).toBe('world');
+    expect(spotFromShape(readNavShape(state({ tab: 'world', gateFirst: true })), 'world')?.tab).toBe('world');
   });
 
   it.each([
@@ -77,7 +74,7 @@ describe('readNavShape + spotFromShape', () => {
     ['a publication with neither id nor name', { tab: 'feed', rootStack: [{ name: 'publication', params: { country: 'IND' } }] }],
     ['a tab screen pushed into the wrong tab', { tab: 'world', tabStack: [{ name: 'interest', params: { factId: 'f' } }] }],
   ])('is null for %s', (_label, opts) => {
-    expect(spotFromShape(readNavShape(state(opts)), null, null)).toBeNull();
+    expect(spotFromShape(readNavShape(state(opts)), null)).toBeNull();
   });
 
   it('is null outside the tab container (a gate, sign-in)', () => {
@@ -86,7 +83,7 @@ describe('readNavShape + spotFromShape', () => {
   });
 
   it('keeps Search but never a query', () => {
-    const spot = spotFromShape(readNavShape(state({ tab: 'world', rootStack: [{ name: 'search', params: { q: 'secret' } }] })), 'world', null);
+    const spot = spotFromShape(readNavShape(state({ tab: 'world', rootStack: [{ name: 'search', params: { q: 'secret' } }] })), 'world');
     expect(spot?.rootStack).toEqual([{ route: 'search', params: {} }]);
   });
 });
@@ -98,7 +95,6 @@ describe('parseResumeSpot', () => {
     page: 'settings',
     tabStack: [{ route: 'fact', params: { factId: 'f1' } }],
     rootStack: [{ route: 'publication', params: { name: 'The Hindu', country: 'IND' } }],
-    scroll: { y: 40 },
   };
 
   it('survives a JSON round trip', () => {
@@ -116,9 +112,8 @@ describe('parseResumeSpot', () => {
     expect(parseResumeSpot(raw)).toBeNull();
   });
 
-  it('drops a malformed scroll rather than the spot', () => {
-    expect(parseResumeSpot({ ...spot, scroll: { y: -5 } })?.scroll).toBeNull();
-    expect(parseResumeSpot({ ...spot, scroll: { y: 10.4, anchorId: 'row' } })?.scroll).toEqual({ y: 10, anchorId: 'row', anchorDelta: 0 });
+  it('keeps only the path from an older bundle marker that carries a scroll (owner: no scroll restore)', () => {
+    expect(parseResumeSpot({ ...spot, scroll: { y: 2400, anchorId: 'row', anchorDelta: 12 } })).toEqual(spot);
   });
 });
 
@@ -130,7 +125,6 @@ describe('planRestore', () => {
       page: 'notifications',
       tabStack: [{ route: 'interest', params: { factId: 'f1' } }],
       rootStack: [{ route: 'story-timeline', params: { trackedStoryId: 's1' } }],
-      scroll: null,
     });
     expect(steps).toEqual([
       { kind: 'page', page: 'notifications' },
@@ -140,7 +134,7 @@ describe('planRestore', () => {
     ]);
   });
 
-  it('truncates at a missing screen and drops the scroll', () => {
+  it('truncates at a missing screen', () => {
     const spot: ResumeSpot = {
       v: 1,
       tab: 'feed',
@@ -150,19 +144,10 @@ describe('planRestore', () => {
         { route: 'story-timeline', params: { trackedStoryId: 's1' } },
         { route: 'article-detail', params: { articleId: 'a1' } },
       ],
-      scroll: { y: 300 },
     };
-    expect(truncateSpot(spot, 1)).toEqual({ ...spot, rootStack: [], scroll: null });
-    expect(truncateSpot(spot, 2)).toEqual({ ...spot, rootStack: [spot.rootStack[0]], scroll: null });
-    expect(truncateSpot(spot, 0)).toEqual({ ...spot, tabStack: [], rootStack: [], scroll: null });
-  });
-});
-
-describe('landStep', () => {
-  it('lands within a few points, keeps going while there is time, then gives up near', () => {
-    expect(landStep(800, 797, 0)).toBe('landed');
-    expect(landStep(800, 400, 100)).toBe('continue');
-    expect(landStep(800, 400, SCROLL_LAND_MAX_MS)).toBe('give-up');
+    expect(truncateSpot(spot, 1)).toEqual({ ...spot, rootStack: [] });
+    expect(truncateSpot(spot, 2)).toEqual({ ...spot, rootStack: [spot.rootStack[0]] });
+    expect(truncateSpot(spot, 0)).toEqual({ ...spot, tabStack: [], rootStack: [] });
   });
 });
 

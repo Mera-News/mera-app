@@ -31,8 +31,7 @@ import {
 } from './tab-press';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { bumpTranslationEpoch } from '@/lib/translation-queue';
-import { noteActivePage, registerScrollTarget, type ResumeScrollTarget } from '@/lib/navigation/resume-spot';
-import { useRestoreHidden } from '@/lib/navigation/use-screen-scroll-target';
+import { noteActivePage } from '@/lib/navigation/resume-spot';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -48,15 +47,14 @@ import {
   reportHeaderBottom,
   reportSurface,
 } from './current-surface';
-import { consumePendingPage, usePendingPageRequest, usePendingPageStore } from './navigate-to-page';
+import { consumePendingPage, usePendingPageRequest } from './navigate-to-page';
 import PageExplainerSheet from './PageExplainerSheet';
-import RestoreReveal from './RestoreReveal';
 import PagePager from './PagePager';
 import { createPageActiveSource, PageActiveContext } from './page-active';
 import { survivingPage } from './tab-swipe';
 import { PageScrollContext, retapTarget, scrollListToTop, type PageScrollTarget, type RegisterPageScroll } from './page-scroll';
 import PageStrip, { HEADER_BOTTOM_PAD, HEADER_SIDE_PAD, HEADER_TOP_PAD } from './PageStrip';
-import { pageMeta, tabOfPage, TAB_LABEL_KEYS, type PageId } from './page-registry';
+import { pageMeta, TAB_LABEL_KEYS, type PageId } from './page-registry';
 import { tabSwipeProgress } from './swipe-progress';
 import type { PageHeaderBinding, TabPagesProps } from './types';
 
@@ -214,38 +212,10 @@ const TabPages: React.FC<TabPagesProps> = ({
   const retap = useRef({ activeId, arranging, reveal, motionAllowed });
   retap.current = { activeId, arranging, reveal, motionAllowed };
 
-  // ── The resume spot (lib/navigation/resume-spot.ts) ──
-  // The tab's ONE target delegates to the ACTIVE page's registered list, read
-  // at call time. Not ready while a page request for this tab is still
-  // unconsumed (a restore asks for the page and this registers before the tab
-  // takes it: the landing would scroll the page that was showing) or while the
-  // page has no list yet: offset NaN, no scroll, so the landing loop retries.
+  // The resume spot restores this tab's page, never its scroll (owner).
   useEffect(() => {
     if (activeId) noteActivePage(tab, activeId);
   }, [tab, activeId]);
-  useEffect(() => {
-    const current = () => {
-      const req = usePendingPageStore.getState().request;
-      if (req && tabOfPage(req.page) === tab) return undefined;
-      return scrollTargets.current.get(retap.current.activeId as PageId);
-    };
-    const target: ResumeScrollTarget = {
-      getOffset: () => current()?.options.current?.getOffset?.() ?? Number.NaN,
-      scrollTo: (y) => {
-        const list = current()?.ref.current;
-        if (list?.scrollToOffset) list.scrollToOffset({ offset: y, animated: false });
-        else list?.scrollTo?.({ x: 0, y, animated: false });
-      },
-      getAnchor: () => current()?.options.current?.getAnchor?.() ?? null,
-      scrollToAnchor: (id, delta) => {
-        const page = current();
-        if (!page) return 'pending';
-        return page.options.current?.scrollToAnchor?.(id, delta) ?? 'missing';
-      },
-    };
-    return registerScrollTarget(route.key, target);
-  }, [route.key, tab]);
-  const restoreHidden = useRestoreHidden(route.key);
   useEffect(() => {
     const own = navigation as unknown as TabNavLike;
     const tabs = findTabAncestor(own);
@@ -321,7 +291,7 @@ const TabPages: React.FC<TabPagesProps> = ({
       {/* The page background: FIRST, so it paints behind everything. */}
       <AbstractGradientBackdrop />
 
-      <RestoreReveal hidden={restoreHidden}>
+      <View style={styles.fill}>
       <PagePager
           index={index}
           count={ids.length}
@@ -333,7 +303,7 @@ const TabPages: React.FC<TabPagesProps> = ({
           progress={tabSwipeProgress(tab)}
           testID={testID ? `${testID}-pager` : undefined}
         />
-      </RestoreReveal>
+      </View>
 
       {/* Feed and Explore: a frosted header (HeaderGlass), status bar
           included, so content scrolling under it never makes it unreadable.

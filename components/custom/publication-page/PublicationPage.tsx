@@ -10,12 +10,11 @@ import { VStack } from '@/components/ui/vstack';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useColors } from '@/lib/theme/tokens';
-import RestoreReveal from '@/components/custom/nav/RestoreReveal';
-import { useReportRestoredScreen, useScreenScrollTarget } from '@/lib/navigation/use-screen-scroll-target';
+import { useReportRestoredScreen } from '@/lib/navigation/use-restore-state';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem, Platform, RefreshControl, StyleSheet, View } from 'react-native';
 
@@ -146,8 +145,6 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
         onEndReached,
         onRefresh,
     } = usePublicationPage({ publisherId, rawName, countryCode, order, focused });
-    const yRef = useRef(0);
-    const { restoreHidden } = useScreenScrollTarget(listRef, { getOffset: () => yRef.current });
     // Missing only for a publisher-id lookup the server answered "not found";
     // a page opened by name and an 'unsupported' answer are ready.
     useReportRestoredScreen(
@@ -412,7 +409,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 onBack={onBack}
                 backTestID="publication-back"
             />
-            <RestoreReveal hidden={restoreHidden}>
+            <View style={{ flex: 1 }}>
             <FlatList
                 ref={listRef}
                 data={articles}
@@ -423,10 +420,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 ListFooterComponent={listFooter}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={(e) => {
-                    yRef.current = e.nativeEvent.contentOffset.y;
-                    notifyScrollTick();
-                }}
+                onScroll={notifyScrollTick}
                 onContentSizeChange={notifyScrollTick}
                 scrollEventThrottle={16}
                 onEndReached={onEndReached}
@@ -439,7 +433,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     />
                 }
             />
-            </RestoreReveal>
+            </View>
             <SubscribeConfirmDialog
                 publisherName={subscribeFlow.confirming?.publisherName ?? null}
                 onYes={subscribeFlow.onYes}

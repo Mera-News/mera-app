@@ -6,13 +6,10 @@ import {
   __resetResumeSpotForTests,
   __setResumeSpotDepsForTests,
   captureSpot,
-  isRestoreHidden,
   lastRestoreMissing,
   noteActivePage,
-  registerScrollTarget,
   reportRestoredScreen,
   restoreSpot,
-  type ResumeScrollTarget,
   type ResumeSpot,
   type SpotScreen,
 } from '@/lib/navigation/resume-spot';
@@ -109,7 +106,6 @@ const deep: ResumeSpot = {
   page: 'feed',
   tabStack: [{ route: 'interest', params: { factId: 'f1', statement: 'Rain' } }],
   rootStack: [{ route: 'story-timeline', params: { trackedStoryId: 's1' } }],
-  scroll: { y: 640 },
 };
 
 describe('restoreSpot', () => {
@@ -124,7 +120,7 @@ describe('restoreSpot', () => {
     expect(nav.model.tabStack[1].params).toEqual({ factId: 'f1', statement: 'Rain' });
   });
 
-  it('lands on the screen under a story that is gone, with no scroll', async () => {
+  it('lands on the screen under a story that is gone', async () => {
     missing.add('s1');
     await expect(restoreSpot(deep)).resolves.toBe('fallback');
     expect(lastRestoreMissing()).toBe('story');
@@ -219,50 +215,10 @@ describe('restoreSpot', () => {
   });
 });
 
-describe('scroll', () => {
-  function list(height: number): ResumeScrollTarget & { y: number } {
-    const t = {
-      y: 0,
-      getOffset: () => t.y,
-      // A list that only grows as it renders toward the goal: each call reaches 300pt further.
-      scrollTo: (y: number) => {
-        t.y = Math.min(y, Math.min(height, t.y + 300));
-      },
-    };
-    return t;
-  }
-
-  it('hides the top list until a long scroll lands, then shows it', async () => {
-    await restoreSpot(deep);
-    const key = nav.topKey();
-    expect(isRestoreHidden(key)).toBe(true);
-    const t = list(5000);
-    registerScrollTarget(key, t);
-    await new Promise((r) => setImmediate(r));
-    for (let i = 0; i < 5; i++) await Promise.resolve();
-    await new Promise((r) => setImmediate(r));
-    expect(t.y).toBe(640);
-    expect(isRestoreHidden(key)).toBe(false);
-  });
-
-  it('a Feed whose anchor row is gone lands at the top, never at the old offset', async () => {
-    const spot: ResumeSpot = { ...deep, tabStack: [], rootStack: [], scroll: { y: 2400, anchorId: 'gone', anchorDelta: 12 } };
-    await restoreSpot(spot);
-    const t = Object.assign(list(5000), { scrollToAnchor: jest.fn(() => 'missing' as const) });
-    t.y = 50;
-    registerScrollTarget(nav.topKey(), t);
-    await new Promise((r) => setImmediate(r));
-    expect(t.scrollToAnchor).toHaveBeenCalledWith('gone', 12);
-    expect(t.y).toBe(0);
-  });
-});
-
 describe('captureSpot', () => {
   it('round-trips: what it captures, restoreSpot rebuilds, and capture reads back the same', async () => {
     await restoreSpot(deep);
     noteActivePage('feed', 'feed');
-    const t = { getOffset: () => 640, scrollTo: () => undefined };
-    registerScrollTarget(nav.topKey(), t);
     expect(captureSpot()).toEqual(deep);
   });
 

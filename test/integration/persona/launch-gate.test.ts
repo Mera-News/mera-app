@@ -324,7 +324,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
 // restoreSpot, faked here at its seam: the gate's contract is the call order, the cap, the
 // single use and the fallback. restoreSpot itself is tested by the feed.
 describe('useLoggedInGate: an update reload puts the reader back', () => {
-    const SPOT = { v: 1, tab: 'feed', page: null, tabStack: [], rootStack: [], scroll: null };
+    const SPOT = { v: 1, tab: 'feed', page: null, tabStack: [], rootStack: [] };
     const seedReload = (reason: string, spot: unknown = SPOT) =>
         setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason, at: 1, backgroundedAt: null, lastForegroundAt: null, spot }));
     const seedOnboarded = async () => {

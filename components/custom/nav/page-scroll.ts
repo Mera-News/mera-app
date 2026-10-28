@@ -12,8 +12,6 @@
 
 import { createContext, useContext, useEffect, useRef, type RefObject } from 'react';
 
-import type { ResumeScrollTarget } from '@/lib/navigation/resume-spot';
-
 import type { PageId } from './page-registry';
 
 /** Whatever list the page draws: a FlatList (scrollToOffset) or a ScrollView
@@ -27,17 +25,9 @@ export interface PageScrollOptions {
   /**
    * The list's offset now, pt: a ref or a UI-written shared value
    * (`useTrackedScroll`), never React state. With it, a re-tap at the top can
-   * refresh, AND the page's scroll is kept across an update reload: TabPages
-   * hands the resume spot the ACTIVE page's offset. A tab-root page registers
-   * ONLY here; `useScreenScrollTarget` is for pushed screens, since it keys by
-   * route key and every page of a tab shares one. Without it the page comes
-   * back at its top.
+   * refresh.
    */
   readonly getOffset?: () => number;
-  /** Feed only: the row at the top of the viewport, for the resume spot. */
-  readonly getAnchor?: ResumeScrollTarget['getAnchor'];
-  /** Feed only: bring that row back to the top after an update reload. */
-  readonly scrollToAnchor?: ResumeScrollTarget['scrollToAnchor'];
   /** The page's pull-to-refresh (the same function its RefreshControl calls). */
   readonly onRefresh?: () => void;
   readonly isRefreshing?: boolean;

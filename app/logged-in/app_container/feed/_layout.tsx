@@ -7,7 +7,7 @@ import { View } from 'react-native';
 
 import { useReportTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useMotionAllowed } from '@/lib/motion-gate';
-import { useRestoreInProgress } from '@/lib/navigation/use-screen-scroll-target';
+import { useRestoreInProgress } from '@/lib/navigation/use-restore-state';
 import { useColors } from '@/lib/theme/tokens';
 
 export default function FeedStackLayout() {
