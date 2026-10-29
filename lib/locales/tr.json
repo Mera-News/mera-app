@@ -1068,7 +1068,14 @@
     "followingSome_one": "{{count}} haberden {{done}} tanesi takip ediliyor",
     "followingSome_other": "{{count}} haberden {{done}} tanesi takip ediliyor",
     "followFailedAll": "Bu haberler takip edilemedi. Bağlantını kontrol et ve tekrar dene.",
-    "optionsExpired": "Seçenekler süresi doldu"
+    "optionsExpired": "Seçenekler süresi doldu",
+    "followingBusy": "Takip ediliyor…",
+    "seeFollowedStories": "Takip edilen haberleri gör",
+    "wideNetLine": "Buradaki bazı makaleler bu haberle ilgili olmayabilir.",
+    "wideNetTitle": "Bazı makaleler ilgili olmayabilir",
+    "wideNetBody": "Mera geniş bir arama yapar, bu yüzden buradaki bazı makaleler haberle yalnızca dolaylı olarak ilgili olabilir. Önemli bir makaleyi kaçırmanızdansa size fazladan bir makale göstermeyi tercih ederiz.",
+    "wideNetRemove": "Birini kaldırmak için menüsünü açın ve {{action}} seçeneğini seçin.",
+    "wideNetShowLess": "Daha az göster"
   },
   "whatsNew": {
     "gotIt": "Anladım",

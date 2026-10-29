@@ -1058,7 +1058,14 @@
     "followingSome_one": "선택한 스토리 {{count}}개 중 {{done}}개를 팔로우 중입니다",
     "followingSome_other": "선택한 스토리 {{count}}개 중 {{done}}개를 팔로우 중입니다",
     "followFailedAll": "이 스토리들을 팔로우하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
-    "optionsExpired": "옵션이 만료되었습니다"
+    "optionsExpired": "옵션이 만료되었습니다",
+    "followingBusy": "팔로우하는 중…",
+    "seeFollowedStories": "팔로우한 스토리 보기",
+    "wideNetLine": "여기 있는 일부 기사는 이 스토리와 관련이 적을 수 있습니다.",
+    "wideNetTitle": "일부 기사는 관련이 적을 수 있습니다",
+    "wideNetBody": "메라는 폭넓게 기사를 찾기 때문에 여기 있는 일부 기사는 스토리와 관련이 적을 수 있습니다. 중요한 기사를 놓치는 것보다 기사를 하나 더 보여 드리는 편이 낫다고 생각합니다.",
+    "wideNetRemove": "기사를 삭제하려면 해당 기사의 메뉴를 열고 '{{action}}'을 선택하세요.",
+    "wideNetShowLess": "간단히 보기"
   },
   "whatsNew": {
     "gotIt": "확인",

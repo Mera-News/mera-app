@@ -1058,7 +1058,14 @@
     "followingSome_one": "Đang theo dõi {{done}} trong số {{count}} câu chuyện",
     "followingSome_other": "Đang theo dõi {{done}} trong số {{count}} câu chuyện",
     "followFailedAll": "Không theo dõi được các câu chuyện này. Hãy kiểm tra kết nối và thử lại.",
-    "optionsExpired": "Lựa chọn đã hết hạn"
+    "optionsExpired": "Lựa chọn đã hết hạn",
+    "followingBusy": "Đang theo dõi…",
+    "seeFollowedStories": "Xem các câu chuyện đang theo dõi",
+    "wideNetLine": "Một số bài viết ở đây có thể không phù hợp.",
+    "wideNetTitle": "Một số bài viết có thể không phù hợp",
+    "wideNetBody": "Mera tìm kiếm trên phạm vi rộng, nên một số bài viết ở đây có thể chỉ liên quan ít đến câu chuyện. Chúng tôi thà cho bạn xem thêm một bài còn hơn để bạn bỏ lỡ một bài quan trọng.",
+    "wideNetRemove": "Để xóa một bài, hãy mở menu của bài đó và chọn {{action}}.",
+    "wideNetShowLess": "Thu gọn"
   },
   "whatsNew": {
     "gotIt": "Đã hiểu",

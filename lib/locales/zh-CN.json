@@ -1058,7 +1058,14 @@
     "followingSome_one": "你选的 {{count}} 则报道中，你现在关注了 {{done}} 则",
     "followingSome_other": "你选的 {{count}} 则报道中，你现在关注了 {{done}} 则",
     "followFailedAll": "无法关注这些报道。请检查网络连接，然后重试。",
-    "optionsExpired": "选项已过期"
+    "optionsExpired": "选项已过期",
+    "followingBusy": "正在关注…",
+    "seeFollowedStories": "查看已关注的报道",
+    "wideNetLine": "这里的部分文章可能与报道关系不大。",
+    "wideNetTitle": "部分文章可能与报道关系不大",
+    "wideNetBody": "梅拉的搜索范围较广，因此这里的部分文章可能与报道关系不大。我们宁愿多给你看一篇，也不想让你错过重要的文章。",
+    "wideNetRemove": "要移除某篇文章，请打开它的菜单并选择“{{action}}”。",
+    "wideNetShowLess": "收起"
   },
   "whatsNew": {
     "gotIt": "知道了",

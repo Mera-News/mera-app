@@ -1066,7 +1066,14 @@
     "followingSome_one": "Du folgst jetzt {{done}} von {{count}} Geschichte",
     "followingSome_other": "Du folgst jetzt {{done}} von {{count}} Geschichten",
     "followFailedAll": "Diesen Geschichten konnte nicht gefolgt werden. Prüf deine Verbindung und versuch es erneut.",
-    "optionsExpired": "Optionen sind abgelaufen"
+    "optionsExpired": "Optionen sind abgelaufen",
+    "followingBusy": "Wird gespeichert…",
+    "seeFollowedStories": "Gefolgte Geschichten ansehen",
+    "wideNetLine": "Manche Artikel hier passen vielleicht nicht.",
+    "wideNetTitle": "Manche Artikel passen vielleicht nicht",
+    "wideNetBody": "Mera sucht breit, daher haben manche Artikel hier nur wenig mit der Geschichte zu tun. Wir zeigen dir lieber einen Artikel zu viel, als dass du einen wichtigen verpasst.",
+    "wideNetRemove": "Um einen zu entfernen, öffne sein Menü und wähle {{action}}.",
+    "wideNetShowLess": "Weniger anzeigen"
   },
   "whatsNew": {
     "gotIt": "Verstanden",

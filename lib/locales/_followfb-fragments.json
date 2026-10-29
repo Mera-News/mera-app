@@ -1,0 +1,183 @@
+{
+  "_comment": "followfb: the follow card's settled state (Following busy label, See followed stories) and the followed-story page's wide-net note.",
+  "en": { "trackedStories": {
+    "followingBusy": "Following…",
+    "seeFollowedStories": "See followed stories",
+    "wideNetLine": "Some articles here may not fit.",
+    "wideNetTitle": "Some articles may not fit",
+    "wideNetBody": "Mera casts a wide net, so a few articles here may be only loosely related. We'd rather show you one extra than miss one that matters.",
+    "wideNetRemove": "To remove one, open its menu and choose {{action}}.",
+    "wideNetShowLess": "Show less"
+  } },
+  "ar": { "trackedStories": {
+    "followingBusy": "جارٍ المتابعة…",
+    "seeFollowedStories": "عرض القصص المتابَعة",
+    "wideNetLine": "قد لا تتعلق بعض المقالات هنا بالقصة.",
+    "wideNetTitle": "قد لا تتعلق بعض المقالات بالقصة",
+    "wideNetBody": "يبحث ميرا على نطاق واسع، لذا قد تكون صلة بعض المقالات هنا بالقصة بسيطة. نفضّل أن نعرض لك مقالًا إضافيًا على أن يفوتك مقال مهم.",
+    "wideNetRemove": "لإزالة مقال، افتح قائمته واختر {{action}}.",
+    "wideNetShowLess": "عرض أقل"
+  } },
+  "de": { "trackedStories": {
+    "followingBusy": "Wird gespeichert…",
+    "seeFollowedStories": "Gefolgte Geschichten ansehen",
+    "wideNetLine": "Manche Artikel hier passen vielleicht nicht.",
+    "wideNetTitle": "Manche Artikel passen vielleicht nicht",
+    "wideNetBody": "Mera sucht breit, daher haben manche Artikel hier nur wenig mit der Geschichte zu tun. Wir zeigen dir lieber einen Artikel zu viel, als dass du einen wichtigen verpasst.",
+    "wideNetRemove": "Um einen zu entfernen, öffne sein Menü und wähle {{action}}.",
+    "wideNetShowLess": "Weniger anzeigen"
+  } },
+  "es": { "trackedStories": {
+    "followingBusy": "Siguiendo…",
+    "seeFollowedStories": "Ver historias seguidas",
+    "wideNetLine": "Puede que algunos artículos de aquí no encajen.",
+    "wideNetTitle": "Puede que algunos artículos no encajen",
+    "wideNetBody": "Mera busca de forma amplia, así que algunos artículos de aquí pueden tener poca relación con la historia. Preferimos mostrarte uno de más que dejar pasar uno importante.",
+    "wideNetRemove": "Para quitar uno, abre su menú y elige {{action}}.",
+    "wideNetShowLess": "Mostrar menos"
+  } },
+  "fr": { "trackedStories": {
+    "followingBusy": "Suivi en cours…",
+    "seeFollowedStories": "Voir les actualités suivies",
+    "wideNetLine": "Certains articles ici peuvent ne pas correspondre.",
+    "wideNetTitle": "Certains articles peuvent ne pas correspondre",
+    "wideNetBody": "Mera ratisse large, donc certains articles ici peuvent n'avoir qu'un lien ténu avec l'actualité. Nous préférons vous montrer un article de trop plutôt que de vous en faire manquer un important.",
+    "wideNetRemove": "Pour en retirer un, ouvrez son menu et choisissez {{action}}.",
+    "wideNetShowLess": "Afficher moins"
+  } },
+  "hi": { "trackedStories": {
+    "followingBusy": "फ़ॉलो कर रहे हैं…",
+    "seeFollowedStories": "फ़ॉलो की गई स्टोरीज़ देखें",
+    "wideNetLine": "हो सकता है यहाँ कुछ लेख इस स्टोरी से मेल न खाएँ।",
+    "wideNetTitle": "हो सकता है कुछ लेख मेल न खाएँ",
+    "wideNetBody": "मेरा बड़े दायरे में खोजता है, इसलिए यहाँ कुछ लेखों का स्टोरी से कम ही संबंध हो सकता है। कोई ज़रूरी लेख छूट जाए, इससे बेहतर है कि हम एक लेख ज़्यादा दिखाएँ।",
+    "wideNetRemove": "किसी लेख को हटाने के लिए, उसका मेनू खोलें और {{action}} चुनें।",
+    "wideNetShowLess": "कम दिखाएँ"
+  } },
+  "id": { "trackedStories": {
+    "followingBusy": "Mengikuti…",
+    "seeFollowedStories": "Lihat cerita yang diikuti",
+    "wideNetLine": "Beberapa artikel di sini mungkin kurang sesuai.",
+    "wideNetTitle": "Beberapa artikel mungkin kurang sesuai",
+    "wideNetBody": "Mera mencari secara luas, jadi beberapa artikel di sini mungkin hanya sedikit berkaitan dengan cerita. Kami lebih memilih menampilkan satu artikel lebih banyak daripada membuat Anda melewatkan artikel yang penting.",
+    "wideNetRemove": "Untuk menghapus artikel, buka menunya lalu pilih {{action}}.",
+    "wideNetShowLess": "Tampilkan lebih sedikit"
+  } },
+  "it": { "trackedStories": {
+    "followingBusy": "Salvataggio…",
+    "seeFollowedStories": "Vedi le storie seguite",
+    "wideNetLine": "Alcuni articoli qui potrebbero non c'entrare.",
+    "wideNetTitle": "Alcuni articoli potrebbero non c'entrare",
+    "wideNetBody": "Mera cerca in modo ampio, quindi alcuni articoli qui potrebbero avere poco a che fare con la storia. Preferiamo mostrarti un articolo in più piuttosto che fartene perdere uno importante.",
+    "wideNetRemove": "Per rimuoverne uno, apri il suo menu e scegli {{action}}.",
+    "wideNetShowLess": "Mostra meno"
+  } },
+  "ja": { "trackedStories": {
+    "followingBusy": "フォローしています…",
+    "seeFollowedStories": "フォロー中のストーリーを見る",
+    "wideNetLine": "ここには関係の薄い記事が含まれることがあります。",
+    "wideNetTitle": "関係の薄い記事が含まれることがあります",
+    "wideNetBody": "メラは幅広く記事を集めるため、ここにはストーリーとの関係が薄い記事が含まれることがあります。大切な記事を見逃すよりも、記事を多めに表示することを優先しています。",
+    "wideNetRemove": "記事を削除するには、その記事のメニューを開いて「{{action}}」を選んでください。",
+    "wideNetShowLess": "閉じる"
+  } },
+  "ko": { "trackedStories": {
+    "followingBusy": "팔로우하는 중…",
+    "seeFollowedStories": "팔로우한 스토리 보기",
+    "wideNetLine": "여기 있는 일부 기사는 이 스토리와 관련이 적을 수 있습니다.",
+    "wideNetTitle": "일부 기사는 관련이 적을 수 있습니다",
+    "wideNetBody": "메라는 폭넓게 기사를 찾기 때문에 여기 있는 일부 기사는 스토리와 관련이 적을 수 있습니다. 중요한 기사를 놓치는 것보다 기사를 하나 더 보여 드리는 편이 낫다고 생각합니다.",
+    "wideNetRemove": "기사를 삭제하려면 해당 기사의 메뉴를 열고 '{{action}}'을 선택하세요.",
+    "wideNetShowLess": "간단히 보기"
+  } },
+  "nl": { "trackedStories": {
+    "followingBusy": "Bezig met volgen…",
+    "seeFollowedStories": "Gevolgde verhalen bekijken",
+    "wideNetLine": "Sommige artikelen hier passen misschien niet.",
+    "wideNetTitle": "Sommige artikelen passen misschien niet",
+    "wideNetBody": "Mera zoekt breed, dus sommige artikelen hier hebben misschien maar weinig met het verhaal te maken. We laten je liever één artikel te veel zien dan dat je een belangrijk artikel mist.",
+    "wideNetRemove": "Wil je er een verwijderen? Open het menu ervan en kies {{action}}.",
+    "wideNetShowLess": "Minder tonen"
+  } },
+  "pl": { "trackedStories": {
+    "followingBusy": "Dodawanie…",
+    "seeFollowedStories": "Zobacz śledzone historie",
+    "wideNetLine": "Niektóre artykuły mogą tu nie pasować.",
+    "wideNetTitle": "Niektóre artykuły mogą nie pasować",
+    "wideNetBody": "Mera szuka szeroko, więc niektóre artykuły tutaj mogą być tylko luźno związane z historią. Wolimy pokazać Ci jeden artykuł za dużo, niż żebyś przegapił ważny.",
+    "wideNetRemove": "Aby usunąć artykuł, otwórz jego menu i wybierz {{action}}.",
+    "wideNetShowLess": "Pokaż mniej"
+  } },
+  "pt-BR": { "trackedStories": {
+    "followingBusy": "Seguindo…",
+    "seeFollowedStories": "Ver histórias seguidas",
+    "wideNetLine": "Alguns artigos aqui podem não se encaixar.",
+    "wideNetTitle": "Alguns artigos podem não se encaixar",
+    "wideNetBody": "A Mera busca de forma ampla, então alguns artigos aqui podem ter pouca relação com a história. Preferimos mostrar um a mais do que deixar passar um importante.",
+    "wideNetRemove": "Para remover um, abra o menu dele e escolha {{action}}.",
+    "wideNetShowLess": "Mostrar menos"
+  } },
+  "ru": { "trackedStories": {
+    "followingBusy": "Добавляем…",
+    "seeFollowedStories": "Открыть отслеживаемые истории",
+    "wideNetLine": "Некоторые статьи здесь могут не подходить.",
+    "wideNetTitle": "Некоторые статьи могут не подходить",
+    "wideNetBody": "Мера ищет широко, поэтому некоторые статьи здесь могут быть лишь косвенно связаны с историей. Лучше показать вам лишнюю статью, чем пропустить важную.",
+    "wideNetRemove": "Чтобы убрать статью, откройте её меню и выберите «{{action}}».",
+    "wideNetShowLess": "Свернуть"
+  } },
+  "th": { "trackedStories": {
+    "followingBusy": "กำลังติดตาม…",
+    "seeFollowedStories": "ดูเรื่องราวที่ติดตาม",
+    "wideNetLine": "บทความบางส่วนที่นี่อาจไม่ตรงกับเรื่องนี้",
+    "wideNetTitle": "บทความบางส่วนอาจไม่ตรงกับเรื่องนี้",
+    "wideNetBody": "เมร่าค้นหาอย่างกว้างขวาง บทความบางส่วนที่นี่จึงอาจเกี่ยวข้องกับเรื่องนี้เพียงเล็กน้อย เราขอแสดงบทความเกินมาหนึ่งบทความ ดีกว่าปล่อยให้คุณพลาดบทความสำคัญ",
+    "wideNetRemove": "หากต้องการนำบทความออก ให้เปิดเมนูของบทความนั้นแล้วเลือก {{action}}",
+    "wideNetShowLess": "แสดงน้อยลง"
+  } },
+  "tr": { "trackedStories": {
+    "followingBusy": "Takip ediliyor…",
+    "seeFollowedStories": "Takip edilen haberleri gör",
+    "wideNetLine": "Buradaki bazı makaleler bu haberle ilgili olmayabilir.",
+    "wideNetTitle": "Bazı makaleler ilgili olmayabilir",
+    "wideNetBody": "Mera geniş bir arama yapar, bu yüzden buradaki bazı makaleler haberle yalnızca dolaylı olarak ilgili olabilir. Önemli bir makaleyi kaçırmanızdansa size fazladan bir makale göstermeyi tercih ederiz.",
+    "wideNetRemove": "Birini kaldırmak için menüsünü açın ve {{action}} seçeneğini seçin.",
+    "wideNetShowLess": "Daha az göster"
+  } },
+  "uk": { "trackedStories": {
+    "followingBusy": "Додаємо…",
+    "seeFollowedStories": "Відкрити відстежувані історії",
+    "wideNetLine": "Деякі статті тут можуть не стосуватися історії.",
+    "wideNetTitle": "Деякі статті можуть не стосуватися історії",
+    "wideNetBody": "Мера шукає широко, тому деякі статті тут можуть бути лише опосередковано пов'язані з історією. Краще показати вам зайву статтю, ніж пропустити важливу.",
+    "wideNetRemove": "Щоб прибрати статтю, відкрийте її меню й виберіть «{{action}}».",
+    "wideNetShowLess": "Згорнути"
+  } },
+  "vi": { "trackedStories": {
+    "followingBusy": "Đang theo dõi…",
+    "seeFollowedStories": "Xem các câu chuyện đang theo dõi",
+    "wideNetLine": "Một số bài viết ở đây có thể không phù hợp.",
+    "wideNetTitle": "Một số bài viết có thể không phù hợp",
+    "wideNetBody": "Mera tìm kiếm trên phạm vi rộng, nên một số bài viết ở đây có thể chỉ liên quan ít đến câu chuyện. Chúng tôi thà cho bạn xem thêm một bài còn hơn để bạn bỏ lỡ một bài quan trọng.",
+    "wideNetRemove": "Để xóa một bài, hãy mở menu của bài đó và chọn {{action}}.",
+    "wideNetShowLess": "Thu gọn"
+  } },
+  "zh-CN": { "trackedStories": {
+    "followingBusy": "正在关注…",
+    "seeFollowedStories": "查看已关注的报道",
+    "wideNetLine": "这里的部分文章可能与报道关系不大。",
+    "wideNetTitle": "部分文章可能与报道关系不大",
+    "wideNetBody": "梅拉的搜索范围较广，因此这里的部分文章可能与报道关系不大。我们宁愿多给你看一篇，也不想让你错过重要的文章。",
+    "wideNetRemove": "要移除某篇文章，请打开它的菜单并选择“{{action}}”。",
+    "wideNetShowLess": "收起"
+  } },
+  "zh-TW": { "trackedStories": {
+    "followingBusy": "正在追蹤…",
+    "seeFollowedStories": "查看已追蹤的報導",
+    "wideNetLine": "這裡的部分文章可能與報導關係不大。",
+    "wideNetTitle": "部分文章可能與報導關係不大",
+    "wideNetBody": "梅拉的搜尋範圍較廣，因此這裡的部分文章可能與報導關係不大。我們寧願多給你看一篇，也不想讓你錯過重要的文章。",
+    "wideNetRemove": "要移除某篇文章，請開啟它的選單並選擇「{{action}}」。",
+    "wideNetShowLess": "收合"
+  } }
+}

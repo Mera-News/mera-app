@@ -31,7 +31,7 @@ const action = (label: string): Extract<ProposalAction, { type: 'track_story' }>
 
 const PLAIN = [
   'cardTitle', 'moreOptions', 'moreOptionsLoading', 'moreOptionsNone', 'moreOptionsFailed', 'follow', 'tryAgain',
-  'rowFollowing', 'rowAlready', 'rowFailed', 'followFailedAll', 'optionsExpired',
+  'rowFollowing', 'rowAlready', 'rowFailed', 'followFailedAll', 'optionsExpired', 'followingBusy', 'seeFollowedStories',
 ];
 const PLURAL = ['moreOptionsAdded', 'followTicked', 'followingAll', 'followingSome'];
 function registerCopy() {
@@ -126,7 +126,11 @@ describe('ticking and Follow', () => {
       ['Moon race', 'moon race'],
       ['NASA Artemis program', 'nasa artemis program'],
     ]);
-    await waitFor(() => expect(view.getAllByText(key('rowFollowing'))).toHaveLength(3));
+    await waitFor(() => expect(view.getByTestId('track-card-followed')).toBeTruthy());
+    expect(view.getByText('trackedStories.followingAll_other:3')).toBeTruthy();
+    for (const i of [0, 1, 2]) {
+      expect(view.getByTestId(`track-row-${i}`).props.accessibilityLabel.endsWith(`, ${key('rowFollowing')}`)).toBe(true);
+    }
     expect(view.queryByTestId('track-option-0')).toBeNull();
     expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith('trackedStories.followingAll_other:3');
     expect(useFloatingChatStore.getState().resolvedProposals[proposal.id]).toBe('applied');
@@ -261,26 +265,58 @@ describe('resolved states', () => {
   it('a followed card stays resolved when a newer card supersedes it', async () => {
     const { view, conversationId } = await mount(['Artemis II launch', 'Moon race']);
     fireEvent.press(view.getByTestId('track-follow'));
-    await waitFor(() => expect(view.getByText(key('rowFollowing'))).toBeTruthy());
+    await waitFor(() => expect(view.getByTestId('track-card-followed')).toBeTruthy());
     view.unmount();
 
     const history = await fetchMessagesForConversation(conversationId);
     const again = render(<Thread history={history} superseded />);
-    expect(again.getByText(key('rowFollowing'))).toBeTruthy();
+    expect(again.getByTestId('track-card-followed')).toBeTruthy();
     expect(again.queryByText(key('optionsExpired'))).toBeNull();
   });
 
-  it('a followed row reads Following, a never-ticked row reads plain, and neither is a checkbox', async () => {
+  it('settled: the title says what happened, only the followed row stays, the buttons go', async () => {
     const { view } = await mount(['Artemis II launch', 'Moon race']);
     fireEvent.press(view.getByTestId('track-follow'));
 
-    await waitFor(() => expect(view.getByText(key('rowFollowing'))).toBeTruthy());
+    await waitFor(() => expect(view.getByTestId('track-card-followed')).toBeTruthy());
     expect(view.getByText('trackedStories.followingAll_one:1')).toBeTruthy();
+    expect(view.queryByText(key('cardTitle'))).toBeNull();
     expect(view.queryAllByRole('checkbox')).toHaveLength(0);
-    const plain = view.getByTestId('track-row-1');
-    expect(plain.props.accessibilityLabel).toBe('Moon race');
     expect(view.getByTestId('track-row-0').props.accessibilityLabel).toBe(`Artemis II launch, ${key('rowFollowing')}`);
+    expect(view.queryByTestId('track-row-1')).toBeNull();
+    expect(view.queryByText('Moon race')).toBeNull();
+    expect(view.queryByTestId('track-follow')).toBeNull();
+    expect(view.queryByTestId('track-not-now')).toBeNull();
     expect(view.queryByTestId('track-more')).toBeNull();
+  });
+
+  it('See followed stories closes the chat and opens the Followed stories page', async () => {
+    const nav = require('@/components/custom/nav/navigate-to-page') as typeof import('@/components/custom/nav/navigate-to-page');
+    const go = jest.spyOn(nav, 'navigateToPage').mockImplementation(() => {});
+    act(() => useFloatingChatStore.setState({ isExpanded: true }));
+    const { view } = await mount(['Artemis II launch']);
+    fireEvent.press(view.getByTestId('track-follow'));
+    await waitFor(() => expect(view.getByTestId('track-see-followed')).toBeTruthy());
+
+    fireEvent.press(view.getByTestId('track-see-followed'));
+
+    expect(useFloatingChatStore.getState().isExpanded).toBe(false);
+    expect(go).toHaveBeenCalledWith('stories');
+    expect(frameHeight(view.getByTestId('track-see-followed'))).toBeGreaterThanOrEqual(44);
+  });
+
+  it('while saving, Follow shows Following and the rows do not toggle', async () => {
+    jest.spyOn(trackActions, 'trackStoryWithProposal').mockImplementation(never);
+    const { view } = await mount(['Artemis II launch', 'Moon race']);
+
+    fireEvent.press(view.getByTestId('track-follow'));
+
+    const follow = view.getByTestId('track-follow');
+    await waitFor(() => expect(within(follow).getByText(key('followingBusy'))).toBeTruthy());
+    expect(follow.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
+    fireEvent.press(view.getByTestId('track-option-1'));
+    expect(checked(view, 1)).toBe(false);
+    expect(view.queryByTestId('track-card-followed')).toBeNull();
   });
 
   it('Not now collapses the card to one line', async () => {

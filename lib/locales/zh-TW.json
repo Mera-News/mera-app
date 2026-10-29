@@ -1058,7 +1058,14 @@
     "followingSome_one": "已追蹤你選的 {{count}} 則報導中的 {{done}} 則",
     "followingSome_other": "已追蹤你選的 {{count}} 則報導中的 {{done}} 則",
     "followFailedAll": "無法追蹤這些報導。請檢查網路連線，然後再試一次。",
-    "optionsExpired": "選項已過期"
+    "optionsExpired": "選項已過期",
+    "followingBusy": "正在追蹤…",
+    "seeFollowedStories": "查看已追蹤的報導",
+    "wideNetLine": "這裡的部分文章可能與報導關係不大。",
+    "wideNetTitle": "部分文章可能與報導關係不大",
+    "wideNetBody": "梅拉的搜尋範圍較廣，因此這裡的部分文章可能與報導關係不大。我們寧願多給你看一篇，也不想讓你錯過重要的文章。",
+    "wideNetRemove": "要移除某篇文章，請開啟它的選單並選擇「{{action}}」。",
+    "wideNetShowLess": "收合"
   },
   "whatsNew": {
     "gotIt": "知道了",

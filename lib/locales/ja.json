@@ -1058,7 +1058,14 @@
     "followingSome_one": "選んだ{{count}}件のストーリーのうち{{done}}件をフォロー中です",
     "followingSome_other": "選んだ{{count}}件のストーリーのうち{{done}}件をフォロー中です",
     "followFailedAll": "これらのストーリーをフォローできませんでした。接続を確認して、もう一度お試しください。",
-    "optionsExpired": "この候補は期限切れです"
+    "optionsExpired": "この候補は期限切れです",
+    "followingBusy": "フォローしています…",
+    "seeFollowedStories": "フォロー中のストーリーを見る",
+    "wideNetLine": "ここには関係の薄い記事が含まれることがあります。",
+    "wideNetTitle": "関係の薄い記事が含まれることがあります",
+    "wideNetBody": "メラは幅広く記事を集めるため、ここにはストーリーとの関係が薄い記事が含まれることがあります。大切な記事を見逃すよりも、記事を多めに表示することを優先しています。",
+    "wideNetRemove": "記事を削除するには、その記事のメニューを開いて「{{action}}」を選んでください。",
+    "wideNetShowLess": "閉じる"
   },
   "whatsNew": {
     "gotIt": "わかりました",

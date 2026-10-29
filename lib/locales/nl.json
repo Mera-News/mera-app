@@ -1066,7 +1066,14 @@
     "followingSome_one": "Je volgt nu {{done}} van de {{count}} verhaal",
     "followingSome_other": "Je volgt nu {{done}} van de {{count}} verhalen",
     "followFailedAll": "Deze verhalen konden niet worden gevolgd. Controleer je verbinding en probeer het opnieuw.",
-    "optionsExpired": "Opties verlopen"
+    "optionsExpired": "Opties verlopen",
+    "followingBusy": "Bezig met volgen…",
+    "seeFollowedStories": "Gevolgde verhalen bekijken",
+    "wideNetLine": "Sommige artikelen hier passen misschien niet.",
+    "wideNetTitle": "Sommige artikelen passen misschien niet",
+    "wideNetBody": "Mera zoekt breed, dus sommige artikelen hier hebben misschien maar weinig met het verhaal te maken. We laten je liever één artikel te veel zien dan dat je een belangrijk artikel mist.",
+    "wideNetRemove": "Wil je er een verwijderen? Open het menu ervan en kies {{action}}.",
+    "wideNetShowLess": "Minder tonen"
   },
   "whatsNew": {
     "gotIt": "Begrepen",

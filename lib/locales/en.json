@@ -626,7 +626,14 @@
     "followingSome_one": "Following {{done}} of {{count}} story",
     "followingSome_other": "Following {{done}} of {{count}} stories",
     "followFailedAll": "Couldn't follow these stories. Check your connection and try again.",
-    "optionsExpired": "Options expired"
+    "optionsExpired": "Options expired",
+    "followingBusy": "Following…",
+    "seeFollowedStories": "See followed stories",
+    "wideNetLine": "Some articles here may not fit.",
+    "wideNetTitle": "Some articles may not fit",
+    "wideNetBody": "Mera casts a wide net, so a few articles here may be only loosely related. We'd rather show you one extra than miss one that matters.",
+    "wideNetRemove": "To remove one, open its menu and choose {{action}}.",
+    "wideNetShowLess": "Show less"
   },
   "whatsNew": {
     "gotIt": "Got it",

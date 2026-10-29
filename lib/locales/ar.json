@@ -1168,7 +1168,14 @@
     "followingSome_many": "تتابع {{done}} من {{count}} قصة",
     "followingSome_other": "تتابع {{done}} من {{count}} قصة",
     "followFailedAll": "تعذّرت متابعة هذه القصص. تحقق من اتصالك وحاول مرة أخرى.",
-    "optionsExpired": "انتهت صلاحية الخيارات"
+    "optionsExpired": "انتهت صلاحية الخيارات",
+    "followingBusy": "جارٍ المتابعة…",
+    "seeFollowedStories": "عرض القصص المتابَعة",
+    "wideNetLine": "قد لا تتعلق بعض المقالات هنا بالقصة.",
+    "wideNetTitle": "قد لا تتعلق بعض المقالات بالقصة",
+    "wideNetBody": "يبحث ميرا على نطاق واسع، لذا قد تكون صلة بعض المقالات هنا بالقصة بسيطة. نفضّل أن نعرض لك مقالًا إضافيًا على أن يفوتك مقال مهم.",
+    "wideNetRemove": "لإزالة مقال، افتح قائمته واختر {{action}}.",
+    "wideNetShowLess": "عرض أقل"
   },
   "whatsNew": {
     "gotIt": "فهمت",
