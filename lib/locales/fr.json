@@ -1072,7 +1072,14 @@
     "followingSome_one": "Vous suivez {{done}} sur {{count}} actualité",
     "followingSome_other": "Vous suivez {{done}} sur {{count}} actualités",
     "followFailedAll": "Impossible de suivre ces actualités. Vérifiez votre connexion et réessayez.",
-    "optionsExpired": "Options expirées"
+    "optionsExpired": "Options expirées",
+    "followingBusy": "Suivi en cours…",
+    "seeFollowedStories": "Voir les actualités suivies",
+    "wideNetLine": "Certains articles ici peuvent ne pas correspondre.",
+    "wideNetTitle": "Certains articles peuvent ne pas correspondre",
+    "wideNetBody": "Mera ratisse large, donc certains articles ici peuvent n'avoir qu'un lien ténu avec l'actualité. Nous préférons vous montrer un article de trop plutôt que de vous en faire manquer un important.",
+    "wideNetRemove": "Pour en retirer un, ouvrez son menu et choisissez {{action}}.",
+    "wideNetShowLess": "Afficher moins"
   },
   "whatsNew": {
     "gotIt": "Compris",

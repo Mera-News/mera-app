@@ -1067,7 +1067,14 @@
     "followingSome_one": "Ahora sigues {{done}} de {{count}} historia",
     "followingSome_other": "Ahora sigues {{done}} de {{count}} historias",
     "followFailedAll": "No se pudieron seguir estas historias. Revisa tu conexión e inténtalo de nuevo.",
-    "optionsExpired": "Opciones caducadas"
+    "optionsExpired": "Opciones caducadas",
+    "followingBusy": "Siguiendo…",
+    "seeFollowedStories": "Ver historias seguidas",
+    "wideNetLine": "Puede que algunos artículos de aquí no encajen.",
+    "wideNetTitle": "Puede que algunos artículos no encajen",
+    "wideNetBody": "Mera busca de forma amplia, así que algunos artículos de aquí pueden tener poca relación con la historia. Preferimos mostrarte uno de más que dejar pasar uno importante.",
+    "wideNetRemove": "Para quitar uno, abre su menú y elige {{action}}.",
+    "wideNetShowLess": "Mostrar menos"
   },
   "whatsNew": {
     "gotIt": "Entendido",

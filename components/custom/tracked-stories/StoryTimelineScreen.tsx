@@ -16,6 +16,7 @@ import { formatDayMonth } from '@/lib/stats/visited-publications';
 import { useColors } from '@/lib/theme/tokens';
 import { timelineCardToArticle, type TimelineEntry } from './merge-timeline';
 import { type TimelineRow, useStoryTimelineScreen } from './useStoryTimelineScreen';
+import WideNetNote from './WideNetNote';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -233,6 +234,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                         <MaterialIcons name="more-horiz" size={24} color={colors.ink} />
                     </Pressable>
                 </HStack>
+                {entries.length > 0 ? <WideNetNote /> : null}
             </VStack>
 
             <BottomSheet

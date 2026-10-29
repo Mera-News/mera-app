@@ -1058,7 +1058,14 @@
     "followingSome_one": "Mengikuti {{done}} dari {{count}} cerita",
     "followingSome_other": "Mengikuti {{done}} dari {{count}} cerita",
     "followFailedAll": "Tidak dapat mengikuti cerita-cerita ini. Periksa koneksi Anda lalu coba lagi.",
-    "optionsExpired": "Opsi sudah kedaluwarsa"
+    "optionsExpired": "Opsi sudah kedaluwarsa",
+    "followingBusy": "Mengikuti…",
+    "seeFollowedStories": "Lihat cerita yang diikuti",
+    "wideNetLine": "Beberapa artikel di sini mungkin kurang sesuai.",
+    "wideNetTitle": "Beberapa artikel mungkin kurang sesuai",
+    "wideNetBody": "Mera mencari secara luas, jadi beberapa artikel di sini mungkin hanya sedikit berkaitan dengan cerita. Kami lebih memilih menampilkan satu artikel lebih banyak daripada membuat Anda melewatkan artikel yang penting.",
+    "wideNetRemove": "Untuk menghapus artikel, buka menunya lalu pilih {{action}}.",
+    "wideNetShowLess": "Tampilkan lebih sedikit"
   },
   "whatsNew": {
     "gotIt": "Mengerti",

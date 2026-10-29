@@ -1114,7 +1114,14 @@
     "followingSome_many": "Śledzisz {{done}} z {{count}} historii",
     "followingSome_other": "Śledzisz {{done}} z {{count}} historii",
     "followFailedAll": "Nie udało się śledzić tych historii. Sprawdź połączenie i spróbuj ponownie.",
-    "optionsExpired": "Opcje wygasły"
+    "optionsExpired": "Opcje wygasły",
+    "followingBusy": "Dodawanie…",
+    "seeFollowedStories": "Zobacz śledzone historie",
+    "wideNetLine": "Niektóre artykuły mogą tu nie pasować.",
+    "wideNetTitle": "Niektóre artykuły mogą nie pasować",
+    "wideNetBody": "Mera szuka szeroko, więc niektóre artykuły tutaj mogą być tylko luźno związane z historią. Wolimy pokazać Ci jeden artykuł za dużo, niż żebyś przegapił ważny.",
+    "wideNetRemove": "Aby usunąć artykuł, otwórz jego menu i wybierz {{action}}.",
+    "wideNetShowLess": "Pokaż mniej"
   },
   "whatsNew": {
     "gotIt": "Rozumiem",

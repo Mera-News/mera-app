@@ -1067,7 +1067,14 @@
     "followingSome_one": "Seguindo {{done}} de {{count}} história",
     "followingSome_other": "Seguindo {{done}} de {{count}} histórias",
     "followFailedAll": "Não foi possível seguir essas histórias. Verifique sua conexão e tente novamente.",
-    "optionsExpired": "Opções expiradas"
+    "optionsExpired": "Opções expiradas",
+    "followingBusy": "Seguindo…",
+    "seeFollowedStories": "Ver histórias seguidas",
+    "wideNetLine": "Alguns artigos aqui podem não se encaixar.",
+    "wideNetTitle": "Alguns artigos podem não se encaixar",
+    "wideNetBody": "A Mera busca de forma ampla, então alguns artigos aqui podem ter pouca relação com a história. Preferimos mostrar um a mais do que deixar passar um importante.",
+    "wideNetRemove": "Para remover um, abra o menu dele e escolha {{action}}.",
+    "wideNetShowLess": "Mostrar menos"
   },
   "whatsNew": {
     "gotIt": "Entendi",
