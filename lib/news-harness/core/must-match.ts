@@ -26,3 +26,13 @@ export function normalizeMustMatch(input: unknown): string[] {
   }
   return out;
 }
+
+/** The prompt rule for `mustMatch`, one line in each chat's option rules. The
+ *  harness's follow skill and `PROPOSE_TRACK_TOOL` carry literal copies (it
+ *  imports nothing from here); tests pin them to these. */
+export const MUST_MATCH_RULE =
+  '- "mustMatch": 1-3 distinctive names (event, organisation, product or person) that any article about exactly this option must mention, written as English headlines write them: Latin script, no year, spelling variants in the spare slots. Never a city, region or country on its own: a place name alone lets in every other event held there. Leave it empty for a broad option that no single name covers.';
+
+/** The `mustMatch` schema description, on every tool and structured schema that offers options. */
+export const MUST_MATCH_DESCRIPTION =
+  '1-3 distinctive names (event, organisation, product or person) any article about exactly this option must mention, as English headlines write them: Latin script, no year, spelling variants in the spare slots. Never a place name on its own. Empty for a broad option. NOT shown to the user.';

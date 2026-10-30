@@ -11,6 +11,7 @@
 
 import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
 import { SUPPRESSION_KINDS } from '../core/types';
+import { MUST_MATCH_DESCRIPTION, MUST_MATCH_RULE, normalizeMustMatch } from '../core/must-match';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import {
@@ -160,10 +161,13 @@ const MAX_TRACK_OPTIONS = 4;
 /** One scope pill the follow-a-story flow offers: a shown display `label` + a
  *  hidden `search` retrieval query. The LLM emits 3–4 of these at widening
  *  scopes (narrow event → broad ongoing story); the user picks one by its
- *  label, and `search` is what gets minted as the tracked topic. */
+ *  label, and `search` is what gets minted as the tracked topic. `mustMatch`
+ *  (hidden, normalized, absent when empty) is the names every article of the
+ *  option must mention. */
 export interface TrackScopeOption {
   label: string;
   search: string;
+  mustMatch?: string[];
 }
 
 function trimTrack(s: string): string {
@@ -186,6 +190,7 @@ export function parseTrackScopeOptions(raw: unknown): TrackScopeOption[] {
   for (const entry of raw) {
     let label = '';
     let search = '';
+    let mustMatch: string[] = [];
     if (typeof entry === 'string') {
       label = entry.trim();
       search = label;
@@ -195,12 +200,13 @@ export function parseTrackScopeOptions(raw: unknown): TrackScopeOption[] {
       search = typeof rec.search === 'string' ? rec.search.trim() : '';
       // A label with no distinct search still tracks (search falls back to it).
       if (!search) search = label;
+      mustMatch = normalizeMustMatch(rec.mustMatch);
     }
     if (!label) continue;
     const key = label.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ label: trimTrack(label), search: trimTrack(search) });
+    out.push({ label: trimTrack(label), search: trimTrack(search), ...(mustMatch.length > 0 ? { mustMatch } : {}) });
     if (out.length >= MAX_TRACK_OPTIONS) break;
   }
   return out;
@@ -388,9 +394,10 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 
 ## Following a story (the proposeTrack tool)
 When the user wants to FOLLOW / TRACK this unfolding story, call proposeTrack with 3–4 scope OPTIONS at widening scope — from the narrow specific event to the broad ongoing story — so the user can pick how much they want to follow. Read the ARTICLE and the RELATED COVERAGE titles to judge the real span of the story; base the options on what that coverage actually spans, not just this one article.
-Each option has TWO fields:
+Each option has these fields:
 - "label": the SHORT display name shown to the user (${MAX_TRACK_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation). This is a generic, recognisable topic name — e.g. "Russia–Ukraine war", "Attacks on Ukraine infrastructure".
 - "search": a short retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "Russia Ukraine civilian infrastructure attacks". NOT shown to the user.
+${MUST_MATCH_RULE}
 Rules:
 - Order options narrow → broad. Make the labels GENERIC enough that future developments keep matching (track the CONTINUING story, not this single article).
 - Do not invent entities absent from the ARTICLE / RELATED COVERAGE. Plain, neutral language; no clickbait, no ALL CAPS.
@@ -428,7 +435,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
 - proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "suppressionKind"?: ${SUPPRESSION_KINDS.join('|')}, "suppressionValue"?, "suppressionId"?, "highPriority"?: boolean}]}
   suppressionValue: copy VERBATIM from <context>, or omit it together with suppressionKind. suppressionId: an [id] from YOUR FILTERS.
-- proposeTrack: {"options": [{"label": string, "search": string}]}
+- proposeTrack: {"options": [{"label": string, "search": string, "mustMatch"?: string[]}]}
 ${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {}
 - cancelProposal: {}
 
@@ -789,6 +796,7 @@ export function getArticleFeedbackToolDefinitions(
                     description:
                       'Hidden retrieval query with concrete who/what/where anchors (≤8 words, e.g. "Russia Ukraine civilian infrastructure attacks"). Sentence case, proper nouns KEEP their capitals — retrieval recognises a place by its capital letter. NOT shown to the user.',
                   },
+                  mustMatch: { type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION },
                 },
                 required: ['label', 'search'],
               },
@@ -1192,6 +1200,7 @@ export function decideProposeTrack(
     type: 'track_story',
     label: o.label,
     searchText: o.search,
+    ...(o.mustMatch ? { mustMatch: o.mustMatch } : {}),
     subject,
   }));
   const chooseOne = actions.length >= 2;

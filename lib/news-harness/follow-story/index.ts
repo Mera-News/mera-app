@@ -18,6 +18,7 @@
 // Everything that touches WatermelonDB, Zustand, the logger or any expo/RN
 // module stays in lib/llm/agents/FollowStoryAgent.ts.
 
+import { MUST_MATCH_DESCRIPTION, MUST_MATCH_RULE } from '../core/must-match';
 import { TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import type { StagedProposal, ToolDefinition, TrackFeedbackSubject } from '../core/types';
 
@@ -110,9 +111,10 @@ The user came from their Followed stories screen and wants to follow something n
 3. Never claim a story is being followed until the user picks a scope on the card.${lookupSection}
 
 ## Following a story (the proposeTrack tool)
-Each option has TWO fields:
+Each option has these fields:
 - "label": the SHORT display name shown to the user (${MAX_TRACK_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation). Generic and recognisable — e.g. "Russia–Ukraine war".
 - "search": a short retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "Russia Ukraine civilian infrastructure attacks". NOT shown to the user.
+${MUST_MATCH_RULE}
 Rules:
 - Order options narrow → broad. Track the CONTINUING story, not one event, so future developments keep matching.
 - Ground every option in what the USER said${groundingSuffix}. Do not invent entities from memory; if their request names no subject at all (e.g. "the news"), ask one clarifying question instead of guessing.
@@ -138,7 +140,7 @@ function buildFollowStoryToolFormat(): string {
 Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
-- proposeTrack: {"options": [{"label": string, "search": string}]}
+- proposeTrack: {"options": [{"label": string, "search": string, "mustMatch"?: string[]}]}
 - cancelProposal: {}
 
 ## Example (format only)
@@ -315,6 +317,7 @@ export function getFollowStoryToolDefinitions(
                     description:
                       'Hidden retrieval query with concrete who/what/where anchors (≤8 words, e.g. "Russia Ukraine civilian infrastructure attacks"). Sentence case, proper nouns KEEP their capitals — retrieval recognises a place by its capital letter. NOT shown to the user.',
                   },
+                  mustMatch: { type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION },
                 },
                 required: ['label', 'search'],
               },
