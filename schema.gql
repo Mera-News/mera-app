@@ -519,6 +519,11 @@ input PersonaTopicInput {
   limit: Int
 
   """
+  Names an article must contain (any one). Request-scoped and never stored.
+  """
+  mustMatch: [String!]
+
+  """
   Require the narrowest place term in the topic rather than any of them. Request-scoped and never stored.
   """
   strictMatch: Boolean! = false

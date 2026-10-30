@@ -524,6 +524,8 @@ export type PersonaQueryResult = {
 export type PersonaTopicInput = {
   afterCursor?: InputMaybe<Scalars['ID']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Names an article must contain (any one). Request-scoped and never stored. */
+  mustMatch?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Require the narrowest place term in the topic rather than any of them. Request-scoped and never stored. */
   strictMatch?: Scalars['Boolean']['input'];
   text: Scalars['String']['input'];
