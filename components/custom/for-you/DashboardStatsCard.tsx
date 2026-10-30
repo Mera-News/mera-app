@@ -14,8 +14,10 @@
 // limit (when articles unlock), a scoring problem, nothing fetched, nothing
 // analysed, nothing relevant, or offline, as plain text (no links, owner).
 // Level 2, under the ⌄ and INSIDE the card: FeedStatusDetails (its Stage row
-// names the limit or the problem), then FeedStatusActions (upgrade and Manage
-// plan at the limit, Try now on a problem).
+// names the limit or the problem), then FeedStatusActions (Read on this phone
+// and Show all articles at the limit, Try now on a problem). At the limit,
+// level 1 also carries the gap bar and the ONE upgrade button
+// (ReadHoldUpgradeButton), under the lead row, outside the chevron.
 //
 // No announcement here: FeedScreen announces the capped and error states.
 
@@ -36,7 +38,8 @@ import FeedStatsSentence from './FeedStatsSentence';
 import FeedStatusDetails, { AnalysingProgress, FeedStatusActions } from './FeedStatusDetails';
 import { markSizeFor, markTone, type MarkTone } from './card-state';
 import { useFeedIssue, useStatsCardLead } from './use-stats-card-lead';
-import CardRow, { CARD_RADIUS, CARD_ROW_PAD } from '@/components/custom/feed/CardRow';
+import CardRow, { CARD_RADIUS, CARD_ROW_PAD, CARD_TEXT_END, CARD_TEXT_START } from '@/components/custom/feed/CardRow';
+import ReadHoldUpgradeButton, { useUpgradeFrom } from './ReadHoldUpgradeButton';
 
 
 
@@ -101,6 +104,26 @@ function ExpandingDetails({ open, children }: { open: boolean; children: React.R
     );
 }
 
+/** The held card's gap as a bar: what Mera read in the accent, what still
+ *  waits on the neutral track. Static (no motion, so Lite needs nothing); its
+ *  label is the sentence above it. */
+function GapBar({ read, waiting, label }: { read: number; waiting: number; label: string }) {
+    const colors = useColors();
+    return (
+        <View
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={label}
+            accessibilityValue={{ min: 0, max: read + waiting, now: read }}
+            testID="feed-status-gap-bar"
+            style={[styles.gapBar, { backgroundColor: colors.trackFill }]}
+        >
+            <View style={{ flex: read, backgroundColor: colors.accent }} />
+            <View style={{ flex: waiting }} />
+        </View>
+    );
+}
+
 /** The Mera mark, always at the sentence's start (owner): moving while a run
  *  is in flight, a still frame when idle. MeraLogo itself holds still in Lite,
  *  under Reduce Motion and off screen. */
@@ -130,7 +153,9 @@ export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactE
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
-    const { mode, articleCount, state, zeroText, stateLabel, processing } = useStatsCardLead();
+    const { mode, articleCount, state, zeroText, stateLabel, processing, gap } = useStatsCardLead();
+    // Level 1 owns the hold's upgrade (owner): the gap bar and the one button.
+    const upgradeFrom = useUpgradeFrom();
     const expanded = useFeedStatusCard((s) => s.expanded);
 
     const colors = useColors();
@@ -203,6 +228,12 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 style={StyleSheet.absoluteFill}
                             />
                         </View>
+                        {gap || upgradeFrom ? (
+                            <View style={styles.holdBlock} testID="feed-status-hold-block">
+                                {gap && zeroText ? <GapBar read={gap.read} waiting={gap.waiting} label={zeroText} /> : null}
+                                <ReadHoldUpgradeButton testID="feed-status-upgrade" />
+                            </View>
+                        ) : null}
                         {details}
                     </>
             </GlassPanel>
@@ -214,6 +245,9 @@ const styles = StyleSheet.create({
     // fontSize with its own lineHeight (the ui Text clipping trap).
     line: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
     detailsClip: { overflow: 'hidden' },
+    // Under the lead row, on its text column; the row above brings the gap.
+    holdBlock: { paddingLeft: CARD_TEXT_START, paddingRight: CARD_TEXT_END, paddingBottom: CARD_ROW_PAD, gap: 12 },
+    gapBar: { flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden' },
     // The details keep the card's padding: the row's 12pt at the sides and
     // below (the row above brings its own).
     detailsBody: {

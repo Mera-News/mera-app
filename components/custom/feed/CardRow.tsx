@@ -21,6 +21,10 @@ const CARD_ROW_GAP = 12;
 const CARD_ICON_SLOT = 40;
 /** The chevron slot (a 22pt glyph). */
 const CARD_CHEVRON = 22;
+/** Where the text column starts and ends, from the card's inner edges: for
+ *  content under the row that lines up with its text. */
+export const CARD_TEXT_START = CARD_ROW_PAD + CARD_ICON_SLOT + CARD_ROW_GAP;
+export const CARD_TEXT_END = CARD_ROW_PAD + CARD_CHEVRON + CARD_ROW_GAP;
 
 const HIDDEN = {
   accessible: false,

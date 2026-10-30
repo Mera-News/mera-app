@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { readingMeterModel } from './reading-meter-model';
+import ReadHoldUpgradeButton from '@/components/custom/for-you/ReadHoldUpgradeButton';
 
 /**
  * Fetches the reading meter on mount and on every focus (the tab stays
@@ -161,6 +162,9 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, size = 'card'
                 <Text style={small}>{t('you.settings.lastUpdated', { time: formatClockTime(m.lastUpdatedAt, lang) ?? '' })}</Text>
             ) : null}
             {m.showNewPlan ? <Text style={small}>{t('you.settings.newPlanApplies')}</Text> : null}
+            {/* Settings only, while held and not Professional (the button gates itself). Manage plan
+                has View plans and stays lean (owner). */}
+            {size === 'card' && m.done ? <ReadHoldUpgradeButton testID="reading-upgrade" /> : null}
         </View>
     );
 };

@@ -13,6 +13,7 @@ import { useColors } from '@/lib/theme/tokens';
 import ReadingMeter, { useReadingFetch } from './ReadingMeter';
 import { useManageSubscription } from './useManageSubscription';
 import { useRestorePurchases } from './useRestorePurchases';
+import { redeemOfferCode } from '@/lib/subscription/redeem-code';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 
 interface ManageSubscriptionScreenProps {
@@ -21,7 +22,7 @@ interface ManageSubscriptionScreenProps {
 
 /**
  * Manage plan, kept lean (owner): the plan and its one line, the usage card,
- * the four numbers, View plans, Restore purchases, and for a store
+ * the four numbers, View plans, Restore purchases, Redeem a code, and for a store
  * subscription the Customer Center and where it is billed.
  *
  * Subscription details + actions: plan and daily reading from our DB
@@ -214,6 +215,17 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         >
                             {restoring ? <Spinner size="small" /> : <MaterialIcons name="restore" size={18} color={colors.accentText} />}
                             <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('you.settings.restorePurchases')}</Text>
+                        </Pressable>
+                        {/* Offer codes are store-run: the iOS sheet or the Play redeem page. */}
+                        <Pressable
+                            testID="manage-redeem-code"
+                            onPress={() => void redeemOfferCode()}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('subscription.redeemCode')}
+                            style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        >
+                            <MaterialIcons name="redeem" size={18} color={colors.accentText} />
+                            <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('subscription.redeemCode')}</Text>
                         </Pressable>
                         {/* Only with a store subscription: the Customer Center
                             opens onto nothing for a granted Starter account. */}

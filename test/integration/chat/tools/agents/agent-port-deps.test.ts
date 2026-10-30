@@ -117,7 +117,7 @@ describe('hindifix A: explainMera through the device port', () => {
     const out = await deps.tools.explainMera?.({ topics: ['plans_and_limits'] });
     const sections = (out as { sections: { topic: string; text: string }[] }).sections;
     expect(sections.map((x) => x.topic)).toEqual(['plans_and_limits']);
-    expect(sections[0].text).toContain('10 MB');
+    expect(sections[0].text).toContain('2 MB');
     expect(requests()).toBe(0);
     expect(gatewayCalls('chat')).toEqual([]);
   });

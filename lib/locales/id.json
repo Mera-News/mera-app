@@ -243,7 +243,10 @@
       "a11y": "Belum dibaca Mera",
       "divider": "Itu semua yang dipilih Mera. Di bawah ini artikel yang belum dibaca Mera.",
       "heldToday": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
-      "heldTomorrow": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
+      "heldTomorrow": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}.",
+      "upgradeTitle_other": "{{formatted}} artikel yang belum dibaca Mera",
+      "upgradeBodyStarter": "Pemula membaca 10 kali lebih sedikit daripada Individu setiap hari.",
+      "upgradeBodyIndividual": "Profesional membaca 5 kali lebih banyak setiap hari."
     },
     "show": {
       "title": "Tampilkan",
@@ -264,7 +267,12 @@
       "waitingToday_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi hari ini pukul {{time}}.",
       "waitingTomorrow_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi besok pukul {{time}}.",
       "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
-      "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}."
+      "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}.",
+      "gapFound_other": "Mera menemukan {{formatted}} artikel untuk Anda hari ini dan membaca {{read}}.",
+      "gapWaiting_other": "{{formatted}} masih menunggu.",
+      "gapResetToday": "Mera membaca lagi hari ini pukul {{time}}.",
+      "gapResetTomorrow": "Mera membaca lagi besok pukul {{time}}.",
+      "tryIndividual_other": "Coba Individu gratis selama {{count}} hari"
     },
     "noteHeldToday": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
     "noteHeldTomorrow": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
@@ -913,7 +921,8 @@
     "restoreNoneApple": "Tidak ada paket di Akun Apple ini.",
     "restoreNoneGoogle": "Tidak ada paket di Akun Google ini.",
     "restoreFailedAppStore": "Tidak bisa menghubungi App Store. Coba lagi.",
-    "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi."
+    "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi.",
+    "redeemCode": "Tukarkan kode"
   },
   "tabs": {
     "deck": "Umpan",
@@ -1072,7 +1081,7 @@
     "starterTitle": "Starter dari kami",
     "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
     "starterArticlesTitle": "Setiap artikel yang cocok",
-    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Pemula sudah termasuk 10 MB pembacaan cloud sehari.",
+    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Pemula sudah termasuk 2 MB pembacaan cloud sehari.",
     "starterInterestsTitle": "Semua minat Anda",
     "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
     "starterChatTitle": "Chat dan cek fakta",

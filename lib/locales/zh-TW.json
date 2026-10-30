@@ -243,7 +243,10 @@
       "a11y": "梅拉尚未閱讀",
       "divider": "以上是梅拉挑選的所有文章。以下是梅拉尚未閱讀的文章。",
       "heldToday": "梅拉還沒有閱讀這篇，因為已用完今日的閱讀額度。梅拉將於今天 {{time}} 再次閱讀。",
-      "heldTomorrow": "梅拉還沒有閱讀這篇，因為已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。"
+      "heldTomorrow": "梅拉還沒有閱讀這篇，因為已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。",
+      "upgradeTitle_other": "梅拉尚未閱讀的 {{formatted}} 篇文章",
+      "upgradeBodyStarter": "入門版每天的閱讀量只有個人版的十分之一。",
+      "upgradeBodyIndividual": "專業版每天的閱讀量是個人版的 5 倍。"
     },
     "show": {
       "title": "顯示",
@@ -264,7 +267,12 @@
       "waitingToday_other": "梅拉已用完今日的閱讀額度。下方有 {{formatted}} 篇文章尚未閱讀。梅拉將於今天 {{time}} 再次閱讀。",
       "waitingTomorrow_other": "梅拉已用完今日的閱讀額度。下方有 {{formatted}} 篇文章尚未閱讀。梅拉將於明天 {{time}} 再次閱讀。",
       "bodyToday": "梅拉已用完今日的閱讀額度。梅拉將於今天 {{time}} 再次閱讀。",
-      "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。"
+      "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。",
+      "gapFound_other": "梅拉今天為你找到 {{formatted}} 篇文章，已閱讀 {{read}} 篇。",
+      "gapWaiting_other": "還有 {{formatted}} 篇在等待。",
+      "gapResetToday": "梅拉將於今天 {{time}} 再次閱讀。",
+      "gapResetTomorrow": "梅拉將於明天 {{time}} 再次閱讀。",
+      "tryIndividual_other": "免費試用個人版 {{count}} 天"
     },
     "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則理由。",
     "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則理由。",
@@ -913,7 +921,8 @@
     "restoreNoneApple": "在這個 Apple 帳戶上找不到方案。",
     "restoreNoneGoogle": "在這個 Google 帳戶上找不到方案。",
     "restoreFailedAppStore": "無法連上 App Store。請再試一次。",
-    "restoreFailedPlayStore": "無法連上 Google Play。請再試一次。"
+    "restoreFailedPlayStore": "無法連上 Google Play。請再試一次。",
+    "redeemCode": "兌換代碼"
   },
   "tabs": {
     "deck": "資訊流",
@@ -1072,7 +1081,7 @@
     "starterTitle": "Starter 由我們招待",
     "starterIntro": "為了讓你看見梅拉的價值，每個帳號現在都免費包含完整的 Starter 方案。",
     "starterArticlesTitle": "每一篇符合的文章",
-    "starterArticlesBody": "每篇符合你興趣的文章都會進入你的資訊流。梅拉會閱讀它們、把雜訊放到一旁，並把重要的內容提上來。入門版每天包含 10 MB 的雲端閱讀量。",
+    "starterArticlesBody": "每篇符合你興趣的文章都會進入你的資訊流。梅拉會閱讀它們、把雜訊放到一旁，並把重要的內容提上來。入門版每天包含 2 MB 的雲端閱讀量。",
     "starterInterestsTitle": "您的所有興趣",
     "starterInterestsBody": "想加多少都可以，梅拉會追蹤每一項。",
     "starterChatTitle": "聊天和事實查核",

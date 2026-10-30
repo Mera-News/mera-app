@@ -11,7 +11,7 @@ import { useReadHold, resetDayWord } from '@/lib/subscription/read-hold';
 import { useNotReadWaiting } from './feed-status-card';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, hasIssue, joinClauses, readHoldSentenceKey, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
+import { cardState, hasIssue, joinClauses, readHoldGap, readHoldSentenceKey, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
 
 /** A state's lead sentence, plain text (owner: no links; the reader finds
  *  Settings and their profile themselves; the limit's and the error's actions
@@ -28,7 +28,18 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
     if (kind === 'limited') {
         const count = waiting ?? 0;
         const day = resetDayWord(resetAt ?? Date.now());
-        return t(readHoldSentenceKey(day, waiting), { count, formatted: formatCount(count, appLanguage), time: limitUnlockTime(resetAt) });
+        const time = limitUnlockTime(resetAt);
+        const gap = readHoldGap(articleCount, analysedCount, waiting);
+        if (gap)
+            return joinClauses(
+                [
+                    t('feed.readHold.gapFound', { ...fmt(articleCount), read: formatCount(gap.read, appLanguage) }),
+                    t('feed.readHold.gapWaiting', fmt(gap.waiting)),
+                    t(day === 'today' ? 'feed.readHold.gapResetToday' : 'feed.readHold.gapResetTomorrow', { time }),
+                ],
+                i18n.language,
+            );
+        return t(readHoldSentenceKey(day, waiting), { count, formatted: formatCount(count, appLanguage), time });
     }
     if (kind === 'error') return t(SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'].message);
     // The key is computed from the failure, hence `tAny`.
@@ -71,5 +82,8 @@ export function useStatsCardLead() {
     const zeroText = useStateText(state, syncFailure);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
-    return { mode, articleCount, state, zeroText, stateLabel, processing };
+    // The held card's bar draws the same gap the sentence names.
+    const waiting = useNotReadWaiting();
+    const gap = state === 'limited' ? readHoldGap(articleCount, analysedCount, waiting) : null;
+    return { mode, articleCount, state, zeroText, stateLabel, processing, gap };
 }

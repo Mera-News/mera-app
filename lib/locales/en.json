@@ -133,7 +133,8 @@
     "restoreNoneApple": "No plan found on this Apple Account.",
     "restoreNoneGoogle": "No plan found on this Google Account.",
     "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
-    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again."
+    "restoreFailedPlayStore": "Couldn't reach Google Play. Try again.",
+    "redeemCode": "Redeem a code"
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",
@@ -280,7 +281,11 @@
       "a11y": "Not read by Mera yet",
       "divider": "That's everything Mera picked. Below are articles Mera hasn't read yet.",
       "heldToday": "Mera hasn't read this because today's reading is used up. Mera reads again today at {{time}}.",
-      "heldTomorrow": "Mera hasn't read this because today's reading is used up. Mera reads again tomorrow at {{time}}."
+      "heldTomorrow": "Mera hasn't read this because today's reading is used up. Mera reads again tomorrow at {{time}}.",
+      "upgradeTitle_one": "{{formatted}} article Mera hasn't read",
+      "upgradeTitle_other": "{{formatted}} articles Mera hasn't read",
+      "upgradeBodyStarter": "Starter reads 10 times less than Individual each day.",
+      "upgradeBodyIndividual": "Professional reads 5 times more each day."
     },
     "show": {
       "title": "Show",
@@ -305,7 +310,15 @@
       "waitingTomorrow_one": "Mera has used today's reading. {{formatted}} article below is still unread. Mera reads again tomorrow at {{time}}.",
       "waitingTomorrow_other": "Mera has used today's reading. {{formatted}} articles below are still unread. Mera reads again tomorrow at {{time}}.",
       "bodyToday": "Mera has used today's reading. Mera reads again today at {{time}}.",
-      "bodyTomorrow": "Mera has used today's reading. Mera reads again tomorrow at {{time}}."
+      "bodyTomorrow": "Mera has used today's reading. Mera reads again tomorrow at {{time}}.",
+      "gapFound_one": "Mera found {{formatted}} article for you today and read {{read}}.",
+      "gapFound_other": "Mera found {{formatted}} articles for you today and read {{read}}.",
+      "gapWaiting_one": "{{formatted}} is still waiting.",
+      "gapWaiting_other": "{{formatted}} are still waiting.",
+      "gapResetToday": "Mera reads again today at {{time}}.",
+      "gapResetTomorrow": "Mera reads again tomorrow at {{time}}.",
+      "tryIndividual_one": "Try Individual free for {{count}} day",
+      "tryIndividual_other": "Try Individual free for {{count}} days"
     },
     "noteHeldToday": "Today's reading is used up, so Mera will write this reason after {{time}} today.",
     "noteHeldTomorrow": "Today's reading is used up, so Mera will write this reason after {{time}} tomorrow.",
@@ -640,7 +653,7 @@
     "starterTitle": "Starter is on us",
     "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
     "starterArticlesTitle": "Every matching article",
-    "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Starter includes 10 MB of cloud reading a day.",
+    "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters. Starter includes 2 MB of cloud reading a day.",
     "starterInterestsTitle": "All your interests",
     "starterInterestsBody": "Add as many as you like. Mera follows every one.",
     "starterChatTitle": "Chat and fact checks",

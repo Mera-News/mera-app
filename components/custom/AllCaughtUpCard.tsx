@@ -30,9 +30,11 @@ interface AllCaughtUpCardProps {
      *  until a pull, so the footer was a dead end). */
     readonly onRefresh?: () => void;
     readonly refreshing?: boolean;
+    /** The not-read divider while the read hold is on: the upgrade button, under the body. */
+    readonly action?: React.ReactNode;
 }
 
-const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID = 'all-caught-up-card', onRefresh, refreshing = false }) => {
+const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID = 'all-caught-up-card', onRefresh, refreshing = false, action }) => {
     const { t } = useTranslation();
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -92,6 +94,8 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID =
                     {bodyText}
                 </Text>
             ) : null}
+
+            {action ? <Box className="mt-4">{action}</Box> : null}
 
         </Box>
     );

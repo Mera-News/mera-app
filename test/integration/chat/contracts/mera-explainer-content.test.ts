@@ -192,9 +192,14 @@ describe('mera-explainer-content — plans', () => {
     const plans = MERA_EXPLAINER_SECTIONS.plans_and_limits;
     expect(plans).not.toMatch(/\b250\b|\b1,000\b|\b10,000\b/);
     expect(plans).not.toMatch(/articles? (?:analysed|analyzed)[^.]*a day/i);
-    expect(plans).toMatch(/10 MB/);
-    expect(plans).toMatch(/50 MB/);
-    expect(plans).toMatch(/200 MB/);
+    expect(plans).toMatch(/\b2 MB/);
+    expect(plans).not.toMatch(/10 MB/);
+    expect(plans).toMatch(/20 MB/);
+    expect(plans).toMatch(/100 MB/);
+  });
+
+  it('names the Individual trial, for new subscribers', () => {
+    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/Individual starts with a 7-day free trial for new subscribers/);
   });
 
   it('says what the servers keep in the same terms as the plans', () => {

@@ -56,7 +56,7 @@ describe('the counts card while the read hold is set', () => {
     resetReadHold();
     setNotReadWaiting(null);
     resetStatusCard();
-    useForYouStore.setState({ asyncJobPhase: 'idle' });
+    useForYouStore.setState({ asyncJobPhase: 'idle', articleCount: 0 });
   });
 
   it('is limited, and names the unread articles when a count is known', async () => {
@@ -68,6 +68,23 @@ describe('the counts card while the read hold is set', () => {
     expect(result.current.zeroText).toBe(
       t('feed.readHold.waitingToday', { count: 3, formatted: '3', time: limitUnlockTime(resetAt) }),
     );
+  });
+
+  it('states the gap with numbers when the day\'s articles and the waiting count are known', async () => {
+    const resetAt = NOON + 2 * HOUR;
+    await setReadHold({ resetAt });
+    useForYouStore.setState({ articleCount: 120 });
+    setNotReadWaiting(80);
+    const { result } = await renderLead();
+    expect(result.current.zeroText).toBe(
+      [
+        t('feed.readHold.gapFound', { count: 120, formatted: '120', read: '0' }),
+        t('feed.readHold.gapWaiting', { count: 80, formatted: '80' }),
+        t('feed.readHold.gapResetToday', { time: limitUnlockTime(resetAt) }),
+      ].join(' '),
+    );
+    expect(result.current.zeroText).toMatch(/^Mera found 120 articles for you today and read 0\. 80 are still waiting\. Mera reads again today at /);
+    expect(result.current.gap).toEqual({ read: 0, waiting: 80 });
   });
 
   it('uses the count-less sentence when nothing is known to be waiting', async () => {

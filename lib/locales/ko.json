@@ -243,7 +243,10 @@
       "a11y": "아직 메라가 읽지 않음",
       "divider": "메라가 고른 기사는 여기까지입니다. 아래는 아직 메라가 읽지 않은 기사입니다.",
       "heldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이것을 아직 읽지 않았습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
-      "heldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이것을 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다."
+      "heldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이것을 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
+      "upgradeTitle_other": "메라가 읽지 않은 기사 {{formatted}}개",
+      "upgradeBodyStarter": "스타터 요금제는 매일 개인 요금제의 10분의 1만 읽습니다.",
+      "upgradeBodyIndividual": "프로페셔널은 매일 5배 더 많이 읽습니다."
     },
     "show": {
       "title": "보기",
@@ -264,7 +267,12 @@
       "waitingToday_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "waitingTomorrow_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
       "bodyToday": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
-      "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다."
+      "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
+      "gapFound_other": "메라가 오늘 회원님을 위한 기사 {{formatted}}개를 찾아 {{read}}개를 읽었습니다.",
+      "gapWaiting_other": "{{formatted}}개가 아직 기다리고 있습니다.",
+      "gapResetToday": "메라는 오늘 {{time}}에 다시 읽습니다.",
+      "gapResetTomorrow": "메라는 내일 {{time}}에 다시 읽습니다.",
+      "tryIndividual_other": "개인 요금제 {{count}}일 무료 체험"
     },
     "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 오늘 {{time}} 이후에 작성합니다.",
     "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 내일 {{time}} 이후에 작성합니다.",
@@ -913,7 +921,8 @@
     "restoreNoneApple": "이 Apple 계정에서 요금제를 찾을 수 없습니다.",
     "restoreNoneGoogle": "이 Google 계정에서 요금제를 찾을 수 없습니다.",
     "restoreFailedAppStore": "App Store에 연결할 수 없습니다. 다시 시도해 주세요.",
-    "restoreFailedPlayStore": "Google Play에 연결할 수 없습니다. 다시 시도해 주세요."
+    "restoreFailedPlayStore": "Google Play에 연결할 수 없습니다. 다시 시도해 주세요.",
+    "redeemCode": "코드 사용하기"
   },
   "tabs": {
     "deck": "피드",
@@ -1072,7 +1081,7 @@
     "starterTitle": "Starter는 무료입니다",
     "starterIntro": "메라가 무엇을 위한 것인지 직접 보실 수 있도록, 이제 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다.",
     "starterArticlesTitle": "관심사에 맞는 모든 기사",
-    "starterArticlesBody": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 스타터에는 하루 10 MB의 클라우드 읽기량이 포함됩니다.",
+    "starterArticlesBody": "회원님의 관심사와 맞는 기사는 모두 피드에 도착합니다. 메라가 기사를 읽고, 불필요한 내용은 걸러내며, 중요한 내용을 위로 올립니다. 스타터에는 하루 2 MB의 클라우드 읽기량이 포함됩니다.",
     "starterInterestsTitle": "모든 관심사",
     "starterInterestsBody": "원하는 만큼 추가하세요. 메라가 전부 팔로우합니다.",
     "starterChatTitle": "채팅과 팩트체크",

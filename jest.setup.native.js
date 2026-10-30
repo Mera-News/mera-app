@@ -293,6 +293,16 @@ jest.mock('react-native-purchases', () => ({
     restorePurchases: jest.fn(() =>
       Promise.resolve({ entitlements: { active: {} } }),
     ),
+    // Manage plan > Redeem a code (iOS) and the read hold's trial label.
+    presentCodeRedemptionSheet: jest.fn(() => Promise.resolve()),
+    checkTrialOrIntroductoryPriceEligibility: jest.fn(() => Promise.resolve({})),
+  },
+  // Real values from the SDK's enum (the trial label reads ELIGIBLE only).
+  INTRO_ELIGIBILITY_STATUS: {
+    INTRO_ELIGIBILITY_STATUS_UNKNOWN: 0,
+    INTRO_ELIGIBILITY_STATUS_INELIGIBLE: 1,
+    INTRO_ELIGIBILITY_STATUS_ELIGIBLE: 2,
+    INTRO_ELIGIBILITY_STATUS_NO_INTRO_OFFER_EXISTS: 3,
   },
   LOG_LEVEL: {
     VERBOSE: 'VERBOSE',

@@ -9,10 +9,9 @@ import { create } from 'zustand';
 
 interface FeedStatusCardState {
     readonly expanded: boolean;
-    /** Articles Mera has not read, below the picks: written by the Continuous
-     *  list while its not-read tail is shown (Show = All or Not read by
-     *  Mera), null otherwise (Sectioned, Mera's picks, unmounted). The limited
-     *  sentence names it only when it is a number. */
+    /** Articles Mera has not read: written by the mounted Continuous list
+     *  under every Show filter, null otherwise (Sectioned, unmounted). The
+     *  limited sentence names it only when it is a number. */
     readonly notReadWaiting: number | null;
 }
 

@@ -259,7 +259,13 @@
       "a11y": "Jeszcze nieprzeczytane przez Merę",
       "divider": "To wszystko, co wybrała Mera. Poniżej są artykuły, których Mera jeszcze nie przeczytała.",
       "heldToday": "Mera jeszcze tego nie przeczytała, bo wykorzystała dzisiejszą porcję czytania. Ponownie czyta dzisiaj o {{time}}.",
-      "heldTomorrow": "Mera jeszcze tego nie przeczytała, bo wykorzystała dzisiejszą porcję czytania. Ponownie czyta jutro o {{time}}."
+      "heldTomorrow": "Mera jeszcze tego nie przeczytała, bo wykorzystała dzisiejszą porcję czytania. Ponownie czyta jutro o {{time}}.",
+      "upgradeTitle_one": "{{formatted}} artykuł, którego Mera nie przeczytała",
+      "upgradeTitle_few": "{{formatted}} artykuły, których Mera nie przeczytała",
+      "upgradeTitle_many": "{{formatted}} artykułów, których Mera nie przeczytała",
+      "upgradeTitle_other": "{{formatted}} artykułów, których Mera nie przeczytała",
+      "upgradeBodyStarter": "Starter czyta każdego dnia 10 razy mniej niż Indywidualny.",
+      "upgradeBodyIndividual": "Profesjonalny czyta każdego dnia 5 razy więcej."
     },
     "show": {
       "title": "Pokaż",
@@ -292,7 +298,21 @@
       "waitingTomorrow_many": "Mera wykorzystała dzisiejsze czytanie. {{formatted}} artykułów poniżej jest nadal nieprzeczytanych. Mera czyta ponownie jutro o {{time}}.",
       "waitingTomorrow_other": "Mera wykorzystała dzisiejsze czytanie. {{formatted}} artykułów poniżej jest nadal nieprzeczytanych. Mera czyta ponownie jutro o {{time}}.",
       "bodyToday": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta dzisiaj o {{time}}.",
-      "bodyTomorrow": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta jutro o {{time}}."
+      "bodyTomorrow": "Mera wykorzystała dzisiejsze czytanie. Ponownie czyta jutro o {{time}}.",
+      "gapFound_one": "Mera znalazła dziś dla Ciebie {{formatted}} artykuł i przeczytała {{read}}.",
+      "gapFound_few": "Mera znalazła dziś dla Ciebie {{formatted}} artykuły i przeczytała {{read}}.",
+      "gapFound_many": "Mera znalazła dziś dla Ciebie {{formatted}} artykułów i przeczytała {{read}}.",
+      "gapFound_other": "Mera znalazła dziś dla Ciebie {{formatted}} artykułów i przeczytała {{read}}.",
+      "gapWaiting_one": "{{formatted}} nadal czeka.",
+      "gapWaiting_few": "{{formatted}} nadal czekają.",
+      "gapWaiting_many": "{{formatted}} nadal czeka.",
+      "gapWaiting_other": "{{formatted}} nadal czeka.",
+      "gapResetToday": "Mera czyta ponownie dzisiaj o {{time}}.",
+      "gapResetTomorrow": "Mera czyta ponownie jutro o {{time}}.",
+      "tryIndividual_one": "Wypróbuj Indywidualny za darmo przez {{count}} dzień",
+      "tryIndividual_few": "Wypróbuj Indywidualny za darmo przez {{count}} dni",
+      "tryIndividual_many": "Wypróbuj Indywidualny za darmo przez {{count}} dni",
+      "tryIndividual_other": "Wypróbuj Indywidualny za darmo przez {{count}} dni"
     },
     "noteHeldToday": "Mera napisze to uzasadnienie dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
     "noteHeldTomorrow": "Mera napisze to uzasadnienie jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
@@ -954,7 +974,8 @@
     "restoreNoneApple": "Nie znaleziono planu na tym koncie Apple.",
     "restoreNoneGoogle": "Nie znaleziono planu na tym koncie Google.",
     "restoreFailedAppStore": "Nie udało się połączyć z App Store. Spróbuj ponownie.",
-    "restoreFailedPlayStore": "Nie udało się połączyć z Google Play. Spróbuj ponownie."
+    "restoreFailedPlayStore": "Nie udało się połączyć z Google Play. Spróbuj ponownie.",
+    "redeemCode": "Zrealizuj kod"
   },
   "tabs": {
     "deck": "Strumień",
@@ -1128,7 +1149,7 @@
     "starterTitle": "Starter na nasz koszt",
     "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
     "starterArticlesTitle": "Każdy pasujący artykuł",
-    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Starter obejmuje 10 MB czytania w chmurze dziennie.",
+    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Starter obejmuje 2 MB czytania w chmurze dziennie.",
     "starterInterestsTitle": "Wszystkie twoje zainteresowania",
     "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
     "starterChatTitle": "Czat i sprawdzanie faktów",
