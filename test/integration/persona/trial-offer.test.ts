@@ -90,14 +90,27 @@ describe('Android', () => {
 });
 
 describe('useTrialOffer', () => {
-    it('is null when the offerings cannot be read, and asks the store once per process', async () => {
+    it('is null when the offerings cannot be read, and asks the store again on the next mount', async () => {
         getOfferings.mockRejectedValue(new Error('offline'));
         const first = renderHook(() => useTrialOffer());
         await waitFor(() => expect(getOfferings).toHaveBeenCalledTimes(1));
         expect(first.result.current).toBeNull();
+        renderHook(() => useTrialOffer());
+        await waitFor(() => expect(getOfferings).toHaveBeenCalledTimes(2));
+    });
+
+    it('caches a yes for the process', async () => {
+        setOS('android');
+        getOfferings.mockResolvedValue(
+            offeringWith({
+                identifier: PLAY_ID,
+                defaultOption: { freePhase: { billingPeriod: { unit: 'DAY', value: 7, iso8601: 'P7D' }, billingCycleCount: 1 } },
+            }),
+        );
+        const first = renderHook(() => useTrialOffer());
+        await waitFor(() => expect(first.result.current).toEqual({ trialDays: 7 }));
         const second = renderHook(() => useTrialOffer());
-        await new Promise((r) => setImmediate(r));
-        expect(second.result.current).toBeNull();
+        await waitFor(() => expect(second.result.current).toEqual({ trialDays: 7 }));
         expect(getOfferings).toHaveBeenCalledTimes(1);
     });
 });

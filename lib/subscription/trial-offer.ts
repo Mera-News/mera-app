@@ -13,7 +13,7 @@
 // - Android: Play hands the app only offers this account is eligible for, so
 //   a `freePhase` on the package's default option is the proof.
 //
-// Resolved once per process and cached: the answer only changes on a purchase,
+// A yes is cached per process (it only changes on a purchase); a null is not,
 // and a reader who bought Individual is no longer shown the trial line
 // (ReadHoldUpgradeButton keys the label on the tier too).
 
@@ -72,7 +72,11 @@ export function useTrialOffer(): TrialOffer | null {
     useEffect(() => {
         let alive = true;
         cached ??= resolveTrialOffer();
-        void cached.then((o) => alive && setOffer(o));
+        void cached.then((o) => {
+            // A null can mean the offering had not loaded yet; ask again on the next mount.
+            if (!o) cached = null;
+            if (alive) setOffer(o);
+        });
         return () => {
             alive = false;
         };
