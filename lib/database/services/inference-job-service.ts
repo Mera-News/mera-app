@@ -16,6 +16,8 @@ const DEFAULT_PRIORITY: Record<InferenceJobType, number> = {
   // Naming a followed story — a background nicety like persona_summary. Runs at
   // the same low priority so it never contends with topic generation.
   story_headline: 20,
+  // A followed story's mustMatch names: a background nicety like story_headline.
+  story_names: 20,
   // Migrating a legacy follow to the topic model — a background nicety, same low
   // priority as story_headline so it never contends with topic generation.
   tracked_story_migrate: 20,

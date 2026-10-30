@@ -156,7 +156,7 @@ export async function untilJob(id: string, statuses: (InferenceJobStatus | 'gone
 export async function resetQueue(): Promise<void> {
   await stopQueue();
   inferenceQueue.__resetTypeGatesForTests();
-  for (const t of ['topic_gen', 'persona_summary', 'story_headline', 'tracked_story_migrate', 'topic_combo'] as const) {
+  for (const t of ['topic_gen', 'persona_summary', 'story_headline', 'story_names', 'tracked_story_migrate', 'topic_combo'] as const) {
     __setJobHandlerForTests(t, undefined);
   }
   useNetworkStore.getState().setIsConnected(true);

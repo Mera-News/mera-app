@@ -5,6 +5,8 @@ export type InferenceJobType =
   | 'topic_gen'
   | 'persona_summary'
   | 'story_headline'
+  // A followed story's mustMatch names. Payload `{ topicId, label, search, useCloud? }`.
+  | 'story_names'
   | 'tracked_story_migrate'
   // One fact of the deferred combination pass. Payload `{ factId, passId }`
   // only: the fact and its siblings are read at run time, never carried.

@@ -56,6 +56,7 @@ describe('enqueueJob', () => {
     ['topic_combo', 15],
     ['persona_summary', 20],
     ['story_headline', 20],
+    ['story_names', 20],
     ['tracked_story_migrate', 20],
   ])('gives %s priority %i, pending, 0 attempts and 3 max attempts', async (type, priority) => {
     const id = await enqueueJob(type, { factId: 'f1' });

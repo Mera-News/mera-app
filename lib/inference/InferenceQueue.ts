@@ -26,6 +26,7 @@ import { purgeSuggestionsForDeadTopics } from '../database/services/article-sugg
 import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
+import { handleStoryNamesJob } from './handlers/story-names-handler';
 import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
 import { handleTopicComboJob } from './handlers/topic-combo-handler';
 import { resetContext } from '../mera-protocol-toolkit';
@@ -64,6 +65,7 @@ const JOB_HANDLERS: Record<InferenceJobType, JobHandler> = {
   topic_gen: adaptHandler(handleTopicGenJob),
   persona_summary: adaptHandler(handlePersonaSummaryJob),
   story_headline: adaptHandler(handleStoryHeadlineJob),
+  story_names: adaptHandler((p: Parameters<typeof handleStoryNamesJob>[0]) => handleStoryNamesJob(p)),
   tracked_story_migrate: adaptHandler(handleTrackedStoryMigrateJob),
   topic_combo: adaptHandler(handleTopicComboJob),
 };
