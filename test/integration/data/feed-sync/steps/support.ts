@@ -10,7 +10,7 @@ import {
 } from '@/lib/database/services/article-suggestion-reads';
 import { upsertLocation } from '@/lib/database/services/location-service';
 import { setSetting } from '@/lib/database/services/setting-service';
-import { createTopics } from '@/lib/database/services/topic-service';
+import { createTopics, setTrackedMustMatch } from '@/lib/database/services/topic-service';
 import { __resetPendingForTests } from '@/lib/database/services/topic-decline-service';
 import { __resetMustMatchSupport } from '@/lib/article-service';
 import { PERSONA_V3_MIGRATION_KEY } from '@/lib/services/persona-migration-service';
@@ -152,8 +152,9 @@ export async function seedInterest(statement: string, topics: (string | Interest
 /** A followed-story topic: no fact, `provenance: 'tracked'`. */
 export async function seedTracked(text: string, weight = 0.85, mustMatch?: string[]) {
   const [topic] = await createTopics([
-    { text, weight, status: 'active', provenance: 'tracked', highPriority: true, mustMatch },
+    { text, weight, status: 'active', provenance: 'tracked', highPriority: true },
   ]);
+  if (mustMatch) await setTrackedMustMatch(topic.id, mustMatch);
   return topic;
 }
 

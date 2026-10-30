@@ -55,9 +55,10 @@ function mustMatchJsonFor(names: unknown): string | null {
 }
 
 /**
- * Write a followed story's must-match names onto its topic row (a re-follow,
- * which never reaches createTopics). Only a live 'tracked' row takes them, and
- * empty names change nothing. Never throws; true when the row was written.
+ * Write a followed story's must-match names onto its topic row: the one writer
+ * of `must_match_json` (the story_names job calls it). Only a non-retired
+ * 'tracked' row takes them, and empty names change nothing. Never throws; true
+ * when the row was written.
  */
 export async function setTrackedMustMatch(topicId: string, names: unknown): Promise<boolean> {
   const json = mustMatchJsonFor(names);
@@ -104,9 +105,6 @@ export interface CreateTopicInput {
   highPriority?: boolean;
   locationId?: string | null;
   lastSignalAt?: number | null;
-  /** A followed story's must-match names. Stored only when the resolved row is
-   *  provenance 'tracked'; empty or absent never touches a reused row. */
-  mustMatch?: string[];
 }
 
 /**
@@ -190,18 +188,11 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
   const claimedBy = new Map<string, number>();
   const toCreate: { index: number; input: CreateTopicInput; normalizedText: string }[] = [];
 
-  // Reused tracked rows whose must-match names change (see CreateTopicInput.mustMatch).
-  const nameUpdates: { row: TopicModel; json: string }[] = [];
-
   normalizedInputs.forEach(({ input, factId, normalizedText }, i) => {
     const k = keyOf(factId, normalizedText);
     const existing = existingByKey.get(k);
     if (existing) {
       results[i] = existing;
-      const json = mustMatchJsonFor(input.mustMatch);
-      if (existing.provenance === 'tracked' && json && json !== existing.mustMatchJson) {
-        nameUpdates.push({ row: existing, json });
-      }
       return;
     }
     if (claimedBy.has(k)) return; // intra-batch duplicate — filled in below
@@ -256,8 +247,6 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
           t.highPriority = input.highPriority ?? false;
           t.locationId = input.locationId ?? null;
           t.lastSignalAt = input.lastSignalAt ?? null;
-          t.mustMatchJson =
-            (input.provenance ?? 'user') === 'tracked' ? mustMatchJsonFor(input.mustMatch) : null;
           t.createdAt = now;
           t.updatedAt = now;
         }),
@@ -298,18 +287,6 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
 
     toCreate.forEach(({ index }, n) => {
       results[index] = created[n];
-    });
-  }
-
-  if (nameUpdates.length > 0) {
-    await database.write(async () => {
-      await database.batch(
-        nameUpdates.map(({ row, json }) =>
-          row.prepareUpdate((t) => {
-            t.mustMatchJson = json;
-          }),
-        ),
-      );
     });
   }
 

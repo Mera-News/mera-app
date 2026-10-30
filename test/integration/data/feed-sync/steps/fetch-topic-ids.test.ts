@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
 import { addFact } from '@/lib/database/services/fact-service';
 import { setHeadlineDepth } from '@/lib/database/services/headline-depth-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
-import { countAllTopics, createTopics } from '@/lib/database/services/topic-service';
+import { countAllTopics, createTopics, setTrackedMustMatch } from '@/lib/database/services/topic-service';
 import { stepFetchTopicIds } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { graphql, HttpResponse, mockGql, server } from '@/test/helpers';
@@ -359,9 +359,10 @@ describe('what the persona request carries', () => {
   it('a followed text held by two tracked rows sends the union of their names', async () => {
     const fact = await addFact('I follow the sub story');
     await seedTracked('Titan sub inquiry', 0.85, ['OceanGate']);
-    await createTopics([
-      { factId: fact.id, text: 'titan sub inquiry', weight: 0.85, provenance: 'tracked', mustMatch: ['Titan'] },
+    const [second] = await createTopics([
+      { factId: fact.id, text: 'titan sub inquiry', weight: 0.85, provenance: 'tracked' },
     ]);
+    await setTrackedMustMatch(second.id, ['Titan']);
     const sent = recordOps();
 
     await stepFetchTopicIds('', makeCtx().ctx);

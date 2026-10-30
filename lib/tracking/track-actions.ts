@@ -22,7 +22,7 @@ import {
   removeMemberSnapshot,
   type TrackedStoryMemberSnapshot,
 } from '../database/services/tracked-story-service';
-import { createTopics, retire, setTrackedMustMatch } from '../database/services/topic-service';
+import { createTopics, retire } from '../database/services/topic-service';
 import { getSuggestionByArticleId } from '../database/services/article-suggestion-reads';
 import {
   keepArticleForTrackedStory,
@@ -51,9 +51,6 @@ const TRACKED_TOPIC_WEIGHT = 0.85;
 export interface AcceptedTrackScope {
   label: string;
   searchText: string;
-  /** Names an article must mention to belong to this story, sent beside
-   *  strictMatch on every feed sync. Absent or empty stores nothing. */
-  mustMatch?: string[];
 }
 
 /** Build the lean member snapshot for the originating (tapped) article. We stamp
@@ -118,9 +115,6 @@ export async function trackStoryWithProposal(
     logger.info('[track-actions] story already tracked — skipping duplicate mint', {
       id: existing,
     });
-    // A re-follow never reaches createTopics, so newly accepted names land here.
-    const topicId = scope.mustMatch?.length ? (await getTrackedStoryById(existing))?.topicId : null;
-    if (topicId) await setTrackedMustMatch(topicId, scope.mustMatch);
     return 'already';
   }
 
@@ -135,7 +129,6 @@ export async function trackStoryWithProposal(
         status: 'active',
         provenance: 'tracked',
         highPriority: true,
-        mustMatch: scope.mustMatch,
       },
     ]);
     topicId = topic?.id ?? null;

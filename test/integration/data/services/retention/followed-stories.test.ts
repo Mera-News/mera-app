@@ -208,30 +208,6 @@ describe('trackStoryWithProposal', () => {
     });
   });
 
-  it('stores the accepted must-match names on the tracked topic', async () => {
-    const a = freshId();
-    await trackStoryWithProposal(subject(a), { label: 'Talks', searchText: 'ceasefire talks', mustMatch: ['Hamas', 'Qatar'] });
-    const [topic] = await getAllByNormalizedText('ceasefire talks');
-    expect(topic.mustMatch).toEqual(['Hamas', 'Qatar']);
-  });
-
-  it('a re-follow of an already followed story writes the names it now carries', async () => {
-    const a = freshId();
-    await follow(a, 'ceasefire talks');
-    const out = await trackStoryWithProposal(subject(a), { label: 'Talks', searchText: 'ceasefire talks', mustMatch: ['Hamas'] });
-    expect(out).toBe('already');
-    const [topic] = await getAllByNormalizedText('ceasefire talks');
-    expect(topic.mustMatch).toEqual(['Hamas']);
-  });
-
-  it('a re-follow with no names leaves the stored names alone', async () => {
-    const a = freshId();
-    await trackStoryWithProposal(subject(a), { label: 'Talks', searchText: 'ceasefire talks', mustMatch: ['Hamas'] });
-    await trackStoryWithProposal(subject(a), { label: 'Talks', searchText: 'ceasefire talks' });
-    const [topic] = await getAllByNormalizedText('ceasefire talks');
-    expect(topic.mustMatch).toEqual(['Hamas']);
-  });
-
   it('seeds the first snapshot with the subject\'s real pubDate and country, and no publication or language', async () => {
     const id = await follow(freshId(), 'tokyo weather', { countryCode: 'JPN' } as never);
     const row = await story(id);
