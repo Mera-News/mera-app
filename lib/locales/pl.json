@@ -264,7 +264,7 @@
       "upgradeTitle_few": "{{formatted}} artykuły, których Mera nie przeczytała",
       "upgradeTitle_many": "{{formatted}} artykułów, których Mera nie przeczytała",
       "upgradeTitle_other": "{{formatted}} artykułów, których Mera nie przeczytała",
-      "upgradeBodyStarter": "Indywidualny czyta każdego dnia 25 razy więcej.",
+      "upgradeBodyStarter": "Starter czyta każdego dnia 25 razy mniej niż Indywidualny.",
       "upgradeBodyIndividual": "Profesjonalny czyta każdego dnia 4 razy więcej."
     },
     "show": {

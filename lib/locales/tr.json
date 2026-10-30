@@ -246,7 +246,7 @@
       "heldTomorrow": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur.",
       "upgradeTitle_one": "Mera'nın okumadığı {{formatted}} makale",
       "upgradeTitle_other": "Mera'nın okumadığı {{formatted}} makale",
-      "upgradeBodyStarter": "Bireysel her gün 25 kat daha fazla okur.",
+      "upgradeBodyStarter": "Başlangıç her gün Bireysel'den 25 kat daha az okur.",
       "upgradeBodyIndividual": "Profesyonel her gün 4 kat daha fazla okur."
     },
     "show": {

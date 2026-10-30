@@ -246,7 +246,7 @@
       "heldTomorrow": "Mera non ha ancora letto questo perché ha usato la lettura di oggi. Mera legge di nuovo domani alle {{time}}.",
       "upgradeTitle_one": "{{formatted}} articolo che Mera non ha letto",
       "upgradeTitle_other": "{{formatted}} articoli che Mera non ha letto",
-      "upgradeBodyStarter": "Individuale legge 25 volte di più ogni giorno.",
+      "upgradeBodyStarter": "Base legge ogni giorno 25 volte meno di Individuale.",
       "upgradeBodyIndividual": "Professionale legge 4 volte di più ogni giorno."
     },
     "show": {

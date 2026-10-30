@@ -245,7 +245,7 @@
       "heldToday": "梅拉还没有阅读这篇文章，因为今日阅读量已用完。梅拉将于今天 {{time}} 再次阅读。",
       "heldTomorrow": "梅拉还没有阅读这篇文章，因为今日阅读量已用完。梅拉将于明天 {{time}} 再次阅读。",
       "upgradeTitle_other": "梅拉尚未阅读的 {{formatted}} 篇文章",
-      "upgradeBodyStarter": "个人版每天的阅读量是入门版的 25 倍。",
+      "upgradeBodyStarter": "入门版每天的阅读量只有个人版的二十五分之一。",
       "upgradeBodyIndividual": "专业版每天的阅读量是个人版的 4 倍。"
     },
     "show": {

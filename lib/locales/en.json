@@ -284,7 +284,7 @@
       "heldTomorrow": "Mera hasn't read this because today's reading is used up. Mera reads again tomorrow at {{time}}.",
       "upgradeTitle_one": "{{formatted}} article Mera hasn't read",
       "upgradeTitle_other": "{{formatted}} articles Mera hasn't read",
-      "upgradeBodyStarter": "Individual reads 25 times more each day.",
+      "upgradeBodyStarter": "Starter reads 25 times less than Individual each day.",
       "upgradeBodyIndividual": "Professional reads 4 times more each day."
     },
     "show": {

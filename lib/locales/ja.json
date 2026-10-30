@@ -245,7 +245,7 @@
       "heldToday": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。今日の{{time}}に、メラがまた読み始めます。",
       "heldTomorrow": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。明日の{{time}}に、メラがまた読み始めます。",
       "upgradeTitle_other": "メラがまだ読んでいない記事 {{formatted}}件",
-      "upgradeBodyStarter": "個人プランは毎日25倍多く読みます。",
+      "upgradeBodyStarter": "スタータープランが毎日読む量は個人プランの25分の1です。",
       "upgradeBodyIndividual": "プロフェッショナルは毎日4倍多く読みます。"
     },
     "show": {

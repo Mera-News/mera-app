@@ -245,7 +245,7 @@
       "heldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이것을 아직 읽지 않았습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "heldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이것을 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
       "upgradeTitle_other": "메라가 읽지 않은 기사 {{formatted}}개",
-      "upgradeBodyStarter": "개인 요금제는 매일 25배 더 많이 읽습니다.",
+      "upgradeBodyStarter": "스타터 요금제는 매일 개인 요금제의 25분의 1만 읽습니다.",
       "upgradeBodyIndividual": "프로페셔널은 매일 4배 더 많이 읽습니다."
     },
     "show": {

@@ -245,7 +245,7 @@
       "heldToday": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "heldTomorrow": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
       "upgradeTitle_other": "{{formatted}} bài Mera chưa đọc",
-      "upgradeBodyStarter": "Gói Cá nhân đọc nhiều gấp 25 lần mỗi ngày.",
+      "upgradeBodyStarter": "Gói Cơ bản mỗi ngày đọc ít hơn gói Cá nhân 25 lần.",
       "upgradeBodyIndividual": "Gói Chuyên nghiệp đọc nhiều gấp 4 lần mỗi ngày."
     },
     "show": {

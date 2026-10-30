@@ -245,7 +245,7 @@
       "heldToday": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "heldTomorrow": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}.",
       "upgradeTitle_other": "{{formatted}} artikel yang belum dibaca Mera",
-      "upgradeBodyStarter": "Individu membaca 25 kali lebih banyak setiap hari.",
+      "upgradeBodyStarter": "Pemula membaca 25 kali lebih sedikit daripada Individu setiap hari.",
       "upgradeBodyIndividual": "Profesional membaca 4 kali lebih banyak setiap hari."
     },
     "show": {
