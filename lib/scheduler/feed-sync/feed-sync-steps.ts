@@ -27,6 +27,7 @@ import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-se
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
 import { getHeadlineDepths } from '@/lib/database/services/headline-depth-service';
 import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine/retrieval-profile';
+import { normalizeMustMatch } from '@/lib/news-harness';
 // The ONE admission predicate ("may this row enter scoring"), shared with the
 // enqueue path and the bundle builders so a headline cannot be admitted by one
 // and dropped by another.
@@ -342,6 +343,23 @@ export function computeFreeTopicTexts(
 }
 
 /**
+ * Normalized text -> the normalized union of the must-match names on every
+ * TRACKED row carrying it. Read only beside `strictMatch`, so a text shared
+ * with an interest never sends names (loose wins, as in computeFreeTopicTexts).
+ */
+export function collectMustMatchByText(
+  activeTopics: { text: string; provenance: string; mustMatch?: string[] }[],
+): Map<string, string[]> {
+  const byText = new Map<string, string[]>();
+  for (const t of activeTopics) {
+    if (t.provenance !== 'tracked' || !t.mustMatch?.length) continue;
+    const key = normalizeTopicText(t.text ?? '');
+    byText.set(key, normalizeMustMatch([...(byText.get(key) ?? []), ...t.mustMatch]));
+  }
+  return byText;
+}
+
+/**
  * Split new-to-device ids into the quota-EXEMPT (followed-story) set and the
  * METERED set.
  *
@@ -434,6 +452,7 @@ async function fetchTopicIdsPersona(
   // agree — an article hydrated free because a followed story was its only
   // match is the same article that story asked the server to match strictly.
   const freeTopicTexts = computeFreeTopicTexts(activeTopics);
+  const mustMatchByText = collectMustMatchByText(activeTopics);
 
   const query: PersonaQueryInput = {
     topics: profile.topics.map((t): PersonaTopicInput => {
@@ -459,7 +478,14 @@ async function fetchTopicIdsPersona(
       // OMITTED, not false, when not tracked-only — the same absence-is-default
       // rule the headline scopes follow just below, so a reader who follows no
       // stories sends the byte-identical payload they send today.
-      if (freeTopicTexts.has(normalizeTopicText(t.text))) topic.strictMatch = true;
+      const key = normalizeTopicText(t.text);
+      if (freeTopicTexts.has(key)) {
+        topic.strictMatch = true;
+        // Same absence rule: no names, no key. ArticleService strips it again
+        // for the session if the server does not know the field.
+        const names = mustMatchByText.get(key);
+        if (names?.length) topic.mustMatch = names;
+      }
 
       return topic;
     }),
