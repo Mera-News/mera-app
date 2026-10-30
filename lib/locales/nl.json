@@ -246,8 +246,8 @@
       "heldTomorrow": "Mera heeft dit nog niet gelezen omdat het lezen voor vandaag al op is. Mera leest morgen weer om {{time}}.",
       "upgradeTitle_one": "{{formatted}} artikel dat Mera niet heeft gelezen",
       "upgradeTitle_other": "{{formatted}} artikelen die Mera niet heeft gelezen",
-      "upgradeBodyStarter": "Starter leest elke dag 25 keer minder dan Individueel.",
-      "upgradeBodyIndividual": "Professioneel leest elke dag 4 keer meer."
+      "upgradeBodyStarter": "Starter leest elke dag 10 keer minder dan Individueel.",
+      "upgradeBodyIndividual": "Professioneel leest elke dag 5 keer meer."
     },
     "show": {
       "title": "Tonen",

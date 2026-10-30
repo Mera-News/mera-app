@@ -264,8 +264,8 @@
       "upgradeTitle_few": "{{formatted}} статьи, которые Мера не прочитала",
       "upgradeTitle_many": "{{formatted}} статей, которые Мера не прочитала",
       "upgradeTitle_other": "{{formatted}} статьи, которые Мера не прочитала",
-      "upgradeBodyStarter": "Стартер читает каждый день в 25 раз меньше, чем Индивидуальный.",
-      "upgradeBodyIndividual": "Профессиональный читает в 4 раза больше каждый день."
+      "upgradeBodyStarter": "Стартер читает каждый день в 10 раз меньше, чем Индивидуальный.",
+      "upgradeBodyIndividual": "Профессиональный читает в 5 раз больше каждый день."
     },
     "show": {
       "title": "Показ",

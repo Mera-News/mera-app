@@ -194,8 +194,8 @@ describe('mera-explainer-content — plans', () => {
     expect(plans).not.toMatch(/articles? (?:analysed|analyzed)[^.]*a day/i);
     expect(plans).toMatch(/\b2 MB/);
     expect(plans).not.toMatch(/10 MB/);
-    expect(plans).toMatch(/50 MB/);
-    expect(plans).toMatch(/200 MB/);
+    expect(plans).toMatch(/20 MB/);
+    expect(plans).toMatch(/100 MB/);
   });
 
   it('names the Individual trial, for new subscribers', () => {

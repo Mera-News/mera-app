@@ -246,8 +246,8 @@
       "heldTomorrow": "मेरा ऐप ने इसे अभी तक नहीं पढ़ा है, क्योंकि आज की रीडिंग इस्तेमाल कर ली है। मेरा ऐप कल {{time}} पर फिर पढ़ेगा।",
       "upgradeTitle_one": "{{formatted}} लेख जिसे मेरा ऐप ने नहीं पढ़ा",
       "upgradeTitle_other": "{{formatted}} लेख जिन्हें मेरा ऐप ने नहीं पढ़ा",
-      "upgradeBodyStarter": "Starter हर दिन इंडिविजुअल से 25 गुना कम पढ़ता है।",
-      "upgradeBodyIndividual": "प्रोफेशनल हर दिन 4 गुना ज़्यादा पढ़ता है।"
+      "upgradeBodyStarter": "Starter हर दिन इंडिविजुअल से 10 गुना कम पढ़ता है।",
+      "upgradeBodyIndividual": "प्रोफेशनल हर दिन 5 गुना ज़्यादा पढ़ता है।"
     },
     "show": {
       "title": "दिखाएँ",

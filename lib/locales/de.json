@@ -246,8 +246,8 @@
       "heldTomorrow": "Mera hat das noch nicht gelesen, weil Mera das heutige Lesekontingent genutzt hat. Mera liest morgen um {{time}} wieder.",
       "upgradeTitle_one": "{{formatted}} Artikel, den Mera nicht gelesen hat",
       "upgradeTitle_other": "{{formatted}} Artikel, die Mera nicht gelesen hat",
-      "upgradeBodyStarter": "Starter liest jeden Tag 25 Mal weniger als Einzelperson.",
-      "upgradeBodyIndividual": "Professional liest jeden Tag 4 Mal so viel."
+      "upgradeBodyStarter": "Starter liest jeden Tag 10 Mal weniger als Einzelperson.",
+      "upgradeBodyIndividual": "Professional liest jeden Tag 5 Mal so viel."
     },
     "show": {
       "title": "Anzeigen",

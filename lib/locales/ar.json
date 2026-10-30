@@ -282,8 +282,8 @@
       "upgradeTitle_few": "{{formatted}} مقالات لم تقرأها ميرا",
       "upgradeTitle_many": "{{formatted}} مقالة لم تقرأها ميرا",
       "upgradeTitle_other": "{{formatted}} مقالة لم تقرأها ميرا",
-      "upgradeBodyStarter": "تقرأ خطة مبتدئ أقل بـ25 مرة من الخطة الفردية كل يوم.",
-      "upgradeBodyIndividual": "تقرأ الخطة الاحترافية أكثر بـ4 مرات كل يوم."
+      "upgradeBodyStarter": "تقرأ خطة مبتدئ أقل بـ10 مرات من الخطة الفردية كل يوم.",
+      "upgradeBodyIndividual": "تقرأ الخطة الاحترافية أكثر بـ5 مرات كل يوم."
     },
     "show": {
       "title": "عرض",
