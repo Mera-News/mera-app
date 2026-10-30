@@ -10,6 +10,7 @@
 // via the topic reconcile, exactly like any other topic — there is no
 // server-side stable-cluster archive and no relevance pipeline for it.
 
+import { Q } from '@nozbe/watermelondb';
 import {
   trackStory,
   untrackStory,
@@ -19,10 +20,14 @@ import {
   getTrackedStoryById,
   getLegacyTrackedForMigration,
   listTrackedMemberArticleIds,
+  getActiveForTopicReconcile,
   removeMemberSnapshot,
   type TrackedStoryMemberSnapshot,
 } from '../database/services/tracked-story-service';
-import { createTopics, retire } from '../database/services/topic-service';
+import { createTopics, getTrackedTopicsWithoutNames, retire } from '../database/services/topic-service';
+import type TopicModel from '../database/models/Topic';
+import type InferenceJob from '../database/models/InferenceJob';
+import database from '../database';
 import { getSuggestionByArticleId } from '../database/services/article-suggestion-reads';
 import {
   keepArticleForTrackedStory,
@@ -115,6 +120,12 @@ export async function trackStoryWithProposal(
     logger.info('[track-actions] story already tracked — skipping duplicate mint', {
       id: existing,
     });
+    // A story followed before its names existed (or whose job failed) asks again.
+    const story = await getTrackedStoryById(existing);
+    if (story?.topicId) {
+      const [topic] = await getTrackedTopicsWithoutNames([story.topicId]);
+      if (topic) await requestStoryNames(topic, story.llmHeadline || story.topicText || topic.text);
+    }
     return 'already';
   }
 
@@ -177,9 +188,70 @@ export async function trackStoryWithProposal(
     row,
   );
 
-  // 4. Fetch the story's coverage now rather than at the next 5-minute tick.
-  if (topicId && opts.syncFeed !== false) void syncFollowedStoryNow();
+  // 4. Ask for the story's must-match names in the background.
+  if (topicId) {
+    const [topic] = await getTrackedTopicsWithoutNames([topicId]);
+    if (topic) await requestStoryNames(topic, label || searchText);
+  }
+
+  // 5. Fetch the story's coverage now rather than at the next 5-minute tick,
+  //    but after the names land (or NAMES_WAIT_MS): reconcile adds members
+  //    permanently, so a sync without them would keep the loose matches.
+  if (topicId && opts.syncFeed !== false) {
+    void waitForStoryNames(topicId, NAMES_WAIT_MS).then(syncFollowedStoryNow);
+  }
   return 'followed';
+}
+
+/** How long the post-follow sync waits for the story_names job. */
+const NAMES_WAIT_MS = 10_000;
+
+/**
+ * Ask for a tracked topic's must-match names (the story_names job; it dedupes on
+ * a pending or running job for the topic). Never throws.
+ */
+async function requestStoryNames(topic: TopicModel, label: string): Promise<void> {
+  // Call-time require: track-actions -> InferenceQueue -> this handler cycles.
+  const { enqueueStoryNamesJob } =
+    require('../inference/handlers/story-names-handler') as typeof import('../inference/handlers/story-names-handler');
+  await enqueueStoryNamesJob({ topicId: topic.id, label, search: topic.text });
+}
+
+/**
+ * Resolves once no pending or running story_names job is left for `topicId`
+ * (done, failed, gone or never queued), or after `timeoutMs`, whichever is
+ * first. A retried job goes back to 'pending', so only the timeout ends a
+ * wait on one that keeps failing. Never rejects.
+ */
+function waitForStoryNames(topicId: string, timeoutMs: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    let sub: { unsubscribe(): void } | undefined;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      sub?.unsubscribe();
+      resolve();
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    try {
+      sub = database
+        .get<InferenceJob>('inference_jobs')
+        .query(Q.where('job_type', 'story_names'), Q.where('status', Q.oneOf(['pending', 'running'])))
+        .observe()
+        .subscribe({
+          next: (jobs) => {
+            if (!jobs.some((j) => j.payload?.topicId === topicId)) finish();
+          },
+          error: finish,
+        });
+      // The first emission can arrive before `sub` was assigned.
+      if (settled) sub.unsubscribe();
+    } catch {
+      finish();
+    }
+  });
 }
 
 /**
@@ -340,6 +412,34 @@ export function observeSubjectTrackedId(subject: FeedbackSubject) {
 
 /** Settings key guarding the one-shot retention backfill below. */
 const RETENTION_BACKFILL_KEY = 'tracked_story_retention_backfilled';
+/** Device-local: deliberately not in the backup allowlist. */
+const STORY_NAMES_BACKFILL_KEY = 'story_names_backfilled';
+
+/**
+ * ONE-SHOT per device: enqueue story_names for every followed story whose live
+ * tracked topic has no must-match names (stories followed before names
+ * existed). Writes names only, never the topic text. The flag is stamped only
+ * on a clean pass. Returns how many topics it asked for. Never throws.
+ */
+export async function backfillStoryNames(): Promise<number> {
+  try {
+    if (await getSetting(STORY_NAMES_BACKFILL_KEY)) return 0;
+    const stories = await getActiveForTopicReconcile();
+    const topics = await getTrackedTopicsWithoutNames(stories.map((s) => s.topicId));
+    let count = 0;
+    for (const topic of topics) {
+      const storyId = stories.find((s) => s.topicId === topic.id)?.id;
+      const story = storyId ? await getTrackedStoryById(storyId) : null;
+      await requestStoryNames(topic, story?.llmHeadline || topic.text);
+      count += 1;
+    }
+    await setSetting(STORY_NAMES_BACKFILL_KEY, String(Date.now()));
+    return count;
+  } catch (err) {
+    logger.warn('[track-actions] story names backfill failed', { error: String(err) });
+    return 0;
+  }
+}
 
 /**
  * ONE-SHOT: retain the members of stories that were already followed before

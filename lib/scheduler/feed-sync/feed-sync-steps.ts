@@ -79,6 +79,7 @@ import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 import { reconcileTrackedStories, type ServerTopicMatches } from './tracked-story-reconcile';
 import {
+  backfillStoryNames,
   backfillTrackedStoryRetention,
   migrateLegacyTrackedStories,
 } from '@/lib/tracking/track-actions';
@@ -706,6 +707,9 @@ export function growTrackedStories(serverMatches?: ServerTopicMatches): void {
         tags: { component: 'feed-sync-steps', method: 'migrateLegacyTrackedStories' },
       });
     })
+    // One-shot per device (settings flag), never throws: ask for must-match
+    // names for stories followed before names existed.
+    .then(() => backfillStoryNames())
     .finally(() => {
       reconcileTrackedStories(serverMatches)
         .catch((err) => {

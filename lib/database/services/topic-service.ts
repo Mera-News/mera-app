@@ -80,6 +80,27 @@ export async function setTrackedMustMatch(topicId: string, names: unknown): Prom
   }
 }
 
+/**
+ * The live tracked rows among `topicIds` that still have no must-match names:
+ * the story_names job's work list (a follow, a re-follow, the backfill). Live
+ * means provenance 'tracked', not retired and not staged for delete.
+ */
+export async function getTrackedTopicsWithoutNames(topicIds: string[]): Promise<TopicModel[]> {
+  const ids = [...new Set(topicIds.filter(Boolean))];
+  if (ids.length === 0) return [];
+  const rows = await topicsCollection
+    .query(
+      Q.where('id', Q.oneOf(ids)),
+      Q.where('provenance', 'tracked'),
+      Q.where('status', Q.notEq('retired')),
+      NOT_STAGED,
+    )
+    .fetch();
+  return rows.filter(
+    (r) => r.provenance === 'tracked' && r.status !== 'retired' && r.pendingDeleteAt == null && r.mustMatch.length === 0,
+  );
+}
+
 export interface CreateTopicInput {
   factId?: string | null;
   text: string;
