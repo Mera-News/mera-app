@@ -8,7 +8,6 @@
 import { MAX_FOLLOW_OPTIONS } from '@/lib/chat-session/engine';
 // The eval's own "too close" rule (eval/track-metrics.ts): one tokenizer, pure.
 import { contentJaccard, DETECT_JACCARD } from '@/lib/mera-harness';
-import { normalizeMustMatch } from '@/lib/news-harness/core/must-match';
 
 /** A card never grows past this: the engine contract's own cap. */
 export const MAX_TRACK_CARD_OPTIONS = MAX_FOLLOW_OPTIONS;
@@ -16,8 +15,6 @@ export const MAX_TRACK_CARD_OPTIONS = MAX_FOLLOW_OPTIONS;
 export interface TrackOption {
   label: string;
   search: string;
-  /** Names every article of the option must mention; absent when none. */
-  mustMatch?: string[];
 }
 
 export type TrackOutcome = 'following' | 'already' | 'failed';
@@ -66,8 +63,7 @@ export function readCardOptions(raw: unknown): TrackOption[] | null {
     const label = typeof rec?.label === 'string' ? rec.label.trim() : '';
     if (!label) continue;
     const search = typeof rec?.search === 'string' && rec.search.trim() ? rec.search.trim() : label;
-    const mustMatch = normalizeMustMatch(rec?.mustMatch);
-    out.push({ label, search, ...(mustMatch.length > 0 ? { mustMatch } : {}) });
+    out.push({ label, search });
     if (out.length >= MAX_TRACK_CARD_OPTIONS) break;
   }
   return out.length > 0 ? out : null;

@@ -72,13 +72,7 @@ export async function runMoreTrackOptions(
     if (seenLabels.has(label) || seenSearches.has(search)) continue;
     seenLabels.add(label);
     seenSearches.add(search);
-    actions.push({
-      type: 'track_story',
-      label: o.label,
-      searchText: o.search || o.label,
-      ...(o.mustMatch ? { mustMatch: o.mustMatch } : {}),
-      subject: input.subject,
-    });
+    actions.push({ type: 'track_story', label: o.label, searchText: o.search || o.label, subject: input.subject });
   }
   return actions.length > 0 ? { actions } : { actions: [], reason: 'none' };
 }

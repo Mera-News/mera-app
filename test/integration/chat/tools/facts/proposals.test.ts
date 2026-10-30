@@ -400,18 +400,6 @@ describe('track_story (follow in chat)', () => {
     expect(result.errors[0]).toContain('mint boom');
     expect((await getFacts()).map((f) => f.statement)).toEqual(['Likes AI news']);
   });
-
-  it('hands the option names to the tracking layer, and none when the option has none', async () => {
-    const spy = jest.spyOn(trackActions, 'trackStoryWithProposal').mockResolvedValue('followed');
-
-    await executeProposalActions([{ ...follow, mustMatch: ['Sonbhadra'] }, { ...follow, label: 'Exam results', searchText: 'UP exam results' }]);
-
-    expect(spy.mock.calls.map((c) => c[1])).toEqual([
-      { label: 'Sonbhadra exam protest', searchText: 'sonbhadra student exam result protest', mustMatch: ['Sonbhadra'] },
-      { label: 'Exam results', searchText: 'UP exam results' },
-    ]);
-    expect('mustMatch' in spy.mock.calls[1][1]).toBe(false);
-  });
 });
 
 // The UI-CONFIRMED actions. This executor is reached from ProposalCard's Confirm (a real tap); the

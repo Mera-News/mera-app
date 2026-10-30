@@ -366,7 +366,7 @@ export async function executeProposalActions(
           // One feed sync for the whole call, after the loop.
           const outcome = await trackStoryWithProposal(
             action.subject as FeedbackSubject,
-            { label, searchText, ...(action.mustMatch?.length ? { mustMatch: action.mustMatch } : {}) },
+            { label, searchText },
             { syncFeed: false },
           );
           if (outcome === 'already') {

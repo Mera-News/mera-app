@@ -58,11 +58,7 @@ export function patchTrackCard(
  */
 export function growTrackCard(source: Source, proposal: StagedProposal, incoming: readonly ProposalAction[]): number {
   const shown = trackActions(proposal.actions);
-  const toOption = (a: TrackAction): TrackOption => ({
-    label: a.label,
-    search: a.searchText,
-    ...(a.mustMatch ? { mustMatch: a.mustMatch } : {}),
-  });
+  const toOption = (a: TrackAction): TrackOption => ({ label: a.label, search: a.searchText });
   const { options, added } = mergeTrackOptions(shown.map(toOption), trackActions(incoming).map(toOption));
   if (added === 0 || shown.length === 0) return 0;
 
@@ -76,7 +72,6 @@ export function growTrackCard(source: Source, proposal: StagedProposal, incoming
       type: 'track_story',
       label: o.label,
       searchText: o.search,
-      ...(o.mustMatch ? { mustMatch: o.mustMatch } : {}),
       subject,
     }));
     store.setProposal({ ...store.proposal, actions, chooseOne: actions.length >= 2 || undefined });

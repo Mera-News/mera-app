@@ -9,7 +9,6 @@ import {
   makeFollowStorySubject,
 } from '@/lib/news-harness/follow-story';
 import type { StagedProposal } from '@/lib/news-harness/core/types';
-import { MUST_MATCH_DESCRIPTION, MUST_MATCH_RULE } from '@/lib/news-harness/core/must-match';
 import { TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
 
 const NOW = Date.parse('2026-08-07T11:00:00.000Z');
@@ -232,21 +231,5 @@ describe('makeFollowStorySubject', () => {
       stableClusterId: null,
       publicationName: null,
     });
-  });
-});
-
-describe('mustMatch on the follow-story chat', () => {
-  it('offers mustMatch as an optional string array, never required', () => {
-    const options = (getFollowStoryToolDefinitions()[0].function.parameters as any).properties.options;
-    expect(options.items.required).toEqual(['label', 'search']);
-    expect(options.items.properties.mustMatch).toEqual({ type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION });
-  });
-
-  it('states the rule in the system prompt on both paths and names the field in the tool format', () => {
-    const cloud = buildFollowStorySystemPrompt({ needsToolFormat: false, languageName: 'English', canSearch: true });
-    const local = buildFollowStorySystemPrompt({ needsToolFormat: true, languageName: 'English' });
-    expect(cloud).toContain(MUST_MATCH_RULE);
-    expect(local).toContain(MUST_MATCH_RULE);
-    expect(local).toContain('"mustMatch"?: string[]');
   });
 });

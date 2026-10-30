@@ -1,10 +1,8 @@
 import { IDENTITY_LINE, languageLine, renderPrompt, type ChatTurn } from '../shared';
-import { MUST_MATCH_RULE } from '../../core/must-match';
 import { MAX_OPTION_LABEL_WORDS, MAX_TRACK_SEARCH_WORDS } from './schema';
 
 /** How every on-device track option is written, shared with the article chat. */
-export const TRACK_OPTION_RULES = `Each option has a label, the story name the user sees (${MAX_OPTION_LABEL_WORDS} words or fewer, Title Case), and a search, a query of ${MAX_TRACK_SEARCH_WORDS} words or fewer naming the people, places and organisations of the story, keeping their capitals. Order them from the narrow event to the broad ongoing story. Write label and search in English, whatever language the reply is in: future articles are matched in English. Never name a year, season or edition that has already ended; today's date is in the context. Never write the word scope.
-${MUST_MATCH_RULE}`;
+export const TRACK_OPTION_RULES = `Each option has a label, the story name the user sees (${MAX_OPTION_LABEL_WORDS} words or fewer, Title Case), and a search, a query of ${MAX_TRACK_SEARCH_WORDS} words or fewer naming the people, places and organisations of the story, keeping their capitals. Order them from the narrow event to the broad ongoing story. Write label and search in English, whatever language the reply is in: future articles are matched in English. Never name a year, season or edition that has already ended; today's date is in the context. Never write the word scope.`;
 
 export function followStoryInstructions(languageName?: string): string {
   return `${IDENTITY_LINE}

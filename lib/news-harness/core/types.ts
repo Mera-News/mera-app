@@ -247,9 +247,8 @@ export type ProposalAction =
    *  tracked topic (e.g. "russia ukraine civilian infrastructure attacks").
    *  `subject` is the self-contained origin snapshot the executor hands to
    *  trackStoryWithProposal (embedded so the confirm is reconstructable from the
-   *  persisted tool call, with no store read). `mustMatch`: the names every
-   *  article of this option must mention (normalized, absent when none). */
-  | { type: 'track_story'; label: string; searchText: string; mustMatch?: string[]; subject: TrackFeedbackSubject }
+   *  persisted tool call, with no store read). */
+  | { type: 'track_story'; label: string; searchText: string; subject: TrackFeedbackSubject }
   // -- Fact-check a claim (the fact-check agent's `proposeFactCheck` tool) --
   /** Fact-check ONE claim drawn from an article, or (`mode: 'article'`) the
    *  whole article. A claim pill: `label` is the short pill text shown to the

@@ -11,8 +11,6 @@ import {
   selectActiveFiltersForContext,
 } from '@/lib/news-harness/article-feedback/agent-core';
 import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
-import { MUST_MATCH_DESCRIPTION, MUST_MATCH_RULE, normalizeMustMatch } from '@/lib/news-harness';
-import { parseTrackScopeOptions } from '@/lib/news-harness/article-feedback/agent-core';
 import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 import { SUPPRESSION_KINDS } from '@/lib/news-harness/core/types';
 import { TRACK_CARD_TAP_PHRASE } from '@/lib/news-harness/core/proposals';
@@ -34,12 +32,8 @@ import type {
  *  detects a place by its uppercase first letter, so the previous "plain
  *  lowercase retrieval query" mandate made every followed topic un-geo-
  *  filterable). Re-measure and restate BOTH numbers if you edit the prompt; do
- *  not buy headroom by trimming those two rules.
- *
- *  RAISED to 2470 (measured 2398) for the mustMatch option rule and its
- *  tool-format field: deliberate spend, the rule's wording is a decided
- *  contract shared with the server and the other chats. */
-const ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING = 2470;
+ *  not buy headroom by trimming those two rules. */
+const ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING = 2360;
 
 /** Fixed injected clock — 2026-03-04T05:06:07Z. Pinned so every assertion over
  *  the rendered context stays deterministic (the builder never reads Date.now). */
@@ -219,8 +213,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     // The cloud path enforces no hard input budget (see
     // CLOUD_HISTORY_BUDGET_TOKENS' note), but latency and cost are real: this is
     // the policy ceiling for the biggest prompt this surface can build.
-    // RAISED from 3200 to 3365 (measured 3294) for the mustMatch option rule.
-    expect(estimateTokens(cloudOn)).toBeLessThan(3365);
+    expect(estimateTokens(cloudOn)).toBeLessThan(3200);
   });
 
   // The LOCAL flag must not be able to smuggle the section in through the XML
@@ -299,17 +292,10 @@ describe('buildArticleFeedbackSystemPrompt', () => {
 
   // not-interested P4a — new: the YOUR FILTERS block is the only unbounded
   // addition to this surface's context, so pin system + a saturated context
-  // (full article, 12 long facts, filters at MAX_ACTIVE_FILTERS).
-  // MEASURED 2026-07-29 on the XML path: 2080 + 660 = 2740, under the ~3072
-  // on-device input budget.
-  //
-  // Now pinned on the CLOUD prompt (needsToolFormat: false), the only one the
-  // app sends. The XML path (needsToolFormat: true) reaches no phone (phones
-  // run lib/news-harness/on-device/article-feedback) and is OVER the 3072
-  // on-device budget since the mustMatch rule (2398 + 719 = 3117). It must be
-  // brought back under 3072 before anything wires it to a phone.
-  it('cloud system + a filter-saturated context stays under its measured ceiling', () => {
-    const system = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+  // (full article, 12 long facts, filters at MAX_ACTIVE_FILTERS) against the
+  // on-device input budget. MEASURED 2026-07-29: 2080 + 660 = 2740.
+  it('system + a filter-saturated context fits the ~3072-token input budget', () => {
+    const system = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
     const context = buildFeedbackContext({
       nowMs: NOW_MS,
       facts: Array.from({ length: 12 }, (_, i) => fact(`f${i}`, 'A'.repeat(199), ['alpha', 'beta', 'gamma'])),
@@ -321,8 +307,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
         kind: 'keyword' as const,
       })),
     });
-    // MEASURED 2706 (cloud system + context); ceiling 2780.
-    expect(estimateTokens(system) + estimateTokens(context)).toBeLessThan(2780);
+    expect(estimateTokens(system) + estimateTokens(context)).toBeLessThan(3072);
   });
 
   it('documents the verbatim-value rule and retire_suppression', () => {
@@ -1581,86 +1566,5 @@ describe('decideProposeChanges — set_fact_places', () => {
       .sideEffects!.proposal!;
     const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, fallbackTitle: 't', proposal });
     expect(ctx).toContain('news for [f1] from "India"');
-  });
-});
-
-// The names a followed option's articles must mention. The server holds an
-// identical copy of this function, so these cases are the shared contract.
-describe('normalizeMustMatch', () => {
-  it('accepts only an array of strings', () => {
-    expect(normalizeMustMatch(undefined)).toEqual([]);
-    expect(normalizeMustMatch('Web Summit')).toEqual([]);
-    expect(normalizeMustMatch({ 0: 'Web Summit' })).toEqual([]);
-    expect(normalizeMustMatch([42, null, { n: 'x' }, 'Web Summit'])).toEqual(['Web Summit']);
-  });
-
-  it('trims, and drops names under 3 or over 60 characters instead of cutting them', () => {
-    const sixty = 'A'.repeat(60);
-    const sixtyOne = 'B'.repeat(61);
-    expect(normalizeMustMatch(['  Web Summit  ', 'AI', '  EU ', sixty, sixtyOne])).toEqual(['Web Summit', sixty]);
-  });
-
-  it('returns NFC for NFD input', () => {
-    const nfd = 'Ciudad Me\u0301xico Expo';
-    const out = normalizeMustMatch([nfd]);
-    expect(out).toEqual(['Ciudad M\u00e9xico Expo']);
-    expect(out[0]).toBe(out[0].normalize('NFC'));
-  });
-
-  it('dedupes case-insensitively keeping the first, and keeps at most 3', () => {
-    expect(normalizeMustMatch(['Web Summit', 'web summit', 'WebSummit', 'Paddy Cosgrave', 'Cosgrave', 'Fourth'])).toEqual([
-      'Web Summit',
-      'WebSummit',
-      'Paddy Cosgrave',
-    ]);
-  });
-});
-
-describe('mustMatch on the article chat', () => {
-  it('parses names normalized onto each option, and leaves the key out when there are none', () => {
-    const options = parseTrackScopeOptions([
-      { label: 'Web Summit Lisbon', search: 'Web Summit Lisbon', mustMatch: [' Web Summit ', 'web summit', 'WebSummit', 'X'] },
-      { label: 'Tech Conferences', search: 'Europe tech conferences', mustMatch: [] },
-      { label: 'Startup Funding', search: 'Europe startup funding', mustMatch: 'Web Summit' },
-      'Legacy string option',
-    ]);
-    expect(options).toEqual([
-      { label: 'Web Summit Lisbon', search: 'Web Summit Lisbon', mustMatch: ['Web Summit', 'WebSummit'] },
-      { label: 'Tech Conferences', search: 'Europe tech conferences' },
-      { label: 'Startup Funding', search: 'Europe startup funding' },
-      { label: 'Legacy string option', search: 'Legacy string option' },
-    ]);
-    expect('mustMatch' in options[1]).toBe(false);
-  });
-
-  it('stages the names on each track_story action and echoes them in the result', () => {
-    const subject: TrackFeedbackSubject = { origin: 'suggestion', surface: 'detail', articleId: 'a1', title: 'T' };
-    const out = decideProposeTrack(
-      { options: [{ label: 'Web Summit Lisbon', search: 'Web Summit Lisbon', mustMatch: ['Web Summit'] }, { label: 'Tech Conferences', search: 'tech conferences' }] },
-      subject,
-    );
-    const actions = out.sideEffects!.proposal!.actions;
-    expect(actions[0]).toMatchObject({ type: 'track_story', mustMatch: ['Web Summit'] });
-    expect('mustMatch' in actions[1]).toBe(false);
-    expect((out.result as { options: unknown[] }).options[0]).toEqual({
-      label: 'Web Summit Lisbon',
-      search: 'Web Summit Lisbon',
-      mustMatch: ['Web Summit'],
-    });
-  });
-
-  it('offers mustMatch as an optional string array in the proposeTrack schema', () => {
-    const propose = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!.function;
-    const items = (propose.parameters as any).properties.options.items;
-    expect(items.required).toEqual(['label', 'search']);
-    expect(items.properties.mustMatch).toEqual({ type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION });
-  });
-
-  it('states the rule in the system prompt on both paths and names the field in the tool format', () => {
-    const cloud = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
-    const local = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
-    expect(cloud).toContain(MUST_MATCH_RULE);
-    expect(local).toContain(MUST_MATCH_RULE);
-    expect(local).toContain('"mustMatch"?: string[]');
   });
 });
