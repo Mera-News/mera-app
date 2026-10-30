@@ -37,8 +37,11 @@ const subject = makeFollowStorySubject();
 const action = (label: string): Extract<ProposalAction, { type: 'track_story' }> => ({ type: 'track_story', label, searchText: label.toLowerCase(), subject });
 
 /** Stages a proposeTrack exactly as the agent does, shows it, and persists the assistant row. */
-async function stage(labels: string[]) {
-  const staged = decideProposeTrack({ options: labels.map((l) => ({ label: l, search: l.toLowerCase() })) }, subject);
+async function stage(labels: string[], names: Record<string, string[]> = {}) {
+  const staged = decideProposeTrack(
+    { options: labels.map((l) => ({ label: l, search: l.toLowerCase(), mustMatch: names[l] })) },
+    subject,
+  );
   const proposal = staged.sideEffects!.proposal!;
   useFloatingChatStore.getState().setProposal(proposal);
   const tc = { id: 'tc-0', name: 'proposeTrack', status: 'done' as const, input: {}, result: staged.result };
@@ -70,6 +73,22 @@ beforeEach(() => resetChatModules());
 afterEach(() => jest.restoreAllMocks());
 
 describe('growing the card', () => {
+  it('keeps every option\'s mustMatch names, in the store and on resume', async () => {
+    const { proposal, conversationId, source } = await stage(['Artemis II launch', 'Space news'], {
+      'Artemis II launch': ['Artemis II'],
+    });
+
+    const names0 = (await resumed(conversationId)).proposal.actions.map((a) => (a as { mustMatch?: string[] }).mustMatch);
+    expect(names0).toEqual([['Artemis II'], undefined]);
+
+    growTrackCard(source, proposal, [{ ...action('Moon race'), mustMatch: ['Moon race'] }]);
+
+    const names = (p: StagedProposal) => p.actions.map((a) => (a as { mustMatch?: string[] }).mustMatch);
+    expect(names(useFloatingChatStore.getState().proposal!)).toEqual([['Artemis II'], undefined, ['Moon race']]);
+    const c = await pollUntil(() => resumed(conversationId), (r) => r.proposal.actions.length === 3, 2000);
+    expect(names(c.proposal)).toEqual([['Artemis II'], undefined, ['Moon race']]);
+  });
+
   it('the first grow on an empty store keeps the staged options and persists the whole list', async () => {
     const { proposal, conversationId, source } = await stage(['Artemis II launch', 'NASA Artemis program']);
 

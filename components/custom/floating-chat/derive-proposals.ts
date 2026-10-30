@@ -303,6 +303,7 @@ export function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | 
     type: 'track_story',
     label: o.label,
     searchText: o.search,
+    ...(o.mustMatch ? { mustMatch: o.mustMatch } : {}),
     subject,
   }));
   return {

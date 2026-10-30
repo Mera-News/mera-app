@@ -66,6 +66,13 @@ describe('readCardOptions', () => {
     expect(readCardOptions([{ label: 'X' }])).toEqual([{ label: 'X', search: 'X' }]);
   });
 
+  it('keeps normalized mustMatch names and leaves the key out when there are none', () => {
+    expect(readCardOptions([{ label: 'X', search: 'x', mustMatch: [' Named Event ', 'named event'] }, { label: 'Y', mustMatch: [] }])).toEqual([
+      { label: 'X', search: 'x', mustMatch: ['Named Event'] },
+      { label: 'Y', search: 'Y' },
+    ]);
+  });
+
   it('is null when absent, malformed or empty', () => {
     expect(readCardOptions(undefined)).toBeNull();
     expect(readCardOptions('x')).toBeNull();
