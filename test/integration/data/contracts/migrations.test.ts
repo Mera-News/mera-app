@@ -285,6 +285,17 @@ describe('specific migration versions', () => {
     expect(!!addStep.columns[0].isIndexed).toBe(true);
   });
 
+  it('v57 additively adds exactly must_match_json to topics', () => {
+    const m = byVersion.get(57);
+    expect(m!.steps).toHaveLength(1);
+    const [step] = m!.steps as any[];
+    expect(step.type).toBe('add_columns');
+    expect(step.table).toBe('topics');
+    expect(step.columns.map((c: any) => c.name)).toEqual(['must_match_json']);
+    // Optional: rows followed before v57 have no names and must keep working.
+    expect(!!step.columns[0].isOptional).toBe(true);
+  });
+
   it('v55 creates declined_topics with its four columns', () => {
     const m = byVersion.get(55);
     const create = m!.steps.find(

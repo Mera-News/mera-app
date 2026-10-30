@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 56,
+  version: 57,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -349,6 +349,9 @@ export default appSchema({
         // and folding it in would lose the status to restore on undo.
         // getAllTopicIds() must keep returning these rows — see topic-service.
         { name: 'pending_delete_at', type: 'number', isOptional: true, isIndexed: true },
+        // JSON string[] of a followed story's must-match names (schema v57).
+        // Written only on provenance 'tracked' rows; read through Topic.mustMatch.
+        { name: 'must_match_json', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],

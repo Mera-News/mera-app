@@ -51,6 +51,9 @@ const TRACKED_TOPIC_WEIGHT = 0.85;
 export interface AcceptedTrackScope {
   label: string;
   searchText: string;
+  /** Names an article must mention to belong to this story, sent beside
+   *  strictMatch on every feed sync. Absent or empty stores nothing. */
+  mustMatch?: string[];
 }
 
 /** Build the lean member snapshot for the originating (tapped) article. We stamp

@@ -46,6 +46,9 @@ export default class Topic extends Model {
    * must be restored to on undo.
    */
   @field('pending_delete_at') pendingDeleteAt!: number | null;
+  /** Raw JSON string[] of a followed story's must-match names (v57). Read
+   *  through `mustMatch`; null on every row followed before v57. */
+  @field('must_match_json') mustMatchJson!: string | null;
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
 }
