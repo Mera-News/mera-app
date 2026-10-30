@@ -17,6 +17,9 @@
 // resolve-or-create and returns one row per input, so `topic?.id ?? null` cannot be reached with a
 // parseable scope (a blank `search` makes the parser fall back to `label`, and a model output with
 // neither throws before the mint). Reported for the fence ledger.
+import { Q } from '@nozbe/watermelondb';
+import database from '@/lib/database';
+import type InferenceJob from '@/lib/database/models/InferenceJob';
 import { addFact } from '@/lib/database/services/fact-service';
 import { getAllSummaryStrings, replaceAllSummaryStrings } from '@/lib/database/services/persona-summary-service';
 import { createTopics, getAllByNormalizedText } from '@/lib/database/services/topic-service';
@@ -286,6 +289,19 @@ describe('tracked_story_migrate', () => {
       topicText: 'assam floods displacement',
       headline: 'Assam floods',
     });
+  });
+
+  it('a migrated story asks for its names: one story_names job on the minted topic', async () => {
+    const story = await legacyStory();
+    reply(SCOPE_JSON);
+
+    await driveDone(handleTrackedStoryMigrateJob({ trackedStoryId: story.id, titles: TITLES, useCloud: true }));
+
+    const [topic] = await getAllByNormalizedText('assam floods displacement');
+    const jobs = await database.get<InferenceJob>('inference_jobs').query(Q.where('job_type', 'story_names')).fetch();
+    expect(jobs.map((j) => j.payload)).toEqual([
+      { topicId: topic.id, label: 'Assam floods', search: 'assam floods displacement', useCloud: true },
+    ]);
   });
 
   it('a second story with the same scope binds the topic that already exists instead of minting a twin', async () => {

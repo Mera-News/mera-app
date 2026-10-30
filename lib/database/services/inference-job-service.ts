@@ -192,7 +192,11 @@ export async function hasPendingJob(
   matchKey: string,
   matchValue: string,
 ): Promise<boolean> {
-  return (await findPendingJobId(jobType, matchKey, matchValue)) !== null;
+  // Keep this one await: triggerTopicGeneration fires it without awaiting, and an
+  // extra tick here moved its enqueue's create under a concurrent query, which
+  // WatermelonDB rejects ("sent over the bridge, but it's not cached").
+  const candidates = await pendingJobsQuery(jobType).fetch();
+  return candidates.some((job) => (job.payload as Record<string, unknown>)[matchKey] === matchValue);
 }
 
 /** The id of a pending or running job of this type whose payload key matches, or null. */
@@ -201,15 +205,13 @@ export async function findPendingJobId(
   matchKey: string,
   matchValue: string,
 ): Promise<string | null> {
-  const candidates = await jobsCollection
-    .query(
-      Q.where('job_type', jobType),
-      Q.where('status', Q.oneOf(['pending', 'running'])),
-    )
-    .fetch();
-
+  const candidates = await pendingJobsQuery(jobType).fetch();
   const match = candidates.find((job) => (job.payload as Record<string, unknown>)[matchKey] === matchValue);
   return match ? match.id : null;
+}
+
+function pendingJobsQuery(jobType: InferenceJobType) {
+  return jobsCollection.query(Q.where('job_type', jobType), Q.where('status', Q.oneOf(['pending', 'running'])));
 }
 
 /**

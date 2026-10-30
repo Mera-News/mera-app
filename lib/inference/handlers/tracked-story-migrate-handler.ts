@@ -18,6 +18,7 @@ import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocalStructured } from '../../llm/completeLocal';
 import { isOnDeviceDeferrable } from '../job-defer';
+import { enqueueStoryNamesJob } from './story-names-handler';
 import { buildStoryScopePrompt, parseStoryScopeOutput } from '../../news-harness/story-scope';
 import { buildOnDeviceStoryScopePrompt } from '../../news-harness/on-device/story-scope/prompt';
 import { STORY_SCOPE_SCHEMA, type StoryScopeReply } from '../../news-harness/on-device/story-scope/schema';
@@ -120,6 +121,8 @@ export async function handleTrackedStoryMigrateJob(
   ]);
   await bindTrackedTopic(trackedStoryId, topic?.id ?? null, search);
   await setLlmHeadline(trackedStoryId, label);
+  // A migrated story gets its mustMatch names like a fresh follow does.
+  if (topic?.id) await enqueueStoryNamesJob({ topicId: topic.id, label, search });
   logger.debug('[tracked-story-migrate] migrated legacy story', { trackedStoryId });
   return { ok: true };
 }
