@@ -1782,60 +1782,117 @@
     "chapters": {
       "welcome": {
         "title": "Witaj w Mera",
-        "subtitle": "Co to za aplikacja, w jedną minutę.",
+        "subtitle": "Co robi Mera, w pół minuty.",
         "slides": {
           "what": {
-            "headline": "Aplikacja wiadomości, która zaczyna od Ciebie",
-            "body": "Większość aplikacji z wiadomościami zaczyna od wiadomości i liczy, że coś pasuje. Mera zaczyna od Ciebie, a potem szuka historii, które dotykają Twojego życia."
+            "headline": "Aplikacja z wiadomościami, która zaczyna od Ciebie",
+            "body": "Opowiedz aplikacji Mera o sobie. Mera znajdzie Twoje wiadomości."
           },
           "not-a-timeline": {
-            "headline": "Nie oś czasu",
-            "body": "Nic tutaj nie jest porządkowane według tego, co jest popularne lub co przybyło ostatnie. Zgadnij, co decyduje o porządku.",
+            "headline": "Najpierw to, co ważne dla Ciebie",
+            "body": "Nie to, co popularne. Nie tylko to, co nowe.",
             "choose": {
               "popular": {
-                "label": "To, co czyta większość ludzi",
-                "feedback": "Nie tutaj. Popularność to czyjeś wiadomości."
+                "label": "To, co czyta większość"
               },
               "yours": {
-                "label": "Jak bardzo dotyczy Twojego życia",
-                "feedback": "To jest to. Wszystko inne to tylko przebieg."
+                "label": "To, co ważne dla Ciebie"
               },
               "newest": {
-                "label": "To, co przybyło jako ostatnie",
-                "feedback": "Blisko. Nowe historii rzeczywiście lądują bliżej szczytu, ale bycie nowym nie jest tym, co zarabia szczyt."
+                "label": "Najnowsze wiadomości"
               }
             }
           },
           "you-first": {
-            "headline": "Trzy kroki, i to cała aplikacja",
+            "headline": "Trzy proste kroki",
             "body": "Naprawdę to takie krótkie.",
             "steps": {
-              "0": "Mówisz kilka prawdziwych rzeczy o swoim życiu.",
-              "1": "Mera zamienia je w rzeczy do szukania.",
-              "2": "Czyta dzisiejszą wiadomość i przechowuje to, co pasuje."
+              "0": "Opowiadasz aplikacji Mera o sobie",
+              "1": "Mera wie, czego szukać",
+              "2": "Mera zostawia pasujące wiadomości"
             }
           },
           "matching": {
-            "headline": "Twoje życie, nie Twoje klikania",
-            "body": "Pielęgniarka w małym mieście i pielęgniarka w stolicy otrzymają tutaj różne wiadomości. Nie dlatego, że jeden z nich dotknął więcej, ale dlatego, że różne rzeczy je faktycznie osiągają."
+            "headline": "Inne życie, inne wiadomości",
+            "body": "Dwie pielęgniarki w dwóch miastach widzą inne wiadomości."
           },
           "stays-here": {
-            "headline": "Pozostaje na tym telefonie",
-            "body": "Dotknij każdy, aby zobaczyć, co to oznacza.",
+            "headline": "To, co Mera wie o Tobie, zostaje w Twoim telefonie",
+            "body": "Komputery Mera trzymają tylko krótkie słowa, bez imienia.",
             "reveal": {
               "about-you": {
-                "label": "Co o Tobie wie",
-                "text": "Twoje fakty, Twoje zainteresowania i to, co przeczytałeś, są zapisane na tym telefonie i tam pozostają. Serwery Mera nie przechowują ich kopii."
+                "label": "O Tobie"
               },
               "what-leaves": {
-                "label": "Co faktycznie wychodzi",
-                "text": "Krótkie frazy tematyczne, takie jak „obsada szpitala”. Serwery Mera przechowują je bez imienia i konta, więc nic nie zapisuje, że fraza pochodzi od Ciebie."
+                "label": "\"praca w szpitalu\""
               }
             }
           },
           "begin": {
-            "headline": "Gotowy, kiedy chcesz",
-            "body": "Mera zada Ci kilka pytań. Nie ma złych odpowiedzi, a wszystko możesz zmienić później."
+            "headline": "Gotowy? Zaczynamy",
+            "body": "Nie ma złych odpowiedzi. Wszystko możesz zmienić później."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Większość wiadomości <a>nie dotyczy Ciebie</a>.",
+            "you": "Mera zaczyna <a>od Ciebie</a>.",
+            "tell": "Powiedz aplikacji Mera kilka <a>prawdziwych rzeczy</a> o sobie.",
+            "becomes": "Każda z nich staje się <a>tym, czego szukać</a>.",
+            "haystack": "Każdego dnia tysiące gazet i portali na świecie publikują <a>setki tysięcy</a> wiadomości.",
+            "picks": "Mera używa Twojego profilu, by znaleźć wszystkie <a>wiadomości dla Ciebie</a>.",
+            "reads": "Potem Mera je czyta, <a>zostawia to, co pasuje</a>, a resztę wyrzuca,",
+            "why": "i pisze Ci <a>notkę z wyjaśnieniem</a>.",
+            "private": "To, co Mera wie o Tobie, <a>zostaje w Twoim telefonie</a>."
+          },
+          "fact": {
+            "nurse": "Jestem pielęgniarką",
+            "utrecht": "Mieszkam w Utrechcie",
+            "kids": "Dwoje dzieci w szkole",
+            "cycle": "Jeżdżę rowerem do pracy",
+            "psv": "Kibicuję PSV",
+            "spanish": "Uczę się hiszpańskiego",
+            "rent": "Wynajmuję mieszkanie",
+            "funds": "Fundusze indeksowe",
+            "porto": "Rodzice w Porto",
+            "veg": "Wegetarianka",
+            "piano": "Gram na pianinie",
+            "japan": "Japonia wiosną"
+          },
+          "topic": {
+            "nursePay": "płace pielęgniarek",
+            "staffing": "obsada szpitali",
+            "nightShift": "zasady nocnych dyżurów",
+            "housing": "mieszkania w Utrechcie",
+            "council": "rada miasta",
+            "holidays": "ferie szkolne",
+            "bikeLanes": "ścieżki rowerowe",
+            "railStrikes": "strajki na kolei",
+            "eredivisie": "Eredivisie",
+            "languageApps": "apki do języków",
+            "rentRules": "zasady najmu",
+            "energyBills": "rachunki za prąd",
+            "interestRates": "stopy procentowe",
+            "portoFlights": "loty do Porto",
+            "foodPrices": "ceny jedzenia",
+            "concerts": "koncerty",
+            "japanTravel": "podróż do Japonii",
+            "yenRate": "kurs jena"
+          },
+          "pill": {
+            "trending": "Na topie",
+            "fake": "Może być fałszywe",
+            "screenTime": "5 godzin dziennie",
+            "rage": "Ma Cię zdenerwować"
+          },
+          "misc": {
+            "healthDesk": "Zdrowie",
+            "cityNews": "Z miasta",
+            "celebNews": "Gwiazdy",
+            "markets": "Rynki",
+            "education": "Edukacja",
+            "high": "Wysoka",
+            "med": "Śred."
           }
         }
       },

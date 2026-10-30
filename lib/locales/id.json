@@ -1703,60 +1703,117 @@
     "chapters": {
       "welcome": {
         "title": "Selamat datang di Mera",
-        "subtitle": "Apa aplikasi ini, dalam satu menit.",
+        "subtitle": "Apa yang dilakukan Mera, dalam setengah menit.",
         "slides": {
           "what": {
-            "headline": "Aplikasi berita yang dimulai dengan Anda",
-            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap sebagiannya cocok. Mera dimulai dengan Anda, lalu mencari cerita yang menyentuh hidup Anda."
+            "headline": "Aplikasi berita yang dimulai dari Anda",
+            "body": "Ceritakan diri Anda ke Mera. Mera mencari berita Anda."
           },
           "not-a-timeline": {
-            "headline": "Bukan garis waktu",
-            "body": "Tidak ada di sini yang dipesan oleh apa yang populer atau apa yang tiba terakhir. Tebak apa yang memutuskan pesanan.",
+            "headline": "Yang penting bagi Anda tampil duluan",
+            "body": "Bukan yang populer. Bukan hanya yang baru.",
             "choose": {
               "popular": {
-                "label": "Apa pun yang kebanyakan orang baca",
-                "feedback": "Bukan di sini. Popularitas adalah berita orang lain."
+                "label": "Yang dibaca banyak orang"
               },
               "yours": {
-                "label": "Berapa banyak itu menyentuh hidup Anda",
-                "feedback": "Itulah. Segalanya yang lain hanya pengalihan."
+                "label": "Yang penting bagi Anda"
               },
               "newest": {
-                "label": "Apa pun yang datang terakhir",
-                "feedback": "Dekat. Cerita baru memang mendarat di dekat atas, tetapi menjadi baru bukan apa yang mengumpulkan puncak."
+                "label": "Berita paling baru"
               }
             }
           },
           "you-first": {
-            "headline": "Tiga langkah, dan itulah seluruh aplikasi",
+            "headline": "Tiga langkah mudah",
             "body": "Ini benar-benar sesingkat ini.",
             "steps": {
-              "0": "Anda mengatakan beberapa hal yang benar tentang hidup Anda.",
-              "1": "Mera mengubahnya menjadi hal-hal untuk dicari.",
-              "2": "Ini membaca berita hari itu dan menjaga apa yang cocok."
+              "0": "Anda bercerita tentang diri Anda",
+              "1": "Mera tahu apa yang dicari",
+              "2": "Mera menyimpan berita yang cocok"
             }
           },
           "matching": {
-            "headline": "Hidup Anda, bukan klik Anda",
-            "body": "Seorang perawat di kota kecil dan seorang perawat di ibu kota mendapatkan berita yang berbeda di sini. Bukan karena salah satu dari mereka mengetuk lebih banyak, tetapi karena hal-hal yang berbeda benar-benar mencapai mereka."
+            "headline": "Hidup berbeda, berita berbeda",
+            "body": "Dua perawat di dua kota melihat berita yang berbeda."
           },
           "stays-here": {
-            "headline": "Ini tetap di ponsel ini",
-            "body": "Ketuk masing-masing untuk melihat apa yang itu berarti.",
+            "headline": "Yang Mera tahu tentang Anda tetap di ponsel Anda",
+            "body": "Komputer Mera hanya menyimpan kata pendek, tanpa nama.",
             "reveal": {
               "about-you": {
-                "label": "Apa yang diketahuinya tentang Anda",
-                "text": "Fakta Anda, minat Anda, dan apa yang telah Anda baca ditulis ke ponsel ini dan tetap di sana. Server Mera tidak menyimpan salinannya."
+                "label": "Tentang Anda"
               },
               "what-leaves": {
-                "label": "Apa yang benar-benar pergi",
-                "text": "Frasa topik pendek, seperti \"staf rumah sakit\". Server Mera menyimpannya tanpa nama atau akun, jadi tidak ada yang mencatat bahwa suatu frasa berasal dari Anda."
+                "label": "\"lowongan rumah sakit\""
               }
             }
           },
           "begin": {
-            "headline": "Siap saat Anda siap",
-            "body": "Mera akan menanyakan beberapa hal. Tidak ada jawaban yang salah, dan Anda bisa mengubah apa saja nanti."
+            "headline": "Siap? Ayo mulai",
+            "body": "Tidak ada jawaban yang salah. Anda bisa mengubah apa pun nanti."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Kebanyakan berita <a>bukan tentang Anda</a>.",
+            "you": "Mera dimulai dari <a>Anda</a>.",
+            "tell": "Ceritakan ke Mera beberapa <a>fakta tentang Anda</a>.",
+            "becomes": "Masing-masing menjadi <a>hal yang dicari</a>.",
+            "haystack": "Setiap hari, <a>ratusan ribu</a> berita terbit dari ribuan media di seluruh dunia.",
+            "picks": "Mera mengambil semua <a>berita yang cocok</a> berdasarkan profil Anda.",
+            "reads": "Lalu Mera membacanya, <a>menyimpan yang cocok</a> dan membuang yang tidak,",
+            "why": "dan menulis <a>catatan berisi alasannya</a> untuk Anda.",
+            "private": "Yang Mera tahu tentang Anda <a>tetap di ponsel Anda</a>."
+          },
+          "fact": {
+            "nurse": "Saya perawat",
+            "utrecht": "Saya tinggal di Utrecht",
+            "kids": "Dua anak sekolah",
+            "cycle": "Bersepeda ke kantor",
+            "psv": "Saya dukung PSV",
+            "spanish": "Belajar bahasa Spanyol",
+            "rent": "Saya sewa apartemen",
+            "funds": "Reksa dana indeks",
+            "porto": "Orang tua di Porto",
+            "veg": "Vegetarian",
+            "piano": "Saya main piano",
+            "japan": "Jepang di musim semi"
+          },
+          "topic": {
+            "nursePay": "gaji perawat",
+            "staffing": "staf rumah sakit",
+            "nightShift": "aturan sif malam",
+            "housing": "rumah di Utrecht",
+            "council": "dewan kota",
+            "holidays": "libur sekolah",
+            "bikeLanes": "jalur sepeda",
+            "railStrikes": "mogok kereta",
+            "eredivisie": "Eredivisie",
+            "languageApps": "aplikasi bahasa",
+            "rentRules": "aturan sewa",
+            "energyBills": "tagihan listrik",
+            "interestRates": "suku bunga",
+            "portoFlights": "penerbangan ke Porto",
+            "foodPrices": "harga makanan",
+            "concerts": "konser",
+            "japanTravel": "wisata Jepang",
+            "yenRate": "kurs yen"
+          },
+          "pill": {
+            "trending": "Lagi tren",
+            "fake": "Mungkin palsu",
+            "screenTime": "5 jam sehari",
+            "rage": "Dibuat agar Anda marah"
+          },
+          "misc": {
+            "healthDesk": "Kesehatan",
+            "cityNews": "Berita kota",
+            "celebNews": "Selebriti",
+            "markets": "Pasar",
+            "education": "Pendidikan",
+            "high": "Tinggi",
+            "med": "Sedang"
           }
         }
       },

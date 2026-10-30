@@ -86,7 +86,14 @@
 // ── `welcome` is special ────────────────────────────────────────────────────
 // It is the PRE-AUTH chapter: no account references, no Ask-Mera, and NO MERA
 // LOGO (explicit user instruction). `chapters.test.ts` asserts the logo rule so
-// it is not enforced by this comment alone.
+// it is not enforced by this comment alone (that rule covers the slide
+// placeholders; the film ends on the Mera mark by a later owner ruling). It is
+// also the first FILM chapter (`mera-app/tutorials/film/welcome.tsx`).
+//
+// ── Copy is ELI10 (owner) ───────────────────────────────────────────────────
+// A ten-year-old understands every line: one idea per card, short sentences,
+// everyday words, no jargon. Flow chapters are written that way; the rest are
+// rewritten as they convert.
 
 import type { ChapterId, TutorialChapter } from './types';
 
@@ -96,6 +103,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     id: 'welcome',
     level: 'basic',
     icon: 'auto-awesome',
+    flow: true,
     slides: [
       {
         id: 'what',
@@ -104,16 +112,6 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
       {
         id: 'not-a-timeline',
         visual: { placeholder: { kind: 'cards', count: 3 } },
-        interaction: {
-          kind: 'choose',
-          options: [
-            { id: 'popular' },
-            { id: 'yours', correct: true },
-            { id: 'newest' },
-          ],
-          mustBeCorrect: false,
-        },
-        optional: true,
       },
       {
         id: 'you-first',
@@ -126,14 +124,6 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
       {
         id: 'stays-here',
         visual: { placeholder: { kind: 'icon', name: 'phone-iphone' } },
-        interaction: {
-          kind: 'tap-to-reveal',
-          targets: [
-            { id: 'about-you', icon: 'lock' },
-            { id: 'what-leaves', icon: 'cloud-upload' },
-          ],
-        },
-        optional: true,
       },
       {
         id: 'begin',

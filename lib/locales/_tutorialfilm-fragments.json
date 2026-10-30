@@ -1,0 +1,1162 @@
+{
+  "ar": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "ما يفعله ميرا، في نصف دقيقة.",
+          "slides": {
+            "what": {
+              "headline": "تطبيق أخبار يبدأ منك",
+              "body": "أخبر ميرا عن نفسك. وهو يجد أخبارك."
+            },
+            "not-a-timeline": {
+              "headline": "ما يهمك يأتي أولًا",
+              "body": "ليس الأكثر شهرة. وليس الأحدث فقط.",
+              "choose": {
+                "popular": {
+                  "label": "ما يقرؤه معظم الناس"
+                },
+                "yours": {
+                  "label": "ما يهمك"
+                },
+                "newest": {
+                  "label": "أحدث الأخبار"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "ثلاث خطوات سهلة",
+              "steps": {
+                "0": "تخبر ميرا عن نفسك",
+                "1": "يعرف ميرا عمّا يبحث",
+                "2": "يحتفظ ميرا بالأخبار التي تناسبك"
+              }
+            },
+            "matching": {
+              "headline": "حياة مختلفة، أخبار مختلفة",
+              "body": "ممرضتان في بلدتين تريان أخبارًا مختلفة."
+            },
+            "stays-here": {
+              "headline": "ما يعرفه ميرا عنك يبقى على هاتفك",
+              "body": "أجهزة ميرا تحتفظ فقط بكلمات قصيرة، بلا اسم.",
+              "reveal": {
+                "about-you": {
+                  "label": "عنك"
+                },
+                "what-leaves": {
+                  "label": "\"وظائف المستشفى\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "مستعد؟ لنبدأ",
+              "body": "لا توجد إجابات خاطئة. يمكنك تغيير أي شيء لاحقًا."
+            }
+          }
+        }
+      }
+    }
+  },
+  "de": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Was Mera macht, in einer halben Minute.",
+          "slides": {
+            "what": {
+              "headline": "Eine News-App, die mit dir anfängt",
+              "body": "Erzähl Mera von dir. Mera findet deine News."
+            },
+            "not-a-timeline": {
+              "headline": "Was dir wichtig ist, kommt zuerst",
+              "body": "Nicht, was beliebt ist. Nicht nur, was neu ist.",
+              "choose": {
+                "popular": {
+                  "label": "Was die meisten lesen"
+                },
+                "yours": {
+                  "label": "Was dir wichtig ist"
+                },
+                "newest": {
+                  "label": "Die neuesten News"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Drei einfache Schritte",
+              "steps": {
+                "0": "Du erzählst Mera von dir",
+                "1": "Mera weiß, wonach es suchen soll",
+                "2": "Mera behält die News, die passen"
+              }
+            },
+            "matching": {
+              "headline": "Anderes Leben, andere News",
+              "body": "Zwei Pflegekräfte in zwei Orten sehen andere News."
+            },
+            "stays-here": {
+              "headline": "Was Mera über dich weiß, bleibt auf deinem Telefon",
+              "body": "Die Computer von Mera behalten nur kurze Wörter, ohne Namen.",
+              "reveal": {
+                "about-you": {
+                  "label": "Über dich"
+                },
+                "what-leaves": {
+                  "label": "\"Jobs im Krankenhaus\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Bereit? Los geht's",
+              "body": "Es gibt keine falschen Antworten. Du kannst alles später ändern."
+            }
+          }
+        }
+      }
+    }
+  },
+  "en": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "What Mera does, in half a minute.",
+          "slides": {
+            "what": {
+              "headline": "A news app that starts with you",
+              "body": "Tell Mera about you. It finds your news."
+            },
+            "not-a-timeline": {
+              "headline": "What matters to you comes first",
+              "body": "Not what's popular. Not just what's new.",
+              "choose": {
+                "popular": {
+                  "label": "What most people read"
+                },
+                "yours": {
+                  "label": "What matters to you"
+                },
+                "newest": {
+                  "label": "The newest news"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Three easy steps",
+              "steps": {
+                "0": "You tell Mera about you",
+                "1": "Mera learns what to look for",
+                "2": "Mera keeps the news that fits"
+              }
+            },
+            "matching": {
+              "headline": "Different lives, different news",
+              "body": "Two nurses in two towns get different news."
+            },
+            "stays-here": {
+              "headline": "What Mera knows about you stays on your phone",
+              "body": "Mera's computers keep only short words, with no name.",
+              "reveal": {
+                "about-you": {
+                  "label": "About you"
+                },
+                "what-leaves": {
+                  "label": "\"hospital jobs\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Ready? Let's start",
+              "body": "No wrong answers. You can change anything later."
+            }
+          }
+        }
+      }
+    }
+  },
+  "es": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Qué hace Mera, en medio minuto.",
+          "slides": {
+            "what": {
+              "headline": "Una app de noticias que empieza por ti",
+              "body": "Cuéntale a Mera sobre ti. Encuentra tus noticias."
+            },
+            "not-a-timeline": {
+              "headline": "Lo que te importa va primero",
+              "body": "No lo más popular. No solo lo más nuevo.",
+              "choose": {
+                "popular": {
+                  "label": "Lo que lee la mayoría"
+                },
+                "yours": {
+                  "label": "Lo que te importa"
+                },
+                "newest": {
+                  "label": "Lo más nuevo"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Tres pasos fáciles",
+              "steps": {
+                "0": "Le cuentas a Mera sobre ti",
+                "1": "Mera sabe qué buscar",
+                "2": "Mera guarda las noticias que encajan"
+              }
+            },
+            "matching": {
+              "headline": "Vidas distintas, noticias distintas",
+              "body": "Dos enfermeras en dos pueblos ven noticias distintas."
+            },
+            "stays-here": {
+              "headline": "Lo que Mera sabe de ti se queda en tu teléfono",
+              "body": "Las computadoras de Mera solo guardan palabras cortas, sin nombre.",
+              "reveal": {
+                "about-you": {
+                  "label": "Sobre ti"
+                },
+                "what-leaves": {
+                  "label": "\"empleos en hospitales\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "¿Listo? Empecemos",
+              "body": "No hay respuestas incorrectas. Puedes cambiar todo después."
+            }
+          }
+        }
+      }
+    }
+  },
+  "fr": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Ce que fait Mera, en trente secondes.",
+          "slides": {
+            "what": {
+              "headline": "Une appli d'actualités qui commence par vous",
+              "body": "Parlez de vous à Mera. Mera trouve vos infos."
+            },
+            "not-a-timeline": {
+              "headline": "Ce qui compte pour vous passe en premier",
+              "body": "Pas ce qui est populaire. Pas juste ce qui est récent.",
+              "choose": {
+                "popular": {
+                  "label": "Ce que la plupart lisent"
+                },
+                "yours": {
+                  "label": "Ce qui compte pour vous"
+                },
+                "newest": {
+                  "label": "Les infos les plus récentes"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Trois étapes faciles",
+              "steps": {
+                "0": "Vous parlez de vous à Mera",
+                "1": "Mera sait quoi chercher",
+                "2": "Mera garde les infos qui vous vont"
+              }
+            },
+            "matching": {
+              "headline": "Des vies différentes, des infos différentes",
+              "body": "Deux infirmières dans deux villes voient des infos différentes."
+            },
+            "stays-here": {
+              "headline": "Ce que Mera sait de vous reste sur votre téléphone",
+              "body": "Les ordinateurs de Mera ne gardent que des mots courts, sans nom.",
+              "reveal": {
+                "about-you": {
+                  "label": "Vous"
+                },
+                "what-leaves": {
+                  "label": "\"emplois à l'hôpital\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Prêt ? C'est parti",
+              "body": "Il n'y a pas de mauvaise réponse. Vous pourrez tout changer plus tard."
+            }
+          }
+        }
+      }
+    }
+  },
+  "hi": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "मेरा ऐप क्या करता है, आधे मिनट में।",
+          "slides": {
+            "what": {
+              "headline": "एक समाचार ऐप जो आपसे शुरू होता है",
+              "body": "मेरा ऐप को अपने बारे में बताइए। वह आपकी खबरें ढूँढता है।"
+            },
+            "not-a-timeline": {
+              "headline": "जो आपके लिए ज़रूरी है, वह पहले आता है",
+              "body": "जो मशहूर है, वह नहीं। सिर्फ़ नया भी नहीं।",
+              "choose": {
+                "popular": {
+                  "label": "जो ज़्यादातर लोग पढ़ते हैं"
+                },
+                "yours": {
+                  "label": "जो आपके लिए ज़रूरी है"
+                },
+                "newest": {
+                  "label": "सबसे नई खबरें"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "तीन आसान कदम",
+              "steps": {
+                "0": "आप मेरा ऐप को अपने बारे में बताते हैं",
+                "1": "मेरा ऐप जानता है कि क्या ढूँढना है",
+                "2": "मेरा ऐप आपके काम की खबरें रखता है"
+              }
+            },
+            "matching": {
+              "headline": "अलग ज़िंदगी, अलग खबरें",
+              "body": "दो कस्बों की दो नर्सों को अलग खबरें मिलती हैं।"
+            },
+            "stays-here": {
+              "headline": "मेरा ऐप आपके बारे में जो जानता है, वह आपके फ़ोन पर रहता है",
+              "body": "मेरा ऐप के कंप्यूटर बस छोटे शब्द रखते हैं, बिना किसी नाम के।",
+              "reveal": {
+                "about-you": {
+                  "label": "आपके बारे में"
+                },
+                "what-leaves": {
+                  "label": "\"अस्पताल की नौकरियाँ\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "तैयार हैं? चलिए शुरू करें",
+              "body": "कोई जवाब गलत नहीं है। आप बाद में कुछ भी बदल सकते हैं।"
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Apa yang dilakukan Mera, dalam setengah menit.",
+          "slides": {
+            "what": {
+              "headline": "Aplikasi berita yang dimulai dari Anda",
+              "body": "Ceritakan diri Anda ke Mera. Mera mencari berita Anda."
+            },
+            "not-a-timeline": {
+              "headline": "Yang penting bagi Anda tampil duluan",
+              "body": "Bukan yang populer. Bukan hanya yang baru.",
+              "choose": {
+                "popular": {
+                  "label": "Yang dibaca banyak orang"
+                },
+                "yours": {
+                  "label": "Yang penting bagi Anda"
+                },
+                "newest": {
+                  "label": "Berita paling baru"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Tiga langkah mudah",
+              "steps": {
+                "0": "Anda bercerita tentang diri Anda",
+                "1": "Mera tahu apa yang dicari",
+                "2": "Mera menyimpan berita yang cocok"
+              }
+            },
+            "matching": {
+              "headline": "Hidup berbeda, berita berbeda",
+              "body": "Dua perawat di dua kota melihat berita yang berbeda."
+            },
+            "stays-here": {
+              "headline": "Yang Mera tahu tentang Anda tetap di ponsel Anda",
+              "body": "Komputer Mera hanya menyimpan kata pendek, tanpa nama.",
+              "reveal": {
+                "about-you": {
+                  "label": "Tentang Anda"
+                },
+                "what-leaves": {
+                  "label": "\"lowongan rumah sakit\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Siap? Ayo mulai",
+              "body": "Tidak ada jawaban yang salah. Anda bisa mengubah apa pun nanti."
+            }
+          }
+        }
+      }
+    }
+  },
+  "it": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Cosa fa Mera, in mezzo minuto.",
+          "slides": {
+            "what": {
+              "headline": "Un'app di notizie che inizia da te",
+              "body": "Racconta a Mera di te. Mera trova le tue notizie."
+            },
+            "not-a-timeline": {
+              "headline": "Prima viene ciò che conta per te",
+              "body": "Non ciò che è popolare. Non solo ciò che è nuovo.",
+              "choose": {
+                "popular": {
+                  "label": "Ciò che legge la maggior parte"
+                },
+                "yours": {
+                  "label": "Ciò che conta per te"
+                },
+                "newest": {
+                  "label": "Le notizie più nuove"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Tre passi facili",
+              "steps": {
+                "0": "Racconti a Mera di te",
+                "1": "Mera sa cosa cercare",
+                "2": "Mera tiene le notizie giuste per te"
+              }
+            },
+            "matching": {
+              "headline": "Vite diverse, notizie diverse",
+              "body": "Due infermiere in due paesi vedono notizie diverse."
+            },
+            "stays-here": {
+              "headline": "Ciò che Mera sa di te resta sul tuo telefono",
+              "body": "I computer di Mera tengono solo parole brevi, senza nome.",
+              "reveal": {
+                "about-you": {
+                  "label": "Su di te"
+                },
+                "what-leaves": {
+                  "label": "\"lavoro in ospedale\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Pronto? Iniziamo",
+              "body": "Non ci sono risposte sbagliate. Puoi cambiare tutto dopo."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ja": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "メラがすること、30秒でわかります。",
+          "slides": {
+            "what": {
+              "headline": "あなたから始まるニュースアプリ",
+              "body": "あなたのことをメラに教えてください。メラがあなたのニュースを探します。"
+            },
+            "not-a-timeline": {
+              "headline": "あなたに大切なことが先に来ます",
+              "body": "人気だからではなく、新しいだけでもありません。",
+              "choose": {
+                "popular": {
+                  "label": "多くの人が読んでいるもの"
+                },
+                "yours": {
+                  "label": "あなたに大切なこと"
+                },
+                "newest": {
+                  "label": "いちばん新しいニュース"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "かんたんな3つのステップ",
+              "steps": {
+                "0": "あなたのことをメラに教えます",
+                "1": "メラが探すものを決めます",
+                "2": "メラが合うニュースだけを残します"
+              }
+            },
+            "matching": {
+              "headline": "ちがう生活には、ちがうニュース",
+              "body": "2つの町の2人の看護師は、ちがうニュースを見ます。"
+            },
+            "stays-here": {
+              "headline": "メラが知っているあなたのことは、スマホの中に残ります",
+              "body": "メラのコンピューターが持つのは、名前のない短い言葉だけです。",
+              "reveal": {
+                "about-you": {
+                  "label": "あなたのこと"
+                },
+                "what-leaves": {
+                  "label": "「病院の仕事」"
+                }
+              }
+            },
+            "begin": {
+              "headline": "準備はいいですか？始めましょう",
+              "body": "まちがった答えはありません。あとで何でも変えられます。"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ko": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "메라가 하는 일을 30초 만에 알아봐요.",
+          "slides": {
+            "what": {
+              "headline": "나에게서 시작하는 뉴스 앱",
+              "body": "메라에게 나에 대해 알려 주세요. 메라가 내 뉴스를 찾아요."
+            },
+            "not-a-timeline": {
+              "headline": "나에게 중요한 것이 먼저 나와요",
+              "body": "인기 있는 것이 아니에요. 그냥 새로운 것도 아니에요.",
+              "choose": {
+                "popular": {
+                  "label": "대부분의 사람이 읽는 것"
+                },
+                "yours": {
+                  "label": "나에게 중요한 것"
+                },
+                "newest": {
+                  "label": "가장 새로운 뉴스"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "쉬운 세 단계",
+              "steps": {
+                "0": "메라에게 나에 대해 알려 줘요",
+                "1": "메라가 무엇을 찾을지 알아요",
+                "2": "메라가 맞는 뉴스만 남겨요"
+              }
+            },
+            "matching": {
+              "headline": "삶이 다르면 뉴스도 달라요",
+              "body": "두 마을의 두 간호사는 서로 다른 뉴스를 봐요."
+            },
+            "stays-here": {
+              "headline": "메라가 아는 나에 대한 정보는 내 휴대폰에 남아요",
+              "body": "메라의 컴퓨터는 이름 없는 짧은 말만 보관해요.",
+              "reveal": {
+                "about-you": {
+                  "label": "나에 대해"
+                },
+                "what-leaves": {
+                  "label": "\"병원 일자리\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "준비됐나요? 시작해요",
+              "body": "틀린 답은 없어요. 나중에 무엇이든 바꿀 수 있어요."
+            }
+          }
+        }
+      }
+    }
+  },
+  "nl": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Wat Mera doet, in een halve minuut.",
+          "slides": {
+            "what": {
+              "headline": "Een nieuwsapp die met jou begint",
+              "body": "Vertel Mera over jezelf. Mera vindt jouw nieuws."
+            },
+            "not-a-timeline": {
+              "headline": "Wat voor jou telt, komt eerst",
+              "body": "Niet wat populair is. Niet alleen wat nieuw is.",
+              "choose": {
+                "popular": {
+                  "label": "Wat de meeste mensen lezen"
+                },
+                "yours": {
+                  "label": "Wat voor jou telt"
+                },
+                "newest": {
+                  "label": "Het nieuwste nieuws"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Drie makkelijke stappen",
+              "steps": {
+                "0": "Je vertelt Mera over jezelf",
+                "1": "Mera weet waar het naar zoekt",
+                "2": "Mera houdt het nieuws dat past"
+              }
+            },
+            "matching": {
+              "headline": "Ander leven, ander nieuws",
+              "body": "Twee verpleegkundigen in twee plaatsen zien ander nieuws."
+            },
+            "stays-here": {
+              "headline": "Wat Mera over je weet, blijft op je telefoon",
+              "body": "De computers van Mera bewaren alleen korte woorden, zonder naam.",
+              "reveal": {
+                "about-you": {
+                  "label": "Over jou"
+                },
+                "what-leaves": {
+                  "label": "\"banen in het ziekenhuis\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Klaar? We beginnen",
+              "body": "Er zijn geen foute antwoorden. Je kunt later alles veranderen."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pl": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Co robi Mera, w pół minuty.",
+          "slides": {
+            "what": {
+              "headline": "Aplikacja z wiadomościami, która zaczyna od Ciebie",
+              "body": "Opowiedz aplikacji Mera o sobie. Mera znajdzie Twoje wiadomości."
+            },
+            "not-a-timeline": {
+              "headline": "Najpierw to, co ważne dla Ciebie",
+              "body": "Nie to, co popularne. Nie tylko to, co nowe.",
+              "choose": {
+                "popular": {
+                  "label": "To, co czyta większość"
+                },
+                "yours": {
+                  "label": "To, co ważne dla Ciebie"
+                },
+                "newest": {
+                  "label": "Najnowsze wiadomości"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Trzy proste kroki",
+              "steps": {
+                "0": "Opowiadasz aplikacji Mera o sobie",
+                "1": "Mera wie, czego szukać",
+                "2": "Mera zostawia pasujące wiadomości"
+              }
+            },
+            "matching": {
+              "headline": "Inne życie, inne wiadomości",
+              "body": "Dwie pielęgniarki w dwóch miastach widzą inne wiadomości."
+            },
+            "stays-here": {
+              "headline": "To, co Mera wie o Tobie, zostaje w Twoim telefonie",
+              "body": "Komputery Mera trzymają tylko krótkie słowa, bez imienia.",
+              "reveal": {
+                "about-you": {
+                  "label": "O Tobie"
+                },
+                "what-leaves": {
+                  "label": "\"praca w szpitalu\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Gotowy? Zaczynamy",
+              "body": "Nie ma złych odpowiedzi. Wszystko możesz zmienić później."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pt-BR": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "O que a Mera faz, em meio minuto.",
+          "slides": {
+            "what": {
+              "headline": "Um app de notícias que começa com você",
+              "body": "Conte para a Mera sobre você. Ela encontra suas notícias."
+            },
+            "not-a-timeline": {
+              "headline": "O que importa para você vem primeiro",
+              "body": "Não o que é popular. Não só o que é novo.",
+              "choose": {
+                "popular": {
+                  "label": "O que a maioria lê"
+                },
+                "yours": {
+                  "label": "O que importa para você"
+                },
+                "newest": {
+                  "label": "As notícias mais novas"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Três passos fáceis",
+              "steps": {
+                "0": "Você conta para a Mera sobre você",
+                "1": "A Mera sabe o que procurar",
+                "2": "A Mera guarda as notícias que combinam"
+              }
+            },
+            "matching": {
+              "headline": "Vidas diferentes, notícias diferentes",
+              "body": "Duas enfermeiras em duas cidades veem notícias diferentes."
+            },
+            "stays-here": {
+              "headline": "O que a Mera sabe sobre você fica no seu celular",
+              "body": "Os computadores da Mera só guardam palavras curtas, sem nome.",
+              "reveal": {
+                "about-you": {
+                  "label": "Sobre você"
+                },
+                "what-leaves": {
+                  "label": "\"vagas em hospital\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Pronto? Vamos começar",
+              "body": "Não há respostas erradas. Você pode mudar tudo depois."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ru": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Что делает Мера, за полминуты.",
+          "slides": {
+            "what": {
+              "headline": "Приложение новостей, которое начинается с вас",
+              "body": "Расскажите Мере о себе. Она найдёт ваши новости."
+            },
+            "not-a-timeline": {
+              "headline": "Сначала то, что важно для вас",
+              "body": "Не то, что популярно. Не просто то, что ново.",
+              "choose": {
+                "popular": {
+                  "label": "То, что читает большинство"
+                },
+                "yours": {
+                  "label": "То, что важно для вас"
+                },
+                "newest": {
+                  "label": "Самые свежие новости"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Три простых шага",
+              "steps": {
+                "0": "Вы рассказываете Мере о себе",
+                "1": "Мера знает, что искать",
+                "2": "Мера оставляет подходящие новости"
+              }
+            },
+            "matching": {
+              "headline": "Разная жизнь, разные новости",
+              "body": "Две медсестры в двух городах видят разные новости."
+            },
+            "stays-here": {
+              "headline": "То, что Мера знает о вас, остаётся на вашем телефоне",
+              "body": "Компьютеры Меры хранят только короткие слова, без имени.",
+              "reveal": {
+                "about-you": {
+                  "label": "О вас"
+                },
+                "what-leaves": {
+                  "label": "«работа в больнице»"
+                }
+              }
+            },
+            "begin": {
+              "headline": "Готовы? Начнём",
+              "body": "Неправильных ответов нет. Всё можно изменить потом."
+            }
+          }
+        }
+      }
+    }
+  },
+  "th": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "เมร่า ทำอะไร รู้ได้ในครึ่งนาที",
+          "slides": {
+            "what": {
+              "headline": "แอปข่าวที่เริ่มต้นจากคุณ",
+              "body": "เล่าเรื่องของคุณให้ เมร่า ฟัง แล้ว เมร่า จะหาข่าวของคุณ"
+            },
+            "not-a-timeline": {
+              "headline": "สิ่งที่สำคัญกับคุณมาก่อน",
+              "body": "ไม่ใช่สิ่งที่คนนิยม ไม่ใช่แค่สิ่งที่ใหม่",
+              "choose": {
+                "popular": {
+                  "label": "สิ่งที่คนส่วนใหญ่อ่าน"
+                },
+                "yours": {
+                  "label": "สิ่งที่สำคัญกับคุณ"
+                },
+                "newest": {
+                  "label": "ข่าวใหม่ล่าสุด"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "สามขั้นตอนง่ายๆ",
+              "steps": {
+                "0": "คุณเล่าเรื่องของคุณให้ เมร่า ฟัง",
+                "1": "เมร่า รู้ว่าต้องหาอะไร",
+                "2": "เมร่า เก็บข่าวที่เข้ากับคุณ"
+              }
+            },
+            "matching": {
+              "headline": "ชีวิตต่างกัน ข่าวก็ต่างกัน",
+              "body": "พยาบาลสองคนในสองเมืองเห็นข่าวต่างกัน"
+            },
+            "stays-here": {
+              "headline": "สิ่งที่ เมร่า รู้เกี่ยวกับคุณอยู่ในโทรศัพท์ของคุณ",
+              "body": "คอมพิวเตอร์ของ เมร่า เก็บแค่คำสั้นๆ โดยไม่มีชื่อ",
+              "reveal": {
+                "about-you": {
+                  "label": "เกี่ยวกับคุณ"
+                },
+                "what-leaves": {
+                  "label": "\"งานโรงพยาบาล\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "พร้อมไหม เริ่มกันเลย",
+              "body": "ไม่มีคำตอบที่ผิด คุณเปลี่ยนอะไรก็ได้ภายหลัง"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tr": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Mera ne yapar, yarım dakikada.",
+          "slides": {
+            "what": {
+              "headline": "Seninle başlayan bir haber uygulaması",
+              "body": "Mera'ya kendini anlat. Mera haberlerini bulur."
+            },
+            "not-a-timeline": {
+              "headline": "Senin için önemli olan önce gelir",
+              "body": "Popüler olan değil. Sadece yeni olan da değil.",
+              "choose": {
+                "popular": {
+                  "label": "Çoğu insanın okuduğu"
+                },
+                "yours": {
+                  "label": "Senin için önemli olan"
+                },
+                "newest": {
+                  "label": "En yeni haberler"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Üç kolay adım",
+              "steps": {
+                "0": "Mera'ya kendini anlatırsın",
+                "1": "Mera neyi arayacağını bilir",
+                "2": "Mera sana uyan haberleri tutar"
+              }
+            },
+            "matching": {
+              "headline": "Farklı hayatlar, farklı haberler",
+              "body": "İki kasabadaki iki hemşire farklı haberler görür."
+            },
+            "stays-here": {
+              "headline": "Mera'nın senin hakkında bildikleri telefonunda kalır",
+              "body": "Mera'nın bilgisayarları sadece kısa kelimeler tutar, isim olmadan.",
+              "reveal": {
+                "about-you": {
+                  "label": "Senin hakkında"
+                },
+                "what-leaves": {
+                  "label": "\"hastane işleri\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Hazır mısın? Başlayalım",
+              "body": "Yanlış cevap yok. Her şeyi sonra değiştirebilirsin."
+            }
+          }
+        }
+      }
+    }
+  },
+  "uk": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Що робить Мера, за пів хвилини.",
+          "slides": {
+            "what": {
+              "headline": "Застосунок новин, який починається з вас",
+              "body": "Розкажіть Мері про себе. Вона знайде ваші новини."
+            },
+            "not-a-timeline": {
+              "headline": "Спершу те, що важливо для вас",
+              "body": "Не те, що популярне. Не просто те, що нове.",
+              "choose": {
+                "popular": {
+                  "label": "Те, що читає більшість"
+                },
+                "yours": {
+                  "label": "Те, що важливо для вас"
+                },
+                "newest": {
+                  "label": "Найсвіжіші новини"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Три прості кроки",
+              "steps": {
+                "0": "Ви розповідаєте Мері про себе",
+                "1": "Мера знає, що шукати",
+                "2": "Мера залишає новини, які підходять"
+              }
+            },
+            "matching": {
+              "headline": "Різне життя, різні новини",
+              "body": "Дві медсестри у двох містах бачать різні новини."
+            },
+            "stays-here": {
+              "headline": "Те, що Мера знає про вас, залишається на вашому телефоні",
+              "body": "Комп'ютери Мери зберігають лише короткі слова, без імені.",
+              "reveal": {
+                "about-you": {
+                  "label": "Про вас"
+                },
+                "what-leaves": {
+                  "label": "«робота в лікарні»"
+                }
+              }
+            },
+            "begin": {
+              "headline": "Готові? Почнімо",
+              "body": "Неправильних відповідей немає. Усе можна змінити пізніше."
+            }
+          }
+        }
+      }
+    }
+  },
+  "vi": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "Mera làm gì, trong nửa phút.",
+          "slides": {
+            "what": {
+              "headline": "Ứng dụng tin tức bắt đầu từ bạn",
+              "body": "Hãy kể cho Mera về bạn. Mera tìm tin cho bạn."
+            },
+            "not-a-timeline": {
+              "headline": "Điều quan trọng với bạn được xếp trước",
+              "body": "Không phải tin nhiều người thích. Cũng không chỉ là tin mới.",
+              "choose": {
+                "popular": {
+                  "label": "Tin nhiều người đọc nhất"
+                },
+                "yours": {
+                  "label": "Điều quan trọng với bạn"
+                },
+                "newest": {
+                  "label": "Tin mới nhất"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "Ba bước dễ dàng",
+              "steps": {
+                "0": "Bạn kể cho Mera về bạn",
+                "1": "Mera biết cần tìm gì",
+                "2": "Mera giữ lại tin phù hợp"
+              }
+            },
+            "matching": {
+              "headline": "Cuộc sống khác, tin tức khác",
+              "body": "Hai y tá ở hai thị trấn thấy tin khác nhau."
+            },
+            "stays-here": {
+              "headline": "Những gì Mera biết về bạn ở lại trên điện thoại của bạn",
+              "body": "Máy tính của Mera chỉ giữ những từ ngắn, không kèm tên.",
+              "reveal": {
+                "about-you": {
+                  "label": "Về bạn"
+                },
+                "what-leaves": {
+                  "label": "\"việc làm ở bệnh viện\""
+                }
+              }
+            },
+            "begin": {
+              "headline": "Sẵn sàng chưa? Bắt đầu nào",
+              "body": "Không có câu trả lời nào sai. Bạn có thể đổi mọi thứ sau."
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-CN": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "半分钟了解梅拉做什么。",
+          "slides": {
+            "what": {
+              "headline": "从你开始的新闻应用",
+              "body": "告诉梅拉你的情况，梅拉帮你找新闻。"
+            },
+            "not-a-timeline": {
+              "headline": "对你重要的排在前面",
+              "body": "不是最热门的，也不只是最新的。",
+              "choose": {
+                "popular": {
+                  "label": "大多数人在看的"
+                },
+                "yours": {
+                  "label": "对你重要的"
+                },
+                "newest": {
+                  "label": "最新的新闻"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "三个简单步骤",
+              "steps": {
+                "0": "你告诉梅拉你的情况",
+                "1": "梅拉知道要找什么",
+                "2": "梅拉留下适合你的新闻"
+              }
+            },
+            "matching": {
+              "headline": "生活不同，新闻也不同",
+              "body": "两个小镇的两位护士看到的新闻不一样。"
+            },
+            "stays-here": {
+              "headline": "梅拉知道的关于你的事，留在你的手机里",
+              "body": "梅拉的电脑只保存短词，而且没有名字。",
+              "reveal": {
+                "about-you": {
+                  "label": "关于你"
+                },
+                "what-leaves": {
+                  "label": "“医院招聘”"
+                }
+              }
+            },
+            "begin": {
+              "headline": "准备好了吗？开始吧",
+              "body": "没有错误答案。之后随时都能更改。"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-TW": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "subtitle": "半分鐘了解梅拉做什麼。",
+          "slides": {
+            "what": {
+              "headline": "從你開始的新聞應用程式",
+              "body": "告訴梅拉你的情況，梅拉幫你找新聞。"
+            },
+            "not-a-timeline": {
+              "headline": "對你重要的排在前面",
+              "body": "不是最熱門的，也不只是最新的。",
+              "choose": {
+                "popular": {
+                  "label": "大多數人在看的"
+                },
+                "yours": {
+                  "label": "對你重要的"
+                },
+                "newest": {
+                  "label": "最新的新聞"
+                }
+              }
+            },
+            "you-first": {
+              "headline": "三個簡單步驟",
+              "steps": {
+                "0": "你告訴梅拉你的情況",
+                "1": "梅拉知道要找什麼",
+                "2": "梅拉留下適合你的新聞"
+              }
+            },
+            "matching": {
+              "headline": "生活不同，新聞也不同",
+              "body": "兩個小鎮的兩位護理師看到的新聞不一樣。"
+            },
+            "stays-here": {
+              "headline": "梅拉知道的關於你的事，留在你的手機裡",
+              "body": "梅拉的電腦只保存短詞，而且沒有名字。",
+              "reveal": {
+                "about-you": {
+                  "label": "關於你"
+                },
+                "what-leaves": {
+                  "label": "「醫院徵才」"
+                }
+              }
+            },
+            "begin": {
+              "headline": "準備好了嗎？開始吧",
+              "body": "沒有錯誤答案。之後隨時都能更改。"
+            }
+          }
+        }
+      }
+    }
+  }
+}

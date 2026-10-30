@@ -1835,60 +1835,117 @@
     "chapters": {
       "welcome": {
         "title": "Welcome to Mera",
-        "subtitle": "What this app is, in one minute.",
+        "subtitle": "What Mera does, in half a minute.",
         "slides": {
           "what": {
             "headline": "A news app that starts with you",
-            "body": "Most news apps start with the news and hope some of it fits. Mera starts with you, then goes looking for the stories that touch your life."
+            "body": "Tell Mera about you. It finds your news."
           },
           "not-a-timeline": {
-            "headline": "Not a timeline",
-            "body": "Nothing here is ordered by what is popular or by whatever arrived last. Have a guess at what decides the order.",
+            "headline": "What matters to you comes first",
+            "body": "Not what's popular. Not just what's new.",
             "choose": {
               "popular": {
-                "label": "Whatever most people are reading",
-                "feedback": "Not here. Popularity is somebody else's news."
+                "label": "What most people read"
               },
               "yours": {
-                "label": "How much it touches your life",
-                "feedback": "That's it. Everything else is only a tiebreak."
+                "label": "What matters to you"
               },
               "newest": {
-                "label": "Whatever came in last",
-                "feedback": "Close. New stories do land near the top, but being new is not what earns the top."
+                "label": "The newest news"
               }
             }
           },
           "you-first": {
-            "headline": "Three steps, and that is the whole app",
+            "headline": "Three easy steps",
             "body": "It really is this short.",
             "steps": {
-              "0": "You say a few true things about your life.",
-              "1": "Mera turns them into things to go looking for.",
-              "2": "It reads the day's news and keeps what fits."
+              "0": "You tell Mera about you",
+              "1": "Mera learns what to look for",
+              "2": "Mera keeps the news that fits"
             }
           },
           "matching": {
-            "headline": "Your life, not your clicks",
-            "body": "A nurse in a small town and a nurse in a capital city get different news here. Not because one of them tapped more, but because different things actually reach them."
+            "headline": "Different lives, different news",
+            "body": "Two nurses in two towns get different news."
           },
           "stays-here": {
-            "headline": "It stays on this phone",
-            "body": "Tap each one to see what that means.",
+            "headline": "What Mera knows about you stays on your phone",
+            "body": "Mera's computers keep only short words, with no name.",
             "reveal": {
               "about-you": {
-                "label": "What it knows about you",
-                "text": "Your facts, your interests and what you have read are written to this phone and stay there. Mera's servers keep no copy of them."
+                "label": "About you"
               },
               "what-leaves": {
-                "label": "What actually leaves",
-                "text": "Short topic phrases, like \"hospital staffing\". Mera's servers store them with no name or account, so nothing records that a phrase came from you."
+                "label": "\"hospital jobs\""
               }
             }
           },
           "begin": {
-            "headline": "Ready when you are",
-            "body": "Mera will ask you a couple of things. There are no wrong answers, and you can change anything later."
+            "headline": "Ready? Let's start",
+            "body": "No wrong answers. You can change anything later."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Most news is <a>not about you</a>.",
+            "you": "Mera starts with <a>you</a>.",
+            "tell": "Tell Mera a few <a>true things</a>.",
+            "becomes": "Each one becomes <a>things to look for</a>.",
+            "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+            "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+            "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+            "why": "and writes you <a>a note saying why</a>.",
+            "private": "What Mera knows about you <a>stays on your phone</a>."
+          },
+          "fact": {
+            "nurse": "I'm a nurse",
+            "utrecht": "I live in Utrecht",
+            "kids": "Two kids at school",
+            "cycle": "I cycle to work",
+            "psv": "I follow PSV",
+            "spanish": "Learning Spanish",
+            "rent": "I rent my flat",
+            "funds": "Index funds",
+            "porto": "Parents in Porto",
+            "veg": "Vegetarian",
+            "piano": "I play piano",
+            "japan": "Japan in spring"
+          },
+          "topic": {
+            "nursePay": "nurse pay",
+            "staffing": "hospital staffing",
+            "nightShift": "night shift rules",
+            "housing": "Utrecht housing",
+            "council": "city council",
+            "holidays": "school holidays",
+            "bikeLanes": "bike lanes",
+            "railStrikes": "rail strikes",
+            "eredivisie": "Eredivisie",
+            "languageApps": "language apps",
+            "rentRules": "rent rules",
+            "energyBills": "energy bills",
+            "interestRates": "interest rates",
+            "portoFlights": "Porto flights",
+            "foodPrices": "food prices",
+            "concerts": "concerts",
+            "japanTravel": "Japan travel",
+            "yenRate": "yen rate"
+          },
+          "pill": {
+            "trending": "Trending",
+            "fake": "Might be fake",
+            "screenTime": "5 hours a day",
+            "rage": "Made to make you mad"
+          },
+          "misc": {
+            "healthDesk": "Health desk",
+            "cityNews": "City news",
+            "celebNews": "Celeb news",
+            "markets": "Markets",
+            "education": "Education",
+            "high": "High",
+            "med": "Med"
           }
         }
       },

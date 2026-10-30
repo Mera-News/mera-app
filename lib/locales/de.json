@@ -1716,60 +1716,117 @@
     "chapters": {
       "welcome": {
         "title": "Willkommen bei Mera",
-        "subtitle": "Was diese App ist, in einer Minute.",
+        "subtitle": "Was Mera macht, in einer halben Minute.",
         "slides": {
           "what": {
             "headline": "Eine News-App, die mit dir anfängt",
-            "body": "Die meisten Nachrichten-Apps fangen mit den Nachrichten an und hoffen, dass etwas davon passt. Mera fängt bei dir an und sucht dann nach den Geschichten, die dein Leben berühren."
+            "body": "Erzähl Mera von dir. Mera findet deine News."
           },
           "not-a-timeline": {
-            "headline": "Nicht eine Timeline",
-            "body": "Nichts hier ist nach dem geordnet, was beliebt ist oder was zuletzt ankam. Rat, was die Reihenfolge entscheidet.",
+            "headline": "Was dir wichtig ist, kommt zuerst",
+            "body": "Nicht, was beliebt ist. Nicht nur, was neu ist.",
             "choose": {
               "popular": {
-                "label": "Was die meisten Leute lesen",
-                "feedback": "Nicht hier. Beliebtheit ist jemand anderes Nachrichten."
+                "label": "Was die meisten lesen"
               },
               "yours": {
-                "label": "Wie sehr es dein Leben berührt",
-                "feedback": "Das ist es. Alles andere ist nur ein Tiebreak."
+                "label": "Was dir wichtig ist"
               },
               "newest": {
-                "label": "Was zuletzt ankam",
-                "feedback": "Nah dran. Neue Geschichten landen oben, aber neu zu sein ist nicht das, was oben verdient."
+                "label": "Die neuesten News"
               }
             }
           },
           "you-first": {
-            "headline": "Drei Schritte, und das ist die ganze App",
+            "headline": "Drei einfache Schritte",
             "body": "Es ist wirklich so kurz.",
             "steps": {
-              "0": "Du sagst ein paar wahre Dinge über dein Leben.",
-              "1": "Mera verwandelt sie in Dinge zum Suchen.",
-              "2": "Es liest die heutigen Nachrichten und behält, was passt."
+              "0": "Du erzählst Mera von dir",
+              "1": "Mera weiß, wonach es suchen soll",
+              "2": "Mera behält die News, die passen"
             }
           },
           "matching": {
-            "headline": "Dein Leben, nicht deine Klicks",
-            "body": "Eine Krankenschwester in einer Kleinstadt und eine Krankenschwester in einer Hauptstadt bekommen unterschiedliche Nachrichten hier. Nicht weil einer von ihnen mehr tappte, sondern weil verschiedene Dinge sie eigentlich erreichen."
+            "headline": "Anderes Leben, andere News",
+            "body": "Zwei Pflegekräfte in zwei Orten sehen andere News."
           },
           "stays-here": {
-            "headline": "Es bleibt auf diesem Telefon",
-            "body": "Tippe auf jede, um zu sehen, was das bedeutet.",
+            "headline": "Was Mera über dich weiß, bleibt auf deinem Telefon",
+            "body": "Die Computer von Mera behalten nur kurze Wörter, ohne Namen.",
             "reveal": {
               "about-you": {
-                "label": "Was es über dich weiß",
-                "text": "Deine Fakten, deine Interessen und das, was du gelesen hast, werden auf diesem Telefon gespeichert und bleiben dort. Die Server von Mera behalten keine Kopie davon."
+                "label": "Über dich"
               },
               "what-leaves": {
-                "label": "Was eigentlich geht",
-                "text": "Kurze Themenphrasen wie \"Personalengpässe im Krankenhaus\". Die Server von Mera speichern sie ohne Namen und ohne Konto, es ist also nirgends festgehalten, dass eine Phrase von dir kam."
+                "label": "\"Jobs im Krankenhaus\""
               }
             }
           },
           "begin": {
-            "headline": "Bereit, wenn du es bist",
-            "body": "Mera stellt dir ein paar Fragen. Es gibt keine falschen Antworten, und du kannst alles später ändern."
+            "headline": "Bereit? Los geht's",
+            "body": "Es gibt keine falschen Antworten. Du kannst alles später ändern."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Die meisten News haben <a>nichts mit dir zu tun</a>.",
+            "you": "Mera fängt mit <a>dir</a> an.",
+            "tell": "Erzähl Mera ein paar <a>wahre Dinge</a> über dich.",
+            "becomes": "Aus jedem wird <a>etwas, wonach Mera sucht</a>.",
+            "haystack": "Jeden Tag erscheinen <a>Hunderttausende</a> Artikel in Tausenden Medien auf der ganzen Welt.",
+            "picks": "Mera holt mit deinem Profil alle <a>Artikel, die zu dir passen</a>.",
+            "reads": "Dann liest Mera sie, <a>behält, was passt</a>, und wirft den Rest weg,",
+            "why": "und schreibt dir <a>eine Notiz, warum</a>.",
+            "private": "Was Mera über dich weiß, <a>bleibt auf deinem Telefon</a>."
+          },
+          "fact": {
+            "nurse": "Ich arbeite in der Pflege",
+            "utrecht": "Ich wohne in Utrecht",
+            "kids": "Zwei Kinder in der Schule",
+            "cycle": "Mit dem Rad zur Arbeit",
+            "psv": "Ich bin PSV-Fan",
+            "spanish": "Ich lerne Spanisch",
+            "rent": "Ich wohne zur Miete",
+            "funds": "Indexfonds",
+            "porto": "Eltern in Porto",
+            "veg": "Vegetarisch",
+            "piano": "Ich spiele Klavier",
+            "japan": "Japan im Frühling"
+          },
+          "topic": {
+            "nursePay": "Gehalt in der Pflege",
+            "staffing": "Personal im Krankenhaus",
+            "nightShift": "Regeln für Nachtschichten",
+            "housing": "Wohnen in Utrecht",
+            "council": "Stadtrat",
+            "holidays": "Schulferien",
+            "bikeLanes": "Radwege",
+            "railStrikes": "Bahnstreiks",
+            "eredivisie": "Eredivisie",
+            "languageApps": "Sprach-Apps",
+            "rentRules": "Mietregeln",
+            "energyBills": "Energiekosten",
+            "interestRates": "Zinsen",
+            "portoFlights": "Flüge nach Porto",
+            "foodPrices": "Lebensmittelpreise",
+            "concerts": "Konzerte",
+            "japanTravel": "Reisen nach Japan",
+            "yenRate": "Yen-Kurs"
+          },
+          "pill": {
+            "trending": "Im Trend",
+            "fake": "Vielleicht falsch",
+            "screenTime": "5 Stunden am Tag",
+            "rage": "Soll dich wütend machen"
+          },
+          "misc": {
+            "healthDesk": "Gesundheit",
+            "cityNews": "Aus der Stadt",
+            "celebNews": "Promi-News",
+            "markets": "Börse",
+            "education": "Bildung",
+            "high": "Hoch",
+            "med": "Mittel"
           }
         }
       },

@@ -1703,60 +1703,117 @@
     "chapters": {
       "welcome": {
         "title": "Chào mừng đến Mera",
-        "subtitle": "Ứng dụng này là gì, trong một phút.",
+        "subtitle": "Mera làm gì, trong nửa phút.",
         "slides": {
           "what": {
-            "headline": "Một ứng dụng tin tức bắt đầu với bạn",
-            "body": "Hầu hết ứng dụng tin tức bắt đầu từ tin tức và hy vọng một phần trong đó vừa với bạn. Mera bắt đầu từ bạn, rồi đi tìm những câu chuyện chạm đến cuộc sống của bạn."
+            "headline": "Ứng dụng tin tức bắt đầu từ bạn",
+            "body": "Hãy kể cho Mera về bạn. Mera tìm tin cho bạn."
           },
           "not-a-timeline": {
-            "headline": "Không phải một dòng thời gian",
-            "body": "Không có gì ở đây được sắp xếp theo những gì phổ biến hoặc bất cứ điều gì đến cuối cùng. Hãy đoán những gì quyết định thứ tự.",
+            "headline": "Điều quan trọng với bạn được xếp trước",
+            "body": "Không phải tin nhiều người thích. Cũng không chỉ là tin mới.",
             "choose": {
               "popular": {
-                "label": "Bất cứ điều gì hầu hết mọi người đang đọc",
-                "feedback": "Không ở đây. Tính phổ biến là tin tức của ai đó khác."
+                "label": "Tin nhiều người đọc nhất"
               },
               "yours": {
-                "label": "Nó chạm vào cuộc sống của bạn bao nhiêu",
-                "feedback": "Đó rồi. Mọi thứ khác chỉ là để phá vỡ."
+                "label": "Điều quan trọng với bạn"
               },
               "newest": {
-                "label": "Bất cứ điều gì đến cuối cùng",
-                "feedback": "Gần. Các câu chuyện mới thực sự hạ cánh gần đầu, nhưng là mới không phải là những gì kiếm được đầu."
+                "label": "Tin mới nhất"
               }
             }
           },
           "you-first": {
-            "headline": "Ba bước, và đó là toàn bộ ứng dụng",
+            "headline": "Ba bước dễ dàng",
             "body": "Nó thực sự ngắn như vậy.",
             "steps": {
-              "0": "Bạn nói một vài điều đúng về cuộc sống của bạn.",
-              "1": "Mera biến chúng thành những thứ để đi tìm.",
-              "2": "Nó đọc tin tức trong ngày và giữ lại những gì phù hợp."
+              "0": "Bạn kể cho Mera về bạn",
+              "1": "Mera biết cần tìm gì",
+              "2": "Mera giữ lại tin phù hợp"
             }
           },
           "matching": {
-            "headline": "Cuộc sống của bạn, không phải nhấp chuột của bạn",
-            "body": "Một y tá ở một thị trấn nhỏ và một y tá ở một thành phố lớn nhận được tin tức khác nhau ở đây. Không phải vì một trong họ nhấn nhiều hơn, mà vì những thứ khác nhau thực sự đến được họ."
+            "headline": "Cuộc sống khác, tin tức khác",
+            "body": "Hai y tá ở hai thị trấn thấy tin khác nhau."
           },
           "stays-here": {
-            "headline": "Nó ở lại điện thoại này",
-            "body": "Nhấn từng cái để xem nghĩa là gì.",
+            "headline": "Những gì Mera biết về bạn ở lại trên điện thoại của bạn",
+            "body": "Máy tính của Mera chỉ giữ những từ ngắn, không kèm tên.",
             "reveal": {
               "about-you": {
-                "label": "Những gì nó biết về bạn",
-                "text": "Các dữ kiện, sở thích và những gì bạn đã đọc được ghi vào điện thoại này và ở lại đó. Máy chủ của Mera không giữ bản sao nào của chúng."
+                "label": "Về bạn"
               },
               "what-leaves": {
-                "label": "Những gì thực sự rời đi",
-                "text": "Các cụm chủ đề ngắn, như \"nhân sự bệnh viện\". Máy chủ của Mera lưu chúng mà không có tên hay tài khoản, nên không có gì ghi lại rằng cụm từ đó đến từ bạn."
+                "label": "\"việc làm ở bệnh viện\""
               }
             }
           },
           "begin": {
-            "headline": "Sẵn sàng khi bạn sẵn sàng",
-            "body": "Mera sẽ hỏi bạn vài điều. Không có câu trả lời nào sai, và bạn có thể đổi bất cứ điều gì sau này."
+            "headline": "Sẵn sàng chưa? Bắt đầu nào",
+            "body": "Không có câu trả lời nào sai. Bạn có thể đổi mọi thứ sau."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Phần lớn tin tức <a>không liên quan đến bạn</a>.",
+            "you": "Mera bắt đầu từ <a>bạn</a>.",
+            "tell": "Hãy kể cho Mera vài <a>điều có thật</a> về bạn.",
+            "becomes": "Mỗi điều trở thành <a>thứ cần tìm</a>.",
+            "haystack": "Mỗi ngày, hàng nghìn tờ báo trên thế giới đăng <a>hàng trăm nghìn</a> bài tin.",
+            "picks": "Mera dựa vào hồ sơ của bạn để lấy mọi <a>tin phù hợp</a>.",
+            "reads": "Rồi Mera đọc chúng, <a>giữ lại tin phù hợp</a> và bỏ phần còn lại,",
+            "why": "và viết cho bạn <a>vài dòng nói lý do</a>.",
+            "private": "Những gì Mera biết về bạn <a>ở lại trên điện thoại của bạn</a>."
+          },
+          "fact": {
+            "nurse": "Tôi là y tá",
+            "utrecht": "Tôi sống ở Utrecht",
+            "kids": "Hai con đang đi học",
+            "cycle": "Tôi đạp xe đi làm",
+            "psv": "Tôi mê PSV",
+            "spanish": "Đang học tiếng Tây Ban Nha",
+            "rent": "Tôi thuê nhà",
+            "funds": "Quỹ chỉ số",
+            "porto": "Bố mẹ ở Porto",
+            "veg": "Ăn chay",
+            "piano": "Tôi chơi piano",
+            "japan": "Nhật Bản mùa xuân"
+          },
+          "topic": {
+            "nursePay": "lương y tá",
+            "staffing": "nhân sự bệnh viện",
+            "nightShift": "quy định ca đêm",
+            "housing": "nhà ở Utrecht",
+            "council": "hội đồng thành phố",
+            "holidays": "lịch nghỉ học",
+            "bikeLanes": "làn xe đạp",
+            "railStrikes": "đình công đường sắt",
+            "eredivisie": "Eredivisie",
+            "languageApps": "ứng dụng học tiếng",
+            "rentRules": "quy định thuê nhà",
+            "energyBills": "hóa đơn điện",
+            "interestRates": "lãi suất",
+            "portoFlights": "vé bay đi Porto",
+            "foodPrices": "giá thực phẩm",
+            "concerts": "hòa nhạc",
+            "japanTravel": "du lịch Nhật Bản",
+            "yenRate": "tỷ giá yên"
+          },
+          "pill": {
+            "trending": "Đang thịnh hành",
+            "fake": "Có thể là giả",
+            "screenTime": "5 giờ mỗi ngày",
+            "rage": "Cố tình làm bạn tức"
+          },
+          "misc": {
+            "healthDesk": "Sức khỏe",
+            "cityNews": "Tin thành phố",
+            "celebNews": "Người nổi tiếng",
+            "markets": "Thị trường",
+            "education": "Giáo dục",
+            "high": "Cao",
+            "med": "Trung bình"
           }
         }
       },

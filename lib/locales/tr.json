@@ -1718,60 +1718,117 @@
     "chapters": {
       "welcome": {
         "title": "Mera'ya hoş geldin",
-        "subtitle": "Bu uygulamanın ne olduğu, bir dakikada.",
+        "subtitle": "Mera ne yapar, yarım dakikada.",
         "slides": {
           "what": {
             "headline": "Seninle başlayan bir haber uygulaması",
-            "body": "Çoğu haber uygulaması haberle başlar ve bir kısmının uymasını umar. Mera sizinle başlar, sonra hayatınıza dokunan haberleri arar."
+            "body": "Mera'ya kendini anlat. Mera haberlerini bulur."
           },
           "not-a-timeline": {
-            "headline": "Zaman çizelgesi değil",
-            "body": "Burada hiçbir şey popüler olduğu veya son gelen tarafından emredilmedi. Sırayı neyin karar verdiğini tahmin et.",
+            "headline": "Senin için önemli olan önce gelir",
+            "body": "Popüler olan değil. Sadece yeni olan da değil.",
             "choose": {
               "popular": {
-                "label": "Çoğu insanın okuduğu ne",
-                "feedback": "Burada değil. Popülarite başka birinin haberidir."
+                "label": "Çoğu insanın okuduğu"
               },
               "yours": {
-                "label": "Ne kadar yaşamına dokunduğu",
-                "feedback": "Bu işte. Başka her şey sadece kırılma."
+                "label": "Senin için önemli olan"
               },
               "newest": {
-                "label": "Son gelen ne",
-                "feedback": "Yakın. Yeni hikayeler tepede iniyor, ama yeni olmak tepede kazanmayan."
+                "label": "En yeni haberler"
               }
             }
           },
           "you-first": {
-            "headline": "Üç adım ve bu tüm uygulama",
+            "headline": "Üç kolay adım",
             "body": "Aslında bu kadar kısa.",
             "steps": {
-              "0": "Yaşamın hakkında birkaç gerçek şeyi söylüyorsun.",
-              "1": "Mera onları aranacak şeyler halinde dönüştürüyor.",
-              "2": "Günün haberlerini okur ve uyuşanları tutar."
+              "0": "Mera'ya kendini anlatırsın",
+              "1": "Mera neyi arayacağını bilir",
+              "2": "Mera sana uyan haberleri tutar"
             }
           },
           "matching": {
-            "headline": "Tıklamalarınız değil, yaşamınız",
-            "body": "Küçük bir şehirdeki hemşire ve başkentin hemşiresi burada farklı haber alıyor. Birinin daha çok tıklaması değil, farklı şeylerin aslında onlara ulaşması."
+            "headline": "Farklı hayatlar, farklı haberler",
+            "body": "İki kasabadaki iki hemşire farklı haberler görür."
           },
           "stays-here": {
-            "headline": "Bu telefonda kalır",
-            "body": "Ne demek olduğunu görmek için her birine dokun.",
+            "headline": "Mera'nın senin hakkında bildikleri telefonunda kalır",
+            "body": "Mera'nın bilgisayarları sadece kısa kelimeler tutar, isim olmadan.",
             "reveal": {
               "about-you": {
-                "label": "Senin hakkında ne biliyor",
-                "text": "Gerçeklerin, ilgi alanların ve okuduklarının hepsi bu telefona yazılır ve orada kalır. Mera'nın sunucuları bunların bir kopyasını tutmaz."
+                "label": "Senin hakkında"
               },
               "what-leaves": {
-                "label": "Aslında ne ayrılıyor",
-                "text": "\"Hastane personeli\" gibi kısa konu ifadeleri. Mera'nın sunucuları bunları ad veya hesap olmadan saklar, bu yüzden bir ifadenin senden geldiğini gösteren hiçbir kayıt yoktur."
+                "label": "\"hastane işleri\""
               }
             }
           },
           "begin": {
-            "headline": "Hazır olduğunda hazır",
-            "body": "Mera size birkaç şey soracak. Yanlış cevap yok ve her şeyi sonra değiştirebilirsiniz."
+            "headline": "Hazır mısın? Başlayalım",
+            "body": "Yanlış cevap yok. Her şeyi sonra değiştirebilirsin."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Çoğu haber <a>seninle ilgili değil</a>.",
+            "you": "Mera <a>seninle</a> başlar.",
+            "tell": "Mera'ya kendin hakkında birkaç <a>gerçek bilgi</a> anlat.",
+            "becomes": "Her biri <a>aranacak bir şeye</a> dönüşür.",
+            "haystack": "Her gün dünyadaki binlerce gazete ve siteden <a>yüz binlerce</a> haber çıkar.",
+            "picks": "Mera profilini kullanarak <a>sana uygun</a> bütün haberleri bulur.",
+            "reads": "Sonra Mera onları okur, <a>uyanları tutar</a> ve uymayanları atar,",
+            "why": "ve sana <a>nedenini anlatan bir not</a> yazar.",
+            "private": "Mera'nın senin hakkında bildikleri <a>telefonunda kalır</a>."
+          },
+          "fact": {
+            "nurse": "Hemşireyim",
+            "utrecht": "Utrecht'te yaşıyorum",
+            "kids": "İki çocuğum okulda",
+            "cycle": "İşe bisikletle gidiyorum",
+            "psv": "PSV'yi tutuyorum",
+            "spanish": "İspanyolca öğreniyorum",
+            "rent": "Kirada oturuyorum",
+            "funds": "Endeks fonları",
+            "porto": "Ailem Porto'da",
+            "veg": "Vejetaryenim",
+            "piano": "Piyano çalıyorum",
+            "japan": "İlkbaharda Japonya"
+          },
+          "topic": {
+            "nursePay": "hemşire maaşları",
+            "staffing": "hastane personeli",
+            "nightShift": "gece nöbeti kuralları",
+            "housing": "Utrecht'te ev",
+            "council": "belediye meclisi",
+            "holidays": "okul tatilleri",
+            "bikeLanes": "bisiklet yolları",
+            "railStrikes": "tren grevleri",
+            "eredivisie": "Eredivisie",
+            "languageApps": "dil uygulamaları",
+            "rentRules": "kira kuralları",
+            "energyBills": "enerji faturaları",
+            "interestRates": "faiz oranları",
+            "portoFlights": "Porto uçuşları",
+            "foodPrices": "gıda fiyatları",
+            "concerts": "konserler",
+            "japanTravel": "Japonya gezisi",
+            "yenRate": "yen kuru"
+          },
+          "pill": {
+            "trending": "Gündemde",
+            "fake": "Sahte olabilir",
+            "screenTime": "Günde 5 saat",
+            "rage": "Seni kızdırmak için"
+          },
+          "misc": {
+            "healthDesk": "Sağlık",
+            "cityNews": "Şehir haberleri",
+            "celebNews": "Magazin",
+            "markets": "Piyasalar",
+            "education": "Eğitim",
+            "high": "Yüksek",
+            "med": "Orta"
           }
         }
       },

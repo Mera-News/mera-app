@@ -1720,60 +1720,117 @@
     "chapters": {
       "welcome": {
         "title": "Bem-vindo ao Mera",
-        "subtitle": "O que este app é, em um minuto.",
+        "subtitle": "O que a Mera faz, em meio minuto.",
         "slides": {
           "what": {
             "headline": "Um app de notícias que começa com você",
-            "body": "A maioria dos apps de notícia começa pelas notícias e torce para alguma caber. A Mera começa por você e depois procura as histórias que tocam a sua vida."
+            "body": "Conte para a Mera sobre você. Ela encontra suas notícias."
           },
           "not-a-timeline": {
-            "headline": "Não é um timeline",
-            "body": "Nada aqui é ordenado pelo que é popular ou por tudo que chegou por último. Faça um palpite do que decide a ordem.",
+            "headline": "O que importa para você vem primeiro",
+            "body": "Não o que é popular. Não só o que é novo.",
             "choose": {
               "popular": {
-                "label": "O que a maioria das pessoas está lendo",
-                "feedback": "Não aqui. Popularidade é notícia de alguém mais."
+                "label": "O que a maioria lê"
               },
               "yours": {
-                "label": "O quanto toca sua vida",
-                "feedback": "É isso. Tudo mais é só um tiebreak."
+                "label": "O que importa para você"
               },
               "newest": {
-                "label": "O que chegou por último",
-                "feedback": "Perto. Novas histórias chegam perto do topo, mas ser novo não é o que ganha o topo."
+                "label": "As notícias mais novas"
               }
             }
           },
           "you-first": {
-            "headline": "Três passos, e esse é o app inteiro",
+            "headline": "Três passos fáceis",
             "body": "Realmente é tão curto.",
             "steps": {
-              "0": "Você diz algumas coisas verdadeiras sobre sua vida.",
-              "1": "Mera as transforma em coisas para procurar.",
-              "2": "Ele lê as notícias do dia e mantém o que se encaixa."
+              "0": "Você conta para a Mera sobre você",
+              "1": "A Mera sabe o que procurar",
+              "2": "A Mera guarda as notícias que combinam"
             }
           },
           "matching": {
-            "headline": "Sua vida, não seus cliques",
-            "body": "Uma enfermeira em uma pequena cidade e uma enfermeira em uma capital recebem notícias diferentes aqui. Não porque uma delas tocou mais, mas porque coisas diferentes realmente as alcançam."
+            "headline": "Vidas diferentes, notícias diferentes",
+            "body": "Duas enfermeiras em duas cidades veem notícias diferentes."
           },
           "stays-here": {
-            "headline": "Fica neste celular",
-            "body": "Toque em cada um para ver o que isso significa.",
+            "headline": "O que a Mera sabe sobre você fica no seu celular",
+            "body": "Os computadores da Mera só guardam palavras curtas, sem nome.",
             "reveal": {
               "about-you": {
-                "label": "O que sabe sobre você",
-                "text": "Seus fatos, seus interesses e o que você leu são escritos neste celular e ficam aqui. Os servidores da Mera não guardam cópia deles."
+                "label": "Sobre você"
               },
               "what-leaves": {
-                "label": "O que realmente sai",
-                "text": "Frases de tópico curtas, como \"equipe hospitalar\". Os servidores da Mera as guardam sem nome nem conta, então nada registra que uma frase veio de você."
+                "label": "\"vagas em hospital\""
               }
             }
           },
           "begin": {
-            "headline": "Pronto quando você estiver",
-            "body": "A Mera vai perguntar algumas coisas. Não há respostas erradas, e você pode mudar qualquer coisa depois."
+            "headline": "Pronto? Vamos começar",
+            "body": "Não há respostas erradas. Você pode mudar tudo depois."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "A maioria das notícias <a>não é sobre você</a>.",
+            "you": "A Mera começa com <a>você</a>.",
+            "tell": "Conte para a Mera algumas <a>coisas reais</a> sobre você.",
+            "becomes": "Cada uma vira <a>algo para procurar</a>.",
+            "haystack": "Todo dia, milhares de jornais e sites do mundo publicam <a>centenas de milhares</a> de notícias.",
+            "picks": "A Mera usa o seu perfil para buscar todas as <a>notícias certas</a>.",
+            "reads": "Depois a Mera lê cada uma, <a>guarda o que combina</a> e joga fora o resto,",
+            "why": "e escreve para você <a>uma nota explicando o porquê</a>.",
+            "private": "O que a Mera sabe sobre você <a>fica no seu celular</a>."
+          },
+          "fact": {
+            "nurse": "Sou enfermeira",
+            "utrecht": "Moro em Utrecht",
+            "kids": "Dois filhos na escola",
+            "cycle": "Vou de bicicleta pro trabalho",
+            "psv": "Torço pro PSV",
+            "spanish": "Aprendendo espanhol",
+            "rent": "Moro de aluguel",
+            "funds": "Fundos de índice",
+            "porto": "Pais no Porto",
+            "veg": "Vegetariana",
+            "piano": "Toco piano",
+            "japan": "Japão na primavera"
+          },
+          "topic": {
+            "nursePay": "salário de enfermeira",
+            "staffing": "equipes de hospital",
+            "nightShift": "regras do plantão noturno",
+            "housing": "moradia em Utrecht",
+            "council": "câmara municipal",
+            "holidays": "férias escolares",
+            "bikeLanes": "ciclovias",
+            "railStrikes": "greves de trem",
+            "eredivisie": "Eredivisie",
+            "languageApps": "apps de idiomas",
+            "rentRules": "regras de aluguel",
+            "energyBills": "conta de luz",
+            "interestRates": "taxa de juros",
+            "portoFlights": "voos para o Porto",
+            "foodPrices": "preço da comida",
+            "concerts": "shows",
+            "japanTravel": "viagem ao Japão",
+            "yenRate": "cotação do iene"
+          },
+          "pill": {
+            "trending": "Em alta",
+            "fake": "Pode ser falso",
+            "screenTime": "5 horas por dia",
+            "rage": "Feito para te irritar"
+          },
+          "misc": {
+            "healthDesk": "Saúde",
+            "cityNews": "Notícias da cidade",
+            "celebNews": "Famosos",
+            "markets": "Mercados",
+            "education": "Educação",
+            "high": "Alta",
+            "med": "Méd"
           }
         }
       },

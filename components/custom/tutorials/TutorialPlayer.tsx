@@ -16,6 +16,7 @@ import {
 import { CARD_IN_MS, TURN_FRACTION, TURN_VELOCITY, useTutorialPlayer } from './useTutorialPlayer';
 import { useTutorialCopy } from './use-tutorial-copy';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
+import { FilmPlayer } from '@/tutorials/FilmPlayer';
 
 export { UNGATE_AFTER_MS } from './useTutorialPlayer';
 
@@ -112,6 +113,15 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
             else if (far && !forward && canSwipeBack) runOnJS(handleBack)();
             else dragX.value = withTiming(0, { duration: CARD_IN_MS, easing: EASE.arrive });
         });
+
+    // A film chapter plays start to finish with no chrome; the sheet's drag or the stack's back still leave.
+    if (chapter?.flow) {
+        return (
+            <View style={[styles.root, styles.film, inSheet ? null : { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+                <FilmPlayer onEnd={onFinish ?? onClose} />
+            </View>
+        );
+    }
 
     if (!chapter || !slide) {
         // Unknown chapter id (a stale deep link, a renamed slug). Render the
@@ -224,6 +234,7 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
 
 const useStyles = themedStyles((c) => StyleSheet.create({
     root: { flex: 1 },
+    film: { backgroundColor: '#000000' },
     card: { flex: 1 },
     empty: {
         alignItems: 'center',

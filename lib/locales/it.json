@@ -1720,60 +1720,117 @@
     "chapters": {
       "welcome": {
         "title": "Benvenuto a Mera",
-        "subtitle": "Cosa è questa app, in un minuto.",
+        "subtitle": "Cosa fa Mera, in mezzo minuto.",
         "slides": {
           "what": {
-            "headline": "Un'app di notizie che inizia con te",
-            "body": "La maggior parte delle app di notizie parte dalle notizie e spera che ne vada bene qualcuna. Mera parte da te, poi cerca le storie che toccano la tua vita."
+            "headline": "Un'app di notizie che inizia da te",
+            "body": "Racconta a Mera di te. Mera trova le tue notizie."
           },
           "not-a-timeline": {
-            "headline": "Non una timeline",
-            "body": "Niente qui è ordinato da quello che è popolare o da quello che è arrivato ultimo. Indovina cosa decide l'ordine.",
+            "headline": "Prima viene ciò che conta per te",
+            "body": "Non ciò che è popolare. Non solo ciò che è nuovo.",
             "choose": {
               "popular": {
-                "label": "Quello che la maggior parte delle persone sta leggendo",
-                "feedback": "Non qui. La popolarità è le notizie di qualcun altro."
+                "label": "Ciò che legge la maggior parte"
               },
               "yours": {
-                "label": "Quanto tocca la tua vita",
-                "feedback": "Esatto. Tutto il resto è solo un pareggio."
+                "label": "Ciò che conta per te"
               },
               "newest": {
-                "label": "Qualunque cosa sia arrivata per ultimo",
-                "feedback": "Vicino. Le nuove storie atterrano vicino al top, ma essere nuovi non è quello che guadagna il top."
+                "label": "Le notizie più nuove"
               }
             }
           },
           "you-first": {
-            "headline": "Tre passaggi, e è l'intera app",
+            "headline": "Tre passi facili",
             "body": "Davvero è così breve.",
             "steps": {
-              "0": "Tu dici poche cose vere sulla tua vita.",
-              "1": "Mera le trasforma in cose da cercare.",
-              "2": "Legge le notizie della giornata e mantiene quello che si adatta."
+              "0": "Racconti a Mera di te",
+              "1": "Mera sa cosa cercare",
+              "2": "Mera tiene le notizie giuste per te"
             }
           },
           "matching": {
-            "headline": "La tua vita, non i tuoi clic",
-            "body": "Un'infermiera in una piccola città e un'infermiera in una capitale ricevono notizie diverse qui. Non perché uno ha toccato di più, ma perché cose diverse le raggiungono effettivamente."
+            "headline": "Vite diverse, notizie diverse",
+            "body": "Due infermiere in due paesi vedono notizie diverse."
           },
           "stays-here": {
-            "headline": "Rimane su questo telefono",
-            "body": "Tocca ognuno per vedere cosa significa.",
+            "headline": "Ciò che Mera sa di te resta sul tuo telefono",
+            "body": "I computer di Mera tengono solo parole brevi, senza nome.",
             "reveal": {
               "about-you": {
-                "label": "Cosa sa di te",
-                "text": "I tuoi fatti, i tuoi interessi e quello che hai letto sono scritti su questo telefono e rimangono lì. I server di Mera non ne conservano alcuna copia."
+                "label": "Su di te"
               },
               "what-leaves": {
-                "label": "Cosa effettivamente se ne va",
-                "text": "Brevi frasi di argomenti, come \"staffing ospedaliero\". I server di Mera le salvano senza nome né account, quindi nulla registra che una frase sia venuta da te."
+                "label": "\"lavoro in ospedale\""
               }
             }
           },
           "begin": {
-            "headline": "Pronto quando lo sei tu",
-            "body": "Mera ti farà un paio di domande. Non ci sono risposte sbagliate e puoi cambiare tutto più tardi."
+            "headline": "Pronto? Iniziamo",
+            "body": "Non ci sono risposte sbagliate. Puoi cambiare tutto dopo."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "La maggior parte delle notizie <a>non parla di te</a>.",
+            "you": "Mera inizia da <a>te</a>.",
+            "tell": "Racconta a Mera qualche <a>cosa vera</a> su di te.",
+            "becomes": "Ognuna diventa <a>qualcosa da cercare</a>.",
+            "haystack": "Ogni giorno escono <a>centinaia di migliaia</a> di notizie da migliaia di giornali e siti nel mondo.",
+            "picks": "Con il tuo profilo, Mera prende tutte le <a>notizie che contano per te</a>.",
+            "reads": "Poi Mera le legge, <a>tiene quelle giuste</a> e butta le altre,",
+            "why": "e ti scrive <a>una nota che spiega perché</a>.",
+            "private": "Ciò che Mera sa di te <a>resta sul tuo telefono</a>."
+          },
+          "fact": {
+            "nurse": "Faccio l'infermiera",
+            "utrecht": "Vivo a Utrecht",
+            "kids": "Due figli a scuola",
+            "cycle": "Vado al lavoro in bici",
+            "psv": "Tifo PSV",
+            "spanish": "Studio spagnolo",
+            "rent": "Vivo in affitto",
+            "funds": "Fondi indicizzati",
+            "porto": "Genitori a Porto",
+            "veg": "Vegetariana",
+            "piano": "Suono il piano",
+            "japan": "Giappone in primavera"
+          },
+          "topic": {
+            "nursePay": "stipendi infermieri",
+            "staffing": "personale ospedaliero",
+            "nightShift": "regole turni di notte",
+            "housing": "case a Utrecht",
+            "council": "consiglio comunale",
+            "holidays": "vacanze scolastiche",
+            "bikeLanes": "piste ciclabili",
+            "railStrikes": "scioperi dei treni",
+            "eredivisie": "Eredivisie",
+            "languageApps": "app per le lingue",
+            "rentRules": "regole sugli affitti",
+            "energyBills": "bollette",
+            "interestRates": "tassi di interesse",
+            "portoFlights": "voli per Porto",
+            "foodPrices": "prezzi del cibo",
+            "concerts": "concerti",
+            "japanTravel": "viaggio in Giappone",
+            "yenRate": "cambio dello yen"
+          },
+          "pill": {
+            "trending": "Di tendenza",
+            "fake": "Forse falso",
+            "screenTime": "5 ore al giorno",
+            "rage": "Fatto per farti arrabbiare"
+          },
+          "misc": {
+            "healthDesk": "Salute",
+            "cityNews": "Notizie locali",
+            "celebNews": "Gossip",
+            "markets": "Mercati",
+            "education": "Istruzione",
+            "high": "Alto",
+            "med": "Med"
           }
         }
       },

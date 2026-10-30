@@ -31,6 +31,8 @@ import path from 'path';
 import en from '@/lib/locales/en.json';
 import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '@/lib/tutorials/chapters';
 import { animationIdFor, keysForChapter, lookupKey } from '@/lib/algorithms/tutorial-keys';
+import { minBeatsFor, wordCount } from '@/tutorials/film/timeline';
+import { SCENE_BEATS, WELCOME_COPY_KEYS, resolveWelcomeCopy, sceneLines, type WelcomeSceneId } from '@/tutorials/film/welcome-script';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../..');
 
@@ -258,5 +260,31 @@ describe('the animation runtime', () => {
       fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
     ) as { dependencies?: Record<string, string> };
     expect(pkg.dependencies?.['lottie-react-native']).toBeDefined();
+  });
+});
+
+describe('the welcome film', () => {
+  // The film reads copy by key, not through the slide registry, so nothing above covers it.
+  it('resolves every copy key in en.json', () => {
+    for (const key of Object.values(WELCOME_COPY_KEYS)) {
+      expect(typeof lookupKey(en, key)).toBe('string');
+    }
+  });
+
+  it('holds each caption long enough to read its English copy', () => {
+    // A caption stays up until the next scene that brings its own lines, so its time is the sum of those scenes.
+    const copy = resolveWelcomeCopy((key) => lookupKey(en, key) as string);
+    const ids = Object.keys(SCENE_BEATS) as WelcomeSceneId[];
+    ids.forEach((id, i) => {
+      const words = wordCount(...sceneLines(id, copy));
+      if (!words) return;
+      let beats = SCENE_BEATS[id];
+      for (let k = i + 1; k < ids.length && !sceneLines(ids[k], copy).length; k++) beats += SCENE_BEATS[ids[k]];
+      expect({ id, beats: beats >= minBeatsFor(words) }).toEqual({ id, beats: true });
+    });
+  });
+
+  it('is the chapter the film plays', () => {
+    expect(getChapter('welcome')?.flow).toBe(true);
   });
 });

@@ -1716,60 +1716,117 @@
     "chapters": {
       "welcome": {
         "title": "Welkom bij Mera",
-        "subtitle": "Wat deze app is, in één minuut.",
+        "subtitle": "Wat Mera doet, in een halve minuut.",
         "slides": {
           "what": {
             "headline": "Een nieuwsapp die met jou begint",
-            "body": "De meeste nieuwsapps beginnen met het nieuws en hopen dat er iets past. Mera begint bij jou en zoekt dan de verhalen die je leven raken."
+            "body": "Vertel Mera over jezelf. Mera vindt jouw nieuws."
           },
           "not-a-timeline": {
-            "headline": "Geen tijdlijn",
-            "body": "Niets hier wordt geordend op basis van wat populair is of wat het laatst binnenkwam. Raad wat de volgorde bepaalt.",
+            "headline": "Wat voor jou telt, komt eerst",
+            "body": "Niet wat populair is. Niet alleen wat nieuw is.",
             "choose": {
               "popular": {
-                "label": "Wat de meeste mensen lezen",
-                "feedback": "Niet hier. Populariteit is het nieuws van iemand anders."
+                "label": "Wat de meeste mensen lezen"
               },
               "yours": {
-                "label": "Hoeveel het je leven raakt",
-                "feedback": "Dat is het. Alles anders is alleen maar een tiebreak."
+                "label": "Wat voor jou telt"
               },
               "newest": {
-                "label": "Wat het laatst binnenkwam",
-                "feedback": "Dicht erbij. Nieuwe verhalen landen wel bovenaan, maar nieuw zijn geeft niet het top verdient."
+                "label": "Het nieuwste nieuws"
               }
             }
           },
           "you-first": {
-            "headline": "Drie stappen en dat is de hele app",
+            "headline": "Drie makkelijke stappen",
             "body": "Het is echt zo kort.",
             "steps": {
-              "0": "Je zegt een paar ware dingen over je leven.",
-              "1": "Mera verandert ze in dingen om naar te zoeken.",
-              "2": "Het leest het dagnieuws en houdt wat past."
+              "0": "Je vertelt Mera over jezelf",
+              "1": "Mera weet waar het naar zoekt",
+              "2": "Mera houdt het nieuws dat past"
             }
           },
           "matching": {
-            "headline": "Je leven, niet je klikken",
-            "body": "Een verpleegster in een klein dorp en een verpleegster in een hoofdstad krijgen hier ander nieuws. Niet omdat de ene meer tikt, maar omdat verschillende dingen werkelijk hen bereiken."
+            "headline": "Ander leven, ander nieuws",
+            "body": "Twee verpleegkundigen in twee plaatsen zien ander nieuws."
           },
           "stays-here": {
-            "headline": "Het blijft op deze telefoon",
-            "body": "Tik elk om te zien wat dat betekent.",
+            "headline": "Wat Mera over je weet, blijft op je telefoon",
+            "body": "De computers van Mera bewaren alleen korte woorden, zonder naam.",
             "reveal": {
               "about-you": {
-                "label": "Wat het over jou weet",
-                "text": "Je feiten, je interesses en wat je hebt gelezen worden op deze telefoon opgeslagen en blijven daar. De servers van Mera bewaren er geen kopie van."
+                "label": "Over jou"
               },
               "what-leaves": {
-                "label": "Wat werkelijk weggaat",
-                "text": "Korte onderwerpsfrasen, zoals 'ziekenhuisbezetting'. De servers van Mera slaan ze op zonder naam of account, dus nergens staat vastgelegd dat een frase van jou kwam."
+                "label": "\"banen in het ziekenhuis\""
               }
             }
           },
           "begin": {
-            "headline": "Klaar wanneer jij het bent",
-            "body": "Mera stelt je een paar vragen. Er zijn geen foute antwoorden, en je kunt alles later wijzigen."
+            "headline": "Klaar? We beginnen",
+            "body": "Er zijn geen foute antwoorden. Je kunt later alles veranderen."
+          }
+        },
+        "film": {
+          "cap": {
+            "noise": "Het meeste nieuws <a>gaat niet over jou</a>.",
+            "you": "Mera begint met <a>jou</a>.",
+            "tell": "Vertel Mera een paar <a>echte dingen</a> over jezelf.",
+            "becomes": "Elk ervan wordt <a>iets om naar te zoeken</a>.",
+            "haystack": "Elke dag komen er <a>honderdduizenden</a> berichten uit duizenden kranten en sites wereldwijd.",
+            "picks": "Mera zoekt met je profiel alle <a>berichten die voor jou tellen</a>.",
+            "reads": "Daarna leest Mera ze, <a>houdt wat past</a> en gooit de rest weg,",
+            "why": "en schrijft je <a>een briefje waarom</a>.",
+            "private": "Wat Mera over je weet, <a>blijft op je telefoon</a>."
+          },
+          "fact": {
+            "nurse": "Ik ben verpleegkundige",
+            "utrecht": "Ik woon in Utrecht",
+            "kids": "Twee kinderen op school",
+            "cycle": "Ik fiets naar mijn werk",
+            "psv": "Ik ben fan van PSV",
+            "spanish": "Ik leer Spaans",
+            "rent": "Ik huur een appartement",
+            "funds": "Indexfondsen",
+            "porto": "Ouders in Porto",
+            "veg": "Vegetarisch",
+            "piano": "Ik speel piano",
+            "japan": "Japan in de lente"
+          },
+          "topic": {
+            "nursePay": "loon in de zorg",
+            "staffing": "ziekenhuispersoneel",
+            "nightShift": "regels nachtdienst",
+            "housing": "wonen in Utrecht",
+            "council": "gemeenteraad",
+            "holidays": "schoolvakanties",
+            "bikeLanes": "fietspaden",
+            "railStrikes": "treinstakingen",
+            "eredivisie": "Eredivisie",
+            "languageApps": "taalapps",
+            "rentRules": "huurregels",
+            "energyBills": "energierekening",
+            "interestRates": "rente",
+            "portoFlights": "vluchten naar Porto",
+            "foodPrices": "prijzen boodschappen",
+            "concerts": "concerten",
+            "japanTravel": "reizen naar Japan",
+            "yenRate": "koers van de yen"
+          },
+          "pill": {
+            "trending": "Trending",
+            "fake": "Misschien nep",
+            "screenTime": "5 uur per dag",
+            "rage": "Gemaakt om je boos te maken"
+          },
+          "misc": {
+            "healthDesk": "Gezondheid",
+            "cityNews": "Stadsnieuws",
+            "celebNews": "Showbizz",
+            "markets": "Beurs",
+            "education": "Onderwijs",
+            "high": "Hoog",
+            "med": "Mid"
           }
         }
       },
