@@ -58,6 +58,8 @@ const { email: EMAIL, userId: ME } = FIXTURE_ACCOUNT;
 // The account this device holds in the "different account" cases; the mock server signs ME in.
 const OTHER = 'bbbbbbbbbbbbbbbbbbbbbbbb';
 const INTRO_MS = 1200;
+// The email gate exists only before EMAIL_CUTOFF; tests of it pin the clock there.
+const BEFORE_CUTOFF = new Date(2026, 9, 29, 12).getTime();
 
 const replace = () => router.replace as jest.Mock;
 
@@ -129,7 +131,7 @@ describe('the stage the gate opens on', () => {
         await seedAccount(ME, EMAIL);
         await settingService.setSetting('cached_support_id', 'support-1');
 
-        const hook = open();
+        const hook = open({ now: BEFORE_CUTOFF });
 
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
         expect(hook.result.current).toMatchObject({ cachedEmail: EMAIL, cachedUserId: ME, supportId: 'support-1' });
@@ -432,7 +434,7 @@ describe('Android Back on the gate', () => {
 
     it('steps back from the code to the email and from the other-email step to the mismatch', async () => {
         await seedAccount(ME, EMAIL);
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
 
         act(() => hook.result.current.go('reauth-otp'));
@@ -461,7 +463,7 @@ describe('Android Back on the gate', () => {
 
     it('leaves the app from the gate itself, where there is nothing behind it', async () => {
         await seedAccount(ME, EMAIL);
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
 
         expect(pressBack()).toBe(true);
@@ -476,7 +478,7 @@ describe('Android Back on the gate', () => {
         expect(handlers).toHaveLength(0);
 
         await seedAccount(ME, EMAIL);
-        const gate = renderHook(() => useAuthScreen({}));
+        const gate = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(gate.result.current.stage).toBe('reauth-email'));
         const registered = handlers.length;
         gate.unmount();
@@ -498,10 +500,10 @@ describe('the legacy email path and an unsupported phone', () => {
 
     it('a cached-email user whose phone cannot attest still reaches the email gate', async () => {
         await seedAccount(ME, EMAIL);
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
 
-        expect(unsupportedExit(hook.result.current.cachedEmail)).toBe('reauth-email');
+        expect(unsupportedExit(hook.result.current.cachedEmail, BEFORE_CUTOFF)).toBe('reauth-email');
     });
 
     it('the legacy email link still opens the email stage through consent', async () => {
@@ -520,12 +522,11 @@ describe('the legacy email path and an unsupported phone', () => {
 });
 
 describe('after the email cutoff', () => {
-    const BEFORE = new Date(2026, 9, 29, 12).getTime();
     const AFTER = new Date(2026, 9, 30, 0, 0, 1).getTime();
 
     it('a cached email opens the gate before the cutoff and "email ended" from it', async () => {
         await seedAccount(ME, EMAIL);
-        const before = renderHook(() => useAuthScreen({ now: BEFORE }));
+        const before = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(before.result.current.stage).toBe('reauth-email'));
         expect(before.result.current.emailEnded).toBe(false);
 
@@ -535,7 +536,7 @@ describe('after the email cutoff', () => {
     });
 
     it('an unsupported phone has no email gate to return to', async () => {
-        expect(unsupportedExit(EMAIL, BEFORE)).toBe('reauth-email');
+        expect(unsupportedExit(EMAIL, BEFORE_CUTOFF)).toBe('reauth-email');
         expect(unsupportedExit(EMAIL, AFTER)).toBeNull();
     });
 
