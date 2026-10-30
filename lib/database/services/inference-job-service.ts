@@ -192,6 +192,15 @@ export async function hasPendingJob(
   matchKey: string,
   matchValue: string,
 ): Promise<boolean> {
+  return (await findPendingJobId(jobType, matchKey, matchValue)) !== null;
+}
+
+/** The id of a pending or running job of this type whose payload key matches, or null. */
+export async function findPendingJobId(
+  jobType: InferenceJobType,
+  matchKey: string,
+  matchValue: string,
+): Promise<string | null> {
   const candidates = await jobsCollection
     .query(
       Q.where('job_type', jobType),
@@ -199,12 +208,8 @@ export async function hasPendingJob(
     )
     .fetch();
 
-  const exists = candidates.some((job) => {
-    const payload = job.payload as Record<string, unknown>;
-    return payload[matchKey] === matchValue;
-  });
-
-  return exists;
+  const match = candidates.find((job) => (job.payload as Record<string, unknown>)[matchKey] === matchValue);
+  return match ? match.id : null;
 }
 
 /**

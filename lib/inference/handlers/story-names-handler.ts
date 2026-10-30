@@ -9,7 +9,8 @@
 // putting a mustMatch field and rule on the cloud follow loop's proposeTrack cut
 // its follow cards in one live run, so the chat tools carry no names.
 
-import { enqueueJob, hasPendingJob } from '../../database/services/inference-job-service';
+import { enqueueJob, findPendingJobId } from '../../database/services/inference-job-service';
+import { setTrackedMustMatch } from '../../database/services/topic-service';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { completeLocal } from '../../llm/completeLocal';
@@ -39,17 +40,10 @@ export interface StoryNamesResult {
 /** Writes the names onto the tracked topic. Injected in tests. */
 export type WriteStoryNames = (topicId: string, names: string[]) => Promise<unknown>;
 
-// Required at call time: track-actions imports the queue, which imports this
-// handler, so a module-scope import would close a cycle.
-const writeViaTrackActions: WriteStoryNames = (topicId, names) =>
-  (require('../../tracking/track-actions') as {
-    setTrackedMustMatch: (topicId: string, names: unknown) => Promise<boolean>;
-  }).setTrackedMustMatch(topicId, names);
-
 export async function handleStoryNamesJob(
   payload: StoryNamesPayload,
   _ctx?: unknown,
-  write: WriteStoryNames = writeViaTrackActions,
+  write: WriteStoryNames = setTrackedMustMatch,
 ): Promise<StoryNamesResult> {
   const topicId = payload.topicId;
   const label = typeof payload.label === 'string' ? payload.label.trim() : '';
@@ -98,24 +92,27 @@ export async function handleStoryNamesJob(
 /**
  * Queue one story_names job for a tracked topic, unless one is already pending
  * or running for it. Transport follows the processing mode at enqueue time; the
- * handler re-checks it at run time. Returns whether a job was queued. Never throws.
+ * handler re-checks it at run time. Returns the new job's id, or the id of the
+ * job already pending or running for that topic (so a caller can wait on it);
+ * null only when the enqueue failed. Never throws.
  */
-export async function enqueueStoryNamesJob(input: { topicId: string; label: string; search: string }): Promise<boolean> {
+export async function enqueueStoryNamesJob(input: { topicId: string; label: string; search: string }): Promise<string | null> {
   try {
-    if (!input.topicId) return false;
-    if (await hasPendingJob('story_names', 'topicId', input.topicId)) return false;
+    if (!input.topicId) return null;
+    const pending = await findPendingJobId('story_names', 'topicId', input.topicId);
+    if (pending) return pending;
     const payload: StoryNamesPayload = {
       topicId: input.topicId,
       label: input.label,
       search: input.search,
       useCloud: useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud,
     };
-    await enqueueJob('story_names', payload as unknown as Record<string, unknown>);
-    // Same cycle as above: the queue imports this module.
+    const id = await enqueueJob('story_names', payload as unknown as Record<string, unknown>);
+    // Required at call time: the queue imports this module.
     (require('../InferenceQueue') as typeof import('../InferenceQueue')).inferenceQueue.notify();
-    return true;
+    return id;
   } catch (err) {
     logger.warn('[story-names] enqueue failed', { error: String(err) });
-    return false;
+    return null;
   }
 }

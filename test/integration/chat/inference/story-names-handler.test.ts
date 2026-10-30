@@ -1,7 +1,9 @@
 // story_names: a followed story's mustMatch names, written by a background job from the accepted
 // label and search. Real handler; the cloud branch through the gateway mock, the on-device branch
 // through the scripted built-in model. The writer is injected (the tracking layer owns the write).
-import { enqueueJob } from '@/lib/database/services/inference-job-service';
+import database from '@/lib/database';
+import type TopicModel from '@/lib/database/models/Topic';
+import { createTopics } from '@/lib/database/services/topic-service';
 import { enqueueStoryNamesJob, handleStoryNamesJob } from '@/lib/inference/handlers/story-names-handler';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -83,9 +85,23 @@ describe('story_names', () => {
     await expect(handleStoryNamesJob(STORY, undefined, jest.fn())).rejects.toBe(busy);
   });
 
-  it('enqueue is one pending job per topic', async () => {
-    expect(await enqueueStoryNamesJob(STORY)).toBe(true);
-    expect(await enqueueStoryNamesJob(STORY)).toBe(false);
-    expect(await enqueueStoryNamesJob({ ...STORY, topicId: 't2' })).toBe(true);
+  it('enqueue is one pending job per topic, and a repeat returns that job\'s id', async () => {
+    const first = await enqueueStoryNamesJob(STORY);
+    expect(first).toEqual(expect.any(String));
+    expect(await enqueueStoryNamesJob(STORY)).toBe(first);
+    const other = await enqueueStoryNamesJob({ ...STORY, topicId: 't2' });
+    expect(other).toEqual(expect.any(String));
+    expect(other).not.toBe(first);
+  });
+
+  it('the default writer stores the names on the tracked topic', async () => {
+    const [topic] = await createTopics([
+      { text: 'Named Summit City conference news', weight: 1, status: 'active', provenance: 'tracked', highPriority: true },
+    ]);
+    reply('{"mustMatch":["Named Summit"]}');
+
+    expect(await driveDone(handleStoryNamesJob({ ...STORY, topicId: topic.id, useCloud: true }))).toEqual({ ok: true, names: 1 });
+    const row = await database.get<TopicModel>('topics').find(topic.id);
+    expect(JSON.parse(row.mustMatchJson ?? 'null')).toEqual(['Named Summit']);
   });
 });
