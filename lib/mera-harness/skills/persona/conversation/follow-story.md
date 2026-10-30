@@ -53,6 +53,7 @@ You have no memory of this week's news, so search before you write options.
 Three or four options, narrow to broad: the specific event, the ongoing story, the wider subject.
 Each has a `label` the user reads (5 words or fewer, Title Case) and a hidden `search` (8 words or
 fewer, the who, what and where, proper nouns keeping their capitals).
+- "mustMatch": 1-3 distinctive names (event, organisation, product or person) that any article about exactly this option must mention, written as English headlines write them: Latin script, no year, spelling variants in the spare slots. Never a city, region or country on its own: a place name alone lets in every other event held there. Leave it empty for a broad option that no single name covers.
 - Ground every option in what they said and what the searches returned. Never invent a name.
 - One incident in one place keeps that place in `search`: it stops the story matching every other
   one nearby.

@@ -346,6 +346,12 @@ export const PROPOSE_TRACK_TOOL: ToolDefinition = {
                 type: 'string',
                 description: 'Hidden search text: 8 words or fewer with the who, what and where, proper nouns keeping their capitals, no year or season.',
               },
+              // A copy of news-harness MUST_MATCH_DESCRIPTION (this folder imports nothing from there); a test pins them equal.
+              mustMatch: {
+                type: 'array',
+                items: { type: 'string' },
+                description: '1-3 distinctive names (event, organisation, product or person) any article about exactly this option must mention, as English headlines write them: Latin script, no year, spelling variants in the spare slots. Never a place name on its own. Empty for a broad option. NOT shown to the user.',
+              },
             },
             required: ['label', 'search'],
           },
