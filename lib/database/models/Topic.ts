@@ -1,6 +1,8 @@
 import { Model } from '@nozbe/watermelondb';
 import { field, text, date } from '@nozbe/watermelondb/decorators';
 
+import { normalizeMustMatch } from '@/lib/news-harness';
+
 /**
  * Persona v3 weighted granular topic — replaces the `fact.metadata.topics`
  * string list. Long-lived, user-owned. `normalized_text` (lowercase/trim) is
@@ -51,4 +53,14 @@ export default class Topic extends Model {
   @field('must_match_json') mustMatchJson!: string | null;
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
+
+  /** The must-match names, normalized; [] when absent or unparseable. */
+  get mustMatch(): string[] {
+    if (!this.mustMatchJson) return [];
+    try {
+      return normalizeMustMatch(JSON.parse(this.mustMatchJson));
+    } catch {
+      return [];
+    }
+  }
 }

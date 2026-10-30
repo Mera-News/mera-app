@@ -25,6 +25,8 @@
 // it is asserted that no row appears.
 import { firstValueFrom } from 'rxjs';
 
+import database from '@/lib/database';
+
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
 import {
@@ -245,6 +247,58 @@ describe('createTopics: the dedupe floor', () => {
       expect(out.map((r) => r.normalizedText)).toEqual(['first', 'second', 'third']);
       expect(out[1].id).toBe(mid.id);
     });
+  });
+});
+
+describe('must-match names: stored on followed-story (tracked) rows only', () => {
+  const tracked = (mustMatch?: string[]) => ({
+    text: 'Gaza ceasefire talks',
+    weight: 0.85,
+    provenance: 'tracked' as const,
+    ...(mustMatch ? { mustMatch } : {}),
+  });
+
+  it('a new tracked row stores the normalized names', async () => {
+    const [row] = await createTopics([tracked(['  Hamas ', 'hamas', 'Qatar', 'x'])]);
+    expect(row.mustMatch).toEqual(['Hamas', 'Qatar']);
+  });
+
+  it('a new tracked row with no names reads [] and stores nothing', async () => {
+    const [row] = await createTopics([tracked()]);
+    expect(row.mustMatchJson).toBeNull();
+    expect(row.mustMatch).toEqual([]);
+  });
+
+  it('never stores names on a non-tracked row', async () => {
+    const [row] = await createTopics([{ text: 'Gaza ceasefire talks', weight: 0.75, mustMatch: ['Hamas'] }]);
+    expect(row.mustMatchJson).toBeNull();
+  });
+
+  it('a reused tracked row is overwritten by non-empty incoming names', async () => {
+    const [first] = await createTopics([tracked(['Hamas'])]);
+    const [again] = await createTopics([tracked(['Qatar', 'Egypt'])]);
+    expect(again.id).toBe(first.id);
+    expect((await allTopics()).find((t) => t.id === first.id)?.mustMatch).toEqual(['Qatar', 'Egypt']);
+  });
+
+  it('empty incoming names leave a reused row alone', async () => {
+    const [first] = await createTopics([tracked(['Hamas'])]);
+    await createTopics([tracked([])]);
+    await createTopics([tracked()]);
+    expect((await allTopics()).find((t) => t.id === first.id)?.mustMatch).toEqual(['Hamas']);
+  });
+
+  it('a reused NON-tracked row sharing the text never takes names', async () => {
+    const [interest] = await createTopics([{ text: 'Gaza ceasefire talks', weight: 0.75 }]);
+    const [again] = await createTopics([tracked(['Hamas'])]);
+    expect(again.id).toBe(interest.id);
+    expect((await allTopics()).find((t) => t.id === interest.id)?.mustMatchJson).toBeNull();
+  });
+
+  it.each([['{'], ['"Hamas"'], ['[1,2]'], ['{"a":1}']])('the getter reads unusable JSON %s as []', async (raw) => {
+    const [row] = await createTopics([tracked(['Hamas'])]);
+    await database.write(() => row.update((t) => { t.mustMatchJson = raw; }));
+    expect(row.mustMatch).toEqual([]);
   });
 });
 
