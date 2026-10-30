@@ -1,0 +1,1333 @@
+{
+  "ar": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "معظم الأخبار <a>لا تخصك</a>.",
+              "you": "ميرا يبدأ <a>منك</a>.",
+              "tell": "أخبر ميرا ببعض <a>الحقائق عنك</a>.",
+              "becomes": "كل حقيقة تصبح <a>شيئًا يبحث عنه</a>.",
+              "haystack": "كل يوم، تنشر آلاف الصحف حول العالم <a>مئات الآلاف</a> من الأخبار.",
+              "picks": "يجمع ميرا كل <a>الأخبار المناسبة</a> حسب ملفك.",
+              "reads": "ثم يقرؤها ميرا، <a>ويحتفظ بما يناسبك</a> ويرمي الباقي،",
+              "why": "ويكتب لك <a>ملاحظة تقول السبب</a>.",
+              "private": "ما يعرفه ميرا عنك <a>يبقى على هاتفك</a>."
+            },
+            "fact": {
+              "nurse": "أنا ممرضة",
+              "utrecht": "أعيش في أوترخت",
+              "kids": "طفلان في المدرسة",
+              "cycle": "أذهب إلى العمل بالدراجة",
+              "psv": "أشجع بي إس في",
+              "spanish": "أتعلم الإسبانية",
+              "rent": "أستأجر شقتي",
+              "funds": "صناديق المؤشرات",
+              "porto": "والداي في بورتو",
+              "veg": "نباتية",
+              "piano": "أعزف البيانو",
+              "japan": "اليابان في الربيع"
+            },
+            "topic": {
+              "nursePay": "رواتب الممرضين",
+              "staffing": "موظفو المستشفيات",
+              "nightShift": "قواعد المناوبات الليلية",
+              "housing": "السكن في أوترخت",
+              "council": "مجلس المدينة",
+              "holidays": "العطل المدرسية",
+              "bikeLanes": "مسارات الدراجات",
+              "railStrikes": "إضرابات القطارات",
+              "eredivisie": "الدوري الهولندي",
+              "languageApps": "تطبيقات اللغات",
+              "rentRules": "قواعد الإيجار",
+              "energyBills": "فواتير الكهرباء والغاز",
+              "interestRates": "أسعار الفائدة",
+              "portoFlights": "رحلات إلى بورتو",
+              "foodPrices": "أسعار الطعام",
+              "concerts": "حفلات موسيقية",
+              "japanTravel": "السفر إلى اليابان",
+              "yenRate": "سعر الين"
+            },
+            "pill": {
+              "trending": "رائج",
+              "fake": "قد يكون مزيفًا",
+              "screenTime": "5 ساعات يوميًا",
+              "rage": "مصنوع ليغضبك"
+            },
+            "misc": {
+              "healthDesk": "الصحة",
+              "cityNews": "أخبار المدينة",
+              "celebNews": "أخبار المشاهير",
+              "markets": "الأسواق",
+              "education": "التعليم",
+              "high": "مرتفع",
+              "med": "متوسط"
+            }
+          }
+        }
+      }
+    }
+  },
+  "de": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Die meisten News haben <a>nichts mit dir zu tun</a>.",
+              "you": "Mera fängt mit <a>dir</a> an.",
+              "tell": "Erzähl Mera ein paar <a>wahre Dinge</a> über dich.",
+              "becomes": "Aus jedem wird <a>etwas, wonach Mera sucht</a>.",
+              "haystack": "Jeden Tag erscheinen <a>Hunderttausende</a> Artikel in Tausenden Medien auf der ganzen Welt.",
+              "picks": "Mera holt mit deinem Profil alle <a>Artikel, die zu dir passen</a>.",
+              "reads": "Dann liest Mera sie, <a>behält, was passt</a>, und wirft den Rest weg,",
+              "why": "und schreibt dir <a>eine Notiz, warum</a>.",
+              "private": "Was Mera über dich weiß, <a>bleibt auf deinem Telefon</a>."
+            },
+            "fact": {
+              "nurse": "Ich arbeite in der Pflege",
+              "utrecht": "Ich wohne in Utrecht",
+              "kids": "Zwei Kinder in der Schule",
+              "cycle": "Mit dem Rad zur Arbeit",
+              "psv": "Ich bin PSV-Fan",
+              "spanish": "Ich lerne Spanisch",
+              "rent": "Ich wohne zur Miete",
+              "funds": "Indexfonds",
+              "porto": "Eltern in Porto",
+              "veg": "Vegetarisch",
+              "piano": "Ich spiele Klavier",
+              "japan": "Japan im Frühling"
+            },
+            "topic": {
+              "nursePay": "Gehalt in der Pflege",
+              "staffing": "Personal im Krankenhaus",
+              "nightShift": "Regeln für Nachtschichten",
+              "housing": "Wohnen in Utrecht",
+              "council": "Stadtrat",
+              "holidays": "Schulferien",
+              "bikeLanes": "Radwege",
+              "railStrikes": "Bahnstreiks",
+              "eredivisie": "Eredivisie",
+              "languageApps": "Sprach-Apps",
+              "rentRules": "Mietregeln",
+              "energyBills": "Energiekosten",
+              "interestRates": "Zinsen",
+              "portoFlights": "Flüge nach Porto",
+              "foodPrices": "Lebensmittelpreise",
+              "concerts": "Konzerte",
+              "japanTravel": "Reisen nach Japan",
+              "yenRate": "Yen-Kurs"
+            },
+            "pill": {
+              "trending": "Im Trend",
+              "fake": "Vielleicht falsch",
+              "screenTime": "5 Stunden am Tag",
+              "rage": "Soll dich wütend machen"
+            },
+            "misc": {
+              "healthDesk": "Gesundheit",
+              "cityNews": "Aus der Stadt",
+              "celebNews": "Promi-News",
+              "markets": "Börse",
+              "education": "Bildung",
+              "high": "Hoch",
+              "med": "Mittel"
+            }
+          }
+        }
+      }
+    }
+  },
+  "es": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "La mayoría de las noticias <a>no tratan de ti</a>.",
+              "you": "Mera empieza por <a>ti</a>.",
+              "tell": "Cuéntale a Mera algunas <a>cosas ciertas</a> sobre ti.",
+              "becomes": "Cada una se convierte en <a>algo que buscar</a>.",
+              "haystack": "Cada día salen <a>cientos de miles</a> de noticias de miles de medios de todo el mundo.",
+              "picks": "Con tu perfil, Mera trae todas las <a>noticias que te importan</a>.",
+              "reads": "Luego Mera las lee, <a>guarda lo que encaja</a> y tira lo que no,",
+              "why": "y te escribe <a>una nota que explica por qué</a>.",
+              "private": "Lo que Mera sabe de ti <a>se queda en tu teléfono</a>."
+            },
+            "fact": {
+              "nurse": "Soy enfermera",
+              "utrecht": "Vivo en Utrecht",
+              "kids": "Dos hijos en la escuela",
+              "cycle": "Voy en bici al trabajo",
+              "psv": "Soy del PSV",
+              "spanish": "Aprendo inglés",
+              "rent": "Alquilo mi apartamento",
+              "funds": "Fondos indexados",
+              "porto": "Mis padres en Porto",
+              "veg": "Vegetariana",
+              "piano": "Toco el piano",
+              "japan": "Japón en primavera"
+            },
+            "topic": {
+              "nursePay": "sueldo de enfermeras",
+              "staffing": "personal del hospital",
+              "nightShift": "turnos de noche",
+              "housing": "vivienda en Utrecht",
+              "council": "concejo municipal",
+              "holidays": "vacaciones escolares",
+              "bikeLanes": "carriles para bici",
+              "railStrikes": "huelgas de trenes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "apps de idiomas",
+              "rentRules": "reglas del alquiler",
+              "energyBills": "facturas de energía",
+              "interestRates": "tasas de interés",
+              "portoFlights": "vuelos a Porto",
+              "foodPrices": "precio de la comida",
+              "concerts": "conciertos",
+              "japanTravel": "viajar a Japón",
+              "yenRate": "cambio del yen"
+            },
+            "pill": {
+              "trending": "Tendencia",
+              "fake": "Podría ser falso",
+              "screenTime": "5 horas al día",
+              "rage": "Hecho para enojarte"
+            },
+            "misc": {
+              "healthDesk": "Salud",
+              "cityNews": "Noticias locales",
+              "celebNews": "Famosos",
+              "markets": "Mercados",
+              "education": "Educación",
+              "high": "Alta",
+              "med": "Media"
+            }
+          }
+        }
+      }
+    }
+  },
+  "fr": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "La plupart des infos <a>ne parlent pas de vous</a>.",
+              "you": "Mera commence par <a>vous</a>.",
+              "tell": "Dites à Mera quelques <a>choses vraies</a> sur vous.",
+              "becomes": "Chacune devient <a>quelque chose à chercher</a>.",
+              "haystack": "Chaque jour, <a>des centaines de milliers</a> d'articles sortent de milliers de médias dans le monde.",
+              "picks": "Grâce à votre profil, Mera trouve tous les <a>articles qui vous concernent</a>.",
+              "reads": "Puis Mera les lit, <a>garde ce qui vous va</a> et jette le reste,",
+              "why": "et vous écrit <a>un mot pour dire pourquoi</a>.",
+              "private": "Ce que Mera sait de vous <a>reste sur votre téléphone</a>."
+            },
+            "fact": {
+              "nurse": "Je suis infirmière",
+              "utrecht": "J'habite à Utrecht",
+              "kids": "Deux enfants à l'école",
+              "cycle": "Je vais au travail à vélo",
+              "psv": "Je suis fan du PSV",
+              "spanish": "J'apprends l'espagnol",
+              "rent": "Je suis locataire",
+              "funds": "Fonds indiciels",
+              "porto": "Mes parents à Porto",
+              "veg": "Végétarienne",
+              "piano": "Je joue du piano",
+              "japan": "Le Japon au printemps"
+            },
+            "topic": {
+              "nursePay": "salaire infirmier",
+              "staffing": "personnel hospitalier",
+              "nightShift": "règles du travail de nuit",
+              "housing": "logement à Utrecht",
+              "council": "conseil municipal",
+              "holidays": "vacances scolaires",
+              "bikeLanes": "pistes cyclables",
+              "railStrikes": "grèves de trains",
+              "eredivisie": "Eredivisie",
+              "languageApps": "applis de langues",
+              "rentRules": "règles des loyers",
+              "energyBills": "factures d'énergie",
+              "interestRates": "taux d'intérêt",
+              "portoFlights": "vols pour Porto",
+              "foodPrices": "prix des courses",
+              "concerts": "concerts",
+              "japanTravel": "voyage au Japon",
+              "yenRate": "cours du yen"
+            },
+            "pill": {
+              "trending": "Tendance",
+              "fake": "Peut-être faux",
+              "screenTime": "5 heures par jour",
+              "rage": "Fait pour vous énerver"
+            },
+            "misc": {
+              "healthDesk": "Santé",
+              "cityNews": "Infos locales",
+              "celebNews": "People",
+              "markets": "Bourse",
+              "education": "Éducation",
+              "high": "Élevé",
+              "med": "Moyen"
+            }
+          }
+        }
+      }
+    }
+  },
+  "hi": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "ज़्यादातर खबरें <a>आपके बारे में नहीं</a> होतीं।",
+              "you": "मेरा ऐप <a>आपसे</a> शुरू होता है।",
+              "tell": "मेरा ऐप को अपनी कुछ <a>सच्ची बातें</a> बताइए।",
+              "becomes": "हर बात बताती है कि <a>क्या ढूँढना है</a>।",
+              "haystack": "हर दिन दुनिया भर के हज़ारों अखबारों से <a>लाखों</a> खबरें आती हैं।",
+              "picks": "मेरा ऐप आपकी प्रोफ़ाइल से सारी <a>काम की खबरें</a> ले आता है।",
+              "reads": "फिर मेरा ऐप उन्हें पढ़ता है, <a>सही खबरें रखता है</a> और बाकी हटा देता है,",
+              "why": "और आपको <a>एक नोट लिखता है कि क्यों</a>।",
+              "private": "मेरा ऐप आपके बारे में जो जानता है, वह <a>आपके फ़ोन पर रहता है</a>।"
+            },
+            "fact": {
+              "nurse": "मैं नर्स हूँ",
+              "utrecht": "मैं यूट्रेक्ट में रहती हूँ",
+              "kids": "दो बच्चे स्कूल में",
+              "cycle": "साइकिल से काम पर जाती हूँ",
+              "psv": "पीएसवी की फ़ैन हूँ",
+              "spanish": "स्पेनिश सीख रही हूँ",
+              "rent": "किराए के फ़्लैट में रहती हूँ",
+              "funds": "इंडेक्स फ़ंड",
+              "porto": "माता-पिता पोर्टो में",
+              "veg": "शाकाहारी",
+              "piano": "पियानो बजाती हूँ",
+              "japan": "बसंत में जापान"
+            },
+            "topic": {
+              "nursePay": "नर्सों का वेतन",
+              "staffing": "अस्पताल में स्टाफ़",
+              "nightShift": "नाइट शिफ़्ट के नियम",
+              "housing": "यूट्रेक्ट में घर",
+              "council": "नगर परिषद",
+              "holidays": "स्कूल की छुट्टियाँ",
+              "bikeLanes": "साइकिल लेन",
+              "railStrikes": "रेल हड़ताल",
+              "eredivisie": "एरेडिविसी",
+              "languageApps": "भाषा सीखने के ऐप",
+              "rentRules": "किराए के नियम",
+              "energyBills": "बिजली का बिल",
+              "interestRates": "ब्याज दरें",
+              "portoFlights": "पोर्टो की उड़ानें",
+              "foodPrices": "खाने के दाम",
+              "concerts": "कॉन्सर्ट",
+              "japanTravel": "जापान की सैर",
+              "yenRate": "येन का भाव"
+            },
+            "pill": {
+              "trending": "ट्रेंडिंग",
+              "fake": "शायद नकली",
+              "screenTime": "दिन में 5 घंटे",
+              "rage": "आपको गुस्सा दिलाने के लिए"
+            },
+            "misc": {
+              "healthDesk": "सेहत",
+              "cityNews": "शहर की खबरें",
+              "celebNews": "सितारों की खबरें",
+              "markets": "बाज़ार",
+              "education": "शिक्षा",
+              "high": "उच्च",
+              "med": "मध्यम"
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Kebanyakan berita <a>bukan tentang Anda</a>.",
+              "you": "Mera dimulai dari <a>Anda</a>.",
+              "tell": "Ceritakan ke Mera beberapa <a>fakta tentang Anda</a>.",
+              "becomes": "Masing-masing menjadi <a>hal yang dicari</a>.",
+              "haystack": "Setiap hari, <a>ratusan ribu</a> berita terbit dari ribuan media di seluruh dunia.",
+              "picks": "Mera mengambil semua <a>berita yang cocok</a> berdasarkan profil Anda.",
+              "reads": "Lalu Mera membacanya, <a>menyimpan yang cocok</a> dan membuang yang tidak,",
+              "why": "dan menulis <a>catatan berisi alasannya</a> untuk Anda.",
+              "private": "Yang Mera tahu tentang Anda <a>tetap di ponsel Anda</a>."
+            },
+            "fact": {
+              "nurse": "Saya perawat",
+              "utrecht": "Saya tinggal di Utrecht",
+              "kids": "Dua anak sekolah",
+              "cycle": "Bersepeda ke kantor",
+              "psv": "Saya dukung PSV",
+              "spanish": "Belajar bahasa Spanyol",
+              "rent": "Saya sewa apartemen",
+              "funds": "Reksa dana indeks",
+              "porto": "Orang tua di Porto",
+              "veg": "Vegetarian",
+              "piano": "Saya main piano",
+              "japan": "Jepang di musim semi"
+            },
+            "topic": {
+              "nursePay": "gaji perawat",
+              "staffing": "staf rumah sakit",
+              "nightShift": "aturan sif malam",
+              "housing": "rumah di Utrecht",
+              "council": "dewan kota",
+              "holidays": "libur sekolah",
+              "bikeLanes": "jalur sepeda",
+              "railStrikes": "mogok kereta",
+              "eredivisie": "Eredivisie",
+              "languageApps": "aplikasi bahasa",
+              "rentRules": "aturan sewa",
+              "energyBills": "tagihan listrik",
+              "interestRates": "suku bunga",
+              "portoFlights": "penerbangan ke Porto",
+              "foodPrices": "harga makanan",
+              "concerts": "konser",
+              "japanTravel": "wisata Jepang",
+              "yenRate": "kurs yen"
+            },
+            "pill": {
+              "trending": "Lagi tren",
+              "fake": "Mungkin palsu",
+              "screenTime": "5 jam sehari",
+              "rage": "Dibuat agar Anda marah"
+            },
+            "misc": {
+              "healthDesk": "Kesehatan",
+              "cityNews": "Berita kota",
+              "celebNews": "Selebriti",
+              "markets": "Pasar",
+              "education": "Pendidikan",
+              "high": "Tinggi",
+              "med": "Sedang"
+            }
+          }
+        }
+      }
+    }
+  },
+  "it": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "La maggior parte delle notizie <a>non parla di te</a>.",
+              "you": "Mera inizia da <a>te</a>.",
+              "tell": "Racconta a Mera qualche <a>cosa vera</a> su di te.",
+              "becomes": "Ognuna diventa <a>qualcosa da cercare</a>.",
+              "haystack": "Ogni giorno escono <a>centinaia di migliaia</a> di notizie da migliaia di giornali e siti nel mondo.",
+              "picks": "Con il tuo profilo, Mera prende tutte le <a>notizie che contano per te</a>.",
+              "reads": "Poi Mera le legge, <a>tiene quelle giuste</a> e butta le altre,",
+              "why": "e ti scrive <a>una nota che spiega perché</a>.",
+              "private": "Ciò che Mera sa di te <a>resta sul tuo telefono</a>."
+            },
+            "fact": {
+              "nurse": "Faccio l'infermiera",
+              "utrecht": "Vivo a Utrecht",
+              "kids": "Due figli a scuola",
+              "cycle": "Vado al lavoro in bici",
+              "psv": "Tifo PSV",
+              "spanish": "Studio spagnolo",
+              "rent": "Vivo in affitto",
+              "funds": "Fondi indicizzati",
+              "porto": "Genitori a Porto",
+              "veg": "Vegetariana",
+              "piano": "Suono il piano",
+              "japan": "Giappone in primavera"
+            },
+            "topic": {
+              "nursePay": "stipendi infermieri",
+              "staffing": "personale ospedaliero",
+              "nightShift": "regole turni di notte",
+              "housing": "case a Utrecht",
+              "council": "consiglio comunale",
+              "holidays": "vacanze scolastiche",
+              "bikeLanes": "piste ciclabili",
+              "railStrikes": "scioperi dei treni",
+              "eredivisie": "Eredivisie",
+              "languageApps": "app per le lingue",
+              "rentRules": "regole sugli affitti",
+              "energyBills": "bollette",
+              "interestRates": "tassi di interesse",
+              "portoFlights": "voli per Porto",
+              "foodPrices": "prezzi del cibo",
+              "concerts": "concerti",
+              "japanTravel": "viaggio in Giappone",
+              "yenRate": "cambio dello yen"
+            },
+            "pill": {
+              "trending": "Di tendenza",
+              "fake": "Forse falso",
+              "screenTime": "5 ore al giorno",
+              "rage": "Fatto per farti arrabbiare"
+            },
+            "misc": {
+              "healthDesk": "Salute",
+              "cityNews": "Notizie locali",
+              "celebNews": "Gossip",
+              "markets": "Mercati",
+              "education": "Istruzione",
+              "high": "Alto",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ja": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "ほとんどのニュースは、<a>あなたのことではありません</a>。",
+              "you": "メラは<a>あなた</a>から始まります。",
+              "tell": "あなたの<a>本当のこと</a>を、メラにいくつか教えてください。",
+              "becomes": "ひとつひとつが<a>探すもの</a>になります。",
+              "haystack": "毎日、世界中の何千ものニュースサイトから<a>何十万</a>ものニュースが出ています。",
+              "picks": "メラはあなたのプロフィールを使って、<a>関係のあるニュース</a>をぜんぶ集めます。",
+              "reads": "そしてメラはそれを読んで、<a>合うものを残し</a>、合わないものはすてて、",
+              "why": "<a>理由を書いたメモ</a>をあなたにとどけます。",
+              "private": "メラが知っているあなたのことは、<a>スマホの中に残ります</a>。"
+            },
+            "fact": {
+              "nurse": "看護師です",
+              "utrecht": "ユトレヒトに住んでいます",
+              "kids": "学校に通う子が2人",
+              "cycle": "自転車で仕事に行きます",
+              "psv": "PSVを応援しています",
+              "spanish": "スペイン語を勉強中",
+              "rent": "家を借りています",
+              "funds": "インデックス投資",
+              "porto": "両親はポルトにいます",
+              "veg": "ベジタリアンです",
+              "piano": "ピアノをひきます",
+              "japan": "春に韓国へ"
+            },
+            "topic": {
+              "nursePay": "看護師の給料",
+              "staffing": "病院の人手不足",
+              "nightShift": "夜勤のルール",
+              "housing": "ユトレヒトの住まい",
+              "council": "市議会",
+              "holidays": "学校の休み",
+              "bikeLanes": "自転車道",
+              "railStrikes": "電車のストライキ",
+              "eredivisie": "エールディヴィジ",
+              "languageApps": "語学アプリ",
+              "rentRules": "家賃のルール",
+              "energyBills": "電気代とガス代",
+              "interestRates": "金利",
+              "portoFlights": "ポルト行きの飛行機",
+              "foodPrices": "食べ物の値段",
+              "concerts": "コンサート",
+              "japanTravel": "韓国旅行",
+              "yenRate": "ウォンのレート"
+            },
+            "pill": {
+              "trending": "いま話題",
+              "fake": "うそかも",
+              "screenTime": "1日5時間",
+              "rage": "わざと怒らせる"
+            },
+            "misc": {
+              "healthDesk": "健康",
+              "cityNews": "まちのニュース",
+              "celebNews": "芸能ニュース",
+              "markets": "マーケット",
+              "education": "教育",
+              "high": "高",
+              "med": "中"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ko": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "대부분의 뉴스는 <a>나와 상관없어요</a>.",
+              "you": "메라는 <a>나</a>에게서 시작해요.",
+              "tell": "메라에게 <a>나에 대한 진짜 이야기</a>를 몇 가지 알려 주세요.",
+              "becomes": "하나하나가 <a>찾아볼 거리</a>가 돼요.",
+              "haystack": "매일 전 세계 수천 곳의 언론사에서 <a>수십만 개</a>의 기사가 나와요.",
+              "picks": "메라는 내 프로필로 <a>관련 있는 기사</a>를 모두 가져와요.",
+              "reads": "그다음 메라가 기사를 읽고, <a>맞는 건 남기고</a> 안 맞는 건 버린 뒤,",
+              "why": "<a>왜 골랐는지 메모</a>를 써 줘요.",
+              "private": "메라가 아는 나에 대한 정보는 <a>내 휴대폰에 남아요</a>."
+            },
+            "fact": {
+              "nurse": "간호사예요",
+              "utrecht": "위트레흐트에 살아요",
+              "kids": "학교 다니는 아이 둘",
+              "cycle": "자전거로 출근해요",
+              "psv": "PSV 팬이에요",
+              "spanish": "스페인어 공부 중",
+              "rent": "월세로 살아요",
+              "funds": "인덱스 펀드",
+              "porto": "부모님은 포르투에 계세요",
+              "veg": "채식주의자예요",
+              "piano": "피아노를 쳐요",
+              "japan": "봄에 일본 여행"
+            },
+            "topic": {
+              "nursePay": "간호사 월급",
+              "staffing": "병원 인력 부족",
+              "nightShift": "야간 근무 규칙",
+              "housing": "위트레흐트 주택",
+              "council": "시의회",
+              "holidays": "학교 방학",
+              "bikeLanes": "자전거 도로",
+              "railStrikes": "철도 파업",
+              "eredivisie": "에레디비시",
+              "languageApps": "언어 학습 앱",
+              "rentRules": "월세 규칙",
+              "energyBills": "에너지 요금",
+              "interestRates": "금리",
+              "portoFlights": "포르투 항공권",
+              "foodPrices": "음식값",
+              "concerts": "콘서트",
+              "japanTravel": "일본 여행",
+              "yenRate": "엔화 환율"
+            },
+            "pill": {
+              "trending": "인기 급상승",
+              "fake": "가짜일 수도",
+              "screenTime": "하루 5시간",
+              "rage": "화나라고 만든 글"
+            },
+            "misc": {
+              "healthDesk": "건강",
+              "cityNews": "도시 소식",
+              "celebNews": "연예 뉴스",
+              "markets": "주식 시장",
+              "education": "교육",
+              "high": "높음",
+              "med": "중간"
+            }
+          }
+        }
+      }
+    }
+  },
+  "nl": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Het meeste nieuws <a>gaat niet over jou</a>.",
+              "you": "Mera begint met <a>jou</a>.",
+              "tell": "Vertel Mera een paar <a>echte dingen</a> over jezelf.",
+              "becomes": "Elk ervan wordt <a>iets om naar te zoeken</a>.",
+              "haystack": "Elke dag komen er <a>honderdduizenden</a> berichten uit duizenden kranten en sites wereldwijd.",
+              "picks": "Mera zoekt met je profiel alle <a>berichten die voor jou tellen</a>.",
+              "reads": "Daarna leest Mera ze, <a>houdt wat past</a> en gooit de rest weg,",
+              "why": "en schrijft je <a>een briefje waarom</a>.",
+              "private": "Wat Mera over je weet, <a>blijft op je telefoon</a>."
+            },
+            "fact": {
+              "nurse": "Ik ben verpleegkundige",
+              "utrecht": "Ik woon in Utrecht",
+              "kids": "Twee kinderen op school",
+              "cycle": "Ik fiets naar mijn werk",
+              "psv": "Ik ben fan van PSV",
+              "spanish": "Ik leer Spaans",
+              "rent": "Ik huur een appartement",
+              "funds": "Indexfondsen",
+              "porto": "Ouders in Porto",
+              "veg": "Vegetarisch",
+              "piano": "Ik speel piano",
+              "japan": "Japan in de lente"
+            },
+            "topic": {
+              "nursePay": "loon in de zorg",
+              "staffing": "ziekenhuispersoneel",
+              "nightShift": "regels nachtdienst",
+              "housing": "wonen in Utrecht",
+              "council": "gemeenteraad",
+              "holidays": "schoolvakanties",
+              "bikeLanes": "fietspaden",
+              "railStrikes": "treinstakingen",
+              "eredivisie": "Eredivisie",
+              "languageApps": "taalapps",
+              "rentRules": "huurregels",
+              "energyBills": "energierekening",
+              "interestRates": "rente",
+              "portoFlights": "vluchten naar Porto",
+              "foodPrices": "prijzen boodschappen",
+              "concerts": "concerten",
+              "japanTravel": "reizen naar Japan",
+              "yenRate": "koers van de yen"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Misschien nep",
+              "screenTime": "5 uur per dag",
+              "rage": "Gemaakt om je boos te maken"
+            },
+            "misc": {
+              "healthDesk": "Gezondheid",
+              "cityNews": "Stadsnieuws",
+              "celebNews": "Showbizz",
+              "markets": "Beurs",
+              "education": "Onderwijs",
+              "high": "Hoog",
+              "med": "Mid"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pl": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Większość wiadomości <a>nie dotyczy Ciebie</a>.",
+              "you": "Mera zaczyna <a>od Ciebie</a>.",
+              "tell": "Powiedz aplikacji Mera kilka <a>prawdziwych rzeczy</a> o sobie.",
+              "becomes": "Każda z nich staje się <a>tym, czego szukać</a>.",
+              "haystack": "Każdego dnia tysiące gazet i portali na świecie publikują <a>setki tysięcy</a> wiadomości.",
+              "picks": "Mera używa Twojego profilu, by znaleźć wszystkie <a>wiadomości dla Ciebie</a>.",
+              "reads": "Potem Mera je czyta, <a>zostawia to, co pasuje</a>, a resztę wyrzuca,",
+              "why": "i pisze Ci <a>notkę z wyjaśnieniem</a>.",
+              "private": "To, co Mera wie o Tobie, <a>zostaje w Twoim telefonie</a>."
+            },
+            "fact": {
+              "nurse": "Jestem pielęgniarką",
+              "utrecht": "Mieszkam w Utrechcie",
+              "kids": "Dwoje dzieci w szkole",
+              "cycle": "Jeżdżę rowerem do pracy",
+              "psv": "Kibicuję PSV",
+              "spanish": "Uczę się hiszpańskiego",
+              "rent": "Wynajmuję mieszkanie",
+              "funds": "Fundusze indeksowe",
+              "porto": "Rodzice w Porto",
+              "veg": "Wegetarianka",
+              "piano": "Gram na pianinie",
+              "japan": "Japonia wiosną"
+            },
+            "topic": {
+              "nursePay": "płace pielęgniarek",
+              "staffing": "obsada szpitali",
+              "nightShift": "zasady nocnych dyżurów",
+              "housing": "mieszkania w Utrechcie",
+              "council": "rada miasta",
+              "holidays": "ferie szkolne",
+              "bikeLanes": "ścieżki rowerowe",
+              "railStrikes": "strajki na kolei",
+              "eredivisie": "Eredivisie",
+              "languageApps": "apki do języków",
+              "rentRules": "zasady najmu",
+              "energyBills": "rachunki za prąd",
+              "interestRates": "stopy procentowe",
+              "portoFlights": "loty do Porto",
+              "foodPrices": "ceny jedzenia",
+              "concerts": "koncerty",
+              "japanTravel": "podróż do Japonii",
+              "yenRate": "kurs jena"
+            },
+            "pill": {
+              "trending": "Na topie",
+              "fake": "Może być fałszywe",
+              "screenTime": "5 godzin dziennie",
+              "rage": "Ma Cię zdenerwować"
+            },
+            "misc": {
+              "healthDesk": "Zdrowie",
+              "cityNews": "Z miasta",
+              "celebNews": "Gwiazdy",
+              "markets": "Rynki",
+              "education": "Edukacja",
+              "high": "Wysoka",
+              "med": "Śred."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pt-BR": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "A maioria das notícias <a>não é sobre você</a>.",
+              "you": "A Mera começa com <a>você</a>.",
+              "tell": "Conte para a Mera algumas <a>coisas reais</a> sobre você.",
+              "becomes": "Cada uma vira <a>algo para procurar</a>.",
+              "haystack": "Todo dia, milhares de jornais e sites do mundo publicam <a>centenas de milhares</a> de notícias.",
+              "picks": "A Mera usa o seu perfil para buscar todas as <a>notícias certas</a>.",
+              "reads": "Depois a Mera lê cada uma, <a>guarda o que combina</a> e joga fora o resto,",
+              "why": "e escreve para você <a>uma nota explicando o porquê</a>.",
+              "private": "O que a Mera sabe sobre você <a>fica no seu celular</a>."
+            },
+            "fact": {
+              "nurse": "Sou enfermeira",
+              "utrecht": "Moro em Utrecht",
+              "kids": "Dois filhos na escola",
+              "cycle": "Vou de bicicleta pro trabalho",
+              "psv": "Torço pro PSV",
+              "spanish": "Aprendendo espanhol",
+              "rent": "Moro de aluguel",
+              "funds": "Fundos de índice",
+              "porto": "Pais no Porto",
+              "veg": "Vegetariana",
+              "piano": "Toco piano",
+              "japan": "Japão na primavera"
+            },
+            "topic": {
+              "nursePay": "salário de enfermeira",
+              "staffing": "equipes de hospital",
+              "nightShift": "regras do plantão noturno",
+              "housing": "moradia em Utrecht",
+              "council": "câmara municipal",
+              "holidays": "férias escolares",
+              "bikeLanes": "ciclovias",
+              "railStrikes": "greves de trem",
+              "eredivisie": "Eredivisie",
+              "languageApps": "apps de idiomas",
+              "rentRules": "regras de aluguel",
+              "energyBills": "conta de luz",
+              "interestRates": "taxa de juros",
+              "portoFlights": "voos para o Porto",
+              "foodPrices": "preço da comida",
+              "concerts": "shows",
+              "japanTravel": "viagem ao Japão",
+              "yenRate": "cotação do iene"
+            },
+            "pill": {
+              "trending": "Em alta",
+              "fake": "Pode ser falso",
+              "screenTime": "5 horas por dia",
+              "rage": "Feito para te irritar"
+            },
+            "misc": {
+              "healthDesk": "Saúde",
+              "cityNews": "Notícias da cidade",
+              "celebNews": "Famosos",
+              "markets": "Mercados",
+              "education": "Educação",
+              "high": "Alta",
+              "med": "Méd"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ru": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Большинство новостей <a>не про вас</a>.",
+              "you": "Мера начинается <a>с вас</a>.",
+              "tell": "Расскажите Мере <a>несколько фактов</a> о себе.",
+              "becomes": "Каждый факт подсказывает, <a>что искать</a>.",
+              "haystack": "Каждый день тысячи изданий по всему миру выпускают <a>сотни тысяч</a> новостей.",
+              "picks": "Мера собирает все <a>подходящие новости</a> по вашему профилю.",
+              "reads": "Потом Мера их читает, <a>оставляет нужное</a> и убирает лишнее,",
+              "why": "и пишет вам <a>короткую записку, почему</a>.",
+              "private": "То, что Мера знает о вас, <a>остаётся на вашем телефоне</a>."
+            },
+            "fact": {
+              "nurse": "Я медсестра",
+              "utrecht": "Живу в Утрехте",
+              "kids": "Двое детей в школе",
+              "cycle": "Езжу на работу на велосипеде",
+              "psv": "Болею за ПСВ",
+              "spanish": "Учу испанский",
+              "rent": "Снимаю квартиру",
+              "funds": "Индексные фонды",
+              "porto": "Родители в Порту",
+              "veg": "Вегетарианка",
+              "piano": "Играю на пианино",
+              "japan": "Япония весной"
+            },
+            "topic": {
+              "nursePay": "зарплата медсестёр",
+              "staffing": "персонал больниц",
+              "nightShift": "правила ночных смен",
+              "housing": "жильё в Утрехте",
+              "council": "городской совет",
+              "holidays": "школьные каникулы",
+              "bikeLanes": "велодорожки",
+              "railStrikes": "забастовки на железной дороге",
+              "eredivisie": "Эредивизи",
+              "languageApps": "приложения для языков",
+              "rentRules": "правила аренды",
+              "energyBills": "счета за свет и газ",
+              "interestRates": "процентные ставки",
+              "portoFlights": "рейсы в Порту",
+              "foodPrices": "цены на еду",
+              "concerts": "концерты",
+              "japanTravel": "поездки в Японию",
+              "yenRate": "курс иены"
+            },
+            "pill": {
+              "trending": "В тренде",
+              "fake": "Может быть фейком",
+              "screenTime": "5 часов в день",
+              "rage": "Чтобы вас разозлить"
+            },
+            "misc": {
+              "healthDesk": "Здоровье",
+              "cityNews": "Новости города",
+              "celebNews": "Новости звёзд",
+              "markets": "Рынки",
+              "education": "Образование",
+              "high": "Высокая",
+              "med": "Средняя"
+            }
+          }
+        }
+      }
+    }
+  },
+  "th": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "ข่าวส่วนใหญ่<a>ไม่เกี่ยวกับคุณ</a>",
+              "you": "เมร่า เริ่มต้นจาก<a>คุณ</a>",
+              "tell": "เล่า<a>เรื่องจริง</a>ของคุณสักสองสามอย่างให้ เมร่า ฟัง",
+              "becomes": "แต่ละเรื่องกลายเป็น<a>สิ่งที่ต้องหา</a>",
+              "haystack": "ทุกวันมีข่าว<a>หลายแสนข่าว</a>ออกมาจากสำนักข่าวนับพันแห่งทั่วโลก",
+              "picks": "เมร่า ดึง<a>ข่าวที่เกี่ยวกับคุณ</a>มาทั้งหมดตามโปรไฟล์ของคุณ",
+              "reads": "จากนั้น เมร่า อ่านข่าวพวกนั้น <a>เก็บข่าวที่เข้ากับคุณ</a> ทิ้งข่าวที่ไม่ใช่",
+              "why": "แล้วเขียน<a>โน้ตบอกว่าทำไม</a>ให้คุณ",
+              "private": "สิ่งที่ เมร่า รู้เกี่ยวกับคุณ<a>อยู่ในโทรศัพท์ของคุณ</a>"
+            },
+            "fact": {
+              "nurse": "ฉันเป็นพยาบาล",
+              "utrecht": "ฉันอยู่ที่อูเทรคต์",
+              "kids": "ลูกสองคนยังเรียนอยู่",
+              "cycle": "ปั่นจักรยานไปทำงาน",
+              "psv": "ฉันเชียร์พีเอสวี",
+              "spanish": "กำลังเรียนภาษาสเปน",
+              "rent": "เช่าห้องอยู่",
+              "funds": "กองทุนดัชนี",
+              "porto": "พ่อแม่อยู่ที่ปอร์โต",
+              "veg": "กินมังสวิรัติ",
+              "piano": "ฉันเล่นเปียโน",
+              "japan": "ญี่ปุ่นหน้าใบไม้ผลิ"
+            },
+            "topic": {
+              "nursePay": "เงินเดือนพยาบาล",
+              "staffing": "คนทำงานในโรงพยาบาล",
+              "nightShift": "กฎกะดึก",
+              "housing": "ที่พักในอูเทรคต์",
+              "council": "สภาเมือง",
+              "holidays": "ปิดเทอม",
+              "bikeLanes": "เลนจักรยาน",
+              "railStrikes": "รถไฟหยุดงาน",
+              "eredivisie": "เอเรดิวิซี",
+              "languageApps": "แอปเรียนภาษา",
+              "rentRules": "กฎการเช่า",
+              "energyBills": "ค่าไฟ",
+              "interestRates": "อัตราดอกเบี้ย",
+              "portoFlights": "เที่ยวบินไปปอร์โต",
+              "foodPrices": "ราคาอาหาร",
+              "concerts": "คอนเสิร์ต",
+              "japanTravel": "เที่ยวญี่ปุ่น",
+              "yenRate": "ค่าเงินเยน"
+            },
+            "pill": {
+              "trending": "กำลังฮิต",
+              "fake": "อาจเป็นข่าวปลอม",
+              "screenTime": "วันละ 5 ชั่วโมง",
+              "rage": "ทำมาให้คุณโกรธ"
+            },
+            "misc": {
+              "healthDesk": "ข่าวสุขภาพ",
+              "cityNews": "ข่าวในเมือง",
+              "celebNews": "ข่าวคนดัง",
+              "markets": "ตลาดหุ้น",
+              "education": "การศึกษา",
+              "high": "สูง",
+              "med": "กลาง"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tr": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Çoğu haber <a>seninle ilgili değil</a>.",
+              "you": "Mera <a>seninle</a> başlar.",
+              "tell": "Mera'ya kendin hakkında birkaç <a>gerçek bilgi</a> anlat.",
+              "becomes": "Her biri <a>aranacak bir şeye</a> dönüşür.",
+              "haystack": "Her gün dünyadaki binlerce gazete ve siteden <a>yüz binlerce</a> haber çıkar.",
+              "picks": "Mera profilini kullanarak <a>sana uygun</a> bütün haberleri bulur.",
+              "reads": "Sonra Mera onları okur, <a>uyanları tutar</a> ve uymayanları atar,",
+              "why": "ve sana <a>nedenini anlatan bir not</a> yazar.",
+              "private": "Mera'nın senin hakkında bildikleri <a>telefonunda kalır</a>."
+            },
+            "fact": {
+              "nurse": "Hemşireyim",
+              "utrecht": "Utrecht'te yaşıyorum",
+              "kids": "İki çocuğum okulda",
+              "cycle": "İşe bisikletle gidiyorum",
+              "psv": "PSV'yi tutuyorum",
+              "spanish": "İspanyolca öğreniyorum",
+              "rent": "Kirada oturuyorum",
+              "funds": "Endeks fonları",
+              "porto": "Ailem Porto'da",
+              "veg": "Vejetaryenim",
+              "piano": "Piyano çalıyorum",
+              "japan": "İlkbaharda Japonya"
+            },
+            "topic": {
+              "nursePay": "hemşire maaşları",
+              "staffing": "hastane personeli",
+              "nightShift": "gece nöbeti kuralları",
+              "housing": "Utrecht'te ev",
+              "council": "belediye meclisi",
+              "holidays": "okul tatilleri",
+              "bikeLanes": "bisiklet yolları",
+              "railStrikes": "tren grevleri",
+              "eredivisie": "Eredivisie",
+              "languageApps": "dil uygulamaları",
+              "rentRules": "kira kuralları",
+              "energyBills": "enerji faturaları",
+              "interestRates": "faiz oranları",
+              "portoFlights": "Porto uçuşları",
+              "foodPrices": "gıda fiyatları",
+              "concerts": "konserler",
+              "japanTravel": "Japonya gezisi",
+              "yenRate": "yen kuru"
+            },
+            "pill": {
+              "trending": "Gündemde",
+              "fake": "Sahte olabilir",
+              "screenTime": "Günde 5 saat",
+              "rage": "Seni kızdırmak için"
+            },
+            "misc": {
+              "healthDesk": "Sağlık",
+              "cityNews": "Şehir haberleri",
+              "celebNews": "Magazin",
+              "markets": "Piyasalar",
+              "education": "Eğitim",
+              "high": "Yüksek",
+              "med": "Orta"
+            }
+          }
+        }
+      }
+    }
+  },
+  "uk": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Більшість новин <a>не про вас</a>.",
+              "you": "Мера починається <a>з вас</a>.",
+              "tell": "Розкажіть Мері <a>кілька фактів</a> про себе.",
+              "becomes": "Кожен факт підказує, <a>що шукати</a>.",
+              "haystack": "Щодня тисячі видань у всьому світі випускають <a>сотні тисяч</a> новин.",
+              "picks": "Мера збирає всі <a>потрібні новини</a> за вашим профілем.",
+              "reads": "Потім Мера їх читає, <a>залишає потрібне</a> і відкидає зайве,",
+              "why": "і пише вам <a>коротку записку, чому</a>.",
+              "private": "Те, що Мера знає про вас, <a>залишається на вашому телефоні</a>."
+            },
+            "fact": {
+              "nurse": "Я медсестра",
+              "utrecht": "Живу в Утрехті",
+              "kids": "Двоє дітей у школі",
+              "cycle": "Їжджу на роботу велосипедом",
+              "psv": "Вболіваю за ПСВ",
+              "spanish": "Вчу іспанську",
+              "rent": "Винаймаю квартиру",
+              "funds": "Індексні фонди",
+              "porto": "Батьки в Порту",
+              "veg": "Вегетаріанка",
+              "piano": "Граю на піаніно",
+              "japan": "Японія навесні"
+            },
+            "topic": {
+              "nursePay": "зарплати медсестер",
+              "staffing": "персонал лікарень",
+              "nightShift": "правила нічних змін",
+              "housing": "житло в Утрехті",
+              "council": "міська рада",
+              "holidays": "шкільні канікули",
+              "bikeLanes": "велодоріжки",
+              "railStrikes": "страйки на залізниці",
+              "eredivisie": "Ередивізі",
+              "languageApps": "застосунки для мов",
+              "rentRules": "правила оренди",
+              "energyBills": "рахунки за світло й газ",
+              "interestRates": "процентні ставки",
+              "portoFlights": "рейси до Порту",
+              "foodPrices": "ціни на їжу",
+              "concerts": "концерти",
+              "japanTravel": "подорожі до Японії",
+              "yenRate": "курс єни"
+            },
+            "pill": {
+              "trending": "У тренді",
+              "fake": "Може бути фейком",
+              "screenTime": "5 годин на день",
+              "rage": "Щоб вас розлютити"
+            },
+            "misc": {
+              "healthDesk": "Здоров'я",
+              "cityNews": "Новини міста",
+              "celebNews": "Новини зірок",
+              "markets": "Ринки",
+              "education": "Освіта",
+              "high": "Висока",
+              "med": "Середня"
+            }
+          }
+        }
+      }
+    }
+  },
+  "vi": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Phần lớn tin tức <a>không liên quan đến bạn</a>.",
+              "you": "Mera bắt đầu từ <a>bạn</a>.",
+              "tell": "Hãy kể cho Mera vài <a>điều có thật</a> về bạn.",
+              "becomes": "Mỗi điều trở thành <a>thứ cần tìm</a>.",
+              "haystack": "Mỗi ngày, hàng nghìn tờ báo trên thế giới đăng <a>hàng trăm nghìn</a> bài tin.",
+              "picks": "Mera dựa vào hồ sơ của bạn để lấy mọi <a>tin phù hợp</a>.",
+              "reads": "Rồi Mera đọc chúng, <a>giữ lại tin phù hợp</a> và bỏ phần còn lại,",
+              "why": "và viết cho bạn <a>vài dòng nói lý do</a>.",
+              "private": "Những gì Mera biết về bạn <a>ở lại trên điện thoại của bạn</a>."
+            },
+            "fact": {
+              "nurse": "Tôi là y tá",
+              "utrecht": "Tôi sống ở Utrecht",
+              "kids": "Hai con đang đi học",
+              "cycle": "Tôi đạp xe đi làm",
+              "psv": "Tôi mê PSV",
+              "spanish": "Đang học tiếng Tây Ban Nha",
+              "rent": "Tôi thuê nhà",
+              "funds": "Quỹ chỉ số",
+              "porto": "Bố mẹ ở Porto",
+              "veg": "Ăn chay",
+              "piano": "Tôi chơi piano",
+              "japan": "Nhật Bản mùa xuân"
+            },
+            "topic": {
+              "nursePay": "lương y tá",
+              "staffing": "nhân sự bệnh viện",
+              "nightShift": "quy định ca đêm",
+              "housing": "nhà ở Utrecht",
+              "council": "hội đồng thành phố",
+              "holidays": "lịch nghỉ học",
+              "bikeLanes": "làn xe đạp",
+              "railStrikes": "đình công đường sắt",
+              "eredivisie": "Eredivisie",
+              "languageApps": "ứng dụng học tiếng",
+              "rentRules": "quy định thuê nhà",
+              "energyBills": "hóa đơn điện",
+              "interestRates": "lãi suất",
+              "portoFlights": "vé bay đi Porto",
+              "foodPrices": "giá thực phẩm",
+              "concerts": "hòa nhạc",
+              "japanTravel": "du lịch Nhật Bản",
+              "yenRate": "tỷ giá yên"
+            },
+            "pill": {
+              "trending": "Đang thịnh hành",
+              "fake": "Có thể là giả",
+              "screenTime": "5 giờ mỗi ngày",
+              "rage": "Cố tình làm bạn tức"
+            },
+            "misc": {
+              "healthDesk": "Sức khỏe",
+              "cityNews": "Tin thành phố",
+              "celebNews": "Người nổi tiếng",
+              "markets": "Thị trường",
+              "education": "Giáo dục",
+              "high": "Cao",
+              "med": "Trung bình"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-CN": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "大多数新闻<a>和你无关</a>。",
+              "you": "梅拉从<a>你</a>开始。",
+              "tell": "告诉梅拉几件<a>关于你的真事</a>。",
+              "becomes": "每一件都会变成<a>要找的东西</a>。",
+              "haystack": "每天，全世界几千家媒体会发出<a>几十万</a>条新闻。",
+              "picks": "梅拉根据你的资料，找来所有<a>相关的新闻</a>。",
+              "reads": "然后梅拉一篇篇读，<a>留下适合你的</a>，扔掉不适合的，",
+              "why": "再给你<a>写一句话说明原因</a>。",
+              "private": "梅拉知道的关于你的事，<a>留在你的手机里</a>。"
+            },
+            "fact": {
+              "nurse": "我是护士",
+              "utrecht": "我住在乌得勒支",
+              "kids": "两个孩子在上学",
+              "cycle": "我骑车上班",
+              "psv": "我支持埃因霍温",
+              "spanish": "在学西班牙语",
+              "rent": "我租房住",
+              "funds": "指数基金",
+              "porto": "父母在波尔图",
+              "veg": "我吃素",
+              "piano": "我会弹钢琴",
+              "japan": "春天去日本"
+            },
+            "topic": {
+              "nursePay": "护士工资",
+              "staffing": "医院人手",
+              "nightShift": "夜班规定",
+              "housing": "乌得勒支住房",
+              "council": "市议会",
+              "holidays": "学校假期",
+              "bikeLanes": "自行车道",
+              "railStrikes": "铁路罢工",
+              "eredivisie": "荷甲",
+              "languageApps": "语言学习应用",
+              "rentRules": "租房规定",
+              "energyBills": "电费和燃气费",
+              "interestRates": "利率",
+              "portoFlights": "波尔图机票",
+              "foodPrices": "食品价格",
+              "concerts": "音乐会",
+              "japanTravel": "日本旅行",
+              "yenRate": "日元汇率"
+            },
+            "pill": {
+              "trending": "热门",
+              "fake": "可能是假的",
+              "screenTime": "每天5小时",
+              "rage": "故意惹你生气"
+            },
+            "misc": {
+              "healthDesk": "健康",
+              "cityNews": "城市新闻",
+              "celebNews": "娱乐新闻",
+              "markets": "财经",
+              "education": "教育",
+              "high": "高",
+              "med": "中"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-TW": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "大多數新聞<a>跟你無關</a>。",
+              "you": "梅拉從<a>你</a>開始。",
+              "tell": "告訴梅拉幾件<a>關於你的真事</a>。",
+              "becomes": "每一件都會變成<a>要找的東西</a>。",
+              "haystack": "每天，全世界幾千家媒體會發出<a>幾十萬</a>則新聞。",
+              "picks": "梅拉依照你的資料，找來所有<a>相關的新聞</a>。",
+              "reads": "接著梅拉一篇篇讀，<a>留下適合你的</a>，丟掉不適合的，",
+              "why": "再為你<a>寫一句話說明原因</a>。",
+              "private": "梅拉知道的關於你的事，<a>留在你的手機裡</a>。"
+            },
+            "fact": {
+              "nurse": "我是護理師",
+              "utrecht": "我住在烏特勒支",
+              "kids": "兩個孩子在上學",
+              "cycle": "我騎腳踏車上班",
+              "psv": "我支持燕豪芬",
+              "spanish": "在學西班牙文",
+              "rent": "我租房子住",
+              "funds": "指數型基金",
+              "porto": "爸媽住在波多",
+              "veg": "我吃素",
+              "piano": "我會彈鋼琴",
+              "japan": "春天去日本"
+            },
+            "topic": {
+              "nursePay": "護理師薪水",
+              "staffing": "醫院人力",
+              "nightShift": "夜班規定",
+              "housing": "烏特勒支住房",
+              "council": "市議會",
+              "holidays": "學校放假",
+              "bikeLanes": "自行車道",
+              "railStrikes": "鐵路罷工",
+              "eredivisie": "荷甲",
+              "languageApps": "語言學習應用程式",
+              "rentRules": "租屋規定",
+              "energyBills": "電費和瓦斯費",
+              "interestRates": "利率",
+              "portoFlights": "波多機票",
+              "foodPrices": "食品價格",
+              "concerts": "音樂會",
+              "japanTravel": "日本旅遊",
+              "yenRate": "日圓匯率"
+            },
+            "pill": {
+              "trending": "熱門",
+              "fake": "可能是假的",
+              "screenTime": "一天5小時",
+              "rage": "故意惹你生氣"
+            },
+            "misc": {
+              "healthDesk": "健康",
+              "cityNews": "城市新聞",
+              "celebNews": "娛樂新聞",
+              "markets": "財經",
+              "education": "教育",
+              "high": "高",
+              "med": "中"
+            }
+          }
+        }
+      }
+    }
+  },
+  "en": {}
+}

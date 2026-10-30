@@ -162,4 +162,11 @@ export interface TutorialChapter {
   readonly level: ChapterLevel;
   readonly icon: MaterialIconName;
   readonly slides: readonly TutorialSlide[];
+  /**
+   * Plays as a FILM (`mera-app/tutorials/film/`): start to finish like a video,
+   * no buttons, no interactions; the slides only carry its copy keys. The same
+   * film source is exported as video for promo (`mera-app/tutorials/export/`).
+   * Lets chapters convert one at a time; goes once every chapter is a film.
+   */
+  readonly flow?: true;
 }
