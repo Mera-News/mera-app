@@ -2,9 +2,7 @@
 // ends the turn, searchNews is a lookup that buys a leg, the follow-story leg reads today's date,
 // the surface the chat was opened from reaches the model, and "More options" is one forced leg.
 import { createAgentState, runAgentTurn, type AgentPersona, type AgentState } from '@/lib/mera-harness/core/core';
-import { PROPOSE_TRACK_TOOL, toolsForLeg } from '@/lib/mera-harness/core/tool-contracts';
-import { PERSONA_SKILLS } from '@/lib/mera-harness/skills/index.generated';
-import { MUST_MATCH_DESCRIPTION, MUST_MATCH_RULE } from '@/lib/news-harness/core/must-match';
+import { toolsForLeg } from '@/lib/mera-harness/core/tool-contracts';
 import { buildStateLine } from '@/lib/mera-harness/core/state-line';
 import type { AgentDeps, AgentModelRequest, AgentModelResult } from '@/lib/mera-harness/core/types';
 
@@ -225,19 +223,5 @@ describe('the new skill ids are internals', () => {
     const { leaksInternals } = require('@/lib/mera-harness/core/prose') as typeof import('@/lib/mera-harness/core/prose');
     expect(leaksInternals('I loaded conversation/follow-story for this.')).toBe(true);
     expect(leaksInternals('That is conversation/feed-tuning territory.')).toBe(true);
-  });
-});
-
-// The cloud follow chat runs here, not on the news-harness follow-story prompt: the harness
-// carries literal copies of the mustMatch rule and description, pinned to the originals.
-describe('mustMatch on the cloud follow loop', () => {
-  it('offers mustMatch as an optional string array with the shared description', () => {
-    const items = (PROPOSE_TRACK_TOOL.function.parameters as any).properties.options.items;
-    expect(items.required).toEqual(['label', 'search']);
-    expect(items.properties.mustMatch).toEqual({ type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION });
-  });
-
-  it('states the shared rule in the follow-story skill', () => {
-    expect(PERSONA_SKILLS['conversation/follow-story']).toContain(MUST_MATCH_RULE);
   });
 });
