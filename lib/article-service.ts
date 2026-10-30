@@ -804,39 +804,6 @@ export function __resetStoryKeySupport(): void {
     storyKeyUnsupported = false;
 }
 
-/**
- * True once the server rejected `PersonaTopicInput.mustMatch`: send persona
- * queries without it for the rest of the session (followed stories then match
- * on strictMatch alone, as before the field existed).
- */
-let mustMatchUnsupported = false;
-
-/** Test seam. */
-export function __resetMustMatchSupport(): void {
-    mustMatchUnsupported = false;
-}
-
-const withoutMustMatch = (query: PersonaQueryInput): PersonaQueryInput => ({
-    ...query,
-    topics: query.topics.map(({ mustMatch: _drop, ...topic }) => topic),
-});
-
-/** An unknown input key fails variable coercion: Apollo Server answers BAD_USER_INPUT, not GRAPHQL_VALIDATION_FAILED. */
-const MUST_MATCH_REJECTION_CODES = ['BAD_USER_INPUT', 'GRAPHQL_VALIDATION_FAILED'];
-
-function isMustMatchRejection(err: unknown): boolean {
-    const list = (err as { errors?: unknown })?.errors ?? (err as { graphQLErrors?: unknown })?.graphQLErrors;
-    if (!Array.isArray(list)) return false;
-    return list.some((e) => {
-        const { message, extensions } = (e ?? {}) as { message?: unknown; extensions?: { code?: unknown } };
-        return (
-            MUST_MATCH_REJECTION_CODES.includes(String(extensions?.code)) &&
-            typeof message === 'string' &&
-            message.includes('mustMatch')
-        );
-    });
-}
-
 /** One hydration chunk. Concurrent workers that fail before the latch lands each fall back on their own, which is harmless. */
 async function hydrateBatch(
     field: 'articlesForTopicsByIds' | 'articlesForStories',
@@ -1053,26 +1020,11 @@ export class ArticleService {
     private static async queryPersonaBatch(
         query: PersonaQueryInput,
     ): Promise<PersonaQueryResult> {
-        type Data = { articleIdsForPersona: PersonaQueryResult };
-        const carriesMustMatch = query.topics.some((t) => t.mustMatch != null);
-        if (carriesMustMatch && !mustMatchUnsupported) {
-            try {
-                const { data } = await client.query<Data>({
-                    query: GET_ARTICLE_IDS_FOR_PERSONA,
-                    variables: { query },
-                    fetchPolicy: 'no-cache',
-                    context: { expectedErrorCodes: MUST_MATCH_REJECTION_CODES },
-                });
-                return data?.articleIdsForPersona ?? { topicResults: [], headlineResults: [] };
-            } catch (error) {
-                if (!isMustMatchRejection(error)) throw error;
-                mustMatchUnsupported = true;
-                logger.info('[ArticleService] server has no PersonaTopicInput.mustMatch; sending without it this session');
-            }
-        }
-        const { data } = await client.query<Data>({
+        const { data } = await client.query<{
+            articleIdsForPersona: PersonaQueryResult;
+        }>({
             query: GET_ARTICLE_IDS_FOR_PERSONA,
-            variables: { query: carriesMustMatch ? withoutMustMatch(query) : query },
+            variables: { query },
             fetchPolicy: 'no-cache',
         });
         return data?.articleIdsForPersona ?? { topicResults: [], headlineResults: [] };

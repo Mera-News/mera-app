@@ -10,7 +10,6 @@ export * from './core/types';
 export * from './core/ports';
 export * from './core/proposals';
 export * from './core/config';
-export * from './core/must-match';
 // `asUntrusted` (the untrusted-text boundary) reaches the public surface
 // through prompts/prompts, which re-exports it. Exporting the module here
 // as well would be a duplicate export of every one of its names.

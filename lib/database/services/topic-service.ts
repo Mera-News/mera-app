@@ -12,8 +12,6 @@ import type FactModel from '../models/Fact';
 import type { TopicProvenance, TopicStatus } from '../models/Topic';
 import { planLlmTopicRows } from '../../news-harness/persona-management/topic-generation';
 import { DEFAULT_HARNESS_CONFIG } from '../../news-harness/core/config';
-import { normalizeMustMatch } from '@/lib/news-harness';
-import logger from '../../logger';
 
 const topicsCollection = database.get<TopicModel>('topics');
 
@@ -46,59 +44,6 @@ const NOT_STAGED = Q.where('pending_delete_at', null);
 /** Lowercase + trim + collapse whitespace — the dedup + article-match key. */
 export function normalizeTopicText(s: string): string {
   return normalizeKey(s);
-}
-
-/** Stored form of must-match names: JSON of the normalized list, null when it is empty. */
-function mustMatchJsonFor(names: unknown): string | null {
-  const list = normalizeMustMatch(names);
-  return list.length > 0 ? JSON.stringify(list) : null;
-}
-
-/**
- * Write a followed story's must-match names onto its topic row: the one writer
- * of `must_match_json` (the story_names job calls it). Only a non-retired
- * 'tracked' row takes them, and empty names change nothing. Never throws; true
- * when the row was written.
- */
-export async function setTrackedMustMatch(topicId: string, names: unknown): Promise<boolean> {
-  const json = mustMatchJsonFor(names);
-  if (!json) return false;
-  try {
-    const row = await topicsCollection.find(topicId);
-    if (row.provenance !== 'tracked' || row.status === 'retired' || row.mustMatchJson === json) {
-      return false;
-    }
-    await database.write(async () => {
-      await row.update((t) => {
-        t.mustMatchJson = json;
-      });
-    });
-    return true;
-  } catch (err) {
-    logger.warn('[topic-service] setTrackedMustMatch failed', { topicId, error: String(err) });
-    return false;
-  }
-}
-
-/**
- * The live tracked rows among `topicIds` that still have no must-match names:
- * the story_names job's work list (a follow, a re-follow, the backfill). Live
- * means provenance 'tracked', not retired and not staged for delete.
- */
-export async function getTrackedTopicsWithoutNames(topicIds: string[]): Promise<TopicModel[]> {
-  const ids = [...new Set(topicIds.filter(Boolean))];
-  if (ids.length === 0) return [];
-  const rows = await topicsCollection
-    .query(
-      Q.where('id', Q.oneOf(ids)),
-      Q.where('provenance', 'tracked'),
-      Q.where('status', Q.notEq('retired')),
-      NOT_STAGED,
-    )
-    .fetch();
-  return rows.filter(
-    (r) => r.provenance === 'tracked' && r.status !== 'retired' && r.pendingDeleteAt == null && r.mustMatch.length === 0,
-  );
 }
 
 export interface CreateTopicInput {

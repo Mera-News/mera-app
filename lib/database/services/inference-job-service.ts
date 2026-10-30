@@ -16,8 +16,6 @@ const DEFAULT_PRIORITY: Record<InferenceJobType, number> = {
   // Naming a followed story — a background nicety like persona_summary. Runs at
   // the same low priority so it never contends with topic generation.
   story_headline: 20,
-  // A followed story's mustMatch names: a background nicety like story_headline.
-  story_names: 20,
   // Migrating a legacy follow to the topic model — a background nicety, same low
   // priority as story_headline so it never contends with topic generation.
   tracked_story_migrate: 20,
@@ -192,26 +190,19 @@ export async function hasPendingJob(
   matchKey: string,
   matchValue: string,
 ): Promise<boolean> {
-  // Keep this one await: triggerTopicGeneration fires it without awaiting, and an
-  // extra tick here moved its enqueue's create under a concurrent query, which
-  // WatermelonDB rejects ("sent over the bridge, but it's not cached").
-  const candidates = await pendingJobsQuery(jobType).fetch();
-  return candidates.some((job) => (job.payload as Record<string, unknown>)[matchKey] === matchValue);
-}
+  const candidates = await jobsCollection
+    .query(
+      Q.where('job_type', jobType),
+      Q.where('status', Q.oneOf(['pending', 'running'])),
+    )
+    .fetch();
 
-/** The id of a pending or running job of this type whose payload key matches, or null. */
-export async function findPendingJobId(
-  jobType: InferenceJobType,
-  matchKey: string,
-  matchValue: string,
-): Promise<string | null> {
-  const candidates = await pendingJobsQuery(jobType).fetch();
-  const match = candidates.find((job) => (job.payload as Record<string, unknown>)[matchKey] === matchValue);
-  return match ? match.id : null;
-}
+  const exists = candidates.some((job) => {
+    const payload = job.payload as Record<string, unknown>;
+    return payload[matchKey] === matchValue;
+  });
 
-function pendingJobsQuery(jobType: InferenceJobType) {
-  return jobsCollection.query(Q.where('job_type', jobType), Q.where('status', Q.oneOf(['pending', 'running'])));
+  return exists;
 }
 
 /**

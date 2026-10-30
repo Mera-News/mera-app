@@ -1585,17 +1585,5 @@ export default schemaMigrations({
         }),
       ],
     },
-    {
-      // A followed story's must-match names (JSON string[]), sent beside
-      // strictMatch. Optional: stories followed before v57 have none and
-      // behave as before. Roll-forward only, like every bump.
-      toVersion: 57,
-      steps: [
-        addColumns({
-          table: 'topics',
-          columns: [{ name: 'must_match_json', type: 'string', isOptional: true }],
-        }),
-      ],
-    },
   ],
 });

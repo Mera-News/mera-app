@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
 import { addFact } from '@/lib/database/services/fact-service';
 import { setHeadlineDepth } from '@/lib/database/services/headline-depth-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
-import { countAllTopics, createTopics, setTrackedMustMatch } from '@/lib/database/services/topic-service';
+import { countAllTopics } from '@/lib/database/services/topic-service';
 import { stepFetchTopicIds } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { graphql, HttpResponse, mockGql, server } from '@/test/helpers';
@@ -327,51 +327,6 @@ describe('what the persona request carries', () => {
     expect(shared[0]).not.toHaveProperty('strictMatch');
   });
 
-  it('sends a followed story\'s names as mustMatch beside strictMatch, and no key for one without names', async () => {
-    await seedTracked('Titan sub inquiry', 0.85, ['OceanGate', 'Titan']);
-    await seedTracked('Gaza ceasefire talks');
-    const sent = recordOps();
-
-    await stepFetchTopicIds('', makeCtx().ctx);
-
-    const [{ variables }] = await sent.named('GetArticleIdsForPersona');
-    const byText = new Map<string, Record<string, unknown>>(
-      variables.query.topics.map((t: { text: string }) => [t.text, t]),
-    );
-    expect(byText.get('Titan sub inquiry')).toEqual(
-      expect.objectContaining({ strictMatch: true, mustMatch: ['OceanGate', 'Titan'] }),
-    );
-    expect(byText.get('Gaza ceasefire talks')).toMatchObject({ strictMatch: true });
-    expect(byText.get('Gaza ceasefire talks')).not.toHaveProperty('mustMatch');
-  });
-
-  it('never sends mustMatch on a followed text shared with an interest (loose wins)', async () => {
-    await seedInterest('I follow gaza news', ['Gaza ceasefire']);
-    await seedTracked('gaza  ceasefire', 0.85, ['Hamas']);
-    const sent = recordOps();
-
-    await stepFetchTopicIds('', makeCtx().ctx);
-
-    const [{ variables }] = await sent.named('GetArticleIdsForPersona');
-    for (const t of variables.query.topics) expect(t).not.toHaveProperty('mustMatch');
-  });
-
-  it('a followed text held by two tracked rows sends the union of their names', async () => {
-    const fact = await addFact('I follow the sub story');
-    await seedTracked('Titan sub inquiry', 0.85, ['OceanGate']);
-    const [second] = await createTopics([
-      { factId: fact.id, text: 'titan sub inquiry', weight: 0.85, provenance: 'tracked' },
-    ]);
-    await setTrackedMustMatch(second.id, ['Titan']);
-    const sent = recordOps();
-
-    await stepFetchTopicIds('', makeCtx().ctx);
-
-    const [{ variables }] = await sent.named('GetArticleIdsForPersona');
-    const [titan] = variables.query.topics.filter((t: { text: string }) => /titan/i.test(t.text));
-    expect([...titan.mustMatch].sort()).toEqual(['OceanGate', 'Titan']);
-  });
-
   it('omits strictMatch entirely when nothing is followed', async () => {
     await seedInterest('I follow racing', ['formula 1']);
     const sent = recordOps();
@@ -380,49 +335,6 @@ describe('what the persona request carries', () => {
 
     const [{ variables }] = await sent.named('GetArticleIdsForPersona');
     for (const t of variables.query.topics) expect(t).not.toHaveProperty('strictMatch');
-  });
-});
-
-describe('a server without PersonaTopicInput.mustMatch', () => {
-  // Apollo Server answers an unknown input key with BAD_USER_INPUT (HTTP 400,
-  // variable coercion), not GRAPHQL_VALIDATION_FAILED.
-  const rejectMustMatch = (message = 'Variable "$query" got invalid value; Field "mustMatch" is not defined by type "PersonaTopicInput".') =>
-    graphql.query('GetArticleIdsForPersona', ({ variables }) => {
-      const carried = (variables.query?.topics ?? []).some((t: Record<string, unknown>) => 'mustMatch' in t);
-      if (!carried) return undefined;
-      return HttpResponse.json(
-        { errors: [{ message, extensions: { code: 'BAD_USER_INPUT' } }] },
-        { status: 400, headers: { 'Content-Type': 'application/graphql-response+json' } },
-      );
-    });
-  const carried = (v: Record<string, any>) => v.query.topics.some((t: object) => 'mustMatch' in t);
-
-  it('retries once without mustMatch, latches for the session, and never captures', async () => {
-    await seedTracked('Titan sub inquiry', 0.85, ['OceanGate']);
-    server.use(rejectMustMatch());
-    const sent = recordOps();
-
-    const out = await stepFetchTopicIds('', makeCtx().ctx);
-    await stepFetchTopicIds('', makeCtx().ctx);
-
-    const calls = await sent.named('GetArticleIdsForPersona');
-    expect(calls.map((c) => carried(c.variables))).toEqual([true, false, false]);
-    // strictMatch survives the strip
-    expect(calls[1].variables.query.topics[0]).toMatchObject({ strictMatch: true });
-    expect(out.serverArticleIds.length).toBeGreaterThan(0);
-    expect(logger.captureException).not.toHaveBeenCalled();
-  });
-
-  it('rethrows a BAD_USER_INPUT that does not name mustMatch, and never strips the field', async () => {
-    await seedTracked('Titan sub inquiry', 0.85, ['OceanGate']);
-    server.use(rejectMustMatch('topics: 219 exceeds the maximum of 200'));
-    const sent = recordOps();
-
-    await expect(stepFetchTopicIds('', makeCtx().ctx)).rejects.toBeDefined();
-
-    const calls = await sent.named('GetArticleIdsForPersona');
-    expect(calls.length).toBeGreaterThan(0);
-    expect(calls.every((c) => carried(c.variables))).toBe(true);
   });
 });
 

@@ -1,8 +1,6 @@
 import { Model } from '@nozbe/watermelondb';
 import { field, text, date } from '@nozbe/watermelondb/decorators';
 
-import { normalizeMustMatch } from '@/lib/news-harness';
-
 /**
  * Persona v3 weighted granular topic — replaces the `fact.metadata.topics`
  * string list. Long-lived, user-owned. `normalized_text` (lowercase/trim) is
@@ -48,19 +46,6 @@ export default class Topic extends Model {
    * must be restored to on undo.
    */
   @field('pending_delete_at') pendingDeleteAt!: number | null;
-  /** Raw JSON string[] of a followed story's must-match names (v57). Read
-   *  through `mustMatch`; null on every row followed before v57. */
-  @field('must_match_json') mustMatchJson!: string | null;
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
-
-  /** The must-match names, normalized; [] when absent or unparseable. */
-  get mustMatch(): string[] {
-    if (!this.mustMatchJson) return [];
-    try {
-      return normalizeMustMatch(JSON.parse(this.mustMatchJson));
-    } catch {
-      return [];
-    }
-  }
 }
