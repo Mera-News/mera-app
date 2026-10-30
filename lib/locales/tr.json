@@ -243,7 +243,11 @@
       "a11y": "Mera henüz okumadı",
       "divider": "Mera'nın seçtiği her şey bu kadar. Aşağıda Mera'nın henüz okumadığı makaleler var.",
       "heldToday": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
-      "heldTomorrow": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
+      "heldTomorrow": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur.",
+      "upgradeTitle_one": "Mera'nın okumadığı {{formatted}} makale",
+      "upgradeTitle_other": "Mera'nın okumadığı {{formatted}} makale",
+      "upgradeBodyStarter": "Bireysel her gün 25 kat daha fazla okur.",
+      "upgradeBodyIndividual": "Profesyonel her gün 4 kat daha fazla okur."
     },
     "show": {
       "title": "Göster",
@@ -268,7 +272,15 @@
       "waitingTomorrow_one": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera yarın {{time}} saatinde yeniden okur.",
       "waitingTomorrow_other": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera yarın {{time}} saatinde yeniden okur.",
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
-      "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur."
+      "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur.",
+      "gapFound_one": "Mera bugün senin için {{formatted}} makale buldu ve {{read}} tanesini okudu.",
+      "gapFound_other": "Mera bugün senin için {{formatted}} makale buldu ve {{read}} tanesini okudu.",
+      "gapWaiting_one": "{{formatted}} makale hâlâ bekliyor.",
+      "gapWaiting_other": "{{formatted}} makale hâlâ bekliyor.",
+      "gapResetToday": "Mera bugün {{time}} saatinde yeniden okur.",
+      "gapResetTomorrow": "Mera yarın {{time}} saatinde yeniden okur.",
+      "tryIndividual_one": "Bireysel planı {{count}} gün ücretsiz dene",
+      "tryIndividual_other": "Bireysel planı {{count}} gün ücretsiz dene"
     },
     "noteHeldToday": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni bugün {{time}} saatinde yazacak.",
     "noteHeldTomorrow": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni yarın {{time}} saatinde yazacak.",
@@ -920,7 +932,8 @@
     "restoreNoneApple": "Bu Apple Hesabında plan bulunamadı.",
     "restoreNoneGoogle": "Bu Google Hesabında plan bulunamadı.",
     "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
-    "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene."
+    "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene.",
+    "redeemCode": "Kod kullan"
   },
   "tabs": {
     "deck": "Akış",
@@ -1082,7 +1095,7 @@
     "starterTitle": "Starter bizden",
     "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
     "starterArticlesTitle": "Eşleşen her haber",
-    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Başlangıç, günde 10 MB bulut okuması içerir.",
+    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Başlangıç, günde 2 MB bulut okuması içerir.",
     "starterInterestsTitle": "Tüm ilgi alanlarınız",
     "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
     "starterChatTitle": "Sohbet ve doğruluk kontrolü",

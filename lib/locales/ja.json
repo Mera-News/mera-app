@@ -243,7 +243,10 @@
       "a11y": "メラがまだ読んでいません",
       "divider": "メラが選んだ記事は以上です。以下は、メラがまだ読んでいない記事です。",
       "heldToday": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。今日の{{time}}に、メラがまた読み始めます。",
-      "heldTomorrow": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。明日の{{time}}に、メラがまた読み始めます。"
+      "heldTomorrow": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。明日の{{time}}に、メラがまた読み始めます。",
+      "upgradeTitle_other": "メラがまだ読んでいない記事 {{formatted}}件",
+      "upgradeBodyStarter": "個人プランは毎日25倍多く読みます。",
+      "upgradeBodyIndividual": "プロフェッショナルは毎日4倍多く読みます。"
     },
     "show": {
       "title": "表示",
@@ -264,7 +267,12 @@
       "waitingToday_other": "メラは今日の読書を使い切りました。下の{{formatted}}件の記事はまだ未読です。メラは今日の{{time}}にまた読み始めます。",
       "waitingTomorrow_other": "メラは今日の読書を使い切りました。下の{{formatted}}件の記事はまだ未読です。メラは明日の{{time}}にまた読み始めます。",
       "bodyToday": "メラは今日の読書を使い切りました。今日の{{time}}に、メラがまた読み始めます。",
-      "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。"
+      "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。",
+      "gapFound_other": "メラは今日、あなた向けの記事を{{formatted}}件見つけ、{{read}}件を読みました。",
+      "gapWaiting_other": "{{formatted}}件がまだ待っています。",
+      "gapResetToday": "メラは今日の{{time}}にまた読み始めます。",
+      "gapResetTomorrow": "メラは明日の{{time}}にまた読み始めます。",
+      "tryIndividual_other": "個人プランを{{count}}日間無料で試す"
     },
     "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の理由を書きます。",
     "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の理由を書きます。",
@@ -913,7 +921,8 @@
     "restoreNoneApple": "このApple アカウントでプランが見つかりませんでした。",
     "restoreNoneGoogle": "このGoogle アカウントでプランが見つかりませんでした。",
     "restoreFailedAppStore": "App Store に接続できませんでした。もう一度お試しください。",
-    "restoreFailedPlayStore": "Google Play に接続できませんでした。もう一度お試しください。"
+    "restoreFailedPlayStore": "Google Play に接続できませんでした。もう一度お試しください。",
+    "redeemCode": "コードを使用"
   },
   "tabs": {
     "deck": "フィード",
@@ -1072,7 +1081,7 @@
     "starterTitle": "Starter は無料です",
     "starterIntro": "メラが何のためのものかを知っていただけるよう、すべてのアカウントにStarterプランの全機能を無料で含めました。",
     "starterArticlesTitle": "興味に合うすべての記事",
-    "starterArticlesBody": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。スターターには、1日10 MBのクラウド読書が含まれます。",
+    "starterArticlesBody": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。スターターには、1日2 MBのクラウド読書が含まれます。",
     "starterInterestsTitle": "あなたのすべての興味",
     "starterInterestsBody": "いくつでも追加できます。メラはそのすべてをフォローします。",
     "starterChatTitle": "チャットとファクトチェック",

@@ -578,10 +578,11 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     [readHeld.held, readHeld.resetAt, t],
   );
 
-  // The counts card names the articles waiting below while the tail shows.
+  // The counts card names the articles Mera has not read, under every Show
+  // filter: the held card's gap must not vanish because a filter hides the tail.
   useEffect(() => {
-    setNotReadWaiting(show === 'picks' || show === 'discarded' ? null : folded.notReadArticles);
-  }, [show, folded]);
+    setNotReadWaiting(folded.notReadArticles);
+  }, [folded]);
   useEffect(() => () => setNotReadWaiting(null), []);
 
   // ── Which cards just arrived ──────────────────────────────────────────────

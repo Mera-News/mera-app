@@ -243,7 +243,11 @@
       "a11y": "Nog niet gelezen door Mera",
       "divider": "Dat is alles wat Mera heeft gekozen. Hieronder staan artikelen die Mera nog niet heeft gelezen.",
       "heldToday": "Mera heeft dit nog niet gelezen omdat het lezen voor vandaag al op is. Mera leest vandaag weer om {{time}}.",
-      "heldTomorrow": "Mera heeft dit nog niet gelezen omdat het lezen voor vandaag al op is. Mera leest morgen weer om {{time}}."
+      "heldTomorrow": "Mera heeft dit nog niet gelezen omdat het lezen voor vandaag al op is. Mera leest morgen weer om {{time}}.",
+      "upgradeTitle_one": "{{formatted}} artikel dat Mera niet heeft gelezen",
+      "upgradeTitle_other": "{{formatted}} artikelen die Mera niet heeft gelezen",
+      "upgradeBodyStarter": "Individueel leest elke dag 25 keer meer.",
+      "upgradeBodyIndividual": "Professioneel leest elke dag 4 keer meer."
     },
     "show": {
       "title": "Tonen",
@@ -268,7 +272,15 @@
       "waitingTomorrow_one": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikel hieronder is nog niet gelezen. Mera leest morgen weer om {{time}}.",
       "waitingTomorrow_other": "Mera heeft het lezen voor vandaag gebruikt. {{formatted}} artikelen hieronder zijn nog niet gelezen. Mera leest morgen weer om {{time}}.",
       "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
-      "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}."
+      "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}.",
+      "gapFound_one": "Mera vond vandaag {{formatted}} artikel voor je en las er {{read}}.",
+      "gapFound_other": "Mera vond vandaag {{formatted}} artikelen voor je en las er {{read}}.",
+      "gapWaiting_one": "{{formatted}} wacht nog.",
+      "gapWaiting_other": "{{formatted}} wachten nog.",
+      "gapResetToday": "Mera leest vandaag weer om {{time}}.",
+      "gapResetTomorrow": "Mera leest morgen weer om {{time}}.",
+      "tryIndividual_one": "Probeer Individueel {{count}} dag gratis",
+      "tryIndividual_other": "Probeer Individueel {{count}} dagen gratis"
     },
     "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas vandaag na {{time}}.",
     "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas morgen na {{time}}.",
@@ -920,7 +932,8 @@
     "restoreNoneApple": "Geen abonnement gevonden op deze Apple-account.",
     "restoreNoneGoogle": "Geen abonnement gevonden op deze Google-account.",
     "restoreFailedAppStore": "De App Store kon niet worden bereikt. Probeer het opnieuw.",
-    "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw."
+    "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw.",
+    "redeemCode": "Code inwisselen"
   },
   "tabs": {
     "deck": "Feed",
@@ -1080,7 +1093,7 @@
     "starterTitle": "Starter krijg je van ons",
     "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
     "starterArticlesTitle": "Elk passend artikel",
-    "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Starter bevat 10 MB lezen in de cloud per dag.",
+    "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren. Starter bevat 2 MB lezen in de cloud per dag.",
     "starterInterestsTitle": "Al je interesses",
     "starterInterestsBody": "Voeg er zoveel toe als je wilt. Mera volgt ze allemaal.",
     "starterChatTitle": "Chat en factchecks",

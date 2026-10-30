@@ -60,6 +60,13 @@ export function readHoldSentenceKey(day: 'today' | 'tomorrow', waiting: number |
     : w ? ('feed.readHold.waitingTomorrow' as const) : ('feed.readHold.bodyTomorrow' as const);
 }
 
+/** The held card's gap (owner: the upgrade moment names what is waiting):
+ *  what Mera read and what still waits, only when both a found count and a
+ *  waiting count are known and above zero; else null and the plain sentence. */
+export function readHoldGap(found: number, read: number, waiting: number | null): { read: number; waiting: number } | null {
+  return found > 0 && waiting != null && waiting > 0 ? { read: Math.max(0, read), waiting } : null;
+}
+
 export type CardState = 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';
 
 export interface CardStateInput {

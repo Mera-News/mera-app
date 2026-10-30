@@ -1,5 +1,5 @@
 import type { FeedSyncState, SyncErrorCode } from '@/lib/scheduler/feed-sync/feed-sync-types';
-import { cardState, hasIssue, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, readHoldSentenceKey, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
+import { cardState, hasIssue, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, readHoldGap, readHoldSentenceKey, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -151,5 +151,18 @@ describe('readHoldSentenceKey', () => {
   it('falls back to the count-less sentence for zero or unknown', () => {
     expect(readHoldSentenceKey('today', null)).toBe('feed.readHold.bodyToday');
     expect(readHoldSentenceKey('tomorrow', 0)).toBe('feed.readHold.bodyTomorrow');
+  });
+});
+
+describe('readHoldGap', () => {
+  it('is what Mera read and what still waits, when both counts are known', () => {
+    expect(readHoldGap(120, 40, 80)).toEqual({ read: 40, waiting: 80 });
+    expect(readHoldGap(120, 0, 80)).toEqual({ read: 0, waiting: 80 });
+  });
+
+  it('is null without a found count or a waiting count (the plain sentence)', () => {
+    expect(readHoldGap(0, 0, 80)).toBeNull();
+    expect(readHoldGap(120, 40, null)).toBeNull();
+    expect(readHoldGap(120, 40, 0)).toBeNull();
   });
 });

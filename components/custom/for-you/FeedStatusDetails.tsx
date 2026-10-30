@@ -5,8 +5,9 @@
 //   state's title), scoring progress with its bar, Published / Analysed /
 //   Relevant so far, Last processed. Values roll to a new number
 //   (FinalFeedStatus #2); Reduce Motion swaps.
-// - `FeedStatusActions`: the read hold's See plans, Read on this phone instead
-//   and Show all articles, or a problem's Try now. Nothing in any other mode.
+// - `FeedStatusActions`: the read hold's Read on this phone instead and Show
+//   all articles, or a problem's Try now. Nothing in any other mode. The
+//   hold's upgrade is on level 1 (ReadHoldUpgradeButton), never here.
 //
 // The counts come from the shared minute-clock `useFeedCounts`, so they match
 // the sentence on level 1.
@@ -31,17 +32,14 @@ import {
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { formatCount } from '@/lib/algorithms/format-count';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp, useReducedMotion } from 'react-native-reanimated';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
-import { useSubscriptionTier } from '@/lib/stores/subscription-store';
 import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
-import { setFeedShow, setFeedView } from '@/components/custom/feed/feed-view-prefs';
-import { useNotReadWaiting } from './feed-status-card';
+import { setFeedShow, setFeedView, useFeedShow, useFeedView } from '@/components/custom/feed/feed-view-prefs';
 import { syncFailureKey, syncFailureOf } from './card-state';
 import { pickScoringProgress } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
@@ -156,16 +154,18 @@ export function AnalysingProgress() {
 export { limitUnlockTime } from '@/components/custom/cards/reset-time';
 
 /** The read hold's and the error's actions, under the details (the lead row
- *  says the state): See plans, Read on this phone instead and Show all
- *  articles at the hold, Try now on a problem. Nothing in any other mode. */
+ *  says the state): Read on this phone instead and Show all articles at the
+ *  hold, Try now on a problem. Nothing in any other mode. */
 export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }) => {
     const { t } = useTranslation();
-    const router = useRouter();
     const { onRefresh } = useFeedSyncRefresh();
     const colors = useColors();
     const styles = useStyles();
-    const tier = useSubscriptionTier();
-    const waiting = useNotReadWaiting();
+    // Show all articles only while a filter hides the not-read tail: the
+    // Sectioned view, Mera's picks or Discarded.
+    const view = useFeedView();
+    const show = useFeedShow();
+    const tailHidden = view !== 'continuous' || show === 'picks' || show === 'discarded';
     // Resolved once: whether this phone can run Mera's reading itself.
     const [canReadOnPhone, setCanReadOnPhone] = React.useState(false);
     React.useEffect(() => {
@@ -198,13 +198,6 @@ export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({
         return (
             <VStack className="mt-2" testID="feed-status-read-hold">
                 <HStack className="justify-end mt-2 flex-wrap" style={{ gap: 8 }}>
-                    {tier !== 'professional'
-                        ? pill(
-                              t('feedStatus.seePlans'),
-                              () => router.push('/logged-in/preferences/manage-subscription' as never),
-                              'feed-status-see-plans',
-                          )
-                        : null}
                     {canReadOnPhone
                         ? pill(
                               t('feedStatus.readOnPhone'),
@@ -214,7 +207,7 @@ export const FeedStatusActions: React.FC<{ readonly mode: FeedStatusMode }> = ({
                               true,
                           )
                         : null}
-                    {waiting === null
+                    {tailHidden
                         ? pill(
                               t('feed.show.showAll'),
                               () => {

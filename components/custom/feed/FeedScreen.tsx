@@ -82,7 +82,10 @@ import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCar
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import ForYouEmptyState, { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import { setFeedShow } from '@/components/custom/feed/feed-view-prefs';
-import { showsProcessingScene } from '@/components/custom/for-you/feed-status-card';
+import { showsProcessingScene, useNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
+import ReadHoldUpgradeButton, { useUpgradeFrom } from '@/components/custom/for-you/ReadHoldUpgradeButton';
+import { formatCount } from '@/lib/algorithms/format-count';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -144,6 +147,8 @@ const ARRIVAL_ENTERING = (delay: number) =>
 const FeedRow = React.memo(function FeedRow({
   item,
   divider,
+  dividerBody,
+  dividerAction,
   noteHeldLine,
   notReadLine,
   suggestion,
@@ -162,6 +167,9 @@ const FeedRow = React.memo(function FeedRow({
   /** The one divider between Mera's picks and the not-read tail, drawn above
    *  the first not-read card (Show: All only). */
   divider?: string;
+  /** Under the divider's title while the read hold is on: the upgrade line and button. */
+  dividerBody?: string;
+  dividerAction?: React.ReactNode;
   /** The held note line, resolved once by the list while the reading hold
    *  is set; undefined otherwise (a pending note shows the writing state). */
   noteHeldLine: string | undefined;
@@ -215,7 +223,7 @@ const FeedRow = React.memo(function FeedRow({
           : ARRIVAL_ENTERING(enterDelay)
       }
     >
-    {divider ? <AllCaughtUpCard title={divider} testID="feed-not-read-divider" /> : null}
+    {divider ? <AllCaughtUpCard title={divider} body={dividerBody} action={dividerAction} testID="feed-not-read-divider" /> : null}
     <ArticleSuggestionCard
       suggestion={suggestion}
       noteHeldLine={noteHeldLine}
@@ -308,14 +316,33 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     windowHeight,
   } = useFeedScreen({ isFocused, header });
 
-  const notReadDivider = t('feed.notRead.divider');
+  // While the read hold is on (not Professional), the divider is the upgrade
+  // moment: how many articles Mera has not read, what the next plan reads, and
+  // the one button. Otherwise the plain divider.
+  const upgradeFrom = useUpgradeFrom();
+  const notReadCount = useNotReadWaiting();
+  const appLanguage = useAppLanguage();
+  const tailUpgrade = upgradeFrom !== null && notReadCount != null && notReadCount > 0;
+  const notReadDivider = tailUpgrade
+    ? t('feed.notRead.upgradeTitle', { count: notReadCount, formatted: formatCount(notReadCount, appLanguage) })
+    : t('feed.notRead.divider');
+  const notReadDividerBody = tailUpgrade
+    ? t(upgradeFrom === 'individual' ? 'feed.notRead.upgradeBodyIndividual' : 'feed.notRead.upgradeBodyStarter')
+    : undefined;
+  const notReadDividerAction = useMemo(
+    () => (tailUpgrade ? <ReadHoldUpgradeButton testID="feed-tail-upgrade" align="center" /> : undefined),
+    [tailUpgrade],
+  );
   const renderItem = useCallback(
     ({ item, index }: { item: FeedEntry; index: number }) => {
       const display = resolveFeedRowDisplay(item, liveById, rowSessionRef.current);
+      const atDivider = show === 'all' && notReadDividerOn && index === picksCount && picksCount > 0;
       return (
       <FeedRow
         item={item}
-        divider={show === 'all' && notReadDividerOn && index === picksCount && picksCount > 0 ? notReadDivider : undefined}
+        divider={atDivider ? notReadDivider : undefined}
+        dividerBody={atDivider ? notReadDividerBody : undefined}
+        dividerAction={atDivider ? notReadDividerAction : undefined}
         noteHeldLine={noteHeldLine}
         notReadLine={notReadLine}
         suggestion={display.suggestion}
@@ -336,7 +363,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerOn, noteHeldLine, notReadLine],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerBody, notReadDividerAction, notReadDividerOn, noteHeldLine, notReadLine],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);

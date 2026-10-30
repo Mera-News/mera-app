@@ -135,9 +135,9 @@ What is being built is one new repository with four deployable parts, all source
 None of that is finished. It is described in the future tense on purpose.`,
 
   // ---------------------------------------------------------------------------
-  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes 10 MB of cloud reading a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
+  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes 2 MB of cloud reading a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
 
-Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day: Starter 10 MB, Individual 50 MB (5 times Starter) and Professional 200 MB (20 times Starter). Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
+Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day: Starter 2 MB, Individual 50 MB (25 times Starter) and Professional 200 MB (100 times Starter). Individual starts with a 7-day free trial for new subscribers, run by the App Store or Google Play. Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
 
 Why megabytes and not articles: Mera reads for you through end-to-end encryption, so it cannot see which articles it reads or how many. What it can measure is how much encrypted text it was sent to read, so that is what a plan counts.
 

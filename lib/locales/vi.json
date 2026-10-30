@@ -243,7 +243,10 @@
       "a11y": "Mera chưa đọc",
       "divider": "Đó là tất cả những gì Mera đã chọn. Bên dưới là các bài viết Mera chưa đọc.",
       "heldToday": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
-      "heldTomorrow": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
+      "heldTomorrow": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
+      "upgradeTitle_other": "{{formatted}} bài Mera chưa đọc",
+      "upgradeBodyStarter": "Gói Cá nhân đọc nhiều gấp 25 lần mỗi ngày.",
+      "upgradeBodyIndividual": "Gói Chuyên nghiệp đọc nhiều gấp 4 lần mỗi ngày."
     },
     "show": {
       "title": "Hiển thị",
@@ -264,7 +267,12 @@
       "waitingToday_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "waitingTomorrow_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
       "bodyToday": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
-      "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}."
+      "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
+      "gapFound_other": "Hôm nay Mera tìm thấy {{formatted}} bài cho bạn và đã đọc {{read}} bài.",
+      "gapWaiting_other": "{{formatted}} bài vẫn đang chờ.",
+      "gapResetToday": "Mera sẽ đọc lại hôm nay lúc {{time}}.",
+      "gapResetTomorrow": "Mera sẽ đọc lại ngày mai lúc {{time}}.",
+      "tryIndividual_other": "Dùng thử gói Cá nhân miễn phí {{count}} ngày"
     },
     "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} hôm nay.",
     "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} vào ngày mai.",
@@ -913,7 +921,8 @@
     "restoreNoneApple": "Không tìm thấy gói nào trên Tài khoản Apple này.",
     "restoreNoneGoogle": "Không tìm thấy gói nào trên Tài khoản Google này.",
     "restoreFailedAppStore": "Không thể kết nối với App Store. Hãy thử lại.",
-    "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại."
+    "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại.",
+    "redeemCode": "Đổi mã"
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -1072,7 +1081,7 @@
     "starterTitle": "Starter do chúng tôi mời",
     "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
     "starterArticlesTitle": "Mọi bài viết phù hợp",
-    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói Cơ bản bao gồm 10 MB lượt đọc trên đám mây mỗi ngày.",
+    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói Cơ bản bao gồm 2 MB lượt đọc trên đám mây mỗi ngày.",
     "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
     "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
     "starterChatTitle": "Trò chuyện và kiểm chứng",

@@ -248,7 +248,11 @@
       "a11y": "Pas encore lu par Mera",
       "divider": "Voilà tout ce que Mera a sélectionné. Ci-dessous, les articles que Mera n'a pas encore lus.",
       "heldToday": "Mera n'a pas encore lu cet article, car Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
-      "heldTomorrow": "Mera n'a pas encore lu cet article, car Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
+      "heldTomorrow": "Mera n'a pas encore lu cet article, car Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}.",
+      "upgradeTitle_one": "{{formatted}} article que Mera n'a pas lu",
+      "upgradeTitle_other": "{{formatted}} articles que Mera n'a pas lus",
+      "upgradeBodyStarter": "Individuel lit 25 fois plus chaque jour.",
+      "upgradeBodyIndividual": "Professionnel lit 4 fois plus chaque jour."
     },
     "show": {
       "title": "Afficher",
@@ -273,7 +277,15 @@
       "waitingTomorrow_one": "Mera a utilisé la lecture du jour. {{formatted}} article ci-dessous n'est pas encore lu. Mera reprend la lecture demain à {{time}}.",
       "waitingTomorrow_other": "Mera a utilisé la lecture du jour. {{formatted}} articles ci-dessous ne sont pas encore lus. Mera reprend la lecture demain à {{time}}.",
       "bodyToday": "Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
-      "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}."
+      "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}.",
+      "gapFound_one": "Mera a trouvé {{formatted}} article pour vous aujourd'hui et en a lu {{read}}.",
+      "gapFound_other": "Mera a trouvé {{formatted}} articles pour vous aujourd'hui et en a lu {{read}}.",
+      "gapWaiting_one": "{{formatted}} attend encore.",
+      "gapWaiting_other": "{{formatted}} attendent encore.",
+      "gapResetToday": "Mera reprend la lecture aujourd'hui à {{time}}.",
+      "gapResetTomorrow": "Mera reprend la lecture demain à {{time}}.",
+      "tryIndividual_one": "Essayer Individuel gratuitement pendant {{count}} jour",
+      "tryIndividual_other": "Essayer Individuel gratuitement pendant {{count}} jours"
     },
     "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison aujourd'hui après {{time}}.",
     "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison demain après {{time}}.",
@@ -925,7 +937,8 @@
     "restoreNoneApple": "Aucun forfait trouvé sur ce compte Apple.",
     "restoreNoneGoogle": "Aucun forfait trouvé sur ce compte Google.",
     "restoreFailedAppStore": "Impossible de joindre l'App Store. Réessayez.",
-    "restoreFailedPlayStore": "Impossible de joindre Google Play. Réessayez."
+    "restoreFailedPlayStore": "Impossible de joindre Google Play. Réessayez.",
+    "redeemCode": "Utiliser un code"
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -1086,7 +1099,7 @@
     "starterTitle": "Starter est offert",
     "starterIntro": "Pour que vous voyiez à quoi sert Mera, chaque compte inclut désormais le forfait Starter complet, sans frais.",
     "starterArticlesTitle": "Chaque article correspondant",
-    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Starter inclut 10 Mo de lecture dans le cloud par jour.",
+    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Starter inclut 2 Mo de lecture dans le cloud par jour.",
     "starterInterestsTitle": "Tous vos centres d'intérêt",
     "starterInterestsBody": "Ajoutez-en autant que vous voulez. Mera les suit tous.",
     "starterChatTitle": "Chat et vérifications",

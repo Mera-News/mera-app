@@ -243,7 +243,11 @@
       "a11y": "Noch nicht von Mera gelesen",
       "divider": "Das war alles, was Mera ausgewählt hat. Darunter stehen Artikel, die Mera noch nicht gelesen hat.",
       "heldToday": "Mera hat das noch nicht gelesen, weil Mera das heutige Lesekontingent genutzt hat. Mera liest heute um {{time}} wieder.",
-      "heldTomorrow": "Mera hat das noch nicht gelesen, weil Mera das heutige Lesekontingent genutzt hat. Mera liest morgen um {{time}} wieder."
+      "heldTomorrow": "Mera hat das noch nicht gelesen, weil Mera das heutige Lesekontingent genutzt hat. Mera liest morgen um {{time}} wieder.",
+      "upgradeTitle_one": "{{formatted}} Artikel, den Mera nicht gelesen hat",
+      "upgradeTitle_other": "{{formatted}} Artikel, die Mera nicht gelesen hat",
+      "upgradeBodyStarter": "Einzelperson liest jeden Tag 25 Mal so viel.",
+      "upgradeBodyIndividual": "Professional liest jeden Tag 4 Mal so viel."
     },
     "show": {
       "title": "Anzeigen",
@@ -268,7 +272,15 @@
       "waitingTomorrow_one": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten ist noch ungelesen. Mera liest morgen um {{time}} wieder.",
       "waitingTomorrow_other": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten sind noch ungelesen. Mera liest morgen um {{time}} wieder.",
       "bodyToday": "Mera hat das heutige Lesekontingent genutzt. Mera liest heute um {{time}} wieder.",
-      "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder."
+      "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder.",
+      "gapFound_one": "Mera hat heute {{formatted}} Artikel für dich gefunden und {{read}} davon gelesen.",
+      "gapFound_other": "Mera hat heute {{formatted}} Artikel für dich gefunden und {{read}} davon gelesen.",
+      "gapWaiting_one": "{{formatted}} wartet noch.",
+      "gapWaiting_other": "{{formatted}} warten noch.",
+      "gapResetToday": "Mera liest heute um {{time}} wieder.",
+      "gapResetTomorrow": "Mera liest morgen um {{time}} wieder.",
+      "tryIndividual_one": "Einzelperson {{count}} Tag kostenlos testen",
+      "tryIndividual_other": "Einzelperson {{count}} Tage kostenlos testen"
     },
     "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund heute ab {{time}}.",
     "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund morgen ab {{time}}.",
@@ -920,7 +932,8 @@
     "restoreNoneApple": "Auf diesem Apple-Account wurde kein Tarif gefunden.",
     "restoreNoneGoogle": "Auf diesem Google-Konto wurde kein Tarif gefunden.",
     "restoreFailedAppStore": "Der App Store ist nicht erreichbar. Versuche es erneut.",
-    "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut."
+    "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut.",
+    "redeemCode": "Code einlösen"
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -1080,7 +1093,7 @@
     "starterTitle": "Starter geht auf uns",
     "starterIntro": "Damit du siehst, wofür Mera da ist, enthält jetzt jedes Konto den vollen Starter-Plan kostenlos.",
     "starterArticlesTitle": "Jeder passende Artikel",
-    "starterArticlesBody": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Der Starter-Tarif umfasst 10 MB tägliches Lesen in der Cloud.",
+    "starterArticlesBody": "Jeder Artikel, der zu deinen Interessen passt, landet in deinen Nachrichten. Mera liest sie, sortiert das Rauschen aus und hebt hervor, was wichtig ist. Der Starter-Tarif umfasst 2 MB tägliches Lesen in der Cloud.",
     "starterInterestsTitle": "Alle deine Interessen",
     "starterInterestsBody": "Füge so viele hinzu, wie du möchtest. Mera verfolgt jedes einzelne.",
     "starterChatTitle": "Chat und Faktenchecks",
