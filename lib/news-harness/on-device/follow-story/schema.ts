@@ -1,4 +1,5 @@
 import type { JsonSchema } from '@/lib/mera-protocol-toolkit/core/structured-json';
+import { MUST_MATCH_DESCRIPTION } from '../../core/must-match';
 
 /** Word cap on an option's display label. */
 export const MAX_OPTION_LABEL_WORDS = 6;
@@ -15,6 +16,8 @@ export const TRACK_OPTIONS_SCHEMA: JsonSchema = {
     properties: {
       label: { type: 'string', description: `The story name shown to the user, ${MAX_OPTION_LABEL_WORDS} words or fewer` },
       search: { type: 'string', description: `A search query of ${MAX_TRACK_SEARCH_WORDS} words or fewer` },
+      // Optional, after search: Apple's guided generation fills properties in schema order.
+      mustMatch: { type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION },
     },
     required: ['label', 'search'],
   },
@@ -23,6 +26,7 @@ export const TRACK_OPTIONS_SCHEMA: JsonSchema = {
 export interface TrackOptionReply {
   label: string;
   search: string;
+  mustMatch?: string[];
 }
 
 export interface FollowStoryReply {

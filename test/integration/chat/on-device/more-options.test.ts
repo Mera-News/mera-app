@@ -58,6 +58,18 @@ describe('runMoreTrackOptions', () => {
     expect(await run(ports({ options: [opt('Bridge Repairs', 'x')] }))).toEqual({ actions: [], reason: 'none' });
   });
 
+  it('carries each option\'s mustMatch names, normalized, and none when it has none', async () => {
+    const p = ports({
+      options: [
+        { label: 'Fresh Summit', search: 'Fresh summit', mustMatch: [' Fresh Summit ', 'fresh summit', 'FS'] },
+        opt('Fresh Broad', 'fresh broad'),
+      ],
+    });
+    const r = await run(p);
+    expect(r.actions[0].mustMatch).toEqual(['Fresh Summit']);
+    expect('mustMatch' in r.actions[1]).toBe(false);
+  });
+
   it('answers failed on a throwing writer', async () => {
     expect(await run(ports(new Error('boom')))).toEqual({ actions: [], reason: 'failed' });
   });

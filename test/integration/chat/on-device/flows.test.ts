@@ -13,6 +13,7 @@ import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { OnDeviceAgent } from '@/lib/llm/agents/on-device/types';
 import { FOLLOW_STORY_SURFACE } from '@/lib/news-harness/follow-story';
 import { countTokens, IDENTITY_LINE } from '@/lib/news-harness/on-device/shared';
+import { MUST_MATCH_DESCRIPTION, MUST_MATCH_RULE } from '@/lib/news-harness/core/must-match';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { recordVerdictFeedback } from '@/lib/database/services/article-feedback-service';
 import { FIXTURE_ACCOUNT } from '@/test/helpers';
@@ -128,6 +129,27 @@ describe('follow a story', () => {
     // The persisted record carries what the resumed card is rebuilt from.
     expect(lastAssistant()?.toolCalls?.[0].result).toMatchObject({ staged: true, chooseOne: true, proposalId: staged.id });
     expect(await activeTopicTexts()).toEqual([]);
+  });
+
+  it('offers mustMatch as optional, states its rule, and stages the names normalized', async () => {
+    answer({
+      reply: 'Pick the story to follow below.',
+      options: [
+        { label: 'The Named Summit', search: 'Named Summit', mustMatch: ['Named Summit', 'named summit', 'NS'] },
+        { label: 'The Broad Theme', search: 'broad theme' },
+      ],
+    });
+
+    await turn(new FollowStoryOnDeviceAgent(USER, SINGLE), 'the story about <event>');
+
+    const call = lastCall();
+    const items = JSON.parse(call.schemaJson!).properties.options.items;
+    expect(items.required).toEqual(['label', 'search']);
+    expect(items.properties.mustMatch).toEqual({ type: 'array', items: { type: 'string' }, description: MUST_MATCH_DESCRIPTION });
+    expect(call.prompt).toContain(MUST_MATCH_RULE);
+    const actions = proposal()!.actions;
+    expect(actions[0]).toMatchObject({ type: 'track_story', mustMatch: ['Named Summit'] });
+    expect('mustMatch' in actions[1]).toBe(false);
   });
 
   // The server matches a followed story's search against an English corpus and finds places by
