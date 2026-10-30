@@ -1,6 +1,6 @@
 // The read hold's ONE upgrade button, the same on every surface that shows it
 // (the Feed counts card's level 1, the not-read tail's block, the Settings
-// usage card): "Try Individual free for 7 days" when the store says this
+// usage card): "Try Individual free for 14 days" when the store says this
 // reader can have the trial, else "See plans". Either opens the store paywall
 // (`presentFreeTierPaywall`, which takes the purchase hold and refreshes
 // billing, so a plan rise lifts the hold).

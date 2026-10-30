@@ -1,5 +1,5 @@
 // Whether the store will give THIS reader a free Individual trial right now,
-// so the read hold's upgrade button can say "Try Individual free for 7 days"
+// so the read hold's upgrade button can say "Try Individual free for 14 days"
 // instead of "See plans". The stores run the trial; Mera only asks.
 //
 // Proof or nothing: an unknown, an error, a missing package or a paid intro

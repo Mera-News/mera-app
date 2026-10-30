@@ -199,7 +199,7 @@ describe('mera-explainer-content — plans', () => {
   });
 
   it('names the Individual trial, for new subscribers', () => {
-    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/Individual starts with a 7-day free trial for new subscribers/);
+    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/Individual starts with a 2-week free trial for new subscribers/);
   });
 
   it('says what the servers keep in the same terms as the plans', () => {
