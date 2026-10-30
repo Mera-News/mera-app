@@ -13,7 +13,7 @@ import { ScrollView, View, useWindowDimensions } from 'react-native';
 
 interface Props {
     readonly topics: readonly CanonicalTopic[];
-    /** The active page's facets (unfiltered counts). */
+    /** The active page's facets: they pick and order the rows. Counts are edition stories, not articles, so never shown. */
     readonly facets: readonly CanonicalTopicFacet[];
     readonly pick: string | null;
     readonly onPick: (id: string | null) => void;
@@ -45,7 +45,6 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
     );
 
     const rows = visibleTopics(topics, facets);
-    const total = facets.reduce((n, f) => n + f.count, 0);
     const picked = pick ? topics.find((tp) => tp.id === pick) : undefined;
     const pickedName = picked ? topicLabel(t, picked) : null;
     const base = clearance + MERA_BUTTON_BAR_GAP;
@@ -123,13 +122,12 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
                     {t('explore.topicFilter.sheetTitle')}
                 </Text>
                 <ScrollView testID="world-topic-list" style={{ maxHeight: windowHeight * LIST_MAX_SHARE }} bounces={false}>
-                    <Row testID="world-topic-row-all" label={t('explore.topicFilter.all')} count={total} selected={!pick} onPress={() => choose(null)} />
-                    {rows.map(({ topic, count }) => (
+                    <Row testID="world-topic-row-all" label={t('explore.topicFilter.all')} selected={!pick} onPress={() => choose(null)} />
+                    {rows.map(({ topic }) => (
                         <Row
                             key={topic.id}
                             testID={`world-topic-row-${topicSlug(topic.path)}`}
                             label={topicLabel(t, topic)}
-                            count={count}
                             selected={topic.id === pick}
                             onPress={() => choose(topic.id)}
                         />
@@ -140,7 +138,7 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
     );
 }
 
-function Row({ label, count, selected, onPress, testID }: { label: string; count: number; selected: boolean; onPress: () => void; testID: string }) {
+function Row({ label, selected, onPress, testID }: { label: string; selected: boolean; onPress: () => void; testID: string }) {
     const c = useColors();
     return (
         <Pressable
@@ -148,12 +146,11 @@ function Row({ label, count, selected, onPress, testID }: { label: string; count
             onPress={onPress}
             accessibilityRole="radio"
             accessibilityState={{ selected, checked: selected }}
-            accessibilityLabel={`${label}, ${count}`}
+            accessibilityLabel={label}
             style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 8 }}
         >
             {/* fontSize with its lineHeight: Text keeps its token's smaller lineHeight otherwise and clips. */}
             <Text style={{ flex: 1, color: c.ink, fontSize: 16, lineHeight: 22 }}>{label}</Text>
-            <Text style={{ color: c.ink3, fontSize: 14, lineHeight: 20 }}>{count}</Text>
             {selected ? <MaterialIcons name="check" size={20} color={c.accent} /> : null}
         </Pressable>
     );
