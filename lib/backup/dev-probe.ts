@@ -16,7 +16,7 @@
 import { Directory, Paths } from 'expo-file-system';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import { sha256 } from '@noble/hashes/sha2.js';
-import pako from 'pako';
+import * as pako from 'pako';
 import { Platform } from 'react-native';
 
 export interface ProbeCheck {

@@ -3,6 +3,19 @@
 // jest.setup.js; legacy-only mocks (expo/fetch, better-auth, storage, crypto,
 // console) stay in jest.setup.js.
 
+// react-aria (via gluestack-ui) patches window.screen.orientation at import
+// when NODE_ENV is test; the RN jest env defines window but not screen.
+if (typeof window !== 'undefined' && !window.screen) window.screen = {};
+
+// @expo/vector-icons loads its font on mount. Under SDK 58 the font require
+// resolves to an asset id expo-asset's registry does not hold in Jest, so every
+// icon render rejected with 'Module "1" is missing from the asset registry'.
+jest.mock('expo-font', () => ({
+  ...jest.requireActual('expo-font'),
+  loadAsync: jest.fn(() => Promise.resolve()),
+  isLoaded: jest.fn(() => true),
+}));
+
 // Suppress Expo Winter warnings and polyfills
 global.__ExpoImportMetaRegistry = {
   register: jest.fn(),

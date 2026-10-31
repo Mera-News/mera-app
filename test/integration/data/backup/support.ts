@@ -3,7 +3,7 @@
 // A device is seeded through the app's own services, exported through the real row source, and
 // restored through the real row sink, all on the in-memory DB. Only the file (a `MemoryFile`, or
 // the RNFS fake in `fakes.ts`) and the cloud are stand-ins.
-import pako from 'pako';
+import * as pako from 'pako';
 
 import database from '@/lib/database';
 import { MemoryFile } from '@/test/unit/data/backup/memory-file';

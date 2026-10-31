@@ -578,17 +578,14 @@ const cacheEvictionLink = new ApolloLink((operation, forward) => {
 const client = new ApolloClient({
     link: errorLink.concat(authSuccessLink.concat(retryLink.concat(cacheEvictionLink.concat(authLink.concat(httpLink))))),
     cache,
+    // errorPolicy stays Apollo's default 'none'; Apollo 4.3 types reject naming
+    // a default errorPolicy without a DeclareDefaultOptions augmentation.
     defaultOptions: {
         watchQuery: {
             fetchPolicy: 'cache-first',
-            errorPolicy: 'none',
         },
         query: {
             fetchPolicy: 'cache-first',
-            errorPolicy: 'none',
-        },
-        mutate: {
-            errorPolicy: 'none',
         },
     },
 });

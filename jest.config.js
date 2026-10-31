@@ -6,7 +6,7 @@ process.env.EXPO_PUBLIC_USE_RN_FETCH = '1';
 // Existing transform allowlist. `msw` is appended for the integration project
 // only: msw/node and its helper packages ship untranspiled ESM.
 const ALLOW =
-  '((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|better-auth|@better-auth|@apollo|graphql|nanostores|@noble|@gluestack-ui/.*|@legendapp/.*';
+  '((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|better-auth|@better-auth|@apollo|graphql|nanostores|rou3|jose|@noble|@gluestack-ui/.*|@legendapp/.*';
 const MSW_ALLOW =
   'msw|@mswjs|@bundled-es-modules|@open-draft|until-async|rettime|outvariant|strict-event-emitter|headers-polyfill|graphql';
 

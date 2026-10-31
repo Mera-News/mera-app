@@ -36,7 +36,7 @@
 //
 // IO and the database are injected. `lib/backup` stays free of native modules.
 
-import pako from 'pako';
+import * as pako from 'pako';
 
 import {
   BACKUP_TABLES,

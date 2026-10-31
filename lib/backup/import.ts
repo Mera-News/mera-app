@@ -25,7 +25,7 @@
 // IO, the database and the current schema are all injected. `lib/backup` stays
 // free of native modules.
 
-import pako from 'pako';
+import * as pako from 'pako';
 
 import { RESTORE_REPLACED_TABLES, isBackedUpSettingKey } from './allowlist';
 import { openBlob, type BlobSource } from './blob';
@@ -341,6 +341,11 @@ async function restore(options: ImportOptions): Promise<ImportResult> {
     let inflatedBytes = 0;
     const feed = async (frame: Uint8Array, isLast: boolean): Promise<void> => {
       inflate.push(frame, isLast);
+      // pako 3 reports a stream that ends early on the final push as Z_BUF_ERROR
+      // (pako 2 left err at 0); that is a cut-short backup, not a forged one.
+      if (isLast && inflate.err === pako.Z_BUF_ERROR) {
+        throw new BackupImportError('incomplete', `deflate stream ended early: ${inflate.msg}`);
+      }
       if (inflate.err) {
         throw new BackupImportError('tampered', `inflate failed (${inflate.err}): ${inflate.msg}`);
       }
@@ -369,10 +374,10 @@ async function restore(options: ImportOptions): Promise<ImportResult> {
     for (const line of splitter.flush()) await handleLine(line);
 
     // The blob's last-frame flag proves the CIPHERTEXT arrived whole; it says
-    // nothing about the deflate stream inside it. pako reports a truncated
-    // stream by simply producing less output — `err` stays 0 and `push` still
-    // returns true — so the only honest check is against the byte count the
-    // exporter recorded. This is what `header.plaintextBytes` is for.
+    // nothing about the deflate stream inside it. A stream cut at a deflate
+    // block boundary can still inflate cleanly to less output, so the byte
+    // count the exporter recorded stays the final check. This is what
+    // `header.plaintextBytes` is for.
     if (inflatedBytes !== header.plaintextBytes) {
       throw new BackupImportError(
         'incomplete',

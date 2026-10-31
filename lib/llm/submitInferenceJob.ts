@@ -25,7 +25,7 @@ import {
 } from '@/lib/e2ee/e2ee-service';
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { recordAuthFailure } from '@/lib/auth-failure-breaker';
-import pako from 'pako';
+import * as pako from 'pako';
 import { Directory, File, Paths } from 'expo-file-system';
 import { INFERENCE_ENDPOINT, DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
 import {
