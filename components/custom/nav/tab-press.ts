@@ -58,7 +58,7 @@ export function decideTabPressAction({
   canRefresh,
   isRefreshing,
 }: TabPressDecisionInput): TabPressAction {
-  // Redundant today — @react-navigation/core's useEventEmitter dispatches only
+  // Redundant today — expo-router's navigation event emitter dispatches only
   // to `items[target]` when `target` is defined, so a screen's listener already
   // only sees its own tab's event. Cheap insurance against that changing.
   if (!isForThisTab) return 'ignore';

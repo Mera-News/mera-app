@@ -2,10 +2,10 @@
 //
 // ## Why `useIsFocused` is not enough
 //
-// `@react-navigation/native`'s `useIsFocused()` THROWS outside a navigator:
+// React Navigation's `useIsFocused()` THROWS outside a navigator:
 // it calls `useNavigation()`, which raises "Couldn't find a navigation object"
 // when there is no navigation context (see
-// node_modules/@react-navigation/core/src/useIsFocused.tsx). That is not a
+// the core package behind expo-router/react-navigation). That is not a
 // theoretical case in this app — `NativeUpdateGate` renders `ForceUpdateScreen`
 // from OUTSIDE the `<Stack>` in `app/_layout.tsx`, and `FullScreenErrorFallback`
 // can render above the navigator when the failing boundary is high enough. A
@@ -36,7 +36,7 @@
 
 import { useContext, useEffect, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
-import { NavigationContext } from '@react-navigation/native';
+import { NavigationContext } from 'expo-router/react-navigation';
 
 /**
  * `useIsFocused()` that returns `true` instead of throwing when there is no

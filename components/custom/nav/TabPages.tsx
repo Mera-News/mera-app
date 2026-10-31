@@ -21,7 +21,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { hapticSelection } from '@/lib/haptics';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
-import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from 'expo-router';
 import { scrollToTopWithRetry } from '@/components/custom/feed/scroll-to-top-with-retry';
 import {
   decideTabPressAction,

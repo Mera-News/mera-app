@@ -3,8 +3,7 @@ import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import FeedbackRequestModal from '@/components/custom/feedback-request/FeedbackRequestModal';
 import { isDuplicateFeedbackRequestScreen } from '@/components/custom/feedback-request/duplicate-screen';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { useRoute } from '@react-navigation/native';
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useLocalSearchParams, useNavigation, useRoute } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 
 /**

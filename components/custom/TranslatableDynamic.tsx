@@ -21,7 +21,7 @@ import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
-import { NavigationContext } from '@react-navigation/native';
+import { NavigationContext } from 'expo-router/react-navigation';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, View, useWindowDimensions } from 'react-native';

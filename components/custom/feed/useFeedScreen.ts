@@ -55,7 +55,7 @@ import {
   useFeedbackSheet,
   type VerdictStoreAdapter,
 } from './use-feedback-sheet';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from 'expo-router';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';

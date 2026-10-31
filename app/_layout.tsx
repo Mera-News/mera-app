@@ -9,8 +9,7 @@ import '@/lib/diagnostics/coldstart-timeline';
 import 'react-native-get-random-values';
 import { ApolloProvider } from '@apollo/client/react';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
-import { ThemeProvider } from '@react-navigation/native';
-import { router, Stack, useNavigationContainerRef, usePathname } from 'expo-router';
+import { router, Stack, ThemeProvider, useNavigationContainerRef, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -110,7 +109,7 @@ function AppRoot() {
     >
       <DatabaseProvider database={database}>
         <ApolloProvider client={client}>
-          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} backgroundColor={COLORS[themeMode].base} />
+          <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
           <ThemeProvider value={navigationTheme}>
             <View style={{ flex: 1 }}>
             <Stack

@@ -4,7 +4,7 @@
 // Kept apart from resume-spot.ts so the gate and the restart marker load no
 // React Navigation.
 
-import { useRoute } from '@react-navigation/native';
+import { useRoute } from 'expo-router';
 import { useEffect, useSyncExternalStore } from 'react';
 
 import { isRestoreInProgress, reportRestoredScreen, subscribeResumeSpot } from './resume-spot';

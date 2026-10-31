@@ -15,7 +15,7 @@ import {
     isDropped,
 } from '@/lib/translation-queue';
 
-jest.mock('@react-navigation/native', () => ({
+jest.mock('expo-router', () => ({
     useIsFocused: () => true,
     useNavigation: () => ({ isFocused: () => true }),
     useRoute: () => ({ key: 'library-1' }),

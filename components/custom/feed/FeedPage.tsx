@@ -14,7 +14,7 @@ import InterestsPage from '@/components/custom/for-you/InterestsPage';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import React, { useEffect } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from 'expo-router';
 import { resetStatusCard } from '@/components/custom/for-you/feed-status-card';
 
 import FeedScreen from './FeedScreen';

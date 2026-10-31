@@ -1,5 +1,5 @@
 // renderHookInScreen lets a hook that calls useIsFocused run, and focus is drivable.
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from 'expo-router';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { renderHookInScreen } from '@/test/helpers';
 
@@ -15,6 +15,11 @@ describe('renderHookInScreen', () => {
 
   it('can start blurred', () => {
     const { result } = renderHookInScreen(() => useIsFocused(), { focused: false });
+    expect(result.current).toBe(false);
+  });
+
+  it('the helper provides the NavigationContext that useIsFocusedSafe reads', () => {
+    const { result } = renderHookInScreen(() => useIsFocusedSafe(), { focused: false });
     expect(result.current).toBe(false);
   });
 });

@@ -7,7 +7,7 @@
 // app's black screens. Providing a dark theme whose background/card are the
 // app's dark background removes that flash.
 
-import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, type Theme } from 'expo-router';
 
 /** The app's dark background: pure black. Screens use `bg-black` and the root
  * Stack sets `contentStyle.backgroundColor` to '#000000'. */

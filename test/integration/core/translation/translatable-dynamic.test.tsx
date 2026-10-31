@@ -7,7 +7,7 @@ import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { createPageActiveSource, PageActiveContext } from '@/components/custom/nav/page-active';
-import { NavigationContext } from '@react-navigation/native';
+import { NavigationContext } from 'expo-router/react-navigation';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { initI18nEn } from '@/test/helpers';
 
@@ -139,7 +139,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 const mount = (el: React.ReactElement) => render(el, { wrapper: Wrapper });
 
 // The RN jest preset's host nodes never answer measureInWindow: put every node on screen.
-const MockNativeMethods = jest.requireActual('react-native/jest/MockNativeMethods').default;
+const MockNativeMethods = jest.requireActual('@react-native/jest-preset/jest/MockNativeMethods').default;
 
 const EN = 'Monsoon reaches Delhi';
 const HI = 'दिल्ली पहुंचा मानसून';

@@ -24,7 +24,7 @@ import { observeFacts } from '@/lib/database/services/fact-service';
 import { observeAll as observeLocations } from '@/lib/database/services/location-service';
 import logger from '@/lib/logger';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { skip } from 'rxjs/operators';
 

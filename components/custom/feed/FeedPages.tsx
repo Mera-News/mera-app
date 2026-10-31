@@ -18,7 +18,7 @@ import { setTabDot } from '@/components/custom/nav/current-surface';
 import { usePageOrder } from '@/lib/navigation/page-order';
 import { buildFeedList } from '@/lib/stores/feed-list-selector';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from 'expo-router';
 import NotificationsScreen from '@/components/custom/notifications/NotificationsScreen';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

@@ -17,7 +17,7 @@ jest.mock('@/lib/navigation/resume-spot', () => {
     noteActivePage: (...a: unknown[]) => mockNote(...a),
   };
 });
-jest.mock('@react-navigation/native', () => ({
+jest.mock('expo-router', () => ({
   useIsFocused: () => true,
   useNavigation: () => ({ isFocused: () => true }),
   useRoute: () => ({ key: 'library-1' }),

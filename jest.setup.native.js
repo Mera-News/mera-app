@@ -41,6 +41,15 @@ jest.mock('expo-router', () => ({
     push: jest.fn(),
     back: jest.fn(),
   })),
+  // Navigation hooks and theme: the real ones from the react-navigation entry (expo-router's root is ESM).
+  ...(({ useIsFocused, useNavigation, useRoute, ThemeProvider, DarkTheme, DefaultTheme }) => ({
+    useIsFocused,
+    useNavigation,
+    useRoute,
+    ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+  }))(jest.requireActual('expo-router/react-navigation')),
 }));
 
 // Mock expo-constants
