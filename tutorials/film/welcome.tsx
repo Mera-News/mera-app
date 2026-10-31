@@ -599,7 +599,7 @@ const st = StyleSheet.create({
     skel: { marginTop: 16, padding: 18, borderRadius: 24, backgroundColor: C.card },
     skelBar: { height: 15, borderRadius: 8, backgroundColor: C.bar, marginBottom: 12 },
     skelShort: { width: '60%', opacity: 0.6 },
-    chipRing: { ...StyleSheet.absoluteFillObject, margin: -10, borderRadius: 54, borderWidth: 6, borderColor: C.accent },
+    chipRing: { ...StyleSheet.absoluteFill, margin: -10, borderRadius: 54, borderWidth: 6, borderColor: C.accent },
     chipTap: { position: 'absolute', right: 24, top: -6, width: 96, height: 96, borderRadius: 48, borderWidth: 5, borderColor: C.ink, backgroundColor: 'rgba(255,255,255,0.3)' },
     webDot: { position: 'absolute', left: BOX_W / 2, top: BOX_H / 2 },
     hub: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#26262a', borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
