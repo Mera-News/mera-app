@@ -224,16 +224,30 @@ jest.mock('react-native/Libraries/AppState/AppState', () => ({
 // 9. Reanimated (its native worklets part cannot initialise in Node), safe area.
 jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
 // RN's codegen babel plugin leaves an `export var __INTERNAL_VIEW_CONFIG` in these
-// native-component specs under Jest ("Unexpected token 'export'"), and
-// reanimated's ScrollView pulls them in. Host-component strings stand in.
-jest.mock(
-  'react-native/src/private/specs_DEPRECATED/components/AndroidHorizontalScrollContentViewNativeComponent',
-  () => ({ __esModule: true, default: 'AndroidHorizontalScrollContentView' }),
-);
-jest.mock(
-  'react-native/src/private/specs_DEPRECATED/components/ActivityIndicatorViewNativeComponent',
-  () => ({ __esModule: true, default: 'ActivityIndicatorView' }),
-);
+// native-component specs under Jest ("Unexpected token 'export'" / "Must use import
+// to load ES Module"), and reanimated's ScrollView and RNGH 3 pull them in.
+// Host-component strings stand in. Mocked by absolute path: RN 0.88's exports map
+// hides src/private from the resolver, and RNGH 3 resolves its specs as .ts.
+const NATIVE_COMPONENT_SPECS = {
+  'react-native/src/private/components/scrollview/specs/AndroidHorizontalScrollContentViewNativeComponent.js':
+    'AndroidHorizontalScrollContentView',
+  'react-native/src/private/components/activityindicator/specs/ActivityIndicatorViewNativeComponent.js':
+    'ActivityIndicatorView',
+  'react-native-gesture-handler/lib/module/specs/RNGestureHandlerButtonNativeComponent.ts': 'RNGestureHandlerButton',
+  'react-native-gesture-handler/lib/module/specs/RNGestureHandlerDetectorNativeComponent.ts': 'RNGestureHandlerDetector',
+  'react-native-gesture-handler/lib/module/specs/RNGestureHandlerRootViewNativeComponent.ts': 'RNGestureHandlerRootView',
+  'react-native-reanimated/src/specs/SharedTransitionBoundaryNativeComponent.ts': 'SharedTransitionBoundary',
+};
+for (const [spec, host] of Object.entries(NATIVE_COMPONENT_SPECS)) {
+  // doMock: the hoisted jest.mock cannot close over the loop variable.
+  jest.doMock(require('path').join(__dirname, 'node_modules', spec), () => ({ __esModule: true, default: host }));
+}
+// Reanimated 4.7 under Jest picks JSReanimated (IS_JEST) but, on the native
+// platform jest-expo resolves, still runs initializers.native.ts, whose
+// setCSSEventHandler call throws in JSReanimated. Its only export is skipped.
+jest.doMock(require('path').join(__dirname, 'node_modules/react-native-reanimated/src/initializers.native.ts'), () => ({
+  initializeReanimatedModule: () => {},
+}));
 jest.mock('react-native-reanimated', () => ({
   ...require('react-native-reanimated/mock'),
   useComposedEventHandler: () => () => {},

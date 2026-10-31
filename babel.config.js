@@ -2,10 +2,12 @@ module.exports = function (api) {
   api.cache(true);
 
   return {
-    presets: [['babel-preset-expo'], 'nativewind/babel'],
+    // SDK 58's preset runs the decorators transform itself, after TS type
+    // stripping; a separate decorators plugin here runs first and breaks
+    // WatermelonDB's `@field x!: T` model fields.
+    presets: [['babel-preset-expo', { decorators: { legacy: true } }], 'nativewind/babel'],
 
     plugins: [
-      ['@babel/plugin-proposal-decorators', { legacy: true }],
       [
         'module-resolver',
         {

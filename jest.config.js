@@ -1,3 +1,8 @@
+// SDK 58 replaces the global fetch with expo/fetch unless this is set, and
+// jest-expo loads that runtime before any setup file runs, so it is set here
+// (workers inherit the parent's env). The shipped app sets the same flag.
+process.env.EXPO_PUBLIC_USE_RN_FETCH = '1';
+
 // Existing transform allowlist. `msw` is appended for the integration project
 // only: msw/node and its helper packages ship untranspiled ESM.
 const ALLOW =
