@@ -16,23 +16,16 @@ import { styles } from './styles';
 // ── 5 · Before you start ─────────────────────────────────────────────────────
 
 function ConsentStage({
-    mode,
     signInPath,
     expectedUserId,
-    onAgreedForEmail,
     onSignedIn,
     onDifferentAccount,
-    onUnsupportedToEmail,
     onBack,
 }: {
-    mode: 'device' | 'email';
     signInPath: DeviceSignInPath;
     expectedUserId: string | null;
-    onAgreedForEmail: () => void;
     onSignedIn: (result: DeviceSignInSuccess) => void;
     onDifferentAccount: (result: DeviceSignInSuccess) => void;
-    /** Only the gate has an email to fall back to; a new user stays here. */
-    onUnsupportedToEmail?: () => void;
     onBack: () => void;
 }) {
     const { t } = useTranslation();
@@ -43,10 +36,6 @@ function ConsentStage({
 
     const agree = async () => {
         if (working) return;
-        if (mode === 'email') {
-            onAgreedForEmail();
-            return;
-        }
         setWorking(true);
         setFailure(null);
         setUnsupported(false);
@@ -57,14 +46,11 @@ function ConsentStage({
         }
         setWorking(false);
         if (outcome.kind === 'different') onDifferentAccount(outcome.result);
-        else if (outcome.kind === 'unsupported') {
-            if (onUnsupportedToEmail) onUnsupportedToEmail();
-            else setUnsupported(true);
-        }
+        else if (outcome.kind === 'unsupported') setUnsupported(true);
         else setFailure(outcome.reason);
     };
 
-    const noticeKey = mode === 'device' ? consentNoticeKey(signInPath) : null;
+    const noticeKey = consentNoticeKey(signInPath);
     const failureText = failure ? t(deviceFailureKey(failure)) : '';
 
     return (

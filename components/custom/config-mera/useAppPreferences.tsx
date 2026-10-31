@@ -1,6 +1,5 @@
 import MeraToast from '@/components/custom/toast/MeraToast';
 import { useToast } from '@/components/ui/toast';
-import { authClient } from '@/lib/auth-client';
 import { backupCadence, backupProviderId } from '@/lib/backup/backup-settings';
 import { FAQ_URL } from '@/lib/config/branding';
 import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
@@ -12,8 +11,6 @@ import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { useTextScaleStore } from '@/lib/stores/text-scale-store';
 import { useUIStore } from '@/lib/stores/ui-store';
-import { useUserStore } from '@/lib/stores/user-store';
-import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
 import { toastManager } from '@/lib/toast-manager';
 import { TEXT_SCALE_STEPS } from '@/lib/algorithms/scale';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
@@ -44,14 +41,6 @@ export function useAppPreferences() {
     const processingMode = useMeraProtocolStore((s) => s.processingMode);
     const textScale = useTextScaleStore((s) => s.scale);
     const lockEnabled = usePinStore((s) => s.lockEnabled);
-    const { data: session } = authClient.useSession();
-    // LOCAL first: the stored email survives offline and auth blips; the
-    // session is the fallback. One derivation, shared with email-capture.
-    const cachedEmail = useUserStore((s) => s.userEmail);
-    const { displayEmail } = resolveAccountEmailView({
-        storedEmail: cachedEmail,
-        sessionUser: session?.user ?? null,
-    });
 
     const { closeModal, setModalProcessing } = useUIStore();
     const confirmDeleteAccount = useDeleteAccount();
@@ -169,7 +158,6 @@ export function useAppPreferences() {
         appLanguage,
         processingMode,
         lockEnabled,
-        displayEmail,
         confirmDeleteAccount,
         confirmLogout,
         devMode,

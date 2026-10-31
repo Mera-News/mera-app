@@ -10,7 +10,6 @@ import ReauthOnReturn from '@/components/custom/auth/ReauthOnReturn';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import MeraButtonHost from '@/components/custom/mera-button/MeraButtonHost';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
-import MoveToPhoneHost from '@/components/custom/auth/MoveToPhoneHost';
 import NotificationSheetHost from '@/components/custom/notifications/NotificationSheetHost';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
@@ -199,9 +198,6 @@ export default function LoggedInLayout() {
       {/* Renders nothing. Pops a live feedback request up once per request
           when nothing else is on screen; see its header for what it waits on. */}
       <FeedbackRequestAutoShowHost />
-      {/* Renders nothing until asked: the email account's move to phone sign-in
-          (inbox offer, confirm dialog, full-screen progress). */}
-      <MoveToPhoneHost />
       {/* Renders nothing until asked: What's new (an App updated row, or the
           "Mera updated" toast after a reload, wherever the reader is) and
           Update ready (an update row's Restart or Not now). */}

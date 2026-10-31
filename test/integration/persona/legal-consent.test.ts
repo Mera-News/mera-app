@@ -6,7 +6,6 @@ import {
     fetchLegalVersions,
     markLegalAcceptedThisProcess,
     needsConsent,
-    silentlyAcceptLegal,
     wasLegalAcceptedThisProcess,
 } from '@/components/custom/auth/legal-consent';
 import logger from '@/lib/logger';
@@ -14,7 +13,7 @@ import { __resetIdentityStateForTests } from '@/lib/security/identity-gate';
 import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
 import { appConfig as published } from '@/test/mock-backend/fixtures/graphql/appConfig';
-import { HttpResponse, graphql, http, mockGql, mockGqlError, server, signInFixtureAccount } from '@/test/helpers';
+import { HttpResponse, http, mockGql, mockGqlError, server, signInFixtureAccount } from '@/test/helpers';
 
 const ACCEPT_LEGAL = '*/api/auth/accept-legal';
 const CURRENT = { termsVersion: '2026-08-01', privacyVersion: '2026-08-01' };
@@ -154,47 +153,5 @@ describe('process latch', () => {
 
         expect(wasLegalAcceptedThisProcess(null)).toBe(false);
         expect(wasLegalAcceptedThisProcess(undefined)).toBe(false);
-    });
-});
-
-describe('silentlyAcceptLegal (email path)', () => {
-    it('marks the latch FIRST, then stamps the fetched versions', async () => {
-        await signInFixtureAccount();
-        let latchedWhenFetched: boolean | undefined;
-        server.use(
-            // First in line: records the latch as the versions request arrives, then lets the next handler answer.
-            graphql.operation(({ operationName }) => {
-                if (operationName === 'LegalConsentAppConfig') {
-                    latchedWhenFetched = wasLegalAcceptedThisProcess('email-user');
-                }
-            }),
-            appConfig({ termsVersion: 't1', privacyVersion: 'p1' }),
-        );
-        const bodies = recordAcceptLegal();
-
-        await silentlyAcceptLegal('email-user');
-
-        expect(latchedWhenFetched).toBe(true);
-        expect(wasLegalAcceptedThisProcess('email-user')).toBe(true);
-        expect(bodies).toEqual([{ termsVersion: 't1', privacyVersion: 'p1' }]);
-    });
-
-    it('keeps the latch even when the stamp cannot run (versions fetch fails): suppressed this process, re-derived next launch', async () => {
-        await signInFixtureAccount();
-        server.use(mockGqlError('LegalConsentAppConfig', 'INTERNAL_SERVER_ERROR'));
-        const bodies = recordAcceptLegal();
-
-        await silentlyAcceptLegal('email-user');
-
-        expect(wasLegalAcceptedThisProcess('email-user')).toBe(true);
-        expect(bodies).toEqual([]);
-    });
-
-    it('never throws, even when the POST fails at the network level', async () => {
-        await signInFixtureAccount();
-        server.use(appConfig({ termsVersion: 't1', privacyVersion: 'p1' }), http.post(ACCEPT_LEGAL, () => HttpResponse.error()));
-
-        await expect(silentlyAcceptLegal('email-user')).resolves.toBeUndefined();
-        expect(wasLegalAcceptedThisProcess('email-user')).toBe(true);
     });
 });

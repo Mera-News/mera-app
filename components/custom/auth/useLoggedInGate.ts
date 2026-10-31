@@ -21,7 +21,7 @@ import { useUserStore } from "@/lib/stores/user-store";
 import { probeInternetReachable, probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
-import { bindPhoneOnce } from "@/components/custom/auth/move-to-phone";
+import { bindPhoneOnce } from "@/components/custom/auth/bind-phone";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab, type StartupTab } from "@/lib/navigation/startup-tab";
 import { loadPageOrders } from "@/lib/navigation/page-order";
@@ -399,7 +399,7 @@ export function useLoggedInGate() {
                     void loginRevenueCat(userId).then((info) => {
                         if (info) useSubscriptionStore.getState().setCustomerInfo(info);
                     });
-                    // Binds this phone to an email account once, silently, so
+                    // Binds this phone to a former email account once, silently, so
                     // it still signs in after every email is deleted. Never
                     // blocks and never signs anyone out; retries next launch.
                     void bindPhoneOnce(userId);

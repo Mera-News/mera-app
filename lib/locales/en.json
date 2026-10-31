@@ -24,16 +24,7 @@
     "dontAskAgain": "Don't ask again"
   },
   "auth": {
-    "emailPlaceholder": "Enter your email address",
-    "otpPlaceholder": "Enter 6-digit code",
-    "invalidEmailDescription": "Please enter a valid email address",
-    "networkError": "Network error. Please try again.",
     "faq": "FAQ",
-    "invalidOtp": "Please enter a valid 6-digit OTP code",
-    "invalidOtpServer": "Invalid OTP code. Please try again.",
-    "otpError": "An error occurred during verification. Please try again.",
-    "resendCode": "Resend code",
-    "resendIn": "Resend in {{seconds}}s",
     "identitySwitchFailedTitle": "We couldn't finish switching accounts",
     "identitySwitchFailedBody": "Another account's data is still on this device. Mera has to clear it before you can go any further, and clearing it did not work this time.",
     "identitySwitchFailedWhy": "Nothing has been deleted yet. That data belongs to the other account, and clearing it removes it from this phone for good unless that account made a backup. Yours starts fresh once this device is clear.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Learn about Mera",
     "continue": "Continue",
     "sourceCode": "Source code",
-    "failedToSendBody": "Failed to send OTP",
-    "signingYouIn": "Signing you in…",
-    "signInWithoutEmail": "Sign in with this phone",
     "differentAccount": {
       "title": "Sign in with this phone?",
-      "body": "We'll wipe everything Mera keeps on this phone for {{email}}. The account itself is not deleted. Are you sure?",
       "continue": "Remove and continue",
       "useEmail": "Keep my account",
       "bodyGeneric": "We'll wipe everything Mera keeps on this phone for this account. The account itself is not deleted. Are you sure?"
@@ -63,36 +50,21 @@
       "beginMera": "Begin Mera",
       "beginTitle": "How do you want to begin?",
       "beginWithoutEmail": "Sign in with this phone",
-      "checkEmailTitle": "Check your email",
       "chooseLanguage": "Choose your language",
-      "codeA11y": "6-digit code",
-      "continueWithEmail": "Continue with email",
       "downloadA11y": "Download {{language}}",
-      "emailBody": "We'll email you a 6-digit code. No password to remember.",
       "gettingReadyIos": "Tap ↓ next to each language on the sheet below, then wait here. Keep Mera open.",
       "gettingReadyTitle": "Getting {{language}} ready",
       "notHereBody": "Download the language pack, or use one of the languages already here.",
       "notHereTitle": "{{language}} isn't on this phone yet",
       "phoneLanguage": "Your phone's language",
-      "sendCode": "Send code",
-      "useDifferentEmail": "Use a different email",
       "welcome": "Welcome to Mera",
-      "wrongCode": "That code didn't work. Check it, or resend a new one.",
       "noSheetTitle": "Your iPhone didn't open the download",
-      "noSheetBody": "Try again, or open Settings on your iPhone and go to General, then Language & Region, then Translation Languages to download {{language}}.",
-      "sentToIfAccount": "If this email has a Mera account, we've sent it a code. New to Mera? Use Sign in with this phone.",
-      "noCodeUsePhone": "Didn't get a code? Use Sign in with this phone."
+      "noSheetBody": "Try again, or open Settings on your iPhone and go to General, then Language & Region, then Translation Languages to download {{language}}."
     },
-    "emailLegacyHint": "Only for people who signed in with email before. New users can't sign in with email anymore.",
     "phoneCheckTemporary": "We couldn't check this phone right now. Try again in a minute.",
     "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
     "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
     "supportedPhones": "Supported phones",
-    "emailEnded": {
-      "title": "Email sign-in has ended",
-      "bodyIos": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from the App Store, and your saved articles come back from your backup.",
-      "bodyAndroid": "Email sign-in ended on {{date}}. Sign in with this phone to start again. Your plan comes back from Google Play, and your saved articles come back from your backup."
-    },
     "phoneNotSupported": "This phone isn't supported"
   },
   "account": {
@@ -903,7 +875,6 @@
     "errorDescription": "Failed to delete data. Please try again.",
     "keeps": {
       "title": "What Mera keeps about you",
-      "emailAndPlan": "Your email, until you switch to phone sign-in or until it is deleted on 30 October 2026, and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
       "plan": "Your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
       "emailIfAdded": "Your plan. Mera never asks for an email, and any email from before is deleted on 30 October 2026. Billing records from the App Store or Google Play are kept as long as the law requires.",
       "signInRecordIos": "A sign-in record for this phone, deleted with your account. Apple's check that this is the real app is not kept.",
@@ -3090,20 +3061,14 @@
     }
   },
   "gate": {
-    "enterCode": "Enter the code",
     "getHelp": "Get help",
     "noEmailBody": "Something went wrong signing in on this phone. Contact support, or reset this phone and sign in again.",
     "noEmailTitle": "There's a problem with your account",
     "offlineBody": "Mera needs a connection to check your account before it opens.",
     "offlineTitle": "You're offline",
     "opensByItself": "Opens by itself when you're back online",
-    "reauthBody": "Your sign-in expired. We'll send a code to the email on this account.",
-    "reauthTitle": "Sign in to continue",
     "unreachableBody": "The problem is on our side, not your phone. Mera keeps trying and opens when it's back.",
     "unreachableTitle": "Mera can't be reached",
-    "mismatchTitle": "This email belongs to a different account",
-    "mismatchBody": "Sign in with the email on this account, or get help.",
-    "mismatchOtherEmail": "Use another email",
     "contactSupport": "Contact support",
     "resetPhone": "Reset this phone and sign in again",
     "resetTitle": "Reset this phone?",
@@ -3114,29 +3079,6 @@
     "relevance": "Best match",
     "oldest": "Oldest first",
     "newest": "Newest first"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Sign in with this phone instead",
-    "dialogBody": "We'll sign you in with this phone, move your account to it and delete your email from our database.",
-    "dialogSettingsHint": "You can do this in Settings until {{date}}.",
-    "confirm": "Move account",
-    "cancel": "Not now",
-    "progressTitle": "Moving your account to this phone",
-    "steps": {
-      "checking": "Checking this phone",
-      "linking": "Linking your account",
-      "removing": "Removing your email",
-      "done": "Done"
-    },
-    "failed": "This didn't finish. Your account still works. Try again in a moment.",
-    "unsupportedIos": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in the App Store before then.",
-    "unsupportedAndroid": "This phone can't use phone sign-in, so Mera stops working on it on {{date}}. If you pay for Mera, cancel your plan in Google Play before then.",
-    "success": "Signed in with this phone. Your email is deleted.",
-    "close": "Close",
-    "inboxTitle": "Email sign-in ends {{date}}",
-    "inboxBody": "Switch to phone sign-in to keep your account.",
-    "settingsRow": "Move to phone sign-in",
-    "settingsRowHint": "Email sign-in ends {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

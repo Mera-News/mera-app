@@ -1,5 +1,5 @@
 // Seam test for useAuthScreen, the sign-in screen's logic: which stage the local rows open on,
-// the email track's hand-off, the "sign in with this phone" bookkeeping and its account-switch
+// the "sign in with this phone" bookkeeping and its account-switch
 // confirm, and Android Back on the gate. Real auth client, identity gate, stores and DB over MSW;
 // the mocks are the attestation SDK wrapper and (through spies) BackHandler.
 import { act, renderHook, waitFor } from '@testing-library/react-native';
@@ -10,7 +10,7 @@ import {
     __resetLegalConsentLatchForTests,
     wasLegalAcceptedThisProcess,
 } from '@/components/custom/auth/legal-consent';
-import { signInWithPhone, unsupportedExit, useAuthScreen, type DeviceSignInSuccess } from '@/components/custom/auth/useAuthScreen';
+import { signInWithPhone, useAuthScreen, type DeviceSignInSuccess } from '@/components/custom/auth/useAuthScreen';
 import * as settingService from '@/lib/database/services/setting-service';
 import { __resetDeviceAttestForTests } from '@/modules/mera-device-attest';
 import {
@@ -29,7 +29,6 @@ import {
     http,
     secureStoreDump,
     server,
-    signInFixtureAccount,
     useFakeClock,
 } from '@/test/helpers';
 import { appConfig } from '@/test/mock-backend/fixtures/graphql/appConfig';
@@ -58,8 +57,6 @@ const { email: EMAIL, userId: ME } = FIXTURE_ACCOUNT;
 // The account this device holds in the "different account" cases; the mock server signs ME in.
 const OTHER = 'bbbbbbbbbbbbbbbbbbbbbbbb';
 const INTRO_MS = 1200;
-// The email gate exists only before EMAIL_CUTOFF; tests of it pin the clock there.
-const BEFORE_CUTOFF = new Date(2026, 9, 29, 12).getTime();
 
 const replace = () => router.replace as jest.Mock;
 
@@ -107,8 +104,13 @@ describe('the stage the gate opens on', () => {
 
     it('no rows: loading, then the intro, then the welcome stage once the intro has held', async () => {
         useFakeClock(Date.now());
+        // Held on the device check: RNTL 14's awaited render settles every resolved read first.
+        let releaseDevice!: (supported: boolean) => void;
+        const deviceCheck = new Promise<boolean>((resolve) => { releaseDevice = resolve; });
+        mockAttest.isSupported.mockImplementation(() => deviceCheck);
         const hook = await open();
         expect(hook.result.current.stage).toBe('loading');
+        await act(async () => releaseDevice(true));
 
         for (let i = 0; i < 40 && hook.result.current.stage === 'loading'; i += 1) {
             await act(async () => {
@@ -127,23 +129,23 @@ describe('the stage the gate opens on', () => {
         expect(hook.result.current.stage).toBe('welcome');
     });
 
-    it('a cached email and id open the re-auth gate on the email', async () => {
-        await seedAccount(ME, EMAIL);
-        await settingService.setSetting('cached_support_id', 'support-1');
-
-        const hook = await open({ now: BEFORE_CUTOFF });
-
-        await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
-        expect(hook.result.current).toMatchObject({ cachedEmail: EMAIL, cachedUserId: ME, supportId: 'support-1' });
-    });
-
-    it('an id without an email opens the no-email gate', async () => {
+    it('a cached id opens the account-problem gate', async () => {
         await seedAccount(ME);
+        await settingService.setSetting('cached_support_id', 'support-1');
 
         const hook = await open();
 
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-no-email'));
-        expect(hook.result.current).toMatchObject({ cachedEmail: null, cachedUserId: ME });
+        expect(hook.result.current).toMatchObject({ cachedUserId: ME, supportId: 'support-1' });
+    });
+
+    it('an old email account (a leftover cached email beside the id) opens the same gate', async () => {
+        await seedAccount(ME, EMAIL);
+
+        const hook = await open();
+
+        await waitFor(() => expect(hook.result.current.stage).toBe('reauth-no-email'));
+        expect(hook.result.current.cachedUserId).toBe(ME);
     });
 
     it('an email without an id is not an account: the intro', async () => {
@@ -182,48 +184,25 @@ describe('the stage the gate opens on', () => {
             return hook;
         };
 
-        test('PE23 a failed settings read still offers sign-in without email', async () => {
+        test('PE23 a failed settings read still offers sign-in with this phone', async () => {
             const hook = await failOneRead();
 
-            expect(hook.result.current).toMatchObject({ availability: 'dev-bypass', canSignInWithoutEmail: true });
+            expect(hook.result.current.availability).toBe('dev-bypass');
         });
     });
 
-    it('offers phone sign-in only where the device can attest, and never on Forgot PIN', async () => {
+    it('offers phone sign-in where the device can attest', async () => {
         useDevBypass();
         const offered = await open();
         await waitFor(() => expect(offered.result.current.availability).toBe('dev-bypass'));
-        expect(offered.result.current).toMatchObject({ signInPath: 'dev-bypass', canSignInWithoutEmail: true });
-
-        const forgotPin = await open({ allowDeviceSignIn: false });
-        await waitFor(() => expect(forgotPin.result.current.availability).toBe('dev-bypass'));
-        expect(forgotPin.result.current.canSignInWithoutEmail).toBe(false);
+        expect(offered.result.current.signInPath).toBe('dev-bypass');
     });
 
-    it('a device that cannot attest offers the email path only', async () => {
+    it('a device that cannot attest has no phone sign-in to offer', async () => {
         const hook = await open();
 
         await waitFor(() => expect(hook.result.current.stage).not.toBe('loading'));
-        expect(hook.result.current).toMatchObject({ availability: 'unavailable', canSignInWithoutEmail: false });
-    });
-});
-
-describe('the email track', () => {
-    it('handleVerificationSuccess stamps the current legal versions and calls onLoginSuccess', async () => {
-        await signInFixtureAccount();
-        const stamps = record(ACCEPT_LEGAL);
-        const onLoginSuccess = jest.fn();
-        const hook = await renderHook(() => useAuthScreen({ onLoginSuccess }));
-        await act(() => hook.result.current.setPendingEmail('someone@example.com'));
-        expect(hook.result.current.pendingEmail).toBe('someone@example.com');
-
-        await act(() => hook.result.current.handleVerificationSuccess(ME));
-
-        expect(onLoginSuccess).toHaveBeenCalledWith(ME);
-        expect(hook.result.current.pendingEmail).toBe('');
-        expect(wasLegalAcceptedThisProcess(ME)).toBe(true);
-        await waitFor(() => expect(stamps).toHaveLength(1));
-        expect(stamps[0]).toEqual({ termsVersion: appConfig.termsVersion, privacyVersion: appConfig.privacyVersion });
+        expect(hook.result.current.availability).toBe('unavailable');
     });
 });
 
@@ -231,7 +210,7 @@ describe('signing in with this phone', () => {
     beforeEach(useDevBypass);
 
     it('the same account is signed in and booked: recorded, re-auth and fault cleared, consent latched and stamped', async () => {
-        await seedAccount(ME, EMAIL);
+        await seedAccount(ME);
         useUserStore.getState().setNeedsReauth(true);
         await settingService.setSetting(IDENTITY_FAULT_KEY, '1');
         const stamps = record(ACCEPT_LEGAL);
@@ -257,7 +236,7 @@ describe('signing in with this phone', () => {
     describe('a phone that opens a DIFFERENT account than the one on this device', () => {
         /** Signs in as the phone's account (ME) while the device holds OTHER; nothing may be booked. */
         async function signInOverOther() {
-            await seedAccount(OTHER, 'other@example.com');
+            await seedAccount(OTHER);
             useUserStore.getState().setNeedsReauth(true);
             await settingService.setSetting(IDENTITY_FAULT_KEY, '1');
             const stamps = record(ACCEPT_LEGAL);
@@ -432,44 +411,15 @@ describe('Android Back on the gate', () => {
         return handled;
     };
 
-    it('steps back from the code to the email and from the other-email step to the mismatch', async () => {
-        await seedAccount(ME, EMAIL);
-        const hook = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
-        await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
-
-        await act(() => hook.result.current.go('reauth-otp'));
-        expect(await pressBack()).toBe(true);
-        expect(hook.result.current.stage).toBe('reauth-email');
-
-        await act(() => hook.result.current.go('reauth-other-email'));
-        expect(await pressBack()).toBe(true);
-        expect(hook.result.current.stage).toBe('reauth-mismatch');
-
-        expect(await pressBack()).toBe(true);
-        expect(hook.result.current.stage).toBe('reauth-email');
-        expect(exitApp).not.toHaveBeenCalled();
-    });
-
-    it('an account without an email steps back to the no-email gate', async () => {
+    it('leaves the app from the gate itself, where there is nothing behind it', async () => {
         await seedAccount(ME);
         const hook = await renderHook(() => useAuthScreen({}));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-no-email'));
 
-        await act(() => hook.result.current.go('reauth-mismatch'));
-        expect(await pressBack()).toBe(true);
-
-        expect(hook.result.current.stage).toBe('reauth-no-email');
-    });
-
-    it('leaves the app from the gate itself, where there is nothing behind it', async () => {
-        await seedAccount(ME, EMAIL);
-        const hook = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
-        await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
-
         expect(await pressBack()).toBe(true);
 
         expect(exitApp).toHaveBeenCalledTimes(1);
-        expect(hook.result.current.stage).toBe('reauth-email');
+        expect(hook.result.current.stage).toBe('reauth-no-email');
     });
 
     it('registers nothing outside the gate, and drops its listener on the way out', async () => {
@@ -477,86 +427,12 @@ describe('Android Back on the gate', () => {
         await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
         expect(handlers).toHaveLength(0);
 
-        await seedAccount(ME, EMAIL);
-        const gate = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
-        await waitFor(() => expect(gate.result.current.stage).toBe('reauth-email'));
+        await seedAccount(ME);
+        const gate = await renderHook(() => useAuthScreen({}));
+        await waitFor(() => expect(gate.result.current.stage).toBe('reauth-no-email'));
         const registered = handlers.length;
         await gate.unmount();
 
         expect(removed).toBe(registered);
-    });
-});
-
-describe('the legacy email path and an unsupported phone', () => {
-    it('a new user whose phone cannot attest stays on Begin and has no email exit from consent', async () => {
-        const hook = await renderHook(() => useAuthScreen({}));
-        await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
-
-        expect(hook.result.current.canSignInWithoutEmail).toBe(false);
-        expect(hook.result.current.cachedEmail).toBeNull();
-        expect(unsupportedExit(hook.result.current.cachedEmail)).toBeNull();
-        expect(hook.result.current.stage).toBe('intro');
-    });
-
-    it('a cached-email user whose phone cannot attest still reaches the email gate', async () => {
-        await seedAccount(ME, EMAIL);
-        const hook = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
-        await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
-
-        expect(unsupportedExit(hook.result.current.cachedEmail, BEFORE_CUTOFF)).toBe('reauth-email');
-    });
-
-    it('the legacy email link still opens the email stage through consent', async () => {
-        const hook = await renderHook(() => useAuthScreen({}));
-        await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
-
-        await act(() => {
-            hook.result.current.setConsentFor('email');
-            hook.result.current.setConsentFrom('begin');
-            hook.result.current.go('consent');
-        });
-        expect(hook.result.current).toMatchObject({ stage: 'consent', consentFor: 'email' });
-        await act(() => hook.result.current.go('email'));
-        expect(hook.result.current.stage).toBe('email');
-    });
-});
-
-describe('after the email cutoff', () => {
-    const AFTER = new Date(2026, 9, 30, 0, 0, 1).getTime();
-
-    it('a cached email opens the gate before the cutoff and "email ended" from it', async () => {
-        await seedAccount(ME, EMAIL);
-        const before = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
-        await waitFor(() => expect(before.result.current.stage).toBe('reauth-email'));
-        expect(before.result.current.emailEnded).toBe(false);
-
-        const after = await renderHook(() => useAuthScreen({ now: AFTER }));
-        await waitFor(() => expect(after.result.current.stage).toBe('email-ended'));
-        expect(after.result.current.emailEnded).toBe(true);
-    });
-
-    it('an unsupported phone has no email gate to return to', async () => {
-        expect(unsupportedExit(EMAIL, BEFORE_CUTOFF)).toBe('reauth-email');
-        expect(unsupportedExit(EMAIL, AFTER)).toBeNull();
-    });
-
-    it('Android Back leaves the app from the ended screen', async () => {
-        await seedAccount(ME, EMAIL);
-        const exit = jest.spyOn(BackHandler, 'exitApp').mockImplementation(() => {});
-        let handler: (() => boolean | null | undefined) | undefined;
-        const add = jest.spyOn(BackHandler, 'addEventListener').mockImplementation(((_e: string, h: () => boolean) => {
-            handler = h;
-            return { remove: () => {} };
-        }) as never);
-        const hook = await renderHook(() => useAuthScreen({ now: AFTER }));
-        await waitFor(() => expect(hook.result.current.stage).toBe('email-ended'));
-
-        await act(() => {
-            handler?.();
-        });
-
-        expect(exit).toHaveBeenCalledTimes(1);
-        add.mockRestore();
-        exit.mockRestore();
     });
 });

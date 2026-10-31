@@ -5,7 +5,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { PRIVACY_URL } from '@/lib/config/branding';
-import { useUserStore } from '@/lib/stores/user-store';
 import { emailLooksAnonymous } from '@/lib/subscription/email-capture';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,37 +14,24 @@ import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import SupportIdCopy from './SupportIdCopy';
 
-/** Which account the card describes. `unknown` covers a store that has not
- *  hydrated and an offline launch with no session: the card then shows the
- *  generic list rather than guessing, and never a spinner or an error. */
-export type KeepsAccountKind = 'email' | 'no-email' | 'unknown';
+/** Which account the card describes. `unknown` covers an offline launch with
+ *  no session: the card then shows the generic list rather than guessing, and
+ *  never a spinner or an error. */
+export type KeepsAccountKind = 'no-email' | 'unknown';
 
 interface SessionUserLike {
     email?: string | null;
     isAnonymous?: boolean | null;
 }
 
-/**
- * Decide the account kind from what is on hand. A REAL stored email wins (it
- * is written only by an email sign-in or a confirmed attach); otherwise a
- * resolved session decides; with neither, the answer is unknown. A merely
- * missing email never counts as "no email", because offline an email account
- * can look exactly like that.
- */
-export function keepsAccountKind(
-    storedEmail: string | null | undefined,
-    sessionUser: SessionUserLike | null | undefined,
-): KeepsAccountKind {
-    if (storedEmail && !emailLooksAnonymous(storedEmail)) return 'email';
-    if (sessionUser) {
-        if (sessionUser.isAnonymous === true) return 'no-email';
-        if (sessionUser.email) return emailLooksAnonymous(sessionUser.email) ? 'no-email' : 'email';
-    }
+/** Decide the account kind from the session: a resolved one with no real
+ *  address is `no-email`; anything else is unknown. */
+export function keepsAccountKind(sessionUser: SessionUserLike | null | undefined): KeepsAccountKind {
+    if (sessionUser && (sessionUser.isAnonymous === true || emailLooksAnonymous(sessionUser.email))) return 'no-email';
     return 'unknown';
 }
 
 export type KeepsLineKey =
-    | 'manageData.keeps.emailAndPlan'
     | 'manageData.keeps.plan'
     | 'manageData.keeps.emailIfAdded'
     | 'manageData.keeps.signInRecordIos'
@@ -61,8 +47,6 @@ export function keepsLineKeys(kind: KeepsAccountKind, platform: string): KeepsLi
             ? 'manageData.keeps.signInRecordIos'
             : 'manageData.keeps.signInRecordAndroid';
     switch (kind) {
-        case 'email':
-            return ['manageData.keeps.emailAndPlan', 'manageData.keeps.usage', 'manageData.keeps.topics'];
         case 'no-email':
             return [
                 'manageData.keeps.plan',
@@ -94,11 +78,10 @@ const WhatMeraKeepsCard: React.FC = () => {
     const { t } = useTranslation();
     const colors = useColors();
     const [expanded, setExpanded] = useState(false);
-    const storedEmail = useUserStore((s) => s.userEmail);
     const { data: session } = authClient.useSession();
     const sessionUser = (session?.user ?? null) as SessionUserLike | null;
 
-    const kind = keepsAccountKind(storedEmail, sessionUser);
+    const kind = keepsAccountKind(sessionUser);
     const lines = keepsLineKeys(kind, Platform.OS);
 
     const title = t('manageData.keeps.title');

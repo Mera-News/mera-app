@@ -1,6 +1,6 @@
 import { deleteOldSuggestions } from '@/lib/database/services/article-suggestion-lifecycle';
 import { deleteOlderThan as deleteOldImpressions } from '@/lib/database/services/story-impression-service';
-import { deleteOlderThan as deleteOldNotifications } from '@/lib/database/services/notification-service';
+import { deleteByTypes as deleteNotificationsOfTypes, deleteOlderThan as deleteOldNotifications } from '@/lib/database/services/notification-service';
 import { deleteExpiredFactChecks } from '@/lib/database/services/fact-check-record-service';
 import { deleteOrphanedRetention } from '@/lib/database/services/saved-article-suggestion-service';
 import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
@@ -53,6 +53,9 @@ AppScheduler.register({
     if (notificationCount > 0) {
       ctx.log(`pruned ${notificationCount} notifications older than 90d`);
     }
+    // shortcut: the retired email-to-phone offer's inbox row (its copy and action are gone);
+    // delete this line once every such row is past the 90-day TTL above (from 2027-01-31).
+    await deleteNotificationsOfTypes(['move_to_phone']);
 
     const factCheckCount = await deleteExpiredFactChecks(
       Date.now() - FACT_CHECK_UNATTRIBUTED_TTL_MS,

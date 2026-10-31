@@ -188,7 +188,6 @@ beforeEach(() => {
     });
     useUserStore.setState({
         userId: null,
-        userEmail: null,
         userPersona: null,
         isLoading: false,
         lastFetchedAt: null,

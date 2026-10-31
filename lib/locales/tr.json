@@ -24,15 +24,6 @@
     "dontAskAgain": "Bir daha sorma"
   },
   "auth": {
-    "emailPlaceholder": "E-posta adresinizi girin",
-    "otpPlaceholder": "6 haneli kodu girin",
-    "invalidEmailDescription": "Lütfen geçerli bir e-posta adresi girin",
-    "networkError": "Ağ hatası. Lütfen tekrar deneyin.",
-    "invalidOtp": "Lütfen geçerli bir 6 haneli OTP kodu girin",
-    "invalidOtpServer": "Geçersiz OTP kodu. Lütfen tekrar deneyin.",
-    "otpError": "Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.",
-    "resendCode": "Kodu yeniden gönder",
-    "resendIn": "{{seconds}} saniye sonra yeniden gönder",
     "faq": "SSS",
     "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
     "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Mera'yı tanıyın",
     "continue": "Devam et",
     "sourceCode": "Kaynak kodu",
-    "failedToSendBody": "OTP gönderilemedi",
-    "signingYouIn": "Giriş yapılıyor…",
-    "signInWithoutEmail": "Bu telefonla giriş yap",
     "differentAccount": {
       "title": "Bu telefonla giriş yapılsın mı?",
-      "body": "Mera'nın bu telefonda {{email}} için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?",
       "continue": "Kaldır ve devam et",
       "useEmail": "Hesabımı koru",
       "bodyGeneric": "Mera'nın bu telefonda bu hesap için tuttuğu her şeyi sileceğiz. Hesabın kendisi silinmez. Emin misin?"
@@ -63,36 +50,21 @@
       "beginMera": "Mera'yı başlat",
       "beginTitle": "Nasıl başlamak istersiniz?",
       "beginWithoutEmail": "Bu telefonla giriş yap",
-      "checkEmailTitle": "E-postanızı kontrol edin",
       "chooseLanguage": "Dilinizi seçin",
-      "codeA11y": "6 haneli kod",
-      "continueWithEmail": "E-posta ile devam et",
       "downloadA11y": "{{language}} dilini indir",
-      "emailBody": "Size 6 haneli bir kodu e-postayla göndereceğiz. Hatırlanacak bir şifre yok.",
       "gettingReadyIos": "Alttaki pencerede her dilin yanındaki ↓ simgesine dokunun, sonra burada bekleyin. Mera'yı açık tutun.",
       "gettingReadyTitle": "{{language}} hazırlanıyor",
       "notHereBody": "Dil paketini indirin ya da burada zaten olan dillerden birini kullanın.",
       "notHereTitle": "{{language}} henüz bu telefonda yok",
       "phoneLanguage": "Telefonunuzun dili",
-      "sendCode": "Kodu gönder",
-      "useDifferentEmail": "Başka bir e-posta kullan",
       "welcome": "Mera'ya hoş geldiniz",
-      "wrongCode": "Bu kod işe yaramadı. Kontrol edin ya da yeni bir kod isteyin.",
       "noSheetTitle": "iPhone'unuz indirmeyi açamadı",
-      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin.",
-      "sentToIfAccount": "Bu e-posta bir Mera hesabına aitse, ona bir kod gönderdik. Mera'da yeni misin? \"Bu telefonla giriş yap\"ı kullan.",
-      "noCodeUsePhone": "Kod gelmedi mi? \"Bu telefonla giriş yap\"ı kullan."
+      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin."
     },
-    "emailLegacyHint": "Yalnızca daha önce e-postayla giriş yapanlar için. Yeni kullanıcılar artık e-posta ile devam edemez.",
     "phoneCheckTemporary": "Bu telefon şu anda kontrol edilemedi. Bir dakika sonra tekrar dene.",
     "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
     "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
     "supportedPhones": "Desteklenen telefonlar",
-    "emailEnded": {
-      "title": "E-posta ile giriş sona erdi",
-      "bodyIos": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın App Store'dan geri gelir, kaydettiğin makaleler de yedeğinden geri gelir.",
-      "bodyAndroid": "E-posta ile giriş {{date}} tarihinde sona erdi. Yeniden başlamak için bu telefonla giriş yap. Planın Google Play'den geri gelir, kaydettiğin makaleler de yedeğinden geri gelir."
-    },
     "phoneNotSupported": "Bu telefon desteklenmiyor"
   },
   "account": {
@@ -556,7 +528,6 @@
     "exportHistoryEmptyDescription": "Son 30 gün içinde hiçbir makale okumadınız.",
     "keeps": {
       "title": "Mera sizinle ilgili neleri saklar",
-      "emailAndPlan": "E-postanız, telefonla girişe geçene ya da 30 Ekim 2026'da silinene kadar, bir de planınız saklanır. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "plan": "Planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "emailIfAdded": "Planınız. Mera hiçbir zaman e-posta istemez, önceden eklenmiş her e-posta 30 Ekim 2026'da silinir. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
@@ -3090,20 +3061,14 @@
     }
   },
   "gate": {
-    "enterCode": "Kodu girin",
     "getHelp": "Yardım alın",
     "noEmailBody": "Bu telefonda giriş yaparken bir sorun oluştu. Destekle iletişime geçin veya bu telefonu sıfırlayıp yeniden giriş yapın.",
     "noEmailTitle": "Hesabınızla ilgili bir sorun var",
     "offlineBody": "Mera, açılmadan önce hesabınızı kontrol etmek için bağlantıya ihtiyaç duyar.",
     "offlineTitle": "Çevrimdışısınız",
     "opensByItself": "Tekrar çevrimiçi olduğunuzda kendiliğinden açılır",
-    "reauthBody": "Oturumunuzun süresi doldu. Bu hesapta kayıtlı e-postaya bir kod göndereceğiz.",
-    "reauthTitle": "Devam etmek için giriş yapın",
     "unreachableBody": "Sorun telefonunuzda değil, bizim tarafımızda. Mera denemeye devam eder ve geri geldiğinde açılır.",
     "unreachableTitle": "Mera'ya ulaşılamıyor",
-    "mismatchTitle": "Bu e-posta farklı bir hesaba ait",
-    "mismatchBody": "Bu hesapla ilişkili e-postayla giriş yapın veya yardım alın.",
-    "mismatchOtherEmail": "Başka bir e-posta kullan",
     "contactSupport": "Destekle iletişime geçin",
     "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
     "resetTitle": "Bu telefon sıfırlansın mı?",
@@ -3114,29 +3079,6 @@
     "relevance": "En iyi eşleşme",
     "oldest": "Eski olanlar ilk",
     "newest": "Yeni olanlar ilk"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Bunun yerine bu telefonla giriş yap",
-    "dialogBody": "Bu telefonla giriş yapmanı sağlayacağız, hesabını bu telefona taşıyacağız ve e-postanı veritabanımızdan sileceğiz.",
-    "dialogSettingsHint": "{{date}} tarihine kadar bunu Ayarlar'dan yapabilirsin.",
-    "confirm": "Hesabı taşı",
-    "cancel": "Şimdi değil",
-    "progressTitle": "Hesabın bu telefona taşınıyor",
-    "steps": {
-      "checking": "Bu telefon kontrol ediliyor",
-      "linking": "Hesabın bağlanıyor",
-      "removing": "E-postan kaldırılıyor",
-      "done": "Tamam"
-    },
-    "failed": "Bu işlem tamamlanamadı. Hesabın hâlâ çalışıyor. Birazdan tekrar dene.",
-    "unsupportedIos": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını App Store'dan iptal et.",
-    "unsupportedAndroid": "Bu telefon telefonla giriş yapamaz, bu yüzden Mera {{date}} tarihinde bu telefonda çalışmayı bırakır. Mera için ödeme yapıyorsan, bundan önce planını Google Play'den iptal et.",
-    "success": "Bu telefonla giriş yapıldı. E-postan silindi.",
-    "close": "Kapat",
-    "inboxTitle": "E-posta ile giriş {{date}} tarihinde sona eriyor",
-    "inboxBody": "Hesabını korumak için telefonla girişe geç.",
-    "settingsRow": "Telefonla girişe geç",
-    "settingsRowHint": "E-posta ile giriş {{date}} tarihinde sona eriyor."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

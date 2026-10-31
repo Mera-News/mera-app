@@ -24,15 +24,6 @@
     "dontAskAgain": "不再詢問"
   },
   "auth": {
-    "emailPlaceholder": "輸入您的電子郵件地址",
-    "otpPlaceholder": "輸入 6 位數驗證碼",
-    "invalidEmailDescription": "請輸入有效的電子郵件地址",
-    "networkError": "網路錯誤，請再試一次。",
-    "invalidOtp": "請輸入有效的 6 位數 OTP 驗證碼",
-    "invalidOtpServer": "OTP 驗證碼無效，請再試一次。",
-    "otpError": "驗證過程中發生錯誤，請再試一次。",
-    "resendCode": "重新發送驗證碼",
-    "resendIn": "{{seconds}} 秒後可重新發送",
     "faq": "常見問題",
     "identitySwitchFailedTitle": "無法完成帳戶切換",
     "identitySwitchFailedBody": "這台裝置上仍有另一個帳號的資料。梅拉必須先清除這些資料，你才能繼續，但這次清除失敗了。",
@@ -47,12 +38,8 @@
     "learnAboutMera": "認識梅拉",
     "continue": "繼續",
     "sourceCode": "原始碼",
-    "failedToSendBody": "無法傳送 OTP",
-    "signingYouIn": "正在登入…",
-    "signInWithoutEmail": "使用這支手機登入",
     "differentAccount": {
       "title": "要使用這支手機登入嗎？",
-      "body": "我們會清除梅拉在這支手機上為 {{email}} 保存的所有內容。帳號本身不會被刪除。你確定嗎？",
       "continue": "移除並繼續",
       "useEmail": "保留我的帳號",
       "bodyGeneric": "我們會清除梅拉在這支手機上為這個帳號保存的所有內容。帳號本身不會被刪除。你確定嗎？"
@@ -63,36 +50,21 @@
       "beginMera": "開始使用梅拉",
       "beginTitle": "你想如何開始？",
       "beginWithoutEmail": "使用這支手機登入",
-      "checkEmailTitle": "請查看你的電子郵件",
       "chooseLanguage": "選擇你的語言",
-      "codeA11y": "6 位數驗證碼",
-      "continueWithEmail": "使用電子郵件繼續",
       "downloadA11y": "下載{{language}}",
-      "emailBody": "我們會寄出 6 位數驗證碼給你，不需要記住密碼。",
       "gettingReadyIos": "請在下方面板中，點按每種語言旁邊的 ↓，然後在這裡等待。請保持梅拉開啟。",
       "gettingReadyTitle": "正在準備{{language}}",
       "notHereBody": "請下載語言包，或使用這裡已有的其他語言。",
       "notHereTitle": "這支手機還沒有{{language}}",
       "phoneLanguage": "你手機的語言",
-      "sendCode": "傳送驗證碼",
-      "useDifferentEmail": "使用其他電子郵件",
       "welcome": "歡迎使用梅拉",
-      "wrongCode": "驗證碼無效。請檢查後再輸入，或重新寄送新的驗證碼。",
       "noSheetTitle": "你的 iPhone 未能開始下載",
-      "noSheetBody": "請再試一次。或在 iPhone 上打開「設定」，依序前往「一般」、「語言與地區」、「翻譯語言」，下載 {{language}}。",
-      "sentToIfAccount": "如果這個電子郵件有梅拉帳號，我們已寄出驗證碼。第一次使用梅拉？請點選「使用這支手機登入」。",
-      "noCodeUsePhone": "沒有收到驗證碼？請點選「使用這支手機登入」。"
+      "noSheetBody": "請再試一次。或在 iPhone 上打開「設定」，依序前往「一般」、「語言與地區」、「翻譯語言」，下載 {{language}}。"
     },
-    "emailLegacyHint": "只適用於之前用電子郵件登入的人。新使用者已無法再用電子郵件登入。",
     "phoneCheckTemporary": "暫時無法檢查這支手機。請一分鐘後再試。",
     "phoneUnsupportedAndroid": "梅拉需要這支手機上有 Google Play 才能為你登入。不支援沒有 Google Play 的手機。",
     "phoneUnsupportedIos": "這支 iPhone 無法使用手機登入。",
     "supportedPhones": "支援的手機",
-    "emailEnded": {
-      "title": "電子郵件登入已結束",
-      "bodyIos": "電子郵件登入已於 {{date}} 結束。請使用這支手機登入以重新開始。你的方案會從 App Store 恢復，你儲存的文章則會從備份恢復。",
-      "bodyAndroid": "電子郵件登入已於 {{date}} 結束。請使用這支手機登入以重新開始。你的方案會從 Google Play 恢復，你儲存的文章則會從備份恢復。"
-    },
     "phoneNotSupported": "這支手機不支援"
   },
   "account": {
@@ -546,7 +518,6 @@
     "exportHistoryEmptyDescription": "你過去30天內還未閱讀任何文章。",
     "keeps": {
       "title": "梅拉為你保留的資料",
-      "emailAndPlan": "你的電子郵件（直到你改用手機登入，或於 2026 年 10 月 30 日刪除為止）和你的方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
       "plan": "你的方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
       "emailIfAdded": "你的方案。梅拉從不要求電子郵件，以前留下的任何電子郵件都會在 2026 年 10 月 30 日刪除。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
       "signInRecordIos": "這支手機的一筆登入紀錄，會隨帳號一起刪除。Apple 確認正版 App 的檢查結果不會保留。",
@@ -3070,20 +3041,14 @@
     }
   },
   "gate": {
-    "enterCode": "輸入驗證碼",
     "getHelp": "取得協助",
     "noEmailBody": "在這支手機上登入時出了問題。請聯絡支援團隊，或重設這支手機後重新登入。",
     "noEmailTitle": "你的帳號出現問題",
     "offlineBody": "梅拉需要網路連線，才能在開啟前確認你的帳號。",
     "offlineTitle": "你目前離線",
     "opensByItself": "恢復連線後會自動開啟",
-    "reauthBody": "你的登入已過期。我們會將驗證碼寄到此帳號的電子郵件。",
-    "reauthTitle": "請登入以繼續",
     "unreachableBody": "問題出在我們這邊，不是你的手機。梅拉會持續嘗試，恢復後就會開啟。",
     "unreachableTitle": "無法連上梅拉",
-    "mismatchTitle": "這個電子郵件屬於其他帳號",
-    "mismatchBody": "請使用此帳號的電子郵件登入，或取得協助。",
-    "mismatchOtherEmail": "使用其他電子郵件",
     "contactSupport": "聯絡支援團隊",
     "resetPhone": "重設這支手機並重新登入",
     "resetTitle": "要重設這支手機嗎？",
@@ -3094,29 +3059,6 @@
     "relevance": "最符合",
     "oldest": "最舊的優先",
     "newest": "最新的優先"
-  },
-  "moveToPhone": {
-    "dialogTitle": "改用這支手機登入",
-    "dialogBody": "我們會用這支手機為你登入、把你的帳號移到這支手機上，並從我們的資料庫刪除你的電子郵件。",
-    "dialogSettingsHint": "你可以在「設定」中於 {{date}} 前完成此操作。",
-    "confirm": "移動帳號",
-    "cancel": "暫不",
-    "progressTitle": "正在將你的帳號移到這支手機",
-    "steps": {
-      "checking": "正在檢查這支手機",
-      "linking": "正在連結你的帳號",
-      "removing": "正在刪除你的電子郵件",
-      "done": "完成"
-    },
-    "failed": "這次沒有完成。你的帳號仍可使用。請稍後再試一次。",
-    "unsupportedIos": "這支手機無法使用手機登入，因此梅拉將於 {{date}} 停止在這支手機上運作。如果你有付費購買梅拉，請在那之前於 App Store 取消你的方案。",
-    "unsupportedAndroid": "這支手機無法使用手機登入，因此梅拉將於 {{date}} 停止在這支手機上運作。如果你有付費購買梅拉，請在那之前於 Google Play 取消你的方案。",
-    "success": "已使用這支手機登入。你的電子郵件已刪除。",
-    "close": "關閉",
-    "inboxTitle": "電子郵件登入將於 {{date}} 結束",
-    "inboxBody": "改用手機登入，即可保留你的帳號。",
-    "settingsRow": "改用手機登入",
-    "settingsRowHint": "電子郵件登入將於 {{date}} 結束。"
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

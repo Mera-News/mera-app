@@ -24,15 +24,6 @@
     "dontAskAgain": "Ne plus demander"
   },
   "auth": {
-    "emailPlaceholder": "Entrez votre adresse e-mail",
-    "otpPlaceholder": "Entrez le code à 6 chiffres",
-    "invalidEmailDescription": "Veuillez entrer une adresse e-mail valide",
-    "networkError": "Erreur réseau. Veuillez réessayer.",
-    "invalidOtp": "Veuillez entrer un code OTP valide à 6 chiffres",
-    "invalidOtpServer": "Code OTP invalide. Veuillez réessayer.",
-    "otpError": "Une erreur est survenue lors de la vérification. Veuillez réessayer.",
-    "resendCode": "Renvoyer le code",
-    "resendIn": "Renvoyer dans {{seconds}}s",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Impossible de terminer le changement de compte",
     "identitySwitchFailedBody": "Les données d'un autre compte sont encore sur cet appareil. Mera doit les effacer avant de continuer, et l'effacement n'a pas fonctionné cette fois.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Découvrir Mera",
     "continue": "Continuer",
     "sourceCode": "Code source",
-    "failedToSendBody": "Échec de l'envoi du code OTP",
-    "signingYouIn": "Connexion en cours…",
-    "signInWithoutEmail": "Se connecter avec ce téléphone",
     "differentAccount": {
       "title": "Se connecter avec ce téléphone ?",
-      "body": "Nous allons effacer tout ce que Mera conserve sur ce téléphone pour {{email}}. Le compte lui-même n'est pas supprimé. Êtes-vous sûr ?",
       "continue": "Supprimer et continuer",
       "useEmail": "Garder mon compte",
       "bodyGeneric": "Nous allons effacer tout ce que Mera conserve sur ce téléphone pour ce compte. Le compte lui-même n'est pas supprimé. Êtes-vous sûr ?"
@@ -63,36 +50,21 @@
       "beginMera": "Commencer avec Mera",
       "beginTitle": "Comment voulez-vous commencer ?",
       "beginWithoutEmail": "Se connecter avec ce téléphone",
-      "checkEmailTitle": "Vérifiez votre e-mail",
       "chooseLanguage": "Choisissez votre langue",
-      "codeA11y": "Code à 6 chiffres",
-      "continueWithEmail": "Continuer avec l'e-mail",
       "downloadA11y": "Télécharger {{language}}",
-      "emailBody": "Nous vous enverrons un code à 6 chiffres par e-mail. Pas de mot de passe à retenir.",
       "gettingReadyIos": "Appuyez sur ↓ à côté de chaque langue dans la fenêtre ci-dessous, puis attendez ici. Gardez Mera ouvert.",
       "gettingReadyTitle": "Préparation de {{language}}",
       "notHereBody": "Téléchargez le pack de langue, ou utilisez l'une des langues déjà disponibles ici.",
       "notHereTitle": "{{language}} n'est pas encore sur ce téléphone",
       "phoneLanguage": "La langue de votre téléphone",
-      "sendCode": "Envoyer le code",
-      "useDifferentEmail": "Utiliser un autre e-mail",
       "welcome": "Bienvenue dans Mera",
-      "wrongCode": "Ce code n'a pas fonctionné. Vérifiez-le ou renvoyez-en un nouveau.",
       "noSheetTitle": "Votre iPhone n'a pas ouvert le téléchargement",
-      "noSheetBody": "Réessayez, ou ouvrez Réglages sur votre iPhone, puis Général, puis Langue et région, puis Langues de traduction pour télécharger {{language}}.",
-      "sentToIfAccount": "Si cet e-mail correspond à un compte Mera, nous lui avons envoyé un code. Vous débutez avec Mera ? Utilisez « Se connecter avec ce téléphone ».",
-      "noCodeUsePhone": "Vous n'avez pas reçu de code ? Utilisez « Se connecter avec ce téléphone »."
+      "noSheetBody": "Réessayez, ou ouvrez Réglages sur votre iPhone, puis Général, puis Langue et région, puis Langues de traduction pour télécharger {{language}}."
     },
-    "emailLegacyHint": "Réservé aux personnes qui se sont connectées par e-mail auparavant. Les nouveaux utilisateurs ne peuvent plus se connecter par e-mail.",
     "phoneCheckTemporary": "Impossible de vérifier ce téléphone pour le moment. Réessayez dans une minute.",
     "phoneUnsupportedAndroid": "Mera a besoin de Google Play sur ce téléphone pour vous connecter. Les téléphones qui n'en ont pas ne sont pas pris en charge.",
     "phoneUnsupportedIos": "Cet iPhone ne peut pas utiliser la connexion par téléphone.",
     "supportedPhones": "Téléphones pris en charge",
-    "emailEnded": {
-      "title": "La connexion par e-mail a pris fin",
-      "bodyIos": "La connexion par e-mail a pris fin le {{date}}. Connectez-vous avec ce téléphone pour recommencer. Votre forfait revient depuis l'App Store, et vos articles enregistrés reviennent depuis votre sauvegarde.",
-      "bodyAndroid": "La connexion par e-mail a pris fin le {{date}}. Connectez-vous avec ce téléphone pour recommencer. Votre forfait revient depuis Google Play, et vos articles enregistrés reviennent depuis votre sauvegarde."
-    },
     "phoneNotSupported": "Ce téléphone n'est pas pris en charge"
   },
   "account": {
@@ -561,7 +533,6 @@
     "exportHistoryEmptyDescription": "Vous n'avez lu aucun article au cours des 30 derniers jours.",
     "keeps": {
       "title": "Ce que Mera conserve sur vous",
-      "emailAndPlan": "Votre e-mail, jusqu'à ce que vous passiez à la connexion par téléphone ou jusqu'à sa suppression le 30 octobre 2026, ainsi que votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
       "plan": "Votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
       "emailIfAdded": "Votre forfait. Mera ne demande jamais d'e-mail, et tout e-mail ajouté auparavant est supprimé le 30 octobre 2026. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
       "signInRecordIos": "Une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple indiquant qu'il s'agit de la vraie app n'est pas conservée.",
@@ -3098,20 +3069,14 @@
     }
   },
   "gate": {
-    "enterCode": "Saisissez le code",
     "getHelp": "Obtenir de l'aide",
     "noEmailBody": "Un problème est survenu lors de la connexion sur ce téléphone. Contactez l'assistance, ou réinitialisez ce téléphone et reconnectez-vous.",
     "noEmailTitle": "Un problème est survenu avec votre compte",
     "offlineBody": "Mera a besoin d'une connexion pour vérifier votre compte avant de s'ouvrir.",
     "offlineTitle": "Vous êtes hors ligne",
     "opensByItself": "S'ouvre automatiquement dès que vous êtes de nouveau en ligne",
-    "reauthBody": "Votre connexion a expiré. Nous enverrons un code à l'adresse e-mail de ce compte.",
-    "reauthTitle": "Connectez-vous pour continuer",
     "unreachableBody": "Le problème vient de notre côté, pas de votre téléphone. Mera continue d'essayer et s'ouvrira dès que le service sera rétabli.",
     "unreachableTitle": "Mera est injoignable",
-    "mismatchTitle": "Cet e-mail appartient à un autre compte",
-    "mismatchBody": "Connectez-vous avec l'e-mail de ce compte, ou obtenez de l'aide.",
-    "mismatchOtherEmail": "Utiliser un autre e-mail",
     "contactSupport": "Contacter l'assistance",
     "resetPhone": "Réinitialiser ce téléphone et se reconnecter",
     "resetTitle": "Réinitialiser ce téléphone ?",
@@ -3122,29 +3087,6 @@
     "relevance": "Meilleure correspondance",
     "oldest": "Les plus anciens en premier",
     "newest": "Les plus récents en premier"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Se connecter avec ce téléphone à la place",
-    "dialogBody": "Nous vous connecterons avec ce téléphone, transférerons votre compte sur lui et supprimerons votre e-mail de notre base de données.",
-    "dialogSettingsHint": "Vous pouvez le faire dans Paramètres jusqu'au {{date}}.",
-    "confirm": "Transférer le compte",
-    "cancel": "Pas maintenant",
-    "progressTitle": "Transfert de votre compte sur ce téléphone",
-    "steps": {
-      "checking": "Vérification de ce téléphone",
-      "linking": "Association de votre compte",
-      "removing": "Suppression de votre e-mail",
-      "done": "Terminé"
-    },
-    "failed": "Cela n'a pas abouti. Votre compte fonctionne toujours. Réessayez dans un instant.",
-    "unsupportedIos": "Ce téléphone ne peut pas utiliser la connexion par téléphone, donc Mera cessera d'y fonctionner le {{date}}. Si vous payez pour Mera, annulez votre forfait dans l'App Store avant cette date.",
-    "unsupportedAndroid": "Ce téléphone ne peut pas utiliser la connexion par téléphone, donc Mera cessera d'y fonctionner le {{date}}. Si vous payez pour Mera, annulez votre forfait dans Google Play avant cette date.",
-    "success": "Vous êtes connecté avec ce téléphone. Votre e-mail est supprimé.",
-    "close": "Fermer",
-    "inboxTitle": "La connexion par e-mail prend fin le {{date}}",
-    "inboxBody": "Passez à la connexion par téléphone pour garder votre compte.",
-    "settingsRow": "Passer à la connexion par téléphone",
-    "settingsRowHint": "La connexion par e-mail prend fin le {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

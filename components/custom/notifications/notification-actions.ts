@@ -2,9 +2,8 @@
 // (NotificationsScreen) and the notice's button (NotifiedToast), so a notice
 // and its inbox row can never do different things.
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
-import { requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import type NotificationModel from '@/lib/database/models/Notification';
-import { markActioned, markRead } from '@/lib/database/services/notification-service';
+import { deleteByTypes, markActioned, markRead } from '@/lib/database/services/notification-service';
 import logger from '@/lib/logger';
 import { APP_UPDATED, RESTART_FOR_UPDATE, UPDATE_AVAILABLE, restartForUpdate, useOpenUpdateNotes } from '@/lib/ota-notice';
 import type { UpdateNote } from '@/lib/algorithms/update-notes';
@@ -25,9 +24,11 @@ export const FEEDBACK_REQUEST = 'feedback_request';
 /**
  * Row types no longer written (owner Y11): the daily limit, a failed sync and
  * a finished migration. Rows written before live up to 90 days; the inbox
- * hides them.
+ * hides them. Also `move_to_phone`, the retired email move's offer: its copy
+ * keys are gone, so a 1.3.5 row must never render, even before data-cleanup
+ * deletes it.
  */
-export const NOT_KEPT_NOTICE_TYPES: ReadonlySet<string> = new Set(['feed_info', 'sync_event', 'migration_done']);
+export const NOT_KEPT_NOTICE_TYPES: ReadonlySet<string> = new Set(['feed_info', 'sync_event', 'migration_done', 'move_to_phone']);
 
 /**
  * The notification sheets (NotificationSheetHost, mounted once in the logged-in
@@ -131,11 +132,12 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
             // The suggestions are cards at the top of the inbox.
             navigateToPage('notifications');
             return;
-        case 'move-to-phone':
-            requestMoveToPhone();
-            return;
         case 'review-plan':
             useFloatingChatStore.getState().openOptimisationPlan();
+            return;
+        case 'move-to-phone':
+            // The retired email move (1.3.5 rows): nothing to open, the row just goes.
+            await deleteByTypes(['move_to_phone']);
             return;
         case RESTART_FOR_UPDATE:
             await restartForUpdate();

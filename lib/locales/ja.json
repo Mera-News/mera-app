@@ -24,15 +24,6 @@
     "dontAskAgain": "今後確認しない"
   },
   "auth": {
-    "emailPlaceholder": "メールアドレスを入力してください",
-    "otpPlaceholder": "6桁のコードを入力してください",
-    "invalidEmailDescription": "有効なメールアドレスを入力してください",
-    "networkError": "ネットワークエラーが発生しました。もう一度お試しください。",
-    "invalidOtp": "有効な6桁のOTPコードを入力してください",
-    "invalidOtpServer": "OTPコードが無効です。もう一度お試しください。",
-    "otpError": "認証中にエラーが発生しました。もう一度お試しください。",
-    "resendCode": "コードを再送信",
-    "resendIn": "{{seconds}}秒後に再送信",
     "faq": "よくある質問",
     "identitySwitchFailedTitle": "アカウントの切り替えを完了できませんでした",
     "identitySwitchFailedBody": "別のアカウントのデータがまだこの端末に残っています。先へ進むには、メラがそのデータを消去する必要がありますが、今回は消去できませんでした。",
@@ -47,12 +38,8 @@
     "learnAboutMera": "メラについて知る",
     "continue": "続行",
     "sourceCode": "ソースコード",
-    "failedToSendBody": "OTPを送信できませんでした",
-    "signingYouIn": "サインインしています…",
-    "signInWithoutEmail": "この電話でサインイン",
     "differentAccount": {
       "title": "この電話でサインインしますか？",
-      "body": "この電話にメラが保存している{{email}}のデータをすべて消去します。アカウント自体は削除されません。よろしいですか？",
       "continue": "削除して続ける",
       "useEmail": "アカウントを残す",
       "bodyGeneric": "この電話にメラが保存しているこのアカウントのデータをすべて消去します。アカウント自体は削除されません。よろしいですか？"
@@ -63,36 +50,21 @@
       "beginMera": "メラを始める",
       "beginTitle": "どのように始めますか？",
       "beginWithoutEmail": "この電話でサインイン",
-      "checkEmailTitle": "メールを確認してください",
       "chooseLanguage": "言語を選んでください",
-      "codeA11y": "6桁のコード",
-      "continueWithEmail": "メールで続ける",
       "downloadA11y": "{{language}}をダウンロード",
-      "emailBody": "6桁のコードをメールでお送りします。覚えるパスワードはありません。",
       "gettingReadyIos": "下のシートで各言語の横にある↓をタップして、そのままお待ちください。メラを開いたままにしてください。",
       "gettingReadyTitle": "{{language}}を準備しています",
       "notHereBody": "言語パックをダウンロードするか、すでにここにある言語からお選びください。",
       "notHereTitle": "{{language}}はまだこの電話にありません",
       "phoneLanguage": "お使いの電話の言語",
-      "sendCode": "コードを送信",
-      "useDifferentEmail": "別のメールアドレスを使う",
       "welcome": "メラへようこそ",
-      "wrongCode": "そのコードは使えませんでした。確認するか、新しいコードを再送信してください。",
       "noSheetTitle": "iPhoneでダウンロードを開けませんでした",
-      "noSheetBody": "もう一度お試しください。または、iPhoneの設定を開き、「一般」「言語と地域」「翻訳言語」の順に進んで、{{language}}をダウンロードしてください。",
-      "sentToIfAccount": "このメールアドレスにメラのアカウントがあれば、コードを送信しました。メラを初めて使う方ですか？その場合は「この電話でサインイン」を使ってください。",
-      "noCodeUsePhone": "コードが届きませんか？「この電話でサインイン」を使ってください。"
+      "noSheetBody": "もう一度お試しください。または、iPhoneの設定を開き、「一般」「言語と地域」「翻訳言語」の順に進んで、{{language}}をダウンロードしてください。"
     },
-    "emailLegacyHint": "メールでサインインしたことがある方だけが対象です。新しく登録する方は、もうメールでサインインできません。",
     "phoneCheckTemporary": "今はこの電話を確認できませんでした。1分ほどしてからもう一度お試しください。",
     "phoneUnsupportedAndroid": "メラでサインインするには、この電話にGoogle Playが必要です。Google Playがない電話は対応していません。",
     "phoneUnsupportedIos": "このiPhoneでは電話でのサインインを使えません。",
     "supportedPhones": "対応端末",
-    "emailEnded": {
-      "title": "メールでのサインインは終了しました",
-      "bodyIos": "メールでのサインインは{{date}}に終了しました。「この電話でサインイン」からやり直してください。プランは App Store から戻り、保存した記事はバックアップから戻ります。",
-      "bodyAndroid": "メールでのサインインは{{date}}に終了しました。「この電話でサインイン」からやり直してください。プランは Google Play から戻り、保存した記事はバックアップから戻ります。"
-    },
     "phoneNotSupported": "この電話は対応していません"
   },
   "account": {
@@ -546,7 +518,6 @@
     "exportHistoryEmptyDescription": "過去30日間に記事を読んでいません。",
     "keeps": {
       "title": "メラがあなたについて保持するもの",
-      "emailAndPlan": "メールアドレス（電話でのサインインに切り替えるまで、または2026年10月30日に削除されるまで）と、プラン。App Store または Google Play からの請求記録は、法律で定められた期間保持します。",
       "plan": "プラン。App Store または Google Play からの請求記録は、法律で定められた期間保持します。",
       "emailIfAdded": "利用中のプラン。メラがメールアドレスを求めることは一切なく、それ以前のメールアドレスは2026年10月30日に削除されます。App Store または Google Play からの請求記録は、法律で定められた期間保持します。",
       "signInRecordIos": "この電話のログイン記録。アカウントと一緒に削除されます。本物のアプリかどうかを確かめる Apple のチェック結果は保持しません。",
@@ -3070,20 +3041,14 @@
     }
   },
   "gate": {
-    "enterCode": "コードを入力",
     "getHelp": "ヘルプを見る",
     "noEmailBody": "この電話でのサインイン中に問題が発生しました。サポートに問い合わせるか、この電話をリセットしてもう一度サインインしてください。",
     "noEmailTitle": "アカウントに問題があります",
     "offlineBody": "メラは、開く前にアカウントを確認するため接続が必要です。",
     "offlineTitle": "オフラインです",
     "opensByItself": "オンラインに戻ると自動的に開きます",
-    "reauthBody": "サインインの期限が切れました。このアカウントのメールにコードを送ります。",
-    "reauthTitle": "続けるにはサインインしてください",
     "unreachableBody": "問題は電話ではなく当社側にあります。メラは引き続き接続を試み、復旧すると開きます。",
     "unreachableTitle": "メラに接続できません",
-    "mismatchTitle": "このメールは別のアカウントのものです",
-    "mismatchBody": "このアカウントのメールでサインインするか、ヘルプをご利用ください。",
-    "mismatchOtherEmail": "別のメールアドレスを使う",
     "contactSupport": "サポートに問い合わせる",
     "resetPhone": "この電話をリセットしてサインインし直す",
     "resetTitle": "この電話をリセットしますか？",
@@ -3094,29 +3059,6 @@
     "relevance": "最も一致したもの",
     "oldest": "古い順",
     "newest": "新しい順"
-  },
-  "moveToPhone": {
-    "dialogTitle": "代わりにこの電話でサインイン",
-    "dialogBody": "この電話でサインインし、アカウントをこの電話に移して、データベースからメールアドレスを削除します。",
-    "dialogSettingsHint": "{{date}}までであれば、設定からこの操作ができます。",
-    "confirm": "アカウントを移行",
-    "cancel": "今はしない",
-    "progressTitle": "アカウントをこの電話に移しています",
-    "steps": {
-      "checking": "この電話を確認しています",
-      "linking": "アカウントを連携しています",
-      "removing": "メールアドレスを削除しています",
-      "done": "完了"
-    },
-    "failed": "完了しませんでした。アカウントは今も使えます。しばらくしてから、もう一度お試しください。",
-    "unsupportedIos": "この電話は電話でのサインインに対応していないため、{{date}}からこの電話でメラが使えなくなります。有料プランをご利用の場合は、それまでに App Store でプランを解約してください。",
-    "unsupportedAndroid": "この電話は電話でのサインインに対応していないため、{{date}}からこの電話でメラが使えなくなります。有料プランをご利用の場合は、それまでに Google Play でプランを解約してください。",
-    "success": "この電話でサインインしました。メールアドレスは削除されました。",
-    "close": "閉じる",
-    "inboxTitle": "メールでのサインインは{{date}}に終了します",
-    "inboxBody": "アカウントを残すには、電話でのサインインに切り替えてください。",
-    "settingsRow": "電話でのサインインに切り替える",
-    "settingsRowHint": "メールでのサインインは{{date}}に終了します。"
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

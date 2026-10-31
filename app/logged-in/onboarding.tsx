@@ -27,7 +27,7 @@ export default function Onboarding() {
     // A failed or slow /get-session settles isPending=false with `session ===
     // undefined`, so that line fired for users who were perfectly signed in —
     // and login.tsx does not bounce back (the session is falsy there too), so
-    // AuthScreen read cached_user_email/cached_user_id and rendered the
+    // AuthScreen read cached_user_id and rendered the
     // sign-in gate over a network blip. Identity is a LOCAL fact.
     const { data: session } = authClient.useSession();
     const [userId, setUserId] = useState<string | null>(null);
@@ -50,8 +50,9 @@ export default function Onboarding() {
                 if (!cancelled) {
                     // Session atom → this process's recorded sign-in → disk.
                     //
-                    // The middle term is the fix. DeepLinkVerifyScreen replaces
-                    // straight to this route the instant OTP succeeds, so the
+                    // The middle term is the fix. The email deep link (since
+                    // removed) replaced straight to this route the instant OTP
+                    // succeeded, so the
                     // atom is still `undefined` here and this used to fall
                     // through to the on-disk owner — which on a device holding
                     // user A's data IS user A. OnboardingScreen would then wipe

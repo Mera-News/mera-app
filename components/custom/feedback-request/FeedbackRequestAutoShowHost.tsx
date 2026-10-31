@@ -12,9 +12,9 @@
 // mount for the push and drawer paths, so nothing presents a request twice.
 //
 // NEVER OVER SOMETHING ELSE. It waits while the PIN lock is up, before the
-// startup gate has passed, on the onboarding, verify-otp and PIN routes and
+// startup gate has passed, on the onboarding and PIN routes and
 // the modal itself, while the bug-report modal, the
-// What's new sheet, the move to phone dialog or the floating chat is open, while ConsentGate is showing,
+// What's new sheet or the floating chat is open, while ConsentGate is showing,
 // and while a notification tap for a feedback request is stashed and about to
 // be opened by the startup gate or the tap handler (it would push the same
 // modal). Each check runs after a settle delay. A deferred show simply retries
@@ -42,7 +42,6 @@ import {
     isStartupGatePassed,
 } from '@/lib/stores/pending-notification-route';
 import { usePinStore } from '@/lib/stores/pin-store';
-import { isMoveToPhoneVisible } from '@/components/custom/auth/move-to-phone';
 import { consentBlocksFeedbackRequest } from './feedback-request-consent';
 
 /** Long enough for the startup gate to open a stashed notification route and
@@ -50,7 +49,7 @@ import { consentBlocksFeedbackRequest } from './feedback-request-consent';
  *  part of arriving. */
 const SETTLE_MS = 1500;
 
-const BLOCKED_ROUTE_PARTS = ['/onboarding', 'verify-otp', 'pin-lock', 'pin-setup', '/feedback-request'];
+const BLOCKED_ROUTE_PARTS = ['/onboarding', 'pin-lock', 'pin-setup', '/feedback-request'];
 
 function routeBlocks(pathname: string | null | undefined): boolean {
     if (!pathname) return true;
@@ -66,7 +65,6 @@ function storesBlock(): boolean {
     if (useFeedbackStore.getState().visible) return true;
     if (useFloatingChatStore.getState().isExpanded) return true;
     if (isWhatsNewSheetActive()) return true;
-    if (isMoveToPhoneVisible()) return true;
     return false;
 }
 

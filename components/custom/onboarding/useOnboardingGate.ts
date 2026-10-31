@@ -23,9 +23,9 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
     // Fail-closed state, mirroring app/logged-in/index.tsx rather than
-    // inventing a second shape. This screen needs its own copy because
-    // DeepLinkVerifyScreen lands here directly and never passes through that
-    // file — a wipe that throws on THIS doorway would otherwise fall through to
+    // inventing a second shape. This screen needs its own copy because a
+    // direct arrival (the removed email deep link was one) never passes through
+    // that file — a wipe that throws on THIS doorway would otherwise fall through to
     // the fact count, read the previous owner's facts, and complete.
     const [wipeFailed, setWipeFailed] = useState(false);
     const [retryNonce, setRetryNonce] = useState(0);
@@ -49,8 +49,8 @@ export function useOnboardingGate({ userId, sessionUserId, onLoginRedirect, onCo
     // regression.
     //
     // A ref rather than only `useCallback` in the parent: the fix has to hold at
-    // this chokepoint no matter which caller mounts the screen (there are two,
-    // and DeepLinkVerifyScreen's is not the one that was audited). The parent
+    // this chokepoint no matter which caller mounts the screen (there were two,
+    // and the removed email deep link's was not the one that was audited). The parent
     // memoizes as well — cheap, and it stops needless re-renders — but this is
     // what makes the property true. Reading a ref inside the effect also keeps
     // `react-hooks/exhaustive-deps` satisfied WITHOUT a disable comment, which a

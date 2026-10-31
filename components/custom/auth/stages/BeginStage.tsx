@@ -7,7 +7,7 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useColors } from '@/lib/theme/tokens';
 
-import { LegacyEmailLink, PhoneUnsupported } from './parts';
+import { PhoneUnsupported } from './parts';
 import { LOGO_TOP, styles } from './styles';
 
 // ── 4 · How do you want to begin? ────────────────────────────────────────────
@@ -15,22 +15,17 @@ import { LOGO_TOP, styles } from './styles';
 function BeginStage({
     canUsePhone,
     onWithoutEmail,
-    onWithEmail,
     onLogoSlot,
-    emailEnded,
 }: {
     canUsePhone: boolean;
-    /** After the cutoff the legacy email link is gone. */
-    emailEnded: boolean;
     onWithoutEmail: () => void;
-    onWithEmail: () => void;
     /** Where the logo belongs in this stack (window y), for the hoisted logo. */
     onLogoSlot: (slot: { y: number; inline: boolean }) => void;
 }) {
     const { t } = useTranslation();
     const colors = useColors();
-    // One centred stack (owner): logo, title, the primary with its helper, the
-    // secondary. Taller than the screen (Larger Text): it scrolls, top-aligned,
+    // One centred stack (owner): logo, title, the primary with its helper.
+    // Taller than the screen (Larger Text): it scrolls, top-aligned,
     // and draws the logo inline, since the hoisted one cannot scroll with it.
     const [viewport, setViewport] = useState(0);
     const [content, setContent] = useState(0);
@@ -64,9 +59,6 @@ function BeginStage({
                 </>
             ) : (
                 <PhoneUnsupported testID="auth-begin-unsupported" />
-            )}
-            {emailEnded ? null : (
-                <LegacyEmailLink label={t('auth.track.continueWithEmail')} onPress={onWithEmail} testID="auth-begin-with-email" />
             )}
         </ScrollView>
     );

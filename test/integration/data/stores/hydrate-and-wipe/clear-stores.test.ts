@@ -132,7 +132,7 @@ describe('clearAllStores: database', () => {
 describe('clearAllStores: Zustand stores', () => {
   it('resets for-you, user, ui, config-panel, floating-chat', async () => {
     useForYouStore.setState({ articleCount: 12, relevantArticleCount: 4, lastSyncAt: 1 });
-    useUserStore.setState({ userId: 'old-user', userEmail: 'a@example.com', needsReauth: true, lastFetchedAt: 5 });
+    useUserStore.setState({ userId: 'old-user', needsReauth: true, lastFetchedAt: 5 });
     useUIStore.getState().openModal('logout');
     useConfigPanelStore.getState().openPanel();
     useFloatingChatStore.getState().expand();
@@ -142,7 +142,6 @@ describe('clearAllStores: Zustand stores', () => {
     expect(useForYouStore.getState()).toMatchObject({ articleCount: 0, relevantArticleCount: 0, lastSyncAt: null });
     expect(useUserStore.getState()).toMatchObject({
       userId: null,
-      userEmail: null,
       userPersona: null,
       needsReauth: false,
       lastFetchedAt: null,

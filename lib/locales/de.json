@@ -24,15 +24,6 @@
     "dontAskAgain": "Nicht noch einmal fragen"
   },
   "auth": {
-    "emailPlaceholder": "E-Mail-Adresse eingeben",
-    "otpPlaceholder": "6-stelligen Code eingeben",
-    "invalidEmailDescription": "Bitte gib eine gültige E-Mail-Adresse ein",
-    "networkError": "Netzwerkfehler. Bitte versuche es erneut.",
-    "invalidOtp": "Bitte gib einen gültigen 6-stelligen OTP-Code ein",
-    "invalidOtpServer": "Ungültiger OTP-Code. Bitte versuche es erneut.",
-    "otpError": "Bei der Verifizierung ist ein Fehler aufgetreten. Bitte versuche es erneut.",
-    "resendCode": "Code erneut senden",
-    "resendIn": "Erneut senden in {{seconds}}s",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Der Kontowechsel konnte nicht abgeschlossen werden",
     "identitySwitchFailedBody": "Auf diesem Gerät sind noch Daten eines anderen Kontos. Mera muss sie löschen, bevor es weitergehen kann, und das Löschen hat diesmal nicht funktioniert.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Mera kennenlernen",
     "continue": "Weiter",
     "sourceCode": "Quellcode",
-    "failedToSendBody": "OTP konnte nicht gesendet werden",
-    "signingYouIn": "Du wirst angemeldet…",
-    "signInWithoutEmail": "Mit diesem Telefon anmelden",
     "differentAccount": {
       "title": "Mit diesem Telefon anmelden?",
-      "body": "Wir löschen alles, was Mera auf diesem Telefon für {{email}} speichert. Das Konto selbst wird nicht gelöscht. Bist du sicher?",
       "continue": "Entfernen und weiter",
       "useEmail": "Mein Konto behalten",
       "bodyGeneric": "Wir löschen alles, was Mera auf diesem Telefon für dieses Konto speichert. Das Konto selbst wird nicht gelöscht. Bist du sicher?"
@@ -63,36 +50,21 @@
       "beginMera": "Mera starten",
       "beginTitle": "Wie möchtest du beginnen?",
       "beginWithoutEmail": "Mit diesem Telefon anmelden",
-      "checkEmailTitle": "Prüfe deine E-Mail",
       "chooseLanguage": "Wähle deine Sprache",
-      "codeA11y": "6-stelliger Code",
-      "continueWithEmail": "Mit E-Mail fortfahren",
       "downloadA11y": "{{language}} herunterladen",
-      "emailBody": "Wir senden dir einen 6-stelligen Code per E-Mail. Du musst kein Passwort merken.",
       "gettingReadyIos": "Tippe neben jeder Sprache im Fenster unten auf ↓, dann warte hier. Lass Mera geöffnet.",
       "gettingReadyTitle": "{{language}} wird vorbereitet",
       "notHereBody": "Lade das Sprachpaket herunter oder wähle eine der Sprachen, die bereits verfügbar sind.",
       "notHereTitle": "{{language}} ist auf diesem Telefon noch nicht verfügbar",
       "phoneLanguage": "Die Sprache deines Telefons",
-      "sendCode": "Code senden",
-      "useDifferentEmail": "Andere E-Mail-Adresse verwenden",
       "welcome": "Willkommen bei Mera",
-      "wrongCode": "Dieser Code hat nicht funktioniert. Prüfe ihn oder fordere einen neuen an.",
       "noSheetTitle": "Dein iPhone hat den Download nicht geöffnet",
-      "noSheetBody": "Versuch es noch einmal, oder öffne auf deinem iPhone die Einstellungen, dann Allgemein, dann Sprache und Region, dann Übersetzungssprachen, und lade dort {{language}} herunter.",
-      "sentToIfAccount": "Wenn zu dieser E-Mail ein Mera-Konto gehört, haben wir dir einen Code geschickt. Neu bei Mera? Tippe auf „Mit diesem Telefon anmelden“.",
-      "noCodeUsePhone": "Keinen Code bekommen? Tippe auf „Mit diesem Telefon anmelden“."
+      "noSheetBody": "Versuch es noch einmal, oder öffne auf deinem iPhone die Einstellungen, dann Allgemein, dann Sprache und Region, dann Übersetzungssprachen, und lade dort {{language}} herunter."
     },
-    "emailLegacyHint": "Nur für Personen, die sich früher mit E-Mail angemeldet haben. Neue Nutzer können sich nicht mehr mit E-Mail anmelden.",
     "phoneCheckTemporary": "Wir konnten dieses Telefon gerade nicht prüfen. Versuche es in einer Minute erneut.",
     "phoneUnsupportedAndroid": "Mera braucht Google Play auf diesem Telefon, um dich anzumelden. Telefone ohne Google Play werden nicht unterstützt.",
     "phoneUnsupportedIos": "Dieses iPhone kann die Anmeldung mit Telefon nicht nutzen.",
     "supportedPhones": "Unterstützte Telefone",
-    "emailEnded": {
-      "title": "Anmeldung mit E-Mail ist beendet",
-      "bodyIos": "Die Anmeldung mit E-Mail endete am {{date}}. Melde dich mit diesem Telefon an, um neu anzufangen. Dein Tarif kommt über den App Store zurück, und deine gespeicherten Artikel kommen aus deinem Backup zurück.",
-      "bodyAndroid": "Die Anmeldung mit E-Mail endete am {{date}}. Melde dich mit diesem Telefon an, um neu anzufangen. Dein Tarif kommt über Google Play zurück, und deine gespeicherten Artikel kommen aus deinem Backup zurück."
-    },
     "phoneNotSupported": "Dieses Telefon wird nicht unterstützt"
   },
   "account": {
@@ -556,7 +528,6 @@
     "exportHistoryEmptyDescription": "Du hast in den letzten 30 Tagen keine Artikel gelesen.",
     "keeps": {
       "title": "Was Mera über dich speichert",
-      "emailAndPlan": "Deine E-Mail, bis du zur Anmeldung mit Telefon wechselst oder sie am 30. Oktober 2026 gelöscht wird, und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
       "plan": "Dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
       "emailIfAdded": "Dein Tarif. Mera fragt nie nach einer E-Mail, und eine E-Mail von früher wird am 30. Oktober 2026 gelöscht. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
       "signInRecordIos": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Apples Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
@@ -3088,20 +3059,14 @@
     }
   },
   "gate": {
-    "enterCode": "Code eingeben",
     "getHelp": "Hilfe holen",
     "noEmailBody": "Beim Anmelden auf diesem Telefon ist etwas schiefgelaufen. Wende dich an den Support oder setz dieses Telefon zurück und melde dich neu an.",
     "noEmailTitle": "Mit deinem Konto gibt es ein Problem",
     "offlineBody": "Mera braucht eine Verbindung, um dein Konto zu prüfen, bevor es sich öffnet.",
     "offlineTitle": "Du bist offline",
     "opensByItself": "Öffnet sich automatisch, sobald du wieder online bist",
-    "reauthBody": "Deine Anmeldung ist abgelaufen. Wir senden einen Code an die E-Mail-Adresse dieses Kontos.",
-    "reauthTitle": "Melde dich an, um fortzufahren",
     "unreachableBody": "Das Problem liegt bei uns, nicht bei deinem Telefon. Mera versucht es weiter und öffnet sich, sobald es wieder funktioniert.",
     "unreachableTitle": "Mera ist nicht erreichbar",
-    "mismatchTitle": "Diese E-Mail gehört zu einem anderen Konto",
-    "mismatchBody": "Melde dich mit der E-Mail-Adresse an, die zu diesem Konto gehört, oder hol dir Hilfe.",
-    "mismatchOtherEmail": "Andere E-Mail-Adresse verwenden",
     "contactSupport": "Support kontaktieren",
     "resetPhone": "Telefon zurücksetzen und neu anmelden",
     "resetTitle": "Dieses Telefon zurücksetzen?",
@@ -3112,29 +3077,6 @@
     "relevance": "Beste Übereinstimmung",
     "oldest": "Älteste zuerst",
     "newest": "Neueste zuerst"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Stattdessen mit diesem Telefon anmelden",
-    "dialogBody": "Wir melden dich mit diesem Telefon an, verschieben dein Konto auf dieses Telefon und löschen deine E-Mail aus unserer Datenbank.",
-    "dialogSettingsHint": "Du kannst das bis {{date}} in den Einstellungen tun.",
-    "confirm": "Konto verschieben",
-    "cancel": "Nicht jetzt",
-    "progressTitle": "Dein Konto wird auf dieses Telefon verschoben",
-    "steps": {
-      "checking": "Dieses Telefon wird geprüft",
-      "linking": "Dein Konto wird verknüpft",
-      "removing": "Deine E-Mail wird entfernt",
-      "done": "Fertig"
-    },
-    "failed": "Das hat nicht geklappt. Dein Konto funktioniert weiterhin. Versuche es in einem Moment noch einmal.",
-    "unsupportedIos": "Auf diesem Telefon ist die Anmeldung mit Telefon nicht möglich, daher funktioniert Mera hier ab {{date}} nicht mehr. Wenn du für Mera bezahlst, kündige deinen Tarif vorher im App Store.",
-    "unsupportedAndroid": "Auf diesem Telefon ist die Anmeldung mit Telefon nicht möglich, daher funktioniert Mera hier ab {{date}} nicht mehr. Wenn du für Mera bezahlst, kündige deinen Tarif vorher bei Google Play.",
-    "success": "Du bist mit diesem Telefon angemeldet. Deine E-Mail wurde gelöscht.",
-    "close": "Schließen",
-    "inboxTitle": "Anmeldung mit E-Mail endet am {{date}}",
-    "inboxBody": "Wechsle zur Anmeldung mit Telefon, um dein Konto zu behalten.",
-    "settingsRow": "Zur Anmeldung mit Telefon wechseln",
-    "settingsRowHint": "Die Anmeldung mit E-Mail endet am {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

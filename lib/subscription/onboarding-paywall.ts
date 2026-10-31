@@ -20,15 +20,15 @@
 // `components/custom/onboarding/OnboardingScreen.tsx` — the ONLY mounter of
 // `OnboardingWizard`, and therefore the real chokepoint. Both doorways into
 // onboarding pass through it: the cold-start route (`app/logged-in/index.tsx`)
-// and the deep-link-verify redirect (`DeepLinkVerifyScreen`), which goes
-// straight to `/logged-in/onboarding` and bypasses the cold-start gate entirely.
+// and any direct arrival at `/logged-in/onboarding` (the removed email deep
+// link was one), which bypasses the cold-start gate entirely.
 //
 // 2026-08-06: `app/login.tsx` used to be a THIRD doorway — it redirected a live
 // session straight to `/logged-in/onboarding`, skipping the identity, local-fact
 // and entitlement gates in `app/logged-in/index.tsx`. It now redirects to
-// `/logged-in`, so that path resolves like every other entry. The deep-link
-// verify redirect still bypasses the cold-start gate, so the chokepoint argument
-// above survives with one doorway fewer.
+// `/logged-in`, so that path resolves like every other entry. A direct arrival
+// still bypasses the cold-start gate, so the chokepoint argument above survives
+// with one doorway fewer.
 //
 // `app/logged-in/index.tsx` calls the same two functions on its no-facts branch
 // so the cold-start path resolves the decision in place instead of bouncing

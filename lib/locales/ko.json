@@ -24,15 +24,6 @@
     "dontAskAgain": "다시 묻지 않기"
   },
   "auth": {
-    "emailPlaceholder": "이메일 주소를 입력하세요",
-    "otpPlaceholder": "6자리 코드를 입력하세요",
-    "invalidEmailDescription": "올바른 이메일 주소를 입력해 주세요",
-    "networkError": "네트워크 오류가 발생했습니다. 다시 시도해 주세요.",
-    "invalidOtp": "유효한 6자리 OTP 코드를 입력해 주세요",
-    "invalidOtpServer": "OTP 코드가 올바르지 않습니다. 다시 시도해 주세요.",
-    "otpError": "인증 중 오류가 발생했습니다. 다시 시도해 주세요.",
-    "resendCode": "코드 재발송",
-    "resendIn": "{{seconds}}초 후 재발송",
     "faq": "자주 묻는 질문",
     "identitySwitchFailedTitle": "계정 전환을 완료할 수 없습니다",
     "identitySwitchFailedBody": "이 기기에 아직 다른 계정의 데이터가 있습니다. 계속하려면 메라가 이를 삭제해야 하는데 이번에는 삭제하지 못했습니다.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "메라 알아보기",
     "continue": "계속",
     "sourceCode": "소스 코드",
-    "failedToSendBody": "OTP를 보내지 못했습니다",
-    "signingYouIn": "로그인하는 중…",
-    "signInWithoutEmail": "이 휴대폰으로 로그인",
     "differentAccount": {
       "title": "이 휴대폰으로 로그인할까요?",
-      "body": "{{email}} 계정으로 메라가 이 휴대폰에 보관하는 모든 것을 삭제합니다. 계정 자체는 삭제되지 않습니다. 계속하시겠습니까?",
       "continue": "삭제하고 계속",
       "useEmail": "내 계정 유지",
       "bodyGeneric": "이 계정으로 메라가 이 휴대폰에 보관하는 모든 것을 삭제합니다. 계정 자체는 삭제되지 않습니다. 계속하시겠습니까?"
@@ -63,36 +50,21 @@
       "beginMera": "메라 시작하기",
       "beginTitle": "어떻게 시작하시겠어요?",
       "beginWithoutEmail": "이 휴대폰으로 로그인",
-      "checkEmailTitle": "이메일을 확인하세요",
       "chooseLanguage": "언어를 선택하세요",
-      "codeA11y": "6자리 코드",
-      "continueWithEmail": "이메일로 계속",
       "downloadA11y": "{{language}} 다운로드",
-      "emailBody": "6자리 코드를 이메일로 보내드립니다. 기억해야 할 비밀번호는 없습니다.",
       "gettingReadyIos": "아래 시트에서 각 언어 옆의 ↓를 누른 뒤 여기서 기다려 주세요. 메라를 열어 두세요.",
       "gettingReadyTitle": "{{language}} 준비 중",
       "notHereBody": "언어 팩을 다운로드하거나, 여기 있는 다른 언어를 선택하세요.",
       "notHereTitle": "이 휴대폰에는 아직 {{language}}이(가) 없습니다",
       "phoneLanguage": "휴대폰 언어",
-      "sendCode": "코드 보내기",
-      "useDifferentEmail": "다른 이메일 사용",
       "welcome": "메라에 오신 것을 환영합니다",
-      "wrongCode": "코드가 맞지 않습니다. 확인하시거나 새 코드를 다시 보내 주세요.",
       "noSheetTitle": "iPhone에서 다운로드를 열지 못했습니다",
-      "noSheetBody": "다시 시도하거나 iPhone 설정을 열고 일반, 언어 및 지역, 번역 언어 순서로 이동해 {{language}}을(를) 다운로드하세요.",
-      "sentToIfAccount": "이 이메일에 메라 계정이 있다면 코드를 보냈습니다. 메라가 처음이신가요? '이 휴대폰으로 로그인'을 누르세요.",
-      "noCodeUsePhone": "코드를 받지 못하셨나요? '이 휴대폰으로 로그인'을 누르세요."
+      "noSheetBody": "다시 시도하거나 iPhone 설정을 열고 일반, 언어 및 지역, 번역 언어 순서로 이동해 {{language}}을(를) 다운로드하세요."
     },
-    "emailLegacyHint": "이메일로 전에 로그인했던 분만 해당합니다. 새 사용자는 더 이상 이메일로 로그인할 수 없습니다.",
     "phoneCheckTemporary": "지금은 이 휴대폰을 확인할 수 없습니다. 1분 뒤에 다시 시도해 주세요.",
     "phoneUnsupportedAndroid": "메라에 로그인하려면 이 휴대폰에 Google Play가 필요합니다. Google Play가 없는 휴대폰은 지원되지 않습니다.",
     "phoneUnsupportedIos": "이 iPhone에서는 휴대폰 로그인을 사용할 수 없습니다.",
     "supportedPhones": "지원되는 휴대폰",
-    "emailEnded": {
-      "title": "이메일 로그인이 종료되었습니다",
-      "bodyIos": "이메일 로그인은 {{date}}에 종료되었습니다. 이 휴대폰으로 로그인하면 다시 시작할 수 있습니다. 요금제는 App Store에서 돌아오고, 저장한 기사는 백업에서 돌아옵니다.",
-      "bodyAndroid": "이메일 로그인은 {{date}}에 종료되었습니다. 이 휴대폰으로 로그인하면 다시 시작할 수 있습니다. 요금제는 Google Play에서 돌아오고, 저장한 기사는 백업에서 돌아옵니다."
-    },
     "phoneNotSupported": "이 휴대폰은 지원되지 않습니다"
   },
   "account": {
@@ -546,7 +518,6 @@
     "exportHistoryEmptyDescription": "지난 30일간 읽은 기사가 없습니다.",
     "keeps": {
       "title": "메라가 보관하는 내 정보",
-      "emailAndPlan": "이메일은 휴대폰 로그인으로 바꾸거나 2026년 10월 30일에 삭제되기 전까지 보관하고, 요금제도 보관합니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
       "plan": "요금제. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
       "emailIfAdded": "요금제. 메라는 이메일을 요구하지 않으며, 이전에 추가한 이메일은 2026년 10월 30일에 삭제됩니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
       "signInRecordIos": "이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple의 검사 결과는 보관하지 않습니다.",
@@ -3070,20 +3041,14 @@
     }
   },
   "gate": {
-    "enterCode": "코드 입력",
     "getHelp": "도움 받기",
     "noEmailBody": "이 휴대폰에서 로그인하는 중에 문제가 발생했습니다. 지원팀에 문의하거나 이 휴대폰을 초기화한 후 다시 로그인하세요.",
     "noEmailTitle": "계정에 문제가 있습니다",
     "offlineBody": "계정을 확인하려면 메라가 연결되어 있어야 합니다.",
     "offlineTitle": "오프라인 상태입니다",
     "opensByItself": "온라인 상태가 되면 자동으로 열립니다",
-    "reauthBody": "로그인이 만료되었습니다. 이 계정의 이메일로 코드를 보내 드리겠습니다.",
-    "reauthTitle": "계속하려면 로그인하세요",
     "unreachableBody": "문제는 회원님의 휴대폰이 아니라 저희 쪽에 있습니다. 메라가 계속 시도하며 복구되면 열립니다.",
     "unreachableTitle": "메라에 연결할 수 없습니다",
-    "mismatchTitle": "이 이메일은 다른 계정에 연결되어 있습니다",
-    "mismatchBody": "이 계정에 등록된 이메일로 로그인하거나 도움을 받으세요.",
-    "mismatchOtherEmail": "다른 이메일 사용",
     "contactSupport": "지원팀에 문의",
     "resetPhone": "이 휴대폰 초기화 후 다시 로그인",
     "resetTitle": "이 휴대폰을 초기화할까요?",
@@ -3094,29 +3059,6 @@
     "relevance": "최고 일치도",
     "oldest": "가장 오래된 순",
     "newest": "최신순"
-  },
-  "moveToPhone": {
-    "dialogTitle": "대신 이 휴대폰으로 로그인",
-    "dialogBody": "이 휴대폰으로 로그인하고, 계정을 이 휴대폰으로 옮긴 뒤, 회원님의 이메일을 메라 데이터베이스에서 삭제합니다.",
-    "dialogSettingsHint": "{{date}}까지 설정에서 이 작업을 할 수 있습니다.",
-    "confirm": "계정 옮기기",
-    "cancel": "나중에",
-    "progressTitle": "계정을 이 휴대폰으로 옮기는 중",
-    "steps": {
-      "checking": "이 휴대폰 확인 중",
-      "linking": "계정 연결 중",
-      "removing": "이메일 삭제 중",
-      "done": "완료"
-    },
-    "failed": "완료되지 않았습니다. 계정은 여전히 사용할 수 있습니다. 잠시 후 다시 시도해 주세요.",
-    "unsupportedIos": "이 휴대폰은 휴대폰 로그인을 지원하지 않아 {{date}}에 메라를 사용할 수 없게 됩니다. 메라 요금제를 결제하고 있다면, 그 전에 App Store에서 요금제를 취소하세요.",
-    "unsupportedAndroid": "이 휴대폰은 휴대폰 로그인을 지원하지 않아 {{date}}에 메라를 사용할 수 없게 됩니다. 메라 요금제를 결제하고 있다면, 그 전에 Google Play에서 요금제를 취소하세요.",
-    "success": "이 휴대폰으로 로그인했습니다. 이메일은 삭제되었습니다.",
-    "close": "닫기",
-    "inboxTitle": "이메일 로그인은 {{date}}에 끝납니다",
-    "inboxBody": "휴대폰 로그인으로 바꾸면 계정을 계속 사용할 수 있습니다.",
-    "settingsRow": "휴대폰 로그인으로 전환",
-    "settingsRowHint": "이메일 로그인은 {{date}}에 끝납니다."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

@@ -24,15 +24,6 @@
     "dontAskAgain": "No volver a preguntar"
   },
   "auth": {
-    "emailPlaceholder": "Ingresa tu dirección de correo electrónico",
-    "otpPlaceholder": "Ingresa el código de 6 dígitos",
-    "invalidEmailDescription": "Por favor, ingresa una dirección de correo electrónico válida",
-    "networkError": "Error de red. Por favor, inténtalo de nuevo.",
-    "invalidOtp": "Por favor, ingresa un código OTP válido de 6 dígitos",
-    "invalidOtpServer": "Código OTP no válido. Por favor, inténtalo de nuevo.",
-    "otpError": "Ocurrió un error durante la verificación. Por favor, inténtalo de nuevo.",
-    "resendCode": "Reenviar código",
-    "resendIn": "Reenviar en {{seconds}}s",
     "faq": "Preguntas frecuentes",
     "identitySwitchFailedTitle": "No pudimos completar el cambio de cuenta",
     "identitySwitchFailedBody": "Los datos de otra cuenta siguen en este dispositivo. Mera debe borrarlos antes de que puedas continuar, y esta vez no se pudieron borrar.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Conoce Mera",
     "continue": "Continuar",
     "sourceCode": "Código fuente",
-    "failedToSendBody": "No se pudo enviar el código OTP",
-    "signingYouIn": "Iniciando sesión…",
-    "signInWithoutEmail": "Iniciar sesión con este teléfono",
     "differentAccount": {
       "title": "¿Iniciar sesión con este teléfono?",
-      "body": "Borraremos todo lo que Mera guarda en este teléfono para {{email}}. La cuenta en sí no se elimina. ¿Seguro?",
       "continue": "Eliminar y continuar",
       "useEmail": "Conservar mi cuenta",
       "bodyGeneric": "Borraremos todo lo que Mera guarda en este teléfono para esta cuenta. La cuenta en sí no se elimina. ¿Seguro?"
@@ -63,36 +50,21 @@
       "beginMera": "Empezar con Mera",
       "beginTitle": "¿Cómo quieres empezar?",
       "beginWithoutEmail": "Iniciar sesión con este teléfono",
-      "checkEmailTitle": "Revisa tu correo",
       "chooseLanguage": "Elige tu idioma",
-      "codeA11y": "Código de 6 dígitos",
-      "continueWithEmail": "Continuar con el correo",
       "downloadA11y": "Descargar {{language}}",
-      "emailBody": "Te enviaremos un código de 6 dígitos por correo. No hay contraseña que recordar.",
       "gettingReadyIos": "Toca ↓ junto a cada idioma de la hoja de abajo y espera aquí. Mantén Mera abierta.",
       "gettingReadyTitle": "Preparando {{language}}",
       "notHereBody": "Descarga el paquete de idioma o usa uno de los idiomas que ya están aquí.",
       "notHereTitle": "{{language}} todavía no está en este teléfono",
       "phoneLanguage": "Idioma de tu teléfono",
-      "sendCode": "Enviar código",
-      "useDifferentEmail": "Usar otro correo",
       "welcome": "Bienvenido a Mera",
-      "wrongCode": "Ese código no funcionó. Revísalo o pide uno nuevo.",
       "noSheetTitle": "Tu iPhone no abrió la descarga",
-      "noSheetBody": "Vuelve a intentarlo, o abre Ajustes en tu iPhone, luego General, después Idioma y región, y por último Idiomas de traducción para descargar {{language}}.",
-      "sentToIfAccount": "Si este correo tiene una cuenta de Mera, hemos enviado un código a esa dirección. ¿Eres nuevo en Mera? Usa \"Iniciar sesión con este teléfono\".",
-      "noCodeUsePhone": "¿No recibiste un código? Usa \"Iniciar sesión con este teléfono\"."
+      "noSheetBody": "Vuelve a intentarlo, o abre Ajustes en tu iPhone, luego General, después Idioma y región, y por último Idiomas de traducción para descargar {{language}}."
     },
-    "emailLegacyHint": "Solo para quienes iniciaron sesión con correo antes. Los usuarios nuevos ya no pueden iniciar sesión con correo.",
     "phoneCheckTemporary": "No pudimos comprobar este teléfono ahora. Inténtalo de nuevo en un minuto.",
     "phoneUnsupportedAndroid": "Mera necesita Google Play en este teléfono para iniciar tu sesión. Los teléfonos sin Google Play no son compatibles.",
     "phoneUnsupportedIos": "Este iPhone no puede usar el inicio de sesión con teléfono.",
     "supportedPhones": "Teléfonos compatibles",
-    "emailEnded": {
-      "title": "El inicio de sesión con correo ha terminado",
-      "bodyIos": "El inicio de sesión con correo terminó el {{date}}. Inicia sesión con este teléfono para empezar de nuevo. Tu plan vuelve desde la App Store, y tus artículos guardados vuelven desde tu copia de seguridad.",
-      "bodyAndroid": "El inicio de sesión con correo terminó el {{date}}. Inicia sesión con este teléfono para empezar de nuevo. Tu plan vuelve desde Google Play, y tus artículos guardados vuelven desde tu copia de seguridad."
-    },
     "phoneNotSupported": "Este teléfono no es compatible"
   },
   "account": {
@@ -556,7 +528,6 @@
     "exportHistoryEmptyDescription": "No has leído ningún artículo en los últimos 30 días.",
     "keeps": {
       "title": "Qué guarda Mera sobre ti",
-      "emailAndPlan": "Tu correo, hasta que pases al inicio de sesión con teléfono o hasta que se elimine el 30 de octubre de 2026, y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
       "plan": "Tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
       "emailIfAdded": "Tu plan. Mera nunca pide un correo, y cualquier correo de antes se elimina el 30 de octubre de 2026. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
       "signInRecordIos": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple de que es la app real no se guarda.",
@@ -3092,20 +3063,14 @@
     }
   },
   "gate": {
-    "enterCode": "Introduce el código",
     "getHelp": "Obtener ayuda",
     "noEmailBody": "Algo salió mal al iniciar sesión en este teléfono. Contacta con soporte o restablece este teléfono y vuelve a iniciar sesión.",
     "noEmailTitle": "Hay un problema con tu cuenta",
     "offlineBody": "Mera necesita conexión para revisar tu cuenta antes de abrirse.",
     "offlineTitle": "Estás sin conexión",
     "opensByItself": "Se abre sola cuando vuelvas a estar en línea",
-    "reauthBody": "Tu inicio de sesión caducó. Enviaremos un código al correo de esta cuenta.",
-    "reauthTitle": "Inicia sesión para continuar",
     "unreachableBody": "El problema está de nuestro lado, no en tu teléfono. Mera sigue intentándolo y se abre cuando vuelva.",
     "unreachableTitle": "No se puede acceder a Mera",
-    "mismatchTitle": "Este correo pertenece a otra cuenta",
-    "mismatchBody": "Inicia sesión con el correo de esta cuenta o obtén ayuda.",
-    "mismatchOtherEmail": "Usar otro correo",
     "contactSupport": "Contactar con soporte",
     "resetPhone": "Restablecer este teléfono e iniciar sesión de nuevo",
     "resetTitle": "¿Restablecer este teléfono?",
@@ -3116,29 +3081,6 @@
     "relevance": "Mejor coincidencia",
     "oldest": "Más antiguos primero",
     "newest": "Más recientes primero"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Inicia sesión con este teléfono en su lugar",
-    "dialogBody": "Te iniciaremos sesión con este teléfono, pasaremos tu cuenta a él y eliminaremos tu correo de nuestra base de datos.",
-    "dialogSettingsHint": "Puedes hacerlo en Ajustes hasta el {{date}}.",
-    "confirm": "Mover cuenta",
-    "cancel": "Ahora no",
-    "progressTitle": "Pasando tu cuenta a este teléfono",
-    "steps": {
-      "checking": "Comprobando este teléfono",
-      "linking": "Vinculando tu cuenta",
-      "removing": "Eliminando tu correo",
-      "done": "Listo"
-    },
-    "failed": "No se pudo terminar. Tu cuenta sigue funcionando. Inténtalo de nuevo en un momento.",
-    "unsupportedIos": "Este teléfono no puede usar el inicio de sesión con teléfono, así que Mera dejará de funcionar en él el {{date}}. Si pagas por Mera, cancela tu plan en la App Store antes de esa fecha.",
-    "unsupportedAndroid": "Este teléfono no puede usar el inicio de sesión con teléfono, así que Mera dejará de funcionar en él el {{date}}. Si pagas por Mera, cancela tu plan en Google Play antes de esa fecha.",
-    "success": "Has iniciado sesión con este teléfono. Tu correo ha sido eliminado.",
-    "close": "Cerrar",
-    "inboxTitle": "El inicio de sesión con correo termina el {{date}}",
-    "inboxBody": "Cambia al inicio de sesión con teléfono para conservar tu cuenta.",
-    "settingsRow": "Pasar al inicio de sesión con teléfono",
-    "settingsRowHint": "El inicio de sesión con correo termina el {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

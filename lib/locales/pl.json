@@ -24,15 +24,6 @@
     "dontAskAgain": "Nie pytaj ponownie"
   },
   "auth": {
-    "emailPlaceholder": "Wpisz swój adres e-mail",
-    "otpPlaceholder": "Wpisz 6-cyfrowy kod",
-    "invalidEmailDescription": "Proszę podać prawidłowy adres e-mail",
-    "networkError": "Błąd sieci. Spróbuj ponownie.",
-    "invalidOtp": "Proszę wpisać prawidłowy 6-cyfrowy kod OTP",
-    "invalidOtpServer": "Nieprawidłowy kod OTP. Spróbuj ponownie.",
-    "otpError": "Podczas weryfikacji wystąpił błąd. Spróbuj ponownie.",
-    "resendCode": "Wyślij kod ponownie",
-    "resendIn": "Wyślij ponownie za {{seconds}}s",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Nie udało się dokończyć przełączania kont",
     "identitySwitchFailedBody": "Na tym urządzeniu wciąż są dane innego konta. Mera musi je usunąć, zanim przejdziesz dalej, a tym razem usuwanie się nie powiodło.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Poznaj aplikację Mera",
     "continue": "Kontynuuj",
     "sourceCode": "Kod źródłowy",
-    "failedToSendBody": "Nie udało się wysłać kodu OTP",
-    "signingYouIn": "Logujemy Cię…",
-    "signInWithoutEmail": "Zaloguj się tym telefonem",
     "differentAccount": {
       "title": "Zalogować się tym telefonem?",
-      "body": "Wyczyścimy wszystko, co Mera przechowuje na tym telefonie dla {{email}}. Samo konto nie zostanie usunięte. Na pewno?",
       "continue": "Usuń i kontynuuj",
       "useEmail": "Zachowaj moje konto",
       "bodyGeneric": "Wyczyścimy wszystko, co Mera przechowuje na tym telefonie dla tego konta. Samo konto nie zostanie usunięte. Na pewno?"
@@ -63,36 +50,21 @@
       "beginMera": "Zacznij z Mera",
       "beginTitle": "Jak chcesz zacząć?",
       "beginWithoutEmail": "Zaloguj się tym telefonem",
-      "checkEmailTitle": "Sprawdź e-mail",
       "chooseLanguage": "Wybierz język",
-      "codeA11y": "6-cyfrowy kod",
-      "continueWithEmail": "Kontynuuj z e-mailem",
       "downloadA11y": "Pobierz {{language}}",
-      "emailBody": "Wyślemy Ci 6-cyfrowy kod e-mailem. Nie trzeba pamiętać hasła.",
       "gettingReadyIos": "Stuknij ↓ obok każdego języka w oknie na dole, a potem poczekaj tutaj. Zostaw Mera otwartą.",
       "gettingReadyTitle": "Przygotowuję: {{language}}",
       "notHereBody": "Pobierz pakiet językowy albo wybierz jeden z języków, które już są na tym telefonie.",
       "notHereTitle": "{{language}} nie jest jeszcze na tym telefonie",
       "phoneLanguage": "Język telefonu",
-      "sendCode": "Wyślij kod",
-      "useDifferentEmail": "Użyj innego e-maila",
       "welcome": "Witaj w Mera",
-      "wrongCode": "Ten kod nie zadziałał. Sprawdź go albo wyślij nowy.",
       "noSheetTitle": "Twój iPhone nie otworzył pobierania",
-      "noSheetBody": "Spróbuj ponownie albo otwórz Ustawienia na iPhonie, potem Ogólne, potem Język i region, a potem Języki tłumaczenia, aby pobrać {{language}}.",
-      "sentToIfAccount": "Jeśli ten e-mail ma konto w Mera, wysłaliśmy na niego kod. Nowy w Mera? Użyj przycisku „Zaloguj się tym telefonem”.",
-      "noCodeUsePhone": "Kod nie przyszedł? Użyj przycisku „Zaloguj się tym telefonem”."
+      "noSheetBody": "Spróbuj ponownie albo otwórz Ustawienia na iPhonie, potem Ogólne, potem Język i region, a potem Języki tłumaczenia, aby pobrać {{language}}."
     },
-    "emailLegacyHint": "Tylko dla osób, które wcześniej logowały się e-mailem. Nowi użytkownicy nie mogą już logować się e-mailem.",
     "phoneCheckTemporary": "Nie udało się teraz sprawdzić tego telefonu. Spróbuj ponownie za minutę.",
     "phoneUnsupportedAndroid": "Mera potrzebuje Google Play na tym telefonie, żeby Cię zalogować. Telefony bez niego nie są obsługiwane.",
     "phoneUnsupportedIos": "Ten iPhone nie może logować się telefonem.",
     "supportedPhones": "Obsługiwane telefony",
-    "emailEnded": {
-      "title": "Logowanie e-mailem zostało zakończone",
-      "bodyIos": "Logowanie e-mailem zakończyło się {{date}}. Zaloguj się tym telefonem, aby zacząć od nowa. Twój plan wróci z App Store, a zapisane artykuły wrócą z kopii zapasowej.",
-      "bodyAndroid": "Logowanie e-mailem zakończyło się {{date}}. Zaloguj się tym telefonem, aby zacząć od nowa. Twój plan wróci z Google Play, a zapisane artykuły wrócą z kopii zapasowej."
-    },
     "phoneNotSupported": "Ten telefon nie jest obsługiwany"
   },
   "account": {
@@ -594,7 +566,6 @@
     "exportHistoryEmptyDescription": "Nie przeczytałeś żadnych artykułów w ciągu ostatnich 30 dni.",
     "keeps": {
       "title": "Co Mera przechowuje o Tobie",
-      "emailAndPlan": "Twój e-mail, do czasu przejścia na logowanie telefonem albo do jego usunięcia 30 października 2026, i Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
       "plan": "Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
       "emailIfAdded": "Twój plan. Mera nigdy nie prosi o e-mail, a każdy stary e-mail zostanie usunięty 30 października 2026. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
       "signInRecordIos": "Zapis logowania dla tego telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Apple, że to prawdziwa aplikacja.",
@@ -3218,20 +3189,14 @@
     }
   },
   "gate": {
-    "enterCode": "Wpisz kod",
     "getHelp": "Uzyskaj pomoc",
     "noEmailBody": "Coś poszło nie tak podczas logowania na tym telefonie. Skontaktuj się z pomocą albo zresetuj ten telefon i zaloguj się ponownie.",
     "noEmailTitle": "Jest problem z Twoim kontem",
     "offlineBody": "Mera potrzebuje połączenia, żeby sprawdzić Twoje konto, zanim się otworzy.",
     "offlineTitle": "Jesteś offline",
     "opensByItself": "Otworzy się sama, gdy wrócisz online",
-    "reauthBody": "Twoje logowanie wygasło. Wyślemy kod na e-mail przypisany do tego konta.",
-    "reauthTitle": "Zaloguj się, aby kontynuować",
     "unreachableBody": "Problem leży po naszej stronie, nie w Twoim telefonie. Mera wciąż próbuje i otworzy się, gdy wróci.",
     "unreachableTitle": "Nie można połączyć się z Mera",
-    "mismatchTitle": "Ten e-mail należy do innego konta",
-    "mismatchBody": "Zaloguj się e-mailem przypisanym do tego konta albo poproś o pomoc.",
-    "mismatchOtherEmail": "Użyj innego e-maila",
     "contactSupport": "Skontaktuj się z pomocą",
     "resetPhone": "Zresetuj ten telefon i zaloguj się ponownie",
     "resetTitle": "Zresetować ten telefon?",
@@ -3242,29 +3207,6 @@
     "relevance": "Najlepsze dopasowanie",
     "oldest": "Najstarsze pierwsze",
     "newest": "Najnowsze pierwsze"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Zaloguj się zamiast tego tym telefonem",
-    "dialogBody": "Zalogujemy Cię tym telefonem, przeniesiemy Twoje konto na ten telefon i usuniemy Twój e-mail z naszej bazy danych.",
-    "dialogSettingsHint": "Możesz to zrobić w Ustawieniach do {{date}}.",
-    "confirm": "Przenieś konto",
-    "cancel": "Nie teraz",
-    "progressTitle": "Przenoszenie konta na ten telefon",
-    "steps": {
-      "checking": "Sprawdzanie tego telefonu",
-      "linking": "Łączenie konta",
-      "removing": "Usuwanie e-maila",
-      "done": "Gotowe"
-    },
-    "failed": "To się nie udało. Twoje konto nadal działa. Spróbuj ponownie za chwilę.",
-    "unsupportedIos": "Ten telefon nie może logować się telefonem, więc Mera przestanie na nim działać {{date}}. Jeśli płacisz za Mera, anuluj plan w App Store przed tą datą.",
-    "unsupportedAndroid": "Ten telefon nie może logować się telefonem, więc Mera przestanie na nim działać {{date}}. Jeśli płacisz za Mera, anuluj plan w Google Play przed tą datą.",
-    "success": "Zalogowano tym telefonem. Twój e-mail został usunięty.",
-    "close": "Zamknij",
-    "inboxTitle": "Logowanie e-mailem kończy się {{date}}",
-    "inboxBody": "Przejdź na logowanie telefonem, aby zachować konto.",
-    "settingsRow": "Przejdź na logowanie telefonem",
-    "settingsRowHint": "Logowanie e-mailem kończy się {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

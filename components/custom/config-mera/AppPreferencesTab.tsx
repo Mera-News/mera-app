@@ -10,18 +10,16 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useChatInCloud } from '@/lib/stores/mera-protocol-store';
 import { useColors } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
-import { maskEmail } from '@/lib/algorithms/mask-email';
 import { getAppVersion, getGitCommit } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
-import SupportIdCopy, { useAccountHandle } from './SupportIdCopy';
+import SupportIdCopy, { useSupportId } from './SupportIdCopy';
 import { useAppPreferences } from './useAppPreferences';
-import { emailCutoffLabel, moveToPhoneDone, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
@@ -30,24 +28,22 @@ const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/$
 
 /** The account row: how this account signs in, with the Support ID and its
  *  copy button as the sub-line (the only place Settings shows it). A Row's
- *  subtitle is text only, so this mirrors Row's look. `reserveSubLine` keeps
- *  the line's height while the cached id loads, so the row never jumps. */
-const AccountRow: React.FC<{ testID: string; icon: keyof typeof MaterialIcons.glyphMap; title: string; reserveSubLine: boolean }> = ({
+ *  subtitle is text only, so this mirrors Row's look. The sub-line keeps its
+ *  height while the cached id loads, so the row never jumps. */
+const AccountRow: React.FC<{ testID: string; icon: keyof typeof MaterialIcons.glyphMap; title: string }> = ({
     testID,
     icon,
     title,
-    reserveSubLine,
 }) => {
     const colors = useColors();
-    const handle = useAccountHandle();
+    const supportId = useSupportId();
     return (
         <View testID={testID} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, paddingHorizontal: 16 }}>
             <MaterialIcons name={icon} size={20} color={colors.ink2} />
             <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={{ color: colors.ink, fontSize: 16, lineHeight: 21 }}>{title}</Text>
-                {/* An email account with no Support ID yet: its "!" already has the Move to phone row. */}
-                <View style={{ minHeight: reserveSubLine ? 20 : 0, marginTop: 2 }}>
-                    {handle?.kind === 'supportId' ? <SupportIdCopy testID="settings-support-id" compact /> : null}
+                <View style={{ minHeight: 20, marginTop: 2 }}>
+                    {supportId ? <SupportIdCopy testID="settings-support-id" compact /> : null}
                 </View>
             </View>
         </View>
@@ -63,7 +59,7 @@ const AccountRow: React.FC<{ testID: string; icon: keyof typeof MaterialIcons.gl
  */
 const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const colors = useColors();
     const {
         supportBusy,
@@ -71,7 +67,6 @@ const AppPreferencesTab: React.FC = () => {
         appLanguage,
         processingMode,
         lockEnabled,
-        displayEmail,
         confirmDeleteAccount,
         confirmLogout,
         devMode,
@@ -85,13 +80,6 @@ const AppPreferencesTab: React.FC = () => {
     } = useAppPreferences();
     const chatInCloud = useChatInCloud();
     useFocusEffect(refreshOnFocus);
-    // The move row is for accounts whose move is not done: the same check as the inbox row (moveToPhoneDone).
-    const [showMoveRow, setShowMoveRow] = useState(false);
-    useEffect(() => {
-        let live = true;
-        void moveToPhoneDone().then((done) => { if (live) setShowMoveRow(!done); });
-        return () => { live = false; };
-    }, [displayEmail]);
 
     const busy = <Spinner size="small" />;
     const version = getAppVersion();
@@ -215,20 +203,7 @@ const AppPreferencesTab: React.FC = () => {
 
             <GroupLabel testID="settings-group-account">{t('settings.groupAccount')}</GroupLabel>
             <Group>
-                {displayEmail ? (
-                    <AccountRow testID="settings-row-email" icon="mail-outline" title={maskEmail(displayEmail)} reserveSubLine={false} />
-                ) : (
-                    <AccountRow testID="settings-row-phone" icon="smartphone" title={t('you.settings.signedInPhone')} reserveSubLine />
-                )}
-                {showMoveRow ? (
-                    <Row
-                        testID="settings-row-move-to-phone"
-                        leadingIcon="smartphone"
-                        title={t('moveToPhone.settingsRow')}
-                        subtitle={t('moveToPhone.settingsRowHint', { date: emailCutoffLabel(i18n.language) })}
-                        onPress={() => void requestMoveToPhone()}
-                    />
-                ) : null}
+                <AccountRow testID="settings-row-phone" icon="smartphone" title={t('you.settings.signedInPhone')} />
             </Group>
             {/* Under the account card: who sends receipts. Restore purchases lives on Manage plan. */}
             <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 12 }}>

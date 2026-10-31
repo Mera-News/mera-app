@@ -18,26 +18,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
 import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
 import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Button, ButtonText } from '@/components/ui/button';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 
 import { BeginStage } from './stages/BeginStage';
 import { ConsentStage } from './stages/ConsentStage';
 import { DifferentAccountSheet } from './stages/DifferentAccountSheet';
-import { EmailEndedStage } from './stages/EmailEndedStage';
-import { EmailStage } from './stages/EmailStage';
-import { ReauthEmailStage } from './stages/ReauthEmailStage';
-import { ReauthMismatchStage } from './stages/ReauthMismatchStage';
 import { ReauthNoEmailStage } from './stages/ReauthNoEmailStage';
 import { LOGO_TOP, styles } from './stages/styles';
-import { unsupportedExit, useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen';
+import { useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen';
 
 /** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
 const LOGO_FULL = 150;
@@ -55,13 +49,12 @@ const LOGO: Partial<Record<Stage, 'center' | 'top' | 'slot'>> = {
  * The first-launch track and the sign-in gate (FinalJourney, FinalStart #8 to
  * #11): ONE backdrop and ONE logo hoisted above the stage switch, so no step is
  * a hard cut. A device with no remembered account walks the track (welcome
- * with the language list, checks, how to begin, before you start, email and
- * code). A device whose account needs signing in again lands on the gate:
- * reauth-email (a code to the account's own masked address) or reauth-no-email
+ * with the language list, checks, how to begin, before you start). A device
+ * whose account needs signing in again lands on the gate, reauth-no-email
  * (contact support, or reset this phone back to the track). Neither ever
  * switches accounts on its own: moving to the phone's account always asks first.
  */
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSignIn = true }) => {
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
@@ -72,29 +65,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         stage,
         forward,
         go,
-        setConsentFor,
-        setConsentFrom,
-        setPendingEmail,
-        pendingEmail,
-        cachedEmail,
         cachedUserId,
         supportId,
         availability,
         signInPath,
-        consentFor,
-        consentFrom,
         pendingSwitch,
         tourOpen,
         setTourOpen,
-        canSignInWithoutEmail,
-        emailEnded,
         finishDeviceSignIn,
         askSwitch,
-        handleVerificationSuccess,
         handleSwitchContinue,
         handleSwitchKeep,
         leaveGate,
-    } = useAuthScreen({ onLoginSuccess, allowDeviceSignIn });
+    } = useAuthScreen({ onLoginSuccess });
 
     // ── The hoisted logo ──────────────────────────────────────────────────
     const logoAt = LOGO[stage];
@@ -163,144 +146,22 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
             body = (
                 <BeginStage
                     onLogoSlot={setSlot}
-                    emailEnded={emailEnded}
                     canUsePhone={availability !== 'unavailable'}
-                    onWithoutEmail={() => {
-                        setConsentFor('device');
-                        setConsentFrom('begin');
-                        go('consent');
-                    }}
-                    onWithEmail={() => {
-                        setConsentFor('email');
-                        setConsentFrom('begin');
-                        go('consent');
-                    }}
+                    onWithoutEmail={() => go('consent')}
                 />
             );
             break;
         case 'consent':
             body = (
                 <ConsentStage
-                    mode={consentFor}
                     signInPath={signInPath}
                     expectedUserId={cachedUserId}
-                    onAgreedForEmail={() => go('email')}
                     onSignedIn={finishDeviceSignIn}
                     onDifferentAccount={(r) => {
                         askSwitch(r);
-                        go(consentFrom);
+                        go('begin');
                     }}
-                    onUnsupportedToEmail={unsupportedExit(cachedEmail) ? () => go('reauth-email') : undefined}
-                    onBack={() => go(consentFrom)}
-                />
-            );
-            break;
-        case 'email':
-            body = (
-                <EmailStage
-                    initialEmail={pendingEmail}
                     onBack={() => go('begin')}
-                    onSent={(email) => {
-                        setPendingEmail(email);
-                        go('otp');
-                    }}
-                />
-            );
-            break;
-        case 'otp':
-            body = (
-                <OTPVerificationView
-                    email={pendingEmail}
-                    onVerificationSuccess={handleVerificationSuccess}
-                    onBack={() => go('email')}
-                    onUseDifferentEmail={() => go('email')}
-                    onUsePhone={
-                        canSignInWithoutEmail
-                            ? () => {
-                                  setConsentFor('device');
-                                  setConsentFrom('begin');
-                                  go('consent');
-                              }
-                            : undefined
-                    }
-                />
-            );
-            break;
-        case 'reauth-email':
-            body = cachedEmail ? (
-                <ReauthEmailStage
-                    email={cachedEmail}
-                    onSent={() => {
-                        setPendingEmail(cachedEmail);
-                        go('reauth-otp');
-                    }}
-                    onWithoutEmail={
-                        canSignInWithoutEmail
-                            ? () => {
-                                  setConsentFor('device');
-                                  setConsentFrom('reauth-email');
-                                  go('consent');
-                              }
-                            : undefined
-                    }
-                />
-            ) : null;
-            break;
-        case 'email-ended':
-            body = (
-                <EmailEndedStage
-                    onUsePhone={
-                        canSignInWithoutEmail
-                            ? () => {
-                                  setConsentFor('device');
-                                  setConsentFrom('email-ended');
-                                  go('consent');
-                              }
-                            : undefined
-                    }
-                />
-            );
-            break;
-        case 'reauth-otp':
-            body = (
-                <OTPVerificationView
-                    email={pendingEmail}
-                    title={t('gate.enterCode')}
-                    expectedUserId={cachedUserId}
-                    onAccountMismatch={() => go('reauth-mismatch')}
-                    onVerificationSuccess={(userId) => onLoginSuccess?.(userId)}
-                    onBack={() => go('reauth-email')}
-                    footer={
-                        canSignInWithoutEmail ? (
-                            <Button
-                                variant="outline"
-                                action="secondary"
-                                onPress={() => {
-                                    setConsentFor('device');
-                                    setConsentFrom('reauth-email');
-                                    go('consent');
-                                }}
-                                testID="reauth-otp-without-email"
-                            >
-                                <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
-                            </Button>
-                        ) : null
-                    }
-                />
-            );
-            break;
-        case 'reauth-mismatch':
-            body = <ReauthMismatchStage onOtherEmail={() => go('reauth-other-email')} />;
-            break;
-        case 'reauth-other-email':
-            body = (
-                <EmailStage
-                    initialEmail=""
-                    onBack={() => go('reauth-mismatch')}
-                    onSent={(email) => {
-                        setPendingEmail(email);
-                        go('reauth-otp');
-                    }}
                 />
             );
             break;
@@ -371,7 +232,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                 testID="auth-different-account"
             >
                 <DifferentAccountSheet
-                    email={cachedEmail}
                     onKeep={handleSwitchKeep}
                     onContinue={handleSwitchContinue}
                 />

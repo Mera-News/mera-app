@@ -84,12 +84,6 @@ export default function LoginScreen() {
         <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
             <AuthScreen
                 onLoginSuccess={reauthMode ? (userId) => { void handleReauthSuccess(userId); } : undefined}
-                // Forgot PIN never offers "Sign in without email": device
-                // sign-in proves only that someone holds the phone, which is
-                // who the PIN guards against, and a same-account resume here
-                // goes straight to clearPin() + /pin-setup. The PARAM is the
-                // guard, never usePinStore.lockEnabled (see above).
-                allowDeviceSignIn={reauth !== 'pin'}
             />
         </ErrorBoundary>
     );

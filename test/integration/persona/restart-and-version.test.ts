@@ -399,12 +399,12 @@ describe('restarts and the version floor', () => {
 
     // ---------------------------------------------------------------------------------------------
     describe('route blocking', () => {
-        it('blocks exactly these five routes, no more and no fewer', () => {
-            expect([...RESTART_BLOCKED_ROUTES]).toEqual(['/login', '/verify-otp', '/pin-setup', '/pin-lock', '/logged-in/onboarding']);
+        it('blocks exactly these four routes, no more and no fewer', () => {
+            expect([...RESTART_BLOCKED_ROUTES]).toEqual(['/login', '/pin-setup', '/pin-lock', '/logged-in/onboarding']);
         });
 
         it('isRestartBlockedRoute matches on prefix and nothing else', () => {
-            expect(isRestartBlockedRoute('/verify-otp?email=x')).toBe(true);
+            expect(isRestartBlockedRoute('/login?reauth=1')).toBe(true);
             expect(isRestartBlockedRoute('/logged-in/onboarding/step-2')).toBe(true);
             expect(isRestartBlockedRoute(FEED)).toBe(false);
             expect(isRestartBlockedRoute('/logged-in/notifications')).toBe(false);
@@ -427,12 +427,12 @@ describe('restarts and the version floor', () => {
 
         it('names the route as the blocker', async () => {
             process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
-            setCurrentPathname('/verify-otp');
+            setCurrentPathname('/pin-setup');
             const info = jest.spyOn(logger, 'info');
 
             await requestRestart('ota');
 
-            expect(info).toHaveBeenCalledWith('[app-restart] would restart (ota, blocked-by: route:/verify-otp)');
+            expect(info).toHaveBeenCalledWith('[app-restart] would restart (ota, blocked-by: route:/pin-setup)');
         });
 
         it('restarts on an ordinary route', async () => {
@@ -501,7 +501,7 @@ describe('restarts and the version floor', () => {
             expect(restartWouldReload('ota')).toBe(false);
             release();
 
-            setCurrentPathname('/verify-otp');
+            setCurrentPathname('/pin-setup');
             expect(restartWouldReload('ota')).toBe(false);
             setCurrentPathname(FEED);
 
@@ -711,7 +711,7 @@ describe('restarts and the version floor', () => {
             pendingUpdate('update-1');
             await mount();
             await flush();
-            setCurrentPathname('/verify-otp');
+            setCurrentPathname('/pin-setup');
             await returnFromBackground();
             expect(mockReloadAsync).not.toHaveBeenCalled();
             await expect(getSetting(OTA_RESTART_GUARD_KEY)).resolves.toBeNull();

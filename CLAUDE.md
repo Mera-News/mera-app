@@ -66,7 +66,7 @@ and most loose `lib/*.ts`. Read the code.
     unless `EXPO_PUBLIC_SENTRY_IN_DEV=true`, so `showFeedback()` no-ops). Never use it while in
     dev; nothing is sent and no error is shown.
 11. Device attestation cannot run on a simulator or emulator. There, device sign-in works only against
-    STAGING through the dev bypass token; prod needs email OTP. Setup: `mera-app-harness`.
+    STAGING through the dev bypass token; email sign-in is gone, so prod has only test accounts. Setup: `mera-app-harness`.
 
 ## Deeper docs
 

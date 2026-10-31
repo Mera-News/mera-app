@@ -10,19 +10,6 @@ import { getSetting, setSetting, deleteSetting } from '@/lib/database/services/s
 
 interface UserState {
     userId: string | null;
-    /**
-     * The signed-in email, read from the LOCAL `cached_user_email` row that the
-     * OTP / deep-link verify screens already write at sign-in.
-     *
-     * Local on purpose. Settings used to render `session?.user?.email` straight
-     * from better-auth, so any window where the server session could not be
-     * fetched — offline, a keychain-locked background wake, a 401 blip — showed
-     * a signed-in user NO email, which reads as "I have been logged out" (that
-     * is exactly how it was reported). Identity is a local fact here; the same
-     * rule the launch gate already applies (lib/security/launch-route.ts).
-     * Only an explicit logout clears it.
-     */
-    userEmail: string | null;
     userPersona: UserPersona | null;
     isLoading: boolean;
     lastFetchedAt: number | null;
@@ -121,7 +108,6 @@ async function fetchUserPersonaCore(
 
 export const useUserStore = create<UserState>()((set, get) => ({
     userId: null,
-    userEmail: null,
     userPersona: null,
     isLoading: false,
     lastFetchedAt: null,
@@ -196,7 +182,6 @@ export const useUserStore = create<UserState>()((set, get) => ({
     clearUser: () => {
         set({
             userId: null,
-            userEmail: null,
             userPersona: null,
             isLoading: false,
             lastFetchedAt: null,
@@ -204,6 +189,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
         });
         clearUserPersona().catch(() => {});
         deleteSetting('cached_user_id').catch(() => {});
+        // Legacy: email sign-in wrote this row. Nothing writes it now; old devices still clear it.
         deleteSetting('cached_user_email').catch(() => {});
         deleteSetting(NEEDS_REAUTH_KEY).catch(() => {});
     },
@@ -217,14 +203,6 @@ export const useUserStore = create<UserState>()((set, get) => ({
             // meaningful when a user exists on-device).
             const needsReauth = (await getSetting(NEEDS_REAUTH_KEY)) === '1';
             if (needsReauth) set({ needsReauth: true });
-
-            // Written at sign-in by OTPVerificationView / DeepLinkVerifyScreen.
-            // Read here so identity survives a server session we cannot reach.
-            // Absent on installs that signed in before this row existed — the
-            // consumers fall back to the session email, so a missing row costs
-            // nothing beyond the pre-existing behaviour.
-            const email = await getSetting('cached_user_email');
-            if (email) set({ userEmail: email });
 
             const persona = await loadUserPersona(userId);
             if (persona) {

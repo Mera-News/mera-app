@@ -149,10 +149,9 @@ export function resolveIdentity({
 // Authenticated-user recorder
 // ---------------------------------------------------------------------------
 //
-// Who signed in during THIS process. Written at all three sign-in sites
-// (OTPVerificationView, DeepLinkVerifyScreen, and AuthScreen's WelcomeView for
-// device sign-in), read by the two identity gates, and cleared the moment it
-// is consumed.
+// Who signed in during THIS process. Written at sign-in
+// (`completeDeviceSignIn` in components/custom/auth/useAuthScreen.ts), read by
+// the two identity gates, and cleared the moment it is consumed.
 //
 // WHY MODULE STATE AND NOT A ROUTE PARAM. `/logged-in` is reachable from the
 // app's registered URL scheme, so a route param would let a crafted deep link

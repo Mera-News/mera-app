@@ -10,7 +10,6 @@ const ALLOWED = [
     'components/custom/FeedbackWidgetModal.tsx',
     'components/custom/share-stats/StatsShareModal.tsx',
     'components/custom/config-mera/SecuritySettingsSection.tsx',
-    'components/custom/auth/MoveToPhoneHost.tsx',
     'components/custom/VideoPlayerModal.tsx',
     'components/custom/nav/InlineChoiceChip.tsx',
 ];

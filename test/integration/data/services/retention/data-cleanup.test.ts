@@ -276,6 +276,15 @@ describe('the sweep', () => {
     expect(logged()).toEqual([]);
   });
 
+  it('deletes the retired move to phone inbox row whatever its age, and keeps the rest', async () => {
+    await notify({ type: 'move_to_phone', title: 'old offer', body: 'b', source: 'move-to-phone' });
+    await notify({ type: 'sync', title: 'kept', body: 'b', source: 's' });
+
+    await run();
+
+    expect((await getNotifications()).map((n: any) => n.title)).toEqual(['kept']);
+  });
+
   it('logs how much each step removed, and nothing for a step that removed nothing', async () => {
     await at(49 * HOUR, () => landSuggestions(['old-a', 'old-b']));
     await at(31 * DAY, () => recordOpen({ articleId: 'imp-old', surface: 'feed' }));

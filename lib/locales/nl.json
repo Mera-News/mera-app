@@ -24,15 +24,6 @@
     "dontAskAgain": "Niet meer vragen"
   },
   "auth": {
-    "emailPlaceholder": "Voer je e-mailadres in",
-    "otpPlaceholder": "Voer 6-cijferige code in",
-    "invalidEmailDescription": "Voer een geldig e-mailadres in",
-    "networkError": "Netwerkfout. Probeer het opnieuw.",
-    "invalidOtp": "Voer een geldige 6-cijferige OTP-code in",
-    "invalidOtpServer": "Ongeldige OTP-code. Probeer het opnieuw.",
-    "otpError": "Er is een fout opgetreden tijdens de verificatie. Probeer het opnieuw.",
-    "resendCode": "Code opnieuw sturen",
-    "resendIn": "Opnieuw sturen over {{seconds}}s",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "We konden het wisselen van account niet afronden",
     "identitySwitchFailedBody": "Er staan nog gegevens van een ander account op dit apparaat. Mera moet die wissen voordat je verder kunt, en het wissen is deze keer niet gelukt.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Maak kennis met Mera",
     "continue": "Doorgaan",
     "sourceCode": "Broncode",
-    "failedToSendBody": "Kan OTP niet verzenden",
-    "signingYouIn": "Je wordt ingelogd…",
-    "signInWithoutEmail": "Inloggen met deze telefoon",
     "differentAccount": {
       "title": "Inloggen met deze telefoon?",
-      "body": "We wissen alles wat Mera op deze telefoon bewaart voor {{email}}. Het account zelf wordt niet verwijderd. Weet je het zeker?",
       "continue": "Verwijderen en doorgaan",
       "useEmail": "Mijn account behouden",
       "bodyGeneric": "We wissen alles wat Mera op deze telefoon bewaart voor dit account. Het account zelf wordt niet verwijderd. Weet je het zeker?"
@@ -63,36 +50,21 @@
       "beginMera": "Mera starten",
       "beginTitle": "Hoe wil je beginnen?",
       "beginWithoutEmail": "Inloggen met deze telefoon",
-      "checkEmailTitle": "Controleer je e-mail",
       "chooseLanguage": "Kies je taal",
-      "codeA11y": "Code van 6 cijfers",
-      "continueWithEmail": "Doorgaan met e-mail",
       "downloadA11y": "{{language}} downloaden",
-      "emailBody": "We mailen je een code van 6 cijfers. Geen wachtwoord om te onthouden.",
       "gettingReadyIos": "Tik onder in het venster op ↓ naast elke taal en wacht hier. Houd Mera open.",
       "gettingReadyTitle": "{{language}} wordt klaargezet",
       "notHereBody": "Download het taalpakket of kies een van de talen die er al zijn.",
       "notHereTitle": "{{language}} staat nog niet op deze telefoon",
       "phoneLanguage": "De taal van je telefoon",
-      "sendCode": "Code versturen",
-      "useDifferentEmail": "Gebruik een ander e-mailadres",
       "welcome": "Welkom bij Mera",
-      "wrongCode": "Die code werkte niet. Controleer hem of vraag een nieuwe aan.",
       "noSheetTitle": "Je iPhone heeft de download niet geopend",
-      "noSheetBody": "Probeer het opnieuw of open Instellingen op je iPhone, ga naar Algemeen, dan naar Taal en regio, en dan naar Vertaaltalen om {{language}} te downloaden.",
-      "sentToIfAccount": "Als dit e-mailadres een Mera-account heeft, hebben we er een code naartoe gestuurd. Nieuw bij Mera? Kies \"Inloggen met deze telefoon\".",
-      "noCodeUsePhone": "Geen code gekregen? Kies \"Inloggen met deze telefoon\"."
+      "noSheetBody": "Probeer het opnieuw of open Instellingen op je iPhone, ga naar Algemeen, dan naar Taal en regio, en dan naar Vertaaltalen om {{language}} te downloaden."
     },
-    "emailLegacyHint": "Alleen voor mensen die eerder met e-mail zijn ingelogd. Nieuwe gebruikers kunnen niet meer met e-mail inloggen.",
     "phoneCheckTemporary": "We konden deze telefoon nu niet controleren. Probeer het over een minuut opnieuw.",
     "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",
     "phoneUnsupportedIos": "Deze iPhone kan niet inloggen met een telefoonnummer.",
     "supportedPhones": "Ondersteunde telefoons",
-    "emailEnded": {
-      "title": "Inloggen met e-mail is gestopt",
-      "bodyIos": "Inloggen met e-mail is gestopt op {{date}}. Log in met deze telefoon om opnieuw te beginnen. Je abonnement komt terug via de App Store, en je opgeslagen artikelen komen terug uit je back-up.",
-      "bodyAndroid": "Inloggen met e-mail is gestopt op {{date}}. Log in met deze telefoon om opnieuw te beginnen. Je abonnement komt terug via Google Play, en je opgeslagen artikelen komen terug uit je back-up."
-    },
     "phoneNotSupported": "Deze telefoon wordt niet ondersteund"
   },
   "account": {
@@ -556,7 +528,6 @@
     "exportHistoryEmptyDescription": "Je hebt de afgelopen 30 dagen geen artikelen gelezen.",
     "keeps": {
       "title": "Wat Mera over je bewaart",
-      "emailAndPlan": "Je e-mailadres, tot je overschakelt naar inloggen met telefoon of tot het op 30 oktober 2026 wordt verwijderd, en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
       "plan": "Je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
       "emailIfAdded": "Je abonnement. Mera vraagt nooit om een e-mailadres, en een e-mailadres van vroeger wordt op 30 oktober 2026 verwijderd. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
       "signInRecordIos": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple dat dit de echte app is, bewaren we niet.",
@@ -3088,20 +3059,14 @@
     }
   },
   "gate": {
-    "enterCode": "Voer de code in",
     "getHelp": "Hulp krijgen",
     "noEmailBody": "Er ging iets mis bij het inloggen op deze telefoon. Neem contact op met support, of reset deze telefoon en log opnieuw in.",
     "noEmailTitle": "Er is een probleem met je account",
     "offlineBody": "Mera heeft een verbinding nodig om je account te controleren voordat het opent.",
     "offlineTitle": "Je bent offline",
     "opensByItself": "Opent vanzelf zodra je weer online bent",
-    "reauthBody": "Je inlogsessie is verlopen. We sturen een code naar het e-mailadres van dit account.",
-    "reauthTitle": "Log in om door te gaan",
     "unreachableBody": "Het probleem zit aan onze kant, niet op je telefoon. Mera blijft het proberen en opent zodra het weer kan.",
     "unreachableTitle": "Mera is niet bereikbaar",
-    "mismatchTitle": "Dit e-mailadres hoort bij een ander account",
-    "mismatchBody": "Log in met het e-mailadres van dit account, of krijg hulp.",
-    "mismatchOtherEmail": "Gebruik een ander e-mailadres",
     "contactSupport": "Contact opnemen met support",
     "resetPhone": "Deze telefoon resetten en opnieuw inloggen",
     "resetTitle": "Deze telefoon resetten?",
@@ -3112,29 +3077,6 @@
     "relevance": "Beste match",
     "oldest": "Oudste eerst",
     "newest": "Nieuwste eerst"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Inloggen met deze telefoon in plaats daarvan",
-    "dialogBody": "We loggen je in met deze telefoon, zetten je account erop over en verwijderen je e-mailadres uit onze database.",
-    "dialogSettingsHint": "Dit kan in Instellingen tot {{date}}.",
-    "confirm": "Account verplaatsen",
-    "cancel": "Niet nu",
-    "progressTitle": "Je account wordt naar deze telefoon verplaatst",
-    "steps": {
-      "checking": "Deze telefoon controleren",
-      "linking": "Je account koppelen",
-      "removing": "Je e-mailadres verwijderen",
-      "done": "Klaar"
-    },
-    "failed": "Dit is niet gelukt. Je account werkt nog steeds. Probeer het zo dadelijk opnieuw.",
-    "unsupportedIos": "Deze telefoon kan niet inloggen met een telefoonnummer, dus Mera stopt op {{date}} met werken op deze telefoon. Als je voor Mera betaalt, zeg je je abonnement vóór die datum op in de App Store.",
-    "unsupportedAndroid": "Deze telefoon kan niet inloggen met een telefoonnummer, dus Mera stopt op {{date}} met werken op deze telefoon. Als je voor Mera betaalt, zeg je je abonnement vóór die datum op in Google Play.",
-    "success": "Je bent ingelogd met deze telefoon. Je e-mailadres is verwijderd.",
-    "close": "Sluiten",
-    "inboxTitle": "Inloggen met e-mail eindigt op {{date}}",
-    "inboxBody": "Schakel over naar inloggen met telefoon om je account te behouden.",
-    "settingsRow": "Overschakelen naar inloggen met telefoon",
-    "settingsRowHint": "Inloggen met e-mail eindigt op {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

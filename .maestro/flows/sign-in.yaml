@@ -1,4 +1,5 @@
-# Subflow: first launch to the Feed with the mock backend's fixture account and fixed OTP.
+# Subflow: first launch to the Feed through Sign in with this phone; the mock backend answers the
+# device sign-in with its fixture account. Needs Play services on the AVD (Play Integrity token).
 # Provisional: the screen order is fixed from the discovery run.
 appId: ${APP_ID}
 ---
@@ -23,33 +24,17 @@ appId: ${APP_ID}
     id: "auth-checks-continue"
 - extendedWaitUntil:
     visible:
-      id: "auth-begin-with-email"
+      id: "auth-begin-without-email"
     timeout: 30000
 - tapOn:
-    id: "auth-begin-with-email"
+    id: "auth-begin-without-email"
 - extendedWaitUntil:
     visible:
       id: "auth-consent-agree"
     timeout: 30000
 - tapOn:
     id: "auth-consent-agree"
-- extendedWaitUntil:
-    visible:
-      id: "auth-email-input"
-    timeout: 30000
-- tapOn:
-    id: "auth-email-input"
-- inputText: ${EMAIL}
-- tapOn:
-    id: "auth-send-otp"
-- extendedWaitUntil:
-    visible:
-      id: "auth-otp-boxes"
-    timeout: 30000
-- tapOn:
-    id: "auth-otp-boxes"
-- inputText: ${OTP}
-# Consent was accepted on the auth screen (auth-consent-agree), so no gate here.
+# Agree is the sign-in, and consent was accepted with it, so no gate here.
 # Onboarding step 1: tell Mera one interest and add the offered fact. A zero-fact Feed requests no
 # articles (D2), so this is what gives the Feed cards. The mock's default responder scripts the
 # turn ("I follow ..." -> facts/interest -> saveExtractedFacts) and the topic generation.

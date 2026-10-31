@@ -1,5 +1,4 @@
 import { expoClient } from "@better-auth/expo/client";
-import i18next from 'i18next';
 import { emailOTPClient, jwtClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import Constants from 'expo-constants';
@@ -74,31 +73,6 @@ export const authClient = createAuthClient({
         jwtClient(),
     ],
 });
-
-export const sendOTP = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-        const { error } = await authClient.emailOtp.sendVerificationOtp({
-            email,
-            type: 'sign-in'
-        });
-
-        if (error) {
-            return {
-                success: false,
-                error: error.message || i18next.t('auth.failedToSendBody'),
-            };
-        }
-
-        return {
-            success: true,
-        };
-    } catch (error: any) {
-        return {
-            success: false,
-            error: error.message,
-        };
-    }
-};
 
 // Cache the JWT for inference-gateway requests. Server TTL is 1h; we re-fetch
 // every 30s to keep the window short while still deduping rapid batch calls.

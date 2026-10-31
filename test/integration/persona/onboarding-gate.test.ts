@@ -86,7 +86,6 @@ beforeEach(() => {
     usePinStore.setState({ pinSet: false, lockEnabled: false, locked: false, lastBackgroundedAt: null, initialized: false });
     useUserStore.setState({
         userId: null,
-        userEmail: null,
         userPersona: null,
         isLoading: false,
         lastFetchedAt: null,
@@ -329,6 +328,15 @@ describe('useOnboardingGate', () => {
         await markOnboardingDone();
         const first = jest.fn();
         const second = jest.fn();
+        // Held on the done read, so the re-render lands while the gate is still deciding (RNTL 14's
+        // awaited render otherwise settles the whole gate, and `first` runs before any re-render).
+        let releaseDone!: () => void;
+        const doneRead = new Promise<void>((resolve) => { releaseDone = resolve; });
+        const real = settingService.getSetting;
+        const hold = jest.spyOn(settingService, 'getSetting').mockImplementation(async (k) => {
+            if (k === ONBOARDING_DONE_SETTING_KEY) await doneRead;
+            return real(k);
+        });
         const { rerender } = await renderHook(
             ({ onComplete }: { onComplete: () => void }) =>
                 useOnboardingGate({ userId: ME, sessionUserId: ME, onLoginRedirect: jest.fn(), onComplete }),
@@ -336,6 +344,9 @@ describe('useOnboardingGate', () => {
         );
 
         await rerender({ onComplete: second });
+        expect(first).not.toHaveBeenCalled();
+        await act(async () => releaseDone());
+        hold.mockRestore();
         await waitFor(() => expect(second).toHaveBeenCalledTimes(1), { timeout: 8000 });
         await drain();
 

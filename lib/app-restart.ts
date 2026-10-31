@@ -89,14 +89,13 @@ export const RESTART_MARKER_KEY = 'js_restart_marker';
 
 /**
  * Routes where a restart must not wipe what the user came back to finish: a
- * login, an OTP fetched from their mail app, a PIN being set or entered,
- * onboarding answers.
+ * login, a PIN being set or entered, onboarding answers.
  *
  * THE LIST LIVES HERE, NOT IN A CALLER, and that is the whole point. It used to
  * be checked by the foreground restart alone, so `requestRestart('ota')` was
- * route-blind: a user returning from their mail app to `/verify-otp` had the
- * foreground restart correctly skipped and was then restarted by the OTA check
- * on that same transition, wiping the code the return had just delivered.
+ * route-blind: a user returning from their mail app to the email code screen
+ * had the foreground restart correctly skipped and was then restarted by the
+ * OTA check on that same transition, wiping the code the return had delivered.
  * Applied in `blockedBy()`, so every reason is covered rather than whichever one
  * happens to own a list.
  *
@@ -109,7 +108,6 @@ export const RESTART_MARKER_KEY = 'js_restart_marker';
  */
 export const RESTART_BLOCKED_ROUTES = [
   '/login',
-  '/verify-otp',
   '/pin-setup',
   '/pin-lock',
   '/logged-in/onboarding',
@@ -517,7 +515,7 @@ export function restartIsAvailable(): boolean {
  * that was blocked did not reload, so it cannot have failed to launch, so it is
  * not what the guard bounds — retrying it on the next return is correct
  * behaviour. Consuming the attempt anyway stranded the bundle: a reader mid-chat
- * -stream, mid-checkout or sitting on `/verify-otp` when the download finished
+ * -stream, mid-checkout or sitting on `/login` when the download finished
  * would never be offered it again on a return, only at a cold start — and the
  * reader who never cold-starts is the entire premise of the feature.
  *

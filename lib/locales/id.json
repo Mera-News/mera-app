@@ -24,15 +24,6 @@
     "dontAskAgain": "Jangan tanya lagi"
   },
   "auth": {
-    "emailPlaceholder": "Masukkan alamat email Anda",
-    "otpPlaceholder": "Masukkan kode 6 digit",
-    "invalidEmailDescription": "Silakan masukkan alamat email yang valid",
-    "networkError": "Kesalahan jaringan. Silakan coba lagi.",
-    "invalidOtp": "Silakan masukkan kode OTP 6 digit yang valid",
-    "invalidOtpServer": "Kode OTP tidak valid. Silakan coba lagi.",
-    "otpError": "Terjadi kesalahan saat verifikasi. Silakan coba lagi.",
-    "resendCode": "Kirim ulang kode",
-    "resendIn": "Kirim ulang dalam {{seconds}}d",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Kami tidak dapat menyelesaikan pergantian akun",
     "identitySwitchFailedBody": "Data akun lain masih ada di perangkat ini. Mera harus menghapusnya sebelum Anda dapat melanjutkan, dan penghapusan kali ini tidak berhasil.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Pelajari Mera",
     "continue": "Lanjutkan",
     "sourceCode": "Kode sumber",
-    "failedToSendBody": "Gagal mengirim kode OTP",
-    "signingYouIn": "Sedang masuk…",
-    "signInWithoutEmail": "Masuk dengan ponsel ini",
     "differentAccount": {
       "title": "Masuk dengan ponsel ini?",
-      "body": "Kami akan menghapus semua yang disimpan Mera di ponsel ini untuk {{email}}. Akunnya sendiri tidak dihapus. Yakin?",
       "continue": "Hapus dan lanjutkan",
       "useEmail": "Simpan akun saya",
       "bodyGeneric": "Kami akan menghapus semua yang disimpan Mera di ponsel ini untuk akun ini. Akunnya sendiri tidak dihapus. Yakin?"
@@ -63,36 +50,21 @@
       "beginMera": "Mulai Mera",
       "beginTitle": "Bagaimana Anda ingin memulai?",
       "beginWithoutEmail": "Masuk dengan ponsel ini",
-      "checkEmailTitle": "Periksa email Anda",
       "chooseLanguage": "Pilih bahasa Anda",
-      "codeA11y": "Kode 6 digit",
-      "continueWithEmail": "Lanjutkan dengan email",
       "downloadA11y": "Unduh {{language}}",
-      "emailBody": "Kami akan mengirim kode 6 digit ke email Anda. Tidak ada kata sandi yang perlu diingat.",
       "gettingReadyIos": "Ketuk ↓ di samping setiap bahasa pada lembar di bawah, lalu tunggu di sini. Biarkan Mera tetap terbuka.",
       "gettingReadyTitle": "Menyiapkan {{language}}",
       "notHereBody": "Unduh paket bahasanya, atau gunakan salah satu bahasa yang sudah ada di sini.",
       "notHereTitle": "{{language}} belum ada di ponsel ini",
       "phoneLanguage": "Bahasa ponsel Anda",
-      "sendCode": "Kirim kode",
-      "useDifferentEmail": "Gunakan email lain",
       "welcome": "Selamat datang di Mera",
-      "wrongCode": "Kode itu tidak berhasil. Periksa lagi, atau kirim kode baru.",
       "noSheetTitle": "iPhone Anda tidak membuka unduhan",
-      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}.",
-      "sentToIfAccount": "Jika email ini punya akun Mera, kami sudah mengirimkan kodenya. Baru di Mera? Gunakan “Masuk dengan ponsel ini”.",
-      "noCodeUsePhone": "Tidak menerima kode? Gunakan “Masuk dengan ponsel ini”."
+      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}."
     },
-    "emailLegacyHint": "Hanya untuk yang dulu masuk dengan email. Pengguna baru tidak bisa lagi masuk dengan email.",
     "phoneCheckTemporary": "Kami tidak bisa memeriksa ponsel ini sekarang. Coba lagi sebentar lagi.",
     "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",
     "phoneUnsupportedIos": "iPhone ini tidak bisa memakai masuk dengan ponsel.",
     "supportedPhones": "Ponsel yang didukung",
-    "emailEnded": {
-      "title": "Masuk dengan email sudah berakhir",
-      "bodyIos": "Masuk dengan email berakhir pada {{date}}. Masuk dengan ponsel ini untuk mulai lagi. Paket Anda kembali dari App Store, dan artikel tersimpan Anda kembali dari cadangan.",
-      "bodyAndroid": "Masuk dengan email berakhir pada {{date}}. Masuk dengan ponsel ini untuk mulai lagi. Paket Anda kembali dari Google Play, dan artikel tersimpan Anda kembali dari cadangan."
-    },
     "phoneNotSupported": "Ponsel ini tidak didukung"
   },
   "account": {
@@ -546,7 +518,6 @@
     "exportHistoryEmptyDescription": "Anda belum membaca artikel apa pun dalam 30 hari terakhir.",
     "keeps": {
       "title": "Yang disimpan Mera tentang Anda",
-      "emailAndPlan": "Email Anda sampai Anda beralih ke masuk dengan ponsel atau sampai dihapus pada 30 Oktober 2026, dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
       "plan": "Paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
       "emailIfAdded": "Paket Anda. Mera tidak pernah meminta email, dan email dari sebelumnya dihapus pada 30 Oktober 2026. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
       "signInRecordIos": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple bahwa ini aplikasi asli tidak disimpan.",
@@ -3070,20 +3041,14 @@
     }
   },
   "gate": {
-    "enterCode": "Masukkan kode",
     "getHelp": "Minta bantuan",
     "noEmailBody": "Terjadi masalah saat masuk di ponsel ini. Hubungi dukungan, atau reset ponsel ini lalu masuk lagi.",
     "noEmailTitle": "Ada masalah dengan akun Anda",
     "offlineBody": "Mera perlu koneksi untuk memeriksa akun Anda sebelum dibuka.",
     "offlineTitle": "Anda sedang offline",
     "opensByItself": "Terbuka sendiri saat Anda kembali online",
-    "reauthBody": "Sesi masuk Anda sudah berakhir. Kami akan mengirim kode ke email di akun ini.",
-    "reauthTitle": "Masuk untuk melanjutkan",
     "unreachableBody": "Masalahnya ada di pihak kami, bukan ponsel Anda. Mera terus mencoba dan akan terbuka saat kembali normal.",
     "unreachableTitle": "Mera tidak dapat dihubungi",
-    "mismatchTitle": "Email ini milik akun lain",
-    "mismatchBody": "Masuk dengan email di akun ini, atau minta bantuan.",
-    "mismatchOtherEmail": "Gunakan email lain",
     "contactSupport": "Hubungi dukungan",
     "resetPhone": "Reset ponsel ini dan masuk lagi",
     "resetTitle": "Reset ponsel ini?",
@@ -3094,29 +3059,6 @@
     "relevance": "Kecocokan terbaik",
     "oldest": "Paling lama pertama",
     "newest": "Terbaru pertama"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Masuk dengan ponsel ini saja",
-    "dialogBody": "Kami akan memasukkan Anda dengan ponsel ini, memindahkan akun Anda ke ponsel ini, dan menghapus email Anda dari database kami.",
-    "dialogSettingsHint": "Anda bisa melakukannya di Pengaturan sampai {{date}}.",
-    "confirm": "Pindahkan akun",
-    "cancel": "Nanti saja",
-    "progressTitle": "Memindahkan akun Anda ke ponsel ini",
-    "steps": {
-      "checking": "Memeriksa ponsel ini",
-      "linking": "Menautkan akun Anda",
-      "removing": "Menghapus email Anda",
-      "done": "Selesai"
-    },
-    "failed": "Proses ini belum selesai. Akun Anda tetap berfungsi. Coba lagi sebentar lagi.",
-    "unsupportedIos": "Ponsel ini tidak bisa memakai masuk dengan ponsel, jadi Mera berhenti berfungsi di ponsel ini pada {{date}}. Jika Anda membayar Mera, batalkan paket Anda di App Store sebelum tanggal itu.",
-    "unsupportedAndroid": "Ponsel ini tidak bisa memakai masuk dengan ponsel, jadi Mera berhenti berfungsi di ponsel ini pada {{date}}. Jika Anda membayar Mera, batalkan paket Anda di Google Play sebelum tanggal itu.",
-    "success": "Anda sudah masuk dengan ponsel ini. Email Anda telah dihapus.",
-    "close": "Tutup",
-    "inboxTitle": "Masuk dengan email berakhir {{date}}",
-    "inboxBody": "Beralih ke masuk dengan ponsel untuk menyimpan akun Anda.",
-    "settingsRow": "Pindah ke masuk dengan ponsel",
-    "settingsRowHint": "Masuk dengan email berakhir {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

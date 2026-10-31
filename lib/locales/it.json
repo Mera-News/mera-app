@@ -24,15 +24,6 @@
     "dontAskAgain": "Non chiedere più"
   },
   "auth": {
-    "emailPlaceholder": "Inserisci il tuo indirizzo email",
-    "otpPlaceholder": "Inserisci il codice a 6 cifre",
-    "invalidEmailDescription": "Per favore inserisci un indirizzo email valido",
-    "networkError": "Errore di rete. Per favore riprova.",
-    "invalidOtp": "Per favore inserisci un codice OTP valido a 6 cifre",
-    "invalidOtpServer": "Codice OTP non valido. Per favore riprova.",
-    "otpError": "Si è verificato un errore durante la verifica. Per favore riprova.",
-    "resendCode": "Invia di nuovo il codice",
-    "resendIn": "Invia di nuovo tra {{seconds}}s",
     "faq": "FAQ",
     "identitySwitchFailedTitle": "Impossibile completare il cambio di account",
     "identitySwitchFailedBody": "Su questo dispositivo ci sono ancora i dati di un altro account. Mera deve cancellarli prima di poter continuare, e questa volta la cancellazione non è riuscita.",
@@ -47,12 +38,8 @@
     "learnAboutMera": "Scopri Mera",
     "continue": "Continua",
     "sourceCode": "Codice sorgente",
-    "failedToSendBody": "Invio del codice OTP non riuscito",
-    "signingYouIn": "Accesso in corso…",
-    "signInWithoutEmail": "Accedi con questo telefono",
     "differentAccount": {
       "title": "Accedere con questo telefono?",
-      "body": "Cancelleremo tutto ciò che Mera conserva su questo telefono per {{email}}. L'account in sé non viene eliminato. Sei sicuro?",
       "continue": "Rimuovi e continua",
       "useEmail": "Mantieni il mio account",
       "bodyGeneric": "Cancelleremo tutto ciò che Mera conserva su questo telefono per questo account. L'account in sé non viene eliminato. Sei sicuro?"
@@ -63,36 +50,21 @@
       "beginMera": "Inizia con Mera",
       "beginTitle": "Come vuoi iniziare?",
       "beginWithoutEmail": "Accedi con questo telefono",
-      "checkEmailTitle": "Controlla la tua email",
       "chooseLanguage": "Scegli la tua lingua",
-      "codeA11y": "Codice a 6 cifre",
-      "continueWithEmail": "Continua con l'email",
       "downloadA11y": "Scarica {{language}}",
-      "emailBody": "Ti invieremo un'email con un codice a 6 cifre. Nessuna password da ricordare.",
       "gettingReadyIos": "Tocca ↓ accanto a ogni lingua nel riquadro qui sotto, poi aspetta qui. Tieni Mera aperto.",
       "gettingReadyTitle": "Preparazione di {{language}} in corso",
       "notHereBody": "Scarica il pacchetto della lingua, oppure usa una delle lingue già disponibili.",
       "notHereTitle": "{{language}} non è ancora su questo telefono",
       "phoneLanguage": "La lingua del tuo telefono",
-      "sendCode": "Invia codice",
-      "useDifferentEmail": "Usa un'altra email",
       "welcome": "Benvenuto in Mera",
-      "wrongCode": "Il codice non funziona. Controllalo, oppure richiedine uno nuovo.",
       "noSheetTitle": "Il tuo iPhone non ha aperto il download",
-      "noSheetBody": "Riprova, oppure apri Impostazioni sul tuo iPhone, poi Generali, poi Lingua e regione, poi Lingue di traduzione, e scarica {{language}}.",
-      "sentToIfAccount": "Se questa email ha un account Mera, ti abbiamo inviato un codice. Sei nuovo su Mera? Usa «Accedi con questo telefono».",
-      "noCodeUsePhone": "Non hai ricevuto il codice? Usa «Accedi con questo telefono»."
+      "noSheetBody": "Riprova, oppure apri Impostazioni sul tuo iPhone, poi Generali, poi Lingua e regione, poi Lingue di traduzione, e scarica {{language}}."
     },
-    "emailLegacyHint": "Solo per chi ha già effettuato l'accesso con l'email. I nuovi utenti non possono più accedere con l'email.",
     "phoneCheckTemporary": "Non è stato possibile verificare questo telefono ora. Riprova tra un minuto.",
     "phoneUnsupportedAndroid": "Mera ha bisogno di Google Play su questo telefono per farti accedere. I telefoni senza Google Play non sono supportati.",
     "phoneUnsupportedIos": "Questo iPhone non può usare l'accesso con il telefono.",
     "supportedPhones": "Telefoni supportati",
-    "emailEnded": {
-      "title": "L'accesso con email è terminato",
-      "bodyIos": "L'accesso con email è terminato il {{date}}. Accedi con questo telefono per ricominciare. Il tuo piano torna dall'App Store, e i tuoi articoli salvati tornano dal tuo backup.",
-      "bodyAndroid": "L'accesso con email è terminato il {{date}}. Accedi con questo telefono per ricominciare. Il tuo piano torna da Google Play, e i tuoi articoli salvati tornano dal tuo backup."
-    },
     "phoneNotSupported": "Questo telefono non è supportato"
   },
   "account": {
@@ -556,7 +528,6 @@
     "exportHistoryEmptyDescription": "Non hai letto alcun articolo negli ultimi 30 giorni.",
     "keeps": {
       "title": "Cosa conserva Mera su di te",
-      "emailAndPlan": "La tua email, fino al passaggio all'accesso con il telefono o fino all'eliminazione il 30 ottobre 2026, e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
       "plan": "Il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
       "emailIfAdded": "Il tuo piano. Mera non chiede mai un'email, e ogni email di prima viene eliminata il 30 ottobre 2026. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
       "signInRecordIos": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple che si tratta della vera app non viene conservato.",
@@ -3092,20 +3063,14 @@
     }
   },
   "gate": {
-    "enterCode": "Inserisci il codice",
     "getHelp": "Chiedi aiuto",
     "noEmailBody": "Qualcosa è andato storto durante l'accesso su questo telefono. Contatta l'assistenza oppure reimposta questo telefono e accedi di nuovo.",
     "noEmailTitle": "C'è un problema con il tuo account",
     "offlineBody": "Mera ha bisogno di una connessione per verificare il tuo account prima di aprirsi.",
     "offlineTitle": "Sei offline",
     "opensByItself": "Si apre da sola quando torni online",
-    "reauthBody": "Il tuo accesso è scaduto. Invieremo un codice all'email di questo account.",
-    "reauthTitle": "Accedi per continuare",
     "unreachableBody": "Il problema è dalla nostra parte, non dal tuo telefono. Mera continua a riprovare e si apre appena torna disponibile.",
     "unreachableTitle": "Impossibile raggiungere Mera",
-    "mismatchTitle": "Questa email appartiene a un altro account",
-    "mismatchBody": "Accedi con l'email di questo account, oppure chiedi aiuto.",
-    "mismatchOtherEmail": "Usa un'altra email",
     "contactSupport": "Contatta l'assistenza",
     "resetPhone": "Reimposta questo telefono e accedi di nuovo",
     "resetTitle": "Reimpostare questo telefono?",
@@ -3116,29 +3081,6 @@
     "relevance": "Miglior corrispondenza",
     "oldest": "Meno recente prima",
     "newest": "Più recente prima"
-  },
-  "moveToPhone": {
-    "dialogTitle": "Accedi invece con questo telefono",
-    "dialogBody": "Ti facciamo accedere con questo telefono, spostiamo il tuo account su di esso ed eliminiamo la tua email dal nostro database.",
-    "dialogSettingsHint": "Puoi farlo nelle Impostazioni fino al {{date}}.",
-    "confirm": "Sposta account",
-    "cancel": "Non ora",
-    "progressTitle": "Spostamento del tuo account su questo telefono",
-    "steps": {
-      "checking": "Verifica di questo telefono",
-      "linking": "Collegamento del tuo account",
-      "removing": "Rimozione della tua email",
-      "done": "Fatto"
-    },
-    "failed": "Non è stato completato. Il tuo account funziona ancora. Riprova tra poco.",
-    "unsupportedIos": "Questo telefono non può usare l'accesso con il telefono, quindi Mera smette di funzionare su di esso il {{date}}. Se paghi per Mera, annulla il tuo piano nell'App Store prima di quella data.",
-    "unsupportedAndroid": "Questo telefono non può usare l'accesso con il telefono, quindi Mera smette di funzionare su di esso il {{date}}. Se paghi per Mera, annulla il tuo piano in Google Play prima di quella data.",
-    "success": "Hai effettuato l'accesso con questo telefono. La tua email è stata eliminata.",
-    "close": "Chiudi",
-    "inboxTitle": "L'accesso con email termina il {{date}}",
-    "inboxBody": "Passa all'accesso con il telefono per conservare il tuo account.",
-    "settingsRow": "Passa all'accesso con il telefono",
-    "settingsRowHint": "L'accesso con email termina il {{date}}."
   },
   "kevChat": {
     "askIntent": "What would you like to do?",

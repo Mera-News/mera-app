@@ -4,18 +4,15 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { useColors } from '@/lib/theme/tokens';
-import { maskEmail } from '@/lib/algorithms/mask-email';
 
 import { styles } from './styles';
 
-// ── Sign in without email? ──────────────────────────────────────────────────
+// ── Sign in with this phone? ──────────────────────────────────────────────────
 
 function DifferentAccountSheet({
-    email,
     onKeep,
     onContinue,
 }: {
-    email: string | null;
     onKeep: () => Promise<void>;
     onContinue: () => Promise<void>;
 }) {
@@ -37,9 +34,7 @@ function DifferentAccountSheet({
                 {t('auth.differentAccount.title')}
             </Text>
             <Text style={[styles.text, { color: colors.ink2 }]}>
-                {email
-                    ? t('auth.differentAccount.body', { email: maskEmail(email) })
-                    : t('auth.differentAccount.bodyGeneric')}
+                {t('auth.differentAccount.bodyGeneric')}
             </Text>
             <View style={styles.sheetActions}>
                 <Button action="negative" onPress={() => void run(onContinue)} isDisabled={busy} style={{ minHeight: 44 }} testID="auth-different-account-continue">

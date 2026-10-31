@@ -137,10 +137,9 @@ describe('hydrateAllStores: seeded settings come back', () => {
     await expect(run()).resolves.toBeUndefined();
   });
 
-  it('user-store: id, email, re-auth flag and persona', () => {
+  it('user-store: id, re-auth flag and persona', () => {
     const s = useUserStore.getState();
     expect(s.userId).toBe('user-1');
-    expect(s.userEmail).toBe('reader@example.com');
     expect(s.needsReauth).toBe(true);
     expect(s.userPersona).toMatchObject({
       _id: 'persona-1',

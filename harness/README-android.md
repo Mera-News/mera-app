@@ -226,8 +226,8 @@ before concluding the code is wrong.
 
 ## Test accounts and entitlements
 
-There is no resident Android account. A new account is made by logging in with a plus-addressed
-email and an emailed OTP (the code goes to a human inbox — this step cannot be automated).
+There is no resident Android account. A new account is made with Sign in with this phone: a dev
+build with the dev bypass token against staging (email sign-in is gone).
 
 **Play Billing does not work on the emulator**, so a new account hits the paywall
 (`NotSubscribedScreen`, "Free isn't free.") and cannot buy its way past it. Grant an entitlement

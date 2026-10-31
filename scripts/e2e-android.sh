@@ -19,8 +19,6 @@ AVD=Mera_Harness_API35
 SERIAL=emulator-5554
 APP_ID=com.mera.news.e2e
 SCHEME=meraapp-e2e
-EMAIL=e2e-fixture@example.com
-OTP=424242
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export ANDROID_HOME="$SDK"  # Gradle needs it; not in the user profile
 EMU="$SDK/emulator/emulator"
@@ -94,7 +92,7 @@ step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle g
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
 step 5 install: adb -s $SERIAL install -r $LAST; system animation scales to 0; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
-step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e EMAIL=$EMAIL -e OTP=$OTP -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler and the logcat stream (started at step 5) -> $RUN/logcat.txt; report the WMDatabaseJSIBridge install line, FATAL lines and removeViewAt lines
+step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler and the logcat stream (started at step 5) -> $RUN/logcat.txt; report the WMDatabaseJSIBridge install line, FATAL lines and removeViewAt lines
 step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
 step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
 exit code: maestro's if non-zero, else step 7's
@@ -256,7 +254,7 @@ echo "== step 6: maestro ${FLOWS[*]}"
 MAESTRO_RC=0
 MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "${FLOWS[@]}" \
   --test-output-dir "$RUN/maestro" --format junit --output "$RUN/junit.xml" \
-  -e MOCK="http://localhost:$PORT" -e EMAIL="$EMAIL" -e OTP="$OTP" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" \
+  -e MOCK="http://localhost:$PORT" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" \
   -e IMAGE_ORIGIN="${IMAGE_ORIGIN:-}" || MAESTRO_RC=$?
 pkill -P "$SAMPLER_PID" 2> /dev/null || true; kill "$SAMPLER_PID" 2> /dev/null || true
 SAMPLER_PID=""

@@ -40,37 +40,6 @@ function GateIcon({ name }: { name: React.ComponentProps<typeof MaterialIcons>['
     );
 }
 
-/** Email sign-in, demoted: a small grey link and the line saying who it is for. */
-function LegacyEmailLink({
-    label,
-    onPress,
-    testID,
-    disabled,
-}: {
-    label: string;
-    onPress: () => void;
-    testID: string;
-    disabled?: boolean;
-}) {
-    const { t } = useTranslation();
-    const colors = useColors();
-    return (
-        <View style={styles.legacyEmail}>
-            <Pressable
-                onPress={onPress}
-                disabled={disabled}
-                accessibilityRole="link"
-                hitSlop={8}
-                style={styles.legacyEmailLink}
-                testID={testID}
-            >
-                <Text style={[styles.legacyEmailText, { color: colors.ink3 }]}>{label}</Text>
-            </Pressable>
-            <Text style={[styles.legacyEmailHint, { color: colors.ink3 }]}>{t('auth.emailLegacyHint')}</Text>
-        </View>
-    );
-}
-
 /** The supported-phones list on the website, in the app's language. */
 function openSupportedPhones() {
     void openInAppBrowser(`${withAppLanguage(FAQ_URL)}#supported-phones`);
@@ -102,4 +71,4 @@ function PhoneUnsupported({ testID }: { testID: string }) {
     );
 }
 
-export { BackArrow, GateIcon, LegacyEmailLink, PhoneUnsupported };
+export { BackArrow, GateIcon, PhoneUnsupported };

@@ -4,7 +4,6 @@
 // store are read back. Mocked: nothing of our own (expo-router and expo-notifications are the setup's native fakes).
 import { t } from 'i18next';
 import { router } from 'expo-router';
-import { __resetMoveToPhoneForTests, subscribeMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { tapNotification, NOT_KEPT_NOTICE_TYPES, useNotificationSheet } from '@/components/custom/notifications/notification-actions';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { deleteNotification, getAll, notify, type NotifyInput } from '@/lib/database/services/notification-service';
@@ -88,18 +87,6 @@ describe('tapNotification', () => {
         const row = await seed({ type: 'agent_note', actions: [{ id: 'something-new', label: 'Ask about this' }] });
         await tapNotification(row);
         expect(useFloatingChatStore.getState().pendingInitialMessage).toBe('Ask about this');
-        expect(await statusOf(row.id)).toBe('actioned');
-    });
-
-    it('the move to phone offer asks the host to open the move and marks the row actioned', async () => {
-        __resetMoveToPhoneForTests();
-        const asked = jest.fn();
-        const stop = subscribeMoveToPhone(asked);
-        const row = await seed({ type: 'move_to_phone', actions: [{ id: 'move-to-phone', labelKey: 'moveToPhone.settingsRow' }] });
-        await tapNotification(row);
-        stop();
-        expect(asked).toHaveBeenCalledTimes(1);
-        expect(useFloatingChatStore.getState().isExpanded).toBe(false);
         expect(await statusOf(row.id)).toBe('actioned');
     });
 
@@ -212,9 +199,20 @@ describe('tapNotification: failures', () => {
     });
 });
 
+describe('a 1.3.5 move to phone row (the email move is gone)', () => {
+    it('a tap deletes the row and opens nothing', async () => {
+        const row = await seed({ type: 'move_to_phone', actions: [{ id: 'move-to-phone', labelKey: 'moveToPhone.settingsRow' }] });
+
+        await tapNotification(row);
+
+        expect(useFloatingChatStore.getState().isExpanded).toBe(false);
+        expect((await getAll()).filter((n) => n.type === 'move_to_phone')).toHaveLength(0);
+    });
+});
+
 describe('NOT_KEPT_NOTICE_TYPES', () => {
-    it('names the three retired types the inbox hides, and none of the types still written', () => {
-        expect([...NOT_KEPT_NOTICE_TYPES].sort()).toEqual(['feed_info', 'migration_done', 'sync_event']);
+    it('names the four retired types the inbox hides, and none of the types still written', () => {
+        expect([...NOT_KEPT_NOTICE_TYPES].sort()).toEqual(['feed_info', 'migration_done', 'move_to_phone', 'sync_event']);
         for (const written of ['hygiene', 'calibration', 'optimisation_plan', 'fact_check_done', 'feedback_request']) {
             expect(NOT_KEPT_NOTICE_TYPES.has(written)).toBe(false);
         }

@@ -308,7 +308,6 @@ describe('clearUser', () => {
     await persistUserPersona('user-1', makePersona());
     useUserStore.setState({
       userId: 'user-1',
-      userEmail: 'reader@example.com',
       userPersona: makePersona(),
       isLoading: true,
       lastFetchedAt: Date.now(),
@@ -322,7 +321,6 @@ describe('clearUser', () => {
 
     expect(useUserStore.getState()).toMatchObject({
       userId: null,
-      userEmail: null,
       userPersona: null,
       isLoading: false,
       lastFetchedAt: null,
@@ -380,12 +378,11 @@ describe('hydrateFromDb', () => {
     expect(asked).toEqual(['user-42']);
   });
 
-  it('restores the re-auth flag and the cached email beside the identity', async () => {
+  it('restores the re-auth flag beside the identity', async () => {
     await setSetting('cached_user_id', 'user-1');
     await setSetting('needs_reauth', '1');
-    await setSetting('cached_user_email', 'reader@example.com');
     await useUserStore.getState().hydrateFromDb();
-    expect(useUserStore.getState()).toMatchObject({ needsReauth: true, userEmail: 'reader@example.com' });
+    expect(useUserStore.getState()).toMatchObject({ needsReauth: true });
   });
 
   it('leaves the state unchanged and does not throw when the read fails', async () => {
