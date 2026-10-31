@@ -67,7 +67,7 @@ const AskMeraButton: React.FC<AskMeraButtonProps> = ({
     prefill,
 }) => {
     const t = useTutorialCopy();
-    const anchorRef = useRef<View>(null);
+    const anchorRef = useRef<React.ComponentRef<typeof View>>(null);
     const aiAccess = useAiAccess();
     // Local identity, not `authClient.useSession()` — same rule as the rest of
     // the app: the persisted id is what survives a /get-session that cannot be

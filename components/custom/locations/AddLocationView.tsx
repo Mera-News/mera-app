@@ -292,7 +292,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                 <MaterialIcons name="search-off" size={40} color={colors.ink3} />
                 <Text className="text-ink-2 text-center text-sm">{t('locations.noMatches')}</Text>
               </VStack>
-            ) : null
+            ) : undefined
           }
           ListFooterComponent={
             <Pressable

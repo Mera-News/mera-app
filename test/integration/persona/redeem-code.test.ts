@@ -37,7 +37,6 @@ it('Android opens the Play redeem page, holding restarts first', async () => {
     let heldAtCall: string[] = [];
     const open = jest.spyOn(Linking, 'openURL').mockImplementation(async () => {
         heldAtCall = activeHolds();
-        return true;
     });
     await redeemOfferCode();
     expect(open).toHaveBeenCalledWith(PLAY_REDEEM_URL);

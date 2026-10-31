@@ -93,7 +93,7 @@ beforeEach(() => {
     // Real-clock timers (the Support ID read's timeout, toasts) would outlive the run.
     useFakeClock(Date.now(), { advanceTimers: true });
     server.events.on('request:start', onRequest);
-    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     require('@/lib/security/identity-gate').__resetIdentityStateForTests();
     require('@/lib/security/local-wipe').__resetLocalWipeForTests();
 });

@@ -184,7 +184,7 @@ const useStyles = themedStyles((c) => StyleSheet.create({
         paddingBottom: 24,
     },
     zones: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         flexDirection: 'row',
     },
     zone: { flex: 1 },

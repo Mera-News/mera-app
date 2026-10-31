@@ -404,7 +404,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                     tab === 'topics' && !suggesting && status !== 'pending' ? (
                         // The tutorial hero over an empty topic list (FinalMotion, Lottie moments).
                         <ForYouEmptyState testID="fact-topics-empty" compact animationId="facts-a-fact-is" body="" />
-                    ) : null
+                    ) : undefined
                 }
                 ListFooterComponent={
                     <>
