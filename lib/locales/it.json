@@ -218,8 +218,12 @@
       "heldTomorrow": "Mera non ha ancora letto questo perché ha usato la lettura di oggi. Mera legge di nuovo domani alle {{time}}.",
       "upgradeTitle_one": "{{formatted}} articolo che Mera non ha letto",
       "upgradeTitle_other": "{{formatted}} articoli che Mera non ha letto",
-      "upgradeBodyStarter": "Base legge ogni giorno 10 volte meno di Individuale.",
-      "upgradeBodyIndividual": "Professionale legge 5 volte di più ogni giorno."
+      "upgradeBodyStarter_one": "Base legge ogni giorno {{count}} volte meno di Individuale.",
+      "upgradeBodyStarter_many": "Base legge ogni giorno {{count}} volte meno di Individuale.",
+      "upgradeBodyStarter_other": "Base legge ogni giorno {{count}} volte meno di Individuale.",
+      "upgradeBodyIndividual_one": "Professionale legge {{count}} volte di più ogni giorno.",
+      "upgradeBodyIndividual_many": "Professionale legge {{count}} volte di più ogni giorno.",
+      "upgradeBodyIndividual_other": "Professionale legge {{count}} volte di più ogni giorno."
     },
     "show": {
       "title": "Mostra",
@@ -1072,7 +1076,7 @@
     "starterTitle": "Starter offriamo noi",
     "starterIntro": "Perché tu veda a cosa serve Mera, ogni account include ora il piano Starter completo senza costi.",
     "starterArticlesTitle": "Ogni articolo che corrisponde",
-    "starterArticlesBody": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta. Il piano Base include 2 MB di lettura nel cloud al giorno.",
+    "starterArticlesBody": "Ogni articolo che corrisponde ai tuoi interessi arriva alle tue Notizie. Mera li legge, mette da parte il rumore ed evidenzia ciò che conta.",
     "starterInterestsTitle": "Tutti i tuoi interessi",
     "starterInterestsBody": "Aggiungine quanti vuoi. Mera li segue tutti.",
     "starterChatTitle": "Chat e fact checking",

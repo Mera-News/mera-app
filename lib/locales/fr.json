@@ -223,8 +223,12 @@
       "heldTomorrow": "Mera n'a pas encore lu cet article, car Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}.",
       "upgradeTitle_one": "{{formatted}} article que Mera n'a pas lu",
       "upgradeTitle_other": "{{formatted}} articles que Mera n'a pas lus",
-      "upgradeBodyStarter": "Starter lit 10 fois moins qu'Individuel chaque jour.",
-      "upgradeBodyIndividual": "Professionnel lit 5 fois plus chaque jour."
+      "upgradeBodyStarter_one": "Starter lit {{count}} fois moins qu'Individuel chaque jour.",
+      "upgradeBodyStarter_many": "Starter lit {{count}} fois moins qu'Individuel chaque jour.",
+      "upgradeBodyStarter_other": "Starter lit {{count}} fois moins qu'Individuel chaque jour.",
+      "upgradeBodyIndividual_one": "Professionnel lit {{count}} fois plus chaque jour.",
+      "upgradeBodyIndividual_many": "Professionnel lit {{count}} fois plus chaque jour.",
+      "upgradeBodyIndividual_other": "Professionnel lit {{count}} fois plus chaque jour."
     },
     "show": {
       "title": "Afficher",
@@ -1077,7 +1081,7 @@
     "starterTitle": "Starter est offert",
     "starterIntro": "Pour que vous voyiez à quoi sert Mera, chaque compte inclut désormais le forfait Starter complet, sans frais.",
     "starterArticlesTitle": "Chaque article correspondant",
-    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel. Starter inclut 2 Mo de lecture dans le cloud par jour.",
+    "starterArticlesBody": "Chaque article qui correspond à vos centres d'intérêt arrive dans votre Fil d'actu. Mera les lit, écarte le bruit et met en avant l'essentiel.",
     "starterInterestsTitle": "Tous vos centres d'intérêt",
     "starterInterestsBody": "Ajoutez-en autant que vous voulez. Mera les suit tous.",
     "starterChatTitle": "Chat et vérifications",

@@ -14,7 +14,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { MERA_EXPLAINER_SECTIONS } from '@/lib/chat-tools/mera-explainer-content';
+import { MERA_EXPLAINER_SECTIONS, PLAN_SIZES_TOKEN } from '@/lib/chat-tools/mera-explainer-content';
 import { MERA_EXPLAINER_TOPIC_IDS } from '@/lib/news-harness/persona-management/persona-agent-core';
 
 const SOURCE_PATH = join(__dirname, '../../../../lib/chat-tools/mera-explainer-content.ts');
@@ -192,14 +192,13 @@ describe('mera-explainer-content — plans', () => {
     const plans = MERA_EXPLAINER_SECTIONS.plans_and_limits;
     expect(plans).not.toMatch(/\b250\b|\b1,000\b|\b10,000\b/);
     expect(plans).not.toMatch(/articles? (?:analysed|analyzed)[^.]*a day/i);
-    expect(plans).toMatch(/\b2 MB/);
-    expect(plans).not.toMatch(/10 MB/);
-    expect(plans).toMatch(/20 MB/);
-    expect(plans).toMatch(/100 MB/);
+    // Owner: no static plan size in the app. The sizes come from the server at answer time.
+    expect(plans).not.toMatch(/\d+(\.\d+)? MB/);
+    expect(plans).toContain(PLAN_SIZES_TOKEN);
   });
 
   it('names the Individual trial, for new subscribers', () => {
-    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/Individual starts with a 2-week free trial for new subscribers/);
+    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/Individual starts with a free trial for new subscribers/);
   });
 
   it('says what the servers keep in the same terms as the plans', () => {

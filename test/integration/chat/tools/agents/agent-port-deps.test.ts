@@ -7,6 +7,7 @@ import { createAgentState, runAgentTurn, type AgentModelRequest } from '@/lib/me
 import type { LiveTool } from '@/lib/llm/chat-phase-store';
 import { gatewayCalls, mockGateway, mockGql, server, signInFixtureAccount, type GatewayCall } from '@/test/helpers';
 import { reply, resetChatModules, seedFacts, setWebSearchInChat, toolCall } from '@/test/integration/chat/_helpers';
+import { __setReadingPlansForTests } from '@/lib/subscription/reading-plans';
 
 jest.setTimeout(30_000);
 
@@ -117,9 +118,21 @@ describe('hindifix A: explainMera through the device port', () => {
     const out = await deps.tools.explainMera?.({ topics: ['plans_and_limits'] });
     const sections = (out as { sections: { topic: string; text: string }[] }).sections;
     expect(sections.map((x) => x.topic)).toEqual(['plans_and_limits']);
-    expect(sections[0].text).toContain('2 MB');
+    // No plan sizes fetched yet: the sentence is left out, never a stale number.
+    expect(sections[0].text).not.toMatch(/\d MB|PLAN_SIZES/);
     expect(requests()).toBe(0);
     expect(gatewayCalls('chat')).toEqual([]);
+  });
+
+  it('states the plan sizes and ratios the server sent', async () => {
+    __setReadingPlansForTests({ starter: 4_000_000, individual: 20_000_000, professional: 100_000_000 });
+    try {
+      const out = await makeAgentDeps('what do plans include', jest.fn()).tools.explainMera?.({ topics: ['plans_and_limits'] });
+      const text = (out as { sections: { text: string }[] }).sections[0].text;
+      expect(text).toContain('Individual 20 MB, Starter 4 MB (5 times less than Individual) and Professional 100 MB (5 times more than Individual).');
+    } finally {
+      __setReadingPlansForTests(null);
+    }
   });
 
   it('answers "stopped" after Stop', async () => {

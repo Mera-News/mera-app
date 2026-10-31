@@ -217,8 +217,8 @@
       "heldToday": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。今日の{{time}}に、メラがまた読み始めます。",
       "heldTomorrow": "メラは今日の読書を使い切りました。そのため、メラはまだこの記事を読んでいません。明日の{{time}}に、メラがまた読み始めます。",
       "upgradeTitle_other": "メラがまだ読んでいない記事 {{formatted}}件",
-      "upgradeBodyStarter": "スタータープランが毎日読む量は個人プランの10分の1です。",
-      "upgradeBodyIndividual": "プロフェッショナルは毎日5倍多く読みます。"
+      "upgradeBodyStarter_other": "スタータープランが毎日読む量は個人プランの{{count}}分の1です。",
+      "upgradeBodyIndividual_other": "プロフェッショナルは毎日{{count}}倍多く読みます。"
     },
     "show": {
       "title": "表示",
@@ -1058,7 +1058,7 @@
     "starterTitle": "Starter は無料です",
     "starterIntro": "メラが何のためのものかを知っていただけるよう、すべてのアカウントにStarterプランの全機能を無料で含めました。",
     "starterArticlesTitle": "興味に合うすべての記事",
-    "starterArticlesBody": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。スターターには、1日2 MBのクラウド読書が含まれます。",
+    "starterArticlesBody": "興味に合うすべての記事がフィードに届きます。メラがそれらを読み、ノイズを取り除き、重要なものを前に出します。",
     "starterInterestsTitle": "あなたのすべての興味",
     "starterInterestsBody": "いくつでも追加できます。メラはそのすべてをフォローします。",
     "starterChatTitle": "チャットとファクトチェック",

@@ -218,8 +218,10 @@
       "heldTomorrow": "Mera bunu henüz okumadı, çünkü bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur.",
       "upgradeTitle_one": "Mera'nın okumadığı {{formatted}} makale",
       "upgradeTitle_other": "Mera'nın okumadığı {{formatted}} makale",
-      "upgradeBodyStarter": "Başlangıç her gün Bireysel'den 10 kat daha az okur.",
-      "upgradeBodyIndividual": "Profesyonel her gün 5 kat daha fazla okur."
+      "upgradeBodyStarter_one": "Başlangıç her gün Bireysel'den {{count}} kat daha az okur.",
+      "upgradeBodyStarter_other": "Başlangıç her gün Bireysel'den {{count}} kat daha az okur.",
+      "upgradeBodyIndividual_one": "Profesyonel her gün {{count}} kat daha fazla okur.",
+      "upgradeBodyIndividual_other": "Profesyonel her gün {{count}} kat daha fazla okur."
     },
     "show": {
       "title": "Göster",
@@ -1073,7 +1075,7 @@
     "starterTitle": "Starter bizden",
     "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
     "starterArticlesTitle": "Eşleşen her haber",
-    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır. Başlangıç, günde 2 MB bulut okuması içerir.",
+    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır.",
     "starterInterestsTitle": "Tüm ilgi alanlarınız",
     "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
     "starterChatTitle": "Sohbet ve doğruluk kontrolü",

@@ -217,8 +217,8 @@
       "heldToday": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "heldTomorrow": "Mera belum membaca ini karena Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}.",
       "upgradeTitle_other": "{{formatted}} artikel yang belum dibaca Mera",
-      "upgradeBodyStarter": "Pemula membaca 10 kali lebih sedikit daripada Individu setiap hari.",
-      "upgradeBodyIndividual": "Profesional membaca 5 kali lebih banyak setiap hari."
+      "upgradeBodyStarter_other": "Pemula membaca {{count}} kali lebih sedikit daripada Individu setiap hari.",
+      "upgradeBodyIndividual_other": "Profesional membaca {{count}} kali lebih banyak setiap hari."
     },
     "show": {
       "title": "Tampilkan",
@@ -1058,7 +1058,7 @@
     "starterTitle": "Starter dari kami",
     "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
     "starterArticlesTitle": "Setiap artikel yang cocok",
-    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting. Pemula sudah termasuk 2 MB pembacaan cloud sehari.",
+    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting.",
     "starterInterestsTitle": "Semua minat Anda",
     "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
     "starterChatTitle": "Chat dan cek fakta",

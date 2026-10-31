@@ -63,6 +63,10 @@
 
 import type { MeraExplainerTopicId } from '@/lib/news-harness/persona-management/persona-agent-core';
 
+/** Stands where the plan sizes go; `handleExplainMera` fills it from the server's
+ *  plan sizes (owner: no static plan size in the app), or with nothing while unknown. */
+export const PLAN_SIZES_TOKEN = '{{PLAN_SIZES}}';
+
 export const MERA_EXPLAINER_SECTIONS: Readonly<Record<MeraExplainerTopicId, string>> = Object.freeze({
   // ---------------------------------------------------------------------------
   what_is_mera: `Mera is an impact-first personal news assistant. There is no infinite feed and no engagement farming. Mera watches hundreds of publications worldwide and surfaces only what genuinely affects you, so it succeeds when you spend LESS time reading news, not more. It is built to give back the 60 to 90 minutes a day most people lose filtering the news themselves.
@@ -135,9 +139,9 @@ What is being built is one new repository with four deployable parts, all source
 None of that is finished. It is described in the future tense on purpose.`,
 
   // ---------------------------------------------------------------------------
-  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes 2 MB of cloud reading a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
+  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes a daily amount of cloud reading, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
 
-Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day: Individual 20 MB, Starter 2 MB (10 times less than Individual) and Professional 100 MB (5 times more than Individual). Individual starts with a 2-week free trial for new subscribers, run by the App Store or Google Play. Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
+Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day.{{PLAN_SIZES}} Individual starts with a free trial for new subscribers, run by the App Store or Google Play. Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
 
 Why megabytes and not articles: Mera reads for you through end-to-end encryption, so it cannot see which articles it reads or how many. What it can measure is how much encrypted text it was sent to read, so that is what a plan counts.
 

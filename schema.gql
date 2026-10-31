@@ -897,6 +897,13 @@ type Query {
   worldHeadlines(after: String, canonicalTopicIds: [ID!], countryCode: String, first: Int = 20, windowHours: Int = 24): WorldHeadlinesResponse!
 }
 
+"""Each plan's cloud reading per UTC day, in decimal bytes."""
+type ReadingPlans {
+  individual: Int!
+  professional: Int!
+  starter: Int!
+}
+
 """
 Country and language counts over the related set. Each dimension is counted with the filter of the other dimension applied.
 """
@@ -1111,6 +1118,11 @@ type UserBillingInfo {
   This plan's daily cloud reading as a multiple of Starter's (Starter 1).
   """
   planMultiplier: Int!
+
+  """
+  Every plan's daily cloud reading, so the app states plan sizes and ratios from the server rather than from copy. Null when the server has no usable budgets.
+  """
+  readingPlans: ReadingPlans
 
   """Next 00:00 UTC, when cloud reading resets."""
   readingResetAt: DateTime

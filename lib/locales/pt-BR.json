@@ -218,8 +218,12 @@
       "heldTomorrow": "O Mera ainda não leu isto, porque já usou a leitura de hoje. O Mera volta a ler amanhã às {{time}}.",
       "upgradeTitle_one": "{{formatted}} artigo que o Mera não leu",
       "upgradeTitle_other": "{{formatted}} artigos que o Mera não leu",
-      "upgradeBodyStarter": "O Starter lê 10 vezes menos que o Individual por dia.",
-      "upgradeBodyIndividual": "O Profissional lê 5 vezes mais por dia."
+      "upgradeBodyStarter_one": "O Starter lê {{count}} vezes menos que o Individual por dia.",
+      "upgradeBodyStarter_many": "O Starter lê {{count}} vezes menos que o Individual por dia.",
+      "upgradeBodyStarter_other": "O Starter lê {{count}} vezes menos que o Individual por dia.",
+      "upgradeBodyIndividual_one": "O Profissional lê {{count}} vezes mais por dia.",
+      "upgradeBodyIndividual_many": "O Profissional lê {{count}} vezes mais por dia.",
+      "upgradeBodyIndividual_other": "O Profissional lê {{count}} vezes mais por dia."
     },
     "show": {
       "title": "Mostrar",
@@ -1072,7 +1076,7 @@
     "starterTitle": "Starter é por nossa conta",
     "starterIntro": "Para você ver para que serve o Mera, toda conta agora inclui o plano Starter completo sem custo.",
     "starterArticlesTitle": "Cada artigo compatível",
-    "starterArticlesBody": "Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa. O Starter inclui 2 MB de leitura na nuvem por dia.",
+    "starterArticlesBody": "Cada artigo que combina com seus interesses chega ao seu Feed. O Mera lê, deixa de lado o que é ruído e destaca o que importa.",
     "starterInterestsTitle": "Todos os seus interesses",
     "starterInterestsBody": "Adicione quantos quiser. O Mera acompanha todos.",
     "starterChatTitle": "Chat e checagens",

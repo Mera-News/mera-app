@@ -218,8 +218,10 @@
       "heldTomorrow": "मेरा ऐप ने इसे अभी तक नहीं पढ़ा है, क्योंकि आज की रीडिंग इस्तेमाल कर ली है। मेरा ऐप कल {{time}} पर फिर पढ़ेगा।",
       "upgradeTitle_one": "{{formatted}} लेख जिसे मेरा ऐप ने नहीं पढ़ा",
       "upgradeTitle_other": "{{formatted}} लेख जिन्हें मेरा ऐप ने नहीं पढ़ा",
-      "upgradeBodyStarter": "Starter हर दिन इंडिविजुअल से 10 गुना कम पढ़ता है।",
-      "upgradeBodyIndividual": "प्रोफेशनल हर दिन 5 गुना ज़्यादा पढ़ता है।"
+      "upgradeBodyStarter_one": "Starter हर दिन इंडिविजुअल से {{count}} गुना कम पढ़ता है।",
+      "upgradeBodyStarter_other": "Starter हर दिन इंडिविजुअल से {{count}} गुना कम पढ़ता है।",
+      "upgradeBodyIndividual_one": "प्रोफेशनल हर दिन {{count}} गुना ज़्यादा पढ़ता है।",
+      "upgradeBodyIndividual_other": "प्रोफेशनल हर दिन {{count}} गुना ज़्यादा पढ़ता है।"
     },
     "show": {
       "title": "दिखाएँ",
@@ -1073,7 +1075,7 @@
     "starterTitle": "Starter हमारी ओर से",
     "starterIntro": "आप देख सकें कि मेरा ऐप किस काम का है, इसलिए अब हर खाते में पूरा Starter प्लान मुफ़्त शामिल है।",
     "starterArticlesTitle": "हर मेल खाने वाला लेख",
-    "starterArticlesBody": "आपकी रुचियों से मेल खाने वाला हर लेख आपकी फीड तक पहुँचता है। मेरा ऐप उन्हें पढ़ता है, फ़ालतू बातें अलग रखता है और जो ज़रूरी है उसे आगे लाता है। Starter में हर दिन 2 MB क्लाउड रीडिंग शामिल है।",
+    "starterArticlesBody": "आपकी रुचियों से मेल खाने वाला हर लेख आपकी फीड तक पहुँचता है। मेरा ऐप उन्हें पढ़ता है, फ़ालतू बातें अलग रखता है और जो ज़रूरी है उसे आगे लाता है।",
     "starterInterestsTitle": "आपकी सभी रुचियाँ",
     "starterInterestsBody": "जितनी चाहें जोड़ें। मेरा ऐप हर एक को फ़ॉलो करता है।",
     "starterChatTitle": "चैट और फ़ैक्ट चेक",

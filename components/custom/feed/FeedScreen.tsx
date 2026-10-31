@@ -113,6 +113,7 @@ import { RefreshControl, View } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
+import { planRatio, useReadingPlans } from '@/lib/subscription/reading-plans';
 
 
 /** Gap between the collapsing header's bottom edge and the first card.
@@ -326,8 +327,15 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   const notReadDivider = tailUpgrade
     ? t('feed.notRead.upgradeTitle', { count: notReadCount, formatted: formatCount(notReadCount, appLanguage) })
     : t('feed.notRead.divider');
-  const notReadDividerBody = tailUpgrade
-    ? t(upgradeFrom === 'individual' ? 'feed.notRead.upgradeBodyIndividual' : 'feed.notRead.upgradeBodyStarter')
+  // The ratio comes from the server's plan sizes; unknown sizes show no line.
+  const readingPlans = useReadingPlans();
+  const upgradeRatio = readingPlans
+    ? upgradeFrom === 'individual'
+      ? planRatio(readingPlans.professional, readingPlans.individual)
+      : planRatio(readingPlans.individual, readingPlans.starter)
+    : null;
+  const notReadDividerBody = tailUpgrade && upgradeRatio != null
+    ? t(upgradeFrom === 'individual' ? 'feed.notRead.upgradeBodyIndividual' : 'feed.notRead.upgradeBodyStarter', { count: upgradeRatio })
     : undefined;
   const notReadDividerAction = useMemo(
     () => (tailUpgrade ? <ReadHoldUpgradeButton testID="feed-tail-upgrade" align="center" /> : undefined),

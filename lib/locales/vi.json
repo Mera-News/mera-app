@@ -217,8 +217,8 @@
       "heldToday": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "heldTomorrow": "Mera chưa đọc nội dung này vì Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
       "upgradeTitle_other": "{{formatted}} bài Mera chưa đọc",
-      "upgradeBodyStarter": "Gói Cơ bản mỗi ngày đọc ít hơn gói Cá nhân 10 lần.",
-      "upgradeBodyIndividual": "Gói Chuyên nghiệp đọc nhiều gấp 5 lần mỗi ngày."
+      "upgradeBodyStarter_other": "Gói Cơ bản mỗi ngày đọc ít hơn gói Cá nhân {{count}} lần.",
+      "upgradeBodyIndividual_other": "Gói Chuyên nghiệp đọc nhiều gấp {{count}} lần mỗi ngày."
     },
     "show": {
       "title": "Hiển thị",
@@ -1058,7 +1058,7 @@
     "starterTitle": "Starter do chúng tôi mời",
     "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
     "starterArticlesTitle": "Mọi bài viết phù hợp",
-    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên. Gói Cơ bản bao gồm 2 MB lượt đọc trên đám mây mỗi ngày.",
+    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên.",
     "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
     "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
     "starterChatTitle": "Trò chuyện và kiểm chứng",

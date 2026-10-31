@@ -236,8 +236,14 @@
       "upgradeTitle_few": "{{formatted}} artykuły, których Mera nie przeczytała",
       "upgradeTitle_many": "{{formatted}} artykułów, których Mera nie przeczytała",
       "upgradeTitle_other": "{{formatted}} artykułów, których Mera nie przeczytała",
-      "upgradeBodyStarter": "Starter czyta każdego dnia 10 razy mniej niż Indywidualny.",
-      "upgradeBodyIndividual": "Profesjonalny czyta każdego dnia 5 razy więcej."
+      "upgradeBodyStarter_one": "Starter czyta każdego dnia {{count}} raz mniej niż Indywidualny.",
+      "upgradeBodyStarter_few": "Starter czyta każdego dnia {{count}} razy mniej niż Indywidualny.",
+      "upgradeBodyStarter_many": "Starter czyta każdego dnia {{count}} razy mniej niż Indywidualny.",
+      "upgradeBodyStarter_other": "Starter czyta każdego dnia {{count}} razy mniej niż Indywidualny.",
+      "upgradeBodyIndividual_one": "Profesjonalny czyta każdego dnia {{count}} raz więcej.",
+      "upgradeBodyIndividual_few": "Profesjonalny czyta każdego dnia {{count}} razy więcej.",
+      "upgradeBodyIndividual_many": "Profesjonalny czyta każdego dnia {{count}} razy więcej.",
+      "upgradeBodyIndividual_other": "Profesjonalny czyta każdego dnia {{count}} razy więcej."
     },
     "show": {
       "title": "Pokaż",
@@ -1129,7 +1135,7 @@
     "starterTitle": "Starter na nasz koszt",
     "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
     "starterArticlesTitle": "Każdy pasujący artykuł",
-    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne. Starter obejmuje 2 MB czytania w chmurze dziennie.",
+    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne.",
     "starterInterestsTitle": "Wszystkie twoje zainteresowania",
     "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
     "starterChatTitle": "Czat i sprawdzanie faktów",

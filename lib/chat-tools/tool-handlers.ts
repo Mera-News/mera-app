@@ -22,6 +22,7 @@ import {
 } from '@/lib/news-harness/persona-management/fact-rules';
 import { factChoiceGroupId } from './fact-choice-resolution';
 import { beginTopicGeneration } from '../database/services/topic-generation-status-service';
+import { formatMb, getReadingPlans, planRatio } from '../subscription/reading-plans';
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -53,7 +54,7 @@ const MAX_EXPLAINER_SECTIONS = 3;
 export async function handleExplainMera(
   args: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const { MERA_EXPLAINER_SECTIONS } =
+  const { MERA_EXPLAINER_SECTIONS, PLAN_SIZES_TOKEN } =
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('./mera-explainer-content') as typeof import('./mera-explainer-content');
   const availableTopics = Object.keys(MERA_EXPLAINER_SECTIONS);
@@ -84,10 +85,28 @@ export async function handleExplainMera(
     .filter((t) => (seen.has(t) ? false : (seen.add(t), true)))
     .map((topic) => ({
       topic,
-      text: MERA_EXPLAINER_SECTIONS[topic as keyof typeof MERA_EXPLAINER_SECTIONS],
+      text: MERA_EXPLAINER_SECTIONS[topic as keyof typeof MERA_EXPLAINER_SECTIONS].replace(
+        PLAN_SIZES_TOKEN,
+        planSizesSentence(),
+      ),
     }));
 
   return { sections };
+}
+
+/** The plan sizes as the server enforces them, as one sentence for the explainer; empty while unknown. */
+function planSizesSentence(): string {
+  const plans = getReadingPlans();
+  if (!plans) return '';
+  const less = planRatio(plans.individual, plans.starter);
+  const more = planRatio(plans.professional, plans.individual);
+  return (
+    ` Today they are: Individual ${formatMb(plans.individual)}, Starter ${formatMb(plans.starter)}` +
+    (less ? ` (${less} times less than Individual)` : '') +
+    ` and Professional ${formatMb(plans.professional)}` +
+    (more ? ` (${more} times more than Individual)` : '') +
+    '.'
+  );
 }
 
 /** Resolves userId from Zustand store (warm) or WatermelonDB (cold). */
