@@ -240,10 +240,6 @@
       "waitingTomorrow_other": "梅拉已用完今日阅读量。下方还有 {{formatted}} 篇文章未阅读。梅拉将于明天 {{time}} 再次阅读。",
       "bodyToday": "梅拉已用完今日阅读量。梅拉将于今天 {{time}} 再次阅读。",
       "bodyTomorrow": "梅拉已用完今日阅读量。梅拉将于明天 {{time}} 再次阅读。",
-      "gapFound_other": "梅拉今天为你找到 {{formatted}} 篇文章，已阅读 {{read}} 篇。",
-      "gapWaiting_other": "还有 {{formatted}} 篇在等待。",
-      "gapResetToday": "梅拉将于今天 {{time}} 再次阅读。",
-      "gapResetTomorrow": "梅拉将于明天 {{time}} 再次阅读。",
       "tryIndividual_other": "免费试用个人版 {{count}} 天"
     },
     "noteHeldToday": "今日阅读量已用完，梅拉将于今天 {{time}} 之后撰写这条推荐理由。",

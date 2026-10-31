@@ -240,10 +240,6 @@
       "waitingTomorrow_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi besok pukul {{time}}.",
       "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}.",
-      "gapFound_other": "Mera menemukan {{formatted}} artikel untuk Anda hari ini dan membaca {{read}}.",
-      "gapWaiting_other": "{{formatted}} masih menunggu.",
-      "gapResetToday": "Mera membaca lagi hari ini pukul {{time}}.",
-      "gapResetTomorrow": "Mera membaca lagi besok pukul {{time}}.",
       "tryIndividual_other": "Coba Individu gratis selama {{count}} hari"
     },
     "noteHeldToday": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",

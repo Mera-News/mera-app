@@ -240,10 +240,6 @@
       "waitingTomorrow_other": "梅拉已用完今日的閱讀額度。下方有 {{formatted}} 篇文章尚未閱讀。梅拉將於明天 {{time}} 再次閱讀。",
       "bodyToday": "梅拉已用完今日的閱讀額度。梅拉將於今天 {{time}} 再次閱讀。",
       "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。",
-      "gapFound_other": "梅拉今天為你找到 {{formatted}} 篇文章，已閱讀 {{read}} 篇。",
-      "gapWaiting_other": "還有 {{formatted}} 篇在等待。",
-      "gapResetToday": "梅拉將於今天 {{time}} 再次閱讀。",
-      "gapResetTomorrow": "梅拉將於明天 {{time}} 再次閱讀。",
       "tryIndividual_other": "免費試用個人版 {{count}} 天"
     },
     "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則理由。",

@@ -54,10 +54,10 @@ jest.setTimeout(60_000);
 
 const RESET_AT = Date.now() + 2 * 3_600_000;
 const LINE_1 =
-  '186,350 articles were published today. Mera saved you time by reading 57 and keeping only the 39 that matter to you.';
+  '186,350 articles were published today. Mera read 57 and kept only 39 that matter to you.';
 /** The card's visuals sit under a childless labelled button, hidden from accessibility. */
 const H = { includeHiddenElements: true } as const;
-const LINE_2 = 'Upgrade to save even more time: Mera will read the other 149 too.';
+const LINE_2 = 'Upgrade to save even more time by letting Mera read 149 as well.';
 
 beforeAll(async () => {
   await initI18nEn();
@@ -98,7 +98,15 @@ it('one kept article reads in the singular', async () => {
   mockCounts = { ...mockCounts, relevantCount: 1 };
   await render(<DashboardStatsCard testID="feed-status-card" />);
   expect(screen.getByTestId('feed-status-lead', H)).toHaveTextContent(
-    '186,350 articles were published today. Mera saved you time by reading 57 and keeping only the 1 that matters to you.',
+    '186,350 articles were published today. Mera read 57 and kept only 1 that matters to you.',
+  );
+});
+
+it('none kept says so', async () => {
+  mockCounts = { ...mockCounts, relevantCount: 0 };
+  await render(<DashboardStatsCard testID="feed-status-card" />);
+  expect(screen.getByTestId('feed-status-lead', H)).toHaveTextContent(
+    '186,350 articles were published today. Mera read 57 and none matter to you yet.',
   );
 });
 

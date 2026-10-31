@@ -245,12 +245,6 @@
       "waitingTomorrow_other": "Mera bugünkü okumasını kullandı. Aşağıdaki {{formatted}} makale hâlâ okunmadı. Mera yarın {{time}} saatinde yeniden okur.",
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur.",
-      "gapFound_one": "Mera bugün senin için {{formatted}} makale buldu ve {{read}} tanesini okudu.",
-      "gapFound_other": "Mera bugün senin için {{formatted}} makale buldu ve {{read}} tanesini okudu.",
-      "gapWaiting_one": "{{formatted}} makale hâlâ bekliyor.",
-      "gapWaiting_other": "{{formatted}} makale hâlâ bekliyor.",
-      "gapResetToday": "Mera bugün {{time}} saatinde yeniden okur.",
-      "gapResetTomorrow": "Mera yarın {{time}} saatinde yeniden okur.",
       "tryIndividual_one": "Bireysel planı {{count}} gün ücretsiz dene",
       "tryIndividual_other": "Bireysel planı {{count}} gün ücretsiz dene"
     },

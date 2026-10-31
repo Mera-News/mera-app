@@ -245,12 +245,6 @@
       "waitingTomorrow_other": "Mera hat das heutige Lesekontingent genutzt. {{formatted}} Artikel unten sind noch ungelesen. Mera liest morgen um {{time}} wieder.",
       "bodyToday": "Mera hat das heutige Lesekontingent genutzt. Mera liest heute um {{time}} wieder.",
       "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder.",
-      "gapFound_one": "Mera hat heute {{formatted}} Artikel für dich gefunden und {{read}} davon gelesen.",
-      "gapFound_other": "Mera hat heute {{formatted}} Artikel für dich gefunden und {{read}} davon gelesen.",
-      "gapWaiting_one": "{{formatted}} wartet noch.",
-      "gapWaiting_other": "{{formatted}} warten noch.",
-      "gapResetToday": "Mera liest heute um {{time}} wieder.",
-      "gapResetTomorrow": "Mera liest morgen um {{time}} wieder.",
       "tryIndividual_one": "Einzelperson {{count}} Tag kostenlos testen",
       "tryIndividual_other": "Einzelperson {{count}} Tage kostenlos testen"
     },

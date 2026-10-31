@@ -245,12 +245,6 @@
       "waitingTomorrow_other": "Mera ha usado la lectura de hoy. {{formatted}} artículos de abajo aún no han sido leídos. Mera vuelve a leer mañana a las {{time}}.",
       "bodyToday": "Mera ha usado la lectura de hoy. Mera vuelve a leer hoy a las {{time}}.",
       "bodyTomorrow": "Mera ha usado la lectura de hoy. Mera vuelve a leer mañana a las {{time}}.",
-      "gapFound_one": "Mera encontró {{formatted}} artículo para ti hoy y leyó {{read}}.",
-      "gapFound_other": "Mera encontró {{formatted}} artículos para ti hoy y leyó {{read}}.",
-      "gapWaiting_one": "{{formatted}} sigue esperando.",
-      "gapWaiting_other": "{{formatted}} siguen esperando.",
-      "gapResetToday": "Mera vuelve a leer hoy a las {{time}}.",
-      "gapResetTomorrow": "Mera vuelve a leer mañana a las {{time}}.",
       "tryIndividual_one": "Prueba Individual gratis durante {{count}} día",
       "tryIndividual_other": "Prueba Individual gratis durante {{count}} días"
     },

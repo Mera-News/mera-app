@@ -245,12 +245,6 @@
       "waitingTomorrow_other": "मेरा ऐप ने आज की रीडिंग इस्तेमाल कर ली है। नीचे {{formatted}} लेख अभी भी अनपढ़े हैं। मेरा ऐप कल {{time}} पर फिर पढ़ेगा।",
       "bodyToday": "मेरा ऐप ने आज की रीडिंग इस्तेमाल कर ली है। मेरा ऐप आज {{time}} पर फिर पढ़ेगा।",
       "bodyTomorrow": "मेरा ऐप ने आज की रीडिंग इस्तेमाल कर ली है। मेरा ऐप कल {{time}} पर फिर पढ़ेगा।",
-      "gapFound_one": "मेरा ऐप को आज आपके लिए {{formatted}} लेख मिला, और उसने {{read}} पढ़ा।",
-      "gapFound_other": "मेरा ऐप को आज आपके लिए {{formatted}} लेख मिले, जिनमें से उसने {{read}} पढ़े।",
-      "gapWaiting_one": "{{formatted}} लेख अभी भी इंतज़ार में है।",
-      "gapWaiting_other": "{{formatted}} लेख अभी भी इंतज़ार में हैं।",
-      "gapResetToday": "मेरा ऐप आज {{time}} पर फिर पढ़ेगा।",
-      "gapResetTomorrow": "मेरा ऐप कल {{time}} पर फिर पढ़ेगा।",
       "tryIndividual_one": "इंडिविजुअल {{count}} दिन मुफ़्त आज़माएँ",
       "tryIndividual_other": "इंडिविजुअल {{count}} दिन मुफ़्त आज़माएँ"
     },

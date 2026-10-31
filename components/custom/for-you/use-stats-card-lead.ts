@@ -37,7 +37,7 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
                 [
                     t('feed.readHold.publishedToday', fmt(articleCount)),
                     ...(analysedCount > 0
-                        ? [t('feed.readHold.savedTime', { ...fmt(relevantCount), read: formatCount(analysedCount, appLanguage) })]
+                        ? [t('feed.readHold.readKept', { ...fmt(relevantCount), read: formatCount(analysedCount, appLanguage) })]
                         : []),
                 ],
                 i18n.language,

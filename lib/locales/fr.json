@@ -250,12 +250,6 @@
       "waitingTomorrow_other": "Mera a utilisé la lecture du jour. {{formatted}} articles ci-dessous ne sont pas encore lus. Mera reprend la lecture demain à {{time}}.",
       "bodyToday": "Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
       "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}.",
-      "gapFound_one": "Mera a trouvé {{formatted}} article pour vous aujourd'hui et en a lu {{read}}.",
-      "gapFound_other": "Mera a trouvé {{formatted}} articles pour vous aujourd'hui et en a lu {{read}}.",
-      "gapWaiting_one": "{{formatted}} attend encore.",
-      "gapWaiting_other": "{{formatted}} attendent encore.",
-      "gapResetToday": "Mera reprend la lecture aujourd'hui à {{time}}.",
-      "gapResetTomorrow": "Mera reprend la lecture demain à {{time}}.",
       "tryIndividual_one": "Essayer Individuel gratuitement pendant {{count}} jour",
       "tryIndividual_other": "Essayer Individuel gratuitement pendant {{count}} jours"
     },

@@ -240,10 +240,6 @@
       "waitingTomorrow_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
       "bodyToday": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
-      "gapFound_other": "메라가 오늘 회원님을 위한 기사 {{formatted}}개를 찾아 {{read}}개를 읽었습니다.",
-      "gapWaiting_other": "{{formatted}}개가 아직 기다리고 있습니다.",
-      "gapResetToday": "메라는 오늘 {{time}}에 다시 읽습니다.",
-      "gapResetTomorrow": "메라는 내일 {{time}}에 다시 읽습니다.",
       "tryIndividual_other": "개인 요금제 {{count}}일 무료 체험"
     },
     "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 오늘 {{time}} 이후에 작성합니다.",

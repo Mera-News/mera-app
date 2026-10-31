@@ -240,10 +240,6 @@
       "waitingTomorrow_other": "メラは今日の読書を使い切りました。下の{{formatted}}件の記事はまだ未読です。メラは明日の{{time}}にまた読み始めます。",
       "bodyToday": "メラは今日の読書を使い切りました。今日の{{time}}に、メラがまた読み始めます。",
       "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。",
-      "gapFound_other": "メラは今日、あなた向けの記事を{{formatted}}件見つけ、{{read}}件を読みました。",
-      "gapWaiting_other": "{{formatted}}件がまだ待っています。",
-      "gapResetToday": "メラは今日の{{time}}にまた読み始めます。",
-      "gapResetTomorrow": "メラは明日の{{time}}にまた読み始めます。",
       "tryIndividual_other": "個人プランを{{count}}日間無料で試す"
     },
     "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の理由を書きます。",

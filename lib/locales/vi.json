@@ -240,10 +240,6 @@
       "waitingTomorrow_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
       "bodyToday": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
-      "gapFound_other": "Hôm nay Mera tìm thấy {{formatted}} bài cho bạn và đã đọc {{read}} bài.",
-      "gapWaiting_other": "{{formatted}} bài vẫn đang chờ.",
-      "gapResetToday": "Mera sẽ đọc lại hôm nay lúc {{time}}.",
-      "gapResetTomorrow": "Mera sẽ đọc lại ngày mai lúc {{time}}.",
       "tryIndividual_other": "Dùng thử gói Cá nhân miễn phí {{count}} ngày"
     },
     "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} hôm nay.",
