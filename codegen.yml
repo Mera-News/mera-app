@@ -6,3 +6,7 @@ generates:
   ./lib/generated/graphql-types.ts:
     plugins:
       - typescript
+    config:
+      # codegen-typescript 6 types custom scalars as unknown; keep DateTime as
+      # it has always been typed so consumers do not change with the tool.
+      defaultScalarType: any
