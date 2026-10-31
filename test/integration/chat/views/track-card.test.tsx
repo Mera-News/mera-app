@@ -70,11 +70,11 @@ async function mount(labels: string[], opts: { superseded?: boolean; onGrown?: (
     growTrackCard({ resultKey: `${staged.msgId}::0`, baseResult: staged.baseResult }, staged.proposal, labels.slice(4).map(action));
   }
   const history = await fetchMessagesForConversation(staged.conversationId);
-  const view = render(<Thread history={history} superseded={opts.superseded} onGrown={opts.onGrown} />);
+  const view = await render(<Thread history={history} superseded={opts.superseded} onGrown={opts.onGrown} />);
   return { ...staged, view };
 }
 
-const checked = (v: ReturnType<typeof render>, i: number) => v.getByTestId(`track-option-${i}`).props.accessibilityState.checked;
+const checked = (v: Awaited<ReturnType<typeof render>>, i: number) => v.getByTestId(`track-option-${i}`).props.accessibilityState.checked;
 const getActive = () => firstValueFrom(observeActive());
 const never = () => new Promise<never>(() => {});
 const flatten = (n: { props: { style?: unknown } }) => StyleSheet.flatten(n.props.style as never) ?? {};
@@ -113,11 +113,11 @@ describe('ticking and Follow', () => {
 
   it('ticking three rows follows three stories, each under its own label and search', async () => {
     const { view, proposal } = await mount(['Artemis II launch', 'NASA Artemis program', 'Moon race']);
-    fireEvent.press(view.getByTestId('track-option-1'));
-    fireEvent.press(view.getByTestId('track-option-2'));
+    await fireEvent.press(view.getByTestId('track-option-1'));
+    await fireEvent.press(view.getByTestId('track-option-2'));
     expect(within(view.getByTestId('track-follow')).getByText('trackedStories.followTicked_other:3')).toBeTruthy();
 
-    fireEvent.press(view.getByTestId('track-follow'));
+    await fireEvent.press(view.getByTestId('track-follow'));
 
     await waitFor(async () => expect(await getActive()).toHaveLength(3));
     const rows = await getActive();
@@ -138,13 +138,13 @@ describe('ticking and Follow', () => {
 
   it('one failed row says so, stays ticked, offers Try again and leaves the proposal waiting', async () => {
     const { view, proposal } = await mount(['Artemis II launch', 'Moon race']);
-    fireEvent.press(view.getByTestId('track-option-1'));
+    await fireEvent.press(view.getByTestId('track-option-1'));
     const real = trackActions.trackStoryWithProposal;
     jest
       .spyOn(trackActions, 'trackStoryWithProposal')
       .mockImplementation((subj, scope, opts) => (scope.label === 'Moon race' ? Promise.reject(new Error('db down')) : real(subj, scope, opts)));
 
-    fireEvent.press(view.getByTestId('track-follow'));
+    await fireEvent.press(view.getByTestId('track-follow'));
 
     // The checkbox row's words sit under a hidden visual: its label carries the outcome.
     await waitFor(() => expect(view.getByTestId('track-option-1').props.accessibilityLabel).toBe(`Moon race. ${key('rowFailed')}`));
@@ -157,11 +157,11 @@ describe('ticking and Follow', () => {
 
   it('with nothing ticked Follow reads plain and is disabled', async () => {
     const { view } = await mount(['Artemis II launch', 'Moon race']);
-    fireEvent.press(view.getByTestId('track-option-0'));
+    await fireEvent.press(view.getByTestId('track-option-0'));
     const follow = view.getByTestId('track-follow');
     expect(within(follow).getByText(key('follow'))).toBeTruthy();
     expect(follow.props.accessibilityState.disabled).toBe(true);
-    fireEvent.press(follow);
+    await fireEvent.press(follow);
     expect(await getActive()).toHaveLength(0);
   });
 });
@@ -178,15 +178,15 @@ describe('More options', () => {
   it('is hidden at eight options, while a turn runs, and when the engine cannot grow a card', async () => {
     const full = await mount(eight);
     expect(full.view.queryByTestId('track-more')).toBeNull();
-    full.view.unmount();
+    await full.view.unmount();
 
     resetChatModules();
     const short = await mount(['Artemis II launch']);
-    act(() => useFloatingChatStore.setState({ isGenerating: true }));
+    await act(() => useFloatingChatStore.setState({ isGenerating: true }));
     expect(short.view.queryByTestId('track-more')).toBeNull();
-    act(() => useFloatingChatStore.setState({ isGenerating: false }));
+    await act(() => useFloatingChatStore.setState({ isGenerating: false }));
     expect(short.view.getByTestId('track-more')).toBeTruthy();
-    short.view.unmount();
+    await short.view.unmount();
 
     (chatSession.canRequestMoreOptions as jest.Mock).mockReturnValue(false);
     const noEngine = await mount(['Artemis II launch']);
@@ -197,7 +197,7 @@ describe('More options', () => {
     const { view } = await mount(['Artemis II launch']);
     jest.spyOn(chatSession, 'requestMoreOptions').mockImplementation(never);
 
-    fireEvent.press(view.getByTestId('track-more'));
+    await fireEvent.press(view.getByTestId('track-more'));
 
     await waitFor(() => expect(view.getByTestId('track-more-loading')).toBeTruthy());
     expect(view.queryByTestId('track-more')).toBeNull();
@@ -217,7 +217,7 @@ describe('More options', () => {
     const { view } = await mount(['Artemis II launch'], { onGrown });
     jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue({ actions: [action('Moon race'), action('Lunar base')] });
 
-    fireEvent.press(view.getByTestId('track-more'));
+    await fireEvent.press(view.getByTestId('track-more'));
 
     await waitFor(() => expect(view.getByTestId('track-option-2')).toBeTruthy());
     expect(checked(view, 0)).toBe(true);
@@ -236,7 +236,7 @@ describe('More options', () => {
     const { view } = await mount(['Artemis II launch']);
     jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue(answer);
 
-    fireEvent.press(view.getByTestId('track-more'));
+    await fireEvent.press(view.getByTestId('track-more'));
 
     await waitFor(() => expect(view.getByText(key(line))).toBeTruthy());
     expect(view.getByTestId('track-more')).toBeTruthy();
@@ -246,7 +246,7 @@ describe('More options', () => {
     const { view } = await mount(['Artemis II launch']);
     jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue({ actions: [], reason: 'stopped' });
 
-    fireEvent.press(view.getByTestId('track-more'));
+    await fireEvent.press(view.getByTestId('track-more'));
 
     await waitFor(() => expect(view.getByTestId('track-more')).toBeTruthy());
     expect(view.queryByText(key('moreOptionsNone'))).toBeNull();
@@ -264,19 +264,19 @@ describe('resolved states', () => {
 
   it('a followed card stays resolved when a newer card supersedes it', async () => {
     const { view, conversationId } = await mount(['Artemis II launch', 'Moon race']);
-    fireEvent.press(view.getByTestId('track-follow'));
+    await fireEvent.press(view.getByTestId('track-follow'));
     await waitFor(() => expect(view.getByTestId('track-card-followed')).toBeTruthy());
-    view.unmount();
+    await view.unmount();
 
     const history = await fetchMessagesForConversation(conversationId);
-    const again = render(<Thread history={history} superseded />);
+    const again = await render(<Thread history={history} superseded />);
     expect(again.getByTestId('track-card-followed')).toBeTruthy();
     expect(again.queryByText(key('optionsExpired'))).toBeNull();
   });
 
   it('settled: the title says what happened, only the followed row stays, the buttons go', async () => {
     const { view } = await mount(['Artemis II launch', 'Moon race']);
-    fireEvent.press(view.getByTestId('track-follow'));
+    await fireEvent.press(view.getByTestId('track-follow'));
 
     await waitFor(() => expect(view.getByTestId('track-card-followed')).toBeTruthy());
     expect(view.getByText('trackedStories.followingAll_one:1')).toBeTruthy();
@@ -293,12 +293,12 @@ describe('resolved states', () => {
   it('See followed stories closes the chat and opens the Followed stories page', async () => {
     const nav = require('@/components/custom/nav/navigate-to-page') as typeof import('@/components/custom/nav/navigate-to-page');
     const go = jest.spyOn(nav, 'navigateToPage').mockImplementation(() => {});
-    act(() => useFloatingChatStore.setState({ isExpanded: true }));
+    await act(() => useFloatingChatStore.setState({ isExpanded: true }));
     const { view } = await mount(['Artemis II launch']);
-    fireEvent.press(view.getByTestId('track-follow'));
+    await fireEvent.press(view.getByTestId('track-follow'));
     await waitFor(() => expect(view.getByTestId('track-see-followed')).toBeTruthy());
 
-    fireEvent.press(view.getByTestId('track-see-followed'));
+    await fireEvent.press(view.getByTestId('track-see-followed'));
 
     expect(useFloatingChatStore.getState().isExpanded).toBe(false);
     expect(go).toHaveBeenCalledWith('stories');
@@ -309,19 +309,19 @@ describe('resolved states', () => {
     jest.spyOn(trackActions, 'trackStoryWithProposal').mockImplementation(never);
     const { view } = await mount(['Artemis II launch', 'Moon race']);
 
-    fireEvent.press(view.getByTestId('track-follow'));
+    await fireEvent.press(view.getByTestId('track-follow'));
 
     const follow = view.getByTestId('track-follow');
     await waitFor(() => expect(within(follow).getByText(key('followingBusy'))).toBeTruthy());
     expect(follow.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
-    fireEvent.press(view.getByTestId('track-option-1'));
+    await fireEvent.press(view.getByTestId('track-option-1'));
     expect(checked(view, 1)).toBe(false);
     expect(view.queryByTestId('track-card-followed')).toBeNull();
   });
 
   it('Not now collapses the card to one line', async () => {
     const { view, proposal } = await mount(['Artemis II launch', 'Moon race']);
-    fireEvent.press(view.getByTestId('track-not-now'));
+    await fireEvent.press(view.getByTestId('track-not-now'));
 
     await waitFor(() => expect(view.queryByTestId('track-follow')).toBeNull());
     expect(view.getByText(cancelText())).toBeTruthy();
@@ -354,9 +354,9 @@ describe('accessibility and touch frames', () => {
     const label = () => view.getByText('trackedStories.followTicked_one:1');
     expect(sideBySide()).toBe(true);
 
-    fireEvent(label(), 'textLayout', { nativeEvent: { lines: [{}, {}] } });
+    await fireEvent(label(), 'textLayout', { nativeEvent: { lines: [{}, {}] } });
     expect(sideBySide()).toBe(false);
-    fireEvent(label(), 'textLayout', { nativeEvent: { lines: [{}] } });
+    await fireEvent(label(), 'textLayout', { nativeEvent: { lines: [{}] } });
     expect(sideBySide()).toBe(false);
   });
 });

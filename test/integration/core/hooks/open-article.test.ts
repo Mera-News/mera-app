@@ -166,9 +166,9 @@ describe('openArticle', () => {
 
 describe('useOpenArticle', () => {
   it('returns one stable fire-and-forget callback that navigates', async () => {
-    const { result, rerender } = renderHook(() => useOpenArticle());
+    const { result, rerender } = await renderHook(() => useOpenArticle());
     const first = result.current;
-    rerender({});
+    await rerender({});
     expect(result.current).toBe(first);
 
     expect(first({ articleId: 'art-8' })).toBeUndefined();

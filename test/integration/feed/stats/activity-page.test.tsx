@@ -41,19 +41,19 @@ describe('the Activity page', () => {
     await visit('a1', 'Le Monde', 'FRA');
     await visit('a2', 'Le Monde', 'FRA');
     await visit('a3', 'NRC', 'NLD', 'nl');
-    const page = renderPage();
+    const page = await renderPage();
     await waitFor(() => expect(page.getByTestId('stat-tile-top')).toBeTruthy());
 
     expect(page.getByText('Your last 30 days')).toBeTruthy();
     expect(page.getByText('All 2 publications you opened')).toBeTruthy();
     expect(page.queryByTestId('stats-history-row')).toBeNull();
-    fireEvent.press(page.getByTestId('stat-tile-top'));
+    await fireEvent.press(page.getByTestId('stat-tile-top'));
     expect(pushedPath()).toBe(`${LIBRARY}/history`);
   });
 
   it('opens each card its screen', async () => {
     await visit('a1', 'Le Monde', 'FRA');
-    const page = renderPage();
+    const page = await renderPage();
     await waitFor(() => expect(page.getByTestId('stat-tile-fresh')).toBeTruthy());
 
     const opens: [string, string][] = [
@@ -64,7 +64,7 @@ describe('the Activity page', () => {
       ['fresh', 'freshness'],
     ];
     for (const [card, screen] of opens) {
-      fireEvent.press(page.getByTestId(`stat-tile-${card}`));
+      await fireEvent.press(page.getByTestId(`stat-tile-${card}`));
       expect(pushedPath()).toBe(`${LIBRARY}/${screen}`);
     }
   });
@@ -72,25 +72,25 @@ describe('the Activity page', () => {
   it('with no Most opened, a History row keeps History reachable, and Right now opens Saved and Stories', async () => {
     await saveStandaloneArticle(newsArticle('s1'));
     await trackStory({ articleId: 'f1', title: 'A followed story', originSurface: 'feed' });
-    const page = renderPage();
+    const page = await renderPage();
     await waitFor(() => expect(page.getByTestId('stat-tile-now')).toBeTruthy());
 
     expect(page.queryByTestId('stat-tile-top')).toBeNull();
-    fireEvent.press(page.getByTestId('stats-history-row'));
+    await fireEvent.press(page.getByTestId('stats-history-row'));
     expect(pushedPath()).toBe(`${LIBRARY}/history`);
 
-    fireEvent.press(page.getByTestId('stats-now-saved'));
+    await fireEvent.press(page.getByTestId('stats-now-saved'));
     expect(usePendingPageStore.getState().request?.page).toBe('saved');
-    fireEvent.press(page.getByTestId('stats-now-followed'));
+    await fireEvent.press(page.getByTestId('stats-now-followed'));
     expect(usePendingPageStore.getState().request?.page).toBe('stories');
   });
 
   it('Share enters select mode in place, every card a checkbox', async () => {
     await visit('a1', 'Le Monde', 'FRA');
-    const page = renderPage();
+    const page = await renderPage();
     await waitFor(() => expect(page.getByTestId('stats-share')).toBeTruthy());
 
-    fireEvent.press(page.getByTestId('stats-share'));
+    await fireEvent.press(page.getByTestId('stats-share'));
     expect(page.getByTestId('stats-preview')).toBeTruthy();
     expect(page.getByTestId('stat-tile-top').props.accessibilityRole).toBe('checkbox');
     expect(page.queryByTestId('stats-share')).toBeNull();
@@ -104,13 +104,13 @@ describe('History', () => {
     // The same outlet filed under a second country counts there only.
     await visit('a3', 'Le Monde', 'BEL');
 
-    const all = renderHookInScreen(() => useHistory(null));
+    const all = await renderHookInScreen(() => useHistory(null));
     await waitFor(() => expect(all.result.current.loading).toBe(false));
     expect(all.result.current.items.map((i) => [i.publicationName, i.visitCount])).toEqual(
       expect.arrayContaining([['Le Monde', 2], ['NRC', 1]]),
     );
 
-    const fr = renderHookInScreen(() => useHistory('FRA'));
+    const fr = await renderHookInScreen(() => useHistory('FRA'));
     await waitFor(() => expect(fr.result.current.loading).toBe(false));
     expect(fr.result.current.items.map((i) => [i.publicationName, i.countryCode, i.visitCount])).toEqual([['Le Monde', 'FRA', 1]]);
   });
@@ -122,18 +122,18 @@ describe('What you opened', () => {
     await visit('a2', 'NRC', 'NLD', 'nl');
     const today = localDateKey(Date.now());
 
-    const log = renderHookInScreen(() => useReadingLog({ language: null, initialDay: null }));
+    const log = await renderHookInScreen(() => useReadingLog({ language: null, initialDay: null }));
     await waitFor(() => expect(log.result.current.all).toHaveLength(2));
     expect(log.result.current.days.at(-1)).toMatchObject({ dateKey: today, count: 2 });
 
-    act(() => log.result.current.setDay('2001-01-01'));
+    await act(() => log.result.current.setDay('2001-01-01'));
     expect(log.result.current.rows).toHaveLength(0);
-    act(() => log.result.current.setDay(today));
+    await act(() => log.result.current.setDay(today));
     expect(log.result.current.rows).toHaveLength(2);
-    act(() => log.result.current.setDay(null));
+    await act(() => log.result.current.setDay(null));
     expect(log.result.current.rows).toHaveLength(2);
 
-    const nl = renderHookInScreen(() => useReadingLog({ language: 'nl', initialDay: today }));
+    const nl = await renderHookInScreen(() => useReadingLog({ language: 'nl', initialDay: today }));
     await waitFor(() => expect(nl.result.current.rows.map((v) => v.articleId)).toEqual(['a2']));
     expect(nl.result.current.days.at(-1)?.count).toBe(1);
   });

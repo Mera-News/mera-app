@@ -32,7 +32,7 @@ const setOS = (os: 'ios' | 'android') => {
     Object.defineProperty(Platform, 'OS', { configurable: true, get: () => os });
 };
 const run = async () => {
-    const hook = renderHook(() => useRestorePurchases());
+    const hook = await renderHook(() => useRestorePurchases());
     await act(async () => {
         await hook.result.current.restore();
     });

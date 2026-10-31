@@ -32,27 +32,27 @@ beforeEach(() => {
 });
 
 describe('useFloatingChatShown', () => {
-  it('is false on a closed chat, true while it is open, and true while it is still moving', () => {
-    const { result } = renderHook(() => useFloatingChatShown());
+  it('is false on a closed chat, true while it is open, and true while it is still moving', async () => {
+    const { result } = await renderHook(() => useFloatingChatShown());
     expect(result.current).toBe(false);
 
-    act(() => useFloatingChatStore.getState().expand());
+    await act(() => useFloatingChatStore.getState().expand());
     expect(result.current).toBe(true);
 
     // The store collapsed but ChatPopover's close animation has not finished: still shown.
-    act(() => useFloatingChatStore.getState().setChatShown(true));
-    act(() => useFloatingChatStore.getState().collapse());
+    await act(() => useFloatingChatStore.getState().setChatShown(true));
+    await act(() => useFloatingChatStore.getState().collapse());
     expect(useFloatingChatStore.getState().isExpanded).toBe(false);
     expect(result.current).toBe(true);
 
-    act(() => useFloatingChatStore.getState().setChatShown(false));
+    await act(() => useFloatingChatStore.getState().setChatShown(false));
     expect(result.current).toBe(false);
   });
 });
 
 describe('when the button shows', () => {
   it('is hidden until the stored corner has loaded, then shows on a tab', async () => {
-    const { result } = renderHook(() => useShown(TAB));
+    const { result } = await renderHook(() => useShown(TAB));
     expect(result.current).toBe(false);
 
     await act(async () => {
@@ -63,17 +63,17 @@ describe('when the button shows', () => {
 
   it('hides while the chat is open or moving, and comes back when it is gone', async () => {
     await hydrateMeraButtonCorner();
-    const { result } = renderHook(() => useShown(TAB));
+    const { result } = await renderHook(() => useShown(TAB));
     expect(result.current).toBe(true);
 
-    act(() => useFloatingChatStore.getState().expand());
+    await act(() => useFloatingChatStore.getState().expand());
     expect(result.current).toBe(false);
 
-    act(() => useFloatingChatStore.getState().setChatShown(true));
-    act(() => useFloatingChatStore.getState().collapse());
+    await act(() => useFloatingChatStore.getState().setChatShown(true));
+    await act(() => useFloatingChatStore.getState().collapse());
     expect(result.current).toBe(false);
 
-    act(() => useFloatingChatStore.getState().setChatShown(false));
+    await act(() => useFloatingChatStore.getState().setChatShown(false));
     expect(result.current).toBe(true);
   });
 
@@ -85,14 +85,14 @@ describe('when the button shows', () => {
     [['logged-in', 'article-detail'], true],
   ])('on %j: %s', async (segments, expected) => {
     await hydrateMeraButtonCorner();
-    const { result } = renderHook(() => useShown(segments));
+    const { result } = await renderHook(() => useShown(segments));
     expect(result.current).toBe(expected);
   });
 
   it('the keyboard hides it on a tab but not on Search', async () => {
     await hydrateMeraButtonCorner();
-    expect(renderHook(() => useShown(TAB, { keyboardUp: true })).result.current).toBe(false);
-    expect(renderHook(() => useShown(['logged-in', 'search'], { keyboardUp: true })).result.current).toBe(true);
+    expect(await (await renderHook(() => useShown(TAB, { keyboardUp: true }))).result.current).toBe(false);
+    expect(await (await renderHook(() => useShown(['logged-in', 'search'], { keyboardUp: true }))).result.current).toBe(true);
   });
 });
 

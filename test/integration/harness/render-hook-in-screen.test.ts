@@ -4,22 +4,22 @@ import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { renderHookInScreen } from '@/test/helpers';
 
 describe('renderHookInScreen', () => {
-  it('useIsFocused and useIsFocusedSafe follow the screen focus', () => {
-    const { result, setFocused } = renderHookInScreen(() => ({ bare: useIsFocused(), safe: useIsFocusedSafe() }));
+  it('useIsFocused and useIsFocusedSafe follow the screen focus', async () => {
+    const { result, setFocused } = await renderHookInScreen(() => ({ bare: useIsFocused(), safe: useIsFocusedSafe() }));
     expect(result.current).toEqual({ bare: true, safe: true });
-    setFocused(false);
+    await setFocused(false);
     expect(result.current).toEqual({ bare: false, safe: false });
-    setFocused(true);
+    await setFocused(true);
     expect(result.current).toEqual({ bare: true, safe: true });
   });
 
-  it('can start blurred', () => {
-    const { result } = renderHookInScreen(() => useIsFocused(), { focused: false });
+  it('can start blurred', async () => {
+    const { result } = await renderHookInScreen(() => useIsFocused(), { focused: false });
     expect(result.current).toBe(false);
   });
 
-  it('the helper provides the NavigationContext that useIsFocusedSafe reads', () => {
-    const { result } = renderHookInScreen(() => useIsFocusedSafe(), { focused: false });
+  it('the helper provides the NavigationContext that useIsFocusedSafe reads', async () => {
+    const { result } = await renderHookInScreen(() => useIsFocusedSafe(), { focused: false });
     expect(result.current).toBe(false);
   });
 });

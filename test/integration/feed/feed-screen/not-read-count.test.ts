@@ -21,14 +21,14 @@ it('stays a number under Mera\'s picks and Discarded, and is withdrawn on unmoun
   const feed = await renderFeed();
   await waitFor(() => expect(waiting()).toBe(1));
 
-  act(() => setFeedShow('picks'));
+  await act(() => setFeedShow('picks'));
   await waitFor(() => expect(feed.ids()).toEqual(['pick']));
   expect(waiting()).toBe(1);
 
-  act(() => setFeedShow('discarded'));
+  await act(() => setFeedShow('discarded'));
   await waitFor(() => expect(feed.ids()).not.toContain('pick'));
   expect(waiting()).toBe(1);
 
-  feed.unmount();
+  await feed.unmount();
   expect(waiting()).toBeNull();
 });

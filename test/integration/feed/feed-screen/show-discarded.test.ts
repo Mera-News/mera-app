@@ -31,7 +31,7 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
     picks: { n: 1 },
     unread: { n: 0 },
   });
-  act(() => setFeedShowMenuOpen(true));
+  await act(() => setFeedShowMenuOpen(true));
   await waitFor(() =>
     expect(counts()).toEqual({
       all: { n: 1 },
@@ -40,10 +40,10 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
       discarded: { n: 2 },
     }),
   );
-  act(() => setFeedShowMenuOpen(false));
+  await act(() => setFeedShowMenuOpen(false));
   await waitFor(() => expect(counts()?.discarded).toBeUndefined());
 
-  act(() => setFeedShow('discarded'));
+  await act(() => setFeedShow('discarded'));
   await waitFor(() => expect(feed.ids().sort()).toEqual(['low', 'zero']));
   expect(feed.result.current.picksCount).toBe(0);
   // Its rows can never be marked seen (not in the order), so none wears the new-card halo.
@@ -56,7 +56,7 @@ it('All shows the pick only; Discarded by Mera shows the below-gate row alone; t
   expect(feed.ids()).toContain('low2');
   expect(useFeedOrderStore.getState().order).not.toContain('low2');
 
-  act(() => setFeedShow('all'));
+  await act(() => setFeedShow('all'));
   await waitFor(() => expect(feed.ids()).toEqual(['pick']));
 });
 
@@ -65,6 +65,6 @@ it('the counts are withdrawn when the Continuous list unmounts', async () => {
   await hydrateSuggestions();
   const feed = await renderFeed();
   await waitFor(() => expect(counts()?.picks?.n).toBe(1));
-  feed.unmount();
+  await feed.unmount();
   expect(counts()).toBeNull();
 });

@@ -19,15 +19,15 @@ describe('overlay restart holds', () => {
     expect(src('InlineChoiceChip.tsx')).toContain("useRestartHold(isOpen, 'overlay:sheet', 'auto')");
   });
 
-  it.each([['world-arrange'], ['overlay:sheet']])('%s is held while open, gone after close and unmount', (label) => {
-    const h = renderHook(({ open }: { open: boolean }) => useRestartHold(open, label, 'auto'), {
+  it.each([['world-arrange'], ['overlay:sheet']])('%s is held while open, gone after close and unmount', async (label) => {
+    const h = await renderHook(({ open }: { open: boolean }) => useRestartHold(open, label, 'auto'), {
       initialProps: { open: true },
     });
     expect(activeHolds()).toContain(label);
-    h.rerender({ open: false });
+    await h.rerender({ open: false });
     expect(activeHolds()).not.toContain(label);
-    h.rerender({ open: true });
-    h.unmount();
+    await h.rerender({ open: true });
+    await h.unmount();
     expect(activeHolds()).not.toContain(label);
   });
 });

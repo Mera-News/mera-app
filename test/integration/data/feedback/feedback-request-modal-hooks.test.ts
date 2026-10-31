@@ -69,7 +69,7 @@ const rows = async () => (await getAll()).filter((n) => (n as any).source === `f
 /** Mounts the card hook and waits for the phase to leave `loading`. */
 async function mountCard(...args: [id?: string]) {
     const id = args.length ? args[0] : ID;
-    const hook = renderHook(() => useFeedbackRequestCard(id));
+    const hook = await renderHook(() => useFeedbackRequestCard(id));
     // Generous: the real retry link re-sends a failed transport call after a delay.
     await waitFor(() => expect(hook.result.current.phase.kind).not.toBe('loading'), { timeout: 15_000 });
     return hook;
@@ -88,17 +88,17 @@ describe('useFeedbackRequestConsent', () => {
     it('blocks and closes once when there is no session and no local user id', async () => {
         const onClose = jest.fn();
         // A fresh callback per render re-runs the effect, so only the once-guard keeps onClose to one call.
-        const { result, rerender } = renderHook(() => useFeedbackRequestConsent(() => onClose()));
+        const { result, rerender } = await renderHook(() => useFeedbackRequestConsent(() => onClose()));
         await waitFor(() => expect(result.current.consent).toBe('blocked'));
         expect(onClose).toHaveBeenCalledTimes(1);
-        rerender({});
+        await rerender({});
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it('is clear for a fixture account on the current legal versions', async () => {
         await signInFixtureAccount();
         const onClose = jest.fn();
-        const { result } = renderHook(() => useFeedbackRequestConsent(onClose));
+        const { result } = await renderHook(() => useFeedbackRequestConsent(onClose));
         await waitFor(() => expect(result.current.consent).toBe('clear'));
         expect(onClose).not.toHaveBeenCalled();
     });
@@ -112,10 +112,10 @@ describe('useFeedbackRequestConsent', () => {
         );
         const onClose = jest.fn();
         // A fresh callback per render re-runs the effect, so only the once-guard keeps onClose to one call.
-        const { result, rerender } = renderHook(() => useFeedbackRequestConsent(() => onClose()));
+        const { result, rerender } = await renderHook(() => useFeedbackRequestConsent(() => onClose()));
         await waitFor(() => expect(result.current.consent).toBe('blocked'));
         expect(onClose).toHaveBeenCalledTimes(1);
-        rerender({});
+        await rerender({});
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 
@@ -123,7 +123,7 @@ describe('useFeedbackRequestConsent', () => {
         await signInFixtureAccount();
         server.use(failOp('LegalConsentAppConfig'));
         const onClose = jest.fn();
-        const { result } = renderHook(() => useFeedbackRequestConsent(onClose));
+        const { result } = await renderHook(() => useFeedbackRequestConsent(onClose));
         await waitFor(() => expect(result.current.consent).toBe('clear'), { timeout: 10_000 });
         expect(onClose).not.toHaveBeenCalled();
     });
@@ -204,7 +204,7 @@ describe('useFeedbackRequestCard submit', () => {
     it('submits the trimmed text, then shows thanks, stamps answeredAt and actions the row', async () => {
         const { result } = await openCard();
         const sent = recordOps();
-        act(() => result.current.setAnswer('  x  '));
+        await act(() => result.current.setAnswer('  x  '));
         expect(result.current.canSubmit).toBe(true);
         await act(async () => {
             await result.current.handleSubmit();
@@ -220,7 +220,7 @@ describe('useFeedbackRequestCard submit', () => {
     it('shows closed when the server reports FEEDBACK_REQUEST_CLOSED', async () => {
         const { result } = await openCard();
         server.use(mockGqlError('SubmitFeedbackResponse', 'FEEDBACK_REQUEST_CLOSED'));
-        act(() => result.current.setAnswer('x'));
+        await act(() => result.current.setAnswer('x'));
         await act(async () => {
             await result.current.handleSubmit();
         });
@@ -234,7 +234,7 @@ describe('useFeedbackRequestCard submit', () => {
                 submitFeedbackResponse: { __typename: 'SubmitFeedbackResponseResult', ok: true, alreadyAnswered: true },
             }),
         );
-        act(() => result.current.setAnswer('x'));
+        await act(() => result.current.setAnswer('x'));
         await act(async () => {
             await result.current.handleSubmit();
         });
@@ -244,7 +244,7 @@ describe('useFeedbackRequestCard submit', () => {
     it('shows the error phase on a transport failure and keeps the answer', async () => {
         const { result } = await openCard();
         server.use(failOp('SubmitFeedbackResponse'));
-        act(() => result.current.setAnswer('x'));
+        await act(() => result.current.setAnswer('x'));
         await act(async () => {
             await result.current.handleSubmit();
         });
@@ -256,7 +256,7 @@ describe('useFeedbackRequestCard submit', () => {
     it('closes without sending once endsAt has passed', async () => {
         const { result } = await openCard();
         const sent = recordOps();
-        act(() => result.current.setAnswer('x'));
+        await act(() => result.current.setAnswer('x'));
         useFakeClock(NOW);
         jest.setSystemTime(NOW + HOUR + 1);
         await act(async () => {
@@ -269,7 +269,7 @@ describe('useFeedbackRequestCard submit', () => {
     it('does nothing for a blank answer', async () => {
         const { result } = await openCard();
         const sent = recordOps();
-        act(() => result.current.setAnswer('   '));
+        await act(() => result.current.setAnswer('   '));
         expect(result.current.canSubmit).toBe(false);
         await act(async () => {
             await result.current.handleSubmit();
@@ -283,19 +283,19 @@ describe('useFeedbackRequestCard dismissal', () => {
     it('stamps dismissedAt when unmounted while open', async () => {
         server.use(serverList(view(ID)));
         const { unmount } = await mountCard();
-        unmount();
+        await unmount();
         expect((await readFeedbackRequestsState())[ID].dismissedAt).toEqual(expect.any(Number));
     });
 
     it('does not stamp dismissedAt after thanks', async () => {
         server.use(serverList(view(ID)));
         const { result, unmount } = await mountCard();
-        act(() => result.current.setAnswer('x'));
+        await act(() => result.current.setAnswer('x'));
         await act(async () => {
             await result.current.handleSubmit();
         });
         expect(result.current.phase.kind).toBe('thanks');
-        unmount();
+        await unmount();
         expect((await readFeedbackRequestsState())[ID].dismissedAt).toBeUndefined();
     });
 
@@ -305,7 +305,7 @@ describe('useFeedbackRequestCard dismissal', () => {
         });
         const { result, unmount } = await mountCard();
         expect(result.current.phase.kind).toBe('closed');
-        unmount();
+        await unmount();
         expect((await readFeedbackRequestsState())[ID].dismissedAt).toBeUndefined();
     });
 });

@@ -62,7 +62,7 @@ function seedCounts() {
 
 /** The hook once the fact observer has reported (a fact exists, so the no-facts card does not own the Feed). */
 async function renderLead() {
-  const view = renderHook(() => useStatsCardLead());
+  const view = await renderHook(() => useStatsCardLead());
   await act(async () => {
     for (let i = 0; i < 5; i++) await new Promise<void>((resolve) => setImmediate(resolve));
   });
@@ -174,7 +174,7 @@ describe('a failed first sync', () => {
   });
 
   const card = async () => {
-    const view = renderHook(() => ({ item: useStatsCardItem(false, false), lead: useStatsCardLead() }));
+    const view = await renderHook(() => ({ item: useStatsCardItem(false, false), lead: useStatsCardLead() }));
     await act(async () => {
       for (let i = 0; i < 5; i++) await new Promise<void>((resolve) => setImmediate(resolve));
     });

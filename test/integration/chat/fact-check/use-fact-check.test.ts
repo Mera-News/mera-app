@@ -62,7 +62,7 @@ const seedAsked = (id: string) => recordFactCheckAsked({ articleId: id, suggesti
 describe('useFactCheck: what it shows', () => {
   it('is absent, with no rows and no request, without an article id', async () => {
     const wire = serveChecks({ ask: () => checkRow() });
-    const { result } = renderHook(() => useFactCheck(null));
+    const { result } = await renderHook(() => useFactCheck(null));
     await flush();
     expect(result.current).toMatchObject({ phase: 'absent', showProgress: false, rows: [] });
     expect(wire).toEqual([]);
@@ -70,7 +70,7 @@ describe('useFactCheck: what it shows', () => {
 
   it('is absent when nobody here asked about the article, and costs zero requests', async () => {
     const wire = serveChecks({ ask: () => checkRow() });
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     await tick(10 * POLL_INTERVAL_MS);
     expect(result.current.phase).toBe('absent');
@@ -81,7 +81,7 @@ describe('useFactCheck: what it shows', () => {
     const wire = serveChecks({ ask: () => checkRow() });
     await seedStored('a1', 'complete', { verdict: 'supported', payload: checkRow() });
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     await tick(5 * POLL_INTERVAL_MS);
 
@@ -95,11 +95,11 @@ describe('useFactCheck: what it shows', () => {
   it('shows only the rows of the article it was given, and follows a change of article', async () => {
     await seedStored('a1', 'complete');
     await seedStored('a2', 'blocked');
-    const { result, rerender } = renderHook(({ id }: { id: string }) => useFactCheck(id), { initialProps: { id: 'a1' } });
+    const { result, rerender } = await renderHook(({ id }: { id: string }) => useFactCheck(id), { initialProps: { id: 'a1' } });
     await flush();
     expect(result.current.rows.map((r) => r.articleId)).toEqual(['a1']);
 
-    rerender({ id: 'a2' });
+    await rerender({ id: 'a2' });
     await flush();
 
     expect(result.current.rows.map((r) => [r.articleId, r.status])).toEqual([['a2', 'blocked']]);
@@ -108,7 +108,7 @@ describe('useFactCheck: what it shows', () => {
 
   it('flips an unasked row to terminal live when something finishes it in place', async () => {
     await seedStored('a1', 'pending');
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     expect(result.current.phase).toBe('stalled');
 
@@ -128,7 +128,7 @@ describe('useFactCheck: an older row nobody here asked for', () => {
     const wire = serveChecks({ ask: () => checkRow(), reread: () => checkRow() });
     await seedStored('a1', 'pending');
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     await tick(10 * POLL_INTERVAL_MS);
 
@@ -140,7 +140,7 @@ describe('useFactCheck: an older row nobody here asked for', () => {
   it("the reader's own tap on it records the ask, so the open panel starts polling", async () => {
     const wire = serveChecks({ ask: (_id, n) => (n >= 3 ? checkRow() : pendingRow()) });
     await seedStored('a1', 'pending');
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     expect(result.current.phase).toBe('stalled');
     expect(wire).toEqual([]);
@@ -168,7 +168,7 @@ describe('useFactCheck: the asked-only poll', () => {
     await seedStored('a1', 'pending');
     await seedAsked('a1');
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     expect(result.current.phase).toBe('processing');
     expect(opsOf(wire, ASK_OP)).toEqual(['a1']);
@@ -187,7 +187,7 @@ describe('useFactCheck: the asked-only poll', () => {
     await seedStored('a1', 'pending');
     await seedAsked('a1');
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     await tick(POLL_INTERVAL_MS);
     await flush();
@@ -209,7 +209,7 @@ describe('useFactCheck: the asked-only poll', () => {
     await seedStored('a1', 'failed');
     await seedAsked('a1');
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
 
     expect(result.current.phase).toBe('processing');
@@ -221,7 +221,7 @@ describe('useFactCheck: the asked-only poll', () => {
     await seedStored('a1', 'pending');
     await seedAsked('a1');
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     await tick(POLL_CEILING_MS - POLL_INTERVAL_MS);
     await flush();
@@ -253,7 +253,7 @@ describe('useFactCheck: the asked-only poll', () => {
       ),
     );
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     expect(opsOf(wire, ASK_OP)).toEqual([]); // the first poll was the one that failed
     expect(result.current.phase).toBe('processing');
@@ -269,11 +269,11 @@ describe('useFactCheck: the asked-only poll', () => {
     const wire = serveChecks({ ask: () => pendingRow() });
     await seedStored('a1', 'pending');
     await seedAsked('a1');
-    const { unmount } = renderHook(() => useFactCheck('a1'));
+    const { unmount } = await renderHook(() => useFactCheck('a1'));
     await flush();
     const polls = opsOf(wire, ASK_OP).length;
 
-    unmount();
+    await unmount();
     await tick(10 * POLL_INTERVAL_MS);
 
     expect(opsOf(wire, ASK_OP)).toHaveLength(polls);
@@ -284,7 +284,7 @@ describe('useFactCheck: the asked-only poll', () => {
     await seedStored('a1', 'pending');
     await seedAsked('a1');
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     expect(result.current.phase).toBe('processing');
     expect(result.current.showProgress).toBe(false);
@@ -315,7 +315,7 @@ describe('useFactCheck: a failed first ask', () => {
     await failedFirstAsk();
     const wire = serveChecks({ ask: () => pendingRow() });
 
-    const { result } = renderHook(() => useFactCheck('a1'));
+    const { result } = await renderHook(() => useFactCheck('a1'));
     await flush();
     await tick(2 * POLL_INTERVAL_MS);
     await flush();
@@ -330,8 +330,8 @@ describe('useStoredFactCheck', () => {
     await seedStored('a1', 'complete');
     const read = jest.spyOn(records, 'listFactChecksForArticle');
 
-    const none = renderHook(() => useStoredFactCheck(null, true));
-    const off = renderHook(() => useStoredFactCheck('a1', false));
+    const none = await renderHook(() => useStoredFactCheck(null, true));
+    const off = await renderHook(() => useStoredFactCheck('a1', false));
     await flush();
 
     expect(none.result.current).toEqual([]);
@@ -344,7 +344,7 @@ describe('useStoredFactCheck', () => {
     await upsertFactCheck({ articleId: 'a1', factCheckId: 'fc-claim', status: 'complete', payload: null, claim: 'A claim', claimKey: 'k1' });
     await seedStored('a2', 'complete');
 
-    const { result } = renderHook(() => useStoredFactCheck('a1', true));
+    const { result } = await renderHook(() => useStoredFactCheck('a1', true));
     await flush();
 
     expect(result.current).toHaveLength(2);
@@ -354,11 +354,11 @@ describe('useStoredFactCheck', () => {
 
   it('does not read until the screen knows the article failed to load, then reads once', async () => {
     await seedStored('a1', 'blocked');
-    const { result, rerender } = renderHook(({ on }: { on: boolean }) => useStoredFactCheck('a1', on), { initialProps: { on: false } });
+    const { result, rerender } = await renderHook(({ on }: { on: boolean }) => useStoredFactCheck('a1', on), { initialProps: { on: false } });
     await flush();
     expect(result.current).toEqual([]);
 
-    rerender({ on: true });
+    await rerender({ on: true });
     await flush();
 
     expect(result.current.map((r) => r.status)).toEqual(['blocked']);
@@ -367,7 +367,7 @@ describe('useStoredFactCheck', () => {
   it('is local only: no request ever leaves', async () => {
     const wire = serveChecks({ ask: () => checkRow(), reread: () => checkRow() });
     await seedStored('a1', 'complete');
-    renderHook(() => useStoredFactCheck('a1', true));
+    await renderHook(() => useStoredFactCheck('a1', true));
     await flush();
     expect(wire).toEqual([]);
   });

@@ -197,7 +197,7 @@ describe('useUserGeoLanguageContext', () => {
   it('is null while loading, then the loaded context', async () => {
     await upsertLocation({ city: 'Mumbai', countryCode: 'IN', role: 'home', weight: 1 });
 
-    const { result } = renderHook(() => useUserGeoLanguageContext());
+    const { result } = await renderHook(() => useUserGeoLanguageContext());
 
     expect(result.current).toBeNull();
     await waitFor(() => expect(result.current).not.toBeNull());
@@ -206,7 +206,7 @@ describe('useUserGeoLanguageContext', () => {
   });
 
   it('re-reads when the user saves a source preference', async () => {
-    const { result } = renderHook(() => useUserGeoLanguageContext());
+    const { result } = await renderHook(() => useUserGeoLanguageContext());
     await waitFor(() => expect(result.current).not.toBeNull());
     expect(result.current).not.toHaveProperty('preferredPublications');
 
@@ -218,7 +218,7 @@ describe('useUserGeoLanguageContext', () => {
   });
 
   it('re-reads when a subscription is added', async () => {
-    const { result } = renderHook(() => useUserGeoLanguageContext());
+    const { result } = await renderHook(() => useUserGeoLanguageContext());
     await waitFor(() => expect(result.current).not.toBeNull());
 
     await act(async () => {
@@ -234,10 +234,10 @@ describe('useUserGeoLanguageContext', () => {
   });
 
   it('re-reads when the app language changes', async () => {
-    const { result } = renderHook(() => useUserGeoLanguageContext());
+    const { result } = await renderHook(() => useUserGeoLanguageContext());
     await waitFor(() => expect(result.current?.appLanguageBase).toBe('en'));
 
-    act(() => useAppLanguageStore.setState({ appLanguage: 'de' }));
+    await act(() => useAppLanguageStore.setState({ appLanguage: 'de' }));
 
     await waitFor(() => expect(result.current?.appLanguageBase).toBe('de'));
   });
@@ -247,7 +247,7 @@ describe('useUserGeoLanguageContext', () => {
     const getAll = jest.spyOn(locationService, 'getAll').mockRejectedValue(new Error('db gone'));
 
     try {
-      const { result } = renderHook(() => useUserGeoLanguageContext());
+      const { result } = await renderHook(() => useUserGeoLanguageContext());
       await act(async () => {
         await new Promise((r) => setTimeout(r, 50));
       });

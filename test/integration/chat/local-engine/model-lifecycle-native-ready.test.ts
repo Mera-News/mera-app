@@ -80,7 +80,7 @@ afterEach(async () => {
 });
 
 it('a download that lands before Apple Intelligence is ready moves the phone to OnDevice on the first foreground after it is', async () => {
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     startModelDownloads({ promote: true });
     await until(() => !isDownloadInProgress(), 20_000, 'download landed');
 

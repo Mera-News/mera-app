@@ -155,12 +155,12 @@ async function settledWrites(): Promise<void> {
 
 async function answerDialog(confirm: boolean): Promise<void> {
     await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1), { timeout: 8000 });
-    act(() => settleDialog(useDialogQueue.getState().queue[0].id, confirm));
+    await act(() => settleDialog(useDialogQueue.getState().queue[0].id, confirm));
 }
 
 it('the gate offers exactly two actions: contact support and reset this phone', async () => {
     await seedStuckPhone();
-    const hook = mountGate();
+    const hook = await mountGate();
     await waitFor(() => expect(hook.result.current.screen.stage).toBe('reauth-no-email'));
 
     const actions = Object.entries(hook.result.current.gate)
@@ -176,12 +176,12 @@ describe('contact support', () => {
         const dev = (global as { __DEV__?: boolean }).__DEV__;
         try {
             (global as { __DEV__?: boolean }).__DEV__ = true;
-            const devHook = mountGate();
+            const devHook = await mountGate();
             await waitFor(() => expect(devHook.result.current.screen.stage).toBe('reauth-no-email'));
             expect(devHook.result.current.gate.supportEnabled).toBe(false);
 
             (global as { __DEV__?: boolean }).__DEV__ = false;
-            const releaseHook = mountGate();
+            const releaseHook = await mountGate();
             await waitFor(() => expect(releaseHook.result.current.screen.stage).toBe('reauth-no-email'));
             expect(releaseHook.result.current.gate.supportEnabled).toBe(true);
         } finally {
@@ -191,7 +191,7 @@ describe('contact support', () => {
 
     it('with a live session (the server mints the identity), opens the Intercom Messenger', async () => {
         await seedStuckPhone();
-        const hook = mountGate();
+        const hook = await mountGate();
 
         await act(async () => {
             await hook.result.current.gate.contactSupport();
@@ -205,7 +205,7 @@ describe('contact support', () => {
     it('signed out (no identity to mint), falls back to mail carrying the Support ID saved on this phone', async () => {
         await seedStuckPhone();
         server.use(mockGqlError('GetIntercomIdentity', 'UNAUTHENTICATED'));
-        const hook = mountGate();
+        const hook = await mountGate();
 
         await act(async () => {
             await hook.result.current.gate.contactSupport();
@@ -224,11 +224,11 @@ describe('contact support', () => {
 describe('reset this phone', () => {
     it('cancel changes nothing', async () => {
         await seedStuckPhone();
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.screen.stage).toBe('reauth-no-email'));
 
         let done!: Promise<void>;
-        act(() => {
+        await act(() => {
             done = hook.result.current.gate.resetThisPhone();
         });
         await answerDialog(false);
@@ -245,11 +245,11 @@ describe('reset this phone', () => {
 
     it('confirm signs out and wipes this phone, keeps the account and the models, and leaves the gate for sign-in', async () => {
         await seedStuckPhone();
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.screen.stage).toBe('reauth-no-email'));
 
         let done!: Promise<void>;
-        act(() => {
+        await act(() => {
             done = hook.result.current.gate.resetThisPhone();
         });
         await answerDialog(true);
@@ -289,11 +289,11 @@ describe('reset this phone', () => {
     it('a cloud phone stays cloud after the reset (nothing is restored that was not there)', async () => {
         await seedStuckPhone();
         useMeraProtocolStore.getState().setProcessingMode(ProcessingMode.Cloud);
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.screen.stage).toBe('reauth-no-email'));
 
         let done!: Promise<void>;
-        act(() => {
+        await act(() => {
             done = hook.result.current.gate.resetThisPhone();
         });
         await answerDialog(true);
@@ -307,11 +307,11 @@ describe('reset this phone', () => {
 
     it('the next launch still treats this phone as installed, so its sign-in credentials survive and the account comes back', async () => {
         await seedStuckPhone();
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.screen.stage).toBe('reauth-no-email'));
 
         let done!: Promise<void>;
-        act(() => {
+        await act(() => {
             done = hook.result.current.gate.resetThisPhone();
         });
         await answerDialog(true);

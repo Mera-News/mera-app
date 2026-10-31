@@ -583,7 +583,7 @@ describe('restarts and the version floor', () => {
 
         it('checks and fetches on mount but NEVER restarts there', async () => {
             pendingUpdate();
-            mount();
+            await mount();
             await flush();
             expect(mockFetchUpdate).toHaveBeenCalledTimes(1);
             expect(mockReloadAsync).not.toHaveBeenCalled();
@@ -592,14 +592,14 @@ describe('restarts and the version floor', () => {
         it('does nothing at all in a dev build or with updates disabled', async () => {
             pendingUpdate();
             mockUpdatesEnabled = false;
-            mount();
+            await mount();
             await flush();
             expect(mockCheckForUpdate).not.toHaveBeenCalled();
         });
 
         it('a return from background with a pending bundle restarts, and the attempt is on disk BEFORE the reload', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             let guardAtReload: string | null = null;
             mockReloadAsync.mockImplementationOnce(async () => {
@@ -613,7 +613,7 @@ describe('restarts and the version floor', () => {
         });
 
         it('a return with nothing pending restarts nothing', async () => {
-            mount();
+            await mount();
             await flush();
             await returnFromBackground();
             expect(mockReloadAsync).not.toHaveBeenCalled();
@@ -621,7 +621,7 @@ describe('restarts and the version floor', () => {
 
         it('an `inactive` transition does not arm the return', async () => {
             pendingUpdate();
-            mount();
+            await mount();
             await flush();
             setAppState('inactive');
             setAppState('active');
@@ -634,7 +634,7 @@ describe('restarts and the version floor', () => {
         it('a process launched in the background applies a downloaded update on the first open', async () => {
             pendingUpdate('update-1');
             setAppState('background');
-            mount();
+            await mount();
             await flush();
             expect(mockReloadAsync).not.toHaveBeenCalled();
 
@@ -647,7 +647,7 @@ describe('restarts and the version floor', () => {
 
         it('a process launched in the background checks for an update on the first open', async () => {
             setAppState('background');
-            mount();
+            await mount();
             await flush();
             expect(mockCheckForUpdate).toHaveBeenCalledTimes(1);
 
@@ -661,7 +661,7 @@ describe('restarts and the version floor', () => {
         it('at most one restart per update id: a second return for the same bundle does not reload', async () => {
             useFakeClock(NOW, { advanceTimers: true });
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await jest.advanceTimersByTimeAsync(100);
             await returnFromBackground();
             expect(mockReloadAsync).toHaveBeenCalledTimes(1);
@@ -676,7 +676,7 @@ describe('restarts and the version floor', () => {
         it('a new update id gets its own attempt', async () => {
             await markOtaRestartAttempted('update-1');
             pendingUpdate('update-2');
-            mount();
+            await mount();
             await flush();
             await returnFromBackground();
             expect(mockReloadAsync).toHaveBeenCalledTimes(1);
@@ -685,7 +685,7 @@ describe('restarts and the version floor', () => {
 
         it('a blocked request does not spend the attempt: the next return retries', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             const release = holdRestart('chat-stream');
 
@@ -700,7 +700,7 @@ describe('restarts and the version floor', () => {
 
         it('a pending bundle with no id is left for the next cold start', async () => {
             pendingUpdate(null);
-            mount();
+            await mount();
             await flush();
             await returnFromBackground();
             expect(mockReloadAsync).not.toHaveBeenCalled();
@@ -709,7 +709,7 @@ describe('restarts and the version floor', () => {
 
         it('on a blocked route a return restarts nothing and consumes nothing', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             setCurrentPathname('/verify-otp');
             await returnFromBackground();
@@ -721,7 +721,7 @@ describe('restarts and the version floor', () => {
         // control in the same test: a blocked decision spends nothing, so the next return reloads.
         it('a reload on a return carries the departure spot and reason ota in the marker', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             let markerAtReload: string | null = null;
             mockReloadAsync.mockImplementationOnce(async () => {
@@ -733,7 +733,7 @@ describe('restarts and the version floor', () => {
         });
 
         it('a download that completes DURING a return never reloads: it is noticed, and the next return applies it', async () => {
-            mount();
+            await mount();
             await flush();
             // Not pending before the return; the return's own check downloads it.
             mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
@@ -748,7 +748,7 @@ describe('restarts and the version floor', () => {
 
         it('a place that cannot be rebuilt (null spot) does not reload; a rebuildable one does', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             mockSpot = null;
             await returnFromBackground();
@@ -761,7 +761,7 @@ describe('restarts and the version floor', () => {
 
         it('a capture that throws counts as not rebuildable', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             jest.spyOn(logger, 'captureException').mockImplementation(() => '');
             const real = jest.requireMock('@/lib/navigation/resume-spot') as { captureSpot: () => unknown };
@@ -778,7 +778,7 @@ describe('restarts and the version floor', () => {
 
         it('an auto-only hold (an open sheet) stops the automatic reload until it is released', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             const release = holdAutoRestart('overlay:sheet');
             await returnFromBackground();
@@ -791,7 +791,7 @@ describe('restarts and the version floor', () => {
 
         it('after a failed restore no update reloads by itself until a cold start', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             disableAutoReload();
             await returnFromBackground();
@@ -807,7 +807,7 @@ describe('restarts and the version floor', () => {
             useFakeClock(NOW, { advanceTimers: true });
             usePinStore.setState({ pinSet: true, lockEnabled: true });
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await jest.advanceTimersByTimeAsync(100);
 
             // Just under the threshold is inside the margin: the reload's own boot could lock.
@@ -826,7 +826,7 @@ describe('restarts and the version floor', () => {
 
         it('an undecided PIN gate counts as a possible lock', async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await flush();
             usePinStore.setState({ unresolved: true });
             await returnFromBackground();
@@ -842,7 +842,7 @@ describe('restarts and the version floor', () => {
         });
 
         it('a departure writes nothing, and a return with nothing pending reads nothing', async () => {
-            mount();
+            await mount();
             await flush();
             const write = jest.spyOn(settingService, 'setSetting');
             const read = jest.spyOn(settingService, 'getSetting');
@@ -889,12 +889,12 @@ describe('restarts and the version floor', () => {
 
         it('a fetched update on mount gets one toast and one row per id, and a later mount none', async () => {
             pendingUpdate('update-1');
-            mount().unmount();
+            await (await mount()).unmount();
             await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(1));
             expect(mockReloadAsync).not.toHaveBeenCalled();
             await expect(getSetting(OTA_NOTICED_KEY)).resolves.toBe('update-1');
 
-            mount();
+            await mount();
             await flush();
             expect(toastShow).toHaveBeenCalledTimes(1);
             const rows = await rowsOf(UPDATE_AVAILABLE);
@@ -904,16 +904,16 @@ describe('restarts and the version floor', () => {
 
         it('a newer pending update replaces the row and toasts again', async () => {
             pendingUpdate('update-1');
-            mount().unmount();
+            await (await mount()).unmount();
             await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(1));
             pendingUpdate('update-2');
-            mount();
+            await mount();
             await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(2));
             expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1);
         });
 
         it('a return that is about to reload shows no toast', async () => {
-            mount();
+            await mount();
             await flush();
             pendingUpdate('update-1');
             await returnFromBackground();
@@ -923,7 +923,7 @@ describe('restarts and the version floor', () => {
         });
 
         it('a return blocked by a hold toasts and writes the row instead', async () => {
-            mount();
+            await mount();
             await flush();
             pendingUpdate('update-1');
             const release = holdRestart('chat-stream');
@@ -948,7 +948,7 @@ describe('restarts and the version floor', () => {
             ];
             process.env.EXPO_PUBLIC_OTA_NOTES = JSON.stringify(notes);
 
-            mount();
+            await mount();
             await flush();
 
             expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
@@ -959,7 +959,7 @@ describe('restarts and the version floor', () => {
             expect(JSON.parse((await getSetting(OTA_LAST_RUNNING_KEY))!)).toEqual({ id: 'update-3', at: day(22).toISOString() });
 
             // The same update on the next launch: nothing new.
-            mount();
+            await mount();
             await flush();
             expect(await rowsOf(APP_UPDATED)).toHaveLength(1);
         });
@@ -968,7 +968,7 @@ describe('restarts and the version floor', () => {
             await notify({ type: UPDATE_AVAILABLE, title: 't', body: 'b', source: 'ota' });
             mockUpdateId = 'update-3';
             mockCreatedAt = day(22);
-            mount();
+            await mount();
             await flush();
             expect(await rowsOf(APP_UPDATED)).toHaveLength(0);
             expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
@@ -980,7 +980,7 @@ describe('restarts and the version floor', () => {
             await notify({ type: UPDATE_AVAILABLE, title: 't', body: 'b', source: 'ota' });
             mockUpdateId = 'embedded-1';
             mockEmbeddedLaunch = true;
-            mount();
+            await mount();
             await flush();
             expect(await rowsOf(APP_UPDATED)).toHaveLength(0);
             expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(0);
@@ -990,7 +990,7 @@ describe('restarts and the version floor', () => {
         it('a download on the PIN lock writes the row but no toast, and a later return toasts', async () => {
             setCurrentPathname('/pin-lock');
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
             expect(toastShow).not.toHaveBeenCalled();
             await expect(getSetting(OTA_NOTICED_KEY)).resolves.toBeNull();
@@ -1013,7 +1013,7 @@ describe('restarts and the version floor', () => {
             mockUpdateId = 'update-2';
             mockCreatedAt = day(21);
             pendingUpdate('update-3');
-            mount().unmount();
+            await (await mount()).unmount();
             await waitFor(() => expect(toastShow).toHaveBeenCalledTimes(1));
             expect((await getAll()).map((n) => n.type)).toEqual([UPDATE_AVAILABLE]);
 
@@ -1022,7 +1022,7 @@ describe('restarts and the version floor', () => {
             mockCreatedAt = day(22);
             mockCheckForUpdate.mockResolvedValue({ isAvailable: false });
             mockLatestContext = {};
-            mount();
+            await mount();
             await flush();
             const rows = await getAll();
             expect(rows.map((n) => n.type)).toEqual([APP_UPDATED]);
@@ -1039,7 +1039,7 @@ describe('restarts and the version floor', () => {
             ]);
             mockUpdateId = 'update-3';
             mockCreatedAt = day(22);
-            mount();
+            await mount();
             await flush();
             const rows = await getAll();
             expect(rows).toHaveLength(1);
@@ -1048,7 +1048,7 @@ describe('restarts and the version floor', () => {
 
         it("Restart (the row's sheet, the toast's pill) honours a hold: no reload, and the row stays", async () => {
             pendingUpdate('update-1');
-            mount();
+            await mount();
             await waitFor(async () => expect(await rowsOf(UPDATE_AVAILABLE)).toHaveLength(1));
             const release = holdRestart('chat-stream');
 
@@ -1100,7 +1100,7 @@ describe('restarts and the version floor', () => {
             let finish: (v: unknown) => void = () => {};
             mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
             mockFetchUpdate.mockImplementationOnce(() => new Promise((r) => (finish = r)) as never);
-            mount();
+            await mount();
             await flush();
             mockSpot = null; // the place left cannot be rebuilt, so this return cannot reload
             setAppState('background');
@@ -1121,7 +1121,7 @@ describe('restarts and the version floor', () => {
             let finish: (v: unknown) => void = () => {};
             mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
             mockFetchUpdate.mockImplementationOnce(() => new Promise((r) => (finish = r)) as never);
-            mount();
+            await mount();
             await flush();
             setAppState('background');
             finish({ isNew: true, manifest: { id: 'update-1' } });
@@ -1205,7 +1205,7 @@ describe('restarts and the version floor', () => {
                 process.env.EXPO_PUBLIC_OTA_NOTES = JSON.stringify(notes);
                 mockUpdateId = 'update-3';
                 mockCreatedAt = day(22);
-                mount();
+                await mount();
                 await flush();
             };
             /** Past the announcement's delay (it waits for the restored screen to settle). */
@@ -1247,7 +1247,7 @@ describe('restarts and the version floor', () => {
                 await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-3', at: day(22).toISOString() }));
                 await setSetting(RESTART_MARKER_KEY, JSON.stringify({ reason: 'ota', at: 1, backgroundedAt: null, lastForegroundAt: null }));
                 mockUpdateId = 'update-3';
-                mount();
+                await mount();
                 await flush();
                 await announce();
                 expect(toastShow).not.toHaveBeenCalled();
@@ -1258,7 +1258,7 @@ describe('restarts and the version floor', () => {
                 process.env.EXPO_PUBLIC_OTA_NOTES = '';
                 __resetOtaNoticeForTests();
                 await setSetting(OTA_LAST_RUNNING_KEY, JSON.stringify({ id: 'update-1', at: day(20).toISOString() }));
-                mount();
+                await mount();
                 await flush();
                 await announce();
                 expect(cardProps().body).toBe('Fixes and improvements.');
@@ -1360,7 +1360,7 @@ describe('restarts and the version floor', () => {
 
         it('with the flag, a dev build reloads on a return with the marker written as in production', async () => {
             process.env.EXPO_PUBLIC_DEV_RESTORE_TEST = '1';
-            mount();
+            await mount();
             await flush();
             let markerAtReload: string | null = null;
             devReload.mockImplementationOnce(() => {
@@ -1378,14 +1378,14 @@ describe('restarts and the version floor', () => {
         it('with the flag, a place that cannot be rebuilt still does not reload', async () => {
             process.env.EXPO_PUBLIC_DEV_RESTORE_TEST = '1';
             mockSpot = null;
-            mount();
+            await mount();
             await flush();
             await returnFromBackground();
             expect(devReload).not.toHaveBeenCalled();
         });
 
         it('without the flag a dev build stays inert', async () => {
-            mount();
+            await mount();
             await flush();
             await returnFromBackground();
             expect(devReload).not.toHaveBeenCalled();
@@ -1398,7 +1398,7 @@ describe('restarts and the version floor', () => {
             mockCheckForUpdate.mockResolvedValue({ isAvailable: true });
             mockFetchUpdate.mockResolvedValue({ isNew: true });
             mockLatestContext = { isUpdatePending: true, downloadedManifest: { id: 'update-1' } };
-            mount();
+            await mount();
             await flush();
             await returnFromBackground();
             expect(mockReloadAsync).toHaveBeenCalledTimes(1);
@@ -1418,10 +1418,10 @@ describe('restarts and the version floor', () => {
         /** The update gate's own hook: its status once the check settles. */
         async function gateVerdict(): Promise<'blocked' | 'allowed'> {
             (globalThis as { __DEV__?: boolean }).__DEV__ = false;
-            const hook = renderHook(() => useNativeUpdateGate());
+            const hook = await renderHook(() => useNativeUpdateGate());
             await waitFor(() => expect(hook.result.current.status).not.toBe('checking'));
             const verdict = hook.result.current.status;
-            hook.unmount();
+            await hook.unmount();
             return verdict as 'blocked' | 'allowed';
         }
 
@@ -1474,10 +1474,10 @@ describe('restarts and the version floor', () => {
         it('a floor above the running version hands the blocked screen the store url', async () => {
             floor('9.0.0');
             (globalThis as { __DEV__?: boolean }).__DEV__ = false;
-            const hook = renderHook(() => useNativeUpdateGate());
+            const hook = await renderHook(() => useNativeUpdateGate());
             await waitFor(() => expect(hook.result.current.status).toBe('blocked'));
             expect(hook.result.current.storeUrl).toBe('https://example.com/store');
-            hook.unmount();
+            await hook.unmount();
         });
 
         it('a GraphQL error is allowed (the check is best-effort)', async () => {

@@ -49,7 +49,7 @@ const follow = (s: FeedbackSubject) => trackStoryWithProposal(s, { label: 'Label
 describe('useTrackedSubject', () => {
   it('starts untracked, and flips live when a story is followed later in the floating chat, then back when it is removed', async () => {
     const s = subject(freshId());
-    const { result } = renderHook(() => useTrackedSubject(s));
+    const { result } = await renderHook(() => useTrackedSubject(s));
     await waitFor(() => result.current.tracked === false);
     expect(result.current).toMatchObject({ tracked: false, trackedStoryId: null });
 
@@ -72,8 +72,8 @@ describe('useTrackedSubject', () => {
     const s = subject(freshId());
     await follow(s);
 
-    const byArticle = renderHook(() => useTrackedSubject(s));
-    const byCluster = renderHook(() => useTrackedSubject(subject(freshId(), { stableClusterId: 'clu-1' })));
+    const byArticle = await renderHook(() => useTrackedSubject(s));
+    const byCluster = await renderHook(() => useTrackedSubject(subject(freshId(), { stableClusterId: 'clu-1' })));
 
     await waitFor(() => byArticle.result.current.tracked && byCluster.result.current.tracked);
     expect(byArticle.result.current.tracked).toBe(true);
@@ -84,13 +84,13 @@ describe('useTrackedSubject', () => {
   it('does not read the table at all while it is not active, and starts once it becomes active', async () => {
     const s = subject(freshId());
     await follow(s);
-    const { result, rerender } = renderHook((props: { active: boolean }) => useTrackedSubject(s, props.active), {
+    const { result, rerender } = await renderHook((props: { active: boolean }) => useTrackedSubject(s, props.active), {
       initialProps: { active: false },
     });
     await waitFor(() => result.current.tracked, 200);
     expect(result.current.tracked).toBe(false);
 
-    rerender({ active: true });
+    await rerender({ active: true });
 
     await waitFor(() => result.current.tracked);
     expect(result.current.tracked).toBe(true);
@@ -98,10 +98,10 @@ describe('useTrackedSubject', () => {
 
   it('startTracking opens the article-feedback chat on the subject, seeded with the follow message', async () => {
     const s = subject(freshId(), { pubDate: '2026-10-09T06:00:00.000Z' });
-    const { result } = renderHook(() => useTrackedSubject(s));
+    const { result } = await renderHook(() => useTrackedSubject(s));
     await waitFor(() => result.current.tracked === false);
 
-    act(() => result.current.startTracking());
+    await act(() => result.current.startTracking());
 
     const chat = useFloatingChatStore.getState();
     expect(chat.isExpanded).toBe(true);
@@ -125,10 +125,10 @@ describe('useTrackedSubject', () => {
 
   it('startTracking carries nulls for the optional subject fields it was not given', async () => {
     const s = subject(freshId(), { pubDate: undefined, stableClusterId: undefined, publicationName: undefined });
-    const { result } = renderHook(() => useTrackedSubject(s));
+    const { result } = await renderHook(() => useTrackedSubject(s));
     await waitFor(() => result.current.tracked === false);
 
-    act(() => result.current.startTracking());
+    await act(() => result.current.startTracking());
 
     expect(useFloatingChatStore.getState().context).toMatchObject({
       trackSubject: { pubDate: null, stableClusterId: null, publicationName: null },
@@ -140,10 +140,10 @@ describe('useTrackedSubject', () => {
   it('startTracking does nothing when the story is already followed', async () => {
     const s = subject(freshId());
     await follow(s);
-    const { result } = renderHook(() => useTrackedSubject(s));
+    const { result } = await renderHook(() => useTrackedSubject(s));
     await waitFor(() => result.current.tracked);
 
-    act(() => result.current.startTracking());
+    await act(() => result.current.startTracking());
 
     const chat = useFloatingChatStore.getState();
     expect(chat.isExpanded).toBe(false);

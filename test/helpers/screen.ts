@@ -25,11 +25,12 @@ export interface ScreenNavigation {
   getState: () => { index: number; routes: unknown[] };
 }
 
-export function renderHookInScreen<Result, Props>(
+export async function renderHookInScreen<Result, Props>(
   hook: (props: Props) => Result,
   opts: { focused?: boolean } & Omit<RenderHookOptions<Props>, 'wrapper'> = {},
 ) {
-  let focused = opts.focused ?? true;
+  const { focused: initialFocus, ...hookOpts } = opts;
+  let focused = initialFocus ?? true;
   const listeners: Record<FocusEvent, Set<() => void>> = { focus: new Set(), blur: new Set() };
   const navigation: ScreenNavigation = {
     isFocused: () => focused,
@@ -63,10 +64,10 @@ export function renderHookInScreen<Result, Props>(
     );
   };
   const wrapper = Wrapper;
-  const result = renderHook(hook, { ...opts, wrapper });
+  const result = await renderHook(hook, { ...hookOpts, wrapper });
   /** Focus or blur the screen; listeners run inside act(). */
   const setFocused = (next: boolean) =>
-    act(() => {
+    act(async () => {
       focused = next;
       for (const set of focusSetters) set(next);
       for (const cb of listeners[next ? 'focus' : 'blur']) cb();

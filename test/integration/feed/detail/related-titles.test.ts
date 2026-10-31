@@ -72,7 +72,7 @@ describe('the article-detail route maps its related rows the same way', () => {
                 },
             }),
         );
-        const { result } = renderHook(() => useArticleDetailScreen({ articleId: ARTICLE_IDS[0] }));
+        const { result } = await renderHook(() => useArticleDetailScreen({ articleId: ARTICLE_IDS[0] }));
         await waitFor(() => expect(result.current.relatedRows.length).toBe(1));
         expect(result.current.relatedRows[0].article.title).toBe('選挙結果が発表された');
         expect(result.current.relatedRows[0].article.title_en_internal_only).toBe('Election results announced');

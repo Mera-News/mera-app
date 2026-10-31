@@ -41,7 +41,7 @@ beforeEach(() => useNotificationSheet.setState({ updateReady: null, updateReadyO
 describe('NotificationRow', () => {
     it('draws the tone badge its toast uses, the title with its age, and a two-line body preview', async () => {
         const row = await updateRow();
-        mount(row);
+        await mount(row);
         // update_available is info: the badge fill is the info tone at the dark 16% tint.
         expect(flat('mera-toast-badge').backgroundColor).toBe(tint(c.info, 0.16));
         expect(screen.getByText(t('notificationCenter.update.availableTitle'))).toBeTruthy();
@@ -53,13 +53,13 @@ describe('NotificationRow', () => {
 
     it('a fact check row takes its tone from the outcome', async () => {
         const row = await seed({ type: 'fact_check_done', context: { outcome: 'found' } });
-        mount(row);
+        await mount(row);
         expect(flat('mera-toast-badge').backgroundColor).toBe(tint(c.positive, 0.16));
     });
 
     it('unread: a dot on the badge, a semibold title, and "unread" in what VoiceOver hears', async () => {
         const row = await updateRow();
-        mount(row);
+        await mount(row);
         expect(screen.getByTestId(`notification-unread-${row.id}`, { includeHiddenElements: true })).toBeTruthy();
         const title = screen.getByText(t('notificationCenter.update.availableTitle'));
         expect(StyleSheet.flatten(title.props.style).fontWeight).toBe('600');
@@ -78,7 +78,7 @@ describe('NotificationRow', () => {
         const seeded = await updateRow();
         await markRead(seeded.id);
         const row = (await getAll()).find((n) => n.id === seeded.id)!;
-        mount(row);
+        await mount(row);
         expect(screen.queryByTestId(`notification-unread-${row.id}`, { includeHiddenElements: true })).toBeNull();
         const title = screen.getByText(t('notificationCenter.update.availableTitle'));
         expect(StyleSheet.flatten(title.props.style).fontWeight).toBe('400');
@@ -87,20 +87,20 @@ describe('NotificationRow', () => {
 
     it('a feedback question shows its free text as written, never through t()', async () => {
         const row = await seed({ type: 'feedback_request', title: 'feedbackRequest.title', body: 'What: do you think?' });
-        mount(row);
+        await mount(row);
         expect(screen.getByText('What: do you think?')).toBeTruthy();
     });
 
     it('a tap on an update row opens the Update ready sheet; delete removes the row and opens nothing', async () => {
         const row = await updateRow();
-        mount(row);
-        fireEvent.press(screen.getByTestId(`notification-row-${row.id}`));
+        await mount(row);
+        await fireEvent.press(screen.getByTestId(`notification-row-${row.id}`));
         await waitFor(() => expect(useNotificationSheet.getState().updateReadyOpen).toBe(true));
 
         const other = await updateRow();
         useNotificationSheet.setState({ updateReady: null, updateReadyOpen: false });
-        render(<NotificationRow n={other} first last motion={false} />);
-        fireEvent.press(screen.getByTestId(`notification-delete-${other.id}`));
+        await render(<NotificationRow n={other} first last motion={false} />);
+        await fireEvent.press(screen.getByTestId(`notification-delete-${other.id}`));
         await waitFor(async () => expect((await getAll()).map((n) => n.id)).not.toContain(other.id));
         expect(useNotificationSheet.getState().updateReadyOpen).toBe(false);
     });

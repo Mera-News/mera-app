@@ -56,20 +56,20 @@ describe('the restore look', () => {
         it('ignores route changes while the rebuild runs and hides when it ends', async () => {
             holdSplash();
             beginRestoreLook();
-            const view = render(<SplashReleaser />);
+            const view = await render(<SplashReleaser />);
             pathIs('/logged-in/app_container/feed');
-            view.rerender(<SplashReleaser />);
+            await view.rerender(<SplashReleaser />);
             expect(SplashScreen.hide).not.toHaveBeenCalled();
 
             endRestoreLook();
             expect(SplashScreen.hide).toHaveBeenCalledTimes(1);
         });
 
-        it('control: with no rebuild running the first real route hides it', () => {
+        it('control: with no rebuild running the first real route hides it', async () => {
             holdSplash();
-            const view = render(<SplashReleaser />);
+            const view = await render(<SplashReleaser />);
             pathIs('/logged-in/app_container/feed');
-            view.rerender(<SplashReleaser />);
+            await view.rerender(<SplashReleaser />);
             expect(SplashScreen.hide).toHaveBeenCalledTimes(1);
         });
     });
@@ -79,12 +79,12 @@ describe('the restore look', () => {
 
         it('covers a restore boot until the rebuild is done', async () => {
             await seedReload();
-            const view = render(<RestoreCover />);
+            const view = await render(<RestoreCover />);
             await waitFor(() => expect(cover(view)).not.toBeNull(), { timeout: 10_000 });
 
             beginRestoreLook();
             pathIs('/logged-in/app_container/feed');
-            view.rerender(<RestoreCover />);
+            await view.rerender(<RestoreCover />);
             expect(cover(view)).not.toBeNull();
 
             endRestoreLook();
@@ -93,15 +93,15 @@ describe('the restore look', () => {
 
         it('leaves when the gate routes somewhere without a rebuild (a sign-in)', async () => {
             await seedReload();
-            const view = render(<RestoreCover />);
+            const view = await render(<RestoreCover />);
             await waitFor(() => expect(cover(view)).not.toBeNull(), { timeout: 10_000 });
             pathIs('/login');
-            view.rerender(<RestoreCover />);
+            await view.rerender(<RestoreCover />);
             expect(cover(view)).toBeNull();
         });
 
         it('never shows on a cold boot', async () => {
-            const view = render(<RestoreCover />);
+            const view = await render(<RestoreCover />);
             await isRestoreBoot();
             await new Promise((r) => setTimeout(r, 20));
             expect(cover(view)).toBeNull();

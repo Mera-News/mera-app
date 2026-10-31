@@ -92,10 +92,10 @@ describe('Android', () => {
 describe('useTrialOffer', () => {
     it('is null when the offerings cannot be read, and asks the store again on the next mount', async () => {
         getOfferings.mockRejectedValue(new Error('offline'));
-        const first = renderHook(() => useTrialOffer());
+        const first = await renderHook(() => useTrialOffer());
         await waitFor(() => expect(getOfferings).toHaveBeenCalledTimes(1));
         expect(first.result.current).toBeNull();
-        renderHook(() => useTrialOffer());
+        await renderHook(() => useTrialOffer());
         await waitFor(() => expect(getOfferings).toHaveBeenCalledTimes(2));
     });
 
@@ -107,9 +107,9 @@ describe('useTrialOffer', () => {
                 defaultOption: { freePhase: { billingPeriod: { unit: 'DAY', value: 7, iso8601: 'P7D' }, billingCycleCount: 1 } },
             }),
         );
-        const first = renderHook(() => useTrialOffer());
+        const first = await renderHook(() => useTrialOffer());
         await waitFor(() => expect(first.result.current).toEqual({ trialDays: 7 }));
-        const second = renderHook(() => useTrialOffer());
+        const second = await renderHook(() => useTrialOffer());
         await waitFor(() => expect(second.result.current).toEqual({ trialDays: 7 }));
         expect(getOfferings).toHaveBeenCalledTimes(1);
     });

@@ -69,10 +69,10 @@ afterEach(() => {
 describe('the upgrade button', () => {
     it('shows See plans while held on Starter and opens the store paywall', async () => {
         useSubscriptionStore.setState({ serverTier: 'starter' });
-        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         const button = await view.findByTestId('feed-status-upgrade');
         expect(view.getByText('See plans')).toBeTruthy();
-        fireEvent.press(button);
+        await fireEvent.press(button);
         expect(presentFreeTierPaywall).toHaveBeenCalledWith('feed-read-hold');
     });
 
@@ -84,54 +84,54 @@ describe('the upgrade button', () => {
         };
         getOfferings.mockResolvedValue({ current: offering, all: { 'mera-news-subscription': offering } });
         checkEligibility.mockResolvedValue({ [INDIVIDUAL]: { status: 2, description: 'eligible' } });
-        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         await waitFor(() => expect(view.getByText('Try Individual free for 7 days')).toBeTruthy());
         expect(checkEligibility).toHaveBeenCalledWith([INDIVIDUAL]);
     });
 
-    it('is not shown while the store has sold a higher plan the server has not confirmed (no second paywall)', () => {
+    it('is not shown while the store has sold a higher plan the server has not confirmed (no second paywall)', async () => {
         useSubscriptionStore.setState({ serverTier: 'starter', tier: 'individual' });
-        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         expect(view.queryByTestId('feed-status-upgrade')).toBeNull();
     });
 
-    it('is not shown to Professional', () => {
+    it('is not shown to Professional', async () => {
         useSubscriptionStore.setState({ serverTier: 'professional' });
-        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         expect(view.queryByTestId('feed-status-upgrade')).toBeNull();
     });
 
-    it('is not shown on this phone, which is never held', () => {
+    it('is not shown on this phone, which is never held', async () => {
         useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
-        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         expect(view.queryByTestId('feed-status-upgrade')).toBeNull();
     });
 
-    it('is not shown before the hold', () => {
+    it('is not shown before the hold', async () => {
         resetReadHold();
-        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         expect(view.queryByTestId('feed-status-upgrade')).toBeNull();
     });
 });
 
 describe('the level-2 actions at the hold', () => {
-    it('no longer carry See plans (level 1 owns the upgrade)', () => {
-        const view = render(<FeedStatusActions mode="limited" />);
+    it('no longer carry See plans (level 1 owns the upgrade)', async () => {
+        const view = await render(<FeedStatusActions mode="limited" />);
         expect(view.queryByTestId('feed-status-see-plans')).toBeNull();
     });
 
-    it('offer Show all articles under Mera\'s picks, Discarded and the Sectioned view, not under All', () => {
-        const view = render(<FeedStatusActions mode="limited" />);
+    it('offer Show all articles under Mera\'s picks, Discarded and the Sectioned view, not under All', async () => {
+        const view = await render(<FeedStatusActions mode="limited" />);
         expect(view.queryByTestId('feed-status-show-all')).toBeNull();
         for (const apply of [() => setFeedShow('picks'), () => setFeedShow('discarded')]) {
             resetFeedViewPrefs();
             apply();
-            view.rerender(<FeedStatusActions mode="limited" />);
+            await view.rerender(<FeedStatusActions mode="limited" />);
             expect(view.getByTestId('feed-status-show-all')).toBeTruthy();
         }
         resetFeedViewPrefs();
         setFeedView('sectioned');
-        view.rerender(<FeedStatusActions mode="limited" />);
+        await view.rerender(<FeedStatusActions mode="limited" />);
         expect(view.getByTestId('feed-status-show-all')).toBeTruthy();
     });
 });

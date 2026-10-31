@@ -46,10 +46,10 @@ async function markTriedUnscored(ids: readonly string[]) {
 }
 
 /** The list reports these rows on screen (the 1% pair) and all but the last ≥75% visible. */
-function onScreen(feed: Feed, ids: readonly string[]) {
+async function onScreen(feed: Feed, ids: readonly string[]) {
   const [anchor, visible] = feed.result.current.viewabilityConfigCallbackPairs;
-  act(() => visible.onViewableItemsChanged({ changed: ids.map((key) => ({ key, isViewable: true })) } as never));
-  act(() =>
+  await act(() => visible.onViewableItemsChanged({ changed: ids.map((key) => ({ key, isViewable: true })) } as never));
+  await act(() =>
     anchor.onViewableItemsChanged({ changed: ids.slice(0, -1).map((key) => ({ key, isViewable: true })) } as never),
   );
 }
@@ -80,7 +80,7 @@ it('a row Mera has not read never renders, and a pick arriving after it lands at
   await act(async () => {});
   expect(feed.ids()).toEqual(['p1', 'p2']);
 
-  onScreen(feed, ['p1', 'p2']);
+  await onScreen(feed, ['p1', 'p2']);
   await pickArrives('hot');
 
   expect(feed.ids()).toEqual(['p1', 'p2', 'hot']);
@@ -107,7 +107,7 @@ it('short cards: a pick lands a whole screen of cards below the last card on scr
   const before = feed.ids();
 
   const shown = before.slice(0, 4);
-  onScreen(feed, shown);
+  await onScreen(feed, shown);
   await pickArrives('hot');
 
   expectNoShift(feed, before, shown, 'hot');
@@ -121,7 +121,7 @@ it('a pick may join the end of a short list: nothing on screen moves', async () 
   await waitFor(() => expect(feed.ids()).toHaveLength(2));
   const before = feed.ids();
 
-  onScreen(feed, before);
+  await onScreen(feed, before);
   await pickArrives('hot');
 
   expect(feed.ids()).toEqual([...before, 'hot']);
@@ -164,7 +164,7 @@ describe('rows Mera tried and that stayed unscored (score_failed_at)', () => {
     const before = feed.ids();
 
     const shown = before.slice(0, 3);
-    onScreen(feed, shown);
+    await onScreen(feed, shown);
     await pickArrives('hot');
 
     // The P2.7 hold: a pick could only land above the tried rows on screen, so it waits.

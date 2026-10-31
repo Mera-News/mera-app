@@ -55,9 +55,9 @@ beforeEach(() => {
 
 describe("What's new", () => {
     it('opens from the store anywhere (the "See what\'s new" toast), with dated notes, and Done closes it', async () => {
-        render(<NotificationSheetHost />);
+        await render(<NotificationSheetHost />);
         expect(screen.queryByTestId('update-notes')).toBeNull();
-        act(() =>
+        await act(() =>
             useOpenUpdateNotes.setState({
                 open: true,
                 notes: [
@@ -74,13 +74,13 @@ describe("What's new", () => {
         const title = screen.getByText(t('notificationCenter.update.notesTitle'));
         expect(StyleSheet.flatten(title.props.style)).toMatchObject({ fontSize: 20, lineHeight: 26, color: c.ink });
 
-        fireEvent.press(screen.getByTestId('update-notes-done'));
+        await fireEvent.press(screen.getByTestId('update-notes-done'));
         expect(useOpenUpdateNotes.getState().open).toBe(false);
     });
 
-    it('with no notes says so', () => {
-        render(<NotificationSheetHost />);
-        act(() => useOpenUpdateNotes.setState({ open: true, notes: [] }));
+    it('with no notes says so', async () => {
+        await render(<NotificationSheetHost />);
+        await act(() => useOpenUpdateNotes.setState({ open: true, notes: [] }));
         expect(screen.getByText(t('notificationCenter.update.notesEmpty'))).toBeTruthy();
     });
 });
@@ -99,7 +99,7 @@ describe('Update ready', () => {
     };
 
     it('a row tap opens it with Restart (filled) and Not now (outlined)', async () => {
-        render(<NotificationSheetHost />);
+        await render(<NotificationSheetHost />);
         const row = await seedUpdate();
         await act(() => tapNotification(row));
         expect(screen.getByText(t('notificationCenter.update.availableTitle'))).toBeTruthy();
@@ -115,24 +115,24 @@ describe('Update ready', () => {
     });
 
     it('Restart closes the sheet first and runs the restart only once it has gone', async () => {
-        render(<NotificationSheetHost />);
+        await render(<NotificationSheetHost />);
         const row = await seedUpdate();
         await act(() => tapNotification(row));
-        fireEvent.press(screen.getByTestId('update-ready-restart'));
+        await fireEvent.press(screen.getByTestId('update-ready-restart'));
         expect(useNotificationSheet.getState().updateReadyOpen).toBe(false);
         // Long enough for an action started on the tap to land, well short of the 1200 ms fallback.
         await act(() => new Promise((r) => setTimeout(r, 300)));
         expect(await statusOf(row.id)).toBe('read');
         // The sheet reports it has gone: now, and only now, the restart runs.
-        act(() => mockDismiss?.());
+        await act(() => mockDismiss?.());
         await waitFor(async () => expect(await statusOf(row.id)).toBe('actioned'), { timeout: 600 });
     });
 
     it('Not now closes it and runs nothing', async () => {
-        render(<NotificationSheetHost />);
+        await render(<NotificationSheetHost />);
         const row = await seedUpdate();
         await act(() => tapNotification(row));
-        fireEvent.press(screen.getByTestId('update-ready-not-now'));
+        await fireEvent.press(screen.getByTestId('update-ready-not-now'));
         expect(useNotificationSheet.getState().updateReadyOpen).toBe(false);
         await act(() => new Promise((r) => setTimeout(r, 1400)));
         expect(await statusOf(row.id)).toBe('read');

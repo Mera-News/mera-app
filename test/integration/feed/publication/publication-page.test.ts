@@ -51,7 +51,7 @@ beforeEach(() => {
 describe('opening', () => {
   it('by publisher id: the profile and the news both load, news asked as Latest', async () => {
     const sent = record('PublicationProfile', 'GetArticlesForPublisher');
-    const { result } = open({ publisherId: PUB.publisherId });
+    const { result } = await open({ publisherId: PUB.publisherId });
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
 
@@ -75,7 +75,7 @@ describe('opening', () => {
         return { publicationProfile: publicationProfileFor(vars as never) };
       }),
     );
-    const { result } = open({ publisherId: PUB.publisherId });
+    const { result } = await open({ publisherId: PUB.publisherId });
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
     expect(result.current.state).toBe('loading');
     expect(result.current.articles).toHaveLength(OWN_IDS.length);
@@ -86,7 +86,7 @@ describe('opening', () => {
   describe('the news request count while the profile lands', () => {
     const newsRequests = async () => {
       const sent = record('GetArticlesForPublisher');
-      const { result } = open({ publisherId: PUB.publisherId });
+      const { result } = await open({ publisherId: PUB.publisherId });
       await waitFor(() => expect(result.current.state).toBe('ready'));
       await waitFor(() => expect(result.current.news.state).toBe('ready'));
       await act(async () => {
@@ -103,7 +103,7 @@ describe('opening', () => {
       await seedSuggestion({ _id: 'local-1', publication_name: PUB.name } as never);
       useNetworkStore.getState().setIsConnected(false);
       try {
-        const { result } = open({ rawName: PUB.name, countryCode: PUB.countryCode });
+        const { result } = await open({ rawName: PUB.name, countryCode: PUB.countryCode });
         await waitFor(() => expect(result.current.news.isLocal).toBe(true));
         await waitFor(() => expect(result.current.articles.map((a) => a._id)).toEqual(['local-1']));
         expect(result.current.news.state).toBe('offline');
@@ -115,7 +115,7 @@ describe('opening', () => {
 
   it('by raw name and country: the profile resolves by name, and the news follows its publisher id', async () => {
     const sent = record('PublicationProfile', 'GetArticlesForPublisher');
-    const { result } = open({ rawName: PUB.name, countryCode: PUB.countryCode });
+    const { result } = await open({ rawName: PUB.name, countryCode: PUB.countryCode });
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
 
@@ -142,12 +142,12 @@ describe('names landing during the first offline read', () => {
       isOffline: () => true,
       onReconnect: () => () => {},
     });
-    const { result, rerender } = renderHookInScreen(
+    const { result, rerender } = await renderHookInScreen(
       (p: { names: string[] }) => usePubArticles('pub-1', 'NEWEST', { sourceNames: p.names }),
       { initialProps: { names: ['One'] } },
     );
     await waitFor(() => expect(loadLocal).toHaveBeenCalledTimes(1)); // held: isLocal is not true yet
-    rerender({ names: ['One', 'Two'] });
+    await rerender({ names: ['One', 'Two'] });
     await waitFor(() => expect(loadLocal).toHaveBeenCalledTimes(2));
     await act(async () => releases[0]());
     await waitFor(() => expect(result.current.articles.map((a) => a._id)).toEqual(['a', 'b']));
@@ -159,7 +159,7 @@ describe('when the publication is not found or the server is old', () => {
   it('PublicationProfile answering not found, opened by name: no news is requested', async () => {
     server.use(mockGql('PublicationProfile', { publicationProfile: null }));
     const sent = record('GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
-    const { result } = open({ rawName: 'Nowhere Gazette', countryCode: 'NLD' });
+    const { result } = await open({ rawName: 'Nowhere Gazette', countryCode: 'NLD' });
     await waitFor(() => expect(result.current.state).toBe('notFound'));
     expect(result.current.newsPublisherId).toBeNull();
     expect(result.current.newsAvailable).toBe(false);
@@ -170,7 +170,7 @@ describe('when the publication is not found or the server is old', () => {
 
   it('opened by a raw name with no country: no profile request is fired (the server answers BAD_PROFILE_KEY to a name-only key)', async () => {
     const sent = record('PublicationProfile', 'GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
-    const { result } = open({ rawName: PUB.name, countryCode: null });
+    const { result } = await open({ rawName: PUB.name, countryCode: null });
     await waitFor(() => expect(result.current.state).toBe('notFound'));
     expect(result.current.newsPublisherId).toBeNull();
     expect(result.current.newsAvailable).toBe(false);
@@ -181,7 +181,7 @@ describe('when the publication is not found or the server is old', () => {
 
   it('PublicationProfile answering not found, opened by id: the page shows no news (the id was asked once, while the profile was still loading)', async () => {
     server.use(mockGql('PublicationProfile', { publicationProfile: null }));
-    const { result } = open({ publisherId: PUB.publisherId });
+    const { result } = await open({ publisherId: PUB.publisherId });
     await waitFor(() => expect(result.current.state).toBe('notFound'));
     expect(result.current.newsAvailable).toBe(false);
     expect(result.current.articles).toEqual([]);
@@ -192,7 +192,7 @@ describe('when the publication is not found or the server is old', () => {
     // A server this old has no `order` either: it answers the plain document, which is top headlines.
     server.use(mockGqlError('GetArticlesForPublisher', 'GRAPHQL_VALIDATION_FAILED', { message: 'Unknown argument "order"' }));
     const sent = record('GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
-    const { result } = open({ publisherId: PUB.publisherId });
+    const { result } = await open({ publisherId: PUB.publisherId });
     await waitFor(() => expect(result.current.state).toBe('unsupported'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
     expect(result.current.newsAvailable).toBe(true);
@@ -205,7 +205,7 @@ describe('when the publication is not found or the server is old', () => {
   it('an unsupported server, opened by name: no news at all (there is no publisher id to ask with)', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED', { message: 'Cannot query field' }));
     const sent = record('GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
-    const { result } = open({ rawName: PUB.name, countryCode: PUB.countryCode });
+    const { result } = await open({ rawName: PUB.name, countryCode: PUB.countryCode });
     await waitFor(() => expect(result.current.state).toBe('unsupported'));
     expect(result.current.newsAvailable).toBe(false);
     expect(result.current.articles).toEqual([]);
@@ -215,11 +215,11 @@ describe('when the publication is not found or the server is old', () => {
 
   it('the unsupported answer is remembered for the session: the next page does not ask again', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
-    const first = open({ rawName: PUB.name, countryCode: PUB.countryCode });
+    const first = await open({ rawName: PUB.name, countryCode: PUB.countryCode });
     await waitFor(() => expect(first.result.current.state).toBe('unsupported'));
 
     const sent = record('PublicationProfile');
-    const second = open({ rawName: OTHER.name, countryCode: OTHER.countryCode });
+    const second = await open({ rawName: OTHER.name, countryCode: OTHER.countryCode });
     await waitFor(() => expect(second.result.current.state).toBe('unsupported'));
     expect(sent).toEqual([]);
   });
@@ -228,7 +228,7 @@ describe('when the publication is not found or the server is old', () => {
 describe('the shown order', () => {
   it('Latest requested but the server applied no order: the shown order is Top headlines', async () => {
     server.use(mockGqlError('GetArticlesForPublisher', 'GRAPHQL_VALIDATION_FAILED', { message: 'Unknown argument "order"' }));
-    const { result } = open({ publisherId: PUB.publisherId, order: 'NEWEST' });
+    const { result } = await open({ publisherId: PUB.publisherId, order: 'NEWEST' });
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
     expect(result.current.news.orderApplied).toBe(false);
@@ -238,7 +238,7 @@ describe('the shown order', () => {
 
   it('an old server is not a problem when Top headlines is what was asked: the shown order stays', async () => {
     server.use(mockGqlError('GetArticlesForPublisher', 'GRAPHQL_VALIDATION_FAILED'));
-    const { result } = open({ publisherId: PUB.publisherId, order: 'TOP_HEADLINES' });
+    const { result } = await open({ publisherId: PUB.publisherId, order: 'TOP_HEADLINES' });
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
     expect(result.current.news.orderApplied).toBe(true);
@@ -247,7 +247,7 @@ describe('the shown order', () => {
 
   it('a server that applies the order keeps the shown order as asked', async () => {
     const sent = record('GetArticlesForPublisher');
-    const { result } = open({ publisherId: PUB.publisherId, order: 'TOP_HEADLINES' });
+    const { result } = await open({ publisherId: PUB.publisherId, order: 'TOP_HEADLINES' });
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
     expect(sent[0].vars.order).toBe('TOP_HEADLINES');
@@ -256,7 +256,7 @@ describe('the shown order', () => {
 
   it('History is not a news order: the news stays requested as Latest', async () => {
     const sent = record('GetArticlesForPublisher');
-    const { result } = open({ publisherId: PUB.publisherId, order: 'HISTORY' });
+    const { result } = await open({ publisherId: PUB.publisherId, order: 'HISTORY' });
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.news.state).toBe('ready'));
     expect(sent[0].vars.order).toBe('NEWEST');
@@ -293,7 +293,7 @@ describe('history', () => {
   it('visits recorded under both names are in the list, and visitCount sums the raw visits', async () => {
     twoNames();
     await seedVisits();
-    const { result } = open({ publisherId: PUB.publisherId, order: 'HISTORY' });
+    const { result } = await open({ publisherId: PUB.publisherId, order: 'HISTORY' });
     // The names grow when the profile lands, and the history is read again then.
     await waitFor(() => expect(result.current.visitCount).toBe(4));
 
@@ -306,7 +306,7 @@ describe('history', () => {
   it('names the profile does not list are not matched: an alias visit is absent until the alias is a known name', async () => {
     await visit(PUB.name, 'art-1');
     await visit(ALIAS, 'art-3');
-    const { result } = open({ publisherId: PUB.publisherId, order: 'HISTORY' }); // default profile: sourceNames = [PUB.name]
+    const { result } = await open({ publisherId: PUB.publisherId, order: 'HISTORY' }); // default profile: sourceNames = [PUB.name]
     await waitFor(() => expect(result.current.state).toBe('ready'));
     await waitFor(() => expect(result.current.visitCount).toBe(1));
     expect(result.current.history.visits.map((v) => v.articleId)).toEqual(['art-1']);
@@ -315,13 +315,13 @@ describe('history', () => {
 
   it('reads only while focused: a visit recorded while away shows on return', async () => {
     twoNames();
-    const { result, rerender } = open({ publisherId: PUB.publisherId, order: 'HISTORY' }, false);
+    const { result, rerender } = await open({ publisherId: PUB.publisherId, order: 'HISTORY' }, false);
     await waitFor(() => expect(result.current.state).toBe('ready'));
     expect(result.current.history.state).toBe('loading');
     expect(result.current.history.visits).toEqual([]);
 
     await visit(ALIAS, 'art-3');
-    rerender({ publisherId: PUB.publisherId, order: 'HISTORY', focused: true } as Props);
+    await rerender({ publisherId: PUB.publisherId, order: 'HISTORY', focused: true } as Props);
     await waitFor(() => expect(result.current.history.state).toBe('ready'));
     expect(result.current.history.visits.map((v) => v.articleId)).toEqual(['art-3']);
     expect(result.current.visitCount).toBe(1);
@@ -330,7 +330,7 @@ describe('history', () => {
   it('without a profile (unsupported server) the page opened by name still lists visits under its raw name', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
     await visit(PUB.name, 'art-1');
-    const { result } = open({ rawName: PUB.name, countryCode: PUB.countryCode, order: 'HISTORY' });
+    const { result } = await open({ rawName: PUB.name, countryCode: PUB.countryCode, order: 'HISTORY' });
     await waitFor(() => expect(result.current.history.state).toBe('ready'));
     expect(result.current.history.visits.map((v) => v.articleId)).toEqual(['art-1']);
   });

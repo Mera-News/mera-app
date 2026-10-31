@@ -199,7 +199,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-    cleanup();
+    await cleanup();
     jest.useRealTimers();
     await drain();
     jest.mocked(GoogleSignin.hasPreviousSignIn).mockReturnValue(false);
@@ -228,7 +228,7 @@ describe('useLoggedInGate: fresh sign-in', () => {
     it('stamps cached_user_id with the signed-in id, adopts it in the user store and goes to the wizard', async () => {
         await signIn();
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -262,7 +262,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await setSetting('cached_user_id', ME);
         await markOnboardingDone();
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -276,7 +276,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await markOnboardingDone();
         await setSetting('startup_tab', 'world');
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -289,7 +289,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await addFact('I follow Formula 1 racing');
         expect(await getSetting('onboarding_done')).toBeNull();
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -301,7 +301,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await signIn();
         await setSetting('cached_user_id', ME);
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -310,7 +310,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
     });
 
     it('no identity at all goes back to the launch gate', async () => {
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -348,7 +348,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await seedOnboarded();
         await seedReload('ota');
 
-        mountGate();
+        await mountGate();
         await waitFor(() => expect(announce).toHaveBeenCalled(), { timeout: 8000 });
         await drain();
 
@@ -364,11 +364,11 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await seedOnboarded();
         await seedReload('update');
 
-        const first = mountGate();
+        const first = await mountGate();
         await waitFor(() => expect(announce).toHaveBeenCalledTimes(1), { timeout: 8000 });
-        first.unmount();
+        await first.unmount();
         // The gate mounts again (a PIN unlock, a reauth): it must not rebuild or announce again.
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -379,7 +379,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
     it('a cold launch never rebuilds', async () => {
         await seedOnboarded();
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -391,7 +391,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await seedOnboarded();
         await seedReload('language');
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -403,7 +403,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await seedReload('ota');
         restore.mockResolvedValue('failed');
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -418,7 +418,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         restore.mockRejectedValue(new Error('nav not ready'));
         spies.push(jest.spyOn(logger, 'captureException').mockImplementation(() => ''));
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -435,7 +435,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
             return new Promise(() => {});
         });
 
-        mountGate();
+        await mountGate();
         await waitFor(() => expect(replaced()).toEqual([[APP_ROUTE]]), { timeout: 8000 + RESTORE_CAP_MS });
         await drain();
 
@@ -448,7 +448,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await seedReload('ota');
         spies.push(jest.spyOn(resumeSpot, 'lastRestoreMissing').mockReturnValue('story'));
 
-        mountGate();
+        await mountGate();
         await waitFor(() => expect(announce).toHaveBeenCalled(), { timeout: 8000 });
 
         expect(announce).toHaveBeenCalledWith('story');
@@ -463,7 +463,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
             return 'restored';
         });
 
-        mountGate();
+        await mountGate();
         await waitFor(() => expect(router.push).toHaveBeenCalledWith(tap), { timeout: 8000 });
         await drain();
 
@@ -486,7 +486,7 @@ describe('useLoggedInGate: account switch', () => {
         expect(before[key('backup_key')]).toBeDefined();
         expect(await hasAnyFacts()).toBe(true);
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -515,7 +515,7 @@ describe('useLoggedInGate: account switch', () => {
         await addFact('I follow cricket');
         jest.mocked(GoogleSignin.hasPreviousSignIn).mockReturnValue(true);
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -530,7 +530,7 @@ describe('useLoggedInGate: account switch', () => {
         await addFact('I follow cricket');
         track(jest.spyOn(database, 'unsafeResetDatabase')).mockRejectedValueOnce(new Error('db busy'));
 
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.wipeFailed).toBe(true), { timeout: 8000 });
         await drain();
 
@@ -539,7 +539,7 @@ describe('useLoggedInGate: account switch', () => {
         expect(await getSetting('cached_user_id')).toBe(FOREIGN);
         expect(await hasAnyFacts()).toBe(true);
 
-        act(() => hook.result.current.handleRetry());
+        await act(() => hook.result.current.handleRetry());
         await waitForRoute();
         await drain();
 
@@ -566,7 +566,7 @@ describe('useLoggedInGate: account switch', () => {
             k === 'cached_user_id' && v === ME ? fake() : real(k, v),
         );
 
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.wipeFailed).toBe(true), { timeout: 8000 });
         await drain();
 
@@ -575,7 +575,7 @@ describe('useLoggedInGate: account switch', () => {
         expect(useUserStore.getState().userId).toBeNull();
 
         spies.pop()?.mockRestore();
-        act(() => hook.result.current.handleRetry());
+        await act(() => hook.result.current.handleRetry());
         await waitForRoute();
         await drain();
 
@@ -589,7 +589,7 @@ describe('useLoggedInGate: account switch', () => {
         await addFact('I follow cricket');
         recordAuthenticatedUser(ME);
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -630,7 +630,7 @@ describe('useLoggedInGate: account switch', () => {
             holdAccountSwitch(ME);
             const ops = recordOps();
 
-            mountGate();
+            await mountGate();
             // A correct gate does nothing here, so there is nothing to wait for: settle, then look.
             await drain();
             await new Promise((r) => setTimeout(r, 300));
@@ -663,7 +663,7 @@ describe('useLoggedInGate: account switch', () => {
         test('U4-N1 the previous owner facts are wiped before the incoming account is routed in', async () => {
             await seed();
 
-            mountGate();
+            await mountGate();
             await waitForRoute();
             await drain();
 
@@ -688,7 +688,7 @@ describe('useLoggedInGate: account switch', () => {
         test('PE9b the previous owner facts are wiped before the incoming account is routed in', async () => {
             await seed();
 
-            mountGate();
+            await mountGate();
             await waitForRoute();
             await drain();
 
@@ -707,7 +707,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         await addFact('I follow Formula 1 racing');
         await setSetting(IDENTITY_FAULT_KEY, '1');
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -725,7 +725,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         await markOnboardingDone();
         await setSetting(IDENTITY_FAULT_KEY, '1');
 
-        mountGate();
+        await mountGate();
         await waitForRoute();
         await drain();
 
@@ -744,7 +744,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             return real(k, v);
         });
 
-        const hook = mountGate();
+        const hook = await mountGate();
         await waitFor(() => expect(hook.result.current.gate).toBe('offline'), { timeout: 8000 });
         await drain();
 
@@ -766,7 +766,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await markOnboardingDone();
             server.use(recheckOnly(() => HttpResponse.json(null)));
 
-            mountGate();
+            await mountGate();
             await waitForRoute();
             await drain();
 
@@ -786,7 +786,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
                 }),
             );
 
-            mountGate();
+            await mountGate();
             await waitForRoute();
             await drain();
 
@@ -804,7 +804,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
                 http.get('*/hotspot-detect.html', () => HttpResponse.text('Success')),
             );
 
-            const hook = mountGate();
+            const hook = await mountGate();
             await waitFor(() => expect(hook.result.current.gate).toBe('unreachable'), { timeout: 8000 });
             await drain();
 
@@ -822,7 +822,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
                 http.get('*/hotspot-detect.html', () => HttpResponse.text('portal login', { status: 200 })),
             );
 
-            const hook = mountGate();
+            const hook = await mountGate();
             await waitFor(() => expect(hook.result.current.gate).toBe('offline'), { timeout: 8000 });
             await drain();
 
@@ -834,7 +834,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
 
-            mountGate();
+            await mountGate();
             await waitForRoute();
             await drain();
 

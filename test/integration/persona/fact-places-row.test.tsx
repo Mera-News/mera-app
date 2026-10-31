@@ -23,36 +23,36 @@ beforeAll(initI18nEn);
 beforeEach(() => jest.mocked(setFactPlaces).mockClear());
 
 describe('FactPlacesRow', () => {
-    it('shows one chip per place, labelled with the place name', () => {
-        mount(['IN|Madhya Pradesh|Bhopal']);
+    it('shows one chip per place, labelled with the place name', async () => {
+        await mount(['IN|Madhya Pradesh|Bhopal']);
         expect(screen.getByText('Bhopal')).toBeTruthy();
         expect(screen.getByLabelText('Bhopal, Madhya Pradesh, India')).toBeTruthy();
     });
 
-    it('removes a chip with its x, as the user', () => {
-        mount(['IN|Madhya Pradesh|Bhopal', 'FR']);
-        fireEvent.press(screen.getByTestId('fact-place-remove-FR'));
+    it('removes a chip with its x, as the user', async () => {
+        await mount(['IN|Madhya Pradesh|Bhopal', 'FR']);
+        await fireEvent.press(screen.getByTestId('fact-place-remove-FR'));
         expect(setFactPlaces).toHaveBeenCalledWith('f1', ['IN|Madhya Pradesh|Bhopal'], 'user');
     });
 
-    it('Anywhere writes GLOBAL and is hidden once the fact is Anywhere', () => {
-        const view = mount(['FR']);
-        fireEvent.press(screen.getByTestId('fact-place-anywhere'));
+    it('Anywhere writes GLOBAL and is hidden once the fact is Anywhere', async () => {
+        const view = await mount(['FR']);
+        await fireEvent.press(screen.getByTestId('fact-place-anywhere'));
         expect(setFactPlaces).toHaveBeenCalledWith('f1', ['GLOBAL'], 'user');
-        view.rerender(<FactPlacesRow factId="f1" fact={fact(['GLOBAL'])} />);
+        await view.rerender(<FactPlacesRow factId="f1" fact={fact(['GLOBAL'])} />);
         expect(screen.queryByTestId('fact-place-anywhere')).toBeNull();
     });
 
-    it('the picker rides above the keyboard, so its search is never covered', () => {
-        mount(['IN']);
+    it('the picker rides above the keyboard, so its search is never covered', async () => {
+        await mount(['IN']);
         expect(sheetProps.at(-1)?.avoidKeyboard).toBe(true);
     });
 
-    it('a picked country joins the places and replaces GLOBAL', () => {
-        mount(['GLOBAL']);
-        fireEvent.press(screen.getByTestId('fact-place-add'));
-        fireEvent.changeText(screen.getByTestId('country-picker-search'), 'Fran');
-        fireEvent.press(screen.getByTestId('country-pick-FR'));
+    it('a picked country joins the places and replaces GLOBAL', async () => {
+        await mount(['GLOBAL']);
+        await fireEvent.press(screen.getByTestId('fact-place-add'));
+        await fireEvent.changeText(screen.getByTestId('country-picker-search'), 'Fran');
+        await fireEvent.press(screen.getByTestId('country-pick-FR'));
         expect(setFactPlaces).toHaveBeenCalledWith('f1', ['FR'], 'user');
     });
 });

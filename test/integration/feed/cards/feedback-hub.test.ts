@@ -48,7 +48,7 @@ const row = async () =>
     (await database.get<ArticleFeedbackModel>('article_feedback').query().fetch()).find((r) => r.articleId === ARTICLE);
 const ctxOf = async () => JSON.parse((await row())?.contextJson ?? '{}') as Record<string, any>;
 
-function mount(over: Partial<FeedbackHubDeps> = {}) {
+async function mount(over: Partial<FeedbackHubDeps> = {}) {
     let recorded = 0;
     const deps: FeedbackHubDeps = {
         t: i18n.t.bind(i18n) as FeedbackHubDeps['t'],
@@ -69,7 +69,7 @@ function mount(over: Partial<FeedbackHubDeps> = {}) {
         closeThen: jest.fn((after?: () => void) => after?.()),
         ...over,
     };
-    const hook = renderHook(() => useFeedbackHub(deps));
+    const hook = await renderHook(() => useFeedbackHub(deps));
     const level = (l: HubLevel) =>
         (hook.result.current.renderLevel(l) as React.ReactElement<{ heading: string; subtitle?: string; rows: HubRow[] }>).props;
     const tap = async (l: HubLevel, testID: string) => {
@@ -104,8 +104,8 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 describe('the hub root', () => {
-    it('asks the question, quotes the fact, and ends with Tell Mera', () => {
-        const { level } = mount();
+    it('asks the question, quotes the fact, and ends with Tell Mera', async () => {
+        const { level } = await mount();
         const root = level(ROOT);
         expect(root.heading).toBe("What's wrong with this story?");
         expect(root.subtitle).toBe('Mera showed this because of: Pensioner in India');
@@ -119,8 +119,8 @@ describe('the hub root', () => {
         expect(root.rows[1].label).toBe('This story isn\'t about "Pensioner in India"');
     });
 
-    it('with no matched fact shows only the site row and no fact line', () => {
-        const { level } = mount({ context: { publicationName: PUB, fact: null } });
+    it('with no matched fact shows only the site row and no fact line', async () => {
+        const { level } = await mount({ context: { publicationName: PUB, fact: null } });
         expect(level(ROOT).subtitle).toBeUndefined();
         expect(level(ROOT).rows.map((r) => r.key)).toEqual(['publication_issue', 'tell-mera']);
     });
@@ -128,7 +128,7 @@ describe('the hub root', () => {
 
 describe('an answer', () => {
     it('applies at the tap, writes the verdict first, and stamps the row processed', async () => {
-        const { deps, tap } = mount();
+        const { deps, tap } = await mount();
         await tap(SITE, 'tree-row-fewer_from_site');
 
         expect(deps.ensureVerdict).toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe('an answer', () => {
     });
 
     it('a mistake applies nothing, keeps the fact id and the story on device, and shows on its row', async () => {
-        const { level, tap } = mount();
+        const { level, tap } = await mount();
         await tap(ROOT, 'tree-row-not_about_fact');
         await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(1));
 
@@ -165,7 +165,7 @@ describe('an answer', () => {
 
     it('a mistake reaches the chat as the sentence the reader tapped, with the fact filled in', async () => {
         const fact = await factService.addFact('Pensioner in India; Lives in Bhopal', { topics: ['pensions India'] });
-        const { tap } = mount({
+        const { tap } = await mount({
             context: { publicationName: PUB, fact: { id: fact.id, statement: 'Pensioner in India', topicTexts: [] } },
         });
         await tap(ROOT, 'tree-row-not_about_fact');
@@ -176,9 +176,9 @@ describe('an answer', () => {
     });
 
     it('an answered row reads "<row>, answered: <answer>", the answer once', async () => {
-        const { hook, tap } = mount();
+        const { hook, tap } = await mount();
         await tap(ROOT, 'tree-row-not_about_fact');
-        render(hook.result.current.renderLevel(ROOT) as React.ReactElement);
+        await render(hook.result.current.renderLevel(ROOT) as React.ReactElement);
         expect(screen.getByTestId('tree-row-not_about_fact').props.accessibilityLabel).toBe(
             'This story isn\'t about "Pensioner in India", answered: Noted as Mera\'s mistake',
         );
@@ -187,7 +187,7 @@ describe('an answer', () => {
     });
 
     it('a later unapplied answer keeps a row that applied something processed', async () => {
-        const { tap } = mount();
+        const { tap } = await mount();
         await tap(SITE, 'tree-row-fewer_from_site');
         await tap(ROOT, 'tree-row-not_about_fact');
         await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(2));
@@ -197,7 +197,7 @@ describe('an answer', () => {
 
     it('"Stop news for this" goes through persona and is undoable', async () => {
         const stop = jest.spyOn(factService, 'stopNewsForFact').mockResolvedValue({ changeLogIds: ['c-stop'] });
-        const { tap } = mount();
+        const { tap } = await mount();
         await tap({ kind: 'tree', pathIds: ['profile_change', 'matters_less'] }, 'tree-row-stop_news');
         expect(stop).toHaveBeenCalledWith('fact-1');
         await waitFor(async () => expect((await ctxOf()).changeLogIds).toEqual(['c-stop']));
@@ -215,7 +215,7 @@ describe('wrong place', () => {
         jest.spyOn(locationService, 'getAll').mockResolvedValue([]);
         jest.spyOn(factService, 'getFacts').mockResolvedValue([]);
         const set = jest.spyOn(factService, 'setFactPlaces').mockResolvedValue({ applied: true, changeLogId: 'c-place' });
-        const { deps, level, tap } = mount();
+        const { deps, level, tap } = await mount();
         await tap(ROOT, 'tree-row-wrong_place');
         expect(deps.push).toHaveBeenCalledWith(expect.objectContaining({ kind: 'place' }));
 
@@ -233,9 +233,9 @@ describe('wrong place', () => {
         jest.spyOn(locationService, 'getAll').mockResolvedValue([]);
         jest.spyOn(factService, 'getFacts').mockResolvedValue([]);
         const wrong = jest.spyOn(factService, 'markFactPlacesWrong').mockResolvedValue(true);
-        const { hook, level, tap } = mount();
+        const { hook, level, tap } = await mount();
         await tap(ROOT, 'tree-row-wrong_place');
-        act(() => hook.result.current.leavePlace());
+        await act(() => hook.result.current.leavePlace());
         expect(wrong).toHaveBeenCalledWith('fact-1');
         expect(level(ROOT).rows.find((r) => r.key === 'wrong_place')?.subtitle).toBe('Mera will check this again');
     });
@@ -243,12 +243,12 @@ describe('wrong place', () => {
 
 describe('the session toast', () => {
     it('sums up the session once the sheet has gone, and Undo reverts it all but keeps the verdict', async () => {
-        const { hook, tap } = mount();
+        const { hook, tap } = await mount();
         await tap(SITE, 'tree-row-fewer_from_site');
         await tap(ROOT, 'tree-row-not_about_fact');
         await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(2));
 
-        act(() => hook.result.current.onSheetGone());
+        await act(() => hook.result.current.onSheetGone());
         // Only config answers count as changes; the site answer is neither.
         expect(toastTitles()).toEqual(["Mera's mistake noted"]);
 
@@ -263,10 +263,10 @@ describe('the session toast', () => {
 
     it('a change and a mistake read "1 change saved · 1 mistake noted", two of each in the plural', async () => {
         jest.spyOn(factService, 'stopNewsForFact').mockResolvedValue({ changeLogIds: [] });
-        const { hook, tap } = mount();
+        const { hook, tap } = await mount();
         await tap({ kind: 'tree', pathIds: ['profile_change', 'matters_less'] }, 'tree-row-stop_news');
         await tap(ROOT, 'tree-row-not_about_fact');
-        act(() => hook.result.current.onSheetGone());
+        await act(() => hook.result.current.onSheetGone());
         expect(toastTitles()).toEqual(['1 change saved · 1 mistake noted']);
         expect(i18n.t('feedbackTree.menu.toastBoth', {
             changes: i18n.t('feedbackTree.menu.toastChanges', { count: 2 }),
@@ -275,8 +275,8 @@ describe('the session toast', () => {
     });
 
     it('Done with no answer shows nothing and writes nothing', async () => {
-        const { hook } = mount();
-        act(() => hook.result.current.onSheetGone());
+        const { hook } = await mount();
+        await act(() => hook.result.current.onSheetGone());
         expect(toastTitles()).toEqual([]);
         expect(await row()).toBeUndefined();
     });
@@ -291,7 +291,7 @@ describe('Also tell Mera Labs', () => {
     it('a mistake`s prefilled report carries no fact wording, no title and no link', async () => {
         const feedback = require('@/lib/feedback') as typeof import('@/lib/feedback');
         const show = jest.spyOn(feedback, 'showFeedback').mockImplementation(() => {});
-        const { tap } = mount({
+        const { tap } = await mount({
             subject: { ...SUBJECT, title: 'Ranji Trophy: Madhya Pradesh reach the final' },
             context: {
                 publicationName: PUB,
@@ -317,7 +317,7 @@ describe('Also tell Mera Labs', () => {
     it('a site answer`s prefilled report names the reason and the site', async () => {
         const feedback = require('@/lib/feedback') as typeof import('@/lib/feedback');
         const show = jest.spyOn(feedback, 'showFeedback').mockImplementation(() => {});
-        const { tap } = mount();
+        const { tap } = await mount();
         await tap({ kind: 'tree', pathIds: ['publication_issue'] }, 'tree-row-paywall');
         await tap({ kind: 'report' }, 'feedback-report-yes');
         const prefill = show.mock.calls[0][0]!.prefill!;
@@ -330,7 +330,7 @@ describe('Also tell Mera Labs', () => {
 describe('Tell Mera', () => {
     it('hands the host every answer, the screen and the fact', async () => {
         const onFeedbackChat = jest.fn();
-        const { level, tap } = mount({ onFeedbackChat });
+        const { level, tap } = await mount({ onFeedbackChat });
         await tap(ROOT, 'tree-row-not_about_fact');
         await tap(SITE, 'feedback-tell-mera');
         expect(onFeedbackChat).toHaveBeenCalledWith(['not_about_fact'], {
@@ -341,7 +341,7 @@ describe('Tell Mera', () => {
     });
 
     it('without a host hand-off opens the feedback chat with the answers', async () => {
-        const { tap } = mount();
+        const { tap } = await mount();
         await tap(ROOT, 'feedback-tell-mera');
         expect(useFloatingChatStore.getState().context).toMatchObject({
             kind: 'article-suggestion',

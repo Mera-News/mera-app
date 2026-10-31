@@ -63,30 +63,30 @@ const record = (id: string) => useFeedOrderStore.getState().verdicts[id];
 describe('useFeedbackSheet: the verdict on a Feed card', () => {
     it('records a dislike: one verdict row, kept under the key', async () => {
         const s = await seedSuggestion({ _id: 'fs-dislike' });
-        const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
+        const { result } = await renderHook(() => useFeedbackSheet(feedAdapter));
 
-        act(() => result.current.onVerdict(s, 'dislike'));
+        await act(() => result.current.onVerdict(s, 'dislike'));
         expect(record('fs-dislike')).toMatchObject({ verdict: 'dislike', path: [] });
         await waitFor(async () => expect(await verdictOf('fs-dislike')).toBe('dislike'));
 
         // The verdict is not a toggle: a second call changes nothing.
-        act(() => result.current.onVerdict(s, 'dislike'));
+        await act(() => result.current.onVerdict(s, 'dislike'));
         expect(record('fs-dislike')).toMatchObject({ verdict: 'dislike', path: [] });
         expect(await verdictOf('fs-dislike')).toBe('dislike');
     });
 
     it('the sheet recording a verdict fills the card and marks it read', async () => {
         const s = await seedSuggestion({ _id: 'fs-recorded' });
-        const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
-        act(() => result.current.feedbackHandlers.onVerdictRecorded(s));
+        const { result } = await renderHook(() => useFeedbackSheet(feedAdapter));
+        await act(() => result.current.feedbackHandlers.onVerdictRecorded(s));
         expect(record('fs-recorded')).toMatchObject({ verdict: 'dislike', committed: true });
         expect(useOpenedStoriesStore.getState().articleIds.has(s.articleId)).toBe(true);
     });
 
     it('a verdict on a card with no key records nothing', async () => {
         const s = await seedSuggestion({ _id: 'fs-nokey' });
-        const { result } = renderHook(() => useFeedbackSheet({ ...feedAdapter, keyFor: () => null }));
-        act(() => result.current.onVerdict(s, 'dislike'));
+        const { result } = await renderHook(() => useFeedbackSheet({ ...feedAdapter, keyFor: () => null }));
+        await act(() => result.current.onVerdict(s, 'dislike'));
         // Nothing to wait for: give a write the chance to land, then look.
         await act(async () => {});
         expect(await verdictOf('fs-nokey')).toBeNull();
@@ -94,13 +94,13 @@ describe('useFeedbackSheet: the verdict on a Feed card', () => {
 
     it('Tell Mera hands every answer to the feedback chat', async () => {
         const s = await seedSuggestion({ _id: 'fs-tell' });
-        const { result } = renderHook(() => useFeedbackSheet(feedAdapter));
+        const { result } = await renderHook(() => useFeedbackSheet(feedAdapter));
         wireSwipeCallbacks();
         const answers = {
             answers: [{ cause: 'source' as const, question: 'Problem with NOS', answer: 'Paywalled' }],
             screen: 'About NOS',
         };
-        act(() => result.current.feedbackHandlers.onInvokeMera(s, ['publication_issue', 'paywall'], answers));
+        await act(() => result.current.feedbackHandlers.onInvokeMera(s, ['publication_issue', 'paywall'], answers));
         await waitFor(() =>
             expect(useFloatingChatStore.getState().context).toMatchObject({ verdict: 'dislike', feedbackAnswers: answers }),
         );
@@ -121,12 +121,12 @@ describe('useArticleActions: the inline actions of a standalone card', () => {
     it('answered comes back from a stored dislike, never from an old like', async () => {
         const disliked = await seedSuggestion({ _id: 'aa-disliked' });
         await recordVerdictFeedback({ articleId: disliked.articleId, sentiment: 'dislike', title: 't' });
-        const a = mountSeeded(disliked);
+        const a = await mountSeeded(disliked);
         await waitFor(() => expect(a.result.current.answered).toBe(true));
 
         const liked = await seedSuggestion({ _id: 'aa-liked' });
         await recordVerdictFeedback({ articleId: liked.articleId, sentiment: 'like', title: 't' });
-        const b = mountSeeded(liked);
+        const b = await mountSeeded(liked);
         await act(async () => {});
         expect(b.result.current.answered).toBe(false);
     });
@@ -134,7 +134,7 @@ describe('useArticleActions: the inline actions of a standalone card', () => {
     it('the sheet recording a verdict marks the row answered', async () => {
         const { result } = await mount('aa-recorded');
         expect(result.current.answered).toBe(false);
-        act(() => result.current.onVerdictRecorded());
+        await act(() => result.current.onVerdictRecorded());
         expect(result.current.answered).toBe(true);
     });
 
@@ -142,11 +142,11 @@ describe('useArticleActions: the inline actions of a standalone card', () => {
         const { result } = await mount('aa-save');
         await waitFor(() => expect(result.current.saved).toBe(false));
 
-        act(() => result.current.onToggleSave());
+        await act(() => result.current.onToggleSave());
         await waitFor(() => expect(result.current.saved).toBe(true));
         expect(await isSuggestionSaved('aa-save')).toBe(true);
 
-        act(() => result.current.onToggleSave());
+        await act(() => result.current.onToggleSave());
         await waitFor(() => expect(result.current.saved).toBe(false));
         expect(await isSuggestionSaved('aa-save')).toBe(false);
     });
@@ -177,11 +177,11 @@ const levelKey = (element: React.ReactNode) => (element as React.ReactElement<{ 
 
 describe('useArticleMenu', () => {
     const toastCount = () => useToastQueue.getState().entries.length;
-    beforeEach(() => {
+    beforeEach(async () => {
         __clearPublisherSourceNames();
         closeAll();
         // What ToastInitializer installs.
-        const { result } = renderHook(() => useToast());
+        const { result } = await renderHook(() => useToast());
         toastManager.setToastInstance(result.current);
     });
     // The queue arms a real 6s timer for the front card; drop it so none outlives the test.
@@ -190,7 +190,7 @@ describe('useArticleMenu', () => {
     const mount = async (id: string, publicationName = 'The Hindu') => {
         const suggestion = await seedSuggestion({ _id: id, publication_name: publicationName });
         const subject = feedbackSubjectFromSuggestion(suggestion, 'for_you');
-        const hook = renderHook(() => useArticleMenu({ subject }));
+        const hook = await renderHook(() => useArticleMenu({ subject }));
         const run = (actionName: string) =>
             act(async () => {
                 hook.result.current.onAccessibilityAction({ nativeEvent: { actionName } } as never);
@@ -281,34 +281,34 @@ describe('useArticleMenu', () => {
         const suggestion = await seedSuggestion({ _id: 'menu-follow' });
         await trackStory({ articleId: 'menu-follow', title: 'English headline', originSurface: 'for_you' });
         const subject = feedbackSubjectFromSuggestion(suggestion, 'for_you');
-        const { result } = renderHook(() => useArticleMenu({ subject }));
+        const { result } = await renderHook(() => useArticleMenu({ subject }));
         // The follow state is read only after the menu is engaged (no DB read per mounted card).
         expect(result.current.tracked).toBe(false);
-        act(() => result.current.open());
+        await act(() => result.current.open());
         await waitFor(() => expect(result.current.tracked).toBe(true));
 
-        act(() => result.current.openFollow());
+        await act(() => result.current.openFollow());
         expect(levelKey(result.current.element)).toMatch(/:follow-tracked$/);
     });
 
     it('a tap that lands while the sheet is closing does not open it again', async () => {
         const { result } = await mount('menu-closing');
         const sheet = () => (result.current.element as React.ReactElement<{ visible: boolean; onClose: () => void }>).props;
-        act(() => result.current.open());
+        await act(() => result.current.open());
         expect(sheet().visible).toBe(true);
-        act(() => sheet().onClose());
+        await act(() => sheet().onClose());
         expect(sheet().visible).toBe(false);
         // The dismissal has not been reported yet: a stray feedback or ••• tap is ignored, or the
         // sheet comes back over whatever the closing item navigates to.
-        act(() => result.current.openFeedback());
-        act(() => result.current.open());
+        await act(() => result.current.openFeedback());
+        await act(() => result.current.open());
         await act(async () => {});
         expect(sheet().visible).toBe(false);
     });
 
     it('Follow stays untracked for a story nobody follows', async () => {
         const { result } = await mount('menu-nofollow');
-        act(() => result.current.open());
+        await act(() => result.current.open());
         await act(async () => {});
         expect(result.current.tracked).toBe(false);
     });

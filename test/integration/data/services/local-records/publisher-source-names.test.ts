@@ -112,7 +112,7 @@ describe('recording from the app', () => {
       }),
     );
 
-    const { result } = renderHook(() => usePublicationProfile({ publisherId: 'pub-toi' }));
+    const { result } = await renderHook(() => usePublicationProfile({ publisherId: 'pub-toi' }));
     await waitFor(() => expect(result.current.state).toBe('ready'));
 
     expect(knownSourceNamesForPublisher('pub-toi')).toEqual(['Times of India', 'TOI Business', 'TOI Sports']);

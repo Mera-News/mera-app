@@ -84,8 +84,8 @@ describe('TabPages resume spot', () => {
     resetPendingPage();
   });
 
-  it('notes the active page and scrolls no page', () => {
-    render(
+  it('notes the active page and scrolls no page', async () => {
+    await render(
       <TabPages
         tab="library"
         pages={pages}

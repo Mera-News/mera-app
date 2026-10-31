@@ -43,7 +43,7 @@ afterEach(async () => {
 });
 
 async function tap(params: ShareArticleParams | undefined) {
-  const { result } = renderHook(() => useShareArticle(params));
+  const { result } = await renderHook(() => useShareArticle(params));
   await act(async () => {
     await result.current();
   });

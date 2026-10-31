@@ -48,8 +48,8 @@ function stored(id: string, payload: Partial<FactCheckRow>, over: Partial<Stored
 const card = (item: StoredFactCheck) => render(<FactCheckCard item={item} onPress={() => {}} onDelete={() => {}} testIDPrefix="c" />);
 
 describe('the list card is a summary', () => {
-  it('leads with the first organisation and its rating, sentence-cased, and nothing else', () => {
-    const view = card(stored('1', { checkedBy: [org('FACTLY', 'MISLEADING')] }));
+  it('leads with the first organisation and its rating, sentence-cased, and nothing else', async () => {
+    const view = await card(stored('1', { checkedBy: [org('FACTLY', 'MISLEADING')] }));
     const summary = within(view.getByTestId('c-summary-1'));
     expect(summary.getByText('FACTLY')).toBeTruthy();
     expect(summary.getByText('Misleading')).toBeTruthy();
@@ -62,19 +62,19 @@ describe('the list card is a summary', () => {
     expect(view.queryByText(/main claims match/)).toBeNull();
   });
 
-  it('counts the other organisations as "+N more"', () => {
-    const view = card(stored('1', { checkedBy: [org('FACTLY', 'False'), org('BOOM', 'Fake'), org('AFP', 'Altered')] }));
+  it('counts the other organisations as "+N more"', async () => {
+    const view = await card(stored('1', { checkedBy: [org('FACTLY', 'False'), org('BOOM', 'Fake'), org('AFP', 'Altered')] }));
     expect(view.getByTestId('c-more-1').props.children).toBe('+2 more');
   });
 
-  it('says so when nobody has published', () => {
-    const view = card(stored('1', { checkedBy: [], checkedByStatus: 'searched' }));
+  it('says so when nobody has published', async () => {
+    const view = await card(stored('1', { checkedBy: [], checkedByStatus: 'searched' }));
     expect(within(view.getByTestId('c-summary-1')).getByText('No published fact checks found')).toBeTruthy();
   });
 
-  it('shows checking, never the stale verdict, on a row pending a recheck', () => {
+  it('shows checking, never the stale verdict, on a row pending a recheck', async () => {
     const item = stored('1', { status: 'pending', checkedBy: [org('FACTLY', 'MISLEADING')] }, { status: 'pending', resolvedAt: null, requestedAt: Date.now() - 5 * 60_000 });
-    const view = card(item);
+    const view = await card(item);
     expect(view.getByTestId('c-checking-1')).toBeTruthy();
     expect(view.getByText('Checking this with fact checkers…')).toBeTruthy();
     expect(view.getByText('Asked 5m ago')).toBeTruthy();
@@ -93,7 +93,7 @@ async function openExport(items: StoredFactCheck[]) {
   const shared = shareSheet();
   const onClose = jest.fn();
   // The kit Modal portals into the app root's OverlayProvider.
-  const view = render(<OverlayProvider><FactCheckExportModal isOpen onClose={onClose} items={items} onFailed={() => {}} /></OverlayProvider>);
+  const view = await render(<OverlayProvider><FactCheckExportModal isOpen onClose={onClose} items={items} onFailed={() => {}} /></OverlayProvider>);
   await act(async () => {});
   return { view, shared, onClose };
 }
@@ -113,20 +113,20 @@ describe('the Fact checks export', () => {
     expect(view.getByText('Organiser · FACTLY: Misleading')).toBeTruthy();
     expect(view.getByText('Organiser · Still checking')).toBeTruthy();
 
-    fireEvent.press(view.getByTestId('fact-check-export-select-all'));
+    await fireEvent.press(view.getByTestId('fact-check-export-select-all'));
     expect(view.getByTestId('fact-check-export-count').props.children).toBe('0 selected');
-    fireEvent.press(view.getByTestId('fact-check-export-select-all'));
+    await fireEvent.press(view.getByTestId('fact-check-export-select-all'));
     expect(view.getByTestId('fact-check-export-count').props.children).toBe('2 selected');
   });
 
   it('writes the chosen checks as Markdown, without the parts the reader unticked', async () => {
     const { view, shared, onClose } = await openExport(items);
-    fireEvent.press(view.getByTestId('fact-check-export-row-2'));
-    fireEvent.press(view.getByTestId('fact-check-export-next'));
+    await fireEvent.press(view.getByTestId('fact-check-export-row-2'));
+    await fireEvent.press(view.getByTestId('fact-check-export-next'));
     expect(view.getByText(/Each export always has the headline/)).toBeTruthy();
-    fireEvent.press(view.getByTestId('fact-check-export-include-sources'));
-    fireEvent.press(view.getByTestId('fact-check-export-next'));
-    fireEvent.press(view.getByTestId('fact-check-export-format-markdown'));
+    await fireEvent.press(view.getByTestId('fact-check-export-include-sources'));
+    await fireEvent.press(view.getByTestId('fact-check-export-next'));
+    await fireEvent.press(view.getByTestId('fact-check-export-format-markdown'));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
 
     const md = (shared.mock.calls[0][0] as { message: string }).message;
@@ -142,9 +142,9 @@ describe('the Fact checks export', () => {
 
   it('writes JSON with every finished check and what was included', async () => {
     const { view, shared, onClose } = await openExport(items);
-    fireEvent.press(view.getByTestId('fact-check-export-next'));
-    fireEvent.press(view.getByTestId('fact-check-export-next'));
-    fireEvent.press(view.getByTestId('fact-check-export-format-json'));
+    await fireEvent.press(view.getByTestId('fact-check-export-next'));
+    await fireEvent.press(view.getByTestId('fact-check-export-next'));
+    await fireEvent.press(view.getByTestId('fact-check-export-format-json'));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
 
     const json = JSON.parse((shared.mock.calls[0][0] as { message: string }).message);
@@ -176,16 +176,16 @@ describe('the Saved export on the shared wizard', () => {
   it('keeps its reason (on) and image (off) choices', async () => {
     const shared = shareSheet();
     const onClose = jest.fn();
-    const view = render(<OverlayProvider><SavedExportModal isOpen onClose={onClose} items={[saved]} onFailed={() => {}} /></OverlayProvider>);
+    const view = await render(<OverlayProvider><SavedExportModal isOpen onClose={onClose} items={[saved]} onFailed={() => {}} /></OverlayProvider>);
     await act(async () => {});
     expect(view.getByTestId('saved-export-count').props.children).toBe('0 selected');
-    fireEvent.press(view.getByTestId('saved-export-select-all'));
-    fireEvent.press(view.getByTestId('saved-export-next'));
+    await fireEvent.press(view.getByTestId('saved-export-select-all'));
+    await fireEvent.press(view.getByTestId('saved-export-next'));
     expect(view.getByTestId('saved-export-include-reason').props.accessibilityState).toMatchObject({ checked: true });
     expect(view.getByTestId('saved-export-include-image').props.accessibilityState).toMatchObject({ checked: false });
-    fireEvent.press(view.getByTestId('saved-export-include-image'));
-    fireEvent.press(view.getByTestId('saved-export-next'));
-    fireEvent.press(view.getByTestId('saved-export-format-json'));
+    await fireEvent.press(view.getByTestId('saved-export-include-image'));
+    await fireEvent.press(view.getByTestId('saved-export-next'));
+    await fireEvent.press(view.getByTestId('saved-export-format-json'));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
 
     const json = JSON.parse((shared.mock.calls[0][0] as { message: string }).message);

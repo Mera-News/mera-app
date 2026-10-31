@@ -65,7 +65,7 @@ afterEach(async () => {
 async function reloadModelWhileJobRuns(): Promise<{ runs: number; status: string | undefined }> {
   await markDownloaded();
   useAppStateStore.getState().setAppInitialized(true);
-  renderHook(() => useModelLifecycle());
+  await renderHook(() => useModelLifecycle());
   await waitFor(() => expect(protocol().modelState).toBe('ready'));
   await waitFor(() => expect(inferenceQueue.getState()).toBe('running'));
 
@@ -76,7 +76,7 @@ async function reloadModelWhileJobRuns(): Promise<{ runs: number; status: string
   await job.started;
 
   await disposeModel();
-  act(() => protocol().setModelState('downloaded'));
+  await act(() => protocol().setModelState('downloaded'));
   setAppState('background');
   setAppState('active');
   await waitFor(() => expect(protocol().modelState).toBe('ready'));

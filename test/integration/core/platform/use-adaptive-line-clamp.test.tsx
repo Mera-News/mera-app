@@ -24,61 +24,61 @@ const setUserScale = (scale: number) => act(() => useTextScaleStore.setState({ s
 const clamp = (base: number, max?: number) =>
   renderHook(() => useAdaptiveLineClamp(base, max), { wrapper: TextScaleProvider as React.ComponentType });
 
-beforeEach(() => {
-  setOsFontScale(1);
-  setUserScale(1);
+beforeEach(async () => {
+  await setOsFontScale(1);
+  await setUserScale(1);
 });
-afterAll(() => {
-  setOsFontScale(original.fontScale);
+afterAll(async () => {
+  await setOsFontScale(original.fontScale);
 });
 
 describe('useAdaptiveLineClamp', () => {
-  it('returns base exactly at 1x, so default rendering is untouched', () => {
-    expect(clamp(3, 4).result.current).toBe(3);
+  it('returns base exactly at 1x, so default rendering is untouched', async () => {
+    expect((await clamp(3, 4)).result.current).toBe(3);
   });
 
-  it('returns base when the scales would shrink the text, never less', () => {
-    setUserScale(0.85);
-    expect(clamp(3, 4).result.current).toBe(3);
+  it('returns base when the scales would shrink the text, never less', async () => {
+    await setUserScale(0.85);
+    expect((await clamp(3, 4)).result.current).toBe(3);
   });
 
-  it('grows the allowance with the text', () => {
-    setOsFontScale(1.5);
+  it('grows the allowance with the text', async () => {
+    await setOsFontScale(1.5);
     // round(3 * 1.5) = 5, clipped by the ceiling.
-    expect(clamp(3, 6).result.current).toBe(5);
+    expect((await clamp(3, 6)).result.current).toBe(5);
   });
 
-  it('never exceeds the ceiling', () => {
-    setOsFontScale(2);
-    expect(clamp(3, 4).result.current).toBe(4);
+  it('never exceeds the ceiling', async () => {
+    await setOsFontScale(2);
+    expect((await clamp(3, 4)).result.current).toBe(4);
   });
 
-  it('caps the OS contribution where the glyphs themselves stop growing', () => {
+  it('caps the OS contribution where the glyphs themselves stop growing', async () => {
     // Past MAX_FONT_SCALE.content the text is capped, so the allowance must be
     // too: an OS scale beyond it buys no extra lines.
-    setOsFontScale(MAX_FONT_SCALE.content);
-    const atCap = clamp(3, 99).result.current;
-    setOsFontScale(MAX_FONT_SCALE.content * 4);
-    expect(clamp(3, 99).result.current).toBe(atCap);
+    await setOsFontScale(MAX_FONT_SCALE.content);
+    const atCap = (await clamp(3, 99)).result.current;
+    await setOsFontScale(MAX_FONT_SCALE.content * 4);
+    expect((await clamp(3, 99)).result.current).toBe(atCap);
   });
 
-  it('compounds the OS scale with the in-app text-size control', () => {
-    setOsFontScale(1.2);
-    setUserScale(1.3);
+  it('compounds the OS scale with the in-app text-size control', async () => {
+    await setOsFontScale(1.2);
+    await setUserScale(1.3);
     // round(2 * 1.2 * 1.3) = round(3.12) = 3
-    expect(clamp(2, 9).result.current).toBe(3);
+    expect((await clamp(2, 9)).result.current).toBe(3);
   });
 
-  it('defaults the ceiling to twice base', () => {
-    setOsFontScale(MAX_FONT_SCALE.content);
-    setUserScale(4);
-    expect(clamp(3).result.current).toBe(6);
+  it('defaults the ceiling to twice base', async () => {
+    await setOsFontScale(MAX_FONT_SCALE.content);
+    await setUserScale(4);
+    expect((await clamp(3)).result.current).toBe(6);
   });
 
-  it('re-renders when the OS text size changes while mounted', () => {
-    const { result } = clamp(3, 6);
+  it('re-renders when the OS text size changes while mounted', async () => {
+    const { result } = await clamp(3, 6);
     expect(result.current).toBe(3);
-    setOsFontScale(1.5);
+    await setOsFontScale(1.5);
     expect(result.current).toBe(5);
   });
 });

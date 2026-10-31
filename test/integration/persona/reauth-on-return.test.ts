@@ -31,7 +31,7 @@ beforeEach(async () => {
 
 it('a flagged session the server confirms dead goes to the sign-in gate on the return', async () => {
     server.use(recheck(() => HttpResponse.json(null)));
-    renderHook(() => ReauthOnReturn());
+    await renderHook(() => ReauthOnReturn());
 
     await returnToApp();
 
@@ -39,7 +39,7 @@ it('a flagged session the server confirms dead goes to the sign-in gate on the r
 });
 
 it('a flagged session the server finds alive stays in the app and loses the flag', async () => {
-    renderHook(() => ReauthOnReturn());
+    await renderHook(() => ReauthOnReturn());
 
     await returnToApp();
 

@@ -53,9 +53,9 @@ function makeProps(over: Partial<ChatSessionViewProps> = {}) {
   return { props, sendMessage, sendHiddenTurn };
 }
 
-function mount(over: Partial<ChatSessionViewProps> = {}) {
+async function mount(over: Partial<ChatSessionViewProps> = {}) {
   const made = makeProps(over);
-  const hook = renderHook((p: ChatSessionViewProps) => useChatSessionView(p), {
+  const hook = await renderHook((p: ChatSessionViewProps) => useChatSessionView(p), {
     initialProps: made.props,
   });
   return { ...made, ...hook };
@@ -70,28 +70,28 @@ function seedBlockedPersona(reason: string | null) {
 }
 
 describe('handleSend', () => {
-  it('trims the text and sends it once', () => {
-    const { result, sendMessage } = mount();
-    act(() => result.current.handleSend('  hi  '));
+  it('trims the text and sends it once', async () => {
+    const { result, sendMessage } = await mount();
+    await act(() => result.current.handleSend('  hi  '));
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(sendMessage).toHaveBeenCalledWith('hi');
   });
 
-  it.each(['', '   ', '\n\t'])('sends nothing for %j', (text) => {
-    const { result, sendMessage } = mount();
-    act(() => result.current.handleSend(text));
+  it.each(['', '   ', '\n\t'])('sends nothing for %j', async (text) => {
+    const { result, sendMessage } = await mount();
+    await act(() => result.current.handleSend(text));
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  it('is a no-op while streaming', () => {
-    const { result, sendMessage } = mount({ status: 'streaming' });
-    act(() => result.current.handleSend('hi'));
+  it('is a no-op while streaming', async () => {
+    const { result, sendMessage } = await mount({ status: 'streaming' });
+    await act(() => result.current.handleSend('hi'));
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  it('is a no-op while isBlocked, and the banner shows the account-restricted copy', () => {
-    const { result, sendMessage } = mount({ isBlocked: true });
-    act(() => result.current.handleSend('hi'));
+  it('is a no-op while isBlocked, and the banner shows the account-restricted copy', async () => {
+    const { result, sendMessage } = await mount({ isBlocked: true });
+    await act(() => result.current.handleSend('hi'));
     expect(sendMessage).not.toHaveBeenCalled();
     expect(result.current.effectiveBlocked).toBe(true);
     expect(result.current.blockedMessage).toBe(t('errors.accountRestricted'));
@@ -99,68 +99,68 @@ describe('handleSend', () => {
 
   it('is a no-op for a persisted blocked persona, and the banner shows its reason', async () => {
     seedBlockedPersona('x');
-    const { result, sendMessage } = mount();
+    const { result, sendMessage } = await mount();
     await waitFor(() => expect(result.current.effectiveBlocked).toBe(true));
-    act(() => result.current.handleSend('hi'));
+    await act(() => result.current.handleSend('hi'));
     expect(sendMessage).not.toHaveBeenCalled();
     expect(result.current.blockedMessage).toBe('x');
   });
 
   it('falls back to the account-restricted copy when the persisted block has no reason', async () => {
     seedBlockedPersona(null);
-    const { result } = mount();
+    const { result } = await mount();
     await waitFor(() => expect(result.current.effectiveBlocked).toBe(true));
     expect(result.current.blockedMessage).toBe(t('errors.accountRestricted'));
   });
 
   it('prefers the prop reason over the persisted one', async () => {
     seedBlockedPersona('persisted');
-    const { result } = mount({ isBlocked: true, blockedReason: 'from the server' });
+    const { result } = await mount({ isBlocked: true, blockedReason: 'from the server' });
     await waitFor(() => expect(result.current.effectiveBlocked).toBe(true));
     expect(result.current.blockedMessage).toBe('from the server');
   });
 });
 
 describe('pending initial message', () => {
-  it('is sent exactly once across re-renders', () => {
+  it('is sent exactly once across re-renders', async () => {
     useFloatingChatStore.getState().openArticleFeedback(ARTICLE_CONTEXT, 'seed');
-    const { result, rerender, props, sendMessage } = mount({ context: ARTICLE_CONTEXT });
+    const { result, rerender, props, sendMessage } = await mount({ context: ARTICLE_CONTEXT });
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(sendMessage).toHaveBeenCalledWith('seed');
-    rerender({ ...props });
-    rerender({ ...props, messages: [] });
+    await rerender({ ...props });
+    await rerender({ ...props, messages: [] });
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(useFloatingChatStore.getState().pendingInitialMessage).toBeNull();
     expect(result.current.introMessage).toBeNull();
   });
 
-  it('is not consumed while loading, and goes out once loading ends', () => {
+  it('is not consumed while loading, and goes out once loading ends', async () => {
     useFloatingChatStore.getState().openArticleFeedback(ARTICLE_CONTEXT, 'seed');
-    const { rerender, props, sendMessage } = mount({ context: ARTICLE_CONTEXT, isLoading: true });
+    const { rerender, props, sendMessage } = await mount({ context: ARTICLE_CONTEXT, isLoading: true });
     expect(sendMessage).not.toHaveBeenCalled();
     expect(useFloatingChatStore.getState().pendingInitialMessage).toBe('seed');
-    rerender({ ...props, isLoading: false });
+    await rerender({ ...props, isLoading: false });
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(sendMessage).toHaveBeenCalledWith('seed');
   });
 
-  it('is not consumed while streaming, and goes out once the stream ends', () => {
+  it('is not consumed while streaming, and goes out once the stream ends', async () => {
     useFloatingChatStore.getState().openArticleFeedback(ARTICLE_CONTEXT, 'seed');
-    const { rerender, props, sendMessage } = mount({
+    const { rerender, props, sendMessage } = await mount({
       context: ARTICLE_CONTEXT,
       status: 'streaming',
     });
     expect(sendMessage).not.toHaveBeenCalled();
     expect(useFloatingChatStore.getState().pendingInitialMessage).toBe('seed');
-    rerender({ ...props, status: 'idle' });
+    await rerender({ ...props, status: 'idle' });
     expect(sendMessage).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('error banner', () => {
-  it('shows the generic inference copy and never the raw error string', () => {
+  it('shows the generic inference copy and never the raw error string', async () => {
     const raw = 'E2EE chat failed: 400 Provider failed for model X: Decryption failed';
-    const { result } = mount({ error: raw });
+    const { result } = await mount({ error: raw });
     expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
     expect(result.current.blockedMessage).not.toContain('Decryption');
     expect(result.current.blockedMessage).not.toContain('E2EE chat failed');
@@ -168,28 +168,28 @@ describe('error banner', () => {
 });
 
 describe('intro message', () => {
-  it('shows the persona intro until the first send, then null', () => {
-    const { result, sendMessage } = mount();
+  it('shows the persona intro until the first send, then null', async () => {
+    const { result, sendMessage } = await mount();
     expect(result.current.introMessage).toBe(t('personaChat.introMessage'));
-    act(() => result.current.handleSend('hello'));
+    await act(() => result.current.handleSend('hello'));
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(result.current.introMessage).toBeNull();
   });
 
-  it('on this phone, the intro says On this phone is Beta', () => {
+  it('on this phone, the intro says On this phone is Beta', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
-    const { result } = mount();
+    const { result } = await mount();
     expect(result.current.introMessage).toBe(`${t('personaChat.introMessage')}\n\n${t('chat.onDeviceBetaNote')}`);
     expect(t('chat.onDeviceBetaNote')).toBe('On this phone is in Beta, so replies can be slower or less accurate.');
   });
 
-  it('picks articleFeedback.intro for a suggestion', () => {
-    const { result } = mount({ context: ARTICLE_CONTEXT });
+  it('picks articleFeedback.intro for a suggestion', async () => {
+    const { result } = await mount({ context: ARTICLE_CONTEXT });
     expect(result.current.introMessage).toBe(t('articleFeedback.intro'));
   });
 
-  it('picks articleFeedback.introArticle for a plain article', () => {
-    const { result } = mount({ context: { kind: 'article-suggestion', articleId: 'a1' } });
+  it('picks articleFeedback.introArticle for a plain article', async () => {
+    const { result } = await mount({ context: { kind: 'article-suggestion', articleId: 'a1' } });
     expect(result.current.introMessage).toBe(t('articleFeedback.introArticle'));
   });
 });
@@ -197,13 +197,13 @@ describe('intro message', () => {
 describe('starter chips', () => {
   const keys = (chips: { key: string }[]) => chips.map((c) => c.key);
 
-  it('offers why, quick fact check and dont-want for a suggestion in cloud mode', () => {
-    const { result } = mount({ context: ARTICLE_CONTEXT });
+  it('offers why, quick fact check and dont-want for a suggestion in cloud mode', async () => {
+    const { result } = await mount({ context: ARTICLE_CONTEXT });
     expect(keys(result.current.starterChips)).toEqual(['why', 'quick-fact-check', 'dont-want']);
   });
 
-  it('offers more-like-this instead of why for a plain article', () => {
-    const { result } = mount({ context: { kind: 'article-suggestion', articleId: 'a1' } });
+  it('offers more-like-this instead of why for a plain article', async () => {
+    const { result } = await mount({ context: { kind: 'article-suggestion', articleId: 'a1' } });
     expect(keys(result.current.starterChips)).toEqual([
       'more-like-this',
       'quick-fact-check',
@@ -211,29 +211,29 @@ describe('starter chips', () => {
     ]);
   });
 
-  it('drops the quick fact check chip in on-device mode', () => {
+  it('drops the quick fact check chip in on-device mode', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
-    const { result } = mount({ context: ARTICLE_CONTEXT });
+    const { result } = await mount({ context: ARTICLE_CONTEXT });
     expect(keys(result.current.starterChips)).toEqual(['why', 'dont-want']);
   });
 
-  it('offers no chips in an optimisation-plan thread', () => {
-    const { result } = mount({ context: { kind: 'optimisation-plan' } });
+  it('offers no chips in an optimisation-plan thread', async () => {
+    const { result } = await mount({ context: { kind: 'optimisation-plan' } });
     expect(result.current.starterChips).toEqual([]);
   });
 
-  it('sends a chip message through the send funnel', () => {
-    const { result, sendMessage } = mount({ context: ARTICLE_CONTEXT });
+  it('sends a chip message through the send funnel', async () => {
+    const { result, sendMessage } = await mount({ context: ARTICLE_CONTEXT });
     const chip = result.current.starterChips[0];
-    act(() => result.current.handleChipPress(chip.message));
+    await act(() => result.current.handleChipPress(chip.message));
     expect(sendMessage).toHaveBeenCalledTimes(1);
     expect(sendMessage).toHaveBeenCalledWith(chip.message);
   });
 });
 
 describe('topic-plan discard reply', () => {
-  function requestDiscardReply(statement = 'Follows chess') {
-    act(() => {
+  async function requestDiscardReply(statement = 'Follows chess') {
+    await act(() => {
       const store = useFloatingChatStore.getState();
       store.addTopicPlanNote({ kind: 'discarded', statement, at: 1 });
       store.requestTopicPlanTurn();
@@ -242,9 +242,9 @@ describe('topic-plan discard reply', () => {
   const expectedBody = (statement = 'Follows chess') =>
     buildTopicPlanTurnBody([{ kind: 'discarded', statement, at: 1 }], { compact: false });
 
-  it('sends one hidden turn with the built body and marks the turn in flight', () => {
-    const { rerender, props, sendHiddenTurn, sendMessage, result } = mount();
-    requestDiscardReply();
+  it('sends one hidden turn with the built body and marks the turn in flight', async () => {
+    const { rerender, props, sendHiddenTurn, sendMessage, result } = await mount();
+    await requestDiscardReply();
     expect(sendHiddenTurn).toHaveBeenCalledTimes(1);
     expect(sendHiddenTurn).toHaveBeenCalledWith(expectedBody());
     expect(sendMessage).not.toHaveBeenCalled();
@@ -252,24 +252,24 @@ describe('topic-plan discard reply', () => {
     expect(store.topicPlanTurnInFlight).toBe(true);
     expect(store.topicPlanTurnRequest).toBeNull();
     expect(result.current.introMessage).toBeNull();
-    rerender({ ...props });
-    rerender({ ...props, messages: [] });
+    await rerender({ ...props });
+    await rerender({ ...props, messages: [] });
     expect(sendHiddenTurn).toHaveBeenCalledTimes(1);
   });
 
-  it('waits while streaming and fires once the status returns to idle', () => {
-    const { rerender, props, sendHiddenTurn } = mount({ status: 'streaming' });
-    requestDiscardReply();
+  it('waits while streaming and fires once the status returns to idle', async () => {
+    const { rerender, props, sendHiddenTurn } = await mount({ status: 'streaming' });
+    await requestDiscardReply();
     expect(sendHiddenTurn).not.toHaveBeenCalled();
     expect(useFloatingChatStore.getState().topicPlanTurnRequest).not.toBeNull();
-    rerender({ ...props, status: 'idle' });
+    await rerender({ ...props, status: 'idle' });
     expect(sendHiddenTurn).toHaveBeenCalledTimes(1);
     expect(sendHiddenTurn).toHaveBeenCalledWith(expectedBody());
   });
 
-  it('drops the reply but keeps the notes when the chat is blocked', () => {
-    const { sendHiddenTurn } = mount({ isBlocked: true });
-    requestDiscardReply();
+  it('drops the reply but keeps the notes when the chat is blocked', async () => {
+    const { sendHiddenTurn } = await mount({ isBlocked: true });
+    await requestDiscardReply();
     expect(sendHiddenTurn).not.toHaveBeenCalled();
     const store = useFloatingChatStore.getState();
     expect(store.topicPlanTurnRequest).toBeNull();
@@ -278,9 +278,9 @@ describe('topic-plan discard reply', () => {
 });
 
 describe('unmount', () => {
-  it('resets the unresolved counts and clears the turn request', () => {
-    const { unmount } = mount({ status: 'streaming' });
-    act(() => {
+  it('resets the unresolved counts and clears the turn request', async () => {
+    const { unmount } = await mount({ status: 'streaming' });
+    await act(() => {
       const store = useFloatingChatStore.getState();
       store.setUnresolvedTopicPlanCount(2);
       store.setUnresolvedFactChoiceCount(1);
@@ -290,7 +290,7 @@ describe('unmount', () => {
     expect(before.unresolvedTopicPlanCount).toBe(2);
     expect(before.unresolvedFactChoiceCount).toBe(1);
     expect(before.topicPlanTurnRequest).not.toBeNull();
-    unmount();
+    await unmount();
     const after = useFloatingChatStore.getState();
     expect(after.unresolvedTopicPlanCount).toBe(0);
     expect(after.unresolvedFactChoiceCount).toBe(0);
@@ -311,18 +311,18 @@ describe('turn-failed sentence', () => {
   const boxOf = (items: { kind: string }[]) =>
     items.find((i) => i.kind === 'agent-steps') as { terminal: string | null } | undefined;
 
-  it('a throw after tool rows were written shows the sentence', () => {
-    const { result } = mount({ messages: rows, error: 'Cloud chat failed: boom' });
+  it('a throw after tool rows were written shows the sentence', async () => {
+    const { result } = await mount({ messages: rows, error: 'Cloud chat failed: boom' });
     expect(boxOf(result.current.items)?.terminal).toBe('turn-failed');
   });
 
-  it('a Stop never sets error, so the box carries no sentence', () => {
-    const { result } = mount({ messages: rows, error: null });
+  it('a Stop never sets error, so the box carries no sentence', async () => {
+    const { result } = await mount({ messages: rows, error: null });
     expect(boxOf(result.current.items)?.terminal).toBeNull();
   });
 
-  it('a throw with no tool rows adds no box', () => {
-    const { result } = mount({
+  it('a throw with no tool rows adds no box', async () => {
+    const { result } = await mount({
       messages: [
         { id: 'u1', role: 'user', content: 'hi' },
         { id: 'a1', role: 'assistant', content: '' },
@@ -339,9 +339,9 @@ describe('typing item inputs', () => {
       | { kind: 'typing'; engine: string; showWords: boolean; ackShowing: boolean }
       | undefined;
 
-  it('on-device processing marks the typing item local and shows words', () => {
+  it('on-device processing marks the typing item local and shows words', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
-    const { result } = mount({
+    const { result } = await mount({
       status: 'streaming',
       messages: [
         { id: 'u0', role: 'user', content: 'first' },
@@ -352,8 +352,8 @@ describe('typing item inputs', () => {
     expect(typing(result.current.items)).toMatchObject({ engine: 'local', showWords: true });
   });
 
-  it('cloud keeps words off from the second message on', () => {
-    const { result } = mount({
+  it('cloud keeps words off from the second message on', async () => {
+    const { result } = await mount({
       status: 'streaming',
       messages: [
         { id: 'u0', role: 'user', content: 'first' },

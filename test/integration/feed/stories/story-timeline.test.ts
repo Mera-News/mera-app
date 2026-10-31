@@ -47,9 +47,9 @@ async function seedStory(): Promise<{ storyId: string; topicId: string }> {
   return { storyId: story.id, topicId: topic.id };
 }
 
-const open = (trackedStoryId: string, onBack = jest.fn()) => ({
+const open = async (trackedStoryId: string, onBack = jest.fn()) => ({
   onBack,
-  ...renderHookInScreen(() => useStoryTimelineScreen({ trackedStoryId, onBack })),
+  ...(await renderHookInScreen(() => useStoryTimelineScreen({ trackedStoryId, onBack }))),
 });
 
 /** Focus the screen the way useFocusEffect does and hand back the effect's cleanup. */
@@ -66,7 +66,7 @@ describe('onFocus', () => {
     const { storyId } = await seedStory();
     expect((await getTrackedStoryById(storyId))?.unseenCount).toBe(2);
 
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await waitFor(() => expect(result.current.newAtOpen).toBe(2));
@@ -80,12 +80,12 @@ describe('onFocus', () => {
 
   it('a second open reports nothing new: the first visit cleared the badge', async () => {
     const { storyId } = await seedStory();
-    const first = open(storyId);
+    const first = await open(storyId);
     await focus(first.result);
     await waitFor(() => expect(first.result.current.newAtOpen).toBe(2));
     await waitFor(async () => expect((await getTrackedStoryById(storyId))?.unseenCount).toBe(0));
 
-    const second = open(storyId);
+    const second = await open(storyId);
     await focus(second.result);
     await waitFor(() => expect(second.result.current.isLoading).toBe(false));
     expect(second.result.current.newAtOpen).toBe(0);
@@ -94,8 +94,8 @@ describe('onFocus', () => {
 
   it('the cleanup invalidates a load still in flight: a blurred screen writes no state', async () => {
     const { storyId } = await seedStory();
-    const { result } = open(storyId);
-    act(() => {
+    const { result } = await open(storyId);
+    await act(() => {
       result.current.onFocus()(); // focus, then blur before the first read can answer
     });
     await act(async () => {
@@ -108,7 +108,7 @@ describe('onFocus', () => {
 
 describe('a story missing from the DB', () => {
   it('has the empty reason gone, no cards, and a zero unseen count', async () => {
-    const { result } = open('does-not-exist');
+    const { result } = await open('does-not-exist');
     await focus(result);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.emptyReason).toBe('gone');
@@ -120,11 +120,11 @@ describe('a story missing from the DB', () => {
 describe('disowning a member ("not part of this story")', () => {
   it('the snapshot leaves the timeline and the row, and the member id STAYS on the row', async () => {
     const { storyId } = await seedStory();
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.cards).toHaveLength(3));
 
-    act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.head.articleId === 'm2')!));
+    await act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.head.articleId === 'm2')!));
     await act(async () => {
       await result.current.handleConfirmRemove();
     });
@@ -140,7 +140,7 @@ describe('disowning a member ("not part of this story")', () => {
 
   it('a remove with nothing chosen changes nothing', async () => {
     const { storyId } = await seedStory();
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.cards).toHaveLength(3));
     await act(async () => {
@@ -154,11 +154,11 @@ describe('disowning a member ("not part of this story")', () => {
 describe('deleting the story', () => {
   it('the row is gone, the linked topic is retired (not destroyed), and the screen leaves', async () => {
     const { storyId, topicId } = await seedStory();
-    const { result, onBack } = open(storyId);
+    const { result, onBack } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.cards).toHaveLength(3));
 
-    act(() => result.current.setConfirmDelete(true));
+    await act(() => result.current.setConfirmDelete(true));
     await act(async () => {
       await result.current.handleConfirmDelete();
     });
@@ -174,7 +174,7 @@ describe('deleting the story', () => {
 describe('export', () => {
   it('has one row per member that has an article id, in timeline order', async () => {
     const { storyId } = await seedStory();
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.cards).toHaveLength(3));
     expect(result.current.exportRows).toEqual([
@@ -186,7 +186,7 @@ describe('export', () => {
 
   it('is empty before the timeline loads', async () => {
     const { storyId } = await seedStory();
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     expect(result.current.exportRows).toEqual([]);
   });
 });
@@ -207,7 +207,7 @@ describe('copies of one story fold into one entry', () => {
 
   it('shows one entry for the two copies, counts it as one article, and exports its head only', async () => {
     const storyId = await seedFolded();
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.entries).toHaveLength(2));
     const folded = result.current.entries.find((e) => e.copies.length === 1)!;
@@ -217,10 +217,10 @@ describe('copies of one story fold into one entry', () => {
 
   it('disowning the entry disowns every copy, and the ledger keeps the ids', async () => {
     const storyId = await seedFolded();
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.entries).toHaveLength(2));
-    act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.copies.length === 1)!));
+    await act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.copies.length === 1)!));
     await act(async () => {
       await result.current.handleConfirmRemove();
     });
@@ -241,10 +241,10 @@ describe('copies of one story fold into one entry', () => {
         ['m4', { storyKey: 'K' }],
       ]),
     );
-    const { result } = open(storyId);
+    const { result } = await open(storyId);
     await focus(result);
     await waitFor(() => expect(result.current.entries).toHaveLength(2));
-    act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.copies.length === 2)!));
+    await act(() => result.current.setConfirmRemove(result.current.entries.find((e) => e.copies.length === 2)!));
     await act(async () => {
       await result.current.handleConfirmRemove();
     });

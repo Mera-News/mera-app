@@ -56,36 +56,36 @@ beforeEach(() => {
 describe('opened-story hydrate', () => {
   it('hydrates on mount even while blurred', async () => {
     await recordOpen({ articleId: 'a1', surface: 'feed' });
-    mount(false);
+    await mount(false);
     await waitFor(() => expect([...useOpenedStoriesStore.getState().articleIds]).toEqual(['a1']));
   });
 
   it('refreshes on every refocus, so an open recorded elsewhere shows up', async () => {
-    const { rerender } = mount(false);
+    const { rerender } = await mount(false);
     await waitFor(() => expect(useOpenedStoriesStore.getState().hydrated).toBe(true));
     await recordOpen({ articleId: 'a2', surface: 'detail' });
     expect(useOpenedStoriesStore.getState().articleIds.has('a2')).toBe(false);
 
-    rerender({ focused: true });
+    await rerender({ focused: true });
     await waitFor(() => expect(useOpenedStoriesStore.getState().articleIds.has('a2')).toBe(true));
   });
 });
 
 describe('persona fetch gate', () => {
   it('fetches nothing while blurred, then fetches on focus', async () => {
-    const { result, rerender } = mount(false);
+    const { result, rerender } = await mount(false);
     await act(async () => {});
     expect(asked).toEqual([]);
     expect(result.current.isLoading).toBe(false);
 
-    rerender({ focused: true });
+    await rerender({ focused: true });
     await waitFor(() => expect(asked).toEqual(['user-1']));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it('fetches nothing without a user id', async () => {
     useUserStore.setState({ userId: null });
-    const { result } = mount(true);
+    const { result } = await mount(true);
     await act(async () => {});
     expect(asked).toEqual([]);
     expect(result.current).toEqual({ isLoading: false, errorMessage: null });
@@ -93,21 +93,21 @@ describe('persona fetch gate', () => {
 
   it('skips the fetch when the feed has suggestions and topics are known', async () => {
     useForYouStore.setState({ suggestions: [{ id: 's1' } as never], hasGeneratedTopics: true });
-    mount(true);
+    await mount(true);
     await act(async () => {});
     expect(asked).toEqual([]);
   });
 
   it('still fetches when suggestions exist but hasGeneratedTopics is false', async () => {
     useForYouStore.setState({ suggestions: [{ id: 's1' } as never], hasGeneratedTopics: false });
-    mount(true);
+    await mount(true);
     await waitFor(() => expect(asked).toEqual(['user-1']));
   });
 
   it('two mounts at once run one fetch (module-level in-flight guard)', async () => {
     const release = servePersonaHeld();
-    const a = mount(true);
-    const b = mount(true);
+    const a = await mount(true);
+    const b = await mount(true);
     await waitFor(() => expect(asked).toHaveLength(1));
     release();
     await waitFor(() => expect(a.result.current.isLoading).toBe(false));
@@ -118,7 +118,7 @@ describe('persona fetch gate', () => {
 
 describe('hasGeneratedTopics', () => {
   it('becomes false for a confirmed-empty local topics table', async () => {
-    const { result } = mount(true);
+    const { result } = await mount(true);
     await waitFor(() => expect(hasTopics()).toBe(false));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
@@ -126,18 +126,18 @@ describe('hasGeneratedTopics', () => {
   it('becomes true when the device holds an active topic', async () => {
     useForYouStore.setState({ hasGeneratedTopics: false });
     await createTopics([{ text: 'Chess', weight: 1 }]);
-    mount(true);
+    await mount(true);
     await waitFor(() => expect(hasTopics()).toBe(true));
   });
 
   it("is written only for the id the run started with: a user switch mid-run drops the write", async () => {
     const release = servePersonaHeld();
-    const { result, rerender } = mount(true);
+    const { result, rerender } = await mount(true);
     await waitFor(() => expect(asked).toEqual(['user-1']));
 
     // Blurred, so the switch starts no second run: this isolates the first run's write.
-    rerender({ focused: false });
-    act(() => useUserStore.setState({ userId: 'user-2' }));
+    await rerender({ focused: false });
+    await act(() => useUserStore.setState({ userId: 'user-2' }));
     release();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {});
@@ -148,14 +148,14 @@ describe('hasGeneratedTopics', () => {
 describe('failure', () => {
   it('shows the feed error, keeps hasGeneratedTopics, and a later refocus retries', async () => {
     server.use(mockGqlError('GetUserPersona', 'INTERNAL_SERVER_ERROR'));
-    const { result, rerender } = mount(true);
+    const { result, rerender } = await mount(true);
     await waitFor(() => expect(result.current.errorMessage).not.toBeNull());
     expect(result.current.isLoading).toBe(false);
     expect(hasTopics()).toBe(true);
 
     servePersona();
-    rerender({ focused: false });
-    rerender({ focused: true });
+    await rerender({ focused: false });
+    await rerender({ focused: true });
     await waitFor(() => expect(hasTopics()).toBe(false));
     await waitFor(() => expect(result.current.errorMessage).toBeNull());
   });
@@ -164,10 +164,10 @@ describe('failure', () => {
 describe('blur is not unmount', () => {
   it('a blur in the middle of a run still clears the spinner when the run settles', async () => {
     const release = servePersonaHeld();
-    const { result, rerender } = mount(true);
+    const { result, rerender } = await mount(true);
     await waitFor(() => expect(result.current.isLoading).toBe(true));
 
-    rerender({ focused: false });
+    await rerender({ focused: false });
     release();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(hasTopics()).toBe(false);
@@ -175,9 +175,9 @@ describe('blur is not unmount', () => {
 
   it('after unmount the run settles without touching local state', async () => {
     const release = servePersonaHeld();
-    const { result, unmount } = mount(true);
+    const { result, unmount } = await mount(true);
     await waitFor(() => expect(result.current.isLoading).toBe(true));
-    unmount();
+    await unmount();
     release();
     await waitFor(() => expect(hasTopics()).toBe(false)); // the store write still lands
   });

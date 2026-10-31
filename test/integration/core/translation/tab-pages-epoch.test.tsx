@@ -93,54 +93,54 @@ beforeEach(() => {
 });
 
 describe('TabPages and the translation epoch', () => {
-    it('drops nothing on mount', () => {
+    it('drops nothing on mount', async () => {
         const before = getTranslationEpoch();
-        renderTabs();
+        await renderTabs();
         expect(getTranslationEpoch()).toBe(before);
     });
 
     it('drops the queued translations when the reader swipes to another page', async () => {
-        renderTabs();
+        await renderTabs();
         // Occupy the slot so the next item stays queued.
         void enqueueTranslationTask(() => new Promise(() => {}));
         const queued = enqueueTranslationTask(async () => 'never');
         const before = getTranslationEpoch();
 
-        act(() => mockSwipeTo(1));
+        await act(() => mockSwipeTo(1));
 
         expect(getTranslationEpoch()).toBe(before + 1);
         expect(isDropped(await queued)).toBe(true);
     });
 
-    it('drops nothing for a page set in code (a page request)', () => {
-        renderTabs();
+    it('drops nothing for a page set in code (a page request)', async () => {
+        await renderTabs();
         const before = getTranslationEpoch();
-        act(() => setPendingPage('checks' as never));
+        await act(() => setPendingPage('checks' as never));
         expect(seen.checks).toBe(true);
         expect(getTranslationEpoch()).toBe(before);
     });
 });
 
 describe('usePageActive', () => {
-    it('is true for the visible page only, and true outside TabPages', () => {
-        renderTabs();
+    it('is true for the visible page only, and true outside TabPages', async () => {
+        await renderTabs();
         expect(seen).toMatchObject({ saved: true, checks: false });
-        act(() => mockSwipeTo(1));
+        await act(() => mockSwipeTo(1));
         expect(seen).toMatchObject({ saved: false, checks: true });
 
-        render(<Page id="loose" />);
+        await render(<Page id="loose" />);
         expect(seen.loose).toBe(true);
         const loose = sources.loose as { isActive(): boolean };
         expect(loose.isActive()).toBe(true);
     });
 
-    it('a page switch never re-renders a consumer that only holds the source', () => {
-        renderTabs();
+    it('a page switch never re-renders a consumer that only holds the source', async () => {
+        await renderTabs();
         const renders = { ...sourceRenders };
         const savedSource = sources.saved as { isActive(): boolean };
         expect(savedSource.isActive()).toBe(true);
 
-        act(() => mockSwipeTo(1));
+        await act(() => mockSwipeTo(1));
         expect(sourceRenders).toEqual(renders);
         expect(sources.saved).toBe(savedSource);
         expect(savedSource.isActive()).toBe(false);
@@ -148,7 +148,7 @@ describe('usePageActive', () => {
 
         const heard = jest.fn();
         const unsubscribe = (sources.saved as { subscribe(l: () => void): () => void }).subscribe(heard);
-        act(() => mockSwipeTo(0));
+        await act(() => mockSwipeTo(0));
         expect(heard).toHaveBeenCalled();
         unsubscribe();
     });

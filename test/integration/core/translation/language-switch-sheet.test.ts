@@ -47,9 +47,9 @@ function settingsPath(onCommitted: jest.Mock, onNoSheet: jest.Mock) {
 test('no give-up while the sheet is up, and the language applies when the download completes', async () => {
     const onCommitted = jest.fn();
     const onNoSheet = jest.fn();
-    const { result } = settingsPath(onCommitted, onNoSheet);
+    const { result } = await settingsPath(onCommitted, onNoSheet);
 
-    act(() => result.current.sw.requestSwitch('ar'));
+    await act(() => result.current.sw.requestSwitch('ar'));
     // preview: false, so the UI strings stay where they were while the probe runs.
     expect(i18n.language).toBe('en');
     await act(flushQueue);
@@ -57,11 +57,11 @@ test('no give-up while the sheet is up, and the language applies when the downlo
 
     // Apple's sheet: iOS reports the app inactive for a moment, then active
     // again while the sheet stays up (a blip a late listener used to miss).
-    act(() => {
+    await act(() => {
         setAppState('inactive');
         setAppState('active');
     });
-    act(() => jest.advanceTimersByTime(NO_SHEET_MS * 4));
+    await act(() => jest.advanceTimersByTime(NO_SHEET_MS * 4));
     expect(onNoSheet).not.toHaveBeenCalled();
     expect(result.current.notice.noticeCode).toBe('ar');
     expect(result.current.sw.busy).toBe(true);
@@ -82,11 +82,11 @@ test('no give-up while the sheet is up, and the language applies when the downlo
 test('with no sign of a sheet the switch is let go after the window, and a late answer applies nothing', async () => {
     const onCommitted = jest.fn();
     const onNoSheet = jest.fn();
-    const { result } = settingsPath(onCommitted, onNoSheet);
+    const { result } = await settingsPath(onCommitted, onNoSheet);
 
-    act(() => result.current.sw.requestSwitch('ar'));
+    await act(() => result.current.sw.requestSwitch('ar'));
     await act(flushQueue);
-    act(() => jest.advanceTimersByTime(NO_SHEET_MS));
+    await act(() => jest.advanceTimersByTime(NO_SHEET_MS));
     expect(onNoSheet).toHaveBeenCalledWith('ar');
     expect(result.current.sw.busy).toBe(false);
 

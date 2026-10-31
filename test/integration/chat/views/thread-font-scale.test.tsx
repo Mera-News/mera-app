@@ -35,24 +35,26 @@ const props: ChatThreadProps = {
 };
 
 /** The OS text size, the way a live change reaches useWindowDimensions. */
-function setFontScale(fontScale: number) {
+async function setFontScale(fontScale: number) {
   const window = { width: 390, height: 844, scale: 3, fontScale };
-  act(() => RN.Dimensions.set({ window, screen: window }));
+  await act(() => RN.Dimensions.set({ window, screen: window }));
 }
 
 beforeAll(initI18nEn);
 beforeEach(() => resetChatModules());
 afterEach(() => setFontScale(2));
 
-it('remounts the list when the OS text size changes, and only then', () => {
-  setFontScale(1);
-  const view = render(<ChatThread {...props} />);
-  const first = view.UNSAFE_getByType(RN.FlatList);
+const list = (v: Awaited<ReturnType<typeof render>>) => v.container.queryAll((n) => n.type === 'RCTScrollView')[0];
 
-  view.rerender(<ChatThread {...props} />);
-  expect(view.UNSAFE_getByType(RN.FlatList)).toBe(first);
+it('remounts the list when the OS text size changes, and only then', async () => {
+  await setFontScale(1);
+  const view = await render(<ChatThread {...props} />);
+  const first = list(view);
 
-  setFontScale(1.6);
-  expect(view.UNSAFE_getByType(RN.FlatList)).not.toBe(first);
+  await view.rerender(<ChatThread {...props} />);
+  expect(list(view)).toBe(first);
+
+  await setFontScale(1.6);
+  expect(list(view)).not.toBe(first);
   expect(view.getByText('Hello')).toBeTruthy();
 });

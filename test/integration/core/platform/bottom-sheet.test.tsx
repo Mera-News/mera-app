@@ -32,16 +32,16 @@ beforeAll(initI18nEn);
 
 const styleOf = (id: string) => StyleSheet.flatten(screen.getByTestId(id).props.style);
 
-function sheet(fullHeight?: boolean) {
-    render(
+async function sheet(fullHeight?: boolean) {
+    await render(
         <BottomSheet open onClose={() => {}} testID="s" fullHeight={fullHeight}>
             <Text>Body</Text>
         </BottomSheet>,
     );
 }
 
-it('spans the screen with no side or bottom inset', () => {
-    sheet();
+it('spans the screen with no side or bottom inset', async () => {
+    await sheet();
     const outer = styleOf('s');
     expect(outer.marginHorizontal ?? 0).toBe(0);
     expect(outer.marginBottom ?? 0).toBe(0);
@@ -49,8 +49,8 @@ it('spans the screen with no side or bottom inset', () => {
     expect(outer.marginRight ?? 0).toBe(0);
 });
 
-it('rounds the top corners only, with a 1pt top hairline', () => {
-    sheet();
+it('rounds the top corners only, with a 1pt top hairline', async () => {
+    await sheet();
     const surface = styleOf('s-surface');
     expect(surface).toMatchObject({ borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, overflow: 'hidden' });
     expect(surface.borderRadius).toBeUndefined();
@@ -59,14 +59,14 @@ it('rounds the top corners only, with a 1pt top hairline', () => {
     expect(surface.borderWidth).toBeUndefined();
 });
 
-it('pads content 20 at the sides and the safe-area bottom plus 8', () => {
-    sheet();
+it('pads content 20 at the sides and the safe-area bottom plus 8', async () => {
+    await sheet();
     expect(styleOf('s-content')).toMatchObject({ paddingHorizontal: 20, paddingBottom: 42 });
     expect(styleOf('s-handle')).toMatchObject({ width: 40, height: 5 });
 });
 
-it('a full-height sheet gives its content the full width', () => {
-    sheet(true);
+it('a full-height sheet gives its content the full width', async () => {
+    await sheet(true);
     expect(styleOf('s-content').paddingHorizontal).toBeUndefined();
     expect(styleOf('s-content').paddingBottom).toBe(42);
 });

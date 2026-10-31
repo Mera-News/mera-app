@@ -96,17 +96,17 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-    cleanup();
+    await cleanup();
     jest.useRealTimers();
     await drain();
     while (stopRecording.length) stopRecording.pop()?.();
     while (spies.length) spies.pop()?.mockRestore();
 });
 
-function mountGate(over: Partial<Parameters<typeof useOnboardingGate>[0]> = {}) {
+async function mountGate(over: Partial<Parameters<typeof useOnboardingGate>[0]> = {}) {
     const onLoginRedirect = jest.fn();
     const onComplete = jest.fn();
-    const hook = renderHook(() =>
+    const hook = await renderHook(() =>
         useOnboardingGate({ userId: ME, sessionUserId: ME, onLoginRedirect, onComplete, ...over }),
     );
     return { ...hook, onLoginRedirect, onComplete };
@@ -117,7 +117,7 @@ describe('useOnboardingGate', () => {
         const ops = recordOps();
         await setSetting('cached_user_id', ME);
 
-        const { result, onComplete, onLoginRedirect } = mountGate();
+        const { result, onComplete, onLoginRedirect } = await mountGate();
         await waitFor(() => expect(result.current.showOnboarding).toBe(true), { timeout: 8000 });
         await drain();
 
@@ -134,7 +134,7 @@ describe('useOnboardingGate', () => {
         await setSetting('cached_user_id', ME);
         await markOnboardingDone();
 
-        const { result, onComplete } = mountGate();
+        const { result, onComplete } = await mountGate();
         await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1), { timeout: 8000 });
         await drain();
 
@@ -151,7 +151,7 @@ describe('useOnboardingGate', () => {
         await addFact('I follow Formula 1 racing');
         expect(await getSetting(ONBOARDING_DONE_SETTING_KEY)).toBeNull();
 
-        const { onComplete, result } = mountGate();
+        const { onComplete, result } = await mountGate();
         await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1), { timeout: 8000 });
 
         expect(result.current.showOnboarding).toBe(false);
@@ -162,7 +162,7 @@ describe('useOnboardingGate', () => {
         await setSetting('cached_user_id', ME);
         await setSetting(IDENTITY_FAULT_KEY, '1');
 
-        const { result, onLoginRedirect, onComplete } = mountGate();
+        const { result, onLoginRedirect, onComplete } = await mountGate();
         await waitFor(() => expect(onLoginRedirect).toHaveBeenCalledTimes(1), { timeout: 8000 });
         await drain();
 
@@ -177,7 +177,7 @@ describe('useOnboardingGate', () => {
         // The previous owner is "done": the new account must not inherit that.
         await markOnboardingDone();
 
-        const { result, onComplete } = mountGate();
+        const { result, onComplete } = await mountGate();
         await waitFor(() => expect(result.current.showOnboarding).toBe(true), { timeout: 8000 });
         await drain();
 
@@ -191,7 +191,7 @@ describe('useOnboardingGate', () => {
     it('a recorded sign-in is consumed once the id it proved is the one stamped', async () => {
         recordAuthenticatedUser(ME);
 
-        const { result } = mountGate({ sessionUserId: undefined });
+        const { result } = await mountGate({ sessionUserId: undefined });
         await waitFor(() => expect(result.current.showOnboarding).toBe(true), { timeout: 8000 });
 
         expect(readPendingAuthUserId()).toBeNull();
@@ -204,7 +204,7 @@ describe('useOnboardingGate', () => {
         await markOnboardingDone();
         spies.push(jest.spyOn(database, 'unsafeResetDatabase').mockRejectedValueOnce(new Error('db busy')));
 
-        const { result, onComplete } = mountGate();
+        const { result, onComplete } = await mountGate();
         await waitFor(() => expect(result.current.wipeFailed).toBe(true), { timeout: 8000 });
         await drain();
 
@@ -215,7 +215,7 @@ describe('useOnboardingGate', () => {
         expect(await getSetting('cached_user_id')).toBe(FOREIGN);
         expect(await hasAnyFacts()).toBe(true);
 
-        act(() => result.current.handleRetry());
+        await act(() => result.current.handleRetry());
         await waitFor(() => expect(result.current.showOnboarding).toBe(true), { timeout: 8000 });
 
         expect(result.current.wipeFailed).toBe(false);
@@ -242,7 +242,7 @@ describe('useOnboardingGate', () => {
         const failIdentityRead = async () => {
             await markOnboardingDone();
             spies.push(jest.spyOn(settingService, 'getSetting').mockRejectedValueOnce(new Error('db unavailable')));
-            const gate = mountGate();
+            const gate = await mountGate();
             await settled(gate.result, gate.onComplete);
             await drain();
             return gate;
@@ -267,7 +267,7 @@ describe('useOnboardingGate', () => {
                         k === 'cached_user_id' && v === ME ? Promise.resolve(undefined as never) : real(k, v),
                     ),
             );
-            const gate = mountGate();
+            const gate = await mountGate();
             await settled(gate.result, gate.onComplete);
             await drain();
             return gate;
@@ -299,13 +299,13 @@ describe('useOnboardingGate', () => {
             spies.push(reset);
 
             const onComplete = jest.fn();
-            const hook = renderHook(
+            const hook = await renderHook(
                 ({ sessionUserId }: { sessionUserId?: string }) =>
                     useOnboardingGate({ userId: ME, sessionUserId, onLoginRedirect: jest.fn(), onComplete }),
                 { initialProps: { sessionUserId: undefined as string | undefined } },
             );
             await waitFor(() => expect(Purchases.logOut).toHaveBeenCalledTimes(1), { timeout: 8000 });
-            hook.rerender({ sessionUserId: ME });
+            await hook.rerender({ sessionUserId: ME });
             // A second run, if the gate starts one, reaches its own logout within a few ticks; a gate that
             // shares the wipe never makes the second call.
             await waitFor(() => expect(Purchases.logOut).toHaveBeenCalledTimes(2), { timeout: 1500 }).catch(
@@ -329,13 +329,13 @@ describe('useOnboardingGate', () => {
         await markOnboardingDone();
         const first = jest.fn();
         const second = jest.fn();
-        const { rerender } = renderHook(
+        const { rerender } = await renderHook(
             ({ onComplete }: { onComplete: () => void }) =>
                 useOnboardingGate({ userId: ME, sessionUserId: ME, onLoginRedirect: jest.fn(), onComplete }),
             { initialProps: { onComplete: first } },
         );
 
-        rerender({ onComplete: second });
+        await rerender({ onComplete: second });
         await waitFor(() => expect(second).toHaveBeenCalledTimes(1), { timeout: 8000 });
         await drain();
 
@@ -345,10 +345,10 @@ describe('useOnboardingGate', () => {
 
     it('finishing the wizard hides it and completes', async () => {
         await setSetting('cached_user_id', ME);
-        const { result, onComplete } = mountGate();
+        const { result, onComplete } = await mountGate();
         await waitFor(() => expect(result.current.showOnboarding).toBe(true), { timeout: 8000 });
 
-        act(() => result.current.handleOnboardingComplete());
+        await act(() => result.current.handleOnboardingComplete());
 
         expect(result.current.showOnboarding).toBe(false);
         expect(onComplete).toHaveBeenCalledTimes(1);

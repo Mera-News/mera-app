@@ -35,7 +35,7 @@ async function readerMidFeed() {
   const feed = await renderFeed();
   await waitFor(() => expect(feed.ids()).toHaveLength(8));
   await act(async () => {});
-  act(() => useFeedOrderStore.getState().markViewed('r7'));
+  await act(() => useFeedOrderStore.getState().markViewed('r7'));
   await arrive([['newH', HIGH]]);
   await waitFor(() => expect(feed.ids()).toContain('newH'));
   // Pin of six, the HIGH arrival leads the dynamic region, r7 still counts as unviewed.
@@ -44,10 +44,10 @@ async function readerMidFeed() {
 }
 
 /** Background, jump `awayMs`, come back. The strict clock must be installed. */
-function awayFor(awayMs: number) {
-  act(() => setAppState('background'));
+async function awayFor(awayMs: number) {
+  await act(() => setAppState('background'));
   jest.setSystemTime(Date.now() + awayMs);
-  act(() => setAppState('active'));
+  await act(() => setAppState('active'));
 }
 
 describe('background then active', () => {
@@ -59,7 +59,7 @@ describe('background then active', () => {
     const before = feed.ids();
 
     useStrictClock();
-    awayFor(awayMs);
+    await awayFor(awayMs);
     await act(async () => {});
 
     expect(feed.ids()).toEqual(before);
@@ -72,7 +72,7 @@ describe('background then active', () => {
     const feed = await readerMidFeed();
 
     useStrictClock();
-    awayFor(awayMs);
+    await awayFor(awayMs);
 
     // r7 (viewed) sinks to tier 1; HIGH leads; the old pin no longer holds r1..r6 in place.
     await waitFor(() =>
@@ -85,9 +85,9 @@ describe('background then active', () => {
     const before = feed.ids();
 
     useStrictClock();
-    act(() => setAppState('inactive'));
+    await act(() => setAppState('inactive'));
     jest.setSystemTime(Date.now() + 6 * 60_000);
-    act(() => setAppState('active'));
+    await act(() => setAppState('active'));
     await act(async () => {});
 
     expect(feed.ids()).toEqual(before);
@@ -96,9 +96,9 @@ describe('background then active', () => {
   it('a second absence is measured from its own background, not the first', async () => {
     const feed = await readerMidFeed();
     useStrictClock();
-    awayFor(4 * 60_000);
+    await awayFor(4 * 60_000);
     jest.setSystemTime(Date.now() + 10 * 60_000); // time spent in the foreground does not add up
-    awayFor(4 * 60_000);
+    await awayFor(4 * 60_000);
     await act(async () => {});
     expect(feed.ids()).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'newH', 'r7', 'r8']);
   });
@@ -114,8 +114,8 @@ describe('going to background', () => {
     // The 1 s persist debounce is armed on the frozen clock, so it can never fire: the write
     // below can only come from the background flush.
     useStrictClock();
-    act(() => useFeedOrderStore.getState().markViewed('r2'));
-    act(() => setAppState('background'));
+    await act(() => useFeedOrderStore.getState().markViewed('r2'));
+    await act(() => setAppState('background'));
     jest.useRealTimers();
     await settleWrites();
 
@@ -129,8 +129,8 @@ describe('going to background', () => {
     await waitFor(() => expect(feed.ids()).toHaveLength(2));
 
     useStrictClock();
-    act(() => useFeedOrderStore.getState().markViewed('r2'));
-    act(() => setAppState('inactive'));
+    await act(() => useFeedOrderStore.getState().markViewed('r2'));
+    await act(() => setAppState('inactive'));
     jest.useRealTimers();
     await settleWrites();
 

@@ -107,7 +107,7 @@ describe('the stage the gate opens on', () => {
 
     it('no rows: loading, then the intro, then the welcome stage once the intro has held', async () => {
         useFakeClock(Date.now());
-        const hook = open();
+        const hook = await open();
         expect(hook.result.current.stage).toBe('loading');
 
         for (let i = 0; i < 40 && hook.result.current.stage === 'loading'; i += 1) {
@@ -131,7 +131,7 @@ describe('the stage the gate opens on', () => {
         await seedAccount(ME, EMAIL);
         await settingService.setSetting('cached_support_id', 'support-1');
 
-        const hook = open({ now: BEFORE_CUTOFF });
+        const hook = await open({ now: BEFORE_CUTOFF });
 
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
         expect(hook.result.current).toMatchObject({ cachedEmail: EMAIL, cachedUserId: ME, supportId: 'support-1' });
@@ -140,7 +140,7 @@ describe('the stage the gate opens on', () => {
     it('an id without an email opens the no-email gate', async () => {
         await seedAccount(ME);
 
-        const hook = open();
+        const hook = await open();
 
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-no-email'));
         expect(hook.result.current).toMatchObject({ cachedEmail: null, cachedUserId: ME });
@@ -149,7 +149,7 @@ describe('the stage the gate opens on', () => {
     it('an email without an id is not an account: the intro', async () => {
         await seedAccount(null, EMAIL);
 
-        const hook = open();
+        const hook = await open();
 
         await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
     });
@@ -158,7 +158,7 @@ describe('the stage the gate opens on', () => {
         await seedAccount(ME, EMAIL);
         const read = jest.spyOn(settingService, 'getSetting').mockRejectedValueOnce(new Error('db unavailable'));
 
-        const hook = open();
+        const hook = await open();
 
         await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
         read.mockRestore();
@@ -172,7 +172,7 @@ describe('the stage the gate opens on', () => {
         const failOneRead = async () => {
             await seedAccount(ME);
             const read = jest.spyOn(settingService, 'getSetting').mockRejectedValueOnce(new Error('db unavailable'));
-            const hook = open();
+            const hook = await open();
             await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
             // Let the device checks settle too: the dev bypass answers within a few ticks.
             await act(async () => {
@@ -191,17 +191,17 @@ describe('the stage the gate opens on', () => {
 
     it('offers phone sign-in only where the device can attest, and never on Forgot PIN', async () => {
         useDevBypass();
-        const offered = open();
+        const offered = await open();
         await waitFor(() => expect(offered.result.current.availability).toBe('dev-bypass'));
         expect(offered.result.current).toMatchObject({ signInPath: 'dev-bypass', canSignInWithoutEmail: true });
 
-        const forgotPin = open({ allowDeviceSignIn: false });
+        const forgotPin = await open({ allowDeviceSignIn: false });
         await waitFor(() => expect(forgotPin.result.current.availability).toBe('dev-bypass'));
         expect(forgotPin.result.current.canSignInWithoutEmail).toBe(false);
     });
 
     it('a device that cannot attest offers the email path only', async () => {
-        const hook = open();
+        const hook = await open();
 
         await waitFor(() => expect(hook.result.current.stage).not.toBe('loading'));
         expect(hook.result.current).toMatchObject({ availability: 'unavailable', canSignInWithoutEmail: false });
@@ -213,11 +213,11 @@ describe('the email track', () => {
         await signInFixtureAccount();
         const stamps = record(ACCEPT_LEGAL);
         const onLoginSuccess = jest.fn();
-        const hook = renderHook(() => useAuthScreen({ onLoginSuccess }));
-        act(() => hook.result.current.setPendingEmail('someone@example.com'));
+        const hook = await renderHook(() => useAuthScreen({ onLoginSuccess }));
+        await act(() => hook.result.current.setPendingEmail('someone@example.com'));
         expect(hook.result.current.pendingEmail).toBe('someone@example.com');
 
-        act(() => hook.result.current.handleVerificationSuccess(ME));
+        await act(() => hook.result.current.handleVerificationSuccess(ME));
 
         expect(onLoginSuccess).toHaveBeenCalledWith(ME);
         expect(hook.result.current.pendingEmail).toBe('');
@@ -280,9 +280,9 @@ describe('signing in with this phone', () => {
 
         it('askSwitch holds the account at once, and the confirm is pending', async () => {
             const { outcome } = await signInOverOther();
-            const hook = renderHook(() => useAuthScreen({}));
+            const hook = await renderHook(() => useAuthScreen({}));
 
-            act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
+            await act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
 
             expect(isAccountSwitchHeld(ME)).toBe(true);
             expect(hook.result.current.pendingSwitch).toMatchObject({ userId: ME });
@@ -297,8 +297,8 @@ describe('signing in with this phone', () => {
                     signOuts += 1;
                 }),
             );
-            const hook = renderHook(() => useAuthScreen({}));
-            act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
+            const hook = await renderHook(() => useAuthScreen({}));
+            await act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
             expect(secureStoreDump()[COOKIE_KEY]).toBeDefined();
 
             await act(async () => {
@@ -316,8 +316,8 @@ describe('signing in with this phone', () => {
         it('Continue (handleSwitchContinue) releases the hold, books the account and hands over to onLoginSuccess', async () => {
             const { outcome, stamps } = await signInOverOther();
             const onLoginSuccess = jest.fn();
-            const hook = renderHook(() => useAuthScreen({ onLoginSuccess }));
-            act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
+            const hook = await renderHook(() => useAuthScreen({ onLoginSuccess }));
+            await act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
 
             await act(async () => {
                 await hook.result.current.handleSwitchContinue();
@@ -335,8 +335,8 @@ describe('signing in with this phone', () => {
 
         it('Continue without an onLoginSuccess routes to /logged-in', async () => {
             const { outcome } = await signInOverOther();
-            const hook = renderHook(() => useAuthScreen({}));
-            act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
+            const hook = await renderHook(() => useAuthScreen({}));
+            await act(() => hook.result.current.askSwitch((outcome as { result: DeviceSignInSuccess }).result));
 
             await act(async () => {
                 await hook.result.current.handleSwitchContinue();
@@ -347,7 +347,7 @@ describe('signing in with this phone', () => {
         });
 
         it('Continue with nothing pending does nothing', async () => {
-            const hook = renderHook(() => useAuthScreen({}));
+            const hook = await renderHook(() => useAuthScreen({}));
 
             await act(async () => {
                 await hook.result.current.handleSwitchContinue();
@@ -424,9 +424,9 @@ describe('Android Back on the gate', () => {
     });
 
     /** The handler the hook registered last; presses it inside act. */
-    const pressBack = () => {
+    const pressBack = async () => {
         let handled: boolean | null | undefined;
-        act(() => {
+        await act(() => {
             handled = handlers[handlers.length - 1]();
         });
         return handled;
@@ -434,54 +434,54 @@ describe('Android Back on the gate', () => {
 
     it('steps back from the code to the email and from the other-email step to the mismatch', async () => {
         await seedAccount(ME, EMAIL);
-        const hook = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
+        const hook = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
 
-        act(() => hook.result.current.go('reauth-otp'));
-        expect(pressBack()).toBe(true);
+        await act(() => hook.result.current.go('reauth-otp'));
+        expect(await pressBack()).toBe(true);
         expect(hook.result.current.stage).toBe('reauth-email');
 
-        act(() => hook.result.current.go('reauth-other-email'));
-        expect(pressBack()).toBe(true);
+        await act(() => hook.result.current.go('reauth-other-email'));
+        expect(await pressBack()).toBe(true);
         expect(hook.result.current.stage).toBe('reauth-mismatch');
 
-        expect(pressBack()).toBe(true);
+        expect(await pressBack()).toBe(true);
         expect(hook.result.current.stage).toBe('reauth-email');
         expect(exitApp).not.toHaveBeenCalled();
     });
 
     it('an account without an email steps back to the no-email gate', async () => {
         await seedAccount(ME);
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = await renderHook(() => useAuthScreen({}));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-no-email'));
 
-        act(() => hook.result.current.go('reauth-mismatch'));
-        expect(pressBack()).toBe(true);
+        await act(() => hook.result.current.go('reauth-mismatch'));
+        expect(await pressBack()).toBe(true);
 
         expect(hook.result.current.stage).toBe('reauth-no-email');
     });
 
     it('leaves the app from the gate itself, where there is nothing behind it', async () => {
         await seedAccount(ME, EMAIL);
-        const hook = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
+        const hook = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
 
-        expect(pressBack()).toBe(true);
+        expect(await pressBack()).toBe(true);
 
         expect(exitApp).toHaveBeenCalledTimes(1);
         expect(hook.result.current.stage).toBe('reauth-email');
     });
 
     it('registers nothing outside the gate, and drops its listener on the way out', async () => {
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = await renderHook(() => useAuthScreen({}));
         await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
         expect(handlers).toHaveLength(0);
 
         await seedAccount(ME, EMAIL);
-        const gate = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
+        const gate = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(gate.result.current.stage).toBe('reauth-email'));
         const registered = handlers.length;
-        gate.unmount();
+        await gate.unmount();
 
         expect(removed).toBe(registered);
     });
@@ -489,7 +489,7 @@ describe('Android Back on the gate', () => {
 
 describe('the legacy email path and an unsupported phone', () => {
     it('a new user whose phone cannot attest stays on Begin and has no email exit from consent', async () => {
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = await renderHook(() => useAuthScreen({}));
         await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
 
         expect(hook.result.current.canSignInWithoutEmail).toBe(false);
@@ -500,23 +500,23 @@ describe('the legacy email path and an unsupported phone', () => {
 
     it('a cached-email user whose phone cannot attest still reaches the email gate', async () => {
         await seedAccount(ME, EMAIL);
-        const hook = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
+        const hook = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(hook.result.current.stage).toBe('reauth-email'));
 
         expect(unsupportedExit(hook.result.current.cachedEmail, BEFORE_CUTOFF)).toBe('reauth-email');
     });
 
     it('the legacy email link still opens the email stage through consent', async () => {
-        const hook = renderHook(() => useAuthScreen({}));
+        const hook = await renderHook(() => useAuthScreen({}));
         await waitFor(() => expect(hook.result.current.stage).toBe('intro'));
 
-        act(() => {
+        await act(() => {
             hook.result.current.setConsentFor('email');
             hook.result.current.setConsentFrom('begin');
             hook.result.current.go('consent');
         });
         expect(hook.result.current).toMatchObject({ stage: 'consent', consentFor: 'email' });
-        act(() => hook.result.current.go('email'));
+        await act(() => hook.result.current.go('email'));
         expect(hook.result.current.stage).toBe('email');
     });
 });
@@ -526,11 +526,11 @@ describe('after the email cutoff', () => {
 
     it('a cached email opens the gate before the cutoff and "email ended" from it', async () => {
         await seedAccount(ME, EMAIL);
-        const before = renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
+        const before = await renderHook(() => useAuthScreen({ now: BEFORE_CUTOFF }));
         await waitFor(() => expect(before.result.current.stage).toBe('reauth-email'));
         expect(before.result.current.emailEnded).toBe(false);
 
-        const after = renderHook(() => useAuthScreen({ now: AFTER }));
+        const after = await renderHook(() => useAuthScreen({ now: AFTER }));
         await waitFor(() => expect(after.result.current.stage).toBe('email-ended'));
         expect(after.result.current.emailEnded).toBe(true);
     });
@@ -548,10 +548,10 @@ describe('after the email cutoff', () => {
             handler = h;
             return { remove: () => {} };
         }) as never);
-        const hook = renderHook(() => useAuthScreen({ now: AFTER }));
+        const hook = await renderHook(() => useAuthScreen({ now: AFTER }));
         await waitFor(() => expect(hook.result.current.stage).toBe('email-ended'));
 
-        act(() => {
+        await act(() => {
             handler?.();
         });
 

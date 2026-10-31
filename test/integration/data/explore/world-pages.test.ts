@@ -230,19 +230,19 @@ describe('useWorldPages', () => {
     });
 
     it('loads once the locations have emitted, and lists World alone with none', async () => {
-        const empty = renderHook(() => useWorldPages());
+        const empty = await renderHook(() => useWorldPages());
         await waitFor(() => expect(empty.result.current.loaded).toBe(true));
         expect(ids(empty.result.current.pages)).toEqual(['world']);
-        empty.unmount();
+        await empty.unmount();
 
         await place('NL');
-        const { result } = renderHook(() => useWorldPages());
+        const { result } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(result.current.loaded).toBe(true));
         expect(brief(result.current.pages)).toEqual(['world:world', 'country:NL:place']);
     });
 
     it('re-derives when a location row is added or removed underneath it', async () => {
-        const { result } = renderHook(() => useWorldPages());
+        const { result } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(result.current.loaded).toBe(true));
         expect(ids(result.current.pages)).toEqual(['world']);
 
@@ -259,7 +259,7 @@ describe('useWorldPages', () => {
 
     it('re-reads the browse and hidden rows after addWorldCountry and removeWorldCountry', async () => {
         await place('NL');
-        const { result } = renderHook(() => useWorldPages());
+        const { result } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(ids(result.current.pages)).toEqual(['world', 'country:NL']));
 
         await act(async () => {
@@ -285,7 +285,7 @@ describe('useWorldPages', () => {
 
     it('returns the same pages array when a re-read finds nothing new', async () => {
         await place('NL');
-        const { result } = renderHook(() => useWorldPages());
+        const { result } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(ids(result.current.pages)).toEqual(['world', 'country:NL']));
         await act(async () => {
             await addWorldCountry('DE');
@@ -302,9 +302,9 @@ describe('useWorldPages', () => {
     it('follows the stored World order from the page-order store', async () => {
         await place('NL');
         await addBrowseCountry('DE');
-        const { result } = renderHook(() => useWorldPages());
+        const { result } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(ids(result.current.pages)).toEqual(['world', 'country:NL', 'country:DE']));
-        act(() => {
+        await act(() => {
             usePageOrderStore.setState({ stored: ['country:DE', 'world', 'country:NL'] });
         });
         expect(ids(result.current.pages)).toEqual(['country:DE', 'world', 'country:NL']);
@@ -314,14 +314,14 @@ describe('useWorldPages', () => {
         await addBrowseCountry('FR');
         await addSuppressedScopeId('country:FRA');
         await addBrowseCountry('DE');
-        const { result } = renderHook(() => useWorldPages());
+        const { result } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(ids(result.current.pages)).toEqual(['world', 'country:DE']));
     });
 
     it('stops listening after unmount', async () => {
-        const { result, unmount } = renderHook(() => useWorldPages());
+        const { result, unmount } = await renderHook(() => useWorldPages());
         await waitFor(() => expect(result.current.loaded).toBe(true));
-        unmount();
+        await unmount();
         await expect(addWorldCountry('DE')).resolves.toBeUndefined();
     });
 });

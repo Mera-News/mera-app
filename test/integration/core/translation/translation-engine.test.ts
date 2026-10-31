@@ -365,12 +365,12 @@ describe('the app leaving the foreground', () => {
         expect(isTranslationBlocked('fr')).toBe(false);
     });
 
-    it('useTranslationQueueActive follows the app state', () => {
-        const { result } = renderHook(() => useTranslationQueueActive());
+    it('useTranslationQueueActive follows the app state', async () => {
+        const { result } = await renderHook(() => useTranslationQueueActive());
         expect(result.current).toBe(true);
-        act(() => emit('inactive'));
+        await act(() => emit('inactive'));
         expect(result.current).toBe(false);
-        act(() => emit('active'));
+        await act(() => emit('active'));
         expect(result.current).toBe(true);
     });
 });
@@ -820,7 +820,7 @@ describe('the service retries a failed text in the one queue', () => {
 
     it('with no interest makes no call at the due time, then one as soon as interest rises', async () => {
         await failOnce('Late');
-        const { result } = renderHook(() => useTextTranslationFailed('Late', 'fr'));
+        const { result } = await renderHook(() => useTextTranslationFailed('Late', 'fr'));
         expect(result.current).toBe(true);
 
         await jest.advanceTimersByTimeAsync(60_000);

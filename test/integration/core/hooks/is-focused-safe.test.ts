@@ -9,88 +9,88 @@ beforeEach(() => setAppState('active'));
 afterAll(() => setAppState('active'));
 
 describe('useIsFocusedSafe', () => {
-  it('is true with no navigator above it, where useIsFocused would throw', () => {
-    const { result } = renderHook(() => useIsFocusedSafe());
+  it('is true with no navigator above it, where useIsFocused would throw', async () => {
+    const { result } = await renderHook(() => useIsFocusedSafe());
     expect(result.current).toBe(true);
   });
 
-  it('reads the screen\'s focus at mount', () => {
-    expect(renderHookInScreen(() => useIsFocusedSafe(), { focused: true }).result.current).toBe(true);
-    expect(renderHookInScreen(() => useIsFocusedSafe(), { focused: false }).result.current).toBe(false);
+  it('reads the screen\'s focus at mount', async () => {
+    expect((await renderHookInScreen(() => useIsFocusedSafe(), { focused: true })).result.current).toBe(true);
+    expect((await renderHookInScreen(() => useIsFocusedSafe(), { focused: false })).result.current).toBe(false);
   });
 
-  it('follows focus and blur events', () => {
-    const { result, setFocused } = renderHookInScreen(() => useIsFocusedSafe());
-    setFocused(false);
+  it('follows focus and blur events', async () => {
+    const { result, setFocused } = await renderHookInScreen(() => useIsFocusedSafe());
+    await setFocused(false);
     expect(result.current).toBe(false);
-    setFocused(true);
+    await setFocused(true);
     expect(result.current).toBe(true);
   });
 
-  it('stops listening once unmounted', () => {
-    const { result, setFocused, unmount } = renderHookInScreen(() => useIsFocusedSafe());
-    unmount();
-    setFocused(false);
+  it('stops listening once unmounted', async () => {
+    const { result, setFocused, unmount } = await renderHookInScreen(() => useIsFocusedSafe());
+    await unmount();
+    await setFocused(false);
     expect(result.current).toBe(true);
   });
 });
 
 describe('useAppIsForegrounded', () => {
-  it('is true while active and while inactive (app switcher still shows content)', () => {
-    const { result } = renderHook(() => useAppIsForegrounded());
+  it('is true while active and while inactive (app switcher still shows content)', async () => {
+    const { result } = await renderHook(() => useAppIsForegrounded());
     expect(result.current).toBe(true);
-    act(() => setAppState('inactive'));
+    await act(() => setAppState('inactive'));
     expect(result.current).toBe(true);
   });
 
-  it('is false only in the background, and true again on return', () => {
-    const { result } = renderHook(() => useAppIsForegrounded());
-    act(() => setAppState('background'));
+  it('is false only in the background, and true again on return', async () => {
+    const { result } = await renderHook(() => useAppIsForegrounded());
+    await act(() => setAppState('background'));
     expect(result.current).toBe(false);
-    act(() => setAppState('active'));
+    await act(() => setAppState('active'));
     expect(result.current).toBe(true);
   });
 
-  it('starts false when mounted while the app is already in the background', () => {
+  it('starts false when mounted while the app is already in the background', async () => {
     setAppState('background');
-    const { result } = renderHook(() => useAppIsForegrounded());
+    const { result } = await renderHook(() => useAppIsForegrounded());
     expect(result.current).toBe(false);
   });
 
-  it('stops listening once unmounted', () => {
-    const { result, unmount } = renderHook(() => useAppIsForegrounded());
-    unmount();
-    act(() => setAppState('background'));
+  it('stops listening once unmounted', async () => {
+    const { result, unmount } = await renderHook(() => useAppIsForegrounded());
+    await unmount();
+    await act(() => setAppState('background'));
     expect(result.current).toBe(true);
   });
 });
 
 describe('useAnimationsActive', () => {
-  it('runs only when the screen is focused AND the app is in front', () => {
-    const { result, setFocused } = renderHookInScreen(() => useAnimationsActive());
+  it('runs only when the screen is focused AND the app is in front', async () => {
+    const { result, setFocused } = await renderHookInScreen(() => useAnimationsActive());
     expect(result.current).toBe(true);
 
-    act(() => setAppState('background'));
+    await act(() => setAppState('background'));
     expect(result.current).toBe(false);
 
-    act(() => setAppState('active'));
+    await act(() => setAppState('active'));
     expect(result.current).toBe(true);
 
-    setFocused(false);
+    await setFocused(false);
     expect(result.current).toBe(false);
 
     // Back in front but still blurred: still paused.
-    act(() => setAppState('inactive'));
+    await act(() => setAppState('inactive'));
     expect(result.current).toBe(false);
 
-    setFocused(true);
+    await setFocused(true);
     expect(result.current).toBe(true);
   });
 
-  it('is true with no navigator while the app is in front', () => {
-    const { result } = renderHook(() => useAnimationsActive());
+  it('is true with no navigator while the app is in front', async () => {
+    const { result } = await renderHook(() => useAnimationsActive());
     expect(result.current).toBe(true);
-    act(() => setAppState('background'));
+    await act(() => setAppState('background'));
     expect(result.current).toBe(false);
   });
 });

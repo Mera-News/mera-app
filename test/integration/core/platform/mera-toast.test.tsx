@@ -41,16 +41,16 @@ afterEach(() => {
 });
 
 describe('width', () => {
-  it('is the screen less 16 on each side, capped at 440, never the text width', () => {
+  it('is the screen less 16 on each side, capped at 440, never the text width', async () => {
     expect(toastWidth(390)).toBe(358);
     expect(toastWidth(320)).toBe(288);
     expect(toastWidth(1024)).toBe(440);
-    render(<MeraToast tone="info" title="Hi" />);
+    await render(<MeraToast tone="info" title="Hi" />);
     expect(flat('mera-toast').width).toBe(toastWidth(Dimensions.get('window').width));
   });
 
-  it('gives the text column the remaining width (flex 1, minWidth 0), so an action never squeezes it', () => {
-    render(
+  it('gives the text column the remaining width (flex 1, minWidth 0), so an action never squeezes it', async () => {
+    await render(
       <MeraToast
         tone="info"
         title="Update ready"
@@ -63,43 +63,43 @@ describe('width', () => {
 });
 
 describe('actions', () => {
-  it('title only with one action: the action sits inline, 44 tall, with no action row', () => {
+  it('title only with one action: the action sits inline, 44 tall, with no action row', async () => {
     const onPress = jest.fn();
-    render(<MeraToast tone="error" title="Something went wrong" actions={[{ label: 'Retry', onPress, testID: 'retry' }]} />);
+    await render(<MeraToast tone="error" title="Something went wrong" actions={[{ label: 'Retry', onPress, testID: 'retry' }]} />);
     expect(screen.queryByTestId('mera-toast-actions')).toBeNull();
     expect(flat('retry').minHeight).toBe(44);
-    fireEvent.press(screen.getByTestId('retry'));
+    await fireEvent.press(screen.getByTestId('retry'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('title only with no action is one 32pt row: no 44pt minimum (10+32+10 plus border = 54)', () => {
-    render(<MeraToast tone="neutral" title="Saved to your Library" />);
+  it('title only with no action is one 32pt row: no 44pt minimum (10+32+10 plus border = 54)', async () => {
+    await render(<MeraToast tone="neutral" title="Saved to your Library" />);
     expect(flat('mera-toast-row').minHeight).toBeUndefined();
     expect(flat('mera-toast-badge')).toMatchObject({ width: 32, height: 32 });
   });
 
-  it('title only with an inline action keeps the 44pt row for the tap target', () => {
-    render(<MeraToast tone="success" title="Saved" actions={[{ label: 'Undo', onPress: () => {} }]} />);
+  it('title only with an inline action keeps the 44pt row for the tap target', async () => {
+    await render(<MeraToast tone="success" title="Saved" actions={[{ label: 'Undo', onPress: () => {} }]} />);
     expect(flat('mera-toast-row').minHeight).toBe(44);
   });
 
-  it('light mode: the primary pill is the deep orange #C4602A with white text (Light board); dark is unchanged', () => {
+  it('light mode: the primary pill is the deep orange #C4602A with white text (Light board); dark is unchanged', async () => {
     const pill = () => (
       <MeraToast tone="info" title="Update ready" body="B" actions={[{ label: 'Restart', onPress: () => {}, primary: true, testID: 'p' }]} />
     );
     useThemeStore.setState({ mode: 'light' });
-    const light = render(pill());
+    const light = await render(pill());
     expect(flat('p-pill').backgroundColor).toBe('#C4602A');
     expect(StyleSheet.flatten(screen.getByText('Restart').props.style).color).toBe('#FFFFFF');
-    light.unmount();
+    await light.unmount();
     useThemeStore.setState({ mode: 'dark' });
-    render(pill());
+    await render(pill());
     expect(flat('p-pill').backgroundColor).toBe(c.accent);
     expect(StyleSheet.flatten(screen.getByText('Restart').props.style).color).toBe(c.onAccent);
   });
 
-  it('with a body, actions are pills under the text, secondary then primary, at most two', () => {
-    render(
+  it('with a body, actions are pills under the text, secondary then primary, at most two', async () => {
+    await render(
       <MeraToast
         tone="info"
         title="T"
@@ -124,16 +124,16 @@ describe('actions', () => {
     expect(flat('p-pill').height).toBe(36);
   });
 
-  it('every action is its own button for VoiceOver, beside one text element for the message', () => {
-    render(<MeraToast tone="success" title="Saved" body="In your Library" actions={[{ label: 'Undo', onPress: () => {} }]} />);
+  it('every action is its own button for VoiceOver, beside one text element for the message', async () => {
+    await render(<MeraToast tone="success" title="Saved" body="In your Library" actions={[{ label: 'Undo', onPress: () => {} }]} />);
     expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
     expect(screen.getByLabelText('Saved. In your Library')).toBeTruthy();
   });
 });
 
 describe('tones', () => {
-  it.each(TOAST_TONES)('%s draws its badge in the tone at low alpha and no side stripe', (tone) => {
-    render(<MeraToast tone={tone} title="T" />);
+  it.each(TOAST_TONES)('%s draws its badge in the tone at low alpha and no side stripe', async (tone) => {
+    await render(<MeraToast tone={tone} title="T" />);
     const expected = tone === 'neutral' ? tint(c.ink, 0.1) : tint(toneColor(tone, c), 0.16);
     expect(flat('mera-toast-badge').backgroundColor).toBe(expected);
     expect(screen.queryByTestId('toast-accent-bar')).toBeNull();
@@ -147,8 +147,8 @@ describe('tones', () => {
     expect(toneColor('neutral', c)).toBe(c.ink);
   });
 
-  it('title and body use the semantic inks, at 15/20 and 14/20, clamped to 2 and 3 lines', () => {
-    render(<MeraToast tone="info" title="Title" body="Body" />);
+  it('title and body use the semantic inks, at 15/20 and 14/20, clamped to 2 and 3 lines', async () => {
+    await render(<MeraToast tone="info" title="Title" body="Body" />);
     const title = screen.getByText('Title');
     const body = screen.getByText('Body');
     expect(StyleSheet.flatten(title.props.style)).toMatchObject({ color: c.ink, fontSize: 15, lineHeight: 20 });
@@ -157,8 +157,8 @@ describe('tones', () => {
     expect(body.props.numberOfLines).toBe(3);
   });
 
-  it('progress draws a bar on the bottom edge', () => {
-    render(<MeraToast tone="neutral" title="Updating all facts" body="Please wait" progress progressTestID="bar" />);
+  it('progress draws a bar on the bottom edge', async () => {
+    await render(<MeraToast tone="neutral" title="Updating all facts" body="Please wait" progress progressTestID="bar" />);
     expect(screen.getByTestId('bar', { includeHiddenElements: true })).toBeTruthy();
   });
 });
@@ -178,10 +178,10 @@ describe('the undo toast', () => {
     show(onUndo);
     // Late in the card's own 6 s: the swap still gets its full hold.
     await act(() => jest.advanceTimersByTimeAsync(5900));
-    mountFront();
+    await mountFront();
     expect(screen.getByText('Showing fewer from AD.nl')).toBeTruthy();
     await act(async () => {
-      fireEvent.press(screen.getByTestId('article-menu-undo'));
+      await fireEvent.press(screen.getByTestId('article-menu-undo'));
       await flush();
     });
     expect(onUndo).toHaveBeenCalledTimes(1);
@@ -200,9 +200,9 @@ describe('the undo toast', () => {
     const onUndo = jest.fn(() => new Promise<boolean>((r) => setTimeout(() => r(true), 300)));
     show(onUndo);
     await act(() => jest.advanceTimersByTimeAsync(5900));
-    mountFront();
+    await mountFront();
     await act(async () => {
-      fireEvent.press(screen.getByTestId('article-menu-undo'));
+      await fireEvent.press(screen.getByTestId('article-menu-undo'));
       await flush();
     });
     // The card's own 6 s would end here; the undo in flight holds it.
@@ -217,9 +217,9 @@ describe('the undo toast', () => {
 
   it('a refused undo (onUndo resolves false) leaves at once and claims nothing', async () => {
     show(async () => false);
-    mountFront();
+    await mountFront();
     await act(async () => {
-      fireEvent.press(screen.getByTestId('article-menu-undo'));
+      await fireEvent.press(screen.getByTestId('article-menu-undo'));
       await flush();
     });
     expect(ids()).toEqual([]);
@@ -229,9 +229,9 @@ describe('the undo toast', () => {
   it('a second tap during the undo runs it once', async () => {
     const onUndo = jest.fn(() => new Promise<boolean>((r) => setTimeout(() => r(true), 50)));
     show(onUndo);
-    mountFront();
-    fireEvent.press(screen.getByTestId('article-menu-undo'));
-    fireEvent.press(screen.getByTestId('article-menu-undo'));
+    await mountFront();
+    await fireEvent.press(screen.getByTestId('article-menu-undo'));
+    await fireEvent.press(screen.getByTestId('article-menu-undo'));
     await act(() => jest.advanceTimersByTimeAsync(50));
     expect(onUndo).toHaveBeenCalledTimes(1);
   });
@@ -242,10 +242,10 @@ describe('migrated manager toasts render', () => {
     ['showError', () => toastManager.showError('Could not save', 'Try again later'), 'Could not save', 'Try again later'],
     ['showSuccess', () => toastManager.showSuccess('Saved', 'Done'), 'Saved', 'Done'],
     ['showInfo', () => toastManager.showInfo('For You'), 'For You', null],
-  ])('%s paints its title and body through MeraToast', (_name, call, title, body) => {
+  ])('%s paints its title and body through MeraToast', async (_name, call, title, body) => {
     toastManager.resetDebounce();
     call();
-    mountFront();
+    await mountFront();
     expect(screen.getByText(title)).toBeTruthy();
     if (body) expect(screen.getByText(body)).toBeTruthy();
     expect(screen.getByTestId('mera-toast')).toBeTruthy();

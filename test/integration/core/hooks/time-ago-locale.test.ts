@@ -35,7 +35,7 @@ describe('absolute date in the in-app language (CO3)', () => {
   test('CO3: the absolute date follows the in-app language', async () => {
     useFakeClock(NOW);
     await i18n.changeLanguage('de');
-    const { result } = renderHook(() => useArticleMetaStrings(new Date(thirtyDaysAgo).toISOString(), null, null));
+    const { result } = await renderHook(() => useArticleMetaStrings(new Date(thirtyDaysAgo).toISOString(), null, null));
     expect(result.current.age).toBe(new Date(thirtyDaysAgo).toLocaleDateString('de'));
   });
 

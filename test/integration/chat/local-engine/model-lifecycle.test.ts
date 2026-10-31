@@ -67,7 +67,7 @@ describe('before the app is initialised', () => {
     await setProcessingMode('on-device');
     await markDownloaded();
 
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await settleTicks();
 
     expect(loads()).toBe(0);
@@ -78,9 +78,9 @@ describe('before the app is initialised', () => {
   it('loads the model as soon as the app reports initialised', async () => {
     await setProcessingMode('on-device');
     await markDownloaded();
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
 
-    act(() => useAppStateStore.getState().setAppInitialized(true));
+    await act(() => useAppStateStore.getState().setAppInitialized(true));
 
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
     expect(loads()).toBe(1);
@@ -100,7 +100,7 @@ describe('on-device mode', () => {
       if (states.at(-1) !== s.modelState) states.push(s.modelState);
     });
 
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     // Not ready yet: the queue (which needs llama.rn) has not started.
     expect(inferenceQueue.getState()).toBe('stopped');
 
@@ -114,7 +114,7 @@ describe('on-device mode', () => {
   });
 
   it('does nothing when the model is not downloaded: no load, no queue', async () => {
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await settleTicks();
 
     expect(loads()).toBe(0);
@@ -124,10 +124,10 @@ describe('on-device mode', () => {
 
   it('does not load again while the model is ready', async () => {
     await markDownloaded();
-    const { rerender } = renderHook(() => useModelLifecycle());
+    const { rerender } = await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
 
-    rerender({});
+    await rerender({});
     await settleTicks();
 
     expect(loads()).toBe(1);
@@ -139,7 +139,7 @@ describe('cloud mode', () => {
     await markDownloaded();
     useAppStateStore.getState().setAppInitialized(true);
 
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
 
     await waitFor(() => expect(inferenceQueue.getState()).toBe('running'));
     await settleTicks();
@@ -151,10 +151,10 @@ describe('cloud mode', () => {
     await setProcessingMode('on-device');
     await markDownloaded();
     useAppStateStore.getState().setAppInitialized(true);
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
 
-    act(() => protocol().setProcessingMode(ProcessingMode.Cloud));
+    await act(() => protocol().setProcessingMode(ProcessingMode.Cloud));
 
     await waitFor(() => expect(protocol().modelState).toBe('downloaded'));
     expect(inferenceQueue.getState()).toBe('running');
@@ -162,10 +162,10 @@ describe('cloud mode', () => {
 
   it('switching cloud -> on-device with no downloaded model stops the queue and loads nothing', async () => {
     useAppStateStore.getState().setAppInitialized(true);
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(inferenceQueue.getState()).toBe('running'));
 
-    act(() => protocol().setProcessingMode(ProcessingMode.OnDevice));
+    await act(() => protocol().setProcessingMode(ProcessingMode.OnDevice));
 
     await waitFor(() => expect(inferenceQueue.getState()).toBe('stopped'));
     expect(loads()).toBe(0);
@@ -177,10 +177,10 @@ describe('returning to the foreground', () => {
     await setProcessingMode('on-device');
     await markDownloaded();
     useAppStateStore.getState().setAppInitialized(true);
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
     await disposeModel();
-    act(() => protocol().setModelState('downloaded'));
+    await act(() => protocol().setModelState('downloaded'));
     installOnDeviceLlm();
 
     setAppState('background');
@@ -194,7 +194,7 @@ describe('returning to the foreground', () => {
     await setProcessingMode('on-device');
     await markDownloaded();
     useAppStateStore.getState().setAppInitialized(true);
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
     installOnDeviceLlm();
 
@@ -208,7 +208,7 @@ describe('returning to the foreground', () => {
   it('does not load a model in cloud mode', async () => {
     await markDownloaded();
     useAppStateStore.getState().setAppInitialized(true);
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(inferenceQueue.getState()).toBe('running'));
 
     setAppState('active');
@@ -221,12 +221,12 @@ describe('returning to the foreground', () => {
     await setProcessingMode('on-device');
     await markDownloaded();
     useAppStateStore.getState().setAppInitialized(true);
-    const { unmount } = renderHook(() => useModelLifecycle());
+    const { unmount } = await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
     await disposeModel();
     protocol().setModelState('downloaded');
     installOnDeviceLlm();
-    unmount();
+    await unmount();
 
     setAppState('active');
     await settleTicks();
@@ -265,7 +265,7 @@ describe('returning to the foreground after a local Private cloud fallback', () 
 
   it('moves the phone back to OnDevice once On this phone can run, and loads the model', async () => {
     await markDownloaded();
-    renderHook(() => useModelLifecycle());
+    await renderHook(() => useModelLifecycle());
     await waitFor(() => expect(inferenceQueue.getState()).toBe('running'));
 
     setAppState('background');

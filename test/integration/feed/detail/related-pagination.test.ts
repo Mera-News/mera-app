@@ -70,10 +70,10 @@ const ids = (r: { result: { current: { entries: { _id: string }[] } } }) =>
     r.result.current.entries.map((e) => e._id);
 
 /** Load page 1 then page 2. */
-async function loadTwoPages(r: ReturnType<typeof mount>) {
+async function loadTwoPages(r: Awaited<ReturnType<typeof mount>>) {
     await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
     await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
-    act(() => r.result.current.loadMore());
+    await act(() => r.result.current.loadMore());
     await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3', 'b1', 'b2']));
 }
 
@@ -84,29 +84,29 @@ describe('useRelatedPagination', () => {
 
     it('loads the first page, then loadMore appends the next', async () => {
         const seen = servePages();
-        const r = mount();
+        const r = await mount();
         await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
         expect(r.result.current.isLoadingInitial).toBe(false);
         expect(r.result.current.hasNextPage).toBe(true);
         expect(seen[0]).toMatchObject({ articleId: 'art-1', first: RELATED_PAGE_SIZE, after: null, sortMode: 'RELEVANCE' });
 
-        act(() => r.result.current.loadMore());
+        await act(() => r.result.current.loadMore());
         await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3', 'b1', 'b2']));
         expect(seen[1]).toMatchObject({ after: 'c1' });
     });
 
     it('collapses a row served again on a later page by _id', async () => {
         servePages({ ...PAGES, c1: { ids: ['a3', 'b1'], next: null } });
-        const r = mount();
+        const r = await mount();
         await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
-        act(() => r.result.current.loadMore());
+        await act(() => r.result.current.loadMore());
         await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3', 'b1']));
     });
 
     it('stays idle with no article id and offline', async () => {
         const seen = servePages();
-        const idle = mount({ articleId: null });
-        const offline = mount({ isConnected: false });
+        const idle = await mount({ articleId: null });
+        const offline = await mount({ isConnected: false });
         await act(async () => {});
         expect(seen).toHaveLength(0);
         expect(idle.result.current.entries).toEqual([]);
@@ -116,9 +116,9 @@ describe('useRelatedPagination', () => {
 
     it('replaces the list when a page answers restarted', async () => {
         servePages({ ...PAGES, c1: { ids: ['z1', 'z2'], next: null, restarted: true } });
-        const r = mount();
+        const r = await mount();
         await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
-        act(() => r.result.current.loadMore());
+        await act(() => r.result.current.loadMore());
         await waitFor(() => expect(ids(r)).toEqual(['z1', 'z2']));
     });
 
@@ -134,14 +134,14 @@ describe('useRelatedPagination', () => {
                 return { ids: ['stale1'], next: null };
             },
         });
-        const r = mount();
+        const r = await mount();
         await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
-        act(() => r.result.current.loadMore());
+        await act(() => r.result.current.loadMore());
         await waitFor(() => expect(seen.map((v) => v.after)).toEqual([null, 'c1']));
         expect(r.result.current.isLoadingMore).toBe(true);
 
         // Sort change: the new ordering's page 1 arrives (its handler is the same `first` page).
-        r.rerender({ ...BASE, sortMode: 'newest' });
+        await r.rerender({ ...BASE, sortMode: 'newest' });
         await waitFor(() => expect(seen).toHaveLength(3));
         expect(seen[2]).toMatchObject({ after: null, sortMode: 'NEWEST' });
         await waitFor(() => expect(r.result.current.isLoadingInitial).toBe(false));
@@ -157,18 +157,18 @@ describe('useRelatedPagination', () => {
     describe('exclusion set', () => {
         it('refetches page 1 once when it goes from empty to non-empty', async () => {
             const seen = servePages();
-            const r = mount({ excludeIds: [] });
+            const r = await mount({ excludeIds: [] });
             await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
             expect(seen).toHaveLength(1);
 
-            r.rerender({ ...BASE, excludeIds: ['x1', 'x2'] });
+            await r.rerender({ ...BASE, excludeIds: ['x1', 'x2'] });
             await waitFor(() => expect(seen).toHaveLength(2));
             expect(seen[1]).toMatchObject({ after: null, excludeIds: ['x1', 'x2'] });
             await waitFor(() => expect(r.result.current.isLoadingInitial).toBe(false));
 
             // A new array with the same ids is not a change, and neither is a non-empty to non-empty move.
-            r.rerender({ ...BASE, excludeIds: ['x2', 'x1'] });
-            r.rerender({ ...BASE, excludeIds: ['x1', 'x2', 'x3'] });
+            await r.rerender({ ...BASE, excludeIds: ['x2', 'x1'] });
+            await r.rerender({ ...BASE, excludeIds: ['x1', 'x2', 'x3'] });
             await act(async () => {
                 await new Promise((res) => setTimeout(res, 100));
             });
@@ -178,11 +178,11 @@ describe('useRelatedPagination', () => {
 
         it('does not refetch once a second page has loaded', async () => {
             const seen = servePages();
-            const r = mount({ excludeIds: [] });
+            const r = await mount({ excludeIds: [] });
             await loadTwoPages(r);
             expect(seen).toHaveLength(2);
 
-            r.rerender({ ...BASE, excludeIds: ['x1'] });
+            await r.rerender({ ...BASE, excludeIds: ['x1'] });
             await act(async () => {
                 await new Promise((res) => setTimeout(res, 100));
             });
@@ -200,28 +200,28 @@ describe('useRelatedPagination', () => {
 
         it('sets error when page 1 fails, and retry fetches page 1 again', async () => {
             server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
-            const r = mount();
+            const r = await mount();
             await waitFor(() => expect(r.result.current.error).toBe(true));
             expect(r.result.current.entries).toEqual([]);
             expect(r.result.current.hasNextPage).toBe(false);
 
             servePages();
-            act(() => r.result.current.retry());
+            await act(() => r.result.current.retry());
             await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
             expect(r.result.current.error).toBe(false);
         });
 
         it('keeps the rows on screen when page 2 fails, and retry fetches page 2', async () => {
             servePages();
-            const r = mount();
+            const r = await mount();
             await waitFor(() => expect(r.result.current.hasNextPage).toBe(true));
             server.use(mockGqlError('GetRelatedArticlesPageFiltered', 'INTERNAL_SERVER_ERROR'));
-            act(() => r.result.current.loadMore());
+            await act(() => r.result.current.loadMore());
             await waitFor(() => expect(r.result.current.error).toBe(true));
             expect(ids(r)).toEqual(['a1', 'a2', 'a3']);
 
             const seen = servePages();
-            act(() => r.result.current.retry());
+            await act(() => r.result.current.retry());
             await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3', 'b1', 'b2']));
             expect(seen.map((v) => v.after)).toEqual(['c1']);
         });
@@ -232,12 +232,12 @@ describe('useRelatedPagination', () => {
     describe('a connectivity blip', () => {
         async function blip() {
             const seen = servePages();
-            const r = mount();
+            const r = await mount();
             await loadTwoPages(r);
             expect(seen.map((v) => v.after)).toEqual([null, 'c1']);
-            r.rerender({ ...BASE, isConnected: false });
+            await r.rerender({ ...BASE, isConnected: false });
             const whileOffline = ids(r);
-            r.rerender({ ...BASE, isConnected: true });
+            await r.rerender({ ...BASE, isConnected: true });
             await act(async () => {
                 await new Promise((res) => setTimeout(res, 150));
             });
@@ -253,10 +253,10 @@ describe('useRelatedPagination', () => {
 
         test('opened offline, the first page loads once the device is back online', async () => {
             const seen = servePages();
-            const r = mount({ isConnected: false });
+            const r = await mount({ isConnected: false });
             await act(async () => {});
             expect(seen).toHaveLength(0);
-            r.rerender({ ...BASE, isConnected: true });
+            await r.rerender({ ...BASE, isConnected: true });
             await waitFor(() => expect(ids(r)).toEqual(['a1', 'a2', 'a3']));
             expect(seen.map((v) => v.after)).toEqual([null]);
         });
@@ -294,14 +294,14 @@ describe('useRelatedPagination: facets', () => {
 
     it('takes facets from every page, tagged with the exclusion set that page was sent with', async () => {
         serveFacets();
-        const r = mount();
+        const r = await mount();
         await waitFor(() => expect(r.result.current.facets?.countries[0].count).toBe(9));
         expect(r.result.current.facetsExcludeKey).toBe('');
 
-        r.rerender({ ...BASE, excludeIds: ['x1', 'x2'] });
+        await r.rerender({ ...BASE, excludeIds: ['x1', 'x2'] });
         await act(async () => {});
         // Page 1 is not refetched mid-list, so the stale facets keep their old key...
-        act(() => r.result.current.loadMore());
+        await act(() => r.result.current.loadMore());
         await waitFor(() => expect(r.result.current.facets?.countries[0].count).toBe(7));
         // ...until the next page heals them under the key now in force.
         expect(r.result.current.facetsExcludeKey).toBe('x1 x2');

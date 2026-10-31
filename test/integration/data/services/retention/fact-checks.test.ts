@@ -424,7 +424,7 @@ describe('fact-checks-store', () => {
       expect(seenAt).toBeGreaterThanOrEqual(NOW);
       await waitFor(async () => (await getSetting(CHECKS_SEEN_AT_SETTING_KEY)) === String(seenAt));
       expect(await getSetting(CHECKS_SEEN_AT_SETTING_KEY)).toBe(String(seenAt));
-      const { result } = renderHook(() => useChecksUnseen());
+      const { result } = await renderHook(() => useChecksUnseen());
       expect(result.current).toBe(false);
     },
   );
@@ -535,7 +535,7 @@ describe('fact-checks-store', () => {
       useFakeClock(NOW);
       await setSetting(CHECKS_SEEN_AT_SETTING_KEY, String(NOW - MIN));
       await store().load();
-      const { result } = renderHook(() => ({ unseen: useChecksUnseen(), items: useFactCheckItems(), hydrated: useFactChecksHydrated(), refreshing: useFactChecksRefreshing() }));
+      const { result } = await renderHook(() => ({ unseen: useChecksUnseen(), items: useFactCheckItems(), hydrated: useFactChecksHydrated(), refreshing: useFactChecksRefreshing() }));
       expect(result.current).toMatchObject({ unseen: false, items: [], hydrated: true, refreshing: false });
 
       await upsertFactCheck(check({ articleId: 'a-new', claimKey: 'n' }));
@@ -543,7 +543,7 @@ describe('fact-checks-store', () => {
       expect(result.current.unseen).toBe(true);
       expect(result.current.items).toHaveLength(1);
 
-      act(() => store().markSeen());
+      await act(() => store().markSeen());
       expect(result.current.unseen).toBe(false);
     });
 
@@ -551,7 +551,7 @@ describe('fact-checks-store', () => {
       await setSetting(CHECKS_SEEN_AT_SETTING_KEY, '1');
       await upsertFactCheck(check({ status: 'processing', payload: null }));
       await store().load();
-      const { result } = renderHook(() => useChecksUnseen());
+      const { result } = await renderHook(() => useChecksUnseen());
       expect(result.current).toBe(false);
     });
   });

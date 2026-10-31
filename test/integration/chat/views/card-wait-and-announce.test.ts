@@ -47,7 +47,7 @@ beforeEach(() => {
 });
 afterEach(() => announce.mockRestore());
 
-function mount(messages: ConversationMessage[]) {
+async function mount(messages: ConversationMessage[]) {
   const props: ChatSessionViewProps = {
     messages,
     status: 'idle',
@@ -61,41 +61,41 @@ function mount(messages: ConversationMessage[]) {
     conversationId: 'c1',
     isLoading: false,
   };
-  const hook = renderHook((p: ChatSessionViewProps) => useChatSessionView(p), { initialProps: props });
+  const hook = await renderHook((p: ChatSessionViewProps) => useChatSessionView(p), { initialProps: props });
   return { ...hook, setMessages: (next: ConversationMessage[]) => hook.rerender({ ...props, messages: next }) };
 }
 
 describe('composerHint while a card waits', () => {
-  it('reads the card hint while the store proposal is pending', () => {
+  it('reads the card hint while the store proposal is pending', async () => {
     useFloatingChatStore.getState().setProposal(PROPOSAL);
-    const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    const { result } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     expect(result.current.composerHint).toBe(t('floatingChat.cardWaitingHint'));
   });
 
-  it('asks for a tap, never a typed yes, when only a tap applies the card', () => {
+  it('asks for a tap, never a typed yes, when only a tap applies the card', async () => {
     useFloatingChatStore.getState().setProposal(TAP_ONLY);
-    const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    const { result } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     expect(result.current.composerHint).toBe(t('floatingChat.cardTapHint'));
   });
 
-  it('asks for a tap on-device, where the loop that reads a typed yes does not run', () => {
+  it('asks for a tap on-device, where the loop that reads a typed yes does not run', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
     useFloatingChatStore.getState().setProposal(PROPOSAL);
-    const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    const { result } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     expect(result.current.composerHint).toBe(t('floatingChat.cardTapHint'));
   });
 
-  it('shows no hint without a store proposal, or once it resolved', () => {
-    const { result } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+  it('shows no hint without a store proposal, or once it resolved', async () => {
+    const { result } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     expect(result.current.composerHint).toBeNull();
-    act(() => {
+    await act(() => {
       useFloatingChatStore.getState().setProposal(PROPOSAL);
       useFloatingChatStore.getState().resolveProposal('cancelled');
     });
     expect(result.current.composerHint).toBeNull();
   });
 
-  it('the fact-card hint wins when a fact card waits too', () => {
+  it('the fact-card hint wins when a fact card waits too', async () => {
     useFloatingChatStore.getState().setProposal(PROPOSAL);
     const factCall: ToolCallRecord = {
       id: 'tc-facts',
@@ -109,7 +109,7 @@ describe('composerHint while a card waits', () => {
         pendingFacts: [{ index: 0, options: ['Lives in Porto'], questionnaireAttribute: null }],
       },
     };
-    const { result } = mount([user('u1', 'hi'), asst('a1', [proposeCall, factCall])]);
+    const { result } = await mount([user('u1', 'hi'), asst('a1', [proposeCall, factCall])]);
     if (result.current.unresolvedFactChoices > 0) {
       expect(result.current.composerHint).toBe(t('factChoice.pendingHint'));
     } else {
@@ -129,35 +129,35 @@ describe('announcing a card resolved by typing', () => {
   };
   const cancelCall: ToolCallRecord = { ...applyCall, id: 'tc-cancel', name: 'cancelProposal', result: {} };
 
-  it('speaks the applied line when the turn carried applyProposal', () => {
+  it('speaks the applied line when the turn carried applyProposal', async () => {
     useFloatingChatStore.getState().setProposal(PROPOSAL);
-    const { setMessages } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    const { setMessages } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     // The typed yes lands first, the store resolves inside the tool, and the
     // call's record reaches the messages after it.
-    setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'yes')]);
-    act(() => useFloatingChatStore.getState().resolveProposal('applied'));
+    await setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'yes')]);
+    await act(() => useFloatingChatStore.getState().resolveProposal('applied'));
     expect(announce).not.toHaveBeenCalled(); // the call has not landed yet
-    setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'yes'), asst('a2', [applyCall])]);
+    await setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'yes'), asst('a2', [applyCall])]);
     expect(announce).toHaveBeenCalledTimes(1);
     expect(announce).toHaveBeenCalledWith(t('articleFeedback.proposalApplied'));
   });
 
-  it('speaks the cancelled line for cancelProposal', () => {
+  it('speaks the cancelled line for cancelProposal', async () => {
     useFloatingChatStore.getState().setProposal(PROPOSAL);
-    const { setMessages } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
-    setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'no')]);
-    act(() => useFloatingChatStore.getState().resolveProposal('cancelled'));
-    setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'no'), asst('a2', [cancelCall])]);
+    const { setMessages } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    await setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'no')]);
+    await act(() => useFloatingChatStore.getState().resolveProposal('cancelled'));
+    await setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'no'), asst('a2', [cancelCall])]);
     expect(announce).toHaveBeenCalledWith(t('floatingChat.cardCancelled'));
   });
 
-  it('stays silent when a button tap resolved it', () => {
+  it('stays silent when a button tap resolved it', async () => {
     useFloatingChatStore.getState().setProposal(PROPOSAL);
-    const { setMessages } = mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
-    act(() => useFloatingChatStore.getState().resolveProposal('applied'));
-    setMessages([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    const { setMessages } = await mount([user('u1', 'tune it'), asst('a1', [proposeCall])]);
+    await act(() => useFloatingChatStore.getState().resolveProposal('applied'));
+    await setMessages([user('u1', 'tune it'), asst('a1', [proposeCall])]);
     // A later typed turn that applies something else must not speak for the tap.
-    setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'also this'), asst('a2', [applyCall])]);
+    await setMessages([user('u1', 'tune it'), asst('a1', [proposeCall]), user('u2', 'also this'), asst('a2', [applyCall])]);
     expect(announce).not.toHaveBeenCalled();
   });
 });

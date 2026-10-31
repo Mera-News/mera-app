@@ -20,7 +20,7 @@ async function follow(id: string, fields: { llmHeadline?: string; topicText?: st
 }
 
 async function noteFor(count: number) {
-  const { result } = renderHook(() => useTrackedStoriesScreen());
+  const { result } = await renderHook(() => useTrackedStoriesScreen());
   await waitFor(() => expect(result.current.stories).toHaveLength(count));
   return result.current.aiNote;
 }

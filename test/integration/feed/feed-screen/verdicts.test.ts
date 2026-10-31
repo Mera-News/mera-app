@@ -28,7 +28,7 @@ describe('a verdict reported by the feedback sheet on a Feed card', () => {
     const { record, cardState, recorded } = await mount();
     expect(cardState('b')).toBeUndefined();
 
-    recorded('b');
+    await recorded('b');
 
     expect(record('b')).toMatchObject({ verdict: 'dislike', committed: true });
     expect(cardState('b')).toBe('viewed');
@@ -36,16 +36,16 @@ describe('a verdict reported by the feedback sheet on a Feed card', () => {
 
   it('a second answer on the same card changes nothing', async () => {
     const { record, recorded } = await mount();
-    recorded('b');
+    await recorded('b');
     const first = record('b');
-    recorded('b');
+    await recorded('b');
     expect(record('b')).toEqual(first);
   });
 
   it('verdicts on two cards do not touch each other', async () => {
     const { record, recorded } = await mount();
-    recorded('a');
-    recorded('c');
+    await recorded('a');
+    await recorded('c');
 
     expect(record('a')?.verdict).toBe('dislike');
     expect(record('c')?.verdict).toBe('dislike');
@@ -55,7 +55,7 @@ describe('a verdict reported by the feedback sheet on a Feed card', () => {
   it('does not re-sort the list: the viewed card holds its place until a reset', async () => {
     const { feed, recorded } = await mount();
     const before = feed.ids();
-    recorded('a');
+    await recorded('a');
     await act(async () => {});
     expect(feed.ids()).toEqual(before);
   });

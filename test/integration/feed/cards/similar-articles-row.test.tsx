@@ -32,8 +32,8 @@ beforeAll(initI18nEn);
 const CARD = { titleEnglish: 'Cabinet falls after the budget vote', publicationName: 'Harbour Daily' };
 
 describe('feed card', () => {
-  it('draws the row under the footer and speaks the count on the root', () => {
-    const { getByTestId, getByText, getByLabelText } = render(
+  it('draws the row under the footer and speaks the count on the root', async () => {
+    const { getByTestId, getByText, getByLabelText } = await render(
       <ArticleCardBase {...CARD} testID="card-a" footer={<></>} similarCount={3} />,
     );
     expect(getByTestId('card-similar-articles')).toBeTruthy();
@@ -41,30 +41,30 @@ describe('feed card', () => {
     expect(getByLabelText(/3 similar articles/)).toBeTruthy();
   });
 
-  it('at 0 keeps the row but hides its label from VoiceOver and the label', () => {
-    const { getByTestId, queryByLabelText } = render(
+  it('at 0 keeps the row but hides its label from VoiceOver and the label', async () => {
+    const { getByTestId, queryByLabelText } = await render(
       <ArticleCardBase {...CARD} testID="card-a" footer={<></>} similarCount={0} />,
     );
     expect(getByTestId('card-similar-articles')).toBeTruthy();
     expect(queryByLabelText(/similar article/)).toBeNull();
   });
 
-  it('draws no row without a count', () => {
-    const { queryByTestId } = render(<ArticleCardBase {...CARD} testID="card-a" footer={<></>} />);
+  it('draws no row without a count', async () => {
+    const { queryByTestId } = await render(<ArticleCardBase {...CARD} testID="card-a" footer={<></>} />);
     expect(queryByTestId('card-similar-articles')).toBeNull();
   });
 });
 
 describe('compact row', () => {
-  it('adds the row under the existing one for one copy ("1 similar article")', () => {
-    const { getByText, getByLabelText } = render(<ArticleCompactCardBase {...CARD} testID="card-b" similarCount={1} />);
+  it('adds the row under the existing one for one copy ("1 similar article")', async () => {
+    const { getByText, getByLabelText } = await render(<ArticleCompactCardBase {...CARD} testID="card-b" similarCount={1} />);
     expect(getByText('1 similar article')).toBeTruthy();
     expect(getByLabelText(/1 similar article/)).toBeTruthy();
   });
 
-  it('adds nothing for 0 or none', () => {
-    const none = render(<ArticleCompactCardBase {...CARD} testID="card-b" />);
-    const zero = render(<ArticleCompactCardBase {...CARD} testID="card-c" similarCount={0} />);
+  it('adds nothing for 0 or none', async () => {
+    const none = await render(<ArticleCompactCardBase {...CARD} testID="card-b" />);
+    const zero = await render(<ArticleCompactCardBase {...CARD} testID="card-c" similarCount={0} />);
     expect(none.queryByTestId('card-similar-articles')).toBeNull();
     expect(zero.queryByTestId('card-similar-articles')).toBeNull();
   });

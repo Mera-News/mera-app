@@ -120,7 +120,7 @@ function cachePersonaMode(mode: ProcessingMode): void {
 const cachedMode = () => useUserStore.getState().userPersona?.processingMode;
 
 async function mountLoaded() {
-    const hook = renderHook(() => useMeraProtocolSettings());
+    const hook = await renderHook(() => useMeraProtocolSettings());
     await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
     return hook;
 }
@@ -402,7 +402,7 @@ describe('Mera Protocol settings', () => {
             const resolveDownload = jest.spyOn(require('@/lib/mera-protocol-toolkit/core/modelManager'), 'downloadBaseModel')
                 .mockImplementation(() => new Promise(() => {}));
             const { result } = await mountLoaded();
-            act(() => downloadService.startModelDownloads({ modelIds: [KEV_ID] }));
+            await act(() => downloadService.startModelDownloads({ modelIds: [KEV_ID] }));
             await waitFor(() => expect(result.current.relevanceModel.download?.status).toBe('downloading'));
             await act(async () => {
                 await downloadService.cancelModelDownload();
@@ -414,7 +414,7 @@ describe('Mera Protocol settings', () => {
         it('a load failure of a model on disk is not a download failure', async () => {
             putModelsOnDisk();
             const { result } = await mountLoaded();
-            act(() => protocol().setModelError('Failed to load model'));
+            await act(() => protocol().setModelError('Failed to load model'));
             expect(result.current.relevanceModel.download).toBeNull();
         });
 
@@ -433,7 +433,7 @@ describe('Mera Protocol settings', () => {
             const { result } = await mountLoaded();
 
             let pending!: Promise<void>;
-            act(() => {
+            await act(() => {
                 pending = result.current.handleDownload(KEV_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
@@ -455,7 +455,7 @@ describe('Mera Protocol settings', () => {
             useDialogQueue.setState({ queue: [] });
             const { result } = await mountLoaded();
             let pending!: Promise<void>;
-            act(() => {
+            await act(() => {
                 pending = result.current.handleDownload(KEV_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
@@ -529,7 +529,7 @@ describe('Mera Protocol settings', () => {
             serverMode(ProcessingMode.Cloud);
             const first = await mountLoaded();
             await waitFor(() => expect(first.result.current.deviceSupported).toBe(true));
-            first.unmount();
+            await first.unmount();
 
             installOnDeviceLlm({ availability: { available: false, reason: 'deviceNotEligible' } });
             const second = await mountLoaded();
@@ -636,7 +636,7 @@ describe('Mera Protocol settings', () => {
                 `${d.title} ${d.body} ${d.confirmLabel} ${d.cancelLabel}`;
             for (const run of [() => result.current.handleDownload(KEV_ID), () => result.current.handleDeleteModel(KEV_ID)]) {
                 let pending!: Promise<void>;
-                act(() => {
+                await act(() => {
                     pending = run();
                 });
                 await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
@@ -672,11 +672,11 @@ describe('Mera Protocol settings', () => {
                 expect(protocol().processingMode).toBe(mode);
                 expect(result.current.skipNotes).toBe(false);
 
-                act(() => result.current.toggleSkipNotes());
+                await act(() => result.current.toggleSkipNotes());
                 expect(protocol().skipNotes).toBe(true);
                 expect(repend).not.toHaveBeenCalled();
 
-                act(() => result.current.toggleSkipNotes());
+                await act(() => result.current.toggleSkipNotes());
                 expect(protocol().skipNotes).toBe(false);
                 await waitFor(() => expect(repend).toHaveBeenCalledTimes(1));
                 // The cloud's orphaned-reasons sweep is kicked now; on this phone the next pass's notes sweep writes them.
@@ -768,7 +768,7 @@ describe('Mera Protocol settings', () => {
             confirmed: boolean,
         ) {
             let pending!: Promise<void>;
-            act(() => {
+            await act(() => {
                 pending = result.current.handleDeleteModel(modelId);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
@@ -824,7 +824,7 @@ describe('Mera Protocol settings', () => {
             );
             const { result } = await mountLoaded();
             let pending!: Promise<void>;
-            act(() => {
+            await act(() => {
                 pending = result.current.handleDeleteModel(KEV_ID);
             });
             await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));

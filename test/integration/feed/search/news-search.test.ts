@@ -145,7 +145,7 @@ describe('useNewsSearch', () => {
 
   it('stays idle with no request below two characters, however long it waits', async () => {
     const sent = answering([hit()]);
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'a');
     await advance(NEWS_SEARCH_DEBOUNCE_MS * 5);
     expect(result.current.status).toBe('idle');
@@ -160,7 +160,7 @@ describe('useNewsSearch', () => {
   it('fires one request 300 ms after the last keystroke, not before', async () => {
     expect(NEWS_SEARCH_DEBOUNCE_MS).toBe(300);
     const sent = answering([hit()]);
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'mo');
     expect(result.current.status).toBe('loading');
     await advance(299);
@@ -173,7 +173,7 @@ describe('useNewsSearch', () => {
 
   it('typing again restarts the window: three quick keystrokes make one request for the last text', async () => {
     const sent = answering([hit()]);
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'mo');
     await advance(200);
     await type(result, 'mod');
@@ -188,7 +188,7 @@ describe('useNewsSearch', () => {
 
   it('asks for at most 25 results', async () => {
     const sent = answering([]);
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'modi');
     await advance(NEWS_SEARCH_DEBOUNCE_MS);
     await settleUntil(() => result.current.status === 'success');
@@ -205,7 +205,7 @@ describe('useNewsSearch', () => {
         return { searchNews: [hit({ _id: `for-${vars.query}` })] };
       }),
     );
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'modi');
     await advance(NEWS_SEARCH_DEBOUNCE_MS); // request 1 is now in flight and held
     await type(result, 'modi india');
@@ -230,7 +230,7 @@ describe('useNewsSearch', () => {
         return { searchNews: [hit()] };
       }),
     );
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'modi');
     await advance(NEWS_SEARCH_DEBOUNCE_MS);
     expect(result.current.status).toBe('loading');
@@ -256,14 +256,14 @@ describe('useNewsSearch', () => {
           : HttpResponse.json({ data: { searchNews: [hit()] } });
       }),
     );
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'modi');
     await advance(NEWS_SEARCH_DEBOUNCE_MS);
     await settleUntil(() => result.current.status === 'error');
     expect(result.current.errorKind).toBe('unknown');
     expect(result.current.hits).toEqual([]);
 
-    act(() => result.current.retry());
+    await act(() => result.current.retry());
     expect(result.current.status).toBe('loading');
     // Real event-loop turns only: no fake time passes, so no debounce could have elapsed.
     await act(async () => {
@@ -280,9 +280,9 @@ describe('useNewsSearch', () => {
 
   it('retry is a no-op below the minimum length', async () => {
     const sent = answering([hit()]);
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'a');
-    act(() => result.current.retry());
+    await act(() => result.current.retry());
     await advance(NEWS_SEARCH_DEBOUNCE_MS);
     expect(sent).toHaveLength(0);
     expect(result.current.status).toBe('idle');
@@ -290,7 +290,7 @@ describe('useNewsSearch', () => {
 
   it('a not-subscribed answer is an error state of kind not-subscribed', async () => {
     server.use(mockGqlError('SearchNews', 'PAYMENT_REQUIRED', { statusCode: 402 }));
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'modi');
     await advance(NEWS_SEARCH_DEBOUNCE_MS);
     await settleUntil(() => result.current.status === 'error');
@@ -299,11 +299,11 @@ describe('useNewsSearch', () => {
 
   it('clear() returns to the idle pre-search state', async () => {
     answering([hit()]);
-    const { result } = renderHook(() => useNewsSearch());
+    const { result } = await renderHook(() => useNewsSearch());
     await type(result, 'modi');
     await advance(NEWS_SEARCH_DEBOUNCE_MS);
     await settleUntil(() => result.current.status === 'success');
-    act(() => result.current.clear());
+    await act(() => result.current.clear());
     expect(result.current.query).toBe('');
     expect(result.current.status).toBe('idle');
     expect(result.current.hits).toEqual([]);

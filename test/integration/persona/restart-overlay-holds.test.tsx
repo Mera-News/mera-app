@@ -46,15 +46,15 @@ describe('restart holds on overlays and typed text', () => {
 
     /** Closed holds nothing, open holds `label`, closed again and unmount release it; then a restart can reload. */
     const overlayCase = (name: string, label: string, el: (open: boolean) => React.ReactElement) =>
-        it(`${name} holds ${label} only while open`, () => {
-            const view = render(el(false));
+        it(`${name} holds ${label} only while open`, async () => {
+            const view = await render(el(false));
             expect(activeHolds()).not.toContain(label);
-            view.rerender(el(true));
+            await view.rerender(el(true));
             expect(activeHolds()).toContain(label);
-            view.rerender(el(false));
+            await view.rerender(el(false));
             expect(activeHolds()).not.toContain(label);
-            view.rerender(el(true));
-            view.unmount();
+            await view.rerender(el(true));
+            await view.unmount();
             expect(activeHolds()).not.toContain(label);
             expect(restartWouldReload('ota')).toBe(true);
         });
@@ -90,27 +90,27 @@ describe('restart holds on overlays and typed text', () => {
         </Popover>
     ));
 
-    it('chat composer holds draft:chat while text is non-empty, hard', () => {
-        render(<PromptInput onSubmit={() => {}} placeholder="ask" />);
+    it('chat composer holds draft:chat while text is non-empty, hard', async () => {
+        await render(<PromptInput onSubmit={() => {}} placeholder="ask" />);
         expect(activeHolds('language')).not.toContain('draft:chat');
         const input = screen.getByPlaceholderText('ask');
-        fireEvent.changeText(input, 'hello');
+        await fireEvent.changeText(input, 'hello');
         expect(activeHolds('language')).toContain('draft:chat');
         expect(restartWouldReload('ota')).toBe(false);
-        fireEvent.changeText(input, '   ');
+        await fireEvent.changeText(input, '   ');
         expect(activeHolds()).not.toContain('draft:chat');
         expect(restartWouldReload('ota')).toBe(true);
     });
 
     it('source search holds draft:source-search while typed, released on clear and unmount', async () => {
-        const view = render(<SourceSearch />);
-        const input = view.UNSAFE_getByProps({ value: '' });
-        await act(async () => fireEvent.changeText(input, 'bbc'));
+        const view = await render(<SourceSearch />);
+        const input = view.getByDisplayValue('');
+        await act(async () => await fireEvent.changeText(input, 'bbc'));
         expect(activeHolds('language')).toContain('draft:source-search');
-        await act(async () => fireEvent.changeText(view.UNSAFE_getByProps({ value: 'bbc' }), ''));
+        await act(async () => await fireEvent.changeText(view.getByDisplayValue('bbc'), ''));
         expect(activeHolds()).not.toContain('draft:source-search');
-        await act(async () => fireEvent.changeText(view.UNSAFE_getByProps({ value: '' }), 'bbc'));
-        view.unmount();
+        await act(async () => await fireEvent.changeText(view.getByDisplayValue(''), 'bbc'));
+        await view.unmount();
         expect(activeHolds()).not.toContain('draft:source-search');
         expect(restartWouldReload('ota')).toBe(true);
     });

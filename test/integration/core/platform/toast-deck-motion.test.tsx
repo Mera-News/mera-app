@@ -118,43 +118,43 @@ afterEach(() => {
 });
 
 describe('full motion', () => {
-    it('arrives sliding down from -150% of its height, scale .96, opacity 0, over 420 ms ease-out', () => {
+    it('arrives sliding down from -150% of its height, scale .96, opacity 0, over 420 ms ease-out', async () => {
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         expect(mockWrites).toEqual(expect.arrayContaining([-1.5 * H, 0.96]));
         const arrive = timings(420);
         expect(arrive.map((a) => a.to).sort()).toEqual([0, 1, 1]);
         expect(arrive.every((a) => a.easing === SETTLE)).toBe(true);
     });
 
-    it('leaves lifting to -150% and fading over 260 ms ease-in, and the clone is gone after it', () => {
+    it('leaves lifting to -150% and fading over 260 ms ease-in, and the clone is gone after it', async () => {
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         clear();
-        advance(5000);
+        await advance(5000);
         expect(ids()).toEqual([]);
         expect(screen.getByTestId('toast-slot-leaving')).toBeTruthy();
         const leave = timings(260);
         expect(leave.map((a) => a.to).sort()).toEqual([-1.5 * H, 0].sort());
         expect(leave.every((a) => a.easing === LEAVE)).toBe(true);
-        advance(260);
+        await advance(260);
         expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
     });
 
-    it('the next in line waits as a strip through the leave, then rises from it over 320 ms', () => {
+    it('the next in line waits as a strip through the leave, then rises from it over 320 ms', async () => {
         toast('a');
         toast('b');
-        render(<ToastDeck />);
-        layoutFront();
-        advance(5000);
+        await render(<ToastDeck />);
+        await layoutFront();
+        await advance(5000);
         // During the leave, b is still a strip behind the leaving card.
         expect(screen.queryByTestId('toast-slot-0')).toBeNull();
         expect(screen.getByTestId('toast-slot-1')).toBeTruthy();
         expect(screen.queryByText('Toast b')).toBeNull();
         clear();
-        advance(260);
+        await advance(260);
         expect(screen.getByText('Toast b')).toBeTruthy();
         expect(mockWrites).toEqual(expect.arrayContaining([14, 0.94, 0.4]));
         const rise = timings(320);
@@ -162,38 +162,38 @@ describe('full motion', () => {
         expect(rise.every((a) => a.easing === SETTLE)).toBe(true);
     });
 
-    it('the risen card keeps its own full duration, counted from when it rose', () => {
+    it('the risen card keeps its own full duration, counted from when it rose', async () => {
         toast('a');
         toast('b');
-        render(<ToastDeck />);
-        layoutFront();
-        advance(5000);
-        advance(260);
-        advance(4900);
+        await render(<ToastDeck />);
+        await layoutFront();
+        await advance(5000);
+        await advance(260);
+        await advance(4900);
         expect(ids()).toEqual(['b']);
-        advance(100);
+        await advance(100);
         expect(ids()).toEqual([]);
     });
 
-    it('a strip fades in from -8 over 320 ms when its card queues', () => {
+    it('a strip fades in from -8 over 320 ms when its card queues', async () => {
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         clear();
-        act(() => {
+        await act(() => {
             toast('b');
         });
         expect(mockWrites).toContain(-8);
         expect(timings(320).map((a) => a.to).sort()).toEqual([0, 1]);
     });
 
-    it('strips hang below the front, never over it: 12 then 8 pt, inset 14 and 28 a side', () => {
+    it('strips hang below the front, never over it: 12 then 8 pt, inset 14 and 28 a side', async () => {
         toast('a');
         toast('b');
         toast('c');
         toast('d');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         const strips = screen.getAllByTestId('toast-buried-panel', { includeHiddenElements: true });
         expect(strips).toHaveLength(2);
         const [two, one] = strips.map((s) => StyleSheet.flatten(s.props.style));
@@ -202,13 +202,13 @@ describe('full motion', () => {
         expect(flat('toast-slot-0').zIndex).toBeGreaterThan(flat('toast-slot-1').zIndex);
     });
 
-    it('light mode strips stay close to the white card: a faint shade and a light edge', () => {
+    it('light mode strips stay close to the white card: a faint shade and a light edge', async () => {
         useThemeStore.setState({ mode: 'light' });
         toast('a');
         toast('b');
         toast('c');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         const shades = screen
             .getAllByTestId('toast-strip-shade', { includeHiddenElements: true })
             .map((s) => StyleSheet.flatten(s.props.style).backgroundColor);
@@ -219,12 +219,12 @@ describe('full motion', () => {
         expect(edges).toEqual([tint(COLORS.light.ink, 0.06), tint(COLORS.light.ink, 0.06)]);
     });
 
-    it('dark mode strips keep the board shades (#1B1A1E, #18171A under the card)', () => {
+    it('dark mode strips keep the board shades (#1B1A1E, #18171A under the card)', async () => {
         toast('a');
         toast('b');
         toast('c');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         const shades = screen
             .getAllByTestId('toast-strip-shade', { includeHiddenElements: true })
             .map((s) => StyleSheet.flatten(s.props.style).backgroundColor);
@@ -235,10 +235,10 @@ describe('full motion', () => {
         toastManager.setToastInstance(toastApi);
         const onUndo = jest.fn(() => true);
         toastManager.showUndoToast({ title: 'Showing fewer from AD.nl', undoLabel: 'Undo', undoneTitle: 'Change undone', onUndo });
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         await act(async () => {
-            fireEvent.press(screen.getByTestId('feedback-undo'));
+            await fireEvent.press(screen.getByTestId('feedback-undo'));
             await Promise.resolve();
         });
         expect(onUndo).toHaveBeenCalledTimes(1);
@@ -246,9 +246,9 @@ describe('full motion', () => {
     });
 });
 
-it('the overlay stays not modal to VoiceOver', () => {
+it('the overlay stays not modal to VoiceOver', async () => {
     toast('a');
-    render(<ToastDeck />);
+    await render(<ToastDeck />);
     expect(screen.getByTestId('full-window-overlay').props.unstable_accessibilityContainerViewIsModal).toBe(false);
 });
 
@@ -264,35 +264,35 @@ describe('swipe', () => {
             ]),
         );
 
-    it('up past 36 pt dismisses, lifting off over 260 ms', () => {
+    it('up past 36 pt dismisses, lifting off over 260 ms', async () => {
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         clear();
-        swipe(-40);
+        await swipe(-40);
         expect(ids()).toEqual([]);
         expect(timings(260).some((a) => a.to === -40 - 1.5 * H)).toBe(true);
         // A swiped card is not replayed as an exit clone.
         expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
     });
 
-    it('less than 36 pt snaps back over 240 ms ease-out, with no spring overshoot', () => {
+    it('less than 36 pt snaps back over 240 ms ease-out, with no spring overshoot', async () => {
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         clear();
-        swipe(-30);
+        await swipe(-30);
         expect(ids()).toEqual(['a']);
         expect(mockAnims.filter((a) => a.kind === 'spring')).toEqual([]);
         expect(timings(240)).toEqual([expect.objectContaining({ to: 0, easing: SETTLE })]);
     });
 
-    it('a downward pull moves the card a fifth of the finger', () => {
+    it('a downward pull moves the card a fifth of the finger', async () => {
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         clear();
-        swipe(100);
+        await swipe(100);
         expect(mockWrites).toContain(20);
         expect(ids()).toEqual(['a']);
     });
@@ -302,20 +302,20 @@ describe('reduced: Lite or system Reduce Motion fades only, 180 ms', () => {
     it.each([
         ['system Reduce Motion', () => setSystemReduced(true)],
         ['Lite', () => useDisplayPrefsStore.setState({ liteMode: true })],
-    ])('%s: arrive and leave are opacity fades that Lite does not cut', (_name, enable) => {
+    ])('%s: arrive and leave are opacity fades that Lite does not cut', async (_name, enable) => {
         enable();
         toast('a');
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         expect(timings(420)).toEqual([]);
         expect(mockWrites).not.toContain(-1.5 * H);
         const fadeIn = timings(180);
         expect(fadeIn).toEqual([expect.objectContaining({ to: 1, easing: 'linear', reduceMotion: 'never' })]);
         clear();
-        advance(5000);
+        await advance(5000);
         expect(timings(260)).toEqual([]);
         expect(timings(180)).toEqual([expect.objectContaining({ to: 0, reduceMotion: 'never' })]);
-        advance(180);
+        await advance(180);
         expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
     });
 
@@ -326,20 +326,20 @@ describe('reduced: Lite or system Reduce Motion fades only, 180 ms', () => {
             render: () => <MeraToast tone="neutral" title="Updating" body="b" progress progressTestID="bar" />,
         });
 
-    it('the progress bar stands still, drawn as a segment parked mid-track', () => {
+    it('the progress bar stands still, drawn as a segment parked mid-track', async () => {
         setSystemReduced(true);
         showBar();
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         expect(screen.getByTestId('bar', { includeHiddenElements: true })).toBeTruthy();
         expect(screen.getByTestId('bar-segment', { includeHiddenElements: true })).toBeTruthy();
         expect(mockAnims.some((a) => a.duration === 1400)).toBe(false);
     });
 
-    it('with motion on, the same bar sweeps (the control for the still case)', () => {
+    it('with motion on, the same bar sweeps (the control for the still case)', async () => {
         showBar();
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         expect(screen.getByTestId('bar-segment', { includeHiddenElements: true })).toBeTruthy();
         expect(timings(1400)).toEqual([expect.objectContaining({ easing: 'linear' })]);
     });
@@ -354,12 +354,12 @@ describe('a notified toast', () => {
     it.each([
         ['system Reduce Motion', () => setSystemReduced(true)],
         ['Lite', () => useDisplayPrefsStore.setState({ liteMode: true })],
-    ])('%s: holds 4 s, then fades over 180 ms, and neither leg is cut', (_name, enable) => {
+    ])('%s: holds 4 s, then fades over 180 ms, and neither leg is cut', async (_name, enable) => {
         enable();
         notice();
         expect(useToastQueue.getState().entries[0].duration).toBe(4000 + 180);
-        render(<ToastDeck />);
-        layoutFront();
+        await render(<ToastDeck />);
+        await layoutFront();
         const delay = mockAnims.find((a) => a.kind === 'delay');
         expect(delay).toMatchObject({ duration: 4000, reduceMotion: 'never' });
         expect(delay?.to).toBe(1);
@@ -370,26 +370,26 @@ describe('a notified toast', () => {
     it.each([
         ['full motion', () => undefined, true],
         ['Lite', () => useDisplayPrefsStore.setState({ liteMode: true }), false],
-    ])('%s: once its own leave has played, the deck replays no exit clone', (_name, enable, canFly) => {
+    ])('%s: once its own leave has played, the deck replays no exit clone', async (_name, enable, canFly) => {
         enable();
         notice();
-        render(<ToastDeck />);
-        layoutFront();
-        advance(notifiedToastDurationMs(canFly));
+        await render(<ToastDeck />);
+        await layoutFront();
+        await advance(notifiedToastDurationMs(canFly));
         expect(ids()).toEqual([]);
         expect(screen.queryByTestId('toast-slot-leaving')).toBeNull();
     });
 
-    it('closed by its button during the hold, it still lifts off like any toast', () => {
+    it('closed by its button during the hold, it still lifts off like any toast', async () => {
         toastManager.setToastInstance(toastApi);
         toastManager.showNoticeToast({
             title: 'Update ready',
             type: 'update_available',
             button: { label: 'Restart', onPress: () => undefined },
         });
-        render(<ToastDeck />);
-        layoutFront();
-        fireEvent.press(screen.getByTestId('notified-toast-button'));
+        await render(<ToastDeck />);
+        await layoutFront();
+        await fireEvent.press(screen.getByTestId('notified-toast-button'));
         expect(ids()).toEqual([]);
         expect(screen.getByTestId('toast-slot-leaving')).toBeTruthy();
     });
@@ -408,10 +408,10 @@ describe('the undo swap', () => {
         );
 
     it('crossfades the undone face in from 4 pt below over 220 ms', async () => {
-        mount();
+        await mount();
         clear();
         await act(async () => {
-            fireEvent.press(screen.getByTestId('undo'));
+            await fireEvent.press(screen.getByTestId('undo'));
             await Promise.resolve();
         });
         expect(screen.getByText('Change undone')).toBeTruthy();
@@ -423,10 +423,10 @@ describe('the undo swap', () => {
 
     it('under Reduce Motion the swap is a 180 ms fade', async () => {
         setSystemReduced(true);
-        mount();
+        await mount();
         clear();
         await act(async () => {
-            fireEvent.press(screen.getByTestId('undo'));
+            await fireEvent.press(screen.getByTestId('undo'));
             await Promise.resolve();
         });
         expect(timings(220)).toEqual([]);

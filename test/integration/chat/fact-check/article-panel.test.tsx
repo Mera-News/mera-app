@@ -51,7 +51,7 @@ afterEach(() => {
 describe('the article fact-check card', () => {
   it('shows published checks first, then Mera labelled AI, the claims, and three sources', async () => {
     await seed(published());
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-result')).toBeTruthy());
 
     expect(panel.getByText('Published fact checks')).toBeTruthy();
@@ -67,17 +67,17 @@ describe('the article fact-check card', () => {
     expect(panel.getByText('thefederal.com')).toBeTruthy();
     expect(panel.queryByText('youtube.com')).toBeNull();
     expect(panel.queryByText(/SUMMARY:/)).toBeNull();
-    fireEvent.press(panel.getByText('Show 2 more'));
+    await fireEvent.press(panel.getByText('Show 2 more'));
     expect(panel.getByText('youtube.com')).toBeTruthy();
   });
 
   it('shares the whole check as plain text, headline first and the footer last', async () => {
     await seed(published());
     const shared = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined });
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-share')).toBeTruthy());
 
-    fireEvent.press(panel.getByTestId('fact-check-0-share'));
+    await fireEvent.press(panel.getByTestId('fact-check-0-share'));
     await waitFor(() => expect(shared).toHaveBeenCalledTimes(1));
 
     const message = (shared.mock.calls[0][0] as { message: string }).message;
@@ -102,31 +102,31 @@ describe('the article fact-check card', () => {
       }),
     );
     serveChecks({ ask: () => stale });
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-again')).toBeTruthy());
     expect(within(panel.getByTestId('fact-check-0-again')).getByText('Fact check again')).toBeTruthy();
 
-    fireEvent.press(panel.getByTestId('fact-check-0-again'));
+    await fireEvent.press(panel.getByTestId('fact-check-0-again'));
 
     await waitFor(() => expect(panel.getByTestId('fact-check-working')).toBeTruthy());
     expect(asked).toEqual([{ articleId: 'a1' }]);
     expect(panel.queryByTestId('fact-check-0-result')).toBeNull();
     expect(panel.queryByText('Misleading')).toBeNull();
     expect(await askedIds()).toContain('a1');
-    panel.unmount();
+    await panel.unmount();
   });
 
   it('reads "Checked recently" and asks nothing while recheckAvailableAt is in the future', async () => {
     await seed(published({ recheckAvailableAt: new Date(Date.now() + DAY).toISOString() }));
     const asked = jest.fn(() => ({ requestFactCheck: published() }));
     server.use(mockGql('RequestFactCheckAgain', asked));
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-again')).toBeTruthy());
 
     const again = panel.getByTestId('fact-check-0-again');
     expect(within(again).getByText('Checked recently')).toBeTruthy();
     expect(again.props.accessibilityState).toMatchObject({ disabled: true });
-    fireEvent.press(again);
+    await fireEvent.press(again);
     await new Promise((r) => setTimeout(r, 50));
     expect(asked).not.toHaveBeenCalled();
   });
@@ -138,10 +138,10 @@ describe('the article fact-check card', () => {
         requestFactCheck: published({ recheckAvailableAt: new Date(Date.now() + DAY).toISOString() }),
       })),
     );
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-again')).toBeTruthy());
 
-    fireEvent.press(panel.getByTestId('fact-check-0-again'));
+    await fireEvent.press(panel.getByTestId('fact-check-0-again'));
 
     await waitFor(() => expect(within(panel.getByTestId('fact-check-0-again')).getByText('Checked recently')).toBeTruthy());
     expect(panel.getByText('Misleading')).toBeTruthy();
@@ -152,10 +152,10 @@ describe('the article fact-check card', () => {
     await seed(published());
     server.use(mockGqlError('RequestFactCheckAgain', 'NOT_FOUND', { message: 'Article not found: a1', statusCode: 404 }));
     const info = jest.spyOn(toastManager, 'showInfo');
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-again')).toBeTruthy());
 
-    fireEvent.press(panel.getByTestId('fact-check-0-again'));
+    await fireEvent.press(panel.getByTestId('fact-check-0-again'));
 
     await waitFor(() => expect(info).toHaveBeenCalledWith('This article is no longer available'));
     expect(panel.getByText('Misleading')).toBeTruthy();
@@ -165,7 +165,7 @@ describe('the article fact-check card', () => {
 
   it('offers no recheck on a blocked check', async () => {
     await seed(published({ status: 'blocked' }));
-    const panel = renderPanel();
+    const panel = await renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-blocked')).toBeTruthy());
     expect(panel.queryByTestId('fact-check-0-again')).toBeNull();
   });

@@ -577,7 +577,7 @@ describe('useReauthSuccess (invariant 7: the lock is opt-in, and only Forgot PIN
     }
 
     async function verified(reauth: string | undefined, userId: string) {
-        const { result } = renderHook(() => useReauthSuccess(reauth));
+        const { result } = await renderHook(() => useReauthSuccess(reauth));
         await act(async () => {
             await result.current(userId);
         });

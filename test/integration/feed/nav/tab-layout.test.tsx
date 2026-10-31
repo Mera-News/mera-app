@@ -46,17 +46,17 @@ beforeEach(() => {
   for (const tab of ['feed', 'world', 'library', 'you'] as const) setTabDot(tab, false);
 });
 
-it('declares Feed, World, Library, You in that order, Feed first, with no anchor override', () => {
-  render(<AppLayout />);
+it('declares Feed, World, Library, You in that order, Feed first, with no anchor override', async () => {
+  await render(<AppLayout />);
   expect(lastRender().map((t) => t.name)).toEqual(['feed', 'world', 'library', 'you']);
   expect((TabLayout as Record<string, unknown>).unstable_settings).toBeUndefined();
 });
 
-it('gives every tab item its name as the label, and says when it has a dot', () => {
-  render(<AppLayout />);
+it('gives every tab item its name as the label, and says when it has a dot', async () => {
+  await render(<AppLayout />);
   expect(lastRender().map((t) => t.accessibilityLabel)).toEqual(['Feed', 'World', 'Library', 'You']);
 
-  act(() => setTabDot('world', true));
+  await act(() => setTabDot('world', true));
   expect(lastRender().map((t) => t.accessibilityLabel)).toEqual([
     'Feed',
     'World, new updates',
@@ -65,8 +65,8 @@ it('gives every tab item its name as the label, and says when it has a dot', () 
   ]);
 });
 
-it('leaves the re-tap to JS and keeps the native pop to root', () => {
-  render(<AppLayout />);
+it('leaves the re-tap to JS and keeps the native pop to root', async () => {
+  await render(<AppLayout />);
   for (const t of lastRender()) {
     expect(t.disableScrollToTop).toBe(true);
     expect(t.disablePopToTop).toBeUndefined();

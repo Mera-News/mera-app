@@ -16,7 +16,7 @@ beforeAll(initI18nEn);
 describe('ReasonNote with a reason', () => {
     it('shows the reason and no matched facts line', async () => {
         mockFacts.mockResolvedValue([{ statement: 'follows arsenal' }]);
-        const { getByText, queryByText } = render(
+        const { getByText, queryByText } = await render(
             <ReasonNote relevance={0.8} reason="A transfer story." topicIds={['t-1']} testID="note" maxNoteLines={4} />,
         );
         await act(async () => {});

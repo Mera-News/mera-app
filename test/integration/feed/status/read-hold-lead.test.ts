@@ -24,7 +24,7 @@ const NOON = new Date(2026, 9, 15, 12, 0, 0).getTime();
 const t = i18n.t.bind(i18n) as unknown as (key: string, options?: object) => string;
 
 async function renderLead() {
-  const view = renderHook(() => useStatsCardLead());
+  const view = await renderHook(() => useStatsCardLead());
   await act(async () => {
     for (let i = 0; i < 5; i++) await new Promise<void>((resolve) => setImmediate(resolve));
   });
@@ -125,10 +125,10 @@ describe('the counts card while the read hold is set', () => {
 
   it('the not-read line follows the same hold: held in the cloud, never on the phone', async () => {
     await setReadHold({ resetAt: NOON + 2 * HOUR });
-    const cloud = renderHook(() => useReadHeld());
+    const cloud = await renderHook(() => useReadHeld());
     expect(cloud.result.current).toEqual({ held: true, resetAt: NOON + 2 * HOUR });
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
-    const phone = renderHook(() => useReadHeld());
+    const phone = await renderHook(() => useReadHeld());
     expect(phone.result.current).toEqual({ held: false, resetAt: null });
   });
 });

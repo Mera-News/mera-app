@@ -59,7 +59,7 @@ describe('ingest is insert-only', () => {
     const feed = await mountWith([['a', HIGH], ['b', MEDIUM], ['c', LOW]]);
     const before = feed.ids();
 
-    act(() => useForYouStore.setState({ suggestions: [] }));
+    await act(() => useForYouStore.setState({ suggestions: [] }));
     await act(async () => {});
 
     expect(feed.ids()).toEqual(before);
@@ -69,8 +69,8 @@ describe('ingest is insert-only', () => {
   it('a re-render with nothing new leaves the list untouched', async () => {
     const feed = await mountWith(SIX);
     const before = feed.ids();
-    feed.rerender({ focused: true });
-    feed.rerender({ focused: true });
+    await feed.rerender({ focused: true });
+    await feed.rerender({ focused: true });
     expect(feed.ids()).toEqual(before);
   });
 });
@@ -94,7 +94,7 @@ describe('pinned prefix', () => {
     const before = feed.ids();
 
     // The Feed's 75% viewability pair reports the fourth row (index 3) as viewable: 3 + 4 pins seven.
-    act(() =>
+    await act(() =>
       feed.result.current.viewabilityConfigCallbackPairs[0].onViewableItemsChanged({
         changed: [{ key: before[3], isViewable: true }],
       } as never),
@@ -114,7 +114,7 @@ describe('partition snapshot', () => {
     const pinnedRow = before[0];
     const dynamicRow = before[6];
 
-    act(() => {
+    await act(() => {
       useFeedOrderStore.getState().markViewed(pinnedRow);
       useFeedOrderStore.getState().markViewed(dynamicRow);
     });
@@ -129,11 +129,11 @@ describe('partition snapshot', () => {
     const pinnedRow = before[0];
     const dynamicRow = before[6];
 
-    act(() => {
+    await act(() => {
       useFeedOrderStore.getState().markViewed(pinnedRow);
       useFeedOrderStore.getState().markViewed(dynamicRow);
     });
-    act(() => feed.result.current.onRefresh());
+    await act(() => feed.result.current.onRefresh());
 
     // Unviewed in their old relative order, then the two viewed ones (tier 1) in theirs.
     const unviewed = before.filter((id) => id !== pinnedRow && id !== dynamicRow);
@@ -159,9 +159,9 @@ describe('leaving the tab', () => {
   it('blur leaves the order alone, even with viewed marks waiting in the store', async () => {
     const feed = await mountWith(SIX);
     const before = feed.ids();
-    act(() => useFeedOrderStore.getState().markViewed(before[0]));
+    await act(() => useFeedOrderStore.getState().markViewed(before[0]));
 
-    feed.focus(false);
+    await feed.focus(false);
     await act(async () => {});
 
     expect(feed.ids()).toEqual(before);
@@ -169,9 +169,9 @@ describe('leaving the tab', () => {
 
   /** Put `id` on screen, bottom edge inside the seen band, the way the list's viewability pair
    *  and a row's `measureInWindow` do. */
-  function putOnScreen(feed: Awaited<ReturnType<typeof mountWith>>, id: string) {
+  async function putOnScreen(feed: Awaited<ReturnType<typeof mountWith>>, id: string) {
     feed.result.current.registerRow(id)({ measureInWindow: (cb: (...a: number[]) => void) => cb(0, 200, 300, 100) } as never);
-    act(() =>
+    await act(() =>
       feed.result.current.viewabilityConfigCallbackPairs[1].onViewableItemsChanged({
         changed: [{ key: id, isViewable: true }],
       } as never),
@@ -182,11 +182,11 @@ describe('leaving the tab', () => {
     const feed = await mountWith(SIX);
     const before = feed.ids();
     useStrictClock();
-    putOnScreen(feed, before[1]);
+    await putOnScreen(feed, before[1]);
     jest.setSystemTime(Date.now() + 2_000); // past the 1.5 s dwell
     expect(useFeedOrderStore.getState().cardStates[before[1]]).toBeUndefined();
 
-    feed.focus(false);
+    await feed.focus(false);
 
     expect(useFeedOrderStore.getState().cardStates[before[1]]).toMatchObject({ state: 'skipped' });
     expect(feed.ids()).toEqual(before);
@@ -196,10 +196,10 @@ describe('leaving the tab', () => {
     const feed = await mountWith(SIX);
     const before = feed.ids();
     useStrictClock();
-    putOnScreen(feed, before[1]);
+    await putOnScreen(feed, before[1]);
     jest.setSystemTime(Date.now() + 1_000);
 
-    feed.focus(false);
+    await feed.focus(false);
 
     expect(useFeedOrderStore.getState().cardStates).toEqual({});
   });
@@ -207,13 +207,13 @@ describe('leaving the tab', () => {
   it('a blurred Feed ingests nothing; the arrival lands when it is focused again', async () => {
     const feed = await mountWith(SIX);
     const before = feed.ids();
-    feed.focus(false);
+    await feed.focus(false);
 
     await arrive([['late', HIGH]]);
     await act(async () => {});
     expect(feed.ids()).toEqual(before);
 
-    feed.focus(true);
+    await feed.focus(true);
     await waitFor(() => expect(feed.ids()).toContain('late'));
     expect(feed.ids().slice(0, 4)).toEqual(before.slice(0, 4));
   });
@@ -241,7 +241,7 @@ describe('empty-state chain flags', () => {
     await addFact('I follow Formula 1 racing');
     await hydrateSuggestions();
     const feed = await renderFeed();
-    act(() => useForYouStore.getState().markProcessingRunFinished());
+    await act(() => useForYouStore.getState().markProcessingRunFinished());
     await waitFor(() => expect(feed.result.current.emptyHere).toBe(true));
     expect(feed.result.current.noFacts).toBe(false);
     expect(feed.result.current.hasRows).toBe(false);

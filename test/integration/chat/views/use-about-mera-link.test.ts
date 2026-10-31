@@ -10,22 +10,22 @@ const { openBrowserAsync } = jest.requireMock('expo-web-browser') as {
   openBrowserAsync: jest.Mock;
 };
 
-const setup = () => {
+const setup = async () => {
   const onClose = jest.fn();
-  const { result } = renderHook(() => useAboutMeraLink(onClose));
+  const { result } = await renderHook(() => useAboutMeraLink(onClose));
   return { onClose, link: result.current };
 };
 
 describe('useAboutMeraLink', () => {
-  it('pressing the link closes the card and opens nothing yet', () => {
-    const { onClose, link } = setup();
+  it('pressing the link closes the card and opens nothing yet', async () => {
+    const { onClose, link } = await setup();
     link.onLinkPress();
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(openBrowserAsync).not.toHaveBeenCalled();
   });
 
-  it('opens the policy once the card has closed after a press', () => {
-    const { link } = setup();
+  it('opens the policy once the card has closed after a press', async () => {
+    const { link } = await setup();
     link.onLinkPress();
     link.onClosed();
     expect(openBrowserAsync).toHaveBeenCalledTimes(1);
@@ -35,14 +35,14 @@ describe('useAboutMeraLink', () => {
     );
   });
 
-  it('opens nothing when the card closes without a link press', () => {
-    const { link } = setup();
+  it('opens nothing when the card closes without a link press', async () => {
+    const { link } = await setup();
     link.onClosed();
     expect(openBrowserAsync).not.toHaveBeenCalled();
   });
 
-  it('a second close after one policy open opens nothing more', () => {
-    const { link } = setup();
+  it('a second close after one policy open opens nothing more', async () => {
+    const { link } = await setup();
     link.onLinkPress();
     link.onClosed();
     link.onClosed();

@@ -144,7 +144,7 @@ describe('the inbox offer', () => {
     it('tapping the row asks for the move', async () => {
         await offerMoveToPhoneOnce(ME);
         const [row] = await moveRows();
-        const { result } = renderHook(() => useMoveToPhoneFlow());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
 
         await act(async () => {
             await tapNotification(row);
@@ -159,9 +159,9 @@ describe('the inbox offer', () => {
 describe('the flow', () => {
     it('shows the dialog with the settings hint, then moves and ends moved', async () => {
         convertAnswers(ok('converted'));
-        const { result } = renderHook(() => useMoveToPhoneFlow());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
 
-        act(() => requestMoveToPhone());
+        await act(() => requestMoveToPhone());
         await waitFor(() => useDialogQueue.getState().queue.length > 0);
         expect(isMoveToPhoneVisible()).toBe(true);
         const dialog = useDialogQueue.getState().queue[0];
@@ -176,15 +176,15 @@ describe('the flow', () => {
 
         expect(stepStates(result.current.view)).toEqual(['done', 'done', 'done', 'done']);
         await expect(getSetting('cached_user_email')).resolves.toBeNull();
-        act(() => result.current.close());
+        await act(() => result.current.close());
         expect(result.current.view).toEqual({ kind: 'idle' });
         expect(isMoveToPhoneVisible()).toBe(false);
     });
 
     it('Not now changes nothing and clears the visibility', async () => {
-        const { result } = renderHook(() => useMoveToPhoneFlow());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
 
-        act(() => requestMoveToPhone());
+        await act(() => requestMoveToPhone());
         await answerDialog(false);
         await waitFor(() => !isMoveToPhoneVisible());
 
@@ -194,9 +194,9 @@ describe('the flow', () => {
 
     it('a failed move shows the cross on the failed step, and Try again reruns it to success', async () => {
         convertAnswers(fail(503, 'DEVICE_ATTESTATION_UNAVAILABLE'), ok('converted'));
-        const { result } = renderHook(() => useMoveToPhoneFlow());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
 
-        act(() => requestMoveToPhone());
+        await act(() => requestMoveToPhone());
         await answerDialog(true);
         await waitFor(() => result.current.view.kind === 'failed');
 
@@ -213,23 +213,23 @@ describe('the flow', () => {
 
     it('an unsupported phone crosses out checking and offers only Close', async () => {
         mockAttest.isSupported.mockResolvedValue(false);
-        const { result } = renderHook(() => useMoveToPhoneFlow());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
 
-        act(() => requestMoveToPhone());
+        await act(() => requestMoveToPhone());
         await answerDialog(true);
         await waitFor(() => result.current.view.kind === 'unsupported');
 
         expect(stepStates(result.current.view)).toEqual(['failed', 'pending', 'pending', 'pending']);
-        act(() => result.current.close());
+        await act(() => result.current.close());
         expect(isMoveToPhoneVisible()).toBe(false);
     });
 
     it('a second request while one is open is ignored', async () => {
-        const { result } = renderHook(() => useMoveToPhoneFlow());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
 
-        act(() => requestMoveToPhone());
+        await act(() => requestMoveToPhone());
         await waitFor(() => useDialogQueue.getState().queue.length > 0);
-        act(() => requestMoveToPhone());
+        await act(() => requestMoveToPhone());
 
         expect(useDialogQueue.getState().queue).toHaveLength(1);
         await answerDialog(false);
@@ -262,17 +262,17 @@ describe('FeedbackRequestAutoShowHost', () => {
     });
 
     it('shows a live request when the move UI is closed (control)', async () => {
-        renderHook(() => FeedbackRequestAutoShowHost());
+        await renderHook(() => FeedbackRequestAutoShowHost());
         await waitFor(() => nav.push.mock.calls.length > 0, 6000);
         expect(nav.push).toHaveBeenCalledWith({ pathname: '/logged-in/feedback-request', params: { id: ID } });
     });
 
     it('stays quiet, and leaves the request unshown, while the move UI is visible', async () => {
-        const { result } = renderHook(() => useMoveToPhoneFlow());
-        act(() => requestMoveToPhone());
+        const { result } = await renderHook(() => useMoveToPhoneFlow());
+        await act(() => requestMoveToPhone());
         await waitFor(() => useDialogQueue.getState().queue.length > 0);
 
-        renderHook(() => FeedbackRequestAutoShowHost());
+        await renderHook(() => FeedbackRequestAutoShowHost());
         await act(async () => {
             await new Promise((r) => setTimeout(r, 2500));
         });

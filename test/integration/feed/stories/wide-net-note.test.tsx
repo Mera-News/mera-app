@@ -10,14 +10,14 @@ import '@/test/helpers';
 
 beforeAll(() => initI18nEn());
 
-it('opens to the reason and the remove hint, and closes again', () => {
-  const view = render(<WideNetNote />);
+it('opens to the reason and the remove hint, and closes again', async () => {
+  const view = await render(<WideNetNote />);
   expect(view.getByText(i18n.t('trackedStories.wideNetLine'))).toBeTruthy();
   expect(view.queryByText(i18n.t('trackedStories.wideNetBody'))).toBeNull();
 
   const more = view.getByTestId('story-wide-net-more');
   expect(more.props.accessibilityState).toMatchObject({ expanded: false });
-  fireEvent.press(more);
+  await fireEvent.press(more);
 
   expect(view.getByText(i18n.t('trackedStories.wideNetBody'))).toBeTruthy();
   const remove = i18n.t('trackedStories.wideNetRemove', { action: i18n.t('trackedStories.removeMemberAction') });
@@ -25,7 +25,7 @@ it('opens to the reason and the remove hint, and closes again', () => {
   expect(view.getByText(remove)).toBeTruthy();
   expect(view.getByTestId('story-wide-net-less').props.accessibilityState).toMatchObject({ expanded: true });
 
-  fireEvent.press(view.getByTestId('story-wide-net-less'));
+  await fireEvent.press(view.getByTestId('story-wide-net-less'));
   expect(view.queryByText(i18n.t('trackedStories.wideNetBody'))).toBeNull();
   expect(view.getByTestId('story-wide-net')).toBeTruthy();
 });

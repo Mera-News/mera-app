@@ -29,23 +29,23 @@ jest.mock('react-native-safe-area-context', () => ({
 type Style = Record<string, unknown>;
 const style = (node: { props: { style?: unknown } }): Style => (StyleSheet.flatten(node.props.style as never) ?? {}) as Style;
 
-function setFontScale(fontScale: number) {
+async function setFontScale(fontScale: number) {
   const window = { width: 390, height: 844, scale: 3, fontScale };
-  act(() => Dimensions.set({ window, screen: window }));
+  await act(() => Dimensions.set({ window, screen: window }));
 }
 
 async function open(fontScale: number) {
-  setFontScale(fontScale);
+  await setFontScale(fontScale);
   await setProcessingMode('cloud');
   useChatReadiness.setState({ status: 'ready' });
-  const view = render(
+  const view = await render(
     <GestureHandlerRootView>
       <ChatPopover>
         <View />
       </ChatPopover>
     </GestureHandlerRootView>,
   );
-  act(() => useFloatingChatStore.getState().expand());
+  await act(() => useFloatingChatStore.getState().expand());
   return view;
 }
 
@@ -74,9 +74,9 @@ it('a title that wraps beside the buttons stacks them, and stays stacked once it
   const view = await open(1);
   const title = view.getByText('Mera');
 
-  fireEvent(title, 'textLayout', { nativeEvent: { lines: [{}, {}] } });
+  await fireEvent(title, 'textLayout', { nativeEvent: { lines: [{}, {}] } });
   expect(style(view.getByTestId('chat-header')).flexDirection).toBe('column');
-  fireEvent(title, 'textLayout', { nativeEvent: { lines: [{}] } });
+  await fireEvent(title, 'textLayout', { nativeEvent: { lines: [{}] } });
   expect(style(view.getByTestId('chat-header')).flexDirection).toBe('column');
 });
 

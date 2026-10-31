@@ -28,9 +28,9 @@ jest.mock('@/components/ui/toast', () => ({
     useIsToastFront: () => true,
 }));
 
-const shown = () => {
+const shown = async () => {
     const opts = mockShow.mock.calls.at(-1)?.[0] as { render: () => React.ReactElement };
-    render(opts.render());
+    await render(opts.render());
 };
 
 beforeAll(initI18nEn);
@@ -45,7 +45,7 @@ beforeEach(() => {
 it('hands a failed or timed-out launch re-verify to the service, and nothing else', async () => {
     mockVerified = false;
     mockProbeOutcome = 'timeout';
-    render(<TranslationUnavailablePrompt />);
+    await render(<TranslationUnavailablePrompt />);
     await waitFor(() => expect(mockNoteLaunchVerifyFailed).toHaveBeenCalledWith('de'));
 });
 
@@ -54,29 +54,29 @@ it('a successful launch re-verify does not touch the breaker', async () => {
     mockProbeOutcome = 'success';
     const { probeLanguage } = jest.requireMock('@/lib/hooks/use-language-switch') as { probeLanguage: jest.Mock };
     probeLanguage.mockClear();
-    render(<TranslationUnavailablePrompt />);
+    await render(<TranslationUnavailablePrompt />);
     await waitFor(() => expect(probeLanguage).toHaveBeenCalled());
     await new Promise((r) => setImmediate(r));
     expect(mockNoteLaunchVerifyFailed).not.toHaveBeenCalled();
 });
 
-it('a breaker block (the pack may still be downloading) shows no notice', () => {
+it('a breaker block (the pack may still be downloading) shows no notice', async () => {
     mockBlock = { permanent: false, deviceUnsupported: false };
-    render(<TranslationUnavailablePrompt />);
+    await render(<TranslationUnavailablePrompt />);
     expect(mockShow).not.toHaveBeenCalled();
 });
 
-it('a language this iOS cannot translate still shows its notice, with no action', () => {
+it('a language this iOS cannot translate still shows its notice, with no action', async () => {
     mockBlock = { permanent: true, deviceUnsupported: false };
-    render(<TranslationUnavailablePrompt />);
+    await render(<TranslationUnavailablePrompt />);
     expect(mockShow).toHaveBeenCalledTimes(1);
-    shown();
+    await shown();
     expect(screen.getByText('Translation unavailable')).toBeTruthy();
     expect(screen.queryByRole('button')).toBeNull();
 });
 
-it('a device with no translator still shows its notice', () => {
+it('a device with no translator still shows its notice', async () => {
     mockBlock = { permanent: true, deviceUnsupported: true };
-    render(<TranslationUnavailablePrompt />);
+    await render(<TranslationUnavailablePrompt />);
     expect(mockShow).toHaveBeenCalledTimes(1);
 });

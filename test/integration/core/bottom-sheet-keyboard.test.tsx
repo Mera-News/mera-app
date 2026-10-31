@@ -35,11 +35,11 @@ const events = (spy: jest.SpyInstance) => spy.mock.calls.map((c) => c[0]);
 describe('BottomSheet avoidKeyboard', () => {
     afterEach(() => jest.restoreAllMocks());
 
-    it('listens for the keyboard only when opted in and open, and stops on close', () => {
+    it('listens for the keyboard only when opted in and open, and stops on close', async () => {
         const remove = jest.fn();
         const spy = jest.spyOn(Keyboard, 'addListener').mockReturnValue({ remove } as never);
 
-        const view = render(
+        const view = await render(
             inTab(
                 <BottomSheet open onClose={() => {}} avoidKeyboard>
                     <Text>field</Text>
@@ -48,7 +48,7 @@ describe('BottomSheet avoidKeyboard', () => {
         );
         expect(events(spy)).toEqual(['keyboardWillShow', 'keyboardWillHide']);
 
-        view.rerender(
+        await view.rerender(
             inTab(
                 <BottomSheet open={false} onClose={() => {}} avoidKeyboard>
                     <Text>field</Text>
@@ -58,9 +58,9 @@ describe('BottomSheet avoidKeyboard', () => {
         expect(remove).toHaveBeenCalledTimes(2);
     });
 
-    it('a sheet without the prop never listens', () => {
+    it('a sheet without the prop never listens', async () => {
         const spy = jest.spyOn(Keyboard, 'addListener');
-        render(
+        await render(
             inTab(
                 <BottomSheet open onClose={() => {}}>
                     <Text>menu</Text>
@@ -83,9 +83,9 @@ describe('keyboardLiftFor', () => {
 });
 
 describe('the sheet bottom inset', () => {
-    it("pads for the WINDOW's home indicator, not a tab screen's inset that includes the tab bar it covers", () => {
+    it("pads for the WINDOW's home indicator, not a tab screen's inset that includes the tab bar it covers", async () => {
         // Inside a tab screen useSafeAreaInsets reports 34 + the 49pt tab bar; the sheet's Modal covers that bar.
-        render(
+        await render(
             inTab(
                 <BottomSheet open onClose={() => {}} testID="sheet">
                     <Text>menu</Text>

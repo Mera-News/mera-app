@@ -100,7 +100,7 @@ export const header: PageHeaderBinding = {
 export async function renderFeed(isFocused = true) {
   useDatabaseStore.getState().setReady(true);
   await useOpenedStoriesStore.getState().hydrate();
-  const view = renderHookInScreen(
+  const view = await renderHookInScreen(
     ({ focused }: { focused: boolean }) => useFeedScreen({ isFocused: focused, header }),
     { initialProps: { focused: isFocused } },
   );

@@ -3,7 +3,9 @@
 // row this device remembers. Owner bug on 1.3.5: a phone that had moved still opened the "Sign in
 // with this phone instead" dialog from the inbox row. Real settings, notifications, dialog queue,
 // auth client and MSW; the session the server reports is the only thing overridden.
-import { act, renderHook } from '@testing-library/react-native';
+import { act, render, renderHook } from '@testing-library/react-native';
+import React from 'react';
+import SupportIdCopy from '@/components/custom/config-mera/SupportIdCopy';
 import { offerMoveToPhoneOnce, useMoveToPhoneFlow } from '@/components/custom/auth/MoveToPhoneHost';
 import {
     __resetMoveToPhoneForTests,
@@ -109,6 +111,40 @@ describe('a phone whose move is done', () => {
         expect(await moveRows()).toHaveLength(0);
         // The Settings row shows only when this answers false.
         await expect(moveToPhoneDone()).resolves.toBe(true);
+    });
+});
+
+// The Settings "!" beside a masked email opens the move: shown only while the move is not done.
+describe('the Support ID line on an old email account with no Support ID', () => {
+    const sessionWithEmail = (email: string) =>
+        server.use(
+            http.get('*/api/auth/get-session', () =>
+                HttpResponse.json({
+                    session: { id: 's1', userId: ME, expiresAt: new Date(Date.now() + 86_400_000).toISOString() },
+                    user: { id: ME, email },
+                }),
+            ),
+        );
+
+    it('shows no move button once the move is done (a stale remembered email)', async () => {
+        await setSetting('cached_user_email', EMAIL);
+        useUserStore.setState({ userEmail: EMAIL });
+        sessionWithEmail(ANON);
+        const view = await render(React.createElement(SupportIdCopy, { testID: 'sid' }));
+        await settle();
+
+        expect(view.getByTestId('sid')).toBeTruthy();
+        expect(view.queryByTestId('sid-move')).toBeNull();
+    });
+
+    it('shows the move button while the move is not done (control)', async () => {
+        await setSetting('cached_user_email', EMAIL);
+        useUserStore.setState({ userEmail: EMAIL });
+        sessionWithEmail(EMAIL);
+        const view = await render(React.createElement(SupportIdCopy, { testID: 'sid' }));
+        await settle();
+
+        expect(view.getByTestId('sid-move')).toBeTruthy();
     });
 });
 

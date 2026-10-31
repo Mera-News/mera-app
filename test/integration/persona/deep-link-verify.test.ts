@@ -59,7 +59,7 @@ describe('useDeepLinkVerify', () => {
     ])('%s goes to /login without calling the server', async (_label, props) => {
         const signIns = record(SIGN_IN);
 
-        mount(props);
+        await mount(props);
         await routed();
 
         expect(replace()).toHaveBeenCalledTimes(1);
@@ -73,7 +73,7 @@ describe('useDeepLinkVerify', () => {
         await setSetting(IDENTITY_FAULT_KEY, '1');
         const stamps = record(ACCEPT_LEGAL);
 
-        mount({ otp: CODE, email: EMAIL });
+        await mount({ otp: CODE, email: EMAIL });
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/logged-in');
@@ -93,16 +93,16 @@ describe('useDeepLinkVerify', () => {
     it('tries once: a re-render does not send the code again', async () => {
         const signIns = record(SIGN_IN);
 
-        const hook = mount({ otp: CODE, email: EMAIL });
+        const hook = await mount({ otp: CODE, email: EMAIL });
         await routed();
-        hook.rerender({});
+        await hook.rerender({});
 
         expect(signIns).toHaveLength(1);
         expect(replace()).toHaveBeenCalledTimes(1);
     });
 
     it('a wrong code goes to /login and records nothing', async () => {
-        mount({ otp: '000000', email: EMAIL });
+        await mount({ otp: '000000', email: EMAIL });
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/login');
@@ -114,7 +114,7 @@ describe('useDeepLinkVerify', () => {
     it('a failed request goes to /login', async () => {
         server.use(http.post(SIGN_IN, () => HttpResponse.error()));
 
-        mount({ otp: CODE, email: EMAIL });
+        await mount({ otp: CODE, email: EMAIL });
         await routed();
 
         expect(replace()).toHaveBeenCalledTimes(1);
@@ -127,7 +127,7 @@ describe('useDeepLinkVerify', () => {
         // uses the same refusal.
         const mountForeign = async () => {
             await setSetting('cached_user_id', OTHER);
-            mount({ otp: CODE, email: EMAIL });
+            await mount({ otp: CODE, email: EMAIL });
             await routed();
         };
 

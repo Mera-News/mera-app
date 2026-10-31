@@ -32,7 +32,7 @@ beforeEach(() => {
 
 it('falls back to the windowed country document, keeps the list and reports topicsSupported false', async () => {
   const sent = record('GetWorldHeadlines', 'GetTopHeadlinesForCountryWindowed');
-  const { result } = render();
+  const { result } = await render();
   await waitFor(() => expect(result.current.isLoading).toBe(false));
   expect(sent.map((s) => s.op)).toEqual(['GetWorldHeadlines', 'GetTopHeadlinesForCountryWindowed']);
   expect(sent[1].vars.windowHours).toBe(12);
@@ -43,10 +43,10 @@ it('falls back to the windowed country document, keeps the list and reports topi
 });
 
 it('latches for the session: a later load never asks for worldHeadlines again', async () => {
-  const first = render();
+  const first = await render();
   await waitFor(() => expect(first.result.current.isLoading).toBe(false));
   const sent = record('GetWorldHeadlines', 'GetTopHeadlinesForCountryWindowed');
-  const second = render('ct-politics');
+  const second = await render('ct-politics');
   await waitFor(() => expect(second.result.current.isLoading).toBe(false));
   expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed']);
   expect(second.result.current.headlines).toHaveLength(10);
@@ -56,7 +56,7 @@ it('latches for the session: a later load never asks for worldHeadlines again', 
 it('any other error is a failed load, not a latch', async () => {
   server.use(mockGqlError('GetWorldHeadlines', 'INTERNAL_SERVER_ERROR'));
   const sent = record('GetTopHeadlinesForCountryWindowed');
-  const { result } = render();
+  const { result } = await render();
   await waitFor(() => expect(result.current.isLoading).toBe(false));
   expect(result.current.loadFailed).toBe(true);
   expect(sent).toHaveLength(0);

@@ -36,7 +36,7 @@ describe('where the suggestion comes from', () => {
         // The DB can no longer supply it, so only the store can have.
         await lifecycle.deleteSuggestionByServerId('in-store');
         putInStore(s);
-        const { result } = mount('in-store');
+        const { result } = await mount('in-store');
         expect(result.current.isLoading).toBe(false);
         expect(result.current.suggestion?._id).toBe('in-store');
         expect(result.current.error).toBeNull();
@@ -44,7 +44,7 @@ describe('where the suggestion comes from', () => {
 
     it('loads from article_suggestions on a deep link before the store hydrates', async () => {
         await seedSuggestion({ _id: 'deep-link' });
-        const { result } = mount('deep-link');
+        const { result } = await mount('deep-link');
         expect(result.current.isLoading).toBe(true);
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.suggestion?._id).toBe('deep-link');
@@ -55,7 +55,7 @@ describe('where the suggestion comes from', () => {
         const s = await seedSuggestion({ _id: 'pruned', title_en: 'Saved copy' });
         await saveSuggestion(s);
         await lifecycle.deleteSuggestionByServerId('pruned');
-        const { result } = mount('pruned');
+        const { result } = await mount('pruned');
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.suggestion?._id).toBe('pruned');
         expect(result.current.suggestion?.title_en).toBe('Saved copy');
@@ -76,7 +76,7 @@ describe('a story neither table holds', () => {
     it('sets the error and purges the feed row from the DB and the store once', async () => {
         const deleteRow = jest.spyOn(lifecycle, 'deleteSuggestionByServerId');
         const removeFromStore = jest.spyOn(useForYouStore.getState(), 'removeSuggestion');
-        const { result } = mount('gone');
+        const { result } = await mount('gone');
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.error).toBe('This story is no longer available');
         expect(result.current.suggestion).toBeNull();
@@ -86,7 +86,7 @@ describe('a story neither table holds', () => {
         expect(removeFromStore).toHaveBeenCalledWith('gone');
 
         // A store change re-renders the hook; it must not purge again.
-        act(() => useForYouStore.setState({ articleCount: 7 }));
+        await act(() => useForYouStore.setState({ articleCount: 7 }));
         expect(deleteRow).toHaveBeenCalledTimes(1);
     });
 
@@ -101,7 +101,7 @@ describe('a story neither table holds', () => {
         const collection = database.get('article_suggestions');
         const fail = jest.spyOn(collection, 'find').mockRejectedValueOnce(new Error('db busy'));
         try {
-            const { result } = mount('kept');
+            const { result } = await mount('kept');
             await waitFor(() => expect(result.current.isLoading).toBe(false));
             return { result, deleteRow, rows: await suggestions.loadSuggestions() };
         } finally {
@@ -120,7 +120,7 @@ describe('a story neither table holds', () => {
 describe('actions', () => {
     it('handleToggleSave saves the suggestion, then removes it', async () => {
         putInStore(await seedSuggestion({ _id: 'to-save' }));
-        const { result } = mount('to-save');
+        const { result } = await mount('to-save');
         await waitFor(() => expect(result.current.isSaved).toBe(false));
 
         await act(async () => {
@@ -142,7 +142,7 @@ describe('actions', () => {
 describe('a visit opened from a suggestion', () => {
     async function openFromSuggestion() {
         putInStore(await seedSuggestion({ _id: 'dutch', ...DUTCH }));
-        const { result } = mount('dutch');
+        const { result } = await mount('dutch');
         await waitFor(() => expect(result.current.suggestion?._id).toBe('dutch'));
         await act(async () => {
             await result.current.handleArticleUrlPress('https://example.com/a');

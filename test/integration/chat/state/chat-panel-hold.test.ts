@@ -41,22 +41,22 @@ describe('chat panel restart hold', () => {
     });
 
     it('an automatic reload lands with the panel closed (positive control)', async () => {
-        renderHook(() => useChatPanelHold());
+        await renderHook(() => useChatPanelHold());
         expect(await reloadsOn('ota')).toBe(true);
     });
 
     it('an open panel blocks the automatic reload, and closing it lifts the block', async () => {
-        renderHook(() => useChatPanelHold());
-        act(() => store().expand());
+        await renderHook(() => useChatPanelHold());
+        await act(() => store().expand());
         expect(await reloadsOn('ota')).toBe(false);
 
-        act(() => store().collapse());
+        await act(() => store().collapse());
         expect(await reloadsOn('ota')).toBe(true);
     });
 
     it('the reader\'s Restart tap still reloads under an open panel', async () => {
-        renderHook(() => useChatPanelHold());
-        act(() => store().expand());
+        await renderHook(() => useChatPanelHold());
+        await act(() => store().expand());
         expect(await reloadsOn('update')).toBe(true);
     });
 
@@ -64,27 +64,27 @@ describe('chat panel restart hold', () => {
         ['toggle', () => store().toggle()],
         ['a store reset (logout, account switch)', () => store().reset()],
     ])('closing by %s releases the hold', async (_name, close) => {
-        renderHook(() => useChatPanelHold());
-        act(() => store().toggle());
+        await renderHook(() => useChatPanelHold());
+        await act(() => store().toggle());
         expect(await reloadsOn('ota')).toBe(false);
-        act(close);
+        await act(close);
         expect(await reloadsOn('ota')).toBe(true);
     });
 
     it('unmounting the host while open releases the hold', async () => {
-        const { unmount } = renderHook(() => useChatPanelHold());
-        act(() => store().expand());
+        const { unmount } = await renderHook(() => useChatPanelHold());
+        await act(() => store().expand());
         expect(await reloadsOn('ota')).toBe(false);
-        unmount();
+        await unmount();
         expect(await reloadsOn('ota')).toBe(true);
     });
 
     it('repeat opens take one hold, so one close releases it', async () => {
-        renderHook(() => useChatPanelHold());
-        act(() => store().expand());
-        act(() => store().expand());
+        await renderHook(() => useChatPanelHold());
+        await act(() => store().expand());
+        await act(() => store().expand());
         expect(await reloadsOn('ota')).toBe(false);
-        act(() => store().collapse());
+        await act(() => store().collapse());
         expect(await reloadsOn('ota')).toBe(true);
     });
 });

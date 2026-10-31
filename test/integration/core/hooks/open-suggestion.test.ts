@@ -33,9 +33,9 @@ beforeEach(() => {
 describe('useOpenSuggestion', () => {
   it('pushes suggestion-detail with empty user and persona ids when signed out', async () => {
     const s = await seeded();
-    const { result } = renderHook(() => useOpenSuggestion('feed'));
+    const { result } = await renderHook(() => useOpenSuggestion('feed'));
 
-    act(() => result.current(s));
+    await act(() => result.current(s));
 
     expect(push).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith({
@@ -49,10 +49,10 @@ describe('useOpenSuggestion', () => {
     await signInFixtureAccount();
     useUserStore.setState({ userPersona: { _id: 'persona-1' } as never });
     const s = await seeded();
-    const { result } = renderHook(() => ({ open: useOpenSuggestion('feed'), session: authClient.useSession().data }));
+    const { result } = await renderHook(() => ({ open: useOpenSuggestion('feed'), session: authClient.useSession().data }));
     await waitFor(() => expect(result.current.session?.user?.id).toBe(FIXTURE_ACCOUNT.userId));
 
-    act(() => result.current.open(s));
+    await act(() => result.current.open(s));
 
     expect(push).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith({
@@ -64,9 +64,9 @@ describe('useOpenSuggestion', () => {
 
   it('dims the story and records the open with its surface, ids and normalised title', async () => {
     const s = await seeded({ title: '  Dike   REPAIR starts\nin Hoorn ', clusterId: 'c1', stableClusterId: 'stable-1' });
-    const { result } = renderHook(() => useOpenSuggestion('headlines'));
+    const { result } = await renderHook(() => useOpenSuggestion('headlines'));
 
-    act(() => result.current(s));
+    await act(() => result.current(s));
 
     const [row] = await impressions();
     expect(row.articleId).toBe('art-1');
@@ -83,9 +83,9 @@ describe('useOpenSuggestion', () => {
 
   it('records no cluster and no title when the row has neither', async () => {
     const s = { ...(await seeded()), clusters: [], title_en: null };
-    const { result } = renderHook(() => useOpenSuggestion('feed'));
+    const { result } = await renderHook(() => useOpenSuggestion('feed'));
 
-    act(() => result.current(s));
+    await act(() => result.current(s));
 
     const [row] = await impressions();
     expect(row.stableClusterId).toBeNull();
@@ -102,22 +102,22 @@ describe('useOpenSuggestion', () => {
         { clusterId: 'c2', confidence: 0.7, stableClusterId: 'stable-c' },
       ],
     };
-    const { result } = renderHook(() => useOpenSuggestion('feed'));
+    const { result } = await renderHook(() => useOpenSuggestion('feed'));
 
-    act(() => result.current(s));
+    await act(() => result.current(s));
 
     const [row] = await impressions();
     expect(row.stableClusterId).toBe('stable-b');
   });
 
   it('keeps one callback per surface and session', async () => {
-    const { result, rerender } = renderHook(({ surface }: { surface: 'feed' | 'swipe' }) => useOpenSuggestion(surface), {
+    const { result, rerender } = await renderHook(({ surface }: { surface: 'feed' | 'swipe' }) => useOpenSuggestion(surface), {
       initialProps: { surface: 'feed' as 'feed' | 'swipe' },
     });
     const first = result.current;
-    rerender({ surface: 'feed' });
+    await rerender({ surface: 'feed' });
     expect(result.current).toBe(first);
-    rerender({ surface: 'swipe' });
+    await rerender({ surface: 'swipe' });
     expect(result.current).not.toBe(first);
   });
 });

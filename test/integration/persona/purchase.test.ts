@@ -132,7 +132,7 @@ const toastTitles = () => useToastQueue.getState().entries.map((e) => textOf(e.r
 /** Mounts the hook and waits for its first load. The clock is faked first: holds arm timers. */
 async function mountSettled() {
     fakeClock(NOW, { advanceTimers: true });
-    const hook = renderHook(() => useManageSubscription());
+    const hook = await renderHook(() => useManageSubscription());
     await waitFor(() => expect(hook.result.current.loading).toBe(false));
     return hook;
 }
@@ -571,7 +571,7 @@ describe('purchase', () => {
             paywallBuys('individual');
             const hook = await mountSettled();
             let done: Promise<void> = Promise.resolve();
-            act(() => {
+            await act(() => {
                 done = hook.result.current.handleViewPlans();
             });
             return { hook, done };
@@ -614,7 +614,7 @@ describe('purchase', () => {
             expect(statusOf(hook)).toBe('timed-out');
 
             let again: Promise<void> = Promise.resolve();
-            act(() => {
+            await act(() => {
                 again = hook.result.current.checkAgain();
             });
             expect(statusOf(hook)).toBe('confirming');

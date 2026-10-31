@@ -68,39 +68,39 @@ describe('useFeedCounts', () => {
     useOpenedStoriesStore.setState({ ids: new Set(), articleIds: new Set() });
   });
 
-  it('quotes the server article count and derives the other three from the store', () => {
+  it('quotes the server article count and derives the other three from the store', async () => {
     useForYouStore.setState({
       articleCount: 42,
       suggestions: asStore([row('a', 1, 0.9), row('b', 2, 0.1), row('c', 30, 0.9)]),
     });
     useOpenedStoriesStore.setState({ articleIds: new Set(['a']) });
 
-    const { result } = renderHook(() => useFeedCounts());
+    const { result } = await renderHook(() => useFeedCounts());
 
     expect(result.current).toEqual({ articleCount: 42, analysedCount: 2, relevantCount: 1, readCount: 1 });
   });
 
-  it('raises the read count the moment a story is opened, never past the relevant count', () => {
+  it('raises the read count the moment a story is opened, never past the relevant count', async () => {
     useForYouStore.setState({
       articleCount: 5,
       suggestions: asStore([row('a', 1, 0.9), row('low', 1, 0.1)]),
     });
-    const { result } = renderHook(() => useFeedCounts());
+    const { result } = await renderHook(() => useFeedCounts());
     expect(result.current.readCount).toBe(0);
 
-    act(() => useOpenedStoriesStore.getState().markOpened('a'));
+    await act(() => useOpenedStoriesStore.getState().markOpened('a'));
     expect(result.current.readCount).toBe(1);
 
     // Opened but never offered as relevant: not read.
-    act(() => useOpenedStoriesStore.getState().markOpened('low'));
+    await act(() => useOpenedStoriesStore.getState().markOpened('low'));
     expect(result.current).toMatchObject({ relevantCount: 1, readCount: 1 });
   });
 
-  it('follows new suggestions in the store', () => {
-    const { result } = renderHook(() => useFeedCounts());
+  it('follows new suggestions in the store', async () => {
+    const { result } = await renderHook(() => useFeedCounts());
     expect(result.current).toEqual({ articleCount: 0, analysedCount: 0, relevantCount: 0, readCount: 0 });
 
-    act(() => useForYouStore.setState({ articleCount: 3, suggestions: asStore([row('a', 1, 0.9)]) }));
+    await act(() => useForYouStore.setState({ articleCount: 3, suggestions: asStore([row('a', 1, 0.9)]) }));
 
     expect(result.current).toEqual({ articleCount: 3, analysedCount: 1, relevantCount: 1, readCount: 0 });
   });
@@ -112,7 +112,7 @@ describe('useFeedCounts', () => {
       articleCount: 1,
       suggestions: asStore([{ ...row('edge', 24, 0.9), firstPubDate: new Date(NOW - 24 * HOUR + 20_000).toISOString() }]),
     });
-    const { result } = renderHook(() => useFeedCounts());
+    const { result } = await renderHook(() => useFeedCounts());
     expect(result.current.analysedCount).toBe(1);
 
     await act(async () => {
@@ -126,20 +126,20 @@ describe('useFeedCounts', () => {
     expect(result.current.analysedCount).toBe(0);
   });
 
-  it('stops polling the minute when the last instance unmounts', () => {
-    const a = renderHook(() => useFeedCounts());
-    const b = renderHook(() => useFeedCounts());
+  it('stops polling the minute when the last instance unmounts', async () => {
+    const a = await renderHook(() => useFeedCounts());
+    const b = await renderHook(() => useFeedCounts());
     expect(jest.getTimerCount()).toBe(1); // one shared interval, not one per instance
-    a.unmount();
+    await a.unmount();
     expect(jest.getTimerCount()).toBe(1);
-    b.unmount();
+    await b.unmount();
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it('two instances in the same minute agree', () => {
+  it('two instances in the same minute agree', async () => {
     useForYouStore.setState({ articleCount: 9, suggestions: asStore([row('a', 1, 0.9)]) });
-    const a = renderHook(() => useFeedCounts());
-    const b = renderHook(() => useFeedCounts());
+    const a = await renderHook(() => useFeedCounts());
+    const b = await renderHook(() => useFeedCounts());
     expect(a.result.current).toEqual(b.result.current);
   });
 });

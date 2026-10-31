@@ -94,7 +94,7 @@ beforeEach(() => {
 describe('first page', () => {
   it('loads a country scope: that country\'s story leaders, in the request for its alpha-3 code', async () => {
     const sent = record('GetTopHeadlinesForCountry');
-    const { result } = render(NLD);
+    const { result } = await render(NLD);
     expect(result.current.isLoading).toBe(true);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(ids(result)).toEqual(leaders('NLD').map((a) => a.id));
@@ -104,7 +104,7 @@ describe('first page', () => {
 
   it('loads World with the GLOBAL sentinel mapped to a null country, first page only', async () => {
     const sent = record('GetTopHeadlinesForCountry');
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(sent[0].vars.countryCode).toBeNull();
     expect(ids(result)).toEqual(WORLD_LEADERS.slice(0, 10).map((a) => a.id));
@@ -112,7 +112,7 @@ describe('first page', () => {
 
   it('an empty answer gives an empty list with isLoading false at once, and no failure', async () => {
     server.use(mockGql('GetTopHeadlinesForCountry', (v) => headlinesAnswer([], v)));
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.headlines).toEqual([]);
     expect(result.current.loadFailed).toBe(false);
@@ -121,7 +121,7 @@ describe('first page', () => {
 
   it('a failed load is loadFailed, not an empty success', async () => {
     server.use(mockGqlError('GetTopHeadlinesForCountry', 'INTERNAL_SERVER_ERROR'));
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.headlines).toEqual([]);
     expect(result.current.loadFailed).toBe(true);
@@ -130,7 +130,7 @@ describe('first page', () => {
 
 describe('paging', () => {
   it('loadMore appends the next page', async () => {
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
       await result.current.loadMore();
@@ -145,7 +145,7 @@ describe('paging', () => {
         v.after ? headlinesAnswer(WORLD_LEADERS.slice(9), { first: 10 }) : headlinesAnswer(WORLD_LEADERS, v),
       ),
     );
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
       await result.current.loadMore();
@@ -170,11 +170,11 @@ describe('paging', () => {
         return headlinesAnswer(++firstPageCalls === 1 ? WORLD_LEADERS : reversed, v);
       }),
     );
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     let more!: Promise<void>;
-    act(() => {
+    await act(() => {
       more = result.current.loadMore();
     });
     await waitFor(() => expect(result.current.isLoadingMore).toBe(true));
@@ -204,7 +204,7 @@ describe('hung load', () => {
         return headlinesAnswer(WORLD_LEADERS, v);
       }),
     );
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await act(async () => {
       await jest.advanceTimersByTimeAsync(HUNG_LOAD_MS - 1);
     });
@@ -224,7 +224,7 @@ describe('hung load', () => {
 
   it('an answer inside the window never flips it', async () => {
     useStrictClock(Date.now());
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await settleUntil(() => !result.current.isLoading);
     await act(async () => {
       await jest.advanceTimersByTimeAsync(HUNG_LOAD_MS * 2);
@@ -240,7 +240,7 @@ describe('Explore window (windowHours)', () => {
 
   it('a supported server answers the windowed document with the window', async () => {
     const sent = record(...WINDOW_OPS);
-    const { result } = render(WORLD, 12);
+    const { result } = await render(WORLD, 12);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed']);
     expect(sent[0].vars.windowHours).toBe(12);
@@ -250,7 +250,7 @@ describe('Explore window (windowHours)', () => {
   it('GRAPHQL_VALIDATION_FAILED falls back to the plain document and stays latched for later loads', async () => {
     server.use(validationFailed());
     const sent = record(...WINDOW_OPS);
-    const first = render(WORLD, 12);
+    const first = await render(WORLD, 12);
     await waitFor(() => expect(first.result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed', 'GetTopHeadlinesForCountry']);
     expect(ids(first.result)).toHaveLength(10);
@@ -258,7 +258,7 @@ describe('Explore window (windowHours)', () => {
 
     // A later load, even for another window, goes straight to the plain document.
     sent.length = 0;
-    const second = render(NLD, 6);
+    const second = await render(NLD, 6);
     await waitFor(() => expect(second.result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountry']);
     expect(ids(second.result)).toEqual(leaders('NLD').map((a) => a.id));
@@ -267,13 +267,13 @@ describe('Explore window (windowHours)', () => {
   it('BAD_WINDOW falls back for that request only: the next load tries the windowed document again', async () => {
     server.use(badWindow());
     const sent = record(...WINDOW_OPS);
-    const first = render(WORLD, 6);
+    const first = await render(WORLD, 6);
     await waitFor(() => expect(first.result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed', 'GetTopHeadlinesForCountry']);
     expect(ids(first.result)).toHaveLength(10);
 
     sent.length = 0;
-    const second = render(WORLD, 24);
+    const second = await render(WORLD, 24);
     await waitFor(() => expect(second.result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed', 'GetTopHeadlinesForCountry']);
   });
@@ -281,7 +281,7 @@ describe('Explore window (windowHours)', () => {
   it('any other error on the windowed document is a failed load, with no fallback request', async () => {
     server.use(mockGqlError('GetTopHeadlinesForCountryWindowed', 'INTERNAL_SERVER_ERROR'));
     const sent = record(...WINDOW_OPS);
-    const { result } = render(WORLD, 12);
+    const { result } = await render(WORLD, 12);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(sent.map((s) => s.op)).toEqual(['GetTopHeadlinesForCountryWindowed']);
     expect(result.current.loadFailed).toBe(true);
@@ -294,7 +294,7 @@ describe('topic filter (worldHeadlines)', () => {
   });
 
   it('returns the facets and marks topics supported', async () => {
-    const { result } = render(WORLD, 24);
+    const { result } = await render(WORLD, 24);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.topicsSupported).toBe(true);
     expect(result.current.facets).toEqual([{ __typename: 'CanonicalTopicFacet', topicId: 'ct-politics', count: WORLD_LEADERS.length }]);
@@ -303,14 +303,14 @@ describe('topic filter (worldHeadlines)', () => {
 
   it('sends the picked topic id and lists only its stories', async () => {
     const sent = record('GetWorldHeadlines');
-    const { result } = renderHookInScreen(() => useScopeArticleList({ scope: WORLD, enabled: true, topicId: 'ct-politics' }));
+    const { result } = await renderHookInScreen(() => useScopeArticleList({ scope: WORLD, enabled: true, topicId: 'ct-politics' }));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(sent[0].vars.canonicalTopicIds).toEqual(['ct-politics']);
     expect(ids(result)).toHaveLength(10);
   });
 
   it('an id the server does not know matches nothing', async () => {
-    const { result } = renderHookInScreen(() => useScopeArticleList({ scope: WORLD, enabled: true, topicId: 'nope' }));
+    const { result } = await renderHookInScreen(() => useScopeArticleList({ scope: WORLD, enabled: true, topicId: 'nope' }));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(ids(result)).toEqual([]);
     expect(result.current.loadFailed).toBe(false);
@@ -318,7 +318,7 @@ describe('topic filter (worldHeadlines)', () => {
 
   it('sends no canonicalTopicIds without a pick', async () => {
     const sent = record('GetWorldHeadlines');
-    const { result } = render(WORLD);
+    const { result } = await render(WORLD);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(sent[0].vars.canonicalTopicIds ?? null).toBeNull();
   });

@@ -204,7 +204,7 @@ describe('the /dev-test-account deep link', () => {
             recordedWhenRouted = readPendingAuthUserId();
         });
 
-        mount({ handle: 'resident-ios' });
+        await mount({ handle: 'resident-ios' });
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/logged-in');
@@ -213,7 +213,7 @@ describe('the /dev-test-account deep link', () => {
     });
 
     it('never takes a user id from the link: an extra param is ignored, the handle decides', async () => {
-        mount({ handle: 'resident-ios', userId: 'bbbbbbbbbbbbbbbbbbbbbbbb' });
+        await mount({ handle: 'resident-ios', userId: 'bbbbbbbbbbbbbbbbbbbbbbbb' });
         await routed();
 
         const [body] = await bodiesTo('/test-account/sign-in');
@@ -222,7 +222,7 @@ describe('the /dev-test-account deep link', () => {
     });
 
     it('reset deletes the handle BEFORE signing in', async () => {
-        mount({ handle: 'resident-ios', reset: '1' });
+        await mount({ handle: 'resident-ios', reset: '1' });
         await routed();
 
         expect(paths()).toEqual(['/test-account/delete', '/test-account/sign-in']);
@@ -230,7 +230,7 @@ describe('the /dev-test-account deep link', () => {
     });
 
     it('new=1 mints a fresh tmp- handle', async () => {
-        mount({ new: '1' });
+        await mount({ new: '1' });
         await routed();
 
         const [body] = await bodiesTo('/test-account/sign-in');
@@ -241,7 +241,7 @@ describe('the /dev-test-account deep link', () => {
         ['an invalid handle', { handle: 'BAD HANDLE' }],
         ['no handle', {}],
     ])('%s goes to / and calls nothing', async (_label, params) => {
-        mount(params);
+        await mount(params);
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/');
@@ -251,7 +251,7 @@ describe('the /dev-test-account deep link', () => {
     it('a failed sign-in goes to / and records nothing', async () => {
         answer(SIGN_IN, 404, { code: 'NOT_FOUND', message: 'Not found' });
 
-        mount({ handle: 'resident-ios' });
+        await mount({ handle: 'resident-ios' });
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/');
@@ -265,7 +265,7 @@ describe('the /dev-test-account deep link', () => {
         if (before) await setTestAccountHandle(before);
         answer(SIGN_IN, 404, { code: 'NOT_FOUND', message: 'Not found' });
 
-        mount({ handle: 'resident-android' });
+        await mount({ handle: 'resident-android' });
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/');
@@ -278,7 +278,7 @@ describe('the /dev-test-account deep link', () => {
     ])('%s goes to / and touches nothing', async (_label, arrange) => {
         arrange();
 
-        mount({ handle: 'resident-ios', reset: '1' });
+        await mount({ handle: 'resident-ios', reset: '1' });
         await routed();
 
         expect(replace()).toHaveBeenCalledWith('/');

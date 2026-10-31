@@ -27,28 +27,28 @@ describe('resolving the look', () => {
 });
 
 describe('useMeraButtonLook', () => {
-  it('with no choice, a dark theme wears the light disc and a light theme the dark one', () => {
-    const { result } = renderHook(() => useMeraButtonLook());
+  it('with no choice, a dark theme wears the light disc and a light theme the dark one', async () => {
+    const { result } = await renderHook(() => useMeraButtonLook());
     expect(result.current).toBe('light');
 
-    act(() => useThemeStore.setState({ mode: 'light' }));
+    await act(() => useThemeStore.setState({ mode: 'light' }));
     expect(result.current).toBe('dark');
   });
 
   it('the reader choice wins over the theme and is kept in AsyncStorage', async () => {
-    const { result } = renderHook(() => useMeraButtonLook());
+    const { result } = await renderHook(() => useMeraButtonLook());
 
-    act(() => useDisplayPrefsStore.getState().setMeraButtonLook('dark'));
+    await act(() => useDisplayPrefsStore.getState().setMeraButtonLook('dark'));
 
     expect(result.current).toBe('dark'); // the dark theme alone would have said light
     expect(await AsyncStorage.getItem(MERA_BUTTON_LOOK_KEY)).toBe('dark');
 
-    act(() => useThemeStore.setState({ mode: 'light' }));
+    await act(() => useThemeStore.setState({ mode: 'light' }));
     expect(result.current).toBe('dark'); // and the theme no longer moves it
   });
 
   it('a stored choice comes back on hydrate, a garbage one is ignored', async () => {
-    const { result } = renderHook(() => useMeraButtonLook());
+    const { result } = await renderHook(() => useMeraButtonLook());
 
     await AsyncStorage.setItem(MERA_BUTTON_LOOK_KEY, 'dark');
     await act(async () => {
@@ -56,7 +56,7 @@ describe('useMeraButtonLook', () => {
     });
     expect(result.current).toBe('dark');
 
-    act(() => useDisplayPrefsStore.setState({ meraButtonLook: null }));
+    await act(() => useDisplayPrefsStore.setState({ meraButtonLook: null }));
     await AsyncStorage.setItem(MERA_BUTTON_LOOK_KEY, 'sepia');
     await act(async () => {
       await useDisplayPrefsStore.getState().hydrate();

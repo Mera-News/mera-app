@@ -95,9 +95,9 @@ function install() {
 }
 
 async function pickRow(slug: string) {
-    fireEvent.press(await screen.findByTestId('world-topic-pill'));
-    fireEvent.press(await screen.findByTestId(`world-topic-row-${slug}`));
-    act(() => mockClosed?.());
+    await fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await fireEvent.press(await screen.findByTestId(`world-topic-row-${slug}`));
+    await act(() => mockClosed?.());
 }
 
 beforeAll(initI18nEn);
@@ -114,40 +114,40 @@ beforeEach(() => {
 });
 
 it('picking applies only after the sheet has closed, and the sheet hides Reference', async () => {
-    render(<WorldPages />);
-    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await render(<WorldPages />);
+    await fireEvent.press(await screen.findByTestId('world-topic-pill'));
     expect(await screen.findByTestId('world-topic-row-politics')).toBeTruthy();
     expect(screen.queryByTestId('world-topic-row-reference')).toBeNull();
-    fireEvent.press(screen.getByTestId('world-topic-row-politics'));
+    await fireEvent.press(screen.getByTestId('world-topic-row-politics'));
     expect(sent.some((s) => s.ids?.length)).toBe(false);
     expect(screen.queryByTestId('world-topic-clear')).toBeNull();
-    act(() => mockClosed?.());
+    await act(() => mockClosed?.());
     await waitFor(() => expect(sent.at(-1)?.ids).toEqual(['ct-politics']));
     expect(await screen.findByTestId('world-topic-clear')).toBeTruthy();
     expect(await screen.findByText('4 stories about Politics')).toBeTruthy();
 });
 
 it('a country switch keeps the pick when that page has it', async () => {
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await pickRow('sports');
     await screen.findByText('2 stories about Sports');
-    fireEvent.press(screen.getByTestId('go-country:NL'));
+    await fireEvent.press(screen.getByTestId('go-country:NL'));
     expect(await screen.findByText('3 stories about Sports')).toBeTruthy();
 });
 
 it('a country switch falls back with the line when that page lacks the pick', async () => {
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await pickRow('politics');
     await screen.findByText('4 stories about Politics');
-    fireEvent.press(screen.getByTestId('go-country:NL'));
+    await fireEvent.press(screen.getByTestId('go-country:NL'));
     expect(await screen.findByText('No Politics stories here right now, so this shows all topics.')).toBeTruthy();
     expect(screen.getByTestId('world-topic-clear')).toBeTruthy();
 });
 
 it('clear returns to All', async () => {
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await pickRow('politics');
-    fireEvent.press(await screen.findByTestId('world-topic-clear'));
+    await fireEvent.press(await screen.findByTestId('world-topic-clear'));
     await waitFor(() => expect(screen.queryByTestId('world-topic-clear')).toBeNull());
     await waitFor(() => expect(sent.at(-1)?.ids).toBeUndefined());
 });
@@ -160,7 +160,7 @@ it('the latch hides the pill', async () => {
                 : undefined,
         ),
     );
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await screen.findByTestId('explore-list');
     await waitFor(() => expect(sent.length).toBe(0));
     await act(async () => {});
@@ -168,7 +168,7 @@ it('the latch hides the pill', async () => {
 });
 
 it('the latch firing under a pick resets to All', async () => {
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await pickRow('politics');
     await screen.findByTestId('world-topic-clear');
     server.use(
@@ -178,14 +178,14 @@ it('the latch firing under a pick resets to All', async () => {
                 : undefined,
         ),
     );
-    fireEvent.press(screen.getByTestId('go-country:NL'));
+    await fireEvent.press(screen.getByTestId('go-country:NL'));
     await waitFor(() => expect(screen.queryByTestId('world-topic-pill')).toBeNull());
     expect(screen.queryByTestId('world-topic-clear')).toBeNull();
 });
 
 it('is hidden offline', async () => {
     useNetworkStore.setState({ isConnected: false } as never);
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await screen.findByTestId('explore-list');
     await act(async () => {});
     expect(screen.queryByTestId('world-topic-pill')).toBeNull();
@@ -193,7 +193,7 @@ it('is hidden offline', async () => {
 
 it('is hidden when every facet is zero', async () => {
     facetsFor = () => [facet('ct-politics', 0), facet('ct-sports', 0)];
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await screen.findByTestId('explore-list');
     await waitFor(() => expect(sent.length).toBeGreaterThan(0));
     await act(async () => {});
@@ -210,19 +210,19 @@ it('a page still loading never shows the previous page counts', async () => {
             return undefined; // fall through to install()'s handler
         }),
     );
-    render(<WorldPages />);
+    await render(<WorldPages />);
     await screen.findByTestId('world-topic-pill');
-    fireEvent.press(screen.getByTestId('go-country:NL'));
+    await fireEvent.press(screen.getByTestId('go-country:NL'));
     await waitFor(() => expect(screen.queryByTestId('world-topic-pill')).toBeNull());
     await act(async () => release());
-    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await fireEvent.press(await screen.findByTestId('world-topic-pill'));
     expect(await screen.findByTestId('world-topic-row-sports')).toBeTruthy();
     expect(screen.queryByTestId('world-topic-row-politics')).toBeNull();
 });
 
 it('the topic rows scroll inside a capped list, so a tall sheet keeps All topics on screen', async () => {
-    render(<WorldPages />);
-    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await render(<WorldPages />);
+    await fireEvent.press(await screen.findByTestId('world-topic-pill'));
     const list = await screen.findByTestId('world-topic-list');
     expect(list.type).toBe('RCTScrollView');
     const style = Object.assign({}, ...[list.props.style].flat(Infinity).filter(Boolean));
@@ -233,20 +233,20 @@ it('the topic rows scroll inside a capped list, so a tall sheet keeps All topics
 });
 
 it('a scrim tap or drag closes without picking', async () => {
-    render(<WorldPages />);
-    fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await render(<WorldPages />);
+    await fireEvent.press(await screen.findByTestId('world-topic-pill'));
     await screen.findByTestId('world-topic-row-politics');
-    act(() => mockClose?.());
-    act(() => mockClosed?.());
+    await act(() => mockClose?.());
+    await act(() => mockClosed?.());
     await act(async () => {});
     expect(screen.queryByTestId('world-topic-clear')).toBeNull();
     expect(sent.some((x) => x.ids?.length)).toBe(false);
 });
 
 it('a picked row applies even if the sheet never reports it has gone', async () => {
-    render(<WorldPages />);
-    fireEvent.press(await screen.findByTestId('world-topic-pill'));
-    fireEvent.press(await screen.findByTestId('world-topic-row-politics'));
+    await render(<WorldPages />);
+    await fireEvent.press(await screen.findByTestId('world-topic-pill'));
+    await fireEvent.press(await screen.findByTestId('world-topic-row-politics'));
     await waitFor(() => expect(sent.at(-1)?.ids).toEqual(['ct-politics']), { timeout: 3000 });
     expect(await screen.findByTestId('world-topic-clear')).toBeTruthy();
 });

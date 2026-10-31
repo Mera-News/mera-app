@@ -76,7 +76,7 @@ const toastTitles = () =>
 type Options = Partial<Parameters<typeof useNotificationSettings>[0]>;
 async function mount(options: Options = {}) {
     const props = { isOnboarding: false, initialHours: [] as number[], toast: toastApi, ...options };
-    const hook = renderHook((p: Options) => useNotificationSettings({ ...props, ...p }), { initialProps: {} as Options });
+    const hook = await renderHook((p: Options) => useNotificationSettings({ ...props, ...p }), { initialProps: {} as Options });
     if (!props.isOnboarding) await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
     return hook;
 }
@@ -191,7 +191,7 @@ describe('notification settings', () => {
             const { result } = await mount();
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([6, 9, 18]));
+            await act(() => result.current.handleHoursChange([6, 9, 18]));
             expect(result.current.saveState).toBe('idle');
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(AUTO_SAVE_DELAY_MS - 100);
@@ -220,11 +220,11 @@ describe('notification settings', () => {
             const { result } = await mount();
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([6]));
+            await act(() => result.current.handleHoursChange([6]));
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(400);
             });
-            act(() => result.current.handleHoursChange([6, 7]));
+            await act(() => result.current.handleHoursChange([6, 7]));
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(AUTO_SAVE_DELAY_MS + 200);
             });
@@ -238,8 +238,8 @@ describe('notification settings', () => {
             const { result } = await mount();
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([6]));
-            act(() => result.current.handleHoursChange([]));
+            await act(() => result.current.handleHoursChange([6]));
+            await act(() => result.current.handleHoursChange([]));
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(AUTO_SAVE_DELAY_MS * 3);
             });
@@ -253,8 +253,8 @@ describe('notification settings', () => {
             const { result, unmount } = await mount();
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([10, 11]));
-            unmount();
+            await act(() => result.current.handleHoursChange([10, 11]));
+            await unmount();
 
             await waitFor(() => expect(sent).toHaveLength(1));
             expect(sent[0].preferredNotificationWindow).toEqual([10, 11].map(toUtc));
@@ -267,7 +267,7 @@ describe('notification settings', () => {
             const { result } = await mount({ onHoursChange });
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([6]));
+            await act(() => result.current.handleHoursChange([6]));
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(AUTO_SAVE_DELAY_MS * 2);
             });
@@ -282,7 +282,7 @@ describe('notification settings', () => {
             const { result } = await mount({ isOnboarding: true });
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([6]));
+            await act(() => result.current.handleHoursChange([6]));
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(AUTO_SAVE_DELAY_MS * 2);
             });
@@ -295,7 +295,7 @@ describe('notification settings', () => {
             const { result } = await mount();
             useFakeClock(NOW);
 
-            act(() => result.current.handleHoursChange([6]));
+            await act(() => result.current.handleHoursChange([6]));
             await act(async () => {
                 await jest.advanceTimersByTimeAsync(AUTO_SAVE_DELAY_MS + 200);
             });
@@ -393,7 +393,7 @@ describe('notification settings', () => {
             await new Promise((r) => setTimeout(r, 30));
             expect(sent).toEqual([]);
 
-            rerender({ enableRequest: 2 });
+            await rerender({ enableRequest: 2 });
 
             await waitFor(() => expect(sent).toHaveLength(1));
             await waitFor(() => expect(result.current.notificationsEnabled).toBe(true));
@@ -425,7 +425,7 @@ describe('notification settings', () => {
             const sent = recordMutation('UpdateNotificationsEnabled', 'updateNotificationsEnabled');
             const hook = await mount();
             await waitFor(() => expect(hook.result.current.osRefused).toBe(true));
-            act(() => hook.result.current.openDeviceSettings());
+            await act(() => hook.result.current.openDeviceSettings());
             setAppState('background');
             permissions.mockResolvedValue({ status: after });
             await act(async () => {
@@ -454,8 +454,8 @@ describe('notification settings', () => {
             const sent = recordMutation('UpdateNotificationsEnabled', 'updateNotificationsEnabled');
             const { result, unmount } = await mount();
             await waitFor(() => expect(result.current.osRefused).toBe(true));
-            act(() => result.current.openDeviceSettings());
-            unmount();
+            await act(() => result.current.openDeviceSettings());
+            await unmount();
             permissions.mockClear();
             permissions.mockResolvedValue({ status: 'granted' });
             setAppState('background');

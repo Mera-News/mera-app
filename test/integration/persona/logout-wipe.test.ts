@@ -210,7 +210,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-    cleanup();
+    await cleanup();
     jest.useRealTimers();
     await drain();
     while (spies.length) spies.pop()?.mockRestore();
@@ -278,7 +278,7 @@ async function runConfirming(run: () => Promise<void>, dialogs = 1, onLastDialog
     for (let i = 0; i < dialogs; i += 1) {
         await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1), { timeout: 8000 });
         if (i === dialogs - 1) onLastDialog?.();
-        act(() => settleDialog(useDialogQueue.getState().queue[0].id, true));
+        await act(() => settleDialog(useDialogQueue.getState().queue[0].id, true));
     }
     await act(async () => {
         await done;
@@ -296,7 +296,7 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
         await seedSignedInDevice();
         // Positive controls: the device really holds every key before the button is pressed.
         for (const k of SECURE_STORE_KEYS) expect(secureStoreDump()[k]).toBeDefined();
-        const { result } = mount();
+        const { result } = await mount();
 
         await runConfirming(() => result.current.confirmLogout());
 
@@ -307,7 +307,7 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
     // Invariant 4b: a Drive left connected uploads the next person's persona into a stranger's Drive.
     it('disconnects Google Drive', async () => {
         await seedSignedInDevice();
-        const { result } = mount();
+        const { result } = await mount();
 
         await runConfirming(() => result.current.confirmLogout());
 
@@ -317,7 +317,7 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
     it('with no Drive connected, never signs Google out and still completes', async () => {
         driveConnected(false);
         await seedSignedInDevice();
-        const { result } = mount();
+        const { result } = await mount();
 
         await runConfirming(() => result.current.confirmLogout());
 
@@ -328,11 +328,11 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
 
     it('declining the dialog changes nothing', async () => {
         await seedSignedInDevice();
-        const { result } = mount();
+        const { result } = await mount();
 
         const done = result.current.confirmLogout();
         await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
-        act(() => settleDialog(useDialogQueue.getState().queue[0].id, false));
+        await act(() => settleDialog(useDialogQueue.getState().queue[0].id, false));
         await done;
 
         expect(await settings.getSetting('cached_user_id')).toBe(ME);
@@ -346,7 +346,7 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
             http.post('*/api/auth/sign-out', () => HttpResponse.json({ message: 'boom' }, { status: 500 })),
         );
         await seedSignedInDevice();
-        const { result } = mount();
+        const { result } = await mount();
 
         await runConfirming(() => result.current.confirmLogout());
 
@@ -365,13 +365,13 @@ describe('logout button (useAppPreferences.confirmLogout)', () => {
             }),
         );
         await seedSignedInDevice();
-        const { result } = mount();
+        const { result } = await mount();
 
         const done = result.current.confirmLogout();
         await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1), { timeout: 8000 });
         // Fake only from here, so the 5 s race and the post-navigation yield run on the test's clock.
         useFakeClock(Date.now());
-        act(() => settleDialog(useDialogQueue.getState().queue[0].id, true));
+        await act(() => settleDialog(useDialogQueue.getState().queue[0].id, true));
         await advanceUntilDone(done);
 
         await expectSignedOutAndWiped();
@@ -867,12 +867,12 @@ describe('local identity state (what feeds the launch route)', () => {
 
 describe('delete account (useDeleteAccount)', () => {
     const mount = () => renderHook(() => useDeleteAccount());
-    const deleteAccount = (hook: ReturnType<typeof mount>) => runConfirming(() => hook.result.current(), 2);
+    const deleteAccount = (hook: Awaited<ReturnType<typeof mount>>) => runConfirming(() => hook.result.current(), 2);
 
     async function deleteWithEverythingSeeded() {
         await seedSignedInDevice();
         await secureStore.setItemAsync(key('device_ref'), 'retired');
-        await deleteAccount(mount());
+        await deleteAccount(await mount());
     }
 
     it('asks twice, requests the deletion, signs out, severs the device binding and clears the stores', async () => {
@@ -919,7 +919,7 @@ describe('delete account (useDeleteAccount)', () => {
 
     it('cancelling at either confirmation changes nothing and sends nothing', async () => {
         await seedSignedInDevice();
-        const { result } = mount();
+        const { result } = await mount();
         let requested = false;
         const listener = ({ request }: { request: Request }) => {
             if (request.url.endsWith('/request-account-deletion')) requested = true;
@@ -928,9 +928,9 @@ describe('delete account (useDeleteAccount)', () => {
 
         const done = result.current();
         await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
-        act(() => settleDialog(useDialogQueue.getState().queue[0].id, true));
+        await act(() => settleDialog(useDialogQueue.getState().queue[0].id, true));
         await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
-        act(() => settleDialog(useDialogQueue.getState().queue[0].id, false));
+        await act(() => settleDialog(useDialogQueue.getState().queue[0].id, false));
         await done;
         server.events.removeListener('request:start', listener);
 
@@ -948,7 +948,7 @@ describe('delete account (useDeleteAccount)', () => {
         );
         await seedSignedInDevice();
 
-        await deleteAccount(mount());
+        await deleteAccount(await mount());
 
         expect(secureStoreDump()[key('cookie')]).toBeDefined();
         expect(secureStoreDump()[DEVICE_CREDENTIALS[0]]).toBeDefined();
@@ -976,7 +976,7 @@ describe('onboarding server-error logout (useServerErrorLogout)', () => {
         await settings.setSetting('cached_user_id', ME);
         useUserStore.setState({ userId: ME });
         const setShow = jest.fn();
-        const { result } = renderHook(() => useServerErrorLogout(setShow));
+        const { result } = await renderHook(() => useServerErrorLogout(setShow));
         await act(async () => {
             await result.current.handleServerErrorLogout();
         });
