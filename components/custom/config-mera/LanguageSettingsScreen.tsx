@@ -7,6 +7,7 @@ import { getNativeLanguageName } from '@/lib/translation-service';
 import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { toastManager } from '@/lib/toast-manager';
 import { requestRestart } from '@/lib/app-restart';
+import { needsRtlRestart } from '@/lib/i18n';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
@@ -27,8 +28,6 @@ interface LanguageSettingsScreenProps {
     onBusyChange?: (busy: boolean) => void;
 }
 
-const RTL_CODES = new Set(['ar', 'he']);
-
 const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack, onBusyChange }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
@@ -40,8 +39,9 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     // Only fires on a language that was actually applied, so a failed attempt
     // can never prompt for a restart the user did not ask for.
     const handleCommitted = useCallback(
-        (code: string, previousCode: string) => {
-            if (RTL_CODES.has(previousCode) === RTL_CODES.has(code)) return;
+        (code: string) => {
+            // Against the live layout, not the previous language: en -> ar (Later) -> en needs none.
+            if (!needsRtlRestart(code)) return;
             void showDialog({
                 title: t('language.restartRequired'),
                 body: t('language.restartDescription'),

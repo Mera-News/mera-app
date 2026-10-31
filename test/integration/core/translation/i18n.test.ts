@@ -1,23 +1,25 @@
 // lib/i18n/index.ts over the real i18next instance, the real bundled locales and the real
-// translation-service. Only the native I18nManager is faked: its forceRTL is spied (it persists a
-// native flag) and isRTL is set per case.
+// translation-service. Only the native I18nManager is faked: allowRTL and forceRTL are spied (each
+// persists a native flag) and isRTL is set per case. As on device, isRTL is FROZEN for the process:
+// a forceRTL write never changes it, it only takes effect at the next launch.
 import { I18nManager } from 'react-native';
 
-import i18n, { applyLanguage, previewLanguage, APP_LANGUAGES } from '@/lib/i18n';
+import i18n, { applyLanguage, previewLanguage, needsRtlRestart, APP_LANGUAGES } from '@/lib/i18n';
 
 let isRTL = false;
 let forceRTL: jest.SpyInstance;
+let allowRTL: jest.SpyInstance;
 
 beforeEach(() => {
   isRTL = false;
   Object.defineProperty(I18nManager, 'isRTL', { configurable: true, get: () => isRTL });
-  forceRTL = jest.spyOn(I18nManager, 'forceRTL').mockImplementation((val: boolean) => {
-    isRTL = val;
-  });
+  forceRTL = jest.spyOn(I18nManager, 'forceRTL').mockImplementation(() => {});
+  allowRTL = jest.spyOn(I18nManager, 'allowRTL').mockImplementation(() => {});
 });
 
 afterEach(async () => {
   forceRTL.mockRestore();
+  allowRTL.mockRestore();
   await i18n.changeLanguage('en');
 });
 
@@ -132,40 +134,47 @@ describe('applyLanguage', () => {
     await applyLanguage('en'); // restore
   });
 
-  it('does NOT call forceRTL for non-RTL languages', async () => {
+  it('writes both RTL flags off for an LTR language', async () => {
     await applyLanguage('fr');
-    expect(forceRTL).not.toHaveBeenCalled();
+    expect(allowRTL).toHaveBeenLastCalledWith(false);
+    expect(forceRTL).toHaveBeenLastCalledWith(false);
   });
 
-  it('calls I18nManager.forceRTL(true) when switching to Arabic', async () => {
-    isRTL = false;
+  it('writes both RTL flags on for Arabic', async () => {
     await applyLanguage('ar');
-    expect(forceRTL).toHaveBeenCalledWith(true);
-    // Reset
-    isRTL = false;
-    await i18n.changeLanguage('en');
+    expect(allowRTL).toHaveBeenLastCalledWith(true);
+    expect(forceRTL).toHaveBeenLastCalledWith(true);
   });
 
-  it('calls I18nManager.forceRTL(false) when switching FROM RTL to LTR', async () => {
+  it('en -> ar -> en in one LTR-started process leaves the flags off (isRTL stays frozen at false)', async () => {
+    await applyLanguage('ar');
+    await applyLanguage('en');
+    expect(forceRTL).toHaveBeenLastCalledWith(false);
+    expect(allowRTL).toHaveBeenLastCalledWith(false);
+  });
+
+  it('ar -> en in an RTL-started process writes the flags off', async () => {
     isRTL = true;
     await applyLanguage('en');
-    expect(forceRTL).toHaveBeenCalledWith(false);
-    isRTL = false;
+    expect(forceRTL).toHaveBeenLastCalledWith(false);
+    expect(allowRTL).toHaveBeenLastCalledWith(false);
   });
 
-  it('does NOT call forceRTL when RTL state already matches (Arabic, already RTL)', async () => {
+  it('rewrites the flags even when the running layout already matches (a phone set to Arabic, app in Arabic)', async () => {
     isRTL = true;
     await applyLanguage('ar');
-    expect(forceRTL).not.toHaveBeenCalled();
-    // Cleanup
-    isRTL = false;
-    await i18n.changeLanguage('en');
+    expect(forceRTL).toHaveBeenLastCalledWith(true);
   });
+});
 
-  it('does NOT call forceRTL for LTR when already LTR', async () => {
+describe('needsRtlRestart', () => {
+  it('compares against the layout the process started with, not the previous language', () => {
     isRTL = false;
-    await applyLanguage('de');
-    expect(forceRTL).not.toHaveBeenCalled();
+    expect(needsRtlRestart('ar')).toBe(true);
+    expect(needsRtlRestart('en')).toBe(false); // en -> ar (Later) -> en: nothing to restart for
+    isRTL = true;
+    expect(needsRtlRestart('en')).toBe(true);
+    expect(needsRtlRestart('ar')).toBe(false);
   });
 });
 

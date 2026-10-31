@@ -64,14 +64,24 @@ i18n.use(initReactI18next).init({
 /**
  * Apply a language to i18n and handle RTL layout for Arabic/Hebrew.
  * Call this after hydrating the app-language store.
- * For RTL changes the caller must trigger an app reload.
+ * For RTL changes the caller must trigger an app reload (see `needsRtlRestart`).
+ *
+ * Both native flags are written on EVERY call, never behind an
+ * `I18nManager.isRTL` comparison: `isRTL` is frozen at JS start, so after
+ * en -> ar -> en in one process it still reads false and a guarded write left
+ * `forceRTL(true)` persisted. `allowRTL(false)` is what keeps an English app LTR
+ * on a phone set to Arabic (the native default allows RTL from the phone).
  */
 export function applyLanguage(lang: string): void {
     i18n.changeLanguage(lang);
     const isRTL = RTL_LANGUAGES.has(lang);
-    if (I18nManager.isRTL !== isRTL) {
-        I18nManager.forceRTL(isRTL);
-    }
+    I18nManager.allowRTL(isRTL);
+    I18nManager.forceRTL(isRTL);
+}
+
+/** True when the running layout (fixed at JS start) differs from what `lang` needs. */
+export function needsRtlRestart(lang: string): boolean {
+    return RTL_LANGUAGES.has(lang) !== I18nManager.isRTL;
 }
 
 /**
