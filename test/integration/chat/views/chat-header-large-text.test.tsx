@@ -5,6 +5,7 @@
 // full width. Every button keeps a 44pt frame.
 import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import ChatPopover from '@/components/custom/floating-chat/ChatPopover';
 import { useChatReadiness } from '@/lib/llm/prewarm';
@@ -15,8 +16,8 @@ import { resetChatModules, setProcessingMode } from '@/test/integration/chat/_he
 jest.mock('react-native-keyboard-controller', () => require('react-native-keyboard-controller/jest'));
 // Reduce Motion: the panel opens without a timed morph, as the bottom-sheet suite does.
 jest.mock('react-native-reanimated', () => {
-  const actual = jest.requireActual('react-native-reanimated');
-  return { ...actual, __esModule: true, default: actual.default ?? actual, useReducedMotion: () => true };
+  const actual = jest.requireActual('react-native-reanimated/mock');
+  return { ...actual, __esModule: true, default: actual.default ?? actual, useReducedMotion: () => true, makeMutable: (v: unknown) => ({ value: v }) };
 });
 // The About Mera sheet is a native Modal the jest preset cannot load; it is not under test here.
 jest.mock('@/components/custom/floating-chat/AboutMeraModal', () => ({ __esModule: true, default: () => null }));
@@ -38,9 +39,11 @@ async function open(fontScale: number) {
   await setProcessingMode('cloud');
   useChatReadiness.setState({ status: 'ready' });
   const view = render(
-    <ChatPopover>
-      <View />
-    </ChatPopover>,
+    <GestureHandlerRootView>
+      <ChatPopover>
+        <View />
+      </ChatPopover>
+    </GestureHandlerRootView>,
   );
   act(() => useFloatingChatStore.getState().expand());
   return view;

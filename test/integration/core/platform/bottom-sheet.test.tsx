@@ -18,7 +18,7 @@ jest.mock('react-native/Libraries/Modal/Modal', () => {
     };
 });
 jest.mock('react-native-reanimated', () => {
-    const actual = jest.requireActual('react-native-reanimated');
+    const actual = jest.requireActual('react-native-reanimated/mock');
     return { ...actual, __esModule: true, default: actual.default ?? actual, useReducedMotion: () => true };
 });
 // The sheet pads for the WINDOW's bottom inset (initialWindowMetrics), not the mounting screen's.

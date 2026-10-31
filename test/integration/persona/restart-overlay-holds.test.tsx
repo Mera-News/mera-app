@@ -18,7 +18,7 @@ jest.mock('react-native/Libraries/Modal/Modal', () => {
 });
 // The shared Reanimated mock has no useReducedMotion, which the sheet and help card read.
 jest.mock('react-native-reanimated', () => {
-    const actual = jest.requireActual('react-native-reanimated');
+    const actual = jest.requireActual('react-native-reanimated/mock');
     return { ...actual, __esModule: true, default: actual.default ?? actual, useReducedMotion: () => true };
 });
 jest.mock('expo-updates', () => ({
