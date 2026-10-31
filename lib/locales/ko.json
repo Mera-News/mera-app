@@ -240,7 +240,11 @@
       "waitingTomorrow_other": "메라가 오늘 읽기 분량을 모두 사용했습니다. 아래 기사 {{formatted}}개는 아직 읽지 않았습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
       "bodyToday": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 오늘 {{time}}에 다시 읽습니다.",
       "bodyTomorrow": "메라가 오늘 읽기 분량을 모두 사용했습니다. 메라는 내일 {{time}}에 다시 읽습니다.",
-      "tryIndividual_other": "개인 요금제 {{count}}일 무료 체험"
+      "tryIndividual_other": "개인 요금제 {{count}}일 무료 체험",
+      "publishedToday_other": "오늘 {{formatted}}개의 기사가 게시되었습니다.",
+      "readKept_zero": "메라가 {{read}}개를 읽었지만 아직 회원님에게 중요한 기사는 없습니다.",
+      "readKept_other": "메라가 {{read}}개를 읽었고, 회원님에게 중요한 {{formatted}}개만 남겼습니다.",
+      "upsell_other": "요금제를 업그레이드하면 메라가 {{formatted}}개를 더 읽어 시간을 더 아낄 수 있습니다."
     },
     "noteHeldToday": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 오늘 {{time}} 이후에 작성합니다.",
     "noteHeldTomorrow": "메라가 오늘 읽기 분량을 모두 사용해서 이 이유는 내일 {{time}} 이후에 작성합니다.",
@@ -984,7 +988,13 @@
     "tryNow": "지금 시도",
     "seePlans": "요금제 보기",
     "readOnPhone": "대신 이 휴대폰에서 읽기",
-    "readingAgainA11y": "메라가 다시 읽고 있습니다."
+    "readingAgainA11y": "메라가 다시 읽고 있습니다.",
+    "funnelPublished": "오늘 게시됨",
+    "funnelRead": "메라가 읽음",
+    "funnelKept": "회원님에게 중요함",
+    "funnelWaiting": "메라 대기 중",
+    "readsAgain": "메라가 {{time}}에 다시 읽습니다.",
+    "readsAgainOrIndividual": "메라가 {{time}}에 다시 읽거나, 지금 개인 요금제로 바로 읽습니다."
   },
   "trackedStories": {
     "emptyTitle": "아직 팔로우한 스토리가 없습니다",

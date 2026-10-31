@@ -274,7 +274,20 @@
       "tryIndividual_one": "Wypróbuj Indywidualny za darmo przez {{count}} dzień",
       "tryIndividual_few": "Wypróbuj Indywidualny za darmo przez {{count}} dni",
       "tryIndividual_many": "Wypróbuj Indywidualny za darmo przez {{count}} dni",
-      "tryIndividual_other": "Wypróbuj Indywidualny za darmo przez {{count}} dni"
+      "tryIndividual_other": "Wypróbuj Indywidualny za darmo przez {{count}} dni",
+      "publishedToday_one": "Dzisiaj został opublikowany {{formatted}} artykuł.",
+      "publishedToday_few": "Dzisiaj zostały opublikowane {{formatted}} artykuły.",
+      "publishedToday_many": "Dzisiaj zostało opublikowanych {{formatted}} artykułów.",
+      "publishedToday_other": "Dzisiaj zostało opublikowanych {{formatted}} artykułów.",
+      "readKept_zero": "Mera przeczytała {{read}} i żaden z nich nie jest jeszcze dla Ciebie ważny.",
+      "readKept_one": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykuł, który jest dla Ciebie ważny.",
+      "readKept_few": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykuły, które są dla Ciebie ważne.",
+      "readKept_many": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykułów, które są dla Ciebie ważne.",
+      "readKept_other": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykułów, które są dla Ciebie ważne.",
+      "upsell_one": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykuł i oszczędzić Ci jeszcze więcej czasu.",
+      "upsell_few": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykuły i oszczędzić Ci jeszcze więcej czasu.",
+      "upsell_many": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykułów i oszczędzić Ci jeszcze więcej czasu.",
+      "upsell_other": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykułów i oszczędzić Ci jeszcze więcej czasu."
     },
     "noteHeldToday": "Mera napisze to uzasadnienie dzisiaj po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
     "noteHeldTomorrow": "Mera napisze to uzasadnienie jutro po {{time}}, bo wykorzystała dzisiejszą porcję czytania.",
@@ -1036,7 +1049,13 @@
     "tryNow": "Spróbuj teraz",
     "seePlans": "Zobacz plany",
     "readOnPhone": "Czytaj zamiast tego na tym telefonie",
-    "readingAgainA11y": "Mera znów czyta."
+    "readingAgainA11y": "Mera znów czyta.",
+    "funnelPublished": "Opublikowano dzisiaj",
+    "funnelRead": "Przeczytane przez Merę",
+    "funnelKept": "Warte Twojego czasu",
+    "funnelWaiting": "Czeka na Merę",
+    "readsAgain": "Mera ponownie czyta o {{time}}.",
+    "readsAgainOrIndividual": "Mera ponownie czyta o {{time}} albo już teraz z Indywidualnym."
   },
   "trackedStories": {
     "emptyTitle": "Nie śledzisz jeszcze żadnych historii",

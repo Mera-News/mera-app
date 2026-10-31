@@ -246,7 +246,14 @@
       "bodyToday": "Mera bugünkü okumasını kullandı. Mera bugün {{time}} saatinde yeniden okur.",
       "bodyTomorrow": "Mera bugünkü okumasını kullandı. Mera yarın {{time}} saatinde yeniden okur.",
       "tryIndividual_one": "Bireysel planı {{count}} gün ücretsiz dene",
-      "tryIndividual_other": "Bireysel planı {{count}} gün ücretsiz dene"
+      "tryIndividual_other": "Bireysel planı {{count}} gün ücretsiz dene",
+      "publishedToday_one": "Bugün {{formatted}} makale yayınlandı.",
+      "publishedToday_other": "Bugün {{formatted}} makale yayınlandı.",
+      "readKept_zero": "Mera {{read}} makale okudu ama şimdilik hiçbiri senin için önemli değil.",
+      "readKept_one": "Mera {{read}} makale okudu ve senin için önemli olan yalnızca {{formatted}} tanesini tuttu.",
+      "readKept_other": "Mera {{read}} makale okudu ve senin için önemli olan yalnızca {{formatted}} tanesini tuttu.",
+      "upsell_one": "Daha fazla zaman kazanmak için planını yükselt, böylece Mera {{formatted}} makaleyi de okuyabilsin.",
+      "upsell_other": "Daha fazla zaman kazanmak için planını yükselt, böylece Mera {{formatted}} makaleyi de okuyabilsin."
     },
     "noteHeldToday": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni bugün {{time}} saatinde yazacak.",
     "noteHeldTomorrow": "Mera bu nedeni henüz yazmadı, çünkü bugünkü okumasını kullandı. Mera bu nedeni yarın {{time}} saatinde yazacak.",
@@ -994,7 +1001,13 @@
     "tryNow": "Şimdi dene",
     "seePlans": "Planları gör",
     "readOnPhone": "Bunun yerine bu telefonda oku",
-    "readingAgainA11y": "Mera yeniden okuyor."
+    "readingAgainA11y": "Mera yeniden okuyor.",
+    "funnelPublished": "Bugün yayınlandı",
+    "funnelRead": "Mera tarafından okundu",
+    "funnelKept": "Vaktine değer",
+    "funnelWaiting": "Mera'yı bekliyor",
+    "readsAgain": "Mera {{time}} saatinde yeniden okur.",
+    "readsAgainOrIndividual": "Mera {{time}} saatinde yeniden okur, ya da Bireysel ile hemen şimdi."
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",

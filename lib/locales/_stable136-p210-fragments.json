@@ -1,0 +1,430 @@
+{
+  "ar": {
+    "feed": {
+      "readHold": {
+        "publishedToday_zero": "نُشرت {{formatted}} مقالة اليوم.",
+        "publishedToday_one": "نُشرت {{formatted}} مقالة اليوم.",
+        "publishedToday_two": "نُشرت {{formatted}} مقالتان اليوم.",
+        "publishedToday_few": "نُشرت {{formatted}} مقالات اليوم.",
+        "publishedToday_many": "نُشرت {{formatted}} مقالة اليوم.",
+        "publishedToday_other": "نُشرت {{formatted}} مقالة اليوم.",
+        "readKept_zero": "قرأت ميرا {{read}} ولا شيء منها يهمك بعد.",
+        "readKept_one": "قرأت ميرا {{read}} واحتفظت بـ{{formatted}} مقالة فقط مما يهمك.",
+        "readKept_two": "قرأت ميرا {{read}} واحتفظت بـ{{formatted}} مقالتين فقط مما يهمك.",
+        "readKept_few": "قرأت ميرا {{read}} واحتفظت بـ{{formatted}} مقالات فقط مما يهمك.",
+        "readKept_many": "قرأت ميرا {{read}} واحتفظت بـ{{formatted}} مقالة فقط مما يهمك.",
+        "readKept_other": "قرأت ميرا {{read}} واحتفظت بـ{{formatted}} مقالة فقط مما يهمك.",
+        "upsell_zero": "رقِّ خطتك لتوفر وقتًا أكبر بأن تقرأ ميرا {{formatted}} مقالة أيضًا.",
+        "upsell_one": "رقِّ خطتك لتوفر وقتًا أكبر بأن تقرأ ميرا {{formatted}} مقالة أيضًا.",
+        "upsell_two": "رقِّ خطتك لتوفر وقتًا أكبر بأن تقرأ ميرا {{formatted}} مقالتين أيضًا.",
+        "upsell_few": "رقِّ خطتك لتوفر وقتًا أكبر بأن تقرأ ميرا {{formatted}} مقالات أيضًا.",
+        "upsell_many": "رقِّ خطتك لتوفر وقتًا أكبر بأن تقرأ ميرا {{formatted}} مقالة أيضًا.",
+        "upsell_other": "رقِّ خطتك لتوفر وقتًا أكبر بأن تقرأ ميرا {{formatted}} مقالة أيضًا."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "نُشرت اليوم",
+      "funnelRead": "قرأتها ميرا",
+      "funnelKept": "تستحق وقتك",
+      "funnelWaiting": "في انتظار ميرا",
+      "readsAgain": "ستقرأ ميرا مجددًا عند {{time}}.",
+      "readsAgainOrIndividual": "ستقرأ ميرا مجددًا عند {{time}}، أو الآن مع الخطة الفردية."
+    }
+  },
+  "de": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} Artikel wurde heute veröffentlicht.",
+        "publishedToday_other": "{{formatted}} Artikel wurden heute veröffentlicht.",
+        "readKept_zero": "Mera hat {{read}} Artikel gelesen, und bisher ist für dich noch keiner wichtig.",
+        "readKept_one": "Mera hat {{read}} Artikel gelesen und nur {{formatted}} behalten, der für dich wichtig ist.",
+        "readKept_other": "Mera hat {{read}} Artikel gelesen und nur {{formatted}} behalten, die für dich wichtig sind.",
+        "upsell_one": "Mit einem Upgrade sparst du noch mehr Zeit, wenn Mera auch {{formatted}} weitere liest.",
+        "upsell_other": "Mit einem Upgrade sparst du noch mehr Zeit, wenn Mera auch {{formatted}} weitere liest."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Heute veröffentlicht",
+      "funnelRead": "Von Mera gelesen",
+      "funnelKept": "Für dich wichtig",
+      "funnelWaiting": "Wartet auf Mera",
+      "readsAgain": "Mera liest wieder um {{time}}.",
+      "readsAgainOrIndividual": "Mera liest wieder um {{time}}, oder jetzt mit Einzelperson."
+    }
+  },
+  "es": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} artículo se publicó hoy.",
+        "publishedToday_other": "{{formatted}} artículos se publicaron hoy.",
+        "readKept_zero": "Mera leyó {{read}} y todavía ninguno te importa.",
+        "readKept_one": "Mera leyó {{read}} y solo conservó {{formatted}} que te importa.",
+        "readKept_other": "Mera leyó {{read}} y solo conservó {{formatted}} que te importan.",
+        "upsell_one": "Mejora tu plan para ahorrar aún más tiempo y deja que Mera lea también {{formatted}}.",
+        "upsell_other": "Mejora tu plan para ahorrar aún más tiempo y deja que Mera lea también {{formatted}}."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Publicado hoy",
+      "funnelRead": "Leído por Mera",
+      "funnelKept": "Vale tu tiempo",
+      "funnelWaiting": "Esperando a Mera",
+      "readsAgain": "Mera vuelve a leer a las {{time}}.",
+      "readsAgainOrIndividual": "Mera vuelve a leer a las {{time}}, o ahora con Individual."
+    }
+  },
+  "fr": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} article a été publié aujourd'hui.",
+        "publishedToday_other": "{{formatted}} articles ont été publiés aujourd'hui.",
+        "readKept_zero": "Mera a lu {{read}} articles et aucun ne compte encore pour vous.",
+        "readKept_one": "Mera a lu {{read}} articles et n'a gardé que {{formatted}} qui compte pour vous.",
+        "readKept_other": "Mera a lu {{read}} articles et n'a gardé que {{formatted}} qui comptent pour vous.",
+        "upsell_one": "Passez à Individuel pour gagner encore plus de temps en laissant Mera lire aussi {{formatted}}.",
+        "upsell_other": "Passez à Individuel pour gagner encore plus de temps en laissant Mera lire aussi {{formatted}}."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Publiés aujourd'hui",
+      "funnelRead": "Lus par Mera",
+      "funnelKept": "Utiles pour vous",
+      "funnelWaiting": "En attente de Mera",
+      "readsAgain": "Mera reprend la lecture à {{time}}.",
+      "readsAgainOrIndividual": "Mera reprend la lecture à {{time}}, ou dès maintenant avec Individuel."
+    }
+  },
+  "hi": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "आज {{formatted}} लेख प्रकाशित हुआ है।",
+        "publishedToday_other": "आज {{formatted}} लेख प्रकाशित हुए हैं।",
+        "readKept_zero": "मेरा ऐप ने {{read}} लेख पढ़े, और इनमें से अभी कोई भी आपके लिए काम का नहीं है।",
+        "readKept_one": "मेरा ऐप ने {{read}} लेख पढ़े और उनमें से आपके लिए काम का सिर्फ़ {{formatted}} लेख रखा।",
+        "readKept_other": "मेरा ऐप ने {{read}} लेख पढ़े और उनमें से आपके लिए काम के सिर्फ़ {{formatted}} लेख रखे।",
+        "upsell_one": "अपग्रेड करके मेरा ऐप को {{formatted}} और लेख भी पढ़ने दें, ताकि आपका और ज़्यादा समय बचे।",
+        "upsell_other": "अपग्रेड करके मेरा ऐप को {{formatted}} और लेख भी पढ़ने दें, ताकि आपका और ज़्यादा समय बचे।"
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "आज प्रकाशित",
+      "funnelRead": "मेरा ऐप ने पढ़ा",
+      "funnelKept": "आपके लिए काम का",
+      "funnelWaiting": "मेरा ऐप के इंतज़ार में",
+      "readsAgain": "मेरा ऐप {{time}} पर फिर पढ़ेगा।",
+      "readsAgainOrIndividual": "मेरा ऐप {{time}} पर फिर पढ़ेगा, या अभी इंडिविजुअल के साथ पढ़वाएं।"
+    }
+  },
+  "id": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "{{formatted}} artikel dipublikasikan hari ini.",
+        "readKept_zero": "Mera membaca {{read}} artikel dan belum ada yang penting bagi Anda.",
+        "readKept_other": "Mera membaca {{read}} artikel dan hanya menyimpan {{formatted}} yang penting bagi Anda.",
+        "upsell_other": "Tingkatkan paket untuk menghemat lebih banyak waktu dengan membiarkan Mera membaca {{formatted}} artikel lainnya juga."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Dipublikasikan hari ini",
+      "funnelRead": "Dibaca Mera",
+      "funnelKept": "Layak waktu Anda",
+      "funnelWaiting": "Menunggu Mera",
+      "readsAgain": "Mera membaca lagi pukul {{time}}.",
+      "readsAgainOrIndividual": "Mera membaca lagi pukul {{time}}, atau sekarang dengan Individu."
+    }
+  },
+  "it": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} articolo è stato pubblicato oggi.",
+        "publishedToday_other": "{{formatted}} articoli sono stati pubblicati oggi.",
+        "readKept_zero": "Mera ha letto {{read}} e per ora nessuno ti riguarda.",
+        "readKept_one": "Mera ha letto {{read}} e ne ha tenuto solo {{formatted}} che ti riguarda.",
+        "readKept_other": "Mera ha letto {{read}} e ne ha tenuti solo {{formatted}} che ti riguardano.",
+        "upsell_one": "Passa a un piano superiore per risparmiare ancora più tempo lasciando che Mera legga anche {{formatted}}.",
+        "upsell_other": "Passa a un piano superiore per risparmiare ancora più tempo lasciando che Mera legga anche {{formatted}}."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Pubblicati oggi",
+      "funnelRead": "Letti da Mera",
+      "funnelKept": "Utili per te",
+      "funnelWaiting": "In attesa di Mera",
+      "readsAgain": "Mera legge di nuovo alle {{time}}.",
+      "readsAgainOrIndividual": "Mera legge di nuovo alle {{time}}, oppure ora con Individuale."
+    }
+  },
+  "ja": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "今日は{{formatted}}件の記事が公開されました。",
+        "readKept_zero": "メラは{{read}}件を読みましたが、まだあなたに関係するものはありません。",
+        "readKept_other": "メラは{{read}}件を読み、あなたにとって大切な{{formatted}}件だけを残しました。",
+        "upsell_other": "プランをアップグレードすると、メラが{{formatted}}件も読めるようになり、さらに時間を節約できます。"
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "今日の公開",
+      "funnelRead": "メラが読んだ",
+      "funnelKept": "読む価値あり",
+      "funnelWaiting": "メラの読書待ち",
+      "readsAgain": "メラは{{time}}に再び読み始めます。",
+      "readsAgainOrIndividual": "メラは{{time}}に再び読み始めます。または、今すぐ個人プランにできます。"
+    }
+  },
+  "ko": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "오늘 {{formatted}}개의 기사가 게시되었습니다.",
+        "readKept_zero": "메라가 {{read}}개를 읽었지만 아직 회원님에게 중요한 기사는 없습니다.",
+        "readKept_other": "메라가 {{read}}개를 읽었고, 회원님에게 중요한 {{formatted}}개만 남겼습니다.",
+        "upsell_other": "요금제를 업그레이드하면 메라가 {{formatted}}개를 더 읽어 시간을 더 아낄 수 있습니다."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "오늘 게시됨",
+      "funnelRead": "메라가 읽음",
+      "funnelKept": "회원님에게 중요함",
+      "funnelWaiting": "메라 대기 중",
+      "readsAgain": "메라가 {{time}}에 다시 읽습니다.",
+      "readsAgainOrIndividual": "메라가 {{time}}에 다시 읽거나, 지금 개인 요금제로 바로 읽습니다."
+    }
+  },
+  "nl": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} artikel is vandaag gepubliceerd.",
+        "publishedToday_other": "{{formatted}} artikelen zijn vandaag gepubliceerd.",
+        "readKept_zero": "Mera heeft {{read}} gelezen en nog niets is voor jou belangrijk.",
+        "readKept_one": "Mera heeft {{read}} gelezen en alleen {{formatted}} bewaard dat voor jou telt.",
+        "readKept_other": "Mera heeft {{read}} gelezen en alleen {{formatted}} bewaard die voor jou tellen.",
+        "upsell_one": "Upgrade om nog meer tijd te besparen door Mera ook {{formatted}} te laten lezen.",
+        "upsell_other": "Upgrade om nog meer tijd te besparen door Mera ook {{formatted}} te laten lezen."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Vandaag gepubliceerd",
+      "funnelRead": "Gelezen door Mera",
+      "funnelKept": "De moeite waard voor jou",
+      "funnelWaiting": "Wacht op Mera",
+      "readsAgain": "Mera leest weer om {{time}}.",
+      "readsAgainOrIndividual": "Mera leest weer om {{time}}, of nu met Individueel."
+    }
+  },
+  "pl": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "Dzisiaj został opublikowany {{formatted}} artykuł.",
+        "publishedToday_few": "Dzisiaj zostały opublikowane {{formatted}} artykuły.",
+        "publishedToday_many": "Dzisiaj zostało opublikowanych {{formatted}} artykułów.",
+        "publishedToday_other": "Dzisiaj zostało opublikowanych {{formatted}} artykułów.",
+        "readKept_zero": "Mera przeczytała {{read}} i żaden z nich nie jest jeszcze dla Ciebie ważny.",
+        "readKept_one": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykuł, który jest dla Ciebie ważny.",
+        "readKept_few": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykuły, które są dla Ciebie ważne.",
+        "readKept_many": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykułów, które są dla Ciebie ważne.",
+        "readKept_other": "Mera przeczytała {{read}} i zachowała tylko {{formatted}} artykułów, które są dla Ciebie ważne.",
+        "upsell_one": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykuł i oszczędzić Ci jeszcze więcej czasu.",
+        "upsell_few": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykuły i oszczędzić Ci jeszcze więcej czasu.",
+        "upsell_many": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykułów i oszczędzić Ci jeszcze więcej czasu.",
+        "upsell_other": "Przejdź na wyższy plan, żeby Mera mogła przeczytać także {{formatted}} artykułów i oszczędzić Ci jeszcze więcej czasu."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Opublikowano dzisiaj",
+      "funnelRead": "Przeczytane przez Merę",
+      "funnelKept": "Warte Twojego czasu",
+      "funnelWaiting": "Czeka na Merę",
+      "readsAgain": "Mera ponownie czyta o {{time}}.",
+      "readsAgainOrIndividual": "Mera ponownie czyta o {{time}} albo już teraz z Indywidualnym."
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} artigo foi publicado hoje.",
+        "publishedToday_other": "{{formatted}} artigos foram publicados hoje.",
+        "readKept_zero": "O Mera leu {{read}} e nenhum deles importa para você ainda.",
+        "readKept_one": "O Mera leu {{read}} e manteve só {{formatted}} que importa para você.",
+        "readKept_other": "O Mera leu {{read}} e manteve só {{formatted}} que importam para você.",
+        "upsell_one": "Faça upgrade para economizar ainda mais tempo, deixando o Mera ler também {{formatted}}.",
+        "upsell_other": "Faça upgrade para economizar ainda mais tempo, deixando o Mera ler também {{formatted}}."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Publicado hoje",
+      "funnelRead": "Lidos pelo Mera",
+      "funnelKept": "Vale o seu tempo",
+      "funnelWaiting": "Aguardando o Mera",
+      "readsAgain": "O Mera volta a ler às {{time}}.",
+      "readsAgainOrIndividual": "O Mera volta a ler às {{time}}, ou agora com o Individual."
+    }
+  },
+  "ru": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} статья опубликована сегодня.",
+        "publishedToday_few": "{{formatted}} статьи опубликованы сегодня.",
+        "publishedToday_many": "{{formatted}} статей опубликовано сегодня.",
+        "publishedToday_other": "{{formatted}} статьи опубликованы сегодня.",
+        "readKept_zero": "Мера прочитала {{read}} и пока ничего из этого не важно для вас.",
+        "readKept_one": "Мера прочитала {{read}} и оставила только {{formatted}} статью, которая важна вам.",
+        "readKept_few": "Мера прочитала {{read}} и оставила только {{formatted}} статьи, которые важны вам.",
+        "readKept_many": "Мера прочитала {{read}} и оставила только {{formatted}} статей, которые важны вам.",
+        "readKept_other": "Мера прочитала {{read}} и оставила только {{formatted}} статьи, которые важны вам.",
+        "upsell_one": "Перейдите на более высокий тариф, и Мера сможет прочитать ещё {{formatted}} статью, чтобы вы сэкономили ещё больше времени.",
+        "upsell_few": "Перейдите на более высокий тариф, и Мера сможет прочитать ещё {{formatted}} статьи, чтобы вы сэкономили ещё больше времени.",
+        "upsell_many": "Перейдите на более высокий тариф, и Мера сможет прочитать ещё {{formatted}} статей, чтобы вы сэкономили ещё больше времени.",
+        "upsell_other": "Перейдите на более высокий тариф, и Мера сможет прочитать ещё {{formatted}} статьи, чтобы вы сэкономили ещё больше времени."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Опубликовано сегодня",
+      "funnelRead": "Прочитано Мерой",
+      "funnelKept": "Важно для вас",
+      "funnelWaiting": "Ожидает чтения Мерой",
+      "readsAgain": "Мера снова читает в {{time}}.",
+      "readsAgainOrIndividual": "Мера снова читает в {{time}}, или прямо сейчас на тарифе Индивидуальный."
+    }
+  },
+  "th": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "วันนี้มีบทความเผยแพร่แล้ว {{formatted}} บทความ",
+        "readKept_zero": "เมร่าอ่านไป {{read}} บทความ และยังไม่มีบทความใดที่สำคัญกับคุณ",
+        "readKept_other": "เมร่าอ่าน {{read}} บทความ และเก็บไว้เฉพาะ {{formatted}} บทความที่สำคัญกับคุณ",
+        "upsell_other": "อัปเกรดเพื่อประหยัดเวลามากขึ้น โดยให้เมร่าอ่าน {{formatted}} บทความเพิ่มด้วย"
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "เผยแพร่วันนี้",
+      "funnelRead": "เมร่าอ่านแล้ว",
+      "funnelKept": "คุ้มค่ากับเวลาของคุณ",
+      "funnelWaiting": "รอให้เมร่าอ่าน",
+      "readsAgain": "เมร่าจะกลับมาอ่านอีกครั้งเวลา {{time}}",
+      "readsAgainOrIndividual": "เมร่าจะกลับมาอ่านอีกครั้งเวลา {{time}} หรืออ่านตอนนี้ด้วยรายบุคคล"
+    }
+  },
+  "tr": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "Bugün {{formatted}} makale yayınlandı.",
+        "publishedToday_other": "Bugün {{formatted}} makale yayınlandı.",
+        "readKept_zero": "Mera {{read}} makale okudu ama şimdilik hiçbiri senin için önemli değil.",
+        "readKept_one": "Mera {{read}} makale okudu ve senin için önemli olan yalnızca {{formatted}} tanesini tuttu.",
+        "readKept_other": "Mera {{read}} makale okudu ve senin için önemli olan yalnızca {{formatted}} tanesini tuttu.",
+        "upsell_one": "Daha fazla zaman kazanmak için planını yükselt, böylece Mera {{formatted}} makaleyi de okuyabilsin.",
+        "upsell_other": "Daha fazla zaman kazanmak için planını yükselt, böylece Mera {{formatted}} makaleyi de okuyabilsin."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Bugün yayınlandı",
+      "funnelRead": "Mera tarafından okundu",
+      "funnelKept": "Vaktine değer",
+      "funnelWaiting": "Mera'yı bekliyor",
+      "readsAgain": "Mera {{time}} saatinde yeniden okur.",
+      "readsAgainOrIndividual": "Mera {{time}} saatinde yeniden okur, ya da Bireysel ile hemen şimdi."
+    }
+  },
+  "uk": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} стаття сьогодні опублікована.",
+        "publishedToday_few": "{{formatted}} статті сьогодні опубліковані.",
+        "publishedToday_many": "{{formatted}} статей сьогодні опубліковано.",
+        "publishedToday_other": "{{formatted}} статті сьогодні опубліковані.",
+        "readKept_zero": "Мера прочитала {{read}} і жодна поки що не важлива для вас.",
+        "readKept_one": "Мера прочитала {{read}} і залишила лише {{formatted}} стаття, яка важлива для вас.",
+        "readKept_few": "Мера прочитала {{read}} і залишила лише {{formatted}} статті, які важливі для вас.",
+        "readKept_many": "Мера прочитала {{read}} і залишила лише {{formatted}} статей, які важливі для вас.",
+        "readKept_other": "Мера прочитала {{read}} і залишила лише {{formatted}} статті, які важливі для вас.",
+        "upsell_one": "Оновіть тариф, щоб заощадити більше часу, і Мера прочитає ще {{formatted}} статтю.",
+        "upsell_few": "Оновіть тариф, щоб заощадити більше часу, і Мера прочитає ще {{formatted}} статті.",
+        "upsell_many": "Оновіть тариф, щоб заощадити більше часу, і Мера прочитає ще {{formatted}} статей.",
+        "upsell_other": "Оновіть тариф, щоб заощадити більше часу, і Мера прочитає ще {{formatted}} статті."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Опубліковано сьогодні",
+      "funnelRead": "Прочитано Мерою",
+      "funnelKept": "Варте вашого часу",
+      "funnelWaiting": "Очікує на Меру",
+      "readsAgain": "Мера знову читатиме о {{time}}.",
+      "readsAgainOrIndividual": "Мера знову читатиме о {{time}}, або зараз з тарифом Індивідуальний."
+    }
+  },
+  "vi": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "{{formatted}} bài viết đã được xuất bản hôm nay.",
+        "readKept_zero": "Mera đã đọc {{read}} bài và chưa có bài nào quan trọng với bạn.",
+        "readKept_other": "Mera đã đọc {{read}} bài và chỉ giữ lại {{formatted}} bài quan trọng với bạn.",
+        "upsell_other": "Nâng cấp để tiết kiệm thêm thời gian, khi Mera đọc thêm {{formatted}} bài nữa."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Đã xuất bản hôm nay",
+      "funnelRead": "Mera đã đọc",
+      "funnelKept": "Đáng thời gian của bạn",
+      "funnelWaiting": "Đang chờ Mera",
+      "readsAgain": "Mera đọc lại lúc {{time}}.",
+      "readsAgainOrIndividual": "Mera đọc lại lúc {{time}}, hoặc đọc ngay với gói Cá nhân."
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "今天发布了 {{formatted}} 篇文章。",
+        "readKept_zero": "梅拉读了 {{read}} 篇，目前还没有对你重要的内容。",
+        "readKept_other": "梅拉读了 {{read}} 篇，只保留了其中对你重要的 {{formatted}} 篇。",
+        "upsell_other": "升级后，梅拉还能帮你阅读 {{formatted}} 篇文章，为你节省更多时间。"
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "今日发布",
+      "funnelRead": "梅拉已阅读",
+      "funnelKept": "值得你花时间",
+      "funnelWaiting": "等待梅拉阅读",
+      "readsAgain": "梅拉将于 {{time}} 再次阅读。",
+      "readsAgainOrIndividual": "梅拉将于 {{time}} 再次阅读，或现在就开通个人版。"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "readHold": {
+        "publishedToday_other": "今天共發佈了 {{formatted}} 篇文章。",
+        "readKept_zero": "梅拉閱讀了 {{read}} 篇，但目前還沒有一篇對你重要。",
+        "readKept_other": "梅拉閱讀了 {{read}} 篇，只保留了其中 {{formatted}} 篇對你重要的文章。",
+        "upsell_other": "升級即可讓梅拉再為你閱讀 {{formatted}} 篇文章，進一步節省時間。"
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "今日已發佈",
+      "funnelRead": "梅拉已閱讀",
+      "funnelKept": "值得你花時間",
+      "funnelWaiting": "等待梅拉閱讀",
+      "readsAgain": "梅拉將於 {{time}} 再次閱讀。",
+      "readsAgainOrIndividual": "梅拉將於 {{time}} 再次閱讀，或你現在就改用個人版。"
+    }
+  },
+  "en": {
+    "feed": {
+      "readHold": {
+        "publishedToday_one": "{{formatted}} article was published today.",
+        "publishedToday_other": "{{formatted}} articles were published today.",
+        "readKept_zero": "Mera read {{read}} and none matter to you yet.",
+        "readKept_one": "Mera read {{read}} and kept only {{formatted}} that matters to you.",
+        "readKept_other": "Mera read {{read}} and kept only {{formatted}} that matter to you.",
+        "upsell_one": "Upgrade to save even more time by letting Mera read {{formatted}} as well.",
+        "upsell_other": "Upgrade to save even more time by letting Mera read {{formatted}} as well."
+      }
+    },
+    "feedStatus": {
+      "funnelPublished": "Published today",
+      "funnelRead": "Read by Mera",
+      "funnelKept": "Worth your time",
+      "funnelWaiting": "Waiting for Mera",
+      "readsAgain": "Mera reads again at {{time}}.",
+      "readsAgainOrIndividual": "Mera reads again at {{time}}, or now with Individual."
+    }
+  }
+}

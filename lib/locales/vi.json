@@ -240,7 +240,11 @@
       "waitingTomorrow_other": "Mera đã dùng hết lượt đọc hôm nay. {{formatted}} bài bên dưới vẫn chưa được đọc. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
       "bodyToday": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại hôm nay lúc {{time}}.",
       "bodyTomorrow": "Mera đã dùng hết lượt đọc hôm nay. Mera sẽ đọc lại vào ngày mai lúc {{time}}.",
-      "tryIndividual_other": "Dùng thử gói Cá nhân miễn phí {{count}} ngày"
+      "tryIndividual_other": "Dùng thử gói Cá nhân miễn phí {{count}} ngày",
+      "publishedToday_other": "{{formatted}} bài viết đã được xuất bản hôm nay.",
+      "readKept_zero": "Mera đã đọc {{read}} bài và chưa có bài nào quan trọng với bạn.",
+      "readKept_other": "Mera đã đọc {{read}} bài và chỉ giữ lại {{formatted}} bài quan trọng với bạn.",
+      "upsell_other": "Nâng cấp để tiết kiệm thêm thời gian, khi Mera đọc thêm {{formatted}} bài nữa."
     },
     "noteHeldToday": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} hôm nay.",
     "noteHeldTomorrow": "Mera đã dùng hết lượt đọc hôm nay, nên Mera sẽ viết lý do này sau {{time}} vào ngày mai.",
@@ -984,7 +988,13 @@
     "tryNow": "Thử ngay",
     "seePlans": "Xem các gói",
     "readOnPhone": "Thay vào đó, đọc trên điện thoại này",
-    "readingAgainA11y": "Mera đang đọc lại."
+    "readingAgainA11y": "Mera đang đọc lại.",
+    "funnelPublished": "Đã xuất bản hôm nay",
+    "funnelRead": "Mera đã đọc",
+    "funnelKept": "Đáng thời gian của bạn",
+    "funnelWaiting": "Đang chờ Mera",
+    "readsAgain": "Mera đọc lại lúc {{time}}.",
+    "readsAgainOrIndividual": "Mera đọc lại lúc {{time}}, hoặc đọc ngay với gói Cá nhân."
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",

@@ -251,7 +251,14 @@
       "bodyToday": "Mera a utilisé la lecture du jour. Mera reprend la lecture aujourd'hui à {{time}}.",
       "bodyTomorrow": "Mera a utilisé la lecture du jour. Mera reprend la lecture demain à {{time}}.",
       "tryIndividual_one": "Essayer Individuel gratuitement pendant {{count}} jour",
-      "tryIndividual_other": "Essayer Individuel gratuitement pendant {{count}} jours"
+      "tryIndividual_other": "Essayer Individuel gratuitement pendant {{count}} jours",
+      "publishedToday_one": "{{formatted}} article a été publié aujourd'hui.",
+      "publishedToday_other": "{{formatted}} articles ont été publiés aujourd'hui.",
+      "readKept_zero": "Mera a lu {{read}} articles et aucun ne compte encore pour vous.",
+      "readKept_one": "Mera a lu {{read}} articles et n'a gardé que {{formatted}} qui compte pour vous.",
+      "readKept_other": "Mera a lu {{read}} articles et n'a gardé que {{formatted}} qui comptent pour vous.",
+      "upsell_one": "Passez à Individuel pour gagner encore plus de temps en laissant Mera lire aussi {{formatted}}.",
+      "upsell_other": "Passez à Individuel pour gagner encore plus de temps en laissant Mera lire aussi {{formatted}}."
     },
     "noteHeldToday": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison aujourd'hui après {{time}}.",
     "noteHeldTomorrow": "Mera a utilisé la lecture du jour, donc Mera écrira cette raison demain après {{time}}.",
@@ -1000,7 +1007,13 @@
     "tryNow": "Essayer maintenant",
     "seePlans": "Voir les forfaits",
     "readOnPhone": "Lire plutôt sur ce téléphone",
-    "readingAgainA11y": "Mera reprend la lecture."
+    "readingAgainA11y": "Mera reprend la lecture.",
+    "funnelPublished": "Publiés aujourd'hui",
+    "funnelRead": "Lus par Mera",
+    "funnelKept": "Utiles pour vous",
+    "funnelWaiting": "En attente de Mera",
+    "readsAgain": "Mera reprend la lecture à {{time}}.",
+    "readsAgainOrIndividual": "Mera reprend la lecture à {{time}}, ou dès maintenant avec Individuel."
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",

@@ -246,7 +246,14 @@
       "bodyToday": "Mera hat das heutige Lesekontingent genutzt. Mera liest heute um {{time}} wieder.",
       "bodyTomorrow": "Mera hat das heutige Lesekontingent genutzt. Mera liest morgen um {{time}} wieder.",
       "tryIndividual_one": "Einzelperson {{count}} Tag kostenlos testen",
-      "tryIndividual_other": "Einzelperson {{count}} Tage kostenlos testen"
+      "tryIndividual_other": "Einzelperson {{count}} Tage kostenlos testen",
+      "publishedToday_one": "{{formatted}} Artikel wurde heute veröffentlicht.",
+      "publishedToday_other": "{{formatted}} Artikel wurden heute veröffentlicht.",
+      "readKept_zero": "Mera hat {{read}} Artikel gelesen, und bisher ist für dich noch keiner wichtig.",
+      "readKept_one": "Mera hat {{read}} Artikel gelesen und nur {{formatted}} behalten, der für dich wichtig ist.",
+      "readKept_other": "Mera hat {{read}} Artikel gelesen und nur {{formatted}} behalten, die für dich wichtig sind.",
+      "upsell_one": "Mit einem Upgrade sparst du noch mehr Zeit, wenn Mera auch {{formatted}} weitere liest.",
+      "upsell_other": "Mit einem Upgrade sparst du noch mehr Zeit, wenn Mera auch {{formatted}} weitere liest."
     },
     "noteHeldToday": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund heute ab {{time}}.",
     "noteHeldTomorrow": "Mera hat das heutige Lesekontingent genutzt, deshalb schreibt Mera diesen Grund morgen ab {{time}}.",
@@ -994,7 +1001,13 @@
     "tryNow": "Jetzt testen",
     "seePlans": "Tarife ansehen",
     "readOnPhone": "Stattdessen auf diesem Telefon lesen",
-    "readingAgainA11y": "Mera liest wieder."
+    "readingAgainA11y": "Mera liest wieder.",
+    "funnelPublished": "Heute veröffentlicht",
+    "funnelRead": "Von Mera gelesen",
+    "funnelKept": "Für dich wichtig",
+    "funnelWaiting": "Wartet auf Mera",
+    "readsAgain": "Mera liest wieder um {{time}}.",
+    "readsAgainOrIndividual": "Mera liest wieder um {{time}}, oder jetzt mit Einzelperson."
   },
   "trackedStories": {
     "emptyTitle": "Noch keine gefolgten Geschichten",

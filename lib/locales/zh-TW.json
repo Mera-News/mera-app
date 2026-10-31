@@ -240,7 +240,11 @@
       "waitingTomorrow_other": "梅拉已用完今日的閱讀額度。下方有 {{formatted}} 篇文章尚未閱讀。梅拉將於明天 {{time}} 再次閱讀。",
       "bodyToday": "梅拉已用完今日的閱讀額度。梅拉將於今天 {{time}} 再次閱讀。",
       "bodyTomorrow": "梅拉已用完今日的閱讀額度。梅拉將於明天 {{time}} 再次閱讀。",
-      "tryIndividual_other": "免費試用個人版 {{count}} 天"
+      "tryIndividual_other": "免費試用個人版 {{count}} 天",
+      "publishedToday_other": "今天共發佈了 {{formatted}} 篇文章。",
+      "readKept_zero": "梅拉閱讀了 {{read}} 篇，但目前還沒有一篇對你重要。",
+      "readKept_other": "梅拉閱讀了 {{read}} 篇，只保留了其中 {{formatted}} 篇對你重要的文章。",
+      "upsell_other": "升級即可讓梅拉再為你閱讀 {{formatted}} 篇文章，進一步節省時間。"
     },
     "noteHeldToday": "今日的閱讀額度已用完，梅拉將於今天 {{time}} 之後撰寫這則理由。",
     "noteHeldTomorrow": "今日的閱讀額度已用完，梅拉將於明天 {{time}} 之後撰寫這則理由。",
@@ -984,7 +988,13 @@
     "tryNow": "立即試試",
     "seePlans": "查看方案",
     "readOnPhone": "改為在這支手機上閱讀",
-    "readingAgainA11y": "梅拉正在再次閱讀。"
+    "readingAgainA11y": "梅拉正在再次閱讀。",
+    "funnelPublished": "今日已發佈",
+    "funnelRead": "梅拉已閱讀",
+    "funnelKept": "值得你花時間",
+    "funnelWaiting": "等待梅拉閱讀",
+    "readsAgain": "梅拉將於 {{time}} 再次閱讀。",
+    "readsAgainOrIndividual": "梅拉將於 {{time}} 再次閱讀，或你現在就改用個人版。"
   },
   "trackedStories": {
     "emptyTitle": "還沒有追蹤任何報導",

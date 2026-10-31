@@ -246,7 +246,14 @@
       "bodyToday": "Mera heeft het lezen voor vandaag gebruikt. Mera leest vandaag weer om {{time}}.",
       "bodyTomorrow": "Mera heeft het lezen voor vandaag gebruikt. Mera leest morgen weer om {{time}}.",
       "tryIndividual_one": "Probeer Individueel {{count}} dag gratis",
-      "tryIndividual_other": "Probeer Individueel {{count}} dagen gratis"
+      "tryIndividual_other": "Probeer Individueel {{count}} dagen gratis",
+      "publishedToday_one": "{{formatted}} artikel is vandaag gepubliceerd.",
+      "publishedToday_other": "{{formatted}} artikelen zijn vandaag gepubliceerd.",
+      "readKept_zero": "Mera heeft {{read}} gelezen en nog niets is voor jou belangrijk.",
+      "readKept_one": "Mera heeft {{read}} gelezen en alleen {{formatted}} bewaard dat voor jou telt.",
+      "readKept_other": "Mera heeft {{read}} gelezen en alleen {{formatted}} bewaard die voor jou tellen.",
+      "upsell_one": "Upgrade om nog meer tijd te besparen door Mera ook {{formatted}} te laten lezen.",
+      "upsell_other": "Upgrade om nog meer tijd te besparen door Mera ook {{formatted}} te laten lezen."
     },
     "noteHeldToday": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas vandaag na {{time}}.",
     "noteHeldTomorrow": "Het lezen voor vandaag is al op, dus Mera schrijft deze reden pas morgen na {{time}}.",
@@ -994,7 +1001,13 @@
     "tryNow": "Nu proberen",
     "seePlans": "Abonnementen bekijken",
     "readOnPhone": "Lees in plaats daarvan op deze telefoon",
-    "readingAgainA11y": "Mera leest weer."
+    "readingAgainA11y": "Mera leest weer.",
+    "funnelPublished": "Vandaag gepubliceerd",
+    "funnelRead": "Gelezen door Mera",
+    "funnelKept": "De moeite waard voor jou",
+    "funnelWaiting": "Wacht op Mera",
+    "readsAgain": "Mera leest weer om {{time}}.",
+    "readsAgainOrIndividual": "Mera leest weer om {{time}}, of nu met Individueel."
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",

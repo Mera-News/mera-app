@@ -246,7 +246,14 @@
       "bodyToday": "Mera ha usado la lectura de hoy. Mera vuelve a leer hoy a las {{time}}.",
       "bodyTomorrow": "Mera ha usado la lectura de hoy. Mera vuelve a leer mañana a las {{time}}.",
       "tryIndividual_one": "Prueba Individual gratis durante {{count}} día",
-      "tryIndividual_other": "Prueba Individual gratis durante {{count}} días"
+      "tryIndividual_other": "Prueba Individual gratis durante {{count}} días",
+      "publishedToday_one": "{{formatted}} artículo se publicó hoy.",
+      "publishedToday_other": "{{formatted}} artículos se publicaron hoy.",
+      "readKept_zero": "Mera leyó {{read}} y todavía ninguno te importa.",
+      "readKept_one": "Mera leyó {{read}} y solo conservó {{formatted}} que te importa.",
+      "readKept_other": "Mera leyó {{read}} y solo conservó {{formatted}} que te importan.",
+      "upsell_one": "Mejora tu plan para ahorrar aún más tiempo y deja que Mera lea también {{formatted}}.",
+      "upsell_other": "Mejora tu plan para ahorrar aún más tiempo y deja que Mera lea también {{formatted}}."
     },
     "noteHeldToday": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de hoy.",
     "noteHeldTomorrow": "Ya se ha usado la lectura de hoy, así que Mera escribirá este motivo después de las {{time}} de mañana.",
@@ -995,7 +1002,13 @@
     "tryNow": "Probar ahora",
     "seePlans": "Ver planes",
     "readOnPhone": "Leer en este teléfono",
-    "readingAgainA11y": "Mera vuelve a leer."
+    "readingAgainA11y": "Mera vuelve a leer.",
+    "funnelPublished": "Publicado hoy",
+    "funnelRead": "Leído por Mera",
+    "funnelKept": "Vale tu tiempo",
+    "funnelWaiting": "Esperando a Mera",
+    "readsAgain": "Mera vuelve a leer a las {{time}}.",
+    "readsAgainOrIndividual": "Mera vuelve a leer a las {{time}}, o ahora con Individual."
   },
   "trackedStories": {
     "emptyTitle": "Aún no sigues ninguna historia",

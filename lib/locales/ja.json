@@ -240,7 +240,11 @@
       "waitingTomorrow_other": "メラは今日の読書を使い切りました。下の{{formatted}}件の記事はまだ未読です。メラは明日の{{time}}にまた読み始めます。",
       "bodyToday": "メラは今日の読書を使い切りました。今日の{{time}}に、メラがまた読み始めます。",
       "bodyTomorrow": "メラは今日の読書を使い切りました。明日の{{time}}に、メラがまた読み始めます。",
-      "tryIndividual_other": "個人プランを{{count}}日間無料で試す"
+      "tryIndividual_other": "個人プランを{{count}}日間無料で試す",
+      "publishedToday_other": "今日は{{formatted}}件の記事が公開されました。",
+      "readKept_zero": "メラは{{read}}件を読みましたが、まだあなたに関係するものはありません。",
+      "readKept_other": "メラは{{read}}件を読み、あなたにとって大切な{{formatted}}件だけを残しました。",
+      "upsell_other": "プランをアップグレードすると、メラが{{formatted}}件も読めるようになり、さらに時間を節約できます。"
     },
     "noteHeldToday": "メラは今日の読書を使い切りました。そのため、今日の{{time}}以降に、メラがこの記事の理由を書きます。",
     "noteHeldTomorrow": "メラは今日の読書を使い切りました。そのため、明日の{{time}}以降に、メラがこの記事の理由を書きます。",
@@ -984,7 +988,13 @@
     "tryNow": "今すぐ試す",
     "seePlans": "プランを見る",
     "readOnPhone": "代わりにこの電話で読む",
-    "readingAgainA11y": "メラが再び読んでいます。"
+    "readingAgainA11y": "メラが再び読んでいます。",
+    "funnelPublished": "今日の公開",
+    "funnelRead": "メラが読んだ",
+    "funnelKept": "読む価値あり",
+    "funnelWaiting": "メラの読書待ち",
+    "readsAgain": "メラは{{time}}に再び読み始めます。",
+    "readsAgainOrIndividual": "メラは{{time}}に再び読み始めます。または、今すぐ個人プランにできます。"
   },
   "trackedStories": {
     "emptyTitle": "まだフォローしているストーリーはありません",

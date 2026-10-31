@@ -240,7 +240,11 @@
       "waitingTomorrow_other": "Mera sudah memakai pembacaan hari ini. {{formatted}} artikel di bawah masih belum dibaca. Mera membaca lagi besok pukul {{time}}.",
       "bodyToday": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi hari ini pukul {{time}}.",
       "bodyTomorrow": "Mera sudah memakai pembacaan hari ini. Mera membaca lagi besok pukul {{time}}.",
-      "tryIndividual_other": "Coba Individu gratis selama {{count}} hari"
+      "tryIndividual_other": "Coba Individu gratis selama {{count}} hari",
+      "publishedToday_other": "{{formatted}} artikel dipublikasikan hari ini.",
+      "readKept_zero": "Mera membaca {{read}} artikel dan belum ada yang penting bagi Anda.",
+      "readKept_other": "Mera membaca {{read}} artikel dan hanya menyimpan {{formatted}} yang penting bagi Anda.",
+      "upsell_other": "Tingkatkan paket untuk menghemat lebih banyak waktu dengan membiarkan Mera membaca {{formatted}} artikel lainnya juga."
     },
     "noteHeldToday": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya hari ini pukul {{time}}.",
     "noteHeldTomorrow": "Mera belum menulis alasan ini karena Mera sudah memakai pembacaan hari ini. Mera akan menulisnya besok pukul {{time}}.",
@@ -984,7 +988,13 @@
     "tryNow": "Coba sekarang",
     "seePlans": "Lihat paket",
     "readOnPhone": "Baca di ponsel ini saja",
-    "readingAgainA11y": "Mera sedang membaca lagi."
+    "readingAgainA11y": "Mera sedang membaca lagi.",
+    "funnelPublished": "Dipublikasikan hari ini",
+    "funnelRead": "Dibaca Mera",
+    "funnelKept": "Layak waktu Anda",
+    "funnelWaiting": "Menunggu Mera",
+    "readsAgain": "Mera membaca lagi pukul {{time}}.",
+    "readsAgainOrIndividual": "Mera membaca lagi pukul {{time}}, atau sekarang dengan Individu."
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
