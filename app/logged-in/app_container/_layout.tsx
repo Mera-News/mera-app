@@ -1,4 +1,4 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
@@ -24,17 +24,6 @@ import { useTranslation } from 'react-i18next';
 
 const { Badge, Icon, Label, VectorIcon } = NativeTabs.Trigger;
 
-/**
- * D2: VoiceOver read the SF Symbol names ("list.bullet.rectangle.fill",
- * "grid 2x2", "safari") even though every trigger carries a hidden `<Label>`:
- * a hidden title is not used as the tab item's accessibility label. The native
- * tab item takes one directly (react-native-screens `tabBarItemAccessibilityLabel`,
- * merged last by expo-router), so this stays JS-only.
- */
-function tabA11y(label: string) {
-    return { tabBarItemAccessibilityLabel: label };
-}
-
 export default function AppLayout() {
     const { t } = useTranslation();
     const colors = useColors();
@@ -46,8 +35,9 @@ export default function AppLayout() {
         library: useTabDot('library'),
         you: useTabDot('you'),
     };
-    // The item label is the only thing VoiceOver reads (a blank badge adds
-    // nothing), so a dot is spoken there.
+    // The item label is the only thing VoiceOver and TalkBack read: a hidden
+    // <Label> is not used for it and a blank badge adds nothing, so each
+    // Trigger passes `accessibilityLabel` and a dot is spoken there.
     const label = (key: 'tabs.deck' | 'tabs.world' | 'tabs.library' | 'tabs.you', on: boolean) =>
         on ? t('nav.tabNewA11y', { label: t(key) }) : t(key);
 
@@ -97,7 +87,7 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="feed"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.deck', feedDot))}
+                        accessibilityLabel={label('tabs.deck', feedDot)}
                     >
                         <Label hidden>{t('tabs.deck')}</Label>
                         <Badge hidden={!feedDot} />
@@ -109,7 +99,7 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="world"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.world', dot.world))}
+                        accessibilityLabel={label('tabs.world', dot.world)}
                     >
                         <Label hidden>{t('tabs.world')}</Label>
                         <Badge hidden={!dot.world} />
@@ -118,7 +108,7 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="library"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.library', dot.library))}
+                        accessibilityLabel={label('tabs.library', dot.library)}
                     >
                         <Label hidden>{t('tabs.library')}</Label>
                         <Badge hidden={!dot.library} />
@@ -127,7 +117,7 @@ export default function AppLayout() {
                     <NativeTabs.Trigger
                         name="you"
                         disableScrollToTop
-                        unstable_nativeProps={tabA11y(label('tabs.you', dot.you))}
+                        accessibilityLabel={label('tabs.you', dot.you)}
                     >
                         <Label hidden>{t('tabs.you')}</Label>
                         <Badge hidden={!dot.you} />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import { Platform, useWindowDimensions, type View } from 'react-native';
+import { Platform, useWindowDimensions, type ViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 
@@ -9,7 +9,7 @@ import logger from '@/lib/logger';
  * Height of the bottom tab bar's own content area, excluding the device's
  * bottom safe-area inset.
  *
- * The bar is `NativeTabs` (expo-router unstable-native-tabs), which owns its
+ * The bar is `NativeTabs` (`expo-router/native-tabs`), which owns its
  * own height and never exposes it to JS, so this is a conservative ESTIMATE,
  * not the rendered height. Do not add it to `useSafeAreaInsets().bottom` inside
  * a tab screen yourself: use `useTabBarClearance()` below, which knows when the
@@ -25,7 +25,7 @@ export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
  * ## Why iOS returns the inset alone
  *
  * On iOS, NativeTabs wraps every tab screen in its OWN `SafeAreaProvider`
- * (`expo-router/build/native-tabs/NativeTabsView.js`), which measures the tab's
+ * (`expo-router/build/native-tabs/NativeTabsView.ios.js`), which measures the tab's
  * native safe area. UIKit's tab bar controller puts the bar inside that area,
  * so `insets.bottom` in a tab screen is about 83-85pt on a Face ID iPhone, not
  * the 34pt home indicator. Adding `TAB_BAR_HEIGHT` on top counted the bar
@@ -165,8 +165,8 @@ export function useTabBarTop(): number | null {
  * first layout, and a value published from the earlier, smaller inset put the
  * Mera button over the bar with no later layout to correct it.
  */
-export function useReportTabBarClearance(): { ref: RefObject<View | null>; onLayout: () => void } {
-  const ref = useRef<View | null>(null);
+export function useReportTabBarClearance(): { ref: RefObject<ViewInstance | null>; onLayout: () => void } {
+  const ref = useRef<ViewInstance | null>(null);
   const windowHeight = useWindowDimensions().height;
   const insetsBottom = useSafeAreaInsets().bottom;
   const onLayout = useCallback(() => {

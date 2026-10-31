@@ -22,7 +22,7 @@ import { useFloatingChatStore, type ChatContext, type MeraPageKey } from '@/lib/
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, type LegacyPanGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeOut,
   useAnimatedStyle,
@@ -90,7 +90,7 @@ export interface MeraButtonProps {
   readonly tooltipSide?: 'left' | 'right';
   /** The host's drag. Composed with the tap so a drag never opens the chat
    *  and a press or a small wobble never moves the button. */
-  readonly pan?: PanGesture;
+  readonly pan?: LegacyPanGesture;
   /** True while the button is being dragged: the tooltip steps aside. */
   readonly dragging?: boolean;
   /** Mera is working on the reader's request with the chat closed: the logo
@@ -134,7 +134,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   const growStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   // ── tap ──────────────────────────────────────────────────────────────────
-  const circleRef = useRef<View>(null);
+  const circleRef = useRef<React.ComponentRef<typeof View>>(null);
   const publishCenter = useCallback(() => {
     circleRef.current?.measureInWindow((x, y, w, h) => {
       if (w === 0 && h === 0) return;
