@@ -1,0 +1,1402 @@
+{
+  "ar": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "de": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "en": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "es": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "fr": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "hi": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "it": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ja": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ko": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "nl": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pl": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pt-BR": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ru": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "th": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tr": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "uk": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "vi": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-CN": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-TW": {
+    "tutorials": {
+      "chapters": {
+        "welcome": {
+          "film": {
+            "cap": {
+              "noise": "Most news is <a>not about you</a>.",
+              "you": "Mera starts with <a>you</a>.",
+              "tell": "Tell Mera a few <a>true things</a>.",
+              "becomes": "Each one becomes <a>things to look for</a>.",
+              "haystack": "Every day, <a>hundreds of thousands</a> of stories come out of thousands of publications worldwide.",
+              "picks": "Mera fetches all the <a>relevant stories</a> using your profile.",
+              "reads": "Mera then reads them, <a>keeps what fits</a> and throws out what doesn't,",
+              "why": "and writes you <a>a note saying why</a>.",
+              "private": "What Mera knows about you <a>stays on your phone</a>."
+            },
+            "fact": {
+              "nurse": "I'm a nurse",
+              "utrecht": "I live in Utrecht",
+              "kids": "Two kids at school",
+              "cycle": "I cycle to work",
+              "psv": "I follow PSV",
+              "spanish": "Learning Spanish",
+              "rent": "I rent my flat",
+              "funds": "Index funds",
+              "porto": "Parents in Porto",
+              "veg": "Vegetarian",
+              "piano": "I play piano",
+              "japan": "Japan in spring"
+            },
+            "topic": {
+              "nursePay": "nurse pay",
+              "staffing": "hospital staffing",
+              "nightShift": "night shift rules",
+              "housing": "Utrecht housing",
+              "council": "city council",
+              "holidays": "school holidays",
+              "bikeLanes": "bike lanes",
+              "railStrikes": "rail strikes",
+              "eredivisie": "Eredivisie",
+              "languageApps": "language apps",
+              "rentRules": "rent rules",
+              "energyBills": "energy bills",
+              "interestRates": "interest rates",
+              "portoFlights": "Porto flights",
+              "foodPrices": "food prices",
+              "concerts": "concerts",
+              "japanTravel": "Japan travel",
+              "yenRate": "yen rate"
+            },
+            "pill": {
+              "trending": "Trending",
+              "fake": "Might be fake",
+              "screenTime": "5 hours a day",
+              "rage": "Made to make you mad"
+            },
+            "misc": {
+              "healthDesk": "Health desk",
+              "cityNews": "City news",
+              "celebNews": "Celeb news",
+              "markets": "Markets",
+              "education": "Education",
+              "high": "High",
+              "med": "Med"
+            }
+          }
+        }
+      }
+    }
+  }
+}
