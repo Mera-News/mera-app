@@ -1,4 +1,4 @@
-import { requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
+import { moveToPhoneDone, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -68,9 +68,18 @@ const SupportIdCopy: React.FC<Props> = ({ testID, compact = false }) => {
         copyTimer.current = setTimeout(() => setCopied(false), 1800);
     };
 
+    const isEmail = handle?.kind === 'email';
+    // The "!" opens the move, so it shows only while the move is not done (the inbox row's check).
+    const [moveOffered, setMoveOffered] = useState(false);
+    useEffect(() => {
+        if (!isEmail) return;
+        let live = true;
+        void moveToPhoneDone().then((done) => { if (live) setMoveOffered(!done); });
+        return () => { live = false; };
+    }, [isEmail]);
+
     if (!handle) return null;
 
-    const isEmail = handle.kind === 'email';
     const label = isEmail ? maskEmail(handle.value) : t('support.supportId', { id: handle.value });
     const target = compact
         ? { style: { minHeight: 20, minWidth: 44 }, hitSlop: { top: 12, bottom: 12 } }
@@ -87,17 +96,19 @@ const SupportIdCopy: React.FC<Props> = ({ testID, compact = false }) => {
                 </Text>
             )}
             {isEmail ? (
-                <Pressable
-                    testID={`${testID}-move`}
-                    onPress={() => requestMoveToPhone()}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={t('moveToPhone.settingsRow')}
-                    className="items-center justify-center"
-                    {...target}
-                >
-                    <MaterialIcons name="error-outline" size={18} color={colors.accentMark} />
-                </Pressable>
+                moveOffered ? (
+                    <Pressable
+                        testID={`${testID}-move`}
+                        onPress={() => requestMoveToPhone()}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('moveToPhone.settingsRow')}
+                        className="items-center justify-center"
+                        {...target}
+                    >
+                        <MaterialIcons name="error-outline" size={18} color={colors.accentMark} />
+                    </Pressable>
+                ) : null
             ) : (
                 <Pressable
                     testID={`${testID}-copy`}
