@@ -416,8 +416,8 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 renderItem={renderItem}
                 keyExtractor={(item, index) => item._id || `article-${index}`}
                 ListHeaderComponent={listHeader}
-                ListEmptyComponent={listEmpty}
-                ListFooterComponent={listFooter}
+                ListEmptyComponent={listEmpty ?? undefined}
+                ListFooterComponent={listFooter ?? undefined}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
                 showsVerticalScrollIndicator={false}
                 onScroll={notifyScrollTick}

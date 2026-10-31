@@ -372,7 +372,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             scrollEventThrottle={16}
             onEndReached={active ? loadMore : undefined}
             onEndReachedThreshold={0.5}
-            ListHeaderComponent={ListHeaderComponent}
+            ListHeaderComponent={ListHeaderComponent ?? undefined}
             ListEmptyComponent={ListEmptyComponent}
             ListFooterComponent={ListFooterComponent}
         />

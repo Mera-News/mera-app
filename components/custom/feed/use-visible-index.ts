@@ -28,7 +28,7 @@
 // debounce / scroll-end / blur / background / unmount.
 
 import { useCallback, useEffect, useRef } from 'react';
-import type { ViewToken } from 'react-native';
+import type { ListViewToken as ViewToken } from 'react-native';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 

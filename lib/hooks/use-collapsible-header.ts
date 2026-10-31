@@ -33,8 +33,9 @@ export interface CollapsibleHeader {
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
   /** Animated style for the absolute header `Animated.View` (translateY only —
    *  kept as this narrow shape so it stays View-style compatible, avoiding the
-   *  broad `DefaultStyle` union's `cursor` clash with `Animated.View`). */
-  headerStyle: { transform: { translateY: number }[] };
+   *  broad `DefaultStyle` union's `cursor` clash with `Animated.View`). Reanimated 4.7
+   *  returns a style HANDLE, not the style object. */
+  headerStyle: ReturnType<typeof useAnimatedStyle<{ transform: { translateY: number }[] }>>;
   /** `onLayout` for the header — measures its height (drives both the hide
    *  distance and the content `paddingTop`). */
   onHeaderLayout: (e: LayoutChangeEvent) => void;

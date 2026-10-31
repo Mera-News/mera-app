@@ -184,7 +184,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 data={stories}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                ListHeaderComponent={listHeader ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{listHeader}</View> : null}
+                ListHeaderComponent={listHeader ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{listHeader}</View> : undefined}
                 ListEmptyComponent={
                     <ForYouEmptyState
                         animationId="following-what-it-is"
@@ -203,7 +203,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                         <View style={{ alignItems: 'center', paddingTop: 4 }}>
                             <AiDisclosureCaption variant="compact" align="left" text={aiNote} />
                         </View>
-                    ) : null
+                    ) : undefined
                 }
                 contentContainerStyle={{
                     paddingTop: headerHeight + PAGE_CONTENT_GAP,

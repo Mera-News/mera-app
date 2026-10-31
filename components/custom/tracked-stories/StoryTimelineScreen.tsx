@@ -327,7 +327,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmpty}
-                ListFooterComponent={entries.length > 0 ? nextNote : null}
+                ListFooterComponent={entries.length > 0 ? nextNote : undefined}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}

@@ -323,9 +323,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
             <View style={{ marginBottom: PAGE_TITLE_GAP }} onLayout={onListHeaderLayout}>
               {ListHeaderComponent}
             </View>
-          ) : null
+          ) : undefined
         }
-        ListEmptyComponent={ListEmptyComponent}
+        ListEmptyComponent={ListEmptyComponent ?? undefined}
         refreshControl={
           onRefresh ? (
             <RefreshControl

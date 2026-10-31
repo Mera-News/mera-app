@@ -27,7 +27,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { menuTop } from './menu-placement';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { I18nManager, Modal, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { I18nManager, Modal, StyleSheet, View, useWindowDimensions, type ViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
 
@@ -147,7 +147,7 @@ export default function InlineChoiceChip<T extends string | number>({
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   const still = useReducedMotion() || liteMode;
   const window = useWindowDimensions();
-  const chipRef = useRef<View>(null);
+  const chipRef = useRef<ViewInstance>(null);
   const insets = useSafeAreaInsets();
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   // Measured once per open by a hidden first pass, then placed: under the

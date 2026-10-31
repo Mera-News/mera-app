@@ -155,7 +155,7 @@ describe('useArticleActions: the inline actions of a standalone card', () => {
         const noUrl = await mount('aa-share-none');
         expect(noUrl.result.current.onShare).toBeUndefined();
 
-        const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+        const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined });
         try {
             const { result } = await mount('aa-share', {
                 share: { url: 'https://example.com/story', titleEnglish: 'English headline' },

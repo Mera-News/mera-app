@@ -42,6 +42,7 @@ import {
   findNodeHandle,
   StyleSheet,
   View,
+  type ViewInstance,
 } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -194,7 +195,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
 
   // Screen-reader focus moves to the new section's title after a "Next" hop,
   // so VoiceOver does not stay on a footer that no longer exists.
-  const titleRef = useRef<View>(null);
+  const titleRef = useRef<ViewInstance>(null);
   useEffect(() => {
     if (!arrivedFromNext) return;
     const handle = findNodeHandle(titleRef.current);
@@ -446,8 +447,8 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         onScroll={notifyScrollTick}
         onContentSizeChange={notifyScrollTick}
         scrollEventThrottle={16}
-        ListEmptyComponent={listEmpty}
-        ListFooterComponent={listFooter}
+        ListEmptyComponent={listEmpty ?? undefined}
+        ListFooterComponent={listFooter ?? undefined}
       />
       </View>
 

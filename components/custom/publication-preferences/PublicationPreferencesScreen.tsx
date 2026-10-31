@@ -167,7 +167,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                             <Text size="xs" className="text-ink-2 px-4">
                                 {t('you.sources.footnote')}
                             </Text>
-                        ) : null
+                        ) : undefined
                     }
                 />
                 </View>

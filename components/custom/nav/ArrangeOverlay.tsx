@@ -459,7 +459,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
 };
 
 const styles = StyleSheet.create({
-  dim: StyleSheet.absoluteFillObject,
+  dim: StyleSheet.absoluteFill,
   // Above the tab header (zIndex 10).
   layer: { zIndex: 20 },
   panel: {
