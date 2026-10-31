@@ -95,18 +95,20 @@ describe('on-device mode', () => {
 
   it('loads a downloaded model (loading then ready) and only then starts the queue', async () => {
     await markDownloaded();
+    // Each model state with the queue's state at that moment. An awaited render settles the load,
+    // so "not started before ready" is read off the transitions, not off a snapshot after render.
     const states: string[] = [];
     const unsub = useMeraProtocolStore.subscribe((s) => {
-      if (states.at(-1) !== s.modelState) states.push(s.modelState);
+      const entry = `${s.modelState}:${inferenceQueue.getState()}`;
+      if (states.at(-1) !== entry) states.push(entry);
     });
 
     await renderHook(() => useModelLifecycle());
-    // Not ready yet: the queue (which needs llama.rn) has not started.
-    expect(inferenceQueue.getState()).toBe('stopped');
 
     await waitFor(() => expect(protocol().modelState).toBe('ready'));
     unsub();
-    expect(states).toEqual(['loading', 'ready']);
+    // Not ready yet, the queue (which needs llama.rn) had not started.
+    expect(states).toEqual(['loading:stopped', 'ready:stopped']);
     expect(loads()).toBe(1);
     // Nothing was loaded on llama.rn: Kev loads only when a decision is asked for.
     expect(llamaLoads()).toEqual([]);

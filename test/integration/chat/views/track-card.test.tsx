@@ -76,7 +76,12 @@ async function mount(labels: string[], opts: { superseded?: boolean; onGrown?: (
 
 const checked = (v: Awaited<ReturnType<typeof render>>, i: number) => v.getByTestId(`track-option-${i}`).props.accessibilityState.checked;
 const getActive = () => firstValueFrom(observeActive());
-const never = () => new Promise<never>(() => {});
+/** A promise the test resolves itself, after asserting the in-flight state. */
+function held<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => (resolve = r));
+  return { promise, resolve };
+}
 const flatten = (n: { props: { style?: unknown } }) => StyleSheet.flatten(n.props.style as never) ?? {};
 /** Climbs from a host node to the first ancestor that carries a numeric minHeight or height. */
 function frameHeight(node: { props: { style?: unknown }; parent: unknown }): number {
@@ -195,9 +200,11 @@ describe('More options', () => {
 
   it('while loading, a spinner row takes its place and Follow and Not now stay enabled', async () => {
     const { view } = await mount(['Artemis II launch']);
-    jest.spyOn(chatSession, 'requestMoreOptions').mockImplementation(never);
+    const load = held<Awaited<ReturnType<typeof chatSession.requestMoreOptions>>>();
+    jest.spyOn(chatSession, 'requestMoreOptions').mockImplementation(() => load.promise);
 
-    await fireEvent.press(view.getByTestId('track-more'));
+    // Not awaited: an awaited press settles the handler, which waits on the held load.
+    const press = fireEvent.press(view.getByTestId('track-more'));
 
     await waitFor(() => expect(view.getByTestId('track-more-loading')).toBeTruthy());
     expect(view.queryByTestId('track-more')).toBeNull();
@@ -206,6 +213,8 @@ describe('More options', () => {
     expect(view.getByTestId('track-not-now').props.accessibilityState.disabled).toBe(false);
     expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(key('moreOptionsLoading'));
     expect(frameHeight(view.getByTestId('track-more-loading'))).toBeGreaterThanOrEqual(44);
+    load.resolve({ actions: [], reason: 'stopped' });
+    await press;
   });
 
   it('new options land unticked, focus moves to the first and it scrolls, then it announces after the focus has spoken', async () => {
@@ -306,17 +315,21 @@ describe('resolved states', () => {
   });
 
   it('while saving, Follow shows Following and the rows do not toggle', async () => {
-    jest.spyOn(trackActions, 'trackStoryWithProposal').mockImplementation(never);
+    const save = held<'followed' | 'already' | 'skipped'>();
+    jest.spyOn(trackActions, 'trackStoryWithProposal').mockImplementation(() => save.promise);
     const { view } = await mount(['Artemis II launch', 'Moon race']);
 
-    await fireEvent.press(view.getByTestId('track-follow'));
+    // Not awaited: an awaited press settles the handler, which waits on the held save.
+    const press = fireEvent.press(view.getByTestId('track-follow'));
 
+    await waitFor(() => expect(within(view.getByTestId('track-follow')).getByText(key('followingBusy'))).toBeTruthy());
     const follow = view.getByTestId('track-follow');
-    await waitFor(() => expect(within(follow).getByText(key('followingBusy'))).toBeTruthy());
     expect(follow.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
     await fireEvent.press(view.getByTestId('track-option-1'));
     expect(checked(view, 1)).toBe(false);
     expect(view.queryByTestId('track-card-followed')).toBeNull();
+    save.resolve('skipped');
+    await press;
   });
 
   it('Not now collapses the card to one line', async () => {

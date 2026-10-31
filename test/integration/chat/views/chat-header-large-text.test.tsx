@@ -82,6 +82,9 @@ it('a title that wraps beside the buttons stacks them, and stays stacked once it
 
 it.each([1, 3])('at fontScale %s New chat and close keep 44pt frames and the badge has no fixed height', async (scale) => {
   const view = await open(scale);
+  // Opening the chat pings the model; signed out, the settled ping sets the badge back to idle
+  // (no badge), so the drawn state is set again after it.
+  await act(() => useChatReadiness.setState({ status: 'ready' }));
   for (const id of ['chat-header-new-chat', 'chat-header-close']) {
     expect(style(view.getByTestId(id))).toMatchObject({ width: 44, height: 44 });
   }

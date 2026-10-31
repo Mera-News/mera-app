@@ -196,11 +196,22 @@ describe('loadUserGeoLanguageContext: source preferences', () => {
 describe('useUserGeoLanguageContext', () => {
   it('is null while loading, then the loaded context', async () => {
     await upsertLocation({ city: 'Mumbai', countryCode: 'IN', role: 'home', weight: 1 });
+    // An awaited render settles effects, so every load (the observers re-run it) is held open to
+    // see the loading state.
+    const realGetAll = locationService.getAll;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const getAll = jest.spyOn(locationService, 'getAll').mockImplementation(async () => {
+      await gate;
+      return realGetAll();
+    });
 
     const { result } = await renderHook(() => useUserGeoLanguageContext());
 
     expect(result.current).toBeNull();
+    release();
     await waitFor(() => expect(result.current).not.toBeNull());
+    getAll.mockRestore();
     expect(result.current).toEqual(await loadUserGeoLanguageContext());
     expect(result.current).toMatchObject({ homeCountryAlpha3: 'IND' });
   });
