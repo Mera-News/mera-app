@@ -295,7 +295,20 @@ if (SENTRY_ENABLED) {
     // reads them from the same options dictionary. They stop UI, lifecycle and
     // network crumbs recorded natively, which never pass through JS.
     ...({ enableAutoBreadcrumbTracking: false, enableNetworkBreadcrumbs: false } as object),
+    // Android's native lifecycle, system, component and connectivity crumbs, the
+    // counterpart of the iOS keys above; Sentry 8 made them switchable.
+    enableActivityLifecycleBreadcrumbs: false,
+    enableAppLifecycleBreadcrumbs: false,
+    enableSystemEventBreadcrumbs: false,
+    enableAppComponentBreadcrumbs: false,
+    enableNetworkEventBreadcrumbs: false,
     integrations: [
+      // Sentry 8 adds these to the defaults: per-native-call counters and slow
+      // call crumbs (TurboModuleContext) and OTA lifecycle crumbs
+      // (ExpoUpdatesListener). An integration given here replaces the default
+      // of the same name, so these inert stand-ins switch both off.
+      { name: 'TurboModuleContext' },
+      { name: 'ExpoUpdatesListener' },
       // Replaces the default by name: no network crumbs (URLs are reading
       // history) and no console crumbs (console text is not scrubbed). The
       // app's own logger crumbs stay, scrubbed in beforeSend.

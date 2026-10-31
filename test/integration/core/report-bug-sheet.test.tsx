@@ -92,12 +92,16 @@ const draft = () => (feedback.feedbackWidgetInternals() as unknown as { _savedSt
 
 it('pins the Sentry draft internals the prefill relies on (fails loudly on an SDK change)', () => {
     const src = fs.readFileSync(
-        path.join(process.cwd(), 'node_modules/@sentry/react-native/dist/js/feedback/FeedbackWidget.js'),
+        path.join(process.cwd(), 'node_modules/@sentry/react-native/dist/js/feedback/FeedbackForm.js'),
         'utf8',
     );
-    expect(src).toMatch(/FeedbackWidget\._savedState = \{[^}]*description: ''/);
+    // Sentry 8 renamed the class FeedbackForm; lib/feedback.ts reaches it through the
+    // deprecated FeedbackWidget alias, so the alias is pinned too.
+    expect(src).toMatch(/FeedbackForm\._savedState = \{[^}]*description: ''/);
     expect(src).toMatch(/static reset\(\)/);
-    expect(src).toMatch(/description: FeedbackWidget\._savedState\.description/);
+    expect(src).toMatch(/description: FeedbackForm\._savedState\.description/);
+    const index = fs.readFileSync(path.join(process.cwd(), 'node_modules/@sentry/react-native/dist/js/index.js'), 'utf8');
+    expect(index).toMatch(/FeedbackForm as FeedbackWidget/);
 });
 
 it('has no email field and seeds the message from a prefill', () => {
