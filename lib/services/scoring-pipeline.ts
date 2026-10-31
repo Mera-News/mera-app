@@ -53,6 +53,7 @@ import {
   batchMarkGateSkipped,
   batchMarkReasonSkipped,
   batchMarkAsScoredByIds,
+  batchMarkScoreAttempted,
 } from '@/lib/database/services/article-suggestion-scoring-writes';
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
@@ -1493,6 +1494,12 @@ async function doSubmitRelevance(
       idempotencyKey: idemKey,
       ...sendOpts(context, io),
     });
+    // An attempt is a request the scorer took ('ok') or one that failed in
+    // flight. A read hold, throttle, held key or missing credential refused it
+    // before any scoring, so those rows are not stamped.
+    if (outcome.status === 'ok' || outcome.status === 'failed') {
+      await batchMarkScoreAttempted(eligibleIds);
+    }
 
     if (outcome.status === 'ok') {
       // `legacyNoteDemote` is decided HERE, once, and persisted on the batch.

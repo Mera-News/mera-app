@@ -1585,5 +1585,18 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // article_suggestions.score_attempted_at: when Mera last sent the row to
+      // a scorer, so an attempt that failed is told apart from a row never sent
+      // (both stay `unscored`). Optional; existing rows read NULL. addColumns,
+      // never a recreate (the donor pool). Roll-forward only, like v56.
+      toVersion: 57,
+      steps: [
+        addColumns({
+          table: 'article_suggestions',
+          columns: [{ name: 'score_attempted_at', type: 'number', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

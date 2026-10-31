@@ -2,6 +2,7 @@
 // burning an attempt, reporting, or retrying before the reset; the hold survives a reload; and
 // dispatch resumes after the reset. Real pipeline, real limiter, gateway mock with setReadMeter.
 import * as SecureStore from 'expo-secure-store';
+import database from '@/lib/database';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -71,6 +72,17 @@ async function holdMidRun() {
 }
 
 describe('the read hold in the scoring pipeline', () => {
+  it('records no scoring attempt: not for the refused submit, not for the batches it kept back', async () => {
+    await holdMidRun();
+
+    expect(isReadHeld()).toBe(true);
+    const stored = await database.get('article_suggestions').query().fetch();
+    expect(stored).toHaveLength(25);
+    for (const row of stored) {
+      expect((row._raw as unknown as Record<string, unknown>).score_attempted_at ?? null).toBeNull();
+    }
+  });
+
   it('a 429 holds: the batch goes back to queued with its attempt and key kept, nothing is reported', async () => {
     const posts = await holdMidRun();
 

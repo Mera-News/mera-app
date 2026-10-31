@@ -66,6 +66,8 @@ export default class ArticleSuggestion extends Model {
   // Round-3 (schema v41): epoch ms the row was scored (math persisted). Null
   // while unscored. Feeds the fact-rows selector's "added" ordering.
   @field('scored_at') scoredAt!: number | null;
+  // Epoch ms Mera last sent this row to a scorer (schema v57); null if never.
+  @field('score_attempted_at') scoreAttemptedAt!: number | null;
   // Scorer VINTAGE (schema v50): did relevance v3 produce this row's
   // `relevance`? NULL/false = legacy v1 vintage. Read by `gateForRow`
   // (lib/stores/fact-rows-selector.ts) so the render gate is applied per row —

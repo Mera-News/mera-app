@@ -24,6 +24,7 @@ import {
 import { buildNotePrompt } from '@/lib/news-harness/on-device/notes/prompt';
 import {
   batchMarkExcluded,
+  batchMarkScoreAttempted,
   batchMarkReasonSkipped,
   rependNotelessRows,
   saveReason,
@@ -940,6 +941,7 @@ async function scoreUnscoredRows(
       .slice(0, batchSize);
     if (batch.length === 0) break;
 
+    await batchMarkScoreAttempted(batch.map((c) => c.id));
     const {
       scoreMap,
       reasonMap,

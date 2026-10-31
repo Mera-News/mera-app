@@ -6,6 +6,7 @@
 // The cloud scorer calls the BATCH route, whose items carry no call id, so the responder tells a
 // relevance call from a reason call by its system prompt and reads each article from the
 // `News Title: Story <id>` line.
+import database from '@/lib/database';
 import { addFact } from '@/lib/database/services/fact-service';
 import * as scoringWrites from '@/lib/database/services/article-suggestion-scoring-writes';
 import * as suggestionReads from '@/lib/database/services/article-suggestion-reads';
@@ -156,6 +157,11 @@ async function seedAndLoad(ids: string[], opts: SeedOptions = {}): Promise<Scori
   return ids.map((id) => rows.find((r) => r.id === id)!);
 }
 
+/** The raw `score_attempted_at` of a row (no mapper carries it yet). */
+async function scoreAttemptedAt(id: string): Promise<number | null> {
+  const row = await database.get('article_suggestions').find(id);
+  return ((row._raw as unknown as Record<string, unknown>).score_attempted_at as number | null) ?? null;
+}
 const stored = async () => Object.fromEntries((await loadSuggestions()).map((s) => [s._id, s]));
 
 // --- scripted gateway ------------------------------------------------------
@@ -1080,6 +1086,21 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows.b.status).toBe('unscored');
     expect(rows.a.rawScore).toBeCloseTo(1, 5);
     expect(rows.c.rawScore).toBeCloseTo(1, 5);
+  });
+
+  it('records the attempt on a row Kev was asked about and failed, and on none that was never sent', async () => {
+    installLocal();
+    queue();
+    installDecide(() => ({ error: 'failed to evaluate the decision prompt (error 1)' }));
+    await seed(['a']);
+    const before = Date.now();
+
+    await run(processAllUnscored());
+
+    expect((await stored()).a.status).toBe('unscored');
+    expect(await scoreAttemptedAt('a')).toBeGreaterThanOrEqual(before);
+    await seed(['later']);
+    expect(await scoreAttemptedAt('later')).toBeNull();
   });
 
   // Copies share a story key and nothing else (titles disjoint, no clusters).

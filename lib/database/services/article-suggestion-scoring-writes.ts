@@ -153,6 +153,33 @@ export async function batchMarkExcluded(
 }
 
 /**
+ * Records that these rows were SENT to a scorer (either lane), whatever comes
+ * back. Status is untouched: a failed attempt stays `unscored`, so no gate or
+ * retry path changes. A retry re-stamps. Rows already gone are skipped.
+ */
+export async function batchMarkScoreAttempted(
+  ids: string[],
+  nowMs: number = Date.now(),
+): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.scoreAttemptedAt = nowMs;
+        }),
+      ),
+    );
+  });
+}
+
+/**
  * The un-exclude direction (D12c): send rows back to `unscored` so the next
  * scoring pass treats them as new. Used ONLY by the sweep that runs when a hard
  * filter is retired, and only for rows the sweep has already re-screened

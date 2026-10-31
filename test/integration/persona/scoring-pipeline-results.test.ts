@@ -7,6 +7,7 @@
 // exactly one batch, `later()` makes a limiter slot free for the notes submit it may chain.
 
 import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
+import database from '@/lib/database';
 import { addSuppression } from '@/lib/database/services/suppression-service';
 import * as scoringService from '@/lib/mera-protocol/scoring-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -76,6 +77,12 @@ async function collect(batch: { requestId?: string }, script: Script, ctx: 'fore
   holdJobs((id) => id !== batch.requestId);
   later();
   await drive(pipeline.handlePush(batch.requestId, ctx));
+}
+
+/** The raw `score_attempted_at` of an article's row (no mapper carries it yet). */
+async function scoreAttemptedAt(id: string): Promise<number | null> {
+  const row = await database.get('article_suggestions').find(id);
+  return ((row._raw as unknown as Record<string, unknown>).score_attempted_at as number | null) ?? null;
 }
 
 describe('relevance completion', () => {
@@ -176,6 +183,23 @@ describe('relevance completion', () => {
     expect(jobSubmits()).toHaveLength(1); // no reasons job
     expect((await rows()).a0).toMatchObject({ relevance: 0.8, reason: '', status: 'reason_skipped' });
     expect(await currentRun()).toBeNull(); // done → finalized
+  });
+
+  it('a scoring call that fails leaves its rows unscored with the attempt recorded; an unsent row has none', async () => {
+    const script: Script = { failScores: true };
+    await seedArticles(['never']);
+    const before = Date.now();
+    const batch = await toWaitingRelevance(['a0', 'a1'], script);
+    // Submitted: stamped before any answer. Not in the batch: never stamped.
+    expect(await scoreAttemptedAt('a0')).toBeGreaterThanOrEqual(before);
+    expect(await scoreAttemptedAt('never')).toBeNull();
+
+    await collect(batch, script);
+
+    const stored = await rows();
+    expect([stored.a0.status, stored.a1.status]).toEqual(['unscored', 'unscored']);
+    expect(await scoreAttemptedAt('a0')).toBeGreaterThanOrEqual(before);
+    expect(await scoreAttemptedAt('a1')).toBeGreaterThanOrEqual(before);
   });
 
   it('a failed score call leaves its rows unscored and finishes the batch without a reasons job', async () => {
