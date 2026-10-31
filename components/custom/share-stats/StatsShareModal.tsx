@@ -31,7 +31,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, I18nManager, Modal, PixelRatio, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, I18nManager, Modal, PixelRatio, StyleSheet, useWindowDimensions, View, type ViewInstance } from 'react-native';
 import { useMotionAllowed } from '@/lib/motion-gate';
 
 type Background = 'dark' | 'light';
@@ -87,7 +87,7 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
     const [index, setIndex] = useState(0);
     const [capturing, setCapturing] = useState<number | null>(null);
     const [failure, setFailure] = useState<'unavailable' | 'failed' | null>(null);
-    const hostRef = useRef<View>(null);
+    const hostRef = useRef<ViewInstance>(null);
     const listRef = useRef<FlatList<StatsCardId[]>>(null);
 
     useEffect(() => {

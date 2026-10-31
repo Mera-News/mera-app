@@ -21,7 +21,7 @@
 // share extension, which would mean an app-group entitlement and an Xcode
 // target, and `shareAsync` needs none of it.
 
-import type { View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 
 // NOTHING NATIVE IS IMPORTED AT MODULE SCOPE IN THIS FILE.
 //
@@ -78,7 +78,7 @@ function removeIfPresent(file: { exists: boolean; delete: () => void }): void {
 
 export interface CaptureAndShareOptions {
   /** The OFFSCREEN host, laid out at its full point size. */
-  ref: React.RefObject<View | null>;
+  ref: React.RefObject<ViewInstance | null>;
   /** The host's point size. Multiplied by the device scale on the way out, so
    *  this is what lands on the export dimensions. */
   hostWidth: number;
