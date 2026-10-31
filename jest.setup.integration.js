@@ -237,6 +237,7 @@ const NATIVE_COMPONENT_SPECS = {
   'react-native-gesture-handler/lib/module/specs/RNGestureHandlerDetectorNativeComponent.ts': 'RNGestureHandlerDetector',
   'react-native-gesture-handler/lib/module/specs/RNGestureHandlerRootViewNativeComponent.ts': 'RNGestureHandlerRootView',
   'react-native-reanimated/src/specs/SharedTransitionBoundaryNativeComponent.ts': 'SharedTransitionBoundary',
+  'react-native-reanimated/lib/module/specs/SharedTransitionBoundaryNativeComponent.ts': 'SharedTransitionBoundary',
 };
 for (const [spec, host] of Object.entries(NATIVE_COMPONENT_SPECS)) {
   // doMock: the hoisted jest.mock cannot close over the loop variable.
