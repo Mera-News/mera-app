@@ -146,6 +146,11 @@ export type ForYouSuggestion = {
      *  unscored or on legacy rows. The fact-rows selector uses `scoredAt ??
      *  createdAt` as the row's "added" time for newest-first ordering. */
     scoredAt?: number | null;
+    /** Epoch ms a scoring attempt last finished with no score
+     *  (`article_suggestions.score_failed_at`, schema v57); null = never. An
+     *  unscored row renders in the Feed only with this set (owner: never a row
+     *  still waiting for its first read). */
+    scoreFailedAt?: number | null;
     /** Scorer VINTAGE (`article_suggestions.scored_with_v3`, schema v50): did
      *  relevance v3 produce this row's `relevance`? Absent/null/false = legacy
      *  v1 vintage, which is what every pre-v50 row is. Read ONLY through

@@ -187,6 +187,17 @@ describe('only what Mera has read renders (owner)', () => {
     expect(out.withheld.size).toBe(0);
     expect(out.notReadArticles).toBe(1);
   });
+
+  it('a row whose scoring attempt finished with no score joins the tail', () => {
+    const tried = unread('t', 1);
+    const out = foldNotReadTail(newNotReadTailSession(), [
+      item('p1'),
+      { ...tried, suggestion: { ...tried.suggestion, scoreFailedAt: 1 } },
+      unread('w', 2),
+    ]);
+    expect(ids(out.tail)).toEqual(['t']);
+    expect(out.notReadArticles).toBe(2);
+  });
 });
 
 describe('offeredShows', () => {

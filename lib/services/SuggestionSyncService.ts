@@ -329,6 +329,8 @@ function suggestionsDisplayEqual(a: ForYouSuggestion, b: ForYouSuggestion): bool
     a.rawScore === b.rawScore &&
     a.eventType === b.eventType &&
     (a.storyKey ?? null) === (b.storyKey ?? null) &&
+    // A stamp is what lets an unscored row render in the Feed.
+    (a.scoreFailedAt ?? null) === (b.scoreFailedAt ?? null) &&
     a.headlineScope === b.headlineScope &&
     // Load-bearing: the Dashboard's per-country headline sections key on this,
     // so a country code arriving on a later sync must mark the row CHANGED —

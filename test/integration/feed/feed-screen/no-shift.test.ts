@@ -2,6 +2,8 @@
 // Mera has read (owner): a row still waiting for its first read never renders. A new pick lands
 // at least one screen of cards past the last card on screen, or at the end of the list. Driven
 // through useFeedScreen with the real stores and the list's own viewability pairs.
+import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
+import { batchMarkScoreFailed } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { setAppState } from '@/test/helpers';
 import {
@@ -35,6 +37,12 @@ const UNREAD_TITLES = [
 
 async function seedNotRead(ids: readonly string[]) {
   await seedArticles(ids.map((id, i) => ({ id, title: UNREAD_TITLES[i] })));
+}
+
+/** Mera tried these rows and the attempt finished with no score (P1.13b's stamp). */
+async function markTriedUnscored(ids: readonly string[]) {
+  const rows = await loadSuggestions();
+  await batchMarkScoreFailed(rows.filter((r) => ids.includes(r.articleId)).map((r) => r._id));
 }
 
 /** The list reports these rows on screen (the 1% pair) and all but the last ≥75% visible. */
@@ -117,4 +125,50 @@ it('a pick may join the end of a short list: nothing on screen moves', async () 
   await pickArrives('hot');
 
   expect(feed.ids()).toEqual([...before, 'hot']);
+});
+
+describe('rows Mera tried and that stayed unscored (score_failed_at)', () => {
+  it('render after the picks; a row never tried does not', async () => {
+    await seedComplete([['p1', HIGH], ['p2', HIGH]]);
+    await seedNotRead(['tried', 'waiting']);
+    await markTriedUnscored(['tried']);
+    await hydrateSuggestions();
+    const feed = await renderFeed();
+    await waitFor(() => expect(feed.ids()).toEqual(['p1', 'p2', 'tried']));
+    await act(async () => {});
+    expect(feed.ids()).toEqual(['p1', 'p2', 'tried']);
+  });
+
+  it('a row stamped after mount joins the end, behind the picks', async () => {
+    await seedComplete([['p1', HIGH]]);
+    await seedNotRead(['later']);
+    await hydrateSuggestions();
+    const feed = await renderFeed();
+    await waitFor(() => expect(feed.ids()).toEqual(['p1']));
+
+    await markTriedUnscored(['later']);
+    await act(async () => {
+      await hydrateSuggestions();
+    });
+
+    await waitFor(() => expect(feed.ids()).toEqual(['p1', 'later']));
+  });
+
+  it('with tried rows on screen after the picks, an arriving pick moves nothing', async () => {
+    await seedComplete([['p1', HIGH], ['p2', HIGH]]);
+    await seedNotRead(['t1', 't2', 't3']);
+    await markTriedUnscored(['t1', 't2', 't3']);
+    await hydrateSuggestions();
+    const feed = await renderFeed();
+    await waitFor(() => expect(feed.ids()).toHaveLength(5));
+    const before = feed.ids();
+
+    const shown = before.slice(0, 3);
+    onScreen(feed, shown);
+    await pickArrives('hot');
+
+    // The P2.7 hold: a pick could only land above the tried rows on screen, so it waits.
+    expectNoShift(feed, before, shown, 'hot');
+    expect(feed.ids()).toEqual(before);
+  });
 });

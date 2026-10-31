@@ -38,12 +38,13 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
  * Whether a not-read row may render at all. The Feed shows only what Mera has
  * read (owner): a row still waiting for its first read never renders, and a
  * read hold is not a read. The tail is for rows Mera TRIED and that stayed
- * unscored, which needs `score_attempted_at` (not landed yet), so for now no
- * not-read row renders. Not-read rows still count in `notReadArticles` (the
+ * unscored: `scoreFailedAt` is stamped only once an attempt has FINISHED with
+ * no score (never for a hold, a throttle or a row in flight), so no in-flight
+ * check is needed here. Not-read rows still count in `notReadArticles` (the
  * counts card's waiting number): that is a fact about the world, not a card.
  */
-export function mayShowNotRead(_s: ForYouSuggestion): boolean {
-  return false;
+export function mayShowNotRead(s: ForYouSuggestion): boolean {
+  return s.scoreFailedAt != null;
 }
 
 /** At most this many not-read cards render (owner, W14). */

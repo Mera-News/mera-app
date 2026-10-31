@@ -144,6 +144,8 @@ export interface SuggestionGroupingRow {
   scoredWithV3?: boolean | null;
   /** Server story id (schema v56); null = no dedup edge. */
   storyKey?: string | null;
+  /** `score_failed_at` (schema v57): a scoring attempt finished with no score. */
+  scoreFailedAt?: number | null;
 }
 
 export function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
@@ -162,6 +164,7 @@ export function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRo
     // Normalised like the `loadSuggestions` mapper: SQLite returns 0/1.
     scoredWithV3: row.scoredWithV3 === true || (row.scoredWithV3 as unknown) === 1,
     storyKey: row.storyKey ?? null,
+    scoreFailedAt: typeof row.scoreFailedAt === 'number' ? row.scoreFailedAt : null,
   };
 }
 
@@ -372,6 +375,7 @@ export function toForYouSuggestion(
     // Round-3 fact-rows fields.
     factIds,
     scoredAt: typeof row.scoredAt === 'number' ? row.scoredAt : null,
+    scoreFailedAt: typeof row.scoreFailedAt === 'number' ? row.scoreFailedAt : null,
     // Scorer vintage (schema v50). Normalised to a strict boolean: SQLite hands
     // booleans back as 0/1, and `gateForRow` tests `=== true`, so a raw 1 would
     // silently fall through to the legacy gate.
