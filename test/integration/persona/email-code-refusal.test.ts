@@ -26,6 +26,7 @@ import {
     useFakeClock,
 } from '@/test/helpers';
 import { authHandlers } from '@/test/mock-backend/auth';
+import { __resetSessionCacheGuardForTests } from '@/lib/auth-client';
 
 const SLUG = Constants.expoConfig?.slug || 'app';
 const COOKIE_KEY = `${SLUG}_cookie`;
@@ -68,6 +69,7 @@ beforeEach(() => {
     __resetLegalConsentLatchForTests();
     __resetAuthReadQuarantineForTests();
     __resetInstallBoundaryForTests();
+    __resetSessionCacheGuardForTests();
     // The boundary has decided in a normal launch; until then every sync cookie read is null.
     releaseAuthReadQuarantine();
 });
@@ -150,6 +152,8 @@ describe('signInWithEmailCode', () => {
             expect(isAccountSwitchHeld(OTHER)).toBe(false);
         });
 
+        // The sign-in's own session refetch lands after the deletes (seen with @better-auth/expo 1.6), so
+        // this also pins that the refusal keeps the session cache suspended.
         it('a failed sign-out still deletes the cookie', async () => {
             server.use(http.post(SIGN_OUT, () => HttpResponse.error()));
 

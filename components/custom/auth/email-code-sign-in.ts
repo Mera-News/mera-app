@@ -15,7 +15,7 @@
 
 import Constants from 'expo-constants';
 
-import { authClient } from '@/lib/auth-client';
+import { authClient, suspendSessionCache } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { holdAccountSwitch, releaseAccountSwitch } from '@/lib/security/identity-gate';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
@@ -99,6 +99,8 @@ export async function signInWithEmailCode(
  */
 async function signOutWrongAccount(userId: string, signOut: () => Promise<void>): Promise<void> {
     holdAccountSwitch(userId);
+    // A session refetch from the sign-in can land after the deletes below and write the cache back.
+    suspendSessionCache();
     try {
         await Promise.race([signOut(), new Promise((resolve) => setTimeout(resolve, SIGN_OUT_BOUND_MS))]);
     } catch (error) {
