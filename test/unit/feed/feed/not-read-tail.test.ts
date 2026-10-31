@@ -6,6 +6,7 @@ import {
   foldNotReadTail,
   newNotReadTailSession,
   TAIL_RENDER_CAP,
+  offeredShows,
 } from '@/components/custom/feed/not-read-tail';
 import { extendPinnedIds, sortFeedEntries } from '@/components/custom/feed/feed-entries';
 import { isNotRead, isUnscoredVisible } from '@/lib/feed-ordering/pending-visibility';
@@ -14,6 +15,9 @@ import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
+/** The tail's mechanics, for rows Mera tried and left unscored (every not-read row admitted). */
+const fold = (...a: [Parameters<typeof foldNotReadTail>[0], Parameters<typeof foldNotReadTail>[1], number?]) =>
+  foldNotReadTail(a[0], a[1], a[2], () => true);
 const H = 3_600_000;
 const NOW = 1_000_000_000_000;
 
@@ -68,7 +72,7 @@ describe('isNotRead / isUnscoredVisible', () => {
 describe('foldNotReadTail', () => {
   it('holds only not-read stories, newest published first, and counts every article', () => {
     const s = newNotReadTailSession();
-    const out = foldNotReadTail(s, [item('p1'), unread('old', 30), unread('new', 2, ['new', 'new2']), item('p2')]);
+    const out = fold(s, [item('p1'), unread('old', 30), unread('new', 2, ['new', 'new2']), item('p2')]);
     expect(ids(out.tail)).toEqual(['new', 'old']);
     expect(out.notReadArticles).toBe(3);
     expect(out.withheld.has('p1')).toBe(false);
@@ -76,9 +80,9 @@ describe('foldNotReadTail', () => {
 
   it('membership is frozen: a tail row Mera reads stays in place with its new state', () => {
     const s = newNotReadTailSession();
-    foldNotReadTail(s, [unread('a', 1), unread('b', 2)]);
+    fold(s, [unread('a', 1), unread('b', 2)]);
     const scoredA = item('a', { relevance: 0.9 });
-    const out = foldNotReadTail(s, [scoredA, unread('b', 2)]);
+    const out = fold(s, [scoredA, unread('b', 2)]);
     expect(ids(out.tail)).toEqual(['a', 'b']);
     expect(out.tail[0]).toBe(scoredA);
     expect(out.withheld.has('a')).toBe(true);
@@ -87,36 +91,36 @@ describe('foldNotReadTail', () => {
 
   it('a tail row that leaves the pool (scored below the gate) stays until the next session', () => {
     const s = newNotReadTailSession();
-    foldNotReadTail(s, [unread('a', 1), unread('b', 2)]);
-    expect(ids(foldNotReadTail(s, [unread('b', 2)]).tail)).toEqual(['a', 'b']);
-    expect(ids(foldNotReadTail(newNotReadTailSession(), [unread('b', 2)]).tail)).toEqual(['b']);
+    fold(s, [unread('a', 1), unread('b', 2)]);
+    expect(ids(fold(s, [unread('b', 2)]).tail)).toEqual(['a', 'b']);
+    expect(ids(fold(newNotReadTailSession(), [unread('b', 2)]).tail)).toEqual(['b']);
   });
 
   it('a scored story sharing a member with a tail row is withheld, so a story never shows twice', () => {
     const s = newNotReadTailSession();
-    foldNotReadTail(s, [unread('a', 1, ['a', 'a2'])]);
-    const out = foldNotReadTail(s, [item('a2', { members: ['a2', 'a'] }), item('other')]);
+    fold(s, [unread('a', 1, ['a', 'a2'])]);
+    const out = fold(s, [item('a2', { members: ['a2', 'a'] }), item('other')]);
     expect(out.withheld.has('a2')).toBe(true);
     expect(out.withheld.has('other')).toBe(false);
   });
 
   it('mid-session arrivals append at the end, newest first among themselves', () => {
     const s = newNotReadTailSession();
-    foldNotReadTail(s, [unread('a', 5)]);
-    const out = foldNotReadTail(s, [unread('a', 5), unread('x', 10), unread('y', 1)]);
+    fold(s, [unread('a', 5)]);
+    const out = fold(s, [unread('a', 5), unread('x', 10), unread('y', 1)]);
     expect(ids(out.tail)).toEqual(['a', 'y', 'x']);
   });
 
   it('is idempotent for the same candidates (a double render)', () => {
     const s = newNotReadTailSession();
     const c = [unread('a', 1), unread('b', 2)];
-    foldNotReadTail(s, c);
-    expect(ids(foldNotReadTail(s, c).tail)).toEqual(['a', 'b']);
+    fold(s, c);
+    expect(ids(fold(s, c).tail)).toEqual(['a', 'b']);
   });
 
   it('renders at most the cap, the newest; the count stays true', () => {
     const many = Array.from({ length: TAIL_RENDER_CAP + 5 }, (_, i) => unread(`u${i}`, i + 1));
-    const out = foldNotReadTail(newNotReadTailSession(), many);
+    const out = fold(newNotReadTailSession(), many);
     expect(out.tail).toHaveLength(TAIL_RENDER_CAP);
     expect(out.tail[0].id).toBe('u0');
     expect(out.notReadArticles).toBe(TAIL_RENDER_CAP + 5);
@@ -127,7 +131,7 @@ describe('the sink: every scored card first, in every seen tier', () => {
   it('a seen, opened Low pick still sorts above every not-read card', () => {
     const scored = [item('hi', { relevance: 0.9 }), item('lowOpened', { relevance: 0.41 })];
     const sorted = sortFeedEntries(scored, { lowOpened: { state: 'viewed', at: 1 } }, new Set(['lowOpened']), [], NOW);
-    const tail = foldNotReadTail(newNotReadTailSession(), [unread('fresh', 0)]).tail;
+    const tail = fold(newNotReadTailSession(), [unread('fresh', 0)]).tail;
     expect(ids(applyFeedShow(sorted.rows, tail, 'all').rows)).toEqual(['hi', 'lowOpened', 'fresh']);
   });
 
@@ -160,8 +164,8 @@ describe('showsNotReadDivider', () => {
   });
   it('hides once every tail row is read, though the rows stay in place', () => {
     const s = newNotReadTailSession();
-    foldNotReadTail(s, [unread('a', 1), unread('b', 2)]);
-    const out = foldNotReadTail(s, [item('a'), item('b')]);
+    fold(s, [unread('a', 1), unread('b', 2)]);
+    const out = fold(s, [item('a'), item('b')]);
     expect(ids(out.tail)).toEqual(['a', 'b']);
     expect(showsNotReadDivider(out.tail, own)).toBe(false);
   });
@@ -172,5 +176,26 @@ describe('showsNotReadDivider', () => {
   });
   it('is false for an empty tail', () => {
     expect(showsNotReadDivider([], own)).toBe(false);
+  });
+});
+
+describe('only what Mera has read renders (owner)', () => {
+  it('a row waiting for its first read is never in the tail, but still counts as waiting', () => {
+    const out = foldNotReadTail(newNotReadTailSession(), [item('p1'), unread('w', 1)]);
+    expect(out.tail).toEqual([]);
+    expect(out.overflow).toBe(0);
+    expect(out.withheld.size).toBe(0);
+    expect(out.notReadArticles).toBe(1);
+  });
+});
+
+describe('offeredShows', () => {
+  const n = (v: number) => ({ n: v });
+  it('hides Not read by Mera while it holds nothing, unless it is the current choice', () => {
+    const counts = { all: n(3), picks: n(3), unread: n(0), discarded: n(2) };
+    expect(offeredShows(counts, 'all')).toEqual(['all', 'picks', 'discarded']);
+    expect(offeredShows(null, 'all')).toEqual(['all', 'picks', 'discarded']);
+    expect(offeredShows(counts, 'unread')).toEqual(['all', 'picks', 'unread', 'discarded']);
+    expect(offeredShows({ ...counts, unread: n(1) }, 'all')).toEqual(['all', 'picks', 'unread', 'discarded']);
   });
 });

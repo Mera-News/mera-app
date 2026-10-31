@@ -16,6 +16,9 @@ import { ArticleSuggestionStatus as S } from '@/lib/database/article-suggestion-
 import { buildFeedList } from '@/lib/stores/feed-list-selector';
 import type { ClusterMembership, ForYouSuggestion } from '@/lib/stores/for-you-store';
 
+/** The tail's mechanics, for rows Mera tried and left unscored (every not-read row admitted). */
+const fold = (...a: [Parameters<typeof foldNotReadTail>[0], Parameters<typeof foldNotReadTail>[1], number?]) =>
+  foldNotReadTail(a[0], a[1], a[2], () => true);
 // feed-view-prefs logs through Sentry, which does not load under node.
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
@@ -121,7 +124,7 @@ describe('the Show segments over one pool', () => {
   ];
   const candidates = buildFeedList(pool, new Set(), NOW, null, { includeReasonPending: true, includeUnscored: true });
   const scored = candidates.filter((c) => !isNotRead(c.suggestion));
-  const folded = foldNotReadTail(newNotReadTailSession(), candidates);
+  const folded = fold(newNotReadTailSession(), candidates);
   const discarded = buildDiscardedStories(pool, null, NOW).rows;
 
   it('All never contains a discarded row', () => {
@@ -156,7 +159,7 @@ describe('counts are exact (owner, 2026-10-21)', () => {
       sugg({ _id: `u${i}`, status: S.Unscored, relevance: 0, ageH: 1 + i * 0.1 }),
     );
     const candidates = buildFeedList(many, new Set(), NOW, null, { includeUnscored: true });
-    const folded = foldNotReadTail(newNotReadTailSession(), candidates);
+    const folded = fold(newNotReadTailSession(), candidates);
     expect(folded.tail).toHaveLength(TAIL_RENDER_CAP);
     expect(folded.overflow).toBe(7);
     const counts = feedShowCounts([], folded.tail, folded.overflow, []);
@@ -170,7 +173,7 @@ describe('counts are exact (owner, 2026-10-21)', () => {
       sugg({ _id: `e${i}`, status: S.Unscored, relevance: 0, ageH: 1 + i * 0.1 }),
     );
     const candidates = buildFeedList(exact, new Set(), NOW, null, { includeUnscored: true });
-    expect(foldNotReadTail(newNotReadTailSession(), candidates).overflow).toBe(0);
+    expect(fold(newNotReadTailSession(), candidates).overflow).toBe(0);
   });
 
   it('Discarded by Mera is uncapped: more than 200 discarded stories all render and all count', () => {

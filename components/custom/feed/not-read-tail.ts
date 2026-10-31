@@ -1,10 +1,10 @@
 // not-read-tail — the Continuous view's articles Mera has not read yet.
 //
-// Every article reaches the Feed; plans meter only Mera's cloud reading. A
-// story whose elected representative is `unscored` (so EVERY member is: a
+// A story whose elected representative is `unscored` (so EVERY member is: a
 // scored member always fronts, see feed-list-selector's `statusRank`) is a
-// NOT-READ card. Those cards come after every scored card, in every seen
-// tier, newest published first.
+// NOT-READ card. Only those `mayShowNotRead` admits render (owner: never a row
+// still waiting for its first read). They come after every scored card, in
+// every seen tier, newest published first.
 //
 // They NEVER enter `feed-order-store`. The store is insert-only (invariant 4),
 // and most of a fetch scores below the gate, so a not-read row ingested there
@@ -33,6 +33,18 @@ import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-prior
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { buildFeedList, type FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+
+/**
+ * Whether a not-read row may render at all. The Feed shows only what Mera has
+ * read (owner): a row still waiting for its first read never renders, and a
+ * read hold is not a read. The tail is for rows Mera TRIED and that stayed
+ * unscored, which needs `score_attempted_at` (not landed yet), so for now no
+ * not-read row renders. Not-read rows still count in `notReadArticles` (the
+ * counts card's waiting number): that is a fact about the world, not a card.
+ */
+export function mayShowNotRead(_s: ForYouSuggestion): boolean {
+  return false;
+}
 
 /** At most this many not-read cards render (owner, W14). */
 export const TAIL_RENDER_CAP = 200;
@@ -83,6 +95,7 @@ export function foldNotReadTail(
   session: NotReadTailSession,
   candidates: readonly FeedListItem[],
   cap: number = TAIL_RENDER_CAP,
+  mayShow: (s: ForYouSuggestion) => boolean = mayShowNotRead,
 ): FoldedTail {
   const inTail = new Set(session.ids);
   const fresh: FeedListItem[] = [];
@@ -90,7 +103,7 @@ export function foldNotReadTail(
   for (const it of candidates) {
     if (inTail.has(it.id)) {
       session.items.set(it.id, it);
-    } else if (isNotRead(it.suggestion)) {
+    } else if (isNotRead(it.suggestion) && mayShow(it.suggestion)) {
       fresh.push(it);
     }
     if (isNotRead(it.suggestion)) notReadArticles += it.memberCount;
@@ -126,7 +139,9 @@ export function foldNotReadTail(
   }
   // Not-read stories past the cap: not rendered, but counted, so the Show menu's
   // number is exact (owner, 2026-10-21: "write the exact number").
-  const overflow = candidates.filter((it) => isNotRead(it.suggestion) && !inTail.has(it.id)).length;
+  const overflow = candidates.filter(
+    (it) => isNotRead(it.suggestion) && mayShow(it.suggestion) && !inTail.has(it.id),
+  ).length;
   return { tail, withheld, notReadArticles, capped: overflow > 0, overflow };
 }
 
@@ -193,6 +208,16 @@ export function feedShowCounts(
     out[show] = { n: applyFeedShow(scored, tail, show, discarded).rows.length + extra[show] };
   }
   return out;
+}
+
+/** The Show options the menu offers. "Not read by Mera" only while it holds a
+ *  story (or is the current choice): its rows are those `mayShowNotRead`
+ *  admits, so an always-empty option would be a dead end. */
+export function offeredShows(
+  counts: Partial<Record<FeedShow, FeedShowCount>> | null | undefined,
+  show: FeedShow,
+): FeedShow[] {
+  return FEED_SHOWS.filter((o) => o !== 'unread' || show === 'unread' || (counts?.unread?.n ?? 0) > 0);
 }
 
 /** The count as shown: the exact number, localised by `format`. */

@@ -24,7 +24,7 @@ import {
   useFeedShowCounts,
   useFeedView,
 } from './feed-view-prefs';
-import { FEED_SHOWS, formatShowCount } from './not-read-tail';
+import { formatShowCount, offeredShows } from './not-read-tail';
 
 const VIEWS: readonly FeedView[] = ['continuous', 'sectioned'];
 /** The style glyphs, distinct at chip size: one card in a running stream
@@ -100,7 +100,7 @@ const FeedViewChip: React.FC<{ readonly pageIndex: number }> = ({ pageIndex }) =
         sections={[
           {
             title: t('feed.show.title'),
-            options: FEED_SHOWS,
+            options: offeredShows(counts, show),
             value: show,
             labelOf: showLabel,
             a11yLabelOf: showA11y,

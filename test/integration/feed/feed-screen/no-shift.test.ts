@@ -1,7 +1,7 @@
-// Nothing on screen moves when picks arrive (owner, MERA-APP-8T). The reader's screen and the
-// screen below it are fixed for the session: a new pick lands at least one screen of cards past
-// the last card on screen, or waits for the next session. Driven through useFeedScreen with the
-// real stores and the list's own viewability pairs.
+// Nothing on screen moves when picks arrive (owner, MERA-APP-8T), and the Feed shows only what
+// Mera has read (owner): a row still waiting for its first read never renders. A new pick lands
+// at least one screen of cards past the last card on screen, or at the end of the list. Driven
+// through useFeedScreen with the real stores and the list's own viewability pairs.
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { setAppState } from '@/test/helpers';
 import {
@@ -63,34 +63,31 @@ function expectNoShift(feed: Feed, before: readonly string[], shown: readonly st
   if (at >= 0) expect(at).toBeGreaterThanOrEqual(lastShown + 1 + shown.length);
 }
 
-it('a pick arriving while not-read cards are on screen does not push them down', async () => {
+it('a row Mera has not read never renders, and a pick arriving after it lands at the end', async () => {
   await seedComplete([['p1', HIGH], ['p2', HIGH]]);
   await seedNotRead(['u1', 'u2', 'u3', 'u4']);
   await hydrateSuggestions();
   const feed = await renderFeed();
-  await waitFor(() => expect(feed.ids()).toHaveLength(6));
-  const before = feed.ids();
-  expect(before.slice(0, 2)).toEqual(['p1', 'p2']);
+  await waitFor(() => expect(feed.ids()).toEqual(['p1', 'p2']));
+  await act(async () => {});
+  expect(feed.ids()).toEqual(['p1', 'p2']);
 
-  const shown = before.slice(0, 3);
-  onScreen(feed, shown);
+  onScreen(feed, ['p1', 'p2']);
   await pickArrives('hot');
 
-  expectNoShift(feed, before, shown, 'hot');
+  expect(feed.ids()).toEqual(['p1', 'p2', 'hot']);
 });
 
-it('cold start: a first pick does not land above the not-read cards on screen', async () => {
+it('cold start: rows waiting for their first read show nothing, and the first pick appears', async () => {
   await seedNotRead(['u1', 'u2', 'u3', 'u4', 'u5']);
   await hydrateSuggestions();
   const feed = await renderFeed();
-  await waitFor(() => expect(feed.ids()).toHaveLength(5));
-  const before = feed.ids();
+  await act(async () => {});
+  expect(feed.ids()).toEqual([]);
 
-  const shown = before.slice(0, 3);
-  onScreen(feed, shown);
   await pickArrives('hot');
 
-  expectNoShift(feed, before, shown, 'hot');
+  await waitFor(() => expect(feed.ids()).toEqual(['hot']));
 });
 
 it('short cards: a pick lands a whole screen of cards below the last card on screen', async () => {
