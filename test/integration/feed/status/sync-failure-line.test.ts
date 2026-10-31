@@ -123,7 +123,8 @@ describe('the counts card lead after a failed refresh', () => {
     failed('fetching-topic-ids', 'server-unreachable');
     const { result } = await renderLead();
     expect(result.current.state).toBe('limited');
-    expect(result.current.zeroText).toContain(limitUnlockTime(resetAt));
+    // The hold's own sentence: what was published (counts known) or when Mera reads again.
+    expect(result.current.zeroText).toMatch(new RegExp(`published today|${limitUnlockTime(resetAt)}`));
   });
 
   describe('through the real FeedSyncMachine', () => {

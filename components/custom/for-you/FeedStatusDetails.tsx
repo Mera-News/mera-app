@@ -43,6 +43,10 @@ import { setFeedShow, setFeedView, useFeedShow, useFeedView } from '@/components
 import { syncFailureKey, syncFailureOf } from './card-state';
 import { pickScoringProgress } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
+import { useNotReadWaiting } from './feed-status-card';
+import { useUpgradeFrom } from './ReadHoldUpgradeButton';
+import { useReadHold } from '@/lib/subscription/read-hold';
+import { limitUnlockTime as resetTimeLabel } from '@/components/custom/cards/reset-time';
 
 /** Explicit size AND line height: an inline fontSize on the ui Text keeps the
  *  token's smaller line box and clips (see the mera-app-feed fontSize trap). */
@@ -64,6 +68,35 @@ function StatRow({ label, value, testID }: { label: string; value: string; testI
                 {value}
             </Animated.Text>
         </HStack>
+    );
+}
+
+/** A quieter row: Last processed under the hold's funnel. */
+function SmallRow({ label, value }: { label: string; value: string }) {
+    const c = useColors();
+    return (
+        <HStack className="items-center justify-between py-1">
+            <Text style={[SMALL_TYPE, { color: c.ink3 }]}>{label}</Text>
+            <Text style={[SMALL_TYPE, { color: c.ink3 }]}>{value}</Text>
+        </HStack>
+    );
+}
+
+const SMALL_TYPE = { fontSize: 12, lineHeight: 17 } as const;
+
+/** The hold's last line: when Mera reads again, and "or now with Individual"
+ *  only where Individual is the upgrade (Starter). Nothing without a reset. */
+export function ReadHoldFooter() {
+    const { t } = useTranslation();
+    const { resetAt } = useReadHold();
+    const from = useUpgradeFrom();
+    const c = useColors();
+    if (resetAt == null) return null;
+    const time = resetTimeLabel(resetAt);
+    return (
+        <Text style={[SMALL_TYPE, { color: c.ink2, marginTop: 8 }]} testID="feed-status-reads-again">
+            {from === 'starter' ? t('feedStatus.readsAgainOrIndividual', { time }) : t('feedStatus.readsAgain', { time })}
+        </Text>
     );
 }
 
@@ -112,6 +145,21 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
     // ONE scoring figure, shared with the "Analysing X of Y" line.
     const cloud = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
     const fmt = (n: number) => formatCount(n, appLanguage);
+    const waiting = useNotReadWaiting();
+
+    // The hold is a funnel (owner): no Stage (level 1 says it) and no Cloud scoring
+    // (the run's queue, not a count of the day's matches; see mera-app-feed).
+    if (mode === 'limited') {
+        return (
+            <VStack className="pt-2" testID="feed-status-details">
+                <StatRow label={t('feedStatus.funnelPublished')} value={fmt(articleCount)} />
+                <StatRow label={t('feedStatus.funnelRead')} value={fmt(analysedCount)} />
+                <StatRow label={t('feedStatus.funnelKept')} value={fmt(relevantCount)} />
+                {waiting != null ? <StatRow label={t('feedStatus.funnelWaiting')} value={fmt(waiting)} /> : null}
+                {lastProcessedLabel ? <SmallRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} /> : null}
+            </VStack>
+        );
+    }
 
     return (
         <VStack className="pt-2" testID="feed-status-details">

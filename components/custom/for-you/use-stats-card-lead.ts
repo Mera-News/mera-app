@@ -12,6 +12,7 @@ import { useNotReadWaiting } from './feed-status-card';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
 import { cardState, hasIssue, joinClauses, readHoldGap, readHoldSentenceKey, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
+import { useUpgradeFrom } from './ReadHoldUpgradeButton';
 
 /** A state's lead sentence, plain text (owner: no links; the reader finds
  *  Settings and their profile themselves; the limit's and the error's actions
@@ -20,7 +21,7 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
     const { t, i18n } = useTranslation();
     const tAny = t as unknown as (key: string) => string;
     const appLanguage = useAppLanguage();
-    const { articleCount, analysedCount } = useFeedCounts();
+    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const { resetAt } = useReadHold();
     const waiting = useNotReadWaiting();
     const scoringError = useForYouScoringError();
@@ -29,13 +30,15 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
         const count = waiting ?? 0;
         const day = resetDayWord(resetAt ?? Date.now());
         const time = limitUnlockTime(resetAt);
-        const gap = readHoldGap(articleCount, analysedCount, waiting);
-        if (gap)
+        // Owner's final copy. `articleCount` is everything PUBLISHED, never "found for
+        // you"; the reset time moved to level 2's last line (ReadHoldFooter).
+        if (articleCount > 0)
             return joinClauses(
                 [
-                    t('feed.readHold.gapFound', { ...fmt(articleCount), read: formatCount(gap.read, appLanguage) }),
-                    t('feed.readHold.gapWaiting', fmt(gap.waiting)),
-                    t(day === 'today' ? 'feed.readHold.gapResetToday' : 'feed.readHold.gapResetTomorrow', { time }),
+                    t('feed.readHold.publishedToday', fmt(articleCount)),
+                    ...(analysedCount > 0
+                        ? [t('feed.readHold.savedTime', { ...fmt(relevantCount), read: formatCount(analysedCount, appLanguage) })]
+                        : []),
                 ],
                 i18n.language,
             );
@@ -85,5 +88,12 @@ export function useStatsCardLead() {
     // The held card's bar draws the same gap the sentence names.
     const waiting = useNotReadWaiting();
     const gap = state === 'limited' ? readHoldGap(articleCount, analysedCount, waiting) : null;
-    return { mode, articleCount, state, zeroText, stateLabel, processing, gap };
+    // Line 2: only where an upgrade exists and something waits (0 waiting: no line).
+    const upgradeFrom = useUpgradeFrom();
+    const appLanguage = useAppLanguage();
+    const upsell =
+        state === 'limited' && upgradeFrom !== null && waiting != null && waiting > 0
+            ? t('feed.readHold.upsell', { count: waiting, formatted: formatCount(waiting, appLanguage) })
+            : null;
+    return { mode, articleCount, state, zeroText, stateLabel, processing, gap, upsell };
 }

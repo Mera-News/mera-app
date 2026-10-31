@@ -35,7 +35,7 @@ import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
-import FeedStatusDetails, { AnalysingProgress, FeedStatusActions } from './FeedStatusDetails';
+import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, ReadHoldFooter } from './FeedStatusDetails';
 import { markSizeFor, markTone, type MarkTone } from './card-state';
 import { useFeedIssue, useStatsCardLead } from './use-stats-card-lead';
 import CardRow, { CARD_RADIUS, CARD_ROW_PAD, CARD_TEXT_END, CARD_TEXT_START } from '@/components/custom/feed/CardRow';
@@ -153,7 +153,7 @@ export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactE
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
-    const { mode, articleCount, state, zeroText, stateLabel, processing, gap } = useStatsCardLead();
+    const { mode, articleCount, state, zeroText, stateLabel, processing, gap, upsell } = useStatsCardLead();
     // Level 1 owns the hold's upgrade (owner): the gap bar and the one button.
     const upgradeFrom = useUpgradeFrom();
     const expanded = useFeedStatusCard((s) => s.expanded);
@@ -177,6 +177,8 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
             <FeedStatusDetails mode={mode} />
             {processing ? <AnalysingProgress /> : null}
             <FeedStatusActions mode={mode} />
+            {/* The reset time is the panel's LAST line in the hold, so it is never lost. */}
+            {mode === 'limited' ? <ReadHoldFooter /> : null}
         </ExpandingDetails>
     );
 
@@ -231,6 +233,11 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                         {gap || upgradeFrom ? (
                             <View style={styles.holdBlock} testID="feed-status-hold-block">
                                 {gap && zeroText ? <GapBar read={gap.read} waiting={gap.waiting} label={zeroText} /> : null}
+                                {upsell ? (
+                                    <Text size="sm" className="text-ink" style={TABULAR} testID="feed-status-upsell">
+                                        {upsell}
+                                    </Text>
+                                ) : null}
                                 <ReadHoldUpgradeButton testID="feed-status-upgrade" />
                             </View>
                         ) : null}

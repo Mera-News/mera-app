@@ -70,20 +70,14 @@ describe('the counts card while the read hold is set', () => {
     );
   });
 
-  it('states the gap with numbers when the day\'s articles and the waiting count are known', async () => {
+  it('names what was published and read, and keeps the gap for the bar, when the counts are known', async () => {
     const resetAt = NOON + 2 * HOUR;
     await setReadHold({ resetAt });
     useForYouStore.setState({ articleCount: 120 });
     setNotReadWaiting(80);
     const { result } = await renderLead();
-    expect(result.current.zeroText).toBe(
-      [
-        t('feed.readHold.gapFound', { count: 120, formatted: '120', read: '0' }),
-        t('feed.readHold.gapWaiting', { count: 80, formatted: '80' }),
-        t('feed.readHold.gapResetToday', { time: limitUnlockTime(resetAt) }),
-      ].join(' '),
-    );
-    expect(result.current.zeroText).toMatch(/^Mera found 120 articles for you today and read 0\. 80 are still waiting\. Mera reads again today at /);
+    // Nothing analysed in this world, so line 1 is the published sentence alone: never "found for you".
+    expect(result.current.zeroText).toBe('120 articles were published today.');
     expect(result.current.gap).toEqual({ read: 0, waiting: 80 });
   });
 
