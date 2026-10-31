@@ -21,7 +21,7 @@ import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
 import SupportIdCopy, { useAccountHandle } from './SupportIdCopy';
 import { useAppPreferences } from './useAppPreferences';
-import { emailCutoffLabel, isEmailAccount, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
+import { emailCutoffLabel, moveToPhoneDone, requestMoveToPhone } from '@/components/custom/auth/move-to-phone';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
@@ -85,14 +85,13 @@ const AppPreferencesTab: React.FC = () => {
     } = useAppPreferences();
     const chatInCloud = useChatInCloud();
     useFocusEffect(refreshOnFocus);
-    // The move row is for accounts that still have an email (a displayed one, or the stored row / session).
-    const [emailAccount, setEmailAccount] = useState(false);
+    // The move row is for accounts whose move is not done: the same check as the inbox row (moveToPhoneDone).
+    const [showMoveRow, setShowMoveRow] = useState(false);
     useEffect(() => {
         let live = true;
-        void isEmailAccount().then((yes) => { if (live) setEmailAccount(yes); });
+        void moveToPhoneDone().then((done) => { if (live) setShowMoveRow(!done); });
         return () => { live = false; };
     }, [displayEmail]);
-    const showMoveRow = emailAccount || !!displayEmail;
 
     const busy = <Spinner size="small" />;
     const version = getAppVersion();

@@ -22,9 +22,10 @@ import logger from '@/lib/logger';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useColors } from '@/lib/theme/tokens';
 import {
+    deleteMoveToPhoneRows,
     emailCutoffLabel,
-    isEmailAccount,
     moveToPhone,
+    moveToPhoneDone,
     setMoveToPhoneVisible,
     subscribeMoveToPhone,
     type MoveStep,
@@ -37,7 +38,7 @@ export const MOVE_TO_PHONE_ACTION_ID = 'move-to-phone';
 export async function offerMoveToPhoneOnce(userId: string): Promise<void> {
     try {
         if (!userId || (await getSetting(MOVE_TO_PHONE_OFFERED_KEY)) === userId) return;
-        if (!(await isEmailAccount())) return;
+        if (await moveToPhoneDone()) return;
         // Stamp first: a crash between the two must not write the row twice.
         await setSetting(MOVE_TO_PHONE_OFFERED_KEY, userId);
         await notify({
@@ -92,6 +93,7 @@ export function useMoveToPhoneFlow() {
     const run = useCallback(async () => {
         setView({ kind: 'running', step: 'checking' });
         const outcome = await moveToPhone((step) => setView((v) => (v.kind === 'running' ? { kind: 'running', step } : v)));
+        if (outcome.kind === 'moved') void deleteMoveToPhoneRows();
         setView(outcome.kind === 'moved' ? { kind: 'moved' } : outcome.kind === 'unsupported' ? { kind: 'unsupported' } : outcome);
     }, []);
 
@@ -104,6 +106,12 @@ export function useMoveToPhoneFlow() {
     const start = useCallback(async () => {
         if (busy.current) return;
         busy.current = true;
+        // A finished move has nothing to ask (owner): no dialog, and a stale inbox row goes.
+        if (await moveToPhoneDone()) {
+            busy.current = false;
+            await deleteMoveToPhoneRows();
+            return;
+        }
         setMoveToPhoneVisible(true);
         const date = emailCutoffLabel(i18n.language);
         const confirmed = await showDialog({

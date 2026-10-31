@@ -136,6 +136,39 @@ export async function isEmailAccount(): Promise<boolean> {
     }
 }
 
+/**
+ * Whether the move has nothing left to do: the server holds no real email on
+ * this account (moved here or on another phone, or deleted on EMAIL_CUTOFF).
+ * The server wins over the email row this device remembers, which a move on
+ * another phone leaves behind. Offline, the remembered email decides. Every
+ * move entry (the inbox row's action, the Settings row, the offer) asks this.
+ * Never throws.
+ */
+export async function moveToPhoneDone(): Promise<boolean> {
+    try {
+        const { authClient } = require('@/lib/auth-client') as typeof import('@/lib/auth-client');
+        const { emailLooksAnonymous } =
+            require('@/lib/subscription/email-capture') as typeof import('@/lib/subscription/email-capture');
+        const res = await authClient.getSession({ query: { disableCookieCache: true } });
+        const user = res?.data?.user;
+        if (user) return emailLooksAnonymous(user.email);
+    } catch {
+        // No answer: fall back to what this device remembers.
+    }
+    return !(await isEmailAccount());
+}
+
+/** Deletes the move's inbox rows (a finished move, or a tap on a stale one). Never throws. */
+export async function deleteMoveToPhoneRows(): Promise<void> {
+    try {
+        const { deleteByTypes } =
+            require('@/lib/database/services/notification-service') as typeof import('@/lib/database/services/notification-service');
+        await deleteByTypes(['move_to_phone']);
+    } catch (error) {
+        logger.warn('[move-to-phone] could not delete the inbox rows', { error: String(error) });
+    }
+}
+
 // ─── The silent bind ─────────────────────────────────────────────────────────
 // Once per device and account, at launch: bind this phone to a signed-in email
 // account WITHOUT moving it, so someone who never opens the move still signs in
