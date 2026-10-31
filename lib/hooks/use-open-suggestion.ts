@@ -5,7 +5,7 @@
 // only difference is the `surface` tag passed at the call site.
 
 import { useCallback } from 'react';
-import { InteractionManager } from 'react-native';
+import { runWhenIdle } from '@/lib/scheduler/idle';
 import { router } from 'expo-router';
 import { authClient } from '@/lib/auth-client';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
@@ -40,7 +40,7 @@ export function useOpenSuggestion(surface: ImpressionSurface) {
       // Defer the dim + impression bookkeeping past navigation so the
       // synchronous markOpened (which triggers Dashboard's buildFactRows
       // recompute + list re-renders) doesn't block the push and cause tap lag.
-      InteractionManager.runAfterInteractions(() => {
+      runWhenIdle(() => {
         // Optimistically dim the story.
         useOpenedStoriesStore.getState().markOpened(suggestion.articleId, stableClusterId);
 

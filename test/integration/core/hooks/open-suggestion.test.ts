@@ -19,7 +19,7 @@ async function seeded(opts: { title?: string; clusterId?: string; stableClusterI
   return (await suggestionRows())['art-1'];
 }
 
-/** The impression write is fire-and-forget behind InteractionManager: wait for the row. */
+/** The impression write is fire-and-forget behind runWhenIdle: wait for the row. */
 async function impressions() {
   await waitFor(async () => expect(await getAll()).toHaveLength(1));
   return getAll();

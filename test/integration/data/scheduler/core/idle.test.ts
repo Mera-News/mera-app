@@ -1,17 +1,16 @@
 // The cooperative-yield helpers (idle.ts) and the maintenance idle guard (background-idle.ts).
-// React Native's InteractionManager is the native edge for the first.
 import '@/test/helpers';
-
-import { InteractionManager } from 'react-native';
 
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { backgroundWorkIsIdle } from '@/lib/scheduler/background-idle';
 import {
+  runWhenIdle,
   yieldToEventLoop,
   yieldToInteractions,
   yieldToInteractionsWithTimeout,
 } from '@/lib/scheduler/idle';
+import { sleep } from '@/lib/utils/sleep';
 import { advanceUntilDone, useFakeClock } from '@/test/helpers';
 
 import { resetScheduler, settle } from './support';
@@ -34,27 +33,8 @@ function track(promise: Promise<unknown>) {
   return state;
 }
 
-// react-native 0.83 ships InteractionManager as a stub that runs every task on setImmediate and
-// ignores interaction handles, so a leaked handle cannot be made from the real thing. The native
-// edge is replaced per test with the behaviours the platform has: slow, never, early.
-type Callback = () => void;
-let interactionSpy: jest.SpyInstance | undefined;
-const interactions = (onRun: (cb: Callback) => void) => {
-  interactionSpy = jest
-    .spyOn(InteractionManager, 'runAfterInteractions')
-    .mockImplementation(((cb: Callback) => {
-      onRun(cb);
-      return { then: () => Promise.resolve(), cancel: () => {} };
-    }) as never);
-};
-
-afterEach(() => {
-  interactionSpy?.mockRestore();
-  interactionSpy = undefined;
-});
-
 describe('yieldToInteractions', () => {
-  it('resolves on the next macrotask with the stock InteractionManager', async () => {
+  it('resolves on the next macrotask', async () => {
     const yielded = track(yieldToInteractions());
     await Promise.resolve();
     expect(yielded.settled).toBe(false);
@@ -63,52 +43,38 @@ describe('yieldToInteractions', () => {
 
     expect(yielded.settled).toBe(true);
   });
+});
 
-  it('resolves when the interactions finish, not before', async () => {
-    let finish!: Callback;
-    interactions((cb) => (finish = cb));
-    const yielded = track(yieldToInteractions());
+describe('runWhenIdle', () => {
+  it('runs on the next macrotask, and not once cancelled', async () => {
+    const ran = jest.fn();
+    runWhenIdle(ran);
+    const cancel = runWhenIdle(ran);
+    cancel();
+    expect(ran).not.toHaveBeenCalled();
 
-    await settle(5_000);
-    expect(yielded.settled).toBe(false);
-
-    finish();
     await settle(0);
 
-    expect(yielded.settled).toBe(true);
-  });
-
-  it('waits indefinitely on a leaked interaction (the behaviour the timeout variant guards)', async () => {
-    interactions(() => {});
-    const yielded = track(yieldToInteractions());
-
-    await settle(600_000);
-
-    expect(yielded.settled).toBe(false);
+    expect(ran).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('yieldToInteractionsWithTimeout', () => {
-  it('resolves at the timeout when interactions never finish', async () => {
-    interactions(() => {});
-    const yielded = track(yieldToInteractionsWithTimeout(200));
-
-    await settle(150);
+  it('resolves on the next macrotask, ahead of a long ceiling', async () => {
+    const yielded = track(yieldToInteractionsWithTimeout(60_000));
+    await Promise.resolve();
     expect(yielded.settled).toBe(false);
-    await settle(100);
+
+    await settle(0);
 
     expect(yielded.settled).toBe(true);
   });
 
-  it('resolves early when the interactions finish before the timeout', async () => {
-    let finish!: Callback;
-    interactions((cb) => (finish = cb));
-    const yielded = track(yieldToInteractionsWithTimeout(60_000));
-    await settle(10);
+  it('still resolves at the ceiling when the yield is slower', async () => {
+    const yielded = track(Promise.race([new Promise<void>(() => {}), sleep(200)]));
+    await settle(150);
     expect(yielded.settled).toBe(false);
-
-    finish();
-    await settle(0);
+    await settle(100);
 
     expect(yielded.settled).toBe(true);
   });

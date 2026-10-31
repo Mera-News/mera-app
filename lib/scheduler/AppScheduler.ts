@@ -13,7 +13,7 @@ import { jitteredInterval } from './jitter';
 import logger from '@/lib/logger';
 
 /** Ceiling on the "let the foreground transition's animations finish first"
- *  deferral. A leaked InteractionManager handle would otherwise swallow the
+ *  deferral. A stalled yield would otherwise swallow the
  *  kick entirely; 200ms is below the threshold where a user perceives the sync
  *  as not having started. */
 export const FOREGROUND_YIELD_TIMEOUT_MS = 200;

@@ -42,7 +42,7 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InteractionManager } from 'react-native';
+import { runWhenIdle } from '@/lib/scheduler/idle';
 
 const SCROLL_THRESHOLD = 300;
 
@@ -150,10 +150,10 @@ export function useArticleSuggestionScreen({
     // compete with the transition for the JS thread.
     const [afterInteractions, setAfterInteractions] = useState(false);
     useEffect(() => {
-        const handle = InteractionManager.runAfterInteractions(() => {
+        const cancel = runWhenIdle(() => {
             setAfterInteractions(true);
         });
-        return () => handle.cancel();
+        return cancel;
     }, []);
 
     // Locally-derived "More coverage" siblings: the user's other personalized

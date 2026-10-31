@@ -1,6 +1,6 @@
 import { usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { InteractionManager } from 'react-native';
+import { runWhenIdle } from '@/lib/scheduler/idle';
 import { useTranslation } from 'react-i18next';
 
 import MeraToast from '@/components/custom/toast/MeraToast';
@@ -68,7 +68,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
         if (isTranslationVerified(appLanguage)) return;
         if (blocked) return;
         startupProbedRef.current = appLanguage;
-        const handle = InteractionManager.runAfterInteractions(() => {
+        const cancel = runWhenIdle(() => {
             // A non-permanent failure: a language this device has translated
             // into before stays blocked and is quietly re-verified on a
             // backoff; one it never has stays gated. The probe never re-runs.
@@ -79,7 +79,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
                 })
                 .catch(() => {});
         });
-        return () => handle.cancel();
+        return cancel;
     }, [appLanguage, blocked]);
 
     useEffect(() => {

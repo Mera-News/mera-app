@@ -1,10 +1,8 @@
 // Scheduler-core arms the other seam files do not reach: each test drives the real AppScheduler,
-// runner, persistence layer and in-memory DB. Edges only: the clock, Sentry, RN's
-// InteractionManager, and llama.rn for the one module-load fault.
+// runner, persistence layer and in-memory DB. Edges only: the clock, Sentry, and llama.rn for the one module-load fault.
 import '@/test/helpers';
 
 import * as Sentry from '@sentry/react-native';
-import { InteractionManager } from 'react-native';
 
 import database from '@/lib/database';
 import type SchedulerJobModel from '@/lib/database/models/SchedulerJob';
@@ -17,7 +15,6 @@ import {
   pruneOldJobs,
   saveLastRun,
 } from '@/lib/scheduler/scheduler-persistence';
-import { yieldToInteractions, yieldToInteractionsWithTimeout } from '@/lib/scheduler/idle';
 import { useUserStore } from '@/lib/stores/user-store';
 import {
   advanceUntilDone,
@@ -167,32 +164,6 @@ describe('scheduler-persistence', () => {
     await expect(pruneOldJobs()).resolves.toBeUndefined();
 
     expect((await database.get<SchedulerJobModel>('scheduler_jobs').find(job.id)).status).toBe('pending');
-  });
-});
-
-describe('idle helpers without InteractionManager.runAfterInteractions', () => {
-  const track = (p: Promise<unknown>) => {
-    const s = { settled: false };
-    void p.then(() => (s.settled = true));
-    return s;
-  };
-
-  it('falls back to the next macrotask when the platform lacks runAfterInteractions', async () => {
-    const manager = InteractionManager as { runAfterInteractions?: unknown };
-    const original = manager.runAfterInteractions;
-    manager.runAfterInteractions = undefined;
-    try {
-      const plain = track(yieldToInteractions());
-      const bounded = track(yieldToInteractionsWithTimeout(60_000));
-      await Promise.resolve();
-      expect(plain.settled).toBe(false);
-      await settle(0);
-
-      expect(plain.settled).toBe(true);
-      expect(bounded.settled).toBe(true);
-    } finally {
-      manager.runAfterInteractions = original;
-    }
   });
 });
 

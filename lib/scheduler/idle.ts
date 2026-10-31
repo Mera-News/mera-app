@@ -2,32 +2,27 @@
 // refreshes, on-device scoring batches) doesn't starve hydration/first-paint or
 // jank foreground animations. RN-touching code is fine in lib/scheduler/.
 
-import { InteractionManager } from 'react-native';
 import { sleep } from '@/lib/utils/sleep';
 
+/** Run `cb` on the next macrotask; the returned function cancels it. RN's interaction manager was already a setImmediate stub in RN 0.83, so this keeps today's timing. */
+export function runWhenIdle(cb: () => void): () => void {
+  const id = setTimeout(cb, 0);
+  return () => clearTimeout(id);
+}
+
 /**
- * Resolve after the current interactions/animations have finished. Falls back to
- * the next macrotask when InteractionManager is unavailable (e.g. unit tests that
- * stub `react-native` without it). Use to defer non-urgent work past
+ * Resolve on the next macrotask. Use to defer non-urgent work past
  * gestures/first-paint so the UI thread stays responsive.
  */
 export function yieldToInteractions(): Promise<void> {
   return new Promise<void>((resolve) => {
-    if (InteractionManager && typeof InteractionManager.runAfterInteractions === 'function') {
-      InteractionManager.runAfterInteractions(() => resolve());
-    } else {
-      setTimeout(resolve, 0);
-    }
+    runWhenIdle(resolve);
   });
 }
 
 /**
- * `yieldToInteractions` with a hard ceiling. `runAfterInteractions` only fires
- * once every registered interaction handle is cleared — a leaked handle (a
- * gesture responder or animation that never completes) means it never fires at
- * all, and the deferred work is lost silently. Use this wherever the deferral
- * is a politeness rather than a requirement: we still let interactions win when
- * they finish promptly, but never wait on them indefinitely.
+ * `yieldToInteractions` with a hard ceiling: whichever of the yield and the
+ * timeout resolves first wins.
  */
 export function yieldToInteractionsWithTimeout(ms: number): Promise<void> {
   return Promise.race([
@@ -38,8 +33,7 @@ export function yieldToInteractionsWithTimeout(ms: number): Promise<void> {
 
 /**
  * Resolve on the next macrotask (setTimeout 0). Lets the JS thread drain pending
- * work (renders, touch handling) between tight loop iterations without waiting
- * for all interactions to settle.
+ * work (renders, touch handling) between tight loop iterations 
  */
 export function yieldToEventLoop(): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, 0));
