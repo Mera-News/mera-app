@@ -232,7 +232,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                                 testID="fact-checks-title-row"
                             />
                         </View>
-                    ) : null
+                    ) : undefined
                 }
                 // The manual path: a reader who suspects the list is stale can
                 // always ask directly rather than waiting for the next arrival.
@@ -280,7 +280,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                             }}
                             testID="fact-checks-empty"
                         />
-                    ) : null
+                    ) : undefined
                 }
             />
         </Box>

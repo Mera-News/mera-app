@@ -301,7 +301,7 @@ function ToastSlot({ entry, depth, reduced, frontSize, onFrontSize, leaving = fa
                                 <View
                                     testID="toast-strip-shade"
                                     style={{
-                                        ...StyleSheet.absoluteFillObject,
+                                        ...StyleSheet.absoluteFill,
                                         backgroundColor: `rgba(0,0,0,${STRIP_SHADE[mode][d]})`,
                                     }}
                                 />

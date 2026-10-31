@@ -75,5 +75,5 @@ export const GlyphSafeIconButton: React.FC<GlyphSafeIconButtonProps> = ({
 
 const frameStyles = StyleSheet.create({
   frame: { width: TOUCH_FRAME, height: TOUCH_FRAME },
-  overlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
 });

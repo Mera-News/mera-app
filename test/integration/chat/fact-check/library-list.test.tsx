@@ -86,7 +86,7 @@ describe('the list card is a summary', () => {
 /** The document an export handed to the share sheet. */
 function shareSheet() {
   jest.spyOn(Sharing, 'isAvailableAsync').mockResolvedValue(false);
-  return jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+  return jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined });
 }
 
 async function openExport(items: StoredFactCheck[]) {

@@ -221,7 +221,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // new state has to be announced rather than silently swapped. Focus lands on
   // the card that changed, not on the list.
   const announce = () => {
-    const node = findNodeHandle(cardRef.current);
+    const node = findNodeHandle(cardRef.current) ?? null;
     if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
   };
 

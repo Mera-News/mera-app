@@ -387,7 +387,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                 </View>
                 {!selecting && !cards.includes('top') ? <HistoryRow /> : null}
             </View>
-        ) : null;
+        ) : undefined;
 
     return (
         // The cards follow the app's theme (the share images choose their own).

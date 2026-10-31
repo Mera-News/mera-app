@@ -9,7 +9,7 @@ import {
     View,
     type LayoutChangeEvent,
     type StyleProp,
-    type TextLayoutEventData,
+    type TextLayoutEvent,
     type NativeSyntheticEvent,
     type ViewStyle,
 } from 'react-native';
@@ -326,7 +326,7 @@ function HeaderTrack<T extends string>({
     // Each label's width, measured at the picked weight and the current text
     // size by a hidden copy, so the decision never depends on what is shown.
     const [widths, setWidths] = useState<Readonly<Record<string, number>>>({});
-    const onMeasure = useCallback((key: string, e: NativeSyntheticEvent<TextLayoutEventData>) => {
+    const onMeasure = useCallback((key: string, e: TextLayoutEvent) => {
         const w = Math.ceil(e.nativeEvent.lines[0]?.width ?? 0);
         setWidths((prev) => (prev[key] === w ? prev : { ...prev, [key]: w }));
     }, []);

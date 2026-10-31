@@ -201,7 +201,7 @@ const ReadingLogScreen: React.FC<Props> = ({ initialDay, language, onBack }) => 
                     <Box className="items-center justify-center py-20">
                         <Spinner size="large" />
                     </Box>
-                ) : null
+                ) : undefined
             }
         />
     );

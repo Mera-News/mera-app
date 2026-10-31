@@ -180,7 +180,7 @@ const HistoryScreen: React.FC<Props> = ({ country, onBack }) => {
                     <Text style={{ fontSize: 12, lineHeight: 17, color: c.ink3, marginTop: 8 }} testID="history-footnote">
                         {t('library.history.footnote')}
                     </Text>
-                ) : null
+                ) : undefined
             }
             ListEmptyComponent={
                 loading ? (

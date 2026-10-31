@@ -45,7 +45,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import React from 'react';
-import { View, type TextStyle } from 'react-native';
+import { View, type TextStyle, type ViewInstance } from 'react-native';
 
 /** The shipping export size. Not a preference. */
 const EXPORT_WIDTH = 1080;
@@ -165,7 +165,7 @@ interface CardShellProps {
   onBodyLayout?: (height: number) => void;
 }
 
-const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
+const CardShell = React.forwardRef<ViewInstance, CardShellProps>(function CardShell(
   { title, privacyLine, pixelRatio, hostSize, fullFrame, testID, children, onBodyLayout },
   ref,
 ) {

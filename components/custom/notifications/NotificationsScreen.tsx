@@ -112,9 +112,9 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                                 />
                             ))}
                         </View>
-                    ) : null
+                    ) : undefined
                 }
-                ListEmptyComponent={suggestions.items.length > 0 ? null : empty}
+                ListEmptyComponent={suggestions.items.length > 0 ? undefined : empty}
                 initialNumToRender={12}
                 showsVerticalScrollIndicator={false}
                 onScroll={tracked.onScroll}

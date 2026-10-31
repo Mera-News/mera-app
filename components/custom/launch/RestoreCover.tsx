@@ -49,6 +49,6 @@ export default function RestoreCover(): React.ReactElement | null {
 }
 
 const styles = StyleSheet.create({
-  cover: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
+  cover: { ...StyleSheet.absoluteFill, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   logo: { width: 200, height: 200 },
 });

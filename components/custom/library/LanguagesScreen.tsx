@@ -72,7 +72,7 @@ const LanguagesScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) 
                         <Box className="items-center justify-center py-20">
                             <Spinner size="large" />
                         </Box>
-                    ) : null
+                    ) : undefined
                 }
             />
             <StatsShareModal open={shareOpen} onClose={() => setShareOpen(false)} groups={CARD} stats={stats} box={box} />

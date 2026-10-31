@@ -18,7 +18,7 @@
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import React, { createContext, forwardRef, useContext, useEffect, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, useWindowDimensions, type ViewInstance, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -58,7 +58,7 @@ interface StreamingBubbleProps {
   children?: React.ReactNode;
 }
 
-export const StreamingBubble = forwardRef<View, StreamingBubbleProps>(function StreamingBubble(
+export const StreamingBubble = forwardRef<ViewInstance, StreamingBubbleProps>(function StreamingBubble(
   { style, testID, children },
   ref,
 ) {
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
-  fill: { ...StyleSheet.absoluteFillObject, borderRadius: 16 },
+  fill: { ...StyleSheet.absoluteFill, borderRadius: 16 },
   strip: { position: 'absolute', top: 8, left: 14, right: 14 },
 });
 

@@ -6,18 +6,18 @@
 import type { PreviewBox } from '@/components/custom/share-stats/StatsShareModal';
 import { useMeraButtonBottom, useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useCallback, useRef, useState } from 'react';
-import { useWindowDimensions, type View } from 'react-native';
+import { useWindowDimensions, type ViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Under the page strip's pill track (safe area + 47): the preview's top. */
 const PREVIEW_TOP = 52;
 
-export function usePreviewBox(): { rootRef: React.RefObject<View | null>; onLayout: () => void; box: PreviewBox } {
+export function usePreviewBox(): { rootRef: React.RefObject<ViewInstance | null>; onLayout: () => void; box: PreviewBox } {
     const insets = useSafeAreaInsets();
     const tabClearance = useTabBarClearance();
     const meraBottom = useMeraButtonBottom();
     const { height: screenH } = useWindowDimensions();
-    const rootRef = useRef<View>(null);
+    const rootRef = useRef<ViewInstance>(null);
     const [pageBottomGap, setPageBottomGap] = useState(0);
     const onLayout = useCallback(() => {
         rootRef.current?.measureInWindow((_x, y, _w, h) => {

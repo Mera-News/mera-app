@@ -34,6 +34,8 @@ import {
   TextInput,
   useWindowDimensions,
   View,
+  type ViewInstance,
+  type ViewProps,
   type ViewStyle,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
@@ -68,10 +70,10 @@ const BUTTON_LIFT = (FIELD_MIN_HEIGHT - SEND_DISC) / 2;
 
 export interface ConversationProps {
   children: React.ReactNode;
-  style?: View['props']['style'];
+  style?: ViewProps['style'];
 }
 
-const Conversation = forwardRef<View, ConversationProps>(function Conversation(
+const Conversation = forwardRef<ViewInstance, ConversationProps>(function Conversation(
   { children, style },
   ref,
 ) {
@@ -166,10 +168,10 @@ function ConversationContentInner<T extends { key: string }>(
               importantForAccessibility="no-hide-descendants"
             />
           </View>
-        ) : null
+        ) : undefined
       }
       // In an inverted list the "header" is drawn at the bottom of the view.
-      ListHeaderComponent={header ?? null}
+      ListHeaderComponent={header ?? undefined}
       ListEmptyComponent={ListEmptyComponent}
       contentContainerStyle={styles.listContent}
     />
@@ -190,7 +192,7 @@ export interface MessageProps {
   children: React.ReactNode;
 }
 
-const Message = forwardRef<View, MessageProps>(function Message({ role, children }, ref) {
+const Message = forwardRef<ViewInstance, MessageProps>(function Message({ role, children }, ref) {
   const styles = useStyles();
   return (
     <View
@@ -237,7 +239,7 @@ export interface MessageContentProps {
   children: React.ReactNode;
 }
 
-const MessageContent = forwardRef<View, MessageContentProps>(function MessageContent(
+const MessageContent = forwardRef<ViewInstance, MessageContentProps>(function MessageContent(
   { role, variant = 'solid', testID, as: Container = View, style, children },
   ref,
 ) {
@@ -266,7 +268,7 @@ export interface MessageResponseProps {
   children: string;
 }
 
-const MessageResponse = forwardRef<View, MessageResponseProps>(function MessageResponse(
+const MessageResponse = forwardRef<ViewInstance, MessageResponseProps>(function MessageResponse(
   { children },
   ref,
 ) {
@@ -342,7 +344,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   const styles = useStyles();
   const [text, setText] = useState('');
   useRestartHold(text.trim().length > 0, 'draft:chat', 'hard');
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => inputRef.current?.focus(),
@@ -616,7 +618,7 @@ const useStyles = themedStyles((c, mode) => StyleSheet.create({
   },
   sendFrame: { width: SEND_FRAME, height: SEND_FRAME },
   sendOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

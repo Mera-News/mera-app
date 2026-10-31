@@ -61,7 +61,7 @@ const FreshnessScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) 
                                 ? t('library.activity.freshNote', { sampled: fresh.sampled, count: fresh.total, missing })
                                 : t('library.activity.freshNoteAll')}
                         </Text>
-                    ) : null
+                    ) : undefined
                 }
             />
             <StatsShareModal open={shareOpen} onClose={() => setShareOpen(false)} groups={CARD} stats={stats} box={box} />

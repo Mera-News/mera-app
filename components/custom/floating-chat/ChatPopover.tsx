@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
         height: MERA_BUTTON_SIZE,
     },
     riderDisc: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         borderRadius: MERA_BUTTON_SIZE / 2,
         alignItems: 'center',
         justifyContent: 'center',

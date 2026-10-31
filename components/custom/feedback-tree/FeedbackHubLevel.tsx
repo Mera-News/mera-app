@@ -9,7 +9,7 @@ import { Text } from '@/components/ui/text';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { AccessibilityInfo, Pressable, View, findNodeHandle, type Text as RNText } from 'react-native';
+import { AccessibilityInfo, Pressable, View, findNodeHandle, Text as RNText } from 'react-native';
 
 export interface HubRow {
     key: string;
@@ -61,7 +61,7 @@ const FeedbackHubLevel: React.FC<FeedbackHubLevelProps> = ({
     focusKey,
 }) => {
     const c = useColors();
-    const headingRef = useRef<RNText>(null);
+    const headingRef = useRef<React.ComponentRef<typeof RNText>>(null);
     useEffect(() => {
         if (!focusKey) return;
         const node = findNodeHandle(headingRef.current);

@@ -21,7 +21,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { useFloatingChatStore, type ChatContext, type MeraPageKey } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ViewInstance } from 'react-native';
 import { Gesture, GestureDetector, type LegacyPanGesture } from 'react-native-gesture-handler';
 import Animated, {
   FadeOut,
@@ -134,7 +134,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   const growStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   // ── tap ──────────────────────────────────────────────────────────────────
-  const circleRef = useRef<React.ComponentRef<typeof View>>(null);
+  const circleRef = useRef<ViewInstance>(null);
   const publishCenter = useCallback(() => {
     circleRef.current?.measureInWindow((x, y, w, h) => {
       if (w === 0 && h === 0) return;

@@ -73,7 +73,7 @@ describe('the article fact-check card', () => {
 
   it('shares the whole check as plain text, headline first and the footer last', async () => {
     await seed(published());
-    const shared = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+    const shared = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined });
     const panel = renderPanel();
     await waitFor(() => expect(panel.getByTestId('fact-check-0-share')).toBeTruthy());
 
