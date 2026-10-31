@@ -163,6 +163,7 @@
       "./plugins/withMlKit16kb",
       "./plugins/withOnDeviceLlmMinSdk",
       "./plugins/withWatermelonJsi",
+      "./plugins/withWatermelonBusyTimeout",
       [
         "@intercom/intercom-react-native",
         {
