@@ -128,27 +128,6 @@ function runJson(cmd, args) {
     }
 }
 
-// SDK 58 makes expo/fetch the global fetch unless this is '1'. The binary was
-// built with it, so a bundle exported without it would swap the fetch under
-// every Apollo and auth request on readers' phones. Read in the same EAS
-// environment the export uses (EXPO_NO_DOTENV, so a local .env cannot mask it).
-const RN_FETCH_FLAG = 'EXPO_PUBLIC_USE_RN_FETCH';
-const FLAG_MISSING = 3;
-
-function requireRnFetchFlag(environment) {
-    const probe = `EXPO_NO_DOTENV=1 node -e "process.exit(process.env.${RN_FETCH_FLAG} === '1' ? 0 : ${FLAG_MISSING})"`;
-    const r = spawnSync('eas', ['env:exec', environment, probe, '--non-interactive'], { cwd: ROOT, stdio: 'inherit' });
-    if (r.status === FLAG_MISSING) {
-        console.error(`ota-publish: REFUSED, ${RN_FETCH_FLAG} is not 1 in the EAS "${environment}" environment.`);
-        console.error(`  Set it there (plain text, value 1) before publishing; the 1.3.6 binary expects React Native fetch.`);
-        process.exit(1);
-    }
-    if (r.status !== 0) {
-        console.error(`ota-publish: eas env:exec failed while checking ${RN_FETCH_FLAG} (exit ${r.status ?? r.signal})`);
-        process.exit(r.status || 1);
-    }
-}
-
 const EXPORT = 'npx expo export --output-dir dist --source-maps --dump-assetmap --platform ios --platform android --clear';
 
 /** The value of `--message <m>` or `--message=<m>`, or undefined. */
@@ -237,7 +216,6 @@ function main(argv) {
     const notes = releaseNotes(message, new Date().toISOString(), priorNotes(channel, runtime));
     const dist = path.join(ROOT, 'dist');
 
-    requireRnFetchFlag(environment);
     fs.rmSync(dist, { recursive: true, force: true });
     run('eas', ['env:exec', environment, `EXPO_NO_DOTENV=1 ${EXPORT}`, '--non-interactive'], {
         ...process.env,

@@ -13,8 +13,7 @@
       },
       "env": {
         "EXPO_PUBLIC_AUTH_ENDPOINT": "https://auth.staging.mera.news",
-        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news",
-        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news"
       }
     },
     "development-simulator": {
@@ -24,8 +23,7 @@
       },
       "env": {
         "EXPO_PUBLIC_AUTH_ENDPOINT": "https://auth.staging.mera.news",
-        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news",
-        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news"
       }
     },
     "preview": {
@@ -33,16 +31,12 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_AUTH_ENDPOINT": "https://auth.staging.mera.news",
-        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news",
-        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news"
       }
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production",
-      "env": {
-        "EXPO_PUBLIC_USE_RN_FETCH": "1"
-      }
+      "channel": "production"
     }
   },
   "submit": {

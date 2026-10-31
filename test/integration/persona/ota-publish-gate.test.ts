@@ -106,8 +106,6 @@ describe('ota-publish --channel', () => {
                     `const fs = require('fs');\n` +
                     `const args = process.argv.slice(2);\n` +
                     `fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify([${JSON.stringify(name)}, ...args]) + '\\n');\n` +
-                    // The EXPO_PUBLIC_USE_RN_FETCH probe: exits with STUB_FLAG_STATUS (default 0).
-                    `if (args[0] === 'env:exec' && args[2].includes('node -e')) process.exit(Number(process.env.STUB_FLAG_STATUS ?? 0));\n` +
                     `if (args[0] === 'env:exec') { fs.mkdirSync('dist', { recursive: true }); fs.writeFileSync('dist/bundle.js', 'clean'); fs.writeFileSync(${JSON.stringify(notesLog)}, process.env.EXPO_PUBLIC_OTA_NOTES ?? ''); }\n` +
                     `if (args[0] === 'update:list') process.stdout.write(${JSON.stringify(JSON.stringify(LIST))});\n` +
                     `if (args[0] === 'update:view') process.stdout.write(JSON.stringify(${JSON.stringify(VIEW)}[args[1]]));\n`,
@@ -122,10 +120,10 @@ describe('ota-publish --channel', () => {
     /** The calls after the release-note reads (one list, one view per kept group). */
     const afterNotes = (calls: string[][]) => calls.filter((c) => c[1] !== 'update:list' && c[1] !== 'update:view');
 
-    const publish = (bin: string, args: string[], env: Record<string, string> = {}) =>
+    const publish = (bin: string, args: string[]) =>
         spawnSync(process.execPath, [COPY, ...args], {
             encoding: 'utf8',
-            env: { PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`, NODE_ENV: 'test', ...env },
+            env: { PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`, NODE_ENV: 'test' },
         });
 
     afterEach(() => fs.rmSync(DIST, { recursive: true, force: true }));
@@ -146,9 +144,7 @@ describe('ota-publish --channel', () => {
         const r = publish(bin, ['--channel', 'production', '--environment', 'production', '--', '--message', 'x']);
 
         expect(r.status).toBe(0);
-        const [probe, exp, upload, sentry] = afterNotes(calls());
-        expect(probe.slice(0, 3)).toEqual(['eas', 'env:exec', 'production']);
-        expect(probe[3]).toContain('EXPO_PUBLIC_USE_RN_FETCH');
+        const [exp, upload, sentry] = afterNotes(calls());
         expect(exp.slice(0, 3)).toEqual(['eas', 'env:exec', 'production']);
         expect(exp[3]).toMatch(/^EXPO_NO_DOTENV=1 npx expo export .*--output-dir dist/);
         expect(exp).toContain('--non-interactive');
@@ -165,21 +161,9 @@ describe('ota-publish --channel', () => {
         const r = publish(bin, ['--channel', 'preview', '--', '--environment', 'preview', '--message', 'x']);
 
         expect(r.status).toBe(0);
-        const [, exp, upload] = afterNotes(calls());
+        const [exp, upload] = afterNotes(calls());
         expect(exp.slice(0, 3)).toEqual(['eas', 'env:exec', 'preview']);
         expect(upload.filter((a) => a === '--environment')).toHaveLength(1);
-    });
-
-    it('refuses before exporting when the EAS environment lacks EXPO_PUBLIC_USE_RN_FETCH=1', () => {
-        const { bin, calls } = stubBin();
-
-        const r = publish(bin, ['--channel', 'production', '--environment', 'production', '--', '--message', 'x'], {
-            STUB_FLAG_STATUS: '3',
-        });
-
-        expect(r.status).toBe(1);
-        expect(r.stderr).toContain('EXPO_PUBLIC_USE_RN_FETCH');
-        expect(afterNotes(calls())).toHaveLength(1);
     });
 
     it('reads the earlier notes on the channel branch and runtime and hands them to the export, newest first', () => {

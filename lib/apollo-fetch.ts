@@ -20,6 +20,7 @@
 // request at 15s that would have completed at 20s makes the bad-network case
 // worse, and "keep trying" is the explicit requirement.
 
+import { createCancellationError } from './utils/retry';
 import {
     reportRequestSlow,
     reportSlowRequestEnded,
@@ -110,6 +111,10 @@ export const instrumentedFetch: typeof fetch = async (input, init) => {
             );
             throw timeoutError;
         }
+        // The caller aborted (Apollo on unsubscribe). expo/fetch, SDK 58's global
+        // fetch, rejects that with a plain Error ("fetch failed: The operation
+        // was aborted."), and every cancellation check here keys on AbortError.
+        if (controller.signal.aborted) throw createCancellationError();
         throw error;
     } finally {
         // Unconditional: every settle path — resolve, reject, our abort, the

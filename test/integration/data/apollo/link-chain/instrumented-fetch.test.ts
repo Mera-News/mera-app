@@ -135,3 +135,27 @@ describe('a caller abort (unmount, tab switch)', () => {
         expect(isRequestTimeoutError((result as { error: Error }).error)).toBe(false);
     });
 });
+
+// SDK 58's global fetch is expo/fetch, which rejects an aborted request with a plain Error
+// ("fetch failed: The operation was aborted."), not an AbortError. Apollo aborts on unsubscribe,
+// and the error link, retry and the logger only know a cancellation by name === 'AbortError'.
+it('turns a caller abort into an AbortError whatever the underlying fetch rejects with', async () => {
+    const expoStyle = jest.spyOn(globalThis, 'fetch').mockImplementation(
+        (_input, init) =>
+            new Promise<Response>((_resolve, reject) => {
+                init?.signal?.addEventListener('abort', () => reject(new Error('fetch failed: The operation was aborted.')));
+            }),
+    );
+    const caller = new AbortController();
+    try {
+        const pending = outcome(instrumentedFetch(URL, { signal: caller.signal }));
+        caller.abort();
+        const result = await pending;
+
+        expect(result.ok).toBe(false);
+        expect(result.ok === false && result.error.name).toBe('AbortError');
+        expect(result.ok === false && isRequestTimeoutError(result.error)).toBe(false);
+    } finally {
+        expoStyle.mockRestore();
+    }
+});

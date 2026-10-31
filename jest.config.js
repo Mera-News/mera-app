@@ -1,6 +1,9 @@
-// SDK 58 replaces the global fetch with expo/fetch unless this is set, and
-// jest-expo loads that runtime before any setup file runs, so it is set here
-// (workers inherit the parent's env). The shipped app sets the same flag.
+// TEST-ONLY. The app ships with SDK 58's default global fetch (expo/fetch).
+// Under Jest that global is backed by jest-expo's stub of the native fetch
+// module, so a suite that re-evaluates `expo` (jest.isolateModules) would send
+// its requests nowhere instead of through MSW. Keeping React Native's fetch as
+// the test global is what lets MSW see them; expo/fetch call sites are mapped
+// to test/helpers/node-fetch.ts below. Workers inherit the parent's env.
 process.env.EXPO_PUBLIC_USE_RN_FETCH = '1';
 
 // Existing transform allowlist. `msw` is appended for the integration project
