@@ -604,8 +604,9 @@ describe('purchase', () => {
 
 
         test('checkAgain from timed-out goes back to confirming, then confirms when billing finally shows the paid tier', async () => {
-            // mount + 8 first-poll reads + 20 late reads stay on starter; the webhook lands for the next look.
-            scriptBilling([...Array<string>(29).fill('starter'), 'individual']);
+            // mount + 8 first-poll reads + 20 late reads + the two forced reads a RevenueCat tier rise
+            // starts (now and at 60s, noteStoreTierRise) stay on starter; the webhook lands for the next look.
+            scriptBilling([...Array<string>(31).fill('starter'), 'individual']);
             paywallBuys('individual');
             const hook = await mountSettled();
             await viewPlans(hook);

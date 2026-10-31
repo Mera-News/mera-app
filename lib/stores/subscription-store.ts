@@ -4,6 +4,7 @@ import type { CustomerInfo } from 'react-native-purchases';
 import { getActiveTier, isAnonymousCustomerInfo, type SubscriptionTier } from '@/lib/revenuecat';
 import { deriveAiAccess, type AiAccess } from '@/lib/subscription/ai-access';
 import { clearJwtSubscriptionLock } from '@/lib/subscription/jwt-subscription-gate';
+import { cancelStoreTierResync, noteStoreTierRise, tierMultiplier } from '@/lib/subscription/plan-rise';
 
 /** The subset of `userBilling` this store mirrors. */
 export interface ServerBillingSnapshot {
@@ -107,7 +108,14 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
       return;
     }
     const tier = getActiveTier(info);
+    // A rise seen by an already-identified customer (not the cold start, not
+    // the anonymous-to-identified step loginRevenueCat syncs itself) is the
+    // only news a store-side purchase, offer code or grant sends while the app
+    // stays open. No plan (a free reader) ranks below Starter.
+    const rank = (t: SubscriptionTier) => (t ? tierMultiplier(t) : 0);
+    const rose = prev !== null && !isAnonymousCustomerInfo(prev) && rank(tier) > rank(get().tier);
     set({ customerInfo: info, tier, isPremium: tier !== null });
+    if (rose) noteStoreTierRise();
   },
 
   setServerBilling: (billing) => {
@@ -164,6 +172,8 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
     // Otherwise user B inherits user A's /token refusal for the whole session
     // and never gets a JWT, whatever they are subscribed to.
     clearJwtSubscriptionLock();
+    // A pending second look must not sync for the next account.
+    cancelStoreTierResync();
     set({ ...initialState });
   },
 }));

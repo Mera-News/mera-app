@@ -12,6 +12,7 @@
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { tierMultiplier } from '@/lib/subscription/plan-rise';
 import { useTrialOffer } from '@/lib/subscription/trial-offer';
 import { useColors } from '@/lib/theme/tokens';
 import React from 'react';
@@ -28,12 +29,15 @@ function openPaywall(): void {
 }
 
 /** The plan the held reader would move up from, or null when no upgrade is
- *  offered (not held, or already on Professional). The server's tier wins
- *  over RevenueCat's (the server meters the reading). */
+ *  offered (not held, already on Professional, or the store already sold a
+ *  higher plan the server has not confirmed yet, so the paywall cannot open a
+ *  second time while the hold waits to lift). The server's tier wins over
+ *  RevenueCat's (the server meters the reading). */
 export function useUpgradeFrom(): 'starter' | 'individual' | null {
     const { held } = useReadHeld();
     const tier = useSubscriptionStore((s) => s.serverTier ?? s.tier);
-    if (!held || tier === 'professional') return null;
+    const awaitingServer = useSubscriptionStore((s) => tierMultiplier(s.tier) > tierMultiplier(s.serverTier));
+    if (!held || awaitingServer || tier === 'professional') return null;
     return tier === 'individual' ? 'individual' : 'starter';
 }
 

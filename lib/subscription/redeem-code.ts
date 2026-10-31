@@ -1,8 +1,9 @@
 // Manage plan > Redeem a code: the store runs offer codes end to end. Mera
 // keeps no code list and records no redemption (owner); the plan arrives
-// through the normal webhook and reaches the app through the existing
-// refreshes (RevenueCat's customer-info listener, the entitlement-sync task on
-// foreground and every 15 minutes). Nothing new polls for it.
+// through the normal webhook. The app learns of it from the entitlement-sync
+// task (foreground, every 15 minutes) and from RevenueCat's customer-info
+// listener, whose tier rise forces a billing read now and at 60s
+// (`noteStoreTierRise`), which is what lifts a read hold mid-session.
 //
 // The purchase hold comes FIRST: both the iOS sheet and the Play page are a
 // departure and a return, and the release is timer-owned (never a finally).

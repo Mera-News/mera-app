@@ -55,6 +55,38 @@ export function noteBillingTier(tier: string | null | undefined): void {
   void setReadHold({ resetAt: null });
 }
 
+/** The second look after a store-side rise: the webhook that tells the server can lag the store. */
+export const STORE_RISE_RESYNC_MS = 60_000;
+let resyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function forceEntitlementSync(): void {
+  // Lazy: entitlement-sync imports the subscription store, which calls this.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { syncEntitlement } = require('./entitlement-sync') as typeof import('./entitlement-sync');
+  void syncEntitlement({ force: true });
+}
+
+/**
+ * RevenueCat reports a higher plan than it did a moment ago (a purchase, an
+ * offer code, a grant). Only a billing read can end the read hold and the
+ * server decides the tier, so read it now and once more after
+ * `STORE_RISE_RESYNC_MS`. One pending second look at a time.
+ */
+export function noteStoreTierRise(): void {
+  forceEntitlementSync();
+  cancelStoreTierResync();
+  resyncTimer = setTimeout(() => {
+    resyncTimer = null;
+    forceEntitlementSync();
+  }, STORE_RISE_RESYNC_MS);
+}
+
+/** Drops a pending second look (logout or account switch). */
+export function cancelStoreTierResync(): void {
+  if (resyncTimer) clearTimeout(resyncTimer);
+  resyncTimer = null;
+}
+
 /** When the plan last rose in this process ("Your new plan applies now."). */
 export function getPlanRaisedAt(): number | null {
   return raisedAt;
@@ -64,4 +96,5 @@ export function getPlanRaisedAt(): number | null {
 export function resetPlanRiseForTests(): void {
   lastSeen = null;
   raisedAt = null;
+  cancelStoreTierResync();
 }

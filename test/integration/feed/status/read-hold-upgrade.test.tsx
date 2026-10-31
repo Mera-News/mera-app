@@ -89,6 +89,12 @@ describe('the upgrade button', () => {
         expect(checkEligibility).toHaveBeenCalledWith([INDIVIDUAL]);
     });
 
+    it('is not shown while the store has sold a higher plan the server has not confirmed (no second paywall)', () => {
+        useSubscriptionStore.setState({ serverTier: 'starter', tier: 'individual' });
+        const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
+        expect(view.queryByTestId('feed-status-upgrade')).toBeNull();
+    });
+
     it('is not shown to Professional', () => {
         useSubscriptionStore.setState({ serverTier: 'professional' });
         const view = render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
