@@ -98,12 +98,63 @@ export function extendPinnedIds(
   prev: readonly string[],
   sorted: readonly FeedListItem[],
   deepestSeenId: string | null,
+  /** `arrivalFloor`: the pin never ends above it, so an arrival lands past the screen. */
+  minCount = 0,
 ): string[] {
   const found = deepestSeenId ? sorted.findIndex((it) => it.id === deepestSeenId) : -1;
-  const want = Math.max(found, INITIAL_VISIBLE_FLOOR) + PIN_SLACK;
+  const want = Math.max(Math.max(found, INITIAL_VISIBLE_FLOOR) + PIN_SLACK, minCount);
   const n = Math.min(Math.max(want, prev.length), sorted.length);
   if (n <= prev.length) return prev as string[];
   return sorted.slice(0, n).map((it) => it.id);
+}
+
+/**
+ * The first RENDERED index a new pick may take: past the last row on screen,
+ * plus one screen of rows (as many as are on screen now). The 75% anchor alone
+ * left short cards (a pending note, no image) one swipe from an arrival, and it
+ * never counted not-read rows at all. 0 until the list reports a row on screen:
+ * nothing has been seen yet, and the pin keeps its floor (INITIAL_VISIBLE_FLOOR
+ * + PIN_SLACK) regardless.
+ */
+export function arrivalFloor(renderedIds: readonly string[], onScreen: ReadonlySet<string>): number {
+  let last = -1;
+  let count = 0;
+  renderedIds.forEach((id, i) => {
+    if (!onScreen.has(id)) return;
+    count += 1;
+    last = i;
+  });
+  return count === 0 ? 0 : last + 1 + count;
+}
+
+/** The session's pinned prefix, and whether it has stopped admitting picks. */
+export interface FeedPin {
+  readonly ids: readonly string[];
+  /** True once an arrival could only land ABOVE rows the reader has on screen
+   *  or just below: picks are scored rows and render before the not-read tail,
+   *  so with fewer picks than `arrivalFloor` a new one would push the tail down
+   *  under the reader. From then on, until the next session, the Feed shows the
+   *  pinned picks only; new ones wait for the reset (pull-to-refresh, a re-tap
+   *  at the top, a long background). Appending to the END of the list moves
+   *  nothing, so a list with nothing rendered after its picks never closes. */
+  readonly closed: boolean;
+}
+
+export const EMPTY_PIN: FeedPin = { ids: [], closed: false };
+
+/** `extendPinnedIds` plus the close rule. `renderedAfterPicks` is how many rows
+ *  render after the picks (the not-read tail under All, else 0). Monotonic: a
+ *  closed pin stays closed; an unchanged pin returns `prev` by identity. */
+export function extendPin(
+  prev: FeedPin,
+  sorted: readonly FeedListItem[],
+  deepestSeenId: string | null,
+  floor: number,
+  renderedAfterPicks: number,
+): FeedPin {
+  const ids = extendPinnedIds(prev.ids, sorted, deepestSeenId, floor);
+  const closed = prev.closed || (renderedAfterPicks > 0 && floor > sorted.length);
+  return ids === prev.ids && closed === prev.closed ? prev : { ids, closed };
 }
 
 /** What `sortFeedEntries` returns: the rendered story order plus the length of
@@ -325,6 +376,8 @@ export function sortFeedEntries(
   /** The session's ranking context: publication tags weigh the band, and a
    *  muted publication's rows leave the list (pinned ones included). */
   ctx: RankingContext | null = null,
+  /** `FeedPin.closed`: render the pinned rows only; arrivals wait for the next session. */
+  closed = false,
 ): SortedFeed {
   if (ctx?.publicationMultipliers) {
     data = data.filter((it) => !isMutedPublication(it.suggestion.publication_name, ctx));
@@ -333,7 +386,7 @@ export function sortFeedEntries(
   const facts = (it: FeedListItem) =>
     feedPriorityFacts(it, cardStates, openedArticleIds, nowMs, awaitingNote, ctx);
   if (pinnedIds.length === 0) {
-    return { rows: sortByPriority(data, facts), pinnedCount: 0 };
+    return closed ? { rows: [], pinnedCount: 0 } : { rows: sortByPriority(data, facts), pinnedCount: 0 };
   }
   const byId = new Map(data.map((it) => [it.id, it]));
   const pinned: FeedListItem[] = [];
@@ -344,6 +397,7 @@ export function sortFeedEntries(
     pinned.push(it);
     pinnedSet.add(id);
   }
+  if (closed) return { rows: pinned, pinnedCount: pinned.length };
   const rest = data.filter((it) => !pinnedSet.has(it.id));
   return { rows: [...pinned, ...sortByPriority(rest, facts)], pinnedCount: pinned.length };
 }

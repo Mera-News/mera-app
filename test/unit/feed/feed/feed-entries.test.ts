@@ -11,6 +11,9 @@ import {
   relevanceBandRank,
   countUnviewed,
   extendPinnedIds,
+  extendPin,
+  arrivalFloor,
+  EMPTY_PIN,
   INITIAL_VISIBLE_FLOOR,
   seenTierOfEntry,
   stalenessBandPenalty,
@@ -568,5 +571,35 @@ describe('publication tags in the sort', () => {
     const out = sortFeedEntries(data, noStates, new Set(), [], 0, () => false, ctx);
     // paid-low 0.45 x2 = 0.9 (HIGH), less-high 0.85 x0.5 = 0.425 (LOW), muted gone.
     expect(ids(out)).toEqual(['plain-high', 'paid-low', 'plain-mid', 'less-high']);
+  });
+});
+
+describe('arrivalFloor and extendPin (nothing on screen moves)', () => {
+  const rendered = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+
+  it('is one screen of rows past the last row on screen, and 0 before the list reports', () => {
+    expect(arrivalFloor(rendered, new Set(['b', 'c', 'd']))).toBe(3 + 1 + 3);
+    expect(arrivalFloor(rendered, new Set())).toBe(0);
+    expect(arrivalFloor([], new Set(['a']))).toBe(0);
+  });
+
+  it('pins down to the floor when it is deeper than the 75% anchor', () => {
+    const sorted = rendered.map((id) => item(id));
+    expect(extendPinnedIds([], sorted, 'b', 9)).toHaveLength(9);
+    expect(extendPinnedIds([], sorted, 'b', 0)).toHaveLength(Math.max(1, INITIAL_VISIBLE_FLOOR) + 4);
+  });
+
+  it('closes when an arrival could only land above rows rendered after the picks, and stays closed', () => {
+    const sorted = ['p1', 'p2'].map((id) => item(id));
+    const closed = extendPin(EMPTY_PIN, sorted, null, 6, 4);
+    expect(closed).toEqual({ ids: ['p1', 'p2'], closed: true });
+    expect(extendPin(closed, sorted, null, 0, 0)).toBe(closed);
+    const out = sortFeedEntries([...sorted, item('hot', 0.95)], noStates, new Set(), closed.ids, Date.now(), undefined, null, closed.closed);
+    expect(ids(out)).toEqual(['p1', 'p2']);
+  });
+
+  it('stays open when nothing renders after the picks: an arrival joins the end', () => {
+    const sorted = ['p1', 'p2'].map((id) => item(id));
+    expect(extendPin(EMPTY_PIN, sorted, null, 6, 0).closed).toBe(false);
   });
 });

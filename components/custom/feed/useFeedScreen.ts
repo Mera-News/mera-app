@@ -20,7 +20,10 @@ import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
   sortFeedEntries,
   countUnviewed,
-  extendPinnedIds,
+  EMPTY_PIN,
+  arrivalFloor,
+  extendPin,
+  type FeedPin,
   isAwaitingNote,
   arrivedAtOf,
   deriveLastLeftAt,
@@ -229,7 +232,12 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // SESSION-ONLY, deliberately not persisted: it resets on a session resume, and
   // a cold launch IS a resume, so a persisted value would be discarded on the
   // very next read. Persisting would buy nothing and add a corrupt-blob surface.
-  const [pinnedIds, setPinnedIds] = useState<readonly string[]>([]);
+  // `closed` (see FeedPin) withholds new picks for the rest of the session once
+  // one could only land above rows on screen.
+  const [pin, setPin] = useState<FeedPin>(EMPTY_PIN);
+  const pinnedIds = pin.ids;
+  // How many rows render after the picks (the not-read tail under All).
+  const renderedAfterPicksRef = useRef(0);
   // Live mirror of the rendered STORY order for the viewability tracker. Created
   // once (stable identity) because the tracker's callbacks are frozen at mount.
   const renderedIdsRef = useRef<readonly string[]>([]);
@@ -387,7 +395,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     tailSessionRef.current = newNotReadTailSession();
     setSessionEpoch((e) => e + 1);
     refreshPartitionSnapshot();
-    setPinnedIds([]);
+    setPin(EMPTY_PIN);
     resetDeepestSeen();
   }, [refreshPartitionSnapshot, resetDeepestSeen]);
 
@@ -478,8 +486,14 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const [ingestedCandidates, setIngestedCandidates] = useState(false);
   useEffect(() => {
     if (!isFocused || !orderHydrated || !openedHydrated) return;
-    setPinnedIds((prev) =>
-      extendPinnedIds(prev, scoredRowsRef.current, deepestSeenIdRef.current),
+    setPin((prev) =>
+      extendPin(
+        prev,
+        scoredRowsRef.current,
+        deepestSeenIdRef.current,
+        arrivalFloor(renderedIdsRef.current, onScreenIdsRef.current),
+        renderedAfterPicksRef.current,
+      ),
     );
     useFeedOrderStore
       .getState()
@@ -518,8 +532,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
         partitionSnapshot.at,
         (it) => isAwaitingNote(displayedSuggestionOf(it, liveById, rowSessionRef.current)),
         userGeoLanguageCtx,
+        pin.closed,
       ),
-    [data, partitionSnapshot, pinnedIds, liveById, userGeoLanguageCtx],
+    [data, partitionSnapshot, pinnedIds, pin.closed, liveById, userGeoLanguageCtx],
   );
   scoredRowsRef.current = scoredRows;
 
@@ -554,6 +569,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     [folded, liveById],
   );
   listDataRef.current = listData;
+  renderedAfterPicksRef.current = show === 'all' ? folded.tail.length : 0;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
 
   // The reading hold, read ONCE for the whole list (no subscription per
@@ -666,7 +682,15 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // to remove.
   useEffect(() => {
     if (scoredRows.length === 0 || pinnedIds.length > 0) return;
-    setPinnedIds(extendPinnedIds([], scoredRows, deepestSeenIdRef.current));
+    setPin((prev) =>
+      extendPin(
+        prev,
+        scoredRows,
+        deepestSeenIdRef.current,
+        arrivalFloor(renderedIdsRef.current, onScreenIdsRef.current),
+        renderedAfterPicksRef.current,
+      ),
+    );
   }, [scoredRows, pinnedIds.length, deepestSeenIdRef]);
 
   // DEV-only: the FIRST commit at which this screen actually has cards. A
@@ -840,7 +864,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
       // in above the cards the reader is now looking at, which read as a
       // second jump right after the refresh. Floor-sized (the reader is at the
       // top), and still monotonic from here.
-      setPinnedIds((prev) => extendPinnedIds(prev, scoredRowsRef.current, null));
+      setPin((prev) => extendPin(prev, scoredRowsRef.current, null, 0, renderedAfterPicksRef.current));
     });
   }, [partitionSnapshot, listData]);
 
