@@ -57,10 +57,18 @@ function headlinesAnswer(list: readonly Item[], vars: Record<string, any>) {
 
 /** Every request the mock receives for these operations, with its variables. */
 function record(...ops: string[]) {
+  return recordHeld(undefined, ...ops);
+}
+
+/** `record`, with every answer to `ops` waiting for `hold`, so the list is seen while loading. */
+function recordHeld(hold: Promise<void> | undefined, ...ops: string[]) {
   const sent: { op: string; vars: Record<string, any> }[] = [];
   server.use(
-    graphql.operation(({ operationName, variables }) => {
-      if (ops.includes(operationName)) sent.push({ op: operationName, vars: variables });
+    graphql.operation(async ({ operationName, variables }) => {
+      if (ops.includes(operationName)) {
+        sent.push({ op: operationName, vars: variables });
+        await hold;
+      }
       return undefined; // observe only; the next handler answers
     }),
   );
@@ -93,9 +101,12 @@ beforeEach(() => {
 
 describe('first page', () => {
   it('loads a country scope: that country\'s story leaders, in the request for its alpha-3 code', async () => {
-    const sent = record('GetTopHeadlinesForCountry');
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    const sent = recordHeld(held, 'GetTopHeadlinesForCountry');
     const { result } = await render(NLD);
     expect(result.current.isLoading).toBe(true);
+    release();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(ids(result)).toEqual(leaders('NLD').map((a) => a.id));
     expect(sent[0].vars).toMatchObject({ countryCode: 'NLD', first: 10 });

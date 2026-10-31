@@ -4,7 +4,8 @@
 // and the detail screen marks a machine translation with a plain glyph.
 // The translation service is faked at its edge; the store, i18n and popover are real.
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { createPageActiveSource, PageActiveContext } from '@/components/custom/nav/page-active';
 import { NavigationContext } from 'expo-router/react-navigation';
@@ -442,8 +443,10 @@ describe('who speaks the failure', () => {
         const glyph = screen.getByTestId('translatable-failed');
         expect(glyph.props.accessibilityLabel).toBe(FAILED);
         expect(glyph.props.accessibilityRole).toBe('button');
-        expect(glyph.queryAll((n) => n.props?.name === 'translate-off')).toHaveLength(0);
-        expect(screen.container.queryAll((n) => n.props?.name === 'translate-off').length).toBeGreaterThan(0);
+        // The icon renders as a host Text holding its font glyph; queries see host elements only.
+        const translateOff = String.fromCodePoint(MaterialCommunityIcons.glyphMap['translate-off'] as number);
+        expect(within(glyph).queryAllByText(translateOff, { includeHiddenElements: true })).toHaveLength(0);
+        expect(screen.queryAllByText(translateOff, { includeHiddenElements: true }).length).toBeGreaterThan(0);
     });
 });
 

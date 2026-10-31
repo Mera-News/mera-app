@@ -247,13 +247,18 @@ describe('useNewsSearch', () => {
 
   it('retry re-runs the search at once, without the debounce', async () => {
     let calls = 0;
+    // The retry's answer waits for the test, so the loading state is seen while it is open.
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
     server.use(
-      graphql.operation(({ operationName }) => {
+      graphql.operation(async ({ operationName }) => {
         if (operationName !== 'SearchNews') return undefined;
         calls += 1;
-        return calls === 1
-          ? HttpResponse.json({ errors: [{ message: 'boom', extensions: { code: 'INTERNAL_SERVER_ERROR' } }] })
-          : HttpResponse.json({ data: { searchNews: [hit()] } });
+        if (calls === 1) {
+          return HttpResponse.json({ errors: [{ message: 'boom', extensions: { code: 'INTERNAL_SERVER_ERROR' } }] });
+        }
+        await held;
+        return HttpResponse.json({ data: { searchNews: [hit()] } });
       }),
     );
     const { result } = await renderHook(() => useNewsSearch());
@@ -269,6 +274,9 @@ describe('useNewsSearch', () => {
     await act(async () => {
       for (let i = 0; i < 50 && calls < 2; i++) await new Promise<void>((resolve) => setImmediate(resolve));
     });
+    expect(calls).toBe(2);
+    expect(result.current.status).toBe('loading');
+    release();
     await act(async () => {
       for (let i = 0; i < 20; i++) await new Promise<void>((resolve) => setImmediate(resolve));
     });

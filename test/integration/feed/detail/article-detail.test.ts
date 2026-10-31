@@ -20,16 +20,27 @@ const UNAVAILABLE = 'This article is no longer available';
 
 const mount = (articleId: string) => renderHook(() => useArticleDetailScreen({ articleId }));
 
-/** Every GetArticleById id the server is asked for from now on. */
-function recordArticleRequests(): string[] {
+/** Every GetArticleById id the server is asked for from now on. With `hold`, each answer waits
+ *  for it, so a test can see the screen while the request is still open. */
+function recordArticleRequests(hold?: Promise<void>): string[] {
     const asked: string[] = [];
     server.use(
-        graphql.operation(({ operationName, variables }) => {
-            if (operationName === 'GetArticleById') asked.push(variables.id);
+        graphql.operation(async ({ operationName, variables }) => {
+            if (operationName === 'GetArticleById') {
+                asked.push(variables.id);
+                await hold;
+            }
             return undefined; // fall through to the default handler
         }),
     );
     return asked;
+}
+
+/** A promise the test resolves by hand. */
+function deferred(): { promise: Promise<void>; resolve: () => void } {
+    let resolve!: () => void;
+    const promise = new Promise<void>((r) => (resolve = r));
+    return { promise, resolve };
 }
 
 const setConnected = (connected: boolean) => act(() => useNetworkStore.getState().setIsConnected(connected));
@@ -45,9 +56,11 @@ beforeEach(async () => {
 
 describe('online', () => {
     it('loads the article from the server', async () => {
-        const asked = recordArticleRequests();
+        const answer = deferred();
+        const asked = recordArticleRequests(answer.promise);
         const { result } = await mount(SERVER_ID);
         expect(result.current.isLoading).toBe(true);
+        answer.resolve();
         await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.article?._id).toBe(SERVER_ID);
         expect(result.current.error).toBeNull();

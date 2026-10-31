@@ -69,6 +69,7 @@ describe('getGroupingRowsByIds', () => {
         languageCode: 'de',
         scoredWithV3: false,
         storyKey: null,
+        scoreFailedAt: null,
       },
     ]);
   });

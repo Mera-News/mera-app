@@ -44,11 +44,23 @@ describe('where the suggestion comes from', () => {
 
     it('loads from article_suggestions on a deep link before the store hydrates', async () => {
         await seedSuggestion({ _id: 'deep-link' });
-        const { result } = await mount('deep-link');
-        expect(result.current.isLoading).toBe(true);
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-        expect(result.current.suggestion?._id).toBe('deep-link');
-        expect(result.current.suggestion?.title_en).toBe('English headline');
+        // Hold the DB read open, so the screen is seen while it loads.
+        const real = suggestions.findSuggestionByServerId;
+        let release!: () => void;
+        const held = new Promise<void>((r) => (release = r));
+        const read = jest
+            .spyOn(suggestions, 'findSuggestionByServerId')
+            .mockImplementation(async (...a) => (await held, real(...a)));
+        try {
+            const { result } = await mount('deep-link');
+            expect(result.current.isLoading).toBe(true);
+            release();
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.suggestion?._id).toBe('deep-link');
+            expect(result.current.suggestion?.title_en).toBe('English headline');
+        } finally {
+            read.mockRestore();
+        }
     });
 
     it('falls back to the saved table when the feed row is pruned', async () => {
