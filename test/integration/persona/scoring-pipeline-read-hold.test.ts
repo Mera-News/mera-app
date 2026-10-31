@@ -72,14 +72,14 @@ async function holdMidRun() {
 }
 
 describe('the read hold in the scoring pipeline', () => {
-  it('records no scoring attempt: not for the refused submit, not for the batches it kept back', async () => {
+  it('marks no row failed: not for the refused submit, not for the batches it kept back', async () => {
     await holdMidRun();
 
     expect(isReadHeld()).toBe(true);
     const stored = await database.get('article_suggestions').query().fetch();
     expect(stored).toHaveLength(25);
     for (const row of stored) {
-      expect((row._raw as unknown as Record<string, unknown>).score_attempted_at ?? null).toBeNull();
+      expect((row._raw as unknown as Record<string, unknown>).score_failed_at ?? null).toBeNull();
     }
   });
 

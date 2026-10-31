@@ -115,10 +115,10 @@ export default appSchema({
         // Round-3 (schema v41): epoch ms the row was scored. Feeds the fact-rows
         // selector's newest-first ordering (scored_at ?? created_at).
         { name: 'scored_at', type: 'number', isOptional: true },
-        // Epoch ms Mera last SENT this row to a scorer, either lane (schema v57).
-        // A failed or timed-out attempt leaves the row `unscored` with this set;
-        // a row never sent, or held back by the read hold, keeps it NULL.
-        { name: 'score_attempted_at', type: 'number', isOptional: true },
+        // Epoch ms a scoring attempt FINISHED and left this row with no score,
+        // either lane (schema v57). The row stays `unscored`. NULL while it was
+        // never sent, is still being scored, or was held back by the read hold.
+        { name: 'score_failed_at', type: 'number', isOptional: true },
         // ── Scorer VINTAGE (schema v50) ────────────────────────────────
         // Which relevance scorer produced this row's `relevance`, so the
         // render gate can be applied PER ROW instead of per flag. v1 and v3

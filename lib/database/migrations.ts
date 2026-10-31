@@ -1586,15 +1586,16 @@ export default schemaMigrations({
       ],
     },
     {
-      // article_suggestions.score_attempted_at: when Mera last sent the row to
-      // a scorer, so an attempt that failed is told apart from a row never sent
-      // (both stay `unscored`). Optional; existing rows read NULL. addColumns,
-      // never a recreate (the donor pool). Roll-forward only, like v56.
+      // article_suggestions.score_failed_at: when a scoring attempt finished
+      // with no score for the row, so a row Mera tried and failed is told apart
+      // from one never sent or still in flight (all stay `unscored`). Optional;
+      // existing rows read NULL. addColumns, never a recreate (the donor pool).
+      // Roll-forward only, like v56.
       toVersion: 57,
       steps: [
         addColumns({
           table: 'article_suggestions',
-          columns: [{ name: 'score_attempted_at', type: 'number', isOptional: true }],
+          columns: [{ name: 'score_failed_at', type: 'number', isOptional: true }],
         }),
       ],
     },

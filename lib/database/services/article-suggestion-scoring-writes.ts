@@ -153,11 +153,12 @@ export async function batchMarkExcluded(
 }
 
 /**
- * Records that these rows were SENT to a scorer (either lane), whatever comes
- * back. Status is untouched: a failed attempt stays `unscored`, so no gate or
- * retry path changes. A retry re-stamps. Rows already gone are skipped.
+ * Records that a scoring attempt FINISHED and left these rows with no score
+ * (either lane). Only rows still `unscored` are stamped, so a caller may pass a
+ * whole failed batch. Status is untouched: no gate or retry path changes. A
+ * later failure re-stamps; a later score just moves the row out of `unscored`.
  */
-export async function batchMarkScoreAttempted(
+export async function batchMarkScoreFailed(
   ids: string[],
   nowMs: number = Date.now(),
 ): Promise<void> {
@@ -166,13 +167,13 @@ export async function batchMarkScoreAttempted(
     await Promise.all(
       ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
     )
-  ).filter((r): r is ArticleSuggestionModel => r != null);
+  ).filter((r): r is ArticleSuggestionModel => r != null && r.status === ArticleSuggestionStatus.Unscored);
   if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
       rows.map((row) =>
         row.prepareUpdate((r) => {
-          r.scoreAttemptedAt = nowMs;
+          r.scoreFailedAt = nowMs;
         }),
       ),
     );

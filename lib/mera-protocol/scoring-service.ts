@@ -24,7 +24,7 @@ import {
 import { buildNotePrompt } from '@/lib/news-harness/on-device/notes/prompt';
 import {
   batchMarkExcluded,
-  batchMarkScoreAttempted,
+  batchMarkScoreFailed,
   batchMarkReasonSkipped,
   rependNotelessRows,
   saveReason,
@@ -941,7 +941,6 @@ async function scoreUnscoredRows(
       .slice(0, batchSize);
     if (batch.length === 0) break;
 
-    await batchMarkScoreAttempted(batch.map((c) => c.id));
     const {
       scoreMap,
       reasonMap,
@@ -1025,6 +1024,8 @@ async function scoreUnscoredRows(
 
     if (succeeded.length > 0 && onBatchComplete) onBatchComplete(succeeded);
     for (const id of failedIds) failedThisPass.add(id);
+    // Kev answered nothing usable for these (no answer, an error, a timeout).
+    await batchMarkScoreFailed([...failedIds]);
 
     totalProcessed += succeeded.length;
     onProgress?.(totalProcessed + settledByGate, totalUnscored);

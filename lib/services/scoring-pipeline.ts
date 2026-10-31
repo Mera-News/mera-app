@@ -53,7 +53,7 @@ import {
   batchMarkGateSkipped,
   batchMarkReasonSkipped,
   batchMarkAsScoredByIds,
-  batchMarkScoreAttempted,
+  batchMarkScoreFailed,
 } from '@/lib/database/services/article-suggestion-scoring-writes';
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
@@ -1494,13 +1494,6 @@ async function doSubmitRelevance(
       idempotencyKey: idemKey,
       ...sendOpts(context, io),
     });
-    // An attempt is a request the scorer took ('ok') or one that failed in
-    // flight. A read hold, throttle, held key or missing credential refused it
-    // before any scoring, so those rows are not stamped.
-    if (outcome.status === 'ok' || outcome.status === 'failed') {
-      await batchMarkScoreAttempted(eligibleIds);
-    }
-
     if (outcome.status === 'ok') {
       // `legacyNoteDemote` is decided HERE, once, and persisted on the batch.
       // The reason calls are not built until a later phase, so the flag must be
@@ -1752,6 +1745,16 @@ async function requeueThrottled(
 }
 
 /** Submit POST failed — attempt+1; fail at cap, else requeue. */
+/** A batch that just went `failed` after its attempts ran out: every row it
+ *  left unscored is marked failed. A batch that was force-failed or refused
+ *  before any request never reaches here. */
+async function markRowsOfExhaustedBatchFailed(batchId: number): Promise<void> {
+  const b = (await getPipeline())?.run.batches.find((x) => x.batchId === batchId);
+  if (b?.phase === 'failed' && b.attempt >= MAX_BATCH_ATTEMPTS) {
+    await batchMarkScoreFailed(b.candidateIds);
+  }
+}
+
 async function failOrRetrySubmit(
   batchId: number,
   fromPhase: 'submitting-relevance' | 'submitting-reasons',
@@ -1772,6 +1775,7 @@ async function failOrRetrySubmit(
     }
     return true;
   });
+  await markRowsOfExhaustedBatchFailed(batchId);
 }
 
 /**
@@ -2033,6 +2037,10 @@ async function handleRelevanceResults(
     promptsById: new Map(),
     chunkIdToCandidates,
   });
+  // The scorer answered and these rows came back with no score.
+  await batchMarkScoreFailed(
+    batch.candidateIds.filter((id) => failedIds.has(id) || scoreMap.get(id) === undefined),
+  );
 
   // (verifier pass removed — absorbed into the judge, Wave 7b M-P5)
 
@@ -2697,8 +2705,9 @@ async function requeueWaitingOrFail(
         );
       }
     }
-    // Relevance batch failure persists NOTHING — rows stay relevance NULL and
-    // re-enter the next run.
+    // Relevance batch failure persists no score — rows stay relevance NULL and
+    // re-enter the next run, marked failed.
+    await markRowsOfExhaustedBatchFailed(batch.batchId);
     await afterTerminal(context);
   } else if (context === 'task') {
     // The background task never drains (a drain would admit foreground work
@@ -3000,6 +3009,7 @@ async function revertStuckSubmitters(
           : 'queued';
       return true;
     });
+    await markRowsOfExhaustedBatchFailed(b.batchId);
   }
 }
 

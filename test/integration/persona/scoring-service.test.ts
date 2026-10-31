@@ -157,10 +157,10 @@ async function seedAndLoad(ids: string[], opts: SeedOptions = {}): Promise<Scori
   return ids.map((id) => rows.find((r) => r.id === id)!);
 }
 
-/** The raw `score_attempted_at` of a row (no mapper carries it yet). */
-async function scoreAttemptedAt(id: string): Promise<number | null> {
+/** The raw `score_failed_at` of a row (no mapper carries it yet). */
+async function scoreFailedAt(id: string): Promise<number | null> {
   const row = await database.get('article_suggestions').find(id);
-  return ((row._raw as unknown as Record<string, unknown>).score_attempted_at as number | null) ?? null;
+  return ((row._raw as unknown as Record<string, unknown>).score_failed_at as number | null) ?? null;
 }
 const stored = async () => Object.fromEntries((await loadSuggestions()).map((s) => [s._id, s]));
 
@@ -1088,19 +1088,23 @@ describe('processAllUnscored - on-device pass', () => {
     expect(rows.c.rawScore).toBeCloseTo(1, 5);
   });
 
-  it('records the attempt on a row Kev was asked about and failed, and on none that was never sent', async () => {
+  it('marks a row failed when Kev errors on it, and leaves a row Kev scored unmarked', async () => {
     installLocal();
     queue();
-    installDecide(() => ({ error: 'failed to evaluate the decision prompt (error 1)' }));
-    await seed(['a']);
+    installDecide((call) => {
+      const id = /Story (\w+) saga/.exec(JSON.stringify(call.request.state))?.[1] ?? '';
+      return id === 'b' ? { error: 'failed to evaluate the decision prompt (error 1)' } : { scores: { rel: 3 } };
+    });
+    await seed(['a', 'b']);
     const before = Date.now();
 
     await run(processAllUnscored());
 
-    expect((await stored()).a.status).toBe('unscored');
-    expect(await scoreAttemptedAt('a')).toBeGreaterThanOrEqual(before);
+    expect((await stored()).b.status).toBe('unscored');
+    expect(await scoreFailedAt('b')).toBeGreaterThanOrEqual(before);
+    expect(await scoreFailedAt('a')).toBeNull();
     await seed(['later']);
-    expect(await scoreAttemptedAt('later')).toBeNull();
+    expect(await scoreFailedAt('later')).toBeNull();
   });
 
   // Copies share a story key and nothing else (titles disjoint, no clusters).

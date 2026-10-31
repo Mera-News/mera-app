@@ -8,6 +8,7 @@
 // limiter spaces gateway actions 1s apart, and run creation takes the first slot (attestation), so a
 // freshly created run's first batch is `queued` until the next tick.
 
+import database from '@/lib/database';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { addSuppression } from '@/lib/database/services/suppression-service';
@@ -88,6 +89,12 @@ afterEach(cleanupWorld);
 
 const JOBS = '*/v1/inference/jobs';
 const waitingCount = async () => (await phases()).filter((p) => p === 'waiting-relevance').length;
+
+/** The raw `score_failed_at` of a row (no mapper carries it yet). */
+async function scoreFailedAt(id: string): Promise<number | null> {
+  const row = await database.get('article_suggestions').find(id);
+  return ((row._raw as unknown as Record<string, unknown>).score_failed_at as number | null) ?? null;
+}
 
 describe('enqueueUnscoredEligible — headline admission (P8 site 1b)', () => {
   it('enqueues a factless TOP-HEADLINE row', async () => {
@@ -349,6 +356,9 @@ describe('enqueueCandidates', () => {
     expect(b0.failureReason).toBe('submit-failed');
     expect(b1.phase).toBe('waiting-relevance');
     expect(Object.values(await rows()).every((r) => r.status === 'unscored' && r.relevance === 0)).toBe(true);
+    // The terminally failed batch marks its rows failed; the one still being scored marks none.
+    for (const id of b0.candidateIds) expect(await scoreFailedAt(id)).not.toBeNull();
+    for (const id of b1.candidateIds) expect(await scoreFailedAt(id)).toBeNull();
     expect(submits).toHaveLength(3);
   });
 });

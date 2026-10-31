@@ -79,10 +79,10 @@ async function collect(batch: { requestId?: string }, script: Script, ctx: 'fore
   await drive(pipeline.handlePush(batch.requestId, ctx));
 }
 
-/** The raw `score_attempted_at` of an article's row (no mapper carries it yet). */
-async function scoreAttemptedAt(id: string): Promise<number | null> {
+/** The raw `score_failed_at` of an article's row (no mapper carries it yet). */
+async function scoreFailedAt(id: string): Promise<number | null> {
   const row = await database.get('article_suggestions').find(id);
-  return ((row._raw as unknown as Record<string, unknown>).score_attempted_at as number | null) ?? null;
+  return ((row._raw as unknown as Record<string, unknown>).score_failed_at as number | null) ?? null;
 }
 
 describe('relevance completion', () => {
@@ -185,21 +185,30 @@ describe('relevance completion', () => {
     expect(await currentRun()).toBeNull(); // done → finalized
   });
 
-  it('a scoring call that fails leaves its rows unscored with the attempt recorded; an unsent row has none', async () => {
+  it('a scoring call that fails leaves its rows unscored and marks them failed, only once the answer is in', async () => {
     const script: Script = { failScores: true };
     await seedArticles(['never']);
     const before = Date.now();
     const batch = await toWaitingRelevance(['a0', 'a1'], script);
-    // Submitted: stamped before any answer. Not in the batch: never stamped.
-    expect(await scoreAttemptedAt('a0')).toBeGreaterThanOrEqual(before);
-    expect(await scoreAttemptedAt('never')).toBeNull();
+    // Sent but still being scored: no mark yet, so the feed keeps it out.
+    expect(await scoreFailedAt('a0')).toBeNull();
 
     await collect(batch, script);
 
     const stored = await rows();
     expect([stored.a0.status, stored.a1.status]).toEqual(['unscored', 'unscored']);
-    expect(await scoreAttemptedAt('a0')).toBeGreaterThanOrEqual(before);
-    expect(await scoreAttemptedAt('a1')).toBeGreaterThanOrEqual(before);
+    expect(await scoreFailedAt('a0')).toBeGreaterThanOrEqual(before);
+    expect(await scoreFailedAt('a1')).toBeGreaterThanOrEqual(before);
+  });
+
+  it('a scoring call that succeeds leaves no failure mark', async () => {
+    const script: Script = { scores: { a0: 0.9 } };
+    const batch = await toWaitingRelevance(['a0'], script);
+
+    await collect(batch, script);
+
+    expect((await rows()).a0.status).not.toBe('unscored');
+    expect(await scoreFailedAt('a0')).toBeNull();
   });
 
   it('a failed score call leaves its rows unscored and finishes the batch without a reasons job', async () => {
