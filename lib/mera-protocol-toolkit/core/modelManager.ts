@@ -91,10 +91,10 @@ async function writeManifest(manifest: BaseModelManifest): Promise<void> {
 }
 
 /** The first four bytes of a GGUF file are the ASCII magic `GGUF`. */
-function hasGgufMagic(file: File): boolean {
+async function hasGgufMagic(file: File): Promise<boolean> {
   const handle = file.open();
   try {
-    const head = handle.readBytes(4);
+    const head = await handle.readBytes(4);
     return String.fromCharCode(...Array.from(head)) === 'GGUF';
   } finally {
     handle.close();
@@ -165,7 +165,7 @@ export async function downloadBaseModel(
     if (modelFile.exists) modelFile.delete();
     throw new Error(`Damaged download: size ${sizeBytes}, expected ${config.sizeBytes}`);
   }
-  if (!hasGgufMagic(modelFile)) {
+  if (!(await hasGgufMagic(modelFile))) {
     if (modelFile.exists) modelFile.delete();
     throw new Error('Damaged download: the file is not a GGUF');
   }

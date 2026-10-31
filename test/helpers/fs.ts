@@ -47,19 +47,21 @@ class FakeFile {
   create(): void {
     if (!files.has(this.uri)) files.set(this.uri, '');
   }
-  /** A read handle, as expo's FileHandle: `readBytes(n)` from the start, one char per byte. */
-  open(): { readBytes: (length: number) => Uint8Array; close: () => void } {
+  /** A read handle, as SDK 58's FileHandle: `readBytes(n)` is async, `readBytesSync(n)` blocks; one char per byte. */
+  open(): {
+    readBytes: (length: number) => Promise<Uint8Array>;
+    readBytesSync: (length: number) => Uint8Array;
+    close: () => void;
+  } {
     const content = files.get(this.uri);
     if (content === undefined) throw new Error(`no such file: ${this.uri}`);
     let offset = 0;
-    return {
-      readBytes: (length: number) => {
-        const out = Uint8Array.from(content.slice(offset, offset + length), (c) => c.charCodeAt(0));
-        offset += out.length;
-        return out;
-      },
-      close: () => {},
+    const readBytesSync = (length: number) => {
+      const out = Uint8Array.from(content.slice(offset, offset + length), (c) => c.charCodeAt(0));
+      offset += out.length;
+      return out;
     };
+    return { readBytes: async (length: number) => readBytesSync(length), readBytesSync, close: () => {} };
   }
   delete(): void {
     files.delete(this.uri);

@@ -20,7 +20,7 @@ import { Text } from '@/components/ui/text';
 import type { ReadingStats, StatsCardId } from '@/lib/stats/reading-stats';
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type LayoutChangeEvent, PixelRatio, View } from 'react-native';
+import { type LayoutChangeEvent, PixelRatio, View, type ViewInstance } from 'react-native';
 
 /** The space between packed rows, and between the two columns of a row. */
 const BLOCK_GAP = 14;
@@ -73,7 +73,7 @@ const StatBlock: React.FC<{
 };
 
 /** One shared image: the shell (logo, title, privacy line) around its figures. */
-export const StatImage = React.forwardRef<View, {
+export const StatImage = React.forwardRef<ViewInstance, {
     readonly ids: readonly StatsCardId[];
     readonly stats: ReadingStats;
     readonly hostSize?: { width: number; height: number };
