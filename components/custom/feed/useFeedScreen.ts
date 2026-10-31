@@ -437,7 +437,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // and both `pinnedIds` and `partitionSnapshot` start empty because neither is
   // persisted. It always re-partitions.
   const backgroundedAtRef = useRef<number | null>(null);
-  const appStateRef = useRef<string>(AppState.currentState);
+  const appStateRef = useRef<string | null | undefined>(AppState.currentState);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
       const prev = appStateRef.current;

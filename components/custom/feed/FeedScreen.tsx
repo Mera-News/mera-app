@@ -572,9 +572,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           paddingBottom: listEndClearance,
           flexGrow: 1,
         }}
-        ListHeaderComponent={headerNode}
-        ListEmptyComponent={renderEmpty()}
-        ListFooterComponent={listFooter}
+        ListHeaderComponent={headerNode ?? undefined}
+        ListEmptyComponent={renderEmpty() ?? undefined}
+        ListFooterComponent={listFooter ?? undefined}
         initialNumToRender={4}
         // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7
         // screens of retained cells is far more than scrolling needs, and every

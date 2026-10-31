@@ -34,7 +34,7 @@ import { bumpTranslationEpoch } from '@/lib/translation-queue';
 import { noteActivePage } from '@/lib/navigation/resume-spot';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ViewInstance } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -145,7 +145,7 @@ const TabPages: React.FC<TabPagesProps> = ({
   // header is absolute at this view's top and includes the status bar inset,
   // so its bottom is this view's window y plus the header's measured height.
   // The root is measured, never the header, which translates when collapsed.
-  const rootRef = useRef<View>(null);
+  const rootRef = useRef<ViewInstance>(null);
   const [rootY, setRootY] = useState<number | null>(null);
   // The track row's block (status inset included).
   const [stripHeight, setStripHeight] = useState(0);
