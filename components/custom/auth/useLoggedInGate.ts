@@ -23,7 +23,7 @@ import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { bindPhoneOnce } from "@/components/custom/auth/move-to-phone";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
-import { readStartupTab } from "@/lib/navigation/startup-tab";
+import { readStartupTab, type StartupTab } from "@/lib/navigation/startup-tab";
 import { loadPageOrders } from "@/lib/navigation/page-order";
 import { loadFeedViewPrefs } from "@/components/custom/feed/feed-view-prefs";
 import {
@@ -71,7 +71,7 @@ export const RESTORE_CAP_MS = 3_000;
  * reauth) and must not rebuild again. Then the one "Mera updated" toast, which
  * itself checks this was an update boot.
  */
-async function placeReader(startupTab: string, userId: string, isCancelled: () => boolean): Promise<void> {
+async function placeReader(startupTab: StartupTab, userId: string, isCancelled: () => boolean): Promise<void> {
     const spot = parseResumeSpot(await takeRestoreSpot());
     if (isCancelled()) return;
     if (!spot) {
