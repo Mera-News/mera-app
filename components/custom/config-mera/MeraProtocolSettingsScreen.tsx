@@ -119,7 +119,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         // Once, when the load lands: selectMode is a fresh closure every render.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading]);
-    const scrollRef = useRef<ScrollView>(null);
+    const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
     const focusState = useRef<{ done: boolean; sectionY: number | null; rowTag: number | null }>({
         done: false,
         sectionY: null,
@@ -140,7 +140,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         // The event's currentTarget is the heading's native host; nativeEvent.target is its tag.
         let tag: number | null = null;
         try {
-            tag = findNodeHandle(e.currentTarget as never);
+            tag = findNodeHandle(e.currentTarget as never) ?? null;
         } catch {
             tag = null;
         }

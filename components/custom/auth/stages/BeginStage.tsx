@@ -35,7 +35,7 @@ function BeginStage({
     const [viewport, setViewport] = useState(0);
     const [content, setContent] = useState(0);
     const inline = viewport > 0 && content > viewport;
-    const slotRef = useRef<View>(null);
+    const slotRef = useRef<React.ComponentRef<typeof View>>(null);
     const report = useCallback(() => {
         slotRef.current?.measureInWindow((_x, y) => onLogoSlot({ y, inline }));
     }, [inline, onLogoSlot]);

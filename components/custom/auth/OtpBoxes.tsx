@@ -143,5 +143,5 @@ const styles = StyleSheet.create({
     boxGreen: { borderRadius: 10, borderWidth: 1.5 },
     digit: { fontSize: 22, fontWeight: '700' },
     // Covers the boxes so a tap anywhere focuses the input; the text itself is invisible.
-    hidden: { ...StyleSheet.absoluteFillObject, opacity: 0.011, color: 'transparent' },
+    hidden: { ...StyleSheet.absoluteFill, opacity: 0.011, color: 'transparent' },
 });

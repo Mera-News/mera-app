@@ -98,6 +98,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         overflow: 'hidden',
     },
-    darken: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000000' },
+    darken: { ...StyleSheet.absoluteFill, backgroundColor: '#000000' },
     ring: { position: 'absolute', width: SIZE, height: SIZE, borderRadius: SIZE / 2, borderWidth: 3, borderColor: BLUE },
 });
