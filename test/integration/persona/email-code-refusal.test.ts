@@ -26,7 +26,8 @@ import {
     useFakeClock,
 } from '@/test/helpers';
 import { authHandlers } from '@/test/mock-backend/auth';
-import { __resetSessionCacheGuardForTests } from '@/lib/auth-client';
+import { __resetSessionCacheGuardForTests, authClient } from '@/lib/auth-client';
+import { secureStoreModule } from '@/test/helpers/storage';
 
 const SLUG = Constants.expoConfig?.slug || 'app';
 const COOKIE_KEY = `${SLUG}_cookie`;
@@ -161,6 +162,29 @@ describe('signInWithEmailCode', () => {
 
             expect(result).toEqual({ kind: 'mismatch' });
             expect(sessionKeys()).toEqual([]);
+        });
+
+        it('the next good sign-in for the right account lifts the suspension: its session is cached and a relaunch restores it', async () => {
+            expect(await signInWithEmailCode(EMAIL, CODE, ME)).toEqual({ kind: 'mismatch' });
+
+            server.resetHandlers();
+            expect(await signInWithEmailCode(EMAIL, CODE, ME)).toEqual({ kind: 'ok', userId: ME });
+            // The session read every launch and foreground makes; its reply is what the cache stores.
+            await authClient.getSession({ query: { disableCookieCache: true } });
+
+            const stored = secureStoreDump();
+            expect(JSON.parse(stored[COOKIE_KEY])['better-auth.session_token']?.value).toBeTruthy();
+            expect(JSON.parse(stored[SESSION_KEY] ?? 'null')?.user?.id).toBe(ME);
+
+            // A relaunch: a fresh auth client over the same keychain, after the install boundary decided.
+            let restored: string | undefined;
+            jest.isolateModules(() => {
+                jest.doMock('expo-secure-store', () => secureStoreModule);
+                require('@/lib/security/install-boundary-latch').releaseAuthReadQuarantine();
+                const fresh = require('@/lib/auth-client').authClient;
+                restored = fresh.$store.atoms.session.get().data?.user?.id;
+            });
+            expect(restored).toBe(ME);
         });
 
         it('a keychain that refuses the delete does not throw: the refusal still answers', async () => {

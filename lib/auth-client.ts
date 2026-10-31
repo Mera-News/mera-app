@@ -157,9 +157,9 @@ export const getJwtToken = async (): Promise<string | null> => {
 // How long the best-effort server sign-out may hold up the LOCAL sign-out.
 const SIGN_OUT_TIMEOUT_MS = 5_000;
 
-// Clears the keys better-auth-expo actually writes (verified against
-// node_modules/@better-auth/expo/dist/client.mjs:98-99). Called only from
-// explicit user-initiated logout flows.
+// Clears the two keys @better-auth/expo writes, `${storagePrefix}_cookie` and
+// `${storagePrefix}_session_data` (its `cookieName` and `localCacheName`).
+// Called only from explicit user-initiated logout flows.
 //
 // THE ONLY PLACE the server sign-out happens. Callers must NOT prefix this
 // with their own `await authClient.signOut()`: unguarded, that await turned a
