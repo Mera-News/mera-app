@@ -333,7 +333,6 @@
     "logoutFailedTitle": "Uitloggen mislukt",
     "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
     "composerPlaceholder": "Vertel Mera iets over jou",
-    "continueAnyway": "Toch doorgaan",
     "factsCount_one": "{{count}} feit over jou",
     "factsCount_other": "{{count}} feiten over jou",
     "noFactsBody": "Mera kiest je nieuws op basis van je feiten. Zonder feiten toont je Feed alleen de grote koppen, en toont Wereld geen landen tot je ze toevoegt.",
@@ -345,7 +344,9 @@
     "remindBody": "Mera is gemaakt om je niet zonder reden lastig te vallen. Kies wanneer je een herinnering wilt om het nieuws te lezen. We stellen een tijd voor waarop je er echt de tijd voor hebt.",
     "remindTitle": "Wanneer moet Mera je herinneren?",
     "turnOn": "Meldingen aanzetten",
-    "turnThemOn": "Zet ze aan"
+    "turnThemOn": "Zet ze aan",
+    "guardSkip": "Overslaan",
+    "guardAddFact": "Feit toevoegen"
   },
   "notifications": {
     "title": "Meldingen",

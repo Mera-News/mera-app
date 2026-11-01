@@ -335,7 +335,6 @@
     "logoutFailedTitle": "Disconnessione non riuscita",
     "logoutFailedDescription": "Si è verificato un problema durante la disconnessione. Per favore riprova.",
     "composerPlaceholder": "Parla a Mera di te",
-    "continueAnyway": "Continua comunque",
     "factsCount_one": "{{count}} fatto su di te",
     "factsCount_other": "{{count}} fatti su di te",
     "noFactsBody": "Mera sceglie le tue notizie in base ai tuoi fatti. Senza fatti, il Feed mostra solo i titoli principali e Mondo non mostra alcun paese finché non ne aggiungi.",
@@ -347,7 +346,9 @@
     "remindBody": "Mera è progettata per non disturbarti senza motivo. Scegli quando vuoi un promemoria per leggere le notizie. Ti suggeriamo un orario in cui puoi leggerle con calma.",
     "remindTitle": "Quando Mera ti deve ricordare?",
     "turnOn": "Attiva le notifiche",
-    "turnThemOn": "Attivale"
+    "turnThemOn": "Attivale",
+    "guardSkip": "Salta",
+    "guardAddFact": "Aggiungi fatto"
   },
   "notifications": {
     "title": "Notifiche",

@@ -321,7 +321,6 @@
     "logoutFailedTitle": "Đăng xuất thất bại",
     "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại.",
     "composerPlaceholder": "Kể cho Mera về bạn",
-    "continueAnyway": "Vẫn tiếp tục",
     "factsCount_one": "{{count}} dữ kiện về bạn",
     "factsCount_other": "{{count}} dữ kiện về bạn",
     "noFactsBody": "Mera chọn tin của bạn dựa trên các dữ kiện của bạn. Nếu không có dữ kiện nào, Bảng tin chỉ hiện tin nổi bật, còn Thế giới sẽ không có quốc gia nào cho đến khi bạn thêm chúng.",
@@ -333,7 +332,9 @@
     "remindBody": "Mera được thiết kế để không làm phiền bạn khi không cần thiết. Hãy chọn thời điểm bạn muốn được nhắc đọc tin. Chúng tôi gợi ý một lúc bạn có thể đọc tin cho trọn vẹn.",
     "remindTitle": "Mera nên nhắc bạn lúc nào?",
     "turnOn": "Bật thông báo",
-    "turnThemOn": "Bật lên"
+    "turnThemOn": "Bật lên",
+    "guardSkip": "Bỏ qua",
+    "guardAddFact": "Thêm dữ kiện"
   },
   "notifications": {
     "title": "Thông báo",

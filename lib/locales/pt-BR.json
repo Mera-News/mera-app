@@ -335,7 +335,6 @@
     "logoutFailedTitle": "Falha ao Sair",
     "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente.",
     "composerPlaceholder": "Conte à Mera sobre você",
-    "continueAnyway": "Continuar mesmo assim",
     "factsCount_one": "{{count}} fato sobre você",
     "factsCount_other": "{{count}} fatos sobre você",
     "noFactsBody": "A Mera escolhe suas notícias a partir dos seus fatos. Sem nenhum, seu Feed mostra só as principais manchetes, e o Mundo não mostra países até você adicionar.",
@@ -347,7 +346,9 @@
     "remindBody": "A Mera foi feita para não incomodar sem motivo. Escolha quando quer um lembrete para ler as notícias. Sugerimos um horário em que você consiga ler com calma.",
     "remindTitle": "Quando a Mera deve lembrar você?",
     "turnOn": "Ativar notificações",
-    "turnThemOn": "Ativar"
+    "turnThemOn": "Ativar",
+    "guardSkip": "Pular",
+    "guardAddFact": "Adicionar fato"
   },
   "notifications": {
     "title": "Notificações",

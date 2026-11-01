@@ -333,7 +333,6 @@
     "logoutFailedTitle": "Abmeldung fehlgeschlagen",
     "logoutFailedDescription": "Bei der Abmeldung ist ein Problem aufgetreten. Bitte versuche es erneut.",
     "composerPlaceholder": "Erzähl Mera von dir",
-    "continueAnyway": "Trotzdem weiter",
     "factsCount_one": "{{count}} Fakt über dich",
     "factsCount_other": "{{count}} Fakten über dich",
     "noFactsBody": "Mera wählt deine Nachrichten anhand deiner Fakten aus. Ohne Fakten zeigt dein Feed nur die wichtigsten Schlagzeilen, und World zeigt keine Länder, bis du sie hinzufügst.",
@@ -345,7 +344,9 @@
     "remindBody": "Mera ist so gebaut, dass es dich nicht ohne Grund stört. Wähle, wann du an das Lesen der Nachrichten erinnert werden möchtest. Wir schlagen eine Zeit vor, zu der du dich in Ruhe damit beschäftigen kannst.",
     "remindTitle": "Wann soll Mera dich erinnern?",
     "turnOn": "Benachrichtigungen einschalten",
-    "turnThemOn": "Einschalten"
+    "turnThemOn": "Einschalten",
+    "guardSkip": "Überspringen",
+    "guardAddFact": "Fakt hinzufügen"
   },
   "notifications": {
     "title": "Benachrichtigungen",

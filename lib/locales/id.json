@@ -321,7 +321,6 @@
     "logoutFailedTitle": "Gagal Keluar",
     "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
     "composerPlaceholder": "Ceritakan tentang diri Anda kepada Mera",
-    "continueAnyway": "Tetap lanjutkan",
     "factsCount_one": "{{count}} fakta tentang Anda",
     "factsCount_other": "{{count}} fakta tentang Anda",
     "noFactsBody": "Mera memilih berita Anda dari fakta Anda. Tanpa fakta, Feed Anda hanya menampilkan judul utama, dan Dunia tidak menampilkan negara apa pun sampai Anda menambahkannya.",
@@ -333,7 +332,9 @@
     "remindBody": "Mera dibuat agar tidak mengganggu Anda tanpa alasan. Pilih kapan Anda ingin pengingat untuk membaca berita. Kami menyarankan waktu saat Anda bisa membacanya dengan tenang.",
     "remindTitle": "Kapan Mera harus mengingatkan Anda?",
     "turnOn": "Aktifkan notifikasi",
-    "turnThemOn": "Aktifkan"
+    "turnThemOn": "Aktifkan",
+    "guardSkip": "Lewati",
+    "guardAddFact": "Tambah fakta"
   },
   "notifications": {
     "title": "Notifikasi",

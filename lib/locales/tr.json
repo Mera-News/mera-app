@@ -333,7 +333,6 @@
     "logoutFailedTitle": "Çıkış Başarısız",
     "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
     "composerPlaceholder": "Mera'ya kendinizden bahsedin",
-    "continueAnyway": "Yine de devam et",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
     "factsCount_other": "Hakkınızda {{count}} bilgi",
     "noFactsBody": "Mera haberlerinizi bilgilerinize göre seçer. Hiç bilgi olmadan Akışınızda yalnızca öne çıkan başlıklar görünür ve Dünya, siz ekleyene kadar hiçbir ülkeyi göstermez.",
@@ -345,7 +344,9 @@
     "remindBody": "Mera sizi gereksiz yere rahatsız etmeyecek şekilde tasarlandı. Haberleri okumanız için bir hatırlatma saati seçin. Haberleri düzgünce okuyabileceğiniz bir saat öneriyoruz.",
     "remindTitle": "Mera sizi ne zaman hatırlatsın?",
     "turnOn": "Bildirimleri aç",
-    "turnThemOn": "Açın"
+    "turnThemOn": "Açın",
+    "guardSkip": "Atla",
+    "guardAddFact": "Bilgi ekle"
   },
   "notifications": {
     "title": "Bildirimler",

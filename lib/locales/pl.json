@@ -373,7 +373,6 @@
     "logoutFailedTitle": "Wylogowanie nieudane",
     "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie.",
     "composerPlaceholder": "Opowiedz Mera o sobie",
-    "continueAnyway": "Kontynuuj mimo to",
     "factsCount_one": "{{count}} fakt o Tobie",
     "factsCount_few": "{{count}} fakty o Tobie",
     "factsCount_many": "{{count}} faktów o Tobie",
@@ -387,7 +386,9 @@
     "remindBody": "Mera jest zbudowana tak, żeby nie przeszkadzać bez powodu. Wybierz, kiedy chcesz przypomnienia o czytaniu wiadomości. Proponujemy porę, w której możesz to spokojnie przejrzeć.",
     "remindTitle": "Kiedy Mera ma Ci przypominać?",
     "turnOn": "Włącz powiadomienia",
-    "turnThemOn": "Włącz je"
+    "turnThemOn": "Włącz je",
+    "guardSkip": "Pomiń",
+    "guardAddFact": "Dodaj fakt"
   },
   "notifications": {
     "title": "Powiadomienia",

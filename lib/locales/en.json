@@ -686,7 +686,6 @@
     "logoutFailedTitle": "Logout Failed",
     "logoutFailedDescription": "There was an issue signing out. Please try again.",
     "composerPlaceholder": "Tell Mera about you",
-    "continueAnyway": "Continue anyway",
     "factsCount_one": "{{count}} fact about you",
     "factsCount_other": "{{count}} facts about you",
     "noFactsBody": "Mera picks your news from your facts. Without any, your Feed shows only top headlines, and World shows no countries until you add them.",
@@ -698,7 +697,9 @@
     "remindBody": "Mera is built not to disturb you without reason. Choose when you'd like a reminder to read the news. We suggest a time when you can go through it properly.",
     "remindTitle": "When should Mera remind you?",
     "turnOn": "Turn on notifications",
-    "turnThemOn": "Turn them on"
+    "turnThemOn": "Turn them on",
+    "guardSkip": "Skip",
+    "guardAddFact": "Add fact"
   },
   "notifications": {
     "title": "Notifications",

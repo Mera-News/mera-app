@@ -373,7 +373,6 @@
     "logoutFailedTitle": "Ошибка выхода",
     "logoutFailedDescription": "Возникла проблема при выходе. Пожалуйста, попробуйте ещё раз.",
     "composerPlaceholder": "Расскажите Мере о себе",
-    "continueAnyway": "Всё равно продолжить",
     "factsCount_one": "{{count}} факт о вас",
     "factsCount_few": "{{count}} факта о вас",
     "factsCount_many": "{{count}} фактов о вас",
@@ -387,7 +386,9 @@
     "remindBody": "Мера не отвлекает без причины. Выберите, когда напоминать вам читать новости. Мы предлагаем время, когда можно спокойно всё просмотреть.",
     "remindTitle": "Когда Мера должна напоминать?",
     "turnOn": "Включить уведомления",
-    "turnThemOn": "Включить их"
+    "turnThemOn": "Включить их",
+    "guardSkip": "Пропустить",
+    "guardAddFact": "Добавить факт"
   },
   "notifications": {
     "title": "Уведомления",

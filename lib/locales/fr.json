@@ -340,7 +340,6 @@
     "logoutFailedTitle": "Échec de la déconnexion",
     "logoutFailedDescription": "Un problème est survenu lors de la déconnexion. Veuillez réessayer.",
     "composerPlaceholder": "Parlez-moi de vous",
-    "continueAnyway": "Continuer quand même",
     "factsCount_one": "{{count}} fait vous concernant",
     "factsCount_other": "{{count}} faits vous concernant",
     "noFactsBody": "Mera choisit vos actualités à partir de vos faits. Sans aucun fait, votre fil n'affiche que les gros titres, et le Monde n'affiche aucun pays tant que vous n'en ajoutez pas.",
@@ -352,7 +351,9 @@
     "remindBody": "Mera est conçu pour ne pas vous déranger sans raison. Choisissez quand vous souhaitez un rappel pour lire les actualités. Nous proposons un moment où vous pourrez tout parcourir correctement.",
     "remindTitle": "Quand Mera doit-il vous rappeler ?",
     "turnOn": "Activer les notifications",
-    "turnThemOn": "Activez-les"
+    "turnThemOn": "Activez-les",
+    "guardSkip": "Passer",
+    "guardAddFact": "Ajouter un fait"
   },
   "notifications": {
     "title": "Notifications",

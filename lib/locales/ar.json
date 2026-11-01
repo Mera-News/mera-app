@@ -412,7 +412,6 @@
     "logoutFailedTitle": "فشل تسجيل الخروج",
     "logoutFailedDescription": "حدثت مشكلة أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى.",
     "composerPlaceholder": "أخبر ميرا عنك",
-    "continueAnyway": "المتابعة على أي حال",
     "factsCount_zero": "لا توجد حقائق عنك",
     "factsCount_one": "حقيقة واحدة عنك",
     "factsCount_two": "حقيقتان عنك",
@@ -428,7 +427,9 @@
     "remindBody": "صُمم ميرا ألا يزعجك دون سبب. اختر الوقت الذي تريد أن نذكّرك فيه بقراءة الأخبار. نقترح وقتًا يمكنك فيه التصفح بتمهل.",
     "remindTitle": "متى تريد أن يذكّرك ميرا؟",
     "turnOn": "تشغيل الإشعارات",
-    "turnThemOn": "شغّلها"
+    "turnThemOn": "شغّلها",
+    "guardSkip": "تخطي",
+    "guardAddFact": "أضف حقيقة"
   },
   "notifications": {
     "title": "الإشعارات",

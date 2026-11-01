@@ -335,7 +335,6 @@
     "logoutFailedTitle": "Error al cerrar sesión",
     "logoutFailedDescription": "Hubo un problema al cerrar sesión. Por favor, inténtalo de nuevo.",
     "composerPlaceholder": "Cuéntale a Mera sobre ti",
-    "continueAnyway": "Continuar de todos modos",
     "factsCount_one": "{{count}} hecho sobre ti",
     "factsCount_other": "{{count}} hechos sobre ti",
     "noFactsBody": "Mera elige tus noticias a partir de tus hechos. Sin ninguno, tu Feed solo muestra titulares principales, y Mundo no muestra países hasta que los añadas.",
@@ -347,7 +346,9 @@
     "remindBody": "Mera está hecha para no molestarte sin motivo. Elige cuándo quieres un recordatorio para leer las noticias. Te sugerimos una hora en la que puedas revisarlas con calma.",
     "remindTitle": "¿Cuándo quieres que Mera te recuerde?",
     "turnOn": "Activar notificaciones",
-    "turnThemOn": "Actívalas"
+    "turnThemOn": "Actívalas",
+    "guardSkip": "Omitir",
+    "guardAddFact": "Añadir hecho"
   },
   "notifications": {
     "title": "Notificaciones",

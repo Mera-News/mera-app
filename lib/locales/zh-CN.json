@@ -321,7 +321,6 @@
     "logoutFailedTitle": "退出登录失败",
     "logoutFailedDescription": "退出登录时出现问题，请重试。",
     "composerPlaceholder": "告诉梅拉你的情况",
-    "continueAnyway": "仍然继续",
     "factsCount_one": "关于你的 {{count}} 个事实",
     "factsCount_other": "关于你的 {{count}} 个事实",
     "noFactsBody": "梅拉根据你的事实挑选新闻。如果没有任何事实，你的信息流只会显示头条新闻，而全球页面在你添加国家之前不会显示任何内容。",
@@ -333,7 +332,9 @@
     "remindBody": "梅拉的设计原则是无故不打扰你。请选择你希望收到阅读新闻提醒的时间。我们建议选择一个你能从容浏览的时间。",
     "remindTitle": "梅拉应该在什么时候提醒你？",
     "turnOn": "开启通知",
-    "turnThemOn": "开启"
+    "turnThemOn": "开启",
+    "guardSkip": "跳过",
+    "guardAddFact": "添加事实"
   },
   "notifications": {
     "title": "通知",

@@ -292,9 +292,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         open={guard === 'no-facts'}
                         title={t('onboarding.noFactsTitle')}
                         body={t('onboarding.noFactsBody')}
-                        primaryLabel={t('facts.addFact')}
+                        primaryLabel={t('onboarding.guardAddFact')}
                         onPrimary={() => setGuard(null)}
-                        secondaryLabel={t('onboarding.continueAnyway')}
+                        secondaryLabel={t('onboarding.guardSkip')}
                         onSecondary={() => void advance()}
                         testID="onboarding-guard-facts"
                     />

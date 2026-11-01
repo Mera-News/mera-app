@@ -321,7 +321,6 @@
     "logoutFailedTitle": "ログアウトに失敗しました",
     "logoutFailedDescription": "サインアウト中に問題が発生しました。もう一度お試しください。",
     "composerPlaceholder": "メラにあなたのことを教えてください",
-    "continueAnyway": "それでも続ける",
     "factsCount_one": "あなたに関するファクト{{count}}件",
     "factsCount_other": "あなたに関するファクト{{count}}件",
     "noFactsBody": "メラはファクトをもとにあなたのニュースを選びます。ファクトがないと、フィードには主要な見出ししか表示されず、ワールドは国を追加するまで何も表示しません。",
@@ -333,7 +332,9 @@
     "remindBody": "メラは、理由もなくあなたを邪魔しないように作られています。ニュースを読むリマインダーを受け取りたい時間を選んでください。じっくり目を通せる時間をおすすめします。",
     "remindTitle": "メラはいつリマインドしますか？",
     "turnOn": "通知をオンにする",
-    "turnThemOn": "オンにする"
+    "turnThemOn": "オンにする",
+    "guardSkip": "スキップ",
+    "guardAddFact": "ファクトを追加"
   },
   "notifications": {
     "title": "通知",

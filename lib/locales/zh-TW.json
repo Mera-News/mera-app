@@ -321,7 +321,6 @@
     "logoutFailedTitle": "登出失敗",
     "logoutFailedDescription": "登出時發生問題，請再試一次。",
     "composerPlaceholder": "告訴梅拉你的事",
-    "continueAnyway": "仍要繼續",
     "factsCount_one": "關於你的 {{count}} 項事實",
     "factsCount_other": "關於你的 {{count}} 項事實",
     "noFactsBody": "梅拉會根據你的事實挑選新聞。如果沒有任何事實，你的資訊流只會顯示頭條，而「全球」在你新增國家之前不會顯示任何國家。",
@@ -333,7 +332,9 @@
     "remindBody": "梅拉的設計是不會無故打擾你。請選擇你希望何時收到閱讀新聞的提醒。我們建議你挑一個能好好讀完新聞的時段。",
     "remindTitle": "梅拉應該何時提醒你？",
     "turnOn": "開啟通知",
-    "turnThemOn": "開啟通知"
+    "turnThemOn": "開啟通知",
+    "guardSkip": "略過",
+    "guardAddFact": "新增事實"
   },
   "notifications": {
     "title": "通知",
