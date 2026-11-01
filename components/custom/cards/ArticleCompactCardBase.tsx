@@ -18,7 +18,7 @@ import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useAdaptiveLineClamp } from '@/lib/typography/useAdaptiveLineClamp';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable as RNPressable } from 'react-native';
+import { Pressable as RNPressable, View } from 'react-native';
 import { Ellipsis } from 'lucide-react-native';
 import type { AccessibilityActionEvent } from 'react-native';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
@@ -168,6 +168,10 @@ interface ArticleCompactCardBaseProps {
    *  the existing row, full width (under the image too), right-aligned. The
    *  row never changes the image arithmetic above. Absent/0: no row. */
   similarCount?: number;
+  /** A row inside a grouped list (the Sectioned view's preview): no plate,
+   *  margin, radius or root Pressable, just the same content and inner padding
+   *  in a plain View. The caller draws the container and owns any press. */
+  grouped?: boolean;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -196,6 +200,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   statusLabel,
   timeLabel,
   similarCount,
+  grouped = false,
 }) => {
   const { t } = useTranslation();
   const colors = useColors();
@@ -251,7 +256,9 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       variant="elevated"
       size="sm"
       className={
-        CARDS_USE_GLASS
+        grouped
+          ? 'bg-transparent rounded-none'
+          : CARDS_USE_GLASS
           // Under glass the margin, radius and clipping move out to the
           // unpadded wrapper below, and the opaque `bg-background-0` the
           // `elevated` variant paints has to be cleared — left in place it
@@ -439,6 +446,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
         </Box>
       </Card>
   );
+
+  if (grouped) return <View>{surface}</View>;
 
   return (
     <PressableCard

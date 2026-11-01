@@ -1,11 +1,12 @@
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { sectionTitle, sectionTitleIsContent } from '@/components/custom/for-you/section-title';
-import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
+import { ArticleCompactCardBase } from '@/components/custom/cards/ArticleCompactCardBase';
+import TapPressable from '@/components/custom/cards/TapPressable';
+import RelevanceChip from '@/components/custom/RelevanceChip';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
-import { useColors } from '@/lib/theme/tokens';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -13,7 +14,6 @@ import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-or
 import { isMutedPublication, rankedRelevance, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
-  isSuggestionOpened,
   type FactRow,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
@@ -66,77 +66,120 @@ const HIDDEN = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-/**
- * A section's header (FinalFeed #5): ONE link band, the fact then
- * "· N stories ›", opening that interest's fact page. A fact statement is
- * user data, so it is translated at run time; a headline section's title is
- * app copy (i18n), shown as is. A hidden visual under a childless
- * labelled button (the glyph-leak pattern); the label is the title as SHOWN.
- */
-function SectionLinkBand({
-  factId,
-  title,
-  content,
-  total,
-  onPress,
-}: {
-  readonly factId: string;
-  readonly title: string;
-  /** A fact statement (runtime-translated); false for an i18n title. */
-  readonly content: boolean;
-  readonly total: number;
-  readonly onPress: () => void;
-}) {
-  const { t } = useTranslation();
-  const c = useColors();
-  const [shown, setShown] = useState(title);
-  const [titleFailed, setTitleFailed] = useState(false);
-  const count = t('forYou.sectionStories', { count: total });
+/** A preview row: the compact card's content with no plate, menu or press. The
+ *  section button speaks for the block, so VoiceOver skips the rows. */
+function PreviewRow({ suggestion }: { readonly suggestion: ForYouSuggestion }) {
+  const status = suggestion.status;
+  const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
   return (
-    <View>
-      <View pointerEvents="none" {...HIDDEN} style={styles.band}>
-        {content ? (
-          <TranslatableDynamic
-            text={title}
-            bold
-            numberOfLines={3}
-            style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}
-            failedGlyph="decorative"
-            onDisplayChange={(d) => {
-              setShown(d.displayedText);
-              setTitleFailed(d.translationFailed);
-            }}
-          />
-        ) : (
-          <Text bold numberOfLines={3} style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}>
-            {title}
-          </Text>
-        )}
-        <HStack className="items-center">
-          <Text style={{ color: c.accentText, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>{`· ${count}`}</Text>
-          <MaterialIcons name="chevron-right" size={18} color={c.accentText} {...HIDDEN} />
-        </HStack>
-      </View>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={`${content ? shown : title}, ${count}${content && titleFailed ? `, ${t('feed.translationFailed')}` : ''}`}
-        testID={`section-open-${factId}`}
-        style={StyleSheet.absoluteFill}
+    <View testID="section-preview-row" pointerEvents="none" {...HIDDEN}>
+      <ArticleCompactCardBase
+        grouped
+        imageUrl={suggestion.image_url}
+        titleEnglish={suggestion.title_en}
+        titleOriginal={suggestion.title_original ?? undefined}
+        sourceLanguage={suggestion.language_code ?? undefined}
+        pubDate={suggestion.firstPubDate ?? suggestion.createdAt}
+        languageCode={suggestion.language_code}
+        countryCode={suggestion.country_code}
+        publicationName={suggestion.publication_name}
+        recyclingKey={suggestion._id}
+        priorityAccessory={relevanceReady ? <RelevanceChip relevance={suggestion.relevance ?? 0} /> : undefined}
       />
     </View>
   );
 }
 
+/**
+ * One section as ONE button (design B): the fact title, a grouped list of the
+ * preview stories, a stacked edge when more stories wait, and a count pill.
+ * A fact statement is user data, so it is translated at run time; a headline
+ * section's title is app copy (i18n), shown as is. The label is the title as
+ * SHOWN plus the count.
+ */
+function SectionBlock({
+  item,
+  onOpen,
+}: {
+  readonly item: SectionItem;
+  readonly onOpen: (row: FactRow, title: string) => void;
+}) {
+  const { row, preview, total, title } = item;
+  const content = sectionTitleIsContent(row);
+  const { t } = useTranslation();
+  const c = useColors();
+  const light = useThemeMode() === 'light';
+  const [shown, setShown] = useState(title);
+  const [titleFailed, setTitleFailed] = useState(false);
+  // Press feedback from state, never a scale or a function style.
+  const [held, setHeld] = useState(false);
+  const count = t('forYou.sectionStories', { count: total });
+  const fill = light ? c.panel : c.surface;
+  return (
+    <TapPressable
+      onPress={() => onOpen(row, title)}
+      onPressIn={() => setHeld(true)}
+      onPressOut={() => setHeld(false)}
+      accessibilityRole="button"
+      accessibilityLabel={`${content ? shown : title}, ${count}${content && titleFailed ? `, ${t('feed.translationFailed')}` : ''}`}
+      testID={`section-open-${row.factId}`}
+      style={{ opacity: held ? 0.7 : 1 }}
+    >
+      <View pointerEvents="none">
+        <View style={styles.band}>
+          {content ? (
+            <TranslatableDynamic
+              text={title}
+              bold
+              numberOfLines={3}
+              style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}
+              failedGlyph="decorative"
+              onDisplayChange={(d) => {
+                setShown(d.displayedText);
+                setTitleFailed(d.translationFailed);
+              }}
+            />
+          ) : (
+            <Text bold numberOfLines={3} style={{ color: c.ink, fontSize: 16, lineHeight: 21 }}>
+              {title}
+            </Text>
+          )}
+        </View>
+        <View style={[styles.group, { backgroundColor: fill, borderColor: c.line }]}>
+          {preview.map((group, i) => (
+            <View key={group.data._id}>
+              {i > 0 ? <View style={[styles.divider, { backgroundColor: c.line }]} /> : null}
+              <PreviewRow suggestion={group.data} />
+            </View>
+          ))}
+        </View>
+        {total > preview.length ? (
+          <View testID="section-stack-edge" {...HIDDEN}>
+            <View style={[styles.edge, styles.edge1, { backgroundColor: fill, borderColor: c.line, opacity: 0.7 }]} />
+            <View style={[styles.edge, styles.edge2, { backgroundColor: fill, borderColor: c.line, opacity: 0.5 }]} />
+          </View>
+        ) : null}
+        <View style={styles.pillRow}>
+          <View style={[styles.pill, { backgroundColor: `${c.accent}29`, borderColor: `${c.accent}73` }]} {...HIDDEN}>
+            <Text style={{ color: c.accentText, fontSize: 14, lineHeight: 20, fontWeight: '600' }}>{count}</Text>
+            <MaterialIcons name="chevron-right" size={18} color={c.accentText} />
+          </View>
+        </View>
+      </View>
+    </TapPressable>
+  );
+}
+
 interface DashboardSectionsFeedProps {
   rows: FactRow[];
-  /** Live opened set — drives the per-card read/dimmed treatment (visual only;
-   *  ORDER comes from the throttled snapshot below). */
+  /** Unused since the section became one button (no read dimming). Kept so
+   *  InterestsPage, outside this change's files, still type-checks. */
   openedIds: Set<string>;
   /** THROTTLED viewed-state snapshot that decides section ORDER. Frozen between
    *  re-sorts so sections never reshuffle under the reader — see
    *  lib/feed-ordering/dashboard-resort and InterestsPage. */
   sortSnapshot: { cardStates: Record<string, unknown>; openedArticleIds: Set<string> };
+  /** Unused: preview stories are no longer tappable (see `openedIds`). */
   onPressSuggestion: (s: ForYouSuggestion) => void;
   /** The collapsible-header scroll handler (worklet). */
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
@@ -173,9 +216,7 @@ interface DashboardSectionsFeedProps {
  */
 const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   rows,
-  openedIds,
   sortSnapshot,
-  onPressSuggestion,
   scrollHandler,
   headerHeight,
   ListEmptyComponent,
@@ -278,36 +319,15 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler, anchorHandler]);
 
   const renderItem = useCallback(
-    ({ item }: { item: SectionItem }) => {
-      const { row, preview, total, title } = item;
-      return (
-        // ONE gradient panel per section, so the pastel groups the band and
-        // its cards and the next section visibly starts its own.
-        // Sections stack PAGE_TITLE_GAP apart, as the board's `.body` gap.
-        <SectionGradientPanel factId={row.factId} style={{ marginBottom: PAGE_TITLE_GAP }}>
-          <SectionLinkBand
-            factId={row.factId}
-            title={title}
-            content={sectionTitleIsContent(row)}
-            total={total}
-            onPress={() => openFactFeed(row, title)}
-          />
-          <Box className="px-2 pb-2">
-            {preview.map((group) => (
-              <ArticleSuggestionCompactCard
-                key={group.data._id}
-                suggestion={group.data}
-                similarCount={group.members.length}
-                onPress={onPressSuggestion}
-                surface="sectioned"
-                read={isSuggestionOpened(group.data, openedIds)}
-              />
-            ))}
-          </Box>
-        </SectionGradientPanel>
-      );
-    },
-    [onPressSuggestion, openedIds, openFactFeed],
+    ({ item }: { item: SectionItem }) => (
+      // ONE gradient panel per section, so the pastel groups the block and the
+      // next section visibly starts its own. Sections stack PAGE_TITLE_GAP
+      // apart, as the board's `.body` gap.
+      <SectionGradientPanel factId={item.row.factId} style={{ marginBottom: PAGE_TITLE_GAP }}>
+        <SectionBlock item={item} onOpen={openFactFeed} />
+      </SectionGradientPanel>
+    ),
+    [openFactFeed],
   );
 
   return (
@@ -393,7 +413,22 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 };
 
 const styles = StyleSheet.create({
-  band: { paddingHorizontal: 12, paddingVertical: 10, gap: 2 },
+  band: { paddingHorizontal: 12, paddingVertical: 10 },
+  group: { marginHorizontal: 8, borderRadius: 14, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
+  divider: { height: StyleSheet.hairlineWidth, marginStart: 12 },
+  edge: { borderTopWidth: 0, borderBottomLeftRadius: 12, borderBottomRightRadius: 12, borderWidth: StyleSheet.hairlineWidth },
+  edge1: { height: 8, marginHorizontal: 18 },
+  edge2: { height: 7, marginHorizontal: 28, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 },
+  pillRow: { minHeight: 44, alignItems: 'flex-end', justifyContent: 'center', paddingEnd: 8, paddingBottom: 6 },
+  pill: {
+    height: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingStart: 12,
+    paddingEnd: 8,
+  },
 });
 
 export default DashboardSectionsFeed;
