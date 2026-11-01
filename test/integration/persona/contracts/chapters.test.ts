@@ -16,8 +16,6 @@
 //     1.3.1 binary carries it and one channel serves them all. What is left is
 //     the inverse assertion, because dropping the dependency now turns every
 //     hero in `animation-registry.ts` into a build error.
-//  3. Chapter `welcome` carries no mera logo — the user's explicit instruction
-//     for the pre-auth chapter.
 //  4. NO CHAPTER TEACHES A DECOY / NOISE-INJECTION FEATURE. Mera has none:
 //     nothing generates, sends or discards decoy topics, and there is no
 //     setting to turn one on. Two slides (`privacy/decoys-are-a-switch`,
@@ -29,17 +27,15 @@ import fs from 'fs';
 import path from 'path';
 
 import en from '@/lib/locales/en.json';
-import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '@/lib/tutorials/chapters';
+import { TUTORIAL_CHAPTERS, chaptersAtLevel } from '@/lib/tutorials/chapters';
 import { animationIdFor, keysForChapter, lookupKey } from '@/lib/algorithms/tutorial-keys';
-import { minBeatsFor, wordCount } from '@/tutorials/film/timeline';
-import { SCENE_BEATS, WELCOME_COPY_KEYS, resolveWelcomeCopy, sceneLines, type WelcomeSceneId } from '@/tutorials/film/welcome-script';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../..');
 
 describe('TUTORIAL_CHAPTERS', () => {
-  it('has twelve chapters split across the two levels', () => {
-    expect(TUTORIAL_CHAPTERS).toHaveLength(12);
-    expect(chaptersAtLevel('basic')).toHaveLength(8);
+  it('has eleven chapters split across the two levels', () => {
+    expect(TUTORIAL_CHAPTERS).toHaveLength(11);
+    expect(chaptersAtLevel('basic')).toHaveLength(7);
     expect(chaptersAtLevel('advanced')).toHaveLength(4);
   });
 
@@ -86,22 +82,6 @@ describe('TUTORIAL_CHAPTERS', () => {
       for (const slide of chapter.slides) {
         expect(slide.visual.animation).toBeUndefined();
       }
-    }
-  });
-
-  it('keeps the mera logo out of the pre-auth chapter', () => {
-    const welcome = getChapter('welcome');
-    expect(welcome).toBeDefined();
-    for (const slide of welcome!.slides) {
-      expect(slide.visual.placeholder.kind).not.toBe('logo');
-    }
-  });
-
-  it('never offers Ask Mera on the pre-auth chapter', () => {
-    // Belt and braces: the player also hard-disables it via `enableAskMera`,
-    // but a slide that WANTS the button pre-auth is an authoring mistake.
-    for (const slide of getChapter('welcome')!.slides) {
-      expect(slide.hasAsk).toBeFalsy();
     }
   });
 });
@@ -260,31 +240,5 @@ describe('the animation runtime', () => {
       fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
     ) as { dependencies?: Record<string, string> };
     expect(pkg.dependencies?.['lottie-react-native']).toBeDefined();
-  });
-});
-
-describe('the welcome film', () => {
-  // The film reads copy by key, not through the slide registry, so nothing above covers it.
-  it('resolves every copy key in en.json', () => {
-    for (const key of Object.values(WELCOME_COPY_KEYS)) {
-      expect(typeof lookupKey(en, key)).toBe('string');
-    }
-  });
-
-  it('holds each caption long enough to read its English copy', () => {
-    // A caption stays up until the next scene that brings its own lines, so its time is the sum of those scenes.
-    const copy = resolveWelcomeCopy((key) => lookupKey(en, key) as string);
-    const ids = Object.keys(SCENE_BEATS) as WelcomeSceneId[];
-    ids.forEach((id, i) => {
-      const words = wordCount(...sceneLines(id, copy));
-      if (!words) return;
-      let beats = SCENE_BEATS[id];
-      for (let k = i + 1; k < ids.length && !sceneLines(ids[k], copy).length; k++) beats += SCENE_BEATS[ids[k]];
-      expect({ id, beats: beats >= minBeatsFor(words) }).toEqual({ id, beats: true });
-    });
-  });
-
-  it('is the chapter the film plays', () => {
-    expect(getChapter('welcome')?.flow).toBe(true);
   });
 });

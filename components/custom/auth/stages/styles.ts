@@ -18,6 +18,7 @@ const styles = StyleSheet.create({
     beginLogo: { width: LOGO_TOP, height: LOGO_TOP, alignSelf: 'center' },
     beginTitle: { marginTop: 24 },
     beginPrimary: { marginTop: 24 },
+    beginLearn: { marginTop: 12 },
     beginSecondary: { marginTop: 16 },
     legacyEmailLink: { paddingVertical: 12 },
     legacyEmailText: { fontSize: 14, lineHeight: 20, textDecorationLine: 'underline' },

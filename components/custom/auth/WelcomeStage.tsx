@@ -28,7 +28,6 @@ interface WelcomeStageProps {
     /** "Begin Mera": on to Checking your phone. */
     onBegin: () => void;
     /** "Learn about Mera": the tour sheet over this page. */
-    onLearn: () => void;
 }
 
 /**
@@ -48,7 +47,7 @@ interface WelcomeStageProps {
  * a toast says so. The list never fires a second probe beside the startup one
  * (TranslationUnavailablePrompt), which drives the same notice.
  */
-export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeStageProps) {
+export default function WelcomeStage({ messageTop, onBegin }: WelcomeStageProps) {
     const { t } = useTranslation();
     const colors = useColors();
     const reduceMotion = useReducedMotion();
@@ -139,9 +138,6 @@ export default function WelcomeStage({ messageTop, onBegin, onLearn }: WelcomeSt
                 >
                     <Button action="primary" onPress={onBegin} testID="auth-begin-mera">
                         <ButtonText>{t('auth.track.beginMera')}</ButtonText>
-                    </Button>
-                    <Button variant="outline" action="secondary" onPress={onLearn} testID="auth-learn-mera">
-                        <ButtonText>{t('auth.learnAboutMera')}</ButtonText>
                     </Button>
                 </Animated.View>
             ) : null}

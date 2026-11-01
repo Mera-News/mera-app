@@ -15,10 +15,13 @@ import { LOGO_TOP, styles } from './styles';
 function BeginStage({
     canUsePhone,
     onWithoutEmail,
+    onLearn,
     onLogoSlot,
 }: {
     canUsePhone: boolean;
     onWithoutEmail: () => void;
+    /** Plays the welcome video. */
+    onLearn: () => void;
     /** Where the logo belongs in this stack (window y), for the hoisted logo. */
     onLogoSlot: (slot: { y: number; inline: boolean }) => void;
 }) {
@@ -49,9 +52,14 @@ function BeginStage({
                 {t('auth.track.beginTitle')}
             </Text>
             {canUsePhone ? (
-                <Button action="primary" onPress={onWithoutEmail} style={styles.beginPrimary} testID="auth-begin-without-email">
-                    <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
-                </Button>
+                <>
+                    <Button action="primary" onPress={onWithoutEmail} style={styles.beginPrimary} testID="auth-begin-without-email">
+                        <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
+                    </Button>
+                    <Button variant="outline" action="secondary" onPress={onLearn} style={styles.beginLearn} testID="auth-learn-mera">
+                        <ButtonText>{t('auth.learnAboutMera')}</ButtonText>
+                    </Button>
+                </>
             ) : (
                 <PhoneUnsupported testID="auth-begin-unsupported" />
             )}

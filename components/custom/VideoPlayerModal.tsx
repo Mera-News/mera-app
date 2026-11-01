@@ -62,6 +62,12 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
 
     const { status } = useEvent(player, 'statusChange', { status: player.status });
 
+    // A short film closes itself when it ends, through the Modal's fade.
+    React.useEffect(() => {
+        const sub = player.addListener('playToEnd', onClose);
+        return () => sub.remove();
+    }, [player, onClose]);
+
     return (
         <Box className="flex-1 bg-black items-center justify-center">
             <VideoView

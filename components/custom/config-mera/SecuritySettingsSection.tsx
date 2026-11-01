@@ -178,7 +178,7 @@ const SecuritySettingsSection: React.FC = () => {
             <Help>{t('appLock.forgot')}</Help>
 
             {/* An RN Modal is a separate native window: it gets its own dark
-                provider and an opaque page, the TutorialModalHost recipe. */}
+                provider and an opaque page. */}
             <Modal
                 visible={flow !== 'none'}
                 animationType={motion ? 'slide' : 'none'}

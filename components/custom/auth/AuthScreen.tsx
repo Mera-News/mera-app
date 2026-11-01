@@ -21,7 +21,8 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
 import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
-import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
+import { welcomeVideoUrl } from '@/lib/config/branding';
+import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
@@ -135,7 +136,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                 <WelcomeStage
                     messageTop={insets.top + 8 - bodyTop}
                     onBegin={() => go('checks')}
-                    onLearn={() => setTourOpen(true)}
                 />
             );
             break;
@@ -148,6 +148,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     onLogoSlot={setSlot}
                     canUsePhone={availability !== 'unavailable'}
                     onWithoutEmail={() => go('consent')}
+                    onLearn={() => setTourOpen(true)}
                 />
             );
             break;
@@ -216,14 +217,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                 {body}
             </Animated.View>
 
-            <TutorialModalHost
+            <VideoPlayerModal
                 visible={tourOpen}
+                uri={welcomeVideoUrl()}
                 onClose={() => setTourOpen(false)}
-                finishLabel={t('auth.track.beginMera')}
-                onFinish={() => {
-                    setTourOpen(false);
-                    go('checks');
-                }}
             />
 
             <BottomSheet
