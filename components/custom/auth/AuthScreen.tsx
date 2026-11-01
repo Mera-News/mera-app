@@ -220,6 +220,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             <VideoPlayerModal
                 visible={tourOpen}
                 uri={welcomeVideoUrl()}
+                closeOnEnd
                 onClose={() => setTourOpen(false)}
             />
 

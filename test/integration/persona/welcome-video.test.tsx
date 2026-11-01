@@ -63,11 +63,18 @@ describe('Learn about Mera', () => {
 });
 
 describe('VideoPlayerModal', () => {
-    it('closes itself when playback reaches the end', async () => {
+    it('closes itself when playback reaches the end, when asked to', async () => {
         const onClose = jest.fn();
-        await render(<VideoPlayerModal visible uri="https://example.test/welcome-en.mp4" onClose={onClose} />);
+        await render(<VideoPlayerModal visible uri="https://example.test/welcome-en.mp4" onClose={onClose} closeOnEnd />);
         expect(onClose).not.toHaveBeenCalled();
         mockListeners.playToEnd.forEach((cb) => cb());
         expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays open at the end by default (the guide videos)', async () => {
+        const onClose = jest.fn();
+        await render(<VideoPlayerModal visible uri="https://example.test/guide.mp4" onClose={onClose} />);
+        (mockListeners.playToEnd ?? []).forEach((cb) => cb());
+        expect(onClose).not.toHaveBeenCalled();
     });
 });
