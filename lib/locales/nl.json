@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Voordat je begint",
-      "beginMera": "Mera starten",
-      "beginTitle": "Nieuws dat voor jou telt",
       "beginWithoutEmail": "Aan de slag",
       "chooseLanguage": "Kies je taal",
       "downloadA11y": "{{language}} downloaden",

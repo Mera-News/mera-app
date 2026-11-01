@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "शुरू करने से पहले",
-      "beginMera": "मेरा ऐप शुरू करें",
-      "beginTitle": "आपके लिए अहम ख़बरें",
       "beginWithoutEmail": "शुरू करें",
       "chooseLanguage": "अपनी भाषा चुनें",
       "downloadA11y": "{{language}} डाउनलोड करें",

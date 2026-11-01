@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
     FadeIn,
@@ -20,14 +20,12 @@ import { useTranslation } from 'react-i18next';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
-import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
 import { welcomeVideoUrl } from '@/lib/config/branding';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 
-import { BeginStage } from './stages/BeginStage';
 import { ConsentStage } from './stages/ConsentStage';
 import { DifferentAccountSheet } from './stages/DifferentAccountSheet';
 import { ReauthNoEmailStage } from './stages/ReauthNoEmailStage';
@@ -36,13 +34,9 @@ import { useAuthScreen, type AuthScreenProps, type Stage } from './useAuthScreen
 
 /** The one logo: where and how big it sits on each stage (FinalJourney "One logo"). */
 const LOGO_FULL = 150;
-/** `slot`: the stage measures where the logo belongs in its own centred stack
- *  (the begin step) and reports it; the logo travels there. */
-const LOGO: Partial<Record<Stage, 'center' | 'top' | 'slot'>> = {
+const LOGO: Partial<Record<Stage, 'center' | 'top'>> = {
     intro: 'center',
     welcome: 'top',
-    checks: 'top',
-    begin: 'slot',
     consent: 'top',
 };
 
@@ -50,7 +44,7 @@ const LOGO: Partial<Record<Stage, 'center' | 'top' | 'slot'>> = {
  * The first-launch track and the sign-in gate (FinalJourney, FinalStart #8 to
  * #11): ONE backdrop and ONE logo hoisted above the stage switch, so no step is
  * a hard cut. A device with no remembered account walks the track (welcome
- * with the language list, checks, how to begin, before you start). A device
+ * with the language list and the two ways in, before you start). A device
  * whose account needs signing in again lands on the gate, reauth-no-email
  * (contact support, or reset this phone back to the track). Neither ever
  * switches accounts on its own: moving to the phone's account always asks first.
@@ -85,21 +79,14 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const logoScale = useSharedValue(1);
     const logoY = useSharedValue(height * 0.3);
     const logoOpacity = useSharedValue(0);
-    // The begin step's logo slot, in window coordinates; `inline` when its
-    // stack scrolls (Larger Text) and draws the logo itself instead.
-    const [slot, setSlot] = useState<{ y: number; inline: boolean } | null>(null);
     useEffect(() => {
-        if (logoAt !== 'slot') setSlot(null);
-    }, [logoAt]);
-    useEffect(() => {
-        const hidden = !logoAt || (logoAt === 'slot' && slot?.inline === true);
-        if (!logoAt || (logoAt === 'slot' && !slot)) {
-            // Gone, or a slot not measured yet (hold where it is until it reports).
-            logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: reduceMotion ? 0 : 250 });
+        const hidden = !logoAt;
+        if (!logoAt) {
+            logoOpacity.value = withTiming(0, { duration: reduceMotion ? 0 : 250 });
             return;
         }
         const topY = (y: number) => y - (LOGO_FULL - LOGO_TOP) / 2;
-        const y = logoAt === 'center' ? height * 0.3 : logoAt === 'slot' && slot ? topY(slot.y) : topY(insets.top + 16);
+        const y = logoAt === 'center' ? height * 0.3 : topY(insets.top + 16);
         const scale = logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL;
         if (reduceMotion) {
             // A plain crossfade: out where it is, in where it goes.
@@ -116,7 +103,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: 250 });
         logoScale.value = withTiming(scale, glide);
         logoY.value = withTiming(y, glide);
-    }, [logoAt, slot, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
+    }, [logoAt, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
     const logoStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,
         transform: [{ translateY: logoY.value }, { scale: logoScale.value }],
@@ -135,19 +122,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             body = (
                 <WelcomeStage
                     messageTop={insets.top + 8 - bodyTop}
-                    onBegin={() => go('checks')}
-                />
-            );
-            break;
-        case 'checks':
-            body = <SystemCheckStage withLogo={false} onContinue={() => go('begin')} testID="auth-checks" />;
-            break;
-        case 'begin':
-            body = (
-                <BeginStage
-                    onLogoSlot={setSlot}
                     canUsePhone={availability !== 'unavailable'}
-                    onWithoutEmail={() => go('consent')}
+                    onGetStarted={() => go('consent')}
                     onLearn={() => setTourOpen(true)}
                 />
             );
@@ -160,9 +136,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     onSignedIn={finishDeviceSignIn}
                     onDifferentAccount={(r) => {
                         askSwitch(r);
-                        go('begin');
+                        go('welcome');
                     }}
-                    onBack={() => go('begin')}
+                    onBack={() => go('welcome')}
                 />
             );
             break;

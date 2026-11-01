@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Antes de começar",
-      "beginMera": "Começar com a Mera",
-      "beginTitle": "Notícias que importam para você",
       "beginWithoutEmail": "Começar",
       "chooseLanguage": "Escolha seu idioma",
       "downloadA11y": "Baixar {{language}}",

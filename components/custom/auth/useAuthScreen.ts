@@ -70,15 +70,13 @@ async function signInWithPhone(expectedUserId: string | null): Promise<PhoneSign
     return { kind: 'failed', reason: result.reason };
 }
 
-type Stage = 'loading' | 'intro' | 'welcome' | 'checks' | 'begin' | 'consent' | 'reauth-no-email';
+type Stage = 'loading' | 'intro' | 'welcome' | 'consent' | 'reauth-no-email';
 
 /** Track position, for the slide direction (forward slides left). */
 const TRACK: Partial<Record<Stage, number>> = {
     intro: 0,
     welcome: 0,
-    checks: 1,
-    begin: 2,
-    consent: 3,
+    consent: 1,
     'reauth-no-email': 0,
 };
 

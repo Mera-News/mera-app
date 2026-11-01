@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Trước khi bắt đầu",
-      "beginMera": "Bắt đầu với Mera",
-      "beginTitle": "Tin tức quan trọng với bạn",
       "beginWithoutEmail": "Bắt đầu",
       "chooseLanguage": "Chọn ngôn ngữ của bạn",
       "downloadA11y": "Tải {{language}}",

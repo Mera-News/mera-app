@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "قبل أن تبدأ",
-      "beginMera": "ابدأ مع ميرا",
-      "beginTitle": "أخبار تهمّك",
       "beginWithoutEmail": "ابدأ",
       "chooseLanguage": "اختر لغتك",
       "downloadA11y": "تنزيل {{language}}",

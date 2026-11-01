@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "開始之前",
-      "beginMera": "開始使用梅拉",
-      "beginTitle": "對你重要的新聞",
       "beginWithoutEmail": "開始使用",
       "chooseLanguage": "選擇你的語言",
       "downloadA11y": "下載{{language}}",

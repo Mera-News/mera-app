@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Avant de commencer",
-      "beginMera": "Commencer avec Mera",
-      "beginTitle": "Les actualités qui comptent pour vous",
       "beginWithoutEmail": "Commencer",
       "chooseLanguage": "Choisissez votre langue",
       "downloadA11y": "Télécharger {{language}}",

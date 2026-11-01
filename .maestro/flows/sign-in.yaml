@@ -11,19 +11,6 @@ appId: ${APP_ID}
     timeout: 60000
 - extendedWaitUntil:
     visible:
-      id: "auth-begin-mera"
-    timeout: 30000
-- tapOn:
-    id: "auth-begin-mera"
-- extendedWaitUntil:
-    visible:
-      id: "auth-checks-continue"
-      enabled: true
-    timeout: 30000
-- tapOn:
-    id: "auth-checks-continue"
-- extendedWaitUntil:
-    visible:
       id: "auth-begin-without-email"
     timeout: 30000
 - tapOn:

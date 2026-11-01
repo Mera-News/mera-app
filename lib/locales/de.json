@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Bevor du beginnst",
-      "beginMera": "Mera starten",
-      "beginTitle": "Nachrichten, die dir wichtig sind",
       "beginWithoutEmail": "Jetzt loslegen",
       "chooseLanguage": "Wähle deine Sprache",
       "downloadA11y": "{{language}} herunterladen",

@@ -46,7 +46,7 @@ interface ConsentContentProps {
 /**
  * The consent surface itself: a centred heading and body, a card of links
  * (Terms, Privacy, the FAQ) and the commit action, as one stack the host
- * centres (owner: the same centred stack as the begin step). Presentational only — it owns no state, performs no
+ * centres (owner: the same centred stack the welcome list sits in). Presentational only — it owns no state, performs no
  * network call and decides nothing about whether consent is needed.
  *
  * Extracted because there are TWO hosts and they had drifted. The pre-auth

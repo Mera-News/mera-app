@@ -57,7 +57,7 @@ function ConsentStage({
         <View style={styles.pad} testID="auth-consent">
             {/* The top bar: back on the left of the logo's row (the hoisted
                 logo is centred over it). Then ONE centred stack, like the
-                begin step; taller than the screen, it scrolls from the top. */}
+                welcome list; taller than the screen, it scrolls from the top. */}
             <View style={styles.topBar}>
                 <BackArrow onPress={onBack} style={styles.backInBar} />
             </View>

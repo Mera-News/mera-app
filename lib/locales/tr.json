@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Başlamadan önce",
-      "beginMera": "Mera'yı başlat",
-      "beginTitle": "Sizin için önemli haberler",
       "beginWithoutEmail": "Başla",
       "chooseLanguage": "Dilinizi seçin",
       "downloadA11y": "{{language}} dilini indir",

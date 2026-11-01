@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Sebelum Anda mulai",
-      "beginMera": "Mulai Mera",
-      "beginTitle": "Berita yang penting bagi Anda",
       "beginWithoutEmail": "Mulai",
       "chooseLanguage": "Pilih bahasa Anda",
       "downloadA11y": "Unduh {{language}}",

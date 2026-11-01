@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Before you start",
-      "beginMera": "Begin Mera",
-      "beginTitle": "News that matters to you",
       "beginWithoutEmail": "Get started",
       "chooseLanguage": "Choose your language",
       "downloadA11y": "Download {{language}}",

@@ -1,11 +1,11 @@
 /**
- * The first-launch "Learn about Mera" video: the button lives on the Begin screen (not the welcome
- * screen), and the full-screen player closes itself when the video reaches its end.
+ * The welcome screen's Get started and "Learn about Mera", the Settings system check, and the full-screen player closes itself when the video reaches its end.
  */
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
-import { BeginStage } from '@/components/custom/auth/stages/BeginStage';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
+import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { initI18nEn } from '@/test/helpers';
 
@@ -40,25 +40,59 @@ jest.mock('expo-video', () => ({
     VideoView: () => null,
 }));
 
+// The check rows' animated mark drives a Reanimated sweep the Jest mock cannot run.
+jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
+
 beforeAll(initI18nEn);
 
-describe('Learn about Mera', () => {
-    it('is on the Begin screen and calls its handler', async () => {
+const welcome = (over: Partial<React.ComponentProps<typeof WelcomeStage>> = {}) =>
+    render(<WelcomeStage messageTop={0} canUsePhone onGetStarted={jest.fn()} onLearn={jest.fn()} {...over} />);
+
+describe('Welcome screen actions', () => {
+    it('shows Get started and Learn about Mera, and no Begin Mera', async () => {
+        await welcome();
+        expect(screen.getByTestId('auth-begin-without-email')).toBeTruthy();
+        expect(screen.getByTestId('auth-learn-mera')).toBeTruthy();
+        expect(screen.queryByTestId('auth-begin-mera')).toBeNull();
+    });
+
+    it('Learn about Mera calls its handler', async () => {
         const onLearn = jest.fn();
-        await render(<BeginStage canUsePhone onWithoutEmail={jest.fn()} onLearn={onLearn} onLogoSlot={jest.fn()} />);
+        await welcome({ onLearn });
         await fireEvent.press(screen.getByTestId('auth-learn-mera'));
         expect(onLearn).toHaveBeenCalledTimes(1);
     });
 
-    it('is hidden when the phone cannot be used', async () => {
-        await render(<BeginStage canUsePhone={false} onWithoutEmail={jest.fn()} onLearn={jest.fn()} onLogoSlot={jest.fn()} />);
-        expect(screen.queryByTestId('auth-learn-mera')).toBeNull();
+    it('Get started saves the language, then moves on', async () => {
+        const setAppLanguage = jest.spyOn(useAppLanguageStore.getState(), 'setAppLanguage').mockResolvedValue(undefined as never);
+        const onGetStarted = jest.fn();
+        await welcome({ onGetStarted });
+        await fireEvent.press(screen.getByTestId('auth-begin-without-email'));
+        expect(setAppLanguage).toHaveBeenCalledTimes(1);
+        expect(onGetStarted).toHaveBeenCalledTimes(1);
+        setAppLanguage.mockRestore();
     });
 
-    it('is gone from the welcome screen', async () => {
-        await render(<WelcomeStage messageTop={0} onBegin={jest.fn()} />);
+    it('an unsupported phone shows the notice and no buttons', async () => {
+        await welcome({ canUsePhone: false });
+        expect(screen.getByTestId('auth-begin-unsupported')).toBeTruthy();
+        expect(screen.queryByTestId('auth-begin-without-email')).toBeNull();
         expect(screen.queryByTestId('auth-learn-mera')).toBeNull();
-        expect(screen.getByTestId('auth-begin-mera')).toBeTruthy();
+    });
+});
+
+describe('Settings system check', () => {
+    it('is unchanged: title, all four rows, Continue', async () => {
+        jest.useFakeTimers();
+        const onContinue = jest.fn();
+        await render(<SystemCheckStage onContinue={onContinue} testID="settings-system-check" />);
+        expect(screen.getByText('Checking your phone')).toBeTruthy();
+        for (let i = 0; i < 4; i += 1) await act(async () => { await jest.advanceTimersByTimeAsync(150); });
+        expect(screen.getByTestId('settings-system-check-ai')).toBeTruthy();
+        await fireEvent.press(screen.getByTestId('settings-system-check-continue'));
+        await act(async () => { await jest.advanceTimersByTimeAsync(0); });
+        expect(onContinue).toHaveBeenCalledTimes(1);
+        jest.useRealTimers();
     });
 });
 

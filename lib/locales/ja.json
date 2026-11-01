@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "始める前に",
-      "beginMera": "メラを始める",
-      "beginTitle": "あなたにとって大切なニュース",
       "beginWithoutEmail": "はじめる",
       "chooseLanguage": "言語を選んでください",
       "downloadA11y": "{{language}}をダウンロード",

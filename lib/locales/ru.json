@@ -46,8 +46,6 @@
     },
     "track": {
       "beforeYouStart": "Перед началом",
-      "beginMera": "Начать работу с Мерой",
-      "beginTitle": "Новости, которые важны для вас",
       "beginWithoutEmail": "Начать",
       "chooseLanguage": "Выберите язык",
       "downloadA11y": "Скачать {{language}}",

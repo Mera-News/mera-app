@@ -1,5 +1,5 @@
 import * as Device from 'expo-device';
-import React, { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
@@ -7,12 +7,14 @@ import { useTranslation } from 'react-i18next';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import RotatingLanguageHeading from '@/components/custom/auth/RotatingLanguageHeading';
 import LanguageDownloadNotice, { useLanguageDownloadNotice } from '@/components/custom/auth/LanguageDownloadNotice';
+import { PhoneUnsupported } from '@/components/custom/auth/stages/parts';
 import { Button, ButtonText } from '@/components/ui/button';
 import MeraToast from '@/components/custom/toast/MeraToast';
 import { useToast } from '@/components/ui/toast';
 import { useLanguageSwitch, type LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { languageCheckStatus } from '@/lib/algorithms/system-check';
+import { hapticLight } from '@/lib/haptics';
 import { useColors } from '@/lib/theme/tokens';
 import {
     getNativeLanguageName,
@@ -25,9 +27,12 @@ interface WelcomeStageProps {
     /** The message card's top in this view's coordinates: the screen top plus
      *  a margin, less where this view starts (Journey #10: it drops from the top). */
     messageTop: number;
-    /** "Begin Mera": on to Checking your phone. */
-    onBegin: () => void;
-    /** "Learn about Mera": the tour sheet over this page. */
+    /** The phone can sign in; false shows the unsupported block in place of the buttons. */
+    canUsePhone: boolean;
+    /** "Get started": the language is saved, on to before you start. */
+    onGetStarted: () => void;
+    /** "Learn about Mera": plays the welcome video. */
+    onLearn: () => void;
 }
 
 /**
@@ -47,7 +52,7 @@ interface WelcomeStageProps {
  * a toast says so. The list never fires a second probe beside the startup one
  * (TranslationUnavailablePrompt), which drives the same notice.
  */
-export default function WelcomeStage({ messageTop, onBegin }: WelcomeStageProps) {
+export default function WelcomeStage({ messageTop, canUsePhone, onGetStarted, onLearn }: WelcomeStageProps) {
     const { t } = useTranslation();
     const colors = useColors();
     const reduceMotion = useReducedMotion();
@@ -111,6 +116,22 @@ export default function WelcomeStage({ messageTop, onBegin }: WelcomeStageProps)
         [waiting, appLanguage, requestSwitch],
     );
 
+    const [saving, setSaving] = useState(false);
+    const getStarted = useCallback(async () => {
+        if (saving) return;
+        setSaving(true);
+        void hapticLight();
+        try {
+            // Persist the language row even when the reader kept the default:
+            // the choice is a fact about this install from now on.
+            await useAppLanguageStore.getState().setAppLanguage(useAppLanguageStore.getState().appLanguage);
+        } catch {
+            // The store already logged it; the reader still moves on.
+        }
+        setSaving(false);
+        onGetStarted();
+    }, [saving, onGetStarted]);
+
     return (
         <View style={styles.root} testID="auth-welcome-stage">
             <LanguageDownloadNotice code={noticeCode} top={messageTop} />
@@ -136,9 +157,18 @@ export default function WelcomeStage({ messageTop, onBegin }: WelcomeStageProps)
                     exiting={reduceMotion ? FadeOut.duration(150) : FadeOutDown.duration(220)}
                     style={styles.actions}
                 >
-                    <Button action="primary" onPress={onBegin} testID="auth-begin-mera">
-                        <ButtonText>{t('auth.track.beginMera')}</ButtonText>
-                    </Button>
+                    {canUsePhone ? (
+                        <>
+                            <Button action="primary" onPress={getStarted} isDisabled={saving} testID="auth-begin-without-email">
+                                <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
+                            </Button>
+                            <Button variant="outline" action="secondary" onPress={onLearn} testID="auth-learn-mera">
+                                <ButtonText>{t('auth.learnAboutMera')}</ButtonText>
+                            </Button>
+                        </>
+                    ) : (
+                        <PhoneUnsupported testID="auth-begin-unsupported" />
+                    )}
                 </Animated.View>
             ) : null}
         </View>
