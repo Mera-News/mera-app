@@ -2,160 +2,140 @@
   "ar": {
     "auth": {
       "track": {
-        "beginTitle": "أخبار تهمّك",
-        "beginCaption": "بلا تسجيل. بلا كلمة مرور."
+        "beginTitle": "أخبار تهمّك"
       }
     }
   },
   "de": {
     "auth": {
       "track": {
-        "beginTitle": "Nachrichten, die dir wichtig sind",
-        "beginCaption": "Keine Registrierung. Kein Passwort."
+        "beginTitle": "Nachrichten, die dir wichtig sind"
       }
     }
   },
   "en": {
     "auth": {
       "track": {
-        "beginTitle": "News that matters to you",
-        "beginCaption": "No sign-up. No password."
+        "beginTitle": "News that matters to you"
       }
     }
   },
   "es": {
     "auth": {
       "track": {
-        "beginTitle": "Noticias que te importan",
-        "beginCaption": "Sin registro. Sin contraseña."
+        "beginTitle": "Noticias que te importan"
       }
     }
   },
   "fr": {
     "auth": {
       "track": {
-        "beginTitle": "Les actualités qui comptent pour vous",
-        "beginCaption": "Sans inscription. Sans mot de passe."
+        "beginTitle": "Les actualités qui comptent pour vous"
       }
     }
   },
   "hi": {
     "auth": {
       "track": {
-        "beginTitle": "आपके लिए अहम ख़बरें",
-        "beginCaption": "कोई साइन अप नहीं। कोई पासवर्ड नहीं।"
+        "beginTitle": "आपके लिए अहम ख़बरें"
       }
     }
   },
   "id": {
     "auth": {
       "track": {
-        "beginTitle": "Berita yang penting bagi Anda",
-        "beginCaption": "Tanpa pendaftaran. Tanpa kata sandi."
+        "beginTitle": "Berita yang penting bagi Anda"
       }
     }
   },
   "it": {
     "auth": {
       "track": {
-        "beginTitle": "Le notizie che contano per te",
-        "beginCaption": "Nessuna registrazione. Nessuna password."
+        "beginTitle": "Le notizie che contano per te"
       }
     }
   },
   "ja": {
     "auth": {
       "track": {
-        "beginTitle": "あなたにとって大切なニュース",
-        "beginCaption": "登録不要。パスワード不要。"
+        "beginTitle": "あなたにとって大切なニュース"
       }
     }
   },
   "ko": {
     "auth": {
       "track": {
-        "beginTitle": "나에게 중요한 뉴스",
-        "beginCaption": "가입이 필요 없습니다. 비밀번호도 필요 없습니다."
+        "beginTitle": "나에게 중요한 뉴스"
       }
     }
   },
   "nl": {
     "auth": {
       "track": {
-        "beginTitle": "Nieuws dat voor jou telt",
-        "beginCaption": "Geen registratie. Geen wachtwoord."
+        "beginTitle": "Nieuws dat voor jou telt"
       }
     }
   },
   "pl": {
     "auth": {
       "track": {
-        "beginTitle": "Wiadomości, które są dla Ciebie ważne",
-        "beginCaption": "Bez rejestracji. Bez hasła."
+        "beginTitle": "Wiadomości, które są dla Ciebie ważne"
       }
     }
   },
   "pt-BR": {
     "auth": {
       "track": {
-        "beginTitle": "Notícias que importam para você",
-        "beginCaption": "Sem cadastro. Sem senha."
+        "beginTitle": "Notícias que importam para você"
       }
     }
   },
   "ru": {
     "auth": {
       "track": {
-        "beginTitle": "Новости, которые важны для вас",
-        "beginCaption": "Без регистрации. Без пароля."
+        "beginTitle": "Новости, которые важны для вас"
       }
     }
   },
   "th": {
     "auth": {
       "track": {
-        "beginTitle": "ข่าวที่สำคัญสำหรับคุณ",
-        "beginCaption": "ไม่ต้องสมัคร ไม่ต้องใช้รหัสผ่าน"
+        "beginTitle": "ข่าวที่สำคัญสำหรับคุณ"
       }
     }
   },
   "tr": {
     "auth": {
       "track": {
-        "beginTitle": "Sizin için önemli haberler",
-        "beginCaption": "Kayıt yok. Şifre yok."
+        "beginTitle": "Sizin için önemli haberler"
       }
     }
   },
   "uk": {
     "auth": {
       "track": {
-        "beginTitle": "Новини, які важливі для вас",
-        "beginCaption": "Без реєстрації. Без пароля."
+        "beginTitle": "Новини, які важливі для вас"
       }
     }
   },
   "vi": {
     "auth": {
       "track": {
-        "beginTitle": "Tin tức quan trọng với bạn",
-        "beginCaption": "Không cần đăng ký. Không cần mật khẩu."
+        "beginTitle": "Tin tức quan trọng với bạn"
       }
     }
   },
   "zh-CN": {
     "auth": {
       "track": {
-        "beginTitle": "对你重要的新闻",
-        "beginCaption": "无需注册，无需密码。"
+        "beginTitle": "对你重要的新闻"
       }
     }
   },
   "zh-TW": {
     "auth": {
       "track": {
-        "beginTitle": "對你重要的新聞",
-        "beginCaption": "無需註冊，無需密碼。"
+        "beginTitle": "對你重要的新聞"
       }
     }
   }

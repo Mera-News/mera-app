@@ -49,14 +49,9 @@ function BeginStage({
                 {t('auth.track.beginTitle')}
             </Text>
             {canUsePhone ? (
-                <>
-                    <Button action="primary" onPress={onWithoutEmail} style={styles.beginPrimary} testID="auth-begin-without-email">
-                        <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
-                    </Button>
-                    <Text style={[styles.caption, styles.centerText, styles.beginHelper, { color: colors.ink3 }]}>
-                        {t('auth.track.beginCaption')}
-                    </Text>
-                </>
+                <Button action="primary" onPress={onWithoutEmail} style={styles.beginPrimary} testID="auth-begin-without-email">
+                    <ButtonText>{t('auth.track.beginWithoutEmail')}</ButtonText>
+                </Button>
             ) : (
                 <PhoneUnsupported testID="auth-begin-unsupported" />
             )}

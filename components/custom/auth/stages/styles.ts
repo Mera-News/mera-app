@@ -17,7 +17,6 @@ const styles = StyleSheet.create({
     beginCentered: { justifyContent: 'center' },
     beginLogo: { width: LOGO_TOP, height: LOGO_TOP, alignSelf: 'center' },
     beginTitle: { marginTop: 24 },
-    beginHelper: { marginTop: 8 },
     beginPrimary: { marginTop: 24 },
     beginSecondary: { marginTop: 16 },
     legacyEmailLink: { paddingVertical: 12 },
