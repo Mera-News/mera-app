@@ -156,6 +156,7 @@
       "./plugins/withOnDeviceLlmMinSdk",
       "./plugins/withWatermelonJsi",
       "./plugins/withWatermelonBusyTimeout",
+      "./plugins/withWatermelonBridgelessJsi",
       [
         "@intercom/intercom-react-native",
         {
