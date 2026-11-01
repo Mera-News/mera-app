@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "Sebelum Anda mulai",
-      "beginCaption": "Tanpa email, nomor ponsel, atau kata sandi. Tidak ada yang perlu diingat.",
+      "beginCaption": "Tanpa pendaftaran. Tanpa kata sandi.",
       "beginMera": "Mulai Mera",
-      "beginTitle": "Bagaimana Anda ingin memulai?",
-      "beginWithoutEmail": "Masuk dengan ponsel ini",
+      "beginTitle": "Berita yang penting bagi Anda",
+      "beginWithoutEmail": "Mulai",
       "chooseLanguage": "Pilih bahasa Anda",
       "downloadA11y": "Unduh {{language}}",
       "gettingReadyIos": "Ketuk ↓ di samping setiap bahasa pada lembar di bawah, lalu tunggu di sini. Biarkan Mera tetap terbuka.",

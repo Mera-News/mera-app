@@ -1,4 +1,4 @@
-# Subflow: first launch to the Feed through Sign in with this phone; the mock backend answers the
+# Subflow: first launch to the Feed through Get started (device sign-in); the mock backend answers the
 # device sign-in with its fixture account. Needs Play services on the AVD (Play Integrity token).
 # Provisional: the screen order is fixed from the discovery run.
 appId: ${APP_ID}

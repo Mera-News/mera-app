@@ -226,7 +226,7 @@ before concluding the code is wrong.
 
 ## Test accounts and entitlements
 
-There is no resident Android account. A new account is made with Sign in with this phone: a dev
+There is no resident Android account. A new account is made with Get started (device sign-in): a dev
 build with the dev bypass token against staging (email sign-in is gone).
 
 **Play Billing does not work on the emulator**, so a new account hits the paywall

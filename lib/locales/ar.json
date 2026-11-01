@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "قبل أن تبدأ",
-      "beginCaption": "لا بريد إلكتروني ولا رقم هاتف ولا كلمة مرور. لا شيء تحتاج إلى تذكّره.",
+      "beginCaption": "بلا تسجيل. بلا كلمة مرور.",
       "beginMera": "ابدأ مع ميرا",
-      "beginTitle": "كيف تريد أن تبدأ؟",
-      "beginWithoutEmail": "تسجيل الدخول بهذا الهاتف",
+      "beginTitle": "أخبار تهمّك",
+      "beginWithoutEmail": "ابدأ",
       "chooseLanguage": "اختر لغتك",
       "downloadA11y": "تنزيل {{language}}",
       "gettingReadyIos": "اضغط على ↓ بجانب كل لغة في النافذة أدناه، ثم انتظر هنا. أبقِ ميرا مفتوحًا.",

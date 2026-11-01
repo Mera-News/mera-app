@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "开始之前",
-      "beginCaption": "无需邮箱、电话号码或密码。无需记住任何东西。",
+      "beginCaption": "无需注册，无需密码。",
       "beginMera": "开始使用梅拉",
-      "beginTitle": "你想如何开始？",
-      "beginWithoutEmail": "用这部手机登录",
+      "beginTitle": "对你重要的新闻",
+      "beginWithoutEmail": "开始使用",
       "chooseLanguage": "选择你的语言",
       "downloadA11y": "下载{{language}}",
       "gettingReadyIos": "在下方面板中点按每种语言旁边的 ↓，然后在此等待。请保持梅拉打开。",

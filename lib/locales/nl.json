@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "Voordat je begint",
-      "beginCaption": "Geen e-mail, telefoonnummer of wachtwoord. Niets om te onthouden.",
+      "beginCaption": "Geen registratie. Geen wachtwoord.",
       "beginMera": "Mera starten",
-      "beginTitle": "Hoe wil je beginnen?",
-      "beginWithoutEmail": "Inloggen met deze telefoon",
+      "beginTitle": "Nieuws dat voor jou telt",
+      "beginWithoutEmail": "Aan de slag",
       "chooseLanguage": "Kies je taal",
       "downloadA11y": "{{language}} downloaden",
       "gettingReadyIos": "Tik onder in het venster op ↓ naast elke taal en wacht hier. Houd Mera open.",

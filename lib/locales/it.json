@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "Prima di iniziare",
-      "beginCaption": "Nessuna email, numero di telefono o password. Nulla da ricordare.",
+      "beginCaption": "Nessuna registrazione. Nessuna password.",
       "beginMera": "Inizia con Mera",
-      "beginTitle": "Come vuoi iniziare?",
-      "beginWithoutEmail": "Accedi con questo telefono",
+      "beginTitle": "Le notizie che contano per te",
+      "beginWithoutEmail": "Inizia",
       "chooseLanguage": "Scegli la tua lingua",
       "downloadA11y": "Scarica {{language}}",
       "gettingReadyIos": "Tocca ↓ accanto a ogni lingua nel riquadro qui sotto, poi aspetta qui. Tieni Mera aperto.",

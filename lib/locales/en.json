@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "Before you start",
-      "beginCaption": "No email, phone number or password. Nothing to remember.",
+      "beginCaption": "No sign-up. No password.",
       "beginMera": "Begin Mera",
-      "beginTitle": "How do you want to begin?",
-      "beginWithoutEmail": "Sign in with this phone",
+      "beginTitle": "News that matters to you",
+      "beginWithoutEmail": "Get started",
       "chooseLanguage": "Choose your language",
       "downloadA11y": "Download {{language}}",
       "gettingReadyIos": "Tap ↓ next to each language on the sheet below, then wait here. Keep Mera open.",

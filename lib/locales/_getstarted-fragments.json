@@ -1,0 +1,142 @@
+{
+  "ar": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "ابدأ"
+      }
+    }
+  },
+  "de": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Jetzt loslegen"
+      }
+    }
+  },
+  "en": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Get started"
+      }
+    }
+  },
+  "es": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Empezar"
+      }
+    }
+  },
+  "fr": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Commencer"
+      }
+    }
+  },
+  "hi": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "शुरू करें"
+      }
+    }
+  },
+  "id": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Mulai"
+      }
+    }
+  },
+  "it": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Inizia"
+      }
+    }
+  },
+  "ja": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "はじめる"
+      }
+    }
+  },
+  "ko": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "시작하기"
+      }
+    }
+  },
+  "nl": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Aan de slag"
+      }
+    }
+  },
+  "pl": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Zacznij"
+      }
+    }
+  },
+  "pt-BR": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Começar"
+      }
+    }
+  },
+  "ru": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Начать"
+      }
+    }
+  },
+  "th": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "เริ่มต้นใช้งาน"
+      }
+    }
+  },
+  "tr": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Başla"
+      }
+    }
+  },
+  "uk": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Почати"
+      }
+    }
+  },
+  "vi": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "Bắt đầu"
+      }
+    }
+  },
+  "zh-CN": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "开始使用"
+      }
+    }
+  },
+  "zh-TW": {
+    "auth": {
+      "track": {
+        "beginWithoutEmail": "開始使用"
+      }
+    }
+  }
+}

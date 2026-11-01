@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "Trước khi bắt đầu",
-      "beginCaption": "Không cần email, số điện thoại hay mật khẩu. Không có gì để nhớ.",
+      "beginCaption": "Không cần đăng ký. Không cần mật khẩu.",
       "beginMera": "Bắt đầu với Mera",
-      "beginTitle": "Bạn muốn bắt đầu như thế nào?",
-      "beginWithoutEmail": "Đăng nhập bằng điện thoại này",
+      "beginTitle": "Tin tức quan trọng với bạn",
+      "beginWithoutEmail": "Bắt đầu",
       "chooseLanguage": "Chọn ngôn ngữ của bạn",
       "downloadA11y": "Tải {{language}}",
       "gettingReadyIos": "Chạm ↓ bên cạnh từng ngôn ngữ trong khung bên dưới, rồi đợi ở đây. Hãy giữ Mera mở.",

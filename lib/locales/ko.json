@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "시작하기 전에",
-      "beginCaption": "이메일, 전화번호, 비밀번호가 필요 없습니다. 기억할 것은 없습니다.",
+      "beginCaption": "가입이 필요 없습니다. 비밀번호도 필요 없습니다.",
       "beginMera": "메라 시작하기",
-      "beginTitle": "어떻게 시작하시겠어요?",
-      "beginWithoutEmail": "이 휴대폰으로 로그인",
+      "beginTitle": "나에게 중요한 뉴스",
+      "beginWithoutEmail": "시작하기",
       "chooseLanguage": "언어를 선택하세요",
       "downloadA11y": "{{language}} 다운로드",
       "gettingReadyIos": "아래 시트에서 각 언어 옆의 ↓를 누른 뒤 여기서 기다려 주세요. 메라를 열어 두세요.",

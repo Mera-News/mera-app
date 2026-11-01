@@ -46,10 +46,10 @@
     },
     "track": {
       "beforeYouStart": "Başlamadan önce",
-      "beginCaption": "E-posta, telefon numarası veya şifre yok. Hatırlanacak bir şey yok.",
+      "beginCaption": "Kayıt yok. Şifre yok.",
       "beginMera": "Mera'yı başlat",
-      "beginTitle": "Nasıl başlamak istersiniz?",
-      "beginWithoutEmail": "Bu telefonla giriş yap",
+      "beginTitle": "Sizin için önemli haberler",
+      "beginWithoutEmail": "Başla",
       "chooseLanguage": "Dilinizi seçin",
       "downloadA11y": "{{language}} dilini indir",
       "gettingReadyIos": "Alttaki pencerede her dilin yanındaki ↓ simgesine dokunun, sonra burada bekleyin. Mera'yı açık tutun.",
