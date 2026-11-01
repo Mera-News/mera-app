@@ -35,3 +35,26 @@ describe('withWatermelonBridgelessJsi', () => {
     expect(patchSource(file, src)).not.toMatch(/RCTCxxBridge \*/);
   });
 });
+
+// AGP 9 no longer generates BuildConfig for libraries, and WatermelonDB's
+// Android module reads BuildConfig.DEBUG: the release build failed with
+// "cannot find symbol BuildConfig" until its build.gradle turns it back on.
+describe('withWatermelonBridgelessJsi android build.gradle', () => {
+  const { patchAndroidGradle, androidGradlePath } = require('../../../../plugins/withWatermelonBridgelessJsi');
+  const GRADLE = 'android {\n    compileSdkVersion 34\n\n    namespace "com.nozbe.watermelondb"\n\n    defaultConfig {\n    }\n}\n';
+
+  it('turns BuildConfig generation on for the module', () => {
+    const out = patchAndroidGradle(GRADLE);
+    expect(out).toContain('namespace "com.nozbe.watermelondb"\n    buildFeatures { buildConfig true }');
+    expect(patchAndroidGradle(out)).toBe(out);
+  });
+
+  it('throws when the anchor moved', () => {
+    expect(() => patchAndroidGradle('android {\n}\n')).toThrow(/anchor moved/);
+  });
+
+  it('matches the installed WatermelonDB build.gradle', () => {
+    const src = fs.readFileSync(androidGradlePath(process.cwd()), 'utf8');
+    expect(patchAndroidGradle(src)).toContain('buildConfig true');
+  });
+});

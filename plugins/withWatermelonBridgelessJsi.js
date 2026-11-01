@@ -1,4 +1,5 @@
-// Make WatermelonDB's iOS JSI installer compile on React Native 0.88.
+// Make WatermelonDB compile on Expo SDK 58: its iOS JSI installer on React Native 0.88
+// (below) and its Android module on Android Gradle Plugin 9 (patchAndroidGradle).
 //
 // RN 0.88 removed RCTCxxBridge, and @nozbe/watermelondb 0.28.0 (and 0.28.1-0)
 // still types its installer with it, so the pod fails with "unknown type name
@@ -52,12 +53,42 @@ function patchSource(file, src) {
   return out;
 }
 
+// Android Gradle Plugin 9 no longer generates BuildConfig for libraries, and
+// WatermelonDB's Android module reads BuildConfig.DEBUG, so the release build
+// failed with "cannot find symbol BuildConfig". Same fix as upstream #1978.
+const GRADLE_ANCHOR = 'namespace "com.nozbe.watermelondb"';
+const GRADLE_EDIT = `${GRADLE_ANCHOR}\n    buildFeatures { buildConfig true }`;
+
+/** Returns the patched build.gradle; throws when the namespace line moved. */
+function patchAndroidGradle(src) {
+  if (src.includes(GRADLE_EDIT)) return src;
+  if (!src.includes(GRADLE_ANCHOR)) {
+    throw new Error(`withWatermelonBridgelessJsi: anchor moved in WatermelonDB android build.gradle: ${GRADLE_ANCHOR}`);
+  }
+  return src.replace(GRADLE_ANCHOR, GRADLE_EDIT);
+}
+
+function androidGradlePath(projectRoot) {
+  const pkg = require.resolve('@nozbe/watermelondb/package.json', { paths: [projectRoot] });
+  return path.join(path.dirname(pkg), 'native', 'android', 'build.gradle');
+}
+
 function iosSourceDir(projectRoot) {
   const pkg = require.resolve('@nozbe/watermelondb/package.json', { paths: [projectRoot] });
   return path.join(path.dirname(pkg), 'native', 'ios', 'WatermelonDB');
 }
 
 function withWatermelonBridgelessJsi(config) {
+  config = withDangerousMod(config, [
+    'android',
+    (cfg) => {
+      const full = androidGradlePath(cfg.modRequest.projectRoot);
+      const src = fs.readFileSync(full, 'utf8');
+      const next = patchAndroidGradle(src);
+      if (next !== src) fs.writeFileSync(full, next);
+      return cfg;
+    },
+  ]);
   return withDangerousMod(config, [
     'ios',
     (cfg) => {
@@ -77,3 +108,5 @@ module.exports = withWatermelonBridgelessJsi;
 module.exports.patchSource = patchSource;
 module.exports.iosSourceDir = iosSourceDir;
 module.exports.FILES = Object.keys(EDITS);
+module.exports.patchAndroidGradle = patchAndroidGradle;
+module.exports.androidGradlePath = androidGradlePath;
