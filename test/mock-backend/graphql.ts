@@ -411,6 +411,13 @@ const billing = (c: Ctx) =>
 query<'userBilling'>('GetUserBilling', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserBillingLapseState', (c) => ({ userBilling: billing(c) }));
 query<'userBilling'>('GetUserReading', (c) => ({ userBilling: billing(c) }));
+// Prod's daily cloud reading per plan (Starter 4 MB, Individual 20, Professional 100).
+query<'userBilling'>('GetReadingPlans', (c) => ({
+    userBilling: {
+        ...billing(c),
+        readingPlans: { __typename: 'ReadingPlans', starter: 4_000_000, individual: 20_000_000, professional: 100_000_000 },
+    },
+}));
 
 query<'appConfig'>('LegalConsentAppConfig', () => ({ appConfig }));
 query<'appVersionInfo'>('AppVersionInfo', () => ({ appVersionInfo }));
