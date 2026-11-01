@@ -16,6 +16,8 @@
 //     1.3.1 binary carries it and one channel serves them all. What is left is
 //     the inverse assertion, because dropping the dependency now turns every
 //     hero in `animation-registry.ts` into a build error.
+//  3. Chapter `welcome` carries no mera logo — the user's explicit instruction
+//     for the pre-auth chapter.
 //  4. NO CHAPTER TEACHES A DECOY / NOISE-INJECTION FEATURE. Mera has none:
 //     nothing generates, sends or discards decoy topics, and there is no
 //     setting to turn one on. Two slides (`privacy/decoys-are-a-switch`,
@@ -27,15 +29,15 @@ import fs from 'fs';
 import path from 'path';
 
 import en from '@/lib/locales/en.json';
-import { TUTORIAL_CHAPTERS, chaptersAtLevel } from '@/lib/tutorials/chapters';
+import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '@/lib/tutorials/chapters';
 import { animationIdFor, keysForChapter, lookupKey } from '@/lib/algorithms/tutorial-keys';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../..');
 
 describe('TUTORIAL_CHAPTERS', () => {
-  it('has eleven chapters split across the two levels', () => {
-    expect(TUTORIAL_CHAPTERS).toHaveLength(11);
-    expect(chaptersAtLevel('basic')).toHaveLength(7);
+  it('has twelve chapters split across the two levels', () => {
+    expect(TUTORIAL_CHAPTERS).toHaveLength(12);
+    expect(chaptersAtLevel('basic')).toHaveLength(8);
     expect(chaptersAtLevel('advanced')).toHaveLength(4);
   });
 
@@ -82,6 +84,22 @@ describe('TUTORIAL_CHAPTERS', () => {
       for (const slide of chapter.slides) {
         expect(slide.visual.animation).toBeUndefined();
       }
+    }
+  });
+
+  it('keeps the mera logo out of the pre-auth chapter', () => {
+    const welcome = getChapter('welcome');
+    expect(welcome).toBeDefined();
+    for (const slide of welcome!.slides) {
+      expect(slide.visual.placeholder.kind).not.toBe('logo');
+    }
+  });
+
+  it('never offers Ask Mera on the pre-auth chapter', () => {
+    // Belt and braces: the player also hard-disables it via `enableAskMera`,
+    // but a slide that WANTS the button pre-auth is an authoring mistake.
+    for (const slide of getChapter('welcome')!.slides) {
+      expect(slide.hasAsk).toBeFalsy();
     }
   });
 });

@@ -2272,6 +2272,65 @@
         },
         "subtitle": "Wat je bewaart, controleert en opent.",
         "title": "Je Bibliotheek"
+      },
+      "welcome": {
+        "title": "Welkom bij Mera",
+        "subtitle": "Wat deze app is, in één minuut.",
+        "slides": {
+          "what": {
+            "headline": "Een nieuwsapp die met jou begint",
+            "body": "De meeste nieuwsapps beginnen met het nieuws en hopen dat er iets past. Mera begint bij jou en zoekt dan de verhalen die je leven raken."
+          },
+          "not-a-timeline": {
+            "headline": "Geen tijdlijn",
+            "body": "Niets hier wordt geordend op basis van wat populair is of wat het laatst binnenkwam. Raad wat de volgorde bepaalt.",
+            "choose": {
+              "popular": {
+                "label": "Wat de meeste mensen lezen",
+                "feedback": "Niet hier. Populariteit is het nieuws van iemand anders."
+              },
+              "yours": {
+                "label": "Hoeveel het je leven raakt",
+                "feedback": "Dat is het. Alles anders is alleen maar een tiebreak."
+              },
+              "newest": {
+                "label": "Wat het laatst binnenkwam",
+                "feedback": "Dicht erbij. Nieuwe verhalen landen wel bovenaan, maar nieuw zijn geeft niet het top verdient."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Drie stappen en dat is de hele app",
+            "body": "Het is echt zo kort.",
+            "steps": {
+              "0": "Je zegt een paar ware dingen over je leven.",
+              "1": "Mera verandert ze in dingen om naar te zoeken.",
+              "2": "Het leest het dagnieuws en houdt wat past."
+            }
+          },
+          "matching": {
+            "headline": "Je leven, niet je klikken",
+            "body": "Een verpleegster in een klein dorp en een verpleegster in een hoofdstad krijgen hier ander nieuws. Niet omdat de ene meer tikt, maar omdat verschillende dingen werkelijk hen bereiken."
+          },
+          "stays-here": {
+            "headline": "Het blijft op deze telefoon",
+            "body": "Tik elk om te zien wat dat betekent.",
+            "reveal": {
+              "about-you": {
+                "label": "Wat het over jou weet",
+                "text": "Je feiten, je interesses en wat je hebt gelezen worden op deze telefoon opgeslagen en blijven daar. De servers van Mera bewaren er geen kopie van."
+              },
+              "what-leaves": {
+                "label": "Wat werkelijk weggaat",
+                "text": "Korte onderwerpsfrasen, zoals 'ziekenhuisbezetting'. De servers van Mera slaan ze op zonder naam of account, dus nergens staat vastgelegd dat een frase van jou kwam."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Klaar wanneer jij het bent",
+            "body": "Mera stelt je een paar vragen. Er zijn geen foute antwoorden, en je kunt alles later wijzigen."
+          }
+        }
       }
     }
   },

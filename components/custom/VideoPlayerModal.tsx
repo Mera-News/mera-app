@@ -21,8 +21,6 @@ interface VideoPlayerModalProps {
     uri: string;
     /** Called when the user dismisses the player. */
     onClose: () => void;
-    /** Close by itself when playback reaches the end (the welcome video). */
-    closeOnEnd?: boolean;
 }
 
 /**
@@ -34,7 +32,7 @@ interface VideoPlayerModalProps {
  * created on open and torn down on close (playback restarts each time, and we
  * don't hold a decoder while the modal is hidden).
  */
-const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClose, closeOnEnd = false }) => {
+const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClose }) => {
     useRestartHold(visible, 'overlay:video', 'auto');
     // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
     const motion = useMotionAllowed();
@@ -48,13 +46,13 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClo
             onRequestClose={onClose}
         >
             <GluestackUIProvider>
-                {visible ? <PlayerContent uri={uri} onClose={onClose} closeOnEnd={closeOnEnd} /> : null}
+                {visible ? <PlayerContent uri={uri} onClose={onClose} /> : null}
             </GluestackUIProvider>
         </Modal>
     );
 };
 
-const PlayerContent: React.FC<{ uri: string; onClose: () => void; closeOnEnd: boolean }> = ({ uri, onClose, closeOnEnd }) => {
+const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, onClose }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const player = useVideoPlayer(uri, (p) => {
@@ -63,13 +61,6 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void; closeOnEnd: bo
     });
 
     const { status } = useEvent(player, 'statusChange', { status: player.status });
-
-    // A short film closes itself when it ends, through the Modal's fade.
-    React.useEffect(() => {
-        if (!closeOnEnd) return;
-        const sub = player.addListener('playToEnd', onClose);
-        return () => sub.remove();
-    }, [player, onClose, closeOnEnd]);
 
     return (
         <Box className="flex-1 bg-black items-center justify-center">

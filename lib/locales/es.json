@@ -2278,6 +2278,65 @@
         },
         "subtitle": "Lo que guardas, verificas y abres.",
         "title": "Tu Biblioteca"
+      },
+      "welcome": {
+        "title": "Bienvenido a Mera",
+        "subtitle": "Qué es esta aplicación, en un minuto.",
+        "slides": {
+          "what": {
+            "headline": "Una aplicación de noticias que comienza contigo",
+            "body": "La mayoría de las apps de noticias empiezan por las noticias y esperan que algo encaje. Mera empieza por ti, y luego busca las historias que tocan tu vida."
+          },
+          "not-a-timeline": {
+            "headline": "No es una línea de tiempo",
+            "body": "Nada aquí se ordena por lo que es popular o por lo que llegó último. Adivina qué decide el orden.",
+            "choose": {
+              "popular": {
+                "label": "Lo que la mayoría de las personas están leyendo",
+                "feedback": "No aquí. La popularidad es las noticias de otro."
+              },
+              "yours": {
+                "label": "Cuánto toca tu vida",
+                "feedback": "Eso es. Todo lo demás es solo un desempate."
+              },
+              "newest": {
+                "label": "Lo que llegó último",
+                "feedback": "Cerca. Las historias nuevas sí llegan cerca de la parte superior, pero ser nuevo no es lo que gana la parte superior."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Tres pasos, y eso es toda la aplicación",
+            "body": "Realmente es tan corto.",
+            "steps": {
+              "0": "Dices algunos datos verdaderos sobre tu vida.",
+              "1": "Mera los convierte en cosas que buscar.",
+              "2": "Lee las noticias del día y guarda lo que encaja."
+            }
+          },
+          "matching": {
+            "headline": "Tu vida, no tus clics",
+            "body": "Una enfermera en un pueblo pequeño y una enfermera en una ciudad capital obtienen noticias diferentes aquí. No porque uno de ellos tocó más, sino porque diferentes cosas realmente los alcanzan."
+          },
+          "stays-here": {
+            "headline": "Se queda en este teléfono",
+            "body": "Toca cada uno para ver qué significa eso.",
+            "reveal": {
+              "about-you": {
+                "label": "Lo que sabe sobre ti",
+                "text": "Tus hechos, tus intereses y lo que has leído se escriben en este teléfono y permanecen allí. Los servidores de Mera no guardan ninguna copia."
+              },
+              "what-leaves": {
+                "label": "Lo que realmente sale",
+                "text": "Frases cortas de temas, como \"personal de hospitales\". Los servidores de Mera las guardan sin nombre ni cuenta, así que nada registra que una frase viniera de ti."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Listo cuando tú lo estés",
+            "body": "Mera te hará un par de preguntas. No hay respuestas incorrectas, y puedes cambiar cualquier cosa después."
+          }
+        }
       }
     }
   },

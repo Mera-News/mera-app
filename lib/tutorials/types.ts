@@ -25,6 +25,7 @@ export type MaterialIconName = keyof typeof MaterialIcons.glyphMap;
 /** Chapter slugs. Order here is menu order within each level. */
 export type ChapterId =
   // level: 'basic'
+  | 'welcome'
   | 'facts'
   | 'feed'
   | 'teaching'
@@ -63,7 +64,7 @@ export type AnimationId = string;
  * discipline for the same reason.
  */
 export type Placeholder =
-  /** The animated Mera mark. */
+  /** The animated Mera mark. FORBIDDEN in chapter `welcome` — see chapters.ts. */
   | { readonly kind: 'logo' }
   /** One accent glyph, breathing. */
   | { readonly kind: 'icon'; readonly name: MaterialIconName }

@@ -20,8 +20,7 @@ import { useTranslation } from 'react-i18next';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
-import { welcomeVideoUrl } from '@/lib/config/branding';
-import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
+import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { EASE, MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
@@ -67,6 +66,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         pendingSwitch,
         tourOpen,
         setTourOpen,
+        getStarted,
+        starting,
         finishDeviceSignIn,
         askSwitch,
         handleSwitchContinue,
@@ -123,7 +124,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                 <WelcomeStage
                     messageTop={insets.top + 8 - bodyTop}
                     canUsePhone={availability !== 'unavailable'}
-                    onGetStarted={() => go('consent')}
+                    onGetStarted={getStarted}
+                    starting={starting}
                     onLearn={() => setTourOpen(true)}
                 />
             );
@@ -193,11 +195,14 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                 {body}
             </Animated.View>
 
-            <VideoPlayerModal
+            <TutorialModalHost
                 visible={tourOpen}
-                uri={welcomeVideoUrl()}
-                closeOnEnd
                 onClose={() => setTourOpen(false)}
+                finishLabel={t('auth.track.beginWithoutEmail')}
+                onFinish={() => {
+                    setTourOpen(false);
+                    void getStarted();
+                }}
             />
 
             <BottomSheet

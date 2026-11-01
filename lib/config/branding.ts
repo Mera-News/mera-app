@@ -30,10 +30,6 @@ export function guideVideoUrl(kind: GuideVideoKind, appLanguage: string): string
   const platform = Platform.OS === 'android' ? 'android' : 'ios';
   return `${GUIDE_VIDEO_BASE_URL}/${kind}-${platform}-${appLanguage}.mp4`;
 }
-// One platform-neutral English file, so other languages fall back to it.
-export function welcomeVideoUrl(): string {
-  return `${GUIDE_VIDEO_BASE_URL}/welcome-en.mp4`;
-}
 
 // utm_source value appended to publisher article URLs so publishers can
 // attribute the visit to us. Derived from WEBSITE_URL's host (e.g. mera.news)

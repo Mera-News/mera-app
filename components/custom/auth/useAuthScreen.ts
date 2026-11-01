@@ -19,6 +19,8 @@ import {
     recordAuthenticatedUser,
     releaseAccountSwitch,
 } from '@/lib/security/identity-gate';
+import { hapticLight } from '@/lib/haptics';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
 
 import { acceptLegal, fetchLegalVersions, markLegalAcceptedThisProcess } from './legal-consent';
@@ -104,6 +106,23 @@ export function useAuthScreen({ onLoginSuccess }: AuthScreenProps) {
         },
         [stage],
     );
+
+    // ONE Get started: the Get started button and the welcome tour's finish both run it.
+    const [starting, setStarting] = useState(false);
+    const getStarted = useCallback(async () => {
+        if (starting) return;
+        setStarting(true);
+        void hapticLight();
+        try {
+            // Persist the language row even when the reader kept the default:
+            // the choice is a fact about this install from now on.
+            await useAppLanguageStore.getState().setAppLanguage(useAppLanguageStore.getState().appLanguage);
+        } catch {
+            // The store already logged it; the reader still moves on.
+        }
+        setStarting(false);
+        go('consent');
+    }, [starting, go]);
 
     useEffect(() => {
         let cancelled = false;
@@ -206,6 +225,8 @@ export function useAuthScreen({ onLoginSuccess }: AuthScreenProps) {
         pendingSwitch,
         tourOpen,
         setTourOpen,
+        getStarted,
+        starting,
         finishDeviceSignIn,
         askSwitch,
         handleSwitchContinue,

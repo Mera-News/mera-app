@@ -2272,6 +2272,65 @@
         },
         "subtitle": "Was du behältst, prüfst und öffnest.",
         "title": "Deine Library"
+      },
+      "welcome": {
+        "title": "Willkommen bei Mera",
+        "subtitle": "Was diese App ist, in einer Minute.",
+        "slides": {
+          "what": {
+            "headline": "Eine News-App, die mit dir anfängt",
+            "body": "Die meisten Nachrichten-Apps fangen mit den Nachrichten an und hoffen, dass etwas davon passt. Mera fängt bei dir an und sucht dann nach den Geschichten, die dein Leben berühren."
+          },
+          "not-a-timeline": {
+            "headline": "Nicht eine Timeline",
+            "body": "Nichts hier ist nach dem geordnet, was beliebt ist oder was zuletzt ankam. Rat, was die Reihenfolge entscheidet.",
+            "choose": {
+              "popular": {
+                "label": "Was die meisten Leute lesen",
+                "feedback": "Nicht hier. Beliebtheit ist jemand anderes Nachrichten."
+              },
+              "yours": {
+                "label": "Wie sehr es dein Leben berührt",
+                "feedback": "Das ist es. Alles andere ist nur ein Tiebreak."
+              },
+              "newest": {
+                "label": "Was zuletzt ankam",
+                "feedback": "Nah dran. Neue Geschichten landen oben, aber neu zu sein ist nicht das, was oben verdient."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Drei Schritte, und das ist die ganze App",
+            "body": "Es ist wirklich so kurz.",
+            "steps": {
+              "0": "Du sagst ein paar wahre Dinge über dein Leben.",
+              "1": "Mera verwandelt sie in Dinge zum Suchen.",
+              "2": "Es liest die heutigen Nachrichten und behält, was passt."
+            }
+          },
+          "matching": {
+            "headline": "Dein Leben, nicht deine Klicks",
+            "body": "Eine Krankenschwester in einer Kleinstadt und eine Krankenschwester in einer Hauptstadt bekommen unterschiedliche Nachrichten hier. Nicht weil einer von ihnen mehr tappte, sondern weil verschiedene Dinge sie eigentlich erreichen."
+          },
+          "stays-here": {
+            "headline": "Es bleibt auf diesem Telefon",
+            "body": "Tippe auf jede, um zu sehen, was das bedeutet.",
+            "reveal": {
+              "about-you": {
+                "label": "Was es über dich weiß",
+                "text": "Deine Fakten, deine Interessen und das, was du gelesen hast, werden auf diesem Telefon gespeichert und bleiben dort. Die Server von Mera behalten keine Kopie davon."
+              },
+              "what-leaves": {
+                "label": "Was eigentlich geht",
+                "text": "Kurze Themenphrasen wie \"Personalengpässe im Krankenhaus\". Die Server von Mera speichern sie ohne Namen und ohne Konto, es ist also nirgends festgehalten, dass eine Phrase von dir kam."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Bereit, wenn du es bist",
+            "body": "Mera stellt dir ein paar Fragen. Es gibt keine falschen Antworten, und du kannst alles später ändern."
+          }
+        }
       }
     }
   },

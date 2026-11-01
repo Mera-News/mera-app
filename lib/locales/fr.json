@@ -2284,6 +2284,65 @@
         },
         "subtitle": "Ce que vous gardez, vérifiez et ouvrez.",
         "title": "Votre Bibliothèque"
+      },
+      "welcome": {
+        "title": "Bienvenue dans Mera",
+        "subtitle": "Ce qu'est cette application, en une minute.",
+        "slides": {
+          "what": {
+            "headline": "Une application d'actualités qui commence par vous",
+            "body": "La plupart des applis d'actualités commencent par l'actu et espèrent qu'une partie correspondra. Mera commence par vous, puis cherche les histoires qui touchent à votre vie."
+          },
+          "not-a-timeline": {
+            "headline": "Pas une chronologie",
+            "body": "Rien ici n'est ordonné par ce qui est populaire ou par ce qui est arrivé en dernier. Devinez ce qui décide de l'ordre.",
+            "choose": {
+              "popular": {
+                "label": "Tout ce que la plupart des gens lisent",
+                "feedback": "Pas ici. La popularité est l'actualité de quelqu'un d'autre."
+              },
+              "yours": {
+                "label": "Combien cela touche votre vie",
+                "feedback": "C'est ça. Tout le reste n'est qu'un bris d'égalité."
+              },
+              "newest": {
+                "label": "Tout ce qui est arrivé en dernier",
+                "feedback": "Proche. Les nouvelles histoires arrivent près du haut, mais être nouveau n'est pas ce qui gagne le haut."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Trois étapes, et c'est toute l'application",
+            "body": "C'est vraiment aussi court.",
+            "steps": {
+              "0": "Vous dites quelques choses vraies sur votre vie.",
+              "1": "Mera les transforme en choses à aller chercher.",
+              "2": "Il lit les actualités du jour et conserve ce qui s'adapte."
+            }
+          },
+          "matching": {
+            "headline": "Votre vie, pas vos clics",
+            "body": "Une infirmière dans une petite ville et une infirmière dans une capitale obtiennent des actualités différentes ici. Pas parce que l'une d'elles a plus appuyé, mais parce que différentes choses les atteignent réellement."
+          },
+          "stays-here": {
+            "headline": "Cela reste sur ce téléphone",
+            "body": "Appuyez sur chacun pour voir ce que cela signifie.",
+            "reveal": {
+              "about-you": {
+                "label": "Ce qu'il sait de vous",
+                "text": "Vos faits, vos intérêts et ce que vous avez lu sont écrits sur ce téléphone et y restent. Les serveurs de Mera n'en gardent aucune copie."
+              },
+              "what-leaves": {
+                "label": "Ce qui quitte réellement",
+                "text": "De courtes expressions de sujet, comme « dotation hospitalière ». Les serveurs de Mera les stockent sans nom ni compte, donc rien n'indique qu'une expression venait de vous."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Prêt quand vous l'êtes",
+            "body": "Mera va vous poser quelques questions. Il n'y a pas de mauvaise réponse, et vous pouvez tout modifier plus tard."
+          }
+        }
       }
     }
   },

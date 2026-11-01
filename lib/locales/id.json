@@ -2252,6 +2252,65 @@
         },
         "subtitle": "Yang Anda simpan, periksa, dan buka.",
         "title": "Pustaka Anda"
+      },
+      "welcome": {
+        "title": "Selamat datang di Mera",
+        "subtitle": "Apa aplikasi ini, dalam satu menit.",
+        "slides": {
+          "what": {
+            "headline": "Aplikasi berita yang dimulai dengan Anda",
+            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap sebagiannya cocok. Mera dimulai dengan Anda, lalu mencari cerita yang menyentuh hidup Anda."
+          },
+          "not-a-timeline": {
+            "headline": "Bukan garis waktu",
+            "body": "Tidak ada di sini yang dipesan oleh apa yang populer atau apa yang tiba terakhir. Tebak apa yang memutuskan pesanan.",
+            "choose": {
+              "popular": {
+                "label": "Apa pun yang kebanyakan orang baca",
+                "feedback": "Bukan di sini. Popularitas adalah berita orang lain."
+              },
+              "yours": {
+                "label": "Berapa banyak itu menyentuh hidup Anda",
+                "feedback": "Itulah. Segalanya yang lain hanya pengalihan."
+              },
+              "newest": {
+                "label": "Apa pun yang datang terakhir",
+                "feedback": "Dekat. Cerita baru memang mendarat di dekat atas, tetapi menjadi baru bukan apa yang mengumpulkan puncak."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Tiga langkah, dan itulah seluruh aplikasi",
+            "body": "Ini benar-benar sesingkat ini.",
+            "steps": {
+              "0": "Anda mengatakan beberapa hal yang benar tentang hidup Anda.",
+              "1": "Mera mengubahnya menjadi hal-hal untuk dicari.",
+              "2": "Ini membaca berita hari itu dan menjaga apa yang cocok."
+            }
+          },
+          "matching": {
+            "headline": "Hidup Anda, bukan klik Anda",
+            "body": "Seorang perawat di kota kecil dan seorang perawat di ibu kota mendapatkan berita yang berbeda di sini. Bukan karena salah satu dari mereka mengetuk lebih banyak, tetapi karena hal-hal yang berbeda benar-benar mencapai mereka."
+          },
+          "stays-here": {
+            "headline": "Ini tetap di ponsel ini",
+            "body": "Ketuk masing-masing untuk melihat apa yang itu berarti.",
+            "reveal": {
+              "about-you": {
+                "label": "Apa yang diketahuinya tentang Anda",
+                "text": "Fakta Anda, minat Anda, dan apa yang telah Anda baca ditulis ke ponsel ini dan tetap di sana. Server Mera tidak menyimpan salinannya."
+              },
+              "what-leaves": {
+                "label": "Apa yang benar-benar pergi",
+                "text": "Frasa topik pendek, seperti \"staf rumah sakit\". Server Mera menyimpannya tanpa nama atau akun, jadi tidak ada yang mencatat bahwa suatu frasa berasal dari Anda."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Siap saat Anda siap",
+            "body": "Mera akan menanyakan beberapa hal. Tidak ada jawaban yang salah, dan Anda bisa mengubah apa saja nanti."
+          }
+        }
       }
     }
   },

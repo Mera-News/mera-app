@@ -2252,6 +2252,65 @@
         },
         "subtitle": "Những gì bạn giữ, kiểm tra và mở.",
         "title": "Thư viện của bạn"
+      },
+      "welcome": {
+        "title": "Chào mừng đến Mera",
+        "subtitle": "Ứng dụng này là gì, trong một phút.",
+        "slides": {
+          "what": {
+            "headline": "Một ứng dụng tin tức bắt đầu với bạn",
+            "body": "Hầu hết ứng dụng tin tức bắt đầu từ tin tức và hy vọng một phần trong đó vừa với bạn. Mera bắt đầu từ bạn, rồi đi tìm những câu chuyện chạm đến cuộc sống của bạn."
+          },
+          "not-a-timeline": {
+            "headline": "Không phải một dòng thời gian",
+            "body": "Không có gì ở đây được sắp xếp theo những gì phổ biến hoặc bất cứ điều gì đến cuối cùng. Hãy đoán những gì quyết định thứ tự.",
+            "choose": {
+              "popular": {
+                "label": "Bất cứ điều gì hầu hết mọi người đang đọc",
+                "feedback": "Không ở đây. Tính phổ biến là tin tức của ai đó khác."
+              },
+              "yours": {
+                "label": "Nó chạm vào cuộc sống của bạn bao nhiêu",
+                "feedback": "Đó rồi. Mọi thứ khác chỉ là để phá vỡ."
+              },
+              "newest": {
+                "label": "Bất cứ điều gì đến cuối cùng",
+                "feedback": "Gần. Các câu chuyện mới thực sự hạ cánh gần đầu, nhưng là mới không phải là những gì kiếm được đầu."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Ba bước, và đó là toàn bộ ứng dụng",
+            "body": "Nó thực sự ngắn như vậy.",
+            "steps": {
+              "0": "Bạn nói một vài điều đúng về cuộc sống của bạn.",
+              "1": "Mera biến chúng thành những thứ để đi tìm.",
+              "2": "Nó đọc tin tức trong ngày và giữ lại những gì phù hợp."
+            }
+          },
+          "matching": {
+            "headline": "Cuộc sống của bạn, không phải nhấp chuột của bạn",
+            "body": "Một y tá ở một thị trấn nhỏ và một y tá ở một thành phố lớn nhận được tin tức khác nhau ở đây. Không phải vì một trong họ nhấn nhiều hơn, mà vì những thứ khác nhau thực sự đến được họ."
+          },
+          "stays-here": {
+            "headline": "Nó ở lại điện thoại này",
+            "body": "Nhấn từng cái để xem nghĩa là gì.",
+            "reveal": {
+              "about-you": {
+                "label": "Những gì nó biết về bạn",
+                "text": "Các dữ kiện, sở thích và những gì bạn đã đọc được ghi vào điện thoại này và ở lại đó. Máy chủ của Mera không giữ bản sao nào của chúng."
+              },
+              "what-leaves": {
+                "label": "Những gì thực sự rời đi",
+                "text": "Các cụm chủ đề ngắn, như \"nhân sự bệnh viện\". Máy chủ của Mera lưu chúng mà không có tên hay tài khoản, nên không có gì ghi lại rằng cụm từ đó đến từ bạn."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Sẵn sàng khi bạn sẵn sàng",
+            "body": "Mera sẽ hỏi bạn vài điều. Không có câu trả lời nào sai, và bạn có thể đổi bất cứ điều gì sau này."
+          }
+        }
       }
     }
   },

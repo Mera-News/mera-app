@@ -83,13 +83,69 @@
 //     genuinely unscored (`explore/ScopeArticleList.tsx`: no suggestions, no
 //     scoring, no LLM, nothing persisted).
 //
+// ── `welcome` is special ────────────────────────────────────────────────────
+// It is the PRE-AUTH chapter: no account references, no Ask-Mera, and NO MERA
+// LOGO (explicit user instruction). `chapters.test.ts` asserts the logo rule so
+// it is not enforced by this comment alone.
+//
 // ── Copy is ELI10 (owner) ───────────────────────────────────────────────────
 // A ten-year-old understands every line: one idea per card, short sentences,
 // everyday words, no jargon. Chapters are written that way.
 
-import type { TutorialChapter } from './types';
+import type { ChapterId, TutorialChapter } from './types';
 
 export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
+  // ───────────────────────────── 1 · welcome (basic, pre-auth) ─────────────
+  {
+    id: 'welcome',
+    level: 'basic',
+    icon: 'auto-awesome',
+    slides: [
+      {
+        id: 'what',
+        visual: { placeholder: { kind: 'icon', name: 'newspaper' } },
+      },
+      {
+        id: 'not-a-timeline',
+        visual: { placeholder: { kind: 'cards', count: 3 } },
+        interaction: {
+          kind: 'choose',
+          options: [
+            { id: 'popular' },
+            { id: 'yours', correct: true },
+            { id: 'newest' },
+          ],
+          mustBeCorrect: false,
+        },
+        optional: true,
+      },
+      {
+        id: 'you-first',
+        visual: { placeholder: { kind: 'steps', count: 3 } },
+      },
+      {
+        id: 'matching',
+        visual: { placeholder: { kind: 'orbit', name: 'person' } },
+      },
+      {
+        id: 'stays-here',
+        visual: { placeholder: { kind: 'icon', name: 'phone-iphone' } },
+        interaction: {
+          kind: 'tap-to-reveal',
+          targets: [
+            { id: 'about-you', icon: 'lock' },
+            { id: 'what-leaves', icon: 'cloud-upload' },
+          ],
+        },
+        optional: true,
+      },
+      {
+        id: 'begin',
+        visual: { placeholder: { kind: 'icon', name: 'east' } },
+      },
+    ],
+  },
+
   // ───────────────────────────── 2 · facts (basic) ─────────────────────────
   {
     id: 'facts',
@@ -564,6 +620,9 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 ] as const;
+
+/** The pre-auth chapter — the only one playable from the login screen. */
+export const PRE_AUTH_CHAPTER_ID: ChapterId = 'welcome';
 
 export function getChapter(id: string): TutorialChapter | undefined {
   return TUTORIAL_CHAPTERS.find((chapter) => chapter.id === id);

@@ -22,6 +22,7 @@ import {
 } from '@/lib/security/identity-gate';
 import { __resetInstallBoundaryForTests } from '@/lib/security/install-boundary';
 import { __resetAuthReadQuarantineForTests, releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import {
     FIXTURE_ACCOUNT,
@@ -127,6 +128,17 @@ describe('the stage the gate opens on', () => {
             await jest.advanceTimersByTimeAsync(200);
         });
         expect(hook.result.current.stage).toBe('welcome');
+    });
+
+    it('getStarted persists the language, then goes to consent (the Get started button and the tour finish share it)', async () => {
+        const setAppLanguage = jest.spyOn(useAppLanguageStore.getState(), 'setAppLanguage').mockResolvedValue(undefined as never);
+        const hook = await open();
+        await act(async () => {
+            await hook.result.current.getStarted();
+        });
+        expect(setAppLanguage).toHaveBeenCalledTimes(1);
+        expect(hook.result.current.stage).toBe('consent');
+        setAppLanguage.mockRestore();
     });
 
     it('a cached id opens the account-problem gate', async () => {

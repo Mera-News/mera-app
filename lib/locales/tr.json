@@ -2274,6 +2274,65 @@
         },
         "subtitle": "Sakladığınız, kontrol ettiğiniz ve açtığınız şeyler.",
         "title": "Kitaplığınız"
+      },
+      "welcome": {
+        "title": "Mera'ya hoş geldin",
+        "subtitle": "Bu uygulamanın ne olduğu, bir dakikada.",
+        "slides": {
+          "what": {
+            "headline": "Seninle başlayan bir haber uygulaması",
+            "body": "Çoğu haber uygulaması haberle başlar ve bir kısmının uymasını umar. Mera sizinle başlar, sonra hayatınıza dokunan haberleri arar."
+          },
+          "not-a-timeline": {
+            "headline": "Zaman çizelgesi değil",
+            "body": "Burada hiçbir şey popüler olduğu veya son gelen tarafından emredilmedi. Sırayı neyin karar verdiğini tahmin et.",
+            "choose": {
+              "popular": {
+                "label": "Çoğu insanın okuduğu ne",
+                "feedback": "Burada değil. Popülarite başka birinin haberidir."
+              },
+              "yours": {
+                "label": "Ne kadar yaşamına dokunduğu",
+                "feedback": "Bu işte. Başka her şey sadece kırılma."
+              },
+              "newest": {
+                "label": "Son gelen ne",
+                "feedback": "Yakın. Yeni hikayeler tepede iniyor, ama yeni olmak tepede kazanmayan."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Üç adım ve bu tüm uygulama",
+            "body": "Aslında bu kadar kısa.",
+            "steps": {
+              "0": "Yaşamın hakkında birkaç gerçek şeyi söylüyorsun.",
+              "1": "Mera onları aranacak şeyler halinde dönüştürüyor.",
+              "2": "Günün haberlerini okur ve uyuşanları tutar."
+            }
+          },
+          "matching": {
+            "headline": "Tıklamalarınız değil, yaşamınız",
+            "body": "Küçük bir şehirdeki hemşire ve başkentin hemşiresi burada farklı haber alıyor. Birinin daha çok tıklaması değil, farklı şeylerin aslında onlara ulaşması."
+          },
+          "stays-here": {
+            "headline": "Bu telefonda kalır",
+            "body": "Ne demek olduğunu görmek için her birine dokun.",
+            "reveal": {
+              "about-you": {
+                "label": "Senin hakkında ne biliyor",
+                "text": "Gerçeklerin, ilgi alanların ve okuduklarının hepsi bu telefona yazılır ve orada kalır. Mera'nın sunucuları bunların bir kopyasını tutmaz."
+              },
+              "what-leaves": {
+                "label": "Aslında ne ayrılıyor",
+                "text": "\"Hastane personeli\" gibi kısa konu ifadeleri. Mera'nın sunucuları bunları ad veya hesap olmadan saklar, bu yüzden bir ifadenin senden geldiğini gösteren hiçbir kayıt yoktur."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Hazır olduğunda hazır",
+            "body": "Mera size birkaç şey soracak. Yanlış cevap yok ve her şeyi sonra değiştirebilirsiniz."
+          }
+        }
       }
     }
   },
