@@ -2657,7 +2657,8 @@
     "liteOff": "Chế độ Lite đang tắt",
     "liteOn": "Chế độ Lite đang bật",
     "phoneSupportedLine": "Điện thoại này được hỗ trợ",
-    "translationFor": "Có bản dịch cho {{language}}"
+    "translationFor": "Có bản dịch cho {{language}}",
+    "aiSupported": "Được hỗ trợ trên điện thoại này"
   },
   "feedbackRequest": {
     "title": "Một câu hỏi từ Mera",

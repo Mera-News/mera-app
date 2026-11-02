@@ -2657,7 +2657,8 @@
     "liteOff": "Mode ringan mati",
     "liteOn": "Mode ringan aktif",
     "phoneSupportedLine": "Ponsel ini didukung",
-    "translationFor": "Terjemahan tersedia untuk {{language}}"
+    "translationFor": "Terjemahan tersedia untuk {{language}}",
+    "aiSupported": "Didukung di ponsel ini"
   },
   "feedbackRequest": {
     "title": "Pertanyaan dari Mera",

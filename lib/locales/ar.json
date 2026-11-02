@@ -2874,7 +2874,8 @@
     "liteOff": "الوضع الخفيف متوقف",
     "liteOn": "الوضع الخفيف مفعّل",
     "phoneSupportedLine": "هذا الهاتف مدعوم",
-    "translationFor": "الترجمة متوفرة لـ{{language}}"
+    "translationFor": "الترجمة متوفرة لـ{{language}}",
+    "aiSupported": "مدعوم على هذا الهاتف"
   },
   "feedbackRequest": {
     "title": "سؤال من ميرا",

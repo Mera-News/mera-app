@@ -2773,7 +2773,8 @@
     "liteOff": "Tryb Lite wyłączony",
     "liteOn": "Tryb Lite włączony",
     "phoneSupportedLine": "Ten telefon jest obsługiwany",
-    "translationFor": "Tłumaczenie dostępne dla: {{language}}"
+    "translationFor": "Tłumaczenie dostępne dla: {{language}}",
+    "aiSupported": "Obsługiwane na tym telefonie"
   },
   "feedbackRequest": {
     "title": "Pytanie od Mera",

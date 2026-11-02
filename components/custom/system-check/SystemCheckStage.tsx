@@ -14,6 +14,7 @@ import { hapticLight } from '@/lib/haptics';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { languageCheckStatus } from '@/lib/algorithms/system-check';
+import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import { useColors } from '@/lib/theme/tokens';
 import {
     getNativeLanguageName,
@@ -73,7 +74,8 @@ interface SystemCheckStageProps {
  * and the Settings > Display > System check screen. Rows tick in one by one,
  * each with the moving Mera mark while it runs: the phone is supported, Lite
  * mode on or off by what the phone can handle, translation for the picked
- * language (none for English), and on-device AI (the private cloud for now).
+ * language (none for English), and on-device AI (supported, Beta, when
+ * `checkRequirements` says this phone can run On this phone; else the private cloud).
  *
  * The language is CHOSEN on the welcome list, which only lets a reader past
  * once it is usable, so this row only confirms it. Continue opens when the
@@ -89,6 +91,17 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
     // The appearance row stacks once its label would wrap (long locales, Larger Text).
     const [stacked, setStacked] = useState(false);
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
+    const [aiSupported, setAiSupported] = useState(false);
+    useEffect(() => {
+        let alive = true;
+        checkRequirements().then(
+            (r) => alive && setAiSupported(r.supported),
+            () => undefined,
+        );
+        return () => {
+            alive = false;
+        };
+    }, []);
 
     const english = appLanguage === 'en';
     const rowCount = english ? 3 : 4;
@@ -137,7 +150,9 @@ export default function SystemCheckStage({ onContinue, withLogo = true, testID =
                       title: t('systemCheck.translationFor', { language: languageName }),
                   },
               ]),
-        { key: 'ai', state: 'info', title: t('systemCheck.aiTitle'), detail: t('systemCheck.aiCloud'), beta: true },
+        aiSupported
+            ? { key: 'ai', state: 'ok', title: t('systemCheck.aiTitle'), detail: t('systemCheck.aiSupported'), beta: true }
+            : { key: 'ai', state: 'info', title: t('systemCheck.aiTitle'), detail: t('systemCheck.aiCloud'), beta: true },
     ];
 
     return (

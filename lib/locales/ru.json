@@ -2773,7 +2773,8 @@
     "liteOff": "Облегчённый режим выключен",
     "liteOn": "Облегчённый режим включён",
     "phoneSupportedLine": "Этот телефон поддерживается",
-    "translationFor": "Перевод доступен для: {{language}}"
+    "translationFor": "Перевод доступен для: {{language}}",
+    "aiSupported": "Поддерживается на этом телефоне"
   },
   "feedbackRequest": {
     "title": "Вопрос от Меры",

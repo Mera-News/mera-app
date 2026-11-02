@@ -2658,7 +2658,8 @@
     "liteOff": "ปิดโหมด Lite",
     "liteOn": "เปิดโหมด Lite",
     "phoneSupportedLine": "โทรศัพท์เครื่องนี้รองรับ",
-    "translationFor": "มีการแปลสำหรับ{{language}}"
+    "translationFor": "มีการแปลสำหรับ{{language}}",
+    "aiSupported": "รองรับบนโทรศัพท์เครื่องนี้"
   },
   "feedbackRequest": {
     "title": "คำถามจาก เมร่า",

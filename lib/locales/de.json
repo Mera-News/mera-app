@@ -2677,7 +2677,8 @@
     "liteOff": "Lite-Modus aus",
     "liteOn": "Lite-Modus an",
     "phoneSupportedLine": "Dieses Telefon wird unterstützt",
-    "translationFor": "Übersetzung verfügbar für {{language}}"
+    "translationFor": "Übersetzung verfügbar für {{language}}",
+    "aiSupported": "Auf diesem Telefon unterstützt"
   },
   "feedbackRequest": {
     "title": "Eine Frage von Mera",

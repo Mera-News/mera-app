@@ -2683,7 +2683,8 @@
     "liteOff": "Modalità Lite disattivata",
     "liteOn": "Modalità Lite attiva",
     "phoneSupportedLine": "Questo telefono è supportato",
-    "translationFor": "Traduzione disponibile per {{language}}"
+    "translationFor": "Traduzione disponibile per {{language}}",
+    "aiSupported": "Supportato su questo telefono"
   },
   "feedbackRequest": {
     "title": "Una domanda da Mera",

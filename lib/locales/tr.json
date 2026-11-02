@@ -2679,7 +2679,8 @@
     "liteOff": "Lite modu kapalı",
     "liteOn": "Lite modu açık",
     "phoneSupportedLine": "Bu telefon destekleniyor",
-    "translationFor": "{{language}} için çeviri kullanılabilir"
+    "translationFor": "{{language}} için çeviri kullanılabilir",
+    "aiSupported": "Bu telefonda destekleniyor"
   },
   "feedbackRequest": {
     "title": "Mera'dan bir soru",

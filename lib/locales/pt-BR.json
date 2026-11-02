@@ -2683,7 +2683,8 @@
     "liteOff": "Modo Lite desativado",
     "liteOn": "Modo Lite ativado",
     "phoneSupportedLine": "Este celular é compatível",
-    "translationFor": "Tradução disponível para {{language}}"
+    "translationFor": "Tradução disponível para {{language}}",
+    "aiSupported": "Compatível com este celular"
   },
   "feedbackRequest": {
     "title": "Uma pergunta da Mera",

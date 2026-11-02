@@ -9,6 +9,8 @@ import { initI18nEn } from '@/test/helpers';
 
 // The check rows' animated mark drives a Reanimated sweep the Jest mock cannot run.
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
+const mockCheckRequirements = jest.fn();
+jest.mock('@/lib/mera-protocol-toolkit/core/systemRequirements', () => ({ checkRequirements: () => mockCheckRequirements() }));
 
 beforeAll(initI18nEn);
 
@@ -46,6 +48,8 @@ describe('Welcome screen actions', () => {
 });
 
 describe('Settings system check', () => {
+    beforeEach(() => mockCheckRequirements.mockResolvedValue({ supported: false }));
+
     it('is unchanged: title, all four rows, Continue', async () => {
         jest.useFakeTimers();
         const onContinue = jest.fn();
@@ -57,5 +61,25 @@ describe('Settings system check', () => {
         await act(async () => { await jest.advanceTimersByTimeAsync(0); });
         expect(onContinue).toHaveBeenCalledTimes(1);
         jest.useRealTimers();
+    });
+
+    const aiRow = async () => {
+        jest.useFakeTimers();
+        await render(<SystemCheckStage onContinue={jest.fn()} testID="settings-system-check" />);
+        for (let i = 0; i < 4; i += 1) await act(async () => { await jest.advanceTimersByTimeAsync(150); });
+        jest.useRealTimers();
+    };
+
+    it('a phone that can run On this phone reads supported, still Beta', async () => {
+        mockCheckRequirements.mockResolvedValue({ supported: true });
+        await aiRow();
+        expect(screen.getByText('Supported on this phone')).toBeTruthy();
+        expect(screen.queryByText('Not on this phone yet. Mera uses the private cloud.')).toBeNull();
+        expect(screen.getByTestId('settings-system-check-ai-beta')).toBeTruthy();
+    });
+
+    it('a phone that cannot keeps the private cloud line', async () => {
+        await aiRow();
+        expect(screen.getByText('Not on this phone yet. Mera uses the private cloud.')).toBeTruthy();
     });
 });

@@ -2777,7 +2777,8 @@
     "liteOff": "Режим Lite вимкнено",
     "liteOn": "Режим Lite увімкнено",
     "phoneSupportedLine": "Цей телефон підтримується",
-    "translationFor": "Переклад доступний для: {{language}}"
+    "translationFor": "Переклад доступний для: {{language}}",
+    "aiSupported": "Підтримується на цьому телефоні"
   },
   "feedbackRequest": {
     "title": "Запитання від Мери",

@@ -2657,7 +2657,8 @@
     "liteOff": "라이트 모드 꺼짐",
     "liteOn": "라이트 모드 켜짐",
     "phoneSupportedLine": "이 휴대폰은 지원됩니다",
-    "translationFor": "{{language}} 번역 가능"
+    "translationFor": "{{language}} 번역 가능",
+    "aiSupported": "이 휴대폰에서 지원됩니다"
   },
   "feedbackRequest": {
     "title": "메라의 질문",

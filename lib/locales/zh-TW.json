@@ -2657,7 +2657,8 @@
     "liteOff": "精簡模式已關閉",
     "liteOn": "精簡模式已開啟",
     "phoneSupportedLine": "這支手機支援",
-    "translationFor": "{{language}}可以翻譯"
+    "translationFor": "{{language}}可以翻譯",
+    "aiSupported": "這支手機支援"
   },
   "feedbackRequest": {
     "title": "來自梅拉的問題",

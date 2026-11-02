@@ -2679,7 +2679,8 @@
     "liteOff": "Lite मोड बंद",
     "liteOn": "Lite मोड चालू",
     "phoneSupportedLine": "यह फ़ोन समर्थित है",
-    "translationFor": "{{language}} के लिए अनुवाद उपलब्ध"
+    "translationFor": "{{language}} के लिए अनुवाद उपलब्ध",
+    "aiSupported": "इस फ़ोन पर समर्थित"
   },
   "feedbackRequest": {
     "title": "मेरा ऐप की ओर से एक सवाल",

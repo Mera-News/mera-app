@@ -2657,7 +2657,8 @@
     "liteOff": "Liteモードはオフ",
     "liteOn": "Liteモードはオン",
     "phoneSupportedLine": "この電話は対応しています",
-    "translationFor": "{{language}}の翻訳が利用できます"
+    "translationFor": "{{language}}の翻訳が利用できます",
+    "aiSupported": "この電話で使えます"
   },
   "feedbackRequest": {
     "title": "メラからの質問",

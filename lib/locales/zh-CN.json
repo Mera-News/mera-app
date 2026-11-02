@@ -2657,7 +2657,8 @@
     "liteOff": "轻量模式已关闭",
     "liteOn": "轻量模式已开启",
     "phoneSupportedLine": "这部手机受支持",
-    "translationFor": "{{language}}可用翻译"
+    "translationFor": "{{language}}可用翻译",
+    "aiSupported": "这部手机支持"
   },
   "feedbackRequest": {
     "title": "来自梅拉的问题",
