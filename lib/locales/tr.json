@@ -56,7 +56,9 @@
       "phoneLanguage": "Telefonunuzun dili",
       "welcome": "Mera'ya hoş geldiniz",
       "noSheetTitle": "iPhone'unuz indirmeyi açamadı",
-      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin."
+      "noSheetBody": "Tekrar deneyin ya da iPhone'unuzda Ayarlar'ı açın, ardından Genel, Dil ve Bölge, Çeviri Dilleri bölümüne gidip {{language}} dilini indirin.",
+      "gettingReadyAndroid": "Şimdi indiriliyor. Mera'yı açık tutun, bu biraz sürecek.",
+      "downloadFailedBody": "İndirme tamamlanmadı. Bağlantınızı kontrol edip tekrar deneyin."
     },
     "phoneCheckTemporary": "Bu telefon şu anda kontrol edilemedi. Bir dakika sonra tekrar dene.",
     "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",

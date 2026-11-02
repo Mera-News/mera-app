@@ -56,7 +56,9 @@
       "phoneLanguage": "Bahasa ponsel Anda",
       "welcome": "Selamat datang di Mera",
       "noSheetTitle": "iPhone Anda tidak membuka unduhan",
-      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}."
+      "noSheetBody": "Coba lagi, atau buka Pengaturan di iPhone Anda, lalu Umum, lalu Bahasa & Wilayah, lalu Bahasa Terjemahan untuk mengunduh {{language}}.",
+      "gettingReadyAndroid": "Sedang mengunduh. Biarkan Mera tetap terbuka, ini butuh sebentar.",
+      "downloadFailedBody": "Unduhan tidak selesai. Periksa koneksi Anda dan coba lagi."
     },
     "phoneCheckTemporary": "Kami tidak bisa memeriksa ponsel ini sekarang. Coba lagi sebentar lagi.",
     "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",

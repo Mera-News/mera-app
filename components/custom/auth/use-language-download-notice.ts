@@ -1,12 +1,12 @@
 // When the language download notice shows (LanguageDownloadNotice.tsx), for
 // first launch and Settings > Language alike.
 //
-// Owner rule: ONLY while Apple's download sheet is up. JS gets no sheet event,
-// so it rides the probe call (`useCurrentProbe`): iOS only, after
-// NOTICE_DELAY_MS, gone the moment the call settles. If the probe never saw a
-// sign of the sheet by NO_SHEET_MS, the host is let go (`onNoSheet`): notice
-// off, list unlocked, the switch cancelled; the call itself keeps its real
-// timeout.
+// Owner rule: ONLY while the download runs. JS gets no sheet event, so it
+// rides the probe call (`useCurrentProbe`): after NOTICE_DELAY_MS, gone the
+// moment the call settles. On iOS, if the probe never saw a sign of Apple's
+// sheet by NO_SHEET_MS, the host is let go (`onNoSheet`): notice off, list
+// unlocked, the switch cancelled; the call itself keeps its real timeout.
+// Android has no sheet (ML Kit downloads silently), so it never gives up early.
 
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
@@ -34,7 +34,7 @@ export const NO_SHEET_MS = 8000;
 export function useLanguageDownloadNotice(cancel: () => void, onNoSheet: (code: string) => void) {
     const probe = useCurrentProbe();
     const [gaveUp, setGaveUp] = useState<Probe | null>(null);
-    const live = Platform.OS === 'ios' && probe && probe !== gaveUp ? probe.code : null;
+    const live = probe && probe !== gaveUp ? probe.code : null;
     const cancelRef = useRef(cancel);
     cancelRef.current = cancel;
     const onNoSheetRef = useRef(onNoSheet);
@@ -57,7 +57,7 @@ export function useLanguageDownloadNotice(cancel: () => void, onNoSheet: (code: 
     // added here, after the page re-rendered, missed a short inactive blip and
     // gave up while the sheet was still up.
     useEffect(() => {
-        if (!live || !probe) return;
+        if (Platform.OS !== 'ios' || !live || !probe) return;
         const id = setTimeout(() => {
             if (probeSawSheet(probe)) return;
             setGaveUp(probe);

@@ -99,3 +99,36 @@ test('with no sign of a sheet the switch is let go after the window, and a late 
     expect(onCommitted).not.toHaveBeenCalled();
     await advanceUntilSettled();
 });
+
+describe('Android (ML Kit downloads with no sheet)', () => {
+    const { Platform } = jest.requireActual<typeof import('react-native')>('react-native');
+    let os: typeof Platform.OS;
+    beforeEach(() => {
+        os = Platform.OS;
+        Platform.OS = 'android';
+    });
+    afterEach(() => {
+        Platform.OS = os;
+    });
+
+    test('the notice shows while the pack downloads, with no give-up, and the language applies when it lands', async () => {
+        const onCommitted = jest.fn();
+        const onNoSheet = jest.fn();
+        const { result } = await settingsPath(onCommitted, onNoSheet);
+
+        await act(() => result.current.sw.requestSwitch('nl'));
+        await act(flushQueue);
+        await act(() => jest.advanceTimersByTime(NO_SHEET_MS * 4));
+        expect(onNoSheet).not.toHaveBeenCalled();
+        expect(result.current.notice.noticeCode).toBe('nl');
+        expect(result.current.sw.busy).toBe(true);
+
+        await act(async () => {
+            nativeAnswers[0]({ translatedTexts: 'Hallo' });
+            await flushQueue();
+        });
+        expect(useAppLanguageStore.getState().appLanguage).toBe('nl');
+        expect(onCommitted).toHaveBeenCalledWith('nl', 'en');
+        expect(result.current.notice.noticeCode).toBeNull();
+    });
+});

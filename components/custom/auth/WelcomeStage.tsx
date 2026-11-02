@@ -1,6 +1,6 @@
 import * as Device from 'expo-device';
 import React, { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -80,7 +80,16 @@ export default function WelcomeStage({ messageTop, canUsePhone, onGetStarted, st
         },
         [notify, t],
     );
-    const onResult = useCallback((r: LanguageSwitchResult) => showMissing(r.code), [showMissing]);
+    const onResult = useCallback(
+        (r: LanguageSwitchResult) => {
+            // Android's pack is an ML Kit download the app starts itself, so a
+            // failed probe is a download that did not finish, not a missing pack.
+            if (Platform.OS !== 'android' || r.outcome === 'language-unsupported') return showMissing(r.code);
+            const language = getNativeLanguageName(r.code) ?? r.code;
+            notify(`auth-language-failed-${r.code}`, t('language.switchFailedTitle', { language }), t('auth.track.downloadFailedBody'));
+        },
+        [showMissing, notify, t],
+    );
     const { requestSwitch, busy, pendingCode, cancel } = useLanguageSwitch({ preview: false, onResult });
 
     // The startup probe for the preselected language (never a second probe).

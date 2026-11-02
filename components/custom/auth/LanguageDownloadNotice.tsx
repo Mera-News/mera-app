@@ -5,7 +5,7 @@
 // When it shows is `useLanguageDownloadNotice` (use-language-download-notice.ts).
 
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion } from 'react-native-reanimated';
 
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
@@ -29,7 +29,9 @@ export default function LanguageDownloadNotice({ code, top }: { readonly code: s
     const lt = i18n.getFixedT(code);
     const dir = RTL_CODES.has(code) ? 'rtl' : 'ltr';
     const title = lt('auth.track.gettingReadyTitle', { language: getNativeLanguageName(code) ?? code });
-    const body = lt('auth.track.gettingReadyIos');
+    // Android: ML Kit downloads with no sheet, so there is no ↓ to point at.
+    const ios = Platform.OS === 'ios';
+    const body = ios ? lt('auth.track.gettingReadyIos') : lt('auth.track.gettingReadyAndroid');
     return (
         <Animated.View
             key={code}
@@ -43,7 +45,7 @@ export default function LanguageDownloadNotice({ code, top }: { readonly code: s
             testID="auth-language-message-getting"
         >
             <ModalMaterial scheme="light" />
-            <DownloadPressIllustration />
+            {ios ? <DownloadPressIllustration /> : null}
             <View style={styles.messageText}>
                 <Text style={[styles.messageTitle, { color: NOTICE_INK, writingDirection: dir }]}>{title}</Text>
                 <Text style={[styles.messageBody, { color: NOTICE_INK, writingDirection: dir }]}>

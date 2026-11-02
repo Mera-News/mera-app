@@ -56,7 +56,9 @@
       "phoneLanguage": "Ngôn ngữ điện thoại của bạn",
       "welcome": "Chào mừng bạn đến với Mera",
       "noSheetTitle": "iPhone của bạn chưa mở được bản tải xuống",
-      "noSheetBody": "Hãy thử lại, hoặc mở Cài đặt trên iPhone, chọn Cài đặt chung, rồi Ngôn ngữ & Vùng, và cuối cùng là Ngôn ngữ dịch để tải {{language}}."
+      "noSheetBody": "Hãy thử lại, hoặc mở Cài đặt trên iPhone, chọn Cài đặt chung, rồi Ngôn ngữ & Vùng, và cuối cùng là Ngôn ngữ dịch để tải {{language}}.",
+      "gettingReadyAndroid": "Đang tải xuống. Hãy giữ Mera mở, việc này mất một chút thời gian.",
+      "downloadFailedBody": "Tải xuống chưa hoàn tất. Hãy kiểm tra kết nối rồi thử lại."
     },
     "phoneCheckTemporary": "Hiện chưa thể kiểm tra điện thoại này. Hãy thử lại sau một phút.",
     "phoneUnsupportedAndroid": "Mera cần Google Play trên điện thoại này để đăng nhập cho bạn. Điện thoại không có Google Play chưa được hỗ trợ.",

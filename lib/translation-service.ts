@@ -1483,6 +1483,8 @@ export function translateTextDetailed(
                     targetLangCode,
                     attempt,
                     error: err instanceof Error ? err.message : String(err),
+                    // The native module's own code (MODEL_DOWNLOAD_FAILED, LANGUAGE_ID_FAILED, ...).
+                    code: (err as { code?: string } | null)?.code,
                 });
                 // Only a cancellation is retried: the shared controller being
                 // overwritten, or iOS tearing the session down. Any other error is

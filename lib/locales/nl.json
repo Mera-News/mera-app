@@ -56,7 +56,9 @@
       "phoneLanguage": "De taal van je telefoon",
       "welcome": "Welkom bij Mera",
       "noSheetTitle": "Je iPhone heeft de download niet geopend",
-      "noSheetBody": "Probeer het opnieuw of open Instellingen op je iPhone, ga naar Algemeen, dan naar Taal en regio, en dan naar Vertaaltalen om {{language}} te downloaden."
+      "noSheetBody": "Probeer het opnieuw of open Instellingen op je iPhone, ga naar Algemeen, dan naar Taal en regio, en dan naar Vertaaltalen om {{language}} te downloaden.",
+      "gettingReadyAndroid": "Wordt nu gedownload. Houd Mera open, dit duurt even.",
+      "downloadFailedBody": "Het downloaden is niet gelukt. Controleer je verbinding en probeer het opnieuw."
     },
     "phoneCheckTemporary": "We konden deze telefoon nu niet controleren. Probeer het over een minuut opnieuw.",
     "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",

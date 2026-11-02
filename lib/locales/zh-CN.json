@@ -56,7 +56,9 @@
       "phoneLanguage": "手机的语言",
       "welcome": "欢迎使用梅拉",
       "noSheetTitle": "你的 iPhone 未能开始下载",
-      "noSheetBody": "请重试，或在 iPhone 上打开“设置”，依次前往“通用”、“语言与地区”、“翻译语言”，下载 {{language}}。"
+      "noSheetBody": "请重试，或在 iPhone 上打开“设置”，依次前往“通用”、“语言与地区”、“翻译语言”，下载 {{language}}。",
+      "gettingReadyAndroid": "正在下载。请保持梅拉打开，这需要一点时间。",
+      "downloadFailedBody": "下载未完成。请检查网络连接后重试。"
     },
     "phoneCheckTemporary": "暂时无法检查这部手机。请一分钟后重试。",
     "phoneUnsupportedAndroid": "梅拉需要这部手机上有 Google Play 才能为你登录。没有 Google Play 的手机不受支持。",
