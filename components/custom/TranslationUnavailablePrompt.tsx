@@ -74,7 +74,7 @@ const TranslationUnavailablePrompt: React.FC = () => {
             // backoff; one it never has stays gated. The probe never re-runs.
             void probeLanguage(appLanguage, TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS)
                 .then((outcome) => {
-                    if (outcome === 'failed' || outcome === 'timeout') return noteLaunchVerifyFailed(appLanguage);
+                    if (outcome === 'failed' || outcome === 'timeout' || outcome === 'cancelled') return noteLaunchVerifyFailed(appLanguage);
                     return undefined;
                 })
                 .catch(() => {});

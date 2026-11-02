@@ -1,10 +1,9 @@
-// probeLanguage: the probe list the download notice reads, and the AppState watch that remembers
-// Apple's sheet. Real translation-service and queue; the native translator, AppState and the clock
+// probeLanguage: the probe list the download notice reads. Real translation-service and queue; the native translator, AppState and the clock
 // are the only fakes. The queue runs one native call at a time, so a probe behind another waits for
 // the first to settle: ordering below follows that, not the order the calls were started.
 // Loaded here, not lazily by the setup's beforeEach: test/helpers/screen.ts registers RNTL hooks on first import.
 import { setAppState } from '@/test/helpers';
-import { currentProbe, probeLanguage, probeSawSheet } from '@/lib/hooks/use-language-switch';
+import { currentProbe, probeLanguage } from '@/lib/hooks/use-language-switch';
 import * as translationService from '@/lib/translation-service';
 import { __resetTranslationStateForTests, NATIVE_SETTLE_CEILING_MS, PROBE_FAST_FAIL_MS } from '@/lib/translation-service';
 
@@ -93,7 +92,7 @@ test('tracks each probe from the call until it settles, newest first', async () 
 test('a probe that fails still leaves the list', async () => {
     // A failure slower than PROBE_FAST_FAIL_MS is not retried, so one native call ends the probe.
     mockOnTranslateTask.mockImplementationOnce(
-        () => new Promise((_r, reject) => setTimeout(() => reject(new Error('cancelled')), PROBE_FAST_FAIL_MS)),
+        () => new Promise((_r, reject) => setTimeout(() => reject(new Error('Unable to Translate')), PROBE_FAST_FAIL_MS)),
     );
     const ja = probeLanguage('ja');
     expect(currentProbe()?.code).toBe('ja');
@@ -134,40 +133,3 @@ test('a retry of the same language is a new probe', async () => {
     expect(currentProbe()).toBeNull();
 });
 
-// The one outside sign of Apple's sheet is iOS reporting the app not active.
-// The probe watches for it from the moment its call starts, so a short blip
-// is kept even if the page's own effects run late.
-test('a probe remembers an inactive blip during its call, and stops watching when it settles', async () => {
-    const quiet = probeLanguage('it');
-    const quietProbe = currentProbe()!;
-    const sheet = probeLanguage('ar');
-    const sheetProbe = currentProbe()!;
-    setAppState('inactive');
-    setAppState('active');
-    expect(probeSawSheet(sheetProbe)).toBe(true);
-    // Both calls were open, so both saw it; a probe started after it did not.
-    const later = probeLanguage('ko');
-    const laterProbe = currentProbe()!;
-    expect(probeSawSheet(laterProbe)).toBe(false);
-    expect(probeSawSheet(quietProbe)).toBe(true);
-
-    await answerNext();
-    await answerNext();
-    await answerNext();
-    await Promise.all([quiet, sheet, later]);
-    expect(currentProbe()).toBeNull();
-
-    // Settled probes have stopped listening: a later blip marks none of them.
-    setAppState('background');
-    setAppState('active');
-    expect(probeSawSheet(laterProbe)).toBe(false);
-});
-
-test('a probe started while the app is not active has seen the sheet already', async () => {
-    setAppState('inactive');
-    const probe = probeLanguage('de');
-    expect(probeSawSheet(currentProbe()!)).toBe(true);
-    setAppState('active');
-    await answerNext();
-    await probe;
-});

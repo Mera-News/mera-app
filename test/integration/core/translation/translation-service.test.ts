@@ -681,7 +681,8 @@ describe('translateText', () => {
         await jest.runAllTimersAsync();
         const outcome = await promise;
 
-        expect(outcome).toBe('failed');
+        // The reader closed the sheet: its own outcome, never an error.
+        expect(outcome).toBe('cancelled');
         expect(logger.captureException).not.toHaveBeenCalled();
         expect(logger.warn).toHaveBeenCalledWith(
             expect.stringContaining('probe cancelled'),

@@ -55,8 +55,6 @@
       "notHereTitle": "{{language}} n'est pas encore sur ce téléphone",
       "phoneLanguage": "La langue de votre téléphone",
       "welcome": "Bienvenue dans Mera",
-      "noSheetTitle": "Votre iPhone n'a pas ouvert le téléchargement",
-      "noSheetBody": "Réessayez, ou ouvrez Réglages sur votre iPhone, puis Général, puis Langue et région, puis Langues de traduction pour télécharger {{language}}.",
       "gettingReadyAndroid": "Téléchargement en cours. Gardez Mera ouvert, cela prend un instant.",
       "downloadFailedBody": "Le téléchargement n'a pas abouti. Vérifiez votre connexion et réessayez."
     },

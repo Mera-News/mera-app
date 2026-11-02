@@ -55,8 +55,6 @@
       "notHereTitle": "{{language}}はまだこの電話にありません",
       "phoneLanguage": "お使いの電話の言語",
       "welcome": "メラへようこそ",
-      "noSheetTitle": "iPhoneでダウンロードを開けませんでした",
-      "noSheetBody": "もう一度お試しください。または、iPhoneの設定を開き、「一般」「言語と地域」「翻訳言語」の順に進んで、{{language}}をダウンロードしてください。",
       "gettingReadyAndroid": "ダウンロードしています。少し時間がかかるので、メラを開いたままにしてください。",
       "downloadFailedBody": "ダウンロードが完了しませんでした。接続を確認して、もう一度お試しください。"
     },
