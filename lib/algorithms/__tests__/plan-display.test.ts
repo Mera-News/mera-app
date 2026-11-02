@@ -57,6 +57,14 @@ describe('resolvePlanDisplay', () => {
         ).toEqual({ tier: 'professional', pending: false, known: true });
     });
 
+    // The server answers `starter` for every unpaid account (the granted
+    // baseline), so a fresh Individual purchase must still show, as pending.
+    it('shows a store tier above the granted starter as pending', () => {
+        expect(
+            resolvePlanDisplay({ serverTier: 'starter', rcTier: 'individual', serverLoaded: true }),
+        ).toEqual({ tier: 'individual', pending: true, known: true });
+    });
+
     // ...nor may a junk tier string from either side be shown as a plan.
     it('ignores tier values outside the known set', () => {
         expect(

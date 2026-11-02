@@ -26,7 +26,7 @@ interface ManageSubscriptionScreenProps {
  * subscription the Customer Center and where it is billed.
  *
  * Subscription details + actions: plan and daily reading from our DB
- * (the source of truth), entitlement details and price from RevenueCat, and
+ * (the source of truth), entitlement details from RevenueCat, and
  * the two RevenueCat UI flows (paywall to view/upgrade plans, Customer Center
  * to manage/cancel). Each data source degrades independently — a failed
  * billing fetch hides the usage/plan rows, an unconfigured RevenueCat hides
@@ -40,7 +40,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const { openSupport } = useSupportAction();
     const { restoring, restore } = useRestorePurchases();
     const {
-        priceString,
         loading,
         purchaseStatus,
         checkAgain,
@@ -166,7 +165,6 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
                                 {/* A script-safe line box: tight leading clipped Devanagari and Thai marks. */}
                                 <Text style={{ flex: 1, color: colors.ink, fontSize: 24, lineHeight: 34, fontWeight: '700' }}>{planLabelText()}</Text>
-                                {priceString ? <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{priceString}</Text> : null}
                             </View>
                             {planLine ? <Text style={{ color: colors.ink2, fontSize: 14 }}>{planLine}</Text> : null}
                         </View>

@@ -74,6 +74,12 @@ export function resolvePlanDisplay({
 }: PlanDisplayInputs): PlanDisplay {
     if (!serverLoaded) return { tier: null, pending: false, known: false };
 
+    // The server answers `starter` for every unpaid account, so a store tier
+    // ABOVE it is a fresh purchase the webhook has not reached yet: pending.
+    if (isPaidTier(rcTier) && PAID_TIERS.indexOf(rcTier) > PAID_TIERS.indexOf(serverTier ?? '')) {
+        return { tier: rcTier, pending: true, known: true };
+    }
+
     // The server confirmed a paid tier: plain, unqualified truth.
     if (isPaidTier(serverTier)) {
         return { tier: serverTier, pending: false, known: true };

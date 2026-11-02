@@ -8,8 +8,6 @@ import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { formatPackagePrice, resolvePricePackage } from '@/lib/subscription/plan-price';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import type { CustomerInfo } from 'react-native-purchases';
 
@@ -17,9 +15,7 @@ import type { CustomerInfo } from 'react-native-purchases';
 export type PurchaseStatus = 'idle' | 'confirming' | 'confirmed' | 'timed-out';
 
 export function useManageSubscription() {
-    const { t } = useTranslation();
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
-    const [priceString, setPriceString] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [purchaseStatus, setPurchaseStatus] = useState<PurchaseStatus>('idle');
     // What a `checkAgain` needs to rerun the polls: the tier held before paying and the tier the store sold.
@@ -33,34 +29,24 @@ export function useManageSubscription() {
     const rcTier = getActiveTier(customerInfo);
     const activeEntitlement = getActiveEntitlementInfo(customerInfo);
 
-    /** The price line, from the active entitlement's product. */
     const applyStoreInfo = useCallback(
-        (freshCustomerInfo: CustomerInfo | null, offering: Awaited<ReturnType<typeof getOfferingSafe>>) => {
+        (freshCustomerInfo: CustomerInfo | null) => {
             if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
-            const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
-            const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
-            setPriceString(
-                formatPackagePrice(
-                    resolvePricePackage(productId, offering),
-                    t('subscription.perMonth'),
-                ),
-            );
         },
-        [setCustomerInfo, t],
+        [setCustomerInfo],
     );
 
     /** Load every panel on this screen. */
     const load = useCallback(async () => {
-        const [billingInfo, freshCustomerInfo, offering] = await Promise.all([
+        const [billingInfo, freshCustomerInfo] = await Promise.all([
             fetchUserBilling(),
             getCustomerInfoSafe(),
-            getOfferingSafe(),
         ]);
         setBilling(billingInfo);
         // Mirror the server's verdict into the store so the free-tier
         // state lifts (or falls) app-wide, not just on this screen's usage card.
         useSubscriptionStore.getState().setServerBilling(billingInfo);
-        applyStoreInfo(freshCustomerInfo, offering);
+        applyStoreInfo(freshCustomerInfo);
         setLoading(false);
     }, [applyStoreInfo]);
 
@@ -100,8 +86,8 @@ export function useManageSubscription() {
     /** After PURCHASED/RESTORED: read what the store sold, then poll for the server to agree. */
     const confirmPurchase = useCallback(
         async (before: string | null, restored: boolean) => {
-            const [info, offering] = await Promise.all([getCustomerInfoSafe(), getOfferingSafe()]);
-            applyStoreInfo(info, offering);
+            const info = await getCustomerInfoSafe();
+            applyStoreInfo(info);
             purchase.current = { before, purchasedTier: getActiveTier(info), restored };
             await pollPurchase(before, purchase.current.purchasedTier, restored);
         },
@@ -190,7 +176,6 @@ export function useManageSubscription() {
 
     return {
         billing,
-        priceString,
         loading,
         activationPending,
         purchaseStatus,
