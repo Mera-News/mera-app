@@ -23,6 +23,7 @@ import LaunchLogo from '@/components/custom/auth/LaunchLogo';
 import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { EASE, MOTION } from '@/lib/motion';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 
 import { ConsentStage } from './stages/ConsentStage';
@@ -54,6 +55,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const insets = useSafeAreaInsets();
     const { height } = useWindowDimensions();
     const reduceMotion = useReducedMotion();
+    const motion = useMotionAllowed();
 
     const {
         stage,
@@ -89,6 +91,14 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         const topY = (y: number) => y - (LOGO_FULL - LOGO_TOP) / 2;
         const y = logoAt === 'center' ? height * 0.3 : topY(insets.top + 16);
         const scale = logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL;
+        if (!motion && !reduceMotion) {
+            // Lite: no motion at all. Set, not animated, so it never rides on
+            // Reanimated's root switch having landed first.
+            logoOpacity.value = 1;
+            logoY.value = y;
+            logoScale.value = scale;
+            return;
+        }
         if (reduceMotion) {
             // A plain crossfade: out where it is, in where it goes.
             const half = MOTION.launchLogo.duration / 2;
@@ -104,7 +114,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: 250 });
         logoScale.value = withTiming(scale, glide);
         logoY.value = withTiming(y, glide);
-    }, [logoAt, height, insets.top, reduceMotion, logoScale, logoY, logoOpacity]);
+    }, [logoAt, height, insets.top, reduceMotion, motion, logoScale, logoY, logoOpacity]);
     const logoStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,
         transform: [{ translateY: logoY.value }, { scale: logoScale.value }],
