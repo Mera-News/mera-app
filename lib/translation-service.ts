@@ -1549,6 +1549,9 @@ export function translateTextDetailed(
                             textPreview: text.slice(0, 20),
                             sourceLangCode,
                             targetLangCode,
+                            // The dev console prints extras but not the error's own message.
+                            error: message,
+                            code: (err as { code?: string } | null)?.code,
                         });
                     }
                     chargeBreaker(message);
