@@ -1112,6 +1112,10 @@ function callNativeWithTimeout(
         // values for these keys. iOS ignores them.
         requiresWifi: false,
         requireCharging: false,
+        // The wrapper forwards this key even when unset, and Android fails
+        // every call on the undefined. Android ignores the value; iOS keeps
+        // its own default, so it is sent there only when set.
+        ...(Platform.OS === 'android' ? { preferredStrategy: 'lowLatency' as const } : {}),
     });
 
     let timedOut = false;
