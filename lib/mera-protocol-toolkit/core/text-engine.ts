@@ -60,8 +60,9 @@ function appLanguage(): string {
 
 /**
  * Platforms where On this phone is offered during the beta (owner, 2026-10-20:
- * iOS only for now). The Gemini Nano module still ships; adding 'android' here
- * turns it on.
+ * iOS only for now). The Gemini Nano module still ships, but Android builds
+ * leave llama.rn (Kev) out (react-native.config.js): drop that exclude and
+ * rebuild natively before adding 'android' here.
  */
 export const ON_DEVICE_BETA_PLATFORMS: ReadonlySet<string> = new Set(['ios']);
 
