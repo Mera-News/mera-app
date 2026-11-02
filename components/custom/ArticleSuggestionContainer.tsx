@@ -221,8 +221,8 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             size={isCard ? 'lg' : '2xl'}
             className={isCard ? '' : 'text-ink'}
             style={isCard ? undefined : { paddingTop: 8 }}
+            // No translated glyph: the Show original chip under the title already says it.
             showToggle={!isCard}
-            showTranslatedGlyph={!isCard}
             onDisplayChange={onTitleDisplayChange}
         />
     );
