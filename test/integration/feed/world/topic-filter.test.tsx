@@ -1,6 +1,12 @@
 // The World topic pill and sheet. Real: WorldPages, WorldTopicPill, ScopeArticleList header, the
 // hook, ArticleService, Apollo and MSW. Faked at the edges: the pager (TabPages renders the chosen
 // page), the sheet primitive (its onClosed is fired by the test), the pages list, reanimated, cards.
+// The feature ships OFF (lib/config/feature-gates.ts); these tests keep its code honest while hidden.
+jest.mock('@/lib/config/feature-gates', () => ({
+    ...jest.requireActual('@/lib/config/feature-gates'),
+    WORLD_TOPIC_PILL_ENABLED: true,
+}));
+
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import React from 'react';
 import { graphql, HttpResponse, initI18nEn, mockGql, server } from '@/test/helpers';

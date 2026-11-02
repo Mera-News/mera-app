@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { ArticleService } from '@/lib/article-service';
 import { effectivePick, topicLabel } from '@/lib/explore/topic-filter';
 import type { CanonicalTopic, CanonicalTopicFacet } from '@/lib/generated/graphql-types';
+import { WORLD_TOPIC_PILL_ENABLED } from '@/lib/config/feature-gates';
 import { useIsOnline } from '@/lib/stores/network-store';
 import WorldTopicPill from './WorldTopicPill';
 import { allCountryOptions, commitWorldDraft, searchCountryOptions } from './world-arrange';
@@ -170,7 +171,7 @@ export function WorldPages() {
     const activeFacets = activeId ? pageFacets[activeId] : undefined;
     // A set pick keeps the pill (and its ✕) while the next page loads.
     const showPill =
-        online && !latched && topics.length > 0 && (!!pick || !!activeFacets?.some((f) => f.count > 0));
+        WORLD_TOPIC_PILL_ENABLED && online && !latched && topics.length > 0 && (!!pick || !!activeFacets?.some((f) => f.count > 0));
 
     return (
         <>

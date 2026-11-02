@@ -1,4 +1,5 @@
 import { HERO_IMAGE_CLASS } from '@/lib/layout/card-metrics';
+import { SIMILAR_ARTICLES_LINE_ENABLED } from '@/lib/config/feature-gates';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import {
   CARDS_USE_GLASS,
@@ -156,9 +157,11 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   spokenPriority,
   spokenTail,
   halo,
-  similarCount,
+  similarCount: similarCountProp,
 }) => {
   const { t } = useTranslation();
+  // The similar-articles line is off (owner) until it says something the order does not.
+  const similarCount = SIMILAR_ARTICLES_LINE_ENABLED ? similarCountProp : undefined;
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // Two-step fallback: rewritten URL -> original -> placeholder. Keyed on
   // `imageUrl` inside the hook, so a recycled row cannot inherit the previous

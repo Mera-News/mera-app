@@ -1,4 +1,5 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import { SIMILAR_ARTICLES_LINE_ENABLED } from '@/lib/config/feature-gates';
 import {
   CARDS_USE_GLASS,
   CardGlassPlate,
@@ -199,10 +200,12 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   spokenPriority,
   statusLabel,
   timeLabel,
-  similarCount,
+  similarCount: similarCountProp,
   grouped = false,
 }) => {
   const { t } = useTranslation();
+  // The similar-articles line is off (owner) until it says something the order does not.
+  const similarCount = SIMILAR_ARTICLES_LINE_ENABLED ? similarCountProp : undefined;
   const colors = useColors();
   const moreLabel = t('articleMenu.openA11y');
   const displayTitle = titleEnglish || titleOriginal || '';

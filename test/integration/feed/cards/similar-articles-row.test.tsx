@@ -1,5 +1,11 @@
 // The "N similar articles" row on the Feed card and the compact row: shown for a count, kept at its
 // height (label hidden) at 0, named in the card root's spoken label, and never a tap target.
+// The feature ships OFF (lib/config/feature-gates.ts); these tests keep its code honest while hidden.
+jest.mock('@/lib/config/feature-gates', () => ({
+    ...jest.requireActual('@/lib/config/feature-gates'),
+    SIMILAR_ARTICLES_LINE_ENABLED: true,
+}));
+
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';

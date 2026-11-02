@@ -67,3 +67,18 @@ export const DEV_FORCE_AI_ACCESS: 'entitled' | 'locked' | null = null;
  * Clear the flag (see `DEV_LAPSE_ACK_SETTING_KEY`) to re-arm it.
  */
 export const DEV_FORCE_LAPSED = false;
+
+/**
+ * The World topic pill (`components/custom/world/WorldTopicPill.tsx`). Off
+ * (owner) until topic filtering returns enough stories: a pick could leave a
+ * page with a handful of articles. See plans/bug/WORLD_TOPIC_FILTER_THIN.md (workspace root).
+ */
+export const WORLD_TOPIC_PILL_ENABLED = false;
+
+/**
+ * The "N similar articles" line on Feed cards and compact rows
+ * (`cards/SimilarArticlesRow`). Off (owner): no list is ordered by how many
+ * outlets carry a story, so the number read as a ranking it is not. Callers
+ * still pass their counts; flipping this back is the whole activation.
+ */
+export const SIMILAR_ARTICLES_LINE_ENABLED = false;
