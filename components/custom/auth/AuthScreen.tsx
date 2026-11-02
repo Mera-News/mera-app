@@ -198,8 +198,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
             <Animated.View
                 key={stage}
-                entering={stage === 'intro' ? undefined : entering}
-                exiting={exiting}
+                // Lite: no entering or exiting at all, so a stage never waits on an animation frame.
+                entering={stage === 'intro' || !motion && !reduceMotion ? undefined : entering}
+                exiting={!motion && !reduceMotion ? undefined : exiting}
                 style={[styles.stage, { paddingTop: bodyTop, paddingBottom: insets.bottom }]}
             >
                 {body}

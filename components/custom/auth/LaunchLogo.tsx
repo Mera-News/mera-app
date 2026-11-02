@@ -4,6 +4,7 @@ import Animated, { runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, 
 
 import MeraLogo from '@/components/custom/MeraLogo';
 import { EASE, MOTION } from '@/lib/motion';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** The first launch logo in this JS context waits one frame before it starts
  *  working, so the native splash → JS handoff lands on the plain mark. */
@@ -18,6 +19,7 @@ let handoffFrameDone = false;
  */
 export default function LaunchLogo({ size, working }: { size: number; working: boolean }) {
     const reduceMotion = useReducedMotion();
+    const motion = useMotionAllowed();
     const [armed, setArmed] = useState(handoffFrameDone);
     useEffect(() => {
         if (armed) return;
@@ -35,6 +37,12 @@ export default function LaunchLogo({ size, working }: { size: number; working: b
     const w = useSharedValue(on ? 1 : 0);
     useEffect(() => {
         if (on) setWorkMounted(true);
+        if (!motion) {
+            // Lite (and Reduce Motion): set, not animated, so the switch never waits on a frame.
+            // The working layer stays mounted at 0; MeraLogo holds it still here.
+            w.value = on ? 1 : 0;
+            return;
+        }
         w.value = withTiming(
             on ? 1 : 0,
             { duration: reduceMotion ? 0 : MOTION.launchLogo.duration, easing: EASE.across },
@@ -42,7 +50,7 @@ export default function LaunchLogo({ size, working }: { size: number; working: b
                 if (done && !on) runOnJS(setWorkMounted)(false);
             },
         );
-    }, [on, reduceMotion, w]);
+    }, [on, reduceMotion, motion, w]);
 
     const calmStyle = useAnimatedStyle(() => ({ opacity: 1 - w.value }));
     const workStyle = useAnimatedStyle(() => ({ opacity: w.value }));
