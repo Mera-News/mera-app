@@ -111,9 +111,10 @@ const STORIES = [
 
 export type ChatSampleKind = 'profile' | 'stories';
 
-/** Deterministic Lehmer generator, so a seed always gives the same sample. */
+/** Deterministic Lehmer generator, so a seed always gives the same sample.
+ *  The seed is hashed first: raw nearby seeds gave the same first pick. */
 function rng(seed: number): () => number {
-  let s = (Math.abs(Math.floor(seed)) % 2147483646) + 1;
+  let s = ((Math.imul(Math.abs(Math.floor(seed)), 2654435761) >>> 0) % 2147483646) + 1;
   return () => {
     s = (s * 16807) % 2147483647;
     return (s - 1) / 2147483646;

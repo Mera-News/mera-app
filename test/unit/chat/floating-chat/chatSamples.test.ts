@@ -23,6 +23,14 @@ describe('chat samples', () => {
     expect(distinct.size).toBeGreaterThan(15);
   });
 
+  it('consecutive samples (seeds 97 apart, as ChatSample steps) change their first line', () => {
+    const base = 51234;
+    const homes = new Set(Array.from({ length: 10 }, (_, i) => sampleProfile(base + i * 97)[0]));
+    const firstStories = new Set(Array.from({ length: 10 }, (_, i) => sampleStories(base + i * 97)[0]));
+    expect(homes.size).toBeGreaterThan(6);
+    expect(firstStories.size).toBeGreaterThan(6);
+  });
+
   it('stories are five distinct names from the list', () => {
     for (let seed = 0; seed < 300; seed++) {
       const s = sampleStories(seed);

@@ -141,9 +141,10 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   const introMessage = introCleared ? null : introShown;
   // The faint example behind a fresh chat: the welcome shows a sample profile,
   // a follow chat shows sample stories. Any earlier message means not fresh.
+  // Onboarding's chat is a persona context with no page, so it is the welcome too.
   const sampleKind: ChatSampleKind | null =
     introMessage && messages.length === 0 && resume.length === 0
-      ? originalWelcome
+      ? originalWelcome || (context.kind === 'persona' && !context.page)
         ? 'profile'
         : context.kind === 'follow-story'
           ? 'stories'
