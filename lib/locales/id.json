@@ -322,11 +322,11 @@
     "close": "Tutup",
     "logoutFailedTitle": "Gagal Keluar",
     "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
-    "composerPlaceholder": "Ceritakan tentang diri Anda kepada Mera",
+    "composerPlaceholder": "Apa yang suka kamu ikuti?",
     "factsCount_one": "{{count}} fakta tentang Anda",
     "factsCount_other": "{{count}} fakta tentang Anda",
-    "noFactsBody": "Mera memilih berita Anda dari fakta Anda. Tanpa fakta, Feed Anda hanya menampilkan judul utama, dan Dunia tidak menampilkan negara apa pun sampai Anda menambahkannya.",
-    "noFactsTitle": "Lanjutkan tanpa fakta?",
+    "noFactsBody": "Tidak apa-apa. Untuk sekarang kamu akan melihat berita utama, dan kamu bisa memberi tahu Mera apa yang kamu suka kapan saja.",
+    "noFactsTitle": "Mulai dengan berita utama?",
     "noNotifBody": "Anda tidak akan tahu saat berita Anda siap atau saat cerita yang Anda ikuti berkembang. Anda bisa menyalakannya nanti di Pengaturan.",
     "noNotifTitle": "Gunakan Mera tanpa notifikasi?",
     "notNow": "Nanti saja",
@@ -335,8 +335,8 @@
     "remindTitle": "Kapan Mera harus mengingatkan Anda?",
     "turnOn": "Aktifkan notifikasi",
     "turnThemOn": "Aktifkan",
-    "guardSkip": "Lewati",
-    "guardAddFact": "Tambah fakta"
+    "guardSkip": "Mulai dengan berita utama",
+    "guardAddFact": "Tambahkan sesuatu"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -674,7 +674,7 @@
     "turnFailed": "Jawaban saya belum selesai. Coba lagi."
   },
   "personaChat": {
-    "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
+    "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nBagikan sebanyak atau sesedikit yang kamu mau. Apa yang kamu ceritakan tetap di ponsel ini. Tidak ada yang bisa mengakses datamu selain kamu."
   },
   "floatingChat": {
     "close": "Tutup",
@@ -1051,7 +1051,8 @@
     "wideNetTitle": "Beberapa artikel mungkin kurang sesuai",
     "wideNetBody": "Mera mencari secara luas, jadi beberapa artikel di sini mungkin hanya sedikit berkaitan dengan cerita. Kami lebih memilih menampilkan satu artikel lebih banyak daripada membuat Anda melewatkan artikel yang penting.",
     "wideNetRemove": "Untuk menghapus artikel, buka menunya lalu pilih {{action}}.",
-    "wideNetShowLess": "Tampilkan lebih sedikit"
+    "wideNetShowLess": "Tampilkan lebih sedikit",
+    "composerPlaceholder": "Berita apa yang perlu aku pantau untukmu?"
   },
   "whatsNew": {
     "gotIt": "Mengerti",
@@ -2979,7 +2980,7 @@
       "name": "Sebutkan cerita yang ingin diikuti"
     },
     "world": {
-      "family": "Beri tahu Mera di mana keluarga Anda tinggal",
+      "family": "Beri tahu Mera tempat yang penting bagimu",
       "behind": "Tanyakan apa di balik sebuah berita"
     },
     "checks": {
@@ -3007,7 +3008,7 @@
     "moveBottomLeft": "Pindahkan ke kiri bawah",
     "moveBottomRight": "Pindahkan ke kanan bawah",
     "answerReady": "Mera, jawaban sudah siap",
-    "tooltipNew": "Ceritakan tentang diri Anda kepada Mera",
+    "tooltipNew": "Beri tahu Mera apa yang kamu suka",
     "working": "Mera sedang mengerjakan permintaan Anda"
   },
   "meraIntro": {
@@ -3022,7 +3023,7 @@
     "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti.",
     "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda.",
     "onDevice": {
-      "feed": "Anda ada di Feed. Beri tahu saya tentang diri Anda, dan saya akan menyesuaikan apa yang muncul di sini.",
+      "feed": "Kamu ada di Feed. Beri tahu aku apa yang suka kamu ikuti, dan aku akan menyesuaikan yang muncul di sini.",
       "library": "Beri tahu saya apa yang suka Anda baca, dan saya akan menyimpannya untuk Feed Anda.",
       "world": "Beri tahu saya tempat mana yang penting bagi Anda, dan saya akan menyimpannya untuk Feed Anda.",
       "sources": "Beri tahu saya apa yang Anda ikuti, dan saya akan menyimpannya untuk Feed Anda."
@@ -3116,5 +3117,9 @@
     "includeSourcesHint": "Setiap tautan yang dipakai pencarian.",
     "stillChecking": "Masih diperiksa",
     "shareDialogTitle": "Ekspor pemeriksaan fakta"
+  },
+  "chatSample": {
+    "profileLabel": "Contoh profil",
+    "storiesLabel": "Contoh berita"
   }
 }

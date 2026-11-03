@@ -336,11 +336,11 @@
     "close": "Fechar",
     "logoutFailedTitle": "Falha ao Sair",
     "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente.",
-    "composerPlaceholder": "Conte à Mera sobre você",
+    "composerPlaceholder": "O que você gosta de acompanhar?",
     "factsCount_one": "{{count}} fato sobre você",
     "factsCount_other": "{{count}} fatos sobre você",
-    "noFactsBody": "A Mera escolhe suas notícias a partir dos seus fatos. Sem nenhum, seu Feed mostra só as principais manchetes, e o Mundo não mostra países até você adicionar.",
-    "noFactsTitle": "Continuar sem nenhum fato?",
+    "noFactsBody": "Tudo bem. Por enquanto você verá as principais manchetes, e pode contar à Mera do que gosta quando quiser.",
+    "noFactsTitle": "Começar com as principais manchetes?",
     "noNotifBody": "Você não vai saber quando suas notícias estiverem prontas ou quando uma história que você segue se mexer. Você pode ativar depois em Configurações.",
     "noNotifTitle": "Usar a Mera sem notificações?",
     "notNow": "Agora não",
@@ -349,8 +349,8 @@
     "remindTitle": "Quando a Mera deve lembrar você?",
     "turnOn": "Ativar notificações",
     "turnThemOn": "Ativar",
-    "guardSkip": "Pular",
-    "guardAddFact": "Adicionar fato"
+    "guardSkip": "Começar com manchetes",
+    "guardAddFact": "Adicionar algo"
   },
   "notifications": {
     "title": "Notificações",
@@ -690,7 +690,7 @@
     "turnFailed": "Essa resposta não terminou. Tente novamente."
   },
   "personaChat": {
-    "introMessage": "Oi! Sou a Mera, sua assistente pessoal de notícias.\n\nPara encontrar notícias que realmente importam para você, preciso saber um pouco sobre você. Onde você mora, o que faz, hobbies que segue, ações que acompanha, onde sua família mora. Compartilhe o quanto quiser ou tão pouco quanto se sinta confortável.\n\nSe isso desperta sua desconfiança, seu instinto é bom. Não é sábio confiar dados pessoais a uma empresa de aplicativos. Mera foi construída diferente: tudo que você me diz é armazenado no seu dispositivo, e não nos nossos servidores. Pergunte-me como funciona, ou diga 'ajude-me a configurar' e começamos."
+    "introMessage": "Oi, eu sou a Mera.\n\nConte um pouco sobre você, como sua cidade ou bairro, o tipo de trabalho que você faz, ou um time ou hobby que você acompanha, e eu encontro notícias que combinam com você.\n\nCompartilhe o quanto quiser. O que você me conta fica neste celular. Ninguém além de você tem acesso aos seus dados."
   },
   "floatingChat": {
     "close": "Fechar",
@@ -1069,7 +1069,8 @@
     "wideNetTitle": "Alguns artigos podem não se encaixar",
     "wideNetBody": "A Mera busca de forma ampla, então alguns artigos aqui podem ter pouca relação com a história. Preferimos mostrar um a mais do que deixar passar um importante.",
     "wideNetRemove": "Para remover um, abra o menu dele e escolha {{action}}.",
-    "wideNetShowLess": "Mostrar menos"
+    "wideNetShowLess": "Mostrar menos",
+    "composerPlaceholder": "Qual história devo acompanhar para você?"
   },
   "whatsNew": {
     "gotIt": "Entendi",
@@ -3006,7 +3007,7 @@
       "name": "Diga uma história para acompanhar"
     },
     "world": {
-      "family": "Diga à Mera onde sua família mora",
+      "family": "Conte à Mera um lugar importante para você",
       "behind": "Pergunte o que está por trás de uma manchete"
     },
     "checks": {
@@ -3034,7 +3035,7 @@
     "moveBottomLeft": "Mover para o canto inferior esquerdo",
     "moveBottomRight": "Mover para o canto inferior direito",
     "answerReady": "Mera, uma resposta está pronta",
-    "tooltipNew": "Conte à Mera sobre você",
+    "tooltipNew": "Conte à Mera do que você gosta",
     "working": "A Mera está trabalhando no seu pedido"
   },
   "meraIntro": {
@@ -3049,7 +3050,7 @@
     "sources": "Pergunte sobre uma publicação, ou diga o que você acompanha.",
     "settings": "Me pergunte o que eu posso fazer ou como a Mera trata seus dados.",
     "onDevice": {
-      "feed": "Você está no seu Feed. Me conte um pouco sobre você e eu ajusto o que aparece aqui.",
+      "feed": "Você está no seu Feed. Me conte o que você gosta de acompanhar e eu ajusto o que aparece aqui.",
       "library": "Me conte o que você gosta de ler e eu vou levar isso em conta no seu Feed.",
       "world": "Me conte quais lugares são importantes para você e eu vou levar isso em conta no seu Feed.",
       "sources": "Me conte o que você acompanha e eu vou levar isso em conta no seu Feed."
@@ -3143,5 +3144,9 @@
     "includeSourcesHint": "Cada link usado na busca.",
     "stillChecking": "Ainda checando",
     "shareDialogTitle": "Exportar checagens"
+  },
+  "chatSample": {
+    "profileLabel": "Perfil de exemplo",
+    "storiesLabel": "Histórias de exemplo"
   }
 }

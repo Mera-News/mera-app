@@ -8,8 +8,9 @@ import { Text } from '@/components/ui/text';
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import type { ConversationMessage } from '@/lib/llm/types';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import ChatSample from './ChatSample';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
 import { themedStyles } from '@/lib/theme/tokens';
@@ -72,7 +73,11 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
     handleSend,
     composerHint,
     handleUnblockSubmitted,
+    sampleKind,
   } = useChatSessionView(props);
+  // The first touch anywhere in the chat retires the sample for this mount.
+  const [sampleDismissed, setSampleDismissed] = useState(false);
+  const showSample = sampleKind !== null && !sampleDismissed;
 
   if (isLoading) {
     return (
@@ -86,7 +91,21 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
   }
 
   return (
-    <>
+    // The handler stays attached and the view never collapses: dropping it once
+    // the sample left let Fabric flatten this view mid-touch, re-parenting the
+    // composer, so the dismissing tap did not focus it.
+    <View
+      style={styles.root}
+      collapsable={false}
+      onTouchStart={() => {
+        if (showSample) setSampleDismissed(true);
+      }}
+    >
+      {showSample && (
+        <View pointerEvents="none" style={styles.sampleArea}>
+          <ChatSample kind={sampleKind} />
+        </View>
+      )}
       <ChatThread
         items={items}
         isStreaming={isStreaming}
@@ -111,7 +130,10 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
         isInputDisabled={isStreaming || effectiveBlocked}
         composerHint={composerHint}
         composerTrailing={composerTrailing}
-        composerPlaceholder={composerPlaceholder}
+        composerPlaceholder={
+          composerPlaceholder ??
+          (context.kind === 'follow-story' ? t('trackedStories.composerPlaceholder') : undefined)
+        }
         usageNotice={
           context.kind === 'persona' ? undefined : t('floatingChat.aiUsageNoticeGeneral')
         }
@@ -125,12 +147,23 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
           onSubmitted={handleUnblockSubmitted}
         />
       )}
-    </>
+    </View>
   );
 }
 
 const useStyles = themedStyles((c) =>
   StyleSheet.create({
+    root: { flex: 1 },
+    // The upper part of the thread, behind it: the intro bubble sits at the
+    // bottom of the inverted list, so the sample stays clear of it.
+    sampleArea: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '55%',
+      justifyContent: 'center',
+    },
     loadingContainer: {
       flex: 1,
       alignItems: 'center',

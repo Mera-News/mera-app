@@ -341,11 +341,11 @@
     "close": "Fermer",
     "logoutFailedTitle": "Échec de la déconnexion",
     "logoutFailedDescription": "Un problème est survenu lors de la déconnexion. Veuillez réessayer.",
-    "composerPlaceholder": "Parlez-moi de vous",
+    "composerPlaceholder": "Qu'aimez-vous suivre ?",
     "factsCount_one": "{{count}} fait vous concernant",
     "factsCount_other": "{{count}} faits vous concernant",
-    "noFactsBody": "Mera choisit vos actualités à partir de vos faits. Sans aucun fait, votre fil n'affiche que les gros titres, et le Monde n'affiche aucun pays tant que vous n'en ajoutez pas.",
-    "noFactsTitle": "Continuer sans aucun fait ?",
+    "noFactsBody": "Aucun souci. Vous verrez les gros titres pour l'instant, et vous pourrez dire à Mera ce que vous aimez quand vous voulez.",
+    "noFactsTitle": "Commencer avec les gros titres ?",
     "noNotifBody": "Vous ne serez pas prévenu quand vos actualités seront prêtes ou quand une histoire que vous suivez évolue. Vous pourrez les activer plus tard dans Paramètres.",
     "noNotifTitle": "Utiliser Mera sans notifications ?",
     "notNow": "Pas maintenant",
@@ -354,8 +354,8 @@
     "remindTitle": "Quand Mera doit-il vous rappeler ?",
     "turnOn": "Activer les notifications",
     "turnThemOn": "Activez-les",
-    "guardSkip": "Passer",
-    "guardAddFact": "Ajouter un fait"
+    "guardSkip": "Commencer avec les titres",
+    "guardAddFact": "Ajouter quelque chose"
   },
   "notifications": {
     "title": "Notifications",
@@ -695,7 +695,7 @@
     "turnFailed": "Ma réponse ne s'est pas terminée. Réessaie."
   },
   "personaChat": {
-    "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle.\n\nPour trouver des actualités qui vous intéressent vraiment, j'ai besoin de connaître quelques détails vous concernant. Où vous vivez, ce que vous faites, les loisirs que vous aimez, les actions que vous suivez, où vit votre famille. Partagez ce que vous voulez, un peu ou beaucoup.\n\nSi cela vous fait hésiter, c'est un bon instinct. Il n'est pas judicieux de confier des données personnelles à une société d'applications. Mera est construite différemment : tout ce que vous me dites est enregistré sur votre appareil, pas sur nos serveurs. Demandez-moi comment cela fonctionne, ou dites « Aidez-moi à configurer » et nous commencerons."
+    "introMessage": "Bonjour, je suis Mera.\n\nParlez-moi un peu de vous, comme votre ville ou votre quartier, votre métier, ou une équipe ou un loisir que vous suivez, et je trouverai des actualités qui vous correspondent.\n\nPartagez autant ou aussi peu que vous voulez. Ce que vous me dites reste sur ce téléphone. Personne d'autre que vous n'a accès à vos données."
   },
   "floatingChat": {
     "close": "Fermer",
@@ -1074,7 +1074,8 @@
     "wideNetTitle": "Certains articles peuvent ne pas correspondre",
     "wideNetBody": "Mera ratisse large, donc certains articles ici peuvent n'avoir qu'un lien ténu avec l'actualité. Nous préférons vous montrer un article de trop plutôt que de vous en faire manquer un important.",
     "wideNetRemove": "Pour en retirer un, ouvrez son menu et choisissez {{action}}.",
-    "wideNetShowLess": "Afficher moins"
+    "wideNetShowLess": "Afficher moins",
+    "composerPlaceholder": "Quel sujet dois-je suivre pour vous ?"
   },
   "whatsNew": {
     "gotIt": "Compris",
@@ -3012,7 +3013,7 @@
       "name": "Nommez une histoire à suivre"
     },
     "world": {
-      "family": "Dites à Mera où vit votre famille",
+      "family": "Indiquez à Mera un lieu qui compte pour vous",
       "behind": "Demandez ce qui se cache derrière un titre"
     },
     "checks": {
@@ -3040,7 +3041,7 @@
     "moveBottomLeft": "Déplacer en bas à gauche",
     "moveBottomRight": "Déplacer en bas à droite",
     "answerReady": "Mera, une réponse est prête",
-    "tooltipNew": "Parlez de vous à Mera",
+    "tooltipNew": "Dites à Mera ce que vous aimez",
     "working": "Mera travaille sur votre demande"
   },
   "meraIntro": {
@@ -3055,7 +3056,7 @@
     "sources": "Posez-moi une question sur une publication, ou dites-moi ce que vous suivez.",
     "settings": "Demandez-moi ce que je peux faire, ou comment Mera gère vos données.",
     "onDevice": {
-      "feed": "Vous êtes sur votre fil. Parlez-moi de vous et j'ajusterai ce qui apparaît ici.",
+      "feed": "Vous êtes sur votre fil. Dites-moi ce que vous aimez suivre et j'ajusterai ce qui s'affiche ici.",
       "library": "Dites-moi ce que vous aimez lire et je le garderai en tête pour votre fil.",
       "world": "Dites-moi quels lieux comptent pour vous et je les garderai en tête pour votre fil.",
       "sources": "Dites-moi ce que vous suivez et je le garderai en tête pour votre fil."
@@ -3149,5 +3150,9 @@
     "includeSourcesHint": "Chaque lien utilisé par la recherche.",
     "stillChecking": "Vérification en cours",
     "shareDialogTitle": "Exporter les vérifications"
+  },
+  "chatSample": {
+    "profileLabel": "Exemple de profil",
+    "storiesLabel": "Exemples de sujets"
   }
 }

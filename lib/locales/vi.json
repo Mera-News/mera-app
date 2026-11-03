@@ -322,11 +322,11 @@
     "close": "Đóng",
     "logoutFailedTitle": "Đăng xuất thất bại",
     "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại.",
-    "composerPlaceholder": "Kể cho Mera về bạn",
+    "composerPlaceholder": "Bạn thích theo dõi điều gì?",
     "factsCount_one": "{{count}} dữ kiện về bạn",
     "factsCount_other": "{{count}} dữ kiện về bạn",
-    "noFactsBody": "Mera chọn tin của bạn dựa trên các dữ kiện của bạn. Nếu không có dữ kiện nào, Bảng tin chỉ hiện tin nổi bật, còn Thế giới sẽ không có quốc gia nào cho đến khi bạn thêm chúng.",
-    "noFactsTitle": "Tiếp tục mà không có dữ kiện nào?",
+    "noFactsBody": "Không sao. Trước mắt bạn sẽ thấy tin nổi bật, và bạn có thể cho Mera biết mình thích gì bất cứ lúc nào.",
+    "noFactsTitle": "Bắt đầu với tin nổi bật?",
     "noNotifBody": "Bạn sẽ không biết khi tin của mình đã sẵn sàng hoặc khi một câu chuyện bạn theo dõi có diễn biến mới. Bạn có thể bật lại sau trong Cài đặt.",
     "noNotifTitle": "Dùng Mera mà không có thông báo?",
     "notNow": "Để sau",
@@ -335,8 +335,8 @@
     "remindTitle": "Mera nên nhắc bạn lúc nào?",
     "turnOn": "Bật thông báo",
     "turnThemOn": "Bật lên",
-    "guardSkip": "Bỏ qua",
-    "guardAddFact": "Thêm dữ kiện"
+    "guardSkip": "Bắt đầu với tin nổi bật",
+    "guardAddFact": "Thêm gì đó"
   },
   "notifications": {
     "title": "Thông báo",
@@ -674,7 +674,7 @@
     "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại."
   },
   "personaChat": {
-    "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nĐể tìm những tin tức thực sự quan trọng với bạn, mình cần biết một chút về bạn. Bạn sống ở đâu, làm nghề gì, những sở thích nào, theo dõi những cổ phiếu nào, gia đình sống ở đâu. Chia sẻ bao nhiêu hay bao ít tùy bạn.\n\nNếu điều này khiến bạn do dự, đó là bản năng tốt. Không nên trao dữ liệu cá nhân cho một công ty làm ứng dụng. Mera được xây dựng khác: mọi thứ bạn kể cho mình đều được lưu trên thiết bị của bạn, không phải trên máy chủ của chúng mình. Hỏi mình cách nó hoạt động, hoặc nói 'giúp mình thiết lập' và chúng ta sẽ bắt đầu."
+    "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nChia sẻ nhiều hay ít tùy bạn. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai có quyền truy cập dữ liệu của bạn ngoài bạn."
   },
   "floatingChat": {
     "close": "Đóng",
@@ -1051,7 +1051,8 @@
     "wideNetTitle": "Một số bài viết có thể không phù hợp",
     "wideNetBody": "Mera tìm kiếm trên phạm vi rộng, nên một số bài viết ở đây có thể chỉ liên quan ít đến câu chuyện. Chúng tôi thà cho bạn xem thêm một bài còn hơn để bạn bỏ lỡ một bài quan trọng.",
     "wideNetRemove": "Để xóa một bài, hãy mở menu của bài đó và chọn {{action}}.",
-    "wideNetShowLess": "Thu gọn"
+    "wideNetShowLess": "Thu gọn",
+    "composerPlaceholder": "Bạn muốn mình theo dõi câu chuyện nào?"
   },
   "whatsNew": {
     "gotIt": "Đã hiểu",
@@ -2979,7 +2980,7 @@
       "name": "Nêu tên một câu chuyện để theo dõi"
     },
     "world": {
-      "family": "Cho Mera biết gia đình bạn sống ở đâu",
+      "family": "Cho Mera biết một nơi bạn quan tâm",
       "behind": "Hỏi điều gì đứng sau một tiêu đề"
     },
     "checks": {
@@ -3007,7 +3008,7 @@
     "moveBottomLeft": "Chuyển đến góc dưới bên trái",
     "moveBottomRight": "Chuyển đến góc dưới bên phải",
     "answerReady": "Mera, đã có câu trả lời",
-    "tooltipNew": "Kể cho Mera về bạn",
+    "tooltipNew": "Cho Mera biết bạn thích gì",
     "working": "Mera đang xử lý yêu cầu của bạn"
   },
   "meraIntro": {
@@ -3022,7 +3023,7 @@
     "sources": "Hãy hỏi tôi về một ấn phẩm, hoặc cho tôi biết bạn theo dõi gì.",
     "settings": "Hãy hỏi mình xem mình làm được gì, hoặc Mera xử lý dữ liệu của bạn như thế nào.",
     "onDevice": {
-      "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết về bạn, mình sẽ điều chỉnh những gì hiện ở đây.",
+      "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết bạn thích theo dõi điều gì, mình sẽ điều chỉnh những gì hiện ở đây.",
       "library": "Hãy cho mình biết bạn thích đọc gì, mình sẽ ghi nhớ để điều chỉnh Bảng tin của bạn.",
       "world": "Hãy cho mình biết những nơi nào quan trọng với bạn, mình sẽ ghi nhớ để điều chỉnh Bảng tin của bạn.",
       "sources": "Hãy cho mình biết bạn theo dõi những gì, mình sẽ ghi nhớ để điều chỉnh Bảng tin của bạn."
@@ -3116,5 +3117,9 @@
     "includeSourcesHint": "Mọi liên kết mà tìm kiếm đã dùng.",
     "stillChecking": "Vẫn đang kiểm chứng",
     "shareDialogTitle": "Xuất kết quả kiểm chứng"
+  },
+  "chatSample": {
+    "profileLabel": "Hồ sơ mẫu",
+    "storiesLabel": "Tin mẫu"
   }
 }
