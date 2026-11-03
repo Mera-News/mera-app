@@ -91,7 +91,16 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
   }
 
   return (
-    <View style={styles.root} onTouchStart={showSample ? () => setSampleDismissed(true) : undefined}>
+    // The handler stays attached and the view never collapses: dropping it once
+    // the sample left let Fabric flatten this view mid-touch, re-parenting the
+    // composer, so the dismissing tap did not focus it.
+    <View
+      style={styles.root}
+      collapsable={false}
+      onTouchStart={() => {
+        if (showSample) setSampleDismissed(true);
+      }}
+    >
       {showSample && (
         <View pointerEvents="none" style={styles.sampleArea}>
           <ChatSample kind={sampleKind} />
