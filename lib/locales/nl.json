@@ -332,11 +332,11 @@
     "close": "Sluiten",
     "logoutFailedTitle": "Uitloggen mislukt",
     "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
-    "composerPlaceholder": "Vertel Mera iets over jou",
+    "composerPlaceholder": "Wat volg je graag?",
     "factsCount_one": "{{count}} feit over jou",
     "factsCount_other": "{{count}} feiten over jou",
-    "noFactsBody": "Mera kiest je nieuws op basis van je feiten. Zonder feiten toont je Feed alleen de grote koppen, en toont Wereld geen landen tot je ze toevoegt.",
-    "noFactsTitle": "Doorgaan zonder feiten?",
+    "noFactsBody": "Prima. Je ziet voorlopig de belangrijkste koppen en je kunt Mera altijd vertellen wat je leuk vindt.",
+    "noFactsTitle": "Beginnen met de belangrijkste koppen?",
     "noNotifBody": "Je hoort niet wanneer je nieuws klaar is of wanneer een verhaal dat je volgt verandert. Je kunt meldingen later aanzetten in Instellingen.",
     "noNotifTitle": "Mera gebruiken zonder meldingen?",
     "notNow": "Niet nu",
@@ -345,8 +345,8 @@
     "remindTitle": "Wanneer moet Mera je herinneren?",
     "turnOn": "Meldingen aanzetten",
     "turnThemOn": "Zet ze aan",
-    "guardSkip": "Overslaan",
-    "guardAddFact": "Feit toevoegen"
+    "guardSkip": "Begin met koppen",
+    "guardAddFact": "Iets toevoegen"
   },
   "notifications": {
     "title": "Meldingen",
@@ -686,7 +686,7 @@
     "turnFailed": "Dat is niet afgerond. Probeer het opnieuw."
   },
   "personaChat": {
-    "introMessage": "Hoi! Ik ben Mera, je persoonlijke nieuwsassistent.\n\nOm nieuws te vinden dat werkelijk belangrijk voor je is, moet ik je wat beter kennen. Waar je woont, wat je doet, hobby's die je volgt, aandelen die je bijhoudt, waar je familie woont. Deel zoveel of zo weinig als je wilt.\n\nAls dit je even doet aarzelen, dat's een goed instinct. Het is niet verstandig persoonlijke gegevens aan een app-bedrijf toe te vertrouwen. Mera is anders opgebouwd: alles wat je me vertelt wordt opgeslagen op je apparaat, niet op onze servers. Vraag me hoe dat werkt, of zeg gewoon 'help me met instellen' en we beginnen."
+    "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nWat je me vertelt, blijft op deze telefoon. Deel zoveel of zo weinig als je wilt."
   },
   "floatingChat": {
     "close": "Sluiten",
@@ -2998,7 +2998,7 @@
       "name": "Noem een verhaal om bij te blijven"
     },
     "world": {
-      "family": "Vertel Mera waar je familie woont",
+      "family": "Vertel Mera een plek die je belangrijk vindt",
       "behind": "Vraag wat er achter een kop zit"
     },
     "checks": {
@@ -3026,7 +3026,7 @@
     "moveBottomLeft": "Naar linksonder verplaatsen",
     "moveBottomRight": "Naar rechtsonder verplaatsen",
     "answerReady": "Mera, een antwoord is klaar",
-    "tooltipNew": "Vertel Mera iets over jou",
+    "tooltipNew": "Vertel Mera wat je leuk vindt",
     "working": "Mera werkt aan je verzoek"
   },
   "meraIntro": {
@@ -3041,7 +3041,7 @@
     "sources": "Vraag me naar een uitgever, of vertel me wat je volgt.",
     "settings": "Vraag me wat ik kan doen, of hoe Mera met je gegevens omgaat.",
     "onDevice": {
-      "feed": "Je bent op je Feed. Vertel me iets over jezelf, dan stem ik af wat hier verschijnt.",
+      "feed": "Je bent in je Feed. Vertel me wat je graag volgt en ik stem af wat hier verschijnt.",
       "library": "Vertel me wat je graag leest, dan hou ik daar rekening mee voor je Feed.",
       "world": "Vertel me welke plekken voor je belangrijk zijn, dan hou ik daar rekening mee voor je Feed.",
       "sources": "Vertel me wat je volgt, dan hou ik daar rekening mee voor je Feed."

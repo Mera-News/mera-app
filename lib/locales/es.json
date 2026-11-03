@@ -334,11 +334,11 @@
     "close": "Cerrar",
     "logoutFailedTitle": "Error al cerrar sesión",
     "logoutFailedDescription": "Hubo un problema al cerrar sesión. Por favor, inténtalo de nuevo.",
-    "composerPlaceholder": "Cuéntale a Mera sobre ti",
+    "composerPlaceholder": "¿Qué te gusta seguir?",
     "factsCount_one": "{{count}} hecho sobre ti",
     "factsCount_other": "{{count}} hechos sobre ti",
-    "noFactsBody": "Mera elige tus noticias a partir de tus hechos. Sin ninguno, tu Feed solo muestra titulares principales, y Mundo no muestra países hasta que los añadas.",
-    "noFactsTitle": "¿Continuar sin ningún hecho?",
+    "noFactsBody": "No pasa nada. Por ahora verás los titulares principales y puedes decirle a Mera lo que te gusta cuando quieras.",
+    "noFactsTitle": "¿Empezar con los titulares principales?",
     "noNotifBody": "No te enterarás cuando tus noticias estén listas ni cuando una historia que sigues avance. Puedes activarlas más tarde en Ajustes.",
     "noNotifTitle": "¿Usar Mera sin notificaciones?",
     "notNow": "Ahora no",
@@ -347,8 +347,8 @@
     "remindTitle": "¿Cuándo quieres que Mera te recuerde?",
     "turnOn": "Activar notificaciones",
     "turnThemOn": "Actívalas",
-    "guardSkip": "Omitir",
-    "guardAddFact": "Añadir hecho"
+    "guardSkip": "Empezar con titulares",
+    "guardAddFact": "Añadir algo"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -688,7 +688,7 @@
     "turnFailed": "Esa respuesta no terminó. Inténtalo de nuevo."
   },
   "personaChat": {
-    "introMessage": "¡Hola! Soy Mera, tu asistente personal de noticias.\n\nPara encontrar noticias que realmente te importan, necesito saber algo sobre ti. Dónde vives, a qué te dedicas, qué aficiones tienes, qué acciones sigues, dónde vive tu familia. Comparte lo que quieras o tan poco como prefieras.\n\nSi esto te genera dudas, buen instinto. No es prudente entregar datos personales a una empresa de aplicaciones. Mera está construida de forma diferente: todo lo que me dices se guarda en tu dispositivo, no en nuestros servidores. Pregúntame cómo funciona, o di 'Ayúdame a configurar' y comenzaremos."
+    "introMessage": "¡Hola! Soy Mera.\n\nCuéntame un poco sobre ti, como tu ciudad o tu barrio, a qué te dedicas o un equipo o afición que sigues, y encontraré noticias a tu medida.\n\nLo que me cuentes se queda en este teléfono. Comparte tanto o tan poco como quieras."
   },
   "floatingChat": {
     "close": "Cerrar",
@@ -3004,7 +3004,7 @@
       "name": "Nombra una historia que quieras seguir"
     },
     "world": {
-      "family": "Dile a Mera dónde vive tu familia",
+      "family": "Dile a Mera un lugar que te importa",
       "behind": "Pregunta qué hay detrás de un titular"
     },
     "checks": {
@@ -3032,7 +3032,7 @@
     "moveBottomLeft": "Mover abajo a la izquierda",
     "moveBottomRight": "Mover abajo a la derecha",
     "answerReady": "Mera, una respuesta está lista",
-    "tooltipNew": "Cuéntale a Mera sobre ti",
+    "tooltipNew": "Dile a Mera lo que te gusta",
     "working": "Mera está trabajando en tu petición"
   },
   "meraIntro": {
@@ -3047,7 +3047,7 @@
     "sources": "Pregúntame sobre una publicación, o dime qué sigues.",
     "settings": "Pregúntame qué puedo hacer, o cómo Mera maneja tus datos.",
     "onDevice": {
-      "feed": "Estás en tu Feed. Cuéntame sobre ti y ajustaré lo que aparece aquí.",
+      "feed": "Estás en tu Feed. Dime qué te gusta seguir y ajustaré lo que aparece aquí.",
       "library": "Cuéntame qué te gusta leer y lo tendré en cuenta para tu Feed.",
       "world": "Dime qué lugares te importan y los tendré en cuenta para tu Feed.",
       "sources": "Dime qué sigues y lo tendré en cuenta para tu Feed."

@@ -332,11 +332,11 @@
     "close": "Schließen",
     "logoutFailedTitle": "Abmeldung fehlgeschlagen",
     "logoutFailedDescription": "Bei der Abmeldung ist ein Problem aufgetreten. Bitte versuche es erneut.",
-    "composerPlaceholder": "Erzähl Mera von dir",
+    "composerPlaceholder": "Was verfolgst du gern?",
     "factsCount_one": "{{count}} Fakt über dich",
     "factsCount_other": "{{count}} Fakten über dich",
-    "noFactsBody": "Mera wählt deine Nachrichten anhand deiner Fakten aus. Ohne Fakten zeigt dein Feed nur die wichtigsten Schlagzeilen, und World zeigt keine Länder, bis du sie hinzufügst.",
-    "noFactsTitle": "Ohne Fakten weitermachen?",
+    "noFactsBody": "Kein Problem. Du siehst vorerst die Top-Schlagzeilen und kannst Mera jederzeit sagen, was dich interessiert.",
+    "noFactsTitle": "Mit Top-Schlagzeilen starten?",
     "noNotifBody": "Du erfährst nicht, wann deine Nachrichten bereit sind oder wann sich eine Geschichte, der du folgst, weiterentwickelt. Du kannst die Benachrichtigungen später in den Einstellungen einschalten.",
     "noNotifTitle": "Mera ohne Benachrichtigungen verwenden?",
     "notNow": "Nicht jetzt",
@@ -345,8 +345,8 @@
     "remindTitle": "Wann soll Mera dich erinnern?",
     "turnOn": "Benachrichtigungen einschalten",
     "turnThemOn": "Einschalten",
-    "guardSkip": "Überspringen",
-    "guardAddFact": "Fakt hinzufügen"
+    "guardSkip": "Mit Schlagzeilen starten",
+    "guardAddFact": "Etwas hinzufügen"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -686,7 +686,7 @@
     "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut."
   },
   "personaChat": {
-    "introMessage": "Hallo! Ich bin Mera, dein persönlicher Nachrichten-Assistent.\n\nUm Nachrichten zu finden, die wirklich zählen, brauche ich ein wenig über dich zu wissen. Wo du wohnst, was du beruflich machst, welchen Hobbys du nachgehst, welche Aktien du verfolgst, wo deine Familie lebt. Teile so viel oder so wenig mit, wie du möchtest.\n\nWenn dich das ins Grübeln bringt, gutes Gespür. Es ist nicht ratsam, persönliche Daten an eine App-Firma zu übergeben. Mera ist anders aufgebaut: Alles, was du mir erzählst, wird auf deinem Gerät gespeichert, nicht auf unseren Servern. Frag mich, wie das funktioniert, oder sag 'Hilf mir bei der Einrichtung' und wir können beginnen."
+    "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nWas du mir erzählst, bleibt auf diesem Handy. Teile so viel oder so wenig, wie du möchtest."
   },
   "floatingChat": {
     "close": "Schließen",
@@ -2998,7 +2998,7 @@
       "name": "Nenne eine Geschichte, die du verfolgen willst"
     },
     "world": {
-      "family": "Sag Mera, wo deine Familie wohnt",
+      "family": "Nenn Mera einen Ort, der dir wichtig ist",
       "behind": "Frag, was hinter einer Schlagzeile steckt"
     },
     "checks": {
@@ -3026,7 +3026,7 @@
     "moveBottomLeft": "Nach links unten verschieben",
     "moveBottomRight": "Nach rechts unten verschieben",
     "answerReady": "Mera, eine Antwort ist bereit",
-    "tooltipNew": "Erzähl Mera von dir",
+    "tooltipNew": "Sag Mera, was dich interessiert",
     "working": "Mera arbeitet an deiner Anfrage"
   },
   "meraIntro": {
@@ -3041,7 +3041,7 @@
     "sources": "Frag mich zu einem Medium oder sag mir, wem oder was du folgst.",
     "settings": "Frag mich, was ich kann oder wie Mera mit deinen Daten umgeht.",
     "onDevice": {
-      "feed": "Du bist in deinem Feed. Sag mir etwas über dich, dann passe ich an, was hier erscheint.",
+      "feed": "Du bist in deinem Feed. Sag mir, was du gern verfolgst, und ich passe an, was hier erscheint.",
       "library": "Sag mir, was du gern liest, und ich merke es mir für deinen Feed.",
       "world": "Sag mir, welche Orte dir wichtig sind, und ich merke sie mir für deinen Feed.",
       "sources": "Sag mir, wem oder was du folgst, und ich merke es mir für deinen Feed."

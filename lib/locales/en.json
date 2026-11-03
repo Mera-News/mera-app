@@ -685,11 +685,11 @@
     "close": "Close",
     "logoutFailedTitle": "Logout Failed",
     "logoutFailedDescription": "There was an issue signing out. Please try again.",
-    "composerPlaceholder": "Tell Mera about you",
+    "composerPlaceholder": "What do you like to follow?",
     "factsCount_one": "{{count}} fact about you",
     "factsCount_other": "{{count}} facts about you",
-    "noFactsBody": "Mera picks your news from your facts. Without any, your Feed shows only top headlines, and World shows no countries until you add them.",
-    "noFactsTitle": "Continue without any facts?",
+    "noFactsBody": "That's fine. You'll see top headlines for now, and you can tell Mera what you like whenever you want.",
+    "noFactsTitle": "Start with top headlines?",
     "noNotifBody": "You won't hear when your news is ready or when a story you follow moves. You can turn them on later in Settings.",
     "noNotifTitle": "Use Mera without notifications?",
     "notNow": "Not now",
@@ -698,8 +698,8 @@
     "remindTitle": "When should Mera remind you?",
     "turnOn": "Turn on notifications",
     "turnThemOn": "Turn them on",
-    "guardSkip": "Skip",
-    "guardAddFact": "Add fact"
+    "guardSkip": "Start with headlines",
+    "guardAddFact": "Add something"
   },
   "notifications": {
     "title": "Notifications",
@@ -1130,7 +1130,7 @@
     "turnFailed": "That didn't finish. Try again."
   },
   "personaChat": {
-    "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
+    "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nWhat you tell me stays on this phone. Share as much or as little as you like."
   },
   "floatingChat": {
     "close": "Close",
@@ -3000,7 +3000,7 @@
       "name": "Name a story to keep up with"
     },
     "world": {
-      "family": "Tell Mera where your family lives",
+      "family": "Tell Mera a place you care about",
       "behind": "Ask what is behind a headline"
     },
     "checks": {
@@ -3028,7 +3028,7 @@
     "moveBottomLeft": "Move to bottom left",
     "moveBottomRight": "Move to bottom right",
     "answerReady": "Mera, an answer is ready",
-    "tooltipNew": "Tell Mera about you",
+    "tooltipNew": "Tell Mera what you like",
     "working": "Mera is working on your request"
   },
   "meraIntro": {
@@ -3043,7 +3043,7 @@
     "sources": "Ask me about a publication, or tell me what you follow.",
     "settings": "Ask me what I can do, or how Mera handles your data.",
     "onDevice": {
-      "feed": "You're on your Feed. Tell me about yourself and I'll tune what shows up here.",
+      "feed": "You're on your Feed. Tell me what you like to follow and I'll tune what shows up here.",
       "library": "Tell me what you like to read and I'll keep it in mind for your Feed.",
       "world": "Tell me which places matter to you and I'll keep them in mind for your Feed.",
       "sources": "Tell me what you follow and I'll keep it in mind for your Feed."

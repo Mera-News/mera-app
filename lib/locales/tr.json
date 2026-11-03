@@ -332,11 +332,11 @@
     "close": "Kapat",
     "logoutFailedTitle": "Çıkış Başarısız",
     "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
-    "composerPlaceholder": "Mera'ya kendinizden bahsedin",
+    "composerPlaceholder": "Neleri takip etmeyi seversin?",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
     "factsCount_other": "Hakkınızda {{count}} bilgi",
-    "noFactsBody": "Mera haberlerinizi bilgilerinize göre seçer. Hiç bilgi olmadan Akışınızda yalnızca öne çıkan başlıklar görünür ve Dünya, siz ekleyene kadar hiçbir ülkeyi göstermez.",
-    "noFactsTitle": "Hiç bilgi olmadan devam edilsin mi?",
+    "noFactsBody": "Sorun değil. Şimdilik öne çıkan başlıkları göreceksin, neleri sevdiğini Mera'ya istediğin zaman söyleyebilirsin.",
+    "noFactsTitle": "Öne çıkan başlıklarla başlansın mı?",
     "noNotifBody": "Haberleriniz hazır olduğunda ya da takip ettiğiniz bir haber değiştiğinde haber almazsınız. Bunları daha sonra Ayarlar'dan açabilirsiniz.",
     "noNotifTitle": "Mera bildirimsiz kullanılsın mı?",
     "notNow": "Şimdi değil",
@@ -345,8 +345,8 @@
     "remindTitle": "Mera sizi ne zaman hatırlatsın?",
     "turnOn": "Bildirimleri aç",
     "turnThemOn": "Açın",
-    "guardSkip": "Atla",
-    "guardAddFact": "Bilgi ekle"
+    "guardSkip": "Başlıklarla başla",
+    "guardAddFact": "Bir şey ekle"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -686,7 +686,7 @@
     "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene."
   },
   "personaChat": {
-    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nBu seni biraz tereddüte düşürüyorsa, içgüdün doğru. Kişisel verilerini bir uygulama şirketine teslim etmek akıllıca değil. Mera farklı tasarlandı: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana bunun nasıl çalıştığını sorabilirsin ya da 'kurulumda bana yardım et' de, başlayalım."
+    "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nBana anlattıkların bu telefonda kalır. İstediğin kadar paylaş."
   },
   "floatingChat": {
     "close": "Kapat",
@@ -3000,7 +3000,7 @@
       "name": "Takip edilecek bir hikayenin adını söyleyin"
     },
     "world": {
-      "family": "Mera'ya ailenizin nerede yaşadığını söyleyin",
+      "family": "Mera'ya senin için önemli bir yeri söyle",
       "behind": "Bir manşetin arkasında ne olduğunu sorun"
     },
     "checks": {
@@ -3028,7 +3028,7 @@
     "moveBottomLeft": "Sol alta taşı",
     "moveBottomRight": "Sağ alta taşı",
     "answerReady": "Mera, bir yanıt hazır",
-    "tooltipNew": "Mera'ya kendinizden bahsedin",
+    "tooltipNew": "Mera'ya neleri sevdiğini söyle",
     "working": "Mera isteğiniz üzerinde çalışıyor"
   },
   "meraIntro": {
@@ -3043,7 +3043,7 @@
     "sources": "Bana bir yayını sorun veya neyi takip ettiğinizi söyleyin.",
     "settings": "Neler yapabileceğimi ya da Mera'nın verilerinizi nasıl ele aldığını sorun.",
     "onDevice": {
-      "feed": "Akışındasın. Bana kendinden biraz anlat, burada ne çıkacağını ayarlayayım.",
+      "feed": "Akışındasın. Neleri takip etmeyi sevdiğini söyle, burada görünenleri ona göre ayarlayayım.",
       "library": "Bana ne okumayı sevdiğini anlat, bunu akışın için aklımda tutayım.",
       "world": "Bana hangi yerlerin senin için önemli olduğunu anlat, bunu akışın için aklımda tutayım.",
       "sources": "Bana neleri takip ettiğini anlat, bunu akışın için aklımda tutayım."

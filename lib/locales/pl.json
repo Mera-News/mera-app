@@ -372,13 +372,13 @@
     "close": "Zamknij",
     "logoutFailedTitle": "Wylogowanie nieudane",
     "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie.",
-    "composerPlaceholder": "Opowiedz Mera o sobie",
+    "composerPlaceholder": "Co lubisz śledzić?",
     "factsCount_one": "{{count}} fakt o Tobie",
     "factsCount_few": "{{count}} fakty o Tobie",
     "factsCount_many": "{{count}} faktów o Tobie",
     "factsCount_other": "{{count}} faktów o Tobie",
-    "noFactsBody": "Mera wybiera Twoje wiadomości na podstawie Twoich faktów. Bez nich Kanał pokazuje tylko najważniejsze nagłówki, a Świat nie pokazuje krajów, dopóki ich nie dodasz.",
-    "noFactsTitle": "Kontynuować bez faktów?",
+    "noFactsBody": "Nie ma sprawy. Na razie zobaczysz najważniejsze nagłówki, a Merze możesz powiedzieć, co lubisz, kiedy tylko zechcesz.",
+    "noFactsTitle": "Zacząć od najważniejszych nagłówków?",
     "noNotifBody": "Nie dowiesz się, kiedy Twoje wiadomości są gotowe ani kiedy zmienia się historia, którą obserwujesz. Możesz to włączyć później w Ustawieniach.",
     "noNotifTitle": "Używać Mera bez powiadomień?",
     "notNow": "Nie teraz",
@@ -387,8 +387,8 @@
     "remindTitle": "Kiedy Mera ma Ci przypominać?",
     "turnOn": "Włącz powiadomienia",
     "turnThemOn": "Włącz je",
-    "guardSkip": "Pomiń",
-    "guardAddFact": "Dodaj fakt"
+    "guardSkip": "Zacznij od nagłówków",
+    "guardAddFact": "Dodaj coś"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -732,7 +732,7 @@
     "turnFailed": "Ta odpowiedź się nie dokończyła. Spróbuj ponownie."
   },
   "personaChat": {
-    "introMessage": "Cześć! Jestem Mera, Twój osobisty asystent wiadomości.\n\nAby znaleźć wiadomości, które Cię naprawdę dotyczą, muszę wiedzieć o Tobie trochę więcej. Gdzie mieszkasz, czym się zajmujesz, jakie masz hobby, które akcje śledzisz, gdzie mieszka Twoja rodzina. Możesz udostępnić tyle lub mało, ile chcesz.\n\nJeśli to Cię niepokoi, masz rację. Nie jest mądrze oddawać dane osobiste firmie, która tworzy aplikacje. Mera jest zbudowana inaczej: wszystko, co mi powiesz, jest zapisywane na Twoim urządzeniu, a nie na naszych serwerach. Zapytaj mnie, jak to działa, lub powiedz 'pomóż mi w konfiguracji' i zaczniemy."
+    "introMessage": "Cześć, jestem Mera.\n\nOpowiedz mi trochę o sobie, na przykład o swoim mieście lub okolicy, rodzaju pracy albo drużynie czy hobby, które śledzisz, a znajdę pasujące wiadomości.\n\nTo, co mi powiesz, zostaje na tym telefonie. Podziel się tym, czym chcesz."
   },
   "floatingChat": {
     "close": "Zamknij",
@@ -3134,7 +3134,7 @@
       "name": "Podaj historię, którą chcesz śledzić"
     },
     "world": {
-      "family": "Powiedz Merze, gdzie mieszka Twoja rodzina",
+      "family": "Powiedz Merze o miejscu, które jest dla Ciebie ważne",
       "behind": "Zapytaj, co stoi za nagłówkiem"
     },
     "checks": {
@@ -3162,7 +3162,7 @@
     "moveBottomLeft": "Przesuń w lewy dolny róg",
     "moveBottomRight": "Przesuń w prawy dolny róg",
     "answerReady": "Mera, odpowiedź jest gotowa",
-    "tooltipNew": "Opowiedz Mera o sobie",
+    "tooltipNew": "Powiedz Merze, co lubisz",
     "working": "Mera pracuje nad Twoją prośbą"
   },
   "meraIntro": {
@@ -3177,7 +3177,7 @@
     "sources": "Zapytaj mnie o wydawcę albo powiedz, co śledzisz.",
     "settings": "Zapytaj mnie, co potrafię, albo jak Mera obchodzi się z Twoimi danymi.",
     "onDevice": {
-      "feed": "Jesteś w swoim Kanale. Opowiedz mi o sobie, a dopasuję to, co tu się pokazuje.",
+      "feed": "Jesteś w swoim Kanale. Powiedz mi, co lubisz śledzić, a dopasuję to, co się tu pojawia.",
       "library": "Powiedz mi, co lubisz czytać, a zapamiętam to dla twojego Kanału.",
       "world": "Powiedz mi, które miejsca są dla ciebie ważne, a zapamiętam je dla twojego Kanału.",
       "sources": "Powiedz mi, co śledzisz, a zapamiętam to dla twojego Kanału."
