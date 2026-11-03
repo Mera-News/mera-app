@@ -686,7 +686,7 @@
     "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut."
   },
   "personaChat": {
-    "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nWas du mir erzählst, bleibt auf diesem Handy. Teile so viel oder so wenig, wie du möchtest."
+    "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nTeile so viel oder so wenig, wie du möchtest. Was du mir erzählst, bleibt auf diesem Handy. Niemand außer dir hat Zugriff auf deine Daten."
   },
   "floatingChat": {
     "close": "Schließen",
@@ -1064,7 +1064,8 @@
     "wideNetTitle": "Manche Artikel passen vielleicht nicht",
     "wideNetBody": "Mera sucht breit, daher haben manche Artikel hier nur wenig mit der Geschichte zu tun. Wir zeigen dir lieber einen Artikel zu viel, als dass du einen wichtigen verpasst.",
     "wideNetRemove": "Um einen zu entfernen, öffne sein Menü und wähle {{action}}.",
-    "wideNetShowLess": "Weniger anzeigen"
+    "wideNetShowLess": "Weniger anzeigen",
+    "composerPlaceholder": "Welche Geschichte soll ich für dich im Blick behalten?"
   },
   "whatsNew": {
     "gotIt": "Verstanden",
@@ -3135,5 +3136,9 @@
     "includeSourcesHint": "Jeder Link, den die Suche genutzt hat.",
     "stillChecking": "Wird noch geprüft",
     "shareDialogTitle": "Faktenchecks exportieren"
+  },
+  "chatSample": {
+    "profileLabel": "Beispielprofil",
+    "storiesLabel": "Beispielgeschichten"
   }
 }

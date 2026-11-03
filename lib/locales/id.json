@@ -672,7 +672,7 @@
     "turnFailed": "Jawaban saya belum selesai. Coba lagi."
   },
   "personaChat": {
-    "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nApa yang kamu ceritakan tetap di ponsel ini. Bagikan sebanyak atau sesedikit yang kamu mau."
+    "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nBagikan sebanyak atau sesedikit yang kamu mau. Apa yang kamu ceritakan tetap di ponsel ini. Tidak ada yang bisa mengakses datamu selain kamu."
   },
   "floatingChat": {
     "close": "Tutup",
@@ -1049,7 +1049,8 @@
     "wideNetTitle": "Beberapa artikel mungkin kurang sesuai",
     "wideNetBody": "Mera mencari secara luas, jadi beberapa artikel di sini mungkin hanya sedikit berkaitan dengan cerita. Kami lebih memilih menampilkan satu artikel lebih banyak daripada membuat Anda melewatkan artikel yang penting.",
     "wideNetRemove": "Untuk menghapus artikel, buka menunya lalu pilih {{action}}.",
-    "wideNetShowLess": "Tampilkan lebih sedikit"
+    "wideNetShowLess": "Tampilkan lebih sedikit",
+    "composerPlaceholder": "Berita apa yang perlu aku pantau untukmu?"
   },
   "whatsNew": {
     "gotIt": "Mengerti",
@@ -3114,5 +3115,9 @@
     "includeSourcesHint": "Setiap tautan yang dipakai pencarian.",
     "stillChecking": "Masih diperiksa",
     "shareDialogTitle": "Ekspor pemeriksaan fakta"
+  },
+  "chatSample": {
+    "profileLabel": "Contoh profil",
+    "storiesLabel": "Contoh berita"
   }
 }

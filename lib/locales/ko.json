@@ -672,7 +672,7 @@
     "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요."
   },
   "personaChat": {
-    "introMessage": "안녕하세요, 메라입니다.\n\n사는 도시나 동네, 하는 일의 분야, 응원하는 팀이나 취미처럼 간단한 것부터 알려 주세요. 잘 맞는 뉴스를 찾아 드릴게요.\n\n알려 주신 내용은 이 휴대폰에만 저장됩니다. 원하는 만큼만 알려 주세요."
+    "introMessage": "안녕하세요, 메라입니다.\n\n사는 도시나 동네, 하는 일의 분야, 응원하는 팀이나 취미처럼 간단한 것부터 알려 주세요. 잘 맞는 뉴스를 찾아 드릴게요.\n\n원하는 만큼만 알려 주세요. 알려 주신 내용은 이 휴대폰에만 저장됩니다. 본인 외에는 누구도 데이터에 접근할 수 없습니다."
   },
   "floatingChat": {
     "close": "닫기",
@@ -1049,7 +1049,8 @@
     "wideNetTitle": "일부 기사는 관련이 적을 수 있습니다",
     "wideNetBody": "메라는 폭넓게 기사를 찾기 때문에 여기 있는 일부 기사는 스토리와 관련이 적을 수 있습니다. 중요한 기사를 놓치는 것보다 기사를 하나 더 보여 드리는 편이 낫다고 생각합니다.",
     "wideNetRemove": "기사를 삭제하려면 해당 기사의 메뉴를 열고 '{{action}}'을 선택하세요.",
-    "wideNetShowLess": "간단히 보기"
+    "wideNetShowLess": "간단히 보기",
+    "composerPlaceholder": "어떤 소식을 대신 지켜볼까요?"
   },
   "whatsNew": {
     "gotIt": "확인",
@@ -3114,5 +3115,9 @@
     "includeSourcesHint": "검색에 사용된 모든 링크.",
     "stillChecking": "아직 확인 중",
     "shareDialogTitle": "팩트체크 내보내기"
+  },
+  "chatSample": {
+    "profileLabel": "프로필 예시",
+    "storiesLabel": "뉴스 예시"
   }
 }

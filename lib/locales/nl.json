@@ -686,7 +686,7 @@
     "turnFailed": "Dat is niet afgerond. Probeer het opnieuw."
   },
   "personaChat": {
-    "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nWat je me vertelt, blijft op deze telefoon. Deel zoveel of zo weinig als je wilt."
+    "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."
   },
   "floatingChat": {
     "close": "Sluiten",
@@ -1064,7 +1064,8 @@
     "wideNetTitle": "Sommige artikelen passen misschien niet",
     "wideNetBody": "Mera zoekt breed, dus sommige artikelen hier hebben misschien maar weinig met het verhaal te maken. We laten je liever één artikel te veel zien dan dat je een belangrijk artikel mist.",
     "wideNetRemove": "Wil je er een verwijderen? Open het menu ervan en kies {{action}}.",
-    "wideNetShowLess": "Minder tonen"
+    "wideNetShowLess": "Minder tonen",
+    "composerPlaceholder": "Welk verhaal moet ik voor je in de gaten houden?"
   },
   "whatsNew": {
     "gotIt": "Begrepen",
@@ -3135,5 +3136,9 @@
     "includeSourcesHint": "Elke link die de zoekopdracht gebruikte.",
     "stillChecking": "Nog bezig",
     "shareDialogTitle": "Feitenchecks exporteren"
+  },
+  "chatSample": {
+    "profileLabel": "Voorbeeldprofiel",
+    "storiesLabel": "Voorbeeldverhalen"
   }
 }

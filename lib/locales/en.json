@@ -624,7 +624,8 @@
     "wideNetTitle": "Some articles may not fit",
     "wideNetBody": "Mera casts a wide net, so a few articles here may be only loosely related. We'd rather show you one extra than miss one that matters.",
     "wideNetRemove": "To remove one, open its menu and choose {{action}}.",
-    "wideNetShowLess": "Show less"
+    "wideNetShowLess": "Show less",
+    "composerPlaceholder": "Which story should I keep an eye on?"
   },
   "whatsNew": {
     "gotIt": "Got it",
@@ -1130,7 +1131,7 @@
     "turnFailed": "That didn't finish. Try again."
   },
   "personaChat": {
-    "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nWhat you tell me stays on this phone. Share as much or as little as you like."
+    "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
   },
   "floatingChat": {
     "close": "Close",
@@ -3137,5 +3138,9 @@
     "includeSourcesHint": "Every link the search used.",
     "stillChecking": "Still checking",
     "shareDialogTitle": "Export fact checks"
+  },
+  "chatSample": {
+    "profileLabel": "Example profile",
+    "storiesLabel": "Example stories"
   }
 }

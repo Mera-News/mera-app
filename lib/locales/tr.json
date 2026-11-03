@@ -686,7 +686,7 @@
     "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene."
   },
   "personaChat": {
-    "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nBana anlattıkların bu telefonda kalır. İstediğin kadar paylaş."
+    "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nİstediğin kadar paylaş. Bana anlattıkların bu telefonda kalır. Verilerine senden başka kimse erişemez."
   },
   "floatingChat": {
     "close": "Kapat",
@@ -1066,7 +1066,8 @@
     "wideNetTitle": "Bazı makaleler ilgili olmayabilir",
     "wideNetBody": "Mera geniş bir arama yapar, bu yüzden buradaki bazı makaleler haberle yalnızca dolaylı olarak ilgili olabilir. Önemli bir makaleyi kaçırmanızdansa size fazladan bir makale göstermeyi tercih ederiz.",
     "wideNetRemove": "Birini kaldırmak için menüsünü açın ve {{action}} seçeneğini seçin.",
-    "wideNetShowLess": "Daha az göster"
+    "wideNetShowLess": "Daha az göster",
+    "composerPlaceholder": "Hangi haberi senin için takip edeyim?"
   },
   "whatsNew": {
     "gotIt": "Anladım",
@@ -3137,5 +3138,9 @@
     "includeSourcesHint": "Aramanın kullandığı her bağlantı.",
     "stillChecking": "Hâlâ kontrol ediliyor",
     "shareDialogTitle": "Doğruluk kontrollerini dışa aktar"
+  },
+  "chatSample": {
+    "profileLabel": "Örnek profil",
+    "storiesLabel": "Örnek haberler"
   }
 }

@@ -688,7 +688,7 @@
     "turnFailed": "Quella risposta non è terminata. Riprova."
   },
   "personaChat": {
-    "introMessage": "Ciao, sono Mera.\n\nRaccontami qualcosa di te, come la tua città o il tuo quartiere, il lavoro che fai, o una squadra o un hobby che segui, e troverò notizie adatte a te.\n\nQuello che mi racconti resta su questo telefono. Condividi quanto vuoi."
+    "introMessage": "Ciao, sono Mera.\n\nRaccontami qualcosa di te, come la tua città o il tuo quartiere, il lavoro che fai, o una squadra o un hobby che segui, e troverò notizie adatte a te.\n\nCondividi quanto vuoi. Quello che mi racconti resta su questo telefono. Nessuno tranne te ha accesso ai tuoi dati."
   },
   "floatingChat": {
     "close": "Chiudi",
@@ -1067,7 +1067,8 @@
     "wideNetTitle": "Alcuni articoli potrebbero non c'entrare",
     "wideNetBody": "Mera cerca in modo ampio, quindi alcuni articoli qui potrebbero avere poco a che fare con la storia. Preferiamo mostrarti un articolo in più piuttosto che fartene perdere uno importante.",
     "wideNetRemove": "Per rimuoverne uno, apri il suo menu e scegli {{action}}.",
-    "wideNetShowLess": "Mostra meno"
+    "wideNetShowLess": "Mostra meno",
+    "composerPlaceholder": "Quale notizia devo seguire per te?"
   },
   "whatsNew": {
     "gotIt": "Capito",
@@ -3141,5 +3142,9 @@
     "includeSourcesHint": "Ogni link usato dalla ricerca.",
     "stillChecking": "Verifica in corso",
     "shareDialogTitle": "Esporta verifiche"
+  },
+  "chatSample": {
+    "profileLabel": "Profilo di esempio",
+    "storiesLabel": "Notizie di esempio"
   }
 }

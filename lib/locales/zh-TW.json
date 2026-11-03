@@ -672,7 +672,7 @@
     "turnFailed": "這個回覆沒有完成。請再試一次。"
   },
   "personaChat": {
-    "introMessage": "嗨，我是梅拉。\n\n跟我聊聊你自己吧，例如你住的城市或街區、你從事的工作類型，或是你關注的球隊或嗜好，我會幫你找到合適的新聞。\n\n你告訴我的內容都保存在這支手機上。想分享多少都可以。"
+    "introMessage": "嗨，我是梅拉。\n\n跟我聊聊你自己吧，例如你住的城市或街區、你從事的工作類型，或是你關注的球隊或嗜好，我會幫你找到合適的新聞。\n\n想分享多少都可以。你告訴我的內容都保存在這支手機上。除了你，沒有人能存取你的資料。"
   },
   "floatingChat": {
     "close": "關閉",
@@ -1049,7 +1049,8 @@
     "wideNetTitle": "部分文章可能與報導關係不大",
     "wideNetBody": "梅拉的搜尋範圍較廣，因此這裡的部分文章可能與報導關係不大。我們寧願多給你看一篇，也不想讓你錯過重要的文章。",
     "wideNetRemove": "要移除某篇文章，請開啟它的選單並選擇「{{action}}」。",
-    "wideNetShowLess": "收合"
+    "wideNetShowLess": "收合",
+    "composerPlaceholder": "你想讓我幫你關注哪則新聞？"
   },
   "whatsNew": {
     "gotIt": "知道了",
@@ -3114,5 +3115,9 @@
     "includeSourcesHint": "搜尋用到的每個連結。",
     "stillChecking": "仍在查核",
     "shareDialogTitle": "匯出事實查核"
+  },
+  "chatSample": {
+    "profileLabel": "範例個人資料",
+    "storiesLabel": "範例新聞"
   }
 }

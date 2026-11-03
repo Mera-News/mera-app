@@ -31,6 +31,7 @@ import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
+import type { ChatSampleKind } from './chat-samples';
 import type { StarterChip } from './types';
 import { renderableTerminal } from './types';
 import { HARNESS_TAP_ONLY } from '@/lib/chat-session/cloud-engine-helpers';
@@ -138,6 +139,16 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // Intro pseudo-message until the first send of this session.
   const [introCleared, setIntroCleared] = useState(false);
   const introMessage = introCleared ? null : introShown;
+  // The faint example behind a fresh chat: the welcome shows a sample profile,
+  // a follow chat shows sample stories. Any earlier message means not fresh.
+  const sampleKind: ChatSampleKind | null =
+    introMessage && messages.length === 0 && resume.length === 0
+      ? originalWelcome
+        ? 'profile'
+        : context.kind === 'follow-story'
+          ? 'stories'
+          : null
+      : null;
 
   // Lazily page in older history on scroll-up.
   const { history, loadOlder, hasOlder, isLoadingOlder } = useChatHistory(
@@ -687,6 +698,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     composerHint,
     handleUnblockSubmitted,
     introMessage,
+    sampleKind,
     unresolvedTopicPlans,
     unresolvedFactChoices,
   };

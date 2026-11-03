@@ -672,7 +672,7 @@
     "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại."
   },
   "personaChat": {
-    "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nNhững gì bạn kể sẽ ở lại trên điện thoại này. Chia sẻ nhiều hay ít tùy bạn."
+    "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nChia sẻ nhiều hay ít tùy bạn. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai có quyền truy cập dữ liệu của bạn ngoài bạn."
   },
   "floatingChat": {
     "close": "Đóng",
@@ -1049,7 +1049,8 @@
     "wideNetTitle": "Một số bài viết có thể không phù hợp",
     "wideNetBody": "Mera tìm kiếm trên phạm vi rộng, nên một số bài viết ở đây có thể chỉ liên quan ít đến câu chuyện. Chúng tôi thà cho bạn xem thêm một bài còn hơn để bạn bỏ lỡ một bài quan trọng.",
     "wideNetRemove": "Để xóa một bài, hãy mở menu của bài đó và chọn {{action}}.",
-    "wideNetShowLess": "Thu gọn"
+    "wideNetShowLess": "Thu gọn",
+    "composerPlaceholder": "Bạn muốn mình theo dõi câu chuyện nào?"
   },
   "whatsNew": {
     "gotIt": "Đã hiểu",
@@ -3114,5 +3115,9 @@
     "includeSourcesHint": "Mọi liên kết mà tìm kiếm đã dùng.",
     "stillChecking": "Vẫn đang kiểm chứng",
     "shareDialogTitle": "Xuất kết quả kiểm chứng"
+  },
+  "chatSample": {
+    "profileLabel": "Hồ sơ mẫu",
+    "storiesLabel": "Tin mẫu"
   }
 }

@@ -693,7 +693,7 @@
     "turnFailed": "Ma réponse ne s'est pas terminée. Réessaie."
   },
   "personaChat": {
-    "introMessage": "Bonjour, je suis Mera.\n\nParlez-moi un peu de vous, comme votre ville ou votre quartier, votre métier, ou une équipe ou un loisir que vous suivez, et je trouverai des actualités qui vous correspondent.\n\nCe que vous me dites reste sur ce téléphone. Partagez autant ou aussi peu que vous voulez."
+    "introMessage": "Bonjour, je suis Mera.\n\nParlez-moi un peu de vous, comme votre ville ou votre quartier, votre métier, ou une équipe ou un loisir que vous suivez, et je trouverai des actualités qui vous correspondent.\n\nPartagez autant ou aussi peu que vous voulez. Ce que vous me dites reste sur ce téléphone. Personne d'autre que vous n'a accès à vos données."
   },
   "floatingChat": {
     "close": "Fermer",
@@ -1072,7 +1072,8 @@
     "wideNetTitle": "Certains articles peuvent ne pas correspondre",
     "wideNetBody": "Mera ratisse large, donc certains articles ici peuvent n'avoir qu'un lien ténu avec l'actualité. Nous préférons vous montrer un article de trop plutôt que de vous en faire manquer un important.",
     "wideNetRemove": "Pour en retirer un, ouvrez son menu et choisissez {{action}}.",
-    "wideNetShowLess": "Afficher moins"
+    "wideNetShowLess": "Afficher moins",
+    "composerPlaceholder": "Quel sujet dois-je suivre pour vous ?"
   },
   "whatsNew": {
     "gotIt": "Compris",
@@ -3147,5 +3148,9 @@
     "includeSourcesHint": "Chaque lien utilisé par la recherche.",
     "stillChecking": "Vérification en cours",
     "shareDialogTitle": "Exporter les vérifications"
+  },
+  "chatSample": {
+    "profileLabel": "Exemple de profil",
+    "storiesLabel": "Exemples de sujets"
   }
 }
