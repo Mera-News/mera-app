@@ -687,6 +687,12 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     setRetryTapped(true);
     hapticLight();
     retryChatTurn();
+    // Refused at the last moment: the error stands, so the banner has to come back.
+    if (useCloudChatStore.getState().error) {
+      retryGuard.current = false;
+      setRetryTapped(false);
+      return;
+    }
     void AccessibilityInfo.announceForAccessibility(t('chat.tryingAgain'));
   }, [t]);
 
