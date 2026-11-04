@@ -35,10 +35,6 @@ const REAUTH_RECHECK_COOLDOWN_MS = 10 * 60_000;
 
 const FEED_SYNC_TASK = 'feed-sync';
 
-// @better-auth/expo's chunked-value marker (its CHUNK_MARKER, not exported). The
-// leading control character is part of it.
-const COOKIE_CHUNK_MARKER = '\u0001ba-chunks:';
-
 // NOT counting a failure while the auth-read quarantine is engaged was tried
 // and withdrawn. The latch defaults to ENGAGED at import and is released only
 // by `enforceInstallBoundary`, so in any process that never boots the launch
@@ -238,7 +234,7 @@ async function readRecheckBasis(
 
   let raw: string | null;
   try {
-    const { secureStore } =
+    const { CHUNK_MARKER, secureStore } =
       require('./utils/secure-store-adapter') as typeof import('./utils/secure-store-adapter');
     const Constants = (require('expo-constants') as { default?: { expoConfig?: { slug?: string } } })
       .default;
@@ -246,8 +242,8 @@ async function readRecheckBasis(
     const key = `${slug}_cookie`;
     raw = await secureStore.getItemAsync(key);
     // A jar over the per-write limit: the base key holds a marker and a count.
-    if (raw?.startsWith(COOKIE_CHUNK_MARKER)) {
-      const count = Number(raw.slice(COOKIE_CHUNK_MARKER.length));
+    if (raw?.startsWith(CHUNK_MARKER)) {
+      const count = Number(raw.slice(CHUNK_MARKER.length));
       const chunks = await Promise.all(
         Array.from({ length: count }, (_, i) => secureStore.getItemAsync(`${key}.${i}`)),
       );

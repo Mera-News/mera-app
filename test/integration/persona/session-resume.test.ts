@@ -18,6 +18,7 @@ import { secureStore } from '@/lib/utils/secure-store-adapter';
 import {
     FIXTURE_ACCOUNT,
     HttpResponse,
+    failSecureStore,
     http,
     secureStoreDump,
     server,
@@ -27,7 +28,8 @@ import {
 
 const ME = FIXTURE_ACCOUNT.userId;
 const OTHER = 'bbbbbbbbbbbbbbbbbbbbbbbb';
-const COOKIE_KEY = `${Constants.expoConfig?.slug || 'app'}_cookie`;
+const SLUG = Constants.expoConfig?.slug || 'app';
+const COOKIE_KEY = `${SLUG}_cookie`;
 const HOUR_MS = 60 * 60_000;
 const REAUTH = { pathname: '/login', params: { reauth: '1' } };
 
@@ -185,12 +187,59 @@ describe.each([
     });
 });
 
-it('minted: true is a failure on its own, whatever id it names', async () => {
-    deviceSignIns(() => signInReply(ME, true));
+describe('the cached account keeps its cookie jar when the resume does not stand', () => {
+    const jar = () => {
+        const { [COOKIE_KEY]: base, [`${COOKIE_KEY}.0`]: c0, [`${COOKIE_KEY}.1`]: c1 } = secureStoreDump();
+        return { base, c0, c1 };
+    };
 
-    expect(await resumeDeadSession()).toBe(false);
+    it.each([
+        ['another account', () => signInReply(OTHER, false)],
+        ['a mint', () => signInReply(OTHER, true)],
+        ['a mint naming the cached id', () => signInReply(ME, true)],
+    ])('%s: the jar comes back exactly', async (_name, reply) => {
+        const before = jar();
+        await secureStore.setItemAsync(`${SLUG}_session_data`, 'session-data-of-me');
+        deviceSignIns(reply);
 
-    expect(secureStoreDump()[COOKIE_KEY]).toBeUndefined();
+        expect(await resumeDeadSession()).toBe(false);
+
+        expect(jar()).toEqual(before);
+        expect(secureStoreDump()[`${SLUG}_session_data`]).toBe('session-data-of-me');
+    });
+
+    it('a chunked jar comes back with its chunks', async () => {
+        const raw = secureStoreDump()[COOKIE_KEY];
+        await secureStore.setItemAsync(`${COOKIE_KEY}.0`, raw.slice(0, 10));
+        await secureStore.setItemAsync(`${COOKIE_KEY}.1`, raw.slice(10));
+        await secureStore.setItemAsync(COOKIE_KEY, '\u0001ba-chunks:2');
+        const before = jar();
+        deviceSignIns(() => signInReply(OTHER, false));
+
+        expect(await resumeDeadSession()).toBe(false);
+
+        expect(jar()).toEqual(before);
+    });
+
+    it('a same-account sign-in the server still calls dead restores it too', async () => {
+        const before = jar();
+        deviceSignIns(() => signInReply(ME, false));
+        alwaysDead();
+
+        expect(await resumeDeadSession()).toBe(false);
+
+        expect(jar()).toEqual(before);
+    });
+
+    it('a jar that cannot be read first means no attempt, and spends none', async () => {
+        failSecureStore(COOKIE_KEY, 'get');
+        const posts = deviceSignIns();
+
+        expect(await resumeDeadSession()).toBe(false);
+
+        expect(posts).toEqual([]);
+        expect(await getSetting(SESSION_RESUME_AT_KEY)).toBeNull();
+    });
 });
 
 describe('when it must not run', () => {

@@ -11,6 +11,10 @@ import * as SecureStore from 'expo-secure-store';
 import logger from '@/lib/logger';
 import { isAuthReadQuarantined } from '@/lib/security/install-boundary-latch';
 
+// @better-auth/expo's marker for a value split across `<key>.<i>` (its CHUNK_MARKER,
+// not exported). The leading control character is part of it.
+export const CHUNK_MARKER = '\u0001ba-chunks:';
+
 const KEYCHAIN_OPTS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
 };

@@ -1,6 +1,6 @@
 import { AppState } from 'react-native';
 
-import { dropSessionCookie } from '@/lib/auth-client';
+import { restoreSession, snapshotSession } from '@/lib/auth-client';
 import { recheckSession } from '@/lib/auth-failure-breaker';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { hasTestAccountToken, signInWithDevice } from '@/lib/device-auth';
@@ -58,20 +58,27 @@ async function attemptResume(): Promise<boolean> {
     ]);
     if (!cachedUserId) return false;
     if (Date.now() - Number(lastAttempt) < SESSION_RESUME_COOLDOWN_MS) return false;
+    // A dead verdict can be wrong (an edge's 401), and the sign-in overwrites the jar,
+    // so the reader's session is kept to put back. Unreadable: no attempt at all.
+    const jar = await snapshotSession();
     // Before the attempt, so a resume that dies or never holds still spends it.
     await setSetting(SESSION_RESUME_AT_KEY, String(Date.now()));
 
     const result = await signInWithDevice({ resumeOnly: true });
-    if (result.status !== 'success') return false;
 
     // The key opened another account, or a server older than the flag minted one
-    // and bound this key to it. Its cookie is in the keychain now: held and
-    // dropped before the identity gates can read it as an account switch and wipe
-    // this reader's data. The gate's sign-in then asks, as it does for any switch.
-    if (result.minted || result.userId !== cachedUserId) {
-        holdAccountSwitch(result.userId);
-        await dropSessionCookie();
+    // and bound this key to it. Held at once, before the identity gates can read
+    // its session as an account switch and wipe this reader's data. The gate's
+    // sign-in then asks, as it does for any switch.
+    const foreign = result.status === 'success' && (result.minted || result.userId !== cachedUserId);
+    if (foreign) holdAccountSwitch(result.userId);
+    if (result.status !== 'success' || foreign) {
+        await restoreSession(jar);
         return false;
     }
-    return (await recheckSession()) === 'alive';
+
+    const outcome = await recheckSession();
+    // Not on inconclusive: a fresh cookie for this very account is worth keeping.
+    if (outcome === 'dead') await restoreSession(jar);
+    return outcome === 'alive';
 }

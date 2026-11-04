@@ -2,7 +2,7 @@ import { expoClient } from "@better-auth/expo/client";
 import { emailOTPClient, jwtClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import Constants from 'expo-constants';
-import { secureStore } from "./utils/secure-store-adapter";
+import { CHUNK_MARKER, secureStore } from "./utils/secure-store-adapter";
 import { AUTH_ENDPOINT } from "./config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
 import { logoutIntercom } from "./intercom";
@@ -23,6 +23,7 @@ const scheme = Constants.expoConfig?.scheme;
 const APP_SCHEME = Array.isArray(scheme) ? scheme[0] : scheme || 'app';
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 export const AUTH_COOKIE_KEY = `${APP_SLUG}_cookie`;
+const SESSION_KEYS = [AUTH_COOKIE_KEY, `${APP_SLUG}_session_data`];
 
 // Set by clearAuthStorage and the sign-in gate's refusal (`suspendSessionCache`) as their first step.
 // A get-session reply that lands after the local wipe makes
@@ -196,11 +197,7 @@ export const clearAuthStorage = async () => {
     } catch {
         // Ignore — we still want to wipe local state below.
     }
-    await deleteSessionKeys();
-};
-
-const deleteSessionKeys = async () => {
-    for (const key of [AUTH_COOKIE_KEY, `${APP_SLUG}_session_data`]) {
+    for (const key of SESSION_KEYS) {
         try {
             await secureStore.deleteItemAsync(key);
         } catch {
@@ -209,13 +206,34 @@ const deleteSessionKeys = async () => {
     }
 };
 
+/** The session's raw keychain values, chunks included, base keys last. Rejects on an unreadable keychain. */
+export const snapshotSession = async (): Promise<Map<string, string | null>> => {
+    const snapshot = new Map<string, string | null>();
+    for (const key of SESSION_KEYS) {
+        const raw = await secureStore.getItemAsync(key);
+        if (raw?.startsWith(CHUNK_MARKER)) {
+            const count = Number(raw.slice(CHUNK_MARKER.length));
+            for (let i = 0; i < count; i++) {
+                snapshot.set(`${key}.${i}`, await secureStore.getItemAsync(`${key}.${i}`));
+            }
+        }
+        snapshot.set(key, raw);
+    }
+    return snapshot;
+};
+
 /**
- * Drop a session this device must not keep, and nothing else: no server call
- * and no SDK logout, unlike clearAuthStorage. For a silent resume that came back
- * as the wrong account, where the reader never asked to leave anything.
+ * Put a snapshot back: no server call and no SDK logout, unlike clearAuthStorage.
+ * A silent resume that does not stand must leave the reader's session as it found it.
  */
-export const dropSessionCookie = async () => {
+export const restoreSession = async (snapshot: Map<string, string | null>) => {
     suspendSessionCache();
     invalidateJwtCache();
-    await deleteSessionKeys();
+    for (const [key, raw] of snapshot) {
+        try {
+            await (raw === null ? secureStore.deleteItemAsync(key) : secureStore.setItemAsync(key, raw));
+        } catch {
+            // Keychain hiccup: the launch gate's account check decides from what is there.
+        }
+    }
 };
