@@ -677,7 +677,8 @@
     "statusError": "出错",
     "turnNoAnswer": "我没能做到。请换个方式再问我。",
     "turnFailed": "这条回复没有完成。请重试。",
-    "tryingAgain": "正在重试"
+    "tryingAgain": "正在重试",
+    "factRemovedLine": "我找不到相关的新闻主题，因此已移除{{facts}}。你希望我改存什么呢？"
   },
   "personaChat": {
     "introMessage": "你好，我是梅拉。\n\n跟我说说你自己吧，比如你所在的城市或街区、你从事的工作类型，或者你关注的球队或爱好，我会为你找到合适的新闻。\n\n想分享多少都可以。你告诉我的内容都保存在这部手机上。除了你，没有人能访问你的数据。"
@@ -2517,7 +2518,9 @@
     "added_other": "已添加 {{count}} 个主题",
     "nothingNew": "目前没有可添加的新主题",
     "moreFailed": "未能找到主题。请重试。",
-    "findTopics": "查找主题"
+    "findTopics": "查找主题",
+    "seeWhatToSave": "查看可以改存的内容",
+    "seeWhatToSaveA11y": "查看可以改存的内容，替代“{{statement}}”"
   },
   "agentSteps": {
     "legStart": "正在思考你说的内容",

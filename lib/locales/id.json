@@ -677,7 +677,8 @@
     "statusError": "Gagal",
     "turnNoAnswer": "Saya tidak bisa melakukan itu. Coba tanyakan dengan cara lain.",
     "turnFailed": "Jawaban saya belum selesai. Coba lagi.",
-    "tryingAgain": "Mencoba lagi"
+    "tryingAgain": "Mencoba lagi",
+    "factRemovedLine": "Saya menghapus {{facts}} karena tidak menemukan topik berita. Apa yang ingin Anda simpan sebagai gantinya?"
   },
   "personaChat": {
     "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nBagikan sebanyak atau sesedikit yang kamu mau. Apa yang kamu ceritakan tetap di ponsel ini. Tidak ada yang bisa mengakses datamu selain kamu."
@@ -2517,7 +2518,9 @@
     "added_other": "{{count}} topik ditambahkan",
     "nothingNew": "Belum ada yang baru untuk ditambahkan saat ini",
     "moreFailed": "Tidak bisa menemukan topik. Coba lagi.",
-    "findTopics": "Cari topik"
+    "findTopics": "Cari topik",
+    "seeWhatToSave": "Lihat apa yang bisa disimpan sebagai gantinya",
+    "seeWhatToSaveA11y": "Lihat apa yang bisa disimpan sebagai pengganti \"{{statement}}\""
   },
   "agentSteps": {
     "legStart": "Memikirkan apa yang kamu katakan",

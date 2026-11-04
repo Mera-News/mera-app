@@ -691,7 +691,8 @@
     "statusError": "Fehler",
     "turnNoAnswer": "Das konnte ich nicht. Frag noch einmal anders.",
     "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut.",
-    "tryingAgain": "Wird erneut versucht"
+    "tryingAgain": "Wird erneut versucht",
+    "factRemovedLine": "Ich habe {{facts}} entfernt, weil ich dazu keine Nachrichtenthemen finden konnte. Was soll ich dir stattdessen speichern?"
   },
   "personaChat": {
     "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nTeile so viel oder so wenig, wie du möchtest. Was du mir erzählst, bleibt auf diesem Handy. Niemand außer dir hat Zugriff auf deine Daten."
@@ -2537,7 +2538,9 @@
     "added_other": "{{count}} Themen hinzugefügt",
     "nothingNew": "Im Moment gibt es nichts Neues hinzuzufügen",
     "moreFailed": "Themen konnten nicht gefunden werden. Versuch es erneut.",
-    "findTopics": "Themen finden"
+    "findTopics": "Themen finden",
+    "seeWhatToSave": "Ansehen, was du stattdessen speichern kannst",
+    "seeWhatToSaveA11y": "Ansehen, was du statt „{{statement}}“ speichern kannst"
   },
   "agentSteps": {
     "legStart": "Ich denke über deine Nachricht nach",

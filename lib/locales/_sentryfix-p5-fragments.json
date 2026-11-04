@@ -1,0 +1,182 @@
+{
+  "ar": {
+    "chatTopics": {
+      "seeWhatToSave": "اعرض ما يمكن حفظه بدلًا منه",
+      "seeWhatToSaveA11y": "اعرض ما يمكن حفظه بدلًا من «{{statement}}»"
+    },
+    "chat": {
+      "factRemovedLine": "أزلتُ {{facts}} لأنني لم أجد مواضيع إخبارية. ماذا تودّ أن أحفظ بدلًا من ذلك؟"
+    }
+  },
+  "de": {
+    "chatTopics": {
+      "seeWhatToSave": "Ansehen, was du stattdessen speichern kannst",
+      "seeWhatToSaveA11y": "Ansehen, was du statt „{{statement}}“ speichern kannst"
+    },
+    "chat": {
+      "factRemovedLine": "Ich habe {{facts}} entfernt, weil ich dazu keine Nachrichtenthemen finden konnte. Was soll ich dir stattdessen speichern?"
+    }
+  },
+  "es": {
+    "chatTopics": {
+      "seeWhatToSave": "Ver qué guardar en su lugar",
+      "seeWhatToSaveA11y": "Ver qué guardar en lugar de «{{statement}}»"
+    },
+    "chat": {
+      "factRemovedLine": "Eliminé {{facts}} porque no encontré temas de noticias. ¿Qué quieres que guarde en su lugar?"
+    }
+  },
+  "fr": {
+    "chatTopics": {
+      "seeWhatToSave": "Voir ce qu'il faut enregistrer à la place",
+      "seeWhatToSaveA11y": "Voir ce qu'il faut enregistrer à la place de « {{statement}} »"
+    },
+    "chat": {
+      "factRemovedLine": "J'ai supprimé {{facts}} parce que je n'ai pas trouvé de sujets d'actualité. Que voulez-vous que j'enregistre à la place ?"
+    }
+  },
+  "hi": {
+    "chatTopics": {
+      "seeWhatToSave": "इसकी जगह क्या सेव करें, देखें",
+      "seeWhatToSaveA11y": "इसकी जगह क्या सेव करें, देखें: “{{statement}}”"
+    },
+    "chat": {
+      "factRemovedLine": "मैंने {{facts}} हटा दिया, क्योंकि मुझे इसके लिए समाचार विषय नहीं मिले। आप इसकी जगह क्या सेव करना चाहेंगे?"
+    }
+  },
+  "id": {
+    "chatTopics": {
+      "seeWhatToSave": "Lihat apa yang bisa disimpan sebagai gantinya",
+      "seeWhatToSaveA11y": "Lihat apa yang bisa disimpan sebagai pengganti \"{{statement}}\""
+    },
+    "chat": {
+      "factRemovedLine": "Saya menghapus {{facts}} karena tidak menemukan topik berita. Apa yang ingin Anda simpan sebagai gantinya?"
+    }
+  },
+  "it": {
+    "chatTopics": {
+      "seeWhatToSave": "Vedi cosa salvare invece",
+      "seeWhatToSaveA11y": "Vedi cosa salvare invece di «{{statement}}»"
+    },
+    "chat": {
+      "factRemovedLine": "Ho rimosso {{facts}} perché non ho trovato argomenti. Cosa vorresti che salvassi invece?"
+    }
+  },
+  "ja": {
+    "chatTopics": {
+      "seeWhatToSave": "代わりに保存するものを見る",
+      "seeWhatToSaveA11y": "「{{statement}}」の代わりに保存するものを見る"
+    },
+    "chat": {
+      "factRemovedLine": "私はニュースのトピックを見つけられなかったため、{{facts}}を削除しました。代わりに何を保存してほしいですか？"
+    }
+  },
+  "ko": {
+    "chatTopics": {
+      "seeWhatToSave": "대신 저장할 것 보기",
+      "seeWhatToSaveA11y": "“{{statement}}” 대신 저장할 것 보기"
+    },
+    "chat": {
+      "factRemovedLine": "뉴스 토픽을 찾지 못해서 제가 이 내용을 삭제했어요: {{facts}}. 대신 어떤 내용을 저장할까요?"
+    }
+  },
+  "nl": {
+    "chatTopics": {
+      "seeWhatToSave": "Bekijk wat je beter kunt opslaan",
+      "seeWhatToSaveA11y": "Bekijk wat je beter kunt opslaan in plaats van „{{statement}}”"
+    },
+    "chat": {
+      "factRemovedLine": "Ik heb {{facts}} verwijderd omdat ik geen nieuwsonderwerpen kon vinden. Wat wil je dat ik in plaats daarvan opsla?"
+    }
+  },
+  "pl": {
+    "chatTopics": {
+      "seeWhatToSave": "Zobacz, co zapisać zamiast tego",
+      "seeWhatToSaveA11y": "Zobacz, co zapisać zamiast tego: „{{statement}}”"
+    },
+    "chat": {
+      "factRemovedLine": "Usunęłam {{facts}}, bo nie znalazłam tematów z wiadomości. Co wolisz, żebym zapisała zamiast tego?"
+    }
+  },
+  "pt-BR": {
+    "chatTopics": {
+      "seeWhatToSave": "Ver o que salvar no lugar",
+      "seeWhatToSaveA11y": "Ver o que salvar no lugar de \"{{statement}}\""
+    },
+    "chat": {
+      "factRemovedLine": "Removi {{facts}} porque não encontrei temas de notícias. O que você gostaria que eu salvasse no lugar?"
+    }
+  },
+  "ru": {
+    "chatTopics": {
+      "seeWhatToSave": "Посмотреть, что сохранить вместо этого",
+      "seeWhatToSaveA11y": "Посмотреть, что сохранить вместо «{{statement}}»"
+    },
+    "chat": {
+      "factRemovedLine": "Я удалила {{facts}}, потому что не смогла найти темы для новостей. Что бы вы хотели сохранить вместо этого?"
+    }
+  },
+  "th": {
+    "chatTopics": {
+      "seeWhatToSave": "ดูสิ่งที่ควรบันทึกแทน",
+      "seeWhatToSaveA11y": "ดูสิ่งที่ควรบันทึกแทน “{{statement}}”"
+    },
+    "chat": {
+      "factRemovedLine": "ฉันลบ {{facts}} ไปแล้ว เพราะฉันหาหัวข้อข่าวไม่เจอ อยากให้ฉันบันทึกอะไรแทนดีไหม?"
+    }
+  },
+  "tr": {
+    "chatTopics": {
+      "seeWhatToSave": "Bunun yerine kaydedilecekleri gör",
+      "seeWhatToSaveA11y": "“{{statement}}” yerine kaydedilecekleri gör"
+    },
+    "chat": {
+      "factRemovedLine": "Haber konusu bulamadığım için şunları kaldırdım: {{facts}}. Bunun yerine ne kaydetmemi istersin?"
+    }
+  },
+  "uk": {
+    "chatTopics": {
+      "seeWhatToSave": "Переглянути, що зберегти натомість",
+      "seeWhatToSaveA11y": "Переглянути, що зберегти натомість замість «{{statement}}»"
+    },
+    "chat": {
+      "factRemovedLine": "Я видалила {{facts}}, бо не змогла знайти теми новин. Що б ви хотіли зберегти натомість?"
+    }
+  },
+  "vi": {
+    "chatTopics": {
+      "seeWhatToSave": "Xem nên lưu gì khác",
+      "seeWhatToSaveA11y": "Xem nên lưu gì khác thay cho “{{statement}}”"
+    },
+    "chat": {
+      "factRemovedLine": "Mình đã xóa {{facts}} vì không tìm thấy chủ đề tin tức nào. Bạn muốn mình lưu gì thay vào đó?"
+    }
+  },
+  "zh-CN": {
+    "chatTopics": {
+      "seeWhatToSave": "查看可以改存的内容",
+      "seeWhatToSaveA11y": "查看可以改存的内容，替代“{{statement}}”"
+    },
+    "chat": {
+      "factRemovedLine": "我找不到相关的新闻主题，因此已移除{{facts}}。你希望我改存什么呢？"
+    }
+  },
+  "zh-TW": {
+    "chatTopics": {
+      "seeWhatToSave": "看看可以改存什麼",
+      "seeWhatToSaveA11y": "看看可以改存什麼，取代「{{statement}}」"
+    },
+    "chat": {
+      "factRemovedLine": "我找不到相關的新聞主題，所以移除了{{facts}}。你希望我改存什麼呢？"
+    }
+  },
+  "en": {
+    "chatTopics": {
+      "seeWhatToSave": "See what to save instead",
+      "seeWhatToSaveA11y": "See what to save instead of \"{{statement}}\""
+    },
+    "chat": {
+      "factRemovedLine": "I removed {{facts}} because I couldn't find news topics. What would you like me to save instead?"
+    }
+  }
+}

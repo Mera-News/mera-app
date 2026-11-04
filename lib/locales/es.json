@@ -693,7 +693,8 @@
     "statusError": "Error",
     "turnNoAnswer": "No pude hacer eso. Prueba a pedirlo de otra forma.",
     "turnFailed": "Esa respuesta no terminó. Inténtalo de nuevo.",
-    "tryingAgain": "Intentando de nuevo"
+    "tryingAgain": "Intentando de nuevo",
+    "factRemovedLine": "Eliminé {{facts}} porque no encontré temas de noticias. ¿Qué quieres que guarde en su lugar?"
   },
   "personaChat": {
     "introMessage": "¡Hola! Soy Mera.\n\nCuéntame un poco sobre ti, como tu ciudad o tu barrio, a qué te dedicas o un equipo o afición que sigues, y encontraré noticias a tu medida.\n\nComparte tanto o tan poco como quieras. Lo que me cuentes se queda en este teléfono. Nadie más que tú tiene acceso a tus datos."
@@ -2543,7 +2544,9 @@
     "added_other": "Se añadieron {{count}} temas",
     "nothingNew": "No hay nada nuevo que añadir por ahora",
     "moreFailed": "No se encontraron temas. Inténtalo de nuevo.",
-    "findTopics": "Buscar temas"
+    "findTopics": "Buscar temas",
+    "seeWhatToSave": "Ver qué guardar en su lugar",
+    "seeWhatToSaveA11y": "Ver qué guardar en lugar de «{{statement}}»"
   },
   "agentSteps": {
     "legStart": "Pensando en lo que dijiste",

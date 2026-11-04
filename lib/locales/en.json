@@ -1138,7 +1138,8 @@
     "statusError": "Error",
     "turnNoAnswer": "I couldn't do that. Try asking another way.",
     "turnFailed": "That didn't finish. Try again.",
-    "tryingAgain": "Trying again"
+    "tryingAgain": "Trying again",
+    "factRemovedLine": "I removed {{facts}} because I couldn't find news topics. What would you like me to save instead?"
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
@@ -2539,7 +2540,9 @@
     "added_other": "Added {{count}} topics",
     "nothingNew": "Nothing new to add right now",
     "moreFailed": "Couldn't find topics. Try again.",
-    "findTopics": "Find topics"
+    "findTopics": "Find topics",
+    "seeWhatToSave": "See what to save instead",
+    "seeWhatToSaveA11y": "See what to save instead of \"{{statement}}\""
   },
   "agentSteps": {
     "legStart": "Thinking about what you said",
