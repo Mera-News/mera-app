@@ -129,7 +129,7 @@ export default function NotificationRow({ n, first, last, motion }: Notification
                         <Text style={{ color: c.ink3, fontSize: 13, lineHeight: 20, fontVariant: ['tabular-nums'] }}>{age}</Text>
                     </View>
                     {preview ? (
-                        <Text numberOfLines={2} style={{ color: c.ink2, fontSize: 14, lineHeight: 20 }}>
+                        <Text numberOfLines={n.type === 'fact_removed' ? undefined : 2} style={{ color: c.ink2, fontSize: 14, lineHeight: 20 }}>
                             {preview}
                         </Text>
                     ) : null}

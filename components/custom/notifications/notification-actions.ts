@@ -1,6 +1,7 @@
 // What tapping an inbox row or its one button does. Shared by the inbox page
 // (NotificationsScreen) and the notice's button (NotifiedToast), so a notice
 // and its inbox row can never do different things.
+import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import type NotificationModel from '@/lib/database/models/Notification';
 import { deleteByTypes, markActioned, markRead } from '@/lib/database/services/notification-service';
@@ -132,6 +133,12 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
             // The suggestions are cards at the top of the inbox.
             navigateToPage('notifications');
             return;
+        case 'add-fact-back': {
+            // A draft in the composer, never sent: the reader rewords it and taps Send.
+            const statement = parseJson<{ statement?: string }>(n.contextJson)?.statement ?? '';
+            openMeraChat({ kind: 'persona' }, { draft: resolveText('notifications.factRemovedDraft', { statement }) });
+            return;
+        }
         case 'review-plan':
             useFloatingChatStore.getState().openOptimisationPlan();
             return;

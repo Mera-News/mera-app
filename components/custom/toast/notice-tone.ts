@@ -10,6 +10,7 @@ import {
     SlidersHorizontal,
     Smartphone,
     Star,
+    Trash2,
     WandSparkles,
     type LucideIcon,
 } from 'lucide-react-native';
@@ -33,6 +34,7 @@ const LOOKS: Record<string, NoticeLook> = {
     optimisation_plan: { tone: 'info', icon: WandSparkles },
     'on-device-fallback': { tone: 'warning', icon: Cloud },
     move_to_phone: { tone: 'warning', icon: Smartphone },
+    fact_removed: { tone: 'info', icon: Trash2 },
     feedback_request: { tone: 'neutral', icon: MessageCircleQuestionMark },
     // Never written any more (NOT_KEPT_NOTICE_TYPES); here only so a stray row draws right.
     feed_info: { tone: 'warning', icon: Clock },
