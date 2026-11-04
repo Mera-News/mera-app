@@ -185,6 +185,17 @@ async function purgeDeadTopicSuggestions(): Promise<number> {
 }
 
 /**
+ * Clear profile: every fact through the same cascade `deleteFact` uses, so the
+ * bulk path takes the fact-owned topics too. Topics no fact owns (followed
+ * stories, chat's feedback topics) are not profile facts and stay. The caller
+ * clears the suggestions, so this does not purge per fact.
+ */
+export async function deleteAllFacts(): Promise<void> {
+  const records = await factsCollection.query().fetch();
+  for (const record of records) await record.destroyCascade();
+}
+
+/**
  * Mark facts that have no topics, no error, and no active topic_gen job with
  * a `topicGenError`. Called on app startup to rescue facts whose in-flight
  * generation job died before completing (crash, max retries exhausted, etc.)

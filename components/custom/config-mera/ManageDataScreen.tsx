@@ -5,6 +5,7 @@ import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
 import { Spinner } from '@/components/ui/spinner';
 import { isBackupConfigured } from '@/lib/backup/key-store';
 import database from '@/lib/database';
+import { deleteAllFacts } from '@/lib/database/services/fact-service';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { showDialog } from '@/lib/dialog';
@@ -22,10 +23,10 @@ import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { setConfirmTopicDelete, shouldConfirmTopicDelete } from '@/components/custom/facts/topic-delete-confirm';
 import { Switch } from '@/components/ui/switch';
 
-// Facts hold the user's topics, and the feed cache is built from those topics,
-// so clearing facts must also clear the derived cache (and its topic-gen jobs)
-// to avoid leaving stale or orphaned rows behind.
-const FACTS_AND_TOPICS_TABLES = ['facts', 'article_suggestions', 'article_suggestion_facts', 'inference_jobs'];
+// Facts and their topics go through `deleteAllFacts`, the real cascade. The feed
+// cache is built from those topics, so it goes too, with any queued topic-gen
+// jobs, or stale rows outlive what made them.
+const DERIVED_FROM_FACTS_TABLES = ['article_suggestions', 'article_suggestion_facts', 'inference_jobs'];
 
 interface ManageDataScreenProps {
     onBack?: () => void;
@@ -94,7 +95,8 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 if (kind === 'factsTopics') {
                     // Re-anchor the DEV cold-start timeline: this clear is the new t0.
                     coldstartTimeline.arm('cache-clear:factsTopics');
-                    await deleteTables(FACTS_AND_TOPICS_TABLES);
+                    await deleteAllFacts();
+                    await deleteTables(DERIVED_FROM_FACTS_TABLES);
                     await clearFeedCacheAndResync();
                 } else {
                     await clearAllVisits();
