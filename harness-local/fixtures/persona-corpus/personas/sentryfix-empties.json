@@ -1,0 +1,12 @@
+{
+  "_note": "sentryfix: facts with no fitting guideline (MERA-APP-8V), interest controls and negatives. Attribute keys are canonical; the catch-all is what the app stamps on a fact nothing else fits. Load with --persona.",
+  "cohort": "sentryfix-empties",
+  "facts": [
+    { "id": "e01", "statement": "30 year old male", "questionnaireAttribute": "topics: general interests", "questionnaireLevel": 1, "questionnaireLevelCategory": "Core", "weight": 1.0, "createdAtMs": 1780000010000 },
+    { "id": "e02", "statement": "Interested in fitness", "questionnaireAttribute": "topics: general interests", "questionnaireLevel": 1, "questionnaireLevelCategory": "Core", "weight": 1.0, "createdAtMs": 1780000020000 },
+    { "id": "e03", "statement": "Is 30 years old", "questionnaireAttribute": "topics: general interests", "questionnaireLevel": 1, "questionnaireLevelCategory": "Core", "weight": 1.0, "createdAtMs": 1780000030000 },
+    { "id": "e04", "statement": "Male", "questionnaireAttribute": "topics: general interests", "questionnaireLevel": 1, "questionnaireLevelCategory": "Core", "weight": 1.0, "createdAtMs": 1780000040000 },
+    { "id": "e05", "statement": "Does not drive", "questionnaireAttribute": "topics: general interests", "questionnaireLevel": 1, "questionnaireLevelCategory": "Core", "weight": 1.0, "createdAtMs": 1780000050000 }
+  ],
+  "topics": []
+}

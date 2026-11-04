@@ -1,4 +1,7 @@
 import {
+  APPEND_BRIEF,
+  EMPTY_RETRY_NUDGE,
+  JUDGEMENT_NUDGE,
   MAX_TOPICS_PER_FACT,
   buildTopicUserMessage,
   capitalizePlaceNames,
@@ -261,19 +264,87 @@ describe('ux2 F6 fix 1: an isolated set never settles empty', () => {
     const out = await generateTopicsForFact({ fact: { statement: 'Speaks Polish, Dutch and English' }, skillId: 'topics/origin', deps });
     expect(deps.callModel).toHaveBeenCalledTimes(3);
     expect(deps.callModel.mock.calls[2][0].systemPrompt).toBe('SKILL:topics/generic');
+    expect(deps.callModel.mock.calls[2][0].messages[0].content).toContain(JUDGEMENT_NUDGE);
+    expect(deps.callModel.mock.calls[2][0].messages[0].content).not.toContain(EMPTY_RETRY_NUDGE);
     expect(out.topics).toHaveLength(3);
   });
 
-  it('a guideline that IS generic retries once and stops', async () => {
-    const deps = seq('[]', '[]');
+  it('a guideline that IS generic still gets the judgement attempt, then settles empty', async () => {
+    const deps = seq('[]', '[]', '[]');
     const out = await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/generic', deps });
-    expect(deps.callModel).toHaveBeenCalledTimes(2);
+    expect(deps.callModel).toHaveBeenCalledTimes(3);
+    expect(deps.callModel.mock.calls[2][0].messages[0].content).toContain(JUDGEMENT_NUDGE);
     expect(out.topics).toEqual([]);
+    expect(out.malformed).toBe(false);
+  });
+
+  it('prose with no array is malformed, never an empty answer', async () => {
+    const deps = seq('I could not think of any.', 'Sorry.', 'Still none.');
+    const out = await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/interest', deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(3);
+    expect(out.malformed).toBe(true);
+  });
+
+  it('the null control runs the ladder as it shipped', async () => {
+    const deps = seq('[]', '[]');
+    await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/generic', promptArm: 'null-control', deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(2);
+    expect(deps.callModel.mock.calls[1][0].messages[0].content).not.toContain('negative or a placeholder');
   });
 
   it('an ERROR result is not retried: the caller records the failure', async () => {
     const callModel = jest.fn(async (_req: Req) => ({ ...res(''), error: 'timeout' }));
     await generateTopicsForFact({ fact: FACT, skillId: 'topics/residence', deps: { callModel, loadSkill: (id: string) => id } });
+    expect(callModel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Generate more', () => {
+  function seq(...outputs: string[]) {
+    let i = 0;
+    const callModel = jest.fn(async (_req: Req) => res(outputs[Math.min(i++, outputs.length - 1)]));
+    return { callModel, loadSkill: (id: string) => `SKILL:${id}` };
+  }
+  const CHESS = { statement: 'Plays chess' };
+
+  it('lists every own topic and asks for new angles, while a first run keeps the names-the-fact filter', async () => {
+    const existingTopics = ['chess world championship', 'Poland news'];
+    const more = buildTopicUserMessage({ fact: CHESS, existingTopics, append: true, deps: seq('[]') });
+    expect(more).toContain('Poland news');
+    expect(more).toContain(APPEND_BRIEF);
+    const first = buildTopicUserMessage({ fact: CHESS, existingTopics, deps: seq('[]') });
+    expect(first).not.toContain('Poland news');
+    expect(first).not.toContain(APPEND_BRIEF);
+  });
+
+  it('re-asks once naming the repeats, then stops', async () => {
+    const deps = seq('["chess world championship"]', '["Chess World Championship"]');
+    const out = await generateTopicsForFact({ fact: CHESS, skillId: 'topics/interest', append: true, existingTopics: ['chess world championship'], deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(2);
+    expect(deps.callModel.mock.calls[1][0].messages[0].content).toMatch(/only repeated:\n- chess world championship/);
+    expect(out.topics).toEqual([]);
+  });
+
+  it('an empty answer gets the same one re-ask, not the empty ladder', async () => {
+    const deps = seq('[]', '["chess engine research"]');
+    const out = await generateTopicsForFact({ fact: CHESS, skillId: 'topics/interest', append: true, deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(2);
+    expect(out.topics).toEqual(['chess engine research']);
+  });
+
+  it('a reworded own or declined topic is a repeat, and a run with one new topic does not re-ask', async () => {
+    const deps = seq('["chess world championship 2027", "chess boxing bans", "FIDE rating rules"]');
+    const out = await generateTopicsForFact({
+      fact: CHESS, skillId: 'topics/interest', append: true,
+      existingTopics: ['chess world championship'], declinedTopics: ['Chess boxing bans'], deps,
+    });
+    expect(deps.callModel).toHaveBeenCalledTimes(1);
+    expect(out.topics).toEqual(['FIDE rating rules']);
+  });
+
+  it('a transport error is not re-asked', async () => {
+    const callModel = jest.fn(async (_req: Req) => ({ ...res(''), error: 'timeout' }));
+    await generateTopicsForFact({ fact: CHESS, append: true, deps: { callModel, loadSkill: (id: string) => id } });
     expect(callModel).toHaveBeenCalledTimes(1);
   });
 });

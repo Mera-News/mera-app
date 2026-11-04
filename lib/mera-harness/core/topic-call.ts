@@ -14,7 +14,7 @@
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { escapeUntrusted } from './state-line';
 import { filterNearDuplicates, type DedupeDrop } from './topic-dedupe';
-import { namesFact } from './topic-similarity';
+import { FILTER_DROP_JACCARD, contentJaccard, namesFact } from './topic-similarity';
 import type { AgentModelResult, PlaceChain } from './types';
 
 /** The only cap. There is NO per-persona ceiling. */
@@ -66,6 +66,11 @@ export interface GenerateTopicsParams {
   ceiling?: number;
   /** Absent means ON. An arm passes 'off' to measure without the filter. */
   dedupe?: 'off' | 'overlap';
+  /** "Generate more": every own topic is listed, and a run with nothing new is
+   *  re-asked once rather than walking the empty ladder. */
+  append?: boolean;
+  /** Eval only: the ladder and the append run as they were before this arm. */
+  promptArm?: 'null-control';
 }
 
 export interface GenerateTopicsOutcome {
@@ -80,12 +85,28 @@ export interface GenerateTopicsOutcome {
   /** The model wrapped its array in prose rather than answering with the array.
    *  Surfaced so the prompt fix is measurable. */
   proseAroundArray: boolean;
+  /** The last answer was neither an array nor held one: it says nothing about
+   *  the fact, so the caller must not read it as an empty answer. */
+  malformed: boolean;
 }
 
 const FALLBACK_SKILL = 'topics/generic';
 
 /** Appended when a guideline returned a well-formed but empty array. */
 export const EMPTY_RETRY_NUDGE =
+  'Your last answer was empty. Return at least 3 topics about this fact: what gets reported about it. Return [] again only if the fact is a negative or a placeholder.';
+
+/** The empty ladder's last attempt, on `topics/generic`. Prose emphasis is not a
+ *  lever on this model, so judgement gets its own attempt rather than a louder
+ *  repeat of the nudge. */
+export const JUDGEMENT_NUDGE =
+  'No guideline fits this fact, so set them aside. Ask what news someone would want because this is true of them, and answer with those topics. Avoid stereotypes about who the person is. Return [] only if the fact is a negative or a placeholder.';
+
+/** Why an append run is not the first run: the same brief twice gives the same list. */
+export const APPEND_BRIEF =
+  'This fact already has the topics above. Find new angles they do not cover: named people, organisations, rules, events and sub-areas.';
+
+const LEGACY_EMPTY_RETRY_NUDGE =
   'Your last answer was empty. Return at least 3 topics about this fact: what gets reported about it.';
 
 /**
@@ -135,7 +156,10 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
   // came back with six Poland school topics. So this fact's own topics are
   // listed only when they name this fact, and the block says what it is.
   // Declined texts are always listed: the veto below needs them regardless.
-  const own = (p.existingTopics ?? []).filter((t) => t && namesFact(t, p.fact.statement));
+  // "Generate more" lists them all: hidden from the model, an own topic comes
+  // straight back as a repeat, and repeats are what stopped the taps adding.
+  const showAll = p.append && p.promptArm !== 'null-control';
+  const own = (p.existingTopics ?? []).filter((t) => t && (showAll || namesFact(t, p.fact.statement)));
   const exclusions = [...new Set([...own, ...(p.declinedTopics ?? []).filter(Boolean)])];
   if (exclusions.length > 0) {
     lines.push(
@@ -144,6 +168,7 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
         .join('\n')}`,
     );
   }
+  if (showAll) lines.push(APPEND_BRIEF);
   lines.push(`Generate at most ${p.ceiling ?? MAX_TOPICS_PER_FACT} topics — fewer is correct.`);
   return lines.join('\n');
 }
@@ -233,18 +258,20 @@ export interface ParsedTopics {
    *  the whole answer. 42% of skill-arm rows did this; counting it is how the
    *  prompt fix gets measured instead of guessed at. */
   proseAroundArray: boolean;
+  /** No array anywhere in a non-empty answer. */
+  malformed: boolean;
 }
 
 export function parseTopicsDetailed(output: string): ParsedTopics {
   const whole = tryParse(output.trim());
-  if (whole) return { topics: whole, proseAroundArray: false };
+  if (whole) return { topics: whole, proseAroundArray: false, malformed: false };
 
   const block = lastBalancedArray(output);
   if (block) {
     const recovered = tryParse(block);
-    if (recovered) return { topics: recovered, proseAroundArray: true };
+    if (recovered) return { topics: recovered, proseAroundArray: true, malformed: false };
   }
-  return { topics: [], proseAroundArray: false };
+  return { topics: [], proseAroundArray: false, malformed: output.trim().length > 0 };
 }
 
 export function parseTopics(output: string): string[] {
@@ -280,22 +307,40 @@ export async function generateTopicsForFact(
       enableThinking: false,
     });
 
-  // AN ISOLATED SET NEVER SETTLES EMPTY (ux2 F6, measured: 29 of 120 were the
-  // model's well-formed [] on running, languages, diet, travel). One retry on
-  // the same guideline with a nudge, then `topics/generic`. A transport ERROR
-  // is not retried: the caller records it and the card offers Retry.
+  const nullControl = params.promptArm === 'null-control';
+  const appending = params.append === true && !nullControl;
+  // Own and declined alike: a reworded repeat is not a new topic.
+  const known = [...(params.existingTopics ?? []), ...(params.declinedTopics ?? [])].filter(Boolean);
+  const knownKeys = new Set(known.map(normalizeTopicText));
+  const isRepeat = (t: string) =>
+    knownKeys.has(normalizeTopicText(t)) || known.some((k) => contentJaccard(t, k) >= FILTER_DROP_JACCARD);
+
   let result = await call(systemPrompt, userMessage);
   let decoded = parseTopicsDetailed(result.content);
-  if (!result.error && decoded.topics.length === 0) {
-    result = await call(systemPrompt, `${userMessage}\n${EMPTY_RETRY_NUDGE}`);
+  if (appending) {
+    // One re-ask naming what came back, then stop: "nothing new" is an answer.
+    const repeats = decoded.topics.filter(isRepeat);
+    if (!result.error && decoded.topics.length === repeats.length) {
+      const named = repeats.slice(0, 12).map((t) => `- ${escapeUntrusted(t, 200)}`).join('\n');
+      const note = named ? `Your last answer only repeated:\n${named}\nName different subjects.` : 'Your last answer was empty. Name different subjects.';
+      result = await call(systemPrompt, `${userMessage}\n${note}`);
+      decoded = parseTopicsDetailed(result.content);
+    }
+  } else if (!result.error && decoded.topics.length === 0) {
+    // AN ISOLATED SET NEVER SETTLES EMPTY (ux2 F6, measured: 29 of 120 were the
+    // model's well-formed [] on running, languages, diet, travel). One retry on
+    // the same guideline with a nudge, then `topics/generic` with judgement. A
+    // transport ERROR is not retried: the caller records it and the card offers
+    // Retry.
+    result = await call(systemPrompt, `${userMessage}\n${nullControl ? LEGACY_EMPTY_RETRY_NUDGE : EMPTY_RETRY_NUDGE}`);
     decoded = parseTopicsDetailed(result.content);
     const generic = loadSkillFn(FALLBACK_SKILL);
-    if (!result.error && decoded.topics.length === 0 && generic && generic !== systemPrompt) {
-      result = await call(generic, `${userMessage}\n${EMPTY_RETRY_NUDGE}`);
+    if (!result.error && decoded.topics.length === 0 && generic && (!nullControl || generic !== systemPrompt)) {
+      result = await call(generic, `${userMessage}\n${nullControl ? LEGACY_EMPTY_RETRY_NUDGE : JUDGEMENT_NUDGE}`);
       decoded = parseTopicsDetailed(result.content);
     }
   }
-  const raw = decoded.topics;
+  const raw = appending ? decoded.topics.filter((t) => !isRepeat(t)) : decoded.topics;
 
   const declined = new Set((params.declinedTopics ?? []).map(normalizeTopicText));
   const kept: string[] = [];
@@ -334,5 +379,6 @@ export async function generateTopicsForFact(
     dropped: { veto: vetoed, filter: deduped.dropped.length },
     filterDrops: deduped.dropped,
     proseAroundArray: decoded.proseAroundArray,
+    malformed: decoded.malformed,
   };
 }

@@ -60,7 +60,7 @@ type SkillId = (typeof SKILL_IDS)[number];
 // follow_story intent with its literal follow-word and surface tests (S3b).
 // topics/generic bought the Place rule (a fact's place at its level) with
 // tokens rather than by trimming its measured examples.
-const BUDGET: Record<string, number> = { router: 2376, 'topics/generic': 1300 };
+const BUDGET: Record<string, number> = { router: 2376, 'topics/generic': 1400 };
 const DEFAULT_BUDGET = 1200;
 
 /**
