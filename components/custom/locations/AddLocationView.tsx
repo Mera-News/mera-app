@@ -34,6 +34,8 @@ interface Props {
   readonly renderIdle: () => React.ReactNode;
   /** The place is the reader's home: no role or weight to choose (onboarding). */
   readonly homeOnly?: boolean;
+  /** Above the search bar, on the search step only: the other steps need the height. */
+  readonly header?: React.ReactNode;
 }
 
 /**
@@ -44,7 +46,7 @@ interface Props {
  * query, search step) it defers to `renderIdle` so the saved-places list stays
  * visible under the search bar.
  */
-const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOnly = false }) => {
+const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOnly = false, header }) => {
   const { t } = useTranslation();
   const colors = useColors();
   const themeMode = useThemeMode();
@@ -85,7 +87,10 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOn
   if (chosen) {
     return (
       <Box className="flex-1">
-        <DrillDownHeader title={t('locations.addTitle')} onBack={() => setChosen(null)} />
+        <DrillDownHeader
+          title={homeOnly ? t('onboarding.noFactsTitle') : t('locations.addTitle')}
+          onBack={() => setChosen(null)}
+        />
         <VStack className="flex-1 px-5 pt-4" space="lg">
           <HStack className="items-center rounded-xl border border-line p-3" space="sm">
             <Text className="text-xl">{flagForAlpha2(chosen.countryCode) || '📍'}</Text>
@@ -234,6 +239,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOn
 
   return (
     <Box className="flex-1">
+      {header}
       <Box className="px-5 pt-4 pb-2">
         <Input variant="outline" size="md" className="border-line">
           <InputSlot className="pl-3">

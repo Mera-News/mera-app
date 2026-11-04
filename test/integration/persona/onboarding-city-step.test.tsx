@@ -44,6 +44,27 @@ it('says what the city is for', async () => {
   expect(screen.getByText('onboarding.noFactsBody')).toBeTruthy();
 });
 
+it('the ask stays on the search step, so manual entry and its country list get the full height', async () => {
+  failServer();
+  await openStep();
+  await search('del');
+  await fireEvent.press(await screen.findByTestId('locations-add-manually'));
+
+  expect(await screen.findByText('locations.cityLabel')).toBeTruthy();
+  expect(screen.queryByText('onboarding.noFactsBody')).toBeNull();
+});
+
+it('the confirm step asks the same question, without the settings title', async () => {
+  answer([delft]);
+  await openStep();
+  await search('del');
+  await fireEvent.press(await screen.findByText('Delft, South Holland, Netherlands'));
+
+  expect(await screen.findByText('onboarding.noFactsTitle')).toBeTruthy();
+  expect(screen.queryByText('locations.addTitle')).toBeNull();
+  expect(screen.queryByText('onboarding.noFactsBody')).toBeNull();
+});
+
 it('a picked place saves a home location and the residence fact, with no role or weight to choose', async () => {
   answer([delft]);
   const onDone = await openStep();

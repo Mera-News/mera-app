@@ -42,13 +42,20 @@ export default function OnboardingCityStep({ onClose, onDone }: OnboardingCitySt
 
     return (
         <Animated.View style={[styles.root, lift]} testID="onboarding-city-step">
-            <View style={styles.ask}>
-                <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
-                    {t('onboarding.noFactsTitle')}
-                </Text>
-                <Text style={[styles.body, { color: colors.ink2 }]}>{t('onboarding.noFactsBody')}</Text>
-            </View>
-            <AddLocationView homeOnly onClose={onClose} onSaved={save} renderIdle={() => null} />
+            <AddLocationView
+                homeOnly
+                onClose={onClose}
+                onSaved={save}
+                renderIdle={() => null}
+                header={
+                    <View style={styles.ask}>
+                        <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                            {t('onboarding.noFactsTitle')}
+                        </Text>
+                        <Text style={[styles.body, { color: colors.ink2 }]}>{t('onboarding.noFactsBody')}</Text>
+                    </View>
+                }
+            />
         </Animated.View>
     );
 }
