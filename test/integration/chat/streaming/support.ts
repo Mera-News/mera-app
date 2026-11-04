@@ -177,5 +177,102 @@ export function rawJson(body: (seal: Seal) => object, opts: { once?: boolean } =
   return { handler, requests: () => count };
 }
 
+export interface TurnPoll {
+  /** Stored bytes visible to this read (cumulative). Default: everything. */
+  upTo?: number;
+  status?: 'running' | 'done' | 'error' | 'cancelled';
+  /** `X-Mera-Turn-Upstream-Status`. */
+  upstream?: number;
+  /** Answer this read with a raw status and body instead. */
+  fail?: { status: number; code: string };
+}
+
+/**
+ * The gateway with CHAT_TURN_RESUME_ENABLED on, for the turn routes. Each POST is one turn: `live`
+ * is what the socket delivers (a `{ hold: true }` POST never answers), `stored` the bytes the turn
+ * store keeps, and `polls` scripts the GETs in order, the last one repeating.
+ */
+export function detachedGateway(
+  script: (seal: Seal, attempt: number) => {
+    live?: RawItem[];
+    hold?: boolean;
+    stored: string;
+    polls?: TurnPoll[];
+    contentType?: string;
+  },
+) {
+  const ids: string[] = [];
+  const reads: { id: string; after: number }[] = [];
+  const deletes: string[] = [];
+  const turns = new Map<string, { stored: Uint8Array; polls: TurnPoll[]; read: number }>();
+  const enc = new TextEncoder();
+  const post = http.post(`*${CHAT_URL}`, async ({ request }) => {
+    const id = request.headers.get('x-mera-turn-id') ?? '';
+    const clientPub = request.headers.get('x-client-pub-key') ?? '';
+    const algo = (request.headers.get('x-signing-algo') ?? 'ed25519') as 'ed25519' | 'ecdsa';
+    const plan = script((t) => sealForClient(t, clientPub, algo), ids.length);
+    ids.push(id);
+    turns.set(id, { stored: enc.encode(plan.stored), polls: plan.polls ?? [{}], read: 0 });
+    if (plan.hold) {
+      await new Promise<void>((resolve) => request.signal.addEventListener('abort', () => resolve(), { once: true }));
+      return new HttpResponse(null, { status: 499 });
+    }
+    const items = plan.live ?? [];
+    const it = (async function* () {
+      for (const item of items) {
+        if (typeof item === 'string') yield item;
+        else if ('wait' in item) await new Promise((r) => setTimeout(r, item.wait));
+        else throw item.fail;
+      }
+    })();
+    const stream = new NodeReadableStream<Uint8Array>(
+      {
+        async pull(controller) {
+          try {
+            const { value, done } = await it.next();
+            if (done) controller.close();
+            else controller.enqueue(enc.encode(value));
+          } catch (err) {
+            controller.error(err);
+          }
+        },
+        cancel() {
+          void it.return(undefined);
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    return new HttpResponse(stream, { headers: { 'content-type': plan.contentType ?? 'text/event-stream' } });
+  });
+  const read = http.get('*/v1/chat/turns/:id', ({ request, params }) => {
+    const id = String(params.id);
+    const after = Number(new URL(request.url).searchParams.get('after'));
+    reads.push({ id, after });
+    const turn = turns.get(id);
+    if (!turn) return HttpResponse.json({ code: 'turn-gone' }, { status: 404 });
+    const poll = turn.polls[Math.min(turn.read, turn.polls.length - 1)];
+    turn.read += 1;
+    if (poll.fail) return HttpResponse.json({ code: poll.fail.code }, { status: poll.fail.status });
+    const end = poll.upTo ?? turn.stored.length;
+    return new HttpResponse(turn.stored.slice(after, end), {
+      headers: {
+        'content-type': 'application/octet-stream',
+        'x-mera-turn-status': poll.status ?? 'done',
+        'x-mera-turn-total': String(end),
+        ...(poll.upstream ? { 'x-mera-turn-upstream-status': String(poll.upstream) } : {}),
+      },
+    });
+  });
+  const cancel = http.delete('*/v1/chat/turns/:id', ({ params }) => {
+    deletes.push(String(params.id));
+    return new HttpResponse(null, { status: 204 });
+  });
+  return { handlers: [post, read, cancel], ids, reads, deletes };
+}
+
+/** The reply as a reader ends up seeing it: a `restart` clears what came before. */
+export const shownText = (events: SseEvent[]) =>
+  events.reduce((shown, e) => (e.type === 'restart' ? '' : e.type === 'text-delta' ? shown + e.delta : shown), '');
+
 /** An AbortError, as a cancelled fetch body rejects with. */
 export const abortError = () => Object.assign(new Error('Fetch request has been canceled'), { name: 'AbortError' });

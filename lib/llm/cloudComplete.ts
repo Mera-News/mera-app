@@ -4,6 +4,7 @@
 // responses are decrypted locally. There is no plaintext path — if E2EE
 // fails, the call fails and the user sees an error.
 
+import { departureMark, whenForeground } from '../app-restart';
 import { assertCloudAllowed, type CloudPurpose } from './on-device-gate';
 import {
   decryptContent,
@@ -31,13 +32,16 @@ import type { PhaseSignal } from '@/lib/services/chat-phase';
 import {
   authFetch,
   CallerAbortError,
+  cancelTurn,
   CleartextToolCallError,
   EmptyReplyError,
   getAuthHeaders,
   isAbortLike,
   isCallerAbort,
+  newChatTurn,
   StreamIdleError,
   takeStreamHandle,
+  type ChatTurn,
   type CloudCallOptions,
 } from './gateway-fetch';
 import { sendWithModelFallback, withUpstreamAlignedDefaults } from './hedge';
@@ -46,6 +50,7 @@ import {
   type ChatCompletionResponse,
   type SseEvent,
 } from './chat-response';
+import type { E2EEContext } from '../e2ee/e2ee-service';
 
 // Everything that moved out is re-exported, so this module's export list is unchanged.
 export {
@@ -455,6 +460,32 @@ export interface CloudChatStreamRequest {
   signal?: AbortSignal;
 }
 
+/** One request's key and turn. `build` makes one per hedge leg and per re-send. */
+interface ChatAttempt {
+  turn: ChatTurn;
+  ctx: E2EEContext;
+}
+
+/** Was this failure the app leaving? An HTTP answer, a stop and a privacy
+ *  refusal are verdicts that stand whether or not the reader stayed. */
+function failedByLeaving(err: unknown, left: () => boolean, signal?: AbortSignal): boolean {
+  return (
+    left() &&
+    !signal?.aborted &&
+    !isCallerAbort(err) &&
+    !(err instanceof CleartextToolCallError) &&
+    (err as { statusCode?: unknown }).statusCode === undefined
+  );
+}
+
+/** Passes `events` on, noting when any of the reply reached the caller. */
+async function* noting(events: AsyncGenerator<SseEvent>, seen: { reply: boolean }): AsyncGenerator<SseEvent> {
+  for await (const event of events) {
+    if (event.type === 'text-delta' || event.type === 'tool-call-delta') seen.reply = true;
+    yield event;
+  }
+}
+
 /**
  * E2EE chat: encrypt messages, stream the response, decrypt each delta, emit
  * events. NEAR encrypts every streamed `delta.content` as its OWN self-contained
@@ -462,6 +493,13 @@ export interface CloudChatStreamRequest {
  * sees text as it is generated (verified against cloud-api.near.ai, 2026-08-03).
  * A non-SSE response (upstream ignoring `stream: true`) falls through to the
  * original buffered handling.
+ *
+ * THE APP LEAVING. No leg opens while away. A leg cut off by a departure is
+ * read back from the gateway's turn store when the store has it (mid-stream the
+ * reader does that below the parser, see chat-turn), and otherwise re-sent once.
+ * A re-send after visible output emits `restart`. None of it is evidence about
+ * the model. Only the leg retries: a leg's tools run after its stream has ended,
+ * so no tool can run twice.
  */
 export async function* cloudChatStream(
   request: CloudChatStreamRequest,
@@ -470,6 +508,67 @@ export async function* cloudChatStream(
   // Always chat: the stream's only callers are chat turns.
   await assertCloudAllowed('chat');
 
+  const { signal } = request;
+  const stopped = () => new CallerAbortError('cloudChatStream: stopped');
+  const counter = { builds: 0 };
+  for (let resent = false; ; resent = true) {
+    await whenForeground(signal);
+    const attempts: ChatAttempt[] = [];
+    const left = departureMark();
+    const seen = { reply: false };
+    let failure: unknown;
+    try {
+      yield* noting(playChatLeg(request, attempts, left, counter), seen);
+      return;
+    } catch (err) {
+      if (!failedByLeaving(err, left, signal)) {
+        // A stall or a stop leaves a detached turn running and paid. An HTTP
+        // answer means there is none.
+        if ((err as { statusCode?: unknown }).statusCode === undefined) attempts.forEach((a) => cancelTurn(a.turn));
+        throw err;
+      }
+      failure = err;
+    }
+
+    await whenForeground(signal);
+    if (signal?.aborted) {
+      attempts.forEach((a) => cancelTurn(a.turn));
+      throw stopped();
+    }
+    // Mid-stream the reader already tried the store. This is the attempt that
+    // never got as far as a reader.
+    const unread = seen.reply ? undefined : attempts.find((a) => a.turn.id && a.turn.bytes === 0 && !a.turn.polled);
+    attempts.forEach((a) => {
+      if (a !== unread) cancelTurn(a.turn);
+    });
+    if (unread) {
+      try {
+        request.onPhase?.('thinking');
+        const resume = { turn: unread.turn, left, streamed: request.stream !== false };
+        const textTools = (request.tools ?? []) as TextToolDefinition[];
+        const { privateKey, algo } = unread.ctx;
+        yield* noting(consumeChatResponse(null, privateKey, algo, textTools, signal, resume), seen);
+        return;
+      } catch (err) {
+        cancelTurn(unread.turn);
+        if (signal?.aborted) throw stopped();
+        logger.debug(`${TAG} no stored reply`, { error: String(err) });
+      }
+    }
+    if (resent) throw failure;
+    if (seen.reply) yield { type: 'restart' };
+    logger.warn(`${TAG} the app left during a leg, sending it again`);
+  }
+}
+
+/** One full send of a leg, with today's hedge and retries. A failure that
+ *  `left()` explains is not handled here: it goes to `cloudChatStream`. */
+async function* playChatLeg(
+  request: CloudChatStreamRequest,
+  attempts: ChatAttempt[],
+  left: () => boolean,
+  counter: { builds: number },
+): AsyncGenerator<SseEvent> {
   // ONE CALL, ONE MARK. An agent turn is a loop of up to MAX_AGENT_LEGS
   // sequential calls and each genuinely re-encrypts and re-sends, so the wait
   // line's high-water mark is bounded here rather than by the turn. This
@@ -506,13 +605,13 @@ export async function* cloudChatStream(
   // retries. Those all re-encrypt, so without this they would report
   // `securing` again and walk the reader back to "encrypting" at the moment
   // they have been waiting longest.
-  let buildAttempts = 0;
   const textTools = (request.tools ?? []) as TextToolDefinition[];
+  const resumeOf = (turn: ChatTurn) => ({ turn, left, streamed: request.stream !== false });
 
   const buildChatRequest = async (sendModel: string) => {
     // A LOCAL copy: a hedge leg can bump the shared counter while a cold
     // attestation below is still in flight.
-    const attempt = ++buildAttempts;
+    const attempt = ++counter.builds;
     // A cache hit makes the key fetch free, so `attesting` would be a line
     // about work that is not happening. A miss means a second interactive
     // grant 1000ms behind the one just spent, plus the attestation round
@@ -569,6 +668,8 @@ export async function* cloudChatStream(
     // FAIL CLOSED: a tool field in clear is a privacy breach, never a request.
     assertNoCleartextToolFields(body);
 
+    const turn = newChatTurn();
+    attempts.push({ turn, ctx: attemptCtx });
     return {
       init: {
         method: 'POST',
@@ -576,7 +677,8 @@ export async function* cloudChatStream(
         body: JSON.stringify(body),
         ...(request.signal ? { signal: request.signal } : {}),
       } satisfies RequestInit,
-      ctx: attemptCtx,
+      ctx: { ...attemptCtx, turn },
+      turn,
     };
   };
 
@@ -619,6 +721,10 @@ export async function* cloudChatStream(
       signal: request.signal,
     }),
   );
+  // The hedge's loser keeps running upstream after its abort.
+  attempts.forEach((a) => {
+    if (a.turn !== ctx.turn) cancelTurn(a.turn);
+  });
   logger.debug('[chat-timing] chat POST→response', {
     ms: Date.now() - postStartMs,
     status: response.status,
@@ -686,9 +792,10 @@ export async function* cloudChatStream(
       const freshResponse = await authFetch(CHAT_API, fresh.init, {
         ...withUpstreamAlignedDefaults({ streamBody: true, lane: 'interactive' }),
         maxTimeoutAttempts: 1,
+        turn: fresh.turn,
       });
       if (freshResponse.ok) {
-        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo, textTools, request.signal);
+        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo, textTools, request.signal, resumeOf(fresh.turn));
         return;
       }
       takeStreamHandle(freshResponse)?.release();
@@ -739,7 +846,7 @@ export async function* cloudChatStream(
 
   let textYielded = false;
   try {
-    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo, textTools, request.signal)) {
+    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo, textTools, request.signal, resumeOf(ctx.turn))) {
       if (event.type === 'text-delta') textYielded = true;
       yield event;
     }
@@ -752,6 +859,8 @@ export async function* cloudChatStream(
     if (isCallerAbort(err) || request.signal?.aborted) throw err;
     // A cleartext tool call is a privacy failure, not model evidence: no retry.
     if (err instanceof CleartextToolCallError) throw err;
+    // The app left: an overdue timer proves nothing, and the caller recovers.
+    if (left()) throw err;
     if (textYielded) throw err;
     // Already on the fallback (session-engaged, or a hedge winner) — there is
     // no healthier model left to try. An empty 2xx is the exception: it is
@@ -775,6 +884,7 @@ export async function* cloudChatStream(
     // Without this check a re-attested request that then died mid-stream would
     // issue a THIRD upstream call for a single user turn.
     if (retried) throw err;
+    cancelTurn(ctx.turn);
     logger.warn(`${TAG} stream died before any text — one fresh attempt`, {
       failedModel: sentModel,
       error: String(err),
@@ -790,6 +900,7 @@ export async function* cloudChatStream(
   const retryResponse = await authFetch(CHAT_API, retry.init, {
     ...withUpstreamAlignedDefaults({ streamBody: true, lane: 'interactive' }),
     maxTimeoutAttempts: 1,
+    turn: retry.turn,
   });
   if (!retryResponse.ok) {
     takeStreamHandle(retryResponse)?.release();
@@ -813,5 +924,5 @@ export async function* cloudChatStream(
       responseBody: errorText,
     });
   }
-  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo, textTools, request.signal);
+  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo, textTools, request.signal, resumeOf(retry.turn));
 }

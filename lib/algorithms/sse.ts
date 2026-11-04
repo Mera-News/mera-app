@@ -79,7 +79,7 @@ function parseEventBlock(block: string): string | null {
  * chunks that complete no event.
  */
 export async function* sseEvents(
-  reader: ReadableStreamDefaultReader<Uint8Array>,
+  reader: Pick<ReadableStreamDefaultReader<Uint8Array>, 'read'>,
   onChunk?: () => void,
 ): AsyncGenerator<string> {
   const parser = new SseParser();

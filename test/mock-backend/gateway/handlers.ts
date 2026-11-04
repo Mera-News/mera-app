@@ -455,6 +455,12 @@ const factCheckClaims = http.post('*/v1/fact-check-claims', ({ request }) => sea
  * per-model curve and the number of "pending" polls before job results land.
  * State is read at request time, so the same handlers serve every test.
  */
+// The deployed flag is off: every turn route answers turn-gone. A test that needs a detached turn
+// overrides these with `detachedGateway` (test/integration/chat/streaming/support.ts).
+const turnGone = () => HttpResponse.json({ code: 'turn-gone' }, { status: 404 });
+const readTurn = http.get('*/v1/chat/turns/:id', turnGone);
+const cancelTurn = http.delete('*/v1/chat/turns/:id', turnGone);
+
 export function createGatewayHandlers(
   respond?: GatewayResponder,
   opts: { curve?: Partial<Record<string, GatewayAlgo>>; pendingPolls?: number } = {},
@@ -462,5 +468,5 @@ export function createGatewayHandlers(
   if (respond) state.responder = respond;
   for (const [model, algo] of Object.entries(opts.curve ?? {})) if (algo) state.curveByModel.set(model, algo);
   if (opts.pendingPolls !== undefined) state.pendingPolls = opts.pendingPolls;
-  return [attestation, chat, batch, submitJob, jobResults, webSearch, factCheckClaims];
+  return [attestation, chat, batch, submitJob, jobResults, webSearch, factCheckClaims, readTurn, cancelTurn];
 }

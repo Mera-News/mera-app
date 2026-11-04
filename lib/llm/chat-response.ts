@@ -12,6 +12,7 @@ import {
   type TextToolDefinition,
 } from './text-tool-protocol';
 import { sseEvents } from '../algorithms/sse';
+import { readStoredTurn, turnReader, type TurnReader, type TurnResume } from './chat-turn';
 import {
   CallerAbortError,
   CleartextToolCallError,
@@ -49,7 +50,10 @@ export type SseEvent =
   | { type: 'reasoning' }
   | { type: 'tool-call-delta'; index: number; id?: string; name?: string; argumentsDelta: string }
   | { type: 'finish'; reason: 'stop' | 'tool_calls' | 'length' | 'error' }
-  | { type: 'error'; message: string };
+  | { type: 'error'; message: string }
+  /** What was sent so far is void: the leg went out again after the app left
+   *  mid-reply. Clear the partial text and any tool call before reading on. */
+  | { type: 'restart' };
 
 /** Non-streaming chat completion response (used for E2EE path). */
 export interface ChatCompletionResponse {
@@ -98,13 +102,17 @@ interface ChatCompletionChunk {
  *  Tool calls are parsed HERE too, after the think stripper (a call inside a
  *  think block must never run): they arrive as text inside the encrypted
  *  content (text-tool-protocol) and leave as the same `tool-call-delta` events
- *  a native call used to produce, one whole call per event. */
+ *  a native call used to produce, one whole call per event.
+ *
+ *  A null `response` reads the reply from the turn store from byte 0: the
+ *  attempt was cut off before any headers. */
 export async function* consumeChatResponse(
-  response: Response,
+  response: Response | null,
   privateKey: Uint8Array,
   algo: SigningAlgo,
   tools: TextToolDefinition[],
   signal?: AbortSignal,
+  resume?: TurnResume,
 ): AsyncGenerator<SseEvent> {
   const think = createThinkStripper();
   const calls = createToolCallStreamParser(tools, APP_TOOL_FORMAT);
@@ -117,7 +125,7 @@ export async function* consumeChatResponse(
       yield { type: 'tool-call-delta', index, id: `call_${stamp}_${index}`, name: c.name, argumentsDelta: c.argumentsRaw };
     }
   }
-  for await (const event of consumeChatResponseRaw(response, privateKey, algo, signal)) {
+  for await (const event of consumeChatResponseRaw(response, privateKey, algo, signal, resume)) {
     if (event.type === 'text-delta') {
       const delta = think.push(event.delta);
       if (delta) yield* emit(calls.push(delta));
@@ -150,11 +158,19 @@ export async function* consumeChatResponse(
 }
 
 async function* consumeChatResponseRaw(
-  response: Response,
+  response: Response | null,
   privateKey: Uint8Array,
   algo: SigningAlgo,
   signal?: AbortSignal,
+  resume?: TurnResume,
 ): AsyncGenerator<SseEvent> {
+  if (!response) {
+    // shortcut: a streamed leg whose upstream ignored `stream: true` stored JSON and reads as
+    // empty here, upgrade if a resumed turn ever comes back blank.
+    if (resume?.streamed) yield* consumeSseChat(null, privateKey, algo, undefined, signal, resume);
+    else yield* parseBufferedChat(await readStoredTurn(resume!, signal), privateKey, algo);
+    return;
+  }
   const handle = takeStreamHandle(response);
   const contentType = response.headers?.get('content-type') ?? '';
   // Content-type first: reading expo/fetch's `.body` starts native streaming and empties the
@@ -163,10 +179,10 @@ async function* consumeChatResponseRaw(
     // The gateway relays NEAR's content-type verbatim, so JSON here means the
     // upstream ignored `stream: true`. Buffered handling, unchanged.
     handle?.release();
-    yield* consumeBufferedChat(response, privateKey, algo);
+    yield* consumeBufferedChat(response, privateKey, algo, signal, resume);
     return;
   }
-  yield* consumeSseChat(response, privateKey, algo, handle, signal);
+  yield* consumeSseChat(response, privateKey, algo, handle, signal, resume);
 }
 
 /** Streaming path: one E2EE envelope per `delta.content`, decrypted as it lands. */
@@ -178,18 +194,26 @@ function finishReasonOf(raw: string | null | undefined): 'stop' | 'tool_calls' |
 }
 
 async function* consumeSseChat(
-  response: Response,
+  response: Response | null,
   privateKey: Uint8Array,
   algo: SigningAlgo,
   handle: StreamHandle | undefined,
   signal?: AbortSignal,
+  resume?: TurnResume,
 ): AsyncGenerator<SseEvent> {
-  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+  const socket = (response?.body as ReadableStream<Uint8Array> | undefined)?.getReader() ?? null;
+  // The resume happens BELOW the parser, as more bytes of the same stream, so
+  // parser, think and tool state carry over and no text can arrive twice.
+  const turn: TurnReader | null = resume ? turnReader(socket, resume, handle, signal) : null;
+  const reader = turn ?? socket!;
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
   let idleTimedOut = false;
   const armIdle = (ms: number) => {
     clearTimeout(idleTimer);
+    // A poll has its own stall budget, which does not count time away.
+    if (turn?.polling()) return;
     idleTimer = setTimeout(() => {
+      if (turn?.takeOver()) return;
       idleTimedOut = true;
       // Abort the in-flight body so the pending read rejects instead of
       // hanging forever behind a silent upstream.
@@ -280,8 +304,24 @@ async function* consumeBufferedChat(
   response: Response,
   privateKey: Uint8Array,
   algo: SigningAlgo,
+  signal?: AbortSignal,
+  resume?: TurnResume,
 ): AsyncGenerator<SseEvent> {
-  const raw = await response.text();
+  let raw: string;
+  try {
+    raw = await response.text();
+  } catch (err) {
+    if (!resume?.left() || signal?.aborted) throw err;
+    raw = await readStoredTurn(resume, signal);
+  }
+  yield* parseBufferedChat(raw, privateKey, algo);
+}
+
+async function* parseBufferedChat(
+  raw: string,
+  privateKey: Uint8Array,
+  algo: SigningAlgo,
+): AsyncGenerator<SseEvent> {
   if (!raw.trim()) throw new EmptyReplyError();
   const data = JSON.parse(raw) as ChatCompletionResponse;
   const choice = data.choices?.[0];

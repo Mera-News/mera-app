@@ -4,10 +4,14 @@
 // Imports none of cloudComplete / hedge / chat-response.
 
 import { fetch as expoFetch } from 'expo/fetch';
+import { randomBytes } from '@noble/ciphers/utils.js';
+import { departureMark, whenForeground } from '../app-restart';
+import { bytesToHex } from '../e2ee/e2ee-crypto';
 import { getJwtToken, invalidateJwtCache } from '../auth-client';
 import logger from '../logger';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import { retryAfterMs } from '../algorithms/retry-after';
+import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import { sleep } from '@/lib/utils/sleep';
 
 const TAG = '[CloudLLM]';
@@ -154,6 +158,40 @@ export interface AuthFetchOptions {
    *  handle via {@link takeStreamHandle} and release it when the body ends.
    *  Chat streaming is the only caller. */
   streamBody?: boolean;
+  /** Detaches this chat call from the socket: every attempt gets a fresh
+   *  `X-Mera-Turn-Id`, written here so the caller can read the turn later. */
+  turn?: ChatTurn;
+}
+
+/** One chat attempt's handle on the gateway's turn store. */
+export interface ChatTurn {
+  /** The id of the attempt that went out last. Null until one has. */
+  id: string | null;
+  /** Bytes of the reply read so far: the resume cursor. */
+  bytes: number;
+  /** A reader took over from the socket, so the store was already tried. */
+  polled: boolean;
+  /** DELETE already sent for `id`. */
+  cancelled: boolean;
+}
+
+export const newChatTurn = (): ChatTurn => ({ id: null, bytes: 0, polled: false, cancelled: false });
+
+/** Base URL of the turn routes. */
+export const turnUrl = (id: string): string => `${INFERENCE_ENDPOINT}/v1/chat/turns/${id}`;
+
+/**
+ * Best effort: a detached turn keeps running and stays paid after a disconnect,
+ * so a turn nobody will read is cancelled by hand. Background lane, because
+ * nobody waits on it. Never throws.
+ */
+export function cancelTurn(turn: ChatTurn): void {
+  if (!turn.id || turn.cancelled) return;
+  turn.cancelled = true;
+  const url = turnUrl(turn.id);
+  void getAuthHeaders()
+    .then((headers) => authFetch(url, { method: 'DELETE', headers }, { maxTimeoutAttempts: 1 }))
+    .catch(() => { /* the turn ends on its own deadline */ });
 }
 
 /** Per-call options for the cloud entry points, which additionally choose
@@ -221,6 +259,18 @@ export class CleartextToolCallError extends Error {
   constructor() {
     super('[CloudLLM] provider returned a cleartext tool call');
     this.name = 'CleartextToolCallError';
+  }
+}
+
+/**
+ * A chat attempt was cut off because the app left. Says nothing about the model,
+ * and deliberately not abort-like: the model-fallback layer treats those as
+ * evidence. `cloudChatStream` catches it and recovers the leg on return.
+ */
+export class AppLeftError extends Error {
+  constructor() {
+    super('[CloudLLM] the app left during the attempt');
+    this.name = 'AppLeftError';
   }
 }
 
@@ -326,6 +376,10 @@ export async function authFetch(
   let throttleRetried = false;
 
   for (let attempt = 0; attempt <= lastAttempt; attempt++) {
+    // A suspended phone cannot answer: hold here rather than burn the budget.
+    if (lane === 'interactive') await whenForeground(init.signal);
+    const left = departureMark();
+
     // The ONLY reliable discriminator between a caller abort and our own
     // per-attempt timeout: the caller's original signal. The combined signal is
     // aborted by both. Checked at the loop top so an aborted leg that is mid
@@ -367,6 +421,15 @@ export async function authFetch(
     const { signal, release } = combineSignals(init.signal, controller.signal);
     // Set when the attempt's teardown is handed to the caller (streamBody).
     let handedOff = false;
+    // A new id per attempt: a reused one is refused detachment by the gateway.
+    if (options.turn) {
+      options.turn.id = bytesToHex(randomBytes(16));
+      options.turn.cancelled = false;
+      init = {
+        ...init,
+        headers: { ...init.headers as Record<string, string>, 'X-Mera-Turn-Id': options.turn.id },
+      };
+    }
 
     try {
       const response = await (expoFetch as unknown as typeof globalThis.fetch)(url, {
@@ -471,6 +534,8 @@ export async function authFetch(
       if (init.signal?.aborted) {
         throw new CallerAbortError('authFetch: caller aborted', err);
       }
+      // The turn may be alive in the store: the caller reads it, no re-send here.
+      if (options.turn && left()) throw new AppLeftError();
       lastError = err instanceof Error ? err : new Error(String(err));
       const isAbort = isAbortLike(lastError);
       if (isAbort) {
@@ -479,9 +544,12 @@ export async function authFetch(
           { url },
         );
       }
-      // Timeout/network failures share the cold-upstream budget with 502s.
-      timeoutAttempts += 1;
+      // Timeout/network failures share the cold-upstream budget with 502s. The
+      // time away is not one of them.
+      if (!left()) timeoutAttempts += 1;
       if (attempt < lastAttempt && timeoutAttempts < maxTimeoutAttempts) {
+        // Its socket is gone and its reply will not be read.
+        if (options.turn) cancelTurn(options.turn);
         logger.warn(`${TAG} fetch error on attempt ${attempt + 1}, retrying`, {
           error: lastError.message,
           timedOut: isAbort,

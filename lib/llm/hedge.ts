@@ -2,6 +2,7 @@
 // fallback retry, and the hedged race of the primary against its fallback.
 // Imports gateway-fetch only.
 
+import { departureMark } from '../app-restart';
 import logger from '../logger';
 import {
   fallbackFor,
@@ -12,11 +13,13 @@ import {
 } from './model-fallback';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import {
+  AppLeftError,
   authFetch,
   isAbortLike,
   isCallerAbort,
   UPSTREAM_ALIGNED_TIMEOUT_MS,
   type AuthFetchOptions,
+  type ChatTurn,
   type CloudCallOptions,
 } from './gateway-fetch';
 
@@ -77,7 +80,7 @@ export async function sendWithModelFallback<C>(
   return sendHedged(url, primaryModel, hedgeModel, build, options, hedgeAfterMs);
 }
 
-type Build<C> = (model: string) => Promise<{ init: RequestInit; ctx: C }>;
+type Build<C> = (model: string) => Promise<{ init: RequestInit; ctx: C; turn?: ChatTurn }>;
 
 /** A settled request leg: the response, the E2EE context that decrypts it, and
  *  the model it was sent to. Raced as ONE tuple so ctx always follows the
@@ -108,7 +111,7 @@ async function sendSequential<C>(
   let originalResponse: Response | null = null;
   let originalError: unknown = null;
   try {
-    const response = await authFetch(url, withCallerSignal(first.init, options), options);
+    const response = await authFetch(url, withCallerSignal(first.init, options), { ...options, turn: first.turn });
     if (response.status !== 502) {
       if (response.ok) reportModelSuccess(primaryModel);
       return { response, ctx: first.ctx, model };
@@ -158,6 +161,7 @@ async function engageAndRetry<C>(
       const response = await authFetch(url, withCallerSignal(retry.init, options), {
         ...options,
         maxTimeoutAttempts: 1,
+        turn: retry.turn,
       });
       if (response.status !== 502) {
         return { response, ctx: retry.ctx, model: fallbackModel };
@@ -198,8 +202,8 @@ async function sendHedged<C>(
     signal: AbortSignal,
     legOptions: AuthFetchOptions,
   ): Promise<Leg<C>> => {
-    const { init, ctx } = await build(model);
-    const response = await authFetch(url, { ...init, signal }, legOptions);
+    const { init, ctx, turn } = await build(model);
+    const response = await authFetch(url, { ...init, signal }, { ...legOptions, turn });
     return { response, ctx, model };
   };
 
@@ -215,6 +219,9 @@ async function sendHedged<C>(
   // earlier.
   const primaryController = new AbortController();
   const hedgeController = new AbortController();
+  // An overdue timer after a suspension reads as silence. Nothing that happens
+  // to a leg while the app is away is a verdict on the model.
+  const left = departureMark();
   // A STOP ABORTS BOTH LEGS. Each leg runs on its own controller (the loser
   // must be abortable alone), so the caller's signal is fanned out to both.
   const stopBoth = () => {
@@ -245,6 +252,12 @@ async function sendHedged<C>(
     timerFired,
   ]);
   clearTimeout(hedgeTimer);
+
+  if (firstUp === 'timer' && left()) {
+    primaryController.abort();
+    void primaryRaw.catch(dropLoserError);
+    throw new AppLeftError();
+  }
 
   if (firstUp === 'primary') {
     // Nothing was hedged — reproduce the sequential semantics exactly,
@@ -313,7 +326,7 @@ async function sendHedged<C>(
           response: out.settled.leg.response,
           error: null,
         };
-        reportModelFailure(primaryModel); // 502 = timeout-class
+        if (!left()) reportModelFailure(primaryModel); // 502 = timeout-class
       } else {
         primaryFailure = {
           ctx: undefined as unknown as C, // never read: no response to decrypt
@@ -322,7 +335,7 @@ async function sendHedged<C>(
         };
         // A caller abort (our own loser-abort included) and plain network
         // errors say nothing about the model.
-        if (!isCallerAbort(out.settled.err) && isAbortLike(out.settled.err)) {
+        if (!left() && !isCallerAbort(out.settled.err) && isAbortLike(out.settled.err)) {
           // No sequential retry here — the in-flight hedge IS that retry.
           reportModelFailure(primaryModel);
         }
@@ -335,7 +348,7 @@ async function sendHedged<C>(
     if (out.settled.kind === 'leg' && out.settled.leg.response.ok) {
       primaryController.abort();
       void primaryRaw.catch(dropLoserError);
-      reportModelSlow(primaryModel);
+      if (!left()) reportModelSlow(primaryModel);
       logger.warn(`${TAG} hedge won`, { primaryModel, hedgeModel });
       return out.settled.leg;
     }
