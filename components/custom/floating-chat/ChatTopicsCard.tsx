@@ -30,13 +30,13 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import StatusIndicator from '@/components/custom/chat/StatusIndicator';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
-import { isRemovableEmptyFact, observeFact, observeTopicsStatus } from '@/lib/database/services/fact-service';
+import { observeFact, observeTopicsStatus } from '@/lib/database/services/fact-service';
 import {
   deleteTopicWithDecline,
   undoPendingDelete,
   UNDO_WINDOW_MS,
 } from '@/lib/database/services/topic-decline-service';
-import { generateMoreAndWait, holdFactOnScreen } from '@/lib/database/services/topic-planning-service';
+import { generateMoreAndWait, holdFactOnScreen, promisesRemoval } from '@/lib/database/services/topic-planning-service';
 import { observeByFact } from '@/lib/database/services/topic-service';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import type TopicModel from '@/lib/database/models/Topic';
@@ -467,7 +467,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             // topics to add right now." beside it read as a contradiction.
             status !== 'pending' && status !== 'error' && (
               <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
-                {fact && isRemovableEmptyFact(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none')}
+                {fact && promisesRemoval(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none')}
               </Text>
             )
           ) : (

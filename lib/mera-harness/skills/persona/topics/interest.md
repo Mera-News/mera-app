@@ -15,7 +15,7 @@ examples:
   - "Formula 1 regulation changes"
   - "Formula 1 driver transfers"
   - "Formula 1 team budget cap"
-  - "Formula 1 engine rules 2027"
+  - "Formula 1 engine rules"
   - "Dutch Grand Prix Zandvoort"
   - "Max Verstappen contract news"
   - "Formula 1 broadcast rights"
@@ -80,7 +80,7 @@ Six global, two local drawn from the driver the fact names, one business. Nine, 
 band.
 
 ```json
-["Formula 1 race results", "Formula 1 regulation changes", "Formula 1 driver transfers", "Formula 1 team budget cap", "Formula 1 engine rules 2027", "Dutch Grand Prix Zandvoort", "Max Verstappen contract news", "Formula 1 broadcast rights", "Formula 1 fan attendance"]
+["Formula 1 race results", "Formula 1 regulation changes", "Formula 1 driver transfers", "Formula 1 team budget cap", "Formula 1 engine rules", "Dutch Grand Prix Zandvoort", "Max Verstappen contract news", "Formula 1 broadcast rights", "Formula 1 fan attendance"]
 ```
 
 ### The same bands, an interest with no places

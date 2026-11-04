@@ -6,7 +6,7 @@ import { getByTypes } from '@/lib/database/services/notification-service';
 import { countEmptyFactRemovals, getRecent } from '@/lib/database/services/persona-change-log-service';
 import { recordDecline } from '@/lib/database/services/topic-decline-service';
 import { failTopicGeneration, restartTopicClocks, settleEmptyTopicGeneration, LEGACY_EMPTY_ERROR } from '@/lib/database/services/topic-generation-status-service';
-import { holdFactOnScreen, sweepTopicLifecycle } from '@/lib/database/services/topic-planning-service';
+import { holdFactOnScreen, promisesRemoval, sweepTopicLifecycle } from '@/lib/database/services/topic-planning-service';
 import { createTopics, getByFact } from '@/lib/database/services/topic-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -243,6 +243,11 @@ describe('removal', () => {
 
     await updateFact(fact.id, { statement: 'Reworded' });
     expect(await meta(fact.id)).not.toHaveProperty('topics_empty_since');
+  });
+
+  it('nothing promises removal while the flag is off', async () => {
+    const fact = await empty();
+    expect(promisesRemoval((await factNow(fact.id))!)).toBe(false);
   });
 
   it('a fact the person shaped reads as guarded on the card', async () => {

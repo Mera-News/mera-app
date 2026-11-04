@@ -1,11 +1,11 @@
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
-import { deleteFact, isRemovableEmptyFact, observeFact } from '@/lib/database/services/fact-service';
+import { deleteFact, observeFact } from '@/lib/database/services/fact-service';
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import { addSuppression, getActive as getActiveSuppressions, retireSuppression } from '@/lib/database/services/suppression-service';
 import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDecline } from '@/lib/database/services/topic-decline-service';
-import { generateMoreAndWait, holdFactOnScreen } from '@/lib/database/services/topic-planning-service';
+import { generateMoreAndWait, holdFactOnScreen, promisesRemoval } from '@/lib/database/services/topic-planning-service';
 import { createTopics, normalizeTopicText, observeByFact, reactivate, retire } from '@/lib/database/services/topic-service';
 import { showDialog } from '@/lib/dialog';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
@@ -325,7 +325,7 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
     }, [phrase, factId]);
 
     // The empty list's line: a fact Mera may remove says so, any other just has none.
-    const emptyLine = fact && isRemovableEmptyFact(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none');
+    const emptyLine = fact && promisesRemoval(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none');
 
     const openSuggestion = useOpenSuggestion('sectioned');
 

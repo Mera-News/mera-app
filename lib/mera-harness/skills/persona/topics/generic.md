@@ -23,8 +23,10 @@ as the fact lives, and nothing downstream traces it back to here.
 ## When this fact doesn't fit a guideline
 The guidelines are guidance, not limits. If a fact doesn't match any of them, use your judgement:
 ask what news someone would want because this is true of them. Prefer real subjects such as policy,
-health, money, law and research, and avoid stereotypes about who the person is. Return nothing only
-when the fact truly gives you nothing to work with, such as a negative or a placeholder.
+health, money, law and research, and avoid stereotypes about who the person is. When the fact says
+who someone is, every topic still names a concrete subject: never a generation label and never a
+debate about what such people are like. Return nothing only when the fact truly gives you nothing to
+work with, such as a negative or a placeholder.
 
 ## Granularity by scope
 The bigger the place, the more specific the topic.
@@ -50,7 +52,8 @@ Schengen.
 ## A place-bound topic names its Place
 With a `Place:` line, a place-bound topic names that Place as a proper noun at its own level, never
 narrower. "anywhere in the world" means name no place. A residence fact may widen from its Place:
-city, region, country, bloc.
+city, region, country, bloc. With no `Place:` line and no place in the fact, name no country: the
+reader's country is unknown and guessing one fills their feed with another country's news.
 
 ## Two entities per topic
 A place, an organisation, a sport, a profession, an industry and a hobby each count as one. Three or
@@ -91,6 +94,9 @@ better phrasing and stop.
 No personal names, use the role. No country-specific acronyms or nationality labels: write "expat",
 "diaspora" or "overseas citizens", never NRI, OCI, PIO, DACA, H-1B, CPA or JD. An acronym tied to
 one country's nationals identifies the reader.
+
+## No year
+No year in a topic unless the fact states one. A year dates the topic and it stops matching.
 
 ## Punctuation
 No em dash and no en dash anywhere. No filler openers. Plain words.

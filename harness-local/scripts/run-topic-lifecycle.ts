@@ -3,11 +3,15 @@
 //   npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/run-topic-lifecycle.ts \
 //     --target staging --repeat 3 [--dry-run]
 //
-// Three arms, interleaved per fact, null first, so one run holds all of them
-// (two runs would put the noise floor between the arms):
+// Arms, interleaved per fact, null first, so one run holds all of them (two runs
+// would put the noise floor between the arms):
 //   null-control       promptArm 'null-control' with the skills as of commit 3e62c609
-//   new                the shipped core and skills
-//   catch-all-generic  new, but the `topics: general interests` attribute loads topics/generic
+//   long-judgement     shipped skills, last attempt on topics/generic with a nudge
+//   catch-all-generic  long-judgement, but `topics: general interests` loads topics/generic
+//   short              shipped: the last attempt is JUDGEMENT_SYSTEM alone
+//   short-catch-all    short, with the same routing
+// Negatives run --negative-repeat times, so a single fact cannot decide that bar. The tap
+// pass runs only the arms it can tell apart: append skips the ladder.
 // Pass 1 (empty): one generation per fact, records attempts, topics, malformed.
 // Pass 2 (tap): a first run, then 5 "Generate more" taps (append, ceiling 10) carrying
 // the fact's own topics forward. Per tap: added, near-duplicates against own, leaks.
@@ -43,8 +47,10 @@ export const TAP_CEILING = 10;
 export const CATCH_ALL_ATTRIBUTE = 'topics: general interests';
 const FIXTURES = resolve(__dirname, '..', 'fixtures', 'persona-corpus', 'personas');
 
-export type ArmName = 'null-control' | 'new' | 'catch-all-generic';
-export const ARM_ORDER: ArmName[] = ['null-control', 'new', 'catch-all-generic'];
+export type ArmName = 'null-control' | 'long-judgement' | 'catch-all-generic' | 'short' | 'short-catch-all';
+export const ARM_ORDER: ArmName[] = ['null-control', 'long-judgement', 'catch-all-generic', 'short', 'short-catch-all'];
+export const TAP_ARMS: ArmName[] = ['null-control', 'short', 'short-catch-all'];
+const isCatchAllArm = (arm: ArmName) => arm === 'catch-all-generic' || arm === 'short-catch-all';
 
 export interface LifecycleFact {
   id: string;
@@ -55,6 +61,7 @@ export interface LifecycleFact {
 export interface Args {
   dryRun: boolean;
   repeat: number;
+  negativeRepeat: number;
   label: string;
   runsRoot: string | null;
 }
@@ -62,13 +69,14 @@ export interface Args {
 /** `--target staging` is required here too, on top of the guard in main(): a flag the
  *  command line must carry is a flag a pasted command cannot lose. */
 export function parseArgs(argv: string[]): Args {
-  const args: Args = { dryRun: false, repeat: 3, label: 'topic-lifecycle', runsRoot: null };
+  const args: Args = { dryRun: false, repeat: 3, negativeRepeat: 6, label: 'topic-lifecycle', runsRoot: null };
   let target: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--target') target = argv[++i];
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
+    else if (a === '--negative-repeat') args.negativeRepeat = Number(argv[++i]);
     else if (a === '--label') args.label = argv[++i] ?? args.label;
     else if (a === '--runs-root') args.runsRoot = argv[++i] ?? null;
   }
@@ -80,7 +88,7 @@ export function parseArgs(argv: string[]): Args {
 }
 
 export function attributeSkill(arm: ArmName, fact: LifecycleFact): string {
-  if (arm === 'catch-all-generic' && fact.questionnaireAttribute === CATCH_ALL_ATTRIBUTE) return 'topics/generic';
+  if (isCatchAllArm(arm) && fact.questionnaireAttribute === CATCH_ALL_ATTRIBUTE) return 'topics/generic';
   return topicSkillForAttribute(fact.questionnaireAttribute);
 }
 
@@ -172,7 +180,7 @@ async function generate(
     fact: { statement: fact.statement, questionnaireAttribute: fact.questionnaireAttribute },
     skillId,
     model: deps.model,
-    promptArm: arm === 'null-control' ? 'null-control' : undefined,
+    promptArm: arm === 'null-control' ? 'null-control' : arm === 'long-judgement' || arm === 'catch-all-generic' ? 'long-judgement' : undefined,
     ...extra,
     deps: {
       callModel: (req) => {
@@ -191,9 +199,10 @@ export async function runLifecycle(
   emptyFacts: LifecycleFact[],
   tapFacts: LifecycleFact[],
   repeat: number,
+  negativeRepeat = repeat,
 ): Promise<void> {
   for (const fact of emptyFacts) {
-    for (let rep = 1; rep <= repeat; rep++) {
+    for (let rep = 1; rep <= (fact.id.startsWith('n') ? negativeRepeat : repeat); rep++) {
       for (const arm of ARM_ORDER) {
         const { out, attempts, skillId } = await generate(deps, arm, fact, {});
         deps.write({
@@ -206,7 +215,7 @@ export async function runLifecycle(
   }
   for (const fact of tapFacts) {
     for (let rep = 1; rep <= repeat; rep++) {
-      for (const arm of ARM_ORDER) {
+      for (const arm of TAP_ARMS) {
         let own: string[] = [];
         for (let tap = 0; tap <= TAPS; tap++) {
           const { out, attempts, skillId } = await generate(
@@ -235,11 +244,12 @@ export function buildRaterView(rows: LifecycleRow[]): { view: string; key: Recor
   const factIds = [...new Set(rows.map((r) => `${r.pass}:${r.factId}`))];
   factIds.forEach((fk, i) => {
     const mine = rows.filter((r) => `${r.pass}:${r.factId}` === fk);
-    const rotated = [...ARM_ORDER.slice(i % 3), ...ARM_ORDER.slice(0, i % 3)];
+    const arms = ARM_ORDER.filter((arm) => mine.some((m) => m.arm === arm));
+    const rotated = [...arms.slice(i % arms.length), ...arms.slice(0, i % arms.length)];
     key[fk] = {};
     lines.push(`## ${fk.split(':')[0]} pass: ${mine[0].statement}`);
     rotated.forEach((arm, j) => {
-      const label = 'ABC'[j];
+      const label = 'ABCDE'[j];
       key[fk][label] = arm;
       lines.push(`### ${label}`);
       for (const r of mine.filter((m) => m.arm === arm)) {
@@ -294,7 +304,10 @@ async function main(): Promise<number> {
 
   const model = TOPICGEN_ARM_MODELS[0];
   const { empty, tap } = loadFacts();
-  const calls = (empty.length * 3 + tap.length * 3 * (1 + TAPS)) * args.repeat;
+  const negatives = empty.filter((f) => f.id.startsWith('n')).length;
+  const calls = (empty.length - negatives) * ARM_ORDER.length * args.repeat
+    + negatives * ARM_ORDER.length * args.negativeRepeat
+    + tap.length * TAP_ARMS.length * (1 + TAPS) * args.repeat;
   console.log(`mode     : ${args.dryRun ? 'DRY RUN, zero model calls' : 'live'}\nmodel    : ${model}\nrepeat   : ${args.repeat}\nplanned  : ~${calls} generations (retries add calls), stop at $${SPEND_STOP_USD}`);
 
   const info = args.dryRun
@@ -332,7 +345,7 @@ async function main(): Promise<number> {
   try {
     await runLifecycle(
       { call, model, nullSkills: await loadNullControlSkills(), write: (r) => { rows.push(r); appendFileSync(rowsPath, `${JSON.stringify(r)}\n`); } },
-      empty, tap, args.repeat,
+      empty, tap, args.repeat, args.negativeRepeat,
     );
   } catch (err) {
     if (!(err instanceof SpendLimitError)) throw err;

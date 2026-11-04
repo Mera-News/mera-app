@@ -32,6 +32,7 @@ import { inferenceQueue } from '../../inference/InferenceQueue';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import logger from '../../logger';
+import type { Fact } from '../../mera-protocol-toolkit/types';
 
 export interface GenerateMoreOutcome {
   /** 'inline' when cloud generation completed synchronously (rows already
@@ -121,6 +122,12 @@ export async function generateMoreAndWait(
 
 /** T9 is the staging proof. Off, the sweep still retries and settles; it removes nothing. */
 const AUTO_DELETE_ENABLED = false;
+/** Whether the empty line may tell the reader Mera will remove this fact. While
+ *  removal is off nothing says it will happen. */
+export function promisesRemoval(fact: Fact): boolean {
+  return AUTO_DELETE_ENABLED && isRemovableEmptyFact(fact);
+}
+
 const MAX_LADDERS_PER_SWEEP = 3;
 const MAX_REMOVALS_PER_DAY = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;

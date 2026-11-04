@@ -11,12 +11,14 @@ import { initI18nEn } from '@/test/helpers';
 const mockGenerate = jest.fn();
 const mockRelease = jest.fn();
 const mockRetry = jest.fn();
+let mockAutoDelete = true;
 let mockFact: Record<string, unknown> | null = null;
 let mockTopics: Record<string, unknown>[] = [];
 
 jest.mock('@/lib/database/services/topic-planning-service', () => ({
     generateMoreAndWait: (...a: unknown[]) => mockGenerate(...a),
     holdFactOnScreen: () => mockRelease,
+    promisesRemoval: (fact: never) => mockAutoDelete && jest.requireActual('@/lib/database/services/fact-service').isRemovableEmptyFact(fact),
 }));
 jest.mock('@/lib/chat-tools/tool-handlers', () => ({ retryTopicGeneration: (...a: unknown[]) => mockRetry(...a) }));
 jest.mock('@/lib/database/services/fact-service', () => ({
@@ -53,6 +55,7 @@ jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
 beforeAll(initI18nEn);
 beforeEach(() => {
     jest.clearAllMocks();
+    mockAutoDelete = true;
     mockTopics = [];
     mockFact = { id: 'f1', statement: 's', metadata: { topics_empty_since: 1 }, weight: null, topicsStatus: 'done' };
     jest.spyOn(toastManager, 'showInfo').mockImplementation(() => {});
@@ -75,6 +78,12 @@ describe('a fact with no topics', () => {
         const view = await open();
         expect(emptyText(view)).toMatch(/remove this fact/);
         expect(view.getByText('Find topics')).toBeTruthy();
+    });
+
+    it('promises nothing while removal is off', async () => {
+        mockAutoDelete = false;
+        const view = await open();
+        expect(emptyText(view)).toBe('Saved. No topics to add right now.');
     });
 
     it('gives a guarded fact the plain line', async () => {

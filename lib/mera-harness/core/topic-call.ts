@@ -69,8 +69,9 @@ export interface GenerateTopicsParams {
   /** "Generate more": every own topic is listed, and a run with nothing new is
    *  re-asked once rather than walking the empty ladder. */
   append?: boolean;
-  /** Eval only: the ladder and the append run as they were before this arm. */
-  promptArm?: 'null-control';
+  /** Eval only. 'null-control': the ladder and the append as they were before
+   *  this work. 'long-judgement': the last attempt on `topics/generic` plus a nudge. */
+  promptArm?: 'null-control' | 'long-judgement';
 }
 
 export interface GenerateTopicsOutcome {
@@ -101,6 +102,15 @@ export const EMPTY_RETRY_NUDGE =
  *  repeat of the nudge. */
 export const JUDGEMENT_NUDGE =
   'No guideline fits this fact, so set them aside. Ask what news someone would want because this is true of them, and answer with those topics. Avoid stereotypes about who the person is. Return [] only if the fact is a negative or a placeholder.';
+
+/** The empty ladder's last attempt, as a whole system prompt. Measured: on the
+ *  1,383-token rules text a judgement nudge rescued 0 of 48 facts, and every fact
+ *  in Dutch or Hindi stayed empty, so this attempt sheds the rules and the first
+ *  line is a required slot that puts the fact in English. */
+export const JUDGEMENT_SYSTEM = `You suggest news topics from one thing a person said about themselves. It may be in any language. Reply in exactly two lines.
+Line 1: the fact in English.
+Line 2: a JSON array of 3 to 6 news topics in English, each 2 to 5 words: real subjects someone would want to follow because this is true of them, such as policy, health, money, law and research. Name what newsrooms report. No stereotypes about who the person is, no generation labels, no debates about what such people are like. No country and no year unless the fact states one.
+If the fact is a negative or a placeholder, line 2 is [].`;
 
 /** Why an append run is not the first run: the same brief twice gives the same list. */
 export const APPEND_BRIEF =
@@ -329,14 +339,21 @@ export async function generateTopicsForFact(
   } else if (!result.error && decoded.topics.length === 0) {
     // AN ISOLATED SET NEVER SETTLES EMPTY (ux2 F6, measured: 29 of 120 were the
     // model's well-formed [] on running, languages, diet, travel). One retry on
-    // the same guideline with a nudge, then `topics/generic` with judgement. A
-    // transport ERROR is not retried: the caller records it and the card offers
-    // Retry.
+    // the same guideline with a nudge, then one on judgement alone. A transport
+    // ERROR is not retried: the caller records it and the card offers Retry.
     result = await call(systemPrompt, `${userMessage}\n${nullControl ? LEGACY_EMPTY_RETRY_NUDGE : EMPTY_RETRY_NUDGE}`);
     decoded = parseTopicsDetailed(result.content);
     const generic = loadSkillFn(FALLBACK_SKILL);
-    if (!result.error && decoded.topics.length === 0 && generic && (!nullControl || generic !== systemPrompt)) {
-      result = await call(generic, `${userMessage}\n${nullControl ? LEGACY_EMPTY_RETRY_NUDGE : JUDGEMENT_NUDGE}`);
+    if (!result.error && decoded.topics.length === 0) {
+      if (nullControl) {
+        if (generic && generic !== systemPrompt) {
+          result = await call(generic, `${userMessage}\n${LEGACY_EMPTY_RETRY_NUDGE}`);
+        }
+      } else if (params.promptArm === 'long-judgement') {
+        result = await call(generic ?? systemPrompt, `${userMessage}\n${JUDGEMENT_NUDGE}`);
+      } else {
+        result = await call(JUDGEMENT_SYSTEM, userMessage);
+      }
       decoded = parseTopicsDetailed(result.content);
     }
   }

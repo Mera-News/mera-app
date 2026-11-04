@@ -151,6 +151,51 @@
       "questionnaireLevelCategory": "Core",
       "weight": 1.0,
       "createdAtMs": 1780000150000
+    },
+    {
+      "id": "n04",
+      "statement": "Does not play chess any more",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000130000
+    },
+    {
+      "id": "n05",
+      "statement": "Has no children",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000130000
+    },
+    {
+      "id": "n06",
+      "statement": "Not interested in sports",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000130000
+    },
+    {
+      "id": "n07",
+      "statement": "N/A",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000130000
+    },
+    {
+      "id": "n08",
+      "statement": "Does not own a car",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000130000
     }
   ],
   "topics": []

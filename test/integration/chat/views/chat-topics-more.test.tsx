@@ -9,10 +9,12 @@ import { initI18nEn } from '@/test/helpers';
 const mockGenerate = jest.fn();
 const mockHold = jest.fn();
 const mockRelease = jest.fn();
+let mockAutoDelete = true;
 let mockFact: Record<string, unknown> = {};
 jest.mock('@/lib/database/services/topic-planning-service', () => ({
     generateMoreAndWait: (...a: unknown[]) => mockGenerate(...a),
     holdFactOnScreen: (...a: unknown[]) => { mockHold(...a); return mockRelease; },
+    promisesRemoval: (fact: never) => mockAutoDelete && jest.requireActual('@/lib/database/services/fact-service').isRemovableEmptyFact(fact),
 }));
 jest.mock('@/lib/database/services/topic-service', () => ({ observeByFact: () => require('rxjs').of([]) }));
 jest.mock('@/lib/database/services/fact-service', () => ({
@@ -24,6 +26,7 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 beforeAll(initI18nEn);
 beforeEach(() => {
     mockGenerate.mockReset();
+    mockAutoDelete = true;
     mockFact = { id: 'f1', statement: 's', metadata: {}, weight: null };
 });
 
@@ -82,6 +85,12 @@ describe('ChatTopicsCard empty line', () => {
         mockFact = { id: 'f1', statement: 's', metadata: { topics_empty_since: 1 }, weight: null };
         const view = await open();
         expect(view.getByTestId('chat-topics-empty').props.children).toMatch(/remove this fact/);
+    });
+    it('promises nothing while removal is off', async () => {
+        mockAutoDelete = false;
+        mockFact = { id: 'f1', statement: 's', metadata: { topics_empty_since: 1 }, weight: null };
+        const view = await open();
+        expect(view.getByTestId('chat-topics-empty').props.children).toBe('Saved. No topics to add right now.');
     });
     it('gives a guarded fact the plain line', async () => {
         mockFact = { id: 'f1', statement: 's', metadata: { topics_empty_since: 1, topics_keep: true }, weight: null };
