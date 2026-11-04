@@ -6,6 +6,7 @@
 // (getJwtToken's own getSession does not), so counting those counts re-checks.
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 import {
   _getBreakerState,
   _resetForTests,
@@ -701,6 +702,65 @@ describe('the event says WHICH cause it was', () => {
     expect(needsReauth()).toBe(false);
     expect(captureMessage).not.toHaveBeenCalled();
     expect(feedSyncPaused()).toBe(true);
+  });
+
+  describe('the cookie is stored but the sync read came back empty', () => {
+    // A failed sync keychain read: better-auth sends nothing while the async read still finds the jar.
+    const missSyncCookieRead = () =>
+      jest.spyOn(SecureStore, 'getItem').mockImplementation(((key: string) => {
+        if (key.startsWith(COOKIE_KEY)) throw new Error('keychain failure (injected)');
+        return secureStoreDump()[key] ?? null;
+      }) as typeof SecureStore.getItem);
+
+    // What @better-auth/expo writes for a jar over its per-write limit.
+    const CHUNK_MARKER = '\u0001ba-chunks:';
+    async function chunkStoredCookie() {
+      const jar = secureStoreDump()[COOKIE_KEY];
+      const middle = Math.floor(jar.length / 2);
+      await secureStore.setItemAsync(`${COOKIE_KEY}.0`, jar.slice(0, middle));
+      await secureStore.setItemAsync(`${COOKIE_KEY}.1`, jar.slice(middle));
+      await secureStore.setItemAsync(COOKIE_KEY, `${CHUNK_MARKER}2`);
+    }
+
+    let syncRead: jest.SpyInstance;
+    afterEach(() => syncRead.mockRestore());
+
+    it('a future cookie is no-credential, NOT dead', async () => {
+      syncRead = missSyncCookieRead();
+      await tripWith('dead');
+
+      expect(needsReauth()).toBe(false);
+      expect(captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('a chunked store with a future cookie is no-credential, NOT dead', async () => {
+      await chunkStoredCookie();
+      syncRead = missSyncCookieRead();
+      await tripWith('dead');
+
+      expect(needsReauth()).toBe(false);
+      expect(captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('a chunked store whose cookies all lapsed stays a real dead verdict', async () => {
+      await chunkStoredCookie();
+      syncRead = missSyncCookieRead();
+      useFakeClock(Date.now());
+      jest.setSystemTime(Date.now() + 31 * DAY_MS);
+      await tripWith('dead');
+
+      expect(trippedExtra().recheckBasis).toBe('expired');
+      expect(needsReauth()).toBe(true);
+    });
+
+    it('a jar with a torn chunk reads as nothing stored, as the sync read does', async () => {
+      await chunkStoredCookie();
+      await secureStore.deleteItemAsync(`${COOKIE_KEY}.1`);
+      await tripWith('dead');
+
+      expect(trippedExtra().recheckBasis).toBe('absent');
+      expect(needsReauth()).toBe(true);
+    });
   });
 
   it('keeps the pinned fingerprint', async () => {
