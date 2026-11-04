@@ -69,12 +69,15 @@ import {
     http,
     secureStoreDump,
     server,
+    setAppState,
     signInFixtureAccount,
+    useFakeClock,
 } from '@/test/helpers';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { RESTORE_CAP_MS } from '@/components/custom/auth/useLoggedInGate';
 import { __resetAppRestartForTests, autoReloadDisabled, RESTART_MARKER_KEY } from '@/lib/app-restart';
 import * as resumeSpot from '@/lib/navigation/resume-spot';
+import * as sessionResume from '@/lib/session-resume';
 import * as otaNotice from '@/lib/ota-notice';
 import logger from '@/lib/logger';
 import { __resetSplashHoldForTests, restoreLookState } from '@/lib/splash-hold';
@@ -806,6 +809,108 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await drain();
 
             expect(replaced()).toEqual([[REAUTH]]);
+        });
+
+        describe('the silent resume', () => {
+            const signInPosts = (reply?: () => Response) => {
+                const posts: unknown[] = [];
+                server.use(
+                    http.post('*/api/auth/device/sign-in/dev', () => {
+                        posts.push(1);
+                        return reply?.();
+                    }),
+                );
+                return posts;
+            };
+            const deadUntil = (posts: unknown[]) =>
+                recheckOnly(() => (posts.length ? (undefined as never) : HttpResponse.json(null)));
+
+            beforeEach(async () => {
+                process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+                await signIn();
+                await setSetting('cached_user_id', ME);
+                await markOnboardingDone();
+            });
+            afterEach(() => {
+                delete process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN;
+                setAppState('active');
+            });
+
+            it('a resumed session opens the app, past the sign-in gate', async () => {
+                const posts = signInPosts();
+                server.use(deadUntil(posts));
+
+                await mountGate();
+                await waitForRoute();
+                await drain();
+
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            });
+
+            it('a 409 shows the sign-in gate', async () => {
+                const posts = signInPosts(() =>
+                    HttpResponse.json({ code: 'DEVICE_NOT_BOUND', message: 'x' }, { status: 409 }),
+                );
+                server.use(recheckOnly(() => HttpResponse.json(null)));
+
+                await mountGate();
+                await waitForRoute();
+                await drain();
+
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[REAUTH]]);
+            });
+
+            it('a refused account still routes when its session re-ran the gate', async () => {
+                // The refetch of the refused session lands a round trip after the reply, past the
+                // switch hold, and the re-run it causes stops there.
+                const posts = signInPosts(() => {
+                    setTimeout(
+                        () => sessionAtom().set({ ...sessionAtom().get(), data: { user: { id: FOREIGN }, session: {} } }),
+                        30,
+                    );
+                    return HttpResponse.json({ user: { id: FOREIGN }, trialAvailable: false, minted: true });
+                });
+                server.use(recheckOnly(() => HttpResponse.json(null)));
+
+                await mountGate();
+                await waitForRoute();
+                await drain();
+
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[REAUTH]]);
+                expect(await getSetting('cached_user_id')).toBe(ME);
+            });
+
+            it('a launch in the background waits for the reader before attesting', async () => {
+                setAppState('background');
+                const posts = signInPosts();
+                server.use(deadUntil(posts));
+
+                await mountGate();
+                await drain();
+                expect(posts).toEqual([]);
+                expect(replaced()).toEqual([]);
+
+                setAppState('active');
+                await waitForRoute();
+                await drain();
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            });
+
+            it('a resume that hangs cannot hold the start screen past the cap', async () => {
+                const hang = new Promise<never>(() => undefined);
+                track(jest.spyOn(sessionResume, 'resumeDeadSession')).mockReturnValue(hang);
+                server.use(recheckOnly(() => HttpResponse.json(null)));
+                useFakeClock(Date.now(), { advanceTimers: true });
+
+                await mountGate();
+                await waitForRoute();
+
+                expect(replaced()).toEqual([[REAUTH]]);
+            });
         });
 
         it('Mera down at a cold start shows the unreachable gate, not an app whose queries fail', async () => {

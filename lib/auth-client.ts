@@ -196,6 +196,10 @@ export const clearAuthStorage = async () => {
     } catch {
         // Ignore — we still want to wipe local state below.
     }
+    await deleteSessionKeys();
+};
+
+const deleteSessionKeys = async () => {
     for (const key of [AUTH_COOKIE_KEY, `${APP_SLUG}_session_data`]) {
         try {
             await secureStore.deleteItemAsync(key);
@@ -203,4 +207,15 @@ export const clearAuthStorage = async () => {
             // Ignore if key doesn't exist.
         }
     }
+};
+
+/**
+ * Drop a session this device must not keep, and nothing else: no server call
+ * and no SDK logout, unlike clearAuthStorage. For a silent resume that came back
+ * as the wrong account, where the reader never asked to leave anything.
+ */
+export const dropSessionCookie = async () => {
+    suspendSessionCache();
+    invalidateJwtCache();
+    await deleteSessionKeys();
 };
