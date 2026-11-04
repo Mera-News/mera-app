@@ -87,7 +87,10 @@ const ME = FIXTURE_ACCOUNT.userId;
 const FOREIGN = '66e2e0000000000000000002';
 const SLUG = Constants.expoConfig?.slug || 'app';
 const key = (suffix: string) => `${SLUG}_${suffix}`;
+/** Where an account with facts opens. */
 const APP_ROUTE = `/logged-in/app_container/${STARTUP_TAB_DEFAULT}`;
+/** Where these fixtures open: an account with no facts and no topics lands on World. */
+const FACTLESS_ROUTE = '/logged-in/app_container/world';
 const REAUTH = { pathname: '/login', params: { reauth: '1' } };
 
 const replaceMock = () => jest.mocked(router.replace);
@@ -260,6 +263,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await signIn();
         await setSetting('cached_user_id', ME);
         await markOnboardingDone();
+        await addFact('I follow Formula 1 racing');
 
         await mountGate();
         await waitForRoute();
@@ -267,6 +271,18 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
 
         expect(replaced()).toEqual([[APP_ROUTE]]);
         expect(useUserStore.getState().userId).toBe(ME);
+    });
+
+    it('a finished account with no facts and no topics opens on World', async () => {
+        await signIn();
+        await setSetting('cached_user_id', ME);
+        await markOnboardingDone();
+
+        await mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(replaced()).toEqual([['/logged-in/app_container/world']]);
     });
 
     it('opens on the tab the person chose, not the default', async () => {
@@ -372,7 +388,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await drain();
 
         expect(restore).toHaveBeenCalledTimes(1);
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
     }, 30_000);
 
     it('a cold launch never rebuilds', async () => {
@@ -383,7 +399,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await drain();
 
         expect(restore).not.toHaveBeenCalled();
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
     }, 30_000);
 
     it('a language restart carries no spot, so it never rebuilds', async () => {
@@ -406,7 +422,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await waitForRoute();
         await drain();
 
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         expect(autoReloadDisabled()).toBe(true);
         expect(restoreLookState()).toBe('done');
     }, 30_000);
@@ -421,7 +437,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await waitForRoute();
         await drain();
 
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         expect(autoReloadDisabled()).toBe(true);
     }, 30_000);
 
@@ -435,7 +451,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         });
 
         await mountGate();
-        await waitFor(() => expect(replaced()).toEqual([[APP_ROUTE]]), { timeout: 8000 + RESTORE_CAP_MS });
+        await waitFor(() => expect(replaced()).toEqual([[FACTLESS_ROUTE]]), { timeout: 8000 + RESTORE_CAP_MS });
         await drain();
 
         expect(signal?.aborted).toBe(true);
@@ -728,7 +744,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         await waitForRoute();
         await drain();
 
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         // Only a fresh proof of identity clears it, never a gate that merely chose not to eject.
         expect(await getSetting(IDENTITY_FAULT_KEY)).toBe('1');
     });
@@ -837,7 +853,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await waitForRoute();
             await drain();
 
-            expect(replaced()).toEqual([[APP_ROUTE]]);
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         });
     });
 });

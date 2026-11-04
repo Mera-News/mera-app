@@ -3,7 +3,9 @@
 // screen's picker). Replaces lib/navigation/__tests__/startup-tab.test.ts and
 // lib/stores/__tests__/startup-tab-store.test.ts (both mocked setting-service).
 import logger from '@/lib/logger';
+import { addFact } from '@/lib/database/services/fact-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
+import { createTopics } from '@/lib/database/services/topic-service';
 import { STARTUP_TAB_SETTING_KEY, parseStartupTab, readStartupTab } from '@/lib/navigation/startup-tab';
 import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
 import { failNextWrite, failSettingRead, flush, persisted, resetStore, restoreFaults } from './support';
@@ -59,8 +61,23 @@ describe('readStartupTab (the cold-start router, before hydration)', () => {
     await expect(readStartupTab()).resolves.toBe(route);
   });
 
-  it('defaults to feed when nothing is stored', async () => {
+  it('opens World when nothing is stored and the reader has no facts and no topics', async () => {
+    await expect(readStartupTab()).resolves.toBe('world');
+  });
+
+  it('defaults to feed when nothing is stored and the reader has a fact', async () => {
+    await addFact('I follow Formula 1 racing');
     await expect(readStartupTab()).resolves.toBe('feed');
+  });
+
+  it('defaults to feed when nothing is stored and the reader has only a topic (a followed story)', async () => {
+    await createTopics([{ text: 'gaza ceasefire', provenance: 'tracked', status: 'active', weight: 1 }]);
+    await expect(readStartupTab()).resolves.toBe('feed');
+  });
+
+  it.each(['feed', 'library'])('an explicit pick of %s wins over a reader with nothing', async (tab) => {
+    await setSetting(KEY, tab);
+    await expect(readStartupTab()).resolves.toBe(tab);
   });
 
   it('fails safe to feed when the read throws', async () => {
