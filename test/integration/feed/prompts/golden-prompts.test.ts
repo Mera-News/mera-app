@@ -17,6 +17,8 @@ import {
   buildRelevanceCalls as harnessBuildRelevanceCalls,
   buildReasonCallsForSubset as harnessBuildReasonCallsForSubset,
   buildScoreCallForChunk,
+  buildUserContext,
+  EMPTY_FACT_BANK_CONTEXT,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
@@ -180,8 +182,10 @@ describe('golden — measured prompt sizes', () => {
     expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4584);
     expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7234);
     // ux1: +43 for RULE_NAME_BAN, which names the rubric label in every spelling.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5511);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7066);
+    // Empty-bank rule: +102 to +103 on each reason prompt, on purpose. A reader with no
+    // facts must get no invented home or job; a reader with facts never hits it.
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5614);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7168);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -271,8 +275,8 @@ describe('golden — measured prompt sizes', () => {
     expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
       'CLOUD_RELEVANCE_SYSTEM_PROMPT 37322',
       'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58816',
-      'CLOUD_REASON_SYSTEM_PROMPT 44768',
-      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 57260',
+      'CLOUD_REASON_SYSTEM_PROMPT 45588',
+      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 58080',
       'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12528',
       'CLOUD_V3_NOTE_SYSTEM_PROMPT 15460',
       'LOCAL_RELEVANCE_SYSTEM_PROMPT 9106',
@@ -604,5 +608,26 @@ describe('golden — related fact places', () => {
     const shim = await shimBuildRelevanceCalls([candidate('a')]);
     expect(shim.calls[0].prompt).toContain('Related User Fact: related fact a\n');
     expect(shim.calls[0].prompt).not.toContain('news from');
+  });
+});
+
+describe('an empty fact bank', () => {
+  it('tells every prompt there is no reader to describe, instead of "[User facts] ."', () => {
+    expect(buildUserContext([])).toBe(EMPTY_FACT_BANK_CONTEXT);
+    expect(buildUserContext(['', '  '])).toBe(EMPTY_FACT_BANK_CONTEXT);
+    const { prompt } = buildScoreCallForChunk([candidate('a')], []);
+    expect(prompt).toContain(`User Context: ${EMPTY_FACT_BANK_CONTEXT}`);
+  });
+
+  it('a reader with facts sees the same context as before', () => {
+    expect(buildUserContext(['Lives in Delft', 'Works as a nurse'])).toBe('[User facts] Lives in Delft. Works as a nurse.');
+  });
+
+  it.each([
+    ['standard', CLOUD_REASON_SYSTEM_PROMPT, '(b)'],
+    ['headline', CLOUD_HEADLINE_REASON_SYSTEM_PROMPT, '(c)'],
+  ])('the %s reason prompt suspends its mandatory bridge when the bank is empty', (_name, system, clause) => {
+    expect(system).toContain(`When User Context reads "[User facts] none", clause ${clause} above`);
+    expect(system).toContain('This is major news with no known link to you.');
   });
 });

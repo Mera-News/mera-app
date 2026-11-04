@@ -514,10 +514,11 @@ describe('buildRelevanceCalls', () => {
     expect(calls[0].prompt).toContain('Lives in Amsterdam');
   });
 
-  it('writes an empty user-facts line when the bank is empty', async () => {
+  it('says the fact bank is empty instead of leaving an empty user-facts line', async () => {
     const [row] = await seedAndLoad(['a'], { factless: true, headline: 'GLOBAL' });
     const { calls } = await buildRelevanceCalls([row]);
-    expect(calls[0].prompt).toContain('User Context: [User facts] .');
+    expect(calls[0].prompt).toContain('User Context: [User facts] none.');
+    expect(calls[0].prompt).not.toContain('[User facts] .');
   });
 });
 
