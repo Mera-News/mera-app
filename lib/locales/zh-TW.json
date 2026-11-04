@@ -326,8 +326,8 @@
     "composerPlaceholder": "你喜歡關注什麼？",
     "factsCount_one": "關於你的 {{count}} 項事實",
     "factsCount_other": "關於你的 {{count}} 項事實",
-    "noFactsBody": "沒問題。現在先為你顯示頭條新聞，你隨時都可以告訴梅拉你喜歡什麼。",
-    "noFactsTitle": "先從頭條新聞開始？",
+    "noFactsBody": "梅拉會根據你所在的城市尋找當地新聞。你隨時都可以告訴梅拉更多關於你的資訊。",
+    "noFactsTitle": "你住在哪裡？",
     "noNotifBody": "新聞準備好或你追蹤的報導有進展時，你不會收到通知。之後可以在設定中開啟。",
     "noNotifTitle": "不開啟通知也要使用梅拉嗎？",
     "notNow": "暫不",
@@ -335,9 +335,7 @@
     "remindBody": "梅拉的設計是不會無故打擾你。請選擇你希望何時收到閱讀新聞的提醒。我們建議你挑一個能好好讀完新聞的時段。",
     "remindTitle": "梅拉應該何時提醒你？",
     "turnOn": "開啟通知",
-    "turnThemOn": "開啟通知",
-    "guardSkip": "從頭條開始",
-    "guardAddFact": "新增內容"
+    "turnThemOn": "開啟通知"
   },
   "notifications": {
     "title": "通知",

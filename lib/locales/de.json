@@ -338,8 +338,8 @@
     "composerPlaceholder": "Was verfolgst du gern?",
     "factsCount_one": "{{count}} Fakt über dich",
     "factsCount_other": "{{count}} Fakten über dich",
-    "noFactsBody": "Kein Problem. Du siehst vorerst die Top-Schlagzeilen und kannst Mera jederzeit sagen, was dich interessiert.",
-    "noFactsTitle": "Mit Top-Schlagzeilen starten?",
+    "noFactsBody": "Mera nutzt deine Stadt, um Nachrichten aus deiner Gegend zu finden. Du kannst Mera jederzeit mehr über dich erzählen.",
+    "noFactsTitle": "Wo wohnst du?",
     "noNotifBody": "Du erfährst nicht, wann deine Nachrichten bereit sind oder wann sich eine Geschichte, der du folgst, weiterentwickelt. Du kannst die Benachrichtigungen später in den Einstellungen einschalten.",
     "noNotifTitle": "Mera ohne Benachrichtigungen verwenden?",
     "notNow": "Nicht jetzt",
@@ -347,9 +347,7 @@
     "remindBody": "Mera ist so gebaut, dass es dich nicht ohne Grund stört. Wähle, wann du an das Lesen der Nachrichten erinnert werden möchtest. Wir schlagen eine Zeit vor, zu der du dich in Ruhe damit beschäftigen kannst.",
     "remindTitle": "Wann soll Mera dich erinnern?",
     "turnOn": "Benachrichtigungen einschalten",
-    "turnThemOn": "Einschalten",
-    "guardSkip": "Mit Schlagzeilen starten",
-    "guardAddFact": "Etwas hinzufügen"
+    "turnThemOn": "Einschalten"
   },
   "notifications": {
     "title": "Benachrichtigungen",

@@ -338,8 +338,8 @@
     "composerPlaceholder": "Neleri takip etmeyi seversin?",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
     "factsCount_other": "Hakkınızda {{count}} bilgi",
-    "noFactsBody": "Sorun değil. Şimdilik öne çıkan başlıkları göreceksin, neleri sevdiğini Mera'ya istediğin zaman söyleyebilirsin.",
-    "noFactsTitle": "Öne çıkan başlıklarla başlansın mı?",
+    "noFactsBody": "Mera, yaşadığın yerin haberlerini bulmak için şehrini kullanır. Kendin hakkında daha fazlasını istediğin zaman söyleyebilirsin.",
+    "noFactsTitle": "Nerede yaşıyorsun?",
     "noNotifBody": "Haberleriniz hazır olduğunda ya da takip ettiğiniz bir haber değiştiğinde haber almazsınız. Bunları daha sonra Ayarlar'dan açabilirsiniz.",
     "noNotifTitle": "Mera bildirimsiz kullanılsın mı?",
     "notNow": "Şimdi değil",
@@ -347,9 +347,7 @@
     "remindBody": "Mera sizi gereksiz yere rahatsız etmeyecek şekilde tasarlandı. Haberleri okumanız için bir hatırlatma saati seçin. Haberleri düzgünce okuyabileceğiniz bir saat öneriyoruz.",
     "remindTitle": "Mera sizi ne zaman hatırlatsın?",
     "turnOn": "Bildirimleri aç",
-    "turnThemOn": "Açın",
-    "guardSkip": "Başlıklarla başla",
-    "guardAddFact": "Bir şey ekle"
+    "turnThemOn": "Açın"
   },
   "notifications": {
     "title": "Bildirimler",

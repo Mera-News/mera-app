@@ -17,20 +17,23 @@ import { FlatList } from 'react-native';
 import { flagForAlpha2 } from './location-display';
 import LocationRolePicker from './LocationRolePicker';
 import WeightSegments from './WeightSegments';
-import { useAddLocation } from './useAddLocation';
+import { useAddLocation, type ChosenPlace } from './useAddLocation';
 
 
 interface Props {
   /** Collapses the whole inline panel back to the plain saved-places list. */
   readonly onClose: () => void;
-  /** A place was saved — parent collapses the panel back to the list. */
-  readonly onSaved: () => void;
+  /** A place was saved — parent collapses the panel back to the list. A
+   *  rejection reads as a failed save and keeps this panel open. */
+  readonly onSaved: (place: ChosenPlace) => void | Promise<void>;
   /**
    * The saved-places list (or its loading/empty state) — rendered below the
    * search bar while idle (search step, empty query) so the list stays part
    * of the same screen instead of being replaced by a full-screen swap.
    */
   readonly renderIdle: () => React.ReactNode;
+  /** The place is the reader's home: no role or weight to choose (onboarding). */
+  readonly homeOnly?: boolean;
 }
 
 /**
@@ -41,7 +44,7 @@ interface Props {
  * query, search step) it defers to `renderIdle` so the saved-places list stays
  * visible under the search bar.
  */
-const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
+const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOnly = false }) => {
   const { t } = useTranslation();
   const colors = useColors();
   const themeMode = useThemeMode();
@@ -75,7 +78,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
     handlePickPlace,
     handleManualContinue,
     handleSave,
-  } = useAddLocation({ onSaved });
+  } = useAddLocation({ onSaved, homeOnly });
   useRestartHold([query, manualCity, countrySearch].some((v) => v.trim().length > 0), 'draft:location', 'hard');
 
   // ── Configure step ────────────────────────────────────────────────────────
@@ -96,17 +99,21 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
             </Pressable>
           </HStack>
 
-          <VStack space="sm">
-            <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
-            <LocationRolePicker value={role} onChange={setRole} />
-          </VStack>
+          {homeOnly ? null : (
+            <>
+              <VStack space="sm">
+                <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
+                <LocationRolePicker value={role} onChange={setRole} />
+              </VStack>
 
-          <VStack space="sm">
-            <Text className="text-ink-2 text-xs uppercase">{t('locations.weightLabel')}</Text>
-            <WeightSegments value={bucket} onChange={setBucket} />
-          </VStack>
+              <VStack space="sm">
+                <Text className="text-ink-2 text-xs uppercase">{t('locations.weightLabel')}</Text>
+                <WeightSegments value={bucket} onChange={setBucket} />
+              </VStack>
+            </>
+          )}
 
-          <Button onPress={handleSave} isDisabled={saving} className="mt-2">
+          <Button onPress={handleSave} isDisabled={saving} className="mt-2" testID="locations-save">
             {saving ? <Spinner /> : <ButtonText>{t('locations.saveCta')}</ButtonText>}
           </Button>
         </VStack>
@@ -221,8 +228,9 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
   const trimmedQuery = query.trim();
   const isIdle = trimmedQuery.length === 0;
   const showUnavailable = searchFailed && !searching && debouncedQuery.trim().length >= 2;
+  const showSearching = searching && results.length === 0;
   const showNoMatches =
-    !showUnavailable && searched && !searching && results.length === 0 && debouncedQuery.trim().length >= 2;
+    !showSearching && !showUnavailable && searched && !searching && results.length === 0 && debouncedQuery.trim().length >= 2;
 
   return (
     <Box className="flex-1">
@@ -280,7 +288,11 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
             </Pressable>
           )}
           ListEmptyComponent={
-            showUnavailable ? (
+            showSearching ? (
+              <VStack className="items-center px-8 py-10" testID="locations-searching">
+                <Spinner />
+              </VStack>
+            ) : showUnavailable ? (
               <VStack className="items-center px-8 py-10" space="sm">
                 <MaterialIcons name="cloud-off" size={40} color={colors.ink3} />
                 <Text className="text-ink-2 text-center text-sm">
@@ -302,6 +314,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
               }}
               className="flex-row items-center justify-center px-5 py-4"
               accessibilityRole="button"
+              testID="locations-add-manually"
             >
               <MaterialIcons name="edit-location-alt" size={18} color={colors.accentText} />
               <Text className="ml-2 text-sm" style={{ color: colors.accentText }}>

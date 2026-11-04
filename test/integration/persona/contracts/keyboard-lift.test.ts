@@ -24,13 +24,11 @@ describe('onboarding chat step', () => {
   });
 });
 
-describe('onboarding guards', () => {
-  it('the keyboard is dismissed right before each guard opens', () => {
+describe('onboarding guard', () => {
+  it('the keyboard is dismissed right before the notifications guard opens', () => {
     const fs = require('fs');
     const path = require('path');
     const src: string = fs.readFileSync(path.resolve(__dirname, '../../../..', 'components/custom/onboarding/OnboardingWizard.tsx'), 'utf8');
-    for (const guard of ['no-facts', 'no-notifications']) {
-      expect(src).toMatch(new RegExp(`Keyboard\\.dismiss\\(\\);\\s*setGuard\\('${guard}'\\)`));
-    }
+    expect(src).toMatch(/Keyboard\.dismiss\(\);\s*setGuard\('no-notifications'\)/);
   });
 });

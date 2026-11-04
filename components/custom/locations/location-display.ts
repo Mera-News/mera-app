@@ -82,6 +82,19 @@ export function composeLocationLabel(loc: {
   return parts.join(', ');
 }
 
+/**
+ * The residence fact for a place, the form the chat writes: "Lives in Delft, South
+ * Holland, Netherlands". `new Set` folds a city-state's repeats ("Singapore").
+ */
+export function homeFactStatement(place: {
+  city: string | null;
+  region: string | null;
+  countryCode: string;
+}): string {
+  const parts = [titleCasePlace(place.city), titleCasePlace(place.region), countryNameForAlpha2(place.countryCode)];
+  return `Lives in ${[...new Set(parts.filter(Boolean))].join(', ')}`;
+}
+
 // ── Weight buckets ──────────────────────────────────────────────────────────
 // The list + add-flow use a 3-step control (Low / Medium / High) mapping to
 // canonical weights. A row whose stored weight (e.g. the 0.5 default) doesn't

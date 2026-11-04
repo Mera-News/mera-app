@@ -338,8 +338,8 @@
     "composerPlaceholder": "Wat volg je graag?",
     "factsCount_one": "{{count}} feit over jou",
     "factsCount_other": "{{count}} feiten over jou",
-    "noFactsBody": "Prima. Je ziet voorlopig de belangrijkste koppen en je kunt Mera altijd vertellen wat je leuk vindt.",
-    "noFactsTitle": "Beginnen met de belangrijkste koppen?",
+    "noFactsBody": "Mera gebruikt je stad om nieuws te vinden uit de plek waar je woont. Je kunt Mera altijd meer over jezelf vertellen.",
+    "noFactsTitle": "Waar woon je?",
     "noNotifBody": "Je hoort niet wanneer je nieuws klaar is of wanneer een verhaal dat je volgt verandert. Je kunt meldingen later aanzetten in Instellingen.",
     "noNotifTitle": "Mera gebruiken zonder meldingen?",
     "notNow": "Niet nu",
@@ -347,9 +347,7 @@
     "remindBody": "Mera is gemaakt om je niet zonder reden lastig te vallen. Kies wanneer je een herinnering wilt om het nieuws te lezen. We stellen een tijd voor waarop je er echt de tijd voor hebt.",
     "remindTitle": "Wanneer moet Mera je herinneren?",
     "turnOn": "Meldingen aanzetten",
-    "turnThemOn": "Zet ze aan",
-    "guardSkip": "Begin met koppen",
-    "guardAddFact": "Iets toevoegen"
+    "turnThemOn": "Zet ze aan"
   },
   "notifications": {
     "title": "Meldingen",

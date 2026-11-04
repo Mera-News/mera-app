@@ -380,8 +380,8 @@
     "factsCount_few": "{{count}} fakty o Tobie",
     "factsCount_many": "{{count}} faktów o Tobie",
     "factsCount_other": "{{count}} faktów o Tobie",
-    "noFactsBody": "Nie ma sprawy. Na razie zobaczysz najważniejsze nagłówki, a Merze możesz powiedzieć, co lubisz, kiedy tylko zechcesz.",
-    "noFactsTitle": "Zacząć od najważniejszych nagłówków?",
+    "noFactsBody": "Mera korzysta z Twojego miasta, aby znaleźć wiadomości z miejsca, w którym mieszkasz. Więcej o sobie możesz powiedzieć w każdej chwili.",
+    "noFactsTitle": "Gdzie mieszkasz?",
     "noNotifBody": "Nie dowiesz się, kiedy Twoje wiadomości są gotowe ani kiedy zmienia się historia, którą obserwujesz. Możesz to włączyć później w Ustawieniach.",
     "noNotifTitle": "Używać Mera bez powiadomień?",
     "notNow": "Nie teraz",
@@ -389,9 +389,7 @@
     "remindBody": "Mera jest zbudowana tak, żeby nie przeszkadzać bez powodu. Wybierz, kiedy chcesz przypomnienia o czytaniu wiadomości. Proponujemy porę, w której możesz to spokojnie przejrzeć.",
     "remindTitle": "Kiedy Mera ma Ci przypominać?",
     "turnOn": "Włącz powiadomienia",
-    "turnThemOn": "Włącz je",
-    "guardSkip": "Zacznij od nagłówków",
-    "guardAddFact": "Dodaj coś"
+    "turnThemOn": "Włącz je"
   },
   "notifications": {
     "title": "Powiadomienia",

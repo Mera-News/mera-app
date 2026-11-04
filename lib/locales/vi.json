@@ -326,8 +326,8 @@
     "composerPlaceholder": "Bạn thích theo dõi điều gì?",
     "factsCount_one": "{{count}} dữ kiện về bạn",
     "factsCount_other": "{{count}} dữ kiện về bạn",
-    "noFactsBody": "Không sao. Trước mắt bạn sẽ thấy tin nổi bật, và bạn có thể cho Mera biết mình thích gì bất cứ lúc nào.",
-    "noFactsTitle": "Bắt đầu với tin nổi bật?",
+    "noFactsBody": "Mera dùng thành phố của bạn để tìm tin tức nơi bạn sống. Bạn có thể kể thêm về mình bất cứ lúc nào.",
+    "noFactsTitle": "Bạn sống ở đâu?",
     "noNotifBody": "Bạn sẽ không biết khi tin của mình đã sẵn sàng hoặc khi một câu chuyện bạn theo dõi có diễn biến mới. Bạn có thể bật lại sau trong Cài đặt.",
     "noNotifTitle": "Dùng Mera mà không có thông báo?",
     "notNow": "Để sau",
@@ -335,9 +335,7 @@
     "remindBody": "Mera được thiết kế để không làm phiền bạn khi không cần thiết. Hãy chọn thời điểm bạn muốn được nhắc đọc tin. Chúng tôi gợi ý một lúc bạn có thể đọc tin cho trọn vẹn.",
     "remindTitle": "Mera nên nhắc bạn lúc nào?",
     "turnOn": "Bật thông báo",
-    "turnThemOn": "Bật lên",
-    "guardSkip": "Bắt đầu với tin nổi bật",
-    "guardAddFact": "Thêm gì đó"
+    "turnThemOn": "Bật lên"
   },
   "notifications": {
     "title": "Thông báo",

@@ -37,6 +37,7 @@ import { useColors } from '@/lib/theme/tokens';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 import { NextGuardBox } from './NextGuardBox';
 import { markOnboardingDone } from './onboarding-done';
+import OnboardingCityStep from './OnboardingCityStep';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import { useServerErrorLogout } from './useServerErrorLogout';
 
@@ -55,7 +56,7 @@ const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
 /** Bound on the mount-time session lookup. */
 const SESSION_LOOKUP_TIMEOUT_MS = 3_000;
 
-type Guard = 'no-facts' | 'no-notifications' | null;
+type Guard = 'no-notifications' | null;
 
 interface OnboardingWizardProps {
     /**
@@ -83,6 +84,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const { isLoggingOut, handleServerErrorLogout } = useServerErrorLogout(setShowServerError);
     const offline = !useIsOnline();
     const [guard, setGuard] = useState<Guard>(null);
+    // Next with zero facts asks for a city: it is the minimum Mera can personalise with.
+    const [cityOpen, setCityOpen] = useState(false);
     const [notificationsOn, setNotificationsOn] = useState(false);
     const [enableRequest, setEnableRequest] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -207,10 +210,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 return;
             }
             if (factCount === 0) {
-                // The keyboard can be up from the chat input: the guard sits near
-                // the bottom and would land behind it.
-                Keyboard.dismiss();
-                setGuard('no-facts');
+                setCityOpen(true);
                 return;
             }
         } else if (!notificationsOn) {
@@ -249,12 +249,22 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         <RNText style={[styles.step, { color: colors.ink3 }]}>
                             {t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
                         </RNText>
-                        {nextButton}
+                        {cityOpen ? null : nextButton}
                     </View>
                 </View>
 
+                {cityOpen ? (
+                    <OnboardingCityStep
+                        onClose={() => setCityOpen(false)}
+                        onDone={() => {
+                            setCityOpen(false);
+                            void advance();
+                        }}
+                    />
+                ) : null}
                 {currentStep === 0 ? (
-                    <>
+                    // Stays mounted under the city step, so a Back keeps the chat as it was.
+                    <View style={[styles.flex, cityOpen && styles.hidden]}>
                         <Animated.View style={[styles.counter, { backgroundColor: colors.surface, borderColor: colors.line }, popStyle]}>
                             <RNText style={[styles.counterText, { color: colors.ink }]} testID="onboarding-facts-count">
                                 {t('onboarding.factsCount', { count: factCount })}
@@ -266,7 +276,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 composerPlaceholder={t('onboarding.composerPlaceholder')}
                             />
                         </View>
-                    </>
+                    </View>
                 ) : (
                     <>
                         <View style={styles.remind}>
@@ -288,16 +298,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 )}
 
                 <View style={[styles.guard, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">
-                    <NextGuardBox
-                        open={guard === 'no-facts'}
-                        title={t('onboarding.noFactsTitle')}
-                        body={t('onboarding.noFactsBody')}
-                        primaryLabel={t('onboarding.guardAddFact')}
-                        onPrimary={() => setGuard(null)}
-                        secondaryLabel={t('onboarding.guardSkip')}
-                        onSecondary={() => void advance()}
-                        testID="onboarding-guard-facts"
-                    />
                     <NextGuardBox
                         open={guard === 'no-notifications'}
                         title={t('onboarding.noNotifTitle')}
@@ -336,6 +336,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 const styles = StyleSheet.create({
     root: { flex: 1 },
     flex: { flex: 1 },
+    hidden: { display: 'none' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, minHeight: 44 },
     who: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     name: { fontSize: 16, fontWeight: '700' },

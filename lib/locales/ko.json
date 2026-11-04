@@ -326,8 +326,8 @@
     "composerPlaceholder": "어떤 소식을 챙겨 보고 싶으세요?",
     "factsCount_one": "회원님에 대한 사실 {{count}}개",
     "factsCount_other": "회원님에 대한 사실 {{count}}개",
-    "noFactsBody": "괜찮아요. 지금은 주요 헤드라인을 보여 드리고, 좋아하는 것은 언제든 메라에게 알려 주시면 됩니다.",
-    "noFactsTitle": "주요 헤드라인으로 시작할까요?",
+    "noFactsBody": "메라는 도시 정보를 사용해 사는 곳의 뉴스를 찾습니다. 자신에 대한 내용은 언제든 더 알려 주시면 됩니다.",
+    "noFactsTitle": "어디에 사시나요?",
     "noNotifBody": "뉴스가 준비되었을 때나 팔로우한 스토리에 변화가 있을 때 알림을 받지 못합니다. 나중에 설정에서 켤 수 있습니다.",
     "noNotifTitle": "알림 없이 메라를 사용할까요?",
     "notNow": "나중에",
@@ -335,9 +335,7 @@
     "remindBody": "메라는 이유 없이 회원님을 방해하지 않도록 만들어졌습니다. 뉴스를 읽을 알림 시간을 고르세요. 여유 있게 훑어볼 수 있는 시간을 추천합니다.",
     "remindTitle": "언제 메라가 알려 드릴까요?",
     "turnOn": "알림 켜기",
-    "turnThemOn": "켜기",
-    "guardSkip": "헤드라인으로 시작",
-    "guardAddFact": "추가하기"
+    "turnThemOn": "켜기"
   },
   "notifications": {
     "title": "알림",

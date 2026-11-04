@@ -345,8 +345,8 @@
     "composerPlaceholder": "Qu'aimez-vous suivre ?",
     "factsCount_one": "{{count}} fait vous concernant",
     "factsCount_other": "{{count}} faits vous concernant",
-    "noFactsBody": "Aucun souci. Vous verrez les gros titres pour l'instant, et vous pourrez dire à Mera ce que vous aimez quand vous voulez.",
-    "noFactsTitle": "Commencer avec les gros titres ?",
+    "noFactsBody": "Mera utilise votre ville pour trouver des actualités de l'endroit où vous vivez. Vous pourrez lui en dire plus sur vous quand vous voulez.",
+    "noFactsTitle": "Où habitez-vous ?",
     "noNotifBody": "Vous ne serez pas prévenu quand vos actualités seront prêtes ou quand une histoire que vous suivez évolue. Vous pourrez les activer plus tard dans Paramètres.",
     "noNotifTitle": "Utiliser Mera sans notifications ?",
     "notNow": "Pas maintenant",
@@ -354,9 +354,7 @@
     "remindBody": "Mera est conçu pour ne pas vous déranger sans raison. Choisissez quand vous souhaitez un rappel pour lire les actualités. Nous proposons un moment où vous pourrez tout parcourir correctement.",
     "remindTitle": "Quand Mera doit-il vous rappeler ?",
     "turnOn": "Activer les notifications",
-    "turnThemOn": "Activez-les",
-    "guardSkip": "Commencer avec les titres",
-    "guardAddFact": "Ajouter quelque chose"
+    "turnThemOn": "Activez-les"
   },
   "notifications": {
     "title": "Notifications",

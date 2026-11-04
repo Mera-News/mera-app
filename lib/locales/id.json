@@ -326,8 +326,8 @@
     "composerPlaceholder": "Apa yang suka kamu ikuti?",
     "factsCount_one": "{{count}} fakta tentang Anda",
     "factsCount_other": "{{count}} fakta tentang Anda",
-    "noFactsBody": "Tidak apa-apa. Untuk sekarang kamu akan melihat berita utama, dan kamu bisa memberi tahu Mera apa yang kamu suka kapan saja.",
-    "noFactsTitle": "Mulai dengan berita utama?",
+    "noFactsBody": "Mera memakai kotamu untuk mencari berita dari tempat kamu tinggal. Kamu bisa menceritakan lebih banyak tentang dirimu kapan saja.",
+    "noFactsTitle": "Kamu tinggal di mana?",
     "noNotifBody": "Anda tidak akan tahu saat berita Anda siap atau saat cerita yang Anda ikuti berkembang. Anda bisa menyalakannya nanti di Pengaturan.",
     "noNotifTitle": "Gunakan Mera tanpa notifikasi?",
     "notNow": "Nanti saja",
@@ -335,9 +335,7 @@
     "remindBody": "Mera dibuat agar tidak mengganggu Anda tanpa alasan. Pilih kapan Anda ingin pengingat untuk membaca berita. Kami menyarankan waktu saat Anda bisa membacanya dengan tenang.",
     "remindTitle": "Kapan Mera harus mengingatkan Anda?",
     "turnOn": "Aktifkan notifikasi",
-    "turnThemOn": "Aktifkan",
-    "guardSkip": "Mulai dengan berita utama",
-    "guardAddFact": "Tambahkan sesuatu"
+    "turnThemOn": "Aktifkan"
   },
   "notifications": {
     "title": "Notifikasi",

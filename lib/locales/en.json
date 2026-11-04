@@ -694,8 +694,8 @@
     "composerPlaceholder": "What do you like to follow?",
     "factsCount_one": "{{count}} fact about you",
     "factsCount_other": "{{count}} facts about you",
-    "noFactsBody": "That's fine. You'll see top headlines for now, and you can tell Mera what you like whenever you want.",
-    "noFactsTitle": "Start with top headlines?",
+    "noFactsBody": "Mera uses your city to find news for where you live. You can tell it more about yourself anytime.",
+    "noFactsTitle": "Where do you live?",
     "noNotifBody": "You won't hear when your news is ready or when a story you follow moves. You can turn them on later in Settings.",
     "noNotifTitle": "Use Mera without notifications?",
     "notNow": "Not now",
@@ -703,9 +703,7 @@
     "remindBody": "Mera is built not to disturb you without reason. Choose when you'd like a reminder to read the news. We suggest a time when you can go through it properly.",
     "remindTitle": "When should Mera remind you?",
     "turnOn": "Turn on notifications",
-    "turnThemOn": "Turn them on",
-    "guardSkip": "Start with headlines",
-    "guardAddFact": "Add something"
+    "turnThemOn": "Turn them on"
   },
   "notifications": {
     "title": "Notifications",

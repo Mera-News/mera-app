@@ -27,7 +27,7 @@ interface OnboardingScreenProps {
     sessionUserId?: string;
     onLoginRedirect: () => void;
     /** The ONE landing after onboarding (or for a user who already has facts):
-     *  the route sends it to the Dashboard. There is no second, plan-dependent
+     *  the route sends it to World. There is no second, plan-dependent
      *  destination any more. */
     onComplete: () => void;
 }
@@ -36,13 +36,12 @@ interface OnboardingScreenProps {
  * Onboarding gate for the /logged-in/onboarding route (reached from the
  * cold-start gate and from deep-link verify).
  *
- * The gate is LOCAL FACTS, not the server's `onboardingStage`. The stage flag
- * lies — the wizard's Next button advances it to FINISHED whether or not the
- * persona chat captured anything — so a user could arrive "onboarded" with an
- * empty persona and a permanently empty feed. Zero facts therefore ALWAYS
- * re-enters the wizard, even at stage FINISHED; that re-entry is intentional.
- * `advanceOnboardingStage` is still written by the wizard (step-resume +
- * server-side analytics), it just no longer decides anything here.
+ * The gate is the LOCAL `onboarding_done` row (onboarding-done.ts), not the
+ * server's `onboardingStage`. The wizard cannot finish with zero facts: Next
+ * asks for a city, which is saved as a fact. An account that finished with zero
+ * facts on an older build stays done and opens on World (startup-tab.ts).
+ * `advanceOnboardingStage` is still written by the wizard, for the record; it
+ * decides nothing here.
  *
  * Consequence: this gate needs no network at all. It works offline and a dead
  * server session can no longer bounce a user through onboarding.

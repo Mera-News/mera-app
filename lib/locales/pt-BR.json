@@ -340,8 +340,8 @@
     "composerPlaceholder": "O que você gosta de acompanhar?",
     "factsCount_one": "{{count}} fato sobre você",
     "factsCount_other": "{{count}} fatos sobre você",
-    "noFactsBody": "Tudo bem. Por enquanto você verá as principais manchetes, e pode contar à Mera do que gosta quando quiser.",
-    "noFactsTitle": "Começar com as principais manchetes?",
+    "noFactsBody": "A Mera usa sua cidade para encontrar notícias do lugar onde você mora. Você pode contar mais sobre você quando quiser.",
+    "noFactsTitle": "Onde você mora?",
     "noNotifBody": "Você não vai saber quando suas notícias estiverem prontas ou quando uma história que você segue se mexer. Você pode ativar depois em Configurações.",
     "noNotifTitle": "Usar a Mera sem notificações?",
     "notNow": "Agora não",
@@ -349,9 +349,7 @@
     "remindBody": "A Mera foi feita para não incomodar sem motivo. Escolha quando quer um lembrete para ler as notícias. Sugerimos um horário em que você consiga ler com calma.",
     "remindTitle": "Quando a Mera deve lembrar você?",
     "turnOn": "Ativar notificações",
-    "turnThemOn": "Ativar",
-    "guardSkip": "Começar com manchetes",
-    "guardAddFact": "Adicionar algo"
+    "turnThemOn": "Ativar"
   },
   "notifications": {
     "title": "Notificações",
