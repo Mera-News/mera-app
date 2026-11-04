@@ -32,11 +32,22 @@ ${voiceRules(languageName)}`;
 
 const fold = (s: string): string => s.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
 
+/** The prompt's own English phrases, in a reply that should not be English. Quoted facts stay English. */
+const ENGLISH_REPLY = /\b(?:i removed|i have removed|news topics|would you like)\b/i;
+
+/** Staging wrote Dutch in English and Hindi in Latin letters, 2 of 3 runs each, despite the rule. */
+function inTheReaderLanguage(reply: string, languageName?: string): boolean {
+  if (!languageName || languageName === 'English') return true;
+  if (languageName === 'Hindi' && !/\p{Script=Devanagari}/u.test(reply)) return false;
+  return !ENGLISH_REPLY.test(reply);
+}
+
 /** Names every fact, asks something, and carries no leak or false claim. */
-export function factRemovedReplyOk(reply: string, statements: readonly string[]): boolean {
+export function factRemovedReplyOk(reply: string, statements: readonly string[], languageName?: string): boolean {
   const text = fold(reply);
   return (
     text.length > 0 &&
+    inTheReaderLanguage(reply, languageName) &&
     /[?？؟]/.test(reply) &&
     statements.every((s) => text.includes(fold(s))) &&
     !leaksInternals(reply) &&
@@ -62,7 +73,7 @@ export async function runFactRemovedTurn(params: {
     role: 'reply',
     model: 'BIG',
     systemPrompt: factRemovedPrompt(params.statements, params.languageName),
-    messages: [{ role: 'user', content: 'Write the message now.' }],
+    messages: [{ role: 'user', content: `Write the message now${params.languageName ? `, in ${params.languageName}` : ''}.` }],
     tools: [],
     maxTokens: REPLY_MAX_TOKENS,
     enableThinking: false,
@@ -70,7 +81,7 @@ export async function runFactRemovedTurn(params: {
   if (called.error) return { reply: '', usedFallback: false, stopped: true };
 
   const text = cleanProse(called.content);
-  const usedFallback = called.truncated || !factRemovedReplyOk(text, params.statements);
+  const usedFallback = called.truncated || !factRemovedReplyOk(text, params.statements, params.languageName);
   const reply = usedFallback ? params.fallback : text;
   if (params.turn) {
     params.turn.lastReply = reply;

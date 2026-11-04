@@ -11,6 +11,19 @@ describe('factRemovedReplyOk', () => {
     expect(factRemovedReplyOk(reply, F)).toBe(true);
   });
 
+  it('fails Hindi written in Latin letters', () => {
+    const reply = 'Maine "30 year old male" hata diya. Main kya save karun?';
+    expect(factRemovedReplyOk(reply, F, 'Hindi')).toBe(false);
+    expect(factRemovedReplyOk(reply, F, 'Dutch')).toBe(true);
+  });
+
+  it('fails English when the reader reads Dutch', () => {
+    const english = 'I removed "30 year old male". What would you like me to save instead?';
+    expect(factRemovedReplyOk(english, F, 'Dutch')).toBe(false);
+    expect(factRemovedReplyOk(english, F, 'English')).toBe(true);
+    expect(factRemovedReplyOk('Ik heb "30 year old male" verwijderd. Wat wil je dat ik opsla?', F, 'Dutch')).toBe(true);
+  });
+
   it.each([
     [''],
     ['I removed something. What should I save instead?'],
