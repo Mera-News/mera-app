@@ -361,7 +361,7 @@ export class ArticleFeedbackAgent implements IAgent {
 
   // --- IAgent: tool execution ---
 
-  async executeTool(name: string, input: unknown): Promise<ToolExecutionResult> {
+  async executeTool(name: string, input: unknown, stop?: AbortSignal): Promise<ToolExecutionResult> {
     const args = (input as Record<string, unknown>) ?? {};
 
     switch (name) {
@@ -507,7 +507,7 @@ export class ArticleFeedbackAgent implements IAgent {
       // first statement before any await — same shape as PersonaUpdateAgent's
       // 'webSearch' case.
       case 'webSearch': {
-        const result = await handleWebSearch(args);
+        const result = await handleWebSearch(args, stop);
         return { result };
       }
 

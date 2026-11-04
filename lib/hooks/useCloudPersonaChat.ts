@@ -744,7 +744,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
                 const refused = retrying ? refusedOnRetry(callName) : null;
                 const { result, sideEffects } = refused
                   ? { result: refused, sideEffects: undefined }
-                  : await agentRef.current.executeTool(callName, tc.input);
+                  : await agentRef.current.executeTool(callName, tc.input, stopRef.current.signal);
                 logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
 
                 applyToolSideEffects(sideEffects, { alive, cloud: cloud() });

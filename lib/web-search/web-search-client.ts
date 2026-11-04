@@ -164,6 +164,14 @@ export function raceDeadline<T>(work: Promise<T>, signal: AbortSignal): Promise<
   ]);
 }
 
+/** The search's own deadline controller, which the Stop button also aborts. */
+function abortedBy(stop?: AbortSignal): AbortController {
+  const controller = new AbortController();
+  if (stop?.aborted) controller.abort();
+  else stop?.addEventListener('abort', () => controller.abort(), { once: true });
+  return controller;
+}
+
 /**
  * Runs one web search. Never throws — every failure is returned as
  * `{ ok: false }` so a chat turn degrades into "I could not search" instead of
@@ -178,7 +186,7 @@ export function raceDeadline<T>(work: Promise<T>, signal: AbortSignal): Promise<
  * empty array behind a 200 once again means only what it says: we asked, and
  * the index had nothing.
  */
-export async function searchWeb(query: string): Promise<WebSearchOutcome> {
+export async function searchWeb(query: string, stop?: AbortSignal): Promise<WebSearchOutcome> {
   const trimmed = (query ?? '').trim();
   if (trimmed.length < MIN_QUERY_CHARS || trimmed.length > MAX_QUERY_CHARS) {
     return { ok: false, error: messageForStatus(400), status: 400 };
@@ -203,7 +211,7 @@ export async function searchWeb(query: string): Promise<WebSearchOutcome> {
   // fetch would make the total unbounded, and a chat turn waiting on a search
   // would hang for as long as a scoring cycle takes. 12s is the budget for
   // "answer this search", queue time included.
-  const controller = new AbortController();
+  const controller = abortedBy(stop);
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     // Through the SHARED gateway limiter, like every other inference-gateway
@@ -311,7 +319,7 @@ export type WebSearchBatchOutcome =
  * the 400 above unambiguous: a server 400 can then only mean "shape not
  * understood".
  */
-export async function searchWebBatch(queries: string[]): Promise<WebSearchBatchOutcome> {
+export async function searchWebBatch(queries: string[], stop?: AbortSignal): Promise<WebSearchBatchOutcome> {
   const seen = new Set<string>();
   const cleaned: string[] = [];
   const rejected: WebSearchBatchEntry[] = [];
@@ -336,7 +344,7 @@ export async function searchWebBatch(queries: string[]): Promise<WebSearchBatchO
   // One query needs no batch, and the single shape works against every gateway
   // ever deployed — so it is also the fallback's unit of work below.
   if (cleaned.length === 1) {
-    const single = await searchWeb(cleaned[0]);
+    const single = await searchWeb(cleaned[0], stop);
     if (!single.ok) return single;
     return { ok: true, searches: [...rejected, { query: cleaned[0], results: single.results }] };
   }
@@ -351,7 +359,7 @@ export async function searchWebBatch(queries: string[]): Promise<WebSearchBatchO
     return { ok: false, error: messageForStatus(401), status: 401 };
   }
 
-  const controller = new AbortController();
+  const controller = abortedBy(stop);
   const timer = setTimeout(() => controller.abort(), BATCH_REQUEST_TIMEOUT_MS);
   try {
     await raceDeadline(
@@ -382,7 +390,7 @@ export async function searchWebBatch(queries: string[]): Promise<WebSearchBatchO
       if (response.status === 400) {
         // Deploy skew — see the header. One grant per query from here on.
         logger.warn('[web-search] Batch shape rejected, falling back to single queries');
-        const singles = await sequentialFallback(cleaned);
+        const singles = await sequentialFallback(cleaned, stop);
         return { ok: true, searches: [...rejected, ...singles] };
       }
       const code = unavailableCodeForStatus(response.status);
@@ -424,10 +432,10 @@ export async function searchWebBatch(queries: string[]): Promise<WebSearchBatchO
 
 /** One `searchWeb` per query, each taking its own limiter grant. Only reached
  *  on deploy skew — this is the slow path the batch exists to avoid. */
-async function sequentialFallback(queries: string[]): Promise<WebSearchBatchEntry[]> {
+async function sequentialFallback(queries: string[], stop?: AbortSignal): Promise<WebSearchBatchEntry[]> {
   const out: WebSearchBatchEntry[] = [];
   for (const query of queries) {
-    const outcome = await searchWeb(query);
+    const outcome = await searchWeb(query, stop);
     out.push(
       outcome.ok
         ? { query, results: outcome.results }
