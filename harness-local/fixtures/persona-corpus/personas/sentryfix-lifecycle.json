@@ -1,0 +1,157 @@
+{
+  "_note": "sentryfix lifecycle eval: empty pass over every fact, tap pass over tapIds plus owner-nieuw-west. Run with run-topic-lifecycle.ts.",
+  "cohort": "sentryfix-lifecycle",
+  "tapIds": [
+    "i01",
+    "i02",
+    "i03",
+    "i04"
+  ],
+  "facts": [
+    {
+      "id": "l01",
+      "statement": "30 year old male",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000000000
+    },
+    {
+      "id": "l02",
+      "statement": "Is 30 years old",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000010000
+    },
+    {
+      "id": "l03",
+      "statement": "Male",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000020000
+    },
+    {
+      "id": "l04",
+      "statement": "30 jaar oud, man",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000030000
+    },
+    {
+      "id": "l05",
+      "statement": "Is 30 jaar oud",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000040000
+    },
+    {
+      "id": "l06",
+      "statement": "Man",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000050000
+    },
+    {
+      "id": "l07",
+      "statement": "30 साल का पुरुष",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000060000
+    },
+    {
+      "id": "l08",
+      "statement": "30 साल का है",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000070000
+    },
+    {
+      "id": "l09",
+      "statement": "पुरुष",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000080000
+    },
+    {
+      "id": "i01",
+      "statement": "Interested in fitness",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000090000
+    },
+    {
+      "id": "i02",
+      "statement": "Follows Formula 1",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000100000
+    },
+    {
+      "id": "i03",
+      "statement": "Into hiking",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000110000
+    },
+    {
+      "id": "i04",
+      "statement": "Interested in personal finance",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000120000
+    },
+    {
+      "id": "n01",
+      "statement": "Does not drive",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000130000
+    },
+    {
+      "id": "n02",
+      "statement": "Prefers not to say",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000140000
+    },
+    {
+      "id": "n03",
+      "statement": "Not specified",
+      "questionnaireAttribute": "topics: general interests",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000150000
+    }
+  ],
+  "topics": []
+}
