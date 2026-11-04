@@ -675,8 +675,13 @@
     "statusError": "오류",
     "turnNoAnswer": "제가 그 일을 할 수 없었어요. 다른 방식으로 물어봐 주세요.",
     "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요.",
+<<<<<<< HEAD
     "tryingAgain": "다시 시도하는 중",
     "factRemovedLine": "뉴스 토픽을 찾지 못해서 제가 이 내용을 삭제했어요: {{facts}}. 대신 어떤 내용을 저장할까요?"
+=======
+    "turnInterrupted": "앱을 나가서 Mera의 답변이 중단되었습니다.",
+    "replyUnfinished": "완료되지 않음"
+>>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "안녕하세요, 메라입니다.\n\n사는 도시나 동네, 하는 일의 분야, 응원하는 팀이나 취미처럼 간단한 것부터 알려 주세요. 잘 맞는 뉴스를 찾아 드릴게요.\n\n원하는 만큼만 알려 주세요. 알려 주신 내용은 이 휴대폰에만 저장됩니다. 본인 외에는 누구도 데이터에 접근할 수 없습니다."

@@ -735,8 +735,13 @@
     "statusError": "Błąd",
     "turnNoAnswer": "Nie udało mi się tego zrobić. Spróbuj zapytać inaczej.",
     "turnFailed": "Ta odpowiedź się nie dokończyła. Spróbuj ponownie.",
+<<<<<<< HEAD
     "tryingAgain": "Próbuję ponownie",
     "factRemovedLine": "Usunęłam {{facts}}, bo nie znalazłam tematów z wiadomości. Co wolisz, żebym zapisała zamiast tego?"
+=======
+    "turnInterrupted": "Odpowiedź Mery została przerwana, gdy opuszczono aplikację.",
+    "replyUnfinished": "Nie ukończono"
+>>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "Cześć, jestem Mera.\n\nOpowiedz mi trochę o sobie, na przykład o swoim mieście lub okolicy, rodzaju pracy albo drużynie czy hobby, które śledzisz, a znajdę pasujące wiadomości.\n\nPodziel się tym, czym chcesz. To, co mi powiesz, zostaje na tym telefonie. Nikt poza Tobą nie ma dostępu do Twoich danych."

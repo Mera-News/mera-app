@@ -675,8 +675,13 @@
     "statusError": "Lỗi",
     "turnNoAnswer": "Mình không làm được điều đó. Hãy thử hỏi theo cách khác.",
     "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại.",
+<<<<<<< HEAD
     "tryingAgain": "Đang thử lại",
     "factRemovedLine": "Mình đã xóa {{facts}} vì không tìm thấy chủ đề tin tức nào. Bạn muốn mình lưu gì thay vào đó?"
+=======
+    "turnInterrupted": "Câu trả lời của Mera đã dừng khi bạn rời ứng dụng.",
+    "replyUnfinished": "Chưa xong"
+>>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nChia sẻ nhiều hay ít tùy bạn. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai có quyền truy cập dữ liệu của bạn ngoài bạn."

@@ -11,6 +11,7 @@ import {
   encryptContent,
   encryptMessages,
   prepareE2EEContext,
+  type E2EEContext,
   type SigningAlgo,
 } from '../e2ee/e2ee-service';
 import { getCachedAttestation, invalidateCachedAttestation } from '../e2ee/e2ee-cache';
@@ -50,7 +51,6 @@ import {
   type ChatCompletionResponse,
   type SseEvent,
 } from './chat-response';
-import type { E2EEContext } from '../e2ee/e2ee-service';
 
 // Everything that moved out is re-exported, so this module's export list is unchanged.
 export {

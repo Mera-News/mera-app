@@ -690,7 +690,9 @@
     "turnNoAnswer": "Das konnte ich nicht. Frag noch einmal anders.",
     "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut.",
     "tryingAgain": "Wird erneut versucht",
-    "factRemovedLine": "Ich habe {{facts}} entfernt, weil ich dazu keine Nachrichtenthemen finden konnte. Was soll ich dir stattdessen speichern?"
+    "factRemovedLine": "Ich habe {{facts}} entfernt, weil ich dazu keine Nachrichtenthemen finden konnte. Was soll ich dir stattdessen speichern?",
+    "turnInterrupted": "Meras Antwort wurde unterbrochen, als du die App verlassen hast.",
+    "replyUnfinished": "Nicht fertig"
   },
   "personaChat": {
     "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nTeile so viel oder so wenig, wie du möchtest. Was du mir erzählst, bleibt auf diesem Handy. Niemand außer dir hat Zugriff auf deine Daten."
