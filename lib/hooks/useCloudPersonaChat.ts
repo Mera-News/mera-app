@@ -51,6 +51,7 @@ import {
 } from '@/lib/chat-session/cloud-engine-helpers';
 import { normaliseTrackText } from '@/components/custom/floating-chat/track-options';
 import type { ProposalAction } from '../news-harness/core/types';
+import { MUTATING_CHAT_TOOLS } from '@/lib/chat-session/engine';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
 import {
@@ -863,7 +864,29 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    *  turn starts: its loop and a turn's would share the card and the wire. */
   let moreAbort: AbortController | null = null;
 
-  const startTurn = (text: string, visible: boolean) => {
+  /** The turn Retry can send again. Set only when it threw and changed nothing;
+   *  a new send, a stop or another conversation clears it. */
+  type FailedTurn = {
+    text: string;
+    /** The wire as the turn found it: restored on retry, so the user's message lands once. */
+    wire: WireMessage[];
+    /** Length of `messages` once the turn opened: everything past it is the turn's own output. */
+    from: number;
+    /** The single-shot context the turn was built with, once built. */
+    context?: string;
+  };
+  let failedTurn: FailedTurn | null = null;
+
+  const canRetry = (): boolean =>
+    alive &&
+    failedTurn !== null &&
+    !turnBusyRef.current &&
+    !isStreamingRef.current &&
+    moreAbort === null &&
+    !cloud().isBlocked &&
+    cloud().error !== null;
+
+  const startTurn = (text: string, visible: boolean, retryContext?: string) => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // A turn started while one runs would push a `user` wire message between
@@ -883,6 +906,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       logger.debug(`${TAG} sendMessage proceeding`, { length: trimmed.length });
       store.setError(null);
+      failedTurn = null;
+      const turnWire = cloud().wireMessages;
 
       if (visible) {
         const userMsg: ConversationMessage = {
@@ -914,6 +939,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       phase('preparing');
 
       const assistantId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const turnStart = cloud().messages.length;
+      let turnContext = retryContext;
 
       void (async () => {
         try {
@@ -937,8 +964,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const tools = agentRef.current.getToolDefinitions?.() ?? [];
             logger.debug(`${TAG} tool definitions`, { count: tools.length, names: tools.map(t => t.function.name) });
 
-            let context = '';
-            if (agentRef.current.buildContext) {
+            let context = turnContext ?? '';
+            if (turnContext === undefined && agentRef.current.buildContext) {
               try {
                 context = await agentRef.current.buildContext();
                 logger.debug(`${TAG} context built`, { length: context.length });
@@ -948,7 +975,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             }
             // A8: the stories the user followed from cards, so the model does not offer them again.
             const followed = followedInChatLabels(cloud().messages);
-            if (followed.length > 0) context = `${context}\nuser followed: ${followed.join(', ')}`.trim();
+            if (turnContext === undefined && followed.length > 0) context = `${context}\nuser followed: ${followed.join(', ')}`.trim();
+            turnContext = context;
             // Push only the RAW user text into wireMessages. Context is re-injected
             // fresh onto the last user message in runSingleShot — never persisted,
             // so multi-turn chats don't accumulate N copies of the facts/guide block.
@@ -962,6 +990,10 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           if (!turnStop.signal.aborted) {
             const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
             logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
+            const mutated = cloud()
+              .messages.slice(turnStart)
+              .some((m) => m.toolCalls?.some((tc) => MUTATING_CHAT_TOOLS.has(tc.name)));
+            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext };
             cloud().setError(msg);
             markChatFailed();
           }
@@ -1066,7 +1098,18 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     sendHidden: (text) => {
       if (alive) startTurn(text, false);
     },
+    canRetry,
+    retry: () => {
+      if (!canRetry() || !failedTurn) return;
+      const { text, wire, from, context } = failedTurn;
+      // The empty rows go; a row with tool calls stays, because a card may sit on it.
+      cloud().setMessages((prev) => prev.filter((m, i) => i < from || (m.toolCalls ?? []).length > 0));
+      useCloudChatStore.setState({ wireMessages: wire });
+      // Not visible: the user's bubble is already there (and a hidden turn never had one).
+      startTurn(text, false, context);
+    },
     setAgent: (agent) => {
+      if (agent.id !== agentRef.current.id) failedTurn = null;
       agentRef.current = agent;
     },
     stop: () => {
@@ -1078,6 +1121,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     dispose: () => {
       detached = detachedCopy(useCloudChatStore.getState());
       alive = false;
+      failedTurn = null;
     },
   };
 }

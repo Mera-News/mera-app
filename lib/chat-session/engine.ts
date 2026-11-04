@@ -9,6 +9,18 @@ import type { ProposalAction, TrackFeedbackSubject } from '@/lib/news-harness/co
 /** The most options a follow card may hold, grown ones included. */
 export const MAX_FOLLOW_OPTIONS = 8;
 
+/** Tools that change the reader's data or a card's outcome when they run. A turn
+ *  that ran one is never retried. Staging tools (saveExtractedFacts, proposeTrack,
+ *  proposeChanges, proposeFactCheck) write nothing, so a repeat is harmless. */
+export const MUTATING_CHAT_TOOLS: ReadonlySet<string> = new Set([
+    'applyProposal',
+    'cancelProposal',
+    'deleteUserFacts',
+    'updateUserConfig',
+    'issueWarning',
+    'runCalibration',
+]);
+
 /** "More options" on a follow card, built from the card alone (`requestMoreOptions`). */
 export interface MoreOptionsRequest {
     /** The card the reader tapped. */
@@ -33,6 +45,11 @@ export interface ChatEngine<A extends ChatAgent = IAgent> {
     send(text: string): void;
     /** A turn the user never sees (the topic-plan discard note). */
     sendHidden(text: string): void;
+    /** The last turn threw and may be sent again; absent on an engine that cannot. */
+    canRetry?(): boolean;
+    /** Sends the failed turn again: no new bubble, the wire as the turn found it.
+     *  A no-op unless `canRetry()`. */
+    retry?(): void;
     /** The view re-creates its agent when the context object changes. */
     setAgent(agent: A): void;
     /** The Stop button: abort the turn in flight (and a queued hidden one).

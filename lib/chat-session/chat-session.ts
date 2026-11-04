@@ -163,6 +163,16 @@ export function stopChatTurn(): void {
     live.engine.stop();
 }
 
+/** Retry is on offer: the last turn failed, nothing is busy, and it changed nothing. */
+export function canRetryChatTurn(): boolean {
+    return !busyNow() && live?.engine.canRetry?.() === true;
+}
+
+/** Sends the failed turn again. A no-op unless `canRetryChatTurn()`. */
+export function retryChatTurn(): void {
+    if (canRetryChatTurn()) live?.engine.retry?.();
+}
+
 /** The live engine can grow a follow card. The card hides "More options" when not. */
 export function canRequestMoreOptions(): boolean {
     return typeof live?.engine.moreOptions === 'function';
