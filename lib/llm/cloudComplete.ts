@@ -510,11 +510,12 @@ export async function* cloudChatStream(
 
   const { signal } = request;
   const stopped = () => new CallerAbortError('cloudChatStream: stopped');
-  const counter = { builds: 0 };
   for (let resent = false; ; resent = true) {
     await whenForeground(signal);
     const attempts: ChatAttempt[] = [];
     const left = departureMark();
+    // Per send: a re-send after returning is a first attempt, not a retry.
+    const counter = { builds: 0 };
     const seen = { reply: false };
     let failure: unknown;
     try {
@@ -618,7 +619,7 @@ async function* playChatLeg(
     // trip: on a cold launch this is the phase, and it is why the first
     // message of a session feels different from the tenth.
     const cold = attempt === 1 && !getCachedAttestation(sendModel);
-    if (attempt > 1) phase('retrying');
+    if (attempt > 1 && !left()) phase('retrying');
     else phase(cold ? 'attesting' : 'securing');
     // NO TOOL FIELD LEAVES THE DEVICE. The schema joins the system prompt,
     // replayed calls and results become text, and all of it is encrypted with

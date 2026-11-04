@@ -109,6 +109,7 @@ async function sendSequential<C>(
   options: CloudCallOptions,
 ): Promise<Leg<C>> {
   const model = resolveModel(primaryModel);
+  const left = departureMark();
   const first = await build(model);
 
   let originalResponse: Response | null = null;
@@ -130,7 +131,7 @@ async function sendSequential<C>(
     originalError = err;
   }
 
-  return engageAndRetry(url, primaryModel, build, options, {
+  return engageAndRetry(url, primaryModel, build, options, left, {
     model,
     ctx: first.ctx,
     response: originalResponse,
@@ -146,9 +147,10 @@ async function engageAndRetry<C>(
   primaryModel: string,
   build: Build<C>,
   options: CloudCallOptions,
+  left: () => boolean,
   failed: { model: string; ctx: C; response: Response | null; error: unknown },
 ): Promise<Leg<C>> {
-  reportModelFailure(primaryModel);
+  if (!left()) reportModelFailure(primaryModel);
   const fallbackModel = resolveModel(primaryModel);
   if (fallbackModel !== failed.model) {
     logger.warn(`${TAG} timeout-class failure — retrying once on session fallback`, {
@@ -277,7 +279,7 @@ async function sendHedged<C>(
       if (isCallerAbort(settled.err)) throw settled.err;
       if (!isAbortLike(settled.err)) throw settled.err;
     }
-    return engageAndRetry(url, primaryModel, build, options, {
+    return engageAndRetry(url, primaryModel, build, options, left, {
       model: primaryModel,
       // Only read when a response is being surfaced, which implies `kind: leg`.
       ctx: settled.kind === 'leg' ? settled.leg.ctx : (undefined as unknown as C),

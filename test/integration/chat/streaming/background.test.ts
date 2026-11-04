@@ -97,6 +97,44 @@ describe('flag off: every read answers turn-gone', () => {
     expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
   });
 
+  it('a re-send after returning is a first attempt on the wait line, never "retrying"', async () => {
+    const seen: string[] = [];
+    server.use(...mockGateway((c) => (c.index === 0 ? { chunks: ['x'], stallAfter: 0 } : 'hello')));
+    const { done } = pump({ onPhase: (p: unknown) => seen.push(String(p)) });
+    await advanceUntil(() => gatewayCalls('chat').length === 1);
+
+    setAppState('background');
+    await jest.advanceTimersByTimeAsync(200_000);
+    setAppState('active');
+    await drive(done);
+
+    expect(gatewayCalls('chat')).toHaveLength(2);
+    expect(seen).not.toContain('retrying');
+  });
+
+  it('a 502 that lands after a departure engages nothing', async () => {
+    let answer = () => {};
+    const held = new Promise<void>((r) => {
+      answer = r;
+    });
+    let posts = 0;
+    server.use(
+      http.post('*/v1/chat/completions', async () => {
+        posts += 1;
+        await held;
+        return HttpResponse.text('bad gateway', { status: 502 });
+      }),
+    );
+    const outcome = fail(pump().done);
+    await advanceUntil(() => posts === 1);
+    await suspendFor(2000);
+    setAppState('active');
+    answer();
+    await drive(outcome);
+
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+  });
+
   it('mid-stream: the partial is cleared by `restart` and the text lands once', async () => {
     server.use(
       ...mockGateway((c) => (c.index === 0 ? { chunks: ['Par', 'tial'], stallAfter: 1 } : 'Whole answer')),
