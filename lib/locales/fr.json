@@ -318,7 +318,8 @@
     "youCameFromHere": "Vous venez d'ici",
     "howToTranslate": "Comment traduire",
     "aboutGoogleTranslate": "À propos de Google Traduction",
-    "googleTranslateBody": "Google Traduction affiche cet article en {{language}}. La page s'ouvre via Google, qui peut donc voir l'article que vous lisez."
+    "googleTranslateBody": "Google Traduction affiche cet article en {{language}}. La page s'ouvre via Google, qui peut donc voir l'article que vous lisez.",
+    "readOnGoogleTranslateA11y": "Lire sur Google Translate, s'ouvre en dehors de Mera"
   },
   "sources": {
     "publishers": "Éditeurs",
@@ -378,7 +379,11 @@
     "savedInline": "Enregistré",
     "selectedLabel": "Sélectionnées",
     "format24h": "24h",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Fait supprimé",
+    "factRemovedBody": "Mera n'a pas trouvé de sujets d'actualité pour « {{statement}} », alors il a supprimé ce fait. Il ne sera plus utilisé dans le chat ni dans votre fil. Vous pouvez le rajouter avec une formulation différente.",
+    "factRemovedAction": "Le rajouter",
+    "factRemovedDraft": "Souviens-toi de ceci à mon sujet : {{statement}}"
   },
   "language": {
     "title": "Langue",
@@ -692,7 +697,8 @@
     "statusReady": "Prêt",
     "statusError": "Erreur",
     "turnNoAnswer": "Je n'ai pas pu faire ça. Essaie de me le demander autrement.",
-    "turnFailed": "Ma réponse ne s'est pas terminée. Réessaie."
+    "turnFailed": "Ma réponse ne s'est pas terminée. Réessaie.",
+    "tryingAgain": "Nouvelle tentative"
   },
   "personaChat": {
     "introMessage": "Bonjour, je suis Mera.\n\nParlez-moi un peu de vous, comme votre ville ou votre quartier, votre métier, ou une équipe ou un loisir que vous suivez, et je trouverai des actualités qui vous correspondent.\n\nPartagez autant ou aussi peu que vous voulez. Ce que vous me dites reste sur ce téléphone. Personne d'autre que vous n'a accès à vos données."
@@ -1075,7 +1081,9 @@
     "wideNetBody": "Mera ratisse large, donc certains articles ici peuvent n'avoir qu'un lien ténu avec l'actualité. Nous préférons vous montrer un article de trop plutôt que de vous en faire manquer un important.",
     "wideNetRemove": "Pour en retirer un, ouvrez son menu et choisissez {{action}}.",
     "wideNetShowLess": "Afficher moins",
-    "composerPlaceholder": "Quel sujet dois-je suivre pour vous ?"
+    "composerPlaceholder": "Quel sujet dois-je suivre pour vous ?",
+    "optionAsWritten": "{{phrase}}, tel que vous l'avez écrit",
+    "optionSpellingFixed": "{{phrase}}, orthographe corrigée"
   },
   "whatsNew": {
     "gotIt": "Compris",
@@ -1288,7 +1296,10 @@
       "toastMistakeCount_one": "{{count}} erreur notée",
       "toastMistakeCount_many": "{{count}} erreurs notées",
       "toastMistakeCount_other": "{{count}} erreurs notées",
-      "prefillReasonNotAbout": "L'article ne correspond pas à l'intérêt pour lequel il a été affiché"
+      "prefillReasonNotAbout": "L'article ne correspond pas à l'intérêt pour lequel il a été affiché",
+      "prefillStoryNoLanguage": "Article de : {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Article de : {{site}}, en {{language}}.",
+      "prefillStorySiteOnly": "Article de : {{site}}."
     }
   },
   "topicPlan": {
@@ -2531,7 +2542,14 @@
     "accordionTitlePending": "Recherche de sujets pour :",
     "pendingA11y": "Des sujets sont en cours de recherche",
     "readyA11y": "Sujets prêts",
-    "failedA11y": "Les sujets n'ont pas pu être trouvés"
+    "failedA11y": "Les sujets n'ont pas pu être trouvés",
+    "emptyDeletable": "Aucun sujet pour l'instant. Mera continuera de chercher aujourd'hui et supprimera ce fait s'il n'en trouve aucun.",
+    "failed": "Impossible de trouver des sujets.",
+    "added_one": "1 sujet ajouté",
+    "added_other": "{{count}} sujets ajoutés",
+    "nothingNew": "Rien de nouveau à ajouter pour le moment",
+    "moreFailed": "Impossible de trouver des sujets. Réessayez.",
+    "findTopics": "Trouver des sujets"
   },
   "agentSteps": {
     "legStart": "Je réfléchis à ce que tu as dit",

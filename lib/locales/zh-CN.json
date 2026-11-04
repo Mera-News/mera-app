@@ -299,7 +299,8 @@
     "youCameFromHere": "你是从这里进入的",
     "howToTranslate": "如何翻译",
     "aboutGoogleTranslate": "关于 Google 翻译",
-    "googleTranslateBody": "Google 翻译会以{{language}}显示这篇文章。页面通过 Google 打开，因此 Google 能看到你在读哪篇文章。"
+    "googleTranslateBody": "Google 翻译会以{{language}}显示这篇文章。页面通过 Google 打开，因此 Google 能看到你在读哪篇文章。",
+    "readOnGoogleTranslateA11y": "在谷歌翻译中阅读，在梅拉外打开"
   },
   "sources": {
     "publishers": "出版商",
@@ -359,7 +360,11 @@
     "savedInline": "已保存",
     "selectedLabel": "已选",
     "format24h": "24小时制",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "已移除一条事实",
+    "factRemovedBody": "梅拉找不到与“{{statement}}”相关的新闻主题，因此已移除这条事实。它不会再用于聊天或你的信息流。你可以用不同的措辞重新添加。",
+    "factRemovedAction": "重新添加",
+    "factRemovedDraft": "记住关于我的这一点：{{statement}}"
   },
   "language": {
     "title": "语言",
@@ -671,7 +676,8 @@
     "statusReady": "就绪",
     "statusError": "出错",
     "turnNoAnswer": "我没能做到。请换个方式再问我。",
-    "turnFailed": "这条回复没有完成。请重试。"
+    "turnFailed": "这条回复没有完成。请重试。",
+    "tryingAgain": "正在重试"
   },
   "personaChat": {
     "introMessage": "你好，我是梅拉。\n\n跟我说说你自己吧，比如你所在的城市或街区、你从事的工作类型，或者你关注的球队或爱好，我会为你找到合适的新闻。\n\n想分享多少都可以。你告诉我的内容都保存在这部手机上。除了你，没有人能访问你的数据。"
@@ -1052,7 +1058,9 @@
     "wideNetBody": "梅拉的搜索范围较广，因此这里的部分文章可能与报道关系不大。我们宁愿多给你看一篇，也不想让你错过重要的文章。",
     "wideNetRemove": "要移除某篇文章，请打开它的菜单并选择“{{action}}”。",
     "wideNetShowLess": "收起",
-    "composerPlaceholder": "你想让我帮你关注哪条新闻？"
+    "composerPlaceholder": "你想让我帮你关注哪条新闻？",
+    "optionAsWritten": "{{phrase}}，按你输入的写法",
+    "optionSpellingFixed": "{{phrase}}，修正拼写"
   },
   "whatsNew": {
     "gotIt": "知道了",
@@ -1259,7 +1267,10 @@
       "answerPaywalled": "需付费",
       "answerSent": "{{answer}} · 已发送给梅拉实验室",
       "toastMistakeCount_other": "已记录 {{count}} 个错误",
-      "prefillReasonNotAbout": "这条新闻与推荐它时依据的兴趣不符"
+      "prefillReasonNotAbout": "这条新闻与推荐它时依据的兴趣不符",
+      "prefillStoryNoLanguage": "新闻来源：{{site}}，{{country}}。",
+      "prefillStoryNoCountry": "新闻来源：{{site}}，{{language}}。",
+      "prefillStorySiteOnly": "新闻来源：{{site}}。"
     }
   },
   "topicPlan": {
@@ -2499,7 +2510,14 @@
     "accordionTitlePending": "正在寻找相关主题：",
     "pendingA11y": "正在寻找主题",
     "readyA11y": "主题已就绪",
-    "failedA11y": "未能找到主题"
+    "failedA11y": "未能找到主题",
+    "emptyDeletable": "还没有主题。梅拉今天会继续尝试，如果仍然找不到，就会移除这条事实。",
+    "failed": "未能找到主题。",
+    "added_one": "已添加 1 个主题",
+    "added_other": "已添加 {{count}} 个主题",
+    "nothingNew": "目前没有可添加的新主题",
+    "moreFailed": "未能找到主题。请重试。",
+    "findTopics": "查找主题"
   },
   "agentSteps": {
     "legStart": "正在思考你说的内容",

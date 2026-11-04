@@ -299,7 +299,8 @@
     "youCameFromHere": "Bạn đến từ đây",
     "howToTranslate": "Cách dịch",
     "aboutGoogleTranslate": "Về Google Dịch",
-    "googleTranslateBody": "Google Dịch hiển thị bài viết này bằng {{language}}. Trang được mở qua Google, nên Google có thể biết bạn đang đọc bài viết nào."
+    "googleTranslateBody": "Google Dịch hiển thị bài viết này bằng {{language}}. Trang được mở qua Google, nên Google có thể biết bạn đang đọc bài viết nào.",
+    "readOnGoogleTranslateA11y": "Đọc trên Google Dịch, mở ngoài Mera"
   },
   "sources": {
     "publishers": "Nhà xuất bản",
@@ -359,7 +360,11 @@
     "savedInline": "Đã lưu",
     "selectedLabel": "Đã chọn",
     "format24h": "24h",
-    "formatAmPm": "SA/CH"
+    "formatAmPm": "SA/CH",
+    "factRemovedTitle": "Đã xóa một dữ kiện",
+    "factRemovedBody": "Mera không tìm thấy chủ đề tin tức nào cho “{{statement}}”, nên Mera đã xóa dữ kiện này. Dữ kiện này sẽ không còn được dùng trong trò chuyện hay nguồn tin của bạn nữa. Bạn có thể thêm lại với cách diễn đạt khác.",
+    "factRemovedAction": "Thêm lại",
+    "factRemovedDraft": "Hãy nhớ điều này về tôi: {{statement}}"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -671,7 +676,8 @@
     "statusReady": "Sẵn sàng",
     "statusError": "Lỗi",
     "turnNoAnswer": "Mình không làm được điều đó. Hãy thử hỏi theo cách khác.",
-    "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại."
+    "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại.",
+    "tryingAgain": "Đang thử lại"
   },
   "personaChat": {
     "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nChia sẻ nhiều hay ít tùy bạn. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai có quyền truy cập dữ liệu của bạn ngoài bạn."
@@ -1052,7 +1058,9 @@
     "wideNetBody": "Mera tìm kiếm trên phạm vi rộng, nên một số bài viết ở đây có thể chỉ liên quan ít đến câu chuyện. Chúng tôi thà cho bạn xem thêm một bài còn hơn để bạn bỏ lỡ một bài quan trọng.",
     "wideNetRemove": "Để xóa một bài, hãy mở menu của bài đó và chọn {{action}}.",
     "wideNetShowLess": "Thu gọn",
-    "composerPlaceholder": "Bạn muốn mình theo dõi câu chuyện nào?"
+    "composerPlaceholder": "Bạn muốn mình theo dõi câu chuyện nào?",
+    "optionAsWritten": "{{phrase}}, đúng như bạn đã viết",
+    "optionSpellingFixed": "{{phrase}}, đã sửa chính tả"
   },
   "whatsNew": {
     "gotIt": "Đã hiểu",
@@ -1259,7 +1267,10 @@
       "answerPaywalled": "Có tường phí",
       "answerSent": "{{answer}} · Đã gửi cho Mera Labs",
       "toastMistakeCount_other": "Đã ghi nhận {{count}} lỗi",
-      "prefillReasonNotAbout": "Tin này không liên quan đến mối quan tâm đã khiến nó được hiển thị"
+      "prefillReasonNotAbout": "Tin này không liên quan đến mối quan tâm đã khiến nó được hiển thị",
+      "prefillStoryNoLanguage": "Tin từ: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Tin từ: {{site}}, bằng {{language}}.",
+      "prefillStorySiteOnly": "Tin từ: {{site}}."
     }
   },
   "topicPlan": {
@@ -2499,7 +2510,14 @@
     "accordionTitlePending": "Đang tìm chủ đề cho:",
     "pendingA11y": "Đang tìm chủ đề",
     "readyA11y": "Chủ đề đã sẵn sàng",
-    "failedA11y": "Không tìm được chủ đề"
+    "failedA11y": "Không tìm được chủ đề",
+    "emptyDeletable": "Chưa có chủ đề nào. Mera sẽ tiếp tục thử trong hôm nay và sẽ xóa dữ kiện này nếu không tìm thấy chủ đề nào.",
+    "failed": "Không tìm được chủ đề.",
+    "added_one": "Đã thêm 1 chủ đề",
+    "added_other": "Đã thêm {{count}} chủ đề",
+    "nothingNew": "Chưa có gì mới để thêm",
+    "moreFailed": "Không tìm được chủ đề. Hãy thử lại.",
+    "findTopics": "Tìm chủ đề"
   },
   "agentSteps": {
     "legStart": "Đang suy nghĩ về điều bạn nói",

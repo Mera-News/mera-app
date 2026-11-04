@@ -311,7 +311,8 @@
     "youCameFromHere": "Je kwam hiervandaan",
     "howToTranslate": "Zo vertaal je",
     "aboutGoogleTranslate": "Over Google Translate",
-    "googleTranslateBody": "Google Translate toont dit artikel in het {{language}}. De pagina opent via Google, dus Google kan zien welk artikel je leest."
+    "googleTranslateBody": "Google Translate toont dit artikel in het {{language}}. De pagina opent via Google, dus Google kan zien welk artikel je leest.",
+    "readOnGoogleTranslateA11y": "Lezen op Google Translate, opent buiten Mera"
   },
   "sources": {
     "publishers": "Uitgevers",
@@ -371,7 +372,11 @@
     "savedInline": "Opgeslagen",
     "selectedLabel": "Gekozen",
     "format24h": "24u",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Feit verwijderd",
+    "factRemovedBody": "Mera kon geen nieuwsonderwerpen vinden voor „{{statement}}”, dus heeft Mera dit feit verwijderd. Het wordt niet meer gebruikt in chat of in je feed. Je kunt het opnieuw toevoegen met andere bewoording.",
+    "factRemovedAction": "Opnieuw toevoegen",
+    "factRemovedDraft": "Onthoud dit over mij: {{statement}}"
   },
   "language": {
     "title": "Taal",
@@ -685,7 +690,8 @@
     "statusReady": "Klaar",
     "statusError": "Fout",
     "turnNoAnswer": "Dat lukte me niet. Probeer het op een andere manier te vragen.",
-    "turnFailed": "Dat is niet afgerond. Probeer het opnieuw."
+    "turnFailed": "Dat is niet afgerond. Probeer het opnieuw.",
+    "tryingAgain": "Opnieuw proberen"
   },
   "personaChat": {
     "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."
@@ -1067,7 +1073,9 @@
     "wideNetBody": "Mera zoekt breed, dus sommige artikelen hier hebben misschien maar weinig met het verhaal te maken. We laten je liever één artikel te veel zien dan dat je een belangrijk artikel mist.",
     "wideNetRemove": "Wil je er een verwijderen? Open het menu ervan en kies {{action}}.",
     "wideNetShowLess": "Minder tonen",
-    "composerPlaceholder": "Welk verhaal moet ik voor je in de gaten houden?"
+    "composerPlaceholder": "Welk verhaal moet ik voor je in de gaten houden?",
+    "optionAsWritten": "{{phrase}}, zoals je het schreef",
+    "optionSpellingFixed": "{{phrase}}, met spelling gecorrigeerd"
   },
   "whatsNew": {
     "gotIt": "Begrepen",
@@ -1277,7 +1285,10 @@
       "answerSent": "{{answer}} · Verstuurd naar Mera Labs",
       "toastMistakeCount_one": "{{count}} fout genoteerd",
       "toastMistakeCount_other": "{{count}} fouten genoteerd",
-      "prefillReasonNotAbout": "Het verhaal past niet bij de interesse waarvoor het werd getoond"
+      "prefillReasonNotAbout": "Het verhaal past niet bij de interesse waarvoor het werd getoond",
+      "prefillStoryNoLanguage": "Bericht van: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Bericht van: {{site}}, taal: {{language}}.",
+      "prefillStorySiteOnly": "Bericht van: {{site}}."
     }
   },
   "topicPlan": {
@@ -2519,7 +2530,14 @@
     "accordionTitlePending": "Onderwerpen zoeken voor:",
     "pendingA11y": "Onderwerpen worden gezocht",
     "readyA11y": "Onderwerpen klaar",
-    "failedA11y": "Onderwerpen konden niet worden gevonden"
+    "failedA11y": "Onderwerpen konden niet worden gevonden",
+    "emptyDeletable": "Nog geen onderwerpen. Mera blijft vandaag zoeken en verwijdert dit feit als er niets wordt gevonden.",
+    "failed": "Onderwerpen konden niet worden gevonden.",
+    "added_one": "1 onderwerp toegevoegd",
+    "added_other": "{{count}} onderwerpen toegevoegd",
+    "nothingNew": "Er is nu niets nieuws om toe te voegen",
+    "moreFailed": "Onderwerpen konden niet worden gevonden. Probeer het opnieuw.",
+    "findTopics": "Onderwerpen zoeken"
   },
   "agentSteps": {
     "legStart": "Ik denk na over wat je zei",

@@ -351,7 +351,8 @@
     "youCameFromHere": "Вы пришли отсюда",
     "howToTranslate": "Как перевести",
     "aboutGoogleTranslate": "О Google Переводчике",
-    "googleTranslateBody": "Google Переводчик показывает эту статью на языке: {{language}}. Страница открывается через Google, поэтому Google видит, какую статью вы читаете."
+    "googleTranslateBody": "Google Переводчик показывает эту статью на языке: {{language}}. Страница открывается через Google, поэтому Google видит, какую статью вы читаете.",
+    "readOnGoogleTranslateA11y": "Читать в Google Translate, открывается вне Меры"
   },
   "sources": {
     "publishers": "Издатели",
@@ -413,7 +414,11 @@
     "savedInline": "Сохранено",
     "selectedLabel": "Выбрано",
     "format24h": "24 ч",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Факт удалён",
+    "factRemovedBody": "Мера не смогла найти темы для новостей по запросу «{{statement}}», поэтому удалила этот факт. Он больше не будет использоваться в чате и в вашей ленте. Вы можете добавить его обратно, сформулировав иначе.",
+    "factRemovedAction": "Добавить обратно",
+    "factRemovedDraft": "Запомни обо мне: {{statement}}"
   },
   "language": {
     "title": "Язык",
@@ -731,7 +736,8 @@
     "statusReady": "Готово",
     "statusError": "Ошибка",
     "turnNoAnswer": "Этого сделать не получилось. Попробуйте спросить по-другому.",
-    "turnFailed": "Ответ не завершился. Попробуйте ещё раз."
+    "turnFailed": "Ответ не завершился. Попробуйте ещё раз.",
+    "tryingAgain": "Пробуем снова"
   },
   "personaChat": {
     "introMessage": "Привет, я Мера.\n\nРасскажите немного о себе: ваш город или район, чем вы занимаетесь, команда или хобби, за которыми вы следите, и я подберу подходящие новости.\n\nДелитесь сколько хотите. Всё, что вы расскажете, остаётся на этом телефоне. Никто, кроме вас, не имеет доступа к вашим данным."
@@ -1129,7 +1135,9 @@
     "wideNetBody": "Мера ищет широко, поэтому некоторые статьи здесь могут быть лишь косвенно связаны с историей. Лучше показать вам лишнюю статью, чем пропустить важную.",
     "wideNetRemove": "Чтобы убрать статью, откройте её меню и выберите «{{action}}».",
     "wideNetShowLess": "Свернуть",
-    "composerPlaceholder": "За каким сюжетом мне следить для вас?"
+    "composerPlaceholder": "За каким сюжетом мне следить для вас?",
+    "optionAsWritten": "{{phrase}}, как вы написали",
+    "optionSpellingFixed": "{{phrase}}, с исправленным написанием"
   },
   "whatsNew": {
     "gotIt": "Понятно",
@@ -1345,7 +1353,10 @@
       "toastMistakeCount_few": "Отмечено ошибок: {{count}}",
       "toastMistakeCount_many": "Отмечено ошибок: {{count}}",
       "toastMistakeCount_other": "Отмечено ошибок: {{count}}",
-      "prefillReasonNotAbout": "Новость не соответствует интересу, по которому её показали"
+      "prefillReasonNotAbout": "Новость не соответствует интересу, по которому её показали",
+      "prefillStoryNoLanguage": "Новость с сайта: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Новость с сайта: {{site}}, язык: {{language}}.",
+      "prefillStorySiteOnly": "Новость с сайта: {{site}}."
     }
   },
   "topicPlan": {
@@ -2611,7 +2622,16 @@
     "accordionTitlePending": "Подбираем темы по:",
     "pendingA11y": "Идёт подбор тем",
     "readyA11y": "Темы готовы",
-    "failedA11y": "Не удалось подобрать темы"
+    "failedA11y": "Не удалось подобрать темы",
+    "emptyDeletable": "Тем пока нет. Мера продолжит искать сегодня и удалит этот факт, если ничего не найдёт.",
+    "failed": "Не удалось найти темы.",
+    "added_one": "Добавлена {{count}} тема",
+    "added_few": "Добавлено {{count}} темы",
+    "added_many": "Добавлено {{count}} тем",
+    "added_other": "Добавлено {{count}} темы",
+    "nothingNew": "Пока ничего нового нет",
+    "moreFailed": "Не удалось найти темы. Попробуйте ещё раз.",
+    "findTopics": "Найти темы"
   },
   "agentSteps": {
     "legStart": "Думаю над тем, что вы сказали",

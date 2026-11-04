@@ -390,7 +390,8 @@
     "youCameFromHere": "أتيت من هنا",
     "howToTranslate": "طريقة الترجمة",
     "aboutGoogleTranslate": "عن ترجمة Google",
-    "googleTranslateBody": "تعرض ترجمة Google هذه المقالة بلغة {{language}}. تُفتح الصفحة عبر Google، لذلك يمكن لـ Google معرفة المقالة التي تقرؤها."
+    "googleTranslateBody": "تعرض ترجمة Google هذه المقالة بلغة {{language}}. تُفتح الصفحة عبر Google، لذلك يمكن لـ Google معرفة المقالة التي تقرؤها.",
+    "readOnGoogleTranslateA11y": "اقرأ على Google Translate، يُفتح خارج ميرا"
   },
   "sources": {
     "publishers": "الناشرون",
@@ -454,7 +455,11 @@
     "savedInline": "تم الحفظ",
     "selectedLabel": "المحدد",
     "format24h": "24 ساعة",
-    "formatAmPm": "ص/م"
+    "formatAmPm": "ص/م",
+    "factRemovedTitle": "تمت إزالة حقيقة",
+    "factRemovedBody": "لم يجد ميرا مواضيع إخبارية لـ«{{statement}}»، فأزال هذه الحقيقة. لن تُستخدم في المحادثات أو في خلاصتك بعد الآن. يمكنك إضافتها مرة أخرى بصياغة مختلفة.",
+    "factRemovedAction": "أعِدها",
+    "factRemovedDraft": "تذكّر هذا عني: {{statement}}"
   },
   "language": {
     "title": "اللغة",
@@ -776,7 +781,8 @@
     "statusReady": "جاهز",
     "statusError": "خطأ",
     "turnNoAnswer": "لم أستطع فعل ذلك. جرّب أن تسألني بطريقة أخرى.",
-    "turnFailed": "لم يكتمل ردّي. حاول مرة أخرى."
+    "turnFailed": "لم يكتمل ردّي. حاول مرة أخرى.",
+    "tryingAgain": "جارٍ المحاولة مرة أخرى"
   },
   "personaChat": {
     "introMessage": "مرحبا، أنا ميرا.\n\nأخبرني قليلا عن نفسك، مثل مدينتك أو حيّك، أو نوع العمل الذي تقوم به، أو فريق أو هواية تتابعها، وسأجد لك أخبارا تناسبك.\n\nشارك بالقدر الذي تريده. ما تخبرني به يبقى على هذا الهاتف. لا يمكن لأحد غيرك الوصول إلى بياناتك."
@@ -1196,7 +1202,9 @@
     "wideNetBody": "يبحث ميرا على نطاق واسع، لذا قد تكون صلة بعض المقالات هنا بالقصة بسيطة. نفضّل أن نعرض لك مقالًا إضافيًا على أن يفوتك مقال مهم.",
     "wideNetRemove": "لإزالة مقال، افتح قائمته واختر {{action}}.",
     "wideNetShowLess": "عرض أقل",
-    "composerPlaceholder": "أي قصة تريدني أن أتابعها لك؟"
+    "composerPlaceholder": "أي قصة تريدني أن أتابعها لك؟",
+    "optionAsWritten": "{{phrase}}، كما كتبته",
+    "optionSpellingFixed": "{{phrase}}، مع تصحيح الإملاء"
   },
   "whatsNew": {
     "gotIt": "فهمت",
@@ -1418,7 +1426,10 @@
       "toastMistakeCount_few": "سُجّلت {{count}} أخطاء",
       "toastMistakeCount_many": "سُجّل {{count}} خطأً",
       "toastMistakeCount_other": "سُجّل {{count}} خطأ",
-      "prefillReasonNotAbout": "هذا الخبر لا يطابق الاهتمام الذي عُرض بسببه"
+      "prefillReasonNotAbout": "هذا الخبر لا يطابق الاهتمام الذي عُرض بسببه",
+      "prefillStoryNoLanguage": "الخبر من: {{site}}، {{country}}.",
+      "prefillStoryNoCountry": "الخبر من: {{site}}، باللغة: {{language}}.",
+      "prefillStorySiteOnly": "الخبر من: {{site}}."
     }
   },
   "topicPlan": {
@@ -2708,7 +2719,18 @@
     "accordionTitlePending": "جارٍ البحث عن مواضيع عن:",
     "pendingA11y": "جارٍ العثور على مواضيع",
     "readyA11y": "المواضيع جاهزة",
-    "failedA11y": "تعذّر العثور على مواضيع"
+    "failedA11y": "تعذّر العثور على مواضيع",
+    "emptyDeletable": "لا توجد مواضيع بعد. سيواصل ميرا البحث اليوم، وسيزيل هذه الحقيقة إذا لم يجد أي موضوع.",
+    "failed": "تعذّر العثور على مواضيع.",
+    "added_zero": "تمت إضافة {{count}} مواضيع جديدة",
+    "added_one": "تمت إضافة موضوع جديد",
+    "added_two": "تمت إضافة {{count}} مواضيع جديدة",
+    "added_few": "تمت إضافة {{count}} مواضيع جديدة",
+    "added_many": "تمت إضافة {{count}} موضوعًا جديدًا",
+    "added_other": "تمت إضافة {{count}} موضوع جديد",
+    "nothingNew": "لا يوجد جديد لإضافته الآن",
+    "moreFailed": "تعذّر العثور على مواضيع. حاول مرة أخرى.",
+    "findTopics": "ابحث عن مواضيع"
   },
   "agentSteps": {
     "legStart": "أفكر فيما قلته",

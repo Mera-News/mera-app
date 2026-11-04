@@ -299,7 +299,8 @@
     "youCameFromHere": "여기서 오셨습니다",
     "howToTranslate": "번역하는 방법",
     "aboutGoogleTranslate": "Google 번역 정보",
-    "googleTranslateBody": "Google 번역은 이 기사를 {{language}}(으)로 보여줘요. 페이지가 Google을 거쳐 열리기 때문에 Google이 어떤 기사를 읽는지 알 수 있어요."
+    "googleTranslateBody": "Google 번역은 이 기사를 {{language}}(으)로 보여줘요. 페이지가 Google을 거쳐 열리기 때문에 Google이 어떤 기사를 읽는지 알 수 있어요.",
+    "readOnGoogleTranslateA11y": "구글 번역으로 읽기, 메라 외부에서 열림"
   },
   "sources": {
     "publishers": "발행사",
@@ -359,7 +360,11 @@
     "savedInline": "저장됨",
     "selectedLabel": "선택됨",
     "format24h": "24시간",
-    "formatAmPm": "오전/오후"
+    "formatAmPm": "오전/오후",
+    "factRemovedTitle": "사실을 삭제했어요",
+    "factRemovedBody": "“{{statement}}”에 관한 뉴스 토픽을 찾지 못해서 메라가 이 사실을 삭제했어요. 이 사실은 이제 채팅이나 피드에 더 이상 쓰이지 않아요. 다른 표현으로 다시 추가할 수 있어요.",
+    "factRemovedAction": "다시 추가하기",
+    "factRemovedDraft": "나에 대해 이거 기억해 줘: {{statement}}"
   },
   "language": {
     "title": "언어",
@@ -671,7 +676,8 @@
     "statusReady": "준비됨",
     "statusError": "오류",
     "turnNoAnswer": "제가 그 일을 할 수 없었어요. 다른 방식으로 물어봐 주세요.",
-    "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요."
+    "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요.",
+    "tryingAgain": "다시 시도하는 중"
   },
   "personaChat": {
     "introMessage": "안녕하세요, 메라입니다.\n\n사는 도시나 동네, 하는 일의 분야, 응원하는 팀이나 취미처럼 간단한 것부터 알려 주세요. 잘 맞는 뉴스를 찾아 드릴게요.\n\n원하는 만큼만 알려 주세요. 알려 주신 내용은 이 휴대폰에만 저장됩니다. 본인 외에는 누구도 데이터에 접근할 수 없습니다."
@@ -1052,7 +1058,9 @@
     "wideNetBody": "메라는 폭넓게 기사를 찾기 때문에 여기 있는 일부 기사는 스토리와 관련이 적을 수 있습니다. 중요한 기사를 놓치는 것보다 기사를 하나 더 보여 드리는 편이 낫다고 생각합니다.",
     "wideNetRemove": "기사를 삭제하려면 해당 기사의 메뉴를 열고 '{{action}}'을 선택하세요.",
     "wideNetShowLess": "간단히 보기",
-    "composerPlaceholder": "어떤 소식을 대신 지켜볼까요?"
+    "composerPlaceholder": "어떤 소식을 대신 지켜볼까요?",
+    "optionAsWritten": "{{phrase}}, 입력한 대로",
+    "optionSpellingFixed": "{{phrase}}, 맞춤법 수정"
   },
   "whatsNew": {
     "gotIt": "확인",
@@ -1259,7 +1267,10 @@
       "answerPaywalled": "유료 기사",
       "answerSent": "{{answer}} · 메라 랩스에 보냄",
       "toastMistakeCount_other": "실수 {{count}}건을 기록했어요",
-      "prefillReasonNotAbout": "이 기사는 표시된 이유인 관심사와 맞지 않아요"
+      "prefillReasonNotAbout": "이 기사는 표시된 이유인 관심사와 맞지 않아요",
+      "prefillStoryNoLanguage": "기사 출처: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "기사 출처: {{site}}, {{language}}.",
+      "prefillStorySiteOnly": "기사 출처: {{site}}."
     }
   },
   "topicPlan": {
@@ -2499,7 +2510,14 @@
     "accordionTitlePending": "관련 주제를 찾는 중:",
     "pendingA11y": "주제를 찾는 중",
     "readyA11y": "주제 준비 완료",
-    "failedA11y": "주제를 찾지 못했어요"
+    "failedA11y": "주제를 찾지 못했어요",
+    "emptyDeletable": "아직 토픽이 없어요. 메라는 오늘 계속 찾아보고, 찾지 못하면 이 사실을 지울 거예요.",
+    "failed": "토픽을 찾지 못했어요.",
+    "added_one": "토픽 1개를 추가했어요",
+    "added_other": "토픽 {{count}}개를 추가했어요",
+    "nothingNew": "지금은 새로 추가할 토픽이 없어요",
+    "moreFailed": "토픽을 찾지 못했어요. 다시 시도해 보세요.",
+    "findTopics": "토픽 찾기"
   },
   "agentSteps": {
     "legStart": "말씀하신 내용을 생각하고 있어요",

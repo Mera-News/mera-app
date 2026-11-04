@@ -313,7 +313,8 @@
     "youCameFromHere": "Você veio daqui",
     "howToTranslate": "Como traduzir",
     "aboutGoogleTranslate": "Sobre o Google Tradutor",
-    "googleTranslateBody": "O Google Tradutor mostra este artigo em {{language}}. A página abre pelo Google, então o Google pode ver qual artigo você lê."
+    "googleTranslateBody": "O Google Tradutor mostra este artigo em {{language}}. A página abre pelo Google, então o Google pode ver qual artigo você lê.",
+    "readOnGoogleTranslateA11y": "Ler no Google Translate, abre fora da Mera"
   },
   "sources": {
     "publishers": "Publicadores",
@@ -373,7 +374,11 @@
     "savedInline": "Salvo",
     "selectedLabel": "Selecionados",
     "format24h": "24h",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Fato removido",
+    "factRemovedBody": "A Mera não encontrou temas de notícias para \"{{statement}}\", então removeu este fato. Ele não será mais usado no chat nem no seu feed. Você pode adicioná-lo de novo com outras palavras.",
+    "factRemovedAction": "Adicionar de volta",
+    "factRemovedDraft": "Lembre disto sobre mim: {{statement}}"
   },
   "language": {
     "title": "Idioma",
@@ -687,7 +692,8 @@
     "statusReady": "Pronto",
     "statusError": "Erro",
     "turnNoAnswer": "Não consegui fazer isso. Tente perguntar de outro jeito.",
-    "turnFailed": "Essa resposta não terminou. Tente novamente."
+    "turnFailed": "Essa resposta não terminou. Tente novamente.",
+    "tryingAgain": "Tentando novamente"
   },
   "personaChat": {
     "introMessage": "Oi, eu sou a Mera.\n\nConte um pouco sobre você, como sua cidade ou bairro, o tipo de trabalho que você faz, ou um time ou hobby que você acompanha, e eu encontro notícias que combinam com você.\n\nCompartilhe o quanto quiser. O que você me conta fica neste celular. Ninguém além de você tem acesso aos seus dados."
@@ -1070,7 +1076,9 @@
     "wideNetBody": "A Mera busca de forma ampla, então alguns artigos aqui podem ter pouca relação com a história. Preferimos mostrar um a mais do que deixar passar um importante.",
     "wideNetRemove": "Para remover um, abra o menu dele e escolha {{action}}.",
     "wideNetShowLess": "Mostrar menos",
-    "composerPlaceholder": "Qual história devo acompanhar para você?"
+    "composerPlaceholder": "Qual história devo acompanhar para você?",
+    "optionAsWritten": "{{phrase}}, como você escreveu",
+    "optionSpellingFixed": "{{phrase}}, com a ortografia corrigida"
   },
   "whatsNew": {
     "gotIt": "Entendi",
@@ -1283,7 +1291,10 @@
       "toastMistakeCount_one": "{{count}} erro anotado",
       "toastMistakeCount_many": "{{count}} erros anotados",
       "toastMistakeCount_other": "{{count}} erros anotados",
-      "prefillReasonNotAbout": "A notícia não combina com o interesse pelo qual foi mostrada"
+      "prefillReasonNotAbout": "A notícia não combina com o interesse pelo qual foi mostrada",
+      "prefillStoryNoLanguage": "Notícia de: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Notícia de: {{site}}, em {{language}}.",
+      "prefillStorySiteOnly": "Notícia de: {{site}}."
     }
   },
   "topicPlan": {
@@ -2525,7 +2536,14 @@
     "accordionTitlePending": "Procurando temas de:",
     "pendingA11y": "Temas sendo procurados",
     "readyA11y": "Temas prontos",
-    "failedA11y": "Não foi possível achar temas"
+    "failedA11y": "Não foi possível achar temas",
+    "emptyDeletable": "Nenhum tema ainda. A Mera continua tentando hoje e remove este fato se não encontrar nenhum.",
+    "failed": "Não foi possível achar temas.",
+    "added_one": "1 tema adicionado",
+    "added_other": "{{count}} temas adicionados",
+    "nothingNew": "Nada novo para adicionar agora",
+    "moreFailed": "Não foi possível achar temas. Tente novamente.",
+    "findTopics": "Procurar temas"
   },
   "agentSteps": {
     "legStart": "Pensando no que você disse",

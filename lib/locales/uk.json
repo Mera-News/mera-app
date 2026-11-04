@@ -351,7 +351,8 @@
     "youCameFromHere": "Ви прийшли звідси",
     "howToTranslate": "Як перекласти",
     "aboutGoogleTranslate": "Про Google Перекладач",
-    "googleTranslateBody": "Google Перекладач показує цю статтю мовою: {{language}}. Сторінка відкривається через Google, тому Google бачить, яку статтю ви читаєте."
+    "googleTranslateBody": "Google Перекладач показує цю статтю мовою: {{language}}. Сторінка відкривається через Google, тому Google бачить, яку статтю ви читаєте.",
+    "readOnGoogleTranslateA11y": "Читати в Google Translate, відкривається поза Мерою"
   },
   "sources": {
     "publishers": "Видавці",
@@ -413,7 +414,11 @@
     "savedInline": "Збережено",
     "selectedLabel": "Вибрано",
     "format24h": "24 год",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Видалено факт",
+    "factRemovedBody": "Мера не змогла знайти теми новин для «{{statement}}», тому видалила цей факт. Він більше не використовується в чаті чи в стрічці. Ви можете додати його знову з іншим формулюванням.",
+    "factRemovedAction": "Додати знову",
+    "factRemovedDraft": "Запам’ятай це про мене: {{statement}}"
   },
   "language": {
     "title": "Мова",
@@ -731,7 +736,8 @@
     "statusReady": "Готово",
     "statusError": "Помилка",
     "turnNoAnswer": "Я не змогла це зробити. Спробуйте запитати інакше.",
-    "turnFailed": "Ця відповідь не завершилася. Спробуйте ще раз."
+    "turnFailed": "Ця відповідь не завершилася. Спробуйте ще раз.",
+    "tryingAgain": "Пробуємо ще раз"
   },
   "personaChat": {
     "introMessage": "Привіт, я Мера.\n\nРозкажіть трохи про себе: ваше місто чи район, чим ви займаєтеся, команда чи хобі, за якими ви стежите, і я підберу відповідні новини.\n\nДіліться скільки хочете. Усе, що ви розкажете, залишається на цьому телефоні. Ніхто, крім вас, не має доступу до ваших даних."
@@ -1133,7 +1139,9 @@
     "wideNetBody": "Мера шукає широко, тому деякі статті тут можуть бути лише опосередковано пов'язані з історією. Краще показати вам зайву статтю, ніж пропустити важливу.",
     "wideNetRemove": "Щоб прибрати статтю, відкрийте її меню й виберіть «{{action}}».",
     "wideNetShowLess": "Згорнути",
-    "composerPlaceholder": "За яким сюжетом мені стежити для вас?"
+    "composerPlaceholder": "За яким сюжетом мені стежити для вас?",
+    "optionAsWritten": "{{phrase}}, як ви написали",
+    "optionSpellingFixed": "{{phrase}}, з виправленим написанням"
   },
   "whatsNew": {
     "gotIt": "Зрозуміло",
@@ -1349,7 +1357,10 @@
       "toastMistakeCount_few": "Позначено помилок: {{count}}",
       "toastMistakeCount_many": "Позначено помилок: {{count}}",
       "toastMistakeCount_other": "Позначено помилок: {{count}}",
-      "prefillReasonNotAbout": "Новина не відповідає інтересу, за яким її показали"
+      "prefillReasonNotAbout": "Новина не відповідає інтересу, за яким її показали",
+      "prefillStoryNoLanguage": "Новина з сайту: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Новина з сайту: {{site}}, мова: {{language}}.",
+      "prefillStorySiteOnly": "Новина з сайту: {{site}}."
     }
   },
   "topicPlan": {
@@ -2615,7 +2626,16 @@
     "accordionTitlePending": "Добираємо теми за:",
     "pendingA11y": "Триває добір тем",
     "readyA11y": "Теми готові",
-    "failedA11y": "Не вдалося дібрати теми"
+    "failedA11y": "Не вдалося дібрати теми",
+    "emptyDeletable": "Поки немає тем. Мера продовжить пошук сьогодні й видалить цей факт, якщо нічого не знайде.",
+    "failed": "Не вдалося дібрати теми.",
+    "added_one": "Додано 1 тему",
+    "added_few": "Додано {{count}} теми",
+    "added_many": "Додано {{count}} тем",
+    "added_other": "Додано {{count}} теми",
+    "nothingNew": "Поки що нових тем немає",
+    "moreFailed": "Не вдалося дібрати теми. Спробуйте ще раз.",
+    "findTopics": "Знайти теми"
   },
   "agentSteps": {
     "legStart": "Думаю над тим, що ви сказали",

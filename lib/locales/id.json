@@ -299,7 +299,8 @@
     "youCameFromHere": "Anda datang dari sini",
     "howToTranslate": "Cara menerjemahkan",
     "aboutGoogleTranslate": "Tentang Google Terjemahan",
-    "googleTranslateBody": "Google Terjemahan menampilkan artikel ini dalam {{language}}. Halaman dibuka melalui Google, jadi Google dapat melihat artikel yang Anda baca."
+    "googleTranslateBody": "Google Terjemahan menampilkan artikel ini dalam {{language}}. Halaman dibuka melalui Google, jadi Google dapat melihat artikel yang Anda baca.",
+    "readOnGoogleTranslateA11y": "Baca di Google Translate, dibuka di luar Mera"
   },
   "sources": {
     "publishers": "Penerbit",
@@ -359,7 +360,11 @@
     "savedInline": "Tersimpan",
     "selectedLabel": "Dipilih",
     "format24h": "24 jam",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Fakta dihapus",
+    "factRemovedBody": "Mera tidak bisa menemukan topik berita untuk \"{{statement}}\", jadi Mera menghapus fakta ini. Fakta ini tidak akan dipakai lagi di chat atau feed Anda. Anda bisa menambahkannya kembali dengan kata-kata yang berbeda.",
+    "factRemovedAction": "Tambahkan lagi",
+    "factRemovedDraft": "Ingat ini tentang saya: {{statement}}"
   },
   "language": {
     "title": "Bahasa",
@@ -671,7 +676,8 @@
     "statusReady": "Siap",
     "statusError": "Gagal",
     "turnNoAnswer": "Saya tidak bisa melakukan itu. Coba tanyakan dengan cara lain.",
-    "turnFailed": "Jawaban saya belum selesai. Coba lagi."
+    "turnFailed": "Jawaban saya belum selesai. Coba lagi.",
+    "tryingAgain": "Mencoba lagi"
   },
   "personaChat": {
     "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nBagikan sebanyak atau sesedikit yang kamu mau. Apa yang kamu ceritakan tetap di ponsel ini. Tidak ada yang bisa mengakses datamu selain kamu."
@@ -1052,7 +1058,9 @@
     "wideNetBody": "Mera mencari secara luas, jadi beberapa artikel di sini mungkin hanya sedikit berkaitan dengan cerita. Kami lebih memilih menampilkan satu artikel lebih banyak daripada membuat Anda melewatkan artikel yang penting.",
     "wideNetRemove": "Untuk menghapus artikel, buka menunya lalu pilih {{action}}.",
     "wideNetShowLess": "Tampilkan lebih sedikit",
-    "composerPlaceholder": "Berita apa yang perlu aku pantau untukmu?"
+    "composerPlaceholder": "Berita apa yang perlu aku pantau untukmu?",
+    "optionAsWritten": "{{phrase}}, seperti yang Anda tulis",
+    "optionSpellingFixed": "{{phrase}}, ejaannya sudah diperbaiki"
   },
   "whatsNew": {
     "gotIt": "Mengerti",
@@ -1259,7 +1267,10 @@
       "answerPaywalled": "Berbayar",
       "answerSent": "{{answer}} · Dikirim ke Mera Labs",
       "toastMistakeCount_other": "{{count}} kesalahan dicatat",
-      "prefillReasonNotAbout": "Berita ini tidak sesuai dengan minat yang membuatnya ditampilkan"
+      "prefillReasonNotAbout": "Berita ini tidak sesuai dengan minat yang membuatnya ditampilkan",
+      "prefillStoryNoLanguage": "Berita dari: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Berita dari: {{site}}, bahasa {{language}}.",
+      "prefillStorySiteOnly": "Berita dari: {{site}}."
     }
   },
   "topicPlan": {
@@ -2499,7 +2510,14 @@
     "accordionTitlePending": "Mencari topik untuk:",
     "pendingA11y": "Topik sedang dicari",
     "readyA11y": "Topik siap",
-    "failedA11y": "Topik tidak bisa ditemukan"
+    "failedA11y": "Topik tidak bisa ditemukan",
+    "emptyDeletable": "Belum ada topik. Mera akan terus mencoba hari ini dan menghapus fakta ini jika tidak menemukan apa pun.",
+    "failed": "Tidak bisa menemukan topik.",
+    "added_one": "1 topik ditambahkan",
+    "added_other": "{{count}} topik ditambahkan",
+    "nothingNew": "Belum ada yang baru untuk ditambahkan saat ini",
+    "moreFailed": "Tidak bisa menemukan topik. Coba lagi.",
+    "findTopics": "Cari topik"
   },
   "agentSteps": {
     "legStart": "Memikirkan apa yang kamu katakan",

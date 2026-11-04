@@ -349,7 +349,8 @@
     "youCameFromHere": "You came from here",
     "howToTranslate": "How to translate",
     "aboutGoogleTranslate": "About Google Translate",
-    "googleTranslateBody": "Google Translate shows this article in {{language}}. The page opens through Google, so Google can see which article you read."
+    "googleTranslateBody": "Google Translate shows this article in {{language}}. The page opens through Google, so Google can see which article you read.",
+    "readOnGoogleTranslateA11y": "Read on Google Translate, opens outside Mera"
   },
   "factCheck": {
     "actionA11y": "Look for published fact checks on this story",
@@ -627,7 +628,9 @@
     "wideNetBody": "Mera casts a wide net, so a few articles here may be only loosely related. We'd rather show you one extra than miss one that matters.",
     "wideNetRemove": "To remove one, open its menu and choose {{action}}.",
     "wideNetShowLess": "Show less",
-    "composerPlaceholder": "Which story should I keep an eye on?"
+    "composerPlaceholder": "Which story should I keep an eye on?",
+    "optionAsWritten": "{{phrase}}, as you wrote it",
+    "optionSpellingFixed": "{{phrase}}, with spelling fixed"
   },
   "whatsNew": {
     "gotIt": "Got it",
@@ -725,7 +728,11 @@
     "savedInline": "Saved",
     "selectedLabel": "Selected",
     "format24h": "24h",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Removed a fact",
+    "factRemovedBody": "Mera couldn't find news topics for \"{{statement}}\", so it removed this fact. It won't be used in chat or your feed anymore. You can add it back with different wording.",
+    "factRemovedAction": "Add it back",
+    "factRemovedDraft": "Remember this about me: {{statement}}"
   },
   "language": {
     "title": "Language",
@@ -1130,7 +1137,8 @@
     "statusReady": "Ready",
     "statusError": "Error",
     "turnNoAnswer": "I couldn't do that. Try asking another way.",
-    "turnFailed": "That didn't finish. Try again."
+    "turnFailed": "That didn't finish. Try again.",
+    "tryingAgain": "Trying again"
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
@@ -1473,7 +1481,10 @@
       "answerSent": "{{answer}} · Sent to Mera Labs",
       "toastMistakeCount_one": "{{count}} mistake noted",
       "toastMistakeCount_other": "{{count}} mistakes noted",
-      "prefillReasonNotAbout": "The story doesn't fit the interest it was shown for"
+      "prefillReasonNotAbout": "The story doesn't fit the interest it was shown for",
+      "prefillStoryNoLanguage": "Story from: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Story from: {{site}}, in {{language}}.",
+      "prefillStorySiteOnly": "Story from: {{site}}."
     }
   },
   "topicPlan": {
@@ -2521,7 +2532,14 @@
     "accordionTitlePending": "Finding topics for:",
     "pendingA11y": "Topics are being found",
     "readyA11y": "Topics ready",
-    "failedA11y": "Topics could not be found"
+    "failedA11y": "Topics could not be found",
+    "emptyDeletable": "No topics yet. Mera will keep trying today and will remove this fact if it finds none.",
+    "failed": "Couldn't find topics.",
+    "added_one": "Added 1 topic",
+    "added_other": "Added {{count}} topics",
+    "nothingNew": "Nothing new to add right now",
+    "moreFailed": "Couldn't find topics. Try again.",
+    "findTopics": "Find topics"
   },
   "agentSteps": {
     "legStart": "Thinking about what you said",

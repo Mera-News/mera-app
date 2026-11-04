@@ -311,7 +311,8 @@
     "youCameFromHere": "Von hier kamst du",
     "howToTranslate": "So übersetzt du",
     "aboutGoogleTranslate": "Über Google Übersetzer",
-    "googleTranslateBody": "Google Übersetzer zeigt diesen Artikel auf {{language}}. Die Seite öffnet sich über Google, daher kann Google sehen, welchen Artikel du liest."
+    "googleTranslateBody": "Google Übersetzer zeigt diesen Artikel auf {{language}}. Die Seite öffnet sich über Google, daher kann Google sehen, welchen Artikel du liest.",
+    "readOnGoogleTranslateA11y": "Bei Google Translate lesen, öffnet sich außerhalb von Mera"
   },
   "sources": {
     "publishers": "Herausgeber",
@@ -371,7 +372,11 @@
     "savedInline": "Gespeichert",
     "selectedLabel": "Ausgewählt",
     "format24h": "24h",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Fakt entfernt",
+    "factRemovedBody": "Mera konnte keine Nachrichtenthemen zu „{{statement}}“ finden und hat diesen Fakt deshalb entfernt. Er wird im Chat und in deinem Feed nicht mehr verwendet. Du kannst ihn mit einer anderen Formulierung wieder hinzufügen.",
+    "factRemovedAction": "Wieder hinzufügen",
+    "factRemovedDraft": "Merk dir das über mich: {{statement}}"
   },
   "language": {
     "title": "Sprache",
@@ -685,7 +690,8 @@
     "statusReady": "Bereit",
     "statusError": "Fehler",
     "turnNoAnswer": "Das konnte ich nicht. Frag noch einmal anders.",
-    "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut."
+    "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut.",
+    "tryingAgain": "Wird erneut versucht"
   },
   "personaChat": {
     "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nTeile so viel oder so wenig, wie du möchtest. Was du mir erzählst, bleibt auf diesem Handy. Niemand außer dir hat Zugriff auf deine Daten."
@@ -1067,7 +1073,9 @@
     "wideNetBody": "Mera sucht breit, daher haben manche Artikel hier nur wenig mit der Geschichte zu tun. Wir zeigen dir lieber einen Artikel zu viel, als dass du einen wichtigen verpasst.",
     "wideNetRemove": "Um einen zu entfernen, öffne sein Menü und wähle {{action}}.",
     "wideNetShowLess": "Weniger anzeigen",
-    "composerPlaceholder": "Welche Geschichte soll ich für dich im Blick behalten?"
+    "composerPlaceholder": "Welche Geschichte soll ich für dich im Blick behalten?",
+    "optionAsWritten": "{{phrase}}, so wie du es geschrieben hast",
+    "optionSpellingFixed": "{{phrase}}, mit korrigierter Schreibweise"
   },
   "whatsNew": {
     "gotIt": "Verstanden",
@@ -1277,7 +1285,10 @@
       "answerSent": "{{answer}} · An Mera Labs gesendet",
       "toastMistakeCount_one": "{{count}} Fehler vermerkt",
       "toastMistakeCount_other": "{{count}} Fehler vermerkt",
-      "prefillReasonNotAbout": "Die Meldung passt nicht zu dem Interesse, für das sie gezeigt wurde"
+      "prefillReasonNotAbout": "Die Meldung passt nicht zu dem Interesse, für das sie gezeigt wurde",
+      "prefillStoryNoLanguage": "Meldung von: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Meldung von: {{site}}, auf {{language}}.",
+      "prefillStorySiteOnly": "Meldung von: {{site}}."
     }
   },
   "topicPlan": {
@@ -2519,7 +2530,14 @@
     "accordionTitlePending": "Themen werden gesucht zu:",
     "pendingA11y": "Themen werden gesucht",
     "readyA11y": "Themen bereit",
-    "failedA11y": "Themen konnten nicht gefunden werden"
+    "failedA11y": "Themen konnten nicht gefunden werden",
+    "emptyDeletable": "Noch keine Themen. Mera versucht es heute weiter und entfernt diesen Fakt, falls es keine findet.",
+    "failed": "Themen konnten nicht gefunden werden.",
+    "added_one": "1 Thema hinzugefügt",
+    "added_other": "{{count}} Themen hinzugefügt",
+    "nothingNew": "Im Moment gibt es nichts Neues hinzuzufügen",
+    "moreFailed": "Themen konnten nicht gefunden werden. Versuch es erneut.",
+    "findTopics": "Themen finden"
   },
   "agentSteps": {
     "legStart": "Ich denke über deine Nachricht nach",

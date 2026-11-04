@@ -311,7 +311,8 @@
     "youCameFromHere": "Buradan geldiniz",
     "howToTranslate": "Nasıl çevrilir",
     "aboutGoogleTranslate": "Google Çeviri hakkında",
-    "googleTranslateBody": "Google Çeviri bu makaleyi {{language}} olarak gösterir. Sayfa Google üzerinden açıldığı için Google hangi makaleyi okuduğunu görebilir."
+    "googleTranslateBody": "Google Çeviri bu makaleyi {{language}} olarak gösterir. Sayfa Google üzerinden açıldığı için Google hangi makaleyi okuduğunu görebilir.",
+    "readOnGoogleTranslateA11y": "Google Translate'de Oku, Mera dışında açılır"
   },
   "sources": {
     "publishers": "Yayıncılar",
@@ -371,7 +372,11 @@
     "savedInline": "Kaydedildi",
     "selectedLabel": "Seçili",
     "format24h": "24 saat",
-    "formatAmPm": "ÖÖ/ÖS"
+    "formatAmPm": "ÖÖ/ÖS",
+    "factRemovedTitle": "Bir bilgi kaldırıldı",
+    "factRemovedBody": "Mera, “{{statement}}” için haber konusu bulamadığından bu bilgiyi kaldırdı. Bu bilgi artık sohbette ve akışında kullanılmayacak. İstersen farklı bir ifadeyle yeniden ekleyebilirsin.",
+    "factRemovedAction": "Yeniden ekle",
+    "factRemovedDraft": "Bunu hakkımda hatırla: {{statement}}"
   },
   "language": {
     "title": "Dil",
@@ -685,7 +690,8 @@
     "statusReady": "Hazır",
     "statusError": "Hata",
     "turnNoAnswer": "Bunu yapamadım. Başka bir şekilde sormayı dene.",
-    "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene."
+    "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene.",
+    "tryingAgain": "Tekrar deneniyor"
   },
   "personaChat": {
     "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nİstediğin kadar paylaş. Bana anlattıkların bu telefonda kalır. Verilerine senden başka kimse erişemez."
@@ -1069,7 +1075,9 @@
     "wideNetBody": "Mera geniş bir arama yapar, bu yüzden buradaki bazı makaleler haberle yalnızca dolaylı olarak ilgili olabilir. Önemli bir makaleyi kaçırmanızdansa size fazladan bir makale göstermeyi tercih ederiz.",
     "wideNetRemove": "Birini kaldırmak için menüsünü açın ve {{action}} seçeneğini seçin.",
     "wideNetShowLess": "Daha az göster",
-    "composerPlaceholder": "Hangi haberi senin için takip edeyim?"
+    "composerPlaceholder": "Hangi haberi senin için takip edeyim?",
+    "optionAsWritten": "{{phrase}}, yazdığın gibi",
+    "optionSpellingFixed": "{{phrase}}, yazımı düzeltilmiş"
   },
   "whatsNew": {
     "gotIt": "Anladım",
@@ -1279,7 +1287,10 @@
       "answerSent": "{{answer}} · Mera Labs'e gönderildi",
       "toastMistakeCount_one": "{{count}} hata not edildi",
       "toastMistakeCount_other": "{{count}} hata not edildi",
-      "prefillReasonNotAbout": "Haber, gösterildiği ilgi alanıyla uyuşmuyor"
+      "prefillReasonNotAbout": "Haber, gösterildiği ilgi alanıyla uyuşmuyor",
+      "prefillStoryNoLanguage": "Haberin kaynağı: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Haberin kaynağı: {{site}}, dil: {{language}}.",
+      "prefillStorySiteOnly": "Haberin kaynağı: {{site}}."
     }
   },
   "topicPlan": {
@@ -2521,7 +2532,14 @@
     "accordionTitlePending": "Şunun konuları bulunuyor:",
     "pendingA11y": "Konular bulunuyor",
     "readyA11y": "Konular hazır",
-    "failedA11y": "Konular bulunamadı"
+    "failedA11y": "Konular bulunamadı",
+    "emptyDeletable": "Henüz konu yok. Mera bugün denemeye devam eder ve hiçbir konu bulamazsa bu bilgiyi kaldırır.",
+    "failed": "Konular bulunamadı.",
+    "added_one": "1 konu eklendi",
+    "added_other": "{{count}} konu eklendi",
+    "nothingNew": "Şu anda eklenecek yeni bir konu yok",
+    "moreFailed": "Konular bulunamadı. Tekrar dene.",
+    "findTopics": "Konu bul"
   },
   "agentSteps": {
     "legStart": "Söylediklerini düşünüyorum",

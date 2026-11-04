@@ -313,7 +313,8 @@
     "youCameFromHere": "Sei arrivato da qui",
     "howToTranslate": "Come tradurre",
     "aboutGoogleTranslate": "Informazioni su Google Traduttore",
-    "googleTranslateBody": "Google Traduttore mostra questo articolo in {{language}}. La pagina si apre tramite Google, quindi Google può vedere quale articolo leggi."
+    "googleTranslateBody": "Google Traduttore mostra questo articolo in {{language}}. La pagina si apre tramite Google, quindi Google può vedere quale articolo leggi.",
+    "readOnGoogleTranslateA11y": "Leggi su Google Translate, si apre fuori da Mera"
   },
   "sources": {
     "publishers": "Editori",
@@ -373,7 +374,11 @@
     "savedInline": "Salvato",
     "selectedLabel": "Selezionati",
     "format24h": "24h",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "Fatto rimosso",
+    "factRemovedBody": "Mera non ha trovato argomenti per «{{statement}}», quindi ha rimosso questo fatto. Non verrà più usato in chat né nel tuo feed. Puoi aggiungerlo di nuovo con parole diverse.",
+    "factRemovedAction": "Aggiungilo di nuovo",
+    "factRemovedDraft": "Ricorda questo di me: {{statement}}"
   },
   "language": {
     "title": "Lingua",
@@ -687,7 +692,8 @@
     "statusReady": "Pronto",
     "statusError": "Errore",
     "turnNoAnswer": "Non sono riuscito a farlo. Prova a chiedermelo in un altro modo.",
-    "turnFailed": "Quella risposta non è terminata. Riprova."
+    "turnFailed": "Quella risposta non è terminata. Riprova.",
+    "tryingAgain": "Nuovo tentativo"
   },
   "personaChat": {
     "introMessage": "Ciao, sono Mera.\n\nRaccontami qualcosa di te, come la tua città o il tuo quartiere, il lavoro che fai, o una squadra o un hobby che segui, e troverò notizie adatte a te.\n\nCondividi quanto vuoi. Quello che mi racconti resta su questo telefono. Nessuno tranne te ha accesso ai tuoi dati."
@@ -1070,7 +1076,9 @@
     "wideNetBody": "Mera cerca in modo ampio, quindi alcuni articoli qui potrebbero avere poco a che fare con la storia. Preferiamo mostrarti un articolo in più piuttosto che fartene perdere uno importante.",
     "wideNetRemove": "Per rimuoverne uno, apri il suo menu e scegli {{action}}.",
     "wideNetShowLess": "Mostra meno",
-    "composerPlaceholder": "Quale notizia devo seguire per te?"
+    "composerPlaceholder": "Quale notizia devo seguire per te?",
+    "optionAsWritten": "{{phrase}}, come l'hai scritto",
+    "optionSpellingFixed": "{{phrase}}, con l'ortografia corretta"
   },
   "whatsNew": {
     "gotIt": "Capito",
@@ -1283,7 +1291,10 @@
       "toastMistakeCount_one": "{{count}} errore segnato",
       "toastMistakeCount_many": "{{count}} errori segnati",
       "toastMistakeCount_other": "{{count}} errori segnati",
-      "prefillReasonNotAbout": "La notizia non corrisponde all'interesse per cui è stata mostrata"
+      "prefillReasonNotAbout": "La notizia non corrisponde all'interesse per cui è stata mostrata",
+      "prefillStoryNoLanguage": "Notizia di: {{site}}, {{country}}.",
+      "prefillStoryNoCountry": "Notizia di: {{site}}, in {{language}}.",
+      "prefillStorySiteOnly": "Notizia di: {{site}}."
     }
   },
   "topicPlan": {
@@ -2525,7 +2536,14 @@
     "accordionTitlePending": "Ricerca argomenti per:",
     "pendingA11y": "Ricerca argomenti in corso",
     "readyA11y": "Argomenti pronti",
-    "failedA11y": "Non è stato possibile trovare argomenti"
+    "failedA11y": "Non è stato possibile trovare argomenti",
+    "emptyDeletable": "Nessun argomento per ora. Mera continuerà a cercarli oggi e rimuoverà questo fatto se non ne trova.",
+    "failed": "Non è stato possibile trovare argomenti.",
+    "added_one": "Aggiunto 1 argomento",
+    "added_other": "Aggiunti {{count}} argomenti",
+    "nothingNew": "Niente di nuovo da aggiungere per ora",
+    "moreFailed": "Non è stato possibile trovare argomenti. Riprova.",
+    "findTopics": "Trova argomenti"
   },
   "agentSteps": {
     "legStart": "Sto pensando a quello che hai detto",

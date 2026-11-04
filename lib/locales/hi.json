@@ -311,7 +311,8 @@
     "youCameFromHere": "आप यहीं से आए थे",
     "howToTranslate": "अनुवाद कैसे करें",
     "aboutGoogleTranslate": "Google Translate के बारे में",
-    "googleTranslateBody": "Google Translate यह लेख {{language}} में दिखाता है। पेज Google के ज़रिए खुलता है, इसलिए Google देख सकता है कि आप कौन सा लेख पढ़ रहे हैं।"
+    "googleTranslateBody": "Google Translate यह लेख {{language}} में दिखाता है। पेज Google के ज़रिए खुलता है, इसलिए Google देख सकता है कि आप कौन सा लेख पढ़ रहे हैं।",
+    "readOnGoogleTranslateA11y": "Google Translate पर पढ़ें, मेरा ऐप के बाहर खुलता है"
   },
   "sources": {
     "publishers": "प्रकाशक",
@@ -371,7 +372,11 @@
     "savedInline": "सहेजा गया",
     "selectedLabel": "चयनित",
     "format24h": "24 घंटे",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "एक तथ्य हटाया गया",
+    "factRemovedBody": "मेरा ऐप “{{statement}}” के लिए समाचार विषय नहीं ढूँढ पाया, इसलिए उसने यह तथ्य हटा दिया। यह अब चैट में या आपके फ़ीड में इस्तेमाल नहीं होगा। आप इसे अलग शब्दों में दोबारा जोड़ सकते हैं।",
+    "factRemovedAction": "इसे वापस जोड़ें",
+    "factRemovedDraft": "मेरे बारे में यह याद रखना: {{statement}}"
   },
   "language": {
     "title": "भाषा",
@@ -685,7 +690,8 @@
     "statusReady": "तैयार",
     "statusError": "त्रुटि",
     "turnNoAnswer": "मैं यह नहीं कर सका। किसी और तरीके से पूछकर देखें।",
-    "turnFailed": "वह जवाब पूरा नहीं हो सका। फिर से कोशिश करें।"
+    "turnFailed": "वह जवाब पूरा नहीं हो सका। फिर से कोशिश करें।",
+    "tryingAgain": "फिर से कोशिश हो रही है"
   },
   "personaChat": {
     "introMessage": "नमस्ते, मैं मेरा ऐप हूं।\n\nमुझे अपने बारे में थोड़ा बताएं, जैसे आपका शहर या इलाका, आप किस तरह का काम करते हैं, या कोई टीम या शौक जिसे आप फॉलो करते हैं, और मैं आपके लिए सही खबरें ढूंढूंगा।\n\nजितना चाहें उतना बताएं। आप जो बताते हैं वह इसी फोन पर रहता है। आपके डेटा तक आपके अलावा किसी की पहुंच नहीं है।"
@@ -1069,7 +1075,9 @@
     "wideNetBody": "मेरा बड़े दायरे में खोजता है, इसलिए यहाँ कुछ लेखों का स्टोरी से कम ही संबंध हो सकता है। कोई ज़रूरी लेख छूट जाए, इससे बेहतर है कि हम एक लेख ज़्यादा दिखाएँ।",
     "wideNetRemove": "किसी लेख को हटाने के लिए, उसका मेनू खोलें और {{action}} चुनें।",
     "wideNetShowLess": "कम दिखाएँ",
-    "composerPlaceholder": "मैं आपके लिए किस खबर पर नज़र रखूं?"
+    "composerPlaceholder": "मैं आपके लिए किस खबर पर नज़र रखूं?",
+    "optionAsWritten": "{{phrase}}, जैसा आपने लिखा",
+    "optionSpellingFixed": "{{phrase}}, वर्तनी सुधारकर"
   },
   "whatsNew": {
     "gotIt": "समझ गया",
@@ -1279,7 +1287,10 @@
       "answerSent": "{{answer}} · मेरा लैब्स को भेजा गया",
       "toastMistakeCount_one": "{{count}} गलती दर्ज की गई",
       "toastMistakeCount_other": "{{count}} गलतियाँ दर्ज की गईं",
-      "prefillReasonNotAbout": "यह खबर उस रुचि से मेल नहीं खाती जिसके लिए इसे दिखाया गया"
+      "prefillReasonNotAbout": "यह खबर उस रुचि से मेल नहीं खाती जिसके लिए इसे दिखाया गया",
+      "prefillStoryNoLanguage": "खबर का स्रोत: {{site}}, {{country}}।",
+      "prefillStoryNoCountry": "खबर का स्रोत: {{site}}, भाषा: {{language}}।",
+      "prefillStorySiteOnly": "खबर का स्रोत: {{site}}।"
     }
   },
   "topicPlan": {
@@ -2521,7 +2532,14 @@
     "accordionTitlePending": "इसके विषय खोजे जा रहे हैं:",
     "pendingA11y": "विषय खोजे जा रहे हैं",
     "readyA11y": "विषय तैयार",
-    "failedA11y": "विषय नहीं मिल सके"
+    "failedA11y": "विषय नहीं मिल सके",
+    "emptyDeletable": "अभी कोई विषय नहीं है। मेरा ऐप आज भर कोशिश करता रहेगा, और कुछ नहीं मिला तो यह तथ्य हटा देगा।",
+    "failed": "विषय नहीं मिल सके।",
+    "added_one": "1 विषय जोड़ा गया",
+    "added_other": "{{count}} विषय जोड़े गए",
+    "nothingNew": "अभी जोड़ने के लिए कुछ नया नहीं है",
+    "moreFailed": "विषय नहीं मिल सके। फिर से कोशिश करें।",
+    "findTopics": "विषय खोजें"
   },
   "agentSteps": {
     "legStart": "आपने जो कहा उस पर सोच रहे हैं",

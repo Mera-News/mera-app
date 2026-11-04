@@ -1,0 +1,692 @@
+{
+  "en": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Story from: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Story from: {{site}}, in {{language}}.",
+        "prefillStorySiteOnly": "Story from: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Read on Google Translate, opens outside Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, as you wrote it",
+      "optionSpellingFixed": "{{phrase}}, with spelling fixed"
+    },
+    "chat": {
+      "tryingAgain": "Trying again"
+    },
+    "chatTopics": {
+      "emptyDeletable": "No topics yet. Mera will keep trying today and will remove this fact if it finds none.",
+      "failed": "Couldn't find topics.",
+      "added_one": "Added 1 topic",
+      "added_other": "Added {{count}} topics",
+      "nothingNew": "Nothing new to add right now",
+      "moreFailed": "Couldn't find topics. Try again.",
+      "findTopics": "Find topics"
+    },
+    "notifications": {
+      "factRemovedTitle": "Removed a fact",
+      "factRemovedBody": "Mera couldn't find news topics for \"{{statement}}\", so it removed this fact. It won't be used in chat or your feed anymore. You can add it back with different wording.",
+      "factRemovedAction": "Add it back",
+      "factRemovedDraft": "Remember this about me: {{statement}}"
+    }
+  },
+  "ar": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "الخبر من: {{site}}، {{country}}.",
+        "prefillStoryNoCountry": "الخبر من: {{site}}، باللغة: {{language}}.",
+        "prefillStorySiteOnly": "الخبر من: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "اقرأ على Google Translate، يُفتح خارج ميرا"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}، كما كتبته",
+      "optionSpellingFixed": "{{phrase}}، مع تصحيح الإملاء"
+    },
+    "chat": {
+      "tryingAgain": "جارٍ المحاولة مرة أخرى"
+    },
+    "chatTopics": {
+      "emptyDeletable": "لا توجد مواضيع بعد. سيواصل ميرا البحث اليوم، وسيزيل هذه الحقيقة إذا لم يجد أي موضوع.",
+      "failed": "تعذّر العثور على مواضيع.",
+      "added_zero": "تمت إضافة {{count}} مواضيع جديدة",
+      "added_one": "تمت إضافة موضوع جديد",
+      "added_two": "تمت إضافة {{count}} مواضيع جديدة",
+      "added_few": "تمت إضافة {{count}} مواضيع جديدة",
+      "added_many": "تمت إضافة {{count}} موضوعًا جديدًا",
+      "added_other": "تمت إضافة {{count}} موضوع جديد",
+      "nothingNew": "لا يوجد جديد لإضافته الآن",
+      "moreFailed": "تعذّر العثور على مواضيع. حاول مرة أخرى.",
+      "findTopics": "ابحث عن مواضيع"
+    },
+    "notifications": {
+      "factRemovedTitle": "تمت إزالة حقيقة",
+      "factRemovedBody": "لم يجد ميرا مواضيع إخبارية لـ«{{statement}}»، فأزال هذه الحقيقة. لن تُستخدم في المحادثات أو في خلاصتك بعد الآن. يمكنك إضافتها مرة أخرى بصياغة مختلفة.",
+      "factRemovedAction": "أعِدها",
+      "factRemovedDraft": "تذكّر هذا عني: {{statement}}"
+    }
+  },
+  "de": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Meldung von: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Meldung von: {{site}}, auf {{language}}.",
+        "prefillStorySiteOnly": "Meldung von: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Bei Google Translate lesen, öffnet sich außerhalb von Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, so wie du es geschrieben hast",
+      "optionSpellingFixed": "{{phrase}}, mit korrigierter Schreibweise"
+    },
+    "chat": {
+      "tryingAgain": "Wird erneut versucht"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Noch keine Themen. Mera versucht es heute weiter und entfernt diesen Fakt, falls es keine findet.",
+      "failed": "Themen konnten nicht gefunden werden.",
+      "added_one": "1 Thema hinzugefügt",
+      "added_other": "{{count}} Themen hinzugefügt",
+      "nothingNew": "Im Moment gibt es nichts Neues hinzuzufügen",
+      "moreFailed": "Themen konnten nicht gefunden werden. Versuch es erneut.",
+      "findTopics": "Themen finden"
+    },
+    "notifications": {
+      "factRemovedTitle": "Fakt entfernt",
+      "factRemovedBody": "Mera konnte keine Nachrichtenthemen zu „{{statement}}“ finden und hat diesen Fakt deshalb entfernt. Er wird im Chat und in deinem Feed nicht mehr verwendet. Du kannst ihn mit einer anderen Formulierung wieder hinzufügen.",
+      "factRemovedAction": "Wieder hinzufügen",
+      "factRemovedDraft": "Merk dir das über mich: {{statement}}"
+    }
+  },
+  "es": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Noticia de: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Noticia de: {{site}}, en {{language}}.",
+        "prefillStorySiteOnly": "Noticia de: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Leer en Google Translate, se abre fuera de Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, como lo escribiste",
+      "optionSpellingFixed": "{{phrase}}, con la ortografía corregida"
+    },
+    "chat": {
+      "tryingAgain": "Intentando de nuevo"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Aún no hay temas. Mera seguirá buscando hoy y eliminará este hecho si no encuentra ninguno.",
+      "failed": "No se encontraron temas.",
+      "added_one": "Se añadió 1 tema",
+      "added_other": "Se añadieron {{count}} temas",
+      "nothingNew": "No hay nada nuevo que añadir por ahora",
+      "moreFailed": "No se encontraron temas. Inténtalo de nuevo.",
+      "findTopics": "Buscar temas"
+    },
+    "notifications": {
+      "factRemovedTitle": "Se eliminó un hecho",
+      "factRemovedBody": "Mera no encontró temas de noticias para «{{statement}}», así que eliminó este hecho. Ya no se usará en el chat ni en tu feed. Puedes volver a añadirlo con otras palabras.",
+      "factRemovedAction": "Volver a añadirlo",
+      "factRemovedDraft": "Recuerda esto sobre mí: {{statement}}"
+    }
+  },
+  "fr": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Article de : {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Article de : {{site}}, en {{language}}.",
+        "prefillStorySiteOnly": "Article de : {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Lire sur Google Translate, s'ouvre en dehors de Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, tel que vous l'avez écrit",
+      "optionSpellingFixed": "{{phrase}}, orthographe corrigée"
+    },
+    "chat": {
+      "tryingAgain": "Nouvelle tentative"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Aucun sujet pour l'instant. Mera continuera de chercher aujourd'hui et supprimera ce fait s'il n'en trouve aucun.",
+      "failed": "Impossible de trouver des sujets.",
+      "added_one": "1 sujet ajouté",
+      "added_other": "{{count}} sujets ajoutés",
+      "nothingNew": "Rien de nouveau à ajouter pour le moment",
+      "moreFailed": "Impossible de trouver des sujets. Réessayez.",
+      "findTopics": "Trouver des sujets"
+    },
+    "notifications": {
+      "factRemovedTitle": "Fait supprimé",
+      "factRemovedBody": "Mera n'a pas trouvé de sujets d'actualité pour « {{statement}} », alors il a supprimé ce fait. Il ne sera plus utilisé dans le chat ni dans votre fil. Vous pouvez le rajouter avec une formulation différente.",
+      "factRemovedAction": "Le rajouter",
+      "factRemovedDraft": "Souviens-toi de ceci à mon sujet : {{statement}}"
+    }
+  },
+  "hi": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "खबर का स्रोत: {{site}}, {{country}}।",
+        "prefillStoryNoCountry": "खबर का स्रोत: {{site}}, भाषा: {{language}}।",
+        "prefillStorySiteOnly": "खबर का स्रोत: {{site}}।"
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Google Translate पर पढ़ें, मेरा ऐप के बाहर खुलता है"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, जैसा आपने लिखा",
+      "optionSpellingFixed": "{{phrase}}, वर्तनी सुधारकर"
+    },
+    "chat": {
+      "tryingAgain": "फिर से कोशिश हो रही है"
+    },
+    "chatTopics": {
+      "emptyDeletable": "अभी कोई विषय नहीं है। मेरा ऐप आज भर कोशिश करता रहेगा, और कुछ नहीं मिला तो यह तथ्य हटा देगा।",
+      "failed": "विषय नहीं मिल सके।",
+      "added_one": "1 विषय जोड़ा गया",
+      "added_other": "{{count}} विषय जोड़े गए",
+      "nothingNew": "अभी जोड़ने के लिए कुछ नया नहीं है",
+      "moreFailed": "विषय नहीं मिल सके। फिर से कोशिश करें।",
+      "findTopics": "विषय खोजें"
+    },
+    "notifications": {
+      "factRemovedTitle": "एक तथ्य हटाया गया",
+      "factRemovedBody": "मेरा ऐप “{{statement}}” के लिए समाचार विषय नहीं ढूँढ पाया, इसलिए उसने यह तथ्य हटा दिया। यह अब चैट में या आपके फ़ीड में इस्तेमाल नहीं होगा। आप इसे अलग शब्दों में दोबारा जोड़ सकते हैं।",
+      "factRemovedAction": "इसे वापस जोड़ें",
+      "factRemovedDraft": "मेरे बारे में यह याद रखना: {{statement}}"
+    }
+  },
+  "id": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Berita dari: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Berita dari: {{site}}, bahasa {{language}}.",
+        "prefillStorySiteOnly": "Berita dari: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Baca di Google Translate, dibuka di luar Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, seperti yang Anda tulis",
+      "optionSpellingFixed": "{{phrase}}, ejaannya sudah diperbaiki"
+    },
+    "chat": {
+      "tryingAgain": "Mencoba lagi"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Belum ada topik. Mera akan terus mencoba hari ini dan menghapus fakta ini jika tidak menemukan apa pun.",
+      "failed": "Tidak bisa menemukan topik.",
+      "added_one": "1 topik ditambahkan",
+      "added_other": "{{count}} topik ditambahkan",
+      "nothingNew": "Belum ada yang baru untuk ditambahkan saat ini",
+      "moreFailed": "Tidak bisa menemukan topik. Coba lagi.",
+      "findTopics": "Cari topik"
+    },
+    "notifications": {
+      "factRemovedTitle": "Fakta dihapus",
+      "factRemovedBody": "Mera tidak bisa menemukan topik berita untuk \"{{statement}}\", jadi Mera menghapus fakta ini. Fakta ini tidak akan dipakai lagi di chat atau feed Anda. Anda bisa menambahkannya kembali dengan kata-kata yang berbeda.",
+      "factRemovedAction": "Tambahkan lagi",
+      "factRemovedDraft": "Ingat ini tentang saya: {{statement}}"
+    }
+  },
+  "it": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Notizia di: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Notizia di: {{site}}, in {{language}}.",
+        "prefillStorySiteOnly": "Notizia di: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Leggi su Google Translate, si apre fuori da Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, come l'hai scritto",
+      "optionSpellingFixed": "{{phrase}}, con l'ortografia corretta"
+    },
+    "chat": {
+      "tryingAgain": "Nuovo tentativo"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Nessun argomento per ora. Mera continuerà a cercarli oggi e rimuoverà questo fatto se non ne trova.",
+      "failed": "Non è stato possibile trovare argomenti.",
+      "added_one": "Aggiunto 1 argomento",
+      "added_other": "Aggiunti {{count}} argomenti",
+      "nothingNew": "Niente di nuovo da aggiungere per ora",
+      "moreFailed": "Non è stato possibile trovare argomenti. Riprova.",
+      "findTopics": "Trova argomenti"
+    },
+    "notifications": {
+      "factRemovedTitle": "Fatto rimosso",
+      "factRemovedBody": "Mera non ha trovato argomenti per «{{statement}}», quindi ha rimosso questo fatto. Non verrà più usato in chat né nel tuo feed. Puoi aggiungerlo di nuovo con parole diverse.",
+      "factRemovedAction": "Aggiungilo di nuovo",
+      "factRemovedDraft": "Ricorda questo di me: {{statement}}"
+    }
+  },
+  "ja": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "記事の出典: {{site}}、{{country}}。",
+        "prefillStoryNoCountry": "記事の出典: {{site}}、{{language}}。",
+        "prefillStorySiteOnly": "記事の出典: {{site}}。"
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Google 翻訳で読む、メラの外で開きます"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}、入力したとおり",
+      "optionSpellingFixed": "{{phrase}}、スペルを修正"
+    },
+    "chat": {
+      "tryingAgain": "もう一度試しています"
+    },
+    "chatTopics": {
+      "emptyDeletable": "まだトピックがありません。メラは今日中に探し続け、見つからなければこのファクトを削除します。",
+      "failed": "トピックが見つかりませんでした。",
+      "added_one": "トピックを1件追加しました",
+      "added_other": "トピックを{{count}}件追加しました",
+      "nothingNew": "今のところ新しく追加するものはありません",
+      "moreFailed": "トピックが見つかりませんでした。もう一度お試しください。",
+      "findTopics": "トピックを探す"
+    },
+    "notifications": {
+      "factRemovedTitle": "ファクトを削除しました",
+      "factRemovedBody": "メラは「{{statement}}」に関するニュースのトピックを見つけられなかったため、このファクトを削除しました。このファクトは、チャットやフィードでもう使われません。違う言い方で、もう一度追加できます。",
+      "factRemovedAction": "もう一度追加する",
+      "factRemovedDraft": "私について覚えておいて: {{statement}}"
+    }
+  },
+  "ko": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "기사 출처: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "기사 출처: {{site}}, {{language}}.",
+        "prefillStorySiteOnly": "기사 출처: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "구글 번역으로 읽기, 메라 외부에서 열림"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, 입력한 대로",
+      "optionSpellingFixed": "{{phrase}}, 맞춤법 수정"
+    },
+    "chat": {
+      "tryingAgain": "다시 시도하는 중"
+    },
+    "chatTopics": {
+      "emptyDeletable": "아직 토픽이 없어요. 메라는 오늘 계속 찾아보고, 찾지 못하면 이 사실을 지울 거예요.",
+      "failed": "토픽을 찾지 못했어요.",
+      "added_one": "토픽 1개를 추가했어요",
+      "added_other": "토픽 {{count}}개를 추가했어요",
+      "nothingNew": "지금은 새로 추가할 토픽이 없어요",
+      "moreFailed": "토픽을 찾지 못했어요. 다시 시도해 보세요.",
+      "findTopics": "토픽 찾기"
+    },
+    "notifications": {
+      "factRemovedTitle": "사실을 삭제했어요",
+      "factRemovedBody": "“{{statement}}”에 관한 뉴스 토픽을 찾지 못해서 메라가 이 사실을 삭제했어요. 이 사실은 이제 채팅이나 피드에 더 이상 쓰이지 않아요. 다른 표현으로 다시 추가할 수 있어요.",
+      "factRemovedAction": "다시 추가하기",
+      "factRemovedDraft": "나에 대해 이거 기억해 줘: {{statement}}"
+    }
+  },
+  "nl": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Bericht van: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Bericht van: {{site}}, taal: {{language}}.",
+        "prefillStorySiteOnly": "Bericht van: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Lezen op Google Translate, opent buiten Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, zoals je het schreef",
+      "optionSpellingFixed": "{{phrase}}, met spelling gecorrigeerd"
+    },
+    "chat": {
+      "tryingAgain": "Opnieuw proberen"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Nog geen onderwerpen. Mera blijft vandaag zoeken en verwijdert dit feit als er niets wordt gevonden.",
+      "failed": "Onderwerpen konden niet worden gevonden.",
+      "added_one": "1 onderwerp toegevoegd",
+      "added_other": "{{count}} onderwerpen toegevoegd",
+      "nothingNew": "Er is nu niets nieuws om toe te voegen",
+      "moreFailed": "Onderwerpen konden niet worden gevonden. Probeer het opnieuw.",
+      "findTopics": "Onderwerpen zoeken"
+    },
+    "notifications": {
+      "factRemovedTitle": "Feit verwijderd",
+      "factRemovedBody": "Mera kon geen nieuwsonderwerpen vinden voor „{{statement}}”, dus heeft Mera dit feit verwijderd. Het wordt niet meer gebruikt in chat of in je feed. Je kunt het opnieuw toevoegen met andere bewoording.",
+      "factRemovedAction": "Opnieuw toevoegen",
+      "factRemovedDraft": "Onthoud dit over mij: {{statement}}"
+    }
+  },
+  "pl": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Artykuł z serwisu: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Artykuł z serwisu: {{site}}, w języku {{language}}.",
+        "prefillStorySiteOnly": "Artykuł z serwisu: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Czytaj w Google Translate, otwiera się poza Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, tak jak wpisano",
+      "optionSpellingFixed": "{{phrase}}, z poprawioną pisownią"
+    },
+    "chat": {
+      "tryingAgain": "Próbuję ponownie"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Na razie brak tematów. Mera będzie dziś dalej szukać i usunie ten fakt, jeśli nic nie znajdzie.",
+      "failed": "Nie udało się znaleźć tematów.",
+      "added_one": "Dodano 1 temat",
+      "added_few": "Dodano {{count}} tematy",
+      "added_many": "Dodano {{count}} tematów",
+      "added_other": "Dodano {{count}} tematów",
+      "nothingNew": "Na razie nic nowego do dodania",
+      "moreFailed": "Nie udało się znaleźć tematów. Spróbuj ponownie.",
+      "findTopics": "Znajdź tematy"
+    },
+    "notifications": {
+      "factRemovedTitle": "Usunięto fakt",
+      "factRemovedBody": "Mera nie znalazła tematów z wiadomości dla „{{statement}}”, więc usunęła ten fakt. Nie będzie on już używany w czacie ani w Twoim feedzie. Możesz dodać go ponownie, ale innymi słowami.",
+      "factRemovedAction": "Dodaj z powrotem",
+      "factRemovedDraft": "Zapamiętaj to o mnie: {{statement}}"
+    }
+  },
+  "pt-BR": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Notícia de: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Notícia de: {{site}}, em {{language}}.",
+        "prefillStorySiteOnly": "Notícia de: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Ler no Google Translate, abre fora da Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, como você escreveu",
+      "optionSpellingFixed": "{{phrase}}, com a ortografia corrigida"
+    },
+    "chat": {
+      "tryingAgain": "Tentando novamente"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Nenhum tema ainda. A Mera continua tentando hoje e remove este fato se não encontrar nenhum.",
+      "failed": "Não foi possível achar temas.",
+      "added_one": "1 tema adicionado",
+      "added_other": "{{count}} temas adicionados",
+      "nothingNew": "Nada novo para adicionar agora",
+      "moreFailed": "Não foi possível achar temas. Tente novamente.",
+      "findTopics": "Procurar temas"
+    },
+    "notifications": {
+      "factRemovedTitle": "Fato removido",
+      "factRemovedBody": "A Mera não encontrou temas de notícias para \"{{statement}}\", então removeu este fato. Ele não será mais usado no chat nem no seu feed. Você pode adicioná-lo de novo com outras palavras.",
+      "factRemovedAction": "Adicionar de volta",
+      "factRemovedDraft": "Lembre disto sobre mim: {{statement}}"
+    }
+  },
+  "ru": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Новость с сайта: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Новость с сайта: {{site}}, язык: {{language}}.",
+        "prefillStorySiteOnly": "Новость с сайта: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Читать в Google Translate, открывается вне Меры"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, как вы написали",
+      "optionSpellingFixed": "{{phrase}}, с исправленным написанием"
+    },
+    "chat": {
+      "tryingAgain": "Пробуем снова"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Тем пока нет. Мера продолжит искать сегодня и удалит этот факт, если ничего не найдёт.",
+      "failed": "Не удалось найти темы.",
+      "added_one": "Добавлена {{count}} тема",
+      "added_few": "Добавлено {{count}} темы",
+      "added_many": "Добавлено {{count}} тем",
+      "added_other": "Добавлено {{count}} темы",
+      "nothingNew": "Пока ничего нового нет",
+      "moreFailed": "Не удалось найти темы. Попробуйте ещё раз.",
+      "findTopics": "Найти темы"
+    },
+    "notifications": {
+      "factRemovedTitle": "Факт удалён",
+      "factRemovedBody": "Мера не смогла найти темы для новостей по запросу «{{statement}}», поэтому удалила этот факт. Он больше не будет использоваться в чате и в вашей ленте. Вы можете добавить его обратно, сформулировав иначе.",
+      "factRemovedAction": "Добавить обратно",
+      "factRemovedDraft": "Запомни обо мне: {{statement}}"
+    }
+  },
+  "th": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "ข่าวจาก: {{site}}, {{country}}",
+        "prefillStoryNoCountry": "ข่าวจาก: {{site}}, ภาษา{{language}}",
+        "prefillStorySiteOnly": "ข่าวจาก: {{site}}"
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "อ่านบน Google Translate เปิดนอก เมร่า"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}} ตามที่คุณพิมพ์",
+      "optionSpellingFixed": "{{phrase}} แก้การสะกดแล้"
+    },
+    "chat": {
+      "tryingAgain": "กำลังลองอีกครั้ง"
+    },
+    "chatTopics": {
+      "emptyDeletable": "ยังไม่มีหัวข้อ เมร่า จะลองหาต่อในวันนี้ และจะลบข้อเท็จจริงนี้หากไม่พบหัวข้อเลย",
+      "failed": "ค้นหาหัวข้อไม่สำเร็จ",
+      "added_one": "เพิ่มหัวข้อ 1 รายการแล้ว",
+      "added_other": "เพิ่มหัวข้อ {{count}} รายการแล้ว",
+      "nothingNew": "ตอนนี้ยังไม่มีอะไรใหม่ให้เพิ่ม",
+      "moreFailed": "ค้นหาหัวข้อไม่สำเร็จ ลองอีกครั้ง",
+      "findTopics": "ค้นหาหัวข้อ"
+    },
+    "notifications": {
+      "factRemovedTitle": "ลบข้อเท็จจริงแล้ว",
+      "factRemovedBody": "เมร่า ค้นหาหัวข้อข่าวสำหรับ “{{statement}}” ไม่พบ จึงลบข้อเท็จจริงนี้ไปแล้ว ข้อเท็จจริงนี้จะไม่ถูกใช้ในแชตหรือฟีดของคุณอีกต่อไป คุณสามารถเพิ่มกลับมาได้ด้วยข้อความที่ต่างออกไป",
+      "factRemovedAction": "เพิ่มกลับ",
+      "factRemovedDraft": "จำเรื่องนี้เกี่ยวกับฉันไว้: {{statement}}"
+    }
+  },
+  "tr": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Haberin kaynağı: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Haberin kaynağı: {{site}}, dil: {{language}}.",
+        "prefillStorySiteOnly": "Haberin kaynağı: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Google Translate'de Oku, Mera dışında açılır"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, yazdığın gibi",
+      "optionSpellingFixed": "{{phrase}}, yazımı düzeltilmiş"
+    },
+    "chat": {
+      "tryingAgain": "Tekrar deneniyor"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Henüz konu yok. Mera bugün denemeye devam eder ve hiçbir konu bulamazsa bu bilgiyi kaldırır.",
+      "failed": "Konular bulunamadı.",
+      "added_one": "1 konu eklendi",
+      "added_other": "{{count}} konu eklendi",
+      "nothingNew": "Şu anda eklenecek yeni bir konu yok",
+      "moreFailed": "Konular bulunamadı. Tekrar dene.",
+      "findTopics": "Konu bul"
+    },
+    "notifications": {
+      "factRemovedTitle": "Bir bilgi kaldırıldı",
+      "factRemovedBody": "Mera, “{{statement}}” için haber konusu bulamadığından bu bilgiyi kaldırdı. Bu bilgi artık sohbette ve akışında kullanılmayacak. İstersen farklı bir ifadeyle yeniden ekleyebilirsin.",
+      "factRemovedAction": "Yeniden ekle",
+      "factRemovedDraft": "Bunu hakkımda hatırla: {{statement}}"
+    }
+  },
+  "uk": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Новина з сайту: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Новина з сайту: {{site}}, мова: {{language}}.",
+        "prefillStorySiteOnly": "Новина з сайту: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Читати в Google Translate, відкривається поза Мерою"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, як ви написали",
+      "optionSpellingFixed": "{{phrase}}, з виправленим написанням"
+    },
+    "chat": {
+      "tryingAgain": "Пробуємо ще раз"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Поки немає тем. Мера продовжить пошук сьогодні й видалить цей факт, якщо нічого не знайде.",
+      "failed": "Не вдалося дібрати теми.",
+      "added_one": "Додано 1 тему",
+      "added_few": "Додано {{count}} теми",
+      "added_many": "Додано {{count}} тем",
+      "added_other": "Додано {{count}} теми",
+      "nothingNew": "Поки що нових тем немає",
+      "moreFailed": "Не вдалося дібрати теми. Спробуйте ще раз.",
+      "findTopics": "Знайти теми"
+    },
+    "notifications": {
+      "factRemovedTitle": "Видалено факт",
+      "factRemovedBody": "Мера не змогла знайти теми новин для «{{statement}}», тому видалила цей факт. Він більше не використовується в чаті чи в стрічці. Ви можете додати його знову з іншим формулюванням.",
+      "factRemovedAction": "Додати знову",
+      "factRemovedDraft": "Запам’ятай це про мене: {{statement}}"
+    }
+  },
+  "vi": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "Tin từ: {{site}}, {{country}}.",
+        "prefillStoryNoCountry": "Tin từ: {{site}}, bằng {{language}}.",
+        "prefillStorySiteOnly": "Tin từ: {{site}}."
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "Đọc trên Google Dịch, mở ngoài Mera"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}, đúng như bạn đã viết",
+      "optionSpellingFixed": "{{phrase}}, đã sửa chính tả"
+    },
+    "chat": {
+      "tryingAgain": "Đang thử lại"
+    },
+    "chatTopics": {
+      "emptyDeletable": "Chưa có chủ đề nào. Mera sẽ tiếp tục thử trong hôm nay và sẽ xóa dữ kiện này nếu không tìm thấy chủ đề nào.",
+      "failed": "Không tìm được chủ đề.",
+      "added_one": "Đã thêm 1 chủ đề",
+      "added_other": "Đã thêm {{count}} chủ đề",
+      "nothingNew": "Chưa có gì mới để thêm",
+      "moreFailed": "Không tìm được chủ đề. Hãy thử lại.",
+      "findTopics": "Tìm chủ đề"
+    },
+    "notifications": {
+      "factRemovedTitle": "Đã xóa một dữ kiện",
+      "factRemovedBody": "Mera không tìm thấy chủ đề tin tức nào cho “{{statement}}”, nên Mera đã xóa dữ kiện này. Dữ kiện này sẽ không còn được dùng trong trò chuyện hay nguồn tin của bạn nữa. Bạn có thể thêm lại với cách diễn đạt khác.",
+      "factRemovedAction": "Thêm lại",
+      "factRemovedDraft": "Hãy nhớ điều này về tôi: {{statement}}"
+    }
+  },
+  "zh-CN": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "新闻来源：{{site}}，{{country}}。",
+        "prefillStoryNoCountry": "新闻来源：{{site}}，{{language}}。",
+        "prefillStorySiteOnly": "新闻来源：{{site}}。"
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "在谷歌翻译中阅读，在梅拉外打开"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}，按你输入的写法",
+      "optionSpellingFixed": "{{phrase}}，修正拼写"
+    },
+    "chat": {
+      "tryingAgain": "正在重试"
+    },
+    "chatTopics": {
+      "emptyDeletable": "还没有主题。梅拉今天会继续尝试，如果仍然找不到，就会移除这条事实。",
+      "failed": "未能找到主题。",
+      "added_one": "已添加 1 个主题",
+      "added_other": "已添加 {{count}} 个主题",
+      "nothingNew": "目前没有可添加的新主题",
+      "moreFailed": "未能找到主题。请重试。",
+      "findTopics": "查找主题"
+    },
+    "notifications": {
+      "factRemovedTitle": "已移除一条事实",
+      "factRemovedBody": "梅拉找不到与“{{statement}}”相关的新闻主题，因此已移除这条事实。它不会再用于聊天或你的信息流。你可以用不同的措辞重新添加。",
+      "factRemovedAction": "重新添加",
+      "factRemovedDraft": "记住关于我的这一点：{{statement}}"
+    }
+  },
+  "zh-TW": {
+    "feedbackTree": {
+      "menu": {
+        "prefillStoryNoLanguage": "新聞來源：{{site}}，{{country}}。",
+        "prefillStoryNoCountry": "新聞來源：{{site}}，{{language}}。",
+        "prefillStorySiteOnly": "新聞來源：{{site}}。"
+      }
+    },
+    "articleDetail": {
+      "readOnGoogleTranslateA11y": "在 Google 翻譯中閱讀，會在梅拉外開啟"
+    },
+    "trackedStories": {
+      "optionAsWritten": "{{phrase}}，照你輸入的寫法",
+      "optionSpellingFixed": "{{phrase}}，修正拼字"
+    },
+    "chat": {
+      "tryingAgain": "正在再試一次"
+    },
+    "chatTopics": {
+      "emptyDeletable": "目前還沒有主題。梅拉今天會繼續嘗試，如果找不到，就會移除這項事實。",
+      "failed": "找不到主題。",
+      "added_one": "已新增 1 個主題",
+      "added_other": "已新增 {{count}} 個主題",
+      "nothingNew": "目前沒有可新增的主題",
+      "moreFailed": "找不到主題。請再試一次。",
+      "findTopics": "尋找主題"
+    },
+    "notifications": {
+      "factRemovedTitle": "已移除一項事實",
+      "factRemovedBody": "梅拉找不到與「{{statement}}」相關的新聞主題，所以移除了這項事實。它之後不會再用於聊天或你的資訊流。你可以換個說法重新加回。",
+      "factRemovedAction": "重新加回",
+      "factRemovedDraft": "請記住這件關於我的事：{{statement}}"
+    }
+  }
+}

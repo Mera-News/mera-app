@@ -299,7 +299,8 @@
     "youCameFromHere": "ここから来ました",
     "howToTranslate": "翻訳のしかた",
     "aboutGoogleTranslate": "Google 翻訳について",
-    "googleTranslateBody": "Google 翻訳はこの記事を{{language}}で表示します。ページは Google を経由して開くため、どの記事を読んでいるかが Google に伝わります。"
+    "googleTranslateBody": "Google 翻訳はこの記事を{{language}}で表示します。ページは Google を経由して開くため、どの記事を読んでいるかが Google に伝わります。",
+    "readOnGoogleTranslateA11y": "Google 翻訳で読む、メラの外で開きます"
   },
   "sources": {
     "publishers": "出版社",
@@ -359,7 +360,11 @@
     "savedInline": "保存しました",
     "selectedLabel": "選択中",
     "format24h": "24時間制",
-    "formatAmPm": "AM/PM"
+    "formatAmPm": "AM/PM",
+    "factRemovedTitle": "ファクトを削除しました",
+    "factRemovedBody": "メラは「{{statement}}」に関するニュースのトピックを見つけられなかったため、このファクトを削除しました。このファクトは、チャットやフィードでもう使われません。違う言い方で、もう一度追加できます。",
+    "factRemovedAction": "もう一度追加する",
+    "factRemovedDraft": "私について覚えておいて: {{statement}}"
   },
   "language": {
     "title": "言語",
@@ -671,7 +676,8 @@
     "statusReady": "準備完了",
     "statusError": "エラー",
     "turnNoAnswer": "私にはそれができませんでした。別の聞き方でお試しください。",
-    "turnFailed": "その返信は完了しませんでした。もう一度お試しください。"
+    "turnFailed": "その返信は完了しませんでした。もう一度お試しください。",
+    "tryingAgain": "もう一度試しています"
   },
   "personaChat": {
     "introMessage": "こんにちは、メラです。\n\n住んでいる街や地域、お仕事の分野、応援しているチームや趣味など、あなたのことを少し教えてください。あなたに合ったニュースを探します。\n\n話したい分だけで大丈夫です。教えてくれた内容はこのスマートフォンに保存されます。あなた以外の誰もあなたのデータにアクセスできません。"
@@ -1052,7 +1058,9 @@
     "wideNetBody": "メラは幅広く記事を集めるため、ここにはストーリーとの関係が薄い記事が含まれることがあります。大切な記事を見逃すよりも、記事を多めに表示することを優先しています。",
     "wideNetRemove": "記事を削除するには、その記事のメニューを開いて「{{action}}」を選んでください。",
     "wideNetShowLess": "閉じる",
-    "composerPlaceholder": "どのニュースを追いかけましょうか？"
+    "composerPlaceholder": "どのニュースを追いかけましょうか？",
+    "optionAsWritten": "{{phrase}}、入力したとおり",
+    "optionSpellingFixed": "{{phrase}}、スペルを修正"
   },
   "whatsNew": {
     "gotIt": "わかりました",
@@ -1259,7 +1267,10 @@
       "answerPaywalled": "有料記事",
       "answerSent": "{{answer}} · メラ・ラボに送信済み",
       "toastMistakeCount_other": "{{count}}件の間違いを記録しました",
-      "prefillReasonNotAbout": "この記事は、表示された理由の関心ごとに合っていません"
+      "prefillReasonNotAbout": "この記事は、表示された理由の関心ごとに合っていません",
+      "prefillStoryNoLanguage": "記事の出典: {{site}}、{{country}}。",
+      "prefillStoryNoCountry": "記事の出典: {{site}}、{{language}}。",
+      "prefillStorySiteOnly": "記事の出典: {{site}}。"
     }
   },
   "topicPlan": {
@@ -2499,7 +2510,14 @@
     "accordionTitlePending": "トピックを探しています:",
     "pendingA11y": "トピックを検索中",
     "readyA11y": "トピックの準備ができました",
-    "failedA11y": "トピックが見つかりませんでした"
+    "failedA11y": "トピックが見つかりませんでした",
+    "emptyDeletable": "まだトピックがありません。メラは今日中に探し続け、見つからなければこのファクトを削除します。",
+    "failed": "トピックが見つかりませんでした。",
+    "added_one": "トピックを1件追加しました",
+    "added_other": "トピックを{{count}}件追加しました",
+    "nothingNew": "今のところ新しく追加するものはありません",
+    "moreFailed": "トピックが見つかりませんでした。もう一度お試しください。",
+    "findTopics": "トピックを探す"
   },
   "agentSteps": {
     "legStart": "お話の内容を考えています",
