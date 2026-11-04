@@ -13,7 +13,16 @@ import { styles } from './styles';
 
 // ── The gate: an account without an email ───────────────────────────────────
 
-function ReauthNoEmailStage({ supportId, onReset }: { supportId: string | null; onReset: () => void }) {
+function ReauthNoEmailStage({
+    supportId,
+    onReset,
+    onSignIn,
+}: {
+    supportId: string | null;
+    onReset: () => void;
+    /** Goes to the consent stage. Absent on Forgot PIN and on a phone that cannot attest. */
+    onSignIn?: () => void;
+}) {
     const { t } = useTranslation();
     const colors = useColors();
     const { contactSupport, supportEnabled, resetThisPhone, supportBusy, resetting } = useAccountProblem({ onReset });
@@ -32,7 +41,7 @@ function ReauthNoEmailStage({ supportId, onReset }: { supportId: string | null; 
             <Text accessibilityRole="header" style={[styles.title, styles.centerText, { color: colors.ink }]}>
                 {t('gate.noEmailTitle')}
             </Text>
-            <Text style={[styles.text, styles.centerText, { color: colors.ink2 }]}>{t('gate.noEmailBody')}</Text>
+            <Text style={[styles.text, styles.centerText, { color: colors.ink2 }]}>{t(onSignIn ? 'gate.signInBody' : 'gate.noEmailBody')}</Text>
             {supportId ? (
                 <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.line }]}>
                     <Text style={[styles.pillText, { color: colors.ink }]} selectable>
@@ -53,7 +62,18 @@ function ReauthNoEmailStage({ supportId, onReset }: { supportId: string | null; 
             ) : null}
             <View style={styles.flex} />
             <View style={styles.actions}>
-                <Button action="primary" onPress={() => void contactSupport()} isDisabled={!supportEnabled || supportBusy || resetting} testID="reauth-contact-support">
+                {onSignIn ? (
+                    <Button action="primary" onPress={onSignIn} isDisabled={supportBusy || resetting} testID="reauth-sign-in">
+                        <ButtonText>{t('gate.signIn')}</ButtonText>
+                    </Button>
+                ) : null}
+                <Button
+                    variant={onSignIn ? 'outline' : 'solid'}
+                    action={onSignIn ? 'secondary' : 'primary'}
+                    onPress={() => void contactSupport()}
+                    isDisabled={!supportEnabled || supportBusy || resetting}
+                    testID="reauth-contact-support"
+                >
                     {supportBusy ? <ButtonSpinner /> : null}
                     <ButtonText>{t('gate.contactSupport')}</ButtonText>
                 </Button>

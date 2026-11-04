@@ -3103,7 +3103,9 @@
     "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
     "resetTitle": "Bu telefon sıfırlansın mı?",
     "resetBody": "Oturumunuz kapatılır ve Mera'ya anlattıklarınız dahil bu telefondaki Mera verileri silinir. Hesabınız silinmez ve indirilen yapay zeka modelleri kalır. Yedekleme kullanıyorsanız verilerinizi kurtarma kodunuzla geri alabilirsiniz.",
-    "resetConfirm": "Sıfırla"
+    "resetConfirm": "Sıfırla",
+    "signIn": "Bu telefonla giriş yap",
+    "signInBody": "Bu telefonda giriş yaparken bir sorun oluştu. Bu telefondaki verileriniz güvende. Yeniden giriş yapın veya destekle iletişime geçin."
   },
   "relatedSort": {
     "relevance": "En iyi eşleşme",

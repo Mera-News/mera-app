@@ -3107,7 +3107,9 @@
     "resetPhone": "Redefinir este celular e entrar de novo",
     "resetTitle": "Redefinir este celular?",
     "resetBody": "Você vai sair da conta e os dados da Mera neste celular serão apagados, incluindo o que você contou à Mera. Sua conta não é excluída e os modelos de IA baixados continuam aqui. Se você usa backup, seu código de recuperação traz seus dados de volta.",
-    "resetConfirm": "Redefinir"
+    "resetConfirm": "Redefinir",
+    "signIn": "Entrar com este celular",
+    "signInBody": "Algo deu errado ao entrar neste celular. Seus dados neste celular estão seguros. Entre de novo ou fale com o suporte."
   },
   "relatedSort": {
     "relevance": "Melhor correspondência",

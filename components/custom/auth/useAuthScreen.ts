@@ -87,6 +87,8 @@ const INTRO_MS = 1200;
 
 interface AuthScreenProps {
     onLoginSuccess?: (userId: string) => void;
+    /** False on Forgot PIN (`reauth=pin`), the one arrival that hides device sign-in. */
+    allowDeviceSignIn?: boolean;
 }
 
 export function useAuthScreen({ onLoginSuccess }: AuthScreenProps) {

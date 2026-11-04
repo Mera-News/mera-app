@@ -3103,7 +3103,9 @@
     "resetPhone": "Reset this phone and sign in again",
     "resetTitle": "Reset this phone?",
     "resetBody": "This signs you out and clears Mera's data on this phone, including what you've told Mera. Your account isn't deleted, and downloaded AI models stay. If you use backup, your recovery code brings your data back.",
-    "resetConfirm": "Reset"
+    "resetConfirm": "Reset",
+    "signIn": "Sign in with this phone",
+    "signInBody": "Something went wrong signing in on this phone. Your data here is safe. Sign in again, or contact support."
   },
   "relatedSort": {
     "relevance": "Best match",

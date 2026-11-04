@@ -3080,7 +3080,9 @@
     "resetPhone": "Reset ponsel ini dan masuk lagi",
     "resetTitle": "Reset ponsel ini?",
     "resetBody": "Anda akan keluar dan data Mera di ponsel ini akan dihapus, termasuk yang sudah Anda ceritakan kepada Mera. Akun Anda tidak dihapus, dan model AI yang sudah diunduh tetap ada. Jika Anda menggunakan cadangan, kode pemulihan Anda dapat mengembalikan data Anda.",
-    "resetConfirm": "Reset"
+    "resetConfirm": "Reset",
+    "signIn": "Masuk dengan ponsel ini",
+    "signInBody": "Terjadi masalah saat masuk di ponsel ini. Data Anda di ponsel ini aman. Masuk lagi, atau hubungi dukungan."
   },
   "relatedSort": {
     "relevance": "Kecocokan terbaik",

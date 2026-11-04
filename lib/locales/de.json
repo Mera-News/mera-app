@@ -3101,7 +3101,9 @@
     "resetPhone": "Telefon zurücksetzen und neu anmelden",
     "resetTitle": "Dieses Telefon zurücksetzen?",
     "resetBody": "Du wirst abgemeldet und die Daten von Mera auf diesem Telefon werden gelöscht, auch alles, was du Mera erzählt hast. Dein Konto wird nicht gelöscht und heruntergeladene KI-Modelle bleiben erhalten. Wenn du Backups nutzt, holst du deine Daten mit deinem Wiederherstellungscode zurück.",
-    "resetConfirm": "Zurücksetzen"
+    "resetConfirm": "Zurücksetzen",
+    "signIn": "Mit diesem Telefon anmelden",
+    "signInBody": "Beim Anmelden auf diesem Telefon ist etwas schiefgelaufen. Deine Daten auf diesem Telefon sind sicher. Melde dich neu an oder wende dich an den Support."
   },
   "relatedSort": {
     "relevance": "Beste Übereinstimmung",

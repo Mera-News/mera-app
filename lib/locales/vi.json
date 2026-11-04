@@ -3080,7 +3080,9 @@
     "resetPhone": "Đặt lại điện thoại này và đăng nhập lại",
     "resetTitle": "Đặt lại điện thoại này?",
     "resetBody": "Bạn sẽ bị đăng xuất và dữ liệu của Mera trên điện thoại này sẽ bị xóa, bao gồm cả những gì bạn đã kể với Mera. Tài khoản của bạn không bị xóa và các mô hình AI đã tải xuống vẫn được giữ lại. Nếu bạn dùng tính năng sao lưu, mã khôi phục sẽ giúp bạn lấy lại dữ liệu.",
-    "resetConfirm": "Đặt lại"
+    "resetConfirm": "Đặt lại",
+    "signIn": "Đăng nhập bằng điện thoại này",
+    "signInBody": "Đã xảy ra lỗi khi đăng nhập trên điện thoại này. Dữ liệu của bạn trên điện thoại này vẫn an toàn. Hãy đăng nhập lại, hoặc liên hệ bộ phận hỗ trợ."
   },
   "relatedSort": {
     "relevance": "Khớp tốt nhất",

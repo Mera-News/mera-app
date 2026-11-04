@@ -3107,7 +3107,9 @@
     "resetPhone": "Reimposta questo telefono e accedi di nuovo",
     "resetTitle": "Reimpostare questo telefono?",
     "resetBody": "Verrai disconnesso e i dati di Mera su questo telefono verranno cancellati, compreso quello che hai detto a Mera. Il tuo account non viene eliminato e i modelli di IA scaricati restano. Se usi il backup, il tuo codice di recupero riporta i tuoi dati.",
-    "resetConfirm": "Reimposta"
+    "resetConfirm": "Reimposta",
+    "signIn": "Accedi con questo telefono",
+    "signInBody": "Qualcosa è andato storto durante l'accesso su questo telefono. I tuoi dati su questo telefono sono al sicuro. Accedi di nuovo oppure contatta l'assistenza."
   },
   "relatedSort": {
     "relevance": "Miglior corrispondenza",

@@ -3239,7 +3239,9 @@
     "resetPhone": "Zresetuj ten telefon i zaloguj się ponownie",
     "resetTitle": "Zresetować ten telefon?",
     "resetBody": "Nastąpi wylogowanie, a dane Mera na tym telefonie zostaną usunięte, w tym to, co przekazano Mera. Twoje konto nie zostanie usunięte, a pobrane modele AI zostaną. Jeśli korzystasz z kopii zapasowej, odzyskasz dane za pomocą kodu odzyskiwania.",
-    "resetConfirm": "Resetuj"
+    "resetConfirm": "Resetuj",
+    "signIn": "Zaloguj się tym telefonem",
+    "signInBody": "Coś poszło nie tak podczas logowania na tym telefonie. Twoje dane na tym telefonie są bezpieczne. Zaloguj się ponownie albo skontaktuj się z pomocą."
   },
   "relatedSort": {
     "relevance": "Najlepsze dopasowanie",

@@ -3113,7 +3113,9 @@
     "resetPhone": "Réinitialiser ce téléphone et se reconnecter",
     "resetTitle": "Réinitialiser ce téléphone ?",
     "resetBody": "Vous serez déconnecté et les données de Mera sur ce téléphone seront effacées, y compris ce que vous avez dit à Mera. Votre compte n'est pas supprimé et les modèles d'IA téléchargés sont conservés. Si vous utilisez la sauvegarde, votre code de récupération restaure vos données.",
-    "resetConfirm": "Réinitialiser"
+    "resetConfirm": "Réinitialiser",
+    "signIn": "Se connecter avec ce téléphone",
+    "signInBody": "Un problème est survenu lors de la connexion sur ce téléphone. Vos données sur ce téléphone sont en sécurité. Reconnectez-vous ou contactez l'assistance."
   },
   "relatedSort": {
     "relevance": "Meilleure correspondance",

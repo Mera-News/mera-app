@@ -3101,7 +3101,9 @@
     "resetPhone": "Deze telefoon resetten en opnieuw inloggen",
     "resetTitle": "Deze telefoon resetten?",
     "resetBody": "Je wordt uitgelogd en de gegevens van Mera op deze telefoon worden gewist, ook wat je Mera hebt verteld. Je account wordt niet verwijderd en gedownloade AI-modellen blijven staan. Gebruik je back-ups, dan haal je je gegevens terug met je herstelcode.",
-    "resetConfirm": "Resetten"
+    "resetConfirm": "Resetten",
+    "signIn": "Inloggen met deze telefoon",
+    "signInBody": "Er ging iets mis bij het inloggen op deze telefoon. Je gegevens op deze telefoon zijn veilig. Log opnieuw in of neem contact op met support."
   },
   "relatedSort": {
     "relevance": "Beste match",
