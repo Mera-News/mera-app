@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
     "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
     "supportedPhones": "Desteklenen telefonlar",
-    "phoneNotSupported": "Bu telefon desteklenmiyor"
+    "phoneNotSupported": "Bu telefon desteklenmiyor",
+    "deviceNotBound": "Bu telefon hesabınıza bağlı değil. Destekle iletişime geçmek veya bu telefonu sıfırlamak için geri dönün."
   },
   "account": {
     "contactSupport": "Destek ekibiyle görüşün"

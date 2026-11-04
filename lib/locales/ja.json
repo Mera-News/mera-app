@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "メラでサインインするには、この電話にGoogle Playが必要です。Google Playがない電話は対応していません。",
     "phoneUnsupportedIos": "このiPhoneでは電話でのサインインを使えません。",
     "supportedPhones": "対応端末",
-    "phoneNotSupported": "この電話は対応していません"
+    "phoneNotSupported": "この電話は対応していません",
+    "deviceNotBound": "この電話はあなたのアカウントに紐付いていません。戻ってサポートに問い合わせるか、この電話をリセットしてください。"
   },
   "account": {
     "contactSupport": "サポートに問い合わせる"

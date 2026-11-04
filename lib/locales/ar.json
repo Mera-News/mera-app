@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "يحتاج ميرا إلى Google Play على هذا الهاتف لتسجيل دخولك. الهواتف التي لا تحتويه غير مدعومة.",
     "phoneUnsupportedIos": "هذا الآيفون لا يمكنه استخدام تسجيل الدخول بالهاتف.",
     "supportedPhones": "الهواتف المدعومة",
-    "phoneNotSupported": "هذا الهاتف غير مدعوم"
+    "phoneNotSupported": "هذا الهاتف غير مدعوم",
+    "deviceNotBound": "هذا الهاتف غير مرتبط بحسابك. ارجع للتواصل مع الدعم أو لإعادة ضبط هذا الهاتف."
   },
   "account": {
     "contactSupport": "تحدث إلى الدعم"

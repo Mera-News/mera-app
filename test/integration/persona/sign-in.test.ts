@@ -238,6 +238,23 @@ describe('signing in with this phone', () => {
         expect(secureStoreDump()[COOKIE_KEY]).toBeDefined();
     });
 
+    it('with an account on the device the sign-in is resume-only: the gate never mints', async () => {
+        await seedAccount(ME);
+        const bodies = record('*/api/auth/device/sign-in/dev');
+
+        await signInWithPhone(ME);
+
+        expect(bodies).toEqual([expect.objectContaining({ resumeOnly: true })]);
+    });
+
+    it('with no account on the device a mint stays possible', async () => {
+        const bodies = record('*/api/auth/device/sign-in/dev');
+
+        await signInWithPhone(null);
+
+        expect(bodies[0]).not.toHaveProperty('resumeOnly');
+    });
+
     it('with no account on the device (the track) the phone account is simply signed in', async () => {
         const outcome = await signInWithPhone(null);
 
@@ -363,7 +380,7 @@ describe('signing in with this phone', () => {
             mockAttest.isSupported.mockResolvedValue(true);
             mockAttest.generateKey.mockRejectedValue(Object.assign(new Error('no'), { code: 'ERR_ATTEST_UNSUPPORTED' }));
 
-            await expect(signInWithPhone(ME)).resolves.toEqual({ kind: 'unsupported' });
+            await expect(signInWithPhone(null)).resolves.toEqual({ kind: 'unsupported' });
         });
 
         it('native attestation that fails maps to failed with the reason', async () => {
@@ -374,7 +391,7 @@ describe('signing in with this phone', () => {
                 Object.assign(new Error('apple'), { code: 'ERR_ATTEST_SERVER_UNAVAILABLE' }),
             );
 
-            await expect(signInWithPhone(ME)).resolves.toEqual({ kind: 'failed', reason: 'attestation-unavailable' });
+            await expect(signInWithPhone(null)).resolves.toEqual({ kind: 'failed', reason: 'attestation-unavailable' });
             expect(readPendingAuthUserId()).toBeNull();
             expect(wasLegalAcceptedThisProcess(ME)).toBe(false);
         });

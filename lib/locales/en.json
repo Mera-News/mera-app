@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
     "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
     "supportedPhones": "Supported phones",
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "This phone isn't supported",
+    "deviceNotBound": "This phone isn't linked to your account. Go back to contact support or reset this phone."
   },
   "account": {
     "contactSupport": "Talk to support"

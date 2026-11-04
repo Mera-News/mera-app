@@ -5,7 +5,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { useLocalSearchParams } from 'expo-router';
 import LoginScreen from '@/app/login';
 import { setSetting } from '@/lib/database/services/setting-service';
-import { http, initI18nEn, server, signInFixtureAccount } from '@/test/helpers';
+import { HttpResponse, http, initI18nEn, server, signInFixtureAccount } from '@/test/helpers';
 
 jest.mock('react-native/Libraries/Modal/Modal', () => {
     const { View } = jest.requireActual('react-native');
@@ -81,4 +81,26 @@ it('a phone that cannot attest gets no sign-in button', async () => {
     await openGate('1');
 
     expect(screen.queryByTestId(SIGN_IN)).toBeNull();
+});
+
+it('an unbound key mints nothing from the gate and points to support or reset', async () => {
+    process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+    const bodies: unknown[] = [];
+    server.use(
+        http.post('*/api/auth/device/sign-in/dev', async ({ request }) => {
+            bodies.push(await request.clone().json());
+            return HttpResponse.json({ code: 'DEVICE_NOT_BOUND', message: 'x' }, { status: 409 });
+        }),
+    );
+    await openGate('1');
+
+    await fireEvent.press(screen.getByTestId(SIGN_IN));
+    await fireEvent.press(await screen.findByTestId('auth-consent-agree'));
+
+    expect((await screen.findByTestId('auth-device-failure')).props.children).toBe(
+        "This phone isn't linked to your account. Go back to contact support or reset this phone.",
+    );
+    expect(bodies).toEqual([expect.objectContaining({ resumeOnly: true })]);
+    expect(screen.queryByTestId('auth-device-retry')).toBeNull();
+    delete process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN;
 });

@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "मेरा ऐप को आपको साइन इन करने के लिए इस फ़ोन पर Google Play चाहिए। जिन फ़ोन में यह नहीं है, वे समर्थित नहीं हैं।",
     "phoneUnsupportedIos": "इस iPhone पर फ़ोन से साइन इन नहीं हो सकता।",
     "supportedPhones": "समर्थित फ़ोन",
-    "phoneNotSupported": "यह फ़ोन समर्थित नहीं है"
+    "phoneNotSupported": "यह फ़ोन समर्थित नहीं है",
+    "deviceNotBound": "यह फ़ोन आपके अकाउंट से जुड़ा नहीं है। सहायता टीम से संपर्क करने या इस फ़ोन को रीसेट करने के लिए वापस जाएं।"
   },
   "account": {
     "contactSupport": "सहायता टीम से बात करें"

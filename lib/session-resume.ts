@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 import { dropSessionCookie } from '@/lib/auth-client';
 import { recheckSession } from '@/lib/auth-failure-breaker';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { signInWithDevice } from '@/lib/device-auth';
+import { hasTestAccountToken, signInWithDevice } from '@/lib/device-auth';
 import logger from '@/lib/logger';
 import { holdAccountSwitch } from '@/lib/security/identity-gate';
 import { usePinStore } from '@/lib/stores/pin-store';
@@ -50,7 +50,8 @@ export function resumeDeadSession(): Promise<boolean> {
 }
 
 async function attemptResume(): Promise<boolean> {
-    if (AppState.currentState === 'background' || usePinStore.getState().locked) return false;
+    // A test account's route takes no resume flag and mints by handle.
+    if (AppState.currentState === 'background' || usePinStore.getState().locked || hasTestAccountToken()) return false;
     const [cachedUserId, lastAttempt] = await Promise.all([
         getSetting('cached_user_id'),
         getSetting(SESSION_RESUME_AT_KEY),

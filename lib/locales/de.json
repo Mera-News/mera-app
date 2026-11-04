@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera braucht Google Play auf diesem Telefon, um dich anzumelden. Telefone ohne Google Play werden nicht unterstützt.",
     "phoneUnsupportedIos": "Dieses iPhone kann die Anmeldung mit Telefon nicht nutzen.",
     "supportedPhones": "Unterstützte Telefone",
-    "phoneNotSupported": "Dieses Telefon wird nicht unterstützt"
+    "phoneNotSupported": "Dieses Telefon wird nicht unterstützt",
+    "deviceNotBound": "Dieses Telefon ist nicht mit deinem Konto verknüpft. Geh zurück, um dich an den Support zu wenden oder dieses Telefon zurückzusetzen."
   },
   "account": {
     "contactSupport": "Mit dem Support sprechen"

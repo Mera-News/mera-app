@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",
     "phoneUnsupportedIos": "iPhone ini tidak bisa memakai masuk dengan ponsel.",
     "supportedPhones": "Ponsel yang didukung",
-    "phoneNotSupported": "Ponsel ini tidak didukung"
+    "phoneNotSupported": "Ponsel ini tidak didukung",
+    "deviceNotBound": "Ponsel ini tidak terhubung ke akun Anda. Kembali untuk menghubungi dukungan atau mereset ponsel ini."
   },
   "account": {
     "contactSupport": "Hubungi dukungan"

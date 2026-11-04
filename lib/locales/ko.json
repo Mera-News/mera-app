@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "메라에 로그인하려면 이 휴대폰에 Google Play가 필요합니다. Google Play가 없는 휴대폰은 지원되지 않습니다.",
     "phoneUnsupportedIos": "이 iPhone에서는 휴대폰 로그인을 사용할 수 없습니다.",
     "supportedPhones": "지원되는 휴대폰",
-    "phoneNotSupported": "이 휴대폰은 지원되지 않습니다"
+    "phoneNotSupported": "이 휴대폰은 지원되지 않습니다",
+    "deviceNotBound": "이 휴대폰은 계정에 연결되어 있지 않습니다. 돌아가서 지원팀에 문의하거나 이 휴대폰을 초기화하세요."
   },
   "account": {
     "contactSupport": "지원팀에 문의"

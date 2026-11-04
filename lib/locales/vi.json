@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera cần Google Play trên điện thoại này để đăng nhập cho bạn. Điện thoại không có Google Play chưa được hỗ trợ.",
     "phoneUnsupportedIos": "iPhone này không thể dùng đăng nhập bằng điện thoại.",
     "supportedPhones": "Điện thoại được hỗ trợ",
-    "phoneNotSupported": "Điện thoại này không được hỗ trợ"
+    "phoneNotSupported": "Điện thoại này không được hỗ trợ",
+    "deviceNotBound": "Điện thoại này chưa được liên kết với tài khoản của bạn. Hãy quay lại để liên hệ bộ phận hỗ trợ hoặc đặt lại điện thoại này."
   },
   "account": {
     "contactSupport": "Trò chuyện với bộ phận hỗ trợ"

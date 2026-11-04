@@ -690,16 +690,14 @@ function classify(error: unknown): DeviceSignInResult {
 const TRANSIENT_INTEGRITY_RETRY_MS = 1500;
 
 /**
- * `resumeOnly` is the silent resume of a dead session (lib/session-resume.ts): it
- * reaches only a key that is already bound, and no refusal recovery runs. The
- * server answers 409 for an unbound key, but a server older than the flag MINTS
- * instead, so the caller must treat `minted: true` as a failure; no store sync
- * runs for it here.
+ * `resumeOnly` is for an account already on this phone: the silent resume of a
+ * dead session (lib/session-resume.ts) and the gate's sign-in. It reaches only a
+ * key that is already bound, and no refusal recovery runs. The server answers 409
+ * for an unbound key, but a server older than the flag MINTS instead: no store
+ * sync runs for it here, and the caller sees an account that is not its own.
  */
 export async function signInWithDevice({ resumeOnly = false }: { resumeOnly?: boolean } = {}): Promise<DeviceSignInResult> {
   try {
-    // /test-account/sign-in mints by handle and takes no such flag.
-    if (resumeOnly && hasTestAccountToken()) return { status: 'unsupported' };
     const flow = await pickFlow({ kind: 'sign-in', resumeOnly });
     if (!flow) return { status: 'unsupported' };
     const runFlow = async (): Promise<ParsedSignIn> => {

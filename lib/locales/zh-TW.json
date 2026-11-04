@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "梅拉需要這支手機上有 Google Play 才能為你登入。不支援沒有 Google Play 的手機。",
     "phoneUnsupportedIos": "這支 iPhone 無法使用手機登入。",
     "supportedPhones": "支援的手機",
-    "phoneNotSupported": "這支手機不支援"
+    "phoneNotSupported": "這支手機不支援",
+    "deviceNotBound": "這支手機未連結你的帳號。請返回聯絡支援團隊，或重設這支手機。"
   },
   "account": {
     "contactSupport": "聯絡支援團隊"

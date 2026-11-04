@@ -62,7 +62,9 @@ type PhoneSignIn =
  */
 async function signInWithPhone(expectedUserId: string | null): Promise<PhoneSignIn> {
     // Every attempt re-enters the whole flow, so it always fetches a fresh nonce.
-    const result = await signInWithDevice();
+    // With an account on this phone the sign-in never mints: a new account would
+    // stay bound to this phone's key for good.
+    const result = await signInWithDevice({ resumeOnly: !!expectedUserId });
     if (result.status === 'success') {
         if (expectedUserId && result.userId !== expectedUserId) return { kind: 'different', result };
         await completeDeviceSignIn(result);

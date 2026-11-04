@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",
     "phoneUnsupportedIos": "Deze iPhone kan niet inloggen met een telefoonnummer.",
     "supportedPhones": "Ondersteunde telefoons",
-    "phoneNotSupported": "Deze telefoon wordt niet ondersteund"
+    "phoneNotSupported": "Deze telefoon wordt niet ondersteund",
+    "deviceNotBound": "Deze telefoon is niet gekoppeld aan je account. Ga terug om contact op te nemen met support of deze telefoon te resetten."
   },
   "account": {
     "contactSupport": "Praat met support"

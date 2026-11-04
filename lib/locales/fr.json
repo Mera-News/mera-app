@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera a besoin de Google Play sur ce téléphone pour vous connecter. Les téléphones qui n'en ont pas ne sont pas pris en charge.",
     "phoneUnsupportedIos": "Cet iPhone ne peut pas utiliser la connexion par téléphone.",
     "supportedPhones": "Téléphones pris en charge",
-    "phoneNotSupported": "Ce téléphone n'est pas pris en charge"
+    "phoneNotSupported": "Ce téléphone n'est pas pris en charge",
+    "deviceNotBound": "Ce téléphone n'est pas associé à votre compte. Revenez en arrière pour contacter l'assistance ou réinitialiser ce téléphone."
   },
   "account": {
     "contactSupport": "Contacter l'assistance"

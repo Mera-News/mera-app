@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera potrzebuje Google Play na tym telefonie, żeby Cię zalogować. Telefony bez niego nie są obsługiwane.",
     "phoneUnsupportedIos": "Ten iPhone nie może logować się telefonem.",
     "supportedPhones": "Obsługiwane telefony",
-    "phoneNotSupported": "Ten telefon nie jest obsługiwany"
+    "phoneNotSupported": "Ten telefon nie jest obsługiwany",
+    "deviceNotBound": "Ten telefon nie jest połączony z Twoim kontem. Wróć, aby skontaktować się z pomocą albo zresetować ten telefon."
   },
   "account": {
     "contactSupport": "Porozmawiaj z pomocą"

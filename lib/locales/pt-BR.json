@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "A Mera precisa do Google Play neste celular para entrar com você. Celulares sem ele não são compatíveis.",
     "phoneUnsupportedIos": "Este iPhone não pode usar o login por celular.",
     "supportedPhones": "Celulares compatíveis",
-    "phoneNotSupported": "Este celular não é compatível"
+    "phoneNotSupported": "Este celular não é compatível",
+    "deviceNotBound": "Este celular não está vinculado à sua conta. Volte para falar com o suporte ou redefinir este celular."
   },
   "account": {
     "contactSupport": "Falar com o suporte"
