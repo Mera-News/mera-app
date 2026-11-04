@@ -1883,9 +1883,14 @@ async function checkBatchHeld(
     if (task) {
       return err instanceof TaskNoAuthError ? { kind: 'no-auth' } : { kind: 'error' };
     }
-    logger.captureException(err, {
-      tags: { service: 'scoring-pipeline', step: 'fetch', batchId: String(batch.batchId) },
-    });
+    // expo fetch throws a plain Error for a native cancel, and the text is localized, so non-English devices still report.
+    const cancelled =
+      isCancellationError(err) || /^fetch failed: cancell?ed$/i.test((err as Error)?.message ?? '');
+    if (!cancelled) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'fetch', batchId: String(batch.batchId) },
+      });
+    }
     // A THROWING /results fetch (5xx / network) used to leave the batch in
     // waiting-* with no phase change and no attempt++, so it could hang forever
     // past BATCH_STALE_MS and MAX_BATCH_ATTEMPTS — only recover()'s 24h
