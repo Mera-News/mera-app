@@ -405,6 +405,8 @@ async function fetchTopicIdsPersona(
       weight: t.weight,
       highPriority: t.highPriority,
       factWeight: t.factId ? factWeights.get(t.factId) ?? 1 : 1,
+      factId: t.factId,
+      createdAtMs: t.createdAt instanceof Date ? t.createdAt.getTime() : 0,
     })),
     locations: locations.map((l) => ({
       countryCode: l.countryCode,

@@ -26,6 +26,8 @@ export interface RetrievalTopicInput {
   weight: number; // topic.weight
   highPriority: boolean;
   factWeight?: number | null; // owning fact.weight; null/undefined ⇒ 1.0
+  factId?: string | null; // owning fact; a factless topic shares with no other
+  createdAtMs?: number; // topic age, for the cap's fair share
 }
 
 export interface RetrievalLocationInput {
@@ -69,6 +71,12 @@ interface RetrievalProfileTopic {
   text: string;
   limit: number;
   effectiveWeight: number;
+}
+
+/** What the cap ranks by. Stays on the device: never part of the output. */
+interface RankedTopic extends RetrievalProfileTopic {
+  factKey: string;
+  createdAtMs: number;
 }
 
 export interface RetrievalProfile {
@@ -127,6 +135,35 @@ const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.m
 const LOCATION_ROLES_ALWAYS = new Set(['home', 'work', 'family', 'partner_family']);
 
 /**
+ * The order the cap reads: heaviest first, then round by round across the facts
+ * tied at that weight, so a fact's Nth topic waits for every tied fact's (N-1)th.
+ * Oldest first within a fact and within a round; a merged text is as old as its
+ * oldest member. Facts weigh in by weight only, so a heavier fact still fills
+ * its slots first.
+ */
+function fairShareOrder(topics: RankedTopic[]): RankedTopic[] {
+  const byAge = (a: RankedTopic, b: RankedTopic): number => {
+    if (a.createdAtMs !== b.createdAtMs) return a.createdAtMs - b.createdAtMs;
+    if (a.text !== b.text) return a.text < b.text ? -1 : 1;
+    return a.topicId < b.topicId ? -1 : a.topicId > b.topicId ? 1 : 0;
+  };
+  const taken = new Map<string, number>();
+  const round = new Map<RankedTopic, number>();
+  for (const t of [...topics].sort(byAge)) {
+    const key = `${t.effectiveWeight}\x00${t.factKey}`;
+    const n = taken.get(key) ?? 0;
+    taken.set(key, n + 1);
+    round.set(t, n);
+  }
+  return [...topics].sort(
+    (a, b) =>
+      b.effectiveWeight - a.effectiveWeight ||
+      (round.get(a) ?? 0) - (round.get(b) ?? 0) ||
+      byAge(a, b),
+  );
+}
+
+/**
  * Build the privacy-lean retrieval profile sent to the server for feed sync.
  *
  * Topics: only active topics with effectiveWeight (w_eff) > 0 are kept —
@@ -143,6 +180,10 @@ const LOCATION_ROLES_ALWAYS = new Set(['home', 'work', 'family', 'partner_family
  * to; `limit` is the max across members. `strictMatch` is not a profile
  * field: feed-sync derives it per normalised text over ALL active topics
  * (loose wins), so a merged text carries the flag its members would have.
+ *
+ * Past the cap, slots are shared by `fairShareOrder`. At or under it the order
+ * stays as it was: feed-sync's `serverArticleIds` order decides what the daily
+ * cap clips, so a reader with room gets a byte-identical request.
  *
  * Headline scopes: one COUNTRY scope per distinct qualifying country code,
  * derived from locations with role home/work/family/partner_family (always) or
@@ -164,7 +205,7 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
   const maxTopics = input.maxTopics ?? DEFAULT_MAX_TOPICS;
 
   // --- Topics ---------------------------------------------------------
-  const kept: RetrievalProfileTopic[] = [];
+  const kept: RankedTopic[] = [];
   for (const t of input.topics) {
     const factWeight = t.factWeight ?? 1;
     const wEff = clamp(t.weight * factWeight, -1, 1);
@@ -180,6 +221,8 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
       text: t.text,
       limit,
       effectiveWeight: wEff,
+      factKey: t.factId ?? t.topicId,
+      createdAtMs: t.createdAtMs ?? 0,
     });
   }
 
@@ -190,13 +233,14 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
   });
 
   // Collapse duplicate texts (see the merge rule above), then cap.
-  const byText = new Map<string, RetrievalProfileTopic>();
-  const distinct: RetrievalProfileTopic[] = [];
+  const byText = new Map<string, RankedTopic>();
+  const distinct: RankedTopic[] = [];
   for (const t of kept) {
     const key = normalizeTopicText(t.text);
     const representative = byText.get(key);
     if (representative) {
       if (t.limit > representative.limit) representative.limit = t.limit;
+      if (t.createdAtMs < representative.createdAtMs) representative.createdAtMs = t.createdAtMs;
       continue;
     }
     const entry = { ...t };
@@ -204,7 +248,9 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
     distinct.push(entry);
   }
 
-  const topics = distinct.slice(0, maxTopics);
+  const topics = (distinct.length > maxTopics ? fairShareOrder(distinct).slice(0, maxTopics) : distinct).map(
+    ({ topicId, text, limit, effectiveWeight }) => ({ topicId, text, limit, effectiveWeight }),
+  );
 
   // --- Headline scopes --------------------------------------------------
   // Track the best (max) weight seen per distinct, normalized country code.

@@ -17,7 +17,7 @@ jest.mock('@/lib/logger', () => ({
 import { addFact } from '@/lib/database/services/fact-service';
 import { setHeadlineDepth } from '@/lib/database/services/headline-depth-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
-import { countAllTopics } from '@/lib/database/services/topic-service';
+import { countAllTopics, createTopics } from '@/lib/database/services/topic-service';
 import { stepFetchTopicIds } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { graphql, HttpResponse, mockGql, server } from '@/test/helpers';
@@ -244,6 +244,39 @@ describe('what the persona request carries', () => {
     // the higher-weighted topic is not given a smaller limit
     const limitOf = (text: string) => topics.find((t) => t.text === text)!.limit;
     expect(limitOf('formula 1')).toBeGreaterThanOrEqual(limitOf('motogp'));
+  });
+
+  describe('past the 200-topic cap', () => {
+    const texts = (prefix: string, count: number, from = 0) =>
+      Array.from({ length: count }, (_, i) => `${prefix} ${String(from + i).padStart(3, '0')}`);
+    const sentTexts = async (sent: ReturnType<typeof recordOps>) => {
+      // The app batches a request this large, so read every chunk.
+      const calls = await sent.named('GetArticleIdsForPersona');
+      return calls.flatMap(({ variables }) => (variables.query.topics as { text: string }[]).map((t) => t.text));
+    };
+
+    it('shares the slots by each topic\'s real fact', async () => {
+      await seedInterest('I read everything', texts('aaa', 210));
+      await seedInterest('I also like zebras', texts('zzz', 5));
+      const sent = recordOps();
+
+      await stepFetchTopicIds('', makeCtx().ctx);
+
+      const topics = await sentTexts(sent);
+      expect(topics).toHaveLength(200);
+      expect(topics).toEqual(expect.arrayContaining(texts('zzz', 5)));
+    });
+
+    it('keeps a fact\'s oldest topics by their real creation time', async () => {
+      const { fact } = await seedInterest('I read everything', texts('mmm', 201));
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await createTopics([{ factId: fact.id, text: 'aaa newest', weight: 1, highPriority: false, provenance: 'llm' }]);
+      const sent = recordOps();
+
+      await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(await sentTexts(sent)).not.toContain('aaa newest');
+    });
   });
 
   it('never sends a negative or suppressed topic', async () => {

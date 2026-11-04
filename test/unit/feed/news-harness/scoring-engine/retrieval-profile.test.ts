@@ -396,3 +396,73 @@ describe('buildRetrievalProfile — duplicate texts collapse before the cap', ()
     expect(topics[0].topicId).toBe('pos');
   });
 });
+
+describe('buildRetrievalProfile — the cap shares equal-weight slots across facts', () => {
+  const seeded = (factId: string, count: number, prefix: string, createdAtMs = 1000) =>
+    Array.from({ length: count }, (_, i) =>
+      topic({
+        topicId: `${prefix}-${i}`,
+        text: `${prefix}-${String(i).padStart(3, '0')}`,
+        weight: 0.75,
+        factId,
+        createdAtMs,
+      }),
+    );
+  const textsOf = (r: ReturnType<typeof buildRetrievalProfile>) => r.topics.map((t) => t.text);
+
+  it('a heavy fact cannot crowd a small one out, whatever the alphabet says', () => {
+    const r = buildRetrievalProfile({
+      topics: [...seeded('heavy', 250, 'aaa'), ...seeded('small', 5, 'zzz')],
+      locations: [],
+    });
+    expect(r.topics).toHaveLength(200);
+    for (let i = 0; i < 5; i++) expect(textsOf(r)).toContain(`zzz-00${i}`);
+  });
+
+  it('two heavy facts split the slots evenly', () => {
+    const r = buildRetrievalProfile({
+      topics: [...seeded('a', 150, 'aaa'), ...seeded('b', 150, 'zzz')],
+      locations: [],
+    });
+    expect(textsOf(r).filter((t) => t.startsWith('zzz'))).toHaveLength(100);
+  });
+
+  it('within a fact the oldest topics stay and a new one cannot push them out', () => {
+    const r = buildRetrievalProfile({
+      topics: [...seeded('f', 200, 'mmm', 1000), ...seeded('f', 3, 'aaa', 2000)],
+      locations: [],
+    });
+    expect(textsOf(r).filter((t) => t.startsWith('aaa'))).toEqual([]);
+    expect(r.topics).toHaveLength(200);
+  });
+
+  it('weight still ranks first: a heavier topic beats any fair share', () => {
+    const r = buildRetrievalProfile({
+      topics: [
+        ...seeded('a', 200, 'aaa').map((t) => ({ ...t, weight: 0.9 })),
+        ...seeded('b', 5, 'bbb'),
+      ],
+      locations: [],
+    });
+    expect(textsOf(r).filter((t) => t.startsWith('bbb'))).toEqual([]);
+  });
+
+  it('a duplicate text counts its oldest member as its age', () => {
+    const shared = topic({ topicId: 'a-late', text: 'aaa-shared', weight: 0.75, factId: 'f', createdAtMs: 9000 });
+    const elder = topic({ topicId: 'z-early', text: 'aaa-shared', weight: 0.75, factId: 'g', createdAtMs: 1 });
+    const r = buildRetrievalProfile({
+      topics: [...seeded('f', 200, 'mmm', 1000), shared, elder],
+      locations: [],
+    });
+    expect(textsOf(r)).toContain('aaa-shared');
+  });
+
+  it('at or under the cap the order and the output shape are unchanged', () => {
+    const r = buildRetrievalProfile({
+      topics: [...seeded('z', 2, 'zzz', 1), ...seeded('a', 2, 'aaa', 2)],
+      locations: [],
+    });
+    expect(textsOf(r)).toEqual(['aaa-000', 'aaa-001', 'zzz-000', 'zzz-001']);
+    expect(Object.keys(r.topics[0]).sort()).toEqual(['effectiveWeight', 'limit', 'text', 'topicId']);
+  });
+});
