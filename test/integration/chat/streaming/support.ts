@@ -185,6 +185,8 @@ export interface TurnPoll {
   upstream?: number;
   /** Answer this read with a raw status and body instead. */
   fail?: { status: number; code: string };
+  /** Never answer: the network hangs. */
+  hang?: boolean;
 }
 
 /**
@@ -244,7 +246,7 @@ export function detachedGateway(
     );
     return new HttpResponse(stream, { headers: { 'content-type': plan.contentType ?? 'text/event-stream' } });
   });
-  const read = http.get('*/v1/chat/turns/:id', ({ request, params }) => {
+  const read = http.get('*/v1/chat/turns/:id', async ({ request, params }) => {
     const id = String(params.id);
     const after = Number(new URL(request.url).searchParams.get('after'));
     reads.push({ id, after });
@@ -252,6 +254,10 @@ export function detachedGateway(
     if (!turn) return HttpResponse.json({ code: 'turn-gone' }, { status: 404 });
     const poll = turn.polls[Math.min(turn.read, turn.polls.length - 1)];
     turn.read += 1;
+    if (poll.hang) {
+      await new Promise<void>((resolve) => request.signal.addEventListener('abort', () => resolve(), { once: true }));
+      return new HttpResponse(null, { status: 499 });
+    }
     if (poll.fail) return HttpResponse.json({ code: poll.fail.code }, { status: poll.fail.status });
     const end = poll.upTo ?? turn.stored.length;
     return new HttpResponse(turn.stored.slice(after, end), {

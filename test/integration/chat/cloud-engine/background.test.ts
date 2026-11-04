@@ -1,12 +1,20 @@
 // A whole chat turn across the app leaving: the engine, the session, the store and the row.
-import { resetChatSession } from '@/lib/chat-session/chat-session';
+import { renderHook } from '@testing-library/react-native';
+import { attachChatSession, resetChatSession } from '@/lib/chat-session/chat-session';
 import { refusedOnRetry } from '@/lib/chat-session/cloud-engine-helpers';
-import { __startNewProcessForTests, deleteInterruptedMessage, recoverInterruptedTurn } from '@/lib/chat-session/turn-inflight';
-import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
+import { __startNewProcessForTests, recoverInterruptedTurn } from '@/lib/chat-session/turn-inflight';
+import { useChatSession } from '@/lib/chat-session/use-chat-session';
+import {
+  appendMessage,
+  createConversation,
+  fetchMessagesForConversation,
+  type PersistedMessage,
+} from '@/lib/database/services/conversation-service';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { isFallbackEngaged } from '@/lib/llm/model-fallback';
 import type { StagedProposal } from '@/lib/llm/types';
 import { BIG_MODEL } from '@/lib/llm/constants';
+import logger from '@/lib/logger';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import {
   advanceUntil,
@@ -33,6 +41,8 @@ const answer = () => cloud().messages.filter((m) => m.role === 'assistant' && m.
 
 async function awayFor(ms: number): Promise<void> {
   setAppState('background');
+  // iOS: JS stops, the wall clock goes on, and timers come due late.
+  jest.setSystemTime(Date.now() + ms);
   await jest.advanceTimersByTimeAsync(ms);
   setAppState('active');
 }
@@ -134,6 +144,22 @@ describe('the reply', () => {
     expect(rows.find((m) => m.role === 'assistant')).toMatchObject({ content: 'Par', failed: true });
   });
 
+  it('an HTTP verdict during a departure stays a service error, with its report', async () => {
+    const report = jest.spyOn(logger, 'error');
+    server.use(...mockGateway(() => ({ status: 400, body: 'nope', headerDelayMs: 2000 })));
+    const { engine } = await advanceUntilDone(attachCloud(articleAgent()));
+    engine.send('Why this story?');
+    await advanceUntil(() => gatewayCalls('chat').length === 1);
+    setAppState('background');
+    setAppState('active');
+    await advanceUntil(idle);
+
+    expect(cloud().error).not.toBeNull();
+    expect(cloud().interrupted).toBe(false);
+    expect(report).toHaveBeenCalled();
+    report.mockRestore();
+  });
+
   it('a failure with the app in front stays a service error', async () => {
     server.use(...mockGateway(() => ({ status: 400, body: 'nope' })));
     const { engine } = await advanceUntilDone(attachCloud(articleAgent()));
@@ -223,24 +249,65 @@ describe('Retry', () => {
     expect(userBubbles()).toHaveLength(2);
   });
 
-  it('after a kill the message moves to the new chat: history holds one copy', async () => {
-    server.use(...mockGateway((c) => (c.index === 0 ? HELD : 'Whole answer')));
-    const first = await advanceUntilDone(attachCloud(articleAgent()));
-    first.engine.send('Why this story?');
-    await advanceUntil(() => gatewayCalls('chat').length === 1);
-    await advanceUntilDone(row());
+  /** A killed turn's row in an earlier conversation, and its notice. */
+  async function killedTurn() {
+    const old = await advanceUntilDone(createConversation('CONFIG' as never));
+    const messageId = 'user-killed';
+    await advanceUntilDone(appendMessage(old, { role: 'user', content: 'Why this story?' }, messageId));
+    useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona', messageId } });
+    return { old, messageId };
+  }
+  const sessionFor = (conversationId: string, resume: PersistedMessage[] = [], agent = articleAgent()) =>
+    advanceUntilDone(renderHook(() => useChatSession('cloud', agent, conversationId, resume)));
+  const notice = () => useFloatingChatStore.getState().interruptedTurn;
 
-    __startNewProcessForTests();
-    resetChatSession();
-    await advanceUntilDone(recoverInterruptedTurn());
-    const next = await advanceUntilDone(attachCloud(articleAgent()));
-    await advanceUntilDone(deleteInterruptedMessage());
-    next.engine.retry?.('Why this story?');
+  it('after a kill the message moves to the new chat: history holds one copy', async () => {
+    server.use(...mockGateway(() => 'Whole answer'));
+    const { old } = await killedTurn();
+    const fresh = await advanceUntilDone(createConversation('CONFIG' as never));
+    const { result } = await sessionFor(fresh);
+
+    expect(result.current.retry('Why this story?')).toBe(true);
     await advanceUntil(() => idle() && answer().includes('Whole answer'));
 
     expect(userBubbles()).toHaveLength(1);
-    const rows = await advanceUntilDone(fetchMessagesForConversation(first.conversationId));
+    const rows = await advanceUntilDone(fetchMessagesForConversation(old));
     expect(rows.filter((m) => m.role === 'user')).toHaveLength(0);
+  });
+
+  it('in a reopened old chat the question stays, once, and its reply lands under it', async () => {
+    server.use(...mockGateway(() => 'Whole answer'));
+    const { old, messageId } = await killedTurn();
+    const resume = await advanceUntilDone(fetchMessagesForConversation(old));
+    const { result } = await sessionFor(old, resume);
+
+    expect(result.current.retry('Why this story?')).toBe(true);
+    await advanceUntil(() => idle() && answer().includes('Whole answer'));
+
+    expect(userBubbles()).toHaveLength(0);
+    const rows = await advanceUntilDone(fetchMessagesForConversation(old));
+    expect(rows.filter((m) => m.role === 'user').map((m) => m.id)).toEqual([messageId]);
+    expect(gatewayCalls('chat')[0].messages.at(-1)?.content).toContain('Why this story?');
+  });
+
+  it('a retry that cannot start deletes nothing and keeps the notice', async () => {
+    server.use(...mockGateway(() => HELD));
+    const { old } = await killedTurn();
+    const fresh = await advanceUntilDone(createConversation('CONFIG' as never));
+    const agent = articleAgent();
+    const { result } = await sessionFor(fresh, [], agent);
+    const engine = attachChatSession({ conversationId: fresh, kind: 'cloud', agent, persistedIds: [] });
+    const more = engine.moreOptions!({ proposalId: 'p', shown: [], room: 1, subject: {} as never });
+    await advanceUntil(() => gatewayCalls('chat').length === 1);
+
+    expect(result.current.retry('Why this story?')).toBe(false);
+    await jest.advanceTimersByTimeAsync(100);
+
+    expect(notice()?.text).toBe('Why this story?');
+    const rows = await advanceUntilDone(fetchMessagesForConversation(old));
+    expect(rows.filter((m) => m.role === 'user')).toHaveLength(1);
+    engine.stop();
+    await advanceUntilDone(more);
   });
 
   it('does not count a warning twice for one interrupted turn, and only that turn is spared', async () => {

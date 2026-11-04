@@ -5,7 +5,7 @@
 // keypair of the attempt is in memory for as long as this JS context lives.
 // Imports gateway-fetch only.
 
-import { whenForeground } from '../app-restart';
+import { departureMark, whenForeground } from '../app-restart';
 import { sleep } from '@/lib/utils/sleep';
 import { raceSignal } from './abort-race';
 import {
@@ -57,13 +57,20 @@ export class TurnResumeError extends Error {
 function storePoller(resume: TurnResume, signal?: AbortSignal) {
   const { turn } = resume;
   let delay = POLL_MS;
-  let waited = 0;
+  // Wall time, so a hanging read counts, restarted by a departure, so time away
+  // does not.
+  let since = Date.now();
+  let leftSince = departureMark();
   let first = true;
   let ended: 'done' | 'failed' | null = null;
 
-  const waitMore = (ms: number) => {
-    waited += ms;
-    if (waited >= (turn.bytes > 0 ? TURN_STALL_MS : UPSTREAM_ALIGNED_TIMEOUT_MS)) throw new TurnResumeError('stalled');
+  const waitMore = () => {
+    if (leftSince()) {
+      leftSince = departureMark();
+      since = Date.now();
+    }
+    const budget = turn.bytes > 0 ? TURN_STALL_MS : UPSTREAM_ALIGNED_TIMEOUT_MS;
+    if (Date.now() - since >= budget) throw new TurnResumeError('stalled');
     delay = Math.min(delay * 2, MAX_POLL_MS);
   };
 
@@ -86,12 +93,12 @@ function storePoller(resume: TurnResume, signal?: AbortSignal) {
         );
       } catch (err) {
         if (signal?.aborted) throw new CallerAbortError('cloudChatStream: stopped', err);
-        waitMore(delay);
+        waitMore();
         continue;
       }
       if (response.status === 404 || response.status === 400) throw new TurnResumeError('gone');
       if (!response.ok) {
-        waitMore(delay);
+        waitMore();
         continue;
       }
 
@@ -103,12 +110,12 @@ function storePoller(resume: TurnResume, signal?: AbortSignal) {
 
       if (bytes.length > 0) {
         turn.bytes += bytes.length;
-        waited = 0;
+        since = Date.now();
         delay = POLL_MS;
         return { done: false, value: bytes };
       }
       if (ended === 'done' && turn.bytes === 0) throw new TurnResumeError('empty');
-      if (ended === null) waitMore(delay);
+      if (ended === null) waitMore();
     }
   };
 }

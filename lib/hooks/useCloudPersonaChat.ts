@@ -7,7 +7,7 @@
 import type { ChatEngine, MoreOptionsRequest, MoreOptionsResult } from '@/lib/chat-session/engine';
 import { FollowStoryAgent } from '../llm/agents/FollowStoryAgent';
 import logger from '../logger';
-import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
+import { CallerAbortError, CleartextToolCallError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 import { markChatFailed, markChatReady } from '../llm/prewarm';
 import { departureMark } from '@/lib/app-restart';
@@ -1060,7 +1060,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           if (!turnStop.signal.aborted) {
             const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
             // The reader left and the reply did not survive it: not an outage.
-            const lost = left();
+            // An HTTP answer or a privacy refusal stands either way.
+            const lost = left() && (err as { statusCode?: unknown }).statusCode === undefined && !(err instanceof CleartextToolCallError);
             if (lost) logger.warn(`${TAG} turn lost to the app leaving`);
             else logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
             const mutated = cloud()

@@ -25,6 +25,9 @@ import {
 
 const TAG = '[CloudLLM]';
 
+/** A hedge timer this late was frozen: the app was suspended, not merely away. */
+const LATE_TIMER_MS = 1_000;
+
 /** 502/timeout attempt cap for every gateway-bound cloud call. A cold or
  *  stalled NEAR model can exceed even 120s, and retrying the SAME model just
  *  storms; cap at 2 total attempts so a persistent stall surfaces the gateway's
@@ -243,6 +246,7 @@ async function sendHedged<C>(
   const primaryP = track('primary', primaryRaw);
 
   // ─── Phase 1: primary alone, until it settles or the hedge timer fires ──────
+  const armedAt = Date.now();
   let hedgeTimer: ReturnType<typeof setTimeout> | undefined;
   const timerFired = new Promise<'timer'>((resolve) => {
     hedgeTimer = setTimeout(() => resolve('timer'), hedgeAfterMs);
@@ -253,7 +257,9 @@ async function sendHedged<C>(
   ]);
   clearTimeout(hedgeTimer);
 
-  if (firstUp === 'timer' && left()) {
+  // Only a late timer means the primary's socket sat through a suspension. A
+  // short trip away left it healthy: hedge as usual.
+  if (firstUp === 'timer' && left() && Date.now() - armedAt > hedgeAfterMs + LATE_TIMER_MS) {
     primaryController.abort();
     void primaryRaw.catch(dropLoserError);
     throw new AppLeftError();

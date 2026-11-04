@@ -44,6 +44,12 @@ function pump(extra: object = {}) {
 }
 const fail = (p: Promise<unknown>) => p.then(() => null, (e: Error) => e);
 const away = () => setAppState('background');
+/** iOS: JS stops, the wall clock goes on, and every timer comes due late on return. */
+async function suspendFor(ms: number): Promise<void> {
+  away();
+  jest.setSystemTime(Date.now() + ms);
+  await jest.advanceTimersByTimeAsync(ms);
+}
 const sentHeaders = () => gatewayCalls('chat').map((c) => c.headers['x-mera-turn-id']);
 
 beforeEach(() => {
@@ -131,13 +137,29 @@ describe('flag off: every read answers turn-gone', () => {
     const { events, done } = pump();
     await advanceUntil(() => gatewayCalls('chat').length === 1);
 
-    setAppState('background');
-    await jest.advanceTimersByTimeAsync(HEDGE_DELAY_MS + 1000);
+    await suspendFor(HEDGE_DELAY_MS + 5000);
     setAppState('active');
     await drive(done);
 
     expect(textOf(events)).toBe('hello');
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, SMALL_MODEL]);
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+  });
+
+  it('a second away inside the hedge window is no departure: the hedge fires on time, the primary is not cut, and no verdict lands', async () => {
+    server.use(
+      ...mockGateway((c) => (c.model === SMALL_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
+    );
+    const { events, done } = pump();
+    await advanceUntil(() => gatewayCalls('chat').length === 1);
+    away();
+    await jest.advanceTimersByTimeAsync(1000);
+    setAppState('active');
+    await drive(done);
+
+    expect(textOf(events)).toBe('fast');
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK]);
+    expect(events.some((e) => e.type === 'restart')).toBe(false);
     expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
   });
 
@@ -228,8 +250,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    setAppState('background');
-    await jest.advanceTimersByTimeAsync(HEDGE_DELAY_MS + 1000);
+    await suspendFor(HEDGE_DELAY_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(textOf(events)).toBe('From the store');
@@ -246,8 +267,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump({ stream: false });
     await advanceUntil(() => gw.ids.length === 1);
-    setAppState('background');
-    await jest.advanceTimersByTimeAsync(BUFFERED_HEDGE_DELAY_MS + 1000);
+    await suspendFor(BUFFERED_HEDGE_DELAY_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(textOf(events)).toBe('Buffered answer');
@@ -291,8 +311,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    setAppState('background');
-    await jest.advanceTimersByTimeAsync(HEDGE_DELAY_MS + 1000);
+    await suspendFor(HEDGE_DELAY_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(textOf(events)).toBe('Stored');
@@ -323,6 +342,46 @@ describe('flag on: the turn store holds the reply', () => {
     for (let i = 1; i < after.length; i++) expect(after[i].after).toBe(after[0].after);
   });
 
+  it('a hanging network ends the poll inside the budget, where counting only the sleeps took minutes', async () => {
+    const gw = detachedGateway((seal, attempt) =>
+      attempt === 0
+        ? { hold: true, stored: '', polls: [{ hang: true }] }
+        : { stored: '', live: [delta({ content: seal('Whole') }, 'stop'), DONE] },
+    );
+    server.use(...gw.handlers);
+    const { events, done } = pump();
+    await advanceUntil(() => gw.ids.length === 1);
+    await suspendFor(HEDGE_DELAY_MS + 5000);
+    const back = Date.now();
+    setAppState('active');
+    await advanceUntil(() => gw.ids.length === 2, 200_000);
+
+    expect(Date.now() - back).toBeLessThan(UPSTREAM_ALIGNED_TIMEOUT_MS + 30_000);
+    await drive(done);
+    expect(textOf(events)).toBe('Whole');
+  });
+
+  it('time away during a poll does not count against its budget', async () => {
+    const running = { status: 'running' as const, upTo: 0 };
+    const gw = detachedGateway((seal) => ({
+      hold: true,
+      stored: delta({ content: seal('Stored') }) + DONE,
+      polls: [running, running, {}],
+    }));
+    server.use(...gw.handlers);
+    const { events, done } = pump();
+    await advanceUntil(() => gw.ids.length === 1);
+    await suspendFor(HEDGE_DELAY_MS + 5000);
+    setAppState('active');
+    await advanceUntil(() => gw.reads.length === 1);
+    await suspendFor(UPSTREAM_ALIGNED_TIMEOUT_MS + 60_000);
+    setAppState('active');
+    await drive(done);
+
+    expect(textOf(events)).toBe('Stored');
+    expect(gw.ids).toHaveLength(1);
+  });
+
   it('polls no faster than once a second', async () => {
     const stamps: number[] = [];
     const gw = detachedGateway((seal) => ({
@@ -336,8 +395,7 @@ describe('flag on: the turn store holds the reply', () => {
     });
     const { done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    setAppState('background');
-    await jest.advanceTimersByTimeAsync(HEDGE_DELAY_MS + 1000);
+    await suspendFor(HEDGE_DELAY_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(stamps.length).toBeGreaterThanOrEqual(4);

@@ -419,4 +419,12 @@ describe('a turn the app leaving ended', () => {
     const other = await mount({ context: ARTICLE_CONTEXT });
     expect(other.result.current.handleRetry).toBeUndefined();
   });
+
+  it('a retry that did not start keeps the notice', async () => {
+    useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona' } });
+    const retryMessage = jest.fn(() => false);
+    const { result } = await mount({ retryMessage });
+    await act(async () => result.current.handleRetry?.());
+    expect(useFloatingChatStore.getState().interruptedTurn).not.toBeNull();
+  });
 });
