@@ -233,7 +233,7 @@ export async function runRestore(
 
   try {
     await provider.download(remotePath, local.path);
-    return await importBackup({
+    const result = await importBackup({
       key,
       blob: local,
       sink: watermelonRowSink,
@@ -241,6 +241,10 @@ export async function runRestore(
       schemaVersion: appSchema.version,
       onProgress,
     });
+    // Lazy: this module loads in places that must not open the database.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    await (require('../database/services/topic-generation-status-service') as typeof import('../database/services/topic-generation-status-service')).restartTopicClocks();
+    return result;
   } finally {
     await local.remove();
   }

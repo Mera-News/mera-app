@@ -57,6 +57,7 @@ describe('the public surface', () => {
       'completeTopicGeneration',
       'failTopicGeneration',
       'markTopicGenerationSettled',
+      'restartTopicClocks',
       'settleEmptyTopicGeneration',
     ]);
   });

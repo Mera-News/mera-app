@@ -48,17 +48,34 @@ export interface AppendChangeInput {
   summary: string;
 }
 
+function fillRow(row: PersonaChangeLogModel, input: AppendChangeInput): void {
+  row.actionType = input.actionType;
+  row.actionJson = JSON.stringify(input.action);
+  row.source = input.source;
+  row.summary = input.summary;
+  row.reverted = false;
+  row.createdAt = new Date();
+}
+
 export async function append(input: AppendChangeInput): Promise<PersonaChangeLogModel> {
-  return database.write(async () => {
-    return changeLogCollection.create((row) => {
-      row.actionType = input.actionType;
-      row.actionJson = JSON.stringify(input.action);
-      row.source = input.source;
-      row.summary = input.summary;
-      row.reverted = false;
-      row.createdAt = new Date();
-    });
-  });
+  return database.write(async () => changeLogCollection.create((row) => fillRow(row, input)));
+}
+
+/** The row, unsaved, for a caller that must commit it in its own batch. */
+export function prepareAppend(input: AppendChangeInput): PersonaChangeLogModel {
+  return changeLogCollection.prepareCreate((row) => fillRow(row, input));
+}
+
+/** `summary` of the audit row Mera writes when it removes an empty fact. */
+export const EMPTY_FACT_SUMMARY = 'empty_fact';
+
+/** How many empty facts Mera removed since `sinceMs`. Read from the audit, which
+ *  the person cannot dismiss the way they can an inbox row. */
+export async function countEmptyFactRemovals(sinceMs: number): Promise<number> {
+  const rows = await changeLogCollection
+    .query(Q.where('action_type', ACTION_NAMES.HYGIENE_DELETE_FACT), Q.where('summary', EMPTY_FACT_SUMMARY))
+    .fetch();
+  return rows.filter((row) => row.createdAt.getTime() >= sinceMs).length;
 }
 
 /** True when a fact with this normalised statement was removed before, by the

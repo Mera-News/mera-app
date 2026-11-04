@@ -82,6 +82,21 @@ async function hasNotifiedToday(type: string, source: string): Promise<boolean> 
   );
 }
 
+/** The row, unsaved, for a caller that must commit it in its own batch. */
+export function prepareNotification(input: NotifyInput): NotificationModel {
+  return notificationsCollection.prepareCreate((n) => {
+    n.type = input.type;
+    n.title = input.title;
+    n.body = input.body;
+    n.icon = input.icon ?? null;
+    n.contextJson = input.context ? JSON.stringify(input.context) : null;
+    n.actionsJson = input.actions ? JSON.stringify(input.actions) : null;
+    n.status = 'unread';
+    n.source = input.source;
+    n.createdAt = new Date();
+  });
+}
+
 /**
  * Creates an unread notification row. When `input.dedupeDaily` is true,
  * suppressed (returns `null`) if a notification with the same
@@ -97,17 +112,7 @@ export async function notify(input: NotifyInput): Promise<NotificationModel | nu
     const replaced = input.replaces?.length
       ? await notificationsCollection.query(Q.where('type', Q.oneOf(input.replaces))).fetch()
       : [];
-    const row = notificationsCollection.prepareCreate((n) => {
-      n.type = input.type;
-      n.title = input.title;
-      n.body = input.body;
-      n.icon = input.icon ?? null;
-      n.contextJson = input.context ? JSON.stringify(input.context) : null;
-      n.actionsJson = input.actions ? JSON.stringify(input.actions) : null;
-      n.status = 'unread';
-      n.source = input.source;
-      n.createdAt = new Date();
-    });
+    const row = prepareNotification(input);
     await database.batch([...replaced.map((r) => r.prepareDestroyPermanently()), row]);
     return row;
   });

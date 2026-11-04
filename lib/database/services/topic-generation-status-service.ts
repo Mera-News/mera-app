@@ -228,6 +228,31 @@ export async function settleEmptyTopicGeneration(
 }
 
 /**
+ * After a restore: a backed-up clock says nothing about this phone, so every
+ * running clock starts again. One write.
+ */
+export async function restartTopicClocks(): Promise<void> {
+  const facts = await factsCollection.query().fetch();
+  const running = facts.filter((f) => (f.metadata as LooseMetadata | undefined)?.[TOPICS_EMPTY_SINCE] != null);
+  if (running.length === 0) return;
+  await database.write(async () => {
+    const now = Date.now();
+    await database.batch(
+      running.map((record) =>
+        record.prepareUpdate((f) => {
+          f.metadata = {
+            ...(f.metadata as LooseMetadata),
+            [TOPICS_EMPTY_SINCE]: now,
+            [TOPICS_EMPTY_RUNS]: 0,
+            [TOPICS_RETRY_AT]: now + FIRST_RETRY_GAP_MS,
+          } as unknown as Record<string, string[]>;
+        }),
+      ),
+    );
+  });
+}
+
+/**
  * Stamp 'error' AND write `metadata.topicGenError` in one write.
  *
  * Both, because three live components still read the legacy marker

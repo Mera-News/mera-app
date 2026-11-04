@@ -9,6 +9,7 @@ import type FactModel from '../models/Fact';
 import type { FactTopicsStatus } from '../models/Fact';
 import type TopicModel from '../models/Topic';
 import type { Fact } from '../../mera-protocol-toolkit/types';
+import { namesFact, topicSkillForAttribute } from '@/lib/mera-harness';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import {
   RESIDENCE_ROLES,
@@ -21,6 +22,8 @@ import {
 } from '../../news-harness/persona-management/fact-places';
 
 const factsCollection = database.get<FactModel>('facts');
+
+type LooseMetadata = Record<string, unknown>;
 
 // --- Helpers ---
 
@@ -161,20 +164,24 @@ export async function markTopicsReviewed(id: string, at: Date = new Date()): Pro
 export async function deleteFact(id: string): Promise<void> {
   const record = await factsCollection.find(id);
   await record.destroyCascade();
-  // The cascade takes the fact's topics; the suggestions those topics
-  // retrieved must go with them. Without this they linger for the full 48h
-  // window as content for a deleted interest — unable to render a Dashboard
-  // section (ownership needs the fact) while still counting as "analysed for
-  // you". Lazy require: article-suggestion-lifecycle imports this module.
+  const purged = await purgeDeadTopicSuggestions();
+  if (purged > 0) {
+    logger.warn('[fact-service] Purged suggestions for deleted fact', { factId: id, purged });
+  }
+}
+
+/** The cascade takes a fact's topics; the suggestions those topics retrieved
+ *  must go with them. Without this they linger for the full 48h window as
+ *  content for a deleted interest, unable to render a Dashboard section
+ *  (ownership needs the fact) while still counting as "analysed for you".
+ *  Lazy require: article-suggestion-lifecycle imports this module. */
+async function purgeDeadTopicSuggestions(): Promise<number> {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const topics = require('./topic-service') as typeof import('./topic-service');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const suggestions =
     require('./article-suggestion-lifecycle') as typeof import('./article-suggestion-lifecycle');
-  const purged = await suggestions.purgeSuggestionsForDeadTopics(await topics.getAllTopicIds());
-  if (purged > 0) {
-    logger.warn('[fact-service] Purged suggestions for deleted fact', { factId: id, purged });
-  }
+  return suggestions.purgeSuggestionsForDeadTopics(await topics.getAllTopicIds());
 }
 
 /**
@@ -254,6 +261,90 @@ export async function markOrphanedFactsAsFailed(
 
 /** When the `topics_settled` marker started being written. */
 const TOPICS_SETTLED_MARKER_SINCE_MS = Date.UTC(2026, 10, 4);
+
+/** 24 hours since the first empty run, and both background ladders came back
+ *  empty. Offline or failing, a phone never gets here on time alone. */
+export const EMPTY_FACT_MIN_AGE_MS = 24 * 60 * 60 * 1000;
+export const EMPTY_FACT_REQUIRED_RUNS = 2;
+
+/**
+ * True when Mera may one day remove this fact: the ones a person shaped stay.
+ * What the person can see on the card, so it reads only the fact.
+ */
+export function isRemovableEmptyFact(fact: Fact): boolean {
+  const meta = fact.metadata as LooseMetadata | undefined;
+  return (
+    meta?.topics_empty_since != null &&
+    meta.topics_keep !== true &&
+    meta.news_stopped !== true &&
+    meta.places_by !== 'user' &&
+    fact.weight == null &&
+    topicSkillForAttribute(fact.questionnaireAttribute) !== 'topics/residence'
+  );
+}
+
+/** Everything else that must hold at the moment of removal. Reads inside the
+ *  caller's write, so nothing can change between the check and the delete. */
+async function emptyFactStillRemovable(fact: Fact, now: number): Promise<boolean> {
+  const meta = fact.metadata as LooseMetadata;
+  if (!isRemovableEmptyFact(fact) || fact.topicsStatus !== 'done') return false;
+  if ((meta.topics_empty_runs as number) < EMPTY_FACT_REQUIRED_RUNS) return false;
+  if (now - (meta.topics_empty_since as number) < EMPTY_FACT_MIN_AGE_MS) return false;
+  if (Array.isArray(meta.topics) && meta.topics.length > 0) return false;
+
+  const topics = database.get<TopicModel>('topics');
+  if ((await topics.query(Q.where('fact_id', fact.id)).fetchCount()) > 0) return false;
+  const declines = database.get('declined_topics').query(Q.where('source_fact_id', fact.id));
+  if ((await declines.fetchCount()) > 0) return false;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const jobs = require('./inference-job-service') as typeof import('./inference-job-service');
+  if ((await jobs.getActiveTopicGenFactIds()).has(fact.id)) return false;
+  // shortcut: a combination topic records only the fact that owns it, so one
+  // that drew on this fact is found by its words and a paraphrase slips past.
+  const combos = await topics.query(Q.where('provenance', 'combo')).fetch();
+  return !combos.some((t) => namesFact(t.text, fact.statement));
+}
+
+/**
+ * Removes an empty fact and leaves the inbox row and the audit entry, in ONE
+ * write, re-checking every guard inside it. `deleteFact` has no undo, so a kill
+ * mid-way must leave either all three changes or none. False means it stayed.
+ */
+export async function removeEmptyFact(id: string, statement: string, now = Date.now()): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const notifications = require('./notification-service') as typeof import('./notification-service');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const changeLog = require('./persona-change-log-service') as typeof import('./persona-change-log-service');
+  const removed = await database.write(async () => {
+    let record: FactModel;
+    try {
+      record = await factsCollection.find(id);
+    } catch {
+      return false;
+    }
+    if (record.statement !== statement || !(await emptyFactStillRemovable(toFact(record), now))) return false;
+    await database.batch([
+      record.prepareDestroyPermanently(),
+      notifications.prepareNotification({
+        type: 'fact_removed',
+        title: 'notifications.factRemovedTitle',
+        body: 'notifications.factRemovedBody',
+        context: { statement },
+        actions: [{ id: 'add-fact-back', labelKey: 'notifications.factRemovedAction' }],
+        source: 'topic-lifecycle',
+      }),
+      changeLog.prepareAppend({
+        actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,
+        action: { targetId: id, statement },
+        source: 'digest',
+        summary: changeLog.EMPTY_FACT_SUMMARY,
+      }),
+    ]);
+    return true;
+  });
+  if (removed) await purgeDeadTopicSuggestions();
+  return removed;
+}
 
 /**
  * How long a fact may sit at 'pending' with no live job before the sweep
@@ -575,10 +666,8 @@ export async function getFactsForTopicTexts(topicTexts: string[]): Promise<Fact[
 // All metadata writes below read and merge INSIDE one database.write: `updateFact`
 // replaces `metadata` wholesale and would drop `topics`.
 
-type LooseMetadata = Record<string, unknown>;
-
 /** Merge into one fact's metadata in a single write; `undefined` deletes a key. Returns the metadata BEFORE. */
-async function patchMetadata(factId: string, patch: LooseMetadata): Promise<LooseMetadata | null> {
+export async function patchMetadata(factId: string, patch: LooseMetadata): Promise<LooseMetadata | null> {
   return database.write(async () => {
     let record: FactModel;
     try {

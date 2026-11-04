@@ -3,6 +3,7 @@ import { rescueStalePendingTopicFacts } from '@/lib/database/services/fact-servi
 import { flushPendingDeletes } from '@/lib/database/services/topic-decline-service';
 import { repairUnweightedTopics } from '@/lib/database/services/topic-service';
 import { runPendingComboPass } from '@/lib/database/services/combo-pass-service';
+import { sweepTopicLifecycle } from '@/lib/database/services/topic-planning-service';
 import { recoverOpenFactsDraft } from '@/lib/services/facts-draft-service';
 import logger from '@/lib/logger';
 import { waitForBackgroundCollect } from '@/lib/background/collect-gate';
@@ -99,6 +100,14 @@ AppScheduler.register({
 
     // After the flush, so the pass reads the persona the user actually sees.
     await resumeComboPass(ctx);
+
+    try {
+      const swept = await sweepTopicLifecycle();
+      if (swept.ladders + swept.removed > 0) ctx.log(`topic lifecycle: ${swept.ladders} retries, ${swept.removed} removed`);
+    } catch (err) {
+      // Never fail recovery over it: the next foreground sweeps again.
+      logger.captureException(err, { tags: { task: 'inference-recover', step: 'topic-lifecycle' } });
+    }
 
     // No ctx.markNoOp(): "nothing to rescue, nothing staged" is the NORMAL
     // state, and suppressing the lastRun stamp on a routine skip turns this
