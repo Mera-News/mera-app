@@ -52,6 +52,18 @@ describe('buildBugPrefill', () => {
     expect(phone[3]).toContain('feedbackTree.menu.scorerPhone');
     expect(buildBugPrefill(t, { ...base, scorer: 'cloud' })).toContain('feedbackTree.menu.scorerCloud');
   });
+  it.each([
+    ['prefillStory', {}, ['"country":"India"', '"language":"Hindi"']],
+    ['prefillStoryNoLanguage', { languageName: '' }, ['"country":"India"']],
+    ['prefillStoryNoCountry', { countryName: '' }, ['"language":"Hindi"']],
+    ['prefillStorySiteOnly', { countryName: '', languageName: '' }, []],
+  ])('picks %s, so a missing value leaves no dangling clause', (key, over, vars) => {
+    const line = buildBugPrefill(t, { ...base, ...over, scorer: 'cloud' }).split('\n')[2];
+    expect(line.startsWith(`feedbackTree.menu.${key}|`)).toBe(true);
+    for (const v of vars) expect(line).toContain(v);
+    if (!vars.some((v) => v.includes('country'))) expect(line).not.toContain('country');
+    if (!vars.some((v) => v.includes('language'))) expect(line).not.toContain('language');
+  });
   it('emits only the allowed fields, even if extra values are smuggled in', () => {
     const smuggled = {
       ...base,

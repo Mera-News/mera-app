@@ -11,11 +11,20 @@ export interface BugPrefillInput {
   scorer: 'phone' | 'cloud';
 }
 
+/** The story line, one key per case: a language lead-in differs per locale, so
+ *  a blank value cannot be stripped out of the full sentence. */
+function storyLine(t: TFunction, { site, countryName: country, languageName: language }: BugPrefillInput): string {
+  if (country && language) return t('feedbackTree.menu.prefillStory', { site, country, language });
+  if (country) return t('feedbackTree.menu.prefillStoryNoLanguage', { site, country });
+  if (language) return t('feedbackTree.menu.prefillStoryNoCountry', { site, language });
+  return t('feedbackTree.menu.prefillStorySiteOnly', { site });
+}
+
 export function buildBugPrefill(t: TFunction, i: BugPrefillInput): string {
   return [
     t('feedbackTree.menu.prefillIntro'),
     t('feedbackTree.menu.prefillWhat', { reason: i.reason }),
-    t('feedbackTree.menu.prefillStory', { site: i.site, country: i.countryName, language: i.languageName }),
+    storyLine(t, i),
     t('feedbackTree.menu.prefillChecked', {
       scorer: t(i.scorer === 'phone' ? 'feedbackTree.menu.scorerPhone' : 'feedbackTree.menu.scorerCloud'),
     }),

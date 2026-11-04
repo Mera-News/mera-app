@@ -52,7 +52,8 @@ interface ReadTranslateActionsProps {
     /** The publisher's article URL. */
     articleUrl: string;
     /** Article's detected source language code. Drives
-     *  {@link getArticleTranslationSupport}: another language adds Google Translate. */
+     *  {@link getArticleTranslationSupport}: another language, or none known, adds
+     *  Google Translate. */
     sourceLanguage?: string | null;
     /** Publisher name: the original button's label, spoken as "Read on
      *  {{publication}}". When absent/blank it falls back to "Read Article". */
@@ -71,8 +72,8 @@ interface ReadTranslateActionsProps {
  *   ( ↗ Read on <publication>      )     green when the reader can read it (same
  *                                         language, or this phone translates it),
  *                                         else the ink outline
- *          (▶) How to translate            another language only: the guide video
- *   ( G文 Read on Google Translate  )     green outline, another language only
+ *          (▶) How to translate            another or unknown language: the guide video
+ *   ( G文 Read on Google Translate  )     green outline, another or unknown language
  *          (?) About Google Translate      muted text button, opens the sheet
  *
  * Render order is VoiceOver order. Each visual is hidden under a childless
@@ -109,6 +110,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
         label: string,
         onPress: () => void,
         ink: string,
+        a11yLabel: string = label,
     ) => (
         <View testID={`${testID}-frame`} style={{ height: TOUCH_TARGET, marginVertical: -FRAME_BLEED, justifyContent: 'center' }}>
             <View
@@ -140,7 +142,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
             <Pressable
                 testID={testID}
                 accessibilityRole="button"
-                accessibilityLabel={label}
+                accessibilityLabel={a11yLabel}
                 onPress={onPress}
                 style={StyleSheet.absoluteFill}
             />
@@ -207,6 +209,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                         t('articleDetail.readOnGoogleTranslate'),
                         () => openInAppBrowser(googleTranslateUrl),
                         colors.positive,
+                        t('articleDetail.readOnGoogleTranslateA11y'),
                     )}
                     {textLine(
                         'detail-about-translation',
