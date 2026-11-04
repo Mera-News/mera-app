@@ -4,6 +4,7 @@
 import i18n from '@/lib/i18n';
 import { requestMoreOptions, stopChatTurn } from '@/lib/chat-session/chat-session';
 import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
+import { deriveTrackProposal } from '@/components/custom/floating-chat/derive-proposals';
 import { FollowStoryAgent } from '@/lib/llm/agents/FollowStoryAgent';
 import { ArticleFeedbackAgent } from '@/lib/llm/agents/ArticleFeedbackAgent';
 import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
@@ -43,6 +44,44 @@ const stagingGateway = (options = OPTIONS) =>
   });
 
 describe('a follow-story chat runs the harness loop', () => {
+  it('puts the reader\'s exact words first and the corrected form second, past the parser cap', async () => {
+    const options = [
+      { label: 'Ajax Feyenoord match riots', search: 'Ajax Feyenoord match riots' },
+      { label: 'Dutch Football Violence', search: 'Netherlands football violence' },
+      { label: 'Eredivisie Crowd Trouble', search: 'Eredivisie crowd trouble' },
+      { label: 'Stadium Safety Rules', search: 'Netherlands stadium safety' },
+    ];
+    server.use(...stagingGateway(options));
+    const { engine } = await attachCloud(followAgent());
+    engine.send('keep me updated on ajax feyenord match riots');
+    await turnDone();
+
+    const live = store().proposal!;
+    const labels = (actions: typeof live.actions) => actions.map((a) => (a as { label: string }).label);
+    expect(labels(live.actions)).toEqual([
+      'ajax feyenord match riots',
+      'Ajax Feyenoord match riots',
+      'Dutch Football Violence',
+      'Eredivisie Crowd Trouble',
+    ]);
+    // The thread rebuilds the card from the staged result, not the model's arguments.
+    const assistant = cloud().messages.find((m) => m.toolCalls?.some((c) => c.name === 'proposeTrack'))!;
+    const call = assistant.toolCalls!.find((c) => c.name === 'proposeTrack')!;
+    expect(labels(deriveTrackProposal(call)!.actions)).toEqual(labels(live.actions));
+    expect(call.result).toMatchObject({
+      phraseRoles: { 'ajax feyenord match riots': 'exact', 'ajax feyenoord match riots': 'corrected' },
+      defaultTick: 'ajax feyenoord match riots',
+    });
+  });
+
+  it('adds nothing when the message only points back', async () => {
+    server.use(...stagingGateway());
+    const { engine } = await attachCloud(followAgent());
+    engine.send('follow this');
+    await turnDone();
+    expect(store().proposal?.actions.map((a) => (a as { label: string }).label)).toEqual(OPTIONS.map((o) => o.label));
+  });
+
   it('reaches the router with the surface hint, and every leg runs thinking off', async () => {
     server.use(...stagingGateway());
     const { engine } = await attachCloud(followAgent());
@@ -52,7 +91,7 @@ describe('a follow-story chat runs the harness loop', () => {
     const calls = gatewayCalls('chat');
     expect(isRouteLeg(calls[0])).toBe(true);
     expect(calls[0].messages.some((m) => m.content.includes('<surface>') && m.content.includes('Followed stories page'))).toBe(true);
-    expect(store().proposal?.actions).toHaveLength(2);
+    expect(store().proposal?.actions).toHaveLength(3);
     expect(store().proposal?.actions[0]).toMatchObject({ type: 'track_story', subject: { surface: FOLLOW_STORY_SURFACE } });
     expect(pendingProposalView()).toMatchObject({ multiSelect: true, appliable: false });
   });
@@ -69,7 +108,7 @@ describe('a follow-story chat runs the harness loop', () => {
       }),
     );
     const { engine } = await attachCloud(followAgent());
-    engine.send('the dutch cabinet formation talks');
+    engine.send('follow this');
     await turnDone();
     expect(pendingProposalView()).toMatchObject({ multiSelect: false, appliable: true });
 

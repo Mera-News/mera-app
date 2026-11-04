@@ -113,7 +113,7 @@ describe('follow a story', () => {
       ],
     });
 
-    await turn(new FollowStoryOnDeviceAgent(USER, SINGLE), 'the story about <event>');
+    await turn(new FollowStoryOnDeviceAgent(USER, SINGLE), 'follow that story');
 
     expect(lastAssistant()?.content).toBe('Pick the story to follow below.');
     expect(lastAssistant()?.toolCalls?.map((t) => [t.name, t.status])).toEqual([['proposeTrack', 'done']]);
@@ -144,7 +144,7 @@ describe('follow a story', () => {
   it('describes a card still on screen in the next prompt', async () => {
     answer({ reply: 'Pick one.', options: [{ label: 'The Wider Story', search: 'Named Region story' }, { label: 'The Broad Theme', search: 'theme' }] });
     const { engine } = await attachLocal(new FollowStoryOnDeviceAgent(USER, SINGLE));
-    engine.send('the story about <event>');
+    engine.send('follow that story');
     await turnDone();
     engine.send('what is the difference?');
     await turnDone();

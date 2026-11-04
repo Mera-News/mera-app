@@ -27,7 +27,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { GlyphSafeButton } from './glyph-safe';
 import { dismissTrackCard, followTickedOptions, loadMoreTrackOptions } from './track-card-actions';
-import { MAX_TRACK_CARD_OPTIONS, normaliseTrackText, trackCardStatus, type TrackOutcome } from './track-options';
+import { MAX_TRACK_CARD_OPTIONS, normaliseTrackText, readPhraseHints, trackCardStatus, type TrackOutcome } from './track-options';
 import type { TrackCardSource } from './types';
 
 // A touch frame is a NUMBER: a NativeWind class like h-11 renders ~38pt here.
@@ -75,7 +75,9 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
 
   const failedKeys = rows.filter((r) => outcomes[r.key] === 'failed').map((r) => r.key);
   const hasOutcomes = Object.keys(outcomes).length > 0;
-  const defaultTicks = hasOutcomes ? failedKeys : rows.slice(0, 1).map((r) => r.key);
+  const phrase = readPhraseHints(source.baseResult);
+  const hinted = rows.find((r) => r.key === phrase.defaultTick) ?? rows[0];
+  const defaultTicks = hasOutcomes ? failedKeys : hinted ? [hinted.key] : [];
   const ticks = storedTicks ?? defaultTicks;
 
   // The first row written flips the status to followed while the rest are still being
@@ -170,10 +172,20 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   };
   const labelText = (r: { label: string; key: string }) =>
     shown[r.key] ?? r.label;
-  const spoken = (r: { label: string; key: string }) =>
-    shownFailed[r.key] ? `${labelText(r)}. ${t('feed.translationFailed')}` : labelText(r);
+  const spoken = (r: { label: string; key: string }) => {
+    const role = phrase.roles[r.key];
+    if (role) {
+      return t(role === 'exact' ? 'trackedStories.optionAsWritten' : 'trackedStories.optionSpellingFixed', { phrase: r.label });
+    }
+    return shownFailed[r.key] ? `${labelText(r)}. ${t('feed.translationFailed')}` : labelText(r);
+  };
 
-  const labelNode = (r: { label: string; key: string }, muted: boolean) => (
+  const labelNode = (r: { label: string; key: string }, muted: boolean) => phrase.roles[r.key] ? (
+    // Their own words, never run through the translator.
+    <Text size="sm" style={muted ? styles.rowTextMuted : styles.rowText}>
+      {r.label}
+    </Text>
+  ) : (
     <TranslatableDynamic
       text={r.label}
       size="sm"

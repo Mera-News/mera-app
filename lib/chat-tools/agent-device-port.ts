@@ -33,6 +33,7 @@ import { getFacts } from '../database/services/fact-service';
 import { useAppLanguageStore } from '../stores/app-language-store';
 import { SUPPORTED_LANGUAGES } from '../translation-service';
 import { canonicalizeLanguageCode } from '../algorithms/language-codes';
+import { withReaderPhrase } from '../news-harness/on-device/follow-story/reader-phrase';
 import type { AgentPersona } from '@/lib/mera-harness';
 import { describeFactPlaces } from '../news-harness/persona-management/fact-places';
 import logger from '../logger';
@@ -362,7 +363,12 @@ export function makeAgentToolPort(
     ...(cards
       ? {
           proposeChanges: (args: Record<string, unknown>) => runCard('proposeChanges', args),
-          proposeTrack: (args: Record<string, unknown>) => runCard('proposeTrack', args),
+          proposeTrack: async (args: Record<string, unknown>) => {
+            // More options sends no message, so a grown card adds nothing.
+            const card = withReaderPhrase(args.options, userMessage, appIsEnglish());
+            if (!card) return runCard('proposeTrack', args);
+            return { ...(await runCard('proposeTrack', { ...args, options: card.options })), ...card.hints };
+          },
           searchNews: (args: { query: string }) => live('searchNews', args, () => runCard('searchNews', args)),
           // A card that only a tap may apply is refused here, before the agent is asked.
           applyProposal: async (): Promise<Record<string, unknown>> =>
@@ -633,6 +639,9 @@ export function logAgentTurn(reason: string, unknownTools: string[]): void {
   }
 }
 
+
+const appIsEnglish = (): boolean =>
+  (canonicalizeLanguageCode(useAppLanguageStore.getState().appLanguage) ?? 'en').split('-')[0] === 'en';
 
 /**
  * The app language's English name ("Hindi"), which pins every reply. Without

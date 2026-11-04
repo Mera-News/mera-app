@@ -9,6 +9,7 @@ import {
   followStoryInstructions,
   followStoryTurn,
   type FollowStoryReply,
+  type PhraseCardHints,
 } from '../../../news-harness/on-device/follow-story';
 import { runFollowKevTurn } from '../../../news-harness/on-device/follow-story/kev-spec';
 import { describePending } from '../../../news-harness/on-device/shared';
@@ -66,7 +67,8 @@ export class FollowStoryOnDeviceAgent implements OnDeviceAgent {
       FOLLOW_STORY_SCHEMA,
       (budget) => buildFollowStoryPrompt({ today: today(), pending }, chatTurns(messages), budget),
     );
-    return followStoryTurn(value);
+    const message = [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+    return followStoryTurn(value, { message, appIsEnglish: appLanguageName() === 'English' });
   }
 
   moreOptions(req: MoreOptionsRequest) {
@@ -74,6 +76,9 @@ export class FollowStoryOnDeviceAgent implements OnDeviceAgent {
   }
 
   async executeTool(name: string, input: unknown) {
-    return (await onDeviceTool(name, input)) ?? this.cloud.executeTool(name, input);
+    const out = (await onDeviceTool(name, input)) ?? (await this.cloud.executeTool(name, input));
+    // The parser keeps label and search only, so the phrase rows' roles ride the result.
+    const hints = (input as { phraseCard?: PhraseCardHints } | null)?.phraseCard;
+    return hints ? { ...out, result: { ...out.result, ...hints } } : out;
   }
 }

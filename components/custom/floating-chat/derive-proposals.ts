@@ -285,14 +285,15 @@ export function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | 
     ...(typeof subjectRec?.pubDate === 'string' ? { pubDate: subjectRec.pubDate } : {}),
   };
 
-  // Rebuild the scope pills from input.options (result.options as fallback), or a
+  // Rebuild the scope pills from result.options (input.options as fallback), or a
   // legacy `track` string. Same parser as the live path → identical actions.
   // The card's own list wins once More options grew it (`cardOptions`, written
   // to the override by track-card-actions): it can hold up to 8, past the
   // staging parser's cap of 4.
+  // result.options first: the staged list holds the reader's phrase, the model's input does not.
   const rawOptions =
-    (Array.isArray(input.options) && input.options) ||
     (Array.isArray(result?.options) && result.options) ||
+    (Array.isArray(input.options) && input.options) ||
     (typeof input.track === 'string' && input.track.trim() ? [input.track] : []) ||
     [];
   const options = readCardOptions(result?.cardOptions) ?? parseTrackScopeOptions(rawOptions);

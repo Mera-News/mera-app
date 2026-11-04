@@ -8,6 +8,21 @@
 import { MAX_FOLLOW_OPTIONS } from '@/lib/chat-session/engine';
 // The eval's own "too close" rule (eval/track-metrics.ts): one tokenizer, pure.
 import { contentJaccard, DETECT_JACCARD } from '@/lib/mera-harness';
+import type { PhraseRole } from '@/lib/news-harness/on-device/follow-story/reader-phrase';
+
+/** The reader-phrase hints on a card's result (`withReaderPhrase`); empty on any other card. */
+export function readPhraseHints(result: Record<string, unknown>): {
+  roles: Record<string, PhraseRole>;
+  defaultTick: string | null;
+} {
+  const roles: Record<string, PhraseRole> = {};
+  if (result.phraseRoles && typeof result.phraseRoles === 'object') {
+    for (const [key, value] of Object.entries(result.phraseRoles as Record<string, unknown>)) {
+      if (value === 'exact' || value === 'corrected') roles[key] = value;
+    }
+  }
+  return { roles, defaultTick: typeof result.defaultTick === 'string' ? result.defaultTick : null };
+}
 
 /** A card never grows past this: the engine contract's own cap. */
 export const MAX_TRACK_CARD_OPTIONS = MAX_FOLLOW_OPTIONS;

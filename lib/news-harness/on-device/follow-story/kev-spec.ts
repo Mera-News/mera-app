@@ -191,7 +191,7 @@ export async function runFollowKevTurn(
       history: chat.history,
     });
     if (!value) return done(intent, ports.t('kevChat.reply.followFailed'));
-    return done(intent, replyOr(value, ports.t('kevChat.reply.followFailed')), proposeTrackCalls(value.options));
+    return done(intent, replyOr(value, ports.t('kevChat.reply.followFailed')), proposeTrackCalls(value.options, { message: chat.subject, appIsEnglish: input.languageName === 'English' }));
   }
 
   const value = await write<{ reply?: string }>(ports, trace, {

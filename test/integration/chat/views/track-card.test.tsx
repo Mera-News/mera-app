@@ -43,8 +43,9 @@ function registerCopy() {
 const key = (k: string) => `trackedStories.${k}`;
 const cancelText = () => i18n.t('articleFeedback.proposalCancel');
 
-async function stage(labels: string[]) {
+async function stage(labels: string[], hints: Record<string, unknown> = {}) {
   const staged = decideProposeTrack({ options: labels.map((l) => ({ label: l, search: l.toLowerCase() })) }, subject);
+  staged.result = { ...staged.result, ...hints };
   const proposal = staged.sideEffects!.proposal!;
   useFloatingChatStore.getState().setProposal(proposal);
   const tc = { id: 'tc-0', name: 'proposeTrack', status: 'done' as const, input: {}, result: staged.result };
@@ -63,9 +64,9 @@ function Thread({ history, superseded = false, onGrown }: { history: Awaited<Ret
   return <TrackStoryCard proposal={c.proposal} source={track} onGrown={onGrown} />;
 }
 
-async function mount(labels: string[], opts: { superseded?: boolean; onGrown?: () => void } = {}) {
+async function mount(labels: string[], opts: { superseded?: boolean; onGrown?: () => void; hints?: Record<string, unknown> } = {}) {
   // The agent stages at most four options; more arrive through More options.
-  const staged = await stage(labels.slice(0, 4));
+  const staged = await stage(labels.slice(0, 4), opts.hints);
   if (labels.length > 4) {
     growTrackCard({ resultKey: `${staged.msgId}::0`, baseResult: staged.baseResult }, staged.proposal, labels.slice(4).map(action));
   }
@@ -168,6 +169,30 @@ describe('ticking and Follow', () => {
     expect(follow.props.accessibilityState.disabled).toBe(true);
     await fireEvent.press(follow);
     expect(await getActive()).toHaveLength(0);
+  });
+});
+
+describe('the reader\'s phrase', () => {
+  const hints = {
+    phraseRoles: { 'ajax feyenord riots': 'exact', 'ajax feyenoord riots': 'corrected' },
+    defaultTick: 'ajax feyenoord riots',
+  };
+  const labels = ['ajax feyenord riots', 'Ajax Feyenoord riots', 'Dutch Football Violence'];
+
+  it('ticks the row the hint names and speaks each phrase row', async () => {
+    const { view } = await mount(labels, { hints });
+    expect([checked(view, 0), checked(view, 1), checked(view, 2)]).toEqual([false, true, false]);
+    expect(view.getByTestId('track-option-0').props.accessibilityLabel).toBe('ajax feyenord riots, as you wrote it');
+    expect(view.getByTestId('track-option-1').props.accessibilityLabel).toBe('Ajax Feyenoord riots, with spelling fixed');
+  });
+
+  it('keeps the phrase rows and their roles when More options grows the card', async () => {
+    const staged = await stage(labels, hints);
+    growTrackCard({ resultKey: `${staged.msgId}::0`, baseResult: staged.baseResult }, staged.proposal, [action('Stadium Safety Rules')]);
+    const history = await fetchMessagesForConversation(staged.conversationId);
+    const view = await render(<Thread history={history} />);
+    expect(view.getByTestId('track-option-1').props.accessibilityLabel).toBe('Ajax Feyenoord riots, with spelling fixed');
+    expect(view.getByTestId('track-option-3')).toBeTruthy();
   });
 });
 

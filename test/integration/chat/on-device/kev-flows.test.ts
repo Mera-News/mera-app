@@ -636,6 +636,16 @@ describe('follow-story on Kev', () => {
     expect(Object.keys(writes[0].schema.properties).sort()).toEqual(['options', 'reply']);
   });
 
+  it('the reader\'s words lead the card, past the word caps, and their roles ride the result', async () => {
+    kevScript = { intent: { follow_a_named_story: 0.9, question_or_other: 0.1 } };
+    const phrase = 'ajax feyenord match riots at the stadium last night in rotterdam';
+    const fixed = 'Ajax Feyenoord match riots at the stadium last night in Rotterdam';
+    writerReply = { reply: 'Pick one below.', options: [{ label: fixed, search: fixed }, { label: 'A Very Long Label Over The Six Word Cap', search: 'story' }] };
+    const { toolCalls } = await turn(follow(), [], `keep me updated on ${phrase}`);
+    expect(proposal()?.actions.map((a) => (a as { label: string }).label)).toEqual([phrase, fixed, 'A Very Long Label Over The']);
+    expect(toolCalls[0].result).toMatchObject({ defaultTick: fixed.toLowerCase(), phraseRoles: { [phrase]: 'exact', [fixed.toLowerCase()]: 'corrected' } });
+  });
+
   it('a close call between the two follow readings is not a reason to ask', async () => {
     kevScript = { intent: { follow_this_story: 0.4, follow_a_named_story: 0.4, question_or_other: 0.2 } };
     writerReply = { reply: 'Which story?', options: [] };
