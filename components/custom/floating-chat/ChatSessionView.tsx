@@ -63,6 +63,7 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
     starterChips,
     handleChipPress,
     blockedMessage,
+    onRetry,
     bannerBlocksInput,
     effectiveBlocked,
     unblockPending,
@@ -120,6 +121,7 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
         starterChips={starterChips}
         onChipPress={handleChipPress}
         blockedMessage={blockedMessage}
+        onRetry={onRetry}
         bannerBlocksInput={bannerBlocksInput}
         showUnblockControls={effectiveBlocked && !!userId}
         unblockPending={unblockPending}

@@ -13,6 +13,13 @@ import { useUserStore } from '@/lib/stores/user-store';
 import i18n from '@/lib/i18n';
 import { initI18nEn } from '@/test/helpers';
 
+// No live engine here: Retry is on offer, and a tap is a no-op.
+jest.mock('@/lib/chat-session/chat-session', () => ({
+  ...jest.requireActual('@/lib/chat-session/chat-session'),
+  canRetryChatTurn: () => true,
+  retryChatTurn: () => {},
+}));
+
 const USER_ID = 'user-1';
 const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
 const ARTICLE_CONTEXT: ChatContext = {
@@ -362,5 +369,20 @@ describe('typing item inputs', () => {
       ],
     });
     expect(typing(result.current.items)).toMatchObject({ engine: 'cloud', showWords: false });
+  });
+});
+
+describe('the failure banner while Retry is offered', () => {
+  it('drops the banner text after the Retry tap and no longer offers it', async () => {
+    const { result } = await mount({ error: 'boom' });
+    expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
+    await act(async () => result.current.onRetry?.());
+    expect(result.current.blockedMessage).toBeNull();
+    expect(result.current.onRetry).toBeUndefined();
+  });
+
+  it('never offers Retry for a blocked account', async () => {
+    const { result } = await mount({ error: 'boom', isBlocked: true, blockedReason: 'nope' });
+    expect(result.current.onRetry).toBeUndefined();
   });
 });

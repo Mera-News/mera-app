@@ -24,10 +24,18 @@ import {
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import { GlyphSafeButton } from './glyph-safe';
+import { GlyphSafeButton, TOUCH_FRAME } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  AccessibilityInfo,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  View,
+  findNodeHandle,
+  useWindowDimensions,
+} from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
@@ -73,6 +81,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   starterChips,
   onChipPress,
   blockedMessage,
+  onRetry,
   bannerBlocksInput,
   showUnblockControls,
   unblockPending,
@@ -91,6 +100,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const colors = useColors();
   // The session's whole-turn busy mirror (not `status`): Send is Stop until it clears.
   const turnBusy = useFloatingChatStore((st) => st.isGenerating);
+
+  // The banner is announced each time it appears. Retry takes screen-reader
+  // focus whenever it is offered, so a repeat failure lands back on it.
+  const retryRef = useRef<React.ComponentRef<typeof View>>(null);
+  useEffect(() => {
+    if (blockedMessage) void AccessibilityInfo.announceForAccessibility(blockedMessage);
+  }, [blockedMessage]);
+  const retryOffered = !!onRetry;
+  useEffect(() => {
+    const node = retryOffered ? findNodeHandle(retryRef.current) : null;
+    if (node) AccessibilityInfo.setAccessibilityFocus(node);
+  }, [retryOffered, blockedMessage]);
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -470,6 +491,26 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             <Text size="sm" style={styles.blockedText}>
               {blockedMessage}
             </Text>
+            {onRetry && (
+              // A childless labelled Pressable over a hidden visual (no icon under an
+              // accessible element); the frame is a number, never a rem class.
+              <View style={styles.retryFrame}>
+                <View style={styles.refreshPill} pointerEvents="none" {...DECORATIVE_ICON_A11Y}>
+                  <MaterialIcons {...DECORATIVE_ICON_A11Y} name="refresh" size={14} color={colors.negative} />
+                  <Text size="xs" style={styles.refreshText}>
+                    {t('common.retry')}
+                  </Text>
+                </View>
+                <Pressable
+                  ref={retryRef}
+                  style={StyleSheet.absoluteFill}
+                  onPress={onRetry}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.retry')}
+                  testID="chat-retry-turn"
+                />
+              </View>
+            )}
             {showUnblockControls && (
               <View style={styles.unblockRow}>
                 {unblockPending ? (
@@ -674,6 +715,12 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: tint(c.negative, 0.5),
+  },
+  retryFrame: {
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    minHeight: TOUCH_FRAME,
+    minWidth: TOUCH_FRAME,
   },
   refreshText: {
     color: c.negative,

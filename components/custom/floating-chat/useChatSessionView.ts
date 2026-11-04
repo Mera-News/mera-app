@@ -5,7 +5,7 @@
 import { AccountService } from '@/lib/account-service';
 import { useChatHistory } from '@/lib/hooks/useChatHistory';
 import { loadUserPersona } from '@/lib/database/services/user-persona-service';
-import { hapticMedium, hapticSuccess } from '@/lib/haptics';
+import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import {
   useFloatingChatProposal,
@@ -16,6 +16,7 @@ import {
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
 import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
+import { canRetryChatTurn, retryChatTurn } from '@/lib/chat-session/chat-session';
 import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
 import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
@@ -661,9 +662,37 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     }
   }, [resolvedProposals, messages, userTurns, t]);
 
+  // One-tap Retry. canRetryChatTurn() is read at render, not memoised on `error`:
+  // error lands before busy clears, so a memo would stay false. The isGenerating
+  // subscription is what re-renders us when busy clears.
+  const turnBusy = useFloatingChatStore((st) => st.isGenerating);
+  const [retryTapped, setRetryTapped] = useState(false);
+  const retryGuard = useRef(false);
+  useEffect(() => {
+    if (!error) {
+      retryGuard.current = false;
+      setRetryTapped(false);
+    }
+  }, [error]);
+  const canRetry =
+    !!error &&
+    !retryTapped &&
+    !effectiveBlocked &&
+    unresolvedTopicPlans.length === 0 &&
+    !turnBusy &&
+    canRetryChatTurn();
+  const handleRetry = useCallback(() => {
+    if (retryGuard.current) return;
+    retryGuard.current = true;
+    setRetryTapped(true);
+    hapticLight();
+    retryChatTurn();
+    void AccessibilityInfo.announceForAccessibility(t('chat.tryingAgain'));
+  }, [t]);
+
   const blockedMessage = effectiveBlocked
     ? (effectiveBlockedReason || t('errors.accountRestricted'))
-    : error
+    : error && !retryTapped
       ? // The raw error string is NOT appended. It is a bare string with no class
         // to branch on, and what it carried was the provider's own English JSON
         // (`{"error":{"message":"Provider failed for model ...: Decryption
@@ -688,6 +717,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     starterChips,
     handleChipPress,
     blockedMessage,
+    onRetry: canRetry ? handleRetry : undefined,
     bannerBlocksInput,
     effectiveBlocked,
     unblockPending,

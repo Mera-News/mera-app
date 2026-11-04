@@ -412,6 +412,8 @@ export interface ChatThreadProps {
   /** When set, show a banner. Does NOT by itself disable the input — see
    *  `bannerBlocksInput`. */
   blockedMessage: string | null;
+  /** Present only while the failed turn can be sent again: draws Retry in the banner. */
+  onRetry?: () => void;
   /**
    * Whether the banner's cause also blocks sending.
    *
