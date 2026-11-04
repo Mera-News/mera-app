@@ -228,10 +228,10 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                     }}
                     disabled={retrying}
                     accessibilityRole="button"
-                    accessibilityLabel={t('configPanel.retryTopicGeneration')}
+                    accessibilityLabel={`${t('chatTopics.failed')} ${t('configPanel.retryTopicGeneration')}`}
                     style={{ minHeight: 44, justifyContent: 'center' }}
                 >
-                    <StatusIndicator status="error" label={t('chatTopics.failed')} />
+                    <StatusIndicator status="error" label={`${t('chatTopics.failed')} ${t('configPanel.retryTopicGeneration')}`} />
                 </Pressable>
             ) : null}
             {tab === 'recent' ? (
@@ -404,7 +404,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 ListEmptyComponent={
                     tab === 'topics' && !suggesting && status !== 'pending' ? (
                         // The tutorial hero over an empty topic list (FinalMotion, Lottie moments).
-                        <ForYouEmptyState testID="fact-topics-empty" compact animationId="facts-a-fact-is" body={emptyLine} />
+                        <ForYouEmptyState testID="fact-topics-empty" compact animationId="facts-a-fact-is" body={status === 'error' ? '' : emptyLine} />
                     ) : undefined
                 }
                 ListFooterComponent={

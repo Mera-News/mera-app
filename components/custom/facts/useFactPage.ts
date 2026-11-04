@@ -250,7 +250,7 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
                 failed();
             } else if (out.added > 0) {
                 line = t('chatTopics.added', { count: out.added });
-                toastManager.showSuccess(line, '');
+                toastManager.showInfo(line);
             } else {
                 line = t('chatTopics.nothingNew');
                 toastManager.showInfo(line);

@@ -2,6 +2,7 @@
 // a fact with no topics gets. Faked at the edges: the generate call and the two observables.
 import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import { AccessibilityInfo } from 'react-native';
 import ChatTopicsCard from '@/components/custom/floating-chat/ChatTopicsCard';
 import { initI18nEn } from '@/test/helpers';
 
@@ -35,7 +36,8 @@ const open = async () => {
 
 describe('ChatTopicsCard find more', () => {
     it.each([
-        [{ mode: 'cloud', added: 3 }, 'Added 3 topics'],
+        [{ mode: 'inline', added: 3 }, 'Added 3 topics'],
+        [{ mode: 'inline', added: 1 }, 'Added 1 topic'],
         [{ mode: 'queued', added: 0 }, 'Nothing new to add right now'],
         [{ mode: 'skipped', added: 0 }, "Couldn't find topics. Try again."],
     ])('maps %j to its line', async (out, line) => {
@@ -43,6 +45,23 @@ describe('ChatTopicsCard find more', () => {
         const view = await open();
         await act(async () => { fireEvent.press(view.getByTestId('chat-topics-more-f1')); });
         expect(view.getByTestId('chat-topics-more-result').props.children).toBe(line);
+    });
+
+    it('clears the old line and disables the control while running, and announces every result', async () => {
+        const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
+        mockGenerate.mockResolvedValueOnce({ mode: 'inline', added: 0 });
+        const view = await open();
+        await act(async () => { fireEvent.press(view.getByTestId('chat-topics-more-f1')); });
+        expect(announce).toHaveBeenLastCalledWith('Nothing new to add right now');
+
+        let finish: (v: unknown) => void = () => {};
+        mockGenerate.mockReturnValueOnce(new Promise((r) => { finish = r; }));
+        await act(async () => { fireEvent.press(view.getByTestId('chat-topics-more-f1')); });
+        expect(view.queryByTestId('chat-topics-more-result')).toBeNull();
+        expect(view.getByTestId('chat-topics-more-f1').props.accessibilityState).toMatchObject({ disabled: true });
+
+        await act(async () => { finish({ mode: 'inline', added: 2 }); });
+        expect(announce).toHaveBeenLastCalledWith('Added 2 topics');
     });
 
     it('holds the fact on screen and releases it on unmount', async () => {

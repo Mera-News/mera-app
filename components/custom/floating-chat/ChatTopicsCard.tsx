@@ -538,15 +538,15 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             </Text>
           )}
 
-          {/* OPTIONAL, AND LOOKS IT (owner request, ux2): a small pill with a
-              thin neutral outline, not the accent pill that read as the next
-              required step. The 44pt touch frame is a number (NativeWind rem
-              is 14); the pill inside it is about 30pt. */}
           {moreResult && !isFindingMore && (
             <Text size="xs" style={styles.statusText} testID="chat-topics-more-result">
               {moreResult}
             </Text>
           )}
+          {/* OPTIONAL, AND LOOKS IT (owner request, ux2): a small pill with a
+              thin neutral outline, not the accent pill that read as the next
+              required step. The 44pt touch frame is a number (NativeWind rem
+              is 14); the pill inside it is about 30pt. */}
           <Pressable
             onPress={handleFindMore}
             disabled={isFindingMore}
