@@ -79,11 +79,17 @@ export async function updateFact(
   updates: Partial<Pick<Fact, 'statement' | 'metadata'>>,
 ): Promise<Fact> {
   const record = await factsCollection.find(id);
-  await record.updateFact(
-    updates.statement ?? record.statement,
-    updates.metadata !== undefined ? updates.metadata : record.metadata,
-  );
+  const metadata = updates.metadata !== undefined ? updates.metadata : record.metadata;
+  const reworded = updates.statement !== undefined && updates.statement !== record.statement;
+  await record.updateFact(updates.statement ?? record.statement, reworded ? dropEmptyClock(metadata) : metadata);
   return toFact(record);
+}
+
+/** A reworded fact is a new question: its empty runs say nothing about it. */
+function dropEmptyClock(metadata: Fact['metadata']): Fact['metadata'] {
+  if (!metadata) return metadata;
+  const { topics_empty_since: _s, topics_empty_runs: _r, topics_retry_at: _a, ...rest } = metadata;
+  return rest as Fact['metadata'];
 }
 
 /**
@@ -214,6 +220,9 @@ export async function markOrphanedFactsAsFailed(
     // Legacy predicate, for rows written before v55 and for the metadata-only
     // path: no topics, no error marker, no live job.
     if (hasTopics || hasError) continue;
+    // Done with no topics is a real answer once a run finished. Older facts have
+    // no marker and count as handled: their dead runs already say so in the error.
+    if (meta?.topics_settled || (record.createdAt?.getTime?.() ?? 0) < TOPICS_SETTLED_MARKER_SINCE_MS) continue;
     orphaned.push(record);
   }
 
@@ -242,6 +251,9 @@ export async function markOrphanedFactsAsFailed(
   });
   return orphaned.length + healed.length;
 }
+
+/** When the `topics_settled` marker started being written. */
+const TOPICS_SETTLED_MARKER_SINCE_MS = Date.UTC(2026, 10, 4);
 
 /**
  * How long a fact may sit at 'pending' with no live job before the sweep

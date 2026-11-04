@@ -6,9 +6,7 @@
 // handler sends no other facts and none are read here. Cloud topics come from
 // the skill core (topic-gen-handler → lib/mera-harness).
 
-import logger from '../logger';
 import { completeLocalStructured } from '../llm/completeLocal';
-import { isOnDeviceDeferrable } from '../inference/job-defer';
 import type { RealTopicGenInputs } from '@/lib/news-harness/persona-management/topic-generation';
 import { buildTopicGenPrompt, TOPIC_GEN_SYSTEM } from '@/lib/news-harness/on-device/topic-gen/prompt';
 import { promptBudgetTokens } from '@/lib/news-harness/on-device/shared';
@@ -18,7 +16,6 @@ import { topicsFromReply } from '@/lib/news-harness/on-device/topic-gen/parse';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
 // Re-export moved pure helpers (canonical home is the harness).
-export { mergeTopicsAppend } from '@/lib/news-harness/persona-management/topic-generation';
 export type { RealTopicGenInputs };
 
 // SOURCED from the harness config, never re-stated: this is what "Generate more
@@ -35,40 +32,32 @@ const LOCAL_TOPIC_GEN_MAX_TOKENS = 1024;
 
 /**
  * Topics for ONE fact on the on-device engine, used by the topic_gen handler's
- * local branch. Busy or unavailable is "not now" and reaches the queue so the
- * job defers; any other failure (including a reply that never fit the schema)
- * is an empty answer, which the handler reports as the fact's failure.
+ * local branch. Every failure reaches the handler: busy or unavailable defers
+ * the job, and anything else (a refusal, a reply that never fit the schema) is an
+ * error, never an empty answer, or it would count toward removing the fact.
  */
 export async function generateTopicsForFact(inputs: RealTopicGenInputs): Promise<string[]> {
   const count = inputs.totalCount ?? DEFAULT_TOTAL_LOCAL;
   const schema = topicGenSchema(count);
   const maxTokens = Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, count * 30);
-  try {
-    // Sized to the engine's input: Gemini Nano refuses an oversized prompt, and
-    // that refusal is not deferrable, so a long exclusion list would fail the
-    // fact on every retry.
-    const engine = await getTextEngine();
-    const budget = promptBudgetTokens({
-      contextSize: await contextSize(engine),
-      maxTokens,
-      system: TOPIC_GEN_SYSTEM,
-      schemaJson: JSON.stringify(schema),
-    });
-    const { system, prompt } = buildTopicGenPrompt(inputs, count, budget);
-    const reply = await completeLocalStructured<TopicGenReply>({
-      systemPrompt: system,
-      prompt,
-      schema,
-      maxTokens,
-      temperature: 0.3,
-      engine,
-    });
-    return topicsFromReply(reply);
-  } catch (err) {
-    if (isOnDeviceDeferrable(err)) throw err;
-    logger.warn('[topic-gen] local generation failed', {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    return [];
-  }
+  // Sized to the engine's input: Gemini Nano refuses an oversized prompt, and
+  // that refusal is not deferrable, so a long exclusion list would fail the
+  // fact on every retry.
+  const engine = await getTextEngine();
+  const budget = promptBudgetTokens({
+    contextSize: await contextSize(engine),
+    maxTokens,
+    system: TOPIC_GEN_SYSTEM,
+    schemaJson: JSON.stringify(schema),
+  });
+  const { system, prompt } = buildTopicGenPrompt(inputs, count, budget);
+  const reply = await completeLocalStructured<TopicGenReply>({
+    systemPrompt: system,
+    prompt,
+    schema,
+    maxTokens,
+    temperature: 0.3,
+    engine,
+  });
+  return topicsFromReply(reply);
 }

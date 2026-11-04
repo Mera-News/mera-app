@@ -51,11 +51,13 @@ afterEach(cleanupTopics);
 
 describe('the public surface', () => {
   it('exports no bare setter: begin, complete, fail and settle are the only writers of topics_status', () => {
-    expect(Object.keys(statusService).sort()).toEqual([
+    const verbs = Object.keys(statusService).filter((k) => /^[a-z]/.test(k));
+    expect(verbs.sort()).toEqual([
       'beginTopicGeneration',
       'completeTopicGeneration',
       'failTopicGeneration',
       'markTopicGenerationSettled',
+      'settleEmptyTopicGeneration',
     ]);
   });
 });

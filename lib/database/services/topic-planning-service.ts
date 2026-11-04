@@ -11,6 +11,7 @@
 // reactively.
 
 import { enqueueJob, hasPendingJob } from './inference-job-service';
+import { getByFact } from './topic-service';
 import { handleTopicGenJob } from '../../inference/handlers/topic-gen-handler';
 import { inferenceQueue } from '../../inference/InferenceQueue';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
@@ -52,6 +53,7 @@ export async function generateMoreTopicsForFact(
         mode: 'append',
         ...extra,
       });
+      if (out.outcome === 'error') return { mode: 'skipped', added: 0 };
       return { mode: 'inline', added: out.topics.length };
     } catch (err) {
       logger.warn('[topic-planning] cloud generate-more failed', {
@@ -75,4 +77,29 @@ export async function generateMoreTopicsForFact(
   });
   inferenceQueue.notify();
   return { mode: 'queued', added: 0 };
+}
+
+/** shortcut: a queue that never drains (a type deferred for long) ends the wait
+ *  here and reads as what has landed so far; a real error on device reads as
+ *  nothing new. Upgrade by reading the job row's outcome. */
+const QUEUED_RUN_WAIT_MS = 90_000;
+
+/**
+ * Generate more as both surfaces need it: resolves when the run is over, with
+ * the rows it added, on either engine. An on-device run is a queued job, so its
+ * count is the difference in rows once the queue drains.
+ */
+export async function generateMoreAndWait(
+  factId: string,
+  factStatement: string,
+  opts: { skillId?: string; count?: number } = {},
+): Promise<GenerateMoreOutcome> {
+  const before = (await getByFact(factId)).length;
+  const out = await generateMoreTopicsForFact(factId, factStatement, opts);
+  if (out.mode !== 'queued') return out;
+  await new Promise<void>((resolve) => {
+    inferenceQueue.onDrain(resolve);
+    setTimeout(resolve, QUEUED_RUN_WAIT_MS);
+  });
+  return { mode: 'queued', added: Math.max(0, (await getByFact(factId)).length - before) };
 }

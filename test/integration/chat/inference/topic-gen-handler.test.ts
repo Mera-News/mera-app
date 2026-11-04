@@ -10,7 +10,9 @@
 //   filter that eats everything; an empty append is not reported; a throw records a failure;
 //   deleted fact is a no-op. On-device: no location and no other facts; first run with nothing
 //   usable settles as an error. ux2 F6: only non-combo own topics listed.
-import { addFact, getFacts, getTopicsStatus, deleteFact } from '@/lib/database/services/fact-service';
+import { addFact, getFacts, getTopicsStatus, deleteFact, updateFact } from '@/lib/database/services/fact-service';
+import * as changeLog from '@/lib/database/services/persona-change-log-service';
+import { completeTopicGeneration } from '@/lib/database/services/topic-generation-status-service';
 import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
 import { createTopics, getByFact } from '@/lib/database/services/topic-service';
 import { recordDecline } from '@/lib/database/services/topic-decline-service';
@@ -21,7 +23,8 @@ import { SMALL_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { TOPIC_CALL_MAX_TOKENS, loadSkill } from '@/lib/mera-harness';
-import { EMPTY_RETRY_NUDGE } from '@/lib/mera-harness/core/topic-call';
+import { EMPTY_RETRY_NUDGE, JUDGEMENT_NUDGE } from '@/lib/mera-harness/core/topic-call';
+import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { gatewayCalls, mockGateway, server } from '@/test/helpers';
@@ -209,52 +212,184 @@ describe('cloud: the skill core, isolated', () => {
   });
 
   describe('a first run that yields nothing', () => {
-    it('retries once with the nudge and then on the generic guideline, and only then records a failure the card can retry', async () => {
+    it('walks the ladder, ending on judgement, and settles done with the clock running, never an error', async () => {
       const fact = await pendingFact(JOB, 'profession: job role and industry');
       reply('[]');
 
       const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
 
-      expect(out.topics).toEqual([]);
+      expect(out).toEqual({ topics: [], outcome: 'empty' });
       const calls = gatewayCalls('chat');
       expect(calls).toHaveLength(3);
       expect(calls[0].messages[1].content).not.toContain(EMPTY_RETRY_NUDGE);
       expect(calls[1].messages[1].content).toContain(EMPTY_RETRY_NUDGE);
       expect(calls[1].messages[0].content).toBe(calls[0].messages[0].content);
       expect(calls[2].messages[0].content).toBe(loadSkill('topics/generic'));
-      expect(await getTopicsStatus(fact.id)).toBe('error');
-      expect((await getFacts())[0].metadata?.topicGenError).toEqual(['Topic generation returned no usable topics']);
+      expect(calls[2].messages[1].content).toContain(JUDGEMENT_NUDGE);
+      expect(await getTopicsStatus(fact.id)).toBe('done');
+      const metadata = (await getFacts())[0].metadata as Record<string, unknown>;
+      expect(metadata.topicGenError).toBeUndefined();
+      expect(metadata.topics_empty_since).toEqual(expect.any(Number));
+      expect(metadata.topics_empty_runs).toBe(0);
       expect(await getByFact(fact.id)).toEqual([]);
     });
 
-    it('is reported to Sentry fingerprinted, with the skill and counts and no persona text', async () => {
+    it('is not reported to Sentry: an empty answer is a normal state', async () => {
       const captured = jest.spyOn(logger, 'captureMessage');
       const fact = await pendingFact(JOB, 'profession: job role and industry');
       reply('[]');
 
       await run({ factId: fact.id, factStatement: JOB, useCloud: true });
 
-      expect(captured).toHaveBeenCalledTimes(1);
-      const [, opts] = captured.mock.calls[0] as [string, { fingerprint: string[]; extra: Record<string, unknown> }];
-      expect(opts.fingerprint).toEqual(['topic-gen-failed', 'empty']);
-      expect(opts.extra).toMatchObject({ coreReturned: 0, afterFresh: 0, skillId: 'topics/profession', veto: 0, filter: 0 });
-      expect(JSON.stringify(captured.mock.calls)).not.toMatch(/nurse/i);
+      expect(captured).not.toHaveBeenCalled();
     });
 
-    it('tells a filter that ate everything from an empty answer', async () => {
-      const captured = jest.spyOn(logger, 'captureMessage');
+    it('a filter that ate everything settles the same way, and the model was answering so there is no ladder', async () => {
       const fact = await pendingFact('Lives in Alkmaar, North Holland, Netherlands, EU', HOME);
       await recordDecline('Alkmaar news', null);
       await recordDecline('Alkmaar street safety', null);
       reply('["Alkmaar news", "Alkmaar street safety"]');
 
-      await run({ factId: fact.id, factStatement: fact.statement, useCloud: true });
+      const out = await run({ factId: fact.id, factStatement: fact.statement, useCloud: true });
 
-      expect(captured.mock.calls[0][1]).toMatchObject({ extra: { coreReturned: 0, afterFresh: 0, veto: 2 } });
-      expect(JSON.stringify(captured.mock.calls)).not.toMatch(/alkmaar/i);
-      expect(await getTopicsStatus(fact.id)).toBe('error');
-      // The model was answering, so no retry ladder: one call.
+      expect(out.outcome).toBe('empty');
+      expect(await getTopicsStatus(fact.id)).toBe('done');
       expect(gatewayCalls('chat')).toHaveLength(1);
+    });
+
+    it('a fact that holds topics never starts the clock', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      await createTopics([{ factId: fact.id, text: 'Nurse staffing', weight: 1, provenance: 'llm' }]);
+      reply('[]');
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect(out.outcome).toBe('nothing-new');
+      expect((await getFacts())[0].metadata).not.toHaveProperty('topics_empty_since');
+    });
+
+    it('an unreadable answer is an error with Retry, never an empty', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      reply('I cannot help with that.');
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect(out.outcome).toBe('error');
+      expect(await getTopicsStatus(fact.id)).toBe('error');
+      expect((await getFacts())[0].metadata).not.toHaveProperty('topics_empty_since');
+    });
+
+    it('marks a re-added fact to keep: its statement was removed before', async () => {
+      await changeLog.append({ actionType: ACTION_NAMES.HYGIENE_DELETE_FACT, action: { statement: JOB.toUpperCase() }, source: 'digest', summary: 'x' });
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      reply('[]');
+
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect((await getFacts())[0].metadata).toMatchObject({ topics_keep: true });
+    });
+  });
+
+  describe('the lifecycle of an empty fact', () => {
+    const lifecycle = async () => (await getFacts())[0].metadata as Record<string, unknown>;
+    const emptied = async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      reply('[]');
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+      return fact;
+    };
+
+    it('a background ladder counts one run, keeps the clock and never shows pending', async () => {
+      const fact = await emptied();
+      const since = (await lifecycle()).topics_empty_since;
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+
+      expect(out.outcome).toBe('empty');
+      expect(await lifecycle()).toMatchObject({ topics_empty_since: since, topics_empty_runs: 1 });
+      expect(await getTopicsStatus(fact.id)).toBe('done');
+    });
+
+    it('a background error changes nothing and counts nothing', async () => {
+      const fact = await emptied();
+      const before = await lifecycle();
+      const captured = jest.spyOn(logger, 'captureException');
+      server.use(...mockGateway(() => ({ status: 400, body: { error: 'nope' } })));
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+
+      expect(out.outcome).toBe('error');
+      expect(await lifecycle()).toEqual(before);
+      expect(await getTopicsStatus(fact.id)).toBe('done');
+      expect(captured).not.toHaveBeenCalled();
+    });
+
+    it('anything added clears every lifecycle key', async () => {
+      const fact = await emptied();
+      reply('["Nurse staffing"]');
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+
+      expect(out.outcome).toBe('added');
+      const metadata = await lifecycle();
+      expect(metadata).not.toHaveProperty('topics_empty_since');
+      expect(metadata).not.toHaveProperty('topics_empty_runs');
+      expect(metadata).not.toHaveProperty('topics_retry_at');
+    });
+
+    it('a tap on Generate more that finds nothing restarts a running clock', async () => {
+      const fact = await emptied();
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+      reply('[]');
+
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true, mode: 'append' });
+
+      expect((await lifecycle()).topics_empty_runs).toBe(0);
+    });
+
+    it('Generate more with nothing new never starts a clock on a fact outside the lifecycle', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      reply('[]');
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true, mode: 'append' });
+
+      expect(out.outcome).toBe('nothing-new');
+      expect(await lifecycle()).not.toHaveProperty('topics_empty_since');
+    });
+
+    it('a new empty result after an error starts the clock', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      server.use(...mockGateway(() => ({ status: 400, body: { error: 'nope' } })));
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+      reply('[]');
+
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect(await getTopicsStatus(fact.id)).toBe('done');
+      expect(await lifecycle()).toMatchObject({ topics_empty_runs: 0 });
+      expect(await lifecycle()).not.toHaveProperty('topicGenError');
+    });
+
+    it('rewording a fact drops its clock', async () => {
+      const fact = await emptied();
+
+      await updateFact(fact.id, { statement: 'Works as a midwife' });
+
+      expect(await lifecycle()).not.toHaveProperty('topics_empty_since');
+    });
+
+    it('drops an answer for words the fact no longer says, and a first run owes the new wording a run', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      server.use(...mockGateway(() => {
+        void updateFact(fact.id, { statement: 'Works as a midwife' });
+        return '["Nurse staffing"]';
+      }));
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect(out).toEqual({ topics: [], outcome: 'nothing-new' });
+      expect(await getByFact(fact.id)).toEqual([]);
+      expect((await jobRows('topic_gen')).map((j) => j.payload.factStatement)).toContain('Works as a midwife');
     });
   });
 
@@ -280,14 +415,17 @@ describe('cloud: the skill core, isolated', () => {
       );
     });
 
-    it('an append run that throws still settles as an error but is not reported', async () => {
+    it('an append run that throws leaves the fact as it was and is not reported', async () => {
       const captured = jest.spyOn(logger, 'captureException');
       const fact = await pendingFact(JOB, 'profession: job role and industry');
+      await completeTopicGeneration(fact.id, ['Nurse staffing']);
       refuse();
 
-      await run({ factId: fact.id, factStatement: JOB, useCloud: true, mode: 'append' });
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true, mode: 'append' });
 
-      expect(await getTopicsStatus(fact.id)).toBe('error');
+      expect(out.outcome).toBe('error');
+      expect(await getTopicsStatus(fact.id)).toBe('done');
+      expect(await texts(fact.id)).toEqual(['Nurse staffing']);
       expect(captured).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ fingerprint: ['topic-gen-failed', 'threw'] }));
     });
   });
@@ -346,7 +484,7 @@ describe('on-device: the local engine, isolated too', () => {
     expect(user.toLowerCase()).toContain('nurse pay');
     expect(user).not.toMatch(/Porto|User location|Other user facts/);
     expect(await texts(nurse.id)).toEqual(['Nurse staffing', 'Paediatric wards']);
-    expect((await getFacts()).find((f) => f.id === nurse.id)?.metadata?.topics).toEqual(['Nurse staffing']);
+    expect((await getFacts()).find((f) => f.id === nurse.id)?.metadata?.topics).toEqual(['Paediatric wards', 'Nurse staffing']);
     expect(await getTopicsStatus(nurse.id)).toBe('done');
     expect(gatewayCalls()).toHaveLength(0);
   });
@@ -370,7 +508,7 @@ describe('on-device: the local engine, isolated too', () => {
     expect(await getTopicsStatus(fact.id)).toBe('done');
   });
 
-  it('a first run with nothing usable settles as an ERROR (Retry), never an empty done, and is reported with its own fingerprint', async () => {
+  it('a first run with nothing usable settles done with the clock running, unreported', async () => {
     const captured = jest.spyOn(logger, 'captureMessage');
     const fact = await pendingFact(JOB, 'profession: job role and industry');
     await setMode('on-device');
@@ -378,10 +516,42 @@ describe('on-device: the local engine, isolated too', () => {
 
     const out = await run({ factId: fact.id, factStatement: JOB, useCloud: false });
 
-    expect(out.topics).toEqual([]);
+    expect(out).toEqual({ topics: [], outcome: 'empty' });
+    expect(await getTopicsStatus(fact.id)).toBe('done');
+    expect((await getFacts())[0].metadata).toMatchObject({ topics_empty_runs: 0 });
+    expect(captured).not.toHaveBeenCalled();
+  });
+
+  it('a model failure is an error with Retry and starts no clock', async () => {
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: { error: 'ERR_AFM_GUARDRAIL' } });
+
+    const out = await run({ factId: fact.id, factStatement: JOB, useCloud: false });
+
+    expect(out.outcome).toBe('error');
     expect(await getTopicsStatus(fact.id)).toBe('error');
-    expect(await getByFact(fact.id)).toEqual([]);
-    expect(captured.mock.calls[0][1]).toMatchObject({ fingerprint: ['topic-gen-failed', 'empty', 'on-device'] });
+    expect((await getFacts())[0].metadata).not.toHaveProperty('topics_empty_since');
+  });
+
+  it('busy still reaches the queue, so the job defers', async () => {
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: { error: 'ERR_AFM_BUSY' } });
+
+    await expect(run({ factId: fact.id, factStatement: JOB, useCloud: false })).rejects.toMatchObject({ code: 'ERR_AFM_BUSY' });
+  });
+
+  it('keeps fact.metadata.topics in step with the rows, on a fact that already holds some', async () => {
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    await createTopics([{ factId: fact.id, text: 'Paediatric wards', weight: 1, provenance: 'llm' }]);
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":["Nurse staffing"]}' });
+
+    await run({ factId: fact.id, factStatement: JOB, useCloud: false });
+
+    expect((await getFacts())[0].metadata?.topics).toEqual(['Paediatric wards', 'Nurse staffing']);
+    expect(await texts(fact.id)).toEqual(['Nurse staffing', 'Paediatric wards']);
   });
 
   it('"Generate more" is queued as an append job and merges into the fact\'s topics', async () => {

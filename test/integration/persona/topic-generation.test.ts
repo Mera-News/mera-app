@@ -148,19 +148,17 @@ describe('generateTopicsForFact: the request', () => {
     expect(userOf(onDeviceLlmCalls()[0])).toContain('Do NOT repeat these existing topics:\n- old topic');
   });
 
-  it('retries a reply that does not fit the schema once, then answers [] with a warning', async () => {
+  it('retries a reply that does not fit the schema once, then throws: an error is never an empty answer', async () => {
     installOnDeviceLlm({ reply: 'not valid json' });
 
-    expect(await generateTopicsForFact(inputs())).toEqual([]);
+    await expect(generateTopicsForFact(inputs())).rejects.toThrow();
     expect(onDeviceLlmCalls()).toHaveLength(2);
-    expect(logger.warn).toHaveBeenCalledWith('[topic-gen] local generation failed', expect.anything());
   });
 
-  it('answers [] with a warning when the call fails for good (a refusal, not busy)', async () => {
+  it('throws when the call fails for good (a refusal, not busy)', async () => {
     installOnDeviceLlm({ reply: { error: 'ERR_AFM_GUARDRAIL' } });
 
-    expect(await generateTopicsForFact(inputs())).toEqual([]);
-    expect(logger.warn).toHaveBeenCalledWith('[topic-gen] local generation failed', expect.anything());
+    await expect(generateTopicsForFact(inputs())).rejects.toThrow();
   });
 });
 

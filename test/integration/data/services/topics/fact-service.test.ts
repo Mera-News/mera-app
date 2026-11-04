@@ -36,6 +36,7 @@ import {
   beginTopicGeneration,
   failTopicGeneration,
   markTopicGenerationSettled,
+  settleEmptyTopicGeneration,
 } from '@/lib/database/services/topic-generation-status-service';
 import { useFakeClock, useFakeClock as freezeClockAt } from '@/test/helpers'; // aliased: a use* name inside a plain function trips react-hooks/rules-of-hooks
 
@@ -364,6 +365,28 @@ describe('topics_status', () => {
 });
 
 describe('the rescue sweep: markOrphanedFactsAsFailed', () => {
+  const FRESH = Date.UTC(2027, 0, 1);
+
+  it('leaves a settled fact with no topics alone: done with nothing is an answer, not a dead job', async () => {
+    freezeClockAt(FRESH);
+    const f = await addFact('Does not drive', {}, undefined, { topicsStatus: 'pending' });
+    await settleEmptyTopicGeneration(f.id, 'Does not drive');
+
+    expect(await markOrphanedFactsAsFailed(new Set(), 'dead')).toBe(0);
+    expect(await getTopicsStatus(f.id)).toBe('done');
+  });
+
+  it('counts a fact older than the marker as handled, and still catches a new one whose run never finished', async () => {
+    freezeClockAt(FRESH - 400 * 24 * 60 * 60 * 1000);
+    const old = await addFact('Old fact', {});
+    freezeClockAt(FRESH);
+    const fresh = await addFact('New fact', {});
+
+    expect(await markOrphanedFactsAsFailed(new Set(), 'dead')).toBe(1);
+    expect(await getTopicsStatus(old.id)).toBeNull();
+    expect(await getTopicsStatus(fresh.id)).toBe('error');
+  });
+
   const pendingFact = async (metadata?: Record<string, string[]>) => {
     freezeClockAt(T0);
     const f = await addFact('s', metadata, undefined, { topicsStatus: 'pending' });

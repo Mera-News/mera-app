@@ -19,6 +19,59 @@ import { DEFAULT_HARNESS_CONFIG } from '../../news-harness/core/config';
 
 const factsCollection = database.get<FactModel>('facts');
 
+/** The error a first-run empty stored before empties settled. A fact holding it
+ *  exactly moves onto the lifecycle at the next sweep, clock starting then. */
+export const LEGACY_EMPTY_ERROR = 'Topic generation returned no usable topics';
+
+/** A background ladder runs at least this long after the first run... */
+export const FIRST_RETRY_GAP_MS = 60 * 60 * 1000;
+/** ...and the second at least this long after the first background ladder. */
+export const SECOND_RETRY_GAP_MS = 7 * 60 * 60 * 1000;
+
+/** The empty-fact lifecycle, in `metadata_json`: no column, so no migration, and
+ *  a restore clears these rather than carrying a stale clock. */
+export const TOPICS_EMPTY_SINCE = 'topics_empty_since';
+export const TOPICS_EMPTY_RUNS = 'topics_empty_runs';
+export const TOPICS_RETRY_AT = 'topics_retry_at';
+/** A run finished for this fact, so "done with no topics" is a real answer and
+ *  the orphan sweep must not read it as a job that died. */
+export const TOPICS_SETTLED = 'topics_settled';
+/** The fact was re-added after a removal: the sweep never removes it again. */
+export const TOPICS_KEEP = 'topics_keep';
+
+type LooseMetadata = Record<string, unknown>;
+
+/** Every metadata writer here merges INSIDE one write: `updateFact` replaces the
+ *  whole object and a read before the write can lose a concurrent key. */
+async function settleDone(
+  factId: string,
+  next: (metadata: LooseMetadata) => LooseMetadata,
+  missing: string,
+): Promise<void> {
+  await database.write(async () => {
+    let record: FactModel;
+    try {
+      record = await factsCollection.find(factId);
+    } catch {
+      logger.warn(missing, { factId });
+      return;
+    }
+    await record.update((f) => {
+      const now = new Date();
+      const { topicGenError: _settled, ...rest } = (f.metadata ?? {}) as LooseMetadata;
+      f.topicsStatus = 'done';
+      f.topicsUpdatedAt = now;
+      f.updatedAt = now;
+      f.metadata = next({ ...rest, [TOPICS_SETTLED]: true }) as Record<string, string[]>;
+    });
+  });
+}
+
+function withoutLifecycle(metadata: LooseMetadata): LooseMetadata {
+  const { [TOPICS_EMPTY_SINCE]: _s, [TOPICS_EMPTY_RUNS]: _r, [TOPICS_RETRY_AT]: _a, ...rest } = metadata;
+  return rest;
+}
+
 /**
  * Stamp 'pending' on every fact whose topic-generation job is being enqueued.
  *
@@ -105,11 +158,11 @@ export async function completeTopicGeneration(
       )
     : [];
 
+  // Anything added ends the empty lifecycle, whoever asked for the run.
   try {
-    const record = await factsCollection.find(factId);
-    await record.setTopicsStatus('done');
-  } catch {
-    logger.warn('[topic-gen-status] complete: fact missing at stamp', { factId });
+    await settleDone(factId, withoutLifecycle, '[topic-gen-status] complete: fact missing at stamp');
+  } catch (err) {
+    logger.warn('[topic-gen-status] complete: stamp failed', { factId, error: String(err) });
   }
   return minted;
 }
@@ -130,13 +183,48 @@ export async function completeTopicGeneration(
  */
 export async function markTopicGenerationSettled(factIds: string[]): Promise<void> {
   for (const factId of factIds) {
-    try {
-      const record = await factsCollection.find(factId);
-      await record.setTopicsStatus('done');
-    } catch {
-      logger.warn('[topic-gen-status] settle: fact missing at stamp', { factId });
-    }
+    await settleDone(factId, (m) => m, '[topic-gen-status] settle: fact missing at stamp');
   }
+}
+
+/**
+ * The ladder finished and the fact has no topics of any kind: 'done', never
+ * 'error', because an empty answer is an answer.
+ *
+ * A background ladder counts one completed run and sets the next slot. Anything
+ * a person started (the first run, Retry, a tap on Generate more) restarts the
+ * clock. `onlyIfClockRunning` is Generate more: nothing new on a fact outside
+ * the lifecycle must not start one.
+ */
+export async function settleEmptyTopicGeneration(
+  factId: string,
+  statement: string,
+  opts: { background?: boolean; onlyIfClockRunning?: boolean } = {},
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { wasFactRemoved } = require('./persona-change-log-service') as typeof import('./persona-change-log-service');
+  const reAdded = await wasFactRemoved(statement);
+  await settleDone(
+    factId,
+    (m) => {
+      const running = m[TOPICS_EMPTY_SINCE] != null;
+      if (opts.onlyIfClockRunning && !running) return m;
+      const now = Date.now();
+      const keep = reAdded ? { [TOPICS_KEEP]: true } : {};
+      if (opts.background && running) {
+        const runs = (typeof m[TOPICS_EMPTY_RUNS] === 'number' ? m[TOPICS_EMPTY_RUNS] : 0) + 1;
+        return { ...m, ...keep, [TOPICS_EMPTY_RUNS]: runs, [TOPICS_RETRY_AT]: now + SECOND_RETRY_GAP_MS };
+      }
+      return {
+        ...m,
+        ...keep,
+        [TOPICS_EMPTY_SINCE]: now,
+        [TOPICS_EMPTY_RUNS]: 0,
+        [TOPICS_RETRY_AT]: now + FIRST_RETRY_GAP_MS,
+      };
+    },
+    '[topic-gen-status] empty: fact missing at stamp',
+  );
 }
 
 /**

@@ -61,6 +61,23 @@ export async function append(input: AppendChangeInput): Promise<PersonaChangeLog
   });
 }
 
+/** True when a fact with this normalised statement was removed before, by the
+ *  person or by Mera. A paraphrase does not match. */
+export async function wasFactRemoved(statement: string): Promise<boolean> {
+  const key = topicService.normalizeTopicText(statement);
+  const rows = await changeLogCollection
+    .query(Q.where('action_type', ACTION_NAMES.HYGIENE_DELETE_FACT))
+    .fetch();
+  return rows.some((row) => {
+    try {
+      const removed = (JSON.parse(row.actionJson) as ChangeLogAction).statement;
+      return typeof removed === 'string' && topicService.normalizeTopicText(removed) === key;
+    } catch {
+      return false;
+    }
+  });
+}
+
 export async function getById(id: string): Promise<PersonaChangeLogModel> {
   return changeLogCollection.find(id);
 }
