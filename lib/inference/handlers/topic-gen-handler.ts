@@ -22,6 +22,7 @@ import { resolveEmptyChatFact } from '../../chat-session/fact-removal';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { isDeferrableError, isOnDeviceDeferrable } from '../job-defer';
+import { EmptyReplyError } from '../../llm/gateway-fetch';
 import { SMALL_MODEL } from '../../llm/constants';
 import logger from '../../logger';
 import type { Fact } from '../../mera-protocol-toolkit/types';
@@ -118,7 +119,7 @@ class UnreadableAnswerError extends Error {}
 /** The model answered, in a form no parser reads. Unlike a transport failure a
  *  retry costs model calls, so these are the errors that are counted. */
 function isUnreadableAnswer(err: unknown): boolean {
-  return err instanceof UnreadableAnswerError || (err as { code?: unknown } | null)?.code === 'ERR_STRUCTURED_OUTPUT';
+  return err instanceof UnreadableAnswerError || err instanceof EmptyReplyError || (err as { code?: unknown } | null)?.code === 'ERR_STRUCTURED_OUTPUT';
 }
 
 /**
@@ -159,8 +160,10 @@ async function runSkillGuided(
           },
           { lane: 'background' },
         );
+        // A blank reply is the provider failing, not the model finding nothing.
+        if (typeof content !== 'string' || !content.trim()) throw new EmptyReplyError();
         return {
-          content: typeof content === 'string' ? content : String(content ?? ''),
+          content,
           toolCalls: [],
           finishReason: 'stop',
           truncated: false,

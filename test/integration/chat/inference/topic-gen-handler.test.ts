@@ -269,6 +269,17 @@ describe('cloud: the skill core, isolated', () => {
       expect((await getFacts())[0].metadata).not.toHaveProperty('topics_empty_since');
     });
 
+    it('a blank answer is an error with Retry, never an empty, and stops the ladder', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      reply('   ');
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect(out).toEqual({ topics: [], outcome: 'error' });
+      expect(gatewayCalls('chat')).toHaveLength(1);
+      expect(await getTopicsStatus(fact.id)).toBe('error');
+    });
+
     it('an unreadable answer is an error with Retry, never an empty', async () => {
       const fact = await pendingFact(JOB, 'profession: job role and industry');
       reply('I cannot help with that.');
@@ -323,6 +334,15 @@ describe('cloud: the skill core, isolated', () => {
       expect(await lifecycle()).toEqual(before);
       expect(await getTopicsStatus(fact.id)).toBe('done');
       expect(captured).not.toHaveBeenCalled();
+    });
+
+    it('a blank background ladder counts as unreadable, so its retries end', async () => {
+      const fact = await emptied();
+      reply('   ');
+
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+
+      expect(await lifecycle()).toMatchObject({ topics_empty_runs: 0, topics_unreadable_runs: 1 });
     });
 
     it('an unreadable background ladder is counted apart, and a tap clears the count', async () => {
