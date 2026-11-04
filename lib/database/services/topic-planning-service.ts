@@ -16,10 +16,12 @@ import { getFacts, isRemovableEmptyFact, patchMetadata, removeEmptyFact, EMPTY_F
 import { countEmptyFactRemovals } from './persona-change-log-service';
 import {
   LEGACY_EMPTY_ERROR,
+  MAX_UNREADABLE_RUNS,
   SECOND_RETRY_GAP_MS,
   TOPICS_EMPTY_RUNS,
   TOPICS_EMPTY_SINCE,
   TOPICS_RETRY_AT,
+  TOPICS_UNREADABLE_RUNS,
   markTopicGenerationSettled,
   settleEmptyTopicGeneration,
 } from './topic-generation-status-service';
@@ -169,7 +171,7 @@ export async function sweepTopicLifecycle(
     let ladders = 0;
     for (const fact of clocked) {
       const meta = fact.metadata as unknown as Record<string, number | boolean | undefined>;
-      if (meta.news_stopped === true) continue;
+      if (meta.news_stopped === true || Number(meta[TOPICS_UNREADABLE_RUNS] ?? 0) >= MAX_UNREADABLE_RUNS) continue;
       const since = Number(meta[TOPICS_EMPTY_SINCE]);
       const retryAt = Number(meta[TOPICS_RETRY_AT] ?? 0);
       const runs = Number(meta[TOPICS_EMPTY_RUNS] ?? 0);

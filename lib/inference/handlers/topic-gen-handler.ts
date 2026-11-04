@@ -12,6 +12,7 @@ import {
   completeTopicGeneration,
   failTopicGeneration,
   markTopicGenerationSettled,
+  noteUnreadableLadder,
   settleEmptyTopicGeneration,
 } from '../../database/services/topic-generation-status-service';
 import { describeFactPlaces } from '../../news-harness/persona-management/fact-places';
@@ -110,6 +111,14 @@ function freshTopics(topics: string[], ownTopics: string[], declined: Set<string
   });
 }
 
+class UnreadableAnswerError extends Error {}
+
+/** The model answered, in a form no parser reads. Unlike a transport failure a
+ *  retry costs model calls, so these are the errors that are counted. */
+function isUnreadableAnswer(err: unknown): boolean {
+  return err instanceof UnreadableAnswerError || (err as { code?: unknown } | null)?.code === 'ERR_STRUCTURED_OUTPUT';
+}
+
 /**
  * CLOUD: one terminal call through the skill core, isolated. The guideline is
  * the one the chat turn chose, else the one the fact's attribute implies, else
@@ -172,7 +181,7 @@ async function runSkillGuided(
       kept: out.topics.length,
     });
   }
-  if (out.malformed) throw new Error('Topic generation returned an unreadable answer');
+  if (out.malformed) throw new UnreadableAnswerError('Topic generation returned an unreadable answer');
   return { topics: out.topics, dropped: out.dropped };
 }
 
@@ -239,6 +248,7 @@ export async function handleTopicGenJob(
       });
       await failTopicGeneration(payload.factId, message);
     }
+    if (background && isUnreadableAnswer(err)) await noteUnreadableLadder(payload.factId);
     return { topics: [], outcome: 'error' };
   }
 

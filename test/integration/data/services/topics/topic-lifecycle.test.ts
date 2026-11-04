@@ -112,6 +112,15 @@ describe('background ladders', () => {
     useSchedulerStore.setState({ taskCurrentStatus: {} });
   });
 
+  it('stop after 3 unreadable ladders until the person taps', async () => {
+    const fact = await empty();
+    await patchMetadata(fact.id, { topics_unreadable_runs: 3 });
+    expect((await sweepTopicLifecycle({ now: T0 + HOUR })).ladders).toBe(0);
+
+    await settleEmptyTopicGeneration(fact.id, STATEMENT);
+    expect((await sweepTopicLifecycle({ now: T0 + 2 * HOUR })).ladders).toBe(1);
+  });
+
   it('reset a clock from the future to now', async () => {
     const fact = await empty();
     await patchMetadata(fact.id, { topics_empty_since: T0 + 90 * 24 * HOUR, topics_retry_at: T0 + 90 * 24 * HOUR });

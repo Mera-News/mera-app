@@ -91,7 +91,7 @@ export async function updateFact(
 /** A reworded fact is a new question: its empty runs say nothing about it. */
 function dropEmptyClock(metadata: Fact['metadata']): Fact['metadata'] {
   if (!metadata) return metadata;
-  const { topics_empty_since: _s, topics_empty_runs: _r, topics_retry_at: _a, ...rest } = metadata;
+  const { topics_empty_since: _s, topics_empty_runs: _r, topics_retry_at: _a, topics_unreadable_runs: _u, ...rest } = metadata;
   return rest as Fact['metadata'];
 }
 

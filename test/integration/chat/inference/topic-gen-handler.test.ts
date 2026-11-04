@@ -324,6 +324,18 @@ describe('cloud: the skill core, isolated', () => {
       expect(captured).not.toHaveBeenCalled();
     });
 
+    it('an unreadable background ladder is counted apart, and a tap clears the count', async () => {
+      const fact = await emptied();
+      reply('Sorry, I cannot do that.');
+
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+
+      expect(await lifecycle()).toMatchObject({ topics_empty_runs: 0, topics_unreadable_runs: 1 });
+      reply('[]');
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true, mode: 'append' });
+      expect(await lifecycle()).not.toHaveProperty('topics_unreadable_runs');
+    });
+
     it('anything added clears every lifecycle key', async () => {
       const fact = await emptied();
       reply('["Nurse staffing"]');

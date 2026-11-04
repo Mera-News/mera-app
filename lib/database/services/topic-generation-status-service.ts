@@ -33,6 +33,11 @@ export const SECOND_RETRY_GAP_MS = 7 * 60 * 60 * 1000;
 export const TOPICS_EMPTY_SINCE = 'topics_empty_since';
 export const TOPICS_EMPTY_RUNS = 'topics_empty_runs';
 export const TOPICS_RETRY_AT = 'topics_retry_at';
+/** Background ladders the model answered with something unreadable. They end as
+ *  errors, so they never count as runs, and nothing else would stop them. */
+export const TOPICS_UNREADABLE_RUNS = 'topics_unreadable_runs';
+/** From here background retries stop until the person taps. */
+export const MAX_UNREADABLE_RUNS = 3;
 /** A run finished for this fact, so "done with no topics" is a real answer and
  *  the orphan sweep must not read it as a job that died. */
 export const TOPICS_SETTLED = 'topics_settled';
@@ -68,7 +73,13 @@ async function settleDone(
 }
 
 function withoutLifecycle(metadata: LooseMetadata): LooseMetadata {
-  const { [TOPICS_EMPTY_SINCE]: _s, [TOPICS_EMPTY_RUNS]: _r, [TOPICS_RETRY_AT]: _a, ...rest } = metadata;
+  const {
+    [TOPICS_EMPTY_SINCE]: _s,
+    [TOPICS_EMPTY_RUNS]: _r,
+    [TOPICS_RETRY_AT]: _a,
+    [TOPICS_UNREADABLE_RUNS]: _u,
+    ...rest
+  } = metadata;
   return rest;
 }
 
@@ -216,7 +227,7 @@ export async function settleEmptyTopicGeneration(
         return { ...m, ...keep, [TOPICS_EMPTY_RUNS]: runs, [TOPICS_RETRY_AT]: now + SECOND_RETRY_GAP_MS };
       }
       return {
-        ...m,
+        ...withoutLifecycle(m),
         ...keep,
         [TOPICS_EMPTY_SINCE]: now,
         [TOPICS_EMPTY_RUNS]: 0,
@@ -225,6 +236,23 @@ export async function settleEmptyTopicGeneration(
     },
     '[topic-gen-status] empty: fact missing at stamp',
   );
+}
+
+/** One more background ladder came back unreadable. Status and clock stay. */
+export async function noteUnreadableLadder(factId: string): Promise<void> {
+  await database.write(async () => {
+    let record: FactModel;
+    try {
+      record = await factsCollection.find(factId);
+    } catch {
+      return;
+    }
+    await record.update((f) => {
+      const metadata = (f.metadata ?? {}) as LooseMetadata;
+      const count = typeof metadata[TOPICS_UNREADABLE_RUNS] === 'number' ? metadata[TOPICS_UNREADABLE_RUNS] : 0;
+      f.metadata = { ...metadata, [TOPICS_UNREADABLE_RUNS]: count + 1 } as unknown as Record<string, string[]>;
+    });
+  });
 }
 
 /**
@@ -241,7 +269,7 @@ export async function restartTopicClocks(): Promise<void> {
       running.map((record) =>
         record.prepareUpdate((f) => {
           f.metadata = {
-            ...(f.metadata as LooseMetadata),
+            ...withoutLifecycle(f.metadata as LooseMetadata),
             [TOPICS_EMPTY_SINCE]: now,
             [TOPICS_EMPTY_RUNS]: 0,
             [TOPICS_RETRY_AT]: now + FIRST_RETRY_GAP_MS,
