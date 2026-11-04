@@ -17,7 +17,7 @@ import {
   type PersonaPersistMeta,
 } from '@/lib/database/services/article-suggestion-persist';
 import { type MatchedTopicMeta } from '@/lib/database/services/article-suggestion-mappers';
-import { getFacts } from '@/lib/database/services/fact-service';
+import { getFacts, hasAnyFacts } from '@/lib/database/services/fact-service';
 import {
   getActive as getActiveTopics,
   countActiveTopicsIncludingStaged,
@@ -590,6 +590,9 @@ async function fetchTopicIdsPersona(
 async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResult> {
   const topicTexts = await getLocalTopicTextsForPersona();
   if (topicTexts.length === 0) {
+    // A fact with no topics yet (a city, or a run still queued) still gets its
+    // country and the world: the persona query takes an empty topic list.
+    if (await hasAnyFacts()) return fetchTopicIdsPersona([], ctx);
     throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
   ctx.log(`fetching ids for ${topicTexts.length} topics (legacy path)`);
