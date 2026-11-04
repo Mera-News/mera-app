@@ -103,14 +103,50 @@ export const EMPTY_RETRY_NUDGE =
 export const JUDGEMENT_NUDGE =
   'No guideline fits this fact, so set them aside. Ask what news someone would want because this is true of them, and answer with those topics. Avoid stereotypes about who the person is. Return [] only if the fact is a negative or a placeholder.';
 
+/** What a rescue must say about the fact before its topics count. Told only to
+ *  return [], the model wrote topics for negatives 29 of 48 times, so the verdict
+ *  is a required slot and code reads it. */
+const VERDICT_RULE =
+  'negative if it says something is not true of the person, they stopped, or they lack or do not want it; placeholder if it says nothing about them; fact otherwise';
+
+/** The rescue on the fact's own guideline: same slot, so a negative cannot mint. */
+const EMPTY_RETRY_SLOT = `Reply in two lines. Line 1: one word for the fact: ${VERDICT_RULE}. Line 2: the JSON array.`;
+
 /** The empty ladder's last attempt, as a whole system prompt. Measured: on the
  *  1,383-token rules text a judgement nudge rescued 0 of 48 facts, and every fact
- *  in Dutch or Hindi stayed empty, so this attempt sheds the rules and the first
+ *  in Dutch or Hindi stayed empty, so this attempt sheds the rules and its first
  *  line is a required slot that puts the fact in English. */
-export const JUDGEMENT_SYSTEM = `You suggest news topics from one thing a person said about themselves. It may be in any language. Reply in exactly two lines.
+export const JUDGEMENT_SYSTEM = `You suggest news topics from one thing a person said about themselves. It may be in any language. Reply in exactly three lines.
 Line 1: the fact in English.
-Line 2: a JSON array of 3 to 6 news topics in English, each 2 to 5 words: real subjects someone would want to follow because this is true of them, such as policy, health, money, law and research. Name what newsrooms report. No stereotypes about who the person is, no generation labels, no debates about what such people are like. No country and no year unless the fact states one.
-If the fact is a negative or a placeholder, line 2 is [].`;
+Line 2: one word for the fact: ${VERDICT_RULE}.
+Line 3: a JSON array of 3 to 6 news topics in English, each 2 to 5 words, or [] unless line 2 is fact.
+Each topic is a real subject someone would want to follow because this is true of them: a policy, law, court ruling, study or trend that journalists report, as a section heading in a real publication would name it. Never advice, tips, guides, strategies, basics or services.
+Good: "pension age reform", "health insurance premiums". Bad: "personal finance tips", "career development strategies".
+No stereotypes about who the person is, no generation labels, no debates about what such people are like. No country and no year unless the fact states one.`;
+
+/** The word a rescue put in its slot, or null when it left the slot out. */
+export function factVerdict(output: string): 'fact' | 'negative' | 'placeholder' | null {
+  for (const line of output.split('\n')) {
+    const word = line.replace(/^\s*line\s*\d+\s*:/i, '').replace(/[^a-z]/gi, '').toLowerCase();
+    if (word === 'fact' || word === 'negative' || word === 'placeholder') return word;
+  }
+  return null;
+}
+
+/** Only a rescue that says "fact" mints. An answer with no slot stays unreadable
+ *  when it held no array, so a broken model is still an error, never an empty. */
+function parseRescue(output: string): ParsedTopics {
+  const parsed = parseTopicsDetailed(output);
+  return factVerdict(output) === 'fact' ? parsed : { ...parsed, topics: [] };
+}
+
+const GENERATION_LABEL = /\b(millennials?|zoomers?|(baby )?boomers?|gen(eration)?[ -]?(x|y|z|alpha))\b/i;
+
+/** The prompt asks; this holds. A generation label on a rescue is a stereotype
+ *  about the reader, unless the fact itself names one. */
+export function dropGenerationLabels(topics: string[], statement: string): string[] {
+  return GENERATION_LABEL.test(statement) ? topics : topics.filter((t) => !GENERATION_LABEL.test(t));
+}
 
 /** Why an append run is not the first run: the same brief twice gives the same list. */
 export const APPEND_BRIEF =
@@ -341,8 +377,19 @@ export async function generateTopicsForFact(
     // model's well-formed [] on running, languages, diet, travel). One retry on
     // the same guideline with a nudge, then one on judgement alone. A transport
     // ERROR is not retried: the caller records it and the card offers Retry.
-    result = await call(systemPrompt, `${userMessage}\n${nullControl ? LEGACY_EMPTY_RETRY_NUDGE : EMPTY_RETRY_NUDGE}`);
-    decoded = parseTopicsDetailed(result.content);
+    const slotted = !nullControl && params.promptArm !== 'long-judgement';
+    const readRescue = (r: AgentModelResult) => {
+      if (!slotted) return parseTopicsDetailed(r.content);
+      const parsed = parseRescue(r.content);
+      return { ...parsed, topics: dropGenerationLabels(parsed.topics, params.fact.statement) };
+    };
+    result = await call(
+      systemPrompt,
+      nullControl
+        ? `${userMessage}\n${LEGACY_EMPTY_RETRY_NUDGE}`
+        : `${userMessage}\n${EMPTY_RETRY_NUDGE}${slotted ? `\n${EMPTY_RETRY_SLOT}` : ''}`,
+    );
+    decoded = readRescue(result);
     const generic = loadSkillFn(FALLBACK_SKILL);
     if (!result.error && decoded.topics.length === 0) {
       if (nullControl) {
@@ -354,7 +401,7 @@ export async function generateTopicsForFact(
       } else {
         result = await call(JUDGEMENT_SYSTEM, userMessage);
       }
-      decoded = parseTopicsDetailed(result.content);
+      decoded = readRescue(result);
     }
   }
   const raw = appending ? decoded.topics.filter((t) => !isRepeat(t)) : decoded.topics;

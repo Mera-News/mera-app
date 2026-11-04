@@ -50,6 +50,7 @@ const FIXTURES = resolve(__dirname, '..', 'fixtures', 'persona-corpus', 'persona
 export type ArmName = 'null-control' | 'long-judgement' | 'catch-all-generic' | 'short' | 'short-catch-all';
 export const ARM_ORDER: ArmName[] = ['null-control', 'long-judgement', 'catch-all-generic', 'short', 'short-catch-all'];
 export const TAP_ARMS: ArmName[] = ['null-control', 'short', 'short-catch-all'];
+export const FINAL_ARMS: ArmName[] = ['null-control', 'short'];
 const isCatchAllArm = (arm: ArmName) => arm === 'catch-all-generic' || arm === 'short-catch-all';
 
 export interface LifecycleFact {
@@ -62,6 +63,8 @@ export interface Args {
   dryRun: boolean;
   repeat: number;
   negativeRepeat: number;
+  /** The empty pass alone, null against the shipped arm. */
+  final: boolean;
   label: string;
   runsRoot: string | null;
 }
@@ -69,13 +72,14 @@ export interface Args {
 /** `--target staging` is required here too, on top of the guard in main(): a flag the
  *  command line must carry is a flag a pasted command cannot lose. */
 export function parseArgs(argv: string[]): Args {
-  const args: Args = { dryRun: false, repeat: 3, negativeRepeat: 6, label: 'topic-lifecycle', runsRoot: null };
+  const args: Args = { dryRun: false, repeat: 3, negativeRepeat: 6, final: false, label: 'topic-lifecycle', runsRoot: null };
   let target: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--target') target = argv[++i];
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
+    else if (a === '--final') args.final = true;
     else if (a === '--negative-repeat') args.negativeRepeat = Number(argv[++i]);
     else if (a === '--label') args.label = argv[++i] ?? args.label;
     else if (a === '--runs-root') args.runsRoot = argv[++i] ?? null;
@@ -200,10 +204,11 @@ export async function runLifecycle(
   tapFacts: LifecycleFact[],
   repeat: number,
   negativeRepeat = repeat,
+  arms: ArmName[] = ARM_ORDER,
 ): Promise<void> {
   for (const fact of emptyFacts) {
     for (let rep = 1; rep <= (fact.id.startsWith('n') ? negativeRepeat : repeat); rep++) {
-      for (const arm of ARM_ORDER) {
+      for (const arm of arms) {
         const { out, attempts, skillId } = await generate(deps, arm, fact, {});
         deps.write({
           pass: 'empty', arm, repeat: rep, factId: fact.id, statement: fact.statement, skillId, tap: 0,
@@ -345,7 +350,7 @@ async function main(): Promise<number> {
   try {
     await runLifecycle(
       { call, model, nullSkills: await loadNullControlSkills(), write: (r) => { rows.push(r); appendFileSync(rowsPath, `${JSON.stringify(r)}\n`); } },
-      empty, tap, args.repeat, args.negativeRepeat,
+      empty, args.final ? [] : tap, args.repeat, args.negativeRepeat, args.final ? FINAL_ARMS : ARM_ORDER,
     );
   } catch (err) {
     if (!(err instanceof SpendLimitError)) throw err;
