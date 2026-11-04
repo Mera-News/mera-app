@@ -11,7 +11,6 @@ outputs:
   - "searchNews (and webSearch when it is offered) on one leg, then one proposeTrack card"
   - "one short question when they named no subject at all"
 examples:
-  - "Ajax Feyenoord match riots"
   - "The fires near Valparaiso"
   - "Valparaiso Wildfire Evacuations"
   - "Chile Wildfires"
