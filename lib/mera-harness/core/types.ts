@@ -293,7 +293,8 @@ export interface AgentModelRequest {
    *  token by token and the thinking caption still fires; the eval omits it.
    *  Two fields, not one: `reasoning` carries NO payload upstream, it marks that
    *  a trace STARTED, which is the only signal the caption has. */
-  onDelta?: (d: { content?: string; reasoning?: string }) => void;
+  /** `restart`: the leg went out again, so what `content` delivered so far is void. */
+  onDelta?: (d: { content?: string; reasoning?: string; restart?: true }) => void;
   /**
    * True only for the leg whose text the user should watch arrive: the route
    * leg of a non-resumed turn (the acknowledgement). A driver that streams

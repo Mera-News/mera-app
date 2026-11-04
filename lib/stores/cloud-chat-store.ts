@@ -13,6 +13,8 @@ interface CloudChatState {
   isBlocked: boolean;
   blockedReason: string | null;
   error: string | null;
+  /** `error` came from the app leaving during the turn, not from the service. */
+  interrupted: boolean;
   wireMessages: WireMessage[];
   /**
    * The agent loop's turn state. P1's loop is the ONLY writer; the thread
@@ -51,6 +53,7 @@ interface CloudChatState {
   setIsBlocked: (blocked: boolean) => void;
   setBlockedReason: (reason: string | null) => void;
   setError: (error: string | null) => void;
+  setInterrupted: (interrupted: boolean) => void;
   setAgentTurnState: (state: AgentTurnState | null) => void;
   setAgentTerminal: (reason: AgentTurnResult['terminalReason'] | null) => void;
   pushWireMessage: (msg: WireMessage) => void;
@@ -64,6 +67,7 @@ const initialState = {
   isBlocked: false,
   blockedReason: null as string | null,
   error: null as string | null,
+  interrupted: false,
   wireMessages: [] as WireMessage[],
   agentTurnState: null as AgentTurnState | null,
   agentTerminal: null as AgentTurnResult['terminalReason'] | null,
@@ -86,6 +90,7 @@ export const useCloudChatStore = create<CloudChatState>((set, get) => ({
   setBlockedReason: (reason) => set({ blockedReason: reason }),
 
   setError: (error) => set({ error }),
+  setInterrupted: (interrupted) => set({ interrupted }),
 
   setAgentTurnState: (agentTurnState) => set({ agentTurnState }),
   setAgentTerminal: (agentTerminal) => set({ agentTerminal }),

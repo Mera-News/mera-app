@@ -696,8 +696,12 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     void AccessibilityInfo.announceForAccessibility(t('chat.tryingAgain'));
   }, [t]);
 
+  const leftTurn = useCloudChatStore((st) => st.interrupted);
+
   const blockedMessage = effectiveBlocked
     ? (effectiveBlockedReason || t('errors.accountRestricted'))
+    : error && !retryTapped && leftTurn
+      ? t('chat.turnInterrupted')
     : error && !retryTapped
       ? // The raw error string is NOT appended. It is a bare string with no class
         // to branch on, and what it carried was the provider's own English JSON
@@ -732,6 +736,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     handleRefreshBlockStatus,
     isRefreshingBlockStatus,
     handleSend,
+    handleRetry,
     composerHint,
     handleUnblockSubmitted,
     introMessage,

@@ -41,6 +41,8 @@ export interface ConversationMessage {
    *  chat bug report's transcript reads it; a reply carries its turn's time. */
   createdAt?: number;
   toolCalls?: ToolCallRecord[];
+  /** The turn failed with this text on screen, so it is not a whole answer. */
+  failed?: boolean;
   /**
    * A turn the MODEL must read but the user must never see.
    *

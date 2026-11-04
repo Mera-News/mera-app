@@ -242,11 +242,19 @@ interface FloatingChatState {
     notifyFactMutation: () => void;
     setConversationId: (id: string | null) => void;
     requestNewChat: () => void;
+    /** A turn a kill ended, from the last process. Memory only. */
+    interruptedTurn: InterruptedTurn | null;
+    setInterruptedTurn: (turn: InterruptedTurn | null) => void;
     reset: () => void;
 }
 
 /** A follow card's More options request: running, or how the last one ended. */
 export type TrackMoreState = 'loading' | 'none' | 'failed';
+
+export interface InterruptedTurn {
+    text: string;
+    contextKind: ChatContext['kind'];
+}
 
 const DEFAULT_CONTEXT: ChatContext = { kind: 'persona' };
 
@@ -259,6 +267,7 @@ const initialState = {
     bubbleCenter: { x: 0, y: 0 },
     closedAt: null as number | null,
     pendingDraft: null as string | null,
+    interruptedTurn: null as InterruptedTurn | null,
     isGenerating: false,
     answerUnread: false,
     chatShown: false,
@@ -547,6 +556,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             topicPlanTurnRequest: null,
         }),
 
+    setInterruptedTurn: (interruptedTurn) => set({ interruptedTurn }),
     reset: () => set({ ...initialState }),
 }));
 

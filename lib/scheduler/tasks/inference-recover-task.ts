@@ -5,6 +5,7 @@ import { repairUnweightedTopics } from '@/lib/database/services/topic-service';
 import { runPendingComboPass } from '@/lib/database/services/combo-pass-service';
 import { sweepTopicLifecycle } from '@/lib/database/services/topic-planning-service';
 import { recoverOpenFactsDraft } from '@/lib/services/facts-draft-service';
+import { recoverInterruptedTurn } from '@/lib/chat-session/turn-inflight';
 import logger from '@/lib/logger';
 import { waitForBackgroundCollect } from '@/lib/background/collect-gate';
 import { AppScheduler } from '../AppScheduler';
@@ -108,6 +109,8 @@ AppScheduler.register({
       // Never fail recovery over it: the next foreground sweeps again.
       logger.captureException(err, { tags: { task: 'inference-recover', step: 'topic-lifecycle' } });
     }
+
+    if (await recoverInterruptedTurn()) ctx.log('a chat turn ended with the app');
 
     // No ctx.markNoOp(): "nothing to rescue, nothing staged" is the NORMAL
     // state, and suppressing the lastRun stamp on a routine skip turns this

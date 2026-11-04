@@ -72,6 +72,7 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
     handleRefreshBlockStatus,
     isRefreshingBlockStatus,
     handleSend,
+    handleRetry,
     composerHint,
     handleUnblockSubmitted,
     sampleKind,
@@ -129,6 +130,7 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
         onRefreshBlockStatus={handleRefreshBlockStatus}
         isRefreshingBlockStatus={isRefreshingBlockStatus}
         onSend={handleSend}
+        onRetry={handleRetry}
         isInputDisabled={isStreaming || effectiveBlocked}
         composerHint={composerHint}
         composerTrailing={composerTrailing}

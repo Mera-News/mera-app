@@ -526,6 +526,11 @@ async function callModelOnce(
   for await (const event of stream) {
     if (event.type === 'reasoning') {
       req.onDelta?.({ reasoning: '' });
+    } else if (event.type === 'restart') {
+      content = '';
+      ttVisibleMs = null;
+      byIndex.clear();
+      req.onDelta?.({ restart: true });
     } else if (event.type === 'text-delta') {
       if (ttVisibleMs === null) ttVisibleMs = Date.now() - started;
       content += event.delta;
@@ -559,7 +564,7 @@ async function callModelOnce(
 
 export function makeAgentDeps(
   userMessage: string,
-  onDelta: (d: { content?: string; reasoning?: string }) => void,
+  onDelta: (d: { content?: string; reasoning?: string; restart?: true }) => void,
   onPhase?: (signal: PhaseSignal) => void,
   /** The Stop button. Once aborted, no further model call or tool runs: the
    *  loop sees a resolved `error` and ends the turn with no new legs. */

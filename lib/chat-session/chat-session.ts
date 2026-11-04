@@ -86,7 +86,12 @@ function write(conversationId: string, message: ConversationMessage): void {
     });
     appendMessage(
         conversationId,
-        { role: 'assistant', content: message.content, toolCalls: toolCalls.length > 0 ? toolCalls : undefined },
+        {
+            role: 'assistant',
+            content: message.content,
+            toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+            failed: message.failed,
+        },
         message.id,
     ).catch(fail);
 }

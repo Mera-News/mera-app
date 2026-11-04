@@ -10,6 +10,8 @@ import logger from '../logger';
 import { CallerAbortError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 import { markChatFailed, markChatReady } from '../llm/prewarm';
+import { departureMark } from '@/lib/app-restart';
+import { clearTurnInflight, markTurnInflight } from '@/lib/chat-session/turn-inflight';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import {
@@ -288,6 +290,11 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           deps: withCombinedFactMemory(makeAgentDeps(
             userMessage,
             (d) => {
+              if (d.restart) {
+                acc = '';
+                schedule();
+                return;
+              }
               // The arrival signal carries no payload, and the line is already
               // on `thinking` from the post-headers route, so there is nothing
               // to do here but avoid falling into the content branch.
@@ -545,6 +552,11 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           } else if (event.type === 'text-delta') {
             accContent += event.delta;
             scheduleContentRender();
+          } else if (event.type === 'restart') {
+            // Nothing of this attempt ran yet: tools wait for the stream's end.
+            accContent = '';
+            toolCallAccumulators.clear();
+            renderContent();
           } else if (event.type === 'tool-call-delta') {
             // No handover here: the wait row stays until text lands or the
             // steps box takes over, never an empty bubble in between.
@@ -882,6 +894,17 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     });
   };
 
+  /** After a failure: the last text of this turn is not a whole answer. */
+  const markFailed = (firstIndex: number): void => {
+    cloud().setMessages((prev) => {
+      const target = prev
+        .slice(firstIndex)
+        .reverse()
+        .find((m) => m.role === 'assistant' && m.content.trim().length > 0);
+      return prev.map((m) => (m === target ? { ...m, failed: true } : m));
+    });
+  };
+
   /** The Stop button's handle on a More options call in flight. While set, no
    *  turn starts: its loop and a turn's would share the card and the wire. */
   let moreAbort: AbortController | null = null;
@@ -930,6 +953,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       logger.debug(`${TAG} sendMessage proceeding`, { length: trimmed.length });
       store.setError(null);
+      store.setInterrupted(false);
       failedTurn = null;
       const turnWire = cloud().wireMessages;
 
@@ -941,7 +965,10 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           createdAt: Date.now(),
         };
         store.setMessages((prev) => [...prev, userMsg]);
+        useFloatingChatStore.getState().setInterruptedTurn(null);
+        markTurnInflight(trimmed, useFloatingChatStore.getState().context.kind);
       }
+      const left = departureMark();
 
       setTurnBusy(true);
       isStreamingRef.current = true;
@@ -1016,13 +1043,18 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           // A stop is not a failure: no banner, no report.
           if (!turnStop.signal.aborted) {
             const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
-            logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
+            // The reader left and the reply did not survive it: not an outage.
+            const lost = left();
+            if (lost) logger.warn(`${TAG} turn lost to the app leaving`);
+            else logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
             const mutated = cloud()
               .messages.slice(turnStart)
               .some((m) => m.toolCalls?.some((tc) => MUTATING_CHAT_TOOLS.has(tc.name)));
             failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed };
             cloud().setError(msg);
-            markChatFailed();
+            markFailed(turnStart);
+            if (lost) cloud().setInterrupted(true);
+            else markChatFailed();
           }
         } finally {
           if (turnStop.signal.aborted) {
@@ -1045,6 +1077,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           // underneath the error banner for the rest of the session.
           phase(null);
           if (phaseSinkRef.current === phase) phaseSinkRef.current = null;
+          if (visible) clearTurnInflight();
           cloud().setStatus('idle');
           isStreamingRef.current = false;
           if (alive) useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);

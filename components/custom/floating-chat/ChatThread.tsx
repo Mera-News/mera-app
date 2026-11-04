@@ -89,6 +89,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   onRefreshBlockStatus,
   isRefreshingBlockStatus,
   onSend,
+  onRetry,
   isInputDisabled,
   usageNotice,
   composerHint = null,
@@ -283,6 +284,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               {message.stopped ? (
                 <Text size="xs" style={styles.stoppedLine} testID="chat-stopped">
                   {t('chat.stopped')}
+                </Text>
+              ) : null}
+              {message.failed ? (
+                <Text size="xs" style={styles.stoppedLine} testID="chat-unfinished">
+                  {t('chat.replyUnfinished')}
                 </Text>
               ) : null}
             </Message>
