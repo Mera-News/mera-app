@@ -30,12 +30,9 @@ test('refuses anything but --target staging', () => {
   assert.equal(parseArgs(['--target', 'staging', '--dry-run', '--repeat', '2']).repeat, 2);
 });
 
-test('only the catch-all arms swap the catch-all attribute to generic', () => {
-  const fact = f('a', 'Male');
-  assert.equal(attributeSkill('catch-all-generic', fact), 'topics/generic');
-  assert.equal(attributeSkill('short-catch-all', fact), 'topics/generic');
-  assert.equal(attributeSkill('short', fact), 'topics/interest');
-  assert.equal(attributeSkill('catch-all-generic', f('b', 'x', 'profession: job')), 'topics/profession');
+test('every arm takes the attribute skill', () => {
+  assert.equal(attributeSkill('new', f('a', 'Male')), 'topics/interest');
+  assert.equal(attributeSkill('null-control', f('b', 'x', 'profession: job')), 'topics/profession');
 });
 
 test('composeSkillFrom puts the group generic ahead of the leaf', () => {
@@ -63,11 +60,11 @@ test('dry lifecycle: null first per fact, 5 taps, no network, rater view hides a
     1,
   );
   assert.deepEqual(rows.filter((r) => r.pass === 'empty').map((r) => r.arm), ARM_ORDER);
-  const taps = rows.filter((r) => r.pass === 'tap' && r.arm === 'short');
+  const taps = rows.filter((r) => r.pass === 'tap' && r.arm === 'new');
   assert.deepEqual(taps.map((r) => r.tap), Array.from({ length: TAPS + 1 }, (_, i) => i));
   assert.ok(rows.every((r) => r.attempts >= 1 && !r.malformed));
 
   const { view, key } = buildRaterView(rows);
   for (const arm of ARM_ORDER) assert.ok(!view.includes(arm), `${arm} leaked into the rater view`);
-  assert.deepEqual(Object.keys(key['empty:e1']).sort(), ['A', 'B', 'C', 'D', 'E']);
+  assert.deepEqual(Object.keys(key['empty:e1']).sort(), ['A', 'B']);
 });

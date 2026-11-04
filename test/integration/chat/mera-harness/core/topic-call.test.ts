@@ -1,9 +1,7 @@
 import {
   APPEND_BRIEF,
   EMPTY_RETRY_NUDGE,
-  factVerdict,
   JUDGEMENT_NUDGE,
-  JUDGEMENT_SYSTEM,
   MAX_TOPICS_PER_FACT,
   buildTopicUserMessage,
   capitalizePlaceNames,
@@ -252,7 +250,7 @@ describe('ux2 F6 fix 1: an isolated set never settles empty', () => {
   }
 
   it('retries a well-formed [] once, with a nudge, on the same guideline', async () => {
-    const deps = seq('[]', 'fact\n["marathon entry rules", "running shoe recalls", "park run safety"]');
+    const deps = seq('[]', '["marathon entry rules", "running shoe recalls", "park run safety"]');
     const out = await generateTopicsForFact({ fact: { statement: 'Runs three times a week' }, skillId: 'topics/interest', deps });
     expect(deps.callModel).toHaveBeenCalledTimes(2);
     expect(deps.callModel.mock.calls[1][0].systemPrompt).toBe('SKILL:topics/interest');
@@ -262,10 +260,11 @@ describe('ux2 F6 fix 1: an isolated set never settles empty', () => {
   });
 
   it('falls back to topics/generic when the retry is empty too', async () => {
-    const deps = seq('[]', '[]', 'Speaks Polish\nfact\n["Polish language exams", "Dutch integration exam changes", "EU language rights"]');
+    const deps = seq('[]', '[]', '["Polish language exams", "Dutch integration exam changes", "EU language rights"]');
     const out = await generateTopicsForFact({ fact: { statement: 'Speaks Polish, Dutch and English' }, skillId: 'topics/origin', deps });
     expect(deps.callModel).toHaveBeenCalledTimes(3);
-    expect(deps.callModel.mock.calls[2][0].systemPrompt).toBe(JUDGEMENT_SYSTEM);
+    expect(deps.callModel.mock.calls[2][0].systemPrompt).toBe('SKILL:topics/generic');
+    expect(deps.callModel.mock.calls[2][0].messages[0].content).toContain(JUDGEMENT_NUDGE);
     expect(deps.callModel.mock.calls[2][0].messages[0].content).not.toContain(EMPTY_RETRY_NUDGE);
     expect(out.topics).toHaveLength(3);
   });
@@ -274,52 +273,9 @@ describe('ux2 F6 fix 1: an isolated set never settles empty', () => {
     const deps = seq('[]', '[]', '[]');
     const out = await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/generic', deps });
     expect(deps.callModel).toHaveBeenCalledTimes(3);
-    expect(deps.callModel.mock.calls[2][0].systemPrompt).toBe(JUDGEMENT_SYSTEM);
-    expect(out.topics).toEqual([]);
-    expect(out.malformed).toBe(false);
-  });
-
-  it('reads the array on the second line of a judgement answer', async () => {
-    const deps = seq('[]', '[]', '30 year old man\nfact\n["Male health screening rules", "Pension age policy"]');
-    const out = await generateTopicsForFact({ fact: { statement: '30 jaar oud, man' }, skillId: 'topics/interest', deps });
-    expect(out.topics).toEqual(['Male health screening rules', 'Pension age policy']);
-  });
-
-  it('a rescue mints only when its slot says fact', async () => {
-    const negative = seq('[]', 'negative\n["public transit funding"]', 'Does not drive\nnegative\n["public transit funding"]');
-    const out = await generateTopicsForFact({ fact: { statement: 'Does not drive' }, skillId: 'topics/interest', deps: negative });
-    expect(out.topics).toEqual([]);
-    expect(out.malformed).toBe(false);
-
-    const noSlot = seq('[]', '["public transit funding"]', '["public transit funding"]');
-    expect((await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/interest', deps: noSlot })).topics).toEqual([]);
-  });
-
-  it('reads the slot however the model dresses it', () => {
-    expect(factVerdict('Line 1: 30 year old man\nLine 2: Fact.\nLine 3: []')).toBe('fact');
-    expect(factVerdict('No children\n**negative**\n[]')).toBe('negative');
-    expect(factVerdict('["a b"]')).toBeNull();
-  });
-
-  it('a first answer needs no slot: only rescues are read this way', async () => {
-    const out = await generateTopicsForFact({ fact: { statement: 'Plays chess' }, skillId: 'topics/interest', deps: seq('["chess engine research"]') });
-    expect(out.topics).toEqual(['chess engine research']);
-  });
-
-  it('a rescue loses generation labels, unless the fact names one', async () => {
-    const answer = 'fact\n["Millennial housing market", "Gen Z voters", "generation x pensions", "pension age reform", "General election polling", "Genetic screening rules", "Boomerang fishing"]';
-    const age = await generateTopicsForFact({ fact: { statement: 'Is 30 years old' }, skillId: 'topics/interest', deps: seq('[]', answer) });
-    expect(age.topics).toEqual(['pension age reform', 'General election polling', 'Genetic screening rules', 'Boomerang fishing']);
-
-    const named = await generateTopicsForFact({ fact: { statement: 'Writes about Gen Z and millennial money' }, skillId: 'topics/interest', deps: seq('[]', answer) });
-    expect(named.topics).toEqual(expect.arrayContaining(['Millennial housing market', 'Gen Z voters', 'generation x pensions']));
-  });
-
-  it('the long-judgement arm ends on the rules text with the nudge', async () => {
-    const deps = seq('[]', '[]', '[]');
-    await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/interest', promptArm: 'long-judgement', deps });
-    expect(deps.callModel.mock.calls[2][0].systemPrompt).toBe('SKILL:topics/generic');
     expect(deps.callModel.mock.calls[2][0].messages[0].content).toContain(JUDGEMENT_NUDGE);
+    expect(out.topics).toEqual([]);
+    expect(out.malformed).toBe(false);
   });
 
   it('prose with no array is malformed, never an empty answer', async () => {

@@ -23,7 +23,7 @@ import { SMALL_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import { TOPIC_CALL_MAX_TOKENS, loadSkill } from '@/lib/mera-harness';
-import { EMPTY_RETRY_NUDGE, JUDGEMENT_SYSTEM } from '@/lib/mera-harness/core/topic-call';
+import { EMPTY_RETRY_NUDGE, JUDGEMENT_NUDGE } from '@/lib/mera-harness/core/topic-call';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -224,7 +224,8 @@ describe('cloud: the skill core, isolated', () => {
       expect(calls[0].messages[1].content).not.toContain(EMPTY_RETRY_NUDGE);
       expect(calls[1].messages[1].content).toContain(EMPTY_RETRY_NUDGE);
       expect(calls[1].messages[0].content).toBe(calls[0].messages[0].content);
-      expect(calls[2].messages[0].content).toBe(JUDGEMENT_SYSTEM);
+      expect(calls[2].messages[0].content).toBe(loadSkill('topics/generic'));
+      expect(calls[2].messages[1].content).toContain(JUDGEMENT_NUDGE);
       expect(await getTopicsStatus(fact.id)).toBe('done');
       const metadata = (await getFacts())[0].metadata as Record<string, unknown>;
       expect(metadata.topicGenError).toBeUndefined();
