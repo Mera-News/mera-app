@@ -678,7 +678,7 @@
     "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요.",
     "tryingAgain": "다시 시도하는 중",
     "factRemovedLine": "뉴스 토픽을 찾지 못해서 제가 이 내용을 삭제했어요: {{facts}}. 대신 어떤 내용을 저장할까요?",
-    "turnInterrupted": "앱을 나가서 Mera의 답변이 중단되었습니다.",
+    "turnInterrupted": "앱을 나가서 메라의 답변이 중단되었습니다.",
     "replyUnfinished": "완료되지 않음"
   },
   "personaChat": {

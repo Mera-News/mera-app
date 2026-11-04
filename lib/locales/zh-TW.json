@@ -678,7 +678,7 @@
     "turnFailed": "這個回覆沒有完成。請再試一次。",
     "tryingAgain": "正在再試一次",
     "factRemovedLine": "我找不到相關的新聞主題，所以移除了{{facts}}。你希望我改存什麼呢？",
-    "turnInterrupted": "你離開應用程式後,Mera 的回覆已中斷。",
+    "turnInterrupted": "你離開應用程式後,梅拉的回覆已中斷。",
     "replyUnfinished": "未完成"
   },
   "personaChat": {

@@ -678,7 +678,7 @@
     "turnFailed": "その返信は完了しませんでした。もう一度お試しください。",
     "tryingAgain": "もう一度試しています",
     "factRemovedLine": "私はニュースのトピックを見つけられなかったため、{{facts}}を削除しました。代わりに何を保存してほしいですか？",
-    "turnInterrupted": "アプリを離れたため、Mera の返信が止まりました。",
+    "turnInterrupted": "アプリを離れたため、メラの返信が止まりました。",
     "replyUnfinished": "未完了"
   },
   "personaChat": {
