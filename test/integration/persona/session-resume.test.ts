@@ -185,6 +185,14 @@ describe.each([
     });
 });
 
+it('minted: true is a failure on its own, whatever id it names', async () => {
+    deviceSignIns(() => signInReply(ME, true));
+
+    expect(await resumeDeadSession()).toBe(false);
+
+    expect(secureStoreDump()[COOKIE_KEY]).toBeUndefined();
+});
+
 describe('when it must not run', () => {
     it('a locked app (the PIN rule) makes no device sign-in', async () => {
         usePinStore.setState({ locked: true });
