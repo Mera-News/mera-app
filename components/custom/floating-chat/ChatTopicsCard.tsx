@@ -366,21 +366,27 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
           }}
           style={styles.headerToggle}
           visualStyle={styles.header}
-          accessibilityState={{ expanded }}
+          // Nothing to open while the fact waits on the button below.
+          disabled={askRemoval}
+          accessibilityState={askRemoval ? { disabled: true } : { expanded }}
           // The spinner is decorative, so the state reaches assistive tech
           // here, in the header's own label.
-          accessibilityLabel={`${statusWord}. ${
-            expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
+          accessibilityLabel={`${
+            askRemoval
+              ? t('chatTopics.none')
+              : `${statusWord}. ${expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')}`
           }${factLineFailed ? ` ${t('feed.translationFailed')}` : ''}`}
           testID={`chat-topics-header-${factId}`}
         >
           <View style={styles.headerRow} testID={`chat-topics-title-row-${factId}`}>
-            <MaterialIcons
-              {...DECORATIVE_ICON_A11Y}
-              name={expanded ? 'expand-more' : 'chevron-right'}
-              size={18}
-              color={colors.accentMark}
-            />
+            {!askRemoval && (
+              <MaterialIcons
+                {...DECORATIVE_ICON_A11Y}
+                name={expanded ? 'expand-more' : 'chevron-right'}
+                size={18}
+                color={colors.accentMark}
+              />
+            )}
 
             <Text size="sm" bold style={styles.title}>
               {status === 'pending'

@@ -119,6 +119,16 @@ describe('ChatTopicsCard, a fact waiting on the reader', () => {
         expect(view.queryByTestId('chat-topics-more-f1')).toBeNull();
     });
 
+    it('the header says there are no topics and offers nothing to open', async () => {
+        mockFact = waiting;
+        const view = await render(<ChatTopicsCard factId="f1" factStatement="30 year old male" />);
+        await act(async () => {});
+        const header = view.getByTestId('chat-topics-header-f1');
+        expect(header.props.accessibilityLabel).toBe('Saved. No topics to add right now.');
+        expect(header.props.accessibilityState).toMatchObject({ disabled: true });
+        expect(header.props.accessibilityState.expanded).toBeUndefined();
+    });
+
     it('a tap goes through the removal, once under a double tap', async () => {
         mockFact = waiting;
         let finish: (v: boolean) => void = () => {};
