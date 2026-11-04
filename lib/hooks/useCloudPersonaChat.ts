@@ -17,6 +17,7 @@ import {
   createAgentTurnState,
   replaceClauseDashes,
   runAgentTurn,
+  runFactRemovedTurn,
   type AgentLeg,
   type AgentState,
 } from '../mera-harness';
@@ -32,6 +33,7 @@ import { applyChatPhase, useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import {
   detachedCopy,
+  factRemovedLine,
   finalizeToolCalls,
   followedInChatLabels,
   FOLLOW_STORY_HINT,
@@ -844,6 +846,26 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    * reads `messages`, not the wire — nothing is stored either. The model still
    * sees an ordinary trailing `user` turn with fresh <context> on it.
    */
+  /** The app removed these facts: one tool-free leg says so. No wire and no tools. */
+  const runRemovedFactsTurn = async (assistantId: string, statements: readonly string[]): Promise<void> => {
+    const persona = await buildAgentPersona(agentRef.current.id);
+    if (!agentStateRef.current && runsOnHarness(agentRef.current.id)) agentStateRef.current = createAgentState(persona);
+    cloud().setMessages((prev) => [...prev, { id: assistantId, role: 'assistant', content: '' }]);
+    cloud().setAgentTerminal(null);
+    const deps = makeAgentDeps('', () => {}, (signal) => phaseSinkRef.current?.(signal), stopRef.current.signal);
+    const out = await runFactRemovedTurn({
+      statements,
+      languageName: persona.languageName,
+      callModel: deps.callModel,
+      fallback: factRemovedLine(statements),
+      turn: agentStateRef.current?.turn,
+    });
+    if (out.stopped) return;
+    cloud().setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: out.reply } : m)));
+    if (agentStateRef.current) cloud().setAgentTurnState({ ...agentStateRef.current.turn });
+    markChatReady();
+  };
+
   /** After a stop: drop the stopped turn's tool calls (nothing is staged or
    *  saved from a half-run turn) and mark the last bubble with text, or the
    *  answer slot when nothing was said, as stopped. The partial text stays. */
@@ -874,6 +896,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     from: number;
     /** The single-shot context the turn was built with, once built. */
     context?: string;
+    /** A turn telling the reader these facts were removed. */
+    removed?: readonly string[];
   };
   let failedTurn: FailedTurn | null = null;
 
@@ -886,7 +910,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     !cloud().isBlocked &&
     cloud().error !== null;
 
-  const startTurn = (text: string, visible: boolean, retryContext?: string) => {
+  const startTurn = (text: string, visible: boolean, again?: Pick<FailedTurn, 'context' | 'removed'>) => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // A turn started while one runs would push a `user` wire message between
@@ -940,11 +964,14 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
 
       const assistantId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const turnStart = cloud().messages.length;
-      let turnContext = retryContext;
+      let turnContext = again?.context;
+      const removed = again?.removed;
 
       void (async () => {
         try {
-          if (runsOnHarness(agentRef.current.id)) {
+          if (removed) {
+            await runRemovedFactsTurn(assistantId, removed);
+          } else if (runsOnHarness(agentRef.current.id)) {
             // THE SHIPPED PATH for the persona agent. No flag: a loop behind a
             // flag is a loop nobody runs, which is exactly how the device pass
             // found the old single-shot prompt still live.
@@ -993,7 +1020,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const mutated = cloud()
               .messages.slice(turnStart)
               .some((m) => m.toolCalls?.some((tc) => MUTATING_CHAT_TOOLS.has(tc.name)));
-            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext };
+            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed };
             cloud().setError(msg);
             markChatFailed();
           }
@@ -1101,12 +1128,22 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     canRetry,
     retry: () => {
       if (!canRetry() || !failedTurn) return;
-      const { text, wire, from, context } = failedTurn;
+      const { text, wire, from, context, removed } = failedTurn;
       // The empty rows go; a row with tool calls stays, because a card may sit on it.
       cloud().setMessages((prev) => prev.filter((m, i) => i < from || (m.toolCalls ?? []).length > 0));
       useCloudChatStore.setState({ wireMessages: wire });
       // Not visible: the user's bubble is already there (and a hidden turn never had one).
-      startTurn(text, false, context);
+      startTurn(text, false, { context, removed });
+    },
+    tellRemovedFacts: (statements) => {
+      if (!alive) return;
+      // A blocked account gets no model call, and startTurn would queue this as a hidden turn.
+      if (cloud().isBlocked) {
+        const line: ConversationMessage = { id: `asst-${Date.now()}`, role: 'assistant', content: factRemovedLine(statements) };
+        cloud().setMessages((prev) => [...prev, line]);
+        return;
+      }
+      startTurn(statements.join(', '), false, { removed: statements });
     },
     setAgent: (agent) => {
       if (agent.id !== agentRef.current.id) failedTurn = null;

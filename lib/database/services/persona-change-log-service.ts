@@ -68,6 +68,8 @@ export function prepareAppend(input: AppendChangeInput): PersonaChangeLogModel {
 
 /** `summary` of the audit row Mera writes when it removes an empty fact. */
 export const EMPTY_FACT_SUMMARY = 'empty_fact';
+/** The same removal from chat. Its own summary: the sweep's daily cap counts only its own. */
+export const CHAT_EMPTY_FACT_SUMMARY = 'empty_fact_chat';
 
 /** How many empty facts Mera removed since `sinceMs`. Read from the audit, which
  *  the person cannot dismiss the way they can an inbox row. */

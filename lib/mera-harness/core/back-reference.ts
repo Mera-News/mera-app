@@ -130,7 +130,8 @@ export function pointsBack(message: string): boolean {
 export function renderRecentBlock(recent: readonly RecentExchange[], lastSubjects: readonly string[]): string | null {
   if (recent.length === 0) return null;
   const lines = recent.flatMap((x) => [
-    `They said: ${escapeRecent(x.user, RECENT_USER_CHARS)}`,
+    // No user half: a reply the app started, never a message of theirs.
+    ...(x.user.trim() ? [`They said: ${escapeRecent(x.user, RECENT_USER_CHARS)}`] : []),
     ...(x.reply.trim() ? [`You replied: ${escapeRecent(x.reply, RECENT_REPLY_CHARS)}`] : []),
   ]);
   const about = lastSubjects.length > 0

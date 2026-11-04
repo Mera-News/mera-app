@@ -44,6 +44,11 @@ export const TOPICS_SETTLED = 'topics_settled';
 /** The fact was re-added after a removal: the sweep never removes it again. */
 export const TOPICS_KEEP = 'topics_keep';
 
+/** Accepted in chat, and not as a replacement: a completed empty run may remove it. */
+export const TOPICS_FROM_CHAT = 'topics_from_chat';
+/** Came back empty with the chat closed: waits for the reader's tap, no model call until then. */
+export const TOPICS_ASK_REMOVAL = 'topics_ask_removal';
+
 type LooseMetadata = Record<string, unknown>;
 
 /** Every metadata writer here merges INSIDE one write: `updateFact` replaces the
@@ -78,6 +83,7 @@ function withoutLifecycle(metadata: LooseMetadata): LooseMetadata {
     [TOPICS_EMPTY_RUNS]: _r,
     [TOPICS_RETRY_AT]: _a,
     [TOPICS_UNREADABLE_RUNS]: _u,
+    [TOPICS_ASK_REMOVAL]: _t,
     ...rest
   } = metadata;
   return rest;

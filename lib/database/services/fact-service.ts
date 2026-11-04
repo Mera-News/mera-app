@@ -91,7 +91,7 @@ export async function updateFact(
 /** A reworded fact is a new question: its empty runs say nothing about it. */
 function dropEmptyClock(metadata: Fact['metadata']): Fact['metadata'] {
   if (!metadata) return metadata;
-  const { topics_empty_since: _s, topics_empty_runs: _r, topics_retry_at: _a, topics_unreadable_runs: _u, ...rest } = metadata;
+  const { topics_empty_since: _s, topics_empty_runs: _r, topics_retry_at: _a, topics_unreadable_runs: _u, topics_ask_removal: _t, ...rest } = metadata as LooseMetadata;
   return rest as Fact['metadata'];
 }
 
@@ -287,9 +287,16 @@ export function isRemovableEmptyFact(fact: Fact): boolean {
  *  caller's write, so nothing can change between the check and the delete. */
 async function emptyFactStillRemovable(fact: Fact, now: number): Promise<boolean> {
   const meta = fact.metadata as LooseMetadata;
+  if ((meta?.topics_empty_runs as number) < EMPTY_FACT_REQUIRED_RUNS) return false;
+  if (now - (meta?.topics_empty_since as number) < EMPTY_FACT_MIN_AGE_MS) return false;
+  return nothingHoldsEmptyFact(fact);
+}
+
+/** The guards every removal shares. `inOwnJob`: the caller IS the fact's one live
+ *  job, and the job row dedupes any other, so that guard would refuse every time. */
+async function nothingHoldsEmptyFact(fact: Fact, { inOwnJob = false } = {}): Promise<boolean> {
+  const meta = fact.metadata as LooseMetadata;
   if (!isRemovableEmptyFact(fact) || fact.topicsStatus !== 'done') return false;
-  if ((meta.topics_empty_runs as number) < EMPTY_FACT_REQUIRED_RUNS) return false;
-  if (now - (meta.topics_empty_since as number) < EMPTY_FACT_MIN_AGE_MS) return false;
   if (Array.isArray(meta.topics) && meta.topics.length > 0) return false;
 
   const topics = database.get<TopicModel>('topics');
@@ -298,7 +305,7 @@ async function emptyFactStillRemovable(fact: Fact, now: number): Promise<boolean
   if ((await declines.fetchCount()) > 0) return false;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const jobs = require('./inference-job-service') as typeof import('./inference-job-service');
-  if ((await jobs.getActiveTopicGenFactIds()).has(fact.id)) return false;
+  if (!inOwnJob && (await jobs.getActiveTopicGenFactIds()).has(fact.id)) return false;
   // shortcut: a combination topic records only the fact that owns it, so one
   // that drew on this fact is found by its words and a paraphrase slips past.
   const combos = await topics.query(Q.where('provenance', 'combo')).fetch();
@@ -338,6 +345,45 @@ export async function removeEmptyFact(id: string, statement: string, now = Date.
         action: { targetId: id, statement },
         source: 'digest',
         summary: changeLog.EMPTY_FACT_SUMMARY,
+      }),
+    ]);
+    return true;
+  });
+  if (removed) await purgeDeadTopicSuggestions();
+  return removed;
+}
+
+/** Chat may remove this fact when a run comes back empty: it was accepted there,
+ *  and nothing the person did holds it. A replacement carries no stamp, so it stays. */
+export async function chatMayRemoveFact(id: string, statement: string, opts: { inOwnJob?: boolean } = {}): Promise<boolean> {
+  try {
+    const record = await factsCollection.find(id);
+    const fact = toFact(record);
+    if (record.statement !== statement || (fact.metadata as LooseMetadata)?.topics_from_chat !== true) return false;
+    return await nothingHoldsEmptyFact(fact, opts);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Chat's removal, for a fact that got no topics. The same one write as
+ * `removeEmptyFact`, but on one empty run and with no inbox row: the reply and
+ * the tombstone are the notice. False means it stayed. `deleteFact` has no undo.
+ */
+export async function removeFailedChatFact(id: string, statement: string, opts: { inOwnJob?: boolean } = {}): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const changeLog = require('./persona-change-log-service') as typeof import('./persona-change-log-service');
+  const removed = await database.write(async () => {
+    if (!(await chatMayRemoveFact(id, statement, opts))) return false;
+    const record = await factsCollection.find(id);
+    await database.batch([
+      record.prepareDestroyPermanently(),
+      changeLog.prepareAppend({
+        actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,
+        action: { targetId: id, statement },
+        source: 'digest',
+        summary: changeLog.CHAT_EMPTY_FACT_SUMMARY,
       }),
     ]);
     return true;

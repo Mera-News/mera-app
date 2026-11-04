@@ -11,6 +11,9 @@ const mockHold = jest.fn();
 const mockRelease = jest.fn();
 let mockAutoDelete = true;
 let mockFact: Record<string, unknown> = {};
+let mockStatus = 'done';
+const mockTap = jest.fn();
+jest.mock('@/lib/chat-session/fact-removal', () => ({ removeFactFromTap: (...a: unknown[]) => mockTap(...a) }));
 jest.mock('@/lib/database/services/topic-planning-service', () => ({
     generateMoreAndWait: (...a: unknown[]) => mockGenerate(...a),
     holdFactOnScreen: (...a: unknown[]) => { mockHold(...a); return mockRelease; },
@@ -19,7 +22,7 @@ jest.mock('@/lib/database/services/topic-planning-service', () => ({
 jest.mock('@/lib/database/services/topic-service', () => ({ observeByFact: () => require('rxjs').of([]) }));
 jest.mock('@/lib/database/services/fact-service', () => ({
     ...jest.requireActual('@/lib/database/services/fact-service'),
-    observeTopicsStatus: () => require('rxjs').of('done'),
+    observeTopicsStatus: () => require('rxjs').of(mockStatus),
     observeFact: () => require('rxjs').of(mockFact),
 }));
 
@@ -27,6 +30,8 @@ beforeAll(initI18nEn);
 beforeEach(() => {
     mockGenerate.mockReset();
     mockAutoDelete = true;
+    mockStatus = 'done';
+    mockTap.mockReset();
     mockFact = { id: 'f1', statement: 's', metadata: {}, weight: null };
 });
 
@@ -96,5 +101,42 @@ describe('ChatTopicsCard empty line', () => {
         mockFact = { id: 'f1', statement: 's', metadata: { topics_empty_since: 1, topics_keep: true }, weight: null };
         const view = await open();
         expect(view.getByTestId('chat-topics-empty').props.children).toBe('Saved. No topics to add right now.');
+    });
+});
+
+describe('ChatTopicsCard, a fact waiting on the reader', () => {
+    const waiting = { id: 'f1', statement: '30 year old male', metadata: { topics_ask_removal: true }, weight: null };
+    const label = 'See what to save instead of "30 year old male"';
+
+    it('shows the button while collapsed, naming the fact, and no Find topics', async () => {
+        mockFact = waiting;
+        const view = await render(<ChatTopicsCard factId="f1" factStatement="30 year old male" />);
+        await act(async () => {});
+        const button = view.getByTestId('chat-topics-see-what-to-save');
+        expect(button.props.accessibilityLabel).toBe(label);
+        expect(view.getByText('See what to save instead')).toBeTruthy();
+        await act(async () => { fireEvent.press(view.getByTestId('chat-topics-header-f1')); });
+        expect(view.queryByTestId('chat-topics-more-f1')).toBeNull();
+    });
+
+    it('a tap goes through the removal, once under a double tap', async () => {
+        mockFact = waiting;
+        let finish: (v: boolean) => void = () => {};
+        mockTap.mockReturnValue(new Promise((r) => { finish = r; }));
+        const view = await render(<ChatTopicsCard factId="f1" factStatement="30 year old male" />);
+        await act(async () => {});
+        const button = view.getByTestId('chat-topics-see-what-to-save');
+        await act(async () => { fireEvent.press(button); fireEvent.press(button); });
+        expect(mockTap).toHaveBeenCalledTimes(1);
+        expect(mockTap).toHaveBeenCalledWith('f1', '30 year old male');
+        await act(async () => { finish(true); });
+    });
+
+    it('a removed fact shows the tombstone and no error', async () => {
+        mockStatus = 'gone';
+        const view = await render(<ChatTopicsCard factId="f1" factStatement="s" />);
+        await act(async () => {});
+        expect(view.getByTestId('chat-topics-gone')).toBeTruthy();
+        expect(view.queryByText("Couldn't find topics.")).toBeNull();
     });
 });

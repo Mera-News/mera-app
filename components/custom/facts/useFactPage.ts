@@ -2,6 +2,8 @@ import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { deleteFact, observeFact } from '@/lib/database/services/fact-service';
+import { removeFactFromTap } from '@/lib/chat-session/fact-removal';
+import { TOPICS_ASK_REMOVAL } from '@/lib/database/services/topic-generation-status-service';
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import { addSuppression, getActive as getActiveSuppressions, retireSuppression } from '@/lib/database/services/suppression-service';
 import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDecline } from '@/lib/database/services/topic-decline-service';
@@ -325,6 +327,14 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
     }, [phrase, factId]);
 
     // The empty list's line: a fact Mera may remove says so, any other just has none.
+    // Empty with the chat closed: the tap removes it, then Mera asks what to save instead.
+    const askRemoval =
+        topics.length === 0 && status === 'done' && (fact?.metadata as Record<string, unknown> | undefined)?.[TOPICS_ASK_REMOVAL] === true;
+    const seeWhatToSave = useCallback(async () => {
+        if (!fact) return;
+        if ((await removeFactFromTap(fact.id, fact.statement)) && router.canGoBack()) router.back();
+    }, [fact]);
+
     const emptyLine = fact && promisesRemoval(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none');
 
     const openSuggestion = useOpenSuggestion('sectioned');
@@ -364,6 +374,8 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         confirmAdd,
         suggesting,
         suggestMore,
+        askRemoval,
+        seeWhatToSave,
         emptyLine,
         knownIds,
         status,

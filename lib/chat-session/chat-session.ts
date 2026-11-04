@@ -99,6 +99,39 @@ function persist(): void {
     for (const message of plan.write) write(live.conversationId, message);
 }
 
+/** Removed facts Mera has not told the reader about yet, in memory. A kill loses
+ *  them, and the tombstone stays as the notice. */
+const removedFacts: string[] = [];
+let flushingRemoved = false;
+
+export function noteRemovedFact(statement: string): void {
+    removedFacts.push(statement);
+}
+
+export function pendingRemovedFacts(): readonly string[] {
+    return removedFacts;
+}
+
+/**
+ * One reply for every fact waiting. Holds while a turn runs or another topic
+ * job could still add to the list, and `exceptFactId` is the job calling from
+ * its own finally, whose row is still active.
+ */
+export async function flushRemovedFacts(exceptFactId?: string): Promise<void> {
+    if (flushingRemoved || removedFacts.length === 0) return;
+    flushingRemoved = true;
+    try {
+        const { getActiveTopicGenFactIds } =
+            require('@/lib/database/services/inference-job-service') as typeof import('@/lib/database/services/inference-job-service');
+        const active = await getActiveTopicGenFactIds();
+        if (exceptFactId) active.delete(exceptFactId);
+        if (active.size > 0 || busyNow() || !live?.engine.tellRemovedFacts) return;
+        live.engine.tellRemovedFacts(removedFacts.splice(0));
+    } finally {
+        flushingRemoved = false;
+    }
+}
+
 function sync(): void {
     const busy = busyNow();
     if (busy && !release) release = holdRestart('chat-stream');
@@ -110,6 +143,7 @@ function sync(): void {
         useFloatingChatStore.getState().setGenerating(busy);
     }
     persist();
+    if (!busy && removedFacts.length > 0) void flushRemovedFacts().catch(() => {});
 }
 
 function wire(): void {
@@ -160,6 +194,7 @@ export function attachChatSession(opts: AttachOptions): ChatEngine {
  */
 export function stopChatTurn(): void {
     if (!live || !busyNow()) return;
+    removedFacts.length = 0;
     live.engine.stop();
 }
 
@@ -218,6 +253,8 @@ export async function requestMoreOptions(
 export function resetChatSession(): void {
     live?.engine.dispose();
     live = null;
+    // The tap opens a fresh chat, and its reset must not eat the note it queued.
+    if (!useFloatingChatStore.getState().isExpanded) removedFacts.length = 0;
     resetLocalChat();
     useCloudChatStore.getState().reset();
     release?.();

@@ -45,6 +45,9 @@ export interface ChatEngine<A extends ChatAgent = IAgent> {
     send(text: string): void;
     /** A turn the user never sees (the topic-plan discard note). */
     sendHidden(text: string): void;
+    /** Tells the reader these facts were removed: no user turn, no tools. The
+     *  session calls it only when nothing is busy. */
+    tellRemovedFacts?(statements: readonly string[]): void;
     /** The last turn threw and may be sent again; absent on an engine that cannot. */
     canRetry?(): boolean;
     /** Sends the failed turn again: no new bubble, the wire as the turn found it.

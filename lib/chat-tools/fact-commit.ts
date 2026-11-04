@@ -14,6 +14,7 @@
 // one batch per card.
 
 import { addFact, getFacts, replaceFact } from '../database/services/fact-service';
+import { TOPICS_FROM_CHAT } from '../database/services/topic-generation-status-service';
 import { detectFactConflicts } from '@/lib/news-harness/persona-management/fact-conflict';
 import { normalizeStatement } from '@/lib/news-harness/persona-management/fact-rules';
 import { runGeoDerivationSweep } from '../database/services/geo-derivation-service';
@@ -116,7 +117,7 @@ export async function commitFactChoices(
           questionnaire: choice.questionnaire,
           topicsStatus: 'pending',
         })
-      : await addFact(statement, undefined, choice.questionnaire, {
+      : await addFact(statement, { [TOPICS_FROM_CHAT]: true } as unknown as Record<string, string[]>, choice.questionnaire, {
           topicsStatus: 'pending',
         });
     if (choice.replaces) replacedFactIds.push(choice.replaces);

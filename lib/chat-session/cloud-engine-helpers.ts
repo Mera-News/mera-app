@@ -199,6 +199,11 @@ function i18nInstance(): typeof import('../i18n').default {
   return (require('../i18n') as typeof import('../i18n')).default;
 }
 
+/** The fixed removal line, in the reader's language. */
+export function factRemovedLine(statements: readonly string[]): string {
+  return i18nInstance().t('chat.factRemovedLine', { facts: statements.map((s) => `"${s}"`).join(', ') });
+}
+
 const TAG = '[CloudChat]';
 
 type CloudState = ReturnType<typeof useCloudChatStore.getState>;

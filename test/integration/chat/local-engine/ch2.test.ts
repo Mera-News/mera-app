@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n';
 // CH2: the on-device engine accepts a send during the tool phase.
 //
 // `status` goes idle BEFORE the tool loop runs (the composer is released while tools work), but
@@ -87,5 +88,15 @@ describe('a send while the first turn runs its tools', () => {
     await turnDone();
     expect(onDeviceLlmCalls()).toHaveLength(1);
     expect(local().messages.find((m) => m.role === 'assistant')?.toolCalls?.[0].status).toBe('done');
+  });
+});
+
+describe('a removed fact on the phone', () => {
+  it('sends the fixed line: no model call, one assistant bubble, no user row', async () => {
+    const { engine } = await attachLocal(personaAgent());
+    engine.tellRemovedFacts?.(['30 year old male']);
+    expect(local().messages.map((m) => [m.role, m.content])).toEqual([
+      ['assistant', i18n.t('chat.factRemovedLine', { facts: '"30 year old male"' })],
+    ]);
   });
 });

@@ -30,6 +30,8 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import StatusIndicator from '@/components/custom/chat/StatusIndicator';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
+import { removeFactFromTap } from '@/lib/chat-session/fact-removal';
+import { TOPICS_ASK_REMOVAL } from '@/lib/database/services/topic-generation-status-service';
 import { observeFact, observeTopicsStatus } from '@/lib/database/services/fact-service';
 import {
   deleteTopicWithDecline,
@@ -118,6 +120,8 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   /** The user opened or closed it themselves; never override that. */
   const userToggledRef = useRef(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const removingRef = useRef(false);
   const [isFindingMore, setIsFindingMore] = useState(false);
   const [moreResult, setMoreResult] = useState<string | null>(null);
   const [fact, setFact] = useState<Fact | null>(null);
@@ -301,6 +305,22 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   };
 
   const empty = visible.length === 0;
+  // Empty with the chat closed: the fact waits for this tap, and nothing else on
+  // the card may spend a model call first.
+  const askRemoval =
+    empty && status === 'done' && (fact?.metadata as Record<string, unknown> | undefined)?.[TOPICS_ASK_REMOVAL] === true;
+  const handleAskRemoval = async () => {
+    if (removingRef.current) return;
+    removingRef.current = true;
+    setIsRemoving(true);
+    void hapticLight();
+    try {
+      await removeFactFromTap(factId, factStatement);
+    } finally {
+      removingRef.current = false;
+      setIsRemoving(false);
+    }
+  };
   const moreLabel = empty ? t('chatTopics.findTopics') : t('chatTopics.findMore');
 
   // TWO DIFFERENT "Try again"s, and they must not merge.
@@ -433,7 +453,23 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
         )}
       </View>
 
-      {expanded && (
+      {askRemoval && (
+        <Pressable
+          onPress={handleAskRemoval}
+          disabled={isRemoving}
+          style={styles.askButton}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isRemoving }}
+          accessibilityLabel={t('chatTopics.seeWhatToSaveA11y', { statement: factStatement })}
+          testID="chat-topics-see-what-to-save"
+        >
+          <Text size="xs" bold style={styles.retryText}>
+            {t('chatTopics.seeWhatToSave')}
+          </Text>
+        </Pressable>
+      )}
+
+      {expanded && !askRemoval && (
         <View style={styles.body}>
           {/* The spinner and the words live ONLY here. Opening the card is the
               user asking about progress; until then the work is quiet. */}
@@ -618,6 +654,17 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     borderColor: c.accentMark,
   },
   retryText: { color: c.accentText },
+  askButton: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 6,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: c.accentMark,
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',

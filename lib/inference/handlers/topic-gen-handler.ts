@@ -17,6 +17,8 @@ import {
 } from '../../database/services/topic-generation-status-service';
 import { describeFactPlaces } from '../../news-harness/persona-management/fact-places';
 import { generateTopicsForFact as generateViaSkill, topicSkillForAttribute } from '@/lib/mera-harness';
+import { flushRemovedFacts } from '../../chat-session/chat-session';
+import { resolveEmptyChatFact } from '../../chat-session/fact-removal';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { isOnDeviceDeferrable } from '../job-defer';
@@ -198,9 +200,18 @@ async function currentStatement(factId: string): Promise<string | null> {
   return (await getFacts()).find((f) => f.id === factId)?.statement ?? null;
 }
 
-export async function handleTopicGenJob(
-  payload: TopicGenPayload,
-): Promise<TopicGenResult> {
+export async function handleTopicGenJob(payload: TopicGenPayload): Promise<TopicGenResult> {
+  try {
+    return await runTopicGen(payload);
+  } finally {
+    // The last job of a batch fires it, so several empty facts make one reply.
+    await flushRemovedFacts(payload.factId).catch((err: unknown) => {
+      logger.warn('[topic-gen] removal note did not fire', { error: String(err) });
+    });
+  }
+}
+
+async function runTopicGen(payload: TopicGenPayload): Promise<TopicGenResult> {
   const allFacts = await getFacts();
   const fact = allFacts.find((f) => f.id === payload.factId);
   // Deleted before its job ran: nothing to generate for and nothing to settle.
@@ -288,6 +299,7 @@ export async function handleTopicGenJob(
     filter: dropped.filter,
   });
   await settleEmptyTopicGeneration(payload.factId, fact.statement, { background });
+  if (!background) await resolveEmptyChatFact(payload.factId, fact.statement);
   useFloatingChatStore.getState().notifyFactMutation();
   return { topics: [], outcome: 'empty' };
 }

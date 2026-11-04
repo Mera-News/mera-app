@@ -8,6 +8,7 @@
 // shows the reply and runs those tools exactly as cloud tool calls run, so the
 // cards (fact choices, proposals, story options) are the same ones.
 
+import { factRemovedLine } from '@/lib/chat-session/cloud-engine-helpers';
 import type { ChatEngine } from '@/lib/chat-session/engine';
 import { useLocalChatStore, type LocalChatState } from '@/lib/chat-session/local-chat-store';
 import { inferenceQueue } from '../inference/InferenceQueue';
@@ -268,6 +269,10 @@ export function createLocalEngine(initialAgent: OnDeviceAgent): ChatEngine<OnDev
     sendHidden: (text) => startTurn(text, true),
     setAgent: (agent) => {
       agentRef.current = agent;
+    },
+    // The fixed line: the built-in writer cannot be relied on to quote a fact exactly.
+    tellRemovedFacts: (statements) => {
+      setMessages([...st().messages, { id: `asst-${Date.now()}`, role: 'assistant', content: factRemovedLine(statements) }]);
     },
     moreOptions: async (req) => {
       const agent = agentRef.current;

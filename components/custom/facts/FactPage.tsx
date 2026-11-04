@@ -101,6 +101,8 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         confirmAdd,
         suggesting,
         suggestMore,
+        askRemoval,
+        seeWhatToSave,
         emptyLine,
         knownIds,
         status,
@@ -275,10 +277,20 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                         <MeraLogo size={26} animated />
                         <Text style={{ color: colors.ink2, fontSize: 14 }}>{t('chatTopics.finding')}</Text>
                     </View>
-                ) : (
+                ) : askRemoval ? null : (
                     <Pill testID="fact-suggest-more" label={topics.length === 0 ? t('chatTopics.findTopics') : t('facts.page.suggestMore')} icon="auto-awesome" filled onPress={suggestMore} />
                 )}
             </View>
+            {askRemoval ? (
+                <Pill
+                    testID="fact-see-what-to-save"
+                    label={t('chatTopics.seeWhatToSave')}
+                    accessibilityLabel={t('chatTopics.seeWhatToSaveA11y', { statement: fact?.statement ?? '' })}
+                    icon="auto-awesome"
+                    filled
+                    onPress={() => void seeWhatToSave()}
+                />
+            ) : null}
             <GroupLabel>{t('facts.page.showLessOf')}</GroupLabel>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {chips.map((chip) => (
@@ -501,7 +513,8 @@ const Pill: React.FC<{
     readonly filled?: boolean;
     readonly onPress: () => void;
     readonly testID: string;
-}> = ({ label, icon, filled = false, onPress, testID }) => {
+    readonly accessibilityLabel?: string;
+}> = ({ label, icon, filled = false, onPress, testID, accessibilityLabel }) => {
     const colors = useColors();
     const ink = filled ? colors.onAccent : colors.ink;
     return (
@@ -509,12 +522,15 @@ const Pill: React.FC<{
             testID={testID}
             onPress={onPress}
             accessibilityRole="button"
-            accessibilityLabel={label}
+            accessibilityLabel={accessibilityLabel ?? label}
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
+                alignSelf: 'flex-start',
+                flexShrink: 1,
                 gap: 6,
-                height: 44,
+                minHeight: 44,
+                paddingVertical: 6,
                 paddingHorizontal: 18,
                 borderRadius: 999,
                 backgroundColor: filled ? colors.accent : 'transparent',
@@ -523,7 +539,7 @@ const Pill: React.FC<{
             }}
         >
             <MaterialIcons name={icon} size={18} color={ink} />
-            <Text style={{ color: ink, fontSize: 15, fontWeight: '600' }}>{label}</Text>
+            <Text style={{ color: ink, fontSize: 15, fontWeight: '600', flexShrink: 1 }}>{label}</Text>
         </Pressable>
     );
 };

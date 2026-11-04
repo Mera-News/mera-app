@@ -11,6 +11,8 @@ import { initI18nEn } from '@/test/helpers';
 const mockGenerate = jest.fn();
 const mockRelease = jest.fn();
 const mockRetry = jest.fn();
+const mockTap = jest.fn();
+jest.mock('@/lib/chat-session/fact-removal', () => ({ removeFactFromTap: (...a: unknown[]) => mockTap(...a) }));
 let mockAutoDelete = true;
 let mockFact: Record<string, unknown> | null = null;
 let mockTopics: Record<string, unknown>[] = [];
@@ -136,5 +138,21 @@ describe('Suggest more', () => {
         await act(async () => { fireEvent.press(view.getByTestId('fact-suggest-more')); });
         expect(view.queryByTestId('fact-suggest-more')).toBeNull();
         expect(view.getByTestId('fact-suggesting')).toBeTruthy();
+    });
+});
+
+describe('a fact waiting on the reader', () => {
+    beforeEach(() => {
+        mockFact = { id: 'f1', statement: '30 year old male', metadata: { topics_ask_removal: true }, weight: null, topicsStatus: 'done' };
+    });
+
+    it('shows the button naming the fact, in place of Find topics, and a tap removes it', async () => {
+        mockTap.mockResolvedValue(true);
+        const view = await open();
+        const button = view.getByTestId('fact-see-what-to-save');
+        expect(button.props.accessibilityLabel).toBe('See what to save instead of "30 year old male"');
+        expect(view.queryByTestId('fact-suggest-more')).toBeNull();
+        await act(async () => { fireEvent.press(button); });
+        expect(mockTap).toHaveBeenCalledWith('f1', '30 year old male');
     });
 });
