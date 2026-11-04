@@ -105,7 +105,7 @@ export default function Onboarding() {
     // it is applied on the returning-user path in app/logged-in/index.tsx. This
     // also runs on a re-login to a finished device, which lands here too.
     const handleComplete = useCallback(() => {
-        void AppScheduler.trigger("feed-sync", { bypassDebounce: true });
+        void AppScheduler.trigger("feed-sync", undefined, { bypassDebounce: true });
         router.replace("/logged-in/app_container/world");
         // A right-to-left language picked on the first-launch track needs a
         // reload to flip the layout, and no restart can happen on /login or

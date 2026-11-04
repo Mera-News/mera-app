@@ -176,8 +176,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 );
             }
             // The push token registers regardless of the visible switch: the
-            // silent-push background cycle needs it.
-            await ensurePushTokenRegistered(userId);
+            // silent-push background cycle needs it. Never awaited: it is total,
+            // push-token-check-task re-registers later, and a slow Expo answer
+            // must not hold the reader back.
+            void ensurePushTokenRegistered(userId);
             void reconcileAppLanguageWithPersona({ userId });
             await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
             await markOnboardingDone();

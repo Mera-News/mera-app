@@ -6,6 +6,7 @@ import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
 import { AccountService } from '@/lib/account-service';
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { OnboardingStage } from '@/lib/generated/graphql-types';
+import * as notificationService from '@/lib/notification-service';
 import { graphql, HttpResponse, server } from '@/test/helpers';
 
 jest.mock('react-native-keyboard-controller', () => ({
@@ -64,6 +65,20 @@ it('the close button goes back to the chat with nothing saved', async () => {
 
   expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
   expect(screen.getByTestId('onboarding-next')).toBeTruthy();
+});
+
+it('finishing does not wait for the push token', async () => {
+  await addFact('I follow Formula 1 racing');
+  jest.spyOn(notificationService, 'ensurePushTokenRegistered').mockReturnValue(new Promise(() => {}));
+  const onComplete = jest.fn();
+  await render(<OnboardingWizard userId="user-1" onComplete={onComplete} />);
+  await fireEvent.press(await screen.findByTestId('onboarding-next'));
+  await waitFor(() => expect(screen.queryByTestId('onboarding-facts-count')).toBeNull());
+
+  await fireEvent.press(screen.getByTestId('onboarding-next'));
+  await fireEvent.press(await screen.findByTestId('onboarding-guard-notifications-secondary'));
+
+  await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
 });
 
 it('Next with a fact goes straight to the notifications step', async () => {

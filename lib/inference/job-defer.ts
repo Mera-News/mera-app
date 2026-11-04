@@ -9,8 +9,8 @@
 // "slow down" (429). Anything else is an ordinary failed attempt.
 //
 // Only job types the queue lists as deferrable use `isDeferrableError`; today
-// that is `topic_combo`, whose pass would otherwise burn three attempts on an
-// app closed without a connection. The built-in model's "busy" and
+// those are `topic_combo`, whose pass would otherwise burn three attempts on an
+// app closed without a connection, and `topic_gen`. The built-in model's "busy" and
 // "unavailable" (`isOnDeviceDeferrable`) defer EVERY job type: Gemini Nano
 // refuses background work and has a per-app quota, Apple throttles, and the
 // model can be mid-download. None of that is the job's fault.

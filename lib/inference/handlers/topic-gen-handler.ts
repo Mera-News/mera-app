@@ -21,7 +21,7 @@ import { flushRemovedFacts } from '../../chat-session/chat-session';
 import { resolveEmptyChatFact } from '../../chat-session/fact-removal';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
-import { isOnDeviceDeferrable } from '../job-defer';
+import { isDeferrableError, isOnDeviceDeferrable } from '../job-defer';
 import { SMALL_MODEL } from '../../llm/constants';
 import logger from '../../logger';
 import type { Fact } from '../../mera-protocol-toolkit/types';
@@ -195,6 +195,23 @@ function topicGenFailureContext(payload: TopicGenPayload, fact: Fact): Record<st
   };
 }
 
+/**
+ * Topics landed, so the first feed can follow them now instead of at the next poll.
+ * Lazy, as in combo-pass-service: this sits under the queue every enqueue path imports.
+ * shortcut: a busy scheduler drops this and the next poll covers it, upgrade if readers report a wait.
+ */
+function followWithFeedSync(): void {
+  try {
+    const { AppScheduler } =
+      require('../../scheduler/AppScheduler') as typeof import('../../scheduler/AppScheduler');
+    void AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true }).catch((err: unknown) =>
+      logger.warn('[topic-gen] feed-sync trigger failed', { error: String(err) }),
+    );
+  } catch (err) {
+    logger.captureException(err, { tags: { service: 'topic-gen', method: 'feed-sync' } });
+  }
+}
+
 /** Stale means the fact was reworded or deleted while the ladder ran. */
 async function currentStatement(factId: string): Promise<string | null> {
   return (await getFacts()).find((f) => f.id === factId)?.statement ?? null;
@@ -243,7 +260,9 @@ async function runTopicGen(payload: TopicGenPayload): Promise<TopicGenResult> {
       });
     }
   } catch (err: unknown) {
-    if (isOnDeviceDeferrable(err)) throw err;
+    // Offline, no credential yet, or the gateway said busy: the queue retries
+    // later without spending an attempt, and the fact stays pending.
+    if (isOnDeviceDeferrable(err) || isDeferrableError(err)) throw err;
     const message = err instanceof Error ? err.message : String(err);
     logger.warn('[topic-gen] run failed', { factId: payload.factId, message });
     // Generate more and a scheduled retry change nothing: the fact's topics and
@@ -279,6 +298,7 @@ async function runTopicGen(payload: TopicGenPayload): Promise<TopicGenResult> {
   if (topics.length > 0) {
     await completeTopicGeneration(payload.factId, topics);
     useFloatingChatStore.getState().notifyFactMutation();
+    followWithFeedSync();
     return { topics, outcome: 'added' };
   }
 
