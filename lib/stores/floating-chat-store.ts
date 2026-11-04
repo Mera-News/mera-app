@@ -556,6 +556,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             quickFactChecks: [],
             topicPlanNotes: [],
             topicPlanTurnRequest: null,
+            // The killed turn's Retry goes with the thread the reader left.
+            interruptedTurn: null,
         }),
 
     setInterruptedTurn: (interruptedTurn) => set({ interruptedTurn }),
