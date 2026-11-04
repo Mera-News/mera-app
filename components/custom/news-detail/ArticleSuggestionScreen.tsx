@@ -258,6 +258,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         pubDate: suggestion.firstPubDate ?? suggestion.createdAt,
                                         publicationName: suggestion.publication_name,
                                         countryCode: suggestion.country_code,
+                                        languageCode: suggestion.language_code,
                                         stableClusterId: suggestion.clusters?.find(
                                             (c) => c.stableClusterId,
                                         )?.stableClusterId ?? undefined,

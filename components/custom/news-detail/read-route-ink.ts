@@ -3,12 +3,12 @@
 // something readable because THIS phone can translate that language on device
 // (`getArticleTranslationSupport`, which carries the iOS-version and language
 // table) or the article is already in the reader's language, the neutral ink
-// outline otherwise. Google Translate is always green. RN-free.
+// outline otherwise, an unknown language included. Google Translate is always green. RN-free.
 
 import type { TranslatableStatus } from '@/lib/translation-service';
 
 export type ReadRouteInk = 'positive' | 'ink';
 
 export function publisherRouteInk(status: TranslatableStatus): ReadRouteInk {
-    return status === 'not-translatable' ? 'ink' : 'positive';
+    return status === 'not-translatable' || status === 'unknown' ? 'ink' : 'positive';
 }

@@ -215,7 +215,7 @@ export function __resetOSMajorCacheForTests(): void {
     cachedOSMajor = undefined;
 }
 
-export type TranslatableStatus = 'translatable' | 'not-translatable' | 'same-language';
+export type TranslatableStatus = 'translatable' | 'not-translatable' | 'same-language' | 'unknown';
 
 export type TranslationUnsupportedReason =
     /** The OS supports this language, but on a newer version than this device runs. */
@@ -248,7 +248,9 @@ export function getArticleTranslationSupport(
     osMajorOverride?: number,
 ): ArticleTranslationSupport {
     const canonical = canonicalizeLanguageCode(originalLang);
-    if (!canonical) return { status: 'same-language' };
+    // A missing language is not the reader's: hiding Google Translate here left
+    // an unlabelled foreign article with no way to translate it (MERA-APP-99).
+    if (!canonical) return { status: 'unknown' };
 
     const canonicalApp = canonicalizeLanguageCode(appLanguage);
     // Chinese is compared at script level: a Simplified reader can't read a
@@ -291,9 +293,10 @@ export function getArticleTranslationSupport(
  * - 'same-language': article is already in the user's language — hide notice
  * - 'translatable': different language AND the device's on-device translator can handle it
  * - 'not-translatable': different language and the device can't translate it
+ * - 'unknown': the article carries no usable language code, so neither is proven
  *
  * Thin wrapper over {@link getArticleTranslationSupport} for callers that
- * only need the three-way status.
+ * only need the status.
  */
 export function getArticleTranslatableStatus(
     originalLang: string | null | undefined,

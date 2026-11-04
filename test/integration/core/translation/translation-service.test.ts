@@ -246,12 +246,12 @@ describe('resolveUiLocale', () => {
 describe('getArticleTranslatableStatus (iOS)', () => {
     // Platform.OS = 'ios' from the native setup → IOS_TRANSLATION_SOURCE_CODES is active
 
-    it('returns "same-language" when originalLang is null', () => {
-        expect(getArticleTranslatableStatus(null, 'en')).toBe('same-language');
+    it('returns "unknown" when originalLang is null: a missing language is never the reader\'s own', () => {
+        expect(getArticleTranslatableStatus(null, 'en')).toBe('unknown');
     });
 
-    it('returns "same-language" when originalLang is undefined', () => {
-        expect(getArticleTranslatableStatus(undefined, 'en')).toBe('same-language');
+    it('returns "unknown" when originalLang is undefined', () => {
+        expect(getArticleTranslatableStatus(undefined, 'en')).toBe('unknown');
     });
 
     it('returns "same-language" when article and app language match', () => {
@@ -317,6 +317,11 @@ describe('getArticleTranslatableStatus (iOS)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('getArticleTranslationSupport (iOS)', () => {
+    it('answers unknown, with no reason, for a blank language', () => {
+        expect(getArticleTranslationSupport('', 'en')).toEqual({ status: 'unknown' });
+        expect(getArticleTranslationSupport('  ', 'nl')).toEqual({ status: 'unknown' });
+    });
+
     it('reports os-outdated with both versions when Apple added the language later', () => {
         // Apple added Hindi as a translation source in iOS 18.
         expect(getArticleTranslationSupport('hi', 'en', 17)).toEqual({

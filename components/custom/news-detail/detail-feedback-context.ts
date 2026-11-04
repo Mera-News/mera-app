@@ -134,6 +134,7 @@ export async function resolveDetailFeedbackSubject(opts: {
       pubDate: article?.pubDate ? String(article.pubDate) : null,
       publicationName: suggestion.publication_name,
       countryCode: suggestion.country_code,
+      languageCode: suggestion.language_code,
       category,
       eventType: article?.event_type ?? undefined,
       matchedTopics: [],

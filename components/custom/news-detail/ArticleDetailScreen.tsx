@@ -427,6 +427,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         pubDate: article.pubDate ?? null,
                                         publicationName: article.publicationSource?.publication_name,
                                         countryCode: article.publicationSource?.country_code,
+                                        languageCode: article.original_language_code,
                                         stableClusterId,
                                     }}
                                     share={{

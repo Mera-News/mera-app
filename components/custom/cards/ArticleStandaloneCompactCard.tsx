@@ -69,6 +69,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       pubDate: article.pubDate ?? null,
       publicationName: article.publicationSource?.publication_name ?? null,
       countryCode: article.publicationSource?.country_code ?? null,
+      languageCode: article.original_language_code ?? null,
       ...subjectExtras,
     }),
     // Callers pass `subjectExtras` as an inline literal; its fields, not its

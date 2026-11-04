@@ -12,4 +12,8 @@ describe('publisherRouteInk', () => {
     it('is green for an article in the reader’s own language', () => {
         expect(publisherRouteInk('same-language')).toBe('positive');
     });
+
+    it('keeps the ink outline when the language is unknown: readable is not proven', () => {
+        expect(publisherRouteInk('unknown')).toBe('ink');
+    });
 });
