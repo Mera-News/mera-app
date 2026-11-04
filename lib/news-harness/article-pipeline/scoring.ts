@@ -197,9 +197,11 @@ export function reasonSystemPromptFor(
  * example persona (Amsterdam, Bhopal, Porto Santo), and an empty "[User facts] ."
  * left that example as the only reader the model could find, so it wrote notes
  * about a home and a commute nobody has. Reaches the on-device prompts too.
+ * The rule lives here, not in a system prompt, because only this reader sees it:
+ * shared prompts ride on every call and stay byte-identical for everyone else.
  */
 export const EMPTY_FACT_BANK_CONTEXT =
-  '[User facts] none. Nothing is known about this reader, so never assume a home, job, family, trip or interest for them.';
+  '[User facts] none. Nothing is known about this reader, so never assume a home, job, family, trip or interest for them, and any instruction to link the article to a user fact does not apply. Say plainly that it has no known link to them, for example "This is major news with no known link to you."';
 
 /** Build the "[User facts] …" string from the user's FULL fact bank. */
 export function buildUserContext(allFactStatements: string[]): string {

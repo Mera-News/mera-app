@@ -284,15 +284,6 @@ ${CLOUD_SCORING_GEO_SCOPE_RULE}`;
  */
 export const RULE_NAME_BAN = `Say what the rules found, never their names: the sentence must not contain a rule name in ANY spelling ("foreign-domestic", "foreign domestic", with or without the hyphen, in any order), nor "tangential", "exclude", "stake", a tag such as "home" or "interest" used as a label, or any other word from these instructions. The reader has never seen them. Say whose story it is in plain words instead ("a Bulgarian domestic matter").`;
 
-/**
- * The two live reason prompts' exception to their mandatory link to a user fact.
- * Added where the two shipped prompts are composed, never to
- * CLOUD_REASON_VOICE_RULE or the task middles, which also feed the frozen
- * archives and the arms. It is inert for a reader with facts.
- */
-const emptyFactBankRule = (bridgeClause: string) =>
-  `When User Context reads "[User facts] none", clause ${bridgeClause} above and the voice rule's "every band" do not apply: nothing is known about this reader. Never claim a place, job, family, commute, trip or investment for them, and never borrow one from an example in these instructions. Write one neutral sentence about the story that says it has no known link to them: "This is major news with no known link to you."`;
-
 const CLOUD_REASON_VOICE_RULE = `Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."`;
 
 /**
@@ -734,8 +725,6 @@ ${REASON_OUTPUT_OBJECT}`;
 export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
 ${CLOUD_REASON_TASK}
-
-${emptyFactBankRule('(b)')}
 ${REASON_V2_RULES}`;
 
 /**
@@ -753,8 +742,6 @@ ${CLOUD_HEADLINE_IMPACT_BLOCK}
 ${CLOUD_HEADLINE_REASON_TASK_V1}
 
 ${RULE_NAME_BAN}
-
-${emptyFactBankRule('(c)')}
 ${REASON_V2_RULES}`;
 
 // ---------------------------------------------------------------------------
