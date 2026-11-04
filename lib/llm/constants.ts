@@ -73,6 +73,8 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   leaks. Costs +93% and runs +25% slower on a projected sync, which is
  *   acceptable for a path that only runs DURING AN OUTAGE. 262K context,
  *   attested ed25519 on staging.
+ *   Re-measured 2026-11-04 against DeepSeek-V4.1-Flash-1017 with a twin (120 scored
+ *   items per arm): gate 35 and 36 against 34 and 30, a tie inside the spread.
  *   A vision-language candidate screened 36% cheaper and was rejected as the
  *   text fallback by product decision, not by measurement.
  *
