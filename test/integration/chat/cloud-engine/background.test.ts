@@ -1,14 +1,11 @@
 // A whole chat turn across the app leaving: the engine, the session, the store and the row.
-import { renderHook } from '@testing-library/react-native';
-import { attachChatSession, resetChatSession } from '@/lib/chat-session/chat-session';
+import { attachChatSession, canRetryChatTurn, resetChatSession, retryChatTurn } from '@/lib/chat-session/chat-session';
 import { refusedOnRetry } from '@/lib/chat-session/cloud-engine-helpers';
 import { __startNewProcessForTests, recoverInterruptedTurn } from '@/lib/chat-session/turn-inflight';
-import { useChatSession } from '@/lib/chat-session/use-chat-session';
 import {
   appendMessage,
   createConversation,
   fetchMessagesForConversation,
-  type PersistedMessage,
 } from '@/lib/database/services/conversation-service';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { isFallbackEngaged } from '@/lib/llm/model-fallback';
@@ -229,7 +226,7 @@ describe('Retry', () => {
     engine.send('Why this story?');
     await advanceUntil(idle);
 
-    engine.retry?.('Why this story?');
+    expect(retryChatTurn()).toBe(true);
     await advanceUntil(() => idle() && answer().includes('Whole answer'));
 
     expect(cloud().error).toBeNull();
@@ -257,17 +254,14 @@ describe('Retry', () => {
     useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona', messageId } });
     return { old, messageId };
   }
-  const sessionFor = (conversationId: string, resume: PersistedMessage[] = [], agent = articleAgent()) =>
-    advanceUntilDone(renderHook(() => useChatSession('cloud', agent, conversationId, resume)));
   const notice = () => useFloatingChatStore.getState().interruptedTurn;
 
   it('after a kill the message moves to the new chat: history holds one copy', async () => {
     server.use(...mockGateway(() => 'Whole answer'));
     const { old } = await killedTurn();
-    const fresh = await advanceUntilDone(createConversation('CONFIG' as never));
-    const { result } = await sessionFor(fresh);
+    await advanceUntilDone(attachCloud(articleAgent()));
 
-    expect(result.current.retry('Why this story?')).toBe(true);
+    expect(retryChatTurn()).toBe(true);
     await advanceUntil(() => idle() && answer().includes('Whole answer'));
 
     expect(userBubbles()).toHaveLength(1);
@@ -278,10 +272,9 @@ describe('Retry', () => {
   it('in a reopened old chat the question stays, once, and its reply lands under it', async () => {
     server.use(...mockGateway(() => 'Whole answer'));
     const { old, messageId } = await killedTurn();
-    const resume = await advanceUntilDone(fetchMessagesForConversation(old));
-    const { result } = await sessionFor(old, resume);
+    attachChatSession({ conversationId: old, kind: 'cloud', agent: articleAgent(), persistedIds: [messageId] });
 
-    expect(result.current.retry('Why this story?')).toBe(true);
+    expect(retryChatTurn()).toBe(true);
     await advanceUntil(() => idle() && answer().includes('Whole answer'));
 
     expect(userBubbles()).toHaveLength(0);
@@ -293,14 +286,11 @@ describe('Retry', () => {
   it('a retry that cannot start deletes nothing and keeps the notice', async () => {
     server.use(...mockGateway(() => HELD));
     const { old } = await killedTurn();
-    const fresh = await advanceUntilDone(createConversation('CONFIG' as never));
-    const agent = articleAgent();
-    const { result } = await sessionFor(fresh, [], agent);
-    const engine = attachChatSession({ conversationId: fresh, kind: 'cloud', agent, persistedIds: [] });
+    const { engine } = await advanceUntilDone(attachCloud(articleAgent()));
     const more = engine.moreOptions!({ proposalId: 'p', shown: [], room: 1, subject: {} as never });
     await advanceUntil(() => gatewayCalls('chat').length === 1);
 
-    expect(result.current.retry('Why this story?')).toBe(false);
+    expect(retryChatTurn()).toBe(false);
     await jest.advanceTimersByTimeAsync(100);
 
     expect(notice()?.text).toBe('Why this story?');
@@ -310,34 +300,42 @@ describe('Retry', () => {
     await advanceUntilDone(more);
   });
 
-  it('does not count a warning twice for one interrupted turn, and only that turn is spared', async () => {
-    const warn = toolCall('issueWarning', { reason: 'abuse' });
-    server.use(
-      ...mockGateway((c) => {
-        if (c.index === 0) return warn;
-        if (c.index === 1) return { status: 400, body: 'nope' };
-        if (c.index === 2) return warn;
-        if (c.index === 4) return warn;
-        return 'Done.';
-      }),
-    );
+  const warningTool = () => {
     const agent = articleAgent();
     agent.getToolDefinitions = () => [
       { type: 'function', function: { name: 'issueWarning', description: 'Warn.', parameters: { type: 'object', properties: {} } } },
     ];
-    const run = jest.spyOn(agent, 'executeTool').mockResolvedValue({ result: { blocked: false } });
+    return { agent, run: jest.spyOn(agent, 'executeTool').mockResolvedValue({ result: { blocked: false } }) };
+  };
+
+  it('a live turn that ran a warning is not offered again', async () => {
+    server.use(
+      ...mockGateway((c) => (c.index === 0 ? toolCall('issueWarning', { reason: 'abuse' }) : { status: 400, body: 'nope' })),
+    );
+    const { agent, run } = warningTool();
     const { engine } = await advanceUntilDone(attachCloud(agent));
     engine.send('Something bad');
-    await advanceUntil(idle);
-    expect(run).toHaveBeenCalledTimes(1);
+    await advanceUntil(() => idle() && cloud().error !== null);
 
-    engine.retry?.('Something bad');
-    await advanceUntil(() => idle() && gatewayCalls('chat').length >= 4);
     expect(run).toHaveBeenCalledTimes(1);
+    expect(canRetryChatTurn()).toBe(false);
+    expect(retryChatTurn()).toBe(false);
+  });
+
+  it('a killed turn cannot tell how far it got: its Retry never counts a warning, and only that turn is spared', async () => {
+    const warn = toolCall('issueWarning', { reason: 'abuse' });
+    server.use(...mockGateway((c) => (c.index === 0 || c.index === 2 ? warn : 'Done.')));
+    await killedTurn();
+    const { agent, run } = warningTool();
+    const { engine } = await advanceUntilDone(attachCloud(agent));
+
+    expect(retryChatTurn()).toBe(true);
+    await advanceUntil(() => idle() && gatewayCalls('chat').length >= 2);
+    expect(run).not.toHaveBeenCalled();
 
     engine.send('Something else bad');
-    await advanceUntil(() => idle() && gatewayCalls('chat').length >= 6);
-    expect(run).toHaveBeenCalledTimes(2);
+    await advanceUntil(() => idle() && gatewayCalls('chat').length >= 4);
+    expect(run).toHaveBeenCalledTimes(1);
   });
 
   describe('a card waiting on a calibration tap', () => {
@@ -358,8 +356,9 @@ describe('Retry', () => {
       useFloatingChatStore.setState({ proposal: CARD });
       const agent = articleAgent();
       const execute = jest.spyOn(agent, 'executeTool').mockResolvedValue({ result: { applied: 1 } });
-      const { engine } = await advanceUntilDone(attachCloud(agent));
-      engine.retry?.('yes');
+      await advanceUntilDone(attachCloud(agent));
+      useFloatingChatStore.setState({ interruptedTurn: { text: 'yes', contextKind: 'persona' } });
+      expect(retryChatTurn()).toBe(true);
       await advanceUntil(() => idle() && gatewayCalls('chat').length >= 1);
 
       expect(gatewayCalls('chat')).not.toHaveLength(0);

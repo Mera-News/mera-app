@@ -390,41 +390,29 @@ describe('the failure banner while Retry is offered', () => {
 describe('a turn the app leaving ended', () => {
   const failedTurn = { error: 'Cloud chat failed: x', messages: [{ id: 'u1', role: 'user' as const, content: 'Why this story?' }] };
 
-  it('says so instead of blaming the service, and Retry sends the same text', async () => {
+  it('says so instead of blaming the service, and shares the one Retry', async () => {
     useCloudChatStore.setState({ interrupted: true });
-    const retryMessage = jest.fn();
-    const { result, sendMessage } = await mount({ ...failedTurn, retryMessage });
-
+    const { result } = await mount(failedTurn);
     expect(result.current.blockedMessage).toBe(t('chat.turnInterrupted'));
-    await act(async () => result.current.handleRetry?.());
-    expect(retryMessage).toHaveBeenCalledWith('Why this story?');
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(result.current.onRetry).toBeDefined();
   });
 
-  it('a service failure keeps its own copy and offers no Retry', async () => {
+  it('a service failure keeps its own copy', async () => {
     const { result } = await mount(failedTurn);
     expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
-    expect(result.current.handleRetry).toBeUndefined();
   });
 
-  it('a kill is offered in the kind of chat it came from, and nowhere else', async () => {
+  it('a kill needs no error to offer Retry', async () => {
     useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona' } });
-    const here = await mount();
-    const { result } = here;
+    const { result } = await mount();
     expect(result.current.blockedMessage).toBe(t('chat.turnInterrupted'));
-    await act(async () => result.current.handleRetry?.());
-    expect(here.sendMessage).toHaveBeenCalledWith('Why this story?');
-    expect(useFloatingChatStore.getState().interruptedTurn).toBeNull();
-
-    const other = await mount({ context: ARTICLE_CONTEXT });
-    expect(other.result.current.handleRetry).toBeUndefined();
+    expect(result.current.onRetry).toBeDefined();
   });
 
-  it('a retry that did not start keeps the notice', async () => {
+  it('a typed send answers the notice', async () => {
     useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona' } });
-    const retryMessage = jest.fn(() => false);
-    const { result } = await mount({ retryMessage });
-    await act(async () => result.current.handleRetry?.());
-    expect(useFloatingChatStore.getState().interruptedTurn).not.toBeNull();
+    const { result } = await mount();
+    await act(async () => result.current.handleSend('Something else'));
+    expect(useFloatingChatStore.getState().interruptedTurn).toBeNull();
   });
 });
