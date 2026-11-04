@@ -6,6 +6,7 @@
 // The text is what the `messages` table already holds. `settings` rows are
 // backed up only from an allowlist, and this key is not on it.
 
+import { deleteMessage } from '@/lib/database/services/conversation-service';
 import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
@@ -18,8 +19,8 @@ let processId = newProcessId();
 
 const warn = (error: unknown) => logger.warn('[ChatSession] turn row write failed', { error: String(error) });
 
-export function markTurnInflight(text: string, contextKind: ChatContext['kind']): void {
-    setSetting(KEY, JSON.stringify({ processId, text, contextKind })).catch(warn);
+export function markTurnInflight(text: string, contextKind: ChatContext['kind'], messageId: string): void {
+    setSetting(KEY, JSON.stringify({ processId, text, contextKind, messageId })).catch(warn);
 }
 
 export function clearTurnInflight(): void {
@@ -30,7 +31,7 @@ export function clearTurnInflight(): void {
 export async function recoverInterruptedTurn(): Promise<boolean> {
     const raw = await getSetting(KEY);
     if (!raw) return false;
-    let row: { processId?: string; text?: string; contextKind?: ChatContext['kind'] };
+    let row: { processId?: string; text?: string; contextKind?: ChatContext['kind']; messageId?: string };
     try {
         row = JSON.parse(raw);
     } catch {
@@ -39,8 +40,18 @@ export async function recoverInterruptedTurn(): Promise<boolean> {
     if (row.processId === processId) return false;
     await deleteSetting(KEY);
     if (!row.text || !row.contextKind) return false;
-    useFloatingChatStore.getState().setInterruptedTurn({ text: row.text, contextKind: row.contextKind });
+    useFloatingChatStore.getState().setInterruptedTurn({
+        text: row.text,
+        contextKind: row.contextKind,
+        messageId: row.messageId,
+    });
     return true;
+}
+
+/** Retry after a kill sent the message in a new conversation, so the old
+ *  conversation's copy goes: history then holds it once. */
+export function deleteInterruptedMessage(id: string): void {
+    deleteMessage(id).catch(warn);
 }
 
 /** Test seam: what a kill does to this module. */

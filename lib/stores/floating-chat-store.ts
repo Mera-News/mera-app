@@ -254,6 +254,8 @@ export type TrackMoreState = 'loading' | 'none' | 'failed';
 export interface InterruptedTurn {
     text: string;
     contextKind: ChatContext['kind'];
+    /** The `messages` row the turn left behind in its old conversation. */
+    messageId?: string;
 }
 
 const DEFAULT_CONTEXT: ChatContext = { kind: 'persona' };

@@ -46,6 +46,7 @@ import {
   activeFiltersView,
   applyToolSideEffects,
   pendingProposalView,
+  refusedOnRetry,
   scheduleFrame,
   TAG,
   withCombinedFactMemory,
@@ -130,8 +131,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   /** proposeTrack and searchNews run on the follow-story agent. On any other
    *  harness chat a lazy one stands in: its executeTool ignores the user id. */
   let delegate: FollowStoryAgent | null = null;
+  /** The turn in flight repeats one the app's leaving ended. */
+  let retrying = false;
   const cardTools = (): CardToolDeps => ({
-    execute: (name, args) => {
+    execute: async (name, args) => {
+      const refused = retrying ? refusedOnRetry(name) : null;
+      if (refused) return { result: refused };
       if (name !== 'proposeTrack' && name !== 'searchNews') return agentRef.current.executeTool(name, args);
       if (agentRef.current.id.startsWith('follow-story-')) return agentRef.current.executeTool(name, args);
       delegate ??= new FollowStoryAgent('delegate');
@@ -736,7 +741,10 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
                 }
                 const callName = resolved ?? tc.name;
                 logger.debug(`${TAG} executing tool`, { name: callName, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
-                const { result, sideEffects } = await agentRef.current.executeTool(callName, tc.input);
+                const refused = retrying ? refusedOnRetry(callName) : null;
+                const { result, sideEffects } = refused
+                  ? { result: refused, sideEffects: undefined }
+                  : await agentRef.current.executeTool(callName, tc.input);
                 logger.debug(`${TAG} tool result`, { name: tc.name, resultLength: JSON.stringify(result).length, sideEffects: sideEffects ? Object.keys(sideEffects) : [] });
 
                 applyToolSideEffects(sideEffects, { alive, cloud: cloud() });
@@ -921,6 +929,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     context?: string;
     /** A turn telling the reader these facts were removed. */
     removed?: readonly string[];
+    /** The user message already in the thread. Unset for a hidden turn. */
+    messageId?: string;
   };
   let failedTurn: FailedTurn | null = null;
 
@@ -933,23 +943,29 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     !cloud().isBlocked &&
     cloud().error !== null;
 
-  const startTurn = (text: string, visible: boolean, again?: Pick<FailedTurn, 'context' | 'removed'>) => {
+  /** Answers whether the turn started. `retrying` holds back what the first try
+   *  may have done (`refusedOnRetry`). */
+  const startTurn = (
+    text: string,
+    visible: boolean,
+    again?: Pick<FailedTurn, 'context' | 'removed' | 'messageId'> & { retrying?: boolean },
+  ): boolean => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
       // A turn started while one runs would push a `user` wire message between
       // an `assistant(tool_calls)` and its `tool` replies, which most
       // OpenAI-compatible endpoints reject.
       if (turnBusyRef.current || isStreamingRef.current || store.isBlocked || moreAbort !== null) {
-        if (!visible) {
+        if (!visible && !again?.retrying) {
           // Queued rather than dropped: the user tapped Discard and is owed a
           // reply, so it fires when the current work settles.
           pendingHiddenTurnRef.current = text;
           logger.debug(`${TAG} hidden turn queued`);
         }
-        return;
+        return false;
       }
       const trimmed = text.trim();
-      if (!trimmed) return;
+      if (!trimmed) return false;
 
       logger.debug(`${TAG} sendMessage proceeding`, { length: trimmed.length });
       store.setError(null);
@@ -957,17 +973,17 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       failedTurn = null;
       const turnWire = cloud().wireMessages;
 
+      const messageId = visible ? `user-${Date.now()}-${Math.random().toString(36).slice(2)}` : again?.messageId;
       if (visible) {
-        const userMsg: ConversationMessage = {
-          id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          role: 'user',
-          content: trimmed,
-          createdAt: Date.now(),
-        };
+        const userMsg: ConversationMessage = { id: messageId!, role: 'user', content: trimmed, createdAt: Date.now() };
         store.setMessages((prev) => [...prev, userMsg]);
-        useFloatingChatStore.getState().setInterruptedTurn(null);
-        markTurnInflight(trimmed, useFloatingChatStore.getState().context.kind);
       }
+      // A hidden turn has no message for the row to name. A retry of a shown one does.
+      if (messageId) {
+        useFloatingChatStore.getState().setInterruptedTurn(null);
+        markTurnInflight(trimmed, useFloatingChatStore.getState().context.kind, messageId);
+      }
+      retrying = again?.retrying === true;
       const left = departureMark();
 
       setTurnBusy(true);
@@ -1050,7 +1066,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const mutated = cloud()
               .messages.slice(turnStart)
               .some((m) => m.toolCalls?.some((tc) => MUTATING_CHAT_TOOLS.has(tc.name)));
-            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed };
+            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed, messageId };
             cloud().setError(msg);
             markFailed(turnStart);
             if (lost) cloud().setInterrupted(true);
@@ -1077,7 +1093,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           // underneath the error banner for the rest of the session.
           phase(null);
           if (phaseSinkRef.current === phase) phaseSinkRef.current = null;
-          if (visible) clearTurnInflight();
+          if (messageId) clearTurnInflight();
+          retrying = false;
           cloud().setStatus('idle');
           isStreamingRef.current = false;
           if (alive) useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
@@ -1086,6 +1103,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           flushPendingHiddenTurn();
         }
       })();
+      return true;
     };
 
   startTurnRef.current = startTurn;
@@ -1159,14 +1177,21 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       if (alive) startTurn(text, false);
     },
     canRetry,
-    retry: () => {
-      if (!canRetry() || !failedTurn) return;
-      const { text, wire, from, context, removed } = failedTurn;
+    retry: (killed) => {
+      if (killed) {
+        if (!alive) return false;
+        const { text, heldMessageId: messageId } = killed;
+        // A kill's thread has nothing to restore: the message is new here, or
+        // already on screen from history.
+        return startTurn(text, !messageId, { retrying: true, messageId });
+      }
+      if (!canRetry() || !failedTurn) return false;
+      const { text, wire, from, context, removed, messageId } = failedTurn;
       // The empty rows go; a row with tool calls stays, because a card may sit on it.
       cloud().setMessages((prev) => prev.filter((m, i) => i < from || (m.toolCalls ?? []).length > 0));
       useCloudChatStore.setState({ wireMessages: wire });
       // Not visible: the user's bubble is already there (and a hidden turn never had one).
-      startTurn(text, false, { context, removed });
+      return startTurn(text, false, { context, removed, messageId, retrying: true });
     },
     tellRemovedFacts: (statements) => {
       if (!alive) return;

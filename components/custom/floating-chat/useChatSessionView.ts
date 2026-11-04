@@ -539,6 +539,8 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       void hapticMedium();
       setIntroCleared(true);
       sendMessage(trimmed);
+      // Any send answers the notice, on either engine.
+      useFloatingChatStore.getState().setInterruptedTurn(null);
     },
     [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],
   );
@@ -668,14 +670,15 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   const turnBusy = useFloatingChatStore((st) => st.isGenerating);
   const [retryTapped, setRetryTapped] = useState(false);
   const retryGuard = useRef(false);
+  const killedTurn = useFloatingChatStore((st) => st.interruptedTurn);
   useEffect(() => {
-    if (!error) {
+    if (!error && !killedTurn) {
       retryGuard.current = false;
       setRetryTapped(false);
     }
-  }, [error]);
+  }, [error, killedTurn]);
   const canRetry =
-    !!error &&
+    (!!error || killedTurn !== null) &&
     !retryTapped &&
     !effectiveBlocked &&
     unresolvedTopicPlans.length === 0 &&
@@ -686,9 +689,8 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     retryGuard.current = true;
     setRetryTapped(true);
     hapticLight();
-    retryChatTurn();
     // Refused at the last moment: the error stands, so the banner has to come back.
-    if (useCloudChatStore.getState().error) {
+    if (retryChatTurn() === false) {
       retryGuard.current = false;
       setRetryTapped(false);
       return;
@@ -700,7 +702,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
 
   const blockedMessage = effectiveBlocked
     ? (effectiveBlockedReason || t('errors.accountRestricted'))
-    : error && !retryTapped && leftTurn
+    : !retryTapped && (error ? leftTurn : canRetry)
       ? t('chat.turnInterrupted')
     : error && !retryTapped
       ? // The raw error string is NOT appended. It is a bare string with no class
@@ -736,7 +738,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     handleRefreshBlockStatus,
     isRefreshingBlockStatus,
     handleSend,
-    handleRetry,
     composerHint,
     handleUnblockSubmitted,
     introMessage,

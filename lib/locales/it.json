@@ -691,13 +691,10 @@
     "statusError": "Errore",
     "turnNoAnswer": "Non sono riuscito a farlo. Prova a chiedermelo in un altro modo.",
     "turnFailed": "Quella risposta non è terminata. Riprova.",
-<<<<<<< HEAD
     "tryingAgain": "Nuovo tentativo",
-    "factRemovedLine": "Ho rimosso {{facts}} perché non ho trovato argomenti. Cosa vorresti che salvassi invece?"
-=======
+    "factRemovedLine": "Ho rimosso {{facts}} perché non ho trovato argomenti. Cosa vorresti che salvassi invece?",
     "turnInterrupted": "La risposta di Mera si è interrotta quando hai lasciato l'app.",
     "replyUnfinished": "Non completata"
->>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "Ciao, sono Mera.\n\nRaccontami qualcosa di te, come la tua città o il tuo quartiere, il lavoro che fai, o una squadra o un hobby che segui, e troverò notizie adatte a te.\n\nCondividi quanto vuoi. Quello che mi racconti resta su questo telefono. Nessuno tranne te ha accesso ai tuoi dati."

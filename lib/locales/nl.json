@@ -689,13 +689,10 @@
     "statusError": "Fout",
     "turnNoAnswer": "Dat lukte me niet. Probeer het op een andere manier te vragen.",
     "turnFailed": "Dat is niet afgerond. Probeer het opnieuw.",
-<<<<<<< HEAD
     "tryingAgain": "Opnieuw proberen",
-    "factRemovedLine": "Ik heb {{facts}} verwijderd omdat ik geen nieuwsonderwerpen kon vinden. Wat wil je dat ik in plaats daarvan opsla?"
-=======
+    "factRemovedLine": "Ik heb {{facts}} verwijderd omdat ik geen nieuwsonderwerpen kon vinden. Wat wil je dat ik in plaats daarvan opsla?",
     "turnInterrupted": "Het antwoord van Mera stopte toen je de app verliet.",
     "replyUnfinished": "Niet af"
->>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."

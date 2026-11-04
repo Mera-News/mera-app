@@ -6,7 +6,7 @@ import type { WireMessage } from '@/lib/llm/cloudComplete';
 import type { ConversationMessage } from '../llm/types';
 import type { AgentDeps, AgentState, PendingProposalView } from '../mera-harness';
 import type { ToolExecutionResult } from '../news-harness/core/types';
-import { proposalAllowsMultiSelect, proposalRequiresUserChoice } from '../news-harness/core/proposals';
+import { proposalAllowsMultiSelect, proposalRequiresUserChoice, userTapOnlyRefusal } from '../news-harness/core/proposals';
 import {
   normaliseTrackText,
   readCardOptions,
@@ -84,6 +84,23 @@ export function pendingCardStatements(messages: ConversationMessage[]): string[]
 /** The agents the harness loop drives: the persona chat and the follow-a-story chat. */
 export function runsOnHarness(agentId: string): boolean {
   return agentId.startsWith('persona-') || agentId.startsWith('follow-story-');
+}
+
+/**
+ * What a retried turn may not do, because the turn it repeats may have done it
+ * already and we cannot tell how far that got. A reader never pays for our
+ * interruption: `issueWarning` counts on the server and three block them, and a
+ * typed yes on a card waiting on a calibration tap leaves the card staged, so
+ * applying it again would repeat its actions. A plain card needs no rule:
+ * applying it consumes it. Null when the tool may run.
+ */
+export function refusedOnRetry(name: string): Record<string, unknown> | null {
+  if (name === 'issueWarning') return { blocked: false, message: 'Already handled for this message.' };
+  const card = useFloatingChatStore.getState().proposal;
+  if (name === 'applyProposal' && card?.actions.some((a) => a.type === 'run_calibration')) {
+    return { ...userTapOnlyRefusal() };
+  }
+  return null;
 }
 
 /** The route leg's one line when the chat was opened to follow a story. */

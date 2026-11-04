@@ -163,6 +163,14 @@ export async function appendMessage(
  * turn finalises, so a very fast tap can land first. `useChatPersistence` merges
  * the override in at write time for exactly that case, and this call no-ops.
  */
+/** Removes one message. A missing row is not an error. */
+export async function deleteMessage(id: string): Promise<void> {
+  await database.write(async () => {
+    const row = await messagesCol.find(id).catch(() => null);
+    await row?.destroyPermanently();
+  });
+}
+
 export async function patchMessageToolCallResult(
   messageId: string,
   toolCallIndex: number,

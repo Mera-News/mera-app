@@ -89,7 +89,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   onRefreshBlockStatus,
   isRefreshingBlockStatus,
   onSend,
-  onRetry,
   isInputDisabled,
   usageNotice,
   composerHint = null,

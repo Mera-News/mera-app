@@ -1136,13 +1136,9 @@
     "statusError": "Error",
     "turnNoAnswer": "I couldn't do that. Try asking another way.",
     "turnFailed": "That didn't finish. Try again.",
-<<<<<<< HEAD
     "tryingAgain": "Trying again",
     "factRemovedLine": "I removed {{facts}} because I couldn't find news topics. What would you like me to save instead?",
-    "turnInterrupted": "Your reply stopped when you left the app.",
-=======
     "turnInterrupted": "Mera's reply stopped when you left the app.",
->>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
     "replyUnfinished": "Not finished"
   },
   "personaChat": {

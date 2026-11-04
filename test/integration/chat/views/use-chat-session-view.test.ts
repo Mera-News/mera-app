@@ -392,11 +392,13 @@ describe('a turn the app leaving ended', () => {
 
   it('says so instead of blaming the service, and Retry sends the same text', async () => {
     useCloudChatStore.setState({ interrupted: true });
-    const { result, sendMessage } = await mount(failedTurn);
+    const retryMessage = jest.fn();
+    const { result, sendMessage } = await mount({ ...failedTurn, retryMessage });
 
     expect(result.current.blockedMessage).toBe(t('chat.turnInterrupted'));
     await act(async () => result.current.handleRetry?.());
-    expect(sendMessage).toHaveBeenCalledWith('Why this story?');
+    expect(retryMessage).toHaveBeenCalledWith('Why this story?');
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   it('a service failure keeps its own copy and offers no Retry', async () => {
@@ -412,6 +414,7 @@ describe('a turn the app leaving ended', () => {
     expect(result.current.blockedMessage).toBe(t('chat.turnInterrupted'));
     await act(async () => result.current.handleRetry?.());
     expect(here.sendMessage).toHaveBeenCalledWith('Why this story?');
+    expect(useFloatingChatStore.getState().interruptedTurn).toBeNull();
 
     const other = await mount({ context: ARTICLE_CONTEXT });
     expect(other.result.current.handleRetry).toBeUndefined();

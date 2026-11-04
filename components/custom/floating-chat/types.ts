@@ -440,8 +440,6 @@ export interface ChatThreadProps {
   onRefreshBlockStatus: () => void;
   isRefreshingBlockStatus: boolean;
   onSend: (text: string) => void;
-  /** Sends the turn the app's leaving ended. Absent when there is none. */
-  onRetry?: () => void;
   isInputDisabled: boolean;
   /**
    * A line in the empty thread's header, under the fixed guidelines line.

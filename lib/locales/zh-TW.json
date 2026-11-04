@@ -675,13 +675,10 @@
     "statusError": "錯誤",
     "turnNoAnswer": "我無法做到。請換個方式問我。",
     "turnFailed": "這個回覆沒有完成。請再試一次。",
-<<<<<<< HEAD
     "tryingAgain": "正在再試一次",
-    "factRemovedLine": "我找不到相關的新聞主題，所以移除了{{facts}}。你希望我改存什麼呢？"
-=======
+    "factRemovedLine": "我找不到相關的新聞主題，所以移除了{{facts}}。你希望我改存什麼呢？",
     "turnInterrupted": "你離開應用程式後,Mera 的回覆已中斷。",
     "replyUnfinished": "未完成"
->>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "嗨，我是梅拉。\n\n跟我聊聊你自己吧，例如你住的城市或街區、你從事的工作類型，或是你關注的球隊或嗜好，我會幫你找到合適的新聞。\n\n想分享多少都可以。你告訴我的內容都保存在這支手機上。除了你，沒有人能存取你的資料。"

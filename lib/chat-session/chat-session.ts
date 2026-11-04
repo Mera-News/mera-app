@@ -203,14 +203,40 @@ export function stopChatTurn(): void {
     live.engine.stop();
 }
 
-/** Retry is on offer: the last turn failed, nothing is busy, and it changed nothing. */
-export function canRetryChatTurn(): boolean {
-    return !busyNow() && live?.engine.canRetry?.() === true;
+/** A turn a kill ended, when this is the kind of chat it came from. */
+function killedTurnHere() {
+    const { interruptedTurn, context } = useFloatingChatStore.getState();
+    return interruptedTurn?.contextKind === context.kind ? interruptedTurn : null;
 }
 
-/** Sends the failed turn again. A no-op unless `canRetryChatTurn()`. */
-export function retryChatTurn(): void {
-    if (canRetryChatTurn()) live?.engine.retry?.();
+/** Retry is on offer: nothing is busy, and the last turn failed having changed
+ *  nothing, or a kill ended one in this kind of chat. */
+export function canRetryChatTurn(): boolean {
+    if (!live || busyNow()) return false;
+    return live.engine.canRetry?.() === true || killedTurnHere() !== null;
+}
+
+/** THE ONE RETRY. False when no turn started, and then nothing has changed. */
+export function retryChatTurn(): boolean {
+    if (!live || !canRetryChatTurn()) return false;
+    const { engine, persisted } = live;
+    if (engine.canRetry?.()) return engine.retry?.() === true;
+    const killed = killedTurnHere();
+    if (!killed) return false;
+    // A reopened old chat shows the message already, so its row stays.
+    const held = killed.messageId && persisted.has(killed.messageId) ? killed.messageId : undefined;
+    if (engine.retry) {
+        if (!engine.retry({ text: killed.text, heldMessageId: held })) return false;
+    } else {
+        engine.send(killed.text);
+    }
+    useFloatingChatStore.getState().setInterruptedTurn(null);
+    if (killed.messageId && !held) {
+        const { deleteInterruptedMessage } =
+            require('./turn-inflight') as typeof import('./turn-inflight');
+        deleteInterruptedMessage(killed.messageId);
+    }
+    return true;
 }
 
 /** The live engine can grow a follow card. The card hides "More options" when not. */

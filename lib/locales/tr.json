@@ -689,13 +689,10 @@
     "statusError": "Hata",
     "turnNoAnswer": "Bunu yapamadım. Başka bir şekilde sormayı dene.",
     "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene.",
-<<<<<<< HEAD
     "tryingAgain": "Tekrar deneniyor",
-    "factRemovedLine": "Haber konusu bulamadığım için şunları kaldırdım: {{facts}}. Bunun yerine ne kaydetmemi istersin?"
-=======
+    "factRemovedLine": "Haber konusu bulamadığım için şunları kaldırdım: {{facts}}. Bunun yerine ne kaydetmemi istersin?",
     "turnInterrupted": "Uygulamadan çıktığınızda Mera'nın yanıtı durdu.",
     "replyUnfinished": "Tamamlanmadı"
->>>>>>> 44fa80fa (Translate the interrupted chat turn copy)
   },
   "personaChat": {
     "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nİstediğin kadar paylaş. Bana anlattıkların bu telefonda kalır. Verilerine senden başka kimse erişemez."

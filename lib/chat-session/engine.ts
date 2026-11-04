@@ -40,6 +40,12 @@ export interface MoreOptionsResult {
     reason?: 'none' | 'busy' | 'failed' | 'stopped';
 }
 
+/** A turn from a dead process. `heldMessageId`: this thread already shows its message. */
+export interface KilledTurn {
+    text: string;
+    heldMessageId?: string;
+}
+
 /** `A` is the agent kind the engine runs: IAgent on cloud, OnDeviceAgent on the phone. */
 export interface ChatEngine<A extends ChatAgent = IAgent> {
     send(text: string): void;
@@ -51,8 +57,9 @@ export interface ChatEngine<A extends ChatAgent = IAgent> {
     /** The last turn threw and may be sent again; absent on an engine that cannot. */
     canRetry?(): boolean;
     /** Sends the failed turn again: no new bubble, the wire as the turn found it.
-     *  A no-op unless `canRetry()`. */
-    retry?(): void;
+     *  With `killed`, a turn a kill ended instead. Either way what the first try
+     *  may have done is not done twice. Answers whether a turn started. */
+    retry?(killed?: KilledTurn): boolean;
     /** The view re-creates its agent when the context object changes. */
     setAgent(agent: A): void;
     /** The Stop button: abort the turn in flight (and a queued hidden one).
