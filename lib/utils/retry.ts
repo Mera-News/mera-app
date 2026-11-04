@@ -117,6 +117,22 @@ export function isUnauthenticatedError(error: unknown): boolean {
   return status === 401;
 }
 
+/** True when the server refused this session: a 401 or a 403, in the shapes above. */
+export function isSessionRefusedError(error: unknown): boolean {
+  if (isUnauthenticatedError(error)) return true;
+  if (CombinedGraphQLErrors.is(error)) {
+    return error.errors.some((e) => {
+      const ext = (e as GraphQLErrorLike & { extensions?: { statusCode?: number } })
+        .extensions;
+      return ext?.code === 'FORBIDDEN' || ext?.statusCode === 403;
+    });
+  }
+  const ne = error as
+    | (NetworkLikeError & { networkError?: { statusCode?: number } })
+    | undefined;
+  return (ne?.statusCode ?? ne?.response?.status ?? ne?.networkError?.statusCode) === 403;
+}
+
 export async function withRetry<T>(
   op: () => Promise<T>,
   signal?: AbortSignal,

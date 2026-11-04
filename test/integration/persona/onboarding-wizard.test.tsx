@@ -1,4 +1,5 @@
 // The wizard's Next: zero facts asks for a city and never advances; a saved city moves on.
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
@@ -7,8 +8,23 @@ import { AccountService } from '@/lib/account-service';
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { OnboardingStage } from '@/lib/generated/graphql-types';
 import * as notificationService from '@/lib/notification-service';
+import { useNetworkStore } from '@/lib/stores/network-store';
 import { graphql, HttpResponse, server } from '@/test/helpers';
 
+// The kit Modal needs its overlay host; what the wizard decides is in these props.
+jest.mock('@/components/ui/confirm-dialog', () => ({
+  ConfirmDialog: ({ open, title, confirmLabel, cancelLabel, onConfirm, onCancel }: Record<string, any>) => {
+    const { Pressable, Text } = jest.requireActual('react-native');
+    if (!open) return null;
+    return (
+      <>
+        <Text>{title}</Text>
+        <Pressable onPress={onConfirm}><Text>{confirmLabel}</Text></Pressable>
+        {onCancel ? <Pressable onPress={onCancel}><Text>{cancelLabel}</Text></Pressable> : null}
+      </>
+    );
+  },
+}));
 jest.mock('react-native-keyboard-controller', () => ({
   useReanimatedKeyboardAnimation: () => ({ height: { value: 0 }, progress: { value: 0 } }),
 }));
@@ -89,4 +105,73 @@ it('Next with a fact goes straight to the notifications step', async () => {
 
   await waitFor(() => expect(advanceStage).toHaveBeenCalledWith('user-1', OnboardingStage.PersonaChat));
   expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
+});
+
+describe('Next when the server does not answer', () => {
+  const toNotifications = async () => {
+    await addFact('I follow Formula 1 racing');
+    await open();
+    await fireEvent.press(screen.getByTestId('onboarding-next'));
+    await waitFor(() => expect(screen.queryByTestId('onboarding-facts-count')).toBeNull());
+  };
+  const finish = async () => {
+    await fireEvent.press(screen.getByTestId('onboarding-next'));
+    await fireEvent.press(await screen.findByTestId('onboarding-guard-notifications-secondary'));
+  };
+  const graphqlError = (code: string, statusCode: number) =>
+    new CombinedGraphQLErrors({ errors: [{ message: 'no', extensions: { code, statusCode } }] });
+
+  afterEach(() => useNetworkStore.setState({ isConnected: true }));
+
+  it('step 0 moves on offline: its stage write decides nothing', async () => {
+    useNetworkStore.setState({ isConnected: false });
+
+    await toNotifications();
+
+    expect(screen.queryByText('Connection Issue')).toBeNull();
+  });
+
+  it('step 0 moves on when its stage write fails, with no dialog', async () => {
+    advanceStage.mockRejectedValue(graphqlError('INTERNAL_SERVER_ERROR', 500));
+
+    await toNotifications();
+
+    expect(screen.queryByText('Connection Issue')).toBeNull();
+  });
+
+  it('step 1 still needs the network: offline it says so and offers no Log out', async () => {
+    await toNotifications();
+    useNetworkStore.setState({ isConnected: false });
+
+    await finish();
+
+    await screen.findByText('Connection Issue');
+    expect(screen.queryByText('Logout')).toBeNull();
+  });
+
+  it('a failure that is not a refusal offers a retry, which runs again, and never Log out', async () => {
+    await toNotifications();
+    advanceStage.mockClear();
+    advanceStage.mockRejectedValueOnce(graphqlError('INTERNAL_SERVER_ERROR', 500));
+
+    await finish();
+    await fireEvent.press(await screen.findByText('Retry'));
+
+    expect(screen.queryByText('Logout')).toBeNull();
+    await waitFor(() => expect(advanceStage).toHaveBeenCalledTimes(2));
+  });
+
+  it.each([
+    ['a GraphQL 401', graphqlError('UNAUTHENTICATED', 401)],
+    ['a GraphQL 403', graphqlError('FORBIDDEN', 403)],
+    ['a network 403', Object.assign(new Error('no'), { statusCode: 403 })],
+  ])('%s offers Log out', async (_name, error) => {
+    await toNotifications();
+    advanceStage.mockRejectedValueOnce(error);
+
+    await finish();
+
+    await screen.findByText('Logout');
+    expect(screen.queryByText('Retry')).toBeNull();
+  });
 });

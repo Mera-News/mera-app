@@ -26,6 +26,7 @@ import {
     useFloatingChatUnresolvedCounts,
 } from '@/lib/stores/floating-chat-store';
 import { isOnline, useIsOnline } from '@/lib/stores/network-store';
+import { isSessionRefusedError } from '@/lib/utils/retry';
 import {
     useOnboardingIsInitializing,
     useOnboardingPreferences,
@@ -81,6 +82,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const { setStep, updatePreferences, setIsInitializing, resetOnboarding } = useOnboardingStore();
 
     const [showServerError, setShowServerError] = useState(false);
+    const [sessionRefused, setSessionRefused] = useState(false);
     const { isLoggingOut, handleServerErrorLogout } = useServerErrorLogout(setShowServerError);
     const offline = !useIsOnline();
     const [guard, setGuard] = useState<Guard>(null);
@@ -156,19 +158,24 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     /** Move on from the current step, past its guard. */
     const advance = useCallback(async () => {
         setGuard(null);
-        // Offline FIRST: every step below talks to the server.
+        if (currentStep === 0) {
+            // For the record only, so it never holds the reader back: the server
+            // stage decides nothing, and step 1 writes a later one.
+            void getCurrentUserId()
+                .then((userId) => AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]))
+                .catch(() => undefined);
+            setStep(1);
+            return;
+        }
+        // Offline FIRST: the last step talks to the server.
         if (!isOnline()) {
+            setSessionRefused(false);
             setShowServerError(true);
             return;
         }
         setBusy(true);
         try {
             const userId = await getCurrentUserId();
-            if (currentStep === 0) {
-                await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
-                setStep(1);
-                return;
-            }
             if (userPreferences.notificationHours.length > 0) {
                 await AccountService.updateNotificationPreferences(
                     userId,
@@ -185,7 +192,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
             await markOnboardingDone();
             resetOnboarding();
             onComplete();
-        } catch {
+        } catch (error) {
+            setSessionRefused(isSessionRefusedError(error));
             setShowServerError(true);
         } finally {
             setBusy(false);
@@ -316,18 +324,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 </View>
             </View>
 
-            {/* A failed request on Next. Log out is destructive (clearAuthStorage),
-                so it is offered only when the server answered and rejected us,
-                never for a connectivity blip. */}
+            {/* A failed request on Next. Log out is destructive (signOutAndWipe),
+                so it is offered only on a real 401 or 403; anything else retries,
+                or just closes while offline. */}
             <ConfirmDialog
                 open={showServerError}
                 title={t('onboarding.connectionIssue')}
                 body={t('onboarding.connectionDescription')}
-                confirmLabel={offline ? t('onboarding.close') : t('onboarding.logout')}
-                destructive={!offline}
+                confirmLabel={sessionRefused ? t('onboarding.logout') : offline ? t('onboarding.close') : t('common.retry')}
+                destructive={sessionRefused}
                 busy={isLoggingOut}
-                onConfirm={() => (offline ? setShowServerError(false) : void handleServerErrorLogout())}
-                onCancel={offline ? undefined : () => setShowServerError(false)}
+                onConfirm={() => {
+                    if (sessionRefused) {
+                        void handleServerErrorLogout();
+                        return;
+                    }
+                    setShowServerError(false);
+                    if (!offline) void advance();
+                }}
+                onCancel={offline && !sessionRefused ? undefined : () => setShowServerError(false)}
                 cancelLabel={t('onboarding.close')}
                 testID="onboarding-server-error"
             />
