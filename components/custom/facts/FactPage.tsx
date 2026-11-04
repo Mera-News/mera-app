@@ -101,6 +101,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
         confirmAdd,
         suggesting,
         suggestMore,
+        emptyLine,
         knownIds,
         status,
         retrying,
@@ -230,7 +231,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                     accessibilityLabel={t('configPanel.retryTopicGeneration')}
                     style={{ minHeight: 44, justifyContent: 'center' }}
                 >
-                    <StatusIndicator status="error" label={t('configPanel.retryTopicGeneration')} />
+                    <StatusIndicator status="error" label={t('chatTopics.failed')} />
                 </Pressable>
             ) : null}
             {tab === 'recent' ? (
@@ -275,7 +276,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                         <Text style={{ color: colors.ink2, fontSize: 14 }}>{t('chatTopics.finding')}</Text>
                     </View>
                 ) : (
-                    <Pill testID="fact-suggest-more" label={t('facts.page.suggestMore')} icon="auto-awesome" filled onPress={suggestMore} />
+                    <Pill testID="fact-suggest-more" label={topics.length === 0 ? t('chatTopics.findTopics') : t('facts.page.suggestMore')} icon="auto-awesome" filled onPress={suggestMore} />
                 )}
             </View>
             <GroupLabel>{t('facts.page.showLessOf')}</GroupLabel>
@@ -403,7 +404,7 @@ const FactPage: React.FC<FactPageProps> = ({ factId, from, statement = '' }) => 
                 ListEmptyComponent={
                     tab === 'topics' && !suggesting && status !== 'pending' ? (
                         // The tutorial hero over an empty topic list (FinalMotion, Lottie moments).
-                        <ForYouEmptyState testID="fact-topics-empty" compact animationId="facts-a-fact-is" body="" />
+                        <ForYouEmptyState testID="fact-topics-empty" compact animationId="facts-a-fact-is" body={emptyLine} />
                     ) : undefined
                 }
                 ListFooterComponent={

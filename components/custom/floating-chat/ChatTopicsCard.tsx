@@ -30,14 +30,15 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import StatusIndicator from '@/components/custom/chat/StatusIndicator';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
-import { observeTopicsStatus } from '@/lib/database/services/fact-service';
+import { isRemovableEmptyFact, observeFact, observeTopicsStatus } from '@/lib/database/services/fact-service';
 import {
   deleteTopicWithDecline,
   undoPendingDelete,
   UNDO_WINDOW_MS,
 } from '@/lib/database/services/topic-decline-service';
-import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
+import { generateMoreAndWait, holdFactOnScreen } from '@/lib/database/services/topic-planning-service';
 import { observeByFact } from '@/lib/database/services/topic-service';
+import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import type TopicModel from '@/lib/database/models/Topic';
 import { hapticLight } from '@/lib/haptics';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -118,6 +119,8 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   const userToggledRef = useRef(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isFindingMore, setIsFindingMore] = useState(false);
+  const [moreResult, setMoreResult] = useState<string | null>(null);
+  const [fact, setFact] = useState<Fact | null>(null);
   /** The topics the first read found. Only a chip that arrives AFTER it pops
    *  in, so a reopened chat or a recycled list row never replays the spring. */
   const baselineIds = useRef<ReadonlySet<string> | null>(null);
@@ -137,6 +140,15 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
     });
     return () => sub.unsubscribe();
   }, [factId]);
+
+  // The empty line depends on whether Mera may one day remove this fact.
+  useEffect(() => {
+    const sub = observeFact(factId).subscribe(setFact);
+    return () => sub.unsubscribe();
+  }, [factId]);
+
+  // A fact being viewed is never auto-deleted under the reader.
+  useEffect(() => holdFactOnScreen(factId), [factId]);
 
   // Only the DISPLAY timers. Dropping them on unmount cannot lose a delete:
   // the service holds the staged row on disk and commits it regardless.
@@ -256,12 +268,24 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   const handleFindMore = async () => {
     if (isFindingMore) return;
     setIsFindingMore(true);
+    setMoreResult(null);
     void hapticLight();
+    let line: string;
     try {
-      await generateMoreTopicsForFact(factId, factStatement, topicSkillId ? { skillId: topicSkillId } : {});
+      const out = await generateMoreAndWait(factId, factStatement, topicSkillId ? { skillId: topicSkillId } : {});
+      line =
+        out.mode === 'skipped'
+          ? t('chatTopics.moreFailed')
+          : out.added > 0
+            ? t('chatTopics.added', { count: out.added })
+            : t('chatTopics.nothingNew');
+    } catch {
+      line = t('chatTopics.moreFailed');
     } finally {
       setIsFindingMore(false);
     }
+    setMoreResult(line);
+    AccessibilityInfo.announceForAccessibility(line);
   };
 
   const handleRetry = async () => {
@@ -277,6 +301,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   };
 
   const empty = visible.length === 0;
+  const moreLabel = empty ? t('chatTopics.findTopics') : t('chatTopics.findMore');
 
   // TWO DIFFERENT "Try again"s, and they must not merge.
   //  - error: the user has to act, so it stays visible while COLLAPSED.
@@ -387,7 +412,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
               so nothing is said until you look. */}
           {status === 'error' && (
             <Text size="xs" style={styles.statusText} numberOfLines={2}>
-              {t('floatingChat.topicGenFailed')}
+              {t('chatTopics.failed')}
             </Text>
           )}
         </GlyphSafeButton>
@@ -442,7 +467,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             // topics to add right now." beside it read as a contradiction.
             status !== 'pending' && status !== 'error' && (
               <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
-                {t('chatTopics.none')}
+                {fact && isRemovableEmptyFact(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none')}
               </Text>
             )
           ) : (
@@ -517,6 +542,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
               thin neutral outline, not the accent pill that read as the next
               required step. The 44pt touch frame is a number (NativeWind rem
               is 14); the pill inside it is about 30pt. */}
+          {moreResult && !isFindingMore && (
+            <Text size="xs" style={styles.statusText} testID="chat-topics-more-result">
+              {moreResult}
+            </Text>
+          )}
           <Pressable
             onPress={handleFindMore}
             disabled={isFindingMore}
@@ -524,12 +554,12 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             style={styles.moreButton}
             accessibilityRole="button"
             accessibilityState={{ disabled: isFindingMore }}
-            accessibilityLabel={isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
+            accessibilityLabel={isFindingMore ? t('chatTopics.findingMore') : moreLabel}
             testID={`chat-topics-more-${factId}`}
           >
             <View style={styles.morePill} testID={`chat-topics-more-pill-${factId}`}>
               <Text size="xs" style={styles.moreText}>
-                {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
+                {isFindingMore ? t('chatTopics.findingMore') : moreLabel}
               </Text>
             </View>
           </Pressable>

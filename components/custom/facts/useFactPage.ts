@@ -1,15 +1,14 @@
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
-import { deleteFact, observeFact } from '@/lib/database/services/fact-service';
+import { deleteFact, isRemovableEmptyFact, observeFact } from '@/lib/database/services/fact-service';
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import { addSuppression, getActive as getActiveSuppressions, retireSuppression } from '@/lib/database/services/suppression-service';
 import { deleteTopicWithDecline, listDeclinedTopics, recordDecline, removeDecline } from '@/lib/database/services/topic-decline-service';
-import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
+import { generateMoreAndWait, holdFactOnScreen } from '@/lib/database/services/topic-planning-service';
 import { createTopics, normalizeTopicText, observeByFact, reactivate, retire } from '@/lib/database/services/topic-service';
 import { showDialog } from '@/lib/dialog';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
-import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -21,6 +20,7 @@ import { toastManager } from '@/lib/toast-manager';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { setConfirmTopicDelete, shouldConfirmTopicDelete } from './topic-delete-confirm';
 import { leftOutStories, storiesPerTopic, type Story, type StoryFilter } from './fact-page-model';
@@ -63,6 +63,9 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         const sub = observeFact(factId).subscribe(setFact);
         return () => sub.unsubscribe();
     }, [factId]);
+
+    // A fact being viewed is never auto-deleted under the reader.
+    useEffect(() => holdFactOnScreen(factId), [factId]);
 
     const [topics, setTopics] = useState<TopicRow[]>([]);
     const [turnedDown, setTurnedDown] = useState<{ id: string; text: string; negative: boolean }[]>([]);
@@ -237,21 +240,28 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         if (!fact || suggesting) return;
         setKnownIds(new Set(topics.map((x) => x.id)));
         setSuggesting(true);
-        const done = () => setSuggesting(false);
+        const failed = () =>
+            toastManager.showError(t('configPanel.generateMoreTopicsFailedTitle'), t('chatTopics.moreFailed'));
+        let line: string | null = null;
         try {
-            const out = await generateMoreTopicsForFact(fact.id, fact.statement, { count: GENERATE_MORE_TOPIC_COUNT });
-            if (out.mode === 'queued') {
-                inferenceQueue.onDrain(done);
-                return;
-            }
-            if (out.mode === 'skipped' || out.added === 0) {
-                toastManager.showError(t('configPanel.generateMoreTopicsFailedTitle'), t('configPanel.generateMoreTopicsFailedDescription'));
+            const out = await generateMoreAndWait(fact.id, fact.statement, { count: GENERATE_MORE_TOPIC_COUNT });
+            if (out.mode === 'skipped') {
+                line = t('chatTopics.moreFailed');
+                failed();
+            } else if (out.added > 0) {
+                line = t('chatTopics.added', { count: out.added });
+                toastManager.showSuccess(line, '');
+            } else {
+                line = t('chatTopics.nothingNew');
+                toastManager.showInfo(line);
             }
         } catch (error) {
             logger.error('[FactPage] generateMoreTopics failed', error, { factId: fact.id });
-            toastManager.showError(t('configPanel.generateMoreTopicsFailedTitle'), t('configPanel.generateMoreTopicsFailedDescription'));
+            line = t('chatTopics.moreFailed');
+            failed();
         }
-        done();
+        AccessibilityInfo.announceForAccessibility(line);
+        setSuggesting(false);
     }, [fact, suggesting, topics, t]);
 
     // topics_status: null renders like done; retry is an enqueue, so its busy
@@ -314,6 +324,9 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         }
     }, [phrase, factId]);
 
+    // The empty list's line: a fact Mera may remove says so, any other just has none.
+    const emptyLine = fact && isRemovableEmptyFact(fact) ? t('chatTopics.emptyDeletable') : t('chatTopics.none');
+
     const openSuggestion = useOpenSuggestion('sectioned');
 
     return {
@@ -351,6 +364,7 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         confirmAdd,
         suggesting,
         suggestMore,
+        emptyLine,
         knownIds,
         status,
         retrying,
