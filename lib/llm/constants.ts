@@ -45,9 +45,7 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   Qwen moves on, so calibration needs an explicit yes. Qwen3.8-27B is the
  *   primary because the SPEED TAIL decides chat UX: its worst turn is ~8s where
  *   GLM's is 55s, since GLM thinks far longer on conversational prompts. It
- *   costs $0.44/$3.30 per 1M, ~3x GLM per turn, on the low-volume path. GLM
- *   5.3 Flash is the fallback (tools + json_mode, $0.15/$0.50) and the only
- *   other TEE model that calls tools correctly.
+ *   costs $0.44/$3.30 per 1M, ~3x GLM per turn, on the low-volume path.
  *
  *   THINKING IS OFF for every chat call since 2026-10-22 (owner decision).
  *   The 2026-09-11 figure that kept it on (17/20 confirm and 3/10 composed
@@ -78,21 +76,13 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   A vision-language candidate screened 36% cheaper and was rejected as the
  *   text fallback by product decision, not by measurement.
  *
- *   BIG -> Qwen/Qwen3.6-35B-A3B-FP8, and this one is a DEGRADED fallback, not a
- *   clean one. The chat path needs TOOLS, which rules out most of the
- *   catalogue, and Qwen3.6 is the fleet's other proven self-hosted model. But
- *   screened on the persona corpus at production budgets (good + adversarial,
- *   19 turns) it returned `finish_reason: length` on 12 of 19, against 0 of 123
- *   for the primary on the same prompts. Mechanism: Qwen3.6 is used as SMALL
- *   with thinking OFF, while `cloudChatStream` hardcodes thinking ON, and its
- *   trace does not fit CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS.
- *   Tool arguments were well-formed on every call that produced them (0
- *   malformed, 0 trace leaks), so what a truncated turn loses is the prose and
- *   sometimes the tool call, not schema validity.
- *   It is chosen because the alternatives are worse: GLM is closed outright, and
- *   leaving a primary with NO fallback means a timeout has nowhere to go. Raising
- *   the reasoning headroom for the fallback, or forcing thinking off on it, is
- *   the open follow-up and needs its own measurement.
+ *   BIG -> Qwen/Qwen3.6-35B-A3B-FP8. The chat path needs TOOLS, which rules out
+ *   most of the catalogue. Re-measured 2026-11-04 on the agent corpus (174 turns
+ *   per arm, thinking off, interleaved with a twin): 0 of 1108 calls truncated
+ *   and 12 of 961 tool calls schema-invalid. DeepSeek-V4.1-Flash-1017 attested and
+ *   called tools but lost: 149 of 1031 invalid, including 49 of 218 load_skill.
+ *   An older 12 of 19 `finish_reason: length` figure was thinking ON, which chat
+ *   no longer sends and the adapter forces off while the fallback is engaged.
  *
  * The two primaries deliberately fall back to DIFFERENT models so one dead
  * fallback cannot take out both lanes at once.
@@ -126,7 +116,7 @@ export const CHAT_MAX_OUTPUT_TOKENS = 1024;
  * Extra `max_tokens` the CLOUD chat stream adds on top of the caller's budget,
  * when a caller turns thinking ON (the default is off) and a reasoning model's trace is
  * billed and capped inside the same `max_tokens` as the visible answer.
- * Measured on GLM 5.3 Flash (the BIG fallback): trace median ~240 tokens, p90
+ * Measured on GLM 5.3 Flash, since closed: trace median ~240 tokens, p90
  * ~830, and the 1024 budget alone truncated 3 of 60 turns (one lost a tool
  * call's arguments); Qwen3.8-27B peaks at ~740. 2048 covers every trace seen;
  * a longer one still ends as `finish_reason: length` rather than being hidden. The visible answer is not lengthened by
