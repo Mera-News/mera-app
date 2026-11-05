@@ -171,33 +171,12 @@ describe('publication target: more / fewer', () => {
     expect((await weightOf('The Times')).provenance).toBe('user');
   });
 
-  it.each(['none', 'boost', 'deprioritize'] as const)('deprioritised from %s writes a deprioritize', async (before) => {
-    if (before !== 'none') await setPreferenceKind('The Times', before, 'user');
-
-    const result = await setSourcePrefFromUi(pub('The Times'), 'deprioritised');
-
-    expect(result.applied).toBe(true);
-    expect(await getPreferenceKind('The Times')).toBe('deprioritize');
-    expect(await logsOf('set_publication_pref')).toHaveLength(1);
-    expect(last(await logsOf('set_publication_pref')).action).toEqual({ targetId: 'The Times', before, after: 'deprioritize', twoState: true });
-  });
-
   it('surfaces applied:false, with nothing written, when the executor refuses the write', async () => {
     const result = await setSourcePrefFromUi(pub(''), 'prioritised');
 
     expect(result).toEqual({ applied: false, changeLogId: undefined });
     expect(await logRows()).toEqual([]);
     expect(await rowsOf('publication_preferences')).toEqual([]);
-  });
-
-  it('setting an unmuted level over a MUTE releases the publication', async () => {
-    await seedArticles([{ id: 'a', title: 'Budget day', publication: 'The Times' }]);
-    await applyPersonaAction({ action_type: 'set_publication_pref', publicationId: 'The Times', publicationPref: 'mute' }, 'user');
-    expect((await statuses()).a).toBe('excluded');
-
-    await setSourcePrefFromUi(pub('The Times'), 'deprioritised');
-
-    expect((await statuses()).a).toBe('unscored');
   });
 });
 
@@ -270,12 +249,6 @@ describe('country scope target', () => {
     });
   });
 
-  it('deprioritised accepts a lower-case alpha-2 and writes a deprioritize', async () => {
-    await setSourcePrefFromUi({ kind: 'country', countryAlpha2: 'in', label: 'India' }, 'deprioritised');
-
-    expect(await getScopePreferenceKind({ scopeKind: 'country', scopeValue: 'IND' })).toBe('deprioritize');
-  });
-
   it('an unmappable alpha-2 fails closed for a set and for a clear: applied:false, nothing written', async () => {
     const bad = { kind: 'country', countryAlpha2: 'ZZ', label: 'Nowhere' } as const;
 
@@ -331,14 +304,14 @@ describe('publisher target: a write reaches every name', () => {
   });
 
   it('skips a name already at the requested level, so an undo reverts only what changed', async () => {
-    await setPreferenceKind('TOI Business', 'deprioritize', 'user');
+    await setPreferenceKind('TOI Business', 'boost', 'user');
 
-    const result = await setSourcePrefFromUi(publisher(['Times of India', 'TOI Business']), 'deprioritised');
+    const result = await setSourcePrefFromUi(publisher(['Times of India', 'TOI Business']), 'prioritised');
 
     const written = await logsOf('set_publication_pref');
     expect(written.map((r) => r.action.targetId)).toEqual(['Times of India']);
     expect(result.changeLogIds).toEqual([written[0].id]);
-    expect(await kinds(['Times of India', 'TOI Business'])).toEqual({ 'Times of India': 'deprioritize', 'TOI Business': 'deprioritize' });
+    expect(await kinds(['Times of India', 'TOI Business'])).toEqual({ 'Times of India': 'boost', 'TOI Business': 'boost' });
   });
 
   it('pressing the level already shown logs nothing and still succeeds', async () => {
@@ -349,16 +322,6 @@ describe('publisher target: a write reaches every name', () => {
 
     expect(result).toEqual({ applied: true, changeLogId: undefined, changeLogIds: [] });
     expect((await logRows()).length).toBe(before);
-  });
-
-  it('never softens a mute when asked for fewer', async () => {
-    await setPreferenceKind('Times of India', 'mute', 'user');
-
-    const result = await setSourcePrefFromUi(publisher(['Times of India']), 'deprioritised');
-
-    expect(result).toEqual({ applied: true, changeLogId: undefined, changeLogIds: [] });
-    expect(await getPreferenceKind('Times of India')).toBe('mute');
-    expect(await logRows()).toEqual([]);
   });
 
   it('asking for more over a mute DOES write the boost, and releases the muted rows', async () => {
@@ -477,22 +440,22 @@ describe('revertSourcePrefChange', () => {
   });
 
   it('is compare-and-set per row: a name changed since is left alone while the others revert', async () => {
-    const result = await setSourcePrefFromUi(publisher(['Times of India', 'TOI Business']), 'deprioritised');
-    await applyPersonaAction({ action_type: 'set_publication_pref', publicationId: 'TOI Business', publicationPref: 'boost' }, 'chat');
+    const result = await setSourcePrefFromUi(publisher(['Times of India', 'TOI Business']), 'prioritised');
+    await applyPersonaAction({ action_type: 'set_publication_pref', publicationId: 'TOI Business', publicationPref: 'mute' }, 'chat');
 
     await expect(revertSourcePrefChange(result)).resolves.toBe(true);
 
-    expect(await kinds(['Times of India', 'TOI Business'])).toEqual({ 'Times of India': 'none', 'TOI Business': 'boost' });
+    expect(await kinds(['Times of India', 'TOI Business'])).toEqual({ 'Times of India': 'none', 'TOI Business': 'mute' });
     expect((await logRow(result.changeLogIds![1])).reverted).toBe(false);
   });
 
   it('returns false when every row has been superseded', async () => {
-    const result = await setSourcePrefFromUi(publisher(['Times of India']), 'deprioritised');
-    await applyPersonaAction({ action_type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'boost' }, 'chat');
+    const result = await setSourcePrefFromUi(publisher(['Times of India']), 'prioritised');
+    await applyPersonaAction({ action_type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' }, 'chat');
 
     await expect(revertSourcePrefChange(result)).resolves.toBe(false);
 
-    expect(await getPreferenceKind('Times of India')).toBe('boost');
+    expect(await getPreferenceKind('Times of India')).toBe('mute');
   });
 
   it('undoing a clear of a mute re-purges what the mute blocked', async () => {

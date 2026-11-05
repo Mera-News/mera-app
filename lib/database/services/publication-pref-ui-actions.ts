@@ -100,7 +100,6 @@ export interface SetSourcePrefResult {
 
 const LEVEL_TO_PREF_KIND = {
   prioritised: 'boost',
-  deprioritised: 'deprioritize',
   muted: 'mute',
 } as const;
 
@@ -232,8 +231,6 @@ async function setPublisherLevel(
   for (const name of names) {
     const kind = await publicationPreferenceService.getPreferenceKind(name);
     if (kind === (level === 'none' ? 'none' : LEVEL_TO_PREF_KIND[level])) continue;
-    // Never soften a mute to fewer here.
-    if (level === 'deprioritised' && kind === 'mute') continue;
     let res: SetSourcePrefResult;
     if (level === 'none') res = await clearNamedPublicationLevel(name);
     else if (level === 'muted') {

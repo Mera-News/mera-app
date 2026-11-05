@@ -1,16 +1,15 @@
-// The publication's four tags, a 2x2 grid of equal toggles right under its
-// identity (FinalLibrary #14 plus the owner's tags): More from | Fewer from,
-// then Subscribed | Mute. More, Fewer and Mute write the same
-// `publication_preferences` rows as You > Sources and exclude each other:
-// tapping the active one clears it back to 'none', tapping another switches
-// directly. Subscribed is its own table and combines with any of them.
+// The publication's controls under its identity: Preferred and Not preferred
+// on row one, Subscribed full width on row two. Preferred and Not preferred
+// write the same `publication_preferences` rows as You > Sources and exclude
+// each other: tapping the active one clears it back to 'none'. A star that is
+// inherited from a preferred country is grey, selected and opens help.
+// Subscribed is its own table and combines with either.
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import type { SourcePrefUiLevel } from '@/lib/database/services/publication-pref-ui-actions';
 import { useColors } from '@/lib/theme/tokens';
 import type { PublicationPrefChoice } from './publication-data';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -27,9 +26,13 @@ const FEED_CONTROL_METRICS = {
 const FRAME_PAD = (FEED_CONTROL_METRICS.target - FEED_CONTROL_METRICS.button) / 2;
 
 interface PublicationFeedControlProps {
-    readonly current: SourcePrefUiLevel;
-    /** A mute on the publication: Mute shows selected, Fewer does not. */
+    readonly current: PublicationPrefChoice;
     readonly muted: boolean;
+    /** The country the star comes from: grey, selected, opens help, writes nothing. */
+    readonly inheritedFrom?: string | null;
+    readonly onInheritedPress?: () => void;
+    /** The publication's name, for the buttons' spoken labels. */
+    readonly displayName?: string;
     readonly subscribed: boolean;
     /** False without a publisher id: a subscription is keyed on one. */
     readonly canSubscribe: boolean;
@@ -43,9 +46,12 @@ interface PublicationFeedControlProps {
 
 interface ChoiceProps {
     readonly testID: string;
-    readonly icon: 'arrow-upward' | 'arrow-downward' | 'block' | 'check';
+    readonly icon: 'star' | 'star-border' | 'eye-off' | 'eye-off-outline' | 'check';
     readonly label: string;
     readonly a11yLabel: string;
+    readonly a11yHint?: string;
+    /** Overrides the ink, such as the inherited grey star. */
+    readonly tint?: string;
     readonly selected: boolean;
     readonly busy: boolean;
     readonly onPress: () => void;
@@ -53,9 +59,10 @@ interface ChoiceProps {
 
 /** The visual is hidden under a childless labelled button: an icon-font glyph
  *  inside a labelled pressable still surfaces on iOS as its own StaticText. */
-const Choice: React.FC<ChoiceProps> = ({ testID, icon, label, a11yLabel, selected, busy, onPress }) => {
+const Choice: React.FC<ChoiceProps> = ({ testID, icon, label, a11yLabel, a11yHint, tint, selected, busy, onPress }) => {
     const c = useColors();
-    const ink = selected ? c.accentText : c.ink;
+    const ink = tint ?? (selected ? c.accentText : c.ink);
+    const Icon = icon === 'eye-off' || icon === 'eye-off-outline' ? MaterialCommunityIcons : MaterialIcons;
     return (
         <View testID={`${testID}-frame`} style={[styles.frame, { opacity: busy ? 0.5 : 1 }]}>
             <View
@@ -70,7 +77,7 @@ const Choice: React.FC<ChoiceProps> = ({ testID, icon, label, a11yLabel, selecte
                     },
                 ]}
             >
-                <MaterialIcons name={icon} size={FEED_CONTROL_METRICS.icon} color={ink} />
+                <Icon name={icon as never} size={FEED_CONTROL_METRICS.icon} color={ink} />
                 <Text size="sm" numberOfLines={1} style={{ color: ink, fontWeight: '600', lineHeight: FEED_CONTROL_METRICS.labelLine }}>
                     {label}
                 </Text>
@@ -81,6 +88,7 @@ const Choice: React.FC<ChoiceProps> = ({ testID, icon, label, a11yLabel, selecte
                 disabled={busy}
                 accessibilityRole="button"
                 accessibilityLabel={a11yLabel}
+                accessibilityHint={a11yHint}
                 accessibilityState={{ selected, disabled: busy }}
                 style={StyleSheet.absoluteFill}
             />
@@ -91,6 +99,9 @@ const Choice: React.FC<ChoiceProps> = ({ testID, icon, label, a11yLabel, selecte
 const PublicationFeedControl: React.FC<PublicationFeedControlProps> = ({
     current,
     muted,
+    inheritedFrom = null,
+    onInheritedPress,
+    displayName = '',
     subscribed,
     canSubscribe,
     subscribeBusy = false,
@@ -100,11 +111,12 @@ const PublicationFeedControl: React.FC<PublicationFeedControlProps> = ({
     testID,
 }) => {
     const { t } = useTranslation();
-    const more = current === 'prioritised';
-    // The level reads a mute as fewer; here they are separate choices.
-    const fewer = current === 'deprioritised' && !muted;
-    const pressMore = useCallback(() => onChange(more ? 'none' : 'prioritised'), [more, onChange]);
-    const pressFewer = useCallback(() => onChange(fewer ? 'none' : 'deprioritised'), [fewer, onChange]);
+    const c = useColors();
+    const preferred = current === 'prioritised';
+    const pressUp = useCallback(() => {
+        if (inheritedFrom) onInheritedPress?.();
+        else onChange(preferred ? 'none' : 'prioritised');
+    }, [inheritedFrom, onInheritedPress, preferred, onChange]);
     const pressMute = useCallback(() => onChange(muted ? 'none' : 'muted'), [muted, onChange]);
 
     return (
@@ -112,21 +124,27 @@ const PublicationFeedControl: React.FC<PublicationFeedControlProps> = ({
             <View style={styles.row}>
                 <Choice
                     testID="publication-pref-up"
-                    icon="arrow-upward"
-                    label={t('publicationPage.moreFrom')}
-                    a11yLabel={t('publicationPage.prefMoreA11y')}
-                    selected={more}
+                    icon={preferred || inheritedFrom ? 'star' : 'star-border'}
+                    label={t('publicationPage.preferred')}
+                    a11yLabel={
+                        inheritedFrom
+                            ? t('publicationPage.includedWithA11y', { country: inheritedFrom })
+                            : t('publicationPage.preferA11y', { publisher: displayName })
+                    }
+                    tint={inheritedFrom ? c.ink3 : undefined}
+                    selected={preferred || !!inheritedFrom}
                     busy={busy}
-                    onPress={pressMore}
+                    onPress={pressUp}
                 />
                 <Choice
-                    testID="publication-pref-down"
-                    icon="arrow-downward"
-                    label={t('publicationPage.fewerFrom')}
-                    a11yLabel={t('publicationPage.prefFewerA11y')}
-                    selected={fewer}
+                    testID="publication-pref-mute"
+                    icon={muted ? 'eye-off' : 'eye-off-outline'}
+                    label={t('publicationPage.notPreferred')}
+                    a11yLabel={t('publicationPage.notPreferA11y', { publisher: displayName })}
+                    a11yHint={t('publicationPage.notPreferHint')}
+                    selected={muted}
                     busy={busy}
-                    onPress={pressFewer}
+                    onPress={pressMute}
                 />
             </View>
             <View style={styles.row}>
@@ -139,16 +157,12 @@ const PublicationFeedControl: React.FC<PublicationFeedControlProps> = ({
                     busy={subscribeBusy || !canSubscribe}
                     onPress={onToggleSubscribed}
                 />
-                <Choice
-                    testID="publication-pref-mute"
-                    icon="block"
-                    label={t('you.sources.mute')}
-                    a11yLabel={t('you.sources.mute')}
-                    selected={muted}
-                    busy={busy}
-                    onPress={pressMute}
-                />
             </View>
+            {inheritedFrom ? (
+                <Text size="xs" style={{ color: c.ink3 }}>
+                    {t('publicationPage.includedWith', { country: inheritedFrom })}
+                </Text>
+            ) : null}
         </View>
     );
 };

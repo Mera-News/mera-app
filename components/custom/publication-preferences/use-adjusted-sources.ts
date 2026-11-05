@@ -1,4 +1,4 @@
-// Every publication the reader has tagged (More, Fewer, Muted, Subscribed),
+// Every publication the reader has tagged (More, Muted, Subscribed),
 // one entry per publication, plus the country scopes: the Sources screen's
 // list and the Profile hub's Sources row read the same entries, so the two
 // can never disagree about what is tagged.
@@ -36,7 +36,7 @@ export interface TaggedPublication {
     readonly publisherId: string | null;
     /** Alpha-3, from a subscription; preference rows carry no country. */
     readonly countryCode: string | null;
-    /** More, Fewer or Mute; null when only Subscribed. */
+    /** More or Mute; null when only Subscribed. */
     readonly kind: PublicationPrefKind | null;
     readonly subscribed: boolean;
 }
@@ -45,14 +45,14 @@ type SubscriptionLike = Pick<UserPublicationSubscriptionModel, 'publisherId' | '
 
 /**
  * The row that stands for a group: its strongest setting, so the tag shows
- * what the publication's preference IS. Mute and "fewer" win over "more",
- * the same rule the publication page reads by.
+ * what the publication's preference IS. A mute wins over "more", the same
+ * rule the publication page reads by.
  */
 export function representativeOf(group: PrefRowGroup<PublicationPreferenceModel>): PublicationPreferenceModel {
     const rows = group.rows;
     if (group.names.length === 0 || rows.length === 1) return rows[0];
     const level = resolvePrefLevel(rows, group.names);
-    return level === 'deprioritised'
+    return level === 'muted'
         ? rows.reduce((a, b) => (b.weight < a.weight ? b : a))
         : rows.reduce((a, b) => (b.weight > a.weight ? b : a));
 }
@@ -73,8 +73,9 @@ export function buildTaggedSources(
     for (const group of groupPrefRowsByPublication(prefs)) {
         const pref = representativeOf(group);
         const kind = weightToPrefKind(pref.weight);
+        // A stored Fewer (the retired level) keeps its ranking effect but is not listed.
         if (pref.scopeKind != null) {
-            scopes.push({ group, pref, kind });
+            if (kind === 'boost') scopes.push({ group, pref, kind });
             continue;
         }
         const names = new Set(group.names.map(normalizeSubscriptionName));
@@ -84,12 +85,13 @@ export function buildTaggedSources(
                 parseSourceNames(s.sourceNamesJson).some((n) => names.has(normalizeSubscriptionName(n))),
         );
         if (sub) unmatched.delete(sub);
+        if (!sub && kind === 'deprioritize') continue;
         publications.push({
             key: group.key,
             displayName: sub?.publisherName ?? pref.publicationName,
             publisherId: sub?.publisherId ?? group.publisherId,
             countryCode: sub?.countryCode ?? null,
-            kind,
+            kind: kind === 'deprioritize' ? null : kind,
             subscribed: !!sub,
         });
     }

@@ -18,8 +18,7 @@
 
 import { normalizeKey } from '@/lib/algorithms/normalize-key';
 
-/** `'deprioritised'` is write-only and goes once its last caller has moved. */
-export type SourcePrefUiLevel = 'none' | 'prioritised' | 'muted' | 'deprioritised';
+export type SourcePrefUiLevel = 'none' | 'prioritised' | 'muted';
 
 /** A publication preference at or below this weight is a mute. */
 export const MUTE_WEIGHT = -0.9;
