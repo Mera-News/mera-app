@@ -183,7 +183,7 @@ const TASK: Record<ArticleKevIntent, string> = {
   follow_story: 'Give 3 or 4 options to follow this story, following the option rules, using names from the article.',
   see_less: 'A card asks the user to confirm seeing less of the topic. Point to the card and say what changes.',
   see_more: 'A card asks the user to confirm seeing more of the topic. Point to the card and say what changes.',
-  mute_source: 'A card asks the user to confirm muting this publication. Point to the card.',
+  mute_source: 'A card asks to mark this publication Not preferred. Point to the card.',
   agree_to_card: 'The waiting change is being applied now. Confirm it in one short sentence.',
   decline_card: 'The waiting change was dropped. Say so in one short sentence.',
 };

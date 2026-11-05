@@ -380,7 +380,7 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - set_topic_weight — "show me less/more of <topic>": nudge a MATCHED topic's weight by a small delta (negative to see less, positive to see more; keep |delta| ≤ 0.5).
 - add_negative_topic — this article is the wrong topic/place/angle: mint a down-ranking negative topic (topicText, e.g. "Delhi crime").
 - set_publication_pref — boost or mute a NAMED publication (publicationId = the publication name, publicationPref = boost|mute). "Less from <source>" is mute: say it hides that source from their feed.
-- add_suppression — filter something out (suppressionPattern = the phrase; suppressionStrength 0.9 = never show it, 0.5 = just less of it). For an EXACT filter also send suppressionKind + suppressionValue, and COPY THE VALUE VERBATIM from <context>: category ← Category, entity ← Entities, publication ← Publication, topic ← MATCHED TOPICS. A value you paraphrase or invent matches NOTHING. So: with "Category: Entertainment" → {"suppressionKind":"category","suppressionValue":"Entertainment"}; your own words "celebrity stuff" → {"suppressionPattern":"celebrity"} with NO kind/value.
+- add_suppression — filter something out (suppressionPattern = the phrase; suppressionStrength 0.9 = never show it, 0.5 = just less of it). For an EXACT filter also send suppressionKind + suppressionValue, and COPY THE VALUE VERBATIM from <context>: category ← Category, entity ← Entities, topic ← MATCHED TOPICS. A publication is never a filter: use set_publication_pref. A value you paraphrase or invent matches NOTHING. So: with "Category: Entertainment" → {"suppressionKind":"category","suppressionValue":"Entertainment"}; your own words "celebrity stuff" → {"suppressionPattern":"celebrity"} with NO kind/value.
 - retire_suppression — the user wants an existing filter GONE ("stop hiding X", "show me X again"): suppressionId = an [id] from YOUR FILTERS in <context>. Never invent an id; if it isn't listed, say you can't find that filter.
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
 - retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).${factPlacesLine}
@@ -733,7 +733,7 @@ export function getArticleFeedbackToolDefinitions(
                   suppressionValue: {
                     type: 'string',
                     description:
-                      'add_suppression: the exact field value to filter on, COPIED VERBATIM from <context> — category ← the Category line, entity ← one of Entities, publication ← the Publication line, topic ← one of MATCHED TOPICS. A paraphrased or invented value matches NOTHING; when the phrase is your own wording, omit suppressionKind+suppressionValue and send suppressionPattern alone.',
+                      'add_suppression: the exact field value to filter on, COPIED VERBATIM from <context> — category ← the Category line, entity ← one of Entities, topic ← one of MATCHED TOPICS. A paraphrased or invented value matches NOTHING; when the phrase is your own wording, omit suppressionKind+suppressionValue and send suppressionPattern alone.',
                   },
                   suppressionId: {
                     type: 'string',
@@ -1003,7 +1003,7 @@ function validateAction(
     case 'add_suppression': {
       const rawValue = typeof o.suppressionValue === 'string' ? o.suppressionValue.trim() : '';
       // A structured value doubles as the display phrase when the model sent no
-      // separate pattern (e.g. muting a publication it quoted verbatim).
+      // separate pattern (e.g. an entity it quoted verbatim).
       const pattern =
         (typeof o.suppressionPattern === 'string' ? o.suppressionPattern.trim() : '') || rawValue;
       if (pattern.length === 0) return { error: 'add_suppression requires a non-empty suppressionPattern' };
@@ -1030,6 +1030,11 @@ function validateAction(
         && CORROBORABLE_SUPPRESSION_KINDS.has(rawKind)
         && corroborable.get(rawKind)?.has(norm(rawValue)) === true
       ) {
+        // A publication filter would be a lowered level the reader cannot see in
+        // Sources, so it stages the one level below neutral instead.
+        if (rawKind === 'publication') {
+          return { action: { type: 'set_publication_pref', publicationId: rawValue, publicationPref: 'mute' } };
+        }
         action.suppressionKind = rawKind as SuppressionKindName;
         action.suppressionValue = rawValue;
       }
