@@ -47,6 +47,16 @@ jest.mock('@/components/custom/nav/InlineChoiceChip', () => {
       options.map((o) => <Pressable key={o} testID={`${testID}-${o}`} onPress={() => onChange(o)} />),
   };
 });
+// The wizard's Modal hangs under the mocked reanimated, and it is not what this suite tests: what
+// the page hands it is.
+const mockExportItems = jest.fn();
+jest.mock('@/components/custom/saved-suggestions/SavedExportModal', () => ({
+  __esModule: true,
+  default: ({ items }: { items: unknown[] }) => {
+    mockExportItems(items);
+    return null;
+  },
+}));
 jest.mock('react-native-safe-area-context', () => ({
   ...jest.requireActual('react-native-safe-area-context/jest/mock').default,
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
@@ -67,6 +77,8 @@ afterEach(closeAll);
 const titled = (id: string) => newsArticle(id, { title_en_internal_only: `Headline ${id}`, title: `Headline ${id}` });
 const saveTo = (id: string, list?: 'later' | 'archive') => saveStandaloneArticle(titled(id), undefined, list);
 const row = (id: string) => screen.queryByTestId(`saved-item-${id}`);
+const exported = () =>
+  (mockExportItems.mock.calls.at(-1)![0] as { savedId: string }[]).map((item) => item.savedId);
 
 
 function Page() {
@@ -131,6 +143,16 @@ describe('the two lists', () => {
 
     await press('saved-list-archive');
     expect(row('a')).toBeTruthy();
+  });
+
+  it('Export offers the list on screen, never the other one', async () => {
+    await saveTo('later-1');
+    await saveTo('arch-1', 'archive');
+    await openPage();
+    expect(exported()).toEqual(['later-1']);
+
+    await press('saved-list-archive');
+    expect(exported()).toEqual(['arch-1']);
   });
 
   it('a removal takes the row and its group heading', async () => {
@@ -261,7 +283,7 @@ describe('the ••• item', () => {
     await waitFor(async () => expect(await getSavedList('art-1')).toBe('archive'));
   }, 15000);
 
-  it('a row removed behind the sheet\'s back moves nothing and shows no toast', async () => {
+  it('a row removed behind the sheet\'s back moves nothing and offers no Undo', async () => {
     await saveTo('art-1');
     await render(<Card />);
     await press('open-menu');
@@ -272,7 +294,10 @@ describe('the ••• item', () => {
     });
     await press('menu-archive');
     expect(await getSavedList('art-1')).toBeNull();
-    await waitFor(() => expect(screen.getByTestId('open-menu')).toBeTruthy());
-    expect(useToastQueue.getState().entries.length).toBe(0);
+    // Failed, so the sheet's retry toast and never a "Moved" with an Undo.
+    await waitFor(() => expect(useToastQueue.getState().entries.length).toBe(1), { timeout: 3000 });
+    const entry = useToastQueue.getState().entries[0];
+    await render(<>{entry.render({ id: entry.id })}</>);
+    expect(screen.queryByTestId('saved-list-undo')).toBeNull();
   }, 15000);
 });
