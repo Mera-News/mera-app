@@ -1266,9 +1266,15 @@
     "removedToastTitle": "Removed",
     "saveAction": "Save",
     "removeAction": "Remove from saved",
-    "savedToastMessage": "Article saved for later",
+    "savedToastMessage": "Added to Read later",
     "removedToastMessage": "Removed from saved",
-    "emptyTitle": "Nothing saved yet"
+    "emptyTitle": "Nothing saved yet",
+    "archiveAction": "Archive",
+    "moveToArchive": "Move to Archive",
+    "moveToReadLater": "Move to Read later",
+    "movedToArchive": "Moved to Archive",
+    "movedToReadLater": "Moved to Read later",
+    "archivedToastMessage": "Added to Archive"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Update required",
@@ -2862,9 +2868,21 @@
     "saved": {
       "export": "Export",
       "emptyBody": "Tap the bookmark on any article to keep it here. Saved articles stay on this phone until you remove them.",
-      "count_one": "{{count}} saved",
-      "count_other": "{{count}} saved",
-      "learn": "Learn about Saved"
+      "learn": "Learn about Saved",
+      "readLater": "Read later",
+      "archive": "Archive",
+      "groupTitle": "Group by",
+      "groupA11y": "Group by {{group}}",
+      "groupNewest": "Date saved",
+      "groupPriority": "Priority",
+      "groupNoPriority": "No priority",
+      "groupOther": "Other",
+      "emptyArchiveTitle": "Nothing archived yet",
+      "emptyArchiveBody": "Choose Archive in the ••• menu of any article. Archived articles stay on this phone until you remove them.",
+      "countLater_one": "{{count}} to read",
+      "countLater_other": "{{count}} to read",
+      "countArchive_one": "{{count}} archived",
+      "countArchive_other": "{{count}} archived"
     },
     "checks": {
       "emptyTitle": "No fact checks yet",

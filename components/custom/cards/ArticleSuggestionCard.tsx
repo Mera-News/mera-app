@@ -5,6 +5,7 @@ import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNot
 import { showsBelowGate, showsChipOnly } from '@/components/custom/cards/note-pending-mode';
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
+import { useArchiveMenuItem } from '@/components/custom/cards/use-archive-menu-item';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
@@ -22,9 +23,9 @@ import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSavedOverride } from '@/lib/saved-state';
+import { useSavedOverride, type SavedList } from '@/lib/saved-state';
 
 interface ArticleCardProps {
   suggestion: ForYouSuggestion;
@@ -158,6 +159,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     };
   }, [savedId, onVerdict]);
 
+  const saveToList = useCallback((list: SavedList) => saveSuggestion(suggestion, list), [suggestion]);
+  const archiveItem = useArchiveMenuItem({ savedId, saved, save: saveToList });
+
   const handleToggleSave = () => {
     // The service publishes the new state, which flows back through
     // `useSavedOverride` — so local state is only the pre-override seed and does
@@ -219,6 +223,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       return asked;
     },
     inlineActions,
+    archiveItem,
     onVerdictRecorded: feedbackHandlers ? () => feedbackHandlers.onVerdictRecorded(suggestion) : undefined,
     onFeedbackChat: feedbackHandlers
       ? (pathIds, answers) => feedbackHandlers.onInvokeMera(suggestion, pathIds, answers)

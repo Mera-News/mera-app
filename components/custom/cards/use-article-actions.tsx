@@ -13,7 +13,9 @@ import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareAr
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import type { TFunction } from 'i18next';
 import { useCallback, useEffect, useState } from 'react';
-import { useSavedOverride } from '@/lib/saved-state';
+import { useSavedOverride, type SavedList } from '@/lib/saved-state';
+import type { ArticleMenuItem } from './ArticleOverflowMenu';
+import { useArchiveMenuItem } from './use-archive-menu-item';
 
 export interface UseArticleActionsInput {
   /** Origin-aware descriptor of what's being acted on + where. */
@@ -36,6 +38,8 @@ export interface ArticleActions {
   onVerdictRecorded: () => void;
   onAskMera: () => void;
   onToggleSave: () => void;
+  /** The ••• item for Archive and moves between Saved's lists. */
+  archiveItem: ArticleMenuItem;
   /** Undefined when there is nothing to share. */
   onShare?: () => void;
 }
@@ -98,6 +102,18 @@ export function useArticleActions({
 
   const onVerdictRecorded = useCallback(() => setAnswered(true), []);
 
+  const saveTo = useCallback(
+    async (list?: SavedList) => {
+      if (subject.origin === 'article' && article) {
+        await saveStandaloneArticle(article, { surface: subject.surface }, list);
+      } else if (suggestion) {
+        await saveSuggestion(suggestion, list);
+      }
+    },
+    [subject.origin, subject.surface, article, suggestion],
+  );
+  const archiveItem = useArchiveMenuItem({ savedId, saved, save: saveTo });
+
   const onToggleSave = useCallback(() => {
     if (saved) {
       hapticLight();
@@ -105,12 +121,8 @@ export function useArticleActions({
       return;
     }
     hapticSuccess();
-    if (subject.origin === 'article' && article) {
-      void saveStandaloneArticle(article, { surface: subject.surface });
-    } else if (suggestion) {
-      void saveSuggestion(suggestion);
-    }
-  }, [saved, savedId, subject.origin, subject.surface, article, suggestion]);
+    void saveTo();
+  }, [saved, savedId, saveTo]);
 
   const onAskMera = useCallback(() => {
     hapticMedium();
@@ -133,6 +145,7 @@ export function useArticleActions({
     onVerdictRecorded,
     onAskMera,
     onToggleSave,
+    archiveItem,
     onShare: share?.url ? handleSharePress : undefined,
   };
 }

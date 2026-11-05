@@ -893,9 +893,15 @@
     "removedToastTitle": "Retiré",
     "saveAction": "Enregistrer",
     "removeAction": "Retirer des enregistrés",
-    "savedToastMessage": "Article enregistré pour plus tard",
+    "savedToastMessage": "Ajouté à À lire plus tard",
     "savedToastTitle": "Enregistré",
-    "emptyTitle": "Rien d'enregistré pour l'instant"
+    "emptyTitle": "Rien d'enregistré pour l'instant",
+    "archiveAction": "Archiver",
+    "moveToArchive": "Déplacer vers Archives",
+    "moveToReadLater": "Déplacer vers À lire plus tard",
+    "movedToArchive": "Déplacé vers Archives",
+    "movedToReadLater": "Déplacé vers À lire plus tard",
+    "archivedToastMessage": "Ajouté aux Archives"
   },
   "subscription": {
     "customerCenter": "Gérer / annuler l'abonnement",
@@ -2873,9 +2879,21 @@
     "saved": {
       "export": "Exporter",
       "emptyBody": "Touchez le marque-page sur un article pour le garder ici. Les articles enregistrés restent sur ce téléphone jusqu'à leur suppression.",
-      "count_one": "{{count}} enregistré",
-      "count_other": "{{count}} enregistrés",
-      "learn": "En savoir plus sur Enregistrés"
+      "learn": "En savoir plus sur Enregistrés",
+      "readLater": "À lire plus tard",
+      "archive": "Archives",
+      "groupTitle": "Regrouper par",
+      "groupA11y": "Regrouper par {{group}}",
+      "groupNewest": "Date d'enregistrement",
+      "groupPriority": "Priorité",
+      "groupNoPriority": "Sans priorité",
+      "groupOther": "Autres",
+      "emptyArchiveTitle": "Rien d'archivé pour l'instant",
+      "emptyArchiveBody": "Choisissez Archiver dans le menu ••• d'un article. Les articles archivés restent sur ce téléphone jusqu'à leur suppression.",
+      "countLater_one": "{{count}} à lire",
+      "countLater_other": "{{count}} à lire",
+      "countArchive_one": "{{count}} archivé",
+      "countArchive_other": "{{count}} archivés"
     },
     "checks": {
       "emptyTitle": "Aucune vérification des faits pour l'instant",

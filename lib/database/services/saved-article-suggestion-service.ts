@@ -14,7 +14,7 @@
 // holds them. See `keepArticleForRetention` below.
 
 import { Q } from '@nozbe/watermelondb';
-import { publishSavedState } from '@/lib/saved-state';
+import { publishSavedList, publishSavedState, type SavedList } from '@/lib/saved-state';
 import database from '../index';
 import logger from '../../logger';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
@@ -45,6 +45,8 @@ export interface StandaloneSaveContext {
  * bookmark for an article the reader never saved, whose un-save tap then
  * destroys someone else's retention copy — is the obvious failure mode.
  */
+export type { SavedList };
+
 export const RETENTION_ORIGINS = ['fact_check', 'tracked_story'] as const;
 export type RetentionOrigin = (typeof RETENTION_ORIGINS)[number];
 
@@ -85,8 +87,14 @@ async function retentionReasonsLive(
  *  either. It is the same column the query already sorts on, so surfacing it
  *  costs no extra read. */
 export type SavedItem =
-  | { origin: 'suggestion'; suggestion: ForYouSuggestion; savedAt: number }
-  | { origin: 'article'; savedId: string; article: NewsArticle; savedAt: number };
+  | { origin: 'suggestion'; suggestion: ForYouSuggestion; savedAt: number; list: SavedList }
+  | { origin: 'article'; savedId: string; article: NewsArticle; savedAt: number; list: SavedList };
+
+/** Which list a row sits in. Null and false both read as Read later: every row
+ *  older than schema v58 is null. */
+function listOf(row: SavedArticleSuggestionModel): SavedList {
+  return row.archived ? 'archive' : 'later';
+}
 
 // --- Write: save (upsert by server id) ---
 
@@ -94,20 +102,25 @@ export type SavedItem =
  * Saves (or re-saves) a suggestion for later. Identity is the source server
  * `_id` (== WMDB row id). Re-saving an already-saved suggestion refreshes its
  * snapshot fields and bumps `savedAt` (so it floats to the top of the list).
+ * `list` picks the list; left out, a new save goes to Read later and a re-save
+ * stays where it is.
  */
-export async function saveSuggestion(s: ForYouSuggestion): Promise<void> {
+export async function saveSuggestion(s: ForYouSuggestion, list?: SavedList): Promise<void> {
   const now = new Date();
   // Announce BEFORE awaiting the write so the bookmark flips on the same frame
   // as the tap; the write is local SQLite and does not fail in practice, and a
   // stale-true is self-correcting on the next mount read.
   publishSavedState(s._id, true);
   const existing = await findRow(s._id);
+  const target = list ?? (existing ? listOf(existing) : 'later');
+  publishSavedList(s._id, target);
 
   await database.write(async () => {
     if (existing) {
       await existing.update((r) => {
         applySnapshot(r, s);
         r.savedAt = now;
+        r.archived = target === 'archive';
       });
       return;
     }
@@ -115,6 +128,7 @@ export async function saveSuggestion(s: ForYouSuggestion): Promise<void> {
       r._raw.id = s._id;
       applySnapshot(r, s);
       r.savedAt = now;
+      r.archived = target === 'archive';
     });
   });
 }
@@ -129,18 +143,22 @@ export async function saveSuggestion(s: ForYouSuggestion): Promise<void> {
 export async function saveStandaloneArticle(
   article: NewsArticle,
   _context?: StandaloneSaveContext,
+  list?: SavedList,
 ): Promise<void> {
   const id = (article?._id ?? '').trim();
   if (!id) return;
   const now = new Date();
   publishSavedState(id, true);
   const existing = await findRow(id);
+  const target = list ?? (existing ? listOf(existing) : 'later');
+  publishSavedList(id, target);
 
   await database.write(async () => {
     if (existing) {
       await existing.update((r) => {
         applyArticleSnapshot(r, article);
         r.savedAt = now;
+        r.archived = target === 'archive';
       });
       return;
     }
@@ -148,8 +166,29 @@ export async function saveStandaloneArticle(
       r._raw.id = id;
       applyArticleSnapshot(r, article);
       r.savedAt = now;
+      r.archived = target === 'archive';
     });
   });
+}
+
+/**
+ * Moves a save to the other list. Bumps `savedAt`, so it tops the list it lands
+ * in, as a re-save does. False, and no change, for a row that is gone or is
+ * retention rather than a save: a late Undo must not turn a row nobody saved
+ * into one.
+ */
+export async function moveSavedToList(serverId: string, list: SavedList): Promise<boolean> {
+  const row = await findRow(serverId);
+  if (!row || isRetentionOrigin(row.origin)) return false;
+  if (listOf(row) === list) return true;
+  publishSavedList(serverId, list);
+  await database.write(async () => {
+    await row.update((r) => {
+      r.archived = list === 'archive';
+      r.savedAt = new Date();
+    });
+  });
+  return true;
 }
 
 // --- Read ---
@@ -161,6 +200,12 @@ export async function saveStandaloneArticle(
 export async function isSuggestionSaved(serverId: string): Promise<boolean> {
   const row = await findRow(serverId);
   return row !== null && !isRetentionOrigin(row.origin);
+}
+
+/** The list a save sits in; null when the reader has not saved it. */
+export async function getSavedList(serverId: string): Promise<SavedList | null> {
+  const row = await findRow(serverId);
+  return row && !isRetentionOrigin(row.origin) ? listOf(row) : null;
 }
 
 /**
@@ -242,11 +287,13 @@ export async function loadSavedItems(): Promise<SavedItem[]> {
             savedId: row.id,
             article: toNewsArticle(row),
             savedAt: row.savedAt.getTime(),
+            list: listOf(row),
           }
         : {
             origin: 'suggestion' as const,
             suggestion: toForYouSuggestion(row),
             savedAt: row.savedAt.getTime(),
+            list: listOf(row),
           },
     );
 }
@@ -304,6 +351,9 @@ export async function deleteSavedSuggestion(serverId: string): Promise<boolean> 
     if (row.id === row.articleId) {
       await row.update((r) => {
         r.origin = survivor;
+        // Not a save any more: a later save of this article must not reappear
+        // in the list this one left.
+        r.archived = false;
       });
       return;
     }

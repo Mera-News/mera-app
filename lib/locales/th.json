@@ -873,9 +873,15 @@
     "removedToastMessage": "ลบออกจากรายการที่บันทึกแล้ว",
     "saveAction": "บันทึก",
     "removeAction": "ลบออกจากรายการที่บันทึก",
-    "savedToastMessage": "บันทึกบทความไว้อ่านภายหลังแล้ว",
+    "savedToastMessage": "เพิ่มในอ่านภายหลังแล้ว",
     "savedToastTitle": "บันทึกแล้ว",
-    "emptyTitle": "ยังไม่มีรายการที่บันทึก"
+    "emptyTitle": "ยังไม่มีรายการที่บันทึก",
+    "archiveAction": "เก็บเข้าคลัง",
+    "moveToArchive": "ย้ายไปคลังเก็บ",
+    "moveToReadLater": "ย้ายไปอ่านภายหลัง",
+    "movedToArchive": "ย้ายไปคลังเก็บแล้ว",
+    "movedToReadLater": "ย้ายไปอ่านภายหลังแล้ว",
+    "archivedToastMessage": "เพิ่มในคลังเก็บแล้ว"
   },
   "subscription": {
     "customerCenter": "จัดการ / ยกเลิกการสมัครสมาชิก",
@@ -2841,9 +2847,21 @@
     "saved": {
       "export": "ส่งออก",
       "emptyBody": "แตะที่บุ๊กมาร์กบนบทความใดก็ได้เพื่อเก็บไว้ที่นี่ บทความที่บันทึกจะอยู่ในโทรศัพท์เครื่องนี้จนกว่าคุณจะลบ",
-      "count_one": "บันทึกไว้ {{count}} รายการ",
-      "count_other": "บันทึกไว้ {{count}} รายการ",
-      "learn": "เรียนรู้เกี่ยวกับที่บันทึกไว้"
+      "learn": "เรียนรู้เกี่ยวกับที่บันทึกไว้",
+      "readLater": "อ่านภายหลัง",
+      "archive": "คลังเก็บ",
+      "groupTitle": "จัดกลุ่มตาม",
+      "groupA11y": "จัดกลุ่มตาม{{group}}",
+      "groupNewest": "วันที่บันทึก",
+      "groupPriority": "ลำดับความสำคัญ",
+      "groupNoPriority": "ไม่มีลำดับความสำคัญ",
+      "groupOther": "อื่นๆ",
+      "emptyArchiveTitle": "ยังไม่มีรายการในคลังเก็บ",
+      "emptyArchiveBody": "เลือกเก็บเข้าคลังในเมนู ••• ของบทความใดก็ได้ บทความในคลังเก็บจะอยู่ในโทรศัพท์เครื่องนี้จนกว่าคุณจะลบ",
+      "countLater_one": "รออ่าน {{count}} รายการ",
+      "countLater_other": "รออ่าน {{count}} รายการ",
+      "countArchive_one": "เก็บไว้ {{count}} รายการ",
+      "countArchive_other": "เก็บไว้ {{count}} รายการ"
     },
     "checks": {
       "emptyTitle": "ยังไม่มีการตรวจสอบข้อเท็จจริง",

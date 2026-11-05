@@ -79,6 +79,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const {
         suggestion,
         isSaved,
+        archiveItem,
         isLoading,
         error,
         openedIds,
@@ -242,6 +243,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // event type, cluster size and place.
                                     publicationName={suggestion.publication_name ?? null}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
+                                    archiveItem={archiveItem}
                                     track={{
                                         origin: 'suggestion',
                                         surface: 'detail',

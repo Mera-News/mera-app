@@ -888,9 +888,15 @@
     "removedToastTitle": "Rimosso",
     "saveAction": "Salva",
     "removeAction": "Rimuovi dai salvati",
-    "savedToastMessage": "Articolo salvato per dopo",
+    "savedToastMessage": "Aggiunto a Leggi dopo",
     "savedToastTitle": "Salvato",
-    "emptyTitle": "Ancora niente di salvato"
+    "emptyTitle": "Ancora niente di salvato",
+    "archiveAction": "Archivia",
+    "moveToArchive": "Sposta in Archivio",
+    "moveToReadLater": "Sposta in Leggi dopo",
+    "movedToArchive": "Spostato in Archivio",
+    "movedToReadLater": "Spostato in Leggi dopo",
+    "archivedToastMessage": "Aggiunto ad Archivio"
   },
   "subscription": {
     "customerCenter": "Gestisci / annulla abbonamento",
@@ -2867,9 +2873,21 @@
     "saved": {
       "export": "Esporta",
       "emptyBody": "Tocca il segnalibro su qualsiasi articolo per tenerlo qui. Gli articoli salvati restano su questo telefono finché non li rimuovi.",
-      "count_one": "{{count}} salvato",
-      "count_other": "{{count}} salvati",
-      "learn": "Scopri i Salvati"
+      "learn": "Scopri i Salvati",
+      "readLater": "Leggi dopo",
+      "archive": "Archivio",
+      "groupTitle": "Raggruppa per",
+      "groupA11y": "Raggruppa per {{group}}",
+      "groupNewest": "Data di salvataggio",
+      "groupPriority": "Priorità",
+      "groupNoPriority": "Nessuna priorità",
+      "groupOther": "Altro",
+      "emptyArchiveTitle": "Ancora niente in archivio",
+      "emptyArchiveBody": "Scegli Archivia nel menu ••• di un articolo. Gli articoli archiviati restano su questo telefono finché non li rimuovi.",
+      "countLater_one": "{{count}} da leggere",
+      "countLater_other": "{{count}} da leggere",
+      "countArchive_one": "{{count}} archiviato",
+      "countArchive_other": "{{count}} archiviati"
     },
     "checks": {
       "emptyTitle": "Nessuna verifica dei fatti per ora",

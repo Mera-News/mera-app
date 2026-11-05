@@ -872,9 +872,15 @@
     "removedToastMessage": "Đã xóa khỏi mục đã lưu",
     "saveAction": "Lưu",
     "removeAction": "Xóa khỏi mục đã lưu",
-    "savedToastMessage": "Đã lưu bài viết để xem sau",
+    "savedToastMessage": "Đã thêm vào Đọc sau",
     "savedToastTitle": "Đã lưu",
-    "emptyTitle": "Chưa lưu gì"
+    "emptyTitle": "Chưa lưu gì",
+    "archiveAction": "Lưu trữ",
+    "moveToArchive": "Chuyển vào Lưu trữ",
+    "moveToReadLater": "Chuyển vào Đọc sau",
+    "movedToArchive": "Đã chuyển vào Lưu trữ",
+    "movedToReadLater": "Đã chuyển vào Đọc sau",
+    "archivedToastMessage": "Đã thêm vào Lưu trữ"
   },
   "subscription": {
     "customerCenter": "Quản lý / hủy gói đăng ký",
@@ -2840,9 +2846,21 @@
     "saved": {
       "export": "Xuất",
       "emptyBody": "Chạm vào dấu trang trên bất kỳ bài báo nào để giữ nó ở đây. Bài đã lưu ở lại trên điện thoại này cho đến khi bạn xóa.",
-      "count_one": "{{count}} đã lưu",
-      "count_other": "{{count}} đã lưu",
-      "learn": "Tìm hiểu về Đã lưu"
+      "learn": "Tìm hiểu về Đã lưu",
+      "readLater": "Đọc sau",
+      "archive": "Lưu trữ",
+      "groupTitle": "Nhóm theo",
+      "groupA11y": "Nhóm theo {{group}}",
+      "groupNewest": "Ngày lưu",
+      "groupPriority": "Mức ưu tiên",
+      "groupNoPriority": "Không có mức ưu tiên",
+      "groupOther": "Khác",
+      "emptyArchiveTitle": "Chưa có gì trong Lưu trữ",
+      "emptyArchiveBody": "Chọn Lưu trữ trong menu ••• của bất kỳ bài báo nào. Bài đã lưu trữ ở lại trên điện thoại này cho đến khi bạn xóa.",
+      "countLater_one": "{{count}} bài cần đọc",
+      "countLater_other": "{{count}} bài cần đọc",
+      "countArchive_one": "{{count}} đã lưu trữ",
+      "countArchive_other": "{{count}} đã lưu trữ"
     },
     "checks": {
       "emptyTitle": "Chưa có lần kiểm chứng sự kiện nào",

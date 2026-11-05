@@ -139,6 +139,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const {
         article,
         isSaved,
+        archiveItem,
         isLoading,
         error,
         notFound,
@@ -415,6 +416,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     article={article}
                                     publicationName={article.publicationSource?.publication_name ?? null}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
+                                    archiveItem={archiveItem}
                                     track={{
                                         origin: 'article',
                                         surface: 'detail',

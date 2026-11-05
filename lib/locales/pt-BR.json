@@ -888,9 +888,15 @@
     "removedToastTitle": "Removido",
     "saveAction": "Salvar",
     "removeAction": "Remover dos salvos",
-    "savedToastMessage": "Artigo salvo para depois",
+    "savedToastMessage": "Adicionado a Ler depois",
     "savedToastTitle": "Salvo",
-    "emptyTitle": "Nada salvo ainda"
+    "emptyTitle": "Nada salvo ainda",
+    "archiveAction": "Arquivar",
+    "moveToArchive": "Mover para Arquivo",
+    "moveToReadLater": "Mover para Ler depois",
+    "movedToArchive": "Movido para Arquivo",
+    "movedToReadLater": "Movido para Ler depois",
+    "archivedToastMessage": "Adicionado ao Arquivo"
   },
   "subscription": {
     "customerCenter": "Gerenciar / cancelar assinatura",
@@ -2867,9 +2873,21 @@
     "saved": {
       "export": "Exportar",
       "emptyBody": "Toque no marcador de qualquer artigo para guardá-lo aqui. Os artigos salvos ficam neste celular até você remover.",
-      "count_one": "{{count}} salvo",
-      "count_other": "{{count}} salvos",
-      "learn": "Saiba mais sobre Salvos"
+      "learn": "Saiba mais sobre Salvos",
+      "readLater": "Ler depois",
+      "archive": "Arquivo",
+      "groupTitle": "Agrupar por",
+      "groupA11y": "Agrupar por {{group}}",
+      "groupNewest": "Data em que salvou",
+      "groupPriority": "Prioridade",
+      "groupNoPriority": "Sem prioridade",
+      "groupOther": "Outros",
+      "emptyArchiveTitle": "Nada arquivado ainda",
+      "emptyArchiveBody": "Escolha Arquivar no menu ••• de qualquer artigo. Os artigos arquivados ficam neste celular até você remover.",
+      "countLater_one": "{{count}} para ler",
+      "countLater_other": "{{count}} para ler",
+      "countArchive_one": "{{count}} arquivado",
+      "countArchive_other": "{{count}} arquivados"
     },
     "checks": {
       "emptyTitle": "Nenhuma checagem ainda",

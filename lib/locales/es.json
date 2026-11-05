@@ -888,9 +888,15 @@
     "removedToastTitle": "Quitado",
     "saveAction": "Guardar",
     "removeAction": "Quitar de guardados",
-    "savedToastMessage": "Artículo guardado para más tarde",
+    "savedToastMessage": "Añadido a Leer más tarde",
     "savedToastTitle": "Guardado",
-    "emptyTitle": "Nada guardado todavía"
+    "emptyTitle": "Nada guardado todavía",
+    "archiveAction": "Archivar",
+    "moveToArchive": "Mover a Archivo",
+    "moveToReadLater": "Mover a Leer más tarde",
+    "movedToArchive": "Movido a Archivo",
+    "movedToReadLater": "Movido a Leer más tarde",
+    "archivedToastMessage": "Añadido a Archivo"
   },
   "subscription": {
     "customerCenter": "Gestionar / cancelar suscripción",
@@ -2867,9 +2873,21 @@
     "saved": {
       "export": "Exportar",
       "emptyBody": "Toca el marcador de cualquier artículo para guardarlo aquí. Los artículos guardados se quedan en este teléfono hasta que los quites.",
-      "count_one": "{{count}} guardado",
-      "count_other": "{{count}} guardados",
-      "learn": "Más sobre Guardados"
+      "learn": "Más sobre Guardados",
+      "readLater": "Leer más tarde",
+      "archive": "Archivo",
+      "groupTitle": "Agrupar por",
+      "groupA11y": "Agrupar por {{group}}",
+      "groupNewest": "Fecha de guardado",
+      "groupPriority": "Prioridad",
+      "groupNoPriority": "Sin prioridad",
+      "groupOther": "Otros",
+      "emptyArchiveTitle": "Nada archivado todavía",
+      "emptyArchiveBody": "Elige Archivar en el menú ••• de cualquier artículo. Los artículos archivados se quedan en este teléfono hasta que los quites.",
+      "countLater_one": "{{count}} por leer",
+      "countLater_other": "{{count}} por leer",
+      "countArchive_one": "{{count}} archivado",
+      "countArchive_other": "{{count}} archivados"
     },
     "checks": {
       "emptyTitle": "Aún no hay verificaciones de hechos",

@@ -869,12 +869,18 @@
   },
   "savedSuggestions": {
     "removedToastMessage": "已從儲存項目移除",
-    "savedToastMessage": "已儲存文章供稍後閱讀",
+    "savedToastMessage": "已加入稍後閱讀",
     "savedToastTitle": "已儲存",
     "removedToastTitle": "已移除",
     "saveAction": "儲存",
     "removeAction": "從已儲存中移除",
-    "emptyTitle": "還沒有儲存任何內容"
+    "emptyTitle": "還沒有儲存任何內容",
+    "archiveAction": "封存",
+    "moveToArchive": "移到封存",
+    "moveToReadLater": "移到稍後閱讀",
+    "movedToArchive": "已移到封存",
+    "movedToReadLater": "已移到稍後閱讀",
+    "archivedToastMessage": "已加入封存"
   },
   "subscription": {
     "customerCenter": "管理／取消訂閱",
@@ -2840,9 +2846,21 @@
     "saved": {
       "export": "匯出",
       "emptyBody": "點一下任何文章上的書籤，即可把它保留在這裡。已儲存的文章會一直留在這支手機上，直到你移除。",
-      "count_one": "已儲存 {{count}} 篇",
-      "count_other": "已儲存 {{count}} 篇",
-      "learn": "了解已儲存"
+      "learn": "了解已儲存",
+      "readLater": "稍後閱讀",
+      "archive": "封存",
+      "groupTitle": "分組方式",
+      "groupA11y": "按{{group}}分組",
+      "groupNewest": "儲存日期",
+      "groupPriority": "優先順序",
+      "groupNoPriority": "無優先順序",
+      "groupOther": "其他",
+      "emptyArchiveTitle": "還沒有封存任何內容",
+      "emptyArchiveBody": "在任何文章的 ••• 選單中選擇「封存」。已封存的文章會一直留在這支手機上，直到你移除。",
+      "countLater_one": "{{count}} 篇待讀",
+      "countLater_other": "{{count}} 篇待讀",
+      "countArchive_one": "已封存 {{count}} 篇",
+      "countArchive_other": "已封存 {{count}} 篇"
     },
     "checks": {
       "emptyTitle": "還沒有事實查核",

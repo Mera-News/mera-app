@@ -20,11 +20,20 @@
 
 import { useSyncExternalStore } from 'react';
 
+/** Saved's two lists. Here rather than in the service so a card can name it
+ *  without importing the database. */
+export type SavedList = 'later' | 'archive';
+
 /** id → authoritative saved flag, for ids mutated during this session. */
 const overrides = new Map<string, boolean>();
+/** id → the Saved list it now sits in, for ids saved or moved this session. */
+const listOverrides = new Map<string, SavedList>();
 const listeners = new Set<() => void>();
+/** Bumped on every change, for a reader that derives a whole list. */
+let version = 0;
 
 function emit(): void {
+  version += 1;
   for (const l of listeners) l();
 }
 
@@ -68,17 +77,35 @@ export function useSavedOverride(id: string): boolean | undefined {
   );
 }
 
-/**
- * How many of `ids` are still saved, reactive. Saved's "N saved" count, so it
- * drops the moment a row is removed from the ••• menu. A number, so the
- * snapshot is stable.
- */
-export function useSavedCount(ids: readonly string[]): number {
+/** Announce which list `id` now sits in. Same contract as publishSavedState. */
+export function publishSavedList(id: string, list: SavedList): void {
+  if (!id) return;
+  if (listOverrides.get(id) === list) return;
+  listOverrides.set(id, list);
+  emit();
+}
+
+/** Non-reactive read of {@link useSavedList}. */
+export function getSavedListOverride(id: string): SavedList | undefined {
+  return id ? listOverrides.get(id) : undefined;
+}
+
+/** Reactive list override for one id. `undefined` ⇒ untouched this session. */
+export function useSavedList(id: string): SavedList | undefined {
   return useSyncExternalStore(
     subscribe,
-    () => ids.reduce((n, id) => (overrides.get(id) === false ? n : n + 1), 0),
-    () => ids.length,
+    () => (id ? listOverrides.get(id) : undefined),
+    () => undefined,
   );
+}
+
+/**
+ * Changes whenever any id's override does. The Saved page re-derives its rows
+ * from it, so a removed or moved row leaves the list and its group heading on
+ * the next frame, count included. A number, so the snapshot is stable.
+ */
+export function useSavedStateVersion(): number {
+  return useSyncExternalStore(subscribe, () => version, () => 0);
 }
 
 /**
@@ -87,11 +114,13 @@ export function useSavedCount(ids: readonly string[]): number {
  */
 export function resetSavedState(): void {
   overrides.clear();
+  listOverrides.clear();
   emit();
 }
 
 /** Test-only reset — the map is module state and would leak across cases. */
 export function __resetSavedStateForTests(): void {
   overrides.clear();
+  listOverrides.clear();
   listeners.clear();
 }

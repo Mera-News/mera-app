@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 57,
+  version: 58,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -200,6 +200,10 @@ export default appSchema({
         // card-renderable column above already tolerates a standalone article
         // snapshot, so no extra columns are needed for the non-default origins.
         { name: 'origin', type: 'string', isOptional: true },
+        // Which Saved list a user save sits in (schema v58): true is Archive,
+        // false or NULL is Read later, so every row older than v58 is Read later.
+        // Meaningless on a retention row, and cleared when a save becomes one.
+        { name: 'archived', type: 'boolean', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
         { name: 'saved_at', type: 'number', isIndexed: true },

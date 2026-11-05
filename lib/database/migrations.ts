@@ -1599,5 +1599,17 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // saved_article_suggestions.archived: Saved's Read later and Archive lists.
+      // NULL reads as Read later, so existing saves need no backfill. Roll-forward
+      // only, like v56.
+      toVersion: 58,
+      steps: [
+        addColumns({
+          table: 'saved_article_suggestions',
+          columns: [{ name: 'archived', type: 'boolean', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

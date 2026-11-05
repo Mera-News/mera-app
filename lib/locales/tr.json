@@ -886,9 +886,15 @@
     "removedToastTitle": "Kaldırıldı",
     "saveAction": "Kaydet",
     "removeAction": "Kaydedilenlerden kaldır",
-    "savedToastMessage": "Makale daha sonrası için kaydedildi",
+    "savedToastMessage": "Sonra oku listesine eklendi",
     "savedToastTitle": "Kaydedildi",
-    "emptyTitle": "Henüz kaydedilen bir şey yok"
+    "emptyTitle": "Henüz kaydedilen bir şey yok",
+    "archiveAction": "Arşivle",
+    "moveToArchive": "Arşive taşı",
+    "moveToReadLater": "Sonra oku listesine taşı",
+    "movedToArchive": "Arşive taşındı",
+    "movedToReadLater": "Sonra oku listesine taşındı",
+    "archivedToastMessage": "Arşive eklendi"
   },
   "subscription": {
     "customerCenter": "Aboneliği yönet / iptal et",
@@ -2863,9 +2869,21 @@
     "saved": {
       "export": "Dışa aktar",
       "emptyBody": "Burada saklamak için herhangi bir makalenin yer imine dokunun. Kaydedilen makaleler siz kaldırana kadar bu telefonda kalır.",
-      "count_one": "{{count}} kayıtlı",
-      "count_other": "{{count}} kayıtlı",
-      "learn": "Kaydedilenler hakkında bilgi edinin"
+      "learn": "Kaydedilenler hakkında bilgi edinin",
+      "readLater": "Sonra oku",
+      "archive": "Arşiv",
+      "groupTitle": "Gruplandır",
+      "groupA11y": "{{group}} ölçütüne göre gruplandır",
+      "groupNewest": "Kaydedilme tarihi",
+      "groupPriority": "Öncelik",
+      "groupNoPriority": "Öncelik yok",
+      "groupOther": "Diğer",
+      "emptyArchiveTitle": "Henüz arşivlenen bir şey yok",
+      "emptyArchiveBody": "Herhangi bir makalenin ••• menüsünden Arşivle seçeneğini seçin. Arşivlenen makaleler siz kaldırana kadar bu telefonda kalır.",
+      "countLater_one": "{{count}} okunacak",
+      "countLater_other": "{{count}} okunacak",
+      "countArchive_one": "{{count}} arşivlendi",
+      "countArchive_other": "{{count}} arşivlendi"
     },
     "checks": {
       "emptyTitle": "Henüz doğruluk kontrolü yok",

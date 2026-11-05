@@ -17,7 +17,8 @@ import {
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { useSavedOverride } from '@/lib/saved-state';
+import { useSavedOverride, type SavedList } from '@/lib/saved-state';
+import { useArchiveMenuItem } from '@/components/custom/cards/use-archive-menu-item';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import {
@@ -435,6 +436,14 @@ export function useArticleSuggestionScreen({
         setFactCheckAsked(true);
     }, [suggestion]);
 
+    const saveToList = useCallback(
+        async (list: SavedList) => {
+            if (suggestion) await saveSuggestion(suggestion, list);
+        },
+        [suggestion],
+    );
+    const archiveItem = useArchiveMenuItem({ savedId: articleSuggestionId, saved: isSaved, save: saveToList });
+
     const handleToggleSave = useCallback(async () => {
         if (!suggestion) return;
         try {
@@ -489,6 +498,7 @@ export function useArticleSuggestionScreen({
     return {
         suggestion,
         isSaved,
+        archiveItem,
         isLoading,
         error,
         openedIds,

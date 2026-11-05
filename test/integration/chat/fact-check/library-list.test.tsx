@@ -157,6 +157,7 @@ describe('the Fact checks export', () => {
 describe('the Saved export on the shared wizard', () => {
   const saved: SavedItem = {
     origin: 'suggestion',
+    list: 'later',
     savedAt: Date.UTC(2026, 8, 21),
     suggestion: {
       _id: 'sug-1',

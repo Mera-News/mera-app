@@ -19,7 +19,8 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { useSavedOverride } from '@/lib/saved-state';
+import { useSavedOverride, type SavedList } from '@/lib/saved-state';
+import { useArchiveMenuItem } from '@/components/custom/cards/use-archive-menu-item';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { relatedExcludeKey, useRelatedPagination } from './use-related-pagination';
@@ -373,6 +374,14 @@ export function useArticleDetailScreen({
         setFactCheckAsked(true);
     }, [article, articleId]);
 
+    const saveToList = useCallback(
+        async (list: SavedList) => {
+            if (article) await saveStandaloneArticle(article, { surface: 'detail' }, list);
+        },
+        [article],
+    );
+    const archiveItem = useArchiveMenuItem({ savedId: article?._id ?? articleId, saved: isSaved, save: saveToList });
+
     const handleToggleSave = useCallback(async () => {
         if (!article) return;
         try {
@@ -428,6 +437,7 @@ export function useArticleDetailScreen({
     return {
         article,
         isSaved,
+        archiveItem,
         isLoading,
         error,
         notFound,

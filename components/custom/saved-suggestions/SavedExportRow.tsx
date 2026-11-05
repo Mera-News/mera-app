@@ -1,15 +1,18 @@
-// Saved's pinned row (FinalLibrary #1): "3 saved" with its ?, then the glass
-// Export button, TRANSPARENT like the Library header (owner: no fill, no
-// hairline). It sits under the page header and rides with it, so it never
-// scrolls away and never hangs alone under the status bar; the list scrolls
-// beneath it. Only while something is saved (#3: the empty page has no pinned
-// row; its "Saved ?" title scrolls with the list).
+// Saved's pinned block: the Read later / Archive switch, then the count with
+// Group by and the glass Export button, TRANSPARENT like the Library header
+// (owner: no fill, no hairline). It sits under the page header and rides with
+// it, so it never scrolls away and never hangs alone under the status bar; the
+// list scrolls beneath it. The switch always shows, or an empty Read later would
+// hide Archive. The row under it shows only while the list has articles.
 //
 // The count is the shell's PageTitleRow; Saved's ? is in the tab header.
 
 import { GlassPlate } from '@/components/custom/GlassSurface';
+import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import PageTitleRow from '@/components/custom/nav/PageTitleRow';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Text } from '@/components/ui/text';
+import type { SavedList } from '@/lib/saved-state';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
@@ -17,14 +20,28 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
+import type { SavedGroupBy } from './saved-groups';
 
-/** The row's height. The list pads by it so its first card starts below. */
-export const SAVED_EXPORT_ROW_HEIGHT = 56;
+/** The switch's 44pt track and the gap under it. */
+const SWITCH_HEIGHT = 52;
+const COUNT_ROW_HEIGHT = 56;
+/** The block's height. The list pads by it so its first card starts below. */
+export const savedPinnedHeight = (hasRows: boolean): number => SWITCH_HEIGHT + (hasRows ? COUNT_ROW_HEIGHT : 0);
+
+const LISTS: readonly SavedList[] = ['later', 'archive'];
+const GROUP_BYS: readonly SavedGroupBy[] = ['newest', 'facts', 'priority'];
+const GROUP_ICON = { newest: 'schedule', facts: 'person-outline', priority: 'outlined-flag' } as const;
+const groupIconOf = (g: SavedGroupBy) => GROUP_ICON[g];
 
 const BUTTON_H = 38;
 const BUTTON_FRAME = 44;
 
 interface Props {
+    readonly list: SavedList;
+    readonly onListChange: (list: SavedList) => void;
+    readonly groupBy: SavedGroupBy;
+    readonly onGroupByChange: (groupBy: SavedGroupBy) => void;
+    /** Articles in the current list. */
     readonly count: number;
     /** The host header's measured height: the row sits directly under it. */
     readonly headerHeight: number;
@@ -33,17 +50,34 @@ interface Props {
     readonly onExport: () => void;
 }
 
-const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExport }) => {
+const SavedExportRow: React.FC<Props> = ({
+    list,
+    onListChange,
+    groupBy,
+    onGroupByChange,
+    count,
+    headerHeight,
+    hidden,
+    onExport,
+}) => {
     const { t } = useTranslation();
     const colors = useColors();
     const styles = useStyles();
 
+    const hasRows = count > 0;
+    const height = savedPinnedHeight(hasRows);
     const ride = useAnimatedStyle(
         () => ({
-            transform: [{ translateY: hidden ? -hidden.value * (headerHeight + SAVED_EXPORT_ROW_HEIGHT) : 0 }],
+            transform: [{ translateY: hidden ? -hidden.value * (headerHeight + height) : 0 }],
         }),
-        [hidden, headerHeight],
+        [hidden, headerHeight, height],
     );
+    const groupLabel = (g: SavedGroupBy) =>
+        g === 'facts'
+            ? t('you.profile.facts')
+            : g === 'priority'
+              ? t('library.saved.groupPriority')
+              : t('library.saved.groupNewest');
 
     const exportButton = (
             // A childless labelled button over a hidden visual: a glyph inside a
@@ -70,27 +104,65 @@ const SavedExportRow: React.FC<Props> = ({ count, headerHeight, hidden, onExport
     );
 
     return (
-        <Animated.View testID="saved-export-row" style={[styles.row, { top: headerHeight }, ride]}>
-            <PageTitleRow
-                title={t('library.saved.count', { count })}
-                trailing={exportButton}
-                testID="saved-title-row"
+        <Animated.View
+            testID="saved-export-row"
+            pointerEvents="box-none"
+            style={[styles.block, { top: headerHeight, height }, ride]}
+        >
+            <SegmentedControl
+                options={[
+                    { value: LISTS[0], label: t('library.saved.readLater') },
+                    { value: LISTS[1], label: t('library.saved.archive') },
+                ]}
+                value={list}
+                onChange={onListChange}
+                accessibilityLabel={t('nav.page.saved')}
+                stretch
+                testID="saved-list"
             />
+            {hasRows ? (
+                <View style={styles.countRow}>
+                    <PageTitleRow
+                        title={
+                            list === 'archive'
+                                ? t('library.saved.countArchive', { count })
+                                : t('library.saved.countLater', { count })
+                        }
+                        trailing={
+                            <View style={styles.trailing}>
+                                <InlineChoiceChip
+                                    options={GROUP_BYS}
+                                    value={groupBy}
+                                    labelOf={groupLabel}
+                                    a11yLabelOf={(g) => t('library.saved.groupA11y', { group: groupLabel(g) })}
+                                    onChange={onGroupByChange}
+                                    iconOf={groupIconOf}
+                                    menuTitle={t('library.saved.groupTitle')}
+                                    rowRole="radio"
+                                    testID="saved-group-chip"
+                                />
+                                {exportButton}
+                            </View>
+                        }
+                        testID="saved-title-row"
+                    />
+                </View>
+            ) : null}
         </Animated.View>
     );
 };
 
 const useStyles = themedStyles((c) => StyleSheet.create({
-    row: {
+    block: {
         position: 'absolute',
         left: 0,
         right: 0,
-        height: SAVED_EXPORT_ROW_HEIGHT,
         paddingHorizontal: PAGE_SIDE_INSET,
-        justifyContent: 'center',
         overflow: 'hidden',
         zIndex: 5,
     },
+    countRow: { position: 'absolute', left: PAGE_SIDE_INSET, right: PAGE_SIDE_INSET, top: SWITCH_HEIGHT, height: COUNT_ROW_HEIGHT, justifyContent: 'center' },
+    trailing: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     frame: { minHeight: BUTTON_FRAME, justifyContent: 'center' },
     button: {
         height: BUTTON_H,

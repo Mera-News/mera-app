@@ -17,7 +17,7 @@ const v57 = migList.find((m) => m.toVersion === 57);
 
 describe('v57: score_failed_at on article_suggestions', () => {
   it('is one additive, optional number column', () => {
-    expect(schema.version).toBe(57);
+    expect(schema.version).toBeGreaterThanOrEqual(57);
     expect(v57?.steps).toEqual([
       {
         type: 'add_columns',

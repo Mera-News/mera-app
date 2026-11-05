@@ -869,12 +869,18 @@
   },
   "savedSuggestions": {
     "removedToastMessage": "저장 목록에서 제거됨",
-    "savedToastMessage": "나중에 볼 기사로 저장됨",
+    "savedToastMessage": "나중에 읽기에 추가됨",
     "savedToastTitle": "저장됨",
     "removedToastTitle": "삭제됨",
     "saveAction": "저장",
     "removeAction": "저장에서 제거",
-    "emptyTitle": "아직 저장한 항목이 없습니다"
+    "emptyTitle": "아직 저장한 항목이 없습니다",
+    "archiveAction": "보관",
+    "moveToArchive": "보관함으로 이동",
+    "moveToReadLater": "나중에 읽기로 이동",
+    "movedToArchive": "보관함으로 이동됨",
+    "movedToReadLater": "나중에 읽기로 이동됨",
+    "archivedToastMessage": "보관함에 추가됨"
   },
   "subscription": {
     "customerCenter": "구독 관리 / 취소",
@@ -2840,9 +2846,21 @@
     "saved": {
       "export": "내보내기",
       "emptyBody": "기사의 북마크를 누르면 여기에 보관돼요. 저장한 기사는 제거하기 전까지 이 휴대전화에 남아요.",
-      "count_one": "{{count}}개 저장됨",
-      "count_other": "{{count}}개 저장됨",
-      "learn": "저장 알아보기"
+      "learn": "저장 알아보기",
+      "readLater": "나중에 읽기",
+      "archive": "보관함",
+      "groupTitle": "그룹 기준",
+      "groupA11y": "{{group}} 기준으로 그룹화",
+      "groupNewest": "저장한 날짜",
+      "groupPriority": "우선순위",
+      "groupNoPriority": "우선순위 없음",
+      "groupOther": "기타",
+      "emptyArchiveTitle": "아직 보관한 기사가 없어요",
+      "emptyArchiveBody": "기사의 ••• 메뉴에서 보관을 선택하세요. 보관한 기사는 제거하기 전까지 이 휴대전화에 남아요.",
+      "countLater_one": "읽을 기사 {{count}}개",
+      "countLater_other": "읽을 기사 {{count}}개",
+      "countArchive_one": "{{count}}개 보관됨",
+      "countArchive_other": "{{count}}개 보관됨"
     },
     "checks": {
       "emptyTitle": "아직 팩트체크가 없습니다",

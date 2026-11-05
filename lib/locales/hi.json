@@ -886,9 +886,15 @@
     "removedToastTitle": "हटाया गया",
     "saveAction": "सहेजें",
     "removeAction": "सहेजे गए से हटाएँ",
-    "savedToastMessage": "लेख बाद के लिए सहेजा गया",
+    "savedToastMessage": "बाद में पढ़ें में जोड़ा गया",
     "savedToastTitle": "सहेजा गया",
-    "emptyTitle": "अभी कुछ सहेजा नहीं गया"
+    "emptyTitle": "अभी कुछ सहेजा नहीं गया",
+    "archiveAction": "संग्रहित करें",
+    "moveToArchive": "संग्रह में ले जाएं",
+    "moveToReadLater": "बाद में पढ़ें में ले जाएं",
+    "movedToArchive": "संग्रह में ले जाया गया",
+    "movedToReadLater": "बाद में पढ़ें में ले जाया गया",
+    "archivedToastMessage": "संग्रह में जोड़ा गया"
   },
   "subscription": {
     "customerCenter": "सब्सक्रिप्शन प्रबंधित / रद्द करें",
@@ -2863,9 +2869,21 @@
     "saved": {
       "export": "एक्सपोर्ट करें",
       "emptyBody": "किसी भी लेख पर बुकमार्क दबाएं और वह यहां रखा जाएगा। सहेजे गए लेख आपके हटाने तक इसी फ़ोन पर रहते हैं।",
-      "count_one": "{{count}} सहेजा गया",
-      "count_other": "{{count}} सहेजे गए",
-      "learn": "सहेजे गए के बारे में जानें"
+      "learn": "सहेजे गए के बारे में जानें",
+      "readLater": "बाद में पढ़ें",
+      "archive": "संग्रह",
+      "groupTitle": "इसके अनुसार समूह बनाएं",
+      "groupA11y": "{{group}} के अनुसार समूह बनाएं",
+      "groupNewest": "सहेजने की तारीख",
+      "groupPriority": "प्राथमिकता",
+      "groupNoPriority": "कोई प्राथमिकता नहीं",
+      "groupOther": "अन्य",
+      "emptyArchiveTitle": "अभी कुछ संग्रहित नहीं है",
+      "emptyArchiveBody": "किसी भी लेख के ••• मेन्यू में संग्रहित करें चुनें। संग्रहित लेख आपके हटाने तक इसी फ़ोन पर रहते हैं।",
+      "countLater_one": "{{count}} पढ़ने के लिए",
+      "countLater_other": "{{count}} पढ़ने के लिए",
+      "countArchive_one": "{{count}} संग्रहित",
+      "countArchive_other": "{{count}} संग्रहित"
     },
     "checks": {
       "emptyTitle": "अभी तक कोई तथ्य-जाँच नहीं",

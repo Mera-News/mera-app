@@ -10,10 +10,14 @@ import { signOutAndWipe } from '@/lib/security/local-wipe';
 import { signInFixtureAccount } from '@/test/helpers';
 import {
   __resetSavedStateForTests,
+  getSavedListOverride,
   getSavedOverride,
+  publishSavedList,
   publishSavedState,
-  useSavedCount,
+  resetSavedState,
+  useSavedList,
   useSavedOverride,
+  useSavedStateVersion,
 } from '@/lib/saved-state';
 import { seedArticles, suggestionRows } from '../sync/seed';
 
@@ -90,27 +94,36 @@ describe('useSavedOverride', () => {
   });
 });
 
-describe('useSavedCount', () => {
-  it('counts every id as saved until one is explicitly un-saved', async () => {
-    const ids = ['a', 'b', 'c'];
-    const { result } = await renderHook(() => useSavedCount(ids));
-    expect(result.current).toBe(3);
-
-    await act(() => publishSavedState('b', false));
-    expect(result.current).toBe(2);
-
-    // A save, or an id outside the list, never changes the count.
-    await act(() => publishSavedState('a', true));
-    await act(() => publishSavedState('zzz', false));
-    expect(result.current).toBe(2);
-
-    await act(() => publishSavedState('b', true));
-    expect(result.current).toBe(3);
+describe('list overrides', () => {
+  it('has none for an id nobody has touched', () => {
+    expect(getSavedListOverride('a')).toBeUndefined();
   });
 
-  it('counts an empty list as zero', async () => {
-    const { result } = await renderHook(() => useSavedCount([]));
-    expect(result.current).toBe(0);
+  it('reports the last list, and the version moves only on a change', async () => {
+    const list = await renderHook(() => useSavedList('a'));
+    const version = await renderHook(() => useSavedStateVersion());
+    const before = version.result.current;
+    expect(list.result.current).toBeUndefined();
+
+    await act(async () => publishSavedList('a', 'archive'));
+    expect(list.result.current).toBe('archive');
+    expect(version.result.current).toBe(before + 1);
+
+    await act(async () => publishSavedList('a', 'archive'));
+    expect(version.result.current).toBe(before + 1);
+  });
+
+  it('a removal moves the version too, so the Saved page drops the row', async () => {
+    const version = await renderHook(() => useSavedStateVersion());
+    const before = version.result.current;
+    await act(async () => publishSavedState('a', false));
+    expect(version.result.current).toBe(before + 1);
+  });
+
+  it('sign-out clears them', () => {
+    publishSavedList('a', 'archive');
+    resetSavedState();
+    expect(getSavedListOverride('a')).toBeUndefined();
   });
 });
 

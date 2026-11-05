@@ -129,6 +129,7 @@ export const BACKUP_SETTING_KEYS: readonly string[] = [
   'feed_view',
   'feed_minimap',
   'feed_show',
+  'saved_group_by',
 ];
 
 /**

@@ -115,6 +115,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     },
     extraItems: menuExtraItems,
     rowActions,
+    archiveItem: actions.archiveItem,
     onVerdictRecorded: actions.onVerdictRecorded,
   });
 

@@ -869,12 +869,18 @@
   },
   "savedSuggestions": {
     "removedToastMessage": "已从收藏中移除",
-    "savedToastMessage": "文章已保存以便稍后阅读",
+    "savedToastMessage": "已添加到稍后阅读",
     "savedToastTitle": "已保存",
     "removedToastTitle": "已移除",
     "saveAction": "保存",
     "removeAction": "从已保存中移除",
-    "emptyTitle": "还没有保存任何内容"
+    "emptyTitle": "还没有保存任何内容",
+    "archiveAction": "归档",
+    "moveToArchive": "移到归档",
+    "moveToReadLater": "移到稍后阅读",
+    "movedToArchive": "已移到归档",
+    "movedToReadLater": "已移到稍后阅读",
+    "archivedToastMessage": "已添加到归档"
   },
   "subscription": {
     "customerCenter": "管理／取消订阅",
@@ -2840,9 +2846,21 @@
     "saved": {
       "export": "导出",
       "emptyBody": "点按任意文章上的书签，即可把它保存在这里。已保存的文章会一直留在这部手机上，直到你移除。",
-      "count_one": "{{count}} 篇已保存",
-      "count_other": "{{count}} 篇已保存",
-      "learn": "了解已保存"
+      "learn": "了解已保存",
+      "readLater": "稍后阅读",
+      "archive": "归档",
+      "groupTitle": "分组方式",
+      "groupA11y": "按{{group}}分组",
+      "groupNewest": "保存日期",
+      "groupPriority": "优先级",
+      "groupNoPriority": "无优先级",
+      "groupOther": "其他",
+      "emptyArchiveTitle": "还没有归档任何内容",
+      "emptyArchiveBody": "在任意文章的 ••• 菜单中选择“归档”。已归档的文章会一直留在这部手机上，直到你移除。",
+      "countLater_one": "{{count}} 篇待读",
+      "countLater_other": "{{count}} 篇待读",
+      "countArchive_one": "{{count}} 篇已归档",
+      "countArchive_other": "{{count}} 篇已归档"
     },
     "checks": {
       "emptyTitle": "还没有事实核查",

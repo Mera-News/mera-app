@@ -886,9 +886,15 @@
     "removedToastTitle": "Verwijderd",
     "saveAction": "Opslaan",
     "removeAction": "Verwijderen uit opgeslagen",
-    "savedToastMessage": "Artikel opgeslagen voor later",
+    "savedToastMessage": "Toegevoegd aan Later lezen",
     "savedToastTitle": "Opgeslagen",
-    "emptyTitle": "Nog niets opgeslagen"
+    "emptyTitle": "Nog niets opgeslagen",
+    "archiveAction": "Archiveren",
+    "moveToArchive": "Verplaatsen naar Archief",
+    "moveToReadLater": "Verplaatsen naar Later lezen",
+    "movedToArchive": "Verplaatst naar Archief",
+    "movedToReadLater": "Verplaatst naar Later lezen",
+    "archivedToastMessage": "Toegevoegd aan Archief"
   },
   "subscription": {
     "customerCenter": "Abonnement beheren / opzeggen",
@@ -2861,9 +2867,21 @@
     "saved": {
       "export": "Exporteren",
       "emptyBody": "Tik op het bladwijzer bij een artikel om het hier te bewaren. Opgeslagen artikelen blijven op deze telefoon tot je ze verwijdert.",
-      "count_one": "{{count}} opgeslagen",
-      "count_other": "{{count}} opgeslagen",
-      "learn": "Meer over Opgeslagen"
+      "learn": "Meer over Opgeslagen",
+      "readLater": "Later lezen",
+      "archive": "Archief",
+      "groupTitle": "Groeperen op",
+      "groupA11y": "Groeperen op {{group}}",
+      "groupNewest": "Opslagdatum",
+      "groupPriority": "Prioriteit",
+      "groupNoPriority": "Geen prioriteit",
+      "groupOther": "Overig",
+      "emptyArchiveTitle": "Nog niets gearchiveerd",
+      "emptyArchiveBody": "Kies Archiveren in het •••-menu van een artikel. Gearchiveerde artikelen blijven op deze telefoon tot je ze verwijdert.",
+      "countLater_one": "{{count}} te lezen",
+      "countLater_other": "{{count}} te lezen",
+      "countArchive_one": "{{count}} gearchiveerd",
+      "countArchive_other": "{{count}} gearchiveerd"
     },
     "checks": {
       "emptyTitle": "Nog geen feitencontroles",

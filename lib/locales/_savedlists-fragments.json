@@ -1,0 +1,602 @@
+{
+  "ar": {
+    "library": {
+      "saved": {
+        "readLater": "القراءة لاحقًا",
+        "archive": "الأرشيف",
+        "groupTitle": "التجميع حسب",
+        "groupA11y": "التجميع حسب {{group}}",
+        "groupNewest": "تاريخ الحفظ",
+        "groupPriority": "الأولوية",
+        "groupNoPriority": "بدون أولوية",
+        "groupOther": "أخرى",
+        "emptyArchiveTitle": "لا شيء في الأرشيف بعد",
+        "emptyArchiveBody": "اختر أرشفة من قائمة ••• في أي مقال. تبقى المقالات المؤرشفة على هذا الهاتف حتى تزيلها.",
+        "countLater_zero": "لا شيء للقراءة",
+        "countLater_one": "مقال واحد للقراءة",
+        "countLater_two": "مقالان للقراءة",
+        "countLater_few": "{{count}} مقالات للقراءة",
+        "countLater_many": "{{count}} مقالًا للقراءة",
+        "countLater_other": "{{count}} مقال للقراءة",
+        "countArchive_zero": "لا شيء في الأرشيف",
+        "countArchive_one": "مقال واحد مؤرشف",
+        "countArchive_two": "مقالان مؤرشفان",
+        "countArchive_few": "{{count}} مقالات مؤرشفة",
+        "countArchive_many": "{{count}} مقالًا مؤرشفًا",
+        "countArchive_other": "{{count}} مقال مؤرشف"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "أرشفة",
+      "moveToArchive": "نقل إلى الأرشيف",
+      "moveToReadLater": "نقل إلى القراءة لاحقًا",
+      "movedToArchive": "تم النقل إلى الأرشيف",
+      "movedToReadLater": "تم النقل إلى القراءة لاحقًا",
+      "archivedToastMessage": "تمت الإضافة إلى الأرشيف",
+      "savedToastMessage": "تمت الإضافة إلى القراءة لاحقًا"
+    }
+  },
+  "de": {
+    "library": {
+      "saved": {
+        "readLater": "Später lesen",
+        "archive": "Archiv",
+        "groupTitle": "Gruppieren nach",
+        "groupA11y": "Gruppieren nach {{group}}",
+        "groupNewest": "Speicherdatum",
+        "groupPriority": "Priorität",
+        "groupNoPriority": "Keine Priorität",
+        "groupOther": "Sonstige",
+        "emptyArchiveTitle": "Noch nichts archiviert",
+        "emptyArchiveBody": "Wähle im •••-Menü eines Artikels Archivieren. Archivierte Artikel bleiben auf diesem Telefon, bis du sie entfernst.",
+        "countLater_one": "{{count}} zu lesen",
+        "countLater_other": "{{count}} zu lesen",
+        "countArchive_one": "{{count}} archiviert",
+        "countArchive_other": "{{count}} archiviert"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archivieren",
+      "moveToArchive": "Ins Archiv verschieben",
+      "moveToReadLater": "Zu Später lesen verschieben",
+      "movedToArchive": "Ins Archiv verschoben",
+      "movedToReadLater": "Zu Später lesen verschoben",
+      "archivedToastMessage": "Zum Archiv hinzugefügt",
+      "savedToastMessage": "Zu Später lesen hinzugefügt"
+    }
+  },
+  "en": {
+    "library": {
+      "saved": {
+        "readLater": "Read later",
+        "archive": "Archive",
+        "groupTitle": "Group by",
+        "groupA11y": "Group by {{group}}",
+        "groupNewest": "Date saved",
+        "groupPriority": "Priority",
+        "groupNoPriority": "No priority",
+        "groupOther": "Other",
+        "emptyArchiveTitle": "Nothing archived yet",
+        "emptyArchiveBody": "Choose Archive in the ••• menu of any article. Archived articles stay on this phone until you remove them.",
+        "countLater_one": "{{count}} to read",
+        "countLater_other": "{{count}} to read",
+        "countArchive_one": "{{count}} archived",
+        "countArchive_other": "{{count}} archived"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archive",
+      "moveToArchive": "Move to Archive",
+      "moveToReadLater": "Move to Read later",
+      "movedToArchive": "Moved to Archive",
+      "movedToReadLater": "Moved to Read later",
+      "archivedToastMessage": "Added to Archive",
+      "savedToastMessage": "Added to Read later"
+    }
+  },
+  "es": {
+    "library": {
+      "saved": {
+        "readLater": "Leer más tarde",
+        "archive": "Archivo",
+        "groupTitle": "Agrupar por",
+        "groupA11y": "Agrupar por {{group}}",
+        "groupNewest": "Fecha de guardado",
+        "groupPriority": "Prioridad",
+        "groupNoPriority": "Sin prioridad",
+        "groupOther": "Otros",
+        "emptyArchiveTitle": "Nada archivado todavía",
+        "emptyArchiveBody": "Elige Archivar en el menú ••• de cualquier artículo. Los artículos archivados se quedan en este teléfono hasta que los quites.",
+        "countLater_one": "{{count}} por leer",
+        "countLater_other": "{{count}} por leer",
+        "countArchive_one": "{{count}} archivado",
+        "countArchive_other": "{{count}} archivados"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archivar",
+      "moveToArchive": "Mover a Archivo",
+      "moveToReadLater": "Mover a Leer más tarde",
+      "movedToArchive": "Movido a Archivo",
+      "movedToReadLater": "Movido a Leer más tarde",
+      "archivedToastMessage": "Añadido a Archivo",
+      "savedToastMessage": "Añadido a Leer más tarde"
+    }
+  },
+  "fr": {
+    "library": {
+      "saved": {
+        "readLater": "À lire plus tard",
+        "archive": "Archives",
+        "groupTitle": "Regrouper par",
+        "groupA11y": "Regrouper par {{group}}",
+        "groupNewest": "Date d'enregistrement",
+        "groupPriority": "Priorité",
+        "groupNoPriority": "Sans priorité",
+        "groupOther": "Autres",
+        "emptyArchiveTitle": "Rien d'archivé pour l'instant",
+        "emptyArchiveBody": "Choisissez Archiver dans le menu ••• d'un article. Les articles archivés restent sur ce téléphone jusqu'à leur suppression.",
+        "countLater_one": "{{count}} à lire",
+        "countLater_other": "{{count}} à lire",
+        "countArchive_one": "{{count}} archivé",
+        "countArchive_other": "{{count}} archivés"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archiver",
+      "moveToArchive": "Déplacer vers Archives",
+      "moveToReadLater": "Déplacer vers À lire plus tard",
+      "movedToArchive": "Déplacé vers Archives",
+      "movedToReadLater": "Déplacé vers À lire plus tard",
+      "archivedToastMessage": "Ajouté aux Archives",
+      "savedToastMessage": "Ajouté à À lire plus tard"
+    }
+  },
+  "hi": {
+    "library": {
+      "saved": {
+        "readLater": "बाद में पढ़ें",
+        "archive": "संग्रह",
+        "groupTitle": "इसके अनुसार समूह बनाएं",
+        "groupA11y": "{{group}} के अनुसार समूह बनाएं",
+        "groupNewest": "सहेजने की तारीख",
+        "groupPriority": "प्राथमिकता",
+        "groupNoPriority": "कोई प्राथमिकता नहीं",
+        "groupOther": "अन्य",
+        "emptyArchiveTitle": "अभी कुछ संग्रहित नहीं है",
+        "emptyArchiveBody": "किसी भी लेख के ••• मेन्यू में संग्रहित करें चुनें। संग्रहित लेख आपके हटाने तक इसी फ़ोन पर रहते हैं।",
+        "countLater_one": "{{count}} पढ़ने के लिए",
+        "countLater_other": "{{count}} पढ़ने के लिए",
+        "countArchive_one": "{{count}} संग्रहित",
+        "countArchive_other": "{{count}} संग्रहित"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "संग्रहित करें",
+      "moveToArchive": "संग्रह में ले जाएं",
+      "moveToReadLater": "बाद में पढ़ें में ले जाएं",
+      "movedToArchive": "संग्रह में ले जाया गया",
+      "movedToReadLater": "बाद में पढ़ें में ले जाया गया",
+      "archivedToastMessage": "संग्रह में जोड़ा गया",
+      "savedToastMessage": "बाद में पढ़ें में जोड़ा गया"
+    }
+  },
+  "id": {
+    "library": {
+      "saved": {
+        "readLater": "Baca nanti",
+        "archive": "Arsip",
+        "groupTitle": "Kelompokkan menurut",
+        "groupA11y": "Kelompokkan menurut {{group}}",
+        "groupNewest": "Tanggal disimpan",
+        "groupPriority": "Prioritas",
+        "groupNoPriority": "Tanpa prioritas",
+        "groupOther": "Lainnya",
+        "emptyArchiveTitle": "Belum ada yang diarsipkan",
+        "emptyArchiveBody": "Pilih Arsipkan di menu ••• pada artikel mana pun. Artikel yang diarsipkan tetap ada di ponsel ini sampai Anda menghapusnya.",
+        "countLater_one": "{{count}} untuk dibaca",
+        "countLater_other": "{{count}} untuk dibaca",
+        "countArchive_one": "{{count}} diarsipkan",
+        "countArchive_other": "{{count}} diarsipkan"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Arsipkan",
+      "moveToArchive": "Pindahkan ke Arsip",
+      "moveToReadLater": "Pindahkan ke Baca nanti",
+      "movedToArchive": "Dipindahkan ke Arsip",
+      "movedToReadLater": "Dipindahkan ke Baca nanti",
+      "archivedToastMessage": "Ditambahkan ke Arsip",
+      "savedToastMessage": "Ditambahkan ke Baca nanti"
+    }
+  },
+  "it": {
+    "library": {
+      "saved": {
+        "readLater": "Leggi dopo",
+        "archive": "Archivio",
+        "groupTitle": "Raggruppa per",
+        "groupA11y": "Raggruppa per {{group}}",
+        "groupNewest": "Data di salvataggio",
+        "groupPriority": "Priorità",
+        "groupNoPriority": "Nessuna priorità",
+        "groupOther": "Altro",
+        "emptyArchiveTitle": "Ancora niente in archivio",
+        "emptyArchiveBody": "Scegli Archivia nel menu ••• di un articolo. Gli articoli archiviati restano su questo telefono finché non li rimuovi.",
+        "countLater_one": "{{count}} da leggere",
+        "countLater_other": "{{count}} da leggere",
+        "countArchive_one": "{{count}} archiviato",
+        "countArchive_other": "{{count}} archiviati"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archivia",
+      "moveToArchive": "Sposta in Archivio",
+      "moveToReadLater": "Sposta in Leggi dopo",
+      "movedToArchive": "Spostato in Archivio",
+      "movedToReadLater": "Spostato in Leggi dopo",
+      "archivedToastMessage": "Aggiunto ad Archivio",
+      "savedToastMessage": "Aggiunto a Leggi dopo"
+    }
+  },
+  "ja": {
+    "library": {
+      "saved": {
+        "readLater": "あとで読む",
+        "archive": "アーカイブ",
+        "groupTitle": "グループ化",
+        "groupA11y": "{{group}}でグループ化",
+        "groupNewest": "保存日",
+        "groupPriority": "優先度",
+        "groupNoPriority": "優先度なし",
+        "groupOther": "その他",
+        "emptyArchiveTitle": "アーカイブした記事はまだありません",
+        "emptyArchiveBody": "記事の ••• メニューから「アーカイブ」を選びます。アーカイブした記事は、削除するまでこの端末に残ります。",
+        "countLater_one": "{{count}}件未読",
+        "countLater_other": "{{count}}件未読",
+        "countArchive_one": "{{count}}件アーカイブ済み",
+        "countArchive_other": "{{count}}件アーカイブ済み"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "アーカイブ",
+      "moveToArchive": "アーカイブに移動",
+      "moveToReadLater": "「あとで読む」に移動",
+      "movedToArchive": "アーカイブに移動しました",
+      "movedToReadLater": "「あとで読む」に移動しました",
+      "archivedToastMessage": "アーカイブに追加しました",
+      "savedToastMessage": "「あとで読む」に追加しました"
+    }
+  },
+  "ko": {
+    "library": {
+      "saved": {
+        "readLater": "나중에 읽기",
+        "archive": "보관함",
+        "groupTitle": "그룹 기준",
+        "groupA11y": "{{group}} 기준으로 그룹화",
+        "groupNewest": "저장한 날짜",
+        "groupPriority": "우선순위",
+        "groupNoPriority": "우선순위 없음",
+        "groupOther": "기타",
+        "emptyArchiveTitle": "아직 보관한 기사가 없어요",
+        "emptyArchiveBody": "기사의 ••• 메뉴에서 보관을 선택하세요. 보관한 기사는 제거하기 전까지 이 휴대전화에 남아요.",
+        "countLater_one": "읽을 기사 {{count}}개",
+        "countLater_other": "읽을 기사 {{count}}개",
+        "countArchive_one": "{{count}}개 보관됨",
+        "countArchive_other": "{{count}}개 보관됨"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "보관",
+      "moveToArchive": "보관함으로 이동",
+      "moveToReadLater": "나중에 읽기로 이동",
+      "movedToArchive": "보관함으로 이동됨",
+      "movedToReadLater": "나중에 읽기로 이동됨",
+      "archivedToastMessage": "보관함에 추가됨",
+      "savedToastMessage": "나중에 읽기에 추가됨"
+    }
+  },
+  "nl": {
+    "library": {
+      "saved": {
+        "readLater": "Later lezen",
+        "archive": "Archief",
+        "groupTitle": "Groeperen op",
+        "groupA11y": "Groeperen op {{group}}",
+        "groupNewest": "Opslagdatum",
+        "groupPriority": "Prioriteit",
+        "groupNoPriority": "Geen prioriteit",
+        "groupOther": "Overig",
+        "emptyArchiveTitle": "Nog niets gearchiveerd",
+        "emptyArchiveBody": "Kies Archiveren in het •••-menu van een artikel. Gearchiveerde artikelen blijven op deze telefoon tot je ze verwijdert.",
+        "countLater_one": "{{count}} te lezen",
+        "countLater_other": "{{count}} te lezen",
+        "countArchive_one": "{{count}} gearchiveerd",
+        "countArchive_other": "{{count}} gearchiveerd"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archiveren",
+      "moveToArchive": "Verplaatsen naar Archief",
+      "moveToReadLater": "Verplaatsen naar Later lezen",
+      "movedToArchive": "Verplaatst naar Archief",
+      "movedToReadLater": "Verplaatst naar Later lezen",
+      "archivedToastMessage": "Toegevoegd aan Archief",
+      "savedToastMessage": "Toegevoegd aan Later lezen"
+    }
+  },
+  "pl": {
+    "library": {
+      "saved": {
+        "readLater": "Przeczytaj później",
+        "archive": "Archiwum",
+        "groupTitle": "Grupuj według",
+        "groupA11y": "Grupuj według: {{group}}",
+        "groupNewest": "Data zapisania",
+        "groupPriority": "Priorytet",
+        "groupNoPriority": "Bez priorytetu",
+        "groupOther": "Inne",
+        "emptyArchiveTitle": "Nic jeszcze nie zarchiwizowano",
+        "emptyArchiveBody": "Wybierz Archiwizuj w menu ••• przy dowolnym artykule. Zarchiwizowane artykuły zostają na tym telefonie, dopóki ich nie usuniesz.",
+        "countLater_one": "{{count}} do przeczytania",
+        "countLater_few": "{{count}} do przeczytania",
+        "countLater_many": "{{count}} do przeczytania",
+        "countLater_other": "{{count}} do przeczytania",
+        "countArchive_one": "{{count}} zarchiwizowany",
+        "countArchive_few": "{{count}} zarchiwizowane",
+        "countArchive_many": "{{count}} zarchiwizowanych",
+        "countArchive_other": "{{count}} zarchiwizowanych"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Archiwizuj",
+      "moveToArchive": "Przenieś do Archiwum",
+      "moveToReadLater": "Przenieś do Przeczytaj później",
+      "movedToArchive": "Przeniesiono do Archiwum",
+      "movedToReadLater": "Przeniesiono do Przeczytaj później",
+      "archivedToastMessage": "Dodano do Archiwum",
+      "savedToastMessage": "Dodano do Przeczytaj później"
+    }
+  },
+  "pt-BR": {
+    "library": {
+      "saved": {
+        "readLater": "Ler depois",
+        "archive": "Arquivo",
+        "groupTitle": "Agrupar por",
+        "groupA11y": "Agrupar por {{group}}",
+        "groupNewest": "Data em que salvou",
+        "groupPriority": "Prioridade",
+        "groupNoPriority": "Sem prioridade",
+        "groupOther": "Outros",
+        "emptyArchiveTitle": "Nada arquivado ainda",
+        "emptyArchiveBody": "Escolha Arquivar no menu ••• de qualquer artigo. Os artigos arquivados ficam neste celular até você remover.",
+        "countLater_one": "{{count}} para ler",
+        "countLater_other": "{{count}} para ler",
+        "countArchive_one": "{{count}} arquivado",
+        "countArchive_other": "{{count}} arquivados"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Arquivar",
+      "moveToArchive": "Mover para Arquivo",
+      "moveToReadLater": "Mover para Ler depois",
+      "movedToArchive": "Movido para Arquivo",
+      "movedToReadLater": "Movido para Ler depois",
+      "archivedToastMessage": "Adicionado ao Arquivo",
+      "savedToastMessage": "Adicionado a Ler depois"
+    }
+  },
+  "ru": {
+    "library": {
+      "saved": {
+        "readLater": "Прочитать позже",
+        "archive": "Архив",
+        "groupTitle": "Группировать",
+        "groupA11y": "Группировать: {{group}}",
+        "groupNewest": "Дата сохранения",
+        "groupPriority": "Приоритет",
+        "groupNoPriority": "Без приоритета",
+        "groupOther": "Другое",
+        "emptyArchiveTitle": "В архиве пока пусто",
+        "emptyArchiveBody": "Выберите «Архивировать» в меню ••• у любой статьи. Статьи в архиве остаются на этом телефоне, пока вы их не удалите.",
+        "countLater_one": "{{count}} к прочтению",
+        "countLater_few": "{{count}} к прочтению",
+        "countLater_many": "{{count}} к прочтению",
+        "countLater_other": "{{count}} к прочтению",
+        "countArchive_one": "{{count}} в архиве",
+        "countArchive_few": "{{count}} в архиве",
+        "countArchive_many": "{{count}} в архиве",
+        "countArchive_other": "{{count}} в архиве"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Архивировать",
+      "moveToArchive": "Переместить в архив",
+      "moveToReadLater": "Переместить в «Прочитать позже»",
+      "movedToArchive": "Перемещено в архив",
+      "movedToReadLater": "Перемещено в «Прочитать позже»",
+      "archivedToastMessage": "Добавлено в архив",
+      "savedToastMessage": "Добавлено в «Прочитать позже»"
+    }
+  },
+  "th": {
+    "library": {
+      "saved": {
+        "readLater": "อ่านภายหลัง",
+        "archive": "คลังเก็บ",
+        "groupTitle": "จัดกลุ่มตาม",
+        "groupA11y": "จัดกลุ่มตาม{{group}}",
+        "groupNewest": "วันที่บันทึก",
+        "groupPriority": "ลำดับความสำคัญ",
+        "groupNoPriority": "ไม่มีลำดับความสำคัญ",
+        "groupOther": "อื่นๆ",
+        "emptyArchiveTitle": "ยังไม่มีรายการในคลังเก็บ",
+        "emptyArchiveBody": "เลือกเก็บเข้าคลังในเมนู ••• ของบทความใดก็ได้ บทความในคลังเก็บจะอยู่ในโทรศัพท์เครื่องนี้จนกว่าคุณจะลบ",
+        "countLater_one": "รออ่าน {{count}} รายการ",
+        "countLater_other": "รออ่าน {{count}} รายการ",
+        "countArchive_one": "เก็บไว้ {{count}} รายการ",
+        "countArchive_other": "เก็บไว้ {{count}} รายการ"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "เก็บเข้าคลัง",
+      "moveToArchive": "ย้ายไปคลังเก็บ",
+      "moveToReadLater": "ย้ายไปอ่านภายหลัง",
+      "movedToArchive": "ย้ายไปคลังเก็บแล้ว",
+      "movedToReadLater": "ย้ายไปอ่านภายหลังแล้ว",
+      "archivedToastMessage": "เพิ่มในคลังเก็บแล้ว",
+      "savedToastMessage": "เพิ่มในอ่านภายหลังแล้ว"
+    }
+  },
+  "tr": {
+    "library": {
+      "saved": {
+        "readLater": "Sonra oku",
+        "archive": "Arşiv",
+        "groupTitle": "Gruplandır",
+        "groupA11y": "{{group}} ölçütüne göre gruplandır",
+        "groupNewest": "Kaydedilme tarihi",
+        "groupPriority": "Öncelik",
+        "groupNoPriority": "Öncelik yok",
+        "groupOther": "Diğer",
+        "emptyArchiveTitle": "Henüz arşivlenen bir şey yok",
+        "emptyArchiveBody": "Herhangi bir makalenin ••• menüsünden Arşivle seçeneğini seçin. Arşivlenen makaleler siz kaldırana kadar bu telefonda kalır.",
+        "countLater_one": "{{count}} okunacak",
+        "countLater_other": "{{count}} okunacak",
+        "countArchive_one": "{{count}} arşivlendi",
+        "countArchive_other": "{{count}} arşivlendi"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Arşivle",
+      "moveToArchive": "Arşive taşı",
+      "moveToReadLater": "Sonra oku listesine taşı",
+      "movedToArchive": "Arşive taşındı",
+      "movedToReadLater": "Sonra oku listesine taşındı",
+      "archivedToastMessage": "Arşive eklendi",
+      "savedToastMessage": "Sonra oku listesine eklendi"
+    }
+  },
+  "uk": {
+    "library": {
+      "saved": {
+        "readLater": "Прочитати пізніше",
+        "archive": "Архів",
+        "groupTitle": "Групувати",
+        "groupA11y": "Групувати: {{group}}",
+        "groupNewest": "Дата збереження",
+        "groupPriority": "Пріоритет",
+        "groupNoPriority": "Без пріоритету",
+        "groupOther": "Інше",
+        "emptyArchiveTitle": "В архіві поки порожньо",
+        "emptyArchiveBody": "Виберіть «Архівувати» в меню ••• біля будь-якої статті. Статті в архіві залишаються на цьому телефоні, доки ви їх не видалите.",
+        "countLater_one": "{{count}} до прочитання",
+        "countLater_few": "{{count}} до прочитання",
+        "countLater_many": "{{count}} до прочитання",
+        "countLater_other": "{{count}} до прочитання",
+        "countArchive_one": "{{count}} в архіві",
+        "countArchive_few": "{{count}} в архіві",
+        "countArchive_many": "{{count}} в архіві",
+        "countArchive_other": "{{count}} в архіві"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Архівувати",
+      "moveToArchive": "Перемістити в архів",
+      "moveToReadLater": "Перемістити в «Прочитати пізніше»",
+      "movedToArchive": "Переміщено в архів",
+      "movedToReadLater": "Переміщено в «Прочитати пізніше»",
+      "archivedToastMessage": "Додано в архів",
+      "savedToastMessage": "Додано в «Прочитати пізніше»"
+    }
+  },
+  "vi": {
+    "library": {
+      "saved": {
+        "readLater": "Đọc sau",
+        "archive": "Lưu trữ",
+        "groupTitle": "Nhóm theo",
+        "groupA11y": "Nhóm theo {{group}}",
+        "groupNewest": "Ngày lưu",
+        "groupPriority": "Mức ưu tiên",
+        "groupNoPriority": "Không có mức ưu tiên",
+        "groupOther": "Khác",
+        "emptyArchiveTitle": "Chưa có gì trong Lưu trữ",
+        "emptyArchiveBody": "Chọn Lưu trữ trong menu ••• của bất kỳ bài báo nào. Bài đã lưu trữ ở lại trên điện thoại này cho đến khi bạn xóa.",
+        "countLater_one": "{{count}} bài cần đọc",
+        "countLater_other": "{{count}} bài cần đọc",
+        "countArchive_one": "{{count}} đã lưu trữ",
+        "countArchive_other": "{{count}} đã lưu trữ"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "Lưu trữ",
+      "moveToArchive": "Chuyển vào Lưu trữ",
+      "moveToReadLater": "Chuyển vào Đọc sau",
+      "movedToArchive": "Đã chuyển vào Lưu trữ",
+      "movedToReadLater": "Đã chuyển vào Đọc sau",
+      "archivedToastMessage": "Đã thêm vào Lưu trữ",
+      "savedToastMessage": "Đã thêm vào Đọc sau"
+    }
+  },
+  "zh-CN": {
+    "library": {
+      "saved": {
+        "readLater": "稍后阅读",
+        "archive": "归档",
+        "groupTitle": "分组方式",
+        "groupA11y": "按{{group}}分组",
+        "groupNewest": "保存日期",
+        "groupPriority": "优先级",
+        "groupNoPriority": "无优先级",
+        "groupOther": "其他",
+        "emptyArchiveTitle": "还没有归档任何内容",
+        "emptyArchiveBody": "在任意文章的 ••• 菜单中选择“归档”。已归档的文章会一直留在这部手机上，直到你移除。",
+        "countLater_one": "{{count}} 篇待读",
+        "countLater_other": "{{count}} 篇待读",
+        "countArchive_one": "{{count}} 篇已归档",
+        "countArchive_other": "{{count}} 篇已归档"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "归档",
+      "moveToArchive": "移到归档",
+      "moveToReadLater": "移到稍后阅读",
+      "movedToArchive": "已移到归档",
+      "movedToReadLater": "已移到稍后阅读",
+      "archivedToastMessage": "已添加到归档",
+      "savedToastMessage": "已添加到稍后阅读"
+    }
+  },
+  "zh-TW": {
+    "library": {
+      "saved": {
+        "readLater": "稍後閱讀",
+        "archive": "封存",
+        "groupTitle": "分組方式",
+        "groupA11y": "按{{group}}分組",
+        "groupNewest": "儲存日期",
+        "groupPriority": "優先順序",
+        "groupNoPriority": "無優先順序",
+        "groupOther": "其他",
+        "emptyArchiveTitle": "還沒有封存任何內容",
+        "emptyArchiveBody": "在任何文章的 ••• 選單中選擇「封存」。已封存的文章會一直留在這支手機上，直到你移除。",
+        "countLater_one": "{{count}} 篇待讀",
+        "countLater_other": "{{count}} 篇待讀",
+        "countArchive_one": "已封存 {{count}} 篇",
+        "countArchive_other": "已封存 {{count}} 篇"
+      }
+    },
+    "savedSuggestions": {
+      "archiveAction": "封存",
+      "moveToArchive": "移到封存",
+      "moveToReadLater": "移到稍後閱讀",
+      "movedToArchive": "已移到封存",
+      "movedToReadLater": "已移到稍後閱讀",
+      "archivedToastMessage": "已加入封存",
+      "savedToastMessage": "已加入稍後閱讀"
+    }
+  }
+}

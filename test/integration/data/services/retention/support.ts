@@ -91,6 +91,7 @@ export interface SavedRow {
   articleId: string;
   origin: string | null;
   savedAt: number;
+  archived: boolean | null;
 }
 
 export async function savedRows(): Promise<SavedRow[]> {
@@ -100,6 +101,7 @@ export async function savedRows(): Promise<SavedRow[]> {
     articleId: r.articleId as string,
     origin: (r.origin ?? null) as string | null,
     savedAt: (r.savedAt as Date).getTime(),
+    archived: (r.archived ?? null) as boolean | null,
   }));
 }
 

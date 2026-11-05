@@ -30,6 +30,7 @@ import {
 import {
   deleteOrphanedRetention,
   deleteSavedSuggestion,
+  getSavedList,
   getSavedSuggestionByServerId,
   isSuggestionSaved,
   keepArticleForFactCheck,
@@ -436,7 +437,9 @@ describe('un-saving (deleteSavedSuggestion)', () => {
     expect(await deleteSavedSuggestion(s._id)).toBe(true);
 
     // the suggestion-keyed row is gone, an article-keyed one carries the snapshot
-    expect(await savedRows()).toEqual([{ id: s.articleId, articleId: s.articleId, origin: 'fact_check', savedAt }]);
+    expect(await savedRows()).toEqual([
+      { id: s.articleId, articleId: s.articleId, origin: 'fact_check', savedAt, archived: null },
+    ]);
     expect(await getSavedSuggestionByServerId(s._id)).toBeNull();
     expect(await getSavedSuggestionByServerId(s.articleId)).toMatchObject({
       _id: s.articleId,
@@ -582,5 +585,20 @@ describe('a keep racing a release (MERA-APP-81)', () => {
 
     expect(await originsById()).toEqual({ [s.articleId]: 'fact_check' });
     expect(captureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('Saved lists and retention', () => {
+  it('an archived save that survives as retention forgets its list, so saving again lands in Read later', async () => {
+    const id = freshId();
+    await saveStandaloneArticle(newsArticle(id), undefined, 'archive');
+    await factCheck(id);
+
+    await deleteSavedSuggestion(id);
+    expect(await isSuggestionSaved(id)).toBe(false);
+    expect((await savedRow(id))!.archived).toBe(false);
+
+    await saveStandaloneArticle(newsArticle(id));
+    expect(await getSavedList(id)).toBe('later');
   });
 });

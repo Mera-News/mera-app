@@ -11,6 +11,7 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 import { deleteSuggestionsByServerIds } from '@/lib/database/services/article-suggestion-lifecycle';
 import { getSuggestionByArticleId } from '@/lib/database/services/article-suggestion-reads';
 import {
+  getSavedList,
   getSavedSuggestionByServerId,
   getSavedSuggestionWithKind,
   isSuggestionSaved,
@@ -18,10 +19,11 @@ import {
   keepArticleForTrackedStory,
   loadSavedItems,
   loadSavedSuggestions,
+  moveSavedToList,
   saveStandaloneArticle,
   saveSuggestion,
 } from '@/lib/database/services/saved-article-suggestion-service';
-import { getSavedOverride } from '@/lib/saved-state';
+import { getSavedListOverride, getSavedOverride } from '@/lib/saved-state';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { useFakeClock } from '@/test/helpers';
 import {
@@ -172,6 +174,7 @@ describe('saveStandaloneArticle', () => {
     expect(items[0]).toEqual({
       origin: 'article',
       savedId: id,
+      list: 'later',
       savedAt: expect.any(Number),
       article: expect.objectContaining({
         _id: id,
@@ -385,5 +388,75 @@ describe('the open path', () => {
     await keepArticleForTrackedStory({ articleId: ts, title: 'Followed' });
     expect(getSavedOverride(fc)).toBeUndefined();
     expect(getSavedOverride(ts)).toBeUndefined();
+  });
+});
+
+describe('Read later and Archive', () => {
+  const listOfItem = async (id: string) => {
+    const item = (await loadSavedItems()).find((i) => (i.origin === 'article' ? i.savedId : i.suggestion._id) === id);
+    return item?.list;
+  };
+
+  it('a save lands in Read later, and a save naming Archive lands there, for both origins', async () => {
+    const plain = await landSuggestion(freshId());
+    const archived = await landSuggestion(freshId());
+    const articleId = freshId();
+    await saveSuggestion(plain);
+    await saveSuggestion(archived, 'archive');
+    await saveStandaloneArticle(standalone(articleId), undefined, 'archive');
+
+    expect(await listOfItem(plain._id)).toBe('later');
+    expect(await listOfItem(archived._id)).toBe('archive');
+    expect(await listOfItem(articleId)).toBe('archive');
+  });
+
+  it('a row older than the column reads as Read later', async () => {
+    const id = freshId();
+    await restoreRows({ saved_article_suggestions: [rawSaved(id, { origin: null })] });
+    expect(await listOfItem(id)).toBe('later');
+    expect(await getSavedList(id)).toBe('later');
+  });
+
+  it('moves a save both ways, bumps savedAt and publishes the list', async () => {
+    useFakeClock(T0);
+    const s = await landSuggestion(freshId());
+    await saveSuggestion(s);
+    jest.setSystemTime(T0 + MIN);
+
+    expect(await moveSavedToList(s._id, 'archive')).toBe(true);
+    expect(await getSavedList(s._id)).toBe('archive');
+    expect(getSavedListOverride(s._id)).toBe('archive');
+    expect((await savedRow(s._id))!.savedAt).toBe(T0 + MIN);
+
+    expect(await moveSavedToList(s._id, 'later')).toBe(true);
+    expect(await getSavedList(s._id)).toBe('later');
+  });
+
+  it('a move to the list it is in changes nothing', async () => {
+    useFakeClock(T0);
+    const s = await landSuggestion(freshId());
+    await saveSuggestion(s);
+    jest.setSystemTime(T0 + MIN);
+
+    expect(await moveSavedToList(s._id, 'later')).toBe(true);
+    expect((await savedRow(s._id))!.savedAt).toBe(T0);
+  });
+
+  it('a plain re-save stays in its list', async () => {
+    const s = await landSuggestion(freshId());
+    await saveSuggestion(s, 'archive');
+    await saveSuggestion(s);
+    expect(await getSavedList(s._id)).toBe('archive');
+    expect(getSavedListOverride(s._id)).toBe('archive');
+  });
+
+  it('refuses a missing row and a retention row, which stays retention', async () => {
+    const articleId = freshId();
+    await keepArticleForFactCheck({ articleId, title: 't', articleUrl: 'https://x', publicationName: 'P' });
+
+    expect(await moveSavedToList(freshId(), 'archive')).toBe(false);
+    expect(await moveSavedToList(articleId, 'archive')).toBe(false);
+    expect((await savedRow(articleId))!.archived).toBeFalsy();
+    expect(await getSavedList(articleId)).toBeNull();
   });
 });

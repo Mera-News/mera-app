@@ -40,6 +40,7 @@ function suggestionItem(
 ): SavedItem {
   return {
     origin: 'suggestion',
+    list: 'later',
     savedAt: over.savedAt ?? Date.UTC(2026, 8, 21, 18, 22, 11),
     suggestion: {
       _id: 'sug-1',
@@ -76,6 +77,7 @@ function articleItem(
 ): SavedItem {
   return {
     origin: 'article',
+    list: 'later',
     savedId: 'saved-2',
     savedAt: over.savedAt ?? Date.UTC(2026, 8, 20, 9, 0, 0),
     article: {

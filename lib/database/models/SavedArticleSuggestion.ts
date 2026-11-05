@@ -38,6 +38,8 @@ export default class SavedArticleSuggestion extends Model {
   // kept only so a fact-checked article stays openable — hidden from the Saved
   // screen and from bookmark state). Null on pre-v38 rows ⇒ 'suggestion'.
   @field('origin') origin!: string | null;
+  // Which Saved list (schema v58): true is Archive, false or null is Read later.
+  @field('archived') archived!: boolean | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
   @date('saved_at') savedAt!: Date;

@@ -1,24 +1,37 @@
-// The Library's Saved page (FinalLibrary #1-3): compact rows that scale, under
-// the pinned "N saved ?" row with the glass Export button.
+// The Library's Saved page: a Read later / Archive switch over compact rows that
+// scale, under the pinned count row with Group by and the glass Export button.
 //
-// No delete circle on the rows: removing is the compact row's ••• > Remove from
-// saved, which publishes the change (lib/saved-state), and `SavedRow` drops the
-// row at once. The list then settles to the top if what is left fits: on iOS a
-// list that shrinks below its viewport keeps its old offset otherwise, with
-// nothing left to scroll back by.
+// No delete circle on the rows: removing or moving is the compact row's •••,
+// which publishes the change (lib/saved-state). The rows are derived from those
+// overrides, so a row and its group heading leave at once and a moved row is in
+// the other list without a reload. The list then settles to the top if what is
+// left fits: on iOS a list that shrinks below its viewport keeps its old offset
+// otherwise, with nothing left to scroll back by.
+//
+// The list picked is session state, never in a URL (one page, no page state).
 
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
+import type { PickableFact } from '@/components/custom/feedback-tree/pick-fact';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
 import MeraToast from '@/components/custom/toast/MeraToast';
 import { useToast } from '@/components/ui/toast';
+import { getFacts } from '@/lib/database/services/fact-service';
 import { loadSavedItems, type SavedItem } from '@/lib/database/services/saved-article-suggestion-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
-import { getSavedOverride, useSavedCount, useSavedOverride } from '@/lib/saved-state';
+import {
+    getSavedListOverride,
+    getSavedOverride,
+    useSavedStateVersion,
+    type SavedList,
+} from '@/lib/saved-state';
+import { useColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -26,7 +39,15 @@ import { useTranslation } from 'react-i18next';
 import { type ListRenderItem } from 'react-native';
 import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import SavedExportModal from './SavedExportModal';
-import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
+import SavedExportRow, { savedPinnedHeight } from './SavedExportRow';
+import {
+    groupSavedItems,
+    parseGroupBy,
+    SAVED_GROUP_BY_SETTING,
+    type PriorityBand,
+    type SavedGroupBy,
+    type SavedGroupHeading,
+} from './saved-groups';
 import { savedItemId } from './saved-item-id';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
@@ -45,11 +66,20 @@ interface SavedSuggestionsScreenProps {
     active?: boolean;
 }
 
-/** One saved row; null once removed from saved in this session. */
-const SavedRow: React.FC<{ readonly item: SavedItem }> = ({ item }) => {
-    const saved = useSavedOverride(savedItemId(item));
-    if (saved === false) return null;
-    return item.origin === 'article' ? (
+type Row =
+    | { readonly kind: 'heading'; readonly key: string; readonly heading: SavedGroupHeading }
+    | { readonly kind: 'item'; readonly key: string; readonly item: SavedItem };
+
+/** The chip's short "Med" reads wrong as a heading: these are the spoken names. */
+const BAND_KEY = {
+    EMERGENCY: 'relevance.a11yEmergency',
+    HIGH: 'relevance.a11yHigh',
+    MEDIUM: 'relevance.a11yMedium',
+    LOW: 'relevance.a11yLow',
+} as const satisfies Record<PriorityBand, string>;
+
+const SavedRow: React.FC<{ readonly item: SavedItem }> = ({ item }) =>
+    item.origin === 'article' ? (
         <ArticleStandaloneCompactCard
             article={item.article}
             onPress={() => router.push({ pathname: '/logged-in/article-detail', params: { articleId: item.article._id } })}
@@ -65,6 +95,28 @@ const SavedRow: React.FC<{ readonly item: SavedItem }> = ({ item }) => {
             surface="saved"
         />
     );
+
+const GroupHeading: React.FC<{ readonly heading: SavedGroupHeading; readonly testID: string }> = ({ heading, testID }) => {
+    const { t } = useTranslation();
+    const colors = useColors();
+    const label =
+        heading.kind === 'fact'
+            ? heading.statement
+            : heading.kind === 'band'
+              ? t(BAND_KEY[heading.band])
+              : heading.kind === 'no-priority'
+                ? t('library.saved.groupNoPriority')
+                : t('library.saved.groupOther');
+    return (
+        <Text
+            testID={testID}
+            accessibilityRole="header"
+            numberOfLines={2}
+            style={{ fontSize: 15, lineHeight: 20, fontWeight: '600', color: colors.ink2, paddingTop: 12, paddingBottom: 8 }}
+        >
+            {label}
+        </Text>
+    );
 };
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
@@ -78,16 +130,25 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const toast = useToast();
     const tabClearance = useTabBarClearance();
     const [saved, setSaved] = useState<SavedItem[]>([]);
+    const [facts, setFacts] = useState<readonly PickableFact[]>([]);
+    const [list, setList] = useState<SavedList>('later');
+    const [groupBy, setGroupBy] = useState<SavedGroupBy>('newest');
     const [isLoading, setIsLoading] = useState(true);
     const [exportOpen, setExportOpen] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
             let cancelled = false;
-            loadSavedItems()
-                .then((rows) => {
-                    if (!cancelled) setSaved(rows);
-                })
+            (async () => {
+                const [rows, stored] = await Promise.all([loadSavedItems(), getSetting(SAVED_GROUP_BY_SETTING)]);
+                const mode = parseGroupBy(stored);
+                // Read together, so the first paint is already the reader's view.
+                const factRows = mode === 'facts' ? await getFacts() : [];
+                if (cancelled) return;
+                setSaved(rows);
+                setGroupBy(mode);
+                setFacts(factRows);
+            })()
                 .catch((err) => {
                     logger.captureException(err, { tags: { screen: 'SavedSuggestionsScreen', method: 'load' } });
                 })
@@ -99,6 +160,16 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             };
         }, []),
     );
+
+    const handleGroupByChange = useCallback((next: SavedGroupBy) => {
+        void (async () => {
+            if (next === 'facts') setFacts(await getFacts());
+            setGroupBy(next);
+            await setSetting(SAVED_GROUP_BY_SETTING, next);
+        })().catch((err) => {
+            logger.captureException(err, { tags: { screen: 'SavedSuggestionsScreen', method: 'groupBy' } });
+        });
+    }, []);
 
     const handleExportFailed = useCallback(() => {
         toast.show({
@@ -113,19 +184,44 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         });
     }, [toast, t]);
 
-    const savedIds = useMemo(() => saved.map(savedItemId), [saved]);
-    const savedCount = useSavedCount(savedIds);
-    // What Export offers: never a row removed this visit.
-    const exportItems = useMemo(
-        () => saved.filter((it) => getSavedOverride(savedItemId(it)) !== false),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [saved, savedCount],
-    );
-
-    const renderItem: ListRenderItem<SavedItem> = useCallback(({ item }) => <SavedRow item={item} />, []);
-    const keyExtractor = useCallback((item: SavedItem, index: number) => savedItemId(item) || `saved-${index}`, []);
-
     const listRef = useRef<any>(null);
+    const handleListChange = useCallback((next: SavedList) => {
+        setList(next);
+        listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
+    }, []);
+
+    const stateVersion = useSavedStateVersion();
+    // What this list holds now, and what Export offers. `stateVersion` is what
+    // makes the overrides read here current.
+    const visible = useMemo(
+        () =>
+            saved.filter((it) => {
+                const id = savedItemId(it);
+                return getSavedOverride(id) !== false && (getSavedListOverride(id) ?? it.list) === list;
+            }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [saved, list, stateVersion],
+    );
+    const rows = useMemo(() => {
+        const out: Row[] = [];
+        for (const group of groupSavedItems(visible, groupBy, facts)) {
+            if (group.heading) out.push({ kind: 'heading', key: group.key, heading: group.heading });
+            for (const item of group.items) out.push({ kind: 'item', key: savedItemId(item), item });
+        }
+        return out;
+    }, [visible, groupBy, facts]);
+
+    const renderItem: ListRenderItem<Row> = useCallback(
+        ({ item }) =>
+            item.kind === 'heading' ? (
+                <GroupHeading heading={item.heading} testID={`saved-group-${item.key}`} />
+            ) : (
+                <SavedRow item={item.item} />
+            ),
+        [],
+    );
+    const keyExtractor = useCallback((row: Row, index: number) => row.key || `saved-${index}`, []);
+
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const tracked = useTrackedScroll(scrollHandler);
     usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
@@ -140,15 +236,20 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         [active],
     );
 
-    // The pinned row only while something is saved; the empty page carries a
-    // plain "Saved ?" title row in the list instead (FinalLibrary #3).
-    const showRow = !isLoading && savedCount > 0;
+    const count = visible.length;
 
     // Everything removed this visit: the empty state, without a reload.
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
             <Spinner size="large" />
         </Box>
+    ) : list === 'archive' ? (
+        <ForYouEmptyState
+            icon="archive"
+            title={t('library.saved.emptyArchiveTitle')}
+            body={t('library.saved.emptyArchiveBody')}
+            testID="saved-empty-archive"
+        />
     ) : (
         <ForYouEmptyState
             icon="bookmark-border"
@@ -164,7 +265,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             <Animated.FlatList
                 ref={listRef}
                 testID="saved-suggestions-list"
-                data={savedCount === 0 ? [] : saved}
+                data={rows}
                 onLayout={(e) => {
                     viewportH.current = e.nativeEvent.layout.height;
                 }}
@@ -173,8 +274,8 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
-                    // 12pt below the pinned row.
-                    paddingTop: headerHeight + (showRow ? SAVED_EXPORT_ROW_HEIGHT : 0) + PAGE_CONTENT_GAP,
+                    // 12pt below the pinned block.
+                    paddingTop: headerHeight + (isLoading ? 0 : savedPinnedHeight(count > 0)) + PAGE_CONTENT_GAP,
                     paddingHorizontal: PAGE_SIDE_INSET,
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                     flexGrow: 1,
@@ -185,19 +286,23 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             />
 
             {/* Pinned under the page header; the list scrolls beneath it. */}
-            {showRow ? (
+            {isLoading ? null : (
                 <SavedExportRow
-                    count={savedCount}
+                    list={list}
+                    onListChange={handleListChange}
+                    groupBy={groupBy}
+                    onGroupByChange={handleGroupByChange}
+                    count={count}
                     headerHeight={headerHeight}
                     hidden={hidden}
                     onExport={() => setExportOpen(true)}
                 />
-            ) : null}
+            )}
 
             <SavedExportModal
                 isOpen={exportOpen}
                 onClose={() => setExportOpen(false)}
-                items={exportItems}
+                items={visible}
                 onFailed={handleExportFailed}
             />
         </Box>

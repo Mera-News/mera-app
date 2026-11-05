@@ -104,6 +104,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
       return asked;
     },
     rowActions,
+    archiveItem: actions.archiveItem,
     onVerdictRecorded: actions.onVerdictRecorded,
   });
 

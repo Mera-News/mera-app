@@ -872,9 +872,15 @@
     "removedToastMessage": "Dihapus dari tersimpan",
     "saveAction": "Simpan",
     "removeAction": "Hapus dari tersimpan",
-    "savedToastMessage": "Artikel disimpan untuk nanti",
+    "savedToastMessage": "Ditambahkan ke Baca nanti",
     "savedToastTitle": "Tersimpan",
-    "emptyTitle": "Belum ada yang disimpan"
+    "emptyTitle": "Belum ada yang disimpan",
+    "archiveAction": "Arsipkan",
+    "moveToArchive": "Pindahkan ke Arsip",
+    "moveToReadLater": "Pindahkan ke Baca nanti",
+    "movedToArchive": "Dipindahkan ke Arsip",
+    "movedToReadLater": "Dipindahkan ke Baca nanti",
+    "archivedToastMessage": "Ditambahkan ke Arsip"
   },
   "subscription": {
     "customerCenter": "Kelola / batalkan langganan",
@@ -2840,9 +2846,21 @@
     "saved": {
       "export": "Ekspor",
       "emptyBody": "Ketuk penanda di artikel mana pun untuk menyimpannya di sini. Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya.",
-      "count_one": "{{count}} tersimpan",
-      "count_other": "{{count}} tersimpan",
-      "learn": "Pelajari tentang Tersimpan"
+      "learn": "Pelajari tentang Tersimpan",
+      "readLater": "Baca nanti",
+      "archive": "Arsip",
+      "groupTitle": "Kelompokkan menurut",
+      "groupA11y": "Kelompokkan menurut {{group}}",
+      "groupNewest": "Tanggal disimpan",
+      "groupPriority": "Prioritas",
+      "groupNoPriority": "Tanpa prioritas",
+      "groupOther": "Lainnya",
+      "emptyArchiveTitle": "Belum ada yang diarsipkan",
+      "emptyArchiveBody": "Pilih Arsipkan di menu ••• pada artikel mana pun. Artikel yang diarsipkan tetap ada di ponsel ini sampai Anda menghapusnya.",
+      "countLater_one": "{{count}} untuk dibaca",
+      "countLater_other": "{{count}} untuk dibaca",
+      "countArchive_one": "{{count}} diarsipkan",
+      "countArchive_other": "{{count}} diarsipkan"
     },
     "checks": {
       "emptyTitle": "Belum ada pemeriksaan fakta",

@@ -869,12 +869,18 @@
   },
   "savedSuggestions": {
     "removedToastMessage": "保存済みから削除しました",
-    "savedToastMessage": "記事を後で読むために保存しました",
+    "savedToastMessage": "「あとで読む」に追加しました",
     "savedToastTitle": "保存しました",
     "removedToastTitle": "削除しました",
     "saveAction": "保存",
     "removeAction": "保存済みから削除",
-    "emptyTitle": "まだ保存したものはありません"
+    "emptyTitle": "まだ保存したものはありません",
+    "archiveAction": "アーカイブ",
+    "moveToArchive": "アーカイブに移動",
+    "moveToReadLater": "「あとで読む」に移動",
+    "movedToArchive": "アーカイブに移動しました",
+    "movedToReadLater": "「あとで読む」に移動しました",
+    "archivedToastMessage": "アーカイブに追加しました"
   },
   "subscription": {
     "customerCenter": "サブスクリプションを管理・解約",
@@ -2840,9 +2846,21 @@
     "saved": {
       "export": "書き出す",
       "emptyBody": "記事のブックマークをタップすると、ここに保存されます。保存した記事は、削除するまでこの端末に残ります。",
-      "count_one": "{{count}}件保存済み",
-      "count_other": "{{count}}件保存済み",
-      "learn": "保存済みについて"
+      "learn": "保存済みについて",
+      "readLater": "あとで読む",
+      "archive": "アーカイブ",
+      "groupTitle": "グループ化",
+      "groupA11y": "{{group}}でグループ化",
+      "groupNewest": "保存日",
+      "groupPriority": "優先度",
+      "groupNoPriority": "優先度なし",
+      "groupOther": "その他",
+      "emptyArchiveTitle": "アーカイブした記事はまだありません",
+      "emptyArchiveBody": "記事の ••• メニューから「アーカイブ」を選びます。アーカイブした記事は、削除するまでこの端末に残ります。",
+      "countLater_one": "{{count}}件未読",
+      "countLater_other": "{{count}}件未読",
+      "countArchive_one": "{{count}}件アーカイブ済み",
+      "countArchive_other": "{{count}}件アーカイブ済み"
     },
     "checks": {
       "emptyTitle": "まだファクトチェックはありません",

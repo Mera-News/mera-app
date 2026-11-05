@@ -934,9 +934,15 @@
     "removedToastTitle": "Удалено",
     "saveAction": "Сохранить",
     "removeAction": "Удалить из сохранённого",
-    "savedToastMessage": "Статья сохранена на потом",
+    "savedToastMessage": "Добавлено в «Прочитать позже»",
     "savedToastTitle": "Сохранено",
-    "emptyTitle": "Пока ничего не сохранено"
+    "emptyTitle": "Пока ничего не сохранено",
+    "archiveAction": "Архивировать",
+    "moveToArchive": "Переместить в архив",
+    "moveToReadLater": "Переместить в «Прочитать позже»",
+    "movedToArchive": "Перемещено в архив",
+    "movedToReadLater": "Перемещено в «Прочитать позже»",
+    "archivedToastMessage": "Добавлено в архив"
   },
   "subscription": {
     "customerCenter": "Управление / отмена подписки",
@@ -2963,11 +2969,25 @@
     "saved": {
       "export": "Экспорт",
       "emptyBody": "Нажмите на закладку у любой статьи, чтобы сохранить её здесь. Сохранённые статьи остаются на этом телефоне, пока вы их не удалите.",
-      "count_one": "{{count}} сохранённая",
-      "count_few": "{{count}} сохранённые",
-      "count_many": "{{count}} сохранённых",
-      "count_other": "{{count}} сохранённых",
-      "learn": "Подробнее о сохранённом"
+      "learn": "Подробнее о сохранённом",
+      "readLater": "Прочитать позже",
+      "archive": "Архив",
+      "groupTitle": "Группировать",
+      "groupA11y": "Группировать: {{group}}",
+      "groupNewest": "Дата сохранения",
+      "groupPriority": "Приоритет",
+      "groupNoPriority": "Без приоритета",
+      "groupOther": "Другое",
+      "emptyArchiveTitle": "В архиве пока пусто",
+      "emptyArchiveBody": "Выберите «Архивировать» в меню ••• у любой статьи. Статьи в архиве остаются на этом телефоне, пока вы их не удалите.",
+      "countLater_one": "{{count}} к прочтению",
+      "countLater_few": "{{count}} к прочтению",
+      "countLater_many": "{{count}} к прочтению",
+      "countLater_other": "{{count}} к прочтению",
+      "countArchive_one": "{{count}} в архиве",
+      "countArchive_few": "{{count}} в архиве",
+      "countArchive_many": "{{count}} в архиве",
+      "countArchive_other": "{{count}} в архиве"
     },
     "checks": {
       "emptyTitle": "Проверок фактов пока нет",

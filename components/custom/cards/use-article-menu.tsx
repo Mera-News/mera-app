@@ -56,6 +56,9 @@ export interface UseArticleMenuInput {
         /** Undefined when there is nothing to share. */
         onShare?: () => void;
     };
+    /** Archive, or a move between Saved's lists (`useArchiveMenuItem`). Leads the
+     *  surface's own items, after the compact rows' save and share. */
+    archiveItem?: ArticleMenuItem;
     /** The sheet recorded this article's verdict (on the reader's FIRST
      *  answer, never on open): the host fills its feedback icon. The row
      *  itself is written here. */
@@ -189,6 +192,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         extraItems,
         inlineActions,
         rowActions,
+        archiveItem,
         onFeedbackChat,
         followLive,
     } = input;
@@ -407,6 +411,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 });
             }
         }
+        if (archiveItem) list.push(archiveItem);
         if (onCheckFacts) {
             list.push({
                 key: 'check-facts',
@@ -448,7 +453,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             run: () => showLevel({ kind: 'support' }),
         });
         return list;
-    }, [t, publication, publicationShown, tracked, enterTree, onCheckFacts, publisherId, extraItems, rowActions, showLevel]);
+    }, [t, publication, publicationShown, tracked, enterTree, onCheckFacts, publisherId, extraItems, rowActions, archiveItem, showLevel]);
 
     /** The publisher's level: About this source, Not preferred. */
     const sourceItems = useMemo<ArticleMenuItem[]>(() => {
