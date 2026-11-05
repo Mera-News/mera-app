@@ -200,7 +200,7 @@
       "status": "done",
       "session": 8,
       "eval_label": "20261105-182550-stake-final0, 20261105-184153-stake-final1, 20261105-185535-stake-final2",
-      "result": "no-stake card 135/144, stake fact 61/66, typed impact 28/30, silent 0/264, reader words lost 7/228 (base 19/228)",
+      "result": "no-stake card 135/144, stake fact 61/66, typed impact 28/30, silent 0/264, reader words lost 7/228 (base 19/228); after the grounding fix no-stake card 138/144, stake fact 64/66, typed impact 30/30, lost 7/228 (base 13/228), 4 of them questions on screen, 0 from grounding",
       "completed_at": "2026-11-05"
     }
   ]
