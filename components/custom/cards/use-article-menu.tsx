@@ -100,8 +100,7 @@ type SheetLevel =
     | { kind: 'source' }
     | { kind: 'support' }
     | HubLevel
-    | { kind: 'follow-tracked' }
-    | { kind: 'follow-locked' };
+    | { kind: 'follow-tracked' };
 
 function levelKey(depth: number, l: SheetLevel): string {
     if (l.kind === 'tree') return `${depth}:tree:${l.pathIds.join('/')}`;
@@ -604,7 +603,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const openFollow = useCallback(() => {
         const outcome = follow.resolve();
         if (outcome === 'tracked') showLevel({ kind: 'follow-tracked' });
-        else if (outcome === 'locked') showLevel({ kind: 'follow-locked' });
         else if (visibleRef.current) closeThen(follow.startTracking);
         else follow.startTracking();
     }, [follow, showLevel, closeThen]);
@@ -749,18 +747,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                             label={t('trackedStories.goToStoryAction')}
                             icon="open-in-new"
                             onPress={() => closeThen(follow.goToStory)}
-                        />
-                    </>
-                );
-            case 'follow-locked':
-                return (
-                    <>
-                        <SheetNote title={t('freeTier.trackTitle')} body={t('freeTier.trackBody')} />
-                        <ActionSheetRow
-                            testID="track-locked-see-plans"
-                            label={t('freeTier.seePlans')}
-                            icon="workspace-premium"
-                            onPress={() => closeThen(follow.seePlans)}
                         />
                     </>
                 );

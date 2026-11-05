@@ -2,40 +2,33 @@
 // shared ••• sheet and the Saved card's inline row, both through the sheet).
 //
 // It reports state and exposes the actions; the SHEET draws the result as a
-// level (the "already following" and free-tier levels), so Follow looks like
-// every other ••• sub-menu instead of opening a centred dialog of its own.
+// level (the "already following" level), so Follow looks like every other •••
+// sub-menu instead of opening a centred dialog of its own.
 //
 // Behaviour (Q13):
-//   untracked → the unchanged proposal flow (floating chat + auto-sent seed),
-//               UNLESS entitlement is locked: starting a NEW story needs an
-//               active plan, so that case is the free-tier level instead.
+//   untracked → the unchanged proposal flow (floating chat + auto-sent seed).
+//               Following is free on every plan, so no plan check sits here.
 //   tracked   → the "already following" level: re-following isn't possible,
 //               and it offers "Go to story". It deliberately does NOT offer
 //               untrack; that destructive path lives on the story timeline,
-//               behind its own confirm. Entitlement-independent.
-//
-// `getAiAccess() === 'unknown'` (cold start) is treated as entitled: never
-// block a paying subscriber for the first second of a launch.
+//               behind its own confirm.
 
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
-import { getAiAccess } from '@/lib/stores/subscription-store';
 import { router } from 'expo-router';
 import { useCallback } from 'react';
 
-type FollowOutcome = 'tracked' | 'locked' | 'start';
+type FollowOutcome = 'tracked' | 'start';
 
 export interface UseTrackButton {
   /** Whether an active story already covers this subject (label + state). */
   tracked: boolean;
-  /** What a Follow tap should do now. Imperative: reads entitlement at the tap. */
+  /** What a Follow tap should do now. */
   resolve: () => FollowOutcome;
   /** Start the proposal flow (floating chat + seed). */
   startTracking: () => void;
   /** Open the already-followed story's timeline. */
   goToStory: () => void;
-  /** Open Manage plan (the free-tier level's action). */
-  seePlans: () => void;
 }
 
 /**
@@ -49,16 +42,7 @@ export function useTrackButton(
 ): UseTrackButton {
   const { tracked, trackedStoryId, startTracking } = useTrackedSubject(subject, active);
 
-  const resolve = useCallback((): FollowOutcome => {
-    if (tracked) return 'tracked';
-    // `getAiAccess()` (imperative), not `useAiAccess()`: this runs in a tap.
-    if (getAiAccess() === 'locked') return 'locked';
-    return 'start';
-  }, [tracked]);
-
-  const seePlans = useCallback(() => {
-    router.push('/logged-in/preferences/manage-subscription');
-  }, []);
+  const resolve = useCallback((): FollowOutcome => (tracked ? 'tracked' : 'start'), [tracked]);
 
   const goToStory = useCallback(() => {
     if (!trackedStoryId) return;
@@ -68,5 +52,5 @@ export function useTrackButton(
     });
   }, [trackedStoryId]);
 
-  return { tracked, resolve, startTracking, goToStory, seePlans };
+  return { tracked, resolve, startTracking, goToStory };
 }
