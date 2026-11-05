@@ -8,9 +8,9 @@
       "sourcesSkip": "تخطي",
       "sourcesLoadError": "تعذّر تحميل المصادر.",
       "sourcesOffline": "أنت غير متصل. يمكنك إضافة مصادر لاحقًا من شاشة المصادر.",
-      "sourcesSearchHint": "ابحث عن منشور أو دولة.",
       "iSubscribe": "أنا مشترك",
-      "iSubscribeA11y": "أنا مشترك في {{publisher}}"
+      "iSubscribeA11y": "أنا مشترك في {{publisher}}",
+      "sourcesFind": "ابحث عن منشور"
     },
     "manageData": {
       "meterTitle": "البيانات على هذا الهاتف",
@@ -55,7 +55,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "ضع نجمة على منشور",
-              "body": "افتح دولة لتجد نجمة على كل منشور فيها. النجمة ترفع المنشور أعلى خلاصتك. ضع نجمة على دولة لتفعل الشيء نفسه مع كل منشوراتها.",
+              "body": "افتح دولة لتجد نجمة على كل منشور فيها. النجمة ترفع المنشور أعلى خلاصتك.",
               "ask": "ما الفرق بين مفضل وغير مفضل؟"
             },
             "mute-is-not-a-downrank": {
@@ -103,15 +103,13 @@
       "notPreferHint": "يخفي مقالاته من خلاصتك",
       "includedWith": "مشمول مع {{country}}",
       "includedWithA11y": "مفضل، مشمول مع {{country}}",
-      "includedWithHelp": "مشمول مع {{country}}. لتغيير ذلك، أزل النجمة عن {{country}}."
+      "includedWithHelp": "مشمول مع {{country}}. لتغيير ذلك، أزل {{country}} من المصادر."
     },
     "you": {
       "sources": {
         "find": "ابحث عن منشور أو دولة",
         "footnote": "اضغط على أي عنصر لتغييره. يظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
-        "empty": "لم تختر أي مصادر بعد. ابحث عن منشور أو دولة لتفضيله أو إخفائه من خلاصتك. ويظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
-        "preferCountryA11y": "اجعل مصادر {{country}} مفضلة",
-        "countryHint": "يفتح مصادر {{country}}",
+        "empty": "لم تختر أي مصادر بعد. ابحث عن منشور لتفضيله أو إخفائه من خلاصتك. ويظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
         "countryCleared": "تمت إزالة تفضيل {{country}}",
         "saveError": "تعذّر حفظ ذلك. حاول مرة أخرى."
       }
@@ -129,9 +127,9 @@
       "sourcesSkip": "Überspringen",
       "sourcesLoadError": "Quellen konnten nicht geladen werden.",
       "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
-      "sourcesSearchHint": "Suche nach einer Veröffentlichung oder einem Land.",
       "iSubscribe": "Ich habe ein Abo",
-      "iSubscribeA11y": "Ich habe {{publisher}} abonniert"
+      "iSubscribeA11y": "Ich habe {{publisher}} abonniert",
+      "sourcesFind": "Veröffentlichung suchen"
     },
     "manageData": {
       "meterTitle": "Daten auf diesem Telefon",
@@ -176,7 +174,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Veröffentlichung mit Stern versehen",
-              "body": "Öffne ein Land, dann hat jede Veröffentlichung einen Stern. Ein Stern holt sie in deinen Nachrichten nach oben. Markiere ein Land mit einem Stern, um dasselbe für alle seine Veröffentlichungen zu tun.",
+              "body": "Öffne ein Land, dann hat jede Veröffentlichung einen Stern. Ein Stern holt sie in deinen Nachrichten nach oben.",
               "ask": "Was ist der Unterschied zwischen Bevorzugt und Nicht bevorzugt?"
             },
             "mute-is-not-a-downrank": {
@@ -224,15 +222,13 @@
       "notPreferHint": "Blendet ihre Artikel aus deinen Nachrichten aus",
       "includedWith": "Mit {{country}} enthalten",
       "includedWithA11y": "Bevorzugt, mit {{country}} enthalten",
-      "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne den Stern bei {{country}}."
+      "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne {{country}} unter Quellen."
     },
     "you": {
       "sources": {
         "find": "Veröffentlichung oder Land suchen",
         "footnote": "Tippe auf einen Eintrag, um ihn zu ändern. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
-        "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung oder einem Land, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
-        "preferCountryA11y": "Quellen aus {{country}} bevorzugen",
-        "countryHint": "Öffnet die Quellen aus {{country}}",
+        "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
         "countryCleared": "{{country}} ist nicht mehr bevorzugt",
         "saveError": "Das konnte nicht gespeichert werden. Versuch es noch einmal."
       }
@@ -250,9 +246,9 @@
       "sourcesSkip": "Omitir",
       "sourcesLoadError": "No se pudieron cargar las fuentes.",
       "sourcesOffline": "Estás sin conexión. Puedes añadir fuentes más tarde en Fuentes.",
-      "sourcesSearchHint": "Busca una publicación o un país.",
       "iSubscribe": "Tengo una suscripción",
-      "iSubscribeA11y": "Tengo una suscripción a {{publisher}}"
+      "iSubscribeA11y": "Tengo una suscripción a {{publisher}}",
+      "sourcesFind": "Busca una publicación"
     },
     "manageData": {
       "meterTitle": "Datos en este teléfono",
@@ -297,7 +293,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Dale una estrella a una publicación",
-              "body": "Abre un país y cada publicación tiene una estrella. Una estrella la sube en tus Noticias. Pon una estrella a un país para hacer lo mismo con todas sus publicaciones.",
+              "body": "Abre un país y cada publicación tiene una estrella. Una estrella la sube en tus Noticias.",
               "ask": "¿Cuál es la diferencia entre Preferida y No preferida?"
             },
             "mute-is-not-a-downrank": {
@@ -345,15 +341,13 @@
       "notPreferHint": "Oculta sus artículos de tus Noticias",
       "includedWith": "Incluida con {{country}}",
       "includedWithA11y": "Preferida, incluida con {{country}}",
-      "includedWithHelp": "Incluida con {{country}}. Para cambiarlo, quita la estrella de {{country}}."
+      "includedWithHelp": "Incluida con {{country}}. Para cambiarlo, quita {{country}} en Fuentes."
     },
     "you": {
       "sources": {
         "find": "Busca una publicación o un país",
         "footnote": "Toca una para cambiarla. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
-        "empty": "Aún no has elegido ninguna fuente. Busca una publicación o un país para preferir u ocultar de tus Noticias. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
-        "preferCountryA11y": "Preferir fuentes de {{country}}",
-        "countryHint": "Abre las fuentes de {{country}}",
+        "empty": "Aún no has elegido ninguna fuente. Busca una publicación para preferirla u ocultarla de tus Noticias. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
         "countryCleared": "{{country}} ya no está entre tus preferencias",
         "saveError": "No se pudo guardar. Inténtalo de nuevo."
       }
@@ -371,9 +365,9 @@
       "sourcesSkip": "Passer",
       "sourcesLoadError": "Impossible de charger les sources.",
       "sourcesOffline": "Vous êtes hors connexion. Vous pourrez ajouter des sources plus tard dans Sources.",
-      "sourcesSearchHint": "Recherchez une publication ou un pays.",
       "iSubscribe": "J'ai un abonnement",
-      "iSubscribeA11y": "J'ai un abonnement à {{publisher}}"
+      "iSubscribeA11y": "J'ai un abonnement à {{publisher}}",
+      "sourcesFind": "Trouver une publication"
     },
     "manageData": {
       "meterTitle": "Données sur ce téléphone",
@@ -418,7 +412,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Ajouter une étoile à une publication",
-              "body": "Ouvrez un pays et chaque publication a une étoile. L'étoile la fait remonter dans votre fil d'actu. Ajoutez une étoile à un pays pour faire de même pour toutes ses publications.",
+              "body": "Ouvrez un pays et chaque publication a une étoile. L'étoile la fait remonter dans votre fil d'actu.",
               "ask": "Quelle est la différence entre « Préférée » et « Non préférée » ?"
             },
             "mute-is-not-a-downrank": {
@@ -466,15 +460,13 @@
       "notPreferHint": "Masque ses articles de votre fil d'actu",
       "includedWith": "Incluse avec {{country}}",
       "includedWithA11y": "Préférée, incluse avec {{country}}",
-      "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez l'étoile de {{country}}."
+      "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez {{country}} dans Sources."
     },
     "you": {
       "sources": {
         "find": "Trouver une publication ou un pays",
         "footnote": "Touchez-en une pour la modifier. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
-        "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication ou un pays à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
-        "preferCountryA11y": "Privilégier les sources de {{country}}",
-        "countryHint": "Ouvre les sources de {{country}}",
+        "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
         "countryCleared": "{{country}} ne fait plus partie de vos préférences",
         "saveError": "Impossible d'enregistrer cela. Réessayez."
       }
@@ -492,9 +484,9 @@
       "sourcesSkip": "छोड़ें",
       "sourcesLoadError": "स्रोत लोड नहीं हो सके।",
       "sourcesOffline": "आप ऑफ़लाइन हैं। आप बाद में स्रोत स्क्रीन से स्रोत जोड़ सकते हैं।",
-      "sourcesSearchHint": "कोई प्रकाशन या देश खोजें।",
       "iSubscribe": "मेरी सदस्यता है",
-      "iSubscribeA11y": "{{publisher}} की मेरी सदस्यता है"
+      "iSubscribeA11y": "{{publisher}} की मेरी सदस्यता है",
+      "sourcesFind": "कोई प्रकाशन खोजें"
     },
     "manageData": {
       "meterTitle": "इस फ़ोन पर डेटा",
@@ -539,7 +531,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "किसी प्रकाशन को स्टार दें",
-              "body": "किसी देश को खोलने पर हर प्रकाशन के पास एक स्टार होता है। स्टार उस प्रकाशन को आपकी फ़ीड में ऊपर ले जाता है। पूरे देश को स्टार दें, और उसके सभी प्रकाशनों के लिए भी यही होगा।",
+              "body": "किसी देश को खोलने पर हर प्रकाशन के पास एक स्टार होता है। स्टार उस प्रकाशन को आपकी फ़ीड में ऊपर ले जाता है।",
               "ask": "पसंदीदा और पसंदीदा नहीं में क्या अंतर है?"
             },
             "mute-is-not-a-downrank": {
@@ -587,15 +579,13 @@
       "notPreferHint": "इसके लेख आपकी फ़ीड से छिपाए जाते हैं",
       "includedWith": "{{country}} के साथ शामिल",
       "includedWithA11y": "पसंदीदा, {{country}} के साथ शामिल",
-      "includedWithHelp": "यह {{country}} के साथ शामिल है। इसे बदलने के लिए {{country}} से स्टार हटाएँ।"
+      "includedWithHelp": "यह {{country}} के साथ शामिल है। इसे बदलने के लिए स्रोत में जाकर {{country}} हटाएँ।"
     },
     "you": {
       "sources": {
         "find": "कोई प्रकाशन या देश खोजें",
         "footnote": "बदलने के लिए किसी एक पर टैप करें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
-        "empty": "आपने अभी तक कोई स्रोत नहीं चुना है। किसी प्रकाशन या देश को पसंदीदा बनाने या उसे फ़ीड से छिपाने के लिए खोजें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
-        "preferCountryA11y": "{{country}} के स्रोत पसंदीदा बनाएँ",
-        "countryHint": "{{country}} के स्रोत खोलती है",
+        "empty": "आपने अभी तक कोई स्रोत नहीं चुना है। किसी प्रकाशन को पसंदीदा बनाने या उसे फ़ीड से छिपाने के लिए खोजें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
         "countryCleared": "{{country}} अब पसंदीदा नहीं है",
         "saveError": "वह सहेजा नहीं जा सका। फिर से कोशिश करें।"
       }
@@ -613,9 +603,9 @@
       "sourcesSkip": "Lewati",
       "sourcesLoadError": "Tidak dapat memuat sumber.",
       "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
-      "sourcesSearchHint": "Cari publikasi atau negara.",
       "iSubscribe": "Saya berlangganan",
-      "iSubscribeA11y": "Saya berlangganan {{publisher}}"
+      "iSubscribeA11y": "Saya berlangganan {{publisher}}",
+      "sourcesFind": "Cari publikasi"
     },
     "manageData": {
       "meterTitle": "Data di ponsel ini",
@@ -660,7 +650,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Beri bintang pada publikasi",
-              "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda. Beri bintang pada negara untuk melakukan hal yang sama pada semua publikasinya.",
+              "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda.",
               "ask": "Apa bedanya Diutamakan dan Jangan tampilkan?"
             },
             "mute-is-not-a-downrank": {
@@ -708,15 +698,13 @@
       "notPreferHint": "Menyembunyikan artikelnya dari umpan Anda",
       "includedWith": "Termasuk dalam {{country}}",
       "includedWithA11y": "Diutamakan, termasuk dalam {{country}}",
-      "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus bintang dari {{country}}."
+      "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus {{country}} di Sumber."
     },
     "you": {
       "sources": {
         "find": "Cari publikasi atau negara",
         "footnote": "Ketuk salah satu untuk mengubahnya. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
-        "empty": "Anda belum memilih sumber apa pun. Cari publikasi atau negara untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
-        "preferCountryA11y": "Utamakan sumber dari {{country}}",
-        "countryHint": "Membuka sumber dari {{country}}",
+        "empty": "Anda belum memilih sumber apa pun. Cari publikasi untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
         "countryCleared": "{{country}} tidak lagi diutamakan",
         "saveError": "Tidak dapat menyimpan itu. Coba lagi."
       }
@@ -734,9 +722,9 @@
       "sourcesSkip": "Salta",
       "sourcesLoadError": "Impossibile caricare le fonti.",
       "sourcesOffline": "Sei offline. Puoi aggiungere fonti più tardi in Fonti.",
-      "sourcesSearchHint": "Cerca una pubblicazione o un paese.",
       "iSubscribe": "Ho un abbonamento",
-      "iSubscribeA11y": "Ho un abbonamento a {{publisher}}"
+      "iSubscribeA11y": "Ho un abbonamento a {{publisher}}",
+      "sourcesFind": "Trova una pubblicazione"
     },
     "manageData": {
       "meterTitle": "Dati su questo telefono",
@@ -781,7 +769,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Dai una stella a una pubblicazione",
-              "body": "Apri un paese e ogni pubblicazione ha una stella. Una stella la sposta più in alto nelle tue Notizie. Metti una stella al paese per fare lo stesso con tutte le sue pubblicazioni.",
+              "body": "Apri un paese e ogni pubblicazione ha una stella. Una stella la sposta più in alto nelle tue Notizie.",
               "ask": "Qual è la differenza tra Preferita e Non preferita?"
             },
             "mute-is-not-a-downrank": {
@@ -829,15 +817,13 @@
       "notPreferHint": "Nasconde i suoi articoli dalle tue Notizie",
       "includedWith": "Inclusa con {{country}}",
       "includedWithA11y": "Preferita, inclusa con {{country}}",
-      "includedWithHelp": "Inclusa con {{country}}. Per cambiarlo, togli la stella a {{country}}."
+      "includedWithHelp": "Inclusa con {{country}}. Per cambiarlo, togli {{country}} in Fonti."
     },
     "you": {
       "sources": {
         "find": "Trova una pubblicazione o un paese",
         "footnote": "Tocca una voce per cambiarla. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
-        "empty": "Non hai ancora scelto nessuna fonte. Cerca una pubblicazione o un paese da preferire o nascondere dalle tue Notizie. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
-        "preferCountryA11y": "Dai la precedenza alle fonti di {{country}}",
-        "countryHint": "Apre le fonti di {{country}}",
+        "empty": "Non hai ancora scelto nessuna fonte. Cerca una pubblicazione da preferire o nascondere dalle tue Notizie. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
         "countryCleared": "{{country}} non è più tra le tue preferenze",
         "saveError": "Non è stato possibile salvare. Riprova."
       }
@@ -855,9 +841,9 @@
       "sourcesSkip": "スキップ",
       "sourcesLoadError": "ソースを読み込めませんでした。",
       "sourcesOffline": "オフラインです。後からソースを追加できます。",
-      "sourcesSearchHint": "公開元または国を検索してください。",
       "iSubscribe": "購読しています",
-      "iSubscribeA11y": "{{publisher}}を購読しています"
+      "iSubscribeA11y": "{{publisher}}を購読しています",
+      "sourcesFind": "公開元を検索"
     },
     "manageData": {
       "meterTitle": "この端末のデータ",
@@ -902,7 +888,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "公開元に星を付ける",
-              "body": "国を開くと、すべての公開元に星があります。星を付けると、その公開元がフィードの上位に表示されます。国に星を付けると、その国のすべての公開元にも同じことが適用されます。",
+              "body": "国を開くと、すべての公開元に星があります。星を付けると、その公開元がフィードの上位に表示されます。",
               "ask": "「優先」と「表示しない」の違いは何ですか？"
             },
             "mute-is-not-a-downrank": {
@@ -950,15 +936,13 @@
       "notPreferHint": "記事をフィードから非表示にする",
       "includedWith": "{{country}}に含まれています",
       "includedWithA11y": "優先、{{country}}に含まれています",
-      "includedWithHelp": "{{country}}に含まれています。変更するには、{{country}}の星を外してください。"
+      "includedWithHelp": "{{country}}に含まれています。変更するには、ソースで{{country}}を削除してください。"
     },
     "you": {
       "sources": {
         "find": "公開元または国を検索",
         "footnote": "変更するには、どれかをタップしてください。記事の•••メニューの「表示しない」も、ここに表示されます。",
-        "empty": "まだソースを選んでいません。公開元か国を検索して、優先したり、フィードから非表示にしたりできます。記事の•••メニューの「表示しない」も、ここに表示されます。",
-        "preferCountryA11y": "{{country}}のソースを優先する",
-        "countryHint": "{{country}}のソースを開く",
+        "empty": "まだソースを選んでいません。公開元を検索して、優先したり、フィードから非表示にしたりできます。記事の•••メニューの「表示しない」も、ここに表示されます。",
         "countryCleared": "{{country}}は優先されなくなりました",
         "saveError": "保存できませんでした。もう一度お試しください。"
       }
@@ -976,9 +960,9 @@
       "sourcesSkip": "건너뛰기",
       "sourcesLoadError": "소스를 불러오지 못했어요.",
       "sourcesOffline": "오프라인 상태예요. 나중에 소스 화면에서 추가할 수 있어요.",
-      "sourcesSearchHint": "매체나 국가를 검색하세요.",
       "iSubscribe": "구독 중이에요",
-      "iSubscribeA11y": "{{publisher}} 구독 중"
+      "iSubscribeA11y": "{{publisher}} 구독 중",
+      "sourcesFind": "매체 찾기"
     },
     "manageData": {
       "meterTitle": "이 휴대폰의 데이터",
@@ -1023,7 +1007,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "매체에 별표 달기",
-              "body": "국가를 열면 모든 매체에 별표가 있어요. 별표를 누르면 피드에서 그 매체가 위로 올라가요. 국가에 별표를 달면 그 국가의 모든 매체도 똑같이 적용돼요.",
+              "body": "국가를 열면 모든 매체에 별표가 있어요. 별표를 누르면 피드에서 그 매체가 위로 올라가요.",
               "ask": "선호와 선호 안 함은 어떻게 다른가요?"
             },
             "mute-is-not-a-downrank": {
@@ -1071,15 +1055,13 @@
       "notPreferHint": "기사를 내 피드에서 숨기기",
       "includedWith": "{{country}}에 포함됨",
       "includedWithA11y": "선호, {{country}}에 포함됨",
-      "includedWithHelp": "{{country}}에 포함돼 있어요. 바꾸려면 {{country}}의 별표를 해제하세요."
+      "includedWithHelp": "{{country}}에 포함돼 있어요. 바꾸려면 소스에서 {{country}} 항목을 삭제하세요."
     },
     "you": {
       "sources": {
         "find": "매체나 국가 찾기",
         "footnote": "눌러서 바꿀 수 있어요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
-        "empty": "아직 고른 소스가 없어요. 매체나 국가를 검색해서 선호로 지정하거나 내 피드에서 숨겨 보세요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
-        "preferCountryA11y": "{{country}} 소스 선호하기",
-        "countryHint": "{{country}}의 소스 열기",
+        "empty": "아직 고른 소스가 없어요. 매체를 검색해서 선호로 지정하거나 내 피드에서 숨겨 보세요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
         "countryCleared": "{{country}} 선호가 해제됐어요",
         "saveError": "저장하지 못했어요. 다시 시도해 주세요."
       }
@@ -1097,9 +1079,9 @@
       "sourcesSkip": "Overslaan",
       "sourcesLoadError": "Kon de bronnen niet laden.",
       "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
-      "sourcesSearchHint": "Zoek naar een publicatie of land.",
       "iSubscribe": "Ik heb een abonnement",
-      "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}"
+      "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}",
+      "sourcesFind": "Zoek een publicatie"
     },
     "manageData": {
       "meterTitle": "Data op deze telefoon",
@@ -1144,7 +1126,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Geef een publicatie een ster",
-              "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed. Geef een land een ster om hetzelfde te doen voor al zijn publicaties.",
+              "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed.",
               "ask": "Wat is het verschil tussen Voorkeur en Liever niet?"
             },
             "mute-is-not-a-downrank": {
@@ -1192,15 +1174,13 @@
       "notPreferHint": "Verbergt de artikelen uit je feed",
       "includedWith": "Inbegrepen bij {{country}}",
       "includedWithA11y": "Voorkeur, inbegrepen bij {{country}}",
-      "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je de ster bij {{country}}."
+      "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je {{country}} bij Bronnen."
     },
     "you": {
       "sources": {
         "find": "Zoek een publicatie of land",
         "footnote": "Tik op een item om het te wijzigen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
-        "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie of land om er een voorkeur aan te geven of het uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
-        "preferCountryA11y": "Voorkeur geven aan bronnen uit {{country}}",
-        "countryHint": "Opent bronnen uit {{country}}",
+        "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie om er een voorkeur aan te geven of haar uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
         "countryCleared": "{{country}} staat niet meer bij je voorkeuren",
         "saveError": "Dat kon niet worden opgeslagen. Probeer het opnieuw."
       }
@@ -1218,9 +1198,9 @@
       "sourcesSkip": "Pomiń",
       "sourcesLoadError": "Nie udało się wczytać źródeł.",
       "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
-      "sourcesSearchHint": "Wyszukaj wydawcę lub kraj.",
       "iSubscribe": "Subskrybuję",
-      "iSubscribeA11y": "Subskrybuję {{publisher}}"
+      "iSubscribeA11y": "Subskrybuję {{publisher}}",
+      "sourcesFind": "Szukaj wydawcy"
     },
     "manageData": {
       "meterTitle": "Dane na tym telefonie",
@@ -1265,7 +1245,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Oznacz wydawcę gwiazdką",
-              "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu. Oznacz kraj gwiazdką, aby zrobić to samo dla wszystkich jego wydawców.",
+              "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu.",
               "ask": "Jaka jest różnica między „Preferowany” a „Niepreferowany”?"
             },
             "mute-is-not-a-downrank": {
@@ -1313,15 +1293,13 @@
       "notPreferHint": "Ukrywa jego artykuły w twoim Strumieniu",
       "includedWith": "Razem z krajem: {{country}}",
       "includedWithA11y": "Preferowany, razem z krajem: {{country}}",
-      "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, zdejmij gwiazdkę z kraju: {{country}}."
+      "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, usuń kraj w Źródłach: {{country}}."
     },
     "you": {
       "sources": {
         "find": "Szukaj wydawcy lub kraju",
         "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
-        "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę lub kraj, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
-        "preferCountryA11y": "Preferuj źródła z kraju: {{country}}",
-        "countryHint": "Otwiera źródła z kraju: {{country}}",
+        "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
         "countryCleared": "Cofnięto preferencję: {{country}}",
         "saveError": "Nie udało się zapisać. Spróbuj ponownie."
       }
@@ -1339,9 +1317,9 @@
       "sourcesSkip": "Pular",
       "sourcesLoadError": "Não foi possível carregar fontes.",
       "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
-      "sourcesSearchHint": "Pesquise uma publicação ou um país.",
       "iSubscribe": "Já assino",
-      "iSubscribeA11y": "Já assino {{publisher}}"
+      "iSubscribeA11y": "Já assino {{publisher}}",
+      "sourcesFind": "Encontre uma publicação"
     },
     "manageData": {
       "meterTitle": "Dados neste celular",
@@ -1386,7 +1364,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Dê uma estrela a uma publicação",
-              "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed. Dê uma estrela ao país para fazer o mesmo com todas as publicações dele.",
+              "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed.",
               "ask": "Qual é a diferença entre Preferida e Não preferida?"
             },
             "mute-is-not-a-downrank": {
@@ -1434,15 +1412,13 @@
       "notPreferHint": "Oculta os artigos dela do seu Feed",
       "includedWith": "Incluída com {{country}}",
       "includedWithA11y": "Preferida, incluída com {{country}}",
-      "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova a estrela de {{country}}."
+      "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova {{country}} em Fontes."
     },
     "you": {
       "sources": {
         "find": "Encontre uma publicação ou um país",
         "footnote": "Toque em uma para mudar. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
-        "empty": "Você ainda não escolheu fontes. Pesquise uma publicação ou um país para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
-        "preferCountryA11y": "Preferir fontes de {{country}}",
-        "countryHint": "Abre as fontes de {{country}}",
+        "empty": "Você ainda não escolheu fontes. Pesquise uma publicação para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
         "countryCleared": "{{country}} saiu das suas preferências",
         "saveError": "Não foi possível salvar. Tente de novo."
       }
@@ -1460,9 +1436,9 @@
       "sourcesSkip": "Пропустить",
       "sourcesLoadError": "Не удалось загрузить источники.",
       "sourcesOffline": "Вы не в сети. Источники можно добавить позже в разделе «Источники».",
-      "sourcesSearchHint": "Найдите издание или страну.",
       "iSubscribe": "У меня есть подписка",
-      "iSubscribeA11y": "У меня есть подписка на {{publisher}}"
+      "iSubscribeA11y": "У меня есть подписка на {{publisher}}",
+      "sourcesFind": "Найти издание"
     },
     "manageData": {
       "meterTitle": "Данные на этом телефоне",
@@ -1507,7 +1483,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Отметьте издание звездой",
-              "body": "Откройте страну, и у каждого издания появится звезда. Звезда поднимает издание выше в вашей ленте. Отметьте звездой страну, чтобы сделать то же самое для всех её изданий.",
+              "body": "Откройте страну, и у каждого издания появится звезда. Звезда поднимает издание выше в вашей ленте.",
               "ask": "В чём разница между «В приоритете» и «Не показывать»?"
             },
             "mute-is-not-a-downrank": {
@@ -1555,15 +1531,13 @@
       "notPreferHint": "Скрывает его статьи из вашей ленты",
       "includedWith": "Включено со страной: {{country}}",
       "includedWithA11y": "В приоритете, включено со страной: {{country}}",
-      "includedWithHelp": "Включено со страной: {{country}}. Чтобы это изменить, снимите звезду со страны: {{country}}."
+      "includedWithHelp": "Включено со страной: {{country}}. Чтобы это изменить, удалите страну в разделе «Источники»: {{country}}."
     },
     "you": {
       "sources": {
         "find": "Найти издание или страну",
         "footnote": "Нажмите на любое, чтобы изменить. «Не показывать» в меню ••• статьи тоже появляется здесь.",
-        "empty": "Вы пока не выбрали ни одного источника. Найдите издание или страну, чтобы поставить в приоритет или скрыть из вашей ленты. «Не показывать» в меню ••• статьи тоже появляется здесь.",
-        "preferCountryA11y": "Отдавать приоритет источникам страны: {{country}}",
-        "countryHint": "Открывает источники страны: {{country}}",
+        "empty": "Вы пока не выбрали ни одного источника. Найдите издание, чтобы поставить в приоритет или скрыть из вашей ленты. «Не показывать» в меню ••• статьи тоже появляется здесь.",
         "countryCleared": "{{country}} больше не в приоритете",
         "saveError": "Не удалось сохранить. Попробуйте ещё раз."
       }
@@ -1581,9 +1555,9 @@
       "sourcesSkip": "ข้าม",
       "sourcesLoadError": "โหลดแหล่งข่าวไม่สำเร็จ",
       "sourcesOffline": "ตอนนี้คุณออฟไลน์อยู่ คุณเพิ่มแหล่งข่าวทีหลังได้ในแหล่งข่าว",
-      "sourcesSearchHint": "ค้นหาสำนักข่าวหรือประเทศ",
       "iSubscribe": "ฉันสมัครสมาชิกแล้ว",
-      "iSubscribeA11y": "ฉันสมัครสมาชิก {{publisher}} แล้ว"
+      "iSubscribeA11y": "ฉันสมัครสมาชิก {{publisher}} แล้ว",
+      "sourcesFind": "ค้นหาสำนักข่าว"
     },
     "manageData": {
       "meterTitle": "ข้อมูลบนโทรศัพท์เครื่องนี้",
@@ -1628,7 +1602,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "ติดดาวให้สำนักข่าว",
-              "body": "เปิดประเทศแล้วทุกสำนักข่าวจะมีรูปดาว ดาวจะดันสำนักข่าวขึ้นมาอยู่ด้านบนในฟีดของคุณ ติดดาวให้ประเทศเพื่อทำแบบเดียวกันกับทุกสำนักข่าวในประเทศนั้น",
+              "body": "เปิดประเทศแล้วทุกสำนักข่าวจะมีรูปดาว ดาวจะดันสำนักข่าวขึ้นมาอยู่ด้านบนในฟีดของคุณ",
               "ask": "ความแตกต่างระหว่างรายการโปรดและไม่แสดงคืออะไร?"
             },
             "mute-is-not-a-downrank": {
@@ -1676,15 +1650,13 @@
       "notPreferHint": "ซ่อนบทความจากฟีดของคุณ",
       "includedWith": "รวมอยู่ใน {{country}}",
       "includedWithA11y": "รายการโปรด รวมอยู่ใน {{country}}",
-      "includedWithHelp": "รวมอยู่ใน {{country}} หากต้องการเปลี่ยน ให้ลบรูปดาวออกจาก {{country}}"
+      "includedWithHelp": "รวมอยู่ใน {{country}} หากต้องการเปลี่ยน ให้ลบ {{country}} ในแหล่งข่าว"
     },
     "you": {
       "sources": {
         "find": "ค้นหาสำนักข่าวหรือประเทศ",
         "footnote": "แตะหนึ่งรายการเพื่อเปลี่ยนค่า “ไม่แสดง” ในเมนู ••• ของบทความก็จะมาอยู่ที่นี่เช่นกัน",
-        "empty": "คุณยังไม่ได้เลือกแหล่งข่าวใด ค้นหาสำนักข่าวหรือประเทศเพื่อเพิ่มในรายการโปรดหรือซ่อนจากฟีดของคุณ “ไม่แสดง” ในเมนู ••• ของบทความก็จะมาอยู่ที่นี่เช่นกัน",
-        "preferCountryA11y": "เพิ่มแหล่งข่าวจาก {{country}} ในรายการโปรด",
-        "countryHint": "เปิดแหล่งข่าวจาก {{country}}",
+        "empty": "คุณยังไม่ได้เลือกแหล่งข่าวใด ค้นหาสำนักข่าวเพื่อเพิ่มในรายการโปรดหรือซ่อนจากฟีดของคุณ “ไม่แสดง” ในเมนู ••• ของบทความก็จะมาอยู่ที่นี่เช่นกัน",
         "countryCleared": "นำ {{country}} ออกจากรายการโปรดแล้ว",
         "saveError": "บันทึกไม่ได้ กรุณาลองอีกครั้ง"
       }
@@ -1702,9 +1674,9 @@
       "sourcesSkip": "Atla",
       "sourcesLoadError": "Kaynaklar yüklenemedi.",
       "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
-      "sourcesSearchHint": "Bir yayın veya ülke arayın.",
       "iSubscribe": "Abone oldum",
-      "iSubscribeA11y": "{{publisher}} yayınına abone oldum"
+      "iSubscribeA11y": "{{publisher}} yayınına abone oldum",
+      "sourcesFind": "Bir yayın bulun"
     },
     "manageData": {
       "meterTitle": "Bu telefondaki veriler",
@@ -1749,7 +1721,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Bir yayını yıldızlayın",
-              "body": "Bir ülkeyi açtığınızda her yayının yanında bir yıldız bulunur. Yıldız, yayını Akışınızda yukarı taşır. Bir ülkeye yıldız verirseniz, aynısı o ülkenin tüm yayınları için de yapılır.",
+              "body": "Bir ülkeyi açtığınızda her yayının yanında bir yıldız bulunur. Yıldız, yayını Akışınızda yukarı taşır.",
               "ask": "Tercih edilen ile Tercih edilmeyen arasındaki fark nedir?"
             },
             "mute-is-not-a-downrank": {
@@ -1797,15 +1769,13 @@
       "notPreferHint": "Makalelerini Akışınızdan gizler",
       "includedWith": "{{country}} ile birlikte dahil",
       "includedWithA11y": "Tercih edilen, {{country}} ile birlikte dahil",
-      "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için {{country}} ülkesinin yıldızını kaldırın."
+      "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için Kaynaklar bölümünden {{country}} ülkesini kaldırın."
     },
     "you": {
       "sources": {
         "find": "Bir yayın veya ülke bulun",
         "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
-        "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını veya ülkeyi aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
-        "preferCountryA11y": "{{country}} ülkesinin kaynaklarını tercih edin",
-        "countryHint": "{{country}} ülkesinin kaynaklarını açar",
+        "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
         "countryCleared": "{{country}} artık tercih edilen değil",
         "saveError": "Bu kaydedilemedi. Lütfen tekrar deneyin."
       }
@@ -1823,9 +1793,9 @@
       "sourcesSkip": "Пропустити",
       "sourcesLoadError": "Не вдалося завантажити джерела.",
       "sourcesOffline": "Немає підключення до мережі. Джерела можна додати пізніше в розділі «Джерела».",
-      "sourcesSearchHint": "Знайдіть видання або країну.",
       "iSubscribe": "Я передплачую",
-      "iSubscribeA11y": "Я передплачую {{publisher}}"
+      "iSubscribeA11y": "Я передплачую {{publisher}}",
+      "sourcesFind": "Знайдіть видання"
     },
     "manageData": {
       "meterTitle": "Дані на цьому телефоні",
@@ -1870,7 +1840,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Позначте видання зіркою",
-              "body": "Відкрийте країну, і кожне видання матиме зірку. Зірка піднімає видання вище у вашій стрічці. Позначте країну зіркою, щоб зробити те саме для всіх її видань.",
+              "body": "Відкрийте країну, і кожне видання матиме зірку. Зірка піднімає видання вище у вашій стрічці.",
               "ask": "Яка різниця між «Пріоритетне» і «Не показувати»?"
             },
             "mute-is-not-a-downrank": {
@@ -1918,15 +1888,13 @@
       "notPreferHint": "Приховує його статті зі стрічки",
       "includedWith": "Разом із країною: {{country}}",
       "includedWithA11y": "Пріоритетне, разом із країною: {{country}}",
-      "includedWithHelp": "Разом із країною: {{country}}. Щоб це змінити, приберіть зірку з країни: {{country}}."
+      "includedWithHelp": "Разом із країною: {{country}}. Щоб це змінити, видаліть країну в розділі «Джерела»: {{country}}."
     },
     "you": {
       "sources": {
         "find": "Знайдіть видання або країну",
         "footnote": "Натисніть на видання, щоб змінити його. Пункт «Не показувати» з меню ••• статті теж з'являється тут.",
-        "empty": "Ви ще не вибрали жодного джерела. Шукайте видання або країну, щоб позначити їх пріоритетними або приховати зі стрічки. Пункт «Не показувати» з меню ••• статті теж з'являється тут.",
-        "preferCountryA11y": "Надавати пріоритет джерелам з {{country}}",
-        "countryHint": "Відкриває джерела з {{country}}",
+        "empty": "Ви ще не вибрали жодного джерела. Шукайте видання, щоб позначити його пріоритетним або приховати зі стрічки. Пункт «Не показувати» з меню ••• статті теж з'являється тут.",
         "countryCleared": "{{country}} більше не в пріоритеті",
         "saveError": "Не вдалося зберегти. Спробуйте ще раз."
       }
@@ -1944,9 +1912,9 @@
       "sourcesSkip": "Bỏ qua",
       "sourcesLoadError": "Không thể tải nguồn.",
       "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
-      "sourcesSearchHint": "Tìm một nguồn hoặc quốc gia.",
       "iSubscribe": "Tôi đã đăng ký",
-      "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}"
+      "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}",
+      "sourcesFind": "Tìm một nguồn"
     },
     "manageData": {
       "meterTitle": "Dữ liệu trên điện thoại này",
@@ -1991,7 +1959,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "Gắn sao cho một nguồn",
-              "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn. Gắn sao cho một quốc gia để làm điều tương tự cho tất cả nguồn của quốc gia đó.",
+              "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn.",
               "ask": "Khác nhau giữa Ưu tiên và Không hiển thị là gì?"
             },
             "mute-is-not-a-downrank": {
@@ -2039,15 +2007,13 @@
       "notPreferHint": "Ẩn các bài viết từ nguồn này khỏi Bảng tin của bạn",
       "includedWith": "Đã bao gồm trong {{country}}",
       "includedWithA11y": "Ưu tiên, đã bao gồm trong {{country}}",
-      "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy bỏ dấu sao ở {{country}}."
+      "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy xóa {{country}} trong Nguồn."
     },
     "you": {
       "sources": {
         "find": "Tìm một nguồn hoặc quốc gia",
         "footnote": "Chạm vào một nguồn để thay đổi. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
-        "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn hoặc quốc gia để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
-        "preferCountryA11y": "Ưu tiên nguồn từ {{country}}",
-        "countryHint": "Mở nguồn từ {{country}}",
+        "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
         "countryCleared": "{{country}} không còn được ưu tiên",
         "saveError": "Không thể lưu. Hãy thử lại."
       }
@@ -2065,9 +2031,9 @@
       "sourcesSkip": "跳过",
       "sourcesLoadError": "无法加载来源。",
       "sourcesOffline": "你目前处于离线状态。稍后可以在来源中添加。",
-      "sourcesSearchHint": "搜索媒体或国家。",
       "iSubscribe": "我已订阅",
-      "iSubscribeA11y": "我已订阅 {{publisher}}"
+      "iSubscribeA11y": "我已订阅 {{publisher}}",
+      "sourcesFind": "查找媒体"
     },
     "manageData": {
       "meterTitle": "此手机上的数据",
@@ -2112,7 +2078,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "为媒体加星标",
-              "body": "打开一个国家，每家媒体旁边都有一个星标。星标会让该媒体在你的信息流中排得更靠前。给国家加星标，即可同时优先其所有媒体。",
+              "body": "打开一个国家，每家媒体旁边都有一个星标。星标会让该媒体在你的信息流中排得更靠前。",
               "ask": "“优先”和“不想看”有什么区别？"
             },
             "mute-is-not-a-downrank": {
@@ -2160,15 +2126,13 @@
       "notPreferHint": "在你的信息流中隐藏其文章",
       "includedWith": "已包含在 {{country}} 中",
       "includedWithA11y": "优先，已包含在 {{country}} 中",
-      "includedWithHelp": "此媒体已包含在 {{country}} 中。要更改此设置，请取消对 {{country}} 的星标。"
+      "includedWithHelp": "此媒体已包含在 {{country}} 中。要更改此设置，请在来源中移除 {{country}}。"
     },
     "you": {
       "sources": {
         "find": "查找媒体或国家",
         "footnote": "点按一项即可更改。文章 ••• 菜单中的“不想看”也会出现在这里。",
-        "empty": "你还没有选择任何来源。搜索媒体或国家，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
-        "preferCountryA11y": "将来自 {{country}} 的来源设为优先",
-        "countryHint": "打开来自 {{country}} 的来源",
+        "empty": "你还没有选择任何来源。搜索媒体，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
         "countryCleared": "{{country}} 已不再优先",
         "saveError": "无法保存。请重试。"
       }
@@ -2186,9 +2150,9 @@
       "sourcesSkip": "略過",
       "sourcesLoadError": "無法載入來源。",
       "sourcesOffline": "你目前離線。之後可以在「來源」中新增來源。",
-      "sourcesSearchHint": "搜尋出版物或國家。",
       "iSubscribe": "我已訂閱",
-      "iSubscribeA11y": "我已訂閱 {{publisher}}"
+      "iSubscribeA11y": "我已訂閱 {{publisher}}",
+      "sourcesFind": "搜尋出版物"
     },
     "manageData": {
       "meterTitle": "這支手機上的資料",
@@ -2233,7 +2197,7 @@
             },
             "arrows-on-a-publisher": {
               "headline": "為出版物加上星號",
-              "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。為國家加上星號，即可同時套用到它的所有出版物。",
+              "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。",
               "ask": "「優先」和「不想看」有什麼不同？"
             },
             "mute-is-not-a-downrank": {
@@ -2281,15 +2245,13 @@
       "notPreferHint": "從你的資訊流中隱藏其文章",
       "includedWith": "已納入 {{country}}",
       "includedWithA11y": "優先，已納入 {{country}}",
-      "includedWithHelp": "已納入 {{country}}。若要更改，請移除 {{country}} 的星號。"
+      "includedWithHelp": "已納入 {{country}}。若要更改，請在「來源」中移除 {{country}}。"
     },
     "you": {
       "sources": {
         "find": "搜尋出版物或國家",
         "footnote": "輕點一項即可更改。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
-        "empty": "你還沒有挑選任何來源。搜尋出版物或國家，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
-        "preferCountryA11y": "優先顯示來自 {{country}} 的來源",
-        "countryHint": "開啟 {{country}} 的來源",
+        "empty": "你還沒有挑選任何來源。搜尋出版物，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
         "countryCleared": "已取消 {{country}} 的優先設定",
         "saveError": "無法儲存這項設定。請再試一次。"
       }

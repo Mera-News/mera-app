@@ -711,9 +711,9 @@
     "sourcesSkip": "Skip",
     "sourcesLoadError": "Couldn't load sources.",
     "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
     "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "iSubscribeA11y": "I subscribe to {{publisher}}",
+    "sourcesFind": "Find a publication"
   },
   "notifications": {
     "title": "Notifications",
@@ -2209,7 +2209,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Star a publication",
-            "body": "Open a country and every publication has a star. A star moves it up your feed. Star a country to do the same for all its publications.",
+            "body": "Open a country and every publication has a star. A star moves it up your feed.",
             "ask": "What's the difference between Preferred and Not preferred?"
           },
           "mute-is-not-a-downrank": {
@@ -2764,7 +2764,7 @@
     "notPreferHint": "Hides its articles from your feed",
     "includedWith": "Included with {{country}}",
     "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "includedWithHelp": "Included with {{country}}. To change this, remove {{country}} in Sources."
   },
   "nav": {
     "page": {
@@ -2956,9 +2956,7 @@
       "title": "Sources",
       "find": "Find a publication or country",
       "footnote": "Tap one to change it. \"Not preferred\" in an article's ••• menu lands here too.",
-      "empty": "You haven't picked any sources yet. Search for a publication or country to prefer it or hide it from your feed. \"Not preferred\" in an article's ••• menu lands here too.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
+      "empty": "You haven't picked any sources yet. Search for a publication to prefer it or hide it from your feed. \"Not preferred\" in an article's ••• menu lands here too.",
       "countryCleared": "{{country}} is no longer preferred",
       "saveError": "Couldn't save that. Try again."
     },

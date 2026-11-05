@@ -355,9 +355,9 @@
     "sourcesSkip": "Überspringen",
     "sourcesLoadError": "Quellen konnten nicht geladen werden.",
     "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
-    "sourcesSearchHint": "Suche nach einer Veröffentlichung oder einem Land.",
     "iSubscribe": "Ich habe ein Abo",
-    "iSubscribeA11y": "Ich habe {{publisher}} abonniert"
+    "iSubscribeA11y": "Ich habe {{publisher}} abonniert",
+    "sourcesFind": "Veröffentlichung suchen"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -2090,7 +2090,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Veröffentlichung mit Stern versehen",
-            "body": "Öffne ein Land, dann hat jede Veröffentlichung einen Stern. Ein Stern holt sie in deinen Nachrichten nach oben. Markiere ein Land mit einem Stern, um dasselbe für alle seine Veröffentlichungen zu tun.",
+            "body": "Öffne ein Land, dann hat jede Veröffentlichung einen Stern. Ein Stern holt sie in deinen Nachrichten nach oben.",
             "ask": "Was ist der Unterschied zwischen Bevorzugt und Nicht bevorzugt?"
           },
           "mute-is-not-a-downrank": {
@@ -2762,7 +2762,7 @@
     "notPreferHint": "Blendet ihre Artikel aus deinen Nachrichten aus",
     "includedWith": "Mit {{country}} enthalten",
     "includedWithA11y": "Bevorzugt, mit {{country}} enthalten",
-    "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne den Stern bei {{country}}."
+    "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne {{country}} unter Quellen."
   },
   "nav": {
     "page": {
@@ -2954,9 +2954,7 @@
       "title": "Quellen",
       "find": "Veröffentlichung oder Land suchen",
       "footnote": "Tippe auf einen Eintrag, um ihn zu ändern. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
-      "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung oder einem Land, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
-      "preferCountryA11y": "Quellen aus {{country}} bevorzugen",
-      "countryHint": "Öffnet die Quellen aus {{country}}",
+      "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
       "countryCleared": "{{country}} ist nicht mehr bevorzugt",
       "saveError": "Das konnte nicht gespeichert werden. Versuch es noch einmal."
     },

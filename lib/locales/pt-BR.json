@@ -357,9 +357,9 @@
     "sourcesSkip": "Pular",
     "sourcesLoadError": "Não foi possível carregar fontes.",
     "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
-    "sourcesSearchHint": "Pesquise uma publicação ou um país.",
     "iSubscribe": "Já assino",
-    "iSubscribeA11y": "Já assino {{publisher}}"
+    "iSubscribeA11y": "Já assino {{publisher}}",
+    "sourcesFind": "Encontre uma publicação"
   },
   "notifications": {
     "title": "Notificações",
@@ -2096,7 +2096,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Dê uma estrela a uma publicação",
-            "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed. Dê uma estrela ao país para fazer o mesmo com todas as publicações dele.",
+            "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed.",
             "ask": "Qual é a diferença entre Preferida e Não preferida?"
           },
           "mute-is-not-a-downrank": {
@@ -2768,7 +2768,7 @@
     "notPreferHint": "Oculta os artigos dela do seu Feed",
     "includedWith": "Incluída com {{country}}",
     "includedWithA11y": "Preferida, incluída com {{country}}",
-    "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova a estrela de {{country}}."
+    "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova {{country}} em Fontes."
   },
   "nav": {
     "page": {
@@ -2960,9 +2960,7 @@
       "title": "Fontes",
       "find": "Encontre uma publicação ou um país",
       "footnote": "Toque em uma para mudar. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
-      "empty": "Você ainda não escolheu fontes. Pesquise uma publicação ou um país para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
-      "preferCountryA11y": "Preferir fontes de {{country}}",
-      "countryHint": "Abre as fontes de {{country}}",
+      "empty": "Você ainda não escolheu fontes. Pesquise uma publicação para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
       "countryCleared": "{{country}} saiu das suas preferências",
       "saveError": "Não foi possível salvar. Tente de novo."
     },

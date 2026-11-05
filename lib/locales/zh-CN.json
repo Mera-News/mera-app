@@ -343,9 +343,9 @@
     "sourcesSkip": "跳过",
     "sourcesLoadError": "无法加载来源。",
     "sourcesOffline": "你目前处于离线状态。稍后可以在来源中添加。",
-    "sourcesSearchHint": "搜索媒体或国家。",
     "iSubscribe": "我已订阅",
-    "iSubscribeA11y": "我已订阅 {{publisher}}"
+    "iSubscribeA11y": "我已订阅 {{publisher}}",
+    "sourcesFind": "查找媒体"
   },
   "notifications": {
     "title": "通知",
@@ -2070,7 +2070,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "为媒体加星标",
-            "body": "打开一个国家，每家媒体旁边都有一个星标。星标会让该媒体在你的信息流中排得更靠前。给国家加星标，即可同时优先其所有媒体。",
+            "body": "打开一个国家，每家媒体旁边都有一个星标。星标会让该媒体在你的信息流中排得更靠前。",
             "ask": "“优先”和“不想看”有什么区别？"
           },
           "mute-is-not-a-downrank": {
@@ -2742,7 +2742,7 @@
     "notPreferHint": "在你的信息流中隐藏其文章",
     "includedWith": "已包含在 {{country}} 中",
     "includedWithA11y": "优先，已包含在 {{country}} 中",
-    "includedWithHelp": "此媒体已包含在 {{country}} 中。要更改此设置，请取消对 {{country}} 的星标。"
+    "includedWithHelp": "此媒体已包含在 {{country}} 中。要更改此设置，请在来源中移除 {{country}}。"
   },
   "nav": {
     "page": {
@@ -2933,9 +2933,7 @@
       "title": "来源",
       "find": "查找媒体或国家",
       "footnote": "点按一项即可更改。文章 ••• 菜单中的“不想看”也会出现在这里。",
-      "empty": "你还没有选择任何来源。搜索媒体或国家，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
-      "preferCountryA11y": "将来自 {{country}} 的来源设为优先",
-      "countryHint": "打开来自 {{country}} 的来源",
+      "empty": "你还没有选择任何来源。搜索媒体，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
       "countryCleared": "{{country}} 已不再优先",
       "saveError": "无法保存。请重试。"
     },

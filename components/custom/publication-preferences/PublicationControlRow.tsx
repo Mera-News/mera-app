@@ -47,17 +47,17 @@ interface PublicationControlRowProps {
     readonly rawName: string;
     readonly flag?: string | null;
     readonly subtitle?: string | null;
-    readonly starred: boolean;
+    /** With `onStar`. */
+    readonly starred?: boolean;
     /** The country the star comes from: grey, opens help, never toggles. */
     readonly inheritedFrom?: string | null;
-    /** Absent on a country: it has no Not preferred, and its column stays
-     *  empty so stars line up with the publications around it. */
     readonly notPreferred?: boolean;
-    /** Set on a country row: words its star and its hint. */
-    readonly countryName?: string;
     readonly busy?: boolean;
-    readonly onStar: (shownAs: string) => void;
+    /** A publication's two controls. */
+    readonly onStar?: (shownAs: string) => void;
     readonly onNotPreferred?: (shownAs: string) => void;
+    /** Instead of those: a stored country row, which only comes off. */
+    readonly onRemove?: (shownAs: string) => void;
     /** Absent: the body is plain text, not a button (onboarding). */
     readonly onPress?: () => void;
     /** Under the row, such as onboarding's "I subscribe". */
@@ -74,13 +74,13 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
     rawName,
     flag,
     subtitle,
-    starred,
+    starred = false,
     inheritedFrom,
     notPreferred,
-    countryName,
     busy = false,
     onStar,
     onNotPreferred,
+    onRemove,
     onPress,
     footer,
     testID,
@@ -93,9 +93,7 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
     const bodyLabel = [shown, line].filter(Boolean).join(', ');
     const starLabel = inheritedFrom
         ? t('publicationPage.includedWithA11y', { country: inheritedFrom })
-        : countryName
-          ? t('you.sources.preferCountryA11y', { country: shown })
-          : t('publicationPage.preferA11y', { publisher: shown });
+        : t('publicationPage.preferA11y', { publisher: shown });
 
     const visual = (
         <View
@@ -132,7 +130,6 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
                             onPressOut={() => setPressed(false)}
                             accessibilityRole="button"
                             accessibilityLabel={bodyLabel}
-                            accessibilityHint={countryName ? t('you.sources.countryHint', { country: shown }) : undefined}
                             style={StyleSheet.absoluteFill}
                         />
                     </View>
@@ -141,19 +138,21 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
                         {visual}
                     </View>
                 )}
-                <RowControl
-                    testID={`${testID}-star`}
-                    label={starLabel}
-                    selected={starred || !!inheritedFrom}
-                    busy={busy}
-                    onPress={() => onStar(shown)}
-                >
-                    <MaterialIcons
-                        name={starred || inheritedFrom ? 'star' : 'star-border'}
-                        size={ICON}
-                        color={inheritedFrom ? c.ink3 : starred ? c.accent : c.ink2}
-                    />
-                </RowControl>
+                {onStar ? (
+                    <RowControl
+                        testID={`${testID}-star`}
+                        label={starLabel}
+                        selected={starred || !!inheritedFrom}
+                        busy={busy}
+                        onPress={() => onStar(shown)}
+                    >
+                        <MaterialIcons
+                            name={starred || inheritedFrom ? 'star' : 'star-border'}
+                            size={ICON}
+                            color={inheritedFrom ? c.ink3 : starred ? c.accent : c.ink2}
+                        />
+                    </RowControl>
+                ) : null}
                 {onNotPreferred ? (
                     <RowControl
                         testID={`${testID}-hide`}
@@ -169,9 +168,18 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
                             color={notPreferred ? c.negative : c.ink2}
                         />
                     </RowControl>
-                ) : (
-                    <View style={styles.control} />
-                )}
+                ) : null}
+                {onRemove ? (
+                    <RowControl
+                        testID={`${testID}-remove`}
+                        label={t('you.fact.places.remove', { place: shown })}
+                        selected={false}
+                        busy={busy}
+                        onPress={() => onRemove(shown)}
+                    >
+                        <MaterialIcons name="close" size={ICON} color={c.ink2} />
+                    </RowControl>
+                ) : null}
             </View>
             {footer}
         </View>

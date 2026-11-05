@@ -343,9 +343,9 @@
     "sourcesSkip": "略過",
     "sourcesLoadError": "無法載入來源。",
     "sourcesOffline": "你目前離線。之後可以在「來源」中新增來源。",
-    "sourcesSearchHint": "搜尋出版物或國家。",
     "iSubscribe": "我已訂閱",
-    "iSubscribeA11y": "我已訂閱 {{publisher}}"
+    "iSubscribeA11y": "我已訂閱 {{publisher}}",
+    "sourcesFind": "搜尋出版物"
   },
   "notifications": {
     "title": "通知",
@@ -2070,7 +2070,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "為出版物加上星號",
-            "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。為國家加上星號，即可同時套用到它的所有出版物。",
+            "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。",
             "ask": "「優先」和「不想看」有什麼不同？"
           },
           "mute-is-not-a-downrank": {
@@ -2742,7 +2742,7 @@
     "notPreferHint": "從你的資訊流中隱藏其文章",
     "includedWith": "已納入 {{country}}",
     "includedWithA11y": "優先，已納入 {{country}}",
-    "includedWithHelp": "已納入 {{country}}。若要更改，請移除 {{country}} 的星號。"
+    "includedWithHelp": "已納入 {{country}}。若要更改，請在「來源」中移除 {{country}}。"
   },
   "nav": {
     "page": {
@@ -2933,9 +2933,7 @@
       "title": "來源",
       "find": "搜尋出版物或國家",
       "footnote": "輕點一項即可更改。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
-      "empty": "你還沒有挑選任何來源。搜尋出版物或國家，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
-      "preferCountryA11y": "優先顯示來自 {{country}} 的來源",
-      "countryHint": "開啟 {{country}} 的來源",
+      "empty": "你還沒有挑選任何來源。搜尋出版物，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
       "countryCleared": "已取消 {{country}} 的優先設定",
       "saveError": "無法儲存這項設定。請再試一次。"
     },

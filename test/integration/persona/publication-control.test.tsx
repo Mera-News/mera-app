@@ -102,7 +102,7 @@ describe('the publication page control', () => {
         await waitFor(() => expect(up().props.accessibilityState).toMatchObject({ selected: true }));
         await press(up());
         expect(await kinds()).toEqual(['none', 'none']);
-        expect(screen.getByText('Included with Germany. To change this, remove the star from Germany.')).toBeTruthy();
+        expect(screen.getByText('Included with Germany. To change this, remove Germany in Sources.')).toBeTruthy();
     });
 });
 

@@ -61,8 +61,8 @@
 //     `government` → "Government source", `regulator` → "Official agency"
 //     (`components/custom/config-panel/SourcesL2PublicationList.tsx:55-72`).
 //   • A publication is Preferred (a star), Not preferred or neither. A country
-//     has a star only. There is no "Fewer" and no arrows, so no chapter may
-//     teach either.
+//     has no star: readers open it and choose per publication. There is no
+//     "Fewer" and no arrows. No chapter may teach any of these.
 //   • Not preferred hides a publication from the Feed only: World and related
 //     stories still show it, so no copy may say "everywhere".
 //   • Structured "not interested" filters match one article field by exact

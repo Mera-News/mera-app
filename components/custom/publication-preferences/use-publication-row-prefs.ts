@@ -25,7 +25,8 @@ export interface RowPublisher {
     readonly sourceNames?: readonly string[];
 }
 
-export interface RowCountry {
+/** A stored country row, such as one chat wrote. */
+export interface StoredCountry {
     readonly alpha2: string;
     readonly alpha3: string;
     /** The English name the scope row stores. */
@@ -35,7 +36,7 @@ export interface RowCountry {
 /**
  * Star and Not preferred for a list of rows, on ONE observation of the
  * preference rows (a row per publication would be one per list item). Spread
- * `publisherRow` or `countryRow` onto a `PublicationControlRow`, and mount one
+ * `publisherRow` or `storedCountryRow` onto a `PublicationControlRow`, and mount one
  * `InheritedStarHelp` with `helpCountry` beside the list.
  */
 export function usePublicationRowPrefs() {
@@ -117,18 +118,15 @@ export function usePublicationRowPrefs() {
         };
     };
 
-    const countryRow = (c: RowCountry) => {
-        // No names: the question is only whether the country itself is preferred.
-        const starred = isStarInherited(rows, [], c.alpha3);
+    // A country is never offered as a preference. A row chat or an older build
+    // stored still ranks its publications, so a reader must be able to take it off.
+    const storedCountryRow = (c: StoredCountry) => {
         const key = `country:${c.alpha3}`;
         const target = { kind: 'country' as const, countryAlpha2: c.alpha2, label: c.label };
         return {
-            starred,
-            countryName: c.label,
             busy: busy.has(key),
-            onStar: (shownAs: string) => {
+            onRemove: (shownAs: string) => {
                 void run(key, async () => {
-                    if (!starred) return (await setSourcePrefFromUi(target, 'prioritised')).applied;
                     const res = await setSourcePrefFromUi(target, 'none');
                     if (res.applied) {
                         toastManager.showUndoToast({
@@ -146,5 +144,5 @@ export function usePublicationRowPrefs() {
     };
 
     const closeHelp = useCallback(() => setHelpCountry(null), []);
-    return { publisherRow, countryRow, helpCountry, closeHelp };
+    return { publisherRow, storedCountryRow, helpCountry, closeHelp };
 }

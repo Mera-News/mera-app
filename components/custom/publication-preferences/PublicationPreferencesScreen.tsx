@@ -65,10 +65,10 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 const country = { alpha2, alpha3: pref.scopeValue, label: pref.publicationName };
                 return (
                     <PublicationControlRow
-                        {...prefs.countryRow(country)}
+                        {...prefs.storedCountryRow(country)}
                         rawName={localizedCountryName(pref.scopeValue, appLanguage)}
                         flag={flagForAlpha2(alpha2)}
-                        subtitle={t('publicationPrefs.scopeKindCountry')}
+                        subtitle={`${t('publicationPrefs.scopeKindCountry')} · ${t('publicationPage.preferred')}`}
                         onPress={() =>
                             router.push({
                                 pathname: '/logged-in/sources-publishers',

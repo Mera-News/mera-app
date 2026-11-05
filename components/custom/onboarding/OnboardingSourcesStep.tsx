@@ -30,7 +30,6 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
     const flow = useSubscribeFlow();
     const { publications, scopes } = useAdjustedSources();
     const [focused, setFocused] = useState(false);
-    const [typed, setTyped] = useState(false);
     const keyboard = useReanimatedKeyboardAnimation();
     const lift = useAnimatedStyle(() => ({ paddingBottom: keyboardLift(keyboard.height.value, insets.bottom) }));
 
@@ -89,11 +88,9 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
                     </Animated.View>
                 ) : null}
                 <Animated.View layout={LinearTransition}>
-                    <SourceSearch onboarding footerFor={footerFor} onActiveChange={setTyped} onFocusChange={setFocused} />
+                    <SourceSearch onboarding footerFor={footerFor} onFocusChange={setFocused} />
                     {!online ? (
                         <RNText style={[styles.hint, { color: colors.ink2 }]}>{t('onboarding.sourcesOffline')}</RNText>
-                    ) : !typed ? (
-                        <RNText style={[styles.hint, { color: colors.ink2 }]}>{t('onboarding.sourcesSearchHint')}</RNText>
                     ) : null}
                 </Animated.View>
             </ScrollView>

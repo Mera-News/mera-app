@@ -362,9 +362,9 @@
     "sourcesSkip": "Passer",
     "sourcesLoadError": "Impossible de charger les sources.",
     "sourcesOffline": "Vous êtes hors connexion. Vous pourrez ajouter des sources plus tard dans Sources.",
-    "sourcesSearchHint": "Recherchez une publication ou un pays.",
     "iSubscribe": "J'ai un abonnement",
-    "iSubscribeA11y": "J'ai un abonnement à {{publisher}}"
+    "iSubscribeA11y": "J'ai un abonnement à {{publisher}}",
+    "sourcesFind": "Trouver une publication"
   },
   "notifications": {
     "title": "Notifications",
@@ -2102,7 +2102,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Ajouter une étoile à une publication",
-            "body": "Ouvrez un pays et chaque publication a une étoile. L'étoile la fait remonter dans votre fil d'actu. Ajoutez une étoile à un pays pour faire de même pour toutes ses publications.",
+            "body": "Ouvrez un pays et chaque publication a une étoile. L'étoile la fait remonter dans votre fil d'actu.",
             "ask": "Quelle est la différence entre « Préférée » et « Non préférée » ?"
           },
           "mute-is-not-a-downrank": {
@@ -2774,7 +2774,7 @@
     "notPreferHint": "Masque ses articles de votre fil d'actu",
     "includedWith": "Incluse avec {{country}}",
     "includedWithA11y": "Préférée, incluse avec {{country}}",
-    "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez l'étoile de {{country}}."
+    "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez {{country}} dans Sources."
   },
   "nav": {
     "page": {
@@ -2966,9 +2966,7 @@
       "title": "Sources",
       "find": "Trouver une publication ou un pays",
       "footnote": "Touchez-en une pour la modifier. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
-      "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication ou un pays à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
-      "preferCountryA11y": "Privilégier les sources de {{country}}",
-      "countryHint": "Ouvre les sources de {{country}}",
+      "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
       "countryCleared": "{{country}} ne fait plus partie de vos préférences",
       "saveError": "Impossible d'enregistrer cela. Réessayez."
     },

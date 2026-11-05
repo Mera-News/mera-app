@@ -4,7 +4,7 @@ import { localizedCountryName, searchSourceCountries } from '@/components/custom
 describe('searchSourceCountries', () => {
     it('finds Germany by its German name when the app is German', () => {
         const hit = searchSourceCountries('Deutschland', 'de')[0];
-        expect(hit).toMatchObject({ alpha2: 'DE', alpha3: 'DEU', name: 'Deutschland', label: 'Germany' });
+        expect(hit).toMatchObject({ alpha2: 'DE', alpha3: 'DEU', name: 'Deutschland' });
     });
 
     it.each([

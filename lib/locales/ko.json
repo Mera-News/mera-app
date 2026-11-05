@@ -343,9 +343,9 @@
     "sourcesSkip": "건너뛰기",
     "sourcesLoadError": "소스를 불러오지 못했어요.",
     "sourcesOffline": "오프라인 상태예요. 나중에 소스 화면에서 추가할 수 있어요.",
-    "sourcesSearchHint": "매체나 국가를 검색하세요.",
     "iSubscribe": "구독 중이에요",
-    "iSubscribeA11y": "{{publisher}} 구독 중"
+    "iSubscribeA11y": "{{publisher}} 구독 중",
+    "sourcesFind": "매체 찾기"
   },
   "notifications": {
     "title": "알림",
@@ -2070,7 +2070,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "매체에 별표 달기",
-            "body": "국가를 열면 모든 매체에 별표가 있어요. 별표를 누르면 피드에서 그 매체가 위로 올라가요. 국가에 별표를 달면 그 국가의 모든 매체도 똑같이 적용돼요.",
+            "body": "국가를 열면 모든 매체에 별표가 있어요. 별표를 누르면 피드에서 그 매체가 위로 올라가요.",
             "ask": "선호와 선호 안 함은 어떻게 다른가요?"
           },
           "mute-is-not-a-downrank": {
@@ -2742,7 +2742,7 @@
     "notPreferHint": "기사를 내 피드에서 숨기기",
     "includedWith": "{{country}}에 포함됨",
     "includedWithA11y": "선호, {{country}}에 포함됨",
-    "includedWithHelp": "{{country}}에 포함돼 있어요. 바꾸려면 {{country}}의 별표를 해제하세요."
+    "includedWithHelp": "{{country}}에 포함돼 있어요. 바꾸려면 소스에서 {{country}} 항목을 삭제하세요."
   },
   "nav": {
     "page": {
@@ -2933,9 +2933,7 @@
       "title": "소스",
       "find": "매체나 국가 찾기",
       "footnote": "눌러서 바꿀 수 있어요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
-      "empty": "아직 고른 소스가 없어요. 매체나 국가를 검색해서 선호로 지정하거나 내 피드에서 숨겨 보세요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
-      "preferCountryA11y": "{{country}} 소스 선호하기",
-      "countryHint": "{{country}}의 소스 열기",
+      "empty": "아직 고른 소스가 없어요. 매체를 검색해서 선호로 지정하거나 내 피드에서 숨겨 보세요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
       "countryCleared": "{{country}} 선호가 해제됐어요",
       "saveError": "저장하지 못했어요. 다시 시도해 주세요."
     },

@@ -343,9 +343,9 @@
     "sourcesSkip": "Lewati",
     "sourcesLoadError": "Tidak dapat memuat sumber.",
     "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
-    "sourcesSearchHint": "Cari publikasi atau negara.",
     "iSubscribe": "Saya berlangganan",
-    "iSubscribeA11y": "Saya berlangganan {{publisher}}"
+    "iSubscribeA11y": "Saya berlangganan {{publisher}}",
+    "sourcesFind": "Cari publikasi"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -2070,7 +2070,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Beri bintang pada publikasi",
-            "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda. Beri bintang pada negara untuk melakukan hal yang sama pada semua publikasinya.",
+            "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda.",
             "ask": "Apa bedanya Diutamakan dan Jangan tampilkan?"
           },
           "mute-is-not-a-downrank": {
@@ -2742,7 +2742,7 @@
     "notPreferHint": "Menyembunyikan artikelnya dari umpan Anda",
     "includedWith": "Termasuk dalam {{country}}",
     "includedWithA11y": "Diutamakan, termasuk dalam {{country}}",
-    "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus bintang dari {{country}}."
+    "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus {{country}} di Sumber."
   },
   "nav": {
     "page": {
@@ -2933,9 +2933,7 @@
       "title": "Sumber",
       "find": "Cari publikasi atau negara",
       "footnote": "Ketuk salah satu untuk mengubahnya. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
-      "empty": "Anda belum memilih sumber apa pun. Cari publikasi atau negara untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
-      "preferCountryA11y": "Utamakan sumber dari {{country}}",
-      "countryHint": "Membuka sumber dari {{country}}",
+      "empty": "Anda belum memilih sumber apa pun. Cari publikasi untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
       "countryCleared": "{{country}} tidak lagi diutamakan",
       "saveError": "Tidak dapat menyimpan itu. Coba lagi."
     },

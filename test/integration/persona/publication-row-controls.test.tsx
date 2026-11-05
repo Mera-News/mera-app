@@ -40,7 +40,7 @@ const Harness: React.FC<{ readonly withCountry?: boolean }> = ({ withCountry }) 
     return (
         <>
             <PublicationControlRow {...prefs.publisherRow(HIT)} rawName={HIT.rawName} onPress={() => undefined} testID="row" />
-            {withCountry ? <PublicationControlRow {...prefs.countryRow(GERMANY)} rawName={GERMANY.label} testID="country" /> : null}
+            {withCountry ? <PublicationControlRow {...prefs.storedCountryRow(GERMANY)} rawName={GERMANY.label} testID="country" /> : null}
             <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />
         </>
     );
@@ -166,29 +166,31 @@ describe('star and Not preferred on a publication row', () => {
 });
 
 describe('a preferred country', () => {
-    it('the star writes one country row and clearing it offers Undo', async () => {
+    const scope = { scopeKind: 'country', scopeValue: 'DEU' } as const;
+
+    it('a stored row offers no star and no hide, only remove, and Undo puts it back', async () => {
+        await setScopePreferenceKind(scope, 'boost', 'Germany', 'user');
         await render(<Harness withCountry />);
-        await press(screen.getByTestId('country-star'));
-        await waitFor(async () =>
-            expect(await getScopePreferenceKind({ scopeKind: 'country', scopeValue: 'DEU' })).toBe('boost'),
-        );
-        await press(screen.getByTestId('country-star'));
-        await waitFor(async () =>
-            expect(await getScopePreferenceKind({ scopeKind: 'country', scopeValue: 'DEU' })).toBe('none'),
-        );
+        expect(screen.queryByTestId('country-star')).toBeNull();
+        expect(screen.queryByTestId('country-hide')).toBeNull();
+        expect(screen.getByTestId('country-remove').props.accessibilityLabel).toBe('Remove Germany');
+        await press(screen.getByTestId('country-remove'));
+        await waitFor(async () => expect(await getScopePreferenceKind(scope)).toBe('none'));
         const opts = undoToast.mock.calls[0][0];
         expect(opts.title).toBe('Germany is no longer preferred');
         await act(async () => {
             await opts.onUndo();
         });
-        await waitFor(async () =>
-            expect(await getScopePreferenceKind({ scopeKind: 'country', scopeValue: 'DEU' })).toBe('boost'),
-        );
+        await waitFor(async () => expect(await getScopePreferenceKind(scope)).toBe('boost'));
     });
 
-    it('has no Not preferred control', async () => {
+    it('removing the stored row ends the inherited star on its publications', async () => {
+        catalogue();
+        await setScopePreferenceKind(scope, 'boost', 'Germany', 'user');
         await render(<Harness withCountry />);
-        expect(screen.queryByTestId('country-hide')).toBeNull();
+        await waitFor(() => expect(star().props.accessibilityLabel).toBe('Preferred, included with Germany'));
+        await press(screen.getByTestId('country-remove'));
+        await waitFor(() => expect(star().props.accessibilityLabel).toBe('Prefer Der Spiegel'));
     });
 
     it('its publications inherit a star that opens help and writes nothing, and can still be hidden', async () => {
@@ -199,7 +201,7 @@ describe('a preferred country', () => {
         expect(star().props.accessibilityLabel).toBe('Preferred, included with Germany');
         await press(star());
         expect(await kinds()).toEqual(['none', 'none']);
-        expect(screen.getByText('Included with Germany. To change this, remove the star from Germany.')).toBeTruthy();
+        expect(screen.getByText('Included with Germany. To change this, remove Germany in Sources.')).toBeTruthy();
         await press(hide());
         await waitFor(async () => expect(await kinds()).toEqual(['mute', 'mute']));
         await waitFor(() => expect(screen.getByTestId('row').props.accessibilityLabel).toBe('Der Spiegel'));

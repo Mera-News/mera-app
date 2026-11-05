@@ -357,9 +357,9 @@
     "sourcesSkip": "Salta",
     "sourcesLoadError": "Impossibile caricare le fonti.",
     "sourcesOffline": "Sei offline. Puoi aggiungere fonti più tardi in Fonti.",
-    "sourcesSearchHint": "Cerca una pubblicazione o un paese.",
     "iSubscribe": "Ho un abbonamento",
-    "iSubscribeA11y": "Ho un abbonamento a {{publisher}}"
+    "iSubscribeA11y": "Ho un abbonamento a {{publisher}}",
+    "sourcesFind": "Trova una pubblicazione"
   },
   "notifications": {
     "title": "Notifiche",
@@ -2096,7 +2096,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Dai una stella a una pubblicazione",
-            "body": "Apri un paese e ogni pubblicazione ha una stella. Una stella la sposta più in alto nelle tue Notizie. Metti una stella al paese per fare lo stesso con tutte le sue pubblicazioni.",
+            "body": "Apri un paese e ogni pubblicazione ha una stella. Una stella la sposta più in alto nelle tue Notizie.",
             "ask": "Qual è la differenza tra Preferita e Non preferita?"
           },
           "mute-is-not-a-downrank": {
@@ -2768,7 +2768,7 @@
     "notPreferHint": "Nasconde i suoi articoli dalle tue Notizie",
     "includedWith": "Inclusa con {{country}}",
     "includedWithA11y": "Preferita, inclusa con {{country}}",
-    "includedWithHelp": "Inclusa con {{country}}. Per cambiarlo, togli la stella a {{country}}."
+    "includedWithHelp": "Inclusa con {{country}}. Per cambiarlo, togli {{country}} in Fonti."
   },
   "nav": {
     "page": {
@@ -2960,9 +2960,7 @@
       "title": "Fonti",
       "find": "Trova una pubblicazione o un paese",
       "footnote": "Tocca una voce per cambiarla. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
-      "empty": "Non hai ancora scelto nessuna fonte. Cerca una pubblicazione o un paese da preferire o nascondere dalle tue Notizie. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
-      "preferCountryA11y": "Dai la precedenza alle fonti di {{country}}",
-      "countryHint": "Apre le fonti di {{country}}",
+      "empty": "Non hai ancora scelto nessuna fonte. Cerca una pubblicazione da preferire o nascondere dalle tue Notizie. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
       "countryCleared": "{{country}} non è più tra le tue preferenze",
       "saveError": "Non è stato possibile salvare. Riprova."
     },

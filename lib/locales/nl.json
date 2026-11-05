@@ -355,9 +355,9 @@
     "sourcesSkip": "Overslaan",
     "sourcesLoadError": "Kon de bronnen niet laden.",
     "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
-    "sourcesSearchHint": "Zoek naar een publicatie of land.",
     "iSubscribe": "Ik heb een abonnement",
-    "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}"
+    "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}",
+    "sourcesFind": "Zoek een publicatie"
   },
   "notifications": {
     "title": "Meldingen",
@@ -2090,7 +2090,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Geef een publicatie een ster",
-            "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed. Geef een land een ster om hetzelfde te doen voor al zijn publicaties.",
+            "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed.",
             "ask": "Wat is het verschil tussen Voorkeur en Liever niet?"
           },
           "mute-is-not-a-downrank": {
@@ -2762,7 +2762,7 @@
     "notPreferHint": "Verbergt de artikelen uit je feed",
     "includedWith": "Inbegrepen bij {{country}}",
     "includedWithA11y": "Voorkeur, inbegrepen bij {{country}}",
-    "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je de ster bij {{country}}."
+    "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je {{country}} bij Bronnen."
   },
   "nav": {
     "page": {
@@ -2954,9 +2954,7 @@
       "title": "Bronnen",
       "find": "Zoek een publicatie of land",
       "footnote": "Tik op een item om het te wijzigen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
-      "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie of land om er een voorkeur aan te geven of het uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
-      "preferCountryA11y": "Voorkeur geven aan bronnen uit {{country}}",
-      "countryHint": "Opent bronnen uit {{country}}",
+      "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie om er een voorkeur aan te geven of haar uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
       "countryCleared": "{{country}} staat niet meer bij je voorkeuren",
       "saveError": "Dat kon niet worden opgeslagen. Probeer het opnieuw."
     },

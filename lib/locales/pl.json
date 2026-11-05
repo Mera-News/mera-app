@@ -397,9 +397,9 @@
     "sourcesSkip": "Pomiń",
     "sourcesLoadError": "Nie udało się wczytać źródeł.",
     "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
-    "sourcesSearchHint": "Wyszukaj wydawcę lub kraj.",
     "iSubscribe": "Subskrybuję",
-    "iSubscribeA11y": "Subskrybuję {{publisher}}"
+    "iSubscribeA11y": "Subskrybuję {{publisher}}",
+    "sourcesFind": "Szukaj wydawcy"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -2170,7 +2170,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Oznacz wydawcę gwiazdką",
-            "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu. Oznacz kraj gwiazdką, aby zrobić to samo dla wszystkich jego wydawców.",
+            "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu.",
             "ask": "Jaka jest różnica między „Preferowany” a „Niepreferowany”?"
           },
           "mute-is-not-a-downrank": {
@@ -2862,7 +2862,7 @@
     "notPreferHint": "Ukrywa jego artykuły w twoim Strumieniu",
     "includedWith": "Razem z krajem: {{country}}",
     "includedWithA11y": "Preferowany, razem z krajem: {{country}}",
-    "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, zdejmij gwiazdkę z kraju: {{country}}."
+    "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, usuń kraj w Źródłach: {{country}}."
   },
   "nav": {
     "page": {
@@ -3092,9 +3092,7 @@
       "title": "Źródła",
       "find": "Szukaj wydawcy lub kraju",
       "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
-      "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę lub kraj, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
-      "preferCountryA11y": "Preferuj źródła z kraju: {{country}}",
-      "countryHint": "Otwiera źródła z kraju: {{country}}",
+      "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
       "countryCleared": "Cofnięto preferencję: {{country}}",
       "saveError": "Nie udało się zapisać. Spróbuj ponownie."
     },

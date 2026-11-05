@@ -1,6 +1,7 @@
 import { useRestartHold } from '@/lib/app-restart';
 import { alpha3ToAlpha2, flagForAlpha2 } from '@/components/custom/locations/location-display';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
+import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
 import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
 import { searchSourceCountries } from '@/components/custom/publication-preferences/country-search';
 import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
@@ -26,15 +27,16 @@ const MIN_QUERY_LENGTH = 2;
 
 /**
  * "Find a publication" on the Sources screen and in onboarding. A result is
- * the shared source row (star, Not preferred) and opens the publication page;
- * a country that matches sits above and opens the country page. Every state is named
+ * the shared source row (star, Not preferred) and opens the publication page.
+ * On Sources a country that matches sits above and opens the country page; in
+ * onboarding that would leave the wizard, so it offers none. Every state is named
  * (too short, searching, none, failed): a search box that shows nothing reads
  * as broken. Nothing typed is stored.
  */
 const SourceSearch: React.FC<{
     /** True while the box holds a query, so the screen can hide its empty state. */
     readonly onActiveChange?: (active: boolean) => void;
-    /** Onboarding: rows have no body button, and a failed search offers Try again. */
+    /** Onboarding: publications only, rows have no body button, and a failed search offers Try again. */
     readonly onboarding?: boolean;
     /** Under a publication row, such as onboarding's "I subscribe". */
     readonly footerFor?: (hit: PublisherSearchHit) => ReactNode;
@@ -86,9 +88,10 @@ const SourceSearch: React.FC<{
     }, [trimmed, attempt]);
 
     const countryHits = useMemo(
-        () => (trimmed.length >= MIN_QUERY_LENGTH ? searchSourceCountries(trimmed, appLanguage) : []),
-        [trimmed, appLanguage],
+        () => (!onboarding && trimmed.length >= MIN_QUERY_LENGTH ? searchSourceCountries(trimmed, appLanguage) : []),
+        [onboarding, trimmed, appLanguage],
     );
+    const findLabel = t(onboarding ? 'onboarding.sourcesFind' : 'you.sources.find');
     const typed = query.trim().length > 0;
     const tooShort = typed && trimmed.length < MIN_QUERY_LENGTH;
     useEffect(() => {
@@ -107,8 +110,8 @@ const SourceSearch: React.FC<{
                         testID="sources-search"
                         value={query}
                         onChangeText={setQuery}
-                        placeholder={t('you.sources.find')}
-                        accessibilityLabel={t('you.sources.find')}
+                        placeholder={findLabel}
+                        accessibilityLabel={findLabel}
                         autoCapitalize="none"
                         autoCorrect={false}
                         onFocus={() => onFocusChange?.(true)}
@@ -142,20 +145,16 @@ const SourceSearch: React.FC<{
 
             {!tooShort
                 ? countryHits.map((c) => (
-                      <PublicationControlRow
+                      <PublicationListRow
                           key={c.alpha3}
-                          {...prefs.countryRow(c)}
                           rawName={c.name}
                           flag={flagForAlpha2(c.alpha2) || null}
                           subtitle={t('publicationPrefs.scopeKindCountry')}
-                          onPress={
-                              onboarding
-                                  ? undefined
-                                  : () =>
-                                        router.push({
-                                            pathname: '/logged-in/sources-publishers',
-                                            params: { countryCode: c.alpha3, countryName: c.name },
-                                        })
+                          onPress={() =>
+                              router.push({
+                                  pathname: '/logged-in/sources-publishers',
+                                  params: { countryCode: c.alpha3, countryName: c.name },
+                              })
                           }
                           testID={`sources-country-${c.alpha3}`}
                       />

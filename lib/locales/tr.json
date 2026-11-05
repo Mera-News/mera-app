@@ -355,9 +355,9 @@
     "sourcesSkip": "Atla",
     "sourcesLoadError": "Kaynaklar yüklenemedi.",
     "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
-    "sourcesSearchHint": "Bir yayın veya ülke arayın.",
     "iSubscribe": "Abone oldum",
-    "iSubscribeA11y": "{{publisher}} yayınına abone oldum"
+    "iSubscribeA11y": "{{publisher}} yayınına abone oldum",
+    "sourcesFind": "Bir yayın bulun"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -2092,7 +2092,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Bir yayını yıldızlayın",
-            "body": "Bir ülkeyi açtığınızda her yayının yanında bir yıldız bulunur. Yıldız, yayını Akışınızda yukarı taşır. Bir ülkeye yıldız verirseniz, aynısı o ülkenin tüm yayınları için de yapılır.",
+            "body": "Bir ülkeyi açtığınızda her yayının yanında bir yıldız bulunur. Yıldız, yayını Akışınızda yukarı taşır.",
             "ask": "Tercih edilen ile Tercih edilmeyen arasındaki fark nedir?"
           },
           "mute-is-not-a-downrank": {
@@ -2764,7 +2764,7 @@
     "notPreferHint": "Makalelerini Akışınızdan gizler",
     "includedWith": "{{country}} ile birlikte dahil",
     "includedWithA11y": "Tercih edilen, {{country}} ile birlikte dahil",
-    "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için {{country}} ülkesinin yıldızını kaldırın."
+    "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için Kaynaklar bölümünden {{country}} ülkesini kaldırın."
   },
   "nav": {
     "page": {
@@ -2956,9 +2956,7 @@
       "title": "Kaynaklar",
       "find": "Bir yayın veya ülke bulun",
       "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
-      "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını veya ülkeyi aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
-      "preferCountryA11y": "{{country}} ülkesinin kaynaklarını tercih edin",
-      "countryHint": "{{country}} ülkesinin kaynaklarını açar",
+      "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
       "countryCleared": "{{country}} artık tercih edilen değil",
       "saveError": "Bu kaydedilemedi. Lütfen tekrar deneyin."
     },

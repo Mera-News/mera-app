@@ -357,9 +357,9 @@
     "sourcesSkip": "Omitir",
     "sourcesLoadError": "No se pudieron cargar las fuentes.",
     "sourcesOffline": "Estás sin conexión. Puedes añadir fuentes más tarde en Fuentes.",
-    "sourcesSearchHint": "Busca una publicación o un país.",
     "iSubscribe": "Tengo una suscripción",
-    "iSubscribeA11y": "Tengo una suscripción a {{publisher}}"
+    "iSubscribeA11y": "Tengo una suscripción a {{publisher}}",
+    "sourcesFind": "Busca una publicación"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -2096,7 +2096,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Dale una estrella a una publicación",
-            "body": "Abre un país y cada publicación tiene una estrella. Una estrella la sube en tus Noticias. Pon una estrella a un país para hacer lo mismo con todas sus publicaciones.",
+            "body": "Abre un país y cada publicación tiene una estrella. Una estrella la sube en tus Noticias.",
             "ask": "¿Cuál es la diferencia entre Preferida y No preferida?"
           },
           "mute-is-not-a-downrank": {
@@ -2768,7 +2768,7 @@
     "notPreferHint": "Oculta sus artículos de tus Noticias",
     "includedWith": "Incluida con {{country}}",
     "includedWithA11y": "Preferida, incluida con {{country}}",
-    "includedWithHelp": "Incluida con {{country}}. Para cambiarlo, quita la estrella de {{country}}."
+    "includedWithHelp": "Incluida con {{country}}. Para cambiarlo, quita {{country}} en Fuentes."
   },
   "nav": {
     "page": {
@@ -2960,9 +2960,7 @@
       "title": "Fuentes",
       "find": "Busca una publicación o un país",
       "footnote": "Toca una para cambiarla. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
-      "empty": "Aún no has elegido ninguna fuente. Busca una publicación o un país para preferir u ocultar de tus Noticias. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
-      "preferCountryA11y": "Preferir fuentes de {{country}}",
-      "countryHint": "Abre las fuentes de {{country}}",
+      "empty": "Aún no has elegido ninguna fuente. Busca una publicación para preferirla u ocultarla de tus Noticias. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
       "countryCleared": "{{country}} ya no está entre tus preferencias",
       "saveError": "No se pudo guardar. Inténtalo de nuevo."
     },

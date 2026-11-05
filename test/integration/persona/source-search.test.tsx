@@ -87,6 +87,15 @@ describe('Sources search', () => {
         });
     });
 
+    it('a country row has no star and no Not preferred', async () => {
+        server.use(answer([]));
+        await render(<SourceSearch />);
+        await type('france');
+        await screen.findByTestId('sources-country-FRA', {}, SLOW);
+        expect(screen.queryByTestId('sources-country-FRA-star')).toBeNull();
+        expect(screen.queryByTestId('sources-country-FRA-hide')).toBeNull();
+    });
+
     it('stars and hides a publication straight from a hit', async () => {
         catalogue();
         server.use(answer([hit]));
@@ -115,6 +124,21 @@ describe('Sources search', () => {
         await render(<SourceSearch />);
         await type('zzqq');
         await screen.findByText(NO_RESULTS, {}, SLOW);
+    });
+
+    it('onboarding finds publications only, and says so in the field', async () => {
+        server.use(answer([hit]));
+        await render(<SourceSearch onboarding />);
+        expect(screen.getByTestId('sources-search').props.placeholder).toBe('Find a publication');
+        await type('france');
+        await screen.findByTestId('sources-hit-pub-1-body', {}, SLOW);
+        expect(screen.queryByTestId('sources-country-FRA')).toBeNull();
+    });
+
+    it('Sources keeps the field that names countries', async () => {
+        server.use(answer([]));
+        await render(<SourceSearch />);
+        expect(screen.getByTestId('sources-search').props.placeholder).toBe('Find a publication or country');
     });
 
     it('onboarding rows have no body button', async () => {

@@ -5,9 +5,7 @@ import { VStack } from '@/components/ui/vstack';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { hostOf } from '@/components/custom/publication-page/publication-format';
 import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
-import { getCountryName } from '@/lib/algorithms/country-utils';
 import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
-import { alpha3ToAlpha2, flagForAlpha2 } from '@/components/custom/locations/location-display';
 import { appendNewPublishers } from '@/lib/algorithms/append-new-publishers';
 import logger from '@/lib/logger';
 import type { NewsPublisher } from '@/lib/source-service';
@@ -122,17 +120,6 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         []
     );
 
-    const alpha2 = alpha3ToAlpha2(countryCode);
-    const countryHeader = alpha2 ? (
-        <PublicationControlRow
-            {...prefs.countryRow({ alpha2, alpha3: countryCode, label: getCountryName(countryCode) })}
-            rawName={countryName}
-            flag={flagForAlpha2(alpha2) || null}
-            subtitle={t('publicationPrefs.scopeKindCountry')}
-            testID="sources-country-header"
-        />
-    ) : null;
-
     const ListFooterComponent = useCallback(() => {
         if (isLoadingMore) {
             return (
@@ -168,7 +155,6 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                     showsVerticalScrollIndicator={false}
                     onEndReached={loadMore}
                     onEndReachedThreshold={0.5}
-                    ListHeaderComponent={countryHeader ?? undefined}
                     ListFooterComponent={ListFooterComponent}
                 />
             )}

@@ -343,9 +343,9 @@
     "sourcesSkip": "スキップ",
     "sourcesLoadError": "ソースを読み込めませんでした。",
     "sourcesOffline": "オフラインです。後からソースを追加できます。",
-    "sourcesSearchHint": "公開元または国を検索してください。",
     "iSubscribe": "購読しています",
-    "iSubscribeA11y": "{{publisher}}を購読しています"
+    "iSubscribeA11y": "{{publisher}}を購読しています",
+    "sourcesFind": "公開元を検索"
   },
   "notifications": {
     "title": "通知",
@@ -2070,7 +2070,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "公開元に星を付ける",
-            "body": "国を開くと、すべての公開元に星があります。星を付けると、その公開元がフィードの上位に表示されます。国に星を付けると、その国のすべての公開元にも同じことが適用されます。",
+            "body": "国を開くと、すべての公開元に星があります。星を付けると、その公開元がフィードの上位に表示されます。",
             "ask": "「優先」と「表示しない」の違いは何ですか？"
           },
           "mute-is-not-a-downrank": {
@@ -2742,7 +2742,7 @@
     "notPreferHint": "記事をフィードから非表示にする",
     "includedWith": "{{country}}に含まれています",
     "includedWithA11y": "優先、{{country}}に含まれています",
-    "includedWithHelp": "{{country}}に含まれています。変更するには、{{country}}の星を外してください。"
+    "includedWithHelp": "{{country}}に含まれています。変更するには、ソースで{{country}}を削除してください。"
   },
   "nav": {
     "page": {
@@ -2933,9 +2933,7 @@
       "title": "ソース",
       "find": "公開元または国を検索",
       "footnote": "変更するには、どれかをタップしてください。記事の•••メニューの「表示しない」も、ここに表示されます。",
-      "empty": "まだソースを選んでいません。公開元か国を検索して、優先したり、フィードから非表示にしたりできます。記事の•••メニューの「表示しない」も、ここに表示されます。",
-      "preferCountryA11y": "{{country}}のソースを優先する",
-      "countryHint": "{{country}}のソースを開く",
+      "empty": "まだソースを選んでいません。公開元を検索して、優先したり、フィードから非表示にしたりできます。記事の•••メニューの「表示しない」も、ここに表示されます。",
       "countryCleared": "{{country}}は優先されなくなりました",
       "saveError": "保存できませんでした。もう一度お試しください。"
     },

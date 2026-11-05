@@ -343,9 +343,9 @@
     "sourcesSkip": "Bỏ qua",
     "sourcesLoadError": "Không thể tải nguồn.",
     "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
-    "sourcesSearchHint": "Tìm một nguồn hoặc quốc gia.",
     "iSubscribe": "Tôi đã đăng ký",
-    "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}"
+    "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}",
+    "sourcesFind": "Tìm một nguồn"
   },
   "notifications": {
     "title": "Thông báo",
@@ -2070,7 +2070,7 @@
           },
           "arrows-on-a-publisher": {
             "headline": "Gắn sao cho một nguồn",
-            "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn. Gắn sao cho một quốc gia để làm điều tương tự cho tất cả nguồn của quốc gia đó.",
+            "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn.",
             "ask": "Khác nhau giữa Ưu tiên và Không hiển thị là gì?"
           },
           "mute-is-not-a-downrank": {
@@ -2742,7 +2742,7 @@
     "notPreferHint": "Ẩn các bài viết từ nguồn này khỏi Bảng tin của bạn",
     "includedWith": "Đã bao gồm trong {{country}}",
     "includedWithA11y": "Ưu tiên, đã bao gồm trong {{country}}",
-    "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy bỏ dấu sao ở {{country}}."
+    "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy xóa {{country}} trong Nguồn."
   },
   "nav": {
     "page": {
@@ -2933,9 +2933,7 @@
       "title": "Nguồn",
       "find": "Tìm một nguồn hoặc quốc gia",
       "footnote": "Chạm vào một nguồn để thay đổi. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
-      "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn hoặc quốc gia để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
-      "preferCountryA11y": "Ưu tiên nguồn từ {{country}}",
-      "countryHint": "Mở nguồn từ {{country}}",
+      "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
       "countryCleared": "{{country}} không còn được ưu tiên",
       "saveError": "Không thể lưu. Hãy thử lại."
     },

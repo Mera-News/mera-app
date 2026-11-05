@@ -48,8 +48,6 @@ export interface SourceCountryHit {
     readonly alpha3: string;
     /** In the app language. */
     readonly name: string;
-    /** The English name the scope row stores. */
-    readonly label: string;
 }
 
 const MAX_HITS = 5;
@@ -102,7 +100,7 @@ export function searchSourceCountries(query: string, appLanguage: string): Sourc
                 ? 2
                 : null;
         if (rank === null) continue;
-        found.push({ hit: { alpha2, alpha3, name, label: getCountryName(alpha3) }, rank });
+        found.push({ hit: { alpha2, alpha3, name }, rank });
     }
     found.sort((a, b) => a.rank - b.rank || a.hit.name.localeCompare(b.hit.name));
     return found.slice(0, MAX_HITS).map((f) => f.hit);
