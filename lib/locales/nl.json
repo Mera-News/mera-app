@@ -1260,10 +1260,8 @@
       "paywalled": "Ik kan het niet lezen, het zit achter een betaalmuur",
       "noTrust": "Ik vertrouw het niet",
       "trustTitle": "Je vertrouwt {{site}} niet",
-      "trustLess": "Minder van {{site}} laten zien",
       "trustNever": "{{site}} nooit laten zien",
       "hardToUse": "De site is moeilijk te gebruiken",
-      "fewerSite": "Minder van deze site laten zien",
       "reportTitle": "Ook Mera Labs laten weten over {{site}}?",
       "reportYes": "Ja, stuur het naar Mera Labs",
       "reportNo": "Nee, bedankt",
@@ -1499,7 +1497,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Voorkeur wissen",
     "scopeKindCountry": "Land"
   },
   "optimisationPlan": {
@@ -2689,7 +2686,6 @@
     "following": "Je volgt dit verhaal",
     "checkFacts": "Feitencontrole",
     "fewerFrom": "Minder van {{source}}",
-    "fewerFromDone": "Je ziet minder van {{source}}.",
     "undo": "Ongedaan maken",
     "reportBug": "Bug melden",
     "actionFailed": "Dat lukte niet. Probeer het opnieuw.",
@@ -2700,7 +2696,6 @@
     "support": "Support",
     "supportSub": "Een bug melden, live chat, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Je ziet al minder van {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2750,12 +2745,8 @@
     "newsLoadError": "Artikelen konden niet worden geladen",
     "websiteA11y": "{{host}} openen",
     "aboutSourceA11y": "Over {{source}}",
-    "prefMoreA11y": "Meer van deze bron",
-    "prefFewerA11y": "Minder van deze bron",
     "history": "Geschiedenis",
-    "fewerFrom": "Minder van",
     "historyEmpty": "Geen bezoeken hier in de afgelopen 30 dagen.",
-    "moreFrom": "Meer van",
     "openedCount_one": "Je hebt {{publisher}} één keer geopend in de afgelopen 30 dagen.",
     "openedCount_other": "Je hebt {{publisher}} {{count}} keer geopend in de afgelopen 30 dagen.",
     "openedOn": "Geopend op {{date}}",
@@ -2962,11 +2953,6 @@
     "sources": {
       "title": "Bronnen",
       "find": "Zoek een uitgever",
-      "more": "Meer",
-      "fewer": "Minder",
-      "muted": "Gedempt",
-      "mute": "Dempen",
-      "clear": "Wissen",
       "footnote": "Tik op een publicatie om die aan te passen. „Minder van” in het •••-menu van een artikel komt hier ook terecht.",
       "empty": "Je hebt nog geen bronnen aangepast. Zoek een publicatie om meer, minder of niets van haar te zien. „Minder van” in het •••-menu van een artikel komt hier ook terecht.",
       "preferCountryA11y": "Prefer sources from {{country}}",

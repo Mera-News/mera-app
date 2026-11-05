@@ -1456,10 +1456,8 @@
       "paywalled": "I can't read it, it's paywalled",
       "noTrust": "I don't trust it",
       "trustTitle": "You don't trust {{site}}",
-      "trustLess": "Show less from {{site}}",
       "trustNever": "Never show {{site}}",
       "hardToUse": "The site is hard to use",
-      "fewerSite": "Show fewer from this site",
       "reportTitle": "Also let Mera Labs know about {{site}}?",
       "reportYes": "Yes, send it to Mera Labs",
       "reportNo": "No thanks",
@@ -1726,7 +1724,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Clear preference",
     "scopeKindCountry": "Country"
   },
   "optimisationPlan": {
@@ -1923,7 +1920,7 @@
               },
               "sources": {
                 "label": "Sources",
-                "text": "Publications you want more or fewer of, and the ones you pay for."
+                "text": "Publications you prefer, the ones you hid from your feed, and the ones you pay for."
               }
             }
           }
@@ -2181,14 +2178,14 @@
       },
       "sources": {
         "title": "Choosing your sources",
-        "subtitle": "Badges, arrows, and the one control that is a block.",
+        "subtitle": "Stars, badges, and hiding a source from your feed.",
         "slides": {
           "where-it-lives": {
             "headline": "Where sources live",
-            "body": "One screen for every publication you adjusted.",
+            "body": "One screen for every publication you picked.",
             "steps": {
               "0": "The You tab, then Sources.",
-              "1": "\"Fewer from\" in an article's ••• menu takes effect at once, with Undo, and the publication then shows under Adjusted."
+              "1": "\"Not preferred\" in an article's ••• menu takes effect at once, with Undo, and the publication then shows in Sources."
             },
             "ask": "Where do I manage which sources I see?"
           },
@@ -2211,26 +2208,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "The same arrows, one publisher at a time",
-            "body": "Open a country and every publisher has its own pair. Down is a nudge rather than a wall: a downranked publisher still turns up when it has a story nobody else has.",
-            "ask": "What is the difference between turning a source down and muting it?"
+            "headline": "Star a publication",
+            "body": "Open a country and every publication has a star. A star moves it up your feed. Star a country to do the same for all its publications.",
+            "ask": "What's the difference between Preferred and Not preferred?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Mute is a different thing entirely",
-            "body": "Mute is set on a publication's page, and it is a hard exclusion: those stories are dropped, not merely sorted lower. Tap each card and put it where it belongs.",
+            "headline": "Not preferred hides it from your feed",
+            "body": "Mark a publication Not preferred and its stories leave your feed. World and related stories can still show them. Tap each card and put it where it belongs.",
             "steps": {
-              "0": "Down arrow: shown less often.",
-              "1": "Mute: not shown at all.",
-              "2": "Either can be cleared later, from source preferences."
+              "0": "Star: shown higher up.",
+              "1": "Not preferred: hidden from your feed.",
+              "2": "You can clear either one in Sources."
             },
             "sort": {
               "buckets": {
-                "softer": "Shown less often",
-                "gone": "Kept out entirely"
+                "softer": "Shown higher up",
+                "gone": "Hidden from your feed"
               },
               "cards": {
-                "down-arrow": "The down arrow",
-                "mute": "Mute"
+                "down-arrow": "The star",
+                "mute": "Not preferred"
               }
             }
           }
@@ -2246,7 +2243,7 @@
             "steps": {
               "0": "Words and things you have hidden.",
               "1": "Topics you see less of.",
-              "2": "Sources you have muted or turned down."
+              "2": "Sources you marked Not preferred."
             },
             "ask": "Where can I see everything I have filtered out?"
           },
@@ -2691,18 +2688,16 @@
     "following": "Following this story",
     "checkFacts": "Fact check",
     "fewerFrom": "Fewer from {{source}}",
-    "fewerFromDone": "You'll see less from {{source}}.",
     "undo": "Undo",
     "reportBug": "Report a bug",
     "actionFailed": "That didn't work. Try again.",
     "aboutSource": "About this source",
     "liveChat": "Live chat",
     "liveChatSub": "A person from the Mera team",
-    "sourceSub": "About, fewer from {{source}}",
+    "sourceSub": "About {{source}}, or hide it from your feed",
     "support": "Support",
     "supportSub": "Report a bug, live chat, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Already showing fewer from {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2752,12 +2747,8 @@
     "newsLoadError": "Couldn't load articles",
     "websiteA11y": "Open {{host}}",
     "aboutSourceA11y": "About {{source}}",
-    "prefMoreA11y": "More from this source",
-    "prefFewerA11y": "Fewer from this source",
     "history": "History",
-    "fewerFrom": "Fewer from",
     "historyEmpty": "No visits here in the last 30 days.",
-    "moreFrom": "More from",
     "openedCount_one": "You opened {{publisher}} once in the last 30 days.",
     "openedCount_other": "You opened {{publisher}} {{count}} times in the last 30 days.",
     "openedOn": "Opened {{date}}",
@@ -2963,14 +2954,9 @@
     },
     "sources": {
       "title": "Sources",
-      "find": "Find a publication",
-      "more": "More",
-      "fewer": "Fewer",
-      "muted": "Muted",
-      "mute": "Mute",
-      "clear": "Clear",
-      "footnote": "Tap one to change it. \"Fewer from\" in an article's ••• menu lands here too.",
-      "empty": "You haven't adjusted any sources. Search for a publication to see more, fewer or none of it. \"Fewer from\" in an article's ••• menu lands here too.",
+      "find": "Find a publication or country",
+      "footnote": "Tap one to change it. \"Not preferred\" in an article's ••• menu lands here too.",
+      "empty": "You haven't picked any sources yet. Search for a publication or country to prefer it or hide it from your feed. \"Not preferred\" in an article's ••• menu lands here too.",
       "preferCountryA11y": "Prefer sources from {{country}}",
       "countryHint": "Opens sources from {{country}}",
       "countryCleared": "{{country}} is no longer preferred",

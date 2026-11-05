@@ -1245,10 +1245,8 @@
       "paywalled": "付费了，我读不了",
       "noTrust": "我不信任它",
       "trustTitle": "你不信任 {{site}}",
-      "trustLess": "少显示 {{site}} 的内容",
       "trustNever": "不再显示 {{site}}",
       "hardToUse": "这个网站不好用",
-      "fewerSite": "少显示这个网站的内容",
       "reportTitle": "也把 {{site}} 的情况告诉梅拉实验室吗？",
       "reportYes": "好，发送给梅拉实验室",
       "reportNo": "不用了",
@@ -1480,7 +1478,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "清除偏好",
     "scopeKindCountry": "国家"
   },
   "optimisationPlan": {
@@ -2669,7 +2666,6 @@
     "following": "已关注此报道",
     "checkFacts": "事实核查",
     "fewerFrom": "减少 {{source}} 的内容",
-    "fewerFromDone": "你将看到更少来自 {{source}} 的内容。",
     "undo": "撤销",
     "reportBug": "报告问题",
     "actionFailed": "操作未成功。请重试。",
@@ -2680,7 +2676,6 @@
     "support": "支持",
     "supportSub": "报告问题、实时聊天、常见问题、教程",
     "tutorial": "教程",
-    "fewerFromAlready": "已减少显示来自 {{source}} 的内容",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2730,12 +2725,8 @@
     "newsLoadError": "无法加载文章",
     "websiteA11y": "打开 {{host}}",
     "aboutSourceA11y": "关于 {{source}}",
-    "prefMoreA11y": "显示此来源的更多内容",
-    "prefFewerA11y": "显示此来源的更少内容",
     "history": "历史记录",
-    "fewerFrom": "减少来自",
     "historyEmpty": "过去30天内这里没有访问记录。",
-    "moreFrom": "更多来自",
     "openedCount_one": "过去30天内你打开过{{publisher}}1次。",
     "openedCount_other": "过去30天内你打开过{{publisher}}{{count}}次。",
     "openedOn": "打开于{{date}}",
@@ -2941,11 +2932,6 @@
     "sources": {
       "title": "来源",
       "find": "查找出版物",
-      "more": "更多",
-      "fewer": "更少",
-      "muted": "已屏蔽",
-      "mute": "屏蔽",
-      "clear": "清除",
       "footnote": "点按某一项即可更改。文章 ••• 菜单里的“减少…的内容”也会出现在这里。",
       "empty": "你还没有调整过任何来源。搜索一个出版物，即可选择多看、少看或不看它。文章 ••• 菜单里的“减少…的内容”也会出现在这里。",
       "preferCountryA11y": "Prefer sources from {{country}}",

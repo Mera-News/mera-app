@@ -1245,10 +1245,8 @@
       "paywalled": "Tôi không đọc được, phải trả phí",
       "noTrust": "Tôi không tin trang này",
       "trustTitle": "Bạn không tin {{site}}",
-      "trustLess": "Hiện ít hơn từ {{site}}",
       "trustNever": "Không bao giờ hiện {{site}}",
       "hardToUse": "Trang này khó dùng",
-      "fewerSite": "Hiện ít hơn từ trang này",
       "reportTitle": "Báo cho Mera Labs về {{site}} nữa nhé?",
       "reportYes": "Có, gửi cho Mera Labs",
       "reportNo": "Không, cảm ơn",
@@ -1480,7 +1478,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Xóa tùy chọn",
     "scopeKindCountry": "Quốc gia"
   },
   "optimisationPlan": {
@@ -2669,7 +2666,6 @@
     "following": "Đang theo dõi câu chuyện này",
     "checkFacts": "Kiểm chứng sự kiện",
     "fewerFrom": "Ít hơn từ {{source}}",
-    "fewerFromDone": "Bạn sẽ thấy ít tin từ {{source}} hơn.",
     "undo": "Hoàn tác",
     "reportBug": "Báo lỗi",
     "actionFailed": "Không thực hiện được. Hãy thử lại.",
@@ -2680,7 +2676,6 @@
     "support": "Hỗ trợ",
     "supportSub": "Báo lỗi, trò chuyện trực tiếp, câu hỏi thường gặp, hướng dẫn",
     "tutorial": "Hướng dẫn",
-    "fewerFromAlready": "Đã hiển thị ít tin hơn từ {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2730,12 +2725,8 @@
     "newsLoadError": "Không thể tải bài viết",
     "websiteA11y": "Mở {{host}}",
     "aboutSourceA11y": "Về {{source}}",
-    "prefMoreA11y": "Xem thêm từ nguồn này",
-    "prefFewerA11y": "Xem ít hơn từ nguồn này",
     "history": "Lịch sử",
-    "fewerFrom": "Ít hơn từ",
     "historyEmpty": "Không có lượt mở nào ở đây trong 30 ngày qua.",
-    "moreFrom": "Nhiều hơn từ",
     "openedCount_one": "Bạn đã mở {{publisher}} một lần trong 30 ngày qua.",
     "openedCount_other": "Bạn đã mở {{publisher}} {{count}} lần trong 30 ngày qua.",
     "openedOn": "Đã mở {{date}}",
@@ -2941,11 +2932,6 @@
     "sources": {
       "title": "Nguồn",
       "find": "Tìm một ấn phẩm",
-      "more": "Nhiều hơn",
-      "fewer": "Ít hơn",
-      "muted": "Tắt tiếng",
-      "mute": "Tắt tiếng",
-      "clear": "Xóa",
       "footnote": "Chạm vào một mục để thay đổi. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
       "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
       "preferCountryA11y": "Prefer sources from {{country}}",

@@ -1245,10 +1245,8 @@
       "paywalled": "有料で読めません",
       "noTrust": "信頼できません",
       "trustTitle": "{{site}}を信頼していません",
-      "trustLess": "{{site}}の記事を減らす",
       "trustNever": "{{site}}を表示しない",
       "hardToUse": "サイトが使いにくい",
-      "fewerSite": "このサイトの記事を減らす",
       "reportTitle": "{{site}}についてメラ・ラボにも知らせますか？",
       "reportYes": "はい、メラ・ラボに送る",
       "reportNo": "いいえ",
@@ -1480,7 +1478,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "設定をクリア",
     "scopeKindCountry": "国"
   },
   "optimisationPlan": {
@@ -2669,7 +2666,6 @@
     "following": "このストーリーをフォロー中",
     "checkFacts": "ファクトチェック",
     "fewerFrom": "{{source}} を減らす",
-    "fewerFromDone": "{{source}} の表示が減ります。",
     "undo": "元に戻す",
     "reportBug": "不具合を報告",
     "actionFailed": "うまくいきませんでした。もう一度お試しください。",
@@ -2680,7 +2676,6 @@
     "support": "サポート",
     "supportSub": "バグの報告、ライブチャット、よくある質問、チュートリアル",
     "tutorial": "チュートリアル",
-    "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2730,12 +2725,8 @@
     "newsLoadError": "記事を読み込めませんでした",
     "websiteA11y": "{{host}}を開く",
     "aboutSourceA11y": "{{source}}について",
-    "prefMoreA11y": "この媒体からもっと表示",
-    "prefFewerA11y": "この媒体から少なく表示",
     "history": "履歴",
-    "fewerFrom": "少なく表示",
     "historyEmpty": "過去30日間にここへの訪問はありません。",
-    "moreFrom": "多く表示",
     "openedCount_one": "過去30日間に{{publisher}}を1回開きました。",
     "openedCount_other": "過去30日間に{{publisher}}を{{count}}回開きました。",
     "openedOn": "{{date}}に開きました",
@@ -2941,11 +2932,6 @@
     "sources": {
       "title": "ソース",
       "find": "メディアを探す",
-      "more": "増やす",
-      "fewer": "減らす",
-      "muted": "ミュート",
-      "mute": "ミュート",
-      "clear": "クリア",
       "footnote": "タップして変更できます。記事の•••メニューの「〜を減らす」もここに表示されます。",
       "empty": "まだ調整したメディアはありません。メディアを検索して、表示を増やす、減らす、または表示しないように設定できます。記事の•••メニューの「〜を減らす」もここに表示されます。",
       "preferCountryA11y": "Prefer sources from {{country}}",

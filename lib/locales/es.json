@@ -1263,10 +1263,8 @@
       "paywalled": "No puedo leerla, es de pago",
       "noTrust": "No confío en ella",
       "trustTitle": "No confías en {{site}}",
-      "trustLess": "Mostrar menos de {{site}}",
       "trustNever": "No mostrar nunca {{site}}",
       "hardToUse": "El sitio es difícil de usar",
-      "fewerSite": "Mostrar menos de este sitio",
       "reportTitle": "¿Avisar también a Mera Labs sobre {{site}}?",
       "reportYes": "Sí, enviarlo a Mera Labs",
       "reportNo": "No, gracias",
@@ -1505,7 +1503,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Borrar preferencia",
     "scopeKindCountry": "País"
   },
   "optimisationPlan": {
@@ -2695,7 +2692,6 @@
     "following": "Siguiendo esta historia",
     "checkFacts": "Verificación de hechos",
     "fewerFrom": "Menos de {{source}}",
-    "fewerFromDone": "Verás menos de {{source}}.",
     "undo": "Deshacer",
     "reportBug": "Informar de un error",
     "actionFailed": "No funcionó. Inténtalo de nuevo.",
@@ -2706,7 +2702,6 @@
     "support": "Soporte",
     "supportSub": "Informar de un error, chat en vivo, preguntas frecuentes, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Ya se muestran menos de {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2756,12 +2751,8 @@
     "newsLoadError": "No se pudieron cargar los artículos",
     "websiteA11y": "Abrir {{host}}",
     "aboutSourceA11y": "Acerca de {{source}}",
-    "prefMoreA11y": "Más de esta fuente",
-    "prefFewerA11y": "Menos de esta fuente",
     "history": "Historial",
-    "fewerFrom": "Menos de",
     "historyEmpty": "No hay visitas aquí en los últimos 30 días.",
-    "moreFrom": "Más de",
     "openedCount_one": "Abriste {{publisher}} una vez en los últimos 30 días.",
     "openedCount_other": "Abriste {{publisher}} {{count}} veces en los últimos 30 días.",
     "openedOn": "Abierto el {{date}}",
@@ -2968,11 +2959,6 @@
     "sources": {
       "title": "Fuentes",
       "find": "Buscar una publicación",
-      "more": "Más",
-      "fewer": "Menos",
-      "muted": "Silenciado",
-      "mute": "Silenciar",
-      "clear": "Borrar",
       "footnote": "Toca una para cambiarla. «Menos de» en el menú ••• de un artículo también llega aquí.",
       "empty": "No has ajustado ninguna fuente. Busca una publicación para ver más, menos o ninguna de ella. «Menos de» en el menú ••• de un artículo también llega aquí.",
       "preferCountryA11y": "Prefer sources from {{country}}",

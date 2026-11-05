@@ -1263,10 +1263,8 @@
       "paywalled": "Non riesco a leggerla, è a pagamento",
       "noTrust": "Non mi fido",
       "trustTitle": "Non ti fidi di {{site}}",
-      "trustLess": "Mostra meno da {{site}}",
       "trustNever": "Non mostrare mai {{site}}",
       "hardToUse": "Il sito è difficile da usare",
-      "fewerSite": "Mostra meno da questo sito",
       "reportTitle": "Vuoi segnalare {{site}} anche a Mera Labs?",
       "reportYes": "Sì, invia a Mera Labs",
       "reportNo": "No, grazie",
@@ -1505,7 +1503,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Cancella preferenza",
     "scopeKindCountry": "Paese"
   },
   "optimisationPlan": {
@@ -2695,7 +2692,6 @@
     "following": "Stai seguendo questa storia",
     "checkFacts": "Verifica dei fatti",
     "fewerFrom": "Meno da {{source}}",
-    "fewerFromDone": "Vedrai meno contenuti da {{source}}.",
     "undo": "Annulla",
     "reportBug": "Segnala un bug",
     "actionFailed": "Non ha funzionato. Riprova.",
@@ -2706,7 +2702,6 @@
     "support": "Assistenza",
     "supportSub": "Segnala un bug, chat dal vivo, FAQ, guida",
     "tutorial": "Guida",
-    "fewerFromAlready": "Vedi già meno notizie da {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2756,12 +2751,8 @@
     "newsLoadError": "Impossibile caricare gli articoli",
     "websiteA11y": "Apri {{host}}",
     "aboutSourceA11y": "Su {{source}}",
-    "prefMoreA11y": "Di più da questa fonte",
-    "prefFewerA11y": "Di meno da questa fonte",
     "history": "Cronologia",
-    "fewerFrom": "Meno da",
     "historyEmpty": "Nessuna visita qui negli ultimi 30 giorni.",
-    "moreFrom": "Più da",
     "openedCount_one": "Hai aperto {{publisher}} una volta negli ultimi 30 giorni.",
     "openedCount_other": "Hai aperto {{publisher}} {{count}} volte negli ultimi 30 giorni.",
     "openedOn": "Aperto il {{date}}",
@@ -2968,11 +2959,6 @@
     "sources": {
       "title": "Fonti",
       "find": "Trova una testata",
-      "more": "Di più",
-      "fewer": "Meno",
-      "muted": "Muto",
-      "mute": "Silenzia",
-      "clear": "Cancella",
       "footnote": "Tocca una testata per cambiarla. Anche «Meno da» nel menu ••• di un articolo arriva qui.",
       "empty": "Non hai ancora modificato nessuna fonte. Cerca una testata per vederne di più, di meno o non vederne affatto. «Meno da» nel menu ••• di un articolo arriva qui anche questo.",
       "preferCountryA11y": "Prefer sources from {{country}}",

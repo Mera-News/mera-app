@@ -1322,10 +1322,8 @@
       "paywalled": "Nie mogę tego przeczytać, jest płatne",
       "noTrust": "Nie ufam temu serwisowi",
       "trustTitle": "Nie ufasz serwisowi {{site}}",
-      "trustLess": "Pokazuj mniej z {{site}}",
       "trustNever": "Nigdy nie pokazuj {{site}}",
       "hardToUse": "Serwis jest trudny w użyciu",
-      "fewerSite": "Pokazuj mniej z tego serwisu",
       "reportTitle": "Poinformować też Mera Labs o serwisie {{site}}?",
       "reportYes": "Tak, wyślij do Mera Labs",
       "reportNo": "Nie, dziękuję",
@@ -1577,7 +1575,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Wyczyść preferencję",
     "scopeKindCountry": "Kraj"
   },
   "optimisationPlan": {
@@ -2787,7 +2784,6 @@
     "following": "Śledzisz tę historię",
     "checkFacts": "Sprawdzanie faktów",
     "fewerFrom": "Mniej z {{source}}",
-    "fewerFromDone": "Zobaczysz mniej z {{source}}.",
     "undo": "Cofnij",
     "reportBug": "Zgłoś błąd",
     "actionFailed": "Nie udało się. Spróbuj ponownie.",
@@ -2798,7 +2794,6 @@
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
     "tutorial": "Samouczek",
-    "fewerFromAlready": "Już pokazujemy mniej z {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2848,12 +2843,8 @@
     "newsLoadError": "Nie można załadować artykułów",
     "websiteA11y": "Otwórz {{host}}",
     "aboutSourceA11y": "O {{source}}",
-    "prefMoreA11y": "Więcej z tego źródła",
-    "prefFewerA11y": "Mniej z tego źródła",
     "history": "Historia",
-    "fewerFrom": "Mniej z",
     "historyEmpty": "Brak wizyt tutaj w ciągu ostatnich 30 dni.",
-    "moreFrom": "Więcej z",
     "openedCount_one": "Otworzyłeś {{publisher}} raz w ciągu ostatnich 30 dni.",
     "openedCount_few": "Otworzyłeś {{publisher}} {{count}} razy w ciągu ostatnich 30 dni.",
     "openedCount_many": "Otworzyłeś {{publisher}} {{count}} razy w ciągu ostatnich 30 dni.",
@@ -3100,11 +3091,6 @@
     "sources": {
       "title": "Źródła",
       "find": "Znajdź wydawcę",
-      "more": "Więcej",
-      "fewer": "Mniej",
-      "muted": "Wyciszono",
-      "mute": "Wycisz",
-      "clear": "Wyczyść",
       "footnote": "Stuknij jedno, aby je zmienić. „Mniej z” w menu ••• artykułu też trafia tutaj.",
       "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale z niego. „Mniej z” w menu ••• artykułu też trafia tutaj.",
       "preferCountryA11y": "Prefer sources from {{country}}",

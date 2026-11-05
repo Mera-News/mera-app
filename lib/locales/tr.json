@@ -1262,10 +1262,8 @@
       "paywalled": "Okuyamıyorum, ücretli",
       "noTrust": "Güvenmiyorum",
       "trustTitle": "{{site}} sitesine güvenmiyorsun",
-      "trustLess": "{{site}} sitesinden daha az göster",
       "trustNever": "{{site}} sitesini asla gösterme",
       "hardToUse": "Siteyi kullanmak zor",
-      "fewerSite": "Bu siteden daha az göster",
       "reportTitle": "{{site}} hakkında Mera Labs'a da haber verilsin mi?",
       "reportYes": "Evet, Mera Labs'a gönder",
       "reportNo": "Hayır, teşekkürler",
@@ -1501,7 +1499,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Tercihi temizle",
     "scopeKindCountry": "Ülke"
   },
   "optimisationPlan": {
@@ -2691,7 +2688,6 @@
     "following": "Bu haberi takip ediyorsun",
     "checkFacts": "Doğruluk kontrolü",
     "fewerFrom": "{{source}} kaynağından daha az",
-    "fewerFromDone": "{{source}} kaynağından daha az göreceksin.",
     "undo": "Geri al",
     "reportBug": "Hata bildir",
     "actionFailed": "Olmadı. Tekrar dene.",
@@ -2702,7 +2698,6 @@
     "support": "Destek",
     "supportSub": "Hata bildir, canlı sohbet, SSS, eğitim",
     "tutorial": "Eğitim",
-    "fewerFromAlready": "Zaten {{source}} kaynağından daha az haber gösteriliyor",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2752,12 +2747,8 @@
     "newsLoadError": "Makaleler yüklenemedi",
     "websiteA11y": "Aç {{host}}",
     "aboutSourceA11y": "{{source}} hakkında",
-    "prefMoreA11y": "Bu kaynaktan daha fazlası",
-    "prefFewerA11y": "Bu kaynaktan daha azı",
     "history": "Geçmiş",
-    "fewerFrom": "Daha az",
     "historyEmpty": "Son 30 günde burada ziyaret yok.",
-    "moreFrom": "Daha fazla",
     "openedCount_one": "Son 30 günde {{publisher}} yayınını bir kez açtınız.",
     "openedCount_other": "Son 30 günde {{publisher}} yayınını {{count}} kez açtınız.",
     "openedOn": "{{date}} tarihinde açıldı",
@@ -2964,11 +2955,6 @@
     "sources": {
       "title": "Kaynaklar",
       "find": "Yayın bul",
-      "more": "Daha fazla",
-      "fewer": "Daha az",
-      "muted": "Sessize alındı",
-      "mute": "Sustur",
-      "clear": "Temizle",
       "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
       "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayının daha fazlasını, daha azını veya hiçbirini görmek için yayın arayın. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
       "preferCountryA11y": "Prefer sources from {{country}}",

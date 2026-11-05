@@ -1245,10 +1245,8 @@
       "paywalled": "Saya tidak bisa membacanya, berbayar",
       "noTrust": "Saya tidak percaya",
       "trustTitle": "Kamu tidak percaya {{site}}",
-      "trustLess": "Tampilkan lebih sedikit dari {{site}}",
       "trustNever": "Jangan pernah tampilkan {{site}}",
       "hardToUse": "Situsnya sulit digunakan",
-      "fewerSite": "Tampilkan lebih sedikit dari situs ini",
       "reportTitle": "Beri tahu Mera Labs juga tentang {{site}}?",
       "reportYes": "Ya, kirim ke Mera Labs",
       "reportNo": "Tidak, terima kasih",
@@ -1480,7 +1478,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Hapus preferensi",
     "scopeKindCountry": "Negara"
   },
   "optimisationPlan": {
@@ -2669,7 +2666,6 @@
     "following": "Mengikuti berita ini",
     "checkFacts": "Pemeriksaan fakta",
     "fewerFrom": "Lebih sedikit dari {{source}}",
-    "fewerFromDone": "Kamu akan melihat lebih sedikit dari {{source}}.",
     "undo": "Urungkan",
     "reportBug": "Laporkan bug",
     "actionFailed": "Itu tidak berhasil. Coba lagi.",
@@ -2680,7 +2676,6 @@
     "support": "Dukungan",
     "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Sudah menampilkan lebih sedikit dari {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2730,12 +2725,8 @@
     "newsLoadError": "Tidak dapat memuat artikel",
     "websiteA11y": "Buka {{host}}",
     "aboutSourceA11y": "Tentang {{source}}",
-    "prefMoreA11y": "Lebih banyak dari sumber ini",
-    "prefFewerA11y": "Lebih sedikit dari sumber ini",
     "history": "Riwayat",
-    "fewerFrom": "Lebih sedikit",
     "historyEmpty": "Tidak ada kunjungan di sini dalam 30 hari terakhir.",
-    "moreFrom": "Lebih banyak",
     "openedCount_one": "Anda membuka {{publisher}} sekali dalam 30 hari terakhir.",
     "openedCount_other": "Anda membuka {{publisher}} {{count}} kali dalam 30 hari terakhir.",
     "openedOn": "Dibuka {{date}}",
@@ -2941,11 +2932,6 @@
     "sources": {
       "title": "Sumber",
       "find": "Cari publikasi",
-      "more": "Lebih banyak",
-      "fewer": "Lebih sedikit",
-      "muted": "Senyap",
-      "mute": "Bisukan",
-      "clear": "Hapus",
       "footnote": "Ketuk satu untuk mengubahnya. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini.",
       "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini.",
       "preferCountryA11y": "Prefer sources from {{country}}",

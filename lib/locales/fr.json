@@ -1268,10 +1268,8 @@
       "paywalled": "Je ne peux pas le lire, il est payant",
       "noTrust": "Je ne lui fais pas confiance",
       "trustTitle": "Tu ne fais pas confiance à {{site}}",
-      "trustLess": "Montrer moins de {{site}}",
       "trustNever": "Ne jamais montrer {{site}}",
       "hardToUse": "Le site est difficile à utiliser",
-      "fewerSite": "Montrer moins de ce site",
       "reportTitle": "Prévenir aussi Mera Labs à propos de {{site}} ?",
       "reportYes": "Oui, envoyer à Mera Labs",
       "reportNo": "Non merci",
@@ -1511,7 +1509,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Effacer la préférence",
     "scopeKindCountry": "Pays"
   },
   "optimisationPlan": {
@@ -2701,7 +2698,6 @@
     "following": "Vous suivez ce sujet",
     "checkFacts": "Vérification des faits",
     "fewerFrom": "Moins de {{source}}",
-    "fewerFromDone": "Vous verrez moins de {{source}}.",
     "undo": "Annuler",
     "reportBug": "Signaler un bug",
     "actionFailed": "Cela n'a pas fonctionné. Réessayez.",
@@ -2712,7 +2708,6 @@
     "support": "Assistance",
     "supportSub": "Signaler un bug, chat en direct, FAQ, tutoriel",
     "tutorial": "Tutoriel",
-    "fewerFromAlready": "Déjà moins d'articles de {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2762,12 +2757,8 @@
     "newsLoadError": "Impossible de charger les articles",
     "websiteA11y": "Ouvrir {{host}}",
     "aboutSourceA11y": "À propos de {{source}}",
-    "prefMoreA11y": "Plus de cette source",
-    "prefFewerA11y": "Moins de cette source",
     "history": "Historique",
-    "fewerFrom": "Moins de",
     "historyEmpty": "Aucune visite ici au cours des 30 derniers jours.",
-    "moreFrom": "Plus de",
     "openedCount_one": "Vous avez ouvert {{publisher}} une fois au cours des 30 derniers jours.",
     "openedCount_other": "Vous avez ouvert {{publisher}} {{count}} fois au cours des 30 derniers jours.",
     "openedOn": "Ouvert le {{date}}",
@@ -2974,11 +2965,6 @@
     "sources": {
       "title": "Sources",
       "find": "Trouver une publication",
-      "more": "Plus",
-      "fewer": "Moins",
-      "muted": "Mis en sourdine",
-      "mute": "Masquer",
-      "clear": "Effacer",
       "footnote": "Touchez-en une pour la modifier. « Moins de » dans le menu ••• d'un article aboutit aussi ici.",
       "empty": "Vous n'avez modifié aucune source. Recherchez une publication pour en voir plus, moins, ou aucune. « Moins de » dans le menu ••• d'un article aboutit aussi ici.",
       "preferCountryA11y": "Prefer sources from {{country}}",

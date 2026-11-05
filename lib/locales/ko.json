@@ -1245,10 +1245,8 @@
       "paywalled": "유료라서 읽을 수 없어요",
       "noTrust": "믿을 수 없어요",
       "trustTitle": "{{site}}을(를) 믿지 않으시는군요",
-      "trustLess": "{{site}} 기사 덜 보기",
       "trustNever": "{{site}} 기사 보지 않기",
       "hardToUse": "사이트를 쓰기 어려워요",
-      "fewerSite": "이 사이트 기사 덜 보기",
       "reportTitle": "{{site}}에 대해 메라 랩스에도 알릴까요?",
       "reportYes": "네, 메라 랩스에 보내기",
       "reportNo": "아니요, 괜찮아요",
@@ -1480,7 +1478,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "선호도 지우기",
     "scopeKindCountry": "국가"
   },
   "optimisationPlan": {
@@ -2669,7 +2666,6 @@
     "following": "이 스토리를 팔로우 중",
     "checkFacts": "팩트체크",
     "fewerFrom": "{{source}} 줄이기",
-    "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
     "undo": "실행 취소",
     "reportBug": "버그 신고",
     "actionFailed": "실패했어요. 다시 시도하세요.",
@@ -2680,7 +2676,6 @@
     "support": "지원",
     "supportSub": "버그 신고, 실시간 채팅, 자주 묻는 질문, 튜토리얼",
     "tutorial": "튜토리얼",
-    "fewerFromAlready": "{{source}} 기사는 이미 적게 표시되고 있어요",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2730,12 +2725,8 @@
     "newsLoadError": "기사를 불러올 수 없습니다",
     "websiteA11y": "{{host}} 열기",
     "aboutSourceA11y": "{{source}} 정보",
-    "prefMoreA11y": "이 매체에서 더 보기",
-    "prefFewerA11y": "이 매체에서 덜 보기",
     "history": "기록",
-    "fewerFrom": "덜 보기:",
     "historyEmpty": "지난 30일 동안 방문 기록이 없습니다.",
-    "moreFrom": "더 보기:",
     "openedCount_one": "지난 30일 동안 {{publisher}}을(를) {{count}}번 열었습니다.",
     "openedCount_other": "지난 30일 동안 {{publisher}}을(를) {{count}}번 열었습니다.",
     "openedOn": "{{date}}에 열람",
@@ -2941,11 +2932,6 @@
     "sources": {
       "title": "소스",
       "find": "매체 찾기",
-      "more": "늘리기",
-      "fewer": "줄이기",
-      "muted": "음소거됨",
-      "mute": "음소거",
-      "clear": "지우기",
       "footnote": "매체를 누르면 바꿀 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요.",
       "empty": "아직 조정한 소스가 없어요. 매체를 검색해서 더 보거나, 덜 보거나, 아예 안 볼 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요.",
       "preferCountryA11y": "Prefer sources from {{country}}",

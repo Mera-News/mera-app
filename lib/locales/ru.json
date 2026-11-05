@@ -1322,10 +1322,8 @@
       "paywalled": "Не могу прочитать, платный доступ",
       "noTrust": "Я не доверяю этому сайту",
       "trustTitle": "Вы не доверяете сайту {{site}}",
-      "trustLess": "Показывать меньше с {{site}}",
       "trustNever": "Никогда не показывать {{site}}",
       "hardToUse": "Сайтом трудно пользоваться",
-      "fewerSite": "Показывать меньше с этого сайта",
       "reportTitle": "Сообщить в Мера Лабс о сайте {{site}}?",
       "reportYes": "Да, отправить в Мера Лабс",
       "reportNo": "Нет, спасибо",
@@ -1577,7 +1575,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Очистить настройку",
     "scopeKindCountry": "Страна"
   },
   "optimisationPlan": {
@@ -2787,7 +2784,6 @@
     "following": "Вы следите за этой историей",
     "checkFacts": "Проверка фактов",
     "fewerFrom": "Меньше от {{source}}",
-    "fewerFromDone": "Материалов от {{source}} станет меньше.",
     "undo": "Отменить",
     "reportBug": "Сообщить об ошибке",
     "actionFailed": "Не получилось. Попробуйте ещё раз.",
@@ -2798,7 +2794,6 @@
     "support": "Поддержка",
     "supportSub": "Сообщить об ошибке, живой чат, FAQ, обучение",
     "tutorial": "Обучение",
-    "fewerFromAlready": "Уже показываем меньше от {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2848,12 +2843,8 @@
     "newsLoadError": "Не удалось загрузить статьи",
     "websiteA11y": "Открыть {{host}}",
     "aboutSourceA11y": "О {{source}}",
-    "prefMoreA11y": "Больше от этого источника",
-    "prefFewerA11y": "Меньше от этого источника",
     "history": "История",
-    "fewerFrom": "Меньше от",
     "historyEmpty": "За последние 30 дней визитов сюда не было.",
-    "moreFrom": "Больше от",
     "openedCount_one": "Вы открывали {{publisher}} {{count}} раз за последние 30 дней.",
     "openedCount_few": "Вы открывали {{publisher}} {{count}} раз за последние 30 дней.",
     "openedCount_many": "Вы открывали {{publisher}} {{count}} раз за последние 30 дней.",
@@ -3100,11 +3091,6 @@
     "sources": {
       "title": "Источники",
       "find": "Найти издание",
-      "more": "Больше",
-      "fewer": "Меньше",
-      "muted": "Приглушено",
-      "mute": "Заглушить",
-      "clear": "Очистить",
       "footnote": "Нажмите на источник, чтобы изменить его. Сюда же попадает пункт «Меньше от» в меню статьи (•••).",
       "empty": "Вы пока не настраивали источники. Найдите издание, чтобы видеть его больше, меньше или совсем не видеть. Сюда же попадает пункт «Меньше от» в меню статьи (•••).",
       "preferCountryA11y": "Prefer sources from {{country}}",

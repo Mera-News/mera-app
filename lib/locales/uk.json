@@ -1326,10 +1326,8 @@
       "paywalled": "Не можу прочитати, платний доступ",
       "noTrust": "Я не довіряю цьому сайту",
       "trustTitle": "Ви не довіряєте сайту {{site}}",
-      "trustLess": "Показувати менше з {{site}}",
       "trustNever": "Ніколи не показувати {{site}}",
       "hardToUse": "Сайтом важко користуватися",
-      "fewerSite": "Показувати менше з цього сайту",
       "reportTitle": "Повідомити Мера Лабс про сайт {{site}}?",
       "reportYes": "Так, надіслати до Мера Лабс",
       "reportNo": "Ні, дякую",
@@ -1581,7 +1579,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Очистити налаштування",
     "scopeKindCountry": "Країна"
   },
   "optimisationPlan": {
@@ -2791,7 +2788,6 @@
     "following": "Ви стежите за цією історією",
     "checkFacts": "Перевірка фактів",
     "fewerFrom": "Менше від {{source}}",
-    "fewerFromDone": "Матеріалів від {{source}} стане менше.",
     "undo": "Скасувати",
     "reportBug": "Повідомити про помилку",
     "actionFailed": "Не вдалося. Спробуйте ще раз.",
@@ -2802,7 +2798,6 @@
     "support": "Підтримка",
     "supportSub": "Повідомити про помилку, живий чат, FAQ, навчання",
     "tutorial": "Навчання",
-    "fewerFromAlready": "Уже показуємо менше від {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2852,12 +2847,8 @@
     "newsLoadError": "Не вдалося завантажити статті",
     "websiteA11y": "Відкрити {{host}}",
     "aboutSourceA11y": "Про {{source}}",
-    "prefMoreA11y": "Більше статей з цього джерела",
-    "prefFewerA11y": "Менше статей з цього джерела",
     "history": "Історія",
-    "fewerFrom": "Менше від",
     "historyEmpty": "За останні 30 днів тут не було візитів.",
-    "moreFrom": "Більше від",
     "openedCount_one": "Ви відкрили {{publisher}} один раз за останні 30 днів.",
     "openedCount_few": "Ви відкрили {{publisher}} {{count}} рази за останні 30 днів.",
     "openedCount_many": "Ви відкрили {{publisher}} {{count}} разів за останні 30 днів.",
@@ -3104,11 +3095,6 @@
     "sources": {
       "title": "Джерела",
       "find": "Знайти видання",
-      "more": "Більше",
-      "fewer": "Менше",
-      "muted": "Приглушено",
-      "mute": "Заглушити",
-      "clear": "Очистити",
       "footnote": "Натисніть на видання, щоб змінити його. Сюди також потрапляє пункт «Менше від» у меню статті «•••».",
       "empty": "Ви ще нічого не змінювали в джерелах. Знайдіть видання, щоб бачити його більше, менше або взагалі не бачити. Сюди також потрапляє пункт «Менше від» у меню статті «•••».",
       "preferCountryA11y": "Prefer sources from {{country}}",

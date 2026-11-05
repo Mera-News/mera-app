@@ -1262,10 +1262,8 @@
       "paywalled": "मैं इसे पढ़ नहीं सकता, यह पेवॉल के पीछे है",
       "noTrust": "मुझे इस पर भरोसा नहीं है",
       "trustTitle": "आपको {{site}} पर भरोसा नहीं है",
-      "trustLess": "{{site}} से कम दिखाएँ",
       "trustNever": "{{site}} कभी न दिखाएँ",
       "hardToUse": "साइट इस्तेमाल करना मुश्किल है",
-      "fewerSite": "इस साइट से कम दिखाएँ",
       "reportTitle": "{{site}} के बारे में मेरा लैब्स को भी बताएँ?",
       "reportYes": "हाँ, मेरा लैब्स को भेजें",
       "reportNo": "नहीं, धन्यवाद",
@@ -1501,7 +1499,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "प्राथमिकता हटाएं",
     "scopeKindCountry": "देश"
   },
   "optimisationPlan": {
@@ -2691,7 +2688,6 @@
     "following": "यह खबर फ़ॉलो कर रहे हैं",
     "checkFacts": "तथ्य-जांच",
     "fewerFrom": "{{source}} से कम",
-    "fewerFromDone": "आपको {{source}} से कम दिखेगा।",
     "undo": "पहले जैसा करें",
     "reportBug": "बग की रिपोर्ट करें",
     "actionFailed": "यह नहीं हो पाया। फिर से कोशिश करें।",
@@ -2702,7 +2698,6 @@
     "support": "सहायता",
     "supportSub": "बग रिपोर्ट करें, लाइव चैट, अक्सर पूछे जाने वाले सवाल, ट्यूटोरियल",
     "tutorial": "ट्यूटोरियल",
-    "fewerFromAlready": "{{source}} से पहले ही कम खबरें दिखाई जा रही हैं",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2752,12 +2747,8 @@
     "newsLoadError": "लेख लोड नहीं हो सके",
     "websiteA11y": "{{host}} खोलें",
     "aboutSourceA11y": "{{source}} के बारे में",
-    "prefMoreA11y": "इस स्रोत से अधिक",
-    "prefFewerA11y": "इस स्रोत से कम",
     "history": "इतिहास",
-    "fewerFrom": "इनसे कम",
     "historyEmpty": "पिछले 30 दिनों में यहां कोई विज़िट नहीं।",
-    "moreFrom": "ज़्यादा",
     "openedCount_one": "आपने पिछले 30 दिनों में {{publisher}} को एक बार खोला।",
     "openedCount_other": "आपने पिछले 30 दिनों में {{publisher}} को {{count}} बार खोला।",
     "openedOn": "{{date}} को खोला गया",
@@ -2964,11 +2955,6 @@
     "sources": {
       "title": "स्रोत",
       "find": "कोई प्रकाशन खोजें",
-      "more": "ज़्यादा",
-      "fewer": "कम",
-      "muted": "म्यूट किया",
-      "mute": "म्यूट",
-      "clear": "हटाएं",
       "footnote": "बदलने के लिए किसी एक को दबाएं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।",
       "empty": "आपने अभी तक कोई स्रोत नहीं बदला है। किसी प्रकाशन को खोजें और तय करें कि आप उसे ज़्यादा देखना चाहते हैं, कम देखना चाहते हैं, या बिल्कुल नहीं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।",
       "preferCountryA11y": "Prefer sources from {{country}}",

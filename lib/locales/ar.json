@@ -1389,10 +1389,8 @@
       "paywalled": "لا أستطيع قراءته لأنه بمقابل مادي",
       "noTrust": "لا أثق به",
       "trustTitle": "أنت لا تثق بـ {{site}}",
-      "trustLess": "اعرض أقل من {{site}}",
       "trustNever": "لا تعرض {{site}} أبدًا",
       "hardToUse": "الموقع صعب الاستخدام",
-      "fewerSite": "اعرض أقل من هذا الموقع",
       "reportTitle": "هل تريد إبلاغ ميرا لابز عن {{site}} أيضًا؟",
       "reportYes": "نعم، أرسله إلى ميرا لابز",
       "reportNo": "لا، شكرًا",
@@ -1660,7 +1658,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "مسح التفضيل",
     "scopeKindCountry": "دولة"
   },
   "optimisationPlan": {
@@ -2890,7 +2887,6 @@
     "following": "تتابع هذه القصة",
     "checkFacts": "التحقق من الحقائق",
     "fewerFrom": "أقل من {{source}}",
-    "fewerFromDone": "ستشاهد محتوى أقل من {{source}}.",
     "undo": "تراجع",
     "reportBug": "الإبلاغ عن خطأ",
     "actionFailed": "لم ينجح ذلك. حاول مرة أخرى.",
@@ -2901,7 +2897,6 @@
     "support": "الدعم",
     "supportSub": "الإبلاغ عن خطأ، محادثة مباشرة، الأسئلة الشائعة، الشرح",
     "tutorial": "الشرح",
-    "fewerFromAlready": "تعرض بالفعل أخباراً أقل من {{source}}",
     "notPreferred": "Not preferred",
     "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
@@ -2951,12 +2946,8 @@
     "newsLoadError": "تعذر تحميل المقالات",
     "websiteA11y": "فتح {{host}}",
     "aboutSourceA11y": "حول {{source}}",
-    "prefMoreA11y": "المزيد من هذا المصدر",
-    "prefFewerA11y": "أقل من هذا المصدر",
     "history": "السجل",
-    "fewerFrom": "عدد أقل من",
     "historyEmpty": "لا توجد زيارات هنا خلال الأيام الثلاثين الماضية.",
-    "moreFrom": "المزيد من",
     "openedCount_zero": "لم تفتح {{publisher}} خلال الأيام الثلاثين الماضية.",
     "openedCount_one": "فتحت {{publisher}} مرة واحدة خلال الأيام الثلاثين الماضية.",
     "openedCount_two": "فتحت {{publisher}} مرتين خلال الأيام الثلاثين الماضية.",
@@ -3243,11 +3234,6 @@
     "sources": {
       "title": "المصادر",
       "find": "ابحث عن منشور",
-      "more": "أكثر",
-      "fewer": "أقل",
-      "muted": "مكتوم",
-      "mute": "كتم",
-      "clear": "مسح",
       "footnote": "اضغط على أحدها لتغييره. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا.",
       "empty": "لم تعدّل أي مصدر بعد. ابحث عن منشور لترى منه أكثر أو أقل أو لا شيء. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا.",
       "preferCountryA11y": "Prefer sources from {{country}}",
