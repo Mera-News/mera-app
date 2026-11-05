@@ -75,6 +75,8 @@ Every story Mera shows carries a plain-language "Why this matters to you" explan
 
 Mera does not summarise or rewrite articles. You get the headline and Mera's reasoning for why it matters; the reading itself happens at the original publisher, through a direct link. That is deliberate. Rather than replacing journalism, Mera routes attention and traffic back to the newsrooms that produced it, and the readers who arrive came because the story genuinely mattered to them.
 
+In cloud chat, Mera can search the web while Web search in chat is on in Mera Protocol settings, and it answers from the search results. It does not open a page or read an article. Publishers own their articles, so Mera works from search results and the headline and short description publishers put in their feeds, and links out to the publisher rather than reproducing the article. Chat that runs on your phone has no web search.
+
 You control the interruptions. You can set up to 24 alert opportunities a day, at times that suit you. Life-safety emergencies are the single exception that always breaks through your cap.
 
 Mera runs on iOS and Android, worldwide. The app interface is available in 20 languages, and news is gathered from sources in many more, so the language a story was written in never limits what reaches you.
