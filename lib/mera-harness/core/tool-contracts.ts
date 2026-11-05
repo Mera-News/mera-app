@@ -245,6 +245,7 @@ export const EXPLAIN_MERA_TOPIC_IDS = [
   'how_news_works',
   'source_available',
   'plans_and_limits',
+  'profile_vs_stories',
   'known_gaps',
 ] as const;
 
