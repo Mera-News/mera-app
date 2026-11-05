@@ -13,7 +13,7 @@ export interface OnboardingPreferences {
 
 interface OnboardingState {
     // Current progress
-    currentStep: number; // 0-1
+    currentStep: number; // 0-2
     isInitializing: boolean;
 
     // User preferences being collected during onboarding

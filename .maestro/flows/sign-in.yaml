@@ -44,10 +44,20 @@ appId: ${APP_ID}
 # Next rides beside the composer, so it stays reachable with the keyboard open.
 - tapOn:
     id: "onboarding-next"
-# Step 2 is the one without the facts counter; Next stays on screen across the switch.
+# Step 2 is the sources step (Skip with no picks); Next stays on screen across the switch.
 - extendedWaitUntil:
     notVisible:
       id: "onboarding-facts-count"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-sources-step"
+    timeout: 30000
+- tapOn:
+    id: "onboarding-next"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-remind"
     timeout: 30000
 - tapOn:
     id: "onboarding-next"

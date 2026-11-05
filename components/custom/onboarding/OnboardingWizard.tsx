@@ -37,19 +37,21 @@ import { useColors } from '@/lib/theme/tokens';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 import { NextGuardBox } from './NextGuardBox';
 import { markOnboardingDone } from './onboarding-done';
+import OnboardingSourcesStep from './OnboardingSourcesStep';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import { useServerErrorLogout } from './useServerErrorLogout';
 
-// Two steps (FinalJourney #8, #24): 0 = tell Mera (the persona chat), 1 =
-// notifications. Chat comes first so the reader's first minute is spent on
-// what makes the Feed, and notifications are asked only once there is news to
-// be told about. It always opens at the chat: whether the wizard runs at all is
-// the local `onboarding_done` gate (onboarding-done.ts), and the server stage
-// is written for the record only.
-const TOTAL_STEPS = 2;
+// Three steps (FinalJourney #8, #24): 0 = tell Mera (the persona chat), 1 =
+// sources (search only, skippable, no server stage), 2 = notifications. Chat
+// comes first so the reader's first minute is spent on what makes the Feed,
+// and notifications are asked only once there is news to be told about. It
+// always opens at the chat: whether the wizard runs at all is the local
+// `onboarding_done` gate (onboarding-done.ts), and the server stage is written
+// for the record only.
+const TOTAL_STEPS = 3;
 const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
     0: OnboardingStage.PersonaChat,
-    1: OnboardingStage.Finished,
+    2: OnboardingStage.Finished,
 };
 
 /** Bound on the mount-time session lookup. */
@@ -86,6 +88,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const [notificationsOn, setNotificationsOn] = useState(false);
     const [enableRequest, setEnableRequest] = useState(0);
     const [busy, setBusy] = useState(false);
+    const [hasPicks, setHasPicks] = useState(false);
 
     // The chat step's input is locked while a "Topics I'll track" or a fact
     // choice card is unresolved (ChatSessionView); Next must honour the same
@@ -153,6 +156,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     /** Move on from the current step, past its guard. */
     const advance = useCallback(async () => {
         setGuard(null);
+        // Sources writes nothing to the server, so Skip works offline.
+        if (currentStep === 1) {
+            setStep(2);
+            return;
+        }
         // Offline FIRST: every step below talks to the server.
         if (!isOnline()) {
             setShowServerError(true);
@@ -176,7 +184,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
             // silent-push background cycle needs it.
             await ensurePushTokenRegistered(userId);
             void reconcileAppLanguageWithPersona({ userId });
-            await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
+            await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2]);
             await markOnboardingDone();
             resetOnboarding();
             onComplete();
@@ -213,7 +221,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 setGuard('no-facts');
                 return;
             }
-        } else if (!notificationsOn) {
+        } else if (currentStep === 2 && !notificationsOn) {
             Keyboard.dismiss();
             setGuard('no-notifications');
             return;
@@ -230,10 +238,20 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         );
     }
 
+    const skipping = currentStep === 1 && !hasPicks;
     const nextButton = (
-        <Button action="primary" onPress={handleNext} isDisabled={busy} style={styles.next} testID="onboarding-next">
-            <ButtonText>{t('common.next')}</ButtonText>
-        </Button>
+        <View style={currentStep === 1 ? styles.nextFrame : undefined}>
+            <Button
+                action="primary"
+                variant={skipping ? 'outline' : 'solid'}
+                onPress={handleNext}
+                isDisabled={busy}
+                style={styles.next}
+                testID="onboarding-next"
+            >
+                <ButtonText>{skipping ? t('onboarding.sourcesSkip') : t('common.next')}</ButtonText>
+            </Button>
+        </View>
     );
 
     return (
@@ -267,9 +285,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                             />
                         </View>
                     </>
+                ) : currentStep === 1 ? (
+                    <OnboardingSourcesStep onHasPicksChange={setHasPicks} />
                 ) : (
                     <>
-                        <View style={styles.remind}>
+                        <View style={styles.remind} testID="onboarding-remind">
                             <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
                                 {t('onboarding.remindTitle')}
                             </RNText>
@@ -354,6 +374,7 @@ const styles = StyleSheet.create({
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },
     next: { height: 36, paddingHorizontal: 16 },
+    nextFrame: { width: 96 },
     guard: { position: 'absolute', left: 16, right: 16 },
 });
 
