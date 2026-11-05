@@ -248,8 +248,6 @@ export function useFeedbackHub(d: FeedbackHubDeps) {
                     ...(cause === 'system' && f ? { value: f.id } : {}),
                 });
                 afterAnswer(cause);
-            } catch (e) {
-                throw e;
             } finally {
                 busy.current = false;
             }
@@ -275,8 +273,6 @@ export function useFeedbackHub(d: FeedbackHubDeps) {
                     changeLogIds: res.changeLogId ? [res.changeLogId] : [],
                 });
                 afterAnswer('config');
-            } catch (e) {
-                throw e;
             } finally {
                 busy.current = false;
             }

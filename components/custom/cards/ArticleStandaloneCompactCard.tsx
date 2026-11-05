@@ -59,9 +59,6 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     (article.source_uri ? extractDomain(article.source_uri) : 'Source');
   const titleEnglish = article.title_en_internal_only ?? undefined;
 
-  // Callers pass `subjectExtras` as an inline literal; its fields, not its
-  // identity, are what matter.
-  const extrasKey = JSON.stringify(subjectExtras ?? null);
   const subject = useMemo<FeedbackSubject>(
     () => ({
       origin: 'article',
@@ -73,9 +70,12 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       publicationName: article.publicationSource?.publication_name ?? null,
       countryCode: article.publicationSource?.country_code ?? null,
       languageCode: article.original_language_code ?? null,
-      ...(JSON.parse(extrasKey) as typeof subjectExtras),
+      ...subjectExtras,
     }),
-    [article, extrasKey],
+    // Callers pass `subjectExtras` as an inline literal; its fields, not its
+    // identity, are what matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [article, JSON.stringify(subjectExtras ?? null)],
   );
   const share = useMemo(
     () => ({

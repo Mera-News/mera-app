@@ -6,6 +6,7 @@ import { showsBelowGate, showsChipOnly } from '@/components/custom/cards/note-pe
 import { isNotRead } from '@/lib/feed-ordering/pending-visibility';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
+import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
 import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
@@ -181,6 +182,24 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     titleOriginal: suggestion.title_original,
     sourceLanguage: suggestion.language_code,
   });
+  // The feedback button opens the SAME ••• sheet as the menu, straight at
+  // the feedback root (no Back row). Nothing is recorded until the reader
+  // answers: the sheet writes the verdict and reports it (owner).
+  const menuRef = React.useRef<{ openFeedback: () => void } | null>(null);
+  const tapFeedback = () => {
+    hapticLight();
+    menuRef.current?.openFeedback();
+  };
+  // The action row's own buttons, as VoiceOver custom actions on the card: the
+  // card root is one accessibility element, which hides the row inside it.
+  const inlineActions = onVerdict
+    ? inlineAccessibilityActions(t, {
+        saved,
+        onFeedback: tapFeedback,
+        onToggleSave: handleToggleSave,
+        onShare: suggestion.article_url ? () => void handleShare() : undefined,
+      })
+    : undefined;
   const menu = useArticleMenu({
     subject: menuSubject,
     visit: menuVisit,
@@ -199,19 +218,13 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       if (asked) onPress(suggestion);
       return asked;
     },
-    inline: onVerdict ? { saved, onToggleSave: handleToggleSave, onShare: suggestion.article_url ? () => void handleShare() : undefined } : undefined,
+    inlineActions,
     onVerdictRecorded: feedbackHandlers ? () => feedbackHandlers.onVerdictRecorded(suggestion) : undefined,
     onFeedbackChat: feedbackHandlers
       ? (pathIds, answers) => feedbackHandlers.onInvokeMera(suggestion, pathIds, answers)
       : undefined,
   });
-  // The feedback button opens the SAME ••• sheet as the menu, straight at
-  // the feedback root (no Back row). Nothing is recorded until the reader
-  // answers: the sheet writes the verdict and reports it (owner).
-  const tapFeedback = () => {
-    hapticLight();
-    menu.openFeedback();
-  };
+  menuRef.current = menu;
   const aboutSourceActions = menu.accessibilityActions.filter((a) => a.name === 'about-source');
   const aboutSourceAction = aboutSourceActions.length > 0 ? aboutSourceActions : undefined;
 
