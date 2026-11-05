@@ -63,6 +63,13 @@ appId: ${APP_ID}
     id: "onboarding-next"
 - tapOn:
     id: "onboarding-guard-notifications-secondary"
+# A finished wizard always lands on World, with the first sync running behind it
+# (handleComplete in app/logged-in/onboarding.tsx). Flows go on from the Feed, by deep link.
+- extendedWaitUntil:
+    visible:
+      id: "world-pages"
+    timeout: 60000
+- openLink: ${SCHEME}:///logged-in/app_container/feed
 - extendedWaitUntil:
     visible:
       id: "feed-screen"

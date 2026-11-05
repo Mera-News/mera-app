@@ -40,6 +40,7 @@ ORIG_ARGS=("$@")
 DRY=0 SKIP_BUILD=0 CLEAN=0 ALLOW_DIRTY=0 SELF_TEST=0
 DEVICE="${E2E_DEVICE:-}"
 FLOWS=()
+MAESTRO_ARGS=()
 HANDLERS="${E2E_HANDLERS:-./handlers}"
 
 usage() {
@@ -70,6 +71,10 @@ if [ -n "$DEVICE" ]; then
   LAST=e2e-output/last-app-e2e-device.apk
   METRO_TMP="$ROOT/e2e-output/.metro-tmp-device"
   export JAVA_HOME="${JAVA_HOME:-$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home}"
+  # MIUI makes a person tap every USB install, and the default reinstalls both drivers each run.
+  # shortcut: a Maestro upgrade keeps the old drivers, `adb uninstall dev.mobile.maestro` and
+  # dev.mobile.maestro.test by hand after one.
+  MAESTRO_ARGS=(--no-reinstall-driver)
 fi
 
 # Remote endpoints of the app-uid sockets sampled from /proc/net/tcp{,6}. Requires at least one
@@ -135,7 +140,7 @@ if [ "$DRY" = 1 ]; then
   if [ -n "$DEVICE" ]; then
     PREFLIGHT="require adb state device for $SERIAL; require airplane_mode_on=1 and 'Active default network: none'"
     BOOT="step 4 connect: adb -s $SERIAL reverse tcp:$PORT tcp:$PORT (no emulator, no proxy)"
-    BEFORE_INSTALL="check airplane mode and no default network again; "
+    BEFORE_INSTALL="check airplane mode and no default network again; skip the install when the phone's APK has the same sha256; "
     SCALES="save the animation scales and stay_on_while_plugged_in, scales to 0, stay on"
     TEARDOWN="stop sampler; restore the saved settings; adb -s $SERIAL reverse --remove tcp:$PORT; kill mock server"
     AFTER7="; check airplane mode and no default network again"
@@ -156,7 +161,7 @@ step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle g
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
 $BOOT
 step 5 install: ${BEFORE_INSTALL}adb -s $SERIAL install -r $LAST; $SCALES; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
-step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler and the logcat stream (started at step 5) -> $RUN/logcat.txt; report the WMDatabaseJSIBridge install line, FATAL lines and removeViewAt lines
+step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${MAESTRO_ARGS[*]+${MAESTRO_ARGS[*]}} ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler and the logcat stream (started at step 5) -> $RUN/logcat.txt; report the WMDatabaseJSIBridge install line, FATAL lines and removeViewAt lines
 step 7 app sockets: every sampled app-uid remote must be $MOCK_HOST:$PORT (or unconnected, or loopback on the emulator), and at least one must be the mock$AFTER7
 step 8 cleanup (always, idempotent): $TEARDOWN
 exit code: maestro's if non-zero, else step 7's
@@ -333,7 +338,17 @@ fi
 echo "== step 5: install"
 # A build can take half an hour; the phone must still be offline when the app first runs.
 if [ -n "$DEVICE" ]; then require_offline || exit 1; fi
-"$ADB" -s "$SERIAL" install -r "$LAST"
+# On MIUI a USB install waits for a tap, so the phone gets only an APK it does not already have.
+ON_PHONE=""
+if [ -n "$DEVICE" ]; then
+  APK_PATH="$("$ADB" -s "$SERIAL" shell pm path "$APP_ID" | tr -d '\r' | sed -n 's/^package://p' | head -1 || true)"
+  [ -z "$APK_PATH" ] || ON_PHONE="$("$ADB" -s "$SERIAL" shell sha256sum "$APK_PATH" | cut -d' ' -f1 || true)"
+fi
+if [ -n "$ON_PHONE" ] && [ "$ON_PHONE" = "$(shasum -a 256 "$LAST" | cut -d' ' -f1)" ]; then
+  echo "apk unchanged on $SERIAL, install skipped"
+else
+  "$ADB" -s "$SERIAL" install -r "$LAST"
+fi
 # System animations off, before any launch (Reanimated reads Reduce Motion at launch). The app's
 # motion gate then parks every loop on a still frame, as Lite does, but keeps the full-mode look.
 # Without it, full mode's animated backdrop on the software GPU slowed each Maestro step to ~100 s.
@@ -368,7 +383,7 @@ LOGCAT_PID=$!
 # ---- step 6: Maestro ---------------------------------------------------------------------
 echo "== step 6: maestro ${FLOWS[*]}"
 MAESTRO_RC=0
-MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test "${FLOWS[@]}" \
+MAESTRO_CLI_NO_ANALYTICS=1 maestro --device "$SERIAL" test ${MAESTRO_ARGS[@]+"${MAESTRO_ARGS[@]}"} "${FLOWS[@]}" \
   --test-output-dir "$RUN/maestro" --format junit --output "$RUN/junit.xml" \
   -e MOCK="http://localhost:$PORT" -e APP_ID="$APP_ID" -e SCHEME="$SCHEME" \
   -e IMAGE_ORIGIN="${IMAGE_ORIGIN:-}" || MAESTRO_RC=$?
