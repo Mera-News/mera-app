@@ -237,7 +237,33 @@
     },
     {
       "index": 15,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 16,
       "user": "Show less from Germany",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 17,
+      "user": "no thanks",
       "expect": {
         "routeKind": "feed-tuning",
         "skill": "conversation/feed-tuning",
