@@ -27,6 +27,8 @@ import {
   HYDRATE_CHUNK_SIZE,
   HYDRATE_CONCURRENCY,
   splitAlreadyReadArticles,
+  stepDiff,
+  stepFetchTopicIds,
 } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { server } from '@/test/helpers';
@@ -195,6 +197,24 @@ describe('chunking and concurrency', () => {
 
     expect(stats.requests).toHaveLength(HYDRATE_CONCURRENCY);
     expect(result.insertedCount).toBeGreaterThan(0);
+  });
+
+  it('past `stopAt` launches no further chunk, keeps what landed, and leaves the rest new for a later sync', async () => {
+    const { t, diff, stats } = await prepare(ids(HYDRATE_CHUNK_SIZE * 5));
+    let now = Date.now();
+    spyOnExport(Date, 'now').mockImplementation(() => now);
+
+    const { result } = await hydrate(diff, t, {
+      stopAt: now + 1,
+      refreshStore: jest.fn(async () => {
+        now += 1;
+      }),
+    });
+
+    expect(t.ctx.signal.aborted).toBe(false);
+    expect(stats.requests).toHaveLength(HYDRATE_CONCURRENCY);
+    expect(result.insertedCount).toBe(HYDRATE_CHUNK_SIZE * HYDRATE_CONCURRENCY);
+    expect((await stepDiff(await stepFetchTopicIds('', t.ctx), t.ctx)).missingIds).toHaveLength(HYDRATE_CHUNK_SIZE * 2);
   });
 });
 

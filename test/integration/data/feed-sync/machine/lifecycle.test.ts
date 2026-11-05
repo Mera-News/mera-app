@@ -99,6 +99,18 @@ describe('FeedSyncMachine lifecycle', () => {
   });
 
   describe('a run with new articles', () => {
+    it('gives hydrate a stop time ahead of the job timeout', async () => {
+      await serveNew(ids(3));
+      const hydrate = spyOnExport(steps, 'stepHydratePersistEnqueue');
+      const before = Date.now();
+
+      await run();
+
+      const { stopAt } = hydrate.mock.calls[0][2];
+      expect(stopAt).toBeGreaterThanOrEqual(before + steps.HYDRATE_STOP_AFTER_MS);
+      expect(steps.HYDRATE_STOP_AFTER_MS).toBeLessThan(3 * 60 * 1000);
+    });
+
     it('walks fetch, diff, hydrate and score to done, publishing only from hydrating onward', async () => {
       await serveNew(ids(6));
       const rec = recordMachine();

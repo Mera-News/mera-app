@@ -184,6 +184,10 @@ export function splitAlreadyReadArticles(
   return { toPersist, readCount };
 }
 
+/** How far into a foreground run hydrate may launch chunks. Past it the rest stay
+ *  new-to-device for a later sync, ahead of the job's 3-minute abort. */
+export const HYDRATE_STOP_AFTER_MS = 150_000;
+
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
   serverArticleIds: string[];
@@ -250,6 +254,9 @@ export interface HydratePersistEnqueueOptions {
    *  `enqueueUnscoredEligible`, which would drain with a foreground context. The
    *  run's own submit takes `eligibleIds` instead. */
   background?: boolean;
+  /** Launch no chunk at or after this wall-clock time. Absent means no limit
+   *  beyond the signal. */
+  stopAt?: number;
 }
 
 export async function stepFetchTopicIds(
@@ -881,7 +888,7 @@ export async function stepHydratePersistEnqueue(
       if (stopLaunching) return;
       // Cooperative points: pause while offline, bail on abort.
       await opts.awaitResumeIfPaused();
-      if (ctx.signal.aborted) {
+      if (ctx.signal.aborted || (opts.stopAt !== undefined && Date.now() >= opts.stopAt)) {
         stopLaunching = true;
         return;
       }
