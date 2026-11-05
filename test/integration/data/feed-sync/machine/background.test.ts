@@ -21,6 +21,8 @@ jest.mock('expo-keep-awake', () => ({
 }));
 
 import database from '@/lib/database';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
+import { TOPIC_CURSOR_KEY } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { toastManager } from '@/lib/toast-manager';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -30,6 +32,7 @@ import {
   art,
   cleanupFeedSync,
   makeCtx,
+  recordOps,
   resetFeedSyncMemory,
   resetScoringWorld,
   rowsById,
@@ -101,6 +104,18 @@ describe('FeedSyncMachine in background mode', () => {
       expect(scoreEntries).toEqual([]);
       expect(gatewayCalls('job').length).toBeGreaterThan(0); // the bounded submit reached the gateway
       expect(feedSyncMachine.state).toBe('done');
+    });
+
+    it('asks from the top of the list and leaves a foreground cursor alone', async () => {
+      await seedInterest('I follow racing', ['a topic', 'b topic']);
+      await setSetting(TOPIC_CURSOR_KEY, 'b topic');
+      const sent = recordOps();
+
+      await run(backgroundHooks());
+
+      const [{ variables }] = await sent.named('GetArticleIdsForPersona');
+      expect(variables.query.topics.map((t: { text: string }) => t.text).sort()).toEqual(['a topic', 'b topic']);
+      expect(await getSetting(TOPIC_CURSOR_KEY)).toBe('b topic');
     });
 
     it('enqueues nothing through the foreground path: the gateway has seen no job when the hook is called', async () => {

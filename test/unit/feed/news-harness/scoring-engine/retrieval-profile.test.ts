@@ -136,26 +136,12 @@ describe('buildRetrievalProfile — factWeight multiplier', () => {
   });
 });
 
-describe('buildRetrievalProfile — maxTopics cap', () => {
-  it('caps at 200 topics, keeping the highest w_eff ones sorted descending', () => {
-    const topics: RetrievalTopicInput[] = [];
-    for (let i = 0; i < 250; i++) {
-      // weights spread across (0, 1], strictly positive and distinct.
-      topics.push(topic({ topicId: `t${i}`, text: `topic-${String(i).padStart(3, '0')}`, weight: (i + 1) / 250 }));
-    }
-    const result = buildRetrievalProfile({ topics, locations: [] });
-    expect(result.topics.length).toBe(200);
-
-    // The kept set should be exactly the top-200 by w_eff (i.e. weight here
-    // since factWeight defaults to 1): topics t50..t249 (250-200=50 lowest dropped).
-    const keptIds = new Set(result.topics.map((t) => t.topicId));
-    for (let i = 50; i < 250; i++) expect(keptIds.has(`t${i}`)).toBe(true);
-    for (let i = 0; i < 50; i++) expect(keptIds.has(`t${i}`)).toBe(false);
-
-    // sorted descending by effectiveWeight
-    for (let i = 1; i < result.topics.length; i++) {
-      expect(result.topics[i - 1].effectiveWeight).toBeGreaterThanOrEqual(result.topics[i].effectiveWeight);
-    }
+describe('buildRetrievalProfile — no count cap', () => {
+  it('returns every positive topic, however long the list', () => {
+    const topics = Array.from({ length: 2000 }, (_, i) =>
+      topic({ topicId: `t${i}`, text: `topic-${String(i).padStart(4, '0')}`, weight: (i + 1) / 2000 }),
+    );
+    expect(buildRetrievalProfile({ topics, locations: [] }).topics).toHaveLength(2000);
   });
 });
 
@@ -318,8 +304,8 @@ describe('buildRetrievalProfile — per-scope headlineDepthByScope', () => {
 
 // ux2: one topic text can live on several facts ("EU AI Act enforcement" x5).
 // The server answers per TEXT, so every duplicate entry after the first only
-// filled a slot under the 200 cap and pushed distinct topics out.
-describe('buildRetrievalProfile — duplicate texts collapse before the cap', () => {
+// would cost a request slot.
+describe('buildRetrievalProfile — duplicate texts collapse', () => {
   it('collapses duplicates by normalised text to ONE entry', () => {
     const { topics } = buildRetrievalProfile({
       topics: [
@@ -376,17 +362,6 @@ describe('buildRetrievalProfile — duplicate texts collapse before the cap', ()
     expect(a).toEqual(b);
   });
 
-  it('the cap counts DISTINCT texts: 232 topics over 204 texts send all 200 slots distinct', () => {
-    const input: RetrievalTopicInput[] = [];
-    for (let i = 0; i < 204; i++) input.push(topic({ topicId: `t${i}`, text: `topic ${i}`, weight: 0.5 }));
-    // 28 duplicates of one text, at a higher weight so they would have led.
-    for (let i = 0; i < 28; i++) input.push(topic({ topicId: `dup${i}`, text: 'EU AI Act enforcement', weight: 0.9 }));
-    const { topics } = buildRetrievalProfile({ topics: input, locations: [] });
-    expect(topics).toHaveLength(200);
-    expect(new Set(topics.map((t) => t.text.toLowerCase())).size).toBe(200);
-    expect(topics[0].text).toBe('EU AI Act enforcement');
-  });
-
   it('a negative member does not drag a text out: only positive members are merged', () => {
     const { topics } = buildRetrievalProfile({
       topics: [topic({ topicId: 'neg', text: 'X', weight: -0.5 }), topic({ topicId: 'pos', text: 'x', weight: 0.4 })],
@@ -397,7 +372,7 @@ describe('buildRetrievalProfile — duplicate texts collapse before the cap', ()
   });
 });
 
-describe('buildRetrievalProfile — the cap shares equal-weight slots across facts', () => {
+describe('buildRetrievalProfile — a long list shares its order across facts', () => {
   const seeded = (factId: string, count: number, prefix: string, createdAtMs = 1000) =>
     Array.from({ length: count }, (_, i) =>
       topic({
@@ -408,14 +383,15 @@ describe('buildRetrievalProfile — the cap shares equal-weight slots across fac
         createdAtMs,
       }),
     );
-  const textsOf = (r: ReturnType<typeof buildRetrievalProfile>) => r.topics.map((t) => t.text);
+  // The first 200 are what a long list serves before the others.
+  const textsOf = (r: ReturnType<typeof buildRetrievalProfile>) => r.topics.slice(0, 200).map((t) => t.text);
 
   it('a heavy fact cannot crowd a small one out, whatever the alphabet says', () => {
     const r = buildRetrievalProfile({
       topics: [...seeded('heavy', 250, 'aaa'), ...seeded('small', 5, 'zzz')],
       locations: [],
     });
-    expect(r.topics).toHaveLength(200);
+    expect(r.topics).toHaveLength(255);
     for (let i = 0; i < 5; i++) expect(textsOf(r)).toContain(`zzz-00${i}`);
   });
 
@@ -433,7 +409,7 @@ describe('buildRetrievalProfile — the cap shares equal-weight slots across fac
       locations: [],
     });
     expect(textsOf(r).filter((t) => t.startsWith('aaa'))).toEqual([]);
-    expect(r.topics).toHaveLength(200);
+    expect(r.topics).toHaveLength(203);
   });
 
   it('weight still ranks first: a heavier topic beats any fair share', () => {
@@ -457,7 +433,7 @@ describe('buildRetrievalProfile — the cap shares equal-weight slots across fac
     expect(textsOf(r)).toContain('aaa-shared');
   });
 
-  it('at or under the cap the order and the output shape are unchanged', () => {
+  it('at or under 200 the order and the output shape are unchanged', () => {
     const r = buildRetrievalProfile({
       topics: [...seeded('z', 2, 'zzz', 1), ...seeded('a', 2, 'aaa', 2)],
       locations: [],

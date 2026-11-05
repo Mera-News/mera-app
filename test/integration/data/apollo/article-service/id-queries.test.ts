@@ -241,66 +241,6 @@ describe('getArticleIdsForPersona', () => {
         });
     });
 
-    describe('chunking at 150 topics', () => {
-        const echo = (scopes: string[] = []) =>
-            mockGql('GetArticleIdsForPersona', (v) => {
-                const asked = (v.query as { topics: { text: string }[] }).topics.map((t) => t.text);
-                return personaReply(asked, scopes);
-            });
-
-        it('sends one request, topHeadlines included, for 150 topics', async () => {
-            server.use(echo());
-            const sent = recordOps();
-            await ArticleService.getArticleIdsForPersona(personaQuery({ topics: personaTopics(150), topHeadlines }));
-            const calls = await sentOf(sent, 'GetArticleIdsForPersona');
-            expect(calls).toHaveLength(1);
-            expect(calls[0].variables.query.topics).toHaveLength(150);
-            expect(calls[0].variables.query.topHeadlines).toEqual(topHeadlines);
-        });
-
-        it('splits 219 topics into 150 then 69 and keeps the result order', async () => {
-            server.use(echo(['GLOBAL']));
-            const sent = recordOps();
-            const all = personaTopics(219);
-            const result = await ArticleService.getArticleIdsForPersona(personaQuery({ topics: all, topHeadlines }));
-            const calls = await sentOf(sent, 'GetArticleIdsForPersona');
-            expect(calls.map((c) => c.variables.query.topics.length)).toEqual([150, 69]);
-            expect(result.topicResults.map((r) => r.topicText)).toEqual(all.map((t) => t.text));
-        });
-
-        it('sends topHeadlines on the FIRST chunk only', async () => {
-            server.use(echo());
-            const sent = recordOps();
-            await ArticleService.getArticleIdsForPersona(personaQuery({ topics: personaTopics(219), topHeadlines }));
-            const calls = await sentOf(sent, 'GetArticleIdsForPersona');
-            expect(calls[0].variables.query.topHeadlines).toEqual(topHeadlines);
-            expect(calls[1].variables.query).not.toHaveProperty('topHeadlines');
-        });
-
-        it('concatenates headlineResults and keeps the first of a topic echoed by a later chunk', async () => {
-            let call = 0;
-            server.use(
-                mockGql('GetArticleIdsForPersona', () =>
-                    call++ === 0 ? personaReply(['t0'], ['GLOBAL']) : personaReply(['t0', 't150']),
-                ),
-            );
-            const result = await ArticleService.getArticleIdsForPersona(
-                personaQuery({ topics: personaTopics(200), topHeadlines }),
-            );
-            expect(result.topicResults.map((r) => r.topicText)).toEqual(['t0', 't150']);
-            expect(result.topicResults[0].articleIds).toEqual(['a-t0']);
-            expect(result.headlineResults).toHaveLength(1);
-        });
-
-        it('carries the rest of the query (limitPerTopic) onto every chunk', async () => {
-            server.use(echo());
-            const sent = recordOps();
-            await ArticleService.getArticleIdsForPersona(personaQuery({ topics: personaTopics(160), limitPerTopic: 40 }));
-            const calls = await sentOf(sent, 'GetArticleIdsForPersona');
-            expect(calls.map((c) => c.variables.query.limitPerTopic)).toEqual([40, 40]);
-        });
-    });
-
     it('rethrows with a breadcrumb and no capture of its own', async () => {
         const logs = spyLogger();
         server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { message: 'persona query failed' }));
@@ -314,22 +254,6 @@ describe('getArticleIdsForPersona', () => {
             expect.objectContaining({ topicCount: 1, method: 'getArticleIdsForPersona' }),
             'warning',
         );
-    });
-
-    it('reports the FULL topic count when the second chunk fails', async () => {
-        const logs = spyLogger();
-        let call = 0;
-        server.use(
-            mockGql('GetArticleIdsForPersona', (v) => {
-                if (call++ === 0) return personaReply((v.query as any).topics.map((t: any) => t.text));
-                // Not a GraphQL body: the client rejects it.
-                throw new Error('chunk 2 failed');
-            }),
-        );
-        await expect(
-            ArticleService.getArticleIdsForPersona(personaQuery({ topics: personaTopics(219) })),
-        ).rejects.toBeTruthy();
-        expect(crumbOf(logs.crumb, 'getArticleIdsForPersona FAILED')?.[2]).toMatchObject({ topicCount: 219 });
     });
 });
 

@@ -17,8 +17,13 @@ jest.mock('@/lib/logger', () => ({
 import { addFact } from '@/lib/database/services/fact-service';
 import { setHeadlineDepth } from '@/lib/database/services/headline-depth-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
-import { countAllTopics, createTopics } from '@/lib/database/services/topic-service';
-import { stepFetchTopicIds } from '@/lib/scheduler/feed-sync/feed-sync-steps';
+import { getSetting } from '@/lib/database/services/setting-service';
+import { countAllTopics } from '@/lib/database/services/topic-service';
+import {
+  stepFetchTopicIds,
+  TOPIC_CURSOR_KEY,
+  TOPIC_FETCH_BUDGET_MS,
+} from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import logger from '@/lib/logger';
 import { graphql, HttpResponse, mockGql, server } from '@/test/helpers';
 import {
@@ -32,6 +37,7 @@ import {
   seedLocation,
   seedTracked,
   servePersona,
+  spyOnExport,
 } from './support';
 import { PERSONA_V3_MIGRATION_KEY } from '@/lib/services/persona-migration-service';
 
@@ -263,36 +269,207 @@ describe('what the persona request carries', () => {
     expect(limitOf('formula 1')).toBeGreaterThanOrEqual(limitOf('motogp'));
   });
 
-  describe('past the 200-topic cap', () => {
+  describe('a list past one batch', () => {
     const texts = (prefix: string, count: number, from = 0) =>
       Array.from({ length: count }, (_, i) => `${prefix} ${String(from + i).padStart(3, '0')}`);
-    const sentTexts = async (sent: ReturnType<typeof recordOps>) => {
-      // The app batches a request this large, so read every chunk.
-      const calls = await sent.named('GetArticleIdsForPersona');
-      return calls.flatMap(({ variables }) => (variables.query.topics as { text: string }[]).map((t) => t.text));
-    };
+    type Asked = { text: string };
+    const batchesOf = async (sent: ReturnType<typeof recordOps>) =>
+      (await sent.named('GetArticleIdsForPersona')).map(({ variables }) => variables.query as { topics: Asked[]; topHeadlines?: unknown });
+    const reply = (topics: Asked[], headlineIds: string[] = []) =>
+      HttpResponse.json({
+        data: {
+          articleIdsForPersona: {
+            __typename: 'PersonaQueryResult',
+            topicResults: topics.map((t) => ({
+              __typename: 'PersonaTopicResult',
+              topicText: t.text,
+              articleIds: [`id ${t.text}`],
+              matchMeta: [],
+              nextCursor: null,
+              hasNextPage: false,
+            })),
+            headlineResults: headlineIds.length
+              ? [{ __typename: 'HeadlineScopeResult', scope: 'GLOBAL', countryCode: null, articleIds: headlineIds, clusterSizes: headlineIds.map(() => 1), stableClusterIds: headlineIds }]
+              : [],
+          },
+        },
+      });
+    const resolverError = () =>
+      HttpResponse.json({ data: null, errors: [{ message: 'resolver timed out', extensions: { code: 'INTERNAL_SERVER_ERROR' } }] });
+    /** Answers every batch; `fail` decides per batch whether this request errors. */
+    const serveBatches = (fail: (firstText: string) => boolean = () => false, onBatch: (firstText: string) => void = () => {}) =>
+      graphql.query('GetArticleIdsForPersona', ({ variables }) => {
+        const query = variables.query as { topics: Asked[]; topHeadlines?: unknown };
+        const first = query.topics[0]?.text ?? '';
+        onBatch(first);
+        return (fail(first) ? resolverError() : reply(query.topics, query.topHeadlines ? ['headline'] : [])) as never;
+      });
 
-    it('shares the slots by each topic\'s real fact', async () => {
-      await seedInterest('I read everything', texts('aaa', 210));
-      await seedInterest('I also like zebras', texts('zzz', 5));
+    it('asks for every topic in batches of 150, with the headlines on the first batch only', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      server.use(serveBatches());
       const sent = recordOps();
 
-      await stepFetchTopicIds('', makeCtx().ctx);
+      const out = await stepFetchTopicIds('', makeCtx().ctx);
 
-      const topics = await sentTexts(sent);
-      expect(topics).toHaveLength(200);
-      expect(topics).toEqual(expect.arrayContaining(texts('zzz', 5)));
+      const batches = await batchesOf(sent);
+      expect(batches.map((b) => b.topics.length)).toEqual([150, 150, 20]);
+      expect(batches.map((b) => b.topHeadlines != null)).toEqual([true, false, false]);
+      expect(new Set(batches.flatMap((b) => b.topics.map((t) => t.text))).size).toBe(320);
+      expect(out.serverArticleIds).toHaveLength(321);
+      expect(out.serverArticleIds.at(-1)).toBe('headline');
     });
 
-    it('keeps a fact\'s oldest topics by their real creation time', async () => {
-      const { fact } = await seedInterest('I read everything', texts('mmm', 201));
-      await new Promise((resolve) => setTimeout(resolve, 5));
-      await createTopics([{ factId: fact.id, text: 'aaa newest', weight: 1, highPriority: false, provenance: 'llm' }]);
+    it('puts followed topics in the earliest batches, whatever their weight', async () => {
+      await seedInterest('I read everything', texts('aaa', 200));
+      await seedTracked('zzz story', 0.1);
       const sent = recordOps();
 
       await stepFetchTopicIds('', makeCtx().ctx);
 
-      expect(await sentTexts(sent)).not.toContain('aaa newest');
+      const [first] = await batchesOf(sent);
+      expect(first.topics[0].text).toBe('zzz story');
+    });
+
+    it('a batch that fails once is the only one asked again', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      let failures = 1;
+      const seen: string[] = [];
+      server.use(
+        serveBatches(
+          (first) => first === 'aaa 150' && failures-- > 0,
+          (first) => seen.push(first),
+        ),
+      );
+
+      const out = await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(seen).toEqual(['aaa 000', 'aaa 150', 'aaa 150', 'aaa 300']);
+      expect(out.serverArticleIds).toHaveLength(321);
+    });
+
+    it('a batch that stays down keeps what arrived, and the next sync starts at it with the headlines', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      let down = true;
+      const seen: string[] = [];
+      server.use(serveBatches((first) => down && first === 'aaa 150', (first) => seen.push(first)));
+
+      const short = await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(seen).toEqual(['aaa 000', 'aaa 150', 'aaa 150']);
+      expect(short.serverArticleIds).toHaveLength(151);
+
+      down = false;
+      seen.length = 0;
+      const sent = recordOps();
+      const resumed = await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(seen).toEqual(['aaa 150', 'aaa 300']);
+      expect((await batchesOf(sent))[0].topHeadlines).toBeDefined();
+      expect(resumed.serverArticleIds).toHaveLength(171);
+
+      seen.length = 0;
+      await stepFetchTopicIds('', makeCtx().ctx);
+      expect(seen).toEqual(['aaa 000', 'aaa 150', 'aaa 300']);
+    });
+
+    it('stops at the time budget, keeps what arrived, and the next sync goes on from the first topic not fetched', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      let now = Date.now();
+      spyOnExport(Date, 'now').mockImplementation(() => now);
+      const seen: string[] = [];
+      server.use(serveBatches(() => false, (first) => {
+        seen.push(first);
+        now += TOPIC_FETCH_BUDGET_MS;
+      }));
+
+      const short = await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(seen).toEqual(['aaa 000']);
+      expect(short.serverArticleIds).toHaveLength(151);
+
+      seen.length = 0;
+      await stepFetchTopicIds('', makeCtx().ctx);
+      expect(seen).toEqual(['aaa 150']);
+    });
+
+    it('a first batch with nothing before it fails the sync as it always did', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      server.use(serveBatches(() => true));
+
+      await expect(stepFetchTopicIds('', makeCtx().ctx)).rejects.toBeDefined();
+    });
+
+    it('a resumed sync whose first batch fails goes back to the top, so one bad batch cannot hold the headlines', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      server.use(serveBatches((first) => first === 'aaa 150'));
+      await stepFetchTopicIds('', makeCtx().ctx);
+
+      await expect(stepFetchTopicIds('', makeCtx().ctx)).rejects.toBeDefined();
+
+      const seen: string[] = [];
+      server.use(serveBatches(() => false, (first) => seen.push(first)));
+      await stepFetchTopicIds('', makeCtx().ctx);
+      expect(seen[0]).toBe('aaa 000');
+    });
+
+    it('a cursor on a topic that has since gone starts from the top', async () => {
+      const { topics } = await seedInterest('I read everything', texts('aaa', 320));
+      server.use(serveBatches((first) => first === 'aaa 150'));
+      await stepFetchTopicIds('', makeCtx().ctx);
+      await deleteTopicWithDecline(topics.find((t) => t.text === 'aaa 150')!.id, { undoWindowMs: 60_000 });
+
+      const seen: string[] = [];
+      server.use(serveBatches(() => false, (first) => seen.push(first)));
+      await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(seen[0]).toBe('aaa 000');
+    });
+
+    it('an unreadable cursor row costs a full pass, not the sync', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      failSettingRead(TOPIC_CURSOR_KEY);
+      const seen: string[] = [];
+      server.use(serveBatches(() => false, (first) => seen.push(first)));
+
+      await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(seen).toEqual(['aaa 000', 'aaa 150', 'aaa 300']);
+    });
+
+    it('an abort mid-list is a cancellation and moves no cursor', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      const t = makeCtx();
+      server.use(serveBatches((first) => {
+        if (first === 'aaa 150') t.abort();
+        return false;
+      }));
+
+      await expect(stepFetchTopicIds('', t.ctx)).rejects.toMatchObject({ name: 'AbortError' });
+
+      expect(await getSetting(TOPIC_CURSOR_KEY)).toBeNull();
+    });
+
+    it('a background run starts at the top and leaves the foreground cursor alone', async () => {
+      await seedInterest('I read everything', texts('aaa', 320));
+      server.use(serveBatches((first) => first === 'aaa 150'));
+      await stepFetchTopicIds('', makeCtx().ctx);
+      const cursor = await getSetting(TOPIC_CURSOR_KEY);
+
+      const seen: string[] = [];
+      server.use(serveBatches(() => false, (first) => seen.push(first)));
+      await stepFetchTopicIds('', makeCtx().ctx, { background: true });
+
+      expect(seen[0]).toBe('aaa 000');
+      expect(await getSetting(TOPIC_CURSOR_KEY)).toBe(cursor);
+    });
+
+    it('a list within one batch never writes the cursor row', async () => {
+      await seedInterest('I follow racing', ['formula 1']);
+
+      await stepFetchTopicIds('', makeCtx().ctx);
+
+      expect(await getSetting(TOPIC_CURSOR_KEY)).toBeNull();
     });
   });
 

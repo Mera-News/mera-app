@@ -358,7 +358,7 @@ class FeedSyncMachine {
       if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
 
       const [topicResult, recentCount] = await Promise.all([
-        steps.stepFetchTopicIds(personaId, ctx),
+        steps.stepFetchTopicIds(personaId, ctx, { background: bg !== undefined }),
         ArticleService.getRecentArticleCount(),
       ]);
       coldstartTimeline.mark(

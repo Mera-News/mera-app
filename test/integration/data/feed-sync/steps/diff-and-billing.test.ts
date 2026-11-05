@@ -25,7 +25,7 @@ import {
   stepDiff,
   stepFetchTopicIds,
 } from '@/lib/scheduler/feed-sync/feed-sync-steps';
-import { server } from '@/test/helpers';
+import { graphql, HttpResponse, server } from '@/test/helpers';
 import {
   cleanupFeedSync,
   fetchAndDiff,
@@ -215,6 +215,79 @@ describe('stepDiff: the billing partition', () => {
     expect(diff.storyIds).toEqual([]);
     expect(diff.personaIds).toEqual(diff.missingIds);
     expect(diff.missingIds.length).toBeGreaterThan(0);
+  });
+});
+
+describe('a sync that stopped short, then resumed', () => {
+  const texts = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => `${prefix} ${String(i).padStart(3, '0')}`);
+  /** The batch starting at `first` errors while `down()` says so; everything else falls through. */
+  const failBatch = (first: string, down: () => boolean) =>
+    graphql.query('GetArticleIdsForPersona', ({ variables }) => {
+      const asked = (variables.query as { topics: { text: string }[] }).topics;
+      if (!down() || asked[0]?.text !== first) return undefined;
+      return HttpResponse.json({ data: null, errors: [{ message: 'down', extensions: { code: 'INTERNAL_SERVER_ERROR' } }] });
+    });
+
+  it('hydrates and charges an article once when a later batch lists it again', async () => {
+    await seedInterest('I read everything', texts('aaa', 200));
+    let down = true;
+    const served = serveHydrate();
+    server.use(
+      failBatch('aaa 150', () => down),
+      servePersona({ topics: { 'aaa 000': ['both', 'early'], 'aaa 199': ['both', 'late'] } }),
+      ...served.handlers,
+    );
+    const t = makeCtx();
+
+    const short = await fetchAndDiff(t);
+    expect(short.diff.personaIds).toEqual(['both', 'early']);
+    await hydrate(short.diff, t);
+
+    down = false;
+    const resumed = await fetchAndDiff(t);
+    expect(resumed.diff.personaIds).toEqual(['late']);
+    await hydrate(resumed.diff, t);
+
+    const charged = served.stats.requests.filter((r) => r.op === 'GetArticlesForTopicsByIds').flatMap((r) => r.ids);
+    expect(charged.sort()).toEqual(['both', 'early', 'late']);
+  });
+
+  it('never meters a followed-only article, and a resumed sync lists no followed topic to re-partition', async () => {
+    await seedInterest('I read everything', texts('aaa', 200));
+    await seedTracked('zzz story', 0.1);
+    let down = true;
+    server.use(
+      failBatch('aaa 149', () => down),
+      servePersona({ topics: { 'zzz story': ['followed'], 'aaa 000': ['metered'], 'aaa 199': ['late'] } }),
+    );
+    const t = makeCtx();
+
+    const short = await fetchAndDiff(t);
+    expect(short.diff.storyIds).toEqual(['followed']);
+    expect(short.diff.personaIds).toEqual(['metered']);
+
+    down = false;
+    const resumed = await fetchAndDiff(t);
+    expect(resumed.diff.storyIds).toEqual([]);
+    expect(resumed.diff.personaIds).toEqual(['late']);
+  });
+
+  // shortcut: the partition sees only what this sync fetched, so an article a batch not yet fetched
+  // would also have matched stays free and unscored. Upgrade with a re-link of local rows if a reader
+  // over one sync's budget reports feed gaps.
+  it('a followed-only article whose fact match sits in an unfetched batch hydrates free', async () => {
+    await seedInterest('I read everything', texts('aaa', 200));
+    await seedTracked('zzz story', 0.1);
+    server.use(
+      failBatch('aaa 149', () => true),
+      servePersona({ topics: { 'zzz story': ['overlap'], 'aaa 199': ['overlap'] } }),
+    );
+
+    const { diff } = await fetchAndDiff(makeCtx());
+
+    expect(diff.storyIds).toEqual(['overlap']);
+    expect(diff.personaIds).toEqual([]);
   });
 });
 

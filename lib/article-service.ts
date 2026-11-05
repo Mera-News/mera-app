@@ -742,7 +742,7 @@ export type {
 // so a single feed-sync could send hundreds at once. We chunk below the server
 // cap (with headroom) and run the batches SEQUENTIALLY — each cold topic costs
 // the server a Jina embed + vector search, so parallel batches would spike load.
-const MAX_TOPICS_PER_BATCH = 150;
+export const MAX_TOPICS_PER_BATCH = 150;
 
 /** How a publisher's articles are ordered (`articlesForPublisher(order:)`),
  *  as the string values of the generated enum. */
@@ -957,47 +957,15 @@ export class ArticleService {
      * Returns per-topic results (with matchMeta) + per-scope headline results.
      * The daily-delivery cap is NOT charged here (candidate listing is free —
      * it is charged at hydration via getArticlesForTopicsByIds).
+     *
+     * One request: `query.topics` must fit the server's per-request limit, so
+     * feed sync sends MAX_TOPICS_PER_BATCH at a time and owns retry and resume.
      */
     static async getArticleIdsForPersona(
         query: PersonaQueryInput,
     ): Promise<PersonaQueryResult> {
         try {
-            // Same server cap as articleIdsForTopics (MAX_TOPICS_PER_REQUEST,
-            // default 200 and env-overridable). buildRetrievalProfile slices to
-            // 200 today, so nothing exceeds it — but that is zero headroom, and
-            // "219 exceeds the maximum of 200" was a 2209-event Sentry issue
-            // before the slice landed. Batch here so a lower server cap, or a
-            // caller that forgets to slice, degrades instead of failing.
-            if (query.topics.length <= MAX_TOPICS_PER_BATCH) {
-                return await this.queryPersonaBatch(query);
-            }
-
-            const topicResults: PersonaQueryResult['topicResults'] = [];
-            const headlineResults: PersonaQueryResult['headlineResults'] = [];
-            const seenTopics = new Set<string>();
-
-            for (let i = 0; i < query.topics.length; i += MAX_TOPICS_PER_BATCH) {
-                const batch: PersonaQueryInput = {
-                    ...query,
-                    topics: query.topics.slice(i, i + MAX_TOPICS_PER_BATCH),
-                    // Headline scopes are query-level, not per-topic: repeating
-                    // them on every chunk would re-run the same scope lookup and
-                    // multiply headlineResults. First chunk only.
-                    topHeadlines: i === 0 ? query.topHeadlines : undefined,
-                };
-                // Sequential, matching the topics path — each cold topic costs
-                // the server a Jina embed + vector search.
-                const result = await this.queryPersonaBatch(batch);
-                // Preserve order; de-dup by topicText so a topic never appears twice.
-                for (const topicResult of result.topicResults) {
-                    if (seenTopics.has(topicResult.topicText)) continue;
-                    seenTopics.add(topicResult.topicText);
-                    topicResults.push(topicResult);
-                }
-                headlineResults.push(...result.headlineResults);
-            }
-
-            return { topicResults, headlineResults };
+            return await this.queryPersonaBatch(query);
         } catch (error) {
             logger.addBreadcrumb(
                 '[ArticleService] getArticleIdsForPersona FAILED',
@@ -1009,14 +977,6 @@ export class ArticleService {
         }
     }
 
-    /**
-     * Single-request articleIdsForPersona call (one batch of ≤ server cap topics).
-     *
-     * NOTE: `query.maxArticles` is a cap on the TOTAL ids across topicResults,
-     * so a chunked call applies it once per chunk. No caller sets it today
-     * (feed-sync-steps builds the query without it), so splitting it across
-     * chunks would be speculative machinery — revisit if one ever does.
-     */
     private static async queryPersonaBatch(
         query: PersonaQueryInput,
     ): Promise<PersonaQueryResult> {
