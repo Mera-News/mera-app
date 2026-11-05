@@ -4,10 +4,11 @@ import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import { usePageOrder } from '@/lib/navigation/page-order';
+import type { SavedList } from '@/lib/saved-state';
 import { useChecksUnseen, watchFactChecks } from '@/lib/stores/fact-checks-store';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import StatsPage from '@/components/custom/library/StatsPage';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -39,6 +40,9 @@ export function LibraryPages() {
     const { t } = useTranslation();
     const order = usePageOrder('library');
     const listEnd = useListEndClearance();
+    // Held here: the pager unmounts Saved two pages away, and coming back must
+    // not change which list the reader was in.
+    const [savedList, setSavedList] = useState<SavedList>('later');
 
     const pills: PagePill[] = useMemo(
         () =>
@@ -57,6 +61,8 @@ export function LibraryPages() {
                 case 'saved':
                     return (
                         <SavedSuggestionsScreen
+                            list={savedList}
+                            onListChange={setSavedList}
                             active={active}
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}
@@ -86,7 +92,7 @@ export function LibraryPages() {
                     return null;
             }
         },
-        [listEnd],
+        [listEnd, savedList],
     );
 
     return (

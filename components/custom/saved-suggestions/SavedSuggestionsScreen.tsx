@@ -8,7 +8,7 @@
 // left fits: on iOS a list that shrinks below its viewport keeps its old offset
 // otherwise, with nothing left to scroll back by.
 //
-// The list picked is session state, never in a URL (one page, no page state).
+// The list picked is the Library tab's session state, never in a URL.
 
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
@@ -54,6 +54,9 @@ import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
 import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 
 interface SavedSuggestionsScreenProps {
+    /** Read later or Archive. */
+    list: SavedList;
+    onListChange: (list: SavedList) => void;
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
     scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
     /** The tab header's height; the pinned row sits under it. */
@@ -120,6 +123,8 @@ const GroupHeading: React.FC<{ readonly heading: SavedGroupHeading; readonly tes
 };
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
+    list,
+    onListChange,
     scrollHandler,
     headerHeight = 0,
     hidden,
@@ -131,14 +136,19 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const tabClearance = useTabBarClearance();
     const [saved, setSaved] = useState<SavedItem[]>([]);
     const [facts, setFacts] = useState<readonly PickableFact[]>([]);
-    const [list, setList] = useState<SavedList>('later');
     const [groupBy, setGroupBy] = useState<SavedGroupBy>('newest');
     const [isLoading, setIsLoading] = useState(true);
     const [exportOpen, setExportOpen] = useState(false);
 
+    const listRef = useRef<any>(null);
+    const scrollToTop = useCallback(() => listRef.current?.scrollToOffset?.({ offset: 0, animated: false }), []);
+    // Bumped by a pick, so a focus load already running cannot undo it.
+    const groupPicks = useRef(0);
+
     useFocusEffect(
         useCallback(() => {
             let cancelled = false;
+            const picksAtStart = groupPicks.current;
             (async () => {
                 const [rows, stored] = await Promise.all([loadSavedItems(), getSetting(SAVED_GROUP_BY_SETTING)]);
                 const mode = parseGroupBy(stored);
@@ -146,6 +156,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 const factRows = mode === 'facts' ? await getFacts() : [];
                 if (cancelled) return;
                 setSaved(rows);
+                if (groupPicks.current !== picksAtStart) return;
                 setGroupBy(mode);
                 setFacts(factRows);
             })()
@@ -161,15 +172,20 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         }, []),
     );
 
-    const handleGroupByChange = useCallback((next: SavedGroupBy) => {
-        void (async () => {
-            if (next === 'facts') setFacts(await getFacts());
-            setGroupBy(next);
-            await setSetting(SAVED_GROUP_BY_SETTING, next);
-        })().catch((err) => {
-            logger.captureException(err, { tags: { screen: 'SavedSuggestionsScreen', method: 'groupBy' } });
-        });
-    }, []);
+    const handleGroupByChange = useCallback(
+        (next: SavedGroupBy) => {
+            groupPicks.current += 1;
+            void (async () => {
+                if (next === 'facts') setFacts(await getFacts());
+                setGroupBy(next);
+                scrollToTop();
+                await setSetting(SAVED_GROUP_BY_SETTING, next);
+            })().catch((err) => {
+                logger.captureException(err, { tags: { screen: 'SavedSuggestionsScreen', method: 'groupBy' } });
+            });
+        },
+        [scrollToTop],
+    );
 
     const handleExportFailed = useCallback(() => {
         toast.show({
@@ -184,11 +200,13 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         });
     }, [toast, t]);
 
-    const listRef = useRef<any>(null);
-    const handleListChange = useCallback((next: SavedList) => {
-        setList(next);
-        listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
-    }, []);
+    const handleListChange = useCallback(
+        (next: SavedList) => {
+            onListChange(next);
+            scrollToTop();
+        },
+        [onListChange, scrollToTop],
+    );
 
     const stateVersion = useSavedStateVersion();
     // What this list holds now, and what Export offers. `stateVersion` is what

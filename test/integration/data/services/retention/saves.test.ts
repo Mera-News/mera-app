@@ -417,7 +417,7 @@ describe('Read later and Archive', () => {
     expect(await getSavedList(id)).toBe('later');
   });
 
-  it('moves a save both ways, bumps savedAt and publishes the list', async () => {
+  it('moves a save both ways, publishes the list and keeps the saved date', async () => {
     useFakeClock(T0);
     const s = await landSuggestion(freshId());
     await saveSuggestion(s);
@@ -426,19 +426,9 @@ describe('Read later and Archive', () => {
     expect(await moveSavedToList(s._id, 'archive')).toBe(true);
     expect(await getSavedList(s._id)).toBe('archive');
     expect(getSavedListOverride(s._id)).toBe('archive');
-    expect((await savedRow(s._id))!.savedAt).toBe(T0 + MIN);
 
     expect(await moveSavedToList(s._id, 'later')).toBe(true);
     expect(await getSavedList(s._id)).toBe('later');
-  });
-
-  it('a move to the list it is in changes nothing', async () => {
-    useFakeClock(T0);
-    const s = await landSuggestion(freshId());
-    await saveSuggestion(s);
-    jest.setSystemTime(T0 + MIN);
-
-    expect(await moveSavedToList(s._id, 'later')).toBe(true);
     expect((await savedRow(s._id))!.savedAt).toBe(T0);
   });
 

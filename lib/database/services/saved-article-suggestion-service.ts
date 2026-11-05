@@ -172,8 +172,9 @@ export async function saveStandaloneArticle(
 }
 
 /**
- * Moves a save to the other list. Bumps `savedAt`, so it tops the list it lands
- * in, as a re-save does. False, and no change, for a row that is gone or is
+ * Moves a save to the other list. Leaves `savedAt` alone: the date is what the
+ * lists sort by, export prints and Date saved promises, and an Undo must put the
+ * row back where it was. False, and no change, for a row that is gone or is
  * retention rather than a save: a late Undo must not turn a row nobody saved
  * into one.
  */
@@ -185,7 +186,6 @@ export async function moveSavedToList(serverId: string, list: SavedList): Promis
   await database.write(async () => {
     await row.update((r) => {
       r.archived = list === 'archive';
-      r.savedAt = new Date();
     });
   });
   return true;

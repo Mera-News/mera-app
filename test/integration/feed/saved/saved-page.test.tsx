@@ -19,8 +19,9 @@ import {
   moveSavedToList,
   saveStandaloneArticle,
 } from '@/lib/database/services/saved-article-suggestion-service';
+import * as settings from '@/lib/database/services/setting-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { __resetSavedStateForTests } from '@/lib/saved-state';
+import { __resetSavedStateForTests, type SavedList } from '@/lib/saved-state';
 import { toastManager } from '@/lib/toast-manager';
 import { closeAll, useToastQueue } from '@/lib/toast/toast-queue';
 import { initI18nEn } from '@/test/helpers';
@@ -68,8 +69,13 @@ const saveTo = (id: string, list?: 'later' | 'archive') => saveStandaloneArticle
 const row = (id: string) => screen.queryByTestId(`saved-item-${id}`);
 
 
+function Page() {
+  const [list, setList] = React.useState<SavedList>('later');
+  return <SavedSuggestionsScreen list={list} onListChange={setList} />;
+}
+
 const openPage = async () => {
-  await render(<SavedSuggestionsScreen />);
+  await render(<Page />);
   await waitFor(() => expect(screen.getByTestId('saved-list-later')).toBeTruthy());
 };
 const press = async (id: string) => {
@@ -152,6 +158,34 @@ describe('Group by', () => {
     await press('saved-group-chip-newest');
     await waitFor(() => expect(screen.queryByTestId('saved-group-no-priority')).toBeNull());
     await waitFor(async () => expect(await getSetting('saved_group_by')).toBe('newest'));
+  });
+
+  it('a load already running cannot undo a pick', async () => {
+    await saveTo('a');
+    await openPage();
+    let release = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const real = settings.getSetting;
+    const spy = jest.spyOn(settings, 'getSetting').mockImplementation(async (key) => {
+      // The old value is read first, then delayed past the pick.
+      const stored = await real(key);
+      await held;
+      return stored;
+    });
+    const focused = (useFocusEffect as jest.Mock).mock.calls.at(-1)![0] as () => void;
+    focused();
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    await press('saved-group-chip-priority');
+    await waitFor(() => expect(screen.getByTestId('saved-group-no-priority')).toBeTruthy());
+    spy.mockRestore();
+    await act(async () => {
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(screen.getByTestId('saved-group-no-priority')).toBeTruthy();
   });
 
   it('a pick of Facts files a save no fact holds under Other', async () => {
