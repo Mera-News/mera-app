@@ -216,3 +216,36 @@ describe('mera-explainer-content — what chat can reach', () => {
     expect(text).toMatch(/publishers own their articles/i);
   });
 });
+
+// Owner rule: the profile holds what affects the reader, and everything else is
+// followed. A chat answer repeats this text, so its limits are pinned here.
+describe('mera-explainer-content — profile or followed story', () => {
+  const text = MERA_EXPLAINER_SECTIONS.profile_vs_stories;
+
+  it('states the rule in the owner words, with F1 both ways', () => {
+    expect(text).toContain('Your profile is for what affects you. Everything else, just follow.');
+    expect(text).toContain('I like Formula 1');
+    expect(text).toContain("I'm going to Monaco");
+  });
+
+  it('says no AI reads followed stories, and names what it does touch', () => {
+    expect(text).toMatch(/no AI reads followed stories/i);
+    expect(text).toMatch(/also matches a fact/i);
+    expect(text).toMatch(/your own words/i);
+    expect(source).not.toMatch(/no AI is involved/i);
+  });
+
+  it('recommends and never forbids, and says where following starts on the phone', () => {
+    expect(text).toMatch(/never a rule/i);
+    expect(text).toContain('Add to my profile instead');
+    expect(text).toMatch(/on your phone/i);
+  });
+
+  it('plans say followed stories use no reading', () => {
+    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/followed stories use no reading/i);
+  });
+
+  it('no section treats "interests" as where things go', () => {
+    expect(source).not.toMatch(/your interests|interest profiles/i);
+  });
+});

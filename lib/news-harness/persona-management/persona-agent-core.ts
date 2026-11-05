@@ -696,6 +696,7 @@ export const MERA_EXPLAINER_TOPIC_IDS = [
   'how_news_works',
   'source_available',
   'plans_and_limits',
+  'profile_vs_stories',
   'known_gaps',
 ] as const;
 
@@ -743,7 +744,7 @@ const EXPLAIN_MERA_TOOL: ToolDefinition = {
   function: {
     name: 'explainMera',
     description:
-      'Answer a user question about Mera itself — privacy, what data leaves the device, encryption, how news is found, the licence, plans, or known limitations. Returns Mera\'s own reference documentation. ALWAYS call this before answering such a question; never answer from memory.',
+      'Answer a user question about Mera itself — privacy, what data leaves the device, encryption, how news is found, the licence, plans, what belongs in the profile and what to follow, or known limitations. Returns Mera\'s own reference documentation. ALWAYS call this before answering such a question; never answer from memory.',
     parameters: {
       type: 'object',
       properties: {

@@ -181,6 +181,14 @@ describe('conversation/about-mera answers from explainMera', () => {
     expect(JSON.stringify(EXPLAIN_MERA_TOOL)).not.toMatch(/[–—]/);
   });
 
+  it('sends a fact or story question to its own topic, and the router counts it as about Mera', () => {
+    const skill = (loadSkill('conversation/about-mera') ?? '').replace(/\s+/g, ' ');
+    expect(skill).toContain('`profile_vs_stories`');
+    expect(skill).toContain('When should I add a fact?');
+    expect(skill).toContain("What's the difference between a fact and a story?");
+    expect(loadSkill('router')).toMatch(/\*\*about_mera\*\*[^\n]*\n[^\n]*fact or follow\./);
+  });
+
   it('the skill exists, is routable and is in the router index', () => {
     expect(skillIds()).toContain('conversation/about-mera');
     expect(loadSkill('conversation/about-mera')).toContain('explainMera');
