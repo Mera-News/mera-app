@@ -221,7 +221,7 @@
     "processingOffline": "You're offline. Your stories arrive once you're back online.",
     "forYouTitle": "For you",
     "newStoriesBelowA11y": "New stories below",
-    "noFactsBody": "Tap the Mera button to tell it what you follow. It turns that into your feed.",
+    "noFactsBody": "Tap the Mera button and tell it about your life. It finds the news that affects you.",
     "noteWait": "Please wait while Mera writes the reason.",
     "opened": "Opened",
     "statsSyncAnalysing_one": "{{formatted}} article is being analysed for you,",
@@ -590,7 +590,7 @@
     "timelineLoadFailed": "Couldn't load this story. Pull down to try again.",
     "deleteFailed": "Couldn't stop following this story. Try again.",
     "removeFailed": "Couldn't remove this article from the story. Try again.",
-    "emptyBodyMera": "Follow a developing story and Mera keeps it up to date here. Tap the Mera button to follow one.",
+    "emptyBodyMera": "Follow anything you like: a team, an artist, a long-running story. It's free and unlimited, and no AI reads followed stories. Tap the Mera button to start.",
     "followedSince": "Followed since {{date}}",
     "learnAbout": "Learn about Stories",
     "nextNote": "Mera adds new coverage here as the story develops.",
@@ -629,7 +629,7 @@
     "wideNetBody": "Mera casts a wide net, so a few articles here may be only loosely related. We'd rather show you one extra than miss one that matters.",
     "wideNetRemove": "To remove one, open its menu and choose {{action}}.",
     "wideNetShowLess": "Show less",
-    "composerPlaceholder": "Which story should I keep an eye on?",
+    "composerPlaceholder": "What should I keep an eye on?",
     "followCardLine": "This one is good to follow. Tick what you want and new articles land in Followed stories.",
     "addToProfile": "Add to my profile instead",
     "impactQuestion": "Before I add it, how does this affect you? Mera's AI uses this to work out how much an article matters to you. If it doesn't affect you personally, I'd recommend just following it as a story.",
@@ -643,13 +643,13 @@
     "starterTitle": "Starter is on us",
     "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
     "starterArticlesTitle": "Every matching article",
-    "starterArticlesBody": "Every article that matches your interests reaches your Feed. Mera reads them, sets aside the noise and lifts what matters.",
-    "starterInterestsTitle": "All your interests",
-    "starterInterestsBody": "Add as many as you like. Mera follows every one.",
+    "starterArticlesBody": "Every article that matches your profile reaches your Feed. Mera reads them, sets aside the noise and lifts what matters.",
+    "starterInterestsTitle": "Your whole profile",
+    "starterInterestsBody": "Add everything that affects you. Mera reads the news against every fact.",
     "starterChatTitle": "Chat and fact checks",
     "starterChatBody": "Ask Mera about any story, and check claims against published fact checks.",
     "starterStoriesTitle": "Followed stories",
-    "starterStoriesBody": "Follow a story and Mera keeps watching it for you."
+    "starterStoriesBody": "Follow anything you like, free and unlimited. No AI reads followed stories."
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -660,7 +660,7 @@
     "settingsLink": "Notification settings",
     "help": {
       "title": "About notifications",
-      "body": "Mera leaves notes here about your feed: a fact check you asked for is ready, your daily feed tune-up, tips to tidy up or tune your interests, and questions from the Mera team. They're kept only on this phone for 90 days, and a dot means something is unread. News alerts don't appear here. You set their times in Settings, under Notifications."
+      "body": "Mera leaves notes here about your feed: a fact check you asked for is ready, your daily feed tune-up, tips to tidy up or tune your profile, and questions from the Mera team. They're kept only on this phone for 90 days, and a dot means something is unread. News alerts don't appear here. You set their times in Settings, under Notifications."
     },
     "ageNow": "now",
     "ageMinutes": "{{n}}m",
@@ -697,10 +697,10 @@
     "close": "Close",
     "logoutFailedTitle": "Logout Failed",
     "logoutFailedDescription": "There was an issue signing out. Please try again.",
-    "composerPlaceholder": "What do you like to follow?",
+    "composerPlaceholder": "Tell me about your life",
     "factsCount_one": "{{count}} fact about you",
     "factsCount_other": "{{count}} facts about you",
-    "noFactsBody": "Mera uses your city to find news for where you live. You can tell it more about yourself anytime.",
+    "noFactsBody": "Mera uses your city to find news that affects you. You can tell it more about your life anytime.",
     "noFactsTitle": "Where do you live?",
     "noNotifBody": "You won't hear when your news is ready or when a story you follow moves. You can turn them on later in Settings.",
     "noNotifTitle": "Use Mera without notifications?",
@@ -1148,7 +1148,7 @@
     "replyUnfinished": "Not finished"
   },
   "personaChat": {
-    "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
+    "introMessage": "Hi, I'm Mera.\n\nTell me about your life: where you live, what you do, who you care about. I'll find the news that affects you. Anything else you like, we can follow as stories.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
   },
   "floatingChat": {
     "close": "Close",
@@ -1190,7 +1190,7 @@
     "factDeleteRemove": "Remove",
     "factDeleteKeep": "Keep",
     "factDeleteKept": "Nothing was removed.",
-    "topicsSavedHint": "Topics saved! Feel free to keep adding facts, or tap {{close}} to start exploring.",
+    "topicsSavedHint": "Topics saved! Tell me more about your life, or tap {{close}} to start exploring.",
     "guidelinesAfter": ". If it spots misuse, it pauses your account until you ask for a review.",
     "guidelinesBefore": "You're talking with Mera, an AI, not a person. Mera follows ",
     "guidelinesLink": "content guidelines",
@@ -1213,7 +1213,7 @@
     "chipDontWant": "I don't want this suggestion",
     "chipDontWantMessage": "I don't want this suggestion. What should we change so I stop getting articles like this?",
     "chipMoreLikeThis": "I want more like this",
-    "chipMoreLikeThisMessage": "I want more articles like this one. What should we add to my interests?",
+    "chipMoreLikeThisMessage": "I want more articles like this one. Should I add something to my profile, or follow it as a story?",
     "proposalTitle": "Proposed changes",
     "expectedEffects": "Expected effect",
     "proposalConfirm": "Yes, do it",
@@ -1333,7 +1333,7 @@
   },
   "personaAudit": {
     "title": "Changes to your profile",
-    "empty": "No changes yet. As Mera tunes your interests, every change shows up here.",
+    "empty": "No changes yet. As Mera tunes your profile, every change shows up here.",
     "revertedBadge": "Reverted",
     "revertConfirmTitle": "Undo this change?",
     "revertConfirmBody": "This puts your profile back to how it was before the change.",
@@ -1569,16 +1569,16 @@
     "statusDismissed": "Dismissed"
   },
   "hygiene": {
-    "notificationTitle": "Tidy up your interests?",
+    "notificationTitle": "Tidy up your profile?",
     "notificationBody_one": "Mera found {{count}} cleanup for your profile.",
     "notificationBody_other": "Mera found {{count}} cleanups for your profile.",
     "reviewChip": "Review",
     "accept": "Accept",
     "reject": "Dismiss",
-    "effectTooBroad": "Lowers this interest's weight so it pulls in fewer off-topic stories.",
+    "effectTooBroad": "Lowers this fact's weight so it pulls in fewer off-topic stories.",
     "effectStaleTopic": "Retires this quiet topic.",
     "effectStaleFact": "Removes this fact. None of its topics are active anymore.",
-    "effectIncoherentTopics": "Replaces these topics with better ones for this interest.",
+    "effectIncoherentTopics": "Replaces these topics with better ones for this fact.",
     "appliedTitle": "Cleanup applied",
     "appliedBody": "Your profile was tidied up. See the change log to review.",
     "applyFailedTitle": "Couldn't apply cleanup",
@@ -1691,7 +1691,7 @@
   },
   "facts": {
     "screenTitle": "Facts",
-    "screenSubtitle": "Mera picks your news from these. Each shows how many topics it has. Tap one to see them and their stories.",
+    "screenSubtitle": "Your profile is for what affects you. Everything else, just follow. Tap a fact to see its topics and stories.",
     "addFact": "Add a fact",
     "page": {
       "edit": "Edit",
@@ -1700,7 +1700,7 @@
       "impactfulHint": "Stories Mera picked for you because of this fact.",
       "menuA11y": "Edit or delete this fact",
       "new": "New",
-      "nextInterest": "Next interest",
+      "nextInterest": "Next fact",
       "reach_one": "{{count}} story in the last 48 hours",
       "reach_other": "{{count}} stories in the last 48 hours",
       "recentTab": "Recent articles",
@@ -1809,10 +1809,7 @@
     "meraButtonHint": "Pick the colour of the floating Mera button. It stays the same in light and dark mode."
   },
   "freeTier": {
-    "seePlans": "See plans",
-    "trackTitle": "Story tracking comes with a plan",
-    "trackBody": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan."
+    "seePlans": "See plans"
   },
   "consent": {
     "title": "Before you continue",
@@ -1865,11 +1862,11 @@
     "chapters": {
       "facts": {
         "title": "Your facts shape your feed",
-        "subtitle": "Tell Mera about your life. It does the rest.",
+        "subtitle": "Your profile is for what affects you. Everything else, just follow.",
         "slides": {
           "a-fact-is": {
             "headline": "A fact is one true line",
-            "body": "\"I am a nurse.\" \"I live in Utrecht.\" \"I have a small child.\" Short, true, about your life. That is the whole idea.",
+            "body": "Your profile is for what affects you, so a fact is one true line about your life. \"I am a nurse.\" \"I live in Utrecht.\" \"I have a small child.\" Short and true. That is the whole idea.",
             "ask": "What counts as a fact in Mera?"
           },
           "where-from": {
@@ -1883,7 +1880,7 @@
           },
           "to-topics": {
             "headline": "Facts become things to look for",
-            "body": "\"I am a nurse\" turns into several search phrases: hospital staffing, nursing pay, health policy. One fact fans out into a handful. Those phrases are what go out to find news."
+            "body": "\"I am a nurse\" turns into search phrases: hospital staffing, nursing pay, health policy. Those phrases go out to find news. Then Mera's AI reads what comes back against your facts and works out the impact on you."
           },
           "sort-them": {
             "headline": "Which of these is a fact?",
@@ -1907,12 +1904,12 @@
             "ask": "How do I change how important one of my facts is?"
           },
           "your-profile": {
-            "body": "Everything Mera uses to pick your news, in one place. Tap each one.",
+            "body": "Everything Mera uses to find what affects you, in one place. Tap each one.",
             "headline": "Your profile",
             "reveal": {
               "facts": {
                 "label": "Facts",
-                "text": "The true lines about your life. Each one finds its own topics."
+                "text": "True lines about what affects you. Each one finds its own topics."
               },
               "places": {
                 "label": "Places",
@@ -1925,6 +1922,20 @@
               "sources": {
                 "label": "Sources",
                 "text": "Publications you want more or fewer of, and the ones you pay for."
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "Your profile is for what affects you. Everything else, just follow.",
+            "headline": "Profile or story?",
+            "reveal": {
+              "follow": {
+                "label": "I like Formula 1",
+                "text": "It doesn't affect you, so just follow it. Following is free and unlimited, and no AI reads followed stories."
+              },
+              "profile": {
+                "label": "I'm going to Monaco",
+                "text": "This affects you, so it goes in your profile. Mera's AI reads the news against it and works out the impact on your trip."
               }
             }
           }
@@ -1988,17 +1999,13 @@
                 "label": "The Feed",
                 "text": "The Mera button moves while Mera reads and stays still the rest of the time. It is the only sign that anything is being fetched."
               },
-              "dashboard": {
-                "label": "Interests",
-                "text": "The same day sorted by interest, with a section for each thing you told Mera and unread stories first. Sections reorder when you leave the page, or every 10 minutes."
-              },
               "continuous": {
                 "label": "Continuous feed",
                 "text": "The Mera icon at the top changes colour while Mera reads and stays still the rest of the time. It is the only sign that anything is being fetched."
               },
               "sectioned": {
                 "label": "Sectioned feed",
-                "text": "The same stories grouped by fact, one section for each thing you told Mera, with unread stories first."
+                "text": "The same stories grouped by fact, one section for each fact in your profile, with unread stories first."
               }
             }
           },
@@ -2057,7 +2064,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "The part about you is kept here",
-            "body": "Your facts, your interests, your places and everything you have read live on this phone. Mera's servers keep no copy, which is why signing out erases your profile. On a new phone, Backup can bring it back."
+            "body": "Your facts, the stories you follow, your places and everything you have read live on this phone. Mera's servers keep no copy, which is why signing out erases your profile. On a new phone, Backup can bring it back."
           },
           "what-leaves": {
             "headline": "What actually goes out",
@@ -2093,8 +2100,8 @@
         "subtitle": "Keep one story in view as it unfolds.",
         "slides": {
           "what-it-is": {
-            "headline": "For stories that are not over",
-            "body": "An election, a trial, a storm, a takeover. Follow it once and every new development gathers in one place instead of arriving scattered through your feed over three weeks."
+            "headline": "For anything else you like",
+            "body": "A team, an artist, an election, a storm. Follow it once and new articles gather in one place. Following is free and unlimited, and no AI reads followed stories."
           },
           "two-ways-in": {
             "headline": "Two ways to start",
@@ -2457,7 +2464,7 @@
             "steps": {
               "0": "You say a few true things about your life.",
               "1": "Mera turns them into things to go looking for.",
-              "2": "It reads the day's news and keeps what fits."
+              "2": "It reads the day's news and keeps what affects you."
             }
           },
           "matching": {
@@ -2470,7 +2477,7 @@
             "reveal": {
               "about-you": {
                 "label": "What it knows about you",
-                "text": "Your facts, your interests and what you have read are written to this phone and stay there. Mera's servers keep no copy of them."
+                "text": "Your facts, the stories you follow and what you have read are written to this phone and stay there. Mera's servers keep no copy of them."
               },
               "what-leaves": {
                 "label": "What actually leaves",
@@ -2605,7 +2612,7 @@
   "skillPhrase": {
     "residence": "where you live",
     "work": "your work",
-    "interests": "your interests",
+    "interests": "what you like",
     "origin": "where you're from",
     "family": "your family",
     "feedTuning": "your feed",
@@ -2805,10 +2812,10 @@
     "tutorials1": "See how Mera works in a few short slides"
   },
   "interests": {
-    "emptyTitle": "Mera doesn't know your interests yet",
-    "learnAbout": "Learn how to add facts",
-    "backToInterests": "Back to Interests",
-    "findingStories": "Mera is finding stories for this interest. The first ones appear here in a few seconds."
+    "emptyTitle": "Mera doesn't know about you yet",
+    "learnAbout": "Learn what goes in your profile",
+    "backToInterests": "Back to your Feed",
+    "findingStories": "Mera is finding stories for this fact. The first ones appear here in a few seconds."
   },
   "world": {
     "gathering": "Gathering today's news from {{country}}. The first stories appear in a few seconds.",
@@ -2941,7 +2948,7 @@
       "places": "Places",
       "sources": "Sources",
       "viewAll": "View all {{count}}",
-      "factsEmpty": "Nothing yet. Tell Mera what you follow and it shows up here.",
+      "factsEmpty": "Nothing yet. Tell Mera about your life and it shows up here.",
       "placesEmpty": "No places yet",
       "addCity": "Add a city",
       "sourcesEmpty": "None adjusted. Mera treats every source alike.",
@@ -3033,8 +3040,8 @@
     },
     "askNews": "Ask about anything in the news",
     "interest": {
-      "change": "Change this interest",
-      "remove": "Remove this interest"
+      "change": "Change this fact",
+      "remove": "Remove this fact"
     },
     "stories": {
       "follow": "Follow a story",
@@ -3057,7 +3064,7 @@
     },
     "sources": {
       "whoBehind": "Ask who is behind a publication",
-      "whatFollow": "Tell Mera what you follow"
+      "whatFollow": "Tell Mera what you like to read"
     },
     "settings": {
       "whatCanYouDo": "What can you do?"
@@ -3069,19 +3076,18 @@
     "moveBottomLeft": "Move to bottom left",
     "moveBottomRight": "Move to bottom right",
     "answerReady": "Mera, an answer is ready",
-    "tooltipNew": "Tell Mera what you like",
+    "tooltipNew": "Tell Mera about you",
     "working": "Mera is working on your request"
   },
   "meraIntro": {
-    "feed": "You're on your Feed. Tell me what you want more news about, or ask me anything in the news.",
-    "interests": "These are your interests. Tell me a new one, or one you want to change or remove.",
-    "interest": "This page follows one of your interests. You can change it or remove it here.",
+    "feed": "You're on your Feed. Tell me what affects you, name something to follow, or ask me anything in the news.",
+    "interest": "This page shows one of your facts. You can change it or remove it here.",
     "world": "Ask me about a headline, or tell me a country you want news from.",
     "checks": "Tell me a claim you've seen and I'll look it up on the web.",
     "checksNoWeb": "Web search in chat is off, so I can't look claims up right now. You can turn it on in Settings.",
-    "library": "Ask me about anything in the news, or tell me what you like to read.",
+    "library": "Ask me about anything in the news, or tell me what you'd like to follow.",
     "facts": "You're looking at your facts. What would you like to change?",
-    "sources": "Ask me about a publication, or tell me what you follow.",
+    "sources": "Ask me about a publication, or tell me what you'd like to follow.",
     "settings": "Ask me what I can do, or how Mera handles your data.",
     "onDevice": {
       "feed": "You're on your Feed. Tell me what you like to follow and I'll tune what shows up here.",
@@ -3091,8 +3097,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "Change my interest \"{{statement}}\" to ",
-    "removeInterest": "Remove my interest \"{{statement}}\"",
+    "changeInterest": "Change my fact \"{{statement}}\" to ",
+    "removeInterest": "Remove my fact \"{{statement}}\"",
     "followStory": "Keep me updated on "
   },
   "appLock": {
