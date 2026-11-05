@@ -266,6 +266,7 @@ describe('the proposal', () => {
 describe('the AI check', () => {
   it('asks with the rule the chat save uses, word for word', () => {
     expect(STAKE_RULE).toMatch(/^Set has_stake true when they said how this touches/);
+    expect(STAKE_RULE).toMatch(/Unsure is false\.$/);
     expect(stakeCheckRequest('Follows football').systemPrompt).toContain(STAKE_RULE);
     expect(stakeCheckRequest('Follows football').prompt).toContain('Follows football');
   });
@@ -296,6 +297,15 @@ describe('the AI check', () => {
     expect(decodeStakeCheck('{"has_stake":false,"story_subject":"my football team"}', 'Follows football').subject).toBeNull();
     expect(decodeStakeCheck('{"has_stake":false,"story_subject":"Football","search":"my team"}', 'Follows football').search).toBe('Football');
     expect(decodeStakeCheck('{"has_stake":false,"story_subject":"Follows football"}', 'Follows football').subject).toBeNull();
+  });
+
+  it('a subject the fact never said is made up, and goes', () => {
+    expect(decodeStakeCheck('{"has_stake":false,"story_subject":"Formula 1"}', 'Is a nurse at Amsterdam UMC').subject).toBeNull();
+    expect(decodeStakeCheck('{"has_stake":false,"story_subject":"Unknown"}', 'Likes jazz').subject).toBeNull();
+  });
+
+  it('the English search may differ from the fact: only a personal one goes', () => {
+    expect(decodeStakeCheck('{"has_stake":false,"story_subject":"Voetbal","search":"football"}', 'Volgt voetbal').search).toBe('football');
   });
 
   it('reads an answer wrapped in a code fence', () => {
