@@ -219,6 +219,16 @@ export async function getOpenedTitleNorms(): Promise<string[]> {
   return out;
 }
 
+/** Clear reading history: every impression goes. A story that matched before
+ *  can then match again, because this table is what remembers an open. */
+export async function clearAllImpressions(): Promise<void> {
+  const rows = await impressionsCollection.query().fetch();
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(rows.map((r) => r.prepareDestroyPermanently()));
+  });
+}
+
 /** Deletes impressions first seen before the cutoff. Returns deleted count. */
 export async function deleteOlderThan(cutoffMs: number): Promise<number> {
   const old = await impressionsCollection

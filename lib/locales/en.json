@@ -889,7 +889,7 @@
     "exportHistoryEmptyTitle": "Nothing to export yet",
     "exportHistoryEmptyDescription": "You haven't read any articles in the last 30 days.",
     "factsModalDescription": "Clears the facts you've added and the topics generated from them. Places saved with your facts go too. Places you added by hand stay. Your facts are stored on this device, not on Mera's servers. Topic phrases are sent when you fetch news and cached on our servers with no user ID attached, so nothing there records that they were yours. Your article feed is cleared too, since it's built from these topics.",
-    "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Nothing else is affected, and no server data is touched, since Mera's servers never had this data.",
+    "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Stories you've read can show up in your Feed again. Nothing else is affected, and no server data is touched, since Mera's servers never had this data.",
     "deletedTitle": "Data Deleted",
     "deletedDescription": "Selected data has been cleared successfully.",
     "errorTitle": "Error",

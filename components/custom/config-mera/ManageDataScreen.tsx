@@ -6,7 +6,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { isBackupConfigured } from '@/lib/backup/key-store';
 import database from '@/lib/database';
 import { deleteAllFacts } from '@/lib/database/services/fact-service';
-import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { showDialog } from '@/lib/dialog';
 import { toastManager } from '@/lib/toast-manager';
@@ -19,6 +18,7 @@ import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExportHistory } from './use-export-history';
 import { clearFeedCacheAndResync } from './clear-feed-cache';
+import { clearReadingHistory } from './clear-reading-history';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { setConfirmTopicDelete, shouldConfirmTopicDelete } from '@/components/custom/facts/topic-delete-confirm';
 import { Switch } from '@/components/ui/switch';
@@ -99,7 +99,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     await deleteTables(DERIVED_FROM_FACTS_TABLES);
                     await clearFeedCacheAndResync();
                 } else {
-                    await clearAllVisits();
+                    await clearReadingHistory();
                 }
                 toastManager.showSuccess(t('manageData.deletedTitle'), t('manageData.deletedDescription'));
             } catch {

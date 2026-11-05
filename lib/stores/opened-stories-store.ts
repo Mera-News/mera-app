@@ -26,6 +26,8 @@ interface OpenedStoriesState {
   /** Optimistic synchronous add of an opened story's keys (article id + optional
    *  stable cluster id). Safe to call before hydrate — merged on hydrate. */
   markOpened: (articleId: string, stableClusterId?: string | null) => void;
+  /** Forget every id, for a reader who cleared their reading history. */
+  clear: () => void;
 }
 
 export const useOpenedStoriesStore = create<OpenedStoriesState>((set, get) => ({
@@ -56,4 +58,6 @@ export const useOpenedStoriesStore = create<OpenedStoriesState>((set, get) => ({
     const nextArticleIds = articleId ? new Set(get().articleIds).add(articleId) : get().articleIds;
     set({ ids: next, articleIds: nextArticleIds });
   },
+
+  clear: () => set({ ids: new Set<string>(), articleIds: new Set<string>() }),
 }));
