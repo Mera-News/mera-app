@@ -67,19 +67,34 @@ describe('the card shows and applies only what the sanitizer staged', () => {
       expected_effects: 'Fewer stories from them.',
       actions: [
         { type: 'set_publication_pref', publicationId: 'The Daily Imaginary', publicationPref: 'mute' },
-        { type: 'set_publication_pref', publicationId: 'The Hindu', publicationPref: 'deprioritize' },
+        { type: 'set_publication_pref', publicationId: 'The Hindu', publicationPref: 'mute' },
       ],
     };
     const staged = decidePersonaProposeChanges(input, [], KNOWN_OUTLETS);
     const card = cardFor(call('proposeChanges', input, staged));
 
     expect(card.actions).toEqual([
-      { type: 'set_publication_pref', publicationId: 'The Hindu', publicationPref: 'deprioritize' },
+      { type: 'set_publication_pref', publicationId: 'The Hindu', publicationPref: 'mute' },
     ]);
 
     // Confirm applies exactly the card's actions (ProposalCard.handleConfirm).
     await executeProposalActions(card.actions, { confirmedByUser: true });
     expect(await getPreferenceKind('The Daily Imaginary')).toBe('none');
+    expect(await getPreferenceKind('The Hindu')).toBe('mute');
+  });
+
+  it('a stored card with the old lowered level still resolves and applies', async () => {
+    const action = { type: 'set_publication_pref', publicationId: 'The Hindu', publicationPref: 'deprioritize' };
+    const scope = { type: 'set_source_scope_pref', scopeCountry: 'Germany', publicationPref: 'deprioritize' };
+    const card = cardFor(
+      call('proposeChanges', { explanation: 'Less.', expected_effects: 'Fewer.', actions: [action, scope] }, {
+        result: { staged: true, actionCount: 2, proposalId: 'stored', actions: [action, scope] },
+      }),
+    );
+
+    expect(card.actions[0]).toEqual(action);
+    expect(card.actions[1]).toMatchObject({ scopeValue: 'DEU', publicationPref: 'deprioritize' });
+    await executeProposalActions(card.actions, { confirmedByUser: true });
     expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
   });
 

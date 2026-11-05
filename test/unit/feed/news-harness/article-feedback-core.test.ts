@@ -895,7 +895,7 @@ describe('getArticleFeedbackToolDefinitions', () => {
     for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'suppressionKeywords', 'suppressionStrength', 'suppressionKind', 'suppressionValue', 'suppressionId', 'highPriority']) {
       expect(props[key]).toBeDefined();
     }
-    expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'deprioritize', 'mute']);
+    expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'mute']);
     // The kind enum mirrors SUPPRESSION_KINDS verbatim (order is load-bearing —
     // it is the same array the DB model persists against).
     expect((props.suppressionKind as { enum: string[] }).enum).toEqual([...SUPPRESSION_KINDS]);

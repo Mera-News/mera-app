@@ -1,0 +1,252 @@
+{
+  "id": "feed-tuning-outlets",
+  "cohort": "feed-tuning",
+  "note": "Two publication levels. Any lowering of a named outlet stages Not preferred (mute), any raising stages Preferred (boost), and a lowering of a country stages nothing. kinds cannot tell boost from mute: read the level from the row's card actions.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Utrecht, Utrecht, Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "English",
+    "knownOutlets": [
+      "The Hindu",
+      "NRC"
+    ],
+    "activeFilters": [
+      {
+        "id": "s1",
+        "pattern": "crypto"
+      }
+    ]
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Show less from The Hindu",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 2,
+      "user": "Less from NRC please",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 3,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 4,
+      "user": "Mute The Hindu",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 5,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 6,
+      "user": "Hide NRC",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 7,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 8,
+      "user": "Stop showing me The Hindu",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 9,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 10,
+      "user": "More from NRC",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 11,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 12,
+      "user": "Prefer The Hindu",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        }
+      }
+    },
+    {
+      "index": 13,
+      "user": "no thanks",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 14,
+      "user": "Less from German outlets",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    },
+    {
+      "index": 15,
+      "user": "Show less from Germany",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        }
+      }
+    }
+  ]
+}

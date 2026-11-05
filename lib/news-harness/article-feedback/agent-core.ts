@@ -141,7 +141,7 @@ function norm(v: string | null | undefined): string {
 }
 
 /** Publication-preference kinds the agent may set on a named publication. */
-const VALID_PUBLICATION_PREFS = new Set(['boost', 'deprioritize', 'mute']);
+const VALID_PUBLICATION_PREFS = new Set(['boost', 'mute']);
 /** Clamp bound for a topic-weight nudge delta — keeps "show less/more" gentle. */
 const MAX_TOPIC_WEIGHT_DELTA = 0.5;
 
@@ -379,7 +379,7 @@ Persona edits (reference facts by the [id] in <context>):
 Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publications by NAME):
 - set_topic_weight — "show me less/more of <topic>": nudge a MATCHED topic's weight by a small delta (negative to see less, positive to see more; keep |delta| ≤ 0.5).
 - add_negative_topic — this article is the wrong topic/place/angle: mint a down-ranking negative topic (topicText, e.g. "Delhi crime").
-- set_publication_pref — boost / deprioritize / mute a NAMED publication (publicationId = the publication name, publicationPref = boost|deprioritize|mute). Use mute only for a clear "stop showing me <source>".
+- set_publication_pref — boost or mute a NAMED publication (publicationId = the publication name, publicationPref = boost|mute). "Less from <source>" is mute: say it hides that source from their feed.
 - add_suppression — filter something out (suppressionPattern = the phrase; suppressionStrength 0.9 = never show it, 0.5 = just less of it). For an EXACT filter also send suppressionKind + suppressionValue, and COPY THE VALUE VERBATIM from <context>: category ← Category, entity ← Entities, publication ← Publication, topic ← MATCHED TOPICS. A value you paraphrase or invent matches NOTHING. So: with "Category: Entertainment" → {"suppressionKind":"category","suppressionValue":"Entertainment"}; your own words "celebrity stuff" → {"suppressionPattern":"celebrity"} with NO kind/value.
 - retire_suppression — the user wants an existing filter GONE ("stop hiding X", "show me X again"): suppressionId = an [id] from YOUR FILTERS in <context>. Never invent an id; if it isn't listed, say you can't find that filter.
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
@@ -426,7 +426,7 @@ function buildArticleFeedbackToolFormat(factCheck: boolean): string {
 Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
-- proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "suppressionKind"?: ${SUPPRESSION_KINDS.join('|')}, "suppressionValue"?, "suppressionId"?, "highPriority"?: boolean}]}
+- proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "suppressionKind"?: ${SUPPRESSION_KINDS.join('|')}, "suppressionValue"?, "suppressionId"?, "highPriority"?: boolean}]}
   suppressionValue: copy VERBATIM from <context>, or omit it together with suppressionKind. suppressionId: an [id] from YOUR FILTERS.
 - proposeTrack: {"options": [{"label": string, "search": string}]}
 ${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {}
@@ -720,7 +720,7 @@ export function getArticleFeedbackToolDefinitions(
                   delta: { type: 'number', description: 'set_topic_weight: weight nudge; negative = show less, positive = show more (|delta| ≤ 0.5).' },
                   weight: { type: 'number', description: 'add_negative_topic: optional explicit weight (defaults to a down-ranking value).' },
                   publicationId: { type: 'string', description: 'set_publication_pref: the publication NAME to adjust.' },
-                  publicationPref: { type: 'string', enum: ['boost', 'deprioritize', 'mute'], description: 'set_publication_pref: boost, deprioritize, or mute the named publication.' },
+                  publicationPref: { type: 'string', enum: ['boost', 'mute'], description: 'set_publication_pref: boost or mute the named publication.' },
                   suppressionPattern: { type: 'string', description: 'add_suppression: the phrase to filter out of the feed (e.g. an entity or category).' },
                   suppressionKeywords: { type: 'array', items: { type: 'string' }, description: 'add_suppression: optional extra keywords that also match the phrase.' },
                   suppressionStrength: { type: 'number', description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).' },
@@ -990,13 +990,13 @@ function validateAction(
       if (publicationId.length === 0) return { error: 'set_publication_pref requires a non-empty publicationId' };
       const pref = typeof o.publicationPref === 'string' ? o.publicationPref.trim() : '';
       if (!VALID_PUBLICATION_PREFS.has(pref)) {
-        return { error: `set_publication_pref requires publicationPref ∈ boost|deprioritize|mute (got: ${String(o.publicationPref)})` };
+        return { error: `set_publication_pref requires publicationPref ∈ boost|mute (got: ${String(o.publicationPref)})` };
       }
       return {
         action: {
           type: 'set_publication_pref',
           publicationId,
-          publicationPref: pref as 'boost' | 'deprioritize' | 'mute',
+          publicationPref: pref as 'boost' | 'mute',
         },
       };
     }

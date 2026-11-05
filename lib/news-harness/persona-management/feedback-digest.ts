@@ -439,15 +439,14 @@ function suppressionCandidate(
 
 function publicationCandidate(
   publicationId: string,
-  pref: 'boost' | 'deprioritize' | 'mute',
+  pref: 'boost' | 'mute',
   rowId: string,
 ): MutableCandidate {
   const up = pref === 'boost';
-  const verb = pref === 'boost' ? 'More from' : pref === 'mute' ? 'Mute' : 'Less from';
   return {
     fingerprint: `${up ? 'publication_up' : 'publication_down'}:${publicationId}`,
     kind: up ? 'publication_up' : 'publication_down',
-    summary: `${verb} "${shorten(publicationId)}"`,
+    summary: up ? `Prefer "${shorten(publicationId)}"` : `Mark "${shorten(publicationId)}" Not preferred`,
     op: {
       action_type: ACTION_NAMES.SET_PUBLICATION_PREF,
       publicationId,
@@ -580,13 +579,6 @@ function leafCandidates(
             { kind: 'category', value: cat },
           ),
         );
-      }
-      break;
-    case 'show_less':
-    case 'too_slow':
-    case 'too_cluttered':
-      if (signal.context.publication) {
-        out.push(publicationCandidate(signal.context.publication, 'deprioritize', signal.id));
       }
       break;
     case 'never_show':
