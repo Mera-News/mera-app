@@ -85,9 +85,11 @@ export async function getAll(): Promise<PublicationPreferenceModel[]> {
   return prefsCollection.query().fetch();
 }
 
-/** Reactive query of active preferences. */
+/** Reactive query of active preferences. `observeWithColumns`, because a bare
+ *  `observe()` emits only when a row joins or leaves, and a hide over a star or
+ *  its Undo changes the weight of a row that stays. */
 export function observeActive() {
-  return prefsCollection.query(Q.where('status', 'active')).observe();
+  return prefsCollection.query(Q.where('status', 'active')).observeWithColumns(['weight']);
 }
 
 /** Retires a preference (soft delete; history preserved for the audit log). */

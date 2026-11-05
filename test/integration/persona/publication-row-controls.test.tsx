@@ -2,9 +2,10 @@
 // faked at GraphQL. A search hit knows only part of a publication's names, so every write is checked per name.
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
+import { useAdjustedSources } from '@/components/custom/publication-preferences/use-adjusted-sources';
 import { usePublicationRowPrefs, type RowPublisher } from '@/components/custom/publication-preferences/use-publication-row-prefs';
 import { resetPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 import { getPreferenceKind, getScopePreferenceKind, setScopePreferenceKind } from '@/lib/database/services/publication-preference-service';
@@ -126,6 +127,31 @@ describe('star and Not preferred on a publication row', () => {
         });
         await settleWrites();
         await waitFor(async () => expect(await kinds()).toEqual(['boost', 'boost']));
+        // Undo runs from the toast, so nothing in the row re-renders it but the observed rows.
+        await waitFor(() => expect(star().props.accessibilityState).toMatchObject({ selected: true }));
+        expect(hide().props.accessibilityState).toMatchObject({ selected: false });
+    });
+
+    it('the tagged list under the search follows a hide over a star, and its Undo', async () => {
+        catalogue();
+        const Tags = () => {
+            const { publications } = useAdjustedSources();
+            return <Text testID="tag">{publications.map((p) => p.kind).join()}</Text>;
+        };
+        await render(
+            <>
+                <Harness />
+                <Tags />
+            </>,
+        );
+        await press(star());
+        await waitFor(() => expect(screen.getByTestId('tag').props.children).toBe('boost'));
+        await press(hide());
+        await waitFor(() => expect(screen.getByTestId('tag').props.children).toBe('mute'));
+        await act(async () => {
+            await undoToast.mock.calls[0][0].onUndo();
+        });
+        await waitFor(() => expect(screen.getByTestId('tag').props.children).toBe('boost'));
     });
 
     it('clearing Not preferred shows no toast', async () => {
