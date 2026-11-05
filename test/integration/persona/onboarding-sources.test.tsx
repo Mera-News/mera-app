@@ -6,13 +6,14 @@ import React from 'react';
 import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
 import { AccountService } from '@/lib/account-service';
 import { addFact } from '@/lib/database/services/fact-service';
+import { getPreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { resetPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 import { getActive, upsertSubscription } from '@/lib/database/services/user-publication-subscription-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useOnboardingStore } from '@/lib/stores/onboarding-store';
 import { toastManager } from '@/lib/toast-manager';
 import * as subscribeFlow from '@/lib/subscriptions/subscribe-flow';
-import { initI18nEn, mockGql, server } from '@/test/helpers';
+import { initI18nEn, mockGql, mockGqlError, server } from '@/test/helpers';
 import { quietLogger, settleWrites } from '@/test/integration/data/services/persona/support';
 
 jest.mock('@/components/custom/onboarding/PersonaUpdateChatStep', () => ({ __esModule: true, default: () => null }));
@@ -134,6 +135,50 @@ describe('onboarding sources step', () => {
         await waitFor(() => screen.getByTestId('onboarding-facts-count'), { timeout: 6000 });
         expect(screen.queryByTestId('onboarding-sources-step')).toBeNull();
         expect(await getActive()).toHaveLength(1);
+    });
+
+    it('a star on an empty name cache writes every name, though the hit showed one', async () => {
+        server.use(
+            mockGql('PublicationSourcesForNewsPublisher', {
+                publicationSourcesForNewsPublisher: {
+                    __typename: 'PublicationSourcesForPublisherResponse',
+                    publicationSources: ['Der Spiegel', 'Spiegel Wirtschaft'].map((publication_name, i) => ({ __typename: 'PublicationSource', _id: `s${i}`, publication_name })),
+                },
+            }),
+        );
+        await mountAtSources();
+        await search();
+        await press(screen.getByTestId('sources-hit-pub-1-star'));
+        await waitFor(async () => expect(await getPreferenceKind('Spiegel Wirtschaft')).toBe('boost'));
+        expect(await getPreferenceKind('Der Spiegel')).toBe('boost');
+    });
+
+    it('a refused write says so, leaves the row unset and keeps Skip', async () => {
+        server.use(mockGqlError('PublicationSourcesForNewsPublisher', 'down'));
+        await mountAtSources();
+        await search();
+        await press(screen.getByTestId('sources-hit-pub-1-star'));
+        await waitFor(() => expect(toastManager.showInfo).toHaveBeenCalledWith("Couldn't save that. Try again."));
+        expect(await getPreferenceKind('Der Spiegel')).toBe('none');
+        expect(screen.getByTestId('sources-hit-pub-1-star').props.accessibilityState).toMatchObject({ selected: false });
+        expect(screen.getByText('Skip')).toBeTruthy();
+    });
+
+    it('a hide is a pick, and so is a subscription', async () => {
+        await mountAtSources();
+        await search();
+        await press(screen.getByTestId('sources-hit-pub-1-hide'));
+        await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
+        await press(screen.getByTestId('sources-hit-pub-1-hide'));
+        await waitFor(() => expect(screen.getByText('Skip')).toBeTruthy());
+        await press(screen.getByTestId('sources-subscribe-pub-1'));
+        await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
+    });
+
+    it('a reopened wizard reaches the sources step showing Next for the picks it kept', async () => {
+        await upsertSubscription({ publisherId: 'pub-1', publisherName: 'Der Spiegel', countryCode: 'DEU', subscriptionUri: null, sourceNames: ['Der Spiegel'] });
+        await mountAtSources();
+        await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
     });
 
     it('Skip works offline', async () => {

@@ -42,6 +42,14 @@ describe('meterFigures', () => {
     expect(meterFigures(sizes({ modelBytes: 2_000_000_000 }), 'de').used).toBe('2,1 GB');
   });
 
+  it('keeps the rows summing to the total in Arabic, in the locale digits', () => {
+    const f = meterFigures(sizes({ databaseBytes: 100_400_000, backupBytes: 100_400_000, freeBytes: 38_200_000_000 }), 'ar');
+    const mb = (n: number) => `${n.toLocaleString('ar')} MB`;
+    expect(f.rows.map((r) => r.value)).toEqual([mb(100), mb(100)]);
+    expect(f.used).toBe(mb(200));
+    expect(f.free).toBe(`${(38.2).toLocaleString('ar', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} GB`);
+  });
+
   it('free space keeps its own unit: a small total never prints "38,200 MB free"', () => {
     expect(meterFigures(sizes({ databaseBytes: 412_000_000, freeBytes: 38_200_000_000 }), 'en').free).toBe('38.2 GB');
     expect(meterFigures(sizes({ modelBytes: 2_000_000_000, freeBytes: 412_000_000 }), 'en').free).toBe('412 MB');

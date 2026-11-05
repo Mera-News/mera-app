@@ -55,6 +55,7 @@ const DataMeterCard: React.FC = () => {
                 {f.rows.map((r) => (
                     <View
                         key={r.key}
+                        testID={`data-meter-row-${r.key}`}
                         style={{
                             flexDirection: stacked ? 'column' : 'row',
                             justifyContent: 'space-between',
