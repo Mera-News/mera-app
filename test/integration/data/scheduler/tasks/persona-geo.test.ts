@@ -48,7 +48,7 @@ beforeEach(async () => {
 afterEach(endTest);
 
 describe('registration', () => {
-  it('is a daily foreground task gated on db-ready plus exactly ONE custom idle check, exclusive, 30s, 2 attempts', () => {
+  it('is a daily foreground task gated on db-ready plus exactly ONE custom idle check, exclusive, 60s, 2 attempts', () => {
     const def = registeredDefinition('@/lib/scheduler/tasks/persona-geo-task');
 
     expect(def).toMatchObject({
@@ -56,7 +56,7 @@ describe('registration', () => {
       frequency: DAY,
       triggers: ['app-foreground'],
       exclusive: true,
-      timeout: 30_000,
+      timeout: 60_000,
       maxAttempts: 2,
     });
     expect(conditionTypes(def)).toEqual(['db-ready', 'custom']);

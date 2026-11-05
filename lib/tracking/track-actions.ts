@@ -92,7 +92,12 @@ function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapsh
 export async function trackStoryWithProposal(
   subject: FeedbackSubject,
   scope: AcceptedTrackScope,
-  opts: { syncFeed?: boolean } = {},
+  opts: {
+    syncFeed?: boolean;
+    /** Answer `skipped` when no topic came of it, for a caller about to remove
+     *  the topic this one replaces: a story with no topic fetches nothing. */
+    requireTopic?: boolean;
+  } = {},
 ): Promise<'followed' | 'already' | 'skipped'> {
   const label = (scope.label ?? '').trim();
   const searchText = (scope.searchText ?? '').trim();
@@ -135,6 +140,7 @@ export async function trackStoryWithProposal(
   } catch (err) {
     logger.warn('[track-actions] topic mint failed', { error: String(err) });
   }
+  if (!topicId && opts.requireTopic) return 'skipped';
 
   // The local row, read once: it supplies the seed's fold keys (the subject
   // carries neither the original title nor the story key) and the retention

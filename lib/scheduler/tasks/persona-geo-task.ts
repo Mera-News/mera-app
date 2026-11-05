@@ -1,4 +1,4 @@
-// Daily persona geo-derivation sweep. Derives `locations` rows and each fact's
+// Daily persona sweeps, geo derivation then the follow-instead offer. Derives `locations` rows and each fact's
 // place (metadata.places) from persona facts on an ONGOING basis — before this task the only fact→location writer
 // was the run-once persona-v3 migration, so on a device where that migration
 // had already completed no new fact ever produced a country again.
@@ -18,6 +18,7 @@
 // Reserve markNoOp for aborts and genuine failures. Same rule as
 // persona-hygiene-task.
 
+import { runFollowInsteadSweep } from '@/lib/database/services/follow-instead-service';
 import { runGeoDerivationSweep } from '@/lib/database/services/geo-derivation-service';
 import { AppScheduler } from '../AppScheduler';
 import { backgroundWorkIsIdle } from '../background-idle';
@@ -32,18 +33,20 @@ AppScheduler.register({
   // db-ready + idle: a low-priority sweep that defers to the feed sync /
   // inference queue and re-checks on the next tick when the app is busy.
   conditions: [{ type: 'db-ready' }, { type: 'custom', check: backgroundWorkIsIdle }],
-  timeout: 30_000,
+  timeout: 60_000,
   maxAttempts: 2,
   exclusive: true,
   handler: async (_input, ctx) => {
     const result = await runGeoDerivationSweep();
-    if (!result.ran) {
+    if (result.ran) {
+      ctx.log(
+        `geo derivation complete — ${result.added} added, ${result.reweighted} reweighted, ` +
+          `${result.placed} placed, ${result.regenerated} regenerated`,
+      );
+    } else {
       ctx.log(`geo derivation skipped — ${result.reason ?? 'not-eligible'}`);
-      return;
     }
-    ctx.log(
-      `geo derivation complete — ${result.added} added, ${result.reweighted} reweighted, ` +
-        `${result.placed} placed, ${result.regenerated} regenerated`,
-    );
+    const follow = await runFollowInsteadSweep();
+    ctx.log(`follow-instead ${follow.offered ? 'offered one' : `none: ${follow.reason ?? 'no candidate'}`}`);
   },
 });

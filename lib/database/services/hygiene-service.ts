@@ -13,9 +13,12 @@
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import logger from '../../logger';
 import { toastManager } from '../../toast-manager';
+import type { FeedbackSubject } from '../../../components/custom/cards/feedback-subject';
+import { syncFollowedStoryNow, trackStoryWithProposal } from '../../tracking/track-actions';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import {
   analyzeHygiene,
+  isNoStakeOffer,
   type HygieneProposal,
   type HygieneOp,
   type HygieneFactInput,
@@ -167,6 +170,17 @@ async function writeBacklog(proposals: HygieneProposal[]): Promise<void> {
 async function publishWithCap(proposals: HygieneProposal[]): Promise<void> {
   await writePending(proposals.slice(0, HYGIENE_PENDING_PRESENTATION_CAP));
   await writeBacklog(proposals.slice(HYGIENE_PENDING_PRESENTATION_CAP));
+}
+
+/**
+ * The queue the weekly sweep is about to publish, with the daily offers kept in
+ * front. That sweep replaces pending and backlog, and a daily offer is not its
+ * to drop: nothing would make it again for a day, or at all once dismissed facts
+ * thin the list.
+ */
+async function withDailyOffers(proposals: HygieneProposal[]): Promise<HygieneProposal[]> {
+  const [pending, backlog] = await Promise.all([readPending(), readBacklog()]);
+  return [...[...pending, ...backlog].filter((p) => p.kind === 'follow_instead'), ...proposals];
 }
 
 /**
@@ -330,7 +344,7 @@ export async function runHygieneSweep(opts?: {
   };
   const proposals = analyzeHygiene(input);
 
-  await publishWithCap(proposals);
+  await publishWithCap(await withDailyOffers(proposals));
   await commitAuditCursor(sanity);
   await stampSweep(now, sanity.skipped);
   notifyChange();
@@ -431,7 +445,7 @@ async function publishSanityOnly(
     };
   }
 
-  await publishWithCap(proposals);
+  await publishWithCap(await withDailyOffers(proposals));
   await commitAuditCursor(sanity);
   await stampSweep(now, sanity.skipped);
   notifyChange();
@@ -512,6 +526,94 @@ export async function addSanityProposals(
     });
   }
   return added.length;
+}
+
+// ── Follow instead (the daily offer) ───────────────────────────────────────
+
+/** What the daily sweep needs before it spends a call. */
+export async function getFollowInsteadState(): Promise<{ rejected: string[]; offerWaiting: boolean }> {
+  const [{ pending, backlog }, rejected] = await Promise.all([readLive(), readRejected()]);
+  return { rejected, offerWaiting: [...pending, ...backlog].some((p) => p.kind === 'follow_instead') };
+}
+
+/**
+ * Publish the day's offer. It goes first: a full queue must not park the one
+ * proposal that gets a reader out of an empty Feed in the backlog.
+ */
+export async function addFollowInsteadProposal(proposal: HygieneProposal): Promise<void> {
+  const { pending, backlog } = await readLive();
+  await publishWithCap([proposal, ...pending, ...backlog]);
+  notifyChange();
+  void toastManager.showNotifiedToast({
+    type: 'hygiene',
+    source: 'hygiene',
+    title: 'hygiene.followInsteadNotificationTitle',
+    body: 'hygiene.followInsteadNotificationBody',
+    icon: 'cleaning-services',
+    context: { count: await getPendingCount() },
+    actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
+  });
+}
+
+/** Whether accepting takes the fact too, which has no undo: always on the no-stake
+ *  trigger, and on a flood when this was the fact's last active topic. Read live,
+ *  because a reader can change their topics after the sweep. */
+export async function followInsteadTakesFact(proposal: HygieneProposal): Promise<boolean> {
+  if (isNoStakeOffer(proposal)) return true;
+  const moving = new Set(proposal.targetTopicIds);
+  const topics = await getAllTopicSnapshots();
+  return !topics.some(
+    (t) => t.status === 'active' && t.factId === proposal.targetFactIds[0] && !moving.has(t.id),
+  );
+}
+
+/** Delete a fact and its audit row. The statement is read first, because the
+ *  audit row names it from the log once the fact is gone. */
+async function deleteFactLogged(factId: string, proposal: HygieneProposal): Promise<void> {
+  const statement = (await getFacts()).find((f) => f.id === factId)?.statement;
+  await deleteFact(factId);
+  await changeLogService.append({
+    actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,
+    action: { targetId: factId, ...(statement ? { statement } : {}) },
+    source: 'digest',
+    summary: proposal.kind,
+  });
+}
+
+/**
+ * Accept a follow_instead offer. Off the generic loop on purpose: that loop runs
+ * every op whatever the one before it did, so a failed follow would still remove
+ * the topic. Here nothing is removed until the follow landed, a failure anywhere
+ * keeps the proposal, and a second tap finishes the job (`trackStoryWithProposal`
+ * answers `already` and mints no second story). The sync runs last, so it reads
+ * the set this accept left.
+ */
+async function applyFollowInsteadProposal(proposal: HygieneProposal): Promise<AcceptResult> {
+  const follow = proposal.ops.find((op) => op.type === 'follow_story');
+  if (follow?.type !== 'follow_story') return { applied: false, ok: false };
+
+  const takesFact = await followInsteadTakesFact(proposal);
+  const outcome = await trackStoryWithProposal(
+    follow.subject as FeedbackSubject,
+    { label: follow.label, searchText: follow.searchText },
+    { syncFeed: false, requireTopic: true },
+  );
+  if (outcome === 'skipped') return { applied: false, ok: false };
+
+  if (takesFact) {
+    await deleteFactLogged(proposal.targetFactIds[0], proposal);
+  } else {
+    for (const topicId of proposal.targetTopicIds) {
+      const res = await applyPersonaAction({ action_type: ACTION_NAMES.RETIRE_TOPIC, topicId }, 'digest');
+      if (!res.applied) return { applied: false, ok: false };
+    }
+  }
+
+  const pending = await readPending();
+  await refillFromBacklog(pending.filter((p) => p.id !== proposal.id));
+  notifyChange();
+  void syncFollowedStoryNow();
+  return { applied: true, ok: true };
 }
 
 // ── Accept / Reject ──────────────────────────────────────────────────────────
@@ -625,22 +727,24 @@ export async function acceptProposal(id: string): Promise<AcceptResult> {
     }
   }
 
+  if (proposal.kind === 'follow_instead') {
+    try {
+      return await applyFollowInsteadProposal(proposal);
+    } catch (error) {
+      logger.captureException(error, {
+        tags: { service: 'hygiene-service', method: 'acceptProposal.followInstead' },
+      });
+      return { applied: false, ok: false };
+    }
+  }
+
   let ok = true;
   for (const op of proposal.ops) {
     try {
-      if (op.type === 'generate_replacements') {
-        continue; // already handled in phase 1
+      if (op.type === 'generate_replacements' || op.type === 'follow_story') {
+        continue; // handled off this loop
       } else if (op.type === 'delete_fact') {
-        // Read the statement first, like the executor's DISCARD_FACT: the
-        // fact is gone after this, and the audit row names it from the log.
-        const statement = (await getFacts()).find((f) => f.id === op.factId)?.statement;
-        await deleteFact(op.factId);
-        await changeLogService.append({
-          actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,
-          action: { targetId: op.factId, ...(statement ? { statement } : {}) },
-          source: 'digest',
-          summary: proposal.kind,
-        });
+        await deleteFactLogged(op.factId, proposal);
       } else {
         // Structurally compatible with the executor's PersonaAction.
         const res = await applyPersonaAction(op.action as PersonaAction, 'digest');
