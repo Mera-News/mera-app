@@ -1,4 +1,3 @@
-import { getCountryName } from '@/lib/algorithms/country-utils';
 import {
     isStarInherited,
     publisherPrefNames,
@@ -9,10 +8,12 @@ import { revertSourcePrefChange, setSourcePrefFromUi } from '@/lib/database/serv
 import { observeActive } from '@/lib/database/services/publication-preference-service';
 import { fetchPublicationPrefNames, knownSourceNamesForPublisher } from '@/lib/database/services/publisher-source-names';
 import logger from '@/lib/logger';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { toastManager } from '@/lib/toast-manager';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { localizedCountryName } from './country-search';
 import { setNotPreferredWithUndo } from './set-not-preferred';
 
 export interface RowPublisher {
@@ -39,6 +40,7 @@ export interface RowCountry {
  */
 export function usePublicationRowPrefs() {
     const { t } = useTranslation();
+    const appLanguage = useAppLanguage();
     const [rows, setRows] = useState<readonly PrefRowLike[]>([]);
     const [busy, setBusy] = useState<ReadonlySet<string>>(new Set());
     const [helpCountry, setHelpCountry] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export function usePublicationRowPrefs() {
         const names = publisherPrefNames(p.sourceNames ?? [], knownSourceNamesForPublisher(p.publisherId) ?? [], p.rawName);
         const level = resolvePrefLevel(rows, names);
         const inherited = isStarInherited(rows, names, p.countryCode);
-        const country = inherited && p.countryCode ? getCountryName(p.countryCode) : null;
+        const country = inherited && p.countryCode ? localizedCountryName(p.countryCode, appLanguage) : null;
         // Fetched before each write, never from the row: a search hit's names are
         // only those that matched, and a preference under part of them reaches
         // part of the publication's news. A throw refuses the write.

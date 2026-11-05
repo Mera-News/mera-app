@@ -1,7 +1,10 @@
 import { useRestartHold } from '@/lib/app-restart';
 import { alpha3ToAlpha2, flagForAlpha2 } from '@/components/custom/locations/location-display';
-import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
+import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
+import { searchSourceCountries } from '@/components/custom/publication-preferences/country-search';
+import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
+import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField, InputSlot } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
@@ -12,26 +15,35 @@ import { useDebouncedValue } from '@/lib/hooks/use-debounced-value';
 import logger from '@/lib/logger';
 import SourceService from '@/lib/source-service';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
-import React, { useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import React, { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** The server rejects a shorter query (BadRequestException). */
 const MIN_QUERY_LENGTH = 2;
 
 /**
- * "Find a publication" on the Sources screen. A result is the slim
- * publication row and opens the publication page, where every tag is set;
- * once tagged, the publication joins the list below. Every state is named
+ * "Find a publication" on the Sources screen and in onboarding. A result is
+ * the shared source row (star, Not preferred) and opens the publication page;
+ * a country that matches sits above and opens the country page. Every state is named
  * (too short, searching, none, failed): a search box that shows nothing reads
  * as broken. Nothing typed is stored.
  */
 const SourceSearch: React.FC<{
     /** True while the box holds a query, so the screen can hide its empty state. */
     readonly onActiveChange?: (active: boolean) => void;
-}> = ({ onActiveChange }) => {
+    /** Onboarding: rows have no body button, and a failed search offers Try again. */
+    readonly onboarding?: boolean;
+    /** Under a publication row, such as onboarding's "I subscribe". */
+    readonly footerFor?: (hit: PublisherSearchHit) => ReactNode;
+    readonly onFocusChange?: (focused: boolean) => void;
+}> = ({ onActiveChange, onboarding, footerFor, onFocusChange }) => {
     const { t } = useTranslation();
     const colors = useColors();
+    const appLanguage = useAppLanguage();
+    const prefs = usePublicationRowPrefs();
     const themeMode = useThemeMode();
     const [query, setQuery] = useState('');
     useRestartHold(query.trim().length > 0, 'draft:source-search', 'hard');
@@ -40,6 +52,7 @@ const SourceSearch: React.FC<{
     const [searching, setSearching] = useState(false);
     const [searched, setSearched] = useState(false);
     const [failed, setFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
 
     const trimmed = debounced.trim();
     useEffect(() => {
@@ -70,8 +83,12 @@ const SourceSearch: React.FC<{
         return () => {
             cancelled = true;
         };
-    }, [trimmed]);
+    }, [trimmed, attempt]);
 
+    const countryHits = useMemo(
+        () => (trimmed.length >= MIN_QUERY_LENGTH ? searchSourceCountries(trimmed, appLanguage) : []),
+        [trimmed, appLanguage],
+    );
     const typed = query.trim().length > 0;
     const tooShort = typed && trimmed.length < MIN_QUERY_LENGTH;
     useEffect(() => {
@@ -94,6 +111,8 @@ const SourceSearch: React.FC<{
                         accessibilityLabel={t('you.sources.find')}
                         autoCapitalize="none"
                         autoCorrect={false}
+                        onFocus={() => onFocusChange?.(true)}
+                        onBlur={() => onFocusChange?.(false)}
                     />
                 </Input>
 
@@ -104,27 +123,65 @@ const SourceSearch: React.FC<{
                         <Text size="sm" className="text-ink-2">{t('subscriptions.searchInFlight')}</Text>
                     </HStack>
                 ) : null}
-                {failed && !searching ? <Text size="sm" className="text-ink-2">{t('subscriptions.searchError')}</Text> : null}
-                {!failed && !searching && searched && results.length === 0 ? (
+                {failed && !searching ? (
+                    onboarding ? (
+                        <VStack space="sm" className="items-start">
+                            <Text size="sm" className="text-ink-2">{t('onboarding.sourcesLoadError')}</Text>
+                            <Button action="secondary" size="sm" onPress={() => setAttempt((n) => n + 1)} testID="sources-search-retry">
+                                <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                            </Button>
+                        </VStack>
+                    ) : (
+                        <Text size="sm" className="text-ink-2">{t('subscriptions.searchError')}</Text>
+                    )
+                ) : null}
+                {!failed && !searching && searched && results.length === 0 && countryHits.length === 0 ? (
                     <Text size="sm" className="text-ink-2">{t('subscriptions.searchNoResults')}</Text>
                 ) : null}
             </VStack>
 
+            {!tooShort
+                ? countryHits.map((c) => (
+                      <PublicationControlRow
+                          key={c.alpha3}
+                          {...prefs.countryRow(c)}
+                          rawName={c.name}
+                          flag={flagForAlpha2(c.alpha2) || null}
+                          subtitle={t('publicationPrefs.scopeKindCountry')}
+                          onPress={
+                              onboarding
+                                  ? undefined
+                                  : () =>
+                                        router.push({
+                                            pathname: '/logged-in/sources-publishers',
+                                            params: { countryCode: c.alpha3, countryName: c.name },
+                                        })
+                          }
+                          testID={`sources-country-${c.alpha3}`}
+                      />
+                  ))
+                : null}
+
             {!tooShort && !searching
                 ? results.map((hit) => (
-                      <PublicationListRow
+                      <PublicationControlRow
                           key={hit._id}
+                          {...prefs.publisherRow({ publisherId: hit._id, rawName: hit.name, countryCode: hit.country_code })}
                           rawName={hit.name}
                           flag={flagForAlpha2(alpha3ToAlpha2(hit.country_code)) || null}
                           subtitle={hit.country_name ?? null}
-                          prefLevel="none"
-                          onPress={() =>
-                              openPublicationPage({ publisherId: hit._id, rawName: hit.name, countryCode: hit.country_code })
+                          footer={footerFor?.(hit)}
+                          onPress={
+                              onboarding
+                                  ? undefined
+                                  : () => openPublicationPage({ publisherId: hit._id, rawName: hit.name, countryCode: hit.country_code })
                           }
                           testID={`sources-hit-${hit._id}`}
                       />
                   ))
                 : null}
+
+            <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />
         </VStack>
     );
 };
