@@ -508,6 +508,16 @@ describe('SuggestionSyncService', () => {
       expect(rowOf('x')).toBe(prev);
     });
 
+    it('keeps the array itself when no row changed, so readers do not regroup', async () => {
+      await seedArticles([{ id: 'x' }, { id: 'y' }]);
+      await refreshSuggestionsInStoreUnsafe();
+      const prev = useForYouStore.getState().suggestions;
+
+      await refreshSuggestionsInStoreUnsafe();
+
+      expect(useForYouStore.getState().suggestions).toBe(prev);
+    });
+
     it('uses a fresh object when a scalar display field changed, and keeps the untouched row', async () => {
       await seedArticles([{ id: 'x' }, { id: 'y' }]);
       await refreshSuggestionsInStoreUnsafe();
