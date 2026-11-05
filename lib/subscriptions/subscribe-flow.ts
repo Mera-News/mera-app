@@ -182,8 +182,8 @@ export const PURCHASE_HOLD_CEILING_MS = 5 * 60_000;
  * THE RELEASE IS TIMER-OWNED, NOT `finally`-OWNED, and that is the whole
  * design. A `finally` is the wrong moment in both callers: `openSubscribePage`
  * returns the instant the browser opens, before the user has even left, and
- * `presentFreeTierPaywall` returns while the entitlement refresh it fired is
- * still running. So the caller does not decide when this ends. Two timers do:
+ * `handleViewPlans` returns while the entitlement refresh it fired is still
+ * running. So the caller does not decide when this ends. Two timers do:
  *
  *   - a true `background` -> `active` return schedules the release at
  *     +`PURCHASE_HOLD_AFTER_RETURN_MS`, re-scheduled on each further trip

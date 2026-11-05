@@ -122,9 +122,8 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
     if (!billing) return;
     // The ONE signal that lifts the /token 403 latch, and it is deliberately
     // this one: every path that can end a refusal — a purchase
-    // (refreshUserBillingAfterPurchase on all four call sites),
-    // presentFreeTierPaywall, and the periodic/foreground syncEntitlement —
-    // lands here, and three of them never call syncEntitlement at all.
+    // (refreshUserBillingAfterPurchase) and the periodic/foreground
+    // syncEntitlement — lands here.
     //
     // Requires an EXPLICIT paid tier, using the same `undefined`-ignoring rule
     // as the setter below: the lapse-state query does not select
