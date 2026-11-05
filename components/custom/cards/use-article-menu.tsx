@@ -154,7 +154,7 @@ function liveChatEnabled(): boolean {
  *
  * The main level (FinalRead #14): [compact rows: Like, Not for me, Save,
  * Share], Fact check, Follow this story, the surface's extra items, then two
- * rows that open their own level: the publisher (About, Fewer from) and
+ * rows that open their own level: the publisher (About, Not preferred) and
  * Support (Report a bug, Live chat, FAQ, Tutorial). Open on source, Google
  * Translate and Ask Mera are not here: the article page and its Mera button
  * do them. The card's VoiceOver custom actions are every LEAF of every level,
@@ -201,7 +201,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     resolveTreeContextRef.current = input.resolveTreeContext;
     const follow = useTrackButton(subject, engaged || !!followLive);
     const { tracked } = follow;
-    // The publication's raw name is the KEY: "Fewer from" writes it and every
+    // The publication's raw name is the KEY: Not preferred writes it and every
     // filter matches on it. Its display name (in the app language) is only
     // what the rows and the toast SAY.
     const publication = (subject.publicationName ?? visit?.publicationName ?? '').trim();
@@ -332,7 +332,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         [showFailure],
     );
 
-    const fewerFromSource = useCallback(
+    const notPreferredSource = useCallback(
         async (publicationName: string, shownAs: string): Promise<boolean> => {
             // Resolved at call time: the preference writer pulls in the persona
             // executor and the database, and this hook sits under every card.
@@ -344,18 +344,19 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // preference by source name, and a publication's sources are not
             // all named alike. One press can therefore write several rows.
             const names = await resolvePublicationPrefNames({ publisherId, rawName: publicationName });
-            const res = await setSourcePrefFromUi({ kind: 'publisher', names }, 'deprioritised');
+            const res = await setSourcePrefFromUi({ kind: 'publisher', names }, 'muted');
             if (!res.applied) return false;
             // The app's one undo toast. Required at call time, like the writer.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
-            // Already fewer: nothing was written, so an Undo would undo nothing.
+            const title = t('articleMenu.notPreferredDone', { publisher: shownAs });
+            // Already hidden: nothing was written, so an Undo would undo nothing.
             if (!res.changeLogIds?.length) {
-                toastManager.showInfo(t('articleMenu.fewerFromAlready', { source: shownAs }));
+                toastManager.showInfo(title);
                 return true;
             }
             toastManager.showUndoToast({
-                title: t('articleMenu.fewerFromDone', { source: shownAs }),
+                title,
                 undoLabel: t('articleMenu.undo'),
                 undoTestID: 'article-menu-undo',
                 // The same "Change undone" the leaf's undo shows; the manager
@@ -366,6 +367,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 // the toast claims nothing for it. A fresh 'none' write
                 // clobbered a later boost and logged as a new action (batch 16).
                 onUndo: () => revertSourcePrefChange(res),
+                // The purge waits for this: an excluded row loses its score, so
+                // an undo after it would send the row back through scoring.
+                onClosed: res.commitPurge,
             });
             return true;
         },
@@ -447,7 +451,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         return list;
     }, [t, publication, publicationShown, tracked, enterTree, onCheckFacts, publisherId, extraItems, rowActions, showLevel]);
 
-    /** The publisher's level: About this source, Fewer from. */
+    /** The publisher's level: About this source, Not preferred. */
     const sourceItems = useMemo<ArticleMenuItem[]>(() => {
         const list: ArticleMenuItem[] = [];
         if (publication || publisherId) {
@@ -464,15 +468,17 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         }
         if (publication) {
             list.push({
-                key: 'fewer-from',
-                label: t('articleMenu.fewerFrom', { source: publicationShown }),
-                icon: 'trending-down',
-                testID: 'menu-fewer-from-source',
-                run: () => fewerFromSource(publication, publicationShown),
+                key: 'not-preferred',
+                label: t('articleMenu.notPreferred'),
+                // The card's VoiceOver/TalkBack action names the source.
+                a11yLabel: t('personaAudit.summary.notPreferred', { name: publicationShown }),
+                icon: 'block',
+                testID: 'menu-not-preferred-source',
+                run: () => notPreferredSource(publication, publicationShown),
             });
         }
         return list;
-    }, [t, publication, publicationShown, publisherId, openPublication, fewerFromSource]);
+    }, [t, publication, publicationShown, publisherId, openPublication, notPreferredSource]);
 
     /** Support: report a bug, a person from the Mera team, the FAQ, the
      *  tutorial. Each presents native UI or navigates, so each runs after the

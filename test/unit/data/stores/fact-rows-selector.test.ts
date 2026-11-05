@@ -388,6 +388,27 @@ describe('buildFactRows visibility', () => {
 
 // --- cluster-timestamp rule (newest member fronts) ------------------------
 
+describe('buildFactRows Not preferred', () => {
+  it('drops a muted publication before grouping, so a row left by a deferred purge never shows', () => {
+    const shared = [{ clusterId: 'c1', stableClusterId: null, confidence: 1 }] as ForYouSuggestion['clusters'];
+    const topic = { factIds: ['f1'], matchedTopics: [{ topicId: 't1', text: 'x' }] };
+    const gone = sugg({ _id: 'gone', ...topic, publication_name: 'Gone', clusters: shared });
+    const kept = sugg({ _id: 'kept', ...topic, publication_name: 'Kept', clusters: shared });
+    const ctx = {
+      homeCountryAlpha3: null,
+      otherCountriesAlpha3: [],
+      appLanguageBase: null,
+      publicationMultipliers: new Map([['gone', 0]]),
+    } as UserGeoLanguageContext;
+    const snaps = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]] as never);
+    const row = (c: UserGeoLanguageContext | null) =>
+      buildFactRows([gone, kept], snaps, new Set(), NOW, DEFAULT_HARNESS_CONFIG, c).rows.find((r) => r.factId === 'f1');
+    expect(row(ctx)?.groups.map((g) => g.data._id)).toEqual(['kept']);
+    expect(row(ctx)?.groups[0].members.map((m) => m._id) ?? []).not.toContain('gone');
+    expect(row(null)?.groups.flatMap((g) => [g.data._id, ...g.members.map((m) => m._id)]).sort()).toEqual(['gone', 'kept']);
+  });
+});
+
 describe('buildFactRows cluster timestamp', () => {
   it('picks the OLDEST member as representative; group pubDate is still the newest', () => {
     const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);

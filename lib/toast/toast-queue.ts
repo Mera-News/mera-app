@@ -76,6 +76,9 @@ export interface ToastShowOptions {
      * sign the work is still running. `close(id)` still removes it. Default true.
      */
     dismissible?: boolean;
+    /** Runs once when the card leaves the queue, whatever removed it: timer,
+     *  swipe, `close`, `closeAll`, a replace by id or the queue cap. */
+    onClosed?: () => void;
     render: (props: ToastRenderProps) => ReactNode;
 }
 
@@ -83,6 +86,7 @@ export interface ToastEntry {
     id: string;
     duration: number | null;
     dismissible: boolean;
+    onClosed?: () => void;
     render: (props: ToastRenderProps) => ReactNode;
     /** Arrival order. The sort is stable on this, never on array position. */
     seq: number;
@@ -171,6 +175,7 @@ function applyCap(entries: ToastEntry[]): ToastEntry[] {
     logger.info(
         `[toast-queue] queue over ${TOAST_QUEUE_CAP}, dropping toast ${entries[dropAt].id}`,
     );
+    entries[dropAt].onClosed?.();
     return entries.filter((_, index) => index !== dropAt);
 }
 
@@ -185,6 +190,7 @@ export function show(options: ToastShowOptions): string {
         // default; `null` means persistent and must survive the check.
         duration: options.duration === undefined ? 5000 : options.duration,
         dismissible: options.dismissible !== false,
+        onClosed: options.onClosed,
         render: options.render,
         seq: nextSeq++,
     };
@@ -204,11 +210,13 @@ export function show(options: ToastShowOptions): string {
  */
 export function close(id: string): void {
     const queue = useToastQueue.getState().entries;
-    if (!queue.some((entry) => entry.id === id)) return;
+    const entry = queue.find((candidate) => candidate.id === id);
+    if (!entry) return;
 
     if (timer?.id === id) clearTimer();
-    useToastQueue.setState({ entries: queue.filter((entry) => entry.id !== id) });
+    useToastQueue.setState({ entries: queue.filter((candidate) => candidate.id !== id) });
     syncTimer();
+    entry.onClosed?.();
 }
 
 /**
@@ -224,7 +232,9 @@ export function rearm(id: string, ms: number): void {
 
 export function closeAll(): void {
     clearTimer();
+    const queue = useToastQueue.getState().entries;
     useToastQueue.setState({ entries: [] });
+    for (const entry of queue) entry.onClosed?.();
 }
 
 export function isActive(id: string): boolean {

@@ -199,12 +199,11 @@ describe('resolveTreeLevel: the shipped v6 hub', () => {
         ]);
     });
 
-    it('opens the site row onto its four problems', () => {
+    it('opens the site row onto its three problems', () => {
         expect(ids(BUNDLED_FEEDBACK_TREE, ['publication_issue'], FULL)).toEqual([
             'paywall',
             'not_factual',
             'too_slow',
-            'fewer_from_site',
         ]);
     });
 });

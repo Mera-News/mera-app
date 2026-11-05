@@ -36,6 +36,8 @@ export interface PrefRowLike {
   readonly publicationName: string;
   readonly weight: number;
   readonly scopeKind?: string | null;
+  /** ISO alpha-3 on a country row. */
+  readonly scopeValue?: string | null;
   readonly status?: string;
 }
 
@@ -83,4 +85,30 @@ export function resolvePrefLevel(
     if (row.weight > 0) more = true;
   }
   return more ? 'prioritised' : 'none';
+}
+
+/**
+ * Whether a publication's star comes from its country: the country is preferred
+ * and none of the publication's names has a row of its own (a stored Fewer
+ * counts, because it outranks the country in the sort). Pass the rows of
+ * `observeActive`, which include scope rows.
+ */
+export function isStarInherited(
+  rows: readonly PrefRowLike[],
+  names: readonly string[],
+  countryAlpha3: string | null | undefined,
+): boolean {
+  const country = countryAlpha3?.trim().toUpperCase();
+  if (!country) return false;
+  const wanted = new Set(names.map(normalizePrefName).filter(Boolean));
+  let inherited = false;
+  for (const row of rows) {
+    if (row.status !== undefined && row.status !== 'active') continue;
+    if (row.scopeKind === 'country') {
+      if (row.weight > 0 && row.scopeValue?.trim().toUpperCase() === country) inherited = true;
+    } else if (row.scopeKind == null && row.weight !== 0 && wanted.has(normalizePrefName(row.publicationName ?? ''))) {
+      return false;
+    }
+  }
+  return inherited;
 }

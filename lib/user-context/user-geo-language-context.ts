@@ -133,8 +133,7 @@ export async function loadUserGeoLanguageContext(): Promise<RankingContext | nul
         }
         const publicationMultipliers = new Map<string, number>();
         for (const name of new Set([...tags.keys(), ...subscribed])) {
-            const m = publicationTagMultiplier(tags.get(name) ?? null, subscribed.has(name));
-            if (m !== 1) publicationMultipliers.set(name, m);
+            publicationMultipliers.set(name, publicationTagMultiplier(tags.get(name) ?? null, subscribed.has(name)));
         }
 
         // Spread CONDITIONALLY — same idiom as `buildPersonaContext`'s

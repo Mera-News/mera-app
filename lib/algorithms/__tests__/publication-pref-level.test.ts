@@ -1,7 +1,7 @@
 // publication-pref-level: pure, so no database mock is needed (and none may be
 // needed: list rows import this module).
 
-import { normalizePrefName, publisherPrefNames, resolvePrefLevel } from '../publication-pref-level';
+import { isStarInherited, normalizePrefName, publisherPrefNames, resolvePrefLevel } from '../publication-pref-level';
 
 describe('normalizePrefName', () => {
   it('lowercases, trims and collapses inner whitespace', () => {
@@ -54,5 +54,29 @@ describe('resolvePrefLevel', () => {
       row('A', 0),
     ];
     expect(resolvePrefLevel(rows, ['A', 'India'])).toBe('none');
+  });
+});
+
+describe('isStarInherited', () => {
+  const india = { publicationName: 'India', weight: 0.5, scopeKind: 'country', scopeValue: 'IND', status: 'active' };
+  const named = (weight: number) => ({ publicationName: 'A', weight, scopeKind: null, status: 'active' });
+
+  it('is true for a publication with no row of its own in a preferred country', () => {
+    expect(isStarInherited([india], ['A'], 'IND')).toBe(true);
+    expect(isStarInherited([india], ['A'], ' ind ')).toBe(true);
+  });
+
+  it('is false in another country, with no country, and for a lowered or retired country', () => {
+    expect(isStarInherited([india], ['A'], 'DEU')).toBe(false);
+    expect(isStarInherited([india], ['A'], null)).toBe(false);
+    expect(isStarInherited([{ ...india, weight: -0.5 }], ['A'], 'IND')).toBe(false);
+    expect(isStarInherited([{ ...india, status: 'retired' }], ['A'], 'IND')).toBe(false);
+  });
+
+  it('a row of its own wins, a stored Fewer included', () => {
+    expect(isStarInherited([india, named(0.5)], ['A'], 'IND')).toBe(false);
+    expect(isStarInherited([named(-1), india], ['A'], 'IND')).toBe(false);
+    expect(isStarInherited([india, named(-0.5)], ['A'], 'IND')).toBe(false);
+    expect(isStarInherited([india, { ...named(-1), status: 'retired' }], ['A'], 'IND')).toBe(true);
   });
 });
