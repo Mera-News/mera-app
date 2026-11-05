@@ -77,6 +77,9 @@ export interface UseArticleMenuInput {
 
 /** A level's own heading and explanation (the confirm and follow levels),
  *  in the sheet's muted text, above its rows. */
+/** Past the sheet's 320 ms rise. */
+const PREPARE_TREE_DELAY_MS = 400;
+
 const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => {
     const colors = useColors();
     return (
@@ -795,7 +798,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         open: useCallback(() => {
             if (closingRef.current) return;
             setEngaged(true);
-            prepareTree();
+            // After the sheet is up: this reads the database on the JS thread, so
+            // starting it with the tap holds the sheet back. `enterTree` starts it
+            // itself if a reader gets there first.
+            setTimeout(prepareTree, PREPARE_TREE_DELAY_MS);
             setDirection('none');
             setStack([{ kind: 'main' }]);
             setMounted(true);

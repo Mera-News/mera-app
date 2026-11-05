@@ -320,6 +320,21 @@ export function normalizeTitleTokens(title: string | null | undefined): Set<stri
     return tokens;
 }
 
+/** The feed regroups the same titles on every change. Sets here are read-only. */
+const titleTokenCache = new Map<string, Set<string>>();
+const TITLE_TOKEN_CACHE_MAX = 10_000;
+
+function cachedTitleTokens(title: string | null | undefined): Set<string> {
+    if (!title) return normalizeTitleTokens(title);
+    let tokens = titleTokenCache.get(title);
+    if (!tokens) {
+        if (titleTokenCache.size >= TITLE_TOKEN_CACHE_MAX) titleTokenCache.clear();
+        tokens = normalizeTitleTokens(title);
+        titleTokenCache.set(title, tokens);
+    }
+    return tokens;
+}
+
 /**
  * Jaccard similarity between two token sets: |intersection| / |union|.
  * Two empty sets → 0 (no evidence, not a perfect match).
@@ -634,7 +649,7 @@ export function buildStoryGroups<T extends GroupableItem>(
     // Tokenize every title once.
     const tokenSets: Set<string>[] = new Array(n);
     for (let i = 0; i < n; i += 1) {
-        tokenSets[i] = normalizeTitleTokens(items[i].title);
+        tokenSets[i] = cachedTitleTokens(items[i].title);
     }
 
     // Build token → posting list (indices, ascending by construction). The

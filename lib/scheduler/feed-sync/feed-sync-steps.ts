@@ -827,7 +827,7 @@ export async function stepHydratePersistEnqueue(
     // Covered, not candidate-only: a sibling held back behind a live batch's rep
     // must not be elected again by the next chunk's gate.
     const inFlight = await getNonTerminalCoveredIds();
-    const gate = await gateUnscoredForScoring(inFlight, userCtx);
+    const gate = await gateUnscoredForScoring(inFlight, userCtx, readIndex);
     if (gate.propagatedCount > 0) {
       // P9: propagated rows were written terminal `complete` WITHOUT passing
       // the scoring stage's hard screen. Reconcile against the live hard
