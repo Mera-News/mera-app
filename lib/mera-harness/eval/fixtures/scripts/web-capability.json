@@ -1,0 +1,259 @@
+{
+  "id": "web-capability",
+  "cohort": "web-capability",
+  "note": "Requests that need the web. The route leg's acknowledgement is what streams, and it must stay on the request: no denial of a capability and no statement of what the agent can do. For a clean rate run each turn in a fresh thread, one single-turn script per prompt: a later turn here sees earlier answers in its history.",
+  "persona": {
+    "facts": [
+      {
+        "id": "f1",
+        "statement": "Lives in Leeds, England, United Kingdom",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Can you search the web for the latest on the Artemis mission?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "Look up who won the Champions League match last night",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "What's the gold price right now?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "user": "What's the weather in Edinburgh tomorrow?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "Can you browse the internet?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "user": "Find me the official website of the Dutch tax office",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "user": "Who is the prime minister of Japan right now?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 7,
+      "user": "Check online for reviews of the Fairphone 6",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 8,
+      "user": "Can you google what time the Monaco Grand Prix starts?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 9,
+      "user": "Do you have access to the internet? I need the current euro to rupee rate",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 10,
+      "user": "क्या आप इंटरनेट पर देख सकते हैं कि आज सोने का भाव क्या है?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    },
+    {
+      "index": 11,
+      "user": "Kun je op internet opzoeken wanneer de treinstaking begint?",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill",
+          "webSearch"
+        ],
+        "legs": 3,
+        "replyExcludes": [
+          "can't browse",
+          "cannot browse",
+          "can't search",
+          "cannot search",
+          "no internet access"
+        ]
+      }
+    }
+  ]
+}

@@ -7,10 +7,10 @@
 //
 // A control and its twin are the same code under two names; their spread is
 // the floor the candidate is judged against. S1, S1.5, S3 and S3b shipped into
-// router.md (chatfix); their arms are gone. The bodies stay because each is
-// derived from the one before it: S3B_ROUTER_BODY is router.md byte for byte (a
-// test pins it), and S3_ROUTER_BODY is the router before it, the next step's
-// control.
+// router.md (chatfix), and so did ack-capability; their arms are gone. The bodies
+// stay because each is derived from the one before it:
+// ACK_CAPABILITY_ROUTER_BODY is router.md byte for byte (a test pins it), and
+// S3B_ROUTER_BODY is the router before it, the next step's control.
 
 /** The S1.5 router: feed_tuning, the card exception and routing a message that
  *  points back by the action it asks for. The base the later bodies swap from. */
@@ -52,7 +52,7 @@ export const S3_ROUTER_BODY = [
   ['| feed_tuning | `conversation/feed-tuning` |\n', '| feed_tuning | `conversation/feed-tuning` |\n| follow_story | `conversation/follow-story` |\n'],
 ].reduce((body, [from, to]) => swap(body, from, to), S1_5_ROUTER_BODY);
 
-/** The S3b router, shipped (chatfix u6b2, confirmed in s3b-confirm2):
+/** The S3b router (chatfix u6b2, confirmed in s3b-confirm2):
  *  follow_story by a literal test. S3 sent
  *  "yes" and "thanks" beside a waiting card, "What is happening with Artemis?",
  *  "Try P" and "Any news about rail strikes would be useful" to the follow
@@ -76,6 +76,20 @@ export const S3B_ROUTER_BODY = [
   ],
 ].reduce((body, [from, to]) => swap(body, from, to), S3_ROUTER_BODY);
 
+/** The router shipped from ack-capability: the acknowledgement knows web search
+ *  waits on the next leg and stays on the request. The route leg offers no search
+ *  tool and is the one leg that streams, so the model's "I can't browse the web"
+ *  appeared live. */
+export const ACK_CAPABILITY_ROUTER_BODY = swap(
+  S3B_ROUTER_BODY,
+  'the skill has even loaded. Repeat what you heard and stop.\n',
+  'the skill has even loaded. Repeat what you heard and stop.\n\n'
+    + 'The skill you load can search the web, so the next leg looks up anything live: prices, scores,\n'
+    + "weather, today's news. Every acknowledgement is about their request and none is about what you\n"
+    + 'can do, even when they ask "can you search?". Repeat the request and let the skill answer.\n\n'
+    + '- "Tram fares in Lisbon this week."\n',
+);
+
 /** Registers the current step's arms. None now: the next step adds its control
- *  (S3_ROUTER_BODY or router.md with its skill hidden), a twin and a candidate. */
+ *  (S3B_ROUTER_BODY or router.md with its skill hidden), a twin and a candidate. */
 export function ensureOnemeraArms(): void {}
