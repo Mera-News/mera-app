@@ -526,7 +526,7 @@
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
     "errorDescription": "Gegevens verwijderen mislukt. Probeer het opnieuw.",
-    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Je feiten staan op dit apparaat, niet op de servers van Mera. Onderwerpsfrasen worden verstuurd wanneer je nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van jou kwamen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd.",
+    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Plaatsen die met je feiten zijn opgeslagen, worden ook gewist. Plaatsen die je zelf hebt toegevoegd, blijven staan. Je feiten staan op dit apparaat, niet op de servers van Mera. Onderwerpsfrasen worden verstuurd wanneer je nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van jou kwamen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd.",
     "exportHistoryTitle": "Leesgeschiedenis exporteren",
     "exportHistoryDescription": "Afgelopen 30 dagen als JSON: artikelen, publicaties en gemiddelde tijd van publicatie tot lezen",
     "exportHistorySubject": "Mijn Mera-leesgeschiedenis (JSON)",

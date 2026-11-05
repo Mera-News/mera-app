@@ -526,7 +526,7 @@
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
     "errorDescription": "Veriler silinemedi. Lütfen tekrar dene.",
-    "factsModalDescription": "Eklediğin gerçekleri ve onlardan üretilen konuları siler. Gerçeklerin bu cihazda saklanır, Mera'nın sunucularında değil. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır, bu yüzden orada bunların sana ait olduğunu gösteren bir kayıt yoktur. Haber akışın da temizlenir, çünkü bu konulardan oluşturulur.",
+    "factsModalDescription": "Eklediğin gerçekleri ve onlardan üretilen konuları siler. Gerçeklerinle birlikte kaydedilen yerler de silinir. Kendin eklediğin yerler kalır. Gerçeklerin bu cihazda saklanır, Mera'nın sunucularında değil. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır, bu yüzden orada bunların sana ait olduğunu gösteren bir kayıt yoktur. Haber akışın da temizlenir, çünkü bu konulardan oluşturulur.",
     "exportHistoryTitle": "Okuma geçmişini dışa aktar",
     "exportHistoryDescription": "Son 30 gün JSON olarak: makaleler, yayınlar ve ortalama yayından okumasına kadar süre",
     "exportHistorySubject": "Mera okuma geçmişim (JSON)",

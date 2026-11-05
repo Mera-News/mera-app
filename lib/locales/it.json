@@ -528,7 +528,7 @@
     "deletedDescription": "I dati selezionati sono stati cancellati con successo.",
     "errorTitle": "Errore",
     "errorDescription": "Impossibile eliminare i dati. Per favore riprova.",
-    "factsModalDescription": "Cancella i fatti che hai aggiunto e gli argomenti generati da essi. I tuoi fatti sono salvati su questo dispositivo, non sui server di Mera. Le frasi degli argomenti vengono inviate quando richiedi notizie e messe in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tue. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi argomenti.",
+    "factsModalDescription": "Cancella i fatti che hai aggiunto e gli argomenti generati da essi. Vengono cancellati anche i luoghi salvati con i tuoi fatti. I luoghi che hai aggiunto tu restano. I tuoi fatti sono salvati su questo dispositivo, non sui server di Mera. Le frasi degli argomenti vengono inviate quando richiedi notizie e messe in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tue. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi argomenti.",
     "exportHistoryTitle": "Esporta cronologia di lettura",
     "exportHistoryDescription": "Ultimi 30 giorni come JSON: articoli, pubblicazioni, e tempo medio dalla pubblicazione alla lettura",
     "exportHistorySubject": "La mia cronologia di lettura Mera (JSON)",

@@ -513,7 +513,7 @@
     "deletedDescription": "Dữ liệu đã chọn đã được xóa thành công.",
     "errorTitle": "Lỗi",
     "errorDescription": "Không thể xóa dữ liệu. Vui lòng thử lại.",
-    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Dữ kiện của bạn được lưu trên thiết bị này, không phải trên máy chủ của Mera. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này.",
+    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Các địa điểm được lưu cùng dữ kiện của bạn cũng bị xóa. Những địa điểm bạn tự thêm vẫn được giữ lại. Dữ kiện của bạn được lưu trên thiết bị này, không phải trên máy chủ của Mera. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này.",
     "exportHistoryTitle": "Xuất lịch sử đọc",
     "exportHistoryDescription": "30 ngày cuối cùng dưới dạng JSON: bài viết, ấn phẩm và thời gian trung bình từ xuất bản đến đọc",
     "exportHistorySubject": "Lịch sử đọc Mera của tôi (JSON)",

@@ -513,7 +513,7 @@
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
     "errorDescription": "Gagal menghapus data. Silakan coba lagi.",
-    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Fakta Anda disimpan di perangkat ini, bukan di server Mera. Frasa topik dikirim saat Anda mengambil berita dan disimpan di cache pada server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini.",
+    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Tempat yang tersimpan bersama fakta Anda juga dihapus. Tempat yang Anda tambahkan sendiri tetap ada. Fakta Anda disimpan di perangkat ini, bukan di server Mera. Frasa topik dikirim saat Anda mengambil berita dan disimpan di cache pada server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini.",
     "exportHistoryTitle": "Ekspor riwayat bacaan",
     "exportHistoryDescription": "30 hari terakhir sebagai JSON: artikel, publikasi, dan waktu rata-rata dari penerbitan hingga dibaca",
     "exportHistorySubject": "Riwayat bacaan Mera saya (JSON)",

@@ -570,7 +570,7 @@
     "deletedDescription": "Wybrane dane zostały pomyślnie wyczyszczone.",
     "errorTitle": "Błąd",
     "errorDescription": "Nie udało się usunąć danych. Spróbuj ponownie.",
-    "factsModalDescription": "Usuwa dodane przez Ciebie fakty i wygenerowane z nich tematy. Twoje fakty są przechowywane na tym urządzeniu, a nie na serwerach Mera. Frazy tematyczne są wysyłane przy pobieraniu wiadomości i buforowane na naszych serwerach bez identyfikatora użytkownika, więc nic tam nie zapisuje, że pochodziły od Ciebie. Twój kanał artykułów również zostanie wyczyszczony, bo opiera się na tych tematach.",
+    "factsModalDescription": "Usuwa dodane przez Ciebie fakty i wygenerowane z nich tematy. Miejsca zapisane z Twoimi faktami również zostaną usunięte. Miejsca dodane przez Ciebie ręcznie pozostaną. Twoje fakty są przechowywane na tym urządzeniu, a nie na serwerach Mera. Frazy tematyczne są wysyłane przy pobieraniu wiadomości i buforowane na naszych serwerach bez identyfikatora użytkownika, więc nic tam nie zapisuje, że pochodziły od Ciebie. Twój kanał artykułów również zostanie wyczyszczony, bo opiera się na tych tematach.",
     "exportHistoryTitle": "Eksportuj historię czytania",
     "exportHistoryDescription": "Ostatnie 30 dni jako JSON: artykuły, publikacje i średni czas od publikacji do przeczytania",
     "exportHistorySubject": "Moja historia czytania Mera (JSON)",

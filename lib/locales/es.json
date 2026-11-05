@@ -528,7 +528,7 @@
     "deletedDescription": "Los datos seleccionados se han limpiado exitosamente.",
     "errorTitle": "Error",
     "errorDescription": "No se pudieron eliminar los datos. Por favor, inténtalo de nuevo.",
-    "factsModalDescription": "Borra los hechos que has añadido y los temas generados a partir de ellos. Tus hechos se guardan en este dispositivo, no en los servidores de Mera. Las frases de temas se envían cuando pides noticias y se guardan en caché en nuestros servidores sin identificador de usuario, así que allí nada registra que fueran tuyas. Tu feed de artículos también se borra, ya que se construye a partir de estos temas.",
+    "factsModalDescription": "Borra los hechos que has añadido y los temas generados a partir de ellos. También se borran los lugares guardados con tus hechos. Los lugares que añadiste a mano se quedan. Tus hechos se guardan en este dispositivo, no en los servidores de Mera. Las frases de temas se envían cuando pides noticias y se guardan en caché en nuestros servidores sin identificador de usuario, así que allí nada registra que fueran tuyas. Tu feed de artículos también se borra, ya que se construye a partir de estos temas.",
     "exportHistoryTitle": "Exportar historial de lectura",
     "exportHistoryDescription": "Últimos 30 días como JSON: artículos, publicaciones y tiempo promedio de publicación a lectura",
     "exportHistorySubject": "Mi historial de lectura de Mera (JSON)",

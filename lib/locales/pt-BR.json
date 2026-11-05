@@ -528,7 +528,7 @@
     "deletedDescription": "Os dados selecionados foram limpos com sucesso.",
     "errorTitle": "Erro",
     "errorDescription": "Falha ao excluir dados. Por favor, tente novamente.",
-    "factsModalDescription": "Apaga os fatos que você adicionou e os tópicos gerados a partir deles. Seus fatos ficam guardados neste dispositivo, não nos servidores da Mera. As frases de tópico são enviadas quando você busca notícias e ficam em cache nos nossos servidores sem identificador de usuário, então nada lá registra que eram suas. Seu feed de artigos também é limpo, já que é construído a partir desses tópicos.",
+    "factsModalDescription": "Apaga os fatos que você adicionou e os tópicos gerados a partir deles. Os lugares salvos com seus fatos também são apagados. Os lugares que você adicionou manualmente continuam. Seus fatos ficam guardados neste dispositivo, não nos servidores da Mera. As frases de tópico são enviadas quando você busca notícias e ficam em cache nos nossos servidores sem identificador de usuário, então nada lá registra que eram suas. Seu feed de artigos também é limpo, já que é construído a partir desses tópicos.",
     "exportHistoryTitle": "Exportar histórico de leitura",
     "exportHistoryDescription": "Últimos 30 dias como JSON: artigos, publicações e tempo médio de publicação até leitura",
     "exportHistorySubject": "Meu histórico de leitura do Mera (JSON)",

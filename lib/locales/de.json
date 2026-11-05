@@ -526,7 +526,7 @@
     "deletedDescription": "Die ausgewählten Daten wurden erfolgreich gelöscht.",
     "errorTitle": "Fehler",
     "errorDescription": "Daten konnten nicht gelöscht werden. Versuche es erneut.",
-    "factsModalDescription": "Löscht die von dir hinzugefügten Fakten und die daraus erzeugten Themen. Deine Fakten sind auf diesem Gerät gespeichert, nicht auf den Servern von Mera. Themenphrasen werden beim Abruf von Nachrichten gesendet und auf unseren Servern ohne Nutzerkennung zwischengespeichert. Dort ist also nirgends festgehalten, dass sie von dir kamen. Dein Artikel-Feed wird ebenfalls geleert, da er auf diesen Themen beruht.",
+    "factsModalDescription": "Löscht die von dir hinzugefügten Fakten und die daraus erzeugten Themen. Auch die mit deinen Fakten gespeicherten Orte werden gelöscht. Orte, die du selbst hinzugefügt hast, bleiben. Deine Fakten sind auf diesem Gerät gespeichert, nicht auf den Servern von Mera. Themenphrasen werden beim Abruf von Nachrichten gesendet und auf unseren Servern ohne Nutzerkennung zwischengespeichert. Dort ist also nirgends festgehalten, dass sie von dir kamen. Dein Artikel-Feed wird ebenfalls geleert, da er auf diesen Themen beruht.",
     "exportHistoryTitle": "Leseverlauf exportieren",
     "exportHistoryDescription": "Letzte 30 Tage als JSON: Artikel, Veröffentlichungen und durchschnittliche Zeit von Veröffentlichung bis Lesedatum",
     "exportHistorySubject": "Mein Mera-Leseverlauf (JSON)",
