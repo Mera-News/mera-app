@@ -792,7 +792,7 @@
     "actionDownRank": "Een onderwerp naar beneden plaatsen",
     "actionPublicationBoost": "Markeer een publicatie als Voorkeur",
     "actionPublicationDeprioritize": "Minder van een publicatie tonen",
-    "actionPublicationMute": "Markeer een publicatie als Geen voorkeur",
+    "actionPublicationMute": "Markeer een publicatie als Liever niet",
     "actionSourceScopeBoost": "Geef bronnen uit een land voorkeur",
     "actionSourceScopeDeprioritize": "Minder van bronnen in een land tonen",
     "actionSuppress": "Een zin uitfilteren",
@@ -1211,7 +1211,7 @@
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
       "preferred": "{{name}} ingesteld als Voorkeur",
-      "notPreferred": "{{name}} ingesteld als Geen voorkeur",
+      "notPreferred": "{{name}} ingesteld als Liever niet",
       "preferredSourcesFrom": "Bronnen van {{name}} ingesteld als Voorkeur"
     }
   },
@@ -2066,7 +2066,7 @@
             "body": "Eén scherm voor elke publicatie die je hebt gekozen.",
             "steps": {
               "0": "Het tabblad Jij, dan Bronnen.",
-              "1": "\"Geen voorkeur\" in het ••• menu van een artikel werkt meteen, met ongedaan maken, en de publicatie verschijnt daarna in Bronnen."
+              "1": "\"Liever niet\" in het ••• menu van een artikel werkt meteen, met ongedaan maken, en de publicatie verschijnt daarna in Bronnen."
             },
             "ask": "Waar beheer ik welke bronnen ik zie?"
           },
@@ -2091,14 +2091,14 @@
           "arrows-on-a-publisher": {
             "headline": "Geef een publicatie een ster",
             "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed. Geef een land een ster om hetzelfde te doen voor al zijn publicaties.",
-            "ask": "Wat is het verschil tussen Voorkeur en Geen voorkeur?"
+            "ask": "Wat is het verschil tussen Voorkeur en Liever niet?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Geen voorkeur verbergt het uit je feed",
-            "body": "Markeer een publicatie als Geen voorkeur en de artikelen verdwijnen uit je feed. Wereld en verwante verhalen kunnen ze nog steeds tonen. Tik op elke kaart en zet hem op de juiste plek.",
+            "headline": "Liever niet verbergt het uit je feed",
+            "body": "Markeer een publicatie als Liever niet en de artikelen verdwijnen uit je feed. Wereld en verwante verhalen kunnen ze nog steeds tonen. Tik op elke kaart en zet hem op de juiste plek.",
             "steps": {
               "0": "Ster: hoger weergegeven.",
-              "1": "Geen voorkeur: verborgen uit je feed.",
+              "1": "Liever niet: verborgen uit je feed.",
               "2": "Je kunt beide wissen bij Bronnen."
             },
             "sort": {
@@ -2108,7 +2108,7 @@
               },
               "cards": {
                 "down-arrow": "De ster",
-                "mute": "Geen voorkeur"
+                "mute": "Liever niet"
               }
             }
           }
@@ -2124,7 +2124,7 @@
             "steps": {
               "0": "Woorden en dingen die je hebt verborgen.",
               "1": "Onderwerpen die je minder ziet.",
-              "2": "Bronnen die je als Geen voorkeur hebt gemarkeerd."
+              "2": "Bronnen die je als Liever niet hebt gemarkeerd."
             },
             "ask": "Waar kan ik alles zien wat ik heb gefilterd?"
           },
@@ -2696,7 +2696,7 @@
     "support": "Support",
     "supportSub": "Een bug melden, live chat, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "notPreferred": "Geen voorkeur",
+    "notPreferred": "Liever niet",
     "notPreferredDone": "{{publisher}} is verborgen uit je feed"
   },
   "storyExport": {
@@ -2756,9 +2756,9 @@
     "visitsLabel": "Je bezoeken in de afgelopen 30 dagen",
     "subscribed": "Geabonneerd",
     "preferred": "Voorkeur",
-    "notPreferred": "Geen voorkeur",
+    "notPreferred": "Liever niet",
     "preferA11y": "Voorkeur geven aan {{publisher}}",
-    "notPreferA11y": "Markeer {{publisher}} als Geen voorkeur",
+    "notPreferA11y": "Markeer {{publisher}} als Liever niet",
     "notPreferHint": "Verbergt de artikelen uit je feed",
     "includedWith": "Inbegrepen bij {{country}}",
     "includedWithA11y": "Voorkeur, inbegrepen bij {{country}}",
@@ -2953,8 +2953,8 @@
     "sources": {
       "title": "Bronnen",
       "find": "Zoek een publicatie of land",
-      "footnote": "Tik op een item om het te wijzigen. \"Geen voorkeur\" in het ••• menu van een artikel komt hier ook terecht.",
-      "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie of land om er een voorkeur aan te geven of het uit je feed te verbergen. \"Geen voorkeur\" in het ••• menu van een artikel komt hier ook terecht.",
+      "footnote": "Tik op een item om het te wijzigen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
+      "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie of land om er een voorkeur aan te geven of het uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
       "preferCountryA11y": "Voorkeur geven aan bronnen uit {{country}}",
       "countryHint": "Opent bronnen uit {{country}}",
       "countryCleared": "{{country}} staat niet meer bij je voorkeuren",
@@ -3145,7 +3145,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Markeer deze publicatie als Geen voorkeur"
+      "mute": "Markeer deze publicatie als Liever niet"
     },
     "follow": {
       "follow": "Follow a story",
