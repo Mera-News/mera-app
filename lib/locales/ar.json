@@ -1338,7 +1338,10 @@
       "carriedOver": "نُقل {{name}}",
       "undone": "تم التراجع عن: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "Set {{name}} as Preferred",
+      "notPreferred": "Set {{name}} as Not preferred",
+      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
     }
   },
   "calibration": {

@@ -1,6 +1,6 @@
 // publication-pref-ui-actions: the ONE writer behind every More/Fewer control, on the real DB.
 // A publication has SEVERAL names: a `publisher` target writes one row per name, reads its level
-// across all of them (fewer wins, a mute reads as fewer) and is undone by revertSourcePrefChange,
+// across all of them (a mute wins, a stored fewer reads as neither) and is undone by revertSourcePrefChange,
 // never by one revertChange. Replaces the mocked publication-pref-ui-actions suite.
 import database from '@/lib/database';
 import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
@@ -51,6 +51,108 @@ const weightOf = async (name: string) => {
 const kinds = async (names: string[]) => Object.fromEntries(await Promise.all(names.map(async (n) => [n, await getPreferenceKind(n)])));
 
 // ---------------------------------------------------------------------------
+// Not preferred: the row at once, the purge after the Undo window
+// ---------------------------------------------------------------------------
+
+describe('publisher target: muted', () => {
+  const names = ['Times of India', 'TOI Business'];
+  const seeded = async () => {
+    await seedArticles([
+      { id: 'a', title: 'x', publication: 'Times of India' },
+      { id: 'b', title: 'y', publication: 'TOI Business' },
+    ]);
+  };
+
+  it('writes every name and logs it, with no purge until commitPurge', async () => {
+    await seeded();
+
+    const result = await setSourcePrefFromUi(publisher(names), 'muted');
+
+    expect(await kinds(names)).toEqual({ 'Times of India': 'mute', 'TOI Business': 'mute' });
+    expect(result.changeLogIds).toHaveLength(2);
+    expect(await statuses()).toEqual({ a: 'unscored', b: 'unscored' });
+
+    await result.commitPurge?.();
+
+    expect(await statuses()).toEqual({ a: 'excluded', b: 'excluded' });
+  });
+
+  it('runs ONE purge per action, however many names and calls', async () => {
+    await seeded();
+    const purge = jest.spyOn(jest.requireActual('@/lib/services/suppression-sweep'), 'purgeHardFilteredSuggestions');
+
+    const result = await setSourcePrefFromUi(publisher(names), 'muted');
+    await result.commitPurge?.();
+    await result.commitPurge?.();
+
+    expect(purge).toHaveBeenCalledTimes(1);
+    purge.mockRestore();
+  });
+
+  it('an undo inside the window leaves the scores alone, and a late commitPurge purges nothing', async () => {
+    await seeded();
+
+    const result = await setSourcePrefFromUi(publisher(names), 'muted');
+    await revertSourcePrefChange(result);
+    await result.commitPurge?.();
+
+    expect(await kinds(names)).toEqual({ 'Times of India': 'none', 'TOI Business': 'none' });
+    expect(await statuses()).toEqual({ a: 'unscored', b: 'unscored' });
+  });
+
+  it('replaces a stored fewer and a star, and the undo restores each one', async () => {
+    await setPreferenceKind('Times of India', 'deprioritize', 'user');
+    await setPreferenceKind('TOI Business', 'boost', 'user');
+
+    const result = await setSourcePrefFromUi(publisher(names), 'muted');
+    expect(await kinds(names)).toEqual({ 'Times of India': 'mute', 'TOI Business': 'mute' });
+
+    await revertSourcePrefChange(result);
+    expect(await kinds(names)).toEqual({ 'Times of India': 'deprioritize', 'TOI Business': 'boost' });
+  });
+
+  it('a name already muted logs nothing and offers no purge', async () => {
+    await setPreferenceKind('Times of India', 'mute', 'user');
+
+    const result = await setSourcePrefFromUi(publisher(['Times of India']), 'muted');
+
+    expect(result.changeLogIds).toEqual([]);
+    expect(result.commitPurge).toBeUndefined();
+  });
+
+  it('a star replaces a stored fewer', async () => {
+    await setPreferenceKind('Times of India', 'deprioritize', 'user');
+
+    await setSourcePrefFromUi(publisher(['Times of India']), 'prioritised');
+
+    expect(await kinds(['Times of India'])).toEqual({ 'Times of India': 'boost' });
+  });
+
+  it('a country cannot be muted', async () => {
+    await expect(setSourcePrefFromUi(india, 'muted')).resolves.toEqual({ applied: false });
+    expect(await rowsOf('publication_preferences')).toEqual([]);
+  });
+
+  it('a country clear can be undone from its result', async () => {
+    await setSourcePrefFromUi(india, 'prioritised');
+
+    const cleared = await setSourcePrefFromUi(india, 'none');
+    await expect(getScopePreferenceKind({ scopeKind: 'country', scopeValue: 'IND' })).resolves.toBe('none');
+
+    await expect(revertSourcePrefChange(cleared)).resolves.toBe(true);
+    await expect(getScopePreferenceKind({ scopeKind: 'country', scopeValue: 'IND' })).resolves.toBe('boost');
+  });
+
+  it('stamps pref rows twoState, and only pref rows', async () => {
+    await setSourcePrefFromUi(publisher(['Times of India']), 'muted');
+    await setSourcePrefFromUi(india, 'prioritised');
+
+    expect((await logsOf('set_publication_pref'))[0].action).toMatchObject({ twoState: true });
+    expect((await logsOf('set_source_scope_pref'))[0].action).toMatchObject({ twoState: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Single named publication
 // ---------------------------------------------------------------------------
 
@@ -77,7 +179,7 @@ describe('publication target: more / fewer', () => {
     expect(result.applied).toBe(true);
     expect(await getPreferenceKind('The Times')).toBe('deprioritize');
     expect(await logsOf('set_publication_pref')).toHaveLength(1);
-    expect(last(await logsOf('set_publication_pref')).action).toEqual({ targetId: 'The Times', before, after: 'deprioritize' });
+    expect(last(await logsOf('set_publication_pref')).action).toEqual({ targetId: 'The Times', before, after: 'deprioritize', twoState: true });
   });
 
   it('surfaces applied:false, with nothing written, when the executor refuses the write', async () => {
@@ -183,15 +285,16 @@ describe('country scope target', () => {
     expect(await rowsOf('publication_preferences')).toEqual([]);
   });
 
-  it('clear retires the scope row, appends a composite-target row, returns no change-log id and sweeps nothing', async () => {
+  it('clear retires the scope row, appends a composite-target row, returns its change-log id and sweeps nothing', async () => {
     await upsertScopePreference({ scopeKind: 'country', scopeValue: 'IND', label: 'India', weight: 0.5, provenance: 'user' });
     await seedArticles([{ id: 'a', title: 'x', publication: 'India' }]);
 
     const result = await setSourcePrefFromUi(india, 'none');
 
-    expect(result).toEqual({ applied: true });
+    const log = (await logsOf('set_source_scope_pref'))[0];
+    expect(result).toEqual({ applied: true, changeLogId: expect.any(String) });
     expect((await rowsOf('publication_preferences'))[0].status).toBe('retired');
-    expect((await logsOf('set_source_scope_pref'))[0]).toMatchObject({
+    expect(log).toMatchObject({
       source: 'user',
       action: { targetId: 'country:IND', before: 'boost', after: 'none' },
       summary: 'Cleared source-scope preference: India',
@@ -328,20 +431,20 @@ describe('publisher target: a write reaches every name', () => {
 });
 
 describe('[dead-candidate] getPublisherPrefLevel', () => {
-  it('reads across every name, fewer winning over more, matching on normalized names', async () => {
+  it('reads across every name, a mute winning over more, matching on normalized names', async () => {
     await setPreferenceKind('Times of India', 'boost', 'user');
-    await setPreferenceKind('TOI Business', 'deprioritize', 'user');
+    await setPreferenceKind('TOI Business', 'mute', 'user');
 
-    await expect(getPublisherPrefLevel(['Times of India', 'TOI Business'])).resolves.toBe('deprioritised');
+    await expect(getPublisherPrefLevel(['Times of India', 'TOI Business'])).resolves.toBe('muted');
     await expect(getPublisherPrefLevel(['  TIMES   of india'])).resolves.toBe('prioritised');
     await expect(getPublisherPrefLevel(['Times Now'])).resolves.toBe('none');
     await expect(getPublisherPrefLevel([])).resolves.toBe('none');
   });
 
-  it('a mute reads as fewer, and a cleared (retired) name reads as none', async () => {
+  it('a mute wins over a preference, and a cleared (retired) name reads as none', async () => {
     await setPreferenceKind('Times of India', 'boost', 'user');
     await setPreferenceKind('TOI Business', 'mute', 'user');
-    await expect(getPublisherPrefLevel(['Times of India', 'TOI Business'])).resolves.toBe('deprioritised');
+    await expect(getPublisherPrefLevel(['Times of India', 'TOI Business'])).resolves.toBe('muted');
 
     await setSourcePrefFromUi(publisher(['Times of India', 'TOI Business']), 'none');
 

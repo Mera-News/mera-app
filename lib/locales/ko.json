@@ -1194,7 +1194,10 @@
       "carriedOver": "{{name}}을(를) 옮겼습니다",
       "undone": "실행 취소됨: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "Set {{name}} as Preferred",
+      "notPreferred": "Set {{name}} as Not preferred",
+      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
     }
   },
   "calibration": {

@@ -48,9 +48,18 @@ export interface AppendChangeInput {
   summary: string;
 }
 
+/** `twoState` tells a Preferred / Not preferred row from an older More / Mute
+ *  one: both store the same kinds, and old rows keep their old wording. */
+const TWO_STATE_ACTIONS: ReadonlySet<string> = new Set([
+  ACTION_NAMES.SET_PUBLICATION_PREF,
+  ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+]);
+
 function fillRow(row: PersonaChangeLogModel, input: AppendChangeInput): void {
   row.actionType = input.actionType;
-  row.actionJson = JSON.stringify(input.action);
+  row.actionJson = JSON.stringify(
+    TWO_STATE_ACTIONS.has(input.actionType) ? { ...input.action, twoState: true } : input.action,
+  );
   row.source = input.source;
   row.summary = input.summary;
   row.reverted = false;

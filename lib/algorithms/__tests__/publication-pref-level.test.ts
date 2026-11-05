@@ -36,13 +36,14 @@ describe('resolvePrefLevel', () => {
     expect(resolvePrefLevel([row('toi  business', 0.5)], ['Times of India', 'TOI Business'])).toBe('prioritised');
   });
 
-  it('fewer wins over more, whatever the row order', () => {
-    expect(resolvePrefLevel([row('A', 0.5), row('B', -0.5)], ['A', 'B'])).toBe('deprioritised');
-    expect(resolvePrefLevel([row('B', -0.5), row('A', 0.5)], ['A', 'B'])).toBe('deprioritised');
+  it('a mute wins over a preference, whatever the row order', () => {
+    expect(resolvePrefLevel([row('A', 0.5), row('B', -1)], ['A', 'B'])).toBe('muted');
+    expect(resolvePrefLevel([row('B', -1), row('A', 0.5)], ['A', 'B'])).toBe('muted');
   });
 
-  it('a mute reads as deprioritised', () => {
-    expect(resolvePrefLevel([row('A', -1)], ['A'])).toBe('deprioritised');
+  it('a stored fewer reads as neither state', () => {
+    expect(resolvePrefLevel([row('A', -0.5)], ['A'])).toBe('none');
+    expect(resolvePrefLevel([row('A', -0.5), row('B', 0.5)], ['A', 'B'])).toBe('prioritised');
   });
 
   it('ignores country scopes, retired rows, other names and neutral weights', () => {

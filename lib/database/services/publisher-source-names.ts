@@ -231,6 +231,28 @@ export async function resolvePublicationPrefNames(hints: PublicationNameHints): 
   }
 }
 
+/**
+ * The full name set for a search hit, fetched when this device does not know
+ * it yet, and recorded. A row control calls this before it writes: the hit's
+ * `matchingSources` is the subset that matched the query, never the set.
+ *
+ * Throws when the set cannot be had, so the caller refuses the write: a
+ * preference under part of a publication's names reaches part of its news.
+ * `fetchPublisherSourceNames` answers [] for a failed query.
+ */
+export async function fetchPublicationPrefNames(
+  hints: PublicationNameHints & { readonly publisherId: string },
+): Promise<string[]> {
+  if (!hints.sourceNames?.length && !knownSourceNamesForPublisher(hints.publisherId)) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { fetchPublisherSourceNames } = require('../../subscriptions/publisher-sources') as typeof import('../../subscriptions/publisher-sources');
+    const fetched = await fetchPublisherSourceNames(hints.publisherId);
+    if (fetched.length === 0) throw new Error('publisher source names unavailable');
+    rememberPublisherSourceNames(hints.publisherId, fetched);
+  }
+  return resolvePublicationPrefNames(hints);
+}
+
 /** One publication's preference rows, as the Source preferences screen lists them. */
 export interface PrefRowGroup<T> {
   /** Stable React key: `publisher:<id>`, `name:<normalized>`, or `scope:<index>`. */

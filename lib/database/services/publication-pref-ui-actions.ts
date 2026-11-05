@@ -10,13 +10,14 @@
 // publication or a country scope, and every caller — including
 // `PublicationPreferencesScreen` itself — routes through it.
 //
-// Deliberately NOT exposing `mute`: muting is a hard exclusion and stays a
-// dedicated, confirm-free-but-explicit action on the `publication-preferences`
-// screen (its 3-way boost/downrank/mute selector) — not part of the L1/L2 ↑/↓
-// vocabulary, which item 9 defines as prioritise/deprioritise ONLY (a
-// downrank is NOT a block; no retroactive purge, no confirm dialog).
+// `muted` is Not preferred, a hard exclusion. The row is written at once and the
+// live filters hide the publication from the Feed, but the purge waits for the
+// toast's Undo window: an excluded row loses its score and an undo sends it back
+// through scoring. The caller runs `commitPurge()` when the toast closes. If the
+// app dies first nothing is lost: every purge reads the live filters, so the next
+// one (each gate propagation, each filter change) takes these rows too.
 //
-// Concrete-kind writes (prioritised/deprioritised) route through
+// Boost and downrank writes route through
 // `applyPersonaAction` — never a bare `setPreferenceKind`/`setScopePreferenceKind`
 // — because the executor already owns the change-log row (Activity undo) and
 // the sweep decision. Nothing further is needed here for those two levels.
@@ -45,8 +46,8 @@ import {
 } from '../../algorithms/publication-pref-level';
 
 /**
- * The L1/L2 vocabulary: three levels, no mute. `'none'` clears whatever is
- * currently set (a no-op write if nothing was set). Defined in the pure
+ * `'none'` clears whatever is currently set (a no-op write if nothing was
+ * set). A country can never be `'muted'`. Defined in the pure
  * `publication-pref-level` module so list rows can read it without the DB.
  */
 export type { SourcePrefUiLevel };
@@ -92,12 +93,16 @@ export interface SetSourcePrefResult {
    *  `publisher` target. Undo with `revertSourcePrefChange`, which reverts
    *  all of them. `changeLogId` is the first, for single-name callers. */
   readonly changeLogIds?: readonly string[];
+  /** Set when a mute was written. Call it once the Undo window closes; a
+   *  second call does nothing, and after an undo it purges nothing new. */
+  readonly commitPurge?: () => Promise<void>;
 }
 
-const LEVEL_TO_PREF_KIND: Record<'prioritised' | 'deprioritised', 'boost' | 'deprioritize'> = {
+const LEVEL_TO_PREF_KIND = {
   prioritised: 'boost',
   deprioritised: 'deprioritize',
-};
+  muted: 'mute',
+} as const;
 
 /** Boost/downrank a named publication — routes through the executor, which owns everything else. */
 async function setNamedPublicationLevel(
@@ -113,6 +118,29 @@ async function setNamedPublicationLevel(
     'user',
   );
   return { applied: result.applied, changeLogId: result.changeLogId };
+}
+
+/** The executor's mute, minus its sweep: see the header. One name of an action. */
+async function muteNamedPublication(publicationName: string): Promise<SetSourcePrefResult> {
+  const before = await publicationPreferenceService.getPreferenceKind(publicationName);
+  await publicationPreferenceService.setPreferenceKind(publicationName, 'mute', 'user');
+  const row = await changeLogService.append({
+    actionType: ACTION_NAMES.SET_PUBLICATION_PREF,
+    action: { targetId: publicationName, before, after: 'mute' },
+    source: 'user',
+    summary: `Set publication preference: ${publicationName} → mute`,
+  });
+  return { applied: true, changeLogId: row.id };
+}
+
+/** One purge per action, however many names it wrote. */
+function purgeOnce(): () => Promise<void> {
+  let done = false;
+  return async () => {
+    if (done) return;
+    done = true;
+    await runSweepFor('purge', ACTION_NAMES.SET_PUBLICATION_PREF);
+  };
 }
 
 /** Boost/downrank a country scope — routes through the executor, which owns everything else. */
@@ -179,20 +207,14 @@ async function clearCountryScopeLevel(
   const scope: SourceScopeRef = { scopeKind: 'country', scopeValue: alpha3 };
   const before = await publicationPreferenceService.getScopePreferenceKind(scope);
   await publicationPreferenceService.setScopePreferenceKind(scope, 'none', label, 'user');
-  await changeLogService.append({
+  const row = await changeLogService.append({
     actionType: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
     action: { targetId: `country:${alpha3}`, before, after: 'none' },
     source: 'user',
     summary: `Cleared source-scope preference: ${label}`,
   });
-  return { applied: true };
+  return { applied: true, changeLogId: row.id };
 }
-
-const LEVEL_OF_KIND = {
-  boost: 'prioritised',
-  deprioritize: 'deprioritised',
-  mute: 'deprioritised',
-} as const;
 
 /**
  * Set or clear one publication across all its names. Only names whose level
@@ -206,30 +228,29 @@ async function setPublisherLevel(
   const names = publisherPrefNames(rawNames);
   if (names.length === 0) return { applied: false };
   const ids: string[] = [];
+  let muted = false;
   for (const name of names) {
     const kind = await publicationPreferenceService.getPreferenceKind(name);
-    const current: SourcePrefUiLevel = kind === 'none' ? 'none' : LEVEL_OF_KIND[kind];
-    if (level === 'none') {
-      if (kind === 'none') continue;
-    } else if (current === level) {
-      // Includes a mute under 'deprioritised': never soften a mute here.
-      continue;
-    }
-    const res =
-      level === 'none'
-        ? await clearNamedPublicationLevel(name)
-        : await setNamedPublicationLevel(name, LEVEL_TO_PREF_KIND[level]);
+    if (kind === (level === 'none' ? 'none' : LEVEL_TO_PREF_KIND[level])) continue;
+    // Never soften a mute to fewer here.
+    if (level === 'deprioritised' && kind === 'mute') continue;
+    let res: SetSourcePrefResult;
+    if (level === 'none') res = await clearNamedPublicationLevel(name);
+    else if (level === 'muted') {
+      res = await muteNamedPublication(name);
+      muted = true;
+    } else res = await setNamedPublicationLevel(name, LEVEL_TO_PREF_KIND[level]);
     if (res.changeLogId) ids.push(res.changeLogId);
     // A refused write stops the run; what was written stays undoable.
     if (!res.applied) return { applied: false, changeLogId: ids[0], changeLogIds: ids };
   }
   // Nothing differed: the state already is `level`, which is a success.
-  return { applied: true, changeLogId: ids[0], changeLogIds: ids };
+  return { applied: true, changeLogId: ids[0], changeLogIds: ids, ...(muted ? { commitPurge: purgeOnce() } : {}) };
 }
 
 /**
- * The current level of one publication across all its names (fewer wins over
- * more). The async twin of `resolvePrefLevel`, for a caller without an
+ * The current level of one publication across all its names (a mute wins over
+ * a preference). The async twin of `resolvePrefLevel`, for a caller without an
  * observed row set.
  */
 export async function getPublisherPrefLevel(names: readonly string[]): Promise<SourcePrefUiLevel> {
@@ -263,6 +284,9 @@ export async function setSourcePrefFromUi(
   level: SourcePrefUiLevel,
 ): Promise<SetSourcePrefResult> {
   if (target.kind === 'publisher') return setPublisherLevel(target.names, level);
+  if (level === 'muted') {
+    return target.kind === 'publication' ? setPublisherLevel([target.publicationName], level) : { applied: false };
+  }
   if (level === 'none') {
     return target.kind === 'publication'
       ? clearNamedPublicationLevel(target.publicationName)

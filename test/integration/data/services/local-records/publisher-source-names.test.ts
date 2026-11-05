@@ -12,6 +12,7 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import { clearAllStores } from '@/lib/stores';
 import {
   __clearPublisherSourceNames,
+  fetchPublicationPrefNames,
   groupPrefRowsByPublication,
   hydratePublisherSourceNames,
   knownSourceNamesForName,
@@ -30,7 +31,7 @@ import { __resetPublicationProfileSession, usePublicationProfile } from '@/lib/p
 import SourceService from '@/lib/source-service';
 import { articleFixtures } from '@/test/mock-backend/fixtures/articles';
 import { publicationProfile } from '@/test/mock-backend/fixtures/graphql/publications';
-import { initI18nEn, mockGql, server, useStrictClock } from '@/test/helpers';
+import { initI18nEn, mockGql, mockGqlError, server, useStrictClock } from '@/test/helpers';
 import { failNextQuery, quietLogger, resetLocalRecordsMemory, restoreFaults, T0, track } from './support';
 
 beforeEach(() => {
@@ -127,6 +128,42 @@ describe('recording from the app', () => {
     expect(result.publishers.length).toBeGreaterThan(0);
     expect(knownSourceNamesForPublisher(outlet.publisherId)).toBeNull();
     expect(knownSourceNamesForName(outlet.name)).toBeNull();
+  });
+});
+
+describe('fetchPublicationPrefNames', () => {
+  const sources = (names: string[]) =>
+    mockGql('PublicationSourcesForNewsPublisher', () => ({
+      publicationSourcesForNewsPublisher: {
+        publicationSources: names.map((n, i) => ({ _id: `s${i}`, publication_name: n })),
+      },
+    }));
+
+  it('fetches the full set on an empty cache, records it and returns it with the hints', async () => {
+    server.use(sources(['Times of India', 'TOI Business']));
+
+    await expect(fetchPublicationPrefNames({ publisherId: 'p1', publisherName: 'TOI Group' })).resolves.toEqual([
+      'Times of India',
+      'TOI Business',
+      'TOI Group',
+    ]);
+    expect(knownSourceNamesForPublisher('p1')).toEqual(['Times of India', 'TOI Business']);
+  });
+
+  it('makes no request when the device already knows the set', async () => {
+    rememberPublisherSourceNames('p1', ['S1']);
+    server.use(mockGql('PublicationSourcesForNewsPublisher', () => {
+      throw new Error('no request expected');
+    }));
+
+    await expect(fetchPublicationPrefNames({ publisherId: 'p1', publisherName: 'P' })).resolves.toEqual(['S1', 'P']);
+  });
+
+  it('throws on a failed query, so no partial name set is ever written', async () => {
+    server.use(mockGqlError('PublicationSourcesForNewsPublisher', 'boom'));
+
+    await expect(fetchPublicationPrefNames({ publisherId: 'p1', publisherName: 'P' })).rejects.toThrow();
+    expect(knownSourceNamesForPublisher('p1')).toBeNull();
   });
 });
 

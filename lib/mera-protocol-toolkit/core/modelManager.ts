@@ -467,6 +467,13 @@ export async function isModelDownloaded(modelId?: string): Promise<boolean> {
   return manifest?.ready === true;
 }
 
+/** Bytes the model's file takes on disk, or null when it is not there. */
+export async function modelFileBytes(modelId: string): Promise<number | null> {
+  const file = getModelFile(modelId);
+  if (!file.exists) return null;
+  return (await file.info()).size ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Internal accessors (used by inference.ts)
 // ---------------------------------------------------------------------------

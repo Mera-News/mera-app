@@ -1211,7 +1211,10 @@
       "carriedOver": "{{name}} आगे ले जाया गया",
       "undone": "वापस लिया गया: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "Set {{name}} as Preferred",
+      "notPreferred": "Set {{name}} as Not preferred",
+      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
     }
   },
   "calibration": {

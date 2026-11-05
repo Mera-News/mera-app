@@ -10,7 +10,7 @@ import type {
   SourceScopeKind,
 } from '../models/PublicationPreference';
 
-import { normalizePrefName as normalizePublicationName } from '../../algorithms/publication-pref-level';
+import { MUTE_WEIGHT, normalizePrefName as normalizePublicationName } from '../../algorithms/publication-pref-level';
 
 const prefsCollection = database.get<PublicationPreferenceModel>('publication_preferences');
 
@@ -121,7 +121,7 @@ export const PUBLICATION_PREF_WEIGHT: Record<PublicationPrefKind, number> = {
 
 /** Classify a stored weight back into the pref kind it represents (null ≈ neutral). */
 export function weightToPrefKind(weight: number): PublicationPrefKind | null {
-  if (weight <= -0.9) return 'mute';
+  if (weight <= MUTE_WEIGHT) return 'mute';
   if (weight < 0) return 'deprioritize';
   if (weight > 0) return 'boost';
   return null;
