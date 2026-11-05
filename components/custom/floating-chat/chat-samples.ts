@@ -1,7 +1,7 @@
 // The faint example behind a fresh chat: what people tell Mera (the welcome) or
 // what they follow (Follow a story). English source; ChatSample translates it.
-// Owner rule: the profile holds broad things with news behind them; a single
-// named artist, team, person or event is a story to follow, never a fact.
+// Owner rule: the profile holds what affects the reader; anything they only like
+// is a story to follow. Translated sets are all-or-nothing, so lines stay short.
 // The trending names date: refresh them by OTA, no native build needed.
 
 const LIVE = [
@@ -63,34 +63,31 @@ const TRAVEL = [
   'I’m going to Kerala in the new year', 'I’m going to the Faroe Islands', 'I’m going to Vancouver Island', 'I’m going to Oaxaca for Día de Muertos',
 ];
 
-const SPORTS = [
-  'I’m into Formula 1', 'I’m into MotoGP', 'I’m into motorsport', 'I’m into European football', 'I’m into Dutch football',
-  'I’m into the Premier League', 'I’m into La Liga', 'I’m into Serie A', 'I’m into the Bundesliga', 'I’m into basketball',
-  'I’m into American football', 'I’m into college sports', 'I’m into ice hockey', 'I’m into baseball', 'I’m into tennis',
-  'I’m into darts', 'I’m into MMA', 'I’m into boxing', 'I’m into cricket', 'I’m into the IPL', 'I’m into women’s football',
-  'I’m into rugby', 'I’m into golf', 'I’m into pickleball', 'I’m into padel', 'I’m into running and marathons',
-  'I’m into road cycling', 'I’m into climbing', 'I’m into athletics', 'I’m into sailing', 'I’m into esports', 'I’m into chess',
-  'I’m into the Olympics',
+// Something the reader is doing or going to: the Monaco line, not "I like F1".
+const PLANS = [
+  'I’m going to Monaco in May', 'I’m running the Berlin Marathon', 'I coach a youth football team', 'I play in a cricket league',
+  'I have Wimbledon tickets', 'I’m going to the Tour de France', 'I’m racing in a triathlon', 'I referee at weekends',
+  'I’m going to the Olympics', 'I teach swimming', 'I’m going to Glastonbury', 'I play in a band',
+  'I have tickets for a stadium tour', 'I teach piano', 'I sing in a choir', 'I’m going to Eurovision',
+  'I’m starting at university', 'I’m moving abroad next year', 'I’m getting married in June', 'I’m looking for a new job',
+  'I’m applying for a visa', 'I’m retiring next year', 'I’m learning to drive', 'I’m training to be a nurse',
 ];
 
-const MUSIC = [
-  'I’m into pop music', 'I’m into Latin music', 'I’m into R&B', 'I’m into Afrobeats', 'I’m into K-pop', 'I’m into Bollywood music',
-  'I’m into the UK grime scene', 'I’m into new music releases', 'I’m into the music industry', 'I’m into the Berlin techno scene',
-  'I go to a lot of gigs in my city', 'I’m into jazz festivals', 'I love classical concerts', 'I’m into indie rock',
-  'I’m into electronic music festivals', 'I love West End musicals', 'I’m into Eurovision', 'I’m into stadium tours',
-  'I’m into the club scene in my city', 'I’m into reggaeton', 'I’m into metal festivals', 'I’m into music awards',
-  'I’m into UK festivals', 'I’m into country music', 'I’m into hip-hop',
+// What the news can change at home: rent, bills, the commute.
+const HOME = [
+  'I rent my flat', 'I’m saving for a first home', 'I’m buying a house', 'I’m renovating my house',
+  'I have solar panels', 'I heat my home with gas', 'I live near the airport', 'I live by the river', 'I live next to a building site',
+  'I commute by train', 'I take the bus to work', 'I cycle to work', 'I drive to work', 'I drive an electric car',
+  'I have a small business', 'I work from home', 'I’m self-employed', 'I’m on a pension', 'I’m looking for a flat',
+  'I’m vegan', 'I have a nut allergy', 'I get hay fever',
 ];
 
-const INTERESTS = [
-  'I love new book releases', 'I’m into literary prizes', 'I love trying new restaurants in my city', 'I’m into food markets near me',
-  'I’m into Michelin restaurants', 'I’m into video games', 'I’m into new game releases', 'I love film festivals', 'I’m into awards season',
-  'I’m into superhero films', 'I’m into space exploration', 'I’m into astronomy', 'I love new museum exhibitions',
-  'I’m into contemporary art fairs', 'I’m into fashion weeks', 'I’m into sneaker drops', 'I love theatre premieres', 'I’m into true crime',
-  'I’m into wildlife conservation', 'I’m into national parks', 'I’m into cycling routes in my city', 'I’m into electric cars',
-  'I’m into new phones and gadgets', 'I’m into AI tools', 'I’m into architecture', 'I’m into archaeology finds', 'I’m into climate tech',
-  'I’m into Formula E', 'I’m into local live music', 'I’m into street food festivals', 'I’m into Japanese anime', 'I’m into comedy specials',
-  'I love bookshop events in my city', 'I’m into wine and new vintages',
+// Who the reader cares about.
+const PEOPLE = [
+  'I have a toddler', 'I have two kids at school', 'I’m expecting a baby', 'My son starts university soon', 'My daughter is doing her exams',
+  'My kids go to the local school', 'I look after my mum', 'My parents are retired',
+  'My partner is a nurse', 'My wife teaches', 'My husband drives a lorry',
+  'I have a dog', 'I have two cats', 'I’m a single parent', 'I’m a foster parent',
 ];
 
 // Written the way a followed story is named in the Followed stories list.
@@ -125,11 +122,11 @@ function pick(list: readonly string[], rand: () => number): string {
   return list[Math.floor(rand() * list.length)];
 }
 
-/** Six lines: home, work, roots or a trip, a sport, music, one more interest. */
+/** Six lines: where they live, work, roots or a trip, a plan, their home, their people. */
 export function sampleProfile(seed: number): string[] {
   const rand = rng(seed);
   const third = rand() < 0.5 ? pick(FROM, rand) : pick(TRAVEL, rand);
-  return [pick(LIVE, rand), pick(WORK, rand), third, pick(SPORTS, rand), pick(MUSIC, rand), pick(INTERESTS, rand)];
+  return [pick(LIVE, rand), pick(WORK, rand), third, pick(PLANS, rand), pick(HOME, rand), pick(PEOPLE, rand)];
 }
 
 /** Five distinct story names. */
@@ -147,4 +144,4 @@ export function sampleLines(kind: ChatSampleKind, seed: number): string[] {
   return kind === 'profile' ? sampleProfile(seed) : sampleStories(seed);
 }
 
-export const SAMPLE_LISTS = { LIVE, WORK, FROM, TRAVEL, SPORTS, MUSIC, INTERESTS, STORIES } as const;
+export const SAMPLE_LISTS = { LIVE, WORK, FROM, TRAVEL, PLANS, HOME, PEOPLE, STORIES } as const;

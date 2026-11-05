@@ -1,18 +1,18 @@
 import { SAMPLE_LISTS, sampleLines, sampleProfile, sampleStories } from '@/components/custom/floating-chat/chat-samples';
 
-const { LIVE, WORK, FROM, TRAVEL, SPORTS, MUSIC, INTERESTS, STORIES } = SAMPLE_LISTS;
+const { LIVE, WORK, FROM, TRAVEL, PLANS, HOME, PEOPLE, STORIES } = SAMPLE_LISTS;
 
 describe('chat samples', () => {
-  it('a profile is six lines in slot order: home, work, roots or a trip, sport, music, interest', () => {
+  it('a profile is six lines in slot order: where they live, work, roots or a trip, plan, home, people', () => {
     for (let seed = 0; seed < 300; seed++) {
       const p = sampleProfile(seed);
       expect(p).toHaveLength(6);
       expect(LIVE).toContain(p[0]);
       expect(WORK).toContain(p[1]);
       expect([...FROM, ...TRAVEL]).toContain(p[2]);
-      expect(SPORTS).toContain(p[3]);
-      expect(MUSIC).toContain(p[4]);
-      expect(INTERESTS).toContain(p[5]);
+      expect(PLANS).toContain(p[3]);
+      expect(HOME).toContain(p[4]);
+      expect(PEOPLE).toContain(p[5]);
     }
   });
 
@@ -39,9 +39,13 @@ describe('chat samples', () => {
     }
   });
 
-  it('profile lines never name a followed thing ("I follow") and no line carries a dash', () => {
-    const profile = [...LIVE, ...WORK, ...FROM, ...TRAVEL, ...SPORTS, ...MUSIC, ...INTERESTS];
-    profile.forEach((line) => expect(line).not.toMatch(/\bI follow\b/i));
+  it('profile lines say what affects the reader, never what they only like, and no line carries a dash', () => {
+    const profile = [...LIVE, ...WORK, ...FROM, ...TRAVEL, ...PLANS, ...HOME, ...PEOPLE];
+    profile.forEach((line) => expect(line).not.toMatch(/\bI follow\b|\bI(’m| am) into\b|\bI (love|like)\b/i));
     [...profile, ...STORIES].forEach((line) => expect(line).not.toMatch(/[–—]/));
+  });
+
+  it('the new slots stay short: a set shows only once every line has translated', () => {
+    [...PLANS, ...HOME, ...PEOPLE].forEach((line) => expect(line.length).toBeLessThanOrEqual(36));
   });
 });
