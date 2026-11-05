@@ -1,0 +1,23 @@
+{
+  "id": "stake-has-hi-ipl",
+  "cohort": "stake",
+  "note": "A stated stake stays a fact: a fact card and no follow card.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "मैं अगले महीने आईपीएल फाइनल देखने अहमदाबाद जा रहा हूँ",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    }
+  ]
+}

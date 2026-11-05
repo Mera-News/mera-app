@@ -1,0 +1,22 @@
+{
+  "id": "stake-mixed-nurse",
+  "cohort": "stake",
+  "note": "A stake beside an interest: a fact card and a follow card in one turn.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm a nurse and I support Liverpool",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}

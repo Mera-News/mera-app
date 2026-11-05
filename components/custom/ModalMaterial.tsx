@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { COLORS, useThemeMode, type ThemeMode } from '@/lib/theme/tokens';
@@ -59,6 +59,32 @@ const GLOWS: Record<ThemeMode, { wash: string; washOpacity: number; glows: Glow[
     },
 };
 
+/** Opaque hex + alpha as the rgba() a CSS gradient takes. */
+function rgba(hex: string, alpha: number): string {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/**
+ * Android's material: the same layers as CSS `background-image`, so no Svg is
+ * rasterised each time a sheet opens. Sizes are radii in dp, so no measuring.
+ * Reversed, because CSS paints the FIRST layer on top and the Svg paints the
+ * last on top (AbstractGradientBackdrop, Trap 4); the wash is on top, so first.
+ * The end stop is the same hue at alpha 0, never `transparent` (grey fringe).
+ */
+function cssMaterial(mode: ThemeMode): string {
+    const { wash, washOpacity, glows } = GLOWS[mode];
+    const w = rgba(wash, washOpacity);
+    return [
+        `linear-gradient(${w}, ${w})`,
+        ...[...glows].reverse().map(
+            (g) =>
+                `radial-gradient(ellipse ${g.rx}px ${g.ry}px at ${Math.round(g.cx * 100)}% ${Math.round(g.cy * 100)}%, ` +
+                `${rgba(g.color, g.opacity)} 0%, ${rgba(g.color, 0)} 100%)`,
+        ),
+    ].join(', ');
+}
+
 interface ModalMaterialProps {
     style?: StyleProp<ViewStyle>;
     /** Paint one theme's material whatever the app theme is. Only the
@@ -76,6 +102,20 @@ export default function ModalMaterial({ style, scheme }: ModalMaterialProps) {
         const { width: w, height: h } = e.nativeEvent.layout;
         setSize((prev) => (prev && prev.w === w && prev.h === h ? prev : { w, h }));
     };
+    if (Platform.OS === 'android') {
+        return (
+            <View
+                pointerEvents="none"
+                style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: COLORS[mode].modalBase },
+                    // Missing from RN 0.83's ViewStyle types, as in AbstractGradientBackdrop.
+                    { experimental_backgroundImage: cssMaterial(mode) } as unknown as ViewStyle,
+                    style,
+                ]}
+            />
+        );
+    }
     return (
         <View
             pointerEvents="none"

@@ -1,0 +1,23 @@
+{
+  "id": "stake-has-nl-tour",
+  "cohort": "stake",
+  "note": "A stated stake stays a fact: a fact card and no follow card.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Dutch"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Ik ga in juli naar de Tour de France",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    }
+  ]
+}

@@ -430,7 +430,7 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
 
-    expect(mockStepFetchTopicIds).toHaveBeenCalledWith('persona-1', ctx);
+    expect(mockStepFetchTopicIds).toHaveBeenCalledWith('persona-1', ctx, { background: false });
     expect(mockStepDiff).toHaveBeenCalled();
     expect(mockStepHydratePersistEnqueue).toHaveBeenCalled();
     expect(mockStepScore).toHaveBeenCalled();

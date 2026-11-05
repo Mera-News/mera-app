@@ -177,6 +177,11 @@ export interface AgentTurnState {
    * was never meant to drop the question the user is answering.
    */
   lastQuestion: string | null;
+  /** "Add to my profile instead" put the impact question on `lastQuestion`
+   *  (`withImpactQuestion`). Read by the next turn only: a no-stake answer gets
+   *  one line, never a second follow card, and a plain no answers the question,
+   *  not the follow card waiting above it. */
+  impactAsked?: boolean;
   lastRoute: string | null;
   lastSkill: string | null;
   /** The user's message from the turn that asked the last question. A chip tap

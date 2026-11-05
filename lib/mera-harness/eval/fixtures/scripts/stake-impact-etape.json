@@ -1,0 +1,33 @@
+{
+  "id": "stake-impact-etape",
+  "cohort": "stake",
+  "note": "Add to my profile instead, then a typed answer: a real impact stages a fact, none gets one line and no second card.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm into cycling",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "I'm riding the Etape du Tour in July",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      },
+      "impactTap": true
+    }
+  ]
+}

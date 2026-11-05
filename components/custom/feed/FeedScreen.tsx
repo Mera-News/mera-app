@@ -81,6 +81,7 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard';
 import ForYouEmptyState, { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
+import { PendingFollowOffer } from '@/components/custom/notifications/HygieneSuggestionCard';
 import { setFeedShow } from '@/components/custom/feed/feed-view-prefs';
 import { showsProcessingScene, useNotReadWaiting } from '@/components/custom/for-you/feed-status-card';
 import ReadHoldUpgradeButton, { useUpgradeFrom } from '@/components/custom/for-you/ReadHoldUpgradeButton';
@@ -423,12 +424,16 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // empty block, never a bare list (owner, R7).
     if (allRowsCount > 0) {
       return show === 'picks' ? (
-        <ForYouEmptyState
-          icon="auto-awesome"
-          body={t('feed.show.emptyPicks')}
-          action={{ label: t('feed.show.showAll'), onPress: () => setFeedShow('all'), testID: 'feed-show-empty-show-all' }}
-          testID="feed-show-empty-picks"
-        />
+        <>
+          {/* No picks is the empty Feed for a reader on the Picks view. */}
+          <PendingFollowOffer />
+          <ForYouEmptyState
+            icon="auto-awesome"
+            body={t('feed.show.emptyPicks')}
+            action={{ label: t('feed.show.showAll'), onPress: () => setFeedShow('all'), testID: 'feed-show-empty-show-all' }}
+            testID="feed-show-empty-picks"
+          />
+        </>
       ) : show === 'discarded' ? (
         <ForYouEmptyState icon="done-all" body={t('feed.show.emptyDiscarded')} testID="feed-show-empty-discarded" />
       ) : (

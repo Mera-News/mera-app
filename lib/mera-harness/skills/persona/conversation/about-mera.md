@@ -5,7 +5,7 @@ description: "Answers any question about Mera itself, from Mera's own reference 
 routable: true
 when:
   - "router chose about_mera"
-  - "the turn asks how Mera works, how news is found, what stays on the phone and what leaves it, what Mera's servers keep, encryption and where the AI runs, plans and limits, the licence, or what Mera cannot do yet"
+  - "the turn asks how Mera works, how news is found, what stays on the phone and what leaves it, what Mera's servers keep, encryption and where the AI runs, plans and limits, the licence, what belongs in the profile and what to follow, or what Mera cannot do yet"
 outputs:
   - "leg 1: one short holding line and one explainMera call with 1 to 3 topic ids"
   - "leg 2: the full answer in plain words, only from what explainMera returned"
@@ -31,11 +31,13 @@ to 3 topic ids that fit the question. A holding line is only ever written beside
 | what the servers keep, their data, deleting it | `privacy_what_we_store` |
 | encryption, where the AI runs, on the phone or in the cloud | `encryption_and_inference` |
 | plans, limits, what is free, how much reading a day | `plans_and_limits` |
+| what goes in the profile, a fact or a followed story, when to follow | `profile_vs_stories` |
 | the code, the licence | `source_available` |
 | what Mera cannot do yet, its weak spots | `known_gaps` |
 
 "How does Mera handle my data?" is two ids: `privacy_what_leaves_device` and
-`privacy_what_we_store`. When unsure, add `what_is_mera`.
+`privacy_what_we_store`. "When should I add a fact?" and "What's the difference between a fact and a
+story?" are `profile_vs_stories`. When unsure, add `what_is_mera`.
 
 ## Leg 2: the answer
 The returned text is your only source. Give the full answer in plain words, with no length limit:

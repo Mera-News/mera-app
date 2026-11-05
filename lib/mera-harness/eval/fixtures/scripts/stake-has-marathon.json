@@ -1,0 +1,22 @@
+{
+  "id": "stake-has-marathon",
+  "cohort": "stake",
+  "note": "A stated stake stays a fact: a fact card and no follow card.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm running the Berlin marathon in September",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    }
+  ]
+}

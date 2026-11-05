@@ -1,4 +1,5 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
+import { router } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -8,7 +9,6 @@ import { alpha2ToAlpha3 } from '@/lib/explore/scopes';
 import type { NewsSearchHit } from '@/lib/generated/graphql-types';
 import type { NewsSearchErrorKind } from '@/lib/news-search/search-news-service';
 import type { NewsSearchStatus } from '@/lib/news-search/use-news-search';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -54,7 +54,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     const colors = useColors();
 
     const handleSeePlans = useCallback(() => {
-        void presentFreeTierPaywall('explore-search');
+        router.push('/logged-in/preferences/manage-subscription');
     }, []);
 
     const renderItem: ListRenderItem<NewsSearchHit> = useCallback(

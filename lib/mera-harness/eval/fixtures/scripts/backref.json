@@ -1,7 +1,7 @@
 {
   "id": "backref",
   "cohort": "backref",
-  "note": "onemera S1.5. A message that points back at the previous answer acts on that answer's subject (follow this stages a follow card on the subject (S3); add this to my interests; my parents live there; update my places with it). LEAK GUARD: after an answer about X, an unrelated fact never names X.",
+  "note": "onemera S1.5. A message that points back at the previous answer acts on that answer's subject (follow this stages a follow card on the subject (S3); add this to my interests ends on a follow card with the subject, by owner ruling; my parents live there; update my places with it). LEAK GUARD: after an answer about X, an unrelated fact never names X.",
   "persona": {
     "facts": [
       {
@@ -99,20 +99,15 @@
         "skill": "facts/interest",
         "tools": [
           "load_skill",
-          "saveExtractedFacts"
+          "saveExtractedFacts",
+          "proposeTrack"
         ],
-        "legs": 3,
-        "endedOn": "settled",
-        "proposals": [
-          {
-            "statementMatches": [
-              "kaziranga"
-            ],
-            "kind": "interest",
-            "placeChain": null,
-            "replaces": null
-          }
-        ]
+        "track": {
+          "staged": true,
+          "labelMatches": [
+            "kaziranga"
+          ]
+        }
       }
     },
     {

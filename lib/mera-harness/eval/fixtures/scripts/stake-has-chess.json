@@ -1,0 +1,22 @@
+{
+  "id": "stake-has-chess",
+  "cohort": "stake",
+  "note": "A stated stake stays a fact: a fact card and no follow card.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I work part time at a chess club",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    }
+  ]
+}

@@ -181,7 +181,7 @@
     "processingOffline": "你目前離線。恢復連線後，你的報導就會送達。",
     "forYouTitle": "為你推薦",
     "newStoriesBelowA11y": "下方有新報導",
-    "noFactsBody": "點按梅拉按鈕，告訴梅拉你關注什麼。梅拉會把它整理成你的資訊流。",
+    "noFactsBody": "點按梅拉按鈕，告訴梅拉你的生活。它會找出影響你的新聞。",
     "noteWait": "梅拉正在撰寫理由，請稍候。",
     "opened": "已開啟",
     "statsSyncAnalysing_one": "{{formatted}} 篇文章正在為你分析，",
@@ -322,10 +322,10 @@
     "close": "關閉",
     "logoutFailedTitle": "登出失敗",
     "logoutFailedDescription": "登出時發生問題，請再試一次。",
-    "composerPlaceholder": "你喜歡關注什麼？",
+    "composerPlaceholder": "告訴我你的生活",
     "factsCount_one": "關於你的 {{count}} 項事實",
     "factsCount_other": "關於你的 {{count}} 項事實",
-    "noFactsBody": "梅拉會根據你所在的城市尋找當地新聞。你隨時都可以告訴梅拉更多關於你的資訊。",
+    "noFactsBody": "梅拉會根據你所在的城市，找出影響你的新聞。你隨時都可以告訴梅拉更多關於你生活的事。",
     "noFactsTitle": "你住在哪裡？",
     "noNotifBody": "新聞準備好或你追蹤的報導有進展時，你不會收到通知。之後可以在設定中開啟。",
     "noNotifTitle": "不開啟通知也要使用梅拉嗎？",
@@ -514,7 +514,7 @@
     "helpModesVerify": "「驗證認證」會檢查雲端是否在真正的安全硬體上執行，以及你的資料是否為它加密。"
   },
   "manageData": {
-    "viewingHistoryModalDescription": "清除你已開啟文章的本機記錄。「來源」標籤中的「你正在閱讀的媒體」卡片及各媒體的歷史記錄將重設為空。其他資料不受影響，也不會動到任何伺服器資料，因為梅拉的伺服器從未有這份資料。",
+    "viewingHistoryModalDescription": "清除你打開過的文章在本機的紀錄。「來源」分頁中的「你閱讀過的媒體」卡片，以及各媒體的紀錄會重設為空。你讀過的報導可能會再次出現在資訊流中。其他內容不受影響，也不會動到伺服器上的資料，因為梅拉的伺服器從來沒有這些資料。",
     "deletedTitle": "資料已刪除",
     "deletedDescription": "所選資料已成功清除。",
     "errorTitle": "錯誤",
@@ -693,7 +693,7 @@
     "replyUnfinished": "未完成"
   },
   "personaChat": {
-    "introMessage": "嗨，我是梅拉。\n\n跟我聊聊你自己吧，例如你住的城市或街區、你從事的工作類型，或是你關注的球隊或嗜好，我會幫你找到合適的新聞。\n\n想分享多少都可以。你告訴我的內容都保存在這支手機上。除了你，沒有人能存取你的資料。"
+    "introMessage": "你好，我是梅拉。\n\n跟我說說你的生活吧：你住在哪裡、做什麼工作、在意哪些人。我會找出影響你的新聞。你還喜歡的其他內容，我們可以當成報導來關注。\n\n想分享多少都可以。你告訴我的內容會留在這支手機上，除了你以外，沒有人能存取你的資料。"
   },
   "floatingChat": {
     "close": "關閉",
@@ -735,7 +735,7 @@
     "factDeleteRemove": "移除",
     "factDeleteKeep": "保留",
     "factDeleteKept": "沒有移除任何內容。",
-    "topicsSavedHint": "主題已儲存！你可以繼續新增資訊，或點按 {{close}} 開始探索。",
+    "topicsSavedHint": "主題已儲存！繼續告訴我你的生活，或點按 {{close}} 開始探索。",
     "guidelinesAfter": "。如果發現濫用，它會暫停你的帳號，直到你要求審核。",
     "guidelinesBefore": "你正在與梅拉交談，它是 AI，不是真人。梅拉遵守 ",
     "guidelinesLink": "內容指引",
@@ -758,7 +758,7 @@
     "chipDontWant": "我不想要這個建議",
     "chipDontWantMessage": "我不想要這個建議。我們應該改變什麼,才能讓我不再收到這樣的文章?",
     "chipMoreLikeThis": "我想要更多這樣的",
-    "chipMoreLikeThisMessage": "我想要更多這樣的文章。我們應該在我的興趣中新增什麼?",
+    "chipMoreLikeThisMessage": "我想看更多和這篇類似的文章。我應該在檔案裡加入什麼，還是把它當成報導來關注？",
     "proposalTitle": "建議的變更",
     "expectedEffects": "預期效果",
     "proposalConfirm": "好,去做",
@@ -1034,7 +1034,7 @@
     "timelineLoadFailed": "無法載入此報導。下拉即可重試。",
     "deleteFailed": "無法取消追蹤此報導。請再試一次。",
     "removeFailed": "無法將此文章從報導中移除。請再試一次。",
-    "emptyBodyMera": "追蹤一則持續發展中的報導，梅拉會在這裡為你更新。點按梅拉按鈕即可追蹤。",
+    "emptyBodyMera": "關注任何你喜歡的內容：一支球隊、一位藝人、一個長期追蹤的事件。免費且不限數量，AI 不會閱讀已關注的報導。點按梅拉按鈕開始。",
     "followedSince": "{{date}} 起追蹤",
     "learnAbout": "了解報導",
     "nextNote": "報導有新進展時，梅拉會在這裡加入新的報導。",
@@ -1071,22 +1071,27 @@
     "wideNetBody": "梅拉的搜尋範圍較廣，因此這裡的部分文章可能與報導關係不大。我們寧願多給你看一篇，也不想讓你錯過重要的文章。",
     "wideNetRemove": "要移除某篇文章，請開啟它的選單並選擇「{{action}}」。",
     "wideNetShowLess": "收合",
-    "composerPlaceholder": "你想讓我幫你關注哪則新聞？",
+    "composerPlaceholder": "我該留意什麼？",
     "optionAsWritten": "{{phrase}}，照你輸入的寫法",
-    "optionSpellingFixed": "{{phrase}}，修正拼字"
+    "optionSpellingFixed": "{{phrase}}，修正拼字",
+    "followCardLine": "這個很適合關注。勾選你想要的內容，新文章就會出現在已關注的報導中。",
+    "addToProfile": "改為加入我的檔案",
+    "impactQuestion": "加入之前，這件事對你有什麼影響？梅拉的 AI 會用這個判斷一篇文章對你有多重要。如果它對你個人沒有影響，我建議你把它當成報導來關注。",
+    "addAnyway": "仍要加入",
+    "addedToProfile": "已加入你的檔案"
   },
   "whatsNew": {
     "gotIt": "知道了",
     "starterTitle": "Starter 由我們招待",
     "starterIntro": "為了讓你看見梅拉的價值，每個帳號現在都免費包含完整的 Starter 方案。",
     "starterArticlesTitle": "每一篇符合的文章",
-    "starterArticlesBody": "每篇符合你興趣的文章都會進入你的資訊流。梅拉會閱讀它們、把雜訊放到一旁，並把重要的內容提上來。",
-    "starterInterestsTitle": "您的所有興趣",
-    "starterInterestsBody": "想加多少都可以，梅拉會追蹤每一項。",
+    "starterArticlesBody": "梅拉會閱讀所有符合你檔案的文章，篩掉雜訊，把影響你的內容呈現給你。",
+    "starterInterestsTitle": "整個檔案",
+    "starterInterestsBody": "把所有影響你的事情都加進來。梅拉會對照每一項事實來閱讀新聞。",
     "starterChatTitle": "聊天和事實查核",
     "starterChatBody": "可以針對任何報導詢問梅拉，並用已發布的事實查核來驗證說法。",
     "starterStoriesTitle": "已追蹤的報導",
-    "starterStoriesBody": "追蹤一則報導，梅拉會替你持續留意。"
+    "starterStoriesBody": "想關注什麼都可以，免費且不限數量。AI 不會閱讀已關注的報導。"
   },
   "notificationCenter": {
     "title": "通知",
@@ -1097,7 +1102,7 @@
     "settingsLink": "通知設定",
     "help": {
       "title": "關於通知",
-      "body": "梅拉會在這裡留下與你資訊流有關的提醒，包括你要求的事實查核已完成、每日資訊流調整、整理或調整興趣的小建議，以及來自梅拉團隊的問題。這些提醒只保存在這支手機上，保存 90 天。小圓點代表有未讀的提醒。新聞提醒不會出現在這裡。提醒時間請在「設定」的「通知」中調整。"
+      "body": "梅拉會在這裡留下關於你資訊流的備註：你要求的事實查核完成了、每天的資訊流整理、整理或調整檔案的小建議，以及梅拉團隊的問題。這些內容只保存在這支手機上，保留 90 天。有未讀時會出現一個小點。新聞提醒不會出現在這裡。你可以在設定的通知中調整提醒時間。"
     },
     "ageNow": "現在",
     "ageMinutes": "{{n}}分",
@@ -1128,7 +1133,7 @@
   },
   "personaAudit": {
     "title": "個人資料的變更",
-    "empty": "還沒有任何變更。梅拉調整你的興趣時，每項變更都會顯示在這裡。",
+    "empty": "目前還沒有變更。梅拉每次調整你的檔案，都會在這裡顯示。",
     "revertedBadge": "已復原",
     "revertConfirmTitle": "要復原這項變更嗎？",
     "revertConfirmBody": "這會將你的個人資料恢復到變更前的樣子。",
@@ -1331,20 +1336,20 @@
     "statusDismissed": "已忽略"
   },
   "hygiene": {
-    "notificationTitle": "整理一下你的興趣？",
+    "notificationTitle": "要整理一下你的檔案嗎？",
     "notificationBody_one": "梅拉為你的個人資料發現了 {{count}} 項整理建議。",
     "notificationBody_other": "梅拉為你的個人資料發現了 {{count}} 項整理建議。",
     "reviewChip": "查看",
     "accept": "接受",
     "reject": "忽略",
-    "effectTooBroad": "降低此興趣的權重，使其帶來的偏題內容更少。",
+    "effectTooBroad": "降低這項事實的權重，讓它帶進來的無關報導更少。",
     "effectStaleTopic": "停用這個不活躍的主題。",
     "effectStaleFact": "移除這項事實。它的所有主題都已不再活躍。",
     "appliedTitle": "整理已套用",
     "appliedBody": "你的資料已完成整理。查看變更紀錄以了解詳情。",
     "applyFailedTitle": "無法套用整理",
     "applyFailedBody": "請稍後再試。",
-    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。",
+    "effectIncoherentTopics": "用更適合這項事實的主題取代這些主題。",
     "effectLocationConflict": "保留較新的地點，移除較舊的地點。",
     "keepBoth": "兩者都保留",
     "merge": "合併",
@@ -1361,8 +1366,19 @@
       "staleFact": "{{fact}} 已經沒有任何有效的主題",
       "tooBroad": "{{fact}} 的範圍很廣",
       "staleTopic": "{{topic}} 已經好幾週沒有動靜了",
-      "incoherentTopics_other": "{{fact}} 底下有 {{count}} 個主題不符合：{{topics}}"
-    }
+      "incoherentTopics_other": "{{fact}} 底下有 {{count}} 個主題不符合：{{topics}}",
+      "followInsteadFlood": "「{{topic}}」正在填滿你的資訊流。要改為當成報導來關注嗎？",
+      "followInsteadNoStake": "關於{{topic}}的新聞很多，但都不會改變你的任何事，所以資訊流會略過它。要當成報導關注，好看到全部內容嗎？"
+    },
+    "titleFollowInstead": "一則可以關注的報導",
+    "effectFollowInstead": "已關注的報導免費，AI 不會閱讀。",
+    "keepFact": "保留為事實",
+    "followInsteadTopicMoves": "關於{{topic}}的新文章會進入已關注的報導，而不是你的資訊流。",
+    "followInsteadFactGoes": "{{fact}}會從你的檔案中移除，而且無法復原。關於{{topic}}的新文章會進入已關注的報導。",
+    "followInsteadDoneTitle": "已關注{{topic}}",
+    "followInsteadDoneBody": "新文章會進入已關注的報導。",
+    "followInsteadNotificationTitle": "一則可以關注的報導",
+    "followInsteadNotificationBody": "梅拉找到一些適合放進已關注報導的內容。"
   },
   "locations": {
     "title": "地點",
@@ -1441,7 +1457,7 @@
   },
   "facts": {
     "screenTitle": "事實",
-    "screenSubtitle": "梅拉根據這些事實為你挑選新聞。每項都會顯示它擁有的主題數量。點按一項，即可查看主題和相關報導。",
+    "screenSubtitle": "檔案是放影響你的事情的地方。其他的，只要關注就好。點按一項事實，就能看到它的主題和報導。",
     "addFact": "新增事實",
     "page": {
       "edit": "編輯",
@@ -1450,7 +1466,7 @@
       "impactfulHint": "因為這項事實，梅拉為你挑選的報導。",
       "menuA11y": "編輯或刪除此事實",
       "new": "新",
-      "nextInterest": "下一個興趣",
+      "nextInterest": "下一項事實",
       "reach_one": "過去 48 小時內 {{count}} 則報導",
       "reach_other": "過去 48 小時內 {{count}} 則報導",
       "recentTab": "最近的文章",
@@ -1558,10 +1574,7 @@
     "meraButtonHint": "選擇浮動梅拉按鈕的顏色。在淺色與深色模式下，它都保持不變。"
   },
   "freeTier": {
-    "seePlans": "查看方案",
-    "storiesNotice": "您已追蹤的報導會保留它們收集的所有內容。開始追蹤新報導需要有效的訂閱方案。",
-    "trackBody": "您已追蹤的報導會保留它們收集的所有內容。開始追蹤新報導需要有效的訂閱方案。",
-    "trackTitle": "報導追蹤需要訂閱方案"
+    "seePlans": "查看方案"
   },
   "factCheck": {
     "actionA11y": "查詢已發佈的事實查證",
@@ -1721,11 +1734,11 @@
     "chapters": {
       "facts": {
         "title": "你的資訊形塑你的動態",
-        "subtitle": "告訴梅拉你的生活狀況，其餘的交給它。",
+        "subtitle": "檔案是放影響你的事情的地方。其他的，只要關注就好。",
         "slides": {
           "a-fact-is": {
             "headline": "一項資訊是一行真實陳述",
-            "body": "「我是護士。」「我住在烏特勒支。」「我有一個小孩。」簡短、真實、關於你的生活。就是全部想法。",
+            "body": "檔案是放影響你的事情的地方，所以一項事實就是一句關於你生活的真話。「我是護理師。」「我住在烏特勒支。」「我有個小孩。」簡短、真實，這就是全部的概念。",
             "ask": "在梅拉中，什麼算是一項事實？"
           },
           "where-from": {
@@ -1739,7 +1752,7 @@
           },
           "to-topics": {
             "headline": "資訊變成要尋找的東西",
-            "body": "「我是護士」變成幾個搜尋短語：醫院人員配置、護理薪資、衛生政策。一項資訊展開成一把。這些短語是出去尋找新聞的。"
+            "body": "「我是護理師」會變成搜尋詞：醫院人力配置、護理師薪資、醫療政策。這些詞會拿去找新聞。接著，梅拉的 AI 會把回傳的內容和你的事實對照，判斷它對你的影響。"
           },
           "sort-them": {
             "headline": "哪一個是資訊？",
@@ -1763,12 +1776,12 @@
             "ask": "我如何改變我某項資訊的重要性？"
           },
           "your-profile": {
-            "body": "梅拉用來挑選新聞的所有內容，都集中在同一個地方。逐一點按即可查看。",
+            "body": "梅拉用來找出影響你的內容的所有東西，都集中在一個地方。點按每一項即可查看。",
             "headline": "你的個人資料",
             "reveal": {
               "facts": {
                 "label": "事實",
-                "text": "關於你生活的真實描述。每一項都會找到自己的主題。"
+                "text": "關於影響你的事情的真話。每一句都會找到自己的主題。"
               },
               "places": {
                 "label": "地點",
@@ -1781,6 +1794,20 @@
               "sources": {
                 "label": "來源",
                 "text": "你設為優先的出版物、從你的資訊流中隱藏的出版物，以及你付費訂閱的出版物。"
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "檔案是放影響你的事情的地方。其他的，只要關注就好。",
+            "headline": "放進檔案，還是當成報導？",
+            "reveal": {
+              "follow": {
+                "label": "我喜歡一級方程式",
+                "text": "這件事不會影響你，所以直接關注就好。關注免費且不限數量，AI 不會閱讀已關注的報導。"
+              },
+              "profile": {
+                "label": "我要去摩納哥",
+                "text": "這件事會影響你，所以放進檔案。梅拉的 AI 會用它來對照新聞，判斷對你這趟旅程的影響。"
               }
             }
           }
@@ -1848,17 +1875,14 @@
                 "label": "資訊流",
                 "text": "梅拉讀取內容時，梅拉按鈕會移動，其餘時間都保持靜止。這是唯一顯示有內容正在擷取的跡象。"
               },
-              "dashboard": {
-                "label": "興趣",
-                "text": "同一天的內容依興趣排序，每件你告訴梅拉的事各有一個分區，未讀報導排在最前面。離開頁面時，或每隔 10 分鐘，分區就會重新排序。"
-              },
+              "dashboard": {},
               "continuous": {
                 "label": "連續資訊流",
                 "text": "梅拉讀取內容時，頂部的梅拉圖示會變色，其餘時間都保持不動。這是唯一顯示有內容正在擷取的跡象。"
               },
               "sectioned": {
                 "label": "分區資訊流",
-                "text": "相同的報導依事實分組，每件你告訴梅拉的事各有一個分區，未讀報導排在最前面。"
+                "text": "同一批報導會依事實分組，檔案裡的每項事實各有一個區段，未讀的報導排在前面。"
               }
             }
           }
@@ -1913,7 +1937,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "關於你的部分保存在這裡",
-            "body": "你的事實、興趣、地點和讀過的所有內容都在這支手機上。梅拉的伺服器不保留副本，所以登出會清除你的個人檔案。換新手機時，備份可以把它找回來。"
+            "body": "你的事實、你關注的報導、你的地點，以及你讀過的所有內容，都存在這支手機上。梅拉的伺服器不保留副本，這也是為什麼登出會清除你的檔案。換新手機時，可以用備份找回。"
           },
           "what-leaves": {
             "headline": "實際上出去的內容",
@@ -1949,8 +1973,8 @@
         "subtitle": "在故事展開時將其保持在視圖中。",
         "slides": {
           "what-it-is": {
-            "headline": "對於尚未結束的故事",
-            "body": "選舉、試驗、風暴、收購。追蹤一次，每個新發展都會聚集在一個地方，而不是在三週內分散通過你的動態到達。"
+            "headline": "其他你喜歡的內容",
+            "body": "一支球隊、一位藝人、一場選舉、一場風暴。關注一次，新文章就會集中在一起。關注免費且不限數量，AI 不會閱讀已關注的報導。"
           },
           "two-ways-in": {
             "headline": "進入的兩個方式",
@@ -2313,7 +2337,7 @@
             "steps": {
               "0": "你說幾件關於你生活的真實事情。",
               "1": "梅拉會把這些內容轉化為要去尋找的目標。",
-              "2": "它讀取當天的新聞並保留符合的內容。"
+              "2": "它會閱讀當天的新聞，留下影響你的內容。"
             }
           },
           "matching": {
@@ -2326,7 +2350,7 @@
             "reveal": {
               "about-you": {
                 "label": "它對你的認識",
-                "text": "你的事實、興趣和讀過的內容都寫入這支手機並留在那裡。梅拉的伺服器不保留任何副本。"
+                "text": "你的事實、你關注的報導和讀過的內容，都寫入這支手機並留在這裡。梅拉的伺服器不保留它們的副本。"
               },
               "what-leaves": {
                 "label": "實際上離開的內容",
@@ -2578,7 +2602,7 @@
   "skillPhrase": {
     "residence": "你居住的地方",
     "work": "你的工作",
-    "interests": "你的興趣",
+    "interests": "你喜歡的內容",
     "origin": "你來自哪裡",
     "family": "你的家人",
     "feedTuning": "你的資訊流",
@@ -2782,10 +2806,10 @@
     "tutorials1": "用幾張簡短的卡片了解梅拉如何運作"
   },
   "interests": {
-    "emptyTitle": "梅拉還不了解你的興趣",
-    "learnAbout": "了解如何新增事實",
-    "backToInterests": "返回興趣",
-    "findingStories": "梅拉正在為這個興趣尋找報導。幾秒鐘後，第一批報導就會出現在這裡。"
+    "emptyTitle": "梅拉還不了解你",
+    "learnAbout": "了解檔案裡該放什麼",
+    "backToInterests": "返回資訊流",
+    "findingStories": "梅拉正在為這項事實尋找報導。第一批報導會在幾秒內出現在這裡。"
   },
   "world": {
     "gathering": "正在彙整{{country}}今天的新聞。幾秒鐘後，第一批報導就會出現。",
@@ -2917,7 +2941,7 @@
       "places": "地點",
       "sources": "來源",
       "viewAll": "查看全部 {{count}} 項",
-      "factsEmpty": "目前還沒有。告訴梅拉你關注什麼，它就會顯示在這裡。",
+      "factsEmpty": "還沒有內容。告訴梅拉你的生活，它就會顯示在這裡。",
       "placesEmpty": "還沒有地點",
       "addCity": "新增城市",
       "sourcesEmpty": "沒有調整過任何來源。梅拉對所有來源一視同仁。",
@@ -3006,8 +3030,8 @@
     },
     "askNews": "詢問任何新聞相關的問題",
     "interest": {
-      "change": "變更這個興趣",
-      "remove": "移除這個興趣"
+      "change": "變更這項事實",
+      "remove": "移除這項事實"
     },
     "stories": {
       "follow": "追蹤報導",
@@ -3030,7 +3054,7 @@
     },
     "sources": {
       "whoBehind": "問問某個出版物背後是誰",
-      "whatFollow": "告訴梅拉你關注什麼"
+      "whatFollow": "告訴梅拉你想讀什麼"
     },
     "settings": {
       "whatCanYouDo": "你可以做什麼？"
@@ -3042,19 +3066,18 @@
     "moveBottomLeft": "移至左下角",
     "moveBottomRight": "移至右下角",
     "answerReady": "梅拉，回答已準備好",
-    "tooltipNew": "告訴梅拉你喜歡什麼",
+    "tooltipNew": "告訴梅拉關於你的事",
     "working": "梅拉正在處理你的請求"
   },
   "meraIntro": {
-    "feed": "你現在在資訊流中。告訴我你想多看哪方面的新聞，或直接問我任何新聞問題。",
-    "interests": "這些是你的興趣。告訴我一個新的，或者你想變更或移除的。",
-    "interest": "這個頁面跟隨你的某個興趣。你可以在這裡變更或移除它。",
+    "feed": "你正在看資訊流。告訴我什麼會影響你，說出想關注的內容，或問我任何新聞相關的問題。",
+    "interest": "這個頁面顯示你的其中一項事實。你可以在這裡變更或移除它。",
     "world": "問我某則頭條，或者告訴我你想看哪個國家或地區的新聞。",
     "checks": "告訴我你看到的某個說法，我會在網路上查一查。",
     "checksNoWeb": "聊天中的網頁搜尋已關閉，所以我現在無法查證說法。你可以在設定中開啟它。",
-    "library": "問我任何新聞相關的問題，或者告訴我你喜歡讀什麼。",
+    "library": "問我任何新聞相關的問題，或告訴我你想關注什麼。",
     "facts": "你正在查看你的事實。你想變更什麼？",
-    "sources": "問我某個出版物的情況，或者告訴我你關注什麼。",
+    "sources": "問我關於某家媒體的事，或告訴我你想關注什麼。",
     "settings": "問我能做什麼，或梅拉如何處理你的資料。",
     "onDevice": {
       "feed": "你現在在資訊流。告訴我你喜歡關注什麼，我會調整這裡顯示的內容。",
@@ -3064,8 +3087,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "將我的興趣「{{statement}}」改為 ",
-    "removeInterest": "移除我的興趣「{{statement}}」",
+    "changeInterest": "把我的事實「{{statement}}」改成： ",
+    "removeInterest": "移除我的事實「{{statement}}」",
     "followStory": "持續告訴我這件事的最新進展："
   },
   "appLock": {

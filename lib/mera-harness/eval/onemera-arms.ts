@@ -94,7 +94,11 @@ export const ACK_CAPABILITY_ROUTER_BODY = swap(
  *  the claim that search is coming, which was false with the toggle off. The
  *  shared identity states search only where the tool is offered. */
 export const ACK_REQUEST_ROUTER_BODY = swap(
-  S3B_ROUTER_BODY,
+  swap(
+    S3B_ROUTER_BODY,
+    'the servers keep, encryption, plans, limits, how much Mera reads for them each day, the licence.',
+    'servers keep, encryption, plans, limits, how much Mera reads a day, the licence, fact or follow.',
+  ),
   'the skill has even loaded. Repeat what you heard and stop.\n',
   'the skill has even loaded. Repeat what you heard and stop.\n\n'
     + 'Every acknowledgement is about their request and none is about what you can do, even when they\n'

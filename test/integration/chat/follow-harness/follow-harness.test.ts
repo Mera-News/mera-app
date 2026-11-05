@@ -341,3 +341,41 @@ describe('More options', () => {
     expect(store().isGenerating).toBe(false);
   });
 });
+
+describe('an interest with no stake, through the real engine', () => {
+  const KEY = 'topics: general interests';
+  const noStake = { statement: 'Follows Rally Finland', questionnaire_attribute: KEY, has_stake: false, story_subject: 'Rally Finland' };
+  const gateway = (subject: string | null = 'Rally Finland') =>
+    mockGateway((c) => {
+      if (isRouteLeg(c)) return reply('Nice.', toolCall('load_skill', { id: 'facts/interest' }));
+      if (systemOf(c).includes('Follow a story') || c.messages.some((m) => m.content.includes('story to follow'))) {
+        return stageCard([{ label: 'WRC Results', search: 'World Rally Championship results' }]);
+      }
+      return toolCall('saveExtractedFacts', { extracted_user_information: [{ ...noStake, story_subject: subject }] });
+    });
+
+  it('a persona chat stages the follow card with the subject first and ticked, and no reader phrase', async () => {
+    server.use(...gateway());
+    const { engine } = await attachCloud(personaAgent());
+    engine.send("I'm into rally finland");
+    await turnDone();
+    const labels = store().proposal!.actions.map((a) => (a as { label: string }).label);
+    expect(labels).toEqual(['Rally Finland', 'WRC Results']);
+    expect(labels.join(' ')).not.toContain("I'm");
+    const facts = cloud().messages.flatMap((m) => m.toolCalls ?? []).filter((t) => t.name === 'proposeTrack');
+    expect(facts[0].result).toMatchObject({ storySubjects: ['Rally Finland'], profileOffer: [{ statement: 'Follows Rally Finland' }] });
+  });
+
+  it('the impact question joins the thread with no model call, and the next turn reads it', async () => {
+    server.use(...gateway());
+    const { engine } = await attachCloud(personaAgent());
+    engine.send("I'm into rally finland");
+    await turnDone();
+    const before = gatewayCalls().length;
+    await engine.askImpact!('Before I add it, how does this affect you?');
+    expect(gatewayCalls()).toHaveLength(before);
+    const last = cloud().messages[cloud().messages.length - 1];
+    expect(last).toMatchObject({ role: 'assistant', content: 'Before I add it, how does this affect you?' });
+    expect(cloud().agentTurnState).toMatchObject({ lastSkill: 'facts/interest', impactAsked: true, lastQuestion: 'Before I add it, how does this affect you?' });
+  });
+});

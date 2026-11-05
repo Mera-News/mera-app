@@ -43,6 +43,7 @@ export {
   MAX_AGENT_LEGS,
   MAX_FACTS_IN_CONTEXT,
   createAgentState,
+  withImpactQuestion,
   estimateTokens,
   formatKnownFacts,
   runAgentTurn,

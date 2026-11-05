@@ -144,7 +144,7 @@ export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; la
 }
 
 export const liveSystem = (agent: Fixture['agent']): string =>
-  setup({ agent, article: { title: '', publication: '', description: '', related: [] } } as Fixture).system;
+  setup({ agent, article: { title: '', publication: '', description: '', related: [] } } as unknown as Fixture).system;
 
 /** Loads the shipped-prompt snapshot; throws when it is malformed or equals the live prompts. */
 export function loadPrePrompts(path: string): PrePrompts {

@@ -25,6 +25,8 @@ import {
   deriveCard,
   emitFactChoiceGroups,
   pushSavedAsWritten,
+  readProfileOffer,
+  readSavedFacts,
   saveAsWrittenOf,
   savedFactsWithIds,
   toStringArray,
@@ -147,10 +149,15 @@ function emitMessage(
                   outcomes: readTrackOutcomes(result?.followed),
                   dismissed: result?.dismissed === true,
                   superseded: false,
+                  profileOffer: readProfileOffer(result?.profileOffer),
+                  profileStep: result?.profileStep === 'asking' || result?.profileStep === 'added' ? result.profileStep : null,
                 },
               }
             : {}),
         });
+        // "Add it anyway" saved them: the fact and its topics, as any accepted fact.
+        const added = tc.name === 'proposeTrack' ? readSavedFacts(result?.profileSaved) : null;
+        if (added) pushSavedAsWritten(cards, message.id, idx, added, readProfileOffer(result?.profileOffer)[0]?.topic_skill_id);
         return;
       }
       // A change applied by a typed yes: one row, with Undo until the user

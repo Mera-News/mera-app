@@ -7,6 +7,7 @@ import { gatewayCalls } from '@/test/helpers';
 import '@/lib/scheduler/tasks/persona-geo-task';
 
 import { addFact } from '@/lib/database/services/fact-service';
+import * as followInstead from '@/lib/database/services/follow-instead-service';
 import { getAll as getLocations } from '@/lib/database/services/location-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
@@ -48,7 +49,7 @@ beforeEach(async () => {
 afterEach(endTest);
 
 describe('registration', () => {
-  it('is a daily foreground task gated on db-ready plus exactly ONE custom idle check, exclusive, 30s, 2 attempts', () => {
+  it('is a daily foreground task gated on db-ready plus exactly ONE custom idle check, exclusive, 60s, 2 attempts', () => {
     const def = registeredDefinition('@/lib/scheduler/tasks/persona-geo-task');
 
     expect(def).toMatchObject({
@@ -56,7 +57,7 @@ describe('registration', () => {
       frequency: DAY,
       triggers: ['app-foreground'],
       exclusive: true,
-      timeout: 30_000,
+      timeout: 60_000,
       maxAttempts: 2,
     });
     expect(conditionTypes(def)).toEqual(['db-ready', 'custom']);
@@ -90,6 +91,17 @@ describe('the handler', () => {
     expect(await getSetting(LAST_RUN)).toBe(String(T0 - HOUR)); // the sweep's own stamp is untouched
     expect(lastRunInStore(TASK)).toBe(T0);
     expect(await lastRunPersisted(TASK)).toBe(T0);
+  });
+
+  it('runs the follow-instead sweep even when the geo sweep had nothing to do', async () => {
+    const sweep = jest.spyOn(followInstead, 'runFollowInsteadSweep');
+    await setSetting(LAST_RUN, String(T0 - HOUR));
+
+    await runTask(TASK);
+
+    expect(sweep).toHaveBeenCalledTimes(1);
+    expect(lastRunInStore(TASK)).toBe(T0);
+    sweep.mockRestore();
   });
 
   it('with no facts it returns and stamps lastRun', async () => {

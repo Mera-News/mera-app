@@ -83,18 +83,34 @@ export function saveAsWrittenOf(
   const result = asRecord(tc.result);
   const raw = asRecord(result?.saveAsWritten);
   if (!result || !raw || typeof raw.statement !== 'string' || !raw.statement.trim()) return null;
-  const entry: SaveAsWrittenOffer['entry'] = {
-    statement: raw.statement,
+  return { offer: { resultKey, baseResult: result, entry: asWrittenEntry(raw) }, saved: readSavedFacts(result.saveAsWrittenSaved) };
+}
+
+function asWrittenEntry(raw: Record<string, unknown>): SaveAsWrittenOffer['entry'] {
+  return {
+    statement: String(raw.statement),
     ...(typeof raw.questionnaire_attribute === 'string' ? { questionnaire_attribute: raw.questionnaire_attribute } : {}),
     ...(typeof raw.topic_skill_id === 'string' ? { topic_skill_id: raw.topic_skill_id } : {}),
   };
-  const saved = Array.isArray(result.saveAsWrittenSaved)
-    ? (result.saveAsWrittenSaved as unknown[])
-        .map((f) => asRecord(f))
-        .filter((f): f is Record<string, unknown> => !!f && typeof f.id === 'string' && typeof f.statement === 'string')
-        .map((f) => ({ id: f.id as string, statement: f.statement as string }))
-    : null;
-  return { offer: { resultKey, baseResult: result, entry }, saved: saved && saved.length > 0 ? saved : null };
+}
+
+/** The `{id, statement}` rows a commit recorded, or null when there are none. */
+export function readSavedFacts(raw: unknown): { id: string; statement: string }[] | null {
+  if (!Array.isArray(raw)) return null;
+  const saved = raw
+    .map((f) => asRecord(f))
+    .filter((f): f is Record<string, unknown> => !!f && typeof f.id === 'string' && typeof f.statement === 'string')
+    .map((f) => ({ id: f.id as string, statement: f.statement as string }));
+  return saved.length > 0 ? saved : null;
+}
+
+/** The follow card's `profileOffer`: entries with a statement, nothing else. */
+export function readProfileOffer(raw: unknown): SaveAsWrittenOffer['entry'][] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((e) => {
+    const rec = asRecord(e);
+    return typeof rec?.statement === 'string' && rec.statement.trim() ? [asWrittenEntry(rec)] : [];
+  });
 }
 
 /** The saved sentence and its topics, in place of the chip. */

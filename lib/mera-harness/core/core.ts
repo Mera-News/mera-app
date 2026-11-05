@@ -69,6 +69,7 @@ const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill, skillThinking, skillTools } from './skill-loader';
 import { CONTINUATION_TOOLS, PROPOSE_TRACK_TOOL, toolsForLeg, validateChoiceOptions } from './tool-contracts';
+import { NO_IMPACT_NOTE, followHandoverNote, profileOfferEntry, storySubjects, subjectsFirst, withoutStakeSlots } from './stake-handover';
 import type {
   PendingProposalView,
   AgentDeps,
@@ -264,6 +265,10 @@ export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you sa
  *  wrote nothing usable either. The app passes the reader-language line. */
 export const REPLY_NO_ANSWER_FALLBACK = "I couldn't do that. Try asking another way.";
 
+/** Beside a handover's follow card when the leg wrote nothing. Never about the
+ *  profile. The app passes the reader-language line. */
+export const REPLY_FOLLOW_CARD_FALLBACK = 'This one is good to follow. Tick what you want and new articles land in Followed stories.';
+
 /** The closing leg of a turn that would otherwise end with no reply, no card
  *  and no question. Nothing was staged on such a turn by definition. */
 const NO_ANSWER_NOTE =
@@ -358,6 +363,21 @@ function plainOriginOf(message: string): string | null {
   return m[1].split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 }
 
+/**
+ * The model sometimes sends this list as a JSON STRING, which read as empty and
+ * lost the reader's words with no card. A string that holds no list stays as it
+ * is: it is a bad call, never the explicit empty save that means "no offer".
+ */
+function factListOf(raw: unknown): unknown {
+  if (typeof raw !== 'string') return raw;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((e) => e !== null && typeof e === 'object') : raw;
+  } catch {
+    return raw;
+  }
+}
+
 /** The loop-written first leg of a "Save all" tap. */
 function saveAllLeg(options: readonly string[]): AgentModelResult {
   const entries = options.map((o) => ({ statement: factPickStatement(o) }));
@@ -410,7 +430,7 @@ export interface RunAgentTurnParams {
   /** The two lines a reply is REPLACED with (leak, narration), in the reader's
    *  language. The harness cannot import i18n, so the app translates them at the
    *  call site; omitted (the eval), the English constants are used. */
-  fallbacks?: { leak: string; process: string; noAnswer?: string };
+  fallbacks?: { leak: string; process: string; noAnswer?: string; followCard?: string };
   /** 'moreOptions': "More options" on a follow card. No route leg, one forced
    *  proposeTrack leg on conversation/follow-story, prose discarded, no closing
    *  leg and no end-of-turn offers. The driver passes a COPY of its state and
@@ -422,6 +442,21 @@ export interface RunAgentTurnParams {
 
 /** The follow skill: the only one with the follow tools, and the one More options runs. */
 export const FOLLOW_STORY_SKILL = 'conversation/follow-story';
+
+/**
+ * "Add to my profile instead" asked how the subject affects the reader. A fixed
+ * string the app wrote, so no model call: it only tells the next turn what its
+ * answer answers. `lastUserMessage` stays the message that named the subject.
+ */
+export function withImpactQuestion(turn: AgentTurnState, question: string): void {
+  turn.lastQuestion = question;
+  turn.lastSkill = 'facts/interest';
+  turn.lastRoute = 'interest';
+  turn.lastTurnAskedQuestion = true;
+  turn.lastReply = question;
+  turn.impactAsked = true;
+  turn.recentExchanges = withExchange(turn.recentExchanges, turn.lastUserMessage ?? '', question);
+}
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
   const { state, userMessage, deps } = params;
@@ -500,8 +535,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   turn.turnNumber += 1;
   const pendingCard = state.pendingProposal ?? null;
   const cardTurn = pendingCard && turn.lastCard && turn.lastCard.proposalId === pendingCard.id ? turn.lastCard.turn : 0;
+  // The impact question was asked after the follow card it came from.
+  const impactAsked = turn.impactAsked === true;
+  turn.impactAsked = false;
   const cardIsNewest =
-    pendingCard !== null && (turn.pendingChoice === null || cardTurn > (turn.choiceTurn ?? 0));
+    pendingCard !== null && !impactAsked && (turn.pendingChoice === null || cardTurn > (turn.choiceTurn ?? 0));
   /** The skill a route-leg answer to the card resumes. */
   const cardSkill =
     pendingCard && turn.lastCard && turn.lastCard.proposalId === pendingCard.id
@@ -683,6 +721,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let heldBackUnverifiedHome = false;
   /** The loop put the "Save as I wrote it" chip on screen. */
   let saveAsWrittenOffered = false;
+  /** Entries the model marked as having no stake: out of the save, on their way
+   *  to a follow card, and back as a fact card if no card comes. */
+  let noStakeEntries: Record<string, unknown>[] = [];
+  /** Set once the turn hands over to the follow skill. */
+  let handover: { subjects: string[]; note: string } | null = null;
+  /** Follow legs left: the card, then one required retry (the More options budget). */
+  let followLegsLeft = 0;
+  let followCardStaged = false;
 
   /**
    * "SAVE AS I WROTE IT" (owner ruling ux2 D9): the user's own sentence, as a
@@ -800,6 +846,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  cricket" invented "No longer follows cricket news" as a replace of an
    *  unrelated fact. */
   let noOfferIsTheAnswer = onlyAcknowledges;
+  // A PLAIN NO TO THE IMPACT QUESTION: one line, and nothing to save.
+  if (impactAsked && plainAnswer === 'no' && resumedSkill) {
+    noOfferIsTheAnswer = true;
+    closingLegNow = true;
+    closingNote = NO_IMPACT_NOTE;
+  }
   /** Waiting cards by their compared form, so the note quotes them as shown. */
   const waitingCards = new Map(pendingCardList.map((s) => [s.trim().toLowerCase(), s]));
   /** A waiting card that is a REWORDING of `statement` (the near-twin rule,
@@ -1039,6 +1091,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const answerLegNow = skillLoaded === 'conversation/about-mera' && explainedFrom(toolResultsThisTurn);
     if (answerLegNow) messages.push({ role: 'user', content: aboutMeraAnswerNote(userMessage, state.persona.languageName) });
     if (moreOptionsNote !== null) messages.push({ role: 'user', content: moreOptionsNote });
+    if (followLegsLeft > 0 && handover !== null) messages.push({ role: 'user', content: handover.note });
 
     const inputTokens =
       estimateTokens(systemPrompt) + messages.reduce((n, m) => n + estimateTokens(m.content), 0);
@@ -1065,6 +1118,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // see is one it cannot spend a leg on.
       tools: moreOptionsMode
         ? (deps.tools.proposeTrack ? [PROPOSE_TRACK_TOOL] : [])
+        : followLegsLeft > 0
+          ? [PROPOSE_TRACK_TOOL]
         : closingLegNow || answerLegNow ? [] : toolsForLeg({
         skillLoaded,
         forcingProposal: forcingProposalNow,
@@ -1083,7 +1138,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       }) as unknown[],
       // More options was asked for by a tap: a card is the answer, and staging
       // it changes nothing until the user ticks and taps Follow.
-      toolChoice: forcingProposalNow || moreOptionsMode ? 'required' : 'auto',
+      // The first follow leg stays on auto: the sentence beside the card is
+      // written there, and a required call measured 0 of 19 with one.
+      toolChoice: forcingProposalNow || moreOptionsMode || followLegsLeft === 1 ? 'required' : 'auto',
       // OFF unless the loaded skill says `thinking: true`, and always off on the
       // route leg: measured, thinking on returned empty content on 8 of 10
       // route probes at 8-10s against 0.8-1.0s and a valid answer every time.
@@ -1302,11 +1359,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // a call is answered, never run.
         const query = typeof args.query === 'string' ? args.query.trim().slice(0, 200) : '';
         if (query) subjectsThisTurn.push(query);
-        const out = deps.tools.searchNews
-          ? query
-            ? await deps.tools.searchNews({ query })
-            : { error: 'query must be a non-empty string' }
-          : { error: 'searchNews is not available' };
+        const out = handover
+          ? { error: 'Already searched. Call proposeTrack now.' }
+          : deps.tools.searchNews
+            ? query
+              ? await deps.tools.searchNews({ query })
+              : { error: 'query must be a non-empty string' }
+            : { error: 'searchNews is not available' };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1472,6 +1531,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       }
 
       if (call.name === 'saveExtractedFacts') {
+        args = { ...args, extracted_user_information: factListOf(args.extracted_user_information) };
         // THREE FACTS, NEVER ONE (owner decision, ux1): a combined
         // origin-and-home entry is expanded into origin, expat status and
         // residence before anything else looks at it, and every entry of
@@ -1606,7 +1666,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // geopolitical conflict in the region of Israel" for a Ukraine
           // answer (navx2-fu). Precision first: ONE shared subject word with
           // anything the user or Mera said this exchange keeps the entry.
-          if (groundForcedOffer && forcingProposalNow && !namesSomethingSaid(statement, groundingText())) continue;
+          // Facts are written in English, so overlap with a message in another
+          // language is always empty and says nothing: Dutch "Ik ben gek op
+          // wielrennen" lost "Follows cycling" this way. There the check narrows to
+          // the leak it guards against, a subject from the turn before. A word or
+          // two answering a question names nothing in any language, so that keeps
+          // the whole rule: a yes must never buy an invented subject.
+          // shortcut: the app language stands in for the message's, so Dutch typed
+          // in an English app keeps the old drop; upgrade with a language detector.
+          const overlapCanTell = plainAnswer !== null
+            || (lastQuestion !== null && userMessage.trim().split(/\s+/).length <= 2)
+            || (/\p{Script=Latin}/u.test(userMessage) && (state.persona.languageName ?? 'English') === 'English');
+          if (
+            groundForcedOffer
+            && forcingProposalNow
+            && !namesSomethingSaid(statement, groundingText())
+            && (overlapCanTell || namesFact(statement, turn.lastSubjects.join(' ')))
+          ) continue;
           // A NEGATIVE INTEREST IS NEVER OFFERED on a see-less turn, forced
           // or not ("Does not want The Hindu included in news updates" after
           // "Mute The Hindu"): stop, less, mute and hide are a filter, not a
@@ -1649,6 +1725,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             continue;
           }
           proposedStatements.add(statement.toLowerCase());
+          // NO STAKE, BY THE MODEL'S SLOT AND THE LOOP'S HAND. Strictly false:
+          // a missing or malformed value is today's fact card. Past every guard
+          // above, so a duplicate or an invented forced offer never gets a card.
+          if (entry.has_stake === false && skillLoaded === 'facts/interest' && deps.tools.proposeTrack) {
+            noStakeEntries.push({
+              ...entry,
+              statement,
+              ...((deps.skillIds() as readonly string[]).includes('topics/interest') ? { topic_skill_id: 'topics/interest' } : {}),
+            });
+            continue;
+          }
           // `replaces` requires a CONFIRMED choice, never merely that a question
           // was asked: those are different facts, and treating one as the other
           // destroys a fact on a turn nobody consented to.
@@ -1784,7 +1871,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               ? candidateSkill
               : undefined;
           sanitised.push({
-            ...entry,
+            ...withoutStakeSlots(entry),
             statement,
             replaces: replaces === null ? undefined : replaces,
             ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
@@ -1822,6 +1909,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           proposals.push({ statement, kind: 'origin', place: null, replaces: expatFact.id });
           proposedStatements.add(statement.toLowerCase());
           offeredThisTurn.push(statement.toLowerCase());
+        }
+        // EVERYTHING WENT TO THE FOLLOW CARD. The port is not called (its
+        // empty-list answer reads as staged), and `factsSaved: 0` keeps the
+        // thread from drawing the call's input as a saved fact.
+        if (sanitised.length === 0 && noStakeEntries.length > 0) {
+          const out = { staged: false, factsSaved: 0 };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          continue;
         }
         // THE OFFER IS ALREADY A CARD ON SCREEN ("follow this" after the card
         // that offers it). The port is not called: its empty-list answer reads
@@ -1933,17 +2029,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // only by the user's ticks and Follow tap, or by a typed yes to a card
       // with one option. Same one-card-per-turn rule as proposeChanges.
       if (call.name === 'proposeTrack') {
-        const out: Record<string, unknown> = !deps.tools.proposeTrack
+        // On the handover code writes the first rows, and the port leaves the
+        // reader's phrase off: `storySubjects` is what tells it.
+        const card = handover ? subjectsFirst(args, handover.subjects, userMessage) : args;
+        const staged: Record<string, unknown> = !deps.tools.proposeTrack
           ? { error: 'proposeTrack is not available' }
           : terminatedByChoice || deleteCardOffered || cardThisTurn !== null
             ? { error: 'One card or question per turn. Ask nothing more.' }
-            : await deps.tools.proposeTrack(args);
+            : await deps.tools.proposeTrack(card);
+        const out = handover && typeof staged.error !== 'string'
+          ? { ...staged, storySubjects: handover.subjects, profileOffer: noStakeEntries.map(profileOfferEntry) }
+          : staged;
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (typeof out.error !== 'string') {
           proposedSomething = true;
           cardThisTurn = 'staged';
-          for (const o of Array.isArray(args.options) ? (args.options as Record<string, unknown>[]) : []) {
+          followCardStaged = handover !== null;
+          for (const o of Array.isArray(card.options) ? (card.options as Record<string, unknown>[]) : []) {
             if (typeof o?.label === 'string') subjectsThisTurn.push(o.label);
           }
           terminatedByCard = true;
@@ -1996,7 +2099,70 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       leg.toolResults.push({ name: call.name, result: { error: `unknown tool: ${call.name}` } });
     }
 
+    // THE HANDOVER'S SEARCH IS THE LOOP'S, on this leg: the follow skill says to
+    // look first, so a forced leg searched twice and ran out of legs with no card
+    // on 29 of 48 turns.
+    const handingOver: boolean = noStakeEntries.length > 0 && handover === null && !impactAsked && !terminatedByChoice;
+    const handoverSubjects: string[] = handingOver ? storySubjects(noStakeEntries, userMessage) : [];
+    const searches = deps.tools.searchNews ? handoverSubjects.map((query) => ({ query })) : [];
+    const found = await Promise.all(searches.map(async (q) => {
+      try {
+        return await deps.tools.searchNews!(q);
+      } catch {
+        return { error: 'search failed' };
+      }
+    }));
+    searches.forEach((q, i) => {
+      leg.toolCalls.push({ name: 'searchNews', argumentsRaw: JSON.stringify(q) });
+      leg.toolResults.push({ name: 'searchNews', result: found[i] });
+    });
+    const handoverResults = searches.map((_, i) => ({ name: 'searchNews', result: found[i] as unknown }));
+
     params.onLeg?.(leg);
+
+    // AN ANSWER TO THE IMPACT QUESTION THAT SHOWS NO IMPACT: the follow card is
+    // still open above it, so one line and no second card.
+    if (noStakeEntries.length > 0 && impactAsked) {
+      noStakeEntries = [];
+      if (!proposedSomething) {
+        noOfferIsTheAnswer = true;
+        forcingProposalNow = false;
+        reply = '';
+        closingLegNow = true;
+        closingNote = NO_IMPACT_NOTE;
+        maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + 1 - formatRetries);
+        continue;
+      }
+    }
+    // THE HANDOVER, ONE WAY: the rest of this turn is the follow skill, with
+    // proposeTrack alone, as More options runs it. A question on this leg keeps the entries, and
+    // they go back as a fact card: one question or card per turn.
+    if (handingOver) {
+      const body = loadSkillFn(FOLLOW_STORY_SKILL);
+      if (body !== null) {
+        handover = { subjects: handoverSubjects, note: followHandoverNote(handoverSubjects) };
+        skillLoaded = FOLLOW_STORY_SKILL;
+        skillsLoaded.push(FOLLOW_STORY_SKILL);
+        routeKind = routeKindFromSkill(FOLLOW_STORY_SKILL);
+        systemPrompt = skillPrompt(body);
+        followLegsLeft = 2;
+        forcingProposalNow = false;
+        reply = '';
+        answeredTheUser = false;
+        toolResultsThisTurn.length = 0;
+        toolResultsThisTurn.push(...handoverResults);
+        maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + followLegsLeft - formatRetries);
+        continue;
+      }
+    }
+    if (followLegsLeft > 0) {
+      followLegsLeft--;
+      if (!terminatedByCard) {
+        reply = '';
+        if (followLegsLeft > 0 && sawContinuationTool) continue;
+        break;
+      }
+    }
 
     // MORE OPTIONS: a card ends it; a leg that only looked the story up gets
     // the one more forced leg; anything else ends it. Prose is discarded, and a
@@ -2512,6 +2678,47 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // will do. No detector catches a claim made without a verb (device pass).
   if (cardThisTurn === 'staged' && !cleanProse(reply).trim()) {
     acknowledgement = '';
+  }
+
+  // A required slot beats prose emphasis: a card leg writes its sentence on about
+  // one turn in fifty, so the line beside the handover's card is the app's.
+  if (followCardStaged && !cleanProse(reply).trim()) reply = params.fallbacks?.followCard ?? REPLY_FOLLOW_CARD_FALLBACK;
+
+  // ---- NO FOLLOW CARD CAME: the reader's words go back as a fact card -------
+  if (noStakeEntries.length > 0 && !followCardStaged && terminalReason !== 'transport-error') {
+    const entries = noStakeEntries.map(withoutStakeSlots);
+    const handedBack: AgentProposal[] = entries.map((e) => ({ statement: String(e.statement), kind: 'interest', place: null, replaces: null }));
+    const out = await deps.tools.saveExtractedFacts({ extracted_user_information: entries, proposals: handedBack });
+    const callRaw = JSON.stringify({ extracted_user_information: entries });
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+      toolResults: [{ name: 'saveExtractedFacts', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    proposals.push(...handedBack);
+    offeredThisTurn.push(...handedBack.map((p) => p.statement.toLowerCase()));
+    proposedSomething = true;
+    skillLoaded = 'facts/interest';
+    routeKind = 'interest';
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
+    params.onLeg?.(leg);
   }
 
   // ---- A RESOLVED PLACE THE TURN NEVER OFFERED -----------------------------

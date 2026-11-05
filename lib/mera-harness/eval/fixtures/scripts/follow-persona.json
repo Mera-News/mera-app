@@ -1,7 +1,7 @@
 {
   "id": "follow-persona",
   "cohort": "follow-persona",
-  "note": "chatfix S3, the Mera button with no surface. Follow wishes stage a card; 'follow this' after a web answer follows the subject of that answer; 'I follow PSV' is a statement about the user (an interest fact), never a card.",
+  "note": "chatfix S3, the Mera button with no surface. Follow wishes stage a card; 'follow this' after a web answer follows the subject of that answer; 'I follow PSV' is an interest with no stake, so facts/interest hands it to a follow card.",
   "persona": {
     "facts": [],
     "topics": []
@@ -129,7 +129,7 @@
         "routeKind": "interest",
         "tools": [],
         "track": {
-          "staged": false
+          "staged": true
         }
       }
     }

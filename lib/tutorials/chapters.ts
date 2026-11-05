@@ -81,6 +81,10 @@
 //   • Chapter `explore` (World) must not borrow relevance phrasing: World is
 //     genuinely unscored (`explore/ScopeArticleList.tsx`: no suggestions, no
 //     scoring, no LLM, nothing persisted).
+//   • Say "no AI reads followed stories", never "no AI is involved": chat's follow
+//     options use a model on the reader's words. An article that also matches a
+//     fact is scored as that fact's cost, so a chapter must not say a followed
+//     topic is never read.
 //
 // ── `welcome` is special ────────────────────────────────────────────────────
 // It is the PRE-AUTH chapter: no account references, no Ask-Mera, and NO MERA
@@ -197,6 +201,18 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
             { id: 'places', icon: 'place' },
             { id: 'sources', icon: 'newspaper' },
             { id: 'show-less', icon: 'remove-circle-outline' },
+          ],
+        },
+      },
+      {
+        // Reveals, not a sort: a sort marks one answer wrong, and the profile takes anything.
+        id: 'profile-or-story',
+        visual: { placeholder: { kind: 'icon', name: 'call-split' } },
+        interaction: {
+          kind: 'tap-to-reveal',
+          targets: [
+            { id: 'follow', icon: 'track-changes' },
+            { id: 'profile', icon: 'person' },
           ],
         },
       },

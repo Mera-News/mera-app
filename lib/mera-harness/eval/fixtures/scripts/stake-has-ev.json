@@ -1,0 +1,22 @@
+{
+  "id": "stake-has-ev",
+  "cohort": "stake",
+  "note": "A stated stake stays a fact: a fact card and no follow card.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I drive an electric car for my delivery job",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      }
+    }
+  ]
+}

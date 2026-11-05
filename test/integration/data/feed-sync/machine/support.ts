@@ -56,14 +56,14 @@ export function fetchStep() {
   const original = steps.stepFetchTopicIds;
   const holds = new Map<number | 'all', { held: Promise<void>; fail?: boolean; after?: boolean }>();
   let calls = 0;
-  spyOnExport(steps, 'stepFetchTopicIds').mockImplementation(async (personaId, ctx) => {
+  spyOnExport(steps, 'stepFetchTopicIds').mockImplementation(async (personaId, ctx, opts) => {
     calls += 1;
     const hold = holds.get(calls) ?? holds.get('all');
     if (hold && !hold.after) {
       await hold.held;
       if (hold.fail) throw new Error('network request failed');
     }
-    const result = await original(personaId, ctx);
+    const result = await original(personaId, ctx, opts);
     if (hold?.after) await hold.held; // the step has finished its work but has not yet returned it
     return result;
   });

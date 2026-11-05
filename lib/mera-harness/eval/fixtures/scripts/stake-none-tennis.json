@@ -1,0 +1,22 @@
+{
+  "id": "stake-none-tennis",
+  "cohort": "stake",
+  "note": "A broad or named interest with no stake: a follow card, and nothing saved.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Big tennis fan here",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}

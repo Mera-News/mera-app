@@ -1109,7 +1109,7 @@ describe('follow card override (chatfix: grown options, outcomes, superseded)', 
   it('carries its override key, staged result and an empty state on a fresh card', () => {
     const tc = staged('p1', ['A', 'B']);
     const [card] = trackCards(deriveThreadItems(base({ live: [assistantMsg('a1', 'Pick below.', [tc])] })));
-    expect(card.track).toEqual({ resultKey: 'a1::0', baseResult: tc.result, outcomes: {}, dismissed: false, superseded: false });
+    expect(card.track).toEqual({ resultKey: 'a1::0', baseResult: tc.result, outcomes: {}, dismissed: false, superseded: false, profileOffer: [], profileStep: null });
   });
 
   it('redraws a card grown past four options from cardOptions, with every option following the staged subject', () => {

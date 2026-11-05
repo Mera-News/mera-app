@@ -177,6 +177,14 @@ describe('handleExplainMera', () => {
     expect(result.error).toBeUndefined();
   });
 
+  it('answers the profile or story question from its own section', async () => {
+    const result = await handleExplainMera({ topics: ['profile_vs_stories'] });
+
+    const sections = result.sections as { topic: string; text: string }[];
+    expect(sections.map((s) => s.topic)).toEqual(['profile_vs_stories']);
+    expect(sections[0].text).toMatch(/no AI reads followed stories/i);
+  });
+
   it('returns availableTopics on an unknown id so the model can retry', async () => {
     const result = await handleExplainMera({ topics: ['how_do_you_make_money'] });
 

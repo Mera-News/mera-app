@@ -20,6 +20,7 @@ import {
   replaceClauseDashes,
   runAgentTurn,
   runFactRemovedTurn,
+  withImpactQuestion,
   type AgentLeg,
   type AgentState,
 } from '../mera-harness';
@@ -324,6 +325,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             leak: i18nInstance().t('chat.replyLeakFallback'),
             process: i18nInstance().t('chat.replyProcessFallback'),
             noAnswer: noAnswerLine(),
+            followCard: i18nInstance().t('trackedStories.followCardLine'),
           },
         });
         if (queued) flush();
@@ -1193,6 +1195,14 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       useCloudChatStore.setState({ wireMessages: wire });
       // Not visible: the user's bubble is already there (and a hidden turn never had one).
       return startTurn(text, false, { context, removed, messageId, retrying: true });
+    },
+    askImpact: async (question) => {
+      if (!alive) return;
+      cloud().setMessages((prev) => [...prev, { id: `asst-${Date.now()}`, role: 'assistant', content: question }]);
+      // A reopened chat has no turn state yet, and the card can still be tapped there.
+      agentStateRef.current ??= createAgentState(await buildAgentPersona(agentRef.current.id));
+      withImpactQuestion(agentStateRef.current.turn, question);
+      cloud().setAgentTurnState({ ...agentStateRef.current.turn });
     },
     tellRemovedFacts: (statements) => {
       if (!alive) return;

@@ -276,6 +276,11 @@ export async function requestMoreOptions(
     }
 }
 
+/** The impact question on a follow card. Answers nothing: the row is the result. */
+export async function askImpactQuestion(question: string): Promise<void> {
+    await live?.engine.askImpact?.(question);
+}
+
 /**
  * A fresh thread: no engine and empty stores. MeraChatSession calls it when it
  * creates a conversation (launch, New chat, a context switch); clearAllStores

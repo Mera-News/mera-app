@@ -1,7 +1,7 @@
 // Individual steps of the feed sync flow, extracted from SuggestionSyncService.
 // Each step is a pure async function that can be aborted via AbortSignal.
 
-import { ArticleService } from '@/lib/article-service';
+import { ArticleService, MAX_TOPICS_PER_BATCH } from '@/lib/article-service';
 import {
   batchMarkAsScoredByIds,
   batchMarkExcluded,
@@ -18,6 +18,7 @@ import {
 } from '@/lib/database/services/article-suggestion-persist';
 import { type MatchedTopicMeta } from '@/lib/database/services/article-suggestion-mappers';
 import { getFacts, hasAnyFacts } from '@/lib/database/services/fact-service';
+import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
 import {
   getActive as getActiveTopics,
   countActiveTopicsIncludingStaged,
@@ -35,6 +36,7 @@ import {
   HeadlineScope,
   type ArticleWithClusters,
   type PersonaQueryInput,
+  type PersonaQueryResult,
   type PersonaTopicInput,
 } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
@@ -184,6 +186,22 @@ export function splitAlreadyReadArticles(
   return { toPersist, readCount };
 }
 
+/** Settings row: the NORMALIZED text of the first topic the last foreground sync
+ *  did not fetch. Absent when that pass reached the end of the list. Local to the
+ *  device and not on the backup allowlist. */
+export const TOPIC_CURSOR_KEY = 'feed_sync_topic_cursor';
+
+/** How long the id fetch may launch batches: half the 3-minute `feed-sync` job,
+ *  so hydrate and scoring still get the other half. */
+export const TOPIC_FETCH_BUDGET_MS = 90_000;
+
+/** The same for the OS task, whose whole run has 60s. */
+export const BG_TOPIC_FETCH_BUDGET_MS = 20_000;
+
+/** How far into a foreground run hydrate may launch chunks. Past it the rest stay
+ *  new-to-device for a later sync, ahead of the job's 3-minute abort. */
+export const HYDRATE_STOP_AFTER_MS = 150_000;
+
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
   serverArticleIds: string[];
@@ -250,11 +268,15 @@ export interface HydratePersistEnqueueOptions {
    *  `enqueueUnscoredEligible`, which would drain with a foreground context. The
    *  run's own submit takes `eligibleIds` instead. */
   background?: boolean;
+  /** Launch no chunk at or after this wall-clock time. Absent means no limit
+   *  beyond the signal. */
+  stopAt?: number;
 }
 
 export async function stepFetchTopicIds(
   _userPersonaId: string,
   ctx: TaskContext,
+  opts: { background?: boolean } = {},
 ): Promise<FetchTopicIdsResult> {
   if (ctx.signal.aborted) throw createCancellationError();
 
@@ -293,7 +315,7 @@ export async function stepFetchTopicIds(
   if (activeTopics.length === 0 && (await countActiveTopicsIncludingStaged()) === 0) {
     return fetchTopicIdsLegacy(ctx);
   }
-  return fetchTopicIdsPersona(activeTopics, ctx);
+  return fetchTopicIdsPersona(activeTopics, ctx, opts.background ?? false);
 }
 
 /**
@@ -379,12 +401,89 @@ export function partitionStoryIds(
   return { storyIds, personaIds };
 }
 
+/**
+ * Ask for `query.topics` one batch at a time, each with its own retry, so a failed
+ * batch costs only itself. Stops at the time budget or at a batch that stays down
+ * and returns what arrived. The foreground run records the first topic not fetched
+ * and the next sync starts there; the sync after a finished pass starts at the top,
+ * so a topic the order moved past a cursor waits one pass at most.
+ *
+ * A background run always starts at the top and leaves the cursor alone: it serves
+ * followed stories first, and a foreground pass is the one that owes the whole list.
+ */
+async function fetchPersonaBatches(
+  query: PersonaQueryInput,
+  ctx: TaskContext,
+  background: boolean,
+): Promise<PersonaQueryResult> {
+  const startedAt = Date.now();
+  const budgetMs = background ? BG_TOPIC_FETCH_BUDGET_MS : TOPIC_FETCH_BUDGET_MS;
+  // A lost cursor costs a repeat of the pass, never the sync.
+  const cursor = background
+    ? null
+    : await getSetting(TOPIC_CURSOR_KEY).catch((err) => {
+        logger.warn('[feed-sync-steps] topic cursor unreadable', err);
+        return null;
+      });
+  const saveCursor = (write: () => Promise<void>): Promise<void> =>
+    write().catch((err) => logger.warn('[feed-sync-steps] topic cursor not saved', err));
+
+  const start = cursor
+    ? Math.max(0, query.topics.findIndex((t) => normalizeTopicText(t.text) === cursor))
+    : 0;
+  const topicResults: PersonaQueryResult['topicResults'] = [];
+  const headlineResults: PersonaQueryResult['headlineResults'] = [];
+
+  let at = start;
+  do {
+    if (at > start && Date.now() - startedAt >= budgetMs) break;
+    const batch: PersonaQueryInput = {
+      ...query,
+      topics: query.topics.slice(at, at + MAX_TOPICS_PER_BATCH),
+      // Query-level, not per-topic: repeating them would multiply the headline
+      // results. Every sync's first batch, a resumed one's too.
+      topHeadlines: at === start ? query.topHeadlines : undefined,
+    };
+    try {
+      const res = await withRetry(
+        () => ArticleService.getArticleIdsForPersona(batch),
+        ctx.signal,
+        RESOLVER_ERROR_RETRIES,
+      );
+      topicResults.push(...res.topicResults);
+      headlineResults.push(...res.headlineResults);
+    } catch (err) {
+      if (ctx.signal.aborted) throw err;
+      if (at === start) {
+        // Going back to the top keeps one bad batch from holding the headlines.
+        if (cursor) await saveCursor(() => deleteSetting(TOPIC_CURSOR_KEY));
+        throw err;
+      }
+      ctx.log(`topic batch at ${at} failed, keeping the ${at - start} topics that arrived`);
+      break;
+    }
+    at += MAX_TOPICS_PER_BATCH;
+  } while (at < query.topics.length);
+
+  if (!background) {
+    const next = query.topics[at];
+    if (next) {
+      ctx.log(`topic fetch stopped at ${at} of ${query.topics.length}`);
+      await saveCursor(() => setSetting(TOPIC_CURSOR_KEY, normalizeTopicText(next.text)));
+    } else if (cursor) {
+      await saveCursor(() => deleteSetting(TOPIC_CURSOR_KEY));
+    }
+  }
+  return { topicResults, headlineResults };
+}
+
 /** Persona-v3 privacy-lean retrieval: build the retrieval profile from weighted
  *  topics + locations, call articleIdsForPersona, and invert the per-topic
  *  matchMeta + headline results into the persist metadata. */
 async function fetchTopicIdsPersona(
   activeTopics: Awaited<ReturnType<typeof getActiveTopics>>,
   ctx: TaskContext,
+  background = false,
 ): Promise<FetchTopicIdsResult> {
   const [factWeights, locations, headlineDepths] = await Promise.all([
     getFactWeightById(),
@@ -437,8 +536,16 @@ async function fetchTopicIdsPersona(
   // match is the same article that story asked the server to match strictly.
   const freeTopicTexts = computeFreeTopicTexts(activeTopics);
 
+  // Followed topics lead, so a sync that runs short has served them. Any tracked
+  // row counts, a text shared with a fact included.
+  const followedTexts = new Set(
+    activeTopics.filter((t) => t.provenance === 'tracked').map((t) => normalizeTopicText(t.text)),
+  );
+  const isFollowed = (t: { text: string }) => followedTexts.has(normalizeTopicText(t.text));
+  const requestOrder = [...profile.topics.filter(isFollowed), ...profile.topics.filter((t) => !isFollowed(t))];
+
   const query: PersonaQueryInput = {
-    topics: profile.topics.map((t): PersonaTopicInput => {
+    topics: requestOrder.map((t): PersonaTopicInput => {
       // Written as a typed variable + conditional assignment, NOT a conditional
       // spread. A spread bypasses excess-property checking, so a typo'd key
       // would compile — and an input field the server does not know fails the
@@ -452,7 +559,7 @@ async function fetchTopicIdsPersona(
       // partition is (see computeFreeTopicTexts): the server answers keyed by
       // topic TEXT. A tracked topic and a fact-owned interest topic can
       // legitimately carry the same text; buildRetrievalProfile collapses such
-      // normalised duplicates into ONE entry before its cap, and
+      // normalised duplicates into ONE entry, and
       // computeFreeTopicTexts, over ALL active topics, guarantees the flag is
       // absent whenever any non-tracked topic shares the text. LOOSE always
       // wins a collision: tightening a followed story must never quietly
@@ -489,11 +596,7 @@ async function fetchTopicIdsPersona(
     `[feed-sync-steps] calling articleIdsForPersona: ${profile.topics.length} topics, ${profile.headlineScopes.length} headline scopes`,
   );
 
-  const res = await withRetry(
-    () => ArticleService.getArticleIdsForPersona(query),
-    ctx.signal,
-    RESOLVER_ERROR_RETRIES,
-  );
+  const res = await fetchPersonaBatches(query, ctx, background);
 
   const articleToTopicTexts = new Map<string, string[]>();
   const matchedTopics = new Map<string, MatchedTopicMeta[]>();
@@ -881,7 +984,7 @@ export async function stepHydratePersistEnqueue(
       if (stopLaunching) return;
       // Cooperative points: pause while offline, bail on abort.
       await opts.awaitResumeIfPaused();
-      if (ctx.signal.aborted) {
+      if (ctx.signal.aborted || (opts.stopAt !== undefined && Date.now() >= opts.stopAt)) {
         stopLaunching = true;
         return;
       }

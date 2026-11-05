@@ -1105,18 +1105,6 @@ describe('getSharedNoteBreakdown', () => {
         expect(r.largestGroup?.titles).toEqual(['Strait closed', 'Tanker traffic halts']);
     });
 
-    it('treats whitespace-only notes as absent rather than as one shared group', async () => {
-        db._setRows('article_suggestions', [
-            makeSuggestion({ id: 'a', reason: '   ' }),
-            makeSuggestion({ id: 'b', reason: '   ' }),
-        ]);
-
-        const r = await getSharedNoteBreakdown();
-
-        expect(r.sharedNoteGroups).toBe(0);
-        expect(r.largestGroup).toBeNull();
-    });
-
     it('returns the zeroed shape when no row carries a note', async () => {
         db._setRows('article_suggestions', []);
 

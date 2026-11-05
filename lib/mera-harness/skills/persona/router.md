@@ -61,7 +61,7 @@ ask "can you search?". Repeat the request and let the skill answer.
   move, a new job, a correction of the world.
 - **question**: the turn asks something. About the news, or about what Mera holds on them.
 - **about_mera**: the turn asks about Mera itself: how it works, how news is found, privacy, what
-  the servers keep, encryption, plans, limits, how much Mera reads for them each day, the licence.
+  servers keep, encryption, plans, limits, how much Mera reads a day, the licence, fact or follow.
 - **feed_tuning**: the turn asks to see less or none of something, to hide or mute it, for more or
   less from a named outlet or a country's outlets, or to show a hidden thing again.
 - **follow_story**: the message itself says follow, track, keep me updated, updates on or keep an

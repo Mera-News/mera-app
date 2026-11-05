@@ -27,7 +27,7 @@ export interface RetrievalTopicInput {
   highPriority: boolean;
   factWeight?: number | null; // owning fact.weight; null/undefined ⇒ 1.0
   factId?: string | null; // owning fact; a factless topic shares with no other
-  createdAtMs?: number; // topic age, for the cap's fair share
+  createdAtMs?: number; // topic age, for the fair order
 }
 
 export interface RetrievalLocationInput {
@@ -42,7 +42,6 @@ export interface BuildRetrievalProfileInput {
   locations: RetrievalLocationInput[];
   nowMs?: number; // default Date.now()
   headlineLimitPerScope?: number; // default DEFAULT_HEADLINE_LIMIT_PER_SCOPE
-  maxTopics?: number; // default 200
   /**
    * Per-scope depth overrides, keyed by scope key: an uppercase country code,
    * or 'GLOBAL'. A scope ABSENT from this map uses `headlineLimitPerScope` —
@@ -73,7 +72,7 @@ interface RetrievalProfileTopic {
   effectiveWeight: number;
 }
 
-/** What the cap ranks by. Stays on the device: never part of the output. */
+/** What the order ranks by. Stays on the device: never part of the output. */
 interface RankedTopic extends RetrievalProfileTopic {
   factKey: string;
   createdAtMs: number;
@@ -109,11 +108,9 @@ export const MAX_HEADLINE_DEPTH = 25;
 /** The scope key used for the GLOBAL scope in `headlineDepthByScope`. Country
  *  scopes key on their uppercase country code. */
 export const GLOBAL_SCOPE_KEY = 'GLOBAL';
-// Must stay ≤ the server's MAX_TOPICS_PER_REQUEST (default 200,
-// articles-for-topics.service.ts) — another agent is adding client-side
-// batching (mirroring getArticleIdsForTopics' MAX_TOPICS_PER_BATCH) so 200
-// remains safe even without a per-request cap change here.
-const DEFAULT_MAX_TOPICS = 200;
+/** Past this many distinct texts the list goes in `fairShareOrder`. Every text is
+ *  still sent; feed sync batches them. */
+const FAIR_ORDER_ABOVE = 200;
 const MAX_COUNTRY_SCOPES = 5;
 
 // Per-topic retrieval limit: limit = clamp(round(BASE + SPAN * wForLimit), MIN, MAX).
@@ -135,7 +132,7 @@ const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.m
 const LOCATION_ROLES_ALWAYS = new Set(['home', 'work', 'family', 'partner_family']);
 
 /**
- * The order the cap reads: heaviest first, then round by round across the facts
+ * The order of a long list: heaviest first, then round by round across the facts
  * tied at that weight, so a fact's Nth topic waits for every tied fact's (N-1)th.
  * Oldest first within a fact and within a round; a merged text is as old as its
  * oldest member. Facts weigh in by weight only, so a heavier fact still fills
@@ -169,10 +166,9 @@ function fairShareOrder(topics: RankedTopic[]): RankedTopic[] {
  * Topics: only active topics with effectiveWeight (w_eff) > 0 are kept —
  * negatives, zero-weight, suppressed/retired topics never appear here.
  *
- * Duplicate texts collapse BEFORE the `maxTopics` cap. One text can live on
- * several facts ("EU AI Act enforcement" on five), and the server answers per
- * TEXT, so each extra entry only took a slot and pushed a distinct topic past
- * the cap. Merge rule, by normalised text (lowercase, trimmed, whitespace
+ * Duplicate texts collapse. One text can live on several facts ("EU AI Act
+ * enforcement" on five), and the server answers per TEXT, so each extra entry
+ * would only cost a request slot. Merge rule, by normalised text (lowercase, trimmed, whitespace
  * collapsed), deterministic: the representative is the member first in the
  * sort (highest effectiveWeight, then text, then topicId), so its topicId,
  * text and effectiveWeight (the max) are what is sent, which is also the id
@@ -181,9 +177,10 @@ function fairShareOrder(topics: RankedTopic[]): RankedTopic[] {
  * field: feed-sync derives it per normalised text over ALL active topics
  * (loose wins), so a merged text carries the flag its members would have.
  *
- * Past the cap, slots are shared by `fairShareOrder`. At or under it the order
- * stays as it was: feed-sync's `serverArticleIds` order decides what the daily
- * cap clips, so a reader with room gets a byte-identical request.
+ * There is no count cap: every text with a positive weight is returned. A long
+ * list goes in `fairShareOrder`, because order decides who waits in a short sync
+ * and what the daily quota clips (feed-sync's `serverArticleIds` follows it), so
+ * one big fact cannot put a small one last.
  *
  * Headline scopes: one COUNTRY scope per distinct qualifying country code,
  * derived from locations with role home/work/family/partner_family (always) or
@@ -202,7 +199,6 @@ function fairShareOrder(topics: RankedTopic[]): RankedTopic[] {
 export function buildRetrievalProfile(input: BuildRetrievalProfileInput): RetrievalProfile {
   const nowMs = input.nowMs ?? Date.now();
   const headlineLimitPerScope = input.headlineLimitPerScope ?? DEFAULT_HEADLINE_LIMIT_PER_SCOPE;
-  const maxTopics = input.maxTopics ?? DEFAULT_MAX_TOPICS;
 
   // --- Topics ---------------------------------------------------------
   const kept: RankedTopic[] = [];
@@ -232,7 +228,7 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
     return a.topicId < b.topicId ? -1 : a.topicId > b.topicId ? 1 : 0;
   });
 
-  // Collapse duplicate texts (see the merge rule above), then cap.
+  // Collapse duplicate texts (see the merge rule above).
   const byText = new Map<string, RankedTopic>();
   const distinct: RankedTopic[] = [];
   for (const t of kept) {
@@ -248,7 +244,7 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
     distinct.push(entry);
   }
 
-  const topics = (distinct.length > maxTopics ? fairShareOrder(distinct).slice(0, maxTopics) : distinct).map(
+  const topics = (distinct.length > FAIR_ORDER_ABOVE ? fairShareOrder(distinct) : distinct).map(
     ({ topicId, text, limit, effectiveWeight }) => ({ topicId, text, limit, effectiveWeight }),
   );
 

@@ -1,0 +1,34 @@
+{
+  "id": "stake-impact-hi",
+  "cohort": "stake",
+  "note": "Add to my profile instead, then a typed answer: a real impact stages a fact, none gets one line and no second card.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "मुझे क्रिकेट बहुत पसंद है",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "मैं अपने बेटे की क्रिकेट अकादमी की फीस भरता हूँ और वह अगले साल रणजी ट्रायल देगा",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      },
+      "impactTap": true
+    }
+  ]
+}

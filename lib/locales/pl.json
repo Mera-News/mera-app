@@ -191,7 +191,7 @@
     "processingOffline": "Jesteś offline. Twoje historie pojawią się, gdy wrócisz do sieci.",
     "forYouTitle": "Dla Ciebie",
     "newStoriesBelowA11y": "Nowe historie poniżej",
-    "noFactsBody": "Stuknij przycisk Mera, aby powiedzieć, co śledzisz. Na tej podstawie powstanie Twój kanał.",
+    "noFactsBody": "Stuknij przycisk Mera i opowiedz o swoim życiu. Mera znajdzie wiadomości, które na Ciebie wpływają.",
     "noteWait": "Poczekaj, aż Mera napisze uzasadnienie.",
     "opened": "Otwarte",
     "statsSyncAnalysing_one": "{{formatted}} artykuł jest dla Ciebie analizowany,",
@@ -374,12 +374,12 @@
     "close": "Zamknij",
     "logoutFailedTitle": "Wylogowanie nieudane",
     "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie.",
-    "composerPlaceholder": "Co lubisz śledzić?",
+    "composerPlaceholder": "Opowiedz mi o swoim życiu",
     "factsCount_one": "{{count}} fakt o Tobie",
     "factsCount_few": "{{count}} fakty o Tobie",
     "factsCount_many": "{{count}} faktów o Tobie",
     "factsCount_other": "{{count}} faktów o Tobie",
-    "noFactsBody": "Mera korzysta z Twojego miasta, aby znaleźć wiadomości z miejsca, w którym mieszkasz. Więcej o sobie możesz powiedzieć w każdej chwili.",
+    "noFactsBody": "Mera korzysta z Twojego miasta, żeby znaleźć wiadomości, które na Ciebie wpływają. Możesz opowiedzieć więcej o swoim życiu w dowolnym momencie.",
     "noFactsTitle": "Gdzie mieszkasz?",
     "noNotifBody": "Nie dowiesz się, kiedy Twoje wiadomości są gotowe ani kiedy zmienia się historia, którą obserwujesz. Możesz to włączyć później w Ustawieniach.",
     "noNotifTitle": "Używać Mera bez powiadomień?",
@@ -571,7 +571,7 @@
     "helpModesVerify": "„Zweryfikuj poświadczenie” sprawdza, czy chmura działa na prawdziwym bezpiecznym sprzęcie i czy Twoje dane są dla niej szyfrowane."
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Publikacje, które czytasz” w zakładce Źródła oraz historia poszczególnych publikacji zostaną zresetowane do zera. Nic innego nie jest dotknięte i żadne dane na serwerze nie są zmieniane, bo serwery Mera nigdy ich nie miały.",
+    "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Wydawcy, które czytasz” w zakładce Źródła oraz historia dla każdego wydawcy wrócą do stanu pustego. Przeczytane historie mogą znowu pojawić się w Twoim Kanale. Nic więcej się nie zmienia, a dane na serwerach nie są ruszane, bo serwery Mery nigdy nie miały tych danych.",
     "deletedTitle": "Dane usunięte",
     "deletedDescription": "Wybrane dane zostały pomyślnie wyczyszczone.",
     "errorTitle": "Błąd",
@@ -753,7 +753,7 @@
     "replyUnfinished": "Nie ukończono"
   },
   "personaChat": {
-    "introMessage": "Cześć, jestem Mera.\n\nOpowiedz mi trochę o sobie, na przykład o swoim mieście lub okolicy, rodzaju pracy albo drużynie czy hobby, które śledzisz, a znajdę pasujące wiadomości.\n\nPodziel się tym, czym chcesz. To, co mi powiesz, zostaje na tym telefonie. Nikt poza Tobą nie ma dostępu do Twoich danych."
+    "introMessage": "Cześć, jestem Mera.\n\nOpowiedz mi o swoim życiu: gdzie mieszkasz, co robisz, na kim Ci zależy. Znajdę wiadomości, które na Ciebie wpływają. Wszystko, co jeszcze chcesz, możemy śledzić jako historie.\n\nPodziel się tyle, ile chcesz. To, co mi powiesz, zostaje na tym telefonie. Poza Tobą nikt nie ma dostępu do Twoich danych."
   },
   "floatingChat": {
     "close": "Zamknij",
@@ -795,7 +795,7 @@
     "factDeleteRemove": "Usuń",
     "factDeleteKeep": "Zachowaj",
     "factDeleteKept": "Nic nie zostało usunięte.",
-    "topicsSavedHint": "Tematy zapisane! Możesz dalej dodawać informacje albo dotknąć {{close}}, aby zacząć odkrywać.",
+    "topicsSavedHint": "Tematy zapisane! Opowiedz mi więcej o swoim życiu albo stuknij {{close}}, żeby zacząć odkrywać.",
     "guidelinesAfter": ". Jeśli wykryje nadużycie, wstrzyma Twoje konto, dopóki nie poprosisz o przegląd.",
     "guidelinesBefore": "Rozmawiasz z Mera, AI, a nie z człowiekiem. Mera stosuje się do ",
     "guidelinesLink": "zasad dotyczących treści",
@@ -818,7 +818,7 @@
     "chipDontWant": "Nie chcę tej sugestii",
     "chipDontWantMessage": "Nie chcę tej sugestii. Co powinniśmy zmienić, żebym przestał otrzymywać takie artykuły?",
     "chipMoreLikeThis": "Chcę więcej takich",
-    "chipMoreLikeThisMessage": "Chcę więcej artykułów takich jak ten. Co powinniśmy dodać do moich zainteresowań?",
+    "chipMoreLikeThisMessage": "Chcę więcej artykułów takich jak ten. Dodać coś do profilu, czy śledzić to jako historię?",
     "proposalTitle": "Proponowane zmiany",
     "expectedEffects": "Oczekiwany efekt",
     "proposalConfirm": "Tak, zrób to",
@@ -1101,7 +1101,7 @@
     "timelineLoadFailed": "Nie udało się wczytać tej historii. Pociągnij w dół, aby spróbować ponownie.",
     "deleteFailed": "Nie udało się przestać obserwować tej historii. Spróbuj ponownie.",
     "removeFailed": "Nie udało się usunąć tego artykułu z historii. Spróbuj ponownie.",
-    "emptyBodyMera": "Śledź rozwijającą się historię, a Mera będzie ją tutaj aktualizować. Stuknij przycisk Mera, aby jakąś śledzić.",
+    "emptyBodyMera": "Śledź, co chcesz: drużynę, artystę, długą historię. To za darmo i bez limitu, a śledzonych historii nie czyta żadna AI. Aby zacząć, stuknij przycisk Mera.",
     "followedSince": "Obserwowana od {{date}}",
     "learnAbout": "Dowiedz się o Historiach",
     "nextNote": "Mera dodaje tu nowe doniesienia w miarę rozwoju historii.",
@@ -1148,22 +1148,27 @@
     "wideNetBody": "Mera szuka szeroko, więc niektóre artykuły tutaj mogą być tylko luźno związane z historią. Wolimy pokazać Ci jeden artykuł za dużo, niż żebyś przegapił ważny.",
     "wideNetRemove": "Aby usunąć artykuł, otwórz jego menu i wybierz {{action}}.",
     "wideNetShowLess": "Pokaż mniej",
-    "composerPlaceholder": "Który temat mam dla Ciebie śledzić?",
+    "composerPlaceholder": "Czego mam pilnować?",
     "optionAsWritten": "{{phrase}}, tak jak wpisano",
-    "optionSpellingFixed": "{{phrase}}, z poprawioną pisownią"
+    "optionSpellingFixed": "{{phrase}}, z poprawioną pisownią",
+    "followCardLine": "Warto to śledzić. Zaznacz, co chcesz, a nowe artykuły trafią do Śledzonych historii.",
+    "addToProfile": "Dodaj do mojego profilu",
+    "impactQuestion": "Zanim dodam, jak to na Ciebie wpływa? AI Mery używa tego, żeby ocenić, jak bardzo artykuł jest dla Ciebie ważny. Jeśli nie dotyczy to Ciebie osobiście, polecam po prostu śledzić to jako historię.",
+    "addAnyway": "Dodaj mimo to",
+    "addedToProfile": "Dodano do Twojego profilu"
   },
   "whatsNew": {
     "gotIt": "Rozumiem",
     "starterTitle": "Starter na nasz koszt",
     "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
     "starterArticlesTitle": "Każdy pasujący artykuł",
-    "starterArticlesBody": "Każdy artykuł pasujący do Twoich zainteresowań trafia do Twojego strumienia. Mera czyta je, odsiewa szum i wyciąga to, co ważne.",
-    "starterInterestsTitle": "Wszystkie twoje zainteresowania",
-    "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
+    "starterArticlesBody": "Mera czyta każdy artykuł pasujący do Twojego profilu, odsiewa szum i pokazuje to, co na Ciebie wpływa.",
+    "starterInterestsTitle": "Cały Twój profil",
+    "starterInterestsBody": "Dodaj wszystko, co na Ciebie wpływa. Mera porównuje wiadomości z każdym faktem.",
     "starterChatTitle": "Czat i sprawdzanie faktów",
     "starterChatBody": "Zapytaj Merę o dowolną wiadomość i zestaw twierdzenia z opublikowanymi analizami faktów.",
     "starterStoriesTitle": "Śledzone historie",
-    "starterStoriesBody": "Śledź historię, a Mera będzie ją dla ciebie obserwować."
+    "starterStoriesBody": "Śledź, co chcesz, za darmo i bez limitu. Śledzonych historii nie czyta żadna AI."
   },
   "notificationCenter": {
     "title": "Powiadomienia",
@@ -1174,7 +1179,7 @@
     "settingsLink": "Ustawienia powiadomień",
     "help": {
       "title": "O powiadomieniach",
-      "body": "Mera zostawia tutaj notatki o Twoim kanale: gotową weryfikację faktów, o którą prosiłeś, codzienny przegląd kanału, wskazówki, jak uporządkować lub dostroić zainteresowania, i pytania od zespołu Mera. Notatki są przechowywane tylko na tym telefonie przez 90 dni, a kropka oznacza, że coś czeka na przeczytanie. Alerty o wiadomościach tutaj się nie pojawiają. Ich godziny ustawisz w Ustawieniach, w sekcji Powiadomienia."
+      "body": "Mera zostawia tu notatki o Twoim Kanale: gotowe sprawdzenie faktów, o które prosiłeś, codzienne dostrojenie Kanału, wskazówki, jak uporządkować lub dopracować profil, oraz pytania od zespołu Mery. Są przechowywane tylko na tym telefonie przez 90 dni, a kropka oznacza nieprzeczytane. Alerty o wiadomościach tu się nie pojawiają. Ich godziny ustawiasz w Ustawieniach, w sekcji Powiadomienia."
     },
     "ageNow": "teraz",
     "ageMinutes": "{{n}} min",
@@ -1205,7 +1210,7 @@
   },
   "personaAudit": {
     "title": "Zmiany w Twoim profilu",
-    "empty": "Brak zmian. Gdy Mera dostosuje Twoje zainteresowania, każda zmiana pojawi się tutaj.",
+    "empty": "Na razie brak zmian. Gdy Mera dostraja Twój profil, każda zmiana pojawi się tutaj.",
     "revertedBadge": "Cofnięto",
     "revertConfirmTitle": "Cofnąć tę zmianę?",
     "revertConfirmBody": "Twój profil wróci do stanu sprzed tej zmiany.",
@@ -1419,7 +1424,7 @@
     "statusDismissed": "Odrzucono"
   },
   "hygiene": {
-    "notificationTitle": "Uporządkować Twoje zainteresowania?",
+    "notificationTitle": "Uporządkować Twój profil?",
     "notificationBody_one": "Mera znalazła {{count}} element do uporządkowania w Twoim profilu.",
     "notificationBody_few": "Mera znalazła {{count}} elementy do uporządkowania w Twoim profilu.",
     "notificationBody_many": "Mera znalazła {{count}} elementów do uporządkowania w Twoim profilu.",
@@ -1427,14 +1432,14 @@
     "reviewChip": "Przejrzyj",
     "accept": "Akceptuj",
     "reject": "Odrzuć",
-    "effectTooBroad": "Obniża wagę tego zainteresowania, aby przyciągało mniej niezwiązanych z tematem wiadomości.",
+    "effectTooBroad": "Obniża wagę tego faktu, żeby przyciągał mniej niepasujących historii.",
     "effectStaleTopic": "Wygasza ten nieaktywny temat.",
     "effectStaleFact": "Usuwa ten fakt: żaden z jego tematów nie jest już aktywny.",
     "appliedTitle": "Zastosowano porządki",
     "appliedBody": "Twój profil został uporządkowany. Sprawdź dziennik zmian, aby to przejrzeć.",
     "applyFailedTitle": "Nie udało się zastosować porządków",
     "applyFailedBody": "Spróbuj ponownie później.",
-    "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego zainteresowania.",
+    "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego faktu.",
     "effectLocationConflict": "Zachowuje nowsze miejsce i usuwa starsze.",
     "keepBoth": "Zachowaj oba",
     "merge": "Połącz",
@@ -1454,8 +1459,19 @@
       "incoherentTopics_one": "{{count}} temat pod {{fact}} nie pasuje do niego: {{topics}}",
       "incoherentTopics_few": "{{count}} tematy pod {{fact}} nie pasują do niego: {{topics}}",
       "incoherentTopics_many": "{{count}} tematów pod {{fact}} nie pasuje do niego: {{topics}}",
-      "incoherentTopics_other": "{{count}} tematów pod {{fact}} nie pasuje do niego: {{topics}}"
-    }
+      "incoherentTopics_other": "{{count}} tematów pod {{fact}} nie pasuje do niego: {{topics}}",
+      "followInsteadFlood": "„{{topic}}” zapycha Twój Kanał. Śledzić to jako historię?",
+      "followInsteadNoStake": "O temacie „{{topic}}” jest sporo wiadomości, ale żadna nic dla Ciebie nie zmienia, więc Twój Kanał je pomija. Śledzić jako historię, żeby widzieć wszystko?"
+    },
+    "titleFollowInstead": "Historia do śledzenia",
+    "effectFollowInstead": "Śledzone historie są za darmo i żadna AI ich nie czyta.",
+    "keepFact": "Zostaw jako fakt",
+    "followInsteadTopicMoves": "Nowe artykuły o temacie „{{topic}}” trafią do Śledzonych historii zamiast do Twojego Kanału.",
+    "followInsteadFactGoes": "„{{fact}}” zniknie z Twojego profilu i nie da się tego cofnąć. Nowe artykuły o temacie „{{topic}}” trafią do Śledzonych historii.",
+    "followInsteadDoneTitle": "Śledzisz: {{topic}}",
+    "followInsteadDoneBody": "Nowe artykuły trafiają do Śledzonych historii.",
+    "followInsteadNotificationTitle": "Historia do śledzenia",
+    "followInsteadNotificationBody": "Mera znalazła coś, co pasuje do Śledzonych historii."
   },
   "locations": {
     "title": "Miejsca",
@@ -1534,7 +1550,7 @@
   },
   "facts": {
     "screenTitle": "Fakty",
-    "screenSubtitle": "Mera wybiera Twoje wiadomości na podstawie tych. Każdy pokazuje, ile ma tematów. Stuknij, aby zobaczyć je i ich historie.",
+    "screenSubtitle": "Twój profil to to, co na Ciebie wpływa. Resztę po prostu śledź. Stuknij fakt, żeby zobaczyć jego tematy i historie.",
     "addFact": "Dodaj fakt",
     "page": {
       "edit": "Edytuj",
@@ -1543,7 +1559,7 @@
       "impactfulHint": "Historie, które Mera wybrała dla Ciebie dzięki temu faktowi.",
       "menuA11y": "Edytuj lub usuń ten fakt",
       "new": "Nowe",
-      "nextInterest": "Następne zainteresowanie",
+      "nextInterest": "Następny fakt",
       "reach_one": "{{count}} historia w ciągu ostatnich 48 godzin",
       "reach_few": "{{count}} historie w ciągu ostatnich 48 godzin",
       "reach_many": "{{count}} historii w ciągu ostatnich 48 godzin",
@@ -1655,10 +1671,7 @@
     "meraButtonHint": "Wybierz kolor pływającego przycisku Mera. Pozostaje taki sam w jasnym i ciemnym trybie."
   },
   "freeTier": {
-    "seePlans": "Pokaż plany",
-    "storiesNotice": "Historie, które już śledzisz, zachowują wszystko, co zebrały. Aby śledzić nową, potrzebujesz aktywnego planu.",
-    "trackBody": "Historie, które już śledzisz, zachowują wszystko, co zebrały. Aby śledzić nową, potrzebujesz aktywnego planu.",
-    "trackTitle": "Śledzenie historii wymaga planu"
+    "seePlans": "Pokaż plany"
   },
   "factCheck": {
     "actionA11y": "Wyszukaj opublikowane weryfikacje faktów dla tego artykułu",
@@ -1821,11 +1834,11 @@
     "chapters": {
       "facts": {
         "title": "Twoje fakty kształtują Twój kanał",
-        "subtitle": "Powiedz Mera o swoim życiu. To zrobi resztę.",
+        "subtitle": "Twój profil to to, co na Ciebie wpływa. Resztę po prostu śledź.",
         "slides": {
           "a-fact-is": {
             "headline": "Fakt to jedna prawdziwa linia",
-            "body": "\"Jestem pielęgniarką.\" \"Mieszkam w Utrechcie.\" \"Mam małe dziecko.\" Krótko, prawdziwie, o Twoim życiu. To cała idea.",
+            "body": "Profil to to, co na Ciebie wpływa, więc fakt to jedno prawdziwe zdanie o Twoim życiu. „Jestem pielęgniarką.” „Mieszkam w Utrechcie.” „Mam małe dziecko.” Krótko i prawdziwie. O to chodzi.",
             "ask": "Co liczy się za fakt w Mera?"
           },
           "where-from": {
@@ -1839,7 +1852,7 @@
           },
           "to-topics": {
             "headline": "Fakty stają się rzeczami do szukania",
-            "body": "\"Jestem pielęgniarką\" zamienia się w kilka fraz wyszukiwania: obsada szpitala, wynagrodzenie pielęgniarki, polityka zdrowia. Jeden fakt rozprzestrzenia się na garstę. Te frazy to to, co wychodzą znaleźć wiadomości."
+            "body": "„Jestem pielęgniarką” zamienia się w frazy wyszukiwania: obsada szpitali, zarobki pielęgniarek, polityka zdrowotna. Te frazy idą szukać wiadomości. Potem AI Mery porównuje to, co wróci, z Twoimi faktami i ocenia wpływ na Ciebie."
           },
           "sort-them": {
             "headline": "Który z nich to fakt?",
@@ -1863,12 +1876,12 @@
             "ask": "Jak zmienić, jak ważny jest jeden z moich faktów?"
           },
           "your-profile": {
-            "body": "Wszystko, czego Mera używa do wyboru wiadomości, w jednym miejscu. Stuknij każde.",
+            "body": "Wszystko, czego Mera używa, żeby znaleźć to, co na Ciebie wpływa, w jednym miejscu. Stuknij każdą pozycję.",
             "headline": "Twój profil",
             "reveal": {
               "facts": {
                 "label": "Fakty",
-                "text": "Prawdziwe zdania o Twoim życiu. Każde znajduje własne tematy."
+                "text": "Prawdziwe zdania o tym, co na Ciebie wpływa. Każde znajduje własne tematy."
               },
               "places": {
                 "label": "Miejsca",
@@ -1881,6 +1894,20 @@
               "sources": {
                 "label": "Źródła",
                 "text": "Wydawcy, których preferujesz, ci, których ukrywasz w swoim Strumieniu, i ci, za których płacisz."
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "Profil to to, co na Ciebie wpływa. Resztę po prostu śledź.",
+            "headline": "Profil czy historia?",
+            "reveal": {
+              "follow": {
+                "label": "Lubię Formula 1",
+                "text": "To na Ciebie nie wpływa, więc po prostu śledź. Śledzenie jest za darmo i bez limitu, a śledzonych historii nie czyta żadna AI."
+              },
+              "profile": {
+                "label": "Jadę do Monaco",
+                "text": "To na Ciebie wpływa, więc trafia do profilu. AI Mery porównuje do tego wiadomości i ocenia, jak wpłynie to na Twoją podróż."
               }
             }
           }
@@ -1948,17 +1975,14 @@
                 "label": "Strumień",
                 "text": "Przycisk Mera porusza się, gdy Mera czyta, a poza tym stoi w miejscu. To jedyny znak, że coś jest pobierane."
               },
-              "dashboard": {
-                "label": "Zainteresowania",
-                "text": "Ten sam dzień posortowany według zainteresowań, z sekcją dla każdej rzeczy, o której powiedziałeś Mera, i nieprzeczytanymi historiami na początku. Sekcje zmieniają kolejność, gdy opuścisz stronę, albo co 10 minut."
-              },
+              "dashboard": {},
               "continuous": {
                 "label": "Kanał ciągły",
                 "text": "Ikona Mera na górze zmienia kolor, gdy Mera czyta, a resztę czasu stoi w miejscu. To jedyny znak, że coś jest pobierane."
               },
               "sectioned": {
                 "label": "Kanał z sekcjami",
-                "text": "Te same historie pogrupowane według faktu, jedna sekcja dla każdej rzeczy, którą powiedziałeś Mera, z nieprzeczytanymi na początku."
+                "text": "Te same wiadomości pogrupowane według faktów, jedna sekcja dla każdego faktu w Twoim profilu, z nieprzeczytanymi na początku."
               }
             }
           }
@@ -2013,7 +2037,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "Część o Tobie jest przechowywana tutaj",
-            "body": "Twoje fakty, Twoje zainteresowania, Twoje miejsca i wszystko, co przeczytałeś, znajdują się na tym telefonie. Serwery Mera nie przechowują kopii, dlatego wylogowanie usuwa Twój profil. Na nowym telefonie Kopia zapasowa może go przywrócić."
+            "body": "Twoje fakty, historie, które śledzisz, Twoje miejsca i wszystko, co przeczytałeś, zostają na tym telefonie. Serwery Mery nie mają kopii, dlatego wylogowanie kasuje Twój profil. Na nowym telefonie Kopia zapasowa może go przywrócić."
           },
           "what-leaves": {
             "headline": "Co faktycznie wychodzi",
@@ -2049,8 +2073,8 @@
         "subtitle": "Zachowaj jedną historię w widoku, gdy się rozprzestrzenia.",
         "slides": {
           "what-it-is": {
-            "headline": "Dla historii, które nie są skończone",
-            "body": "Wybory, proces, burza, przejęcie. Śledź to raz i każdy nowy rozwój zbiera się w jednym miejscu zamiast przybywa rozrzucone przez kanał ponad trzy tygodnie."
+            "headline": "Dla wszystkiego innego, co lubisz",
+            "body": "Drużyna, artysta, wybory, burza. Śledź raz, a nowe artykuły zbiorą się w jednym miejscu. Śledzenie jest za darmo i bez limitu, a śledzonych historii nie czyta żadna AI."
           },
           "two-ways-in": {
             "headline": "Dwa sposoby na rozpoczęcie",
@@ -2413,7 +2437,7 @@
             "steps": {
               "0": "Mówisz kilka prawdziwych rzeczy o swoim życiu.",
               "1": "Mera zamienia je w rzeczy do szukania.",
-              "2": "Czyta dzisiejszą wiadomość i przechowuje to, co pasuje."
+              "2": "Czyta wiadomości dnia i zostawia to, co na Ciebie wpływa."
             }
           },
           "matching": {
@@ -2426,7 +2450,7 @@
             "reveal": {
               "about-you": {
                 "label": "Co o Tobie wie",
-                "text": "Twoje fakty, Twoje zainteresowania i to, co przeczytałeś, są zapisane na tym telefonie i tam pozostają. Serwery Mera nie przechowują ich kopii."
+                "text": "Twoje fakty, historie, które śledzisz, i to, co przeczytałeś, zapisują się na tym telefonie i tu zostają. Serwery Mery nie mają ich kopii."
               },
               "what-leaves": {
                 "label": "Co faktycznie wychodzi",
@@ -2696,7 +2720,7 @@
   "skillPhrase": {
     "residence": "miejsce, w którym mieszkasz",
     "work": "twoją pracę",
-    "interests": "twoje zainteresowania",
+    "interests": "to, co lubisz",
     "origin": "skąd pochodzisz",
     "family": "twoją rodzinę",
     "feedTuning": "twój Kanał",
@@ -2902,10 +2926,10 @@
     "tutorials1": "Zobacz w kilku krótkich slajdach, jak działa Mera"
   },
   "interests": {
-    "emptyTitle": "Mera jeszcze nie zna Twoich zainteresowań",
-    "learnAbout": "Dowiedz się, jak dodawać fakty",
-    "backToInterests": "Wróć do Zainteresowań",
-    "findingStories": "Mera szuka historii dla tego zainteresowania. Pierwsze pojawią się tutaj za kilka sekund."
+    "emptyTitle": "Mera jeszcze o Tobie nic nie wie",
+    "learnAbout": "Dowiedz się, co trafia do Twojego profilu",
+    "backToInterests": "Wróć do Kanału",
+    "findingStories": "Mera szuka historii dla tego faktu. Pierwsze pojawią się tutaj za kilka sekund."
   },
   "world": {
     "gathering": "Zbieramy dzisiejsze wiadomości z kraju: {{country}}. Pierwsze pojawią się za kilka sekund.",
@@ -3072,7 +3096,7 @@
       "places": "Miejsca",
       "sources": "Źródła",
       "viewAll": "Zobacz wszystkie: {{count}}",
-      "factsEmpty": "Na razie nic. Powiedz Merze, co śledzisz, a pojawi się tutaj.",
+      "factsEmpty": "Na razie pusto. Opowiedz Merze o swoim życiu, a to się tu pojawi.",
       "placesEmpty": "Brak miejsc",
       "addCity": "Dodaj miasto",
       "sourcesEmpty": "Nic nie zmieniono. Mera traktuje każde źródło tak samo.",
@@ -3165,8 +3189,8 @@
     },
     "askNews": "Zapytaj o cokolwiek z wiadomości",
     "interest": {
-      "change": "Zmień to zainteresowanie",
-      "remove": "Usuń to zainteresowanie"
+      "change": "Zmień ten fakt",
+      "remove": "Usuń ten fakt"
     },
     "stories": {
       "follow": "Śledź historię",
@@ -3189,7 +3213,7 @@
     },
     "sources": {
       "whoBehind": "Zapytaj, kto stoi za wydawcą",
-      "whatFollow": "Powiedz Merze, co śledzisz"
+      "whatFollow": "Powiedz Merze, co lubisz czytać"
     },
     "settings": {
       "whatCanYouDo": "Co potrafisz?"
@@ -3201,19 +3225,18 @@
     "moveBottomLeft": "Przesuń w lewy dolny róg",
     "moveBottomRight": "Przesuń w prawy dolny róg",
     "answerReady": "Mera, odpowiedź jest gotowa",
-    "tooltipNew": "Powiedz Merze, co lubisz",
+    "tooltipNew": "Opowiedz Merze o sobie",
     "working": "Mera pracuje nad Twoją prośbą"
   },
   "meraIntro": {
-    "feed": "Jesteś w swoim Kanale. Powiedz mi, o czym chcesz czytać więcej, albo zapytaj mnie o cokolwiek z wiadomości.",
-    "interests": "To Twoje zainteresowania. Powiedz mi o nowym albo o takim, które chcesz zmienić lub usunąć.",
-    "interest": "Ta strona śledzi jedno z Twoich zainteresowań. Możesz je tutaj zmienić lub usunąć.",
+    "feed": "Jesteś w swoim Kanale. Powiedz, co na Ciebie wpływa, nazwij coś do śledzenia albo zapytaj o cokolwiek w wiadomościach.",
+    "interest": "Ta strona pokazuje jeden z Twoich faktów. Możesz go tu zmienić albo usunąć.",
     "world": "Zapytaj mnie o nagłówek albo powiedz, z jakiego kraju chcesz wiadomości.",
     "checks": "Powiedz mi, jakie twierdzenie widziałeś, a poszukam go w sieci.",
     "checksNoWeb": "Wyszukiwanie w sieci w czacie jest wyłączone, więc teraz nie mogę sprawdzać twierdzeń. Możesz je włączyć w Ustawieniach.",
-    "library": "Zapytaj mnie o cokolwiek z wiadomości albo powiedz, co lubisz czytać.",
+    "library": "Zapytaj o cokolwiek z wiadomości albo powiedz, co chcesz śledzić.",
     "facts": "Oglądasz swoje fakty. Co chcesz zmienić?",
-    "sources": "Zapytaj mnie o wydawcę albo powiedz, co śledzisz.",
+    "sources": "Zapytaj o wydawcę albo powiedz, co chcesz śledzić.",
     "settings": "Zapytaj mnie, co potrafię, albo jak Mera obchodzi się z Twoimi danymi.",
     "onDevice": {
       "feed": "Jesteś w swoim Kanale. Powiedz mi, co lubisz śledzić, a dopasuję to, co się tu pojawia.",
@@ -3223,8 +3246,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "Zmień moje zainteresowanie „{{statement}}” na ",
-    "removeInterest": "Usuń moje zainteresowanie „{{statement}}”",
+    "changeInterest": "Zmień mój fakt „{{statement}}” na ",
+    "removeInterest": "Usuń mój fakt „{{statement}}”",
     "followStory": "Informuj mnie na bieżąco o "
   },
   "appLock": {

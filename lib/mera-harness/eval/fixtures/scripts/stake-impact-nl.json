@@ -1,0 +1,34 @@
+{
+  "id": "stake-impact-nl",
+  "cohort": "stake",
+  "note": "Add to my profile instead, then a typed answer: a real impact stages a fact, none gets one line and no second card.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Dutch"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Ik ben gek op wielrennen",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "Ik rijd in juli de Amstel Gold Race",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      },
+      "impactTap": true
+    }
+  ]
+}

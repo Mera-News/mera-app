@@ -279,6 +279,7 @@ class FeedSyncMachine {
     runId: number,
     bg?: BackgroundSyncHooks,
   ): Promise<void> {
+    const runStartedAt = Date.now();
     logger.debug(`[FeedSyncMachine] run start${bg ? ' (background)' : ''}`);
     coldstartTimeline.mark(bg ? 'bg-feed-sync-start' : 'feed-sync-start');
     // Status publishes paint the feed header; a background run has no header
@@ -357,7 +358,7 @@ class FeedSyncMachine {
       if (ctx.signal.aborted) { this._forceIdle(runId); ctx.markNoOp(); return; }
 
       const [topicResult, recentCount] = await Promise.all([
-        steps.stepFetchTopicIds(personaId, ctx),
+        steps.stepFetchTopicIds(personaId, ctx, { background: bg !== undefined }),
         ArticleService.getRecentArticleCount(),
       ]);
       coldstartTimeline.mark(
@@ -482,6 +483,8 @@ class FeedSyncMachine {
         // drains with a foreground context. Its own submit follows below.
         suppressEnqueue: suppressScoring || bg !== undefined,
         background: bg !== undefined,
+        // The OS task has its own deadline and fetch budget.
+        stopAt: bg ? undefined : runStartedAt + steps.HYDRATE_STOP_AFTER_MS,
       });
       useForYouStore.getState().resetHydrationProgress();
       // "Updated just now" means NEW ARTICLES arrived, not "a sync ran". The

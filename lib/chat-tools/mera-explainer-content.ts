@@ -73,6 +73,8 @@ export const MERA_EXPLAINER_SECTIONS: Readonly<Record<MeraExplainerTopicId, stri
 
 Every story Mera shows carries a plain-language "Why this matters to you" explanation, written against what Mera knows about your life: a policy change in your country, an emergency near people you love, a regulation shift in your industry. That is the difference from a trending list. Trending tells you what is loud. Mera tells you what reaches you.
 
+Your profile is for what affects you. Everything else, just follow. Mera reads the news against your profile to work out the impact on you. Anything else you like is a followed story, which is free and unlimited, and no AI reads followed stories.
+
 Mera does not summarise or rewrite articles. You get the headline and Mera's reasoning for why it matters; the reading itself happens at the original publisher, through a direct link. That is deliberate. Rather than replacing journalism, Mera routes attention and traffic back to the newsrooms that produced it, and the readers who arrive came because the story genuinely mattered to them.
 
 In cloud chat, Mera can search the web while Web search in chat is on in Mera Protocol settings, and it answers from the search results. It does not open a page or read an article. Publishers own their articles, so Mera works from search results and the headline and short description publishers put in their feeds, and links out to the publisher rather than reproducing the article. Chat that runs on your phone has no web search.
@@ -103,7 +105,7 @@ One exception, stated explicitly: if the in-app assistant's safety guardrail blo
 
 The topic phrases you send ARE stored, and it matters exactly how. They go into a shared cache keyed by the topic text itself: one entry per distinct phrase, drawn on by every reader, carrying no user identifier and no owner field. Any phrase nobody has requested for 14 days is deleted. No database anywhere associates a user with a topic. That is not a policy promise about a table Mera chooses not to query; the linking record is not created in the first place, so it cannot be produced in a breach or under legal compulsion.
 
-Not stored on Mera's servers at all: your personal facts, interest profiles, reading history, article-open or dismissal history, which articles became notifications, the reasoning behind them, AI inputs and outputs, location data, contacts, or any browsing outside Mera.
+Not stored on Mera's servers at all: your personal facts, your profile, reading history, article-open or dismissal history, which articles became notifications, the reasoning behind them, AI inputs and outputs, location data, contacts, or any browsing outside Mera.
 
 One retention window is still unbounded and is being worked on: submitted unblock transcripts. The daily reading record is kept 90 days and holds no content, article text, topics or chat, and an account that stays inactive for 12 months is deleted unless it is on a paid plan. Request timestamps are kept 90 days, crash logs 30.`,
 
@@ -143,11 +145,13 @@ None of that is finished. It is described in the future tense on purpose.`,
   // ---------------------------------------------------------------------------
   plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not expire. Starter includes a daily amount of cloud reading, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
 
-Every article that matches your interests reaches your Feed, on every plan. Mera reads them, sets aside the noise and lifts what matters. What a plan sets is how much Mera reads for you in the cloud each day.{{PLAN_SIZES}} Individual starts with a free trial for new subscribers, run by the App Store or Google Play. Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
+On every plan, Mera reads every article that matches your profile, sets aside the noise and shows you what affects you. What a plan sets is how much Mera reads for you in the cloud each day.{{PLAN_SIZES}} Individual starts with a free trial for new subscribers, run by the App Store or Google Play. Settings in the app shows how much of today's cloud reading is used; when Mera reads on the phone instead, it shows that reading is unlimited.
 
 Why megabytes and not articles: Mera reads for you through end-to-end encryption, so it cannot see which articles it reads or how many. What it can measure is how much encrypted text it was sent to read, so that is what a plan counts.
 
 On supported phones, reading on the phone itself is unlimited on every plan and is never counted. Only reading in the cloud is.
+
+Followed stories use no reading, on any plan. No AI reads followed stories, so following is free and unlimited and never counts against the day's cloud reading. An article that also matches a fact in your profile is read because of that fact, and that reading counts as usual.
 
 The day's cloud reading resets at midnight UTC, shown in your own time in the app. When it is used up, articles still reach your Feed, marked as not read by Mera yet, and Mera reads again after the reset.
 
@@ -157,7 +161,20 @@ Every plan includes the complete Mera experience. There is no feature held back 
 
 Separately from the plan, you control interruptions: up to 24 alert opportunities per day at times you choose, with life-safety emergencies as the one exception that always breaks through.
 
-A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
+Mera is a project funded by its readers: paid plans are what keep it going. Individual and Professional are billed monthly or yearly, and the free trial is on monthly Individual only. A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
+
+  // ---------------------------------------------------------------------------
+  profile_vs_stories: `Your profile is for what affects you. Everything else, just follow.
+
+A fact is for something that touches your own life: where you live, your work, your money, your health, your family, a trip you are taking. Mera's AI reads the news against your profile to work out the impact on you, so "I'm going to Monaco" or "I work for a Formula 1 team" belongs there. Stories that change something for you reach your Feed, each with a reason.
+
+Everything else is better followed as a story: a sport, a team, an artist, a game, an election, anything you simply like or want to keep up with. "I like Formula 1" says nothing the news could change for you, so there is no impact to work out. New articles land in Followed stories.
+
+Following is free and unlimited on every plan, and no AI reads followed stories, so they use none of your daily cloud reading. There is one overlap: an article that also matches a fact is read because of that fact, and that reading counts. When you ask to follow something in chat, the AI works with your own words to suggest what to follow and to name the story. It does not read the articles.
+
+This is a recommendation, never a rule. You can add anything to your profile. When you tell Mera you like something, it offers stories to follow, with Add to my profile instead one tap away. A fact with nothing at stake uses daily reading and brings little to your Feed, because the Feed shows what changes something for you.
+
+Chat that runs on your phone keeps what you like as a fact. To follow something there, tap the Mera button on Followed stories.`,
 
   // ---------------------------------------------------------------------------
   known_gaps: `Mera would rather you heard these from Mera than found them yourself. All of these are true right now.

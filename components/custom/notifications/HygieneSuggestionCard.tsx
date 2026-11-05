@@ -3,6 +3,8 @@
 // its Profile row are gone). Each card says what the suggestion is and what
 // accepting does; nothing changes until the reader chooses. A duplicate offers
 // Merge (behind a confirm: it deletes the second fact for good) or Keep both.
+// A follow_instead offer is the same card with its own words, and it also sits
+// in the Feed's empty state, because that reader never reaches this page.
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 import { useHubFacts } from '@/components/custom/you/use-hub-data';
@@ -10,6 +12,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import {
     acceptProposal,
+    followInsteadTakesFact,
     getPendingProposals,
     rejectProposal,
     subscribeHygieneChange,
@@ -18,7 +21,11 @@ import { showDialog } from '@/lib/dialog';
 import { hapticLight } from '@/lib/haptics';
 import { showCloudOnlyNotice } from '@/lib/llm/cloud-only-notice';
 import logger from '@/lib/logger';
-import type { HygieneProposal, HygieneProposalKind } from '@/lib/news-harness/persona-management/fact-hygiene';
+import {
+    isNoStakeOffer,
+    type HygieneProposal,
+    type HygieneProposalKind,
+} from '@/lib/news-harness/persona-management/fact-hygiene';
 import { useColors } from '@/lib/theme/tokens';
 import { toastManager } from '@/lib/toast-manager';
 import type { TFunction } from 'i18next';
@@ -39,6 +46,8 @@ function titleForKind(kind: HygieneProposalKind, t: TFunction): string {
             return t('hygiene.titleStaleFact');
         case 'location_conflict':
             return t('hygiene.titleLocationConflict');
+        case 'follow_instead':
+            return t('hygiene.titleFollowInstead');
         default:
             return t('hygiene.titleIncoherentTopics');
     }
@@ -60,6 +69,8 @@ function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
             return t('hygiene.effectIncoherentTopics');
         case 'location_conflict':
             return t('hygiene.effectLocationConflict');
+        case 'follow_instead':
+            return t('hygiene.effectFollowInstead');
         default:
             return '';
     }
@@ -89,6 +100,10 @@ function summaryFor(item: HygieneProposal, t: TFunction): string | null {
                 count: subject.topics.length,
                 fact,
                 topics: subject.topics.join(', '),
+            });
+        case 'follow_instead':
+            return t(isNoStakeOffer(item) ? 'hygiene.summary.followInsteadNoStake' : 'hygiene.summary.followInsteadFlood', {
+                topic: subject.topics[0] ?? '',
             });
         default:
             return null;
@@ -130,6 +145,22 @@ const ActionButton: React.FC<{
     );
 };
 
+/** The confirm before a follow_instead accept. A lost read says the fact goes,
+ *  the claim that cannot surprise anyone. */
+async function confirmFollowInstead(proposal: HygieneProposal, t: TFunction): Promise<boolean> {
+    const takesFact = await followInsteadTakesFact(proposal).catch(() => true);
+    const topic = proposal.subject.topics[0] ?? '';
+    return showDialog({
+        title: t('hygiene.titleFollowInstead'),
+        body: takesFact
+            ? t('hygiene.followInsteadFactGoes', { fact: proposal.subject.facts[0] ?? '', topic })
+            : t('hygiene.followInsteadTopicMoves', { topic }),
+        confirmLabel: t('trackedStories.follow'),
+        cancelLabel: t('common.cancel'),
+        destructive: takesFact,
+    });
+}
+
 /** The pending suggestions, live, with Accept and Dismiss. */
 export function useHygieneSuggestions() {
     const { t } = useTranslation();
@@ -162,6 +193,7 @@ export function useHygieneSuggestions() {
                 });
                 if (!ok) return;
             }
+            if (proposal.kind === 'follow_instead' && !(await confirmFollowInstead(proposal, t))) return;
             setActingId(proposal.id);
             void hapticLight();
             // Optimistic: drop the card immediately.
@@ -174,6 +206,11 @@ export function useHygieneSuggestions() {
                     void load();
                 } else if (res.floorHeld) {
                     // Nothing was cleaned and nothing failed: the proposal is settled, quietly.
+                } else if (res.applied && res.ok && proposal.kind === 'follow_instead') {
+                    toastManager.showSuccess(
+                        t('hygiene.followInsteadDoneTitle', { topic: proposal.subject.topics[0] ?? '' }),
+                        t('hygiene.followInsteadDoneBody'),
+                    );
                 } else if (res.applied && res.ok) {
                     toastManager.showSuccess(t('hygiene.appliedTitle'), t('hygiene.appliedBody'));
                 } else {
@@ -220,10 +257,13 @@ export const HygieneSuggestionCard: React.FC<{
     readonly busy: boolean;
     readonly onAccept: (item: HygieneProposal) => void;
     readonly onDismiss: (item: HygieneProposal) => void;
-}> = ({ item, busy, onAccept, onDismiss }) => {
+    /** False inside a list that already keeps the page's side inset. */
+    readonly inset?: boolean;
+}> = ({ item, busy, onAccept, onDismiss, inset = true }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const duplicate = item.kind === 'duplicate_facts';
+    const follow = item.kind === 'follow_instead';
     const facts = useHubFacts();
     // A proposal saved before `subject` existed has no summary: name its facts
     // from the table instead, so Accept is never blind.
@@ -236,7 +276,7 @@ export const HygieneSuggestionCard: React.FC<{
         <View
             testID={`hygiene-card-${item.id}`}
             style={{
-                marginHorizontal: PAGE_SIDE_INSET,
+                marginHorizontal: inset ? PAGE_SIDE_INSET : 0,
                 marginBottom: 12,
                 padding: 16,
                 gap: 8,
@@ -256,18 +296,34 @@ export const HygieneSuggestionCard: React.FC<{
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
                 <ActionButton
                     testID={`hygiene-accept-${item.id}`}
-                    label={duplicate ? t('hygiene.merge') : t('hygiene.accept')}
+                    label={duplicate ? t('hygiene.merge') : follow ? t('trackedStories.follow') : t('hygiene.accept')}
                     onPress={() => onAccept(item)}
                     filled
                     disabled={busy}
                 />
                 <ActionButton
                     testID={`hygiene-reject-${item.id}`}
-                    label={duplicate ? t('hygiene.keepBoth') : t('hygiene.reject')}
+                    label={duplicate ? t('hygiene.keepBoth') : follow ? t('hygiene.keepFact') : t('hygiene.reject')}
                     onPress={() => onDismiss(item)}
                     disabled={busy}
                 />
             </View>
         </View>
+    );
+};
+
+/** The waiting follow_instead offer, or nothing: what the Feed's empty state shows. */
+export const PendingFollowOffer: React.FC = () => {
+    const { items, actingId, accept, dismiss } = useHygieneSuggestions();
+    const offer = items.find((p) => p.kind === 'follow_instead');
+    if (!offer) return null;
+    return (
+        <HygieneSuggestionCard
+            item={offer}
+            busy={actingId === offer.id}
+            onAccept={accept}
+            onDismiss={dismiss}
+            inset={false}
+        />
     );
 };
