@@ -1237,10 +1237,10 @@
     "actionShowLessTopic": "Show less of a topic",
     "actionShowMoreTopic": "Show more of a topic",
     "actionDownRank": "Down-rank a topic",
-    "actionPublicationBoost": "Show more from a publication",
+    "actionPublicationBoost": "Mark a publication Preferred",
     "actionPublicationDeprioritize": "Show less from a publication",
-    "actionPublicationMute": "Mute a publication",
-    "actionSourceScopeBoost": "Show more from sources in a country",
+    "actionPublicationMute": "Mark a publication Not preferred",
+    "actionSourceScopeBoost": "Prefer sources from a country",
     "actionSourceScopeDeprioritize": "Show less from sources in a country",
     "actionSuppress": "Filter out a phrase",
     "actionPinTopic": "Pin a topic",
@@ -3147,7 +3147,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Mark this publication Not preferred"
     },
     "follow": {
       "follow": "Follow a story",
