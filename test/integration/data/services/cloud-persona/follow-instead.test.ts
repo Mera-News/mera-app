@@ -8,7 +8,6 @@ import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { runFollowInsteadSweep } from '@/lib/database/services/follow-instead-service';
 import {
   acceptProposal,
-  addSanityProposals,
   followInsteadTakesFact,
   getPendingCount,
   getPendingProposals,
@@ -17,7 +16,7 @@ import {
   runHygieneSweep,
 } from '@/lib/database/services/hygiene-service';
 import { getRecent } from '@/lib/database/services/persona-change-log-service';
-import { getSetting } from '@/lib/database/services/setting-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
 import * as topicService from '@/lib/database/services/topic-service';
 import { findActiveTrackedId, getActiveForTopicReconcile } from '@/lib/database/services/tracked-story-service';
@@ -260,12 +259,21 @@ describe('the weekly sweep and the backfill leave a daily offer alone', () => {
 
   it('a full queue still shows it: the offer takes the first slot', async () => {
     await fourFacts();
-    const seeded = await seedPersona(HYGIENE_PENDING_PRESENTATION_CAP + 2);
-    await addSanityProposals(seeded.map((f) => ({ factId: f.id, topicIds: [], fillTo: 1 })));
+    const others = Array.from({ length: HYGIENE_PENDING_PRESENTATION_CAP }, (_, i) => ({
+      id: `stale_topic:${i}`,
+      kind: 'stale_topic',
+      subject: { facts: [], topics: [`quiet ${i}`] },
+      targetFactIds: [],
+      targetTopicIds: [],
+      ops: [],
+      invertible: true,
+    }));
+    await setSetting('hygiene_pending_proposals', JSON.stringify(others));
 
     await sweep();
 
     expect((await getPendingProposals())[0].kind).toBe('follow_instead');
+    expect(await getPendingCount()).toBe(HYGIENE_PENDING_PRESENTATION_CAP + 1);
   });
 });
 

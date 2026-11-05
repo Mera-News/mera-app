@@ -533,7 +533,7 @@ export function detectFollowInstead(input: FollowInsteadInput): FollowInsteadCan
       if (count < bars.minStories || count < bars.medianMultiple * medianStories) continue;
       if (count < bars.minShare * allStories.size) continue;
       const counted = [...stories.values()].filter((r) => r.some((x) => !x.alreadyRead));
-      const opened = counted.filter((r) => r.some((x) => !x.alreadyRead && x.opened)).length;
+      const opened = counted.filter((r) => r.some((x) => x.opened)).length;
       if (counted.length > 0 && opened / counted.length >= bars.maxOpenedShare) continue;
       flood.push({ trigger: 'flood', id, factId: f.id, statement: f.statement, topicIds: [t.id], subject: t.text, stories: count });
     }
