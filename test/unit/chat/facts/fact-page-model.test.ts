@@ -108,15 +108,29 @@ describe('withLiveMutes', () => {
     const base = { homeCountryAlpha3: null, otherCountriesAlpha3: [], appLanguageBase: 'en' };
     const held = { ...base, preferredPublications: new Set(['old']), publicationMultipliers: new Map([['old', 0]]) };
 
-    it('takes the live hides and keeps the held grouping', () => {
-        const live = { ...base, preferredPublications: new Set(['new']), publicationMultipliers: new Map([['new', 0]]) };
+    it('takes the live hides and keeps everything else held', () => {
+        const live = {
+            ...base,
+            preferredPublications: new Set(['new']),
+            publicationMultipliers: new Map([['new', 0], ['old', 0], ['starred', 1.5]]),
+        };
         const out = withLiveMutes(held, live);
-        expect(out?.publicationMultipliers).toBe(live.publicationMultipliers);
+        expect(out?.publicationMultipliers).toEqual(new Map([['new', 0], ['old', 0]]));
         expect(out?.preferredPublications).toBe(held.preferredPublications);
     });
 
+    it('returns the held object while the hides agree, so a star moves nothing', () => {
+        const live = { ...base, publicationMultipliers: new Map([['old', 0], ['starred', 1.5]]) };
+        expect(withLiveMutes(held, live)).toBe(held);
+    });
+
     it('an Undo that clears the last tag clears the hide', () => {
-        expect(withLiveMutes(held, base)?.publicationMultipliers).toBeUndefined();
+        expect(withLiveMutes(held, base)?.publicationMultipliers).toEqual(new Map());
+    });
+
+    it('a hide lifted onto a star takes the live value', () => {
+        const live = { ...base, publicationMultipliers: new Map([['old', 1.5]]) };
+        expect(withLiveMutes(held, live)?.publicationMultipliers).toEqual(new Map([['old', 1.5]]));
     });
 
     it('keeps the held context while the live one is missing', () => {

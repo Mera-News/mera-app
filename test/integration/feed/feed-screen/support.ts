@@ -38,9 +38,11 @@ const TITLES = [
 let titleCursor = 0;
 
 /** Insert complete rows (`scoreRow`: terminal, no note owed) in the order given. */
-export async function seedComplete(rows: readonly (readonly [id: string, relevance: number])[]): Promise<void> {
+export async function seedComplete(
+  rows: readonly (readonly [id: string, relevance: number, extra?: Partial<Parameters<typeof seedArticles>[0][number]>])[],
+): Promise<void> {
   await withFrozenNow(async () => {
-    await seedArticles(rows.map(([id]) => ({ id, title: TITLES[titleCursor++ % TITLES.length] + ` (${id})` })));
+    await seedArticles(rows.map(([id, , extra]) => ({ id, title: TITLES[titleCursor++ % TITLES.length] + ` (${id})`, ...extra })));
     for (const [id, relevance] of rows) await scoreRow(await localId(id), relevance);
   });
 }

@@ -10,7 +10,7 @@
 // "New stories" pill, and the next tap landed on a different article. The
 // Feed's rule is a static session order; a preference change reaches it at
 // the next session (pull-to-refresh, the pill, a resume), never under the
-// reader.
+// reader. A hide is the one exception (`withLiveMutes`).
 //
 // It follows the live context at once only for the first load and an
 // app-language change (the whole screen re-renders in the new language
@@ -21,13 +21,31 @@ import type { RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { useRef } from 'react';
 
 /**
- * A fact screen's context: the visit's held grouping with the LIVE hides. A
- * fact screen has no pinned list to protect, and its rows go by date, so only
- * "Not preferred" can show there, and it must show at once: the card goes when
- * the reader asks, and an Undo brings it back. A star keeps waiting.
+ * A session's context with the LIVE hides: Not preferred applies at the tap and
+ * an Undo lifts it, because the reader asked for exactly that move. Everything
+ * else stays held, a star's multiplier included, so nothing regroups or
+ * re-sorts. The held object comes back untouched while the hides agree, which
+ * keeps every memo on it quiet through a star.
  */
 export function withLiveMutes(held: RankingContext | null, live: RankingContext | null): RankingContext | null {
-    return held && live ? { ...held, publicationMultipliers: live.publicationMultipliers } : held;
+    if (!held || !live) return held;
+    const liveMap = live.publicationMultipliers;
+    const merged = new Map(held.publicationMultipliers);
+    let changed = false;
+    for (const [name, m] of liveMap ?? []) {
+        if (m === 0 && merged.get(name) !== 0) {
+            merged.set(name, 0);
+            changed = true;
+        }
+    }
+    for (const [name, m] of held.publicationMultipliers ?? []) {
+        if (m !== 0 || liveMap?.get(name) === 0) continue;
+        const now = liveMap?.get(name);
+        if (now === undefined) merged.delete(name);
+        else merged.set(name, now);
+        changed = true;
+    }
+    return changed ? { ...held, publicationMultipliers: merged } : held;
 }
 
 export function useSessionGeoLanguageContext<T extends UserGeoLanguageContext>(

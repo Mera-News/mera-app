@@ -13,7 +13,7 @@ import {
   newFeedRowSession,
   type FeedRowSession,
 } from '@/components/custom/feed/feed-row-display';
-import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
+import { useSessionGeoLanguageContext, withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
@@ -76,6 +76,7 @@ import {
 import { useForYouSuggestionsHydrated, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
+import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import {
@@ -145,8 +146,14 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // Frozen per reading session (see use-session-geo-context): a publication
   // preference written from a card's ••• sheet must not regroup and re-sort
   // the stories under the reader. `sessionEpoch` is bumped by `resetSession`.
+  // Not preferred stays live: the card goes at the tap and Undo brings it back.
   const [sessionEpoch, setSessionEpoch] = useState(0);
-  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), sessionEpoch);
+  const liveGeoLanguageCtx = useUserGeoLanguageContext();
+  const heldGeoLanguageCtx = useSessionGeoLanguageContext(liveGeoLanguageCtx, sessionEpoch);
+  const userGeoLanguageCtx = useMemo(
+    () => withLiveMutes(heldGeoLanguageCtx, liveGeoLanguageCtx),
+    [heldGeoLanguageCtx, liveGeoLanguageCtx],
+  );
 
   // ONE subscription for "a run is really downloading, grouping and scoring"
   // (`isFeedProcessing`, NEVER `statusMode === 'processing'`, which also goes
@@ -186,7 +193,11 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // which bumps `sessionEpoch`). Folding mutates the session, idempotently.
   const tailSessionRef = useRef<NotReadTailSession>(newNotReadTailSession());
   const folded = useMemo(
-    () => foldNotReadTail(tailSessionRef.current, allCandidates),
+    () => {
+      const fold = foldNotReadTail(tailSessionRef.current, allCandidates);
+      // The tail keeps a row that left the pool, so a hide has to reach it here.
+      return { ...fold, tail: fold.tail.filter((it) => !isMutedPublication(it.suggestion.publication_name, userGeoLanguageCtx)) };
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allCandidates, sessionEpoch],
   );
@@ -525,7 +536,12 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const { rows: scoredRows } = useMemo(
     () =>
       sortFeedEntries(
-        data,
+        // A card keeps the article it first showed, which a re-election can
+        // leave out of `item.suggestion`: the hide reads what the card shows.
+        data.filter(
+          (it) =>
+            !isMutedPublication(displayedSuggestionOf(it, liveById, rowSessionRef.current).publication_name, userGeoLanguageCtx),
+        ),
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
         pinnedIds,
