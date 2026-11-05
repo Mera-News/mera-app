@@ -327,7 +327,6 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
 
     return (
         <Animated.FlatList
-            windowSize={5}
             ref={listRef}
             testID="explore-list"
             data={headlines}
