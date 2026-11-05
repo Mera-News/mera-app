@@ -5,7 +5,8 @@ import type { FeedbackTree, LocalFeedbackContext } from '@/lib/news-harness/feed
 import type { FeedbackAnswersHandoff } from '@/lib/news-harness/core/types';
 import type { VisitInput } from '@/components/custom/cards/article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
-import type { InlineAccessibilityAction } from '@/components/custom/cards/use-article-actions';
+import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
+import { hapticLight } from '@/lib/haptics';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import { Text } from '@/components/ui/text';
@@ -18,7 +19,7 @@ import { useColors } from '@/lib/theme/tokens';
 import { router } from 'expo-router';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, type AccessibilityActionEvent } from 'react-native';
 
@@ -42,8 +43,9 @@ export interface UseArticleMenuInput {
     /** The surface's own inline buttons (see `inlineAccessibilityActions`),
      *  listed FIRST in the card's VoiceOver custom actions. The card root is one
      *  accessibility element, so the buttons drawn inside it are otherwise
-     *  unreachable with VoiceOver. */
-    inlineActions?: readonly InlineAccessibilityAction[];
+     *  unreachable with VoiceOver. The hook adds the feedback action itself
+     *  (it opens this menu's own sheet). */
+    inline?: { saved: boolean; onToggleSave?: () => void; onShare?: () => void };
     /** COMPACT rows only: they draw no inline action row (owner review), so
      *  "What's wrong with this story?", save and share lead the menu instead.
      *  Surfaces with an inline row (Feed card, detail) leave this out. */
@@ -188,7 +190,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         publisherId,
         onCheckFacts,
         extraItems,
-        inlineActions,
+        inline,
         rowActions,
         onFeedbackChat,
         followLive,
@@ -628,6 +630,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         () => [...items.filter((i) => i.key !== LEVEL_SOURCE && i.key !== LEVEL_SUPPORT), ...sourceItems, ...supportItems],
         [items, sourceItems, supportItems],
     );
+    const inlineActions = useMemo(
+        () => (inline ? inlineAccessibilityActions(t, { ...inline, onFeedback: () => { hapticLight(); enterTree(); } }) : undefined),
+        [t, inline, enterTree],
+    );
     const accessibilityActions = useMemo(
         () => [
             ...(inlineActions ?? []).map((i) => ({ name: `inline-${i.key}`, label: i.label })),
@@ -707,9 +713,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         onFeedbackChat,
     });
     const hubRef = useRef(hub);
-    hubRef.current = hub;
     const stackTopRef = useRef<SheetLevel | undefined>(undefined);
-    stackTopRef.current = stack[stack.length - 1];
+    useLayoutEffect(() => {
+        hubRef.current = hub;
+        stackTopRef.current = stack[stack.length - 1];
+    });
     const back = useCallback(() => {
         // Leaving the place screen with no pick is an answer too (persona re-checks it).
         if (stackTopRef.current?.kind === 'place') hubRef.current.leavePlace();
