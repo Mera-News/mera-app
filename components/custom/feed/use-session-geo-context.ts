@@ -17,7 +17,18 @@
 // anyway).
 
 import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
+import type { RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { useRef } from 'react';
+
+/**
+ * A fact screen's context: the visit's held grouping with the LIVE hides. A
+ * fact screen has no pinned list to protect, and its rows go by date, so only
+ * "Not preferred" can show there, and it must show at once: the card goes when
+ * the reader asks, and an Undo brings it back. A star keeps waiting.
+ */
+export function withLiveMutes(held: RankingContext | null, live: RankingContext | null): RankingContext | null {
+    return held && live ? { ...held, publicationMultipliers: live.publicationMultipliers } : held;
+}
 
 export function useSessionGeoLanguageContext<T extends UserGeoLanguageContext>(
     live: T | null,

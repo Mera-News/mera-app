@@ -11,6 +11,7 @@ import {
     groupableOf,
     pickRepresentative,
 } from '@/lib/algorithms/story-grouping';
+import { isMutedPublication, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { FEED_WINDOW_MS, isWithinWindow, relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { FactRowGroup } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -34,16 +35,27 @@ export function isLeftOut(s: ForYouSuggestion): boolean {
 }
 
 /**
- * This fact's left-out stories inside the 48-hour window, newest first.
+ * This fact's left-out stories inside the 48-hour window, newest first. A Not
+ * preferred publication stays out, like the Feed's own Discarded view: it was
+ * the reader's choice, so it is not Mera's to offer back.
  *
  * ponytail: grouped among themselves only, so one story with some articles
  * picked and some left out counts on both sides. Group across both pools if
  * the two totals ever need to be exact.
  */
-export function leftOutStories(suggestions: readonly ForYouSuggestion[], factId: string, nowMs: number): Story[] {
+export function leftOutStories(
+    suggestions: readonly ForYouSuggestion[],
+    factId: string,
+    nowMs: number,
+    ctx: RankingContext | null = null,
+): Story[] {
     const cutoff = nowMs - FEED_WINDOW_MS;
     const pool = suggestions.filter(
-        (s) => (s.factIds ?? []).includes(factId) && isWithinWindow(s, cutoff) && isLeftOut(s),
+        (s) =>
+            (s.factIds ?? []).includes(factId) &&
+            isWithinWindow(s, cutoff) &&
+            isLeftOut(s) &&
+            !isMutedPublication(s.publication_name, ctx),
     );
     if (pool.length === 0) return [];
     const groups = buildStoryGroups(pool.map(groupableOf), DISPLAY_GROUPING_OPTIONS);

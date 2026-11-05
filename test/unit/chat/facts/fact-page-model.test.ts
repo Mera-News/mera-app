@@ -1,4 +1,5 @@
 import { filterStories, isLeftOut, leftOutStories, storiesPerTopic } from '@/components/custom/facts/fact-page-model';
+import { withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 const NOW = Date.parse('2026-10-07T12:00:00Z');
@@ -77,5 +78,49 @@ describe('filterStories', () => {
     });
     it('is empty when both lists are', () => {
         expect(filterStories('all', [], [])).toEqual([]);
+    });
+});
+
+describe('a Not preferred publication', () => {
+    const ctx = {
+        homeCountryAlpha3: null,
+        otherCountriesAlpha3: [],
+        appLanguageBase: null,
+        publicationMultipliers: new Map([['gone', 0]]),
+    };
+
+    it('stays out of the Discarded list, as it does in the Feed', () => {
+        const excluded = { status: 'excluded' } as never;
+        const stories = leftOutStories(
+            [
+                row('a', { ...(excluded as object), publication_name: 'Gone', title_en: 'Bridge closes for repairs' }),
+                row('b', { ...(excluded as object), publication_name: 'Kept', title_en: 'Council votes on parking' }),
+            ],
+            'f1',
+            NOW,
+            ctx,
+        );
+        expect(stories.map((st) => st.data._id)).toEqual(['b']);
+    });
+});
+
+describe('withLiveMutes', () => {
+    const base = { homeCountryAlpha3: null, otherCountriesAlpha3: [], appLanguageBase: 'en' };
+    const held = { ...base, preferredPublications: new Set(['old']), publicationMultipliers: new Map([['old', 0]]) };
+
+    it('takes the live hides and keeps the held grouping', () => {
+        const live = { ...base, preferredPublications: new Set(['new']), publicationMultipliers: new Map([['new', 0]]) };
+        const out = withLiveMutes(held, live);
+        expect(out?.publicationMultipliers).toBe(live.publicationMultipliers);
+        expect(out?.preferredPublications).toBe(held.preferredPublications);
+    });
+
+    it('an Undo that clears the last tag clears the hide', () => {
+        expect(withLiveMutes(held, base)?.publicationMultipliers).toBeUndefined();
+    });
+
+    it('keeps the held context while the live one is missing', () => {
+        expect(withLiveMutes(held, null)).toBe(held);
+        expect(withLiveMutes(null, base)).toBeNull();
     });
 });

@@ -28,7 +28,7 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useColors } from '@/lib/theme/tokens';
-import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
+import { useSessionGeoLanguageContext, withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -126,8 +126,10 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   //
   // Held for the visit (see feed/use-session-geo-context): a publication
   // preference written from a card's ••• sheet re-loads the live context, and a
-  // live one regrouped and re-sorted the cards under the reader.
-  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), factId);
+  // live one regrouped and re-sorted the cards under the reader. Hides stay live.
+  const liveCtx = useUserGeoLanguageContext();
+  const heldCtx = useSessionGeoLanguageContext(liveCtx, factId);
+  const userGeoLanguageCtx = useMemo(() => withLiveMutes(heldCtx, liveCtx), [heldCtx, liveCtx]);
 
   // Hoisted so the "next fact" footer below can reuse it instead of calling
   // `buildFactRows` a second time — this was previously computed inline and
