@@ -30,6 +30,26 @@ describe('searchSourceCountries', () => {
         expect(localizedCountryName('USA', 'en')).toBe('United States');
     });
 
+    it('finds a country by its own name whatever the app language', () => {
+        expect(searchSourceCountries('Deutschland', 'en').map((c) => c.alpha3)).toEqual(['DEU']);
+        expect(searchSourceCountries('Deutschland', 'en')[0].name).toBe('Germany');
+        expect(searchSourceCountries('España', 'de')[0].alpha3).toBe('ESP');
+        expect(searchSourceCountries('日本', 'en')[0].alpha3).toBe('JPN');
+    });
+
+    it('puts a match in the app language ahead of one in another language', () => {
+        expect(searchSourceCountries('Germany', 'en')[0].alpha3).toBe('DEU');
+        expect(searchSourceCountries('Indo', 'en')[0].alpha3).toBe('IDN');
+    });
+
+    it('stays quiet on what a reader types for a publication', () => {
+        // Spitzbergen, in German, must not show up while "Spiegel" is half typed.
+        expect(searchSourceCountries('spi', 'en')).toEqual([]);
+        for (const q of ['spie', 'spiegel', 'times', 'post', 'welt', 'bild', 'news', 'guardian']) {
+            expect(searchSourceCountries(q, 'en')).toEqual([]);
+        }
+    });
+
     it('offers nothing for an empty query', () => {
         expect(searchSourceCountries('  ', 'en')).toEqual([]);
     });

@@ -54,22 +54,55 @@ export interface SourceCountryHit {
 
 const MAX_HITS = 5;
 
-/** Countries whose name (app language, or any English name or alias) contains the query; start-of-name matches first. */
+/** Below this a Latin query matches in the app language and English only: three
+ *  letters of "Spiegel" would otherwise raise Spitzbergen, in German. */
+const FOREIGN_MIN_LATIN = 4;
+const NON_LATIN = /[^\u0000-\u024F]/;
+
+let everyName: ReadonlyMap<string, readonly string[]> | null = null;
+
+/** Every name of every country in every language we hold, lowercased, built once
+ *  on the first search so a country is found in its own language. */
+function namesInEveryLanguage(): ReadonlyMap<string, readonly string[]> {
+    if (everyName) return everyName;
+    const names = new Map<string, string[]>();
+    for (const appLanguage of Object.keys(LOCALE_FILES)) {
+        const all = countries.getNames(libLanguage(appLanguage), { select: 'all' }) as unknown as Record<string, readonly string[]>;
+        for (const [alpha2, list] of Object.entries(all)) {
+            const held = names.get(alpha2) ?? [];
+            held.push(...list.map((n) => n.toLowerCase()));
+            names.set(alpha2, held);
+        }
+    }
+    everyName = names;
+    return names;
+}
+
+/**
+ * Countries whose name (app language, or any English name or alias) contains the
+ * query, or whose name in any other language starts with it. Start-of-name
+ * matches in the reader's languages lead, then other languages, then the rest.
+ */
 export function searchSourceCountries(query: string, appLanguage: string): SourceCountryHit[] {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     const lang = libLanguage(appLanguage);
+    const foreign = q.length >= FOREIGN_MIN_LATIN || NON_LATIN.test(q) ? namesInEveryLanguage() : null;
     const found: { hit: SourceCountryHit; rank: number }[] = [];
     for (const alpha2 of Object.keys(countries.getAlpha2Codes())) {
         const alpha3 = countries.alpha2ToAlpha3(alpha2);
         if (!alpha3) continue;
         const name = (lang !== 'en' && countries.getName(alpha2, lang)) || getCountryName(alpha3);
         const names = [name, ...(countries.getName(alpha2, 'en', { select: 'all' }) ?? [])].map((n) => n.toLowerCase());
-        if (!names.some((n) => n.includes(q))) continue;
-        found.push({
-            hit: { alpha2, alpha3, name, label: getCountryName(alpha3) },
-            rank: names.some((n) => n.startsWith(q)) ? 0 : 1,
-        });
+        const rank = names.some((n) => n.startsWith(q))
+            ? 0
+            : foreign?.get(alpha2)?.some((n) => n.startsWith(q))
+              ? 1
+              : names.some((n) => n.includes(q))
+                ? 2
+                : null;
+        if (rank === null) continue;
+        found.push({ hit: { alpha2, alpha3, name, label: getCountryName(alpha3) }, rank });
     }
     found.sort((a, b) => a.rank - b.rank || a.hit.name.localeCompare(b.hit.name));
     return found.slice(0, MAX_HITS).map((f) => f.hit);
