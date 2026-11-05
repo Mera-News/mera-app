@@ -484,7 +484,7 @@ export default appSchema({
     // (once resolved) to a server stable_cluster_id so the reconcile poll can
     // find new member articles for it. Long-lived — migrate, NEVER wipe.
     // `member_article_ids_json` is a JSON string[] of the article ids in the
-    // story, newest-first, capped at 30. `llm_headline` is the generated
+    // story, newest-first, capped at 2000. `llm_headline` is the generated
     // English one-liner (rendered via TranslatableDynamic); `fallback_title`
     // is the title captured at track time and always renders until a headline
     // exists. `unseen_count`/`last_update_at` drive the "new updates" badge and
@@ -510,7 +510,7 @@ export default appSchema({
         // A tracked story is a user-owned TOPIC continuously linked server-side
         // every pipeline cycle. `topic_id`/`topic_text` point at the minted
         // `topics` row; the reconcile matches suggestions whose matchedTopics
-        // carry `topic_id`. `member_snapshots_json` is a capped (50), newest-
+        // carry `topic_id`. `member_snapshots_json` is a capped (2000), newest-
         // first-by-pubDate JSON array of lean card snapshots
         // [{articleId, title, pubDateMs, imageUrl?, publicationName?}] so the
         // timeline renders locally-discovered members without a server round

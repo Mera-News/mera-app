@@ -287,7 +287,7 @@ export function effectiveBand(
 ): number {
   // The publication tags weigh the SORT band only (publication-tags.ts).
   const base = relevanceBandRank(
-    rankedRelevance(item.suggestion.relevance ?? 0, item.suggestion.publication_name, ctx),
+    rankedRelevance(item.suggestion.relevance ?? 0, item.suggestion, ctx),
   );
   if (tier !== 0) return base;
   const penalty = stalenessBandPenalty(ageHoursOf(item, nowMs));

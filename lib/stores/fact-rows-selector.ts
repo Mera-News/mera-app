@@ -89,6 +89,7 @@ import {
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
+import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { makeRepCompare } from '@/lib/algorithms/representative-compare';
 import type { ForYouSuggestion } from './for-you-store';
 
@@ -612,8 +613,12 @@ export function buildFactRows(
     if (cc) headlineCountries.set(sectionId, cc);
   }
 
-  // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS).
-  const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
+  // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS). A muted
+  //    publication's rows leave here, not at each surface: its purge waits for
+  //    the Undo toast and dies with the app, so rows can outlive the mute.
+  const visible = suggestions.filter(
+    (s) => isVisible(s, cutoffMs) && !isMutedPublication(s.publication_name, userCtx),
+  );
   if (visible.length === 0) {
     return {
       breaking: [],

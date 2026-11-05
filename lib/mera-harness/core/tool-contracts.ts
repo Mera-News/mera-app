@@ -260,7 +260,7 @@ export const PROPOSE_CHANGES_TOOL: ToolDefinition = {
     name: 'proposeChanges',
     description:
       'Put a change on a card for the user to confirm. Nothing changes until they agree. Use for "stop showing me X" '
-      + '(add_suppression), "show me X again" (retire_suppression with an id from <filters>), more or less or mute of a '
+      + '(add_suppression), "show me X again" (retire_suppression with an id from <filters>), more from or hiding a '
       + 'named outlet (set_publication_pref) and "prefer <country> sources" (set_source_scope_pref). This ENDS your turn.',
     parameters: {
       type: 'object',
@@ -284,8 +284,8 @@ export const PROPOSE_CHANGES_TOOL: ToolDefinition = {
               scopeCountry: { type: 'string', description: 'set_source_scope_pref: the country in English.' },
               publicationPref: {
                 type: 'string',
-                enum: ['boost', 'deprioritize', 'mute'],
-                description: 'set_source_scope_pref takes boost or deprioritize only.',
+                enum: ['boost', 'mute'],
+                description: 'boost is Preferred, mute is Not preferred. set_source_scope_pref takes boost only.',
               },
             },
             required: ['type'],

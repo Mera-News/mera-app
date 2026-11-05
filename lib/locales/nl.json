@@ -346,7 +346,15 @@
     "remindBody": "Mera is gemaakt om je niet zonder reden lastig te vallen. Kies wanneer je een herinnering wilt om het nieuws te lezen. We stellen een tijd voor waarop je er echt de tijd voor hebt.",
     "remindTitle": "Wanneer moet Mera je herinneren?",
     "turnOn": "Meldingen aanzetten",
-    "turnThemOn": "Zet ze aan"
+    "turnThemOn": "Zet ze aan",
+    "sourcesTitle": "Welke nieuwsbronnen vertrouw je?",
+    "sourcesBody": "Tik op de ster om meer te zien. Tik op het oog om het uit je feed te verbergen. Dit kun je altijd wijzigen bij Bronnen.",
+    "sourcesSkip": "Overslaan",
+    "sourcesLoadError": "Kon de bronnen niet laden.",
+    "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
+    "iSubscribe": "Ik heb een abonnement",
+    "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}",
+    "sourcesFind": "Zoek een publicatie"
   },
   "notifications": {
     "title": "Meldingen",
@@ -555,7 +563,12 @@
     "askBeforeTopicDelete": "Vragen voordat je een onderwerp verwijdert",
     "askBeforeTopicDeleteHint": "Mera vraagt je elke keer om te bevestigen als je een onderwerp uit een van je feiten verwijdert.",
     "exportHistoryWindowNote_one": "Deze export bevat alleen de laatste {{count}} dag leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd.",
-    "exportHistoryWindowNote_other": "Deze export bevat alleen de laatste {{count}} dagen leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd."
+    "exportHistoryWindowNote_other": "Deze export bevat alleen de laatste {{count}} dagen leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd.",
+    "meterTitle": "Data op deze telefoon",
+    "meterLine": "Mera gebruikt {{used}}. {{free}} vrij op deze telefoon.",
+    "meterUsedOnly": "Mera gebruikt {{used}}.",
+    "meterDatabase": "Artikelen en profiel",
+    "meterBackup": "Reservekopie"
   },
   "preferences": {
     "notifications": "Meldingen",
@@ -776,10 +789,10 @@
     "actionShowLessTopic": "Minder van een onderwerp tonen",
     "actionShowMoreTopic": "Meer van een onderwerp tonen",
     "actionDownRank": "Een onderwerp naar beneden plaatsen",
-    "actionPublicationBoost": "Meer van een publicatie tonen",
+    "actionPublicationBoost": "Markeer een publicatie als Voorkeur",
     "actionPublicationDeprioritize": "Minder van een publicatie tonen",
-    "actionPublicationMute": "Een publicatie dempen",
-    "actionSourceScopeBoost": "Meer van bronnen in een land tonen",
+    "actionPublicationMute": "Markeer een publicatie als Liever niet",
+    "actionSourceScopeBoost": "Geef bronnen uit een land voorkeur",
     "actionSourceScopeDeprioritize": "Minder van bronnen in een land tonen",
     "actionSuppress": "Een zin uitfilteren",
     "actionPinTopic": "Een onderwerp vastzetten",
@@ -1195,7 +1208,10 @@
       "carriedOver": "{{name}} overgezet",
       "undone": "Ongedaan gemaakt: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "{{name}} ingesteld als Voorkeur",
+      "notPreferred": "{{name}} ingesteld als Liever niet",
+      "preferredSourcesFrom": "Bronnen van {{name}} ingesteld als Voorkeur"
     }
   },
   "calibration": {
@@ -1243,10 +1259,8 @@
       "paywalled": "Ik kan het niet lezen, het zit achter een betaalmuur",
       "noTrust": "Ik vertrouw het niet",
       "trustTitle": "Je vertrouwt {{site}} niet",
-      "trustLess": "Minder van {{site}} laten zien",
       "trustNever": "{{site}} nooit laten zien",
       "hardToUse": "De site is moeilijk te gebruiken",
-      "fewerSite": "Minder van deze site laten zien",
       "reportTitle": "Ook Mera Labs laten weten over {{site}}?",
       "reportYes": "Ja, stuur het naar Mera Labs",
       "reportNo": "Nee, bedankt",
@@ -1482,7 +1496,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Voorkeur wissen",
     "scopeKindCountry": "Land"
   },
   "optimisationPlan": {
@@ -1787,7 +1800,7 @@
               },
               "sources": {
                 "label": "Bronnen",
-                "text": "Publicaties waarvan je meer of minder wilt zien, en de publicaties waarvoor je betaalt."
+                "text": "Publicaties die je voorkeur hebben, die je uit je feed hebt verborgen en waarvoor je betaalt."
               }
             }
           }
@@ -2045,14 +2058,14 @@
       },
       "sources": {
         "title": "Je bronnen kiezen",
-        "subtitle": "Badges, pijlen en de ene besturing die een blok is.",
+        "subtitle": "Sterren, badges en een bron uit je feed verbergen.",
         "slides": {
           "where-it-lives": {
             "headline": "Waar bronnen leven",
-            "body": "Eén scherm voor elke uitgever die je hebt aangepast.",
+            "body": "Eén scherm voor elke publicatie die je hebt gekozen.",
             "steps": {
               "0": "Het tabblad Jij, dan Bronnen.",
-              "1": "“Minder van” in het menu ••• van een artikel werkt meteen, met Ongedaan maken, en de uitgever staat dan onder Aangepast."
+              "1": "\"Liever niet\" in het ••• menu van een artikel werkt meteen, met ongedaan maken, en de publicatie verschijnt daarna in Bronnen."
             },
             "ask": "Waar beheer ik welke bronnen ik zie?"
           },
@@ -2075,26 +2088,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Dezelfde pijlen, één uitgever tegelijk",
-            "body": "Open een land en elke uitgever heeft zijn eigen paar. Omlaag is een duwtje eerder dan muur: een gedownrankte uitgever verschijnt nog steeds wanneer deze een verhaal heeft dat niemand anders heeft.",
-            "ask": "Wat is het verschil tussen het omlaagdraaien van een bron en het dempen ervan?"
+            "headline": "Geef een publicatie een ster",
+            "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed.",
+            "ask": "Wat is het verschil tussen Voorkeur en Liever niet?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Mute is iets heel anders",
-            "body": "Dempen stel je in op de pagina van een publicatie, en het is een harde uitsluiting: die verhalen worden verwijderd, niet alleen lager gesorteerd. Tik op elke kaart en zet hem waar hij hoort.",
+            "headline": "Liever niet verbergt het uit je feed",
+            "body": "Markeer een publicatie als Liever niet en de artikelen verdwijnen uit je feed. Wereld en verwante verhalen kunnen ze nog steeds tonen. Tik op elke kaart en zet hem op de juiste plek.",
             "steps": {
-              "0": "Omlaag pijl: minder vaak weergegeven.",
-              "1": "Dempen: helemaal niet weergegeven.",
-              "2": "Beide kunnen later worden gewist, van bronvoorkeuzen."
+              "0": "Ster: hoger weergegeven.",
+              "1": "Liever niet: verborgen uit je feed.",
+              "2": "Je kunt beide wissen bij Bronnen."
             },
             "sort": {
               "buckets": {
-                "softer": "Minder vaak weergegeven",
-                "gone": "Compleet verwijderd"
+                "softer": "Hoger weergegeven",
+                "gone": "Verborgen uit je feed"
               },
               "cards": {
-                "down-arrow": "De omlaag pijl",
-                "mute": "Dempen"
+                "down-arrow": "De ster",
+                "mute": "Liever niet"
               }
             }
           }
@@ -2110,7 +2123,7 @@
             "steps": {
               "0": "Woorden en dingen die je hebt verborgen.",
               "1": "Onderwerpen die je minder ziet.",
-              "2": "Bronnen die je hebt gedempt of omlaaggedraaid."
+              "2": "Bronnen die je als Liever niet hebt gemarkeerd."
             },
             "ask": "Waar kan ik alles zien wat ik heb gefilterd?"
           },
@@ -2672,18 +2685,18 @@
     "following": "Je volgt dit verhaal",
     "checkFacts": "Feitencontrole",
     "fewerFrom": "Minder van {{source}}",
-    "fewerFromDone": "Je ziet minder van {{source}}.",
     "undo": "Ongedaan maken",
     "reportBug": "Bug melden",
     "actionFailed": "Dat lukte niet. Probeer het opnieuw.",
     "aboutSource": "Over deze bron",
     "liveChat": "Live chat",
     "liveChatSub": "Een persoon van het Mera-team",
-    "sourceSub": "Over, minder van {{source}}",
+    "sourceSub": "Over {{source}}, of verberg het uit je feed",
     "support": "Support",
     "supportSub": "Een bug melden, live chat, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Je ziet al minder van {{source}}"
+    "notPreferred": "Liever niet",
+    "notPreferredDone": "{{publisher}} is verborgen uit je feed"
   },
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",
@@ -2731,12 +2744,8 @@
     "newsLoadError": "Artikelen konden niet worden geladen",
     "websiteA11y": "{{host}} openen",
     "aboutSourceA11y": "Over {{source}}",
-    "prefMoreA11y": "Meer van deze bron",
-    "prefFewerA11y": "Minder van deze bron",
     "history": "Geschiedenis",
-    "fewerFrom": "Minder van",
     "historyEmpty": "Geen bezoeken hier in de afgelopen 30 dagen.",
-    "moreFrom": "Meer van",
     "openedCount_one": "Je hebt {{publisher}} één keer geopend in de afgelopen 30 dagen.",
     "openedCount_other": "Je hebt {{publisher}} {{count}} keer geopend in de afgelopen 30 dagen.",
     "openedOn": "Geopend op {{date}}",
@@ -2744,7 +2753,15 @@
     "openedYesterday": "Gisteren geopend",
     "supportLine": "Goede journalistiek blijft bestaan als lezers het steunen.",
     "visitsLabel": "Je bezoeken in de afgelopen 30 dagen",
-    "subscribed": "Geabonneerd"
+    "subscribed": "Geabonneerd",
+    "preferred": "Voorkeur",
+    "notPreferred": "Liever niet",
+    "preferA11y": "Voorkeur geven aan {{publisher}}",
+    "notPreferA11y": "Markeer {{publisher}} als Liever niet",
+    "notPreferHint": "Verbergt de artikelen uit je feed",
+    "includedWith": "Inbegrepen bij {{country}}",
+    "includedWithA11y": "Voorkeur, inbegrepen bij {{country}}",
+    "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je {{country}} bij Bronnen."
   },
   "nav": {
     "page": {
@@ -2934,14 +2951,11 @@
     },
     "sources": {
       "title": "Bronnen",
-      "find": "Zoek een uitgever",
-      "more": "Meer",
-      "fewer": "Minder",
-      "muted": "Gedempt",
-      "mute": "Dempen",
-      "clear": "Wissen",
-      "footnote": "Tik op een publicatie om die aan te passen. „Minder van” in het •••-menu van een artikel komt hier ook terecht.",
-      "empty": "Je hebt nog geen bronnen aangepast. Zoek een publicatie om meer, minder of niets van haar te zien. „Minder van” in het •••-menu van een artikel komt hier ook terecht."
+      "find": "Zoek een publicatie of land",
+      "footnote": "Tik op een item om het te wijzigen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
+      "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie om er een voorkeur aan te geven of haar uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
+      "countryCleared": "{{country}} staat niet meer bij je voorkeuren",
+      "saveError": "Dat kon niet worden opgeslagen. Probeer het opnieuw."
     },
     "settings": {
       "yourPlan": "Jouw abonnement",
@@ -3130,7 +3144,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Markeer deze publicatie als Liever niet"
     },
     "follow": {
       "follow": "Follow a story",

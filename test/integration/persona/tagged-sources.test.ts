@@ -24,4 +24,17 @@ describe('buildTaggedSources', () => {
         ]);
         expect(scopes.map((s) => s.pref.publicationName)).toEqual(['India']);
     });
+
+    it('does not list a stored Fewer unless subscribed, and then it carries no kind', async () => {
+        await upsertPreference({ publicationName: 'Old Fewer', weight: -0.5 });
+        await upsertPreference({ publicationName: 'Fewer And Subscribed', weight: -0.5 });
+        await upsertScopePreference({ scopeKind: 'country', scopeValue: 'IND', label: 'India', weight: -0.5 });
+        await subscribe('p3', 'Fewer And Subscribed', ['Fewer And Subscribed']);
+
+        const { publications, scopes } = buildTaggedSources(await activePreferences(), await activeSubscriptions());
+
+        expect(publications.map((p) => [p.displayName, p.kind, p.subscribed])).toEqual([['Fewer And Subscribed', null, true]]);
+        expect(scopes).toEqual([]);
+        expect(await activePreferences()).toHaveLength(3);
+    });
 });

@@ -572,6 +572,22 @@ describe('publication tags in the sort', () => {
     // paid-low 0.45 x2 = 0.9 (HIGH), less-high 0.85 x0.5 = 0.425 (LOW), muted gone.
     expect(ids(out)).toEqual(['plain-high', 'paid-low', 'plain-mid', 'less-high']);
   });
+
+  it('a preferred country lifts its publications in the sort', () => {
+    const inCountry = (id: string, relevance: number, country: string): FeedListItem => {
+      const it = item(id, relevance);
+      return { ...it, suggestion: { ...it.suggestion, country_code: country } as ForYouSuggestion };
+    };
+    const data = [tagged('plain-mid', 0.65, 'Plain'), inCountry('german-low', 0.45, 'DEU'), inCountry('indian-low', 0.45, 'IND')];
+    const out = sortFeedEntries(data, noStates, new Set(), [], 0, () => false, {
+      homeCountryAlpha3: null,
+      otherCountriesAlpha3: [],
+      appLanguageBase: null,
+      preferredCountriesAlpha3: new Set(['IND']),
+    });
+    // indian-low 0.45 x1.5 = 0.675, the same MEDIUM band as plain-mid; german-low stays LOW.
+    expect(ids(out).indexOf('indian-low')).toBeLessThan(ids(out).indexOf('german-low'));
+  });
 });
 
 describe('arrivalFloor and extendPin (nothing on screen moves)', () => {

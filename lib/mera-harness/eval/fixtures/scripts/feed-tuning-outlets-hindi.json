@@ -1,0 +1,248 @@
+{
+  "id": "feed-tuning-outlets-hindi",
+  "cohort": "feed-tuning",
+  "note": "The two publication levels in Hindi. Turn 10 names the outlet in Devanagari, which the outlet list does not hold. kinds cannot tell boost from mute: read the level from the row's card actions.",
+  "persona": {
+    "facts": [
+      {
+        "id": "h",
+        "statement": "Lives in Jaipur, Rajasthan, India, Asia",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": [],
+    "languageName": "Hindi",
+    "knownOutlets": [
+      "The Hindu",
+      "NRC"
+    ]
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "The Hindu से कम खबरें दिखाओ",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 1,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 2,
+      "user": "NRC की खबरें कम कर दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 3,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 4,
+      "user": "The Hindu को म्यूट करो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 5,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 6,
+      "user": "NRC को छुपा दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 7,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 8,
+      "user": "The Hindu मत दिखाओ",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 9,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 10,
+      "user": "द हिंदू की खबरें कम दिखाओ",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 11,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 12,
+      "user": "NRC से ज़्यादा खबरें दिखाओ",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "awaiting-user",
+        "card": {
+          "kinds": [
+            "set_publication_pref"
+          ]
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 13,
+      "user": "नहीं, रहने दो",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    },
+    {
+      "index": 14,
+      "user": "जर्मनी की खबरें कम दिखाओ",
+      "expect": {
+        "routeKind": "feed-tuning",
+        "skill": "conversation/feed-tuning",
+        "legs": 2,
+        "endedOn": "settled",
+        "card": {
+          "noApply": true
+        },
+        "replyScript": "devanagari"
+      }
+    }
+  ]
+}

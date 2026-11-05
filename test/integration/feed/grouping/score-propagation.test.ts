@@ -10,6 +10,7 @@ import {
   noteStoryNoteFailure,
   propagateToUnscoredSiblings,
 } from '@/lib/feed-grouping/score-propagation';
+import { EMPTY_READ_STORY_INDEX } from '@/lib/feed-grouping/read-story-filter';
 import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import logger from '@/lib/logger';
 import {
@@ -64,6 +65,19 @@ const UNSCORED = { relevance: 0, reason: '', status: ArticleSuggestionStatus.Uns
 // ===========================================================================
 // gateUnscoredForScoring: donor propagation
 // ===========================================================================
+
+describe('gateUnscoredForScoring: shared read index', () => {
+  it('uses the index the caller passes instead of re-reading impressions', async () => {
+    await seedUnscored({ id: 'opened' });
+    await recordOpen({ articleId: 'opened', surface: 'feed' });
+
+    const inert = await gateUnscoredForScoring(new Set(), null, EMPTY_READ_STORY_INDEX);
+    expect(inert.readCount).toBe(0);
+
+    const live = await gateUnscoredForScoring(new Set());
+    expect(live.readCount).toBe(1);
+  });
+});
 
 describe('gateUnscoredForScoring: donor propagation', () => {
   it('picks the max-relevance donor and copies its relevance + reason to every candidate in one batch', async () => {

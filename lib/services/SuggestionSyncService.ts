@@ -284,11 +284,14 @@ function mergePreservingIdentity(
   for (const p of prev) {
     if (p && p._id) prevById.set(p._id, p);
   }
-  return next.map((n) => {
+  const merged = next.map((n) => {
     if (!n._id) return n;
     const p = prevById.get(n._id);
     return p && suggestionsDisplayEqual(p, n) ? p : n;
   });
+  // Nothing changed: keep the array itself, or every reader regroups the feed.
+  const unchanged = merged.length === prev.length && merged.every((m, i) => m === prev[i]);
+  return unchanged ? prev : merged;
 }
 
 function clustersSig(clusters: ClusterMembership[] | undefined): string {

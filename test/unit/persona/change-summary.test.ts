@@ -48,6 +48,28 @@ describe('changeSummary', () => {
         );
     });
 
+    it('words a two-state row by its new name, and leaves an older row alone', () => {
+        const c = ctx({ publication: (n) => n });
+        expect(changeSummary(t, row('set_publication_pref', { targetId: 'BBC', after: 'boost', twoState: true }), c)).toBe(
+            'personaAudit.summary.preferred {"name":"BBC"}',
+        );
+        expect(changeSummary(t, row('set_publication_pref', { targetId: 'BBC', after: 'mute', twoState: true }), c)).toBe(
+            'personaAudit.summary.notPreferred {"name":"BBC"}',
+        );
+        expect(changeSummary(t, row('set_publication_pref', { targetId: 'BBC', after: 'mute' }), c)).toBe(
+            'personaAudit.summary.muted {"name":"BBC"}',
+        );
+        expect(changeSummary(t, row('set_source_scope_pref', { targetId: 'country:IND', after: 'boost', label: 'India', twoState: true }), c)).toBe(
+            'personaAudit.summary.preferredSourcesFrom {"name":"India"}',
+        );
+        expect(changeSummary(t, row('set_source_scope_pref', { targetId: 'country:IND', after: 'boost', label: 'India' }), c)).toBe(
+            'personaAudit.summary.moreSourcesFrom {"name":"India"}',
+        );
+        expect(changeSummary(t, row('set_source_scope_pref', { targetId: 'country:IND', after: 'deprioritize', label: 'India', twoState: true }), c)).toBe(
+            'personaAudit.summary.fewerSourcesFrom {"name":"India"}',
+        );
+    });
+
     it('names a country scope from its code when no label was logged', () => {
         expect(changeSummary(t, row('set_source_scope_pref', { targetId: 'country:IND', after: 'none' }), ctx())).toBe(
             'personaAudit.summary.clearedSourcesFrom {"name":"India"}',

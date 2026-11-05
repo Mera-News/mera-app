@@ -161,3 +161,14 @@ describe('cleanParams keeps trackedStoryId on both detail routes', () => {
     });
   });
 });
+
+describe('sources-publishers', () => {
+  it('restores with its country and drops a spot without one', () => {
+    const schema = ROOT_ROUTES['sources-publishers'];
+    expect(cleanParams(schema, { countryCode: 'DEU', countryName: 'Germany', junk: 'x' })).toEqual({
+      countryCode: 'DEU',
+      countryName: 'Germany',
+    });
+    expect(cleanParams(schema, { countryName: 'Germany' })).toBeNull();
+  });
+});

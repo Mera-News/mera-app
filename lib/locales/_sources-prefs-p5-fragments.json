@@ -1,0 +1,2265 @@
+{
+  "_comment": "sources-prefs wave: Preferred, Not preferred, sources step, data meter. English is already in en.json.",
+  "en": {},
+  "ar": {
+    "onboarding": {
+      "sourcesTitle": "أي مصادر الأخبار تثق بها؟",
+      "sourcesBody": "اضغط على النجمة لرؤية المزيد. اضغط على العين لإخفائه من خلاصتك. يمكنك تغيير ذلك في أي وقت من المصادر.",
+      "sourcesSkip": "تخطي",
+      "sourcesLoadError": "تعذّر تحميل المصادر.",
+      "sourcesOffline": "أنت غير متصل. يمكنك إضافة مصادر لاحقًا من شاشة المصادر.",
+      "iSubscribe": "أنا مشترك",
+      "iSubscribeA11y": "أنا مشترك في {{publisher}}",
+      "sourcesFind": "ابحث عن منشور"
+    },
+    "manageData": {
+      "meterTitle": "البيانات على هذا الهاتف",
+      "meterLine": "يستخدم ميرا {{used}}. {{free}} متاحة على هذا الهاتف.",
+      "meterUsedOnly": "يستخدم ميرا {{used}}.",
+      "meterDatabase": "المقالات والملف الشخصي",
+      "meterBackup": "نسخة احتياطية"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "اجعل منشورًا مفضلًا",
+      "actionPublicationMute": "اجعل منشورًا غير مفضل",
+      "actionSourceScopeBoost": "فضّل المصادر من دولة"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "اجعل {{name}} مفضلًا",
+        "notPreferred": "اجعل {{name}} غير مفضل",
+        "preferredSourcesFrom": "اجعل مصادر {{name}} مفضلة"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "المنشورات التي فضّلتها، والتي أخفيتها من خلاصتك، والتي تدفع ثمنها."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "النجوم والشارات، وإخفاء مصدر من خلاصتك.",
+          "slides": {
+            "where-it-lives": {
+              "body": "شاشة واحدة لكل منشور اخترته.",
+              "steps": {
+                "1": "«غير مفضل» في قائمة ••• الخاصة بالمقال يسري فورًا، مع خيار التراجع، ثم يظهر المنشور في المصادر."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "ضع نجمة على منشور",
+              "body": "افتح دولة لتجد نجمة على كل منشور فيها. النجمة ترفع المنشور أعلى خلاصتك.",
+              "ask": "ما الفرق بين مفضل وغير مفضل؟"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "غير مفضل يخفيه من خلاصتك",
+              "body": "عندما تضع منشورًا كـ«غير مفضل»، تختفي قصصه من خلاصتك. ما زال تبويب العالم والقصص ذات الصلة قادرًا على عرضها. اضغط على كل بطاقة وضعها في مكانها الصحيح.",
+              "steps": {
+                "0": "النجمة: تظهر أعلى.",
+                "1": "غير مفضل: مخفي من خلاصتك.",
+                "2": "يمكنك إلغاء أي منهما من المصادر."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "تظهر أعلى",
+                  "gone": "مخفي من خلاصتك"
+                },
+                "cards": {
+                  "down-arrow": "النجمة",
+                  "mute": "غير مفضل"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "المصادر التي وضعتها كـ«غير مفضل»."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "عن {{source}}، أو أخفه من خلاصتك",
+      "notPreferred": "غير مفضل",
+      "notPreferredDone": "تم إخفاء {{publisher}} من خلاصتك"
+    },
+    "publicationPage": {
+      "preferred": "مفضل",
+      "notPreferred": "غير مفضل",
+      "preferA11y": "اجعل {{publisher}} مفضلًا",
+      "notPreferA11y": "ضع {{publisher}} كـ«غير مفضل»",
+      "notPreferHint": "يخفي مقالاته من خلاصتك",
+      "includedWith": "مشمول مع {{country}}",
+      "includedWithA11y": "مفضل، مشمول مع {{country}}",
+      "includedWithHelp": "مشمول مع {{country}}. لتغيير ذلك، أزل {{country}} من المصادر."
+    },
+    "you": {
+      "sources": {
+        "find": "ابحث عن منشور أو دولة",
+        "footnote": "اضغط على أي عنصر لتغييره. يظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
+        "empty": "لم تختر أي مصادر بعد. ابحث عن منشور لتفضيله أو إخفائه من خلاصتك. ويظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
+        "countryCleared": "تمت إزالة تفضيل {{country}}",
+        "saveError": "تعذّر حفظ ذلك. حاول مرة أخرى."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "ضع هذا المنشور كـ«غير مفضل»"
+      }
+    }
+  },
+  "de": {
+    "onboarding": {
+      "sourcesTitle": "Welchen Nachrichtenquellen vertraust du?",
+      "sourcesBody": "Tippe auf den Stern, um mehr zu sehen. Tippe auf das Auge, um eine Quelle aus deinen Nachrichten auszublenden. Das kannst du jederzeit unter Quellen ändern.",
+      "sourcesSkip": "Überspringen",
+      "sourcesLoadError": "Quellen konnten nicht geladen werden.",
+      "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
+      "iSubscribe": "Ich habe ein Abo",
+      "iSubscribeA11y": "Ich habe {{publisher}} abonniert",
+      "sourcesFind": "Veröffentlichung suchen"
+    },
+    "manageData": {
+      "meterTitle": "Daten auf diesem Telefon",
+      "meterLine": "Mera nutzt {{used}}. Auf diesem Telefon sind {{free}} frei.",
+      "meterUsedOnly": "Mera nutzt {{used}}.",
+      "meterDatabase": "Artikel und Profil",
+      "meterBackup": "Sicherungskopie"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Eine Veröffentlichung als Bevorzugt markieren",
+      "actionPublicationMute": "Eine Veröffentlichung als Nicht bevorzugt markieren",
+      "actionSourceScopeBoost": "Quellen aus einem Land bevorzugen"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "{{name}} als Bevorzugt festgelegt",
+        "notPreferred": "{{name}} als Nicht bevorzugt festgelegt",
+        "preferredSourcesFrom": "Quellen aus {{name}} als Bevorzugt festgelegt"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Veröffentlichungen, die du bevorzugst, die, die du aus deinen Nachrichten ausgeblendet hast, und die, für die du bezahlst."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Sterne, Abzeichen und das Ausblenden einer Quelle aus deinen Nachrichten.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Ein Bildschirm für jede Veröffentlichung, die du ausgewählt hast.",
+              "steps": {
+                "1": "„Nicht bevorzugt“ im •••-Menü eines Artikels wirkt sofort, mit Rückgängig, und die Veröffentlichung erscheint dann unter Quellen."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Veröffentlichung mit Stern versehen",
+              "body": "Öffne ein Land, dann hat jede Veröffentlichung einen Stern. Ein Stern holt sie in deinen Nachrichten nach oben.",
+              "ask": "Was ist der Unterschied zwischen Bevorzugt und Nicht bevorzugt?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "„Nicht bevorzugt“ blendet sie aus deinen Nachrichten aus",
+              "body": "Markiere eine Veröffentlichung als Nicht bevorzugt, dann verschwinden ihre Geschichten aus deinen Nachrichten. Welt und verwandte Geschichten können sie weiterhin zeigen. Tippe auf jede Karte und lege sie an die richtige Stelle.",
+              "steps": {
+                "0": "Stern: weiter oben angezeigt.",
+                "1": "Nicht bevorzugt: aus deinen Nachrichten ausgeblendet.",
+                "2": "Du kannst eines davon unter Quellen aufheben."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Weiter oben angezeigt",
+                  "gone": "Aus deinen Nachrichten ausgeblendet"
+                },
+                "cards": {
+                  "down-arrow": "Der Stern",
+                  "mute": "Nicht bevorzugt"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Quellen, die du als Nicht bevorzugt markiert hast."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Über {{source}} oder aus deinen Nachrichten ausblenden",
+      "notPreferred": "Nicht bevorzugt",
+      "notPreferredDone": "{{publisher}} ist aus deinen Nachrichten ausgeblendet"
+    },
+    "publicationPage": {
+      "preferred": "Bevorzugt",
+      "notPreferred": "Nicht bevorzugt",
+      "preferA11y": "{{publisher}} bevorzugen",
+      "notPreferA11y": "{{publisher}} als Nicht bevorzugt markieren",
+      "notPreferHint": "Blendet ihre Artikel aus deinen Nachrichten aus",
+      "includedWith": "Mit {{country}} enthalten",
+      "includedWithA11y": "Bevorzugt, mit {{country}} enthalten",
+      "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne {{country}} unter Quellen."
+    },
+    "you": {
+      "sources": {
+        "find": "Veröffentlichung oder Land suchen",
+        "footnote": "Tippe auf einen Eintrag, um ihn zu ändern. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
+        "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
+        "countryCleared": "{{country}} ist nicht mehr bevorzugt",
+        "saveError": "Das konnte nicht gespeichert werden. Versuch es noch einmal."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Diese Veröffentlichung als Nicht bevorzugt markieren"
+      }
+    }
+  },
+  "es": {
+    "onboarding": {
+      "sourcesTitle": "¿En qué fuentes de noticias confías?",
+      "sourcesBody": "Toca la estrella para ver más. Toca el ojo para ocultarla de tus Noticias. Puedes cambiarlo cuando quieras en Fuentes.",
+      "sourcesSkip": "Omitir",
+      "sourcesLoadError": "No se pudieron cargar las fuentes.",
+      "sourcesOffline": "Estás sin conexión. Puedes añadir fuentes más tarde en Fuentes.",
+      "iSubscribe": "Tengo una suscripción",
+      "iSubscribeA11y": "Tengo una suscripción a {{publisher}}",
+      "sourcesFind": "Busca una publicación"
+    },
+    "manageData": {
+      "meterTitle": "Datos en este teléfono",
+      "meterLine": "Mera usa {{used}}. {{free}} libres en este teléfono.",
+      "meterUsedOnly": "Mera usa {{used}}.",
+      "meterDatabase": "Artículos y perfil",
+      "meterBackup": "Copia de seguridad"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Marcar una publicación como Preferida",
+      "actionPublicationMute": "Marcar una publicación como No preferida",
+      "actionSourceScopeBoost": "Preferir fuentes de un país"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Preferida: {{name}}",
+        "notPreferred": "No preferida: {{name}}",
+        "preferredSourcesFrom": "Marcar las fuentes de {{name}} como Preferidas"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Publicaciones que prefieres, las que ocultaste de tus Noticias y las que pagas."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Estrellas, etiquetas y ocultar una fuente de tus Noticias.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Una sola pantalla para cada publicación que elegiste.",
+              "steps": {
+                "1": "\"No preferida\" en el menú ••• de un artículo surte efecto al momento, con Deshacer, y después la publicación aparece en Fuentes."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Dale una estrella a una publicación",
+              "body": "Abre un país y cada publicación tiene una estrella. Una estrella la sube en tus Noticias.",
+              "ask": "¿Cuál es la diferencia entre Preferida y No preferida?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "\"No preferida\" la oculta de tus Noticias",
+              "body": "Marca una publicación como No preferida y sus historias dejan de aparecer en tus Noticias. La pestaña Mundo y las historias relacionadas aún pueden mostrarlas. Toca cada tarjeta y colócala donde corresponde.",
+              "steps": {
+                "0": "Estrella: se muestra más arriba.",
+                "1": "No preferida: oculta de tus Noticias.",
+                "2": "Puedes quitar cualquiera de las dos en Fuentes."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Se muestra más arriba",
+                  "gone": "Oculta de tus Noticias"
+                },
+                "cards": {
+                  "down-arrow": "La estrella",
+                  "mute": "No preferida"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Fuentes que marcaste como No preferida."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Sobre {{source}}, o ocultar la fuente de tus Noticias",
+      "notPreferred": "No preferida",
+      "notPreferredDone": "{{publisher}} está oculta de tus Noticias"
+    },
+    "publicationPage": {
+      "preferred": "Preferida",
+      "notPreferred": "No preferida",
+      "preferA11y": "Preferir {{publisher}}",
+      "notPreferA11y": "Marcar {{publisher}} como no preferida",
+      "notPreferHint": "Oculta sus artículos de tus Noticias",
+      "includedWith": "Incluida con {{country}}",
+      "includedWithA11y": "Preferida, incluida con {{country}}",
+      "includedWithHelp": "Incluida con {{country}}. Para cambiarlo, quita {{country}} en Fuentes."
+    },
+    "you": {
+      "sources": {
+        "find": "Busca una publicación o un país",
+        "footnote": "Toca una para cambiarla. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
+        "empty": "Aún no has elegido ninguna fuente. Busca una publicación para preferirla u ocultarla de tus Noticias. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
+        "countryCleared": "{{country}} ya no está entre tus preferencias",
+        "saveError": "No se pudo guardar. Inténtalo de nuevo."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Marcar esta publicación como No preferida"
+      }
+    }
+  },
+  "fr": {
+    "onboarding": {
+      "sourcesTitle": "En quelles sources d'actualité avez-vous confiance ?",
+      "sourcesBody": "Touchez l'étoile pour en voir davantage. Touchez l'œil pour la masquer de votre fil d'actu. Vous pourrez modifier cela à tout moment dans Sources.",
+      "sourcesSkip": "Passer",
+      "sourcesLoadError": "Impossible de charger les sources.",
+      "sourcesOffline": "Vous êtes hors connexion. Vous pourrez ajouter des sources plus tard dans Sources.",
+      "iSubscribe": "J'ai un abonnement",
+      "iSubscribeA11y": "J'ai un abonnement à {{publisher}}",
+      "sourcesFind": "Trouver une publication"
+    },
+    "manageData": {
+      "meterTitle": "Données sur ce téléphone",
+      "meterLine": "Mera utilise {{used}}. {{free}} disponibles sur ce téléphone.",
+      "meterUsedOnly": "Mera utilise {{used}}.",
+      "meterDatabase": "Articles et profil",
+      "meterBackup": "Copie de sauvegarde"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Marquer une publication comme préférée",
+      "actionPublicationMute": "Marquer une publication comme non préférée",
+      "actionSourceScopeBoost": "Privilégier les sources d'un pays"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Préférée : {{name}}",
+        "notPreferred": "Non préférée : {{name}}",
+        "preferredSourcesFrom": "Définir les sources de {{name}} comme préférées"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Les publications que vous préférez, celles que vous avez masquées de votre fil d'actu et celles que vous payez."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Étoiles, badges et masquage d'une source dans votre fil d'actu.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Un seul écran pour toutes les publications que vous avez choisies.",
+              "steps": {
+                "1": "« Non préférée » dans le menu ••• d'un article prend effet immédiatement, avec Annuler, et la publication apparaît ensuite dans Sources."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Ajouter une étoile à une publication",
+              "body": "Ouvrez un pays et chaque publication a une étoile. L'étoile la fait remonter dans votre fil d'actu.",
+              "ask": "Quelle est la différence entre « Préférée » et « Non préférée » ?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "« Non préférée » la masque de votre fil d'actu",
+              "body": "Marquez une publication comme non préférée et ses articles disparaissent de votre fil d'actu. La rubrique Monde et les articles associés peuvent toujours les afficher. Touchez chaque carte et placez-la où elle doit être.",
+              "steps": {
+                "0": "Étoile : affichée plus haut.",
+                "1": "Non préférée : masquée de votre fil d'actu.",
+                "2": "Vous pouvez annuler l'un ou l'autre dans Sources."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Affichée plus haut",
+                  "gone": "Masquée de votre fil d'actu"
+                },
+                "cards": {
+                  "down-arrow": "L'étoile",
+                  "mute": "Non préférée"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Sources que vous avez marquées comme non préférées."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "À propos de {{source}}, ou masquer cette source de votre fil d'actu",
+      "notPreferred": "Non préférée",
+      "notPreferredDone": "{{publisher}} est masquée de votre fil d'actu"
+    },
+    "publicationPage": {
+      "preferred": "Préférée",
+      "notPreferred": "Non préférée",
+      "preferA11y": "Préférer {{publisher}}",
+      "notPreferA11y": "Marquer {{publisher}} comme non préférée",
+      "notPreferHint": "Masque ses articles de votre fil d'actu",
+      "includedWith": "Incluse avec {{country}}",
+      "includedWithA11y": "Préférée, incluse avec {{country}}",
+      "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez {{country}} dans Sources."
+    },
+    "you": {
+      "sources": {
+        "find": "Trouver une publication ou un pays",
+        "footnote": "Touchez-en une pour la modifier. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
+        "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
+        "countryCleared": "{{country}} ne fait plus partie de vos préférences",
+        "saveError": "Impossible d'enregistrer cela. Réessayez."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Marquer cette publication comme non préférée"
+      }
+    }
+  },
+  "hi": {
+    "onboarding": {
+      "sourcesTitle": "आप किन समाचार स्रोतों पर भरोसा करते हैं?",
+      "sourcesBody": "ज़्यादा देखने के लिए स्टार पर टैप करें। अपनी फ़ीड से छिपाने के लिए आँख के आइकन पर टैप करें। इसे कभी भी स्रोत में जाकर बदल सकते हैं।",
+      "sourcesSkip": "छोड़ें",
+      "sourcesLoadError": "स्रोत लोड नहीं हो सके।",
+      "sourcesOffline": "आप ऑफ़लाइन हैं। आप बाद में स्रोत स्क्रीन से स्रोत जोड़ सकते हैं।",
+      "iSubscribe": "मेरी सदस्यता है",
+      "iSubscribeA11y": "{{publisher}} की मेरी सदस्यता है",
+      "sourcesFind": "कोई प्रकाशन खोजें"
+    },
+    "manageData": {
+      "meterTitle": "इस फ़ोन पर डेटा",
+      "meterLine": "मेरा ऐप {{used}} इस्तेमाल करता है। इस फ़ोन पर {{free}} खाली है।",
+      "meterUsedOnly": "मेरा ऐप {{used}} इस्तेमाल करता है।",
+      "meterDatabase": "लेख और प्रोफ़ाइल",
+      "meterBackup": "बैकअप कॉपी"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "किसी प्रकाशन को पसंदीदा चिह्नित करें",
+      "actionPublicationMute": "किसी प्रकाशन को पसंदीदा नहीं चिह्नित करें",
+      "actionSourceScopeBoost": "किसी देश के स्रोत पसंदीदा बनाएँ"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "{{name}} को पसंदीदा सेट किया",
+        "notPreferred": "{{name}} को \"पसंदीदा नहीं\" पर सेट किया",
+        "preferredSourcesFrom": "{{name}} के स्रोत पसंदीदा सेट किए"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "आपके पसंदीदा प्रकाशन, वे जिन्हें आपने फ़ीड से छिपाया है, और वे जिनके लिए आप भुगतान करते हैं।"
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "स्टार, बैज, और स्रोत को फ़ीड से छिपाना।",
+          "slides": {
+            "where-it-lives": {
+              "body": "आपके चुने हुए हर प्रकाशन के लिए एक स्क्रीन।",
+              "steps": {
+                "1": "लेख के ••• मेनू से \"पसंदीदा नहीं\" तुरंत लागू होता है, पूर्ववत करने का विकल्प साथ रहता है, और प्रकाशन फिर स्रोत में दिखता है।"
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "किसी प्रकाशन को स्टार दें",
+              "body": "किसी देश को खोलने पर हर प्रकाशन के पास एक स्टार होता है। स्टार उस प्रकाशन को आपकी फ़ीड में ऊपर ले जाता है।",
+              "ask": "पसंदीदा और पसंदीदा नहीं में क्या अंतर है?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "पसंदीदा नहीं प्रकाशन को फ़ीड से छिपा देता है",
+              "body": "किसी प्रकाशन को पसंदीदा नहीं चिह्नित करने पर उसकी स्टोरीज़ आपकी फ़ीड में नहीं दिखतीं। विश्व और संबंधित स्टोरीज़ में फिर भी उन्हें दिखाया जा सकता है। हर कार्ड पर टैप करें और उसे सही जगह पर रखें।",
+              "steps": {
+                "0": "स्टार: ऊपर दिखाया जाता है।",
+                "1": "पसंदीदा नहीं: आपकी फ़ीड से छिपा हुआ।",
+                "2": "आप स्रोत में जाकर इनमें से किसी को भी साफ़ कर सकते हैं।"
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "ऊपर दिखाए जाते हैं",
+                  "gone": "आपकी फ़ीड से छिपे हुए"
+                },
+                "cards": {
+                  "down-arrow": "स्टार",
+                  "mute": "पसंदीदा नहीं"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "वे स्रोत जिन्हें आपने पसंदीदा नहीं चिह्नित किया है।"
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "{{source}} के बारे में, या उसे अपनी फ़ीड से छिपाएँ",
+      "notPreferred": "पसंदीदा नहीं",
+      "notPreferredDone": "{{publisher}} आपकी फ़ीड से छिपा है"
+    },
+    "publicationPage": {
+      "preferred": "पसंदीदा",
+      "notPreferred": "पसंदीदा नहीं",
+      "preferA11y": "{{publisher}} को पसंदीदा बनाएँ",
+      "notPreferA11y": "{{publisher}} को पसंदीदा नहीं चिह्नित करें",
+      "notPreferHint": "इसके लेख आपकी फ़ीड से छिपाए जाते हैं",
+      "includedWith": "{{country}} के साथ शामिल",
+      "includedWithA11y": "पसंदीदा, {{country}} के साथ शामिल",
+      "includedWithHelp": "यह {{country}} के साथ शामिल है। इसे बदलने के लिए स्रोत में जाकर {{country}} हटाएँ।"
+    },
+    "you": {
+      "sources": {
+        "find": "कोई प्रकाशन या देश खोजें",
+        "footnote": "बदलने के लिए किसी एक पर टैप करें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
+        "empty": "आपने अभी तक कोई स्रोत नहीं चुना है। किसी प्रकाशन को पसंदीदा बनाने या उसे फ़ीड से छिपाने के लिए खोजें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
+        "countryCleared": "{{country}} अब पसंदीदा नहीं है",
+        "saveError": "वह सहेजा नहीं जा सका। फिर से कोशिश करें।"
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "इस प्रकाशन को पसंदीदा नहीं चिह्नित करें"
+      }
+    }
+  },
+  "id": {
+    "onboarding": {
+      "sourcesTitle": "Sumber berita mana yang Anda percayai?",
+      "sourcesBody": "Ketuk bintang untuk melihat lebih banyak. Ketuk ikon mata untuk menyembunyikan dari umpan Anda. Anda bisa mengubahnya kapan saja di Sumber.",
+      "sourcesSkip": "Lewati",
+      "sourcesLoadError": "Tidak dapat memuat sumber.",
+      "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
+      "iSubscribe": "Saya berlangganan",
+      "iSubscribeA11y": "Saya berlangganan {{publisher}}",
+      "sourcesFind": "Cari publikasi"
+    },
+    "manageData": {
+      "meterTitle": "Data di ponsel ini",
+      "meterLine": "Mera menggunakan {{used}}. {{free}} tersedia di ponsel ini.",
+      "meterUsedOnly": "Mera menggunakan {{used}}.",
+      "meterDatabase": "Artikel dan profil",
+      "meterBackup": "Salinan cadangan"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Tandai publikasi sebagai Diutamakan",
+      "actionPublicationMute": "Tandai publikasi sebagai Jangan tampilkan",
+      "actionSourceScopeBoost": "Utamakan sumber dari negara"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Atur {{name}} sebagai Diutamakan",
+        "notPreferred": "Atur {{name}} sebagai Jangan tampilkan",
+        "preferredSourcesFrom": "Atur sumber dari {{name}} sebagai Diutamakan"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Publikasi yang Anda utamakan, yang Anda sembunyikan dari umpan Anda, dan yang Anda bayar."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Bintang, lencana, dan menyembunyikan sumber dari umpan Anda.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Satu layar untuk setiap publikasi yang Anda pilih.",
+              "steps": {
+                "1": "\"Jangan tampilkan\" di menu ••• artikel langsung berlaku, dengan opsi Urungkan, lalu publikasi itu tampil di Sumber."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Beri bintang pada publikasi",
+              "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda.",
+              "ask": "Apa bedanya Diutamakan dan Jangan tampilkan?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "\"Jangan tampilkan\" menyembunyikannya dari umpan Anda",
+              "body": "Tandai publikasi sebagai Jangan tampilkan dan ceritanya hilang dari umpan Anda. Tab Dunia dan cerita terkait tetap bisa menampilkannya. Ketuk setiap kartu lalu letakkan di tempat yang semestinya.",
+              "steps": {
+                "0": "Bintang: ditampilkan lebih tinggi.",
+                "1": "Jangan tampilkan: disembunyikan dari umpan Anda.",
+                "2": "Anda bisa menghapus salah satunya di Sumber."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Ditampilkan lebih tinggi",
+                  "gone": "Disembunyikan dari umpan Anda"
+                },
+                "cards": {
+                  "down-arrow": "Bintang",
+                  "mute": "Jangan tampilkan"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Sumber yang Anda tandai Jangan tampilkan."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Tentang {{source}}, atau sembunyikan dari umpan Anda",
+      "notPreferred": "Jangan tampilkan",
+      "notPreferredDone": "{{publisher}} disembunyikan dari umpan Anda"
+    },
+    "publicationPage": {
+      "preferred": "Diutamakan",
+      "notPreferred": "Jangan tampilkan",
+      "preferA11y": "Utamakan {{publisher}}",
+      "notPreferA11y": "Tandai {{publisher}} sebagai Jangan tampilkan",
+      "notPreferHint": "Menyembunyikan artikelnya dari umpan Anda",
+      "includedWith": "Termasuk dalam {{country}}",
+      "includedWithA11y": "Diutamakan, termasuk dalam {{country}}",
+      "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus {{country}} di Sumber."
+    },
+    "you": {
+      "sources": {
+        "find": "Cari publikasi atau negara",
+        "footnote": "Ketuk salah satu untuk mengubahnya. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
+        "empty": "Anda belum memilih sumber apa pun. Cari publikasi untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
+        "countryCleared": "{{country}} tidak lagi diutamakan",
+        "saveError": "Tidak dapat menyimpan itu. Coba lagi."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Tandai publikasi ini sebagai Jangan tampilkan"
+      }
+    }
+  },
+  "it": {
+    "onboarding": {
+      "sourcesTitle": "Di quali fonti di notizie ti fidi?",
+      "sourcesBody": "Tocca la stella per vederne di più. Tocca l'occhio per nasconderla dalle tue Notizie. Puoi cambiarlo in qualsiasi momento in Fonti.",
+      "sourcesSkip": "Salta",
+      "sourcesLoadError": "Impossibile caricare le fonti.",
+      "sourcesOffline": "Sei offline. Puoi aggiungere fonti più tardi in Fonti.",
+      "iSubscribe": "Ho un abbonamento",
+      "iSubscribeA11y": "Ho un abbonamento a {{publisher}}",
+      "sourcesFind": "Trova una pubblicazione"
+    },
+    "manageData": {
+      "meterTitle": "Dati su questo telefono",
+      "meterLine": "Mera usa {{used}}. {{free}} liberi su questo telefono.",
+      "meterUsedOnly": "Mera usa {{used}}.",
+      "meterDatabase": "Articoli e profilo",
+      "meterBackup": "Copia di backup"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Segna una pubblicazione come Preferita",
+      "actionPublicationMute": "Segna una pubblicazione come Non preferita",
+      "actionSourceScopeBoost": "Dai la precedenza alle fonti di un paese"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Preferita: {{name}}",
+        "notPreferred": "Non preferita: {{name}}",
+        "preferredSourcesFrom": "Imposta su Preferita le fonti di {{name}}"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Le pubblicazioni che preferisci, quelle che hai nascosto dalle tue Notizie e quelle per cui paghi."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Stelle, badge e nascondere una fonte dalle tue Notizie.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Una schermata per ogni pubblicazione che hai scelto.",
+              "steps": {
+                "1": "\"Non preferita\" nel menu ••• di un articolo ha effetto subito, con Annulla, e poi la pubblicazione compare in Fonti."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Dai una stella a una pubblicazione",
+              "body": "Apri un paese e ogni pubblicazione ha una stella. Una stella la sposta più in alto nelle tue Notizie.",
+              "ask": "Qual è la differenza tra Preferita e Non preferita?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "Non preferita nasconde la pubblicazione dalle tue Notizie",
+              "body": "Segna una pubblicazione come Non preferita e le sue storie escono dalle tue Notizie. La scheda Mondo e le storie correlate possono comunque mostrarle. Tocca ogni scheda e mettila dove appartiene.",
+              "steps": {
+                "0": "Stella: compare più in alto.",
+                "1": "Non preferita: nascosta dalle tue Notizie.",
+                "2": "Puoi togliere l'una o l'altra in Fonti."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Compare più in alto",
+                  "gone": "Nascosta dalle tue Notizie"
+                },
+                "cards": {
+                  "down-arrow": "La stella",
+                  "mute": "Non preferita"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Fonti che hai segnato come Non preferita."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Info su {{source}}, o nascondi la pubblicazione dalle tue Notizie",
+      "notPreferred": "Non preferita",
+      "notPreferredDone": "{{publisher}} non compare più nelle tue Notizie"
+    },
+    "publicationPage": {
+      "preferred": "Preferita",
+      "notPreferred": "Non preferita",
+      "preferA11y": "Preferisci {{publisher}}",
+      "notPreferA11y": "Segna {{publisher}} come non preferita",
+      "notPreferHint": "Nasconde i suoi articoli dalle tue Notizie",
+      "includedWith": "Inclusa con {{country}}",
+      "includedWithA11y": "Preferita, inclusa con {{country}}",
+      "includedWithHelp": "Inclusa con {{country}}. Per cambiarlo, togli {{country}} in Fonti."
+    },
+    "you": {
+      "sources": {
+        "find": "Trova una pubblicazione o un paese",
+        "footnote": "Tocca una voce per cambiarla. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
+        "empty": "Non hai ancora scelto nessuna fonte. Cerca una pubblicazione da preferire o nascondere dalle tue Notizie. \"Non preferita\" nel menu ••• di un articolo finisce anche qui.",
+        "countryCleared": "{{country}} non è più tra le tue preferenze",
+        "saveError": "Non è stato possibile salvare. Riprova."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Segna questa pubblicazione come Non preferita"
+      }
+    }
+  },
+  "ja": {
+    "onboarding": {
+      "sourcesTitle": "信頼できるニュースソースはどれですか？",
+      "sourcesBody": "星をタップすると、より多く表示されます。目のアイコンをタップすると、フィードから非表示になります。いつでもソースで変更できます。",
+      "sourcesSkip": "スキップ",
+      "sourcesLoadError": "ソースを読み込めませんでした。",
+      "sourcesOffline": "オフラインです。後からソースを追加できます。",
+      "iSubscribe": "購読しています",
+      "iSubscribeA11y": "{{publisher}}を購読しています",
+      "sourcesFind": "公開元を検索"
+    },
+    "manageData": {
+      "meterTitle": "この端末のデータ",
+      "meterLine": "メラは{{used}}を使用しています。この端末には{{free}}の空きがあります。",
+      "meterUsedOnly": "メラは{{used}}を使用しています。",
+      "meterDatabase": "記事とプロフィール",
+      "meterBackup": "バックアップ用のコピー"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "公開元を「優先」に設定",
+      "actionPublicationMute": "公開元を「表示しない」に設定",
+      "actionSourceScopeBoost": "国のソースを優先する"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "{{name}}を優先に設定",
+        "notPreferred": "{{name}}を「表示しない」に設定",
+        "preferredSourcesFrom": "{{name}}のソースを優先に設定"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "優先している公開元、フィードから非表示にした公開元、購読している公開元。"
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "星、バッジ、フィードからソースを非表示にすること。",
+          "slides": {
+            "where-it-lives": {
+              "body": "選んだすべての公開元が一つの画面に表示されます。",
+              "steps": {
+                "1": "記事の•••メニューの「表示しない」はすぐに反映され、元に戻すこともでき、その公開元はソースに表示されるようになります。"
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "公開元に星を付ける",
+              "body": "国を開くと、すべての公開元に星があります。星を付けると、その公開元がフィードの上位に表示されます。",
+              "ask": "「優先」と「表示しない」の違いは何ですか？"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "「表示しない」にすると、フィードから非表示になります",
+              "body": "公開元を「表示しない」に設定すると、その記事はフィードから消えます。「世界」タブや関連ストーリーには、引き続き表示されることがあります。各カードをタップして、正しい位置に移動してください。",
+              "steps": {
+                "0": "星: 上位に表示されます。",
+                "1": "表示しない: フィードから非表示になります。",
+                "2": "どちらも、ソースで解除できます。"
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "上位に表示",
+                  "gone": "フィードから非表示"
+                },
+                "cards": {
+                  "down-arrow": "星",
+                  "mute": "表示しない"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "「表示しない」に設定したソース。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "{{source}}について、またはフィードから非表示にする",
+      "notPreferred": "表示しない",
+      "notPreferredDone": "{{publisher}}はフィードから非表示になっています"
+    },
+    "publicationPage": {
+      "preferred": "優先",
+      "notPreferred": "表示しない",
+      "preferA11y": "{{publisher}}を優先する",
+      "notPreferA11y": "{{publisher}}を「表示しない」に設定",
+      "notPreferHint": "記事をフィードから非表示にする",
+      "includedWith": "{{country}}に含まれています",
+      "includedWithA11y": "優先、{{country}}に含まれています",
+      "includedWithHelp": "{{country}}に含まれています。変更するには、ソースで{{country}}を削除してください。"
+    },
+    "you": {
+      "sources": {
+        "find": "公開元または国を検索",
+        "footnote": "変更するには、どれかをタップしてください。記事の•••メニューの「表示しない」も、ここに表示されます。",
+        "empty": "まだソースを選んでいません。公開元を検索して、優先したり、フィードから非表示にしたりできます。記事の•••メニューの「表示しない」も、ここに表示されます。",
+        "countryCleared": "{{country}}は優先されなくなりました",
+        "saveError": "保存できませんでした。もう一度お試しください。"
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "この公開元を「表示しない」に設定"
+      }
+    }
+  },
+  "ko": {
+    "onboarding": {
+      "sourcesTitle": "어떤 뉴스 소스를 신뢰하세요?",
+      "sourcesBody": "별표를 누르면 더 많이 볼 수 있어요. 눈 아이콘을 누르면 내 피드에서 숨길 수 있어요. 설정은 언제든지 소스에서 바꿀 수 있어요.",
+      "sourcesSkip": "건너뛰기",
+      "sourcesLoadError": "소스를 불러오지 못했어요.",
+      "sourcesOffline": "오프라인 상태예요. 나중에 소스 화면에서 추가할 수 있어요.",
+      "iSubscribe": "구독 중이에요",
+      "iSubscribeA11y": "{{publisher}} 구독 중",
+      "sourcesFind": "매체 찾기"
+    },
+    "manageData": {
+      "meterTitle": "이 휴대폰의 데이터",
+      "meterLine": "메라가 {{used}} 사용 중이에요. 이 휴대폰에 {{free}} 남아 있어요.",
+      "meterUsedOnly": "메라가 {{used}} 사용 중이에요.",
+      "meterDatabase": "기사와 프로필",
+      "meterBackup": "백업 사본"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "매체를 선호로 표시",
+      "actionPublicationMute": "매체를 선호 안 함으로 표시",
+      "actionSourceScopeBoost": "국가의 소스 선호하기"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "{{name}} 선호로 설정",
+        "notPreferred": "{{name}} 선호 안 함으로 설정",
+        "preferredSourcesFrom": "{{name}}의 소스 선호로 설정"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "선호하는 매체, 피드에서 숨긴 매체, 구독 중인 매체."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "별표, 배지, 그리고 피드에서 소스 숨기기.",
+          "slides": {
+            "where-it-lives": {
+              "body": "내가 고른 모든 매체를 한 화면에서 볼 수 있어요.",
+              "steps": {
+                "1": "기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 바로 적용되고, 실행 취소할 수 있으며, 그 매체는 소스에 나타나요."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "매체에 별표 달기",
+              "body": "국가를 열면 모든 매체에 별표가 있어요. 별표를 누르면 피드에서 그 매체가 위로 올라가요.",
+              "ask": "선호와 선호 안 함은 어떻게 다른가요?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "선호 안 함은 내 피드에서 숨겨요",
+              "body": "매체를 선호 안 함으로 표시하면 그 매체의 기사가 내 피드에서 사라져요. 전 세계 탭과 관련 스토리에는 여전히 나올 수 있어요. 카드를 하나씩 눌러 알맞은 자리로 옮겨 보세요.",
+              "steps": {
+                "0": "별표: 위쪽에 표시돼요.",
+                "1": "선호 안 함: 내 피드에서 숨겨요.",
+                "2": "소스에서 둘 중 하나를 지울 수 있어요."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "위쪽에 표시",
+                  "gone": "내 피드에서 숨김"
+                },
+                "cards": {
+                  "down-arrow": "별표",
+                  "mute": "선호 안 함"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "선호 안 함으로 표시한 소스."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "{{source}} 정보, 또는 내 피드에서 숨기기",
+      "notPreferred": "선호 안 함",
+      "notPreferredDone": "{{publisher}} 매체가 내 피드에서 숨겨졌어요"
+    },
+    "publicationPage": {
+      "preferred": "선호",
+      "notPreferred": "선호 안 함",
+      "preferA11y": "{{publisher}} 선호하기",
+      "notPreferA11y": "{{publisher}} 선호 안 함으로 표시",
+      "notPreferHint": "기사를 내 피드에서 숨기기",
+      "includedWith": "{{country}}에 포함됨",
+      "includedWithA11y": "선호, {{country}}에 포함됨",
+      "includedWithHelp": "{{country}}에 포함돼 있어요. 바꾸려면 소스에서 {{country}} 항목을 삭제하세요."
+    },
+    "you": {
+      "sources": {
+        "find": "매체나 국가 찾기",
+        "footnote": "눌러서 바꿀 수 있어요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
+        "empty": "아직 고른 소스가 없어요. 매체를 검색해서 선호로 지정하거나 내 피드에서 숨겨 보세요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
+        "countryCleared": "{{country}} 선호가 해제됐어요",
+        "saveError": "저장하지 못했어요. 다시 시도해 주세요."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "이 매체를 선호 안 함으로 표시"
+      }
+    }
+  },
+  "nl": {
+    "onboarding": {
+      "sourcesTitle": "Welke nieuwsbronnen vertrouw je?",
+      "sourcesBody": "Tik op de ster om meer te zien. Tik op het oog om het uit je feed te verbergen. Dit kun je altijd wijzigen bij Bronnen.",
+      "sourcesSkip": "Overslaan",
+      "sourcesLoadError": "Kon de bronnen niet laden.",
+      "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
+      "iSubscribe": "Ik heb een abonnement",
+      "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}",
+      "sourcesFind": "Zoek een publicatie"
+    },
+    "manageData": {
+      "meterTitle": "Data op deze telefoon",
+      "meterLine": "Mera gebruikt {{used}}. {{free}} vrij op deze telefoon.",
+      "meterUsedOnly": "Mera gebruikt {{used}}.",
+      "meterDatabase": "Artikelen en profiel",
+      "meterBackup": "Reservekopie"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Markeer een publicatie als Voorkeur",
+      "actionPublicationMute": "Markeer een publicatie als Liever niet",
+      "actionSourceScopeBoost": "Geef bronnen uit een land voorkeur"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "{{name}} ingesteld als Voorkeur",
+        "notPreferred": "{{name}} ingesteld als Liever niet",
+        "preferredSourcesFrom": "Bronnen van {{name}} ingesteld als Voorkeur"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Publicaties die je voorkeur hebben, die je uit je feed hebt verborgen en waarvoor je betaalt."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Sterren, badges en een bron uit je feed verbergen.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Eén scherm voor elke publicatie die je hebt gekozen.",
+              "steps": {
+                "1": "\"Liever niet\" in het ••• menu van een artikel werkt meteen, met ongedaan maken, en de publicatie verschijnt daarna in Bronnen."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Geef een publicatie een ster",
+              "body": "Open een land en elke publicatie heeft een ster. Een ster zet een publicatie hoger in je feed.",
+              "ask": "Wat is het verschil tussen Voorkeur en Liever niet?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "Liever niet verbergt het uit je feed",
+              "body": "Markeer een publicatie als Liever niet en de artikelen verdwijnen uit je feed. Wereld en verwante verhalen kunnen ze nog steeds tonen. Tik op elke kaart en zet hem op de juiste plek.",
+              "steps": {
+                "0": "Ster: hoger weergegeven.",
+                "1": "Liever niet: verborgen uit je feed.",
+                "2": "Je kunt beide wissen bij Bronnen."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Hoger weergegeven",
+                  "gone": "Verborgen uit je feed"
+                },
+                "cards": {
+                  "down-arrow": "De ster",
+                  "mute": "Liever niet"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Bronnen die je als Liever niet hebt gemarkeerd."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Over {{source}}, of verberg het uit je feed",
+      "notPreferred": "Liever niet",
+      "notPreferredDone": "{{publisher}} is verborgen uit je feed"
+    },
+    "publicationPage": {
+      "preferred": "Voorkeur",
+      "notPreferred": "Liever niet",
+      "preferA11y": "Voorkeur geven aan {{publisher}}",
+      "notPreferA11y": "Markeer {{publisher}} als Liever niet",
+      "notPreferHint": "Verbergt de artikelen uit je feed",
+      "includedWith": "Inbegrepen bij {{country}}",
+      "includedWithA11y": "Voorkeur, inbegrepen bij {{country}}",
+      "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je {{country}} bij Bronnen."
+    },
+    "you": {
+      "sources": {
+        "find": "Zoek een publicatie of land",
+        "footnote": "Tik op een item om het te wijzigen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
+        "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie om er een voorkeur aan te geven of haar uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
+        "countryCleared": "{{country}} staat niet meer bij je voorkeuren",
+        "saveError": "Dat kon niet worden opgeslagen. Probeer het opnieuw."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Markeer deze publicatie als Liever niet"
+      }
+    }
+  },
+  "pl": {
+    "onboarding": {
+      "sourcesTitle": "Którym źródłom wiadomości ufasz?",
+      "sourcesBody": "Dotknij gwiazdki, aby zobaczyć więcej. Dotknij oka, aby ukryć to w swoim Strumieniu. Zmienić to możesz w dowolnej chwili w Źródłach.",
+      "sourcesSkip": "Pomiń",
+      "sourcesLoadError": "Nie udało się wczytać źródeł.",
+      "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
+      "iSubscribe": "Subskrybuję",
+      "iSubscribeA11y": "Subskrybuję {{publisher}}",
+      "sourcesFind": "Szukaj wydawcy"
+    },
+    "manageData": {
+      "meterTitle": "Dane na tym telefonie",
+      "meterLine": "Mera używa {{used}}. Na tym telefonie wolne jest {{free}}.",
+      "meterUsedOnly": "Mera używa {{used}}.",
+      "meterDatabase": "Artykuły i profil",
+      "meterBackup": "Kopia zapasowa"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Oznacz wydawcę jako Preferowany",
+      "actionPublicationMute": "Oznacz wydawcę jako Niepreferowany",
+      "actionSourceScopeBoost": "Preferuj źródła z kraju"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Preferowany: {{name}}",
+        "notPreferred": "Niepreferowany: {{name}}",
+        "preferredSourcesFrom": "Ustaw kraj {{name}} jako Preferowany"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Wydawcy, których preferujesz, ci, których ukrywasz w swoim Strumieniu, i ci, za których płacisz."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Gwiazdki, odznaki i ukrywanie źródeł w Strumieniu.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Jeden ekran dla wszystkich wybranych wydawców.",
+              "steps": {
+                "1": "„Niepreferowany” w menu ••• przy artykule działa od razu, z opcją Cofnij, a potem wydawca pojawia się w Źródłach."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Oznacz wydawcę gwiazdką",
+              "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu.",
+              "ask": "Jaka jest różnica między „Preferowany” a „Niepreferowany”?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "„Niepreferowany” ukrywa go w Strumieniu",
+              "body": "Oznacz wydawcę jako Niepreferowany, a jego artykuły znikną z twojego Strumienia. Świat i powiązane historie nadal mogą je pokazywać. Dotknij każdej karty i przenieś ją tam, gdzie jej miejsce.",
+              "steps": {
+                "0": "Gwiazdka: wyświetla się wyżej.",
+                "1": "Niepreferowany: ukryty w Strumieniu.",
+                "2": "Możesz wyczyścić któreś z nich w Źródłach."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Wyświetla się wyżej",
+                  "gone": "Ukryty w Strumieniu"
+                },
+                "cards": {
+                  "down-arrow": "Gwiazdka",
+                  "mute": "Niepreferowany"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Źródła oznaczone jako „Niepreferowany”."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "O {{source}} lub ukryj go w Strumieniu",
+      "notPreferred": "Niepreferowany",
+      "notPreferredDone": "{{publisher}} jest ukryty w twoim Strumieniu"
+    },
+    "publicationPage": {
+      "preferred": "Preferowany",
+      "notPreferred": "Niepreferowany",
+      "preferA11y": "Preferuj {{publisher}}",
+      "notPreferA11y": "Oznacz {{publisher}} jako Niepreferowany",
+      "notPreferHint": "Ukrywa jego artykuły w twoim Strumieniu",
+      "includedWith": "Razem z krajem: {{country}}",
+      "includedWithA11y": "Preferowany, razem z krajem: {{country}}",
+      "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, usuń kraj w Źródłach: {{country}}."
+    },
+    "you": {
+      "sources": {
+        "find": "Szukaj wydawcy lub kraju",
+        "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
+        "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
+        "countryCleared": "Cofnięto preferencję: {{country}}",
+        "saveError": "Nie udało się zapisać. Spróbuj ponownie."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Oznacz tego wydawcę jako Niepreferowany"
+      }
+    }
+  },
+  "pt-BR": {
+    "onboarding": {
+      "sourcesTitle": "Em quais fontes de notícias você confia?",
+      "sourcesBody": "Toque na estrela para ver mais. Toque no olho para ocultar do seu Feed. Você pode mudar isso a qualquer momento em Fontes.",
+      "sourcesSkip": "Pular",
+      "sourcesLoadError": "Não foi possível carregar fontes.",
+      "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
+      "iSubscribe": "Já assino",
+      "iSubscribeA11y": "Já assino {{publisher}}",
+      "sourcesFind": "Encontre uma publicação"
+    },
+    "manageData": {
+      "meterTitle": "Dados neste celular",
+      "meterLine": "A Mera usa {{used}}. {{free}} livres neste celular.",
+      "meterUsedOnly": "A Mera usa {{used}}.",
+      "meterDatabase": "Artigos e perfil",
+      "meterBackup": "Cópia de backup"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Marcar uma publicação como Preferida",
+      "actionPublicationMute": "Marcar uma publicação como Não preferida",
+      "actionSourceScopeBoost": "Preferir fontes de um país"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Definir {{name}} como Preferida",
+        "notPreferred": "Definir {{name}} como Não preferida",
+        "preferredSourcesFrom": "Definir como Preferida as fontes de {{name}}"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Publicações que você prefere, as que ocultou do seu Feed e as que você assina."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Estrelas, selos e ocultar uma fonte do seu Feed.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Uma tela com todas as publicações que você escolheu.",
+              "steps": {
+                "1": "\"Não preferida\" no menu ••• de um artigo vale na hora, com Desfazer, e a publicação então aparece em Fontes."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Dê uma estrela a uma publicação",
+              "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed.",
+              "ask": "Qual é a diferença entre Preferida e Não preferida?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "Não preferida esconde do seu Feed",
+              "body": "Marque uma publicação como Não preferida e as histórias dela saem do seu Feed. O Mundo e as histórias relacionadas ainda podem mostrá-las. Toque em cada cartão e coloque-o no lugar certo.",
+              "steps": {
+                "0": "Estrela: aparece mais acima.",
+                "1": "Não preferida: oculta do seu Feed.",
+                "2": "Você pode desmarcar qualquer uma delas em Fontes."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Aparece mais acima",
+                  "gone": "Oculta do seu Feed"
+                },
+                "cards": {
+                  "down-arrow": "A estrela",
+                  "mute": "Não preferida"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Fontes que você marcou como Não preferida."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Sobre {{source}}, ou oculte do seu Feed",
+      "notPreferred": "Não preferida",
+      "notPreferredDone": "{{publisher}} não aparece mais no seu Feed"
+    },
+    "publicationPage": {
+      "preferred": "Preferida",
+      "notPreferred": "Não preferida",
+      "preferA11y": "Preferir {{publisher}}",
+      "notPreferA11y": "Marcar {{publisher}} como Não preferida",
+      "notPreferHint": "Oculta os artigos dela do seu Feed",
+      "includedWith": "Incluída com {{country}}",
+      "includedWithA11y": "Preferida, incluída com {{country}}",
+      "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova {{country}} em Fontes."
+    },
+    "you": {
+      "sources": {
+        "find": "Encontre uma publicação ou um país",
+        "footnote": "Toque em uma para mudar. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
+        "empty": "Você ainda não escolheu fontes. Pesquise uma publicação para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
+        "countryCleared": "{{country}} saiu das suas preferências",
+        "saveError": "Não foi possível salvar. Tente de novo."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Marcar esta publicação como Não preferida"
+      }
+    }
+  },
+  "ru": {
+    "onboarding": {
+      "sourcesTitle": "Каким новостным источникам вы доверяете?",
+      "sourcesBody": "Нажмите на звезду, чтобы видеть больше. Нажмите на значок глаза, чтобы скрыть из вашей ленты. Это можно изменить в любой момент в разделе «Источники».",
+      "sourcesSkip": "Пропустить",
+      "sourcesLoadError": "Не удалось загрузить источники.",
+      "sourcesOffline": "Вы не в сети. Источники можно добавить позже в разделе «Источники».",
+      "iSubscribe": "У меня есть подписка",
+      "iSubscribeA11y": "У меня есть подписка на {{publisher}}",
+      "sourcesFind": "Найти издание"
+    },
+    "manageData": {
+      "meterTitle": "Данные на этом телефоне",
+      "meterLine": "Мера использует {{used}}. {{free}} свободно на этом телефоне.",
+      "meterUsedOnly": "Мера использует {{used}}.",
+      "meterDatabase": "Статьи и профиль",
+      "meterBackup": "Резервная копия"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Отметить издание как «В приоритете»",
+      "actionPublicationMute": "Отметить издание как «Не показывать»",
+      "actionSourceScopeBoost": "Отдавать приоритет источникам из страны"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Отметить {{name}} как «В приоритете»",
+        "notPreferred": "Отметить {{name}} как «Не показывать»",
+        "preferredSourcesFrom": "Отметить источники страны {{name}} как «В приоритете»"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Издания в приоритете, те, что вы скрыли из вашей ленты, и те, за которые вы платите."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Звёзды, значки и скрытие источника из вашей ленты.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Один экран для всех изданий, которые вы выбрали.",
+              "steps": {
+                "1": "«Не показывать» в меню ••• статьи срабатывает сразу, с кнопкой «Отменить», а издание затем появляется в разделе «Источники»."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Отметьте издание звездой",
+              "body": "Откройте страну, и у каждого издания появится звезда. Звезда поднимает издание выше в вашей ленте.",
+              "ask": "В чём разница между «В приоритете» и «Не показывать»?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "«Не показывать» скрывает издание из вашей ленты",
+              "body": "Отметьте издание как «Не показывать», и его статьи пропадут из вашей ленты. Мир и похожие материалы по-прежнему могут их показывать. Нажмите на каждую карточку и поставьте её туда, где ей место.",
+              "steps": {
+                "0": "Звезда: показывается выше.",
+                "1": "«Не показывать»: скрыто из вашей ленты.",
+                "2": "Любой из этих пунктов можно сбросить в разделе «Источники»."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Показывается выше",
+                  "gone": "Скрыто из вашей ленты"
+                },
+                "cards": {
+                  "down-arrow": "Звезда",
+                  "mute": "Не показывать"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Источники, которые вы отметили как «Не показывать»."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "О {{source}} или скрыть из вашей ленты",
+      "notPreferred": "Не показывать",
+      "notPreferredDone": "Издание {{publisher}} скрыто из вашей ленты"
+    },
+    "publicationPage": {
+      "preferred": "В приоритете",
+      "notPreferred": "Не показывать",
+      "preferA11y": "Поставить {{publisher}} в приоритет",
+      "notPreferA11y": "Отметить {{publisher}} как «Не показывать»",
+      "notPreferHint": "Скрывает его статьи из вашей ленты",
+      "includedWith": "Включено со страной: {{country}}",
+      "includedWithA11y": "В приоритете, включено со страной: {{country}}",
+      "includedWithHelp": "Включено со страной: {{country}}. Чтобы это изменить, удалите страну в разделе «Источники»: {{country}}."
+    },
+    "you": {
+      "sources": {
+        "find": "Найти издание или страну",
+        "footnote": "Нажмите на любое, чтобы изменить. «Не показывать» в меню ••• статьи тоже появляется здесь.",
+        "empty": "Вы пока не выбрали ни одного источника. Найдите издание, чтобы поставить в приоритет или скрыть из вашей ленты. «Не показывать» в меню ••• статьи тоже появляется здесь.",
+        "countryCleared": "{{country}} больше не в приоритете",
+        "saveError": "Не удалось сохранить. Попробуйте ещё раз."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Отметить это издание как «Не показывать»"
+      }
+    }
+  },
+  "th": {
+    "onboarding": {
+      "sourcesTitle": "แหล่งข่าวไหนที่คุณเชื่อถือ?",
+      "sourcesBody": "แตะรูปดาวเพื่อดูเพิ่มเติม แตะไอคอนตาเพื่อซ่อนจากฟีดของคุณ คุณเปลี่ยนได้ทุกเมื่อในแหล่งข่าว",
+      "sourcesSkip": "ข้าม",
+      "sourcesLoadError": "โหลดแหล่งข่าวไม่สำเร็จ",
+      "sourcesOffline": "ตอนนี้คุณออฟไลน์อยู่ คุณเพิ่มแหล่งข่าวทีหลังได้ในแหล่งข่าว",
+      "iSubscribe": "ฉันสมัครสมาชิกแล้ว",
+      "iSubscribeA11y": "ฉันสมัครสมาชิก {{publisher}} แล้ว",
+      "sourcesFind": "ค้นหาสำนักข่าว"
+    },
+    "manageData": {
+      "meterTitle": "ข้อมูลบนโทรศัพท์เครื่องนี้",
+      "meterLine": "เมร่า ใช้ {{used}} ยังมีพื้นที่ว่าง {{free}} บนโทรศัพท์เครื่องนี้",
+      "meterUsedOnly": "เมร่า ใช้ {{used}}",
+      "meterDatabase": "บทความและโปรไฟล์",
+      "meterBackup": "สำเนาสำรอง"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "เพิ่มสำนักข่าวในรายการโปรด",
+      "actionPublicationMute": "ตั้งสำนักข่าวเป็นไม่แสดง",
+      "actionSourceScopeBoost": "เพิ่มแหล่งข่าวจากประเทศในรายการโปรด"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "ตั้ง {{name}} เป็นรายการโปรด",
+        "notPreferred": "ตั้ง {{name}} เป็นไม่แสดง",
+        "preferredSourcesFrom": "ตั้งแหล่งข่าวจาก {{name}} เป็นรายการโปรด"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "สำนักข่าวในรายการโปรด สำนักข่าวที่คุณซ่อนจากฟีด และสำนักข่าวที่คุณจ่ายเงินให้"
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "ดาว ป้ายกำกับ และการซ่อนแหล่งข่าวจากฟีดของคุณ",
+          "slides": {
+            "where-it-lives": {
+              "body": "หน้าเดียวสำหรับทุกสำนักข่าวที่คุณเลือกไว้",
+              "steps": {
+                "1": "“ไม่แสดง” ในเมนู ••• ของบทความจะมีผลทันที พร้อมปุ่มเลิกทำ และสำนักข่าวนั้นจะไปแสดงในแหล่งข่าว"
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "ติดดาวให้สำนักข่าว",
+              "body": "เปิดประเทศแล้วทุกสำนักข่าวจะมีรูปดาว ดาวจะดันสำนักข่าวขึ้นมาอยู่ด้านบนในฟีดของคุณ",
+              "ask": "ความแตกต่างระหว่างรายการโปรดและไม่แสดงคืออะไร?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "“ไม่แสดง” จะซ่อนจากฟีดของคุณ",
+              "body": "ตั้งสำนักข่าวเป็นไม่แสดง แล้วเรื่องราวจากสำนักข่าวนั้นจะถูกซ่อนจากฟีดของคุณ โลกและเรื่องที่เกี่ยวข้องยังแสดงสำนักข่าวนั้นได้ แตะแต่ละการ์ดแล้วจัดให้อยู่ตรงที่ควรอยู่",
+              "steps": {
+                "0": "ดาว: แสดงขึ้นไปอยู่ด้านบน",
+                "1": "ไม่แสดง: ซ่อนจากฟีดของคุณ",
+                "2": "คุณล้างค่าอย่างใดอย่างหนึ่งได้ในแหล่งข่าว"
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "แสดงขึ้นไปอยู่ด้านบน",
+                  "gone": "ซ่อนจากฟีดของคุณ"
+                },
+                "cards": {
+                  "down-arrow": "ดาว",
+                  "mute": "ไม่แสดง"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "แหล่งข่าวที่คุณตั้งเป็นไม่แสดง"
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "เกี่ยวกับ {{source}} หรือซ่อนจากฟีดของคุณ",
+      "notPreferred": "ไม่แสดง",
+      "notPreferredDone": "{{publisher}} ถูกซ่อนจากฟีดของคุณ"
+    },
+    "publicationPage": {
+      "preferred": "รายการโปรด",
+      "notPreferred": "ไม่แสดง",
+      "preferA11y": "เพิ่ม {{publisher}} ในรายการโปรด",
+      "notPreferA11y": "ตั้ง {{publisher}} เป็นไม่แสดง",
+      "notPreferHint": "ซ่อนบทความจากฟีดของคุณ",
+      "includedWith": "รวมอยู่ใน {{country}}",
+      "includedWithA11y": "รายการโปรด รวมอยู่ใน {{country}}",
+      "includedWithHelp": "รวมอยู่ใน {{country}} หากต้องการเปลี่ยน ให้ลบ {{country}} ในแหล่งข่าว"
+    },
+    "you": {
+      "sources": {
+        "find": "ค้นหาสำนักข่าวหรือประเทศ",
+        "footnote": "แตะหนึ่งรายการเพื่อเปลี่ยนค่า “ไม่แสดง” ในเมนู ••• ของบทความก็จะมาอยู่ที่นี่เช่นกัน",
+        "empty": "คุณยังไม่ได้เลือกแหล่งข่าวใด ค้นหาสำนักข่าวเพื่อเพิ่มในรายการโปรดหรือซ่อนจากฟีดของคุณ “ไม่แสดง” ในเมนู ••• ของบทความก็จะมาอยู่ที่นี่เช่นกัน",
+        "countryCleared": "นำ {{country}} ออกจากรายการโปรดแล้ว",
+        "saveError": "บันทึกไม่ได้ กรุณาลองอีกครั้ง"
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "ตั้งสำนักข่าวนี้เป็นไม่แสดง"
+      }
+    }
+  },
+  "tr": {
+    "onboarding": {
+      "sourcesTitle": "Hangi haber kaynaklarına güveniyorsunuz?",
+      "sourcesBody": "Daha fazlasını görmek için yıldıza dokunun. Bir kaynağı Akışınızdan gizlemek için göze dokunun. Bunu istediğiniz zaman Kaynaklar bölümünden değiştirebilirsiniz.",
+      "sourcesSkip": "Atla",
+      "sourcesLoadError": "Kaynaklar yüklenemedi.",
+      "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
+      "iSubscribe": "Abone oldum",
+      "iSubscribeA11y": "{{publisher}} yayınına abone oldum",
+      "sourcesFind": "Bir yayın bulun"
+    },
+    "manageData": {
+      "meterTitle": "Bu telefondaki veriler",
+      "meterLine": "Mera {{used}} kullanıyor. Bu telefonda {{free}} boş alan var.",
+      "meterUsedOnly": "Mera {{used}} kullanıyor.",
+      "meterDatabase": "Makaleler ve profil",
+      "meterBackup": "Yedek kopya"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Bir yayını Tercih edilen olarak işaretleyin",
+      "actionPublicationMute": "Bir yayını Tercih edilmeyen olarak işaretleyin",
+      "actionSourceScopeBoost": "Bir ülkenin kaynaklarını tercih edin"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "{{name}} Tercih edilen olarak ayarlandı",
+        "notPreferred": "{{name}} Tercih edilmeyen olarak ayarlandı",
+        "preferredSourcesFrom": "{{name}} ülkesinin kaynakları Tercih edilen olarak ayarlandı"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Tercih ettiğiniz, Akışınızdan gizlediğiniz ve ücretini ödediğiniz yayınlar."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Yıldızlar, rozetler ve bir kaynağı Akışınızdan gizleme.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Seçtiğiniz her yayın için tek bir ekran.",
+              "steps": {
+                "1": "Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" hemen uygulanır, Geri Al seçeneği sunulur ve yayın Kaynaklar bölümünde görünür."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Bir yayını yıldızlayın",
+              "body": "Bir ülkeyi açtığınızda her yayının yanında bir yıldız bulunur. Yıldız, yayını Akışınızda yukarı taşır.",
+              "ask": "Tercih edilen ile Tercih edilmeyen arasındaki fark nedir?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "Tercih edilmeyen yayını Akışınızdan gizler",
+              "body": "Bir yayını Tercih edilmeyen olarak işaretlediğinizde haberleri Akışınızdan çıkar. Dünya sekmesi ve ilgili haberler yine de bu yayını gösterebilir. Her karta dokunun ve ait olduğu yere taşıyın.",
+              "steps": {
+                "0": "Yıldız: daha yukarıda gösterilir.",
+                "1": "Tercih edilmeyen: Akışınızdan gizlenir.",
+                "2": "Bunlardan birini veya ikisini de Kaynaklar bölümünden kaldırabilirsiniz."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Daha yukarıda gösterilir",
+                  "gone": "Akışınızdan gizlendi"
+                },
+                "cards": {
+                  "down-arrow": "Yıldız",
+                  "mute": "Tercih edilmeyen"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Tercih edilmeyen olarak işaretlediğiniz kaynaklar."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "{{source}} hakkında veya onu Akışınızdan gizleyin",
+      "notPreferred": "Tercih edilmeyen",
+      "notPreferredDone": "{{publisher}} Akışınızdan gizlendi"
+    },
+    "publicationPage": {
+      "preferred": "Tercih edilen",
+      "notPreferred": "Tercih edilmeyen",
+      "preferA11y": "{{publisher}} yayınını tercih edin",
+      "notPreferA11y": "{{publisher}} yayınını Tercih edilmeyen olarak işaretleyin",
+      "notPreferHint": "Makalelerini Akışınızdan gizler",
+      "includedWith": "{{country}} ile birlikte dahil",
+      "includedWithA11y": "Tercih edilen, {{country}} ile birlikte dahil",
+      "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için Kaynaklar bölümünden {{country}} ülkesini kaldırın."
+    },
+    "you": {
+      "sources": {
+        "find": "Bir yayın veya ülke bulun",
+        "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
+        "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
+        "countryCleared": "{{country}} artık tercih edilen değil",
+        "saveError": "Bu kaydedilemedi. Lütfen tekrar deneyin."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Bu yayını Tercih edilmeyen olarak işaretleyin"
+      }
+    }
+  },
+  "uk": {
+    "onboarding": {
+      "sourcesTitle": "Яким новинним джерелам ви довіряєте?",
+      "sourcesBody": "Натисніть зірку, щоб бачити більше. Натисніть значок ока, щоб приховати зі стрічки. Змінити це можна будь-коли в розділі Джерела.",
+      "sourcesSkip": "Пропустити",
+      "sourcesLoadError": "Не вдалося завантажити джерела.",
+      "sourcesOffline": "Немає підключення до мережі. Джерела можна додати пізніше в розділі «Джерела».",
+      "iSubscribe": "Я передплачую",
+      "iSubscribeA11y": "Я передплачую {{publisher}}",
+      "sourcesFind": "Знайдіть видання"
+    },
+    "manageData": {
+      "meterTitle": "Дані на цьому телефоні",
+      "meterLine": "Мера використовує {{used}}. {{free}} вільно на цьому телефоні.",
+      "meterUsedOnly": "Мера використовує {{used}}.",
+      "meterDatabase": "Статті та профіль",
+      "meterBackup": "Резервна копія"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Позначити видання як пріоритетне",
+      "actionPublicationMute": "Позначити видання як «Не показувати»",
+      "actionSourceScopeBoost": "Надавати пріоритет джерелам з країни"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Встановлено {{name}} як пріоритетне",
+        "notPreferred": "Встановлено {{name}} як «Не показувати»",
+        "preferredSourcesFrom": "Джерела з {{name}}: пріоритетне"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Видання, які ви позначили як пріоритетні, ті, що ви приховали зі стрічки, і ті, за які ви платите."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Зірки, значки та приховування джерела зі стрічки.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Один екран для кожного видання, яке ви вибрали.",
+              "steps": {
+                "1": "«Не показувати» в меню ••• статті діє одразу, з можливістю скасувати, і видання потім з'являється в розділі Джерела."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Позначте видання зіркою",
+              "body": "Відкрийте країну, і кожне видання матиме зірку. Зірка піднімає видання вище у вашій стрічці.",
+              "ask": "Яка різниця між «Пріоритетне» і «Не показувати»?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "«Не показувати» приховує його зі стрічки",
+              "body": "Позначте видання як «Не показувати», і його історії зникнуть зі стрічки. Розділ «Світ» і пов'язані історії досі можуть їх показувати. Натисніть на кожну картку й перетягніть її туди, де вона має бути.",
+              "steps": {
+                "0": "Зірка: показується вище.",
+                "1": "Не показувати: приховано зі стрічки.",
+                "2": "Будь-яку з цих позначок можна скасувати в розділі Джерела."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Показується вище",
+                  "gone": "Приховано зі стрічки"
+                },
+                "cards": {
+                  "down-arrow": "Зірка",
+                  "mute": "Не показувати"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Джерела, які ви позначили як «Не показувати»."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Про {{source}} або приховати його зі стрічки",
+      "notPreferred": "Не показувати",
+      "notPreferredDone": "{{publisher}} приховано зі стрічки"
+    },
+    "publicationPage": {
+      "preferred": "Пріоритетне",
+      "notPreferred": "Не показувати",
+      "preferA11y": "Надати {{publisher}} пріоритет",
+      "notPreferA11y": "Позначити {{publisher}} як «Не показувати»",
+      "notPreferHint": "Приховує його статті зі стрічки",
+      "includedWith": "Разом із країною: {{country}}",
+      "includedWithA11y": "Пріоритетне, разом із країною: {{country}}",
+      "includedWithHelp": "Разом із країною: {{country}}. Щоб це змінити, видаліть країну в розділі «Джерела»: {{country}}."
+    },
+    "you": {
+      "sources": {
+        "find": "Знайдіть видання або країну",
+        "footnote": "Натисніть на видання, щоб змінити його. Пункт «Не показувати» з меню ••• статті теж з'являється тут.",
+        "empty": "Ви ще не вибрали жодного джерела. Шукайте видання, щоб позначити його пріоритетним або приховати зі стрічки. Пункт «Не показувати» з меню ••• статті теж з'являється тут.",
+        "countryCleared": "{{country}} більше не в пріоритеті",
+        "saveError": "Не вдалося зберегти. Спробуйте ще раз."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Позначити це видання як «Не показувати»"
+      }
+    }
+  },
+  "vi": {
+    "onboarding": {
+      "sourcesTitle": "Bạn tin tưởng những nguồn tin nào?",
+      "sourcesBody": "Chạm vào ngôi sao để xem thêm. Chạm vào biểu tượng mắt để ẩn khỏi Bảng tin của bạn. Bạn có thể thay đổi điều này bất cứ lúc nào trong Nguồn.",
+      "sourcesSkip": "Bỏ qua",
+      "sourcesLoadError": "Không thể tải nguồn.",
+      "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
+      "iSubscribe": "Tôi đã đăng ký",
+      "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}",
+      "sourcesFind": "Tìm một nguồn"
+    },
+    "manageData": {
+      "meterTitle": "Dữ liệu trên điện thoại này",
+      "meterLine": "Mera dùng {{used}}. {{free}} còn trống trên điện thoại này.",
+      "meterUsedOnly": "Mera dùng {{used}}.",
+      "meterDatabase": "Bài viết và hồ sơ",
+      "meterBackup": "Bản sao lưu"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "Đánh dấu một nguồn là Ưu tiên",
+      "actionPublicationMute": "Đánh dấu một nguồn là Không hiển thị",
+      "actionSourceScopeBoost": "Ưu tiên nguồn từ một quốc gia"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "Đặt {{name}} là Ưu tiên",
+        "notPreferred": "Đặt {{name}} là Không hiển thị",
+        "preferredSourcesFrom": "Đặt nguồn từ {{name}} là Ưu tiên"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "Các nguồn bạn ưu tiên, các nguồn bạn đã ẩn khỏi Bảng tin, và các nguồn bạn trả phí."
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "Dấu sao, huy hiệu và ẩn một nguồn khỏi Bảng tin.",
+          "slides": {
+            "where-it-lives": {
+              "body": "Một màn hình cho mọi nguồn bạn đã chọn.",
+              "steps": {
+                "1": "\"Không hiển thị\" trong menu ••• của bài viết có hiệu lực ngay, kèm nút Hoàn tác, và nguồn sau đó hiện trong Nguồn."
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "Gắn sao cho một nguồn",
+              "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn.",
+              "ask": "Khác nhau giữa Ưu tiên và Không hiển thị là gì?"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "\"Không hiển thị\" sẽ ẩn khỏi Bảng tin",
+              "body": "Đánh dấu một nguồn là Không hiển thị và các bài của nguồn đó sẽ rời khỏi Bảng tin của bạn. Mục Thế giới và các bài liên quan vẫn có thể hiển thị chúng. Chạm vào từng thẻ và đặt thẻ vào đúng chỗ của nó.",
+              "steps": {
+                "0": "Dấu sao: hiển thị cao hơn.",
+                "1": "Không hiển thị: ẩn khỏi Bảng tin.",
+                "2": "Bạn có thể xóa một trong hai trong Nguồn."
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "Hiển thị cao hơn",
+                  "gone": "Ẩn khỏi Bảng tin"
+                },
+                "cards": {
+                  "down-arrow": "Dấu sao",
+                  "mute": "Không hiển thị"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "Các nguồn bạn đã đánh dấu Không hiển thị."
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "Về {{source}}, hoặc ẩn khỏi Bảng tin",
+      "notPreferred": "Không hiển thị",
+      "notPreferredDone": "{{publisher}} đang được ẩn khỏi Bảng tin"
+    },
+    "publicationPage": {
+      "preferred": "Ưu tiên",
+      "notPreferred": "Không hiển thị",
+      "preferA11y": "Đặt {{publisher}} là Ưu tiên",
+      "notPreferA11y": "Đánh dấu {{publisher}} là Không hiển thị",
+      "notPreferHint": "Ẩn các bài viết từ nguồn này khỏi Bảng tin của bạn",
+      "includedWith": "Đã bao gồm trong {{country}}",
+      "includedWithA11y": "Ưu tiên, đã bao gồm trong {{country}}",
+      "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy xóa {{country}} trong Nguồn."
+    },
+    "you": {
+      "sources": {
+        "find": "Tìm một nguồn hoặc quốc gia",
+        "footnote": "Chạm vào một nguồn để thay đổi. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
+        "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
+        "countryCleared": "{{country}} không còn được ưu tiên",
+        "saveError": "Không thể lưu. Hãy thử lại."
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "Đánh dấu nguồn này là Không hiển thị"
+      }
+    }
+  },
+  "zh-CN": {
+    "onboarding": {
+      "sourcesTitle": "你信任哪些新闻来源？",
+      "sourcesBody": "点按星标可以看到更多内容。点按眼睛图标，即可在你的信息流中隐藏它。你随时可以在来源中更改。",
+      "sourcesSkip": "跳过",
+      "sourcesLoadError": "无法加载来源。",
+      "sourcesOffline": "你目前处于离线状态。稍后可以在来源中添加。",
+      "iSubscribe": "我已订阅",
+      "iSubscribeA11y": "我已订阅 {{publisher}}",
+      "sourcesFind": "查找媒体"
+    },
+    "manageData": {
+      "meterTitle": "此手机上的数据",
+      "meterLine": "梅拉使用了 {{used}}。此手机上还有 {{free}} 可用。",
+      "meterUsedOnly": "梅拉使用了 {{used}}。",
+      "meterDatabase": "文章和个人资料",
+      "meterBackup": "备份副本"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "将一家媒体标为优先",
+      "actionPublicationMute": "将一家媒体标为不想看",
+      "actionSourceScopeBoost": "优先来自某个国家的来源"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "将 {{name}} 设为优先",
+        "notPreferred": "将 {{name}} 设为不想看",
+        "preferredSourcesFrom": "将来自 {{name}} 的来源设为优先"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "你优先关注的媒体、你在信息流中隐藏的媒体，以及你付费订阅的媒体。"
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "星标、标记，以及在信息流中隐藏来源。",
+          "slides": {
+            "where-it-lives": {
+              "body": "每个你选中的媒体都在同一个页面中。",
+              "steps": {
+                "1": "文章 ••• 菜单中的“不想看”会立即生效，并可撤销，之后该媒体会显示在来源中。"
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "为媒体加星标",
+              "body": "打开一个国家，每家媒体旁边都有一个星标。星标会让该媒体在你的信息流中排得更靠前。",
+              "ask": "“优先”和“不想看”有什么区别？"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "“不想看”会将其从你的信息流中隐藏",
+              "body": "将一家媒体标为不想看后，它的文章就不再出现在你的信息流中。全球和相关报道仍可能显示这家媒体。点按每张卡片，然后把它放到合适的位置。",
+              "steps": {
+                "0": "星标：排在更靠前的位置。",
+                "1": "不想看：从你的信息流中隐藏。",
+                "2": "你可以在来源中清除任一项。"
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "排得更靠前",
+                  "gone": "已从你的信息流中隐藏"
+                },
+                "cards": {
+                  "down-arrow": "星标",
+                  "mute": "不想看"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "你标为不想看的来源。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "关于 {{source}}，或在你的信息流中隐藏它",
+      "notPreferred": "不想看",
+      "notPreferredDone": "{{publisher}} 已从你的信息流中隐藏"
+    },
+    "publicationPage": {
+      "preferred": "优先",
+      "notPreferred": "不想看",
+      "preferA11y": "将 {{publisher}} 设为优先",
+      "notPreferA11y": "将 {{publisher}} 标为不想看",
+      "notPreferHint": "在你的信息流中隐藏其文章",
+      "includedWith": "已包含在 {{country}} 中",
+      "includedWithA11y": "优先，已包含在 {{country}} 中",
+      "includedWithHelp": "此媒体已包含在 {{country}} 中。要更改此设置，请在来源中移除 {{country}}。"
+    },
+    "you": {
+      "sources": {
+        "find": "查找媒体或国家",
+        "footnote": "点按一项即可更改。文章 ••• 菜单中的“不想看”也会出现在这里。",
+        "empty": "你还没有选择任何来源。搜索媒体，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
+        "countryCleared": "{{country}} 已不再优先",
+        "saveError": "无法保存。请重试。"
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "将此媒体标为不想看"
+      }
+    }
+  },
+  "zh-TW": {
+    "onboarding": {
+      "sourcesTitle": "你信任哪些新聞來源？",
+      "sourcesBody": "輕點星號即可看到更多。輕點眼睛圖示，即可從你的資訊流中隱藏。你隨時可以在「來源」中更改。",
+      "sourcesSkip": "略過",
+      "sourcesLoadError": "無法載入來源。",
+      "sourcesOffline": "你目前離線。之後可以在「來源」中新增來源。",
+      "iSubscribe": "我已訂閱",
+      "iSubscribeA11y": "我已訂閱 {{publisher}}",
+      "sourcesFind": "搜尋出版物"
+    },
+    "manageData": {
+      "meterTitle": "這支手機上的資料",
+      "meterLine": "梅拉使用了 {{used}}。這支手機上還有 {{free}} 可用。",
+      "meterUsedOnly": "梅拉使用了 {{used}}。",
+      "meterDatabase": "文章與個人檔案",
+      "meterBackup": "備份副本"
+    },
+    "articleFeedback": {
+      "actionPublicationBoost": "將出版物標為優先",
+      "actionPublicationMute": "將出版物標為不想看",
+      "actionSourceScopeBoost": "優先顯示來自某國家的來源"
+    },
+    "personaAudit": {
+      "summary": {
+        "preferred": "將 {{name}} 設為優先",
+        "notPreferred": "將 {{name}} 設為不想看",
+        "preferredSourcesFrom": "將 {{name}} 的來源設為優先"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "slides": {
+            "your-profile": {
+              "reveal": {
+                "sources": {
+                  "text": "你設為優先的出版物、從你的資訊流中隱藏的出版物，以及你付費訂閱的出版物。"
+                }
+              }
+            }
+          }
+        },
+        "sources": {
+          "subtitle": "星號、徽章，以及從你的資訊流隱藏來源。",
+          "slides": {
+            "where-it-lives": {
+              "body": "你選過的每個出版物都集中在同一個畫面。",
+              "steps": {
+                "1": "在文章的 ••• 選單中選擇「不想看」會立即生效並可復原，該出版物之後會顯示在「來源」中。"
+              }
+            },
+            "arrows-on-a-publisher": {
+              "headline": "為出版物加上星號",
+              "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。",
+              "ask": "「優先」和「不想看」有什麼不同？"
+            },
+            "mute-is-not-a-downrank": {
+              "headline": "「不想看」會從你的資訊流中隱藏它",
+              "body": "將出版物標為「不想看」後，它的報導會離開你的資訊流。全球和相關報導仍然可能顯示它們。點按每張卡片，並把它放到正確的位置。",
+              "steps": {
+                "0": "星號：排得比較前面。",
+                "1": "不想看：從你的資訊流中隱藏。",
+                "2": "你可以在「來源」中清除任一項設定。"
+              },
+              "sort": {
+                "buckets": {
+                  "softer": "排得比較前面",
+                  "gone": "已從你的資訊流隱藏"
+                },
+                "cards": {
+                  "down-arrow": "星號",
+                  "mute": "不想看"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "slides": {
+            "three-shelves": {
+              "steps": {
+                "2": "你標為不想看的來源。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "articleMenu": {
+      "sourceSub": "關於 {{source}}，或從你的資訊流中隱藏",
+      "notPreferred": "不想看",
+      "notPreferredDone": "{{publisher}} 已從你的資訊流中隱藏"
+    },
+    "publicationPage": {
+      "preferred": "優先",
+      "notPreferred": "不想看",
+      "preferA11y": "將 {{publisher}} 設為優先",
+      "notPreferA11y": "將 {{publisher}} 標為不想看",
+      "notPreferHint": "從你的資訊流中隱藏其文章",
+      "includedWith": "已納入 {{country}}",
+      "includedWithA11y": "優先，已納入 {{country}}",
+      "includedWithHelp": "已納入 {{country}}。若要更改，請在「來源」中移除 {{country}}。"
+    },
+    "you": {
+      "sources": {
+        "find": "搜尋出版物或國家",
+        "footnote": "輕點一項即可更改。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
+        "empty": "你還沒有挑選任何來源。搜尋出版物，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
+        "countryCleared": "已取消 {{country}} 的優先設定",
+        "saveError": "無法儲存這項設定。請再試一次。"
+      }
+    },
+    "kevChat": {
+      "article": {
+        "mute": "將此出版物標為不想看"
+      }
+    }
+  }
+}

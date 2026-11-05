@@ -1,6 +1,9 @@
-// Publication tags weigh the feed (owner): More ×1.5, Subscribed ×2, Fewer ×0.5,
-// Mute skips. Subscribed combines with one of the other three by multiplying
-// (Subscribed + Fewer = 1.0); Mute wins at 0.
+// Publication tags weigh the feed (owner): Preferred ×1.5, Subscribed ×2, a
+// stored Fewer ×0.5, Not preferred skips. Subscribed combines with one of the
+// others by multiplying (Subscribed + Fewer = 1.0); Not preferred wins at 0.
+//
+// A preferred country gives its publications ×1.5. A publication with any tag of
+// its own keeps that tag's multiplier instead: the two never stack.
 //
 // RANKING ONLY. The multiplier moves the band a row SORTS in; the chip, the
 // visibility gate and the note keep the raw score, so Fewer sinks a story but
@@ -14,14 +17,15 @@
 // Pure: no RN, database or store imports.
 
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
-import { normPublicationName, type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
+import { normAlpha3, normPublicationName, type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 
 const PUBLICATION_TAG_MULTIPLIER = { more: 1.5, fewer: 0.5, subscribed: 2 } as const;
 
 export type PublicationPrefTag = 'more' | 'fewer' | 'mute' | null;
 
 /** The geo/language context plus the one map of publication multipliers
- *  (normalised name → multiplier; 0 = muted; absent = 1). */
+ *  (normalised name → multiplier; 0 = muted). An entry of 1 is kept: a tagged
+ *  publication's own tags outrank its country. */
 export type RankingContext = UserGeoLanguageContext & {
     readonly publicationMultipliers?: ReadonlyMap<string, number>;
 };
@@ -34,15 +38,25 @@ export function publicationTagMultiplier(pref: PublicationPrefTag, subscribed: b
     return (subscribed ? m.subscribed : 1) * prefM;
 }
 
-/** The multiplier for an article's publication name; 1 without a context. */
-function publicationMultiplier(
+/** The multiplier a publication's own tags give it; undefined when it has none. */
+function namedMultiplier(
     publicationName: string | null | undefined,
     ctx: RankingContext | null | undefined,
-): number {
-    const map = ctx?.publicationMultipliers;
-    if (!map || map.size === 0) return 1;
+): number | undefined {
     const key = normPublicationName(publicationName);
-    return key === null ? 1 : map.get(key) ?? 1;
+    return key === null ? undefined : ctx?.publicationMultipliers?.get(key);
+}
+
+/** The part of a row the sort weighs. */
+export type RankedRow = {
+    readonly publication_name: string | null | undefined;
+    /** Alpha-3, or null. */
+    readonly country_code: string | null | undefined;
+};
+
+function isPreferredCountry(countryCode: string | null | undefined, ctx: RankingContext | null | undefined): boolean {
+    const country = normAlpha3(countryCode);
+    return country !== null && ctx?.preferredCountriesAlpha3?.has(country) === true;
 }
 
 /** Mute means skip: the row leaves every Feed list. */
@@ -50,7 +64,7 @@ export function isMutedPublication(
     publicationName: string | null | undefined,
     ctx: RankingContext | null | undefined,
 ): boolean {
-    return publicationMultiplier(publicationName, ctx) === 0;
+    return namedMultiplier(publicationName, ctx) === 0;
 }
 
 /**
@@ -60,11 +74,13 @@ export function isMutedPublication(
  */
 export function rankedRelevance(
     relevance: number,
-    publicationName: string | null | undefined,
+    row: RankedRow,
     ctx: RankingContext | null | undefined,
     cutoff: number = DEFAULT_HARNESS_CONFIG.articlePipeline.emergencyPriorityCutoff,
 ): number {
     if (relevance > cutoff) return relevance;
-    const m = publicationMultiplier(publicationName, ctx);
+    const m =
+        namedMultiplier(row.publication_name, ctx) ??
+        (isPreferredCountry(row.country_code, ctx) ? PUBLICATION_TAG_MULTIPLIER.more : 1);
     return m === 1 ? relevance : Math.min(relevance * m, cutoff);
 }

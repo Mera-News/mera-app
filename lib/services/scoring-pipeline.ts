@@ -630,7 +630,9 @@ async function refreshUi(context?: ExecutionContext): Promise<void> {
   // (wave 3) scoring-pipeline. Same pattern as lib/database/hydrate-stores.ts.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod = require('./SuggestionSyncService') as typeof import('./SuggestionSyncService');
-  await mod.refreshSuggestionsInStoreUnsafe();
+  // Throttled: each refresh reloads every row and regroups the feed, and a run
+  // lands a result per batch. The trailing refresh shows the final state.
+  await mod.requestSuggestionsRefresh();
   // Every suggestions refresh is also a header-progress checkpoint (scores/notes
   // just landed or a batch went terminal) — keep the "Sifting through X/Y"
   // header in lockstep with the pipeline.

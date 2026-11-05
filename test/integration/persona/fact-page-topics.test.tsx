@@ -36,7 +36,10 @@ jest.mock('@/lib/database/services/topic-decline-service', () => ({
     listDeclinedTopics: () => require('rxjs').of([]),
 }));
 jest.mock('@/components/custom/for-you/use-section-snapshots', () => ({ useSectionSnapshots: () => null }));
-jest.mock('@/components/custom/feed/use-session-geo-context', () => ({ useSessionGeoLanguageContext: () => ({}) }));
+jest.mock('@/components/custom/feed/use-session-geo-context', () => ({
+    useSessionGeoLanguageContext: () => ({}),
+    withLiveMutes: (held: unknown) => held,
+}));
 jest.mock('@/lib/user-context/user-geo-language-context', () => ({ useUserGeoLanguageContext: () => ({}) }));
 jest.mock('@/lib/hooks/use-open-suggestion', () => ({ useOpenSuggestion: () => jest.fn() }));
 jest.mock('@/lib/stores/selectors', () => ({ useForYouSuggestions: () => [] }));

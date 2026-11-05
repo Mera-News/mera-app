@@ -348,7 +348,15 @@
     "remindBody": "Mera está hecha para no molestarte sin motivo. Elige cuándo quieres un recordatorio para leer las noticias. Te sugerimos una hora en la que puedas revisarlas con calma.",
     "remindTitle": "¿Cuándo quieres que Mera te recuerde?",
     "turnOn": "Activar notificaciones",
-    "turnThemOn": "Actívalas"
+    "turnThemOn": "Actívalas",
+    "sourcesTitle": "¿En qué fuentes de noticias confías?",
+    "sourcesBody": "Toca la estrella para ver más. Toca el ojo para ocultarla de tus Noticias. Puedes cambiarlo cuando quieras en Fuentes.",
+    "sourcesSkip": "Omitir",
+    "sourcesLoadError": "No se pudieron cargar las fuentes.",
+    "sourcesOffline": "Estás sin conexión. Puedes añadir fuentes más tarde en Fuentes.",
+    "iSubscribe": "Tengo una suscripción",
+    "iSubscribeA11y": "Tengo una suscripción a {{publisher}}",
+    "sourcesFind": "Busca una publicación"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -557,7 +565,12 @@
     "askBeforeTopicDelete": "Preguntar antes de eliminar un tema",
     "askBeforeTopicDeleteHint": "Mera te pide confirmación cada vez que eliminas un tema de uno de tus hechos.",
     "exportHistoryWindowNote_one": "Esta exportación solo cubre el último {{count}} día de lectura. Las entradas más antiguas se borran automáticamente de este dispositivo y nunca se enviaron a los servidores de Mera.",
-    "exportHistoryWindowNote_other": "Esta exportación solo cubre los últimos {{count}} días de lectura. Las entradas más antiguas se borran automáticamente de este dispositivo y nunca se enviaron a los servidores de Mera."
+    "exportHistoryWindowNote_other": "Esta exportación solo cubre los últimos {{count}} días de lectura. Las entradas más antiguas se borran automáticamente de este dispositivo y nunca se enviaron a los servidores de Mera.",
+    "meterTitle": "Datos en este teléfono",
+    "meterLine": "Mera usa {{used}}. {{free}} libres en este teléfono.",
+    "meterUsedOnly": "Mera usa {{used}}.",
+    "meterDatabase": "Artículos y perfil",
+    "meterBackup": "Copia de seguridad"
   },
   "preferences": {
     "notifications": "Notificaciones",
@@ -778,10 +791,10 @@
     "actionShowLessTopic": "Mostrar menos de un tema",
     "actionShowMoreTopic": "Mostrar más de un tema",
     "actionDownRank": "Bajar la prioridad de un tema",
-    "actionPublicationBoost": "Mostrar más de una publicación",
+    "actionPublicationBoost": "Marcar una publicación como Preferida",
     "actionPublicationDeprioritize": "Mostrar menos de una publicación",
-    "actionPublicationMute": "Silenciar una publicación",
-    "actionSourceScopeBoost": "Mostrar más fuentes de un país",
+    "actionPublicationMute": "Marcar una publicación como No preferida",
+    "actionSourceScopeBoost": "Preferir fuentes de un país",
     "actionSourceScopeDeprioritize": "Mostrar menos fuentes de un país",
     "actionSuppress": "Filtrar una frase",
     "actionPinTopic": "Fijar un tema",
@@ -1198,7 +1211,10 @@
       "carriedOver": "Se trasladó {{name}}",
       "undone": "Deshecho: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "Preferida: {{name}}",
+      "notPreferred": "No preferida: {{name}}",
+      "preferredSourcesFrom": "Marcar las fuentes de {{name}} como Preferidas"
     }
   },
   "calibration": {
@@ -1246,10 +1262,8 @@
       "paywalled": "No puedo leerla, es de pago",
       "noTrust": "No confío en ella",
       "trustTitle": "No confías en {{site}}",
-      "trustLess": "Mostrar menos de {{site}}",
       "trustNever": "No mostrar nunca {{site}}",
       "hardToUse": "El sitio es difícil de usar",
-      "fewerSite": "Mostrar menos de este sitio",
       "reportTitle": "¿Avisar también a Mera Labs sobre {{site}}?",
       "reportYes": "Sí, enviarlo a Mera Labs",
       "reportNo": "No, gracias",
@@ -1488,7 +1502,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Borrar preferencia",
     "scopeKindCountry": "País"
   },
   "optimisationPlan": {
@@ -1793,7 +1806,7 @@
               },
               "sources": {
                 "label": "Fuentes",
-                "text": "Publicaciones de las que quieres ver más o menos, y las que pagas."
+                "text": "Publicaciones que prefieres, las que ocultaste de tus Noticias y las que pagas."
               }
             }
           }
@@ -2051,14 +2064,14 @@
       },
       "sources": {
         "title": "Eligiendo tus fuentes",
-        "subtitle": "Insignias, flechas, y el control que es un bloque.",
+        "subtitle": "Estrellas, etiquetas y ocultar una fuente de tus Noticias.",
         "slides": {
           "where-it-lives": {
             "headline": "Dónde viven las fuentes",
-            "body": "Una sola pantalla para todas las publicaciones que ajustaste.",
+            "body": "Una sola pantalla para cada publicación que elegiste.",
             "steps": {
               "0": "La pestaña Tú, luego Fuentes.",
-              "1": "«Menos de» en el menú ••• de un artículo se aplica al instante, con Deshacer, y la publicación aparece después en Ajustadas."
+              "1": "\"No preferida\" en el menú ••• de un artículo surte efecto al momento, con Deshacer, y después la publicación aparece en Fuentes."
             },
             "ask": "¿Dónde gestiono qué fuentes veo?"
           },
@@ -2081,26 +2094,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Las mismas flechas, un publicador a la vez",
-            "body": "Abre un país y cada publicador tiene su propio par. Abajo es un codazo en lugar de una pared: un publicador clasificado hacia abajo aún aparece cuando tiene una historia que nadie más tiene.",
-            "ask": "¿Cuál es la diferencia entre bajar una fuente y silenciarla?"
+            "headline": "Dale una estrella a una publicación",
+            "body": "Abre un país y cada publicación tiene una estrella. Una estrella la sube en tus Noticias.",
+            "ask": "¿Cuál es la diferencia entre Preferida y No preferida?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Silenciar es una cosa completamente diferente",
-            "body": "Silenciar se ajusta en la página de una publicación, y es una exclusión dura: esas historias se descartan, no simplemente se ordenan más abajo. Toca cada tarjeta y ponla donde pertenece.",
+            "headline": "\"No preferida\" la oculta de tus Noticias",
+            "body": "Marca una publicación como No preferida y sus historias dejan de aparecer en tus Noticias. La pestaña Mundo y las historias relacionadas aún pueden mostrarlas. Toca cada tarjeta y colócala donde corresponde.",
             "steps": {
-              "0": "Flecha hacia abajo: mostrada menos a menudo.",
-              "1": "Silenciar: no mostrada en absoluto.",
-              "2": "Ambas pueden borrarse más tarde, desde preferencias de fuente."
+              "0": "Estrella: se muestra más arriba.",
+              "1": "No preferida: oculta de tus Noticias.",
+              "2": "Puedes quitar cualquiera de las dos en Fuentes."
             },
             "sort": {
               "buckets": {
-                "softer": "Mostrada menos a menudo",
-                "gone": "Guardada completamente"
+                "softer": "Se muestra más arriba",
+                "gone": "Oculta de tus Noticias"
               },
               "cards": {
-                "down-arrow": "La flecha hacia abajo",
-                "mute": "Silenciar"
+                "down-arrow": "La estrella",
+                "mute": "No preferida"
               }
             }
           }
@@ -2116,7 +2129,7 @@
             "steps": {
               "0": "Palabras y cosas que has ocultado.",
               "1": "Temas que ves menos.",
-              "2": "Fuentes que has silenciado o bajado."
+              "2": "Fuentes que marcaste como No preferida."
             },
             "ask": "¿Dónde puedo ver todo lo que he filtrado?"
           },
@@ -2678,18 +2691,18 @@
     "following": "Siguiendo esta historia",
     "checkFacts": "Verificación de hechos",
     "fewerFrom": "Menos de {{source}}",
-    "fewerFromDone": "Verás menos de {{source}}.",
     "undo": "Deshacer",
     "reportBug": "Informar de un error",
     "actionFailed": "No funcionó. Inténtalo de nuevo.",
     "aboutSource": "Acerca de esta fuente",
     "liveChat": "Chat en vivo",
     "liveChatSub": "Una persona del equipo de Mera",
-    "sourceSub": "Información, menos de {{source}}",
+    "sourceSub": "Sobre {{source}}, o ocultar la fuente de tus Noticias",
     "support": "Soporte",
     "supportSub": "Informar de un error, chat en vivo, preguntas frecuentes, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Ya se muestran menos de {{source}}"
+    "notPreferred": "No preferida",
+    "notPreferredDone": "{{publisher}} está oculta de tus Noticias"
   },
   "storyExport": {
     "shareA11y": "Exportar esta historia",
@@ -2737,12 +2750,8 @@
     "newsLoadError": "No se pudieron cargar los artículos",
     "websiteA11y": "Abrir {{host}}",
     "aboutSourceA11y": "Acerca de {{source}}",
-    "prefMoreA11y": "Más de esta fuente",
-    "prefFewerA11y": "Menos de esta fuente",
     "history": "Historial",
-    "fewerFrom": "Menos de",
     "historyEmpty": "No hay visitas aquí en los últimos 30 días.",
-    "moreFrom": "Más de",
     "openedCount_one": "Abriste {{publisher}} una vez en los últimos 30 días.",
     "openedCount_other": "Abriste {{publisher}} {{count}} veces en los últimos 30 días.",
     "openedOn": "Abierto el {{date}}",
@@ -2750,7 +2759,15 @@
     "openedYesterday": "Abierto ayer",
     "supportLine": "El buen periodismo dura cuando los lectores lo apoyan.",
     "visitsLabel": "Tus visitas en los últimos 30 días",
-    "subscribed": "Suscrito"
+    "subscribed": "Suscrito",
+    "preferred": "Preferida",
+    "notPreferred": "No preferida",
+    "preferA11y": "Preferir {{publisher}}",
+    "notPreferA11y": "Marcar {{publisher}} como no preferida",
+    "notPreferHint": "Oculta sus artículos de tus Noticias",
+    "includedWith": "Incluida con {{country}}",
+    "includedWithA11y": "Preferida, incluida con {{country}}",
+    "includedWithHelp": "Incluida con {{country}}. Para cambiarlo, quita {{country}} en Fuentes."
   },
   "nav": {
     "page": {
@@ -2940,14 +2957,11 @@
     },
     "sources": {
       "title": "Fuentes",
-      "find": "Buscar una publicación",
-      "more": "Más",
-      "fewer": "Menos",
-      "muted": "Silenciado",
-      "mute": "Silenciar",
-      "clear": "Borrar",
-      "footnote": "Toca una para cambiarla. «Menos de» en el menú ••• de un artículo también llega aquí.",
-      "empty": "No has ajustado ninguna fuente. Busca una publicación para ver más, menos o ninguna de ella. «Menos de» en el menú ••• de un artículo también llega aquí."
+      "find": "Busca una publicación o un país",
+      "footnote": "Toca una para cambiarla. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
+      "empty": "Aún no has elegido ninguna fuente. Busca una publicación para preferirla u ocultarla de tus Noticias. \"No preferida\" en el menú ••• de un artículo también aparece aquí.",
+      "countryCleared": "{{country}} ya no está entre tus preferencias",
+      "saveError": "No se pudo guardar. Inténtalo de nuevo."
     },
     "settings": {
       "yourPlan": "Tu plan",
@@ -3136,7 +3150,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Marcar esta publicación como No preferida"
     },
     "follow": {
       "follow": "Follow a story",

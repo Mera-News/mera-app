@@ -416,11 +416,10 @@ export function resolveCountryScope(
   };
 }
 
-/** The pref kinds a NAMED publication accepts. */
-const PUBLICATION_PREFS = ['boost', 'deprioritize', 'mute'] as const;
-/** The pref kinds a SOURCE SCOPE accepts — no `mute`, see the ProposalAction
- *  doc comment in core/types.ts (nothing implements a scope exclusion). */
-const SCOPE_PREFS = ['boost', 'deprioritize'] as const;
+/** The pref kinds the model may propose for a NAMED publication: Preferred and
+ *  Not preferred. A stored card with `deprioritize` never passes through here;
+ *  `parseProposalAction` and the executor still take it. */
+const PUBLICATION_PREFS = ['boost', 'mute'] as const;
 
 /**
  * Pure propose/confirm decision for the PERSONA chat's `proposeChanges` tool.
@@ -533,7 +532,7 @@ export function decidePersonaProposeChanges(
       actions.push({
         type: 'set_publication_pref',
         publicationId: name,
-        publicationPref: pref as 'boost' | 'deprioritize' | 'mute',
+        publicationPref: pref as 'boost' | 'mute',
       });
       continue;
     }
@@ -543,15 +542,11 @@ export function decidePersonaProposeChanges(
       if (countryName.length === 0) {
         return { result: { error: 'set_source_scope_pref requires a non-empty scopeCountry' } };
       }
+      // A country is only ever preferred. Silent DROP, not an error: an error
+      // would offer only boost, and the model could restage the opposite of
+      // what the user asked for.
       const pref = typeof o.publicationPref === 'string' ? o.publicationPref.trim() : '';
-      if (!(SCOPE_PREFS as readonly string[]).includes(pref)) {
-        // `mute` lands here deliberately — an ERROR rather than a silent drop,
-        // because unlike a hallucinated outlet this IS correctable: the model
-        // can restage the same intent as `deprioritize`.
-        return {
-          result: { error: `set_source_scope_pref requires publicationPref ∈ ${SCOPE_PREFS.join('|')} (a country cannot be muted)` },
-        };
-      }
+      if (pref !== 'boost') continue;
       // Closed vocabulary: the ONLY thing that makes a scope row live is a
       // resolvable alpha-3. Unresolvable ⇒ drop, never mint a dead row.
       const resolved = resolveCountryScope(countryName);
@@ -561,7 +556,7 @@ export function decidePersonaProposeChanges(
         scopeKind: 'country',
         scopeValue: resolved.scopeValue,
         label: resolved.label,
-        publicationPref: pref as 'boost' | 'deprioritize',
+        publicationPref: 'boost',
       });
       continue;
     }

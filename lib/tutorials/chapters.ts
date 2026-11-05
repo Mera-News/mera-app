@@ -60,12 +60,11 @@
 //   • Source badges come from `publication_type` and there are exactly two:
 //     `government` → "Government source", `regulator` → "Official agency"
 //     (`components/custom/config-panel/SourcesL2PublicationList.tsx:55-72`).
-//   • Sources (You › Sources) has no country rows: no country "+" and no
-//     country arrows, so no chapter may teach either.
-//   • Mute is a HARD exclusion (weight ≤ −0.9,
-//     `lib/mera-protocol/stage-scoring.ts:80`) and lives only on the
-//     source-preferences screen; ↓ is only a downrank
-//     (`lib/database/services/publication-pref-ui-actions.ts:14-16`).
+//   • A publication is Preferred (a star), Not preferred or neither. A country
+//     has no star: readers open it and choose per publication. There is no
+//     "Fewer" and no arrows. No chapter may teach any of these.
+//   • Not preferred hides a publication from the Feed only: World and related
+//     stories still show it, so no copy may say "everywhere".
 //   • Structured "not interested" filters match one article field by exact
 //     equality, so they are minted from a real article; hand-typed ones are
 //     keyword-only (`components/custom/not-interested/AddPhraseModal.tsx:30-35`).
@@ -461,7 +460,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
         interaction: {
           kind: 'sort',
           buckets: [
-            { id: 'softer', icon: 'arrow-downward' },
+            { id: 'softer', icon: 'star' },
             { id: 'gone', icon: 'block' },
           ],
           cards: [

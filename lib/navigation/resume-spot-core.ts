@@ -44,6 +44,7 @@ export const ROOT_ROUTES: Readonly<Record<string, ParamSchema>> = {
   'article-detail': { required: ['articleId'], optional: ['stableClusterId', 'trackedStoryId', 'from'] },
   'suggestion-detail': { required: ['articleSuggestionId'], optional: ['trackedStoryId', 'from'] },
   publication: { required: [], optional: ['publisherId', 'name', 'country', 'order'], anyOf: ['publisherId', 'name'] },
+  'sources-publishers': { required: ['countryCode'], optional: ['countryName'] },
   'story-timeline': { required: ['trackedStoryId'], optional: [] },
   'persona-articles': { required: ['topicTexts'], optional: ['factStatement'] },
   // Search restores EMPTY: the query is never stored (typed text holds the reload).

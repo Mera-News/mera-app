@@ -315,6 +315,8 @@ function electRepresentative(
 export async function gateUnscoredForScoring(
     inFlightIds: Set<string>,
     userCtx: UserGeoLanguageContext | null = null,
+    /** A run-scoped snapshot, so a per-chunk caller does not re-read the table. */
+    sharedReadIndex?: Awaited<ReturnType<typeof loadReadStoryIndex>>,
 ): Promise<GateResult> {
     // Captured before any throwing step so the fail-open path can enqueue them.
     let candidateIds: string[] = [];
@@ -339,7 +341,7 @@ export async function gateUnscoredForScoring(
         // from an article the user is done with). `loadReadStoryIndex` fails open
         // to an inert index, so a read failure degrades to the previous behaviour
         // rather than hiding anything.
-        const readIndex = await loadReadStoryIndex();
+        const readIndex = sharedReadIndex ?? (await loadReadStoryIndex());
         const { alreadyReadIds, scorable: candidates } = partitionAlreadyRead(
             allCandidates,
             readIndex,

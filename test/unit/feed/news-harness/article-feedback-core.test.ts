@@ -895,7 +895,7 @@ describe('getArticleFeedbackToolDefinitions', () => {
     for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'suppressionKeywords', 'suppressionStrength', 'suppressionKind', 'suppressionValue', 'suppressionId', 'highPriority']) {
       expect(props[key]).toBeDefined();
     }
-    expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'deprioritize', 'mute']);
+    expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'mute']);
     // The kind enum mirrors SUPPRESSION_KINDS verbatim (order is load-bearing —
     // it is the same array the DB model persists against).
     expect((props.suppressionKind as { enum: string[] }).enum).toEqual([...SUPPRESSION_KINDS]);
@@ -1464,10 +1464,22 @@ describe('decideProposeChanges — suppression kinds (D9)', () => {
   });
 
   it('falls back to the structured value as the display phrase when no pattern was sent', () => {
-    const r = stage({ type: 'add_suppression', suppressionKind: 'publication', suppressionValue: 'Euronews' });
+    const r = stage({ type: 'add_suppression', suppressionKind: 'category', suppressionValue: 'Technology' });
     const a = r.sideEffects!.proposal!.actions[0] as { suppressionPattern: string; suppressionKind?: string };
-    expect(a.suppressionPattern).toBe('Euronews');
-    expect(a.suppressionKind).toBe('publication');
+    expect(a.suppressionPattern).toBe('Technology');
+    expect(a.suppressionKind).toBe('category');
+  });
+
+  it.each([0.5, 0.9])('stages Not preferred for a %s publication filter, so no hidden lowered level exists', (strength) => {
+    const r = stage({
+      type: 'add_suppression',
+      suppressionKind: 'publication',
+      suppressionValue: 'Euronews',
+      suppressionStrength: strength,
+    });
+    expect(r.sideEffects!.proposal!.actions).toEqual([
+      { type: 'set_publication_pref', publicationId: 'Euronews', publicationPref: 'mute' },
+    ]);
   });
 
   it('still rejects an add_suppression with neither a pattern nor a value', () => {

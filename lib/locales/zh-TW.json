@@ -334,7 +334,15 @@
     "remindBody": "梅拉的設計是不會無故打擾你。請選擇你希望何時收到閱讀新聞的提醒。我們建議你挑一個能好好讀完新聞的時段。",
     "remindTitle": "梅拉應該何時提醒你？",
     "turnOn": "開啟通知",
-    "turnThemOn": "開啟通知"
+    "turnThemOn": "開啟通知",
+    "sourcesTitle": "你信任哪些新聞來源？",
+    "sourcesBody": "輕點星號即可看到更多。輕點眼睛圖示，即可從你的資訊流中隱藏。你隨時可以在「來源」中更改。",
+    "sourcesSkip": "略過",
+    "sourcesLoadError": "無法載入來源。",
+    "sourcesOffline": "你目前離線。之後可以在「來源」中新增來源。",
+    "iSubscribe": "我已訂閱",
+    "iSubscribeA11y": "我已訂閱 {{publisher}}",
+    "sourcesFind": "搜尋出版物"
   },
   "notifications": {
     "title": "通知",
@@ -541,7 +549,12 @@
     "lookAndTake": "查看與帶走",
     "askBeforeTopicDelete": "刪除主題前詢問",
     "askBeforeTopicDeleteHint": "每次你從某項事實中刪除主題時，梅拉都會先請你確認。",
-    "exportHistoryWindowNote_other": "此匯出只包含最近 {{count}} 天的閱讀紀錄。較舊的紀錄會自動從這支裝置刪除，也從未傳送到梅拉的伺服器。"
+    "exportHistoryWindowNote_other": "此匯出只包含最近 {{count}} 天的閱讀紀錄。較舊的紀錄會自動從這支裝置刪除，也從未傳送到梅拉的伺服器。",
+    "meterTitle": "這支手機上的資料",
+    "meterLine": "梅拉使用了 {{used}}。這支手機上還有 {{free}} 可用。",
+    "meterUsedOnly": "梅拉使用了 {{used}}。",
+    "meterDatabase": "文章與個人檔案",
+    "meterBackup": "備份副本"
   },
   "preferences": {
     "notifications": "通知",
@@ -762,10 +775,10 @@
     "actionShowLessTopic": "減少顯示某個主題",
     "actionShowMoreTopic": "增加顯示某個主題",
     "actionDownRank": "降低某個主題的優先順序",
-    "actionPublicationBoost": "顯示某個媒體的更多內容",
+    "actionPublicationBoost": "將出版物標為優先",
     "actionPublicationDeprioritize": "顯示某個媒體的更少內容",
-    "actionPublicationMute": "靜音某個媒體",
-    "actionSourceScopeBoost": "顯示某個國家來源的更多內容",
+    "actionPublicationMute": "將出版物標為不想看",
+    "actionSourceScopeBoost": "優先顯示來自某國家的來源",
     "actionSourceScopeDeprioritize": "顯示某個國家來源的更少內容",
     "actionSuppress": "篩選掉某個詞語",
     "actionPinTopic": "釘選某個主題",
@@ -1180,7 +1193,10 @@
       "carriedOver": "已帶入 {{name}}",
       "undone": "已復原：{{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "將 {{name}} 設為優先",
+      "notPreferred": "將 {{name}} 設為不想看",
+      "preferredSourcesFrom": "將 {{name}} 的來源設為優先"
     }
   },
   "calibration": {
@@ -1228,10 +1244,8 @@
       "paywalled": "需要付費，我讀不了",
       "noTrust": "我不信任它",
       "trustTitle": "你不信任 {{site}}",
-      "trustLess": "少顯示 {{site}} 的內容",
       "trustNever": "不再顯示 {{site}}",
       "hardToUse": "這個網站不好用",
-      "fewerSite": "少顯示這個網站的內容",
       "reportTitle": "也把 {{site}} 的情況告訴梅拉實驗室嗎？",
       "reportYes": "好，傳送給梅拉實驗室",
       "reportNo": "不用了",
@@ -1463,7 +1477,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "清除偏好",
     "scopeKindCountry": "國家"
   },
   "optimisationPlan": {
@@ -1767,7 +1780,7 @@
               },
               "sources": {
                 "label": "來源",
-                "text": "你想增加或減少的出版物，以及你付費訂閱的出版物。"
+                "text": "你設為優先的出版物、從你的資訊流中隱藏的出版物，以及你付費訂閱的出版物。"
               }
             }
           }
@@ -2025,14 +2038,14 @@
       },
       "sources": {
         "title": "選擇你的來源",
-        "subtitle": "徽章、箭頭和一個是塊的控制。",
+        "subtitle": "星號、徽章，以及從你的資訊流隱藏來源。",
         "slides": {
           "where-it-lives": {
             "headline": "來源住在哪裡",
-            "body": "一個頁面，管理你調整過的所有媒體。",
+            "body": "你選過的每個出版物都集中在同一個畫面。",
             "steps": {
               "0": "「我的」標籤，然後是「來源」。",
-              "1": "文章 ••• 選單中的「減少…的內容」會立即生效，並提供復原，之後該媒體會顯示在「已調整」下。"
+              "1": "在文章的 ••• 選單中選擇「不想看」會立即生效並可復原，該出版物之後會顯示在「來源」中。"
             },
             "ask": "我在哪裡管理我看到的來源？"
           },
@@ -2055,26 +2068,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "相同的箭頭，一次一個出版商",
-            "body": "打開一個國家，每個出版商都有自己的一對。向下是輕推而非牆：向下排列的出版商在它有沒有人擁有的故事時仍然出現。",
-            "ask": "轉動來源和使其沉默之間有什麼區別？"
+            "headline": "為出版物加上星號",
+            "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。",
+            "ask": "「優先」和「不想看」有什麼不同？"
           },
           "mute-is-not-a-downrank": {
-            "headline": "靜音是完全不同的東西",
-            "body": "靜音是在媒體的頁面上設定，而且是硬排除：這些報導會被移除，而不只是排序較低。點擊每張卡片，把它放到正確的位置。",
+            "headline": "「不想看」會從你的資訊流中隱藏它",
+            "body": "將出版物標為「不想看」後，它的報導會離開你的資訊流。全球和相關報導仍然可能顯示它們。點按每張卡片，並把它放到正確的位置。",
             "steps": {
-              "0": "向下箭頭：不那麼經常顯示。",
-              "1": "靜音：完全不顯示。",
-              "2": "兩者都可以稍後從來源首選項中清除。"
+              "0": "星號：排得比較前面。",
+              "1": "不想看：從你的資訊流中隱藏。",
+              "2": "你可以在「來源」中清除任一項設定。"
             },
             "sort": {
               "buckets": {
-                "softer": "不那麼經常顯示",
-                "gone": "完全保留在外"
+                "softer": "排得比較前面",
+                "gone": "已從你的資訊流隱藏"
               },
               "cards": {
-                "down-arrow": "向下箭頭",
-                "mute": "靜音"
+                "down-arrow": "星號",
+                "mute": "不想看"
               }
             }
           }
@@ -2090,7 +2103,7 @@
             "steps": {
               "0": "你隱藏的字詞和東西。",
               "1": "你看到較少的主題。",
-              "2": "你已使其沉默或轉動的來源。"
+              "2": "你標為不想看的來源。"
             },
             "ask": "我在哪裡可以看到我篩選掉的所有東西？"
           },
@@ -2652,18 +2665,18 @@
     "following": "已追蹤此報導",
     "checkFacts": "事實查核",
     "fewerFrom": "減少 {{source}} 的內容",
-    "fewerFromDone": "你會看到更少來自 {{source}} 的內容。",
     "undo": "復原",
     "reportBug": "回報問題",
     "actionFailed": "操作未成功。請再試一次。",
     "aboutSource": "關於此來源",
     "liveChat": "即時聊天",
     "liveChatSub": "來自梅拉團隊的真人",
-    "sourceSub": "關於此來源，減少來自{{source}}的內容",
+    "sourceSub": "關於 {{source}}，或從你的資訊流中隱藏",
     "support": "支援",
     "supportSub": "回報問題、即時聊天、常見問題、教學",
     "tutorial": "教學",
-    "fewerFromAlready": "已設定為較少顯示 {{source}}"
+    "notPreferred": "不想看",
+    "notPreferredDone": "{{publisher}} 已從你的資訊流中隱藏"
   },
   "storyExport": {
     "shareA11y": "匯出這篇報導",
@@ -2711,12 +2724,8 @@
     "newsLoadError": "無法載入文章",
     "websiteA11y": "開啟 {{host}}",
     "aboutSourceA11y": "關於 {{source}}",
-    "prefMoreA11y": "顯示此來源的更多內容",
-    "prefFewerA11y": "顯示此來源的更少內容",
     "history": "歷史紀錄",
-    "fewerFrom": "減少來自",
     "historyEmpty": "過去 30 天內這裡沒有造訪紀錄。",
-    "moreFrom": "增加來自",
     "openedCount_one": "過去 30 天內你開啟了 {{publisher}} 1 次。",
     "openedCount_other": "過去 30 天內你開啟了 {{publisher}} {{count}} 次。",
     "openedOn": "開啟於 {{date}}",
@@ -2724,7 +2733,15 @@
     "openedYesterday": "昨天開啟",
     "supportLine": "優質報導需要讀者支持才能持續。",
     "visitsLabel": "過去 30 天的造訪紀錄",
-    "subscribed": "已訂閱"
+    "subscribed": "已訂閱",
+    "preferred": "優先",
+    "notPreferred": "不想看",
+    "preferA11y": "將 {{publisher}} 設為優先",
+    "notPreferA11y": "將 {{publisher}} 標為不想看",
+    "notPreferHint": "從你的資訊流中隱藏其文章",
+    "includedWith": "已納入 {{country}}",
+    "includedWithA11y": "優先，已納入 {{country}}",
+    "includedWithHelp": "已納入 {{country}}。若要更改，請在「來源」中移除 {{country}}。"
   },
   "nav": {
     "page": {
@@ -2913,14 +2930,11 @@
     },
     "sources": {
       "title": "來源",
-      "find": "尋找出版物",
-      "more": "更多",
-      "fewer": "更少",
-      "muted": "已靜音",
-      "mute": "靜音",
-      "clear": "清除",
-      "footnote": "點一下某一項即可變更。文章 ••• 選單裡的「減少…的內容」也會出現在這裡。",
-      "empty": "你還沒有調整過任何來源。搜尋一個出版物，即可選擇多看、少看或不看它。文章 ••• 選單裡的「減少…的內容」也會出現在這裡。"
+      "find": "搜尋出版物或國家",
+      "footnote": "輕點一項即可更改。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
+      "empty": "你還沒有挑選任何來源。搜尋出版物，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
+      "countryCleared": "已取消 {{country}} 的優先設定",
+      "saveError": "無法儲存這項設定。請再試一次。"
     },
     "settings": {
       "yourPlan": "你的方案",
@@ -3109,7 +3123,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "將此出版物標為不想看"
     },
     "follow": {
       "follow": "Follow a story",

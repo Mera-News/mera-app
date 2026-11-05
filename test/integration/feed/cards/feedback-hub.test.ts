@@ -84,6 +84,17 @@ async function mount(over: Partial<FeedbackHubDeps> = {}) {
 
 const ROOT: HubLevel = { kind: 'tree', pathIds: [] };
 const SITE: HubLevel = { kind: 'tree', pathIds: ['publication_issue'] };
+const NEVER_SHOW_PATH = ['publication_issue', 'not_factual', 'never_show'];
+
+/** Never show {{site}}, through its confirm level: the tree's one leaf that writes a preference. */
+async function answerNeverShow(mounted: Awaited<ReturnType<typeof mount>>) {
+    const node = BUNDLED_FEEDBACK_TREE.root
+        .find((n) => n.id === 'publication_issue')
+        ?.children?.find((n) => n.id === 'not_factual')
+        ?.children?.find((n) => n.id === 'never_show');
+    if (!node) throw new Error('no never_show leaf');
+    await mounted.tap({ kind: 'tree-confirm', node, pathIds: NEVER_SHOW_PATH }, 'tree-confirm-destructive');
+}
 
 beforeAll(async () => {
     await initI18nEn();
@@ -128,16 +139,17 @@ describe('the hub root', () => {
 
 describe('an answer', () => {
     it('applies at the tap, writes the verdict first, and stamps the row processed', async () => {
-        const { deps, tap } = await mount();
-        await tap(SITE, 'tree-row-fewer_from_site');
+        const mounted = await mount();
+        const { deps } = mounted;
+        await answerNeverShow(mounted);
 
         expect(deps.ensureVerdict).toHaveBeenCalled();
         await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(1));
-        expect(await getPreferenceKind(PUB)).toBe('deprioritize');
+        expect(await getPreferenceKind(PUB)).toBe('mute');
         const ctx = await ctxOf();
-        expect(ctx.answers[0]).toEqual({ leafId: 'fewer_from_site', path: ['publication_issue', 'fewer_from_site'], cause: 'source' });
+        expect(ctx.answers[0]).toEqual({ leafId: 'never_show', path: NEVER_SHOW_PATH, cause: 'source' });
         // A row with no treePath is reaped at write: the first answer's path keeps it.
-        expect(ctx.treePath).toEqual(['publication_issue', 'fewer_from_site']);
+        expect(ctx.treePath).toEqual(NEVER_SHOW_PATH);
         expect(ctx.changeLogIds).toHaveLength(1);
         // Applied at the tap: the digest must not apply it a second time.
         expect(await feedbackService.getUnprocessedFeedback()).toHaveLength(0);
@@ -186,13 +198,20 @@ describe('an answer', () => {
         expect(screen.getByTestId('feedback-tell-mera').props.accessibilityLabel).toBe('Tell Mera, Say it in your own words');
     });
 
-    it('a later unapplied answer keeps a row that applied something processed', async () => {
+    it('The site is hard to use records the answer and writes no preference', async () => {
         const { tap } = await mount();
-        await tap(SITE, 'tree-row-fewer_from_site');
-        await tap(ROOT, 'tree-row-not_about_fact');
+        await tap(SITE, 'tree-row-too_slow');
+        await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(1));
+        expect(await getPreferenceKind(PUB)).toBe('none');
+    });
+
+    it('a later unapplied answer keeps a row that applied something processed', async () => {
+        const mounted = await mount();
+        await answerNeverShow(mounted);
+        await mounted.tap(ROOT, 'tree-row-not_about_fact');
         await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(2));
         expect(await feedbackService.getUnprocessedFeedback()).toHaveLength(0);
-        expect((await ctxOf()).treePath).toEqual(['publication_issue', 'fewer_from_site']);
+        expect((await ctxOf()).treePath).toEqual(NEVER_SHOW_PATH);
     });
 
     it('"Stop news for this" goes through persona and is undoable', async () => {
@@ -243,8 +262,9 @@ describe('wrong place', () => {
 
 describe('the session toast', () => {
     it('sums up the session once the sheet has gone, and Undo reverts it all but keeps the verdict', async () => {
-        const { hook, tap } = await mount();
-        await tap(SITE, 'tree-row-fewer_from_site');
+        const mounted = await mount();
+        const { hook, tap } = mounted;
+        await answerNeverShow(mounted);
         await tap(ROOT, 'tree-row-not_about_fact');
         await waitFor(async () => expect((await ctxOf()).answers).toHaveLength(2));
 

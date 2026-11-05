@@ -42,13 +42,11 @@ import NetInfo from '@react-native-community/netinfo';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { gbText } from '@/lib/algorithms/format-bytes';
 import {
     loadBgRefreshToggle,
     saveBgRefreshToggle,
 } from '@/lib/background/bg-refresh-ui';
-
-/** Decimal gigabytes with one place, the way the catalogue sizes read. */
-export const gbText = (bytes: number): string => (bytes / 1e9).toFixed(1);
 
 /**
  * Why the built-in model (Apple Intelligence, Gemini Nano) cannot run now, by

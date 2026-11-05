@@ -202,3 +202,26 @@ describe('dismissible', () => {
         expect(isActive(progress)).toBe(false);
     });
 });
+
+describe('onClosed', () => {
+    it('runs once however the card left', () => {
+        const closedBy = (leave: (id: string) => void) => {
+            const onClosed = jest.fn();
+            const id = show({ duration: 3000, onClosed, render });
+            leave(id);
+            return onClosed;
+        };
+        expect(closedBy(close)).toHaveBeenCalledTimes(1);
+        expect(closedBy(() => closeAll())).toHaveBeenCalledTimes(1);
+        expect(closedBy(() => jest.advanceTimersByTime(3000))).toHaveBeenCalledTimes(1);
+        expect(closedBy((id) => show({ id, render }))).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs for a card the queue cap drops', () => {
+        const onClosed = jest.fn();
+        show({ duration: 3000, render });
+        show({ duration: 3000, onClosed, render });
+        for (let i = 0; i < TOAST_QUEUE_CAP; i++) show({ duration: 3000, render });
+        expect(onClosed).toHaveBeenCalledTimes(1);
+    });
+});

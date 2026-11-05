@@ -687,7 +687,7 @@ describe('set_publication_pref', () => {
   it("records before: 'none' when there was no prior preference", async () => {
     await applyPersonaAction({ action_type: A.SET_PUBLICATION_PREF, publicationId: 'The Times', publicationPref: 'boost' }, 'user');
 
-    expect((await logsOf('set_publication_pref'))[0].action).toEqual({ targetId: 'The Times', before: 'none', after: 'boost' });
+    expect((await logsOf('set_publication_pref'))[0].action).toEqual({ targetId: 'The Times', before: 'none', after: 'boost', twoState: true });
     expect((await prefRows())[0].weight).toBe(0.5);
   });
 

@@ -51,14 +51,17 @@ export function usePublicationPage({
 
     const newsPublisherId = publisherId || profile?.newsPublisherId || null;
 
-    // More/fewer, keyed on every name the publication is known by. Resolved
+    // Preferred / Not preferred, keyed on every name the publication is known by. Resolved
     // from what the device knows, so it works offline and when not found.
-    const pref = usePublicationPref({
-        publisherId: newsPublisherId,
-        rawName,
-        publisherName: profile?.name,
-        sourceNames: profile?.sourceNames,
-    });
+    const pref = usePublicationPref(
+        {
+            publisherId: newsPublisherId,
+            rawName,
+            publisherName: profile?.name,
+            sourceNames: profile?.sourceNames,
+        },
+        profile?.countryCode ?? countryCode,
+    );
 
     // The news starts as soon as a publisher id is known and does not wait on
     // the profile. An unknown publication gets none. So does a server too old

@@ -2,12 +2,11 @@ import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { hostOf } from '@/components/custom/publication-page/publication-format';
-import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
+import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
+import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
 import { appendNewPublishers } from '@/lib/algorithms/append-new-publishers';
-import { publisherPrefNames } from '@/lib/algorithms/publication-pref-level';
 import logger from '@/lib/logger';
 import type { NewsPublisher } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';
@@ -42,7 +41,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
-    const prefLevelFor = usePublicationPrefLevels();
+    const prefs = usePublicationRowPrefs();
     useEffect(() => {
         if (countryCode && !hasFetched.current) {
             hasFetched.current = true;
@@ -96,25 +95,25 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         }
     }, [hasNextPage, isLoadingMore, endCursor, countryCode]);
 
-    const renderPublisher: ListRenderItem<NewsPublisher> = useCallback(
-        ({ item }) => {
-            const host = hostOf(item.website_url);
+    // Not memoized: the row props come from the observed preferences, which change under the list.
+    const renderPublisher: ListRenderItem<NewsPublisher> = ({ item }) => {
             return (
-                <PublicationListRow
+                <PublicationControlRow
+                    {...prefs.publisherRow({
+                        publisherId: item._id,
+                        rawName: item.name,
+                        countryCode: item.country_code,
+                        sourceNames: (item.publicationSources ?? []).map((src) => src.publication_name),
+                    })}
                     rawName={item.name}
-                    subtitle={host}
-                    prefLevel={prefLevelFor(
-                        publisherPrefNames(item.name, (item.publicationSources ?? []).map((src) => src.publication_name)),
-                    )}
+                    subtitle={hostOf(item.website_url)}
                     onPress={() =>
                         openPublicationPage({ publisherId: item._id, rawName: item.name, countryCode: item.country_code })
                     }
                     testID={`sources-publisher-${item._id}`}
                 />
             );
-        },
-        [prefLevelFor],
-    );
+    };
 
     const keyExtractor = useCallback(
         (item: NewsPublisher, index: number) => item._id || `pub-${index}`,
@@ -159,6 +158,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                     ListFooterComponent={ListFooterComponent}
                 />
             )}
+            <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />
         </Box>
     );
 };

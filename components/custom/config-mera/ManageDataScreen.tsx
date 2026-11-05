@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import DataMeterCard from '@/components/custom/config-mera/DataMeterCard';
 import WhatMeraKeepsCard from '@/components/custom/config-mera/WhatMeraKeepsCard';
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, GroupLabel, Help, Row } from '@/components/custom/you/rows';
@@ -123,6 +124,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             >
                 <Help>{t('manageData.intro')}</Help>
                 <View style={{ height: 12 }} />
+                <DataMeterCard />
                 <Group>
                     <Row
                         testID="manage-data-backup"

@@ -2,11 +2,9 @@ import TapPressable from '@/components/custom/cards/TapPressable';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import type { SourcePrefUiLevel } from '@/lib/database/services/publication-pref-ui-actions';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useColors } from '@/lib/theme/tokens';
 import { I18nManager, StyleSheet, View } from 'react-native';
 
@@ -20,15 +18,13 @@ interface PublicationListRowProps {
     readonly subtitle?: string | null;
     /** A leading flag emoji (L1 search hits span countries). */
     readonly flag?: string | null;
-    /** The current more/fewer state, shown as a small glyph. Read locally. */
-    readonly prefLevel: SourcePrefUiLevel;
     readonly onPress: () => void;
     readonly testID: string;
 }
 
 /**
- * One publication in a Sources list: name, host, the more/fewer state as a
- * glyph, a chevron. Tapping opens the publication page, where more/fewer,
+ * One publication in a Sources list: name, host, a chevron. Tapping opens the
+ * publication page, where Preferred, Not preferred,
  * Top headlines and Subscribe now live. There are no feeds here, by design.
  *
  * The visual is hidden from accessibility and a CHILDLESS labelled button is
@@ -40,22 +36,14 @@ const PublicationListRow: React.FC<PublicationListRowProps> = ({
     rawName,
     subtitle,
     flag,
-    prefLevel,
     onPress,
     testID,
 }) => {
-    const { t } = useTranslation();
     const colors = useColors();
     const shown = useDisplayPublication(rawName.trim()) || rawName;
     const [pressed, setPressed] = useState(false);
 
-    const prefLabel =
-        prefLevel === 'prioritised'
-            ? t('publicationPage.prefMoreA11y')
-            : prefLevel === 'deprioritised'
-              ? t('publicationPage.prefFewerA11y')
-              : null;
-    const label = [shown, subtitle, prefLabel].filter(Boolean).join(', ');
+    const label = [shown, subtitle].filter(Boolean).join(', ');
 
     return (
         <View className="mx-4 mb-3 rounded-lg border border-line" testID={`${testID}-frame`}>
@@ -78,14 +66,6 @@ const PublicationListRow: React.FC<PublicationListRowProps> = ({
                         </Text>
                     ) : null}
                 </VStack>
-                {prefLevel !== 'none' ? (
-                    <MaterialIcons
-                        testID={`${testID}-pref-${prefLevel}`}
-                        name={prefLevel === 'prioritised' ? 'arrow-upward' : 'arrow-downward'}
-                        size={16}
-                        color={prefLevel === 'prioritised' ? colors.positive : colors.warning}
-                    />
-                ) : null}
                 <MaterialIcons
                     name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'}
                     size={20}

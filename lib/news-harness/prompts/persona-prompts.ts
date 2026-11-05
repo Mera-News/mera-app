@@ -191,7 +191,7 @@ export function buildToolDefinitions(
           name: 'proposeChanges',
           description:
             filterTools === 'full'
-              ? 'Stage a "not interested" filter change or a SOURCE preference for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression), "show me X again" / "remove that filter" (retire_suppression), "more/less from <outlet>" (set_publication_pref) and "prefer <country> sources" (set_source_scope_pref).'
+              ? 'Stage a "not interested" filter change or a SOURCE preference for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression), "show me X again" / "remove that filter" (retire_suppression), "more from" or "hide <outlet>" (set_publication_pref) and "prefer <country> sources" (set_source_scope_pref).'
               : 'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
           parameters: {
             type: 'object',
@@ -256,9 +256,9 @@ export function buildToolDefinitions(
                           },
                           publicationPref: {
                             type: 'string',
-                            enum: ['boost', 'deprioritize', 'mute'],
+                            enum: ['boost', 'mute'],
                             description:
-                              'set_publication_pref: boost | deprioritize | mute. set_source_scope_pref: boost | deprioritize ONLY — a country can never be muted.',
+                              'set_publication_pref: boost | mute. set_source_scope_pref: boost ONLY.',
                           },
                         }
                       : {}),
@@ -396,7 +396,7 @@ ${examples}`;
  */
 const FILTERS_PROMPT_SECTION_FULL = `
 - FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in ENGLISH, the user's OWN words, never an invented category name; suppressionStrength 0.9 = never show it, 0.5 = less of it}. "Show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS in <context>} — never invent an id.
-- SOURCES: "more/less from X" → set_publication_pref {publicationId: X as the user named it}; "prefer X sources" → set_source_scope_pref {scopeCountry: country name in English}. Both need publicationPref: boost|deprioritize (mute: outlets only).
+- SOURCES: "more from X" → set_publication_pref boost, "less from X" or "hide X" → mute {publicationId: X as the user named it}; "prefer X sources" → set_source_scope_pref boost {scopeCountry: country name in English}.
 - NEVER apply a filter directly: stage ONE proposeChanges, then applyProposal when the user confirms (yes / ok, any language) or cancelProposal when they decline. While a PENDING PROPOSAL is in <context> and they say anything else, leave it pending and reply normally.`;
 
 /** The degraded rung: the same two FILTER actions and the same
