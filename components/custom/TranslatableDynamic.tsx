@@ -518,13 +518,19 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     }, []);
 
     // Reset visibility (and local toggle) when the text prop changes (e.g. FlatList
-    // recycling), then re-measure on the next tick so recycled cells re-check at
+    // recycling); the effect below re-measures so recycled cells re-check at
     // their new position.
     useEffect(() => {
         setIsOnScreen(false);
         setLocalShowOriginal(false);
         setDropped(false);
         firedRef.current = null;
+    }, [text]);
+
+    useEffect(() => {
+        // English text is never measured. Deps include needsTranslation so a
+        // language switch or a lifted suppression re-runs the ladder.
+        if (!needsTranslation) return;
         // RETRY LADDER, not a single shot. Under Fabric, `measureInWindow` on a
         // freshly-mounted (or freshly-recycled) FlatList cell can return without
         // ever invoking its callback — the node has no committed shadow-tree
@@ -537,7 +543,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         // visible — an unresolved measure must not translate an off-screen node.
         const ids = [0, 150, 450].map((ms) => setTimeout(checkVisibility, ms));
         return () => ids.forEach(clearTimeout);
-    }, [text, checkVisibility]);
+    }, [text, needsTranslation, checkVisibility]);
 
     // Subscribe to scroll ticks until we know the node is on screen. Once visible
     // we drop the subscription — no work after that.
@@ -727,7 +733,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     ) => {
         const baseStyle = layout ? layout.innerStyle : (style ?? {});
         const props = {
-            ...(measured ? { ref: setNodeRef, onLayout: checkVisibility } : null),
+            ...(measured ? { ref: setNodeRef, onLayout: needsTranslation ? checkVisibility : undefined } : null),
             className: layout ? layout.innerClass : className,
             style: [
                 baseStyle,

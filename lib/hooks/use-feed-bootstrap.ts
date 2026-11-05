@@ -50,7 +50,7 @@ export function useFeedBootstrap(isFocused: boolean): FeedBootstrapState {
   // auth COOKIE, not by this object, and Apollo soft-fails a 401 by design, so
   // the local id is a safe key for a server fetch too.
   const localUserId = useUserStore((s) => s.userId);
-  const { fetchUserPersonaOrThrow } = useUserStore();
+  const fetchUserPersonaOrThrow = useUserStore((s) => s.fetchUserPersonaOrThrow);
   // Reactive subscription: a persisted-false flag (e.g. from a prior transient
   // failure, before this fix, or a confirmed-empty persona) must retrigger the
   // fetch on a later tab visit rather than being sticky for the session.

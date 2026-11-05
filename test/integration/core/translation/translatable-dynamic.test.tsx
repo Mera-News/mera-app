@@ -10,7 +10,7 @@ import TranslatableDynamic, { type TranslatableDisplayState } from '@/components
 import { createPageActiveSource, PageActiveContext } from '@/components/custom/nav/page-active';
 import { NavigationContext } from 'expo-router/react-navigation';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { initI18nEn } from '@/test/helpers';
+import { initI18nEn, useFakeClock } from '@/test/helpers';
 
 // The preset's Modal mock loads an untransformed native spec; the popover opens through it.
 jest.mock('react-native/Libraries/Modal/Modal', () => {
@@ -483,5 +483,41 @@ describe('detail labels carry no icon characters', () => {
         const toggle = screen.getByRole('button', { name: 'Show original' });
         expectCleanLabel(toggle.props.accessibilityLabel);
         expect(toggle.props.accessibilityLabel).toBe('Show original');
+    });
+});
+
+describe('the visibility check runs only for text that needs translation', () => {
+    const measure = () => MockNativeMethods.measureInWindow as jest.Mock;
+    const advance = (ms: number) => act(() => jest.advanceTimersByTimeAsync(ms));
+
+    beforeEach(() => useFakeClock('2026-01-01T00:00:00Z'));
+
+    it('an English node is never measured, on mount, after the retry ladder or on layout', async () => {
+        useAppLanguageStore.setState({ appLanguage: 'en' });
+        await mount(detail());
+        await advance(500);
+        await fireEvent(screen.getByText(EN), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 300, height: 20 } } });
+        expect(measure()).not.toHaveBeenCalled();
+    });
+
+    it('switching from en to another language asks for the translation without a scroll tick', async () => {
+        useAppLanguageStore.setState({ appLanguage: 'en' });
+        await mount(detail());
+        await advance(500);
+        expect(mockTranslate).not.toHaveBeenCalled();
+        await act(async () => useAppLanguageStore.setState({ appLanguage: 'mr' }));
+        await advance(500);
+        expect(mockTranslate).toHaveBeenCalledWith(EN, 'mr');
+    });
+
+    it('a suppression that lifts asks for the translation without a scroll tick', async () => {
+        mockGated = true;
+        const view = await mount(detail());
+        await advance(500);
+        expect(mockTranslate).not.toHaveBeenCalled();
+        mockGated = false;
+        await view.rerender(detail());
+        await advance(500);
+        expect(mockTranslate).toHaveBeenCalledWith(EN, 'mr');
     });
 });
