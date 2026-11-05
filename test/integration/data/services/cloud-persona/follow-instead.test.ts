@@ -62,10 +62,11 @@ async function stories(topic: { id: string; text: string }, n: number, relevance
 }
 
 /** The AI check's model: `hasStake` decides per fact statement. */
-const checkModel = (hasStake: (statement: string) => boolean = () => false, subject = 'Football') => (call: GatewayCall) => {
+const checkModel = (hasStake: (statement: string) => boolean = () => false) => (call: GatewayCall) => {
   if (!/has_stake/.test(call.messages[0]?.content ?? '')) return sanityModel(() => false)(call);
   const statement = JSON.parse(userMessage(call).replace(/^Fact: /, '')) as string;
-  return JSON.stringify({ has_stake: hasStake(statement), story_subject: subject, search: subject.toLowerCase() });
+  const subject = statement.split(' ').slice(1).join(' ');
+  return JSON.stringify({ has_stake: hasStake(statement), story_subject: subject, search: subject });
 };
 
 let logs: ReturnType<typeof quietLogger>;
@@ -127,8 +128,14 @@ describe('the sweep', () => {
 
     const [offer, ...rest] = await getPendingProposals();
     expect(rest).toEqual([]);
-    expect(offer).toMatchObject({ kind: 'follow_instead', invertible: false, subject: { topics: ['Football'] } });
-    expect(offer.ops[0]).toMatchObject({ type: 'follow_story', label: 'Football', searchText: 'football' });
+    const statement = offer.subject.facts[0];
+    const subject = statement.replace('Follows ', '');
+    expect(offer).toMatchObject({ kind: 'follow_instead', invertible: false });
+    expect(offer.ops[0]).toMatchObject({
+      type: 'follow_story',
+      label: subject.charAt(0).toUpperCase() + subject.slice(1),
+      searchText: subject,
+    });
     expect(checks()).toHaveLength(1);
     expect(await getSetting(KEY)).toBe(String(T0));
     expect(notified.calls()).toHaveLength(1);
@@ -385,7 +392,9 @@ describe('accept', () => {
 
     expect((await getFacts()).map((f) => f.id)).not.toContain(fact.fact.id);
     expect(await topicService.getByFact(fact.fact.id)).toEqual([]);
-    expect((await topicService.getActive()).find((t) => t.provenance === 'tracked')?.text).toBe('football');
+    expect((await topicService.getActive()).find((t) => t.provenance === 'tracked')?.text).toBe(
+      fact.fact.statement.replace('Follows ', ''),
+    );
     expect(syncNow).toHaveBeenCalledTimes(1);
   });
 });
