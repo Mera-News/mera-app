@@ -12,6 +12,8 @@ config.resolver.sourceExts.push("cjs");
 
 // Ensure Metro can find assets in the assets directory
 config.resolver.assetExts = config.resolver.assetExts || [];
+// A mutation run rewrites thousands of files here, which kills Metro's watcher.
+config.resolver.blockList = [].concat(config.resolver.blockList ?? [], /\/\.stryker-tmp\//, /\/coverage\//);
 config.watchFolders = config.watchFolders || [];
 config.watchFolders.push(path.resolve(__dirname, 'assets'));
 
@@ -24,6 +26,7 @@ const ALIASES = {
 // backend's scenario, since that build carries no RevenueCat key. Same flag as app.config.js.
 if (process.env.EXPO_PUBLIC_E2E === '1') {
     ALIASES['react-native-purchases-ui'] = path.resolve(__dirname, 'lib/e2e/purchases-ui.ts');
+    ALIASES['@/modules/mera-device-attest'] = path.resolve(__dirname, 'lib/e2e/device-attest.ts');
 }
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {

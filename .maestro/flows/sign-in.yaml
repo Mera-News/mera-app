@@ -1,5 +1,5 @@
 # Subflow: first launch to the Feed through Get started (device sign-in); the mock backend answers the
-# device sign-in with its fixture account. Needs Play services on the AVD (Play Integrity token).
+# device sign-in with its fixture account. lib/e2e/device-attest.ts answers attestation in this build.
 # Provisional: the screen order is fixed from the discovery run.
 appId: ${APP_ID}
 ---
