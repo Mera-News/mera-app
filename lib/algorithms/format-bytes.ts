@@ -1,7 +1,8 @@
 // format-bytes: storage sizes in decimal units, the way phones report them.
 
 /** The GB figure alone, one decimal: 1234000000 -> "1.2". */
-export const gbText = (bytes: number): string => (bytes / 1e9).toFixed(1);
+export const gbText = (bytes: number, locale?: string): string =>
+  (bytes / 1e9).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /** A size with its unit: "412 MB", "38.2 GB". */
 export function sizeText(bytes: number): string {
