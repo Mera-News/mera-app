@@ -119,7 +119,7 @@ describe('the eval sends what the app sends', () => {
     const body = loadSkill('conversation/about-mera');
     expect(body).not.toBeNull();
     const skillLeg = captured[1].systemPrompt;
-    expect(skillLeg.startsWith(body!)).toBe(true);
+    expect(skillLeg.includes(body!)).toBe(true);
     expect(skillLeg).not.toMatch(/^skill:/);
     const voice = skillLeg.slice(skillLeg.lastIndexOf('## Voice'));
     expect(voice).toContain('**Hindi**');

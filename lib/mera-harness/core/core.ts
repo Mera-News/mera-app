@@ -6,7 +6,8 @@
 
 import { forcedOfferClosingFor, forcedOfferGroundingFor, multiSubjectFor, recentConversationFor, resolveAgentArm, routeEnforcementFor } from './arms';
 import { pointsBack, renderRecentBlock, subjectsOf, withExchange } from './back-reference';
-import { brandRule, buildRouterPrompt, fixBrandSpelling, voiceRules, type PersonaSurface } from './router-prompt';
+import { HARNESS_ABILITIES, brandRule, buildRouterPrompt, fixBrandSpelling, voiceRules, type PersonaSurface } from './router-prompt';
+import { meraIdentity } from './identity';
 import {
   asksForLess,
   claimsChangeHappened,
@@ -535,14 +536,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // against itself across four "arms". `promptVariant` was declared on the
     // params, passed by the eval runner, and read nowhere.
     arm: params.promptVariant,
+    webSearch: typeof deps.tools.webSearch === 'function',
   });
-  // A loaded body REPLACES the router prompt, which is the only place the
-  // language and punctuation rules live, so they are re-appended to the body.
+  // A loaded body REPLACES the router prompt, so the identity and the language
+  // and punctuation rules are re-appended to the body.
   // Last in the PROMPT, not on the wire: text-xml appends the English tools
   // block after it, and tool results follow (see `aboutMeraAnswerNote`).
   const brandLine = brandRule(state.persona.languageName);
+  const identity = meraIdentity({ abilities: HARNESS_ABILITIES, webSearch: typeof deps.tools.webSearch === 'function' });
   const skillPrompt = (body: string): string =>
-    `${body}\n\n${voiceRules(state.persona.languageName)}${brandLine ? `\n${brandLine}` : ''}`;
+    `${identity}\n\n${body}\n\n${voiceRules(state.persona.languageName)}${brandLine ? `\n${brandLine}` : ''}`;
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
   /** Every skill this turn ran, in order. One entry unless the multi-subject

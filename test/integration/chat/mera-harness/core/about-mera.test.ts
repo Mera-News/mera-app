@@ -74,7 +74,7 @@ describe('the voice rules reach every skill leg', () => {
       res({ content: 'नमस्ते।' }),
     ]);
     await runAgentTurn({ state: createAgentState(HINDI), userMessage: 'नमस्ते', deps: h.deps });
-    expect(h.calls[1].systemPrompt.startsWith('QUESTION SKILL BODY')).toBe(true);
+    expect(h.calls[1].systemPrompt.includes('QUESTION SKILL BODY')).toBe(true);
     expect(h.calls[1].systemPrompt).toContain('Hindi');
     expect(h.calls[1].systemPrompt).toContain('PUNCTUATION');
   });
@@ -85,7 +85,7 @@ describe('the voice rules reach every skill leg', () => {
     state.turn.lastSkill = 'facts/interest';
     const h = harness([res({ content: 'ठीक है।' })]);
     await runAgentTurn({ state, userMessage: 'No thanks', deps: h.deps });
-    expect(h.calls[0].systemPrompt.startsWith('INTEREST SKILL BODY')).toBe(true);
+    expect(h.calls[0].systemPrompt.includes('INTEREST SKILL BODY')).toBe(true);
     expect(h.calls[0].systemPrompt).toContain('Hindi');
   });
 
@@ -104,7 +104,7 @@ describe('the voice rules reach every skill leg', () => {
       deps: h.deps,
       promptVariant: MULTI_SUBJECT_ARM_ID,
     });
-    const prof = h.calls.find((c) => c.systemPrompt.startsWith('PROFESSION SKILL BODY'));
+    const prof = h.calls.find((c) => c.systemPrompt.includes('PROFESSION SKILL BODY'));
     expect(prof).toBeDefined();
     expect(prof!.systemPrompt).toContain('Hindi');
   });

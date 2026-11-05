@@ -18,6 +18,7 @@
 // Everything that touches WatermelonDB, Zustand, the logger or any expo/RN
 // module stays in lib/llm/agents/FollowStoryAgent.ts.
 
+import { meraIdentity } from '../../mera-harness/core/identity';
 import { TRACK_CARD_TAP_PHRASE } from '../core/proposals';
 import type { StagedProposal, ToolDefinition, TrackFeedbackSubject } from '../core/types';
 
@@ -101,7 +102,9 @@ You have no article and no memory of this week's news, so a story the user names
 - If both come back empty, say plainly that you could not find recent coverage and ask the user for one detail that pins it down. Do NOT say you do not understand them.`
     : '';
 
-  return `You are Mera, helping the user start FOLLOWING a news story.
+  return `${meraIdentity({ abilities: ['follow'], webSearch: webSearch === true })}
+
+This chat starts FOLLOWING a news story.
 
 ## The one thing you do here
 The user came from their Followed stories screen and wants to follow something new. There is NO article in this conversation — only what the user tells you.

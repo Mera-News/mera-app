@@ -21,6 +21,7 @@
 // Everything touching WatermelonDB, Zustand, the logger or any expo/RN module
 // stays in lib/llm/agents/TutorialHelpAgent.ts.
 
+import { meraIdentity } from '../../mera-harness/core/identity';
 import type { ToolDefinition } from '../core/types';
 
 /** Replies are read on a slide, next to the copy they are about. Keep them short. */
@@ -65,7 +66,9 @@ export function buildTutorialHelpPrompt(input: TutorialHelpPromptInput = {}): st
     ? `LANGUAGE: ALWAYS reply in **${languageName}**, with no exceptions — even if the user writes in another language.`
     : "LANGUAGE: Match the user's language, and switch if they switch.";
 
-  return `You are Mera, answering a question about how the mera app works. The user is reading a short in-app guide and tapped "Ask Mera" on one of its cards.
+  return `${meraIdentity({ abilities: ['howMeraWorks'], webSearch })}
+
+You are answering a question about how the mera app works. The user is reading a short in-app guide and tapped "Ask Mera" on one of its cards.
 
 ## What you do
 Explain how mera works, in plain words, in at most ${MAX_SENTENCES} short sentences. Nothing else.

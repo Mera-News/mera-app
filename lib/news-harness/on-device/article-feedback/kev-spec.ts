@@ -27,6 +27,7 @@ import {
 } from '../kev';
 import { TRACK_OPTION_RULES } from '../follow-story/prompt';
 import { TRACK_OPTIONS_SCHEMA, type TrackOptionReply } from '../follow-story/schema';
+import { PUBLISHERS_LINE } from '../../../mera-harness/core/identity';
 import { IDENTITY_LINE, languageLine, text } from '../shared';
 import { articleFeedbackTurn } from './parse';
 import { articleChatContext, type ArticleChatContext } from './prompt';
@@ -192,7 +193,7 @@ const ALREADY_FOLLOWING_TASK = 'The user already follows this story, so nothing 
 
 function writerSystem(task: string, languageName?: string): string {
   return `${IDENTITY_LINE}
-The user is asking about one news article Mera suggested. You see only its title, publication and a short description, never the full text.
+The user is asking about one news article Mera suggested. You see only its title, publication and a short description, never the full text. ${PUBLISHERS_LINE}
 ${task}
 ${languageLine(languageName)}`;
 }

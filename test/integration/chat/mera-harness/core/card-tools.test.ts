@@ -156,7 +156,7 @@ describe('answering a waiting card', () => {
     expect(names(requests[0])).toEqual(['load_skill', 'applyProposal', 'cancelProposal']);
     expect(stateOf(requests[0])).toContain('A card is waiting for the user: "Mute The Hindu"');
     expect(port.applyProposal).toHaveBeenCalledTimes(1);
-    expect(requests[1].systemPrompt.startsWith('FEED TUNING BODY')).toBe(true);
+    expect(requests[1].systemPrompt.includes('FEED TUNING BODY')).toBe(true);
     expect(stateOf(requests[1])).toContain('You applied the waiting card this turn');
     // The apply went through, so "I have muted" is true and is not re-asked.
     expect(out.replyRetries).toBe(0);

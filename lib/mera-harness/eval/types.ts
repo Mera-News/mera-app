@@ -368,6 +368,8 @@ export interface AgentScript {
   /** Where the chat is opened, fed to the loop as `state.surfaceContext` on
    *  every turn. Absent: no surface (the Mera button on a plain page). */
   surface?: SurfaceContext;
+  /** The reader switched "Web search in chat" off: the device offers no webSearch. */
+  webSearchOff?: boolean;
   turns: ScriptTurn[];
 }
 

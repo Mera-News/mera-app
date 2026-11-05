@@ -7,10 +7,10 @@
 //
 // A control and its twin are the same code under two names; their spread is
 // the floor the candidate is judged against. S1, S1.5, S3 and S3b shipped into
-// router.md (chatfix), and so did ack-capability; their arms are gone. The bodies
-// stay because each is derived from the one before it:
-// ACK_CAPABILITY_ROUTER_BODY is router.md byte for byte (a test pins it), and
-// S3B_ROUTER_BODY is the router before it, the next step's control.
+// router.md (chatfix), and so did ack-capability and identity-ack; their arms are
+// gone. The bodies stay because each is derived from the one before it:
+// ACK_REQUEST_ROUTER_BODY is router.md byte for byte (a test pins it), and
+// ACK_CAPABILITY_ROUTER_BODY is the router before it, the next step's control.
 
 /** The S1.5 router: feed_tuning, the card exception and routing a message that
  *  points back by the action it asks for. The base the later bodies swap from. */
@@ -76,7 +76,7 @@ export const S3B_ROUTER_BODY = [
   ],
 ].reduce((body, [from, to]) => swap(body, from, to), S3_ROUTER_BODY);
 
-/** The router shipped from ack-capability: the acknowledgement knows web search
+/** The router after ack-capability: the acknowledgement knows web search
  *  waits on the next leg and stays on the request. The route leg offers no search
  *  tool and is the one leg that streams, so the model's "I can't browse the web"
  *  appeared live. */
@@ -90,6 +90,18 @@ export const ACK_CAPABILITY_ROUTER_BODY = swap(
     + '- "Tram fares in Lisbon this week."\n',
 );
 
+/** The router shipped from identity-ack: the same acknowledgement rule without
+ *  the claim that search is coming, which was false with the toggle off. The
+ *  shared identity states search only where the tool is offered. */
+export const ACK_REQUEST_ROUTER_BODY = swap(
+  S3B_ROUTER_BODY,
+  'the skill has even loaded. Repeat what you heard and stop.\n',
+  'the skill has even loaded. Repeat what you heard and stop.\n\n'
+    + 'Every acknowledgement is about their request and none is about what you can do, even when they\n'
+    + 'ask "can you search?". Repeat the request and let the skill answer.\n\n'
+    + '- "Tram fares in Lisbon this week."\n',
+);
+
 /** Registers the current step's arms. None now: the next step adds its control
- *  (S3B_ROUTER_BODY or router.md with its skill hidden), a twin and a candidate. */
+ *  (ACK_CAPABILITY_ROUTER_BODY or router.md with its skill hidden), a twin and a candidate. */
 export function ensureOnemeraArms(): void {}
