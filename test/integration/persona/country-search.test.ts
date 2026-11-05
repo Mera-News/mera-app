@@ -19,9 +19,15 @@ describe('searchSourceCountries', () => {
     });
 
     it('ranks start-of-name first and caps at 5', () => {
-        const hits = searchSourceCountries('un', 'en');
-        expect(hits).toHaveLength(5);
-        expect(hits.every((h) => /^un/i.test(h.name))).toBe(true);
+        expect(searchSourceCountries('an', 'en')).toHaveLength(5);
+        // "San Marino" holds "an" too; Andorra starts with it.
+        expect(searchSourceCountries('an', 'en')[0].name).toMatch(/^An/);
+        expect(searchSourceCountries('fra', 'en')[0].name).toBe('France');
+    });
+
+    it('in English uses the name the rest of the app shows, not the official form', () => {
+        expect(searchSourceCountries('United States', 'en')[0].name).toBe('United States');
+        expect(localizedCountryName('USA', 'en')).toBe('United States');
     });
 
     it('offers nothing for an empty query', () => {

@@ -9,7 +9,7 @@ import { usePublicationPref } from '@/components/custom/publication-page/publica
 import { resetPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 import { getPreferenceKind, setPreferenceKind, setScopePreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { toastManager } from '@/lib/toast-manager';
-import { initI18nEn } from '@/test/helpers';
+import { initI18nEn, mockGql, mockGqlError, server } from '@/test/helpers';
 import { quietLogger, settleWrites } from '@/test/integration/data/services/persona/support';
 
 jest.mock('react-native/Libraries/Modal/Modal', () => {
@@ -103,5 +103,49 @@ describe('the publication page control', () => {
         await press(up());
         expect(await kinds()).toEqual(['none', 'none']);
         expect(screen.getByText('Included with Germany. To change this, remove the star from Germany.')).toBeTruthy();
+    });
+});
+
+describe('a tap before the profile has answered', () => {
+    // The page mounts knowing one name; the full set arrives with the profile.
+    const Cold: React.FC = () => {
+        const pref = usePublicationPref({ publisherId: 'pub-1', rawName: 'Der Spiegel' });
+        return (
+            <PublicationFeedControl
+                current={pref.level}
+                muted={pref.muted}
+                subscribed={false}
+                canSubscribe
+                onToggleSubscribed={() => undefined}
+                busy={pref.busy || pref.names.length === 0}
+                onChange={pref.change}
+            />
+        );
+    };
+
+    it('still writes every name', async () => {
+        server.use(
+            mockGql('PublicationSourcesForNewsPublisher', {
+                publicationSourcesForNewsPublisher: {
+                    __typename: 'PublicationSourcesForPublisherResponse',
+                    publicationSources: NAMES.map((publication_name, i) => ({ __typename: 'PublicationSource', _id: `s${i}`, publication_name })),
+                },
+            }),
+        );
+        await render(<Cold />);
+        await ready();
+        await press(up());
+        await waitFor(async () => expect(await kinds()).toEqual(['boost', 'boost']));
+    });
+
+    it('refuses the write when the names cannot be fetched', async () => {
+        const info = jest.spyOn(toastManager, 'showInfo').mockImplementation(() => undefined);
+        server.use(mockGqlError('PublicationSourcesForNewsPublisher', 'down'));
+        await render(<Cold />);
+        await ready();
+        await press(up());
+        await waitFor(() => expect(info).toHaveBeenCalledWith("Couldn't save that. Try again."));
+        expect(await kinds()).toEqual(['none', 'none']);
+        info.mockRestore();
     });
 });

@@ -7,6 +7,7 @@ import { observeActive as observeActivePublicationPreferences } from '@/lib/data
 import { isStarInherited, resolvePrefLevel, type PrefRowLike } from '@/lib/algorithms/publication-pref-level';
 import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import {
+    fetchPublicationPrefNames,
     resolvePublicationPrefNames,
     type PublicationNameHints,
 } from '@/lib/database/services/publisher-source-names';
@@ -46,10 +47,11 @@ export interface PublicationPrefResult {
 }
 
 /**
- * Preferred and Not preferred for ONE publication. The names come from what the
- * device knows (the hints, then memory, then subscriptions; never the network),
- * and a write covers every one of them, so a preference set here reaches every
- * source the publication publishes as, whichever entry point opened the page.
+ * Preferred and Not preferred for ONE publication. The state reads the names
+ * the device knows (the hints, then memory, then subscriptions). A write covers
+ * the publication's full set, fetched first when a publisher id has none yet, so
+ * it reaches every source the publication publishes as, whichever entry point
+ * opened the page. With no publisher id there is nothing to fetch by.
  */
 export function usePublicationPref(hints: PublicationNameHints, countryAlpha3?: string | null): PublicationPrefResult {
     const { t } = useTranslation();
@@ -92,10 +94,17 @@ export function usePublicationPref(hints: PublicationNameHints, countryAlpha3?: 
             if (names.length === 0) return;
             setBusy(true);
             const refused = () => toastManager.showInfo(t('you.sources.saveError'));
-            const write = async (): Promise<boolean> =>
-                next === 'muted'
-                    ? setNotPreferredWithUndo(names, shownAs || hints.publisherName || hints.rawName || '', t)
-                    : (await setSourcePrefFromUi({ kind: 'publisher', names }, next)).applied;
+            const write = async (): Promise<boolean> => {
+                // A tap can land before the profile answers, when `names` is only
+                // the name that opened the page.
+                const all = hints.publisherId
+                    ? await fetchPublicationPrefNames({ ...hints, publisherId: hints.publisherId }).catch(() => null)
+                    : names;
+                if (!all) return false;
+                return next === 'muted'
+                    ? setNotPreferredWithUndo(all, shownAs || hints.publisherName || hints.rawName || '', t)
+                    : (await setSourcePrefFromUi({ kind: 'publisher', names: all }, next)).applied;
+            };
             write()
                 .then((ok) => {
                     if (!ok) refused();
@@ -106,9 +115,9 @@ export function usePublicationPref(hints: PublicationNameHints, countryAlpha3?: 
                 })
                 .finally(() => setBusy(false));
         },
-        // `hints` only words the toast.
+        // `hintKey` stands in for `hints`, as above.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [names, t],
+        [names, hintKey, t],
     );
 
     return { level, muted, inheritedFrom, busy, names, change };

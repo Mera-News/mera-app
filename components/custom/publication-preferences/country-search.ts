@@ -39,7 +39,8 @@ function libLanguage(appLanguage: string): string {
 
 /** A country's name in the app language (English where the language has no list). */
 export function localizedCountryName(alpha3: string, appLanguage: string): string {
-    return countries.getName(alpha3, libLanguage(appLanguage)) || getCountryName(alpha3);
+    const lang = libLanguage(appLanguage);
+    return (lang !== 'en' && countries.getName(alpha3, lang)) || getCountryName(alpha3);
 }
 
 export interface SourceCountryHit {
@@ -62,7 +63,7 @@ export function searchSourceCountries(query: string, appLanguage: string): Sourc
     for (const alpha2 of Object.keys(countries.getAlpha2Codes())) {
         const alpha3 = countries.alpha2ToAlpha3(alpha2);
         if (!alpha3) continue;
-        const name = countries.getName(alpha2, lang) || getCountryName(alpha3);
+        const name = (lang !== 'en' && countries.getName(alpha2, lang)) || getCountryName(alpha3);
         const names = [name, ...(countries.getName(alpha2, 'en', { select: 'all' }) ?? [])].map((n) => n.toLowerCase());
         if (!names.some((n) => n.includes(q))) continue;
         found.push({

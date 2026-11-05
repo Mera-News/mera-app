@@ -1,4 +1,5 @@
 import { meterFigures } from '@/components/custom/config-mera/data-meter-model';
+import { gbText } from '@/lib/algorithms/format-bytes';
 
 const sizes = (o: Partial<Parameters<typeof meterFigures>[0]> = {}) => ({
   databaseBytes: 100_000_000,
@@ -41,9 +42,28 @@ describe('meterFigures', () => {
     expect(meterFigures(sizes({ modelBytes: 2_000_000_000 }), 'de').used).toBe('2,1 GB');
   });
 
+  it('free space keeps its own unit: a small total never prints "38,200 MB free"', () => {
+    expect(meterFigures(sizes({ databaseBytes: 412_000_000, freeBytes: 38_200_000_000 }), 'en').free).toBe('38.2 GB');
+    expect(meterFigures(sizes({ modelBytes: 2_000_000_000, freeBytes: 412_000_000 }), 'en').free).toBe('412 MB');
+  });
+
   it('fraction is used over used plus free, null free gives no fraction', () => {
     expect(meterFigures(sizes(), 'en').fraction).toBeCloseTo(0.1);
     expect(meterFigures(sizes({ freeBytes: null }), 'en').fraction).toBeNull();
     expect(meterFigures(sizes({ freeBytes: null }), 'en').free).toBeNull();
+  });
+});
+
+describe('gbText', () => {
+  it('with no locale keeps the plain figure Mera Protocol has always shown', () => {
+    expect(gbText(3_000_000_000)).toBe('3.0');
+    const spy = jest.spyOn(Number.prototype, 'toLocaleString');
+    gbText(3_000_000_000);
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('with a locale formats for it', () => {
+    expect(gbText(3_000_000_000, 'de')).toBe('3,0');
   });
 });

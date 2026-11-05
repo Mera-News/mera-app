@@ -42,6 +42,8 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
     const footerFor = (hit: PublisherSearchHit) => {
         const row = flow.subscriptions.items.find((r) => r.publisherId === hit._id);
         const checked = !!row;
+        const busyId = flow.subscriptions.busyId;
+        const busy = !!busyId && (busyId === hit._id || busyId === row?.id);
         const onPress = () => {
             if (row) {
                 void flow.subscriptions.removeSubscription(row).then((ok) => {
@@ -65,8 +67,9 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
                 <RNPressable
                     testID={`sources-subscribe-${hit._id}`}
                     onPress={onPress}
+                    disabled={busy}
                     accessibilityRole="switch"
-                    accessibilityState={{ checked }}
+                    accessibilityState={{ checked, disabled: busy }}
                     accessibilityLabel={t('onboarding.iSubscribeA11y', { publisher: hit.name })}
                     style={StyleSheet.absoluteFill}
                 />
@@ -105,7 +108,7 @@ const styles = StyleSheet.create({
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },
     hint: { fontSize: 14, paddingHorizontal: 20 },
-    toggle: { height: TOGGLE, justifyContent: 'center' },
+    toggle: { height: TOGGLE, justifyContent: 'center', paddingHorizontal: 16 },
     toggleVisual: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     toggleLabel: { fontSize: 14 },
 });

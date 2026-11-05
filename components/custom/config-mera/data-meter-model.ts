@@ -1,6 +1,6 @@
 // data-meter-model: the Your data card's figures. Pure; no log of any size.
 
-import { gbText } from '@/lib/algorithms/format-bytes';
+import { gbText, sizeText } from '@/lib/algorithms/format-bytes';
 import type { LocalDataSizes } from '@/lib/database/local-data-size';
 
 export interface MeterRow {
@@ -21,6 +21,7 @@ export interface MeterFigures {
  * MB under 1 GB of the summed total, else GB to one decimal. Each row is
  * rounded in that unit and the shown total is the sum of the rounded rows, so
  * the card always adds up. Whole units (MB, tenths of a GB) keep the sum exact.
+ * Free space is not part of that sum and keeps its own unit.
  */
 export function meterFigures(sizes: LocalDataSizes, locale: string): MeterFigures {
   const parts: { key: MeterRow['key']; bytes: number }[] = [{ key: 'database', bytes: sizes.databaseBytes }];
@@ -36,7 +37,7 @@ export function meterFigures(sizes: LocalDataSizes, locale: string): MeterFigure
   const usedBytes = parts.reduce((sum, p) => sum + p.bytes, 0);
   return {
     used: text(rounded.reduce((sum, r) => sum + r.n, 0)),
-    free: sizes.freeBytes === null ? null : text(units(sizes.freeBytes)),
+    free: sizes.freeBytes === null ? null : sizeText(sizes.freeBytes, locale),
     rows: rounded.map((r) => ({ key: r.key, value: text(r.n) })),
     fraction: sizes.freeBytes === null ? null : usedBytes / (usedBytes + sizes.freeBytes),
   };

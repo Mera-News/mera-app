@@ -246,7 +246,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 variant={skipping ? 'outline' : 'solid'}
                 onPress={handleNext}
                 isDisabled={busy}
-                style={styles.next}
+                style={currentStep === 1 ? styles.nextFixed : styles.next}
                 testID="onboarding-next"
             >
                 <ButtonText>{skipping ? t('onboarding.sourcesSkip') : t('common.next')}</ButtonText>
@@ -374,7 +374,9 @@ const styles = StyleSheet.create({
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },
     next: { height: 36, paddingHorizontal: 16 },
-    nextFrame: { width: 96 },
+    // Wide enough for the longest Skip, so the header holds still when it turns to Next.
+    nextFrame: { width: 104 },
+    nextFixed: { height: 36, paddingHorizontal: 8 },
     guard: { position: 'absolute', left: 16, right: 16 },
 });
 
