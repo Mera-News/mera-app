@@ -48,6 +48,11 @@ function trackedService(): typeof import('@/lib/database/services/tracked-story-
   return require('@/lib/database/services/tracked-story-service');
 }
 
+function hygieneCard(): typeof import('@/components/custom/notifications/HygieneSuggestionCard') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('@/components/custom/notifications/HygieneSuggestionCard');
+}
+
 function useHasSaved(): boolean {
   const [has, setHas] = useState(false);
   useEffect(() => {
@@ -149,8 +154,12 @@ const FeedShortcuts: React.FC<{ readonly reading: boolean }> = ({ reading }) => 
     icon: 'school',
   });
 
+  const { PendingFollowOffer } = hygieneCard();
+
   return (
     <View style={styles.wrap} testID="feed-shortcuts">
+      {/* Every empty Feed lands here, and that reader never reaches the inbox. */}
+      <PendingFollowOffer />
       {reading ? (
         <Text size="sm" bold style={styles.header} accessibilityRole="header">
           {t('feedShortcuts.header')}

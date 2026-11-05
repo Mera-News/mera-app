@@ -1593,6 +1593,15 @@
     "titleStaleFact": "A fact has no active topics left",
     "titleStaleTopic": "A topic has gone quiet",
     "titleTooBroad": "One fact brings in too much",
+    "titleFollowInstead": "A story to follow",
+    "effectFollowInstead": "Followed stories are free, and no AI reads them.",
+    "keepFact": "Keep it as a fact",
+    "followInsteadTopicMoves": "New articles on {{topic}} will go to Followed stories instead of your Feed.",
+    "followInsteadFactGoes": "{{fact}} will leave your profile, and you can't undo that. New articles on {{topic}} will go to Followed stories.",
+    "followInsteadDoneTitle": "Following {{topic}}",
+    "followInsteadDoneBody": "New articles land in Followed stories.",
+    "followInsteadNotificationTitle": "A story to follow",
+    "followInsteadNotificationBody": "Mera found something that suits Followed stories.",
     "summary": {
       "duplicate": "{{fact}} repeats {{other}}",
       "locationConflict": "{{fact}} and {{other}} name different places",
@@ -1600,7 +1609,9 @@
       "tooBroad": "{{fact}} is very broad",
       "staleTopic": "{{topic}} has been quiet for weeks",
       "incoherentTopics_one": "{{count}} topic under {{fact}} doesn't fit it: {{topics}}",
-      "incoherentTopics_other": "{{count}} topics under {{fact}} don't fit it: {{topics}}"
+      "incoherentTopics_other": "{{count}} topics under {{fact}} don't fit it: {{topics}}",
+      "followInsteadFlood": "\"{{topic}}\" is filling your feed. Follow it as a story instead?",
+      "followInsteadNoStake": "There's a lot of news on {{topic}}, but none of it changes anything for you, so your Feed skips it. Follow it as a story to see it all?"
     }
   },
   "locations": {
