@@ -9,6 +9,7 @@ import AddLocationView from '@/components/custom/locations/AddLocationView';
 import { homeFactStatement } from '@/components/custom/locations/location-display';
 import type { ChosenPlace } from '@/components/custom/locations/useAddLocation';
 import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
+import { upsertLocation } from '@/lib/database/services/location-service';
 import { CANONICAL_LOCATION_KEY } from '@/lib/mera-harness/core/combined-fact';
 import { useColors } from '@/lib/theme/tokens';
 
@@ -24,7 +25,8 @@ interface OnboardingCityStepProps {
 /**
  * The least Mera can personalise with. No model is needed, so on-device readers
  * are covered too. The location alone leaves zero facts, so the fact is written
- * here, under the canonical home key the topic generator resolves.
+ * here, under the canonical home key the topic generator resolves, and the
+ * location is linked to it.
  */
 export default function OnboardingCityStep({ onClose, onDone }: OnboardingCityStepProps) {
     const { t } = useTranslation();
@@ -34,9 +36,17 @@ export default function OnboardingCityStep({ onClose, onDone }: OnboardingCitySt
     const lift = useAnimatedStyle(() => ({ paddingBottom: keyboardLift(keyboard.height.value, insets.bottom) }));
 
     const save = async (place: ChosenPlace) => {
-        await commitFactChoices([
+        const { savedFacts } = await commitFactChoices([
             { statement: homeFactStatement(place), questionnaire: { attribute: CANONICAL_LOCATION_KEY } },
         ]);
+        // The link is how Clear profile finds this row. Provenance stays 'user',
+        // so the geo sweep leaves it alone.
+        await upsertLocation({
+            city: place.city,
+            countryCode: place.countryCode,
+            role: 'home',
+            sourceFactId: savedFacts[0].id,
+        });
         onDone();
     };
 

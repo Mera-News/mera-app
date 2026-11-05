@@ -23,7 +23,7 @@ import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { setConfirmTopicDelete, shouldConfirmTopicDelete } from '@/components/custom/facts/topic-delete-confirm';
 import { Switch } from '@/components/ui/switch';
 
-// Facts and their topics go through `deleteAllFacts`, the real cascade. The feed
+// Facts, their topics and the places they gave go through `deleteAllFacts`. The feed
 // cache is built from those topics, so it goes too, with any queued topic-gen
 // jobs, or stale rows outlive what made them.
 const DERIVED_FROM_FACTS_TABLES = ['article_suggestions', 'article_suggestion_facts', 'inference_jobs'];

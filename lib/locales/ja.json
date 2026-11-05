@@ -534,7 +534,7 @@
     "backupHint": "暗号化されたコピーなので、新しい電話でゼロから始めずに済みます",
     "clearHistoryHint": "この電話上",
     "clearHistoryTitle": "閲覧履歴を消去",
-    "clearProfileHint": "あなたのファクトとそのトピック",
+    "clearProfileHint": "あなたのファクト、そのトピック、一緒に保存された場所",
     "clearProfileTitle": "プロフィールを消去",
     "deleteAccountHint": "アカウントと、この電話にメラが保存しているすべてのデータが対象です。ストアのサブスクリプションは、App StoreまたはGoogle Playで解約するまで続きます。この操作は元に戻せません。",
     "deleteGroup": "削除",

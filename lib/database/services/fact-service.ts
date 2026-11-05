@@ -187,12 +187,15 @@ async function purgeDeadTopicSuggestions(): Promise<number> {
 /**
  * Clear profile: every fact through the same cascade `deleteFact` uses, so the
  * bulk path takes the fact-owned topics too. Topics no fact owns (followed
- * stories, chat's feedback topics) are not profile facts and stay. The caller
- * clears the suggestions, so this does not purge per fact.
+ * stories, chat's feedback topics) are not profile facts and stay. Every place
+ * with a `source_fact_id` goes, dangling ones included; a place added by hand
+ * has none. The caller clears the suggestions, so this does not purge per fact.
  */
 export async function deleteAllFacts(): Promise<void> {
   const records = await factsCollection.query().fetch();
   for (const record of records) await record.destroyCascade();
+  const factPlaceRows = await database.get('locations').query(Q.where('source_fact_id', Q.notEq(null))).fetch();
+  await database.write(() => database.batch(factPlaceRows.map((r) => r.prepareDestroyPermanently())));
 }
 
 /**

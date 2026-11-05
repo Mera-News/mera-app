@@ -534,7 +534,7 @@
     "backupHint": "암호화된 사본입니다. 새 휴대폰을 처음부터 시작하지 않아도 됩니다.",
     "clearHistoryHint": "이 휴대폰에 있는 기록",
     "clearHistoryTitle": "열람 기록 지우기",
-    "clearProfileHint": "회원님의 사실과 그 토픽",
+    "clearProfileHint": "회원님의 사실, 그 토픽, 함께 저장된 장소",
     "clearProfileTitle": "프로필 지우기",
     "deleteAccountHint": "계정과 메라가 이 휴대폰에 보관하는 모든 것이 삭제됩니다. 스토어 구독은 App Store 또는 Google Play에서 해지할 때까지 계속 유지됩니다. 이 작업은 되돌릴 수 없습니다.",
     "deleteGroup": "삭제",

@@ -5,7 +5,8 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 
 import OnboardingCityStep from '@/components/custom/onboarding/OnboardingCityStep';
 import * as factCommit from '@/lib/chat-tools/fact-commit';
-import { getFacts } from '@/lib/database/services/fact-service';
+import { deleteAllFacts, getFacts } from '@/lib/database/services/fact-service';
+import { runGeoDerivationSweep } from '@/lib/database/services/geo-derivation-service';
 import { getAll as getLocations } from '@/lib/database/services/location-service';
 import { toastManager } from '@/lib/toast-manager';
 import { graphql, HttpResponse, server } from '@/test/helpers';
@@ -79,6 +80,24 @@ it('a picked place saves a home location and the residence fact, with no role or
   expect(fact.statement).toBe('Lives in Delft, South Holland, Netherlands');
   expect(fact.questionnaireAttribute).toBe(HOME_KEY);
   expect((await getLocations()).filter((l) => l.city === 'Delft' && l.role === 'home')).toHaveLength(1);
+});
+
+it('links the location to its fact, through the geo sweep, so Clear profile takes the city', async () => {
+  answer([delft]);
+  const onDone = await openStep();
+  await search('del');
+  await fireEvent.press(await screen.findByText('Delft, South Holland, Netherlands'));
+  await fireEvent.press(screen.getByTestId('locations-save'));
+  await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+
+  await runGeoDerivationSweep({ force: true });
+  const [fact] = await getFacts();
+  const [home, ...rest] = await getLocations();
+  expect(rest).toEqual([]);
+  expect(home).toMatchObject({ city: 'Delft', role: 'home', provenance: 'user', sourceFactId: fact.id });
+
+  await deleteAllFacts();
+  expect(await getLocations()).toEqual([]);
 });
 
 it('shows a loading state while the search runs', async () => {
