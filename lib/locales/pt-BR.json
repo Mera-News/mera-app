@@ -792,9 +792,9 @@
     "actionShowLessTopic": "Mostrar menos de um tópico",
     "actionShowMoreTopic": "Mostrar mais de um tópico",
     "actionDownRank": "Diminuir a prioridade de um tópico",
-    "actionPublicationBoost": "Marcar uma publicação como Preferido",
+    "actionPublicationBoost": "Marcar uma publicação como Preferida",
     "actionPublicationDeprioritize": "Mostrar menos de uma publicação",
-    "actionPublicationMute": "Marcar uma publicação como Não preferido",
+    "actionPublicationMute": "Marcar uma publicação como Não preferida",
     "actionSourceScopeBoost": "Preferir fontes de um país",
     "actionSourceScopeDeprioritize": "Mostrar menos de fontes de um país",
     "actionSuppress": "Filtrar uma frase",
@@ -1213,9 +1213,9 @@
       "undone": "Desfeito: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Definir {{name}} como Preferido",
-      "notPreferred": "Definir {{name}} como Não preferido",
-      "preferredSourcesFrom": "Definir como Preferido as fontes de {{name}}"
+      "preferred": "Definir {{name}} como Preferida",
+      "notPreferred": "Definir {{name}} como Não preferida",
+      "preferredSourcesFrom": "Definir como Preferida as fontes de {{name}}"
     }
   },
   "calibration": {
@@ -2072,7 +2072,7 @@
             "body": "Uma tela com todas as publicações que você escolheu.",
             "steps": {
               "0": "A aba Você, depois Fontes.",
-              "1": "\"Não preferido\" no menu ••• de um artigo vale na hora, com Desfazer, e a publicação então aparece em Fontes."
+              "1": "\"Não preferida\" no menu ••• de um artigo vale na hora, com Desfazer, e a publicação então aparece em Fontes."
             },
             "ask": "Onde eu gerencio quais fontes vejo?"
           },
@@ -2097,24 +2097,24 @@
           "arrows-on-a-publisher": {
             "headline": "Dê uma estrela a uma publicação",
             "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed. Dê uma estrela ao país para fazer o mesmo com todas as publicações dele.",
-            "ask": "Qual é a diferença entre Preferido e Não preferido?"
+            "ask": "Qual é a diferença entre Preferida e Não preferida?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Não preferido esconde do seu Feed",
-            "body": "Marque uma publicação como Não preferido e as histórias dela saem do seu Feed. O Mundo e as histórias relacionadas ainda podem mostrá-las. Toque em cada cartão e coloque-o no lugar certo.",
+            "headline": "Não preferida esconde do seu Feed",
+            "body": "Marque uma publicação como Não preferida e as histórias dela saem do seu Feed. O Mundo e as histórias relacionadas ainda podem mostrá-las. Toque em cada cartão e coloque-o no lugar certo.",
             "steps": {
               "0": "Estrela: aparece mais acima.",
-              "1": "Não preferido: oculto do seu Feed.",
+              "1": "Não preferida: oculta do seu Feed.",
               "2": "Você pode desmarcar qualquer uma delas em Fontes."
             },
             "sort": {
               "buckets": {
                 "softer": "Aparece mais acima",
-                "gone": "Oculto do seu Feed"
+                "gone": "Oculta do seu Feed"
               },
               "cards": {
                 "down-arrow": "A estrela",
-                "mute": "Não preferido"
+                "mute": "Não preferida"
               }
             }
           }
@@ -2130,7 +2130,7 @@
             "steps": {
               "0": "Palavras e coisas que você escondeu.",
               "1": "Tópicos que você vê menos.",
-              "2": "Fontes que você marcou como Não preferido."
+              "2": "Fontes que você marcou como Não preferida."
             },
             "ask": "Onde posso ver tudo que filtrei?"
           },
@@ -2702,8 +2702,8 @@
     "support": "Suporte",
     "supportSub": "Relatar um bug, chat ao vivo, perguntas frequentes, tutorial",
     "tutorial": "Tutorial",
-    "notPreferred": "Não preferido",
-    "notPreferredDone": "{{publisher}} fica oculto no seu Feed"
+    "notPreferred": "Não preferida",
+    "notPreferredDone": "{{publisher}} não aparece mais no seu Feed"
   },
   "storyExport": {
     "shareA11y": "Exportar esta história",
@@ -2761,14 +2761,14 @@
     "supportLine": "Um bom jornalismo dura quando os leitores o apoiam.",
     "visitsLabel": "Suas visitas nos últimos 30 dias",
     "subscribed": "Assinado",
-    "preferred": "Preferido",
-    "notPreferred": "Não preferido",
+    "preferred": "Preferida",
+    "notPreferred": "Não preferida",
     "preferA11y": "Preferir {{publisher}}",
-    "notPreferA11y": "Marcar {{publisher}} como Não preferido",
+    "notPreferA11y": "Marcar {{publisher}} como Não preferida",
     "notPreferHint": "Oculta os artigos dela do seu Feed",
-    "includedWith": "Incluído com {{country}}",
-    "includedWithA11y": "Preferido, incluído com {{country}}",
-    "includedWithHelp": "Incluído com {{country}}. Para mudar isso, remova a estrela de {{country}}."
+    "includedWith": "Incluída com {{country}}",
+    "includedWithA11y": "Preferida, incluída com {{country}}",
+    "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova a estrela de {{country}}."
   },
   "nav": {
     "page": {
@@ -2959,11 +2959,11 @@
     "sources": {
       "title": "Fontes",
       "find": "Encontre uma publicação ou um país",
-      "footnote": "Toque em uma para mudar. \"Não preferido\" no menu ••• de um artigo também aparece aqui.",
-      "empty": "Você ainda não escolheu fontes. Pesquise uma publicação ou um país para preferir ou ocultar do seu Feed. \"Não preferido\" no menu ••• de um artigo também aparece aqui.",
+      "footnote": "Toque em uma para mudar. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
+      "empty": "Você ainda não escolheu fontes. Pesquise uma publicação ou um país para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
       "preferCountryA11y": "Preferir fontes de {{country}}",
       "countryHint": "Abre as fontes de {{country}}",
-      "countryCleared": "{{country}} deixou de ser Preferido",
+      "countryCleared": "{{country}} saiu das suas preferências",
       "saveError": "Não foi possível salvar. Tente de novo."
     },
     "settings": {
@@ -3151,7 +3151,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Marcar esta publicação como Não preferido"
+      "mute": "Marcar esta publicação como Não preferida"
     },
     "follow": {
       "follow": "Follow a story",

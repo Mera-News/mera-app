@@ -778,7 +778,7 @@
     "actionDownRank": "降低某个主题的优先级",
     "actionPublicationBoost": "将一家媒体标为优先",
     "actionPublicationDeprioritize": "显示某个媒体的更少内容",
-    "actionPublicationMute": "将一家媒体标为不优先",
+    "actionPublicationMute": "将一家媒体标为不想看",
     "actionSourceScopeBoost": "优先来自某个国家的来源",
     "actionSourceScopeDeprioritize": "显示某个国家来源的更少内容",
     "actionSuppress": "过滤掉某个短语",
@@ -1196,7 +1196,7 @@
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
       "preferred": "将 {{name}} 设为优先",
-      "notPreferred": "将 {{name}} 设为不优先",
+      "notPreferred": "将 {{name}} 设为不想看",
       "preferredSourcesFrom": "将来自 {{name}} 的来源设为优先"
     }
   },
@@ -2046,7 +2046,7 @@
             "body": "每个你选中的媒体都在同一个页面中。",
             "steps": {
               "0": "“我的”标签，然后是“来源”。",
-              "1": "文章 ••• 菜单中的“不优先”会立即生效，并可撤销，之后该媒体会显示在来源中。"
+              "1": "文章 ••• 菜单中的“不想看”会立即生效，并可撤销，之后该媒体会显示在来源中。"
             },
             "ask": "我在哪里管理我看到的来源？"
           },
@@ -2071,14 +2071,14 @@
           "arrows-on-a-publisher": {
             "headline": "为媒体加星标",
             "body": "打开一个国家，每家媒体旁边都有一个星标。星标会让该媒体在你的信息流中排得更靠前。给国家加星标，即可同时优先其所有媒体。",
-            "ask": "“优先”和“不优先”有什么区别？"
+            "ask": "“优先”和“不想看”有什么区别？"
           },
           "mute-is-not-a-downrank": {
-            "headline": "不优先会将其从你的信息流中隐藏",
-            "body": "将一家媒体标为不优先后，它的文章就不再出现在你的信息流中。全球和相关报道仍可能显示这家媒体。点按每张卡片，然后把它放到合适的位置。",
+            "headline": "“不想看”会将其从你的信息流中隐藏",
+            "body": "将一家媒体标为不想看后，它的文章就不再出现在你的信息流中。全球和相关报道仍可能显示这家媒体。点按每张卡片，然后把它放到合适的位置。",
             "steps": {
               "0": "星标：排在更靠前的位置。",
-              "1": "不优先：从你的信息流中隐藏。",
+              "1": "不想看：从你的信息流中隐藏。",
               "2": "你可以在来源中清除任一项。"
             },
             "sort": {
@@ -2088,7 +2088,7 @@
               },
               "cards": {
                 "down-arrow": "星标",
-                "mute": "不优先"
+                "mute": "不想看"
               }
             }
           }
@@ -2104,7 +2104,7 @@
             "steps": {
               "0": "您隐藏的单词和东西。",
               "1": "您看到较少的话题。",
-              "2": "你标为不优先的来源。"
+              "2": "你标为不想看的来源。"
             },
             "ask": "我在哪里可以看到我过滤掉的所有内容？"
           },
@@ -2676,7 +2676,7 @@
     "support": "支持",
     "supportSub": "报告问题、实时聊天、常见问题、教程",
     "tutorial": "教程",
-    "notPreferred": "不优先",
+    "notPreferred": "不想看",
     "notPreferredDone": "{{publisher}} 已从你的信息流中隐藏"
   },
   "storyExport": {
@@ -2736,9 +2736,9 @@
     "visitsLabel": "过去30天你的访问次数",
     "subscribed": "已订阅",
     "preferred": "优先",
-    "notPreferred": "不优先",
+    "notPreferred": "不想看",
     "preferA11y": "将 {{publisher}} 设为优先",
-    "notPreferA11y": "将 {{publisher}} 标为不优先",
+    "notPreferA11y": "将 {{publisher}} 标为不想看",
     "notPreferHint": "在你的信息流中隐藏其文章",
     "includedWith": "已包含在 {{country}} 中",
     "includedWithA11y": "优先，已包含在 {{country}} 中",
@@ -2932,8 +2932,8 @@
     "sources": {
       "title": "来源",
       "find": "查找媒体或国家",
-      "footnote": "点按一项即可更改。文章 ••• 菜单中的“不优先”也会出现在这里。",
-      "empty": "你还没有选择任何来源。搜索媒体或国家，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不优先”也会出现在这里。",
+      "footnote": "点按一项即可更改。文章 ••• 菜单中的“不想看”也会出现在这里。",
+      "empty": "你还没有选择任何来源。搜索媒体或国家，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
       "preferCountryA11y": "将来自 {{country}} 的来源设为优先",
       "countryHint": "打开来自 {{country}} 的来源",
       "countryCleared": "{{country}} 已不再优先",
@@ -3124,7 +3124,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "将此媒体标为不优先"
+      "mute": "将此媒体标为不想看"
     },
     "follow": {
       "follow": "Follow a story",

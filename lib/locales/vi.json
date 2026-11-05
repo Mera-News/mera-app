@@ -778,7 +778,7 @@
     "actionDownRank": "Giảm ưu tiên một chủ đề",
     "actionPublicationBoost": "Đánh dấu một nguồn là Ưu tiên",
     "actionPublicationDeprioritize": "Hiện ít hơn từ một ấn phẩm",
-    "actionPublicationMute": "Đánh dấu một nguồn là Không ưu tiên",
+    "actionPublicationMute": "Đánh dấu một nguồn là Không hiển thị",
     "actionSourceScopeBoost": "Ưu tiên nguồn từ một quốc gia",
     "actionSourceScopeDeprioritize": "Hiện ít hơn từ các nguồn ở một quốc gia",
     "actionSuppress": "Lọc bỏ một cụm từ",
@@ -1196,7 +1196,7 @@
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
       "preferred": "Đặt {{name}} là Ưu tiên",
-      "notPreferred": "Đặt {{name}} là Không ưu tiên",
+      "notPreferred": "Đặt {{name}} là Không hiển thị",
       "preferredSourcesFrom": "Đặt nguồn từ {{name}} là Ưu tiên"
     }
   },
@@ -2046,7 +2046,7 @@
             "body": "Một màn hình cho mọi nguồn bạn đã chọn.",
             "steps": {
               "0": "Tab Bạn, rồi Nguồn.",
-              "1": "\"Không ưu tiên\" trong menu ••• của bài viết có hiệu lực ngay, kèm nút Hoàn tác, và nguồn sau đó hiện trong Nguồn."
+              "1": "\"Không hiển thị\" trong menu ••• của bài viết có hiệu lực ngay, kèm nút Hoàn tác, và nguồn sau đó hiện trong Nguồn."
             },
             "ask": "Tôi quản lý những nguồn nào tôi thấy ở đâu?"
           },
@@ -2071,14 +2071,14 @@
           "arrows-on-a-publisher": {
             "headline": "Gắn sao cho một nguồn",
             "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn. Gắn sao cho một quốc gia để làm điều tương tự cho tất cả nguồn của quốc gia đó.",
-            "ask": "Khác nhau giữa Ưu tiên và Không ưu tiên là gì?"
+            "ask": "Khác nhau giữa Ưu tiên và Không hiển thị là gì?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Không ưu tiên sẽ ẩn khỏi Bảng tin",
-            "body": "Đánh dấu một nguồn là Không ưu tiên và các bài của nguồn đó sẽ rời khỏi Bảng tin của bạn. Mục Thế giới và các bài liên quan vẫn có thể hiển thị chúng. Chạm vào từng thẻ và đặt thẻ vào đúng chỗ của nó.",
+            "headline": "\"Không hiển thị\" sẽ ẩn khỏi Bảng tin",
+            "body": "Đánh dấu một nguồn là Không hiển thị và các bài của nguồn đó sẽ rời khỏi Bảng tin của bạn. Mục Thế giới và các bài liên quan vẫn có thể hiển thị chúng. Chạm vào từng thẻ và đặt thẻ vào đúng chỗ của nó.",
             "steps": {
               "0": "Dấu sao: hiển thị cao hơn.",
-              "1": "Không ưu tiên: ẩn khỏi Bảng tin.",
+              "1": "Không hiển thị: ẩn khỏi Bảng tin.",
               "2": "Bạn có thể xóa một trong hai trong Nguồn."
             },
             "sort": {
@@ -2088,7 +2088,7 @@
               },
               "cards": {
                 "down-arrow": "Dấu sao",
-                "mute": "Không ưu tiên"
+                "mute": "Không hiển thị"
               }
             }
           }
@@ -2104,7 +2104,7 @@
             "steps": {
               "0": "Từ và những thứ bạn đã ẩn.",
               "1": "Các chủ đề bạn thấy ít hơn.",
-              "2": "Các nguồn bạn đã đánh dấu Không ưu tiên."
+              "2": "Các nguồn bạn đã đánh dấu Không hiển thị."
             },
             "ask": "Nơi tôi có thể thấy mọi thứ tôi đã lọc ra?"
           },
@@ -2676,7 +2676,7 @@
     "support": "Hỗ trợ",
     "supportSub": "Báo lỗi, trò chuyện trực tiếp, câu hỏi thường gặp, hướng dẫn",
     "tutorial": "Hướng dẫn",
-    "notPreferred": "Không ưu tiên",
+    "notPreferred": "Không hiển thị",
     "notPreferredDone": "{{publisher}} đang được ẩn khỏi Bảng tin"
   },
   "storyExport": {
@@ -2736,9 +2736,9 @@
     "visitsLabel": "Lượt mở của bạn trong 30 ngày qua",
     "subscribed": "Đã đăng ký",
     "preferred": "Ưu tiên",
-    "notPreferred": "Không ưu tiên",
+    "notPreferred": "Không hiển thị",
     "preferA11y": "Đặt {{publisher}} là Ưu tiên",
-    "notPreferA11y": "Đánh dấu {{publisher}} là Không ưu tiên",
+    "notPreferA11y": "Đánh dấu {{publisher}} là Không hiển thị",
     "notPreferHint": "Ẩn các bài viết từ nguồn này khỏi Bảng tin của bạn",
     "includedWith": "Đã bao gồm trong {{country}}",
     "includedWithA11y": "Ưu tiên, đã bao gồm trong {{country}}",
@@ -2932,8 +2932,8 @@
     "sources": {
       "title": "Nguồn",
       "find": "Tìm một nguồn hoặc quốc gia",
-      "footnote": "Chạm vào một nguồn để thay đổi. \"Không ưu tiên\" trong menu ••• của bài viết cũng hiển thị ở đây.",
-      "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn hoặc quốc gia để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không ưu tiên\" trong menu ••• của bài viết cũng hiển thị ở đây.",
+      "footnote": "Chạm vào một nguồn để thay đổi. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
+      "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn hoặc quốc gia để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
       "preferCountryA11y": "Ưu tiên nguồn từ {{country}}",
       "countryHint": "Mở nguồn từ {{country}}",
       "countryCleared": "{{country}} không còn được ưu tiên",
@@ -3124,7 +3124,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Đánh dấu nguồn này là Không ưu tiên"
+      "mute": "Đánh dấu nguồn này là Không hiển thị"
     },
     "follow": {
       "follow": "Follow a story",

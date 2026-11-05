@@ -778,7 +778,7 @@
     "actionDownRank": "降低某個主題的優先順序",
     "actionPublicationBoost": "將出版物標為優先",
     "actionPublicationDeprioritize": "顯示某個媒體的更少內容",
-    "actionPublicationMute": "將出版物標為不優先",
+    "actionPublicationMute": "將出版物標為不想看",
     "actionSourceScopeBoost": "優先顯示來自某國家的來源",
     "actionSourceScopeDeprioritize": "顯示某個國家來源的更少內容",
     "actionSuppress": "篩選掉某個詞語",
@@ -1196,7 +1196,7 @@
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
       "preferred": "將 {{name}} 設為優先",
-      "notPreferred": "將 {{name}} 設為不優先",
+      "notPreferred": "將 {{name}} 設為不想看",
       "preferredSourcesFrom": "將 {{name}} 的來源設為優先"
     }
   },
@@ -2046,7 +2046,7 @@
             "body": "你選過的每個出版物都集中在同一個畫面。",
             "steps": {
               "0": "「我的」標籤，然後是「來源」。",
-              "1": "在文章的 ••• 選單中選擇「不優先」會立即生效並可復原，該出版物之後會顯示在「來源」中。"
+              "1": "在文章的 ••• 選單中選擇「不想看」會立即生效並可復原，該出版物之後會顯示在「來源」中。"
             },
             "ask": "我在哪裡管理我看到的來源？"
           },
@@ -2071,14 +2071,14 @@
           "arrows-on-a-publisher": {
             "headline": "為出版物加上星號",
             "body": "展開國家後，每個出版物都有星號。星號會讓出版物在你的資訊流中往上移。為國家加上星號，即可同時套用到它的所有出版物。",
-            "ask": "「優先」和「不優先」有什麼不同？"
+            "ask": "「優先」和「不想看」有什麼不同？"
           },
           "mute-is-not-a-downrank": {
-            "headline": "不優先會從你的資訊流中隱藏它",
-            "body": "將出版物標為「不優先」後，它的報導會離開你的資訊流。全球和相關報導仍然可能顯示它們。點按每張卡片，並把它放到正確的位置。",
+            "headline": "「不想看」會從你的資訊流中隱藏它",
+            "body": "將出版物標為「不想看」後，它的報導會離開你的資訊流。全球和相關報導仍然可能顯示它們。點按每張卡片，並把它放到正確的位置。",
             "steps": {
               "0": "星號：排得比較前面。",
-              "1": "不優先：從你的資訊流中隱藏。",
+              "1": "不想看：從你的資訊流中隱藏。",
               "2": "你可以在「來源」中清除任一項設定。"
             },
             "sort": {
@@ -2088,7 +2088,7 @@
               },
               "cards": {
                 "down-arrow": "星號",
-                "mute": "不優先"
+                "mute": "不想看"
               }
             }
           }
@@ -2104,7 +2104,7 @@
             "steps": {
               "0": "你隱藏的字詞和東西。",
               "1": "你看到較少的主題。",
-              "2": "你標為不優先的來源。"
+              "2": "你標為不想看的來源。"
             },
             "ask": "我在哪裡可以看到我篩選掉的所有東西？"
           },
@@ -2676,7 +2676,7 @@
     "support": "支援",
     "supportSub": "回報問題、即時聊天、常見問題、教學",
     "tutorial": "教學",
-    "notPreferred": "不優先",
+    "notPreferred": "不想看",
     "notPreferredDone": "{{publisher}} 已從你的資訊流中隱藏"
   },
   "storyExport": {
@@ -2736,9 +2736,9 @@
     "visitsLabel": "過去 30 天的造訪紀錄",
     "subscribed": "已訂閱",
     "preferred": "優先",
-    "notPreferred": "不優先",
+    "notPreferred": "不想看",
     "preferA11y": "將 {{publisher}} 設為優先",
-    "notPreferA11y": "將 {{publisher}} 標為不優先",
+    "notPreferA11y": "將 {{publisher}} 標為不想看",
     "notPreferHint": "從你的資訊流中隱藏其文章",
     "includedWith": "已納入 {{country}}",
     "includedWithA11y": "優先，已納入 {{country}}",
@@ -2932,8 +2932,8 @@
     "sources": {
       "title": "來源",
       "find": "搜尋出版物或國家",
-      "footnote": "輕點一項即可更改。在文章的 ••• 選單中選擇「不優先」，也會出現在這裡。",
-      "empty": "你還沒有挑選任何來源。搜尋出版物或國家，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不優先」，也會出現在這裡。",
+      "footnote": "輕點一項即可更改。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
+      "empty": "你還沒有挑選任何來源。搜尋出版物或國家，即可將其設為優先，或從你的資訊流中隱藏。在文章的 ••• 選單中選擇「不想看」，也會出現在這裡。",
       "preferCountryA11y": "優先顯示來自 {{country}} 的來源",
       "countryHint": "開啟 {{country}} 的來源",
       "countryCleared": "已取消 {{country}} 的優先設定",
@@ -3124,7 +3124,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "將此出版物標為不優先"
+      "mute": "將此出版物標為不想看"
     },
     "follow": {
       "follow": "Follow a story",

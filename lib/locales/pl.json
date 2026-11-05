@@ -836,9 +836,9 @@
     "actionShowLessTopic": "Pokazuj mniej danego tematu",
     "actionShowMoreTopic": "Pokazuj więcej danego tematu",
     "actionDownRank": "Obniż rangę tematu",
-    "actionPublicationBoost": "Oznacz wydawcę jako Preferowane",
+    "actionPublicationBoost": "Oznacz wydawcę jako Preferowany",
     "actionPublicationDeprioritize": "Pokażę mniej z tej publikacji",
-    "actionPublicationMute": "Oznacz wydawcę jako Niepreferowane",
+    "actionPublicationMute": "Oznacz wydawcę jako Niepreferowany",
     "actionSourceScopeBoost": "Preferuj źródła z kraju",
     "actionSourceScopeDeprioritize": "Pokażę mniej źródeł z kraju",
     "actionSuppress": "Odfiltruj frazę",
@@ -1272,9 +1272,9 @@
       "undone": "Cofnięto: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Preferowane: {{name}}",
-      "notPreferred": "Niepreferowane: {{name}}",
-      "preferredSourcesFrom": "Ustaw źródła z {{name}} jako Preferowane"
+      "preferred": "Preferowany: {{name}}",
+      "notPreferred": "Niepreferowany: {{name}}",
+      "preferredSourcesFrom": "Ustaw kraj {{name}} jako Preferowany"
     }
   },
   "calibration": {
@@ -2146,7 +2146,7 @@
             "body": "Jeden ekran dla wszystkich wybranych wydawców.",
             "steps": {
               "0": "Karta Ty, potem Źródła.",
-              "1": "„Niepreferowane” w menu ••• przy artykule działa od razu, z opcją Cofnij, a potem wydawca pojawia się w Źródłach."
+              "1": "„Niepreferowany” w menu ••• przy artykule działa od razu, z opcją Cofnij, a potem wydawca pojawia się w Źródłach."
             },
             "ask": "Gdzie zarządzam, które źródła widzę?"
           },
@@ -2171,24 +2171,24 @@
           "arrows-on-a-publisher": {
             "headline": "Oznacz wydawcę gwiazdką",
             "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu. Oznacz kraj gwiazdką, aby zrobić to samo dla wszystkich jego wydawców.",
-            "ask": "Jaka jest różnica między Preferowane a Niepreferowane?"
+            "ask": "Jaka jest różnica między „Preferowany” a „Niepreferowany”?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Niepreferowane ukrywa go w Strumieniu",
-            "body": "Oznacz wydawcę jako Niepreferowane, a jego artykuły znikną z twojego Strumienia. Świat i powiązane historie nadal mogą je pokazywać. Dotknij każdej karty i przenieś ją tam, gdzie jej miejsce.",
+            "headline": "„Niepreferowany” ukrywa go w Strumieniu",
+            "body": "Oznacz wydawcę jako Niepreferowany, a jego artykuły znikną z twojego Strumienia. Świat i powiązane historie nadal mogą je pokazywać. Dotknij każdej karty i przenieś ją tam, gdzie jej miejsce.",
             "steps": {
               "0": "Gwiazdka: wyświetla się wyżej.",
-              "1": "Niepreferowane: ukryte w Strumieniu.",
+              "1": "Niepreferowany: ukryty w Strumieniu.",
               "2": "Możesz wyczyścić któreś z nich w Źródłach."
             },
             "sort": {
               "buckets": {
                 "softer": "Wyświetla się wyżej",
-                "gone": "Ukryte w Strumieniu"
+                "gone": "Ukryty w Strumieniu"
               },
               "cards": {
                 "down-arrow": "Gwiazdka",
-                "mute": "Niepreferowane"
+                "mute": "Niepreferowany"
               }
             }
           }
@@ -2204,7 +2204,7 @@
             "steps": {
               "0": "Słowa i rzeczy, które ukryłeś.",
               "1": "Tematy, które widzisz mniej.",
-              "2": "Źródła oznaczone jako Niepreferowane."
+              "2": "Źródła oznaczone jako „Niepreferowany”."
             },
             "ask": "Gdzie mogę zobaczyć wszystko, co filtrowałem?"
           },
@@ -2794,7 +2794,7 @@
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
     "tutorial": "Samouczek",
-    "notPreferred": "Niepreferowane",
+    "notPreferred": "Niepreferowany",
     "notPreferredDone": "{{publisher}} jest ukryty w twoim Strumieniu"
   },
   "storyExport": {
@@ -2855,13 +2855,13 @@
     "supportLine": "Dobre dziennikarstwo przetrwa, gdy czytelnicy je wspierają.",
     "visitsLabel": "Twoje wizyty w ciągu ostatnich 30 dni",
     "subscribed": "Subskrybowane",
-    "preferred": "Preferowane",
-    "notPreferred": "Niepreferowane",
+    "preferred": "Preferowany",
+    "notPreferred": "Niepreferowany",
     "preferA11y": "Preferuj {{publisher}}",
-    "notPreferA11y": "Oznacz {{publisher}} jako nie preferowane",
+    "notPreferA11y": "Oznacz {{publisher}} jako Niepreferowany",
     "notPreferHint": "Ukrywa jego artykuły w twoim Strumieniu",
     "includedWith": "Razem z krajem: {{country}}",
-    "includedWithA11y": "Preferowane, razem z krajem: {{country}}",
+    "includedWithA11y": "Preferowany, razem z krajem: {{country}}",
     "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, zdejmij gwiazdkę z kraju: {{country}}."
   },
   "nav": {
@@ -3091,8 +3091,8 @@
     "sources": {
       "title": "Źródła",
       "find": "Szukaj wydawcy lub kraju",
-      "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowane” z menu ••• przy artykule też trafia tutaj.",
-      "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę lub kraj, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowane” z menu ••• przy artykule też trafia tutaj.",
+      "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
+      "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę lub kraj, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
       "preferCountryA11y": "Preferuj źródła z kraju: {{country}}",
       "countryHint": "Otwiera źródła z kraju: {{country}}",
       "countryCleared": "Cofnięto preferencję: {{country}}",
@@ -3283,7 +3283,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Oznacz tego wydawcę jako Niepreferowane"
+      "mute": "Oznacz tego wydawcę jako Niepreferowany"
     },
     "follow": {
       "follow": "Follow a story",

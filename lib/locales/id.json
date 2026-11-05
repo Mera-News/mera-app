@@ -778,7 +778,7 @@
     "actionDownRank": "Turunkan peringkat suatu topik",
     "actionPublicationBoost": "Tandai publikasi sebagai Diutamakan",
     "actionPublicationDeprioritize": "Tampilkan lebih sedikit dari penerbit",
-    "actionPublicationMute": "Tandai publikasi sebagai Tidak diutamakan",
+    "actionPublicationMute": "Tandai publikasi sebagai Jangan tampilkan",
     "actionSourceScopeBoost": "Utamakan sumber dari negara",
     "actionSourceScopeDeprioritize": "Tampilkan lebih sedikit dari sumber di negara",
     "actionSuppress": "Saring suatu frasa",
@@ -1196,7 +1196,7 @@
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
       "preferred": "Atur {{name}} sebagai Diutamakan",
-      "notPreferred": "Atur {{name}} sebagai Tidak diutamakan",
+      "notPreferred": "Atur {{name}} sebagai Jangan tampilkan",
       "preferredSourcesFrom": "Atur sumber dari {{name}} sebagai Diutamakan"
     }
   },
@@ -2046,7 +2046,7 @@
             "body": "Satu layar untuk setiap publikasi yang Anda pilih.",
             "steps": {
               "0": "Tab Anda, lalu Sumber.",
-              "1": "\"Tidak diutamakan\" di menu ••• artikel langsung berlaku, dengan opsi Urungkan, lalu publikasi itu tampil di Sumber."
+              "1": "\"Jangan tampilkan\" di menu ••• artikel langsung berlaku, dengan opsi Urungkan, lalu publikasi itu tampil di Sumber."
             },
             "ask": "Di mana saya mengelola sumber mana yang saya lihat?"
           },
@@ -2071,14 +2071,14 @@
           "arrows-on-a-publisher": {
             "headline": "Beri bintang pada publikasi",
             "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda. Beri bintang pada negara untuk melakukan hal yang sama pada semua publikasinya.",
-            "ask": "Apa bedanya Diutamakan dan Tidak diutamakan?"
+            "ask": "Apa bedanya Diutamakan dan Jangan tampilkan?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Tidak diutamakan menyembunyikannya dari umpan Anda",
-            "body": "Tandai publikasi sebagai Tidak diutamakan dan ceritanya hilang dari umpan Anda. Tab Dunia dan cerita terkait tetap bisa menampilkannya. Ketuk setiap kartu lalu letakkan di tempat yang semestinya.",
+            "headline": "\"Jangan tampilkan\" menyembunyikannya dari umpan Anda",
+            "body": "Tandai publikasi sebagai Jangan tampilkan dan ceritanya hilang dari umpan Anda. Tab Dunia dan cerita terkait tetap bisa menampilkannya. Ketuk setiap kartu lalu letakkan di tempat yang semestinya.",
             "steps": {
               "0": "Bintang: ditampilkan lebih tinggi.",
-              "1": "Tidak diutamakan: disembunyikan dari umpan Anda.",
+              "1": "Jangan tampilkan: disembunyikan dari umpan Anda.",
               "2": "Anda bisa menghapus salah satunya di Sumber."
             },
             "sort": {
@@ -2088,7 +2088,7 @@
               },
               "cards": {
                 "down-arrow": "Bintang",
-                "mute": "Tidak diutamakan"
+                "mute": "Jangan tampilkan"
               }
             }
           }
@@ -2104,7 +2104,7 @@
             "steps": {
               "0": "Kata-kata dan hal-hal yang Anda sembunyikan.",
               "1": "Topik yang Anda lihat lebih sedikit.",
-              "2": "Sumber yang Anda tandai Tidak diutamakan."
+              "2": "Sumber yang Anda tandai Jangan tampilkan."
             },
             "ask": "Di mana saya dapat melihat semua yang telah saya saring?"
           },
@@ -2676,7 +2676,7 @@
     "support": "Dukungan",
     "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "notPreferred": "Tidak diutamakan",
+    "notPreferred": "Jangan tampilkan",
     "notPreferredDone": "{{publisher}} disembunyikan dari umpan Anda"
   },
   "storyExport": {
@@ -2736,9 +2736,9 @@
     "visitsLabel": "Kunjungan Anda dalam 30 hari terakhir",
     "subscribed": "Berlangganan",
     "preferred": "Diutamakan",
-    "notPreferred": "Tidak diutamakan",
+    "notPreferred": "Jangan tampilkan",
     "preferA11y": "Utamakan {{publisher}}",
-    "notPreferA11y": "Tandai {{publisher}} sebagai tidak diutamakan",
+    "notPreferA11y": "Tandai {{publisher}} sebagai Jangan tampilkan",
     "notPreferHint": "Menyembunyikan artikelnya dari umpan Anda",
     "includedWith": "Termasuk dalam {{country}}",
     "includedWithA11y": "Diutamakan, termasuk dalam {{country}}",
@@ -2932,8 +2932,8 @@
     "sources": {
       "title": "Sumber",
       "find": "Cari publikasi atau negara",
-      "footnote": "Ketuk salah satu untuk mengubahnya. \"Tidak diutamakan\" di menu ••• artikel juga muncul di sini.",
-      "empty": "Anda belum memilih sumber apa pun. Cari publikasi atau negara untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Tidak diutamakan\" di menu ••• artikel juga muncul di sini.",
+      "footnote": "Ketuk salah satu untuk mengubahnya. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
+      "empty": "Anda belum memilih sumber apa pun. Cari publikasi atau negara untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
       "preferCountryA11y": "Utamakan sumber dari {{country}}",
       "countryHint": "Membuka sumber dari {{country}}",
       "countryCleared": "{{country}} tidak lagi diutamakan",
@@ -3124,7 +3124,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Tandai publikasi ini sebagai Tidak diutamakan"
+      "mute": "Tandai publikasi ini sebagai Jangan tampilkan"
     },
     "follow": {
       "follow": "Follow a story",
