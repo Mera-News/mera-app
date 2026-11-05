@@ -510,7 +510,7 @@ export default appSchema({
         // A tracked story is a user-owned TOPIC continuously linked server-side
         // every pipeline cycle. `topic_id`/`topic_text` point at the minted
         // `topics` row; the reconcile matches suggestions whose matchedTopics
-        // carry `topic_id`. `member_snapshots_json` is a capped (50), newest-
+        // carry `topic_id`. `member_snapshots_json` is a capped (2000), newest-
         // first-by-pubDate JSON array of lean card snapshots
         // [{articleId, title, pubDateMs, imageUrl?, publicationName?}] so the
         // timeline renders locally-discovered members without a server round
