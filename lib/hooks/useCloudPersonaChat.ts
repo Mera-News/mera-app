@@ -325,6 +325,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             leak: i18nInstance().t('chat.replyLeakFallback'),
             process: i18nInstance().t('chat.replyProcessFallback'),
             noAnswer: noAnswerLine(),
+            followCard: i18nInstance().t('trackedStories.followCardLine'),
           },
         });
         if (queued) flush();

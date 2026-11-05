@@ -268,6 +268,7 @@ function parseTurn(scriptId: string, i: number, raw: unknown, opts: ParseOptions
     chooses,
     ...(moreOptions ? { moreOptions } : {}),
     ...(pendingCards !== undefined ? { pendingCards: pendingCards as string[] } : {}),
+    ...(rec.impactTap === true ? { impactTap: true } : {}),
     expect: {
       ...(routeKind !== undefined ? { routeKind } : {}),
       ...(skill !== undefined ? { skill } : {}),

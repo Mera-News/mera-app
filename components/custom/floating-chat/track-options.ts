@@ -10,7 +10,8 @@ import { MAX_FOLLOW_OPTIONS } from '@/lib/chat-session/engine';
 import { contentJaccard, DETECT_JACCARD } from '@/lib/mera-harness';
 import type { PhraseRole } from '@/lib/news-harness/on-device/follow-story/reader-phrase';
 
-/** `subject`: the loop's handover put it first. Plain text and ticked, like a phrase row. */
+/** `subject`: the loop's handover put it first and ticks it. Unlike a phrase row it is
+ *  translated, because the model writes most subjects in English. */
 export type TrackRowRole = PhraseRole | 'subject';
 
 /** The hints on a card's result (`withReaderPhrase`, the handover's `storySubjects`); empty on any other card. */

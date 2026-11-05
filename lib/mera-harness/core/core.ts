@@ -68,7 +68,7 @@ function namesSomethingSaid(statement: string, text: string): boolean {
 const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill, skillThinking, skillTools } from './skill-loader';
-import { CONTINUATION_TOOLS, PROPOSE_TRACK_TOOL, SEARCH_NEWS_TOOL, toolsForLeg, validateChoiceOptions } from './tool-contracts';
+import { CONTINUATION_TOOLS, PROPOSE_TRACK_TOOL, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import { NO_IMPACT_NOTE, followHandoverNote, profileOfferEntry, storySubjects, subjectsFirst, withoutStakeSlots } from './stake-handover';
 import type {
   PendingProposalView,
@@ -265,6 +265,10 @@ export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you sa
  *  wrote nothing usable either. The app passes the reader-language line. */
 export const REPLY_NO_ANSWER_FALLBACK = "I couldn't do that. Try asking another way.";
 
+/** Beside a handover's follow card when the leg wrote nothing. Never about the
+ *  profile. The app passes the reader-language line. */
+export const REPLY_FOLLOW_CARD_FALLBACK = 'This one is good to follow. Tick what you want and new articles land in Followed stories.';
+
 /** The closing leg of a turn that would otherwise end with no reply, no card
  *  and no question. Nothing was staged on such a turn by definition. */
 const NO_ANSWER_NOTE =
@@ -411,7 +415,7 @@ export interface RunAgentTurnParams {
   /** The two lines a reply is REPLACED with (leak, narration), in the reader's
    *  language. The harness cannot import i18n, so the app translates them at the
    *  call site; omitted (the eval), the English constants are used. */
-  fallbacks?: { leak: string; process: string; noAnswer?: string };
+  fallbacks?: { leak: string; process: string; noAnswer?: string; followCard?: string };
   /** 'moreOptions': "More options" on a follow card. No route leg, one forced
    *  proposeTrack leg on conversation/follow-story, prose discarded, no closing
    *  leg and no end-of-turn offers. The driver passes a COPY of its state and
@@ -707,7 +711,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let noStakeEntries: Record<string, unknown>[] = [];
   /** Set once the turn hands over to the follow skill. */
   let handover: { subjects: string[]; note: string } | null = null;
-  /** Follow legs left: a lookup, then the card (the More options budget). */
+  /** Follow legs left: the card, then one required retry (the More options budget). */
   let followLegsLeft = 0;
   let followCardStaged = false;
 
@@ -1100,7 +1104,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       tools: moreOptionsMode
         ? (deps.tools.proposeTrack ? [PROPOSE_TRACK_TOOL] : [])
         : followLegsLeft > 0
-          ? [PROPOSE_TRACK_TOOL, ...(followLegsLeft > 1 && deps.tools.searchNews ? [SEARCH_NEWS_TOOL] : [])]
+          ? [PROPOSE_TRACK_TOOL]
         : closingLegNow || answerLegNow ? [] : toolsForLeg({
         skillLoaded,
         forcingProposal: forcingProposalNow,
@@ -1119,7 +1123,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       }) as unknown[],
       // More options was asked for by a tap: a card is the answer, and staging
       // it changes nothing until the user ticks and taps Follow.
-      toolChoice: forcingProposalNow || moreOptionsMode || followLegsLeft > 0 ? 'required' : 'auto',
+      // The first follow leg stays on auto: the sentence beside the card is
+      // written there, and a required call measured 0 of 19 with one.
+      toolChoice: forcingProposalNow || moreOptionsMode || followLegsLeft === 1 ? 'required' : 'auto',
       // OFF unless the loaded skill says `thinking: true`, and always off on the
       // route leg: measured, thinking on returned empty content on 8 of 10
       // route probes at 8-10s against 0.8-1.0s and a valid answer every time.
@@ -1338,11 +1344,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // a call is answered, never run.
         const query = typeof args.query === 'string' ? args.query.trim().slice(0, 200) : '';
         if (query) subjectsThisTurn.push(query);
-        const out = deps.tools.searchNews
-          ? query
-            ? await deps.tools.searchNews({ query })
-            : { error: 'query must be a non-empty string' }
-          : { error: 'searchNews is not available' };
+        const out = handover
+          ? { error: 'Already searched. Call proposeTrack now.' }
+          : deps.tools.searchNews
+            ? query
+              ? await deps.tools.searchNews({ query })
+              : { error: 'query must be a non-empty string' }
+            : { error: 'searchNews is not available' };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1642,7 +1650,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // geopolitical conflict in the region of Israel" for a Ukraine
           // answer (navx2-fu). Precision first: ONE shared subject word with
           // anything the user or Mera said this exchange keeps the entry.
-          if (groundForcedOffer && forcingProposalNow && !namesSomethingSaid(statement, groundingText())) continue;
+          // Facts are written in English, so a message with no Latin letter shares
+          // no word with any of them: on an interest leg the slots vouch instead.
+          const ungroundable = typeof entry.has_stake === 'boolean' && !/\p{Script=Latin}/u.test(userMessage);
+          if (groundForcedOffer && forcingProposalNow && !ungroundable && !namesSomethingSaid(statement, groundingText())) continue;
           // A NEGATIVE INTEREST IS NEVER OFFERED on a see-less turn, forced
           // or not ("Does not want The Hindu included in news updates" after
           // "Mute The Hindu"): stop, less, mute and hide are a filter, not a
@@ -2059,6 +2070,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       leg.toolResults.push({ name: call.name, result: { error: `unknown tool: ${call.name}` } });
     }
 
+    // THE HANDOVER'S SEARCH IS THE LOOP'S, on this leg: the follow skill says to
+    // look first, so a forced leg searched twice and ran out of legs with no card
+    // on 29 of 48 turns.
+    const handingOver: boolean = noStakeEntries.length > 0 && handover === null && !impactAsked && !terminatedByChoice;
+    const handoverSubjects: string[] = handingOver ? storySubjects(noStakeEntries, userMessage) : [];
+    const searches = deps.tools.searchNews ? handoverSubjects.map((query) => ({ query })) : [];
+    const found = await Promise.all(searches.map(async (q) => {
+      try {
+        return await deps.tools.searchNews!(q);
+      } catch {
+        return { error: 'search failed' };
+      }
+    }));
+    searches.forEach((q, i) => {
+      leg.toolCalls.push({ name: 'searchNews', argumentsRaw: JSON.stringify(q) });
+      leg.toolResults.push({ name: 'searchNews', result: found[i] });
+    });
+    const handoverResults = searches.map((_, i) => ({ name: 'searchNews', result: found[i] as unknown }));
+
     params.onLeg?.(leg);
 
     // AN ANSWER TO THE IMPACT QUESTION THAT SHOWS NO IMPACT: the follow card is
@@ -2075,14 +2105,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
     }
-    // THE HANDOVER, ONE WAY: the rest of this turn is the follow skill, forced,
-    // as More options runs it. A question on this leg keeps the entries, and
+    // THE HANDOVER, ONE WAY: the rest of this turn is the follow skill, with
+    // proposeTrack alone, as More options runs it. A question on this leg keeps the entries, and
     // they go back as a fact card: one question or card per turn.
-    if (noStakeEntries.length > 0 && handover === null && !terminatedByChoice) {
+    if (handingOver) {
       const body = loadSkillFn(FOLLOW_STORY_SKILL);
       if (body !== null) {
-        const subjects = storySubjects(noStakeEntries, userMessage);
-        handover = { subjects, note: followHandoverNote(subjects) };
+        handover = { subjects: handoverSubjects, note: followHandoverNote(handoverSubjects) };
         skillLoaded = FOLLOW_STORY_SKILL;
         skillsLoaded.push(FOLLOW_STORY_SKILL);
         routeKind = routeKindFromSkill(FOLLOW_STORY_SKILL);
@@ -2092,6 +2121,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         reply = '';
         answeredTheUser = false;
         toolResultsThisTurn.length = 0;
+        toolResultsThisTurn.push(...handoverResults);
         maxLegsThisTurn = Math.max(maxLegsThisTurn, nextLegIndex + followLegsLeft - formatRetries);
         continue;
       }
@@ -2620,6 +2650,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   if (cardThisTurn === 'staged' && !cleanProse(reply).trim()) {
     acknowledgement = '';
   }
+
+  // A required slot beats prose emphasis: a card leg writes its sentence on about
+  // one turn in fifty, so the line beside the handover's card is the app's.
+  if (followCardStaged && !cleanProse(reply).trim()) reply = params.fallbacks?.followCard ?? REPLY_FOLLOW_CARD_FALLBACK;
 
   // ---- NO FOLLOW CARD CAME: the reader's words go back as a fact card -------
   if (noStakeEntries.length > 0 && !followCardStaged && terminalReason !== 'transport-error') {

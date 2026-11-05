@@ -100,24 +100,62 @@ describe('the handover', () => {
     expect(state.turn.lastCard?.skill).toBe('conversation/follow-story');
   });
 
-  it('the forced leg runs the follow skill, proposeTrack required, and reads today', async () => {
+  it('the follow leg runs the follow skill with proposeTrack alone, on auto so it writes the sentence, and reads today', async () => {
     const h = harness([route(), save(NO_STAKE), card()]);
     await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps });
     const leg = h.requests[2];
     expect(leg.systemPrompt).toContain('FOLLOW BODY');
-    expect(leg.toolChoice).toBe('required');
-    expect(names(leg)).toEqual(['proposeTrack', 'searchNews']);
+    expect(leg.toolChoice).toBe('auto');
+    expect(names(leg)).toEqual(['proposeTrack']);
     expect(leg.messages.map((m) => m.content).join('\n')).toContain('Today:');
     expect(leg.messages[leg.messages.length - 1].content).toContain('Rally Finland');
   });
 
-  it('a search leg buys one more forced leg, proposeTrack alone', async () => {
-    const h = harness([route(), save(NO_STAKE), res({ toolCalls: [tc('searchNews', { query: 'Rally Finland' })] }), card()]);
+  it('the loop searches the subject itself, once, and the leg reads the result', async () => {
+    const searchNews = jest.fn(async (a: { query: string }) => ({ query: a.query, headlines: ['Rally Finland stage two'] }));
+    const h = harness([route(), save(NO_STAKE), card()], { searchNews });
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps });
+    expect(searchNews.mock.calls).toEqual([[{ query: 'Rally Finland' }]]);
+    expect(h.requests[2].messages.map((m) => m.content).join('\n')).toContain('Rally Finland stage two');
+    expect(out.legs[1].toolCalls.map((c) => c.name)).toEqual(['saveExtractedFacts', 'searchNews']);
+    expect(out.legs[1].toolResults.map((c) => c.name)).toEqual(['saveExtractedFacts', 'searchNews']);
+  });
+
+  it('a search that throws still ends on the card', async () => {
+    const h = harness([route(), save(NO_STAKE), card()], { searchNews: async () => { throw new Error('offline'); } });
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps });
+    expect(stagedTrack(out)).toBeDefined();
+  });
+
+  it('a leg that writes no card gets one required retry, and a model search is refused', async () => {
+    const h = harness([route(), save(NO_STAKE), res({ toolCalls: [tc('searchNews', { query: 'again' })] }), card()]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps });
     expect(h.port.searchNews).toHaveBeenCalledTimes(1);
     expect(names(h.requests[3])).toEqual(['proposeTrack']);
     expect(h.requests[3].toolChoice).toBe('required');
     expect(stagedTrack(out)).toBeDefined();
+  });
+
+  it('a card with no sentence beside it gets the fixed line, in the reader\'s language', async () => {
+    const h = harness([route(), save(NO_STAKE), res({ toolCalls: [tc('proposeTrack', MODEL_OPTIONS)] })]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps,
+      fallbacks: { leak: 'l', process: 'p', followCard: 'VOLG DEZE' },
+    });
+    expect(out.reply).toBe('VOLG DEZE');
+  });
+
+  it('a forced offer in a script that shares no word with English facts still goes through', async () => {
+    const stake = { statement: 'Travels to Ahmedabad for the IPL final', has_stake: true, story_subject: 'IPL' };
+    const h = harness([route(), res({ content: 'ठीक है।' }), res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [stake] })] }), res({ content: 'ठीक है।' })]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'मैं अगले महीने फाइनल देखने जा रहा हूँ', deps: h.deps });
+    expect(h.port.saveExtractedFacts).toHaveBeenCalledTimes(1);
+  });
+
+  it('capitalises a subject the model wrote in lower case', async () => {
+    const h = harness([route(), save({ ...NO_STAKE, story_subject: 'cycling' }), card()]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into cycling", deps: h.deps });
+    expect((h.port.proposeTrack.mock.calls[0][0] as { options: { label: string }[] }).options[0].label).toBe('Cycling');
   });
 
   it("the model's search for the subject's own row wins: the label stays theirs, the search is English", async () => {
@@ -167,7 +205,7 @@ describe('the handover', () => {
   });
 
   it('a forced leg that stages no card gives the fact card back, and the reader loses nothing', async () => {
-    const h = harness([route(), save(NO_STAKE), res({ content: 'No idea.' })]);
+    const h = harness([route(), save(NO_STAKE), res({ content: 'No idea.' }), res({ content: 'Still none.' })]);
     const state = createAgentState(PERSONA);
     const out = await runAgentTurn({ state, userMessage: "I'm into rally finland", deps: h.deps });
     const entries = (h.port.saveExtractedFacts.mock.calls[0][0] as { extracted_user_information: Record<string, unknown>[] }).extracted_user_information;

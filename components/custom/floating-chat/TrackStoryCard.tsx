@@ -238,14 +238,13 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     shown[r.key] ?? r.label;
   const spoken = (r: { label: string; key: string }) => {
     const role = phrase.roles[r.key];
-    if (role === 'subject') return r.label;
-    if (role) {
+    if (role && role !== 'subject') {
       return t(role === 'exact' ? 'trackedStories.optionAsWritten' : 'trackedStories.optionSpellingFixed', { phrase: r.label });
     }
     return shownFailed[r.key] ? `${labelText(r)}. ${t('feed.translationFailed')}` : labelText(r);
   };
 
-  const labelNode = (r: { label: string; key: string }, muted: boolean) => phrase.roles[r.key] ? (
+  const labelNode = (r: { label: string; key: string }, muted: boolean) => phrase.roles[r.key] && phrase.roles[r.key] !== 'subject' ? (
     // Their own words, never run through the translator.
     <Text size="sm" style={muted ? styles.rowTextMuted : styles.rowText}>
       {r.label}

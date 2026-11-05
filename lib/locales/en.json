@@ -630,6 +630,7 @@
     "wideNetRemove": "To remove one, open its menu and choose {{action}}.",
     "wideNetShowLess": "Show less",
     "composerPlaceholder": "Which story should I keep an eye on?",
+    "followCardLine": "This one is good to follow. Tick what you want and new articles land in Followed stories.",
     "addToProfile": "Add to my profile instead",
     "impactQuestion": "Before I add it, how does this affect you? Mera's AI uses this to work out how much an article matters to you. If it doesn't affect you personally, I'd recommend just following it as a story.",
     "addAnyway": "Add it anyway",

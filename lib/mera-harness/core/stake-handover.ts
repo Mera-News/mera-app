@@ -42,12 +42,15 @@ export function isUsableSubject(subject: unknown, message: string): subject is s
   return !(said.length >= MIN_SENTENCE_WORDS && said.join(' ') === words(message).join(' '));
 }
 
+/** The model writes "cycling"; every other row on the card is Title Case. */
+const capitalised = (s: string): string => s.charAt(0).toLocaleUpperCase() + s.slice(1);
+
 /** The subjects that may lead the card, in the order the model gave them. */
 export function storySubjects(entries: readonly Record<string, unknown>[], message: string): string[] {
   const out: string[] = [];
   for (const e of entries) {
     const subject = e.story_subject;
-    if (isUsableSubject(subject, message) && !out.some((s) => sameText(s, subject))) out.push(subject.trim());
+    if (isUsableSubject(subject, message) && !out.some((s) => sameText(s, subject))) out.push(capitalised(subject.trim()));
   }
   return out.slice(0, CARD_SLOTS);
 }
@@ -87,7 +90,7 @@ export function followHandoverNote(subjects: readonly string[]): string {
       ? `They like ${named}, with no effect on their life, so it is a story to follow. Options come first with exactly that label and its search in English. `
       : 'They said they like something, with no effect on their life, so it is a story to follow. ')
     + 'Then add narrower or wider options. No option says I, my or anything about them. '
-    + 'You may call searchNews once, then proposeTrack. '
+    + 'Call proposeTrack now, using the search results above if there are any; when they are empty, write the options from what they named. '
     + 'Beside the card write one or two short sentences in the language of their message: this one is good to follow, '
     + 'and new articles land in Followed stories once they tick what they want and tap Follow. '
     + 'Say nothing about their profile, or about why it is not a fact.'
