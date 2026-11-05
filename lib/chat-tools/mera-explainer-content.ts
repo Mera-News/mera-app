@@ -155,7 +155,7 @@ Every plan includes the complete Mera experience. There is no feature held back 
 
 Separately from the plan, you control interruptions: up to 24 alert opportunities per day at times you choose, with life-safety emergencies as the one exception that always breaks through.
 
-A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
+Mera is a project funded by its readers: paid plans are what keep it going. Individual and Professional are billed monthly or yearly, and the free trial is on monthly Individual only. A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
 
   // ---------------------------------------------------------------------------
   known_gaps: `Mera would rather you heard these from Mera than found them yourself. All of these are true right now.

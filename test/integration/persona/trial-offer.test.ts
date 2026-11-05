@@ -63,6 +63,15 @@ describe('iOS', () => {
         expect(await resolveTrialOffer()).toBeNull();
     });
 
+    it('reads the monthly Individual plan when a yearly one is listed first', async () => {
+        const monthly = { identifier: 'individual', product: { identifier: IOS_ID, introPrice: freeWeek } };
+        const yearly = { identifier: 'yearly-individual', product: { identifier: 'mera_news_individual_yearly', introPrice: null } };
+        const offering = { identifier: 'mera-news-subscription', availablePackages: [yearly, monthly] };
+        getOfferings.mockResolvedValue({ current: offering, all: { 'mera-news-subscription': offering } });
+        checkEligibility.mockResolvedValue(eligibility(2));
+        expect(await resolveTrialOffer()).toEqual({ trialDays: 7 });
+    });
+
     it('is null for a paid intro offer, even when eligible', async () => {
         getOfferings.mockResolvedValue(offeringWith({ identifier: IOS_ID, introPrice: { ...freeWeek, price: 0.99 } }));
         checkEligibility.mockResolvedValue(eligibility(2));
