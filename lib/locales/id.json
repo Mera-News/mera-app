@@ -183,7 +183,7 @@
     "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
     "forYouTitle": "Untuk Anda",
     "newStoriesBelowA11y": "Cerita baru di bawah",
-    "noFactsBody": "Ketuk tombol Mera untuk memberi tahu Mera apa yang Anda ikuti. Hasilnya jadi feed Anda.",
+    "noFactsBody": "Ketuk tombol Mera dan ceritakan tentang hidup Anda. Mera akan menemukan berita yang berdampak pada Anda.",
     "noteWait": "Mohon tunggu sementara Mera menulis alasannya.",
     "opened": "Dibuka",
     "statsSyncAnalysing_one": "{{formatted}} artikel sedang dianalisis untuk Anda,",
@@ -324,10 +324,10 @@
     "close": "Tutup",
     "logoutFailedTitle": "Gagal Keluar",
     "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
-    "composerPlaceholder": "Apa yang suka kamu ikuti?",
+    "composerPlaceholder": "Ceritakan tentang hidup Anda",
     "factsCount_one": "{{count}} fakta tentang Anda",
     "factsCount_other": "{{count}} fakta tentang Anda",
-    "noFactsBody": "Mera memakai kotamu untuk mencari berita dari tempat kamu tinggal. Kamu bisa menceritakan lebih banyak tentang dirimu kapan saja.",
+    "noFactsBody": "Mera memakai kota Anda untuk mencari berita dari tempat Anda tinggal. Anda bisa menceritakan lebih banyak tentang hidup Anda kapan saja.",
     "noFactsTitle": "Kamu tinggal di mana?",
     "noNotifBody": "Anda tidak akan tahu saat berita Anda siap atau saat cerita yang Anda ikuti berkembang. Anda bisa menyalakannya nanti di Pengaturan.",
     "noNotifTitle": "Gunakan Mera tanpa notifikasi?",
@@ -508,7 +508,7 @@
     "helpModesVerify": "“Verifikasi atestasi” memeriksa bahwa cloud berjalan di perangkat keras aman yang asli, dan bahwa data Anda dienkripsi untuknya."
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah memiliki data ini.",
+    "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu “Publikasi yang Anda baca” di tab Sumber dan riwayat per publikasi akan kembali kosong. Cerita yang sudah Anda baca bisa muncul lagi di feed. Tidak ada yang lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah menyimpan data ini.",
     "deletedTitle": "Data Dihapus",
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
@@ -682,7 +682,7 @@
     "replyUnfinished": "Belum selesai"
   },
   "personaChat": {
-    "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nBagikan sebanyak atau sesedikit yang kamu mau. Apa yang kamu ceritakan tetap di ponsel ini. Tidak ada yang bisa mengakses datamu selain kamu."
+    "introMessage": "Halo, saya Mera.\n\nCeritakan tentang hidup Anda: di mana Anda tinggal, apa pekerjaan Anda, siapa yang Anda pedulikan. Saya akan mencari berita yang berdampak pada Anda. Hal lain yang Anda suka bisa kita ikuti sebagai cerita.\n\nBagikan sebanyak atau sesedikit yang Anda mau. Apa yang Anda sampaikan tetap di ponsel ini. Tidak ada orang lain yang bisa mengakses data Anda selain Anda."
   },
   "floatingChat": {
     "close": "Tutup",
@@ -724,7 +724,7 @@
     "factDeleteRemove": "Hapus",
     "factDeleteKeep": "Simpan",
     "factDeleteKept": "Tidak ada yang dihapus.",
-    "topicsSavedHint": "Topik tersimpan! Silakan terus tambahkan fakta, atau ketuk {{close}} untuk mulai menjelajah.",
+    "topicsSavedHint": "Topik tersimpan! Ceritakan lebih banyak tentang hidup Anda, atau ketuk {{close}} untuk mulai menjelajah.",
     "guidelinesAfter": ". Jika Mera menemukan penyalahgunaan, akun Anda dijeda sampai Anda meminta peninjauan.",
     "guidelinesBefore": "Anda sedang berbicara dengan Mera, AI, bukan orang. Mera mengikuti ",
     "guidelinesLink": "pedoman konten",
@@ -747,7 +747,7 @@
     "chipDontWant": "Saya tidak ingin saran ini",
     "chipDontWantMessage": "Saya tidak ingin saran ini. Apa yang harus kita ubah agar saya berhenti mendapatkan artikel seperti ini?",
     "chipMoreLikeThis": "Saya ingin lebih banyak seperti ini",
-    "chipMoreLikeThisMessage": "Saya ingin lebih banyak artikel seperti ini. Apa yang harus kita tambahkan ke minat saya?",
+    "chipMoreLikeThisMessage": "Saya ingin lebih banyak artikel seperti ini. Sebaiknya saya menambahkan sesuatu ke profil, atau mengikutinya sebagai cerita?",
     "proposalTitle": "Perubahan yang diusulkan",
     "expectedEffects": "Efek yang diharapkan",
     "proposalConfirm": "Ya, lakukan",
@@ -1023,7 +1023,7 @@
     "timelineLoadFailed": "Tidak dapat memuat berita ini. Tarik ke bawah untuk mencoba lagi.",
     "deleteFailed": "Tidak dapat berhenti mengikuti berita ini. Coba lagi.",
     "removeFailed": "Tidak dapat menghapus artikel ini dari berita. Coba lagi.",
-    "emptyBodyMera": "Ikuti cerita yang sedang berkembang dan Mera akan terus memperbaruinya di sini. Ketuk tombol Mera untuk mengikuti satu cerita.",
+    "emptyBodyMera": "Ikuti apa saja yang Anda suka: sebuah tim, seorang seniman, cerita yang panjang. Gratis dan tanpa batas, dan tidak ada AI yang membaca cerita yang Anda ikuti. Ketuk tombol Mera untuk memulai.",
     "followedSince": "Diikuti sejak {{date}}",
     "learnAbout": "Pelajari tentang Cerita",
     "nextNote": "Mera menambahkan liputan baru di sini saat cerita berkembang.",
@@ -1060,22 +1060,27 @@
     "wideNetBody": "Mera mencari secara luas, jadi beberapa artikel di sini mungkin hanya sedikit berkaitan dengan cerita. Kami lebih memilih menampilkan satu artikel lebih banyak daripada membuat Anda melewatkan artikel yang penting.",
     "wideNetRemove": "Untuk menghapus artikel, buka menunya lalu pilih {{action}}.",
     "wideNetShowLess": "Tampilkan lebih sedikit",
-    "composerPlaceholder": "Berita apa yang perlu aku pantau untukmu?",
+    "composerPlaceholder": "Apa yang sebaiknya saya pantau?",
     "optionAsWritten": "{{phrase}}, seperti yang Anda tulis",
-    "optionSpellingFixed": "{{phrase}}, ejaannya sudah diperbaiki"
+    "optionSpellingFixed": "{{phrase}}, ejaannya sudah diperbaiki",
+    "followCardLine": "Topik ini layak diikuti. Centang yang Anda mau dan artikel baru akan masuk ke Cerita yang diikuti.",
+    "addToProfile": "Tambahkan ke profil saya saja",
+    "impactQuestion": "Sebelum saya tambahkan, bagaimana ini memengaruhi Anda? AI Mera menggunakan ini untuk menghitung seberapa penting sebuah artikel bagi Anda. Jika tidak berdampak langsung pada Anda, saya sarankan cukup mengikutinya sebagai cerita.",
+    "addAnyway": "Tetap tambahkan",
+    "addedToProfile": "Ditambahkan ke profil Anda"
   },
   "whatsNew": {
     "gotIt": "Mengerti",
     "starterTitle": "Starter dari kami",
     "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
     "starterArticlesTitle": "Setiap artikel yang cocok",
-    "starterArticlesBody": "Setiap artikel yang cocok dengan minat Anda sampai ke Umpan Anda. Mera membacanya, menyisihkan gangguan, dan mengangkat yang penting.",
-    "starterInterestsTitle": "Semua minat Anda",
-    "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
+    "starterArticlesBody": "Mera membaca setiap artikel yang cocok dengan profil Anda, menyisihkan yang tidak relevan, dan menunjukkan apa yang berdampak pada Anda.",
+    "starterInterestsTitle": "Seluruh profil Anda",
+    "starterInterestsBody": "Tambahkan semua yang berdampak pada Anda. Mera membaca berita dengan mencocokkannya ke setiap fakta.",
     "starterChatTitle": "Chat dan cek fakta",
     "starterChatBody": "Tanya Mera tentang berita apa pun, dan uji klaim dengan cek fakta yang sudah diterbitkan.",
     "starterStoriesTitle": "Cerita yang diikuti",
-    "starterStoriesBody": "Ikuti sebuah cerita dan Mera terus mengawasinya untuk Anda."
+    "starterStoriesBody": "Ikuti apa saja yang Anda suka, gratis dan tanpa batas. Tidak ada AI yang membaca cerita yang diikuti."
   },
   "notificationCenter": {
     "title": "Notifikasi",
@@ -1086,7 +1091,7 @@
     "settingsLink": "Pengaturan notifikasi",
     "help": {
       "title": "Tentang notifikasi",
-      "body": "Mera menulis catatan di sini tentang feed Anda: pemeriksaan fakta yang Anda minta sudah siap, penyesuaian feed harian, tips untuk merapikan atau menyetel minat Anda, dan pertanyaan dari tim Mera. Catatan hanya disimpan di ponsel ini selama 90 hari, dan titik berarti ada yang belum dibaca. Notifikasi berita tidak muncul di sini. Waktunya bisa Anda atur di Pengaturan, di bagian Notifikasi."
+      "body": "Mera meninggalkan catatan di sini tentang feed Anda: pemeriksaan fakta yang Anda minta sudah siap, perapian feed harian, tips untuk merapikan atau menyetel profil, dan pertanyaan dari tim Mera. Catatan ini hanya disimpan di ponsel ini selama 90 hari, dan titik menandakan ada yang belum dibaca. Notifikasi berita tidak muncul di sini. Waktunya diatur di Pengaturan, di bawah Notifikasi."
     },
     "ageNow": "kini",
     "ageMinutes": "{{n}} mnt",
@@ -1117,7 +1122,7 @@
   },
   "personaAudit": {
     "title": "Perubahan pada profil Anda",
-    "empty": "Belum ada perubahan. Saat Mera menyempurnakan minat Anda, setiap perubahan akan muncul di sini.",
+    "empty": "Belum ada perubahan. Saat Mera menyesuaikan profil Anda, setiap perubahan akan muncul di sini.",
     "revertedBadge": "Dikembalikan",
     "revertConfirmTitle": "Urungkan perubahan ini?",
     "revertConfirmBody": "Ini akan membatalkan perubahan dan memulihkan profil Anda seperti sebelumnya.",
@@ -1319,20 +1324,20 @@
     "statusDismissed": "Ditutup"
   },
   "hygiene": {
-    "notificationTitle": "Rapikan minat Anda?",
+    "notificationTitle": "Rapikan profil Anda?",
     "notificationBody_one": "Mera menemukan {{count}} pembersihan untuk profil Anda.",
     "notificationBody_other": "Mera menemukan {{count}} hal untuk dirapikan di profil Anda.",
     "reviewChip": "Tinjau",
     "accept": "Terima",
     "reject": "Tolak",
-    "effectTooBroad": "Menurunkan bobot minat ini agar menarik lebih sedikit cerita yang tidak relevan.",
+    "effectTooBroad": "Menurunkan bobot fakta ini supaya lebih sedikit cerita yang tidak relevan ikut terbawa.",
     "effectStaleTopic": "Menghentikan topik yang sepi ini.",
     "effectStaleFact": "Menghapus fakta ini: tidak ada lagi topiknya yang aktif.",
     "appliedTitle": "Perapian diterapkan",
     "appliedBody": "Profil Anda telah dirapikan. Lihat log perubahan untuk meninjau.",
     "applyFailedTitle": "Tidak dapat menerapkan perapian",
     "applyFailedBody": "Silakan coba lagi nanti.",
-    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini.",
+    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih tepat untuk fakta ini.",
     "effectLocationConflict": "Menyimpan tempat yang lebih baru dan menghapus yang lama.",
     "keepBoth": "Simpan keduanya",
     "merge": "Gabungkan",
@@ -1349,8 +1354,19 @@
       "staleFact": "{{fact}} tidak punya topik aktif lagi",
       "tooBroad": "{{fact}} sangat luas",
       "staleTopic": "{{topic}} sepi selama berminggu-minggu",
-      "incoherentTopics_other": "{{count}} topik di bawah {{fact}} tidak cocok dengannya: {{topics}}"
-    }
+      "incoherentTopics_other": "{{count}} topik di bawah {{fact}} tidak cocok dengannya: {{topics}}",
+      "followInsteadFlood": "“{{topic}}” memenuhi feed Anda. Ikuti sebagai cerita saja?",
+      "followInsteadNoStake": "Ada banyak berita tentang {{topic}}, tapi tidak satu pun mengubah apa pun bagi Anda, jadi feed Anda melewatinya. Ikuti sebagai cerita untuk melihat semuanya?"
+    },
+    "titleFollowInstead": "Cerita untuk diikuti",
+    "effectFollowInstead": "Cerita yang diikuti gratis, dan tidak ada AI yang membacanya.",
+    "keepFact": "Simpan sebagai fakta",
+    "followInsteadTopicMoves": "Artikel baru tentang {{topic}} akan masuk ke Cerita yang diikuti, bukan ke feed Anda.",
+    "followInsteadFactGoes": "{{fact}} akan keluar dari profil Anda, dan ini tidak bisa dibatalkan. Artikel baru tentang {{topic}} akan masuk ke Cerita yang diikuti.",
+    "followInsteadDoneTitle": "Mengikuti {{topic}}",
+    "followInsteadDoneBody": "Artikel baru akan masuk ke Cerita yang diikuti.",
+    "followInsteadNotificationTitle": "Cerita untuk diikuti",
+    "followInsteadNotificationBody": "Mera menemukan sesuatu yang cocok untuk Cerita yang diikuti."
   },
   "locations": {
     "title": "Tempat",
@@ -1429,7 +1445,7 @@
   },
   "facts": {
     "screenTitle": "Fakta",
-    "screenSubtitle": "Mera memilih berita Anda dari ini. Setiap item menunjukkan jumlah topiknya. Ketuk satu untuk melihat topik dan ceritanya.",
+    "screenSubtitle": "Profil Anda untuk hal-hal yang berdampak pada Anda. Selebihnya, cukup ikuti. Ketuk sebuah fakta untuk melihat topik dan ceritanya.",
     "addFact": "Tambah fakta",
     "page": {
       "edit": "Ubah",
@@ -1438,7 +1454,7 @@
       "impactfulHint": "Cerita yang Mera pilih untuk Anda karena fakta ini.",
       "menuA11y": "Ubah atau hapus fakta ini",
       "new": "Baru",
-      "nextInterest": "Minat berikutnya",
+      "nextInterest": "Fakta berikutnya",
       "reach_one": "{{count}} cerita dalam 48 jam terakhir",
       "reach_other": "{{count}} cerita dalam 48 jam terakhir",
       "recentTab": "Artikel terbaru",
@@ -1547,10 +1563,7 @@
     "meraButtonHint": "Pilih warna tombol Mera yang mengambang. Warnanya tetap sama di mode terang dan mode gelap."
   },
   "freeTier": {
-    "seePlans": "Lihat paket",
-    "storiesNotice": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
-    "trackBody": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
-    "trackTitle": "Pelacakan cerita memerlukan paket"
+    "seePlans": "Lihat paket"
   },
   "factCheck": {
     "actionA11y": "Cari pemeriksaan fakta yang dipublikasikan pada cerita ini",
@@ -1710,11 +1723,11 @@
     "chapters": {
       "facts": {
         "title": "Fakta Anda membentuk feed Anda",
-        "subtitle": "Beri tahu Mera tentang hidup Anda. Ini melakukan sisanya.",
+        "subtitle": "Profil Anda untuk hal-hal yang berdampak pada Anda. Selebihnya, cukup ikuti.",
         "slides": {
           "a-fact-is": {
             "headline": "Fakta adalah satu baris yang benar",
-            "body": "\"Saya seorang perawat.\" \"Saya tinggal di Utrecht.\" \"Saya punya anak kecil.\" Pendek, benar, tentang hidup Anda. Itulah ide seluruhnya.",
+            "body": "Profil Anda untuk hal-hal yang berdampak pada Anda, jadi fakta adalah satu baris benar tentang hidup Anda. “Saya perawat.” “Saya tinggal di Utrecht.” “Saya punya anak kecil.” Singkat dan benar. Itulah seluruh idenya.",
             "ask": "Apa yang dihitung sebagai fakta di Mera?"
           },
           "where-from": {
@@ -1728,7 +1741,7 @@
           },
           "to-topics": {
             "headline": "Fakta menjadi hal-hal untuk dicari",
-            "body": "\"Saya seorang perawat\" berubah menjadi beberapa frasa pencarian: staf rumah sakit, gaji perawat, kebijakan kesehatan. Satu fakta terbentang menjadi segelintir. Frasa-frasa itu adalah apa yang keluar untuk menemukan berita."
+            "body": "“Saya perawat” berubah menjadi frasa pencarian: staf rumah sakit, gaji perawat, kebijakan kesehatan. Frasa itu dikirim untuk mencari berita. Lalu AI Mera membaca hasilnya terhadap fakta Anda dan menghitung dampaknya bagi Anda."
           },
           "sort-them": {
             "headline": "Mana yang merupakan fakta?",
@@ -1752,12 +1765,12 @@
             "ask": "Bagaimana cara saya mengubah seberapa penting salah satu fakta saya?"
           },
           "your-profile": {
-            "body": "Semua yang Mera gunakan untuk memilih berita Anda, di satu tempat. Ketuk masing-masing.",
+            "body": "Semua yang dipakai Mera untuk menemukan apa yang berdampak pada Anda, di satu tempat. Ketuk masing-masing.",
             "headline": "Profil Anda",
             "reveal": {
               "facts": {
                 "label": "Fakta",
-                "text": "Fakta-fakta benar tentang hidup Anda. Setiap fakta menemukan topiknya sendiri."
+                "text": "Baris yang benar tentang hal yang berdampak pada Anda. Setiap fakta menemukan topiknya sendiri."
               },
               "places": {
                 "label": "Tempat",
@@ -1770,6 +1783,20 @@
               "sources": {
                 "label": "Sumber",
                 "text": "Publikasi yang ingin Anda lihat lebih banyak atau lebih sedikit, dan yang Anda bayar."
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "Profil Anda untuk hal-hal yang berdampak pada Anda. Selebihnya, cukup ikuti.",
+            "headline": "Profil atau cerita?",
+            "reveal": {
+              "follow": {
+                "label": "Saya suka Formula 1",
+                "text": "Ini tidak berdampak pada Anda, jadi cukup ikuti saja. Mengikuti gratis dan tanpa batas, dan tidak ada AI yang membaca cerita yang diikuti."
+              },
+              "profile": {
+                "label": "Saya akan ke Monako",
+                "text": "Ini berdampak pada Anda, jadi masuk ke profil Anda. AI Mera membaca berita terhadapnya dan menghitung dampaknya pada perjalanan Anda."
               }
             }
           }
@@ -1837,17 +1864,14 @@
                 "label": "Umpan",
                 "text": "Tombol Mera bergerak saat Mera membaca dan diam di waktu lainnya. Itu satu-satunya tanda bahwa sesuatu sedang diambil."
               },
-              "dashboard": {
-                "label": "Minat",
-                "text": "Hari yang sama diurutkan berdasarkan minat, dengan satu bagian untuk setiap hal yang Anda katakan kepada Mera dan berita yang belum dibaca di urutan pertama. Bagian diurutkan ulang saat Anda meninggalkan halaman, atau setiap 10 menit."
-              },
+              "dashboard": {},
               "continuous": {
                 "label": "Feed berkelanjutan",
                 "text": "Ikon Mera di bagian atas berubah warna saat Mera membaca dan tetap diam di waktu lainnya. Ini satu-satunya tanda bahwa sesuatu sedang diambil."
               },
               "sectioned": {
                 "label": "Feed per bagian",
-                "text": "Cerita yang sama dikelompokkan berdasarkan fakta, satu bagian untuk setiap hal yang Anda beri tahu Mera, dengan cerita yang belum dibaca di urutan pertama."
+                "text": "Cerita yang sama dikelompokkan per fakta, satu bagian untuk setiap fakta di profil Anda, dengan cerita yang belum dibaca di atas."
               }
             }
           }
@@ -1902,7 +1926,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "Bagian tentang Anda disimpan di sini",
-            "body": "Fakta Anda, minat Anda, tempat Anda, dan semua yang telah Anda baca tinggal di ponsel ini. Server Mera tidak menyimpan salinannya, itulah sebabnya keluar akan menghapus profil Anda. Di ponsel baru, Cadangan dapat mengembalikannya."
+            "body": "Fakta Anda, cerita yang Anda ikuti, tempat Anda, dan semua yang sudah Anda baca tersimpan di ponsel ini. Server Mera tidak menyimpan salinannya, itulah sebabnya keluar akun menghapus profil Anda. Di ponsel baru, Cadangan dapat mengembalikannya."
           },
           "what-leaves": {
             "headline": "Apa yang benar-benar keluar",
@@ -1938,8 +1962,8 @@
         "subtitle": "Simpan satu cerita dalam tampilan saat terbuka.",
         "slides": {
           "what-it-is": {
-            "headline": "Untuk cerita yang belum berakhir",
-            "body": "Pemilihan, pengadilan, badai, pengambilalihan. Ikuti sekali dan setiap perkembangan baru berkumpul di satu tempat alih-alih tiba tersebar melalui feed Anda selama tiga minggu."
+            "headline": "Untuk apa pun yang Anda suka",
+            "body": "Sebuah tim, seorang seniman, pemilu, badai. Ikuti sekali, dan artikel baru berkumpul di satu tempat. Mengikuti gratis dan tanpa batas, dan tidak ada AI yang membaca cerita yang diikuti."
           },
           "two-ways-in": {
             "headline": "Dua cara untuk memulai",
@@ -2302,7 +2326,7 @@
             "steps": {
               "0": "Anda mengatakan beberapa hal yang benar tentang hidup Anda.",
               "1": "Mera mengubahnya menjadi hal-hal untuk dicari.",
-              "2": "Ini membaca berita hari itu dan menjaga apa yang cocok."
+              "2": "Membaca berita hari ini dan menyimpan apa yang berdampak pada Anda."
             }
           },
           "matching": {
@@ -2315,7 +2339,7 @@
             "reveal": {
               "about-you": {
                 "label": "Apa yang diketahuinya tentang Anda",
-                "text": "Fakta Anda, minat Anda, dan apa yang telah Anda baca ditulis ke ponsel ini dan tetap di sana. Server Mera tidak menyimpan salinannya."
+                "text": "Fakta Anda, cerita yang Anda ikuti, dan apa yang sudah Anda baca ditulis ke ponsel ini dan tetap di sana. Server Mera tidak menyimpan salinannya."
               },
               "what-leaves": {
                 "label": "Apa yang benar-benar pergi",
@@ -2567,7 +2591,7 @@
   "skillPhrase": {
     "residence": "tempat tinggalmu",
     "work": "pekerjaanmu",
-    "interests": "minatmu",
+    "interests": "yang Anda suka",
     "origin": "asalmu",
     "family": "keluargamu",
     "feedTuning": "feed Anda",
@@ -2767,10 +2791,10 @@
     "tutorials1": "Lihat cara kerja Mera dalam beberapa kartu singkat"
   },
   "interests": {
-    "emptyTitle": "Mera belum tahu minat Anda",
-    "learnAbout": "Pelajari cara menambahkan fakta",
-    "backToInterests": "Kembali ke Minat",
-    "findingStories": "Mera sedang mencari cerita untuk minat ini. Cerita pertama akan muncul di sini dalam beberapa detik."
+    "emptyTitle": "Mera belum mengenal Anda",
+    "learnAbout": "Pelajari apa yang masuk ke profil Anda",
+    "backToInterests": "Kembali ke feed Anda",
+    "findingStories": "Mera sedang mencari cerita untuk fakta ini. Yang pertama akan muncul di sini dalam beberapa detik."
   },
   "world": {
     "gathering": "Mengumpulkan berita hari ini dari {{country}}. Cerita pertama akan muncul dalam beberapa detik.",
@@ -2902,7 +2926,7 @@
       "places": "Tempat",
       "sources": "Sumber",
       "viewAll": "Lihat semua {{count}}",
-      "factsEmpty": "Belum ada. Beri tahu Mera apa yang Anda ikuti dan hasilnya muncul di sini.",
+      "factsEmpty": "Belum ada. Beri tahu Mera tentang hidup Anda dan ini akan muncul di sini.",
       "placesEmpty": "Belum ada tempat",
       "addCity": "Tambah kota",
       "sourcesEmpty": "Tidak ada yang diatur. Mera memperlakukan semua sumber sama.",
@@ -2994,8 +3018,8 @@
     },
     "askNews": "Tanyakan apa saja tentang berita",
     "interest": {
-      "change": "Ubah minat ini",
-      "remove": "Hapus minat ini"
+      "change": "Ubah fakta ini",
+      "remove": "Hapus fakta ini"
     },
     "stories": {
       "follow": "Ikuti cerita",
@@ -3018,7 +3042,7 @@
     },
     "sources": {
       "whoBehind": "Tanyakan siapa di balik sebuah publikasi",
-      "whatFollow": "Beri tahu Mera apa yang Anda ikuti"
+      "whatFollow": "Beri tahu Mera apa yang Anda suka baca"
     },
     "settings": {
       "whatCanYouDo": "Apa yang bisa Anda lakukan?"
@@ -3030,19 +3054,18 @@
     "moveBottomLeft": "Pindahkan ke kiri bawah",
     "moveBottomRight": "Pindahkan ke kanan bawah",
     "answerReady": "Mera, jawaban sudah siap",
-    "tooltipNew": "Beri tahu Mera apa yang kamu suka",
+    "tooltipNew": "Beri tahu Mera tentang Anda",
     "working": "Mera sedang mengerjakan permintaan Anda"
   },
   "meraIntro": {
-    "feed": "Anda sedang di Feed. Beri tahu saya berita apa yang ingin Anda baca lebih banyak, atau tanyakan apa saja tentang berita.",
-    "interests": "Ini minat Anda. Beri tahu saya yang baru, atau yang ingin Anda ubah atau hapus.",
-    "interest": "Halaman ini mengikuti salah satu minat Anda. Anda bisa mengubah atau menghapusnya di sini.",
+    "feed": "Anda sedang di Feed. Beri tahu saya apa yang berdampak pada Anda, sebutkan sesuatu untuk diikuti, atau tanyakan apa saja tentang berita.",
+    "interest": "Halaman ini menampilkan salah satu fakta Anda. Anda bisa mengubah atau menghapusnya di sini.",
     "world": "Tanyakan tentang sebuah berita utama, atau sebutkan negara yang ingin Anda ikuti beritanya.",
     "checks": "Sebutkan klaim yang pernah Anda lihat dan saya akan mencarinya di web.",
     "checksNoWeb": "Pencarian web di chat sedang nonaktif, jadi saya tidak bisa mencari klaim saat ini. Anda bisa mengaktifkannya di Pengaturan.",
-    "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang suka Anda baca.",
+    "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang ingin Anda ikuti.",
     "facts": "Anda sedang melihat fakta Anda. Apa yang ingin Anda ubah?",
-    "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti.",
+    "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang ingin Anda ikuti.",
     "settings": "Tanyakan kepada saya apa yang bisa saya lakukan, atau bagaimana Mera menangani data Anda.",
     "onDevice": {
       "feed": "Kamu ada di Feed. Beri tahu aku apa yang suka kamu ikuti, dan aku akan menyesuaikan yang muncul di sini.",
@@ -3052,8 +3075,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "Ubah minat saya \"{{statement}}\" menjadi ",
-    "removeInterest": "Hapus minat saya \"{{statement}}\"",
+    "changeInterest": "Ubah fakta saya “{{statement}}” menjadi ",
+    "removeInterest": "Hapus fakta saya “{{statement}}”",
     "followStory": "Beri saya kabar terbaru tentang "
   },
   "appLock": {

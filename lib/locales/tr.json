@@ -183,7 +183,7 @@
     "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
     "forYouTitle": "Sizin için",
     "newStoriesBelowA11y": "Aşağıda yeni haberler",
-    "noFactsBody": "Takip ettiklerinizi Mera'ya anlatmak için Mera düğmesine dokunun. Mera bunu akışınıza dönüştürür.",
+    "noFactsBody": "Mera düğmesine dokunup hayatınızı anlatın. Sizi ilgilendiren haberleri Mera bulur.",
     "noteWait": "Mera nedenini yazarken lütfen bekleyin.",
     "opened": "Açıldı",
     "statsSyncAnalysing_one": "{{formatted}} makale senin için analiz ediliyor,",
@@ -336,10 +336,10 @@
     "close": "Kapat",
     "logoutFailedTitle": "Çıkış Başarısız",
     "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
-    "composerPlaceholder": "Neleri takip etmeyi seversin?",
+    "composerPlaceholder": "Hayatınızı anlatın",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
     "factsCount_other": "Hakkınızda {{count}} bilgi",
-    "noFactsBody": "Mera, yaşadığın yerin haberlerini bulmak için şehrini kullanır. Kendin hakkında daha fazlasını istediğin zaman söyleyebilirsin.",
+    "noFactsBody": "Mera, sizi ilgilendiren haberleri bulmak için şehrinizi kullanır. Hayatınız hakkında istediğiniz zaman daha fazla şey anlatabilirsiniz.",
     "noFactsTitle": "Nerede yaşıyorsun?",
     "noNotifBody": "Haberleriniz hazır olduğunda ya da takip ettiğiniz bir haber değiştiğinde haber almazsınız. Bunları daha sonra Ayarlar'dan açabilirsiniz.",
     "noNotifTitle": "Mera bildirimsiz kullanılsın mı?",
@@ -521,7 +521,7 @@
     "helpModesVerify": "“Tasdiki doğrula”, bulutun gerçek güvenli donanımda çalıştığını ve verilerinin ona göre şifrelendiğini kontrol eder."
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanıp boşalır. Başka hiçbir şey etkilenmez ve sunucu verisine dokunulmaz, çünkü Mera'nın sunucularında bu veri hiç olmadı.",
+    "viewingHistoryModalDescription": "Açtığınız makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki “Okuduğunuz yayınlar” kartı ve yayıncı başına geçmiş boş hâle döner. Okuduğunuz haberler Akışınızda yeniden görünebilir. Başka hiçbir şey etkilenmez ve sunucu verilerine dokunulmaz, çünkü Mera’nın sunucularında bu veriler hiçbir zaman olmadı.",
     "deletedTitle": "Veriler Silindi",
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
@@ -696,7 +696,7 @@
     "replyUnfinished": "Tamamlanmadı"
   },
   "personaChat": {
-    "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nİstediğin kadar paylaş. Bana anlattıkların bu telefonda kalır. Verilerine senden başka kimse erişemez."
+    "introMessage": "Merhaba, ben Mera.\n\nHayatınızı anlatın: nerede yaşıyorsunuz, ne iş yapıyorsunuz, kimleri önemsiyorsunuz. Sizi ilgilendiren haberleri bulacağım. Başka istediğiniz her şeyi hikâye olarak takip edebiliriz.\n\nİstediğiniz kadar ya da az paylaşın. Bana anlattıklarınız bu telefonda kalır. Verilerinize sizden başka kimse erişemez."
   },
   "floatingChat": {
     "close": "Kapat",
@@ -738,7 +738,7 @@
     "factDeleteRemove": "Kaldır",
     "factDeleteKeep": "Tut",
     "factDeleteKept": "Hiçbir şey kaldırılmadı.",
-    "topicsSavedHint": "Konular kaydedildi! Bilgi eklemeye devam edebilir ya da keşfetmeye başlamak için {{close}} simgesine dokunabilirsin.",
+    "topicsSavedHint": "Konular kaydedildi! Hayatınız hakkında daha fazla anlatın ya da keşfetmeye başlamak için {{close}} düğmesine dokunun.",
     "guidelinesAfter": ". Kötüye kullanım fark ederse, bir inceleme isteyene kadar hesabınızı duraklatır.",
     "guidelinesBefore": "Bir kişiyle değil, yapay zeka olan Mera ile konuşuyorsunuz. Mera ",
     "guidelinesLink": "içerik yönergelerine uyar",
@@ -761,7 +761,7 @@
     "chipDontWant": "Bu öneriyi istemiyorum",
     "chipDontWantMessage": "Bu öneriyi istemiyorum. Bunun gibi makaleler almayı bırakmam için neyi değiştirmeliyiz?",
     "chipMoreLikeThis": "Bunun gibi daha fazlasını istiyorum",
-    "chipMoreLikeThisMessage": "Bunun gibi daha fazla makale istiyorum. İlgi alanlarıma ne eklemeliyiz?",
+    "chipMoreLikeThisMessage": "Buna benzer daha fazla makale görmek istiyorum. Profilime bir şey eklemeli miyim, yoksa bunu bir hikâye olarak mı takip etmeliyim?",
     "proposalTitle": "Önerilen değişiklikler",
     "expectedEffects": "Beklenen etki",
     "proposalConfirm": "Evet, yap",
@@ -1040,7 +1040,7 @@
     "timelineLoadFailed": "Bu haber yüklenemedi. Tekrar denemek için aşağı çekin.",
     "deleteFailed": "Bu haberin takibi bırakılamadı. Tekrar dene.",
     "removeFailed": "Bu makale haberden kaldırılamadı. Tekrar dene.",
-    "emptyBodyMera": "Gelişen bir hikayeyi takip edin, Mera onu burada güncel tutsun. Birini takip etmek için Mera düğmesine dokunun.",
+    "emptyBodyMera": "Sevdiğiniz her şeyi takip edin: bir takım, bir sanatçı, uzun süren bir olay. Ücretsiz ve sınırsız, ayrıca hiçbir yapay zeka takip edilen haberleri okumaz. Başlamak için Mera düğmesine dokunun.",
     "followedSince": "{{date}} tarihinden beri takip ediliyor",
     "learnAbout": "Haberler hakkında bilgi edinin",
     "nextNote": "Haber geliştikçe Mera buraya yeni haberler ekler.",
@@ -1077,22 +1077,27 @@
     "wideNetBody": "Mera geniş bir arama yapar, bu yüzden buradaki bazı makaleler haberle yalnızca dolaylı olarak ilgili olabilir. Önemli bir makaleyi kaçırmanızdansa size fazladan bir makale göstermeyi tercih ederiz.",
     "wideNetRemove": "Birini kaldırmak için menüsünü açın ve {{action}} seçeneğini seçin.",
     "wideNetShowLess": "Daha az göster",
-    "composerPlaceholder": "Hangi haberi senin için takip edeyim?",
+    "composerPlaceholder": "Neyi takip etmeliyim?",
     "optionAsWritten": "{{phrase}}, yazdığın gibi",
-    "optionSpellingFixed": "{{phrase}}, yazımı düzeltilmiş"
+    "optionSpellingFixed": "{{phrase}}, yazımı düzeltilmiş",
+    "followCardLine": "Bu takip etmeye değer. İstediklerinizi işaretleyin, yeni makaleler Takip edilen haberler kısmına düşer.",
+    "addToProfile": "Bunun yerine profilime ekle",
+    "impactQuestion": "Eklemeden önce, bu sizi nasıl etkiliyor? Mera’nın yapay zekası, bir makalenin sizin için ne kadar önemli olduğunu bulmak için bunu kullanır. Sizi kişisel olarak etkilemiyorsa, sadece bir haber hikâyesi olarak takip etmenizi öneririm.",
+    "addAnyway": "Yine de ekle",
+    "addedToProfile": "Profilinize eklendi"
   },
   "whatsNew": {
     "gotIt": "Anladım",
     "starterTitle": "Starter bizden",
     "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
     "starterArticlesTitle": "Eşleşen her haber",
-    "starterArticlesBody": "İlgi alanlarınla eşleşen her haber Akışına ulaşır. Mera bunları okur, gürültüyü ayırır ve önemli olanı öne çıkarır.",
-    "starterInterestsTitle": "Tüm ilgi alanlarınız",
-    "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
+    "starterArticlesBody": "Mera, profilinizle eşleşen her makaleyi okur, gürültüyü ayıklar ve sizi ilgilendireni gösterir.",
+    "starterInterestsTitle": "Tüm profiliniz",
+    "starterInterestsBody": "Sizi ilgilendiren her şeyi ekleyin. Mera haberleri her bir gerçeğe karşı karşılaştırır.",
     "starterChatTitle": "Sohbet ve doğruluk kontrolü",
     "starterChatBody": "Herhangi bir haber hakkında Mera'ya sorun ve iddiaları yayımlanmış doğruluk kontrolleriyle karşılaştırın.",
     "starterStoriesTitle": "Takip edilen haberler",
-    "starterStoriesBody": "Bir haberi takip edin, Mera sizin için izlemeyi sürdürsün."
+    "starterStoriesBody": "Sevdiğiniz her şeyi ücretsiz ve sınırsız takip edin. Hiçbir yapay zeka takip edilen haberleri okumaz."
   },
   "notificationCenter": {
     "title": "Bildirimler",
@@ -1103,7 +1108,7 @@
     "settingsLink": "Bildirim ayarları",
     "help": {
       "title": "Bildirimler hakkında",
-      "body": "Mera burada haber akışın hakkında notlar bırakır: istediğin doğruluk kontrolü hazır olduğunda, günlük haber akışı bakımın, ilgi alanlarını düzenlemek ya da toparlamak için ipuçları ve Mera ekibinden sorular. Bunlar yalnızca bu telefonda 90 gün saklanır ve okunmamış bir not varsa bir nokta görünür. Haber uyarıları burada görünmez. Zamanlarını Ayarlar'da, Bildirimler altından ayarlarsın."
+      "body": "Mera burada akışınızla ilgili notlar bırakır: istediğiniz bir doğrulama hazır olduğunda, günlük akış ayarınız, profilinizi düzenleme ya da ayarlama ipuçları ve Mera ekibinin soruları. Bunlar yalnızca bu telefonda 90 gün saklanır ve nokta okunmamış bir şey olduğunu gösterir. Haber uyarıları burada görünmez. Zamanlarını Ayarlar’da, Bildirimler altında belirlersiniz."
     },
     "ageNow": "şimdi",
     "ageMinutes": "{{n}} dk",
@@ -1134,7 +1139,7 @@
   },
   "personaAudit": {
     "title": "Profilinizdeki değişiklikler",
-    "empty": "Henüz değişiklik yok. Mera ilgi alanlarını ayarladıkça, her değişiklik burada görünecek.",
+    "empty": "Henüz değişiklik yok. Mera profilinizi ayarladıkça her değişiklik burada görünür.",
     "revertedBadge": "Geri alındı",
     "revertConfirmTitle": "Bu değişiklik geri alınsın mı?",
     "revertConfirmBody": "Bu, profilini değişiklikten önceki haline geri döndürür.",
@@ -1339,20 +1344,20 @@
     "statusDismissed": "Kapatıldı"
   },
   "hygiene": {
-    "notificationTitle": "İlgi alanların düzenlensin mi?",
+    "notificationTitle": "Profilinizi toparlayalım mı?",
     "notificationBody_one": "Mera profilin için {{count}} temizlik önerisi buldu.",
     "notificationBody_other": "Mera profilin için {{count}} temizlik önerisi buldu.",
     "reviewChip": "İncele",
     "accept": "Kabul et",
     "reject": "Reddet",
-    "effectTooBroad": "Bu ilgi alanının ağırlığını azaltarak daha az alakasız haber çekmesini sağlar.",
+    "effectTooBroad": "Bu gerçeğin ağırlığını düşürür, böylece konu dışı daha az haber getirir.",
     "effectStaleTopic": "Bu sessiz konuyu emekliye ayırır.",
     "effectStaleFact": "Bu bilgiyi kaldırır: konularından hiçbiri artık aktif değil.",
     "appliedTitle": "Temizlik uygulandı",
     "appliedBody": "Profilin düzenlendi. İncelemek için değişiklik günlüğüne bak.",
     "applyFailedTitle": "Temizlik uygulanamadı",
     "applyFailedBody": "Lütfen daha sonra tekrar dene.",
-    "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir.",
+    "effectIncoherentTopics": "Bu konuları, bu gerçek için daha uygun olanlarla değiştirir.",
     "effectLocationConflict": "Yeni yeri tutar, eskisini kaldırır.",
     "keepBoth": "İkisini de tut",
     "merge": "Birleştir",
@@ -1370,8 +1375,19 @@
       "tooBroad": "{{fact}} çok geniş",
       "staleTopic": "{{topic}} haftalardır sessiz",
       "incoherentTopics_one": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}",
-      "incoherentTopics_other": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}"
-    }
+      "incoherentTopics_other": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}",
+      "followInsteadFlood": "“{{topic}}” akışınızı dolduruyor. Bunu bir hikâye olarak takip edelim mi?",
+      "followInsteadNoStake": "{{topic}} ile ilgili çok haber var, ama hiçbiri sizin için bir şey değiştirmiyor, bu yüzden Akışınız bunları atlıyor. Hepsini görmek için bir hikâye olarak takip etmek ister misiniz?"
+    },
+    "titleFollowInstead": "Takip edilecek bir hikâye",
+    "effectFollowInstead": "Takip edilen haberler ücretsizdir ve hiçbir yapay zeka onları okumaz.",
+    "keepFact": "Gerçek olarak tut",
+    "followInsteadTopicMoves": "{{topic}} ile ilgili yeni makaleler, Akışınız yerine Takip edilen haberler kısmına gidecek.",
+    "followInsteadFactGoes": "{{fact}} profilinizden çıkacak ve bu geri alınamaz. {{topic}} ile ilgili yeni makaleler Takip edilen haberler kısmına gidecek.",
+    "followInsteadDoneTitle": "{{topic}} takip ediliyor",
+    "followInsteadDoneBody": "Yeni makaleler Takip edilen haberler kısmına düşer.",
+    "followInsteadNotificationTitle": "Takip edilecek bir hikâye",
+    "followInsteadNotificationBody": "Mera, Takip edilen haberlere uygun bir şey buldu."
   },
   "locations": {
     "title": "Yerler",
@@ -1450,7 +1466,7 @@
   },
   "facts": {
     "screenTitle": "Bilgilerin",
-    "screenSubtitle": "Mera haberlerinizi bunlardan seçer. Her biri kaç konusu olduğunu gösterir. Konularını ve haberlerini görmek için birine dokunun.",
+    "screenSubtitle": "Profiliniz sizi ilgilendirenler içindir. Gerisi için takip etmeniz yeterli. Konularını ve haberlerini görmek için bir gerçeğe dokunun.",
     "addFact": "Bilgi ekle",
     "page": {
       "edit": "Düzenle",
@@ -1459,7 +1475,7 @@
       "impactfulHint": "Bu bilgi yüzünden sizin için seçilen haberler.",
       "menuA11y": "Bu bilgiyi düzenle ya da sil",
       "new": "Yeni",
-      "nextInterest": "Sonraki ilgi alanı",
+      "nextInterest": "Sonraki gerçek",
       "reach_one": "Son 48 saatte {{count}} haber",
       "reach_other": "Son 48 saatte {{count}} haber",
       "recentTab": "Son makaleler",
@@ -1568,10 +1584,7 @@
     "meraButtonHint": "Yüzen Mera düğmesinin rengini seçin. Açık ve koyu modda aynı kalır."
   },
   "freeTier": {
-    "seePlans": "Planları görün",
-    "storiesNotice": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
-    "trackBody": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
-    "trackTitle": "Haber takibi bir plan ile birlikte geliyor"
+    "seePlans": "Planları görün"
   },
   "factCheck": {
     "actionA11y": "Bu haber hakkında yayımlanmış doğruluk kontrolleri ara",
@@ -1732,11 +1745,11 @@
     "chapters": {
       "facts": {
         "title": "Gerçekleriniz akışınızı şekillendiriyor",
-        "subtitle": "Mera'ya yaşamın hakkında söyle. Geri kalanını o hallediyor.",
+        "subtitle": "Profiliniz sizi ilgilendirenler içindir. Gerisi için takip etmeniz yeterli.",
         "slides": {
           "a-fact-is": {
             "headline": "Gerçek bir doğru satır",
-            "body": "\"Ben hemşireyim.\" \"Utrecht'te yaşıyorum.\" \"Küçük bir çocuğum var.\" Kısa, doğru, yaşamınızla ilgili. Tüm fikir budur.",
+            "body": "Profiliniz sizi ilgilendirenler içindir, bu yüzden bir gerçek, hayatınız hakkında tek satırlık doğru bir cümledir. “Ben hemşireyim.” “Utrecht’te yaşıyorum.” “Küçük bir çocuğum var.” Kısa ve doğru. Bütün fikir bu.",
             "ask": "Mera'da ne gerçek sayılıyor?"
           },
           "where-from": {
@@ -1750,7 +1763,7 @@
           },
           "to-topics": {
             "headline": "Gerçekler aranacak şeyler olur",
-            "body": "\"Ben hemşireyim\" birkaç arama ifadesine dönüşür: hastane personeli, hemşirelik maaşları, sağlık politikası. Bir gerçek bir avuç havaya fan. Bu ifadeler haberleri bulmaya gidenlerin."
+            "body": "“Ben hemşireyim” arama ifadelerine dönüşür: hastane personel ihtiyacı, hemşire maaşları, sağlık politikası. Bu ifadeler haber aramaya gider. Sonra Mera’nın yapay zekası, geri gelenleri gerçeklerinizle karşılaştırır ve sizin üzerindeki etkisini çıkarır."
           },
           "sort-them": {
             "headline": "Bunlardan hangisi gerçek?",
@@ -1774,12 +1787,12 @@
             "ask": "Gerçeklerinden birinin ne kadar önemli olduğunu nasıl değiştirebilirim?"
           },
           "your-profile": {
-            "body": "Mera'nın haberlerinizi seçmek için kullandığı her şey tek yerde. Her birine dokunun.",
+            "body": "Mera’nın sizi ilgilendireni bulmak için kullandığı her şey tek bir yerde. Her birine dokunun.",
             "headline": "Profiliniz",
             "reveal": {
               "facts": {
                 "label": "Bilgiler",
-                "text": "Hayatınız hakkındaki doğru bilgiler. Her biri kendi konularını bulur."
+                "text": "Sizi ilgilendiren doğru cümleler. Her biri kendi konularını bulur."
               },
               "places": {
                 "label": "Yerler",
@@ -1792,6 +1805,20 @@
               "sources": {
                 "label": "Kaynaklar",
                 "text": "Daha fazla ya da daha az görmek istediğiniz yayınlar ve ödediğiniz yayınlar."
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "Profiliniz sizi ilgilendirenler içindir. Gerisi için takip etmeniz yeterli.",
+            "headline": "Profil mi, hikâye mi?",
+            "reveal": {
+              "follow": {
+                "label": "Formula 1’i severim",
+                "text": "Sizi ilgilendirmiyor, bu yüzden sadece takip edin. Takip etmek ücretsiz ve sınırsız, ayrıca hiçbir yapay zeka takip edilen haberleri okumaz."
+              },
+              "profile": {
+                "label": "Monaco’ya gidiyorum",
+                "text": "Bu sizi ilgilendiriyor, bu yüzden profilinize girer. Mera’nın yapay zekası haberleri buna göre okur ve gezinize etkisini çıkarır."
               }
             }
           }
@@ -1859,17 +1886,14 @@
                 "label": "Akış",
                 "text": "Mera düğmesi, Mera okurken hareket eder ve geri kalan zamanda sabit durur. Bir şeyin getirildiğini gösteren tek işaret budur."
               },
-              "dashboard": {
-                "label": "İlgi alanları",
-                "text": "Aynı gün, ilgi alanlarına göre sıralanır. Mera'ya söylediğiniz her şey için bir bölüm vardır ve okunmamış haberler en başta gelir. Bölümler sayfadan çıktığınızda ya da her 10 dakikada bir yeniden sıralanır."
-              },
+              "dashboard": {},
               "continuous": {
                 "label": "Sürekli akış",
                 "text": "Mera okurken üstteki Mera simgesi renk değiştirir, geri kalan zamanda sabit durur. Bir şeyin getirildiğini gösteren tek işaret budur."
               },
               "sectioned": {
                 "label": "Bölümlü akış",
-                "text": "Aynı haberler bilgiye göre gruplanır, size söylediğiniz her şey için bir bölüm vardır ve okunmamış haberler önce gelir."
+                "text": "Aynı haberler gerçeğe göre gruplanmış: profilinizdeki her gerçek için bir bölüm, okunmamış haberler önce."
               }
             }
           }
@@ -1924,7 +1948,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "Senin hakkındaki kısım burada tutulur",
-            "body": "Gerçeklerin, ilgi alanların, yerlerin ve okuduğun her şey bu telefonda durur. Mera'nın sunucuları bunun bir kopyasını tutmaz, bu yüzden çıkış yapmak profilini siler. Yeni bir telefonda Yedekleme onu geri getirebilir."
+            "body": "Gerçekleriniz, takip ettiğiniz haberler, yerleriniz ve okuduğunuz her şey bu telefonda durur. Mera’nın sunucularında kopya tutulmaz; bu yüzden oturumu kapatmak profilinizi siler. Yeni bir telefonda Yedekleme profilinizi geri getirebilir."
           },
           "what-leaves": {
             "headline": "Aslında ne gidiyor",
@@ -1960,8 +1984,8 @@
         "subtitle": "Açılırken bir hikayeyi görünümde tut.",
         "slides": {
           "what-it-is": {
-            "headline": "Bitmeyen hikayeler için",
-            "body": "Seçim, dava, fırtına, devralmak. Bir kez takip edin ve her yeni gelişme üç haftada dağınık akıştan geçen bir yerde toplanır."
+            "headline": "Sevdiğiniz diğer her şey için",
+            "body": "Bir takım, bir sanatçı, bir seçim, bir fırtına. Bir kez takip edin, yeni makaleler tek bir yerde toplansın. Takip etmek ücretsiz ve sınırsız, ayrıca hiçbir yapay zeka takip edilen haberleri okumaz."
           },
           "two-ways-in": {
             "headline": "Başlamak için iki yol",
@@ -2324,7 +2348,7 @@
             "steps": {
               "0": "Yaşamın hakkında birkaç gerçek şeyi söylüyorsun.",
               "1": "Mera onları aranacak şeyler halinde dönüştürüyor.",
-              "2": "Günün haberlerini okur ve uyuşanları tutar."
+              "2": "Günün haberlerini okur ve sizi ilgilendireni tutar."
             }
           },
           "matching": {
@@ -2337,7 +2361,7 @@
             "reveal": {
               "about-you": {
                 "label": "Senin hakkında ne biliyor",
-                "text": "Gerçeklerin, ilgi alanların ve okuduklarının hepsi bu telefona yazılır ve orada kalır. Mera'nın sunucuları bunların bir kopyasını tutmaz."
+                "text": "Gerçekleriniz, takip ettiğiniz haberler ve okuduklarınız bu telefona yazılır ve orada kalır. Mera’nın sunucularında bunların kopyası tutulmaz."
               },
               "what-leaves": {
                 "label": "Aslında ne ayrılıyor",
@@ -2589,7 +2613,7 @@
   "skillPhrase": {
     "residence": "yaşadığın yeri",
     "work": "işini",
-    "interests": "ilgi alanlarını",
+    "interests": "sevdiklerinizi",
     "origin": "nereli olduğunu",
     "family": "aileni",
     "feedTuning": "akışını",
@@ -2789,10 +2813,10 @@
     "tutorials1": "Mera'nın nasıl çalıştığını birkaç kısa slaytta görün"
   },
   "interests": {
-    "emptyTitle": "Mera ilgi alanlarınızı henüz bilmiyor",
-    "learnAbout": "Bilgi eklemeyi öğrenin",
-    "backToInterests": "İlgi alanlarına dön",
-    "findingStories": "Mera bu ilgi alanı için hikayeler arıyor. İlkleri birkaç saniye içinde burada görünür."
+    "emptyTitle": "Mera sizi henüz tanımıyor",
+    "learnAbout": "Profilinize neyin gireceğini öğrenin",
+    "backToInterests": "Akışınıza dönün",
+    "findingStories": "Mera bu gerçek için haberler buluyor. İlk haberler birkaç saniye içinde burada görünür."
   },
   "world": {
     "gathering": "{{country}} ülkesinin bugünkü haberleri toplanıyor. İlk hikayeler birkaç saniye içinde görünür.",
@@ -2925,7 +2949,7 @@
       "places": "Yerler",
       "sources": "Kaynaklar",
       "viewAll": "{{count}} öğenin tümünü gör",
-      "factsEmpty": "Henüz yok. Mera'ya neyi takip ettiğinizi söyleyin, burada görünsün.",
+      "factsEmpty": "Henüz bir şey yok. Mera’ya hayatınızı anlatın, burada görünsün.",
       "placesEmpty": "Henüz yer yok",
       "addCity": "Şehir ekle",
       "sourcesEmpty": "Hiçbiri ayarlanmadı. Mera tüm kaynaklara aynı davranır.",
@@ -3017,8 +3041,8 @@
     },
     "askNews": "Haberlerdeki herhangi bir şeyi sorun",
     "interest": {
-      "change": "Bu ilgi alanını değiştir",
-      "remove": "Bu ilgi alanını kaldır"
+      "change": "Bu gerçeği değiştir",
+      "remove": "Bu gerçeği kaldır"
     },
     "stories": {
       "follow": "Bir hikayeyi takip et",
@@ -3041,7 +3065,7 @@
     },
     "sources": {
       "whoBehind": "Bir yayının arkasında kimin olduğunu sorun",
-      "whatFollow": "Mera'ya neyi takip ettiğinizi söyleyin"
+      "whatFollow": "Mera’ya ne okumayı sevdiğinizi anlatın"
     },
     "settings": {
       "whatCanYouDo": "Neler yapabilirsiniz?"
@@ -3053,19 +3077,18 @@
     "moveBottomLeft": "Sol alta taşı",
     "moveBottomRight": "Sağ alta taşı",
     "answerReady": "Mera, bir yanıt hazır",
-    "tooltipNew": "Mera'ya neleri sevdiğini söyle",
+    "tooltipNew": "Mera’ya kendinizi anlatın",
     "working": "Mera isteğiniz üzerinde çalışıyor"
   },
   "meraIntro": {
-    "feed": "Akışınızdasınız. Daha fazla hangi haberi istediğinizi söyleyin ya da haberlerle ilgili her şeyi sorun.",
-    "interests": "Bunlar ilgi alanlarınız. Bana yeni bir tane söyleyin veya değiştirmek ya da kaldırmak istediğinizi.",
-    "interest": "Bu sayfa ilgi alanlarınızdan birini takip ediyor. Burada değiştirebilir veya kaldırabilirsiniz.",
+    "feed": "Akışınızdasınız. Sizi neyin ilgilendirdiğini anlatın, takip edilecek bir şey söyleyin ya da haberlerle ilgili her şeyi sorun.",
+    "interest": "Bu sayfa gerçeklerinizden birini gösteriyor. Bunu burada değiştirebilir ya da kaldırabilirsiniz.",
     "world": "Bana bir manşeti sorun veya haber istediğiniz bir ülkeyi söyleyin.",
     "checks": "Gördüğünüz bir iddiayı söyleyin, ben de web'de arayayım.",
     "checksNoWeb": "Sohbette web araması kapalı, bu yüzden şu an iddiaları arayamıyorum. Bunu Ayarlar'dan açabilirsiniz.",
-    "library": "Bana haberlerdeki herhangi bir şeyi sorun veya ne okumayı sevdiğinizi söyleyin.",
+    "library": "Haberlerle ilgili istediğinizi sorun ya da neyi takip etmek istediğinizi söyleyin.",
     "facts": "Gerçeklerinize bakıyorsunuz. Neyi değiştirmek istersiniz?",
-    "sources": "Bana bir yayını sorun veya neyi takip ettiğinizi söyleyin.",
+    "sources": "Bir yayın hakkında sorun ya da neyi takip etmek istediğinizi söyleyin.",
     "settings": "Neler yapabileceğimi ya da Mera'nın verilerinizi nasıl ele aldığını sorun.",
     "onDevice": {
       "feed": "Akışındasın. Neleri takip etmeyi sevdiğini söyle, burada görünenleri ona göre ayarlayayım.",
@@ -3075,8 +3098,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "\"{{statement}}\" ilgi alanımı şuna değiştir: ",
-    "removeInterest": "\"{{statement}}\" ilgi alanımı kaldır",
+    "changeInterest": "“{{statement}}” gerçeğimi şuna değiştir: ",
+    "removeInterest": "“{{statement}}” gerçeğimi kaldır",
     "followStory": "Şu konuda beni güncel tut: "
   },
   "appLock": {

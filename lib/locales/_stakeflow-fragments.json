@@ -1,0 +1,3663 @@
+{
+  "_comment": "stake flow: profile vs followed stories.",
+  "en": {
+    "feed": {
+      "noFactsBody": "Tap the Mera button and tell it about your life. It finds the news that affects you."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Follow anything you like: a team, an artist, a long-running story. It's free and unlimited, and no AI reads followed stories. Tap the Mera button to start.",
+      "composerPlaceholder": "What should I keep an eye on?",
+      "followCardLine": "This one is good to follow. Tick what you want and new articles land in Followed stories.",
+      "addToProfile": "Add to my profile instead",
+      "impactQuestion": "Before I add it, how does this affect you? Mera's AI uses this to work out how much an article matters to you. If it doesn't affect you personally, I'd recommend just following it as a story.",
+      "addAnyway": "Add it anyway",
+      "addedToProfile": "Added to your profile"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera reads every article that matches your profile, sets aside the noise and shows you what affects you.",
+      "starterInterestsTitle": "Your whole profile",
+      "starterInterestsBody": "Add everything that affects you. Mera reads the news against every fact.",
+      "starterStoriesBody": "Follow anything you like, free and unlimited. No AI reads followed stories."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera leaves notes here about your feed: a fact check you asked for is ready, your daily feed tune-up, tips to tidy up or tune your profile, and questions from the Mera team. They're kept only on this phone for 90 days, and a dot means something is unread. News alerts don't appear here. You set their times in Settings, under Notifications."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Tell me about your life",
+      "noFactsBody": "Mera uses your city to find news that affects you. You can tell it more about your life anytime."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Stories you've read can show up in your Feed again. Nothing else is affected, and no server data is touched, since Mera's servers never had this data."
+    },
+    "personaChat": {
+      "introMessage": "Hi, I'm Mera.\n\nTell me about your life: where you live, what you do, who you care about. I'll find the news that affects you. Anything else you like, we can follow as stories.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Topics saved! Tell me more about your life, or tap {{close}} to start exploring."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "I want more articles like this one. Should I add something to my profile, or follow it as a story?"
+    },
+    "personaAudit": {
+      "empty": "No changes yet. As Mera tunes your profile, every change shows up here."
+    },
+    "hygiene": {
+      "notificationTitle": "Tidy up your profile?",
+      "effectTooBroad": "Lowers this fact's weight so it pulls in fewer off-topic stories.",
+      "effectIncoherentTopics": "Replaces these topics with better ones for this fact.",
+      "titleFollowInstead": "A story to follow",
+      "effectFollowInstead": "Followed stories are free, and no AI reads them.",
+      "keepFact": "Keep it as a fact",
+      "followInsteadTopicMoves": "New articles on {{topic}} will go to Followed stories instead of your Feed.",
+      "followInsteadFactGoes": "{{fact}} will leave your profile, and you can't undo that. New articles on {{topic}} will go to Followed stories.",
+      "followInsteadDoneTitle": "Following {{topic}}",
+      "followInsteadDoneBody": "New articles land in Followed stories.",
+      "followInsteadNotificationTitle": "A story to follow",
+      "followInsteadNotificationBody": "Mera found something that suits Followed stories.",
+      "summary": {
+        "followInsteadFlood": "\"{{topic}}\" is filling your feed. Follow it as a story instead?",
+        "followInsteadNoStake": "There's a lot of news on {{topic}}, but none of it changes anything for you, so your Feed skips it. Follow it as a story to see it all?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Your profile is for what affects you. Everything else, just follow. Tap a fact to see its topics and stories.",
+      "page": {
+        "nextInterest": "Next fact"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Your profile is for what affects you. Everything else, just follow.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Your profile is for what affects you, so a fact is one true line about your life. \"I am a nurse.\" \"I live in Utrecht.\" \"I have a small child.\" Short and true. That is the whole idea."
+            },
+            "to-topics": {
+              "body": "\"I am a nurse\" turns into search phrases: hospital staffing, nursing pay, health policy. Those phrases go out to find news. Then Mera's AI reads what comes back against your facts and works out the impact on you."
+            },
+            "your-profile": {
+              "body": "Everything Mera uses to find what affects you, in one place. Tap each one.",
+              "reveal": {
+                "facts": {
+                  "text": "True lines about what affects you. Each one finds its own topics."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Your profile is for what affects you. Everything else, just follow.",
+              "headline": "Profile or story?",
+              "reveal": {
+                "follow": {
+                  "label": "I like Formula 1",
+                  "text": "It doesn't affect you, so just follow it. Following is free and unlimited, and no AI reads followed stories."
+                },
+                "profile": {
+                  "label": "I'm going to Monaco",
+                  "text": "This affects you, so it goes in your profile. Mera's AI reads the news against it and works out the impact on your trip."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "The same stories grouped by fact, one section for each fact in your profile, with unread stories first."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Your facts, the stories you follow, your places and everything you have read live on this phone. Mera's servers keep no copy, which is why signing out erases your profile. On a new phone, Backup can bring it back."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "For anything else you like",
+              "body": "A team, an artist, an election, a storm. Follow it once and new articles gather in one place. Following is free and unlimited, and no AI reads followed stories."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "It reads the day's news and keeps what affects you."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Your facts, the stories you follow and what you have read are written to this phone and stay there. Mera's servers keep no copy of them."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "what you like"
+    },
+    "interests": {
+      "emptyTitle": "Mera doesn't know about you yet",
+      "learnAbout": "Learn what goes in your profile",
+      "backToInterests": "Back to your Feed",
+      "findingStories": "Mera is finding stories for this fact. The first ones appear here in a few seconds."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Nothing yet. Tell Mera about your life and it shows up here."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Change this fact",
+        "remove": "Remove this fact"
+      },
+      "sources": {
+        "whatFollow": "Tell Mera what you like to read"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Tell Mera about you"
+    },
+    "meraIntro": {
+      "feed": "You're on your Feed. Tell me what affects you, name something to follow, or ask me anything in the news.",
+      "interest": "This page shows one of your facts. You can change it or remove it here.",
+      "library": "Ask me about anything in the news, or tell me what you'd like to follow.",
+      "sources": "Ask me about a publication, or tell me what you'd like to follow."
+    },
+    "meraDraft": {
+      "changeInterest": "Change my fact \"{{statement}}\" to ",
+      "removeInterest": "Remove my fact \"{{statement}}\""
+    }
+  },
+  "ar": {
+    "feed": {
+      "noFactsBody": "اضغط على زر ميرا وأخبره عن حياتك. سيجد الأخبار التي تؤثر فيك."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "تابع أي شيء تحبه: فريقًا، أو فنانًا، أو قصةً طويلة الأمد. المتابعة مجانية وغير محدودة، ولا يقرأ الذكاء الاصطناعي القصص المتابَعة. اضغط على زر ميرا للبدء.",
+      "composerPlaceholder": "ما الذي عليّ متابعته؟",
+      "followCardLine": "هذه القصة تستحق المتابعة. حدّد ما تريده، وستصل المقالات الجديدة إلى القصص المتابَعة.",
+      "addToProfile": "أضفه إلى ملفي الشخصي بدلًا من ذلك",
+      "impactQuestion": "قبل أن أضيفه، كيف يؤثر فيك؟ يستخدم الذكاء الاصطناعي لدى ميرا هذا ليعرف مدى أهمية المقال بالنسبة إليك. إذا لم يؤثر فيك شخصيًا، فأنصحك بمتابعته كقصة فقط.",
+      "addAnyway": "أضفه على أي حال",
+      "addedToProfile": "أُضيف إلى ملفك الشخصي"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "يقرأ ميرا كل مقال يطابق ملفك الشخصي، ويستبعد الضجيج، ويعرض لك ما يؤثر فيك.",
+      "starterInterestsTitle": "ملفك الشخصي كاملًا",
+      "starterInterestsBody": "أضف كل ما يؤثر فيك. يقرأ ميرا الأخبار في ضوء كل حقيقة لديك.",
+      "starterStoriesBody": "تابع أي شيء تحبه، مجانًا وبلا حدود. لا يقرأ الذكاء الاصطناعي القصص المتابَعة."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "يترك ميرا هنا ملاحظات عن خلاصتك: فحص حقيقة طلبته أصبح جاهزًا، ومراجعة يومية لخلاصتك، ونصائح لترتيب ملفك الشخصي وضبطه، وأسئلة من فريق ميرا. تُحفظ على هذا الهاتف فقط لمدة 90 يومًا، والنقطة تعني أن هناك شيئًا لم تقرأه. لا تظهر تنبيهات الأخبار هنا. تضبط أوقاتها في الإعدادات، ضمن الإشعارات."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "أخبرني عن حياتك",
+      "noFactsBody": "يستخدم ميرا مدينتك للعثور على أخبار تؤثر فيك. يمكنك أن تخبره بالمزيد عن حياتك في أي وقت."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "يمسح السجل المحلي للمقالات التي فتحتها. ستعود بطاقة “الصحف التي تقرأها” في تبويب المصادر، وسجل كل صحيفة، إلى الفراغ. قد تظهر القصص التي قرأتها في خلاصتك من جديد. لا يتأثر شيء آخر، ولا تُمسّ أي بيانات على الخوادم، لأن خوادم ميرا لم تحتفظ بهذه البيانات أصلًا."
+    },
+    "personaChat": {
+      "introMessage": "أهلًا، أنا ميرا.\n\nأخبرني عن حياتك: أين تعيش، وماذا تعمل، ومن تهتم لأمره. سأجد الأخبار التي تؤثر فيك. وأي شيء آخر تحبه يمكننا متابعته كقصص.\n\nشارك بقدر ما تريد. ما تخبرني به يبقى على هذا الهاتف، ولا يملك أحد حق الوصول إلى بياناتك غيرك."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "حُفظت المواضيع! أخبرني المزيد عن حياتك، أو اضغط {{close}} لبدء الاستكشاف."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "أريد مقالات أكثر مثل هذا. هل أضيف شيئًا إلى ملفي الشخصي، أم أتابعه كقصة؟"
+    },
+    "personaAudit": {
+      "empty": "لا توجد تغييرات بعد. عندما يضبط ميرا ملفك الشخصي، ستظهر كل تغييرات هنا."
+    },
+    "hygiene": {
+      "notificationTitle": "هل تريد ترتيب ملفك الشخصي؟",
+      "effectTooBroad": "يخفّض وزن هذه الحقيقة حتى تجذب قصصًا أقل خارج الموضوع.",
+      "effectIncoherentTopics": "يستبدل هذه المواضيع بمواضيع أفضل لهذه الحقيقة.",
+      "titleFollowInstead": "قصة للمتابعة",
+      "effectFollowInstead": "القصص المتابَعة مجانية، ولا يقرأها الذكاء الاصطناعي.",
+      "keepFact": "أبقها حقيقة",
+      "followInsteadTopicMoves": "ستذهب المقالات الجديدة عن {{topic}} إلى القصص المتابَعة بدلًا من خلاصتك.",
+      "followInsteadFactGoes": "ستخرج {{fact}} من ملفك الشخصي، ولا يمكن التراجع عن ذلك. ستذهب المقالات الجديدة عن {{topic}} إلى القصص المتابَعة.",
+      "followInsteadDoneTitle": "متابعة {{topic}}",
+      "followInsteadDoneBody": "تصل المقالات الجديدة إلى القصص المتابَعة.",
+      "followInsteadNotificationTitle": "قصة للمتابعة",
+      "followInsteadNotificationBody": "وجد ميرا شيئًا يناسب القصص المتابَعة.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” يملأ خلاصتك. هل تتابعه كقصة بدلًا من ذلك؟",
+        "followInsteadNoStake": "هناك أخبار كثيرة عن {{topic}}، لكن لا شيء منها يغيّر شيئًا بالنسبة إليك، لذلك تتخطاه خلاصتك. هل تتابعه كقصة لترى كل ما فيه؟"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "ملفك الشخصي للأشياء التي تؤثر فيك. وكل ما عدا ذلك، تابعه فقط. اضغط على حقيقة لترى مواضيعها وقصصها.",
+      "page": {
+        "nextInterest": "الحقيقة التالية"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "ملفك الشخصي للأشياء التي تؤثر فيك. وكل ما عدا ذلك، تابعه فقط.",
+          "slides": {
+            "a-fact-is": {
+              "body": "ملفك الشخصي للأشياء التي تؤثر فيك، لذلك فالحقيقة سطر واحد صادق عن حياتك. “أنا ممرضة.” “أعيش في أوترخت.” “لدي طفل صغير.” قصير وصادق. هذه هي الفكرة كلها."
+            },
+            "to-topics": {
+              "body": "“أنا ممرضة” تتحول إلى عبارات بحث: نقص الكوادر في المستشفيات، ورواتب الممرضات، وسياسات الصحة. تُرسل هذه العبارات للعثور على الأخبار. ثم يقرأ الذكاء الاصطناعي لدى ميرا ما يعود منها في ضوء حقائقك، ويحسب أثره عليك."
+            },
+            "your-profile": {
+              "body": "كل ما يستخدمه ميرا للعثور على ما يؤثر فيك، في مكان واحد. اضغط على كل عنصر.",
+              "reveal": {
+                "facts": {
+                  "text": "حقائق صادقة عمّا يؤثر فيك. كل واحدة تعثر على مواضيعها الخاصة."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "ملفك الشخصي للأشياء التي تؤثر فيك. وكل ما عدا ذلك، تابعه فقط.",
+              "headline": "ملف شخصي أم قصة؟",
+              "reveal": {
+                "follow": {
+                  "label": "أحب فورمولا 1",
+                  "text": "لا يؤثر فيك، لذا تابعه فقط. المتابعة مجانية وغير محدودة، ولا يقرأ الذكاء الاصطناعي القصص المتابَعة."
+                },
+                "profile": {
+                  "label": "سأسافر إلى موناكو",
+                  "text": "هذا يؤثر فيك، لذلك يدخل ملفك الشخصي. يقرأ الذكاء الاصطناعي لدى ميرا الأخبار في ضوئه، ويحسب أثرها على رحلتك."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "القصص نفسها مجمّعة حسب الحقيقة، بقسم لكل حقيقة في ملفك الشخصي، مع وضع القصص غير المقروءة أولًا."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "حقائقك، والقصص التي تتابعها، وأماكنك، وكل ما قرأته، تعيش على هذا الهاتف. لا تحتفظ خوادم ميرا بنسخة منها، ولهذا يمحو تسجيل الخروج ملفك الشخصي. على هاتف جديد، يمكن للنسخ الاحتياطي أن يعيده."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "لكل ما عدا ذلك مما تحبه",
+              "body": "فريق، أو فنان، أو انتخابات، أو عاصفة. تابعه مرة واحدة، فتتجمع المقالات الجديدة في مكان واحد. المتابعة مجانية وغير محدودة، ولا يقرأ الذكاء الاصطناعي القصص المتابَعة."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "يقرأ أخبار اليوم ويحتفظ بما يؤثر فيك."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "حقائقك، والقصص التي تتابعها، وما قرأته، تُكتب على هذا الهاتف وتبقى فيه. لا تحتفظ خوادم ميرا بنسخة منها."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "ما تحبه"
+    },
+    "interests": {
+      "emptyTitle": "ميرا لا يعرف عنك شيئًا بعد",
+      "learnAbout": "تعرّف على ما يدخل ملفك الشخصي",
+      "backToInterests": "العودة إلى خلاصتك",
+      "findingStories": "يبحث ميرا عن قصص لهذه الحقيقة. ستظهر الأولى هنا خلال ثوانٍ."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "لا شيء بعد. أخبر ميرا عن حياتك وسيظهر هنا."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "غيّر هذه الحقيقة",
+        "remove": "احذف هذه الحقيقة"
+      },
+      "sources": {
+        "whatFollow": "أخبر ميرا بما تحب قراءته"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "أخبر ميرا عنك"
+    },
+    "meraIntro": {
+      "feed": "أنت في خلاصتك. أخبرني بما يؤثر فيك، أو اذكر شيئًا تريد متابعته، أو اسألني أي شيء عن الأخبار.",
+      "interest": "تعرض هذه الصفحة إحدى حقائقك. يمكنك تغييرها أو حذفها هنا.",
+      "library": "اسألني عن أي شيء في الأخبار، أو أخبرني بما تريد متابعته.",
+      "sources": "اسألني عن صحيفة، أو أخبرني بما تريد متابعته."
+    },
+    "meraDraft": {
+      "changeInterest": "غيّر حقيقتي “{{statement}}” إلى ",
+      "removeInterest": "احذف حقيقتي “{{statement}}”"
+    }
+  },
+  "de": {
+    "feed": {
+      "noFactsBody": "Tippe auf den Mera-Button und erzähl von deinem Leben. Mera findet die Nachrichten, die dich betreffen."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Folge allem, was dir gefällt: einer Band, einem Künstler, einer Geschichte, die lange läuft. Das ist kostenlos und unbegrenzt, und KI liest gefolgte Geschichten nicht. Tippe auf den Mera-Button, um loszulegen.",
+      "composerPlaceholder": "Was soll ich im Auge behalten?",
+      "followCardLine": "Das lohnt sich zu verfolgen. Hake an, was du willst, und neue Artikel landen unter „Gefolgte Geschichten“.",
+      "addToProfile": "Stattdessen zu meinem Profil hinzufügen",
+      "impactQuestion": "Bevor ich es hinzufüge: Wie betrifft dich das? Die KI von Mera nutzt das, um einzuschätzen, wie wichtig ein Artikel für dich ist. Wenn es dich persönlich nicht betrifft, empfehle ich, es einfach als Geschichte zu folgen.",
+      "addAnyway": "Trotzdem hinzufügen",
+      "addedToProfile": "Zu deinem Profil hinzugefügt"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera liest jeden Artikel, der zu deinem Profil passt, lässt das Rauschen weg und zeigt dir, was dich betrifft.",
+      "starterInterestsTitle": "Dein ganzes Profil",
+      "starterInterestsBody": "Füge alles hinzu, was dich betrifft. Mera gleicht die Nachrichten mit jedem Fakt ab.",
+      "starterStoriesBody": "Folge allem, was dir gefällt, kostenlos und unbegrenzt. KI liest gefolgte Geschichten nicht."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera hinterlässt hier Notizen zu deinem Feed: einen Faktencheck, den du angefragt hast, deine tägliche Feed-Pflege, Tipps, um dein Profil aufzuräumen oder abzustimmen, und Fragen des Mera-Teams. Sie werden nur auf diesem Telefon gespeichert, 90 Tage lang, und ein Punkt bedeutet, dass etwas ungelesen ist. Nachrichtenhinweise erscheinen hier nicht. Du legst ihre Zeiten in den Einstellungen unter Benachrichtigungen fest."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Erzähl mir von deinem Leben",
+      "noFactsBody": "Mera nutzt deine Stadt, um Nachrichten zu finden, die dich betreffen. Du kannst jederzeit mehr über dein Leben erzählen."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Löscht das lokale Protokoll der Artikel, die du geöffnet hast. Die Karte „Publikationen, die du gelesen hast“ und der Verlauf pro Publikation werden leer zurückgesetzt. Geschichten, die du gelesen hast, können wieder in deinem Feed auftauchen. Sonst ändert sich nichts, und keine Serverdaten werden angerührt, denn die Server von Mera hatten diese Daten nie."
+    },
+    "personaChat": {
+      "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir von deinem Leben: wo du wohnst, was du machst, wem du nahestehst. Ich finde die Nachrichten, die dich betreffen. Alles andere, was dir gefällt, können wir als Geschichten verfolgen.\n\nTeile so viel oder so wenig, wie du möchtest. Was du mir erzählst, bleibt auf diesem Telefon. Außer dir hat niemand Zugriff auf deine Daten."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Themen gespeichert! Erzähl mir mehr über dein Leben, oder tippe auf {{close}}, um mit dem Entdecken zu beginnen."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Ich möchte mehr Artikel wie diesen. Soll ich etwas zu meinem Profil hinzufügen oder dem Thema als Geschichte folgen?"
+    },
+    "personaAudit": {
+      "empty": "Noch keine Änderungen. Jedes Mal, wenn Mera dein Profil anpasst, erscheint die Änderung hier."
+    },
+    "hygiene": {
+      "notificationTitle": "Dein Profil aufräumen?",
+      "effectTooBroad": "Senkt das Gewicht dieses Fakts, damit weniger themenfremde Geschichten hineingezogen werden.",
+      "effectIncoherentTopics": "Ersetzt diese Themen durch passendere für diesen Fakt.",
+      "titleFollowInstead": "Eine Geschichte zum Folgen",
+      "effectFollowInstead": "Gefolgte Geschichten sind kostenlos, und KI liest sie nicht.",
+      "keepFact": "Als Fakt behalten",
+      "followInsteadTopicMoves": "Neue Artikel zu {{topic}} landen unter Gefolgte Geschichten statt in deinem Feed.",
+      "followInsteadFactGoes": "{{fact}} wird aus deinem Profil entfernt, und das kannst du nicht rückgängig machen. Neue Artikel zu {{topic}} landen unter Gefolgte Geschichten.",
+      "followInsteadDoneTitle": "Du folgst jetzt {{topic}}",
+      "followInsteadDoneBody": "Neue Artikel landen unter Gefolgte Geschichten.",
+      "followInsteadNotificationTitle": "Eine Geschichte zum Folgen",
+      "followInsteadNotificationBody": "Mera hat etwas gefunden, das zu deinen gefolgten Geschichten passt.",
+      "summary": {
+        "followInsteadFlood": "„{{topic}}“ füllt gerade deinen Feed. Willst du dem Thema lieber als Geschichte folgen?",
+        "followInsteadNoStake": "Es gibt viele Nachrichten zu {{topic}}, aber keine davon ändert etwas für dich, deshalb überspringt sie dein Feed. Willst du dem Thema als Geschichte folgen, um alles zu sehen?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Dein Profil ist für das, was dich betrifft. Alles andere folgst du einfach. Tippe auf einen Fakt, um seine Themen und Geschichten zu sehen.",
+      "page": {
+        "nextInterest": "Nächster Fakt"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Dein Profil ist für das, was dich betrifft. Alles andere folgst du einfach.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Dein Profil ist für das, was dich betrifft. Ein Fakt ist also ein wahrer Satz über dein Leben. „Ich arbeite in der Pflege.“ „Ich wohne in Utrecht.“ „Ich habe ein kleines Kind.“ Kurz und wahr. Das ist die ganze Idee."
+            },
+            "to-topics": {
+              "body": "„Ich arbeite in der Pflege“ wird zu Suchbegriffen: Personalmangel im Krankenhaus, Gehälter in der Pflege, Gesundheitspolitik. Mit diesen Begriffen werden Nachrichten gesucht. Dann liest die KI von Mera, was zurückkommt, gleicht es mit deinen Fakten ab und ermittelt, wie stark es dich betrifft."
+            },
+            "your-profile": {
+              "body": "Alles, was Mera nutzt, um herauszufinden, was dich betrifft, an einem Ort. Tippe auf jeden Eintrag.",
+              "reveal": {
+                "facts": {
+                  "text": "Wahre Aussagen darüber, was dich betrifft. Jeder Fakt findet seine eigenen Themen."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Dein Profil ist für das, was dich betrifft. Alles andere folgst du einfach.",
+              "headline": "Profil oder Geschichte?",
+              "reveal": {
+                "follow": {
+                  "label": "Ich mag Formula 1",
+                  "text": "Es betrifft dich nicht, also folge einfach. Folgen ist kostenlos und unbegrenzt, und KI liest gefolgte Geschichten nicht."
+                },
+                "profile": {
+                  "label": "Ich fahre nach Monaco",
+                  "text": "Das betrifft dich, also kommt es in dein Profil. Die KI von Mera gleicht die Nachrichten damit ab und ermittelt die Auswirkungen auf deine Reise."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Dieselben Geschichten, nach Fakt gruppiert, mit einem Abschnitt für jeden Fakt in deinem Profil, und ungelesene Geschichten zuerst."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Deine Fakten, die Geschichten, denen du folgst, deine Orte und alles, was du gelesen hast, bleiben auf diesem Telefon. Die Server von Mera behalten keine Kopie, deshalb löscht das Abmelden dein Profil. Auf einem neuen Telefon kann das Backup es zurückholen."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Für alles andere, was dir gefällt",
+              "body": "Ein Team, ein Künstler, eine Wahl, ein Sturm. Folge einmal, und neue Artikel sammeln sich an einem Ort. Folgen ist kostenlos und unbegrenzt, und KI liest gefolgte Geschichten nicht."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Mera liest die Nachrichten des Tages und behält, was dich betrifft."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Deine Fakten, die Geschichten, denen du folgst, und was du gelesen hast, werden auf diesem Telefon gespeichert und bleiben dort. Die Server von Mera behalten keine Kopie davon."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "was dir gefällt"
+    },
+    "interests": {
+      "emptyTitle": "Mera weiß noch nichts über dich",
+      "learnAbout": "Erfahre, was in dein Profil gehört",
+      "backToInterests": "Zurück zu deinem Feed",
+      "findingStories": "Mera sucht Geschichten zu diesem Fakt. Die ersten erscheinen hier in ein paar Sekunden."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Noch nichts. Erzähl Mera von deinem Leben, dann erscheint es hier."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Diesen Fakt ändern",
+        "remove": "Diesen Fakt entfernen"
+      },
+      "sources": {
+        "whatFollow": "Sag Mera, was du gern liest"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Erzähl Mera von dir"
+    },
+    "meraIntro": {
+      "feed": "Du bist in deinem Feed. Sag mir, was dich betrifft, nenne etwas, dem du folgen willst, oder frag mich alles zu den Nachrichten.",
+      "interest": "Diese Seite zeigt einen deiner Fakten. Hier kannst du ihn ändern oder entfernen.",
+      "library": "Frag mich alles zu den Nachrichten, oder sag mir, was du verfolgen möchtest.",
+      "sources": "Frag mich nach einer Publikation, oder sag mir, was du verfolgen möchtest."
+    },
+    "meraDraft": {
+      "changeInterest": "Ändere meinen Fakt „{{statement}}“ zu ",
+      "removeInterest": "Entferne meinen Fakt „{{statement}}“"
+    }
+  },
+  "es": {
+    "feed": {
+      "noFactsBody": "Toca el botón de Mera y cuéntame sobre tu vida. Mera encontrará las noticias que te afectan."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Sigue lo que te guste: un equipo, un artista, una historia que dure mucho. Es gratis e ilimitado, y ninguna IA lee las historias seguidas. Toca el botón de Mera para empezar.",
+      "composerPlaceholder": "¿Qué debería vigilar?",
+      "followCardLine": "Esto vale la pena seguirlo. Marca lo que quieras y los artículos nuevos llegarán a Historias seguidas.",
+      "addToProfile": "Añadir a mi perfil",
+      "impactQuestion": "Antes de añadirlo, ¿cómo te afecta? La IA de Mera usa esto para calcular cuánto importa un artículo para ti. Si no te afecta personalmente, te recomiendo seguirlo como historia.",
+      "addAnyway": "Añadir de todos modos",
+      "addedToProfile": "Añadido a tu perfil"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera lee cada artículo que encaja con tu perfil, descarta lo que no importa y te muestra lo que te afecta.",
+      "starterInterestsTitle": "Todo tu perfil",
+      "starterInterestsBody": "Añade todo lo que te afecte. Mera compara las noticias con cada hecho.",
+      "starterStoriesBody": "Sigue lo que quieras, gratis e ilimitado. Ninguna IA lee las historias seguidas."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera deja aquí notas sobre tu feed: una verificación de datos que pediste ya está lista, tu puesta a punto diaria del feed, consejos para ordenar o ajustar tu perfil y preguntas del equipo de Mera. Solo se guardan en este teléfono durante 90 días, y un punto indica que hay algo sin leer. Las alertas de noticias no aparecen aquí. Sus horarios se configuran en Ajustes, en Notificaciones."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Cuéntame sobre tu vida",
+      "noFactsBody": "Mera usa tu ciudad para encontrar noticias que te afecten. Puedes contarme más sobre tu vida cuando quieras."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Borra el registro local de los artículos que has abierto. La tarjeta «Publicaciones que has leído» y el historial por publicación volverán a estar vacíos. Las historias que has leído pueden volver a aparecer en tu feed. No se modifica nada más y no se toca ningún dato del servidor, porque los servidores de Mera nunca tuvieron estos datos."
+    },
+    "personaChat": {
+      "introMessage": "Hola, soy Mera.\n\nCuéntame sobre tu vida: dónde vives, a qué te dedicas, a quién quieres. Encontraré las noticias que te afectan. Todo lo demás que te guste lo podemos seguir como historias.\n\nComparte todo lo que quieras, o muy poco. Lo que me cuentes se queda en este teléfono. Nadie tiene acceso a tus datos salvo tú."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "¡Temas guardados! Cuéntame más sobre tu vida, o toca {{close}} para empezar a explorar."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Quiero más artículos como este. ¿Debo añadir algo a mi perfil o seguir el tema como una historia?"
+    },
+    "personaAudit": {
+      "empty": "Todavía no hay cambios. Cada vez que Mera ajuste tu perfil, el cambio aparecerá aquí."
+    },
+    "hygiene": {
+      "notificationTitle": "¿Ordenar tu perfil?",
+      "effectTooBroad": "Reduce el peso de este hecho para que traiga menos historias fuera de tema.",
+      "effectIncoherentTopics": "Sustituye estos temas por otros mejores para este hecho.",
+      "titleFollowInstead": "Una historia para seguir",
+      "effectFollowInstead": "Las historias seguidas son gratis, y ninguna IA las lee.",
+      "keepFact": "Mantenerlo como hecho",
+      "followInsteadTopicMoves": "Los artículos nuevos sobre {{topic}} irán a Historias seguidas en lugar de a tu feed.",
+      "followInsteadFactGoes": "{{fact}} saldrá de tu perfil, y no podrás deshacerlo. Los artículos nuevos sobre {{topic}} irán a Historias seguidas.",
+      "followInsteadDoneTitle": "Siguiendo {{topic}}",
+      "followInsteadDoneBody": "Los artículos nuevos llegan a Historias seguidas.",
+      "followInsteadNotificationTitle": "Una historia para seguir",
+      "followInsteadNotificationBody": "Mera encontró algo que encaja con Historias seguidas.",
+      "summary": {
+        "followInsteadFlood": "«{{topic}}» está llenando tu feed. ¿Quieres seguir ese tema como historia?",
+        "followInsteadNoStake": "Hay muchas noticias sobre {{topic}}, pero ninguna cambia nada para ti, así que tu feed las omite. ¿Quieres seguir ese tema como historia para verlas todas?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Tu perfil es para lo que te afecta. Lo demás, sígalo. Toca un hecho para ver sus temas y sus historias.",
+      "page": {
+        "nextInterest": "Siguiente hecho"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Tu perfil es para lo que te afecta. Lo demás, sígelo.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Tu perfil es para lo que te afecta, así que un hecho es una frase verdadera sobre tu vida. «Trabajo en la sanidad.» «Vivo en Utrecht.» «Tengo un hijo pequeño.» Breve y verdadero. Esa es toda la idea."
+            },
+            "to-topics": {
+              "body": "«Trabajo en la sanidad» se convierte en frases de búsqueda: plantillas en hospitales, sueldos del sector sanitario, políticas de salud. Esas frases salen a buscar noticias. Después, la IA de Mera compara lo que vuelve con tus hechos y calcula cómo te afecta."
+            },
+            "your-profile": {
+              "body": "Todo lo que Mera usa para encontrar lo que te afecta, en un solo lugar. Toca cada elemento.",
+              "reveal": {
+                "facts": {
+                  "text": "Frases verdaderas sobre lo que te afecta. Cada una encuentra sus propios temas."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Tu perfil es para lo que te afecta. Lo demás, sígelo.",
+              "headline": "¿Perfil o historia?",
+              "reveal": {
+                "follow": {
+                  "label": "Me gusta Formula 1",
+                  "text": "No te afecta, así que simplemente sígalo. Seguir es gratis e ilimitado, y ninguna IA lee las historias seguidas."
+                },
+                "profile": {
+                  "label": "Voy a Monaco",
+                  "text": "Esto te afecta, así que va a tu perfil. La IA de Mera compara las noticias con esto y calcula el impacto en tu viaje."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Las mismas historias agrupadas por hecho, con una sección para cada hecho de tu perfil y las no leídas primero."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Tus hechos, las historias que sigues, tus lugares y todo lo que has leído se quedan en este teléfono. Los servidores de Mera no guardan copia, por eso cerrar sesión borra tu perfil. En un teléfono nuevo, la copia de seguridad puede recuperarlo."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Para todo lo demás que te guste",
+              "body": "Un equipo, un artista, unas elecciones, una tormenta. Sigue una vez y los artículos nuevos se reúnen en un solo lugar. Seguir es gratis e ilimitado, y ninguna IA lee las historias seguidas."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Mera lee las noticias del día y se queda con lo que te afecta."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Tus hechos, las historias que sigues y lo que has leído se guardan en este teléfono y allí se quedan. Los servidores de Mera no guardan copia de ellos."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "lo que te gusta"
+    },
+    "interests": {
+      "emptyTitle": "Mera todavía no te conoce",
+      "learnAbout": "Descubre qué va en tu perfil",
+      "backToInterests": "Volver a tu feed",
+      "findingStories": "Mera está buscando historias para este hecho. Las primeras aparecen aquí en unos segundos."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Todavía nada. Cuéntale a Mera sobre tu vida y aparecerá aquí."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Cambiar este hecho",
+        "remove": "Eliminar este hecho"
+      },
+      "sources": {
+        "whatFollow": "Dile a Mera qué te gusta leer"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Cuéntale a Mera sobre ti"
+    },
+    "meraIntro": {
+      "feed": "Estás en tu feed. Dime qué te afecta, nombra algo que seguir o pregúntame lo que quieras sobre las noticias.",
+      "interest": "Esta página muestra uno de tus hechos. Aquí puedes cambiarlo o eliminarlo.",
+      "library": "Pregúntame lo que quieras sobre las noticias, o dime qué te gustaría seguir.",
+      "sources": "Pregúntame sobre una publicación, o dime qué te gustaría seguir."
+    },
+    "meraDraft": {
+      "changeInterest": "Cambiar mi hecho «{{statement}}» a ",
+      "removeInterest": "Eliminar mi hecho «{{statement}}»"
+    }
+  },
+  "fr": {
+    "feed": {
+      "noFactsBody": "Appuyez sur le bouton Mera et parlez-moi de votre vie. Je trouve les actualités qui vous concernent."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Suivez ce qui vous intéresse : une équipe, un artiste, un sujet qui dure. C'est gratuit et illimité, et aucune IA ne lit les histoires suivies. Appuyez sur le bouton Mera pour commencer.",
+      "composerPlaceholder": "Que dois-je surveiller ?",
+      "followCardLine": "Ce sujet mérite d'être suivi. Cochez ce que vous voulez, et les nouveaux articles arrivent dans les histoires suivies.",
+      "addToProfile": "Ajouter plutôt à mon profil",
+      "impactQuestion": "Avant de l'ajouter, en quoi cela vous concerne-t-il ? L'IA de Mera s'en sert pour évaluer l'importance d'un article pour vous. Si cela ne vous concerne pas personnellement, je vous conseille de simplement le suivre comme une histoire.",
+      "addAnyway": "L'ajouter quand même",
+      "addedToProfile": "Ajouté à votre profil"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera lit chaque article qui correspond à votre profil, écarte le bruit et vous montre ce qui vous concerne.",
+      "starterInterestsTitle": "Tout votre profil",
+      "starterInterestsBody": "Ajoutez tout ce qui vous concerne. Mera confronte l'actualité à chacun de vos faits.",
+      "starterStoriesBody": "Suivez ce que vous voulez, gratuitement et sans limite. Aucune IA ne lit les histoires suivies."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera laisse ici des notes sur votre fil : une vérification des faits que vous avez demandée est prête, votre mise au point quotidienne du fil, des conseils pour ranger ou ajuster votre profil, et les questions de l'équipe Mera. Elles sont conservées uniquement sur ce téléphone pendant 90 jours, et un point signale une note non lue. Les alertes d'actualité n'apparaissent pas ici. Vous réglez leurs horaires dans les Réglages, sous Notifications."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Parlez-moi de votre vie",
+      "noFactsBody": "Mera utilise votre ville pour trouver les actualités qui vous concernent. Vous pouvez lui en dire davantage sur votre vie à tout moment."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Efface le journal local des articles que vous avez ouverts. La carte « Publications que vous lisez » et l'historique par publication repartiront de zéro. Les histoires que vous avez lues peuvent réapparaître dans votre fil. Rien d'autre n'est touché, et aucune donnée sur les serveurs n'est modifiée, car les serveurs de Mera n'ont jamais eu ces données."
+    },
+    "personaChat": {
+      "introMessage": "Bonjour, je suis Mera.\n\nParlez-moi de votre vie : où vous habitez, ce que vous faites, qui compte pour vous. Je trouverai les actualités qui vous concernent. Tout le reste, vous pouvez le suivre sous forme d'histoires.\n\nPartagez autant ou aussi peu que vous le souhaitez. Ce que vous me dites reste sur ce téléphone. Personne d'autre que vous n'a accès à vos données."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Sujets enregistrés ! Parlez-moi davantage de votre vie, ou appuyez sur {{close}} pour commencer à explorer."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Je veux plus d'articles comme celui-ci. Dois-je ajouter quelque chose à mon profil, ou suivre le sujet comme une histoire ?"
+    },
+    "personaAudit": {
+      "empty": "Aucune modification pour l'instant. Chaque ajustement de votre profil par Mera apparaît ici."
+    },
+    "hygiene": {
+      "notificationTitle": "Ranger votre profil ?",
+      "effectTooBroad": "Réduit le poids de ce fait pour qu'il attire moins d'histoires hors sujet.",
+      "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour ce fait.",
+      "titleFollowInstead": "Une histoire à suivre",
+      "effectFollowInstead": "Les histoires suivies sont gratuites, et aucune IA ne les lit.",
+      "keepFact": "Garder comme fait",
+      "followInsteadTopicMoves": "Les nouveaux articles sur {{topic}} iront dans les histoires suivies au lieu de votre fil.",
+      "followInsteadFactGoes": "{{fact}} quittera votre profil, et vous ne pourrez pas revenir en arrière. Les nouveaux articles sur {{topic}} iront dans les histoires suivies.",
+      "followInsteadDoneTitle": "Vous suivez {{topic}}",
+      "followInsteadDoneBody": "Les nouveaux articles arrivent dans les histoires suivies.",
+      "followInsteadNotificationTitle": "Une histoire à suivre",
+      "followInsteadNotificationBody": "Mera a trouvé quelque chose qui convient aux histoires suivies.",
+      "summary": {
+        "followInsteadFlood": "« {{topic}} » remplit votre fil. Voulez-vous le suivre comme une histoire ?",
+        "followInsteadNoStake": "Il y a beaucoup d'actualités sur {{topic}}, mais aucune ne change quoi que ce soit pour vous, alors votre fil les laisse de côté. Voulez-vous suivre ce sujet comme une histoire pour tout voir ?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Votre profil sert à ce qui vous concerne. Tout le reste, suivez-le. Appuyez sur un fait pour voir ses sujets et ses histoires.",
+      "page": {
+        "nextInterest": "Fait suivant"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Votre profil sert à ce qui vous concerne. Tout le reste, suivez-le.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Votre profil sert à ce qui vous concerne, donc un fait est une phrase vraie sur votre vie. « Je travaille dans la santé. » « J'habite à Utrecht. » « J'ai un petit enfant. » Court et vrai. C'est toute l'idée."
+            },
+            "to-topics": {
+              "body": "« Je travaille dans la santé » devient des expressions de recherche : effectifs à l'hôpital, salaires du soin, politique de santé. Ces expressions servent à trouver des actualités. Ensuite, l'IA de Mera confronte ce qui revient à vos faits et détermine l'impact sur vous."
+            },
+            "your-profile": {
+              "body": "Tout ce que Mera utilise pour trouver ce qui vous concerne, au même endroit. Appuyez sur chaque élément.",
+              "reveal": {
+                "facts": {
+                  "text": "Des phrases vraies sur ce qui vous concerne. Chacune trouve ses propres sujets."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Votre profil sert à ce qui vous concerne. Tout le reste, suivez-le.",
+              "headline": "Profil ou histoire ?",
+              "reveal": {
+                "follow": {
+                  "label": "J'aime Formula 1",
+                  "text": "Cela ne vous concerne pas, donc suivez-le simplement. Suivre est gratuit et illimité, et aucune IA ne lit les histoires suivies."
+                },
+                "profile": {
+                  "label": "Je vais à Monaco",
+                  "text": "Cela vous concerne, donc cela va dans votre profil. L'IA de Mera confronte l'actualité à cela et détermine l'impact sur votre voyage."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Les mêmes histoires regroupées par fait, avec une section pour chaque fait de votre profil, et les histoires non lues en premier."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Vos faits, les histoires que vous suivez, vos lieux et tout ce que vous avez lu restent sur ce téléphone. Les serveurs de Mera n'en gardent aucune copie, c'est pourquoi la déconnexion efface votre profil. Sur un nouveau téléphone, la sauvegarde peut le restaurer."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Pour tout le reste qui vous plaît",
+              "body": "Une équipe, un artiste, une élection, une tempête. Suivez-le une fois, et les nouveaux articles se rassemblent au même endroit. Suivre est gratuit et illimité, et aucune IA ne lit les histoires suivies."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Mera lit l'actualité du jour et garde ce qui vous concerne."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Vos faits, les histoires que vous suivez et ce que vous avez lu sont enregistrés sur ce téléphone et y restent. Les serveurs de Mera n'en gardent aucune copie."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "ce que vous aimez"
+    },
+    "interests": {
+      "emptyTitle": "Mera ne vous connaît pas encore",
+      "learnAbout": "Découvrir ce qui entre dans votre profil",
+      "backToInterests": "Retour à votre fil",
+      "findingStories": "Mera cherche des histoires pour ce fait. Les premières apparaissent ici dans quelques secondes."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Rien pour l'instant. Parlez à Mera de votre vie et cela apparaîtra ici."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Modifier ce fait",
+        "remove": "Supprimer ce fait"
+      },
+      "sources": {
+        "whatFollow": "Dites à Mera ce que vous aimez lire"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Parlez de vous à Mera"
+    },
+    "meraIntro": {
+      "feed": "Vous êtes sur votre fil. Dites-moi ce qui vous concerne, nommez quelque chose à suivre, ou posez-moi une question sur l'actualité.",
+      "interest": "Cette page présente l'un de vos faits. Vous pouvez le modifier ou le supprimer ici.",
+      "library": "Posez-moi une question sur l'actualité, ou dites-moi ce que vous voulez suivre.",
+      "sources": "Posez-moi une question sur une publication, ou dites-moi ce que vous voulez suivre."
+    },
+    "meraDraft": {
+      "changeInterest": "Modifier mon fait « {{statement}} » en ",
+      "removeInterest": "Supprimer mon fait « {{statement}} »"
+    }
+  },
+  "hi": {
+    "feed": {
+      "noFactsBody": "मेरा ऐप बटन दबाएं और उसे अपनी ज़िंदगी के बारे में बताएं। वह आप पर असर डालने वाली खबरें ढूंढता है।"
+    },
+    "trackedStories": {
+      "emptyBodyMera": "कुछ भी फ़ॉलो करें: कोई टीम, कोई कलाकार, कोई लंबी चलने वाली कहानी। यह मुफ़्त है और इसकी कोई सीमा नहीं, और फ़ॉलो की गई स्टोरीज़ को कोई AI नहीं पढ़ता। शुरू करने के लिए मेरा ऐप बटन दबाएं।",
+      "composerPlaceholder": "किस पर नज़र रखूं?",
+      "followCardLine": "इसे फ़ॉलो करना अच्छा रहेगा। जो चाहिए उसे चुनें, और नए लेख फ़ॉलो की गई स्टोरीज़ में आएंगे।",
+      "addToProfile": "इसके बजाय मेरी प्रोफ़ाइल में जोड़ें",
+      "impactQuestion": "जोड़ने से पहले बताइए, यह आप पर कैसे असर डालता है? मेरा ऐप का AI यह तय करने के लिए इसका इस्तेमाल करता है कि कोई लेख आपके लिए कितना अहम है। अगर यह आप पर निजी तौर पर असर नहीं डालता, तो मेरा सुझाव है कि इसे बस एक स्टोरी की तरह फ़ॉलो करें।",
+      "addAnyway": "फिर भी जोड़ें",
+      "addedToProfile": "आपकी प्रोफ़ाइल में जोड़ दिया गया"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "मेरा ऐप हर उस लेख को पढ़ता है जो आपकी प्रोफ़ाइल से मेल खाता है, शोर को अलग करता है और दिखाता है कि आप पर क्या असर पड़ता है।",
+      "starterInterestsTitle": "आपकी पूरी प्रोफ़ाइल",
+      "starterInterestsBody": "वह सब जोड़ें जो आप पर असर डालता है। मेरा ऐप हर तथ्य के मुकाबले खबरें पढ़ता है।",
+      "starterStoriesBody": "कुछ भी फ़ॉलो करें, मुफ़्त और बिना सीमा के। फ़ॉलो की गई स्टोरीज़ को कोई AI नहीं पढ़ता।"
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "मेरा ऐप यहां आपकी फ़ीड के बारे में नोट छोड़ता है: आपकी मांगी तथ्य जांच तैयार हो जाए, आपकी रोज़ाना फ़ीड की जांच, प्रोफ़ाइल को साफ़ या ठीक करने के सुझाव, और मेरा ऐप टीम के सवाल। ये सिर्फ़ इसी फ़ोन पर 90 दिन तक रखे जाते हैं, और बिंदु का मतलब है कि कुछ पढ़ा नहीं गया है। खबर के अलर्ट यहां नहीं दिखते। उनका समय आप सेटिंग में, नोटिफ़िकेशन के अंतर्गत तय करते हैं।"
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "मुझे अपनी ज़िंदगी के बारे में बताइए",
+      "noFactsBody": "मेरा ऐप आपके शहर से आपके इलाके की खबरें ढूंढता है। आप जब चाहें उसे अपने बारे में और बता सकते हैं।"
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "आपके खोले गए लेखों का स्थानीय लॉग साफ़ करता है। सोर्स टैब का कार्ड “आप जो प्रकाशन पढ़ रहे हैं” और हर प्रकाशन का इतिहास खाली हो जाएगा। आपकी पढ़ी हुई स्टोरीज़ फिर से आपकी फ़ीड में दिख सकती हैं। और कुछ भी प्रभावित नहीं होता, क्योंकि सर्वर पर कोई डेटा नहीं छुआ जाता। मेरा ऐप के सर्वरों पर यह डेटा कभी था ही नहीं।"
+    },
+    "personaChat": {
+      "introMessage": "नमस्ते, मैं मेरा ऐप हूँ।\n\nमुझे अपनी ज़िंदगी के बारे में बताइए: आप कहाँ रहते हैं, क्या करते हैं, किसकी परवाह करते हैं। मैं वे खबरें ढूंढूंगा जो आप पर असर डालती हैं। और जो कुछ और आपको पसंद है, उसे हम स्टोरीज़ की तरह फ़ॉलो कर सकते हैं।\n\nजितना चाहें उतना साझा करें। जो आप बताते हैं वह इसी फ़ोन पर रहता है। आपके डेटा तक आपके अलावा किसी की पहुंच नहीं है।"
+    },
+    "floatingChat": {
+      "topicsSavedHint": "विषय सहेजे गए! अपने बारे में और बताइए, या खोज शुरू करने के लिए {{close}} दबाएं।"
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "मुझे इस जैसे और लेख चाहिए। क्या मैं अपनी प्रोफ़ाइल में कुछ जोड़ूं, या इसे एक स्टोरी की तरह फ़ॉलो करूं?"
+    },
+    "personaAudit": {
+      "empty": "अभी कोई बदलाव नहीं है। जैसे-जैसे मेरा ऐप आपकी प्रोफ़ाइल ठीक करेगा, हर बदलाव यहां दिखेगा।"
+    },
+    "hygiene": {
+      "notificationTitle": "अपनी प्रोफ़ाइल साफ़ करें?",
+      "effectTooBroad": "इस तथ्य का वज़न घटाता है, ताकि यह कम विषय से हटकर स्टोरीज़ खींचे।",
+      "effectIncoherentTopics": "इस तथ्य के लिए इन विषयों को बेहतर विषयों से बदलता है।",
+      "titleFollowInstead": "फ़ॉलो करने लायक एक स्टोरी",
+      "effectFollowInstead": "फ़ॉलो की गई स्टोरीज़ मुफ़्त हैं, और उन्हें कोई AI नहीं पढ़ता।",
+      "keepFact": "इसे एक तथ्य की तरह रखें",
+      "followInsteadTopicMoves": "{{topic}} पर नए लेख आपकी फ़ीड के बजाय फ़ॉलो की गई स्टोरीज़ में जाएंगे।",
+      "followInsteadFactGoes": "{{fact}} आपकी प्रोफ़ाइल से हट जाएगा, और इसे वापस नहीं लिया जा सकता। {{topic}} पर नए लेख फ़ॉलो की गई स्टोरीज़ में जाएंगे।",
+      "followInsteadDoneTitle": "{{topic}} फ़ॉलो हो रहा है",
+      "followInsteadDoneBody": "नए लेख फ़ॉलो की गई स्टोरीज़ में आते हैं।",
+      "followInsteadNotificationTitle": "फ़ॉलो करने लायक एक स्टोरी",
+      "followInsteadNotificationBody": "मेरा ऐप को कुछ ऐसा मिला है जो फ़ॉलो की गई स्टोरीज़ के लायक है।",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” आपकी फ़ीड भर रहा है। क्या इसे एक स्टोरी की तरह फ़ॉलो करें?",
+        "followInsteadNoStake": "{{topic}} पर बहुत खबरें हैं, पर इनमें से कुछ भी आपके लिए नहीं बदलता, इसलिए आपकी फ़ीड इसे छोड़ देती है। क्या इसे एक स्टोरी की तरह फ़ॉलो करें ताकि सब कुछ दिखे?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "आपकी प्रोफ़ाइल उन चीज़ों के लिए है जो आप पर असर डालती हैं। बाकी सब बस फ़ॉलो करें। कोई तथ्य टैप करें और उसके विषय और स्टोरीज़ देखें।",
+      "page": {
+        "nextInterest": "अगला तथ्य"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "आपकी प्रोफ़ाइल उन चीज़ों के लिए है जो आप पर असर डालती हैं। बाकी सब बस फ़ॉलो करें।",
+          "slides": {
+            "a-fact-is": {
+              "body": "आपकी प्रोफ़ाइल उन चीज़ों के लिए है जो आप पर असर डालती हैं, इसलिए तथ्य आपकी ज़िंदगी के बारे में एक सच्ची पंक्ति है। “मैं नर्स हूं।” “मैं यूट्रेक्ट में रहता हूं।” “मेरा एक छोटा बच्चा है।” छोटा और सच्चा। बस यही पूरा विचार है।"
+            },
+            "to-topics": {
+              "body": "“मैं नर्स हूं” खोज वाक्यांशों में बदल जाता है: अस्पताल में स्टाफ़िंग, नर्सों का वेतन, स्वास्थ्य नीति। ये वाक्यांश खबरें ढूंढने के लिए भेजे जाते हैं। फिर मेरा ऐप का AI वापस आई खबरों को आपके तथ्यों के मुकाबले पढ़ता है और तय करता है कि आप पर कितना असर है।"
+            },
+            "your-profile": {
+              "body": "वह सब कुछ जिससे मेरा ऐप यह ढूंढता है कि क्या आप पर असर डालता है, एक ही जगह पर। हर एक पर टैप करें।",
+              "reveal": {
+                "facts": {
+                  "text": "आप पर असर डालने वाली चीज़ों के बारे में सच्ची पंक्तियां। हर एक अपने विषय खुद ढूंढता है।"
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "आपकी प्रोफ़ाइल उन चीज़ों के लिए है जो आप पर असर डालती हैं। बाकी सब बस फ़ॉलो करें।",
+              "headline": "प्रोफ़ाइल या स्टोरी?",
+              "reveal": {
+                "follow": {
+                  "label": "मुझे फ़ॉर्मूला 1 पसंद है",
+                  "text": "यह आप पर असर नहीं डालता, इसलिए बस फ़ॉलो करें। फ़ॉलो करना मुफ़्त और बिना सीमा के है, और फ़ॉलो की गई स्टोरीज़ को कोई AI नहीं पढ़ता।"
+                },
+                "profile": {
+                  "label": "मैं मोनाको जा रहा हूं",
+                  "text": "यह आप पर असर डालता है, इसलिए यह आपकी प्रोफ़ाइल में जाता है। मेरा ऐप का AI खबरों को इसके मुकाबले पढ़ता है और आपकी यात्रा पर असर का हिसाब लगाता है।"
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "वही स्टोरीज़ तथ्य के हिसाब से समूहित, आपकी प्रोफ़ाइल में हर तथ्य के लिए एक सेक्शन, और बिना पढ़ी स्टोरीज़ सबसे ऊपर।"
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "आपके तथ्य, आपकी फ़ॉलो की गई स्टोरीज़, आपकी जगहें और आपका सब पढ़ा हुआ इसी फ़ोन पर रहता है। मेरा ऐप के सर्वर इसकी कोई कॉपी नहीं रखते, इसीलिए साइन आउट करने से आपकी प्रोफ़ाइल मिट जाती है। नए फ़ोन पर, बैकअप इसे वापस ला सकता है।"
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "बाकी सब के लिए जो आपको पसंद है",
+              "body": "कोई टीम, कोई कलाकार, कोई चुनाव, कोई तूफ़ान। एक बार फ़ॉलो करें, और नए लेख एक ही जगह इकट्ठा होते रहेंगे। फ़ॉलो करना मुफ़्त और बिना सीमा के है, और फ़ॉलो की गई स्टोरीज़ को कोई AI नहीं पढ़ता।"
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "यह दिन की खबरें पढ़ता है और वह रखता है जो आप पर असर डालता है।"
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "आपके तथ्य, फ़ॉलो की गई स्टोरीज़ और जो आपने पढ़ा है, वे इसी फ़ोन पर लिखे जाते हैं और यहीं रहते हैं। मेरा ऐप के सर्वर इनकी कोई कॉपी नहीं रखते।"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "जो आपको पसंद है"
+    },
+    "interests": {
+      "emptyTitle": "मेरा ऐप अभी आपके बारे में कुछ नहीं जानता",
+      "learnAbout": "जानें कि प्रोफ़ाइल में क्या जाता है",
+      "backToInterests": "अपनी फ़ीड पर वापस जाएं",
+      "findingStories": "मेरा ऐप इस तथ्य के लिए स्टोरीज़ ढूंढ रहा है। पहली कुछ सेकंड में यहां दिखेंगी।"
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "अभी कुछ नहीं है। मेरा ऐप को अपनी ज़िंदगी के बारे में बताएं, और वह यहां दिखेगा।"
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "यह तथ्य बदलें",
+        "remove": "यह तथ्य हटाएं"
+      },
+      "sources": {
+        "whatFollow": "मेरा ऐप को बताएं कि आप क्या पढ़ना पसंद करते हैं"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "मेरा ऐप को अपने बारे में बताएं"
+    },
+    "meraIntro": {
+      "feed": "आप अपनी फ़ीड पर हैं। मुझे बताएं कि आप पर क्या असर डालता है, कोई चीज़ फ़ॉलो करने के लिए बताएं, या खबरों के बारे में मुझसे कुछ भी पूछें।",
+      "interest": "यह पेज आपके एक तथ्य को दिखाता है। आप इसे यहां बदल या हटा सकते हैं।",
+      "library": "खबरों में किसी भी चीज़ के बारे में मुझसे पूछें, या बताएं कि आप क्या फ़ॉलो करना चाहते हैं।",
+      "sources": "किसी प्रकाशन के बारे में मुझसे पूछें, या बताएं कि आप क्या फ़ॉलो करना चाहते हैं।"
+    },
+    "meraDraft": {
+      "changeInterest": "मेरा तथ्य “{{statement}}” बदलें: ",
+      "removeInterest": "मेरा तथ्य “{{statement}}” हटाएं"
+    }
+  },
+  "id": {
+    "feed": {
+      "noFactsBody": "Ketuk tombol Mera dan ceritakan tentang hidup Anda. Mera akan menemukan berita yang berdampak pada Anda."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Ikuti apa saja yang Anda suka: sebuah tim, seorang seniman, cerita yang panjang. Gratis dan tanpa batas, dan tidak ada AI yang membaca cerita yang Anda ikuti. Ketuk tombol Mera untuk memulai.",
+      "composerPlaceholder": "Apa yang sebaiknya saya pantau?",
+      "followCardLine": "Topik ini layak diikuti. Centang yang Anda mau dan artikel baru akan masuk ke Cerita yang diikuti.",
+      "addToProfile": "Tambahkan ke profil saya saja",
+      "impactQuestion": "Sebelum saya tambahkan, bagaimana ini memengaruhi Anda? AI Mera menggunakan ini untuk menghitung seberapa penting sebuah artikel bagi Anda. Jika tidak berdampak langsung pada Anda, saya sarankan cukup mengikutinya sebagai cerita.",
+      "addAnyway": "Tetap tambahkan",
+      "addedToProfile": "Ditambahkan ke profil Anda"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera membaca setiap artikel yang cocok dengan profil Anda, menyisihkan yang tidak relevan, dan menunjukkan apa yang berdampak pada Anda.",
+      "starterInterestsTitle": "Seluruh profil Anda",
+      "starterInterestsBody": "Tambahkan semua yang berdampak pada Anda. Mera membaca berita dengan mencocokkannya ke setiap fakta.",
+      "starterStoriesBody": "Ikuti apa saja yang Anda suka, gratis dan tanpa batas. Tidak ada AI yang membaca cerita yang diikuti."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera meninggalkan catatan di sini tentang feed Anda: pemeriksaan fakta yang Anda minta sudah siap, perapian feed harian, tips untuk merapikan atau menyetel profil, dan pertanyaan dari tim Mera. Catatan ini hanya disimpan di ponsel ini selama 90 hari, dan titik menandakan ada yang belum dibaca. Notifikasi berita tidak muncul di sini. Waktunya diatur di Pengaturan, di bawah Notifikasi."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Ceritakan tentang hidup Anda",
+      "noFactsBody": "Mera memakai kota Anda untuk mencari berita dari tempat Anda tinggal. Anda bisa menceritakan lebih banyak tentang hidup Anda kapan saja."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu “Publikasi yang Anda baca” di tab Sumber dan riwayat per publikasi akan kembali kosong. Cerita yang sudah Anda baca bisa muncul lagi di feed. Tidak ada yang lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah menyimpan data ini."
+    },
+    "personaChat": {
+      "introMessage": "Halo, saya Mera.\n\nCeritakan tentang hidup Anda: di mana Anda tinggal, apa pekerjaan Anda, siapa yang Anda pedulikan. Saya akan mencari berita yang berdampak pada Anda. Hal lain yang Anda suka bisa kita ikuti sebagai cerita.\n\nBagikan sebanyak atau sesedikit yang Anda mau. Apa yang Anda sampaikan tetap di ponsel ini. Tidak ada orang lain yang bisa mengakses data Anda selain Anda."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Topik tersimpan! Ceritakan lebih banyak tentang hidup Anda, atau ketuk {{close}} untuk mulai menjelajah."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Saya ingin lebih banyak artikel seperti ini. Sebaiknya saya menambahkan sesuatu ke profil, atau mengikutinya sebagai cerita?"
+    },
+    "personaAudit": {
+      "empty": "Belum ada perubahan. Saat Mera menyesuaikan profil Anda, setiap perubahan akan muncul di sini."
+    },
+    "hygiene": {
+      "notificationTitle": "Rapikan profil Anda?",
+      "effectTooBroad": "Menurunkan bobot fakta ini supaya lebih sedikit cerita yang tidak relevan ikut terbawa.",
+      "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih tepat untuk fakta ini.",
+      "titleFollowInstead": "Cerita untuk diikuti",
+      "effectFollowInstead": "Cerita yang diikuti gratis, dan tidak ada AI yang membacanya.",
+      "keepFact": "Simpan sebagai fakta",
+      "followInsteadTopicMoves": "Artikel baru tentang {{topic}} akan masuk ke Cerita yang diikuti, bukan ke feed Anda.",
+      "followInsteadFactGoes": "{{fact}} akan keluar dari profil Anda, dan ini tidak bisa dibatalkan. Artikel baru tentang {{topic}} akan masuk ke Cerita yang diikuti.",
+      "followInsteadDoneTitle": "Mengikuti {{topic}}",
+      "followInsteadDoneBody": "Artikel baru akan masuk ke Cerita yang diikuti.",
+      "followInsteadNotificationTitle": "Cerita untuk diikuti",
+      "followInsteadNotificationBody": "Mera menemukan sesuatu yang cocok untuk Cerita yang diikuti.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” memenuhi feed Anda. Ikuti sebagai cerita saja?",
+        "followInsteadNoStake": "Ada banyak berita tentang {{topic}}, tapi tidak satu pun mengubah apa pun bagi Anda, jadi feed Anda melewatinya. Ikuti sebagai cerita untuk melihat semuanya?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Profil Anda untuk hal-hal yang berdampak pada Anda. Selebihnya, cukup ikuti. Ketuk sebuah fakta untuk melihat topik dan ceritanya.",
+      "page": {
+        "nextInterest": "Fakta berikutnya"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Profil Anda untuk hal-hal yang berdampak pada Anda. Selebihnya, cukup ikuti.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Profil Anda untuk hal-hal yang berdampak pada Anda, jadi fakta adalah satu baris benar tentang hidup Anda. “Saya perawat.” “Saya tinggal di Utrecht.” “Saya punya anak kecil.” Singkat dan benar. Itulah seluruh idenya."
+            },
+            "to-topics": {
+              "body": "“Saya perawat” berubah menjadi frasa pencarian: staf rumah sakit, gaji perawat, kebijakan kesehatan. Frasa itu dikirim untuk mencari berita. Lalu AI Mera membaca hasilnya terhadap fakta Anda dan menghitung dampaknya bagi Anda."
+            },
+            "your-profile": {
+              "body": "Semua yang dipakai Mera untuk menemukan apa yang berdampak pada Anda, di satu tempat. Ketuk masing-masing.",
+              "reveal": {
+                "facts": {
+                  "text": "Baris yang benar tentang hal yang berdampak pada Anda. Setiap fakta menemukan topiknya sendiri."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Profil Anda untuk hal-hal yang berdampak pada Anda. Selebihnya, cukup ikuti.",
+              "headline": "Profil atau cerita?",
+              "reveal": {
+                "follow": {
+                  "label": "Saya suka Formula 1",
+                  "text": "Ini tidak berdampak pada Anda, jadi cukup ikuti saja. Mengikuti gratis dan tanpa batas, dan tidak ada AI yang membaca cerita yang diikuti."
+                },
+                "profile": {
+                  "label": "Saya akan ke Monako",
+                  "text": "Ini berdampak pada Anda, jadi masuk ke profil Anda. AI Mera membaca berita terhadapnya dan menghitung dampaknya pada perjalanan Anda."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Cerita yang sama dikelompokkan per fakta, satu bagian untuk setiap fakta di profil Anda, dengan cerita yang belum dibaca di atas."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Fakta Anda, cerita yang Anda ikuti, tempat Anda, dan semua yang sudah Anda baca tersimpan di ponsel ini. Server Mera tidak menyimpan salinannya, itulah sebabnya keluar akun menghapus profil Anda. Di ponsel baru, Cadangan dapat mengembalikannya."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Untuk apa pun yang Anda suka",
+              "body": "Sebuah tim, seorang seniman, pemilu, badai. Ikuti sekali, dan artikel baru berkumpul di satu tempat. Mengikuti gratis dan tanpa batas, dan tidak ada AI yang membaca cerita yang diikuti."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Membaca berita hari ini dan menyimpan apa yang berdampak pada Anda."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Fakta Anda, cerita yang Anda ikuti, dan apa yang sudah Anda baca ditulis ke ponsel ini dan tetap di sana. Server Mera tidak menyimpan salinannya."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "yang Anda suka"
+    },
+    "interests": {
+      "emptyTitle": "Mera belum mengenal Anda",
+      "learnAbout": "Pelajari apa yang masuk ke profil Anda",
+      "backToInterests": "Kembali ke feed Anda",
+      "findingStories": "Mera sedang mencari cerita untuk fakta ini. Yang pertama akan muncul di sini dalam beberapa detik."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Belum ada. Beri tahu Mera tentang hidup Anda dan ini akan muncul di sini."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Ubah fakta ini",
+        "remove": "Hapus fakta ini"
+      },
+      "sources": {
+        "whatFollow": "Beri tahu Mera apa yang Anda suka baca"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Beri tahu Mera tentang Anda"
+    },
+    "meraIntro": {
+      "feed": "Anda sedang di Feed. Beri tahu saya apa yang berdampak pada Anda, sebutkan sesuatu untuk diikuti, atau tanyakan apa saja tentang berita.",
+      "interest": "Halaman ini menampilkan salah satu fakta Anda. Anda bisa mengubah atau menghapusnya di sini.",
+      "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang ingin Anda ikuti.",
+      "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang ingin Anda ikuti."
+    },
+    "meraDraft": {
+      "changeInterest": "Ubah fakta saya “{{statement}}” menjadi ",
+      "removeInterest": "Hapus fakta saya “{{statement}}”"
+    }
+  },
+  "it": {
+    "feed": {
+      "noFactsBody": "Tocca il pulsante Mera e raccontami della tua vita. Trovo le notizie che ti riguardano."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Segui ciò che ti piace: una squadra, un artista, una storia che va avanti da tempo. È gratis e senza limiti, e nessuna IA legge le storie seguite. Tocca il pulsante Mera per iniziare.",
+      "composerPlaceholder": "Cosa devo tenere d'occhio?",
+      "followCardLine": "Questa vale la pena seguirla. Seleziona ciò che vuoi e i nuovi articoli arriveranno in Storie seguite.",
+      "addToProfile": "Aggiungi invece al mio profilo",
+      "impactQuestion": "Prima di aggiungerla: in che modo ti riguarda? L'IA di Mera usa questo per capire quanto conta un articolo per te. Se non ti riguarda personalmente, ti consiglio di seguirla semplicemente come storia.",
+      "addAnyway": "Aggiungi comunque",
+      "addedToProfile": "Aggiunto al tuo profilo"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera legge ogni articolo che corrisponde al tuo profilo, scarta il rumore e ti mostra ciò che ti riguarda.",
+      "starterInterestsTitle": "Tutto il tuo profilo",
+      "starterInterestsBody": "Aggiungi tutto ciò che ti riguarda. Mera confronta le notizie con ogni fatto.",
+      "starterStoriesBody": "Segui ciò che ti piace, gratis e senza limiti. Nessuna IA legge le storie seguite."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera lascia qui appunti sul tuo feed: un controllo dei fatti che hai chiesto è pronto, la tua messa a punto quotidiana del feed, suggerimenti per ordinare o regolare il profilo e domande dal team di Mera. Restano solo su questo telefono per 90 giorni, e un puntino indica che c'è qualcosa di non letto. Gli avvisi delle notizie non compaiono qui. Ne imposti gli orari in Impostazioni, sotto Notifiche."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Raccontami della tua vita",
+      "noFactsBody": "Mera usa la tua città per trovare notizie che ti riguardano. Puoi raccontarmi di più sulla tua vita in qualsiasi momento."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Cancella il registro locale degli articoli che hai aperto. La scheda «Pubblicazioni che stai leggendo» e la cronologia per pubblicazione torneranno vuote. Le storie che hai letto possono ricomparire nel tuo feed. Non viene toccato nient'altro e nessun dato sui server, perché i server di Mera non hanno mai avuto questi dati."
+    },
+    "personaChat": {
+      "introMessage": "Ciao, sono Mera.\n\nRaccontami della tua vita: dove vivi, cosa fai, a chi tieni. Troverò le notizie che ti riguardano. Tutto il resto che ti piace possiamo seguirlo come storie.\n\nCondividi quanto vuoi, anche poco. Ciò che mi racconti resta su questo telefono. Nessuno tranne te ha accesso ai tuoi dati."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Argomenti salvati! Raccontami di più sulla tua vita, oppure tocca {{close}} per iniziare a esplorare."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Voglio più articoli come questo. Devo aggiungere qualcosa al mio profilo, o seguire l'argomento come storia?"
+    },
+    "personaAudit": {
+      "empty": "Nessuna modifica per ora. Ogni volta che Mera regola il tuo profilo, la modifica compare qui."
+    },
+    "hygiene": {
+      "notificationTitle": "Vuoi sistemare il profilo?",
+      "effectTooBroad": "Abbassa il peso di questo fatto così attira meno storie fuori tema.",
+      "effectIncoherentTopics": "Sostituisce questi argomenti con altri migliori per questo fatto.",
+      "titleFollowInstead": "Una storia da seguire",
+      "effectFollowInstead": "Le storie seguite sono gratuite e nessuna IA le legge.",
+      "keepFact": "Tienilo come fatto",
+      "followInsteadTopicMoves": "I nuovi articoli su {{topic}} andranno in Storie seguite invece che nel tuo feed.",
+      "followInsteadFactGoes": "{{fact}} uscirà dal tuo profilo, e non potrai annullarlo. I nuovi articoli su {{topic}} andranno in Storie seguite.",
+      "followInsteadDoneTitle": "Segui {{topic}}",
+      "followInsteadDoneBody": "I nuovi articoli arrivano in Storie seguite.",
+      "followInsteadNotificationTitle": "Una storia da seguire",
+      "followInsteadNotificationBody": "Mera ha trovato qualcosa adatto alle Storie seguite.",
+      "summary": {
+        "followInsteadFlood": "«{{topic}}» sta riempiendo il tuo feed. Vuoi seguirlo come storia?",
+        "followInsteadNoStake": "Ci sono molte notizie su {{topic}}, ma nessuna cambia qualcosa per te, quindi il tuo feed le salta. Vuoi seguire questo argomento come storia per vederle tutte?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Il tuo profilo serve per ciò che ti riguarda. Tutto il resto, seguilo. Tocca un fatto per vederne argomenti e storie.",
+      "page": {
+        "nextInterest": "Fatto successivo"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Il tuo profilo serve per ciò che ti riguarda. Tutto il resto, seguilo.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Il tuo profilo serve per ciò che ti riguarda, quindi un fatto è una frase vera sulla tua vita. «Lavoro nella sanità.» «Abito a Utrecht.» «Ho un figlio piccolo.» Breve e vero. È tutta l'idea."
+            },
+            "to-topics": {
+              "body": "«Lavoro nella sanità» diventa frasi di ricerca: carenza di personale negli ospedali, stipendi del settore sanitario, politica sanitaria. Quelle frasi vanno a cercare notizie. Poi l'IA di Mera confronta ciò che torna con i tuoi fatti e stabilisce quanto ti riguarda."
+            },
+            "your-profile": {
+              "body": "Tutto ciò che Mera usa per trovare ciò che ti riguarda, in un unico posto. Tocca ciascun elemento.",
+              "reveal": {
+                "facts": {
+                  "text": "Frasi vere su ciò che ti riguarda. Ognuna trova i propri argomenti."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Il tuo profilo serve per ciò che ti riguarda. Tutto il resto, seguilo.",
+              "headline": "Profilo o storia?",
+              "reveal": {
+                "follow": {
+                  "label": "Mi piace Formula 1",
+                  "text": "Non ti riguarda, quindi seguilo e basta. Seguire è gratis e senza limiti, e nessuna IA legge le storie seguite."
+                },
+                "profile": {
+                  "label": "Vado a Monaco",
+                  "text": "Questo ti riguarda, quindi va nel tuo profilo. L'IA di Mera confronta le notizie con questo e stabilisce l'impatto sul tuo viaggio."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Le stesse storie raggruppate per fatto, con una sezione per ogni fatto nel tuo profilo e le storie non lette per prime."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "I tuoi fatti, le storie che segui, i tuoi luoghi e tutto ciò che hai letto restano su questo telefono. I server di Mera non ne conservano una copia, ed è per questo che uscire cancella il tuo profilo. Su un nuovo telefono, il backup può riportarlo."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Per tutto il resto che ti piace",
+              "body": "Una squadra, un artista, un'elezione, una tempesta. Seguilo una volta e i nuovi articoli si raccolgono in un unico posto. Seguire è gratis e senza limiti, e nessuna IA legge le storie seguite."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Mera legge le notizie del giorno e tiene ciò che ti riguarda."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "I tuoi fatti, le storie che segui e ciò che hai letto sono salvati su questo telefono e restano lì. I server di Mera non ne conservano una copia."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "ciò che ti piace"
+    },
+    "interests": {
+      "emptyTitle": "Mera non sa ancora niente di te",
+      "learnAbout": "Scopri cosa va nel tuo profilo",
+      "backToInterests": "Torna al tuo feed",
+      "findingStories": "Mera sta cercando storie per questo fatto. Le prime compaiono qui tra pochi secondi."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Ancora niente. Racconta a Mera della tua vita e apparirà qui."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Cambia questo fatto",
+        "remove": "Rimuovi questo fatto"
+      },
+      "sources": {
+        "whatFollow": "Dì a Mera cosa ti piace leggere"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Racconta a Mera di te"
+    },
+    "meraIntro": {
+      "feed": "Sei nel tuo feed. Dimmi cosa ti riguarda, indica qualcosa da seguire o chiedimi qualsiasi cosa sulle notizie.",
+      "interest": "Questa pagina mostra uno dei tuoi fatti. Qui puoi modificarlo o rimuoverlo.",
+      "library": "Chiedimi qualsiasi cosa sulle notizie, o dimmi cosa vorresti seguire.",
+      "sources": "Chiedimi di una pubblicazione, o dimmi cosa vorresti seguire."
+    },
+    "meraDraft": {
+      "changeInterest": "Cambia il mio fatto «{{statement}}» in ",
+      "removeInterest": "Rimuovi il mio fatto «{{statement}}»"
+    }
+  },
+  "ja": {
+    "feed": {
+      "noFactsBody": "メラボタンをタップして、あなたの生活について教えてください。あなたに影響するニュースを見つけます。"
+    },
+    "trackedStories": {
+      "emptyBodyMera": "好きなものは何でもフォローしましょう。チーム、アーティスト、長く続いている話題など。無料で数の制限もなく、AIはフォロー中のストーリーを読みません。メラボタンをタップして始めましょう。",
+      "composerPlaceholder": "何を追いかけたいですか？",
+      "followCardLine": "これはフォローするのにぴったりです。見たいものにチェックを入れると、新しい記事がフォロー中のストーリーに届きます。",
+      "addToProfile": "代わりにプロフィールに追加",
+      "impactQuestion": "追加する前に、これはあなたにどう影響しますか？ メラのAIは、この答えを使って記事があなたにとってどれくらい重要かを判断します。個人的な影響がないなら、ストーリーとしてフォローするのがおすすめです。",
+      "addAnyway": "それでも追加する",
+      "addedToProfile": "プロフィールに追加しました"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "メラは、あなたのプロフィールに合うすべての記事を読み、ノイズを取り除いて、あなたに影響することを表示します。",
+      "starterInterestsTitle": "プロフィール全体",
+      "starterInterestsBody": "あなたに影響することを何でも追加してください。メラは、すべてのファクトに照らしてニュースを読みます。",
+      "starterStoriesBody": "好きなものは何でもフォローできます。無料で、数の制限もありません。AIはフォロー中のストーリーを読みません。"
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "メラはここに、フィードについてのメモを残します。依頼したファクトチェックの準備ができたこと、毎日のフィードの調整、プロフィールを整えるコツ、メラチームからの質問などです。これらはこの端末にだけ90日間保存され、未読のものには点が付きます。ニュースの通知はここには表示されません。通知の時間は設定の「通知」で変更できます。"
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "あなたの生活について教えてください",
+      "noFactsBody": "メラはお住まいの都市をもとに、あなたに影響するニュースを探します。生活についての情報は、いつでも追加で伝えられます。"
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "開いた記事のローカルの記録を消去します。ソースタブの「読んでいる媒体」カードと、媒体ごとの履歴は空にリセットされます。読んだストーリーがフィードにもう一度表示されることがあります。それ以外には影響せず、メラのサーバー上のデータにも触れません。メラのサーバーには、もともとこのデータがないためです。"
+    },
+    "personaChat": {
+      "introMessage": "こんにちは、メラです。\n\nあなたの生活について教えてください。どこに住んでいて、何の仕事をしていて、誰を大切に思っているか。あなたに影響するニュースを見つけます。ほかに好きなものがあれば、ストーリーとしてフォローできます。\n\n話す量は自由です。教えていただいた内容はこの端末に残ります。あなた以外に、あなたのデータにアクセスできる人はいません。"
+    },
+    "floatingChat": {
+      "topicsSavedHint": "トピックを保存しました！ さらに生活について教えてください。または {{close}} をタップして探索を始めましょう。"
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "この記事に近いものをもっと見たいです。プロフィールに何か追加すべきですか、それともストーリーとしてフォローしますか？"
+    },
+    "personaAudit": {
+      "empty": "まだ変更はありません。メラがプロフィールを調整すると、すべての変更がここに表示されます。"
+    },
+    "hygiene": {
+      "notificationTitle": "プロフィールを整理しますか？",
+      "effectTooBroad": "このファクトの重みを下げて、関係のないストーリーが混ざる量を減らします。",
+      "effectIncoherentTopics": "このファクトに合う、より適切なトピックに置き換えます。",
+      "titleFollowInstead": "フォローするストーリー",
+      "effectFollowInstead": "フォロー中のストーリーは無料で、AIは読みません。",
+      "keepFact": "ファクトとして残す",
+      "followInsteadTopicMoves": "{{topic}}に関する新しい記事は、フィードではなくフォロー中のストーリーに届きます。",
+      "followInsteadFactGoes": "{{fact}}はプロフィールから外れ、元に戻せません。{{topic}}に関する新しい記事は、フォロー中のストーリーに届きます。",
+      "followInsteadDoneTitle": "{{topic}}をフォローしました",
+      "followInsteadDoneBody": "新しい記事はフォロー中のストーリーに届きます。",
+      "followInsteadNotificationTitle": "フォローするストーリー",
+      "followInsteadNotificationBody": "メラが、フォロー中のストーリーに合うものを見つけました。",
+      "summary": {
+        "followInsteadFlood": "「{{topic}}」がフィードを埋めています。代わりにストーリーとしてフォローしますか？",
+        "followInsteadNoStake": "{{topic}}に関するニュースは多いですが、あなたに影響するものはないので、フィードには表示しません。すべて見たい場合は、ストーリーとしてフォローしてください。"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "プロフィールには、あなたに影響することを入れます。それ以外は、フォローしてください。ファクトをタップすると、そのトピックとストーリーが見られます。",
+      "page": {
+        "nextInterest": "次のファクト"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "プロフィールには、あなたに影響することを入れます。それ以外は、フォローしてください。",
+          "slides": {
+            "a-fact-is": {
+              "body": "プロフィールは、あなたに影響することのためのものです。だからファクトは、生活についての一行の真実です。「看護師をしています。」「ユトレヒトに住んでいます。」「小さな子どもがいます。」短くて、本当のこと。それがすべてです。"
+            },
+            "to-topics": {
+              "body": "「看護師をしています」は、検索フレーズに変わります。病院の人員配置、看護師の給与、医療政策。そのフレーズでニュースを探します。その後、メラのAIが返ってきた内容をあなたのファクトと照らし合わせ、あなたへの影響を判断します。"
+            },
+            "your-profile": {
+              "body": "メラがあなたに影響することを見つけるために使うものを、ひとつの場所にまとめました。それぞれタップしてください。",
+              "reveal": {
+                "facts": {
+                  "text": "あなたに影響することについての、真実の一行。それぞれが独自のトピックを見つけます。"
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "プロフィールは、あなたに影響することのためのものです。それ以外は、フォローしてください。",
+              "headline": "プロフィールか、ストーリーか？",
+              "reveal": {
+                "follow": {
+                  "label": "フォーミュラ1が好き",
+                  "text": "あなたに影響しないので、フォローするだけで十分です。フォローは無料で数の制限もなく、AIはフォロー中のストーリーを読みません。"
+                },
+                "profile": {
+                  "label": "モナコに行きます",
+                  "text": "これはあなたに影響するので、プロフィールに入れます。メラのAIは、ニュースをこれと照らし合わせて、旅行への影響を判断します。"
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "同じストーリーを、プロフィールのファクトごとにまとめて表示します。ファクトごとにセクションがあり、未読のストーリーが先に出ます。"
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "ファクト、フォロー中のストーリー、あなたの場所、読んだものすべては、この端末に保存されます。メラのサーバーには控えが残らないため、サインアウトするとプロフィールも消えます。新しい端末では、バックアップから戻せます。"
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "それ以外の好きなものに",
+              "body": "チーム、アーティスト、選挙、嵐。一度フォローすると、新しい記事が一か所に集まります。フォローは無料で数の制限もなく、AIはフォロー中のストーリーを読みません。"
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "メラは毎日のニュースを読み、あなたに影響することを残します。"
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "ファクト、フォロー中のストーリー、読んだ記録はこの端末に書き込まれ、そこに残ります。メラのサーバーには控えが残りません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "好きなこと"
+    },
+    "interests": {
+      "emptyTitle": "メラはまだあなたのことを知りません",
+      "learnAbout": "プロフィールに入るものを知る",
+      "backToInterests": "フィードに戻る",
+      "findingStories": "メラがこのファクトのストーリーを探しています。最初のものが数秒以内にここに表示されます。"
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "まだありません。メラに生活のことを伝えると、ここに表示されます。"
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "このファクトを変更",
+        "remove": "このファクトを削除"
+      },
+      "sources": {
+        "whatFollow": "メラに、読みたいものを教えてください"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "メラにあなたのことを伝える"
+    },
+    "meraIntro": {
+      "feed": "フィードを見ていますね。あなたに影響することを教えてください。フォローしたいものを挙げてもいいですし、ニュースについて何でも聞いてください。",
+      "interest": "このページは、あなたのファクトのひとつを表示しています。ここで変更したり、削除したりできます。",
+      "library": "ニュースについて何でも聞いてください。フォローしたいものがあれば教えてください。",
+      "sources": "媒体について聞いてください。フォローしたいものがあれば教えてください。"
+    },
+    "meraDraft": {
+      "changeInterest": "私のファクト「{{statement}}」を次のように変更： ",
+      "removeInterest": "私のファクト「{{statement}}」を削除"
+    }
+  },
+  "ko": {
+    "feed": {
+      "noFactsBody": "메라 버튼을 누르고 일상에 대해 알려 주세요. 회원님에게 영향을 주는 뉴스를 찾아 드려요."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "좋아하는 것은 무엇이든 팔로우하세요. 팀, 아티스트, 오래 이어지는 이야기까지 전부요. 무료이고 횟수 제한도 없으며, AI는 팔로우한 스토리를 읽지 않아요. 메라 버튼을 눌러 시작하세요.",
+      "composerPlaceholder": "무엇을 계속 지켜볼까요?",
+      "followCardLine": "팔로우하기 좋은 주제예요. 원하는 항목에 체크하면 새 기사가 팔로우한 스토리에 쌓여요.",
+      "addToProfile": "대신 내 프로필에 추가",
+      "impactQuestion": "추가하기 전에, 이것이 회원님에게 어떤 영향을 주나요? 메라의 AI는 이 답으로 기사가 회원님에게 얼마나 중요한지 판단해요. 개인적인 영향이 없다면 스토리로 팔로우하시는 걸 추천해요.",
+      "addAnyway": "그래도 추가",
+      "addedToProfile": "프로필에 추가했어요"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "메라는 프로필에 맞는 기사를 모두 읽고, 잡음은 걸러 내고, 회원님에게 영향을 주는 내용을 보여 드려요.",
+      "starterInterestsTitle": "프로필 전체",
+      "starterInterestsBody": "회원님에게 영향을 주는 것은 무엇이든 추가해 주세요. 메라는 모든 사실에 비추어 뉴스를 읽어요.",
+      "starterStoriesBody": "좋아하는 것은 무엇이든 무료로, 횟수 제한 없이 팔로우하세요. AI는 팔로우한 스토리를 읽지 않아요."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "메라는 여기에 피드에 관한 메모를 남겨요. 요청하신 사실 확인이 준비되었을 때, 매일 피드를 다듬는 알림, 프로필을 정리하는 팁, 메라 팀의 질문 같은 내용이에요. 이 메모는 이 기기에만 90일 동안 보관되고, 읽지 않은 항목에는 점이 표시돼요. 뉴스 알림은 여기에 나타나지 않아요. 알림 시간은 설정의 알림에서 정할 수 있어요."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "일상에 대해 알려 주세요",
+      "noFactsBody": "메라는 회원님이 사는 도시를 기준으로 영향을 주는 뉴스를 찾아요. 일상에 대해서는 언제든 더 알려 주실 수 있어요."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "열어 본 기사의 기기 기록을 지워요. 소스 탭의 '읽은 매체' 카드와 매체별 기록도 빈 상태로 초기화돼요. 읽었던 스토리가 피드에 다시 나올 수 있어요. 그 밖에는 아무것도 바뀌지 않고, 서버 데이터도 건드리지 않아요. 메라 서버에는 원래 이 데이터가 없었기 때문이에요."
+    },
+    "personaChat": {
+      "introMessage": "안녕하세요, 메라예요.\n\n회원님의 일상을 알려 주세요. 어디에 살고, 무슨 일을 하고, 누구를 아끼는지요. 회원님에게 영향을 주는 뉴스를 찾아 드릴게요. 그 밖에 좋아하는 것이 있다면 스토리로 팔로우할 수 있어요.\n\n얼마나 말씀하실지는 자유예요. 말씀하신 내용은 이 기기에 남아요. 회원님 말고는 누구도 회원님의 데이터에 접근할 수 없어요."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "토픽을 저장했어요! 일상에 대해 더 알려 주시거나 {{close}}을(를) 탭해서 둘러보기를 시작하세요."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "이 기사와 비슷한 기사를 더 보고 싶어요. 프로필에 무언가 추가해야 할까요, 아니면 스토리로 팔로우할까요?"
+    },
+    "personaAudit": {
+      "empty": "아직 변경 사항이 없어요. 메라가 프로필을 다듬을 때마다 변경 내용이 여기에 나타나요."
+    },
+    "hygiene": {
+      "notificationTitle": "프로필을 정리할까요?",
+      "effectTooBroad": "이 사실의 비중을 낮춰서 주제와 관련 없는 스토리가 덜 섞이게 해요.",
+      "effectIncoherentTopics": "이 사실에 맞는 더 나은 토픽으로 바꿔요.",
+      "titleFollowInstead": "팔로우할 스토리",
+      "effectFollowInstead": "팔로우한 스토리는 무료이고, AI가 읽지 않아요.",
+      "keepFact": "사실로 유지",
+      "followInsteadTopicMoves": "{{topic}} 관련 새 기사는 피드 대신 팔로우한 스토리에 나와요.",
+      "followInsteadFactGoes": "{{fact}}은(는) 프로필에서 빠지며 되돌릴 수 없어요. {{topic}} 관련 새 기사는 팔로우한 스토리에 나와요.",
+      "followInsteadDoneTitle": "{{topic}} 팔로우 중",
+      "followInsteadDoneBody": "새 기사는 팔로우한 스토리에 쌓여요.",
+      "followInsteadNotificationTitle": "팔로우할 스토리",
+      "followInsteadNotificationBody": "메라가 팔로우한 스토리에 어울리는 소식을 찾았어요.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” 기사가 피드를 채우고 있어요. 대신 스토리로 팔로우할까요?",
+        "followInsteadNoStake": "{{topic}} 관련 뉴스가 많지만 회원님에게 바뀌는 것은 없어서, 피드에서는 건너뛰고 있어요. 전부 보고 싶다면 스토리로 팔로우해 보세요."
+      }
+    },
+    "facts": {
+      "screenSubtitle": "프로필에는 회원님에게 영향을 주는 것을 넣어요. 그 밖의 것은 팔로우하세요. 사실을 누르면 토픽과 스토리를 볼 수 있어요.",
+      "page": {
+        "nextInterest": "다음 사실"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "프로필에는 회원님에게 영향을 주는 것을 넣어요. 그 밖의 것은 팔로우하세요.",
+          "slides": {
+            "a-fact-is": {
+              "body": "프로필은 회원님에게 영향을 주는 것을 위한 곳이라, 사실은 일상에 대한 한 줄짜리 진실이에요. “간호사예요.” “위트레흐트에 살아요.” “어린 아이가 있어요.” 짧고 참인 말이면 돼요. 그게 전부예요."
+            },
+            "to-topics": {
+              "body": "“간호사예요”는 검색어로 바뀌어요. 병원 인력 배치, 간호사 급여, 보건 정책 같은 검색어요. 이 검색어로 뉴스를 찾고, 메라의 AI가 돌아온 결과를 회원님의 사실과 비교해서 회원님에게 주는 영향을 판단해요."
+            },
+            "your-profile": {
+              "body": "메라가 회원님에게 영향을 주는 것을 찾는 데 쓰는 모든 것을 한곳에 모았어요. 각각을 눌러 보세요.",
+              "reveal": {
+                "facts": {
+                  "text": "회원님에게 영향을 주는 것에 대한 참인 한 줄이에요. 각 사실이 고유한 토픽을 찾아요."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "프로필은 회원님에게 영향을 주는 것을 위한 곳이에요. 그 밖의 것은 팔로우하세요.",
+              "headline": "프로필일까요, 스토리일까요?",
+              "reveal": {
+                "follow": {
+                  "label": "포뮬러 1을 좋아해요",
+                  "text": "회원님에게 영향을 주지 않으니 팔로우하면 돼요. 팔로우는 무료이고 횟수 제한이 없으며, AI는 팔로우한 스토리를 읽지 않아요."
+                },
+                "profile": {
+                  "label": "모나코에 가요",
+                  "text": "회원님에게 영향을 주는 내용이라 프로필에 넣어요. 메라의 AI는 이 내용을 기준으로 뉴스를 읽고, 여행에 주는 영향을 판단해요."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "같은 스토리를 프로필의 사실별로 묶어서 보여 줘요. 사실마다 섹션이 있고, 읽지 않은 스토리가 먼저 나와요."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "사실, 팔로우한 스토리, 장소, 읽은 기록은 모두 이 기기에 저장돼요. 메라 서버에는 사본이 없어서, 로그아웃하면 프로필도 지워져요. 새 휴대폰에서는 백업으로 되돌릴 수 있어요."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "그 밖에 좋아하는 것을 위해",
+              "body": "팀, 아티스트, 선거, 폭풍. 한 번 팔로우하면 새 기사가 한곳에 모여요. 팔로우는 무료이고 횟수 제한이 없으며, AI는 팔로우한 스토리를 읽지 않아요."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "메라는 오늘의 뉴스를 읽고 회원님에게 영향을 주는 것을 남겨요."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "사실, 팔로우한 스토리, 읽은 기록은 이 기기에 저장되고 여기에만 남아요. 메라 서버에는 사본이 남지 않아요."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "좋아하는 것"
+    },
+    "interests": {
+      "emptyTitle": "메라가 아직 회원님을 잘 몰라요",
+      "learnAbout": "프로필에 무엇을 넣는지 알아보기",
+      "backToInterests": "피드로 돌아가기",
+      "findingStories": "이 사실에 맞는 스토리를 찾고 있어요. 첫 스토리가 몇 초 안에 여기에 나타나요."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "아직 없어요. 메라에게 일상을 알려 주면 여기에 나타나요."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "이 사실 바꾸기",
+        "remove": "이 사실 삭제"
+      },
+      "sources": {
+        "whatFollow": "메라에게 읽고 싶은 것을 알려 주세요"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "메라에게 나에 대해 알려 주기"
+    },
+    "meraIntro": {
+      "feed": "지금 피드를 보고 계시네요. 회원님에게 영향을 주는 것을 알려 주시거나, 팔로우할 것을 말해 주시거나, 뉴스에 대해 무엇이든 물어보세요.",
+      "interest": "이 페이지는 회원님의 사실 중 하나를 보여 줘요. 여기에서 바꾸거나 삭제할 수 있어요.",
+      "library": "뉴스에 대해 무엇이든 물어보세요. 팔로우하고 싶은 것이 있으면 알려 주셔도 돼요.",
+      "sources": "매체에 대해 물어보세요. 팔로우하고 싶은 것이 있으면 알려 주셔도 돼요."
+    },
+    "meraDraft": {
+      "changeInterest": "내 사실 “{{statement}}”을(를) 다음으로 바꿔 줘: ",
+      "removeInterest": "내 사실 “{{statement}}” 삭제해 줘"
+    }
+  },
+  "nl": {
+    "feed": {
+      "noFactsBody": "Tik op de Mera-knop en vertel over je leven. Mera zoekt het nieuws dat jou raakt."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Volg wat je leuk vindt: een team, een artiest, een verhaal dat lang loopt. Het is gratis en onbeperkt, en geen AI leest gevolgde verhalen. Tik op de Mera-knop om te beginnen.",
+      "composerPlaceholder": "Waar moet ik een oogje op houden?",
+      "followCardLine": "Dit is de moeite waard om te volgen. Vink aan wat je wilt en nieuwe artikelen komen in Gevolgde verhalen terecht.",
+      "addToProfile": "Liever aan mijn profiel toevoegen",
+      "impactQuestion": "Voordat ik het toevoeg: hoe raakt het jou? De AI van Mera gebruikt dit om te bepalen hoeveel een artikel voor jou telt. Als het je persoonlijk niet raakt, raad ik aan het gewoon als verhaal te volgen.",
+      "addAnyway": "Toch toevoegen",
+      "addedToProfile": "Toegevoegd aan je profiel"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera leest elk artikel dat bij je profiel past, laat de ruis weg en laat zien wat jou raakt.",
+      "starterInterestsTitle": "Je hele profiel",
+      "starterInterestsBody": "Voeg alles toe wat jou raakt. Mera legt het nieuws naast elk feit.",
+      "starterStoriesBody": "Volg wat je wilt, gratis en onbeperkt. Geen AI leest gevolgde verhalen."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera zet hier notities over je feed: een feitencontrole die je hebt gevraagd is klaar, je dagelijkse feed-opschoning, tips om je profiel op te ruimen of af te stellen, en vragen van het Mera-team. Ze worden alleen op deze telefoon bewaard, 90 dagen lang, en een stip betekent dat er iets ongelezen is. Nieuwsmeldingen verschijnen hier niet. Je stelt hun tijden in bij Instellingen, onder Meldingen."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Vertel me over je leven",
+      "noFactsBody": "Mera gebruikt je stad om nieuws te vinden dat jou raakt. Je kunt altijd meer over je leven vertellen."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart “Publicaties die je hebt gelezen” en de geschiedenis per publicatie beginnen weer leeg. Verhalen die je hebt gelezen kunnen opnieuw in je feed verschijnen. Verder verandert er niets, en er worden geen gegevens op de servers aangeraakt, want de servers van Mera hadden deze gegevens nooit."
+    },
+    "personaChat": {
+      "introMessage": "Hoi, ik ben Mera.\n\nVertel me over je leven: waar je woont, wat je doet, om wie je geeft. Ik zoek het nieuws dat jou raakt. Al het andere dat je leuk vindt, kunnen we als verhalen volgen.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Onderwerpen opgeslagen! Vertel me meer over je leven, of tik op {{close}} om te beginnen met verkennen."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Ik wil meer artikelen zoals dit. Moet ik iets aan mijn profiel toevoegen, of het onderwerp als verhaal volgen?"
+    },
+    "personaAudit": {
+      "empty": "Nog geen wijzigingen. Elke keer dat Mera je profiel aanpast, verschijnt de wijziging hier."
+    },
+    "hygiene": {
+      "notificationTitle": "Je profiel opruimen?",
+      "effectTooBroad": "Verlaagt het gewicht van dit feit, zodat er minder verhalen bij komen die er niets mee te maken hebben.",
+      "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor dit feit.",
+      "titleFollowInstead": "Een verhaal om te volgen",
+      "effectFollowInstead": "Gevolgde verhalen zijn gratis, en geen AI leest ze.",
+      "keepFact": "Houd het als feit",
+      "followInsteadTopicMoves": "Nieuwe artikelen over {{topic}} gaan naar Gevolgde verhalen in plaats van naar je feed.",
+      "followInsteadFactGoes": "{{fact}} verdwijnt uit je profiel, en dat kun je niet ongedaan maken. Nieuwe artikelen over {{topic}} gaan naar Gevolgde verhalen.",
+      "followInsteadDoneTitle": "Je volgt {{topic}}",
+      "followInsteadDoneBody": "Nieuwe artikelen komen in Gevolgde verhalen terecht.",
+      "followInsteadNotificationTitle": "Een verhaal om te volgen",
+      "followInsteadNotificationBody": "Mera heeft iets gevonden dat bij Gevolgde verhalen past.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” vult je feed. Wil je het als verhaal volgen?",
+        "followInsteadNoStake": "Er is veel nieuws over {{topic}}, maar niets daarvan verandert iets voor jou, dus je feed slaat het over. Wil je het als verhaal volgen om alles te zien?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Je profiel is voor wat jou raakt. Al het andere volg je gewoon. Tik op een feit om de onderwerpen en verhalen te zien.",
+      "page": {
+        "nextInterest": "Volgend feit"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Je profiel is voor wat jou raakt. Al het andere volg je gewoon.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Je profiel is voor wat jou raakt, dus een feit is één ware zin over je leven. “Ik ben verpleegkundige.” “Ik woon in Utrecht.” “Ik heb een klein kind.” Kort en waar. Dat is het hele idee."
+            },
+            "to-topics": {
+              "body": "“Ik ben verpleegkundige” wordt zoekzinnen: personeelstekort in ziekenhuizen, salarissen in de zorg, gezondheidsbeleid. Die zinnen gaan op zoek naar nieuws. Daarna legt de AI van Mera wat terugkomt naast je feiten en bepaalt hoe het jou raakt."
+            },
+            "your-profile": {
+              "body": "Alles wat Mera gebruikt om te vinden wat jou raakt, op één plek. Tik op elk ding.",
+              "reveal": {
+                "facts": {
+                  "text": "Ware zinnen over wat jou raakt. Elk feit vindt zijn eigen onderwerpen."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Je profiel is voor wat jou raakt. Al het andere volg je gewoon.",
+              "headline": "Profiel of verhaal?",
+              "reveal": {
+                "follow": {
+                  "label": "Ik hou van Formula 1",
+                  "text": "Het raakt je niet, dus volg het gewoon. Volgen is gratis en onbeperkt, en geen AI leest gevolgde verhalen."
+                },
+                "profile": {
+                  "label": "Ik ga naar Monaco",
+                  "text": "Dit raakt je, dus het gaat in je profiel. De AI van Mera legt het nieuws hiernaast en bepaalt wat het voor je reis betekent."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Dezelfde verhalen gegroepeerd per feit, met een sectie voor elk feit in je profiel, en ongelezen verhalen eerst."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Je feiten, de verhalen die je volgt, je plaatsen en alles wat je hebt gelezen blijven op deze telefoon. De servers van Mera houden geen kopie, daarom wist uitloggen je profiel. Op een nieuwe telefoon kan de back-up het terugzetten."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Voor al het andere waar je van houdt",
+              "body": "Een team, een artiest, een verkiezing, een storm. Volg het eenmaal en nieuwe artikelen komen op één plek bij elkaar. Volgen is gratis en onbeperkt, en geen AI leest gevolgde verhalen."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Mera leest het nieuws van de dag en houdt over wat jou raakt."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Je feiten, de verhalen die je volgt en wat je hebt gelezen worden op deze telefoon opgeslagen en blijven daar. De servers van Mera houden er geen kopie van."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "wat je leuk vindt"
+    },
+    "interests": {
+      "emptyTitle": "Mera weet nog niets over je",
+      "learnAbout": "Lees wat er in je profiel hoort",
+      "backToInterests": "Terug naar je feed",
+      "findingStories": "Mera zoekt verhalen voor dit feit. De eerste verschijnen hier over een paar seconden."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Nog niets. Vertel Mera over je leven en het verschijnt hier."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Dit feit wijzigen",
+        "remove": "Dit feit verwijderen"
+      },
+      "sources": {
+        "whatFollow": "Vertel Mera wat je graag leest"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Vertel Mera over jou"
+    },
+    "meraIntro": {
+      "feed": "Je bent op je feed. Vertel me wat jou raakt, noem iets om te volgen, of stel me een vraag over het nieuws.",
+      "interest": "Deze pagina toont een van je feiten. Hier kun je het wijzigen of verwijderen.",
+      "library": "Stel me een vraag over het nieuws, of vertel me wat je wilt volgen.",
+      "sources": "Stel me een vraag over een publicatie, of vertel me wat je wilt volgen."
+    },
+    "meraDraft": {
+      "changeInterest": "Wijzig mijn feit “{{statement}}” naar ",
+      "removeInterest": "Verwijder mijn feit “{{statement}}”"
+    }
+  },
+  "pl": {
+    "feed": {
+      "noFactsBody": "Stuknij przycisk Mera i opowiedz o swoim życiu. Mera znajdzie wiadomości, które na Ciebie wpływają."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Śledź, co chcesz: drużynę, artystę, długą historię. To za darmo i bez limitu, a śledzonych historii nie czyta żadna AI. Aby zacząć, stuknij przycisk Mera.",
+      "composerPlaceholder": "Czego mam pilnować?",
+      "followCardLine": "Warto to śledzić. Zaznacz, co chcesz, a nowe artykuły trafią do Śledzonych historii.",
+      "addToProfile": "Dodaj do mojego profilu",
+      "impactQuestion": "Zanim dodam, jak to na Ciebie wpływa? AI Mery używa tego, żeby ocenić, jak bardzo artykuł jest dla Ciebie ważny. Jeśli nie dotyczy to Ciebie osobiście, polecam po prostu śledzić to jako historię.",
+      "addAnyway": "Dodaj mimo to",
+      "addedToProfile": "Dodano do Twojego profilu"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera czyta każdy artykuł pasujący do Twojego profilu, odsiewa szum i pokazuje to, co na Ciebie wpływa.",
+      "starterInterestsTitle": "Cały Twój profil",
+      "starterInterestsBody": "Dodaj wszystko, co na Ciebie wpływa. Mera porównuje wiadomości z każdym faktem.",
+      "starterStoriesBody": "Śledź, co chcesz, za darmo i bez limitu. Śledzonych historii nie czyta żadna AI."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera zostawia tu notatki o Twoim Kanale: gotowe sprawdzenie faktów, o które prosiłeś, codzienne dostrojenie Kanału, wskazówki, jak uporządkować lub dopracować profil, oraz pytania od zespołu Mery. Są przechowywane tylko na tym telefonie przez 90 dni, a kropka oznacza nieprzeczytane. Alerty o wiadomościach tu się nie pojawiają. Ich godziny ustawiasz w Ustawieniach, w sekcji Powiadomienia."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Opowiedz mi o swoim życiu",
+      "noFactsBody": "Mera korzysta z Twojego miasta, żeby znaleźć wiadomości, które na Ciebie wpływają. Możesz opowiedzieć więcej o swoim życiu w dowolnym momencie."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Wydawcy, które czytasz” w zakładce Źródła oraz historia dla każdego wydawcy wrócą do stanu pustego. Przeczytane historie mogą znowu pojawić się w Twoim Kanale. Nic więcej się nie zmienia, a dane na serwerach nie są ruszane, bo serwery Mery nigdy nie miały tych danych."
+    },
+    "personaChat": {
+      "introMessage": "Cześć, jestem Mera.\n\nOpowiedz mi o swoim życiu: gdzie mieszkasz, co robisz, na kim Ci zależy. Znajdę wiadomości, które na Ciebie wpływają. Wszystko, co jeszcze chcesz, możemy śledzić jako historie.\n\nPodziel się tyle, ile chcesz. To, co mi powiesz, zostaje na tym telefonie. Poza Tobą nikt nie ma dostępu do Twoich danych."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Tematy zapisane! Opowiedz mi więcej o swoim życiu albo stuknij {{close}}, żeby zacząć odkrywać."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Chcę więcej artykułów takich jak ten. Dodać coś do profilu, czy śledzić to jako historię?"
+    },
+    "personaAudit": {
+      "empty": "Na razie brak zmian. Gdy Mera dostraja Twój profil, każda zmiana pojawi się tutaj."
+    },
+    "hygiene": {
+      "notificationTitle": "Uporządkować Twój profil?",
+      "effectTooBroad": "Obniża wagę tego faktu, żeby przyciągał mniej niepasujących historii.",
+      "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego faktu.",
+      "titleFollowInstead": "Historia do śledzenia",
+      "effectFollowInstead": "Śledzone historie są za darmo i żadna AI ich nie czyta.",
+      "keepFact": "Zostaw jako fakt",
+      "followInsteadTopicMoves": "Nowe artykuły o temacie „{{topic}}” trafią do Śledzonych historii zamiast do Twojego Kanału.",
+      "followInsteadFactGoes": "„{{fact}}” zniknie z Twojego profilu i nie da się tego cofnąć. Nowe artykuły o temacie „{{topic}}” trafią do Śledzonych historii.",
+      "followInsteadDoneTitle": "Śledzisz: {{topic}}",
+      "followInsteadDoneBody": "Nowe artykuły trafiają do Śledzonych historii.",
+      "followInsteadNotificationTitle": "Historia do śledzenia",
+      "followInsteadNotificationBody": "Mera znalazła coś, co pasuje do Śledzonych historii.",
+      "summary": {
+        "followInsteadFlood": "„{{topic}}” zapycha Twój Kanał. Śledzić to jako historię?",
+        "followInsteadNoStake": "O temacie „{{topic}}” jest sporo wiadomości, ale żadna nic dla Ciebie nie zmienia, więc Twój Kanał je pomija. Śledzić jako historię, żeby widzieć wszystko?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Twój profil to to, co na Ciebie wpływa. Resztę po prostu śledź. Stuknij fakt, żeby zobaczyć jego tematy i historie.",
+      "page": {
+        "nextInterest": "Następny fakt"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Twój profil to to, co na Ciebie wpływa. Resztę po prostu śledź.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Profil to to, co na Ciebie wpływa, więc fakt to jedno prawdziwe zdanie o Twoim życiu. „Jestem pielęgniarką.” „Mieszkam w Utrechcie.” „Mam małe dziecko.” Krótko i prawdziwie. O to chodzi."
+            },
+            "to-topics": {
+              "body": "„Jestem pielęgniarką” zamienia się w frazy wyszukiwania: obsada szpitali, zarobki pielęgniarek, polityka zdrowotna. Te frazy idą szukać wiadomości. Potem AI Mery porównuje to, co wróci, z Twoimi faktami i ocenia wpływ na Ciebie."
+            },
+            "your-profile": {
+              "body": "Wszystko, czego Mera używa, żeby znaleźć to, co na Ciebie wpływa, w jednym miejscu. Stuknij każdą pozycję.",
+              "reveal": {
+                "facts": {
+                  "text": "Prawdziwe zdania o tym, co na Ciebie wpływa. Każde znajduje własne tematy."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Profil to to, co na Ciebie wpływa. Resztę po prostu śledź.",
+              "headline": "Profil czy historia?",
+              "reveal": {
+                "follow": {
+                  "label": "Lubię Formula 1",
+                  "text": "To na Ciebie nie wpływa, więc po prostu śledź. Śledzenie jest za darmo i bez limitu, a śledzonych historii nie czyta żadna AI."
+                },
+                "profile": {
+                  "label": "Jadę do Monaco",
+                  "text": "To na Ciebie wpływa, więc trafia do profilu. AI Mery porównuje do tego wiadomości i ocenia, jak wpłynie to na Twoją podróż."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Te same wiadomości pogrupowane według faktów, jedna sekcja dla każdego faktu w Twoim profilu, z nieprzeczytanymi na początku."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Twoje fakty, historie, które śledzisz, Twoje miejsca i wszystko, co przeczytałeś, zostają na tym telefonie. Serwery Mery nie mają kopii, dlatego wylogowanie kasuje Twój profil. Na nowym telefonie Kopia zapasowa może go przywrócić."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Dla wszystkiego innego, co lubisz",
+              "body": "Drużyna, artysta, wybory, burza. Śledź raz, a nowe artykuły zbiorą się w jednym miejscu. Śledzenie jest za darmo i bez limitu, a śledzonych historii nie czyta żadna AI."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Czyta wiadomości dnia i zostawia to, co na Ciebie wpływa."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Twoje fakty, historie, które śledzisz, i to, co przeczytałeś, zapisują się na tym telefonie i tu zostają. Serwery Mery nie mają ich kopii."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "to, co lubisz"
+    },
+    "interests": {
+      "emptyTitle": "Mera jeszcze o Tobie nic nie wie",
+      "learnAbout": "Dowiedz się, co trafia do Twojego profilu",
+      "backToInterests": "Wróć do Kanału",
+      "findingStories": "Mera szuka historii dla tego faktu. Pierwsze pojawią się tutaj za kilka sekund."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Na razie pusto. Opowiedz Merze o swoim życiu, a to się tu pojawi."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Zmień ten fakt",
+        "remove": "Usuń ten fakt"
+      },
+      "sources": {
+        "whatFollow": "Powiedz Merze, co lubisz czytać"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Opowiedz Merze o sobie"
+    },
+    "meraIntro": {
+      "feed": "Jesteś w swoim Kanale. Powiedz, co na Ciebie wpływa, nazwij coś do śledzenia albo zapytaj o cokolwiek w wiadomościach.",
+      "interest": "Ta strona pokazuje jeden z Twoich faktów. Możesz go tu zmienić albo usunąć.",
+      "library": "Zapytaj o cokolwiek z wiadomości albo powiedz, co chcesz śledzić.",
+      "sources": "Zapytaj o wydawcę albo powiedz, co chcesz śledzić."
+    },
+    "meraDraft": {
+      "changeInterest": "Zmień mój fakt „{{statement}}” na ",
+      "removeInterest": "Usuń mój fakt „{{statement}}”"
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "noFactsBody": "Toque no botão da Mera e conte sobre a sua vida. A Mera encontra as notícias que afetam você."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Siga o que quiser: um time, um artista, uma história que se arrasta. É grátis e sem limite, e nenhuma IA lê as histórias seguidas. Toque no botão da Mera para começar.",
+      "composerPlaceholder": "O que devo acompanhar?",
+      "followCardLine": "Vale a pena seguir. Marque o que quiser e os artigos novos vão para Histórias seguidas.",
+      "addToProfile": "Adicionar ao meu perfil",
+      "impactQuestion": "Antes de adicionar, como isso afeta você? A IA da Mera usa essa informação para descobrir o quanto um artigo importa para você. Se não afeta você diretamente, eu recomendo apenas seguir como uma história.",
+      "addAnyway": "Adicionar mesmo assim",
+      "addedToProfile": "Adicionado ao seu perfil"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "A Mera lê todo artigo que combina com o seu perfil, deixa de lado o que não importa e mostra o que afeta você.",
+      "starterInterestsTitle": "Todo o seu perfil",
+      "starterInterestsBody": "Adicione tudo o que afeta você. A Mera compara as notícias com cada fato.",
+      "starterStoriesBody": "Siga o que quiser, grátis e sem limite. Nenhuma IA lê as histórias seguidas."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "A Mera deixa avisos aqui sobre o seu Feed: uma checagem de fatos que você pediu está pronta, o ajuste diário do seu Feed, dicas para organizar ou ajustar o seu perfil e perguntas da equipe da Mera. Esses avisos ficam guardados só neste celular por 90 dias, e um ponto indica que há algo não lido. Alertas de notícias não aparecem aqui. Você define os horários deles em Configurações, em Notificações."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Conte um pouco sobre a sua vida",
+      "noFactsBody": "A Mera usa sua cidade para encontrar notícias que afetam você. Você pode contar mais sobre a sua vida quando quiser."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Apaga o registro local dos artigos que você abriu. O cartão “Publicações que você tem lido”, na aba Fontes, e o histórico de cada publicação voltam a ficar vazios. As histórias que você leu podem aparecer no seu Feed de novo. Nada mais é afetado, e nenhum dado dos servidores é tocado, já que os servidores da Mera nunca tiveram esses dados."
+    },
+    "personaChat": {
+      "introMessage": "Oi, eu sou a Mera.\n\nConte um pouco sobre a sua vida: onde você mora, o que faz, com quem se importa. Eu encontro as notícias que afetam você. Tudo o que mais você quiser, podemos seguir como histórias.\n\nCompartilhe o quanto quiser. O que você me contar fica neste celular. Ninguém tem acesso aos seus dados além de você."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Tópicos salvos! Conte mais sobre a sua vida, ou toque em {{close}} para começar a explorar."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Quero mais artigos como este. Devo adicionar algo ao meu perfil ou seguir como uma história?"
+    },
+    "personaAudit": {
+      "empty": "Nenhuma mudança ainda. Conforme a Mera ajusta o seu perfil, cada mudança aparece aqui."
+    },
+    "hygiene": {
+      "notificationTitle": "Organizar o seu perfil?",
+      "effectTooBroad": "Diminui o peso deste fato para que ele traga menos histórias fora do assunto.",
+      "effectIncoherentTopics": "Troca estes tópicos por outros melhores para este fato.",
+      "titleFollowInstead": "Uma história para seguir",
+      "effectFollowInstead": "Histórias seguidas são grátis, e nenhuma IA as lê.",
+      "keepFact": "Manter como fato",
+      "followInsteadTopicMoves": "Novos artigos sobre {{topic}} vão para Histórias seguidas, em vez do seu Feed.",
+      "followInsteadFactGoes": "{{fact}} vai sair do seu perfil, e isso não pode ser desfeito. Novos artigos sobre {{topic}} vão para Histórias seguidas.",
+      "followInsteadDoneTitle": "Seguindo {{topic}}",
+      "followInsteadDoneBody": "Novos artigos chegam em Histórias seguidas.",
+      "followInsteadNotificationTitle": "Uma história para seguir",
+      "followInsteadNotificationBody": "A Mera encontrou algo que combina com Histórias seguidas.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” está enchendo o seu Feed. Quer seguir como uma história?",
+        "followInsteadNoStake": "Há muitas notícias sobre {{topic}}, mas nenhuma muda nada para você, então o seu Feed deixa isso de fora. Quer seguir como uma história para ver tudo?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Seu perfil é para o que afeta você. O resto, basta seguir. Toque em um fato para ver os tópicos e as histórias dele.",
+      "page": {
+        "nextInterest": "Próximo fato"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Seu perfil é para o que afeta você. O resto, basta seguir.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Seu perfil é para o que afeta você, então um fato é uma frase verdadeira sobre a sua vida. “Sou enfermeira.” “Moro em Utrecht.” “Tenho um filho pequeno.” Curto e verdadeiro. A ideia é só essa."
+            },
+            "to-topics": {
+              "body": "“Sou enfermeira” vira frases de busca: equipe de hospital, salário de enfermagem, política de saúde. Essas frases saem para encontrar notícias. Depois, a IA da Mera compara o que volta com os seus fatos e descobre o impacto em você."
+            },
+            "your-profile": {
+              "body": "Tudo o que a Mera usa para encontrar o que afeta você, em um só lugar. Toque em cada item.",
+              "reveal": {
+                "facts": {
+                  "text": "Verdades sobre o que afeta você. Cada uma encontra os próprios tópicos."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Seu perfil é para o que afeta você. O resto, basta seguir.",
+              "headline": "Perfil ou história?",
+              "reveal": {
+                "follow": {
+                  "label": "Gosto de Formula 1",
+                  "text": "Não afeta você, então basta seguir. Seguir é grátis e sem limite, e nenhuma IA lê as histórias seguidas."
+                },
+                "profile": {
+                  "label": "Vou para Monaco",
+                  "text": "Isso afeta você, então vai para o seu perfil. A IA da Mera compara as notícias com isso e descobre o impacto na sua viagem."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "As mesmas histórias agrupadas por fato, com uma seção para cada fato do seu perfil e as histórias não lidas primeiro."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Seus fatos, as histórias que você segue, seus lugares e tudo o que você leu ficam neste celular. Os servidores da Mera não guardam cópia, e é por isso que sair da conta apaga o seu perfil. Em um celular novo, o Backup pode trazê-lo de volta."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Para qualquer outra coisa que você goste",
+              "body": "Um time, um artista, uma eleição, uma tempestade. Siga uma vez e os artigos novos se reúnem em um só lugar. Seguir é grátis e sem limite, e nenhuma IA lê as histórias seguidas."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Ela lê as notícias do dia e guarda o que afeta você."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Seus fatos, as histórias que você segue e o que você leu são gravados neste celular e ficam aqui. Os servidores da Mera não guardam cópia deles."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "o que você gosta"
+    },
+    "interests": {
+      "emptyTitle": "A Mera ainda não conhece você",
+      "learnAbout": "Saiba o que entra no seu perfil",
+      "backToInterests": "Voltar ao seu Feed",
+      "findingStories": "A Mera está buscando histórias para este fato. As primeiras aparecem aqui em alguns segundos."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Nada ainda. Conte à Mera sobre a sua vida e isso aparece aqui."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Alterar este fato",
+        "remove": "Remover este fato"
+      },
+      "sources": {
+        "whatFollow": "Conte à Mera o que você gosta de ler"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Conte à Mera sobre você"
+    },
+    "meraIntro": {
+      "feed": "Você está no seu Feed. Conte o que afeta você, cite algo para seguir ou pergunte qualquer coisa sobre notícias.",
+      "interest": "Esta página mostra um dos seus fatos. Você pode alterá-lo ou removê-lo aqui.",
+      "library": "Pergunte sobre qualquer notícia, ou diga o que você gostaria de seguir.",
+      "sources": "Pergunte sobre uma publicação, ou diga o que você gostaria de seguir."
+    },
+    "meraDraft": {
+      "changeInterest": "Alterar meu fato “{{statement}}” para ",
+      "removeInterest": "Remover meu fato “{{statement}}”"
+    }
+  },
+  "ru": {
+    "feed": {
+      "noFactsBody": "Нажмите кнопку Мера и расскажите о своей жизни. Мера найдёт новости, которые на вас влияют."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Следите за чем угодно: за командой, артистом, долгой историей. Это бесплатно и без ограничений, а отслеживаемые истории не читает ни один ИИ. Чтобы начать, нажмите кнопку Мера.",
+      "composerPlaceholder": "За чем мне стоит следить?",
+      "followCardLine": "Это стоит отслеживать. Отметьте, что вам нужно, и новые статьи появятся в «Отслеживаемых историях».",
+      "addToProfile": "Добавить в мой профиль",
+      "impactQuestion": "Прежде чем добавить, как это на вас влияет? ИИ Меры использует это, чтобы понять, насколько статья важна для вас. Если это вас не касается лично, советую просто отслеживать это как историю.",
+      "addAnyway": "Всё равно добавить",
+      "addedToProfile": "Добавлено в ваш профиль"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Мера читает каждую статью, которая подходит вашему профилю, отсеивает лишнее и показывает то, что на вас влияет.",
+      "starterInterestsTitle": "Весь ваш профиль",
+      "starterInterestsBody": "Добавьте всё, что на вас влияет. Мера сверяет новости с каждым фактом.",
+      "starterStoriesBody": "Отслеживайте что угодно, бесплатно и без ограничений. Отслеживаемые истории не читает ни один ИИ."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Здесь Мера оставляет заметки о вашей Ленте: готова проверка фактов, которую вы запрашивали, ежедневная настройка Ленты, советы по наведению порядка в профиле и вопросы от команды Меры. Они хранятся только на этом телефоне 90 дней, а точка означает, что есть непрочитанное. Новостные оповещения сюда не попадают. Их время задаётся в Настройках, в разделе «Уведомления»."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Расскажите о своей жизни",
+      "noFactsBody": "Мера использует ваш город, чтобы находить новости, которые на вас влияют. Рассказать больше о своей жизни можно в любой момент."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Очищает локальный журнал открытых статей. Карточка «Издания, которые вы читаете» на вкладке «Источники» и история по каждому изданию станут пустыми. Прочитанные истории могут снова появиться в вашей Ленте. Больше ничего не меняется, данные на серверах не затрагиваются, так как серверы Меры этих данных никогда не хранили."
+    },
+    "personaChat": {
+      "introMessage": "Привет, я Мера.\n\nРасскажите о своей жизни: где вы живёте, чем занимаетесь, о ком заботитесь. Я найду новости, которые на вас влияют. Всё остальное, что вам интересно, можно отслеживать как истории.\n\nДелитесь столькими подробностями, сколько хотите. Всё, что вы расскажете, остаётся на этом телефоне. Кроме вас, никто не имеет доступа к вашим данным."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Темы сохранены! Расскажите подробнее о своей жизни или нажмите {{close}}, чтобы начать изучать."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Хочу больше статей, похожих на эту. Добавить что-то в мой профиль или отслеживать это как историю?"
+    },
+    "personaAudit": {
+      "empty": "Изменений пока нет. Когда Мера настраивает ваш профиль, каждое изменение появляется здесь."
+    },
+    "hygiene": {
+      "notificationTitle": "Навести порядок в профиле?",
+      "effectTooBroad": "Снижает вес этого факта, чтобы он приносил меньше нерелевантных историй.",
+      "effectIncoherentTopics": "Заменяет эти темы на более подходящие для этого факта.",
+      "titleFollowInstead": "История для отслеживания",
+      "effectFollowInstead": "Отслеживаемые истории бесплатны, и ИИ их не читает.",
+      "keepFact": "Оставить как факт",
+      "followInsteadTopicMoves": "Новые статьи на тему «{{topic}}» будут попадать в «Отслеживаемые истории», а не в Ленту.",
+      "followInsteadFactGoes": "«{{fact}}» уйдёт из вашего профиля, и это нельзя отменить. Новые статьи на тему «{{topic}}» будут попадать в «Отслеживаемые истории».",
+      "followInsteadDoneTitle": "Отслеживаем «{{topic}}»",
+      "followInsteadDoneBody": "Новые статьи появляются в «Отслеживаемых историях».",
+      "followInsteadNotificationTitle": "История для отслеживания",
+      "followInsteadNotificationBody": "Мера нашла то, что подходит для «Отслеживаемых историй».",
+      "summary": {
+        "followInsteadFlood": "«{{topic}}» заполняет вашу Ленту. Отслеживать это как историю?",
+        "followInsteadNoStake": "По теме «{{topic}}» много новостей, но ни одна из них ничего для вас не меняет, поэтому Лента её пропускает. Отслеживать как историю, чтобы видеть всё?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Профиль нужен для того, что на вас влияет. Всё остальное просто отслеживайте. Нажмите на факт, чтобы увидеть его темы и истории.",
+      "page": {
+        "nextInterest": "Следующий факт"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Профиль нужен для того, что на вас влияет. Всё остальное просто отслеживайте.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Профиль нужен для того, что на вас влияет, поэтому факт: одна правдивая строка о вашей жизни. «Я медсестра.» «Я живу в Утрехте.» «У меня маленький ребёнок.» Коротко и правдиво. Вот и вся идея."
+            },
+            "to-topics": {
+              "body": "«Я медсестра» превращается в поисковые фразы: укомплектованность больниц, зарплаты медсестёр, политика здравоохранения. Эти фразы уходят на поиск новостей. Затем ИИ Меры сверяет найденное с вашими фактами и определяет, как это влияет на вас."
+            },
+            "your-profile": {
+              "body": "Всё, что Мера использует, чтобы находить то, что на вас влияет, в одном месте. Нажмите на каждый пункт.",
+              "reveal": {
+                "facts": {
+                  "text": "Правдивые строки о том, что на вас влияет. У каждой свои темы."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Профиль нужен для того, что на вас влияет. Всё остальное просто отслеживайте.",
+              "headline": "Профиль или история?",
+              "reveal": {
+                "follow": {
+                  "label": "Мне нравится Formula 1",
+                  "text": "Это на вас не влияет, поэтому просто отслеживайте. Отслеживание бесплатно и без ограничений, а отслеживаемые истории не читает ни один ИИ."
+                },
+                "profile": {
+                  "label": "Я еду в Monaco",
+                  "text": "Это на вас влияет, поэтому попадает в профиль. ИИ Меры сверяет новости с этим и определяет, как это скажется на вашей поездке."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Те же истории, сгруппированные по фактам: отдельный раздел для каждого факта в вашем профиле, сначала непрочитанные."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Ваши факты, отслеживаемые истории, ваши места и всё, что вы читали, хранятся на этом телефоне. На серверах Меры копий нет, поэтому выход из аккаунта стирает ваш профиль. На новом телефоне его может вернуть Резервная копия."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Для всего остального, что вам нравится",
+              "body": "Команда, артист, выборы, буря. Отследите один раз, и новые статьи соберутся в одном месте. Отслеживание бесплатно и без ограничений, а отслеживаемые истории не читает ни один ИИ."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Она читает новости дня и оставляет то, что на вас влияет."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Ваши факты, отслеживаемые истории и прочитанное записываются на этот телефон и остаются здесь. На серверах Меры их копий нет."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "то, что вам нравится"
+    },
+    "interests": {
+      "emptyTitle": "Мера пока ничего о вас не знает",
+      "learnAbout": "Узнайте, что входит в ваш профиль",
+      "backToInterests": "Назад в Ленту",
+      "findingStories": "Мера подбирает истории для этого факта. Первые появятся здесь через несколько секунд."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Пока пусто. Расскажите Мере о своей жизни, и это появится здесь."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Изменить этот факт",
+        "remove": "Удалить этот факт"
+      },
+      "sources": {
+        "whatFollow": "Расскажите Мере, что вы любите читать"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Расскажите Мере о себе"
+    },
+    "meraIntro": {
+      "feed": "Вы в своей Ленте. Расскажите, что на вас влияет, назовите, за чем следить, или спросите о любых новостях.",
+      "interest": "Здесь показан один из ваших фактов. Его можно изменить или удалить.",
+      "library": "Спросите меня о любых новостях или расскажите, что хотите отслеживать.",
+      "sources": "Спросите меня об издании или расскажите, что хотите отслеживать."
+    },
+    "meraDraft": {
+      "changeInterest": "Изменить мой факт «{{statement}}» на ",
+      "removeInterest": "Удалить мой факт «{{statement}}»"
+    }
+  },
+  "th": {
+    "feed": {
+      "noFactsBody": "แตะปุ่ม เมร่า แล้วเล่าเรื่องราวในชีวิตของคุณ เมร่า จะหาข่าวที่กระทบคุณ"
+    },
+    "trackedStories": {
+      "emptyBodyMera": "ติดตามอะไรก็ได้ที่คุณชอบ ไม่ว่าจะเป็นทีม ศิลปิน หรือเรื่องราวที่ยาวนาน ฟรีและไม่จำกัด และไม่มี AI อ่านเรื่องราวที่ติดตาม แตะปุ่ม เมร่า เพื่อเริ่มต้น",
+      "composerPlaceholder": "อยากให้เฝ้าดูเรื่องอะไร?",
+      "followCardLine": "เรื่องนี้น่าติดตาม เลือกสิ่งที่คุณต้องการ แล้วบทความใหม่จะไปขึ้นที่เรื่องราวที่ติดตาม",
+      "addToProfile": "เพิ่มไปยังโปรไฟล์ของฉันแทน",
+      "impactQuestion": "ก่อนเพิ่ม มันส่งผลต่อคุณอย่างไร AI ของ เมร่า ใช้ข้อมูลนี้เพื่อดูว่าบทความหนึ่งสำคัญกับคุณแค่ไหน ถ้ามันไม่กระทบคุณโดยตรง ฉันแนะนำให้ติดตามเป็นเรื่องราวเฉย ๆ",
+      "addAnyway": "เพิ่มอยู่ดี",
+      "addedToProfile": "เพิ่มลงในโปรไฟล์ของคุณแล้ว"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "เมร่า อ่านทุกบทความที่ตรงกับโปรไฟล์ของคุณ คัดสิ่งรบกวนออก และแสดงให้คุณเห็นสิ่งที่กระทบคุณ",
+      "starterInterestsTitle": "โปรไฟล์ของคุณทั้งหมด",
+      "starterInterestsBody": "เพิ่มทุกอย่างที่กระทบคุณ เมร่า จะอ่านข่าวเทียบกับข้อเท็จจริงทุกข้อ",
+      "starterStoriesBody": "ติดตามอะไรก็ได้ที่คุณชอบ ฟรีและไม่จำกัด ไม่มี AI อ่านเรื่องราวที่ติดตาม"
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "เมร่า จะทิ้งบันทึกไว้ที่นี่เกี่ยวกับฟีดของคุณ เช่น การตรวจข้อเท็จจริงที่คุณขอพร้อมแล้ว การปรับแต่งฟีดประจำวัน คำแนะนำในการจัดหรือปรับโปรไฟล์ และคำถามจากทีมเมร่า ข้อมูลเหล่านี้เก็บไว้ในโทรศัพท์เครื่องนี้เท่านั้นเป็นเวลา 90 วัน และจุดแสดงว่ามีรายการที่ยังไม่ได้อ่าน การแจ้งเตือนข่าวจะไม่แสดงที่นี่ คุณตั้งเวลาได้ในการตั้งค่า ภายใต้การแจ้งเตือน"
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "เล่าเรื่องชีวิตของคุณให้ฟังหน่อย",
+      "noFactsBody": "เมร่า ใช้เมืองของคุณเพื่อหาข่าวที่กระทบคุณ และคุณเล่าเรื่องชีวิตเพิ่มเติมให้ เมร่า ฟังได้ทุกเมื่อ"
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "ล้างบันทึกในเครื่องของบทความที่คุณเปิดอ่าน การ์ด “สิ่งพิมพ์ที่คุณอ่าน” ในแท็บแหล่งข่าว และประวัติของแต่ละสิ่งพิมพ์จะกลับไปว่างเปล่า เรื่องที่คุณเคยอ่านอาจกลับมาปรากฏในฟีดอีก ไม่มีสิ่งอื่นได้รับผลกระทบ และไม่มีการแตะต้องข้อมูลบนเซิร์ฟเวอร์ เพราะเซิร์ฟเวอร์ของ เมร่า ไม่เคยมีข้อมูลนี้"
+    },
+    "personaChat": {
+      "introMessage": "สวัสดี ฉันคือเมร่า\n\nเล่าเรื่องชีวิตของคุณให้ฟังหน่อย ว่าคุณอยู่ที่ไหน ทำอะไร และห่วงใยใคร ฉันจะหาข่าวที่กระทบคุณ ส่วนเรื่องอื่นที่คุณชอบ เราติดตามเป็นเรื่องราวได้\n\nจะเล่ามากหรือน้อยก็ได้ ที่คุณเล่าจะอยู่ในโทรศัพท์เครื่องนี้ ไม่มีใครเข้าถึงข้อมูลของคุณได้นอกจากคุณ"
+    },
+    "floatingChat": {
+      "topicsSavedHint": "บันทึกหัวข้อแล้ว! เล่าเรื่องชีวิตของคุณเพิ่มเติม หรือแตะ {{close}} เพื่อเริ่มสำรวจ"
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "อยากได้บทความแบบนี้เพิ่มอีก ควรเพิ่มอะไรลงในโปรไฟล์ หรือติดตามเป็นเรื่องราวดี?"
+    },
+    "personaAudit": {
+      "empty": "ยังไม่มีการเปลี่ยนแปลง เมื่อ เมร่า ปรับโปรไฟล์ของคุณ ทุกการเปลี่ยนแปลงจะแสดงที่นี่"
+    },
+    "hygiene": {
+      "notificationTitle": "จัดระเบียบโปรไฟล์ของคุณไหม?",
+      "effectTooBroad": "ลดน้ำหนักของข้อเท็จจริงนี้ เพื่อให้ดึงเรื่องที่ไม่เกี่ยวข้องเข้ามาน้อยลง",
+      "effectIncoherentTopics": "แทนที่หัวข้อเหล่านี้ด้วยหัวข้อที่เหมาะกับข้อเท็จจริงนี้มากกว่า",
+      "titleFollowInstead": "เรื่องราวที่น่าติดตาม",
+      "effectFollowInstead": "เรื่องราวที่ติดตามฟรี และไม่มี AI อ่าน",
+      "keepFact": "เก็บไว้เป็นข้อเท็จจริง",
+      "followInsteadTopicMoves": "บทความใหม่เกี่ยวกับ {{topic}} จะไปอยู่ที่เรื่องราวที่ติดตาม แทนที่จะอยู่ในฟีดของคุณ",
+      "followInsteadFactGoes": "{{fact}} จะออกจากโปรไฟล์ของคุณ และยกเลิกไม่ได้ บทความใหม่เกี่ยวกับ {{topic}} จะไปอยู่ที่เรื่องราวที่ติดตาม",
+      "followInsteadDoneTitle": "กำลังติดตาม {{topic}}",
+      "followInsteadDoneBody": "บทความใหม่จะไปอยู่ที่เรื่องราวที่ติดตาม",
+      "followInsteadNotificationTitle": "เรื่องราวที่น่าติดตาม",
+      "followInsteadNotificationBody": "เมร่า พบบางอย่างที่เหมาะกับเรื่องราวที่ติดตาม",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” กำลังเต็มฟีดของคุณ จะติดตามเป็นเรื่องราวแทนไหม?",
+        "followInsteadNoStake": "มีข่าวเกี่ยวกับ {{topic}} มากมาย แต่ไม่มีข่าวไหนเปลี่ยนแปลงอะไรสำหรับคุณ ฟีดของคุณจึงข้ามไป จะติดตามเป็นเรื่องราวเพื่อดูทั้งหมดไหม?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "โปรไฟล์ของคุณมีไว้สำหรับสิ่งที่กระทบคุณ สิ่งอื่นทั้งหมดแค่ติดตาม แตะข้อเท็จจริงเพื่อดูหัวข้อและเรื่องราวของมัน",
+      "page": {
+        "nextInterest": "ข้อเท็จจริงถัดไป"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "โปรไฟล์ของคุณมีไว้สำหรับสิ่งที่กระทบคุณ สิ่งอื่นทั้งหมดแค่ติดตาม",
+          "slides": {
+            "a-fact-is": {
+              "body": "โปรไฟล์ของคุณมีไว้สำหรับสิ่งที่กระทบคุณ ข้อเท็จจริงจึงเป็นประโยคจริงหนึ่งประโยคเกี่ยวกับชีวิตของคุณ “ฉันเป็นพยาบาล” “ฉันอาศัยอยู่ที่อูเทรคต์” “ฉันมีลูกเล็ก” สั้นและเป็นจริง นั่นคือทั้งหมดของแนวคิดนี้"
+            },
+            "to-topics": {
+              "body": "“ฉันเป็นพยาบาล” จะกลายเป็นวลีค้นหา เช่น การจัดอัตรากำลังในโรงพยาบาล เงินเดือนพยาบาล นโยบายสุขภาพ วลีเหล่านั้นถูกส่งออกไปค้นหาข่าว จากนั้น AI ของ เมร่า จะอ่านสิ่งที่ค้นได้เทียบกับข้อเท็จจริงของคุณ และคำนวณผลกระทบต่อคุณ"
+            },
+            "your-profile": {
+              "body": "ทุกอย่างที่ เมร่า ใช้หาสิ่งที่กระทบคุณ รวมอยู่ในที่เดียว แตะแต่ละรายการ",
+              "reveal": {
+                "facts": {
+                  "text": "ประโยคจริงเกี่ยวกับสิ่งที่กระทบคุณ แต่ละข้อจะหาหัวข้อของตัวเอง"
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "โปรไฟล์ของคุณมีไว้สำหรับสิ่งที่กระทบคุณ สิ่งอื่นทั้งหมดแค่ติดตาม",
+              "headline": "โปรไฟล์หรือเรื่องราว?",
+              "reveal": {
+                "follow": {
+                  "label": "ฉันชอบฟอร์มูลา 1",
+                  "text": "มันไม่กระทบคุณ จึงแค่ติดตาม การติดตามฟรีและไม่จำกัด และไม่มี AI อ่านเรื่องราวที่ติดตาม"
+                },
+                "profile": {
+                  "label": "ฉันจะไปโมนาโก",
+                  "text": "อันนี้กระทบคุณ จึงอยู่ในโปรไฟล์ AI ของ เมร่า จะอ่านข่าวเทียบกับมัน และคำนวณผลกระทบต่อการเดินทางของคุณ"
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "เรื่องราวเดิมจัดกลุ่มตามข้อเท็จจริง มีหนึ่งส่วนต่อหนึ่งข้อเท็จจริงในโปรไฟล์ของคุณ โดยเรื่องที่ยังไม่ได้อ่านจะขึ้นก่อน"
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "ข้อเท็จจริงของคุณ เรื่องราวที่คุณติดตาม สถานที่ของคุณ และทุกอย่างที่คุณเคยอ่าน อยู่ในโทรศัพท์เครื่องนี้ เซิร์ฟเวอร์ของ เมร่า ไม่เก็บสำเนา ซึ่งเป็นเหตุผลที่การออกจากระบบจะลบโปรไฟล์ของคุณ บนโทรศัพท์เครื่องใหม่ การสำรองข้อมูลจะนำกลับมาได้"
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "สำหรับสิ่งอื่นที่คุณชอบ",
+              "body": "ทีม ศิลปิน การเลือกตั้ง หรือพายุ ติดตามครั้งเดียว บทความใหม่จะมารวมกันในที่เดียว การติดตามฟรีและไม่จำกัด และไม่มี AI อ่านเรื่องราวที่ติดตาม"
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "อ่านข่าวของวันและเก็บสิ่งที่กระทบคุณไว้"
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "ข้อเท็จจริงของคุณ เรื่องราวที่ติดตาม และสิ่งที่คุณอ่าน ถูกบันทึกลงโทรศัพท์เครื่องนี้และอยู่ที่นั่น เซิร์ฟเวอร์ของ เมร่า ไม่เก็บสำเนาของสิ่งเหล่านี้"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "สิ่งที่คุณชอบ"
+    },
+    "interests": {
+      "emptyTitle": "เมร่า ยังไม่รู้จักคุณ",
+      "learnAbout": "เรียนรู้ว่าอะไรเข้าโปรไฟล์ของคุณได้บ้าง",
+      "backToInterests": "กลับไปที่ฟีดของคุณ",
+      "findingStories": "เมร่า กำลังหาเรื่องราวสำหรับข้อเท็จจริงนี้ เรื่องแรกจะปรากฏที่นี่ในไม่กี่วินาที"
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "ยังไม่มีอะไร เล่าเรื่องชีวิตของคุณให้ เมร่า ฟัง แล้วมันจะแสดงที่นี่"
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "เปลี่ยนข้อเท็จจริงนี้",
+        "remove": "ลบข้อเท็จจริงนี้"
+      },
+      "sources": {
+        "whatFollow": "บอก เมร่า ว่าคุณชอบอ่านอะไร"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "เล่าเรื่องของคุณให้ เมร่า ฟัง"
+    },
+    "meraIntro": {
+      "feed": "คุณอยู่ที่ฟีดของคุณ บอกฉันว่าอะไรกระทบคุณ ตั้งชื่อเรื่องที่อยากติดตาม หรือถามอะไรก็ได้เกี่ยวกับข่าว",
+      "interest": "หน้านี้แสดงข้อเท็จจริงหนึ่งข้อของคุณ คุณเปลี่ยนหรือลบได้ที่นี่",
+      "library": "ถามฉันเรื่องอะไรก็ได้ในข่าว หรือบอกฉันว่าคุณอยากติดตามอะไร",
+      "sources": "ถามฉันเกี่ยวกับสิ่งพิมพ์ หรือบอกฉันว่าคุณอยากติดตามอะไร"
+    },
+    "meraDraft": {
+      "changeInterest": "เปลี่ยนข้อเท็จจริงของฉัน “{{statement}}” เป็น ",
+      "removeInterest": "ลบข้อเท็จจริงของฉัน “{{statement}}”"
+    }
+  },
+  "tr": {
+    "feed": {
+      "noFactsBody": "Mera düğmesine dokunup hayatınızı anlatın. Sizi ilgilendiren haberleri Mera bulur."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Sevdiğiniz her şeyi takip edin: bir takım, bir sanatçı, uzun süren bir olay. Ücretsiz ve sınırsız, ayrıca hiçbir yapay zeka takip edilen haberleri okumaz. Başlamak için Mera düğmesine dokunun.",
+      "composerPlaceholder": "Neyi takip etmeliyim?",
+      "followCardLine": "Bu takip etmeye değer. İstediklerinizi işaretleyin, yeni makaleler Takip edilen haberler kısmına düşer.",
+      "addToProfile": "Bunun yerine profilime ekle",
+      "impactQuestion": "Eklemeden önce, bu sizi nasıl etkiliyor? Mera’nın yapay zekası, bir makalenin sizin için ne kadar önemli olduğunu bulmak için bunu kullanır. Sizi kişisel olarak etkilemiyorsa, sadece bir haber hikâyesi olarak takip etmenizi öneririm.",
+      "addAnyway": "Yine de ekle",
+      "addedToProfile": "Profilinize eklendi"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera, profilinizle eşleşen her makaleyi okur, gürültüyü ayıklar ve sizi ilgilendireni gösterir.",
+      "starterInterestsTitle": "Tüm profiliniz",
+      "starterInterestsBody": "Sizi ilgilendiren her şeyi ekleyin. Mera haberleri her bir gerçeğe karşı karşılaştırır.",
+      "starterStoriesBody": "Sevdiğiniz her şeyi ücretsiz ve sınırsız takip edin. Hiçbir yapay zeka takip edilen haberleri okumaz."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera burada akışınızla ilgili notlar bırakır: istediğiniz bir doğrulama hazır olduğunda, günlük akış ayarınız, profilinizi düzenleme ya da ayarlama ipuçları ve Mera ekibinin soruları. Bunlar yalnızca bu telefonda 90 gün saklanır ve nokta okunmamış bir şey olduğunu gösterir. Haber uyarıları burada görünmez. Zamanlarını Ayarlar’da, Bildirimler altında belirlersiniz."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Hayatınızı anlatın",
+      "noFactsBody": "Mera, sizi ilgilendiren haberleri bulmak için şehrinizi kullanır. Hayatınız hakkında istediğiniz zaman daha fazla şey anlatabilirsiniz."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Açtığınız makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki “Okuduğunuz yayınlar” kartı ve yayıncı başına geçmiş boş hâle döner. Okuduğunuz haberler Akışınızda yeniden görünebilir. Başka hiçbir şey etkilenmez ve sunucu verilerine dokunulmaz, çünkü Mera’nın sunucularında bu veriler hiçbir zaman olmadı."
+    },
+    "personaChat": {
+      "introMessage": "Merhaba, ben Mera.\n\nHayatınızı anlatın: nerede yaşıyorsunuz, ne iş yapıyorsunuz, kimleri önemsiyorsunuz. Sizi ilgilendiren haberleri bulacağım. Başka istediğiniz her şeyi hikâye olarak takip edebiliriz.\n\nİstediğiniz kadar ya da az paylaşın. Bana anlattıklarınız bu telefonda kalır. Verilerinize sizden başka kimse erişemez."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Konular kaydedildi! Hayatınız hakkında daha fazla anlatın ya da keşfetmeye başlamak için {{close}} düğmesine dokunun."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Buna benzer daha fazla makale görmek istiyorum. Profilime bir şey eklemeli miyim, yoksa bunu bir hikâye olarak mı takip etmeliyim?"
+    },
+    "personaAudit": {
+      "empty": "Henüz değişiklik yok. Mera profilinizi ayarladıkça her değişiklik burada görünür."
+    },
+    "hygiene": {
+      "notificationTitle": "Profilinizi toparlayalım mı?",
+      "effectTooBroad": "Bu gerçeğin ağırlığını düşürür, böylece konu dışı daha az haber getirir.",
+      "effectIncoherentTopics": "Bu konuları, bu gerçek için daha uygun olanlarla değiştirir.",
+      "titleFollowInstead": "Takip edilecek bir hikâye",
+      "effectFollowInstead": "Takip edilen haberler ücretsizdir ve hiçbir yapay zeka onları okumaz.",
+      "keepFact": "Gerçek olarak tut",
+      "followInsteadTopicMoves": "{{topic}} ile ilgili yeni makaleler, Akışınız yerine Takip edilen haberler kısmına gidecek.",
+      "followInsteadFactGoes": "{{fact}} profilinizden çıkacak ve bu geri alınamaz. {{topic}} ile ilgili yeni makaleler Takip edilen haberler kısmına gidecek.",
+      "followInsteadDoneTitle": "{{topic}} takip ediliyor",
+      "followInsteadDoneBody": "Yeni makaleler Takip edilen haberler kısmına düşer.",
+      "followInsteadNotificationTitle": "Takip edilecek bir hikâye",
+      "followInsteadNotificationBody": "Mera, Takip edilen haberlere uygun bir şey buldu.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” akışınızı dolduruyor. Bunu bir hikâye olarak takip edelim mi?",
+        "followInsteadNoStake": "{{topic}} ile ilgili çok haber var, ama hiçbiri sizin için bir şey değiştirmiyor, bu yüzden Akışınız bunları atlıyor. Hepsini görmek için bir hikâye olarak takip etmek ister misiniz?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Profiliniz sizi ilgilendirenler içindir. Gerisi için takip etmeniz yeterli. Konularını ve haberlerini görmek için bir gerçeğe dokunun.",
+      "page": {
+        "nextInterest": "Sonraki gerçek"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Profiliniz sizi ilgilendirenler içindir. Gerisi için takip etmeniz yeterli.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Profiliniz sizi ilgilendirenler içindir, bu yüzden bir gerçek, hayatınız hakkında tek satırlık doğru bir cümledir. “Ben hemşireyim.” “Utrecht’te yaşıyorum.” “Küçük bir çocuğum var.” Kısa ve doğru. Bütün fikir bu."
+            },
+            "to-topics": {
+              "body": "“Ben hemşireyim” arama ifadelerine dönüşür: hastane personel ihtiyacı, hemşire maaşları, sağlık politikası. Bu ifadeler haber aramaya gider. Sonra Mera’nın yapay zekası, geri gelenleri gerçeklerinizle karşılaştırır ve sizin üzerindeki etkisini çıkarır."
+            },
+            "your-profile": {
+              "body": "Mera’nın sizi ilgilendireni bulmak için kullandığı her şey tek bir yerde. Her birine dokunun.",
+              "reveal": {
+                "facts": {
+                  "text": "Sizi ilgilendiren doğru cümleler. Her biri kendi konularını bulur."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Profiliniz sizi ilgilendirenler içindir. Gerisi için takip etmeniz yeterli.",
+              "headline": "Profil mi, hikâye mi?",
+              "reveal": {
+                "follow": {
+                  "label": "Formula 1’i severim",
+                  "text": "Sizi ilgilendirmiyor, bu yüzden sadece takip edin. Takip etmek ücretsiz ve sınırsız, ayrıca hiçbir yapay zeka takip edilen haberleri okumaz."
+                },
+                "profile": {
+                  "label": "Monaco’ya gidiyorum",
+                  "text": "Bu sizi ilgilendiriyor, bu yüzden profilinize girer. Mera’nın yapay zekası haberleri buna göre okur ve gezinize etkisini çıkarır."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Aynı haberler gerçeğe göre gruplanmış: profilinizdeki her gerçek için bir bölüm, okunmamış haberler önce."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Gerçekleriniz, takip ettiğiniz haberler, yerleriniz ve okuduğunuz her şey bu telefonda durur. Mera’nın sunucularında kopya tutulmaz; bu yüzden oturumu kapatmak profilinizi siler. Yeni bir telefonda Yedekleme profilinizi geri getirebilir."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Sevdiğiniz diğer her şey için",
+              "body": "Bir takım, bir sanatçı, bir seçim, bir fırtına. Bir kez takip edin, yeni makaleler tek bir yerde toplansın. Takip etmek ücretsiz ve sınırsız, ayrıca hiçbir yapay zeka takip edilen haberleri okumaz."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Günün haberlerini okur ve sizi ilgilendireni tutar."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Gerçekleriniz, takip ettiğiniz haberler ve okuduklarınız bu telefona yazılır ve orada kalır. Mera’nın sunucularında bunların kopyası tutulmaz."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "sevdiklerinizi"
+    },
+    "interests": {
+      "emptyTitle": "Mera sizi henüz tanımıyor",
+      "learnAbout": "Profilinize neyin gireceğini öğrenin",
+      "backToInterests": "Akışınıza dönün",
+      "findingStories": "Mera bu gerçek için haberler buluyor. İlk haberler birkaç saniye içinde burada görünür."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Henüz bir şey yok. Mera’ya hayatınızı anlatın, burada görünsün."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Bu gerçeği değiştir",
+        "remove": "Bu gerçeği kaldır"
+      },
+      "sources": {
+        "whatFollow": "Mera’ya ne okumayı sevdiğinizi anlatın"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Mera’ya kendinizi anlatın"
+    },
+    "meraIntro": {
+      "feed": "Akışınızdasınız. Sizi neyin ilgilendirdiğini anlatın, takip edilecek bir şey söyleyin ya da haberlerle ilgili her şeyi sorun.",
+      "interest": "Bu sayfa gerçeklerinizden birini gösteriyor. Bunu burada değiştirebilir ya da kaldırabilirsiniz.",
+      "library": "Haberlerle ilgili istediğinizi sorun ya da neyi takip etmek istediğinizi söyleyin.",
+      "sources": "Bir yayın hakkında sorun ya da neyi takip etmek istediğinizi söyleyin."
+    },
+    "meraDraft": {
+      "changeInterest": "“{{statement}}” gerçeğimi şuna değiştir: ",
+      "removeInterest": "“{{statement}}” gerçeğimi kaldır"
+    }
+  },
+  "uk": {
+    "feed": {
+      "noFactsBody": "Натисніть кнопку Мера і розкажіть про своє життя. Мера знайде новини, які на вас впливають."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Відстежуйте що завгодно: команду, виконавця, тривалу історію. Це безплатно й без обмежень, і жоден ШІ не читає відстежувані історії. Щоб почати, натисніть кнопку Мера.",
+      "composerPlaceholder": "За чим мені стежити?",
+      "followCardLine": "Це варто відстежувати. Позначте потрібне, і нові статті потраплять у «Відстежувані історії».",
+      "addToProfile": "Додати до мого профілю",
+      "impactQuestion": "Перш ніж додати, як це впливає на вас? ШІ Мери використовує це, щоб визначити, наскільки стаття важлива для вас. Якщо це не стосується вас особисто, радимо просто стежити за цим як за історією.",
+      "addAnyway": "Все одно додати",
+      "addedToProfile": "Додано до вашого профілю"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Мера читає кожну статтю, що відповідає вашому профілю, відсіює зайве й показує те, що на вас впливає.",
+      "starterInterestsTitle": "Весь ваш профіль",
+      "starterInterestsBody": "Додайте все, що на вас впливає. Мера порівнює новини з кожним фактом.",
+      "starterStoriesBody": "Стежте за чим завгодно, безплатно й без обмежень. Жоден ШІ не читає відстежувані історії."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Тут Мера залишає нотатки про вашу стрічку: готова перевірка фактів, яку ви запитували, щоденне налаштування стрічки, поради, як упорядкувати або налаштувати профіль, і запитання від команди Мери. Вони зберігаються лише на цьому телефоні 90 днів, а крапка означає, що є непрочитане. Сповіщення про новини тут не з’являються. Їх час ви встановлюєте в Налаштуваннях, у розділі «Сповіщення»."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Розкажіть мені про своє життя",
+      "noFactsBody": "Мера використовує ваше місто, щоб знаходити новини, які на вас впливають. Розповісти більше про своє життя можна будь-коли."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Очищає локальний журнал статей, які ви відкривали. Картка «Видання, які ви читаєте» на вкладці «Джерела» та історія за кожним виданням стануть порожніми. Прочитані історії можуть знову з’явитися у вашій стрічці. Нічого більше не змінюється, дані на серверах не зачіпаються, бо сервери Мери цих даних ніколи не мали."
+    },
+    "personaChat": {
+      "introMessage": "Привіт, я Мера.\n\nРозкажіть про своє життя: де ви живете, що робите, про кого дбаєте. Я знайду новини, які на вас впливають. Усе інше, що вам цікаво, можна стежити як за історіями.\n\nДіліться стільки, скільки хочете. Усе, що ви розповісте, залишається на цьому телефоні. Ніхто, крім вас, не має доступу до ваших даних."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Теми збережено! Розкажіть більше про своє життя або натисніть {{close}}, щоб почати досліджувати."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Хочу більше статей, як ця. Додати щось до мого профілю чи стежити за цим як за історією?"
+    },
+    "personaAudit": {
+      "empty": "Змін поки немає. Щойно Мера налаштовує ваш профіль, кожна зміна з’являється тут."
+    },
+    "hygiene": {
+      "notificationTitle": "Упорядкувати ваш профіль?",
+      "effectTooBroad": "Знижує вагу цього факту, щоб він приносив менше не пов’язаних історій.",
+      "effectIncoherentTopics": "Замінює ці теми на кращі для цього факту.",
+      "titleFollowInstead": "Історія, за якою варто стежити",
+      "effectFollowInstead": "Відстежувані історії безплатні, і ШІ їх не читає.",
+      "keepFact": "Залишити як факт",
+      "followInsteadTopicMoves": "Нові статті на тему «{{topic}}» потраплятимуть у «Відстежувані історії», а не у вашу стрічку.",
+      "followInsteadFactGoes": "«{{fact}}» піде з вашого профілю, і це не можна скасувати. Нові статті на тему «{{topic}}» потраплятимуть у «Відстежувані історії».",
+      "followInsteadDoneTitle": "Стежимо за «{{topic}}»",
+      "followInsteadDoneBody": "Нові статті з’являються у «Відстежуваних історіях».",
+      "followInsteadNotificationTitle": "Історія, за якою варто стежити",
+      "followInsteadNotificationBody": "Мера знайшла щось, що підходить для «Відстежуваних історій».",
+      "summary": {
+        "followInsteadFlood": "«{{topic}}» заповнює вашу стрічку. Стежити за цим як за історією?",
+        "followInsteadNoStake": "Про тему «{{topic}}» багато новин, але жодна з них нічого для вас не змінює, тож ваша стрічка її пропускає. Стежити як за історією, щоб бачити все?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "У профілі зберігається те, що на вас впливає. Решту просто відстежуйте. Торкніться факту, щоб побачити його теми та історії.",
+      "page": {
+        "nextInterest": "Наступний факт"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "У профілі зберігається те, що на вас впливає. Решту просто відстежуйте.",
+          "slides": {
+            "a-fact-is": {
+              "body": "У профілі зберігається те, що на вас впливає, тож факт: одна правдива фраза про ваше життя. «Я медсестра.» «Я живу в Утрехті.» «У мене є маленька дитина.» Коротко і правдиво. Ось уся ідея."
+            },
+            "to-topics": {
+              "body": "«Я медсестра» перетворюється на пошукові фрази: укомплектування лікарень, зарплати медсестер, політика охорони здоров’я. Ці фрази йдуть на пошук новин. Потім ШІ Мери порівнює те, що повернулося, з вашими фактами і визначає вплив на вас."
+            },
+            "your-profile": {
+              "body": "Усе, що Мера використовує, щоб знаходити те, що на вас впливає, в одному місці. Торкніться кожного пункту.",
+              "reveal": {
+                "facts": {
+                  "text": "Правдиві фрази про те, що на вас впливає. Кожна знаходить власні теми."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "У профілі зберігається те, що на вас впливає. Решту просто відстежуйте.",
+              "headline": "Профіль чи історія?",
+              "reveal": {
+                "follow": {
+                  "label": "Мені подобається Formula 1",
+                  "text": "Це на вас не впливає, тож просто стежте. Стеження безплатне й без обмежень, і жоден ШІ не читає відстежувані історії."
+                },
+                "profile": {
+                  "label": "Я їду в Monaco",
+                  "text": "Це на вас впливає, тож іде у ваш профіль. ШІ Мери порівнює новини з цим і визначає, як це вплине на вашу подорож."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Ті самі історії, згруповані за фактами: окремий розділ для кожного факту у вашому профілі, спочатку непрочитані."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Ваші факти, відстежувані історії, ваші місця та все, що ви читали, зберігаються на цьому телефоні. На серверах Мери копій немає, тому вихід з акаунта стирає ваш профіль. На новому телефоні Резервна копія може його повернути."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Для всього іншого, що вам подобається",
+              "body": "Команда, виконавець, вибори, буря. Стежте один раз, і нові статті зберуться в одному місці. Стеження безплатне й без обмежень, і жоден ШІ не читає відстежувані історії."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Вона читає новини дня й залишає те, що на вас впливає."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Ваші факти, відстежувані історії та прочитане записуються на цей телефон і лишаються тут. На серверах Мери їхніх копій немає."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "те, що вам подобається"
+    },
+    "interests": {
+      "emptyTitle": "Мера ще нічого про вас не знає",
+      "learnAbout": "Дізнайтеся, що входить до вашого профілю",
+      "backToInterests": "Назад до стрічки",
+      "findingStories": "Мера добирає історії для цього факту. Перші з’являться тут за кілька секунд."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Поки порожньо. Розкажіть Мері про своє життя, і це з’явиться тут."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Змінити цей факт",
+        "remove": "Видалити цей факт"
+      },
+      "sources": {
+        "whatFollow": "Розкажіть Мері, що ви любите читати"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Розкажіть Мері про себе"
+    },
+    "meraIntro": {
+      "feed": "Ви у своїй стрічці. Розкажіть, що на вас впливає, назвіть, за чим стежити, або запитайте будь-що про новини.",
+      "interest": "Ця сторінка показує один із ваших фактів. Його можна змінити або видалити тут.",
+      "library": "Запитайте мене про будь-що в новинах або розкажіть, за чим хочете стежити.",
+      "sources": "Запитайте мене про видання або розкажіть, за чим хочете стежити."
+    },
+    "meraDraft": {
+      "changeInterest": "Змінити мій факт «{{statement}}» на ",
+      "removeInterest": "Видалити мій факт «{{statement}}»"
+    }
+  },
+  "vi": {
+    "feed": {
+      "noFactsBody": "Chạm vào nút Mera và kể cho Mera nghe về cuộc sống của bạn. Mera sẽ tìm các tin tức ảnh hưởng đến bạn."
+    },
+    "trackedStories": {
+      "emptyBodyMera": "Theo dõi bất cứ điều gì bạn thích: một đội bóng, một nghệ sĩ, một câu chuyện dài kỳ. Theo dõi miễn phí và không giới hạn, và không có AI nào đọc các câu chuyện đang theo dõi. Chạm vào nút Mera để bắt đầu.",
+      "composerPlaceholder": "Mình nên để ý điều gì?",
+      "followCardLine": "Chủ đề này đáng theo dõi. Chọn những gì bạn muốn và bài viết mới sẽ vào mục Câu chuyện đang theo dõi.",
+      "addToProfile": "Thêm vào hồ sơ của tôi thay vì vậy",
+      "impactQuestion": "Trước khi thêm, điều này ảnh hưởng đến bạn như thế nào? AI của Mera dùng thông tin này để xác định một bài viết quan trọng với bạn đến mức nào. Nếu nó không ảnh hưởng trực tiếp đến bạn, mình khuyên bạn chỉ nên theo dõi nó như một câu chuyện.",
+      "addAnyway": "Vẫn thêm",
+      "addedToProfile": "Đã thêm vào hồ sơ của bạn"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera đọc mọi bài viết khớp với hồ sơ của bạn, loại bỏ nhiễu và cho bạn thấy điều gì ảnh hưởng đến bạn.",
+      "starterInterestsTitle": "Toàn bộ hồ sơ của bạn",
+      "starterInterestsBody": "Thêm mọi điều ảnh hưởng đến bạn. Mera đối chiếu tin tức với từng dữ kiện.",
+      "starterStoriesBody": "Theo dõi bất cứ điều gì bạn thích, miễn phí và không giới hạn. Không AI nào đọc các câu chuyện đang theo dõi."
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "Mera để lại ghi chú về bảng tin của bạn tại đây: một lần kiểm tra thông tin bạn yêu cầu đã sẵn sàng, việc rà soát bảng tin hằng ngày, mẹo dọn dẹp hoặc điều chỉnh hồ sơ, và các câu hỏi từ đội ngũ Mera. Chúng chỉ được lưu trên điện thoại này trong 90 ngày, và chấm báo nghĩa là có mục chưa đọc. Thông báo tin tức không hiện ở đây. Bạn đặt giờ nhận trong Cài đặt, mục Thông báo."
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "Kể cho mình nghe về cuộc sống của bạn",
+      "noFactsBody": "Mera dùng thành phố của bạn để tìm tin tức nơi bạn sống. Bạn có thể kể thêm về cuộc sống của mình bất cứ lúc nào."
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ “Các nguồn bạn đã đọc” ở tab Nguồn và lịch sử theo từng nguồn sẽ trống trở lại. Các câu chuyện bạn đã đọc có thể xuất hiện lại trong bảng tin. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị đụng đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này."
+    },
+    "personaChat": {
+      "introMessage": "Chào bạn, mình là Mera.\n\nKể cho mình nghe về cuộc sống của bạn: bạn sống ở đâu, làm gì, quan tâm đến ai. Mình sẽ tìm các tin tức ảnh hưởng đến bạn. Bất cứ điều gì khác bạn thích, chúng ta có thể theo dõi như những câu chuyện.\n\nBạn chia sẻ nhiều hay ít tùy ý. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai ngoài chính bạn có quyền truy cập dữ liệu của bạn."
+    },
+    "floatingChat": {
+      "topicsSavedHint": "Đã lưu chủ đề! Kể thêm về cuộc sống của bạn, hoặc chạm {{close}} để bắt đầu khám phá."
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "Mình muốn xem thêm bài viết như thế này. Mình nên thêm gì vào hồ sơ, hay theo dõi nó như một câu chuyện?"
+    },
+    "personaAudit": {
+      "empty": "Chưa có thay đổi nào. Khi Mera điều chỉnh hồ sơ của bạn, mọi thay đổi sẽ hiện ở đây."
+    },
+    "hygiene": {
+      "notificationTitle": "Dọn dẹp hồ sơ của bạn?",
+      "effectTooBroad": "Giảm trọng số của dữ kiện này để nó kéo về ít tin lạc đề hơn.",
+      "effectIncoherentTopics": "Thay các chủ đề này bằng những chủ đề phù hợp hơn với dữ kiện này.",
+      "titleFollowInstead": "Một câu chuyện để theo dõi",
+      "effectFollowInstead": "Câu chuyện theo dõi miễn phí, và không có AI nào đọc chúng.",
+      "keepFact": "Giữ lại như một dữ kiện",
+      "followInsteadTopicMoves": "Bài viết mới về {{topic}} sẽ chuyển vào Câu chuyện đang theo dõi thay vì bảng tin của bạn.",
+      "followInsteadFactGoes": "{{fact}} sẽ rời khỏi hồ sơ của bạn, và không thể hoàn tác. Bài viết mới về {{topic}} sẽ chuyển vào Câu chuyện đang theo dõi.",
+      "followInsteadDoneTitle": "Đang theo dõi {{topic}}",
+      "followInsteadDoneBody": "Bài viết mới sẽ vào Câu chuyện đang theo dõi.",
+      "followInsteadNotificationTitle": "Một câu chuyện để theo dõi",
+      "followInsteadNotificationBody": "Mera tìm thấy điều gì đó phù hợp với Câu chuyện đang theo dõi.",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}” đang lấp đầy bảng tin của bạn. Theo dõi nó như một câu chuyện thay vì vậy nhé?",
+        "followInsteadNoStake": "Có rất nhiều tin về {{topic}}, nhưng không tin nào thay đổi điều gì đối với bạn, nên bảng tin của bạn bỏ qua nó. Theo dõi nó như một câu chuyện để xem đầy đủ?"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn. Mọi thứ còn lại, chỉ cần theo dõi. Chạm vào một dữ kiện để xem các chủ đề và câu chuyện của nó.",
+      "page": {
+        "nextInterest": "Dữ kiện tiếp theo"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn. Mọi thứ còn lại, chỉ cần theo dõi.",
+          "slides": {
+            "a-fact-is": {
+              "body": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn, nên một dữ kiện là một dòng đúng sự thật về cuộc sống của bạn. “Tôi là y tá.” “Tôi sống ở Utrecht.” “Tôi có một con nhỏ.” Ngắn gọn và đúng sự thật. Đó là toàn bộ ý tưởng."
+            },
+            "to-topics": {
+              "body": "“Tôi là y tá” biến thành các cụm từ tìm kiếm: nhân sự bệnh viện, lương điều dưỡng, chính sách y tế. Những cụm từ đó được gửi đi để tìm tin tức. Sau đó AI của Mera đối chiếu kết quả với dữ kiện của bạn và tính toán tác động đến bạn."
+            },
+            "your-profile": {
+              "body": "Mọi thứ Mera dùng để tìm điều ảnh hưởng đến bạn, gom về một chỗ. Chạm vào từng mục.",
+              "reveal": {
+                "facts": {
+                  "text": "Những dòng đúng sự thật về điều ảnh hưởng đến bạn. Mỗi dữ kiện tự tìm chủ đề của nó."
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn. Mọi thứ còn lại, chỉ cần theo dõi.",
+              "headline": "Hồ sơ hay câu chuyện?",
+              "reveal": {
+                "follow": {
+                  "label": "Tôi thích Công thức 1",
+                  "text": "Nó không ảnh hưởng đến bạn, nên chỉ cần theo dõi. Theo dõi miễn phí và không giới hạn, và không có AI nào đọc các câu chuyện đang theo dõi."
+                },
+                "profile": {
+                  "label": "Tôi sắp đi Monaco",
+                  "text": "Điều này ảnh hưởng đến bạn, nên nó thuộc về hồ sơ của bạn. AI của Mera đối chiếu tin tức với nó và tính tác động đến chuyến đi của bạn."
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "Cùng các câu chuyện được nhóm theo dữ kiện, mỗi dữ kiện trong hồ sơ của bạn có một phần riêng, với các câu chuyện chưa đọc lên trước."
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "Dữ kiện của bạn, các câu chuyện bạn theo dõi, địa điểm và mọi thứ bạn đã đọc đều nằm trên điện thoại này. Máy chủ của Mera không giữ bản sao nào, đó là lý do đăng xuất sẽ xóa hồ sơ của bạn. Trên điện thoại mới, Sao lưu có thể khôi phục lại."
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "Cho mọi thứ khác bạn thích",
+              "body": "Một đội bóng, một nghệ sĩ, một cuộc bầu cử, một cơn bão. Theo dõi một lần, các bài viết mới sẽ tập hợp ở một chỗ. Theo dõi miễn phí và không giới hạn, và không có AI nào đọc các câu chuyện đang theo dõi."
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "Nó đọc tin tức trong ngày và giữ lại những gì ảnh hưởng đến bạn."
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "Dữ kiện của bạn, các câu chuyện bạn theo dõi và những gì bạn đã đọc được ghi vào điện thoại này và ở lại đó. Máy chủ của Mera không giữ bản sao nào."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "điều bạn thích"
+    },
+    "interests": {
+      "emptyTitle": "Mera chưa biết gì về bạn",
+      "learnAbout": "Tìm hiểu những gì thuộc về hồ sơ của bạn",
+      "backToInterests": "Quay lại bảng tin",
+      "findingStories": "Mera đang tìm câu chuyện cho dữ kiện này. Những câu chuyện đầu tiên sẽ hiện ở đây trong vài giây."
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "Chưa có gì. Kể cho Mera biết về cuộc sống của bạn và nó sẽ hiện ở đây."
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "Đổi dữ kiện này",
+        "remove": "Xóa dữ kiện này"
+      },
+      "sources": {
+        "whatFollow": "Cho Mera biết bạn thích đọc gì"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "Kể cho Mera về bạn"
+    },
+    "meraIntro": {
+      "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết điều gì ảnh hưởng đến bạn, nêu một điều muốn theo dõi, hoặc hỏi mình bất cứ điều gì về tin tức.",
+      "interest": "Trang này hiển thị một dữ kiện của bạn. Bạn có thể đổi hoặc xóa nó ngay tại đây.",
+      "library": "Hỏi mình bất cứ điều gì trong tin tức, hoặc cho mình biết điều bạn muốn theo dõi.",
+      "sources": "Hỏi mình về một nguồn tin, hoặc cho mình biết điều bạn muốn theo dõi."
+    },
+    "meraDraft": {
+      "changeInterest": "Đổi dữ kiện của mình “{{statement}}” thành ",
+      "removeInterest": "Xóa dữ kiện của mình “{{statement}}”"
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "noFactsBody": "点按梅拉按钮，告诉梅拉你的生活。它会找出影响你的新闻。"
+    },
+    "trackedStories": {
+      "emptyBodyMera": "关注任何你喜欢的内容：一支球队、一位艺人、一个长期跟进的事件。免费且不限数量，AI 不会阅读已关注的报道。点按梅拉按钮开始。",
+      "composerPlaceholder": "我该留意什么？",
+      "followCardLine": "这个很适合关注。勾选你想要的内容，新文章就会出现在已关注的报道中。",
+      "addToProfile": "改为添加到我的档案",
+      "impactQuestion": "添加之前，它会对你有什么影响？梅拉的 AI 会据此判断一篇文章对你有多重要。如果它对你没有直接影响，我建议你把它当作报道来关注。",
+      "addAnyway": "仍然添加",
+      "addedToProfile": "已添加到你的档案"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "梅拉会阅读所有符合你档案的文章，过滤掉杂音，把影响你的内容呈现给你。",
+      "starterInterestsTitle": "整个档案",
+      "starterInterestsBody": "把所有影响你的事情都加进来。梅拉会对照每一条事实来阅读新闻。",
+      "starterStoriesBody": "想关注什么都可以，免费且不限数量。AI 不会阅读已关注的报道。"
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "梅拉会在这里留下关于你信息流的提示：你请求的事实核查已完成、每天的信息流整理、整理或优化档案的小建议，以及梅拉团队的问题。这些内容只保存在这部手机上，保留 90 天。有未读内容时会显示一个小圆点。新闻提醒不会出现在这里。你可以在设置的通知中设定提醒时间。"
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "告诉我你的生活",
+      "noFactsBody": "梅拉会根据你所在的城市，找到影响你的新闻。你随时可以告诉梅拉更多关于你生活的信息。"
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "清除你打开过的文章的本地记录。“来源”标签页中的“你阅读过的媒体”卡片和各媒体的历史记录会重置为空。你读过的报道可能会再次出现在信息流中。其他内容不受影响，也不会触及服务器数据，因为梅拉的服务器从来没有这些数据。"
+    },
+    "personaChat": {
+      "introMessage": "你好，我是梅拉。\n\n跟我说说你的生活吧：你住在哪里，做什么工作，在乎哪些人。我会找到影响你的新闻。你还喜欢的其他内容，我们可以作为报道来关注。\n\n想分享多少都可以。你告诉我的内容会保存在这部手机上，除了你，没有人能访问你的数据。"
+    },
+    "floatingChat": {
+      "topicsSavedHint": "话题已保存！继续告诉我你的生活，或点按 {{close}} 开始探索。"
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "我想看更多类似这篇的文章。我应该在档案里添加点什么，还是把它当作报道来关注？"
+    },
+    "personaAudit": {
+      "empty": "还没有变更。梅拉每次调整你的档案，都会在这里显示。"
+    },
+    "hygiene": {
+      "notificationTitle": "整理一下你的档案吗？",
+      "effectTooBroad": "降低这条事实的权重，让它带进来的无关报道更少。",
+      "effectIncoherentTopics": "用对这条事实更合适的话题替换这些话题。",
+      "titleFollowInstead": "一个可以关注的报道",
+      "effectFollowInstead": "已关注的报道免费，AI 不会阅读。",
+      "keepFact": "保留为事实",
+      "followInsteadTopicMoves": "关于{{topic}}的新文章会进入已关注的报道，而不是你的信息流。",
+      "followInsteadFactGoes": "{{fact}}会从你的档案中移除，且无法撤销。关于{{topic}}的新文章会进入已关注的报道。",
+      "followInsteadDoneTitle": "已关注{{topic}}",
+      "followInsteadDoneBody": "新文章会进入已关注的报道。",
+      "followInsteadNotificationTitle": "一个可以关注的报道",
+      "followInsteadNotificationBody": "梅拉找到了一些适合已关注报道的内容。",
+      "summary": {
+        "followInsteadFlood": "“{{topic}}”正在占满你的信息流。要改为作为报道关注吗？",
+        "followInsteadNoStake": "关于{{topic}}的新闻很多，但都不会对你产生影响，所以你的信息流会跳过它。要作为报道关注，好看到全部内容吗？"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "档案用于记录影响你的事情。其他的，只需关注。点按一条事实，即可查看它的话题和报道。",
+      "page": {
+        "nextInterest": "下一条事实"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "档案用于记录影响你的事情。其他的，只需关注。",
+          "slides": {
+            "a-fact-is": {
+              "body": "档案用于记录影响你的事情，所以一条事实就是关于你生活的一句真话。“我是护士。”“我住在乌得勒支。”“我有个小孩。”简短、真实，这就是全部思路。"
+            },
+            "to-topics": {
+              "body": "“我是护士”会变成搜索短语：医院人手配置、护士薪资、医疗政策。这些短语会用来寻找新闻。然后，梅拉的 AI 会对照你的事实阅读返回的内容，判断它对你的影响。"
+            },
+            "your-profile": {
+              "body": "梅拉用来找出影响你的内容的所有东西，都放在这一处。点按每一项即可查看。",
+              "reveal": {
+                "facts": {
+                  "text": "关于影响你的事情的真话。每一条都会找到自己的话题。"
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "档案用于记录影响你的事情。其他的，只需关注。",
+              "headline": "放进档案，还是作为报道？",
+              "reveal": {
+                "follow": {
+                  "label": "我喜欢一级方程式",
+                  "text": "它不会影响你，所以直接关注即可。关注免费且不限数量，AI 不会阅读已关注的报道。"
+                },
+                "profile": {
+                  "label": "我要去摩纳哥",
+                  "text": "这件事会影响你，所以放进档案。梅拉的 AI 会对照它阅读新闻，判断对你这次行程的影响。"
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "相同的报道按事实分组，档案中的每条事实各占一个分区，未读的报道排在前面。"
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "你的事实、你关注的报道、你的地点，以及你读过的所有内容，都保存在这部手机上。梅拉的服务器不保留副本，这也是退出登录会清除你的档案的原因。换新手机时，可以通过备份恢复。"
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "其他你喜欢的内容",
+              "body": "一支球队、一位艺人、一场选举、一场风暴。关注一次，新文章就会汇集到一处。关注免费且不限数量，AI 不会阅读已关注的报道。"
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "它会阅读当天的新闻，保留影响你的内容。"
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "你的事实、你关注的报道和你读过的内容，都写入这部手机并保存在这里。梅拉的服务器不保留它们的副本。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "你喜欢的内容"
+    },
+    "interests": {
+      "emptyTitle": "梅拉还不了解你",
+      "learnAbout": "了解档案里该放什么",
+      "backToInterests": "返回信息流",
+      "findingStories": "梅拉正在为这条事实寻找报道。第一批报道会在几秒钟内出现在这里。"
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "还没有内容。告诉梅拉你的生活，它就会显示在这里。"
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "更改这条事实",
+        "remove": "移除这条事实"
+      },
+      "sources": {
+        "whatFollow": "告诉梅拉你想读什么"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "告诉梅拉关于你的事"
+    },
+    "meraIntro": {
+      "feed": "你正在查看信息流。告诉我什么影响你，说出想关注的内容，或者问我任何新闻相关的问题。",
+      "interest": "这个页面显示的是你的一条事实。你可以在这里更改或移除它。",
+      "library": "问我任何新闻相关的问题，或者告诉我你想关注什么。",
+      "sources": "问我关于某家媒体的事，或者告诉我你想关注什么。"
+    },
+    "meraDraft": {
+      "changeInterest": "把我的事实“{{statement}}”改为： ",
+      "removeInterest": "移除我的事实“{{statement}}”"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "noFactsBody": "點按梅拉按鈕，告訴梅拉你的生活。它會找出影響你的新聞。"
+    },
+    "trackedStories": {
+      "emptyBodyMera": "關注任何你喜歡的內容：一支球隊、一位藝人、一個長期追蹤的事件。免費且不限數量，AI 不會閱讀已關注的報導。點按梅拉按鈕開始。",
+      "composerPlaceholder": "我該留意什麼？",
+      "followCardLine": "這個很適合關注。勾選你想要的內容，新文章就會出現在已關注的報導中。",
+      "addToProfile": "改為加入我的檔案",
+      "impactQuestion": "加入之前，這件事對你有什麼影響？梅拉的 AI 會用這個判斷一篇文章對你有多重要。如果它對你個人沒有影響，我建議你把它當成報導來關注。",
+      "addAnyway": "仍要加入",
+      "addedToProfile": "已加入你的檔案"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "梅拉會閱讀所有符合你檔案的文章，篩掉雜訊，把影響你的內容呈現給你。",
+      "starterInterestsTitle": "整個檔案",
+      "starterInterestsBody": "把所有影響你的事情都加進來。梅拉會對照每一項事實來閱讀新聞。",
+      "starterStoriesBody": "想關注什麼都可以，免費且不限數量。AI 不會閱讀已關注的報導。"
+    },
+    "notificationCenter": {
+      "help": {
+        "body": "梅拉會在這裡留下關於你資訊流的備註：你要求的事實查核完成了、每天的資訊流整理、整理或調整檔案的小建議，以及梅拉團隊的問題。這些內容只保存在這支手機上，保留 90 天。有未讀時會出現一個小點。新聞提醒不會出現在這裡。你可以在設定的通知中調整提醒時間。"
+      }
+    },
+    "onboarding": {
+      "composerPlaceholder": "告訴我你的生活",
+      "noFactsBody": "梅拉會根據你所在的城市，找出影響你的新聞。你隨時都可以告訴梅拉更多關於你生活的事。"
+    },
+    "manageData": {
+      "viewingHistoryModalDescription": "清除你打開過的文章在本機的紀錄。「來源」分頁中的「你閱讀過的媒體」卡片，以及各媒體的紀錄會重設為空。你讀過的報導可能會再次出現在資訊流中。其他內容不受影響，也不會動到伺服器上的資料，因為梅拉的伺服器從來沒有這些資料。"
+    },
+    "personaChat": {
+      "introMessage": "你好，我是梅拉。\n\n跟我說說你的生活吧：你住在哪裡、做什麼工作、在意哪些人。我會找出影響你的新聞。你還喜歡的其他內容，我們可以當成報導來關注。\n\n想分享多少都可以。你告訴我的內容會留在這支手機上，除了你以外，沒有人能存取你的資料。"
+    },
+    "floatingChat": {
+      "topicsSavedHint": "主題已儲存！繼續告訴我你的生活，或點按 {{close}} 開始探索。"
+    },
+    "articleFeedback": {
+      "chipMoreLikeThisMessage": "我想看更多和這篇類似的文章。我應該在檔案裡加入什麼，還是把它當成報導來關注？"
+    },
+    "personaAudit": {
+      "empty": "目前還沒有變更。梅拉每次調整你的檔案，都會在這裡顯示。"
+    },
+    "hygiene": {
+      "notificationTitle": "要整理一下你的檔案嗎？",
+      "effectTooBroad": "降低這項事實的權重，讓它帶進來的無關報導更少。",
+      "effectIncoherentTopics": "用更適合這項事實的主題取代這些主題。",
+      "titleFollowInstead": "一則可以關注的報導",
+      "effectFollowInstead": "已關注的報導免費，AI 不會閱讀。",
+      "keepFact": "保留為事實",
+      "followInsteadTopicMoves": "關於{{topic}}的新文章會進入已關注的報導，而不是你的資訊流。",
+      "followInsteadFactGoes": "{{fact}}會從你的檔案中移除，而且無法復原。關於{{topic}}的新文章會進入已關注的報導。",
+      "followInsteadDoneTitle": "已關注{{topic}}",
+      "followInsteadDoneBody": "新文章會進入已關注的報導。",
+      "followInsteadNotificationTitle": "一則可以關注的報導",
+      "followInsteadNotificationBody": "梅拉找到一些適合放進已關注報導的內容。",
+      "summary": {
+        "followInsteadFlood": "「{{topic}}」正在填滿你的資訊流。要改為當成報導來關注嗎？",
+        "followInsteadNoStake": "關於{{topic}}的新聞很多，但都不會改變你的任何事，所以資訊流會略過它。要當成報導關注，好看到全部內容嗎？"
+      }
+    },
+    "facts": {
+      "screenSubtitle": "檔案是放影響你的事情的地方。其他的，只要關注就好。點按一項事實，就能看到它的主題和報導。",
+      "page": {
+        "nextInterest": "下一項事實"
+      }
+    },
+    "tutorials": {
+      "chapters": {
+        "facts": {
+          "subtitle": "檔案是放影響你的事情的地方。其他的，只要關注就好。",
+          "slides": {
+            "a-fact-is": {
+              "body": "檔案是放影響你的事情的地方，所以一項事實就是一句關於你生活的真話。「我是護理師。」「我住在烏特勒支。」「我有個小孩。」簡短、真實，這就是全部的概念。"
+            },
+            "to-topics": {
+              "body": "「我是護理師」會變成搜尋詞：醫院人力配置、護理師薪資、醫療政策。這些詞會拿去找新聞。接著，梅拉的 AI 會把回傳的內容和你的事實對照，判斷它對你的影響。"
+            },
+            "your-profile": {
+              "body": "梅拉用來找出影響你的內容的所有東西，都集中在一個地方。點按每一項即可查看。",
+              "reveal": {
+                "facts": {
+                  "text": "關於影響你的事情的真話。每一句都會找到自己的主題。"
+                }
+              }
+            },
+            "profile-or-story": {
+              "body": "檔案是放影響你的事情的地方。其他的，只要關注就好。",
+              "headline": "放進檔案，還是當成報導？",
+              "reveal": {
+                "follow": {
+                  "label": "我喜歡一級方程式",
+                  "text": "這件事不會影響你，所以直接關注就好。關注免費且不限數量，AI 不會閱讀已關注的報導。"
+                },
+                "profile": {
+                  "label": "我要去摩納哥",
+                  "text": "這件事會影響你，所以放進檔案。梅拉的 AI 會用它來對照新聞，判斷對你這趟旅程的影響。"
+                }
+              }
+            }
+          }
+        },
+        "feed": {
+          "slides": {
+            "quiet-by-design": {
+              "reveal": {
+                "sectioned": {
+                  "text": "同一批報導會依事實分組，檔案裡的每項事實各有一個區段，未讀的報導排在前面。"
+                }
+              }
+            }
+          }
+        },
+        "privacy": {
+          "slides": {
+            "stays-on-phone": {
+              "body": "你的事實、你關注的報導、你的地點，以及你讀過的所有內容，都存在這支手機上。梅拉的伺服器不保留副本，這也是為什麼登出會清除你的檔案。換新手機時，可以用備份找回。"
+            }
+          }
+        },
+        "following": {
+          "slides": {
+            "what-it-is": {
+              "headline": "其他你喜歡的內容",
+              "body": "一支球隊、一位藝人、一場選舉、一場風暴。關注一次，新文章就會集中在一起。關注免費且不限數量，AI 不會閱讀已關注的報導。"
+            }
+          }
+        },
+        "welcome": {
+          "slides": {
+            "you-first": {
+              "steps": {
+                "2": "它會閱讀當天的新聞，留下影響你的內容。"
+              }
+            },
+            "stays-here": {
+              "reveal": {
+                "about-you": {
+                  "text": "你的事實、你關注的報導和讀過的內容，都寫入這支手機並留在這裡。梅拉的伺服器不保留它們的副本。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skillPhrase": {
+      "interests": "你喜歡的內容"
+    },
+    "interests": {
+      "emptyTitle": "梅拉還不了解你",
+      "learnAbout": "了解檔案裡該放什麼",
+      "backToInterests": "返回資訊流",
+      "findingStories": "梅拉正在為這項事實尋找報導。第一批報導會在幾秒內出現在這裡。"
+    },
+    "you": {
+      "profile": {
+        "factsEmpty": "還沒有內容。告訴梅拉你的生活，它就會顯示在這裡。"
+      }
+    },
+    "meraHints": {
+      "interest": {
+        "change": "變更這項事實",
+        "remove": "移除這項事實"
+      },
+      "sources": {
+        "whatFollow": "告訴梅拉你想讀什麼"
+      }
+    },
+    "meraButton": {
+      "tooltipNew": "告訴梅拉關於你的事"
+    },
+    "meraIntro": {
+      "feed": "你正在看資訊流。告訴我什麼會影響你，說出想關注的內容，或問我任何新聞相關的問題。",
+      "interest": "這個頁面顯示你的其中一項事實。你可以在這裡變更或移除它。",
+      "library": "問我任何新聞相關的問題，或告訴我你想關注什麼。",
+      "sources": "問我關於某家媒體的事，或告訴我你想關注什麼。"
+    },
+    "meraDraft": {
+      "changeInterest": "把我的事實「{{statement}}」改成： ",
+      "removeInterest": "移除我的事實「{{statement}}」"
+    }
+  }
+}

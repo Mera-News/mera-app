@@ -183,7 +183,7 @@
     "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
     "forYouTitle": "Voor jou",
     "newStoriesBelowA11y": "Nieuwe verhalen hieronder",
-    "noFactsBody": "Tik op de Mera-knop om te vertellen wat je volgt. Daaruit maakt Mera je feed.",
+    "noFactsBody": "Tik op de Mera-knop en vertel over je leven. Mera zoekt het nieuws dat jou raakt.",
     "noteWait": "Even wachten terwijl Mera de reden schrijft.",
     "opened": "Geopend",
     "statsSyncAnalysing_one": "{{formatted}} artikel wordt voor je geanalyseerd,",
@@ -336,10 +336,10 @@
     "close": "Sluiten",
     "logoutFailedTitle": "Uitloggen mislukt",
     "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
-    "composerPlaceholder": "Wat volg je graag?",
+    "composerPlaceholder": "Vertel me over je leven",
     "factsCount_one": "{{count}} feit over jou",
     "factsCount_other": "{{count}} feiten over jou",
-    "noFactsBody": "Mera gebruikt je stad om nieuws te vinden uit de plek waar je woont. Je kunt Mera altijd meer over jezelf vertellen.",
+    "noFactsBody": "Mera gebruikt je stad om nieuws te vinden dat jou raakt. Je kunt altijd meer over je leven vertellen.",
     "noFactsTitle": "Waar woon je?",
     "noNotifBody": "Je hoort niet wanneer je nieuws klaar is of wanneer een verhaal dat je volgt verandert. Je kunt meldingen later aanzetten in Instellingen.",
     "noNotifTitle": "Mera gebruiken zonder meldingen?",
@@ -521,7 +521,7 @@
     "helpModesVerify": "‘Attestatie verifiëren’ controleert of de cloud op echte beveiligde hardware draait en of je gegevens ervoor worden versleuteld."
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt, want de servers van Mera hebben deze gegevens nooit gehad.",
+    "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart “Publicaties die je leest” op het tabblad Bronnen en de geschiedenis per publicatie beginnen weer leeg. Verhalen die je hebt gelezen kunnen opnieuw in je feed verschijnen. Verder verandert er niets, en er worden geen gegevens op de servers aangeraakt, want de servers van Mera hadden deze gegevens nooit.",
     "deletedTitle": "Gegevens verwijderd",
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
@@ -696,7 +696,7 @@
     "replyUnfinished": "Niet af"
   },
   "personaChat": {
-    "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."
+    "introMessage": "Hoi, ik ben Mera.\n\nVertel me over je leven: waar je woont, wat je doet, om wie je geeft. Ik zoek het nieuws dat jou raakt. Al het andere dat je leuk vindt, kunnen we als verhalen volgen.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."
   },
   "floatingChat": {
     "close": "Sluiten",
@@ -738,7 +738,7 @@
     "factDeleteRemove": "Verwijderen",
     "factDeleteKeep": "Houden",
     "factDeleteKept": "Er is niets verwijderd.",
-    "topicsSavedHint": "Onderwerpen opgeslagen! Voeg gerust meer feiten toe, of tik op {{close}} om te beginnen met ontdekken.",
+    "topicsSavedHint": "Onderwerpen opgeslagen! Vertel me meer over je leven, of tik op {{close}} om te beginnen met verkennen.",
     "guidelinesAfter": ". Als het misbruik ziet, pauzeert het je account totdat je om een beoordeling vraagt.",
     "guidelinesBefore": "Je praat met Mera, een AI en geen mens. Mera volgt de ",
     "guidelinesLink": "contentrichtlijnen",
@@ -761,7 +761,7 @@
     "chipDontWant": "Ik wil deze suggestie niet",
     "chipDontWantMessage": "Ik wil deze suggestie niet. Wat moeten we veranderen zodat ik geen artikelen zoals dit meer krijg?",
     "chipMoreLikeThis": "Ik wil er meer zoals dit",
-    "chipMoreLikeThisMessage": "Ik wil meer artikelen zoals dit. Wat moeten we toevoegen aan mijn interesses?",
+    "chipMoreLikeThisMessage": "Ik wil meer artikelen zoals dit. Moet ik iets aan mijn profiel toevoegen, of het onderwerp als verhaal volgen?",
     "proposalTitle": "Voorgestelde wijzigingen",
     "expectedEffects": "Verwacht effect",
     "proposalConfirm": "Ja, doe het",
@@ -1038,7 +1038,7 @@
     "timelineLoadFailed": "Dit verhaal kon niet worden geladen. Trek omlaag om het opnieuw te proberen.",
     "deleteFailed": "Ontvolgen is niet gelukt. Probeer het opnieuw.",
     "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw.",
-    "emptyBodyMera": "Volg een zich ontwikkelend verhaal en Mera houdt het hier bij. Tik op de Mera-knop om er een te volgen.",
+    "emptyBodyMera": "Volg wat je leuk vindt: een team, een artiest, een verhaal dat lang loopt. Het is gratis en onbeperkt, en geen AI leest gevolgde verhalen. Tik op de Mera-knop om te beginnen.",
     "followedSince": "Gevolgd sinds {{date}}",
     "learnAbout": "Meer over Verhalen",
     "nextNote": "Mera voegt hier nieuwe berichtgeving toe naarmate het verhaal zich ontwikkelt.",
@@ -1075,22 +1075,27 @@
     "wideNetBody": "Mera zoekt breed, dus sommige artikelen hier hebben misschien maar weinig met het verhaal te maken. We laten je liever één artikel te veel zien dan dat je een belangrijk artikel mist.",
     "wideNetRemove": "Wil je er een verwijderen? Open het menu ervan en kies {{action}}.",
     "wideNetShowLess": "Minder tonen",
-    "composerPlaceholder": "Welk verhaal moet ik voor je in de gaten houden?",
+    "composerPlaceholder": "Waar moet ik een oogje op houden?",
     "optionAsWritten": "{{phrase}}, zoals je het schreef",
-    "optionSpellingFixed": "{{phrase}}, met spelling gecorrigeerd"
+    "optionSpellingFixed": "{{phrase}}, met spelling gecorrigeerd",
+    "followCardLine": "Dit is de moeite waard om te volgen. Vink aan wat je wilt en nieuwe artikelen komen in Gevolgde verhalen terecht.",
+    "addToProfile": "Liever aan mijn profiel toevoegen",
+    "impactQuestion": "Voordat ik het toevoeg: hoe raakt het jou? De AI van Mera gebruikt dit om te bepalen hoeveel een artikel voor jou telt. Als het je persoonlijk niet raakt, raad ik aan het gewoon als verhaal te volgen.",
+    "addAnyway": "Toch toevoegen",
+    "addedToProfile": "Toegevoegd aan je profiel"
   },
   "whatsNew": {
     "gotIt": "Begrepen",
     "starterTitle": "Starter krijg je van ons",
     "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
     "starterArticlesTitle": "Elk passend artikel",
-    "starterArticlesBody": "Elk artikel dat bij je interesses past, komt in je Feed terecht. Mera leest ze, filtert de ruis eruit en zet wat ertoe doet naar voren.",
-    "starterInterestsTitle": "Al je interesses",
-    "starterInterestsBody": "Voeg er zoveel toe als je wilt. Mera volgt ze allemaal.",
+    "starterArticlesBody": "Mera leest elk artikel dat bij je profiel past, laat de ruis weg en laat zien wat jou raakt.",
+    "starterInterestsTitle": "Je hele profiel",
+    "starterInterestsBody": "Voeg alles toe wat jou raakt. Mera legt het nieuws naast elk feit.",
     "starterChatTitle": "Chat en factchecks",
     "starterChatBody": "Vraag Mera van alles over een bericht en toets beweringen aan gepubliceerde factchecks.",
     "starterStoriesTitle": "Gevolgde verhalen",
-    "starterStoriesBody": "Volg een verhaal en Mera houdt het voor je in de gaten."
+    "starterStoriesBody": "Volg wat je wilt, gratis en onbeperkt. Geen AI leest gevolgde verhalen."
   },
   "notificationCenter": {
     "title": "Meldingen",
@@ -1101,7 +1106,7 @@
     "settingsLink": "Meldingsinstellingen",
     "help": {
       "title": "Over meldingen",
-      "body": "Mera zet hier notities over je feed: een factcheck die je hebt gevraagd is klaar, je dagelijkse feedcheck, tips om je interesses op te ruimen of bij te stellen, en vragen van het Mera-team. Ze blijven alleen op deze telefoon, 90 dagen lang, en een stip betekent dat er iets ongelezen is. Nieuwsmeldingen verschijnen hier niet. Je stelt de tijden in bij Instellingen, onder Meldingen."
+      "body": "Mera zet hier notities over je feed: een feitencontrole die je hebt gevraagd is klaar, je dagelijkse feed-opschoning, tips om je profiel op te ruimen of af te stellen, en vragen van het Mera-team. Ze worden alleen op deze telefoon bewaard, 90 dagen lang, en een stip betekent dat er iets ongelezen is. Nieuwsmeldingen verschijnen hier niet. Je stelt hun tijden in bij Instellingen, onder Meldingen."
     },
     "ageNow": "nu",
     "ageMinutes": "{{n}} min",
@@ -1132,7 +1137,7 @@
   },
   "personaAudit": {
     "title": "Wijzigingen in je profiel",
-    "empty": "Nog geen wijzigingen. Zodra Mera je interesses aanpast, verschijnt dit hier.",
+    "empty": "Nog geen wijzigingen. Elke keer dat Mera je profiel aanpast, verschijnt de wijziging hier.",
     "revertedBadge": "Teruggedraaid",
     "revertConfirmTitle": "Deze wijziging ongedaan maken?",
     "revertConfirmBody": "Je profiel wordt teruggezet naar hoe het was voor deze wijziging.",
@@ -1337,20 +1342,20 @@
     "statusDismissed": "Gesloten"
   },
   "hygiene": {
-    "notificationTitle": "Je interesses opschonen?",
+    "notificationTitle": "Je profiel opruimen?",
     "notificationBody_one": "Mera heeft {{count}} opschoning gevonden voor je profiel.",
     "notificationBody_other": "Mera heeft {{count}} opschoningen gevonden voor je profiel.",
     "reviewChip": "Bekijken",
     "accept": "Accepteren",
     "reject": "Afwijzen",
-    "effectTooBroad": "Verlaagt het gewicht van deze interesse zodat er minder off-topic verhalen binnenkomen.",
+    "effectTooBroad": "Verlaagt het gewicht van dit feit, zodat er minder verhalen bij komen die er niets mee te maken hebben.",
     "effectStaleTopic": "Zet dit stille onderwerp op inactief.",
     "effectStaleFact": "Verwijdert dit feit: geen van de onderwerpen ervan is nog actief.",
     "appliedTitle": "Opschoning toegepast",
     "appliedBody": "Je profiel is opgeschoond. Bekijk het wijzigingslog om te controleren.",
     "applyFailedTitle": "Kon opschoning niet toepassen",
     "applyFailedBody": "Probeer het later opnieuw.",
-    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse.",
+    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor dit feit.",
     "effectLocationConflict": "Houdt de nieuwere plaats en verwijdert de oudere.",
     "keepBoth": "Beide houden",
     "merge": "Samenvoegen",
@@ -1368,8 +1373,19 @@
       "tooBroad": "{{fact}} is erg breed",
       "staleTopic": "{{topic}} is al weken rustig",
       "incoherentTopics_one": "{{count}} onderwerp onder {{fact}} past daar niet bij: {{topics}}",
-      "incoherentTopics_other": "{{count}} onderwerpen onder {{fact}} passen daar niet bij: {{topics}}"
-    }
+      "incoherentTopics_other": "{{count}} onderwerpen onder {{fact}} passen daar niet bij: {{topics}}",
+      "followInsteadFlood": "“{{topic}}” vult je feed. Wil je het als verhaal volgen?",
+      "followInsteadNoStake": "Er is veel nieuws over {{topic}}, maar niets daarvan verandert iets voor jou, dus je feed slaat het over. Wil je het als verhaal volgen om alles te zien?"
+    },
+    "titleFollowInstead": "Een verhaal om te volgen",
+    "effectFollowInstead": "Gevolgde verhalen zijn gratis, en geen AI leest ze.",
+    "keepFact": "Houd het als feit",
+    "followInsteadTopicMoves": "Nieuwe artikelen over {{topic}} gaan naar Gevolgde verhalen in plaats van naar je feed.",
+    "followInsteadFactGoes": "{{fact}} verdwijnt uit je profiel, en dat kun je niet ongedaan maken. Nieuwe artikelen over {{topic}} gaan naar Gevolgde verhalen.",
+    "followInsteadDoneTitle": "Je volgt {{topic}}",
+    "followInsteadDoneBody": "Nieuwe artikelen komen in Gevolgde verhalen terecht.",
+    "followInsteadNotificationTitle": "Een verhaal om te volgen",
+    "followInsteadNotificationBody": "Mera heeft iets gevonden dat bij Gevolgde verhalen past."
   },
   "locations": {
     "title": "Plaatsen",
@@ -1448,7 +1464,7 @@
   },
   "facts": {
     "screenTitle": "Feiten",
-    "screenSubtitle": "Mera kiest je nieuws uit deze feiten. Elk toont hoeveel onderwerpen het heeft. Tik op een feit om de onderwerpen en hun verhalen te zien.",
+    "screenSubtitle": "Je profiel is voor wat jou raakt. Al het andere volg je gewoon. Tik op een feit om de onderwerpen en verhalen te zien.",
     "addFact": "Feit toevoegen",
     "page": {
       "edit": "Bewerken",
@@ -1457,7 +1473,7 @@
       "impactfulHint": "Verhalen die Mera voor je heeft gekozen vanwege dit feit.",
       "menuA11y": "Dit feit bewerken of verwijderen",
       "new": "Nieuw",
-      "nextInterest": "Volgende interesse",
+      "nextInterest": "Volgend feit",
       "reach_one": "{{count}} verhaal in de laatste 48 uur",
       "reach_other": "{{count}} verhalen in de laatste 48 uur",
       "recentTab": "Recente artikelen",
@@ -1566,10 +1582,7 @@
     "meraButtonHint": "Kies de kleur van de zwevende Mera-knop. Die blijft hetzelfde in de lichte en donkere modus."
   },
   "freeTier": {
-    "seePlans": "Zie plannen",
-    "storiesNotice": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
-    "trackBody": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
-    "trackTitle": "Verhaalvolging hoort bij een plan"
+    "seePlans": "Zie plannen"
   },
   "factCheck": {
     "actionA11y": "Zoeken naar gepubliceerde feitchecks op dit artikel",
@@ -1730,11 +1743,11 @@
     "chapters": {
       "facts": {
         "title": "Je feiten bepalen je feed",
-        "subtitle": "Vertel Mera over je leven. Het doet de rest.",
+        "subtitle": "Je profiel is voor wat jou raakt. Al het andere volg je gewoon.",
         "slides": {
           "a-fact-is": {
             "headline": "Een feit is één ware regel",
-            "body": "'Ik ben een verpleegster.' 'Ik woon in Utrecht.' 'Ik heb een klein kind.' Kort, waar, over je leven. Dat is het hele idee.",
+            "body": "Je profiel is voor wat jou raakt, dus een feit is één ware zin over je leven. “Ik ben verpleegkundige.” “Ik woon in Utrecht.” “Ik heb een klein kind.” Kort en waar. Dat is het hele idee.",
             "ask": "Wat telt als feit in Mera?"
           },
           "where-from": {
@@ -1748,7 +1761,7 @@
           },
           "to-topics": {
             "headline": "Feiten worden dingen om naar te zoeken",
-            "body": "'Ik ben een verpleegster' verandert in verschillende zoekfrasen: ziekenhuisbezetting, salaris voor verpleegkundigen, gezondheidsbeleid. Één feit waiert uit naar een handvol. Die frasen zijn wat naar buiten gaat om nieuws te vinden."
+            "body": "“Ik ben verpleegkundige” wordt zoekzinnen: personeelstekort in ziekenhuizen, salarissen in de zorg, gezondheidsbeleid. Die zinnen gaan op zoek naar nieuws. Daarna legt de AI van Mera wat terugkomt naast je feiten en bepaalt hoe het jou raakt."
           },
           "sort-them": {
             "headline": "Welke hiervan is een feit?",
@@ -1772,12 +1785,12 @@
             "ask": "Hoe wijzig ik hoe belangrijk één van mijn feiten is?"
           },
           "your-profile": {
-            "body": "Alles wat Mera gebruikt om je nieuws te kiezen, op één plek. Tik op elk onderdeel.",
+            "body": "Alles wat Mera gebruikt om te vinden wat jou raakt, op één plek. Tik op elk ding.",
             "headline": "Je profiel",
             "reveal": {
               "facts": {
                 "label": "Feiten",
-                "text": "De waarheden over je leven. Elk feit vindt zijn eigen onderwerpen."
+                "text": "Ware zinnen over wat jou raakt. Elk feit vindt zijn eigen onderwerpen."
               },
               "places": {
                 "label": "Plaatsen",
@@ -1790,6 +1803,20 @@
               "sources": {
                 "label": "Bronnen",
                 "text": "Publicaties waarvan je meer of minder wilt zien, en de publicaties waarvoor je betaalt."
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "Je profiel is voor wat jou raakt. Al het andere volg je gewoon.",
+            "headline": "Profiel of verhaal?",
+            "reveal": {
+              "follow": {
+                "label": "Ik hou van Formula 1",
+                "text": "Het raakt je niet, dus volg het gewoon. Volgen is gratis en onbeperkt, en geen AI leest gevolgde verhalen."
+              },
+              "profile": {
+                "label": "Ik ga naar Monaco",
+                "text": "Dit raakt je, dus het gaat in je profiel. De AI van Mera legt het nieuws hiernaast en bepaalt wat het voor je reis betekent."
               }
             }
           }
@@ -1857,17 +1884,14 @@
                 "label": "Feed",
                 "text": "De Mera-knop beweegt terwijl Mera leest en blijft verder stil. Het is het enige teken dat er iets wordt opgehaald."
               },
-              "dashboard": {
-                "label": "Interesses",
-                "text": "Dezelfde dag gesorteerd op interesse, met een sectie voor alles wat je aan Mera hebt verteld en ongelezen verhalen eerst. Secties worden opnieuw gesorteerd als je de pagina verlaat, of elke 10 minuten."
-              },
+              "dashboard": {},
               "continuous": {
                 "label": "Doorlopende feed",
                 "text": "Het Mera-icoon bovenaan verandert van kleur terwijl Mera leest en staat de rest van de tijd stil. Het is het enige teken dat er iets wordt opgehaald."
               },
               "sectioned": {
                 "label": "Feed per sectie",
-                "text": "Dezelfde verhalen, gegroepeerd per feit, met een sectie voor elk ding dat je Mera hebt verteld, en ongelezen verhalen eerst."
+                "text": "Dezelfde verhalen gegroepeerd per feit, met een sectie voor elk feit in je profiel, en ongelezen verhalen eerst."
               }
             }
           }
@@ -1922,7 +1946,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "Het deel over jou blijft hier bewaard",
-            "body": "Je feiten, je interesses, je plaatsen en alles wat je hebt gelezen staan op deze telefoon. De servers van Mera bewaren geen kopie, en daarom wordt je profiel gewist als je je afmeldt. Op een nieuwe telefoon kan Back-up het terugbrengen."
+            "body": "Je feiten, de verhalen die je volgt, je plaatsen en alles wat je hebt gelezen blijven op deze telefoon. De servers van Mera houden geen kopie, daarom wist uitloggen je profiel. Op een nieuwe telefoon kan de back-up het terugzetten."
           },
           "what-leaves": {
             "headline": "Wat werkelijk naar buiten gaat",
@@ -1958,8 +1982,8 @@
         "subtitle": "Houd één verhaal in de gaten terwijl het zich ontvouwt.",
         "slides": {
           "what-it-is": {
-            "headline": "Voor verhalen die niet voorbij zijn",
-            "body": "Een verkiezing, een proces, een storm, een overname. Volg het eenmaal en elk nieuwe ontwikkeling verzamelt op één plek in plaats van over drie weken verspreid door je feed te arriveren."
+            "headline": "Voor al het andere waar je van houdt",
+            "body": "Een team, een artiest, een verkiezing, een storm. Volg het eenmaal en nieuwe artikelen komen op één plek bij elkaar. Volgen is gratis en onbeperkt, en geen AI leest gevolgde verhalen."
           },
           "two-ways-in": {
             "headline": "Twee manieren om te beginnen",
@@ -2322,7 +2346,7 @@
             "steps": {
               "0": "Je zegt een paar ware dingen over je leven.",
               "1": "Mera verandert ze in dingen om naar te zoeken.",
-              "2": "Het leest het dagnieuws en houdt wat past."
+              "2": "Mera leest het nieuws van de dag en houdt over wat jou raakt."
             }
           },
           "matching": {
@@ -2335,7 +2359,7 @@
             "reveal": {
               "about-you": {
                 "label": "Wat het over jou weet",
-                "text": "Je feiten, je interesses en wat je hebt gelezen worden op deze telefoon opgeslagen en blijven daar. De servers van Mera bewaren er geen kopie van."
+                "text": "Je feiten, de verhalen die je volgt en wat je hebt gelezen worden op deze telefoon opgeslagen en blijven daar. De servers van Mera houden er geen kopie van."
               },
               "what-leaves": {
                 "label": "Wat werkelijk weggaat",
@@ -2587,7 +2611,7 @@
   "skillPhrase": {
     "residence": "waar je woont",
     "work": "je werk",
-    "interests": "je interesses",
+    "interests": "wat je leuk vindt",
     "origin": "waar je vandaan komt",
     "family": "je gezin",
     "feedTuning": "je feed",
@@ -2787,10 +2811,10 @@
     "tutorials1": "Bekijk in een paar korte dia's hoe Mera werkt"
   },
   "interests": {
-    "emptyTitle": "Mera kent je interesses nog niet",
-    "learnAbout": "Leer hoe je feiten toevoegt",
-    "backToInterests": "Terug naar Interesses",
-    "findingStories": "Mera zoekt verhalen voor deze interesse. De eerste verschijnen hier over een paar seconden."
+    "emptyTitle": "Mera weet nog niets over je",
+    "learnAbout": "Lees wat er in je profiel hoort",
+    "backToInterests": "Terug naar je feed",
+    "findingStories": "Mera zoekt verhalen voor dit feit. De eerste verschijnen hier over een paar seconden."
   },
   "world": {
     "gathering": "Het nieuws van vandaag uit {{country}} wordt verzameld. De eerste verhalen verschijnen over een paar seconden.",
@@ -2923,7 +2947,7 @@
       "places": "Plaatsen",
       "sources": "Bronnen",
       "viewAll": "Bekijk alle {{count}}",
-      "factsEmpty": "Nog niets. Vertel Mera wat je volgt en het verschijnt hier.",
+      "factsEmpty": "Nog niets. Vertel Mera over je leven en het verschijnt hier.",
       "placesEmpty": "Nog geen plaatsen",
       "addCity": "Voeg een stad toe",
       "sourcesEmpty": "Niets aangepast. Mera behandelt elke bron gelijk.",
@@ -3015,8 +3039,8 @@
     },
     "askNews": "Vraag naar alles in het nieuws",
     "interest": {
-      "change": "Wijzig deze interesse",
-      "remove": "Verwijder deze interesse"
+      "change": "Dit feit wijzigen",
+      "remove": "Dit feit verwijderen"
     },
     "stories": {
       "follow": "Een verhaal volgen",
@@ -3039,7 +3063,7 @@
     },
     "sources": {
       "whoBehind": "Vraag wie achter een uitgever zit",
-      "whatFollow": "Vertel Mera wat je volgt"
+      "whatFollow": "Vertel Mera wat je graag leest"
     },
     "settings": {
       "whatCanYouDo": "Wat kun je doen?"
@@ -3051,19 +3075,18 @@
     "moveBottomLeft": "Naar linksonder verplaatsen",
     "moveBottomRight": "Naar rechtsonder verplaatsen",
     "answerReady": "Mera, een antwoord is klaar",
-    "tooltipNew": "Vertel Mera wat je leuk vindt",
+    "tooltipNew": "Vertel Mera over jou",
     "working": "Mera werkt aan je verzoek"
   },
   "meraIntro": {
-    "feed": "Je bent op je Feed. Vertel me waar je meer nieuws over wilt, of vraag me alles over het nieuws.",
-    "interests": "Dit zijn je interesses. Vertel me een nieuwe, of een die je wilt wijzigen of verwijderen.",
-    "interest": "Deze pagina volgt een van je interesses. Je kunt hem hier wijzigen of verwijderen.",
+    "feed": "Je bent op je feed. Vertel me wat jou raakt, noem iets om te volgen, of stel me een vraag over het nieuws.",
+    "interest": "Deze pagina toont een van je feiten. Hier kun je het wijzigen of verwijderen.",
     "world": "Vraag me naar een kop, of vertel me uit welk land je nieuws wilt.",
     "checks": "Vertel me een bewering die je hebt gezien en ik zoek hem op het web op.",
     "checksNoWeb": "Zoeken op het web in de chat staat uit, dus ik kan nu geen beweringen opzoeken. Je kunt het aanzetten in Instellingen.",
-    "library": "Vraag me naar alles in het nieuws, of vertel me wat je graag leest.",
+    "library": "Stel me een vraag over het nieuws, of vertel me wat je wilt volgen.",
     "facts": "Je bekijkt je feiten. Wat wil je wijzigen?",
-    "sources": "Vraag me naar een uitgever, of vertel me wat je volgt.",
+    "sources": "Stel me een vraag over een publicatie, of vertel me wat je wilt volgen.",
     "settings": "Vraag me wat ik kan doen, of hoe Mera met je gegevens omgaat.",
     "onDevice": {
       "feed": "Je bent in je Feed. Vertel me wat je graag volgt en ik stem af wat hier verschijnt.",
@@ -3073,8 +3096,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "Wijzig mijn interesse “{{statement}}” in ",
-    "removeInterest": "Verwijder mijn interesse “{{statement}}”",
+    "changeInterest": "Wijzig mijn feit “{{statement}}” naar ",
+    "removeInterest": "Verwijder mijn feit “{{statement}}”",
     "followStory": "Houd me op de hoogte van "
   },
   "appLock": {

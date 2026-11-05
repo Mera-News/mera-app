@@ -183,7 +183,7 @@
     "processingOffline": "Bạn đang ngoại tuyến. Các câu chuyện của bạn sẽ đến khi bạn có mạng trở lại.",
     "forYouTitle": "Dành cho bạn",
     "newStoriesBelowA11y": "Có câu chuyện mới bên dưới",
-    "noFactsBody": "Chạm vào nút Mera để kể cho Mera biết bạn theo dõi điều gì. Mera sẽ biến điều đó thành nguồn tin của bạn.",
+    "noFactsBody": "Chạm vào nút Mera và kể cho Mera nghe về cuộc sống của bạn. Mera sẽ tìm các tin tức ảnh hưởng đến bạn.",
     "noteWait": "Vui lòng đợi trong khi Mera viết lý do.",
     "opened": "Đã mở",
     "statsSyncAnalysing_one": "{{formatted}} bài viết đang được phân tích cho bạn,",
@@ -324,10 +324,10 @@
     "close": "Đóng",
     "logoutFailedTitle": "Đăng xuất thất bại",
     "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại.",
-    "composerPlaceholder": "Bạn thích theo dõi điều gì?",
+    "composerPlaceholder": "Kể cho mình nghe về cuộc sống của bạn",
     "factsCount_one": "{{count}} dữ kiện về bạn",
     "factsCount_other": "{{count}} dữ kiện về bạn",
-    "noFactsBody": "Mera dùng thành phố của bạn để tìm tin tức nơi bạn sống. Bạn có thể kể thêm về mình bất cứ lúc nào.",
+    "noFactsBody": "Mera dùng thành phố của bạn để tìm tin tức nơi bạn sống. Bạn có thể kể thêm về cuộc sống của mình bất cứ lúc nào.",
     "noFactsTitle": "Bạn sống ở đâu?",
     "noNotifBody": "Bạn sẽ không biết khi tin của mình đã sẵn sàng hoặc khi một câu chuyện bạn theo dõi có diễn biến mới. Bạn có thể bật lại sau trong Cài đặt.",
     "noNotifTitle": "Dùng Mera mà không có thông báo?",
@@ -508,7 +508,7 @@
     "helpModesVerify": "“Xác minh chứng thực” kiểm tra rằng đám mây chạy trên phần cứng bảo mật thật, và dữ liệu của bạn được mã hóa cho nó."
   },
   "manageData": {
-    "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ \"Ấn phẩm bạn đang đọc\" trong tab Nguồn và lịch sử theo từng ấn phẩm sẽ trở về trạng thái trống. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị chạm đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này.",
+    "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ “Các nguồn bạn đã đọc” ở tab Nguồn và lịch sử theo từng nguồn sẽ trống trở lại. Các câu chuyện bạn đã đọc có thể xuất hiện lại trong bảng tin. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị đụng đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này.",
     "deletedTitle": "Đã xóa dữ liệu",
     "deletedDescription": "Dữ liệu đã chọn đã được xóa thành công.",
     "errorTitle": "Lỗi",
@@ -682,7 +682,7 @@
     "replyUnfinished": "Chưa xong"
   },
   "personaChat": {
-    "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nChia sẻ nhiều hay ít tùy bạn. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai có quyền truy cập dữ liệu của bạn ngoài bạn."
+    "introMessage": "Chào bạn, mình là Mera.\n\nKể cho mình nghe về cuộc sống của bạn: bạn sống ở đâu, làm gì, quan tâm đến ai. Mình sẽ tìm các tin tức ảnh hưởng đến bạn. Bất cứ điều gì khác bạn thích, chúng ta có thể theo dõi như những câu chuyện.\n\nBạn chia sẻ nhiều hay ít tùy ý. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai ngoài chính bạn có quyền truy cập dữ liệu của bạn."
   },
   "floatingChat": {
     "close": "Đóng",
@@ -724,7 +724,7 @@
     "factDeleteRemove": "Xóa",
     "factDeleteKeep": "Giữ lại",
     "factDeleteKept": "Không có gì bị xóa.",
-    "topicsSavedHint": "Đã lưu chủ đề! Bạn cứ tiếp tục thêm thông tin, hoặc nhấn {{close}} để bắt đầu khám phá.",
+    "topicsSavedHint": "Đã lưu chủ đề! Kể thêm về cuộc sống của bạn, hoặc chạm {{close}} để bắt đầu khám phá.",
     "guidelinesAfter": ". Nếu phát hiện hành vi lạm dụng, Mera sẽ tạm khóa tài khoản của bạn cho đến khi bạn yêu cầu xem xét lại.",
     "guidelinesBefore": "Bạn đang trò chuyện với Mera, một AI chứ không phải người. Mera tuân theo ",
     "guidelinesLink": "hướng dẫn nội dung",
@@ -747,7 +747,7 @@
     "chipDontWant": "Tôi không muốn gợi ý này",
     "chipDontWantMessage": "Tôi không muốn gợi ý này. Chúng ta nên thay đổi gì để tôi không nhận được bài viết như thế này nữa?",
     "chipMoreLikeThis": "Tôi muốn thêm bài viết như thế này",
-    "chipMoreLikeThisMessage": "Tôi muốn thêm bài viết như thế này. Chúng ta nên thêm gì vào sở thích của tôi?",
+    "chipMoreLikeThisMessage": "Mình muốn xem thêm bài viết như thế này. Mình nên thêm gì vào hồ sơ, hay theo dõi nó như một câu chuyện?",
     "proposalTitle": "Các thay đổi được đề xuất",
     "expectedEffects": "Hiệu ứng dự kiến",
     "proposalConfirm": "Có, thực hiện đi",
@@ -1023,7 +1023,7 @@
     "timelineLoadFailed": "Không tải được câu chuyện này. Kéo xuống để thử lại.",
     "deleteFailed": "Không thể bỏ theo dõi câu chuyện này. Hãy thử lại.",
     "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại.",
-    "emptyBodyMera": "Hãy theo dõi một câu chuyện đang diễn biến và Mera sẽ cập nhật nó ở đây. Chạm vào nút Mera để theo dõi.",
+    "emptyBodyMera": "Theo dõi bất cứ điều gì bạn thích: một đội bóng, một nghệ sĩ, một câu chuyện dài kỳ. Theo dõi miễn phí và không giới hạn, và không có AI nào đọc các câu chuyện đang theo dõi. Chạm vào nút Mera để bắt đầu.",
     "followedSince": "Theo dõi từ {{date}}",
     "learnAbout": "Tìm hiểu về Câu chuyện",
     "nextNote": "Mera thêm các đưa tin mới ở đây khi câu chuyện phát triển.",
@@ -1060,22 +1060,27 @@
     "wideNetBody": "Mera tìm kiếm trên phạm vi rộng, nên một số bài viết ở đây có thể chỉ liên quan ít đến câu chuyện. Chúng tôi thà cho bạn xem thêm một bài còn hơn để bạn bỏ lỡ một bài quan trọng.",
     "wideNetRemove": "Để xóa một bài, hãy mở menu của bài đó và chọn {{action}}.",
     "wideNetShowLess": "Thu gọn",
-    "composerPlaceholder": "Bạn muốn mình theo dõi câu chuyện nào?",
+    "composerPlaceholder": "Mình nên để ý điều gì?",
     "optionAsWritten": "{{phrase}}, đúng như bạn đã viết",
-    "optionSpellingFixed": "{{phrase}}, đã sửa chính tả"
+    "optionSpellingFixed": "{{phrase}}, đã sửa chính tả",
+    "followCardLine": "Chủ đề này đáng theo dõi. Chọn những gì bạn muốn và bài viết mới sẽ vào mục Câu chuyện đang theo dõi.",
+    "addToProfile": "Thêm vào hồ sơ của tôi thay vì vậy",
+    "impactQuestion": "Trước khi thêm, điều này ảnh hưởng đến bạn như thế nào? AI của Mera dùng thông tin này để xác định một bài viết quan trọng với bạn đến mức nào. Nếu nó không ảnh hưởng trực tiếp đến bạn, mình khuyên bạn chỉ nên theo dõi nó như một câu chuyện.",
+    "addAnyway": "Vẫn thêm",
+    "addedToProfile": "Đã thêm vào hồ sơ của bạn"
   },
   "whatsNew": {
     "gotIt": "Đã hiểu",
     "starterTitle": "Starter do chúng tôi mời",
     "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
     "starterArticlesTitle": "Mọi bài viết phù hợp",
-    "starterArticlesBody": "Mọi bài viết phù hợp với mối quan tâm của bạn đều đến Bảng tin. Mera đọc chúng, gạt bớt nhiễu và đưa những gì quan trọng lên.",
-    "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
-    "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
+    "starterArticlesBody": "Mera đọc mọi bài viết khớp với hồ sơ của bạn, loại bỏ nhiễu và cho bạn thấy điều gì ảnh hưởng đến bạn.",
+    "starterInterestsTitle": "Toàn bộ hồ sơ của bạn",
+    "starterInterestsBody": "Thêm mọi điều ảnh hưởng đến bạn. Mera đối chiếu tin tức với từng dữ kiện.",
     "starterChatTitle": "Trò chuyện và kiểm chứng",
     "starterChatBody": "Hỏi Mera về bất kỳ tin nào, và đối chiếu các tuyên bố với những kiểm chứng đã công bố.",
     "starterStoriesTitle": "Câu chuyện đang theo dõi",
-    "starterStoriesBody": "Theo dõi một câu chuyện và Mera sẽ tiếp tục dõi theo giúp bạn."
+    "starterStoriesBody": "Theo dõi bất cứ điều gì bạn thích, miễn phí và không giới hạn. Không AI nào đọc các câu chuyện đang theo dõi."
   },
   "notificationCenter": {
     "title": "Thông báo",
@@ -1086,7 +1091,7 @@
     "settingsLink": "Cài đặt thông báo",
     "help": {
       "title": "Về thông báo",
-      "body": "Mera ghi chú ở đây về bảng tin của bạn: kết quả kiểm chứng bạn đã yêu cầu đã sẵn sàng, lời nhắc tinh chỉnh bảng tin mỗi ngày, gợi ý giúp bạn dọn dẹp hoặc điều chỉnh sở thích, và các câu hỏi từ nhóm Mera. Những ghi chú này chỉ được giữ trên điện thoại này trong 90 ngày. Chấm tròn nghĩa là có mục chưa đọc. Thông báo tin tức sẽ không hiện ở đây. Bạn đặt giờ nhận các thông báo đó trong Cài đặt, ở mục Thông báo."
+      "body": "Mera để lại ghi chú về bảng tin của bạn tại đây: một lần kiểm tra thông tin bạn yêu cầu đã sẵn sàng, việc rà soát bảng tin hằng ngày, mẹo dọn dẹp hoặc điều chỉnh hồ sơ, và các câu hỏi từ đội ngũ Mera. Chúng chỉ được lưu trên điện thoại này trong 90 ngày, và chấm báo nghĩa là có mục chưa đọc. Thông báo tin tức không hiện ở đây. Bạn đặt giờ nhận trong Cài đặt, mục Thông báo."
     },
     "ageNow": "Ngay",
     "ageMinutes": "{{n}}p",
@@ -1117,7 +1122,7 @@
   },
   "personaAudit": {
     "title": "Thay đổi đối với hồ sơ của bạn",
-    "empty": "Chưa có thay đổi nào. Khi Mera tinh chỉnh sở thích của bạn, mọi thay đổi sẽ hiện ở đây.",
+    "empty": "Chưa có thay đổi nào. Khi Mera điều chỉnh hồ sơ của bạn, mọi thay đổi sẽ hiện ở đây.",
     "revertedBadge": "Đã hoàn tác",
     "revertConfirmTitle": "Hoàn tác thay đổi này?",
     "revertConfirmBody": "Thao tác này đưa hồ sơ của bạn trở lại như trước thay đổi này.",
@@ -1319,20 +1324,20 @@
     "statusDismissed": "Đã bỏ qua"
   },
   "hygiene": {
-    "notificationTitle": "Dọn dẹp sở thích của bạn?",
+    "notificationTitle": "Dọn dẹp hồ sơ của bạn?",
     "notificationBody_one": "Mera tìm thấy {{count}} dọn dẹp cho hồ sơ của bạn.",
     "notificationBody_other": "Mera đã tìm thấy {{count}} mục cần dọn dẹp trong hồ sơ của bạn.",
     "reviewChip": "Xem xét",
     "accept": "Chấp nhận",
     "reject": "Bỏ qua",
-    "effectTooBroad": "Giảm trọng số của sở thích này để nó kéo về ít bài viết lạc chủ đề hơn.",
+    "effectTooBroad": "Giảm trọng số của dữ kiện này để nó kéo về ít tin lạc đề hơn.",
     "effectStaleTopic": "Ngừng theo dõi chủ đề ít hoạt động này.",
     "effectStaleFact": "Xóa thông tin này: không còn chủ đề nào của nó đang hoạt động.",
     "appliedTitle": "Đã dọn dẹp",
     "appliedBody": "Hồ sơ của bạn đã được dọn dẹp. Xem nhật ký thay đổi để kiểm tra lại.",
     "applyFailedTitle": "Không thể áp dụng dọn dẹp",
     "applyFailedBody": "Vui lòng thử lại sau.",
-    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này.",
+    "effectIncoherentTopics": "Thay các chủ đề này bằng những chủ đề phù hợp hơn với dữ kiện này.",
     "effectLocationConflict": "Giữ nơi mới hơn và xóa nơi cũ.",
     "keepBoth": "Giữ cả hai",
     "merge": "Gộp",
@@ -1349,8 +1354,19 @@
       "staleFact": "{{fact}} không còn chủ đề đang hoạt động nào",
       "tooBroad": "{{fact}} quá rộng",
       "staleTopic": "{{topic}} đã không có tin mới trong nhiều tuần",
-      "incoherentTopics_other": "{{count}} chủ đề trong {{fact}} không phù hợp: {{topics}}"
-    }
+      "incoherentTopics_other": "{{count}} chủ đề trong {{fact}} không phù hợp: {{topics}}",
+      "followInsteadFlood": "“{{topic}}” đang lấp đầy bảng tin của bạn. Theo dõi nó như một câu chuyện thay vì vậy nhé?",
+      "followInsteadNoStake": "Có rất nhiều tin về {{topic}}, nhưng không tin nào thay đổi điều gì đối với bạn, nên bảng tin của bạn bỏ qua nó. Theo dõi nó như một câu chuyện để xem đầy đủ?"
+    },
+    "titleFollowInstead": "Một câu chuyện để theo dõi",
+    "effectFollowInstead": "Câu chuyện theo dõi miễn phí, và không có AI nào đọc chúng.",
+    "keepFact": "Giữ lại như một dữ kiện",
+    "followInsteadTopicMoves": "Bài viết mới về {{topic}} sẽ chuyển vào Câu chuyện đang theo dõi thay vì bảng tin của bạn.",
+    "followInsteadFactGoes": "{{fact}} sẽ rời khỏi hồ sơ của bạn, và không thể hoàn tác. Bài viết mới về {{topic}} sẽ chuyển vào Câu chuyện đang theo dõi.",
+    "followInsteadDoneTitle": "Đang theo dõi {{topic}}",
+    "followInsteadDoneBody": "Bài viết mới sẽ vào Câu chuyện đang theo dõi.",
+    "followInsteadNotificationTitle": "Một câu chuyện để theo dõi",
+    "followInsteadNotificationBody": "Mera tìm thấy điều gì đó phù hợp với Câu chuyện đang theo dõi."
   },
   "locations": {
     "title": "Địa điểm",
@@ -1429,7 +1445,7 @@
   },
   "facts": {
     "screenTitle": "Dữ kiện",
-    "screenSubtitle": "Mera chọn tin của bạn từ những dữ kiện này. Mỗi dữ kiện cho biết có bao nhiêu chủ đề. Chạm vào một dữ kiện để xem các chủ đề và câu chuyện của nó.",
+    "screenSubtitle": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn. Mọi thứ còn lại, chỉ cần theo dõi. Chạm vào một dữ kiện để xem các chủ đề và câu chuyện của nó.",
     "addFact": "Thêm một dữ kiện",
     "page": {
       "edit": "Sửa",
@@ -1438,7 +1454,7 @@
       "impactfulHint": "Các câu chuyện Mera chọn cho bạn nhờ dữ kiện này.",
       "menuA11y": "Sửa hoặc xóa dữ kiện này",
       "new": "Mới",
-      "nextInterest": "Mối quan tâm tiếp theo",
+      "nextInterest": "Dữ kiện tiếp theo",
       "reach_one": "{{count}} câu chuyện trong 48 giờ qua",
       "reach_other": "{{count}} câu chuyện trong 48 giờ qua",
       "recentTab": "Bài viết gần đây",
@@ -1547,10 +1563,7 @@
     "meraButtonHint": "Chọn màu cho nút Mera nổi. Nút giữ nguyên màu ở chế độ sáng và chế độ tối."
   },
   "freeTier": {
-    "seePlans": "Xem gói",
-    "storiesNotice": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
-    "trackBody": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
-    "trackTitle": "Theo dõi câu chuyện đi kèm với một gói"
+    "seePlans": "Xem gói"
   },
   "factCheck": {
     "actionA11y": "Tìm kiếm các kiểm chứng sự kiện được công bố về câu chuyện này",
@@ -1710,11 +1723,11 @@
     "chapters": {
       "facts": {
         "title": "Các thông tin của bạn định hình bản tin của bạn",
-        "subtitle": "Hãy kể cho Mera về cuộc sống của bạn. Nó làm phần còn lại.",
+        "subtitle": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn. Mọi thứ còn lại, chỉ cần theo dõi.",
         "slides": {
           "a-fact-is": {
             "headline": "Một thông tin là một dòng đúng",
-            "body": "'Tôi là một y tá.' 'Tôi sống ở Utrecht.' 'Tôi có một đứa trẻ nhỏ.' Ngắn, đúng, về cuộc sống của bạn. Đó là toàn bộ ý tưởng.",
+            "body": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn, nên một dữ kiện là một dòng đúng sự thật về cuộc sống của bạn. “Tôi là y tá.” “Tôi sống ở Utrecht.” “Tôi có một con nhỏ.” Ngắn gọn và đúng sự thật. Đó là toàn bộ ý tưởng.",
             "ask": "Điều gì được tính là một thông tin trong Mera?"
           },
           "where-from": {
@@ -1728,7 +1741,7 @@
           },
           "to-topics": {
             "headline": "Các thông tin trở thành những thứ để tìm kiếm",
-            "body": "'Tôi là một y tá' chuyển thành một vài cụm tìm kiếm: quản lý bệnh viện, lương y tá, chính sách y tế. Một thông tin quạt ra thành một tay cầm. Những cụm từ đó là những gì đi ra để tìm tin tức."
+            "body": "“Tôi là y tá” biến thành các cụm từ tìm kiếm: nhân sự bệnh viện, lương điều dưỡng, chính sách y tế. Những cụm từ đó được gửi đi để tìm tin tức. Sau đó AI của Mera đối chiếu kết quả với dữ kiện của bạn và tính toán tác động đến bạn."
           },
           "sort-them": {
             "headline": "Cái nào là một thông tin?",
@@ -1752,12 +1765,12 @@
             "ask": "Làm thế nào để tôi thay đổi mức độ quan trọng của một trong những thông tin của tôi?"
           },
           "your-profile": {
-            "body": "Mọi thứ Mera dùng để chọn tin cho bạn, gom về một chỗ. Chạm vào từng mục.",
+            "body": "Mọi thứ Mera dùng để tìm điều ảnh hưởng đến bạn, gom về một chỗ. Chạm vào từng mục.",
             "headline": "Hồ sơ của bạn",
             "reveal": {
               "facts": {
                 "label": "Dữ kiện",
-                "text": "Những dòng thật về cuộc sống của bạn. Mỗi dòng tự tìm các chủ đề của riêng nó."
+                "text": "Những dòng đúng sự thật về điều ảnh hưởng đến bạn. Mỗi dữ kiện tự tìm chủ đề của nó."
               },
               "places": {
                 "label": "Địa điểm",
@@ -1770,6 +1783,20 @@
               "sources": {
                 "label": "Nguồn tin",
                 "text": "Những nguồn bạn muốn xem nhiều hơn hoặc ít hơn, và những nguồn bạn trả tiền để đọc."
+              }
+            }
+          },
+          "profile-or-story": {
+            "body": "Hồ sơ của bạn dành cho những điều ảnh hưởng đến bạn. Mọi thứ còn lại, chỉ cần theo dõi.",
+            "headline": "Hồ sơ hay câu chuyện?",
+            "reveal": {
+              "follow": {
+                "label": "Tôi thích Công thức 1",
+                "text": "Nó không ảnh hưởng đến bạn, nên chỉ cần theo dõi. Theo dõi miễn phí và không giới hạn, và không có AI nào đọc các câu chuyện đang theo dõi."
+              },
+              "profile": {
+                "label": "Tôi sắp đi Monaco",
+                "text": "Điều này ảnh hưởng đến bạn, nên nó thuộc về hồ sơ của bạn. AI của Mera đối chiếu tin tức với nó và tính tác động đến chuyến đi của bạn."
               }
             }
           }
@@ -1837,17 +1864,14 @@
                 "label": "Bảng tin",
                 "text": "Nút Mera chỉ chuyển động khi Mera đang đọc và đứng yên suốt thời gian còn lại. Đó là dấu hiệu duy nhất cho thấy có gì đó đang được tải."
               },
-              "dashboard": {
-                "label": "Mối quan tâm",
-                "text": "Cùng một ngày nhưng sắp xếp theo mối quan tâm, mỗi điều bạn đã nói với Mera có một mục riêng và tin chưa đọc nằm trước. Các mục được sắp xếp lại khi bạn rời trang, hoặc sau mỗi 10 phút."
-              },
+              "dashboard": {},
               "continuous": {
                 "label": "Bảng tin liên tục",
                 "text": "Biểu tượng Mera ở trên cùng đổi màu khi Mera đang đọc và đứng yên phần còn lại thời gian. Đó là dấu hiệu duy nhất cho thấy có thứ gì đang được tải."
               },
               "sectioned": {
                 "label": "Bảng tin theo mục",
-                "text": "Cùng các câu chuyện được nhóm theo dữ kiện, mỗi mục ứng với một điều bạn đã kể với Mera, với các câu chuyện chưa đọc hiện lên trước."
+                "text": "Cùng các câu chuyện được nhóm theo dữ kiện, mỗi dữ kiện trong hồ sơ của bạn có một phần riêng, với các câu chuyện chưa đọc lên trước."
               }
             }
           }
@@ -1902,7 +1926,7 @@
         "slides": {
           "stays-on-phone": {
             "headline": "Phần về bạn được giữ ở đây",
-            "body": "Các dữ kiện, sở thích, nơi chốn của bạn và tất cả những gì bạn đã đọc nằm trên điện thoại này. Máy chủ của Mera không giữ bản sao nào, đó là lý do đăng xuất sẽ xóa hồ sơ của bạn. Trên điện thoại mới, Sao lưu có thể khôi phục lại."
+            "body": "Dữ kiện của bạn, các câu chuyện bạn theo dõi, địa điểm và mọi thứ bạn đã đọc đều nằm trên điện thoại này. Máy chủ của Mera không giữ bản sao nào, đó là lý do đăng xuất sẽ xóa hồ sơ của bạn. Trên điện thoại mới, Sao lưu có thể khôi phục lại."
           },
           "what-leaves": {
             "headline": "Những gì thực sự đi ra",
@@ -1938,8 +1962,8 @@
         "subtitle": "Giữ một câu chuyện trong chế độ xem khi nó mở ra.",
         "slides": {
           "what-it-is": {
-            "headline": "Đối với những câu chuyện không kết thúc",
-            "body": "Một cuộc bầu cử, một phiên tòa, một cơn bão, một chiếc xe. Theo dõi nó một lần và mỗi sự phát triển mới tập hợp ở một nơi thay vì đến rải rác thông qua bản tin của bạn trong ba tuần."
+            "headline": "Cho mọi thứ khác bạn thích",
+            "body": "Một đội bóng, một nghệ sĩ, một cuộc bầu cử, một cơn bão. Theo dõi một lần, các bài viết mới sẽ tập hợp ở một chỗ. Theo dõi miễn phí và không giới hạn, và không có AI nào đọc các câu chuyện đang theo dõi."
           },
           "two-ways-in": {
             "headline": "Hai cách để bắt đầu",
@@ -2302,7 +2326,7 @@
             "steps": {
               "0": "Bạn nói một vài điều đúng về cuộc sống của bạn.",
               "1": "Mera biến chúng thành những thứ để đi tìm.",
-              "2": "Nó đọc tin tức trong ngày và giữ lại những gì phù hợp."
+              "2": "Nó đọc tin tức trong ngày và giữ lại những gì ảnh hưởng đến bạn."
             }
           },
           "matching": {
@@ -2315,7 +2339,7 @@
             "reveal": {
               "about-you": {
                 "label": "Những gì nó biết về bạn",
-                "text": "Các dữ kiện, sở thích và những gì bạn đã đọc được ghi vào điện thoại này và ở lại đó. Máy chủ của Mera không giữ bản sao nào của chúng."
+                "text": "Dữ kiện của bạn, các câu chuyện bạn theo dõi và những gì bạn đã đọc được ghi vào điện thoại này và ở lại đó. Máy chủ của Mera không giữ bản sao nào."
               },
               "what-leaves": {
                 "label": "Những gì thực sự rời đi",
@@ -2567,7 +2591,7 @@
   "skillPhrase": {
     "residence": "nơi bạn sống",
     "work": "công việc của bạn",
-    "interests": "sở thích của bạn",
+    "interests": "điều bạn thích",
     "origin": "nơi bạn đến từ",
     "family": "gia đình bạn",
     "feedTuning": "nguồn tin của bạn",
@@ -2767,10 +2791,10 @@
     "tutorials1": "Xem Mera hoạt động thế nào qua vài thẻ ngắn"
   },
   "interests": {
-    "emptyTitle": "Mera chưa biết bạn quan tâm đến điều gì",
-    "learnAbout": "Tìm hiểu cách thêm dữ kiện",
-    "backToInterests": "Quay lại Mối quan tâm",
-    "findingStories": "Mera đang tìm câu chuyện cho mối quan tâm này. Những câu chuyện đầu tiên sẽ hiện ở đây sau vài giây."
+    "emptyTitle": "Mera chưa biết gì về bạn",
+    "learnAbout": "Tìm hiểu những gì thuộc về hồ sơ của bạn",
+    "backToInterests": "Quay lại bảng tin",
+    "findingStories": "Mera đang tìm câu chuyện cho dữ kiện này. Những câu chuyện đầu tiên sẽ hiện ở đây trong vài giây."
   },
   "world": {
     "gathering": "Đang thu thập tin hôm nay từ {{country}}. Những câu chuyện đầu tiên sẽ hiện sau vài giây.",
@@ -2902,7 +2926,7 @@
       "places": "Địa điểm",
       "sources": "Nguồn",
       "viewAll": "Xem tất cả {{count}}",
-      "factsEmpty": "Chưa có gì. Hãy cho Mera biết bạn theo dõi điều gì và nó sẽ hiện ở đây.",
+      "factsEmpty": "Chưa có gì. Kể cho Mera biết về cuộc sống của bạn và nó sẽ hiện ở đây.",
       "placesEmpty": "Chưa có địa điểm nào",
       "addCity": "Thêm một thành phố",
       "sourcesEmpty": "Chưa điều chỉnh nguồn nào. Mera đối xử với mọi nguồn như nhau.",
@@ -2994,8 +3018,8 @@
     },
     "askNews": "Hỏi về bất cứ điều gì trong tin tức",
     "interest": {
-      "change": "Đổi mối quan tâm này",
-      "remove": "Xóa mối quan tâm này"
+      "change": "Đổi dữ kiện này",
+      "remove": "Xóa dữ kiện này"
     },
     "stories": {
       "follow": "Theo dõi một câu chuyện",
@@ -3018,7 +3042,7 @@
     },
     "sources": {
       "whoBehind": "Hỏi ai đứng sau một ấn phẩm",
-      "whatFollow": "Cho Mera biết bạn theo dõi gì"
+      "whatFollow": "Cho Mera biết bạn thích đọc gì"
     },
     "settings": {
       "whatCanYouDo": "Bạn có thể làm gì?"
@@ -3030,19 +3054,18 @@
     "moveBottomLeft": "Chuyển đến góc dưới bên trái",
     "moveBottomRight": "Chuyển đến góc dưới bên phải",
     "answerReady": "Mera, đã có câu trả lời",
-    "tooltipNew": "Cho Mera biết bạn thích gì",
+    "tooltipNew": "Kể cho Mera về bạn",
     "working": "Mera đang xử lý yêu cầu của bạn"
   },
   "meraIntro": {
-    "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết bạn muốn đọc thêm tin gì, hoặc hỏi mình bất cứ điều gì về tin tức.",
-    "interests": "Đây là những mối quan tâm của bạn. Hãy nói với tôi một mối quan tâm mới, hoặc một mối bạn muốn đổi hay xóa.",
-    "interest": "Trang này theo dõi một mối quan tâm của bạn. Bạn có thể đổi hoặc xóa nó tại đây.",
+    "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết điều gì ảnh hưởng đến bạn, nêu một điều muốn theo dõi, hoặc hỏi mình bất cứ điều gì về tin tức.",
+    "interest": "Trang này hiển thị một dữ kiện của bạn. Bạn có thể đổi hoặc xóa nó ngay tại đây.",
     "world": "Hãy hỏi tôi về một tiêu đề, hoặc cho tôi biết quốc gia bạn muốn xem tin.",
     "checks": "Hãy nói với tôi một nhận định bạn đã thấy và tôi sẽ tra cứu trên web.",
     "checksNoWeb": "Tìm kiếm web trong trò chuyện đang tắt, nên tôi chưa thể tra cứu nhận định lúc này. Bạn có thể bật nó trong Cài đặt.",
-    "library": "Hãy hỏi tôi về bất cứ điều gì trong tin tức, hoặc cho tôi biết bạn thích đọc gì.",
+    "library": "Hỏi mình bất cứ điều gì trong tin tức, hoặc cho mình biết điều bạn muốn theo dõi.",
     "facts": "Bạn đang xem thông tin của mình. Bạn muốn đổi gì?",
-    "sources": "Hãy hỏi tôi về một ấn phẩm, hoặc cho tôi biết bạn theo dõi gì.",
+    "sources": "Hỏi mình về một nguồn tin, hoặc cho mình biết điều bạn muốn theo dõi.",
     "settings": "Hãy hỏi mình xem mình làm được gì, hoặc Mera xử lý dữ liệu của bạn như thế nào.",
     "onDevice": {
       "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết bạn thích theo dõi điều gì, mình sẽ điều chỉnh những gì hiện ở đây.",
@@ -3052,8 +3075,8 @@
     }
   },
   "meraDraft": {
-    "changeInterest": "Đổi mối quan tâm \"{{statement}}\" của tôi thành ",
-    "removeInterest": "Xóa mối quan tâm \"{{statement}}\" của tôi",
+    "changeInterest": "Đổi dữ kiện của mình “{{statement}}” thành ",
+    "removeInterest": "Xóa dữ kiện của mình “{{statement}}”",
     "followStory": "Cập nhật cho tôi về "
   },
   "appLock": {
