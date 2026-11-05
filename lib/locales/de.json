@@ -350,14 +350,14 @@
     "turnThemOn": "Einschalten",
     "guardSkip": "Mit Schlagzeilen starten",
     "guardAddFact": "Etwas hinzufügen",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Welchen Nachrichtenquellen vertraust du?",
+    "sourcesBody": "Tippe auf den Stern, um mehr zu sehen. Tippe auf das Auge, um eine Quelle aus deinen Nachrichten auszublenden. Das kannst du jederzeit unter Quellen ändern.",
+    "sourcesSkip": "Überspringen",
+    "sourcesLoadError": "Quellen konnten nicht geladen werden.",
+    "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
+    "sourcesSearchHint": "Suche nach einer Veröffentlichung oder einem Land.",
+    "iSubscribe": "Ich habe ein Abo",
+    "iSubscribeA11y": "Ich habe {{publisher}} abonniert"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -567,11 +567,11 @@
     "askBeforeTopicDeleteHint": "Mera bittet dich jedes Mal um Bestätigung, wenn du ein Thema aus einem deiner Fakten löschst.",
     "exportHistoryWindowNote_one": "Dieser Export umfasst nur den letzten {{count}} Tag Lesezeit. Ältere Einträge werden automatisch von diesem Gerät gelöscht und wurden nie an die Server von Mera gesendet.",
     "exportHistoryWindowNote_other": "Dieser Export umfasst nur die letzten {{count}} Tage Lesezeit. Ältere Einträge werden automatisch von diesem Gerät gelöscht und wurden nie an die Server von Mera gesendet.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Mera uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Daten auf diesem Telefon",
+    "meterLine": "Mera nutzt {{used}}. Auf diesem Telefon sind {{free}} frei.",
+    "meterUsedOnly": "Mera nutzt {{used}}.",
+    "meterDatabase": "Artikel und Profil",
+    "meterBackup": "Sicherungskopie"
   },
   "preferences": {
     "notifications": "Benachrichtigungen",
@@ -790,10 +790,10 @@
     "actionShowLessTopic": "Weniger von einem Thema anzeigen",
     "actionShowMoreTopic": "Mehr von einem Thema anzeigen",
     "actionDownRank": "Ein Thema herabstufen",
-    "actionPublicationBoost": "Mehr von einer Publikation anzeigen",
+    "actionPublicationBoost": "Eine Veröffentlichung als Bevorzugt markieren",
     "actionPublicationDeprioritize": "Weniger von einer Publikation anzeigen",
-    "actionPublicationMute": "Eine Publikation stummschalten",
-    "actionSourceScopeBoost": "Mehr von Quellen in einem Land anzeigen",
+    "actionPublicationMute": "Eine Veröffentlichung als Nicht bevorzugt markieren",
+    "actionSourceScopeBoost": "Quellen aus einem Land bevorzugen",
     "actionSourceScopeDeprioritize": "Weniger von Quellen in einem Land anzeigen",
     "actionSuppress": "Eine Phrase herausfiltern",
     "actionPinTopic": "Ein Thema anheften",
@@ -1210,9 +1210,9 @@
       "undone": "Rückgängig gemacht: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "{{name}} als Bevorzugt festgelegt",
+      "notPreferred": "{{name}} als Nicht bevorzugt festgelegt",
+      "preferredSourcesFrom": "Quellen aus {{name}} als Bevorzugt festgelegt"
     }
   },
   "calibration": {
@@ -1801,7 +1801,7 @@
               },
               "sources": {
                 "label": "Quellen",
-                "text": "Veröffentlichungen, von denen du mehr oder weniger willst, und die, für die du bezahlst."
+                "text": "Veröffentlichungen, die du bevorzugst, die, die du aus deinen Nachrichten ausgeblendet hast, und die, für die du bezahlst."
               }
             }
           }
@@ -2059,14 +2059,14 @@
       },
       "sources": {
         "title": "Deine Quellen aussuchen",
-        "subtitle": "Abzeichen, Pfeile und das eine Kontroll das ein Block ist.",
+        "subtitle": "Sterne, Abzeichen und das Ausblenden einer Quelle aus deinen Nachrichten.",
         "slides": {
           "where-it-lives": {
             "headline": "Wo Quellen leben",
-            "body": "Eine Übersicht für alle Quellen, die du angepasst hast.",
+            "body": "Ein Bildschirm für jede Veröffentlichung, die du ausgewählt hast.",
             "steps": {
               "0": "Der Tab Du, dann Quellen.",
-              "1": "„Weniger von“ im Menü ••• eines Artikels wirkt sofort, mit Rückgängig, und die Quelle erscheint dann unter Angepasst."
+              "1": "„Nicht bevorzugt“ im •••-Menü eines Artikels wirkt sofort, mit Rückgängig, und die Veröffentlichung erscheint dann unter Quellen."
             },
             "ask": "Wo verwalte ich, welche Quellen ich sehe?"
           },
@@ -2089,26 +2089,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Die gleichen Pfeile, ein Herausgeber auf einmal",
-            "body": "Öffne ein Land und jeder Herausgeber hat sein eigenes Paar. Ab ist ein Schubs statt einer Wand: ein herabgestufter Herausgeber dreht immer noch wenn er eine Geschichte hat, die niemand sonst hat.",
-            "ask": "Was ist der Unterschied zwischen das Senken einer Quelle und das Stummschalten davon?"
+            "headline": "Veröffentlichung mit Stern versehen",
+            "body": "Öffne ein Land, dann hat jede Veröffentlichung einen Stern. Ein Stern holt sie in deinen Nachrichten nach oben. Markiere ein Land mit einem Stern, um dasselbe für alle seine Veröffentlichungen zu tun.",
+            "ask": "Was ist der Unterschied zwischen Bevorzugt und Nicht bevorzugt?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Stummschalten ist eine völlig andere Sache",
-            "body": "Stummschalten wird auf der Seite einer Publikation eingestellt und ist ein harter Ausschluss: Diese Geschichten werden verworfen, nicht bloß weiter unten einsortiert. Tippe auf jede Karte und ordne sie dorthin, wo sie hingehört.",
+            "headline": "„Nicht bevorzugt“ blendet sie aus deinen Nachrichten aus",
+            "body": "Markiere eine Veröffentlichung als Nicht bevorzugt, dann verschwinden ihre Geschichten aus deinen Nachrichten. Welt und verwandte Geschichten können sie weiterhin zeigen. Tippe auf jede Karte und lege sie an die richtige Stelle.",
             "steps": {
-              "0": "Ab-Pfeil: weniger oft gezeigt.",
-              "1": "Stummschalten: überhaupt nicht gezeigt.",
-              "2": "Entweder kann später gelöscht werden von Quellen-Vorzügen."
+              "0": "Stern: weiter oben angezeigt.",
+              "1": "Nicht bevorzugt: aus deinen Nachrichten ausgeblendet.",
+              "2": "Du kannst eines davon unter Quellen aufheben."
             },
             "sort": {
               "buckets": {
-                "softer": "Weniger oft gezeigt",
-                "gone": "Vollständig gehalten aus"
+                "softer": "Weiter oben angezeigt",
+                "gone": "Aus deinen Nachrichten ausgeblendet"
               },
               "cards": {
-                "down-arrow": "Der ab-Pfeil",
-                "mute": "Stummschalten"
+                "down-arrow": "Der Stern",
+                "mute": "Nicht bevorzugt"
               }
             }
           }
@@ -2124,7 +2124,7 @@
             "steps": {
               "0": "Wörter und Dinge die du verborgen hast.",
               "1": "Themen die du weniger von siehst.",
-              "2": "Quellen die du stummgeschaltet oder herabgestuft hast."
+              "2": "Quellen, die du als Nicht bevorzugt markiert hast."
             },
             "ask": "Wo kann ich alles sehen, das ich gefiltert habe?"
           },
@@ -2692,12 +2692,12 @@
     "aboutSource": "Über diese Quelle",
     "liveChat": "Live-Chat",
     "liveChatSub": "Eine Person aus dem Mera-Team",
-    "sourceSub": "Über, weniger von {{source}}",
+    "sourceSub": "Über {{source}} oder aus deinen Nachrichten ausblenden",
     "support": "Support",
     "supportSub": "Fehler melden, Live-Chat, FAQ, Anleitung",
     "tutorial": "Anleitung",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Nicht bevorzugt",
+    "notPreferredDone": "{{publisher}} ist aus deinen Nachrichten ausgeblendet"
   },
   "storyExport": {
     "shareA11y": "Diese Story exportieren",
@@ -2755,14 +2755,14 @@
     "supportLine": "Guter Journalismus hält sich, wenn Leser ihn unterstützen.",
     "visitsLabel": "Deine Besuche in den letzten 30 Tagen",
     "subscribed": "Abonniert",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Bevorzugt",
+    "notPreferred": "Nicht bevorzugt",
+    "preferA11y": "{{publisher}} bevorzugen",
+    "notPreferA11y": "{{publisher}} als Nicht bevorzugt markieren",
+    "notPreferHint": "Blendet ihre Artikel aus deinen Nachrichten aus",
+    "includedWith": "Mit {{country}} enthalten",
+    "includedWithA11y": "Bevorzugt, mit {{country}} enthalten",
+    "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne den Stern bei {{country}}."
   },
   "nav": {
     "page": {
@@ -2952,13 +2952,13 @@
     },
     "sources": {
       "title": "Quellen",
-      "find": "Medium finden",
-      "footnote": "Tippe auf eine, um sie zu ändern. „Weniger von“ im Menü ••• eines Artikels landet auch hier.",
-      "empty": "Du hast noch keine Quellen angepasst. Suche nach einem Medium, um mehr, weniger oder nichts davon zu sehen. „Weniger von“ im Menü ••• eines Artikels landet auch hier.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Veröffentlichung oder Land suchen",
+      "footnote": "Tippe auf einen Eintrag, um ihn zu ändern. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
+      "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung oder einem Land, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
+      "preferCountryA11y": "Quellen aus {{country}} bevorzugen",
+      "countryHint": "Öffnet die Quellen aus {{country}}",
+      "countryCleared": "{{country}} ist nicht mehr bevorzugt",
+      "saveError": "Das konnte nicht gespeichert werden. Versuch es noch einmal."
     },
     "settings": {
       "yourPlan": "Dein Tarif",
@@ -3145,7 +3145,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Diese Veröffentlichung als Nicht bevorzugt markieren"
     },
     "follow": {
       "follow": "Follow a story",

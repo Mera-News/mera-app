@@ -350,14 +350,14 @@
     "turnThemOn": "इन्हें चालू करें",
     "guardSkip": "सुर्खियों से शुरू करें",
     "guardAddFact": "कुछ जोड़ें",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "आप किन समाचार स्रोतों पर भरोसा करते हैं?",
+    "sourcesBody": "ज़्यादा देखने के लिए स्टार पर टैप करें। अपनी फ़ीड से छिपाने के लिए आँख के आइकन पर टैप करें। इसे कभी भी स्रोत में जाकर बदल सकते हैं।",
+    "sourcesSkip": "छोड़ें",
+    "sourcesLoadError": "स्रोत लोड नहीं हो सके।",
+    "sourcesOffline": "आप ऑफ़लाइन हैं। आप बाद में स्रोत स्क्रीन से स्रोत जोड़ सकते हैं।",
+    "sourcesSearchHint": "कोई प्रकाशन या देश खोजें।",
+    "iSubscribe": "मेरी सदस्यता है",
+    "iSubscribeA11y": "{{publisher}} की मेरी सदस्यता है"
   },
   "notifications": {
     "title": "नोटिफिकेशन",
@@ -567,11 +567,11 @@
     "askBeforeTopicDeleteHint": "जब भी आप किसी तथ्य से कोई विषय हटाते हैं, मेरा ऐप हर बार पुष्टि माँगता है।",
     "exportHistoryWindowNote_one": "इस एक्सपोर्ट में पढ़ने का सिर्फ़ पिछला {{count}} दिन शामिल है। पुराने रिकॉर्ड इस डिवाइस से अपने-आप हट जाते हैं और मेरा ऐप के सर्वर पर कभी नहीं भेजे गए।",
     "exportHistoryWindowNote_other": "इस एक्सपोर्ट में पढ़ने के सिर्फ़ पिछले {{count}} दिन शामिल हैं। पुराने रिकॉर्ड इस डिवाइस से अपने-आप हट जाते हैं और मेरा ऐप के सर्वर पर कभी नहीं भेजे गए।",
-    "meterTitle": "Data on this phone",
-    "meterLine": "मेरा uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "मेरा uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "इस फ़ोन पर डेटा",
+    "meterLine": "मेरा ऐप {{used}} इस्तेमाल करता है। इस फ़ोन पर {{free}} खाली है।",
+    "meterUsedOnly": "मेरा ऐप {{used}} इस्तेमाल करता है।",
+    "meterDatabase": "लेख और प्रोफ़ाइल",
+    "meterBackup": "बैकअप कॉपी"
   },
   "preferences": {
     "notifications": "नोटिफिकेशन",
@@ -790,10 +790,10 @@
     "actionShowLessTopic": "किसी विषय को कम दिखाएं",
     "actionShowMoreTopic": "किसी विषय को अधिक दिखाएं",
     "actionDownRank": "किसी विषय को डाउनरैंक करें",
-    "actionPublicationBoost": "किसी प्रकाशन से अधिक दिखाएं",
+    "actionPublicationBoost": "किसी प्रकाशन को पसंदीदा चिह्नित करें",
     "actionPublicationDeprioritize": "किसी प्रकाशन से कम दिखाएं",
-    "actionPublicationMute": "किसी प्रकाशन को म्यूट करें",
-    "actionSourceScopeBoost": "किसी देश के स्रोतों से अधिक दिखाएं",
+    "actionPublicationMute": "किसी प्रकाशन को पसंदीदा नहीं चिह्नित करें",
+    "actionSourceScopeBoost": "किसी देश के स्रोत पसंदीदा बनाएँ",
     "actionSourceScopeDeprioritize": "किसी देश के स्रोतों से कम दिखाएं",
     "actionSuppress": "किसी वाक्यांश को फ़िल्टर करें",
     "actionPinTopic": "किसी विषय को पिन करें",
@@ -1212,9 +1212,9 @@
       "undone": "वापस लिया गया: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "{{name}} को पसंदीदा सेट किया",
+      "notPreferred": "{{name}} को \"पसंदीदा नहीं\" पर सेट किया",
+      "preferredSourcesFrom": "{{name}} के स्रोत पसंदीदा सेट किए"
     }
   },
   "calibration": {
@@ -1803,7 +1803,7 @@
               },
               "sources": {
                 "label": "स्रोत",
-                "text": "वे प्रकाशन जिन्हें आप ज़्यादा या कम चाहते हैं, और जिनके लिए आप भुगतान करते हैं।"
+                "text": "आपके पसंदीदा प्रकाशन, वे जिन्हें आपने फ़ीड से छिपाया है, और वे जिनके लिए आप भुगतान करते हैं।"
               }
             }
           }
@@ -2061,14 +2061,14 @@
       },
       "sources": {
         "title": "अपने स्रोत चुन रहे हैं",
-        "subtitle": "बैज, तीर, और वह एक नियंत्रण जो एक ब्लॉक है।",
+        "subtitle": "स्टार, बैज, और स्रोत को फ़ीड से छिपाना।",
         "slides": {
           "where-it-lives": {
             "headline": "स्रोत कहाँ रहते हैं",
-            "body": "आपके बदले हुए हर प्रकाशन के लिए एक स्क्रीन।",
+            "body": "आपके चुने हुए हर प्रकाशन के लिए एक स्क्रीन।",
             "steps": {
               "0": "आप टैब, फिर स्रोत।",
-              "1": "किसी लेख के ••• मेनू में \"से कम\" तुरंत लागू होता है, साथ में पूर्ववत करें का विकल्प मिलता है, और फिर वह प्रकाशन \"बदले गए\" में दिखता है।"
+              "1": "लेख के ••• मेनू से \"पसंदीदा नहीं\" तुरंत लागू होता है, पूर्ववत करने का विकल्प साथ रहता है, और प्रकाशन फिर स्रोत में दिखता है।"
             },
             "ask": "मैं अपने स्रोत प्रबंधित कहाँ करूँ?"
           },
@@ -2091,26 +2091,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "समान तीर, एक प्रकाशक एक बार",
-            "body": "कोई देश खोलें तो हर प्रकाशक की अपनी जोड़ी होती है। नीचे का तीर एक धक्का है, दीवार नहीं। नीचे किया गया प्रकाशक तब भी दिखता है, जब उसके पास ऐसी स्टोरी हो जो किसी और के पास न हो।",
-            "ask": "एक स्रोत को बंद करने और इसे म्यूट करने के बीच अंतर क्या है?"
+            "headline": "किसी प्रकाशन को स्टार दें",
+            "body": "किसी देश को खोलने पर हर प्रकाशन के पास एक स्टार होता है। स्टार उस प्रकाशन को आपकी फ़ीड में ऊपर ले जाता है। पूरे देश को स्टार दें, और उसके सभी प्रकाशनों के लिए भी यही होगा।",
+            "ask": "पसंदीदा और पसंदीदा नहीं में क्या अंतर है?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "म्यूट बिल्कुल एक अलग बात है",
-            "body": "म्यूट किसी प्रकाशन के पेज पर सेट होता है, और यह एक सख़्त अपवर्जन है: वे स्टोरीज़ हटा दी जाती हैं, सिर्फ़ नीचे नहीं खिसकाई जातीं। हर कार्ड पर टैप करें और उसे सही जगह पर रखें।",
+            "headline": "पसंदीदा नहीं प्रकाशन को फ़ीड से छिपा देता है",
+            "body": "किसी प्रकाशन को पसंदीदा नहीं चिह्नित करने पर उसकी स्टोरीज़ आपकी फ़ीड में नहीं दिखतीं। विश्व और संबंधित स्टोरीज़ में फिर भी उन्हें दिखाया जा सकता है। हर कार्ड पर टैप करें और उसे सही जगह पर रखें।",
             "steps": {
-              "0": "नीचे का तीर: कम बार दिखाया जाता है।",
-              "1": "म्यूट: बिल्कुल नहीं दिखाया जाता।",
-              "2": "कोई भी बाद में स्रोत प्राथमिकताओं से साफ़ किया जा सकता है।"
+              "0": "स्टार: ऊपर दिखाया जाता है।",
+              "1": "पसंदीदा नहीं: आपकी फ़ीड से छिपा हुआ।",
+              "2": "आप स्रोत में जाकर इनमें से किसी को भी साफ़ कर सकते हैं।"
             },
             "sort": {
               "buckets": {
-                "softer": "कम अक्सर दिखाया",
-                "gone": "पूरी तरह अलग रखा"
+                "softer": "ऊपर दिखाए जाते हैं",
+                "gone": "आपकी फ़ीड से छिपे हुए"
               },
               "cards": {
-                "down-arrow": "नीचे तीर",
-                "mute": "म्यूट"
+                "down-arrow": "स्टार",
+                "mute": "पसंदीदा नहीं"
               }
             }
           }
@@ -2126,7 +2126,7 @@
             "steps": {
               "0": "शब्द और चीज़ें आपने छिपाई हैं।",
               "1": "विषय आप कम देखते हैं।",
-              "2": "स्रोत आपने म्यूट किए या बंद किए।"
+              "2": "वे स्रोत जिन्हें आपने पसंदीदा नहीं चिह्नित किया है।"
             },
             "ask": "मैं सब कुछ कहाँ देख सकता हूँ मैंने फ़िल्टर किया है?"
           },
@@ -2694,12 +2694,12 @@
     "aboutSource": "इस स्रोत के बारे में",
     "liveChat": "लाइव चैट",
     "liveChatSub": "मेरा ऐप टीम का एक व्यक्ति",
-    "sourceSub": "इसके बारे में, {{source}} से कम",
+    "sourceSub": "{{source}} के बारे में, या उसे अपनी फ़ीड से छिपाएँ",
     "support": "सहायता",
     "supportSub": "बग रिपोर्ट करें, लाइव चैट, अक्सर पूछे जाने वाले सवाल, ट्यूटोरियल",
     "tutorial": "ट्यूटोरियल",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "पसंदीदा नहीं",
+    "notPreferredDone": "{{publisher}} आपकी फ़ीड से छिपा है"
   },
   "storyExport": {
     "shareA11y": "यह स्टोरी निर्यात करें",
@@ -2757,14 +2757,14 @@
     "supportLine": "अच्छी रिपोर्टिंग तब टिकती है जब पाठक उसका साथ दें।",
     "visitsLabel": "पिछले 30 दिनों में आपकी विज़िट",
     "subscribed": "सदस्यता ली",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "पसंदीदा",
+    "notPreferred": "पसंदीदा नहीं",
+    "preferA11y": "{{publisher}} को पसंदीदा बनाएँ",
+    "notPreferA11y": "{{publisher}} को पसंदीदा नहीं चिह्नित करें",
+    "notPreferHint": "इसके लेख आपकी फ़ीड से छिपाए जाते हैं",
+    "includedWith": "{{country}} के साथ शामिल",
+    "includedWithA11y": "पसंदीदा, {{country}} के साथ शामिल",
+    "includedWithHelp": "यह {{country}} के साथ शामिल है। इसे बदलने के लिए {{country}} से स्टार हटाएँ।"
   },
   "nav": {
     "page": {
@@ -2954,13 +2954,13 @@
     },
     "sources": {
       "title": "स्रोत",
-      "find": "कोई प्रकाशन खोजें",
-      "footnote": "बदलने के लिए किसी एक को दबाएं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।",
-      "empty": "आपने अभी तक कोई स्रोत नहीं बदला है। किसी प्रकाशन को खोजें और तय करें कि आप उसे ज़्यादा देखना चाहते हैं, कम देखना चाहते हैं, या बिल्कुल नहीं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "कोई प्रकाशन या देश खोजें",
+      "footnote": "बदलने के लिए किसी एक पर टैप करें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
+      "empty": "आपने अभी तक कोई स्रोत नहीं चुना है। किसी प्रकाशन या देश को पसंदीदा बनाने या उसे फ़ीड से छिपाने के लिए खोजें। लेख के ••• मेनू से \"पसंदीदा नहीं\" चुनने पर वह भी यहीं आता है।",
+      "preferCountryA11y": "{{country}} के स्रोत पसंदीदा बनाएँ",
+      "countryHint": "{{country}} के स्रोत खोलती है",
+      "countryCleared": "{{country}} अब पसंदीदा नहीं है",
+      "saveError": "वह सहेजा नहीं जा सका। फिर से कोशिश करें।"
     },
     "settings": {
       "yourPlan": "आपका प्लान",
@@ -3147,7 +3147,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "इस प्रकाशन को पसंदीदा नहीं चिह्नित करें"
     },
     "follow": {
       "follow": "Follow a story",

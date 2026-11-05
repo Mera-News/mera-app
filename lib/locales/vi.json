@@ -338,14 +338,14 @@
     "turnThemOn": "Bật lên",
     "guardSkip": "Bắt đầu với tin nổi bật",
     "guardAddFact": "Thêm gì đó",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Bạn tin tưởng những nguồn tin nào?",
+    "sourcesBody": "Chạm vào ngôi sao để xem thêm. Chạm vào biểu tượng mắt để ẩn khỏi Bảng tin của bạn. Bạn có thể thay đổi điều này bất cứ lúc nào trong Nguồn.",
+    "sourcesSkip": "Bỏ qua",
+    "sourcesLoadError": "Không thể tải nguồn.",
+    "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
+    "sourcesSearchHint": "Tìm một nguồn hoặc quốc gia.",
+    "iSubscribe": "Tôi đã đăng ký",
+    "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}"
   },
   "notifications": {
     "title": "Thông báo",
@@ -553,11 +553,11 @@
     "askBeforeTopicDelete": "Hỏi trước khi xóa chủ đề",
     "askBeforeTopicDeleteHint": "Mera yêu cầu bạn xác nhận mỗi lần bạn xóa một chủ đề khỏi một trong các dữ kiện của mình.",
     "exportHistoryWindowNote_other": "Bản xuất này chỉ bao gồm {{count}} ngày đọc gần nhất. Các mục cũ hơn sẽ tự động bị xóa khỏi thiết bị này và chưa bao giờ được gửi lên máy chủ của Mera.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Mera uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Dữ liệu trên điện thoại này",
+    "meterLine": "Mera dùng {{used}}. {{free}} còn trống trên điện thoại này.",
+    "meterUsedOnly": "Mera dùng {{used}}.",
+    "meterDatabase": "Bài viết và hồ sơ",
+    "meterBackup": "Bản sao lưu"
   },
   "preferences": {
     "notifications": "Thông báo",
@@ -776,10 +776,10 @@
     "actionShowLessTopic": "Hiện ít hơn về một chủ đề",
     "actionShowMoreTopic": "Hiện nhiều hơn về một chủ đề",
     "actionDownRank": "Giảm ưu tiên một chủ đề",
-    "actionPublicationBoost": "Hiện thêm từ một ấn phẩm",
+    "actionPublicationBoost": "Đánh dấu một nguồn là Ưu tiên",
     "actionPublicationDeprioritize": "Hiện ít hơn từ một ấn phẩm",
-    "actionPublicationMute": "Tắt tiếng ấn phẩm",
-    "actionSourceScopeBoost": "Hiện thêm từ các nguồn ở một quốc gia",
+    "actionPublicationMute": "Đánh dấu một nguồn là Không ưu tiên",
+    "actionSourceScopeBoost": "Ưu tiên nguồn từ một quốc gia",
     "actionSourceScopeDeprioritize": "Hiện ít hơn từ các nguồn ở một quốc gia",
     "actionSuppress": "Lọc bỏ một cụm từ",
     "actionPinTopic": "Ghim một chủ đề",
@@ -1195,9 +1195,9 @@
       "undone": "Đã hoàn tác: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "Đặt {{name}} là Ưu tiên",
+      "notPreferred": "Đặt {{name}} là Không ưu tiên",
+      "preferredSourcesFrom": "Đặt nguồn từ {{name}} là Ưu tiên"
     }
   },
   "calibration": {
@@ -1781,7 +1781,7 @@
               },
               "sources": {
                 "label": "Nguồn tin",
-                "text": "Những nguồn bạn muốn xem nhiều hơn hoặc ít hơn, và những nguồn bạn trả tiền để đọc."
+                "text": "Các nguồn bạn ưu tiên, các nguồn bạn đã ẩn khỏi Bảng tin, và các nguồn bạn trả phí."
               }
             }
           }
@@ -2039,14 +2039,14 @@
       },
       "sources": {
         "title": "Lựa chọn các nguồn của bạn",
-        "subtitle": "Huy hiệu, mũi tên, và điều khiển duy nhất là một khối.",
+        "subtitle": "Dấu sao, huy hiệu và ẩn một nguồn khỏi Bảng tin.",
         "slides": {
           "where-it-lives": {
             "headline": "Nơi các nguồn sống",
-            "body": "Một màn hình cho mọi nguồn báo bạn đã điều chỉnh.",
+            "body": "Một màn hình cho mọi nguồn bạn đã chọn.",
             "steps": {
               "0": "Tab Bạn, rồi Nguồn.",
-              "1": "\"Ít hơn từ\" trong menu ••• của một bài viết có hiệu lực ngay, kèm Hoàn tác, và nguồn báo đó sẽ hiện trong mục Đã điều chỉnh."
+              "1": "\"Không ưu tiên\" trong menu ••• của bài viết có hiệu lực ngay, kèm nút Hoàn tác, và nguồn sau đó hiện trong Nguồn."
             },
             "ask": "Tôi quản lý những nguồn nào tôi thấy ở đâu?"
           },
@@ -2069,26 +2069,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Cùng các mũi tên, một nhà xuất bản tại một thời điểm",
-            "body": "Mở một quốc gia và mỗi nhà xuất bản có cặp của nó. Xuống là một nhịp chứ không phải một bức tường: một nhà xuất bản xếp hạng thấp vẫn quay lên khi nó có một câu chuyện không ai khác có.",
-            "ask": "Sự khác biệt giữa giảm một nguồn và im lặng nó?"
+            "headline": "Gắn sao cho một nguồn",
+            "body": "Mở một quốc gia và mọi nguồn đều có dấu sao. Dấu sao đưa nguồn lên cao hơn trong Bảng tin của bạn. Gắn sao cho một quốc gia để làm điều tương tự cho tất cả nguồn của quốc gia đó.",
+            "ask": "Khác nhau giữa Ưu tiên và Không ưu tiên là gì?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Im lặng là một điều khác hoàn toàn",
-            "body": "Tắt tiếng được đặt trên trang của một ấn phẩm, và đó là loại trừ cứng: những câu chuyện đó bị loại bỏ, không chỉ sắp xếp thấp hơn. Nhấn mỗi thẻ và đặt nó vào đúng chỗ.",
+            "headline": "Không ưu tiên sẽ ẩn khỏi Bảng tin",
+            "body": "Đánh dấu một nguồn là Không ưu tiên và các bài của nguồn đó sẽ rời khỏi Bảng tin của bạn. Mục Thế giới và các bài liên quan vẫn có thể hiển thị chúng. Chạm vào từng thẻ và đặt thẻ vào đúng chỗ của nó.",
             "steps": {
-              "0": "Mũi tên xuống: được hiển thị ít thường xuyên.",
-              "1": "Im lặng: không hiển thị nào cả.",
-              "2": "Cái nào cũng có thể được xóa sau, từ tùy chọn nguồn."
+              "0": "Dấu sao: hiển thị cao hơn.",
+              "1": "Không ưu tiên: ẩn khỏi Bảng tin.",
+              "2": "Bạn có thể xóa một trong hai trong Nguồn."
             },
             "sort": {
               "buckets": {
-                "softer": "Được hiển thị ít thường xuyên",
-                "gone": "Được giữ lại hoàn toàn"
+                "softer": "Hiển thị cao hơn",
+                "gone": "Ẩn khỏi Bảng tin"
               },
               "cards": {
-                "down-arrow": "Mũi tên xuống",
-                "mute": "Im lặng"
+                "down-arrow": "Dấu sao",
+                "mute": "Không ưu tiên"
               }
             }
           }
@@ -2104,7 +2104,7 @@
             "steps": {
               "0": "Từ và những thứ bạn đã ẩn.",
               "1": "Các chủ đề bạn thấy ít hơn.",
-              "2": "Các nguồn bạn đã im lặng hoặc giảm xuống."
+              "2": "Các nguồn bạn đã đánh dấu Không ưu tiên."
             },
             "ask": "Nơi tôi có thể thấy mọi thứ tôi đã lọc ra?"
           },
@@ -2672,12 +2672,12 @@
     "aboutSource": "Về nguồn này",
     "liveChat": "Trò chuyện trực tiếp",
     "liveChatSub": "Một người trong đội ngũ Mera",
-    "sourceSub": "Giới thiệu, ít tin hơn từ {{source}}",
+    "sourceSub": "Về {{source}}, hoặc ẩn khỏi Bảng tin",
     "support": "Hỗ trợ",
     "supportSub": "Báo lỗi, trò chuyện trực tiếp, câu hỏi thường gặp, hướng dẫn",
     "tutorial": "Hướng dẫn",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Không ưu tiên",
+    "notPreferredDone": "{{publisher}} đang được ẩn khỏi Bảng tin"
   },
   "storyExport": {
     "shareA11y": "Xuất câu chuyện này",
@@ -2735,14 +2735,14 @@
     "supportLine": "Báo chí chất lượng tồn tại được khi độc giả ủng hộ.",
     "visitsLabel": "Lượt mở của bạn trong 30 ngày qua",
     "subscribed": "Đã đăng ký",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Ưu tiên",
+    "notPreferred": "Không ưu tiên",
+    "preferA11y": "Đặt {{publisher}} là Ưu tiên",
+    "notPreferA11y": "Đánh dấu {{publisher}} là Không ưu tiên",
+    "notPreferHint": "Ẩn các bài viết từ nguồn này khỏi Bảng tin của bạn",
+    "includedWith": "Đã bao gồm trong {{country}}",
+    "includedWithA11y": "Ưu tiên, đã bao gồm trong {{country}}",
+    "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy bỏ dấu sao ở {{country}}."
   },
   "nav": {
     "page": {
@@ -2931,13 +2931,13 @@
     },
     "sources": {
       "title": "Nguồn",
-      "find": "Tìm một ấn phẩm",
-      "footnote": "Chạm vào một mục để thay đổi. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
-      "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Tìm một nguồn hoặc quốc gia",
+      "footnote": "Chạm vào một nguồn để thay đổi. \"Không ưu tiên\" trong menu ••• của bài viết cũng hiển thị ở đây.",
+      "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn hoặc quốc gia để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không ưu tiên\" trong menu ••• của bài viết cũng hiển thị ở đây.",
+      "preferCountryA11y": "Ưu tiên nguồn từ {{country}}",
+      "countryHint": "Mở nguồn từ {{country}}",
+      "countryCleared": "{{country}} không còn được ưu tiên",
+      "saveError": "Không thể lưu. Hãy thử lại."
     },
     "settings": {
       "yourPlan": "Gói của bạn",
@@ -3124,7 +3124,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Đánh dấu nguồn này là Không ưu tiên"
     },
     "follow": {
       "follow": "Follow a story",

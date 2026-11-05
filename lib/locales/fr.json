@@ -357,14 +357,14 @@
     "turnThemOn": "Activez-les",
     "guardSkip": "Commencer avec les titres",
     "guardAddFact": "Ajouter quelque chose",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "En quelles sources d'actualité avez-vous confiance ?",
+    "sourcesBody": "Touchez l'étoile pour en voir davantage. Touchez l'œil pour la masquer de votre fil d'actu. Vous pourrez modifier cela à tout moment dans Sources.",
+    "sourcesSkip": "Passer",
+    "sourcesLoadError": "Impossible de charger les sources.",
+    "sourcesOffline": "Vous êtes hors connexion. Vous pourrez ajouter des sources plus tard dans Sources.",
+    "sourcesSearchHint": "Recherchez une publication ou un pays.",
+    "iSubscribe": "J'ai un abonnement",
+    "iSubscribeA11y": "J'ai un abonnement à {{publisher}}"
   },
   "notifications": {
     "title": "Notifications",
@@ -574,11 +574,11 @@
     "askBeforeTopicDeleteHint": "Mera vous demande de confirmer chaque fois que vous supprimez un sujet de l'un de vos faits.",
     "exportHistoryWindowNote_one": "Cet export ne couvre que le dernier jour de lecture ({{count}} jour). Les entrées plus anciennes sont supprimées automatiquement de cet appareil et n'ont jamais été envoyées aux serveurs de Mera.",
     "exportHistoryWindowNote_other": "Cet export ne couvre que les {{count}} derniers jours de lecture. Les entrées plus anciennes sont supprimées automatiquement de cet appareil et n'ont jamais été envoyées aux serveurs de Mera.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Mera uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Données sur ce téléphone",
+    "meterLine": "Mera utilise {{used}}. {{free}} disponibles sur ce téléphone.",
+    "meterUsedOnly": "Mera utilise {{used}}.",
+    "meterDatabase": "Articles et profil",
+    "meterBackup": "Copie de sauvegarde"
   },
   "preferences": {
     "notifications": "Notifications",
@@ -797,10 +797,10 @@
     "actionShowLessTopic": "Afficher moins d'un sujet",
     "actionShowMoreTopic": "Afficher plus d'un sujet",
     "actionDownRank": "Rétrograder un sujet",
-    "actionPublicationBoost": "Afficher plus d'une publication",
+    "actionPublicationBoost": "Marquer une publication comme préférée",
     "actionPublicationDeprioritize": "Afficher moins d'une publication",
-    "actionPublicationMute": "Mettre une publication en sourdine",
-    "actionSourceScopeBoost": "Afficher plus de sources d'un pays",
+    "actionPublicationMute": "Marquer une publication comme non préférée",
+    "actionSourceScopeBoost": "Privilégier les sources d'un pays",
     "actionSourceScopeDeprioritize": "Afficher moins de sources d'un pays",
     "actionSuppress": "Filtrer une expression",
     "actionPinTopic": "Épingler un sujet",
@@ -1218,9 +1218,9 @@
       "undone": "Annulé : {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "Préférée : {{name}}",
+      "notPreferred": "Non préférée : {{name}}",
+      "preferredSourcesFrom": "Définir les sources de {{name}} comme préférées"
     }
   },
   "calibration": {
@@ -1813,7 +1813,7 @@
               },
               "sources": {
                 "label": "Sources",
-                "text": "Publications dont vous voulez plus ou moins, et celles que vous payez."
+                "text": "Les publications que vous préférez, celles que vous avez masquées de votre fil d'actu et celles que vous payez."
               }
             }
           }
@@ -2071,14 +2071,14 @@
       },
       "sources": {
         "title": "Choisir vos sources",
-        "subtitle": "Insignes, flèches, et l'un contrôle qui est un bloc.",
+        "subtitle": "Étoiles, badges et masquage d'une source dans votre fil d'actu.",
         "slides": {
           "where-it-lives": {
             "headline": "Où vivent les sources",
-            "body": "Une seule page pour toutes les sources que vous avez ajustées.",
+            "body": "Un seul écran pour toutes les publications que vous avez choisies.",
             "steps": {
               "0": "L'onglet Vous, puis Sources.",
-              "1": "« Moins de » dans le menu ••• d'un article s'applique tout de suite, avec Annuler, puis la source apparaît sous Ajustées."
+              "1": "« Non préférée » dans le menu ••• d'un article prend effet immédiatement, avec Annuler, et la publication apparaît ensuite dans Sources."
             },
             "ask": "Où je gère quelles sources je vois ?"
           },
@@ -2101,26 +2101,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Les mêmes flèches, un éditeur à la fois",
-            "body": "Ouvrez un pays et chaque éditeur a sa propre paire. Vers le bas est un coup plutôt qu'un mur : un éditeur rétrogradé s'affiche toujours quand il a une histoire que personne d'autre n'a.",
-            "ask": "Quelle est la différence entre l'arrêt d'une source et son sourdine ?"
+            "headline": "Ajouter une étoile à une publication",
+            "body": "Ouvrez un pays et chaque publication a une étoile. L'étoile la fait remonter dans votre fil d'actu. Ajoutez une étoile à un pays pour faire de même pour toutes ses publications.",
+            "ask": "Quelle est la différence entre « Préférée » et « Non préférée » ?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Mute est une chose complètement différente",
-            "body": "Le mode muet se règle sur la page d'une publication, et c'est une exclusion dure : ces articles sont écartés, pas simplement classés plus bas. Appuyez sur chaque carte et placez-la là où elle va.",
+            "headline": "« Non préférée » la masque de votre fil d'actu",
+            "body": "Marquez une publication comme non préférée et ses articles disparaissent de votre fil d'actu. La rubrique Monde et les articles associés peuvent toujours les afficher. Touchez chaque carte et placez-la où elle doit être.",
             "steps": {
-              "0": "Flèche vers le bas : affichée moins souvent.",
-              "1": "Mute : pas du tout affichée.",
-              "2": "Soit peut être effacée plus tard, à partir des préférences source."
+              "0": "Étoile : affichée plus haut.",
+              "1": "Non préférée : masquée de votre fil d'actu.",
+              "2": "Vous pouvez annuler l'un ou l'autre dans Sources."
             },
             "sort": {
               "buckets": {
-                "softer": "Affichée moins souvent",
-                "gone": "Gardée entièrement"
+                "softer": "Affichée plus haut",
+                "gone": "Masquée de votre fil d'actu"
               },
               "cards": {
-                "down-arrow": "La flèche vers le bas",
-                "mute": "Muet"
+                "down-arrow": "L'étoile",
+                "mute": "Non préférée"
               }
             }
           }
@@ -2136,7 +2136,7 @@
             "steps": {
               "0": "Mots et choses que vous avez cachées.",
               "1": "Sujets que vous voyez moins de.",
-              "2": "Sources que vous avez mises en sourdine ou tournées vers le bas."
+              "2": "Sources que vous avez marquées comme non préférées."
             },
             "ask": "Où je peux voir tout ce que j'ai filtré ?"
           },
@@ -2704,12 +2704,12 @@
     "aboutSource": "À propos de cette source",
     "liveChat": "Chat en direct",
     "liveChatSub": "Une personne de l'équipe Mera",
-    "sourceSub": "À propos, moins de {{source}}",
+    "sourceSub": "À propos de {{source}}, ou masquer cette source de votre fil d'actu",
     "support": "Assistance",
     "supportSub": "Signaler un bug, chat en direct, FAQ, tutoriel",
     "tutorial": "Tutoriel",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Non préférée",
+    "notPreferredDone": "{{publisher}} est masquée de votre fil d'actu"
   },
   "storyExport": {
     "shareA11y": "Exporter cette actualité",
@@ -2767,14 +2767,14 @@
     "supportLine": "Un bon journalisme dure quand ses lecteurs le soutiennent.",
     "visitsLabel": "Vos visites au cours des 30 derniers jours",
     "subscribed": "Abonné",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Préférée",
+    "notPreferred": "Non préférée",
+    "preferA11y": "Préférer {{publisher}}",
+    "notPreferA11y": "Marquer {{publisher}} comme non préférée",
+    "notPreferHint": "Masque ses articles de votre fil d'actu",
+    "includedWith": "Incluse avec {{country}}",
+    "includedWithA11y": "Préférée, incluse avec {{country}}",
+    "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez l'étoile de {{country}}."
   },
   "nav": {
     "page": {
@@ -2964,13 +2964,13 @@
     },
     "sources": {
       "title": "Sources",
-      "find": "Trouver une publication",
-      "footnote": "Touchez-en une pour la modifier. « Moins de » dans le menu ••• d'un article aboutit aussi ici.",
-      "empty": "Vous n'avez modifié aucune source. Recherchez une publication pour en voir plus, moins, ou aucune. « Moins de » dans le menu ••• d'un article aboutit aussi ici.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Trouver une publication ou un pays",
+      "footnote": "Touchez-en une pour la modifier. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
+      "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication ou un pays à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
+      "preferCountryA11y": "Privilégier les sources de {{country}}",
+      "countryHint": "Ouvre les sources de {{country}}",
+      "countryCleared": "{{country}} ne fait plus partie de vos préférences",
+      "saveError": "Impossible d'enregistrer cela. Réessayez."
     },
     "settings": {
       "yourPlan": "Votre forfait",
@@ -3157,7 +3157,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Marquer cette publication comme non préférée"
     },
     "follow": {
       "follow": "Follow a story",

@@ -352,14 +352,14 @@
     "turnThemOn": "Ativar",
     "guardSkip": "Começar com manchetes",
     "guardAddFact": "Adicionar algo",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Em quais fontes de notícias você confia?",
+    "sourcesBody": "Toque na estrela para ver mais. Toque no olho para ocultar do seu Feed. Você pode mudar isso a qualquer momento em Fontes.",
+    "sourcesSkip": "Pular",
+    "sourcesLoadError": "Não foi possível carregar fontes.",
+    "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
+    "sourcesSearchHint": "Pesquise uma publicação ou um país.",
+    "iSubscribe": "Já assino",
+    "iSubscribeA11y": "Já assino {{publisher}}"
   },
   "notifications": {
     "title": "Notificações",
@@ -569,11 +569,11 @@
     "askBeforeTopicDeleteHint": "A Mera pede que você confirme sempre que apagar um tópico de um dos seus fatos.",
     "exportHistoryWindowNote_one": "Esta exportação cobre apenas o último {{count}} dia de leitura. Entradas mais antigas são apagadas automaticamente deste dispositivo e nunca foram enviadas aos servidores da Mera.",
     "exportHistoryWindowNote_other": "Esta exportação cobre apenas os últimos {{count}} dias de leitura. Entradas mais antigas são apagadas automaticamente deste dispositivo e nunca foram enviadas aos servidores da Mera.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Mera uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Dados neste celular",
+    "meterLine": "A Mera usa {{used}}. {{free}} livres neste celular.",
+    "meterUsedOnly": "A Mera usa {{used}}.",
+    "meterDatabase": "Artigos e perfil",
+    "meterBackup": "Cópia de backup"
   },
   "preferences": {
     "notifications": "Notificações",
@@ -792,10 +792,10 @@
     "actionShowLessTopic": "Mostrar menos de um tópico",
     "actionShowMoreTopic": "Mostrar mais de um tópico",
     "actionDownRank": "Diminuir a prioridade de um tópico",
-    "actionPublicationBoost": "Mostrar mais de uma publicação",
+    "actionPublicationBoost": "Marcar uma publicação como Preferido",
     "actionPublicationDeprioritize": "Mostrar menos de uma publicação",
-    "actionPublicationMute": "Silenciar uma publicação",
-    "actionSourceScopeBoost": "Mostrar mais de fontes de um país",
+    "actionPublicationMute": "Marcar uma publicação como Não preferido",
+    "actionSourceScopeBoost": "Preferir fontes de um país",
     "actionSourceScopeDeprioritize": "Mostrar menos de fontes de um país",
     "actionSuppress": "Filtrar uma frase",
     "actionPinTopic": "Fixar um tópico",
@@ -1213,9 +1213,9 @@
       "undone": "Desfeito: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "Definir {{name}} como Preferido",
+      "notPreferred": "Definir {{name}} como Não preferido",
+      "preferredSourcesFrom": "Definir como Preferido as fontes de {{name}}"
     }
   },
   "calibration": {
@@ -1807,7 +1807,7 @@
               },
               "sources": {
                 "label": "Fontes",
-                "text": "Veículos de que você quer mais ou menos, e os que você paga."
+                "text": "Publicações que você prefere, as que ocultou do seu Feed e as que você assina."
               }
             }
           }
@@ -2065,14 +2065,14 @@
       },
       "sources": {
         "title": "Escolhendo suas fontes",
-        "subtitle": "Badges, setas, e o controle que é um bloqueio.",
+        "subtitle": "Estrelas, selos e ocultar uma fonte do seu Feed.",
         "slides": {
           "where-it-lives": {
             "headline": "Onde fontes vivem",
-            "body": "Uma tela para todas as publicações que você ajustou.",
+            "body": "Uma tela com todas as publicações que você escolheu.",
             "steps": {
               "0": "A aba Você, depois Fontes.",
-              "1": "«Menos de» no menu ••• de um artigo vale na hora, com Desfazer, e a publicação passa a aparecer em Ajustadas."
+              "1": "\"Não preferido\" no menu ••• de um artigo vale na hora, com Desfazer, e a publicação então aparece em Fontes."
             },
             "ask": "Onde eu gerencio quais fontes vejo?"
           },
@@ -2095,26 +2095,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "As mesmas setas, um publicador de cada vez",
-            "body": "Abra um país e todo publicador tem seu próprio par. Para baixo é um empurrão em vez de parede: um publicador com rank reduzido ainda aparece quando tem uma história que ninguém mais tem.",
-            "ask": "Qual é a diferença entre virar uma fonte para baixo e mudar seu som?"
+            "headline": "Dê uma estrela a uma publicação",
+            "body": "Abra um país e cada publicação tem uma estrela. A estrela faz a publicação subir no seu Feed. Dê uma estrela ao país para fazer o mesmo com todas as publicações dele.",
+            "ask": "Qual é a diferença entre Preferido e Não preferido?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Mudar som é uma coisa completamente diferente",
-            "body": "Silenciar é definido na página de uma publicação, e é uma exclusão total: essas histórias são descartadas, não apenas ordenadas mais abaixo. Toque em cada card e coloque-o onde ele pertence.",
+            "headline": "Não preferido esconde do seu Feed",
+            "body": "Marque uma publicação como Não preferido e as histórias dela saem do seu Feed. O Mundo e as histórias relacionadas ainda podem mostrá-las. Toque em cada cartão e coloque-o no lugar certo.",
             "steps": {
-              "0": "Seta para baixo: mostrado menos vezes.",
-              "1": "Mudar som: não mostrado de todo.",
-              "2": "Ambos podem ser limpos depois, de preferências de fonte."
+              "0": "Estrela: aparece mais acima.",
+              "1": "Não preferido: oculto do seu Feed.",
+              "2": "Você pode desmarcar qualquer uma delas em Fontes."
             },
             "sort": {
               "buckets": {
-                "softer": "Mostrado menos vezes",
-                "gone": "Mantido fora completamente"
+                "softer": "Aparece mais acima",
+                "gone": "Oculto do seu Feed"
               },
               "cards": {
-                "down-arrow": "A seta para baixo",
-                "mute": "Mudar som"
+                "down-arrow": "A estrela",
+                "mute": "Não preferido"
               }
             }
           }
@@ -2130,7 +2130,7 @@
             "steps": {
               "0": "Palavras e coisas que você escondeu.",
               "1": "Tópicos que você vê menos.",
-              "2": "Fontes que você silenciou ou virou para baixo."
+              "2": "Fontes que você marcou como Não preferido."
             },
             "ask": "Onde posso ver tudo que filtrei?"
           },
@@ -2698,12 +2698,12 @@
     "aboutSource": "Sobre esta fonte",
     "liveChat": "Chat ao vivo",
     "liveChatSub": "Uma pessoa da equipe da Mera",
-    "sourceSub": "Sobre, menos de {{source}}",
+    "sourceSub": "Sobre {{source}}, ou oculte do seu Feed",
     "support": "Suporte",
     "supportSub": "Relatar um bug, chat ao vivo, perguntas frequentes, tutorial",
     "tutorial": "Tutorial",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Não preferido",
+    "notPreferredDone": "{{publisher}} fica oculto no seu Feed"
   },
   "storyExport": {
     "shareA11y": "Exportar esta história",
@@ -2761,14 +2761,14 @@
     "supportLine": "Um bom jornalismo dura quando os leitores o apoiam.",
     "visitsLabel": "Suas visitas nos últimos 30 dias",
     "subscribed": "Assinado",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Preferido",
+    "notPreferred": "Não preferido",
+    "preferA11y": "Preferir {{publisher}}",
+    "notPreferA11y": "Marcar {{publisher}} como Não preferido",
+    "notPreferHint": "Oculta os artigos dela do seu Feed",
+    "includedWith": "Incluído com {{country}}",
+    "includedWithA11y": "Preferido, incluído com {{country}}",
+    "includedWithHelp": "Incluído com {{country}}. Para mudar isso, remova a estrela de {{country}}."
   },
   "nav": {
     "page": {
@@ -2958,13 +2958,13 @@
     },
     "sources": {
       "title": "Fontes",
-      "find": "Encontrar uma publicação",
-      "footnote": "Toque em uma para mudar. “Menos de” no menu ••• de um artigo também vem parar aqui.",
-      "empty": "Você não ajustou nenhuma fonte. Pesquise uma publicação para ver mais, menos ou nenhuma dela. “Menos de” no menu ••• de um artigo também vem parar aqui.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Encontre uma publicação ou um país",
+      "footnote": "Toque em uma para mudar. \"Não preferido\" no menu ••• de um artigo também aparece aqui.",
+      "empty": "Você ainda não escolheu fontes. Pesquise uma publicação ou um país para preferir ou ocultar do seu Feed. \"Não preferido\" no menu ••• de um artigo também aparece aqui.",
+      "preferCountryA11y": "Preferir fontes de {{country}}",
+      "countryHint": "Abre as fontes de {{country}}",
+      "countryCleared": "{{country}} deixou de ser Preferido",
+      "saveError": "Não foi possível salvar. Tente de novo."
     },
     "settings": {
       "yourPlan": "Seu plano",
@@ -3151,7 +3151,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Marcar esta publicação como Não preferido"
     },
     "follow": {
       "follow": "Follow a story",

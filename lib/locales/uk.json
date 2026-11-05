@@ -392,14 +392,14 @@
     "turnThemOn": "Увімкнути їх",
     "guardSkip": "Почати з головних новин",
     "guardAddFact": "Додати",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Яким новинним джерелам ви довіряєте?",
+    "sourcesBody": "Натисніть зірку, щоб бачити більше. Натисніть значок ока, щоб приховати зі стрічки. Змінити це можна будь-коли в розділі Джерела.",
+    "sourcesSkip": "Пропустити",
+    "sourcesLoadError": "Не вдалося завантажити джерела.",
+    "sourcesOffline": "Немає підключення до мережі. Джерела можна додати пізніше в розділі «Джерела».",
+    "sourcesSearchHint": "Знайдіть видання або країну.",
+    "iSubscribe": "Я передплачую",
+    "iSubscribeA11y": "Я передплачую {{publisher}}"
   },
   "notifications": {
     "title": "Сповіщення",
@@ -613,11 +613,11 @@
     "exportHistoryWindowNote_few": "Цей експорт охоплює лише останні {{count}} дні читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
     "exportHistoryWindowNote_many": "Цей експорт охоплює лише останні {{count}} днів читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
     "exportHistoryWindowNote_other": "Цей експорт охоплює лише останні {{count}} днів читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Мера uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Мера uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Дані на цьому телефоні",
+    "meterLine": "Мера використовує {{used}}. {{free}} вільно на цьому телефоні.",
+    "meterUsedOnly": "Мера використовує {{used}}.",
+    "meterDatabase": "Статті та профіль",
+    "meterBackup": "Резервна копія"
   },
   "preferences": {
     "notifications": "Сповіщення",
@@ -836,10 +836,10 @@
     "actionShowLessTopic": "Показувати тему рідше",
     "actionShowMoreTopic": "Показувати тему частіше",
     "actionDownRank": "Знизити тему",
-    "actionPublicationBoost": "Показувати більше від видання",
+    "actionPublicationBoost": "Позначити видання як пріоритетне",
     "actionPublicationDeprioritize": "Показувати менше від видання",
-    "actionPublicationMute": "Приглушити видання",
-    "actionSourceScopeBoost": "Показувати більше з цієї країни",
+    "actionPublicationMute": "Позначити видання як непріоритетне",
+    "actionSourceScopeBoost": "Надавати пріоритет джерелам з країни",
     "actionSourceScopeDeprioritize": "Показувати менше з цієї країни",
     "actionSuppress": "Відфільтрувати фразу",
     "actionPinTopic": "Закріпити тему",
@@ -1276,9 +1276,9 @@
       "undone": "Відмінено: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "Встановлено {{name}} як пріоритетне",
+      "notPreferred": "Встановлено {{name}} як непріоритетне",
+      "preferredSourcesFrom": "Джерела з {{name}}: пріоритетне"
     }
   },
   "calibration": {
@@ -1885,7 +1885,7 @@
               },
               "sources": {
                 "label": "Джерела",
-                "text": "Видання, яких ви хочете більше або менше, і ті, за які ви платите."
+                "text": "Видання, які ви позначили як пріоритетні, ті, що ви приховали зі стрічки, і ті, за які ви платите."
               }
             }
           }
@@ -2143,14 +2143,14 @@
       },
       "sources": {
         "title": "Вибір ваших джерел",
-        "subtitle": "Значки, стрілки, й один контроль, що це блок.",
+        "subtitle": "Зірки, значки та приховування джерела зі стрічки.",
         "slides": {
           "where-it-lives": {
             "headline": "Де живуть джерела",
-            "body": "Один екран для всіх видань, які ви налаштували.",
+            "body": "Один екран для кожного видання, яке ви вибрали.",
             "steps": {
               "0": "Вкладка «Ви», потім «Джерела».",
-              "1": "«Менше від» у меню ••• статті діє одразу, з можливістю скасування, і після цього видання з'являється в розділі «Змінено»."
+              "1": "«Непріоритетне» в меню ••• статті діє одразу, з можливістю скасувати, і видання потім з'являється в розділі Джерела."
             },
             "ask": "Де мне керувати, які джерела я бачу?"
           },
@@ -2173,26 +2173,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Ті ж стрілки, один видавець за раз",
-            "body": "Відкрийте країну й кожний видавець має свою пару. Вниз - штовх, а не стіна: знижений видавець все ще показується, коли в нього є історія, що ніхто інший немає.",
-            "ask": "Яка різниця між зниженням джерела й його приглушенням?"
+            "headline": "Позначте видання зіркою",
+            "body": "Відкрийте країну, і кожне видання матиме зірку. Зірка піднімає видання вище у вашій стрічці. Позначте країну зіркою, щоб зробити те саме для всіх її видань.",
+            "ask": "Яка різниця між «Пріоритетне» і «Непріоритетне»?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Приглушення - це щось зовсім інше",
-            "body": "Тег «Заглушити» ставиться на сторінці видання, і це жорстке виключення: ті історії відкидаються, а не просто опускаються нижче в порядку. Торкніться кожної картки й покладіть її туди, де їй місце.",
+            "headline": "Непріоритетне приховує його зі стрічки",
+            "body": "Позначте видання як непріоритетне, і його історії зникнуть зі стрічки. Розділ «Світ» і пов'язані історії досі можуть їх показувати. Натисніть на кожну картку й перетягніть її туди, де вона має бути.",
             "steps": {
-              "0": "Стрілка вниз: показується рідше.",
-              "1": "Приглушення: взагалі не показується.",
-              "2": "Будь-яка може бути очищена пізніше, з переваг джерела."
+              "0": "Зірка: показується вище.",
+              "1": "Непріоритетне: приховано зі стрічки.",
+              "2": "Будь-яку з цих позначок можна скасувати в розділі Джерела."
             },
             "sort": {
               "buckets": {
-                "softer": "Показується рідше",
-                "gone": "Тримається взагалі"
+                "softer": "Показується вище",
+                "gone": "Приховано зі стрічки"
               },
               "cards": {
-                "down-arrow": "Стрілка вниз",
-                "mute": "Приглушення"
+                "down-arrow": "Зірка",
+                "mute": "Непріоритетне"
               }
             }
           }
@@ -2208,7 +2208,7 @@
             "steps": {
               "0": "Слова й речи, які ви приховали.",
               "1": "Теми, які ви бачите менше.",
-              "2": "Джерела, які ви приглушили або знизили."
+              "2": "Джерела, які ви позначили як «Непріоритетне»."
             },
             "ask": "Де мне бачити все, що я відфільтрував?"
           },
@@ -2794,12 +2794,12 @@
     "aboutSource": "Про це джерело",
     "liveChat": "Живий чат",
     "liveChatSub": "Людина з команди Мера",
-    "sourceSub": "Про видання, менше від {{source}}",
+    "sourceSub": "Про {{source}} або приховати його зі стрічки",
     "support": "Підтримка",
     "supportSub": "Повідомити про помилку, живий чат, FAQ, навчання",
     "tutorial": "Навчання",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Непріоритетне",
+    "notPreferredDone": "{{publisher}} приховано зі стрічки"
   },
   "storyExport": {
     "shareA11y": "Експортувати цю історію",
@@ -2859,14 +2859,14 @@
     "supportLine": "Якісна журналістика живе, поки читачі її підтримують.",
     "visitsLabel": "Ваші візити за останні 30 днів",
     "subscribed": "Передплачено",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Пріоритетне",
+    "notPreferred": "Непріоритетне",
+    "preferA11y": "Надати {{publisher}} пріоритет",
+    "notPreferA11y": "Позначити {{publisher}} як непріоритетне",
+    "notPreferHint": "Приховує його статті зі стрічки",
+    "includedWith": "Разом із країною: {{country}}",
+    "includedWithA11y": "Пріоритетне, разом із країною: {{country}}",
+    "includedWithHelp": "Разом із країною: {{country}}. Щоб це змінити, приберіть зірку з країни: {{country}}."
   },
   "nav": {
     "page": {
@@ -3094,13 +3094,13 @@
     },
     "sources": {
       "title": "Джерела",
-      "find": "Знайти видання",
-      "footnote": "Натисніть на видання, щоб змінити його. Сюди також потрапляє пункт «Менше від» у меню статті «•••».",
-      "empty": "Ви ще нічого не змінювали в джерелах. Знайдіть видання, щоб бачити його більше, менше або взагалі не бачити. Сюди також потрапляє пункт «Менше від» у меню статті «•••».",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Знайдіть видання або країну",
+      "footnote": "Натисніть на видання, щоб змінити його. Пункт «Непріоритетне» з меню ••• статті теж з'являється тут.",
+      "empty": "Ви ще не вибрали жодного джерела. Шукайте видання або країну, щоб позначити їх пріоритетними або приховати зі стрічки. Пункт «Непріоритетне» з меню ••• статті теж з'являється тут.",
+      "preferCountryA11y": "Надавати пріоритет джерелам з {{country}}",
+      "countryHint": "Відкриває джерела з {{country}}",
+      "countryCleared": "{{country}} більше не в пріоритеті",
+      "saveError": "Не вдалося зберегти. Спробуйте ще раз."
     },
     "settings": {
       "yourPlan": "Ваш тариф",
@@ -3287,7 +3287,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Позначити це видання як непріоритетне"
     },
     "follow": {
       "follow": "Follow a story",

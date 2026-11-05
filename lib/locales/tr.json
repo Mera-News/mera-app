@@ -350,14 +350,14 @@
     "turnThemOn": "Açın",
     "guardSkip": "Başlıklarla başla",
     "guardAddFact": "Bir şey ekle",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Hangi haber kaynaklarına güveniyorsunuz?",
+    "sourcesBody": "Daha fazlasını görmek için yıldıza dokunun. Bir kaynağı Akışınızdan gizlemek için göze dokunun. Bunu istediğiniz zaman Kaynaklar bölümünden değiştirebilirsiniz.",
+    "sourcesSkip": "Atla",
+    "sourcesLoadError": "Kaynaklar yüklenemedi.",
+    "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
+    "sourcesSearchHint": "Bir yayın veya ülke arayın.",
+    "iSubscribe": "Abone oldum",
+    "iSubscribeA11y": "{{publisher}} yayınına abone oldum"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -567,11 +567,11 @@
     "askBeforeTopicDeleteHint": "Bilgilerinizden birinden bir konuyu her sildiğinizde Mera sizden onay ister.",
     "exportHistoryWindowNote_one": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi.",
     "exportHistoryWindowNote_other": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Mera uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Bu telefondaki veriler",
+    "meterLine": "Mera {{used}} kullanıyor. Bu telefonda {{free}} boş alan var.",
+    "meterUsedOnly": "Mera {{used}} kullanıyor.",
+    "meterDatabase": "Makaleler ve profil",
+    "meterBackup": "Yedek kopya"
   },
   "preferences": {
     "notifications": "Bildirimler",
@@ -790,10 +790,10 @@
     "actionShowLessTopic": "Konuyu daha az göster",
     "actionShowMoreTopic": "Konuyu daha çok göster",
     "actionDownRank": "Konunun önceliğini düşür",
-    "actionPublicationBoost": "Bu yayından daha fazla göster",
+    "actionPublicationBoost": "Bir yayını Tercih edilen olarak işaretleyin",
     "actionPublicationDeprioritize": "Bu yayından daha az göster",
-    "actionPublicationMute": "Yayını sessize al",
-    "actionSourceScopeBoost": "Ülkedeki kaynaklardan daha fazla göster",
+    "actionPublicationMute": "Bir yayını Tercih edilmeyen olarak işaretleyin",
+    "actionSourceScopeBoost": "Bir ülkenin kaynaklarını tercih edin",
     "actionSourceScopeDeprioritize": "Ülkedeki kaynaklardan daha az göster",
     "actionSuppress": "Bir ifadeyi filtrele",
     "actionPinTopic": "Konuyu sabitle",
@@ -1212,9 +1212,9 @@
       "undone": "Geri alındı: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "{{name}} Tercih edilen olarak ayarlandı",
+      "notPreferred": "{{name}} Tercih edilmeyen olarak ayarlandı",
+      "preferredSourcesFrom": "{{name}} ülkesinin kaynakları Tercih edilen olarak ayarlandı"
     }
   },
   "calibration": {
@@ -1803,7 +1803,7 @@
               },
               "sources": {
                 "label": "Kaynaklar",
-                "text": "Daha fazla ya da daha az görmek istediğiniz yayınlar ve ödediğiniz yayınlar."
+                "text": "Tercih ettiğiniz, Akışınızdan gizlediğiniz ve ücretini ödediğiniz yayınlar."
               }
             }
           }
@@ -2061,14 +2061,14 @@
       },
       "sources": {
         "title": "Kaynaklarınızı seçme",
-        "subtitle": "Rozetler, oklar ve engelleyen bir kontrol.",
+        "subtitle": "Yıldızlar, rozetler ve bir kaynağı Akışınızdan gizleme.",
         "slides": {
           "where-it-lives": {
             "headline": "Kaynaklar nerede yaşıyor",
-            "body": "Ayarladığınız tüm yayıncılar için tek bir ekran.",
+            "body": "Seçtiğiniz her yayın için tek bir ekran.",
             "steps": {
               "0": "Siz sekmesi, sonra Kaynaklar.",
-              "1": "Bir haberin ••• menüsündeki \"Daha az\" seçeneği hemen geçerli olur, Geri al ile birlikte, ardından yayıncı Ayarlananlar altında görünür."
+              "1": "Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" hemen uygulanır, Geri Al seçeneği sunulur ve yayın Kaynaklar bölümünde görünür."
             },
             "ask": "Hangi kaynakları gördüğümü nereden yönetirim?"
           },
@@ -2091,26 +2091,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Aynı oklar, bir yayıncı bir kez",
-            "body": "Bir ülke açın ve her yayıncı kendi çiftini taşır. Aşağı sessizçe yayıncı hâlâ karar çiziyse hikaye hiç yok.",
-            "ask": "Kaynağı döndürme ile onu sessize almanın arasındaki fark nedir?"
+            "headline": "Bir yayını yıldızlayın",
+            "body": "Bir ülkeyi açtığınızda her yayının yanında bir yıldız bulunur. Yıldız, yayını Akışınızda yukarı taşır. Bir ülkeye yıldız verirseniz, aynısı o ülkenin tüm yayınları için de yapılır.",
+            "ask": "Tercih edilen ile Tercih edilmeyen arasındaki fark nedir?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Sessize almak tamamen başka bir şey",
-            "body": "Sessize alma, bir yayının sayfasında ayarlanır ve sert bir dışlamadır: o hikayeler yalnızca aşağı sıralanmaz, tamamen çıkarılır. Her karta dokun ve ait olduğu yere koy.",
+            "headline": "Tercih edilmeyen yayını Akışınızdan gizler",
+            "body": "Bir yayını Tercih edilmeyen olarak işaretlediğinizde haberleri Akışınızdan çıkar. Dünya sekmesi ve ilgili haberler yine de bu yayını gösterebilir. Her karta dokunun ve ait olduğu yere taşıyın.",
             "steps": {
-              "0": "Aşağı okları: daha az sık gösterilir.",
-              "1": "Sessize al: hiç gösterilmez.",
-              "2": "Her ikisi daha sonra kaynak tercihlerinden temizlenebilir."
+              "0": "Yıldız: daha yukarıda gösterilir.",
+              "1": "Tercih edilmeyen: Akışınızdan gizlenir.",
+              "2": "Bunlardan birini veya ikisini de Kaynaklar bölümünden kaldırabilirsiniz."
             },
             "sort": {
               "buckets": {
-                "softer": "Daha az sık gösterilir",
-                "gone": "Tamamen tutuluyor"
+                "softer": "Daha yukarıda gösterilir",
+                "gone": "Akışınızdan gizlendi"
               },
               "cards": {
-                "down-arrow": "Aşağı oklar",
-                "mute": "Sessize al"
+                "down-arrow": "Yıldız",
+                "mute": "Tercih edilmeyen"
               }
             }
           }
@@ -2126,7 +2126,7 @@
             "steps": {
               "0": "Kelimeler ve gizlediğiniz şeyler.",
               "1": "Daha az gördüğü konular.",
-              "2": "Sessize aldığınız veya başa indirdiğiniz kaynaklar."
+              "2": "Tercih edilmeyen olarak işaretlediğiniz kaynaklar."
             },
             "ask": "Filtreleyenin tümünü nerede görebilirim?"
           },
@@ -2694,12 +2694,12 @@
     "aboutSource": "Bu kaynak hakkında",
     "liveChat": "Canlı sohbet",
     "liveChatSub": "Mera ekibinden bir kişi",
-    "sourceSub": "Hakkında, {{source}} kaynağından daha az",
+    "sourceSub": "{{source}} hakkında veya onu Akışınızdan gizleyin",
     "support": "Destek",
     "supportSub": "Hata bildir, canlı sohbet, SSS, eğitim",
     "tutorial": "Eğitim",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Tercih edilmeyen",
+    "notPreferredDone": "{{publisher}} Akışınızdan gizlendi"
   },
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",
@@ -2757,14 +2757,14 @@
     "supportLine": "İyi haberciliğin devamı, okurlar destek olduğunda gelir.",
     "visitsLabel": "Son 30 gündeki ziyaretleriniz",
     "subscribed": "Abonesiniz",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Tercih edilen",
+    "notPreferred": "Tercih edilmeyen",
+    "preferA11y": "{{publisher}} yayınını tercih edin",
+    "notPreferA11y": "{{publisher}} yayınını Tercih edilmeyen olarak işaretleyin",
+    "notPreferHint": "Makalelerini Akışınızdan gizler",
+    "includedWith": "{{country}} ile birlikte dahil",
+    "includedWithA11y": "Tercih edilen, {{country}} ile birlikte dahil",
+    "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için {{country}} ülkesinin yıldızını kaldırın."
   },
   "nav": {
     "page": {
@@ -2954,13 +2954,13 @@
     },
     "sources": {
       "title": "Kaynaklar",
-      "find": "Yayın bul",
-      "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
-      "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayının daha fazlasını, daha azını veya hiçbirini görmek için yayın arayın. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Bir yayın veya ülke bulun",
+      "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
+      "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını veya ülkeyi aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
+      "preferCountryA11y": "{{country}} ülkesinin kaynaklarını tercih edin",
+      "countryHint": "{{country}} ülkesinin kaynaklarını açar",
+      "countryCleared": "{{country}} artık tercih edilen değil",
+      "saveError": "Bu kaydedilemedi. Lütfen tekrar deneyin."
     },
     "settings": {
       "yourPlan": "Planınız",
@@ -3147,7 +3147,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Bu yayını Tercih edilmeyen olarak işaretleyin"
     },
     "follow": {
       "follow": "Follow a story",

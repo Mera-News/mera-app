@@ -392,14 +392,14 @@
     "turnThemOn": "Включить их",
     "guardSkip": "Начать с главных новостей",
     "guardAddFact": "Добавить",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Каким новостным источникам вы доверяете?",
+    "sourcesBody": "Нажмите на звезду, чтобы видеть больше. Нажмите на значок глаза, чтобы скрыть из вашей ленты. Это можно изменить в любой момент в разделе «Источники».",
+    "sourcesSkip": "Пропустить",
+    "sourcesLoadError": "Не удалось загрузить источники.",
+    "sourcesOffline": "Вы не в сети. Источники можно добавить позже в разделе «Источники».",
+    "sourcesSearchHint": "Найдите издание или страну.",
+    "iSubscribe": "У меня есть подписка",
+    "iSubscribeA11y": "У меня есть подписка на {{publisher}}"
   },
   "notifications": {
     "title": "Уведомления",
@@ -613,11 +613,11 @@
     "exportHistoryWindowNote_few": "Этот экспорт охватывает чтение только за последние {{count}} дня. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
     "exportHistoryWindowNote_many": "Этот экспорт охватывает чтение только за последние {{count}} дней. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
     "exportHistoryWindowNote_other": "Этот экспорт охватывает чтение только за последние {{count}} дня. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Мера uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Мера uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Данные на этом телефоне",
+    "meterLine": "Мера использует {{used}}. {{free}} свободно на этом телефоне.",
+    "meterUsedOnly": "Мера использует {{used}}.",
+    "meterDatabase": "Статьи и профиль",
+    "meterBackup": "Резервная копия"
   },
   "preferences": {
     "notifications": "Уведомления",
@@ -836,10 +836,10 @@
     "actionShowLessTopic": "Показывать тему реже",
     "actionShowMoreTopic": "Показывать тему чаще",
     "actionDownRank": "Понизить приоритет темы",
-    "actionPublicationBoost": "Показать больше от издания",
+    "actionPublicationBoost": "Отметить издание как «В приоритете»",
     "actionPublicationDeprioritize": "Показать меньше от издания",
-    "actionPublicationMute": "Приглушить издание",
-    "actionSourceScopeBoost": "Показать больше из страны",
+    "actionPublicationMute": "Отметить издание как «Не в приоритете»",
+    "actionSourceScopeBoost": "Отдавать приоритет источникам из страны",
     "actionSourceScopeDeprioritize": "Показать меньше из страны",
     "actionSuppress": "Подавить фразу",
     "actionPinTopic": "Закрепить тему",
@@ -1272,9 +1272,9 @@
       "undone": "Отменено: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "Отметить {{name}} как «В приоритете»",
+      "notPreferred": "Отметить {{name}} как «Не в приоритете»",
+      "preferredSourcesFrom": "Отметить источники страны {{name}} как «В приоритете»"
     }
   },
   "calibration": {
@@ -1881,7 +1881,7 @@
               },
               "sources": {
                 "label": "Источники",
-                "text": "Издания, которые вы хотите видеть чаще или реже, и те, на которые вы подписаны."
+                "text": "Издания в приоритете, те, что вы скрыли из вашей ленты, и те, за которые вы платите."
               }
             }
           }
@@ -2139,14 +2139,14 @@
       },
       "sources": {
         "title": "Выбор ваших источников",
-        "subtitle": "Значки, стрелки и один контроль это блок.",
+        "subtitle": "Звёзды, значки и скрытие источника из вашей ленты.",
         "slides": {
           "where-it-lives": {
             "headline": "Где живут источники",
-            "body": "Один экран для всех изданий, которые вы настроили.",
+            "body": "Один экран для всех изданий, которые вы выбрали.",
             "steps": {
               "0": "Вкладка «Вы», затем «Источники».",
-              "1": "«Меньше от» в меню ••• статьи действует сразу, с возможностью отмены, и после этого издание появляется в разделе «Изменено»."
+              "1": "«Не в приоритете» в меню ••• статьи срабатывает сразу, с кнопкой «Отменить», а издание затем появляется в разделе «Источники»."
             },
             "ask": "Где я управляю, какие источники я вижу?"
           },
@@ -2169,26 +2169,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Те же стрелки, один издатель одновременно",
-            "body": "Откройте страну и каждый издатель имеет его собственную пару. Вниз это толчок вместо стены: понизившийся издатель всё ещё появляется, когда у него есть история, которую никто другой нет.",
-            "ask": "В чём разница между понижением источника и приглушением?"
+            "headline": "Отметьте издание звездой",
+            "body": "Откройте страну, и у каждого издания появится звезда. Звезда поднимает издание выше в вашей ленте. Отметьте звездой страну, чтобы сделать то же самое для всех её изданий.",
+            "ask": "В чём разница между «В приоритете» и «Не в приоритете»?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Приглушение это совершенно другое",
-            "body": "Приглушение включается на странице издания, и это жёсткое исключение: эти истории удаляются, а не просто опускаются ниже. Нажимайте на каждую карточку и положите её на своё место.",
+            "headline": "«Не в приоритете» скрывает издание из вашей ленты",
+            "body": "Отметьте издание как «Не в приоритете», и его статьи пропадут из вашей ленты. Мир и похожие материалы по-прежнему могут их показывать. Нажмите на каждую карточку и поставьте её туда, где ей место.",
             "steps": {
-              "0": "Стрелка вниз: показана реже.",
-              "1": "Приглушение: совсем не показана.",
-              "2": "Любое может быть очищено позже, из предпочтений источника."
+              "0": "Звезда: показывается выше.",
+              "1": "«Не в приоритете»: скрыто из вашей ленты.",
+              "2": "Любой из этих пунктов можно сбросить в разделе «Источники»."
             },
             "sort": {
               "buckets": {
-                "softer": "Показана реже",
-                "gone": "Держана полностью вне"
+                "softer": "Показывается выше",
+                "gone": "Скрыто из вашей ленты"
               },
               "cards": {
-                "down-arrow": "Стрелка вниз",
-                "mute": "Приглушение"
+                "down-arrow": "Звезда",
+                "mute": "Не в приоритете"
               }
             }
           }
@@ -2204,7 +2204,7 @@
             "steps": {
               "0": "Слова и вещи вы скрыли.",
               "1": "Темы вы видите реже.",
-              "2": "Источники вы приглушили или понизили."
+              "2": "Источники, которые вы отметили как «Не в приоритете»."
             },
             "ask": "Где я могу увидеть всё, что я отфильтровал?"
           },
@@ -2790,12 +2790,12 @@
     "aboutSource": "Об этом источнике",
     "liveChat": "Живой чат",
     "liveChatSub": "Человек из команды Меры",
-    "sourceSub": "Об источнике, меньше от {{source}}",
+    "sourceSub": "О {{source}} или скрыть из вашей ленты",
     "support": "Поддержка",
     "supportSub": "Сообщить об ошибке, живой чат, FAQ, обучение",
     "tutorial": "Обучение",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Не в приоритете",
+    "notPreferredDone": "Издание {{publisher}} скрыто из вашей ленты"
   },
   "storyExport": {
     "shareA11y": "Экспортировать эту историю",
@@ -2855,14 +2855,14 @@
     "supportLine": "Качественная журналистика держится, когда читатели её поддерживают.",
     "visitsLabel": "Ваши визиты за последние 30 дней",
     "subscribed": "Подписан",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "В приоритете",
+    "notPreferred": "Не в приоритете",
+    "preferA11y": "Поставить {{publisher}} в приоритет",
+    "notPreferA11y": "Отметить {{publisher}} как «Не в приоритете»",
+    "notPreferHint": "Скрывает его статьи из вашей ленты",
+    "includedWith": "Включено со страной: {{country}}",
+    "includedWithA11y": "В приоритете, включено со страной: {{country}}",
+    "includedWithHelp": "Включено со страной: {{country}}. Чтобы это изменить, снимите звезду со страны: {{country}}."
   },
   "nav": {
     "page": {
@@ -3090,13 +3090,13 @@
     },
     "sources": {
       "title": "Источники",
-      "find": "Найти издание",
-      "footnote": "Нажмите на источник, чтобы изменить его. Сюда же попадает пункт «Меньше от» в меню статьи (•••).",
-      "empty": "Вы пока не настраивали источники. Найдите издание, чтобы видеть его больше, меньше или совсем не видеть. Сюда же попадает пункт «Меньше от» в меню статьи (•••).",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Найти издание или страну",
+      "footnote": "Нажмите на любое, чтобы изменить. «Не в приоритете» в меню ••• статьи тоже появляется здесь.",
+      "empty": "Вы пока не выбрали ни одного источника. Найдите издание или страну, чтобы поставить в приоритет или скрыть из вашей ленты. «Не в приоритете» в меню ••• статьи тоже появляется здесь.",
+      "preferCountryA11y": "Отдавать приоритет источникам страны: {{country}}",
+      "countryHint": "Открывает источники страны: {{country}}",
+      "countryCleared": "{{country}} больше не в приоритете",
+      "saveError": "Не удалось сохранить. Попробуйте ещё раз."
     },
     "settings": {
       "yourPlan": "Ваш тариф",
@@ -3283,7 +3283,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Отметить это издание как «Не в приоритете»"
     },
     "follow": {
       "follow": "Follow a story",

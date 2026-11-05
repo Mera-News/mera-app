@@ -433,14 +433,14 @@
     "turnThemOn": "شغّلها",
     "guardSkip": "ابدأ بالعناوين",
     "guardAddFact": "أضف شيئا",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "أي مصادر الأخبار تثق بها؟",
+    "sourcesBody": "اضغط على النجمة لرؤية المزيد. اضغط على العين لإخفائه من خلاصتك. يمكنك تغيير ذلك في أي وقت من المصادر.",
+    "sourcesSkip": "تخطي",
+    "sourcesLoadError": "تعذّر تحميل المصادر.",
+    "sourcesOffline": "أنت غير متصل. يمكنك إضافة مصادر لاحقًا من شاشة المصادر.",
+    "sourcesSearchHint": "ابحث عن منشور أو دولة.",
+    "iSubscribe": "أنا مشترك",
+    "iSubscribeA11y": "أنا مشترك في {{publisher}}"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -658,11 +658,11 @@
     "exportHistoryWindowNote_few": "لا يغطي هذا التصدير إلا آخر {{count}} أيام من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
     "exportHistoryWindowNote_many": "لا يغطي هذا التصدير إلا آخر {{count}} يومًا من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
     "exportHistoryWindowNote_other": "لا يغطي هذا التصدير إلا آخر {{count}} يوم من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "ميرا uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "ميرا uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "البيانات على هذا الهاتف",
+    "meterLine": "يستخدم ميرا {{used}}. {{free}} متاحة على هذا الهاتف.",
+    "meterUsedOnly": "يستخدم ميرا {{used}}.",
+    "meterDatabase": "المقالات والملف الشخصي",
+    "meterBackup": "نسخة احتياطية"
   },
   "preferences": {
     "notifications": "الإشعارات",
@@ -881,10 +881,10 @@
     "actionShowLessTopic": "عرض أقل من موضوع",
     "actionShowMoreTopic": "عرض المزيد من موضوع",
     "actionDownRank": "خفض ترتيب موضوع",
-    "actionPublicationBoost": "عرض المزيد من منشور",
+    "actionPublicationBoost": "اجعل منشورًا مفضلًا",
     "actionPublicationDeprioritize": "عرض أقل من منشور",
-    "actionPublicationMute": "كتم منشور",
-    "actionSourceScopeBoost": "عرض المزيد من مصادر دولة",
+    "actionPublicationMute": "اجعل منشورًا غير مفضل",
+    "actionSourceScopeBoost": "فضّل المصادر من دولة",
     "actionSourceScopeDeprioritize": "عرض أقل من مصادر دولة",
     "actionSuppress": "تصفية عبارة",
     "actionPinTopic": "تثبيت موضوع",
@@ -1339,9 +1339,9 @@
       "undone": "تم التراجع عن: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "اجعل {{name}} مفضلًا",
+      "notPreferred": "اجعل {{name}} غير مفضل",
+      "preferredSourcesFrom": "اجعل مصادر {{name}} مفضلة"
     }
   },
   "calibration": {
@@ -1966,7 +1966,7 @@
               },
               "sources": {
                 "label": "المصادر",
-                "text": "المنشورات التي تريد رؤية المزيد منها أو أقل، والمنشورات التي تدفع لها."
+                "text": "المنشورات التي فضّلتها، والتي أخفيتها من خلاصتك، والتي تدفع ثمنها."
               }
             }
           }
@@ -2224,14 +2224,14 @@
       },
       "sources": {
         "title": "اختيار مصادرك",
-        "subtitle": "شارات، أسهم، والتحكم الوحيد الذي يكون حظرًا.",
+        "subtitle": "النجوم والشارات، وإخفاء مصدر من خلاصتك.",
         "slides": {
           "where-it-lives": {
             "headline": "حيث تعيش المصادر",
-            "body": "شاشة واحدة لكل ناشر عدّلته.",
+            "body": "شاشة واحدة لكل منشور اخترته.",
             "steps": {
               "0": "تبويب أنت، ثم المصادر.",
-              "1": "\"أقل من\" في قائمة ••• الخاصة بأي مقال تُطبَّق فورًا مع خيار التراجع، ثم يظهر الناشر ضمن المعدَّلة."
+              "1": "«غير مفضل» في قائمة ••• الخاصة بالمقال يسري فورًا، مع خيار التراجع، ثم يظهر المنشور في المصادر."
             },
             "ask": "أين أتولى أي مصادر أرى؟"
           },
@@ -2254,26 +2254,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "نفس الأسهم، ناشر واحد مرة واحدة",
-            "body": "افتح بلد وكل ناشر له زوج الخاص به. الأسفل دفعة بدلاً من جدار: ناشر مخفّض الترتيب لا يزال يظهر عندما يملك قصة لا أحد آخر.",
-            "ask": "ما الفرق بين تخفيض مصدر وكتمه؟"
+            "headline": "ضع نجمة على منشور",
+            "body": "افتح دولة لتجد نجمة على كل منشور فيها. النجمة ترفع المنشور أعلى خلاصتك. ضع نجمة على دولة لتفعل الشيء نفسه مع كل منشوراتها.",
+            "ask": "ما الفرق بين مفضل وغير مفضل؟"
           },
           "mute-is-not-a-downrank": {
-            "headline": "كتم شيء مختلف تمامًا",
-            "body": "يُضبط الكتم في صفحة المنشور، وهو استبعاد تام: تُحذف تلك القصص ولا يقتصر الأمر على ترتيبها أقل. اضغط على كل بطاقة وضعها حيث تنتمي.",
+            "headline": "غير مفضل يخفيه من خلاصتك",
+            "body": "عندما تضع منشورًا كـ«غير مفضل»، تختفي قصصه من خلاصتك. ما زال تبويب العالم والقصص ذات الصلة قادرًا على عرضها. اضغط على كل بطاقة وضعها في مكانها الصحيح.",
             "steps": {
-              "0": "السهم الأسفل: معروضة أقل.",
-              "1": "كتم: غير معروضة على الإطلاق.",
-              "2": "كليهما يمكن مسحه لاحقًا، من تفضيلات المصدر."
+              "0": "النجمة: تظهر أعلى.",
+              "1": "غير مفضل: مخفي من خلاصتك.",
+              "2": "يمكنك إلغاء أي منهما من المصادر."
             },
             "sort": {
               "buckets": {
-                "softer": "معروضة أقل",
-                "gone": "تُبقى خارجًا تمامًا"
+                "softer": "تظهر أعلى",
+                "gone": "مخفي من خلاصتك"
               },
               "cards": {
-                "down-arrow": "السهم الأسفل",
-                "mute": "كتم"
+                "down-arrow": "النجمة",
+                "mute": "غير مفضل"
               }
             }
           }
@@ -2289,7 +2289,7 @@
             "steps": {
               "0": "كلمات وأشياء أخفيتها.",
               "1": "مواضيع ترى أقل منها.",
-              "2": "مصادر كتمتها أو خفضت ترتيبها."
+              "2": "المصادر التي وضعتها كـ«غير مفضل»."
             },
             "ask": "أين أرى كل شيء صفيت خارجًا؟"
           },
@@ -2893,12 +2893,12 @@
     "aboutSource": "حول هذا المصدر",
     "liveChat": "محادثة مباشرة",
     "liveChatSub": "شخص من فريق ميرا",
-    "sourceSub": "عن المصدر، وعدد أقل من {{source}}",
+    "sourceSub": "عن {{source}}، أو أخفه من خلاصتك",
     "support": "الدعم",
     "supportSub": "الإبلاغ عن خطأ، محادثة مباشرة، الأسئلة الشائعة، الشرح",
     "tutorial": "الشرح",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "غير مفضل",
+    "notPreferredDone": "تم إخفاء {{publisher}} من خلاصتك"
   },
   "storyExport": {
     "shareA11y": "تصدير هذه القصة",
@@ -2960,14 +2960,14 @@
     "supportLine": "تدوم التغطية الجيدة حين يدعمها قراؤها.",
     "visitsLabel": "زياراتك خلال الأيام الثلاثين الماضية",
     "subscribed": "مشترك",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "مفضل",
+    "notPreferred": "غير مفضل",
+    "preferA11y": "اجعل {{publisher}} مفضلًا",
+    "notPreferA11y": "ضع {{publisher}} كـ«غير مفضل»",
+    "notPreferHint": "يخفي مقالاته من خلاصتك",
+    "includedWith": "مشمول مع {{country}}",
+    "includedWithA11y": "مفضل، مشمول مع {{country}}",
+    "includedWithHelp": "مشمول مع {{country}}. لتغيير ذلك، أزل النجمة عن {{country}}."
   },
   "nav": {
     "page": {
@@ -3233,13 +3233,13 @@
     },
     "sources": {
       "title": "المصادر",
-      "find": "ابحث عن منشور",
-      "footnote": "اضغط على أحدها لتغييره. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا.",
-      "empty": "لم تعدّل أي مصدر بعد. ابحث عن منشور لترى منه أكثر أو أقل أو لا شيء. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "ابحث عن منشور أو دولة",
+      "footnote": "اضغط على أي عنصر لتغييره. يظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
+      "empty": "لم تختر أي مصادر بعد. ابحث عن منشور أو دولة لتفضيله أو إخفائه من خلاصتك. ويظهر «غير مفضل» من قائمة ••• في المقال هنا أيضًا.",
+      "preferCountryA11y": "اجعل مصادر {{country}} مفضلة",
+      "countryHint": "يفتح مصادر {{country}}",
+      "countryCleared": "تمت إزالة تفضيل {{country}}",
+      "saveError": "تعذّر حفظ ذلك. حاول مرة أخرى."
     },
     "settings": {
       "yourPlan": "خطتك",
@@ -3426,7 +3426,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "ضع هذا المنشور كـ«غير مفضل»"
     },
     "follow": {
       "follow": "Follow a story",

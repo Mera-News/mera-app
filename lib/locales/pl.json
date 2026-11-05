@@ -392,14 +392,14 @@
     "turnThemOn": "Włącz je",
     "guardSkip": "Zacznij od nagłówków",
     "guardAddFact": "Dodaj coś",
-    "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
-    "sourcesSkip": "Skip",
-    "sourcesLoadError": "Couldn't load sources.",
-    "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "sourcesSearchHint": "Search for a publication or country.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}"
+    "sourcesTitle": "Którym źródłom wiadomości ufasz?",
+    "sourcesBody": "Dotknij gwiazdki, aby zobaczyć więcej. Dotknij oka, aby ukryć to w swoim Strumieniu. Zmienić to możesz w dowolnej chwili w Źródłach.",
+    "sourcesSkip": "Pomiń",
+    "sourcesLoadError": "Nie udało się wczytać źródeł.",
+    "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
+    "sourcesSearchHint": "Wyszukaj wydawcę lub kraj.",
+    "iSubscribe": "Subskrybuję",
+    "iSubscribeA11y": "Subskrybuję {{publisher}}"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -613,11 +613,11 @@
     "exportHistoryWindowNote_few": "Ten eksport obejmuje tylko ostatnie {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
     "exportHistoryWindowNote_many": "Ten eksport obejmuje tylko ostatnich {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
     "exportHistoryWindowNote_other": "Ten eksport obejmuje tylko ostatnich {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
-    "meterTitle": "Data on this phone",
-    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
-    "meterUsedOnly": "Mera uses {{used}}.",
-    "meterDatabase": "Articles and profile",
-    "meterBackup": "Backup copy"
+    "meterTitle": "Dane na tym telefonie",
+    "meterLine": "Mera używa {{used}}. Na tym telefonie wolne jest {{free}}.",
+    "meterUsedOnly": "Mera używa {{used}}.",
+    "meterDatabase": "Artykuły i profil",
+    "meterBackup": "Kopia zapasowa"
   },
   "preferences": {
     "notifications": "Powiadomienia",
@@ -836,10 +836,10 @@
     "actionShowLessTopic": "Pokazuj mniej danego tematu",
     "actionShowMoreTopic": "Pokazuj więcej danego tematu",
     "actionDownRank": "Obniż rangę tematu",
-    "actionPublicationBoost": "Pokażę więcej z tej publikacji",
+    "actionPublicationBoost": "Oznacz wydawcę jako Preferowane",
     "actionPublicationDeprioritize": "Pokażę mniej z tej publikacji",
-    "actionPublicationMute": "Wyciszę publikację",
-    "actionSourceScopeBoost": "Pokażę więcej źródeł z kraju",
+    "actionPublicationMute": "Oznacz wydawcę jako Niepreferowane",
+    "actionSourceScopeBoost": "Preferuj źródła z kraju",
     "actionSourceScopeDeprioritize": "Pokażę mniej źródeł z kraju",
     "actionSuppress": "Odfiltruj frazę",
     "actionPinTopic": "Przypnij temat",
@@ -1272,9 +1272,9 @@
       "undone": "Cofnięto: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
       "newsStopped": "Stopped news for {{name}}",
-      "preferred": "Set {{name}} as Preferred",
-      "notPreferred": "Set {{name}} as Not preferred",
-      "preferredSourcesFrom": "Set sources from {{name}} as Preferred"
+      "preferred": "Preferowane: {{name}}",
+      "notPreferred": "Niepreferowane: {{name}}",
+      "preferredSourcesFrom": "Ustaw źródła z {{name}} jako Preferowane"
     }
   },
   "calibration": {
@@ -1881,7 +1881,7 @@
               },
               "sources": {
                 "label": "Źródła",
-                "text": "Wydawcy, których chcesz mieć więcej lub mniej, i te, za które płacisz."
+                "text": "Wydawcy, których preferujesz, ci, których ukrywasz w swoim Strumieniu, i ci, za których płacisz."
               }
             }
           }
@@ -2139,14 +2139,14 @@
       },
       "sources": {
         "title": "Wybieranie swoich źródeł",
-        "subtitle": "Odznaki, strzałki i jedna kontrolka, która jest blokiem.",
+        "subtitle": "Gwiazdki, odznaki i ukrywanie źródeł w Strumieniu.",
         "slides": {
           "where-it-lives": {
             "headline": "Gdzie żyją źródła",
-            "body": "Jeden ekran dla każdego wydawcy, którego zmieniłeś.",
+            "body": "Jeden ekran dla wszystkich wybranych wydawców.",
             "steps": {
               "0": "Karta Ty, potem Źródła.",
-              "1": "“Mniej z” w menu ••• artykułu działa od razu, z opcją Cofnij, a wydawca pojawia się potem w sekcji Zmienione."
+              "1": "„Niepreferowane” w menu ••• przy artykule działa od razu, z opcją Cofnij, a potem wydawca pojawia się w Źródłach."
             },
             "ask": "Gdzie zarządzam, które źródła widzę?"
           },
@@ -2169,26 +2169,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Te same strzałki, jeden wydawca na raz",
-            "body": "Otwórz kraj i każdy wydawca ma swoje. Dół to lekka porada niż ściana: wydawca z dołem wciąż pojawia się, gdy ma historię, którą nikt inny nie ma.",
-            "ask": "Jaka jest różnica między obróceniem źródła w dół a wyciszeniem go?"
+            "headline": "Oznacz wydawcę gwiazdką",
+            "body": "Otwórz kraj, a każdy wydawca ma gwiazdkę. Gwiazdka przenosi go wyżej w twoim Strumieniu. Oznacz kraj gwiazdką, aby zrobić to samo dla wszystkich jego wydawców.",
+            "ask": "Jaka jest różnica między Preferowane a Niepreferowane?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Wyciszenie to coś zupełnie innego",
-            "body": "Wyciszenie ustawia się na stronie publikacji i jest to twarde wykluczenie: te historie są odrzucane, a nie tylko sortowane niżej. Dotknij każdą kartę i umieść ją tam, gdzie powinna być.",
+            "headline": "Niepreferowane ukrywa go w Strumieniu",
+            "body": "Oznacz wydawcę jako Niepreferowane, a jego artykuły znikną z twojego Strumienia. Świat i powiązane historie nadal mogą je pokazywać. Dotknij każdej karty i przenieś ją tam, gdzie jej miejsce.",
             "steps": {
-              "0": "Strzałka w dół: pokazana rzadziej.",
-              "1": "Wyciszenie: wcale nie pokazane.",
-              "2": "Każdy można wyczyścić później z preferencji źródła."
+              "0": "Gwiazdka: wyświetla się wyżej.",
+              "1": "Niepreferowane: ukryte w Strumieniu.",
+              "2": "Możesz wyczyścić któreś z nich w Źródłach."
             },
             "sort": {
               "buckets": {
-                "softer": "Pokazane rzadziej",
-                "gone": "Trzymane całkowicie poza"
+                "softer": "Wyświetla się wyżej",
+                "gone": "Ukryte w Strumieniu"
               },
               "cards": {
-                "down-arrow": "Strzałka w dół",
-                "mute": "Wyciszenie"
+                "down-arrow": "Gwiazdka",
+                "mute": "Niepreferowane"
               }
             }
           }
@@ -2204,7 +2204,7 @@
             "steps": {
               "0": "Słowa i rzeczy, które ukryłeś.",
               "1": "Tematy, które widzisz mniej.",
-              "2": "Źródła, które wyciszyłeś lub obróciłeś w dół."
+              "2": "Źródła oznaczone jako Niepreferowane."
             },
             "ask": "Gdzie mogę zobaczyć wszystko, co filtrowałem?"
           },
@@ -2790,12 +2790,12 @@
     "aboutSource": "O tym źródle",
     "liveChat": "Czat na żywo",
     "liveChatSub": "Osoba z zespołu Mera",
-    "sourceSub": "O źródle, mniej z {{source}}",
+    "sourceSub": "O {{source}} lub ukryj go w Strumieniu",
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
     "tutorial": "Samouczek",
-    "notPreferred": "Not preferred",
-    "notPreferredDone": "{{publisher}} is hidden from your feed"
+    "notPreferred": "Niepreferowane",
+    "notPreferredDone": "{{publisher}} jest ukryty w twoim Strumieniu"
   },
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",
@@ -2855,14 +2855,14 @@
     "supportLine": "Dobre dziennikarstwo przetrwa, gdy czytelnicy je wspierają.",
     "visitsLabel": "Twoje wizyty w ciągu ostatnich 30 dni",
     "subscribed": "Subskrybowane",
-    "preferred": "Preferred",
-    "notPreferred": "Not preferred",
-    "preferA11y": "Prefer {{publisher}}",
-    "notPreferA11y": "Mark {{publisher}} as not preferred",
-    "notPreferHint": "Hides its articles from your feed",
-    "includedWith": "Included with {{country}}",
-    "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
+    "preferred": "Preferowane",
+    "notPreferred": "Niepreferowane",
+    "preferA11y": "Preferuj {{publisher}}",
+    "notPreferA11y": "Oznacz {{publisher}} jako nie preferowane",
+    "notPreferHint": "Ukrywa jego artykuły w twoim Strumieniu",
+    "includedWith": "Razem z krajem: {{country}}",
+    "includedWithA11y": "Preferowane, razem z krajem: {{country}}",
+    "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, zdejmij gwiazdkę z kraju: {{country}}."
   },
   "nav": {
     "page": {
@@ -3090,13 +3090,13 @@
     },
     "sources": {
       "title": "Źródła",
-      "find": "Znajdź wydawcę",
-      "footnote": "Stuknij jedno, aby je zmienić. „Mniej z” w menu ••• artykułu też trafia tutaj.",
-      "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale z niego. „Mniej z” w menu ••• artykułu też trafia tutaj.",
-      "preferCountryA11y": "Prefer sources from {{country}}",
-      "countryHint": "Opens sources from {{country}}",
-      "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "find": "Szukaj wydawcy lub kraju",
+      "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowane” z menu ••• przy artykule też trafia tutaj.",
+      "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę lub kraj, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowane” z menu ••• przy artykule też trafia tutaj.",
+      "preferCountryA11y": "Preferuj źródła z kraju: {{country}}",
+      "countryHint": "Otwiera źródła z kraju: {{country}}",
+      "countryCleared": "Cofnięto preferencję: {{country}}",
+      "saveError": "Nie udało się zapisać. Spróbuj ponownie."
     },
     "settings": {
       "yourPlan": "Twój plan",
@@ -3283,7 +3283,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Oznacz tego wydawcę jako Niepreferowane"
     },
     "follow": {
       "follow": "Follow a story",
