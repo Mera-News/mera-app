@@ -1,0 +1,33 @@
+{
+  "id": "stake-impact-son",
+  "cohort": "stake",
+  "note": "Add to my profile instead, then a typed answer: a real impact stages a fact, none gets one line and no second card.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm into tennis",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    },
+    {
+      "index": 1,
+      "user": "My son trains at a national tennis academy",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": false
+        }
+      },
+      "impactTap": true
+    }
+  ]
+}

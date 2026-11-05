@@ -80,7 +80,7 @@ ONE line: "Pick the stories to follow below." in the reply language. Never the w
 never say anything is followed or tracked yet: nothing is until they tap Follow.
 
 ## Never
-- A card for something they did not ask to follow. "I support Olympiakos" said about themselves is a fact
-  for another guideline.
+- A card for something they did not ask to follow, unless the last message hands you the subject.
+  "I support Olympiakos" said about themselves is a fact for another guideline.
 - Facts offered or saved here.
 - An em dash or an en dash.

@@ -8,7 +8,7 @@
 // model for free.
 
 import { personaPromptFor, resolveAgentArm } from '../core/arms';
-import { createAgentState, runAgentTurn, type AgentPersona, type AgentState } from '../core/core';
+import { createAgentState, runAgentTurn, withImpactQuestion, type AgentPersona, type AgentState } from '../core/core';
 import { loadSkill as realLoadSkill } from '../core/skill-loader';
 import type { AgentDeps, AgentModelRequest, AgentModelResult, AgentTurnState } from './contract';
 import { createFakeTools, type FakeToolsHandle } from './fake-tools';
@@ -78,6 +78,11 @@ interface CapturedRequest {
    *  once a skill is loaded, so a fixed list would misreport every later leg. */
   toolNames: string[];
 }
+
+/** `trackedStories.impactQuestion` in en.json: this folder imports no locale. */
+const IMPACT_QUESTION =
+  "Before I add it, how does this affect you? Mera's AI uses this to work out how much an article matters to you. "
+  + "If it doesn't affect you personally, I'd recommend just following it as a story.";
 
 const ROLE_TO_CALL_TYPE: Record<string, EvalCallType> = {
   route: 'agent-route',
@@ -253,6 +258,7 @@ export async function runAgentScript(
     state.activeFilters = fakes.activeFilters();
     // Fact cards the fixture says are waiting, this turn only.
     state.pendingCardStatements = turn.pendingCards ?? [];
+    if (turn.impactTap) withImpactQuestion(state.turn, IMPACT_QUESTION);
 
     const turnStartedAtMs = now();
     const captured: CapturedRequest[] = [];

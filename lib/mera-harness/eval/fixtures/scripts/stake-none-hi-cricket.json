@@ -1,0 +1,23 @@
+{
+  "id": "stake-none-hi-cricket",
+  "cohort": "stake",
+  "note": "A broad or named interest with no stake: a follow card, and nothing saved.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "मुझे क्रिकेट बहुत पसंद है",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}

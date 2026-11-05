@@ -159,6 +159,49 @@ export const SAVE_FACTS_TOOL: ToolDefinition = {
 };
 
 /**
+ * THE SAVE ON A `facts/interest` LEG: two required slots, because prompt
+ * emphasis is not a lever on this model. Residence, work and family never see
+ * them. The loop reads `has_stake`, not the model: false leaves the save and
+ * goes to a follow card, `story_subject` is that card's first row. Offered only
+ * where a follow card can be staged.
+ */
+export const SAVE_INTEREST_FACTS_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    ...SAVE_FACTS_TOOL.function,
+    description:
+      `${SAVE_FACTS_TOOL.function.description} Set has_stake true when they said how this touches their life, work, money, health, family or travel, `
+      + 'false when they only said they like it. "I\'m into Formula 1" is false. "I\'m going to the Monaco GP" and "I coach a football club" are true. Unsure is false.',
+    parameters: {
+      type: 'object',
+      properties: {
+        extracted_user_information: {
+          type: 'array',
+          description: 'New facts from the user message.',
+          items: {
+            type: 'object',
+            properties: {
+              statement: { type: 'string' },
+              has_stake: { type: 'boolean' },
+              story_subject: {
+                type: 'string',
+                description: 'The subject alone, spelled correctly, in the language they wrote: "Formula 1", never "I\'m into Formula 1". No I, my or into.',
+              },
+              questionnaire_attribute: { type: 'string' },
+              alternatives: { type: 'array', items: { type: 'string' } },
+              replaces: { type: 'string' },
+              placeChain: { type: 'object', properties: {} },
+            },
+            required: ['statement', 'has_stake', 'story_subject'],
+          },
+        },
+      },
+      required: ['extracted_user_information'],
+    },
+  },
+};
+
+/**
  * THE WEB, from the user's device through the gateway (ux2 D10). `queries`,
  * never `query`: one call carries up to 4 searches and the gateway fans them
  * out. The query leaves the device in plaintext and is not linked to the user,
@@ -463,7 +506,9 @@ export function toolsForLeg(opts: {
   /** The waiting card is the most recent ask, so the route leg may answer it. */
   cardOnRouteLeg?: boolean;
 }): ToolDefinition[] {
-  if (opts.forcingProposal) return withoutChoice([SAVE_FACTS_TOOL, ASK_CHOICE_TOOL], opts.allowChoice);
+  // The stake slots go wherever this skill can save, and only where they can be acted on.
+  const saveTool = opts.skillLoaded === 'facts/interest' && opts.tracks === true ? SAVE_INTEREST_FACTS_TOOL : SAVE_FACTS_TOOL;
+  if (opts.forcingProposal) return withoutChoice([saveTool, ASK_CHOICE_TOOL], opts.allowChoice);
   const cardTools = (): ToolDefinition[] =>
     opts.cards && opts.pendingCard
       ? [...(opts.pendingCard.appliable ? [APPLY_PROPOSAL_TOOL] : []), CANCEL_PROPOSAL_TOOL]
@@ -484,7 +529,7 @@ export function toolsForLeg(opts: {
     if (name === 'cancelProposal') return opts.cards === true && !!opts.pendingCard;
     return true;
   });
-  return withoutChoice(offered.map((name) => SKILL_TOOL_DEFS[name]), opts.allowChoice);
+  return withoutChoice(offered.map((name) => (name === 'saveExtractedFacts' ? saveTool : SKILL_TOOL_DEFS[name])), opts.allowChoice);
 }
 
 function withoutChoice(tools: ToolDefinition[], allowChoice?: boolean): ToolDefinition[] {

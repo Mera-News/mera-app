@@ -365,6 +365,12 @@ export function makeAgentToolPort(
       ? {
           proposeChanges: (args: Record<string, unknown>) => runCard('proposeChanges', args),
           proposeTrack: async (args: Record<string, unknown>) => {
+            // The loop's handover already put the subject first: a reader's phrase
+            // here would be the whole sentence in any language but English.
+            if (Array.isArray(args.storySubjects)) {
+              const { storySubjects: _subjects, ...card } = args;
+              return runCard('proposeTrack', card);
+            }
             // More options sends no message, so a grown card adds nothing.
             const card = withReaderPhrase(args.options, userMessage, appIsEnglish());
             if (!card) return runCard('proposeTrack', args);

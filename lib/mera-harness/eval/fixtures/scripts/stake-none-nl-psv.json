@@ -1,0 +1,23 @@
+{
+  "id": "stake-none-nl-psv",
+  "cohort": "stake",
+  "note": "A broad or named interest with no stake: a follow card, and nothing saved.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Dutch"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "Ik volg PSV",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}

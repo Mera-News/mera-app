@@ -1,0 +1,22 @@
+{
+  "id": "stake-mixed-teacher",
+  "cohort": "stake",
+  "note": "A stake beside an interest: a fact card and a follow card in one turn.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I teach maths and I love jazz",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}

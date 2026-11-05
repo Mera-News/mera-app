@@ -334,6 +334,8 @@ export interface ScriptTurn {
    *  loop as `state.pendingCardStatements` for this turn only (the device
    *  derives them from the thread before every turn). */
   pendingCards?: string[];
+  /** The reader tapped "Add to my profile instead" before this turn. */
+  impactTap?: boolean;
   expect: ScriptExpect;
   fakeTools?: {
     lookup_place?: FakeLookupPlaceAnswer[];

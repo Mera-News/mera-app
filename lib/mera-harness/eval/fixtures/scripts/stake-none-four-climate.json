@@ -1,0 +1,22 @@
+{
+  "id": "stake-none-four-climate",
+  "cohort": "stake",
+  "note": "A broad or named interest with no stake: a follow card, and nothing saved.",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I follow climate news",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}

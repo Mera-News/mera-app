@@ -83,19 +83,12 @@
         "skill": "facts/interest",
         "tools": [
           "load_skill",
-          "saveExtractedFacts"
+          "saveExtractedFacts",
+          "proposeTrack"
         ],
-        "legs": 2,
-        "proposals": [
-          {
-            "statementMatches": [
-              "football"
-            ],
-            "kind": null,
-            "placeChain": "forbidden",
-            "replaces": null
-          }
-        ]
+        "track": {
+          "staged": true
+        }
       }
     },
     {

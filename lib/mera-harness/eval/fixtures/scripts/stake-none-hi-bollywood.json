@@ -1,0 +1,23 @@
+{
+  "id": "stake-none-hi-bollywood",
+  "cohort": "stake",
+  "note": "A broad or named interest with no stake: a follow card, and nothing saved.",
+  "persona": {
+    "facts": [],
+    "topics": [],
+    "languageName": "Hindi"
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "मुझे बॉलीवुड फिल्में पसंद हैं",
+      "expect": {
+        "tools": [],
+        "track": {
+          "staged": true
+        }
+      }
+    }
+  ]
+}
