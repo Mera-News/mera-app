@@ -11,6 +11,9 @@
 //   • location_conflict — two or more of the user's OWN place facts name
 //     places that share nothing (moved from Amsterdam to Berlin, and an older
 //     "Expat from India living in Amsterdam" survived) → keep the newest
+//   • follow_instead — not from the weekly analyzer: the daily sweep's
+//     detectFollowInstead names a topic that floods the feed unread, or an
+//     interest fact with no stake, and offers it as a followed story
 //
 // No imports of lib/database, lib/stores, expo, react-native, or watermelondb —
 // the RN adapter (lib/database/services/hygiene-service.ts) maps live rows into
@@ -22,6 +25,7 @@
 // concurrent chat-rail work this round, so hygiene knobs are colocated with the
 // only code that reads them. If they ever need runtime tuning, promote them.
 
+import type { TrackFeedbackSubject } from '../core/types';
 import { ACTION_NAMES, type ActionName } from './action-names';
 import { RELATIONAL_SUBJECT_RE } from './topic-generation';
 import { isLocationAttribute } from '../prompts/questionnaire-data';
@@ -52,6 +56,19 @@ export const HYGIENE_THRESHOLDS = {
 } as const;
 
 export type HygieneThresholds = typeof HYGIENE_THRESHOLDS;
+
+/** The daily follow-instead bars, tuned against the four-fact account (510
+ *  articles, 490 scored, top 0.38). */
+export const FOLLOW_INSTEAD_BARS = {
+  /** Distinct stories a topic or fact needs in the 48h window. */
+  minStories: 20,
+  /** A flooding topic has at least this many times the median topic's stories. */
+  medianMultiple: 3,
+  /** …and at least this share of all the stories matched. */
+  minShare: 0.25,
+  /** …and the reader opened fewer than this share of them. */
+  maxOpenedShare: 0.25,
+} as const;
 
 // ── Input projections (plain; no DB/RN) ─────────────────────────────────────
 
@@ -113,7 +130,10 @@ export type HygieneProposalKind =
   // contamination ("Amsterdam cricket festival music tech"). Grouped PER FACT,
   // not per topic: the fact statement is the only context that makes the
   // verdict judgeable, and it turns ~60 verdicts into ~15 review cards.
-  | 'incoherent_topics';
+  | 'incoherent_topics'
+  // A topic or fact that belongs in Followed stories. Made by the daily sweep,
+  // never by analyzeHygiene.
+  | 'follow_instead';
 
 /** A minimal PersonaAction shape, structurally compatible with the executor's
  *  richer `PersonaAction` — kept local so the pure module never imports RN. */
@@ -131,7 +151,10 @@ export type HygieneOp =
   // Regenerate topics for a fact BEFORE its incoherent ones are retired. Always
   // ordered first in `ops` so the executor can hold the invariant that a topic
   // is never retired unless its replacement is already committed.
-  | { type: 'generate_replacements'; factId: string; fillTo: number };
+  | { type: 'generate_replacements'; factId: string; fillTo: number }
+  // Follow first; whatever comes after it runs only once the follow landed. The
+  // subject is embedded so an accept reads no row, which expire at 48h.
+  | { type: 'follow_story'; label: string; searchText: string; subject: TrackFeedbackSubject };
 
 export interface HygieneSubject {
   facts: string[];
@@ -383,12 +406,168 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     incoherent_topics: 3,
     too_broad_fact: 4,
     stale_topic: 5,
+    follow_instead: 6,
   };
   proposals.sort((a, b) => {
     const k = kindOrder[a.kind] - kindOrder[b.kind];
     return k !== 0 ? k : a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   });
   return proposals;
+}
+
+// ── follow-instead detector ─────────────────────────────────────────────────
+
+/** One article in the 48h window, read from rows the product already keeps. */
+export interface FollowInsteadRow {
+  /** The server's story key, else the article id. */
+  storyKey: string;
+  topicIds: string[];
+  /** The reader opened it inside the window. */
+  opened: boolean;
+  /** Filtered as read: left out of the opened share. */
+  alreadyRead: boolean;
+  /** It carries a score, a verdict rather than a row still waiting. */
+  judged: boolean;
+  /** Its score reached the Feed's gate. */
+  passedGate: boolean;
+}
+
+export interface FollowInsteadFactInput
+  extends Pick<HygieneFactInput, 'id' | 'statement' | 'questionnaireAttribute'> {
+  /** Read off the `facts/interest` keys by the adapter. */
+  isInterest: boolean;
+  newsStopped: boolean;
+}
+
+export interface FollowInsteadInput {
+  facts: FollowInsteadFactInput[];
+  topics: HygieneTopicInput[];
+  rows: FollowInsteadRow[];
+  /** Topics a followed story points at. */
+  storyBoundTopicIds?: string[];
+  rejectedFingerprints?: string[];
+}
+
+export type FollowInsteadCandidate = {
+  factId: string;
+  statement: string;
+  topicIds: string[];
+  /** The fingerprint a dismissal remembers. */
+  id: string;
+  stories: number;
+} & ({ trigger: 'flood'; subject: string } | { trigger: 'no_stake' });
+
+const FLOOD_PREFIX = 'follow_instead:topic:';
+const NO_STAKE_PREFIX = 'follow_instead:fact:';
+
+/** The no-stake trigger takes the fact with it, so the card words it apart. */
+export const isNoStakeOffer = (p: Pick<HygieneProposal, 'id'>): boolean => p.id.startsWith(NO_STAKE_PREFIX);
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * Who could move to Followed stories, best first: a no-stake fact leads (it is
+ * how an empty Feed ends), then the most stories. Reads only what the product
+ * already keeps and only proposes: no opens are stored, no topic changes here.
+ */
+export function detectFollowInstead(input: FollowInsteadInput): FollowInsteadCandidate[] {
+  const bars = FOLLOW_INSTEAD_BARS;
+  const rejected = new Set(input.rejectedFingerprints ?? []);
+  const topicById = new Map(input.topics.filter((t) => t.status === 'active').map((t) => [t.id, t]));
+
+  const storiesByTopic = new Map<string, Map<string, FollowInsteadRow[]>>();
+  const allStories = new Set<string>();
+  for (const row of input.rows) {
+    for (const topicId of row.topicIds) {
+      if (!topicById.has(topicId)) continue;
+      allStories.add(row.storyKey);
+      const stories = storiesByTopic.get(topicId) ?? new Map<string, FollowInsteadRow[]>();
+      stories.set(row.storyKey, [...(stories.get(row.storyKey) ?? []), row]);
+      storiesByTopic.set(topicId, stories);
+    }
+  }
+  const medianStories = storiesByTopic.size > 0 ? median([...storiesByTopic.values()].map((s) => s.size)) : 0;
+
+  const storyBound = new Set(input.storyBoundTopicIds ?? []);
+  const eligible = input.facts.filter(
+    (f) => !f.newsStopped && !isLocationAttribute(f.questionnaireAttribute ?? '') && !rejected.has(`${NO_STAKE_PREFIX}${f.id}`),
+  );
+  const topicsOf = (factId: string) =>
+    [...topicById.values()].filter((t) => t.factId === factId && !storyBound.has(t.id));
+
+  const noStake: FollowInsteadCandidate[] = [];
+  const noStakeFacts = new Set<string>();
+  for (const f of eligible.filter((x) => x.isInterest)) {
+    const topics = topicsOf(f.id);
+    const stories = new Map<string, FollowInsteadRow[]>();
+    for (const t of topics) {
+      for (const [key, rows] of storiesByTopic.get(t.id) ?? []) stories.set(key, [...(stories.get(key) ?? []), ...rows]);
+    }
+    const rows = [...stories.values()];
+    // A row still waiting has no verdict, so only judged stories can say "none".
+    const judged = rows.filter((r) => r.some((x) => x.judged)).length;
+    if (judged < bars.minStories || rows.some((r) => r.some((x) => x.passedGate))) continue;
+    noStakeFacts.add(f.id);
+    noStake.push({
+      trigger: 'no_stake',
+      id: `${NO_STAKE_PREFIX}${f.id}`,
+      factId: f.id,
+      statement: f.statement,
+      topicIds: topics.map((t) => t.id),
+      stories: stories.size,
+    });
+  }
+
+  const flood: FollowInsteadCandidate[] = [];
+  for (const f of eligible) {
+    if (noStakeFacts.has(f.id)) continue;
+    for (const t of topicsOf(f.id)) {
+      const id = `${FLOOD_PREFIX}${t.normalizedText}`;
+      const stories = storiesByTopic.get(t.id);
+      if (!stories || rejected.has(id)) continue;
+      const count = stories.size;
+      if (count < bars.minStories || count < bars.medianMultiple * medianStories) continue;
+      if (count < bars.minShare * allStories.size) continue;
+      const counted = [...stories.values()].filter((r) => r.some((x) => !x.alreadyRead));
+      const opened = counted.filter((r) => r.some((x) => !x.alreadyRead && x.opened)).length;
+      if (counted.length > 0 && opened / counted.length >= bars.maxOpenedShare) continue;
+      flood.push({ trigger: 'flood', id, factId: f.id, statement: f.statement, topicIds: [t.id], subject: t.text, stories: count });
+    }
+  }
+
+  const biggest = (a: FollowInsteadCandidate, b: FollowInsteadCandidate) =>
+    b.stories - a.stories || (a.id < b.id ? -1 : 1);
+  return [...noStake.sort(biggest), ...flood.sort(biggest)];
+}
+
+/** The offer for a candidate that passed the AI check. */
+export function followInsteadProposal(
+  c: FollowInsteadCandidate,
+  follow: { label: string; searchText: string },
+  subject: TrackFeedbackSubject,
+): HygieneProposal {
+  const noStake = c.trigger === 'no_stake';
+  return {
+    id: c.id,
+    kind: 'follow_instead',
+    subject: { facts: [shorten(c.statement)], topics: [shorten(follow.label)] },
+    targetFactIds: [c.factId],
+    targetTopicIds: [...c.topicIds].sort(),
+    ops: [
+      { type: 'follow_story', ...follow, subject },
+      ...(noStake
+        ? [{ type: 'delete_fact' as const, factId: c.factId }]
+        : c.topicIds.map((topicId) => ({
+            type: 'persona_action' as const,
+            action: { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId },
+          }))),
+    ],
+    invertible: !noStake,
+  };
 }
 
 // ── duplicate detector ───────────────────────────────────────────────────────
