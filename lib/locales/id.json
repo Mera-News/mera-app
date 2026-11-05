@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera memerlukan Google Play di ponsel ini untuk memasukkan Anda. Ponsel tanpa Google Play tidak didukung.",
     "phoneUnsupportedIos": "iPhone ini tidak bisa memakai masuk dengan ponsel.",
     "supportedPhones": "Ponsel yang didukung",
-    "phoneNotSupported": "Ponsel ini tidak didukung"
+    "phoneNotSupported": "Ponsel ini tidak didukung",
+    "deviceNotBound": "Ponsel ini tidak terhubung ke akun Anda. Kembali untuk menghubungi dukungan atau mereset ponsel ini."
   },
   "account": {
     "contactSupport": "Hubungi dukungan"
@@ -326,8 +327,8 @@
     "composerPlaceholder": "Apa yang suka kamu ikuti?",
     "factsCount_one": "{{count}} fakta tentang Anda",
     "factsCount_other": "{{count}} fakta tentang Anda",
-    "noFactsBody": "Tidak apa-apa. Untuk sekarang kamu akan melihat berita utama, dan kamu bisa memberi tahu Mera apa yang kamu suka kapan saja.",
-    "noFactsTitle": "Mulai dengan berita utama?",
+    "noFactsBody": "Mera memakai kotamu untuk mencari berita dari tempat kamu tinggal. Kamu bisa menceritakan lebih banyak tentang dirimu kapan saja.",
+    "noFactsTitle": "Kamu tinggal di mana?",
     "noNotifBody": "Anda tidak akan tahu saat berita Anda siap atau saat cerita yang Anda ikuti berkembang. Anda bisa menyalakannya nanti di Pengaturan.",
     "noNotifTitle": "Gunakan Mera tanpa notifikasi?",
     "notNow": "Nanti saja",
@@ -336,8 +337,6 @@
     "remindTitle": "Kapan Mera harus mengingatkan Anda?",
     "turnOn": "Aktifkan notifikasi",
     "turnThemOn": "Aktifkan",
-    "guardSkip": "Mulai dengan berita utama",
-    "guardAddFact": "Tambahkan sesuatu",
     "sourcesTitle": "Sumber berita mana yang Anda percayai?",
     "sourcesBody": "Ketuk bintang untuk melihat lebih banyak. Ketuk ikon mata untuk menyembunyikan dari umpan Anda. Anda bisa mengubahnya kapan saja di Sumber.",
     "sourcesSkip": "Lewati",
@@ -522,7 +521,7 @@
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
     "errorDescription": "Gagal menghapus data. Silakan coba lagi.",
-    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Fakta Anda disimpan di perangkat ini, bukan di server Mera. Frasa topik dikirim saat Anda mengambil berita dan disimpan di cache pada server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini.",
+    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Tempat yang tersimpan bersama fakta Anda juga dihapus. Tempat yang Anda tambahkan sendiri tetap ada. Fakta Anda disimpan di perangkat ini, bukan di server Mera. Frasa topik dikirim saat Anda mengambil berita dan disimpan di cache pada server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini.",
     "exportHistoryTitle": "Ekspor riwayat bacaan",
     "exportHistoryDescription": "30 hari terakhir sebagai JSON: artikel, publikasi, dan waktu rata-rata dari penerbitan hingga dibaca",
     "exportHistorySubject": "Riwayat bacaan Mera saya (JSON)",
@@ -543,7 +542,7 @@
     "backupHint": "Salinan terenkripsi, agar ponsel baru tidak mulai dari nol",
     "clearHistoryHint": "Di ponsel ini",
     "clearHistoryTitle": "Hapus riwayat baca",
-    "clearProfileHint": "Fakta Anda dan topiknya",
+    "clearProfileHint": "Fakta Anda, topiknya, dan tempat yang tersimpan bersamanya",
     "clearProfileTitle": "Hapus profil",
     "deleteAccountHint": "Akun Anda dan semua yang disimpan Mera di ponsel ini. Langganan toko tetap berjalan sampai Anda membatalkannya di App Store atau Google Play. Tindakan ini tidak dapat dibatalkan.",
     "deleteGroup": "Hapus",
@@ -691,7 +690,9 @@
     "turnNoAnswer": "Saya tidak bisa melakukan itu. Coba tanyakan dengan cara lain.",
     "turnFailed": "Jawaban saya belum selesai. Coba lagi.",
     "tryingAgain": "Mencoba lagi",
-    "factRemovedLine": "Saya menghapus {{facts}} karena tidak menemukan topik berita. Apa yang ingin Anda simpan sebagai gantinya?"
+    "factRemovedLine": "Saya menghapus {{facts}} karena tidak menemukan topik berita. Apa yang ingin Anda simpan sebagai gantinya?",
+    "turnInterrupted": "Balasan Mera berhenti saat Anda keluar dari aplikasi.",
+    "replyUnfinished": "Belum selesai"
   },
   "personaChat": {
     "introMessage": "Hai, aku Mera.\n\nCeritakan sedikit tentang dirimu, seperti kota atau lingkunganmu, jenis pekerjaanmu, atau tim atau hobi yang kamu ikuti, dan aku akan mencarikan berita yang cocok.\n\nBagikan sebanyak atau sesedikit yang kamu mau. Apa yang kamu ceritakan tetap di ponsel ini. Tidak ada yang bisa mengakses datamu selain kamu."
@@ -3096,7 +3097,9 @@
     "resetPhone": "Reset ponsel ini dan masuk lagi",
     "resetTitle": "Reset ponsel ini?",
     "resetBody": "Anda akan keluar dan data Mera di ponsel ini akan dihapus, termasuk yang sudah Anda ceritakan kepada Mera. Akun Anda tidak dihapus, dan model AI yang sudah diunduh tetap ada. Jika Anda menggunakan cadangan, kode pemulihan Anda dapat mengembalikan data Anda.",
-    "resetConfirm": "Reset"
+    "resetConfirm": "Reset",
+    "signIn": "Masuk dengan ponsel ini",
+    "signInBody": "Terjadi masalah saat masuk di ponsel ini. Data Anda di ponsel ini aman. Masuk lagi, atau hubungi dukungan."
   },
   "relatedSort": {
     "relevance": "Kecocokan terbaik",

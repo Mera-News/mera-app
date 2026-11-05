@@ -829,3 +829,90 @@ describe('clearDeviceAuthCredentials (S10: deletion severs, logout preserves)', 
         });
     });
 });
+
+describe('resumeOnly', () => {
+    const notBound = () => rejection(409, 'DEVICE_NOT_BOUND');
+    const resume = () => signInWithDevice({ resumeOnly: true });
+
+    it('sends the literal flag on iOS with the same assertion and a fresh nonce', async () => {
+        await seed({ [KEY_SLOT]: 'key-1' });
+
+        expect((await resume()).status).toBe('success');
+
+        const [body] = await bodiesTo('/device/sign-in/ios');
+        expect(body).toEqual({ keyId: 'key-1', assertion: 'assertion-b64', nonce: body.nonce, resumeOnly: true });
+    });
+
+    it('sends the literal flag on Android and on the dev route', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        await resume();
+        expect((await bodiesTo('/device/sign-in/android'))[0].resumeOnly).toBe(true);
+
+        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+        await resume();
+        expect((await bodiesTo('/device/sign-in/dev'))[0].resumeOnly).toBe(true);
+    });
+
+    it('a plain sign-in never carries it', async () => {
+        await seed({ [KEY_SLOT]: 'key-1' });
+        await signInWithDevice();
+        expect((await bodiesTo('/device/sign-in/ios'))[0]).not.toHaveProperty('resumeOnly');
+    });
+
+    it('409 DEVICE_NOT_BOUND is a quiet not-bound, with no capture', async () => {
+        await seed({ [KEY_SLOT]: 'key-1' });
+        answerInOrder(SIGN_IN('ios'), notBound);
+
+        expect(await resume()).toEqual({ status: 'failed', reason: 'not-bound' });
+
+        expect(countTo('/device/sign-in/ios')).toBe(1);
+        expect(log.captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('with no stored key it enrolls nothing and posts nothing', async () => {
+        expect(await resume()).toEqual({ status: 'failed', reason: 'not-bound' });
+
+        expect(mockAttest.generateKey).not.toHaveBeenCalled();
+        expect(sent).toEqual([]);
+    });
+
+    it('a key the OS lost stays a failure: no new key', async () => {
+        await seed({ [KEY_SLOT]: 'key-1', [PROVEN_SLOT]: 'key-1' });
+        mockAttest.generateAssertion.mockRejectedValue(Object.assign(new Error('gone'), { code: 'ERR_ATTEST_INVALID_KEY' }));
+
+        expect(await resume()).toEqual({ status: 'failed', reason: 'not-bound' });
+
+        expect(mockAttest.generateKey).not.toHaveBeenCalled();
+        expect(dump()[KEY_SLOT]).toBe('key-1');
+    });
+
+    it('a 400 on a virgin key keeps the key: the key recovery is for a tap, not a wake', async () => {
+        await seed({ [KEY_SLOT]: 'key-1' });
+        answerInOrder(SIGN_IN('ios'), () => rejection(400, 'DEVICE_ATTESTATION_FAILED'));
+
+        expect(await resume()).toEqual({ status: 'failed', reason: 'attestation-denied' });
+
+        expect(mockAttest.generateKey).not.toHaveBeenCalled();
+        expect(dump()[KEY_SLOT]).toBe('key-1');
+    });
+
+    it('a 403 refusal severs nothing and does not retry', async () => {
+        await seed({ [KEY_SLOT]: 'key-1', [DEVICE_ID_STORE_KEY]: 'device-1' });
+        answerInOrder(SIGN_IN('ios'), () => rejection(403, 'DEVICE_ATTESTATION_FAILED'));
+
+        expect(await resume()).toEqual({ status: 'failed', reason: 'attestation-denied' });
+
+        expect(countTo('/device/sign-in/ios')).toBe(1);
+        expect(dump()[KEY_SLOT]).toBe('key-1');
+        expect(dump()[DEVICE_ID_STORE_KEY]).toBe('device-1');
+    });
+
+    it('reports a mint to its caller', async () => {
+        await seed({ [KEY_SLOT]: 'key-1' });
+        answerInOrder(SIGN_IN('ios'), () =>
+            HttpResponse.json({ user: { id: OTHER }, trialAvailable: false, minted: true }),
+        );
+
+        expect(await resume()).toMatchObject({ status: 'success', userId: OTHER, minted: true });
+    });
+});

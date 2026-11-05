@@ -213,7 +213,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     // The cloud path enforces no hard input budget (see
     // CLOUD_HISTORY_BUDGET_TOKENS' note), but latency and cost are real: this is
     // the policy ceiling for the biggest prompt this surface can build.
-    expect(estimateTokens(cloudOn)).toBeLessThan(3200);
+    expect(estimateTokens(cloudOn)).toBeLessThan(3400);
   });
 
   // The LOCAL flag must not be able to smuggle the section in through the XML

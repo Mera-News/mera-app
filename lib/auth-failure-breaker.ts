@@ -100,11 +100,12 @@ type DeadReason = 'rejected' | 'no-session';
 // `cookie` in any extra key added here.
 type RecheckBasis =
   | 'present'      // getCookie() returned something: the server really saw it
-  | 'expired'      // nothing sent, but the keychain holds entries - better-auth
+  | 'expired'      // nothing sent, and every stored cookie has lapsed - better-auth
                    // filters expired cookies client-side, so this is a real lapse
   | 'absent'       // nothing sent and nothing stored
   | 'quarantined'  // the install-boundary latch was hiding the sync read
-  | 'unreadable'   // the keychain read rejected (locked / transient)
+  | 'unreadable'   // a keychain read failed (locked / transient): the async read
+                   // rejected, or it found a live cookie the sync read missed
   | 'unknown';     // the probe itself failed; never blocks the verdict
 
 interface AuthErrorLike {
@@ -233,21 +234,36 @@ async function readRecheckBasis(
 
   let raw: string | null;
   try {
-    const { secureStore } =
+    const { CHUNK_MARKER, secureStore } =
       require('./utils/secure-store-adapter') as typeof import('./utils/secure-store-adapter');
     const Constants = (require('expo-constants') as { default?: { expoConfig?: { slug?: string } } })
       .default;
     const slug = Constants?.expoConfig?.slug || 'app';
-    raw = await secureStore.getItemAsync(`${slug}_cookie`);
+    const key = `${slug}_cookie`;
+    raw = await secureStore.getItemAsync(key);
+    // A jar over the per-write limit: the base key holds a marker and a count.
+    if (raw?.startsWith(CHUNK_MARKER)) {
+      const count = Number(raw.slice(CHUNK_MARKER.length));
+      const chunks = await Promise.all(
+        Array.from({ length: count }, (_, i) => secureStore.getItemAsync(`${key}.${i}`)),
+      );
+      // A torn write reads as nothing stored, the same way the expo client reads it.
+      raw = count >= 1 && chunks.every((c) => c !== null) ? chunks.join('') : null;
+    }
   } catch {
     return 'unreadable';
   }
 
   try {
     if (!raw) return 'absent';
-    const parsed = JSON.parse(raw) as Record<string, unknown> | null;
+    const parsed = JSON.parse(raw) as Record<string, { expires?: string | null }> | null;
     if (!parsed || typeof parsed !== 'object') return 'absent';
-    return Object.keys(parsed).length === 0 ? 'absent' : 'expired';
+    const cookies = Object.values(parsed);
+    if (cookies.length === 0) return 'absent';
+    // Nothing went out, yet a cookie the expo client would have sent is stored:
+    // the sync keychain read failed. Same filter as its getCookie.
+    const now = new Date();
+    return cookies.some((c) => !(c.expires && new Date(c.expires) < now)) ? 'unreadable' : 'expired';
   } catch {
     return 'unknown';
   }

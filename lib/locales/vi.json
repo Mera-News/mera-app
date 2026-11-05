@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera cần Google Play trên điện thoại này để đăng nhập cho bạn. Điện thoại không có Google Play chưa được hỗ trợ.",
     "phoneUnsupportedIos": "iPhone này không thể dùng đăng nhập bằng điện thoại.",
     "supportedPhones": "Điện thoại được hỗ trợ",
-    "phoneNotSupported": "Điện thoại này không được hỗ trợ"
+    "phoneNotSupported": "Điện thoại này không được hỗ trợ",
+    "deviceNotBound": "Điện thoại này chưa được liên kết với tài khoản của bạn. Hãy quay lại để liên hệ bộ phận hỗ trợ hoặc đặt lại điện thoại này."
   },
   "account": {
     "contactSupport": "Trò chuyện với bộ phận hỗ trợ"
@@ -326,8 +327,8 @@
     "composerPlaceholder": "Bạn thích theo dõi điều gì?",
     "factsCount_one": "{{count}} dữ kiện về bạn",
     "factsCount_other": "{{count}} dữ kiện về bạn",
-    "noFactsBody": "Không sao. Trước mắt bạn sẽ thấy tin nổi bật, và bạn có thể cho Mera biết mình thích gì bất cứ lúc nào.",
-    "noFactsTitle": "Bắt đầu với tin nổi bật?",
+    "noFactsBody": "Mera dùng thành phố của bạn để tìm tin tức nơi bạn sống. Bạn có thể kể thêm về mình bất cứ lúc nào.",
+    "noFactsTitle": "Bạn sống ở đâu?",
     "noNotifBody": "Bạn sẽ không biết khi tin của mình đã sẵn sàng hoặc khi một câu chuyện bạn theo dõi có diễn biến mới. Bạn có thể bật lại sau trong Cài đặt.",
     "noNotifTitle": "Dùng Mera mà không có thông báo?",
     "notNow": "Để sau",
@@ -336,8 +337,6 @@
     "remindTitle": "Mera nên nhắc bạn lúc nào?",
     "turnOn": "Bật thông báo",
     "turnThemOn": "Bật lên",
-    "guardSkip": "Bắt đầu với tin nổi bật",
-    "guardAddFact": "Thêm gì đó",
     "sourcesTitle": "Bạn tin tưởng những nguồn tin nào?",
     "sourcesBody": "Chạm vào ngôi sao để xem thêm. Chạm vào biểu tượng mắt để ẩn khỏi Bảng tin của bạn. Bạn có thể thay đổi điều này bất cứ lúc nào trong Nguồn.",
     "sourcesSkip": "Bỏ qua",
@@ -522,7 +521,7 @@
     "deletedDescription": "Dữ liệu đã chọn đã được xóa thành công.",
     "errorTitle": "Lỗi",
     "errorDescription": "Không thể xóa dữ liệu. Vui lòng thử lại.",
-    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Dữ kiện của bạn được lưu trên thiết bị này, không phải trên máy chủ của Mera. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này.",
+    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Các địa điểm được lưu cùng dữ kiện của bạn cũng bị xóa. Những địa điểm bạn tự thêm vẫn được giữ lại. Dữ kiện của bạn được lưu trên thiết bị này, không phải trên máy chủ của Mera. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này.",
     "exportHistoryTitle": "Xuất lịch sử đọc",
     "exportHistoryDescription": "30 ngày cuối cùng dưới dạng JSON: bài viết, ấn phẩm và thời gian trung bình từ xuất bản đến đọc",
     "exportHistorySubject": "Lịch sử đọc Mera của tôi (JSON)",
@@ -543,7 +542,7 @@
     "backupHint": "Một bản sao được mã hóa, để điện thoại mới không phải bắt đầu từ con số không",
     "clearHistoryHint": "Trên điện thoại này",
     "clearHistoryTitle": "Xóa lịch sử đọc",
-    "clearProfileHint": "Các dữ kiện của bạn và chủ đề của chúng",
+    "clearProfileHint": "Các dữ kiện của bạn, chủ đề của chúng và những địa điểm được lưu cùng",
     "clearProfileTitle": "Xóa hồ sơ",
     "deleteAccountHint": "Tài khoản của bạn và mọi thứ Mera lưu trên điện thoại này. Gói đăng ký qua cửa hàng vẫn tiếp tục cho đến khi bạn hủy trên App Store hoặc Google Play. Không thể hoàn tác.",
     "deleteGroup": "Xóa",
@@ -691,7 +690,9 @@
     "turnNoAnswer": "Mình không làm được điều đó. Hãy thử hỏi theo cách khác.",
     "turnFailed": "Câu trả lời đó chưa hoàn tất. Hãy thử lại.",
     "tryingAgain": "Đang thử lại",
-    "factRemovedLine": "Mình đã xóa {{facts}} vì không tìm thấy chủ đề tin tức nào. Bạn muốn mình lưu gì thay vào đó?"
+    "factRemovedLine": "Mình đã xóa {{facts}} vì không tìm thấy chủ đề tin tức nào. Bạn muốn mình lưu gì thay vào đó?",
+    "turnInterrupted": "Câu trả lời của Mera đã dừng khi bạn rời ứng dụng.",
+    "replyUnfinished": "Chưa xong"
   },
   "personaChat": {
     "introMessage": "Xin chào, mình là Mera.\n\nHãy kể cho mình nghe một chút về bạn, như thành phố hay khu phố bạn sống, công việc bạn làm, hoặc một đội bóng hay sở thích bạn theo dõi, và mình sẽ tìm tin tức phù hợp.\n\nChia sẻ nhiều hay ít tùy bạn. Những gì bạn kể sẽ ở lại trên điện thoại này. Không ai có quyền truy cập dữ liệu của bạn ngoài bạn."
@@ -3096,7 +3097,9 @@
     "resetPhone": "Đặt lại điện thoại này và đăng nhập lại",
     "resetTitle": "Đặt lại điện thoại này?",
     "resetBody": "Bạn sẽ bị đăng xuất và dữ liệu của Mera trên điện thoại này sẽ bị xóa, bao gồm cả những gì bạn đã kể với Mera. Tài khoản của bạn không bị xóa và các mô hình AI đã tải xuống vẫn được giữ lại. Nếu bạn dùng tính năng sao lưu, mã khôi phục sẽ giúp bạn lấy lại dữ liệu.",
-    "resetConfirm": "Đặt lại"
+    "resetConfirm": "Đặt lại",
+    "signIn": "Đăng nhập bằng điện thoại này",
+    "signInBody": "Đã xảy ra lỗi khi đăng nhập trên điện thoại này. Dữ liệu của bạn trên điện thoại này vẫn an toàn. Hãy đăng nhập lại, hoặc liên hệ bộ phận hỗ trợ."
   },
   "relatedSort": {
     "relevance": "Khớp tốt nhất",

@@ -22,6 +22,7 @@ jest.mock('expo-keep-awake', () => ({
 
 import database from '@/lib/database';
 import { batchMarkExcluded } from '@/lib/database/services/article-suggestion-scoring-writes';
+import { addFact } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import * as persistence from '@/lib/scheduler/feed-sync/feed-sync-persistence';
 import { publishSyncError, publishSyncStatus } from '@/lib/scheduler/feed-sync/feed-sync-status';
@@ -271,6 +272,17 @@ describe('FeedSyncMachine lifecycle', () => {
       expect(store().articleCount).toBe(12);
       expect(feedSyncMachine.state).toBe('done');
     });
+  });
+
+  it('a fact with no topics ends the processing scene, even when the server has nothing', async () => {
+    await addFact('Lives in Delft, Netherlands');
+    server.use(servePersona({}));
+    expect(store().lastProcessingRunFinishedAt).toBeNull();
+
+    await run();
+
+    expect(feedSyncMachine.state).toBe('done');
+    expect(store().lastProcessingRunFinishedAt).not.toBeNull();
   });
 
   describe('a run with nothing new', () => {

@@ -26,6 +26,7 @@ import {
     useFloatingChatUnresolvedCounts,
 } from '@/lib/stores/floating-chat-store';
 import { isOnline, useIsOnline } from '@/lib/stores/network-store';
+import { isSessionRefusedError } from '@/lib/utils/retry';
 import {
     useOnboardingIsInitializing,
     useOnboardingPreferences,
@@ -37,6 +38,7 @@ import { useColors } from '@/lib/theme/tokens';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 import { NextGuardBox } from './NextGuardBox';
 import { markOnboardingDone } from './onboarding-done';
+import OnboardingCityStep from './OnboardingCityStep';
 import OnboardingSourcesStep from './OnboardingSourcesStep';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import { useServerErrorLogout } from './useServerErrorLogout';
@@ -57,7 +59,7 @@ const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
 /** Bound on the mount-time session lookup. */
 const SESSION_LOOKUP_TIMEOUT_MS = 3_000;
 
-type Guard = 'no-facts' | 'no-notifications' | null;
+type Guard = 'no-notifications' | null;
 
 interface OnboardingWizardProps {
     /**
@@ -82,9 +84,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const { setStep, updatePreferences, setIsInitializing, resetOnboarding } = useOnboardingStore();
 
     const [showServerError, setShowServerError] = useState(false);
+    const [sessionRefused, setSessionRefused] = useState(false);
     const { isLoggingOut, handleServerErrorLogout } = useServerErrorLogout(setShowServerError);
     const offline = !useIsOnline();
     const [guard, setGuard] = useState<Guard>(null);
+    // Next with zero facts asks for a city: it is the minimum Mera can personalise with.
+    const [cityOpen, setCityOpen] = useState(false);
     const [notificationsOn, setNotificationsOn] = useState(false);
     const [enableRequest, setEnableRequest] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -156,24 +161,29 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     /** Move on from the current step, past its guard. */
     const advance = useCallback(async () => {
         setGuard(null);
+        if (currentStep === 0) {
+            // For the record only, so it never holds the reader back: the server
+            // stage decides nothing, and the last step writes a later one.
+            void getCurrentUserId()
+                .then((userId) => AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]))
+                .catch(() => undefined);
+            setStep(1);
+            return;
+        }
         // Sources writes nothing to the server, so Skip works offline.
         if (currentStep === 1) {
             setStep(2);
             return;
         }
-        // Offline FIRST: every step below talks to the server.
+        // Offline FIRST: the last step talks to the server.
         if (!isOnline()) {
+            setSessionRefused(false);
             setShowServerError(true);
             return;
         }
         setBusy(true);
         try {
             const userId = await getCurrentUserId();
-            if (currentStep === 0) {
-                await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
-                setStep(1);
-                return;
-            }
             if (userPreferences.notificationHours.length > 0) {
                 await AccountService.updateNotificationPreferences(
                     userId,
@@ -181,14 +191,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 );
             }
             // The push token registers regardless of the visible switch: the
-            // silent-push background cycle needs it.
-            await ensurePushTokenRegistered(userId);
+            // silent-push background cycle needs it. Never awaited: it is total,
+            // push-token-check-task re-registers later, and a slow Expo answer
+            // must not hold the reader back.
+            void ensurePushTokenRegistered(userId);
             void reconcileAppLanguageWithPersona({ userId });
             await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2]);
             await markOnboardingDone();
             resetOnboarding();
             onComplete();
-        } catch {
+        } catch (error) {
+            setSessionRefused(isSessionRefusedError(error));
             setShowServerError(true);
         } finally {
             setBusy(false);
@@ -215,10 +228,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 return;
             }
             if (factCount === 0) {
-                // The keyboard can be up from the chat input: the guard sits near
-                // the bottom and would land behind it.
-                Keyboard.dismiss();
-                setGuard('no-facts');
+                setCityOpen(true);
                 return;
             }
         } else if (currentStep === 2 && !notificationsOn) {
@@ -267,12 +277,22 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         <RNText style={[styles.step, { color: colors.ink3 }]}>
                             {t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
                         </RNText>
-                        {nextButton}
+                        {cityOpen ? null : nextButton}
                     </View>
                 </View>
 
+                {cityOpen ? (
+                    <OnboardingCityStep
+                        onClose={() => setCityOpen(false)}
+                        onDone={() => {
+                            setCityOpen(false);
+                            void advance();
+                        }}
+                    />
+                ) : null}
                 {currentStep === 0 ? (
-                    <>
+                    // Stays mounted under the city step, so a Back keeps the chat as it was.
+                    <View style={[styles.flex, cityOpen && styles.hidden]}>
                         <Animated.View style={[styles.counter, { backgroundColor: colors.surface, borderColor: colors.line }, popStyle]}>
                             <RNText style={[styles.counterText, { color: colors.ink }]} testID="onboarding-facts-count">
                                 {t('onboarding.factsCount', { count: factCount })}
@@ -284,7 +304,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 composerPlaceholder={t('onboarding.composerPlaceholder')}
                             />
                         </View>
-                    </>
+                    </View>
                 ) : currentStep === 1 ? (
                     <OnboardingSourcesStep onHasPicksChange={setHasPicks} />
                 ) : (
@@ -309,16 +329,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 
                 <View style={[styles.guard, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">
                     <NextGuardBox
-                        open={guard === 'no-facts'}
-                        title={t('onboarding.noFactsTitle')}
-                        body={t('onboarding.noFactsBody')}
-                        primaryLabel={t('onboarding.guardAddFact')}
-                        onPrimary={() => setGuard(null)}
-                        secondaryLabel={t('onboarding.guardSkip')}
-                        onSecondary={() => void advance()}
-                        testID="onboarding-guard-facts"
-                    />
-                    <NextGuardBox
                         open={guard === 'no-notifications'}
                         title={t('onboarding.noNotifTitle')}
                         body={t('onboarding.noNotifBody')}
@@ -334,18 +344,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 </View>
             </View>
 
-            {/* A failed request on Next. Log out is destructive (clearAuthStorage),
-                so it is offered only when the server answered and rejected us,
-                never for a connectivity blip. */}
+            {/* A failed request on Next. Log out is destructive (signOutAndWipe),
+                so it is offered only on a real 401 or 403; anything else retries,
+                or just closes while offline. */}
             <ConfirmDialog
                 open={showServerError}
                 title={t('onboarding.connectionIssue')}
                 body={t('onboarding.connectionDescription')}
-                confirmLabel={offline ? t('onboarding.close') : t('onboarding.logout')}
-                destructive={!offline}
+                confirmLabel={sessionRefused ? t('onboarding.logout') : offline ? t('onboarding.close') : t('common.retry')}
+                destructive={sessionRefused}
                 busy={isLoggingOut}
-                onConfirm={() => (offline ? setShowServerError(false) : void handleServerErrorLogout())}
-                onCancel={offline ? undefined : () => setShowServerError(false)}
+                onConfirm={() => {
+                    if (sessionRefused) {
+                        void handleServerErrorLogout();
+                        return;
+                    }
+                    setShowServerError(false);
+                    if (!offline) void advance();
+                }}
+                onCancel={offline && !sessionRefused ? undefined : () => setShowServerError(false)}
                 cancelLabel={t('onboarding.close')}
                 testID="onboarding-server-error"
             />
@@ -356,6 +373,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 const styles = StyleSheet.create({
     root: { flex: 1 },
     flex: { flex: 1 },
+    hidden: { display: 'none' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, minHeight: 44 },
     who: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     name: { fontSize: 16, fontWeight: '700' },

@@ -192,11 +192,109 @@
       "title": "EU AI Office publishes guidance for general-purpose AI models",
       "publication": "Euractiv",
       "description": "The EU AI Office released its guidance on how providers of general-purpose AI models should meet transparency and copyright obligations under the AI Act.",
-      "related": ["Brussels opens first AI Act compliance review"]
+      "related": [
+        "Brussels opens first AI Act compliance review"
+      ]
     },
     "search": [
       "Brussels opens first AI Act compliance review",
       "Tech firms lobby to delay AI Act high-risk rules"
     ]
+  },
+  {
+    "id": "article-open-0",
+    "agent": "article",
+    "message": "Open the article and read it to me",
+    "expect": "answer",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    }
+  },
+  {
+    "id": "article-open-1",
+    "agent": "article",
+    "message": "Summarise this article",
+    "expect": "answer",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    }
+  },
+  {
+    "id": "article-open-2",
+    "agent": "article",
+    "message": "Read the full text for me",
+    "expect": "answer",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    }
+  },
+  {
+    "id": "article-open-3",
+    "agent": "article",
+    "message": "Why can't you open it?",
+    "expect": "answer",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    }
+  },
+  {
+    "id": "article-open-4",
+    "agent": "article",
+    "message": "https://www.nltimes.example/2026/coalition-talks read this",
+    "expect": "answer",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    }
+  },
+  {
+    "id": "article-open-5",
+    "agent": "article",
+    "message": "Why won't you just read the page?",
+    "expect": "answer",
+    "article": {
+      "title": "Dutch coalition talks stall over asylum policy",
+      "publication": "NL Times",
+      "description": "Negotiations to form a new Dutch government stalled on Tuesday after two parties failed to agree on limits to asylum intake, the informateur said.",
+      "related": [
+        "Informateur hands report to Dutch parliament",
+        "Netherlands parties agree on outline coalition deal",
+        "Dutch election winner seeks fourth coalition partner"
+      ]
+    }
   }
 ]

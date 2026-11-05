@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera'nın seni giriş yaptırabilmesi için bu telefonda Google Play gerekir. Google Play olmayan telefonlar desteklenmiyor.",
     "phoneUnsupportedIos": "Bu iPhone telefonla giriş yapamaz.",
     "supportedPhones": "Desteklenen telefonlar",
-    "phoneNotSupported": "Bu telefon desteklenmiyor"
+    "phoneNotSupported": "Bu telefon desteklenmiyor",
+    "deviceNotBound": "Bu telefon hesabınıza bağlı değil. Destekle iletişime geçmek veya bu telefonu sıfırlamak için geri dönün."
   },
   "account": {
     "contactSupport": "Destek ekibiyle görüşün"
@@ -338,8 +339,8 @@
     "composerPlaceholder": "Neleri takip etmeyi seversin?",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
     "factsCount_other": "Hakkınızda {{count}} bilgi",
-    "noFactsBody": "Sorun değil. Şimdilik öne çıkan başlıkları göreceksin, neleri sevdiğini Mera'ya istediğin zaman söyleyebilirsin.",
-    "noFactsTitle": "Öne çıkan başlıklarla başlansın mı?",
+    "noFactsBody": "Mera, yaşadığın yerin haberlerini bulmak için şehrini kullanır. Kendin hakkında daha fazlasını istediğin zaman söyleyebilirsin.",
+    "noFactsTitle": "Nerede yaşıyorsun?",
     "noNotifBody": "Haberleriniz hazır olduğunda ya da takip ettiğiniz bir haber değiştiğinde haber almazsınız. Bunları daha sonra Ayarlar'dan açabilirsiniz.",
     "noNotifTitle": "Mera bildirimsiz kullanılsın mı?",
     "notNow": "Şimdi değil",
@@ -348,8 +349,6 @@
     "remindTitle": "Mera sizi ne zaman hatırlatsın?",
     "turnOn": "Bildirimleri aç",
     "turnThemOn": "Açın",
-    "guardSkip": "Başlıklarla başla",
-    "guardAddFact": "Bir şey ekle",
     "sourcesTitle": "Hangi haber kaynaklarına güveniyorsunuz?",
     "sourcesBody": "Daha fazlasını görmek için yıldıza dokunun. Bir kaynağı Akışınızdan gizlemek için göze dokunun. Bunu istediğiniz zaman Kaynaklar bölümünden değiştirebilirsiniz.",
     "sourcesSkip": "Atla",
@@ -535,7 +534,7 @@
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
     "errorDescription": "Veriler silinemedi. Lütfen tekrar dene.",
-    "factsModalDescription": "Eklediğin gerçekleri ve onlardan üretilen konuları siler. Gerçeklerin bu cihazda saklanır, Mera'nın sunucularında değil. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır, bu yüzden orada bunların sana ait olduğunu gösteren bir kayıt yoktur. Haber akışın da temizlenir, çünkü bu konulardan oluşturulur.",
+    "factsModalDescription": "Eklediğin gerçekleri ve onlardan üretilen konuları siler. Gerçeklerinle birlikte kaydedilen yerler de silinir. Kendin eklediğin yerler kalır. Gerçeklerin bu cihazda saklanır, Mera'nın sunucularında değil. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır, bu yüzden orada bunların sana ait olduğunu gösteren bir kayıt yoktur. Haber akışın da temizlenir, çünkü bu konulardan oluşturulur.",
     "exportHistoryTitle": "Okuma geçmişini dışa aktar",
     "exportHistoryDescription": "Son 30 gün JSON olarak: makaleler, yayınlar ve ortalama yayından okumasına kadar süre",
     "exportHistorySubject": "Mera okuma geçmişim (JSON)",
@@ -556,7 +555,7 @@
     "backupHint": "Şifreli bir kopya, yeni telefon sıfırdan başlamasın diye",
     "clearHistoryHint": "Bu telefonda",
     "clearHistoryTitle": "Okuma geçmişini temizle",
-    "clearProfileHint": "Bilgileriniz ve konuları",
+    "clearProfileHint": "Bilgileriniz, konuları ve onlarla kaydedilen yerler",
     "clearProfileTitle": "Profili temizle",
     "deleteAccountHint": "Hesabın ve Mera'nın bu telefonda tuttuğu her şey. Mağaza aboneliği, App Store'dan veya Google Play'den iptal edene kadar devam eder. Bu geri alınamaz.",
     "deleteGroup": "Sil",
@@ -705,7 +704,9 @@
     "turnNoAnswer": "Bunu yapamadım. Başka bir şekilde sormayı dene.",
     "turnFailed": "Bu cevap tamamlanamadı. Tekrar dene.",
     "tryingAgain": "Tekrar deneniyor",
-    "factRemovedLine": "Haber konusu bulamadığım için şunları kaldırdım: {{facts}}. Bunun yerine ne kaydetmemi istersin?"
+    "factRemovedLine": "Haber konusu bulamadığım için şunları kaldırdım: {{facts}}. Bunun yerine ne kaydetmemi istersin?",
+    "turnInterrupted": "Uygulamadan çıktığınızda Mera'nın yanıtı durdu.",
+    "replyUnfinished": "Tamamlanmadı"
   },
   "personaChat": {
     "introMessage": "Merhaba, ben Mera.\n\nBana biraz kendinden bahset: yaşadığın şehir ya da semt, yaptığın iş ya da takip ettiğin bir takım veya hobi gibi. Sana uygun haberleri bulayım.\n\nİstediğin kadar paylaş. Bana anlattıkların bu telefonda kalır. Verilerine senden başka kimse erişemez."
@@ -3119,7 +3120,9 @@
     "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
     "resetTitle": "Bu telefon sıfırlansın mı?",
     "resetBody": "Oturumunuz kapatılır ve Mera'ya anlattıklarınız dahil bu telefondaki Mera verileri silinir. Hesabınız silinmez ve indirilen yapay zeka modelleri kalır. Yedekleme kullanıyorsanız verilerinizi kurtarma kodunuzla geri alabilirsiniz.",
-    "resetConfirm": "Sıfırla"
+    "resetConfirm": "Sıfırla",
+    "signIn": "Bu telefonla giriş yap",
+    "signInBody": "Bu telefonda giriş yaparken bir sorun oluştu. Bu telefondaki verileriniz güvende. Yeniden giriş yapın veya destekle iletişime geçin."
   },
   "relatedSort": {
     "relevance": "En iyi eşleşme",

@@ -549,7 +549,8 @@ describe('the bounded loop', () => {
     expect(out.routeKind).toBe('residence');
     // The loaded body becomes the NEXT leg's system prompt.
     expect(calls[0].systemPrompt).toContain('You are Mera');
-    expect(calls[1].systemPrompt.startsWith('RESIDENCE SKILL BODY')).toBe(true);
+    expect(calls[1].systemPrompt).toContain('You do not open a page or read an article.');
+    expect(calls[1].systemPrompt.includes('RESIDENCE SKILL BODY')).toBe(true);
   });
 
   it('CLAMPS at the leg bound on DISTINCT forcing calls, and never throws', async () => {

@@ -18,6 +18,7 @@ export default class Message extends Model {
   @field('conversation_id') conversationId!: string;
   @field('role') role!: string;
   @field('content') content!: string;
+  /** Holds only conversation-service's failed mark now. */
   @field('suggested_options_json') suggestedOptionsJson!: string | null;
   @field('tool_calls_json') toolCallsJson!: string | null;
   @date('created_at') createdAt!: Date;

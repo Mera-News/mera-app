@@ -26,8 +26,14 @@ export interface PersistedMessage {
   content: string;
   /** Parsed from tool_calls_json; null when absent or unparseable. */
   toolCalls: ToolCallRecord[] | null;
+  /** The turn failed with this text on screen. */
+  failed?: boolean;
   createdAt: number;
 }
+
+/** In `suggested_options_json`, which nothing else reads or writes: a dedicated
+ *  column is a schema bump, and a rollback past a bump wipes the database. */
+const FAILED_MARK = '{"failed":true}';
 
 export interface MessageCursor {
   createdAt: number;
@@ -57,6 +63,7 @@ function toPersistedMessage(record: MessageModel): PersistedMessage {
     role: record.role as MessageRole,
     content: record.content,
     toolCalls: parseToolCalls(record.toolCallsJson),
+    failed: record.suggestedOptionsJson === FAILED_MARK,
     createdAt: record.createdAt.getTime(),
   };
 }
@@ -99,7 +106,7 @@ export async function createConversation(surface: ConversationSurface): Promise<
  */
 export async function appendMessage(
   conversationId: string,
-  msg: { role: MessageRole; content: string; toolCalls?: ToolCallRecord[] },
+  msg: { role: MessageRole; content: string; toolCalls?: ToolCallRecord[]; failed?: boolean },
   explicitId?: string,
 ): Promise<string> {
   // ALREADY THERE IS NOT AN ERROR. The caller's in-memory "already persisted"
@@ -136,6 +143,7 @@ export async function appendMessage(
       m.content = msg.content;
       m.toolCallsJson =
         msg.toolCalls && msg.toolCalls.length > 0 ? JSON.stringify(msg.toolCalls) : null;
+      m.suggestedOptionsJson = msg.failed ? FAILED_MARK : null;
     });
     createdId = record.id;
   });
@@ -155,6 +163,14 @@ export async function appendMessage(
  * turn finalises, so a very fast tap can land first. `useChatPersistence` merges
  * the override in at write time for exactly that case, and this call no-ops.
  */
+/** Removes one message. A missing row is not an error. */
+export async function deleteMessage(id: string): Promise<void> {
+  await database.write(async () => {
+    const row = await messagesCol.find(id).catch(() => null);
+    await row?.destroyPermanently();
+  });
+}
+
 export async function patchMessageToolCallResult(
   messageId: string,
   toolCallIndex: number,

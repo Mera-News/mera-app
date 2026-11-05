@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "梅拉需要這支手機上有 Google Play 才能為你登入。不支援沒有 Google Play 的手機。",
     "phoneUnsupportedIos": "這支 iPhone 無法使用手機登入。",
     "supportedPhones": "支援的手機",
-    "phoneNotSupported": "這支手機不支援"
+    "phoneNotSupported": "這支手機不支援",
+    "deviceNotBound": "這支手機未連結你的帳號。請返回聯絡支援團隊，或重設這支手機。"
   },
   "account": {
     "contactSupport": "聯絡支援團隊"
@@ -326,8 +327,8 @@
     "composerPlaceholder": "你喜歡關注什麼？",
     "factsCount_one": "關於你的 {{count}} 項事實",
     "factsCount_other": "關於你的 {{count}} 項事實",
-    "noFactsBody": "沒問題。現在先為你顯示頭條新聞，你隨時都可以告訴梅拉你喜歡什麼。",
-    "noFactsTitle": "先從頭條新聞開始？",
+    "noFactsBody": "梅拉會根據你所在的城市尋找當地新聞。你隨時都可以告訴梅拉更多關於你的資訊。",
+    "noFactsTitle": "你住在哪裡？",
     "noNotifBody": "新聞準備好或你追蹤的報導有進展時，你不會收到通知。之後可以在設定中開啟。",
     "noNotifTitle": "不開啟通知也要使用梅拉嗎？",
     "notNow": "暫不",
@@ -336,8 +337,6 @@
     "remindTitle": "梅拉應該何時提醒你？",
     "turnOn": "開啟通知",
     "turnThemOn": "開啟通知",
-    "guardSkip": "從頭條開始",
-    "guardAddFact": "新增內容",
     "sourcesTitle": "你信任哪些新聞來源？",
     "sourcesBody": "輕點星號即可看到更多。輕點眼睛圖示，即可從你的資訊流中隱藏。你隨時可以在「來源」中更改。",
     "sourcesSkip": "略過",
@@ -522,7 +521,7 @@
     "deletedDescription": "所選資料已成功清除。",
     "errorTitle": "錯誤",
     "errorDescription": "資料刪除失敗，請再試一次。",
-    "factsModalDescription": "清除你新增的事實以及由此產生的主題。你的事實儲存在這支裝置上，而不是梅拉的伺服器。主題短語會在你取得新聞時送出，並在我們的伺服器上快取，不附帶使用者 ID，因此那裡沒有任何紀錄顯示它們屬於你。你的文章列表也會一併清空，因為它由這些主題建立。",
+    "factsModalDescription": "清除你新增的事實以及由此產生的主題。與事實一併儲存的地點也會清除。你手動新增的地點會保留。你的事實儲存在這支裝置上，而不是梅拉的伺服器。主題短語會在你取得新聞時送出，並在我們的伺服器上快取，不附帶使用者 ID，因此那裡沒有任何紀錄顯示它們屬於你。你的文章列表也會一併清空，因為它由這些主題建立。",
     "exportHistoryTitle": "匯出閱讀歷史",
     "exportHistoryDescription": "過去30天的JSON：文章、出版商和發佈後到閱讀的平均時間",
     "exportHistorySubject": "我的梅拉閱讀紀錄（JSON）",
@@ -543,7 +542,7 @@
     "backupHint": "加密副本，讓新手機不必從零開始",
     "clearHistoryHint": "在這支手機上",
     "clearHistoryTitle": "清除閱讀紀錄",
-    "clearProfileHint": "你的事實與它們的主題",
+    "clearProfileHint": "你的事實、它們的主題以及一併儲存的地點",
     "clearProfileTitle": "清除個人資料",
     "deleteAccountHint": "你的帳號，以及梅拉在這支手機上保存的所有內容。商店訂閱會持續到你在 App Store 或 Google Play 取消為止。此操作無法復原。",
     "deleteGroup": "刪除",
@@ -691,7 +690,9 @@
     "turnNoAnswer": "我無法做到。請換個方式問我。",
     "turnFailed": "這個回覆沒有完成。請再試一次。",
     "tryingAgain": "正在再試一次",
-    "factRemovedLine": "我找不到相關的新聞主題，所以移除了{{facts}}。你希望我改存什麼呢？"
+    "factRemovedLine": "我找不到相關的新聞主題，所以移除了{{facts}}。你希望我改存什麼呢？",
+    "turnInterrupted": "你離開應用程式後,梅拉的回覆已中斷。",
+    "replyUnfinished": "未完成"
   },
   "personaChat": {
     "introMessage": "嗨，我是梅拉。\n\n跟我聊聊你自己吧，例如你住的城市或街區、你從事的工作類型，或是你關注的球隊或嗜好，我會幫你找到合適的新聞。\n\n想分享多少都可以。你告訴我的內容都保存在這支手機上。除了你，沒有人能存取你的資料。"
@@ -3096,7 +3097,9 @@
     "resetPhone": "重設這支手機並重新登入",
     "resetTitle": "要重設這支手機嗎？",
     "resetBody": "這會讓你登出，並清除梅拉在這支手機上的資料，包括你告訴梅拉的內容。你的帳號不會被刪除，已下載的 AI 模型也會保留。如果你使用了備份，可以用復原代碼找回資料。",
-    "resetConfirm": "重設"
+    "resetConfirm": "重設",
+    "signIn": "使用這支手機登入",
+    "signInBody": "在這支手機上登入時出了問題。這支手機上的資料很安全。請重新登入，或聯絡支援團隊。"
   },
   "relatedSort": {
     "relevance": "最符合",

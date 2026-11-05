@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera braucht Google Play auf diesem Telefon, um dich anzumelden. Telefone ohne Google Play werden nicht unterstützt.",
     "phoneUnsupportedIos": "Dieses iPhone kann die Anmeldung mit Telefon nicht nutzen.",
     "supportedPhones": "Unterstützte Telefone",
-    "phoneNotSupported": "Dieses Telefon wird nicht unterstützt"
+    "phoneNotSupported": "Dieses Telefon wird nicht unterstützt",
+    "deviceNotBound": "Dieses Telefon ist nicht mit deinem Konto verknüpft. Geh zurück, um dich an den Support zu wenden oder dieses Telefon zurückzusetzen."
   },
   "account": {
     "contactSupport": "Mit dem Support sprechen"
@@ -338,8 +339,8 @@
     "composerPlaceholder": "Was verfolgst du gern?",
     "factsCount_one": "{{count}} Fakt über dich",
     "factsCount_other": "{{count}} Fakten über dich",
-    "noFactsBody": "Kein Problem. Du siehst vorerst die Top-Schlagzeilen und kannst Mera jederzeit sagen, was dich interessiert.",
-    "noFactsTitle": "Mit Top-Schlagzeilen starten?",
+    "noFactsBody": "Mera nutzt deine Stadt, um Nachrichten aus deiner Gegend zu finden. Du kannst Mera jederzeit mehr über dich erzählen.",
+    "noFactsTitle": "Wo wohnst du?",
     "noNotifBody": "Du erfährst nicht, wann deine Nachrichten bereit sind oder wann sich eine Geschichte, der du folgst, weiterentwickelt. Du kannst die Benachrichtigungen später in den Einstellungen einschalten.",
     "noNotifTitle": "Mera ohne Benachrichtigungen verwenden?",
     "notNow": "Nicht jetzt",
@@ -348,8 +349,6 @@
     "remindTitle": "Wann soll Mera dich erinnern?",
     "turnOn": "Benachrichtigungen einschalten",
     "turnThemOn": "Einschalten",
-    "guardSkip": "Mit Schlagzeilen starten",
-    "guardAddFact": "Etwas hinzufügen",
     "sourcesTitle": "Welchen Nachrichtenquellen vertraust du?",
     "sourcesBody": "Tippe auf den Stern, um mehr zu sehen. Tippe auf das Auge, um eine Quelle aus deinen Nachrichten auszublenden. Das kannst du jederzeit unter Quellen ändern.",
     "sourcesSkip": "Überspringen",
@@ -535,7 +534,7 @@
     "deletedDescription": "Die ausgewählten Daten wurden erfolgreich gelöscht.",
     "errorTitle": "Fehler",
     "errorDescription": "Daten konnten nicht gelöscht werden. Versuche es erneut.",
-    "factsModalDescription": "Löscht die von dir hinzugefügten Fakten und die daraus erzeugten Themen. Deine Fakten sind auf diesem Gerät gespeichert, nicht auf den Servern von Mera. Themenphrasen werden beim Abruf von Nachrichten gesendet und auf unseren Servern ohne Nutzerkennung zwischengespeichert. Dort ist also nirgends festgehalten, dass sie von dir kamen. Dein Artikel-Feed wird ebenfalls geleert, da er auf diesen Themen beruht.",
+    "factsModalDescription": "Löscht die von dir hinzugefügten Fakten und die daraus erzeugten Themen. Auch die mit deinen Fakten gespeicherten Orte werden gelöscht. Orte, die du selbst hinzugefügt hast, bleiben. Deine Fakten sind auf diesem Gerät gespeichert, nicht auf den Servern von Mera. Themenphrasen werden beim Abruf von Nachrichten gesendet und auf unseren Servern ohne Nutzerkennung zwischengespeichert. Dort ist also nirgends festgehalten, dass sie von dir kamen. Dein Artikel-Feed wird ebenfalls geleert, da er auf diesen Themen beruht.",
     "exportHistoryTitle": "Leseverlauf exportieren",
     "exportHistoryDescription": "Letzte 30 Tage als JSON: Artikel, Veröffentlichungen und durchschnittliche Zeit von Veröffentlichung bis Lesedatum",
     "exportHistorySubject": "Mein Mera-Leseverlauf (JSON)",
@@ -556,7 +555,7 @@
     "backupHint": "Eine verschlüsselte Kopie, damit ein neues Telefon nicht bei null anfängt",
     "clearHistoryHint": "Auf diesem Telefon",
     "clearHistoryTitle": "Leseverlauf löschen",
-    "clearProfileHint": "Deine Fakten und deren Themen",
+    "clearProfileHint": "Deine Fakten, deren Themen und die damit gespeicherten Orte",
     "clearProfileTitle": "Profil leeren",
     "deleteAccountHint": "Dein Konto und alles, was Mera auf diesem Telefon speichert. Ein Abo über den Store läuft weiter, bis du es im App Store oder bei Google Play kündigst. Das kann nicht rückgängig gemacht werden.",
     "deleteGroup": "Löschen",
@@ -705,7 +704,9 @@
     "turnNoAnswer": "Das konnte ich nicht. Frag noch einmal anders.",
     "turnFailed": "Meine Antwort ist nicht fertig geworden. Versuch es erneut.",
     "tryingAgain": "Wird erneut versucht",
-    "factRemovedLine": "Ich habe {{facts}} entfernt, weil ich dazu keine Nachrichtenthemen finden konnte. Was soll ich dir stattdessen speichern?"
+    "factRemovedLine": "Ich habe {{facts}} entfernt, weil ich dazu keine Nachrichtenthemen finden konnte. Was soll ich dir stattdessen speichern?",
+    "turnInterrupted": "Meras Antwort wurde unterbrochen, als du die App verlassen hast.",
+    "replyUnfinished": "Nicht fertig"
   },
   "personaChat": {
     "introMessage": "Hallo, ich bin Mera.\n\nErzähl mir ein bisschen von dir, zum Beispiel deine Stadt oder dein Viertel, was du beruflich machst oder ein Team oder Hobby, dem du folgst, und ich finde passende Nachrichten.\n\nTeile so viel oder so wenig, wie du möchtest. Was du mir erzählst, bleibt auf diesem Handy. Niemand außer dir hat Zugriff auf deine Daten."
@@ -3117,7 +3118,9 @@
     "resetPhone": "Telefon zurücksetzen und neu anmelden",
     "resetTitle": "Dieses Telefon zurücksetzen?",
     "resetBody": "Du wirst abgemeldet und die Daten von Mera auf diesem Telefon werden gelöscht, auch alles, was du Mera erzählt hast. Dein Konto wird nicht gelöscht und heruntergeladene KI-Modelle bleiben erhalten. Wenn du Backups nutzt, holst du deine Daten mit deinem Wiederherstellungscode zurück.",
-    "resetConfirm": "Zurücksetzen"
+    "resetConfirm": "Zurücksetzen",
+    "signIn": "Mit diesem Telefon anmelden",
+    "signInBody": "Beim Anmelden auf diesem Telefon ist etwas schiefgelaufen. Deine Daten auf diesem Telefon sind sicher. Melde dich neu an oder wende dich an den Support."
   },
   "relatedSort": {
     "relevance": "Beste Übereinstimmung",

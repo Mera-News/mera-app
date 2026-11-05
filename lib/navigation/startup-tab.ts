@@ -16,7 +16,9 @@
 // new value restored onto an older build falls back to its default, and there
 // is no migration to run twice.
 
+import { hasAnyFacts } from '@/lib/database/services/fact-service';
 import { getSetting } from '@/lib/database/services/setting-service';
+import { countActiveTopicsIncludingStaged } from '@/lib/database/services/topic-service';
 
 export const STARTUP_TAB_SETTING_KEY = 'startup_tab';
 
@@ -43,13 +45,19 @@ export function parseStartupTab(raw: string | null | undefined): StartupTab {
 }
 
 /**
- * Which tab route should open on launch. FAILS to the default ('feed') on an
- * unreadable setting: there is no wrong side to fail toward here, so it
- * collapses to "behave as if the user never set a preference."
+ * Which tab route should open on launch: a stored pick, else World for a reader
+ * with no facts and no topics (their Feed has nothing to fetch), else the
+ * default. Read at cold launch only, straight from the DB, so no tab flashes.
+ * FAILS to the default ('feed') on an unreadable setting: there is no wrong side
+ * to fail toward here, so it collapses to "behave as if the user never set a
+ * preference."
  */
 export async function readStartupTab(): Promise<StartupTab> {
   try {
-    return parseStartupTab(await getSetting(STARTUP_TAB_SETTING_KEY));
+    const stored = await getSetting(STARTUP_TAB_SETTING_KEY);
+    if (stored) return parseStartupTab(stored);
+    if (!(await hasAnyFacts()) && (await countActiveTopicsIncludingStaged()) === 0) return 'world';
+    return STARTUP_TAB_DEFAULT;
   } catch {
     return STARTUP_TAB_DEFAULT;
   }

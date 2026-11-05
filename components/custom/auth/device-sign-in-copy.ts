@@ -45,6 +45,8 @@ export function deviceFailureKey(reason: DeviceSignInFailureReason) {
             return 'auth.phoneCheckTemporary' as const;
         case 'attestation-denied':
             return 'auth.deviceSignInDenied' as const;
+        case 'not-bound':
+            return 'auth.deviceNotBound' as const;
         default:
             return 'auth.deviceSignInFailed' as const;
     }

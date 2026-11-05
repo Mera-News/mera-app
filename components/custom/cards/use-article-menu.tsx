@@ -766,7 +766,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                             testID="track-locked-see-plans"
                             label={t('freeTier.seePlans')}
                             icon="workspace-premium"
-                            onPress={() => closeThen(() => void follow.seePlans())}
+                            onPress={() => closeThen(follow.seePlans)}
                         />
                     </>
                 );

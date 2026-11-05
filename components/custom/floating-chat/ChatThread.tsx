@@ -285,6 +285,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   {t('chat.stopped')}
                 </Text>
               ) : null}
+              {message.failed ? (
+                <Text size="xs" style={styles.stoppedLine} testID="chat-unfinished">
+                  {t('chat.replyUnfinished')}
+                </Text>
+              ) : null}
             </Message>
           );
         // Only animate in live-session bubbles; history pages load without

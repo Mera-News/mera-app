@@ -130,6 +130,7 @@ function shapeEntry(entry: WebSearchBatchEntry, maxResults: number) {
 
 export async function handleWebSearch(
   args: Record<string, unknown>,
+  stop?: AbortSignal,
 ): Promise<Record<string, unknown>> {
   // GATE 2 — first statement, no await before it. See the header.
   if (!useMeraProtocolStore.getState().webSearchInChat) {
@@ -150,7 +151,7 @@ export async function handleWebSearch(
   // answer confidently from results for a question it did not ask. The client's
   // own length check refuses it instead, with a "rewrite it and try once more"
   // the model can actually act on.
-  const outcome = await searchWebBatch(queries);
+  const outcome = await searchWebBatch(queries, stop);
   if (!outcome.ok) {
     return { error: outcome.error, searched: false };
   }

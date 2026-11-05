@@ -5,7 +5,7 @@
 //
 // The no-churn contract is first-class here: a fact is sent only when its place is due, a user's place
 // is never sent, and two runs over an unchanged persona send and write nothing.
-import { addFact, getFacts, markFactPlacesWrong, setFactPlaces } from '@/lib/database/services/fact-service';
+import { addFact, deleteAllFacts, getFacts, markFactPlacesWrong, setFactPlaces } from '@/lib/database/services/fact-service';
 import { GEO_SWEEP_COOLDOWN_MS, runGeoDerivationSweep } from '@/lib/database/services/geo-derivation-service';
 import * as locationService from '@/lib/database/services/location-service';
 import { getRecent } from '@/lib/database/services/persona-change-log-service';
@@ -312,6 +312,17 @@ describe('guards', () => {
   it('skips with no facts', async () => {
     expect(await sweep()).toMatchObject({ ran: false, reason: 'no_facts' });
     expect(await getSetting(LAST_RUN)).toBeNull();
+  });
+
+  it('a fingerprint frozen by a cleared profile does not stop the same city being derived again', async () => {
+    await facts(AMSTERDAM);
+    await sweep({ now: T0 });
+    await deleteAllFacts();
+    expect(await sweep({ now: T0, force: true })).toMatchObject({ ran: false, reason: 'no_facts' });
+    expect(await getSetting(FINGERPRINT)).not.toBeNull();
+
+    await facts(AMSTERDAM);
+    expect(await sweep({ now: T0, force: true })).toMatchObject({ ran: true, added: 1 });
   });
 
   it('`force` bypasses the cooldown but not the no-churn check; a changed fact set runs again', async () => {

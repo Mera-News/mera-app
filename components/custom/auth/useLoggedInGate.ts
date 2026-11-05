@@ -17,6 +17,7 @@ import {
     resolveIdentity,
 } from "@/lib/security/identity-gate";
 import { wipeAllLocalUserData } from "@/lib/security/local-wipe";
+import { resumeDeadSession, whenForeground } from "@/lib/session-resume";
 import { useUserStore } from "@/lib/stores/user-store";
 import { probeInternetReachable, probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
@@ -470,8 +471,26 @@ export function useLoggedInGate() {
                 });
                 if (cancelled) return;
                 if (gateVerdict === 'reauth') {
-                    router.replace({ pathname: '/login', params: { reauth: '1' } });
-                    return;
+                    // Before the sign-in gate: the phone's key can usually bring the
+                    // session back. A launch in the background waits for the reader.
+                    await whenForeground();
+                    if (cancelled) return;
+                    let capTimer: ReturnType<typeof setTimeout> | undefined;
+                    const resumed = await Promise.race([
+                        resumeDeadSession(),
+                        new Promise<boolean>((resolve) => {
+                            capTimer = setTimeout(() => resolve(false), LAUNCH_ACCOUNT_CHECK_CAP_MS);
+                        }),
+                    ]);
+                    clearTimeout(capTimer);
+                    // Past `cancelled` on purpose: a refused account's session lands
+                    // in the atom and re-runs this gate, and that run stops at the
+                    // account-switch hold with nothing else to route the reader.
+                    if (!resumed) {
+                        router.replace({ pathname: '/login', params: { reauth: '1' } });
+                        return;
+                    }
+                    if (cancelled) return;
                 }
                 if (gateVerdict === 'offline' || gateVerdict === 'unreachable') {
                     setGate(gateVerdict);

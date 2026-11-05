@@ -12,7 +12,8 @@ import { toastManager } from '@/lib/toast-manager';
 
 /**
  * "There's a problem with your account" (the auth screen's reauth-no-email
- * stage) has exactly two ways out (owner, 2026-10-21):
+ * stage). Sign in with this phone is the auth screen's own step to consent;
+ * these are the other two ways out:
  *
  * - Contact support: the one support path (Intercom, else mail). Signed out,
  *   Intercom cannot mint an identity, so it opens mail with the Support ID.

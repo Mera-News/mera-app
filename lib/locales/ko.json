@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "메라에 로그인하려면 이 휴대폰에 Google Play가 필요합니다. Google Play가 없는 휴대폰은 지원되지 않습니다.",
     "phoneUnsupportedIos": "이 iPhone에서는 휴대폰 로그인을 사용할 수 없습니다.",
     "supportedPhones": "지원되는 휴대폰",
-    "phoneNotSupported": "이 휴대폰은 지원되지 않습니다"
+    "phoneNotSupported": "이 휴대폰은 지원되지 않습니다",
+    "deviceNotBound": "이 휴대폰은 계정에 연결되어 있지 않습니다. 돌아가서 지원팀에 문의하거나 이 휴대폰을 초기화하세요."
   },
   "account": {
     "contactSupport": "지원팀에 문의"
@@ -326,8 +327,8 @@
     "composerPlaceholder": "어떤 소식을 챙겨 보고 싶으세요?",
     "factsCount_one": "회원님에 대한 사실 {{count}}개",
     "factsCount_other": "회원님에 대한 사실 {{count}}개",
-    "noFactsBody": "괜찮아요. 지금은 주요 헤드라인을 보여 드리고, 좋아하는 것은 언제든 메라에게 알려 주시면 됩니다.",
-    "noFactsTitle": "주요 헤드라인으로 시작할까요?",
+    "noFactsBody": "메라는 도시 정보를 사용해 사는 곳의 뉴스를 찾습니다. 자신에 대한 내용은 언제든 더 알려 주시면 됩니다.",
+    "noFactsTitle": "어디에 사시나요?",
     "noNotifBody": "뉴스가 준비되었을 때나 팔로우한 스토리에 변화가 있을 때 알림을 받지 못합니다. 나중에 설정에서 켤 수 있습니다.",
     "noNotifTitle": "알림 없이 메라를 사용할까요?",
     "notNow": "나중에",
@@ -336,8 +337,6 @@
     "remindTitle": "언제 메라가 알려 드릴까요?",
     "turnOn": "알림 켜기",
     "turnThemOn": "켜기",
-    "guardSkip": "헤드라인으로 시작",
-    "guardAddFact": "추가하기",
     "sourcesTitle": "어떤 뉴스 소스를 신뢰하세요?",
     "sourcesBody": "별표를 누르면 더 많이 볼 수 있어요. 눈 아이콘을 누르면 내 피드에서 숨길 수 있어요. 설정은 언제든지 소스에서 바꿀 수 있어요.",
     "sourcesSkip": "건너뛰기",
@@ -522,7 +521,7 @@
     "deletedDescription": "선택한 데이터가 성공적으로 삭제되었습니다.",
     "errorTitle": "오류",
     "errorDescription": "데이터를 삭제하지 못했습니다. 다시 시도해 주세요.",
-    "factsModalDescription": "추가한 사실과 거기서 생성된 주제를 지웁니다. 사실은 메라 서버가 아니라 이 기기에 저장됩니다. 주제 문구는 뉴스를 가져올 때 전송되어 사용자 ID 없이 저희 서버에 캐시되므로, 그것이 회원님의 것이었다는 기록은 어디에도 남지 않습니다. 기사 피드도 이 주제들로 만들어지므로 함께 지워집니다.",
+    "factsModalDescription": "추가한 사실과 거기서 생성된 주제를 지웁니다. 사실과 함께 저장된 장소도 지워집니다. 직접 추가한 장소는 그대로 남습니다. 사실은 메라 서버가 아니라 이 기기에 저장됩니다. 주제 문구는 뉴스를 가져올 때 전송되어 사용자 ID 없이 저희 서버에 캐시되므로, 그것이 회원님의 것이었다는 기록은 어디에도 남지 않습니다. 기사 피드도 이 주제들로 만들어지므로 함께 지워집니다.",
     "exportHistoryTitle": "읽기 기록 내보내기",
     "exportHistoryDescription": "지난 30일간 JSON으로 표시: 기사, 발행사, 발행부터 읽음까지의 평균 시간",
     "exportHistorySubject": "내 메라 읽기 기록(JSON)",
@@ -543,7 +542,7 @@
     "backupHint": "암호화된 사본입니다. 새 휴대폰을 처음부터 시작하지 않아도 됩니다.",
     "clearHistoryHint": "이 휴대폰에 있는 기록",
     "clearHistoryTitle": "열람 기록 지우기",
-    "clearProfileHint": "회원님의 사실과 그 토픽",
+    "clearProfileHint": "회원님의 사실, 그 토픽, 함께 저장된 장소",
     "clearProfileTitle": "프로필 지우기",
     "deleteAccountHint": "계정과 메라가 이 휴대폰에 보관하는 모든 것이 삭제됩니다. 스토어 구독은 App Store 또는 Google Play에서 해지할 때까지 계속 유지됩니다. 이 작업은 되돌릴 수 없습니다.",
     "deleteGroup": "삭제",
@@ -691,7 +690,9 @@
     "turnNoAnswer": "제가 그 일을 할 수 없었어요. 다른 방식으로 물어봐 주세요.",
     "turnFailed": "그 답변이 끝나지 않았어요. 다시 시도하세요.",
     "tryingAgain": "다시 시도하는 중",
-    "factRemovedLine": "뉴스 토픽을 찾지 못해서 제가 이 내용을 삭제했어요: {{facts}}. 대신 어떤 내용을 저장할까요?"
+    "factRemovedLine": "뉴스 토픽을 찾지 못해서 제가 이 내용을 삭제했어요: {{facts}}. 대신 어떤 내용을 저장할까요?",
+    "turnInterrupted": "앱을 나가서 메라의 답변이 중단되었습니다.",
+    "replyUnfinished": "완료되지 않음"
   },
   "personaChat": {
     "introMessage": "안녕하세요, 메라입니다.\n\n사는 도시나 동네, 하는 일의 분야, 응원하는 팀이나 취미처럼 간단한 것부터 알려 주세요. 잘 맞는 뉴스를 찾아 드릴게요.\n\n원하는 만큼만 알려 주세요. 알려 주신 내용은 이 휴대폰에만 저장됩니다. 본인 외에는 누구도 데이터에 접근할 수 없습니다."
@@ -3096,7 +3097,9 @@
     "resetPhone": "이 휴대폰 초기화 후 다시 로그인",
     "resetTitle": "이 휴대폰을 초기화할까요?",
     "resetBody": "로그아웃되고 이 휴대폰에 있는 메라 데이터가 삭제됩니다. 메라에게 알려 준 내용도 포함됩니다. 계정은 삭제되지 않으며 다운로드한 AI 모델은 그대로 남습니다. 백업을 사용 중이라면 복구 코드로 데이터를 되찾을 수 있습니다.",
-    "resetConfirm": "초기화"
+    "resetConfirm": "초기화",
+    "signIn": "이 휴대폰으로 로그인",
+    "signInBody": "이 휴대폰에서 로그인하는 중에 문제가 발생했습니다. 이 휴대폰의 데이터는 안전합니다. 다시 로그인하거나 지원팀에 문의하세요."
   },
   "relatedSort": {
     "relevance": "최고 일치도",

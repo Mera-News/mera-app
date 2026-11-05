@@ -386,3 +386,33 @@ describe('the failure banner while Retry is offered', () => {
     expect(result.current.onRetry).toBeUndefined();
   });
 });
+
+describe('a turn the app leaving ended', () => {
+  const failedTurn = { error: 'Cloud chat failed: x', messages: [{ id: 'u1', role: 'user' as const, content: 'Why this story?' }] };
+
+  it('says so instead of blaming the service, and shares the one Retry', async () => {
+    useCloudChatStore.setState({ interrupted: true });
+    const { result } = await mount(failedTurn);
+    expect(result.current.blockedMessage).toBe(t('chat.turnInterrupted'));
+    expect(result.current.onRetry).toBeDefined();
+  });
+
+  it('a service failure keeps its own copy', async () => {
+    const { result } = await mount(failedTurn);
+    expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
+  });
+
+  it('a kill needs no error to offer Retry', async () => {
+    useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona' } });
+    const { result } = await mount();
+    expect(result.current.blockedMessage).toBe(t('chat.turnInterrupted'));
+    expect(result.current.onRetry).toBeDefined();
+  });
+
+  it('a typed send answers the notice', async () => {
+    useFloatingChatStore.setState({ interruptedTurn: { text: 'Why this story?', contextKind: 'persona' } });
+    const { result } = await mount();
+    await act(async () => result.current.handleSend('Something else'));
+    expect(useFloatingChatStore.getState().interruptedTurn).toBeNull();
+  });
+});

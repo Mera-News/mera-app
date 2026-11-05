@@ -41,6 +41,8 @@ export interface ConversationMessage {
    *  chat bug report's transcript reads it; a reply carries its turn's time. */
   createdAt?: number;
   toolCalls?: ToolCallRecord[];
+  /** The turn failed with this text on screen, so it is not a whole answer. */
+  failed?: boolean;
   /**
    * A turn the MODEL must read but the user must never see.
    *
@@ -90,8 +92,9 @@ export interface IAgent {
    * harness-local/scripts/run-singleshot-corpus.ts for this agent.
    */
   readonly chatThinking?: boolean;
-  /** Execute a tool call by name and return result + optional side effects. */
-  executeTool(name: string, input: unknown): Promise<ToolExecutionResult>;
+  /** Execute a tool call by name and return result + optional side effects.
+   *  `stop` is the Stop button, for a tool that can end early. */
+  executeTool(name: string, input: unknown, stop?: AbortSignal): Promise<ToolExecutionResult>;
   /** Optional: load prior conversation from local storage on mount. */
   loadHistory?(): Promise<ConversationHistory>;
   /** Optional: persist a message to local storage after it is finalized. */

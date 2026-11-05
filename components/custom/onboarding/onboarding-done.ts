@@ -1,6 +1,6 @@
 // The ONE onboarding gate: a settings row, `onboarding_done`, written when the
-// wizard finishes. It replaced "zero facts re-enters the wizard": with
-// "Continue without any facts" a factless finish is a real ending, and with
+// wizard finishes. It replaced "zero facts re-enters the wizard": an older
+// build let a reader finish with no facts, and that finish stays done, and with
 // chat before notifications a user who left after adding facts would never be
 // asked about notifications.
 //

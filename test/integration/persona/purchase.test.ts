@@ -1,6 +1,5 @@
-// The PRIMARY purchase route (You > Settings > Manage plan > View Plans) through `useManageSubscription`,
-// and the shared free-tier paywall chokepoint (`presentFreeTierPaywall`). Real stores, Apollo over MSW,
-// in-memory DB, real app-restart holds, real toast queue. Mocked: the
+// The ONE purchase route (You > Settings > Manage plan > View Plans) through `useManageSubscription`.
+// Real stores, Apollo over MSW, in-memory DB, real app-restart holds, real toast queue. Mocked: the
 // RevenueCat paywall SDK (an edge), driven per test.
 import Purchases from 'react-native-purchases';
 import RevenueCatUI from 'react-native-purchases-ui';
@@ -10,9 +9,7 @@ import { __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import database from '@/lib/database';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { resetEntitlementSyncState } from '@/lib/subscription/entitlement-sync';
-import { readLastKnownTier } from '@/lib/subscription/last-known-tier';
 import { configureRevenueCat } from '@/lib/revenuecat';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { PURCHASE_HOLD_AFTER_RETURN_MS, PURCHASE_HOLD_CEILING_MS } from '@/lib/subscriptions/subscribe-flow';
 import { useDialogQueue } from '@/lib/dialog';
 import { toastManager } from '@/lib/toast-manager';
@@ -261,13 +258,6 @@ describe('purchase', () => {
             await jest.advanceTimersByTimeAsync(PURCHASE_HOLD_CEILING_MS + 5_000);
             expect(activeHolds()).toEqual([]);
         });
-
-        it('presentFreeTierPaywall takes it, and keeps it when the sheet throws', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            presentPaywall.mockRejectedValueOnce(new Error('sheet failed'));
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-            expect(activeHolds()).toEqual(['purchase']);
-        });
     });
 
     // ---------------------------------------------------------------------------------------------
@@ -438,71 +428,6 @@ describe('purchase', () => {
     });
 
     // ---------------------------------------------------------------------------------------------
-    describe('presentFreeTierPaywall', () => {
-        it('presents the paywall with a close button when the gate passes', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-            expect(presentPaywall).toHaveBeenCalledWith({ displayCloseButton: true });
-        });
-
-        it('cancelled: a FORCED entitlement sync goes out, the store takes the answer, and nothing is navigated', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            setScenario({ tier: 'individual' });
-            const reads = countBillingReads();
-
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-            await until(() => reads() === 1);
-
-            expect(useSubscriptionStore.getState().serverTier).toBe('individual');
-            expect(router.replace).not.toHaveBeenCalled();
-            // Forced: a second dismissal inside the 60s debounce still reads.
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-            await until(() => reads() === 2);
-        });
-
-        it('a confirmed purchase commits the tier, remembers it on the device and announces it', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
-            scriptBilling(['individual']);
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
-
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-
-            expect(useSubscriptionStore.getState().serverTier).toBe('individual');
-            await until(async () => (await readLastKnownTier()) === 'individual');
-            expect(toastTitles()).toEqual(['Individual is active']);
-        });
-
-        it('an unconfirmed purchase commits nothing and announces nothing, then a forced sync follows', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
-            setScenario({ tier: 'none' });
-            const reads = countBillingReads();
-            presentPaywall.mockResolvedValueOnce('PURCHASED');
-
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-            await jest.advanceTimersByTimeAsync(500);
-
-            // 8 poll attempts, then the forced sync.
-            await until(() => reads() === 9);
-            expect(useSubscriptionStore.getState().serverTier).toBe('none');
-            expect(toastTitles()).toEqual([]);
-            expect(router.replace).not.toHaveBeenCalled();
-        });
-
-        it('a throwing paywall is swallowed and refreshes nothing', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            const reads = countBillingReads();
-            presentPaywall.mockRejectedValueOnce(new Error('sheet failed'));
-
-            await expect(advanceUntilDone(presentFreeTierPaywall('test'))).resolves.toBeUndefined();
-            await jest.advanceTimersByTimeAsync(200);
-
-            expect(reads()).toBe(0);
-        });
-    });
-
-    // ---------------------------------------------------------------------------------------------
     // PE6 (owner ruling): after a purchase the app stays on Manage subscription. The purchase starts a billing
     // poll and the hook reports it, `purchaseStatus`: 'confirming' (an indeterminate loader) until billing
     // confirms the entitlement ('confirmed'), or 'timed-out' when the poll budget runs out (the page then asks
@@ -548,20 +473,6 @@ describe('purchase', () => {
             await advanceWhile(() => hook.result.current.billing?.subscriptionTier !== 'individual');
             await settle();
             expect(hook.result.current.billing?.subscriptionTier).toBe('individual');
-            expect(router.replace).not.toHaveBeenCalled();
-        });
-
-        test('PE6 presentFreeTierPaywall leaves the user where they are after a confirmed purchase', async () => {
-            fakeClock(NOW, { advanceTimers: true });
-            await seedFacts(['Follows Formula 1']);
-            useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
-            scriptBilling(['individual']);
-            paywallBuys('individual');
-
-            await advanceUntilDone(presentFreeTierPaywall('test'));
-            await settle();
-
-            expect(useSubscriptionStore.getState().serverTier).toBe('individual');
             expect(router.replace).not.toHaveBeenCalled();
         });
 

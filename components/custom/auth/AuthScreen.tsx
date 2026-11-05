@@ -46,10 +46,12 @@ const LOGO: Partial<Record<Stage, 'center' | 'top'>> = {
  * a hard cut. A device with no remembered account walks the track (welcome
  * with the language list and the two ways in, before you start). A device
  * whose account needs signing in again lands on the gate, reauth-no-email
- * (contact support, or reset this phone back to the track). Neither ever
+ * (sign in with this phone, contact support, or reset this phone back to the
+ * track). Forgot PIN gets no sign-in there: device sign-in proves only
+ * possession of the phone, which is who the PIN guards against. Neither ever
  * switches accounts on its own: moving to the phone's account always asks first.
  */
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSignIn = true }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
@@ -124,6 +126,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     // ── Stages ────────────────────────────────────────────────────────────
     let body: React.ReactNode = null;
+    // Consent is entered from the welcome stage or, with an account on the phone, from the gate.
+    const entry: Stage = cachedUserId ? 'reauth-no-email' : 'welcome';
     switch (stage) {
         case 'intro':
             // The line itself is drawn beside the logo in the root (below).
@@ -148,15 +152,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     onSignedIn={finishDeviceSignIn}
                     onDifferentAccount={(r) => {
                         askSwitch(r);
-                        go('welcome');
+                        go(entry);
                     }}
-                    onBack={() => go('welcome')}
+                    onBack={() => go(entry)}
                 />
             );
             break;
         case 'reauth-no-email':
             body = (
-                <ReauthNoEmailStage supportId={supportId} onReset={leaveGate} />
+                <ReauthNoEmailStage
+                    supportId={supportId}
+                    onReset={leaveGate}
+                    onSignIn={allowDeviceSignIn && availability !== 'unavailable' ? () => go('consent') : undefined}
+                />
             );
             break;
         default:

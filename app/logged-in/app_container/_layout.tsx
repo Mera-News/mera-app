@@ -1,6 +1,6 @@
 import { NativeTabs } from 'expo-router/native-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
@@ -9,6 +9,7 @@ import { setTabDot, useTabDot } from '@/components/custom/nav/current-surface';
 import { useStarredPublicationsSync } from '@/components/custom/cards/use-starred-publications-sync';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
 import { useChecksUnseen } from '@/lib/stores/fact-checks-store';
+import { useFloatingChatShown } from '@/lib/stores/floating-chat-store';
 import { useColors } from '@/lib/theme/tokens';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +30,7 @@ export default function AppLayout() {
     const colors = useColors();
     // The one writer of the publication-star set every card reads.
     useStarredPublicationsSync();
+    const chatShown = useFloatingChatShown();
     const dot = {
         feed: useTabDot('feed'),
         world: useTabDot('world'),
@@ -76,6 +78,10 @@ export default function AppLayout() {
                     iconColor={{ default: colors.ink, selected: colors.accentMark }}
                     badgeBackgroundColor={colors.accent}
                     minimizeBehavior="onScrollDown"
+                    // iOS: under the open chat the bar still took presses meant
+                    // for the composer's Send and Stop, which sit over it.
+                    hidden={Platform.OS === 'ios' && chatShown}
+                    disableHiddenAnimation
                 >
                     {/* navx: four tabs, Feed, World, Library, You, each a folder
                         with its own Stack. `disableScrollToTop` because the

@@ -272,7 +272,11 @@ export async function runAgentScript(
 
     const deps: AgentDeps = {
       callModel,
-      tools: opts.explainMera ? { ...fakes.port, explainMera: opts.explainMera } : fakes.port,
+      tools: {
+        ...fakes.port,
+        ...(opts.explainMera ? { explainMera: opts.explainMera } : {}),
+        ...(script.webSearchOff ? { webSearch: undefined } : {}),
+      },
       loadSkill: opts.loadSkill ?? realLoadSkill,
       skillIds: () => skillIds,
       now,

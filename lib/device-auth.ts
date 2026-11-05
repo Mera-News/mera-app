@@ -153,6 +153,8 @@ export type DeviceSignInFailureReason =
   | 'attestation-unavailable'
   /** Transport-level failure. Try again. */
   | 'network'
+  /** A resume-only sign-in: no account is bound to this phone's key. */
+  | 'not-bound'
   | 'unknown';
 
 export type DeviceSignInResult =
@@ -249,6 +251,9 @@ async function post<T>(path: string, body?: Record<string, unknown>): Promise<T>
   return (result?.data ?? (result as unknown)) as T;
 }
 
+/** The server's 409 for a resume-only sign-in with an unbound key. */
+const DEVICE_NOT_BOUND = 'DEVICE_NOT_BOUND';
+
 type NoncePurpose = 'attest' | 'assert' | 'integrity';
 
 async function fetchNonce(purpose: NoncePurpose): Promise<string> {
@@ -268,7 +273,9 @@ type AttestPlatform = 'ios' | 'android' | 'dev';
  * body. `onPost` fires when the attestation is done and the post is about to
  * leave, which is where the move's progress steps from "checking" to "linking".
  */
-type FlowTarget = { kind: 'sign-in' } | { kind: 'convert'; bindOnly?: boolean; onPost?: () => void };
+type FlowTarget =
+  | { kind: 'sign-in'; resumeOnly?: boolean }
+  | { kind: 'convert'; bindOnly?: boolean; onPost?: () => void };
 
 interface FlowResponse {
   path: string;
@@ -282,7 +289,7 @@ async function finalPost(
 ): Promise<FlowResponse> {
   if (target.kind === 'sign-in') {
     const path = `/device/sign-in/${platform}`;
-    return { path, data: await post(path, body) };
+    return { path, data: await post(path, target.resumeOnly ? { ...body, resumeOnly: true } : body) };
   }
   target.onPost?.();
   const convertBody = target.bindOnly ? { platform, bindOnly: true, ...body } : { platform, ...body };
@@ -429,14 +436,20 @@ async function assertAndSignInIos(keyId: string, target: FlowTarget): Promise<Fl
 }
 
 async function signInIos(target: FlowTarget): Promise<FlowResponse> {
+  // A resume only uses the key it has: a fresh key is unbound by definition, and
+  // the key recoveries below would give up a binding nobody asked to give up.
+  const resumeOnly = target.kind === 'sign-in' && target.resumeOnly === true;
+  const noBoundKey = () => new ServerRejection('/device/sign-in/ios', 409, DEVICE_NOT_BOUND);
   const storedKeyId = await readStoredKeyId();
   if (!storedKeyId) {
+    if (resumeOnly) throw noBoundKey();
     const keyId = await enrollIos();
     return assertAndSignInIos(keyId, target);
   }
   try {
     return await assertAndSignInIos(storedKeyId, target);
   } catch (error) {
+    if (resumeOnly) throw isInvalidKeyError(error) ? noBoundKey() : error;
     // Recovery 1: the stored key vanished (reinstall, device migration,
     // restore — App Attest keys survive none of them).
     // Recovery 2: a 400 assert rejection on a VIRGIN key — one that never
@@ -676,9 +689,16 @@ function classify(error: unknown): DeviceSignInResult {
  */
 const TRANSIENT_INTEGRITY_RETRY_MS = 1500;
 
-export async function signInWithDevice(): Promise<DeviceSignInResult> {
+/**
+ * `resumeOnly` is for an account already on this phone: the silent resume of a
+ * dead session (lib/session-resume.ts) and the gate's sign-in. It reaches only a
+ * key that is already bound, and no refusal recovery runs. The server answers 409
+ * for an unbound key, but a server older than the flag MINTS instead: no store
+ * sync runs for it here, and the caller sees an account that is not its own.
+ */
+export async function signInWithDevice({ resumeOnly = false }: { resumeOnly?: boolean } = {}): Promise<DeviceSignInResult> {
   try {
-    const flow = await pickFlow({ kind: 'sign-in' });
+    const flow = await pickFlow({ kind: 'sign-in', resumeOnly });
     if (!flow) return { status: 'unsupported' };
     const runFlow = async (): Promise<ParsedSignIn> => {
       const { path, data } = await flow();
@@ -717,7 +737,7 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
         // sever everything and re-enroll fresh, ONCE. Mirrors the ERR_ATTEST_INVALID_KEY shape.
         // 400/503/network never clear credentials, and a fresh install has
         // nothing to recover.
-        if (!hadStoredCredentials || !isServerRefusal(error)) throw error;
+        if (resumeOnly || !hadStoredCredentials || !isServerRefusal(error)) throw error;
         logger.warn('[device-auth] stored credential refused; severing and re-enrolling once', {
           code: (error as ServerRejection).code,
         });
@@ -727,13 +747,15 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
     }
 
     // Best-effort session-atom refresh. The recorder is what routing trusts.
-    void authClient.getSession().catch(() => {});
+    // Not on a resume: its caller may still refuse this account, and a reply
+    // landing after that would write the refused session back.
+    if (!resumeOnly) void authClient.getSession().catch(() => {});
 
     // A brand-new account takes any plan the store account holds (owner: at
     // mint and after a move only, never on resume). It runs once RevenueCat
     // is identified as this account. Lazy: revenuecat is not needed here.
     // A test account never takes the store plan.
-    if (parsed.minted && !testFlow) {
+    if (parsed.minted && !testFlow && !resumeOnly) {
       (require('@/lib/revenuecat') as typeof import('@/lib/revenuecat')).requestStorePurchasesSync(parsed.userId);
     }
 
@@ -744,6 +766,9 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
       minted: parsed.minted,
     };
   } catch (error) {
+    if (resumeOnly && error instanceof ServerRejection && error.code === DEVICE_NOT_BOUND) {
+      return { status: 'failed', reason: 'not-bound' };
+    }
     return classifyFailure(error);
   }
 }

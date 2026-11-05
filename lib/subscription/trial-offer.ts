@@ -26,11 +26,11 @@ export interface TrialOffer {
     readonly trialDays: number;
 }
 
-/** The offering's Individual package. Product ids carry the plan name on both
+/** The offering's monthly Individual package, the only one with a trial. Product ids carry the plan name on both
  *  stores (iOS `mera_news_individual_monthly`, Play
  *  `mera_news_subscriptions:mera-news-individual-monthly`). */
 export function individualPackage(offering: PurchasesOffering | null): PurchasesPackage | null {
-    return offering?.availablePackages.find((p) => /individual/i.test(p.product.identifier)) ?? null;
+    return offering?.availablePackages.find((p) => /individual.*monthly/i.test(p.product.identifier)) ?? null;
 }
 
 /** A period in days; null for a unit that is not a fixed number of days. */

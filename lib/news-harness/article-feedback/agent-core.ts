@@ -10,6 +10,7 @@
 // that thin adapter reads the data and hands plain values to this module.
 
 import { estimateTokens } from '@/lib/algorithms/estimate-tokens';
+import { IDENTITY_LINE, meraIdentity } from '../../mera-harness/core/identity';
 import { SUPPRESSION_KINDS } from '../core/types';
 import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '../core/proposals';
@@ -356,7 +357,15 @@ export function buildArticleFeedbackSystemPrompt(params: {
     ? '\n- **WEB SEARCH (the user switched it on).** Before telling the user you don\'t have something, ask: could a web search answer this? If yes — background on the story, other coverage, verification, "is this true", what happened before/after — call `webSearch` and answer from what you find, naming the publications you cite by name. Only the search words leave the device — never the article, the user\'s facts, or their feed. Don\'t use it to guess at the article\'s OWN content (title/description/publication) you were not given; use it for context outside that.'
     : '';
 
-  return `You are Mera, helping the user understand and shape their personalized news feed.
+  // The XML path is the on-device one, which has no search toggle to name.
+  const identity = needsToolFormat
+    ? IDENTITY_LINE
+    : meraIdentity({
+        abilities: ['articleContext', 'profile', 'feed', 'follow', ...(factCheck ? (['factCheck'] as const) : []), 'howMeraWorks'],
+        webSearch: webSearch === true,
+      });
+
+  return `${identity}
 
 ## How Mera works
 - The user tells Mera facts about themselves (job, location, family, interests).
@@ -369,8 +378,8 @@ export function buildArticleFeedbackSystemPrompt(params: {
 - Handle feedback: "more like this" (strengthen the matching facts/topics) and "less like this" (weaken or remove them).
 
 ## Article access (by design)
-- You see ONLY limited metadata: title, publication, and a short description — NEVER the full article text.
-- Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).${webSearchLine}
+- You see ONLY the title, publication and a short description, NEVER the full article text.
+- For detail beyond that, say you don't have the full article and recommend reading it: the human-written article is the source of truth.${webSearchLine}
 
 ## Capabilities — what proposeChanges can do
 Persona edits (reference facts by the [id] in <context>):

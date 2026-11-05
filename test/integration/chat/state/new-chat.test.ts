@@ -24,3 +24,9 @@ it('New chat keeps the tool-result overrides: they record writes that already ha
   store().requestNewChat();
   expect(store().toolCallResults['m1::0']).toEqual({ followed: { a: 'following' } });
 });
+
+it("drops a killed turn's Retry: the banner belongs to the thread New chat just left", () => {
+  store().setInterruptedTurn({ text: 'Why this story?', contextKind: 'persona' });
+  store().requestNewChat();
+  expect(store().interruptedTurn).toBeNull();
+});

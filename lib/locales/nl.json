@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera heeft Google Play op deze telefoon nodig om je in te loggen. Telefoons zonder Google Play worden niet ondersteund.",
     "phoneUnsupportedIos": "Deze iPhone kan niet inloggen met een telefoonnummer.",
     "supportedPhones": "Ondersteunde telefoons",
-    "phoneNotSupported": "Deze telefoon wordt niet ondersteund"
+    "phoneNotSupported": "Deze telefoon wordt niet ondersteund",
+    "deviceNotBound": "Deze telefoon is niet gekoppeld aan je account. Ga terug om contact op te nemen met support of deze telefoon te resetten."
   },
   "account": {
     "contactSupport": "Praat met support"
@@ -338,8 +339,8 @@
     "composerPlaceholder": "Wat volg je graag?",
     "factsCount_one": "{{count}} feit over jou",
     "factsCount_other": "{{count}} feiten over jou",
-    "noFactsBody": "Prima. Je ziet voorlopig de belangrijkste koppen en je kunt Mera altijd vertellen wat je leuk vindt.",
-    "noFactsTitle": "Beginnen met de belangrijkste koppen?",
+    "noFactsBody": "Mera gebruikt je stad om nieuws te vinden uit de plek waar je woont. Je kunt Mera altijd meer over jezelf vertellen.",
+    "noFactsTitle": "Waar woon je?",
     "noNotifBody": "Je hoort niet wanneer je nieuws klaar is of wanneer een verhaal dat je volgt verandert. Je kunt meldingen later aanzetten in Instellingen.",
     "noNotifTitle": "Mera gebruiken zonder meldingen?",
     "notNow": "Niet nu",
@@ -348,8 +349,6 @@
     "remindTitle": "Wanneer moet Mera je herinneren?",
     "turnOn": "Meldingen aanzetten",
     "turnThemOn": "Zet ze aan",
-    "guardSkip": "Begin met koppen",
-    "guardAddFact": "Iets toevoegen",
     "sourcesTitle": "Welke nieuwsbronnen vertrouw je?",
     "sourcesBody": "Tik op de ster om meer te zien. Tik op het oog om het uit je feed te verbergen. Dit kun je altijd wijzigen bij Bronnen.",
     "sourcesSkip": "Overslaan",
@@ -535,7 +534,7 @@
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
     "errorDescription": "Gegevens verwijderen mislukt. Probeer het opnieuw.",
-    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Je feiten staan op dit apparaat, niet op de servers van Mera. Onderwerpsfrasen worden verstuurd wanneer je nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van jou kwamen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd.",
+    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Plaatsen die met je feiten zijn opgeslagen, worden ook gewist. Plaatsen die je zelf hebt toegevoegd, blijven staan. Je feiten staan op dit apparaat, niet op de servers van Mera. Onderwerpsfrasen worden verstuurd wanneer je nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van jou kwamen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd.",
     "exportHistoryTitle": "Leesgeschiedenis exporteren",
     "exportHistoryDescription": "Afgelopen 30 dagen als JSON: artikelen, publicaties en gemiddelde tijd van publicatie tot lezen",
     "exportHistorySubject": "Mijn Mera-leesgeschiedenis (JSON)",
@@ -556,7 +555,7 @@
     "backupHint": "Een versleutelde kopie, zodat een nieuwe telefoon niet van nul begint",
     "clearHistoryHint": "Op deze telefoon",
     "clearHistoryTitle": "Leesgeschiedenis wissen",
-    "clearProfileHint": "Je feiten en hun onderwerpen",
+    "clearProfileHint": "Je feiten, hun onderwerpen en de plaatsen die ermee zijn opgeslagen",
     "clearProfileTitle": "Profiel wissen",
     "deleteAccountHint": "Je account en alles wat Mera op deze telefoon bewaart. Een abonnement via de store blijft doorlopen totdat je het opzegt in de App Store of Google Play. Dit kan niet ongedaan worden gemaakt.",
     "deleteGroup": "Verwijderen",
@@ -705,7 +704,9 @@
     "turnNoAnswer": "Dat lukte me niet. Probeer het op een andere manier te vragen.",
     "turnFailed": "Dat is niet afgerond. Probeer het opnieuw.",
     "tryingAgain": "Opnieuw proberen",
-    "factRemovedLine": "Ik heb {{facts}} verwijderd omdat ik geen nieuwsonderwerpen kon vinden. Wat wil je dat ik in plaats daarvan opsla?"
+    "factRemovedLine": "Ik heb {{facts}} verwijderd omdat ik geen nieuwsonderwerpen kon vinden. Wat wil je dat ik in plaats daarvan opsla?",
+    "turnInterrupted": "Het antwoord van Mera stopte toen je de app verliet.",
+    "replyUnfinished": "Niet af"
   },
   "personaChat": {
     "introMessage": "Hoi, ik ben Mera.\n\nVertel me iets over jezelf, zoals je stad of buurt, wat voor werk je doet of een team of hobby die je volgt, en ik zoek nieuws dat bij je past.\n\nDeel zoveel of zo weinig als je wilt. Wat je me vertelt, blijft op deze telefoon. Niemand behalve jij heeft toegang tot je gegevens."
@@ -3117,7 +3118,9 @@
     "resetPhone": "Deze telefoon resetten en opnieuw inloggen",
     "resetTitle": "Deze telefoon resetten?",
     "resetBody": "Je wordt uitgelogd en de gegevens van Mera op deze telefoon worden gewist, ook wat je Mera hebt verteld. Je account wordt niet verwijderd en gedownloade AI-modellen blijven staan. Gebruik je back-ups, dan haal je je gegevens terug met je herstelcode.",
-    "resetConfirm": "Resetten"
+    "resetConfirm": "Resetten",
+    "signIn": "Inloggen met deze telefoon",
+    "signInBody": "Er ging iets mis bij het inloggen op deze telefoon. Je gegevens op deze telefoon zijn veilig. Log opnieuw in of neem contact op met support."
   },
   "relatedSort": {
     "relevance": "Beste match",

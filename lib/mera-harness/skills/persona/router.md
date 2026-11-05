@@ -46,6 +46,11 @@ One sentence, their words not a rewrite: if they said "Nieuw-West", say "Nieuw-W
 been saved and the user has tapped nothing, so a turn claiming otherwise is wrong on screen before
 the skill has even loaded. Repeat what you heard and stop.
 
+Every acknowledgement is about their request and none is about what you can do, even when they
+ask "can you search?". Repeat the request and let the skill answer.
+
+- "Tram fares in Lisbon this week."
+
 ## Step 1: intent
 
 - **new_fact**: the turn states something about the user or their life that Known Facts does not

@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera potrzebuje Google Play na tym telefonie, żeby Cię zalogować. Telefony bez niego nie są obsługiwane.",
     "phoneUnsupportedIos": "Ten iPhone nie może logować się telefonem.",
     "supportedPhones": "Obsługiwane telefony",
-    "phoneNotSupported": "Ten telefon nie jest obsługiwany"
+    "phoneNotSupported": "Ten telefon nie jest obsługiwany",
+    "deviceNotBound": "Ten telefon nie jest połączony z Twoim kontem. Wróć, aby skontaktować się z pomocą albo zresetować ten telefon."
   },
   "account": {
     "contactSupport": "Porozmawiaj z pomocą"
@@ -380,8 +381,8 @@
     "factsCount_few": "{{count}} fakty o Tobie",
     "factsCount_many": "{{count}} faktów o Tobie",
     "factsCount_other": "{{count}} faktów o Tobie",
-    "noFactsBody": "Nie ma sprawy. Na razie zobaczysz najważniejsze nagłówki, a Merze możesz powiedzieć, co lubisz, kiedy tylko zechcesz.",
-    "noFactsTitle": "Zacząć od najważniejszych nagłówków?",
+    "noFactsBody": "Mera korzysta z Twojego miasta, aby znaleźć wiadomości z miejsca, w którym mieszkasz. Więcej o sobie możesz powiedzieć w każdej chwili.",
+    "noFactsTitle": "Gdzie mieszkasz?",
     "noNotifBody": "Nie dowiesz się, kiedy Twoje wiadomości są gotowe ani kiedy zmienia się historia, którą obserwujesz. Możesz to włączyć później w Ustawieniach.",
     "noNotifTitle": "Używać Mera bez powiadomień?",
     "notNow": "Nie teraz",
@@ -390,8 +391,6 @@
     "remindTitle": "Kiedy Mera ma Ci przypominać?",
     "turnOn": "Włącz powiadomienia",
     "turnThemOn": "Włącz je",
-    "guardSkip": "Zacznij od nagłówków",
-    "guardAddFact": "Dodaj coś",
     "sourcesTitle": "Którym źródłom wiadomości ufasz?",
     "sourcesBody": "Dotknij gwiazdki, aby zobaczyć więcej. Dotknij oka, aby ukryć to w swoim Strumieniu. Zmienić to możesz w dowolnej chwili w Źródłach.",
     "sourcesSkip": "Pomiń",
@@ -579,7 +578,7 @@
     "deletedDescription": "Wybrane dane zostały pomyślnie wyczyszczone.",
     "errorTitle": "Błąd",
     "errorDescription": "Nie udało się usunąć danych. Spróbuj ponownie.",
-    "factsModalDescription": "Usuwa dodane przez Ciebie fakty i wygenerowane z nich tematy. Twoje fakty są przechowywane na tym urządzeniu, a nie na serwerach Mera. Frazy tematyczne są wysyłane przy pobieraniu wiadomości i buforowane na naszych serwerach bez identyfikatora użytkownika, więc nic tam nie zapisuje, że pochodziły od Ciebie. Twój kanał artykułów również zostanie wyczyszczony, bo opiera się na tych tematach.",
+    "factsModalDescription": "Usuwa dodane przez Ciebie fakty i wygenerowane z nich tematy. Miejsca zapisane z Twoimi faktami również zostaną usunięte. Miejsca dodane przez Ciebie ręcznie pozostaną. Twoje fakty są przechowywane na tym urządzeniu, a nie na serwerach Mera. Frazy tematyczne są wysyłane przy pobieraniu wiadomości i buforowane na naszych serwerach bez identyfikatora użytkownika, więc nic tam nie zapisuje, że pochodziły od Ciebie. Twój kanał artykułów również zostanie wyczyszczony, bo opiera się na tych tematach.",
     "exportHistoryTitle": "Eksportuj historię czytania",
     "exportHistoryDescription": "Ostatnie 30 dni jako JSON: artykuły, publikacje i średni czas od publikacji do przeczytania",
     "exportHistorySubject": "Moja historia czytania Mera (JSON)",
@@ -600,7 +599,7 @@
     "backupHint": "Zaszyfrowana kopia, żeby nowy telefon nie zaczynał od zera",
     "clearHistoryHint": "Na tym telefonie",
     "clearHistoryTitle": "Wyczyść historię czytania",
-    "clearProfileHint": "Twoje fakty i ich tematy",
+    "clearProfileHint": "Twoje fakty, ich tematy i zapisane z nimi miejsca",
     "clearProfileTitle": "Wyczyść profil",
     "deleteAccountHint": "Twoje konto i wszystko, co Mera przechowuje na tym telefonie. Subskrypcja w sklepie trwa, dopóki jej nie anulujesz w App Store lub Google Play. Nie można tego cofnąć.",
     "deleteGroup": "Usuń",
@@ -751,7 +750,9 @@
     "turnNoAnswer": "Nie udało mi się tego zrobić. Spróbuj zapytać inaczej.",
     "turnFailed": "Ta odpowiedź się nie dokończyła. Spróbuj ponownie.",
     "tryingAgain": "Próbuję ponownie",
-    "factRemovedLine": "Usunęłam {{facts}}, bo nie znalazłam tematów z wiadomości. Co wolisz, żebym zapisała zamiast tego?"
+    "factRemovedLine": "Usunęłam {{facts}}, bo nie znalazłam tematów z wiadomości. Co wolisz, żebym zapisała zamiast tego?",
+    "turnInterrupted": "Odpowiedź Mery została przerwana, gdy opuszczono aplikację.",
+    "replyUnfinished": "Nie ukończono"
   },
   "personaChat": {
     "introMessage": "Cześć, jestem Mera.\n\nOpowiedz mi trochę o sobie, na przykład o swoim mieście lub okolicy, rodzaju pracy albo drużynie czy hobby, które śledzisz, a znajdę pasujące wiadomości.\n\nPodziel się tym, czym chcesz. To, co mi powiesz, zostaje na tym telefonie. Nikt poza Tobą nie ma dostępu do Twoich danych."
@@ -3255,7 +3256,9 @@
     "resetPhone": "Zresetuj ten telefon i zaloguj się ponownie",
     "resetTitle": "Zresetować ten telefon?",
     "resetBody": "Nastąpi wylogowanie, a dane Mera na tym telefonie zostaną usunięte, w tym to, co przekazano Mera. Twoje konto nie zostanie usunięte, a pobrane modele AI zostaną. Jeśli korzystasz z kopii zapasowej, odzyskasz dane za pomocą kodu odzyskiwania.",
-    "resetConfirm": "Resetuj"
+    "resetConfirm": "Resetuj",
+    "signIn": "Zaloguj się tym telefonem",
+    "signInBody": "Coś poszło nie tak podczas logowania na tym telefonie. Twoje dane na tym telefonie są bezpieczne. Zaloguj się ponownie albo skontaktuj się z pomocą."
   },
   "relatedSort": {
     "relevance": "Najlepsze dopasowanie",

@@ -58,7 +58,13 @@ export async function addUserLocation(
         'slider',
       );
     }
-    const location = await locationService.upsertLocation({ ...input, weight: undefined });
+    // A hand-add over a derived row makes the place the reader's: dropping the
+    // link keeps it through Clear profile.
+    const location = await locationService.upsertLocation({
+      ...input,
+      weight: undefined,
+      sourceFactId: input.sourceFactId ?? null,
+    });
     return { location, updated: true };
   }
 

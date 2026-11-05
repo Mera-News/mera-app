@@ -64,7 +64,8 @@
     "phoneUnsupportedAndroid": "Mera needs Google Play on this phone to sign you in. Phones without it aren't supported.",
     "phoneUnsupportedIos": "This iPhone can't use phone sign-in.",
     "supportedPhones": "Supported phones",
-    "phoneNotSupported": "This phone isn't supported"
+    "phoneNotSupported": "This phone isn't supported",
+    "deviceNotBound": "This phone isn't linked to your account. Go back to contact support or reset this phone."
   },
   "account": {
     "contactSupport": "Talk to support"
@@ -694,8 +695,8 @@
     "composerPlaceholder": "What do you like to follow?",
     "factsCount_one": "{{count}} fact about you",
     "factsCount_other": "{{count}} facts about you",
-    "noFactsBody": "That's fine. You'll see top headlines for now, and you can tell Mera what you like whenever you want.",
-    "noFactsTitle": "Start with top headlines?",
+    "noFactsBody": "Mera uses your city to find news for where you live. You can tell it more about yourself anytime.",
+    "noFactsTitle": "Where do you live?",
     "noNotifBody": "You won't hear when your news is ready or when a story you follow moves. You can turn them on later in Settings.",
     "noNotifTitle": "Use Mera without notifications?",
     "notNow": "Not now",
@@ -704,8 +705,6 @@
     "remindTitle": "When should Mera remind you?",
     "turnOn": "Turn on notifications",
     "turnThemOn": "Turn them on",
-    "guardSkip": "Start with headlines",
-    "guardAddFact": "Add something",
     "sourcesTitle": "Which news sources do you trust?",
     "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
     "sourcesSkip": "Skip",
@@ -892,7 +891,7 @@
     "exporting": "Exporting…",
     "exportHistoryEmptyTitle": "Nothing to export yet",
     "exportHistoryEmptyDescription": "You haven't read any articles in the last 30 days.",
-    "factsModalDescription": "Clears the facts you've added and the topics generated from them. Your facts are stored on this device, not on Mera's servers. Topic phrases are sent when you fetch news and cached on our servers with no user ID attached, so nothing there records that they were yours. Your article feed is cleared too, since it's built from these topics.",
+    "factsModalDescription": "Clears the facts you've added and the topics generated from them. Places saved with your facts go too. Places you added by hand stay. Your facts are stored on this device, not on Mera's servers. Topic phrases are sent when you fetch news and cached on our servers with no user ID attached, so nothing there records that they were yours. Your article feed is cleared too, since it's built from these topics.",
     "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Nothing else is affected, and no server data is touched, since Mera's servers never had this data.",
     "deletedTitle": "Data Deleted",
     "deletedDescription": "Selected data has been cleared successfully.",
@@ -912,7 +911,7 @@
     "backupHint": "An encrypted copy, so a new phone doesn't start from zero",
     "clearHistoryHint": "On this phone",
     "clearHistoryTitle": "Clear reading history",
-    "clearProfileHint": "Your facts and their topics",
+    "clearProfileHint": "Your facts, their topics and the places saved with them",
     "clearProfileTitle": "Clear profile",
     "deleteAccountHint": "Your account and everything Mera keeps on this phone. A store subscription keeps running until you cancel it in the App Store or Google Play. This can't be undone.",
     "deleteGroup": "Delete",
@@ -1152,7 +1151,9 @@
     "turnNoAnswer": "I couldn't do that. Try asking another way.",
     "turnFailed": "That didn't finish. Try again.",
     "tryingAgain": "Trying again",
-    "factRemovedLine": "I removed {{facts}} because I couldn't find news topics. What would you like me to save instead?"
+    "factRemovedLine": "I removed {{facts}} because I couldn't find news topics. What would you like me to save instead?",
+    "turnInterrupted": "Mera's reply stopped when you left the app.",
+    "replyUnfinished": "Not finished"
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera.\n\nTell me a little about yourself, like your city or neighbourhood, the kind of work you do, or a team or hobby you follow, and I'll find news that fits.\n\nShare as much or as little as you like. What you tell me stays on this phone. No one has access to your data except you."
@@ -3119,7 +3120,9 @@
     "resetPhone": "Reset this phone and sign in again",
     "resetTitle": "Reset this phone?",
     "resetBody": "This signs you out and clears Mera's data on this phone, including what you've told Mera. Your account isn't deleted, and downloaded AI models stay. If you use backup, your recovery code brings your data back.",
-    "resetConfirm": "Reset"
+    "resetConfirm": "Reset",
+    "signIn": "Sign in with this phone",
+    "signInBody": "Something went wrong signing in on this phone. Your data here is safe. Sign in again, or contact support."
   },
   "relatedSort": {
     "relevance": "Best match",

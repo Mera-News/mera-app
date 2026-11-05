@@ -18,7 +18,7 @@ import { createTopics, getByFact } from '@/lib/database/services/topic-service';
 import { recordDecline } from '@/lib/database/services/topic-decline-service';
 import { startTopicGeneration } from '@/lib/chat-tools/tool-handlers';
 import { handleTopicGenJob } from '@/lib/inference/handlers/topic-gen-handler';
-import { inferenceQueue } from '@/lib/inference/InferenceQueue';
+import { __setJobHandlerForTests, inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
@@ -27,10 +27,11 @@ import { EMPTY_RETRY_NUDGE, JUDGEMENT_NUDGE } from '@/lib/mera-harness/core/topi
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { gatewayCalls, mockGateway, server } from '@/test/helpers';
 import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
 import { installLlama, resetFileSystem } from '@/test/integration/chat/_helpers';
-import { cleanup, driveDone, jobRows, prepare, untilJob, watchBodies, setMode } from './kit';
+import { cleanup, driveDone, driveUntil, jobRow, jobRows, prepare, untilJob, watchBodies, setMode } from './kit';
 
 // Hoisted above the imports by babel-jest.
 jest.mock('expo-file-system', () => require('@/test/integration/chat/_helpers/fs').fileSystemModule);
@@ -268,6 +269,17 @@ describe('cloud: the skill core, isolated', () => {
       expect((await getFacts())[0].metadata).not.toHaveProperty('topics_empty_since');
     });
 
+    it('a blank answer is an error with Retry, never an empty, and stops the ladder', async () => {
+      const fact = await pendingFact(JOB, 'profession: job role and industry');
+      reply('   ');
+
+      const out = await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+      expect(out).toEqual({ topics: [], outcome: 'error' });
+      expect(gatewayCalls('chat')).toHaveLength(1);
+      expect(await getTopicsStatus(fact.id)).toBe('error');
+    });
+
     it('an unreadable answer is an error with Retry, never an empty', async () => {
       const fact = await pendingFact(JOB, 'profession: job role and industry');
       reply('I cannot help with that.');
@@ -322,6 +334,15 @@ describe('cloud: the skill core, isolated', () => {
       expect(await lifecycle()).toEqual(before);
       expect(await getTopicsStatus(fact.id)).toBe('done');
       expect(captured).not.toHaveBeenCalled();
+    });
+
+    it('a blank background ladder counts as unreadable, so its retries end', async () => {
+      const fact = await emptied();
+      reply('   ');
+
+      await run({ factId: fact.id, factStatement: JOB, useCloud: true, background: true });
+
+      expect(await lifecycle()).toMatchObject({ topics_empty_runs: 0, topics_unreadable_runs: 1 });
     });
 
     it('an unreadable background ladder is counted apart, and a tap clears the count', async () => {
@@ -455,6 +476,76 @@ describe('cloud: the skill core, isolated', () => {
     expect(row).toMatchObject({ status: 'done', attempts: 1, result: { topics: [] } });
     expect(gatewayCalls()).toHaveLength(0);
     expect(await getTopicsStatus(other.id)).toBe('pending');
+  });
+});
+
+describe('the first feed follows the topics', () => {
+  const sync = ['feed-sync', undefined, { bypassDebounce: true }];
+
+  it('a cloud run that mints topics starts a feed sync past the debounce', async () => {
+    const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    reply('["Paediatric nursing pay"]');
+
+    await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+    expect(trigger).toHaveBeenCalledWith(...sync);
+    trigger.mockRestore();
+  });
+
+  it('an on-device run that mints topics does too', async () => {
+    const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
+    const fact = await pendingFact('Plays chess');
+    await setMode('on-device');
+    installOnDeviceLlm({ reply: '{"topics":["Chess openings"]}' });
+
+    await run({ factId: fact.id, factStatement: 'Plays chess', useCloud: false });
+
+    expect(trigger).toHaveBeenCalledWith(...sync);
+    trigger.mockRestore();
+  });
+
+  it('a run with no usable topics starts nothing', async () => {
+    const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    reply('[]');
+
+    await run({ factId: fact.id, factStatement: JOB, useCloud: true });
+
+    expect(trigger).not.toHaveBeenCalled();
+    trigger.mockRestore();
+  });
+});
+
+describe('a deferrable failure', () => {
+  const busy = () => server.use(...mockGateway(() => ({ status: 503, body: { error: 'busy' } })));
+
+  it('rethrows for the queue, leaving the fact pending and reporting nothing', async () => {
+    const captured = jest.spyOn(logger, 'captureException');
+    const fact = await pendingFact(JOB, 'profession: job role and industry');
+    busy();
+
+    await expect(run({ factId: fact.id, factStatement: JOB, useCloud: true })).rejects.toThrow(/503/);
+
+    expect(await getTopicsStatus(fact.id)).toBe('pending');
+    expect(captured).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ fingerprint: ['topic-gen-failed', 'threw'] }));
+  });
+
+  it('through the queue it goes back to pending with its attempt given back', async () => {
+    const handler = jest.fn(async () => {
+      throw new Error('E2EE completion failed: 503 busy');
+    });
+    __setJobHandlerForTests('topic_gen', handler);
+    const fact = await pendingFact('Plays chess');
+    await driveDone(startTopicGeneration([{ id: fact.id, statement: 'Plays chess' }]));
+    const [job] = await jobRows('topic_gen');
+
+    await inferenceQueue.start();
+    await driveUntil(() => handler.mock.calls.length === 1, 'first run');
+    await driveUntil(async () => (await jobRow(job.id))?.errorMessage != null, 'deferred');
+
+    expect(await jobRow(job.id)).toMatchObject({ status: 'pending', attempts: 0 });
+    expect(await getTopicsStatus(fact.id)).toBe('pending');
   });
 });
 

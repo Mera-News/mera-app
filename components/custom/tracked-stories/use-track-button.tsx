@@ -20,7 +20,6 @@
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
 import { getAiAccess } from '@/lib/stores/subscription-store';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { router } from 'expo-router';
 import { useCallback } from 'react';
 
@@ -35,8 +34,8 @@ export interface UseTrackButton {
   startTracking: () => void;
   /** Open the already-followed story's timeline. */
   goToStory: () => void;
-  /** Present the plans (the free-tier level's action). */
-  seePlans: () => Promise<void>;
+  /** Open Manage plan (the free-tier level's action). */
+  seePlans: () => void;
 }
 
 /**
@@ -57,8 +56,8 @@ export function useTrackButton(
     return 'start';
   }, [tracked]);
 
-  const seePlans = useCallback(async () => {
-    await presentFreeTierPaywall('useTrackButton');
+  const seePlans = useCallback(() => {
+    router.push('/logged-in/preferences/manage-subscription');
   }, []);
 
   const goToStory = useCallback(() => {

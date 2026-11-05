@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
 import { recheckSession } from '@/lib/auth-failure-breaker';
+import { resumeDeadSession } from '@/lib/session-resume';
 import { useUserStore } from '@/lib/stores/user-store';
 
 /**
@@ -12,8 +13,10 @@ import { useUserStore } from '@/lib/stores/user-store';
  * Never mid-read: only on a return, and the launch case is LoggedInGate's.
  * The server is asked first (the same deduped recheck): only `dead` routes, so
  * a wrong verdict heals here instead of stranding a live account at the gate;
- * offline leaves the reader in the app until a later return. It never signs
- * anyone out; local data and the PIN stay (only the Log out button logs out).
+ * offline leaves the reader in the app until a later return. A dead session
+ * first tries a silent resume with the phone's key, so the reader stays put; the
+ * gate is what is left when that fails. It never signs anyone out; local data
+ * and the PIN stay (only the Log out button logs out).
  * Renders nothing.
  */
 export default function ReauthOnReturn() {
@@ -31,8 +34,10 @@ export default function ReauthOnReturn() {
             // Only from the app itself: the PIN screen and the gate own their
             // own routes, and a root push (an article) is still "in the app".
             if (!pathRef.current.startsWith('/logged-in')) return;
-            void recheckSession().then((outcome) => {
+            void recheckSession().then(async (outcome) => {
                 if (outcome !== 'dead' || !pathRef.current.startsWith('/logged-in')) return;
+                if (await resumeDeadSession()) return;
+                if (!pathRef.current.startsWith('/logged-in')) return;
                 router.replace({ pathname: '/login', params: { reauth: '1' } });
             });
         });

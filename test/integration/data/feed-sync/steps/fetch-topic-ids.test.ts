@@ -112,6 +112,23 @@ describe('which retrieval path runs', () => {
     expect(await sent.all()).toEqual([]);
   });
 
+  it('a fact and a location with no topics yet fetches headlines for the country and the world', async () => {
+    await markPersonaMigrated();
+    await addFact('Lives in Amsterdam, North Holland, Netherlands');
+    await seedLocation('NL', 0.6);
+    const sent = recordOps();
+
+    await stepFetchTopicIds('', makeCtx().ctx);
+
+    expect(await sent.count('GetArticleIdsForTopics')).toBe(0);
+    const [persona] = await sent.named('GetArticleIdsForPersona');
+    expect(persona.variables.query.topics).toEqual([]);
+    expect(persona.variables.query.topHeadlines.scopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'NL' },
+      { scope: 'GLOBAL', countryCode: null },
+    ]);
+  });
+
   // DA45: a reader who follows only staged or muted topics still gets headlines. The profile always
   // carries a GLOBAL scope, so the request is sent with an empty topic list.
   test('DA45: staged-only topics still fetch headlines (no topics, GLOBAL plus the country scope)', async () => {

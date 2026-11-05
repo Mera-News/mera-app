@@ -1,4 +1,3 @@
-import { AccountService } from '@/lib/account-service';
 import { getCountryName, getFlagEmoji } from '@/lib/algorithms/country-utils';
 import type { LocationRole } from '@/lib/database/models/Location';
 import { addUserLocation } from '@/lib/database/services/location-persona-actions';
@@ -7,12 +6,13 @@ import { useDebouncedValue } from '@/lib/hooks/use-debounced-value';
 import logger from '@/lib/logger';
 import { searchPlaces, type Place } from '@/lib/place-service';
 import { toastManager } from '@/lib/toast-manager';
+import countries from 'i18n-iso-countries';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { alpha3ToAlpha2, titleCasePlace, weightForBucket, type WeightBucket } from './location-display';
 
 /** A place resolved either from placeSearch or manual entry, ready to save. */
-interface ChosenPlace {
+export interface ChosenPlace {
   readonly city: string | null;
   readonly region: string | null;
   /** ISO alpha-2 (matches `locations.countryCode`). */
@@ -20,7 +20,14 @@ interface ChosenPlace {
   readonly label: string;
 }
 
-export function useAddLocation({ onSaved }: { onSaved: () => void }) {
+export function useAddLocation({
+  onSaved,
+  homeOnly = false,
+}: {
+  /** Awaited: a rejection counts as a failed save, so the reader can try again. */
+  onSaved: (place: ChosenPlace) => void | Promise<void>;
+  homeOnly?: boolean;
+}) {
   const { t } = useTranslation();
   const [chosen, setChosen] = useState<ChosenPlace | null>(null);
   const [role, setRole] = useState<LocationRole>('home');
@@ -39,7 +46,6 @@ export function useAddLocation({ onSaved }: { onSaved: () => void }) {
   // ── Manual-entry state ────────────────────────────────────────────────────
   const [manual, setManual] = useState(false);
   const [manualCity, setManualCity] = useState('');
-  const [countryCodes, setCountryCodes] = useState<string[]>([]); // ISO alpha-3
   const [manualCountryA3, setManualCountryA3] = useState<string | null>(null);
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
@@ -75,25 +81,16 @@ export function useAddLocation({ onSaved }: { onSaved: () => void }) {
       });
   }, [debouncedQuery, manual]);
 
-  // Lazy-load the country list the first time manual entry opens.
-  useEffect(() => {
-    if (!manual || countryCodes.length > 0) return;
-    AccountService.getAllCountries()
-      .then((codes) => setCountryCodes(codes.filter((c) => c !== 'GLOBAL')))
-      .catch((error) => {
-        logger.captureException(error, {
-          tags: { component: 'AddLocationView', method: 'getAllCountries' },
-        });
-      });
-  }, [manual, countryCodes.length]);
-
+  // The ISO list on the phone, not the server's: manual entry is the way through
+  // when Mera is unreachable, so it must not need Mera.
   const countryOptions = useMemo(() => {
+    if (!manual) return [];
     const q = countrySearch.toLowerCase().trim();
-    return countryCodes
+    return Object.keys(countries.getAlpha3Codes())
       .map((a3) => ({ a3, name: getCountryName(a3), flag: getFlagEmoji(a3) }))
       .filter((c) => !q || c.name.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [countryCodes, countrySearch]);
+  }, [manual, countrySearch]);
 
   const handlePickPlace = useCallback((place: Place) => {
     void hapticLight();
@@ -129,10 +126,10 @@ export function useAddLocation({ onSaved }: { onSaved: () => void }) {
         role,
         weight: weightForBucket(bucket),
       });
-      if (result.updated) {
+      if (result.updated && !homeOnly) {
         toastManager.showInfo(t('locations.toastUpdatedTitle'), t('locations.toastUpdatedBody'));
       }
-      onSaved();
+      await onSaved(chosen);
     } catch (error) {
       logger.captureException(error, {
         tags: { component: 'AddLocationView', method: 'handleSave' },
@@ -140,7 +137,7 @@ export function useAddLocation({ onSaved }: { onSaved: () => void }) {
       toastManager.showError(t('locations.saveFailedTitle'), t('locations.saveFailedBody'));
       setSaving(false);
     }
-  }, [chosen, saving, role, bucket, onSaved, t]);
+  }, [chosen, saving, role, bucket, onSaved, homeOnly, t]);
 
   return {
     chosen,

@@ -205,3 +205,14 @@ describe('mera-explainer-content — plans', () => {
     expect(MERA_EXPLAINER_SECTIONS.privacy_what_we_store).not.toMatch(/count of how many articles were analysed/i);
   });
 });
+
+describe('mera-explainer-content — what chat can reach', () => {
+  // The reference outranks the identity on the about-Mera skill, so a text that
+  // only says Mera reads feeds answers "Can you browse?" with no.
+  it('says chat searches the web and opens no page', () => {
+    const text = MERA_EXPLAINER_SECTIONS.what_is_mera;
+    expect(text).toMatch(/search the web/i);
+    expect(text).toMatch(/does not open a page or read an article/i);
+    expect(text).toMatch(/publishers own their articles/i);
+  });
+});

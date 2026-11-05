@@ -57,11 +57,12 @@ type SkillId = (typeof SKILL_IDS)[number];
 // reached a model, so its size cost nothing and bought nothing. 2,162 is the
 // measured size of the feed_tuning and back-reference rows (onemera S1/S1.5),
 // shipped after staging moved see-less routing 8/60 to 48/60; 2,376 is the
-// follow_story intent with its literal follow-word and surface tests (S3b).
+// follow_story intent with its literal follow-word and surface tests (S3b);
+// 2,426 is the acknowledgement line that keeps the sentence on the request.
 // topics/generic bought the Place rule (a fact's place at its level) and the
 // no-guideline, no-country and no-year rules with tokens rather than by trimming
 // its measured examples.
-const BUDGET: Record<string, number> = { router: 2376, 'topics/generic': 1500 };
+const BUDGET: Record<string, number> = { router: 2426, 'topics/generic': 1500 };
 const DEFAULT_BUDGET = 1200;
 
 /**

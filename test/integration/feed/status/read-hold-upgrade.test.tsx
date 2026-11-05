@@ -13,7 +13,7 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { configureRevenueCat } from '@/lib/revenuecat';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
+import { router } from 'expo-router';
 import { resetReadHold, setReadHold } from '@/lib/subscription/read-hold';
 import { __resetTrialOfferForTests } from '@/lib/subscription/trial-offer';
 import { initI18nEn } from '@/test/helpers';
@@ -29,7 +29,6 @@ jest.mock('react-native-reanimated', () => {
         useReducedMotion: () => true,
     };
 });
-jest.mock('@/lib/subscription/present-free-tier-paywall', () => ({ presentFreeTierPaywall: jest.fn(() => Promise.resolve()) }));
 jest.mock('@/lib/mera-protocol-toolkit/core/systemRequirements', () => ({
     checkRequirements: jest.fn(() => Promise.resolve({ supported: false })),
 }));
@@ -67,13 +66,13 @@ afterEach(() => {
 });
 
 describe('the upgrade button', () => {
-    it('shows See plans while held on Starter and opens the store paywall', async () => {
+    it('shows See plans while held on Starter and opens Manage plan', async () => {
         useSubscriptionStore.setState({ serverTier: 'starter' });
         const view = await render(<ReadHoldUpgradeButton testID="feed-status-upgrade" />);
         const button = await view.findByTestId('feed-status-upgrade');
         expect(view.getByText('See plans')).toBeTruthy();
         await fireEvent.press(button);
-        expect(presentFreeTierPaywall).toHaveBeenCalledWith('feed-read-hold');
+        expect(router.push).toHaveBeenCalledWith('/logged-in/preferences/manage-subscription');
     });
 
     it('offers the Individual trial only when the store says this reader is eligible', async () => {

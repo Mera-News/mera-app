@@ -110,6 +110,7 @@ export function parseScript(raw: unknown, opts: ParseOptions): AgentScript {
     persona,
     declinedTopics,
     ...(root.surface !== undefined ? { surface: parseSurface(id, root.surface) } : {}),
+    ...(root.webSearchOff === true ? { webSearchOff: true } : {}),
     turns,
   };
 }

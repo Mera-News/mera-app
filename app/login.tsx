@@ -84,6 +84,7 @@ export default function LoginScreen() {
         <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
             <AuthScreen
                 onLoginSuccess={reauthMode ? (userId) => { void handleReauthSuccess(userId); } : undefined}
+                allowDeviceSignIn={reauth !== 'pin'}
             />
         </ErrorBoundary>
     );

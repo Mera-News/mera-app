@@ -101,11 +101,11 @@ export class TutorialHelpAgent implements IAgent {
     return getTutorialHelpToolDefinitions(this.webSearchEnabled());
   }
 
-  async executeTool(name: string, input: unknown): Promise<ToolExecutionResult> {
+  async executeTool(name: string, input: unknown, stop?: AbortSignal): Promise<ToolExecutionResult> {
     if (name === 'webSearch') {
       // The handler re-checks the toggle before any await, so a call replayed
       // from a conversation held while it was on still cannot search.
-      return { result: await handleWebSearch((input as Record<string, unknown>) ?? {}) };
+      return { result: await handleWebSearch((input as Record<string, unknown>) ?? {}, stop) };
     }
 
     // Reached only if a model invents a tool name it was never offered. Logged

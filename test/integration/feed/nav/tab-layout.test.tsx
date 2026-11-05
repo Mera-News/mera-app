@@ -6,6 +6,7 @@ import type React from 'react';
 
 type TriggerProps = Record<string, unknown> & { name: string };
 const mockTriggers: TriggerProps[] = [];
+const mockBar: { hidden?: boolean } = {};
 
 jest.mock('expo-router/native-tabs', () => {
   const Trigger = (props: TriggerProps & { children?: React.ReactNode }) => {
@@ -17,7 +18,10 @@ jest.mock('expo-router/native-tabs', () => {
   Trigger.Icon = () => null;
   Trigger.Label = () => null;
   Trigger.VectorIcon = () => null;
-  const NativeTabs = ({ children }: { children: React.ReactNode }) => children;
+  const NativeTabs = ({ children, hidden }: { children: React.ReactNode; hidden?: boolean }) => {
+    mockBar.hidden = hidden;
+    return children;
+  };
   NativeTabs.Trigger = Trigger;
   return { NativeTabs };
 });
@@ -29,6 +33,7 @@ jest.mock('@/lib/stores/fact-checks-store', () => ({ useChecksUnseen: () => fals
 
 import * as TabLayout from '@/app/logged-in/app_container/_layout';
 import { setTabDot } from '@/components/custom/nav/current-surface';
+import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { initI18nEn } from '@/test/helpers';
 
 const AppLayout = TabLayout.default;
@@ -63,6 +68,17 @@ it('gives every tab item its name as the label, and says when it has a dot', asy
     'Library',
     'You',
   ]);
+});
+
+it('takes the native tab bar away while the chat panel is on screen, motion included', async () => {
+  await render(<AppLayout />);
+  expect(mockBar.hidden).toBe(false);
+
+  await act(() => useFloatingChatStore.getState().setChatShown(true));
+  expect(mockBar.hidden).toBe(true);
+
+  await act(() => useFloatingChatStore.getState().setChatShown(false));
+  expect(mockBar.hidden).toBe(false);
 });
 
 it('leaves the re-tap to JS and keeps the native pop to root', async () => {

@@ -17,6 +17,8 @@ import {
   buildRelevanceCalls as harnessBuildRelevanceCalls,
   buildReasonCallsForSubset as harnessBuildReasonCallsForSubset,
   buildScoreCallForChunk,
+  buildUserContext,
+  EMPTY_FACT_BANK_CONTEXT,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
@@ -604,5 +606,24 @@ describe('golden — related fact places', () => {
     const shim = await shimBuildRelevanceCalls([candidate('a')]);
     expect(shim.calls[0].prompt).toContain('Related User Fact: related fact a\n');
     expect(shim.calls[0].prompt).not.toContain('news from');
+  });
+});
+
+describe('an empty fact bank', () => {
+  it('tells every prompt there is no reader to describe, instead of "[User facts] ."', () => {
+    expect(buildUserContext([])).toBe(EMPTY_FACT_BANK_CONTEXT);
+    expect(buildUserContext(['', '  '])).toBe(EMPTY_FACT_BANK_CONTEXT);
+    const { prompt } = buildScoreCallForChunk([candidate('a')], []);
+    expect(prompt).toContain(`User Context: ${EMPTY_FACT_BANK_CONTEXT}`);
+  });
+
+  it('a reader with facts sees the same context as before', () => {
+    expect(buildUserContext(['Lives in Delft', 'Works as a nurse'])).toBe('[User facts] Lives in Delft. Works as a nurse.');
+  });
+
+  it('carries the reader-less rule itself, so no shared prompt changes for a reader with facts', () => {
+    expect(EMPTY_FACT_BANK_CONTEXT).toContain('any instruction to link the article to a user fact does not apply');
+    expect(CLOUD_REASON_SYSTEM_PROMPT).not.toContain('[User facts] none');
+    expect(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT).not.toContain('[User facts] none');
   });
 });

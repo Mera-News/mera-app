@@ -80,10 +80,11 @@ export function __setJobHandlerForTests(
 
 /**
  * Types whose failures may be a DEFERRAL (lib/inference/job-defer.ts) rather
- * than a spent attempt. Only the combination pass: it runs unattended after a
- * chat closes, often exactly when the phone goes offline.
+ * than a spent attempt. The combination pass runs unattended after a chat
+ * closes, often exactly when the phone goes offline; a first topic run lost to
+ * a brief 503 or a dropped link would leave the reader's Feed without topics.
  */
-const DEFERRABLE_TYPES: ReadonlySet<InferenceJobType> = new Set<InferenceJobType>(['topic_combo']);
+const DEFERRABLE_TYPES: ReadonlySet<InferenceJobType> = new Set<InferenceJobType>(['topic_combo', 'topic_gen']);
 
 /** Types `onDrain` does not wait for. A combination pass can sit deferred for
  *  as long as the device is offline, and a fact's "generating more" spinner

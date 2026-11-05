@@ -209,6 +209,7 @@ const EMPTY_CONTEXT: RestartContext = {
 let trackingInstalled = false;
 let backgroundedAt: number | null = null;
 let lastForegroundAt: number | null = null;
+let departures = 0;
 
 /**
  * Records the stamps the marker carries.
@@ -228,9 +229,36 @@ function ensureDepartureTracking(): void {
   AppState.addEventListener('change', (state: AppStateStatus) => {
     if (state === 'background') {
       backgroundedAt = Date.now();
+      departures += 1;
     } else if (state === 'active') {
       lastForegroundAt = Date.now();
     }
+  });
+}
+
+/** A check that answers true once the app has left since this call. */
+export function departureMark(): () => boolean {
+  ensureDepartureTracking();
+  const at = departures;
+  return () => departures !== at;
+}
+
+/**
+ * Resolves at once unless the app is in the background, then on `active` or on
+ * `signal`. Same line as the tracking above: `inactive` is not a departure.
+ */
+export function whenForeground(signal?: AbortSignal | null): Promise<void> {
+  if (AppState.currentState !== 'background' || signal?.aborted) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      sub.remove();
+      signal?.removeEventListener('abort', done);
+      resolve();
+    };
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') done();
+    });
+    signal?.addEventListener('abort', done, { once: true });
   });
 }
 
@@ -650,6 +678,7 @@ export function __resetAppRestartForTests(): void {
   restartInFlight = false;
   backgroundedAt = null;
   lastForegroundAt = null;
+  departures = 0;
   trackingInstalled = false;
   spotTaken = false;
   autoReloadOff = false;

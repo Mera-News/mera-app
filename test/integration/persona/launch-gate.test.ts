@@ -69,12 +69,15 @@ import {
     http,
     secureStoreDump,
     server,
+    setAppState,
     signInFixtureAccount,
+    useFakeClock,
 } from '@/test/helpers';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { RESTORE_CAP_MS } from '@/components/custom/auth/useLoggedInGate';
 import { __resetAppRestartForTests, autoReloadDisabled, RESTART_MARKER_KEY } from '@/lib/app-restart';
 import * as resumeSpot from '@/lib/navigation/resume-spot';
+import * as sessionResume from '@/lib/session-resume';
 import * as otaNotice from '@/lib/ota-notice';
 import logger from '@/lib/logger';
 import { __resetSplashHoldForTests, restoreLookState } from '@/lib/splash-hold';
@@ -87,7 +90,10 @@ const ME = FIXTURE_ACCOUNT.userId;
 const FOREIGN = '66e2e0000000000000000002';
 const SLUG = Constants.expoConfig?.slug || 'app';
 const key = (suffix: string) => `${SLUG}_${suffix}`;
+/** Where an account with facts opens. */
 const APP_ROUTE = `/logged-in/app_container/${STARTUP_TAB_DEFAULT}`;
+/** Where these fixtures open: an account with no facts and no topics lands on World. */
+const FACTLESS_ROUTE = '/logged-in/app_container/world';
 const REAUTH = { pathname: '/login', params: { reauth: '1' } };
 
 const replaceMock = () => jest.mocked(router.replace);
@@ -260,6 +266,7 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await signIn();
         await setSetting('cached_user_id', ME);
         await markOnboardingDone();
+        await addFact('I follow Formula 1 racing');
 
         await mountGate();
         await waitForRoute();
@@ -267,6 +274,18 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
 
         expect(replaced()).toEqual([[APP_ROUTE]]);
         expect(useUserStore.getState().userId).toBe(ME);
+    });
+
+    it('a finished account with no facts and no topics opens on World', async () => {
+        await signIn();
+        await setSetting('cached_user_id', ME);
+        await markOnboardingDone();
+
+        await mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(replaced()).toEqual([['/logged-in/app_container/world']]);
     });
 
     it('opens on the tab the person chose, not the default', async () => {
@@ -372,7 +391,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await drain();
 
         expect(restore).toHaveBeenCalledTimes(1);
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
     }, 30_000);
 
     it('a cold launch never rebuilds', async () => {
@@ -383,7 +402,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await drain();
 
         expect(restore).not.toHaveBeenCalled();
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
     }, 30_000);
 
     it('a language restart carries no spot, so it never rebuilds', async () => {
@@ -406,7 +425,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await waitForRoute();
         await drain();
 
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         expect(autoReloadDisabled()).toBe(true);
         expect(restoreLookState()).toBe('done');
     }, 30_000);
@@ -421,7 +440,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         await waitForRoute();
         await drain();
 
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         expect(autoReloadDisabled()).toBe(true);
     }, 30_000);
 
@@ -435,7 +454,7 @@ describe('useLoggedInGate: an update reload puts the reader back', () => {
         });
 
         await mountGate();
-        await waitFor(() => expect(replaced()).toEqual([[APP_ROUTE]]), { timeout: 8000 + RESTORE_CAP_MS });
+        await waitFor(() => expect(replaced()).toEqual([[FACTLESS_ROUTE]]), { timeout: 8000 + RESTORE_CAP_MS });
         await drain();
 
         expect(signal?.aborted).toBe(true);
@@ -728,7 +747,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         await waitForRoute();
         await drain();
 
-        expect(replaced()).toEqual([[APP_ROUTE]]);
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         // Only a fresh proof of identity clears it, never a gate that merely chose not to eject.
         expect(await getSetting(IDENTITY_FAULT_KEY)).toBe('1');
     });
@@ -792,6 +811,108 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             expect(replaced()).toEqual([[REAUTH]]);
         });
 
+        describe('the silent resume', () => {
+            const signInPosts = (reply?: () => Response) => {
+                const posts: unknown[] = [];
+                server.use(
+                    http.post('*/api/auth/device/sign-in/dev', () => {
+                        posts.push(1);
+                        return reply?.();
+                    }),
+                );
+                return posts;
+            };
+            const deadUntil = (posts: unknown[]) =>
+                recheckOnly(() => (posts.length ? (undefined as never) : HttpResponse.json(null)));
+
+            beforeEach(async () => {
+                process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+                await signIn();
+                await setSetting('cached_user_id', ME);
+                await markOnboardingDone();
+            });
+            afterEach(() => {
+                delete process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN;
+                setAppState('active');
+            });
+
+            it('a resumed session opens the app, past the sign-in gate', async () => {
+                const posts = signInPosts();
+                server.use(deadUntil(posts));
+
+                await mountGate();
+                await waitForRoute();
+                await drain();
+
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            });
+
+            it('a 409 shows the sign-in gate', async () => {
+                const posts = signInPosts(() =>
+                    HttpResponse.json({ code: 'DEVICE_NOT_BOUND', message: 'x' }, { status: 409 }),
+                );
+                server.use(recheckOnly(() => HttpResponse.json(null)));
+
+                await mountGate();
+                await waitForRoute();
+                await drain();
+
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[REAUTH]]);
+            });
+
+            it('a refused account still routes when its session re-ran the gate', async () => {
+                // The refetch of the refused session lands a round trip after the reply, past the
+                // switch hold, and the re-run it causes stops there.
+                const posts = signInPosts(() => {
+                    setTimeout(
+                        () => sessionAtom().set({ ...sessionAtom().get(), data: { user: { id: FOREIGN }, session: {} } }),
+                        30,
+                    );
+                    return HttpResponse.json({ user: { id: FOREIGN }, trialAvailable: false, minted: true });
+                });
+                server.use(recheckOnly(() => HttpResponse.json(null)));
+
+                await mountGate();
+                await waitForRoute();
+                await drain();
+
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[REAUTH]]);
+                expect(await getSetting('cached_user_id')).toBe(ME);
+            });
+
+            it('a launch in the background waits for the reader before attesting', async () => {
+                setAppState('background');
+                const posts = signInPosts();
+                server.use(deadUntil(posts));
+
+                await mountGate();
+                await drain();
+                expect(posts).toEqual([]);
+                expect(replaced()).toEqual([]);
+
+                setAppState('active');
+                await waitForRoute();
+                await drain();
+                expect(posts).toHaveLength(1);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            });
+
+            it('a resume that hangs cannot hold the start screen past the cap', async () => {
+                const hang = new Promise<never>(() => undefined);
+                track(jest.spyOn(sessionResume, 'resumeDeadSession')).mockReturnValue(hang);
+                server.use(recheckOnly(() => HttpResponse.json(null)));
+                useFakeClock(Date.now(), { advanceTimers: true });
+
+                await mountGate();
+                await waitForRoute();
+
+                expect(replaced()).toEqual([[REAUTH]]);
+            });
+        });
+
         it('Mera down at a cold start shows the unreachable gate, not an app whose queries fail', async () => {
             await signIn();
             await setSetting('cached_user_id', ME);
@@ -837,7 +958,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await waitForRoute();
             await drain();
 
-            expect(replaced()).toEqual([[APP_ROUTE]]);
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         });
     });
 });

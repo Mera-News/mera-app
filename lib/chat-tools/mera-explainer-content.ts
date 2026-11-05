@@ -75,6 +75,8 @@ Every story Mera shows carries a plain-language "Why this matters to you" explan
 
 Mera does not summarise or rewrite articles. You get the headline and Mera's reasoning for why it matters; the reading itself happens at the original publisher, through a direct link. That is deliberate. Rather than replacing journalism, Mera routes attention and traffic back to the newsrooms that produced it, and the readers who arrive came because the story genuinely mattered to them.
 
+In cloud chat, Mera can search the web while Web search in chat is on in Mera Protocol settings, and it answers from the search results. It does not open a page or read an article. Publishers own their articles, so Mera works from search results and the headline and short description publishers put in their feeds, and links out to the publisher rather than reproducing the article. Chat that runs on your phone has no web search.
+
 You control the interruptions. You can set up to 24 alert opportunities a day, at times that suit you. Life-safety emergencies are the single exception that always breaks through your cap.
 
 Mera runs on iOS and Android, worldwide. The app interface is available in 20 languages, and news is gathered from sources in many more, so the language a story was written in never limits what reaches you.
@@ -155,7 +157,7 @@ Every plan includes the complete Mera experience. There is no feature held back 
 
 Separately from the plan, you control interruptions: up to 24 alert opportunities per day at times you choose, with life-safety emergencies as the one exception that always breaks through.
 
-A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
+Mera is a project funded by its readers: paid plans are what keep it going. Individual and Professional are billed monthly or yearly, and the free trial is on monthly Individual only. A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
 
   // ---------------------------------------------------------------------------
   known_gaps: `Mera would rather you heard these from Mera than found them yourself. All of these are true right now.

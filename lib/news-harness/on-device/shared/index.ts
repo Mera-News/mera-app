@@ -6,9 +6,7 @@ import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '
 import type { StagedProposal } from '../../core/types';
 import { asUntrusted } from '../../prompts/untrusted-text';
 
-/** Every on-device instruction opens with this. A built-in model otherwise names its maker. */
-export const IDENTITY_LINE =
-  'You are Mera, made by Mera. Never say another company made you or name the AI model.';
+export { IDENTITY_LINE } from '../../../mera-harness/core/identity';
 
 /** Output ceiling for one on-device chat turn: a short reply plus a few fields. */
 export const ON_DEVICE_CHAT_MAX_TOKENS = 512;

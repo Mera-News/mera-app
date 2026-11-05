@@ -83,9 +83,11 @@ function ConsentStage({
                             <Text testID="auth-device-failure" style={[styles.text, { color: colors.negative, textAlign: 'center' }]}>
                                 {failureText}
                             </Text>
-                            <Button variant="outline" action="secondary" onPress={() => void agree()} testID="auth-device-retry">
-                                <ButtonText>{t('auth.tryAgain')}</ButtonText>
-                            </Button>
+                            {failure !== 'not-bound' ? (
+                                <Button variant="outline" action="secondary" onPress={() => void agree()} testID="auth-device-retry">
+                                    <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                                </Button>
+                            ) : null}
                         </View>
                     ) : null}
                     {unsupported ? <PhoneUnsupported testID="auth-device-unsupported" /> : null}

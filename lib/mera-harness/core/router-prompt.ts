@@ -1,11 +1,12 @@
 // mera-harness/core — the router system prompt. PURE, RN-free.
 //
-// Identity, voice, the tool list, the skill INDEX and the decision procedure.
+// Who it is (core/identity), voice, the tool list, the skill INDEX and the decision procedure.
 // NOTHING about what to generate: every rule about facts, alternatives,
 // anchoring, identity composition and the question bank lives in a skill body,
 // which is the whole point of the split.
 
 import { resolveAgentArm, routerProcedureFor } from './arms';
+import { meraRouteIdentity, type MeraAbility } from './identity';
 import { loadSkill, renderSkillIndex } from './skill-loader';
 
 export type PersonaSurface = 'ONBOARDING' | 'CONFIG';
@@ -17,6 +18,8 @@ export interface RouterPromptInput {
   /** Computed by the LOOP from turn state, never reported by the model: the
    *  previous turn asked something and this message did not answer it. */
   answerPending?: boolean;
+  /** webSearch is offered on this turn's skill legs. */
+  webSearch?: boolean;
   /** Experiment arm. Omitted or 'baseline' returns the shipped prompt BYTE FOR
    *  BYTE; an unknown id throws rather than quietly scoring the control. */
   arm?: string;
@@ -162,7 +165,10 @@ function routerAddendum(arm?: string): string {
 }
 
 const SCOPE = `## Scope
-Stay on the user's profile and their news. Redirect anything else politely, briefly.`;
+News, the reader's profile and Mera itself are all yours to help with. The loaded skill handles a request about anything else.`;
+
+/** What the harness surfaces do: the persona and follow-story skills. */
+export const HARNESS_ABILITIES: readonly MeraAbility[] = ['profile', 'feed', 'follow', 'newsContext', 'howMeraWorks'];
 
 export function buildRouterPrompt(input: RouterPromptInput): string {
   // Resolved FIRST and applied to whichever surface is built below, so the two
@@ -174,16 +180,14 @@ export function buildRouterPrompt(input: RouterPromptInput): string {
       : armPrompt;
   }
 
-  const isOnboarding = input.surface === 'ONBOARDING';
-  const opening = isOnboarding
-    ? 'You are onboarding the user, learning what news matters to them.'
-    : "You are updating the user's news profile (adding, changing or removing information).";
-
+  const onboarding = input.surface === 'ONBOARDING'
+    ? '\n\nRight now you are onboarding the user, learning what news matters to them.'
+    : '';
   const pendingLine = input.answerPending
     ? '\n\n**They did NOT answer your last question.** Do not repeat it. Take the best reading of what they did say and offer it.'
     : '';
 
-  return `You are Mera. ${opening}
+  return `${meraRouteIdentity({ abilities: HARNESS_ABILITIES, webSearch: input.webSearch === true })}${onboarding}
 
 ${voiceRules(input.languageName)}
 - Short, plain, specific. No filler openers, no lists of options in your prose.

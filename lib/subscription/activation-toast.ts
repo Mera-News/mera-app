@@ -1,9 +1,7 @@
 // The one place a completed subscription is announced to the user.
 //
 // Friction this removes (the repo rule: name it or don't add the pattern): the
-// purchase call sites — ManageSubscriptionScreen, presentFreeTierPaywall
-// and NotSubscribedScreen — share
-// one contract, `{ billing, confirmed }` from `refreshUserBillingAfterPurchase`,
+// purchase paths share one contract, `{ billing, confirmed }` from `refreshUserBillingAfterPurchase`,
 // and each already branches on `confirmed` the same way. The toast hangs off that
 // same branch everywhere, so it is one behaviour, not five copies.
 //
@@ -22,8 +20,7 @@
 // still rendering the previous plan. `confirmed: true` is precisely "the server
 // agreed", which is the same fact `setServerBilling` commits.
 //
-// `toastManager` rather than `useToast()`: `presentFreeTierPaywall` is a plain
-// module, not a component, and this must behave identically from every site.
+// `toastManager` rather than `useToast()`: this is a plain module, not a component.
 // showSuccess is the same success MeraToast as the sign-out toast in AppPreferencesTab.
 
 import i18next from 'i18next';

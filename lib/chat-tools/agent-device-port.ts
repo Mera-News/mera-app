@@ -336,6 +336,7 @@ export function makeAgentToolPort(
   onPhase?: (signal: PhaseSignal) => void,
   cards?: CardToolDeps,
   onTool?: ToolSignal,
+  stop?: AbortSignal,
 ): AgentToolPort {
   // Fired HERE, inside the port, so `haltable` answers a stopped turn before
   // any `start`. `toolName` is the CONTRACT name the row labels key on. The
@@ -393,7 +394,7 @@ export function makeAgentToolPort(
               // The wait line's phase for the same search. The next model call
               // opens with 'reset', which moves the line on; the row ends here.
               onPhase?.('webSearch');
-              return handleWebSearch(args);
+              return handleWebSearch(args, stop);
             }),
         }
       : {}),
@@ -526,6 +527,11 @@ async function callModelOnce(
   for await (const event of stream) {
     if (event.type === 'reasoning') {
       req.onDelta?.({ reasoning: '' });
+    } else if (event.type === 'restart') {
+      content = '';
+      ttVisibleMs = null;
+      byIndex.clear();
+      req.onDelta?.({ restart: true });
     } else if (event.type === 'text-delta') {
       if (ttVisibleMs === null) ttVisibleMs = Date.now() - started;
       content += event.delta;
@@ -559,7 +565,7 @@ async function callModelOnce(
 
 export function makeAgentDeps(
   userMessage: string,
-  onDelta: (d: { content?: string; reasoning?: string }) => void,
+  onDelta: (d: { content?: string; reasoning?: string; restart?: true }) => void,
   onPhase?: (signal: PhaseSignal) => void,
   /** The Stop button. Once aborted, no further model call or tool runs: the
    *  loop sees a resolved `error` and ends the turn with no new legs. */
@@ -567,7 +573,7 @@ export function makeAgentDeps(
   cards?: CardToolDeps,
   onTool?: ToolSignal,
 ): AgentDeps {
-  const tools = makeAgentToolPort(userMessage, onPhase, cards, onTool);
+  const tools = makeAgentToolPort(userMessage, onPhase, cards, onTool, stop);
   return {
     // Only the leg the loop marks `streamToUser` reaches the bubble. Passing
     // `onDelta` on every leg streamed each later leg's text into the
@@ -610,7 +616,7 @@ function stoppedModelResult(): AgentModelResult {
 
 /** After Stop, every tool answers "stopped" without touching the device. A tool
  *  already past its guard (a write in flight) finishes on its own: each is a
- *  single atomic call. Mid-turn tools only read or STAGE a card; nothing is
+ *  single atomic call. A web search in flight takes `stop` itself and ends at once. Mid-turn tools only read or STAGE a card; nothing is
  *  committed until the reader taps it, so a stopped turn leaves nothing behind. */
 function haltable(port: AgentToolPort, stop: AbortSignal): AgentToolPort {
   const halted = <T,>(run: () => Promise<T>): Promise<T> =>
