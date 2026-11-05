@@ -3,15 +3,15 @@
 //
 // Owner rule: ONLY while the download runs. JS gets no sheet event, so it
 // rides the probe call (`useCurrentProbe`): after NOTICE_DELAY_MS, gone the
-// moment the call settles. On iOS, if the probe never saw a sign of Apple's
-// sheet by NO_SHEET_MS, the host is let go (`onNoSheet`): notice off, list
-// unlocked, the switch cancelled; the call itself keeps its real timeout.
-// Android has no sheet (ML Kit downloads silently), so it never gives up early.
+// moment the call settles. There is no early give-up: iOS draws Apple's sheet
+// inside the app and reports nothing while it is up, so an 8s "no sheet" guess
+// abandoned readers mid-download and left the native call holding the
+// translator, which then refused the next tap's sheet. The call ends the wait
+// (download done, sheet closed, or its own 90s / 20s timeout).
 
-import { useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { useEffect, useState } from 'react';
 
-import { probeSawSheet, useCurrentProbe, type Probe } from '@/lib/hooks/use-language-switch';
+import { useCurrentProbe } from '@/lib/hooks/use-language-switch';
 
 export const NOTICE_DELAY_MS = 300;
 
@@ -19,26 +19,10 @@ export const NOTICE_DELAY_MS = 300;
    NOTICE_DELAY_MS, with no sheet. Waiting it out keeps the notice from
    flashing in that case. */
 
-/**
- * A probe this far in with no sign of Apple's sheet is not going to show one
- * (a call left over from an earlier attempt can hold the native host). The
- * reader is let go; the call itself keeps its real 90s / 20s timeout.
- */
-export const NO_SHEET_MS = 8000;
-
-/**
- * The notice's guards. `noticeCode` is the language to show the notice for
- * (null: no notice); `gaveUp` is the probe the host stopped waiting on.
- * `cancel` is the host's switch cancel; `onNoSheet` says why it was let go.
- */
-export function useLanguageDownloadNotice(cancel: () => void, onNoSheet: (code: string) => void) {
+/** The language to show the notice for (null: no notice). */
+export function useLanguageDownloadNotice() {
     const probe = useCurrentProbe();
-    const [gaveUp, setGaveUp] = useState<Probe | null>(null);
-    const live = probe && probe !== gaveUp ? probe.code : null;
-    const cancelRef = useRef(cancel);
-    cancelRef.current = cancel;
-    const onNoSheetRef = useRef(onNoSheet);
-    onNoSheetRef.current = onNoSheet;
+    const live = probe ? probe.code : null;
 
     const [noticeCode, setNoticeCode] = useState<string | null>(null);
     useEffect(() => {
@@ -50,23 +34,5 @@ export function useLanguageDownloadNotice(cancel: () => void, onNoSheet: (code: 
         return () => clearTimeout(id);
     }, [live, probe]);
 
-    // No-sheet fallback. Apple's sheet sends JS no event; iOS reporting the app
-    // not active is the one outside sign of it, and a probe that has seen it is
-    // waiting on the reader, so it is never cut short. The probe itself watches
-    // AppState from the moment its call starts (probeSawSheet): a listener
-    // added here, after the page re-rendered, missed a short inactive blip and
-    // gave up while the sheet was still up.
-    useEffect(() => {
-        if (Platform.OS !== 'ios' || !live || !probe) return;
-        const id = setTimeout(() => {
-            if (probeSawSheet(probe)) return;
-            setGaveUp(probe);
-            cancelRef.current();
-            onNoSheetRef.current(live);
-        }, NO_SHEET_MS);
-        return () => clearTimeout(id);
-    }, [live, probe]);
-
-    return { noticeCode, gaveUp };
+    return { noticeCode };
 }
-

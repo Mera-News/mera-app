@@ -3,9 +3,7 @@ import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import LanguageDownloadNotice, { useLanguageDownloadNotice } from '@/components/custom/auth/LanguageDownloadNotice';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
-import { getNativeLanguageName } from '@/lib/translation-service';
 import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
-import { toastManager } from '@/lib/toast-manager';
 import { requestRestart } from '@/lib/app-restart';
 import { needsRtlRestart } from '@/lib/i18n';
 import { phoneLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -73,6 +71,8 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
             const current = getLocalizedLanguageName(appLanguage, appLanguage) ?? 'English';
             // Read AFTER the hook applied it, so `current` is already English
             // here — the body names the landing spot rather than re-deriving it.
+            // Closing the sheet is the reader's choice, not an error.
+            if (outcome === 'cancelled') return;
             if (fellBackToEnglish) {
                 void showDialog({
                     title: t('language.switchFailedTitle', { language }),
@@ -100,12 +100,8 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
         onResult: handleResult,
     });
 
-    // The first-launch download notice and its sheet guards: shown only while
-    // Apple's download sheet is up; with no sheet by 8s the switch is let go.
-    const { noticeCode } = useLanguageDownloadNotice(cancel, (code) => {
-        const language = getNativeLanguageName(code) ?? code;
-        toastManager.showInfo(t('auth.track.noSheetTitle'), t('auth.track.noSheetBody', { language }));
-    });
+    // The first-launch download notice: up while the language check is open.
+    const { noticeCode } = useLanguageDownloadNotice();
 
     React.useEffect(() => {
         onBusyChange?.(busy);

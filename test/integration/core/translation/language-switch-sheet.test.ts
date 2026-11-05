@@ -6,12 +6,12 @@ import { act, renderHook } from '@testing-library/react-native';
 
 // Loaded here, not lazily by the setup's beforeEach: test/helpers/screen.ts registers RNTL hooks on first import.
 import { advanceUntilSettled, setAppState, useFakeClock } from '@/test/helpers';
-import { NO_SHEET_MS, useLanguageDownloadNotice } from '@/components/custom/auth/use-language-download-notice';
+import { useLanguageDownloadNotice } from '@/components/custom/auth/use-language-download-notice';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { useLanguageSwitch } from '@/lib/hooks/use-language-switch';
 import i18n from '@/lib/i18n';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { __resetTranslationStateForTests } from '@/lib/translation-service';
+import { __resetTranslationStateForTests, isTranslationBlocked } from '@/lib/translation-service';
 
 const mockOnTranslateTask: jest.Mock = jest.requireMock('expo-translate-text').onTranslateTask;
 
@@ -36,18 +36,17 @@ beforeEach(async () => {
 });
 
 /** The Settings screen's wiring: the switch, then the notice over it. */
-function settingsPath(onCommitted: jest.Mock, onNoSheet: jest.Mock) {
+function settingsPath(onCommitted: jest.Mock, onResult: jest.Mock = jest.fn()) {
     return renderHook(() => {
-        const sw = useLanguageSwitch({ preview: false, onCommitted });
-        const notice = useLanguageDownloadNotice(sw.cancel, onNoSheet);
+        const sw = useLanguageSwitch({ preview: false, onCommitted, onResult });
+        const notice = useLanguageDownloadNotice();
         return { sw, notice };
     });
 }
 
 test('no give-up while the sheet is up, and the language applies when the download completes', async () => {
     const onCommitted = jest.fn();
-    const onNoSheet = jest.fn();
-    const { result } = await settingsPath(onCommitted, onNoSheet);
+    const { result } = await settingsPath(onCommitted);
 
     await act(() => result.current.sw.requestSwitch('ar'));
     // preview: false, so the UI strings stay where they were while the probe runs.
@@ -61,8 +60,7 @@ test('no give-up while the sheet is up, and the language applies when the downlo
         setAppState('inactive');
         setAppState('active');
     });
-    await act(() => jest.advanceTimersByTime(NO_SHEET_MS * 4));
-    expect(onNoSheet).not.toHaveBeenCalled();
+    await act(() => jest.advanceTimersByTime(30_000));
     expect(result.current.notice.noticeCode).toBe('ar');
     expect(result.current.sw.busy).toBe(true);
 
@@ -79,24 +77,50 @@ test('no give-up while the sheet is up, and the language applies when the downlo
     expect(result.current.notice.noticeCode).toBeNull();
 });
 
-test('with no sign of a sheet the switch is let go after the window, and a late answer applies nothing', async () => {
+// Apple's sheet is drawn inside the app, so iOS reports nothing while it is up
+// (measured on an iPhone: no AppState change in 37s). The switch waits on the
+// call itself, however long the download takes.
+test('with no sign of a sheet the switch still waits, and applies when the download completes', async () => {
     const onCommitted = jest.fn();
-    const onNoSheet = jest.fn();
-    const { result } = await settingsPath(onCommitted, onNoSheet);
+    const { result } = await settingsPath(onCommitted);
 
     await act(() => result.current.sw.requestSwitch('ar'));
     await act(flushQueue);
-    await act(() => jest.advanceTimersByTime(NO_SHEET_MS));
-    expect(onNoSheet).toHaveBeenCalledWith('ar');
-    expect(result.current.sw.busy).toBe(false);
+    await act(() => jest.advanceTimersByTime(30_000));
+    expect(result.current.sw.busy).toBe(true);
+    expect(result.current.notice.noticeCode).toBe('ar');
 
     await act(async () => {
         nativeAnswers[0]({ translatedTexts: 'مرحبا' });
         await flushQueue();
     });
+    expect(useAppLanguageStore.getState().appLanguage).toBe('ar');
+    expect(onCommitted).toHaveBeenCalledWith('ar', 'en');
+});
+
+test('closing the sheet is a cancel: the language stays, nothing is blocked, and a retry asks again', async () => {
+    const onCommitted = jest.fn();
+    const onResult = jest.fn();
+    const { result } = await settingsPath(onCommitted, onResult);
+    mockOnTranslateTask.mockImplementationOnce(() => Promise.reject(new Error('The operation was cancelled.')));
+
+    await act(() => result.current.sw.requestSwitch('ar'));
+    await act(flushQueue);
+    expect(onResult).toHaveBeenCalledWith(expect.objectContaining({ code: 'ar', outcome: 'cancelled' }));
     expect(useAppLanguageStore.getState().appLanguage).toBe('en');
-    expect(await getSetting('app_language')).toBeNull();
-    expect(onCommitted).not.toHaveBeenCalled();
+    expect(result.current.sw.busy).toBe(false);
+    expect(isTranslationBlocked('ar')).toBe(false);
+    // One native call: a decline is never retried behind the reader's back.
+    expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+
+    await act(() => result.current.sw.requestSwitch('ar'));
+    await act(flushQueue);
+    expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
+    await act(async () => {
+        nativeAnswers[0]({ translatedTexts: 'مرحبا' });
+        await flushQueue();
+    });
+    expect(useAppLanguageStore.getState().appLanguage).toBe('ar');
     await advanceUntilSettled();
 });
 
@@ -113,13 +137,11 @@ describe('Android (ML Kit downloads with no sheet)', () => {
 
     test('the notice shows while the pack downloads, with no give-up, and the language applies when it lands', async () => {
         const onCommitted = jest.fn();
-        const onNoSheet = jest.fn();
-        const { result } = await settingsPath(onCommitted, onNoSheet);
+        const { result } = await settingsPath(onCommitted);
 
         await act(() => result.current.sw.requestSwitch('nl'));
         await act(flushQueue);
-        await act(() => jest.advanceTimersByTime(NO_SHEET_MS * 4));
-        expect(onNoSheet).not.toHaveBeenCalled();
+        await act(() => jest.advanceTimersByTime(30_000));
         expect(result.current.notice.noticeCode).toBe('nl');
         expect(result.current.sw.busy).toBe(true);
 

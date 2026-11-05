@@ -44,9 +44,9 @@ interface WelcomeStageProps {
  * Apple's download sheet, and the ways in step away. The page turns to the new
  * language only once it is ready; the list's tick says so, with no message.
  *
- * The download notice and its sheet guards are `LanguageDownloadNotice` (shared
- * with Settings > Language); when no sheet shows, the page lets the reader go
- * with a toast pointing at iOS Settings.
+ * The download notice is `LanguageDownloadNotice` (shared with Settings >
+ * Language): up while the call is open. Closing Apple's sheet stays on the
+ * current language with no message.
  *
  * Owner rule: a language the phone cannot translate into is never offered, and
  * one that turns out missing falls back to English, with no continue-anyway;
@@ -82,6 +82,8 @@ export default function WelcomeStage({ messageTop, canUsePhone, onGetStarted, st
     );
     const onResult = useCallback(
         (r: LanguageSwitchResult) => {
+            // Closing the sheet is the reader's choice, not an error: stay quietly.
+            if (r.outcome === 'cancelled') return;
             // Android's pack is an ML Kit download the app starts itself, so a
             // failed probe is a download that did not finish, not a missing pack.
             if (Platform.OS !== 'android' || r.outcome === 'language-unsupported') return showMissing(r.code);
@@ -90,7 +92,7 @@ export default function WelcomeStage({ messageTop, canUsePhone, onGetStarted, st
         },
         [showMissing, notify, t],
     );
-    const { requestSwitch, busy, pendingCode, cancel } = useLanguageSwitch({ preview: false, onResult });
+    const { requestSwitch, busy, pendingCode } = useLanguageSwitch({ preview: false, onResult });
 
     // The startup probe for the preselected language (never a second probe).
     const blocked = useTranslationBlocked(appLanguage) != null;
@@ -105,18 +107,11 @@ export default function WelcomeStage({ messageTop, canUsePhone, onGetStarted, st
         void useAppLanguageStore.getState().setAppLanguage('en');
     }, [startup, appLanguage, busy, showMissing]);
 
-    const onNoSheet = useCallback(
-        (code: string) => {
-            const language = getNativeLanguageName(code) ?? code;
-            notify(`auth-language-nosheet-${code}`, t('auth.track.noSheetTitle'), t('auth.track.noSheetBody', { language }));
-        },
-        [notify, t],
-    );
-    const { noticeCode, gaveUp } = useLanguageDownloadNotice(cancel, onNoSheet);
+    const { noticeCode } = useLanguageDownloadNotice();
 
     // The list locks at once, with no delay: a second tap inside the notice
     // delay would start a second probe, i.e. a second sheet.
-    const waiting = busy || (startup === 'checking' && gaveUp?.code !== appLanguage);
+    const waiting = busy || startup === 'checking';
 
     const pick = useCallback(
         (code: string) => {

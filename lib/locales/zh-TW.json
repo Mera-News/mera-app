@@ -55,8 +55,6 @@
       "notHereTitle": "這支手機還沒有{{language}}",
       "phoneLanguage": "你手機的語言",
       "welcome": "歡迎使用梅拉",
-      "noSheetTitle": "你的 iPhone 未能開始下載",
-      "noSheetBody": "請再試一次。或在 iPhone 上打開「設定」，依序前往「一般」、「語言與地區」、「翻譯語言」，下載 {{language}}。",
       "gettingReadyAndroid": "正在下載。請保持梅拉開啟，這需要一點時間。",
       "downloadFailedBody": "下載未完成。請檢查網路連線後再試一次。"
     },

@@ -1243,7 +1243,10 @@ export type TranslationProbeOutcome =
     /** This device has no on-device translator at all (see deviceCanTranslate). */
     | 'device-unsupported'
     /** This OS version has no translator for this language. */
-    | 'language-unsupported';
+    | 'language-unsupported'
+    /** The reader closed the download sheet. Their choice: nothing is blocked
+     *  and no error is owed; the next probe asks again. */
+    | 'cancelled';
 
 /**
  * Ask the OS, once, whether it can translate into this language — and let it
@@ -1292,6 +1295,9 @@ export async function probeTranslationLanguage(
         isProbe: true,
         timeoutMs,
     });
+    // Closing Apple's sheet ends the call "cancelled". A decline is never
+    // retried and never blocks the language: the reader's next tap asks again.
+    if (translated == null && /cancel/i.test(probeErrors.get(targetLangCode) ?? '')) return 'cancelled';
     // After a (re)start the first native call can fail at once with "Unable to
     // Translate" for a pack that IS installed, and the next call succeeds
     // (owner's iPhone, navx2). Blocking on that put the "may still be
