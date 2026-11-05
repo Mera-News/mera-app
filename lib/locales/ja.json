@@ -337,7 +337,15 @@
     "turnOn": "通知をオンにする",
     "turnThemOn": "オンにする",
     "guardSkip": "主要ニュースで始める",
-    "guardAddFact": "何か追加する"
+    "guardAddFact": "何か追加する",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "通知",
@@ -544,7 +552,12 @@
     "lookAndTake": "確認と持ち出し",
     "askBeforeTopicDelete": "トピックを削除する前に確認する",
     "askBeforeTopicDeleteHint": "ファクトからトピックを削除するたびに、メラが確認を求めます。",
-    "exportHistoryWindowNote_other": "このエクスポートに含まれるのは、直近{{count}}日分の閲覧履歴だけです。それより古い記録はこの端末から自動的に削除されており、メラのサーバーに送信されたことはありません。"
+    "exportHistoryWindowNote_other": "このエクスポートに含まれるのは、直近{{count}}日分の閲覧履歴だけです。それより古い記録はこの端末から自動的に削除されており、メラのサーバーに送信されたことはありません。",
+    "meterTitle": "Data on this phone",
+    "meterLine": "メラ uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "メラ uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "通知",
@@ -2664,7 +2677,9 @@
     "support": "サポート",
     "supportSub": "バグの報告、ライブチャット、よくある質問、チュートリアル",
     "tutorial": "チュートリアル",
-    "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています"
+    "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "このストーリーを書き出す",
@@ -2725,7 +2740,15 @@
     "openedYesterday": "昨日開きました",
     "supportLine": "良い報道は、読者が支えることで続きます。",
     "visitsLabel": "過去30日間のあなたの訪問",
-    "subscribed": "購読中"
+    "subscribed": "購読中",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2921,7 +2944,11 @@
       "mute": "ミュート",
       "clear": "クリア",
       "footnote": "タップして変更できます。記事の•••メニューの「〜を減らす」もここに表示されます。",
-      "empty": "まだ調整したメディアはありません。メディアを検索して、表示を増やす、減らす、または表示しないように設定できます。記事の•••メニューの「〜を減らす」もここに表示されます。"
+      "empty": "まだ調整したメディアはありません。メディアを検索して、表示を増やす、減らす、または表示しないように設定できます。記事の•••メニューの「〜を減らす」もここに表示されます。",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "ご利用中のプラン",

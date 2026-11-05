@@ -349,7 +349,15 @@
     "turnOn": "Bildirimleri aç",
     "turnThemOn": "Açın",
     "guardSkip": "Başlıklarla başla",
-    "guardAddFact": "Bir şey ekle"
+    "guardAddFact": "Bir şey ekle",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -558,7 +566,12 @@
     "askBeforeTopicDelete": "Konu silmeden önce onay iste",
     "askBeforeTopicDeleteHint": "Bilgilerinizden birinden bir konuyu her sildiğinizde Mera sizden onay ister.",
     "exportHistoryWindowNote_one": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi.",
-    "exportHistoryWindowNote_other": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi."
+    "exportHistoryWindowNote_other": "Bu dışa aktarma yalnızca okumanın son {{count}} gününü kapsar. Daha eski kayıtlar bu cihazdan otomatik olarak silinir ve Mera'nın sunucularına hiç gönderilmedi.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Mera uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Bildirimler",
@@ -2686,7 +2699,9 @@
     "support": "Destek",
     "supportSub": "Hata bildir, canlı sohbet, SSS, eğitim",
     "tutorial": "Eğitim",
-    "fewerFromAlready": "Zaten {{source}} kaynağından daha az haber gösteriliyor"
+    "fewerFromAlready": "Zaten {{source}} kaynağından daha az haber gösteriliyor",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Bu haberi dışa aktar",
@@ -2747,7 +2762,15 @@
     "openedYesterday": "Dün açıldı",
     "supportLine": "İyi haberciliğin devamı, okurlar destek olduğunda gelir.",
     "visitsLabel": "Son 30 gündeki ziyaretleriniz",
-    "subscribed": "Abonesiniz"
+    "subscribed": "Abonesiniz",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2944,7 +2967,11 @@
       "mute": "Sustur",
       "clear": "Temizle",
       "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
-      "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayının daha fazlasını, daha azını veya hiçbirini görmek için yayın arayın. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer."
+      "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayının daha fazlasını, daha azını veya hiçbirini görmek için yayın arayın. Bir makalenin ••• menüsündeki \"daha az\" seçeneği de buraya düşer.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Planınız",

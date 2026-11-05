@@ -391,7 +391,15 @@
     "turnOn": "Włącz powiadomienia",
     "turnThemOn": "Włącz je",
     "guardSkip": "Zacznij od nagłówków",
-    "guardAddFact": "Dodaj coś"
+    "guardAddFact": "Dodaj coś",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -604,7 +612,12 @@
     "exportHistoryWindowNote_one": "Ten eksport obejmuje tylko ostatni {{count}} dzień czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
     "exportHistoryWindowNote_few": "Ten eksport obejmuje tylko ostatnie {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
     "exportHistoryWindowNote_many": "Ten eksport obejmuje tylko ostatnich {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
-    "exportHistoryWindowNote_other": "Ten eksport obejmuje tylko ostatnich {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera."
+    "exportHistoryWindowNote_other": "Ten eksport obejmuje tylko ostatnich {{count}} dni czytania. Starsze wpisy są automatycznie usuwane z tego urządzenia i nigdy nie zostały wysłane na serwery Mera.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Mera uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Powiadomienia",
@@ -2782,7 +2795,9 @@
     "support": "Pomoc",
     "supportSub": "Zgłoś błąd, czat na żywo, FAQ, samouczek",
     "tutorial": "Samouczek",
-    "fewerFromAlready": "Już pokazujemy mniej z {{source}}"
+    "fewerFromAlready": "Już pokazujemy mniej z {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Eksportuj tę historię",
@@ -2845,7 +2860,15 @@
     "openedYesterday": "Otwarte wczoraj",
     "supportLine": "Dobre dziennikarstwo przetrwa, gdy czytelnicy je wspierają.",
     "visitsLabel": "Twoje wizyty w ciągu ostatnich 30 dni",
-    "subscribed": "Subskrybowane"
+    "subscribed": "Subskrybowane",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -3080,7 +3103,11 @@
       "mute": "Wycisz",
       "clear": "Wyczyść",
       "footnote": "Stuknij jedno, aby je zmienić. „Mniej z” w menu ••• artykułu też trafia tutaj.",
-      "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale z niego. „Mniej z” w menu ••• artykułu też trafia tutaj."
+      "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale z niego. „Mniej z” w menu ••• artykułu też trafia tutaj.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Twój plan",

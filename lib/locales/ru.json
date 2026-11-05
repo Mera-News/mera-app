@@ -391,7 +391,15 @@
     "turnOn": "Включить уведомления",
     "turnThemOn": "Включить их",
     "guardSkip": "Начать с главных новостей",
-    "guardAddFact": "Добавить"
+    "guardAddFact": "Добавить",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Уведомления",
@@ -604,7 +612,12 @@
     "exportHistoryWindowNote_one": "Этот экспорт охватывает чтение только за последний {{count}} день. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
     "exportHistoryWindowNote_few": "Этот экспорт охватывает чтение только за последние {{count}} дня. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
     "exportHistoryWindowNote_many": "Этот экспорт охватывает чтение только за последние {{count}} дней. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
-    "exportHistoryWindowNote_other": "Этот экспорт охватывает чтение только за последние {{count}} дня. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры."
+    "exportHistoryWindowNote_other": "Этот экспорт охватывает чтение только за последние {{count}} дня. Старые записи автоматически удаляются с этого устройства и никогда не отправлялись на серверы Меры.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Мера uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Мера uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Уведомления",
@@ -2782,7 +2795,9 @@
     "support": "Поддержка",
     "supportSub": "Сообщить об ошибке, живой чат, FAQ, обучение",
     "tutorial": "Обучение",
-    "fewerFromAlready": "Уже показываем меньше от {{source}}"
+    "fewerFromAlready": "Уже показываем меньше от {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Экспортировать эту историю",
@@ -2845,7 +2860,15 @@
     "openedYesterday": "Открыто вчера",
     "supportLine": "Качественная журналистика держится, когда читатели её поддерживают.",
     "visitsLabel": "Ваши визиты за последние 30 дней",
-    "subscribed": "Подписан"
+    "subscribed": "Подписан",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -3080,7 +3103,11 @@
       "mute": "Заглушить",
       "clear": "Очистить",
       "footnote": "Нажмите на источник, чтобы изменить его. Сюда же попадает пункт «Меньше от» в меню статьи (•••).",
-      "empty": "Вы пока не настраивали источники. Найдите издание, чтобы видеть его больше, меньше или совсем не видеть. Сюда же попадает пункт «Меньше от» в меню статьи (•••)."
+      "empty": "Вы пока не настраивали источники. Найдите издание, чтобы видеть его больше, меньше или совсем не видеть. Сюда же попадает пункт «Меньше от» в меню статьи (•••).",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Ваш тариф",

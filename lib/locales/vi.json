@@ -337,7 +337,15 @@
     "turnOn": "Bật thông báo",
     "turnThemOn": "Bật lên",
     "guardSkip": "Bắt đầu với tin nổi bật",
-    "guardAddFact": "Thêm gì đó"
+    "guardAddFact": "Thêm gì đó",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Thông báo",
@@ -544,7 +552,12 @@
     "lookAndTake": "Xem và mang theo",
     "askBeforeTopicDelete": "Hỏi trước khi xóa chủ đề",
     "askBeforeTopicDeleteHint": "Mera yêu cầu bạn xác nhận mỗi lần bạn xóa một chủ đề khỏi một trong các dữ kiện của mình.",
-    "exportHistoryWindowNote_other": "Bản xuất này chỉ bao gồm {{count}} ngày đọc gần nhất. Các mục cũ hơn sẽ tự động bị xóa khỏi thiết bị này và chưa bao giờ được gửi lên máy chủ của Mera."
+    "exportHistoryWindowNote_other": "Bản xuất này chỉ bao gồm {{count}} ngày đọc gần nhất. Các mục cũ hơn sẽ tự động bị xóa khỏi thiết bị này và chưa bao giờ được gửi lên máy chủ của Mera.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Mera uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Thông báo",
@@ -2664,7 +2677,9 @@
     "support": "Hỗ trợ",
     "supportSub": "Báo lỗi, trò chuyện trực tiếp, câu hỏi thường gặp, hướng dẫn",
     "tutorial": "Hướng dẫn",
-    "fewerFromAlready": "Đã hiển thị ít tin hơn từ {{source}}"
+    "fewerFromAlready": "Đã hiển thị ít tin hơn từ {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Xuất câu chuyện này",
@@ -2725,7 +2740,15 @@
     "openedYesterday": "Đã mở hôm qua",
     "supportLine": "Báo chí chất lượng tồn tại được khi độc giả ủng hộ.",
     "visitsLabel": "Lượt mở của bạn trong 30 ngày qua",
-    "subscribed": "Đã đăng ký"
+    "subscribed": "Đã đăng ký",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2921,7 +2944,11 @@
       "mute": "Tắt tiếng",
       "clear": "Xóa",
       "footnote": "Chạm vào một mục để thay đổi. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
-      "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây."
+      "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu ••• của bài viết cũng nằm ở đây.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Gói của bạn",

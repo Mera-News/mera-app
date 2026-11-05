@@ -391,7 +391,15 @@
     "turnOn": "Увімкнути сповіщення",
     "turnThemOn": "Увімкнути їх",
     "guardSkip": "Почати з головних новин",
-    "guardAddFact": "Додати"
+    "guardAddFact": "Додати",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Сповіщення",
@@ -604,7 +612,12 @@
     "exportHistoryWindowNote_one": "Цей експорт охоплює лише останній {{count}} день читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
     "exportHistoryWindowNote_few": "Цей експорт охоплює лише останні {{count}} дні читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
     "exportHistoryWindowNote_many": "Цей експорт охоплює лише останні {{count}} днів читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
-    "exportHistoryWindowNote_other": "Цей експорт охоплює лише останні {{count}} днів читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери."
+    "exportHistoryWindowNote_other": "Цей експорт охоплює лише останні {{count}} днів читання. Старіші записи автоматично видаляються з цього пристрою й ніколи не надсилалися на сервери Мери.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Мера uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Мера uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Сповіщення",
@@ -2786,7 +2799,9 @@
     "support": "Підтримка",
     "supportSub": "Повідомити про помилку, живий чат, FAQ, навчання",
     "tutorial": "Навчання",
-    "fewerFromAlready": "Уже показуємо менше від {{source}}"
+    "fewerFromAlready": "Уже показуємо менше від {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Експортувати цю історію",
@@ -2849,7 +2864,15 @@
     "openedYesterday": "Відкрито вчора",
     "supportLine": "Якісна журналістика живе, поки читачі її підтримують.",
     "visitsLabel": "Ваші візити за останні 30 днів",
-    "subscribed": "Передплачено"
+    "subscribed": "Передплачено",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -3084,7 +3107,11 @@
       "mute": "Заглушити",
       "clear": "Очистити",
       "footnote": "Натисніть на видання, щоб змінити його. Сюди також потрапляє пункт «Менше від» у меню статті «•••».",
-      "empty": "Ви ще нічого не змінювали в джерелах. Знайдіть видання, щоб бачити його більше, менше або взагалі не бачити. Сюди також потрапляє пункт «Менше від» у меню статті «•••»."
+      "empty": "Ви ще нічого не змінювали в джерелах. Знайдіть видання, щоб бачити його більше, менше або взагалі не бачити. Сюди також потрапляє пункт «Менше від» у меню статті «•••».",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Ваш тариф",

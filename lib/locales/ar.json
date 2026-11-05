@@ -432,7 +432,15 @@
     "turnOn": "تشغيل الإشعارات",
     "turnThemOn": "شغّلها",
     "guardSkip": "ابدأ بالعناوين",
-    "guardAddFact": "أضف شيئا"
+    "guardAddFact": "أضف شيئا",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -649,7 +657,12 @@
     "exportHistoryWindowNote_two": "لا يغطي هذا التصدير إلا آخر يومين من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
     "exportHistoryWindowNote_few": "لا يغطي هذا التصدير إلا آخر {{count}} أيام من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
     "exportHistoryWindowNote_many": "لا يغطي هذا التصدير إلا آخر {{count}} يومًا من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
-    "exportHistoryWindowNote_other": "لا يغطي هذا التصدير إلا آخر {{count}} يوم من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا."
+    "exportHistoryWindowNote_other": "لا يغطي هذا التصدير إلا آخر {{count}} يوم من القراءة. تُحذف الإدخالات الأقدم من هذا الجهاز تلقائيًا، ولم تُرسل قط إلى خوادم ميرا.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "ميرا uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "ميرا uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "الإشعارات",
@@ -2885,7 +2898,9 @@
     "support": "الدعم",
     "supportSub": "الإبلاغ عن خطأ، محادثة مباشرة، الأسئلة الشائعة، الشرح",
     "tutorial": "الشرح",
-    "fewerFromAlready": "تعرض بالفعل أخباراً أقل من {{source}}"
+    "fewerFromAlready": "تعرض بالفعل أخباراً أقل من {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "تصدير هذه القصة",
@@ -2950,7 +2965,15 @@
     "openedYesterday": "فُتح أمس",
     "supportLine": "تدوم التغطية الجيدة حين يدعمها قراؤها.",
     "visitsLabel": "زياراتك خلال الأيام الثلاثين الماضية",
-    "subscribed": "مشترك"
+    "subscribed": "مشترك",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -3223,7 +3246,11 @@
       "mute": "كتم",
       "clear": "مسح",
       "footnote": "اضغط على أحدها لتغييره. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا.",
-      "empty": "لم تعدّل أي مصدر بعد. ابحث عن منشور لترى منه أكثر أو أقل أو لا شيء. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا."
+      "empty": "لم تعدّل أي مصدر بعد. ابحث عن منشور لترى منه أكثر أو أقل أو لا شيء. «أقل من» في قائمة ••• للمقال تصل إلى هنا أيضًا.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "خطتك",

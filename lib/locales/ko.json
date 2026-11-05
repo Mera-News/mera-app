@@ -337,7 +337,15 @@
     "turnOn": "알림 켜기",
     "turnThemOn": "켜기",
     "guardSkip": "헤드라인으로 시작",
-    "guardAddFact": "추가하기"
+    "guardAddFact": "추가하기",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "알림",
@@ -544,7 +552,12 @@
     "lookAndTake": "살펴보기 및 가져가기",
     "askBeforeTopicDelete": "토픽을 삭제하기 전에 확인",
     "askBeforeTopicDeleteHint": "사실에서 토픽을 삭제할 때마다 메라가 확인을 요청합니다.",
-    "exportHistoryWindowNote_other": "이 내보내기에는 최근 {{count}}일간의 읽기 기록만 포함됩니다. 그보다 오래된 항목은 이 기기에서 자동으로 삭제되며, 메라 서버로 전송된 적이 없습니다."
+    "exportHistoryWindowNote_other": "이 내보내기에는 최근 {{count}}일간의 읽기 기록만 포함됩니다. 그보다 오래된 항목은 이 기기에서 자동으로 삭제되며, 메라 서버로 전송된 적이 없습니다.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "메라 uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "메라 uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "알림",
@@ -2664,7 +2677,9 @@
     "support": "지원",
     "supportSub": "버그 신고, 실시간 채팅, 자주 묻는 질문, 튜토리얼",
     "tutorial": "튜토리얼",
-    "fewerFromAlready": "{{source}} 기사는 이미 적게 표시되고 있어요"
+    "fewerFromAlready": "{{source}} 기사는 이미 적게 표시되고 있어요",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "이 스토리 내보내기",
@@ -2725,7 +2740,15 @@
     "openedYesterday": "어제 열람",
     "supportLine": "좋은 보도는 독자가 지지할 때 오래갑니다.",
     "visitsLabel": "지난 30일 동안 회원님의 방문",
-    "subscribed": "구독 중"
+    "subscribed": "구독 중",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2921,7 +2944,11 @@
       "mute": "음소거",
       "clear": "지우기",
       "footnote": "매체를 누르면 바꿀 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요.",
-      "empty": "아직 조정한 소스가 없어요. 매체를 검색해서 더 보거나, 덜 보거나, 아예 안 볼 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요."
+      "empty": "아직 조정한 소스가 없어요. 매체를 검색해서 더 보거나, 덜 보거나, 아예 안 볼 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "내 요금제",

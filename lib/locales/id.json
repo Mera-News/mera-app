@@ -337,7 +337,15 @@
     "turnOn": "Aktifkan notifikasi",
     "turnThemOn": "Aktifkan",
     "guardSkip": "Mulai dengan berita utama",
-    "guardAddFact": "Tambahkan sesuatu"
+    "guardAddFact": "Tambahkan sesuatu",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -544,7 +552,12 @@
     "lookAndTake": "Lihat dan bawa",
     "askBeforeTopicDelete": "Tanyakan sebelum menghapus topik",
     "askBeforeTopicDeleteHint": "Mera meminta Anda mengonfirmasi setiap kali Anda menghapus topik dari salah satu fakta Anda.",
-    "exportHistoryWindowNote_other": "Ekspor ini hanya mencakup {{count}} hari terakhir membaca. Entri yang lebih lama dihapus otomatis dari perangkat ini dan tidak pernah dikirim ke server Mera."
+    "exportHistoryWindowNote_other": "Ekspor ini hanya mencakup {{count}} hari terakhir membaca. Entri yang lebih lama dihapus otomatis dari perangkat ini dan tidak pernah dikirim ke server Mera.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Mera uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Notifikasi",
@@ -2664,7 +2677,9 @@
     "support": "Dukungan",
     "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Sudah menampilkan lebih sedikit dari {{source}}"
+    "fewerFromAlready": "Sudah menampilkan lebih sedikit dari {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Ekspor cerita ini",
@@ -2725,7 +2740,15 @@
     "openedYesterday": "Dibuka kemarin",
     "supportLine": "Pelaporan yang baik bertahan saat pembacanya mendukungnya.",
     "visitsLabel": "Kunjungan Anda dalam 30 hari terakhir",
-    "subscribed": "Berlangganan"
+    "subscribed": "Berlangganan",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2921,7 +2944,11 @@
       "mute": "Bisukan",
       "clear": "Hapus",
       "footnote": "Ketuk satu untuk mengubahnya. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini.",
-      "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini."
+      "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Paket Anda",

@@ -349,7 +349,15 @@
     "turnOn": "Meldingen aanzetten",
     "turnThemOn": "Zet ze aan",
     "guardSkip": "Begin met koppen",
-    "guardAddFact": "Iets toevoegen"
+    "guardAddFact": "Iets toevoegen",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "Meldingen",
@@ -558,7 +566,12 @@
     "askBeforeTopicDelete": "Vragen voordat je een onderwerp verwijdert",
     "askBeforeTopicDeleteHint": "Mera vraagt je elke keer om te bevestigen als je een onderwerp uit een van je feiten verwijdert.",
     "exportHistoryWindowNote_one": "Deze export bevat alleen de laatste {{count}} dag leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd.",
-    "exportHistoryWindowNote_other": "Deze export bevat alleen de laatste {{count}} dagen leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd."
+    "exportHistoryWindowNote_other": "Deze export bevat alleen de laatste {{count}} dagen leesgeschiedenis. Oudere items worden automatisch van dit apparaat verwijderd en zijn nooit naar de servers van Mera gestuurd.",
+    "meterTitle": "Data on this phone",
+    "meterLine": "Mera uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "Mera uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "Meldingen",
@@ -2684,7 +2697,9 @@
     "support": "Support",
     "supportSub": "Een bug melden, live chat, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Je ziet al minder van {{source}}"
+    "fewerFromAlready": "Je ziet al minder van {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "Dit verhaal exporteren",
@@ -2745,7 +2760,15 @@
     "openedYesterday": "Gisteren geopend",
     "supportLine": "Goede journalistiek blijft bestaan als lezers het steunen.",
     "visitsLabel": "Je bezoeken in de afgelopen 30 dagen",
-    "subscribed": "Geabonneerd"
+    "subscribed": "Geabonneerd",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2942,7 +2965,11 @@
       "mute": "Dempen",
       "clear": "Wissen",
       "footnote": "Tik op een publicatie om die aan te passen. „Minder van” in het •••-menu van een artikel komt hier ook terecht.",
-      "empty": "Je hebt nog geen bronnen aangepast. Zoek een publicatie om meer, minder of niets van haar te zien. „Minder van” in het •••-menu van een artikel komt hier ook terecht."
+      "empty": "Je hebt nog geen bronnen aangepast. Zoek een publicatie om meer, minder of niets van haar te zien. „Minder van” in het •••-menu van een artikel komt hier ook terecht.",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "Jouw abonnement",

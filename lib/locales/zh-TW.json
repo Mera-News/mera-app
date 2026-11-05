@@ -337,7 +337,15 @@
     "turnOn": "開啟通知",
     "turnThemOn": "開啟通知",
     "guardSkip": "從頭條開始",
-    "guardAddFact": "新增內容"
+    "guardAddFact": "新增內容",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "通知",
@@ -544,7 +552,12 @@
     "lookAndTake": "查看與帶走",
     "askBeforeTopicDelete": "刪除主題前詢問",
     "askBeforeTopicDeleteHint": "每次你從某項事實中刪除主題時，梅拉都會先請你確認。",
-    "exportHistoryWindowNote_other": "此匯出只包含最近 {{count}} 天的閱讀紀錄。較舊的紀錄會自動從這支裝置刪除，也從未傳送到梅拉的伺服器。"
+    "exportHistoryWindowNote_other": "此匯出只包含最近 {{count}} 天的閱讀紀錄。較舊的紀錄會自動從這支裝置刪除，也從未傳送到梅拉的伺服器。",
+    "meterTitle": "Data on this phone",
+    "meterLine": "梅拉 uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "梅拉 uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "通知",
@@ -2664,7 +2677,9 @@
     "support": "支援",
     "supportSub": "回報問題、即時聊天、常見問題、教學",
     "tutorial": "教學",
-    "fewerFromAlready": "已設定為較少顯示 {{source}}"
+    "fewerFromAlready": "已設定為較少顯示 {{source}}",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "匯出這篇報導",
@@ -2725,7 +2740,15 @@
     "openedYesterday": "昨天開啟",
     "supportLine": "優質報導需要讀者支持才能持續。",
     "visitsLabel": "過去 30 天的造訪紀錄",
-    "subscribed": "已訂閱"
+    "subscribed": "已訂閱",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2921,7 +2944,11 @@
       "mute": "靜音",
       "clear": "清除",
       "footnote": "點一下某一項即可變更。文章 ••• 選單裡的「減少…的內容」也會出現在這裡。",
-      "empty": "你還沒有調整過任何來源。搜尋一個出版物，即可選擇多看、少看或不看它。文章 ••• 選單裡的「減少…的內容」也會出現在這裡。"
+      "empty": "你還沒有調整過任何來源。搜尋一個出版物，即可選擇多看、少看或不看它。文章 ••• 選單裡的「減少…的內容」也會出現在這裡。",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "你的方案",

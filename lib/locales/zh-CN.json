@@ -337,7 +337,15 @@
     "turnOn": "开启通知",
     "turnThemOn": "开启",
     "guardSkip": "从头条开始",
-    "guardAddFact": "添加内容"
+    "guardAddFact": "添加内容",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "通知",
@@ -544,7 +552,12 @@
     "lookAndTake": "查看与导出",
     "askBeforeTopicDelete": "删除主题前询问",
     "askBeforeTopicDeleteHint": "每次你从某条事实中删除主题时，梅拉都会请你确认。",
-    "exportHistoryWindowNote_other": "此导出只包含最近 {{count}} 天的阅读记录。更早的记录会自动从此设备删除，且从未发送到梅拉的服务器。"
+    "exportHistoryWindowNote_other": "此导出只包含最近 {{count}} 天的阅读记录。更早的记录会自动从此设备删除，且从未发送到梅拉的服务器。",
+    "meterTitle": "Data on this phone",
+    "meterLine": "梅拉 uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "梅拉 uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "通知",
@@ -2664,7 +2677,9 @@
     "support": "支持",
     "supportSub": "报告问题、实时聊天、常见问题、教程",
     "tutorial": "教程",
-    "fewerFromAlready": "已减少显示来自 {{source}} 的内容"
+    "fewerFromAlready": "已减少显示来自 {{source}} 的内容",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "导出这篇报道",
@@ -2725,7 +2740,15 @@
     "openedYesterday": "昨天打开",
     "supportLine": "好的报道需要读者的支持才能持续。",
     "visitsLabel": "过去30天你的访问次数",
-    "subscribed": "已订阅"
+    "subscribed": "已订阅",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2921,7 +2944,11 @@
       "mute": "屏蔽",
       "clear": "清除",
       "footnote": "点按某一项即可更改。文章 ••• 菜单里的“减少…的内容”也会出现在这里。",
-      "empty": "你还没有调整过任何来源。搜索一个出版物，即可选择多看、少看或不看它。文章 ••• 菜单里的“减少…的内容”也会出现在这里。"
+      "empty": "你还没有调整过任何来源。搜索一个出版物，即可选择多看、少看或不看它。文章 ••• 菜单里的“减少…的内容”也会出现在这里。",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "你的方案",

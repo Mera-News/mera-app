@@ -349,7 +349,15 @@
     "turnOn": "नोटिफ़िकेशन चालू करें",
     "turnThemOn": "इन्हें चालू करें",
     "guardSkip": "सुर्खियों से शुरू करें",
-    "guardAddFact": "कुछ जोड़ें"
+    "guardAddFact": "कुछ जोड़ें",
+    "sourcesTitle": "Which news sources do you trust?",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesSkip": "Skip",
+    "sourcesLoadError": "Couldn't load sources.",
+    "sourcesOffline": "You're offline. You can add sources later in Sources.",
+    "sourcesSearchHint": "Search for a publication or country.",
+    "iSubscribe": "I subscribe",
+    "iSubscribeA11y": "I subscribe to {{publisher}}"
   },
   "notifications": {
     "title": "नोटिफिकेशन",
@@ -558,7 +566,12 @@
     "askBeforeTopicDelete": "विषय हटाने से पहले पूछें",
     "askBeforeTopicDeleteHint": "जब भी आप किसी तथ्य से कोई विषय हटाते हैं, मेरा ऐप हर बार पुष्टि माँगता है।",
     "exportHistoryWindowNote_one": "इस एक्सपोर्ट में पढ़ने का सिर्फ़ पिछला {{count}} दिन शामिल है। पुराने रिकॉर्ड इस डिवाइस से अपने-आप हट जाते हैं और मेरा ऐप के सर्वर पर कभी नहीं भेजे गए।",
-    "exportHistoryWindowNote_other": "इस एक्सपोर्ट में पढ़ने के सिर्फ़ पिछले {{count}} दिन शामिल हैं। पुराने रिकॉर्ड इस डिवाइस से अपने-आप हट जाते हैं और मेरा ऐप के सर्वर पर कभी नहीं भेजे गए।"
+    "exportHistoryWindowNote_other": "इस एक्सपोर्ट में पढ़ने के सिर्फ़ पिछले {{count}} दिन शामिल हैं। पुराने रिकॉर्ड इस डिवाइस से अपने-आप हट जाते हैं और मेरा ऐप के सर्वर पर कभी नहीं भेजे गए।",
+    "meterTitle": "Data on this phone",
+    "meterLine": "मेरा uses {{used}}. {{free}} free on this phone.",
+    "meterUsedOnly": "मेरा uses {{used}}.",
+    "meterDatabase": "Articles and profile",
+    "meterBackup": "Backup copy"
   },
   "preferences": {
     "notifications": "नोटिफिकेशन",
@@ -2686,7 +2699,9 @@
     "support": "सहायता",
     "supportSub": "बग रिपोर्ट करें, लाइव चैट, अक्सर पूछे जाने वाले सवाल, ट्यूटोरियल",
     "tutorial": "ट्यूटोरियल",
-    "fewerFromAlready": "{{source}} से पहले ही कम खबरें दिखाई जा रही हैं"
+    "fewerFromAlready": "{{source}} से पहले ही कम खबरें दिखाई जा रही हैं",
+    "notPreferred": "Not preferred",
+    "notPreferredDone": "{{publisher}} is hidden from your feed"
   },
   "storyExport": {
     "shareA11y": "यह स्टोरी निर्यात करें",
@@ -2747,7 +2762,15 @@
     "openedYesterday": "कल खोला गया",
     "supportLine": "अच्छी रिपोर्टिंग तब टिकती है जब पाठक उसका साथ दें।",
     "visitsLabel": "पिछले 30 दिनों में आपकी विज़िट",
-    "subscribed": "सदस्यता ली"
+    "subscribed": "सदस्यता ली",
+    "preferred": "Preferred",
+    "notPreferred": "Not preferred",
+    "preferA11y": "Prefer {{publisher}}",
+    "notPreferA11y": "Mark {{publisher}} as not preferred",
+    "notPreferHint": "Hides its articles from your feed",
+    "includedWith": "Included with {{country}}",
+    "includedWithA11y": "Preferred, included with {{country}}",
+    "includedWithHelp": "Included with {{country}}. To change this, remove the star from {{country}}."
   },
   "nav": {
     "page": {
@@ -2944,7 +2967,11 @@
       "mute": "म्यूट",
       "clear": "हटाएं",
       "footnote": "बदलने के लिए किसी एक को दबाएं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।",
-      "empty": "आपने अभी तक कोई स्रोत नहीं बदला है। किसी प्रकाशन को खोजें और तय करें कि आप उसे ज़्यादा देखना चाहते हैं, कम देखना चाहते हैं, या बिल्कुल नहीं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।"
+      "empty": "आपने अभी तक कोई स्रोत नहीं बदला है। किसी प्रकाशन को खोजें और तय करें कि आप उसे ज़्यादा देखना चाहते हैं, कम देखना चाहते हैं, या बिल्कुल नहीं। लेख के ••• मेन्यू में \"से कम\" भी यहीं आता है।",
+      "preferCountryA11y": "Prefer sources from {{country}}",
+      "countryHint": "Opens sources from {{country}}",
+      "countryCleared": "{{country}} is no longer preferred",
+      "saveError": "Couldn't save that. Try again."
     },
     "settings": {
       "yourPlan": "आपका प्लान",
