@@ -7,7 +7,7 @@ import MeraToast from './MeraToast';
 
 /**
  * THE UNDO TOAST: every "done, with Undo" confirmation (the feedback leaf's
- * "Got it: feed updated", the ••• menu's "Fewer from <source>"). A success
+ * "Got it: feed updated", the ••• menu's Not preferred). A success
  * MeraToast with one Undo action: inline when there is only a title, a pill
  * under the text when there is a body. Show it through
  * `toastManager.showUndoToast`, never hand-built.

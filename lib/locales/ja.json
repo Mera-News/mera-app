@@ -336,7 +336,15 @@
     "remindBody": "メラは、理由もなくあなたを邪魔しないように作られています。ニュースを読むリマインダーを受け取りたい時間を選んでください。じっくり目を通せる時間をおすすめします。",
     "remindTitle": "メラはいつリマインドしますか？",
     "turnOn": "通知をオンにする",
-    "turnThemOn": "オンにする"
+    "turnThemOn": "オンにする",
+    "sourcesTitle": "信頼できるニュースソースはどれですか？",
+    "sourcesBody": "星をタップすると、より多く表示されます。目のアイコンをタップすると、フィードから非表示になります。いつでもソースで変更できます。",
+    "sourcesSkip": "スキップ",
+    "sourcesLoadError": "ソースを読み込めませんでした。",
+    "sourcesOffline": "オフラインです。後からソースを追加できます。",
+    "iSubscribe": "購読しています",
+    "iSubscribeA11y": "{{publisher}}を購読しています",
+    "sourcesFind": "公開元を検索"
   },
   "notifications": {
     "title": "通知",
@@ -543,7 +551,12 @@
     "lookAndTake": "確認と持ち出し",
     "askBeforeTopicDelete": "トピックを削除する前に確認する",
     "askBeforeTopicDeleteHint": "ファクトからトピックを削除するたびに、メラが確認を求めます。",
-    "exportHistoryWindowNote_other": "このエクスポートに含まれるのは、直近{{count}}日分の閲覧履歴だけです。それより古い記録はこの端末から自動的に削除されており、メラのサーバーに送信されたことはありません。"
+    "exportHistoryWindowNote_other": "このエクスポートに含まれるのは、直近{{count}}日分の閲覧履歴だけです。それより古い記録はこの端末から自動的に削除されており、メラのサーバーに送信されたことはありません。",
+    "meterTitle": "この端末のデータ",
+    "meterLine": "メラは{{used}}を使用しています。この端末には{{free}}の空きがあります。",
+    "meterUsedOnly": "メラは{{used}}を使用しています。",
+    "meterDatabase": "記事とプロフィール",
+    "meterBackup": "バックアップ用のコピー"
   },
   "preferences": {
     "notifications": "通知",
@@ -764,10 +777,10 @@
     "actionShowLessTopic": "トピックの表示を減らす",
     "actionShowMoreTopic": "トピックの表示を増やす",
     "actionDownRank": "トピックを格下げする",
-    "actionPublicationBoost": "出版社からもっと表示",
+    "actionPublicationBoost": "公開元を「優先」に設定",
     "actionPublicationDeprioritize": "出版社から少なく表示",
-    "actionPublicationMute": "出版社をミュート",
-    "actionSourceScopeBoost": "国のソースからもっと表示",
+    "actionPublicationMute": "公開元を「表示しない」に設定",
+    "actionSourceScopeBoost": "国のソースを優先する",
     "actionSourceScopeDeprioritize": "国のソースから少なく表示",
     "actionSuppress": "フレーズを除外する",
     "actionPinTopic": "トピックをピン留めする",
@@ -1187,7 +1200,10 @@
       "carriedOver": "{{name}}を引き継ぎました",
       "undone": "取り消しました：{{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "{{name}}を優先に設定",
+      "notPreferred": "{{name}}を「表示しない」に設定",
+      "preferredSourcesFrom": "{{name}}のソースを優先に設定"
     }
   },
   "calibration": {
@@ -1235,10 +1251,8 @@
       "paywalled": "有料で読めません",
       "noTrust": "信頼できません",
       "trustTitle": "{{site}}を信頼していません",
-      "trustLess": "{{site}}の記事を減らす",
       "trustNever": "{{site}}を表示しない",
       "hardToUse": "サイトが使いにくい",
-      "fewerSite": "このサイトの記事を減らす",
       "reportTitle": "{{site}}についてメラ・ラボにも知らせますか？",
       "reportYes": "はい、メラ・ラボに送る",
       "reportNo": "いいえ",
@@ -1481,7 +1495,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "設定をクリア",
     "scopeKindCountry": "国"
   },
   "optimisationPlan": {
@@ -1782,7 +1795,7 @@
               },
               "sources": {
                 "label": "ソース",
-                "text": "もっと見たい、または少なく見たい公開元と、お金を払っている公開元です。"
+                "text": "優先している公開元、フィードから非表示にした公開元、購読している公開元。"
               }
             }
           },
@@ -2051,14 +2064,14 @@
       },
       "sources": {
         "title": "ソースを選ぶ",
-        "subtitle": "バッジ、矢、1つのコントロールはブロック。",
+        "subtitle": "星、バッジ、フィードからソースを非表示にすること。",
         "slides": {
           "where-it-lives": {
             "headline": "ソースが住む場所",
-            "body": "自分で調整したすべてのソースを1つの画面で確認できます。",
+            "body": "選んだすべての公開元が一つの画面に表示されます。",
             "steps": {
               "0": "「あなた」タブから「ソース」を開きます。",
-              "1": "記事の •••メニューにある「…を減らす」はすぐに反映され、元に戻すこともできます。そのソースは「調整済み」に表示されます。"
+              "1": "記事の•••メニューの「表示しない」はすぐに反映され、元に戻すこともでき、その公開元はソースに表示されるようになります。"
             },
             "ask": "どこで見るソースを管理しますか?"
           },
@@ -2081,26 +2094,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "同じ矢、一度に1つの出版社",
-            "body": "国を開くと、すべての出版社には独自のペアがあります。ダウン対象は不正行為よりも優しいです。素早くはじかされた出版社は、独特の物語がある場合、まだ表示されます。",
-            "ask": "ソースをオフにして消すことの違いは何ですか?"
+            "headline": "公開元に星を付ける",
+            "body": "国を開くと、すべての公開元に星があります。星を付けると、その公開元がフィードの上位に表示されます。",
+            "ask": "「優先」と「表示しない」の違いは何ですか？"
           },
           "mute-is-not-a-downrank": {
-            "headline": "ミュートは完全に異なるもの",
-            "body": "ミュートは出版社のページで設定します。これは完全な除外で、該当するストーリーは順位が下がるだけでなく、表示されなくなります。各カードをタップして、正しい場所に置いてください。",
+            "headline": "「表示しない」にすると、フィードから非表示になります",
+            "body": "公開元を「表示しない」に設定すると、その記事はフィードから消えます。「世界」タブや関連ストーリーには、引き続き表示されることがあります。各カードをタップして、正しい位置に移動してください。",
             "steps": {
-              "0": "矢を下にします。より少ない頻繁に表示されます。",
-              "1": "消す。すべてとは全く関係なく表示されました。",
-              "2": "どちらもその後ソースの設定からクリアできます。"
+              "0": "星: 上位に表示されます。",
+              "1": "表示しない: フィードから非表示になります。",
+              "2": "どちらも、ソースで解除できます。"
             },
             "sort": {
               "buckets": {
-                "softer": "より少ない頻繁に表示",
-                "gone": "完全に除外"
+                "softer": "上位に表示",
+                "gone": "フィードから非表示"
               },
               "cards": {
-                "down-arrow": "矢を下にします",
-                "mute": "消す"
+                "down-arrow": "星",
+                "mute": "表示しない"
               }
             }
           }
@@ -2116,7 +2129,7 @@
             "steps": {
               "0": "非表示にしたことと言葉。",
               "1": "トピックはあまり見ません。",
-              "2": "ソースミュートまたはオフダウンにしました。"
+              "2": "「表示しない」に設定したソース。"
             },
             "ask": "私がフィルタリングしたすべてを見ることができますか?"
           },
@@ -2678,18 +2691,18 @@
     "following": "このストーリーをフォロー中",
     "checkFacts": "ファクトチェック",
     "fewerFrom": "{{source}} を減らす",
-    "fewerFromDone": "{{source}} の表示が減ります。",
     "undo": "元に戻す",
     "reportBug": "不具合を報告",
     "actionFailed": "うまくいきませんでした。もう一度お試しください。",
     "aboutSource": "この媒体について",
     "liveChat": "ライブチャット",
     "liveChatSub": "メラチームのスタッフ",
-    "sourceSub": "概要と、{{source}}の記事を減らす",
+    "sourceSub": "{{source}}について、またはフィードから非表示にする",
     "support": "サポート",
     "supportSub": "バグの報告、ライブチャット、よくある質問、チュートリアル",
     "tutorial": "チュートリアル",
-    "fewerFromAlready": "{{source}}の記事はすでに少なめに表示されています"
+    "notPreferred": "表示しない",
+    "notPreferredDone": "{{publisher}}はフィードから非表示になっています"
   },
   "storyExport": {
     "shareA11y": "このストーリーを書き出す",
@@ -2737,12 +2750,8 @@
     "newsLoadError": "記事を読み込めませんでした",
     "websiteA11y": "{{host}}を開く",
     "aboutSourceA11y": "{{source}}について",
-    "prefMoreA11y": "この媒体からもっと表示",
-    "prefFewerA11y": "この媒体から少なく表示",
     "history": "履歴",
-    "fewerFrom": "少なく表示",
     "historyEmpty": "過去30日間にここへの訪問はありません。",
-    "moreFrom": "多く表示",
     "openedCount_one": "過去30日間に{{publisher}}を1回開きました。",
     "openedCount_other": "過去30日間に{{publisher}}を{{count}}回開きました。",
     "openedOn": "{{date}}に開きました",
@@ -2750,7 +2759,15 @@
     "openedYesterday": "昨日開きました",
     "supportLine": "良い報道は、読者が支えることで続きます。",
     "visitsLabel": "過去30日間のあなたの訪問",
-    "subscribed": "購読中"
+    "subscribed": "購読中",
+    "preferred": "優先",
+    "notPreferred": "表示しない",
+    "preferA11y": "{{publisher}}を優先する",
+    "notPreferA11y": "{{publisher}}を「表示しない」に設定",
+    "notPreferHint": "記事をフィードから非表示にする",
+    "includedWith": "{{country}}に含まれています",
+    "includedWithA11y": "優先、{{country}}に含まれています",
+    "includedWithHelp": "{{country}}に含まれています。変更するには、ソースで{{country}}を削除してください。"
   },
   "nav": {
     "page": {
@@ -2939,14 +2956,11 @@
     },
     "sources": {
       "title": "ソース",
-      "find": "メディアを探す",
-      "more": "増やす",
-      "fewer": "減らす",
-      "muted": "ミュート",
-      "mute": "ミュート",
-      "clear": "クリア",
-      "footnote": "タップして変更できます。記事の•••メニューの「〜を減らす」もここに表示されます。",
-      "empty": "まだ調整したメディアはありません。メディアを検索して、表示を増やす、減らす、または表示しないように設定できます。記事の•••メニューの「〜を減らす」もここに表示されます。"
+      "find": "公開元または国を検索",
+      "footnote": "変更するには、どれかをタップしてください。記事の•••メニューの「表示しない」も、ここに表示されます。",
+      "empty": "まだソースを選んでいません。公開元を検索して、優先したり、フィードから非表示にしたりできます。記事の•••メニューの「表示しない」も、ここに表示されます。",
+      "countryCleared": "{{country}}は優先されなくなりました",
+      "saveError": "保存できませんでした。もう一度お試しください。"
     },
     "settings": {
       "yourPlan": "ご利用中のプラン",
@@ -3134,7 +3148,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "この公開元を「表示しない」に設定"
     },
     "follow": {
       "follow": "Follow a story",

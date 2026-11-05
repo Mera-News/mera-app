@@ -336,7 +336,15 @@
     "remindBody": "메라는 이유 없이 회원님을 방해하지 않도록 만들어졌습니다. 뉴스를 읽을 알림 시간을 고르세요. 여유 있게 훑어볼 수 있는 시간을 추천합니다.",
     "remindTitle": "언제 메라가 알려 드릴까요?",
     "turnOn": "알림 켜기",
-    "turnThemOn": "켜기"
+    "turnThemOn": "켜기",
+    "sourcesTitle": "어떤 뉴스 소스를 신뢰하세요?",
+    "sourcesBody": "별표를 누르면 더 많이 볼 수 있어요. 눈 아이콘을 누르면 내 피드에서 숨길 수 있어요. 설정은 언제든지 소스에서 바꿀 수 있어요.",
+    "sourcesSkip": "건너뛰기",
+    "sourcesLoadError": "소스를 불러오지 못했어요.",
+    "sourcesOffline": "오프라인 상태예요. 나중에 소스 화면에서 추가할 수 있어요.",
+    "iSubscribe": "구독 중이에요",
+    "iSubscribeA11y": "{{publisher}} 구독 중",
+    "sourcesFind": "매체 찾기"
   },
   "notifications": {
     "title": "알림",
@@ -543,7 +551,12 @@
     "lookAndTake": "살펴보기 및 가져가기",
     "askBeforeTopicDelete": "토픽을 삭제하기 전에 확인",
     "askBeforeTopicDeleteHint": "사실에서 토픽을 삭제할 때마다 메라가 확인을 요청합니다.",
-    "exportHistoryWindowNote_other": "이 내보내기에는 최근 {{count}}일간의 읽기 기록만 포함됩니다. 그보다 오래된 항목은 이 기기에서 자동으로 삭제되며, 메라 서버로 전송된 적이 없습니다."
+    "exportHistoryWindowNote_other": "이 내보내기에는 최근 {{count}}일간의 읽기 기록만 포함됩니다. 그보다 오래된 항목은 이 기기에서 자동으로 삭제되며, 메라 서버로 전송된 적이 없습니다.",
+    "meterTitle": "이 휴대폰의 데이터",
+    "meterLine": "메라가 {{used}} 사용 중이에요. 이 휴대폰에 {{free}} 남아 있어요.",
+    "meterUsedOnly": "메라가 {{used}} 사용 중이에요.",
+    "meterDatabase": "기사와 프로필",
+    "meterBackup": "백업 사본"
   },
   "preferences": {
     "notifications": "알림",
@@ -764,10 +777,10 @@
     "actionShowLessTopic": "주제 덜 보기",
     "actionShowMoreTopic": "주제 더 보기",
     "actionDownRank": "주제 순위 낮추기",
-    "actionPublicationBoost": "출판사에서 더 보기",
+    "actionPublicationBoost": "매체를 선호로 표시",
     "actionPublicationDeprioritize": "출판사에서 덜 보기",
-    "actionPublicationMute": "출판사 음소거",
-    "actionSourceScopeBoost": "국가의 소스에서 더 보기",
+    "actionPublicationMute": "매체를 선호 안 함으로 표시",
+    "actionSourceScopeBoost": "국가의 소스 선호하기",
     "actionSourceScopeDeprioritize": "국가의 소스에서 덜 보기",
     "actionSuppress": "문구 필터링",
     "actionPinTopic": "주제 고정",
@@ -1187,7 +1200,10 @@
       "carriedOver": "{{name}}을(를) 옮겼습니다",
       "undone": "실행 취소됨: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "{{name}} 선호로 설정",
+      "notPreferred": "{{name}} 선호 안 함으로 설정",
+      "preferredSourcesFrom": "{{name}}의 소스 선호로 설정"
     }
   },
   "calibration": {
@@ -1235,10 +1251,8 @@
       "paywalled": "유료라서 읽을 수 없어요",
       "noTrust": "믿을 수 없어요",
       "trustTitle": "{{site}}을(를) 믿지 않으시는군요",
-      "trustLess": "{{site}} 기사 덜 보기",
       "trustNever": "{{site}} 기사 보지 않기",
       "hardToUse": "사이트를 쓰기 어려워요",
-      "fewerSite": "이 사이트 기사 덜 보기",
       "reportTitle": "{{site}}에 대해 메라 랩스에도 알릴까요?",
       "reportYes": "네, 메라 랩스에 보내기",
       "reportNo": "아니요, 괜찮아요",
@@ -1481,7 +1495,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "선호도 지우기",
     "scopeKindCountry": "국가"
   },
   "optimisationPlan": {
@@ -1782,7 +1795,7 @@
               },
               "sources": {
                 "label": "소스",
-                "text": "더 많이 또는 덜 보고 싶은 매체와 회원님이 구독하는 매체입니다."
+                "text": "선호하는 매체, 피드에서 숨긴 매체, 구독 중인 매체."
               }
             }
           },
@@ -2051,14 +2064,14 @@
       },
       "sources": {
         "title": "출처 선택",
-        "subtitle": "배지, 화살표, 그리고 차단인 하나의 컨트롤.",
+        "subtitle": "별표, 배지, 그리고 피드에서 소스 숨기기.",
         "slides": {
           "where-it-lives": {
             "headline": "출처가 있는 곳",
-            "body": "직접 조정한 모든 소스를 한 화면에서 볼 수 있습니다.",
+            "body": "내가 고른 모든 매체를 한 화면에서 볼 수 있어요.",
             "steps": {
               "0": "내 정보 탭에서 소스를 엽니다.",
-              "1": "기사의 ••• 메뉴에서 「… 줄이기」를 누르면 바로 적용되고 실행 취소도 할 수 있습니다. 그 소스는 조정됨에 표시됩니다."
+              "1": "기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 바로 적용되고, 실행 취소할 수 있으며, 그 매체는 소스에 나타나요."
             },
             "ask": "어디에서 어떤 출처를 볼지 관리합니까?"
           },
@@ -2081,26 +2094,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "같은 화살표, 한 번에 하나의 발행사",
-            "body": "국가를 열고 모든 발행사가 자체 쌍을 가집니다. 아래는 벽보다는 긴장입니다. 다운 순위가 매겨진 발행사는 다른 누구도 가진 스토리가 없을 때 여전히 나타납니다.",
-            "ask": "출처를 낮추는 것과 음소거하는 것의 차이점은 무엇입니까?"
+            "headline": "매체에 별표 달기",
+            "body": "국가를 열면 모든 매체에 별표가 있어요. 별표를 누르면 피드에서 그 매체가 위로 올라가요.",
+            "ask": "선호와 선호 안 함은 어떻게 다른가요?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "음소거는 완전히 다른 것입니다",
-            "body": "음소거는 발행사 페이지에서 설정하며, 완전한 제외입니다. 해당 스토리는 순위만 낮아지는 것이 아니라 삭제됩니다. 각 카드를 탭하고 알맞은 위치에 놓으세요.",
+            "headline": "선호 안 함은 내 피드에서 숨겨요",
+            "body": "매체를 선호 안 함으로 표시하면 그 매체의 기사가 내 피드에서 사라져요. 전 세계 탭과 관련 스토리에는 여전히 나올 수 있어요. 카드를 하나씩 눌러 알맞은 자리로 옮겨 보세요.",
             "steps": {
-              "0": "아래 화살표: 덜 자주 표시됨.",
-              "1": "음소거: 전혀 표시되지 않음.",
-              "2": "둘 다 나중에 출처 기본 설정에서 지워질 수 있습니다."
+              "0": "별표: 위쪽에 표시돼요.",
+              "1": "선호 안 함: 내 피드에서 숨겨요.",
+              "2": "소스에서 둘 중 하나를 지울 수 있어요."
             },
             "sort": {
               "buckets": {
-                "softer": "덜 자주 표시됨",
-                "gone": "완전히 제외됨"
+                "softer": "위쪽에 표시",
+                "gone": "내 피드에서 숨김"
               },
               "cards": {
-                "down-arrow": "아래 화살표",
-                "mute": "음소거"
+                "down-arrow": "별표",
+                "mute": "선호 안 함"
               }
             }
           }
@@ -2116,7 +2129,7 @@
             "steps": {
               "0": "숨긴 단어와 것들.",
               "1": "덜 본 주제.",
-              "2": "음소거했거나 낮춘 출처."
+              "2": "선호 안 함으로 표시한 소스."
             },
             "ask": "필터링한 모든 것을 어디에서 볼 수 있습니까?"
           },
@@ -2678,18 +2691,18 @@
     "following": "이 스토리를 팔로우 중",
     "checkFacts": "팩트체크",
     "fewerFrom": "{{source}} 줄이기",
-    "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
     "undo": "실행 취소",
     "reportBug": "버그 신고",
     "actionFailed": "실패했어요. 다시 시도하세요.",
     "aboutSource": "이 매체 정보",
     "liveChat": "실시간 채팅",
     "liveChatSub": "메라 팀의 담당자",
-    "sourceSub": "정보, {{source}}의 기사는 덜 보기",
+    "sourceSub": "{{source}} 정보, 또는 내 피드에서 숨기기",
     "support": "지원",
     "supportSub": "버그 신고, 실시간 채팅, 자주 묻는 질문, 튜토리얼",
     "tutorial": "튜토리얼",
-    "fewerFromAlready": "{{source}} 기사는 이미 적게 표시되고 있어요"
+    "notPreferred": "선호 안 함",
+    "notPreferredDone": "{{publisher}} 매체가 내 피드에서 숨겨졌어요"
   },
   "storyExport": {
     "shareA11y": "이 스토리 내보내기",
@@ -2737,12 +2750,8 @@
     "newsLoadError": "기사를 불러올 수 없습니다",
     "websiteA11y": "{{host}} 열기",
     "aboutSourceA11y": "{{source}} 정보",
-    "prefMoreA11y": "이 매체에서 더 보기",
-    "prefFewerA11y": "이 매체에서 덜 보기",
     "history": "기록",
-    "fewerFrom": "덜 보기:",
     "historyEmpty": "지난 30일 동안 방문 기록이 없습니다.",
-    "moreFrom": "더 보기:",
     "openedCount_one": "지난 30일 동안 {{publisher}}을(를) {{count}}번 열었습니다.",
     "openedCount_other": "지난 30일 동안 {{publisher}}을(를) {{count}}번 열었습니다.",
     "openedOn": "{{date}}에 열람",
@@ -2750,7 +2759,15 @@
     "openedYesterday": "어제 열람",
     "supportLine": "좋은 보도는 독자가 지지할 때 오래갑니다.",
     "visitsLabel": "지난 30일 동안 회원님의 방문",
-    "subscribed": "구독 중"
+    "subscribed": "구독 중",
+    "preferred": "선호",
+    "notPreferred": "선호 안 함",
+    "preferA11y": "{{publisher}} 선호하기",
+    "notPreferA11y": "{{publisher}} 선호 안 함으로 표시",
+    "notPreferHint": "기사를 내 피드에서 숨기기",
+    "includedWith": "{{country}}에 포함됨",
+    "includedWithA11y": "선호, {{country}}에 포함됨",
+    "includedWithHelp": "{{country}}에 포함돼 있어요. 바꾸려면 소스에서 {{country}} 항목을 삭제하세요."
   },
   "nav": {
     "page": {
@@ -2939,14 +2956,11 @@
     },
     "sources": {
       "title": "소스",
-      "find": "매체 찾기",
-      "more": "늘리기",
-      "fewer": "줄이기",
-      "muted": "음소거됨",
-      "mute": "음소거",
-      "clear": "지우기",
-      "footnote": "매체를 누르면 바꿀 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요.",
-      "empty": "아직 조정한 소스가 없어요. 매체를 검색해서 더 보거나, 덜 보거나, 아예 안 볼 수 있어요. 기사 ••• 메뉴의 \"줄이기\"도 여기에 들어와요."
+      "find": "매체나 국가 찾기",
+      "footnote": "눌러서 바꿀 수 있어요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
+      "empty": "아직 고른 소스가 없어요. 매체를 검색해서 선호로 지정하거나 내 피드에서 숨겨 보세요. 기사의 ••• 메뉴에서 \"선호 안 함\"을 누르면 여기에도 나타나요.",
+      "countryCleared": "{{country}} 선호가 해제됐어요",
+      "saveError": "저장하지 못했어요. 다시 시도해 주세요."
     },
     "settings": {
       "yourPlan": "내 요금제",
@@ -3134,7 +3148,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "이 매체를 선호 안 함으로 표시"
     },
     "follow": {
       "follow": "Follow a story",

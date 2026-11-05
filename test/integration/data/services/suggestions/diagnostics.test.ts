@@ -51,7 +51,7 @@ describe('getSharedNoteBreakdown', () => {
     expect([...r.largestGroup!.titles].sort()).toEqual(['Strait closed', 'Tanker traffic halts']);
   });
 
-  it('treats whitespace-only notes as absent rather than as one shared group', async () => {
+  it('stores no whitespace-only note, so none forms a shared group', async () => {
     await seed([article('a'), article('b')]);
     await saveReason('a', '   ');
     await saveReason('b', '   ');

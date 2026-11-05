@@ -1,5 +1,5 @@
 // The card action hooks: the shared verdict plumbing (useFeedbackSheet), the origin-aware inline
-// actions (useArticleActions) and the ••• menu's "Fewer from" / follow state (useArticleMenu).
+// actions (useArticleActions) and the ••• menu's Not preferred / follow state (useArticleMenu).
 // Real stores, in-memory DB, real services; the only fakes are native edges and the toast
 // queue the undo toast is shown on (the real show/close ToastInitializer installs).
 // A native module (the sheet's gesture layer); the hook never renders the sheet here.
@@ -29,7 +29,7 @@ import { __resetSavedStateForTests } from '@/lib/saved-state';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { toastManager } from '@/lib/toast-manager';
-import { closeAll, useToastQueue } from '@/lib/toast/toast-queue';
+import { close, closeAll, useToastQueue } from '@/lib/toast/toast-queue';
 import { useToast } from '@/components/ui/toast';
 import { initI18nEn, signInFixtureAccount } from '@/test/helpers';
 import { seedSuggestion } from '../detail/seed';
@@ -197,7 +197,7 @@ describe('useArticleMenu', () => {
             });
         return { ...hook, run };
     };
-    /** The Undo button's handler on the toast "Fewer from" showed. */
+    /** The Undo button's handler on the toast Not preferred showed. */
     const pressUndo = async () => {
         const toast = useToastQueue.getState().entries[0];
         await act(async () => {
@@ -205,21 +205,21 @@ describe('useArticleMenu', () => {
         });
     };
 
-    it('Fewer from writes a preference for every name the publication is known by', async () => {
+    it('Not preferred writes a preference for every name the publication is known by', async () => {
         rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'Hindu Business Line']);
-        const { run } = await mount('menu-fewer');
-        await run('fewer-from');
+        const { run } = await mount('menu-muted');
+        await run('not-preferred');
         // The toast is shown after the last name is written.
         await waitFor(() => expect(toastCount()).toBe(1));
-        expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
-        expect(await getPreferenceKind('Hindu Business Line')).toBe('deprioritize');
+        expect(await getPreferenceKind('The Hindu')).toBe('mute');
+        expect(await getPreferenceKind('Hindu Business Line')).toBe('mute');
     });
 
-    it('Fewer from for a publication with one known name writes that one row', async () => {
-        const { run } = await mount('menu-fewer-one', 'De Volkskrant');
-        await run('fewer-from');
+    it('Not preferred for a publication with one known name writes that one row', async () => {
+        const { run } = await mount('menu-muted-one', 'De Volkskrant');
+        await run('not-preferred');
         await waitFor(() => expect(toastCount()).toBe(1));
-        expect(await getPreferenceKind('De Volkskrant')).toBe('deprioritize');
+        expect(await getPreferenceKind('De Volkskrant')).toBe('mute');
     });
 
     /** The props of the front toast's rendered card. */
@@ -229,33 +229,33 @@ describe('useArticleMenu', () => {
     };
 
     it('a real change shows the Undo toast', async () => {
-        const { run } = await mount('menu-fewer-undo', 'De Volkskrant');
-        await run('fewer-from');
+        const { run } = await mount('menu-muted-undo', 'De Volkskrant');
+        await run('not-preferred');
         await waitFor(() => expect(toastCount()).toBe(1));
         const props = frontToastProps();
-        expect(props.title).toBe("You'll see less from De Volkskrant.");
+        expect(props.title).toBe('De Volkskrant is hidden from your feed');
         expect(typeof props.onUndo).toBe('function');
     });
 
-    it('Fewer from on a publication already fewer shows a title-only toast with no Undo', async () => {
-        await setSourcePrefFromUi({ kind: 'publisher', names: ['De Volkskrant'] }, 'deprioritised');
-        const { run } = await mount('menu-fewer-already', 'De Volkskrant');
-        await run('fewer-from');
+    it('Not preferred on a publication already hidden shows a title-only toast with no Undo', async () => {
+        await setSourcePrefFromUi({ kind: 'publisher', names: ['De Volkskrant'] }, 'muted');
+        const { run } = await mount('menu-muted-already', 'De Volkskrant');
+        await run('not-preferred');
         await waitFor(() => expect(toastCount()).toBe(1));
         const props = frontToastProps();
-        expect(props.title).toBe('Already showing fewer from De Volkskrant');
+        expect(props.title).toBe('De Volkskrant is hidden from your feed');
         expect(props.body).toBeUndefined();
         expect(props.onUndo).toBeUndefined();
-        expect(await getPreferenceKind('De Volkskrant')).toBe('deprioritize');
+        expect(await getPreferenceKind('De Volkskrant')).toBe('mute');
     });
 
     it('Undo reverts every row the press wrote', async () => {
         rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'Hindu Business Line']);
         const { run } = await mount('menu-undo');
-        await run('fewer-from');
+        await run('not-preferred');
         await waitFor(() => expect(toastCount()).toBe(1));
-        expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
-        expect(await getPreferenceKind('Hindu Business Line')).toBe('deprioritize');
+        expect(await getPreferenceKind('The Hindu')).toBe('mute');
+        expect(await getPreferenceKind('Hindu Business Line')).toBe('mute');
 
         await pressUndo();
         await waitFor(async () => expect(await getPreferenceKind('The Hindu')).toBe('none'));
@@ -265,9 +265,9 @@ describe('useArticleMenu', () => {
     it('Undo leaves alone a name a newer change owns (compare-and-set)', async () => {
         rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'Hindu Business Line']);
         const { run } = await mount('menu-cas');
-        await run('fewer-from');
+        await run('not-preferred');
         await waitFor(() => expect(toastCount()).toBe(1));
-        expect(await getPreferenceKind('The Hindu')).toBe('deprioritize');
+        expect(await getPreferenceKind('The Hindu')).toBe('mute');
         // A later "More from" on one of the two names.
         await setSourcePrefFromUi({ kind: 'publisher', names: ['Hindu Business Line'] }, 'prioritised');
         expect(await getPreferenceKind('Hindu Business Line')).toBe('boost');
@@ -275,6 +275,22 @@ describe('useArticleMenu', () => {
         await pressUndo();
         await waitFor(async () => expect(await getPreferenceKind('The Hindu')).toBe('none'));
         expect(await getPreferenceKind('Hindu Business Line')).toBe('boost');
+    });
+
+    it('the purge waits for the toast to close, Undo tapped or not', async () => {
+        const ui = jest.requireActual('@/lib/database/services/publication-pref-ui-actions');
+        const commitPurge = jest.fn(async () => undefined);
+        const spy = jest
+            .spyOn(ui, 'setSourcePrefFromUi')
+            .mockResolvedValue({ applied: true, changeLogIds: ['c-1'], commitPurge });
+        const { run } = await mount('menu-purge', 'De Volkskrant');
+        await run('not-preferred');
+        await waitFor(() => expect(toastCount()).toBe(1));
+        expect(commitPurge).not.toHaveBeenCalled();
+
+        await act(async () => close(useToastQueue.getState().entries[0].id));
+        expect(commitPurge).toHaveBeenCalledTimes(1);
+        spy.mockRestore();
     });
 
     it('Follow opens the already-following level for a tracked story, once the menu is engaged', async () => {

@@ -163,7 +163,7 @@ describe('loadUserGeoLanguageContext: source preferences', () => {
     );
   });
 
-  it('Subscribed plus Fewer cancels to 1 and leaves the multiplier map out', async () => {
+  it('Subscribed plus Fewer cancels to 1 and stays in the map, so it outranks a preferred country', async () => {
     await upsertSubscription({
       publisherId: 'pub-1',
       publisherName: 'The Guardian',
@@ -175,7 +175,7 @@ describe('loadUserGeoLanguageContext: source preferences', () => {
     const ctx = await loadUserGeoLanguageContext();
 
     expect(ctx!.preferredPublications).toEqual(new Set(['the guardian']));
-    expect(ctx).not.toHaveProperty('publicationMultipliers');
+    expect(ctx!.publicationMultipliers).toEqual(new Map([['the guardian', 1]]));
   });
 
   it('Mute wins over a subscription', async () => {

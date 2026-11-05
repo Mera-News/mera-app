@@ -148,6 +148,17 @@ describe('path-mapped candidates', () => {
     expect(c.every((x) => x.kind !== 'suppress')).toBe(true);
   });
 
+  it.each(['show_less', 'too_slow', 'too_cluttered'])('%s proposes no publication change: there is no lowered level', (leaf) => {
+    const c = run({ signals: [signal('r1', 'dislike', { publication: 'pub-123', treePath: ['source', leaf] })] });
+    expect(c.filter((x) => x.kind === 'publication_down')).toEqual([]);
+  });
+
+  it('never_show asks to mark the outlet Not preferred', () => {
+    const c = run({ signals: [signal('r1', 'dislike', { publication: 'pub-123', treePath: ['source', 'never_show'] })] });
+    expect(c[0].summary).toBe('Mark "pub-123" Not preferred');
+    expect(c[0].ops[0].publicationPref).toBe('mute');
+  });
+
   it('like + more_from_publication with a publication id → publication boost (auto)', () => {
     const c = run({
       signals: [signal('r1', 'like', { publication: 'pub-123', treePath: ['more_from_publication'] })],

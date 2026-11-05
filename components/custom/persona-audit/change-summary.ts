@@ -91,6 +91,8 @@ export function changeSummary(t: Translate, row: ChangeRow, ctx: ChangeContext):
             // targetId is the publication NAME (the app keys publications by name).
             const name = id ? ctx.publication(id) : '';
             if (!name) return label;
+            if (a.twoState === true && a.after === 'boost') return named('preferred', name);
+            if (a.twoState === true && a.after === 'mute') return named('notPreferred', name);
             if (a.after === 'boost') return named('moreFrom', name);
             if (a.after === 'deprioritize') return t('articleMenu.fewerFrom', { source: name });
             if (a.after === 'mute') return named('muted', name);
@@ -100,6 +102,7 @@ export function changeSummary(t: Translate, row: ChangeRow, ctx: ChangeContext):
             // targetId is '{scopeKind}:{alpha3}'; only 'country' exists.
             const alpha3 = id.startsWith('country:') ? id.slice('country:'.length) : '';
             const name = str(a.label) || countryNameForAlpha2(alpha3ToAlpha2(alpha3));
+            if (a.twoState === true && a.after === 'boost') return named('preferredSourcesFrom', name);
             if (a.after === 'boost') return named('moreSourcesFrom', name);
             if (a.after === 'deprioritize') return named('fewerSourcesFrom', name);
             return named('clearedSourcesFrom', name);

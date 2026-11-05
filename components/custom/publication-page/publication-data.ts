@@ -3,16 +3,11 @@
 // sits behind it: the profile query, the paged news list, and the preference
 // rows keyed on EVERY name a publication is known by.
 
+import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
+import { isStarInherited, resolvePrefLevel, type PrefRowLike } from '@/lib/algorithms/publication-pref-level';
+import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import {
-    observeActive as observeActivePublicationPreferences,
-    weightToPrefKind,
-} from '@/lib/database/services/publication-preference-service';
-import { normalizePrefName, resolvePrefLevel, type PrefRowLike } from '@/lib/algorithms/publication-pref-level';
-import {
-    setSourcePrefFromUi,
-    type SourcePrefUiLevel,
-} from '@/lib/database/services/publication-pref-ui-actions';
-import {
+    fetchPublicationPrefNames,
     resolvePublicationPrefNames,
     type PublicationNameHints,
 } from '@/lib/database/services/publisher-source-names';
@@ -20,7 +15,11 @@ import {
     getAllVisitedArticles,
     type VisitedArticle,
 } from '@/lib/database/services/publication-visit-service';
-import { setPublisherKind } from '@/components/custom/publication-preferences/set-publisher-kind';
+import { localizedCountryName } from '@/components/custom/publication-preferences/country-search';
+import { setNotPreferredWithUndo } from '@/components/custom/publication-preferences/set-not-preferred';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { toastManager } from '@/lib/toast-manager';
+import { useTranslation } from 'react-i18next';
 import logger from '@/lib/logger';
 import { visitsForNames } from '@/lib/stats/visited-publications';
 import { useCallback, useEffect, useState } from 'react';
@@ -31,40 +30,32 @@ export {
 } from '@/lib/publication-profile-service';
 export { usePublicationArticles } from '@/lib/hooks/use-publication-articles';
 
+/** What the page's control writes. */
+export type PublicationPrefChoice = 'none' | 'prioritised' | 'muted';
+
 export interface PublicationPrefResult {
-    /** The level across every name (fewer wins over more). */
-    readonly level: SourcePrefUiLevel;
-    /** A mute on any of the names. The level reads a mute as fewer; the page
-     *  shows Mute as its own choice. */
+    /** The level across every name (a mute wins over a preference). */
+    readonly level: PublicationPrefChoice;
     readonly muted: boolean;
+    /** The country the star comes from, in the app language; null when the publication has its own star or none. */
+    readonly inheritedFrom: string | null;
     readonly busy: boolean;
     /** Every name the level is read and written under; empty until resolved. */
     readonly names: readonly string[];
-    readonly change: (next: PublicationPrefChoice) => void;
-}
-
-/** What the page's control writes: a level, or a mute. */
-export type PublicationPrefChoice = SourcePrefUiLevel | 'muted';
-
-/** True when an active named row for any of `names` is a mute. */
-function isMutedAcross(rows: readonly PrefRowLike[], names: readonly string[]): boolean {
-    const wanted = new Set(names.map(normalizePrefName).filter(Boolean));
-    return rows.some(
-        (row) =>
-            row.scopeKind == null &&
-            (row.status === undefined || row.status === 'active') &&
-            wanted.has(normalizePrefName(row.publicationName ?? '')) &&
-            weightToPrefKind(row.weight) === 'mute',
-    );
+    /** `shownAs` is the name the Undo toast uses. */
+    readonly change: (next: PublicationPrefChoice, shownAs?: string) => void;
 }
 
 /**
- * More/fewer for ONE publication. The names come from what the device knows
- * (the hints, then memory, then subscriptions; never the network), and a
- * write covers every one of them, so a preference set here reaches every
- * source the publication publishes as, whichever entry point opened the page.
+ * Preferred and Not preferred for ONE publication. The state reads the names
+ * the device knows (the hints, then memory, then subscriptions). A write covers
+ * the publication's full set, fetched first when a publisher id has none yet, so
+ * it reaches every source the publication publishes as, whichever entry point
+ * opened the page. With no publisher id there is nothing to fetch by.
  */
-export function usePublicationPref(hints: PublicationNameHints): PublicationPrefResult {
+export function usePublicationPref(hints: PublicationNameHints, countryAlpha3?: string | null): PublicationPrefResult {
+    const { t } = useTranslation();
+    const appLanguage = useAppLanguage();
     const [rows, setRows] = useState<readonly PrefRowLike[]>([]);
     const [names, setNames] = useState<readonly string[]>([]);
     const [busy, setBusy] = useState(false);
@@ -94,32 +85,42 @@ export function usePublicationPref(hints: PublicationNameHints): PublicationPref
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hintKey]);
 
-    const muted = isMutedAcross(rows, names);
+    const level = resolvePrefLevel(rows, names);
+    const muted = level === 'muted';
+    const inheritedFrom =
+        countryAlpha3 && isStarInherited(rows, names, countryAlpha3) ? localizedCountryName(countryAlpha3, appLanguage) : null;
     const change = useCallback(
-        (next: PublicationPrefChoice) => {
+        (next: PublicationPrefChoice, shownAs?: string) => {
             if (names.length === 0) return;
             setBusy(true);
-            const target = { kind: 'publisher' as const, names };
-            // A mute is not a level: the same per-name executor write the
-            // Sources rows use. Clearing goes through the level writer, which
-            // re-sweeps what the mute had hidden. The level writer never
-            // softens a mute to fewer (the card menu relies on that), so an
-            // explicit Fewer over a mute clears it first.
-            const write = async (): Promise<unknown> => {
-                if (next === 'muted') return setPublisherKind(names, 'mute');
-                if (muted && next === 'deprioritised') await setSourcePrefFromUi(target, 'none');
-                return setSourcePrefFromUi(target, next);
+            const refused = () => toastManager.showInfo(t('you.sources.saveError'));
+            const write = async (): Promise<boolean> => {
+                // A tap can land before the profile answers, when `names` is only
+                // the name that opened the page.
+                const all = hints.publisherId
+                    ? await fetchPublicationPrefNames({ ...hints, publisherId: hints.publisherId }).catch(() => null)
+                    : names;
+                if (!all) return false;
+                return next === 'muted'
+                    ? setNotPreferredWithUndo(all, shownAs || hints.publisherName || hints.rawName || '', t)
+                    : (await setSourcePrefFromUi({ kind: 'publisher', names: all }, next)).applied;
             };
             write()
+                .then((ok) => {
+                    if (!ok) refused();
+                })
                 .catch((error) => {
                     logger.captureException(error, { tags: { screen: 'PublicationPage', method: 'setPref' } });
+                    refused();
                 })
                 .finally(() => setBusy(false));
         },
-        [names, muted],
+        // `hintKey` stands in for `hints`, as above.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [names, hintKey, t],
     );
 
-    return { level: resolvePrefLevel(rows, names), muted, busy, names, change };
+    return { level, muted, inheritedFrom, busy, names, change };
 }
 
 export interface PublicationHistoryResult {

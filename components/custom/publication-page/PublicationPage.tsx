@@ -1,5 +1,6 @@
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
 import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -14,7 +15,7 @@ import { useReportRestoredScreen } from '@/lib/navigation/use-restore-state';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem, Platform, RefreshControl, StyleSheet, View } from 'react-native';
 
@@ -114,6 +115,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     const { t } = useTranslation();
     const focused = useIsFocusedSafe();
     const colors = useColors();
+    const [helpCountry, setHelpCountry] = useState<string | null>(null);
     const {
         listRef,
         state,
@@ -208,12 +210,15 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     testID="publication-pref-row"
                     current={pref.level}
                     muted={pref.muted}
+                    inheritedFrom={pref.inheritedFrom}
+                    onInheritedPress={() => setHelpCountry(pref.inheritedFrom)}
+                    displayName={displayName}
                     subscribed={subscribed}
                     canSubscribe={!!subscribeTarget}
                     subscribeBusy={subscribeBusy}
                     onToggleSubscribed={toggleSubscribed}
                     busy={pref.busy || pref.names.length === 0}
-                    onChange={pref.change}
+                    onChange={(next) => pref.change(next, displayName)}
                 />
             ) : null}
 
@@ -434,6 +439,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 }
             />
             </View>
+            <InheritedStarHelp country={helpCountry} onClose={() => setHelpCountry(null)} />
             <SubscribeConfirmDialog
                 publisherName={subscribeFlow.confirming?.publisherName ?? null}
                 onYes={subscribeFlow.onYes}

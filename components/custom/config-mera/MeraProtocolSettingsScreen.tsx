@@ -41,7 +41,8 @@ import {
     bgRefreshDescriptionKey,
 } from '@/lib/background/bg-refresh-ui';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
-import { gbText, useMeraProtocolSettings, type ModelRowState } from './useMeraProtocolSettings';
+import { gbText } from '@/lib/algorithms/format-bytes';
+import { useMeraProtocolSettings, type ModelRowState } from './useMeraProtocolSettings';
 
 /** The downloadable model is Apache 2.0 (it ships no LICENSE file), so the tab links the licence text. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';

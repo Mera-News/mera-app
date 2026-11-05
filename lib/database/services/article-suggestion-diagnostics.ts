@@ -70,7 +70,6 @@ export async function getSharedNoteBreakdown(): Promise<SharedNoteBreakdown> {
   const byNote = new Map<string, ArticleSuggestionModel[]>();
   for (const row of rows) {
     const note = (row.reason ?? '').trim();
-    if (note.length === 0) continue;
     const bucket = byNote.get(note);
     if (bucket) bucket.push(row);
     else byNote.set(note, [row]);

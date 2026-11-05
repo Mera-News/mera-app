@@ -429,7 +429,8 @@ describe('executeTool: proposeChanges', () => {
 
       expect(byCategory.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'category', suppressionValue: 'celebrity' });
       expect(byEntity.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'entity', suppressionValue: 'TAYLOR SWIFT' });
-      expect(byPublication.sideEffects?.proposal?.actions[0]).toMatchObject({ suppressionKind: 'publication', suppressionValue: 'euronews' });
+      // A publication filter would be a lowered level Sources cannot show, so it stages Not preferred.
+      expect(byPublication.sideEffects?.proposal?.actions[0]).toEqual({ type: 'set_publication_pref', publicationId: 'euronews', publicationPref: 'mute' });
     });
 
     it('downgrades an invented value to a keyword filter, and so does a kind the article has nothing for', async () => {

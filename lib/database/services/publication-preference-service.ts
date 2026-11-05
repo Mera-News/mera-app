@@ -10,7 +10,7 @@ import type {
   SourceScopeKind,
 } from '../models/PublicationPreference';
 
-import { normalizePrefName as normalizePublicationName } from '../../algorithms/publication-pref-level';
+import { MUTE_WEIGHT, normalizePrefName as normalizePublicationName } from '../../algorithms/publication-pref-level';
 
 const prefsCollection = database.get<PublicationPreferenceModel>('publication_preferences');
 
@@ -85,9 +85,11 @@ export async function getAll(): Promise<PublicationPreferenceModel[]> {
   return prefsCollection.query().fetch();
 }
 
-/** Reactive query of active preferences. */
+/** Reactive query of active preferences. `observeWithColumns`, because a bare
+ *  `observe()` emits only when a row joins or leaves, and a hide over a star or
+ *  its Undo changes the weight of a row that stays. */
 export function observeActive() {
-  return prefsCollection.query(Q.where('status', 'active')).observe();
+  return prefsCollection.query(Q.where('status', 'active')).observeWithColumns(['weight']);
 }
 
 /** Retires a preference (soft delete; history preserved for the audit log). */
@@ -121,7 +123,7 @@ export const PUBLICATION_PREF_WEIGHT: Record<PublicationPrefKind, number> = {
 
 /** Classify a stored weight back into the pref kind it represents (null ≈ neutral). */
 export function weightToPrefKind(weight: number): PublicationPrefKind | null {
-  if (weight <= -0.9) return 'mute';
+  if (weight <= MUTE_WEIGHT) return 'mute';
   if (weight < 0) return 'deprioritize';
   if (weight > 0) return 'boost';
   return null;

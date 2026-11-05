@@ -11,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
-import { isMutedPublication, rankedRelevance, type RankingContext } from '@/lib/feed-ordering/publication-tags';
+import { rankedRelevance, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
   type FactRow,
@@ -259,13 +259,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       // no header and no placeholder. The selector still builds it (a fact
       // feed opened directly shows its own empty state), nothing is persisted,
       // and it appears as soon as a refresh gives it a story.
-      // Every group renders except a muted publication's (Mute means skip),
+      // A muted publication's rows never reach `row.groups` (`buildFactRows`),
       // so the preview, the total and the "+N"/denominator counts agree on
       // `groups` by construction.
-      const groups = row.groups.filter((g) => !isMutedPublication(g.data.publication_name, rankingCtx));
+      const groups = row.groups;
       if (groups.length === 0) continue;
       const ordered = sortByPriority(groups, (g) => ({
-        relevance: rankedRelevance(g.data.relevance ?? 0, g.data.publication_name, rankingCtx),
+        relevance: rankedRelevance(g.data.relevance ?? 0, g.data, rankingCtx),
         viewed: isViewedArticle(
           g.data.articleId,
           g.data.articleId,

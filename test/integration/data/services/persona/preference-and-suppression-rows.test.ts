@@ -88,6 +88,18 @@ describe('named publication preferences', () => {
     expect(await getAll()).toHaveLength(1);
   });
 
+  it('observeActive emits when a row changes weight, not only when one joins or leaves', async () => {
+    await upsertPreference({ publicationName: 'The Times', weight: 1 });
+    const seen: number[][] = [];
+    const sub = observeActive().subscribe((rows) => seen.push(rows.map((p) => p.weight)));
+    await settleWrites();
+    await upsertPreference({ publicationName: 'The Times', weight: -1 });
+    await settleWrites();
+    sub.unsubscribe();
+    expect(seen.at(-1)).toEqual([-1]);
+    expect(seen.length).toBeGreaterThan(1);
+  });
+
   it('observeActive emits the active rows', async () => {
     await setPreferenceKind('The Times', 'boost');
     const retired = await upsertPreference({ publicationName: 'Gone', weight: 0.5 });

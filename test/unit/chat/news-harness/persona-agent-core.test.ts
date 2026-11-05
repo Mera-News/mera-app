@@ -890,10 +890,10 @@ describe('decidePersonaProposeChanges — source preferences (D5)', () => {
   it('drops ONLY the uncorroborated action when the proposal has others', () => {
     const r = stageSource([
       { type: 'set_publication_pref', publicationId: 'Times of India Group', publicationPref: 'boost' },
-      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'deprioritize' },
+      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'mute' },
     ]);
     expect(r.sideEffects!.proposal!.actions).toEqual([
-      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'deprioritize' },
+      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'mute' },
     ]);
   });
 
@@ -936,7 +936,7 @@ describe('decidePersonaProposeChanges — source preferences (D5)', () => {
 
   it('needs NO corroboration — a country is a closed vocabulary', () => {
     const r = stageSource(
-      [{ type: 'set_source_scope_pref', scopeCountry: 'Germany', publicationPref: 'deprioritize' }],
+      [{ type: 'set_source_scope_pref', scopeCountry: 'Germany', publicationPref: 'boost' }],
       new Set<string>(),
     );
     expect(r.sideEffects!.proposal!.actions[0]).toMatchObject({ scopeValue: 'DEU', label: 'Germany' });
@@ -951,12 +951,25 @@ describe('decidePersonaProposeChanges — source preferences (D5)', () => {
     }
   });
 
-  it('rejects mute for a scope — nothing implements a scope exclusion', () => {
-    const r = stageSource([
-      { type: 'set_source_scope_pref', scopeCountry: 'India', publicationPref: 'mute' },
+  it.each(['mute', 'deprioritize'])('drops a %s scope silently, so the model cannot restage the opposite', (pref) => {
+    const alone = stageSource([{ type: 'set_source_scope_pref', scopeCountry: 'India', publicationPref: pref }]);
+    expect(alone.sideEffects).toBeUndefined();
+    expect(alone.result.error).toContain('nothing was staged');
+    expect(alone.result.error).not.toContain('boost');
+
+    const beside = stageSource([
+      { type: 'set_source_scope_pref', scopeCountry: 'India', publicationPref: pref },
+      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'boost' },
     ]);
+    expect(beside.sideEffects!.proposal!.actions).toEqual([
+      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'boost' },
+    ]);
+  });
+
+  it('refuses the old lowered level for a named outlet', () => {
+    const r = stageSource([{ type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'deprioritize' }]);
     expect(r.sideEffects).toBeUndefined();
-    expect(r.result.error).toContain('cannot be muted');
+    expect(r.result.error).toContain('boost|mute');
   });
 
   it('requires a non-empty scopeCountry', () => {

@@ -27,9 +27,8 @@ import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
-import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { useColors } from '@/lib/theme/tokens';
-import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
+import { useSessionGeoLanguageContext, withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -127,22 +126,17 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   //
   // Held for the visit (see feed/use-session-geo-context): a publication
   // preference written from a card's ••• sheet re-loads the live context, and a
-  // live one regrouped and re-sorted the cards under the reader.
-  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), factId);
+  // live one regrouped and re-sorted the cards under the reader. Hides stay live.
+  const liveCtx = useUserGeoLanguageContext();
+  const heldCtx = useSessionGeoLanguageContext(liveCtx, factId);
+  const userGeoLanguageCtx = useMemo(() => withLiveMutes(heldCtx, liveCtx), [heldCtx, liveCtx]);
 
   // Hoisted so the "next fact" footer below can reuse it instead of calling
   // `buildFactRows` a second time — this was previously computed inline and
   // thrown away, keeping only this section's own `groups`.
   const allRows: FactRow[] = useMemo(() => {
     if (!snapshots) return [];
-    const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    // A muted publication's stories leave the list, as in the Sectioned view
-    // (DashboardSectionsFeed): filtered once here, so this page's cards, its
-    // count and the Next hop's skip all match the header the reader tapped.
-    return rows.map((r) => ({
-      ...r,
-      groups: r.groups.filter((g) => !isMutedPublication(g.data.publication_name, userGeoLanguageCtx)),
-    }));
+    return buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx).rows;
   }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
 
   const groups: FactRowGroup[] = useMemo(() => {

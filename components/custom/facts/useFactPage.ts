@@ -1,5 +1,5 @@
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
-import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
+import { useSessionGeoLanguageContext, withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { deleteFact, observeFact } from '@/lib/database/services/fact-service';
 import { removeFactFromTap } from '@/lib/chat-session/fact-removal';
@@ -98,7 +98,9 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         void useOpenedStoriesStore.getState().hydrate();
     }, []);
     const snapshots = useSectionSnapshots('FactPage');
-    const geoCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), factId);
+    const liveCtx = useUserGeoLanguageContext();
+    const heldCtx = useSessionGeoLanguageContext(liveCtx, factId);
+    const geoCtx = useMemo(() => withLiveMutes(heldCtx, liveCtx), [heldCtx, liveCtx]);
     // ONE buildFactRows pass (the expensive selector), for Impactful and for
     // the Next interest footer.
     const rows = useMemo(
@@ -109,7 +111,7 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
         const groups = rows.find((r) => r.factId === factId)?.groups ?? [];
         return [...groups].sort((a, b) => b.pubDateMs - a.pubDateMs);
     }, [rows, factId]);
-    const leftOut = useMemo(() => leftOutStories(suggestions, factId, Date.now()), [suggestions, factId]);
+    const leftOut = useMemo(() => leftOutStories(suggestions, factId, Date.now(), geoCtx), [suggestions, factId, geoCtx]);
     const topicStories = useMemo(() => storiesPerTopic([...impactful, ...leftOut]), [impactful, leftOut]);
     const total = impactful.length + leftOut.length;
     const filterCount = (f: StoryFilter) => (f === 'all' ? total : f === 'suggested' ? impactful.length : leftOut.length);

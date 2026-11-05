@@ -9,8 +9,9 @@
 //
 // Leaf ids are the digest's contract (`feedback-digest::pathCandidates`
 // switches on the last id of a stored path): `too_many`, `not_important`,
-// `show_less`, `never_show` and `too_slow` keep their ids and actions; new
-// reasons get new ids. Branch ids may change freely.
+// `never_show` and `too_slow` keep their ids; new reasons get new ids, and a
+// retired id (`show_less`, `fewer_from_site`) is never reused. Branch ids may
+// change freely. No leaf writes `deprioritize`: Fewer left every surface.
 //
 // v6: the like tree is gone (thumbs up left every surface), the root is a hub
 // of four reasons, and every leaf says its `cause`. Rows that name the reader's
@@ -125,13 +126,6 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           icon: 'gpp-maybe',
           children: [
             {
-              id: 'show_less',
-              labelKey: 'feedbackTree.menu.trustLess',
-              labelDefault: 'Show less from {{site}}',
-              icon: 'remove',
-              leaf: { cause: 'source', actions: [{ type: 'set_publication_pref', value: 'deprioritize' }] },
-            },
-            {
               id: 'never_show',
               labelKey: 'feedbackTree.menu.trustNever',
               labelDefault: 'Never show {{site}}',
@@ -145,14 +139,7 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           labelKey: 'feedbackTree.menu.hardToUse',
           labelDefault: 'The site is hard to use',
           icon: 'hourglass-empty',
-          leaf: { cause: 'source', actions: [{ type: 'set_publication_pref', value: 'deprioritize' }] },
-        },
-        {
-          id: 'fewer_from_site',
-          labelKey: 'feedbackTree.menu.fewerSite',
-          labelDefault: 'Show fewer from this site',
-          icon: 'remove-circle-outline',
-          leaf: { cause: 'source', actions: [{ type: 'set_publication_pref', value: 'deprioritize' }] },
+          leaf: { cause: 'source' },
         },
       ],
     },

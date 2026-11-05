@@ -206,6 +206,17 @@ describe('one top stack', () => {
     expect(ids()[0]).toBe(showing);
   });
 
+  it('runs onClosed when the undo toast leaves, and logs a failure', async () => {
+    const onClosed = jest.fn(async () => {
+      throw new Error('purge failed');
+    });
+    toastManager.showUndoToast(undoOpts({ onClosed }));
+    expect(onClosed).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(6000);
+    expect(onClosed).toHaveBeenCalledTimes(1);
+    expect(logger.captureException).toHaveBeenCalled();
+  });
+
   it('lets the front toast run its own timeout when the undo toast arrives mid-read', async () => {
     const fewer = show({ duration: 6000, render: () => null });
     await jest.advanceTimersByTimeAsync(4300);

@@ -336,7 +336,15 @@
     "remindBody": "Mera dibuat agar tidak mengganggu Anda tanpa alasan. Pilih kapan Anda ingin pengingat untuk membaca berita. Kami menyarankan waktu saat Anda bisa membacanya dengan tenang.",
     "remindTitle": "Kapan Mera harus mengingatkan Anda?",
     "turnOn": "Aktifkan notifikasi",
-    "turnThemOn": "Aktifkan"
+    "turnThemOn": "Aktifkan",
+    "sourcesTitle": "Sumber berita mana yang Anda percayai?",
+    "sourcesBody": "Ketuk bintang untuk melihat lebih banyak. Ketuk ikon mata untuk menyembunyikan dari umpan Anda. Anda bisa mengubahnya kapan saja di Sumber.",
+    "sourcesSkip": "Lewati",
+    "sourcesLoadError": "Tidak dapat memuat sumber.",
+    "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
+    "iSubscribe": "Saya berlangganan",
+    "iSubscribeA11y": "Saya berlangganan {{publisher}}",
+    "sourcesFind": "Cari publikasi"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -543,7 +551,12 @@
     "lookAndTake": "Lihat dan bawa",
     "askBeforeTopicDelete": "Tanyakan sebelum menghapus topik",
     "askBeforeTopicDeleteHint": "Mera meminta Anda mengonfirmasi setiap kali Anda menghapus topik dari salah satu fakta Anda.",
-    "exportHistoryWindowNote_other": "Ekspor ini hanya mencakup {{count}} hari terakhir membaca. Entri yang lebih lama dihapus otomatis dari perangkat ini dan tidak pernah dikirim ke server Mera."
+    "exportHistoryWindowNote_other": "Ekspor ini hanya mencakup {{count}} hari terakhir membaca. Entri yang lebih lama dihapus otomatis dari perangkat ini dan tidak pernah dikirim ke server Mera.",
+    "meterTitle": "Data di ponsel ini",
+    "meterLine": "Mera menggunakan {{used}}. {{free}} tersedia di ponsel ini.",
+    "meterUsedOnly": "Mera menggunakan {{used}}.",
+    "meterDatabase": "Artikel dan profil",
+    "meterBackup": "Salinan cadangan"
   },
   "preferences": {
     "notifications": "Notifikasi",
@@ -764,10 +777,10 @@
     "actionShowLessTopic": "Tampilkan lebih sedikit dari suatu topik",
     "actionShowMoreTopic": "Tampilkan lebih banyak dari suatu topik",
     "actionDownRank": "Turunkan peringkat suatu topik",
-    "actionPublicationBoost": "Tampilkan lebih banyak dari penerbit",
+    "actionPublicationBoost": "Tandai publikasi sebagai Diutamakan",
     "actionPublicationDeprioritize": "Tampilkan lebih sedikit dari penerbit",
-    "actionPublicationMute": "Senyapkan penerbit",
-    "actionSourceScopeBoost": "Tampilkan lebih banyak dari sumber di negara",
+    "actionPublicationMute": "Tandai publikasi sebagai Jangan tampilkan",
+    "actionSourceScopeBoost": "Utamakan sumber dari negara",
     "actionSourceScopeDeprioritize": "Tampilkan lebih sedikit dari sumber di negara",
     "actionSuppress": "Saring suatu frasa",
     "actionPinTopic": "Sematkan suatu topik",
@@ -1187,7 +1200,10 @@
       "carriedOver": "Memindahkan {{name}}",
       "undone": "Dibatalkan: {{change}}",
       "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}"
+      "newsStopped": "Stopped news for {{name}}",
+      "preferred": "Atur {{name}} sebagai Diutamakan",
+      "notPreferred": "Atur {{name}} sebagai Jangan tampilkan",
+      "preferredSourcesFrom": "Atur sumber dari {{name}} sebagai Diutamakan"
     }
   },
   "calibration": {
@@ -1235,10 +1251,8 @@
       "paywalled": "Saya tidak bisa membacanya, berbayar",
       "noTrust": "Saya tidak percaya",
       "trustTitle": "Kamu tidak percaya {{site}}",
-      "trustLess": "Tampilkan lebih sedikit dari {{site}}",
       "trustNever": "Jangan pernah tampilkan {{site}}",
       "hardToUse": "Situsnya sulit digunakan",
-      "fewerSite": "Tampilkan lebih sedikit dari situs ini",
       "reportTitle": "Beri tahu Mera Labs juga tentang {{site}}?",
       "reportYes": "Ya, kirim ke Mera Labs",
       "reportNo": "Tidak, terima kasih",
@@ -1481,7 +1495,6 @@
     }
   },
   "publicationPrefs": {
-    "clearA11y": "Hapus preferensi",
     "scopeKindCountry": "Negara"
   },
   "optimisationPlan": {
@@ -1782,7 +1795,7 @@
               },
               "sources": {
                 "label": "Sumber",
-                "text": "Publikasi yang ingin Anda lihat lebih banyak atau lebih sedikit, dan yang Anda bayar."
+                "text": "Publikasi yang Anda utamakan, yang Anda sembunyikan dari umpan Anda, dan yang Anda bayar."
               }
             }
           },
@@ -2051,14 +2064,14 @@
       },
       "sources": {
         "title": "Memilih sumber Anda",
-        "subtitle": "Lencana, panah, dan satu kontrol yang merupakan blok.",
+        "subtitle": "Bintang, lencana, dan menyembunyikan sumber dari umpan Anda.",
         "slides": {
           "where-it-lives": {
             "headline": "Di mana sumber tinggal",
-            "body": "Satu layar untuk semua penerbit yang Anda atur.",
+            "body": "Satu layar untuk setiap publikasi yang Anda pilih.",
             "steps": {
               "0": "Tab Anda, lalu Sumber.",
-              "1": "\"Lebih sedikit dari\" di menu ••• sebuah berita langsung berlaku, dengan Urungkan, lalu penerbitnya muncul di bawah Diatur."
+              "1": "\"Jangan tampilkan\" di menu ••• artikel langsung berlaku, dengan opsi Urungkan, lalu publikasi itu tampil di Sumber."
             },
             "ask": "Di mana saya mengelola sumber mana yang saya lihat?"
           },
@@ -2081,26 +2094,26 @@
             }
           },
           "arrows-on-a-publisher": {
-            "headline": "Panah yang sama, satu penerbit sekaligus",
-            "body": "Buka negara dan setiap penerbit memiliki pasangannya sendiri. Turun adalah dorong daripada dinding: penerbit yang diturunkan masih muncul ketika ia memiliki cerita yang tidak ada orang lain.",
-            "ask": "Apa perbedaan antara menurunkan sumber dan membungkamnya?"
+            "headline": "Beri bintang pada publikasi",
+            "body": "Buka sebuah negara dan setiap publikasi memiliki bintang. Bintang akan memindahkannya lebih tinggi di umpan Anda.",
+            "ask": "Apa bedanya Diutamakan dan Jangan tampilkan?"
           },
           "mute-is-not-a-downrank": {
-            "headline": "Bungkam adalah hal yang sama sekali berbeda",
-            "body": "Bungkam diatur di halaman sebuah publikasi, dan itu pengecualian keras: cerita-cerita itu dibuang, bukan hanya diurutkan lebih rendah. Ketuk setiap kartu dan letakkan di tempat yang seharusnya.",
+            "headline": "\"Jangan tampilkan\" menyembunyikannya dari umpan Anda",
+            "body": "Tandai publikasi sebagai Jangan tampilkan dan ceritanya hilang dari umpan Anda. Tab Dunia dan cerita terkait tetap bisa menampilkannya. Ketuk setiap kartu lalu letakkan di tempat yang semestinya.",
             "steps": {
-              "0": "Panah turun: ditampilkan lebih jarang.",
-              "1": "Bungkam: tidak ditampilkan sama sekali.",
-              "2": "Keduanya dapat dihapus nanti, dari preferensi sumber."
+              "0": "Bintang: ditampilkan lebih tinggi.",
+              "1": "Jangan tampilkan: disembunyikan dari umpan Anda.",
+              "2": "Anda bisa menghapus salah satunya di Sumber."
             },
             "sort": {
               "buckets": {
-                "softer": "Ditampilkan lebih jarang",
-                "gone": "Disimpan sepenuhnya"
+                "softer": "Ditampilkan lebih tinggi",
+                "gone": "Disembunyikan dari umpan Anda"
               },
               "cards": {
-                "down-arrow": "Panah turun",
-                "mute": "Bungkam"
+                "down-arrow": "Bintang",
+                "mute": "Jangan tampilkan"
               }
             }
           }
@@ -2116,7 +2129,7 @@
             "steps": {
               "0": "Kata-kata dan hal-hal yang Anda sembunyikan.",
               "1": "Topik yang Anda lihat lebih sedikit.",
-              "2": "Sumber yang telah Anda bungkam atau turunkan."
+              "2": "Sumber yang Anda tandai Jangan tampilkan."
             },
             "ask": "Di mana saya dapat melihat semua yang telah saya saring?"
           },
@@ -2678,18 +2691,18 @@
     "following": "Mengikuti berita ini",
     "checkFacts": "Pemeriksaan fakta",
     "fewerFrom": "Lebih sedikit dari {{source}}",
-    "fewerFromDone": "Kamu akan melihat lebih sedikit dari {{source}}.",
     "undo": "Urungkan",
     "reportBug": "Laporkan bug",
     "actionFailed": "Itu tidak berhasil. Coba lagi.",
     "aboutSource": "Tentang sumber ini",
     "liveChat": "Obrolan langsung",
     "liveChatSub": "Seseorang dari tim Mera",
-    "sourceSub": "Tentang, lebih sedikit dari {{source}}",
+    "sourceSub": "Tentang {{source}}, atau sembunyikan dari umpan Anda",
     "support": "Dukungan",
     "supportSub": "Laporkan bug, obrolan langsung, FAQ, tutorial",
     "tutorial": "Tutorial",
-    "fewerFromAlready": "Sudah menampilkan lebih sedikit dari {{source}}"
+    "notPreferred": "Jangan tampilkan",
+    "notPreferredDone": "{{publisher}} disembunyikan dari umpan Anda"
   },
   "storyExport": {
     "shareA11y": "Ekspor cerita ini",
@@ -2737,12 +2750,8 @@
     "newsLoadError": "Tidak dapat memuat artikel",
     "websiteA11y": "Buka {{host}}",
     "aboutSourceA11y": "Tentang {{source}}",
-    "prefMoreA11y": "Lebih banyak dari sumber ini",
-    "prefFewerA11y": "Lebih sedikit dari sumber ini",
     "history": "Riwayat",
-    "fewerFrom": "Lebih sedikit",
     "historyEmpty": "Tidak ada kunjungan di sini dalam 30 hari terakhir.",
-    "moreFrom": "Lebih banyak",
     "openedCount_one": "Anda membuka {{publisher}} sekali dalam 30 hari terakhir.",
     "openedCount_other": "Anda membuka {{publisher}} {{count}} kali dalam 30 hari terakhir.",
     "openedOn": "Dibuka {{date}}",
@@ -2750,7 +2759,15 @@
     "openedYesterday": "Dibuka kemarin",
     "supportLine": "Pelaporan yang baik bertahan saat pembacanya mendukungnya.",
     "visitsLabel": "Kunjungan Anda dalam 30 hari terakhir",
-    "subscribed": "Berlangganan"
+    "subscribed": "Berlangganan",
+    "preferred": "Diutamakan",
+    "notPreferred": "Jangan tampilkan",
+    "preferA11y": "Utamakan {{publisher}}",
+    "notPreferA11y": "Tandai {{publisher}} sebagai Jangan tampilkan",
+    "notPreferHint": "Menyembunyikan artikelnya dari umpan Anda",
+    "includedWith": "Termasuk dalam {{country}}",
+    "includedWithA11y": "Diutamakan, termasuk dalam {{country}}",
+    "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus {{country}} di Sumber."
   },
   "nav": {
     "page": {
@@ -2939,14 +2956,11 @@
     },
     "sources": {
       "title": "Sumber",
-      "find": "Cari publikasi",
-      "more": "Lebih banyak",
-      "fewer": "Lebih sedikit",
-      "muted": "Senyap",
-      "mute": "Bisukan",
-      "clear": "Hapus",
-      "footnote": "Ketuk satu untuk mengubahnya. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini.",
-      "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu ••• artikel juga berakhir di sini."
+      "find": "Cari publikasi atau negara",
+      "footnote": "Ketuk salah satu untuk mengubahnya. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
+      "empty": "Anda belum memilih sumber apa pun. Cari publikasi untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
+      "countryCleared": "{{country}} tidak lagi diutamakan",
+      "saveError": "Tidak dapat menyimpan itu. Coba lagi."
     },
     "settings": {
       "yourPlan": "Paket Anda",
@@ -3134,7 +3148,7 @@
       "follow": "Follow this story",
       "less": "Show less like this",
       "more": "Show more like this",
-      "mute": "Mute this publication"
+      "mute": "Tandai publikasi ini sebagai Jangan tampilkan"
     },
     "follow": {
       "follow": "Follow a story",

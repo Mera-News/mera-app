@@ -52,6 +52,7 @@ export interface NotifiedToastOptions {
 export interface ToastShowOptions {
     /** null = persistent lane: stays until dismissed (toast-queue). */
     duration?: number | null;
+    onClosed?: () => void;
     render: (props: { id: string }) => React.ReactNode;
 }
 
@@ -230,9 +231,23 @@ class ToastManager {
         /** Defaults to `feedback-undo`, the id the harness runbooks address. */
         undoTestID?: string;
         onUndo: () => void | boolean | Promise<void | boolean>;
+        /** Runs once when the card leaves, Undo tapped or not; also at once when
+         *  no card can show. Errors are logged. Pass `commitPurge` from a
+         *  Not preferred write here. */
+        onClosed?: () => void | Promise<void>;
     }) {
+        const closed = async () => {
+            try {
+                await opts.onClosed?.();
+            } catch (err) {
+                logger.captureException(err, {
+                    tags: { component: 'ToastManager', method: 'showUndoToast.closed' },
+                });
+            }
+        };
         if (!this.toastInstance) {
             logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
+            void closed();
             return;
         }
 
@@ -245,6 +260,7 @@ class ToastManager {
         let pressed = false;
         const id = this.toastInstance.show({
             duration: 6000,
+            onClosed: () => void closed(),
             render: () =>
                 React.createElement(UndoToast, {
                     title: opts.title,

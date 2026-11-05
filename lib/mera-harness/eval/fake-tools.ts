@@ -257,7 +257,12 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
         if (type === 'set_publication_pref') {
           const name = typeof rec.publicationId === 'string' ? rec.publicationId : '';
           if (!outlets.has(foldOutlet(name))) return { error: `unknown publication: ${name || '(none)'}` };
+          if (rec.publicationPref !== 'boost' && rec.publicationPref !== 'mute') {
+            return { error: 'set_publication_pref requires publicationPref ∈ boost|mute' };
+          }
         }
+        // As the device's sanitizer: a country is only ever preferred, anything else drops.
+        if (type === 'set_source_scope_pref' && rec.publicationPref !== 'boost') continue;
         actions.push({ ...rec });
       }
       if (actions.length === 0) return { error: 'no actions to stage' };
