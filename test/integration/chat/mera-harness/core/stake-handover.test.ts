@@ -314,6 +314,42 @@ describe('forced-offer grounding on a message it cannot compare', () => {
   });
 });
 
+describe('a save whose list arrives as a JSON string', () => {
+  const stringSave = (raw: string) => res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: raw })] });
+
+  it('keeps the entries on any fact skill', async () => {
+    const raw = JSON.stringify([{ statement: 'Daughter plays in a youth team' }]);
+    const h = harness([route('facts/residence'), stringSave(raw), res({ content: 'Nice.' })]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'My daughter plays in a youth team', deps: h.deps });
+    expect(out.proposals.map((p) => p.statement)).toEqual(['Daughter plays in a youth team']);
+    expect(h.port.saveExtractedFacts).toHaveBeenCalledTimes(1);
+  });
+
+  it('a no-stake entry in a string still reaches the follow card', async () => {
+    const h = harness([route(), stringSave(JSON.stringify([NO_STAKE])), card()]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps });
+    expect(h.port.saveExtractedFacts).not.toHaveBeenCalled();
+    expect(h.port.proposeTrack).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['[{"statement": "Rally'], ['not json'], ['{"statement":"Rally"}'], ['7'], ['[1,"x",null]'], ['']])(
+    'a malformed string (%p) is treated as empty and the call never fails',
+    async (raw) => {
+      const h = harness([route(), stringSave(raw), res({ content: 'Nice to hear it.' }), res({ content: 'Nice to hear it.' })]);
+      const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: "I'm into rally finland", deps: h.deps });
+      expect(out.terminalReason).not.toBe('transport-error');
+      expect(out.proposals).toEqual([]);
+    },
+  );
+
+  it('a malformed string is not an explicit empty save: the forced leg still rescues the turn', async () => {
+    const h = harness([route(), stringSave('not json'), res({ content: 'Nice.' }), save(STAKE), res({ content: 'Nice.' })]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'I marshal at rally finland', deps: h.deps });
+    expect(out.forcedProposal).toBe(true);
+    expect(out.proposals.map((p) => p.statement)).toEqual(['Marshals at Rally Finland']);
+  });
+});
+
 describe('the first option is never personal', () => {
   it('skips a personal or missing subject and opens on the model\'s options', async () => {
     for (const subject of ["I'm into Rally Finland", undefined]) {

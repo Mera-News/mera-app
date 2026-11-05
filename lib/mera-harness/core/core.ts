@@ -363,6 +363,21 @@ function plainOriginOf(message: string): string | null {
   return m[1].split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 }
 
+/**
+ * The model sometimes sends this list as a JSON STRING, which read as empty and
+ * lost the reader's words with no card. A string that holds no list stays as it
+ * is: it is a bad call, never the explicit empty save that means "no offer".
+ */
+function factListOf(raw: unknown): unknown {
+  if (typeof raw !== 'string') return raw;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((e) => e !== null && typeof e === 'object') : raw;
+  } catch {
+    return raw;
+  }
+}
+
 /** The loop-written first leg of a "Save all" tap. */
 function saveAllLeg(options: readonly string[]): AgentModelResult {
   const entries = options.map((o) => ({ statement: factPickStatement(o) }));
@@ -1516,6 +1531,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       }
 
       if (call.name === 'saveExtractedFacts') {
+        args = { ...args, extracted_user_information: factListOf(args.extracted_user_information) };
         // THREE FACTS, NEVER ONE (owner decision, ux1): a combined
         // origin-and-home entry is expanded into origin, expat status and
         // residence before anything else looks at it, and every entry of
