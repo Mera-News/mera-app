@@ -344,6 +344,20 @@ describe('accept', () => {
     expect((await topicService.getByFact(pop.fact.id)).find((t) => t.text === 'katseye')?.status).toBe('retired');
   });
 
+  it('a topic the reader removed after the sweep still lets the follow land', async () => {
+    const pop = await flooded();
+    await sweep();
+    const [offer] = await getPendingProposals();
+    await database.write(async () => {
+      await (await database.get('topics').find(pop.topics[0].id)).destroyPermanently();
+    });
+
+    expect(await accept(offer.id)).toMatchObject({ applied: true, ok: true });
+
+    expect(await getActiveForTopicReconcile()).toHaveLength(1);
+    expect(await getPendingProposals()).toEqual([]);
+  });
+
   it('the fact\'s last active topic takes the fact: the dialog can say so, and there is no retire row to undo', async () => {
     const pop = await flooded();
     await sweep();

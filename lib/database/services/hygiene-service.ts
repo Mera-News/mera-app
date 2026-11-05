@@ -560,11 +560,12 @@ export async function addFollowInsteadProposal(proposal: HygieneProposal): Promi
  *  because a reader can change their topics after the sweep. */
 export async function followInsteadTakesFact(proposal: HygieneProposal): Promise<boolean> {
   if (isNoStakeOffer(proposal)) return true;
-  const moving = new Set(proposal.targetTopicIds);
+  return (await activeTopicsOf(proposal)).every((t) => proposal.targetTopicIds.includes(t.id));
+}
+
+async function activeTopicsOf(proposal: HygieneProposal) {
   const topics = await getAllTopicSnapshots();
-  return !topics.some(
-    (t) => t.status === 'active' && t.factId === proposal.targetFactIds[0] && !moving.has(t.id),
-  );
+  return topics.filter((t) => t.status === 'active' && t.factId === proposal.targetFactIds[0]);
 }
 
 /** Delete a fact and its audit row. The statement is read first, because the
@@ -593,6 +594,8 @@ async function applyFollowInsteadProposal(proposal: HygieneProposal): Promise<Ac
   if (follow?.type !== 'follow_story') return { applied: false, ok: false };
 
   const takesFact = await followInsteadTakesFact(proposal);
+  // Read before the follow: the reader may have removed a topic since the sweep.
+  const moving = (await activeTopicsOf(proposal)).filter((t) => proposal.targetTopicIds.includes(t.id));
   const outcome = await trackStoryWithProposal(
     follow.subject as FeedbackSubject,
     { label: follow.label, searchText: follow.searchText },
@@ -603,7 +606,7 @@ async function applyFollowInsteadProposal(proposal: HygieneProposal): Promise<Ac
   if (takesFact) {
     await deleteFactLogged(proposal.targetFactIds[0], proposal);
   } else {
-    for (const topicId of proposal.targetTopicIds) {
+    for (const { id: topicId } of moving) {
       const res = await applyPersonaAction({ action_type: ACTION_NAMES.RETIRE_TOPIC, topicId }, 'digest');
       if (!res.applied) return { applied: false, ok: false };
     }
