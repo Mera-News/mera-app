@@ -8,6 +8,12 @@
 # (the playstore image's OS traffic arrives as raw IPs), so step 7 samples the sockets owned by the
 # app's uid from /proc/net and fails on any remote other than the mock. Denied proxy connections are
 # held open for 3 s so the 0.2 s sampler sees them.
+#
+# --device <serial> (or E2E_DEVICE) runs on a physical phone instead: no emulator, no proxy, the mock
+# behind `adb reverse`, endpoints at 127.0.0.1. The owner puts the phone in airplane mode with Wi-Fi
+# off; the script refuses to start without it and checks it again before the flows and after them. A
+# foreign connect then fails with no socket row, so this lane prevents outside traffic and step 7
+# cannot see an attempt; step 7 still fails on any other remote it does sample.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -23,22 +29,28 @@ SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export ANDROID_HOME="$SDK"  # Gradle needs it; not in the user profile
 EMU="$SDK/emulator/emulator"
 ADB="$SDK/platform-tools/adb"
+[ -x "$ADB" ] || ADB="$(command -v adb || echo "$ADB")"
 RUN="e2e-output/$(date +%Y%m%d-%H%M%S)"
 APK_OUT=android/app/build/outputs/apk/release/app-release.apk
 LAST=e2e-output/last-app-e2e.apk
+MOCK_HOST=10.0.2.2
+METRO_TMP="$ROOT/e2e-output/.metro-tmp"
 
 ORIG_ARGS=("$@")
-DRY=0 SKIP_BUILD=0 CLEAN=0 ALLOW_DIRTY=0
+DRY=0 SKIP_BUILD=0 CLEAN=0 ALLOW_DIRTY=0 SELF_TEST=0
+DEVICE="${E2E_DEVICE:-}"
 FLOWS=()
 HANDLERS="${E2E_HANDLERS:-./handlers}"
 
 usage() {
-  echo "usage: $0 [--dry-run] [--flows <path>]... [--skip-build] [--clean] [--handlers <module>]" >&2
+  echo "usage: $0 [--dry-run] [--self-test] [--device <serial>] [--flows <path>]... [--skip-build] [--clean] [--handlers <module>]" >&2
   exit 2
 }
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
+    --self-test) SELF_TEST=1 ;;  # checks step 7's socket verdicts, touches nothing
+    --device) DEVICE="${2:?}"; shift ;;  # a physical phone by adb serial, see the header
     --flows) FLOWS+=("${2:?}"); shift ;;  # repeatable: several flows or dirs, one boot
     --skip-build) SKIP_BUILD=1 ;;
     --clean) CLEAN=1 ;;
@@ -50,12 +62,23 @@ while [ $# -gt 0 ]; do
 done
 [ "${#FLOWS[@]}" -gt 0 ] || FLOWS=(.maestro/)
 
-# Remote endpoints of the app-uid sockets sampled from /proc/net/tcp{,6}. Allowed: the mock
-# (10.0.2.2:PORT), loopback and unconnected sockets. Requires at least one socket to the mock,
-# so a sampler that reads nothing cannot pass.
+if [ -n "$DEVICE" ]; then
+  SERIAL="$DEVICE"
+  MOCK_HOST=127.0.0.1
+  # Its own APK and Metro cache: Metro's cache key ignores env, so a shared one keeps the other
+  # lane's inlined endpoints.
+  LAST=e2e-output/last-app-e2e-device.apk
+  METRO_TMP="$ROOT/e2e-output/.metro-tmp-device"
+  export JAVA_HOME="${JAVA_HOME:-$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home}"
+fi
+
+# Remote endpoints of the app-uid sockets sampled from /proc/net/tcp{,6}. Requires at least one
+# socket to the mock, so a sampler that reads nothing cannot pass. Emulator: the mock is
+# 10.0.2.2:PORT, and loopback and unconnected sockets are allowed. Phone: the mock is
+# 127.0.0.1:PORT, and only unconnected sockets are allowed besides it.
 SOCK_JS='
 const fs = require("fs");
-const [file, port] = process.argv.slice(1);
+const [file, port, mockHost] = process.argv.slice(1);
 const rows = fs.existsSync(file) ? fs.readFileSync(file, "utf8").split("\n").filter(Boolean) : [];
 const v4 = (h) => [0, 1, 2, 3].map((i) => parseInt(h.substr(6 - 2 * i, 2), 16)).join(".");
 const decode = (hex) => {
@@ -72,8 +95,9 @@ const foreign = new Set();
 for (const r of rows) {
   const [addr, st] = r.trim().split(/\s+/);
   const { ip, port: p } = decode(addr);
-  if (ip === "10.0.2.2" && p === Number(port)) { mock++; continue; }
-  if (ip === "0.0.0.0" || ip === "127.0.0.1" || /^\[0000(:0000){6}:000[01]\]$/.test(ip)) continue;
+  if (ip === mockHost && p === Number(port)) { mock++; continue; }
+  if (ip === "0.0.0.0" || /^\[0000(:0000){6}:0000\]$/.test(ip)) continue;
+  if (mockHost !== "127.0.0.1" && (ip === "127.0.0.1" || /^\[0000(:0000){6}:0001\]$/.test(ip))) continue;
   // st: /proc/net tcp state, 01 ESTABLISHED, 02 SYN_SENT, 06 TIME_WAIT (uid 0, never seen here).
   foreign.add(ip + ":" + p + (st ? " (state " + st + ")" : ""));
 }
@@ -82,19 +106,59 @@ if (foreign.size) { console.error("FAIL: app sockets to non-mock hosts:\n" + [..
 console.log("app sockets ok (" + mock + " samples to the mock, none elsewhere)");
 '
 
+if [ "$SELF_TEST" = 1 ]; then
+  # Rows as the sampler writes them: "<rem_address> <state>". 8790 is 2256 in hex.
+  verdict() { # <want pass|fail> <mock host> <row>...
+    local want="$1" host="$2" f got; shift 2
+    f="$(mktemp)"; printf '%s\n' "$@" > "$f"
+    if node -e "$SOCK_JS" "$f" 8790 "$host" > /dev/null 2>&1; then got=pass; else got=fail; fi
+    rm -f "$f"
+    [ "$got" = "$want" ] || { echo "FAIL: $host [$*] gave $got, wanted $want" >&2; exit 1; }
+  }
+  MOCK6=0000000000000000FFFF00000100007F:2256  # 127.0.0.1:8790 as a v4-mapped tcp6 row
+  verdict pass 127.0.0.1 "0100007F:2256 01"
+  verdict pass 127.0.0.1 "$MOCK6 01" "00000000:0000 0A"
+  verdict fail 127.0.0.1 ""
+  verdict fail 127.0.0.1 "00000000:0000 0A"
+  verdict fail 127.0.0.1 "0100007F:2256 01" "0202000A:2256 01"
+  verdict fail 127.0.0.1 "0100007F:2256 01" "0100007F:2257 01"
+  verdict fail 127.0.0.1 "0100007F:2256 01" "00000000000000000000000001000000:2256 01"
+  verdict fail 127.0.0.1 "0100007F:2256 01" "08080808:01BB 02"
+  verdict pass 10.0.2.2 "0202000A:2256 01" "0100007F:2257 01" "00000000000000000000000001000000:2256 01"
+  verdict fail 10.0.2.2 "0100007F:2256 01"
+  verdict fail 10.0.2.2 "0202000A:2256 01" "0202000A:2257 01"
+  echo "socket verdicts ok"
+  exit 0
+fi
+
 if [ "$DRY" = 1 ]; then
+  if [ -n "$DEVICE" ]; then
+    PREFLIGHT="require adb state device for $SERIAL; require airplane_mode_on=1 and 'Active default network: none'"
+    BOOT="step 4 connect: adb -s $SERIAL reverse tcp:$PORT tcp:$PORT (no emulator, no proxy)"
+    BEFORE_INSTALL="check airplane mode and no default network again; "
+    SCALES="save the animation scales and stay_on_while_plugged_in, scales to 0, stay on"
+    TEARDOWN="stop sampler; restore the saved settings; adb -s $SERIAL reverse --remove tcp:$PORT; kill mock server"
+    AFTER7="; check airplane mode and no default network again"
+  else
+    PREFLIGHT="abort if adb lists an emulator-*; require $EMU"
+    BOOT="step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png"
+    BEFORE_INSTALL=""
+    SCALES="system animation scales to 0"
+    TEARDOWN="stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f \"@$AVD\" to clear; kill mock server"
+    AFTER7=""
+  fi
   cat <<PLAN
 e2e-android --dry-run (nothing is run, no heavy slot is taken)
-ROOT=$ROOT  RUN=$RUN  flows=${FLOWS[*]}  handlers=$HANDLERS
-step 0 preflight: re-exec as E2E_HEAVY_HELD=1 $ROOT/../bin/heavy --all bash $SELF; abort if adb lists an emulator-*; require maestro, $EMU, $ADB; mkdir -p $RUN; trap cleanup EXIT INT TERM
+ROOT=$ROOT  RUN=$RUN  flows=${FLOWS[*]}  handlers=$HANDLERS  serial=$SERIAL
+step 0 preflight: re-exec as E2E_HEAVY_HELD=1 $ROOT/../bin/heavy --all bash $SELF; $PREFLIGHT; require maestro, $ADB; mkdir -p $RUN; trap cleanup EXIT INT TERM
 step 1 prebuild$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build)" ): (set -a; . ./.env.e2e; CI=1 EXPO_NO_DOTENV=1 TMPDIR=$ROOT/e2e-output/.metro-tmp npx expo prebuild --platform android --no-install$( [ "$CLEAN" = 1 ] && echo " --clean" ))
-step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process); cp $APK_OUT $LAST; grep the raw bundle: require 10.0.2.2:$PORT, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
+step 2 gradle$( [ "$SKIP_BUILD" = 1 ] && echo " (skipped: --skip-build; bundle grep still runs)" ): (cd android && SENTRY_DISABLE_AUTO_UPLOAD=true ./gradlew :app:createBundleReleaseJsAndAssets --rerun assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process); cp $APK_OUT $LAST; grep the raw bundle: require $MOCK_HOST:$PORT and the stub markers, forbid prod/staging endpoint hosts and every .env secret value (DSN, KEY, TOKEN, APP_ID, CLIENT_ID)
 step 3 mock server: npx tsx test/mock-backend/server.ts --port $PORT --log $RUN/proxy.jsonl --deny-delay 3000 --handlers $HANDLERS > $RUN/mock.log; poll http://127.0.0.1:$PORT/__control/health (30 s)
-step 4 boot: $EMU @$AVD -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 -http-proxy http://127.0.0.1:$PORT > $RUN/emulator.log; wait-for-device; sys.boot_completed (300 s); screenshot $RUN/launcher.png
-step 5 install: adb -s $SERIAL install -r $LAST; system animation scales to 0; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
+$BOOT
+step 5 install: ${BEFORE_INSTALL}adb -s $SERIAL install -r $LAST; $SCALES; resolve the app uid; require /proc/net/tcp6 readable; start the 0.2 s on-device app-socket sampler -> $RUN/app-sockets.txt
 step 6 maestro: MAESTRO_CLI_NO_ANALYTICS=1 maestro --device $SERIAL test ${FLOWS[*]} --test-output-dir $RUN/maestro --format junit --output $RUN/junit.xml -e MOCK=http://localhost:$PORT -e APP_ID=$APP_ID -e SCHEME=$SCHEME; stop the sampler and the logcat stream (started at step 5) -> $RUN/logcat.txt; report the WMDatabaseJSIBridge install line, FATAL lines and removeViewAt lines
-step 7 app sockets: every sampled app-uid remote must be 10.0.2.2:$PORT (or loopback/unconnected), and at least one must be the mock
-step 8 cleanup (always, idempotent): stop sampler; adb -s $SERIAL emu kill; wait up to 60 s for pgrep -f "@$AVD" to clear; kill mock server
+step 7 app sockets: every sampled app-uid remote must be $MOCK_HOST:$PORT (or unconnected, or loopback on the emulator), and at least one must be the mock$AFTER7
+step 8 cleanup (always, idempotent): $TEARDOWN
 exit code: maestro's if non-zero, else step 7's
 PLAN
   exit 0
@@ -108,22 +172,48 @@ if [ -z "${E2E_HEAVY_HELD:-}" ]; then
   fi
   echo "warn: $HEAVY missing; running without holding the heavy slots" >&2
 fi
-[ -x "$EMU" ] || { echo "error: emulator binary not found at $EMU" >&2; exit 1; }
 [ -x "$ADB" ] || { echo "error: adb not found at $ADB" >&2; exit 1; }
 command -v maestro > /dev/null || { echo "error: maestro not on PATH (brew install mobile-dev-inc/tap/maestro)" >&2; exit 1; }
-if "$ADB" devices | grep -q '^emulator-'; then
-  echo "error: an emulator is already running; it belongs to another lane. Not touching it." >&2
-  exit 1
+
+# The phone lane's only guarantee against outside hosts. Reads a literal "none", so a phone or dump
+# this does not understand refuses instead of passing.
+require_offline() {
+  local air dump
+  air="$("$ADB" -s "$SERIAL" shell settings get global airplane_mode_on | tr -d '\r')"
+  dump="$("$ADB" -s "$SERIAL" shell dumpsys connectivity | tr -d '\r')"
+  if [ "$air" != 1 ] || ! grep -qF 'Active default network: none' <<< "$dump"; then
+    echo "FAIL: $SERIAL must be in airplane mode with Wi-Fi off and no default network (airplane_mode_on=$air)" >&2
+    return 1
+  fi
+}
+
+if [ -n "$DEVICE" ]; then
+  [ "$("$ADB" -s "$SERIAL" get-state 2> /dev/null)" = device ] || { echo "error: $SERIAL is not connected and authorized" >&2; exit 1; }
+  require_offline || exit 1
+else
+  [ -x "$EMU" ] || { echo "error: emulator binary not found at $EMU" >&2; exit 1; }
+  if "$ADB" devices | grep -q '^emulator-'; then
+    echo "error: an emulator is already running; it belongs to another lane. Not touching it." >&2
+    exit 1
+  fi
 fi
 mkdir -p "$RUN"
 
-MOCK_PID="" EMU_STARTED=0 SAMPLER_PID="" LOGCAT_PID="" CLEANED=0
+MOCK_PID="" EMU_STARTED=0 SAMPLER_PID="" LOGCAT_PID="" CLEANED=0 REVERSED=0
+SAVED=()  # phone settings as key=value, put back by cleanup
 cleanup() {
   [ "$CLEANED" = 1 ] && return 0
   CLEANED=1
   set +e
   [ -n "$SAMPLER_PID" ] && { pkill -P "$SAMPLER_PID" 2> /dev/null; kill "$SAMPLER_PID" 2> /dev/null; }
   [ -n "$LOGCAT_PID" ] && kill "$LOGCAT_PID" 2> /dev/null
+  for kv in ${SAVED[@]+"${SAVED[@]}"}; do
+    if [ "${kv#*=}" = null ]; then "$ADB" -s "$SERIAL" shell settings delete global "${kv%%=*}" > /dev/null
+    else "$ADB" -s "$SERIAL" shell settings put global "${kv%%=*}" "${kv#*=}"
+    fi || echo "warn: could not restore ${kv%%=*} (was ${kv#*=})" >&2
+  done
+  # One port only: the owner's own reverses (Metro) stay.
+  [ "$REVERSED" = 1 ] && "$ADB" -s "$SERIAL" reverse --remove "tcp:$PORT"
   if [ "$EMU_STARTED" = 1 ]; then
     "$ADB" -s "$SERIAL" emu kill > /dev/null 2>&1
     for _ in $(seq 1 60); do pgrep -f "@$AVD" > /dev/null || break; sleep 1; done
@@ -142,7 +232,7 @@ require_clean() {
   [ "$ALLOW_DIRTY" = 1 ] && return 0
   local dirty
   # Test files never reach the bundle, so their churn (a gate runner's deletions) does not count.
-  dirty="$(git status --porcelain -- app components lib modules plugins app.json app.config.js package.json \
+  dirty="$(git status --porcelain -- app components lib modules plugins app.json app.config.js metro.config.js package.json \
     | grep -vE '(__tests__/|\.(test|spec)\.[jt]sx?$)' || true)"
   if [ -n "$dirty" ]; then
     echo "FAIL: uncommitted app source; the APK would match no commit (--allow-dirty to override):" >&2
@@ -153,8 +243,14 @@ require_clean() {
 
 e2e_env() {
   set -a; . ./.env.e2e; set +a
-  export EXPO_NO_DOTENV=1 TMPDIR="$ROOT/e2e-output/.metro-tmp"
+  export EXPO_NO_DOTENV=1 TMPDIR="$METRO_TMP"
   mkdir -p "$TMPDIR"
+  if [ -n "$DEVICE" ]; then
+    export E2E_DEVICE_BUILD=1  # metro.config.js: the NetInfo alias
+    export EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT="http://$MOCK_HOST:$PORT"
+    export EXPO_PUBLIC_AUTH_ENDPOINT="http://$MOCK_HOST:$PORT"
+    export EXPO_PUBLIC_INFERENCE_ENDPOINT="http://$MOCK_HOST:$PORT"
+  fi
 }
 
 # ---- steps 1-2: build --------------------------------------------------------------------
@@ -166,7 +262,8 @@ if [ "$SKIP_BUILD" = 0 ]; then
   require_clean
   [ "$(git rev-parse --short HEAD)" = "$BUILT_SHA" ] || { echo "FAIL: HEAD moved during prebuild" >&2; exit 1; }
   echo "== step 2: gradle"
-  ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process )
+  # --rerun: BundleHermesCTask has no env input, so switching lanes would reuse the other's bundle.
+  ( e2e_env; export SENTRY_DISABLE_AUTO_UPLOAD=true; cd android && ./gradlew :app:createBundleReleaseJsAndAssets --rerun assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process )
   cp "$APK_OUT" "$LAST"
   echo "$BUILT_SHA" > "$LAST.sha"
 fi
@@ -178,10 +275,15 @@ echo "== step 2: bundle grep"
 # values, matched as fixed strings (names only are printed, never values).
 BUNDLE="$RUN/index.android.bundle"
 unzip -p "$LAST" assets/index.android.bundle > "$BUNDLE"
-LC_ALL=C grep -a -q -F "10.0.2.2:$PORT" "$BUNDLE" || { echo "FAIL: bundle lacks 10.0.2.2:$PORT" >&2; exit 1; }
+LC_ALL=C grep -a -q -F "$MOCK_HOST:$PORT" "$BUNDLE" || { echo "FAIL: bundle lacks $MOCK_HOST:$PORT" >&2; exit 1; }
 # metro.config.js swaps in the scenario-driven paywall stub (lib/e2e/purchases-ui.ts) for this build.
 LC_ALL=C grep -a -q -F "/__e2e/paywall" "$BUNDLE" || { echo "FAIL: bundle lacks the e2e paywall stub" >&2; exit 1; }
+LC_ALL=C grep -a -q -F "e2e-fixture-integrity-token" "$BUNDLE" || { echo "FAIL: bundle lacks the e2e attestation stub" >&2; exit 1; }
 BAD=0
+if [ -n "$DEVICE" ]; then
+  LC_ALL=C grep -a -q -F "e2e-netinfo-connected" "$BUNDLE" || { echo "FAIL: bundle lacks the phone NetInfo stub" >&2; BAD=1; }
+  if LC_ALL=C grep -a -q -F "10.0.2.2:$PORT" "$BUNDLE"; then echo "FAIL: phone bundle still points at 10.0.2.2:$PORT" >&2; BAD=1; fi
+fi
 if LC_ALL=C grep -a -q -E '(graphql|auth|inference)(\.staging)?\.mera\.news' "$BUNDLE"; then
   echo "FAIL: bundle contains a prod or staging endpoint host" >&2; BAD=1
 fi
@@ -208,28 +310,42 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
-# ---- step 4: boot ------------------------------------------------------------------------
-echo "== step 4: boot $AVD"
-EMU_STARTED=1
-"$EMU" "@$AVD" -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 \
-  -http-proxy "http://127.0.0.1:$PORT" > "$RUN/emulator.log" 2>&1 &
-"$ADB" -s "$SERIAL" wait-for-device
-for i in $(seq 1 300); do
-  [ "$("$ADB" -s "$SERIAL" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ] && break
-  [ "$i" = 300 ] && { echo "error: emulator not booted after 300 s" >&2; exit 1; }
-  sleep 1
-done
-"$ADB" -s "$SERIAL" emu screenrecord screenshot "$RUN/launcher.png" || echo "warn: launcher screenshot failed" >&2
+# ---- step 4: boot, or connect the phone ---------------------------------------------------
+if [ -n "$DEVICE" ]; then
+  echo "== step 4: adb reverse on $SERIAL"
+  REVERSED=1
+  "$ADB" -s "$SERIAL" reverse "tcp:$PORT" "tcp:$PORT"
+else
+  echo "== step 4: boot $AVD"
+  EMU_STARTED=1
+  "$EMU" "@$AVD" -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -memory 3072 \
+    -http-proxy "http://127.0.0.1:$PORT" > "$RUN/emulator.log" 2>&1 &
+  "$ADB" -s "$SERIAL" wait-for-device
+  for i in $(seq 1 300); do
+    [ "$("$ADB" -s "$SERIAL" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = 1 ] && break
+    [ "$i" = 300 ] && { echo "error: emulator not booted after 300 s" >&2; exit 1; }
+    sleep 1
+  done
+  "$ADB" -s "$SERIAL" emu screenrecord screenshot "$RUN/launcher.png" || echo "warn: launcher screenshot failed" >&2
+fi
 
 # ---- step 5: install and the app-socket sampler ------------------------------------------
 echo "== step 5: install"
+# A build can take half an hour; the phone must still be offline when the app first runs.
+if [ -n "$DEVICE" ]; then require_offline || exit 1; fi
 "$ADB" -s "$SERIAL" install -r "$LAST"
 # System animations off, before any launch (Reanimated reads Reduce Motion at launch). The app's
 # motion gate then parks every loop on a still frame, as Lite does, but keeps the full-mode look.
 # Without it, full mode's animated backdrop on the software GPU slowed each Maestro step to ~100 s.
 for k in window_animation_scale transition_animation_scale animator_duration_scale; do
+  if [ -n "$DEVICE" ]; then SAVED+=("$k=$("$ADB" -s "$SERIAL" shell settings get global "$k" | tr -d '\r')"); fi
   "$ADB" -s "$SERIAL" shell settings put global "$k" 0
 done
+# A phone sleeps mid-run; 7 stays on for any charger, USB included.
+if [ -n "$DEVICE" ]; then
+  SAVED+=("stay_on_while_plugged_in=$("$ADB" -s "$SERIAL" shell settings get global stay_on_while_plugged_in | tr -d '\r')")
+  "$ADB" -s "$SERIAL" shell settings put global stay_on_while_plugged_in 7
+fi
 APP_UID="$("$ADB" -s "$SERIAL" shell pm list packages -U "$APP_ID" | tr -d '\r' | sed -n 's/.*uid://p' | head -1)"
 [ -n "$APP_UID" ] || { echo "error: could not resolve the uid of $APP_ID" >&2; exit 1; }
 "$ADB" -s "$SERIAL" shell cat /proc/net/tcp6 | head -1 | grep -q local_address \
@@ -269,8 +385,12 @@ echo "logcat: $(grep -c 'removeViewAt' "$RUN/logcat.txt" || true) removeViewAt l
 # ---- step 7: app sockets -----------------------------------------------------------------
 echo "== step 7: app sockets"
 SOCK_RC=0
-node -e "$SOCK_JS" "$RUN/app-sockets.txt" "$PORT" || SOCK_RC=$?
-echo "proxy (diagnostic): $(grep -c '"status":403' "$RUN/proxy.jsonl" || true) foreign connections refused"
+node -e "$SOCK_JS" "$RUN/app-sockets.txt" "$PORT" "$MOCK_HOST" || SOCK_RC=$?
+if [ -n "$DEVICE" ]; then
+  require_offline || SOCK_RC=1
+else
+  echo "proxy (diagnostic): $(grep -c '"status":403' "$RUN/proxy.jsonl" || true) foreign connections refused"
+fi
 
 # Flows tagged `blocked` are skipped by .maestro/config.yaml; name them on every run so the
 # exclusion can never go silent.

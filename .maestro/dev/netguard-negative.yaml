@@ -2,6 +2,9 @@
 # non-mock origin (IMAGE_ORIGIN, e.g. a fast closing server on 10.0.2.2:8791, or an internet host
 # the proxy refuses), signs in and waits for cards. The run MUST end red at step 7 listing that host.
 # Run: scripts/e2e-android.sh --skip-build --handlers ./handlers --flows .maestro/dev/netguard-negative.yaml
+# Phone lane: airplane mode leaves a foreign connect no socket row, so point at a second loopback port
+# that really connects: `adb reverse tcp:8791 tcp:8790` first, IMAGE_ORIGIN=http://127.0.0.1:8791,
+# --device <serial>; remove that reverse afterwards. The run must end red naming 127.0.0.1:8791.
 appId: ${APP_ID}
 ---
 - runScript: ../scripts/reset-scenario.js

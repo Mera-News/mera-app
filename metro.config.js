@@ -27,6 +27,9 @@ const ALIASES = {
 if (process.env.EXPO_PUBLIC_E2E === '1') {
     ALIASES['react-native-purchases-ui'] = path.resolve(__dirname, 'lib/e2e/purchases-ui.ts');
     ALIASES['@/modules/mera-device-attest'] = path.resolve(__dirname, 'lib/e2e/device-attest.ts');
+    if (process.env.E2E_DEVICE_BUILD === '1') {
+        ALIASES['@react-native-community/netinfo'] = path.resolve(__dirname, 'lib/e2e/netinfo-connected.ts');
+    }
 }
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
