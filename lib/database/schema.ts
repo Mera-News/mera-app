@@ -484,7 +484,7 @@ export default appSchema({
     // (once resolved) to a server stable_cluster_id so the reconcile poll can
     // find new member articles for it. Long-lived — migrate, NEVER wipe.
     // `member_article_ids_json` is a JSON string[] of the article ids in the
-    // story, newest-first, capped at 30. `llm_headline` is the generated
+    // story, newest-first, capped at 2000. `llm_headline` is the generated
     // English one-liner (rendered via TranslatableDynamic); `fallback_title`
     // is the title captured at track time and always renders until a headline
     // exists. `unseen_count`/`last_update_at` drive the "new updates" badge and
