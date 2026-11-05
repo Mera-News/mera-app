@@ -1650,10 +1650,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // geopolitical conflict in the region of Israel" for a Ukraine
           // answer (navx2-fu). Precision first: ONE shared subject word with
           // anything the user or Mera said this exchange keeps the entry.
-          // Facts are written in English, so a message with no Latin letter shares
-          // no word with any of them: on an interest leg the slots vouch instead.
-          const ungroundable = typeof entry.has_stake === 'boolean' && !/\p{Script=Latin}/u.test(userMessage);
-          if (groundForcedOffer && forcingProposalNow && !ungroundable && !namesSomethingSaid(statement, groundingText())) continue;
+          // Facts are written in English, so overlap with a message in another
+          // language is always empty and says nothing: Dutch "Ik ben gek op
+          // wielrennen" lost "Follows cycling" this way. There the check narrows to
+          // the leak it guards against, a subject from the turn before. A word or
+          // two answering a question names nothing in any language, so that keeps
+          // the whole rule: a yes must never buy an invented subject.
+          // shortcut: the app language stands in for the message's, so Dutch typed
+          // in an English app keeps the old drop; upgrade with a language detector.
+          const overlapCanTell = plainAnswer !== null
+            || (lastQuestion !== null && userMessage.trim().split(/\s+/).length <= 2)
+            || (/\p{Script=Latin}/u.test(userMessage) && (state.persona.languageName ?? 'English') === 'English');
+          if (
+            groundForcedOffer
+            && forcingProposalNow
+            && !namesSomethingSaid(statement, groundingText())
+            && (overlapCanTell || namesFact(statement, turn.lastSubjects.join(' ')))
+          ) continue;
           // A NEGATIVE INTEREST IS NEVER OFFERED on a see-less turn, forced
           // or not ("Does not want The Hindu included in news updates" after
           // "Mute The Hindu"): stop, less, mute and hide are a filter, not a

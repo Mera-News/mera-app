@@ -245,6 +245,75 @@ describe('the handover', () => {
   });
 });
 
+describe('forced-offer grounding on a message it cannot compare', () => {
+  // Facts are written in English, so word overlap with any other language is always empty.
+  const forced = (statement: string, extra: Record<string, unknown> = {}) =>
+    res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement, ...extra }] })] });
+  const run = (facts: { languageName: string; message: string; statement: string; earlier?: string[]; profession?: boolean; question?: string }) => {
+    const h = harness([route(facts.profession ? 'facts/residence' : 'facts/interest'), res({ content: 'Prima.' }), forced(facts.statement), res({ content: 'Prima.' })]);
+    const state = createAgentState({ ...PERSONA, languageName: facts.languageName });
+    state.turn.lastSubjects = facts.earlier ?? [];
+    state.turn.lastQuestion = facts.question ?? null;
+    return { h, done: runAgentTurn({ state, userMessage: facts.message, deps: h.deps }) };
+  };
+  const saved = (h: ReturnType<typeof harness>) =>
+    h.port.saveExtractedFacts.mock.calls.flatMap((c) => (c[0] as { extracted_user_information: { statement: string }[] }).extracted_user_information.map((e) => e.statement));
+
+  it('a Dutch message keeps its forced offer, in the Latin script', async () => {
+    const { h, done } = run({ languageName: 'Dutch', message: 'Ik ben gek op wielrennen', statement: 'Follows cycling' });
+    await done;
+    expect(saved(h)).toEqual(['Follows cycling']);
+  });
+
+  it('a Hindi message keeps its forced offer on any fact skill, not only interests', async () => {
+    const { h, done } = run({ languageName: 'Hindi', message: 'मैं क्रिकेट कोच हूँ', statement: 'Cricket coach', profession: true });
+    await done;
+    expect(saved(h)).toEqual(['Cricket coach']);
+  });
+
+  it('a script with no Latin letter is exempt whatever the app language', async () => {
+    const { h, done } = run({ languageName: 'English', message: 'मैं क्रिकेट कोच हूँ', statement: 'Cricket coach' });
+    await done;
+    expect(saved(h)).toEqual(['Cricket coach']);
+  });
+
+  it('LEAK GUARD, in Dutch: an unrelated new fact never carries the earlier subject', async () => {
+    const { h, done } = run({ languageName: 'Dutch', message: 'Ik roei graag in het weekend', statement: 'Follows Porto Santo news', earlier: ['Porto Santo island'] });
+    await done;
+    expect(saved(h)).toEqual([]);
+  });
+
+  it('LEAK GUARD, in Hindi', async () => {
+    const { h, done } = run({ languageName: 'Hindi', message: 'मुझे सप्ताहांत में नाव चलाना पसंद है', statement: 'Follows Porto Santo news', earlier: ['Porto Santo island'] });
+    await done;
+    expect(saved(h)).toEqual([]);
+  });
+
+  it('a Dutch message that names the earlier subject itself keeps it', async () => {
+    const { h, done } = run({ languageName: 'Dutch', message: 'Ik ga volgend jaar naar Porto Santo', statement: 'Going to Porto Santo', earlier: ['Porto Santo island'] });
+    await done;
+    expect(saved(h)).toEqual(['Going to Porto Santo']);
+  });
+
+  it('a bare yes names nothing in any language, so an invented subject still goes', async () => {
+    const { h, done } = run({ languageName: 'Dutch', message: 'ja', statement: 'Follows the conflict in Israel', question: 'Which thread are you following?' });
+    await done;
+    expect(saved(h)).toEqual([]);
+  });
+
+  it('a bare yes in Hindi too', async () => {
+    const { h, done } = run({ languageName: 'Hindi', message: 'हाँ', statement: 'Follows the conflict in Israel', question: 'कौन सी खबर?' });
+    await done;
+    expect(saved(h)).toEqual([]);
+  });
+
+  it('an English reader keeps the original rule: an offer naming nothing said goes', async () => {
+    const { h, done } = run({ languageName: 'English', message: 'I enjoy rowing on weekends', statement: 'Follows the conflict in Israel' });
+    await done;
+    expect(saved(h)).toEqual([]);
+  });
+});
+
 describe('the first option is never personal', () => {
   it('skips a personal or missing subject and opens on the model\'s options', async () => {
     for (const subject of ["I'm into Rally Finland", undefined]) {

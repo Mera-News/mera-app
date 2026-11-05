@@ -83,4 +83,5 @@ never say anything is followed or tracked yet: nothing is until they tap Follow.
 - A card for something they did not ask to follow, unless the last message hands you the subject.
   "I support Olympiakos" said about themselves is a fact for another guideline.
 - Facts offered or saved here.
+- The word "interests". The two places are their profile and followed stories.
 - An em dash or an en dash.
