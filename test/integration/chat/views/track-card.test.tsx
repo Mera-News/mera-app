@@ -368,6 +368,45 @@ describe('resolved states', () => {
   });
 });
 
+describe('Add to my profile instead', () => {
+  const OFFER = [{ statement: 'Follows Rally Finland', topic_skill_id: 'topics/interest' }];
+  const hints = { storySubjects: ['Rally Finland', 'Rally Sweden'], profileOffer: OFFER };
+
+  it('every subject is ticked and reads plainly, never as "as you wrote it"', async () => {
+    const { view } = await mount(['Rally Finland', 'Rally Sweden', 'WRC Results'], { hints });
+    expect([0, 1, 2].map((i) => checked(view, i))).toEqual([true, true, false]);
+    expect(view.getByTestId('track-option-0').props.accessibilityLabel).toBe('Rally Finland');
+  });
+
+  it('a card with no offer has no link', async () => {
+    const { view } = await mount(['Artemis II launch', 'Moon race']);
+    expect(view.queryByTestId('track-add-to-profile')).toBeNull();
+  });
+
+  it('the link asks, saves nothing, and the card keeps its rows with Add it anyway', async () => {
+    const ask = jest.spyOn(chatSession, 'askImpactQuestion').mockResolvedValue(undefined);
+    const { view } = await mount(['Rally Finland', 'WRC Results'], { hints });
+    await fireEvent.press(view.getByTestId('track-add-to-profile'));
+
+    await waitFor(() => expect(view.getByTestId('track-add-anyway')).toBeTruthy());
+    expect(ask).toHaveBeenCalledWith(i18n.t('trackedStories.impactQuestion'));
+    expect(view.queryByTestId('track-add-to-profile')).toBeNull();
+    expect(view.getByTestId('track-follow')).toBeTruthy();
+    expect(frameHeight(view.getByTestId('track-add-anyway'))).toBeGreaterThanOrEqual(44);
+    ask.mockRestore();
+  });
+
+  it('Add it anyway settles the card', async () => {
+    const ask = jest.spyOn(chatSession, 'askImpactQuestion').mockResolvedValue(undefined);
+    const { view } = await mount(['Rally Finland', 'WRC Results'], { hints });
+    await fireEvent.press(view.getByTestId('track-add-to-profile'));
+    await waitFor(() => expect(view.getByTestId('track-add-anyway')).toBeTruthy());
+    await fireEvent.press(view.getByTestId('track-add-anyway'));
+    await waitFor(() => expect(view.getByTestId('track-card-added')).toBeTruthy());
+    ask.mockRestore();
+  });
+});
+
 describe('accessibility and touch frames', () => {
   it('pending rows are checkboxes with a checked state', async () => {
     const { view } = await mount(['Artemis II launch', 'Moon race']);

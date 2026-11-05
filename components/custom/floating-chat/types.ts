@@ -44,6 +44,10 @@ export interface TrackCardSource {
   dismissed: boolean;
   /** A newer proposeTrack card exists further down the thread. */
   superseded: boolean;
+  /** What "Add to my profile instead" would commit. Empty on any other card. */
+  profileOffer?: SaveAsWrittenOffer['entry'][];
+  /** Asked how it affects them, or added. Null before the tap. */
+  profileStep?: 'asking' | 'added' | null;
 }
 
 export type FactCardAction ='saved' | 'deleted' | 'deletePending' | 'deleteKept' | 'updated';

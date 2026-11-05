@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GlyphSafeButton } from './glyph-safe';
-import { dismissTrackCard, followTickedOptions, loadMoreTrackOptions } from './track-card-actions';
+import { addProfileOffer, askProfileImpact, dismissTrackCard, followTickedOptions, loadMoreTrackOptions } from './track-card-actions';
 import { MAX_TRACK_CARD_OPTIONS, normaliseTrackText, readPhraseHints, trackCardStatus, type TrackOutcome } from './track-options';
 import type { TrackCardSource } from './types';
 
@@ -65,10 +65,11 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const [shown, setShown] = useState<Record<string, string>>({});
   const [shownFailed, setShownFailed] = useState<Record<string, boolean>>({});
   const [pendingGrow, setPendingGrow] = useState<{ firstKey: string; added: number } | null>(null);
+  const [adding, setAdding] = useState(false);
   const rowRefs = useRef<Record<string, unknown>>({});
 
-  const { outcomes } = source;
-  const status = trackCardStatus({ outcomes, dismissed: source.dismissed, superseded: source.superseded });
+  const { outcomes, profileOffer = [], profileStep = null } = source;
+  const status = trackCardStatus({ outcomes, dismissed: source.dismissed, superseded: source.superseded, added: profileStep === 'added' });
   const rows = proposal.actions.flatMap((a) =>
     a.type === 'track_story' ? [{ label: a.label, key: normaliseTrackText(a.label) }] : [],
   );
@@ -77,7 +78,8 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const hasOutcomes = Object.keys(outcomes).length > 0;
   const phrase = readPhraseHints(source.baseResult);
   const hinted = rows.find((r) => r.key === phrase.defaultTick) ?? rows[0];
-  const defaultTicks = hasOutcomes ? failedKeys : hinted ? [hinted.key] : [];
+  const subjectKeys = rows.filter((r) => phrase.roles[r.key] === 'subject').map((r) => r.key);
+  const defaultTicks = hasOutcomes ? failedKeys : subjectKeys.length > 0 ? subjectKeys : hinted ? [hinted.key] : [];
   const ticks = storedTicks ?? defaultTicks;
 
   // The first row written flips the status to followed while the rest are still being
@@ -127,6 +129,19 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     if (res.added > 0) setPendingGrow({ firstKey: `#${before}`, added: res.added });
   };
 
+  const askImpact = () => {
+    const question = t('trackedStories.impactQuestion');
+    void askProfileImpact(source, question);
+    AccessibilityInfo.announceForAccessibility(question);
+  };
+  const addAnyway = async () => {
+    if (adding) return;
+    setAdding(true);
+    const ok = await addProfileOffer(source, proposal.id, profileOffer);
+    setAdding(false);
+    if (ok) AccessibilityInfo.announceForAccessibility(t('trackedStories.addedToProfile'));
+  };
+
   // Once the grown rows are drawn: focus the first new row, then say so, then scroll.
   useEffect(() => {
     if (!pendingGrow) return;
@@ -157,6 +172,55 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     );
   }
 
+  // Asked, the next step is the commit: Mera recommends and never restricts.
+  const profileRow = profileOffer.length === 0 ? null : profileStep === 'added' ? (
+    <Text size="sm" testID="track-profile-added" style={styles.mutedText}>
+      {t('trackedStories.addedToProfile')}
+    </Text>
+  ) : profileStep === 'asking' ? (
+    <GlyphSafeButton
+      testID="track-add-anyway"
+      onPress={addAnyway}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: adding, busy: adding }}
+      accessibilityLabel={t('trackedStories.addAnyway')}
+      style={styles.frame}
+      visualStyle={styles.moreRow}
+    >
+      <Text size="sm" style={styles.moreText}>
+        {t('trackedStories.addAnyway')}
+      </Text>
+    </GlyphSafeButton>
+  ) : (
+    <GlyphSafeButton
+      testID="track-add-to-profile"
+      onPress={askImpact}
+      disabled={isGenerating}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isGenerating }}
+      accessibilityLabel={t('trackedStories.addToProfile')}
+      style={styles.frame}
+      visualStyle={styles.moreRow}
+    >
+      <Text size="sm" style={styles.moreText}>
+        {t('trackedStories.addToProfile')}
+      </Text>
+    </GlyphSafeButton>
+  );
+
+  if (status === 'addedToProfile') {
+    return (
+      <View style={[styles.card, styles.cardSettled]} testID="track-card-added">
+        <View style={styles.headerRow}>
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={colors.accentMark} />
+          <Text size="sm" bold style={styles.settledTitle}>
+            {t('trackedStories.addedToProfile')}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   const outcomeText = (o: TrackOutcome | undefined) =>
     o === 'following'
       ? t('trackedStories.rowFollowing')
@@ -174,6 +238,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     shown[r.key] ?? r.label;
   const spoken = (r: { label: string; key: string }) => {
     const role = phrase.roles[r.key];
+    if (role === 'subject') return r.label;
     if (role) {
       return t(role === 'exact' ? 'trackedStories.optionAsWritten' : 'trackedStories.optionSpellingFixed', { phrase: r.label });
     }
@@ -246,6 +311,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
           })}
         </View>
         <View style={styles.divider} />
+        {profileRow}
         <GlyphSafeButton
           testID="track-see-followed"
           onPress={openFollowed}
@@ -456,6 +522,8 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
           {notNowButton}
         </View>
       )}
+
+      {pending && profileRow}
 
       {footer && (
         <View style={styles.statusRow}>

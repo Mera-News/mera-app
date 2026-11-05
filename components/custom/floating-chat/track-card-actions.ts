@@ -10,7 +10,7 @@ import { patchMessageToolCallResult } from '@/lib/database/services/conversation
 import { syncFollowedStoryNow } from '@/lib/tracking/track-actions';
 import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
 import logger from '@/lib/logger';
-import { requestMoreOptions } from '@/lib/chat-session/chat-session';
+import { askImpactQuestion, requestMoreOptions } from '@/lib/chat-session/chat-session';
 import { useFloatingChatStore, type TrackMoreState } from '@/lib/stores/floating-chat-store';
 import {
   mergeTrackOptions,
@@ -21,7 +21,8 @@ import {
   type TrackOption,
   type TrackOutcome,
 } from './track-options';
-import type { TrackCardSource } from './types';
+import { commitAsWritten } from './fact-choice-actions';
+import type { SaveAsWrittenOffer, TrackCardSource } from './types';
 
 type TrackAction = Extract<ProposalAction, { type: 'track_story' }>;
 type Source = Pick<TrackCardSource, 'resultKey' | 'baseResult'>;
@@ -150,4 +151,35 @@ export function dismissTrackCard(source: Source, proposalId: string): void {
   patchTrackCard(source, () => ({ dismissed: true }));
   const store = useFloatingChatStore.getState();
   if (store.proposal?.id === proposalId) store.resolveProposal('cancelled');
+}
+
+/**
+ * "Add to my profile instead": never a commit. The fixed question joins the
+ * thread with no model call, and the reader's answer is an ordinary turn.
+ */
+export async function askProfileImpact(source: Source, question: string): Promise<void> {
+  patchTrackCard(source, () => ({ profileStep: 'asking' }));
+  await askImpactQuestion(question);
+}
+
+/**
+ * "Add it anyway": Mera recommends and never restricts. Commits as written, so
+ * topics run as usual, and settles the store's waiting proposal. Rows already
+ * followed stay followed. False leaves the card as it was, to tap again.
+ */
+export async function addProfileOffer(
+  source: Source,
+  proposalId: string,
+  offer: readonly SaveAsWrittenOffer['entry'][],
+): Promise<boolean> {
+  try {
+    const saved = await commitAsWritten(offer);
+    patchTrackCard(source, () => ({ profileStep: 'added', profileSaved: saved }));
+    const store = useFloatingChatStore.getState();
+    if (store.proposal?.id === proposalId) store.resolveProposal('applied');
+    return true;
+  } catch (err) {
+    logger.error('[track-card] add to profile failed', err, { resultKey: source.resultKey });
+    return false;
+  }
 }

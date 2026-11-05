@@ -69,6 +69,10 @@ export interface ChatEngine<A extends ChatAgent = IAgent> {
      *  persistence and never stages a proposal: the card merges the result.
      *  Absent on an engine that cannot do it, and then the card hides the button. */
     moreOptions?(req: MoreOptionsRequest): Promise<MoreOptionsResult>;
+    /** "Add to my profile instead": the fixed question joins the thread as an
+     *  assistant row and the next turn reads the answer against it. No model call.
+     *  Absent on device, where no card carries the offer. */
+    askImpact?(question: string): Promise<void>;
     /** Stops the engine writing to its store once replaced. A turn already
      *  running finishes its own cleanup (the inference queue resumes). */
     dispose(): void;

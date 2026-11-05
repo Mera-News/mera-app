@@ -10,12 +10,18 @@ import { MAX_FOLLOW_OPTIONS } from '@/lib/chat-session/engine';
 import { contentJaccard, DETECT_JACCARD } from '@/lib/mera-harness';
 import type { PhraseRole } from '@/lib/news-harness/on-device/follow-story/reader-phrase';
 
-/** The reader-phrase hints on a card's result (`withReaderPhrase`); empty on any other card. */
+/** `subject`: the loop's handover put it first. Plain text and ticked, like a phrase row. */
+export type TrackRowRole = PhraseRole | 'subject';
+
+/** The hints on a card's result (`withReaderPhrase`, the handover's `storySubjects`); empty on any other card. */
 export function readPhraseHints(result: Record<string, unknown>): {
-  roles: Record<string, PhraseRole>;
+  roles: Record<string, TrackRowRole>;
   defaultTick: string | null;
 } {
-  const roles: Record<string, PhraseRole> = {};
+  const roles: Record<string, TrackRowRole> = {};
+  if (Array.isArray(result.storySubjects)) {
+    for (const s of result.storySubjects) if (typeof s === 'string') roles[normaliseTrackText(s)] = 'subject';
+  }
   if (result.phraseRoles && typeof result.phraseRoles === 'object') {
     for (const [key, value] of Object.entries(result.phraseRoles as Record<string, unknown>)) {
       if (value === 'exact' || value === 'corrected') roles[key] = value;
@@ -94,7 +100,7 @@ export function readTrackOutcomes(raw: unknown): Record<string, TrackOutcome> {
   return out;
 }
 
-export type TrackCardStatus = 'pending' | 'followed' | 'dismissed' | 'expired';
+export type TrackCardStatus = 'pending' | 'followed' | 'addedToProfile' | 'dismissed' | 'expired';
 
 /**
  * What the card shows. A card with a followed row is resolved and never flips
@@ -105,11 +111,14 @@ export function trackCardStatus(input: {
   outcomes: Record<string, TrackOutcome>;
   dismissed: boolean;
   superseded: boolean;
+  /** "Add it anyway" committed. Rows already followed keep the card followed. */
+  added?: boolean;
 }): TrackCardStatus {
   const values = Object.values(input.outcomes);
   const succeeded = values.some((v) => v !== 'failed');
   const failed = values.includes('failed');
   if (succeeded && (!failed || input.dismissed || input.superseded)) return 'followed';
+  if (input.added) return 'addedToProfile';
   if (input.dismissed) return 'dismissed';
   if (input.superseded) return 'expired';
   return 'pending';

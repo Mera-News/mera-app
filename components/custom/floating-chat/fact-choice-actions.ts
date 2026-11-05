@@ -115,6 +115,18 @@ export function resolveGroups(
   return settled;
 }
 
+/** The sentences as written, each with its key and topic guideline. */
+export async function commitAsWritten(entries: readonly SaveAsWrittenOffer['entry'][]) {
+  const { savedFacts } = await commitFactChoices(
+    entries.map((entry) => ({
+      statement: entry.statement,
+      ...(entry.questionnaire_attribute ? { questionnaire: { attribute: entry.questionnaire_attribute } } : {}),
+      ...(entry.topic_skill_id ? { skillId: entry.topic_skill_id } : {}),
+    })),
+  );
+  return savedFacts;
+}
+
 /**
  * "Save as I wrote it" (ux2 D9): commit the user's own sentence, then record
  * the saved fact on the offering call's result so the thread swaps the chip
@@ -125,13 +137,7 @@ export function resolveGroups(
 export async function commitSaveAsWritten(offer: SaveAsWrittenOffer): Promise<void> {
   const { entry, resultKey, baseResult } = offer;
   try {
-    const { savedFacts } = await commitFactChoices([
-      {
-        statement: entry.statement,
-        ...(entry.questionnaire_attribute ? { questionnaire: { attribute: entry.questionnaire_attribute } } : {}),
-        ...(entry.topic_skill_id ? { skillId: entry.topic_skill_id } : {}),
-      },
-    ]);
+    const savedFacts = await commitAsWritten([entry]);
     const store = useFloatingChatStore.getState();
     const current = (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
     const next = { ...current, saveAsWrittenSaved: savedFacts };
