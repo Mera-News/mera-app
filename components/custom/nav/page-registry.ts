@@ -191,7 +191,7 @@ export type SurfaceId =
   | 'locations'
   | 'sources'
   | 'activity'
-  | LibraryScreen
+  | (typeof LIBRARY_SCREENS)[number]
   | 'settings:display'
   | 'settings:mera-protocol'
   | 'settings:notifications'
@@ -215,9 +215,11 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
 ]);
 
 /** The screens pushed in the Library stack (`app_container/library/<screen>`),
- *  each its own surface: History and the Activity page's detail screens. */
-export const LIBRARY_SCREENS = ['history', 'where-you-read', 'languages', 'reading-log', 'freshness'] as const;
-export type LibraryScreen = (typeof LIBRARY_SCREENS)[number];
+ *  each its own surface: History, the Activity page's detail screens and Saved's
+ *  Archive. */
+export const LIBRARY_SCREENS = ['history', 'where-you-read', 'languages', 'reading-log', 'freshness', 'archive'] as const;
+/** What `openLibraryScreen` opens: every one but Archive, which Saved pushes itself. */
+export type LibraryScreen = Exclude<(typeof LIBRARY_SCREENS)[number], 'archive'>;
 const LIBRARY_STACK_SURFACES: ReadonlySet<string> = new Set(LIBRARY_SCREENS);
 
 /** The tab a surface lives in, or null for a root push (Search, an article). */

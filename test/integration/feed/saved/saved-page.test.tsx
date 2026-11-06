@@ -5,11 +5,12 @@
 import React from 'react';
 import { Platform, Pressable } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import database from '@/lib/database';
 import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
+import ArchiveScreen from '@/components/custom/saved-suggestions/ArchiveScreen';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import { useToast } from '@/components/ui/toast';
 import {
@@ -81,14 +82,9 @@ const exported = () =>
   (mockExportItems.mock.calls.at(-1)![0] as { savedId: string }[]).map((item) => item.savedId);
 
 
-function Page() {
-  const [list, setList] = React.useState<SavedList>('later');
-  return <SavedSuggestionsScreen list={list} onListChange={setList} />;
-}
-
-const openPage = async () => {
-  await render(<Page />);
-  await waitFor(() => expect(screen.getByTestId('saved-list-later')).toBeTruthy());
+const openPage = async (list: SavedList = 'later') => {
+  await render(<SavedSuggestionsScreen list={list} />);
+  await waitFor(() => expect(screen.getByTestId('saved-export-row')).toBeTruthy());
 };
 const press = async (id: string) => {
   await waitFor(() => expect(screen.getByTestId(id)).toBeTruthy());
@@ -97,40 +93,40 @@ const press = async (id: string) => {
   });
 };
 
-describe('the two lists', () => {
-  it('opens on Read later and the switch shows each list alone', async () => {
+describe('the Read later page', () => {
+  it('shows its title and Read later rows alone', async () => {
     await saveTo('later-1');
     await saveTo('arch-1', 'archive');
     await openPage();
 
     expect(row('later-1')).toBeTruthy();
     expect(row('arch-1')).toBeNull();
-    expect(screen.getByText('1 to read')).toBeTruthy();
-
-    await press('saved-list-archive');
-    expect(row('later-1')).toBeNull();
-    expect(row('arch-1')).toBeTruthy();
-    expect(screen.getByText('1 archived')).toBeTruthy();
+    expect(screen.getByText('Read later')).toBeTruthy();
+    expect(screen.queryByTestId('saved-list')).toBeNull();
   });
 
-  it('an empty Read later still reaches Archive, and hides the count row', async () => {
+  it('an empty Read later keeps its title and Archive icon, and drops Export and Group by', async () => {
     await saveTo('arch-1', 'archive');
     await openPage();
 
     expect(screen.getByTestId('saved-empty')).toBeTruthy();
-    expect(screen.queryByTestId('saved-title-row')).toBeNull();
-    await press('saved-list-archive');
-    expect(row('arch-1')).toBeTruthy();
+    expect(screen.getByText('Read later')).toBeTruthy();
+    expect(screen.queryByTestId('saved-export-open')).toBeNull();
+    expect(screen.queryByTestId('saved-group-chip-newest')).toBeNull();
+
+    (router.push as jest.Mock).mockClear();
+    await press('saved-archive-open');
+    expect(router.push).toHaveBeenCalledWith('/logged-in/app_container/library/archive');
   });
 
-  it('an empty Archive explains how to fill it', async () => {
+  it('the Archive icon and Export are named for VoiceOver', async () => {
     await saveTo('later-1');
     await openPage();
-    await press('saved-list-archive');
-    expect(screen.getByTestId('saved-empty-archive')).toBeTruthy();
+    expect(screen.getByLabelText('Open Archive')).toBeTruthy();
+    expect(screen.getByLabelText('Export saved articles')).toBeTruthy();
   });
 
-  it('a move leaves this list at once and is in the other with no reload', async () => {
+  it('a move leaves the list at once', async () => {
     await saveTo('a');
     await saveTo('b');
     await openPage();
@@ -139,20 +135,7 @@ describe('the two lists', () => {
       await moveSavedToList('a', 'archive');
     });
     expect(row('a')).toBeNull();
-    expect(screen.getByText('1 to read')).toBeTruthy();
-
-    await press('saved-list-archive');
-    expect(row('a')).toBeTruthy();
-  });
-
-  it('Export offers the list on screen, never the other one', async () => {
-    await saveTo('later-1');
-    await saveTo('arch-1', 'archive');
-    await openPage();
-    expect(exported()).toEqual(['later-1']);
-
-    await press('saved-list-archive');
-    expect(exported()).toEqual(['arch-1']);
+    expect(row('b')).toBeTruthy();
   });
 
   it('a removal takes the row and its group heading', async () => {
@@ -167,6 +150,52 @@ describe('the two lists', () => {
     expect(row('a')).toBeNull();
     expect(screen.queryByTestId('saved-group-other')).toBeNull();
     expect(screen.getByTestId('saved-empty')).toBeTruthy();
+  });
+});
+
+describe('the Archive page', () => {
+  const openArchive = async () => {
+    await render(<ArchiveScreen onBack={onBack} />);
+    await waitFor(() => expect(screen.getByTestId('saved-export-row')).toBeTruthy());
+  };
+  const onBack = jest.fn();
+
+  it('lists archived rows alone under its header, with no Archive icon, and Back leaves', async () => {
+    await saveTo('later-1');
+    await saveTo('arch-1', 'archive');
+    await openArchive();
+
+    expect(row('arch-1')).toBeTruthy();
+    expect(row('later-1')).toBeNull();
+    expect(screen.getByText('Archive')).toBeTruthy();
+    expect(screen.queryByTestId('saved-archive-open')).toBeNull();
+
+    await press('saved-archive-back');
+    expect(onBack).toHaveBeenCalled();
+  });
+
+  it('Export offers the archived list, never Read later', async () => {
+    await saveTo('later-1');
+    await saveTo('arch-1', 'archive');
+    await openArchive();
+    expect(exported()).toEqual(['arch-1']);
+    expect(screen.getByTestId('saved-export-open')).toBeTruthy();
+  });
+
+  it('an empty Archive explains how to fill it', async () => {
+    await saveTo('later-1');
+    await openArchive();
+    expect(screen.getByTestId('saved-empty-archive')).toBeTruthy();
+    expect(screen.queryByTestId('saved-export-open')).toBeNull();
+  });
+
+  it('a row moved back to Read later leaves at once', async () => {
+    await saveTo('arch-1', 'archive');
+    await openArchive();
+    await act(async () => {
+      await moveSavedToList('arch-1', 'later');
+    });
+    expect(row('arch-1')).toBeNull();
   });
 });
 

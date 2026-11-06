@@ -38,6 +38,17 @@ function state(opts: {
 }
 
 describe('readNavShape + spotFromShape', () => {
+  it('restores the Archive page pushed in the Library stack', () => {
+    const shape = readNavShape(state({ tab: 'library', tabStack: [{ name: 'archive' }] }));
+    expect(spotFromShape(shape, 'saved')).toEqual({
+      v: 1,
+      tab: 'library',
+      page: 'saved',
+      tabStack: [{ route: 'archive', params: {} }],
+      rootStack: [],
+    });
+  });
+
   it('reads a tab root with its page', () => {
     const shape = readNavShape(state({ tab: 'library' }));
     expect(topRouteKey(shape!)).toBe('tabroot');

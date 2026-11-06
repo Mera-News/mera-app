@@ -62,6 +62,7 @@ export const TAB_ROUTES: Readonly<Record<TabId, Readonly<Record<string, ParamSch
     languages: NO_PARAMS,
     'reading-log': { required: [], optional: ['day', 'language'] },
     freshness: NO_PARAMS,
+    archive: NO_PARAMS,
   },
   you: {
     fact: { required: ['factId'], optional: ['statement'] },

@@ -1,5 +1,6 @@
-// The Library's Saved page: a Read later / Archive switch over compact rows that
-// scale, under the pinned count row with Group by and the glass Export button.
+// One of Saved's two lists over compact rows that scale. Read later is the
+// Library's Saved page, under the pinned title row with Group by, Archive and
+// Export. Archive is the same screen pushed in the Library stack (ArchiveScreen).
 //
 // No delete circle on the rows: removing or moving is the compact row's •••,
 // which publishes the change (lib/saved-state). The rows are derived from those
@@ -7,8 +8,6 @@
 // the other list without a reload. The list then settles to the top if what is
 // left fits: on iOS a list that shrinks below its viewport keeps its old offset
 // otherwise, with nothing left to scroll back by.
-//
-// The list picked is the Library tab's session state, never in a URL.
 
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
@@ -39,7 +38,7 @@ import { useTranslation } from 'react-i18next';
 import { type ListRenderItem } from 'react-native';
 import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import SavedExportModal from './SavedExportModal';
-import SavedExportRow, { savedPinnedHeight } from './SavedExportRow';
+import SavedExportRow, { SAVED_PINNED_HEIGHT } from './SavedExportRow';
 import {
     groupSavedItems,
     parseGroupBy,
@@ -56,7 +55,6 @@ import { useTrackedScroll } from '@/components/custom/nav/use-tracked-scroll';
 interface SavedSuggestionsScreenProps {
     /** Read later or Archive. */
     list: SavedList;
-    onListChange: (list: SavedList) => void;
     /** The tab's collapsing-header scroll handler (an Animated.FlatList's). */
     scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
     /** The tab header's height; the pinned row sits under it. */
@@ -124,7 +122,6 @@ const GroupHeading: React.FC<{ readonly heading: SavedGroupHeading; readonly tes
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     list,
-    onListChange,
     scrollHandler,
     headerHeight = 0,
     hidden,
@@ -200,14 +197,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         });
     }, [toast, t]);
 
-    const handleListChange = useCallback(
-        (next: SavedList) => {
-            onListChange(next);
-            scrollToTop();
-        },
-        [onListChange, scrollToTop],
-    );
-
     const stateVersion = useSavedStateVersion();
     // What this list holds now, and what Export offers. `stateVersion` is what
     // makes the overrides read here current.
@@ -254,8 +243,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         [active],
     );
 
-    const count = visible.length;
-
     // Everything removed this visit: the empty state, without a reload.
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
@@ -278,6 +265,22 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         />
     );
 
+    // Pinned on Read later, where it rides with the tab header. Archive has a
+    // fixed header and no such ride, so there it scrolls with the rows.
+    const pinned = list === 'later';
+    const exportRow = isLoading ? undefined : (
+        <SavedExportRow
+            list={list}
+            groupBy={groupBy}
+            onGroupByChange={handleGroupByChange}
+            hasRows={visible.length > 0}
+            headerHeight={headerHeight}
+            hidden={hidden}
+            onOpenArchive={() => router.push('/logged-in/app_container/library/archive')}
+            onExport={() => setExportOpen(true)}
+        />
+    );
+
     return (
         <Box className="flex-1">
             <Animated.FlatList
@@ -290,10 +293,11 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 onContentSizeChange={settleIfShort}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
+                ListHeaderComponent={pinned ? undefined : exportRow}
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
-                    // 12pt below the pinned block.
-                    paddingTop: headerHeight + (isLoading ? 0 : savedPinnedHeight(count > 0)) + PAGE_CONTENT_GAP,
+                    // 12pt below the pinned row.
+                    paddingTop: headerHeight + (pinned && !isLoading ? SAVED_PINNED_HEIGHT : 0) + PAGE_CONTENT_GAP,
                     paddingHorizontal: PAGE_SIDE_INSET,
                     paddingBottom: listEndPadding ?? tabClearance + 24,
                     flexGrow: 1,
@@ -304,18 +308,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             />
 
             {/* Pinned under the page header; the list scrolls beneath it. */}
-            {isLoading ? null : (
-                <SavedExportRow
-                    list={list}
-                    onListChange={handleListChange}
-                    groupBy={groupBy}
-                    onGroupByChange={handleGroupByChange}
-                    count={count}
-                    headerHeight={headerHeight}
-                    hidden={hidden}
-                    onExport={() => setExportOpen(true)}
-                />
-            )}
+            {pinned ? exportRow : null}
 
             <SavedExportModal
                 isOpen={exportOpen}
