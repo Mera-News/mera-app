@@ -6,8 +6,8 @@
  *
  * Two rules this component exists to hold:
  *
- *  1. `not-checked` never renders as a green tick. TCB currency and GPU
- *     attestation are genuinely not verified, and a security screen that
+ *  1. `not-checked` never renders as a green tick. TCB currency is
+ *     genuinely not verified, and a security screen that
  *     quietly omits what it skipped is worse than one that admits it. They get
  *     a distinct grey "remove" icon and a "not checked" label.
  *  2. The summary line derives from the WEAKEST check, so the header can never
@@ -97,6 +97,7 @@ export function AttestationVerificationRow() {
         signingAlgo: attestation.signing_algo,
         expectedNonce: nonce,
         hasGpuPayload: Boolean(attestation.nvidia_payload),
+        nvidiaAttestation: attestation.nvidia_attestation,
       });
       setState({ phase: 'done', report });
     } catch (e) {
@@ -181,6 +182,13 @@ export function AttestationVerificationRow() {
                   : t('meraProtocol.attestationVerdictIncompleteDetail')}
               </Text>
             )}
+
+            {state.phase === 'done' &&
+              state.report.checks.find(c => c.id === 'gpu-attestation')?.status === 'pass' && (
+                <Text className="text-ink-3 text-xs mt-2" testID="attestation-gpu-notice">
+                  {t('meraProtocol.attestationGpuNotice')}
+                </Text>
+              )}
 
             {/* Scope disclosure. This row attests ONE model — the scoring
                 model. Chat runs on a different model, and each has a session

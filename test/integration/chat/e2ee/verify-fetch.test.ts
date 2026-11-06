@@ -1,5 +1,10 @@
 // The Settings "Verify attestation" path: fetchAttestationForVerification (nonce'd, uncached) and the
 // verifier over the report the gateway mock serves. Mirrors AttestationVerificationRow.run().
+import React from 'react';
+import { act, fireEvent, render } from '@testing-library/react-native';
+import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
+import * as e2eeService from '@/lib/e2ee/e2ee-service';
+import { initI18nEn } from '@/test/helpers';
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
 import { verifyAttestation, type VerificationReport } from '@/lib/algorithms/attestation-verify';
 import { clearAttestationCache, getCachedAttestation, setCachedAttestation } from '@/lib/e2ee/e2ee-cache';
@@ -14,6 +19,7 @@ import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback'
 import { attestationRequests, http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import capturedReport from '@/test/fixtures/attestation-report.json';
+import gpu1a from '@/test/fixtures/attestation/1gpu-004-0.json';
 
 const ROUTE = '*/api/attestation/report';
 const MODEL = 'some/model';
@@ -213,5 +219,76 @@ describe('verifyAttestation over the served report (what the Settings row does)'
     expect(report.verdict).toBe('failed');
     expect(status(report, 'tcb-status')).toBe('not-checked');
     expect(status(report, 'gpu-attestation')).toBe('not-checked');
+  });
+});
+
+describe('verifyAttestation with a served NVIDIA token', () => {
+  beforeEach(signedIn);
+
+  // Same wire shape the unit test builds from its fixture.
+  const nvidia = { tokens: gpu1a.reply, keys: [(gpu1a as { jwk: unknown }).jwk] };
+  const GPU_NOW = new Date('2026-11-06T02:30:00Z');
+  const GPU_NONCE = 'ebbaa3eafb3f3765cccf6fd57750991f77ba33499838045bc31c4c3f58821a91';
+
+  it('passes only gpu-attestation, at the fixture\'s time and nonce', async () => {
+    server.use(
+      http.get(ROUTE, () =>
+        HttpResponse.json({
+          model_attestations: [{ ...captured, nvidia_attestation: nvidia }],
+        }),
+      ),
+    );
+    jest.setSystemTime(GPU_NOW);
+    const { attestation } = await run(fetchAttestationForVerification(MODEL, GPU_NONCE));
+    const report = verifyAttestation({
+      quoteHex: attestation.intel_quote ?? '',
+      signingPublicKey: attestation.signing_public_key ?? '',
+      signingAlgo: attestation.signing_algo,
+      expectedNonce: GPU_NONCE,
+      nvidiaAttestation: attestation.nvidia_attestation,
+      now: GPU_NOW,
+    });
+    expect(report.checks.filter((c) => c.status === 'pass' && c.id === 'gpu-attestation')).toHaveLength(1);
+    expect(report.checks.find((c) => c.id === 'gpu-attestation')?.status).toBe('pass');
+    expect(report.checks.find((c) => c.id === 'tcb-status')?.status).toBe('not-checked');
+  });
+});
+
+describe('AttestationVerificationRow: GPU notice', () => {
+  const GPU_NONCE = 'ebbaa3eafb3f3765cccf6fd57750991f77ba33499838045bc31c4c3f58821a91';
+  const nvidia = { tokens: gpu1a.reply, keys: [(gpu1a as { jwk: unknown }).jwk] };
+  beforeAll(initI18nEn);
+  beforeEach(async () => {
+    await signInFixtureAccount();
+    fakeClock('2026-11-06T02:30:00Z');
+    jest.spyOn(e2eeService, 'generateAttestationNonce').mockReturnValue(GPU_NONCE);
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  async function tapVerify() {
+    const view = await render(React.createElement(AttestationVerificationRow));
+    await fireEvent.press(view.getByTestId('mera-protocol-attestation-toggle'));
+    await act(async () => {
+      fireEvent.press(view.getByTestId('mera-protocol-attestation-run'));
+      await run(Promise.resolve());
+    });
+    await run(Promise.resolve());
+    return view;
+  }
+
+  it('shows the notice when NVIDIA\'s result passes', async () => {
+    server.use(
+      http.get(ROUTE, () =>
+        HttpResponse.json({ model_attestations: [{ ...captured, nvidia_attestation: nvidia }] }),
+      ),
+    );
+    const view = await tapVerify();
+    expect(await view.findByTestId('attestation-gpu-notice')).toBeTruthy();
+  });
+
+  it('shows no notice on the old gateway', async () => {
+    const view = await tapVerify();
+    expect(await view.findByTestId('attestation-scope-notice')).toBeTruthy();
+    expect(view.queryByTestId('attestation-gpu-notice')).toBeNull();
   });
 });
