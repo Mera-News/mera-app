@@ -1,6 +1,7 @@
 // The onboarding sources step at its seam: the real wizard, the real search and row writers on the in-memory
 // database, the server faked at GraphQL. The chat step is stubbed out; it has its own tests.
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 import React from 'react';
 
 import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
@@ -12,7 +13,6 @@ import { getActive, upsertSubscription } from '@/lib/database/services/user-publ
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useOnboardingStore } from '@/lib/stores/onboarding-store';
 import { toastManager } from '@/lib/toast-manager';
-import * as subscribeFlow from '@/lib/subscriptions/subscribe-flow';
 import { initI18nEn, mockGql, mockGqlError, server } from '@/test/helpers';
 import { quietLogger, settleWrites } from '@/test/integration/data/services/persona/support';
 
@@ -115,18 +115,62 @@ describe('onboarding sources step', () => {
         await waitFor(() => expect(screen.getByText('Skip')).toBeTruthy());
     });
 
-    it('I subscribe writes a subscription without opening the browser, and off removes it', async () => {
-        const open = jest.spyOn(subscribeFlow, 'openSubscribePage');
+    it('rows are star and hide with no subscribe footer, and a name opens the publication page', async () => {
         await mountAtSources();
         await search();
-        const toggle = screen.getByTestId('sources-subscribe-pub-1');
-        expect(toggle.props.accessibilityRole).toBe('switch');
-        await press(toggle);
-        await waitFor(async () => expect((await getActive()).map((r) => r.publisherId)).toEqual(['pub-1']));
-        expect(open).not.toHaveBeenCalled();
-        await waitFor(() => expect(screen.getByTestId('sources-subscribe-pub-1').props.accessibilityState).toMatchObject({ checked: true }));
-        await press(screen.getByTestId('sources-subscribe-pub-1'));
-        await waitFor(async () => expect(await getActive()).toHaveLength(0));
+        expect(screen.queryByText('I subscribe')).toBeNull();
+        expect(screen.queryByTestId('sources-subscribe-pub-1')).toBeNull();
+        expect(screen.getByTestId('sources-hit-pub-1-hide')).toBeTruthy();
+        jest.mocked(router.push).mockClear();
+        await press(screen.getByTestId('sources-hit-pub-1'));
+        expect(router.push).toHaveBeenCalledWith(
+            expect.objectContaining({ pathname: '/logged-in/publication', params: expect.objectContaining({ publisherId: 'pub-1' }) }),
+        );
+    });
+
+    it('a subscription made on the page shows under Your sources and turns Skip into Next', async () => {
+        await mountAtSources();
+        expect(screen.queryByTestId('onboarding-your-sources')).toBeNull();
+        await upsertSubscription({ publisherId: 'pub-1', publisherName: 'Der Spiegel', countryCode: 'DEU', subscriptionUri: null, sourceNames: ['Der Spiegel'] });
+        await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
+        expect(screen.getByText('Your sources')).toBeTruthy();
+        expect(screen.getByTestId('onboarding-pick-subscription:pub-1')).toBeTruthy();
+    });
+
+    it('results float in a panel that stays open on a star, and the pick shows under Your sources once the search is cleared', async () => {
+        await mountAtSources();
+        await search();
+        expect(screen.getByTestId('sources-search-panel')).toBeTruthy();
+        await press(screen.getByTestId('sources-hit-pub-1-star'));
+        await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
+        expect(screen.getByTestId('sources-search-panel')).toBeTruthy();
+        await press(screen.getByTestId('sources-hit-pub-1-hide'));
+        expect(screen.getByTestId('sources-search-panel')).toBeTruthy();
+        await act(async () => {
+            fireEvent.changeText(screen.getByTestId('sources-search'), '');
+        });
+        expect(screen.queryByTestId('sources-search-panel')).toBeNull();
+        expect(screen.getByText('Your sources')).toBeTruthy();
+        expect(screen.getByTestId('onboarding-pick-publisher:pub-1')).toBeTruthy();
+    });
+
+    it('a tap outside closes the panel but keeps the query, and typing opens it again', async () => {
+        await mountAtSources();
+        await search();
+        await press(screen.getByTestId('sources-search-backdrop'));
+        expect(screen.queryByTestId('sources-search-panel')).toBeNull();
+        expect(screen.getByTestId('sources-search').props.value).toBe('spiegel');
+        await act(async () => {
+            fireEvent.changeText(screen.getByTestId('sources-search'), 'spiegel ');
+        });
+        expect(screen.getByTestId('sources-search-panel')).toBeTruthy();
+    });
+
+    it('a pick can be changed right in Your sources', async () => {
+        await upsertSubscription({ publisherId: 'pub-1', publisherName: 'Der Spiegel', countryCode: 'DEU', subscriptionUri: null, sourceNames: ['Der Spiegel'] });
+        await mountAtSources();
+        await press(screen.getByTestId('onboarding-pick-subscription:pub-1-star'));
+        await waitFor(async () => expect(await getPreferenceKind('Der Spiegel')).toBe('boost'));
     });
 
     it('reopening starts at the chat and the picks survive', async () => {
@@ -164,15 +208,13 @@ describe('onboarding sources step', () => {
         expect(screen.getByText('Skip')).toBeTruthy();
     });
 
-    it('a hide is a pick, and so is a subscription', async () => {
+    it('a hide is a pick', async () => {
         await mountAtSources();
         await search();
         await press(screen.getByTestId('sources-hit-pub-1-hide'));
         await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
         await press(screen.getByTestId('sources-hit-pub-1-hide'));
         await waitFor(() => expect(screen.getByText('Skip')).toBeTruthy());
-        await press(screen.getByTestId('sources-subscribe-pub-1'));
-        await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
     });
 
     it('a reopened wizard reaches the sources step showing Next for the picks it kept', async () => {

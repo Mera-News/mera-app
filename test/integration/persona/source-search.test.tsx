@@ -131,7 +131,7 @@ describe('Sources search', () => {
         await render(<SourceSearch onboarding />);
         expect(screen.getByTestId('sources-search').props.placeholder).toBe('Find a publication');
         await type('france');
-        await screen.findByTestId('sources-hit-pub-1-body', {}, SLOW);
+        await screen.findByTestId('sources-hit-pub-1', {}, SLOW);
         expect(screen.queryByTestId('sources-country-FRA')).toBeNull();
     });
 
@@ -141,13 +141,13 @@ describe('Sources search', () => {
         expect(screen.getByTestId('sources-search').props.placeholder).toBe('Find a publication or country');
     });
 
-    it('onboarding rows have no body button', async () => {
-        catalogue();
+    it('the Sources search keeps its inline list: no floating panel', async () => {
         server.use(answer([hit]));
-        await render(<SourceSearch onboarding />);
+        await render(<SourceSearch />);
         await type('spiegel');
-        await screen.findByTestId('sources-hit-pub-1-body', {}, SLOW);
-        expect(screen.queryByTestId('sources-hit-pub-1')).toBeNull();
+        await screen.findByTestId('sources-hit-pub-1', {}, SLOW);
+        expect(screen.queryByTestId('sources-search-panel')).toBeNull();
+        expect(screen.queryByTestId('sources-search-backdrop')).toBeNull();
     });
 
     it('onboarding Try again reruns the query', async () => {
@@ -158,6 +158,6 @@ describe('Sources search', () => {
         expect(screen.getByText("Couldn't load sources.")).toBeTruthy();
         server.use(answer([hit]));
         await press(retry);
-        await screen.findByTestId('sources-hit-pub-1-body', {}, SLOW);
+        await screen.findByTestId('sources-hit-pub-1', {}, SLOW);
     });
 });

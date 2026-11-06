@@ -19,8 +19,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { router } from 'expo-router';
-import React, { useEffect, useMemo, useState, type ReactNode } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Keyboard, Pressable as RNPressable, ScrollView, StyleSheet, View } from 'react-native';
 
 /** The server rejects a shorter query (BadRequestException). */
 const MIN_QUERY_LENGTH = 2;
@@ -38,10 +39,10 @@ const SourceSearch: React.FC<{
     readonly onActiveChange?: (active: boolean) => void;
     /** Onboarding: publications only, rows have no body button, and a failed search offers Try again. */
     readonly onboarding?: boolean;
-    /** Under a publication row, such as onboarding's "I subscribe". */
-    readonly footerFor?: (hit: PublisherSearchHit) => ReactNode;
     readonly onFocusChange?: (focused: boolean) => void;
-}> = ({ onActiveChange, onboarding, footerFor, onFocusChange }) => {
+    /** Onboarding: what sits under the field. Results float over it in a panel, so it never moves. */
+    readonly children?: React.ReactNode;
+}> = ({ onActiveChange, onboarding, onFocusChange, children }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const appLanguage = useAppLanguage();
@@ -55,6 +56,10 @@ const SourceSearch: React.FC<{
     const [searched, setSearched] = useState(false);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    // Onboarding: a tap outside closes the panel and keeps the query; typing or focus opens it again.
+    const [dismissed, setDismissed] = useState(false);
+    const [fieldHeight, setFieldHeight] = useState(0);
+    const [boxHeight, setBoxHeight] = useState(0);
 
     const trimmed = debounced.trim();
     useEffect(() => {
@@ -98,51 +103,61 @@ const SourceSearch: React.FC<{
         onActiveChange?.(typed);
     }, [typed, onActiveChange]);
 
-    return (
-        <VStack className="pb-2">
-            <VStack space="sm" className="px-4 pb-3">
-                <Input className="rounded-full border-line bg-surface" style={{ height: 42 }}>
-                    <InputSlot className="pl-3.5">
-                        <MaterialIcons name="search" size={18} color={colors.ink2} />
-                    </InputSlot>
-                    <InputField
-                        keyboardAppearance={themeMode}
-                        testID="sources-search"
-                        value={query}
-                        onChangeText={setQuery}
-                        placeholder={findLabel}
-                        accessibilityLabel={findLabel}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        onFocus={() => onFocusChange?.(true)}
-                        onBlur={() => onFocusChange?.(false)}
-                    />
-                </Input>
+    const input = (
+        <Input className="rounded-full border-line bg-surface" style={{ height: 42 }}>
+            <InputSlot className="pl-3.5">
+                <MaterialIcons name="search" size={18} color={colors.ink2} />
+            </InputSlot>
+            <InputField
+                keyboardAppearance={themeMode}
+                testID="sources-search"
+                value={query}
+                onChangeText={(text) => {
+                    setDismissed(false);
+                    setQuery(text);
+                }}
+                placeholder={findLabel}
+                accessibilityLabel={findLabel}
+                autoCapitalize="none"
+                autoCorrect={false}
+                onFocus={() => {
+                    setDismissed(false);
+                    onFocusChange?.(true);
+                }}
+                onBlur={() => onFocusChange?.(false)}
+            />
+        </Input>
+    );
 
-                {tooShort ? <Text size="sm" className="text-ink-2">{t('subscriptions.searchTooShort')}</Text> : null}
-                {!tooShort && searching ? (
-                    <HStack space="sm" className="items-center">
-                        <Spinner size="small" />
-                        <Text size="sm" className="text-ink-2">{t('subscriptions.searchInFlight')}</Text>
-                    </HStack>
-                ) : null}
-                {failed && !searching ? (
-                    onboarding ? (
-                        <VStack space="sm" className="items-start">
-                            <Text size="sm" className="text-ink-2">{t('onboarding.sourcesLoadError')}</Text>
-                            <Button action="secondary" size="sm" onPress={() => setAttempt((n) => n + 1)} testID="sources-search-retry">
-                                <ButtonText>{t('auth.tryAgain')}</ButtonText>
-                            </Button>
-                        </VStack>
-                    ) : (
-                        <Text size="sm" className="text-ink-2">{t('subscriptions.searchError')}</Text>
-                    )
-                ) : null}
-                {!failed && !searching && searched && results.length === 0 && countryHits.length === 0 ? (
-                    <Text size="sm" className="text-ink-2">{t('subscriptions.searchNoResults')}</Text>
-                ) : null}
-            </VStack>
+    const status = (
+        <>
+            {tooShort ? <Text size="sm" className="text-ink-2">{t('subscriptions.searchTooShort')}</Text> : null}
+            {!tooShort && searching ? (
+                <HStack space="sm" className="items-center">
+                    <Spinner size="small" />
+                    <Text size="sm" className="text-ink-2">{t('subscriptions.searchInFlight')}</Text>
+                </HStack>
+            ) : null}
+            {failed && !searching ? (
+                onboarding ? (
+                    <VStack space="sm" className="items-start">
+                        <Text size="sm" className="text-ink-2">{t('onboarding.sourcesLoadError')}</Text>
+                        <Button action="secondary" size="sm" onPress={() => setAttempt((n) => n + 1)} testID="sources-search-retry">
+                            <ButtonText>{t('auth.tryAgain')}</ButtonText>
+                        </Button>
+                    </VStack>
+                ) : (
+                    <Text size="sm" className="text-ink-2">{t('subscriptions.searchError')}</Text>
+                )
+            ) : null}
+            {!failed && !searching && searched && results.length === 0 && countryHits.length === 0 ? (
+                <Text size="sm" className="text-ink-2">{t('subscriptions.searchNoResults')}</Text>
+            ) : null}
+        </>
+    );
 
+    const rows = (
+        <>
             {!tooShort
                 ? countryHits.map((c) => (
                       <PublicationListRow
@@ -169,20 +184,81 @@ const SourceSearch: React.FC<{
                           rawName={hit.name}
                           flag={flagForAlpha2(alpha3ToAlpha2(hit.country_code)) || null}
                           subtitle={hit.country_name ?? null}
-                          footer={footerFor?.(hit)}
-                          onPress={
-                              onboarding
-                                  ? undefined
-                                  : () => openPublicationPage({ publisherId: hit._id, rawName: hit.name, countryCode: hit.country_code })
-                          }
+                          onPress={() => openPublicationPage({ publisherId: hit._id, rawName: hit.name, countryCode: hit.country_code })}
                           testID={`sources-hit-${hit._id}`}
                       />
                   ))
                 : null}
+        </>
+    );
 
-            <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />
-        </VStack>
+    const help = <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />;
+
+    if (!onboarding) {
+        return (
+            <VStack className="pb-2">
+                <VStack space="sm" className="px-4 pb-3">
+                    {input}
+                    {status}
+                </VStack>
+                {rows}
+                {help}
+            </VStack>
+        );
+    }
+
+    // The panel is a sibling of the picks inside one flex:1 box, not an overflow of a short parent:
+    // Android delivers no touch outside a parent's bounds. Its top is the field's measured height,
+    // so the title collapsing moves field and panel together.
+    return (
+        <View style={styles.flex} onLayout={(e) => setBoxHeight(e.nativeEvent.layout.height)}>
+            <View style={styles.field} onLayout={(e) => setFieldHeight(e.nativeEvent.layout.height)}>
+                {input}
+            </View>
+            {children}
+            {typed && !dismissed ? (
+                <>
+                    <RNPressable
+                        testID="sources-search-backdrop"
+                        accessible={false}
+                        importantForAccessibility="no"
+                        onPress={() => {
+                            Keyboard.dismiss();
+                            setDismissed(true);
+                        }}
+                        style={[StyleSheet.absoluteFill, styles.backdrop]}
+                    />
+                    <View
+                        testID="sources-search-panel"
+                        style={[styles.panel, { top: fieldHeight, maxHeight: Math.max(0, boxHeight - fieldHeight - 8), backgroundColor: colors.panel, borderColor: colors.line }]}
+                    >
+                        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.panelContent}>
+                            <VStack space="sm" className="px-4">{status}</VStack>
+                            {rows}
+                        </ScrollView>
+                    </View>
+                </>
+            ) : null}
+            {help}
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    flex: { flex: 1 },
+    field: { paddingHorizontal: 16, paddingBottom: 12 },
+    backdrop: { zIndex: 1 },
+    panel: {
+        position: 'absolute',
+        left: 12,
+        right: 12,
+        zIndex: 2,
+        elevation: 8,
+        borderRadius: 16,
+        borderWidth: StyleSheet.hairlineWidth,
+        overflow: 'hidden',
+    },
+    panelContent: { paddingTop: 12, paddingBottom: 4 },
+});
 
 export default SourceSearch;

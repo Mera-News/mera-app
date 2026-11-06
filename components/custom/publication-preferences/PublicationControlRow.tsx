@@ -60,8 +60,6 @@ interface PublicationControlRowProps {
     readonly onRemove?: (shownAs: string) => void;
     /** Absent: the body is plain text, not a button (onboarding). */
     readonly onPress?: () => void;
-    /** Under the row, such as onboarding's "I subscribe". */
-    readonly footer?: React.ReactNode;
     readonly testID: string;
 }
 
@@ -82,7 +80,6 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
     onNotPreferred,
     onRemove,
     onPress,
-    footer,
     testID,
 }) => {
     const { t } = useTranslation();
@@ -181,7 +178,6 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
                     </RowControl>
                 ) : null}
             </View>
-            {footer}
         </View>
     );
 };

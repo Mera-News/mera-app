@@ -1,33 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable as RNPressable, ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
+import { ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition, useAnimatedStyle } from 'react-native-reanimated';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcons } from '@expo/vector-icons';
 
-import { useAdjustedSources } from '@/components/custom/publication-preferences/use-adjusted-sources';
+import { alpha3ToAlpha2, flagForAlpha2 } from '@/components/custom/locations/location-display';
+import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
+import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
 import SourceSearch from '@/components/custom/publication-preferences/SourceSearch';
-import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
-import type { PublisherSearchHit } from '@/lib/generated/graphql-types';
+import { localizedCountryName } from '@/components/custom/publication-preferences/country-search';
+import { useAdjustedSources } from '@/components/custom/publication-preferences/use-adjusted-sources';
+import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsOnline } from '@/lib/stores/network-store';
 import { useColors } from '@/lib/theme/tokens';
-import { toastManager } from '@/lib/toast-manager';
 
 import { keyboardLift } from './keyboard-lift';
 
-const TOGGLE = 44;
-
 /**
- * Step 1: search only. Picks are the shared source rows' own writes, so the
- * wizard needs just to know whether any exist (Skip becomes Next).
+ * Step 1: search, and the picks so far. Picks are the shared source rows' own
+ * writes; the wizard only needs to know whether any exist (Skip becomes Next).
+ * A name opens the publication page, whose Subscribed button needs nothing here.
  */
 const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean) => void }> = ({ onHasPicksChange }) => {
     const { t } = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
     const online = useIsOnline();
-    const flow = useSubscribeFlow();
+    const appLanguage = useAppLanguage();
+    const prefs = usePublicationRowPrefs();
     const { publications, scopes } = useAdjustedSources();
     const [focused, setFocused] = useState(false);
     const keyboard = useReanimatedKeyboardAnimation();
@@ -38,62 +40,58 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
         onHasPicksChange(hasPicks);
     }, [hasPicks, onHasPicksChange]);
 
-    const footerFor = (hit: PublisherSearchHit) => {
-        const row = flow.subscriptions.items.find((r) => r.publisherId === hit._id);
-        const checked = !!row;
-        const busyId = flow.subscriptions.busyId;
-        const busy = !!busyId && (busyId === hit._id || busyId === row?.id);
-        const onPress = () => {
-            if (row) {
-                void flow.subscriptions.removeSubscription(row).then((ok) => {
-                    if (ok) toastManager.showInfo(t('subscriptions.removed', { publisher: row.publisherName }));
-                });
-                return;
-            }
-            void flow.confirmDirectly({
-                publisherId: hit._id,
-                publisherName: hit.name,
-                countryCode: hit.country_code,
-                subscriptionUri: hit.subscription_uri ?? null,
-            });
-        };
-        return (
-            <View style={styles.toggle} testID={`sources-subscribe-${hit._id}-frame`}>
-                <View style={styles.toggleVisual} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                    <MaterialIcons name={checked ? 'check-box' : 'check-box-outline-blank'} size={22} color={checked ? colors.ink : colors.ink3} />
-                    <RNText style={[styles.toggleLabel, { color: colors.ink2 }]}>{t('onboarding.iSubscribe')}</RNText>
-                </View>
-                <RNPressable
-                    testID={`sources-subscribe-${hit._id}`}
-                    onPress={onPress}
-                    disabled={busy}
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked, disabled: busy }}
-                    accessibilityLabel={t('onboarding.iSubscribeA11y', { publisher: hit.name })}
-                    style={StyleSheet.absoluteFill}
-                />
-            </View>
-        );
-    };
-
     return (
         <Animated.View style={[styles.flex, lift]} testID="onboarding-sources-step">
-            <ScrollView style={styles.flex} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-                {!focused ? (
-                    <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.remind}>
-                        <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
-                            {t('onboarding.sourcesTitle')}
-                        </RNText>
-                        <RNText style={[styles.body, { color: colors.ink2 }]}>{t('onboarding.sourcesBody')}</RNText>
-                    </Animated.View>
-                ) : null}
-                <Animated.View layout={LinearTransition}>
-                    <SourceSearch onboarding footerFor={footerFor} onFocusChange={setFocused} />
-                    {!online ? (
-                        <RNText style={[styles.hint, { color: colors.ink2 }]}>{t('onboarding.sourcesOffline')}</RNText>
-                    ) : null}
+            {!focused ? (
+                <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.remind}>
+                    <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
+                        {t('onboarding.sourcesTitle')}
+                    </RNText>
+                    <RNText style={[styles.body, { color: colors.ink2 }]}>{t('onboarding.sourcesBody')}</RNText>
                 </Animated.View>
-            </ScrollView>
+            ) : null}
+            <Animated.View layout={LinearTransition} style={styles.flex}>
+                <SourceSearch onboarding onFocusChange={setFocused}>
+                    <ScrollView style={styles.flex} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+                        {!online ? <RNText style={[styles.hint, { color: colors.ink2 }]}>{t('onboarding.sourcesOffline')}</RNText> : null}
+                        {hasPicks ? (
+                            <View testID="onboarding-your-sources">
+                                <RNText accessibilityRole="header" style={[styles.section, { color: colors.ink2 }]}>
+                                    {t('onboarding.yourSources')}
+                                </RNText>
+                                {publications.map((pub) => (
+                                    <PublicationControlRow
+                                        key={pub.key}
+                                        {...prefs.publisherRow({ publisherId: pub.publisherId ?? pub.key, rawName: pub.displayName, countryCode: pub.countryCode })}
+                                        rawName={pub.displayName}
+                                        flag={pub.countryCode ? flagForAlpha2(alpha3ToAlpha2(pub.countryCode)) || null : null}
+                                        onPress={() =>
+                                            openPublicationPage({ publisherId: pub.publisherId, rawName: pub.displayName, countryCode: pub.countryCode })
+                                        }
+                                        testID={`onboarding-pick-${pub.key}`}
+                                    />
+                                ))}
+                                {scopes.map(({ pref, group }) => {
+                                    const alpha2 = alpha3ToAlpha2(pref.scopeValue);
+                                    // An unmappable stored code cannot be written; the row is not drawn.
+                                    if (!alpha2 || !pref.scopeValue) return null;
+                                    return (
+                                        <PublicationControlRow
+                                            key={group.key}
+                                            {...prefs.storedCountryRow({ alpha2, alpha3: pref.scopeValue, label: pref.publicationName })}
+                                            rawName={localizedCountryName(pref.scopeValue, appLanguage)}
+                                            flag={flagForAlpha2(alpha2)}
+                                            subtitle={`${t('publicationPrefs.scopeKindCountry')} · ${t('publicationPage.preferred')}`}
+                                            testID={`onboarding-pick-${group.key}`}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        ) : null}
+                    </ScrollView>
+                </SourceSearch>
+            </Animated.View>
+            <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />
         </Animated.View>
     );
 };
@@ -104,10 +102,8 @@ const styles = StyleSheet.create({
     remind: { paddingHorizontal: 20, paddingTop: 16, gap: 10, marginBottom: 12 },
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },
-    hint: { fontSize: 14, paddingHorizontal: 20 },
-    toggle: { height: TOGGLE, justifyContent: 'center', paddingHorizontal: 16 },
-    toggleVisual: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    toggleLabel: { fontSize: 14 },
+    hint: { fontSize: 14, paddingHorizontal: 20, paddingBottom: 8 },
+    section: { fontSize: 13, fontWeight: '600', paddingHorizontal: 20, paddingBottom: 8 },
 });
 
 export default OnboardingSourcesStep;
