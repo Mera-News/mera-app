@@ -394,8 +394,6 @@
     "sourcesSkip": "Pomiń",
     "sourcesLoadError": "Nie udało się wczytać źródeł.",
     "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
-    "iSubscribe": "Subskrybuję",
-    "iSubscribeA11y": "Subskrybuję {{publisher}}",
     "sourcesFind": "Szukaj wydawcy",
     "yourSources": "Twoje źródła",
     "ratherNotSay": "Wolę nie mówić",
@@ -3005,14 +3003,6 @@
       "groupOther": "Inne",
       "emptyArchiveTitle": "Nic jeszcze nie zarchiwizowano",
       "emptyArchiveBody": "Dotknij zakładki przy zapisanym artykule i wybierz Archiwizuj albo użyj menu •••. Zarchiwizowane artykuły zostają na tym telefonie, dopóki ich nie usuniesz.",
-      "countLater_one": "{{count}} do przeczytania",
-      "countLater_few": "{{count}} do przeczytania",
-      "countLater_many": "{{count}} do przeczytania",
-      "countLater_other": "{{count}} do przeczytania",
-      "countArchive_one": "{{count}} zarchiwizowany",
-      "countArchive_few": "{{count}} zarchiwizowane",
-      "countArchive_many": "{{count}} zarchiwizowanych",
-      "countArchive_other": "{{count}} zarchiwizowanych",
       "openArchive": "Otwórz Archiwum"
     },
     "checks": {

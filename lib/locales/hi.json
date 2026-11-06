@@ -352,8 +352,6 @@
     "sourcesSkip": "छोड़ें",
     "sourcesLoadError": "स्रोत लोड नहीं हो सके।",
     "sourcesOffline": "आप ऑफ़लाइन हैं। आप बाद में स्रोत स्क्रीन से स्रोत जोड़ सकते हैं।",
-    "iSubscribe": "मेरी सदस्यता है",
-    "iSubscribeA11y": "{{publisher}} की मेरी सदस्यता है",
     "sourcesFind": "कोई प्रकाशन खोजें",
     "yourSources": "आपके स्रोत",
     "ratherNotSay": "मुझे इसके बारे में बताना पसंद नहीं",
@@ -2905,10 +2903,6 @@
       "groupOther": "अन्य",
       "emptyArchiveTitle": "अभी कुछ संग्रहित नहीं है",
       "emptyArchiveBody": "किसी सहेजे गए लेख पर बुकमार्क दबाएं और संग्रहित करें चुनें, या ••• मेन्यू इस्तेमाल करें। संग्रहित लेख आपके हटाने तक इसी फ़ोन पर रहते हैं।",
-      "countLater_one": "{{count}} पढ़ने के लिए",
-      "countLater_other": "{{count}} पढ़ने के लिए",
-      "countArchive_one": "{{count}} संग्रहित",
-      "countArchive_other": "{{count}} संग्रहित",
       "openArchive": "संग्रह खोलें"
     },
     "checks": {

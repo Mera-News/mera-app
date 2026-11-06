@@ -352,8 +352,6 @@
     "sourcesSkip": "Atla",
     "sourcesLoadError": "Kaynaklar yüklenemedi.",
     "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
-    "iSubscribe": "Abone oldum",
-    "iSubscribeA11y": "{{publisher}} yayınına abone oldum",
     "sourcesFind": "Bir yayın bulun",
     "yourSources": "Kaynaklarınız",
     "ratherNotSay": "Söylemek istemiyorum",
@@ -2905,10 +2903,6 @@
       "groupOther": "Diğer",
       "emptyArchiveTitle": "Henüz arşivlenen bir şey yok",
       "emptyArchiveBody": "Kaydedilen bir makalenin yer imine dokunup Arşivle seçeneğini seçin ya da ••• menüsünü kullanın. Arşivlenen makaleler siz kaldırana kadar bu telefonda kalır.",
-      "countLater_one": "{{count}} okunacak",
-      "countLater_other": "{{count}} okunacak",
-      "countArchive_one": "{{count}} arşivlendi",
-      "countArchive_other": "{{count}} arşivlendi",
       "openArchive": "Arşivi aç"
     },
     "checks": {

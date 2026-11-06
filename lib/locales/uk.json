@@ -394,8 +394,6 @@
     "sourcesSkip": "Пропустити",
     "sourcesLoadError": "Не вдалося завантажити джерела.",
     "sourcesOffline": "Немає підключення до мережі. Джерела можна додати пізніше в розділі «Джерела».",
-    "iSubscribe": "Я передплачую",
-    "iSubscribeA11y": "Я передплачую {{publisher}}",
     "sourcesFind": "Знайдіть видання",
     "yourSources": "Ваші джерела",
     "ratherNotSay": "Краще не скажу",
@@ -3009,14 +3007,6 @@
       "groupOther": "Інше",
       "emptyArchiveTitle": "В архіві поки порожньо",
       "emptyArchiveBody": "Натисніть закладку біля збереженої статті та виберіть «Архівувати» або скористайтеся меню •••. Статті в архіві залишаються на цьому телефоні, доки ви їх не видалите.",
-      "countLater_one": "{{count}} до прочитання",
-      "countLater_few": "{{count}} до прочитання",
-      "countLater_many": "{{count}} до прочитання",
-      "countLater_other": "{{count}} до прочитання",
-      "countArchive_one": "{{count}} в архіві",
-      "countArchive_few": "{{count}} в архіві",
-      "countArchive_many": "{{count}} в архіві",
-      "countArchive_other": "{{count}} в архіві",
       "openArchive": "Відкрити архів"
     },
     "checks": {

@@ -394,8 +394,6 @@
     "sourcesSkip": "Пропустить",
     "sourcesLoadError": "Не удалось загрузить источники.",
     "sourcesOffline": "Вы не в сети. Источники можно добавить позже в разделе «Источники».",
-    "iSubscribe": "У меня есть подписка",
-    "iSubscribeA11y": "У меня есть подписка на {{publisher}}",
     "sourcesFind": "Найти издание",
     "yourSources": "Ваши источники",
     "ratherNotSay": "Предпочитаю не говорить",
@@ -3005,14 +3003,6 @@
       "groupOther": "Другое",
       "emptyArchiveTitle": "В архиве пока пусто",
       "emptyArchiveBody": "Нажмите на закладку у сохранённой статьи и выберите «Архивировать» или откройте меню •••. Статьи в архиве остаются на этом телефоне, пока вы их не удалите.",
-      "countLater_one": "{{count}} к прочтению",
-      "countLater_few": "{{count}} к прочтению",
-      "countLater_many": "{{count}} к прочтению",
-      "countLater_other": "{{count}} к прочтению",
-      "countArchive_one": "{{count}} в архиве",
-      "countArchive_few": "{{count}} в архиве",
-      "countArchive_many": "{{count}} в архиве",
-      "countArchive_other": "{{count}} в архиве",
       "openArchive": "Открыть архив"
     },
     "checks": {

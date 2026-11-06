@@ -340,8 +340,6 @@
     "sourcesSkip": "건너뛰기",
     "sourcesLoadError": "소스를 불러오지 못했어요.",
     "sourcesOffline": "오프라인 상태예요. 나중에 소스 화면에서 추가할 수 있어요.",
-    "iSubscribe": "구독 중이에요",
-    "iSubscribeA11y": "{{publisher}} 구독 중",
     "sourcesFind": "매체 찾기",
     "yourSources": "내 소스",
     "ratherNotSay": "말하지 않을래요",
@@ -2882,10 +2880,6 @@
       "groupOther": "기타",
       "emptyArchiveTitle": "아직 보관한 기사가 없어요",
       "emptyArchiveBody": "저장한 기사의 북마크를 누른 다음 보관을 선택하거나, ••• 메뉴를 사용하세요. 보관한 기사는 제거하기 전까지 이 휴대전화에 남아요.",
-      "countLater_one": "읽을 기사 {{count}}개",
-      "countLater_other": "읽을 기사 {{count}}개",
-      "countArchive_one": "{{count}}개 보관됨",
-      "countArchive_other": "{{count}}개 보관됨",
       "openArchive": "보관함 열기"
     },
     "checks": {

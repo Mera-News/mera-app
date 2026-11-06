@@ -352,8 +352,6 @@
     "sourcesSkip": "Überspringen",
     "sourcesLoadError": "Quellen konnten nicht geladen werden.",
     "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
-    "iSubscribe": "Ich habe ein Abo",
-    "iSubscribeA11y": "Ich habe {{publisher}} abonniert",
     "sourcesFind": "Veröffentlichung suchen",
     "yourSources": "Deine Quellen",
     "ratherNotSay": "Sag ich lieber nicht",
@@ -2903,10 +2901,6 @@
       "groupOther": "Sonstige",
       "emptyArchiveTitle": "Noch nichts archiviert",
       "emptyArchiveBody": "Tippe bei einem gespeicherten Artikel auf das Lesezeichen und wähle Archivieren, oder nutze das •••-Menü. Archivierte Artikel bleiben auf diesem Telefon, bis du sie entfernst.",
-      "countLater_one": "{{count}} zu lesen",
-      "countLater_other": "{{count}} zu lesen",
-      "countArchive_one": "{{count}} archiviert",
-      "countArchive_other": "{{count}} archiviert",
       "openArchive": "Archiv öffnen"
     },
     "checks": {

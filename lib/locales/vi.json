@@ -340,8 +340,6 @@
     "sourcesSkip": "Bỏ qua",
     "sourcesLoadError": "Không thể tải nguồn.",
     "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
-    "iSubscribe": "Tôi đã đăng ký",
-    "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}",
     "sourcesFind": "Tìm một nguồn",
     "yourSources": "Nguồn của bạn",
     "ratherNotSay": "Tôi không muốn nói",
@@ -2882,10 +2880,6 @@
       "groupOther": "Khác",
       "emptyArchiveTitle": "Chưa có gì trong Lưu trữ",
       "emptyArchiveBody": "Chạm vào dấu trang trên bài báo đã lưu và chọn Lưu trữ, hoặc dùng menu •••. Bài đã lưu trữ ở lại trên điện thoại này cho đến khi bạn xóa.",
-      "countLater_one": "{{count}} bài cần đọc",
-      "countLater_other": "{{count}} bài cần đọc",
-      "countArchive_one": "{{count}} đã lưu trữ",
-      "countArchive_other": "{{count}} đã lưu trữ",
       "openArchive": "Mở Lưu trữ"
     },
     "checks": {

@@ -340,8 +340,6 @@
     "sourcesSkip": "跳过",
     "sourcesLoadError": "无法加载来源。",
     "sourcesOffline": "你目前处于离线状态。稍后可以在来源中添加。",
-    "iSubscribe": "我已订阅",
-    "iSubscribeA11y": "我已订阅 {{publisher}}",
     "sourcesFind": "查找媒体",
     "yourSources": "你的来源",
     "ratherNotSay": "我不想说",
@@ -2882,10 +2880,6 @@
       "groupOther": "其他",
       "emptyArchiveTitle": "还没有归档任何内容",
       "emptyArchiveBody": "点按已保存文章上的书签，然后选择“归档”，或使用 ••• 菜单。已归档的文章会一直留在这部手机上，直到你移除。",
-      "countLater_one": "{{count}} 篇待读",
-      "countLater_other": "{{count}} 篇待读",
-      "countArchive_one": "{{count}} 篇已归档",
-      "countArchive_other": "{{count}} 篇已归档",
       "openArchive": "打开归档"
     },
     "checks": {

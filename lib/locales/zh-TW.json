@@ -340,8 +340,6 @@
     "sourcesSkip": "略過",
     "sourcesLoadError": "無法載入來源。",
     "sourcesOffline": "你目前離線。之後可以在「來源」中新增來源。",
-    "iSubscribe": "我已訂閱",
-    "iSubscribeA11y": "我已訂閱 {{publisher}}",
     "sourcesFind": "搜尋出版物",
     "yourSources": "你的來源",
     "ratherNotSay": "我不想透露",
@@ -2882,10 +2880,6 @@
       "groupOther": "其他",
       "emptyArchiveTitle": "還沒有封存任何內容",
       "emptyArchiveBody": "點按已儲存文章上的書籤，然後選擇「封存」，或使用 ••• 選單。已封存的文章會一直留在這支手機上，直到你移除。",
-      "countLater_one": "{{count}} 篇待讀",
-      "countLater_other": "{{count}} 篇待讀",
-      "countArchive_one": "已封存 {{count}} 篇",
-      "countArchive_other": "已封存 {{count}} 篇",
       "openArchive": "開啟封存"
     },
     "checks": {

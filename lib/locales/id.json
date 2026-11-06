@@ -340,8 +340,6 @@
     "sourcesSkip": "Lewati",
     "sourcesLoadError": "Tidak dapat memuat sumber.",
     "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
-    "iSubscribe": "Saya berlangganan",
-    "iSubscribeA11y": "Saya berlangganan {{publisher}}",
     "sourcesFind": "Cari publikasi",
     "yourSources": "Sumber Anda",
     "ratherNotSay": "Saya tidak ingin menjawab",
@@ -2882,10 +2880,6 @@
       "groupOther": "Lainnya",
       "emptyArchiveTitle": "Belum ada yang diarsipkan",
       "emptyArchiveBody": "Ketuk penanda di artikel tersimpan dan pilih Arsipkan, atau gunakan menu •••. Artikel yang diarsipkan tetap ada di ponsel ini sampai Anda menghapusnya.",
-      "countLater_one": "{{count}} untuk dibaca",
-      "countLater_other": "{{count}} untuk dibaca",
-      "countArchive_one": "{{count}} diarsipkan",
-      "countArchive_other": "{{count}} diarsipkan",
       "openArchive": "Buka Arsip"
     },
     "checks": {

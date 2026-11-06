@@ -354,8 +354,6 @@
     "sourcesSkip": "Salta",
     "sourcesLoadError": "Impossibile caricare le fonti.",
     "sourcesOffline": "Sei offline. Puoi aggiungere fonti più tardi in Fonti.",
-    "iSubscribe": "Ho un abbonamento",
-    "iSubscribeA11y": "Ho un abbonamento a {{publisher}}",
     "sourcesFind": "Trova una pubblicazione",
     "yourSources": "Le tue fonti",
     "ratherNotSay": "Preferisco non dirlo",
@@ -2909,10 +2907,6 @@
       "groupOther": "Altro",
       "emptyArchiveTitle": "Ancora niente in archivio",
       "emptyArchiveBody": "Tocca il segnalibro su un articolo salvato e scegli Archivia, oppure usa il menu •••. Gli articoli archiviati restano su questo telefono finché non li rimuovi.",
-      "countLater_one": "{{count}} da leggere",
-      "countLater_other": "{{count}} da leggere",
-      "countArchive_one": "{{count}} archiviato",
-      "countArchive_other": "{{count}} archiviati",
       "openArchive": "Apri Archivio"
     },
     "checks": {

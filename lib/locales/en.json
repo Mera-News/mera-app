@@ -700,8 +700,6 @@
     "sourcesSkip": "Skip",
     "sourcesLoadError": "Couldn't load sources.",
     "sourcesOffline": "You're offline. You can add sources later in Sources.",
-    "iSubscribe": "I subscribe",
-    "iSubscribeA11y": "I subscribe to {{publisher}}",
     "sourcesFind": "Find a publication",
     "yourSources": "Your sources",
     "ratherNotSay": "I'd rather not say",
@@ -2904,10 +2902,6 @@
       "groupOther": "Other",
       "emptyArchiveTitle": "Nothing archived yet",
       "emptyArchiveBody": "Tap the bookmark on a saved article and choose Archive, or use the ••• menu. Archived articles stay on this phone until you remove them.",
-      "countLater_one": "{{count}} to read",
-      "countLater_other": "{{count}} to read",
-      "countArchive_one": "{{count}} archived",
-      "countArchive_other": "{{count}} archived",
       "openArchive": "Open Archive"
     },
     "checks": {

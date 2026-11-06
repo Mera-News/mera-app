@@ -354,8 +354,6 @@
     "sourcesSkip": "Pular",
     "sourcesLoadError": "Não foi possível carregar fontes.",
     "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
-    "iSubscribe": "Já assino",
-    "iSubscribeA11y": "Já assino {{publisher}}",
     "sourcesFind": "Encontre uma publicação",
     "yourSources": "Suas fontes",
     "ratherNotSay": "Prefiro não dizer",
@@ -2909,10 +2907,6 @@
       "groupOther": "Outros",
       "emptyArchiveTitle": "Nada arquivado ainda",
       "emptyArchiveBody": "Toque no marcador de um artigo salvo e escolha Arquivar, ou use o menu •••. Os artigos arquivados ficam neste celular até você remover.",
-      "countLater_one": "{{count}} para ler",
-      "countLater_other": "{{count}} para ler",
-      "countArchive_one": "{{count}} arquivado",
-      "countArchive_other": "{{count}} arquivados",
       "openArchive": "Abrir Arquivo"
     },
     "checks": {

@@ -340,8 +340,6 @@
     "sourcesSkip": "スキップ",
     "sourcesLoadError": "ソースを読み込めませんでした。",
     "sourcesOffline": "オフラインです。後からソースを追加できます。",
-    "iSubscribe": "購読しています",
-    "iSubscribeA11y": "{{publisher}}を購読しています",
     "sourcesFind": "公開元を検索",
     "yourSources": "あなたのソース",
     "ratherNotSay": "答えたくありません",
@@ -2882,10 +2880,6 @@
       "groupOther": "その他",
       "emptyArchiveTitle": "アーカイブした記事はまだありません",
       "emptyArchiveBody": "保存した記事のしおりをタップして「アーカイブ」を選ぶか、••• メニューを使ってください。アーカイブした記事は、削除するまでこの端末に残ります。",
-      "countLater_one": "{{count}}件未読",
-      "countLater_other": "{{count}}件未読",
-      "countArchive_one": "{{count}}件アーカイブ済み",
-      "countArchive_other": "{{count}}件アーカイブ済み",
       "openArchive": "アーカイブを開く"
     },
     "checks": {

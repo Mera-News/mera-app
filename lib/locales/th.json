@@ -340,8 +340,6 @@
     "sourcesSkip": "ข้าม",
     "sourcesLoadError": "โหลดแหล่งข่าวไม่สำเร็จ",
     "sourcesOffline": "ตอนนี้คุณออฟไลน์อยู่ คุณเพิ่มแหล่งข่าวทีหลังได้ในแหล่งข่าว",
-    "iSubscribe": "ฉันสมัครสมาชิกแล้ว",
-    "iSubscribeA11y": "ฉันสมัครสมาชิก {{publisher}} แล้ว",
     "sourcesFind": "ค้นหาสำนักข่าว",
     "yourSources": "แหล่งข่าวของคุณ",
     "ratherNotSay": "ฉันขอไม่บอก",
@@ -2883,10 +2881,6 @@
       "groupOther": "อื่นๆ",
       "emptyArchiveTitle": "ยังไม่มีรายการในคลังเก็บ",
       "emptyArchiveBody": "แตะบุ๊กมาร์กบนบทความที่บันทึกไว้ แล้วเลือกเก็บเข้าคลัง หรือใช้เมนู ••• บทความในคลังเก็บจะอยู่ในโทรศัพท์เครื่องนี้จนกว่าคุณจะลบ",
-      "countLater_one": "รออ่าน {{count}} รายการ",
-      "countLater_other": "รออ่าน {{count}} รายการ",
-      "countArchive_one": "เก็บไว้ {{count}} รายการ",
-      "countArchive_other": "เก็บไว้ {{count}} รายการ",
       "openArchive": "เปิดคลังเก็บ"
     },
     "checks": {

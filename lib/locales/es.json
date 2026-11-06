@@ -354,8 +354,6 @@
     "sourcesSkip": "Omitir",
     "sourcesLoadError": "No se pudieron cargar las fuentes.",
     "sourcesOffline": "Estás sin conexión. Puedes añadir fuentes más tarde en Fuentes.",
-    "iSubscribe": "Tengo una suscripción",
-    "iSubscribeA11y": "Tengo una suscripción a {{publisher}}",
     "sourcesFind": "Busca una publicación",
     "yourSources": "Tus fuentes",
     "ratherNotSay": "Prefiero no decirlo",
@@ -2909,10 +2907,6 @@
       "groupOther": "Otros",
       "emptyArchiveTitle": "Nada archivado todavía",
       "emptyArchiveBody": "Toca el marcador de un artículo guardado y elige Archivar, o usa el menú •••. Los artículos archivados se quedan en este teléfono hasta que los quites.",
-      "countLater_one": "{{count}} por leer",
-      "countLater_other": "{{count}} por leer",
-      "countArchive_one": "{{count}} archivado",
-      "countArchive_other": "{{count}} archivados",
       "openArchive": "Abrir Archivo"
     },
     "checks": {

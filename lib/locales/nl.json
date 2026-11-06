@@ -352,8 +352,6 @@
     "sourcesSkip": "Overslaan",
     "sourcesLoadError": "Kon de bronnen niet laden.",
     "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
-    "iSubscribe": "Ik heb een abonnement",
-    "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}",
     "sourcesFind": "Zoek een publicatie",
     "yourSources": "Je bronnen",
     "ratherNotSay": "Dat zeg ik liever niet",
@@ -2903,10 +2901,6 @@
       "groupOther": "Overig",
       "emptyArchiveTitle": "Nog niets gearchiveerd",
       "emptyArchiveBody": "Tik op de bladwijzer bij een opgeslagen artikel en kies Archiveren, of gebruik het •••-menu. Gearchiveerde artikelen blijven op deze telefoon tot je ze verwijdert.",
-      "countLater_one": "{{count}} te lezen",
-      "countLater_other": "{{count}} te lezen",
-      "countArchive_one": "{{count}} gearchiveerd",
-      "countArchive_other": "{{count}} gearchiveerd",
       "openArchive": "Archief openen"
     },
     "checks": {
