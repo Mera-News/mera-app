@@ -12,6 +12,7 @@ const ALLOWED = [
     'components/custom/config-mera/SecuritySettingsSection.tsx',
     'components/custom/VideoPlayerModal.tsx',
     'components/custom/nav/InlineChoiceChip.tsx',
+    'components/custom/cards/UnsaveBubble.tsx',
 ];
 
 function walk(dir: string): string[] {

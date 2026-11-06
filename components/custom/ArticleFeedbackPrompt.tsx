@@ -3,7 +3,7 @@
 // components/custom/cards/CardActionBar, which is now the one action row across
 // cards, detail screens and the standalone card. New surfaces should render
 // CardActionBar directly rather than growing a fourth copy.
-import type { ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
+import type { ArchiveMenuItem } from '@/components/custom/cards/use-archive-menu-item';
 import { Box } from '@/components/ui/box';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
@@ -36,7 +36,7 @@ interface ArticleFeedbackPromptProps {
         onToggle: () => void;
     };
     /** The ••• item for Archive and moves between Saved's lists. */
-    archiveItem?: ArticleMenuItem;
+    archiveItem?: ArchiveMenuItem;
     /** The subject for the ••• menu's Follow item. The subject
      *  carries the stable cluster id when the caller already knows it (suggestion
      *  clusters); otherwise `trackStoryFromSubject` resolves it lazily at track
@@ -238,6 +238,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 onFeedback={handleFeedback}
                 onAskMera={handleChatPress}
                 onToggleSave={save?.onToggle}
+                archiveItem={archiveItem}
                 onShare={share?.url ? handleSharePress : undefined}
                 onFactCheck={factCheck?.onStart}
                 factCheckState={factCheck?.state}

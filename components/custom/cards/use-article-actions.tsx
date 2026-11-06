@@ -14,8 +14,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import type { TFunction } from 'i18next';
 import { useCallback, useEffect, useState } from 'react';
 import { useSavedOverride, type SavedList } from '@/lib/saved-state';
-import type { ArticleMenuItem } from './ArticleOverflowMenu';
-import { useArchiveMenuItem } from './use-archive-menu-item';
+import { useArchiveMenuItem, type ArchiveMenuItem } from './use-archive-menu-item';
 
 export interface UseArticleActionsInput {
   /** Origin-aware descriptor of what's being acted on + where. */
@@ -39,7 +38,7 @@ export interface ArticleActions {
   onAskMera: () => void;
   onToggleSave: () => void;
   /** The ••• item for Archive and moves between Saved's lists. */
-  archiveItem: ArticleMenuItem;
+  archiveItem: ArchiveMenuItem;
   /** Undefined when there is nothing to share. */
   onShare?: () => void;
 }

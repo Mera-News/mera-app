@@ -6,6 +6,12 @@
 //   - ArticleSuggestionCard — the For You feed (FeedScreen) and the fact feed
 //     (FactFeedScreen).
 //   - ArticleFeedbackPrompt — the article + suggestion DETAIL screens.
+//
+// A tap on a filled bookmark no longer unsaves: with `archiveItem` it opens
+// UnsaveBubble (Archive or Read later, and Remove). The bubble mounts only while
+// open, so a row in a list carries no Modal, and its state dies with the row
+// (the Feed is a FlatList: a row is unmounted, never reused for another article).
+//
 // ArticleFeedbackPrompt used to hand-roll its own row of 48pt round,
 // primary-orange-outlined buttons. It was converted to this component
 // for card parity. A given answer turns the feedback icon the
@@ -36,12 +42,15 @@ import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { MessageSquareWarning, Bookmark, Crosshair, Share, Share2, SearchCheck, Ellipsis } from 'lucide-react-native';
-import { Platform, ToastAndroid } from 'react-native';
-import React, { useEffect, useRef } from 'react';
+import { Platform, ToastAndroid, View, type ViewInstance } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
+import { hapticLight } from '@/lib/haptics';
 import { SPRING } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 import { useTranslation } from 'react-i18next';
+import UnsaveBubble, { type BubbleAnchor } from './UnsaveBubble';
+import type { ArchiveMenuItem } from './use-archive-menu-item';
 
 /** A 44pt target around a 27pt glyph, given back by negative margins so the
  *  row keeps its spacing (never hitSlop: QA measures that as the glyph). */
@@ -75,6 +84,9 @@ interface CardActionBarProps {
    *  `ArticleFeedbackPrompt`'s `save` prop is optional and a bookmark that
    *  toggles nothing is worse than no bookmark. */
   onToggleSave?: () => void;
+  /** Given, a tap on the FILLED bookmark opens the bubble: this item, then
+   *  Remove, which runs `onToggleSave`. Absent: the tap unsaves directly. */
+  archiveItem?: ArchiveMenuItem;
   /** Optional "track story" toggle — a crosshair right of the bookmark. Hidden
    *  entirely when undefined, which is the FEED's case: a feed card has no
    *  track affordance by design (see TrackedStoriesScreen's empty state), the
@@ -120,6 +132,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   onFeedback,
   onAskMera,
   onToggleSave,
+  archiveItem,
   onTrack,
   tracked = false,
   onShare,
@@ -139,7 +152,21 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   const answered = verdict === 'dislike';
   const feedbackLabel = t(answered ? 'feedbackTree.menu.iconGiven' : 'feedbackTree.menu.iconLabel');
 
+  const bookmarkRef = useRef<ViewInstance>(null);
+  const [anchor, setAnchor] = useState<BubbleAnchor | null>(null);
+  const closeBubble = useCallback(() => setAnchor(null), []);
+  const bubbleItem = saved ? archiveItem : undefined;
+  const tapBookmark = () => {
+    if (!bubbleItem) {
+      onToggleSave?.();
+      return;
+    }
+    hapticLight();
+    bookmarkRef.current?.measureInWindow((x, y, width, height) => setAnchor({ x, y, width, height }));
+  };
+
   return (
+    <>
     <HStack
       className="items-center"
       style={{
@@ -178,18 +205,27 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       {onToggleSave ? (
         <Pressable
           testID="card-action-save"
-          onPress={onToggleSave}
+          onPress={tapBookmark}
           style={FRAME}
           accessibilityRole="button"
-          accessibilityState={{ selected: saved }}
-          accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
+          accessibilityState={{ selected: saved, expanded: bubbleItem ? anchor !== null : undefined }}
+          accessibilityLabel={t(
+            bubbleItem
+              ? 'savedSuggestions.savedToastTitle'
+              : saved
+                ? 'savedSuggestions.removeAction'
+                : 'savedSuggestions.saveAction',
+          )}
+          accessibilityHint={bubbleItem ? `${bubbleItem.shortLabel}, ${t('savedSuggestions.removeShort')}` : undefined}
         >
-          <Bookmark
-            size={iconSize}
-            strokeWidth={STROKE}
-            color={saved ? SAVE_ACCENT : WHITE}
-            fill={saved ? SAVE_ACCENT : 'none'}
-          />
+          <View ref={bookmarkRef} collapsable={false}>
+            <Bookmark
+              size={iconSize}
+              strokeWidth={STROKE}
+              color={saved ? SAVE_ACCENT : WHITE}
+              fill={saved ? SAVE_ACCENT : 'none'}
+            />
+          </View>
         </Pressable>
       ) : null}
 
@@ -294,6 +330,10 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         </Pressable>
       ) : null}
     </HStack>
+    {bubbleItem && anchor ? (
+      <UnsaveBubble anchor={anchor} item={bubbleItem} onRemove={onToggleSave} onClose={closeBubble} />
+    ) : null}
+    </>
   );
 };
 

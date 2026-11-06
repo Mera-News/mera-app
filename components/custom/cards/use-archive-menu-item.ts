@@ -1,7 +1,7 @@
-// The ••• item that sends an article to Archive or moves it between Saved's two
-// lists. The bookmark only ever saves to Read later, so this is the one way
-// into Archive. Runs after the sheet has gone, so its toast is never painted
-// under the Modal on Android.
+// The action that sends an article to Archive or moves it between Saved's two
+// lists: the ••• item, and the filled bookmark's bubble. A tap on an empty
+// bookmark only ever saves to Read later. Runs after the sheet or bubble has
+// gone, so its toast is never painted under the Modal on Android.
 
 import {
   deleteSavedSuggestion,
@@ -23,7 +23,13 @@ interface Input {
   readonly save: (list: SavedList) => Promise<void>;
 }
 
-export function useArchiveMenuItem({ savedId, saved, save }: Input): ArticleMenuItem {
+export interface ArchiveMenuItem extends ArticleMenuItem {
+  readonly icon: 'archive' | 'unarchive';
+  /** The bubble's word for it: Archive, or Read later for an archived article. */
+  readonly shortLabel: string;
+}
+
+export function useArchiveMenuItem({ savedId, saved, save }: Input): ArchiveMenuItem {
   const { t } = useTranslation();
   const [listFromDb, setListFromDb] = useState<SavedList | null>(null);
   const override = useSavedList(savedId);
@@ -78,6 +84,7 @@ export function useArchiveMenuItem({ savedId, saved, save }: Input): ArticleMenu
         : target === 'archive'
           ? t('savedSuggestions.moveToArchive')
           : t('savedSuggestions.moveToReadLater'),
+      shortLabel: target === 'archive' ? t('savedSuggestions.archiveAction') : t('library.saved.readLater'),
       icon: target === 'archive' ? 'archive' : 'unarchive',
       testID: 'menu-archive',
       run,
