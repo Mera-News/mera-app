@@ -327,6 +327,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       onFeedback={tapFeedback}
       onAskMera={() => onAskMera?.(suggestion)}
       onToggleSave={handleToggleSave}
+      archiveItem={archiveItem}
       onShare={suggestion.article_url ? () => void handleShare() : undefined}
       onOverflow={menu.open}
       horizontalPadding={0}

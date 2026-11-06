@@ -5,6 +5,7 @@ import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
+import ArticleSuggestionCard from '@/components/custom/cards/ArticleSuggestionCard';
 import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { useToast } from '@/components/ui/toast';
@@ -12,13 +13,14 @@ import {
   getSavedList,
   isSuggestionSaved,
   saveStandaloneArticle,
+  saveSuggestion,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import { activeHolds } from '@/lib/app-restart';
 import { __resetSavedStateForTests } from '@/lib/saved-state';
 import { toastManager } from '@/lib/toast-manager';
 import { closeAll, useToastQueue } from '@/lib/toast/toast-queue';
 import { initI18nEn } from '@/test/helpers';
-import { newsArticle } from '../detail/seed';
+import { newsArticle, seedSuggestion } from '../detail/seed';
 
 jest.mock('react-native/Libraries/Modal/Modal', () => {
   const { View } = jest.requireActual('react-native');
@@ -177,6 +179,50 @@ describe('the filled bookmark', () => {
     await render(<>{entry.render({ id: entry.id })}</>);
     expect(screen.queryByTestId('saved-list-undo')).toBeNull();
     expect(screen.getByText("That didn't work. Try again.")).toBeTruthy();
+  });
+});
+
+describe('the filled bookmark on a Feed card', () => {
+  const mountCard = async () => {
+    const suggestion = await seedSuggestion({ _id: 'sug-1' });
+    await saveSuggestion(suggestion);
+    const onSaveToggled = jest.fn();
+    await render(
+      <ArticleSuggestionCard suggestion={suggestion} onPress={jest.fn()} onVerdict={jest.fn()} onSaveToggled={onSaveToggled} />,
+    );
+    await act(async () => {});
+    return onSaveToggled;
+  };
+  // The row sits inside the card root, one accessibility element, so it is hidden from the default query.
+  const openCardBubble = async () => {
+    const bookmark = () => screen.getByTestId('card-action-save', { includeHiddenElements: true });
+    await waitFor(() => expect(bookmark().props.accessibilityState.selected).toBe(true));
+    await act(async () => {
+      fireEvent.press(bookmark());
+    });
+  };
+
+  it('opens the bubble and unsaves nothing', async () => {
+    await mountCard();
+    await openCardBubble();
+    expect(bubble()).toBeTruthy();
+    expect(await isSuggestionSaved('sug-1')).toBe(true);
+  });
+
+  it('Archive moves the row and the card stays saved', async () => {
+    const onSaveToggled = await mountCard();
+    await openCardBubble();
+    await press('unsave-bubble-move');
+    await waitFor(async () => expect(await getSavedList('sug-1')).toBe('archive'));
+    expect(onSaveToggled).not.toHaveBeenCalled();
+  });
+
+  it('Remove unsaves through the card, so the list hears about it', async () => {
+    const onSaveToggled = await mountCard();
+    await openCardBubble();
+    await press('unsave-bubble-remove');
+    await waitFor(async () => expect(await isSuggestionSaved('sug-1')).toBe(false));
+    expect(onSaveToggled).toHaveBeenCalledWith(expect.objectContaining({ _id: 'sug-1' }), false);
   });
 });
 
