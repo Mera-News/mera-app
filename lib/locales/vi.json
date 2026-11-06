@@ -1107,19 +1107,6 @@
     "addAnyway": "Vẫn thêm",
     "addedToProfile": "Đã thêm vào hồ sơ của bạn"
   },
-  "whatsNew": {
-    "gotIt": "Đã hiểu",
-    "starterTitle": "Starter do chúng tôi mời",
-    "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
-    "starterArticlesTitle": "Mọi bài viết phù hợp",
-    "starterArticlesBody": "Mera đọc mọi bài viết khớp với hồ sơ của bạn, loại bỏ nhiễu và cho bạn thấy điều gì ảnh hưởng đến bạn.",
-    "starterInterestsTitle": "Toàn bộ hồ sơ của bạn",
-    "starterInterestsBody": "Thêm mọi điều ảnh hưởng đến bạn. Mera đối chiếu tin tức với từng dữ kiện.",
-    "starterChatTitle": "Trò chuyện và kiểm chứng",
-    "starterChatBody": "Hỏi Mera về bất kỳ tin nào, và đối chiếu các tuyên bố với những kiểm chứng đã công bố.",
-    "starterStoriesTitle": "Câu chuyện đang theo dõi",
-    "starterStoriesBody": "Theo dõi bất cứ điều gì bạn thích, miễn phí và không giới hạn. Không AI nào đọc các câu chuyện đang theo dõi."
-  },
   "notificationCenter": {
     "title": "Thông báo",
     "empty": "Bạn đã xem hết rồi",

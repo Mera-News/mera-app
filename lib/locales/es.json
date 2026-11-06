@@ -1125,19 +1125,6 @@
     "addAnyway": "Añadir de todos modos",
     "addedToProfile": "Añadido a tu perfil"
   },
-  "whatsNew": {
-    "gotIt": "Entendido",
-    "starterTitle": "Starter corre por nuestra cuenta",
-    "starterIntro": "Para que veas para qué sirve Mera, todas las cuentas incluyen ahora el plan Starter completo sin coste.",
-    "starterArticlesTitle": "Cada artículo que coincida",
-    "starterArticlesBody": "Mera lee cada artículo que encaja con tu perfil, descarta lo que no importa y te muestra lo que te afecta.",
-    "starterInterestsTitle": "Todo tu perfil",
-    "starterInterestsBody": "Añade todo lo que te afecte. Mera compara las noticias con cada hecho.",
-    "starterChatTitle": "Chat y verificaciones",
-    "starterChatBody": "Pregunta a Mera sobre cualquier noticia y contrasta afirmaciones con verificaciones publicadas.",
-    "starterStoriesTitle": "Historias seguidas",
-    "starterStoriesBody": "Sigue lo que quieras, gratis e ilimitado. Ninguna IA lee las historias seguidas."
-  },
   "notificationCenter": {
     "title": "Notificaciones",
     "empty": "Estás al día",

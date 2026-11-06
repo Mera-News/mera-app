@@ -1124,19 +1124,6 @@
     "addAnyway": "Yine de ekle",
     "addedToProfile": "Profilinize eklendi"
   },
-  "whatsNew": {
-    "gotIt": "Anladım",
-    "starterTitle": "Starter bizden",
-    "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
-    "starterArticlesTitle": "Eşleşen her haber",
-    "starterArticlesBody": "Mera, profilinizle eşleşen her makaleyi okur, gürültüyü ayıklar ve sizi ilgilendireni gösterir.",
-    "starterInterestsTitle": "Tüm profiliniz",
-    "starterInterestsBody": "Sizi ilgilendiren her şeyi ekleyin. Mera haberleri her bir gerçeğe karşı karşılaştırır.",
-    "starterChatTitle": "Sohbet ve doğruluk kontrolü",
-    "starterChatBody": "Herhangi bir haber hakkında Mera'ya sorun ve iddiaları yayımlanmış doğruluk kontrolleriyle karşılaştırın.",
-    "starterStoriesTitle": "Takip edilen haberler",
-    "starterStoriesBody": "Sevdiğiniz her şeyi ücretsiz ve sınırsız takip edin. Hiçbir yapay zeka takip edilen haberleri okumaz."
-  },
   "notificationCenter": {
     "title": "Bildirimler",
     "empty": "Her şeyi okudun",

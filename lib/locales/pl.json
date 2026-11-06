@@ -1184,19 +1184,6 @@
     "addAnyway": "Dodaj mimo to",
     "addedToProfile": "Dodano do Twojego profilu"
   },
-  "whatsNew": {
-    "gotIt": "Rozumiem",
-    "starterTitle": "Starter na nasz koszt",
-    "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
-    "starterArticlesTitle": "Każdy pasujący artykuł",
-    "starterArticlesBody": "Mera czyta każdy artykuł pasujący do Twojego profilu, odsiewa szum i pokazuje to, co na Ciebie wpływa.",
-    "starterInterestsTitle": "Cały Twój profil",
-    "starterInterestsBody": "Dodaj wszystko, co na Ciebie wpływa. Mera porównuje wiadomości z każdym faktem.",
-    "starterChatTitle": "Czat i sprawdzanie faktów",
-    "starterChatBody": "Zapytaj Merę o dowolną wiadomość i zestaw twierdzenia z opublikowanymi analizami faktów.",
-    "starterStoriesTitle": "Śledzone historie",
-    "starterStoriesBody": "Śledź, co chcesz, za darmo i bez limitu. Śledzonych historii nie czyta żadna AI."
-  },
   "notificationCenter": {
     "title": "Powiadomienia",
     "empty": "Jesteś na bieżąco",

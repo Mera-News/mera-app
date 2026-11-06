@@ -1107,19 +1107,6 @@
     "addAnyway": "仍要加入",
     "addedToProfile": "已加入你的檔案"
   },
-  "whatsNew": {
-    "gotIt": "知道了",
-    "starterTitle": "Starter 由我們招待",
-    "starterIntro": "為了讓你看見梅拉的價值，每個帳號現在都免費包含完整的 Starter 方案。",
-    "starterArticlesTitle": "每一篇符合的文章",
-    "starterArticlesBody": "梅拉會閱讀所有符合你檔案的文章，篩掉雜訊，把影響你的內容呈現給你。",
-    "starterInterestsTitle": "整個檔案",
-    "starterInterestsBody": "把所有影響你的事情都加進來。梅拉會對照每一項事實來閱讀新聞。",
-    "starterChatTitle": "聊天和事實查核",
-    "starterChatBody": "可以針對任何報導詢問梅拉，並用已發布的事實查核來驗證說法。",
-    "starterStoriesTitle": "已追蹤的報導",
-    "starterStoriesBody": "想關注什麼都可以，免費且不限數量。AI 不會閱讀已關注的報導。"
-  },
   "notificationCenter": {
     "title": "通知",
     "empty": "你已經看完所有內容",

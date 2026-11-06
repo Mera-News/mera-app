@@ -1107,19 +1107,6 @@
     "addAnyway": "それでも追加する",
     "addedToProfile": "プロフィールに追加しました"
   },
-  "whatsNew": {
-    "gotIt": "わかりました",
-    "starterTitle": "Starter は無料です",
-    "starterIntro": "メラが何のためのものかを知っていただけるよう、すべてのアカウントにStarterプランの全機能を無料で含めました。",
-    "starterArticlesTitle": "興味に合うすべての記事",
-    "starterArticlesBody": "メラは、あなたのプロフィールに合うすべての記事を読み、ノイズを取り除いて、あなたに影響することを表示します。",
-    "starterInterestsTitle": "プロフィール全体",
-    "starterInterestsBody": "あなたに影響することを何でも追加してください。メラは、すべてのファクトに照らしてニュースを読みます。",
-    "starterChatTitle": "チャットとファクトチェック",
-    "starterChatBody": "どのニュースについてもメラに質問でき、主張を公開されたファクトチェックと照らし合わせられます。",
-    "starterStoriesTitle": "フォロー中のストーリー",
-    "starterStoriesBody": "好きなものは何でもフォローできます。無料で、数の制限もありません。AIはフォロー中のストーリーを読みません。"
-  },
   "notificationCenter": {
     "title": "通知",
     "empty": "すべて確認済みです",

@@ -1122,19 +1122,6 @@
     "addAnyway": "Toch toevoegen",
     "addedToProfile": "Toegevoegd aan je profiel"
   },
-  "whatsNew": {
-    "gotIt": "Begrepen",
-    "starterTitle": "Starter krijg je van ons",
-    "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
-    "starterArticlesTitle": "Elk passend artikel",
-    "starterArticlesBody": "Mera leest elk artikel dat bij je profiel past, laat de ruis weg en laat zien wat jou raakt.",
-    "starterInterestsTitle": "Je hele profiel",
-    "starterInterestsBody": "Voeg alles toe wat jou raakt. Mera legt het nieuws naast elk feit.",
-    "starterChatTitle": "Chat en factchecks",
-    "starterChatBody": "Vraag Mera van alles over een bericht en toets beweringen aan gepubliceerde factchecks.",
-    "starterStoriesTitle": "Gevolgde verhalen",
-    "starterStoriesBody": "Volg wat je wilt, gratis en onbeperkt. Geen AI leest gevolgde verhalen."
-  },
   "notificationCenter": {
     "title": "Meldingen",
     "empty": "Je bent helemaal bij",

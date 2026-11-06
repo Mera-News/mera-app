@@ -1107,19 +1107,6 @@
     "addAnyway": "그래도 추가",
     "addedToProfile": "프로필에 추가했어요"
   },
-  "whatsNew": {
-    "gotIt": "확인",
-    "starterTitle": "Starter는 무료입니다",
-    "starterIntro": "메라가 무엇을 위한 것인지 직접 보실 수 있도록, 이제 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다.",
-    "starterArticlesTitle": "관심사에 맞는 모든 기사",
-    "starterArticlesBody": "메라는 프로필에 맞는 기사를 모두 읽고, 잡음은 걸러 내고, 회원님에게 영향을 주는 내용을 보여 드려요.",
-    "starterInterestsTitle": "프로필 전체",
-    "starterInterestsBody": "회원님에게 영향을 주는 것은 무엇이든 추가해 주세요. 메라는 모든 사실에 비추어 뉴스를 읽어요.",
-    "starterChatTitle": "채팅과 팩트체크",
-    "starterChatBody": "어떤 뉴스든 메라에게 물어보고, 주장을 공개된 팩트체크와 대조해 보세요.",
-    "starterStoriesTitle": "팔로우 중인 스토리",
-    "starterStoriesBody": "좋아하는 것은 무엇이든 무료로, 횟수 제한 없이 팔로우하세요. AI는 팔로우한 스토리를 읽지 않아요."
-  },
   "notificationCenter": {
     "title": "알림",
     "empty": "모두 확인하셨습니다",

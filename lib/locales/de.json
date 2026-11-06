@@ -1122,19 +1122,6 @@
     "addAnyway": "Trotzdem hinzufügen",
     "addedToProfile": "Zu deinem Profil hinzugefügt"
   },
-  "whatsNew": {
-    "gotIt": "Verstanden",
-    "starterTitle": "Starter geht auf uns",
-    "starterIntro": "Damit du siehst, wofür Mera da ist, enthält jetzt jedes Konto den vollen Starter-Plan kostenlos.",
-    "starterArticlesTitle": "Jeder passende Artikel",
-    "starterArticlesBody": "Mera liest jeden Artikel, der zu deinem Profil passt, lässt das Rauschen weg und zeigt dir, was dich betrifft.",
-    "starterInterestsTitle": "Dein ganzes Profil",
-    "starterInterestsBody": "Füge alles hinzu, was dich betrifft. Mera gleicht die Nachrichten mit jedem Fakt ab.",
-    "starterChatTitle": "Chat und Faktenchecks",
-    "starterChatBody": "Frag Mera zu jeder Meldung, und prüfe Aussagen anhand veröffentlichter Faktenchecks.",
-    "starterStoriesTitle": "Verfolgte Geschichten",
-    "starterStoriesBody": "Folge allem, was dir gefällt, kostenlos und unbegrenzt. KI liest gefolgte Geschichten nicht."
-  },
   "notificationCenter": {
     "title": "Benachrichtigungen",
     "empty": "Du bist auf dem neuesten Stand",

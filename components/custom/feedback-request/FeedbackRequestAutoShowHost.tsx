@@ -13,20 +13,19 @@
 //
 // NEVER OVER SOMETHING ELSE. It waits while the PIN lock is up, before the
 // startup gate has passed, on the onboarding and PIN routes and
-// the modal itself, while the bug-report modal, the
-// What's new sheet or the floating chat is open, while ConsentGate is showing,
-// and while a notification tap for a feedback request is stashed and about to
-// be opened by the startup gate or the tap handler (it would push the same
-// modal). Each check runs after a settle delay. A deferred show simply retries
-// on the next trigger; the two sheets expose a synchronous read only, so their
-// closing is picked up on the next route change, foreground or state write.
+// the modal itself, while the bug-report modal or the floating chat is open,
+// while ConsentGate is showing, and while a notification tap for a feedback
+// request is stashed and about to be opened by the startup gate or the tap
+// handler (it would push the same modal). Each check runs after a settle delay.
+// A deferred show simply retries on the next trigger; the two overlays expose a
+// synchronous read only, so their closing is picked up on the next route change,
+// foreground or state write.
 
 import { router, usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import type { ConsentSessionUser } from '@/components/custom/auth/legal-consent';
-import { isWhatsNewSheetActive } from '@/components/custom/for-you/WhatsNewSheet';
 import { authClient } from '@/lib/auth-client';
 import {
     markFeedbackRequestShown,
@@ -64,7 +63,6 @@ function storesBlock(): boolean {
     if (usePinStore.getState().locked) return true;
     if (useFeedbackStore.getState().visible) return true;
     if (useFloatingChatStore.getState().isExpanded) return true;
-    if (isWhatsNewSheetActive()) return true;
     return false;
 }
 

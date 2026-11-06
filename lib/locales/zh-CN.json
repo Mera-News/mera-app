@@ -1107,19 +1107,6 @@
     "addAnyway": "仍然添加",
     "addedToProfile": "已添加到你的档案"
   },
-  "whatsNew": {
-    "gotIt": "知道了",
-    "starterTitle": "Starter 由我们买单",
-    "starterIntro": "为了让你看到梅拉是做什么的，现在每个账号都免费包含完整的 Starter 计划。",
-    "starterArticlesTitle": "每一篇匹配的文章",
-    "starterArticlesBody": "梅拉会阅读所有符合你档案的文章，过滤掉杂音，把影响你的内容呈现给你。",
-    "starterInterestsTitle": "整个档案",
-    "starterInterestsBody": "把所有影响你的事情都加进来。梅拉会对照每一条事实来阅读新闻。",
-    "starterChatTitle": "聊天和事实核查",
-    "starterChatBody": "就任何报道向梅拉提问，并用已发布的事实核查来验证说法。",
-    "starterStoriesTitle": "已关注的报道",
-    "starterStoriesBody": "想关注什么都可以，免费且不限数量。AI 不会阅读已关注的报道。"
-  },
   "notificationCenter": {
     "title": "通知",
     "empty": "你已经查看完所有内容",

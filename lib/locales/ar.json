@@ -1251,19 +1251,6 @@
     "addAnyway": "أضفه على أي حال",
     "addedToProfile": "أُضيف إلى ملفك الشخصي"
   },
-  "whatsNew": {
-    "gotIt": "فهمت",
-    "starterTitle": "Starter على حسابنا",
-    "starterIntro": "لكي ترى ما الغرض من ميرا، أصبح كل حساب يتضمن خطة Starter كاملة دون تكلفة.",
-    "starterArticlesTitle": "كل مقالة مطابقة",
-    "starterArticlesBody": "يقرأ ميرا كل مقال يطابق ملفك الشخصي، ويستبعد الضجيج، ويعرض لك ما يؤثر فيك.",
-    "starterInterestsTitle": "ملفك الشخصي كاملًا",
-    "starterInterestsBody": "أضف كل ما يؤثر فيك. يقرأ ميرا الأخبار في ضوء كل حقيقة لديك.",
-    "starterChatTitle": "الدردشة وتدقيق الحقائق",
-    "starterChatBody": "اسأل ميرا عن أي خبر، وقارن الادعاءات بعمليات تدقيق الحقائق المنشورة.",
-    "starterStoriesTitle": "القصص المتابَعة",
-    "starterStoriesBody": "تابع أي شيء تحبه، مجانًا وبلا حدود. لا يقرأ الذكاء الاصطناعي القصص المتابَعة."
-  },
   "notificationCenter": {
     "title": "الإشعارات",
     "empty": "أنت مطّلع على كل شيء",

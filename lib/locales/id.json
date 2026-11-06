@@ -1107,19 +1107,6 @@
     "addAnyway": "Tetap tambahkan",
     "addedToProfile": "Ditambahkan ke profil Anda"
   },
-  "whatsNew": {
-    "gotIt": "Mengerti",
-    "starterTitle": "Starter dari kami",
-    "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
-    "starterArticlesTitle": "Setiap artikel yang cocok",
-    "starterArticlesBody": "Mera membaca setiap artikel yang cocok dengan profil Anda, menyisihkan yang tidak relevan, dan menunjukkan apa yang berdampak pada Anda.",
-    "starterInterestsTitle": "Seluruh profil Anda",
-    "starterInterestsBody": "Tambahkan semua yang berdampak pada Anda. Mera membaca berita dengan mencocokkannya ke setiap fakta.",
-    "starterChatTitle": "Chat dan cek fakta",
-    "starterChatBody": "Tanya Mera tentang berita apa pun, dan uji klaim dengan cek fakta yang sudah diterbitkan.",
-    "starterStoriesTitle": "Cerita yang diikuti",
-    "starterStoriesBody": "Ikuti apa saja yang Anda suka, gratis dan tanpa batas. Tidak ada AI yang membaca cerita yang diikuti."
-  },
   "notificationCenter": {
     "title": "Notifikasi",
     "empty": "Anda sudah mengikuti semua update",

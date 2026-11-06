@@ -11,7 +11,6 @@
 // chip sits in the tab header, by the ?.
 
 import InterestsPage from '@/components/custom/for-you/InterestsPage';
-import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import React, { useEffect } from 'react';
 import { useIsFocused } from 'expo-router';
@@ -33,18 +32,10 @@ const FeedPage: React.FC<FeedPageProps> = ({ active, header }) => {
   }, [active, focused]);
   const view = useFeedView();
 
-  return (
-    <>
-      {view === 'sectioned' ? (
-        <InterestsPage active={active} header={header} />
-      ) : (
-        <FeedScreen active={active} header={header} />
-      )}
-      {/* One-time "What's new" sheet: gated on the PAGE being active, so a
-          reader who keeps Sectioned still gets it decided. After the list, so
-          the list stays the first child. */}
-      {active ? <WhatsNewSheet /> : null}
-    </>
+  return view === 'sectioned' ? (
+    <InterestsPage active={active} header={header} />
+  ) : (
+    <FeedScreen active={active} header={header} />
   );
 };
 
