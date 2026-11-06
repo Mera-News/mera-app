@@ -396,7 +396,6 @@
     "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
     "sourcesFind": "Szukaj wydawcy",
     "yourSources": "Twoje źródła",
-    "ratherNotSay": "Wolę nie mówić",
     "howDataHandled": "Jak Mera obsługuje moje dane",
     "somethingElse": "Chcesz zrobić coś innego?",
     "whatNext": "Co chcesz zrobić?",
@@ -1018,8 +1017,7 @@
     "restoreNoneGoogle": "Nie znaleziono planu na tym koncie Google.",
     "restoreFailedAppStore": "Nie udało się połączyć z App Store. Spróbuj ponownie.",
     "restoreFailedPlayStore": "Nie udało się połączyć z Google Play. Spróbuj ponownie.",
-    "redeemCode": "Zrealizuj kod",
-    "promoWebSummit": "Dodatkowe czytanie za darmo na Web Summit"
+    "redeemCode": "Zrealizuj kod"
   },
   "tabs": {
     "deck": "Strumień",

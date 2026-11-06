@@ -39,12 +39,13 @@ export default function OnboardingPathCard({ onPick }: OnboardingPathCardProps) 
     };
   }, []);
 
-  // Tell me about Mera is help, so it has nothing to finish.
+  // The last two are help, so they have nothing to finish.
   const options: { path: OnboardingPath; icon: keyof typeof MaterialIcons.glyphMap; label: string; done?: boolean }[] = [
     { path: 'location', icon: 'place', label: t('onboarding.pathLocation'), done: hasLocation },
     { path: 'profile', icon: 'person-outline', label: t('onboarding.pathProfile'), done: hasProfile },
     { path: 'follow', icon: 'sync', label: t('onboarding.pathFollow'), done: following },
     { path: 'about', icon: 'help-outline', label: t('onboarding.pathAbout') },
+    { path: 'data', icon: 'lock-outline', label: t('onboarding.howDataHandled') },
   ];
 
   return (

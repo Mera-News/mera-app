@@ -354,7 +354,6 @@
     "sourcesOffline": "आप ऑफ़लाइन हैं। आप बाद में स्रोत स्क्रीन से स्रोत जोड़ सकते हैं।",
     "sourcesFind": "कोई प्रकाशन खोजें",
     "yourSources": "आपके स्रोत",
-    "ratherNotSay": "मुझे इसके बारे में बताना पसंद नहीं",
     "howDataHandled": "मेरा ऐप मेरे डेटा को कैसे संभालता है",
     "somethingElse": "कुछ और करना चाहेंगे?",
     "whatNext": "आप क्या करना चाहेंगे?",
@@ -970,8 +969,7 @@
     "restoreNoneGoogle": "इस Google खाते पर कोई प्लान नहीं मिला।",
     "restoreFailedAppStore": "App Store तक नहीं पहुँच सके। फिर से कोशिश करें।",
     "restoreFailedPlayStore": "Google Play तक नहीं पहुँच सके। फिर से कोशिश करें।",
-    "redeemCode": "कोड रिडीम करें",
-    "promoWebSummit": "Web Summit पर अतिरिक्त पढ़ने की सीमा मुफ़्त"
+    "redeemCode": "कोड रिडीम करें"
   },
   "tabs": {
     "deck": "फीड",

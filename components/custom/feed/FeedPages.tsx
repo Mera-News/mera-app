@@ -15,6 +15,7 @@ import TabPages from '@/components/custom/nav/TabPages';
 import type { PageDot, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import TrackedStoriesScreen from '@/components/custom/tracked-stories/TrackedStoriesScreen';
 import { setTabDot } from '@/components/custom/nav/current-surface';
+import { useStoriesUnopened } from '@/components/custom/tracked-stories/use-stories-unopened';
 import { usePageOrder } from '@/lib/navigation/page-order';
 import { buildFeedList } from '@/lib/stores/feed-list-selector';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
@@ -31,16 +32,17 @@ function trackedService(): typeof import('@/lib/database/services/tracked-story-
   return require('@/lib/database/services/tracked-story-service');
 }
 
-/** Stories' dot: something new in a followed story (a dot, never a count). */
+/** Stories' dot: something new in a followed story, or one never opened (a dot, never a count). */
 function useStoriesDot(): PageDot {
   const [unseen, setUnseen] = useState(0);
+  const unopened = useStoriesUnopened();
   useEffect(() => {
     const sub = trackedService()
       .observeUnseenTotal()
       .subscribe({ next: setUnseen, error: () => setUnseen(0) });
     return () => sub.unsubscribe();
   }, []);
-  return { visible: unseen > 0 };
+  return { visible: unseen > 0 || unopened };
 }
 
 const NO_EXCLUSIONS: Set<string> = new Set();

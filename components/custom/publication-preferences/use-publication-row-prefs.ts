@@ -7,6 +7,7 @@ import {
 import { revertSourcePrefChange, setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import { observeActive } from '@/lib/database/services/publication-preference-service';
 import { fetchPublicationPrefNames, knownSourceNamesForPublisher } from '@/lib/database/services/publisher-source-names';
+import { observeActive as observeSubscriptions } from '@/lib/database/services/user-publication-subscription-service';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { toastManager } from '@/lib/toast-manager';
@@ -43,6 +44,7 @@ export function usePublicationRowPrefs() {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
     const [rows, setRows] = useState<readonly PrefRowLike[]>([]);
+    const [subscribed, setSubscribed] = useState<ReadonlySet<string>>(new Set());
     const [busy, setBusy] = useState<ReadonlySet<string>>(new Set());
     const [helpCountry, setHelpCountry] = useState<string | null>(null);
     // A second tap can land before the busy render.
@@ -50,7 +52,13 @@ export function usePublicationRowPrefs() {
 
     useEffect(() => {
         const sub = observeActive().subscribe((next) => setRows(next));
-        return () => sub.unsubscribe();
+        const subscriptions = observeSubscriptions().subscribe((next) =>
+            setSubscribed(new Set(next.map((s) => s.publisherId))),
+        );
+        return () => {
+            sub.unsubscribe();
+            subscriptions.unsubscribe();
+        };
     }, []);
 
     const run = useCallback(
@@ -92,6 +100,7 @@ export function usePublicationRowPrefs() {
         };
         return {
             starred: level === 'prioritised',
+            subscribed: subscribed.has(p.publisherId),
             inheritedFrom: country,
             notPreferred: level === 'muted',
             busy: busy.has(p.publisherId),

@@ -19,7 +19,7 @@ jest.mock('expo-router', () => ({
 const promoIs = (planPromo: string | null) =>
     server.use(mockGql('GetPlanPromo', { userBilling: { __typename: 'UserBillingInfo', planPromo } }));
 const rows = () => database.get<NotificationModel>('notifications').query().fetch();
-const LINE = 'Free extra usage for Web Summit';
+const LINE = 'Free 5x extra usage for today';
 
 beforeAll(initI18nEn);
 beforeEach(async () => {
@@ -33,7 +33,7 @@ afterEach(() => {
 
 describe('the plan card', () => {
     it('shows the line while the server names a promo, and goes back when it stops', async () => {
-        promoIs('web_summit');
+        promoIs(LINE);
         await syncPlanPromo();
         await render(<SettingsUsageCard />);
         expect(screen.getByText(LINE)).toBeTruthy();
@@ -44,13 +44,6 @@ describe('the plan card', () => {
             await syncPlanPromo();
         });
         expect(screen.queryByText(LINE)).toBeNull();
-        expect(screen.getByText('Your plan')).toBeTruthy();
-    });
-
-    it('shows nothing for a promo this build has no copy for', async () => {
-        promoIs('some_later_promo');
-        await syncPlanPromo();
-        await render(<SettingsUsageCard />);
         expect(screen.getByText('Your plan')).toBeTruthy();
     });
 
@@ -65,7 +58,7 @@ describe('the plan card', () => {
 });
 
 it('writes nothing to the Inbox: the push tells readers, once', async () => {
-    promoIs('web_summit');
+    promoIs(LINE);
     await syncPlanPromo();
     expect(await rows()).toHaveLength(0);
 });

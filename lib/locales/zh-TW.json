@@ -342,7 +342,6 @@
     "sourcesOffline": "你目前離線。之後可以在「來源」中新增來源。",
     "sourcesFind": "搜尋出版物",
     "yourSources": "你的來源",
-    "ratherNotSay": "我不想透露",
     "howDataHandled": "梅拉如何處理我的資料",
     "somethingElse": "想做別的事嗎？",
     "whatNext": "你想做什麼？",
@@ -956,8 +955,7 @@
     "restoreNoneGoogle": "在這個 Google 帳戶上找不到方案。",
     "restoreFailedAppStore": "無法連上 App Store。請再試一次。",
     "restoreFailedPlayStore": "無法連上 Google Play。請再試一次。",
-    "redeemCode": "兌換代碼",
-    "promoWebSummit": "Web Summit 期間免費贈送額外用量"
+    "redeemCode": "兌換代碼"
   },
   "tabs": {
     "deck": "資訊流",

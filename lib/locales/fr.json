@@ -361,7 +361,6 @@
     "sourcesOffline": "Vous êtes hors connexion. Vous pourrez ajouter des sources plus tard dans Sources.",
     "sourcesFind": "Trouver une publication",
     "yourSources": "Vos sources",
-    "ratherNotSay": "Je préfère ne pas le dire",
     "howDataHandled": "Comment Mera gère mes données",
     "somethingElse": "Vous voulez faire autre chose ?",
     "whatNext": "Que souhaitez-vous faire ?",
@@ -977,8 +976,7 @@
     "restoreNoneGoogle": "Aucun forfait trouvé sur ce compte Google.",
     "restoreFailedAppStore": "Impossible de joindre l'App Store. Réessayez.",
     "restoreFailedPlayStore": "Impossible de joindre Google Play. Réessayez.",
-    "redeemCode": "Utiliser un code",
-    "promoWebSummit": "Lecture en plus gratuite pendant Web Summit"
+    "redeemCode": "Utiliser un code"
   },
   "tabs": {
     "deck": "Fil d'actu",

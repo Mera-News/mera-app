@@ -342,7 +342,6 @@
     "sourcesOffline": "오프라인 상태예요. 나중에 소스 화면에서 추가할 수 있어요.",
     "sourcesFind": "매체 찾기",
     "yourSources": "내 소스",
-    "ratherNotSay": "말하지 않을래요",
     "howDataHandled": "메라는 내 데이터를 어떻게 처리하나요?",
     "somethingElse": "다른 걸 해 보고 싶으세요?",
     "whatNext": "무엇을 하고 싶으세요?",
@@ -956,8 +955,7 @@
     "restoreNoneGoogle": "이 Google 계정에서 요금제를 찾을 수 없습니다.",
     "restoreFailedAppStore": "App Store에 연결할 수 없습니다. 다시 시도해 주세요.",
     "restoreFailedPlayStore": "Google Play에 연결할 수 없습니다. 다시 시도해 주세요.",
-    "redeemCode": "코드 사용하기",
-    "promoWebSummit": "Web Summit 동안 추가 사용량 무료"
+    "redeemCode": "코드 사용하기"
   },
   "tabs": {
     "deck": "피드",

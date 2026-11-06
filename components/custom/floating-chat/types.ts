@@ -399,12 +399,11 @@ export interface StarterChip {
 export interface ComposerAction {
   key: string;
   label: string;
-  /** Runs on tap. Without it the tap sends the label. */
-  onPress?: () => void;
+  onPress: () => void;
   testID: string;
 }
 
-export type OnboardingPath = 'location' | 'profile' | 'follow' | 'about';
+export type OnboardingPath = 'location' | 'profile' | 'follow' | 'about' | 'data';
 
 /** True inside the wizard's chat step. A context so CloudPersonaChat, between the
  *  step and the view, carries none of this. */

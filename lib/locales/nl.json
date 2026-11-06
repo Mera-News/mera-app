@@ -354,7 +354,6 @@
     "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
     "sourcesFind": "Zoek een publicatie",
     "yourSources": "Je bronnen",
-    "ratherNotSay": "Dat zeg ik liever niet",
     "howDataHandled": "Hoe Mera mijn gegevens verwerkt",
     "somethingElse": "Wil je iets anders doen?",
     "whatNext": "Wat wil je doen?",
@@ -970,8 +969,7 @@
     "restoreNoneGoogle": "Geen abonnement gevonden op deze Google-account.",
     "restoreFailedAppStore": "De App Store kon niet worden bereikt. Probeer het opnieuw.",
     "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw.",
-    "redeemCode": "Code inwisselen",
-    "promoWebSummit": "Gratis extra gebruik voor Web Summit"
+    "redeemCode": "Code inwisselen"
   },
   "tabs": {
     "deck": "Feed",

@@ -356,7 +356,6 @@
     "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
     "sourcesFind": "Encontre uma publicação",
     "yourSources": "Suas fontes",
-    "ratherNotSay": "Prefiro não dizer",
     "howDataHandled": "Como a Mera trata meus dados",
     "somethingElse": "Quer fazer outra coisa?",
     "whatNext": "O que você gostaria de fazer?",
@@ -972,8 +971,7 @@
     "restoreNoneGoogle": "Nenhum plano encontrado nesta Conta do Google.",
     "restoreFailedAppStore": "Não foi possível acessar a App Store. Tente novamente.",
     "restoreFailedPlayStore": "Não foi possível acessar o Google Play. Tente novamente.",
-    "redeemCode": "Resgatar um código",
-    "promoWebSummit": "Leitura extra grátis no Web Summit"
+    "redeemCode": "Resgatar um código"
   },
   "tabs": {
     "deck": "Feed",

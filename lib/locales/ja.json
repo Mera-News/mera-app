@@ -342,7 +342,6 @@
     "sourcesOffline": "オフラインです。後からソースを追加できます。",
     "sourcesFind": "公開元を検索",
     "yourSources": "あなたのソース",
-    "ratherNotSay": "答えたくありません",
     "howDataHandled": "メラが私のデータをどう扱うか",
     "somethingElse": "ほかに何かしたいですか？",
     "whatNext": "何をしたいですか？",
@@ -956,8 +955,7 @@
     "restoreNoneGoogle": "このGoogle アカウントでプランが見つかりませんでした。",
     "restoreFailedAppStore": "App Store に接続できませんでした。もう一度お試しください。",
     "restoreFailedPlayStore": "Google Play に接続できませんでした。もう一度お試しください。",
-    "redeemCode": "コードを使用",
-    "promoWebSummit": "Web Summit中は追加の利用が無料"
+    "redeemCode": "コードを使用"
   },
   "tabs": {
     "deck": "フィード",

@@ -437,7 +437,6 @@
     "sourcesOffline": "أنت غير متصل. يمكنك إضافة مصادر لاحقًا من شاشة المصادر.",
     "sourcesFind": "ابحث عن منشور",
     "yourSources": "مصادرك",
-    "ratherNotSay": "أفضّل ألا أقول",
     "howDataHandled": "كيف تتعامل ميرا مع بياناتي؟",
     "somethingElse": "هل تريد فعل شيء آخر؟",
     "whatNext": "ماذا تريد أن تفعل؟",
@@ -1065,8 +1064,7 @@
     "restoreNoneGoogle": "لم نعثر على أي خطة في حساب Google هذا.",
     "restoreFailedAppStore": "تعذّر الوصول إلى App Store. حاول مرة أخرى.",
     "restoreFailedPlayStore": "تعذّر الوصول إلى Google Play. حاول مرة أخرى.",
-    "redeemCode": "استرداد رمز",
-    "promoWebSummit": "قراءة إضافية مجانًا خلال Web Summit"
+    "redeemCode": "استرداد رمز"
   },
   "tabs": {
     "deck": "الخلاصة",

@@ -354,7 +354,6 @@
     "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
     "sourcesFind": "Veröffentlichung suchen",
     "yourSources": "Deine Quellen",
-    "ratherNotSay": "Sag ich lieber nicht",
     "howDataHandled": "Wie Mera mit meinen Daten umgeht",
     "somethingElse": "Möchtest du etwas anderes machen?",
     "whatNext": "Was möchtest du tun?",
@@ -970,8 +969,7 @@
     "restoreNoneGoogle": "Auf diesem Google-Konto wurde kein Tarif gefunden.",
     "restoreFailedAppStore": "Der App Store ist nicht erreichbar. Versuche es erneut.",
     "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut.",
-    "redeemCode": "Code einlösen",
-    "promoWebSummit": "Extra Lesekontingent gratis bei Web Summit"
+    "redeemCode": "Code einlösen"
   },
   "tabs": {
     "deck": "Nachrichten",

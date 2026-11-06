@@ -14,6 +14,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import LoopScene from '@/components/custom/for-you/LoopScene';
+import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { animationSourceFor } from '@/components/custom/tutorials/animation-registry';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -111,9 +112,17 @@ export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }
     <View style={{ gap: 12 }} testID={`feed-no-facts-${view}`}>
       <GlassPanel radius={12} contentClassName="px-4 py-3" paper>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ paddingTop: 1 }}>
+          {/* Readers tap this mark because the line beside it says to tap the Mera button. */}
+          <Pressable
+            onPress={() => openMeraChat({ kind: 'persona' })}
+            accessibilityRole="button"
+            accessibilityLabel={t('tutorials.askMera')}
+            testID="feed-no-facts-mera"
+            hitSlop={12}
+            style={{ paddingTop: 1 }}
+          >
             <MeraLogo size={20} color={c.accentMark} animated={false} />
-          </View>
+          </Pressable>
           <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
             <Text style={{ color: c.ink, fontSize: 15, lineHeight: 20, fontWeight: '600' }} accessibilityRole="header">
               {t('interests.emptyTitle')}

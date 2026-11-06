@@ -342,7 +342,6 @@
     "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
     "sourcesFind": "Cari publikasi",
     "yourSources": "Sumber Anda",
-    "ratherNotSay": "Saya tidak ingin menjawab",
     "howDataHandled": "Bagaimana Mera menangani data saya",
     "somethingElse": "Ingin melakukan hal lain?",
     "whatNext": "Apa yang ingin Anda lakukan?",
@@ -956,8 +955,7 @@
     "restoreNoneGoogle": "Tidak ada paket di Akun Google ini.",
     "restoreFailedAppStore": "Tidak bisa menghubungi App Store. Coba lagi.",
     "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi.",
-    "redeemCode": "Tukarkan kode",
-    "promoWebSummit": "Pemakaian ekstra gratis untuk Web Summit"
+    "redeemCode": "Tukarkan kode"
   },
   "tabs": {
     "deck": "Umpan",

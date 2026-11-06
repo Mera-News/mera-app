@@ -177,6 +177,9 @@ describe('onboarding sources step', () => {
 
         await waitFor(() => expect(screen.getByText('Next')).toBeTruthy());
         expect(screen.getByTestId(`onboarding-pick-subscription:${pub.publisherId}`)).toBeTruthy();
+        await waitFor(() =>
+            expect(screen.getByTestId(`onboarding-pick-subscription:${pub.publisherId}-subscribed`, { includeHiddenElements: true })).toBeTruthy(),
+        );
     });
 
     it('results float in a panel that stays open on a star, and the pick shows under Your sources once the search is cleared', async () => {

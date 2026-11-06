@@ -396,7 +396,6 @@
     "sourcesOffline": "Вы не в сети. Источники можно добавить позже в разделе «Источники».",
     "sourcesFind": "Найти издание",
     "yourSources": "Ваши источники",
-    "ratherNotSay": "Предпочитаю не говорить",
     "howDataHandled": "Как Мера обрабатывает мои данные",
     "somethingElse": "Хотите сделать что-то другое?",
     "whatNext": "Что вы хотите сделать?",
@@ -1018,8 +1017,7 @@
     "restoreNoneGoogle": "На этом аккаунте Google тариф не найден.",
     "restoreFailedAppStore": "Не удалось связаться с App Store. Попробуйте ещё раз.",
     "restoreFailedPlayStore": "Не удалось связаться с Google Play. Попробуйте ещё раз.",
-    "redeemCode": "Активировать код",
-    "promoWebSummit": "Дополнительное чтение бесплатно на Web Summit"
+    "redeemCode": "Активировать код"
   },
   "tabs": {
     "deck": "Лента",

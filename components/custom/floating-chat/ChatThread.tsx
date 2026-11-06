@@ -577,8 +577,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               style={styles.action}
               onPress={() => {
                 hapticLight();
-                if (action.onPress) action.onPress();
-                else onChipPress(action.label);
+                action.onPress();
               }}
               accessibilityRole="button"
               testID={action.testID}

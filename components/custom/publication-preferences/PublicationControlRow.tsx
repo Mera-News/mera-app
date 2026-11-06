@@ -6,6 +6,7 @@ import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -49,6 +50,8 @@ interface PublicationControlRowProps {
     readonly subtitle?: string | null;
     /** With `onStar`. */
     readonly starred?: boolean;
+    /** Shown, never tapped: Subscribed is set on the publication's page. */
+    readonly subscribed?: boolean;
     /** The country the star comes from: grey, opens help, never toggles. */
     readonly inheritedFrom?: string | null;
     readonly notPreferred?: boolean;
@@ -73,6 +76,7 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
     flag,
     subtitle,
     starred = false,
+    subscribed = false,
     inheritedFrom,
     notPreferred,
     busy = false,
@@ -87,7 +91,7 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
     const shown = useDisplayPublication(rawName.trim()) || rawName;
     const [pressed, setPressed] = useState(false);
     const line = inheritedFrom ? t('publicationPage.includedWith', { country: inheritedFrom }) : subtitle;
-    const bodyLabel = [shown, line].filter(Boolean).join(', ');
+    const bodyLabel = [shown, line, subscribed ? t('publicationPage.subscribed') : null].filter(Boolean).join(', ');
     const starLabel = inheritedFrom
         ? t('publicationPage.includedWithA11y', { country: inheritedFrom })
         : t('publicationPage.preferA11y', { publisher: shown });
@@ -135,6 +139,11 @@ const PublicationControlRow: React.FC<PublicationControlRowProps> = ({
                         {visual}
                     </View>
                 )}
+                {subscribed ? (
+                    <View testID={`${testID}-subscribed`} style={styles.subscribed}>
+                        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="card-membership" size={ICON} color={c.accent} />
+                    </View>
+                ) : null}
                 {onStar ? (
                     <RowControl
                         testID={`${testID}-star`}
@@ -199,6 +208,7 @@ export const InheritedStarHelp: React.FC<{
 };
 
 const styles = StyleSheet.create({
+    subscribed: { justifyContent: 'center', paddingLeft: 8 },
     row: { flexDirection: 'row', alignItems: 'center', paddingRight: 4 },
     flex: { flex: 1 },
     body: { flexDirection: 'row', alignItems: 'center', columnGap: 12, paddingLeft: 16, paddingRight: 8, paddingVertical: 12 },

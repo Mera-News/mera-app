@@ -134,7 +134,7 @@ describe('opening the wizard', () => {
     expect(menuCount()).toBe(1);
     expect(rows()).toEqual([copy.whatNext]);
     expect(screen.getByPlaceholderText(copy.placeholderChoose)).toBeTruthy();
-    expect(screen.getByTestId('onboarding-chip-privacy')).toBeTruthy();
+    expect(screen.getByTestId('onboarding-path-data')).toBeTruthy();
     expect(screen.queryByTestId('onboarding-chip-decline')).toBeNull();
     expect(screen.queryByTestId('onboarding-chip-something-else')).toBeNull();
     expect(modelCalls()).toHaveLength(0);
@@ -172,7 +172,7 @@ describe('How Mera handles my data', () => {
   it('asks in chat on one tap, and the reply lands in the thread', async () => {
     await openWizard();
 
-    await press('onboarding-chip-privacy');
+    await press('onboarding-path-data');
 
     await screen.findByText('E2E fixture answer.');
     expect(screen.getByTestId('chat-input').props.value).toBe('');
@@ -189,7 +189,7 @@ describe("I'd rather not say", () => {
     await press('onboarding-chip-decline');
 
     await waitForMenus(2);
-    expect(rows().slice(-2)).toEqual([copy.ratherNotSay, copy.whatNext]);
+    expect(rows().slice(-2)).toEqual([copy.sourcesSkip, copy.whatNext]);
     expect(modelCalls()).toHaveLength(0);
     // Earlier messages stay.
     expect(screen.getByText(copy.locationAsk)).toBeTruthy();
@@ -204,7 +204,7 @@ describe("I'd rather not say", () => {
     await press('onboarding-chip-decline');
 
     await waitForMenus(2);
-    expect(rows().slice(-2)).toEqual([copy.ratherNotSay, copy.whatNext]);
+    expect(rows().slice(-2)).toEqual([copy.sourcesSkip, copy.whatNext]);
     expect(modelCalls()).toHaveLength(before);
 
     await send('What is new today?');
@@ -223,7 +223,7 @@ describe("I'd rather not say", () => {
     await turnOver();
 
     const [leg, ...rest] = modelCalls().slice(before);
-    expect(personMessage(leg)).toBe(copy.ratherNotSay);
+    expect(personMessage(leg)).toBe(copy.sourcesSkip);
     expect(isRouteLeg(leg)).toBe(false);
     expect(systemOf(leg)).toContain('Either way you extract nothing and save');
     expect(rest).toHaveLength(0);
@@ -242,7 +242,7 @@ describe("I'd rather not say", () => {
 
     const sent = modelCalls()[0].messages.map((m) => m.content).join('\n');
     expect(sent).toContain('Where do you live?');
-    expect(sent).toContain(`They said: ${copy.ratherNotSay}`);
+    expect(sent).toContain(`They said: ${copy.sourcesSkip}`);
   });
 
   it('is not offered on the about path, which asks nothing', async () => {
@@ -402,7 +402,9 @@ describe('check marks', () => {
     for (const path of ['location', 'profile', 'follow']) {
       expect(screen.getByTestId(`onboarding-path-${path}-open`, { includeHiddenElements: true })).toBeTruthy();
     }
-    expect(screen.queryByTestId('onboarding-path-about-open', { includeHiddenElements: true })).toBeNull();
+    for (const path of ['about', 'data']) {
+      expect(screen.queryByTestId(`onboarding-path-${path}-open`, { includeHiddenElements: true })).toBeNull();
+    }
   });
 
   it('a location ticks Set location, and only another fact ticks Create my profile', async () => {

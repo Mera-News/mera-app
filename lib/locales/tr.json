@@ -354,7 +354,6 @@
     "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
     "sourcesFind": "Bir yayın bulun",
     "yourSources": "Kaynaklarınız",
-    "ratherNotSay": "Söylemek istemiyorum",
     "howDataHandled": "Mera verilerimi nasıl işliyor?",
     "somethingElse": "Başka bir şey yapmak ister misiniz?",
     "whatNext": "Ne yapmak istersiniz?",
@@ -970,8 +969,7 @@
     "restoreNoneGoogle": "Bu Google Hesabında plan bulunamadı.",
     "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
     "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene.",
-    "redeemCode": "Kod kullan",
-    "promoWebSummit": "Web Summit'te ek okuma ücretsiz"
+    "redeemCode": "Kod kullan"
   },
   "tabs": {
     "deck": "Akış",

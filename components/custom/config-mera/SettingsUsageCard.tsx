@@ -3,7 +3,7 @@ import { Text } from '@/components/ui/text';
 import { fetchUserBilling } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import { getActiveTier } from '@/lib/revenuecat';
-import { usePlanPromoCopy } from '@/lib/subscription/plan-promo';
+import { usePlanPromo } from '@/lib/subscription/plan-promo';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { useColors } from '@/lib/theme/tokens';
 import { resolvePlanDisplay } from '@/lib/algorithms/plan-display';
@@ -79,7 +79,7 @@ const SettingsUsageCard: React.FC = () => {
             })();
 
     const reading = useReadingFetch();
-    const promo = usePlanPromoCopy();
+    const promo = usePlanPromo();
 
     return (
         <View
@@ -100,7 +100,7 @@ const SettingsUsageCard: React.FC = () => {
                             {planLabel}
                         </Text>
                     ) : null}
-                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{t(promo?.line ?? 'you.settings.yourPlan')}</Text>
+                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{promo ?? t('you.settings.yourPlan')}</Text>
                 </View>
                 <Pressable
                     testID="settings-manage-plan"

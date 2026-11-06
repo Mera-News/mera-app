@@ -342,7 +342,6 @@
     "sourcesOffline": "你目前处于离线状态。稍后可以在来源中添加。",
     "sourcesFind": "查找媒体",
     "yourSources": "你的来源",
-    "ratherNotSay": "我不想说",
     "howDataHandled": "梅拉如何处理我的数据",
     "somethingElse": "想做点别的吗？",
     "whatNext": "你想做什么？",
@@ -956,8 +955,7 @@
     "restoreNoneGoogle": "在这个 Google 账号上没有找到套餐。",
     "restoreFailedAppStore": "无法连接 App Store。请重试。",
     "restoreFailedPlayStore": "无法连接 Google Play。请重试。",
-    "redeemCode": "兑换代码",
-    "promoWebSummit": "Web Summit 期间免费赠送额外用量"
+    "redeemCode": "兑换代码"
   },
   "tabs": {
     "deck": "信息流",

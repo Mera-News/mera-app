@@ -356,7 +356,6 @@
     "sourcesOffline": "Sei offline. Puoi aggiungere fonti più tardi in Fonti.",
     "sourcesFind": "Trova una pubblicazione",
     "yourSources": "Le tue fonti",
-    "ratherNotSay": "Preferisco non dirlo",
     "howDataHandled": "Come Mera gestisce i miei dati",
     "somethingElse": "Vuoi fare qualcos'altro?",
     "whatNext": "Cosa vorresti fare?",
@@ -972,8 +971,7 @@
     "restoreNoneGoogle": "Nessun piano trovato su questo Account Google.",
     "restoreFailedAppStore": "Impossibile raggiungere l'App Store. Riprova.",
     "restoreFailedPlayStore": "Impossibile raggiungere Google Play. Riprova.",
-    "redeemCode": "Riscatta un codice",
-    "promoWebSummit": "Utilizzo extra gratuito per Web Summit"
+    "redeemCode": "Riscatta un codice"
   },
   "tabs": {
     "deck": "Notizie",

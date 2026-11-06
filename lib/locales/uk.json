@@ -396,7 +396,6 @@
     "sourcesOffline": "Немає підключення до мережі. Джерела можна додати пізніше в розділі «Джерела».",
     "sourcesFind": "Знайдіть видання",
     "yourSources": "Ваші джерела",
-    "ratherNotSay": "Краще не скажу",
     "howDataHandled": "Як Мера обробляє мої дані",
     "somethingElse": "Хочете зробити щось інше?",
     "whatNext": "Що б ви хотіли зробити?",
@@ -1018,8 +1017,7 @@
     "restoreNoneGoogle": "Тарифу на цьому обліковому записі Google не знайдено.",
     "restoreFailedAppStore": "Не вдалося зв'язатися з App Store. Спробуйте ще раз.",
     "restoreFailedPlayStore": "Не вдалося зв'язатися з Google Play. Спробуйте ще раз.",
-    "redeemCode": "Використати код",
-    "promoWebSummit": "Безкоштовний додатковий ліміт на Web Summit"
+    "redeemCode": "Використати код"
   },
   "tabs": {
     "deck": "Стрічка",

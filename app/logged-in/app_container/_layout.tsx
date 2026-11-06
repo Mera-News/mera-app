@@ -6,6 +6,7 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 import { setTabDot, useTabDot } from '@/components/custom/nav/current-surface';
+import { useStoriesUnopened } from '@/components/custom/tracked-stories/use-stories-unopened';
 import { useStarredPublicationsSync } from '@/components/custom/cards/use-starred-publications-sync';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
 import { useChecksUnseen } from '@/lib/stores/fact-checks-store';
@@ -44,14 +45,15 @@ export default function AppLayout() {
         on ? t('nav.tabNewA11y', { label: t(key) }) : t(key);
 
     // The Feed's dot (everything new): its own (first stories landed while
-    // away, FeedPages) OR unread notices (its Notifications page marks them
-    // read). Combined here, so neither source clears the other.
+    // away, FeedPages), unread notices (its Notifications page marks them
+    // read) OR a followed story never opened. Combined here, so none clears another.
     const [unread, setUnread] = useState(false);
     useEffect(() => {
         const sub = observeUnreadCount().subscribe((n) => setUnread(n > 0));
         return () => sub.unsubscribe();
     }, []);
-    const feedDot = dot.feed || unread;
+    const storiesUnopened = useStoriesUnopened();
+    const feedDot = dot.feed || unread || storiesUnopened;
     // Library's dot: a fact check finished since Fact checks was seen (the
     // reader's own request, so it stays here).
     const checksUnseen = useChecksUnseen();

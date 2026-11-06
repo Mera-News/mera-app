@@ -28,12 +28,13 @@ import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type ListRenderItem, Pressable, StyleSheet, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { latestMember } from './merge-timeline';
+import { markStoriesOpened } from './use-stories-unopened';
 import { useTrackedStoriesScreen } from './useTrackedStoriesScreen';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET, PAGE_TITLE_GAP } from '@/components/custom/nav/page-registry';
 import { usePageScrollTarget } from '@/components/custom/nav/page-scroll';
@@ -57,6 +58,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     listHeader,
 }) => {
     const { t } = useTranslation();
+    useEffect(() => {
+        if (active) void markStoriesOpened();
+    }, [active]);
     // The tab's re-tap scrolls this page to the top (nav/page-scroll).
     const listRef = useRef<Animated.FlatList<TrackedStoryModel>>(null);
     const tracked = useTrackedScroll(scrollHandler);

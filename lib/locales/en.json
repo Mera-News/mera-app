@@ -104,8 +104,7 @@
     "restoreNoneGoogle": "No plan found on this Google Account.",
     "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
     "restoreFailedPlayStore": "Couldn't reach Google Play. Try again.",
-    "redeemCode": "Redeem a code",
-    "promoWebSummit": "Free extra usage for Web Summit"
+    "redeemCode": "Redeem a code"
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",
@@ -703,7 +702,6 @@
     "sourcesOffline": "You're offline. You can add sources later in Sources.",
     "sourcesFind": "Find a publication",
     "yourSources": "Your sources",
-    "ratherNotSay": "I'd rather not say",
     "howDataHandled": "How Mera handles my data",
     "somethingElse": "Want to do something else?",
     "whatNext": "What would you like to do?",

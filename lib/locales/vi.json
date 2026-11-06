@@ -342,7 +342,6 @@
     "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
     "sourcesFind": "Tìm một nguồn",
     "yourSources": "Nguồn của bạn",
-    "ratherNotSay": "Tôi không muốn nói",
     "howDataHandled": "Mera xử lý dữ liệu của tôi như thế nào?",
     "somethingElse": "Bạn muốn làm việc khác không?",
     "whatNext": "Bạn muốn làm gì?",
@@ -956,8 +955,7 @@
     "restoreNoneGoogle": "Không tìm thấy gói nào trên Tài khoản Google này.",
     "restoreFailedAppStore": "Không thể kết nối với App Store. Hãy thử lại.",
     "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại.",
-    "redeemCode": "Đổi mã",
-    "promoWebSummit": "Miễn phí thêm lượt dùng cho Web Summit"
+    "redeemCode": "Đổi mã"
   },
   "tabs": {
     "deck": "Bảng tin",

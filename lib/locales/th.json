@@ -342,7 +342,6 @@
     "sourcesOffline": "ตอนนี้คุณออฟไลน์อยู่ คุณเพิ่มแหล่งข่าวทีหลังได้ในแหล่งข่าว",
     "sourcesFind": "ค้นหาสำนักข่าว",
     "yourSources": "แหล่งข่าวของคุณ",
-    "ratherNotSay": "ฉันขอไม่บอก",
     "howDataHandled": "เมร่าจัดการข้อมูลของฉันอย่างไร",
     "somethingElse": "อยากทำอย่างอื่นไหม?",
     "whatNext": "คุณอยากทำอะไร?",
@@ -957,8 +956,7 @@
     "restoreNoneGoogle": "ไม่พบแผนในบัญชี Google นี้",
     "restoreFailedAppStore": "เชื่อมต่อกับ App Store ไม่ได้ ลองอีกครั้ง",
     "restoreFailedPlayStore": "เชื่อมต่อกับ Google Play ไม่ได้ ลองอีกครั้ง",
-    "redeemCode": "แลกรับโค้ด",
-    "promoWebSummit": "อ่านเพิ่มฟรีในงาน Web Summit"
+    "redeemCode": "แลกรับโค้ด"
   },
   "tabs": {
     "deck": "ฟีด",

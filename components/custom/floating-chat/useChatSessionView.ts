@@ -47,7 +47,7 @@ import type { ChatSessionViewProps } from './ChatSessionView';
 // English default is how English has previously shipped into 19 locale files.
 type PendingLocaleKey = 'factCheck.chatSeed';
 
-type OnboardingStep = 'choose' | OnboardingPath;
+type OnboardingStep = 'choose' | Exclude<OnboardingPath, 'data'>;
 
 const STEP_PLACEHOLDER = {
   location: 'onboarding.placeholderHome',
@@ -118,9 +118,9 @@ function useOnboardingQuestionnaire({
   const onPick = useCallback(
     (path: OnboardingPath) => {
       if (busy) return;
-      if (path === 'about') {
+      if (path === 'about' || path === 'data') {
         forcedNextRef.current = null;
-        if (handleSend(t('onboarding.pathAbout'))) setStep(path);
+        if (handleSend(t(path === 'about' ? 'onboarding.pathAbout' : 'onboarding.howDataHandled'))) setStep('about');
         return;
       }
       const exchange = {
@@ -139,7 +139,7 @@ function useOnboardingQuestionnaire({
 
   if (!enabled) return null;
 
-  const decline = t('onboarding.ratherNotSay');
+  const decline = t('onboarding.sourcesSkip');
   const onDecline = () => {
     // A profile question gets a real answer, so the model moves on to the next.
     if (step === 'profile') {
@@ -153,15 +153,6 @@ function useOnboardingQuestionnaire({
   const actions: ComposerAction[] = busy
     ? []
     : [
-        ...(step === 'choose'
-          ? [
-              {
-                key: 'privacy',
-                label: t('onboarding.howDataHandled'),
-                testID: 'onboarding-chip-privacy',
-              },
-            ]
-          : []),
         ...(step === 'location' || step === 'profile' || step === 'follow'
           ? [{ key: 'decline', label: decline, testID: 'onboarding-chip-decline', onPress: onDecline }]
           : []),
