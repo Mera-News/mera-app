@@ -12,6 +12,7 @@ import SourceSearch from '@/components/custom/publication-preferences/SourceSear
 import { localizedCountryName } from '@/components/custom/publication-preferences/country-search';
 import { useAdjustedSources } from '@/components/custom/publication-preferences/use-adjusted-sources';
 import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
+import { useRestartHold } from '@/lib/app-restart';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsOnline } from '@/lib/stores/network-store';
 import { useColors } from '@/lib/theme/tokens';
@@ -32,6 +33,9 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
     const prefs = usePublicationRowPrefs();
     const { publications, scopes } = useAdjustedSources();
     const [focused, setFocused] = useState(false);
+    // The wizard's route is blocked, but a name pushes the publication page over it,
+    // and an update restart there would end the wizard.
+    useRestartHold(true, 'onboarding-sources', 'hard');
     const keyboard = useReanimatedKeyboardAnimation();
     const lift = useAnimatedStyle(() => ({ paddingBottom: keyboardLift(keyboard.height.value, insets.bottom) }));
 

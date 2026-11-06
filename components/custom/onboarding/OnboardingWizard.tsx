@@ -297,13 +297,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         <RNText style={[styles.name, { color: colors.ink }]}>Mera</RNText>
                     </View>
                     <View style={[styles.who, styles.shrink]}>
-                        <RNText
-                            style={[styles.step, styles.shrink, { color: colors.ink3 }]}
+                        {/* A View, because iOS caches a Text's label until its string changes, and the status changes with the string fixed. */}
+                        <View
+                            style={styles.shrink}
+                            accessible
+                            accessibilityRole="text"
                             accessibilityLabel={badge ? `${stepText}, ${badge.label}` : stepText}
                             testID="onboarding-step-label"
                         >
-                            {stepText}
-                        </RNText>
+                            <RNText style={[styles.step, { color: colors.ink3 }]}>{stepText}</RNText>
+                        </View>
                         {badge ? <ReadinessBadge {...badge} spinning={readiness === 'warming'} /> : null}
                         {cityOpen ? null : nextButton}
                     </View>

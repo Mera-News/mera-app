@@ -37,9 +37,8 @@ interface OnboardingScreenProps {
  * cold-start gate and from deep-link verify).
  *
  * The gate is the LOCAL `onboarding_done` row (onboarding-done.ts), not the
- * server's `onboardingStage`. The wizard cannot finish with zero facts: Next
- * asks for a city, which is saved as a fact. An account that finished with zero
- * facts on an older build stays done and opens on World (startup-tab.ts).
+ * server's `onboardingStage`. A reader can finish with zero facts by declining
+ * where they live; that account stays done and opens on World (startup-tab.ts).
  * `advanceOnboardingStage` is still written by the wizard, for the record; it
  * decides nothing here.
  *

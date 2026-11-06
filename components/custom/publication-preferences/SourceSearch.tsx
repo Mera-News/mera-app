@@ -38,7 +38,7 @@ const MIN_QUERY_LENGTH = 2;
 const SourceSearch: React.FC<{
     /** True while the box holds a query, so the screen can hide its empty state. */
     readonly onActiveChange?: (active: boolean) => void;
-    /** Onboarding: publications only, rows have no body button, and a failed search offers Try again. */
+    /** Onboarding: publications only, results float in a panel, and a failed search offers Try again. */
     readonly onboarding?: boolean;
     readonly onFocusChange?: (focused: boolean) => void;
     /** Onboarding: what sits under the field. Results float over it in a panel, so it never moves. */
@@ -177,7 +177,8 @@ const SourceSearch: React.FC<{
                   ))
                 : null}
 
-            {!tooShort && !searching
+            {/* The panel keeps its rows through a new search, or one can unmount under a finger. */}
+            {!tooShort && (onboarding || !searching)
                 ? results.map((hit) => (
                       <PublicationControlRow
                           key={hit._id}

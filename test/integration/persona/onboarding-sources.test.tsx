@@ -9,6 +9,7 @@ import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
 import PublicationFeedControl from '@/components/custom/publication-page/PublicationFeedControl';
 import { usePublicationPage } from '@/components/custom/publication-page/usePublicationPage';
 import { AccountService } from '@/lib/account-service';
+import { activeHolds } from '@/lib/app-restart';
 import { addFact } from '@/lib/database/services/fact-service';
 import { getPreferenceKind, setPreferenceKind } from '@/lib/database/services/publication-preference-service';
 import { resetPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
@@ -193,6 +194,39 @@ describe('onboarding sources step', () => {
         expect(screen.queryByTestId('sources-search-panel')).toBeNull();
         expect(screen.getByText('Your sources')).toBeTruthy();
         expect(screen.getByTestId('onboarding-pick-publisher:pub-1')).toBeTruthy();
+    });
+
+    it('every restart is held on this step, because a name opens a page outside the blocked routes', async () => {
+        await mountAtSources();
+        expect(activeHolds('update')).toContain('onboarding-sources');
+    });
+
+    it('a row stays under the finger while the next search runs', async () => {
+        await mountAtSources();
+        await search();
+        let release: () => void = () => undefined;
+        const held = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        server.use(
+            mockGql('SearchPublishers', async () => {
+                await held;
+                return {
+                    searchPublishers: {
+                        __typename: 'PublisherSearchResponse',
+                        publishers: [hit],
+                        pageInfo: { __typename: 'PageInfo', endCursor: null, hasNextPage: false, pageSize: 20 },
+                    },
+                };
+            }),
+        );
+        await act(async () => {
+            fireEvent.changeText(screen.getByTestId('sources-search'), 'spiegel online');
+        });
+        await waitFor(() => screen.getByText('Searching'), { timeout: 4000 });
+        expect(screen.getByTestId('sources-hit-pub-1-star')).toBeTruthy();
+        release();
+        await waitFor(() => expect(screen.queryByText('Searching')).toBeNull(), { timeout: 4000 });
     });
 
     it('a tap outside closes the panel but keeps the query, and typing opens it again', async () => {
