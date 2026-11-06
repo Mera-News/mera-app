@@ -8,8 +8,8 @@ import { Text } from '@/components/ui/text';
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import type { ConversationMessage } from '@/lib/llm/types';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
-import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, StyleSheet, View } from 'react-native';
 import ChatSample from './ChatSample';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
@@ -76,8 +76,15 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
     handleUnblockSubmitted,
     sampleKind,
   } = useChatSessionView(props);
-  // The first touch anywhere in the chat retires the sample for this mount.
-  const [sampleDismissed, setSampleDismissed] = useState(false);
+  // The first touch anywhere in the chat retires the sample for this mount, and
+  // so does the keyboard: ChatThread focuses the composer itself when the chat
+  // opens, so it can rise with no touch. keyboardWillShow is iOS only.
+  const [sampleDismissed, setSampleDismissed] = useState(() => Keyboard.isVisible());
+  useEffect(() => {
+    const dismiss = () => setSampleDismissed(true);
+    const subs = [Keyboard.addListener('keyboardWillShow', dismiss), Keyboard.addListener('keyboardDidShow', dismiss)];
+    return () => subs.forEach((s) => s.remove());
+  }, []);
   const showSample = sampleKind !== null && !sampleDismissed;
 
   if (isLoading) {
