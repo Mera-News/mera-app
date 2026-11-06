@@ -499,7 +499,7 @@
     "checkNotMet": "不满足",
     "helpModesCloud": "私有云：梅拉 AI 在安全服务器上加密运行，梅拉无法读取你的数据。你的方案决定梅拉每天读取多少内容。",
     "helpModesPhone": "在这部手机上：梅拉 AI 在你的手机上运行，阅读不限量。新闻仍来自梅拉的服务器。此功能为测试版。",
-    "helpModesVerify": "「验证证明」会检查云端报告上的 Intel 签名，以及你的数据是否加密到该报告中的密钥。",
+    "helpModesVerify": "“验证证明”会检查云端报告上的 Intel 签名，以及你的数据是否加密到该报告中的密钥。",
     "attestationGpuNotice": "NVIDIA 的签名结果显示，真正的 NVIDIA GPU 回应了此次检查。它不能证明这些 GPU 连接到了安全硬件。"
   },
   "manageData": {
