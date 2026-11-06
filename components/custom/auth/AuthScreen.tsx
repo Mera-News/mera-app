@@ -26,6 +26,7 @@ import { EASE, MOTION } from '@/lib/motion';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 
+import AuthAppearanceToggle from './AuthAppearanceToggle';
 import { ConsentStage } from './stages/ConsentStage';
 import { DifferentAccountSheet } from './stages/DifferentAccountSheet';
 import { ReauthNoEmailStage } from './stages/ReauthNoEmailStage';
@@ -213,6 +214,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
             >
                 {body}
             </Animated.View>
+
+            {stage === 'welcome' || stage === 'consent' ? <AuthAppearanceToggle /> : null}
 
             <TutorialModalHost
                 visible={tourOpen}

@@ -3,9 +3,10 @@
  * tutorial's finish runs the one Get started path.
  */
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import AuthScreen from '@/components/custom/auth/AuthScreen';
 import { getChapter } from '@/lib/tutorials/chapters';
+import { useThemeStore } from '@/lib/theme/theme-store';
 import { initI18nEn } from '@/test/helpers';
 
 jest.mock('react-native/Libraries/Modal/Modal', () => {
@@ -84,6 +85,17 @@ jest.mock('@/components/ui/gluestack-ui-provider', () => ({
 
 describe('Learn about Mera opens the welcome tutorial', () => {
     beforeEach(() => jest.clearAllMocks());
+
+    it('switches light and dark before sign-in, and says which mode it is on', async () => {
+        useThemeStore.setState({ mode: 'dark' });
+        await render(<AuthScreen />);
+        const toggle = () => screen.getByTestId('auth-appearance');
+        expect(toggle().props.accessibilityValue).toEqual({ text: 'Dark' });
+
+        await fireEvent.press(toggle());
+        await waitFor(() => expect(useThemeStore.getState().mode).toBe('light'));
+        expect(toggle().props.accessibilityValue).toEqual({ text: 'Light' });
+    });
 
     it('shows the tutorial sheet on the welcome chapter, and no video player', async () => {
         await render(<AuthScreen />);
