@@ -11,8 +11,20 @@
  * returns `pass` on everything is indistinguishable from one that returns
  * `pass` unconditionally unless something is proven to make it fail.
  */
+import { generateKeyPairSync, sign as rsaSign } from 'node:crypto';
+import { p384 } from '@noble/curves/nist.js';
+import { sha256, sha384 } from '@noble/hashes/sha2.js';
 import fixture from '@/test/fixtures/attestation-report.json';
+import gpu1a from '@/test/fixtures/attestation/1gpu-004-0.json';
+import gpu1b from '@/test/fixtures/attestation/1gpu-004-1.json';
+import gpu8a from '@/test/fixtures/attestation/8gpu-004-2.json';
+import gpu8b from '@/test/fixtures/attestation/8gpu-004-3.json';
+import gpu8c from '@/test/fixtures/attestation/8gpu-004-4.json';
+import int005 from '@/test/fixtures/attestation/intermediate-005-jwk.json';
 import {
+  NVIDIA_NRAS_ROOT_CA_DER_B64,
+  NVIDIA_NRAS_ROOT_CA_DER_SHA256,
+  verifyNvidiaAttestation,
   bytesToHex,
   derSignatureToRaw,
   hexToBytes,
@@ -550,3 +562,517 @@ function toBase64(bin: string): string {
   }
   return out;
 }
+
+
+// ─── NVIDIA GPU attestation: the tamper matrix ───────────────────────────────
+
+const GPU_NOW = new Date('2026-11-06T02:30:00Z');
+const GPU_NOW_S = GPU_NOW.getTime() / 1000;
+/** Hardcoded like CLIENT_NONCE: the fixtures' own `nonce` is never read. */
+const NONCE_1GPU = 'ebbaa3eafb3f3765cccf6fd57750991f77ba33499838045bc31c4c3f58821a91';
+const NONCE_8GPU = '38f1695ee946485002b83ce685ee5be8cc70fb144314d7927dd8887233f14c7f';
+const WRONG_NONCE = 'ab'.repeat(32);
+
+type Raw = { tokens: [[string, string], Record<string, string>]; keys: { kid: string; x5c: string[] }[] };
+type Fx = { reply: unknown; jwk: unknown };
+const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
+const wire = (fx: Fx): Raw => clone({ tokens: fx.reply, keys: [fx.jwk] }) as Raw;
+const b64u = (b: Uint8Array | string) => Buffer.from(b).toString('base64url');
+const claimsOf = (t: string): Record<string, number> =>
+  JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString());
+const flipSignatureByte = (t: string) => {
+  const [h, p, s] = t.split('.');
+  const sig = Buffer.from(s, 'base64url');
+  sig[10] ^= 0x01;
+  return `${h}.${p}.${b64u(sig)}`;
+};
+const flipLastByte = (b64: string) => {
+  const der = Buffer.from(b64, 'base64');
+  der[der.length - 1] ^= 0x01;
+  return der.toString('base64');
+};
+
+/** Every call asserts that no detail carries the nonce or a 24+ char fragment of
+ *  anything in the input (tokens, digests, kids). */
+function verify(raw: unknown, nonce: string | undefined, now: Date, rootDer?: Uint8Array) {
+  const r = verifyNvidiaAttestation(raw, nonce, now, rootDer);
+  if (nonce) expect(r.detail).not.toContain(nonce);
+  for (const frag of (JSON.stringify(raw) ?? '').match(/[A-Za-z0-9_-]{24,}/g) ?? []) {
+    expect(r.detail).not.toContain(frag);
+  }
+  return r;
+}
+
+const NOT_READ = 'the NVIDIA attestation has a shape this build does not read';
+const fail = (detail: string) => ({ status: 'fail', detail });
+const notChecked = (detail: string) => ({ status: 'not-checked', detail });
+
+describe('verifyNvidiaAttestation: real NRAS tokens, pinned root', () => {
+  const real: [string, Fx, string, number][] = [
+    ['1 GPU (kid A)', gpu1a, NONCE_1GPU, 1],
+    ['1 GPU (kid B)', gpu1b, NONCE_1GPU, 1],
+    ['8 GPUs (kid A, run 2)', gpu8a, NONCE_8GPU, 8],
+    ['8 GPUs (kid A, run 3)', gpu8b, NONCE_8GPU, 8],
+    ['8 GPUs (kid C)', gpu8c, NONCE_8GPU, 8],
+  ];
+
+  it('shares kids as the fixtures were captured', () => {
+    const kid = (f: Fx) => (f.jwk as { kid: string }).kid;
+    expect(kid(gpu1a)).toBe(kid(gpu8a));
+    expect(kid(gpu8a)).toBe(kid(gpu8b));
+    expect(kid(gpu8c)).not.toBe(kid(gpu8a));
+    expect(kid(gpu1b)).not.toBe(kid(gpu1a));
+    expect(kid(gpu1b)).not.toBe(kid(gpu8c));
+  });
+
+  it.each(real)('passes on %s', (_n, fx, nonce, count) => {
+    expect(verify(wire(fx), nonce, GPU_NOW)).toEqual({
+      status: 'pass',
+      detail: `NVIDIA signed a passing result for ${count} GPU(s)`,
+    });
+  });
+
+  it('fails on the wrong nonce', () => {
+    expect(verify(wire(gpu1a), WRONG_NONCE, GPU_NOW)).toEqual(fail('eat_nonce is not the required value'));
+  });
+
+  it('fails on a flipped signature byte of the overall token', () => {
+    const raw = wire(gpu8a);
+    raw.tokens[0][1] = flipSignatureByte(raw.tokens[0][1]);
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('a token signature did not verify'));
+  });
+
+  it('fails on a flipped signature byte of a GPU token', () => {
+    const raw = wire(gpu8a);
+    raw.tokens[1]['GPU-4'] = flipSignatureByte(raw.tokens[1]['GPU-4']);
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('a token signature did not verify'));
+  });
+
+  it('fails when a validly signed GPU-0 from another run is swapped in (digest)', () => {
+    const raw = wire(gpu8a);
+    raw.tokens[1]['GPU-0'] = wire(gpu8b).tokens[1]['GPU-0'];
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('GPU-0 does not match the overall token'));
+  });
+
+  it('fails when a listed GPU has no token', () => {
+    const raw = wire(gpu8a);
+    delete raw.tokens[1]['GPU-3'];
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('GPU-3 has no token'));
+  });
+
+  it('fails on an extra token the overall token does not list', () => {
+    const raw = wire(gpu8a);
+    raw.tokens[1]['GPU-9'] = raw.tokens[1]['GPU-0'];
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('GPU-9 is not in the overall token'));
+  });
+
+  it('fails on a swapped leaf: a real chain, another leaf key', () => {
+    const raw = wire(gpu8a);
+    raw.keys[0].x5c[0] = wire(gpu8c).keys[0].x5c[0];
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('a token signature did not verify'));
+  });
+
+  it('fails under the real 005 chain: the EC link passed, so the key is simply not the signer', () => {
+    const raw = wire(gpu8a);
+    raw.keys[0].x5c = clone((int005 as { x5c: string[] }).x5c);
+    expect(Buffer.from(raw.keys[0].x5c[1], 'base64')).toHaveLength(742);
+    expect(verify(raw, NONCE_8GPU, GPU_NOW)).toEqual(fail('a token signature did not verify'));
+  });
+
+  it('is not-checked without a client nonce', () => {
+    expect(verify(wire(gpu1a), undefined, GPU_NOW)).toEqual(notChecked('no client nonce to compare'));
+    expect(verify(wire(gpu1a), '', GPU_NOW)).toEqual(notChecked('no client nonce to compare'));
+  });
+
+  it('is not-checked a day later: the leaf has expired', () => {
+    const later = new Date(GPU_NOW.getTime() + 86_400_000);
+    expect(verify(wire(gpu1a), NONCE_1GPU, later)).toEqual(
+      notChecked('a certificate is outside its validity window'),
+    );
+  });
+
+  describe('token window, 60 s leeway', () => {
+    const raw = wire(gpu8a);
+    const all = [raw.tokens[0][1], ...Object.values(raw.tokens[1])].map(claimsOf);
+    const minExp = Math.min(...all.map(c => c.exp));
+    const maxNbf = Math.max(...all.map(c => c.nbf));
+    const at = (s: number) => new Date(s * 1000);
+
+    it('accepts exp + 59 s and nbf - 59 s', () => {
+      expect(verify(wire(gpu8a), NONCE_8GPU, at(minExp + 59)).status).toBe('pass');
+      expect(verify(wire(gpu8a), NONCE_8GPU, at(maxNbf - 59)).status).toBe('pass');
+    });
+    it('rejects exp + 61 s and nbf - 61 s as the phone clock', () => {
+      const w = notChecked('a token is outside its time window');
+      expect(verify(wire(gpu8a), NONCE_8GPU, at(minExp + 61))).toEqual(w);
+      expect(verify(wire(gpu8a), NONCE_8GPU, at(maxNbf - 61))).toEqual(w);
+    });
+  });
+
+  it('is not-checked for 1 or 3 certificates', () => {
+    const one = wire(gpu1a);
+    one.keys[0].x5c = [one.keys[0].x5c[0]];
+    const three = wire(gpu1a);
+    three.keys[0].x5c = [...three.keys[0].x5c, three.keys[0].x5c[1]];
+    const w = notChecked('expected a leaf and an intermediate certificate');
+    expect(verify(one, NONCE_1GPU, GPU_NOW)).toEqual(w);
+    expect(verify(three, NONCE_1GPU, GPU_NOW)).toEqual(w);
+  });
+
+  it('is not-checked when a 004 leaf sits under the 005 intermediate', () => {
+    const raw = wire(gpu1a);
+    raw.keys[0].x5c[1] = (int005 as { x5c: string[] }).x5c[1];
+    expect(verify(raw, NONCE_1GPU, GPU_NOW).status).toBe('not-checked');
+  });
+
+  it('is not-checked for a flipped byte in the real leaf RSA signature', () => {
+    const raw = wire(gpu1a);
+    raw.keys[0].x5c[0] = flipLastByte(raw.keys[0].x5c[0]);
+    expect(verify(raw, NONCE_1GPU, GPU_NOW)).toEqual(
+      notChecked('the leaf does not chain to its intermediate'),
+    );
+  });
+
+  it('is not-checked above the caps', () => {
+    const keys = wire(gpu1a);
+    keys.keys = Array.from({ length: 9 }, () => clone(keys.keys[0]));
+    expect(verify(keys, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('more keys than this build reads'));
+
+    const toks = wire(gpu1a);
+    for (let i = 1; i <= 16; i++) toks.tokens[1][`GPU-${i}`] = toks.tokens[1]['GPU-0'];
+    expect(verify(toks, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('more GPU tokens than this build reads'));
+  });
+
+  it('is not-checked for a duplicate kid and for a kid with no key', () => {
+    const dup = wire(gpu1a);
+    dup.keys.push(clone(dup.keys[0]));
+    expect(verify(dup, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('a key id appears twice'));
+
+    const orphan = wire(gpu1a);
+    orphan.keys[0].kid = 'some-other-kid';
+    expect(verify(orphan, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('a token has no matching key'));
+  });
+
+  it('is not-checked for an NVSwitch token', () => {
+    const raw = wire(gpu1a);
+    raw.tokens[1]['SWITCH-0'] = raw.tokens[1]['GPU-0'];
+    delete raw.tokens[1]['GPU-0'];
+    expect(verify(raw, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('a token is not for a GPU'));
+  });
+
+  it('reads a __proto__ token name as a name, not as a prototype', () => {
+    const good = wire(gpu1a);
+    const raw = { ...good, tokens: [good.tokens[0], JSON.parse(`{"__proto__": "${good.tokens[1]['GPU-0']}"}`)] };
+    expect(Object.keys(raw.tokens[1])).toEqual(['__proto__']);
+    expect(verify(raw, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('a token is not for a GPU'));
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
+  it('is not-checked when alg is changed to none', () => {
+    const raw = wire(gpu1a);
+    const [, p, s] = raw.tokens[0][1].split('.');
+    raw.tokens[0][1] = `${b64u(JSON.stringify({ alg: 'none', kid: raw.keys[0].kid }))}.${p}.${s}`;
+    expect(verify(raw, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('unexpected token algorithm'));
+  });
+
+  it.each([[{}], ['a string'], [42], [null], [undefined], [{ tokens: [], keys: [] }]])(
+    'is not-checked for the garbage shape %j',
+    garbage => {
+      expect(verify(garbage, NONCE_1GPU, GPU_NOW)).toEqual(notChecked(NOT_READ));
+    },
+  );
+});
+
+describe('verifyAttestation: the GPU row', () => {
+  const base = { quoteHex: att.intel_quote, signingPublicKey: att.signing_public_key, now: GPU_NOW };
+  const gpu = (r: ReturnType<typeof verifyAttestation>) => r.checks.find(c => c.id === 'gpu-attestation')!;
+
+  it('words an absent token by whether a payload was served', () => {
+    const withPayload = gpu(verifyAttestation({ ...base, hasGpuPayload: true }));
+    const without = gpu(verifyAttestation({ ...base, hasGpuPayload: false }));
+    expect(withPayload.status).toBe('not-checked');
+    expect(without.status).toBe('not-checked');
+    expect(withPayload.detail).not.toBe(without.detail);
+  });
+
+  it('still runs the GPU check beside a malformed quote', () => {
+    const r = verifyAttestation({
+      ...base,
+      quoteHex: 'zz',
+      expectedNonce: NONCE_1GPU,
+      nvidiaAttestation: wire(gpu1a),
+    });
+    expect(r.checks.find(c => c.id === 'quote-structure')!.status).toBe('fail');
+    expect(gpu(r)).toMatchObject({ status: 'pass' });
+  });
+
+  it('summarizes as incomplete with GPU pass and TCB not-checked', () => {
+    const r = verifyAttestation({
+      ...base,
+      quoteHex: 'zz',
+      expectedNonce: NONCE_1GPU,
+      nvidiaAttestation: wire(gpu1a),
+    });
+    const kept = r.checks.filter(c => c.id === 'gpu-attestation' || c.id === 'tcb-status');
+    expect(kept.map(c => c.status).sort()).toEqual(['not-checked', 'pass']);
+    expect(summarize(kept).verdict).toBe('incomplete');
+    expect(summarize([...kept, { id: 'gpu-attestation', status: 'fail', detail: '' }]).verdict).toBe('failed');
+  });
+});
+
+describe('the pinned NVIDIA root', () => {
+  it('hashes to its constant', () => {
+    expect(bytesToHex(sha256(Buffer.from(NVIDIA_NRAS_ROOT_CA_DER_B64, 'base64')))).toBe(
+      NVIDIA_NRAS_ROOT_CA_DER_SHA256,
+    );
+  });
+});
+
+// ─── Synthetic chain: every clause failing alone ─────────────────────────────
+
+const cat = (...p: Uint8Array[]) => {
+  const out = new Uint8Array(p.reduce((n, x) => n + x.length, 0));
+  let o = 0;
+  for (const x of p) (out.set(x, o), (o += x.length));
+  return out;
+};
+/** Long-form lengths, which the file's own short-form helper does not cover. */
+const tlvLong = (tag: number, ...parts: Uint8Array[]) => {
+  const body = cat(...parts);
+  const n = body.length;
+  const len = n < 0x80 ? [n] : n < 0x100 ? [0x81, n] : [0x82, n >> 8, n & 0xff];
+  return cat(Uint8Array.from([tag, ...len]), body);
+};
+const oid = (hex: string) => tlvLong(0x06, hexToBytes(hex));
+const bitStringN = (b: Uint8Array) => tlvLong(0x03, Uint8Array.from([0]), b);
+const derInt = (raw: Uint8Array) => {
+  let i = 0;
+  while (i < raw.length - 1 && raw[i] === 0) i++;
+  const v = raw.subarray(i);
+  return tlvLong(0x02, v[0] & 0x80 ? cat(Uint8Array.from([0]), v) : v);
+};
+const OID = {
+  ecKey: '2a8648ce3d0201',
+  p384: '2b81040022',
+  rsaKey: '2a864886f70d010101',
+  ecdsaSha384: '2a8648ce3d040303',
+  rsaSha256: '2a864886f70d01010b',
+  rsaSha1: '2a864886f70d010105',
+};
+const ecSpki = (pub: Uint8Array) =>
+  tlvLong(0x30, tlvLong(0x30, oid(OID.ecKey), oid(OID.p384)), bitStringN(pub));
+const rsaSpki = (n: Uint8Array, e = '010001') =>
+  tlvLong(
+    0x30,
+    tlvLong(0x30, oid(OID.rsaKey), Uint8Array.from([5, 0])),
+    bitStringN(tlvLong(0x30, derInt(n), derInt(hexToBytes(e)))),
+  );
+const utc = (s: string) => tlvLong(0x17, new TextEncoder().encode(s));
+const ecSign = (sk: Uint8Array, msg: Uint8Array) => {
+  const raw = p384.sign(sha384(msg), sk, { prehash: false, lowS: false });
+  return tlvLong(0x30, derInt(raw.subarray(0, 48)), derInt(raw.subarray(48)));
+};
+
+function cert(spki: Uint8Array, sigOid: string, sign: (tbs: Uint8Array) => Uint8Array): Uint8Array {
+  const tbs = tlvLong(
+    0x30,
+    tlvLong(0xa0, tlvLong(0x02, Uint8Array.from([2]))),
+    tlvLong(0x02, Uint8Array.from([1])),
+    tlvLong(0x30, oid(sigOid)),
+    tlvLong(0x30),
+    tlvLong(0x30, utc('261101000000Z'), utc('301231235959Z')),
+    tlvLong(0x30),
+    spki,
+  );
+  return tlvLong(0x30, tbs, tlvLong(0x30, oid(sigOid)), bitStringN(sign(tbs)));
+}
+
+const keypair = () => {
+  const sk = p384.utils.randomSecretKey();
+  return { sk, pub: p384.getPublicKey(sk, false) };
+};
+const rootKp = keypair();
+const leafKp = keypair();
+const KID = 'test-kid';
+const rootDer = cert(ecSpki(rootKp.pub), OID.ecdsaSha384, tbs => ecSign(rootKp.sk, tbs));
+const ecIntermediateKp = keypair();
+const ecIntermediate = cert(ecSpki(ecIntermediateKp.pub), OID.ecdsaSha384, tbs => ecSign(rootKp.sk, tbs));
+const b64 = (b: Uint8Array) => Buffer.from(b).toString('base64');
+
+// An RSA intermediate, signed by the P-384 root, as NVIDIA's 004 is.
+const rsaKp = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const rsaN = Buffer.from(rsaKp.publicKey.export({ format: 'jwk' }).n as string, 'base64url');
+const rsaIntermediate = (spki = rsaSpki(rsaN)) => cert(spki, OID.ecdsaSha384, tbs => ecSign(rootKp.sk, tbs));
+const rsaLeaf = (sigOid = OID.rsaSha256) =>
+  cert(ecSpki(leafKp.pub), sigOid, tbs => rsaSign('sha256', tbs, rsaKp.privateKey));
+
+interface Spec {
+  iss?: unknown;
+  nonce?: string;
+  overall?: Record<string, unknown>;
+  gpu?: Record<string, unknown>;
+  gpus?: number;
+  digestAlg?: unknown;
+  submods?: unknown;
+  header?: Record<string, unknown>;
+  x5c?: string[];
+}
+
+function jws(claims: Record<string, unknown>, header: Record<string, unknown> = {}) {
+  const h = b64u(JSON.stringify({ kid: KID, alg: 'ES384', ...header }));
+  const p = b64u(JSON.stringify(claims));
+  const sig = p384.sign(sha384(new TextEncoder().encode(`${h}.${p}`)), leafKp.sk, {
+    prehash: false,
+    lowS: false,
+  });
+  return `${h}.${p}.${b64u(sig)}`;
+}
+
+/** Digests are recomputed from the final GPU tokens, so only the edited clause fails. */
+function build(spec: Spec = {}): Raw {
+  const nonce = spec.nonce ?? NONCE_1GPU;
+  const window = { nbf: GPU_NOW_S - 60, exp: GPU_NOW_S + 3540 };
+  const gpuTokens: Record<string, string> = {};
+  const submods: Record<string, unknown> = {};
+  for (let i = 0; i < (spec.gpus ?? 2); i++) {
+    const t = jws({
+      eat_nonce: nonce,
+      ...window,
+      'x-nvidia-gpu-attestation-report-nonce-match': true,
+      'x-nvidia-gpu-attestation-report-signature-verified': true,
+      measres: 'success',
+      secboot: true,
+      dbgstat: 'disabled',
+      ...spec.gpu,
+    });
+    gpuTokens[`GPU-${i}`] = t;
+    submods[`GPU-${i}`] = [
+      'DIGEST',
+      [spec.digestAlg ?? 'SHA-256', bytesToHex(sha256(new TextEncoder().encode(t)))],
+    ];
+  }
+  const overall = jws(
+    {
+      iss: spec.iss ?? 'https://nras.attestation.nvidia.com',
+      eat_nonce: nonce,
+      ...window,
+      'x-nvidia-overall-att-result': true,
+      submods: 'submods' in spec ? spec.submods : submods,
+      ...spec.overall,
+    },
+    spec.header,
+  );
+  return {
+    tokens: [['JWT', overall], gpuTokens],
+    keys: [{ kid: KID, x5c: spec.x5c ?? [b64(ecLeaf()), b64(ecIntermediate)] }],
+  };
+}
+const ecLeaf = () => cert(ecSpki(leafKp.pub), OID.ecdsaSha384, tbs => ecSign(ecIntermediateKp.sk, tbs));
+
+describe('verifyNvidiaAttestation: synthetic P-384 chain', () => {
+  const run = (spec?: Spec | Raw) =>
+    verify('tokens' in (spec ?? {}) ? spec : build(spec as Spec), NONCE_1GPU, GPU_NOW, rootDer);
+
+  it('control: the all-good token passes', () => {
+    expect(run()).toEqual({ status: 'pass', detail: 'NVIDIA signed a passing result for 2 GPU(s)' });
+  });
+
+  it('with the default root the same complete chain is not-checked', () => {
+    expect(verify(build(), NONCE_1GPU, GPU_NOW)).toEqual(
+      notChecked('the intermediate does not chain to the pinned root'),
+    );
+  });
+
+  it('fails on a wrong iss', () => {
+    expect(run({ iss: 'https://evil.example' })).toEqual(fail('iss is not the required value'));
+  });
+
+  it.each([false, null])('fails when the overall result is %s beside a matching nonce', v => {
+    expect(run({ overall: { 'x-nvidia-overall-att-result': v } })).toEqual(
+      fail('x-nvidia-overall-att-result is not the required value'),
+    );
+  });
+
+  it('fails on a wrong eat_nonce on the overall token and on a GPU token', () => {
+    const w = fail('eat_nonce is not the required value');
+    expect(run({ overall: { eat_nonce: WRONG_NONCE } })).toEqual(w);
+    expect(run({ gpu: { eat_nonce: WRONG_NONCE } })).toEqual(w);
+  });
+
+  it.each([
+    ['x-nvidia-gpu-attestation-report-nonce-match', false],
+    ['x-nvidia-gpu-attestation-report-nonce-match', null],
+    ['x-nvidia-gpu-attestation-report-signature-verified', false],
+    ['x-nvidia-gpu-attestation-report-signature-verified', null],
+    ['measres', 'failure'],
+    ['measres', null],
+    ['secboot', false],
+    ['dbgstat', 'enabled'],
+  ])('fails when GPU claim %s is %j', (name, value) => {
+    expect(run({ gpu: { [name]: value } })).toEqual(fail(`${name} is not the required value`));
+  });
+
+  it('fails when a signed claim is missing', () => {
+    expect(run({ gpu: { secboot: undefined } })).toEqual(fail('secboot is not the required value'));
+  });
+
+  it.each([
+    ['overall', 'overall'],
+    ['a GPU', 'gpu'],
+  ] as const)('fails on a missing exp or a string nbf on %s', (_n, target) => {
+    const w = fail('a token has no time window');
+    expect(run({ [target]: { exp: undefined } })).toEqual(w);
+    expect(run({ [target]: { nbf: String(GPU_NOW_S - 60) } })).toEqual(w);
+  });
+
+  it('is not-checked for a digest algorithm other than SHA-256', () => {
+    expect(run({ digestAlg: 'SHA-384' })).toEqual(notChecked('unexpected digest algorithm'));
+  });
+
+  it('is not-checked for unreadable or empty submods', () => {
+    expect(run({ submods: {} })).toEqual(notChecked('no GPU is listed'));
+    expect(run({ submods: undefined })).toEqual(notChecked(NOT_READ));
+    expect(run({ submods: 'GPU-0' })).toEqual(notChecked('a token is not for a GPU'));
+  });
+
+  it('is not-checked for an unknown token algorithm', () => {
+    expect(run({ header: { alg: 'ES256' } })).toEqual(notChecked('unexpected token algorithm'));
+  });
+
+  it('is not-checked for a token type other than JWT', () => {
+    const raw = build();
+    raw.tokens[0][0] = 'JWE';
+    expect(run(raw)).toEqual(notChecked('unexpected token type'));
+  });
+
+  it('is not-checked for a token outside its window', () => {
+    expect(run({ gpu: { exp: GPU_NOW_S - 61 } })).toEqual(notChecked('a token is outside its time window'));
+  });
+});
+
+describe('verifyNvidiaAttestation: RSA intermediate', () => {
+  const run = (x5c: Uint8Array[]) => verify(build({ x5c: x5c.map(b64) }), NONCE_1GPU, GPU_NOW, rootDer);
+
+  it('control: an RSA-signed leaf under an RSA intermediate passes', () => {
+    expect(run([rsaLeaf(), rsaIntermediate()]).status).toBe('pass');
+  });
+
+  it('is not-checked for a modulus over 4096 bits (fake bytes)', () => {
+    const fakeN = new Uint8Array(513).fill(0xff);
+    expect(run([rsaLeaf(), rsaIntermediate(rsaSpki(fakeN))])).toEqual(
+      notChecked('unsupported certificate key'),
+    );
+  });
+
+  it('is not-checked for exponent 3', () => {
+    expect(run([rsaLeaf(), rsaIntermediate(rsaSpki(rsaN, '03'))])).toEqual(
+      notChecked('unsupported certificate key'),
+    );
+  });
+
+  it('is not-checked for sha1WithRSA, and for an ecdsa OID under an RSA issuer', () => {
+    const w = notChecked('unsupported certificate signature algorithm');
+    expect(run([rsaLeaf(OID.rsaSha1), rsaIntermediate()])).toEqual(w);
+    expect(run([rsaLeaf(OID.ecdsaSha384), rsaIntermediate()])).toEqual(w);
+  });
+});
