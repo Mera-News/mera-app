@@ -45,6 +45,8 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
 
   const persist = useCallback(
     async (value: string) => {
+      // Stays set after a successful save: a parent that re-renders on onComplete
+      // changes this callback's identity and re-fires the effect with the same pin.
       if (savingRef.current) return;
       savingRef.current = true;
       setSaving(true);
@@ -63,9 +65,9 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
         setPhase('enter');
         setFirstPin('');
         setPin('');
+        savingRef.current = false;
       } finally {
         setSaving(false);
-        savingRef.current = false;
       }
     },
     [onComplete],
