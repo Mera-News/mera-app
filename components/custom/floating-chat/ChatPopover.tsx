@@ -199,16 +199,14 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         );
     }, [originX, originY, progress, finishClose, reduceMotion]);
 
-    // User-initiated close (backdrop tap or X). Must work mid-stream — nothing
-    // here is gated on generation state.
+    // User-initiated close (backdrop tap, X, swipe). Must work mid-stream: nothing here is
+    // gated on generation state. It only collapses the store; the effect below animates the
+    // close, so the store and the phase never disagree (expanded + closing reads as a reopen).
     const requestClose = useCallback(() => {
-        setPhase((p) => {
-            if (p !== 'open' && p !== 'opening') return p;
-            Keyboard.dismiss();
-            startClosing();
-            return p; // startClosing sets 'closing'; keep this updater pure-ish
-        });
-    }, [startClosing]);
+        if (phase !== 'open' && phase !== 'opening') return;
+        Keyboard.dismiss();
+        useFloatingChatStore.getState().collapse();
+    }, [phase]);
 
     const onClosePress = useCallback(() => {
         hapticLight();
