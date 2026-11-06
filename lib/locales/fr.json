@@ -519,7 +519,8 @@
     "checkNotMet": "non rempli",
     "helpModesCloud": "Cloud privé : Mera AI fonctionne sur des serveurs sécurisés, chiffré, donc Mera ne peut pas lire vos données. Votre forfait fixe ce que Mera lit chaque jour.",
     "helpModesPhone": "Sur ce téléphone : Mera AI fonctionne sur votre téléphone et la lecture est illimitée. Les actualités viennent toujours des serveurs de Mera. C'est en Bêta.",
-    "helpModesVerify": "« Vérifier l'attestation » contrôle que le cloud fonctionne sur du matériel sécurisé authentique et que vos données sont chiffrées pour lui."
+    "helpModesVerify": "« Vérifier l'attestation » contrôle la signature d'Intel sur le rapport du cloud, ainsi que le chiffrement de vos données avec la clé inscrite dans ce rapport.",
+    "attestationGpuNotice": "Le résultat signé de NVIDIA indique que de vrais GPU NVIDIA ont répondu à cette vérification. Il ne prouve pas que ces GPU sont connectés au matériel sécurisé."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Efface le journal local des articles que vous avez ouverts. La carte « Publications que vous lisez » dans l'onglet Sources et l'historique par publication seront réinitialisés à vide. Rien d'autre n'est affecté et aucune donnée serveur n'est touchée, puisque les serveurs de Mera n'ont jamais eu ces données.",

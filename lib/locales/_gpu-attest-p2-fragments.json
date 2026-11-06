@@ -1,0 +1,122 @@
+{
+  "ar": {
+    "meraProtocol": {
+      "attestationGpuNotice": "تُظهر النتيجة الموقّعة من NVIDIA أن وحدات GPU أصلية من NVIDIA ردّت على هذا الفحص. ولا تُثبت النتيجة الموقّعة أن هذه الوحدات مرتبطة بالعتاد الآمن.",
+      "helpModesVerify": "يتحقق «تحقق من الشهادة» من توقيع Intel على تقرير السحابة، ومن أن بياناتك مشفّرة للمفتاح الوارد في ذلك التقرير."
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIAs signiertes Ergebnis zeigt, dass echte NVIDIA-GPUs auf diese Prüfung geantwortet haben. Das Ergebnis beweist aber nicht, dass diese GPUs mit der sicheren Hardware verbunden sind.",
+      "helpModesVerify": "Attestation überprüfen prüft Intels Signatur auf dem Bericht der Cloud und ob deine Daten mit dem Schlüssel aus diesem Bericht verschlüsselt sind."
+    }
+  },
+  "en": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIA's signed result shows genuine NVIDIA GPUs answered this check. It doesn't show those GPUs are attached to the secure hardware.",
+      "helpModesVerify": "Verify attestation checks Intel's signature on the cloud's report, and that your data is encrypted to the key in that report."
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "attestationGpuNotice": "La respuesta firmada por NVIDIA muestra que GPU reales de NVIDIA respondieron a esta comprobación. No prueba que esas GPU estén conectadas al hardware seguro.",
+      "helpModesVerify": "Verificar atestación comprueba la firma de Intel en el informe de la nube, y que tus datos están cifrados con la clave que contiene ese informe."
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Le résultat signé de NVIDIA indique que de vrais GPU NVIDIA ont répondu à cette vérification. Il ne prouve pas que ces GPU sont connectés au matériel sécurisé.",
+      "helpModesVerify": "« Vérifier l'attestation » contrôle la signature d'Intel sur le rapport du cloud, ainsi que le chiffrement de vos données avec la clé inscrite dans ce rapport."
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIA का हस्ताक्षरित परिणाम दिखाता है कि असली NVIDIA GPU ने इस जाँच का जवाब दिया। यह साबित नहीं करता कि वे GPU सुरक्षित हार्डवेयर से जुड़े हैं।",
+      "helpModesVerify": "‘प्रमाणीकरण सत्यापित करें’ क्लाउड की रिपोर्ट पर Intel का हस्ताक्षर जाँचता है, और यह भी कि आपका डेटा उसी रिपोर्ट में दी गई कुंजी से एन्क्रिप्ट होता है।"
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Hasil bertanda tangan dari NVIDIA menunjukkan bahwa GPU NVIDIA asli membalas pemeriksaan ini. Hasil itu tidak membuktikan bahwa GPU tersebut terhubung ke perangkat keras aman.",
+      "helpModesVerify": "Verifikasi atestasi memeriksa tanda tangan Intel pada laporan dari cloud, dan bahwa data Anda terenkripsi dengan kunci yang ada di dalam laporan itu."
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Il risultato firmato da NVIDIA mostra che GPU NVIDIA reali hanno risposto a questo controllo. Non dimostra che siano collegate all'hardware sicuro.",
+      "helpModesVerify": "«Verifica attestazione» controlla la firma di Intel sul rapporto del cloud e che i tuoi dati siano cifrati con la chiave contenuta in quel rapporto."
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIAの署名付きの結果は、本物のNVIDIA GPUがこの確認に応答したことを示しています。ただし、NVIDIAの署名付きの結果は、それらのGPUが安全なハードウェアに接続されていることを証明するものではありません。",
+      "helpModesVerify": "「認証を検証」は、クラウドのレポートに付いているIntelの署名と、あなたのデータがそのレポートの鍵で暗号化されていることを確認します。"
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIA의 서명된 결과는 실제 NVIDIA GPU가 이 확인에 응답했음을 보여 줍니다. NVIDIA의 서명된 결과는 그 GPU들이 보안 하드웨어에 연결되어 있다는 것을 증명하지 않습니다.",
+      "helpModesVerify": "증명 확인은 클라우드 보고서에 대한 Intel의 서명과, 회원님의 데이터가 그 보고서의 키로 암호화되었는지를 확인합니다."
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Het ondertekende resultaat van NVIDIA laat zien dat echte NVIDIA-GPU's op deze controle hebben gereageerd. Het bewijst niet dat die GPU's verbonden zijn met de beveiligde hardware.",
+      "helpModesVerify": "‘Attestatie verifiëren’ controleert Intels handtekening op het rapport van de cloud en of je gegevens zijn versleuteld met de sleutel in dat rapport."
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Podpisany wynik NVIDIA pokazuje, że prawdziwe karty graficzne NVIDIA odpowiedziały na to sprawdzenie. Nie dowodzi on, że te karty są podłączone do bezpiecznego sprzętu.",
+      "helpModesVerify": "„Zweryfikuj poświadczenie” sprawdza podpis Intela na raporcie chmury oraz to, czy Twoje dane są zaszyfrowane kluczem zawartym w tym raporcie."
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "attestationGpuNotice": "A resposta assinada da NVIDIA mostra que GPUs reais da NVIDIA responderam a esta verificação. Ela não comprova que essas GPUs estão conectadas ao hardware seguro.",
+      "helpModesVerify": "Verificar atestação confere a assinatura da Intel no relatório da nuvem e se seus dados são criptografados para a chave desse relatório."
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Подписанный результат NVIDIA показывает, что на проверку ответили настоящие GPU NVIDIA. Он не доказывает, что эти GPU подключены к защищённому оборудованию.",
+      "helpModesVerify": "«Проверить аттестацию» проверяет подпись Intel на отчёте облака и то, что ваши данные зашифрованы для ключа из этого отчёта."
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "attestationGpuNotice": "ผลลัพธ์ที่ NVIDIA ลงนามแสดงว่า GPU ของ NVIDIA ตัวจริงตอบกลับการตรวจสอบนี้ ผลลัพธ์ที่ NVIDIA ลงนามไม่ได้พิสูจน์ว่า GPU เหล่านั้นเชื่อมต่อกับฮาร์ดแวร์ที่ปลอดภัย",
+      "helpModesVerify": "“ยืนยันการรับรอง” จะตรวจลายเซ็นของ Intel บนรายงานของคลาวด์ และตรวจว่าข้อมูลของคุณถูกเข้ารหัสด้วยกุญแจที่อยู่ในรายงานนั้น"
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIA'nın imzalı sonucu, bu kontrole gerçek NVIDIA GPU'larının yanıt verdiğini gösteriyor. NVIDIA'nın imzalı sonucu, bu GPU'ların güvenli donanıma bağlı olduğunu kanıtlamıyor.",
+      "helpModesVerify": "Tasdiki doğrula, bulutun raporundaki Intel imzasını ve verilerinin o raporda yer alan anahtarla şifrelendiğini kontrol eder."
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Підписаний результат NVIDIA показує, що відповіли справжні GPU від NVIDIA. Він не доводить, що ці GPU підключені до захищеного обладнання.",
+      "helpModesVerify": "«Перевірити засвідчення» перевіряє підпис Intel під звітом хмари і те, що ваші дані зашифровані ключем із цього звіту."
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "attestationGpuNotice": "Kết quả có chữ ký của NVIDIA cho thấy các GPU NVIDIA thật đã phản hồi trong lần kiểm tra này. Kết quả đó không chứng minh các GPU này được kết nối với phần cứng bảo mật.",
+      "helpModesVerify": "Xác minh chứng thực kiểm tra chữ ký của Intel trên báo cáo của đám mây, và kiểm tra rằng dữ liệu của bạn được mã hóa theo khóa trong báo cáo đó."
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIA 的签名结果显示，真正的 NVIDIA GPU 回应了此次检查。它不能证明这些 GPU 连接到了安全硬件。",
+      "helpModesVerify": "「验证证明」会检查云端报告上的 Intel 签名，以及你的数据是否加密到该报告中的密钥。"
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "attestationGpuNotice": "NVIDIA的簽署結果顯示，真正的NVIDIA GPU回應了這項檢查。它不能證明這些GPU連接到安全硬體。",
+      "helpModesVerify": "「驗證認證」會檢查雲端的認證報告是否有Intel的簽章，以及你的資料是否已加密到該報告中的金鑰。"
+    }
+  }
+}
