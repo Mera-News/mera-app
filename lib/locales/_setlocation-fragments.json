@@ -1,0 +1,102 @@
+{
+  "tr": {
+    "onboarding": {
+      "pathLocation": "Konumumu ayarla"
+    }
+  },
+  "nl": {
+    "onboarding": {
+      "pathLocation": "Mijn locatie instellen"
+    }
+  },
+  "ja": {
+    "onboarding": {
+      "pathLocation": "自分の居住地を設定する"
+    }
+  },
+  "de": {
+    "onboarding": {
+      "pathLocation": "Meinen Standort festlegen"
+    }
+  },
+  "ru": {
+    "onboarding": {
+      "pathLocation": "Указать моё местоположение"
+    }
+  },
+  "pl": {
+    "onboarding": {
+      "pathLocation": "Ustaw moją lokalizację"
+    }
+  },
+  "uk": {
+    "onboarding": {
+      "pathLocation": "Вказати моє місцезнаходження"
+    }
+  },
+  "zh-CN": {
+    "onboarding": {
+      "pathLocation": "设置我的位置"
+    }
+  },
+  "en": {
+    "onboarding": {
+      "pathLocation": "Set location"
+    }
+  },
+  "it": {
+    "onboarding": {
+      "pathLocation": "Imposta la mia posizione"
+    }
+  },
+  "fr": {
+    "onboarding": {
+      "pathLocation": "Définir ma localisation"
+    }
+  },
+  "hi": {
+    "onboarding": {
+      "pathLocation": "मेरा स्थान सेट करें"
+    }
+  },
+  "pt-BR": {
+    "onboarding": {
+      "pathLocation": "Definir minha localização"
+    }
+  },
+  "ko": {
+    "onboarding": {
+      "pathLocation": "내 위치 설정하기"
+    }
+  },
+  "zh-TW": {
+    "onboarding": {
+      "pathLocation": "設定我的位置"
+    }
+  },
+  "vi": {
+    "onboarding": {
+      "pathLocation": "Đặt vị trí của tôi"
+    }
+  },
+  "id": {
+    "onboarding": {
+      "pathLocation": "Atur lokasi saya"
+    }
+  },
+  "th": {
+    "onboarding": {
+      "pathLocation": "ตั้งค่าตำแหน่งของฉัน"
+    }
+  },
+  "es": {
+    "onboarding": {
+      "pathLocation": "Establecer mi ubicación"
+    }
+  },
+  "ar": {
+    "onboarding": {
+      "pathLocation": "حدّد موقعي"
+    }
+  }
+}

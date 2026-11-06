@@ -410,7 +410,8 @@
     "placeholderHome": "Gdzie mieszkasz",
     "placeholderChoose": "Albo wpisz cokolwiek",
     "placeholderFollow": "Historia, drużyna lub temat",
-    "placeholderAbout": "Zapytaj o cokolwiek"
+    "placeholderAbout": "Zapytaj o cokolwiek",
+    "pathLocation": "Ustaw moją lokalizację"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -1017,9 +1018,7 @@
     "restoreFailedAppStore": "Nie udało się połączyć z App Store. Spróbuj ponownie.",
     "restoreFailedPlayStore": "Nie udało się połączyć z Google Play. Spróbuj ponownie.",
     "redeemCode": "Zrealizuj kod",
-    "promoWebSummit": "Dodatkowe czytanie za darmo na Web Summit",
-    "promoWebSummitTitle": "Dodatkowe czytanie, za darmo",
-    "promoWebSummitBody": "Podczas Web Summit masz dodatkowe czytanie za darmo."
+    "promoWebSummit": "Dodatkowe czytanie za darmo na Web Summit"
   },
   "tabs": {
     "deck": "Strumień",

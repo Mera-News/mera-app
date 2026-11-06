@@ -356,7 +356,8 @@
     "placeholderHome": "사는 곳",
     "placeholderChoose": "아니면 무엇이든 입력하세요",
     "placeholderFollow": "스토리, 팀 또는 주제",
-    "placeholderAbout": "무엇이든 물어보세요"
+    "placeholderAbout": "무엇이든 물어보세요",
+    "pathLocation": "내 위치 설정하기"
   },
   "notifications": {
     "title": "알림",
@@ -955,9 +956,7 @@
     "restoreFailedAppStore": "App Store에 연결할 수 없습니다. 다시 시도해 주세요.",
     "restoreFailedPlayStore": "Google Play에 연결할 수 없습니다. 다시 시도해 주세요.",
     "redeemCode": "코드 사용하기",
-    "promoWebSummit": "Web Summit 동안 추가 사용량 무료",
-    "promoWebSummitTitle": "추가 사용량 무료",
-    "promoWebSummitBody": "Web Summit 기간 동안 추가 사용량을 무료로 이용하실 수 있습니다."
+    "promoWebSummit": "Web Summit 동안 추가 사용량 무료"
   },
   "tabs": {
     "deck": "피드",

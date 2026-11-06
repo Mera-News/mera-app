@@ -370,7 +370,8 @@
     "placeholderHome": "Onde você mora",
     "placeholderChoose": "Ou digite qualquer coisa",
     "placeholderFollow": "Uma história, time ou tema",
-    "placeholderAbout": "Pergunte qualquer coisa"
+    "placeholderAbout": "Pergunte qualquer coisa",
+    "pathLocation": "Definir minha localização"
   },
   "notifications": {
     "title": "Notificações",
@@ -971,9 +972,7 @@
     "restoreFailedAppStore": "Não foi possível acessar a App Store. Tente novamente.",
     "restoreFailedPlayStore": "Não foi possível acessar o Google Play. Tente novamente.",
     "redeemCode": "Resgatar um código",
-    "promoWebSummit": "Leitura extra grátis no Web Summit",
-    "promoWebSummitTitle": "Leitura extra, grátis",
-    "promoWebSummitBody": "Durante o Web Summit, você ganha leitura extra de graça."
+    "promoWebSummit": "Leitura extra grátis no Web Summit"
   },
   "tabs": {
     "deck": "Feed",

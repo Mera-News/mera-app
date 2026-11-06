@@ -32,8 +32,6 @@ interface Props {
    * of the same screen instead of being replaced by a full-screen swap.
    */
   readonly renderIdle: () => React.ReactNode;
-  /** The place is the reader's home: no role or weight to choose (onboarding). */
-  readonly homeOnly?: boolean;
   /** Above the search bar, on the search step only: the other steps need the height. */
   readonly header?: React.ReactNode;
 }
@@ -46,7 +44,7 @@ interface Props {
  * query, search step) it defers to `renderIdle` so the saved-places list stays
  * visible under the search bar.
  */
-const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOnly = false, header }) => {
+const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, header }) => {
   const { t } = useTranslation();
   const colors = useColors();
   const themeMode = useThemeMode();
@@ -80,7 +78,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOn
     handlePickPlace,
     handleManualContinue,
     handleSave,
-  } = useAddLocation({ onSaved, homeOnly });
+  } = useAddLocation({ onSaved });
   useRestartHold([query, manualCity, countrySearch].some((v) => v.trim().length > 0), 'draft:location', 'hard');
 
   // ── Configure step ────────────────────────────────────────────────────────
@@ -88,7 +86,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOn
     return (
       <Box className="flex-1">
         <DrillDownHeader
-          title={homeOnly ? t('onboarding.noFactsTitle') : t('locations.addTitle')}
+          title={t('locations.addTitle')}
           onBack={() => setChosen(null)}
         />
         <VStack className="flex-1 px-5 pt-4" space="lg">
@@ -104,19 +102,15 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, homeOn
             </Pressable>
           </HStack>
 
-          {homeOnly ? null : (
-            <>
-              <VStack space="sm">
-                <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
-                <LocationRolePicker value={role} onChange={setRole} />
-              </VStack>
+          <VStack space="sm">
+            <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
+            <LocationRolePicker value={role} onChange={setRole} />
+          </VStack>
 
-              <VStack space="sm">
-                <Text className="text-ink-2 text-xs uppercase">{t('locations.weightLabel')}</Text>
-                <WeightSegments value={bucket} onChange={setBucket} />
-              </VStack>
-            </>
-          )}
+          <VStack space="sm">
+            <Text className="text-ink-2 text-xs uppercase">{t('locations.weightLabel')}</Text>
+            <WeightSegments value={bucket} onChange={setBucket} />
+          </VStack>
 
           <Button onPress={handleSave} isDisabled={saving} className="mt-2" testID="locations-save">
             {saving ? <Spinner /> : <ButtonText>{t('locations.saveCta')}</ButtonText>}

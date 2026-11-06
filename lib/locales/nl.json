@@ -368,7 +368,8 @@
     "placeholderHome": "Waar je woont",
     "placeholderChoose": "Of typ iets",
     "placeholderFollow": "Een verhaal, team of onderwerp",
-    "placeholderAbout": "Vraag wat je wilt"
+    "placeholderAbout": "Vraag wat je wilt",
+    "pathLocation": "Mijn locatie instellen"
   },
   "notifications": {
     "title": "Meldingen",
@@ -969,9 +970,7 @@
     "restoreFailedAppStore": "De App Store kon niet worden bereikt. Probeer het opnieuw.",
     "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw.",
     "redeemCode": "Code inwisselen",
-    "promoWebSummit": "Gratis extra gebruik voor Web Summit",
-    "promoWebSummitTitle": "Extra gebruik, gratis",
-    "promoWebSummitBody": "Tijdens Web Summit krijg je gratis extra gebruik."
+    "promoWebSummit": "Gratis extra gebruik voor Web Summit"
   },
   "tabs": {
     "deck": "Feed",

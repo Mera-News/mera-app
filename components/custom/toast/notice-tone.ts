@@ -3,7 +3,6 @@ import {
     Brush,
     Clock,
     Cloud,
-    Gift,
     MessageCircleQuestionMark,
     RotateCw,
     ShieldAlert,
@@ -37,7 +36,6 @@ const LOOKS: Record<string, NoticeLook> = {
     move_to_phone: { tone: 'warning', icon: Smartphone },
     fact_removed: { tone: 'info', icon: Trash2 },
     feedback_request: { tone: 'neutral', icon: MessageCircleQuestionMark },
-    plan_promo: { tone: 'info', icon: Gift },
     // Never written any more (NOT_KEPT_NOTICE_TYPES); here only so a stray row draws right.
     feed_info: { tone: 'warning', icon: Clock },
 };

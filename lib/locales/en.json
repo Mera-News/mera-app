@@ -105,9 +105,7 @@
     "restoreFailedAppStore": "Couldn't reach the App Store. Try again.",
     "restoreFailedPlayStore": "Couldn't reach Google Play. Try again.",
     "redeemCode": "Redeem a code",
-    "promoWebSummit": "Free extra usage for Web Summit",
-    "promoWebSummitTitle": "Extra usage, free",
-    "promoWebSummitBody": "You get extra usage for free during Web Summit."
+    "promoWebSummit": "Free extra usage for Web Summit"
   },
   "feed": {
     "allCaughtUp": "You're all caught up with what impacts you.",
@@ -719,7 +717,8 @@
     "placeholderHome": "Where you live",
     "placeholderChoose": "Or type anything",
     "placeholderFollow": "A story, team or topic",
-    "placeholderAbout": "Ask anything"
+    "placeholderAbout": "Ask anything",
+    "pathLocation": "Set location"
   },
   "notifications": {
     "title": "Notifications",

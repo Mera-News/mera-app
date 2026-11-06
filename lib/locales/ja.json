@@ -356,7 +356,8 @@
     "placeholderHome": "お住まいの場所",
     "placeholderChoose": "または何でも入力",
     "placeholderFollow": "ストーリー、チーム、トピック",
-    "placeholderAbout": "何でも聞いてください"
+    "placeholderAbout": "何でも聞いてください",
+    "pathLocation": "自分の居住地を設定する"
   },
   "notifications": {
     "title": "通知",
@@ -955,9 +956,7 @@
     "restoreFailedAppStore": "App Store に接続できませんでした。もう一度お試しください。",
     "restoreFailedPlayStore": "Google Play に接続できませんでした。もう一度お試しください。",
     "redeemCode": "コードを使用",
-    "promoWebSummit": "Web Summit中は追加の利用が無料",
-    "promoWebSummitTitle": "追加の利用量、無料",
-    "promoWebSummitBody": "Web Summitの期間中は、追加の利用量が無料です。"
+    "promoWebSummit": "Web Summit中は追加の利用が無料"
   },
   "tabs": {
     "deck": "フィード",

@@ -451,7 +451,8 @@
     "placeholderHome": "أين تعيش",
     "placeholderChoose": "أو اكتب أي شيء",
     "placeholderFollow": "قصة أو فريق أو موضوع",
-    "placeholderAbout": "اسأل عن أي شيء"
+    "placeholderAbout": "اسأل عن أي شيء",
+    "pathLocation": "حدّد موقعي"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -1064,9 +1065,7 @@
     "restoreFailedAppStore": "تعذّر الوصول إلى App Store. حاول مرة أخرى.",
     "restoreFailedPlayStore": "تعذّر الوصول إلى Google Play. حاول مرة أخرى.",
     "redeemCode": "استرداد رمز",
-    "promoWebSummit": "قراءة إضافية مجانًا خلال Web Summit",
-    "promoWebSummitTitle": "قراءة إضافية، مجانًا",
-    "promoWebSummitBody": "تحصل على قراءة إضافية مجانًا خلال Web Summit."
+    "promoWebSummit": "قراءة إضافية مجانًا خلال Web Summit"
   },
   "tabs": {
     "deck": "الخلاصة",

@@ -356,7 +356,8 @@
     "placeholderHome": "Di mana Anda tinggal",
     "placeholderChoose": "Atau ketik apa saja",
     "placeholderFollow": "Sebuah cerita, tim, atau topik",
-    "placeholderAbout": "Tanyakan apa saja"
+    "placeholderAbout": "Tanyakan apa saja",
+    "pathLocation": "Atur lokasi saya"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -955,9 +956,7 @@
     "restoreFailedAppStore": "Tidak bisa menghubungi App Store. Coba lagi.",
     "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi.",
     "redeemCode": "Tukarkan kode",
-    "promoWebSummit": "Pemakaian ekstra gratis untuk Web Summit",
-    "promoWebSummitTitle": "Pemakaian ekstra, gratis",
-    "promoWebSummitBody": "Selama Web Summit, Anda mendapat pemakaian ekstra secara gratis."
+    "promoWebSummit": "Pemakaian ekstra gratis untuk Web Summit"
   },
   "tabs": {
     "deck": "Umpan",

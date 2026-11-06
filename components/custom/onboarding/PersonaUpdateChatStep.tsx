@@ -32,7 +32,7 @@ import { useColors } from '@/lib/theme/tokens';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -52,13 +52,11 @@ interface PersonaUpdateChatStepProps {
   /** Beside the composer: the wizard's Next (FinalJourney #8). */
   composerTrailing?: React.ReactNode;
   /** The reader declined where they live: goes up to the wizard's Next. */
-  onDeclineHome?: () => void;
 }
 
 export default function PersonaUpdateChatStep({
   userId: userIdProp,
   composerTrailing,
-  onDeclineHome,
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
   const colors = useColors();
@@ -79,7 +77,6 @@ export default function PersonaUpdateChatStep({
   const [resumeMessages, setResumeMessages] = useState<PersistedMessage[]>([]);
   const [resumeLoadedForId, setResumeLoadedForId] = useState<string | null>(null);
 
-  const host = useMemo(() => ({ onDeclineHome: () => onDeclineHome?.() }), [onDeclineHome]);
 
   const hasInitialized = useRef(false);
   const surfaceRef = useRef<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
@@ -205,7 +202,7 @@ export default function PersonaUpdateChatStep({
 
   return (
     <Animated.View style={[styles.container, liftStyle]} testID="onboarding-chat-lift">
-      <OnboardingChatContext.Provider value={host}>
+      <OnboardingChatContext.Provider value>
         <CloudPersonaChat
           key={conversationId}
           userId={userId ?? ''}

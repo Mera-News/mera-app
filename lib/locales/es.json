@@ -370,7 +370,8 @@
     "placeholderHome": "Dónde vives",
     "placeholderChoose": "O escribe lo que quieras",
     "placeholderFollow": "Una historia, equipo o tema",
-    "placeholderAbout": "Pregunta lo que quieras"
+    "placeholderAbout": "Pregunta lo que quieras",
+    "pathLocation": "Establecer mi ubicación"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -971,9 +972,7 @@
     "restoreFailedAppStore": "No se pudo conectar con la App Store. Inténtalo de nuevo.",
     "restoreFailedPlayStore": "No se pudo conectar con Google Play. Inténtalo de nuevo.",
     "redeemCode": "Canjear un código",
-    "promoWebSummit": "Lectura extra gratis en Web Summit",
-    "promoWebSummitTitle": "Lectura extra, gratis",
-    "promoWebSummitBody": "Durante Web Summit tienes lectura extra gratis."
+    "promoWebSummit": "Lectura extra gratis en Web Summit"
   },
   "tabs": {
     "deck": "Noticias",

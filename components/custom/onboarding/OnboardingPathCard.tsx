@@ -1,5 +1,5 @@
-// OnboardingPathCard: the questionnaire's three options, drawn under its "what next" row.
-// A check mark shows once the reader has done an option; every option stays tappable.
+// OnboardingPathCard: the questionnaire's options, drawn under its "what next" row.
+// A dashed circle fills with a check once the reader has done an option; every option stays tappable.
 
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { GlyphSafeButton, TOUCH_FRAME } from '@/components/custom/floating-chat/glyph-safe';
@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { observeFacts } from '@/lib/database/services/fact-service';
 import { observeActive } from '@/lib/database/services/tracked-story-service';
 import { hapticLight } from '@/lib/haptics';
+import { CANONICAL_LOCATION_KEY } from '@/lib/mera-harness/core/combined-fact';
 import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
@@ -15,20 +16,23 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 interface OnboardingPathCardProps {
-  /** Then no fact is the first answer about where they live, so one fact counts. */
-  declinedHome: boolean;
   aboutDone: boolean;
   onPick: (path: OnboardingPath) => void;
 }
 
-export default function OnboardingPathCard({ declinedHome, aboutDone, onPick }: OnboardingPathCardProps) {
+export default function OnboardingPathCard({ aboutDone, onPick }: OnboardingPathCardProps) {
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
-  const [factCount, setFactCount] = useState(0);
+  const [hasLocation, setHasLocation] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
   const [following, setFollowing] = useState(false);
   useEffect(() => {
-    const facts = observeFacts().subscribe((rows) => setFactCount(rows.length));
+    const facts = observeFacts().subscribe((rows) => {
+      const isHome = (f: (typeof rows)[number]) => f.questionnaireAttribute === CANONICAL_LOCATION_KEY;
+      setHasLocation(rows.some(isHome));
+      setHasProfile(rows.some((f) => !isHome(f)));
+    });
     const stories = observeActive().subscribe((rows) => setFollowing(rows.length > 0));
     return () => {
       facts.unsubscribe();
@@ -37,7 +41,8 @@ export default function OnboardingPathCard({ declinedHome, aboutDone, onPick }: 
   }, []);
 
   const options = [
-    { path: 'profile', icon: 'person-outline', label: t('onboarding.pathProfile'), done: factCount > (declinedHome ? 0 : 1) },
+    { path: 'location', icon: 'place', label: t('onboarding.pathLocation'), done: hasLocation },
+    { path: 'profile', icon: 'person-outline', label: t('onboarding.pathProfile'), done: hasProfile },
     { path: 'follow', icon: 'sync', label: t('onboarding.pathFollow'), done: following },
     { path: 'about', icon: 'help-outline', label: t('onboarding.pathAbout'), done: aboutDone },
   ] as const;
@@ -64,11 +69,13 @@ export default function OnboardingPathCard({ declinedHome, aboutDone, onPick }: 
             <MaterialIcons
               {...DECORATIVE_ICON_A11Y}
               testID={`onboarding-path-${path}-done`}
-              name="check"
-              size={20}
+              name="check-circle"
+              size={22}
               color={colors.positive}
             />
-          ) : null}
+          ) : (
+            <View style={styles.open} testID={`onboarding-path-${path}-open`} />
+          )}
         </GlyphSafeButton>
       ))}
     </View>
@@ -96,6 +103,15 @@ const useStyles = themedStyles((c) =>
       minHeight: TOUCH_FRAME,
       paddingHorizontal: 14,
       paddingVertical: 10,
+    },
+    open: {
+      width: 20,
+      height: 20,
+      margin: 1,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderStyle: 'dashed',
+      borderColor: c.ink3,
     },
     label: {
       flex: 1,

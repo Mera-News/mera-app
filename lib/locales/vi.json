@@ -356,7 +356,8 @@
     "placeholderHome": "Nơi bạn sống",
     "placeholderChoose": "Hoặc nhập bất cứ điều gì",
     "placeholderFollow": "Một câu chuyện, đội bóng hoặc chủ đề",
-    "placeholderAbout": "Hỏi bất cứ điều gì"
+    "placeholderAbout": "Hỏi bất cứ điều gì",
+    "pathLocation": "Đặt vị trí của tôi"
   },
   "notifications": {
     "title": "Thông báo",
@@ -955,9 +956,7 @@
     "restoreFailedAppStore": "Không thể kết nối với App Store. Hãy thử lại.",
     "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại.",
     "redeemCode": "Đổi mã",
-    "promoWebSummit": "Miễn phí thêm lượt dùng cho Web Summit",
-    "promoWebSummitTitle": "Thêm lượt dùng, miễn phí",
-    "promoWebSummitBody": "Bạn được dùng thêm miễn phí trong thời gian Web Summit."
+    "promoWebSummit": "Miễn phí thêm lượt dùng cho Web Summit"
   },
   "tabs": {
     "deck": "Bảng tin",

@@ -410,7 +410,8 @@
     "placeholderHome": "Где вы живёте",
     "placeholderChoose": "Или напишите что угодно",
     "placeholderFollow": "История, команда или тема",
-    "placeholderAbout": "Спросите что угодно"
+    "placeholderAbout": "Спросите что угодно",
+    "pathLocation": "Указать моё местоположение"
   },
   "notifications": {
     "title": "Уведомления",
@@ -1017,9 +1018,7 @@
     "restoreFailedAppStore": "Не удалось связаться с App Store. Попробуйте ещё раз.",
     "restoreFailedPlayStore": "Не удалось связаться с Google Play. Попробуйте ещё раз.",
     "redeemCode": "Активировать код",
-    "promoWebSummit": "Дополнительное чтение бесплатно на Web Summit",
-    "promoWebSummitTitle": "Дополнительное чтение, бесплатно",
-    "promoWebSummitBody": "Во время Web Summit вам доступно дополнительное чтение без оплаты."
+    "promoWebSummit": "Дополнительное чтение бесплатно на Web Summit"
   },
   "tabs": {
     "deck": "Лента",

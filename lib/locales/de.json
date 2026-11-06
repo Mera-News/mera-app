@@ -368,7 +368,8 @@
     "placeholderHome": "Wo du wohnst",
     "placeholderChoose": "Oder schreib etwas",
     "placeholderFollow": "Eine Geschichte, ein Team oder ein Thema",
-    "placeholderAbout": "Frag, was du willst"
+    "placeholderAbout": "Frag, was du willst",
+    "pathLocation": "Meinen Standort festlegen"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -969,9 +970,7 @@
     "restoreFailedAppStore": "Der App Store ist nicht erreichbar. Versuche es erneut.",
     "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut.",
     "redeemCode": "Code einlösen",
-    "promoWebSummit": "Extra Lesekontingent gratis bei Web Summit",
-    "promoWebSummitTitle": "Extra Lesekontingent, gratis",
-    "promoWebSummitBody": "Während der Web Summit bekommst du gratis zusätzliches Lesekontingent."
+    "promoWebSummit": "Extra Lesekontingent gratis bei Web Summit"
   },
   "tabs": {
     "deck": "Nachrichten",

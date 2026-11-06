@@ -404,17 +404,11 @@ export interface ComposerAction {
   testID: string;
 }
 
-export type OnboardingPath = 'profile' | 'follow' | 'about';
+export type OnboardingPath = 'location' | 'profile' | 'follow' | 'about';
 
-/** What the wizard's chat step does for the chat it hosts. */
-export interface OnboardingChatHost {
-  /** The reader declined where they live. */
-  onDeclineHome: () => void;
-}
-
-/** Set only by the wizard's chat step. A context so CloudPersonaChat, between the
+/** True inside the wizard's chat step. A context so CloudPersonaChat, between the
  *  step and the view, carries none of this. */
-export const OnboardingChatContext = createContext<OnboardingChatHost | null>(null);
+export const OnboardingChatContext = createContext(false);
 
 // ---------------------------------------------------------------------------
 // ChatThread props

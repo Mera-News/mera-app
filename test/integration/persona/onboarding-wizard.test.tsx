@@ -1,4 +1,4 @@
-// The wizard's Next: zero facts asks for a city; a saved city moves on. A declined one is
+// The wizard's Next: nothing is required to move on; a saved city moves on. A declined one is
 // onboarding-questionnaire.test.tsx.
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import React from 'react';
@@ -56,45 +56,13 @@ beforeEach(() => {
 });
 afterEach(() => advanceStage.mockRestore());
 
-it('Next with zero facts opens the city step and does not advance', async () => {
+it('Next with zero facts goes straight to the sources step, because a location is optional', async () => {
   await open();
 
   await fireEvent.press(screen.getByTestId('onboarding-next'));
-
-  expect(screen.getByTestId('onboarding-city-step')).toBeTruthy();
-  expect(screen.queryByTestId('onboarding-next')).toBeNull();
-  expect(screen.queryByTestId('onboarding-guard-facts-secondary')).toBeNull();
-  expect(advanceStage).not.toHaveBeenCalled();
-});
-
-it('a saved city writes the fact and moves on to the sources step', async () => {
-  server.use(
-    graphql.query('PlaceSearch', () =>
-      HttpResponse.json({
-        data: { placeSearch: [{ __typename: 'Place', _id: 'p1', city: 'Delft', region: null, countryCode: 'NL', displayName: 'Delft, Netherlands', normalized: 'delft', population: 1, search_keys: [] }] },
-      }),
-    ),
-  );
-  await open();
-  await fireEvent.press(screen.getByTestId('onboarding-next'));
-  await fireEvent.changeText(screen.getByPlaceholderText('Search for a city'), 'del');
-  await fireEvent.press(await screen.findByText('Delft, Netherlands'));
-  await fireEvent.press(screen.getByTestId('locations-save'));
 
   await waitFor(() => expect(advanceStage).toHaveBeenCalledWith('user-1', OnboardingStage.PersonaChat));
-  expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
   expect(await screen.findByTestId('onboarding-sources-step')).toBeTruthy();
-  expect((await getFacts()).map((f) => f.statement)).toEqual(['Lives in Delft, Netherlands']);
-});
-
-it('the close button goes back to the chat with nothing saved', async () => {
-  await open();
-  await fireEvent.press(screen.getByTestId('onboarding-next'));
-
-  await fireEvent.press(screen.getByLabelText('Cancel', { includeHiddenElements: true }));
-
-  expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
-  expect(screen.getByTestId('onboarding-next')).toBeTruthy();
 });
 
 it('finishing does not wait for the push token', async () => {
@@ -118,7 +86,6 @@ it('Next with a fact goes straight to the sources step', async () => {
   await fireEvent.press(screen.getByTestId('onboarding-next'));
 
   await waitFor(() => expect(advanceStage).toHaveBeenCalledWith('user-1', OnboardingStage.PersonaChat));
-  expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
   expect(await screen.findByTestId('onboarding-sources-step')).toBeTruthy();
 });
 

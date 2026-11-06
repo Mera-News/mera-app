@@ -24,7 +24,7 @@ import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-
 import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useUserStore } from '@/lib/stores/user-store';
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
@@ -36,7 +36,7 @@ import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { ChatSampleKind } from './chat-samples';
 import type { ComposerAction, OnboardingPath, StarterChip } from './types';
-import { OnboardingChatContext, renderableTerminal } from './types';
+import { renderableTerminal } from './types';
 import { HARNESS_TAP_ONLY } from '@/lib/chat-session/cloud-engine-helpers';
 import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
 import type { ChatSessionViewProps } from './ChatSessionView';
@@ -51,6 +51,7 @@ type OnboardingStep = 'home' | 'choose' | OnboardingPath;
 
 const STEP_PLACEHOLDER = {
   home: 'onboarding.placeholderHome',
+  location: 'onboarding.placeholderHome',
   choose: 'onboarding.placeholderChoose',
   profile: 'onboarding.composerPlaceholder',
   follow: 'onboarding.placeholderFollow',
@@ -78,9 +79,7 @@ function useOnboardingQuestionnaire({
   forcedNextRef: RefObject<ForcedSkill | null>;
 }) {
   const { t } = useTranslation();
-  const host = useContext(OnboardingChatContext);
   const [step, setStep] = useState<OnboardingStep>('home');
-  const [declinedHome, setDeclinedHome] = useState(false);
   const [aboutDone, setAboutDone] = useState(false);
   // The menu is written once no turn is running: a scripted row refuses a busy chat.
   const [menuOwed, setMenuOwed] = useState(false);
@@ -130,10 +129,11 @@ function useOnboardingQuestionnaire({
         }
         return;
       }
-      const exchange =
-        path === 'profile'
-          ? { user: t('onboarding.pathProfile'), assistant: t('onboarding.profileExplain') }
-          : { user: t('onboarding.pathFollow'), assistant: t('onboarding.followExplain') };
+      const exchange = {
+        location: { user: t('onboarding.pathLocation'), assistant: t('onboarding.noFactsTitle') },
+        profile: { user: t('onboarding.pathProfile'), assistant: t('onboarding.profileExplain') },
+        follow: { user: t('onboarding.pathFollow'), assistant: t('onboarding.followExplain') },
+      }[path];
       void script(exchange).then((added) => {
         if (!added) return;
         forcedNextRef.current = path === 'follow' ? FOLLOW_STORY_SKILL : null;
@@ -153,14 +153,10 @@ function useOnboardingQuestionnaire({
       if (!handleSend(decline)) forcedNextRef.current = null;
       return;
     }
-    void backToMenu(decline, step === 'home' ? lastParagraph(t('onboarding.intro')) : undefined).then((added) => {
-      if (!added || step !== 'home') return;
-      setDeclinedHome(true);
-      host?.onDeclineHome();
-    });
+    void backToMenu(decline, step === 'home' ? lastParagraph(t('onboarding.intro')) : undefined);
   };
   const atHome = step === 'home' && hasFacts === false;
-  const onPath = step === 'profile' || step === 'follow' || step === 'about';
+  const onPath = step === 'location' || step === 'profile' || step === 'follow' || step === 'about';
   const actions: ComposerAction[] = busy
     ? []
     : [
@@ -173,7 +169,7 @@ function useOnboardingQuestionnaire({
               },
             ]
           : []),
-        ...(atHome || step === 'profile' || step === 'follow'
+        ...(atHome || step === 'location' || step === 'profile' || step === 'follow'
           ? [{ key: 'decline', label: decline, testID: 'onboarding-chip-decline', onPress: onDecline }]
           : []),
         ...(onPath
@@ -188,7 +184,7 @@ function useOnboardingQuestionnaire({
           : []),
       ];
 
-  return { actions, placeholder: t(STEP_PLACEHOLDER[step]), menu: { declinedHome, aboutDone, onPick } };
+  return { actions, placeholder: t(STEP_PLACEHOLDER[step]), menu: { aboutDone, onPick } };
 }
 
 export function useChatSessionView(props: ChatSessionViewProps) {

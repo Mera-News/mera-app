@@ -43,7 +43,6 @@ import { useColors } from '@/lib/theme/tokens';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 import { NextGuardBox } from './NextGuardBox';
 import { markOnboardingDone } from './onboarding-done';
-import OnboardingCityStep from './OnboardingCityStep';
 import OnboardingSourcesStep from './OnboardingSourcesStep';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import { useServerErrorLogout } from './useServerErrorLogout';
@@ -95,9 +94,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const [guard, setGuard] = useState<Guard>(null);
     // Next with zero facts asks for a city, unless the reader already declined that
     // question in the chat. Memory only, so a reopened wizard asks again.
-    const [cityOpen, setCityOpen] = useState(false);
-    const [declinedHome, setDeclinedHome] = useState(false);
-    const declineHome = useCallback(() => setDeclinedHome(true), []);
     const [notificationsOn, setNotificationsOn] = useState(false);
     const [enableRequest, setEnableRequest] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -112,7 +108,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const blockedLive = useCloudChatStore((s) => s.isBlocked);
     const blockedPersona = useUserStore((s) => !!s.userPersona?.blockedByLlm);
     const badge =
-        currentStep === 0 && !cityOpen && chatInCloud && !blockedLive && !blockedPersona && readiness !== 'idle'
+        currentStep === 0 && chatInCloud && !blockedLive && !blockedPersona && readiness !== 'idle'
             ? {
                   warming: { label: t('chat.statusWarming'), tone: 'neutral' as const, icon: 'autorenew' as const },
                   ready: { label: t('chat.statusReady'), tone: 'positive' as const, icon: 'check' as const },
@@ -249,17 +245,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 });
                 return;
             }
-            if (factCount === 0 && !declinedHome) {
-                setCityOpen(true);
-                return;
-            }
         } else if (currentStep === 2 && !notificationsOn) {
             Keyboard.dismiss();
             setGuard('no-notifications');
             return;
         }
         void advance();
-    }, [busy, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, factCount, declinedHome, notificationsOn, advance, toast, t]);
+    }, [busy, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, notificationsOn, advance, toast, t]);
 
     if (isInitializing) {
         return (
@@ -308,29 +300,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                             <RNText style={[styles.step, { color: colors.ink3 }]}>{stepText}</RNText>
                         </View>
                         {badge ? <ReadinessBadge {...badge} spinning={readiness === 'warming'} /> : null}
-                        {cityOpen ? null : nextButton}
+                        {nextButton}
                     </View>
                 </View>
-
-                {cityOpen ? (
-                    <OnboardingCityStep
-                        onClose={() => setCityOpen(false)}
-                        onDone={() => {
-                            setCityOpen(false);
-                            void advance();
-                        }}
-                    />
-                ) : null}
                 {currentStep === 0 ? (
-                    // Stays mounted under the city step, so a Back keeps the chat as it was.
-                    <View style={[styles.flex, cityOpen && styles.hidden]}>
+                    <View style={styles.flex}>
                         <Animated.View style={[styles.counter, { backgroundColor: colors.surface, borderColor: colors.line }, popStyle]}>
                             <RNText style={[styles.counterText, { color: colors.ink }]} testID="onboarding-facts-count">
                                 {t('onboarding.factsCount', { count: factCount })}
                             </RNText>
                         </Animated.View>
                         <View style={styles.flex}>
-                            <PersonaUpdateChatStep userId={userPreferences.userId} onDeclineHome={declineHome} />
+                            <PersonaUpdateChatStep userId={userPreferences.userId} />
                         </View>
                     </View>
                 ) : currentStep === 1 ? (
@@ -401,7 +382,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 const styles = StyleSheet.create({
     root: { flex: 1 },
     flex: { flex: 1 },
-    hidden: { display: 'none' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, minHeight: 44 },
     who: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     shrink: { flexShrink: 1 },

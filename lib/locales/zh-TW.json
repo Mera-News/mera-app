@@ -356,7 +356,8 @@
     "placeholderHome": "你住的地方",
     "placeholderChoose": "或輸入任何內容",
     "placeholderFollow": "一則報導、一支球隊或一個主題",
-    "placeholderAbout": "問任何問題"
+    "placeholderAbout": "問任何問題",
+    "pathLocation": "設定我的位置"
   },
   "notifications": {
     "title": "通知",
@@ -955,9 +956,7 @@
     "restoreFailedAppStore": "無法連上 App Store。請再試一次。",
     "restoreFailedPlayStore": "無法連上 Google Play。請再試一次。",
     "redeemCode": "兌換代碼",
-    "promoWebSummit": "Web Summit 期間免費贈送額外用量",
-    "promoWebSummitTitle": "額外用量，免費",
-    "promoWebSummitBody": "Web Summit 期間，你可以免費獲得額外用量。"
+    "promoWebSummit": "Web Summit 期間免費贈送額外用量"
   },
   "tabs": {
     "deck": "資訊流",

@@ -375,7 +375,8 @@
     "placeholderHome": "Où vous habitez",
     "placeholderChoose": "Ou tapez ce que vous voulez",
     "placeholderFollow": "Une actualité, une équipe ou un sujet",
-    "placeholderAbout": "Posez une question"
+    "placeholderAbout": "Posez une question",
+    "pathLocation": "Définir ma localisation"
   },
   "notifications": {
     "title": "Notifications",
@@ -976,9 +977,7 @@
     "restoreFailedAppStore": "Impossible de joindre l'App Store. Réessayez.",
     "restoreFailedPlayStore": "Impossible de joindre Google Play. Réessayez.",
     "redeemCode": "Utiliser un code",
-    "promoWebSummit": "Lecture en plus gratuite pendant Web Summit",
-    "promoWebSummitTitle": "Lecture en plus, gratuite",
-    "promoWebSummitBody": "Pendant Web Summit, vous bénéficiez d'une lecture en plus gratuite."
+    "promoWebSummit": "Lecture en plus gratuite pendant Web Summit"
   },
   "tabs": {
     "deck": "Fil d'actu",

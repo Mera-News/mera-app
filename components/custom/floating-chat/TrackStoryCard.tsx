@@ -58,7 +58,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const { t } = useTranslation();
   const isGenerating = useFloatingChatIsGenerating();
   const motion = useMotionAllowed();
-  const inOnboarding = useContext(OnboardingChatContext) !== null;
+  const inOnboarding = useContext(OnboardingChatContext);
   const storedTicks = useFloatingChatStore((s) => s.trackTicks[proposal.id]);
   const moreState = useFloatingChatStore((s) => s.trackMore[proposal.id]);
   const [busy, setBusy] = useState(false);

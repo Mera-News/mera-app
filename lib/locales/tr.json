@@ -368,7 +368,8 @@
     "placeholderHome": "Yaşadığınız yer",
     "placeholderChoose": "Ya da istediğinizi yazın",
     "placeholderFollow": "Bir haber, takım ya da konu",
-    "placeholderAbout": "İstediğinizi sorun"
+    "placeholderAbout": "İstediğinizi sorun",
+    "pathLocation": "Konumumu ayarla"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -969,9 +970,7 @@
     "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
     "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene.",
     "redeemCode": "Kod kullan",
-    "promoWebSummit": "Web Summit'te ek okuma ücretsiz",
-    "promoWebSummitTitle": "Ek okuma, ücretsiz",
-    "promoWebSummitBody": "Web Summit sırasında ek okuma hakkını ücretsiz kullanabilirsin."
+    "promoWebSummit": "Web Summit'te ek okuma ücretsiz"
   },
   "tabs": {
     "deck": "Akış",

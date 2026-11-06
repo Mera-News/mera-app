@@ -22,11 +22,9 @@ export interface ChosenPlace {
 
 export function useAddLocation({
   onSaved,
-  homeOnly = false,
 }: {
   /** Awaited: a rejection counts as a failed save, so the reader can try again. */
   onSaved: (place: ChosenPlace) => void | Promise<void>;
-  homeOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const [chosen, setChosen] = useState<ChosenPlace | null>(null);
@@ -126,7 +124,7 @@ export function useAddLocation({
         role,
         weight: weightForBucket(bucket),
       });
-      if (result.updated && !homeOnly) {
+      if (result.updated) {
         toastManager.showInfo(t('locations.toastUpdatedTitle'), t('locations.toastUpdatedBody'));
       }
       await onSaved(chosen);
@@ -137,7 +135,7 @@ export function useAddLocation({
       toastManager.showError(t('locations.saveFailedTitle'), t('locations.saveFailedBody'));
       setSaving(false);
     }
-  }, [chosen, saving, role, bucket, onSaved, homeOnly, t]);
+  }, [chosen, saving, role, bucket, onSaved, t]);
 
   return {
     chosen,

@@ -7,6 +7,7 @@ import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
 import { AccountService } from '@/lib/account-service';
 import { resetChatSession, retryChatTurn } from '@/lib/chat-session/chat-session';
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
+import { CANONICAL_LOCATION_KEY } from '@/lib/mera-harness/core/combined-fact';
 import { getAll as getLocations } from '@/lib/database/services/location-service';
 import { trackStory } from '@/lib/database/services/tracked-story-service';
 import * as prewarm from '@/lib/llm/prewarm';
@@ -199,7 +200,7 @@ describe('How Mera handles my data', () => {
 });
 
 describe("I'd rather not say", () => {
-  it('at where you live moves to the menu with no model call, and Next then skips the city step', async () => {
+  it('at where you live moves to the menu with no model call', async () => {
     await openWizard();
 
     await press('onboarding-chip-decline');
@@ -210,9 +211,6 @@ describe("I'd rather not say", () => {
     // Earlier messages stay.
     expect(screen.getByText(/To begin, where do you live/)).toBeTruthy();
 
-    await press('onboarding-next');
-    expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
-    expect(await screen.findByTestId('onboarding-sources-step')).toBeTruthy();
   });
 
   it('on the follow path goes back to the menu, and the pending follow is dropped', async () => {
@@ -275,15 +273,11 @@ describe("I'd rather not say", () => {
 });
 
 describe('the wizard after a decline', () => {
-  it('Next with nothing saved and no decline still opens the city step, and its decline writes nothing', async () => {
+  it('Next with nothing saved reaches sources and writes nothing', async () => {
     const onComplete = await openWizard();
     await press('onboarding-next');
-    await screen.findByTestId('onboarding-city-step');
-
-    await press('onboarding-city-decline');
 
     expect(await screen.findByTestId('onboarding-sources-step')).toBeTruthy();
-    expect(screen.queryByTestId('onboarding-city-step')).toBeNull();
     expect(await getFacts()).toEqual([]);
     expect(await getLocations()).toEqual([]);
 
@@ -435,27 +429,37 @@ describe('Want to do something else?', () => {
 describe('check marks', () => {
   const { pathProfile, pathFollow, pathAbout } = copy;
 
-  it('the where-you-live fact alone leaves Create my profile open, and a second fact ticks it', async () => {
-    await toMenu();
-    expect(label('onboarding-path-profile')).toBe(pathProfile);
+  it('every option starts open, and Set location asks where they live with no model call', async () => {
+    await openWizard();
+    await press('onboarding-chip-decline');
+    await waitForMenus(1);
+    for (const path of ['location', 'profile', 'follow', 'about']) {
+      expect(screen.getByTestId(`onboarding-path-${path}-open`, { includeHiddenElements: true })).toBeTruthy();
+    }
 
-    await act(async () => {
-      await addFact('Works as a nurse');
-    });
+    await press('onboarding-path-location');
 
-    await waitFor(() => expect(label('onboarding-path-profile')).toBe(`${pathProfile}, done`));
-    expect(screen.getByTestId('onboarding-path-profile-done', { includeHiddenElements: true })).toBeTruthy();
+    expect(rows()).toEqual([copy.ratherNotSay, copy.whatNext, 'Set location', 'Where do you live?']);
+    expect(modelCalls()).toHaveLength(0);
+    expect(screen.getByTestId('onboarding-chip-decline')).toBeTruthy();
+    expect(screen.getByTestId('onboarding-chip-something-else')).toBeTruthy();
   });
 
-  it('after a decline at where you live, one fact ticks Create my profile', async () => {
+  it('a location ticks Set location, and only another fact ticks Create my profile', async () => {
     await openWizard();
     await press('onboarding-chip-decline');
     await waitForMenus(1);
 
     await act(async () => {
+      await addFact('Lives in Delft', undefined, { attribute: CANONICAL_LOCATION_KEY });
+    });
+    await waitFor(() => expect(label('onboarding-path-location')).toBe('Set location, done'));
+    expect(screen.getByTestId('onboarding-path-location-done', { includeHiddenElements: true })).toBeTruthy();
+    expect(label('onboarding-path-profile')).toBe(pathProfile);
+
+    await act(async () => {
       await addFact('Works as a nurse');
     });
-
     await waitFor(() => expect(label('onboarding-path-profile')).toBe(`${pathProfile}, done`));
   });
 
@@ -540,14 +544,10 @@ describe('the Ready badge', () => {
     expect(ping).toHaveBeenCalledTimes(1);
   });
 
-  it('hides over the city step and on the later steps', async () => {
+  it('hides on the later steps', async () => {
     await openWizard();
     await status('ready');
     await press('onboarding-next');
-    await screen.findByTestId('onboarding-city-step');
-    expect(badge()).toBeNull();
-
-    await press('onboarding-city-decline');
     await screen.findByTestId('onboarding-sources-step');
     expect(badge()).toBeNull();
     expect(stepLabel()).toBe('Step 2 of 3');

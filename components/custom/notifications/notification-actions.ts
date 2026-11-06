@@ -142,9 +142,6 @@ export async function runNotificationAction(n: NotificationModel, action: Notifi
         case 'review-plan':
             useFloatingChatStore.getState().openOptimisationPlan();
             return;
-        case 'open-plans':
-            router.push('/logged-in/preferences/manage-subscription');
-            return;
         case 'move-to-phone':
             // The retired email move (1.3.5 rows): nothing to open, the row just goes.
             await deleteByTypes(['move_to_phone']);
