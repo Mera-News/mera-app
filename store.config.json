@@ -20,7 +20,7 @@
           "ذكاء اصطناعي خاص",
           "ذكاء اصطناعي محلي"
         ],
-        "releaseNotes": "إصلاحات للأخطاء وتحسينات في الأداء.",
+        "releaseNotes": "طريقة جديدة للبدء: تعرض لك ميرا الآن ما تستطيع فعله، وتتيح لك اختيار المكان الذي تبدأ منه.\n\n• المحفوظات أصبحت أبسط، مع «القراءة لاحقًا» في المقدمة وصفحة «الأرشيف» جديدة\n• إصلاحات للأخطاء وتحسينات",
         "marketingUrl": "https://mera.news/ar",
         "supportUrl": "https://mera.news/ar/faq",
         "privacyPolicyUrl": "https://mera.news/ar/privacy",
@@ -40,7 +40,7 @@
           "lokale KI",
           "mera"
         ],
-        "releaseNotes": "Fehlerbehebungen und Leistungsverbesserungen.",
+        "releaseNotes": "Ein neuer Einstieg: Mera zeigt dir jetzt, was es kann, und lässt dich wählen, wo du anfangen willst.\n\n• Gespeichert ist einfacher, mit Später lesen ganz vorn und einer neuen Seite Archiv\n• Fehlerbehebungen und Verbesserungen",
         "marketingUrl": "https://mera.news/de",
         "supportUrl": "https://mera.news/de/faq",
         "privacyPolicyUrl": "https://mera.news/de/privacy",
@@ -59,7 +59,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "Bugfixes and performance improvements.",
+        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -78,7 +78,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "Bugfixes and performance improvements.",
+        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -97,7 +97,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "Bugfixes and performance improvements.",
+        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -116,7 +116,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "Bugfixes and performance improvements.",
+        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -135,7 +135,7 @@
           "ia privada",
           "ia local"
         ],
-        "releaseNotes": "Corrección de errores y mejoras de rendimiento.",
+        "releaseNotes": "Una nueva forma de empezar: Mera ahora te muestra lo que puede hacer y te deja elegir por dónde empezar.\n\n• Guardados es más sencillo, con Leer más tarde al frente y una nueva página de Archivo\n• Corrección de errores y mejoras",
         "marketingUrl": "https://mera.news/es",
         "supportUrl": "https://mera.news/es/faq",
         "privacyPolicyUrl": "https://mera.news/es/privacy",
@@ -154,7 +154,7 @@
           "ia privada",
           "ia local"
         ],
-        "releaseNotes": "Corrección de errores y mejoras de rendimiento.",
+        "releaseNotes": "Una nueva forma de empezar: Mera ahora te muestra lo que puede hacer y te deja elegir por dónde empezar.\n\n• Guardados es más sencillo, con Leer más tarde al frente y una página nueva de Archivo\n• Correcciones de errores y mejoras",
         "marketingUrl": "https://mera.news/es",
         "supportUrl": "https://mera.news/es/faq",
         "privacyPolicyUrl": "https://mera.news/es/privacy",
@@ -174,7 +174,7 @@
           "IA locale",
           "sans pub"
         ],
-        "releaseNotes": "Corrections de bugs et améliorations des performances.",
+        "releaseNotes": "Une nouvelle façon de commencer : Mera vous montre maintenant ce qu'il sait faire et vous laisse choisir par où commencer.\n\n• Enregistrés est plus simple, avec À lire plus tard en premier et une nouvelle page Archives\n• Corrections de bogues et améliorations",
         "marketingUrl": "https://mera.news/fr",
         "supportUrl": "https://mera.news/fr/faq",
         "privacyPolicyUrl": "https://mera.news/fr/privacy",
@@ -194,7 +194,7 @@
           "IA locale",
           "sans pub"
         ],
-        "releaseNotes": "Corrections de bugs et améliorations des performances.",
+        "releaseNotes": "Une nouvelle façon de commencer : Mera vous montre maintenant ce qu'il peut faire et vous laisse choisir par où commencer.\n\n• Enregistrés est plus simple, avec À lire plus tard en premier et une nouvelle page Archives\n• Corrections de bugs et améliorations",
         "marketingUrl": "https://mera.news/fr",
         "supportUrl": "https://mera.news/fr/faq",
         "privacyPolicyUrl": "https://mera.news/fr/privacy",
@@ -214,7 +214,7 @@
           "प्राइवेट एआई",
           "ऑन-डिवाइस एआई"
         ],
-        "releaseNotes": "बग फ़िक्स और परफ़ॉर्मेंस में सुधार।",
+        "releaseNotes": "शुरू करने का एक नया तरीका: मेरा अब दिखाता है कि वह क्या कर सकता है, और आप चुन सकते हैं कि कहां से शुरू करना है।\n\n• सहेजे गए अब सरल हैं, बाद में पढ़ें सबसे ऊपर है और संग्रह के लिए एक नया पेज है\n• बग ठीक किए गए और सुधार",
         "marketingUrl": "https://mera.news/hi",
         "supportUrl": "https://mera.news/hi/faq",
         "privacyPolicyUrl": "https://mera.news/hi/privacy",
@@ -234,7 +234,7 @@
           "berita privasi",
           "ai pribadi"
         ],
-        "releaseNotes": "Perbaikan bug dan peningkatan performa.",
+        "releaseNotes": "Cara baru untuk mulai: Mera kini menunjukkan apa yang bisa dilakukannya dan membiarkan Anda memilih dari mana mulai.\n\n• Tersimpan jadi lebih sederhana, dengan Baca nanti di depan dan halaman Arsip yang baru\n• Perbaikan bug dan peningkatan",
         "marketingUrl": "https://mera.news/id",
         "supportUrl": "https://mera.news/id/faq",
         "privacyPolicyUrl": "https://mera.news/id/privacy",
@@ -253,7 +253,7 @@
           "IA privata",
           "IA locale"
         ],
-        "releaseNotes": "Correzioni di bug e miglioramenti delle prestazioni.",
+        "releaseNotes": "Un nuovo modo per iniziare: Mera ora ti mostra cosa sa fare e ti lascia scegliere da dove cominciare.\n\n• Salvati è più semplice, con Leggi dopo in primo piano e una nuova pagina Archivio\n• Correzioni di bug e miglioramenti",
         "marketingUrl": "https://mera.news/it",
         "supportUrl": "https://mera.news/it/faq",
         "privacyPolicyUrl": "https://mera.news/it/privacy",
@@ -275,7 +275,7 @@
           "mera",
           "メラ"
         ],
-        "releaseNotes": "バグ修正とパフォーマンスの改善。",
+        "releaseNotes": "はじめるための新しい方法：メラがいまできることを見せて、どこから始めるかを選べるようにしました。\n\n• 保存済みがシンプルになりました。「あとで読む」を先頭に置き、新しい「アーカイブ」のページを追加しました\n• 不具合の修正と改善",
         "marketingUrl": "https://mera.news/ja",
         "supportUrl": "https://mera.news/ja/faq",
         "privacyPolicyUrl": "https://mera.news/ja/privacy",
@@ -297,7 +297,7 @@
           "메라",
           "mera"
         ],
-        "releaseNotes": "버그 수정 및 성능 개선.",
+        "releaseNotes": "시작하는 새로운 방법이 생겼어요: 메라가 이제 할 수 있는 일을 보여 주고, 어디서 시작할지 직접 고를 수 있어요.\n\n• 저장됨이 더 간단해졌어요. 나중에 읽기가 맨 앞에 있고, 새 보관함 페이지가 생겼어요\n• 버그 수정과 개선",
         "marketingUrl": "https://mera.news/ko",
         "supportUrl": "https://mera.news/ko/faq",
         "privacyPolicyUrl": "https://mera.news/ko/privacy",
@@ -318,7 +318,7 @@
           "privé ai",
           "mera"
         ],
-        "releaseNotes": "Bugfixes en prestatieverbeteringen.",
+        "releaseNotes": "Een nieuwe manier om te beginnen: Mera laat nu zien wat het kan en laat je kiezen waar je wilt beginnen.\n\n• Opgeslagen is eenvoudiger, met Later lezen vooraan en een nieuwe pagina Archief\n• Bugfixes en verbeteringen",
         "marketingUrl": "https://mera.news/nl",
         "supportUrl": "https://mera.news/nl/faq",
         "privacyPolicyUrl": "https://mera.news/nl/privacy",
@@ -338,7 +338,7 @@
           "prywatna AI",
           "mera"
         ],
-        "releaseNotes": "Poprawki błędów i ulepszenia wydajności.",
+        "releaseNotes": "Nowy sposób na start: Mera teraz pokazuje, co potrafi, i pozwala wybrać, od czego zacząć.\n\n• Zapisane są prostsze, z Przeczytaj później na początku i nową stroną Archiwum\n• Poprawki błędów i ulepszenia",
         "marketingUrl": "https://mera.news/pl",
         "supportUrl": "https://mera.news/pl/faq",
         "privacyPolicyUrl": "https://mera.news/pl/privacy",
@@ -357,7 +357,7 @@
           "IA privada",
           "IA local"
         ],
-        "releaseNotes": "Correções de bugs e melhorias de desempenho.",
+        "releaseNotes": "Um novo jeito de começar: Mera agora mostra o que sabe fazer e deixa você escolher por onde começar.\n\n• Salvos ficou mais simples, com Ler depois em primeiro lugar e uma nova página Arquivo\n• Correções de bugs e melhorias",
         "marketingUrl": "https://mera.news/pt",
         "supportUrl": "https://mera.news/pt/faq",
         "privacyPolicyUrl": "https://mera.news/pt/privacy",
@@ -376,7 +376,7 @@
           "IA privada",
           "IA local"
         ],
-        "releaseNotes": "Correções de bugs e melhorias de desempenho.",
+        "releaseNotes": "Uma nova forma de começar: a Mera mostra agora o que pode fazer e deixa-te escolher por onde começar.\n\n• Guardados ficou mais simples, com Ler depois em primeiro plano e uma nova página Arquivo\n• Correções de erros e melhorias",
         "marketingUrl": "https://mera.news/pt",
         "supportUrl": "https://mera.news/pt/faq",
         "privacyPolicyUrl": "https://mera.news/pt/privacy",
@@ -395,7 +395,7 @@
           "приватный ИИ",
           "ИИ на телефоне"
         ],
-        "releaseNotes": "Исправления ошибок и улучшения производительности.",
+        "releaseNotes": "Новый способ начать: Мера теперь показывает, что умеет, и позволяет выбрать, с чего начать.\n\n• Раздел «Сохранённое» стал проще: «Прочитать позже» вынесено наверх, а страница «Архив» новая\n• Исправление ошибок и улучшения",
         "marketingUrl": "https://mera.news/ru",
         "supportUrl": "https://mera.news/ru/faq",
         "privacyPolicyUrl": "https://mera.news/ru/privacy",
@@ -417,7 +417,7 @@
           "เมร่า",
           "AI ส่วนตัว"
         ],
-        "releaseNotes": "แก้ไขข้อบกพร่องและปรับปรุงประสิทธิภาพ",
+        "releaseNotes": "วิธีใหม่ในการเริ่มต้น: เมร่าจะแสดงให้เห็นว่าทำอะไรได้บ้าง และให้คุณเลือกว่าจะเริ่มจากตรงไหน\n\n• บันทึกแล้วเรียบง่ายขึ้น โดยมีอ่านภายหลังอยู่ด้านหน้า และมีหน้าคลังเก็บใหม่\n• แก้ไขข้อบกพร่องและปรับปรุงต่าง ๆ",
         "marketingUrl": "https://mera.news/th",
         "supportUrl": "https://mera.news/th/faq",
         "privacyPolicyUrl": "https://mera.news/th/privacy",
@@ -437,7 +437,7 @@
           "özel yapay zeka",
           "mera"
         ],
-        "releaseNotes": "Hata düzeltmeleri ve performans iyileştirmeleri.",
+        "releaseNotes": "Başlamanın yeni bir yolu: Mera artık neler yapabildiğini gösteriyor ve nereden başlamak istediğini seçmene izin veriyor.\n\n• Kaydedilenler daha sade: Sonra oku en başta, yeni bir Arşiv sayfası var\n• Hata düzeltmeleri ve iyileştirmeler",
         "marketingUrl": "https://mera.news/tr",
         "supportUrl": "https://mera.news/tr/faq",
         "privacyPolicyUrl": "https://mera.news/tr/privacy",
@@ -456,7 +456,7 @@
           "приватний ШІ",
           "ШІ на телефоні"
         ],
-        "releaseNotes": "Виправлення помилок і покращення продуктивності.",
+        "releaseNotes": "Новий спосіб почати: Мера тепер показує, що вміє, і дає змогу обрати, з чого почати.\n\n• Збережені стали простішими: Прочитати пізніше тепер вгорі, і з'явилася нова сторінка Архів\n• Виправлення помилок і покращення",
         "marketingUrl": "https://mera.news/uk",
         "supportUrl": "https://mera.news/uk/faq",
         "privacyPolicyUrl": "https://mera.news/uk/privacy",
@@ -477,7 +477,7 @@
           "ai riêng tư",
           "ai trên máy"
         ],
-        "releaseNotes": "Sửa lỗi và cải thiện hiệu suất.",
+        "releaseNotes": "Cách mới để bắt đầu: Mera giờ cho bạn thấy những gì ứng dụng làm được và để bạn chọn nơi bắt đầu.\n\n• Đã lưu đơn giản hơn, với Đọc sau ở đầu và trang Lưu trữ mới\n• Sửa lỗi và cải thiện",
         "marketingUrl": "https://mera.news/vi",
         "supportUrl": "https://mera.news/vi/faq",
         "privacyPolicyUrl": "https://mera.news/vi/privacy",
@@ -499,7 +499,7 @@
           "梅拉",
           "mera"
         ],
-        "releaseNotes": "错误修复和性能改进。",
+        "releaseNotes": "全新的开始方式：梅拉现在会展示它能做什么，并让你选择从哪里开始。\n\n• 已保存更简单，稍后阅读放在最前，并新增归档页面\n• 错误修复与功能改进",
         "marketingUrl": "https://mera.news/zh-Hans",
         "supportUrl": "https://mera.news/zh-Hans/faq",
         "privacyPolicyUrl": "https://mera.news/zh-Hans/privacy",
@@ -522,7 +522,7 @@
           "mera",
           "梅拉"
         ],
-        "releaseNotes": "錯誤修正與效能改善。",
+        "releaseNotes": "全新的開始方式：梅拉現在會展示它能做什麼，並讓你選擇從哪裡開始。\n\n• 已儲存更簡單，稍後閱讀放在最前面，並新增封存頁面\n• 錯誤修正與功能改進",
         "marketingUrl": "https://mera.news/zh-Hant",
         "supportUrl": "https://mera.news/zh-Hant/faq",
         "privacyPolicyUrl": "https://mera.news/zh-Hant/privacy",
