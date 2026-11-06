@@ -336,13 +336,29 @@
     "turnOn": "Bật thông báo",
     "turnThemOn": "Bật lên",
     "sourcesTitle": "Bạn tin tưởng những nguồn tin nào?",
-    "sourcesBody": "Chạm vào ngôi sao để xem thêm. Chạm vào biểu tượng mắt để ẩn khỏi Bảng tin của bạn. Bạn có thể thay đổi điều này bất cứ lúc nào trong Nguồn.",
+    "sourcesBody": "Chạm vào ngôi sao để xem thêm. Chạm vào biểu tượng mắt để ẩn khỏi Bảng tin của bạn. Chạm vào tên một nguồn để mở trang của nguồn đó, nơi bạn có thể đánh dấu là Đã đăng ký. Bạn có thể thay đổi điều này bất cứ lúc nào trong Nguồn.",
     "sourcesSkip": "Bỏ qua",
     "sourcesLoadError": "Không thể tải nguồn.",
     "sourcesOffline": "Bạn đang ngoại tuyến. Bạn có thể thêm nguồn sau trong Nguồn.",
     "iSubscribe": "Tôi đã đăng ký",
     "iSubscribeA11y": "Tôi đã đăng ký {{publisher}}",
-    "sourcesFind": "Tìm một nguồn"
+    "sourcesFind": "Tìm một nguồn",
+    "yourSources": "Nguồn của bạn",
+    "ratherNotSay": "Tôi không muốn nói",
+    "howDataHandled": "Mera xử lý dữ liệu của tôi như thế nào?",
+    "somethingElse": "Bạn muốn làm việc khác không?",
+    "whatNext": "Bạn muốn làm gì tiếp theo?",
+    "pathProfile": "Tạo hồ sơ của tôi",
+    "pathFollow": "Theo dõi một câu chuyện",
+    "pathAbout": "Kể cho tôi về Mera",
+    "pathDoneA11y": "{{option}}, đã xong",
+    "intro": "Chào bạn, mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nMình đọc tin tức và cho bạn thấy những gì ảnh hưởng đến bạn.\n\nĐể bắt đầu, bạn sống ở đâu? Chia sẻ bao nhiêu tùy bạn: một khu phố và thành phố, hoặc chỉ tiểu bang hay quốc gia.",
+    "profileExplain": "Phần này xây dựng Bảng tin của bạn. Mera tìm các chủ đề để tìm kiếm dựa trên việc bạn là ai, tiếp tục theo dõi chúng, và cho bạn thấy những gì quan trọng trong Bảng tin.\n\nBạn làm nghề gì?",
+    "followExplain": "Bạn sẽ thấy mọi câu chuyện đang theo dõi trong Câu chuyện, ở tab Bảng tin.\n\nBạn muốn theo dõi câu chuyện nào?",
+    "placeholderHome": "Nơi bạn sống",
+    "placeholderChoose": "Hoặc nhập bất cứ điều gì",
+    "placeholderFollow": "Một câu chuyện, đội bóng hoặc chủ đề",
+    "placeholderAbout": "Hỏi bất cứ điều gì"
   },
   "notifications": {
     "title": "Thông báo",
@@ -901,7 +917,8 @@
     "moveToReadLater": "Chuyển vào Đọc sau",
     "movedToArchive": "Đã chuyển vào Lưu trữ",
     "movedToReadLater": "Đã chuyển vào Đọc sau",
-    "archivedToastMessage": "Đã thêm vào Lưu trữ"
+    "archivedToastMessage": "Đã thêm vào Lưu trữ",
+    "removeShort": "Xóa"
   },
   "subscription": {
     "customerCenter": "Quản lý / hủy gói đăng ký",
@@ -1958,7 +1975,7 @@
             "body": "Những điều chính, và lý do mỗi điều được gửi đi.",
             "steps": {
               "0": "Các cụm chủ đề ngắn, vì vậy có cái gì đó để đối sánh những câu chuyện với.",
-              "1": "Cách bạn đăng nhập, là điện thoại này (hoặc, cho đến ngày 30 tháng 10 năm 2026, một email từ trước đó), và gói bạn đang dùng.",
+              "1": "Cách bạn đăng nhập, là điện thoại này, và gói bạn đang dùng.",
               "2": "Các bài viết điện thoại của bạn yêu cầu, và văn bản đã mã hóa mà Mera gửi để đọc cho bạn, được đếm theo ngày để áp dụng gói của bạn."
             },
             "ask": "Ứng dụng gửi những gì cho máy chủ của bạn?"
@@ -1973,11 +1990,11 @@
           },
           "on-device-option": {
             "headline": "Trên thiết bị, nếu bạn muốn",
-            "body": "Mở Cài đặt, rồi Mera Protocol, để chuyển việc xử lý sang điện thoại này. Khi đó AI đọc tin tức cho bạn chạy tại đây thay vì trên đám mây. Các cụm từ chủ đề vẫn được gửi đi để lấy tin, và việc đăng nhập vẫn cần email của bạn hoặc điện thoại này. Trước tiên nó tải một mô hình, cần điện thoại khá mới và chậm hơn rõ rệt, chính vì vậy nó không phải là mặc định."
+            "body": "Mở Cài đặt, rồi Mera Protocol, để chuyển việc xử lý sang điện thoại này. Khi đó AI đọc tin tức cho bạn chạy tại đây thay vì trên đám mây. Các cụm chủ đề vẫn được gửi đi để lấy tin, và việc đăng nhập vẫn cần điện thoại này. Trước tiên nó tải một mô hình, cần điện thoại khá mới và chậm hơn rõ rệt, chính vì vậy nó không phải là mặc định."
           },
           "what-we-keep": {
             "headline": "Những gì chúng tôi giữ lại",
-            "body": "Bạn đang dùng gói nào. Email chỉ dành cho tài khoản đã đăng nhập bằng email trước đây, và sẽ bị xóa vào ngày 30 tháng 10 năm 2026. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
+            "body": "Bạn đang dùng gói nào. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
             "ask": "Mera lưu trữ những gì về tôi trên máy chủ của nó?"
           }
         }
@@ -2864,11 +2881,12 @@
       "groupNoPriority": "Không có mức ưu tiên",
       "groupOther": "Khác",
       "emptyArchiveTitle": "Chưa có gì trong Lưu trữ",
-      "emptyArchiveBody": "Chọn Lưu trữ trong menu ••• của bất kỳ bài báo nào. Bài đã lưu trữ ở lại trên điện thoại này cho đến khi bạn xóa.",
+      "emptyArchiveBody": "Chạm vào dấu trang trên bài báo đã lưu và chọn Lưu trữ, hoặc dùng menu •••. Bài đã lưu trữ ở lại trên điện thoại này cho đến khi bạn xóa.",
       "countLater_one": "{{count}} bài cần đọc",
       "countLater_other": "{{count}} bài cần đọc",
       "countArchive_one": "{{count}} đã lưu trữ",
-      "countArchive_other": "{{count}} đã lưu trữ"
+      "countArchive_other": "{{count}} đã lưu trữ",
+      "openArchive": "Mở Lưu trữ"
     },
     "checks": {
       "emptyTitle": "Chưa có lần kiểm chứng sự kiện nào",

@@ -1,0 +1,983 @@
+{
+  "_comment": "onbq P1: onboarding questionnaire, sources page, Saved Archive and privacy tutorial copy. Spliced with --allow-overwrite for onboarding.sourcesBody, library.saved.emptyArchiveBody and three tutorials.chapters.privacy strings.",
+  "en": {
+    "onboarding": {
+      "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. Tap a name to open its page, where you can mark it Subscribed. You can change this anytime in Sources.",
+      "yourSources": "Your sources",
+      "ratherNotSay": "I'd rather not say",
+      "howDataHandled": "How Mera handles my data",
+      "somethingElse": "Want to do something else?",
+      "whatNext": "What would you like to do next?",
+      "pathProfile": "Create my profile",
+      "pathFollow": "Follow a story",
+      "pathAbout": "Tell me about Mera",
+      "pathDoneA11y": "{{option}}, done",
+      "intro": "Hi, I'm Mera, your personal news assistant.\n\nI read the news and show you what affects you.\n\nTo begin, where do you live? Share as much as you like: a neighborhood and city, or just your state or country.",
+      "profileExplain": "This builds your Feed. Mera finds topics to search for based on who you are, keeps reading them, and shows you what matters in your Feed.\n\nWhat do you do for work?",
+      "followExplain": "You'll find every story you follow in Stories, on the Feed tab.\n\nWhat story do you want to follow?",
+      "placeholderHome": "Where you live",
+      "placeholderChoose": "Or type anything",
+      "placeholderFollow": "A story, team or topic",
+      "placeholderAbout": "Ask anything"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Open Archive",
+        "emptyArchiveBody": "Tap the bookmark on a saved article and choose Archive, or use the ••• menu. Archived articles stay on this phone until you remove them."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Remove"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "How you sign in, which is this phone, and which plan you are on."
+              }
+            },
+            "on-device-option": {
+              "body": "Open Settings, then Mera Protocol, to move the processing onto this phone. The AI that reads your news then runs here instead of in the cloud. Your topic phrases still go out to fetch news, and signing in still needs this phone. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
+            },
+            "what-we-keep": {
+              "body": "Which plan you are on. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. A sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ar": {
+    "onboarding": {
+      "sourcesBody": "اضغط على النجمة لرؤية المزيد. اضغط على العين لإخفائه من خلاصتك. اضغط على اسم لفتح صفحته، حيث يمكنك وضع علامة «مشترك» عليه. يمكنك تغيير ذلك في أي وقت من المصادر.",
+      "yourSources": "مصادرك",
+      "ratherNotSay": "أفضّل ألا أقول",
+      "howDataHandled": "كيف تتعامل ميرا مع بياناتي؟",
+      "somethingElse": "هل تريد فعل شيء آخر؟",
+      "whatNext": "ماذا تريد أن تفعل بعد ذلك؟",
+      "pathProfile": "أنشئ ملفي الشخصي",
+      "pathFollow": "متابعة قصة",
+      "pathAbout": "أخبرني عن ميرا",
+      "pathDoneA11y": "{{option}}، تم",
+      "intro": "أهلًا، أنا ميرا، مساعدتك الشخصية للأخبار.\n\nأقرأ الأخبار وأُريك ما يؤثر فيك.\n\nولنبدأ: أين تعيش؟ شارك بقدر ما تريد، حيًا ومدينة، أو ولايتك أو بلدك فقط.",
+      "profileExplain": "هذا يبني خلاصتك. تجد ميرا مواضيع تبحث عنها بحسب من تكون، وتواصل قراءتها، وتعرض لك ما يهم في خلاصتك.\n\nما الذي تعمل فيه؟",
+      "followExplain": "ستجد كل قصة تتابعها في القصص، على تبويب الخلاصة.\n\nأي قصة تريد متابعتها؟",
+      "placeholderHome": "أين تعيش",
+      "placeholderChoose": "أو اكتب أي شيء",
+      "placeholderFollow": "قصة أو فريق أو موضوع",
+      "placeholderAbout": "اسأل عن أي شيء"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "فتح الأرشيف",
+        "emptyArchiveBody": "اضغط على إشارة الحفظ في مقال محفوظ واختر أرشفة، أو استخدم قائمة •••. تبقى المقالات المؤرشفة على هذا الهاتف حتى تزيلها."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "إزالة"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "طريقة تسجيل دخولك، وهي هذا الهاتف، والخطة التي تستخدمها."
+              }
+            },
+            "on-device-option": {
+              "body": "افتح الإعدادات، ثم بروتوكول ميرا. هناك يمكنك نقل المعالجة إلى هذا الهاتف، فيعمل الذكاء الاصطناعي الذي يقرأ أخبارك هنا بدلًا من السحابة. تظل عبارات مواضيعك تُرسل لجلب الأخبار، ويظل تسجيل الدخول يحتاج إلى هذا الهاتف. يُنزَّل نموذج أولًا، ويحتاج إلى هاتف حديث نسبيًا، وهو أبطأ بشكل ملحوظ، ولهذا بالضبط ليس الخيار الافتراضي."
+            },
+            "what-we-keep": {
+              "body": "الخطة التي تستخدمها. عدد يومي للمقالات المرسلة إليك، وحجم النص المشفّر الذي أرسلته ميرا لتُقرأ لك وعدد الطلبات (لا النص نفسه أبدًا)، ومتى وصلت إلى القراءة اليومية لخطتك، والأيام التي استخدمت فيها ميرا، يُحفظ لمدة 90 يومًا. أوقات إشعاراتك ولغتك وخيار المعالجة. الإجابات التي ترسلها على أسئلة فريق ميرا. سجل تسجيل دخول لهذا الهاتف، يُحذف مع حسابك. تُخزَّن عبارات المواضيع مؤقتًا بنصها وحده، من دون تسجيل من طلبها، وتُحذف بعد أربعة عشر يومًا من عدم الاستخدام."
+            }
+          }
+        }
+      }
+    }
+  },
+  "de": {
+    "onboarding": {
+      "sourcesBody": "Tippe auf den Stern, um mehr zu sehen. Tippe auf das Auge, um eine Quelle aus deinen Nachrichten auszublenden. Tippe auf einen Namen, um seine Seite zu öffnen, wo du sie als „Abonniert“ markieren kannst. Das kannst du jederzeit unter Quellen ändern.",
+      "yourSources": "Deine Quellen",
+      "ratherNotSay": "Sag ich lieber nicht",
+      "howDataHandled": "Wie Mera mit meinen Daten umgeht",
+      "somethingElse": "Möchtest du etwas anderes machen?",
+      "whatNext": "Was möchtest du als Nächstes tun?",
+      "pathProfile": "Mein Profil erstellen",
+      "pathFollow": "Einer Geschichte folgen",
+      "pathAbout": "Erzähl mir von Mera",
+      "pathDoneA11y": "{{option}}, erledigt",
+      "intro": "Hallo, ich bin Mera, dein persönlicher Nachrichtenassistent.\n\nIch lese die Nachrichten und zeige dir, was dich betrifft.\n\nFangen wir an: Wo wohnst du? Erzähl ruhig so viel, wie du willst: ein Viertel und eine Stadt oder nur deine Region oder dein Land.",
+      "profileExplain": "Damit entstehen deine Nachrichten. Mera findet anhand deiner Person Themen zur Suche, liest sie weiter und zeigt dir unter Nachrichten, was wichtig ist.\n\nWas machst du beruflich?",
+      "followExplain": "Jede Geschichte, der du folgst, findest du unter Geschichten im Tab Nachrichten.\n\nWelcher Geschichte möchtest du folgen?",
+      "placeholderHome": "Wo du wohnst",
+      "placeholderChoose": "Oder schreib etwas",
+      "placeholderFollow": "Eine Geschichte, ein Team oder ein Thema",
+      "placeholderAbout": "Frag, was du willst"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Archiv öffnen",
+        "emptyArchiveBody": "Tippe bei einem gespeicherten Artikel auf das Lesezeichen und wähle Archivieren, oder nutze das •••-Menü. Archivierte Artikel bleiben auf diesem Telefon, bis du sie entfernst."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Entfernen"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Wie du dich anmeldest, nämlich mit diesem Telefon, und welchen Tarif du hast."
+              }
+            },
+            "on-device-option": {
+              "body": "Öffne Einstellungen, dann Mera Protocol, um die Verarbeitung auf dieses Telefon zu verlegen. Dann läuft die KI, die deine Nachrichten liest, hier statt in der Cloud. Deine Themenbegriffe gehen weiterhin raus, um Nachrichten abzurufen, und für die Anmeldung braucht es weiterhin dieses Telefon. Zuerst wird ein Modell heruntergeladen, es braucht ein recht neues Telefon und ist spürbar langsamer, genau deshalb ist es nicht die Standardeinstellung."
+            },
+            "what-we-keep": {
+              "body": "Welchen Tarif du hast. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht."
+            }
+          }
+        }
+      }
+    }
+  },
+  "es": {
+    "onboarding": {
+      "sourcesBody": "Toca la estrella para ver más. Toca el ojo para ocultarla de tus Noticias. Toca un nombre para abrir su página, donde puedes marcar Suscrito. Puedes cambiarlo cuando quieras en Fuentes.",
+      "yourSources": "Tus fuentes",
+      "ratherNotSay": "Prefiero no decirlo",
+      "howDataHandled": "Cómo maneja Mera mis datos",
+      "somethingElse": "¿Quieres hacer otra cosa?",
+      "whatNext": "¿Qué quieres hacer ahora?",
+      "pathProfile": "Crear mi perfil",
+      "pathFollow": "Seguir una historia",
+      "pathAbout": "Háblame de Mera",
+      "pathDoneA11y": "{{option}}, listo",
+      "intro": "Hola, soy Mera, tu asistente personal de noticias.\n\nLeo las noticias y te muestro lo que te afecta.\n\nPara empezar, ¿dónde vives? Comparte todo lo que quieras: un barrio y una ciudad, o solo tu estado o país.",
+      "profileExplain": "Esto crea tus Noticias. Mera busca temas según quién eres, sigue leyéndolos y te muestra lo que importa en Noticias.\n\n¿A qué te dedicas?",
+      "followExplain": "Encontrarás cada historia que sigas en Historias, en la pestaña Noticias.\n\n¿Qué historia quieres seguir?",
+      "placeholderHome": "Dónde vives",
+      "placeholderChoose": "O escribe lo que quieras",
+      "placeholderFollow": "Una historia, equipo o tema",
+      "placeholderAbout": "Pregunta lo que quieras"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Abrir Archivo",
+        "emptyArchiveBody": "Toca el marcador de un artículo guardado y elige Archivar, o usa el menú •••. Los artículos archivados se quedan en este teléfono hasta que los quites."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Quitar"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Cómo inicias sesión, que es este teléfono, y qué plan tienes."
+              }
+            },
+            "on-device-option": {
+              "body": "Abre Ajustes y luego Mera Protocol para pasar el procesamiento a este teléfono. Así la IA que lee tus noticias funciona aquí en lugar de en la nube. Tus frases de temas siguen saliendo para buscar noticias, y para iniciar sesión sigues necesitando este teléfono. Primero descarga un modelo, necesita un teléfono bastante reciente y es bastante más lento, justo por eso no es la opción predeterminada."
+            },
+            "what-we-keep": {
+              "body": "Qué plan tienes. Un recuento diario de artículos enviados a ti, cuánto texto cifrado envió Mera para que lo leyera por ti y en cuántas solicitudes (nunca el texto en sí), cuándo alcanzaste la lectura diaria de tu plan, y los días en que usaste Mera, que se conserva durante 90 días. Tus horarios de notificaciones, tu idioma y tu modo de procesamiento. Las respuestas que envías a las preguntas del equipo de Mera. Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se eliminan tras catorce días sin uso."
+            }
+          }
+        }
+      }
+    }
+  },
+  "fr": {
+    "onboarding": {
+      "sourcesBody": "Touchez l'étoile pour en voir davantage. Touchez l'œil pour la masquer de votre fil d'actu. Touchez un nom pour ouvrir sa page, où vous pouvez choisir Abonné. Vous pourrez modifier cela à tout moment dans Sources.",
+      "yourSources": "Vos sources",
+      "ratherNotSay": "Je préfère ne pas le dire",
+      "howDataHandled": "Comment Mera gère mes données",
+      "somethingElse": "Vous voulez faire autre chose ?",
+      "whatNext": "Que souhaitez-vous faire ensuite ?",
+      "pathProfile": "Créer mon profil",
+      "pathFollow": "Suivre une actualité",
+      "pathAbout": "Parlez-moi de Mera",
+      "pathDoneA11y": "{{option}}, terminé",
+      "intro": "Bonjour, je suis Mera, votre assistant d'actualités personnel.\n\nJe lis les actualités et je vous montre ce qui vous concerne.\n\nPour commencer, où habitez-vous ? Partagez autant que vous le souhaitez : un quartier et une ville, ou seulement votre région ou votre pays.",
+      "profileExplain": "Cela construit votre Fil d'actu. Mera trouve des sujets à rechercher selon qui vous êtes, continue de les suivre et vous montre ce qui compte dans votre Fil d'actu.\n\nQuel est votre métier ?",
+      "followExplain": "Vous retrouverez chaque actualité que vous suivez dans Actualités, dans l'onglet Fil d'actu.\n\nQuelle actualité voulez-vous suivre ?",
+      "placeholderHome": "Où vous habitez",
+      "placeholderChoose": "Ou tapez ce que vous voulez",
+      "placeholderFollow": "Une actualité, une équipe ou un sujet",
+      "placeholderAbout": "Posez une question"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Ouvrir les Archives",
+        "emptyArchiveBody": "Touchez le marque-page d'un article enregistré et choisissez Archiver, ou utilisez le menu •••. Les articles archivés restent sur ce téléphone jusqu'à leur suppression."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Retirer"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Votre façon de vous connecter, qui est ce téléphone, et le forfait que vous avez."
+              }
+            },
+            "on-device-option": {
+              "body": "Ouvrez Paramètres, puis Mera Protocol, pour déplacer le traitement sur ce téléphone. L'IA qui lit vos actualités tourne alors ici plutôt que dans le cloud. Vos expressions de sujet partent toujours pour récupérer les actualités, et la connexion demande toujours ce téléphone. Un modèle est d'abord téléchargé, il faut un téléphone assez récent et c'est nettement plus lent, c'est justement pour cela que ce n'est pas le réglage par défaut."
+            },
+            "what-we-keep": {
+              "body": "Le forfait que vous avez. Un décompte quotidien des articles qui vous sont envoyés, le volume de texte chiffré que Mera a envoyé pour être lu pour vous et en combien de requêtes (jamais le texte lui-même), le moment où vous avez atteint la lecture quotidienne de votre forfait, et les jours où vous avez utilisé Mera, conservé 90 jours. Vos horaires de notification, votre langue et votre choix de traitement. Les réponses que vous envoyez aux questions de l'équipe Mera. Une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation."
+            }
+          }
+        }
+      }
+    }
+  },
+  "hi": {
+    "onboarding": {
+      "sourcesBody": "ज़्यादा देखने के लिए स्टार पर टैप करें। अपनी फ़ीड से छिपाने के लिए आँख के आइकन पर टैप करें। किसी नाम पर टैप करें, तो उसका पेज खुलेगा, जहाँ आप उसे सदस्यता ली के रूप में चिह्नित कर सकते हैं। इसे कभी भी स्रोत में जाकर बदल सकते हैं।",
+      "yourSources": "आपके स्रोत",
+      "ratherNotSay": "मुझे इसके बारे में बताना पसंद नहीं",
+      "howDataHandled": "मेरा ऐप मेरे डेटा को कैसे संभालता है",
+      "somethingElse": "कुछ और करना चाहेंगे?",
+      "whatNext": "अब आप आगे क्या करना चाहेंगे?",
+      "pathProfile": "मेरी प्रोफ़ाइल बनाएं",
+      "pathFollow": "कोई स्टोरी फ़ॉलो करें",
+      "pathAbout": "मेरा ऐप के बारे में बताएं",
+      "pathDoneA11y": "{{option}}, हो गया",
+      "intro": "नमस्ते, मैं मेरा ऐप हूँ, आपका निजी समाचार सहायक।\n\nमैं खबरें पढ़ता हूँ और दिखाता हूँ कि कौन सी बातें आप पर असर डालती हैं।\n\nशुरू करने के लिए, आप कहाँ रहते हैं? जितना चाहें बताएं: कोई इलाका और शहर, या सिर्फ़ आपका राज्य या देश।",
+      "profileExplain": "यह आपकी फ़ीड बनाता है। मेरा ऐप आप कौन हैं, इसके आधार पर खोजने के लिए विषय ढूंढता है, उन्हें लगातार पढ़ता है, और आपकी फ़ीड में दिखाता है कि क्या मायने रखता है।\n\nआप काम क्या करते हैं?",
+      "followExplain": "आप जो भी स्टोरी फ़ॉलो करते हैं, वह फ़ीड टैब पर स्टोरीज़ में मिलेगी।\n\nआप कौन सी स्टोरी फ़ॉलो करना चाहेंगे?",
+      "placeholderHome": "आप कहाँ रहते हैं",
+      "placeholderChoose": "या कुछ भी लिखें",
+      "placeholderFollow": "कोई स्टोरी, टीम या विषय",
+      "placeholderAbout": "कुछ भी पूछें"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "संग्रह खोलें",
+        "emptyArchiveBody": "किसी सहेजे गए लेख पर बुकमार्क दबाएं और संग्रहित करें चुनें, या ••• मेन्यू इस्तेमाल करें। संग्रहित लेख आपके हटाने तक इसी फ़ोन पर रहते हैं।"
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "हटाएं"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "आप कैसे साइन इन करते हैं, यानी इस फ़ोन से, और आप किस प्लान पर हैं।"
+              }
+            },
+            "on-device-option": {
+              "body": "सेटिंग्स खोलें, फिर मेरा प्रोटोकॉल पर जाएं, और वहाँ प्रोसेसिंग इस फ़ोन पर ले आएं। फिर खबरें पढ़ने वाला AI क्लाउड के बजाय यहीं चलता है। खबरें लाने के लिए आपके विषय वाक्यांश अब भी भेजे जाते हैं, और साइन इन के लिए अब भी यह फ़ोन चाहिए। पहले एक मॉडल डाउनलोड होता है, काफ़ी नया फ़ोन चाहिए, और यह साफ़ तौर पर धीमा है। इसीलिए यह डिफ़ॉल्ट नहीं है।"
+            },
+            "what-we-keep": {
+              "body": "आप किस प्लान पर हैं। आपको भेजे गए लेखों की रोज़ की गिनती, आपके लिए पढ़ने के लिए हर दिन कितना एन्क्रिप्टेड टेक्स्ट और कितने अनुरोधों में भेजा गया (टेक्स्ट खुद कभी नहीं), कब आपने अपने प्लान की रोज़ की रीडिंग पूरी की, और आपने मेरा ऐप किन दिनों इस्तेमाल किया, जो 90 दिन तक रखा जाता है। आपके नोटिफ़िकेशन के समय, भाषा और प्रोसेसिंग का चुनाव। मेरा ऐप टीम के सवालों पर आपके भेजे जवाब। इस फ़ोन का एक साइन-इन रिकॉर्ड, जो आपके खाते के साथ हट जाता है। विषय-वाक्यांश सिर्फ़ उनके टेक्स्ट से कैश होते हैं, किसने माँगा इसका कोई रिकॉर्ड नहीं होता, और चौदह दिन इस्तेमाल न होने पर हटा दिए जाते हैं।"
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": {
+    "onboarding": {
+      "sourcesBody": "Ketuk bintang untuk melihat lebih banyak. Ketuk ikon mata untuk menyembunyikan dari umpan Anda. Ketuk nama untuk membuka halamannya, tempat Anda bisa menandainya sebagai Berlangganan. Anda bisa mengubahnya kapan saja di Sumber.",
+      "yourSources": "Sumber Anda",
+      "ratherNotSay": "Saya tidak ingin menjawab",
+      "howDataHandled": "Bagaimana Mera menangani data saya",
+      "somethingElse": "Ingin melakukan hal lain?",
+      "whatNext": "Apa yang ingin Anda lakukan selanjutnya?",
+      "pathProfile": "Buat profil saya",
+      "pathFollow": "Ikuti sebuah cerita",
+      "pathAbout": "Ceritakan tentang Mera",
+      "pathDoneA11y": "{{option}}, selesai",
+      "intro": "Halo, saya Mera, asisten berita pribadi Anda.\n\nSaya membaca berita dan menunjukkan apa yang berdampak pada Anda.\n\nUntuk memulai, di mana Anda tinggal? Bagikan sebanyak yang Anda mau: sebuah kawasan dan kota, atau hanya provinsi atau negara Anda.",
+      "profileExplain": "Ini membangun Umpan Anda. Mera menemukan topik untuk dicari berdasarkan siapa Anda, terus membacanya, dan menunjukkan apa yang penting di Umpan Anda.\n\nApa pekerjaan Anda?",
+      "followExplain": "Anda akan menemukan setiap cerita yang Anda ikuti di Cerita, pada tab Umpan.\n\nCerita apa yang ingin Anda ikuti?",
+      "placeholderHome": "Di mana Anda tinggal",
+      "placeholderChoose": "Atau ketik apa saja",
+      "placeholderFollow": "Sebuah cerita, tim, atau topik",
+      "placeholderAbout": "Tanyakan apa saja"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Buka Arsip",
+        "emptyArchiveBody": "Ketuk penanda di artikel tersimpan dan pilih Arsipkan, atau gunakan menu •••. Artikel yang diarsipkan tetap ada di ponsel ini sampai Anda menghapusnya."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Hapus"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Cara Anda masuk, yaitu ponsel ini, dan paket yang Anda pakai."
+              }
+            },
+            "on-device-option": {
+              "body": "Buka Pengaturan, lalu Mera Protocol, untuk memindahkan pemrosesan ke ponsel ini. Lalu AI yang membaca berita Anda berjalan di sini, bukan di cloud. Frasa topik Anda tetap dikirim untuk mengambil berita, dan untuk masuk tetap perlu ponsel ini. Model diunduh lebih dulu, butuh ponsel yang cukup baru, dan terasa lebih lambat, justru karena itu ini bukan pilihan default."
+            },
+            "what-we-keep": {
+              "body": "Paket yang Anda pakai. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai."
+            }
+          }
+        }
+      }
+    }
+  },
+  "it": {
+    "onboarding": {
+      "sourcesBody": "Tocca la stella per vederne di più. Tocca l'occhio per nasconderla dalle tue Notizie. Tocca un nome per aprire la sua pagina, dove puoi impostarla come Abbonato. Puoi cambiarlo in qualsiasi momento in Fonti.",
+      "yourSources": "Le tue fonti",
+      "ratherNotSay": "Preferisco non dirlo",
+      "howDataHandled": "Come Mera gestisce i miei dati",
+      "somethingElse": "Vuoi fare qualcos'altro?",
+      "whatNext": "Cosa vorresti fare adesso?",
+      "pathProfile": "Crea il mio profilo",
+      "pathFollow": "Segui una storia",
+      "pathAbout": "Parlami di Mera",
+      "pathDoneA11y": "{{option}}, fatto",
+      "intro": "Ciao, sono Mera, il tuo assistente personale per le notizie.\n\nLeggo le notizie e ti mostro cosa ti riguarda.\n\nPer iniziare, dove vivi? Condividi quanto vuoi: un quartiere e una città, oppure solo la regione o il paese.",
+      "profileExplain": "Questo crea le tue Notizie. Mera trova argomenti da cercare in base a chi sei, continua a leggerli e ti mostra ciò che conta in Notizie.\n\nChe lavoro fai?",
+      "followExplain": "Troverai ogni storia che segui in Storie, nella scheda Notizie.\n\nQuale storia vuoi seguire?",
+      "placeholderHome": "Dove vivi",
+      "placeholderChoose": "Oppure scrivi quello che vuoi",
+      "placeholderFollow": "Una storia, una squadra o un argomento",
+      "placeholderAbout": "Chiedi qualsiasi cosa"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Apri Archivio",
+        "emptyArchiveBody": "Tocca il segnalibro su un articolo salvato e scegli Archivia, oppure usa il menu •••. Gli articoli archiviati restano su questo telefono finché non li rimuovi."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Rimuovi"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Come accedi, cioè con questo telefono, e quale piano hai."
+              }
+            },
+            "on-device-option": {
+              "body": "Apri Impostazioni, poi Mera Protocol, per spostare l'elaborazione su questo telefono. Così l'IA che legge le tue notizie funziona qui invece che nel cloud. Le tue frasi di argomento escono comunque per cercare le notizie, e per accedere serve comunque questo telefono. Prima scarica un modello, serve un telefono abbastanza recente ed è decisamente più lento, proprio per questo non è l'impostazione predefinita."
+            },
+            "what-we-keep": {
+              "body": "Quale piano hai. Un conteggio giornaliero degli articoli inviati a te, quanto testo cifrato Mera ha inviato per essere letto per te e in quante richieste (mai il testo stesso), quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ja": {
+    "onboarding": {
+      "sourcesBody": "星をタップすると、より多く表示されます。目のアイコンをタップすると、フィードから非表示になります。名前をタップすると、その公開元のページが開き、そこで「購読中」に設定できます。いつでもソースで変更できます。",
+      "yourSources": "あなたのソース",
+      "ratherNotSay": "答えたくありません",
+      "howDataHandled": "メラが私のデータをどう扱うか",
+      "somethingElse": "ほかに何かしたいですか？",
+      "whatNext": "次は何をしたいですか？",
+      "pathProfile": "自分のプロフィールを作る",
+      "pathFollow": "ストーリーをフォローする",
+      "pathAbout": "メラについて教えて",
+      "pathDoneA11y": "{{option}}、完了",
+      "intro": "こんにちは、メラです。あなた専用のニュースアシスタントです。\n\nニュースを読んで、あなたに影響することを見せます。\n\nまず、どこにお住まいですか？ 近所と市区町村でも、都道府県や国だけでも構いません。",
+      "profileExplain": "これであなたのフィードが作られます。メラは、あなたのことをもとに検索するトピックを見つけ、それらを読み続けて、フィードで大切なことを表示します。\n\nお仕事は何をされていますか？",
+      "followExplain": "フォローしたすべてのストーリーは、フィードタブのストーリーに表示されます。\n\nどのストーリーをフォローしたいですか？",
+      "placeholderHome": "お住まいの場所",
+      "placeholderChoose": "または何でも入力",
+      "placeholderFollow": "ストーリー、チーム、トピック",
+      "placeholderAbout": "何でも聞いてください"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "アーカイブを開く",
+        "emptyArchiveBody": "保存した記事のしおりをタップして「アーカイブ」を選ぶか、••• メニューを使ってください。アーカイブした記事は、削除するまでこの端末に残ります。"
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "削除"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "サインイン方法（この電話）と、利用中のプラン。"
+              }
+            },
+            "on-device-option": {
+              "body": "設定の「メラ・プロトコル」で、処理をこの電話の中で行うように切り替えられます。そうすると、ニュースを読むAIがクラウドではなくこの電話で動きます。ニュースを取得するために、トピックのフレーズは引き続き送信されます。サインインにはこの電話が引き続き必要です。最初にモデルをダウンロードする必要があり、比較的新しい電話が必要で、動作もはっきり遅くなります。そのため、初期設定にはしていません。"
+            },
+            "what-we-keep": {
+              "body": "利用中のプラン。あなたに送られた1日あたりの記事数、あなたのためにメラが読むよう送った暗号化テキストの量とそのリクエスト数（テキスト自体は含みません）、プランの1日の読書量に達した時点、メラを使った日（90日間保存）。通知の時間、言語、処理方法の選択。メラのチームからの質問に送った回答。この電話のログイン記録は、アカウントと一緒に削除されます。トピックのフレーズは、テキストだけでキャッシュされ、誰が求めたかは記録されず、14日間使われないと削除されます。"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ko": {
+    "onboarding": {
+      "sourcesBody": "별표를 누르면 더 많이 볼 수 있어요. 눈 아이콘을 누르면 내 피드에서 숨길 수 있어요. 매체 이름을 누르면 그 매체의 페이지가 열리고, 거기서 구독 중으로 표시할 수 있어요. 설정은 언제든지 소스에서 바꿀 수 있어요.",
+      "yourSources": "내 소스",
+      "ratherNotSay": "말하지 않을래요",
+      "howDataHandled": "메라는 내 데이터를 어떻게 처리하나요?",
+      "somethingElse": "다른 걸 해 보고 싶으세요?",
+      "whatNext": "다음에는 무엇을 하고 싶으세요?",
+      "pathProfile": "내 프로필 만들기",
+      "pathFollow": "스토리 팔로우하기",
+      "pathAbout": "메라에 대해 알려 주세요",
+      "pathDoneA11y": "{{option}}, 완료",
+      "intro": "안녕하세요, 메라예요. 회원님의 개인 뉴스 도우미예요.\n\n뉴스를 읽고 회원님에게 영향을 주는 소식을 보여 드려요.\n\n시작하기 위해 어디에 사시는지 알려 주세요. 편한 만큼 말씀해 주시면 돼요. 동네와 도시, 아니면 주나 나라만 알려 주셔도 괜찮아요.",
+      "profileExplain": "이 내용으로 피드가 만들어져요. 메라는 회원님이 어떤 분인지에 따라 찾아볼 주제를 정하고, 계속 읽으면서 피드에서 중요한 소식을 보여 드려요.\n\n어떤 일을 하세요?",
+      "followExplain": "팔로우한 스토리는 모두 피드 탭의 스토리에서 볼 수 있어요.\n\n어떤 스토리를 팔로우하고 싶으세요?",
+      "placeholderHome": "사는 곳",
+      "placeholderChoose": "아니면 무엇이든 입력하세요",
+      "placeholderFollow": "스토리, 팀 또는 주제",
+      "placeholderAbout": "무엇이든 물어보세요"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "보관함 열기",
+        "emptyArchiveBody": "저장한 기사의 북마크를 누른 다음 보관을 선택하거나, ••• 메뉴를 사용하세요. 보관한 기사는 제거하기 전까지 이 휴대전화에 남아요."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "제거"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "로그인 방법(이 휴대폰)과 사용 중인 요금제."
+              }
+            },
+            "on-device-option": {
+              "body": "설정에서 메라 프로토콜을 열면 처리를 이 휴대폰으로 옮길 수 있습니다. 그러면 뉴스를 읽는 AI가 클라우드 대신 여기서 실행됩니다. 뉴스를 가져오기 위해 주제 문구는 계속 전송되고, 로그인에는 계속 이 휴대폰이 필요합니다. 먼저 모델을 내려받아야 하고, 비교적 최신 휴대폰이 필요하며, 눈에 띄게 느립니다. 그래서 기본값이 아닙니다."
+            },
+            "what-we-keep": {
+              "body": "사용 중인 요금제. 회원님께 보낸 기사 수를 하루 단위로 센 값, 메라가 회원님을 위해 읽도록 보낸 암호화된 텍스트의 양과 요청 횟수(텍스트 내용 자체는 제외), 요금제의 하루 읽기 분량에 도달한 시점, 메라를 사용한 날짜를 90일 동안 보관. 알림 시간, 언어, 처리 방식 선택. 메라 팀의 질문에 보낸 답변. 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 주제 문구는 텍스트로만 캐시되고 누가 요청했는지는 기록되지 않으며, 14일 동안 쓰이지 않으면 삭제됩니다."
+            }
+          }
+        }
+      }
+    }
+  },
+  "nl": {
+    "onboarding": {
+      "sourcesBody": "Tik op de ster om meer te zien. Tik op het oog om het uit je feed te verbergen. Tik op een naam om de pagina te openen, waar je die als Geabonneerd kunt markeren. Dit kun je altijd wijzigen bij Bronnen.",
+      "yourSources": "Je bronnen",
+      "ratherNotSay": "Dat zeg ik liever niet",
+      "howDataHandled": "Hoe Mera mijn gegevens verwerkt",
+      "somethingElse": "Wil je iets anders doen?",
+      "whatNext": "Wat wil je hierna doen?",
+      "pathProfile": "Mijn profiel maken",
+      "pathFollow": "Een verhaal volgen",
+      "pathAbout": "Vertel me over Mera",
+      "pathDoneA11y": "{{option}}, klaar",
+      "intro": "Hoi, ik ben Mera, je persoonlijke nieuwsassistent.\n\nIk lees het nieuws en laat zien wat jou raakt.\n\nOm te beginnen: waar woon je? Deel zoveel als je wilt: een buurt en stad, of alleen je regio of land.",
+      "profileExplain": "Hiermee wordt je Feed opgebouwd. Mera zoekt onderwerpen op basis van wie je bent, blijft die volgen en laat in je Feed zien wat ertoe doet.\n\nWat doe je voor werk?",
+      "followExplain": "Elk verhaal dat je volgt vind je in Verhalen, in het tabblad Feed.\n\nWelk verhaal wil je volgen?",
+      "placeholderHome": "Waar je woont",
+      "placeholderChoose": "Of typ iets",
+      "placeholderFollow": "Een verhaal, team of onderwerp",
+      "placeholderAbout": "Vraag wat je wilt"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Archief openen",
+        "emptyArchiveBody": "Tik op de bladwijzer bij een opgeslagen artikel en kies Archiveren, of gebruik het •••-menu. Gearchiveerde artikelen blijven op deze telefoon tot je ze verwijdert."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Verwijderen"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Hoe je inlogt, namelijk met deze telefoon, en welk abonnement je hebt."
+              }
+            },
+            "on-device-option": {
+              "body": "Open Instellingen en daarna Mera Protocol om de verwerking naar deze telefoon te verplaatsen. Dan draait de AI die je nieuws leest hier in plaats van in de cloud. Je onderwerpzinnen gaan nog steeds naar buiten om nieuws op te halen, en voor inloggen is nog steeds deze telefoon nodig. Eerst wordt een model gedownload, het vraagt een vrij recente telefoon en het is merkbaar trager, en precies daarom is het niet de standaard."
+            },
+            "what-we-keep": {
+              "body": "Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera heeft gestuurd om voor je te laten lezen en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pl": {
+    "onboarding": {
+      "sourcesBody": "Dotknij gwiazdki, aby zobaczyć więcej. Dotknij oka, aby ukryć to w swoim Strumieniu. Dotknij nazwy wydawcy, aby otworzyć jego stronę, gdzie możesz go oznaczyć jako Subskrybowane. Zmienić to możesz w dowolnej chwili w Źródłach.",
+      "yourSources": "Twoje źródła",
+      "ratherNotSay": "Wolę nie mówić",
+      "howDataHandled": "Jak Mera obsługuje moje dane",
+      "somethingElse": "Chcesz zrobić coś innego?",
+      "whatNext": "Co chcesz zrobić dalej?",
+      "pathProfile": "Utwórz mój profil",
+      "pathFollow": "Śledź historię",
+      "pathAbout": "Opowiedz mi o Merze",
+      "pathDoneA11y": "{{option}}, gotowe",
+      "intro": "Cześć, jestem Mera, Twoja osobista asystentka do wiadomości.\n\nCzytam wiadomości i pokazuję Ci to, co na Ciebie wpływa.\n\nZacznijmy od tego, gdzie mieszkasz. Podaj tyle, ile chcesz: osiedle i miasto albo sam region lub kraj.",
+      "profileExplain": "To buduje Twój Strumień. Mera szuka tematów na podstawie tego, kim jesteś, czyta je dalej i pokazuje w Strumieniu to, co się dla Ciebie liczy.\n\nCo robisz zawodowo?",
+      "followExplain": "Każdą historię, którą śledzisz, znajdziesz w Historiach, na karcie Strumień.\n\nKtórą historię chcesz śledzić?",
+      "placeholderHome": "Gdzie mieszkasz",
+      "placeholderChoose": "Albo wpisz cokolwiek",
+      "placeholderFollow": "Historia, drużyna lub temat",
+      "placeholderAbout": "Zapytaj o cokolwiek"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Otwórz Archiwum",
+        "emptyArchiveBody": "Dotknij zakładki przy zapisanym artykule i wybierz Archiwizuj albo użyj menu •••. Zarchiwizowane artykuły zostają na tym telefonie, dopóki ich nie usuniesz."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Usuń"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Jak się logujesz, czyli tym telefonem, i jaki masz plan."
+              }
+            },
+            "on-device-option": {
+              "body": "Otwórz Ustawienia, a potem Mera Protocol, aby przenieść przetwarzanie na ten telefon. Wtedy AI, które czyta Twoje wiadomości, działa tutaj zamiast w chmurze. Twoje frazy tematów nadal wychodzą, żeby pobrać wiadomości, a do logowania nadal potrzebny jest ten telefon. Najpierw pobiera się model, potrzebny jest dość nowy telefon i działa to wyraźnie wolniej, i właśnie dlatego nie jest to ustawienie domyślne."
+            },
+            "what-we-keep": {
+              "body": "Jaki masz plan. Dzienna liczba artykułów wysłanych do Ciebie, ile zaszyfrowanego tekstu Mera wysłała do przeczytania dla Ciebie i w ilu żądaniach (nigdy sam tekst), kiedy wyczerpano dzienne czytanie w Twoim planie oraz dni, w których korzystasz z Mera, przechowywane przez 90 dni. Godziny powiadomień, język i wybrany tryb przetwarzania. Odpowiedzi wysyłane na pytania zespołu Mera. Zapis logowania dla tego telefonu, usuwany razem z kontem. Frazy tematów są przechowywane w pamięci podręcznej tylko jako tekst, bez zapisu, kto o nie prosił, i usuwane po czternastu dniach nieużywania."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pt-BR": {
+    "onboarding": {
+      "sourcesBody": "Toque na estrela para ver mais. Toque no olho para ocultar do seu Feed. Toque em um nome para abrir a página dele, onde você pode marcar como Assinado. Você pode mudar isso a qualquer momento em Fontes.",
+      "yourSources": "Suas fontes",
+      "ratherNotSay": "Prefiro não dizer",
+      "howDataHandled": "Como a Mera trata meus dados",
+      "somethingElse": "Quer fazer outra coisa?",
+      "whatNext": "O que você gostaria de fazer agora?",
+      "pathProfile": "Criar meu perfil",
+      "pathFollow": "Seguir uma história",
+      "pathAbout": "Me fale sobre a Mera",
+      "pathDoneA11y": "{{option}}, concluído",
+      "intro": "Oi, eu sou a Mera, sua assistente pessoal de notícias.\n\nEu leio as notícias e mostro o que afeta você.\n\nPara começar, onde você mora? Conte o quanto quiser: um bairro e uma cidade, ou só o seu estado ou país.",
+      "profileExplain": "Isto monta o seu Feed. A Mera encontra temas para buscar com base em quem você é, continua acompanhando esses temas e mostra o que importa no seu Feed.\n\nO que você faz no trabalho?",
+      "followExplain": "Você vai encontrar todas as histórias que segue em Histórias, na aba Feed.\n\nQual história você quer seguir?",
+      "placeholderHome": "Onde você mora",
+      "placeholderChoose": "Ou digite qualquer coisa",
+      "placeholderFollow": "Uma história, time ou tema",
+      "placeholderAbout": "Pergunte qualquer coisa"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Abrir Arquivo",
+        "emptyArchiveBody": "Toque no marcador de um artigo salvo e escolha Arquivar, ou use o menu •••. Os artigos arquivados ficam neste celular até você remover."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Remover"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Como você entra, que é este celular, e qual plano você tem."
+              }
+            },
+            "on-device-option": {
+              "body": "Abra Configurações e depois Mera Protocol para passar o processamento para este celular. Aí a IA que lê suas notícias roda aqui em vez de na nuvem. Suas frases de tópicos ainda saem para buscar notícias, e o login ainda precisa deste celular. Primeiro ele baixa um modelo, precisa de um celular razoavelmente recente e é bem mais lento, e é exatamente por isso que não é o padrão."
+            },
+            "what-we-keep": {
+              "body": "Qual plano você tem. Uma contagem diária de artigos enviados a você, quanto texto criptografado a Mera enviou para ser lido para você e em quantas solicitações (nunca o texto em si), quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera, guardada por 90 dias. Seus horários de notificação, idioma e escolha de processamento. As respostas que você envia às perguntas da equipe da Mera. Um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ru": {
+    "onboarding": {
+      "sourcesBody": "Нажмите на звезду, чтобы видеть больше. Нажмите на значок глаза, чтобы скрыть из вашей ленты. Нажмите на название издания, чтобы открыть его страницу, где можно отметить его как «Подписан». Это можно изменить в любой момент в разделе «Источники».",
+      "yourSources": "Ваши источники",
+      "ratherNotSay": "Предпочитаю не говорить",
+      "howDataHandled": "Как Мера обрабатывает мои данные",
+      "somethingElse": "Хотите сделать что-то другое?",
+      "whatNext": "Что вы хотите сделать дальше?",
+      "pathProfile": "Создать мой профиль",
+      "pathFollow": "Отслеживать историю",
+      "pathAbout": "Расскажите о Мере",
+      "pathDoneA11y": "{{option}}, готово",
+      "intro": "Привет, я Мера, ваш личный помощник по новостям.\n\nЯ читаю новости и показываю то, что влияет на вас.\n\nЧтобы начать, скажите, где вы живёте. Расскажите столько, сколько хотите: район и город или только регион или страну.",
+      "profileExplain": "Это формирует вашу Ленту. Мера подбирает темы для поиска на основе того, кто вы, продолжает их читать и показывает то, что важно, в вашей Ленте.\n\nЧем вы занимаетесь по работе?",
+      "followExplain": "Каждую историю, за которой вы следите, вы найдёте в разделе «Истории» на вкладке «Лента».\n\nКакую историю вы хотите отслеживать?",
+      "placeholderHome": "Где вы живёте",
+      "placeholderChoose": "Или напишите что угодно",
+      "placeholderFollow": "История, команда или тема",
+      "placeholderAbout": "Спросите что угодно"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Открыть архив",
+        "emptyArchiveBody": "Нажмите на закладку у сохранённой статьи и выберите «Архивировать» или откройте меню •••. Статьи в архиве остаются на этом телефоне, пока вы их не удалите."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Удалить"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Как вы входите (с этого телефона) и какой у вас тариф."
+              }
+            },
+            "on-device-option": {
+              "body": "Откройте Настройки, затем Протокол Мера, и перенесите обработку на этот телефон. Тогда ИИ, который читает ваши новости, работает здесь, а не в облаке. Фразы тем всё равно отправляются, чтобы получить новости, а для входа по-прежнему нужен этот телефон. Модель сначала нужно скачать, нужен довольно новый телефон, и работает она заметно медленнее, именно поэтому это не вариант по умолчанию."
+            },
+            "what-we-keep": {
+              "body": "Какой у вас тариф. Ежедневное число статей, отправленных вам, сколько зашифрованного текста Мера отправляла на чтение для вас каждый день и сколько было запросов (но не сам текст), когда вы исчерпали дневное чтение по тарифу, и дни, в которые вы пользовались Мерой, хранятся 90 дней. Время уведомлений, язык и выбранный режим обработки. Ответы, которые вы отправляете на вопросы команды Меры. Запись входа для этого телефона, которая удаляется вместе с аккаунтом. Фразы тем кэшируются только по их тексту, без записи о том, кто их запросил, и удаляются через четырнадцать дней без использования."
+            }
+          }
+        }
+      }
+    }
+  },
+  "th": {
+    "onboarding": {
+      "sourcesBody": "แตะรูปดาวเพื่อดูเพิ่มเติม แตะไอคอนตาเพื่อซ่อนจากฟีดของคุณ แตะชื่อเพื่อเปิดหน้าของชื่อนั้น แล้วทำเครื่องหมายว่าสมัครแล้วได้ คุณเปลี่ยนได้ทุกเมื่อในแหล่งข่าว",
+      "yourSources": "แหล่งข่าวของคุณ",
+      "ratherNotSay": "ฉันขอไม่บอก",
+      "howDataHandled": "เมร่าจัดการข้อมูลของฉันอย่างไร",
+      "somethingElse": "อยากทำอย่างอื่นไหม?",
+      "whatNext": "ต่อไปคุณอยากทำอะไร?",
+      "pathProfile": "สร้างโปรไฟล์ของฉัน",
+      "pathFollow": "ติดตามเรื่องราว",
+      "pathAbout": "บอกฉันเกี่ยวกับเมร่า",
+      "pathDoneA11y": "{{option}} เสร็จแล้ว",
+      "intro": "สวัสดี ฉันคือเมร่า ผู้ช่วยข่าวส่วนตัวของคุณ\n\nฉันอ่านข่าวและแสดงให้คุณเห็นสิ่งที่กระทบคุณ\n\nเริ่มกันเลย คุณอยู่ที่ไหน? แชร์มากหรือน้อยก็ได้ เช่น ย่านและเมือง หรือแค่รัฐหรือประเทศ",
+      "profileExplain": "ส่วนนี้สร้างฟีดของคุณ เมร่าหาหัวข้อที่จะค้นหาจากตัวตนของคุณ คอยติดตามหัวข้อเหล่านั้น และแสดงสิ่งที่สำคัญในฟีดของคุณ\n\nคุณทำงานอะไร?",
+      "followExplain": "คุณจะเห็นทุกเรื่องที่ติดตามได้ในเรื่องราว ในแท็บฟีด\n\nอยากติดตามเรื่องอะไร?",
+      "placeholderHome": "ที่ที่คุณอาศัยอยู่",
+      "placeholderChoose": "หรือพิมพ์อะไรก็ได้",
+      "placeholderFollow": "เรื่องราว ทีม หรือหัวข้อ",
+      "placeholderAbout": "ถามอะไรก็ได้"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "เปิดคลังเก็บ",
+        "emptyArchiveBody": "แตะบุ๊กมาร์กบนบทความที่บันทึกไว้ แล้วเลือกเก็บเข้าคลัง หรือใช้เมนู ••• บทความในคลังเก็บจะอยู่ในโทรศัพท์เครื่องนี้จนกว่าคุณจะลบ"
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "ลบ"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "วิธีที่คุณลงชื่อเข้าใช้ ซึ่งคือโทรศัพท์เครื่องนี้ และแพ็กเกจที่คุณใช้"
+              }
+            },
+            "on-device-option": {
+              "body": "เปิด การตั้งค่า แล้วไปที่ เมร่า โปรโตคอล เพื่อย้ายการประมวลผลมาไว้บนโทรศัพท์เครื่องนี้ แล้ว AI ที่อ่านข่าวให้คุณจะทำงานที่นี่แทนบนคลาวด์ วลีหัวข้อของคุณยังคงถูกส่งออกไปเพื่อดึงข่าว และการลงชื่อเข้าใช้ยังคงต้องใช้โทรศัพท์เครื่องนี้ ต้องดาวน์โหลดโมเดลก่อน ต้องใช้โทรศัพท์ที่ค่อนข้างใหม่ และช้ากว่าอย่างเห็นได้ชัด นี่คือเหตุผลที่ไม่ได้ตั้งเป็นค่าเริ่มต้น"
+            },
+            "what-we-keep": {
+              "body": "แพ็กเกจที่คุณใช้ จำนวนบทความที่ส่งถึงคุณต่อวัน ปริมาณข้อความที่เข้ารหัสซึ่งเมร่าส่งไปให้อ่านแทนคุณ และจำนวนคำขอ (ไม่รวมตัวข้อความ) เมื่อใดที่คุณใช้การอ่านรายวันตามแผนของคุณจนครบ และวันที่คุณใช้ เมร่าเก็บไว้ 90 วัน เวลาแจ้งเตือน ภาษา และตัวเลือกการประมวลผลของคุณ คำตอบที่คุณส่งถึงคำถามของทีม เมร่า บันทึกการลงชื่อเข้าใช้สำหรับโทรศัพท์เครื่องนี้ ซึ่งจะถูกลบพร้อมบัญชีของคุณ วลีหัวข้อถูกแคชไว้ด้วยข้อความเพียงอย่างเดียว โดยไม่มีการบันทึกว่าใครขอ และจะถูกลบหลังจากไม่ได้ใช้สิบสี่วัน"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tr": {
+    "onboarding": {
+      "sourcesBody": "Daha fazlasını görmek için yıldıza dokunun. Bir kaynağı Akışınızdan gizlemek için göze dokunun. Bir yayın adına dokunarak sayfasını açın, orada Abonesiniz olarak işaretleyebilirsiniz. Bunu istediğiniz zaman Kaynaklar bölümünden değiştirebilirsiniz.",
+      "yourSources": "Kaynaklarınız",
+      "ratherNotSay": "Söylemek istemiyorum",
+      "howDataHandled": "Mera verilerimi nasıl işliyor?",
+      "somethingElse": "Başka bir şey yapmak ister misiniz?",
+      "whatNext": "Sonra ne yapmak istersiniz?",
+      "pathProfile": "Profilimi oluştur",
+      "pathFollow": "Bir haberi takip et",
+      "pathAbout": "Mera hakkında bana anlat",
+      "pathDoneA11y": "{{option}}, tamam",
+      "intro": "Merhaba, ben Mera, kişisel haber asistanınız.\n\nHaberleri okuyup sizi etkileyeni gösteriyorum.\n\nBaşlamak için, nerede yaşıyorsunuz? İstediğiniz kadar paylaşın: bir mahalle ve şehir, ya da yalnızca eyaletiniz veya ülkeniz.",
+      "profileExplain": "Bu, Akışınızı oluşturur. Mera, kim olduğunuza göre aranacak konuları bulur, bunları takip etmeye devam eder ve Akışınızda önemli olanları gösterir.\n\nİş olarak ne yapıyorsunuz?",
+      "followExplain": "Takip ettiğiniz her haberi Akış sekmesindeki Haberler bölümünde bulacaksınız.\n\nHangi haberi takip etmek istersiniz?",
+      "placeholderHome": "Yaşadığınız yer",
+      "placeholderChoose": "Ya da istediğinizi yazın",
+      "placeholderFollow": "Bir haber, takım ya da konu",
+      "placeholderAbout": "İstediğinizi sorun"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Arşivi aç",
+        "emptyArchiveBody": "Kaydedilen bir makalenin yer imine dokunup Arşivle seçeneğini seçin ya da ••• menüsünü kullanın. Arşivlenen makaleler siz kaldırana kadar bu telefonda kalır."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Kaldır"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Giriş yöntemin, bu telefon ve hangi planda olduğun."
+              }
+            },
+            "on-device-option": {
+              "body": "Ayarlar'ı, ardından Mera Protocol'ü açarak işlemeyi bu telefona taşıyabilirsiniz. O zaman haberlerinizi okuyan yapay zeka bulut yerine burada çalışır. Konu ifadeleriniz haber getirmek için yine dışarı çıkar ve giriş için yine bu telefon gerekir. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin şekilde daha yavaştır, varsayılan olmamasının nedeni de tam olarak budur."
+            },
+            "what-we-keep": {
+              "body": "Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir."
+            }
+          }
+        }
+      }
+    }
+  },
+  "uk": {
+    "onboarding": {
+      "sourcesBody": "Натисніть зірку, щоб бачити більше. Натисніть значок ока, щоб приховати зі стрічки. Натисніть назву, щоб відкрити її сторінку, де можна позначити «Передплачено». Змінити це можна будь-коли в розділі Джерела.",
+      "yourSources": "Ваші джерела",
+      "ratherNotSay": "Краще не скажу",
+      "howDataHandled": "Як Мера обробляє мої дані",
+      "somethingElse": "Хочете зробити щось інше?",
+      "whatNext": "Що б ви хотіли зробити далі?",
+      "pathProfile": "Створити мій профіль",
+      "pathFollow": "Стежити за історією",
+      "pathAbout": "Розкажіть мені про Меру",
+      "pathDoneA11y": "{{option}}, готово",
+      "intro": "Привіт, я Мера, ваш персональний помічник з новин.\n\nЯ читаю новини й показую, що впливає на вас.\n\nДля початку: де ви живете? Розкажіть стільки, скільки хочете: район і місто або лише область чи країну.",
+      "profileExplain": "Це формує вашу Стрічку. Мера знаходить теми для пошуку на основі того, хто ви є, постійно їх відстежує і показує в Стрічці те, що важливо.\n\nКим ви працюєте?",
+      "followExplain": "Усі історії, за якими ви стежите, будуть у розділі Історії на вкладці Стрічка.\n\nЗа якою історією ви хочете стежити?",
+      "placeholderHome": "Де ви живете",
+      "placeholderChoose": "Або введіть будь-що",
+      "placeholderFollow": "Історія, команда або тема",
+      "placeholderAbout": "Запитайте будь-що"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Відкрити архів",
+        "emptyArchiveBody": "Натисніть закладку біля збереженої статті та виберіть «Архівувати» або скористайтеся меню •••. Статті в архіві залишаються на цьому телефоні, доки ви їх не видалите."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Видалити"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Як ви входите, це цей телефон, а також який у вас тариф."
+              }
+            },
+            "on-device-option": {
+              "body": "У Налаштуваннях відкрийте Протокол Мера. Там можна перенести обробку на цей телефон. Тоді ШІ, який читає ваші новини, працює тут, а не в хмарі. Фрази тем усе одно надсилаються, щоб отримати новини, а для входу все одно потрібен цей телефон. Спершу завантажується модель, потрібен досить новий телефон, і це працює помітно повільніше, саме тому це не варіант за замовчуванням."
+            },
+            "what-we-keep": {
+              "body": "Який у вас тариф. Щоденна кількість статей, надісланих вам, скільки зашифрованого тексту Мера надсилала, щоб прочитати для вас, і в скількох запитах (але ніколи не сам текст), коли ви досягли щоденного читання за своїм тарифом і в які дні ви користувалися Мерою, зберігаються 90 днів. Час ваших сповіщень, мова та вибір обробки. Відповіді, які ви надсилаєте на запитання команди Мери. Запис входу для цього телефона, який видаляється разом з обліковим записом. Фрази тем кешуються лише за їхнім текстом, без запису про те, хто їх запитував, і видаляються через чотирнадцять днів без використання."
+            }
+          }
+        }
+      }
+    }
+  },
+  "vi": {
+    "onboarding": {
+      "sourcesBody": "Chạm vào ngôi sao để xem thêm. Chạm vào biểu tượng mắt để ẩn khỏi Bảng tin của bạn. Chạm vào tên một nguồn để mở trang của nguồn đó, nơi bạn có thể đánh dấu là Đã đăng ký. Bạn có thể thay đổi điều này bất cứ lúc nào trong Nguồn.",
+      "yourSources": "Nguồn của bạn",
+      "ratherNotSay": "Tôi không muốn nói",
+      "howDataHandled": "Mera xử lý dữ liệu của tôi như thế nào?",
+      "somethingElse": "Bạn muốn làm việc khác không?",
+      "whatNext": "Bạn muốn làm gì tiếp theo?",
+      "pathProfile": "Tạo hồ sơ của tôi",
+      "pathFollow": "Theo dõi một câu chuyện",
+      "pathAbout": "Kể cho tôi về Mera",
+      "pathDoneA11y": "{{option}}, đã xong",
+      "intro": "Chào bạn, mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nMình đọc tin tức và cho bạn thấy những gì ảnh hưởng đến bạn.\n\nĐể bắt đầu, bạn sống ở đâu? Chia sẻ bao nhiêu tùy bạn: một khu phố và thành phố, hoặc chỉ tiểu bang hay quốc gia.",
+      "profileExplain": "Phần này xây dựng Bảng tin của bạn. Mera tìm các chủ đề để tìm kiếm dựa trên việc bạn là ai, tiếp tục theo dõi chúng, và cho bạn thấy những gì quan trọng trong Bảng tin.\n\nBạn làm nghề gì?",
+      "followExplain": "Bạn sẽ thấy mọi câu chuyện đang theo dõi trong Câu chuyện, ở tab Bảng tin.\n\nBạn muốn theo dõi câu chuyện nào?",
+      "placeholderHome": "Nơi bạn sống",
+      "placeholderChoose": "Hoặc nhập bất cứ điều gì",
+      "placeholderFollow": "Một câu chuyện, đội bóng hoặc chủ đề",
+      "placeholderAbout": "Hỏi bất cứ điều gì"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "Mở Lưu trữ",
+        "emptyArchiveBody": "Chạm vào dấu trang trên bài báo đã lưu và chọn Lưu trữ, hoặc dùng menu •••. Bài đã lưu trữ ở lại trên điện thoại này cho đến khi bạn xóa."
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "Xóa"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "Cách bạn đăng nhập, là điện thoại này, và gói bạn đang dùng."
+              }
+            },
+            "on-device-option": {
+              "body": "Mở Cài đặt, rồi Mera Protocol, để chuyển việc xử lý sang điện thoại này. Khi đó AI đọc tin tức cho bạn chạy tại đây thay vì trên đám mây. Các cụm chủ đề vẫn được gửi đi để lấy tin, và việc đăng nhập vẫn cần điện thoại này. Trước tiên nó tải một mô hình, cần điện thoại khá mới và chậm hơn rõ rệt, chính vì vậy nó không phải là mặc định."
+            },
+            "what-we-keep": {
+              "body": "Bạn đang dùng gói nào. Số bài viết được gửi đến bạn mỗi ngày, lượng văn bản đã mã hóa mà Mera gửi để đọc cho bạn và trong bao nhiêu yêu cầu (không bao giờ là chính nội dung văn bản), thời điểm bạn đạt lượt đọc hằng ngày của gói, và những ngày bạn dùng Mera, được giữ trong 90 ngày. Giờ thông báo, ngôn ngữ và lựa chọn chế độ xử lý của bạn. Các câu trả lời bạn gửi cho câu hỏi của đội ngũ Mera. Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng."
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-CN": {
+    "onboarding": {
+      "sourcesBody": "点按星标可以看到更多内容。点按眼睛图标，即可在你的信息流中隐藏它。点按名称即可打开它的页面，在那里可以标记为已订阅。你随时可以在来源中更改。",
+      "yourSources": "你的来源",
+      "ratherNotSay": "我不想说",
+      "howDataHandled": "梅拉如何处理我的数据",
+      "somethingElse": "想做点别的吗？",
+      "whatNext": "接下来你想做什么？",
+      "pathProfile": "创建我的档案",
+      "pathFollow": "关注一则报道",
+      "pathAbout": "告诉我关于梅拉的事",
+      "pathDoneA11y": "{{option}}，已完成",
+      "intro": "你好，我是梅拉，你的私人新闻助手。\n\n我会阅读新闻，并告诉你哪些与你有关。\n\n我们先从这里开始：你住在哪里？你想说多少都可以，一个街区和城市，或者只说州或国家。",
+      "profileExplain": "这会构建你的信息流。梅拉会根据你是谁找出要搜索的话题，持续跟进，并在信息流中显示最重要的内容。\n\n你的工作是做什么的？",
+      "followExplain": "你关注的每则报道都会出现在“报道”中，位于“信息流”标签页。\n\n你想关注哪则报道？",
+      "placeholderHome": "你住的地方",
+      "placeholderChoose": "或输入任何内容",
+      "placeholderFollow": "一则报道、一支球队或一个话题",
+      "placeholderAbout": "随便问"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "打开归档",
+        "emptyArchiveBody": "点按已保存文章上的书签，然后选择“归档”，或使用 ••• 菜单。已归档的文章会一直留在这部手机上，直到你移除。"
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "移除"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "你的登录方式（这部手机），以及你使用的套餐。"
+              }
+            },
+            "on-device-option": {
+              "body": "打开设置，然后打开梅拉协议，就可以把处理移到这部手机上。这样，为你阅读新闻的 AI 就在这里运行，而不是在云端。你的话题短语仍会发出以获取新闻，登录也仍需要这部手机。它会先下载一个模型，需要较新的手机，而且明显更慢，这正是它不是默认选项的原因。"
+            },
+            "what-we-keep": {
+              "body": "你使用的套餐。每日发送给你的文章数量，梅拉每天为你发送阅读的加密文本量及请求次数（不含文本本身），你用完方案每日阅读量的时间，以及你使用梅拉的日期，保留 90 天。你的通知时间、语言和处理方式选择。你回答梅拉团队问题时发送的内容。这部手机的一条登录记录，会随账户一起删除。主题短语只按文本缓存，不记录是谁请求的，十四天未使用即删除。"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-TW": {
+    "onboarding": {
+      "sourcesBody": "輕點星號即可看到更多。輕點眼睛圖示，即可從你的資訊流中隱藏。輕點名稱即可開啟它的頁面，你可以在那裡標記為已訂閱。你隨時可以在「來源」中更改。",
+      "yourSources": "你的來源",
+      "ratherNotSay": "我不想透露",
+      "howDataHandled": "梅拉如何處理我的資料",
+      "somethingElse": "想做別的事嗎？",
+      "whatNext": "接下來你想做什麼？",
+      "pathProfile": "建立我的檔案",
+      "pathFollow": "追蹤一則報導",
+      "pathAbout": "告訴我關於梅拉的事",
+      "pathDoneA11y": "{{option}}，已完成",
+      "intro": "嗨，我是梅拉，你的個人新聞助理。\n\n我會閱讀新聞，並告訴你哪些事會影響你。\n\n開始之前，請問你住在哪裡？你想分享多少都可以：可以是社區與城市，也可以只說州或國家。",
+      "profileExplain": "這會建立你的資訊流。梅拉會根據你的情況找出值得搜尋的主題，持續追蹤，並在你的資訊流中顯示最重要的內容。\n\n你的工作是什麼？",
+      "followExplain": "你追蹤的每則報導都會出現在資訊流分頁的「報導」中。\n\n你想追蹤哪則報導？",
+      "placeholderHome": "你住的地方",
+      "placeholderChoose": "或輸入任何內容",
+      "placeholderFollow": "一則報導、一支球隊或一個主題",
+      "placeholderAbout": "問任何問題"
+    },
+    "library": {
+      "saved": {
+        "openArchive": "開啟封存",
+        "emptyArchiveBody": "點按已儲存文章上的書籤，然後選擇「封存」，或使用 ••• 選單。已封存的文章會一直留在這支手機上，直到你移除。"
+      }
+    },
+    "savedSuggestions": {
+      "removeShort": "移除"
+    },
+    "tutorials": {
+      "chapters": {
+        "privacy": {
+          "slides": {
+            "what-leaves": {
+              "steps": {
+                "1": "你的登入方式是這支手機，以及你使用的方案。"
+              }
+            },
+            "on-device-option": {
+              "body": "你可以在「設定」中點選「梅拉協定」，把處理移到這支手機上。這樣一來，為你閱讀新聞的 AI 就會在這裡執行，而不是在雲端。你的主題片語仍會送出去取得新聞，登入也仍需要這支手機。它會先下載一個模型，需要較新的手機，而且速度明顯較慢，這正是它不是預設選項的原因。"
+            },
+            "what-we-keep": {
+              "body": "你使用的方案。每天傳送給你的文章數量、梅拉為你送去閱讀的加密文字量與請求次數（不含文字本身）、你達到方案每日閱讀額度的時間，以及你使用梅拉的日期，保留 90 天。你的通知時間、語言和處理方式選擇。你回覆梅拉團隊問題的答案。這支手機的一筆登入紀錄，會隨帳號一起刪除。主題短語只依文字本身快取，不記錄是誰提出的，十四天沒有使用就會刪除。"
+            }
+          }
+        }
+      }
+    }
+  }
+}

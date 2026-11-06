@@ -355,13 +355,29 @@
     "turnOn": "Activer les notifications",
     "turnThemOn": "Activez-les",
     "sourcesTitle": "En quelles sources d'actualité avez-vous confiance ?",
-    "sourcesBody": "Touchez l'étoile pour en voir davantage. Touchez l'œil pour la masquer de votre fil d'actu. Vous pourrez modifier cela à tout moment dans Sources.",
+    "sourcesBody": "Touchez l'étoile pour en voir davantage. Touchez l'œil pour la masquer de votre fil d'actu. Touchez un nom pour ouvrir sa page, où vous pouvez choisir Abonné. Vous pourrez modifier cela à tout moment dans Sources.",
     "sourcesSkip": "Passer",
     "sourcesLoadError": "Impossible de charger les sources.",
     "sourcesOffline": "Vous êtes hors connexion. Vous pourrez ajouter des sources plus tard dans Sources.",
     "iSubscribe": "J'ai un abonnement",
     "iSubscribeA11y": "J'ai un abonnement à {{publisher}}",
-    "sourcesFind": "Trouver une publication"
+    "sourcesFind": "Trouver une publication",
+    "yourSources": "Vos sources",
+    "ratherNotSay": "Je préfère ne pas le dire",
+    "howDataHandled": "Comment Mera gère mes données",
+    "somethingElse": "Vous voulez faire autre chose ?",
+    "whatNext": "Que souhaitez-vous faire ensuite ?",
+    "pathProfile": "Créer mon profil",
+    "pathFollow": "Suivre une actualité",
+    "pathAbout": "Parlez-moi de Mera",
+    "pathDoneA11y": "{{option}}, terminé",
+    "intro": "Bonjour, je suis Mera, votre assistant d'actualités personnel.\n\nJe lis les actualités et je vous montre ce qui vous concerne.\n\nPour commencer, où habitez-vous ? Partagez autant que vous le souhaitez : un quartier et une ville, ou seulement votre région ou votre pays.",
+    "profileExplain": "Cela construit votre Fil d'actu. Mera trouve des sujets à rechercher selon qui vous êtes, continue de les suivre et vous montre ce qui compte dans votre Fil d'actu.\n\nQuel est votre métier ?",
+    "followExplain": "Vous retrouverez chaque actualité que vous suivez dans Actualités, dans l'onglet Fil d'actu.\n\nQuelle actualité voulez-vous suivre ?",
+    "placeholderHome": "Où vous habitez",
+    "placeholderChoose": "Ou tapez ce que vous voulez",
+    "placeholderFollow": "Une actualité, une équipe ou un sujet",
+    "placeholderAbout": "Posez une question"
   },
   "notifications": {
     "title": "Notifications",
@@ -922,7 +938,8 @@
     "moveToReadLater": "Déplacer vers À lire plus tard",
     "movedToArchive": "Déplacé vers Archives",
     "movedToReadLater": "Déplacé vers À lire plus tard",
-    "archivedToastMessage": "Ajouté aux Archives"
+    "archivedToastMessage": "Ajouté aux Archives",
+    "removeShort": "Retirer"
   },
   "subscription": {
     "customerCenter": "Gérer / annuler l'abonnement",
@@ -1990,7 +2007,7 @@
             "body": "L'essentiel, et pourquoi chaque élément part.",
             "steps": {
               "0": "De courtes expressions de sujet, pour avoir de quoi comparer les actualités.",
-              "1": "Votre façon de vous connecter, qui est ce téléphone (ou, jusqu'au 30 octobre 2026, un e-mail ajouté auparavant), et le forfait que vous avez.",
+              "1": "Votre façon de vous connecter, qui est ce téléphone, et le forfait que vous avez.",
               "2": "Les articles que demande votre téléphone, et le texte chiffré que Mera envoie pour être lu pour vous, comptés par jour pour appliquer votre forfait."
             },
             "ask": "Qu'est-ce que l'application envoie aux serveurs de Mera ?"
@@ -2005,11 +2022,11 @@
           },
           "on-device-option": {
             "headline": "Sur l'appareil, si vous le souhaitez",
-            "body": "Ouvrez Paramètres, puis Mera Protocol, pour déplacer le traitement sur ce téléphone. L'IA qui lit vos actualités tourne alors ici plutôt que dans le cloud. Vos expressions de sujet partent toujours pour récupérer les actualités, et la connexion demande toujours votre e-mail ou ce téléphone. Un modèle est d'abord téléchargé, il faut un téléphone assez récent et c'est nettement plus lent, c'est justement pour cela que ce n'est pas le réglage par défaut."
+            "body": "Ouvrez Paramètres, puis Mera Protocol, pour déplacer le traitement sur ce téléphone. L'IA qui lit vos actualités tourne alors ici plutôt que dans le cloud. Vos expressions de sujet partent toujours pour récupérer les actualités, et la connexion demande toujours ce téléphone. Un modèle est d'abord téléchargé, il faut un téléphone assez récent et c'est nettement plus lent, c'est justement pour cela que ce n'est pas le réglage par défaut."
           },
           "what-we-keep": {
             "headline": "Ce que nous gardons",
-            "body": "Le forfait que vous avez. Un e-mail seulement pour un compte qui s'est connecté par e-mail auparavant, supprimé le 30 octobre 2026. Un décompte quotidien des articles qui vous sont envoyés, le volume de texte chiffré que Mera a envoyé pour être lu pour vous et en combien de requêtes (jamais le texte lui-même), le moment où vous avez atteint la lecture quotidienne de votre forfait, et les jours où vous avez utilisé Mera, conservé 90 jours. Vos horaires de notification, votre langue et votre choix de traitement. Les réponses que vous envoyez aux questions de l'équipe Mera. Une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation.",
+            "body": "Le forfait que vous avez. Un décompte quotidien des articles qui vous sont envoyés, le volume de texte chiffré que Mera a envoyé pour être lu pour vous et en combien de requêtes (jamais le texte lui-même), le moment où vous avez atteint la lecture quotidienne de votre forfait, et les jours où vous avez utilisé Mera, conservé 90 jours. Vos horaires de notification, votre langue et votre choix de traitement. Les réponses que vous envoyez aux questions de l'équipe Mera. Une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation.",
             "ask": "Qu'est-ce que Mera stocke de moi sur ses serveurs ?"
           }
         }
@@ -2897,11 +2914,12 @@
       "groupNoPriority": "Sans priorité",
       "groupOther": "Autres",
       "emptyArchiveTitle": "Rien d'archivé pour l'instant",
-      "emptyArchiveBody": "Choisissez Archiver dans le menu ••• d'un article. Les articles archivés restent sur ce téléphone jusqu'à leur suppression.",
+      "emptyArchiveBody": "Touchez le marque-page d'un article enregistré et choisissez Archiver, ou utilisez le menu •••. Les articles archivés restent sur ce téléphone jusqu'à leur suppression.",
       "countLater_one": "{{count}} à lire",
       "countLater_other": "{{count}} à lire",
       "countArchive_one": "{{count}} archivé",
-      "countArchive_other": "{{count}} archivés"
+      "countArchive_other": "{{count}} archivés",
+      "openArchive": "Ouvrir les Archives"
     },
     "checks": {
       "emptyTitle": "Aucune vérification des faits pour l'instant",

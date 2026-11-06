@@ -390,13 +390,29 @@
     "turnOn": "Włącz powiadomienia",
     "turnThemOn": "Włącz je",
     "sourcesTitle": "Którym źródłom wiadomości ufasz?",
-    "sourcesBody": "Dotknij gwiazdki, aby zobaczyć więcej. Dotknij oka, aby ukryć to w swoim Strumieniu. Zmienić to możesz w dowolnej chwili w Źródłach.",
+    "sourcesBody": "Dotknij gwiazdki, aby zobaczyć więcej. Dotknij oka, aby ukryć to w swoim Strumieniu. Dotknij nazwy wydawcy, aby otworzyć jego stronę, gdzie możesz go oznaczyć jako Subskrybowane. Zmienić to możesz w dowolnej chwili w Źródłach.",
     "sourcesSkip": "Pomiń",
     "sourcesLoadError": "Nie udało się wczytać źródeł.",
     "sourcesOffline": "Nie masz połączenia z internetem. Źródła możesz dodać później w Źródłach.",
     "iSubscribe": "Subskrybuję",
     "iSubscribeA11y": "Subskrybuję {{publisher}}",
-    "sourcesFind": "Szukaj wydawcy"
+    "sourcesFind": "Szukaj wydawcy",
+    "yourSources": "Twoje źródła",
+    "ratherNotSay": "Wolę nie mówić",
+    "howDataHandled": "Jak Mera obsługuje moje dane",
+    "somethingElse": "Chcesz zrobić coś innego?",
+    "whatNext": "Co chcesz zrobić dalej?",
+    "pathProfile": "Utwórz mój profil",
+    "pathFollow": "Śledź historię",
+    "pathAbout": "Opowiedz mi o Merze",
+    "pathDoneA11y": "{{option}}, gotowe",
+    "intro": "Cześć, jestem Mera, Twoja osobista asystentka do wiadomości.\n\nCzytam wiadomości i pokazuję Ci to, co na Ciebie wpływa.\n\nZacznijmy od tego, gdzie mieszkasz. Podaj tyle, ile chcesz: osiedle i miasto albo sam region lub kraj.",
+    "profileExplain": "To buduje Twój Strumień. Mera szuka tematów na podstawie tego, kim jesteś, czyta je dalej i pokazuje w Strumieniu to, co się dla Ciebie liczy.\n\nCo robisz zawodowo?",
+    "followExplain": "Każdą historię, którą śledzisz, znajdziesz w Historiach, na karcie Strumień.\n\nKtórą historię chcesz śledzić?",
+    "placeholderHome": "Gdzie mieszkasz",
+    "placeholderChoose": "Albo wpisz cokolwiek",
+    "placeholderFollow": "Historia, drużyna lub temat",
+    "placeholderAbout": "Zapytaj o cokolwiek"
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -963,7 +979,8 @@
     "moveToReadLater": "Przenieś do Przeczytaj później",
     "movedToArchive": "Przeniesiono do Archiwum",
     "movedToReadLater": "Przeniesiono do Przeczytaj później",
-    "archivedToastMessage": "Dodano do Archiwum"
+    "archivedToastMessage": "Dodano do Archiwum",
+    "removeShort": "Usuń"
   },
   "subscription": {
     "customerCenter": "Zarządzaj / anuluj subskrypcję",
@@ -2058,7 +2075,7 @@
             "body": "Najważniejsze rzeczy i powód, dla którego każda z nich wychodzi.",
             "steps": {
               "0": "Krótkie frazy tematyczne, aby było coś do dopasowania historii.",
-              "1": "Jak się logujesz, czyli tym telefonem (albo, do 30 października 2026, e-mailem z wcześniejszego konta), i jaki masz plan.",
+              "1": "Jak się logujesz, czyli tym telefonem, i jaki masz plan.",
               "2": "Artykuły, o które prosi Twój telefon, oraz zaszyfrowany tekst, który Mera wysyła do przeczytania dla Ciebie, liczone dziennie, aby zastosować Twój plan."
             },
             "ask": "Co aplikacja wysyła na Twoje serwery?"
@@ -2073,11 +2090,11 @@
           },
           "on-device-option": {
             "headline": "Na urządzeniu, jeśli chcesz",
-            "body": "Otwórz Ustawienia, a potem Mera Protocol, aby przenieść przetwarzanie na ten telefon. Wtedy AI, które czyta Twoje wiadomości, działa tutaj zamiast w chmurze. Twoje frazy tematów nadal wychodzą, żeby pobrać wiadomości, a do logowania nadal potrzebny jest Twój e-mail lub ten telefon. Najpierw pobiera się model, potrzebny jest dość nowy telefon i działa to wyraźnie wolniej, i właśnie dlatego nie jest to ustawienie domyślne."
+            "body": "Otwórz Ustawienia, a potem Mera Protocol, aby przenieść przetwarzanie na ten telefon. Wtedy AI, które czyta Twoje wiadomości, działa tutaj zamiast w chmurze. Twoje frazy tematów nadal wychodzą, żeby pobrać wiadomości, a do logowania nadal potrzebny jest ten telefon. Najpierw pobiera się model, potrzebny jest dość nowy telefon i działa to wyraźnie wolniej, i właśnie dlatego nie jest to ustawienie domyślne."
           },
           "what-we-keep": {
             "headline": "Co przechowujemy",
-            "body": "Jaki masz plan. E-mail tylko dla konta, które wcześniej logowało się e-mailem, usuwany 30 października 2026. Dzienna liczba artykułów wysłanych do Ciebie, ile zaszyfrowanego tekstu Mera wysłała do przeczytania dla Ciebie i w ilu żądaniach (nigdy sam tekst), kiedy wyczerpano dzienne czytanie w Twoim planie oraz dni, w których korzystasz z Mera, przechowywane przez 90 dni. Godziny powiadomień, język i wybrany tryb przetwarzania. Odpowiedzi wysyłane na pytania zespołu Mera. Zapis logowania dla tego telefonu, usuwany razem z kontem. Frazy tematów są przechowywane w pamięci podręcznej tylko jako tekst, bez zapisu, kto o nie prosił, i usuwane po czternastu dniach nieużywania.",
+            "body": "Jaki masz plan. Dzienna liczba artykułów wysłanych do Ciebie, ile zaszyfrowanego tekstu Mera wysłała do przeczytania dla Ciebie i w ilu żądaniach (nigdy sam tekst), kiedy wyczerpano dzienne czytanie w Twoim planie oraz dni, w których korzystasz z Mera, przechowywane przez 90 dni. Godziny powiadomień, język i wybrany tryb przetwarzania. Odpowiedzi wysyłane na pytania zespołu Mera. Zapis logowania dla tego telefonu, usuwany razem z kontem. Frazy tematów są przechowywane w pamięci podręcznej tylko jako tekst, bez zapisu, kto o nie prosił, i usuwane po czternastu dniach nieużywania.",
             "ask": "Co Mera przechowuje o mnie na swoich serwerach?"
           }
         }
@@ -2987,7 +3004,7 @@
       "groupNoPriority": "Bez priorytetu",
       "groupOther": "Inne",
       "emptyArchiveTitle": "Nic jeszcze nie zarchiwizowano",
-      "emptyArchiveBody": "Wybierz Archiwizuj w menu ••• przy dowolnym artykule. Zarchiwizowane artykuły zostają na tym telefonie, dopóki ich nie usuniesz.",
+      "emptyArchiveBody": "Dotknij zakładki przy zapisanym artykule i wybierz Archiwizuj albo użyj menu •••. Zarchiwizowane artykuły zostają na tym telefonie, dopóki ich nie usuniesz.",
       "countLater_one": "{{count}} do przeczytania",
       "countLater_few": "{{count}} do przeczytania",
       "countLater_many": "{{count}} do przeczytania",
@@ -2995,7 +3012,8 @@
       "countArchive_one": "{{count}} zarchiwizowany",
       "countArchive_few": "{{count}} zarchiwizowane",
       "countArchive_many": "{{count}} zarchiwizowanych",
-      "countArchive_other": "{{count}} zarchiwizowanych"
+      "countArchive_other": "{{count}} zarchiwizowanych",
+      "openArchive": "Otwórz Archiwum"
     },
     "checks": {
       "emptyTitle": "Brak weryfikacji faktów",

@@ -696,13 +696,29 @@
     "turnOn": "Turn on notifications",
     "turnThemOn": "Turn them on",
     "sourcesTitle": "Which news sources do you trust?",
-    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. You can change this anytime in Sources.",
+    "sourcesBody": "Tap the star to see more. Tap the eye to hide from your feed. Tap a name to open its page, where you can mark it Subscribed. You can change this anytime in Sources.",
     "sourcesSkip": "Skip",
     "sourcesLoadError": "Couldn't load sources.",
     "sourcesOffline": "You're offline. You can add sources later in Sources.",
     "iSubscribe": "I subscribe",
     "iSubscribeA11y": "I subscribe to {{publisher}}",
-    "sourcesFind": "Find a publication"
+    "sourcesFind": "Find a publication",
+    "yourSources": "Your sources",
+    "ratherNotSay": "I'd rather not say",
+    "howDataHandled": "How Mera handles my data",
+    "somethingElse": "Want to do something else?",
+    "whatNext": "What would you like to do next?",
+    "pathProfile": "Create my profile",
+    "pathFollow": "Follow a story",
+    "pathAbout": "Tell me about Mera",
+    "pathDoneA11y": "{{option}}, done",
+    "intro": "Hi, I'm Mera, your personal news assistant.\n\nI read the news and show you what affects you.\n\nTo begin, where do you live? Share as much as you like: a neighborhood and city, or just your state or country.",
+    "profileExplain": "This builds your Feed. Mera finds topics to search for based on who you are, keeps reading them, and shows you what matters in your Feed.\n\nWhat do you do for work?",
+    "followExplain": "You'll find every story you follow in Stories, on the Feed tab.\n\nWhat story do you want to follow?",
+    "placeholderHome": "Where you live",
+    "placeholderChoose": "Or type anything",
+    "placeholderFollow": "A story, team or topic",
+    "placeholderAbout": "Ask anything"
   },
   "notifications": {
     "title": "Notifications",
@@ -1282,7 +1298,8 @@
     "moveToReadLater": "Move to Read later",
     "movedToArchive": "Moved to Archive",
     "movedToReadLater": "Moved to Read later",
-    "archivedToastMessage": "Added to Archive"
+    "archivedToastMessage": "Added to Archive",
+    "removeShort": "Remove"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Update required",
@@ -2096,7 +2113,7 @@
             "body": "The main things, and why each one goes out.",
             "steps": {
               "0": "Short topic phrases, so there is something to match stories against.",
-              "1": "How you sign in, which is this phone (or, until 30 October 2026, an email from before), and which plan you are on.",
+              "1": "How you sign in, which is this phone, and which plan you are on.",
               "2": "The articles your phone asks for, and the encrypted text Mera sends to be read for you, counted per day to apply your plan."
             },
             "ask": "What does the app send to your servers?"
@@ -2111,11 +2128,11 @@
           },
           "on-device-option": {
             "headline": "On-device, if you want it",
-            "body": "Open Settings, then Mera Protocol, to move the processing onto this phone. The AI that reads your news then runs here instead of in the cloud. Your topic phrases still go out to fetch news, and signing in still needs your email or this phone. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
+            "body": "Open Settings, then Mera Protocol, to move the processing onto this phone. The AI that reads your news then runs here instead of in the cloud. Your topic phrases still go out to fetch news, and signing in still needs this phone. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
           },
           "what-we-keep": {
             "headline": "What we do keep",
-            "body": "Which plan you are on. An email only for an account that signed in with one before, deleted on 30 October 2026. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. A sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
+            "body": "Which plan you are on. A per-day count of articles sent to you, how much encrypted text Mera sent to be read for you and in how many requests (never the text itself), when you reached your plan's daily reading, and which days you used Mera, kept for 90 days. Your notification times, language and processing choice. Answers you send to Mera team questions. A sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
             "ask": "What does Mera store about me on its servers?"
           }
         }
@@ -2886,11 +2903,12 @@
       "groupNoPriority": "No priority",
       "groupOther": "Other",
       "emptyArchiveTitle": "Nothing archived yet",
-      "emptyArchiveBody": "Choose Archive in the ••• menu of any article. Archived articles stay on this phone until you remove them.",
+      "emptyArchiveBody": "Tap the bookmark on a saved article and choose Archive, or use the ••• menu. Archived articles stay on this phone until you remove them.",
       "countLater_one": "{{count}} to read",
       "countLater_other": "{{count}} to read",
       "countArchive_one": "{{count}} archived",
-      "countArchive_other": "{{count}} archived"
+      "countArchive_other": "{{count}} archived",
+      "openArchive": "Open Archive"
     },
     "checks": {
       "emptyTitle": "No fact checks yet",

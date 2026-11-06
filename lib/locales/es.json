@@ -350,13 +350,29 @@
     "turnOn": "Activar notificaciones",
     "turnThemOn": "Actívalas",
     "sourcesTitle": "¿En qué fuentes de noticias confías?",
-    "sourcesBody": "Toca la estrella para ver más. Toca el ojo para ocultarla de tus Noticias. Puedes cambiarlo cuando quieras en Fuentes.",
+    "sourcesBody": "Toca la estrella para ver más. Toca el ojo para ocultarla de tus Noticias. Toca un nombre para abrir su página, donde puedes marcar Suscrito. Puedes cambiarlo cuando quieras en Fuentes.",
     "sourcesSkip": "Omitir",
     "sourcesLoadError": "No se pudieron cargar las fuentes.",
     "sourcesOffline": "Estás sin conexión. Puedes añadir fuentes más tarde en Fuentes.",
     "iSubscribe": "Tengo una suscripción",
     "iSubscribeA11y": "Tengo una suscripción a {{publisher}}",
-    "sourcesFind": "Busca una publicación"
+    "sourcesFind": "Busca una publicación",
+    "yourSources": "Tus fuentes",
+    "ratherNotSay": "Prefiero no decirlo",
+    "howDataHandled": "Cómo maneja Mera mis datos",
+    "somethingElse": "¿Quieres hacer otra cosa?",
+    "whatNext": "¿Qué quieres hacer ahora?",
+    "pathProfile": "Crear mi perfil",
+    "pathFollow": "Seguir una historia",
+    "pathAbout": "Háblame de Mera",
+    "pathDoneA11y": "{{option}}, listo",
+    "intro": "Hola, soy Mera, tu asistente personal de noticias.\n\nLeo las noticias y te muestro lo que te afecta.\n\nPara empezar, ¿dónde vives? Comparte todo lo que quieras: un barrio y una ciudad, o solo tu estado o país.",
+    "profileExplain": "Esto crea tus Noticias. Mera busca temas según quién eres, sigue leyéndolos y te muestra lo que importa en Noticias.\n\n¿A qué te dedicas?",
+    "followExplain": "Encontrarás cada historia que sigas en Historias, en la pestaña Noticias.\n\n¿Qué historia quieres seguir?",
+    "placeholderHome": "Dónde vives",
+    "placeholderChoose": "O escribe lo que quieras",
+    "placeholderFollow": "Una historia, equipo o tema",
+    "placeholderAbout": "Pregunta lo que quieras"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -917,7 +933,8 @@
     "moveToReadLater": "Mover a Leer más tarde",
     "movedToArchive": "Movido a Archivo",
     "movedToReadLater": "Movido a Leer más tarde",
-    "archivedToastMessage": "Añadido a Archivo"
+    "archivedToastMessage": "Añadido a Archivo",
+    "removeShort": "Quitar"
   },
   "subscription": {
     "customerCenter": "Gestionar / cancelar suscripción",
@@ -1984,7 +2001,7 @@
             "body": "Lo principal, y por qué sale cada cosa.",
             "steps": {
               "0": "Frases de temas cortos, así hay algo que comparar historias contra.",
-              "1": "Cómo inicias sesión, que es este teléfono (o, hasta el 30 de octubre de 2026, un correo de antes), y qué plan tienes.",
+              "1": "Cómo inicias sesión, que es este teléfono, y qué plan tienes.",
               "2": "Los artículos que pide tu teléfono, y el texto cifrado que Mera envía para que lo lea por ti, contados por día para aplicar tu plan."
             },
             "ask": "¿Qué envía la app a los servidores de Mera?"
@@ -1999,11 +2016,11 @@
           },
           "on-device-option": {
             "headline": "En el dispositivo, si lo quieres",
-            "body": "Abre Ajustes y luego Mera Protocol para pasar el procesamiento a este teléfono. Así la IA que lee tus noticias funciona aquí en lugar de en la nube. Tus frases de temas siguen saliendo para buscar noticias, y para iniciar sesión sigues necesitando tu correo o este teléfono. Primero descarga un modelo, necesita un teléfono bastante reciente y es bastante más lento, justo por eso no es la opción predeterminada."
+            "body": "Abre Ajustes y luego Mera Protocol para pasar el procesamiento a este teléfono. Así la IA que lee tus noticias funciona aquí en lugar de en la nube. Tus frases de temas siguen saliendo para buscar noticias, y para iniciar sesión sigues necesitando este teléfono. Primero descarga un modelo, necesita un teléfono bastante reciente y es bastante más lento, justo por eso no es la opción predeterminada."
           },
           "what-we-keep": {
             "headline": "Lo que sí guardamos",
-            "body": "Qué plan tienes. Un correo solo para las cuentas que iniciaron sesión con correo antes, eliminado el 30 de octubre de 2026. Un recuento diario de artículos enviados a ti, cuánto texto cifrado envió Mera para que lo leyera por ti y en cuántas solicitudes (nunca el texto en sí), cuándo alcanzaste la lectura diaria de tu plan, y los días en que usaste Mera, que se conserva durante 90 días. Tus horarios de notificaciones, tu idioma y tu modo de procesamiento. Las respuestas que envías a las preguntas del equipo de Mera. Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se eliminan tras catorce días sin uso.",
+            "body": "Qué plan tienes. Un recuento diario de artículos enviados a ti, cuánto texto cifrado envió Mera para que lo leyera por ti y en cuántas solicitudes (nunca el texto en sí), cuándo alcanzaste la lectura diaria de tu plan, y los días en que usaste Mera, que se conserva durante 90 días. Tus horarios de notificaciones, tu idioma y tu modo de procesamiento. Las respuestas que envías a las preguntas del equipo de Mera. Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se eliminan tras catorce días sin uso.",
             "ask": "¿Qué almacena Mera sobre mí en sus servidores?"
           }
         }
@@ -2891,11 +2908,12 @@
       "groupNoPriority": "Sin prioridad",
       "groupOther": "Otros",
       "emptyArchiveTitle": "Nada archivado todavía",
-      "emptyArchiveBody": "Elige Archivar en el menú ••• de cualquier artículo. Los artículos archivados se quedan en este teléfono hasta que los quites.",
+      "emptyArchiveBody": "Toca el marcador de un artículo guardado y elige Archivar, o usa el menú •••. Los artículos archivados se quedan en este teléfono hasta que los quites.",
       "countLater_one": "{{count}} por leer",
       "countLater_other": "{{count}} por leer",
       "countArchive_one": "{{count}} archivado",
-      "countArchive_other": "{{count}} archivados"
+      "countArchive_other": "{{count}} archivados",
+      "openArchive": "Abrir Archivo"
     },
     "checks": {
       "emptyTitle": "Aún no hay verificaciones de hechos",

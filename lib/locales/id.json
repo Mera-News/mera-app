@@ -336,13 +336,29 @@
     "turnOn": "Aktifkan notifikasi",
     "turnThemOn": "Aktifkan",
     "sourcesTitle": "Sumber berita mana yang Anda percayai?",
-    "sourcesBody": "Ketuk bintang untuk melihat lebih banyak. Ketuk ikon mata untuk menyembunyikan dari umpan Anda. Anda bisa mengubahnya kapan saja di Sumber.",
+    "sourcesBody": "Ketuk bintang untuk melihat lebih banyak. Ketuk ikon mata untuk menyembunyikan dari umpan Anda. Ketuk nama untuk membuka halamannya, tempat Anda bisa menandainya sebagai Berlangganan. Anda bisa mengubahnya kapan saja di Sumber.",
     "sourcesSkip": "Lewati",
     "sourcesLoadError": "Tidak dapat memuat sumber.",
     "sourcesOffline": "Anda sedang offline. Anda bisa menambahkan sumber nanti di Sumber.",
     "iSubscribe": "Saya berlangganan",
     "iSubscribeA11y": "Saya berlangganan {{publisher}}",
-    "sourcesFind": "Cari publikasi"
+    "sourcesFind": "Cari publikasi",
+    "yourSources": "Sumber Anda",
+    "ratherNotSay": "Saya tidak ingin menjawab",
+    "howDataHandled": "Bagaimana Mera menangani data saya",
+    "somethingElse": "Ingin melakukan hal lain?",
+    "whatNext": "Apa yang ingin Anda lakukan selanjutnya?",
+    "pathProfile": "Buat profil saya",
+    "pathFollow": "Ikuti sebuah cerita",
+    "pathAbout": "Ceritakan tentang Mera",
+    "pathDoneA11y": "{{option}}, selesai",
+    "intro": "Halo, saya Mera, asisten berita pribadi Anda.\n\nSaya membaca berita dan menunjukkan apa yang berdampak pada Anda.\n\nUntuk memulai, di mana Anda tinggal? Bagikan sebanyak yang Anda mau: sebuah kawasan dan kota, atau hanya provinsi atau negara Anda.",
+    "profileExplain": "Ini membangun Umpan Anda. Mera menemukan topik untuk dicari berdasarkan siapa Anda, terus membacanya, dan menunjukkan apa yang penting di Umpan Anda.\n\nApa pekerjaan Anda?",
+    "followExplain": "Anda akan menemukan setiap cerita yang Anda ikuti di Cerita, pada tab Umpan.\n\nCerita apa yang ingin Anda ikuti?",
+    "placeholderHome": "Di mana Anda tinggal",
+    "placeholderChoose": "Atau ketik apa saja",
+    "placeholderFollow": "Sebuah cerita, tim, atau topik",
+    "placeholderAbout": "Tanyakan apa saja"
   },
   "notifications": {
     "title": "Notifikasi",
@@ -901,7 +917,8 @@
     "moveToReadLater": "Pindahkan ke Baca nanti",
     "movedToArchive": "Dipindahkan ke Arsip",
     "movedToReadLater": "Dipindahkan ke Baca nanti",
-    "archivedToastMessage": "Ditambahkan ke Arsip"
+    "archivedToastMessage": "Ditambahkan ke Arsip",
+    "removeShort": "Hapus"
   },
   "subscription": {
     "customerCenter": "Kelola / batalkan langganan",
@@ -1958,7 +1975,7 @@
             "body": "Hal-hal utamanya, dan mengapa masing-masing keluar.",
             "steps": {
               "0": "Frasa topik pendek, jadi ada sesuatu untuk mencocokkan cerita.",
-              "1": "Cara Anda masuk, yaitu ponsel ini (atau email dari sebelumnya sampai 30 Oktober 2026), dan paket yang Anda pakai.",
+              "1": "Cara Anda masuk, yaitu ponsel ini, dan paket yang Anda pakai.",
               "2": "Artikel yang diminta ponsel Anda, serta teks terenkripsi yang Mera kirim untuk dibaca bagi Anda, dihitung per hari untuk menerapkan paket Anda."
             },
             "ask": "Apa yang dikirim aplikasi ke server Anda?"
@@ -1973,11 +1990,11 @@
           },
           "on-device-option": {
             "headline": "Di perangkat, jika Anda menginginkannya",
-            "body": "Buka Pengaturan, lalu Mera Protocol, untuk memindahkan pemrosesan ke ponsel ini. Lalu AI yang membaca berita Anda berjalan di sini, bukan di cloud. Frasa topik Anda tetap dikirim untuk mengambil berita, dan untuk masuk tetap perlu email Anda atau ponsel ini. Model diunduh lebih dulu, butuh ponsel yang cukup baru, dan terasa lebih lambat, justru karena itu ini bukan pilihan default."
+            "body": "Buka Pengaturan, lalu Mera Protocol, untuk memindahkan pemrosesan ke ponsel ini. Lalu AI yang membaca berita Anda berjalan di sini, bukan di cloud. Frasa topik Anda tetap dikirim untuk mengambil berita, dan untuk masuk tetap perlu ponsel ini. Model diunduh lebih dulu, butuh ponsel yang cukup baru, dan terasa lebih lambat, justru karena itu ini bukan pilihan default."
           },
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
-            "body": "Paket yang Anda pakai. Email hanya untuk akun yang dulu masuk dengan email, dihapus pada 30 Oktober 2026. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
+            "body": "Paket yang Anda pakai. Jumlah teks terenkripsi yang Mera kirim untuk dibaca bagi Anda setiap hari dan dalam berapa permintaan (tidak pernah teks aslinya), berapa artikel yang dikirim kepada Anda setiap hari, kapan Anda mencapai pembacaan harian paket Anda, dan hari-hari saat Anda memakai Mera, disimpan selama 90 hari. Waktu notifikasi, bahasa, dan pilihan pemrosesan Anda. Jawaban yang Anda kirim untuk pertanyaan tim Mera. Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
             "ask": "Apa yang disimpan Mera tentang saya di servernya?"
           }
         }
@@ -2864,11 +2881,12 @@
       "groupNoPriority": "Tanpa prioritas",
       "groupOther": "Lainnya",
       "emptyArchiveTitle": "Belum ada yang diarsipkan",
-      "emptyArchiveBody": "Pilih Arsipkan di menu ••• pada artikel mana pun. Artikel yang diarsipkan tetap ada di ponsel ini sampai Anda menghapusnya.",
+      "emptyArchiveBody": "Ketuk penanda di artikel tersimpan dan pilih Arsipkan, atau gunakan menu •••. Artikel yang diarsipkan tetap ada di ponsel ini sampai Anda menghapusnya.",
       "countLater_one": "{{count}} untuk dibaca",
       "countLater_other": "{{count}} untuk dibaca",
       "countArchive_one": "{{count}} diarsipkan",
-      "countArchive_other": "{{count}} diarsipkan"
+      "countArchive_other": "{{count}} diarsipkan",
+      "openArchive": "Buka Arsip"
     },
     "checks": {
       "emptyTitle": "Belum ada pemeriksaan fakta",

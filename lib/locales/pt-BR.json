@@ -350,13 +350,29 @@
     "turnOn": "Ativar notificações",
     "turnThemOn": "Ativar",
     "sourcesTitle": "Em quais fontes de notícias você confia?",
-    "sourcesBody": "Toque na estrela para ver mais. Toque no olho para ocultar do seu Feed. Você pode mudar isso a qualquer momento em Fontes.",
+    "sourcesBody": "Toque na estrela para ver mais. Toque no olho para ocultar do seu Feed. Toque em um nome para abrir a página dele, onde você pode marcar como Assinado. Você pode mudar isso a qualquer momento em Fontes.",
     "sourcesSkip": "Pular",
     "sourcesLoadError": "Não foi possível carregar fontes.",
     "sourcesOffline": "Você está sem conexão. Depois, adicione fontes em Fontes.",
     "iSubscribe": "Já assino",
     "iSubscribeA11y": "Já assino {{publisher}}",
-    "sourcesFind": "Encontre uma publicação"
+    "sourcesFind": "Encontre uma publicação",
+    "yourSources": "Suas fontes",
+    "ratherNotSay": "Prefiro não dizer",
+    "howDataHandled": "Como a Mera trata meus dados",
+    "somethingElse": "Quer fazer outra coisa?",
+    "whatNext": "O que você gostaria de fazer agora?",
+    "pathProfile": "Criar meu perfil",
+    "pathFollow": "Seguir uma história",
+    "pathAbout": "Me fale sobre a Mera",
+    "pathDoneA11y": "{{option}}, concluído",
+    "intro": "Oi, eu sou a Mera, sua assistente pessoal de notícias.\n\nEu leio as notícias e mostro o que afeta você.\n\nPara começar, onde você mora? Conte o quanto quiser: um bairro e uma cidade, ou só o seu estado ou país.",
+    "profileExplain": "Isto monta o seu Feed. A Mera encontra temas para buscar com base em quem você é, continua acompanhando esses temas e mostra o que importa no seu Feed.\n\nO que você faz no trabalho?",
+    "followExplain": "Você vai encontrar todas as histórias que segue em Histórias, na aba Feed.\n\nQual história você quer seguir?",
+    "placeholderHome": "Onde você mora",
+    "placeholderChoose": "Ou digite qualquer coisa",
+    "placeholderFollow": "Uma história, time ou tema",
+    "placeholderAbout": "Pergunte qualquer coisa"
   },
   "notifications": {
     "title": "Notificações",
@@ -917,7 +933,8 @@
     "moveToReadLater": "Mover para Ler depois",
     "movedToArchive": "Movido para Arquivo",
     "movedToReadLater": "Movido para Ler depois",
-    "archivedToastMessage": "Adicionado ao Arquivo"
+    "archivedToastMessage": "Adicionado ao Arquivo",
+    "removeShort": "Remover"
   },
   "subscription": {
     "customerCenter": "Gerenciar / cancelar assinatura",
@@ -1984,7 +2001,7 @@
             "body": "As principais coisas, e por que cada uma sai.",
             "steps": {
               "0": "Frases de tópico curtas, para ter algo para combinar com histórias.",
-              "1": "Como você entra, que é este celular (ou, até 30 de outubro de 2026, um e-mail de antes), e qual plano você tem.",
+              "1": "Como você entra, que é este celular, e qual plano você tem.",
               "2": "Os artigos que seu celular pede e o texto criptografado que o Mera envia para ser lido por você, contados por dia para aplicar seu plano."
             },
             "ask": "O que o app envia aos seus servidores?"
@@ -1999,11 +2016,11 @@
           },
           "on-device-option": {
             "headline": "No dispositivo, se quiser",
-            "body": "Abra Configurações e depois Mera Protocol para passar o processamento para este celular. Aí a IA que lê suas notícias roda aqui em vez de na nuvem. Suas frases de tópicos ainda saem para buscar notícias, e o login ainda precisa do seu e-mail ou deste celular. Primeiro ele baixa um modelo, precisa de um celular razoavelmente recente e é bem mais lento, e é exatamente por isso que não é o padrão."
+            "body": "Abra Configurações e depois Mera Protocol para passar o processamento para este celular. Aí a IA que lê suas notícias roda aqui em vez de na nuvem. Suas frases de tópicos ainda saem para buscar notícias, e o login ainda precisa deste celular. Primeiro ele baixa um modelo, precisa de um celular razoavelmente recente e é bem mais lento, e é exatamente por isso que não é o padrão."
           },
           "what-we-keep": {
             "headline": "O que mantemos",
-            "body": "Qual plano você tem. Um e-mail só para uma conta que entrou com um antes, apagado em 30 de outubro de 2026. Uma contagem diária de artigos enviados a você, quanto texto criptografado o Mera enviou para ser lido por você e em quantas solicitações (nunca o texto em si), quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera, guardada por 90 dias. Seus horários de notificação, idioma e escolha de processamento. As respostas que você envia às perguntas da equipe da Mera. Um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso.",
+            "body": "Qual plano você tem. Uma contagem diária de artigos enviados a você, quanto texto criptografado a Mera enviou para ser lido para você e em quantas solicitações (nunca o texto em si), quando você atingiu a leitura diária do seu plano e em quais dias você usou a Mera, guardada por 90 dias. Seus horários de notificação, idioma e escolha de processamento. As respostas que você envia às perguntas da equipe da Mera. Um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso.",
             "ask": "O que Mera armazena sobre mim em seus servidores?"
           }
         }
@@ -2891,11 +2908,12 @@
       "groupNoPriority": "Sem prioridade",
       "groupOther": "Outros",
       "emptyArchiveTitle": "Nada arquivado ainda",
-      "emptyArchiveBody": "Escolha Arquivar no menu ••• de qualquer artigo. Os artigos arquivados ficam neste celular até você remover.",
+      "emptyArchiveBody": "Toque no marcador de um artigo salvo e escolha Arquivar, ou use o menu •••. Os artigos arquivados ficam neste celular até você remover.",
       "countLater_one": "{{count}} para ler",
       "countLater_other": "{{count}} para ler",
       "countArchive_one": "{{count}} arquivado",
-      "countArchive_other": "{{count}} arquivados"
+      "countArchive_other": "{{count}} arquivados",
+      "openArchive": "Abrir Arquivo"
     },
     "checks": {
       "emptyTitle": "Nenhuma checagem ainda",

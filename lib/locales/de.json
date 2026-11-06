@@ -348,13 +348,29 @@
     "turnOn": "Benachrichtigungen einschalten",
     "turnThemOn": "Einschalten",
     "sourcesTitle": "Welchen Nachrichtenquellen vertraust du?",
-    "sourcesBody": "Tippe auf den Stern, um mehr zu sehen. Tippe auf das Auge, um eine Quelle aus deinen Nachrichten auszublenden. Das kannst du jederzeit unter Quellen ändern.",
+    "sourcesBody": "Tippe auf den Stern, um mehr zu sehen. Tippe auf das Auge, um eine Quelle aus deinen Nachrichten auszublenden. Tippe auf einen Namen, um seine Seite zu öffnen, wo du sie als „Abonniert“ markieren kannst. Das kannst du jederzeit unter Quellen ändern.",
     "sourcesSkip": "Überspringen",
     "sourcesLoadError": "Quellen konnten nicht geladen werden.",
     "sourcesOffline": "Du bist offline. Du kannst Quellen später im Bereich Quellen hinzufügen.",
     "iSubscribe": "Ich habe ein Abo",
     "iSubscribeA11y": "Ich habe {{publisher}} abonniert",
-    "sourcesFind": "Veröffentlichung suchen"
+    "sourcesFind": "Veröffentlichung suchen",
+    "yourSources": "Deine Quellen",
+    "ratherNotSay": "Sag ich lieber nicht",
+    "howDataHandled": "Wie Mera mit meinen Daten umgeht",
+    "somethingElse": "Möchtest du etwas anderes machen?",
+    "whatNext": "Was möchtest du als Nächstes tun?",
+    "pathProfile": "Mein Profil erstellen",
+    "pathFollow": "Einer Geschichte folgen",
+    "pathAbout": "Erzähl mir von Mera",
+    "pathDoneA11y": "{{option}}, erledigt",
+    "intro": "Hallo, ich bin Mera, dein persönlicher Nachrichtenassistent.\n\nIch lese die Nachrichten und zeige dir, was dich betrifft.\n\nFangen wir an: Wo wohnst du? Erzähl ruhig so viel, wie du willst: ein Viertel und eine Stadt oder nur deine Region oder dein Land.",
+    "profileExplain": "Damit entstehen deine Nachrichten. Mera findet anhand deiner Person Themen zur Suche, liest sie weiter und zeigt dir unter Nachrichten, was wichtig ist.\n\nWas machst du beruflich?",
+    "followExplain": "Jede Geschichte, der du folgst, findest du unter Geschichten im Tab Nachrichten.\n\nWelcher Geschichte möchtest du folgen?",
+    "placeholderHome": "Wo du wohnst",
+    "placeholderChoose": "Oder schreib etwas",
+    "placeholderFollow": "Eine Geschichte, ein Team oder ein Thema",
+    "placeholderAbout": "Frag, was du willst"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -915,7 +931,8 @@
     "moveToReadLater": "Zu Später lesen verschieben",
     "movedToArchive": "Ins Archiv verschoben",
     "movedToReadLater": "Zu Später lesen verschoben",
-    "archivedToastMessage": "Zum Archiv hinzugefügt"
+    "archivedToastMessage": "Zum Archiv hinzugefügt",
+    "removeShort": "Entfernen"
   },
   "subscription": {
     "customerCenter": "Abo verwalten / kündigen",
@@ -1978,7 +1995,7 @@
             "body": "Die wichtigsten Dinge, und warum jedes davon hinausgeht.",
             "steps": {
               "0": "Kurze Topicsätze, damit es etwas zum Abgleichen von Geschichten gegen gibt.",
-              "1": "Wie du dich anmeldest, nämlich mit diesem Telefon (oder bis 30. Oktober 2026 mit einer E-Mail von früher), und welchen Tarif du hast.",
+              "1": "Wie du dich anmeldest, nämlich mit diesem Telefon, und welchen Tarif du hast.",
               "2": "Die Artikel, die dein Telefon anfragt, und der verschlüsselte Text, den Mera zum Lesen für dich sendet, pro Tag gezählt, um deinen Tarif anzuwenden."
             },
             "ask": "Was sendet die App an deine Server?"
@@ -1993,11 +2010,11 @@
           },
           "on-device-option": {
             "headline": "Auf dem Gerät, wenn du es möchtest",
-            "body": "Öffne Einstellungen, dann Mera Protocol, um die Verarbeitung auf dieses Telefon zu verlegen. Dann läuft die KI, die deine Nachrichten liest, hier statt in der Cloud. Deine Themenbegriffe gehen weiterhin raus, um Nachrichten abzurufen, und für die Anmeldung braucht es weiterhin deine E-Mail oder dieses Telefon. Zuerst wird ein Modell heruntergeladen, es braucht ein recht neues Telefon und ist spürbar langsamer, genau deshalb ist es nicht die Standardeinstellung."
+            "body": "Öffne Einstellungen, dann Mera Protocol, um die Verarbeitung auf dieses Telefon zu verlegen. Dann läuft die KI, die deine Nachrichten liest, hier statt in der Cloud. Deine Themenbegriffe gehen weiterhin raus, um Nachrichten abzurufen, und für die Anmeldung braucht es weiterhin dieses Telefon. Zuerst wird ein Modell heruntergeladen, es braucht ein recht neues Telefon und ist spürbar langsamer, genau deshalb ist es nicht die Standardeinstellung."
           },
           "what-we-keep": {
             "headline": "Was wir behalten",
-            "body": "Welchen Tarif du hast. Eine E-Mail nur für ein Konto, das sich früher mit E-Mail angemeldet hat, wird am 30. Oktober 2026 gelöscht. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
+            "body": "Welchen Tarif du hast. Eine tägliche Zahl der an dich gesendeten Artikel, wie viel verschlüsselter Text Mera zum Lesen für dich gesendet hat und in wie vielen Anfragen (nie der Text selbst), wann du das tägliche Lesekontingent deines Tarifs erreicht hast und an welchen Tagen du Mera genutzt hast, 90 Tage aufbewahrt. Deine Benachrichtigungszeiten, deine Sprache und deine Verarbeitungswahl. Antworten, die du auf Fragen des Mera-Teams schickst. Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenphrasen werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
             "ask": "Was speichert Mera über mich auf seinen Servern?"
           }
         }
@@ -2885,11 +2902,12 @@
       "groupNoPriority": "Keine Priorität",
       "groupOther": "Sonstige",
       "emptyArchiveTitle": "Noch nichts archiviert",
-      "emptyArchiveBody": "Wähle im •••-Menü eines Artikels Archivieren. Archivierte Artikel bleiben auf diesem Telefon, bis du sie entfernst.",
+      "emptyArchiveBody": "Tippe bei einem gespeicherten Artikel auf das Lesezeichen und wähle Archivieren, oder nutze das •••-Menü. Archivierte Artikel bleiben auf diesem Telefon, bis du sie entfernst.",
       "countLater_one": "{{count}} zu lesen",
       "countLater_other": "{{count}} zu lesen",
       "countArchive_one": "{{count}} archiviert",
-      "countArchive_other": "{{count}} archiviert"
+      "countArchive_other": "{{count}} archiviert",
+      "openArchive": "Archiv öffnen"
     },
     "checks": {
       "emptyTitle": "Noch keine Faktenchecks",

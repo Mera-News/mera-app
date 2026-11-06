@@ -350,13 +350,29 @@
     "turnOn": "Attiva le notifiche",
     "turnThemOn": "Attivale",
     "sourcesTitle": "Di quali fonti di notizie ti fidi?",
-    "sourcesBody": "Tocca la stella per vederne di più. Tocca l'occhio per nasconderla dalle tue Notizie. Puoi cambiarlo in qualsiasi momento in Fonti.",
+    "sourcesBody": "Tocca la stella per vederne di più. Tocca l'occhio per nasconderla dalle tue Notizie. Tocca un nome per aprire la sua pagina, dove puoi impostarla come Abbonato. Puoi cambiarlo in qualsiasi momento in Fonti.",
     "sourcesSkip": "Salta",
     "sourcesLoadError": "Impossibile caricare le fonti.",
     "sourcesOffline": "Sei offline. Puoi aggiungere fonti più tardi in Fonti.",
     "iSubscribe": "Ho un abbonamento",
     "iSubscribeA11y": "Ho un abbonamento a {{publisher}}",
-    "sourcesFind": "Trova una pubblicazione"
+    "sourcesFind": "Trova una pubblicazione",
+    "yourSources": "Le tue fonti",
+    "ratherNotSay": "Preferisco non dirlo",
+    "howDataHandled": "Come Mera gestisce i miei dati",
+    "somethingElse": "Vuoi fare qualcos'altro?",
+    "whatNext": "Cosa vorresti fare adesso?",
+    "pathProfile": "Crea il mio profilo",
+    "pathFollow": "Segui una storia",
+    "pathAbout": "Parlami di Mera",
+    "pathDoneA11y": "{{option}}, fatto",
+    "intro": "Ciao, sono Mera, il tuo assistente personale per le notizie.\n\nLeggo le notizie e ti mostro cosa ti riguarda.\n\nPer iniziare, dove vivi? Condividi quanto vuoi: un quartiere e una città, oppure solo la regione o il paese.",
+    "profileExplain": "Questo crea le tue Notizie. Mera trova argomenti da cercare in base a chi sei, continua a leggerli e ti mostra ciò che conta in Notizie.\n\nChe lavoro fai?",
+    "followExplain": "Troverai ogni storia che segui in Storie, nella scheda Notizie.\n\nQuale storia vuoi seguire?",
+    "placeholderHome": "Dove vivi",
+    "placeholderChoose": "Oppure scrivi quello che vuoi",
+    "placeholderFollow": "Una storia, una squadra o un argomento",
+    "placeholderAbout": "Chiedi qualsiasi cosa"
   },
   "notifications": {
     "title": "Notifiche",
@@ -917,7 +933,8 @@
     "moveToReadLater": "Sposta in Leggi dopo",
     "movedToArchive": "Spostato in Archivio",
     "movedToReadLater": "Spostato in Leggi dopo",
-    "archivedToastMessage": "Aggiunto ad Archivio"
+    "archivedToastMessage": "Aggiunto ad Archivio",
+    "removeShort": "Rimuovi"
   },
   "subscription": {
     "customerCenter": "Gestisci / annulla abbonamento",
@@ -1984,7 +2001,7 @@
             "body": "Le cose principali, e perché ognuna esce.",
             "steps": {
               "0": "Brevi frasi di argomenti, così c'è qualcosa con cui abbinare le storie.",
-              "1": "Come accedi, cioè con questo telefono (o, fino al 30 ottobre 2026, con un'email di prima), e quale piano hai.",
+              "1": "Come accedi, cioè con questo telefono, e quale piano hai.",
               "2": "Gli articoli che il tuo telefono richiede e il testo cifrato che Mera invia per essere letto per te, conteggiati ogni giorno per applicare il tuo piano."
             },
             "ask": "Cosa invia l'app ai tuoi server?"
@@ -1999,11 +2016,11 @@
           },
           "on-device-option": {
             "headline": "On-device, se lo vuoi",
-            "body": "Apri Impostazioni, poi Mera Protocol, per spostare l'elaborazione su questo telefono. Così l'IA che legge le tue notizie funziona qui invece che nel cloud. Le tue frasi di argomento escono comunque per cercare le notizie, e per accedere servono comunque la tua email o questo telefono. Prima scarica un modello, serve un telefono abbastanza recente ed è decisamente più lento, proprio per questo non è l'impostazione predefinita."
+            "body": "Apri Impostazioni, poi Mera Protocol, per spostare l'elaborazione su questo telefono. Così l'IA che legge le tue notizie funziona qui invece che nel cloud. Le tue frasi di argomento escono comunque per cercare le notizie, e per accedere serve comunque questo telefono. Prima scarica un modello, serve un telefono abbastanza recente ed è decisamente più lento, proprio per questo non è l'impostazione predefinita."
           },
           "what-we-keep": {
             "headline": "Cosa conserviamo",
-            "body": "Quale piano hai. Un'email solo per un account che in precedenza ha effettuato l'accesso con una, eliminata il 30 ottobre 2026. Un conteggio giornaliero degli articoli inviati a te, quanto testo cifrato Mera ha inviato per essere letto per te e in quante richieste (mai il testo stesso), quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
+            "body": "Quale piano hai. Un conteggio giornaliero degli articoli inviati a te, quanto testo cifrato Mera ha inviato per essere letto per te e in quante richieste (mai il testo stesso), quando hai raggiunto la lettura giornaliera del tuo piano e i giorni in cui hai usato Mera, conservato per 90 giorni. Gli orari delle notifiche, la lingua e la modalità di elaborazione. Le risposte che invii alle domande del team di Mera. Un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
             "ask": "Cosa conserva Mera su di me sui suoi server?"
           }
         }
@@ -2891,11 +2908,12 @@
       "groupNoPriority": "Nessuna priorità",
       "groupOther": "Altro",
       "emptyArchiveTitle": "Ancora niente in archivio",
-      "emptyArchiveBody": "Scegli Archivia nel menu ••• di un articolo. Gli articoli archiviati restano su questo telefono finché non li rimuovi.",
+      "emptyArchiveBody": "Tocca il segnalibro su un articolo salvato e scegli Archivia, oppure usa il menu •••. Gli articoli archiviati restano su questo telefono finché non li rimuovi.",
       "countLater_one": "{{count}} da leggere",
       "countLater_other": "{{count}} da leggere",
       "countArchive_one": "{{count}} archiviato",
-      "countArchive_other": "{{count}} archiviati"
+      "countArchive_other": "{{count}} archiviati",
+      "openArchive": "Apri Archivio"
     },
     "checks": {
       "emptyTitle": "Nessuna verifica dei fatti per ora",

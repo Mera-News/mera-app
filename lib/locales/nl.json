@@ -348,13 +348,29 @@
     "turnOn": "Meldingen aanzetten",
     "turnThemOn": "Zet ze aan",
     "sourcesTitle": "Welke nieuwsbronnen vertrouw je?",
-    "sourcesBody": "Tik op de ster om meer te zien. Tik op het oog om het uit je feed te verbergen. Dit kun je altijd wijzigen bij Bronnen.",
+    "sourcesBody": "Tik op de ster om meer te zien. Tik op het oog om het uit je feed te verbergen. Tik op een naam om de pagina te openen, waar je die als Geabonneerd kunt markeren. Dit kun je altijd wijzigen bij Bronnen.",
     "sourcesSkip": "Overslaan",
     "sourcesLoadError": "Kon de bronnen niet laden.",
     "sourcesOffline": "Je bent offline. Je kunt later bronnen toevoegen bij Bronnen.",
     "iSubscribe": "Ik heb een abonnement",
     "iSubscribeA11y": "Ik heb een abonnement op {{publisher}}",
-    "sourcesFind": "Zoek een publicatie"
+    "sourcesFind": "Zoek een publicatie",
+    "yourSources": "Je bronnen",
+    "ratherNotSay": "Dat zeg ik liever niet",
+    "howDataHandled": "Hoe Mera mijn gegevens verwerkt",
+    "somethingElse": "Wil je iets anders doen?",
+    "whatNext": "Wat wil je hierna doen?",
+    "pathProfile": "Mijn profiel maken",
+    "pathFollow": "Een verhaal volgen",
+    "pathAbout": "Vertel me over Mera",
+    "pathDoneA11y": "{{option}}, klaar",
+    "intro": "Hoi, ik ben Mera, je persoonlijke nieuwsassistent.\n\nIk lees het nieuws en laat zien wat jou raakt.\n\nOm te beginnen: waar woon je? Deel zoveel als je wilt: een buurt en stad, of alleen je regio of land.",
+    "profileExplain": "Hiermee wordt je Feed opgebouwd. Mera zoekt onderwerpen op basis van wie je bent, blijft die volgen en laat in je Feed zien wat ertoe doet.\n\nWat doe je voor werk?",
+    "followExplain": "Elk verhaal dat je volgt vind je in Verhalen, in het tabblad Feed.\n\nWelk verhaal wil je volgen?",
+    "placeholderHome": "Waar je woont",
+    "placeholderChoose": "Of typ iets",
+    "placeholderFollow": "Een verhaal, team of onderwerp",
+    "placeholderAbout": "Vraag wat je wilt"
   },
   "notifications": {
     "title": "Meldingen",
@@ -915,7 +931,8 @@
     "moveToReadLater": "Verplaatsen naar Later lezen",
     "movedToArchive": "Verplaatst naar Archief",
     "movedToReadLater": "Verplaatst naar Later lezen",
-    "archivedToastMessage": "Toegevoegd aan Archief"
+    "archivedToastMessage": "Toegevoegd aan Archief",
+    "removeShort": "Verwijderen"
   },
   "subscription": {
     "customerCenter": "Abonnement beheren / opzeggen",
@@ -1978,7 +1995,7 @@
             "body": "De belangrijkste dingen, en waarom elk ervan de deur uit gaat.",
             "steps": {
               "0": "Korte onderwerpsfrasen, dus er is iets om verhalen tegenaan te passen.",
-              "1": "Hoe je inlogt, namelijk met deze telefoon (of, tot 30 oktober 2026, een e-mailadres van vroeger), en welk abonnement je hebt.",
+              "1": "Hoe je inlogt, namelijk met deze telefoon, en welk abonnement je hebt.",
               "2": "De artikelen die je telefoon opvraagt, en de versleutelde tekst die Mera naar het lezen voor je stuurt, per dag geteld om je abonnement toe te passen."
             },
             "ask": "Wat stuurt de app naar jullie servers?"
@@ -1993,11 +2010,11 @@
           },
           "on-device-option": {
             "headline": "Apparaat, als je wilt",
-            "body": "Open Instellingen en daarna Mera Protocol om de verwerking naar deze telefoon te verplaatsen. Dan draait de AI die je nieuws leest hier in plaats van in de cloud. Je onderwerpzinnen gaan nog steeds naar buiten om nieuws op te halen, en voor inloggen is nog steeds je e-mail of deze telefoon nodig. Eerst wordt een model gedownload, het vraagt een vrij recente telefoon en het is merkbaar trager, en precies daarom is het niet de standaard."
+            "body": "Open Instellingen en daarna Mera Protocol om de verwerking naar deze telefoon te verplaatsen. Dan draait de AI die je nieuws leest hier in plaats van in de cloud. Je onderwerpzinnen gaan nog steeds naar buiten om nieuws op te halen, en voor inloggen is nog steeds deze telefoon nodig. Eerst wordt een model gedownload, het vraagt een vrij recente telefoon en het is merkbaar trager, en precies daarom is het niet de standaard."
           },
           "what-we-keep": {
             "headline": "Wat we houden",
-            "body": "Een e-mailadres is er alleen voor een account dat eerder met e-mail is ingelogd, en dat wordt op 30 oktober 2026 verwijderd. Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera naar het lezen voor je heeft gestuurd en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
+            "body": "Welk abonnement je hebt. Een dagelijkse telling van de artikelen die naar je zijn gestuurd, hoeveel versleutelde tekst Mera heeft gestuurd om voor je te laten lezen en in hoeveel verzoeken (nooit de tekst zelf), wanneer je het dagelijkse lezen van je abonnement hebt bereikt, en op welke dagen je Mera hebt gebruikt, bewaard gedurende 90 dagen. Je meldingstijden, taal en keuze voor verwerking. Antwoorden die je op vragen van het Mera-team stuurt. Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
             "ask": "Wat slaat Mera op haar servers over mij op?"
           }
         }
@@ -2885,11 +2902,12 @@
       "groupNoPriority": "Geen prioriteit",
       "groupOther": "Overig",
       "emptyArchiveTitle": "Nog niets gearchiveerd",
-      "emptyArchiveBody": "Kies Archiveren in het •••-menu van een artikel. Gearchiveerde artikelen blijven op deze telefoon tot je ze verwijdert.",
+      "emptyArchiveBody": "Tik op de bladwijzer bij een opgeslagen artikel en kies Archiveren, of gebruik het •••-menu. Gearchiveerde artikelen blijven op deze telefoon tot je ze verwijdert.",
       "countLater_one": "{{count}} te lezen",
       "countLater_other": "{{count}} te lezen",
       "countArchive_one": "{{count}} gearchiveerd",
-      "countArchive_other": "{{count}} gearchiveerd"
+      "countArchive_other": "{{count}} gearchiveerd",
+      "openArchive": "Archief openen"
     },
     "checks": {
       "emptyTitle": "Nog geen feitencontroles",

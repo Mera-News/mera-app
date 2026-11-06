@@ -348,13 +348,29 @@
     "turnOn": "Bildirimleri aç",
     "turnThemOn": "Açın",
     "sourcesTitle": "Hangi haber kaynaklarına güveniyorsunuz?",
-    "sourcesBody": "Daha fazlasını görmek için yıldıza dokunun. Bir kaynağı Akışınızdan gizlemek için göze dokunun. Bunu istediğiniz zaman Kaynaklar bölümünden değiştirebilirsiniz.",
+    "sourcesBody": "Daha fazlasını görmek için yıldıza dokunun. Bir kaynağı Akışınızdan gizlemek için göze dokunun. Bir yayın adına dokunarak sayfasını açın, orada Abonesiniz olarak işaretleyebilirsiniz. Bunu istediğiniz zaman Kaynaklar bölümünden değiştirebilirsiniz.",
     "sourcesSkip": "Atla",
     "sourcesLoadError": "Kaynaklar yüklenemedi.",
     "sourcesOffline": "Çevrimdışısınız. Daha sonra Kaynaklar bölümünden kaynak ekleyebilirsiniz.",
     "iSubscribe": "Abone oldum",
     "iSubscribeA11y": "{{publisher}} yayınına abone oldum",
-    "sourcesFind": "Bir yayın bulun"
+    "sourcesFind": "Bir yayın bulun",
+    "yourSources": "Kaynaklarınız",
+    "ratherNotSay": "Söylemek istemiyorum",
+    "howDataHandled": "Mera verilerimi nasıl işliyor?",
+    "somethingElse": "Başka bir şey yapmak ister misiniz?",
+    "whatNext": "Sonra ne yapmak istersiniz?",
+    "pathProfile": "Profilimi oluştur",
+    "pathFollow": "Bir haberi takip et",
+    "pathAbout": "Mera hakkında bana anlat",
+    "pathDoneA11y": "{{option}}, tamam",
+    "intro": "Merhaba, ben Mera, kişisel haber asistanınız.\n\nHaberleri okuyup sizi etkileyeni gösteriyorum.\n\nBaşlamak için, nerede yaşıyorsunuz? İstediğiniz kadar paylaşın: bir mahalle ve şehir, ya da yalnızca eyaletiniz veya ülkeniz.",
+    "profileExplain": "Bu, Akışınızı oluşturur. Mera, kim olduğunuza göre aranacak konuları bulur, bunları takip etmeye devam eder ve Akışınızda önemli olanları gösterir.\n\nİş olarak ne yapıyorsunuz?",
+    "followExplain": "Takip ettiğiniz her haberi Akış sekmesindeki Haberler bölümünde bulacaksınız.\n\nHangi haberi takip etmek istersiniz?",
+    "placeholderHome": "Yaşadığınız yer",
+    "placeholderChoose": "Ya da istediğinizi yazın",
+    "placeholderFollow": "Bir haber, takım ya da konu",
+    "placeholderAbout": "İstediğinizi sorun"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -915,7 +931,8 @@
     "moveToReadLater": "Sonra oku listesine taşı",
     "movedToArchive": "Arşive taşındı",
     "movedToReadLater": "Sonra oku listesine taşındı",
-    "archivedToastMessage": "Arşive eklendi"
+    "archivedToastMessage": "Arşive eklendi",
+    "removeShort": "Kaldır"
   },
   "subscription": {
     "customerCenter": "Aboneliği yönet / iptal et",
@@ -1980,7 +1997,7 @@
             "body": "Başlıca şeyler ve her birinin neden dışarı çıktığı.",
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
-              "1": "Giriş yöntemin, bu telefon (ya da 30 Ekim 2026'ya kadar, daha önce kalmış bir e-posta) ve hangi planda olduğun.",
+              "1": "Giriş yöntemin, bu telefon ve hangi planda olduğun.",
               "2": "Telefonunun istediği makaleler ve Mera'nın senin için okunmak üzere gönderdiği şifreli metin, planını uygulamak için günlük olarak sayılır."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
@@ -1995,11 +2012,11 @@
           },
           "on-device-option": {
             "headline": "İsterseniz cihaz üzerinde",
-            "body": "Ayarlar'ı, ardından Mera Protocol'ü açarak işlemeyi bu telefona taşıyabilirsiniz. O zaman haberlerinizi okuyan yapay zeka bulut yerine burada çalışır. Konu ifadeleriniz haber getirmek için yine dışarı çıkar ve giriş için yine e-postanız ya da bu telefon gerekir. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin şekilde daha yavaştır, varsayılan olmamasının nedeni de tam olarak budur."
+            "body": "Ayarlar'ı, ardından Mera Protocol'ü açarak işlemeyi bu telefona taşıyabilirsiniz. O zaman haberlerinizi okuyan yapay zeka bulut yerine burada çalışır. Konu ifadeleriniz haber getirmek için yine dışarı çıkar ve giriş için yine bu telefon gerekir. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin şekilde daha yavaştır, varsayılan olmamasının nedeni de tam olarak budur."
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
-            "body": "Yalnızca daha önce e-postayla giriş yapmış bir hesabın e-postası, 30 Ekim 2026'da silinir. Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
+            "body": "Hangi planda olduğun. Sana gönderilen makalelerin günlük sayısı, Mera'nın senin için okunmak üzere gönderdiği şifreli metnin her gün ne kadarı ve kaç istekte (metnin kendisi hiçbir zaman değil), planının günlük okumasına ne zaman ulaştığın ve Mera'yı hangi günler kullandığın, 90 gün saklanır. Bildirim saatlerin, dilin ve işleme tercihin. Mera ekibinin sorularına gönderdiğin yanıtlar. Bu telefon için hesabınla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğini gösteren hiçbir kayıt tutulmaz ve kullanılmazsa on dört gün sonra silinir.",
             "ask": "Mera sunucularında benim hakkımda ne saklıyor?"
           }
         }
@@ -2887,11 +2904,12 @@
       "groupNoPriority": "Öncelik yok",
       "groupOther": "Diğer",
       "emptyArchiveTitle": "Henüz arşivlenen bir şey yok",
-      "emptyArchiveBody": "Herhangi bir makalenin ••• menüsünden Arşivle seçeneğini seçin. Arşivlenen makaleler siz kaldırana kadar bu telefonda kalır.",
+      "emptyArchiveBody": "Kaydedilen bir makalenin yer imine dokunup Arşivle seçeneğini seçin ya da ••• menüsünü kullanın. Arşivlenen makaleler siz kaldırana kadar bu telefonda kalır.",
       "countLater_one": "{{count}} okunacak",
       "countLater_other": "{{count}} okunacak",
       "countArchive_one": "{{count}} arşivlendi",
-      "countArchive_other": "{{count}} arşivlendi"
+      "countArchive_other": "{{count}} arşivlendi",
+      "openArchive": "Arşivi aç"
     },
     "checks": {
       "emptyTitle": "Henüz doğruluk kontrolü yok",
