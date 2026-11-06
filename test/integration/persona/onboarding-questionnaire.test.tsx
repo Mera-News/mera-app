@@ -5,7 +5,7 @@ import React from 'react';
 
 import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
 import { AccountService } from '@/lib/account-service';
-import { resetChatSession } from '@/lib/chat-session/chat-session';
+import { resetChatSession, retryChatTurn } from '@/lib/chat-session/chat-session';
 import { addFact, getFacts } from '@/lib/database/services/fact-service';
 import { getAll as getLocations } from '@/lib/database/services/location-service';
 import { trackStory } from '@/lib/database/services/tracked-story-service';
@@ -149,6 +149,42 @@ describe('opening the wizard', () => {
   });
 });
 
+describe('the first question', () => {
+  const askedHome = (c: GatewayCall) =>
+    c.messages.some((m) => m.content.includes('Your last turn asked: "To begin, where do you live?'));
+
+  it('reaches the model with a bare answer, and adds no row', async () => {
+    await openWizard();
+    await send('De Pijp, Amsterdam');
+
+    expect(askedHome(modelCalls()[0])).toBe(true);
+    expect(rows()[0]).toBe('De Pijp, Amsterdam');
+  });
+
+  it('rides the first send only', async () => {
+    await openWizard();
+    await send('De Pijp, Amsterdam');
+    const before = modelCalls().length;
+
+    await send('Noord-Holland');
+
+    expect(askedHome(modelCalls()[before])).toBe(false);
+  });
+
+  it('is still there on a retry of a failed first turn', async () => {
+    await openWizard();
+    server.use(...mockGateway((c) => (isPing(c) ? defaultResponder(c) : { status: 400, body: { error: 'nope' } })));
+    await send('De Pijp, Amsterdam');
+    server.use(...mockGateway(responder));
+    const before = modelCalls().length;
+
+    expect(retryChatTurn()).toBe(true);
+    await turnOver();
+
+    expect(askedHome(modelCalls()[before])).toBe(true);
+  });
+});
+
 describe('How Mera handles my data', () => {
   it('opens the privacy sheet over the chat and comes back to it with the text intact', async () => {
     await openWizard();
@@ -198,19 +234,37 @@ describe("I'd rather not say", () => {
     expect(isRouteLeg(modelCalls()[before])).toBe(true);
   });
 
-  it('on the profile path is an ordinary message, so the model moves on and nothing is saved', async () => {
+  it('on the profile path goes to the skill that saves nothing, so a prose reply is never forced into an offer', async () => {
     await toMenu();
     await press('onboarding-path-profile');
     await screen.findByPlaceholderText(en.onboarding.composerPlaceholder);
     const before = modelCalls().length;
     const facts = (await getFacts()).length;
+    server.use(...mockGateway((c) => (isPing(c) ? defaultResponder(c) : 'No problem. Is there someone at home you care about?')));
 
     await press('onboarding-chip-decline');
     await turnOver();
 
-    expect(personMessage(modelCalls()[before])).toBe(copy.ratherNotSay);
+    const [leg, ...rest] = modelCalls().slice(before);
+    expect(personMessage(leg)).toBe(copy.ratherNotSay);
+    expect(isRouteLeg(leg)).toBe(false);
+    expect(systemOf(leg)).toContain('Either way you extract nothing and save');
+    expect(rest).toHaveLength(0);
+    expect(rows().at(-1)).toBe('No problem. Is there someone at home you care about?');
     expect((await getFacts()).length).toBe(facts);
     expect(menuCount()).toBe(1);
+  });
+
+  it('at where you live tells the next turn what was declined', async () => {
+    await openWizard();
+    await press('onboarding-chip-decline');
+    await waitForMenus(1);
+
+    await send('What is new today?');
+
+    const sent = modelCalls()[0].messages.map((m) => m.content).join('\n');
+    expect(sent).toContain('To begin, where do you live?');
+    expect(sent).toContain(`They said: ${copy.ratherNotSay}`);
   });
 
   it('is not offered on the about path, which asks nothing', async () => {
@@ -436,6 +490,25 @@ describe('check marks', () => {
     });
     await turnOver();
     expect(rows().filter((r) => r === pathAbout)).toHaveLength(2);
+  });
+});
+
+describe('the Ready badge on the real ping', () => {
+  const stepLabel = () => screen.getByTestId('onboarding-step-label').props.accessibilityLabel;
+
+  it('warms until the ping answers, then reads Ready', async () => {
+    server.use(...mockGateway((c) => (isPing(c) ? { chunks: ['ready'], headerDelayMs: 1500 } : responder(c))));
+    await openWizard();
+
+    await waitFor(() => expect(stepLabel()).toBe(`Step 1 of 3, ${en.chat.statusWarming}`), { timeout: 10_000 });
+    await waitFor(() => expect(stepLabel()).toBe(`Step 1 of 3, ${en.chat.statusReady}`), { timeout: 15_000 });
+  });
+
+  it('shows the error state when the ping fails', async () => {
+    server.use(...mockGateway((c) => (isPing(c) ? { status: 400, body: { error: 'nope' } } : responder(c))));
+    await openWizard();
+
+    await waitFor(() => expect(stepLabel()).toBe(`Step 1 of 3, ${en.chat.statusError}`), { timeout: 15_000 });
   });
 });
 

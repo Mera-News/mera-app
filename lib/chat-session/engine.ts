@@ -4,7 +4,7 @@
 
 import type { IAgent } from '@/lib/llm/types';
 import type { ChatAgent } from '@/lib/llm/agents/on-device/types';
-import type { FOLLOW_STORY_SKILL } from '@/lib/mera-harness/core/core';
+import type { ForcedSkill } from '@/lib/mera-harness/core/core';
 import type { ProposalAction, TrackFeedbackSubject } from '@/lib/news-harness/core/types';
 
 /** The most options a follow card may hold, grown ones included. */
@@ -26,7 +26,9 @@ export const MUTATING_CHAT_TOOLS: ReadonlySet<string> = new Set([
 export interface SendOptions {
     /** This turn runs this skill with no route leg. Ignored on device, and by a
      *  chat that does not run on the harness. */
-    forcedSkill?: typeof FOLLOW_STORY_SKILL;
+    forcedSkill?: ForcedSkill;
+    /** The question this send answers, when no row holds it. Ignored on device. */
+    asked?: string;
 }
 
 /** An onboarding line: no model call and no turn. The next real turn reads it. */
@@ -37,6 +39,8 @@ export interface ScriptedExchange {
     assistant: string;
     /** This row is the onboarding menu: the thread draws the card under it. */
     menu?: true;
+    /** The question `user` answers, when no row holds it. */
+    asked?: string;
 }
 
 /** The marker is the id, because the id is what `messages` keeps and resume returns. */

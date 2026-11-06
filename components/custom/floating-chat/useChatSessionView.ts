@@ -18,7 +18,7 @@ import {
 import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { canRetryChatTurn, retryChatTurn, scriptedExchange } from '@/lib/chat-session/chat-session';
 import type { ScriptedExchange } from '@/lib/chat-session/engine';
-import { FOLLOW_STORY_SKILL } from '@/lib/mera-harness/core/core';
+import { FOLLOW_STORY_SKILL, QUESTION_SKILL, type ForcedSkill } from '@/lib/mera-harness/core/core';
 import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
 import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
@@ -57,6 +57,9 @@ const STEP_PLACEHOLDER = {
   about: 'onboarding.placeholderAbout',
 } as const;
 
+/** The intro is no row, so the model is told this line ends it. */
+const lastParagraph = (text: string): string => text.trim().split(/\n+/).pop() ?? text;
+
 /** Onboarding's questionnaire: where the reader is, the buttons above the composer,
  *  and the menu's handlers. Every tap but a real send costs no model call. */
 function useOnboardingQuestionnaire({
@@ -71,8 +74,8 @@ function useOnboardingQuestionnaire({
   /** A turn runs or the account is blocked: nothing is added to the thread. */
   busy: boolean;
   handleSend: (text: string) => boolean;
-  /** The next send answers the follow question. */
-  forcedNextRef: RefObject<boolean>;
+  /** The next send answers the app's question, so it runs this skill. */
+  forcedNextRef: RefObject<ForcedSkill | null>;
 }) {
   const { t } = useTranslation();
   const host = useContext(OnboardingChatContext);
@@ -105,10 +108,10 @@ function useOnboardingQuestionnaire({
   }, [menuOwed, busy, script, t]);
 
   const backToMenu = useCallback(
-    async (user?: string): Promise<boolean> => {
-      const added = await script({ user, assistant: t('onboarding.whatNext'), menu: true });
+    async (user?: string, asked?: string): Promise<boolean> => {
+      const added = await script({ user, asked, assistant: t('onboarding.whatNext'), menu: true });
       if (added) {
-        forcedNextRef.current = false;
+        forcedNextRef.current = null;
         setStep('choose');
       }
       return added;
@@ -120,7 +123,7 @@ function useOnboardingQuestionnaire({
     (path: OnboardingPath) => {
       if (busy) return;
       if (path === 'about') {
-        forcedNextRef.current = false;
+        forcedNextRef.current = null;
         if (handleSend(t('onboarding.pathAbout'))) {
           setAboutDone(true);
           setStep(path);
@@ -133,7 +136,7 @@ function useOnboardingQuestionnaire({
           : { user: t('onboarding.pathFollow'), assistant: t('onboarding.followExplain') };
       void script(exchange).then((added) => {
         if (!added) return;
-        forcedNextRef.current = path === 'follow';
+        forcedNextRef.current = path === 'follow' ? FOLLOW_STORY_SKILL : null;
         setStep(path);
       });
     },
@@ -146,10 +149,11 @@ function useOnboardingQuestionnaire({
   const onDecline = () => {
     // A profile question gets a real answer, so the model moves on to the next.
     if (step === 'profile') {
-      handleSend(decline);
+      forcedNextRef.current = QUESTION_SKILL;
+      if (!handleSend(decline)) forcedNextRef.current = null;
       return;
     }
-    void backToMenu(decline).then((added) => {
+    void backToMenu(decline, step === 'home' ? lastParagraph(t('onboarding.intro')) : undefined).then((added) => {
       if (!added || step !== 'home') return;
       setDeclinedHome(true);
       host?.onDeclineHome();
@@ -679,7 +683,10 @@ export function useChatSessionView(props: ChatSessionViewProps) {
 
   // Set by onboarding's follow line: only the send that answers it is forced, so
   // a follow-skill chip on a later turn can still resume.
-  const forcedNextRef = useRef(false);
+  const forcedNextRef = useRef<ForcedSkill | null>(null);
+  // The first question: only the send that answers it carries it.
+  const homeQuestion =
+    inOnboarding && factsAtOpen === false && messages.length === 0 ? lastParagraph(t('onboarding.intro')) : undefined;
 
   const handleSend = useCallback(
     (text: string): boolean => {
@@ -692,14 +699,15 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       if (unresolvedTopicPlans.length > 0) return false;
       void hapticMedium();
       setIntroCleared(true);
-      if (forcedNextRef.current) sendMessage(trimmed, { forcedSkill: FOLLOW_STORY_SKILL });
-      else sendMessage(trimmed);
-      forcedNextRef.current = false;
+      if (forcedNextRef.current || homeQuestion) {
+        sendMessage(trimmed, { forcedSkill: forcedNextRef.current ?? undefined, asked: homeQuestion });
+      } else sendMessage(trimmed);
+      forcedNextRef.current = null;
       // Any send answers the notice, on either engine.
       useFloatingChatStore.getState().setInterruptedTurn(null);
       return true;
     },
-    [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],
+    [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage, homeQuestion],
   );
 
   // Chips send their canned message through the same path (haptic included).

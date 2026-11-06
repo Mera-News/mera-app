@@ -442,11 +442,16 @@ export interface RunAgentTurnParams {
    *  the message answers, and the answer alone would not route there. Passed per
    *  send and never written to the state. An older chip waiting is dropped, because
    *  a chip's `resolvedChoice` authorises what this message never asked for. */
-  forcedSkill?: typeof FOLLOW_STORY_SKILL;
+  forcedSkill?: ForcedSkill;
 }
 
 /** The follow skill: the only one with the follow tools, and the one More options runs. */
 export const FOLLOW_STORY_SKILL = 'conversation/follow-story';
+/** Saves nothing, so a turn forced here can never become a fact offer: a declined
+ *  question. A forced-leg rule would not do, because prose emphasis moves this model
+ *  little and word overlap cannot ground a message in another language. */
+export const QUESTION_SKILL = 'conversation/question';
+export type ForcedSkill = typeof FOLLOW_STORY_SKILL | typeof QUESTION_SKILL;
 
 /**
  * "Add to my profile instead" asked how the subject affects the reader. A fixed
@@ -472,17 +477,23 @@ export function withImpactQuestion(turn: AgentTurnState, question: string): void
  * answers, or a stale "Yes" would authorise a delete.
  */
 export function withScriptedQuestion(turn: AgentTurnState, line: string, readerLine?: string): void {
+  withAppQuestion(turn, line.trim().split(/\n+/).pop() ?? line);
+  turn.lastUserMessage = readerLine ?? null;
+  turn.lastReply = line;
+  turn.recentExchanges = withExchange(turn.recentExchanges, readerLine ?? '', line);
+}
+
+/** The app asked this, so it is the newest ask, and no exchange is added: the
+ *  onboarding intro's question is on screen, never a row of the chat. */
+export function withAppQuestion(turn: AgentTurnState, question: string): void {
   turn.pendingChoice = null;
   turn.choiceTurn = null;
   turn.impactAsked = false;
   turn.scriptedAsked = true;
-  turn.lastQuestion = line.trim().split(/\n+/).pop() ?? line;
+  turn.lastQuestion = question;
   turn.lastTurnAskedQuestion = true;
   turn.lastSkill = null;
   turn.lastRoute = null;
-  turn.lastUserMessage = readerLine ?? null;
-  turn.lastReply = line;
-  turn.recentExchanges = withExchange(turn.recentExchanges, readerLine ?? '', line);
 }
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {

@@ -58,7 +58,7 @@ import {
 import { normaliseTrackText } from '@/components/custom/floating-chat/track-options';
 import type { ProposalAction } from '../news-harness/core/types';
 import { MUTATING_CHAT_TOOLS, scriptedRowIds } from '@/lib/chat-session/engine';
-import { withScriptedQuestion } from '@/lib/mera-harness/core/core';
+import { withAppQuestion, withScriptedQuestion } from '@/lib/mera-harness/core/core';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
 import {
@@ -176,7 +176,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    * which is the point: a harness green is evidence about the app rather than
    * about a parallel implementation.
    */
-  const runAgentLoopTurn = async (assistantId: string, userMessage: string, forcedSkill?: SendOptions['forcedSkill']): Promise<void> => {
+  const runAgentLoopTurn = async (assistantId: string, userMessage: string, { forcedSkill, asked }: SendOptions = {}): Promise<void> => {
       const store = cloud();
       const persona = await buildAgentPersona(agentRef.current.id);
       // NEW CHAT clears the store's agentTurnState, and this ref has to follow
@@ -191,6 +191,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       agentStateRef.current.pendingCardStatements = pendingCardStatements(store.messages);
       // Facts are re-read every turn; only the TURN half persists.
       agentStateRef.current.persona = persona;
+      if (asked) withAppQuestion(agentStateRef.current.turn, asked);
       // The card on screen and the filters it could retire, so a typed yes or no
       // can settle the card and `retire_suppression` names a real id.
       agentStateRef.current.pendingProposal = pendingProposalView();
@@ -937,6 +938,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     messageId?: string;
     /** A retry is the same turn, so it stays forced. */
     forcedSkill?: SendOptions['forcedSkill'];
+    asked?: string;
   };
   let failedTurn: FailedTurn | null = null;
 
@@ -954,7 +956,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   const startTurn = (
     text: string,
     visible: boolean,
-    again?: Pick<FailedTurn, 'context' | 'removed' | 'messageId' | 'forcedSkill'> & { retrying?: boolean },
+    again?: Pick<FailedTurn, 'context' | 'removed' | 'messageId' | 'forcedSkill' | 'asked'> & { retrying?: boolean },
   ): boolean => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
@@ -1016,6 +1018,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       let turnContext = again?.context;
       const removed = again?.removed;
       const forcedSkill = again?.forcedSkill;
+      const asked = again?.asked;
 
       void (async () => {
         try {
@@ -1032,7 +1035,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             // model never saw (its "Middle East politics" example and its
             // searchNews rule were blamed for a turn they never reached).
             cloud().pushWireMessage({ role: 'user', content: trimmed });
-            await runAgentLoopTurn(assistantId, trimmed, forcedSkill);
+            await runAgentLoopTurn(assistantId, trimmed, { forcedSkill, asked });
             logger.debug(`${TAG} agent loop completed`);
           } else {
             const systemPrompt = await agentRef.current.buildSystemPrompt(false);
@@ -1074,7 +1077,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const mutated = cloud()
               .messages.slice(turnStart)
               .some((m) => m.toolCalls?.some((tc) => MUTATING_CHAT_TOOLS.has(tc.name)));
-            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed, messageId, forcedSkill };
+            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed, messageId, forcedSkill, asked };
             cloud().setError(msg);
             markFailed(turnStart);
             if (lost) cloud().setInterrupted(true);
@@ -1194,12 +1197,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         return startTurn(text, !messageId, { retrying: true, messageId });
       }
       if (!canRetry() || !failedTurn) return false;
-      const { text, wire, from, context, removed, messageId, forcedSkill } = failedTurn;
+      const { text, wire, from, context, removed, messageId, forcedSkill, asked } = failedTurn;
       // The empty rows go; a row with tool calls stays, because a card may sit on it.
       cloud().setMessages((prev) => prev.filter((m, i) => i < from || (m.toolCalls ?? []).length > 0));
       useCloudChatStore.setState({ wireMessages: wire });
       // Not visible: the user's bubble is already there (and a hidden turn never had one).
-      return startTurn(text, false, { context, removed, messageId, forcedSkill, retrying: true });
+      return startTurn(text, false, { context, removed, messageId, forcedSkill, asked, retrying: true });
     },
     askImpact: async (question) => {
       if (!alive) return;
@@ -1209,7 +1212,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       withImpactQuestion(agentStateRef.current.turn, question);
       cloud().setAgentTurnState({ ...agentStateRef.current.turn });
     },
-    scriptedExchange: async ({ user, assistant, menu }) => {
+    scriptedExchange: async ({ user, assistant, menu, asked }) => {
       const busy = () => !alive || turnBusyRef.current || isStreamingRef.current || moreAbort !== null;
       if (busy()) return false;
       // New chat clears the store's turn state; see runAgentLoopTurn.
@@ -1224,6 +1227,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       cloud().setError(null);
       cloud().setInterrupted(false);
       cloud().setMessages((prev) => [...prev, ...rows]);
+      if (asked) withScriptedQuestion(agentStateRef.current.turn, asked);
       withScriptedQuestion(agentStateRef.current.turn, assistant, user);
       cloud().setAgentTurnState({ ...agentStateRef.current.turn });
       return true;
