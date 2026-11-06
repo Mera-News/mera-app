@@ -1,5 +1,6 @@
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Share } from 'react-native';
+import { AppState, Share } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -88,6 +89,16 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
     setSettings(readSettings());
     setVersion((v) => v + 1);
   }, []);
+
+  // A scheduled run stamps the mirror while this screen stays mounted behind the app or another tab.
+  const rereadSettings = useCallback(() => setSettings(readSettings()), []);
+  useFocusEffect(rereadSettings);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') rereadSettings();
+    });
+    return () => sub.remove();
+  }, [rereadSettings]);
 
   const fail = useCallback((err: unknown, where: string) => {
     logger.captureException(err, { tags: { screen: 'backup', action: where } });
@@ -211,11 +222,13 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
       setState('off');
       refresh();
     } catch (err) {
+      // The cadence write may have landed before the key step failed.
+      rereadSettings();
       fail(err, 'turn-off');
     } finally {
       setBusy(null);
     }
-  }, [fail, refresh]);
+  }, [fail, refresh, rereadSettings]);
 
   const onSwitch = (on: boolean) => {
     if (busy) return;
@@ -248,6 +261,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
         setEditing(null);
         refresh();
       } else {
+        rereadSettings();
         setStep('when');
       }
     } catch (err) {
@@ -255,7 +269,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
     } finally {
       setBusy(null);
     }
-  }, [pickedProvider, reachProvider, state, fail, refresh]);
+  }, [pickedProvider, reachProvider, state, fail, refresh, rereadSettings]);
 
   const finishCadence = useCallback(async () => {
     try {

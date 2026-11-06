@@ -2,9 +2,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import BackupSection from '@/components/custom/backup/BackupSection';
-import { resetBackupSettingsMirror } from '@/lib/backup/backup-settings';
+import { recordBackupRun, resetBackupSettingsMirror } from '@/lib/backup/backup-settings';
 import { runBackup } from '@/lib/backup/backup-service';
-import { initI18nEn } from '@/test/helpers';
+import { clearBackupKey, ensureBackupKey, isBackupConfigured } from '@/lib/backup/key-store';
+import { initI18nEn, setAppState } from '@/test/helpers';
 
 // RN Modal pulls an untransformed native spec in jest.
 jest.mock('react-native/Libraries/Modal/Modal', () => {
@@ -43,6 +44,7 @@ jest.mock('@/lib/backup/providers/google-drive', () => ({
     isGoogleDriveConfigured: () => false,
     connectGoogleDrive: jest.fn(),
 }));
+jest.mock('@/lib/dialog', () => ({ showDialog: jest.fn(async () => true) }));
 jest.mock('@/lib/background/backup-task', () => ({ backgroundBackupIsAvailable: async () => true }));
 jest.mock('@/lib/toast-manager', () => ({
     toastManager: { showError: jest.fn(), showSuccess: jest.fn(), showInfo: jest.fn() },
@@ -56,7 +58,15 @@ beforeEach(() => {
     mockStore.set('backup_provider', 'icloud');
     mockStore.set('backup_cadence', 'daily');
     run.mockReset();
+    jest.mocked(isBackupConfigured).mockResolvedValue(true);
+    jest.mocked(clearBackupKey).mockReset();
 });
+
+const toggleBackup = async (on: boolean) => {
+    await act(async () => {
+        fireEvent(screen.getByTestId('backup-switch'), 'valueChange', on);
+    });
+};
 
 const pressRun = async () => {
     await act(async () => {
@@ -99,5 +109,47 @@ describe('BackupSection status card', () => {
         });
         expect(screen.queryByText('Schedule: Every day')).toBeNull();
         expect(screen.getByText('Schedule: Every week')).toBeTruthy();
+    });
+
+    it('shows a scheduled run when the reader returns to the app', async () => {
+        await render(<BackupSection />);
+        await screen.findByText('No backup saved yet');
+        await act(async () => {
+            setAppState('background');
+            await recordBackupRun(Date.now());
+            setAppState('active');
+        });
+        expect(screen.queryByText('No backup saved yet')).toBeNull();
+        expect(screen.getByText(/^Last backup /)).toBeTruthy();
+    });
+
+    it('drops the schedule when turning off fails after the cadence write', async () => {
+        jest.mocked(clearBackupKey).mockRejectedValue(new Error('keychain'));
+        await render(<BackupSection />);
+        await screen.findByText('Schedule: Every day');
+        await toggleBackup(false);
+        expect(screen.queryByText('Schedule: Every day')).toBeNull();
+    });
+
+    it('shows the newly picked provider during setup', async () => {
+        mockStore.set('backup_provider', 'google-drive');
+        jest.mocked(isBackupConfigured).mockResolvedValue(false);
+        jest.mocked(ensureBackupKey).mockResolvedValue('code' as never);
+        await render(<BackupSection />);
+        await screen.findByTestId('backup-switch');
+        await toggleBackup(true);
+        await act(async () => {
+            fireEvent.press(await screen.findByTestId('backup-code-saved'));
+        });
+        await act(async () => {
+            fireEvent.press(screen.getByTestId('backup-code-continue'));
+        });
+        await act(async () => {
+            fireEvent.press(await screen.findByTestId('backup-pick-icloud'));
+        });
+        await act(async () => {
+            fireEvent.press(screen.getByTestId('backup-where-continue'));
+        });
+        expect(await screen.findByText('iCloud')).toBeTruthy();
     });
 });
