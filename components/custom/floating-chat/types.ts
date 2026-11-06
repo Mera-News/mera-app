@@ -399,7 +399,7 @@ export interface StarterChip {
 export interface ComposerAction {
   key: string;
   label: string;
-  /** Runs on tap. Without it the label goes into the composer, unsent. */
+  /** Runs on tap. Without it the tap sends the label. */
   onPress?: () => void;
   testID: string;
 }

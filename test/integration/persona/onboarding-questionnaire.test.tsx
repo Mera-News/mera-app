@@ -186,15 +186,15 @@ describe('the first question', () => {
 });
 
 describe('How Mera handles my data', () => {
-  it('fills the composer and sends nothing, so the reader asks in chat', async () => {
+  it('asks in chat on one tap, and the reply lands in the thread', async () => {
     await openWizard();
 
     await press('onboarding-chip-privacy');
 
-    expect(screen.getByTestId('chat-input').props.value).toBe('How Mera handles my data');
+    await screen.findByText('E2E fixture answer.');
+    expect(screen.getByText('How Mera handles my data')).toBeTruthy();
+    expect(screen.getByTestId('chat-input').props.value).toBe('');
     expect(screen.queryByTestId('tutorial-sheet')).toBeNull();
-    expect(modelCalls()).toHaveLength(0);
-    expect(rows()).toEqual([]);
   });
 });
 
