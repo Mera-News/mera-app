@@ -1,10 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
+import { TOUCH_FRAME } from '@/components/custom/floating-chat/glyph-safe';
 import AddLocationView from '@/components/custom/locations/AddLocationView';
 import { homeFactStatement } from '@/components/custom/locations/location-display';
 import type { ChosenPlace } from '@/components/custom/locations/useAddLocation';
@@ -18,15 +19,15 @@ import { keyboardLift } from './keyboard-lift';
 interface OnboardingCityStepProps {
     /** Back to the chat, with nothing saved. */
     onClose: () => void;
-    /** The city and its fact are saved. */
+    /** On to the sources step: the city and its fact are saved, or the reader declined. */
     onDone: () => void;
 }
 
 /**
- * The least Mera can personalise with. No model is needed, so on-device readers
- * are covered too. The location alone leaves zero facts, so the fact is written
- * here, under the canonical home key the topic generator resolves, and the
- * location is linked to it.
+ * The least Mera can personalise with, and the reader may decline it. No model is
+ * needed, so on-device readers are covered too. The location alone leaves zero
+ * facts, so the fact is written here, under the canonical home key the topic
+ * generator resolves, and the location is linked to it.
  */
 export default function OnboardingCityStep({ onClose, onDone }: OnboardingCityStepProps) {
     const { t } = useTranslation();
@@ -56,7 +57,18 @@ export default function OnboardingCityStep({ onClose, onDone }: OnboardingCitySt
                 homeOnly
                 onClose={onClose}
                 onSaved={save}
-                renderIdle={() => null}
+                renderIdle={() => (
+                    <View style={styles.decline}>
+                        <Pressable
+                            style={styles.declineFrame}
+                            onPress={onDone}
+                            accessibilityRole="button"
+                            testID="onboarding-city-decline"
+                        >
+                            <Text style={[styles.declineText, { color: colors.accentText }]}>{t('onboarding.ratherNotSay')}</Text>
+                        </Pressable>
+                    </View>
+                )}
                 header={
                     <View style={styles.ask}>
                         <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
@@ -75,4 +87,7 @@ const styles = StyleSheet.create({
     ask: { paddingHorizontal: 20, paddingTop: 16, gap: 10 },
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },
+    decline: { paddingHorizontal: 20, alignItems: 'flex-start' },
+    declineFrame: { minHeight: TOUCH_FRAME, justifyContent: 'center' },
+    declineText: { fontSize: 15, fontWeight: '600' },
 });

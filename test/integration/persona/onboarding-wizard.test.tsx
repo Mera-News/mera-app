@@ -1,4 +1,5 @@
-// The wizard's Next: zero facts asks for a city and never advances; a saved city moves on.
+// The wizard's Next: zero facts asks for a city; a saved city moves on. A declined one is
+// onboarding-questionnaire.test.tsx.
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
@@ -55,7 +56,7 @@ beforeEach(() => {
 });
 afterEach(() => advanceStage.mockRestore());
 
-it('Next with zero facts opens the city step, offers no skip and does not advance', async () => {
+it('Next with zero facts opens the city step and does not advance', async () => {
   await open();
 
   await fireEvent.press(screen.getByTestId('onboarding-next'));

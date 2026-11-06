@@ -16,13 +16,15 @@ import {
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
 import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
-import { canRetryChatTurn, retryChatTurn } from '@/lib/chat-session/chat-session';
+import { canRetryChatTurn, retryChatTurn, scriptedExchange } from '@/lib/chat-session/chat-session';
+import type { ScriptedExchange } from '@/lib/chat-session/engine';
+import { FOLLOW_STORY_SKILL } from '@/lib/mera-harness/core/core';
 import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
 import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useUserStore } from '@/lib/stores/user-store';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
@@ -33,8 +35,8 @@ import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/to
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { ChatSampleKind } from './chat-samples';
-import type { StarterChip } from './types';
-import { renderableTerminal } from './types';
+import type { ComposerAction, OnboardingPath, StarterChip } from './types';
+import { OnboardingChatContext, renderableTerminal } from './types';
 import { HARNESS_TAP_ONLY } from '@/lib/chat-session/cloud-engine-helpers';
 import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
 import type { ChatSessionViewProps } from './ChatSessionView';
@@ -44,6 +46,147 @@ import type { ChatSessionViewProps } from './ChatSessionView';
 // the key is not in the union yet. One cast, no `defaultValue` — an inline
 // English default is how English has previously shipped into 19 locale files.
 type PendingLocaleKey = 'factCheck.chatSeed';
+
+type OnboardingStep = 'home' | 'choose' | OnboardingPath;
+
+const STEP_PLACEHOLDER = {
+  home: 'onboarding.placeholderHome',
+  choose: 'onboarding.placeholderChoose',
+  profile: 'onboarding.composerPlaceholder',
+  follow: 'onboarding.placeholderFollow',
+  about: 'onboarding.placeholderAbout',
+} as const;
+
+/** Onboarding's questionnaire: where the reader is, the buttons above the composer,
+ *  and the menu's handlers. Every tap but a real send costs no model call. */
+function useOnboardingQuestionnaire({
+  enabled,
+  hasFacts,
+  busy,
+  handleSend,
+  forcedNextRef,
+}: {
+  enabled: boolean;
+  hasFacts: boolean | null;
+  /** A turn runs or the account is blocked: nothing is added to the thread. */
+  busy: boolean;
+  handleSend: (text: string) => boolean;
+  /** The next send answers the follow question. */
+  forcedNextRef: RefObject<boolean>;
+}) {
+  const { t } = useTranslation();
+  const host = useContext(OnboardingChatContext);
+  const [step, setStep] = useState<OnboardingStep>('home');
+  const [declinedHome, setDeclinedHome] = useState(false);
+  const [aboutDone, setAboutDone] = useState(false);
+  // The menu is written once no turn is running: a scripted row refuses a busy chat.
+  const [menuOwed, setMenuOwed] = useState(false);
+
+  const scripting = useRef(false);
+  const script = useCallback((exchange: ScriptedExchange): Promise<boolean> => {
+    if (scripting.current) return Promise.resolve(false);
+    scripting.current = true;
+    return scriptedExchange(exchange).finally(() => {
+      scripting.current = false;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || step !== 'home' || hasFacts !== true) return;
+    setStep('choose');
+    setMenuOwed(true);
+  }, [enabled, step, hasFacts]);
+
+  useEffect(() => {
+    if (!menuOwed || busy) return;
+    void script({ assistant: t('onboarding.whatNext'), menu: true }).then((added) => {
+      if (added) setMenuOwed(false);
+    });
+  }, [menuOwed, busy, script, t]);
+
+  const backToMenu = useCallback(
+    async (user?: string): Promise<boolean> => {
+      const added = await script({ user, assistant: t('onboarding.whatNext'), menu: true });
+      if (added) {
+        forcedNextRef.current = false;
+        setStep('choose');
+      }
+      return added;
+    },
+    [script, t, forcedNextRef],
+  );
+
+  const onPick = useCallback(
+    (path: OnboardingPath) => {
+      if (busy) return;
+      if (path === 'about') {
+        forcedNextRef.current = false;
+        if (handleSend(t('onboarding.pathAbout'))) {
+          setAboutDone(true);
+          setStep(path);
+        }
+        return;
+      }
+      const exchange =
+        path === 'profile'
+          ? { user: t('onboarding.pathProfile'), assistant: t('onboarding.profileExplain') }
+          : { user: t('onboarding.pathFollow'), assistant: t('onboarding.followExplain') };
+      void script(exchange).then((added) => {
+        if (!added) return;
+        forcedNextRef.current = path === 'follow';
+        setStep(path);
+      });
+    },
+    [busy, handleSend, script, t, forcedNextRef],
+  );
+
+  if (!enabled) return null;
+
+  const decline = t('onboarding.ratherNotSay');
+  const onDecline = () => {
+    // A profile question gets a real answer, so the model moves on to the next.
+    if (step === 'profile') {
+      handleSend(decline);
+      return;
+    }
+    void backToMenu(decline).then((added) => {
+      if (!added || step !== 'home') return;
+      setDeclinedHome(true);
+      host?.onDeclineHome();
+    });
+  };
+  const atHome = step === 'home' && hasFacts === false;
+  const onPath = step === 'profile' || step === 'follow' || step === 'about';
+  const actions: ComposerAction[] = busy
+    ? []
+    : [
+        ...(atHome
+          ? [
+              {
+                key: 'privacy',
+                label: t('onboarding.howDataHandled'),
+                testID: 'onboarding-chip-privacy',
+                onPress: () => host?.onPrivacy(),
+              },
+            ]
+          : []),
+        ...(atHome || step === 'profile' || step === 'follow'
+          ? [{ key: 'decline', label: decline, testID: 'onboarding-chip-decline', onPress: onDecline }]
+          : []),
+        ...(onPath
+          ? [
+              {
+                key: 'something-else',
+                label: t('onboarding.somethingElse'),
+                testID: 'onboarding-chip-something-else',
+                onPress: () => void backToMenu(),
+              },
+            ]
+          : []),
+      ];
+
+  return { actions, placeholder: t(STEP_PLACEHOLDER[step]), menu: { declinedHome, aboutDone, onPick } };
+}
 
 export function useChatSessionView(props: ChatSessionViewProps) {
   const {
@@ -101,10 +244,16 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   useEffect(() => {
     if (factsAtOpen === null && hasFacts !== null) setFactsAtOpen(hasFacts);
   }, [factsAtOpen, hasFacts]);
+  const inOnboarding = context.kind === 'persona' && context.onboarding === true;
   const originalWelcome = usesOriginalWelcome(context, factsAtOpen);
   const awaitingFacts = awaitsFactsRead(context, factsAtOpen);
   const introText = awaitingFacts
     ? null
+    : inOnboarding
+      ? // A reader with facts on file skips the first question for the menu.
+        factsAtOpen === false
+        ? t('onboarding.intro')
+        : null
     : context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
@@ -139,12 +288,13 @@ export function useChatSessionView(props: ChatSessionViewProps) {
 
   // Intro pseudo-message until the first send of this session.
   const [introCleared, setIntroCleared] = useState(false);
-  const introMessage = introCleared ? null : introShown;
+  // In onboarding it stays: it holds the question the reader is answering.
+  const introMessage = introCleared && !inOnboarding ? null : introShown;
   // The faint example behind a fresh chat: the welcome shows a sample profile,
   // a follow chat shows sample stories. Any earlier message means not fresh.
-  // Onboarding's chat is a persona context with no page, so it is the welcome too.
+  // Onboarding shows none: Mera doesn't yet know what the reader wants to do.
   const sampleKind: ChatSampleKind | null =
-    introMessage && messages.length === 0 && resume.length === 0
+    introMessage && messages.length === 0 && resume.length === 0 && !inOnboarding
       ? originalWelcome || (context.kind === 'persona' && !context.page)
         ? 'profile'
         : context.kind === 'follow-story'
@@ -309,7 +459,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
 
   const starterChips: StarterChip[] = useMemo(() => {
     // The optimisation-plan thread is card-only — no persona/article chips.
-    if (context.kind === 'optimisation-plan' || awaitingFacts) return [];
+    if (context.kind === 'optimisation-plan' || awaitingFacts || inOnboarding) return [];
     // Opened from the Mera button: the page's hints as starters that fill the
     // composer and never send (owner ruling, navx).
     if (
@@ -395,7 +545,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
         message: t('floatingChat.chipDataHandlingMessage'),
       },
     ];
-  }, [t, tKey, context, isOnDevice, webSearch, originalWelcome, awaitingFacts]);
+  }, [t, tKey, context, isOnDevice, webSearch, originalWelcome, awaitingFacts, inOnboarding]);
 
   // --- Server-authoritative block state ---------------------------------
   // The hook's `isBlocked` only flips mid-session (via an issueWarning side
@@ -527,20 +677,27 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     setUnblockPending(true);
   }, []);
 
+  // Set by onboarding's follow line: only the send that answers it is forced, so
+  // a follow-skill chip on a later turn can still resume.
+  const forcedNextRef = useRef(false);
+
   const handleSend = useCallback(
-    (text: string) => {
+    (text: string): boolean => {
       const trimmed = text.trim();
-      if (!trimmed || isStreaming || effectiveBlocked) return;
+      if (!trimmed || isStreaming || effectiveBlocked) return false;
       // Disabling PromptInput is not enough: the auto-send effect below and the
       // starter chips both call this directly, bypassing the input entirely.
       // Only the legacy topic-plan card gates here: a waiting FACT card takes a
       // typed answer, and the card stays pending beside it (audit F7).
-      if (unresolvedTopicPlans.length > 0) return;
+      if (unresolvedTopicPlans.length > 0) return false;
       void hapticMedium();
       setIntroCleared(true);
-      sendMessage(trimmed);
+      if (forcedNextRef.current) sendMessage(trimmed, { forcedSkill: FOLLOW_STORY_SKILL });
+      else sendMessage(trimmed);
+      forcedNextRef.current = false;
       // Any send answers the notice, on either engine.
       useFloatingChatStore.getState().setInterruptedTurn(null);
+      return true;
     },
     [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],
   );
@@ -668,6 +825,13 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // error lands before busy clears, so a memo would stay false. The isGenerating
   // subscription is what re-renders us when busy clears.
   const turnBusy = useFloatingChatStore((st) => st.isGenerating);
+  const onboarding = useOnboardingQuestionnaire({
+    enabled: inOnboarding,
+    hasFacts,
+    busy: isStreaming || turnBusy || effectiveBlocked,
+    handleSend,
+    forcedNextRef,
+  });
   const [retryTapped, setRetryTapped] = useState(false);
   const retryGuard = useRef(false);
   const killedTurn = useFloatingChatStore((st) => st.interruptedTurn);
@@ -742,6 +906,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     handleUnblockSubmitted,
     introMessage,
     sampleKind,
+    onboarding,
     unresolvedTopicPlans,
     unresolvedFactChoices,
   };

@@ -13,7 +13,7 @@ import { useMotionAllowed } from '@/lib/motion-gate';
 import { useFloatingChatIsGenerating, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { GlyphSafeButton } from './glyph-safe';
 import { addProfileOffer, askProfileImpact, dismissTrackCard, followTickedOptions, loadMoreTrackOptions } from './track-card-actions';
 import { MAX_TRACK_CARD_OPTIONS, normaliseTrackText, readPhraseHints, trackCardStatus, type TrackOutcome } from './track-options';
-import type { TrackCardSource } from './types';
+import { OnboardingChatContext, type TrackCardSource } from './types';
 
 // A touch frame is a NUMBER: a NativeWind class like h-11 renders ~38pt here.
 const FRAME = 44;
@@ -58,6 +58,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const { t } = useTranslation();
   const isGenerating = useFloatingChatIsGenerating();
   const motion = useMotionAllowed();
+  const inOnboarding = useContext(OnboardingChatContext) !== null;
   const storedTicks = useFloatingChatStore((s) => s.trackTicks[proposal.id]);
   const moreState = useFloatingChatStore((s) => s.trackMore[proposal.id]);
   const [busy, setBusy] = useState(false);
@@ -311,20 +312,23 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
         </View>
         <View style={styles.divider} />
         {profileRow}
-        <GlyphSafeButton
-          testID="track-see-followed"
-          onPress={openFollowed}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: false }}
-          accessibilityLabel={t('trackedStories.seeFollowedStories')}
-          style={styles.frame}
-          visualStyle={styles.linkRow}
-        >
-          <Text size="sm" style={styles.moreText}>
-            {t('trackedStories.seeFollowedStories')}
-          </Text>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="chevron-right" size={20} color={colors.accentText} />
-        </GlyphSafeButton>
+        {/* It would leave the wizard. */}
+        {inOnboarding ? null : (
+          <GlyphSafeButton
+            testID="track-see-followed"
+            onPress={openFollowed}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: false }}
+            accessibilityLabel={t('trackedStories.seeFollowedStories')}
+            style={styles.frame}
+            visualStyle={styles.linkRow}
+          >
+            <Text size="sm" style={styles.moreText}>
+              {t('trackedStories.seeFollowedStories')}
+            </Text>
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="chevron-right" size={20} color={colors.accentText} />
+          </GlyphSafeButton>
+        )}
       </View>
     );
   }

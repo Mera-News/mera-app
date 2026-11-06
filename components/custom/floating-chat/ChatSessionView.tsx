@@ -10,6 +10,8 @@ import type { ConversationMessage } from '@/lib/llm/types';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import React, { useEffect, useState } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
+import OnboardingPathCard from '@/components/custom/onboarding/OnboardingPathCard';
+import type { SendOptions } from '@/lib/chat-session/engine';
 import ChatSample from './ChatSample';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
@@ -22,7 +24,7 @@ export interface ChatSessionViewProps {
   // The engine's state, from its store
   messages: ConversationMessage[];
   status: 'idle' | 'streaming';
-  sendMessage: (text: string) => void;
+  sendMessage: (text: string, opts?: SendOptions) => void;
   /** Starts a turn the user never sees. Used by the topic-plan discard reply. */
   sendHiddenTurn: (text: string) => void;
   isBlocked: boolean;
@@ -75,6 +77,7 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
     composerHint,
     handleUnblockSubmitted,
     sampleKind,
+    onboarding,
   } = useChatSessionView(props);
   // The first touch anywhere in the chat retires the sample for this mount, and
   // so does the keyboard: ChatThread focuses the composer itself when the chat
@@ -126,6 +129,8 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
         showHistoryButton={hasOlder && !historyRevealed}
         onRevealHistory={handleRevealHistory}
         starterChips={starterChips}
+        composerActions={onboarding?.actions}
+        renderOnboardingMenu={onboarding ? () => <OnboardingPathCard {...onboarding.menu} /> : undefined}
         onChipPress={handleChipPress}
         blockedMessage={blockedMessage}
         onRetry={onRetry}
@@ -140,6 +145,7 @@ export default function ChatSessionView(props: ChatSessionViewProps) {
         composerHint={composerHint}
         composerTrailing={composerTrailing}
         composerPlaceholder={
+          onboarding?.placeholder ??
           composerPlaceholder ??
           (context.kind === 'follow-story' ? t('trackedStories.composerPlaceholder') : undefined)
         }

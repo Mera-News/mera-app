@@ -10,6 +10,7 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Spinner } from '@/components/ui/spinner';
+import ReadinessBadge from '@/components/custom/floating-chat/ReadinessBadge';
 import MeraToast from '@/components/custom/toast/MeraToast';
 import { useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
@@ -17,6 +18,8 @@ import { authClient } from '@/lib/auth-client';
 import { observeFacts } from '@/lib/database/services/fact-service';
 import { OnboardingStage } from '@/lib/generated/graphql-types';
 import { reconcileAppLanguageWithPersona } from '@/lib/language-sync';
+import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
+import { useChatReadiness } from '@/lib/llm/prewarm';
 import { SPRING } from '@/lib/motion';
 import { ensurePushTokenRegistered } from '@/lib/notification-service';
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
@@ -25,6 +28,7 @@ import {
     useFloatingChatStore,
     useFloatingChatUnresolvedCounts,
 } from '@/lib/stores/floating-chat-store';
+import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { isOnline, useIsOnline } from '@/lib/stores/network-store';
 import { isSessionRefusedError } from '@/lib/utils/retry';
 import {
@@ -33,6 +37,7 @@ import {
     useOnboardingStep,
     useOnboardingStore,
 } from '@/lib/stores/onboarding-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import { useColors } from '@/lib/theme/tokens';
 
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
@@ -88,8 +93,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const { isLoggingOut, handleServerErrorLogout } = useServerErrorLogout(setShowServerError);
     const offline = !useIsOnline();
     const [guard, setGuard] = useState<Guard>(null);
-    // Next with zero facts asks for a city: it is the minimum Mera can personalise with.
+    // Next with zero facts asks for a city, unless the reader already declined that
+    // question in the chat. Memory only, so a reopened wizard asks again.
     const [cityOpen, setCityOpen] = useState(false);
+    const [declinedHome, setDeclinedHome] = useState(false);
+    const declineHome = useCallback(() => setDeclinedHome(true), []);
     const [notificationsOn, setNotificationsOn] = useState(false);
     const [enableRequest, setEnableRequest] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -98,6 +106,20 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     // The chat step's input is locked while a "Topics I'll track" or a fact
     // choice card is unresolved (ChatSessionView); Next must honour the same
     // lock or the block is bypassed by the most obvious tap on the screen.
+    // The chat's readiness badge, by the same rules as its header.
+    const readiness = useChatReadiness((s) => s.status);
+    const chatInCloud = useChatRunsInCloud();
+    const blockedLive = useCloudChatStore((s) => s.isBlocked);
+    const blockedPersona = useUserStore((s) => !!s.userPersona?.blockedByLlm);
+    const badge =
+        currentStep === 0 && !cityOpen && chatInCloud && !blockedLive && !blockedPersona && readiness !== 'idle'
+            ? {
+                  warming: { label: t('chat.statusWarming'), tone: 'neutral' as const, icon: 'autorenew' as const },
+                  ready: { label: t('chat.statusReady'), tone: 'positive' as const, icon: 'check' as const },
+                  error: { label: t('chat.statusError'), tone: 'negative' as const, icon: 'error-outline' as const },
+              }[readiness]
+            : null;
+
     const hasUnresolvedTopicPlans = useFloatingChatHasUnresolvedTopicPlans();
     const unresolvedCounts = useFloatingChatUnresolvedCounts();
 
@@ -227,7 +249,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 });
                 return;
             }
-            if (factCount === 0) {
+            if (factCount === 0 && !declinedHome) {
                 setCityOpen(true);
                 return;
             }
@@ -237,7 +259,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
             return;
         }
         void advance();
-    }, [busy, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, factCount, notificationsOn, advance, toast, t]);
+    }, [busy, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, factCount, declinedHome, notificationsOn, advance, toast, t]);
 
     if (isInitializing) {
         return (
@@ -249,6 +271,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     }
 
     const skipping = currentStep === 1 && !hasPicks;
+    const stepText = t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS });
     const nextButton = (
         <View style={currentStep === 1 ? styles.nextFrame : undefined}>
             <Button
@@ -273,10 +296,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                         <MeraLogo size={28} animated />
                         <RNText style={[styles.name, { color: colors.ink }]}>Mera</RNText>
                     </View>
-                    <View style={styles.who}>
-                        <RNText style={[styles.step, { color: colors.ink3 }]}>
-                            {t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
+                    <View style={[styles.who, styles.shrink]}>
+                        <RNText
+                            style={[styles.step, styles.shrink, { color: colors.ink3 }]}
+                            accessibilityLabel={badge ? `${stepText}, ${badge.label}` : stepText}
+                            testID="onboarding-step-label"
+                        >
+                            {stepText}
                         </RNText>
+                        {badge ? <ReadinessBadge {...badge} spinning={readiness === 'warming'} /> : null}
                         {cityOpen ? null : nextButton}
                     </View>
                 </View>
@@ -299,10 +327,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                             </RNText>
                         </Animated.View>
                         <View style={styles.flex}>
-                            <PersonaUpdateChatStep
-                                userId={userPreferences.userId}
-                                composerPlaceholder={t('onboarding.composerPlaceholder')}
-                            />
+                            <PersonaUpdateChatStep userId={userPreferences.userId} onDeclineHome={declineHome} />
                         </View>
                     </View>
                 ) : currentStep === 1 ? (
@@ -376,6 +401,7 @@ const styles = StyleSheet.create({
     hidden: { display: 'none' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, minHeight: 44 },
     who: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    shrink: { flexShrink: 1 },
     name: { fontSize: 16, fontWeight: '700' },
     step: { fontSize: 13 },
     counter: {

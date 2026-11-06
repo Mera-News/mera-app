@@ -1149,3 +1149,44 @@ describe('follow card override (chatfix: grown options, outcomes, superseded)', 
     expect(trackCards(items).map((c) => c.track?.superseded)).toEqual([true, false]);
   });
 });
+
+describe('the onboarding menu row', () => {
+  const menuRow = assistantMsg('scripted-1-x-onboarding-menu', 'What would you like to do next?');
+  const followTurn: ToolCallRecord = {
+    id: 'tc-track',
+    name: 'proposeTrack',
+    status: 'done',
+    input: {},
+    result: { staged: true, proposalId: 'track-1', options: [{ label: 'Ukraine war', search: 'ukraine war' }] },
+  };
+
+  it('draws the menu under its row', () => {
+    const items = deriveThreadItems(base({ live: [menuRow] }));
+    expect(items.map((i) => i.kind)).toEqual(['message', 'onboarding-menu']);
+  });
+
+  it('marks only the menu row', () => {
+    const items = deriveThreadItems(base({ live: [assistantMsg('scripted-1-x-b', 'What do you do for work?')] }));
+    expect(items.map((i) => i.kind)).toEqual(['message']);
+  });
+
+  it('draws no menu for an earlier conversation', () => {
+    const items = deriveThreadItems(
+      base({ history: [persisted(menuRow.id, 'c0', 'assistant', menuRow.content, 1)] }),
+    );
+    expect(items.some((i) => i.kind === 'onboarding-menu')).toBe(false);
+  });
+
+  it('a follow card stays above the menu that came after it', () => {
+    const items = deriveThreadItems(
+      base({ live: [userMsg('u1', 'Ukraine war'), assistantMsg('a1', 'Pick below.', [followTurn]), menuRow] }),
+    );
+    expect(items.filter((i) => i.kind !== 'agent-steps').map((i) => (i.kind === 'message' ? i.message.id : i.kind))).toEqual([
+      'u1',
+      'a1',
+      'proposal-card',
+      menuRow.id,
+      'onboarding-menu',
+    ]);
+  });
+});

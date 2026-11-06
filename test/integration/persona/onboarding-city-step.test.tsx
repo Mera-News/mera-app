@@ -1,4 +1,4 @@
-// The required city step: placeSearch, its loading and failure states, manual entry when the server
+// The city step: placeSearch, its loading and failure states, manual entry when the server
 // is unreachable, and the fact the step saves. Real services, real DB, the mock server.
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';

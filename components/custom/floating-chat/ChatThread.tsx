@@ -79,6 +79,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   showHistoryButton,
   onRevealHistory,
   starterChips,
+  composerActions = [],
+  renderOnboardingMenu,
   onChipPress,
   blockedMessage,
   onRetry,
@@ -357,6 +359,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />
         );
 
+      case 'onboarding-menu':
+        return renderOnboardingMenu?.() ?? null;
+
       case 'applied-by-typing':
         return <AppliedByTypingCard changeLogIds={item.changeLogIds} undoable={item.undoable} />;
 
@@ -564,6 +569,27 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       <TopicPlanSaveAllRow factIds={topicPlanFactIds} />
 
+      {composerActions.length > 0 ? (
+        <View style={styles.actionRow}>
+          {composerActions.map((action) => (
+            <Pressable
+              key={action.key}
+              style={styles.action}
+              onPress={() => {
+                hapticLight();
+                action.onPress();
+              }}
+              accessibilityRole="button"
+              testID={action.testID}
+            >
+              <Text size="sm" style={styles.actionText}>
+                {action.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
       {composerHint && !blockedMessage ? (
         <View style={styles.hintRow} testID="chat-composer-hint">
           <Text size="xs" style={styles.hintText} accessibilityLiveRegion="polite">
@@ -654,6 +680,27 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     color: c.ink3,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginHorizontal: 12,
+    marginBottom: 6,
+  },
+  action: {
+    minHeight: TOUCH_FRAME,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: c.accentMark,
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  actionText: {
+    color: c.accentText,
+    fontSize: 13,
+    lineHeight: 18,
   },
   // Neutral, not the red banner: nothing has gone wrong, a card is simply
   // waiting. rgb(185,185,185) on the panel measures ~9:1.

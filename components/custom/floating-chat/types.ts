@@ -4,7 +4,7 @@
 // util, the ChatThread component, and the (parallel) data/store layer that
 // feeds it. Everything here is presentational — no data fetching, no stores.
 
-import type { ReactNode } from 'react';
+import { createContext, type ReactElement, type ReactNode } from 'react';
 import type { StepKind } from '@/lib/services/chat-phase';
 import type { AgentTurnResult } from '@/lib/mera-harness';
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
@@ -186,6 +186,8 @@ export type ChatThreadItem =
       pendingDelete?: PendingDelete;
     }
   | { kind: 'proposal-card'; key: string; proposal: StagedProposal; track?: TrackCardSource }
+  // Onboarding's three options, under the row that asks what next.
+  | { kind: 'onboarding-menu'; key: string }
   // A change applied because the reader TYPED yes (applyProposal), with the
   // change-log rows that undo it. `undoable` is false once a later user
   // message exists or the row is from an earlier conversation.
@@ -392,6 +394,29 @@ export interface StarterChip {
   draft?: boolean;
 }
 
+/** An onboarding button above the composer. It runs its own handler, so a tap
+ *  that must cost no model call never reaches the send path. */
+export interface ComposerAction {
+  key: string;
+  label: string;
+  onPress: () => void;
+  testID: string;
+}
+
+export type OnboardingPath = 'profile' | 'follow' | 'about';
+
+/** What the wizard's chat step does for the chat it hosts. */
+export interface OnboardingChatHost {
+  /** The reader declined where they live. */
+  onDeclineHome: () => void;
+  /** "How Mera handles my data". */
+  onPrivacy: () => void;
+}
+
+/** Set only by the wizard's chat step. A context so CloudPersonaChat, between the
+ *  step and the view, carries none of this. */
+export const OnboardingChatContext = createContext<OnboardingChatHost | null>(null);
+
 // ---------------------------------------------------------------------------
 // ChatThread props
 // ---------------------------------------------------------------------------
@@ -412,6 +437,10 @@ export interface ChatThreadProps {
   onRevealHistory: () => void;
   /** Shown only when items contain no user/assistant messages. */
   starterChips: StarterChip[];
+  /** Pinned above the composer, whatever the thread holds. Onboarding only. */
+  composerActions?: ComposerAction[];
+  /** Draws an `onboarding-menu` item. Absent outside onboarding, which draws none. */
+  renderOnboardingMenu?: () => ReactElement;
   onChipPress: (message: string) => void;
   /** When set, show a banner. Does NOT by itself disable the input — see
    *  `bannerBlocksInput`. */

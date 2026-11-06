@@ -5,6 +5,7 @@
 // older messages (`history`), and a few flags, and produces a flat
 // `ChatThreadItem[]` ordered newest-LAST (ChatThread inverts internally).
 
+import { isOnboardingMenuRow } from '@/lib/chat-session/engine';
 import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
 import {
   readGroupResolutions,
@@ -56,7 +57,7 @@ import {
 function placeProposalCardsLast(items: ChatThreadItem[]): ChatThreadItem[] {
   const out = [...items];
   const isBoundary = (it: ChatThreadItem) =>
-    (it.kind === 'message' && it.message.role === 'user')
+    (it.kind === 'message' && (it.message.role === 'user' || isOnboardingMenuRow(it.message.id)))
     || it.kind === 'typing'
     || it.kind === 'quick-fact-check-card'
     || it.kind === 'divider';
@@ -302,6 +303,11 @@ function emitMessage(
         }
       }
     });
+  }
+
+  // An earlier conversation's menu leads nowhere.
+  if (!stale && isOnboardingMenuRow(message.id)) {
+    cards.push({ kind: 'onboarding-menu', key: `onboarding-menu-${message.id}` });
   }
 
   // A stopped turn with nothing said still shows its "Stopped" line.
@@ -558,8 +564,8 @@ export function deriveThreadItems(opts: {
   }
 
   // --- Intro pseudo-message: suppressed once the conversation has resumed
-  // messages (ChatSessionView already clears introMessage on the first send,
-  // so intro never coexists with a live message in practice). ---
+  // messages. ChatSessionView clears introMessage on the first send, except in
+  // onboarding, where it is the question the reader is answering. ---
   if (introMessage !== null && sortedResume.length === 0) {
     out.push({
       kind: 'message',

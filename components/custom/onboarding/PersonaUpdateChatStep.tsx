@@ -32,7 +32,7 @@ import { useColors } from '@/lib/theme/tokens';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -40,9 +40,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { keyboardLift } from './keyboard-lift';
 import { useTranslation } from 'react-i18next';
 import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
+import { OnboardingChatContext } from '../floating-chat/types';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
+import TutorialModalHost from '../tutorials/TutorialModalHost';
 
-const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
+const PERSONA_CONTEXT: ChatContext = { kind: 'persona', onboarding: true };
 
 interface PersonaUpdateChatStepProps {
   /** Authenticated user id (from the wizard's preferences). Falls back to a
@@ -50,13 +52,14 @@ interface PersonaUpdateChatStepProps {
   userId: string;
   /** Beside the composer: the wizard's Next (FinalJourney #8). */
   composerTrailing?: React.ReactNode;
-  composerPlaceholder?: string;
+  /** The reader declined where they live: goes up to the wizard's Next. */
+  onDeclineHome?: () => void;
 }
 
 export default function PersonaUpdateChatStep({
   userId: userIdProp,
   composerTrailing,
-  composerPlaceholder,
+  onDeclineHome,
 }: PersonaUpdateChatStepProps) {
   const { t } = useTranslation();
   const colors = useColors();
@@ -76,6 +79,12 @@ export default function PersonaUpdateChatStep({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [resumeMessages, setResumeMessages] = useState<PersistedMessage[]>([]);
   const [resumeLoadedForId, setResumeLoadedForId] = useState<string | null>(null);
+
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const host = useMemo(
+    () => ({ onDeclineHome: () => onDeclineHome?.(), onPrivacy: () => setPrivacyOpen(true) }),
+    [onDeclineHome],
+  );
 
   const hasInitialized = useRef(false);
   const surfaceRef = useRef<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
@@ -201,18 +210,20 @@ export default function PersonaUpdateChatStep({
 
   return (
     <Animated.View style={[styles.container, liftStyle]} testID="onboarding-chat-lift">
-      <CloudPersonaChat
-        key={conversationId}
-        userId={userId ?? ''}
-        surface={surface}
-        context={PERSONA_CONTEXT}
-        conversationId={conversationId}
-        resumeMessages={resumeMessages}
-        isLoading={false}
-        loadingMessage={t('chat.startingChat')}
-        composerTrailing={composerTrailing}
-        composerPlaceholder={composerPlaceholder}
-      />
+      <OnboardingChatContext.Provider value={host}>
+        <CloudPersonaChat
+          key={conversationId}
+          userId={userId ?? ''}
+          surface={surface}
+          context={PERSONA_CONTEXT}
+          conversationId={conversationId}
+          resumeMessages={resumeMessages}
+          isLoading={false}
+          loadingMessage={t('chat.startingChat')}
+          composerTrailing={composerTrailing}
+        />
+      </OnboardingChatContext.Provider>
+      <TutorialModalHost visible={privacyOpen} onClose={() => setPrivacyOpen(false)} chapterId="privacy" />
     </Animated.View>
   );
 }
