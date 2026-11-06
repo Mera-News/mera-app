@@ -370,12 +370,15 @@ For devices that cannot run on-device inference, the protocol provides an equiva
 > client-supplied nonce echoed into `report_data`, but only on the user-initiated
 > check, not on the inference hot path. That same check reads NVIDIA's signed
 > result when the gateway relays it: the tokens chain to a pinned NVIDIA root, and
-> NVIDIA reports that genuine NVIDIA GPUs answered with the client's nonce.
+> NVIDIA reports that genuine NVIDIA GPUs answered with the client's nonce. It also
+> follows NEAR's deployment log (`lib/algorithms/deployed-software.ts`): the log's own
+> quote carries the client's nonce and the model quote's measurements, and the
+> compose file it hashes pins the proxy image by digest.
 >
 > **What it does NOT verify:** platform TCB currency and QE identity (these need
 > Intel PCS collateral the app does not fetch), enclave measurements against
-> published expected values, and that the attested GPUs are attached to the
-> enclave. Verification is also **fail-open** — results are displayed, and a
+> published expected values, that the attested GPUs are attached to the enclave,
+> the proxy image's source, and what that software does with data. Verification is also **fail-open** — results are displayed, and a
 > failure does not block inference.
 >
 > Until those close, do not describe this path as hardware-proven. This matches

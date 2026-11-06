@@ -98,6 +98,16 @@ describe('mera-explainer-content — banned claims', () => {
   const GPU_ATTACHED = /GPUs?[^.]{0,60}\b(attached|bound|connected)\b/i;
   const ALL_GPUS = /\b(all|every)( of)?( the| your)? GPUs?\b/i;
 
+  it('the proxy check names the image and never vouches for what it does', () => {
+    const { attestationCheckDeployedSoftware, attestationDeployedSoftwareNotice } = en.meraProtocol;
+    for (const text of [attestationCheckDeployedSoftware, attestationDeployedSoftwareNotice]) {
+      expect(text).not.toMatch(/verified|proven/i);
+    }
+    expect(attestationDeployedSoftwareNotice).toMatch(/NEAR says it installed/);
+    expect(attestationDeployedSoftwareNotice).toMatch(/doesn't show what that software does/);
+    expect(source).toMatch(/does not show what that software does/);
+  });
+
   it('the GPU guard fires on a claim that the GPUs are attached', () => {
     expect(runAffirmsThat('Those GPUs are attached to the enclave.', GPU_ATTACHED)).not.toBeNull();
     expect(runAffirmsThat("It doesn't show those GPUs are attached.", GPU_ATTACHED)).toBeNull();

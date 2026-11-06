@@ -512,7 +512,9 @@
     "helpModesCloud": "私有云：梅拉 AI 在安全服务器上加密运行，梅拉无法读取你的数据。你的方案决定梅拉每天读取多少内容。",
     "helpModesPhone": "在这部手机上：梅拉 AI 在你的手机上运行，阅读不限量。新闻仍来自梅拉的服务器。此功能为测试版。",
     "helpModesVerify": "“验证证明”会检查云端报告上的 Intel 签名，以及你的数据是否加密到该报告中的密钥。",
-    "attestationGpuNotice": "NVIDIA 的签名结果显示，真正的 NVIDIA GPU 回应了此次检查。它不能证明这些 GPU 连接到了安全硬件。"
+    "attestationGpuNotice": "NVIDIA 的签名结果显示，真正的 NVIDIA GPU 回应了此次检查。它不能证明这些 GPU 连接到了安全硬件。",
+    "attestationCheckDeployedSoftware": "代理与 NEAR 的公开配置一致",
+    "attestationDeployedSoftwareNotice": "这显示 NEAR 声称安装了哪个代理镜像，但不能说明该软件如何处理你的数据。"
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你打开过的文章的本地记录。“来源”标签页中的“你阅读过的媒体”卡片和各媒体的历史记录会重置为空。你读过的报道可能会再次出现在信息流中。其他内容不受影响，也不会触及服务器数据，因为梅拉的服务器从来没有这些数据。",

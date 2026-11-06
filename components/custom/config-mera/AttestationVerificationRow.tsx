@@ -29,8 +29,10 @@ import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import {
   fetchAttestationForVerification,
+  fetchComposeFile,
   generateAttestationNonce,
 } from '@/lib/e2ee/e2ee-service';
+import { checkDeployedSoftware } from '@/lib/algorithms/deployed-software';
 import { verifyAttestation, type CheckId, type VerificationReport } from '@/lib/algorithms/attestation-verify';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
@@ -49,6 +51,7 @@ export const CHECK_ORDER: CheckId[] = [
   'signing-algo',
   'tcb-status',
   'gpu-attestation',
+  'deployed-software',
 ];
 
 // `as const satisfies` rather than a `Record<CheckId, string>` annotation: the
@@ -68,6 +71,7 @@ export const CHECK_LABEL_KEYS = {
   'signing-algo': 'meraProtocol.attestationCheckSigningAlgo',
   'tcb-status': 'meraProtocol.attestationCheckTcbStatus',
   'gpu-attestation': 'meraProtocol.attestationCheckGpuAttestation',
+  'deployed-software': 'meraProtocol.attestationCheckDeployedSoftware',
 } as const satisfies Record<CheckId, string>;
 
 type RunState =
@@ -91,6 +95,15 @@ export function AttestationVerificationRow() {
       // and it deliberately bypasses every cache in the path.
       const nonce = generateAttestationNonce();
       const { attestation } = await fetchAttestationForVerification(SMALL_MODEL, nonce);
+      const deployedSoftware = await checkDeployedSoftware(
+        {
+          composeManagerAttestation: attestation.compose_manager_attestation,
+          modelQuoteHex: attestation.intel_quote ?? '',
+          modelName: SMALL_MODEL,
+          expectedNonce: nonce,
+        },
+        fetchComposeFile,
+      );
       const report = verifyAttestation({
         quoteHex: attestation.intel_quote ?? '',
         signingPublicKey: attestation.signing_public_key ?? '',
@@ -98,6 +111,7 @@ export function AttestationVerificationRow() {
         expectedNonce: nonce,
         hasGpuPayload: Boolean(attestation.nvidia_payload),
         nvidiaAttestation: attestation.nvidia_attestation,
+        deployedSoftware,
       });
       setState({ phase: 'done', report });
     } catch (e) {
@@ -187,6 +201,13 @@ export function AttestationVerificationRow() {
               state.report.checks.find(c => c.id === 'gpu-attestation')?.status === 'pass' && (
                 <Text className="text-ink-3 text-xs mt-2" testID="attestation-gpu-notice">
                   {t('meraProtocol.attestationGpuNotice')}
+                </Text>
+              )}
+
+            {state.phase === 'done' &&
+              state.report.checks.find(c => c.id === 'deployed-software')?.status === 'pass' && (
+                <Text className="text-ink-3 text-xs mt-2" testID="attestation-deployed-software-notice">
+                  {t('meraProtocol.attestationDeployedSoftwareNotice')}
                 </Text>
               )}
 

@@ -525,7 +525,9 @@
     "helpModesCloud": "Özel bulut: Mera AI güvenli sunucularda şifreli çalışır, yani Mera verilerini okuyamaz. Planın, Mera'nın her gün ne kadar okuyacağını belirler.",
     "helpModesPhone": "Bu telefonda: Mera AI telefonunda çalışır ve okuma sınırsızdır. Haberler yine Mera'nın sunucularından gelir. Bu özellik Beta aşamasında.",
     "helpModesVerify": "Tasdiki doğrula, bulutun raporundaki Intel imzasını ve verilerinin o raporda yer alan anahtarla şifrelendiğini kontrol eder.",
-    "attestationGpuNotice": "NVIDIA'nın imzalı sonucu, bu kontrole gerçek NVIDIA GPU'larının yanıt verdiğini gösteriyor. NVIDIA'nın imzalı sonucu, bu GPU'ların güvenli donanıma bağlı olduğunu kanıtlamıyor."
+    "attestationGpuNotice": "NVIDIA'nın imzalı sonucu, bu kontrole gerçek NVIDIA GPU'larının yanıt verdiğini gösteriyor. NVIDIA'nın imzalı sonucu, bu GPU'ların güvenli donanıma bağlı olduğunu kanıtlamıyor.",
+    "attestationCheckDeployedSoftware": "Proxy, NEAR'ın herkese açık yapılandırmasıyla eşleşiyor",
+    "attestationDeployedSoftwareNotice": "Bu, NEAR'ın hangi proxy imajını yüklediğini söylediğini gösterir. Bu yazılımın verilerinizle ne yaptığını göstermez."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığınız makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki “Okuduğunuz yayınlar” kartı ve yayıncı başına geçmiş boş hâle döner. Okuduğunuz haberler Akışınızda yeniden görünebilir. Başka hiçbir şey etkilenmez ve sunucu verilerine dokunulmaz, çünkü Mera’nın sunucularında bu veriler hiçbir zaman olmadı.",

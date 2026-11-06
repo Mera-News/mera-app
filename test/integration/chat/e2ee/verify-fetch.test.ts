@@ -1,5 +1,8 @@
 // The Settings "Verify attestation" path: fetchAttestationForVerification (nonce'd, uncached) and the
 // verifier over the report the gateway mock serves. Mirrors AttestationVerificationRow.run().
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { gunzipSync } from 'zlib';
 import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
@@ -20,6 +23,7 @@ import { attestationRequests, http, HttpResponse, server, signInFixtureAccount }
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import capturedReport from '@/test/fixtures/attestation-report.json';
 import gpu1a from '@/test/fixtures/attestation/1gpu-004-0.json';
+import composeManagerReport from '@/test/fixtures/attestation/compose-manager-report.json';
 
 const ROUTE = '*/api/attestation/report';
 const MODEL = 'some/model';
@@ -303,5 +307,84 @@ describe('AttestationVerificationRow: GPU notice', () => {
     const view = await tapVerify();
     expect(await view.findByTestId('attestation-scope-notice')).toBeTruthy();
     expect(view.queryByTestId('attestation-gpu-notice')).toBeNull();
+  });
+});
+
+describe('AttestationVerificationRow: proxy identity', () => {
+  const FILE_ROUTE = '*/api/attestation/compose-file';
+  const report = composeManagerReport;
+  const fixtureFile = (name: string) =>
+    gunzipSync(readFileSync(join(__dirname, '../../../fixtures/attestation', name))).toString('utf8');
+  const files: Record<string, string> = {
+    '81da1f6290a2bdb2f8f7712ab8ca76c891f5660d': fixtureFile('compose-small-models-81da1f6.yaml.gz'),
+    '75d31e6461dc51465a81ff69203200a51a820d1c': fixtureFile('compose-small-models-75d31e6.yaml.gz'),
+  };
+  let fileRequests: { commit: string | null; file: string | null; authorization: string | null }[];
+  beforeAll(initI18nEn);
+  beforeEach(async () => {
+    await signInFixtureAccount();
+    fakeClock('2026-11-06T09:45:00Z');
+    fileRequests = [];
+    jest.spyOn(e2eeService, 'generateAttestationNonce').mockReturnValue(report.request_nonce);
+    server.use(
+      http.get(ROUTE, () => HttpResponse.json({ model_attestations: [report] })),
+      http.get(FILE_ROUTE, ({ request }) => {
+        const url = new URL(request.url);
+        const commit = url.searchParams.get('commit');
+        fileRequests.push({
+          commit,
+          file: url.searchParams.get('file'),
+          authorization: request.headers.get('authorization'),
+        });
+        return HttpResponse.text(files[commit ?? '']);
+      }),
+    );
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  async function tapVerify() {
+    const view = await render(React.createElement(AttestationVerificationRow));
+    await fireEvent.press(view.getByTestId('mera-protocol-attestation-toggle'));
+    await act(async () => {
+      fireEvent.press(view.getByTestId('mera-protocol-attestation-run'));
+      await run(Promise.resolve());
+    });
+    await run(Promise.resolve());
+    await view.findByTestId('attestation-scope-notice');
+    return view;
+  }
+
+  it('fetches both files through the gateway, authenticated, and shows the notice', async () => {
+    const view = await tapVerify();
+
+    expect(view.getByTestId('attestation-deployed-software-notice')).toBeTruthy();
+    expect(view.getByText("Proxy matches NEAR's public configuration")).toBeTruthy();
+    expect(fileRequests.map(r => r.commit)).toEqual(Object.keys(files));
+    expect(fileRequests.every(r => r.file === 'prod/small-models.yaml')).toBe(true);
+    expect(fileRequests.every(r => r.authorization?.startsWith('Bearer '))).toBe(true);
+  });
+
+  it('reads as not checked, with no notice, when the gateway can not supply the file', async () => {
+    server.use(http.get(FILE_ROUTE, () => HttpResponse.json({ error: 'x' }, { status: 502 })));
+    const view = await tapVerify();
+
+    expect(view.queryByTestId('attestation-deployed-software-notice')).toBeNull();
+    expect(
+      view.getByText("Proxy matches NEAR's public configuration · not checked"),
+    ).toBeTruthy();
+  });
+
+  it('fetches nothing from a gateway that sends no log', async () => {
+    server.use(
+      http.get(ROUTE, () =>
+        HttpResponse.json({
+          model_attestations: [{ ...report, compose_manager_attestation: undefined }],
+        }),
+      ),
+    );
+    const view = await tapVerify();
+
+    expect(fileRequests).toEqual([]);
+    expect(view.queryByTestId('attestation-deployed-software-notice')).toBeNull();
   });
 });
