@@ -62,7 +62,13 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
                                 {publications.map((pub) => (
                                     <PublicationControlRow
                                         key={pub.key}
-                                        {...prefs.publisherRow({ publisherId: pub.publisherId ?? pub.key, rawName: pub.displayName, countryCode: pub.countryCode })}
+                                        {...prefs.publisherRow({
+                                            publisherId: pub.publisherId ?? pub.key,
+                                            // No known publisher, so nothing to fetch: writes take the stored name.
+                                            sourceNames: pub.publisherId ? undefined : [pub.displayName],
+                                            rawName: pub.displayName,
+                                            countryCode: pub.countryCode,
+                                        })}
                                         rawName={pub.displayName}
                                         flag={pub.countryCode ? flagForAlpha2(alpha3ToAlpha2(pub.countryCode)) || null : null}
                                         onPress={() =>

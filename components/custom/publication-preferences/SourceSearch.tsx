@@ -16,6 +16,7 @@ import { useDebouncedValue } from '@/lib/hooks/use-debounced-value';
 import logger from '@/lib/logger';
 import SourceService from '@/lib/source-service';
 import { MaterialIcons } from '@expo/vector-icons';
+import { X } from 'lucide-react-native';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import { router } from 'expo-router';
@@ -104,7 +105,7 @@ const SourceSearch: React.FC<{
     }, [typed, onActiveChange]);
 
     const input = (
-        <Input className="rounded-full border-line bg-surface" style={{ height: 42 }}>
+        <Input className="rounded-full border-line bg-surface" style={{ height: 42, paddingRight: onboarding && typed ? 40 : 0 }}>
             <InputSlot className="pl-3.5">
                 <MaterialIcons name="search" size={18} color={colors.ink2} />
             </InputSlot>
@@ -209,14 +210,34 @@ const SourceSearch: React.FC<{
 
     // The panel is a sibling of the picks inside one flex:1 box, not an overflow of a short parent:
     // Android delivers no touch outside a parent's bounds. Its top is the field's measured height,
-    // so the title collapsing moves field and panel together.
+    // so the title collapsing moves field and panel together. The backdrop starts there too: a tap
+    // on the field is not a tap outside.
+    const panelOpen = typed && !dismissed;
     return (
         <View style={styles.flex} onLayout={(e) => setBoxHeight(e.nativeEvent.layout.height)}>
             <View style={styles.field} onLayout={(e) => setFieldHeight(e.nativeEvent.layout.height)}>
                 {input}
+                {typed ? (
+                    <RNPressable
+                        testID="sources-search-clear"
+                        accessibilityRole="button"
+                        accessibilityLabel={t('onboarding.close')}
+                        onPress={() => setQuery('')}
+                        style={styles.clear}
+                    >
+                        <X size={18} color={colors.ink2} />
+                    </RNPressable>
+                ) : null}
             </View>
-            {children}
-            {typed && !dismissed ? (
+            {/* A screen reader must not reach a row drawn under the panel. */}
+            <View
+                style={styles.flex}
+                accessibilityElementsHidden={panelOpen}
+                importantForAccessibility={panelOpen ? 'no-hide-descendants' : 'auto'}
+            >
+                {children}
+            </View>
+            {panelOpen ? (
                 <>
                     <RNPressable
                         testID="sources-search-backdrop"
@@ -226,7 +247,7 @@ const SourceSearch: React.FC<{
                             Keyboard.dismiss();
                             setDismissed(true);
                         }}
-                        style={[StyleSheet.absoluteFill, styles.backdrop]}
+                        style={[StyleSheet.absoluteFill, styles.backdrop, { top: fieldHeight }]}
                     />
                     <View
                         testID="sources-search-panel"
@@ -247,6 +268,8 @@ const SourceSearch: React.FC<{
 const styles = StyleSheet.create({
     flex: { flex: 1 },
     field: { paddingHorizontal: 16, paddingBottom: 12 },
+    // A 44pt frame over the 42pt field's end, outside the Input, whose overflow would clip it.
+    clear: { position: 'absolute', top: -1, right: 16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     backdrop: { zIndex: 1 },
     panel: {
         position: 'absolute',
