@@ -373,6 +373,8 @@ export interface RawModelAttestation {
   nvidia_attestation?: unknown;
   /** Served on nonce'd replies only. Read by `checkDeployedSoftware`, never trusted here. */
   compose_manager_attestation?: unknown;
+  /** Unsigned machine info. Shown as reported, never used to decide anything. */
+  info?: unknown;
 }
 
 /**

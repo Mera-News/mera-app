@@ -13,6 +13,9 @@
  *  2. The summary line derives from the WEAKEST check, so the header can never
  *     read "Verified" while the expanded list contains something unchecked.
  *
+ * Each tap checks both models, and one failing never hides the other. A card under
+ * each shows the raw values for anyone who came here to check them.
+ *
  * FAIL-OPEN: nothing here gates inference. A failure is displayed, not
  * enforced. The notice text says so rather than letting the user infer a
  * protection that isn't there yet.
@@ -24,6 +27,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
 
 import { HStack } from '@/components/ui/hstack';
+import { AttestationDetailsCard, STATUS_LABEL_KEYS } from '@/components/custom/config-mera/AttestationDetailsCard';
 import { Group, Row } from '@/components/custom/you/rows';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
@@ -33,8 +37,9 @@ import {
   generateAttestationNonce,
 } from '@/lib/e2ee/e2ee-service';
 import { checkDeployedSoftware } from '@/lib/algorithms/deployed-software';
+import { attestationDetails, type AttestationDetails } from '@/lib/algorithms/attestation-details';
 import { verifyAttestation, type CheckId, type VerificationReport } from '@/lib/algorithms/attestation-verify';
-import { SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
 
 /** Stable display order — most security-relevant first, unchecked items last
@@ -74,12 +79,134 @@ export const CHECK_LABEL_KEYS = {
   'deployed-software': 'meraProtocol.attestationCheckDeployedSoftware',
 } as const satisfies Record<CheckId, string>;
 
+const MODELS = [BIG_MODEL, SMALL_MODEL];
+
+type ModelResult =
+  | { model: string; report: VerificationReport; details: AttestationDetails }
+  | { model: string; report: null };
+
 type RunState =
   | { phase: 'idle' }
   | { phase: 'running' }
-  | { phase: 'done'; report: VerificationReport }
+  | { phase: 'done'; results: ModelResult[] }
   | { phase: 'error' };
 
+async function verifyModel(model: string): Promise<ModelResult> {
+  try {
+    // A fresh nonce per tap — this is what makes the freshness check real,
+    // and it deliberately bypasses every cache in the path.
+    const nonce = generateAttestationNonce();
+    const { attestation } = await fetchAttestationForVerification(model, nonce);
+    const quoteHex = attestation.intel_quote ?? '';
+    const deployedSoftware = await checkDeployedSoftware(
+      {
+        composeManagerAttestation: attestation.compose_manager_attestation,
+        modelQuoteHex: quoteHex,
+        modelName: model,
+        expectedNonce: nonce,
+      },
+      fetchComposeFile,
+    );
+    const report = verifyAttestation({
+      quoteHex,
+      signingPublicKey: attestation.signing_public_key ?? '',
+      signingAlgo: attestation.signing_algo,
+      expectedNonce: nonce,
+      hasGpuPayload: Boolean(attestation.nvidia_payload),
+      nvidiaAttestation: attestation.nvidia_attestation,
+      deployedSoftware,
+    });
+    const details = attestationDetails({
+      checkedAt: new Date(),
+      nonce,
+      signingPublicKey: attestation.signing_public_key,
+      signingAlgo: attestation.signing_algo,
+      quoteHex,
+      info: attestation.info,
+      report,
+      proxy: deployedSoftware.proxy,
+    });
+    return { model, report, details };
+  } catch (e) {
+    // A fetch failure is NOT a verification failure — showing it as one
+    // would train users to ignore red. It gets its own state.
+    logger.debug('[attestation] verification fetch failed', { model, error: String(e) });
+    return { model, report: null };
+  }
+}
+
+/** The weakest result across models: a model that couldn't be fetched can't read as a pass. */
+function weakestVerdict(results: ModelResult[]): VerificationReport['verdict'] {
+  if (results.some(r => r.report?.verdict === 'failed')) return 'failed';
+  return results.every(r => r.report?.verdict === 'verified') ? 'verified' : 'incomplete';
+}
+
+
+function ModelSection({ result }: { result: ModelResult }) {
+  const { t } = useTranslation();
+  const colors = useColors();
+  const { model, report } = result;
+
+  return (
+    <VStack space="sm" testID={`attestation-model-${model}`}>
+      <Text selectable className="text-ink-2 text-sm font-semibold">
+        {model}
+      </Text>
+      {!report && (
+        <Text className="text-ink-3 text-sm" testID="attestation-model-error">
+          {t('meraProtocol.attestationModelError')}
+        </Text>
+      )}
+      {report &&
+        CHECK_ORDER.map(id => {
+          const check = report.checks.find(c => c.id === id);
+          if (!check) return null;
+          const isPass = check.status === 'pass';
+          const isFail = check.status === 'fail';
+          const label = t(CHECK_LABEL_KEYS[id]);
+          return (
+            <View key={id}>
+              <HStack
+                accessible
+                accessibilityLabel={`${label}, ${t(STATUS_LABEL_KEYS[check.status])}`}
+                space="sm"
+                className="items-start"
+                testID={`attestation-check-${id}`}
+              >
+                <MaterialIcons
+                  // `remove` (not `check-circle`) for not-checked — the
+                  // whole point is that it must not read as a pass.
+                  name={isPass ? 'check-circle' : isFail ? 'cancel' : 'remove'}
+                  size={16}
+                  color={isPass ? colors.positive : isFail ? colors.negative : colors.ink3}
+                  style={{ marginTop: 2 }}
+                />
+                <Text className="text-ink-2 text-sm flex-1">
+                  {label}
+                  {check.status === 'not-checked'
+                    ? ` · ${t('meraProtocol.attestationNotCheckedLabel')}`
+                    : ''}
+                </Text>
+              </HStack>
+              {!isPass && (
+                <Text
+                  selectable
+                  className="text-ink-3 text-xs"
+                  style={{ marginStart: 24 }}
+                  testID={`attestation-check-detail-${id}`}
+                >
+                  {check.detail}
+                </Text>
+              )}
+            </View>
+          );
+        })}
+      {result.report && (
+        <AttestationDetailsCard model={model} details={result.details} checks={result.report.checks} />
+      )}
+    </VStack>
+  );
+}
 
 export function AttestationVerificationRow() {
   const { t } = useTranslation();
@@ -90,39 +217,14 @@ export function AttestationVerificationRow() {
   const run = useCallback(async () => {
     setState({ phase: 'running' });
     setExpanded(true);
-    try {
-      // A fresh nonce per tap — this is what makes the freshness check real,
-      // and it deliberately bypasses every cache in the path.
-      const nonce = generateAttestationNonce();
-      const { attestation } = await fetchAttestationForVerification(SMALL_MODEL, nonce);
-      const deployedSoftware = await checkDeployedSoftware(
-        {
-          composeManagerAttestation: attestation.compose_manager_attestation,
-          modelQuoteHex: attestation.intel_quote ?? '',
-          modelName: SMALL_MODEL,
-          expectedNonce: nonce,
-        },
-        fetchComposeFile,
-      );
-      const report = verifyAttestation({
-        quoteHex: attestation.intel_quote ?? '',
-        signingPublicKey: attestation.signing_public_key ?? '',
-        signingAlgo: attestation.signing_algo,
-        expectedNonce: nonce,
-        hasGpuPayload: Boolean(attestation.nvidia_payload),
-        nvidiaAttestation: attestation.nvidia_attestation,
-        deployedSoftware,
-      });
-      setState({ phase: 'done', report });
-    } catch (e) {
-      // A fetch failure is NOT a verification failure — showing it as one
-      // would train users to ignore red. It gets its own state.
-      logger.debug('[attestation] verification fetch failed', { error: String(e) });
-      setState({ phase: 'error' });
-    }
+    const results = await Promise.all(MODELS.map(verifyModel));
+    setState(results.some(r => r.report) ? { phase: 'done', results } : { phase: 'error' });
   }, []);
 
-  const verdict = state.phase === 'done' ? state.report.verdict : null;
+  const verdict = state.phase === 'done' ? weakestVerdict(state.results) : null;
+  const anyPassed = (id: CheckId) =>
+    state.phase === 'done' &&
+    state.results.some(r => r.report?.checks.find(c => c.id === id)?.status === 'pass');
 
   const summaryText =
     state.phase === 'running'
@@ -164,30 +266,7 @@ export function AttestationVerificationRow() {
         {expanded && (
           <VStack space="sm" style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             {state.phase === 'done' &&
-              CHECK_ORDER.map(id => {
-                const check = state.report.checks.find(c => c.id === id);
-                if (!check) return null;
-                const isPass = check.status === 'pass';
-                const isFail = check.status === 'fail';
-                return (
-                  <HStack key={id} space="sm" className="items-start" testID={`attestation-check-${id}`}>
-                    <MaterialIcons
-                      // `remove` (not `check-circle`) for not-checked — the
-                      // whole point is that it must not read as a pass.
-                      name={isPass ? 'check-circle' : isFail ? 'cancel' : 'remove'}
-                      size={16}
-                      color={isPass ? colors.positive : isFail ? colors.negative : colors.ink3}
-                      style={{ marginTop: 2 }}
-                    />
-                    <Text className="text-ink-2 text-sm flex-1">
-                      {t(CHECK_LABEL_KEYS[id])}
-                      {check.status === 'not-checked'
-                        ? ` · ${t('meraProtocol.attestationNotCheckedLabel')}`
-                        : ''}
-                    </Text>
-                  </HStack>
-                );
-              })}
+              state.results.map(result => <ModelSection key={result.model} result={result} />)}
 
             {state.phase === 'done' && (
               <Text className="text-ink-3 text-xs mt-2">
@@ -197,24 +276,22 @@ export function AttestationVerificationRow() {
               </Text>
             )}
 
-            {state.phase === 'done' &&
-              state.report.checks.find(c => c.id === 'gpu-attestation')?.status === 'pass' && (
+            {anyPassed('gpu-attestation') && (
                 <Text className="text-ink-3 text-xs mt-2" testID="attestation-gpu-notice">
                   {t('meraProtocol.attestationGpuNotice')}
                 </Text>
               )}
 
-            {state.phase === 'done' &&
-              state.report.checks.find(c => c.id === 'deployed-software')?.status === 'pass' && (
+            {anyPassed('deployed-software') && (
                 <Text className="text-ink-3 text-xs mt-2" testID="attestation-deployed-software-notice">
                   {t('meraProtocol.attestationDeployedSoftwareNotice')}
                 </Text>
               )}
 
-            {/* Scope disclosure. This row attests ONE model — the scoring
-                model. Chat runs on a different model, and each has a session
-                fallback, so a pass here does NOT mean every cloud request went
-                to a verified enclave. Saying "the cloud AI" without this would
+            {/* Scope disclosure. This row checks one machine per model at one
+                moment, and each model has a session fallback it doesn't check,
+                so a pass here does NOT mean every cloud request went to a
+                verified enclave. Saying "the cloud AI" without this would
                 over-claim in exactly the way the rest of this feature exists
                 to avoid. */}
             {state.phase === 'done' && (

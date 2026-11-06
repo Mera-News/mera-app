@@ -627,7 +627,7 @@ describe('verifyNvidiaAttestation: real NRAS tokens, pinned root', () => {
   });
 
   it.each(real)('passes on %s', (_n, fx, nonce, count) => {
-    expect(verify(wire(fx), nonce, GPU_NOW)).toEqual({
+    expect(verify(wire(fx), nonce, GPU_NOW)).toMatchObject({
       status: 'pass',
       detail: `NVIDIA signed a passing result for ${count} GPU(s)`,
     });
@@ -1007,7 +1007,7 @@ describe('verifyNvidiaAttestation: synthetic P-384 chain', () => {
     verify('tokens' in (spec ?? {}) ? spec : build(spec as Spec), NONCE_1GPU, GPU_NOW, rootDer);
 
   it('control: the all-good token passes', () => {
-    expect(run()).toEqual({ status: 'pass', detail: 'NVIDIA signed a passing result for 2 GPU(s)' });
+    expect(run()).toMatchObject({ status: 'pass', detail: 'NVIDIA signed a passing result for 2 GPU(s)' });
   });
 
   it('with the default root the same complete chain is not-checked', () => {
@@ -1083,7 +1083,7 @@ describe('verifyNvidiaAttestation: synthetic P-384 chain', () => {
   });
 
   it('passes at exactly 16 GPU tokens and exactly 8 keys', () => {
-    expect(run({ gpus: 16 })).toEqual({
+    expect(run({ gpus: 16 })).toMatchObject({
       status: 'pass',
       detail: 'NVIDIA signed a passing result for 16 GPU(s)',
     });

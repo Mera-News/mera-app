@@ -26,9 +26,18 @@ import {
   type CheckStatus,
 } from './attestation-verify';
 
+export interface DeployedProxy {
+  image: string;
+  file: string;
+  commit: string;
+  tag?: string;
+}
+
 export interface DeployedSoftwareResult {
   status: CheckStatus;
   detail: string;
+  /** On a pass only. */
+  proxy?: DeployedProxy;
 }
 
 export interface DeployedSoftwareInput {
@@ -155,6 +164,7 @@ interface ComposeAction {
   file?: unknown;
   file_sha256?: unknown;
   services?: unknown;
+  tag?: unknown;
 }
 
 interface ComposeUp {
@@ -162,6 +172,7 @@ interface ComposeUp {
   file: string;
   fileSha256: string;
   services: string[];
+  tag?: string;
 }
 
 function namedServices(action: ComposeAction): string[] {
@@ -183,7 +194,8 @@ function asComposeUp(action: ComposeAction): ComposeUp | null {
   ) {
     return null;
   }
-  return { commit, file, fileSha256, services: namedServices(action) };
+  const tag = typeof action.tag === 'string' ? action.tag : undefined;
+  return { commit, file, fileSha256, services: namedServices(action), tag };
 }
 
 /** `running` is only an up that still stands: nothing later took the service down. */
@@ -258,6 +270,12 @@ export async function traceProxyImage(
   return {
     status: 'pass',
     detail: `nearaidev/vllm-proxy-rs@sha256:${digest.slice(0, SHORT_DIGEST_LEN)}, from ${latest.up.file} at ${latest.up.commit.slice(0, SHORT_DIGEST_LEN)}`,
+    proxy: {
+      image: `nearaidev/vllm-proxy-rs@sha256:${digest}`,
+      file: latest.up.file,
+      commit: latest.up.commit,
+      tag: latest.up.tag,
+    },
   };
 }
 
