@@ -4,11 +4,11 @@ import { fetchUserReading } from '@/lib/billing-service';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { formatClockTime } from '@/lib/subscription/clock-time';
 import { getPlanRaisedAt } from '@/lib/subscription/plan-rise';
-import { getReadHoldUpdatedAt, isReadHeld, useReadHold } from '@/lib/subscription/read-hold';
+import { getReadHoldUpdatedAt, isReadHeld, subscribeReadHold, useReadHold } from '@/lib/subscription/read-hold';
 import { useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { readingMeterModel } from './reading-meter-model';
@@ -74,7 +74,12 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, size = 'card'
     const [, tick] = useState(0);
 
     // Expiry emits nothing, so while held, look again until the hold ends. On device is never held.
-    const held = !onDevice && isReadHeld();
+    // Module reads are real inputs here: the compiler would cache a bare call for the mount.
+    // noteBillingTier and every hold write emit through subscribeReadHold; expiry is the tick.
+    const readHeld = useSyncExternalStore(subscribeReadHold, isReadHeld);
+    const updatedAt = useSyncExternalStore(subscribeReadHold, getReadHoldUpdatedAt);
+    const planRaised = useSyncExternalStore(subscribeReadHold, () => getPlanRaisedAt() != null);
+    const held = !onDevice && readHeld;
     useEffect(() => {
         if (!held) return;
         const id = setInterval(() => {
@@ -91,9 +96,9 @@ const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, size = 'card'
         holdResetAt: hold.resetAt,
         now,
         online,
-        updatedAt: getReadHoldUpdatedAt(),
+        updatedAt,
         onDevice,
-        planRaised: getPlanRaisedAt() != null,
+        planRaised,
     });
 
     const modeRow = (
