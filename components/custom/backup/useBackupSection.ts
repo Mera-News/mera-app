@@ -3,6 +3,8 @@ import { Share } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
+  backupCadence,
+  backupLastFailedAt,
   backupLastRunAt,
   backupProviderId,
   hydrateBackupSettings,
@@ -41,6 +43,17 @@ type BackupState = 'loading' | 'off' | 'setup' | 'on';
 type BackupStep = 'code' | 'where' | 'when';
 type RestoreStep = 'idle' | 'where' | 'code' | 'restoring';
 
+// The settings mirror is a module read the React Compiler would cache forever,
+// so the screen reads this snapshot from state, re-taken by refresh().
+function readSettings() {
+  return {
+    providerId: backupProviderId(),
+    cadence: backupCadence(),
+    lastRunAt: backupLastRunAt(),
+    lastFailedAt: backupLastFailedAt(),
+  };
+}
+
 function cloudProviderFor(id: BackupProviderId): BackupProvider | null {
   if (id === 'icloud') return icloudProvider;
   if (id === 'google-drive') return googleDriveProvider;
@@ -70,7 +83,11 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
   // Newest backup in the cloud, for a device that never stamped one itself.
   const [cloudLastAt, setCloudLastAt] = useState<number | null>(null);
   const [version, setVersion] = useState(0);
-  const refresh = useCallback(() => setVersion((v) => v + 1), []);
+  const [settings, setSettings] = useState(readSettings);
+  const refresh = useCallback(() => {
+    setSettings(readSettings());
+    setVersion((v) => v + 1);
+  }, []);
 
   const fail = useCallback((err: unknown, where: string) => {
     logger.captureException(err, { tags: { screen: 'backup', action: where } });
@@ -84,6 +101,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
     void (async () => {
       try {
         await hydrateBackupSettings();
+        if (!cancelled) setSettings(readSettings());
         const [ic, gd, bg] = await Promise.all([
           isICloudSupported() ? icloudProvider.isAvailable() : Promise.resolve(false),
           isGoogleDriveConfigured() ? googleDriveProvider.isAvailable() : Promise.resolve(false),
@@ -389,6 +407,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
   }, [found, typedCode, fail]);
 
   return {
+    settings,
     state,
     step,
     editing,

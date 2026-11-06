@@ -48,7 +48,7 @@ import { StepsAccordion, type AccordionStep } from '@/components/ui/steps-accord
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 
-import { backupCadence, backupLastFailedAt, backupLastRunAt, backupProviderId, type BackupProviderId } from '@/lib/backup/backup-settings';
+import type { BackupProviderId } from '@/lib/backup/backup-settings';
 import { isGoogleDriveConfigured } from '@/lib/backup/providers/google-drive';
 import { isICloudSupported } from '@/lib/backup/providers/icloud';
 import type { BackupCadence } from '@/lib/backup/types';
@@ -111,6 +111,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
     earned,
     setEarned,
     cloudLastAt,
+    settings,
     refresh,
     onSwitch,
     acknowledgeCode,
@@ -270,12 +271,12 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         id: 'where',
         title: on || statusOf('where') === 'done' ? t('backup.where') : t('backup.whereTitle'),
         hint: t('backup.whereDescription'),
-        summary: providerName(backupProviderId() ?? pickedProvider),
+        summary: providerName(settings.providerId ?? pickedProvider),
         status: statusOf('where'),
         actionLabel: on ? t('backup.change') : undefined,
         onAction: on
           ? () => {
-              setPickedProvider(backupProviderId());
+              setPickedProvider(settings.providerId);
               setEditing('where');
             }
           : undefined,
@@ -289,12 +290,12 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       {
         id: 'when',
         title: t('backup.whenTitle'),
-        summary: cadenceName(backupCadence()),
+        summary: cadenceName(settings.cadence),
         status: statusOf('when'),
         actionLabel: on ? t('backup.change') : undefined,
         onAction: on
           ? () => {
-              const c = backupCadence();
+              const c = settings.cadence;
               setPickedCadence(c === 'off' ? 'daily' : c);
               setEditing('when');
             }
@@ -312,9 +313,9 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   };
 
   const statusCard = () => {
-    const id = backupProviderId() as BackupProviderId;
-    const last = backupLastRunAt();
-    const failedAt = backupLastFailedAt();
+    const id = settings.providerId as BackupProviderId;
+    const last = settings.lastRunAt;
+    const failedAt = settings.lastFailedAt;
     const age = last !== null ? Date.now() - last : null;
     const warn = { color: colors.warning, fontSize: 13, lineHeight: 18 } as const;
     const plain = { color: colors.ink2, fontSize: 13, lineHeight: 18 } as const;
@@ -346,7 +347,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         {/* Restricted has to be a SENTENCE: with Background App Refresh off,
             backups never run on their own. */}
         {bgAvailable ? null : <Text style={warn}>{t('backup.backgroundRestricted')}</Text>}
-        <Text style={plain}>{t('backup.schedule', { cadence: cadenceName(backupCadence()) })}</Text>
+        <Text style={plain}>{t('backup.schedule', { cadence: cadenceName(settings.cadence) })}</Text>
       </View>
     );
   };
