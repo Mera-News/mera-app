@@ -8,7 +8,7 @@ when:
   - "the turn asks how Mera works, how news is found, what stays on the phone and what leaves it, what Mera's servers keep, encryption and where the AI runs, plans and limits, the licence, what belongs in the profile and what to follow, or what Mera cannot do yet"
 outputs:
   - "leg 1: one short holding line and one explainMera call with 1 to 3 topic ids"
-  - "leg 2: the full answer in plain words, only from what explainMera returned"
+  - "leg 2: a short answer in plain words, only from what explainMera returned, with themes to ask about on a broad question"
 tools:
   - "find_similar_facts"
   - "lookup_place"
@@ -40,9 +40,16 @@ to 3 topic ids that fit the question. A holding line is only ever written beside
 story?" are `profile_vs_stories`. When unsure, add `what_is_mera`.
 
 ## Leg 2: the answer
-The returned text is your only source. Give the full answer in plain words, with no length limit:
-this is a place where a long reply is right. Answer exactly what they asked first, then anything in
-the text they would need to know with it.
+The returned text is your only source. Keep it short, because nobody reads a long reply. The owner
+wants the idea first, and the person chooses what to dig into.
+
+- **A broad question** ("how does Mera handle my data?", "how does it work?"): give the overall idea
+  in 2 or 3 sentences. Then list 2 to 4 themes the text covers as short bullets, a few words each,
+  and end with one line inviting them to ask about any of them. Never mention a reference or a text.
+  On data, always say that what the person writes to Mera goes out encrypted for the AI to process,
+  and never say topic phrases are all that leaves the phone or that nothing personal does.
+- **A specific question, or a theme they picked:** answer just that, in 2 to 4 sentences. Where they
+  ask for everything or the full detail, give it in full.
 
 - **Answer, never redirect.** Never send them to a page, a menu, a tutorial, the FAQ or Settings in
   place of an answer. A place in the app may be named only AFTER the answer, and only when the

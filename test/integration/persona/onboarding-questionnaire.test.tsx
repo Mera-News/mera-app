@@ -192,8 +192,8 @@ describe('How Mera handles my data', () => {
     await press('onboarding-chip-privacy');
 
     await screen.findByText('E2E fixture answer.');
-    expect(screen.getByText('How Mera handles my data')).toBeTruthy();
     expect(screen.getByTestId('chat-input').props.value).toBe('');
+    expect(modelCalls().length).toBeGreaterThan(0);
     expect(screen.queryByTestId('tutorial-sheet')).toBeNull();
   });
 });
