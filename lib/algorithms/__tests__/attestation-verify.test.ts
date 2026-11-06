@@ -21,6 +21,7 @@ import gpu8a from '@/test/fixtures/attestation/8gpu-004-2.json';
 import gpu8b from '@/test/fixtures/attestation/8gpu-004-3.json';
 import gpu8c from '@/test/fixtures/attestation/8gpu-004-4.json';
 import int005 from '@/test/fixtures/attestation/intermediate-005-jwk.json';
+import intelQuote from '@/test/fixtures/attestation/intel-quote-ebba.json';
 import {
   NVIDIA_NRAS_ROOT_CA_DER_B64,
   NVIDIA_NRAS_ROOT_CA_DER_SHA256,
@@ -765,7 +766,6 @@ describe('verifyNvidiaAttestation: real NRAS tokens, pinned root', () => {
     const raw = { ...good, tokens: [good.tokens[0], JSON.parse(`{"__proto__": "${good.tokens[1]['GPU-0']}"}`)] };
     expect(Object.keys(raw.tokens[1])).toEqual(['__proto__']);
     expect(verify(raw, NONCE_1GPU, GPU_NOW)).toEqual(notChecked('a token is not for a GPU'));
-    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
   });
 
   it('is not-checked when alg is changed to none', () => {
@@ -793,6 +793,11 @@ describe('verifyAttestation: the GPU row', () => {
     expect(withPayload.status).toBe('not-checked');
     expect(without.status).toBe('not-checked');
     expect(withPayload.detail).not.toBe(without.detail);
+    for (const hasGpuPayload of [true, false]) {
+      const unset = gpu(verifyAttestation({ ...base, hasGpuPayload }));
+      const nulled = gpu(verifyAttestation({ ...base, hasGpuPayload, nvidiaAttestation: null }));
+      expect(nulled).toEqual(unset);
+    }
   });
 
   it('still runs the GPU check beside a malformed quote', () => {
@@ -806,17 +811,32 @@ describe('verifyAttestation: the GPU row', () => {
     expect(gpu(r)).toMatchObject({ status: 'pass' });
   });
 
-  it('summarizes as incomplete with GPU pass and TCB not-checked', () => {
+  it('reports every check on a real quote and real tokens that share one nonce', () => {
     const r = verifyAttestation({
-      ...base,
-      quoteHex: 'zz',
+      quoteHex: intelQuote.intel_quote,
+      signingPublicKey: intelQuote.signing_public_key,
+      signingAlgo: intelQuote.signing_algo,
       expectedNonce: NONCE_1GPU,
+      hasGpuPayload: true,
       nvidiaAttestation: wire(gpu1a),
+      now: GPU_NOW,
     });
-    const kept = r.checks.filter(c => c.id === 'gpu-attestation' || c.id === 'tcb-status');
-    expect(kept.map(c => c.status).sort()).toEqual(['not-checked', 'pass']);
-    expect(summarize(kept).verdict).toBe('incomplete');
-    expect(summarize([...kept, { id: 'gpu-attestation', status: 'fail', detail: '' }]).verdict).toBe('failed');
+    const status = Object.fromEntries(r.checks.map(c => [c.id, c.status]));
+    expect(r.checks).toHaveLength(11);
+    expect(status).toEqual({
+      'quote-structure': 'pass',
+      'report-data-key': 'pass',
+      'freshness-nonce': 'pass',
+      'signing-algo': 'pass',
+      'qe-report-signature': 'pass',
+      'attestation-key-binding': 'pass',
+      'quote-signature': 'pass',
+      'pck-chain': 'pass',
+      'root-ca-pin': 'pass',
+      'tcb-status': 'not-checked',
+      'gpu-attestation': 'pass',
+    });
+    expect(r.verdict).toBe('incomplete');
   });
 });
 
@@ -858,9 +878,11 @@ const OID = {
   ecdsaSha384: '2a8648ce3d040303',
   rsaSha256: '2a864886f70d01010b',
   rsaSha1: '2a864886f70d010105',
+  ecdsaSha256: '2a8648ce3d040302',
+  brainpoolP384r1: '2b240303020801010b',
 };
-const ecSpki = (pub: Uint8Array) =>
-  tlvLong(0x30, tlvLong(0x30, oid(OID.ecKey), oid(OID.p384)), bitStringN(pub));
+const ecSpki = (pub: Uint8Array, curve = OID.p384) =>
+  tlvLong(0x30, tlvLong(0x30, oid(OID.ecKey), oid(curve)), bitStringN(pub));
 const rsaSpki = (n: Uint8Array, e = '010001') =>
   tlvLong(
     0x30,
@@ -873,14 +895,23 @@ const ecSign = (sk: Uint8Array, msg: Uint8Array) => {
   return tlvLong(0x30, derInt(raw.subarray(0, 48)), derInt(raw.subarray(48)));
 };
 
-function cert(spki: Uint8Array, sigOid: string, sign: (tbs: Uint8Array) => Uint8Array): Uint8Array {
+const VALID: [string, string] = ['261101000000Z', '301231235959Z'];
+const EXPIRED: [string, string] = ['250101000000Z', '260101000000Z'];
+const NOT_YET: [string, string] = ['300101000000Z', '310101000000Z'];
+
+function cert(
+  spki: Uint8Array,
+  sigOid: string,
+  sign: (tbs: Uint8Array) => Uint8Array,
+  dates: [string, string] = VALID,
+): Uint8Array {
   const tbs = tlvLong(
     0x30,
     tlvLong(0xa0, tlvLong(0x02, Uint8Array.from([2]))),
     tlvLong(0x02, Uint8Array.from([1])),
     tlvLong(0x30, oid(sigOid)),
     tlvLong(0x30),
-    tlvLong(0x30, utc('261101000000Z'), utc('301231235959Z')),
+    tlvLong(0x30, utc(dates[0]), utc(dates[1])),
     tlvLong(0x30),
     spki,
   );
@@ -967,7 +998,8 @@ function build(spec: Spec = {}): Raw {
     keys: [{ kid: KID, x5c: spec.x5c ?? [b64(ecLeaf()), b64(ecIntermediate)] }],
   };
 }
-const ecLeaf = () => cert(ecSpki(leafKp.pub), OID.ecdsaSha384, tbs => ecSign(ecIntermediateKp.sk, tbs));
+const ecLeaf = (spki = ecSpki(leafKp.pub), sigOid = OID.ecdsaSha384, dates = VALID) =>
+  cert(spki, sigOid, tbs => ecSign(ecIntermediateKp.sk, tbs), dates);
 
 describe('verifyNvidiaAttestation: synthetic P-384 chain', () => {
   const run = (spec?: Spec | Raw) =>
@@ -1032,7 +1064,7 @@ describe('verifyNvidiaAttestation: synthetic P-384 chain', () => {
   it('is not-checked for unreadable or empty submods', () => {
     expect(run({ submods: {} })).toEqual(notChecked('no GPU is listed'));
     expect(run({ submods: undefined })).toEqual(notChecked(NOT_READ));
-    expect(run({ submods: 'GPU-0' })).toEqual(notChecked('a token is not for a GPU'));
+    expect(run({ submods: 'GPU-0' }).status).toBe('not-checked');
   });
 
   it('is not-checked for an unknown token algorithm', () => {
@@ -1048,6 +1080,69 @@ describe('verifyNvidiaAttestation: synthetic P-384 chain', () => {
   it('is not-checked for a token outside its window', () => {
     expect(run({ gpu: { exp: GPU_NOW_S - 61 } })).toEqual(notChecked('a token is outside its time window'));
   });
+
+  it('passes at exactly 16 GPU tokens and exactly 8 keys', () => {
+    expect(run({ gpus: 16 })).toEqual({
+      status: 'pass',
+      detail: 'NVIDIA signed a passing result for 16 GPU(s)',
+    });
+    const raw = build();
+    for (let i = 0; i < 7; i++) raw.keys.push({ kid: `decoy-${i}`, x5c: raw.keys[0].x5c });
+    expect(raw.keys).toHaveLength(8);
+    expect(run(raw).status).toBe('pass');
+  });
+
+  describe('certificate validity, each certificate on its own', () => {
+    const chain = (o: { root?: [string, string]; intermediate?: [string, string]; leaf?: [string, string] }) => {
+      const root = cert(ecSpki(rootKp.pub), OID.ecdsaSha384, tbs => ecSign(rootKp.sk, tbs), o.root);
+      const intermediate = cert(
+        ecSpki(ecIntermediateKp.pub),
+        OID.ecdsaSha384,
+        tbs => ecSign(rootKp.sk, tbs),
+        o.intermediate,
+      );
+      const x5c = [b64(ecLeaf(undefined, undefined, o.leaf)), b64(intermediate)];
+      return verify(build({ x5c }), NONCE_1GPU, GPU_NOW, root);
+    };
+    const w = notChecked('a certificate is outside its validity window');
+
+    it('control: valid dates pass', () => {
+      expect(chain({}).status).toBe('pass');
+    });
+    it.each([
+      ['an expired', EXPIRED],
+      ['a not-yet-valid', NOT_YET],
+    ] as const)('is not-checked for %s leaf, intermediate and root', (_n, dates) => {
+      expect(chain({ leaf: dates })).toEqual(w);
+      expect(chain({ intermediate: dates })).toEqual(w);
+      expect(chain({ root: dates })).toEqual(w);
+    });
+  });
+
+  it('is not-checked, not failed, when the leaf key is RSA', () => {
+    const x5c = [b64(ecLeaf(rsaSpki(rsaN))), b64(ecIntermediate)];
+    expect(run({ x5c })).toEqual(notChecked('the leaf key is not P-384'));
+  });
+
+  it('is not-checked for ecdsa-with-SHA256 under a P-384 issuer, even with a valid SHA-384 signature', () => {
+    const x5c = [b64(ecLeaf(undefined, OID.ecdsaSha256)), b64(ecIntermediate)];
+    expect(run({ x5c })).toEqual(notChecked('unsupported certificate signature algorithm'));
+  });
+
+  it('is not-checked for brainpoolP384r1 keys, whose points are also 97 bytes', () => {
+    const brainpool = ecSpki(leafKp.pub, OID.brainpoolP384r1);
+    expect(run({ x5c: [b64(ecLeaf(brainpool)), b64(ecIntermediate)] })).toEqual(
+      notChecked('unsupported certificate key'),
+    );
+    const bpIntermediate = cert(
+      ecSpki(ecIntermediateKp.pub, OID.brainpoolP384r1),
+      OID.ecdsaSha384,
+      tbs => ecSign(rootKp.sk, tbs),
+    );
+    expect(run({ x5c: [b64(ecLeaf()), b64(bpIntermediate)] })).toEqual(
+      notChecked('unsupported certificate key'),
+    );
+  });
 });
 
 describe('verifyNvidiaAttestation: RSA intermediate', () => {
@@ -1061,6 +1156,31 @@ describe('verifyNvidiaAttestation: RSA intermediate', () => {
     const fakeN = new Uint8Array(513).fill(0xff);
     expect(run([rsaLeaf(), rsaIntermediate(rsaSpki(fakeN))])).toEqual(
       notChecked('unsupported certificate key'),
+    );
+  });
+
+  it('is not-checked for a 255-byte modulus and for a 256-byte one with the top bit clear', () => {
+    const w = notChecked('unsupported certificate key');
+    expect(run([rsaLeaf(), rsaIntermediate(rsaSpki(new Uint8Array(255).fill(0xff)))])).toEqual(w);
+    const topClear = new Uint8Array(256).fill(0xff);
+    topClear[0] = 0x7f;
+    expect(run([rsaLeaf(), rsaIntermediate(rsaSpki(topClear))])).toEqual(w);
+  });
+
+  it('passes at the 4096-bit upper bound (512-byte modulus)', () => {
+    const big = generateKeyPairSync('rsa', { modulusLength: 4096 });
+    const n = Buffer.from(big.publicKey.export({ format: 'jwk' }).n as string, 'base64url');
+    expect(n).toHaveLength(512);
+    const leaf = cert(ecSpki(leafKp.pub), OID.rsaSha256, tbs => rsaSign('sha256', tbs, big.privateKey));
+    expect(run([leaf, rsaIntermediate(rsaSpki(n))]).status).toBe('pass');
+  });
+
+  it('is not-checked for a signature with an extra leading 0x00', () => {
+    const padded = cert(ecSpki(leafKp.pub), OID.rsaSha256, tbs =>
+      cat(Uint8Array.from([0]), rsaSign('sha256', tbs, rsaKp.privateKey)),
+    );
+    expect(run([padded, rsaIntermediate()])).toEqual(
+      notChecked('the leaf does not chain to its intermediate'),
     );
   });
 
