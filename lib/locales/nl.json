@@ -513,7 +513,9 @@
     "helpModesCloud": "Privécloud: Mera AI draait versleuteld op beveiligde servers, dus Mera kan je gegevens niet lezen. Je abonnement bepaalt hoeveel Mera per dag leest.",
     "helpModesPhone": "Op deze telefoon: Mera AI draait op je telefoon en lezen is onbeperkt. Het nieuws komt nog steeds van de servers van Mera. Dit is in bèta.",
     "helpModesVerify": "‘Attestatie verifiëren’ controleert Intels handtekening op het rapport van de cloud en of je gegevens zijn versleuteld met de sleutel in dat rapport.",
-    "attestationGpuNotice": "Het ondertekende resultaat van NVIDIA laat zien dat echte NVIDIA-GPU's op deze controle hebben gereageerd. Het bewijst niet dat die GPU's verbonden zijn met de beveiligde hardware."
+    "attestationGpuNotice": "Het ondertekende resultaat van NVIDIA laat zien dat echte NVIDIA-GPU's op deze controle hebben gereageerd. Het bewijst niet dat die GPU's verbonden zijn met de beveiligde hardware.",
+    "attestationCheckDeployedSoftware": "Proxy komt overeen met de openbare configuratie van NEAR",
+    "attestationDeployedSoftwareNotice": "Dit laat zien welke proxy-image NEAR zegt te hebben geïnstalleerd. Het laat niet zien wat die software met je gegevens doet."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt, want de servers van Mera hebben deze gegevens nooit gehad.",

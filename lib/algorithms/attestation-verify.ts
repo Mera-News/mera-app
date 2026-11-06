@@ -134,7 +134,8 @@ export type CheckId =
   | 'pck-chain'
   | 'root-ca-pin'
   | 'tcb-status'
-  | 'gpu-attestation';
+  | 'gpu-attestation'
+  | 'deployed-software';
 
 export interface CheckResult {
   id: CheckId;
@@ -557,6 +558,8 @@ export interface AttestationInput {
   /** `model_attestations[i].nvidia_attestation`, untouched. `unknown` because the
    *  gateway is untrusted: {@link verifyNvidiaAttestation} is what reads it. */
   nvidiaAttestation?: unknown;
+  /** The result of `checkDeployedSoftware`, which is async and so runs first. */
+  deployedSoftware?: { status: CheckStatus; detail: string };
   /** Injectable for tests; defaults to now. */
   now?: Date;
 }
@@ -604,6 +607,7 @@ export function verifyAttestation(input: AttestationInput): VerificationReport {
     addAlgoCheck(add, input.signingAlgo, keyBytes);
     addUncheckable(add);
     addGpuCheck(add, input);
+    addDeployedSoftware(add, input);
     return summarize(checks);
   }
 
@@ -723,6 +727,7 @@ export function verifyAttestation(input: AttestationInput): VerificationReport {
 
   addUncheckable(add);
   addGpuCheck(add, input);
+  addDeployedSoftware(add, input);
   return summarize(checks);
 }
 
@@ -792,6 +797,17 @@ function addGpuCheck(
     input.now ?? new Date(),
   );
   add('gpu-attestation', status, detail);
+}
+
+function addDeployedSoftware(
+  add: (id: CheckId, s: CheckStatus, d: string) => void,
+  input: AttestationInput,
+): void {
+  const { status, detail } = input.deployedSoftware ?? {
+    status: 'not-checked',
+    detail: 'the deployment log was not checked',
+  };
+  add('deployed-software', status, detail);
 }
 
 /**

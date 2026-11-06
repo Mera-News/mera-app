@@ -1,0 +1,122 @@
+{
+  "ar": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "الوسيط يطابق إعدادات NEAR العامة",
+      "attestationDeployedSoftwareNotice": "يوضح هذا صورة الوسيط التي تقول NEAR إنها ثبّتتها. ولا يوضح ما يفعله هذا البرنامج ببياناتك."
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy entspricht NEARs öffentlicher Konfiguration",
+      "attestationDeployedSoftwareNotice": "Das zeigt, welches Proxy-Image NEAR nach eigener Angabe installiert hat. Es zeigt nicht, was diese Software mit deinen Daten macht."
+    }
+  },
+  "en": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy matches NEAR's public configuration",
+      "attestationDeployedSoftwareNotice": "This shows which proxy image NEAR says it installed. It doesn't show what that software does with your data."
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "El proxy coincide con la configuración pública de NEAR",
+      "attestationDeployedSoftwareNotice": "Esto muestra qué imagen de proxy dice NEAR que instaló. No muestra qué hace ese software con tus datos."
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Le proxy correspond à la configuration publique de NEAR",
+      "attestationDeployedSoftwareNotice": "Cela montre quelle image de proxy NEAR indique avoir installée. Cela ne montre pas ce que ce logiciel fait de vos données."
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "प्रॉक्सी NEAR के सार्वजनिक कॉन्फ़िगरेशन से मेल खाता है",
+      "attestationDeployedSoftwareNotice": "इससे पता चलता है कि NEAR के अनुसार उसने कौन सी प्रॉक्सी इमेज इंस्टॉल की है। इससे यह पता नहीं चलता कि वह सॉफ़्टवेयर आपके डेटा के साथ क्या करता है।"
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy cocok dengan konfigurasi publik NEAR",
+      "attestationDeployedSoftwareNotice": "Ini menunjukkan image proxy yang menurut NEAR telah dipasangnya. Ini tidak menunjukkan apa yang dilakukan software tersebut dengan data Anda."
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Il proxy corrisponde alla configurazione pubblica di NEAR",
+      "attestationDeployedSoftwareNotice": "Mostra quale immagine del proxy NEAR dichiara di aver installato. Non mostra cosa fa quel software con i tuoi dati."
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "プロキシが NEAR の公開設定と一致",
+      "attestationDeployedSoftwareNotice": "NEAR がインストールしたとするプロキシイメージを示します。そのソフトウェアがデータをどう扱うかは示しません。"
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "프록시가 NEAR의 공개 구성과 일치함",
+      "attestationDeployedSoftwareNotice": "NEAR가 설치했다고 밝힌 프록시 이미지를 보여 줍니다. 해당 소프트웨어가 내 데이터로 무엇을 하는지는 보여 주지 않습니다."
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy komt overeen met de openbare configuratie van NEAR",
+      "attestationDeployedSoftwareNotice": "Dit laat zien welke proxy-image NEAR zegt te hebben geïnstalleerd. Het laat niet zien wat die software met je gegevens doet."
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy jest zgodne z publiczną konfiguracją NEAR",
+      "attestationDeployedSoftwareNotice": "To pokazuje, który obraz proxy według NEAR został zainstalowany. Nie pokazuje, co to oprogramowanie robi z Twoimi danymi."
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "O proxy corresponde à configuração pública da NEAR",
+      "attestationDeployedSoftwareNotice": "Isso mostra qual imagem de proxy a NEAR diz ter instalado. Não mostra o que esse software faz com seus dados."
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Прокси соответствует публичной конфигурации NEAR",
+      "attestationDeployedSoftwareNotice": "Это показывает, какой образ прокси, по словам NEAR, был установлен. Это не показывает, что эта программа делает с вашими данными."
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "พร็อกซีตรงกับการกำหนดค่าสาธารณะของ NEAR",
+      "attestationDeployedSoftwareNotice": "ข้อมูลนี้แสดงว่า NEAR ระบุว่าได้ติดตั้งอิมเมจพร็อกซีใด แต่ไม่ได้แสดงว่าซอฟต์แวร์นั้นทำอะไรกับข้อมูลของคุณ"
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy, NEAR'ın herkese açık yapılandırmasıyla eşleşiyor",
+      "attestationDeployedSoftwareNotice": "Bu, NEAR'ın hangi proxy imajını yüklediğini söylediğini gösterir. Bu yazılımın verilerinizle ne yaptığını göstermez."
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Проксі відповідає публічній конфігурації NEAR",
+      "attestationDeployedSoftwareNotice": "Це показує, який образ проксі, за словами NEAR, встановлено. Це не показує, що ця програма робить із вашими даними."
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "Proxy khớp với cấu hình công khai của NEAR",
+      "attestationDeployedSoftwareNotice": "Thông tin này cho thấy NEAR nói đã cài đặt image proxy nào. Thông tin này không cho thấy phần mềm đó làm gì với dữ liệu của bạn."
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "代理与 NEAR 的公开配置一致",
+      "attestationDeployedSoftwareNotice": "这显示 NEAR 声称安装了哪个代理镜像，但不能说明该软件如何处理你的数据。"
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "attestationCheckDeployedSoftware": "代理與 NEAR 的公開設定相符",
+      "attestationDeployedSoftwareNotice": "這會顯示 NEAR 聲稱安裝了哪個代理映像檔，但無法說明該軟體如何處理你的資料。"
+    }
+  }
+}

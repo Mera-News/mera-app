@@ -866,7 +866,9 @@
     "checkNotMet": "not met",
     "helpModesCloud": "Private cloud: Mera AI runs on secure servers, encrypted, so Mera can't read your data. Your plan sets how much Mera reads each day.",
     "helpModesPhone": "On this phone: Mera AI runs on your phone, and reading is unlimited. News still comes from Mera's servers. This is in Beta.",
-    "helpModesVerify": "Verify attestation checks Intel's signature on the cloud's report, and that your data is encrypted to the key in that report."
+    "helpModesVerify": "Verify attestation checks Intel's signature on the cloud's report, and that your data is encrypted to the key in that report.",
+    "attestationCheckDeployedSoftware": "Proxy matches NEAR's public configuration",
+    "attestationDeployedSoftwareNotice": "This shows which proxy image NEAR says it installed. It doesn't show what that software does with your data."
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",

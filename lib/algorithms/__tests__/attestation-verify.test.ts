@@ -822,7 +822,7 @@ describe('verifyAttestation: the GPU row', () => {
       now: GPU_NOW,
     });
     const status = Object.fromEntries(r.checks.map(c => [c.id, c.status]));
-    expect(r.checks).toHaveLength(11);
+    expect(r.checks).toHaveLength(12);
     expect(status).toEqual({
       'quote-structure': 'pass',
       'report-data-key': 'pass',
@@ -835,6 +835,7 @@ describe('verifyAttestation: the GPU row', () => {
       'root-ca-pin': 'pass',
       'tcb-status': 'not-checked',
       'gpu-attestation': 'pass',
+      'deployed-software': 'not-checked',
     });
     expect(r.verdict).toBe('incomplete');
   });

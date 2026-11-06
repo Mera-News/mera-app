@@ -140,6 +140,7 @@ const TAG = '[E2EE]';
 // generic OpenAI-compatible server will get 404s here, breaking cloud E2EE
 // inference.
 const ATTESTATION_API = `${INFERENCE_ENDPOINT}/api/attestation/report`;
+const COMPOSE_FILE_API = `${INFERENCE_ENDPOINT}/api/attestation/compose-file`;
 
 export interface ModelAttestation {
   /** Hex-encoded model pubkey: 32-byte Ed25519 or 64-byte secp256k1 (raw x‖y). */
@@ -370,6 +371,8 @@ export interface RawModelAttestation {
   nvidia_payload?: string;
   /** Additive; served only on nonce'd replies, and read from `model_attestations[0]` only. */
   nvidia_attestation?: unknown;
+  /** Served on nonce'd replies only. Read by `checkDeployedSoftware`, never trusted here. */
+  compose_manager_attestation?: unknown;
 }
 
 /**
@@ -437,6 +440,22 @@ export async function fetchAttestationForVerification(
     );
   }
   return { attestation, nonce: nonceHex };
+}
+
+/**
+ * One file of NEAR's public compose repo, for the verify tap. Null when it can't
+ * be had: a missing file reads as not-checked, never as a failed verification.
+ * The caller checks the bytes against NEAR's attested log.
+ */
+export async function fetchComposeFile(commit: string, file: string): Promise<string | null> {
+  const token = await getJwtToken();
+  if (!token) return null;
+  await gatewayRateLimiter.acquire('interactive');
+  const res = await fetchWithTimeout(
+    `${COMPOSE_FILE_API}?commit=${encodeURIComponent(commit)}&file=${encodeURIComponent(file)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  return res.ok ? res.text() : null;
 }
 
 /** 32 random bytes, hex — the shape NEAR's `nonce` param echoes into the

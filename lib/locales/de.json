@@ -513,7 +513,9 @@
     "helpModesCloud": "Private Cloud: Mera AI läuft verschlüsselt auf sicheren Servern, sodass Mera deine Daten nicht lesen kann. Dein Tarif legt fest, wie viel Mera pro Tag liest.",
     "helpModesPhone": "Auf diesem Telefon: Mera AI läuft auf deinem Telefon, und Lesen ist unbegrenzt. Die Nachrichten kommen weiter von den Servern von Mera. Das ist in der Beta.",
     "helpModesVerify": "Attestation überprüfen prüft Intels Signatur auf dem Bericht der Cloud und ob deine Daten mit dem Schlüssel aus diesem Bericht verschlüsselt sind.",
-    "attestationGpuNotice": "NVIDIAs signiertes Ergebnis zeigt, dass echte NVIDIA-GPUs auf diese Prüfung geantwortet haben. Das Ergebnis beweist aber nicht, dass diese GPUs mit der sicheren Hardware verbunden sind."
+    "attestationGpuNotice": "NVIDIAs signiertes Ergebnis zeigt, dass echte NVIDIA-GPUs auf diese Prüfung geantwortet haben. Das Ergebnis beweist aber nicht, dass diese GPUs mit der sicheren Hardware verbunden sind.",
+    "attestationCheckDeployedSoftware": "Proxy entspricht NEARs öffentlicher Konfiguration",
+    "attestationDeployedSoftwareNotice": "Das zeigt, welches Proxy-Image NEAR nach eigener Angabe installiert hat. Es zeigt nicht, was diese Software mit deinen Daten macht."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der von dir geöffneten Artikel. Die Karte \"Zuletzt gelesene Publikationen\" im Tab \"Quellen\" sowie der Verlauf pro Publikation werden zurückgesetzt. Nichts anderes ist betroffen, und es werden keine Serverdaten berührt, da die Server von Mera diese Daten nie hatten.",

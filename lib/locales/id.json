@@ -500,7 +500,9 @@
     "helpModesCloud": "Cloud pribadi: Mera AI berjalan di server aman, terenkripsi, jadi Mera tidak bisa membaca data Anda. Paket Anda menentukan berapa banyak yang dibaca Mera setiap hari.",
     "helpModesPhone": "Di ponsel ini: Mera AI berjalan di ponsel Anda, dan bacaan tanpa batas. Berita tetap datang dari server Mera. Fitur ini masih Beta.",
     "helpModesVerify": "Verifikasi atestasi memeriksa tanda tangan Intel pada laporan dari cloud, dan bahwa data Anda terenkripsi dengan kunci yang ada di dalam laporan itu.",
-    "attestationGpuNotice": "Hasil bertanda tangan dari NVIDIA menunjukkan bahwa GPU NVIDIA asli membalas pemeriksaan ini. Hasil itu tidak membuktikan bahwa GPU tersebut terhubung ke perangkat keras aman."
+    "attestationGpuNotice": "Hasil bertanda tangan dari NVIDIA menunjukkan bahwa GPU NVIDIA asli membalas pemeriksaan ini. Hasil itu tidak membuktikan bahwa GPU tersebut terhubung ke perangkat keras aman.",
+    "attestationCheckDeployedSoftware": "Proxy cocok dengan konfigurasi publik NEAR",
+    "attestationDeployedSoftwareNotice": "Ini menunjukkan image proxy yang menurut NEAR telah dipasangnya. Ini tidak menunjukkan apa yang dilakukan software tersebut dengan data Anda."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah memiliki data ini.",

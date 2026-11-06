@@ -515,7 +515,9 @@
     "helpModesCloud": "Cloud privato: Mera AI funziona su server sicuri, cifrato, quindi Mera non può leggere i tuoi dati. Il tuo piano stabilisce quanto legge Mera ogni giorno.",
     "helpModesPhone": "Su questo telefono: Mera AI funziona sul tuo telefono e la lettura è illimitata. Le notizie arrivano sempre dai server di Mera. È in Beta.",
     "helpModesVerify": "«Verifica attestazione» controlla la firma di Intel sul rapporto del cloud e che i tuoi dati siano cifrati con la chiave contenuta in quel rapporto.",
-    "attestationGpuNotice": "Il risultato firmato da NVIDIA mostra che GPU NVIDIA reali hanno risposto a questo controllo. Non dimostra che siano collegate all'hardware sicuro."
+    "attestationGpuNotice": "Il risultato firmato da NVIDIA mostra che GPU NVIDIA reali hanno risposto a questo controllo. Non dimostra che siano collegate all'hardware sicuro.",
+    "attestationCheckDeployedSoftware": "Il proxy corrisponde alla configurazione pubblica di NEAR",
+    "attestationDeployedSoftwareNotice": "Mostra quale immagine del proxy NEAR dichiara di aver installato. Non mostra cosa fa quel software con i tuoi dati."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Cancella il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato sui server viene toccato, perché i server di Mera non hanno mai avuto questi dati.",
