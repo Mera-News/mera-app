@@ -34,7 +34,7 @@ import {
   server,
   signInFixtureAccount,
   takeGatewayViolations,
-  useFakeClock,
+  useFakeClock as fakeClock,
   type GatewayResponder,
 } from '@/test/helpers';
 import { TEST_MODEL_KEYS } from '@/test/mock-backend/gateway/keys';
@@ -61,7 +61,7 @@ const respond = (r: ReturnType<GatewayResponder>): GatewayResponder => () => r;
 // timed out under a loaded run. Every test that reaches the gateway through the app runs
 // on the strict fake clock, which steps through those waits.
 function onFakeClock<T>(run: () => Promise<T>): Promise<T> {
-  useFakeClock('2026-10-09T00:00:00Z');
+  fakeClock('2026-10-09T00:00:00Z');
   return advanceUntilDone(run());
 }
 
@@ -264,14 +264,14 @@ describe('chat: fake clock', () => {
   }
 
   it('a gap above STREAM_IDLE_TIMEOUT_MS after the first chunk ends the stream, without hanging', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    fakeClock('2026-10-09T00:00:00Z');
     const { result, seen } = await runWithGap(STREAM_IDLE_TIMEOUT_MS + 1000);
     expect(result).toBe('[CloudLLM] chat stream went idle');
     expect(seen).toEqual(['first ']);
   });
 
   it('a gap just under it is waited out', async () => {
-    useFakeClock('2026-10-09T00:00:00Z');
+    fakeClock('2026-10-09T00:00:00Z');
     const { result, seen } = await runWithGap(STREAM_IDLE_TIMEOUT_MS - 1000);
     expect(result).toBe('finished');
     expect(seen).toEqual(['first ', 'second']);
@@ -283,7 +283,7 @@ describe('chat: hedge', () => {
     server.use(
       ...mockGateway((c) => (c.model === SMALL_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
     );
-    useFakeClock('2026-10-09T00:00:00Z');
+    fakeClock('2026-10-09T00:00:00Z');
     const seen: string[] = [];
     const outcome = (async () => {
       for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) {

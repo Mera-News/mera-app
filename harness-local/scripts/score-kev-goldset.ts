@@ -401,6 +401,7 @@ async function main(): Promise<number> {
   const env = loadHarnessEnv();
   const redpillKey = process.env.REDPILL_API_KEY ?? '';
   if (!redpillKey && arms.includes('redpill-small')) throw new Error('REDPILL_API_KEY missing (harness-local/.env.harness)');
+  // eslint-disable-next-line expo/no-dynamic-env-var -- script, the env var name is a CLI argument
   const kevKey = process.env[kevKeyEnv];
   if (!kevKey && arms.includes('kev')) throw new Error(`${kevKeyEnv} missing (harness-local/.env.harness)`);
 

@@ -10,7 +10,7 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import { trackStory } from '@/lib/database/services/tracked-story-service';
 import { loadReadingStats } from '@/lib/stats/reading-stats-source';
-import { useFakeClock } from '@/test/helpers';
+import { useFakeClock as fakeClock } from '@/test/helpers';
 import { newsArticle, seedSuggestion } from '../detail/seed';
 
 jest.mock('@/lib/logger', () => ({
@@ -31,7 +31,7 @@ const HOUR = 60 * 60 * 1000;
 
 /** One tap on "Read Article", stamped one hour before NOW (the service stamps visitedAt from the clock). */
 async function visit(over: Partial<Parameters<typeof recordPublicationVisit>[0]> = {}, at = NOW - HOUR) {
-  useFakeClock(at);
+  fakeClock(at);
   await recordPublicationVisit({
     articleId: 'a1',
     publicationName: 'Le Monde',
@@ -40,7 +40,7 @@ async function visit(over: Partial<Parameters<typeof recordPublicationVisit>[0]>
     pubDate: NOW - 3 * HOUR,
     ...over,
   });
-  useFakeClock(NOW);
+  fakeClock(NOW);
 }
 
 afterEach(() => jest.restoreAllMocks());
@@ -71,7 +71,7 @@ describe('loadReadingStats', () => {
 
   it('defaults nowMs to the clock when the caller does not inject one', async () => {
     await visit();
-    useFakeClock(NOW);
+    fakeClock(NOW);
 
     const stats = await loadReadingStats();
 

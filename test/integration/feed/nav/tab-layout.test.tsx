@@ -14,10 +14,10 @@ jest.mock('expo-router/native-tabs', () => {
     mockTriggers.push(rest as TriggerProps);
     return null;
   };
-  Trigger.Badge = () => null;
-  Trigger.Icon = () => null;
-  Trigger.Label = () => null;
-  Trigger.VectorIcon = () => null;
+  Trigger.Badge = function Badge() { return null; };
+  Trigger.Icon = function Icon() { return null; };
+  Trigger.Label = function Label() { return null; };
+  Trigger.VectorIcon = function VectorIcon() { return null; };
   const NativeTabs = ({ children, hidden }: { children: React.ReactNode; hidden?: boolean }) => {
     mockBar.hidden = hidden;
     return children;

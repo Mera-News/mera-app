@@ -54,7 +54,7 @@ jest.mock('@/components/custom/nav/TabPages', () => {
     const { View, Pressable, Text } = jest.requireActual('react-native');
     return {
         __esModule: true,
-        default: ({ pages, renderPage }: any) => {
+        default: function TabPagesMock({ pages, renderPage }: any) {
             const [cur, setCur] = R.useState(pages[0].id);
             return R.createElement(
                 View,
