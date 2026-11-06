@@ -1126,7 +1126,7 @@ export type UserBillingInfo = {
   hasEverSubscribed: Scalars['Boolean']['output'];
   /** This plan's daily cloud reading as a multiple of Starter's (Starter 1). */
   planMultiplier: Scalars['Int']['output'];
-  /** Id of the promo this reader is on, which the app maps to its copy. Null when none runs or on a paid plan. */
+  /** Promo line for this reader, shown as written. Null when none runs or on a paid plan. */
   planPromo?: Maybe<Scalars['String']['output']>;
   /** Every plan's daily cloud reading, so the app states plan sizes and ratios from the server rather than from copy. Null when the server has no usable budgets. */
   readingPlans?: Maybe<ReadingPlans>;

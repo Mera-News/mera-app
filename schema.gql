@@ -1120,7 +1120,7 @@ type UserBillingInfo {
   planMultiplier: Int!
 
   """
-  Id of the promo this reader is on, which the app maps to its copy. Null when none runs or on a paid plan.
+  Promo line for this reader, shown as written. Null when none runs or on a paid plan.
   """
   planPromo: String
 
