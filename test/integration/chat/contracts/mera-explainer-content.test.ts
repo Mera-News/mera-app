@@ -15,6 +15,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { MERA_EXPLAINER_SECTIONS, PLAN_SIZES_TOKEN } from '@/lib/chat-tools/mera-explainer-content';
+import en from '@/lib/locales/en.json';
 import { MERA_EXPLAINER_TOPIC_IDS } from '@/lib/news-harness/persona-management/persona-agent-core';
 
 const SOURCE_PATH = join(__dirname, '../../../../lib/chat-tools/mera-explainer-content.ts');
@@ -32,17 +33,18 @@ describe('mera-explainer-content — banned claims', () => {
   // Intel root and the key-to-quote binding, so the old blanket ban on
   // "attestation-verified" would block honest, corrected copy. What must stay
   // banned is the claim the invariant was always really about: that the
-  // HARDWARE or PLATFORM has been proven. It has not — TCB currency,
-  // measurement comparison and GPU attestation are all unchecked, and
-  // verification is fail-open (see lib/algorithms/attestation-verify.ts).
+  // HARDWARE or PLATFORM has been proven. It has not — TCB currency and
+  // measurement comparison are unchecked, NVIDIA's signed result does not show
+  // its GPUs are attached to the enclave, and verification is fail-open (see
+  // lib/algorithms/attestation-verify.ts).
   //
   // These assertions are NEGATION-AWARE on purpose. The corrected copy has to
-  // NAME the things Mera does not check ("does not verify the GPU's separate
-  // attestation", "not hardware-proven") in order to disclose them, so a plain
+  // NAME the things Mera does not check ("does not show those GPUs are
+  // attached", "not hardware-proven") in order to disclose them, so a plain
   // `not.toMatch` on those terms would ban the honest disclosure and pass only
   // for text that stays silent about the gaps — the exact opposite of what
   // this invariant is for. `affirmsThat` ignores a hit that is negated.
-  const NEGATION = /\b(not|never|no|nor|cannot|can't|without|lacks?|missing|neither)\b[^.]{0,80}$/i;
+  const NEGATION = /\b(not|never|no|nor|cannot|can't|doesn't|without|lacks?|missing|neither)\b[^.]{0,80}$/i;
 
   /** Returns the offending excerpt if `pattern` appears in `text` WITHOUT a
    *  negation earlier in the same sentence; null otherwise. Parameterised on
@@ -85,12 +87,39 @@ describe('mera-explainer-content — banned claims', () => {
     expect(affirmsThat(/tamper[- ]proof/i)).toBeNull();
   });
 
-  // The two claims that would be outright false. These are the checks the app
-  // does NOT perform, so prose asserting them is a fabrication, not a nuance.
-  it('never claims the platform firmware level or GPU attestation is checked', () => {
-    expect(
-      affirmsThat(/(verif|check|validat)\w*[^.]{0,60}\b(TCB|firmware|GPU)\b/i),
-    ).toBeNull();
+  // A check the app does NOT perform, so prose asserting it is a fabrication,
+  // not a nuance.
+  it('never claims the platform firmware level is checked', () => {
+    expect(affirmsThat(/(verif|check|validat)\w*[^.]{0,60}\b(TCB|firmware)\b/i)).toBeNull();
+  });
+
+  // The limit on what NVIDIA's signed result can claim, in the explainer and in
+  // the Settings strings: genuine NVIDIA GPUs answered, nothing about where they sit.
+  const GPU_ATTACHED = /GPUs?[^.]{0,60}\b(attached|bound|connected)\b/i;
+  const ALL_GPUS = /\b(all|every)( of)?( the| your)? GPUs?\b/i;
+
+  it('the GPU guard fires on a claim that the GPUs are attached', () => {
+    expect(runAffirmsThat('Those GPUs are attached to the enclave.', GPU_ATTACHED)).not.toBeNull();
+    expect(runAffirmsThat("It doesn't show those GPUs are attached.", GPU_ATTACHED)).toBeNull();
+    expect('NVIDIA checked all GPUs.').toMatch(ALL_GPUS);
+  });
+
+  it('never claims the GPUs are attached to the enclave, or speaks for all of them', () => {
+    expect(affirmsThat(GPU_ATTACHED)).toBeNull();
+    expect(source).not.toMatch(ALL_GPUS);
+  });
+
+  it('Settings strings keep to the same limit', () => {
+    const { attestationGpuNotice, helpModesVerify } = en.meraProtocol;
+    for (const text of [attestationGpuNotice, helpModesVerify]) {
+      expect(runAffirmsThat(text, GPU_ATTACHED)).toBeNull();
+      expect(text).not.toMatch(ALL_GPUS);
+      expect(text).not.toMatch(/genuine secure hardware/i);
+      expect(text).not.toMatch(/[\u2013\u2014]/);
+    }
+    expect(attestationGpuNotice).toMatch(/genuine NVIDIA GPUs answered/i);
+    expect(attestationGpuNotice).toMatch(/doesn't show those GPUs are attached/i);
+    expect(helpModesVerify).toMatch(/Intel's signature/);
   });
 
   // The feature does not exist: nothing in the app generates, sends or discards
@@ -111,7 +140,7 @@ describe('mera-explainer-content — banned claims', () => {
   it('still discloses what is not checked, and that failures are not enforced', () => {
     const s = MERA_EXPLAINER_SECTIONS.encryption_and_inference;
     expect(s).toMatch(/still missing|does not check/i);
-    expect(s).toMatch(/GPU/i);
+    expect(s).toMatch(/does not show those GPUs are attached/i);
     expect(s).toMatch(/not enforced|does not yet refuse|shown to you, not enforced/i);
     expect(s).toMatch(/not hardware-proven/i);
   });

@@ -37,10 +37,11 @@
 //    the attestation quote's signature chain to a pinned Intel root and that
 //    the encryption key is committed inside the quote — but it does NOT check
 //    the platform's patch level (TCB currency), does not compare measurements
-//    against published expected values, does not verify GPU attestation, and
-//    does not refuse to continue when a check fails. So "verified" may be
-//    written about the quote chain and the key binding, and must never be
-//    written unqualified about the hardware or the platform.
+//    against published expected values, and does not refuse to continue when a
+//    check fails. So "verified" may be written about the quote chain and the key
+//    binding, and must never be written unqualified about the hardware or the
+//    platform. NVIDIA's signed result says genuine NVIDIA GPUs answered a check.
+//    It does not show those GPUs are attached to the enclave.
 // 3. No decoy / noise-injection claim. Mera ships no decoy topics and no
 //    noise-injection setting: nothing generates, sends or discards them, and
 //    no control exists to switch one on. An earlier version of this file
@@ -112,7 +113,7 @@ On-device: if your device can run it, ranking your news, writing reasons and min
 
 Cloud: otherwise the work runs inside a trusted execution environment, a hardware-isolated enclave the operator cannot look into. Your app fetches the enclave's attestation report, takes the public key it publishes, and encrypts the request to that key end to end (X25519 key exchange, XChaCha20-Poly1305 for the payload). The request is unreadable in transit and unreadable to Mera. It is decrypted only inside the enclave, the result comes back encrypted to your device, and everything is wiped once the computation finishes. Nothing from it is retained.
 
-Now the part Mera would rather you heard from us. The app does check the attestation quote: it verifies the quote's signature chain up to Intel's own root certificate, which is built into the app, and it checks that the key your request is encrypted to is the key committed inside that quote. That last check matters most, because a genuine quote served next to somebody else's key would otherwise look fine. You can run these checks yourself in Settings, under Mera Protocol.\n\nWhat is still missing: Mera does not check whether the platform's firmware is up to date, does not compare the enclave's measurements against published expected values, does not verify the GPU's separate attestation, and does not yet refuse to continue when a check fails - a failure is shown to you, not enforced. So this path is not hardware-proven, Mera does not describe it that way, and neither should anyone quoting Mera.
+Now the part Mera would rather you heard from us. The app does check the attestation quote: it verifies the quote's signature chain up to Intel's own root certificate, which is built into the app, and it checks that the key your request is encrypted to is the key committed inside that quote. That last check matters most, because a genuine quote served next to somebody else's key would otherwise look fine. You can run these checks yourself in Settings, under Mera Protocol.\n\nWhat is still missing: Mera does not check whether the platform's firmware is up to date, does not compare the enclave's measurements against published expected values, and does not yet refuse to continue when a check fails - a failure is shown to you, not enforced. The check in Settings also reads NVIDIA's signed result for the GPUs, when the server sends one: it shows genuine NVIDIA GPUs answered that check. It does not show those GPUs are attached to the enclave. So this path is not hardware-proven, Mera does not describe it that way, and neither should anyone quoting Mera.
 
 Be clear about which of the two defaults: cloud is the default, and on-device is something you switch on. Both are reachable from the Mera Protocol section of your settings, along with which mode is currently active.`,
 
@@ -162,7 +163,7 @@ A paid plan is managed through the App Store or Google Play, and there is a mana
 
 Cloud is the default, not on-device. Running the AI on your own phone is something you turn on, and Mera's own writing can leave the opposite impression. Said plainly: unless you switched it, your relevance scoring is running in the enclave, not on your handset.
 
-The app verifies the enclave's attestation quote against Intel's root certificate and confirms the encryption key is committed inside that quote, but it does not check the platform's firmware level or the GPU's attestation, and it does not yet refuse to continue when a check fails.
+The app verifies the enclave's attestation quote against Intel's root certificate and confirms the encryption key is committed inside that quote, but it does not check the platform's firmware level, and it does not yet refuse to continue when a check fails. NVIDIA's signed result for the GPUs is read only when you run the check in Settings and the server sends one, and it does not show those GPUs are attached to the enclave.
 
 The backend is not published yet, so what happens to your topic phrases is documented but not readable. Target: before September 2026.
 

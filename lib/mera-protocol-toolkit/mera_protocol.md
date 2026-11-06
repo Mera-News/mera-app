@@ -368,16 +368,19 @@ For devices that cannot run on-device inference, the protocol provides an equiva
 > importantly, that the `signing_public_key` the app encrypts toward is the key
 > committed in the quote's `report_data`. Freshness is verified via a
 > client-supplied nonce echoed into `report_data`, but only on the user-initiated
-> check, not on the inference hot path.
+> check, not on the inference hot path. That same check reads NVIDIA's signed
+> result when the gateway relays it: the tokens chain to a pinned NVIDIA root, and
+> NVIDIA reports that genuine NVIDIA GPUs answered with the client's nonce.
 >
 > **What it does NOT verify:** platform TCB currency and QE identity (these need
 > Intel PCS collateral the app does not fetch), enclave measurements against
-> published expected values, and the NVIDIA GPU attestation. Verification is also
-> **fail-open** — results are displayed, and a failure does not block inference.
+> published expected values, and that the attested GPUs are attached to the
+> enclave. Verification is also **fail-open** — results are displayed, and a
+> failure does not block inference.
 >
 > Until those close, do not describe this path as hardware-proven. This matches
-> `README.md`, the privacy policy, and the in-app explainer; an earlier version of
-> this table contradicted all three.
+> `README.md` and the in-app explainer; an earlier version of this table
+> contradicted them.
 
 ---
 
