@@ -67,6 +67,9 @@ const GlyphRow: React.FC<{ icon: keyof typeof MaterialIcons.glyphMap; label?: st
 
 /** The processing mode, then in the cloud the day's reading as a bar and when it resets; on device, unlimited. */
 const ReadingMeter: React.FC<ReadingMeterProps> = ({ used, online, size = 'card' }) => {
+    // Uncompiled on purpose: compiled, the clock read below stops following the 30s tick, and the
+    // hold's reset day goes stale. Jest runs uncompiled too, so this keeps it testable.
+    'use no memo';
     const { t, i18n } = useTranslation();
     const colors = useColors();
     const hold = useReadHold();
