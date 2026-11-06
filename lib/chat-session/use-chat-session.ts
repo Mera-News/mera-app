@@ -8,13 +8,14 @@ import type { ChatAgent } from '@/lib/llm/agents/on-device/types';
 import { useCallback, useEffect, useRef } from 'react';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { attachChatSession, type EngineKind } from './chat-session';
+import type { SendOptions } from './engine';
 
 export function useChatSession(
     kind: EngineKind,
     agent: ChatAgent,
     conversationId: string | null,
     resumeMessages: readonly PersistedMessage[] | undefined,
-): { send: (text: string) => void; sendHidden: (text: string) => void } {
+): { send: (text: string, opts?: SendOptions) => void; sendHidden: (text: string) => void } {
     const opts = { kind, agent, conversationId, resumeMessages };
     const ref = useRef(opts);
     ref.current = opts;
@@ -34,7 +35,7 @@ export function useChatSession(
         engine();
     }, [engine, kind, agent, conversationId, resumeMessages]);
 
-    const send = useCallback((text: string) => engine()?.send(text), [engine]);
+    const send = useCallback((text: string, opts?: SendOptions) => engine()?.send(text, opts), [engine]);
     const sendHidden = useCallback((text: string) => engine()?.sendHidden(text), [engine]);
     return { send, sendHidden };
 }

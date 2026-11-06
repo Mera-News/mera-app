@@ -438,6 +438,11 @@ export interface RunAgentTurnParams {
   mode?: 'turn' | 'moreOptions';
   /** Required with mode 'moreOptions': what the card shows and how many it can take. */
   moreOptions?: { shown: { label: string; searchText: string }[]; room: number };
+  /** This one turn runs this skill with no route leg: the app asked the question
+   *  the message answers, and the answer alone would not route there. Passed per
+   *  send and never written to the state. An older chip waiting is dropped, because
+   *  a chip's `resolvedChoice` authorises what this message never asked for. */
+  forcedSkill?: typeof FOLLOW_STORY_SKILL;
 }
 
 /** The follow skill: the only one with the follow tools, and the one More options runs. */
@@ -456,6 +461,28 @@ export function withImpactQuestion(turn: AgentTurnState, question: string): void
   turn.lastReply = question;
   turn.impactAsked = true;
   turn.recentExchanges = withExchange(turn.recentExchanges, turn.lastUserMessage ?? '', question);
+}
+
+/**
+ * The app asked a fixed question, optionally after a fixed line from the reader
+ * (a tapped option). No model call: it only tells the next turn what its answer
+ * answers. A scripted line ends on its question, as its own last line, and these
+ * lines are translated, so `trailingQuestion` (the ASCII mark only) cannot find it.
+ * Nothing earlier stays open: no skill resumes on a plain yes and no older chip
+ * answers, or a stale "Yes" would authorise a delete.
+ */
+export function withScriptedQuestion(turn: AgentTurnState, line: string, readerLine?: string): void {
+  turn.pendingChoice = null;
+  turn.choiceTurn = null;
+  turn.impactAsked = false;
+  turn.scriptedAsked = true;
+  turn.lastQuestion = line.trim().split(/\n+/).pop() ?? line;
+  turn.lastTurnAskedQuestion = true;
+  turn.lastSkill = null;
+  turn.lastRoute = null;
+  turn.lastUserMessage = readerLine ?? null;
+  turn.lastReply = line;
+  turn.recentExchanges = withExchange(turn.recentExchanges, readerLine ?? '', line);
 }
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
@@ -486,6 +513,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // next leg save the chosen place without a second lookup.
   const turn = state.turn;
   let saveAllOptions: string[] | null = null;
+  if (params.forcedSkill) turn.pendingChoice = null;
   if (turn.pendingChoice) {
     // EXACT match only, and the chips are the only thing that can consume a
     // pending choice. Anything else is a new turn, and the stale choice is
@@ -538,8 +566,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // The impact question was asked after the follow card it came from.
   const impactAsked = turn.impactAsked === true;
   turn.impactAsked = false;
+  const scriptedAsked = turn.scriptedAsked === true;
+  turn.scriptedAsked = false;
   const cardIsNewest =
-    pendingCard !== null && !impactAsked && (turn.pendingChoice === null || cardTurn > (turn.choiceTurn ?? 0));
+    pendingCard !== null && !impactAsked && !scriptedAsked && (turn.pendingChoice === null || cardTurn > (turn.choiceTurn ?? 0));
   /** The skill a route-leg answer to the card resumes. */
   const cardSkill =
     pendingCard && turn.lastCard && turn.lastCard.proposalId === pendingCard.id
@@ -617,7 +647,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // statements read as the user's own, because the model had already dropped
   // the girlfriend from the sentence. The subject has to survive the question,
   // which means resuming the skill rather than re-deciding.
-  if ((turn.resolvedChoice !== null || typedYesResume || saveAllOptions !== null) && turn.lastSkill !== null) {
+  const forcedBody = params.forcedSkill ? loadSkillFn(params.forcedSkill) : null;
+  if (forcedBody !== null) {
+    // Like a resume, so the first leg is a skill leg and never a route.
+    skillLoaded = params.forcedSkill!;
+    routeKind = routeKindFromSkill(skillLoaded);
+    systemPrompt = skillPrompt(forcedBody);
+    resumedSkill = true;
+    skillsLoaded.push(skillLoaded);
+  } else if ((turn.resolvedChoice !== null || typedYesResume || saveAllOptions !== null) && turn.lastSkill !== null) {
     const body = deps.loadSkill(turn.lastSkill);
     if (body !== null) {
       skillLoaded = turn.lastSkill;
@@ -1018,7 +1056,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // proposed "Lives in Bhopal" for the USER, because the word "parents"
       // only ever existed in the previous turn's message. Resuming the skill
       // without the subject moves the bug rather than fixing it.
-      ...(resumedSkill && turn.lastUserMessage
+      ...(resumedSkill && forcedBody === null && turn.lastUserMessage
         ? [
             {
               role: 'user' as const,

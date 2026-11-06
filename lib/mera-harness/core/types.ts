@@ -182,6 +182,9 @@ export interface AgentTurnState {
    *  one line, never a second follow card, and a plain no answers the question,
    *  not the follow card waiting above it. */
   impactAsked?: boolean;
+  /** A fixed question from the app is the newest ask (`withScriptedQuestion`).
+   *  Read by the next turn only, so a plain no answers it, not a card above it. */
+  scriptedAsked?: boolean;
   lastRoute: string | null;
   lastSkill: string | null;
   /** The user's message from the turn that asked the last question. A chip tap

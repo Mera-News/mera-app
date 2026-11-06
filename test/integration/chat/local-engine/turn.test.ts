@@ -9,7 +9,8 @@ import { activeHolds } from '@/lib/app-restart';
 import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { enqueueJob, getQueueStats } from '@/lib/database/services/inference-job-service';
 import { __setJobHandlerForTests, inferenceQueue } from '@/lib/inference/InferenceQueue';
-import { stopChatTurn } from '@/lib/chat-session/chat-session';
+import { scriptedExchange, stopChatTurn } from '@/lib/chat-session/chat-session';
+import { FOLLOW_STORY_SKILL } from '@/lib/mera-harness/core/core';
 import { decide, disposeModel, initBaseModel, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -101,6 +102,16 @@ describe('a plain turn', () => {
     expect(Math.max(...watch.samples.map((s) => s.held))).toBe(1);
     expect(streamHolds()).toBe(0);
     expect(useFloatingChatStore.getState().isGenerating).toBe(false);
+    expectNothingLeftTheDevice();
+  });
+
+  it('the onboarding questionnaire is cloud only: a forced send is an ordinary turn, and no scripted row lands', async () => {
+    const { engine } = await attachLocal();
+    await expect(scriptedExchange({ assistant: 'What do you do for work?' })).resolves.toBe(false);
+    expect(local().messages).toHaveLength(0);
+    engine.send('hi', { forcedSkill: FOLLOW_STORY_SKILL });
+    await turnDone();
+    expect(lastAssistant()?.content).toBe('Hello there.');
     expectNothingLeftTheDevice();
   });
 

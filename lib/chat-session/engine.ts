@@ -4,6 +4,7 @@
 
 import type { IAgent } from '@/lib/llm/types';
 import type { ChatAgent } from '@/lib/llm/agents/on-device/types';
+import type { FOLLOW_STORY_SKILL } from '@/lib/mera-harness/core/core';
 import type { ProposalAction, TrackFeedbackSubject } from '@/lib/news-harness/core/types';
 
 /** The most options a follow card may hold, grown ones included. */
@@ -20,6 +21,35 @@ export const MUTATING_CHAT_TOOLS: ReadonlySet<string> = new Set([
     'issueWarning',
     'runCalibration',
 ]);
+
+/** What rides one send. Held nowhere else, so nothing needs clearing. */
+export interface SendOptions {
+    /** This turn runs this skill with no route leg. Ignored on device, and by a
+     *  chat that does not run on the harness. */
+    forcedSkill?: typeof FOLLOW_STORY_SKILL;
+}
+
+/** An onboarding line: no model call and no turn. The next real turn reads it. */
+export interface ScriptedExchange {
+    /** The reader's row, when they tapped an option. */
+    user?: string;
+    /** Mera's row. Ends on its question, as its own last line. */
+    assistant: string;
+    /** This row is the onboarding menu: the thread draws the card under it. */
+    menu?: true;
+}
+
+/** The marker is the id, because the id is what `messages` keeps and resume returns. */
+const MENU_ROW_SUFFIX = '-onboarding-menu';
+
+export const isOnboardingMenuRow = (id: string): boolean => id.endsWith(MENU_ROW_SUFFIX);
+
+/** Ids for one exchange. Rows written in one tick can share a timestamp, and the
+ *  table then orders by id, so these sort reader first ("a" before "b" and "o"). */
+export function scriptedRowIds(menu: boolean | undefined): { user: string; assistant: string } {
+    const base = `scripted-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return { user: `${base}-a`, assistant: menu ? `${base}${MENU_ROW_SUFFIX}` : `${base}-b` };
+}
 
 /** "More options" on a follow card, built from the card alone (`requestMoreOptions`). */
 export interface MoreOptionsRequest {
@@ -48,7 +78,7 @@ export interface KilledTurn {
 
 /** `A` is the agent kind the engine runs: IAgent on cloud, OnDeviceAgent on the phone. */
 export interface ChatEngine<A extends ChatAgent = IAgent> {
-    send(text: string): void;
+    send(text: string, opts?: SendOptions): void;
     /** A turn the user never sees (the topic-plan discard note). */
     sendHidden(text: string): void;
     /** Tells the reader these facts were removed: no user turn, no tools. The
@@ -73,6 +103,9 @@ export interface ChatEngine<A extends ChatAgent = IAgent> {
      *  assistant row and the next turn reads the answer against it. No model call.
      *  Absent on device, where no card carries the offer. */
     askImpact?(question: string): Promise<void>;
+    /** Adds the rows and tells the next turn what they asked. False, adding
+     *  nothing, while a turn runs. Absent on device: onboarding chat is cloud only. */
+    scriptedExchange?(exchange: ScriptedExchange): Promise<boolean>;
     /** Stops the engine writing to its store once replaced. A turn already
      *  running finishes its own cleanup (the inference queue resumes). */
     dispose(): void;

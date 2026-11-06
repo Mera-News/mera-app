@@ -62,7 +62,7 @@ export type ChatContext =
     // All facts, Sources and One interest). Only that chat is an
     // editing session whose close may owe a combination pass (ux2 F2).
     // `subject` is the fact statement on One interest, for its starters.
-    | { kind: 'persona'; origin?: 'profile'; page?: MeraPageKey; subject?: string }
+    | { kind: 'persona'; origin?: 'profile'; page?: MeraPageKey; subject?: string; onboarding?: true }
     // At least one of articleId / suggestionId must be set; the agent resolves
     // the other (and the suggestion row) from whichever id is provided.
     | {

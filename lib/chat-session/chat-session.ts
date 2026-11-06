@@ -23,7 +23,7 @@ import logger from '@/lib/logger';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import type { ProposalAction } from '@/lib/news-harness/core/types';
-import { MAX_FOLLOW_OPTIONS, type ChatEngine, type MoreOptionsResult } from './engine';
+import { MAX_FOLLOW_OPTIONS, type ChatEngine, type MoreOptionsResult, type ScriptedExchange } from './engine';
 import { resetLocalChat, useLocalChatStore } from './local-chat-store';
 import { toPersist } from './persist';
 
@@ -279,6 +279,12 @@ export async function requestMoreOptions(
 /** The impact question on a follow card. Answers nothing: the row is the result. */
 export async function askImpactQuestion(question: string): Promise<void> {
     await live?.engine.askImpact?.(question);
+}
+
+/** An onboarding line, with no model call. False when it did not land: a turn is
+ *  running, no chat is attached, or the engine has none (on device). */
+export async function scriptedExchange(exchange: ScriptedExchange): Promise<boolean> {
+    return (await live?.engine.scriptedExchange?.(exchange)) === true;
 }
 
 /**

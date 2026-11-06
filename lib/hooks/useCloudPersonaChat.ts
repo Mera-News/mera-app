@@ -4,7 +4,7 @@
 // being closed. State is in cloud-chat-store; the turn bookkeeping is closure
 // state here.
 
-import type { ChatEngine, MoreOptionsRequest, MoreOptionsResult } from '@/lib/chat-session/engine';
+import type { ChatEngine, MoreOptionsRequest, MoreOptionsResult, SendOptions } from '@/lib/chat-session/engine';
 import { FollowStoryAgent } from '../llm/agents/FollowStoryAgent';
 import logger from '../logger';
 import { CallerAbortError, CleartextToolCallError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
@@ -57,7 +57,8 @@ import {
 } from '@/lib/chat-session/cloud-engine-helpers';
 import { normaliseTrackText } from '@/components/custom/floating-chat/track-options';
 import type { ProposalAction } from '../news-harness/core/types';
-import { MUTATING_CHAT_TOOLS } from '@/lib/chat-session/engine';
+import { MUTATING_CHAT_TOOLS, scriptedRowIds } from '@/lib/chat-session/engine';
+import { withScriptedQuestion } from '@/lib/mera-harness/core/core';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
 import {
@@ -175,7 +176,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
    * which is the point: a harness green is evidence about the app rather than
    * about a parallel implementation.
    */
-  const runAgentLoopTurn = async (assistantId: string, userMessage: string): Promise<void> => {
+  const runAgentLoopTurn = async (assistantId: string, userMessage: string, forcedSkill?: SendOptions['forcedSkill']): Promise<void> => {
       const store = cloud();
       const persona = await buildAgentPersona(agentRef.current.id);
       // NEW CHAT clears the store's agentTurnState, and this ref has to follow
@@ -293,6 +294,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         const out = await runAgentTurn({
           state: agentStateRef.current,
           userMessage,
+          forcedSkill,
           deps: withCombinedFactMemory(makeAgentDeps(
             userMessage,
             (d) => {
@@ -933,6 +935,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
     removed?: readonly string[];
     /** The user message already in the thread. Unset for a hidden turn. */
     messageId?: string;
+    /** A retry is the same turn, so it stays forced. */
+    forcedSkill?: SendOptions['forcedSkill'];
   };
   let failedTurn: FailedTurn | null = null;
 
@@ -950,7 +954,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   const startTurn = (
     text: string,
     visible: boolean,
-    again?: Pick<FailedTurn, 'context' | 'removed' | 'messageId'> & { retrying?: boolean },
+    again?: Pick<FailedTurn, 'context' | 'removed' | 'messageId' | 'forcedSkill'> & { retrying?: boolean },
   ): boolean => {
       const store = cloud();
       logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
@@ -1011,6 +1015,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       const turnStart = cloud().messages.length;
       let turnContext = again?.context;
       const removed = again?.removed;
+      const forcedSkill = again?.forcedSkill;
 
       void (async () => {
         try {
@@ -1027,7 +1032,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             // model never saw (its "Middle East politics" example and its
             // searchNews rule were blamed for a turn they never reached).
             cloud().pushWireMessage({ role: 'user', content: trimmed });
-            await runAgentLoopTurn(assistantId, trimmed);
+            await runAgentLoopTurn(assistantId, trimmed, forcedSkill);
             logger.debug(`${TAG} agent loop completed`);
           } else {
             const systemPrompt = await agentRef.current.buildSystemPrompt(false);
@@ -1069,7 +1074,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
             const mutated = cloud()
               .messages.slice(turnStart)
               .some((m) => m.toolCalls?.some((tc) => MUTATING_CHAT_TOOLS.has(tc.name)));
-            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed, messageId };
+            failedTurn = mutated ? null : { text: trimmed, wire: turnWire, from: turnStart, context: turnContext, removed, messageId, forcedSkill };
             cloud().setError(msg);
             markFailed(turnStart);
             if (lost) cloud().setInterrupted(true);
@@ -1172,8 +1177,8 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
   };
 
   return {
-    send: (text) => {
-      if (alive) startTurn(text, true);
+    send: (text, opts) => {
+      if (alive) startTurn(text, true, opts);
     },
     moreOptions,
     sendHidden: (text) => {
@@ -1189,12 +1194,12 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
         return startTurn(text, !messageId, { retrying: true, messageId });
       }
       if (!canRetry() || !failedTurn) return false;
-      const { text, wire, from, context, removed, messageId } = failedTurn;
+      const { text, wire, from, context, removed, messageId, forcedSkill } = failedTurn;
       // The empty rows go; a row with tool calls stays, because a card may sit on it.
       cloud().setMessages((prev) => prev.filter((m, i) => i < from || (m.toolCalls ?? []).length > 0));
       useCloudChatStore.setState({ wireMessages: wire });
       // Not visible: the user's bubble is already there (and a hidden turn never had one).
-      return startTurn(text, false, { context, removed, messageId, retrying: true });
+      return startTurn(text, false, { context, removed, messageId, forcedSkill, retrying: true });
     },
     askImpact: async (question) => {
       if (!alive) return;
@@ -1203,6 +1208,25 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
       agentStateRef.current ??= createAgentState(await buildAgentPersona(agentRef.current.id));
       withImpactQuestion(agentStateRef.current.turn, question);
       cloud().setAgentTurnState({ ...agentStateRef.current.turn });
+    },
+    scriptedExchange: async ({ user, assistant, menu }) => {
+      const busy = () => !alive || turnBusyRef.current || isStreamingRef.current || moreAbort !== null;
+      if (busy()) return false;
+      // New chat clears the store's turn state; see runAgentLoopTurn.
+      if (cloud().agentTurnState === null) agentStateRef.current = null;
+      agentStateRef.current ??= createAgentState(await buildAgentPersona(agentRef.current.id));
+      if (busy()) return false;
+      const ids = scriptedRowIds(menu);
+      const rows: ConversationMessage[] = [{ id: ids.assistant, role: 'assistant', content: assistant }];
+      if (user) rows.unshift({ id: ids.user, role: 'user', content: user, createdAt: Date.now() });
+      // Like any send: Retry would drop every row after the failed turn's start.
+      failedTurn = null;
+      cloud().setError(null);
+      cloud().setInterrupted(false);
+      cloud().setMessages((prev) => [...prev, ...rows]);
+      withScriptedQuestion(agentStateRef.current.turn, assistant, user);
+      cloud().setAgentTurnState({ ...agentStateRef.current.turn });
+      return true;
     },
     tellRemovedFacts: (statements) => {
       if (!alive) return;
