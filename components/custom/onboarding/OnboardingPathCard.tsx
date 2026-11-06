@@ -16,11 +16,10 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 interface OnboardingPathCardProps {
-  aboutDone: boolean;
   onPick: (path: OnboardingPath) => void;
 }
 
-export default function OnboardingPathCard({ aboutDone, onPick }: OnboardingPathCardProps) {
+export default function OnboardingPathCard({ onPick }: OnboardingPathCardProps) {
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -40,12 +39,13 @@ export default function OnboardingPathCard({ aboutDone, onPick }: OnboardingPath
     };
   }, []);
 
-  const options = [
+  // Tell me about Mera is help, so it has nothing to finish.
+  const options: { path: OnboardingPath; icon: keyof typeof MaterialIcons.glyphMap; label: string; done?: boolean }[] = [
     { path: 'location', icon: 'place', label: t('onboarding.pathLocation'), done: hasLocation },
     { path: 'profile', icon: 'person-outline', label: t('onboarding.pathProfile'), done: hasProfile },
     { path: 'follow', icon: 'sync', label: t('onboarding.pathFollow'), done: following },
-    { path: 'about', icon: 'help-outline', label: t('onboarding.pathAbout'), done: aboutDone },
-  ] as const;
+    { path: 'about', icon: 'help-outline', label: t('onboarding.pathAbout') },
+  ];
 
   return (
     <View style={styles.card} testID="onboarding-path-card">
@@ -73,9 +73,9 @@ export default function OnboardingPathCard({ aboutDone, onPick }: OnboardingPath
               size={22}
               color={colors.positive}
             />
-          ) : (
+          ) : done === false ? (
             <View style={styles.open} testID={`onboarding-path-${path}-open`} />
-          )}
+          ) : null}
         </GlyphSafeButton>
       ))}
     </View>

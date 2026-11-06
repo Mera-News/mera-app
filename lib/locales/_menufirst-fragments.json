@@ -1,0 +1,182 @@
+{
+  "ar": {
+    "onboarding": {
+      "intro": "أهلًا، أنا ميرا، مساعدتك الشخصية للأخبار.\n\nأقرأ الأخبار وأُريك ما يؤثر فيك.",
+      "whatNext": "ماذا تريد أن تفعل؟",
+      "locationAsk": "أين تعيش؟ شارك بقدر ما تريد، حيًا ومدينة، أو ولايتك أو بلدك فقط.",
+      "profileExplain": "هذا يبني خلاصتك. تجد ميرا مواضيع تبحث عنها بحسب من تكون، وتواصل قراءتها، وتعرض لك ما يهم في خلاصتك.\n\nيمكنك أن تشارك أي شيء تريده عن نفسك، أو يمكنني أن أطرح عليك أسئلة.",
+      "followExplain": "متابعة القصة تجمع مقالاتها الجديدة في مكان واحد. وهي مجانية وبلا حدود.\n\nستجد كل قصة تتابعها في القصص، على تبويب الخلاصة.\n\nأي قصة تريد متابعتها؟"
+    }
+  },
+  "de": {
+    "onboarding": {
+      "intro": "Hallo, ich bin Mera, dein persönlicher Nachrichtenassistent.\n\nIch lese die Nachrichten und zeige dir, was dich betrifft.",
+      "whatNext": "Was möchtest du tun?",
+      "locationAsk": "Wo wohnst du? Erzähl ruhig so viel, wie du willst: ein Viertel und eine Stadt oder nur deine Region oder dein Land.",
+      "profileExplain": "Damit entstehen deine Nachrichten. Mera findet anhand deiner Person Themen zur Suche, liest sie weiter und zeigt dir unter Nachrichten, was wichtig ist.\n\nDu kannst mir alles über dich erzählen, was du möchtest, oder ich kann dir Fragen stellen.",
+      "followExplain": "Wenn du einer Geschichte folgst, werden ihre neuen Artikel an einer Stelle gesammelt. Das ist kostenlos und unbegrenzt.\n\nJede Geschichte, der du folgst, findest du unter Geschichten im Tab Nachrichten.\n\nWelcher Geschichte möchtest du folgen?"
+    }
+  },
+  "en": {
+    "onboarding": {
+      "intro": "Hi, I'm Mera, your personal news assistant.\n\nI read the news and show you what affects you.",
+      "whatNext": "What would you like to do?",
+      "locationAsk": "Where do you live? Share as much as you like: a neighborhood and city, or just your state or country.",
+      "profileExplain": "This builds your Feed. Mera finds topics to search for based on who you are, keeps reading them, and shows you what matters in your Feed.\n\nYou can share anything you like about yourself, or I can ask you questions.",
+      "followExplain": "Following a story gathers its new articles in one place. It's free and unlimited.\n\nYou'll find every story you follow in Stories, on the Feed tab.\n\nWhat story do you want to follow?"
+    }
+  },
+  "es": {
+    "onboarding": {
+      "intro": "Hola, soy Mera, tu asistente personal de noticias.\n\nLeo las noticias y te muestro lo que te afecta.",
+      "whatNext": "¿Qué quieres hacer?",
+      "locationAsk": "¿Dónde vives? Comparte todo lo que quieras: un barrio y una ciudad, o solo tu estado o país.",
+      "profileExplain": "Esto crea tus Noticias. Mera busca temas según quién eres, sigue leyéndolos y te muestra lo que importa en Noticias.\n\nPuedes compartir lo que quieras sobre ti, o puedo hacerte preguntas.",
+      "followExplain": "Seguir una historia reúne sus artículos nuevos en un solo lugar. Es gratis y sin límites.\n\nEncontrarás cada historia que sigas en Historias, en la pestaña Noticias.\n\n¿Qué historia quieres seguir?"
+    }
+  },
+  "fr": {
+    "onboarding": {
+      "intro": "Bonjour, je suis Mera, votre assistant d'actualités personnel.\n\nJe lis les actualités et je vous montre ce qui vous concerne.",
+      "whatNext": "Que souhaitez-vous faire ?",
+      "locationAsk": "Où habitez-vous ? Partagez autant que vous le souhaitez : un quartier et une ville, ou seulement votre région ou votre pays.",
+      "profileExplain": "Cela construit votre Fil d'actu. Mera trouve des sujets à rechercher selon qui vous êtes, continue de les suivre et vous montre ce qui compte dans votre Fil d'actu.\n\nVous pouvez partager ce que vous voulez sur vous-même, ou je peux vous poser des questions.",
+      "followExplain": "Suivre une actualité regroupe ses nouveaux articles en un seul endroit. C'est gratuit et illimité.\n\nVous retrouverez chaque actualité que vous suivez dans Actualités, dans l'onglet Fil d'actu.\n\nQuelle actualité voulez-vous suivre ?"
+    }
+  },
+  "hi": {
+    "onboarding": {
+      "intro": "नमस्ते, मैं मेरा ऐप हूँ, आपका निजी समाचार सहायक।\n\nमैं खबरें पढ़ता हूँ और दिखाता हूँ कि कौन सी बातें आप पर असर डालती हैं।",
+      "whatNext": "आप क्या करना चाहेंगे?",
+      "locationAsk": "आप कहाँ रहते हैं? जितना चाहें बताएं: कोई इलाका और शहर, या सिर्फ़ आपका राज्य या देश।",
+      "profileExplain": "यह आपकी फ़ीड बनाता है। मेरा ऐप आप कौन हैं, इसके आधार पर खोजने के लिए विषय ढूंढता है, उन्हें लगातार पढ़ता है, और आपकी फ़ीड में दिखाता है कि क्या मायने रखता है।\n\nआप अपने बारे में जो चाहें बताएं, या मैं आपसे सवाल भी पूछ सकता हूँ।",
+      "followExplain": "किसी स्टोरी को फ़ॉलो करने से उसके नए लेख एक जगह इकट्ठा हो जाते हैं। यह मुफ़्त है और असीमित है।\n\nआप जो भी स्टोरी फ़ॉलो करते हैं, वह फ़ीड टैब पर स्टोरीज़ में मिलेगी।\n\nआप कौन सी स्टोरी फ़ॉलो करना चाहेंगे?"
+    }
+  },
+  "id": {
+    "onboarding": {
+      "intro": "Halo, saya Mera, asisten berita pribadi Anda.\n\nSaya membaca berita dan menunjukkan apa yang berdampak pada Anda.",
+      "whatNext": "Apa yang ingin Anda lakukan?",
+      "locationAsk": "Di mana Anda tinggal? Bagikan sebanyak yang Anda mau: sebuah kawasan dan kota, atau hanya provinsi atau negara Anda.",
+      "profileExplain": "Ini membangun Umpan Anda. Mera menemukan topik untuk dicari berdasarkan siapa Anda, terus membacanya, dan menunjukkan apa yang penting di Umpan Anda.\n\nAnda bisa membagikan apa saja tentang diri Anda, atau saya bisa mengajukan pertanyaan.",
+      "followExplain": "Mengikuti sebuah cerita mengumpulkan artikel barunya di satu tempat. Ini gratis dan tanpa batas.\n\nAnda akan menemukan setiap cerita yang Anda ikuti di Cerita, pada tab Umpan.\n\nCerita apa yang ingin Anda ikuti?"
+    }
+  },
+  "it": {
+    "onboarding": {
+      "intro": "Ciao, sono Mera, il tuo assistente personale per le notizie.\n\nLeggo le notizie e ti mostro cosa ti riguarda.",
+      "whatNext": "Cosa vorresti fare?",
+      "locationAsk": "Dove vivi? Condividi quanto vuoi: un quartiere e una città, oppure solo la regione o il paese.",
+      "profileExplain": "Questo crea le tue Notizie. Mera trova argomenti da cercare in base a chi sei, continua a leggerli e ti mostra ciò che conta in Notizie.\n\nPuoi condividere quello che vuoi di te, oppure posso farti delle domande.",
+      "followExplain": "Seguire una storia raccoglie i suoi articoli nuovi in un unico posto. È gratuito e illimitato.\n\nTroverai ogni storia che segui in Storie, nella scheda Notizie.\n\nQuale storia vuoi seguire?"
+    }
+  },
+  "ja": {
+    "onboarding": {
+      "intro": "こんにちは、メラです。あなた専用のニュースアシスタントです。\n\nニュースを読んで、あなたに影響することを見せます。",
+      "whatNext": "何をしたいですか？",
+      "locationAsk": "どこにお住まいですか？ 近所と市区町村でも、都道府県や国だけでも構いません。",
+      "profileExplain": "これであなたのフィードが作られます。メラは、あなたのことをもとに検索するトピックを見つけ、それらを読み続けて、フィードで大切なことを表示します。\n\nご自身のことは何でも話していただけますし、メラから質問することもできます。",
+      "followExplain": "ストーリーをフォローすると、その新しい記事が一か所にまとまります。無料で、無制限に利用できます。\n\nフォローしたすべてのストーリーは、フィードタブのストーリーに表示されます。\n\nどのストーリーをフォローしたいですか？"
+    }
+  },
+  "ko": {
+    "onboarding": {
+      "intro": "안녕하세요, 메라예요. 회원님의 개인 뉴스 도우미예요.\n\n뉴스를 읽고 회원님에게 영향을 주는 소식을 보여 드려요.",
+      "whatNext": "무엇을 하고 싶으세요?",
+      "locationAsk": "어디에 사시는지 알려 주세요. 편한 만큼 말씀해 주시면 돼요. 동네와 도시, 아니면 주나 나라만 알려 주셔도 괜찮아요.",
+      "profileExplain": "이 내용으로 피드가 만들어져요. 메라는 회원님이 어떤 분인지에 따라 찾아볼 주제를 정하고, 계속 읽으면서 피드에서 중요한 소식을 보여 드려요.\n\n회원님에 대해 무엇이든 편하게 말씀해 주시거나, 제가 질문을 드릴 수도 있어요.",
+      "followExplain": "스토리를 팔로우하면 새 기사가 한곳에 모여요. 무료이고 무제한이에요.\n\n팔로우한 스토리는 모두 피드 탭의 스토리에서 볼 수 있어요.\n\n어떤 스토리를 팔로우하고 싶으세요?"
+    }
+  },
+  "nl": {
+    "onboarding": {
+      "intro": "Hoi, ik ben Mera, je persoonlijke nieuwsassistent.\n\nIk lees het nieuws en laat zien wat jou raakt.",
+      "whatNext": "Wat wil je doen?",
+      "locationAsk": "Waar woon je? Deel zoveel als je wilt: een buurt en stad, of alleen je regio of land.",
+      "profileExplain": "Hiermee wordt je Feed opgebouwd. Mera zoekt onderwerpen op basis van wie je bent, blijft die volgen en laat in je Feed zien wat ertoe doet.\n\nJe kunt alles over jezelf delen wat je wilt, of ik kan je vragen stellen.",
+      "followExplain": "Een verhaal volgen verzamelt de nieuwe artikelen op één plek. Het is gratis en onbeperkt.\n\nElk verhaal dat je volgt vind je in Verhalen, in het tabblad Feed.\n\nWelk verhaal wil je volgen?"
+    }
+  },
+  "pl": {
+    "onboarding": {
+      "intro": "Cześć, jestem Mera, Twoja osobista asystentka do wiadomości.\n\nCzytam wiadomości i pokazuję Ci to, co na Ciebie wpływa.",
+      "whatNext": "Co chcesz zrobić?",
+      "locationAsk": "Gdzie mieszkasz? Podaj tyle, ile chcesz: osiedle i miasto albo sam region lub kraj.",
+      "profileExplain": "To buduje Twój Strumień. Mera szuka tematów na podstawie tego, kim jesteś, czyta je dalej i pokazuje w Strumieniu to, co się dla Ciebie liczy.\n\nMożesz podzielić się czymkolwiek o sobie, a ja mogę zadawać Ci pytania.",
+      "followExplain": "Śledzenie historii zbiera jej nowe artykuły w jednym miejscu. Jest bezpłatne i bez limitu.\n\nKażdą historię, którą śledzisz, znajdziesz w Historiach, na karcie Strumień.\n\nKtórą historię chcesz śledzić?"
+    }
+  },
+  "pt-BR": {
+    "onboarding": {
+      "intro": "Oi, eu sou a Mera, sua assistente pessoal de notícias.\n\nEu leio as notícias e mostro o que afeta você.",
+      "whatNext": "O que você gostaria de fazer?",
+      "locationAsk": "Onde você mora? Conte o quanto quiser: um bairro e uma cidade, ou só o seu estado ou país.",
+      "profileExplain": "Isto monta o seu Feed. A Mera encontra temas para buscar com base em quem você é, continua acompanhando esses temas e mostra o que importa no seu Feed.\n\nVocê pode compartilhar o que quiser sobre você, ou eu posso fazer perguntas.",
+      "followExplain": "Seguir uma história reúne os novos artigos dela em um só lugar. É grátis e sem limite.\n\nVocê vai encontrar todas as histórias que segue em Histórias, na aba Feed.\n\nQual história você quer seguir?"
+    }
+  },
+  "ru": {
+    "onboarding": {
+      "intro": "Привет, я Мера, ваш личный помощник по новостям.\n\nЯ читаю новости и показываю то, что влияет на вас.",
+      "whatNext": "Что вы хотите сделать?",
+      "locationAsk": "Где вы живёте? Расскажите столько, сколько хотите: район и город или только регион или страну.",
+      "profileExplain": "Это формирует вашу Ленту. Мера подбирает темы для поиска на основе того, кто вы, продолжает их читать и показывает то, что важно, в вашей Ленте.\n\nВы можете рассказать о себе что угодно, а я могу задавать вам вопросы.",
+      "followExplain": "Отслеживание истории собирает её новые статьи в одном месте. Это бесплатно и без ограничений.\n\nКаждую историю, за которой вы следите, вы найдёте в разделе «Истории» на вкладке «Лента».\n\nКакую историю вы хотите отслеживать?"
+    }
+  },
+  "th": {
+    "onboarding": {
+      "intro": "สวัสดี ฉันคือเมร่า ผู้ช่วยข่าวส่วนตัวของคุณ\n\nฉันอ่านข่าวและแสดงให้คุณเห็นสิ่งที่กระทบคุณ",
+      "whatNext": "คุณอยากทำอะไร?",
+      "locationAsk": "คุณอยู่ที่ไหน? แชร์มากหรือน้อยก็ได้ เช่น ย่านและเมือง หรือแค่รัฐหรือประเทศ",
+      "profileExplain": "ส่วนนี้สร้างฟีดของคุณ เมร่าหาหัวข้อที่จะค้นหาจากตัวตนของคุณ คอยติดตามหัวข้อเหล่านั้น และแสดงสิ่งที่สำคัญในฟีดของคุณ\n\nคุณแชร์เรื่องอะไรเกี่ยวกับตัวเองก็ได้ หรือฉันจะถามคุณก็ได้",
+      "followExplain": "การติดตามเรื่องราวจะรวบรวมบทความใหม่ของเรื่องนั้นไว้ในที่เดียว ไม่มีค่าใช้จ่ายและไม่จำกัดจำนวน\n\nคุณจะเห็นทุกเรื่องที่ติดตามได้ในเรื่องราว ในแท็บฟีด\n\nอยากติดตามเรื่องอะไร?"
+    }
+  },
+  "tr": {
+    "onboarding": {
+      "intro": "Merhaba, ben Mera, kişisel haber asistanınız.\n\nHaberleri okuyup sizi etkileyeni gösteriyorum.",
+      "whatNext": "Ne yapmak istersiniz?",
+      "locationAsk": "Nerede yaşıyorsunuz? İstediğiniz kadar paylaşın: bir mahalle ve şehir, ya da yalnızca eyaletiniz veya ülkeniz.",
+      "profileExplain": "Bu, Akışınızı oluşturur. Mera, kim olduğunuza göre aranacak konuları bulur, bunları takip etmeye devam eder ve Akışınızda önemli olanları gösterir.\n\nBana hayatınız hakkında istediğinizi paylaşabilirsiniz, ya da size sorular sorabilirim.",
+      "followExplain": "Bir haberi takip etmek, o habere ait yeni makaleleri tek yerde toplar. Ücretsiz ve sınırsızdır.\n\nTakip ettiğiniz her haberi Akış sekmesindeki Haberler bölümünde bulacaksınız.\n\nHangi haberi takip etmek istersiniz?"
+    }
+  },
+  "uk": {
+    "onboarding": {
+      "intro": "Привіт, я Мера, ваш персональний помічник з новин.\n\nЯ читаю новини й показую, що впливає на вас.",
+      "whatNext": "Що б ви хотіли зробити?",
+      "locationAsk": "Де ви живете? Розкажіть стільки, скільки хочете: район і місто або лише область чи країну.",
+      "profileExplain": "Це формує вашу Стрічку. Мера знаходить теми для пошуку на основі того, хто ви є, постійно їх відстежує і показує в Стрічці те, що важливо.\n\nВи можете розповісти про себе що завгодно, а я можу ставити вам запитання.",
+      "followExplain": "Стеження за історією збирає її нові статті в одному місці. Це безкоштовно і без обмежень.\n\nУсі історії, за якими ви стежите, будуть у розділі Історії на вкладці Стрічка.\n\nЗа якою історією ви хочете стежити?"
+    }
+  },
+  "vi": {
+    "onboarding": {
+      "intro": "Chào bạn, mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nMình đọc tin tức và cho bạn thấy những gì ảnh hưởng đến bạn.",
+      "whatNext": "Bạn muốn làm gì?",
+      "locationAsk": "Bạn sống ở đâu? Chia sẻ bao nhiêu tùy bạn: một khu phố và thành phố, hoặc chỉ tiểu bang hay quốc gia.",
+      "profileExplain": "Phần này xây dựng Bảng tin của bạn. Mera tìm các chủ đề để tìm kiếm dựa trên việc bạn là ai, tiếp tục theo dõi chúng, và cho bạn thấy những gì quan trọng trong Bảng tin.\n\nBạn có thể chia sẻ bất cứ điều gì về bản thân, hoặc mình có thể hỏi bạn vài câu.",
+      "followExplain": "Theo dõi một câu chuyện sẽ gom các bài viết mới của câu chuyện đó vào một chỗ. Miễn phí và không giới hạn.\n\nBạn sẽ thấy mọi câu chuyện đang theo dõi trong Câu chuyện, ở tab Bảng tin.\n\nBạn muốn theo dõi câu chuyện nào?"
+    }
+  },
+  "zh-CN": {
+    "onboarding": {
+      "intro": "你好，我是梅拉，你的私人新闻助手。\n\n我会阅读新闻，并告诉你哪些与你有关。",
+      "whatNext": "你想做什么？",
+      "locationAsk": "你住在哪里？你想说多少都可以，一个街区和城市，或者只说州或国家。",
+      "profileExplain": "这会构建你的信息流。梅拉会根据你是谁找出要搜索的话题，持续跟进，并在信息流中显示最重要的内容。\n\n你可以告诉我任何关于你自己的事，我也可以向你提问。",
+      "followExplain": "关注一则报道，会把它的新文章集中到一处。免费且不限量。\n\n你关注的每则报道都会出现在“报道”中，位于“信息流”标签页。\n\n你想关注哪则报道？"
+    }
+  },
+  "zh-TW": {
+    "onboarding": {
+      "intro": "嗨，我是梅拉，你的個人新聞助理。\n\n我會閱讀新聞，並告訴你哪些事會影響你。",
+      "whatNext": "你想做什麼？",
+      "locationAsk": "你住在哪裡？你想分享多少都可以：可以是社區與城市，也可以只說州或國家。",
+      "profileExplain": "這會建立你的資訊流。梅拉會根據你的情況找出值得搜尋的主題，持續追蹤，並在你的資訊流中顯示最重要的內容。\n\n你可以分享任何關於自己的事，我也可以問你幾個問題。",
+      "followExplain": "追蹤一則報導，會把它的新文章集中到同一處。免費且無限制。\n\n你追蹤的每則報導都會出現在資訊流分頁的「報導」中。\n\n你想追蹤哪則報導？"
+    }
+  }
+}

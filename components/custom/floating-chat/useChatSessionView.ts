@@ -47,10 +47,9 @@ import type { ChatSessionViewProps } from './ChatSessionView';
 // English default is how English has previously shipped into 19 locale files.
 type PendingLocaleKey = 'factCheck.chatSeed';
 
-type OnboardingStep = 'home' | 'choose' | OnboardingPath;
+type OnboardingStep = 'choose' | OnboardingPath;
 
 const STEP_PLACEHOLDER = {
-  home: 'onboarding.placeholderHome',
   location: 'onboarding.placeholderHome',
   choose: 'onboarding.placeholderChoose',
   profile: 'onboarding.composerPlaceholder',
@@ -58,20 +57,18 @@ const STEP_PLACEHOLDER = {
   about: 'onboarding.placeholderAbout',
 } as const;
 
-/** The intro is no row, so the model is told this line ends it. */
-const lastParagraph = (text: string): string => text.trim().split(/\n+/).pop() ?? text;
-
 /** Onboarding's questionnaire: where the reader is, the buttons above the composer,
  *  and the menu's handlers. Every tap but a real send costs no model call. */
 function useOnboardingQuestionnaire({
   enabled,
-  hasFacts,
+  ready,
   busy,
   handleSend,
   forcedNextRef,
 }: {
   enabled: boolean;
-  hasFacts: boolean | null;
+  /** The chat can take a row, so the menu can open it. */
+  ready: boolean;
   /** A turn runs or the account is blocked: nothing is added to the thread. */
   busy: boolean;
   handleSend: (text: string) => boolean;
@@ -79,8 +76,7 @@ function useOnboardingQuestionnaire({
   forcedNextRef: RefObject<ForcedSkill | null>;
 }) {
   const { t } = useTranslation();
-  const [step, setStep] = useState<OnboardingStep>('home');
-  const [aboutDone, setAboutDone] = useState(false);
+  const [step, setStep] = useState<OnboardingStep>('choose');
   // The menu is written once no turn is running: a scripted row refuses a busy chat.
   const [menuOwed, setMenuOwed] = useState(false);
 
@@ -93,11 +89,12 @@ function useOnboardingQuestionnaire({
     });
   }, []);
 
+  const menuOpened = useRef(false);
   useEffect(() => {
-    if (!enabled || step !== 'home' || hasFacts !== true) return;
-    setStep('choose');
+    if (!enabled || !ready || menuOpened.current) return;
+    menuOpened.current = true;
     setMenuOwed(true);
-  }, [enabled, step, hasFacts]);
+  }, [enabled, ready]);
 
   useEffect(() => {
     if (!menuOwed || busy) return;
@@ -123,14 +120,11 @@ function useOnboardingQuestionnaire({
       if (busy) return;
       if (path === 'about') {
         forcedNextRef.current = null;
-        if (handleSend(t('onboarding.pathAbout'))) {
-          setAboutDone(true);
-          setStep(path);
-        }
+        if (handleSend(t('onboarding.pathAbout'))) setStep(path);
         return;
       }
       const exchange = {
-        location: { user: t('onboarding.pathLocation'), assistant: t('onboarding.noFactsTitle') },
+        location: { user: t('onboarding.pathLocation'), assistant: t('onboarding.locationAsk') },
         profile: { user: t('onboarding.pathProfile'), assistant: t('onboarding.profileExplain') },
         follow: { user: t('onboarding.pathFollow'), assistant: t('onboarding.followExplain') },
       }[path];
@@ -153,14 +147,13 @@ function useOnboardingQuestionnaire({
       if (!handleSend(decline)) forcedNextRef.current = null;
       return;
     }
-    void backToMenu(decline, step === 'home' ? lastParagraph(t('onboarding.intro')) : undefined);
+    void backToMenu(decline);
   };
-  const atHome = step === 'home' && hasFacts === false;
   const onPath = step === 'location' || step === 'profile' || step === 'follow' || step === 'about';
   const actions: ComposerAction[] = busy
     ? []
     : [
-        ...(atHome
+        ...(step === 'choose'
           ? [
               {
                 key: 'privacy',
@@ -169,7 +162,7 @@ function useOnboardingQuestionnaire({
               },
             ]
           : []),
-        ...(atHome || step === 'location' || step === 'profile' || step === 'follow'
+        ...(step === 'location' || step === 'profile' || step === 'follow'
           ? [{ key: 'decline', label: decline, testID: 'onboarding-chip-decline', onPress: onDecline }]
           : []),
         ...(onPath
@@ -184,7 +177,7 @@ function useOnboardingQuestionnaire({
           : []),
       ];
 
-  return { actions, placeholder: t(STEP_PLACEHOLDER[step]), menu: { aboutDone, onPick } };
+  return { actions, placeholder: t(STEP_PLACEHOLDER[step]), menu: { onPick } };
 }
 
 export function useChatSessionView(props: ChatSessionViewProps) {
@@ -679,9 +672,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // Set by onboarding's follow line: only the send that answers it is forced, so
   // a follow-skill chip on a later turn can still resume.
   const forcedNextRef = useRef<ForcedSkill | null>(null);
-  // The first question: only the send that answers it carries it.
-  const homeQuestion =
-    inOnboarding && factsAtOpen === false && messages.length === 0 ? lastParagraph(t('onboarding.intro')) : undefined;
 
   const handleSend = useCallback(
     (text: string): boolean => {
@@ -694,15 +684,14 @@ export function useChatSessionView(props: ChatSessionViewProps) {
       if (unresolvedTopicPlans.length > 0) return false;
       void hapticMedium();
       setIntroCleared(true);
-      if (forcedNextRef.current || homeQuestion) {
-        sendMessage(trimmed, { forcedSkill: forcedNextRef.current ?? undefined, asked: homeQuestion });
-      } else sendMessage(trimmed);
+      if (forcedNextRef.current) sendMessage(trimmed, { forcedSkill: forcedNextRef.current });
+      else sendMessage(trimmed);
       forcedNextRef.current = null;
       // Any send answers the notice, on either engine.
       useFloatingChatStore.getState().setInterruptedTurn(null);
       return true;
     },
-    [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage, homeQuestion],
+    [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],
   );
 
   // Chips send their canned message through the same path (haptic included).
@@ -830,7 +819,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   const turnBusy = useFloatingChatStore((st) => st.isGenerating);
   const onboarding = useOnboardingQuestionnaire({
     enabled: inOnboarding,
-    hasFacts,
+    ready: !isLoading,
     busy: isStreaming || turnBusy || effectiveBlocked,
     handleSend,
     forcedNextRef,

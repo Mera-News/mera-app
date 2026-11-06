@@ -91,6 +91,7 @@ const send = async (text: string) => {
 const openWizard = async (onComplete = jest.fn()) => {
   await render(<OnboardingWizard userId={FIXTURE_ACCOUNT.userId} onComplete={onComplete} />);
   await screen.findByTestId('chat-input', {}, { timeout: 15_000 });
+  await screen.findByTestId('onboarding-path-card', {}, { timeout: 10_000 });
   return onComplete;
 };
 const menuCount = () => screen.queryAllByTestId('onboarding-path-card').length;
@@ -124,17 +125,19 @@ afterEach(async () => {
 });
 
 describe('opening the wizard', () => {
-  it('a new reader gets the intro and the first question, with no sample profile', async () => {
+  it('a new reader gets the short intro and the menu, with no sample profile and no model call', async () => {
     await openWizard();
 
-    await screen.findByText(/To begin, where do you live/);
+    await screen.findByText(/show you what affects you/);
+    expect(screen.queryByText(/where do you live/i)).toBeNull();
     expect(screen.queryByTestId('chat-sample')).toBeNull();
-    expect(screen.getByPlaceholderText(copy.placeholderHome)).toBeTruthy();
+    expect(menuCount()).toBe(1);
+    expect(rows()).toEqual([copy.whatNext]);
+    expect(screen.getByPlaceholderText(copy.placeholderChoose)).toBeTruthy();
     expect(screen.getByTestId('onboarding-chip-privacy')).toBeTruthy();
-    expect(screen.getByTestId('onboarding-chip-decline')).toBeTruthy();
-    // The first question comes first.
+    expect(screen.queryByTestId('onboarding-chip-decline')).toBeNull();
     expect(screen.queryByTestId('onboarding-chip-something-else')).toBeNull();
-    expect(menuCount()).toBe(0);
+    expect(modelCalls()).toHaveLength(0);
   });
 
   it('a reader with facts on file opens at the menu, with no intro and no model call', async () => {
@@ -143,46 +146,25 @@ describe('opening the wizard', () => {
 
     await waitForMenus(1);
     expect(rows()).toEqual([copy.whatNext]);
-    expect(screen.queryByText(/To begin, where do you live/)).toBeNull();
+    expect(screen.queryByText(/show you what affects you/)).toBeNull();
     expect(screen.queryByTestId('onboarding-chip-decline')).toBeNull();
     expect(screen.getByPlaceholderText(copy.placeholderChoose)).toBeTruthy();
     expect(modelCalls()).toHaveLength(0);
   });
 });
 
-describe('the first question', () => {
-  const askedHome = (c: GatewayCall) =>
-    c.messages.some((m) => m.content.includes('Your last turn asked: "To begin, where do you live?'));
-
-  it('reaches the model with a bare answer, and adds no row', async () => {
+describe('Set location', () => {
+  it('asks in full, and a bare answer reaches the model with that question', async () => {
     await openWizard();
+    await press('onboarding-path-location');
+    expect(rows().slice(-2)).toEqual([copy.pathLocation, copy.locationAsk]);
+    expect(screen.getByPlaceholderText(copy.placeholderHome)).toBeTruthy();
+    expect(modelCalls()).toHaveLength(0);
+
     await send('De Pijp, Amsterdam');
 
-    expect(askedHome(modelCalls()[0])).toBe(true);
-    expect(rows()[0]).toBe('De Pijp, Amsterdam');
-  });
-
-  it('rides the first send only', async () => {
-    await openWizard();
-    await send('De Pijp, Amsterdam');
-    const before = modelCalls().length;
-
-    await send('Noord-Holland');
-
-    expect(askedHome(modelCalls()[before])).toBe(false);
-  });
-
-  it('is still there on a retry of a failed first turn', async () => {
-    await openWizard();
-    server.use(...mockGateway((c) => (isPing(c) ? defaultResponder(c) : { status: 400, body: { error: 'nope' } })));
-    await send('De Pijp, Amsterdam');
-    server.use(...mockGateway(responder));
-    const before = modelCalls().length;
-
-    expect(retryChatTurn()).toBe(true);
-    await turnOver();
-
-    expect(askedHome(modelCalls()[before])).toBe(true);
+    const asked = modelCalls()[0].messages.some((m) => m.content.includes('Your last turn asked: "Where do you live?'));
+    expect(asked).toBe(true);
   });
 });
 
@@ -202,15 +184,15 @@ describe('How Mera handles my data', () => {
 describe("I'd rather not say", () => {
   it('at where you live moves to the menu with no model call', async () => {
     await openWizard();
+    await press('onboarding-path-location');
 
     await press('onboarding-chip-decline');
 
-    await waitForMenus(1);
-    expect(rows()).toEqual([copy.ratherNotSay, copy.whatNext]);
+    await waitForMenus(2);
+    expect(rows().slice(-2)).toEqual([copy.ratherNotSay, copy.whatNext]);
     expect(modelCalls()).toHaveLength(0);
     // Earlier messages stay.
-    expect(screen.getByText(/To begin, where do you live/)).toBeTruthy();
-
+    expect(screen.getByText(copy.locationAsk)).toBeTruthy();
   });
 
   it('on the follow path goes back to the menu, and the pending follow is dropped', async () => {
@@ -252,13 +234,14 @@ describe("I'd rather not say", () => {
 
   it('at where you live tells the next turn what was declined', async () => {
     await openWizard();
+    await press('onboarding-path-location');
     await press('onboarding-chip-decline');
-    await waitForMenus(1);
+    await waitForMenus(2);
 
     await send('What is new today?');
 
     const sent = modelCalls()[0].messages.map((m) => m.content).join('\n');
-    expect(sent).toContain('To begin, where do you live?');
+    expect(sent).toContain('Where do you live?');
     expect(sent).toContain(`They said: ${copy.ratherNotSay}`);
   });
 
@@ -290,21 +273,6 @@ describe('the wizard after a decline', () => {
 });
 
 describe('the step', () => {
-  it('moves from home to the menu once a fact is saved', async () => {
-    await openWizard();
-    await send('I follow Formula 1 racing');
-    expect(menuCount()).toBe(0);
-    expect(screen.getByPlaceholderText(copy.placeholderHome)).toBeTruthy();
-
-    await press('fact-choice-add-0');
-
-    await waitForMenus(1);
-    expect(rows()[rows().length - 1]).toBe(copy.whatNext);
-    expect(screen.getByPlaceholderText(copy.placeholderChoose)).toBeTruthy();
-    expect(screen.queryByTestId('onboarding-chip-privacy')).toBeNull();
-    expect(screen.queryByTestId('onboarding-chip-decline')).toBeNull();
-  });
-
   it('typing at the menu is an ordinary turn and stays at the menu', async () => {
     await toMenu();
     const before = modelCalls().length;
@@ -429,26 +397,16 @@ describe('Want to do something else?', () => {
 describe('check marks', () => {
   const { pathProfile, pathFollow, pathAbout } = copy;
 
-  it('every option starts open, and Set location asks where they live with no model call', async () => {
+  it('every option but the help starts open', async () => {
     await openWizard();
-    await press('onboarding-chip-decline');
-    await waitForMenus(1);
-    for (const path of ['location', 'profile', 'follow', 'about']) {
+    for (const path of ['location', 'profile', 'follow']) {
       expect(screen.getByTestId(`onboarding-path-${path}-open`, { includeHiddenElements: true })).toBeTruthy();
     }
-
-    await press('onboarding-path-location');
-
-    expect(rows()).toEqual([copy.ratherNotSay, copy.whatNext, 'Set location', 'Where do you live?']);
-    expect(modelCalls()).toHaveLength(0);
-    expect(screen.getByTestId('onboarding-chip-decline')).toBeTruthy();
-    expect(screen.getByTestId('onboarding-chip-something-else')).toBeTruthy();
+    expect(screen.queryByTestId('onboarding-path-about-open', { includeHiddenElements: true })).toBeNull();
   });
 
   it('a location ticks Set location, and only another fact ticks Create my profile', async () => {
     await openWizard();
-    await press('onboarding-chip-decline');
-    await waitForMenus(1);
 
     await act(async () => {
       await addFact('Lives in Delft', undefined, { attribute: CANONICAL_LOCATION_KEY });
@@ -477,20 +435,20 @@ describe('check marks', () => {
     expect(label('onboarding-path-follow', 1)).toBe(`${pathFollow}, done`);
   });
 
-  it('Tell me about Mera ticks once tapped, and stays tappable', async () => {
+  it('Tell me about Mera never ticks, and stays tappable', async () => {
     await toMenu();
     await press('onboarding-path-about');
     await turnOver();
     await press('onboarding-chip-something-else');
     await waitForMenus(2);
 
-    expect(label('onboarding-path-about', 0)).toBe(`${pathAbout}, done`);
-    expect(label('onboarding-path-about', 1)).toBe(`${pathAbout}, done`);
+    expect(label('onboarding-path-about', 1)).toBe(pathAbout);
+    expect(screen.queryByTestId('onboarding-path-about-done', { includeHiddenElements: true })).toBeNull();
     await act(async () => {
       fireEvent.press(screen.getAllByTestId('onboarding-path-about')[1]);
     });
     await turnOver();
-    expect(rows().filter((r) => r === pathAbout)).toHaveLength(2);
+    expect(screen.getByPlaceholderText(copy.placeholderAbout)).toBeTruthy();
   });
 });
 

@@ -8,7 +8,7 @@ const FENCE = /<<ARTICLE [a-f0-9]{12}>>/g;
 const content = (call: GatewayCall, role: string) =>
   call.messages.find((m) => m.role === role)?.content ?? '';
 
-const HARNESS_LINES = /^(<state>|<known_facts>|<tool_response>|They were answering|Their previous message|Earlier in this chat)/;
+const HARNESS_LINES = /^(<state>|<known_facts>|<recent>|<tool_response>|They were answering|Their previous message|Earlier in this chat)/;
 /** The person's own message in a persona-loop leg: the first user turn the harness did not write. */
 const personMessage = (call: GatewayCall) =>
   call.messages.find((m) => m.role === 'user' && !HARNESS_LINES.test(m.content))?.content ?? '';
