@@ -1,15 +1,15 @@
 /**
  * "Verify attestation" — an inline expand row for the Mera Protocol screen.
  *
- * Renders the result of a REAL Intel TDX quote verification (see
+ * Renders the result of a REAL Intel TDX quote and NVIDIA GPU verification (see
  * `lib/algorithms/attestation-verify.ts`), one row per check.
  *
  * Two rules this component exists to hold:
  *
- *  1. `not-checked` never renders as a green tick. TCB currency is
- *     genuinely not verified, and a security screen that
- *     quietly omits what it skipped is worse than one that admits it. They get
- *     a distinct grey "remove" icon and a "not checked" label.
+ *  1. `not-checked` never renders as a green tick. A check the app skips, like
+ *     TCB currency, gets a distinct grey "remove" icon and a "not checked"
+ *     label, because a security screen that quietly omits what it skipped is
+ *     worse than one that admits it.
  *  2. The summary line derives from the WEAKEST check, so the header can never
  *     read "Verified" while the expanded list contains something unchecked.
  *

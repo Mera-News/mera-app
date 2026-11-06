@@ -230,7 +230,7 @@ describe('verifyAttestation with a served NVIDIA token', () => {
   const GPU_NOW = new Date('2026-11-06T02:30:00Z');
   const GPU_NONCE = 'ebbaa3eafb3f3765cccf6fd57750991f77ba33499838045bc31c4c3f58821a91';
 
-  it('passes only gpu-attestation, at the fixture\'s time and nonce', async () => {
+  it('passes gpu-attestation at the fixture\'s time and nonce', async () => {
     server.use(
       http.get(ROUTE, () =>
         HttpResponse.json({
@@ -248,7 +248,6 @@ describe('verifyAttestation with a served NVIDIA token', () => {
       nvidiaAttestation: attestation.nvidia_attestation,
       now: GPU_NOW,
     });
-    expect(report.checks.filter((c) => c.status === 'pass' && c.id === 'gpu-attestation')).toHaveLength(1);
     expect(report.checks.find((c) => c.id === 'gpu-attestation')?.status).toBe('pass');
     expect(report.checks.find((c) => c.id === 'tcb-status')?.status).toBe('not-checked');
   });
@@ -284,6 +283,20 @@ describe('AttestationVerificationRow: GPU notice', () => {
     );
     const view = await tapVerify();
     expect(await view.findByTestId('attestation-gpu-notice')).toBeTruthy();
+  });
+
+  it('shows no notice when the GPU check fails', async () => {
+    server.use(
+      http.get(ROUTE, () =>
+        HttpResponse.json({ model_attestations: [{ ...captured, nvidia_attestation: nvidia }] }),
+      ),
+    );
+    // A nonce the token was not issued for: the check is `fail`, not `not-checked`.
+    jest.spyOn(e2eeService, 'generateAttestationNonce').mockReturnValue('ab'.repeat(32));
+    const view = await tapVerify();
+    expect(await view.findByTestId('attestation-scope-notice')).toBeTruthy();
+    expect(view.getByTestId('attestation-check-gpu-attestation')).toBeTruthy();
+    expect(view.queryByTestId('attestation-gpu-notice')).toBeNull();
   });
 
   it('shows no notice on the old gateway', async () => {
