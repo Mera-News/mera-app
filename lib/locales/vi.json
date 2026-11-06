@@ -954,7 +954,10 @@
     "restoreNoneGoogle": "Không tìm thấy gói nào trên Tài khoản Google này.",
     "restoreFailedAppStore": "Không thể kết nối với App Store. Hãy thử lại.",
     "restoreFailedPlayStore": "Không thể kết nối với Google Play. Hãy thử lại.",
-    "redeemCode": "Đổi mã"
+    "redeemCode": "Đổi mã",
+    "promoWebSummit": "Miễn phí thêm lượt dùng cho Web Summit",
+    "promoWebSummitTitle": "Thêm lượt dùng, miễn phí",
+    "promoWebSummitBody": "Bạn được dùng thêm miễn phí trong thời gian Web Summit."
   },
   "tabs": {
     "deck": "Bảng tin",

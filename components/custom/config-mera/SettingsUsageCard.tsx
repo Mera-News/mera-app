@@ -3,6 +3,7 @@ import { Text } from '@/components/ui/text';
 import { fetchUserBilling } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import { getActiveTier } from '@/lib/revenuecat';
+import { usePlanPromoCopy } from '@/lib/subscription/plan-promo';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { useColors } from '@/lib/theme/tokens';
 import { resolvePlanDisplay } from '@/lib/algorithms/plan-display';
@@ -13,8 +14,8 @@ import { View } from 'react-native';
 import ReadingMeter, { useReadingFetch } from './ReadingMeter';
 
 /**
- * The plan card at the TOP of Settings (FinalSettings #1): plan name, Manage
- * plan (the only plan entry in Settings), then the reading meter. Offline with
+ * The plan card at the TOP of Settings (FinalSettings #1): plan name, See
+ * plans (the only plan entry in Settings), then the reading meter. Offline with
  * nothing known the meter says so; it never shows a made-up figure.
  *
  * Billing is fetched on focus (the tab stays mounted) and again whenever the
@@ -78,6 +79,7 @@ const SettingsUsageCard: React.FC = () => {
             })();
 
     const reading = useReadingFetch();
+    const promo = usePlanPromoCopy();
 
     return (
         <View
@@ -98,13 +100,13 @@ const SettingsUsageCard: React.FC = () => {
                             {planLabel}
                         </Text>
                     ) : null}
-                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{t('you.settings.yourPlan')}</Text>
+                    <Text style={{ color: colors.ink2, fontSize: 13 }}>{t(promo?.line ?? 'you.settings.yourPlan')}</Text>
                 </View>
                 <Pressable
                     testID="settings-manage-plan"
                     onPress={() => router.push('/logged-in/preferences/manage-subscription')}
                     accessibilityRole="button"
-                    accessibilityLabel={t('subscription.managePlan')}
+                    accessibilityLabel={t('feedStatus.seePlans')}
                     style={{
                         minHeight: 44,
                         paddingHorizontal: 14,
@@ -114,7 +116,7 @@ const SettingsUsageCard: React.FC = () => {
                         justifyContent: 'center',
                     }}
                 >
-                    <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600' }}>{t('subscription.managePlan')}</Text>
+                    <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '600' }}>{t('feedStatus.seePlans')}</Text>
                 </Pressable>
             </View>
             <ReadingMeter size="card" {...reading} />

@@ -1016,7 +1016,10 @@
     "restoreNoneGoogle": "Nie znaleziono planu na tym koncie Google.",
     "restoreFailedAppStore": "Nie udało się połączyć z App Store. Spróbuj ponownie.",
     "restoreFailedPlayStore": "Nie udało się połączyć z Google Play. Spróbuj ponownie.",
-    "redeemCode": "Zrealizuj kod"
+    "redeemCode": "Zrealizuj kod",
+    "promoWebSummit": "Dodatkowe czytanie za darmo na Web Summit",
+    "promoWebSummitTitle": "Dodatkowe czytanie, za darmo",
+    "promoWebSummitBody": "Podczas Web Summit masz dodatkowe czytanie za darmo."
   },
   "tabs": {
     "deck": "Strumień",

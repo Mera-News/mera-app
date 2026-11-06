@@ -968,7 +968,10 @@
     "restoreNoneGoogle": "Auf diesem Google-Konto wurde kein Tarif gefunden.",
     "restoreFailedAppStore": "Der App Store ist nicht erreichbar. Versuche es erneut.",
     "restoreFailedPlayStore": "Google Play ist nicht erreichbar. Versuche es erneut.",
-    "redeemCode": "Code einlösen"
+    "redeemCode": "Code einlösen",
+    "promoWebSummit": "Extra Lesekontingent gratis bei Web Summit",
+    "promoWebSummitTitle": "Extra Lesekontingent, gratis",
+    "promoWebSummitBody": "Während der Web Summit bekommst du gratis zusätzliches Lesekontingent."
   },
   "tabs": {
     "deck": "Nachrichten",

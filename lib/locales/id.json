@@ -954,7 +954,10 @@
     "restoreNoneGoogle": "Tidak ada paket di Akun Google ini.",
     "restoreFailedAppStore": "Tidak bisa menghubungi App Store. Coba lagi.",
     "restoreFailedPlayStore": "Tidak bisa menghubungi Google Play. Coba lagi.",
-    "redeemCode": "Tukarkan kode"
+    "redeemCode": "Tukarkan kode",
+    "promoWebSummit": "Pemakaian ekstra gratis untuk Web Summit",
+    "promoWebSummitTitle": "Pemakaian ekstra, gratis",
+    "promoWebSummitBody": "Selama Web Summit, Anda mendapat pemakaian ekstra secara gratis."
   },
   "tabs": {
     "deck": "Umpan",

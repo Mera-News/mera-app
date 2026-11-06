@@ -10,6 +10,7 @@ import {
     fetchUserBillingLapseState,
     fetchUserReading,
 } from '@/lib/billing-service';
+import { syncPlanPromo } from './plan-promo';
 import { fetchReadingPlans } from './reading-plans';
 import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
@@ -61,6 +62,7 @@ export async function syncEntitlement(
                 fetchUserBillingLapseState(),
                 fetchUserReading(),
                 fetchReadingPlans(),
+                syncPlanPromo(),
             ]);
             if (billing) {
                 useSubscriptionStore.getState().setServerBilling(billing);

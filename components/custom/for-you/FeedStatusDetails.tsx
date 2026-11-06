@@ -44,6 +44,7 @@ import { syncFailureKey, syncFailureOf } from './card-state';
 import { pickScoringProgress } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
 import { useNotReadWaiting } from './feed-status-card';
+import { planRatio, useReadingPlans } from '@/lib/subscription/reading-plans';
 import { useUpgradeFrom } from './ReadHoldUpgradeButton';
 import { useReadHold } from '@/lib/subscription/read-hold';
 import { limitUnlockTime as resetTimeLabel } from '@/components/custom/cards/reset-time';
@@ -90,12 +91,15 @@ export function ReadHoldFooter() {
     const { t } = useTranslation();
     const { resetAt } = useReadHold();
     const from = useUpgradeFrom();
+    const plans = useReadingPlans();
     const c = useColors();
     if (resetAt == null) return null;
     const time = resetTimeLabel(resetAt);
+    // A promo can lift Starter to Individual's size, and then Individual reads no more.
+    const offersIndividual = from === 'starter' && (!plans || planRatio(plans.individual, plans.starter) != null);
     return (
         <Text style={[SMALL_TYPE, { color: c.ink2, marginTop: 8 }]} testID="feed-status-reads-again">
-            {from === 'starter' ? t('feedStatus.readsAgainOrIndividual', { time }) : t('feedStatus.readsAgain', { time })}
+            {offersIndividual ? t('feedStatus.readsAgainOrIndividual', { time }) : t('feedStatus.readsAgain', { time })}
         </Text>
     );
 }

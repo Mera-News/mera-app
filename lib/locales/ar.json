@@ -1063,7 +1063,10 @@
     "restoreNoneGoogle": "لم نعثر على أي خطة في حساب Google هذا.",
     "restoreFailedAppStore": "تعذّر الوصول إلى App Store. حاول مرة أخرى.",
     "restoreFailedPlayStore": "تعذّر الوصول إلى Google Play. حاول مرة أخرى.",
-    "redeemCode": "استرداد رمز"
+    "redeemCode": "استرداد رمز",
+    "promoWebSummit": "قراءة إضافية مجانًا خلال Web Summit",
+    "promoWebSummitTitle": "قراءة إضافية، مجانًا",
+    "promoWebSummitBody": "تحصل على قراءة إضافية مجانًا خلال Web Summit."
   },
   "tabs": {
     "deck": "الخلاصة",

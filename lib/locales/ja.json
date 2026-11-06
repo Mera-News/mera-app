@@ -954,7 +954,10 @@
     "restoreNoneGoogle": "このGoogle アカウントでプランが見つかりませんでした。",
     "restoreFailedAppStore": "App Store に接続できませんでした。もう一度お試しください。",
     "restoreFailedPlayStore": "Google Play に接続できませんでした。もう一度お試しください。",
-    "redeemCode": "コードを使用"
+    "redeemCode": "コードを使用",
+    "promoWebSummit": "Web Summit中は追加の利用が無料",
+    "promoWebSummitTitle": "追加の利用量、無料",
+    "promoWebSummitBody": "Web Summitの期間中は、追加の利用量が無料です。"
   },
   "tabs": {
     "deck": "フィード",

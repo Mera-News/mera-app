@@ -970,7 +970,10 @@
     "restoreNoneGoogle": "Nenhum plano encontrado nesta Conta do Google.",
     "restoreFailedAppStore": "Não foi possível acessar a App Store. Tente novamente.",
     "restoreFailedPlayStore": "Não foi possível acessar o Google Play. Tente novamente.",
-    "redeemCode": "Resgatar um código"
+    "redeemCode": "Resgatar um código",
+    "promoWebSummit": "Leitura extra grátis no Web Summit",
+    "promoWebSummitTitle": "Leitura extra, grátis",
+    "promoWebSummitBody": "Durante o Web Summit, você ganha leitura extra de graça."
   },
   "tabs": {
     "deck": "Feed",

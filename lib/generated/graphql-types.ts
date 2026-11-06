@@ -1,10 +1,5 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -1131,6 +1126,8 @@ export type UserBillingInfo = {
   hasEverSubscribed: Scalars['Boolean']['output'];
   /** This plan's daily cloud reading as a multiple of Starter's (Starter 1). */
   planMultiplier: Scalars['Int']['output'];
+  /** Id of the promo this reader is on, which the app maps to its copy. Null when none runs or on a paid plan. */
+  planPromo?: Maybe<Scalars['String']['output']>;
   /** Every plan's daily cloud reading, so the app states plan sizes and ratios from the server rather than from copy. Null when the server has no usable budgets. */
   readingPlans?: Maybe<ReadingPlans>;
   /** Next 00:00 UTC, when cloud reading resets. */

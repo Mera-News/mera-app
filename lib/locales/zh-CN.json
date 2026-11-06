@@ -954,7 +954,10 @@
     "restoreNoneGoogle": "在这个 Google 账号上没有找到套餐。",
     "restoreFailedAppStore": "无法连接 App Store。请重试。",
     "restoreFailedPlayStore": "无法连接 Google Play。请重试。",
-    "redeemCode": "兑换代码"
+    "redeemCode": "兑换代码",
+    "promoWebSummit": "Web Summit 期间免费赠送额外用量",
+    "promoWebSummitTitle": "额外用量，免费",
+    "promoWebSummitBody": "Web Summit 期间，你可以免费获得额外用量。"
   },
   "tabs": {
     "deck": "信息流",

@@ -968,7 +968,10 @@
     "restoreNoneGoogle": "Bu Google Hesabında plan bulunamadı.",
     "restoreFailedAppStore": "App Store'a ulaşılamadı. Tekrar dene.",
     "restoreFailedPlayStore": "Google Play'e ulaşılamadı. Tekrar dene.",
-    "redeemCode": "Kod kullan"
+    "redeemCode": "Kod kullan",
+    "promoWebSummit": "Web Summit'te ek okuma ücretsiz",
+    "promoWebSummitTitle": "Ek okuma, ücretsiz",
+    "promoWebSummitBody": "Web Summit sırasında ek okuma hakkını ücretsiz kullanabilirsin."
   },
   "tabs": {
     "deck": "Akış",

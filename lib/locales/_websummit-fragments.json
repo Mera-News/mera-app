@@ -1,0 +1,142 @@
+{
+  "tr": {
+    "subscription": {
+      "promoWebSummit": "Web Summit'te ek okuma ücretsiz",
+      "promoWebSummitTitle": "Ek okuma, ücretsiz",
+      "promoWebSummitBody": "Web Summit sırasında ek okuma hakkını ücretsiz kullanabilirsin."
+    }
+  },
+  "nl": {
+    "subscription": {
+      "promoWebSummit": "Gratis extra gebruik voor Web Summit",
+      "promoWebSummitTitle": "Extra gebruik, gratis",
+      "promoWebSummitBody": "Tijdens Web Summit krijg je gratis extra gebruik."
+    }
+  },
+  "ja": {
+    "subscription": {
+      "promoWebSummit": "Web Summit中は追加の利用が無料",
+      "promoWebSummitTitle": "追加の利用量、無料",
+      "promoWebSummitBody": "Web Summitの期間中は、追加の利用量が無料です。"
+    }
+  },
+  "de": {
+    "subscription": {
+      "promoWebSummit": "Extra Lesekontingent gratis bei Web Summit",
+      "promoWebSummitTitle": "Extra Lesekontingent, gratis",
+      "promoWebSummitBody": "Während der Web Summit bekommst du gratis zusätzliches Lesekontingent."
+    }
+  },
+  "ru": {
+    "subscription": {
+      "promoWebSummit": "Дополнительное чтение бесплатно на Web Summit",
+      "promoWebSummitTitle": "Дополнительное чтение, бесплатно",
+      "promoWebSummitBody": "Во время Web Summit вам доступно дополнительное чтение без оплаты."
+    }
+  },
+  "pl": {
+    "subscription": {
+      "promoWebSummit": "Dodatkowe czytanie za darmo na Web Summit",
+      "promoWebSummitTitle": "Dodatkowe czytanie, za darmo",
+      "promoWebSummitBody": "Podczas Web Summit masz dodatkowe czytanie za darmo."
+    }
+  },
+  "uk": {
+    "subscription": {
+      "promoWebSummit": "Безкоштовний додатковий ліміт на Web Summit",
+      "promoWebSummitTitle": "Додатковий ліміт безкоштовно",
+      "promoWebSummitBody": "Під час Web Summit ви отримуєте додатковий ліміт безкоштовно."
+    }
+  },
+  "zh-CN": {
+    "subscription": {
+      "promoWebSummit": "Web Summit 期间免费赠送额外用量",
+      "promoWebSummitTitle": "额外用量，免费",
+      "promoWebSummitBody": "Web Summit 期间，你可以免费获得额外用量。"
+    }
+  },
+  "en": {
+    "subscription": {
+      "promoWebSummit": "Free extra usage for Web Summit",
+      "promoWebSummitTitle": "Extra usage, free",
+      "promoWebSummitBody": "You get extra usage for free during Web Summit."
+    }
+  },
+  "it": {
+    "subscription": {
+      "promoWebSummit": "Utilizzo extra gratuito per Web Summit",
+      "promoWebSummitTitle": "Utilizzo extra, gratis",
+      "promoWebSummitBody": "Durante Web Summit hai un utilizzo extra gratuito."
+    }
+  },
+  "fr": {
+    "subscription": {
+      "promoWebSummit": "Lecture en plus gratuite pendant Web Summit",
+      "promoWebSummitTitle": "Lecture en plus, gratuite",
+      "promoWebSummitBody": "Pendant Web Summit, vous bénéficiez d'une lecture en plus gratuite."
+    }
+  },
+  "hi": {
+    "subscription": {
+      "promoWebSummit": "Web Summit पर अतिरिक्त पढ़ने की सीमा मुफ़्त",
+      "promoWebSummitTitle": "अतिरिक्त पढ़ने की सीमा, मुफ़्त",
+      "promoWebSummitBody": "Web Summit के दौरान आपको अतिरिक्त पढ़ने की सीमा मुफ़्त मिलती है।"
+    }
+  },
+  "pt-BR": {
+    "subscription": {
+      "promoWebSummit": "Leitura extra grátis no Web Summit",
+      "promoWebSummitTitle": "Leitura extra, grátis",
+      "promoWebSummitBody": "Durante o Web Summit, você ganha leitura extra de graça."
+    }
+  },
+  "ko": {
+    "subscription": {
+      "promoWebSummit": "Web Summit 동안 추가 사용량 무료",
+      "promoWebSummitTitle": "추가 사용량 무료",
+      "promoWebSummitBody": "Web Summit 기간 동안 추가 사용량을 무료로 이용하실 수 있습니다."
+    }
+  },
+  "zh-TW": {
+    "subscription": {
+      "promoWebSummit": "Web Summit 期間免費贈送額外用量",
+      "promoWebSummitTitle": "額外用量，免費",
+      "promoWebSummitBody": "Web Summit 期間，你可以免費獲得額外用量。"
+    }
+  },
+  "vi": {
+    "subscription": {
+      "promoWebSummit": "Miễn phí thêm lượt dùng cho Web Summit",
+      "promoWebSummitTitle": "Thêm lượt dùng, miễn phí",
+      "promoWebSummitBody": "Bạn được dùng thêm miễn phí trong thời gian Web Summit."
+    }
+  },
+  "id": {
+    "subscription": {
+      "promoWebSummit": "Pemakaian ekstra gratis untuk Web Summit",
+      "promoWebSummitTitle": "Pemakaian ekstra, gratis",
+      "promoWebSummitBody": "Selama Web Summit, Anda mendapat pemakaian ekstra secara gratis."
+    }
+  },
+  "th": {
+    "subscription": {
+      "promoWebSummit": "อ่านเพิ่มฟรีในงาน Web Summit",
+      "promoWebSummitTitle": "อ่านเพิ่มได้ฟรี",
+      "promoWebSummitBody": "ในช่วง Web Summit คุณจะได้อ่านเพิ่มได้ฟรี"
+    }
+  },
+  "es": {
+    "subscription": {
+      "promoWebSummit": "Lectura extra gratis en Web Summit",
+      "promoWebSummitTitle": "Lectura extra, gratis",
+      "promoWebSummitBody": "Durante Web Summit tienes lectura extra gratis."
+    }
+  },
+  "ar": {
+    "subscription": {
+      "promoWebSummit": "قراءة إضافية مجانًا خلال Web Summit",
+      "promoWebSummitTitle": "قراءة إضافية، مجانًا",
+      "promoWebSummitBody": "تحصل على قراءة إضافية مجانًا خلال Web Summit."
+    }
+  }
+}

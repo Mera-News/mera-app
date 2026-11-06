@@ -968,7 +968,10 @@
     "restoreNoneGoogle": "Geen abonnement gevonden op deze Google-account.",
     "restoreFailedAppStore": "De App Store kon niet worden bereikt. Probeer het opnieuw.",
     "restoreFailedPlayStore": "Google Play kon niet worden bereikt. Probeer het opnieuw.",
-    "redeemCode": "Code inwisselen"
+    "redeemCode": "Code inwisselen",
+    "promoWebSummit": "Gratis extra gebruik voor Web Summit",
+    "promoWebSummitTitle": "Extra gebruik, gratis",
+    "promoWebSummitBody": "Tijdens Web Summit krijg je gratis extra gebruik."
   },
   "tabs": {
     "deck": "Feed",

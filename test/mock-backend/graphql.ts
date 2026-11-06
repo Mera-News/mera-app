@@ -419,6 +419,8 @@ query<'userBilling'>('GetReadingPlans', (c) => ({
     },
 }));
 
+query<'userBilling'>('GetPlanPromo', (c) => ({ userBilling: { ...billing(c), planPromo: null } }));
+
 query<'appConfig'>('LegalConsentAppConfig', () => ({ appConfig }));
 query<'appVersionInfo'>('AppVersionInfo', () => ({ appVersionInfo }));
 query<'activeFeedbackRequests'>('ActiveFeedbackRequests', () => ({ activeFeedbackRequests: feedbackRequests }));

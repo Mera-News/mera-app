@@ -1016,7 +1016,10 @@
     "restoreNoneGoogle": "Тарифу на цьому обліковому записі Google не знайдено.",
     "restoreFailedAppStore": "Не вдалося зв'язатися з App Store. Спробуйте ще раз.",
     "restoreFailedPlayStore": "Не вдалося зв'язатися з Google Play. Спробуйте ще раз.",
-    "redeemCode": "Використати код"
+    "redeemCode": "Використати код",
+    "promoWebSummit": "Безкоштовний додатковий ліміт на Web Summit",
+    "promoWebSummitTitle": "Додатковий ліміт безкоштовно",
+    "promoWebSummitBody": "Під час Web Summit ви отримуєте додатковий ліміт безкоштовно."
   },
   "tabs": {
     "deck": "Стрічка",

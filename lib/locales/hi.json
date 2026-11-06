@@ -968,7 +968,10 @@
     "restoreNoneGoogle": "इस Google खाते पर कोई प्लान नहीं मिला।",
     "restoreFailedAppStore": "App Store तक नहीं पहुँच सके। फिर से कोशिश करें।",
     "restoreFailedPlayStore": "Google Play तक नहीं पहुँच सके। फिर से कोशिश करें।",
-    "redeemCode": "कोड रिडीम करें"
+    "redeemCode": "कोड रिडीम करें",
+    "promoWebSummit": "Web Summit पर अतिरिक्त पढ़ने की सीमा मुफ़्त",
+    "promoWebSummitTitle": "अतिरिक्त पढ़ने की सीमा, मुफ़्त",
+    "promoWebSummitBody": "Web Summit के दौरान आपको अतिरिक्त पढ़ने की सीमा मुफ़्त मिलती है।"
   },
   "tabs": {
     "deck": "फीड",

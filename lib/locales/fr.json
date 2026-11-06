@@ -975,7 +975,10 @@
     "restoreNoneGoogle": "Aucun forfait trouvé sur ce compte Google.",
     "restoreFailedAppStore": "Impossible de joindre l'App Store. Réessayez.",
     "restoreFailedPlayStore": "Impossible de joindre Google Play. Réessayez.",
-    "redeemCode": "Utiliser un code"
+    "redeemCode": "Utiliser un code",
+    "promoWebSummit": "Lecture en plus gratuite pendant Web Summit",
+    "promoWebSummitTitle": "Lecture en plus, gratuite",
+    "promoWebSummitBody": "Pendant Web Summit, vous bénéficiez d'une lecture en plus gratuite."
   },
   "tabs": {
     "deck": "Fil d'actu",

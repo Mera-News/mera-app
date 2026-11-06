@@ -1,5 +1,5 @@
 // The read hold's ONE upgrade button (ReadHoldUpgradeButton, level 1 of the counts card, the
-// not-read tail block, the Settings usage card) and the level-2 actions left under the chevron.
+// not-read tail block) and the level-2 actions left under the chevron.
 // Real stores and read hold; faked at the edges: the RevenueCat SDK (setup mock), the paywall
 // chokepoint (its own suite covers it) and the on-device requirements probe.
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
