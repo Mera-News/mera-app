@@ -568,7 +568,8 @@
     "checkNotMet": "niespełnione",
     "helpModesCloud": "Prywatna chmura: Mera AI działa na bezpiecznych serwerach, zaszyfrowana, więc Mera nie może odczytać Twoich danych. Twój plan określa, ile Mera czyta każdego dnia.",
     "helpModesPhone": "Na tym telefonie: Mera AI działa na Twoim telefonie, a czytanie jest nieograniczone. Wiadomości nadal przychodzą z serwerów Mera. To wersja Beta.",
-    "helpModesVerify": "„Zweryfikuj poświadczenie” sprawdza, czy chmura działa na prawdziwym bezpiecznym sprzęcie i czy Twoje dane są dla niej szyfrowane."
+    "helpModesVerify": "„Zweryfikuj poświadczenie” sprawdza podpis Intela na raporcie chmury oraz to, czy Twoje dane są zaszyfrowane kluczem zawartym w tym raporcie.",
+    "attestationGpuNotice": "Podpisany wynik NVIDIA pokazuje, że prawdziwe karty graficzne NVIDIA odpowiedziały na to sprawdzenie. Nie dowodzi on, że te karty są podłączone do bezpiecznego sprzętu."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Wydawcy, które czytasz” w zakładce Źródła oraz historia dla każdego wydawcy wrócą do stanu pustego. Przeczytane historie mogą znowu pojawić się w Twoim Kanale. Nic więcej się nie zmienia, a dane na serwerach nie są ruszane, bo serwery Mery nigdy nie miały tych danych.",

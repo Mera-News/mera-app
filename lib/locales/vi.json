@@ -511,7 +511,8 @@
     "checkNotMet": "chưa đạt",
     "helpModesCloud": "Đám mây riêng: Mera AI chạy trên máy chủ bảo mật, được mã hóa, nên Mera không thể đọc dữ liệu của bạn. Gói của bạn quyết định Mera đọc bao nhiêu mỗi ngày.",
     "helpModesPhone": "Trên điện thoại này: Mera AI chạy trên điện thoại của bạn và đọc không giới hạn. Tin tức vẫn đến từ máy chủ của Mera. Tính năng này đang ở bản Beta.",
-    "helpModesVerify": "“Xác minh chứng thực” kiểm tra rằng đám mây chạy trên phần cứng bảo mật thật, và dữ liệu của bạn được mã hóa cho nó."
+    "helpModesVerify": "Xác minh chứng thực kiểm tra chữ ký của Intel trên báo cáo của đám mây, và kiểm tra rằng dữ liệu của bạn được mã hóa theo khóa trong báo cáo đó.",
+    "attestationGpuNotice": "Kết quả có chữ ký của NVIDIA cho thấy các GPU NVIDIA thật đã phản hồi trong lần kiểm tra này. Kết quả đó không chứng minh các GPU này được kết nối với phần cứng bảo mật."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ “Các nguồn bạn đã đọc” ở tab Nguồn và lịch sử theo từng nguồn sẽ trống trở lại. Các câu chuyện bạn đã đọc có thể xuất hiện lại trong bảng tin. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị đụng đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này.",

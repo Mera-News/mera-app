@@ -526,7 +526,8 @@
     "checkNotMet": "no cumplido",
     "helpModesCloud": "Nube privada: Mera AI funciona en servidores seguros, cifrado, así que Mera no puede leer tus datos. Tu plan define cuánto lee Mera cada día.",
     "helpModesPhone": "En este teléfono: Mera AI funciona en tu teléfono y la lectura es ilimitada. Las noticias siguen llegando desde los servidores de Mera. Está en Beta.",
-    "helpModesVerify": "«Verificar atestación» comprueba que la nube funciona en hardware seguro auténtico y que tus datos se cifran para ella."
+    "helpModesVerify": "Verificar atestación comprueba la firma de Intel en el informe de la nube, y que tus datos están cifrados con la clave que contiene ese informe.",
+    "attestationGpuNotice": "La respuesta firmada por NVIDIA muestra que GPU reales de NVIDIA respondieron a esta comprobación. No prueba que esas GPU estén conectadas al hardware seguro."
   },
   "manageData": {
     "viewingHistoryModalDescription": "Borra el registro local de los artículos que has abierto. La tarjeta «Publicaciones que has estado leyendo» de la pestaña Fuentes y el historial por publicación volverán a estar vacíos. Las historias que has leído pueden volver a aparecer en tu feed. No se modifica nada más y no se toca ningún dato del servidor, porque los servidores de Mera nunca tuvieron estos datos.",
