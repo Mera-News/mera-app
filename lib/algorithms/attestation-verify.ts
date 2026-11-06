@@ -143,6 +143,8 @@ export interface CheckResult {
   /** Short machine-ish explanation. Safe to display and to log — every value
    *  involved is public attestation data. */
   detail: string;
+  /** `gpu-attestation` only, on a pass. */
+  gpuCount?: number;
 }
 
 export interface VerificationReport {
@@ -477,6 +479,37 @@ export interface ParsedQuote {
   certChain: Uint8Array[];
 }
 
+/** What the quote itself commits to, in hex, for showing on screen. */
+export interface QuoteMeasurements {
+  mrtd: string;
+  rtmr0: string;
+  rtmr1: string;
+  rtmr2: string;
+  rtmr3: string;
+  /** Read from MRCONFIGID, so absent when that isn't dstack's `01 || sha256(app_compose)` shape. */
+  composeHash?: string;
+}
+
+/** Null when the quote can't be parsed. Offsets are absolute in `signedBody`. */
+export function quoteMeasurements(quoteHex: string): QuoteMeasurements | null {
+  let body: Uint8Array;
+  try {
+    body = parseQuote(quoteHex).signedBody;
+  } catch {
+    return null;
+  }
+  const hexAt = (offset: number, length: number) => bytesToHex(body.subarray(offset, offset + length));
+  const rtmr = (index: number) => hexAt(376 + index * 48, 48);
+  return {
+    mrtd: hexAt(184, 48),
+    rtmr0: rtmr(0),
+    rtmr1: rtmr(1),
+    rtmr2: rtmr(2),
+    rtmr3: rtmr(3),
+    ...(body[232] === 1 ? { composeHash: hexAt(233, 32) } : {}),
+  };
+}
+
 export function parseQuote(quoteHex: string): ParsedQuote {
   const q = hexToBytes(quoteHex);
   if (q.length < QUOTE_HEADER_LEN + TD_REPORT_LEN + 4) {
@@ -573,8 +606,8 @@ export interface AttestationInput {
  */
 export function verifyAttestation(input: AttestationInput): VerificationReport {
   const checks: CheckResult[] = [];
-  const add = (id: CheckId, status: CheckStatus, detail: string) =>
-    checks.push({ id, status, detail });
+  const add = (id: CheckId, status: CheckStatus, detail: string, gpuCount?: number) =>
+    checks.push({ id, status, detail, ...(gpuCount === undefined ? {} : { gpuCount }) });
 
   // These two never depend on the quote parsing, so they are computed even if
   // the quote is garbage.
@@ -778,7 +811,7 @@ function addUncheckable(add: (id: CheckId, s: CheckStatus, d: string) => void): 
 }
 
 function addGpuCheck(
-  add: (id: CheckId, s: CheckStatus, d: string) => void,
+  add: (id: CheckId, s: CheckStatus, d: string, gpuCount?: number) => void,
   input: AttestationInput,
 ): void {
   if (input.nvidiaAttestation === undefined || input.nvidiaAttestation === null) {
@@ -791,12 +824,12 @@ function addGpuCheck(
     );
     return;
   }
-  const { status, detail } = verifyNvidiaAttestation(
+  const { status, detail, gpuCount } = verifyNvidiaAttestation(
     input.nvidiaAttestation,
     input.expectedNonce,
     input.now ?? new Date(),
   );
-  add('gpu-attestation', status, detail);
+  add('gpu-attestation', status, detail, gpuCount);
 }
 
 function addDeployedSoftware(
@@ -1079,7 +1112,7 @@ function checkNvidiaAttestation(
   nonce: string,
   now: Date,
   root: NrasCertificate,
-): { status: CheckStatus; detail: string } {
+): { status: 'pass'; detail: string; gpuCount: number } {
   const { tokens, keys } = raw as {
     tokens: [[string, string], Record<string, string>];
     keys: { kid: string; x5c: string[] }[];
@@ -1138,7 +1171,11 @@ function checkNvidiaAttestation(
     expectClaim(claims, 'secboot', true);
     expectClaim(claims, 'dbgstat', 'disabled');
   }
-  return { status: 'pass', detail: `NVIDIA signed a passing result for ${listed.size} GPU(s)` };
+  return {
+    status: 'pass',
+    detail: `NVIDIA signed a passing result for ${listed.size} GPU(s)`,
+    gpuCount: listed.size,
+  };
 }
 
 /**
@@ -1151,7 +1188,7 @@ export function verifyNvidiaAttestation(
   expectedNonce: string | undefined,
   now: Date,
   rootDer: Uint8Array = base64ToBytes(NVIDIA_NRAS_ROOT_CA_DER_B64),
-): { status: CheckStatus; detail: string } {
+): { status: CheckStatus; detail: string; gpuCount?: number } {
   try {
     if (!expectedNonce) throw unsupported('no client nonce to compare');
     return checkNvidiaAttestation(raw, expectedNonce, now, parseNrasCertificate(rootDer));

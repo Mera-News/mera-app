@@ -71,6 +71,12 @@ describe('checkDeployedSoftware: a real NEAR report', () => {
       status: 'pass',
       detail:
         'nearaidev/vllm-proxy-rs@sha256:0be4ee8f40a2, from prod/small-models.yaml at 75d31e6461dc',
+      proxy: {
+        image: 'nearaidev/vllm-proxy-rs@sha256:0be4ee8f40a2bf71a6e2fab1e780ad1a6e738ffb2085553f1ed4b85fcb944207',
+        file: 'prod/small-models.yaml',
+        commit: COMMIT_PROXY_UP,
+        tag: 'v0.0.540',
+      },
     });
     expect(realFetch.mock.calls).toEqual([
       [COMMIT_NEWEST, 'prod/small-models.yaml'],

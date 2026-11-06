@@ -4,8 +4,10 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { gunzipSync } from 'zlib';
 import React from 'react';
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render, within } from '@testing-library/react-native';
+import * as Clipboard from 'expo-clipboard';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import * as e2eeService from '@/lib/e2ee/e2ee-service';
 import { initI18nEn } from '@/test/helpers';
 import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
@@ -299,7 +301,7 @@ describe('AttestationVerificationRow: GPU notice', () => {
     jest.spyOn(e2eeService, 'generateAttestationNonce').mockReturnValue('ab'.repeat(32));
     const view = await tapVerify();
     expect(await view.findByTestId('attestation-scope-notice')).toBeTruthy();
-    expect(view.getByTestId('attestation-check-gpu-attestation')).toBeTruthy();
+    expect(view.getAllByTestId('attestation-check-gpu-attestation')).toHaveLength(2);
     expect(view.queryByTestId('attestation-gpu-notice')).toBeNull();
   });
 
@@ -358,8 +360,12 @@ describe('AttestationVerificationRow: proxy identity', () => {
     const view = await tapVerify();
 
     expect(view.getByTestId('attestation-deployed-software-notice')).toBeTruthy();
-    expect(view.getByText("Proxy matches NEAR's public configuration")).toBeTruthy();
-    expect(fileRequests.map(r => r.commit)).toEqual(Object.keys(files));
+    expect(
+      within(view.getByTestId(`attestation-model-${SMALL_MODEL}`)).getByText(
+        "Proxy matches NEAR's public configuration",
+      ),
+    ).toBeTruthy();
+    expect(new Set(fileRequests.map(r => r.commit))).toEqual(new Set(Object.keys(files)));
     expect(fileRequests.every(r => r.file === 'prod/small-models.yaml')).toBe(true);
     expect(fileRequests.every(r => r.authorization?.startsWith('Bearer '))).toBe(true);
   });
@@ -370,8 +376,8 @@ describe('AttestationVerificationRow: proxy identity', () => {
 
     expect(view.queryByTestId('attestation-deployed-software-notice')).toBeNull();
     expect(
-      view.getByText("Proxy matches NEAR's public configuration · not checked"),
-    ).toBeTruthy();
+      view.getAllByText("Proxy matches NEAR's public configuration · not checked"),
+    ).toHaveLength(2);
   });
 
   it('fetches nothing from a gateway that sends no log', async () => {
@@ -386,5 +392,88 @@ describe('AttestationVerificationRow: proxy identity', () => {
 
     expect(fileRequests).toEqual([]);
     expect(view.queryByTestId('attestation-deployed-software-notice')).toBeNull();
+    expect(view.queryByTestId('attestation-detail-proxyImage')).toBeNull();
+    expect(view.getAllByTestId('attestation-check-detail-deployed-software')[0]).toHaveTextContent(
+      'no deployment log was served',
+      { exact: false },
+    );
+  });
+
+  it('asks for both models, and shows each one its own section and card', async () => {
+    const view = await tapVerify();
+
+    expect(new Set(seen.map(s => s.model))).toEqual(new Set([BIG_MODEL, SMALL_MODEL]));
+    for (const model of [BIG_MODEL, SMALL_MODEL]) {
+      const section = within(view.getByTestId(`attestation-model-${model}`));
+      expect(section.getByText(model)).toBeTruthy();
+      expect(section.getByTestId(`attestation-details-${model}`)).toBeTruthy();
+      expect(section.getByTestId('attestation-detail-nonce')).toHaveTextContent(report.request_nonce, {
+        exact: false,
+      });
+      expect(section.getByTestId('attestation-detail-mrtd')).toBeTruthy();
+    }
+  });
+
+  it('shows the full image digest, file and commit that started the proxy', async () => {
+    const view = await tapVerify();
+    const card = within(view.getByTestId(`attestation-details-${SMALL_MODEL}`));
+
+    expect(card.getByTestId('attestation-detail-proxyImage')).toHaveTextContent(
+      'nearaidev/vllm-proxy-rs@sha256:0be4ee8f40a2bf71a6e2fab1e780ad1a6e738ffb2085553f1ed4b85fcb944207',
+      { exact: false },
+    );
+    expect(card.getByTestId('attestation-detail-composeFile')).toHaveTextContent('prod/small-models.yaml', {
+      exact: false,
+    });
+    expect(card.getByTestId('attestation-detail-composeTag')).toHaveTextContent('v0.0.540', { exact: false });
+    expect(card.getByTestId('attestation-detail-composeCommit')).toHaveTextContent(
+      '75d31e6461dc51465a81ff69203200a51a820d1c',
+      { exact: false },
+    );
+    expect(card.getByTestId('attestation-detail-patchLevel')).toHaveTextContent('not checked', {
+      exact: false,
+    });
+  });
+
+  it('a model that can not be fetched does not hide the other, and the summary stays partial', async () => {
+    server.use(
+      http.get(ROUTE, ({ request }) =>
+        new URL(request.url).searchParams.get('model') === BIG_MODEL
+          ? HttpResponse.json({ error: 'x' }, { status: 503 })
+          : HttpResponse.json({ model_attestations: [report] }),
+      ),
+    );
+    const view = await tapVerify();
+
+    expect(
+      within(view.getByTestId(`attestation-model-${BIG_MODEL}`)).getByTestId('attestation-model-error'),
+    ).toBeTruthy();
+    expect(view.getByTestId(`attestation-details-${SMALL_MODEL}`)).toBeTruthy();
+    expect(view.getByText('Partly verified')).toBeTruthy();
+  });
+
+  it('copies that model\'s card as JSON, and holds no account data', async () => {
+    const copied = jest.spyOn(Clipboard, 'setStringAsync').mockResolvedValue(true);
+    const view = await tapVerify();
+
+    await act(async () => {
+      fireEvent.press(view.getByTestId(`attestation-copy-${SMALL_MODEL}`));
+      await run(Promise.resolve());
+    });
+
+    const json = JSON.parse(copied.mock.calls[0][0]);
+    expect(json.model).toBe(SMALL_MODEL);
+    expect(json.nonce).toBe(report.request_nonce);
+    expect(json.proxyImage).toContain('vllm-proxy-rs@sha256:');
+    expect(json.checks).toHaveLength(12);
+    expect(view.getByText('Copied')).toBeTruthy();
+  });
+
+  it('reads each check\'s status to a screen reader', async () => {
+    const view = await tapVerify();
+    const section = within(view.getByTestId(`attestation-model-${SMALL_MODEL}`));
+
+    expect(section.getByLabelText('Quote signature is valid, passed')).toBeTruthy();
+    expect(section.getByLabelText('Platform patch level is current, not checked')).toBeTruthy();
   });
 });
