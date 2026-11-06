@@ -399,7 +399,8 @@ export interface StarterChip {
 export interface ComposerAction {
   key: string;
   label: string;
-  onPress: () => void;
+  /** Runs on tap. Without it the label goes into the composer, unsent. */
+  onPress?: () => void;
   testID: string;
 }
 
@@ -409,8 +410,6 @@ export type OnboardingPath = 'profile' | 'follow' | 'about';
 export interface OnboardingChatHost {
   /** The reader declined where they live. */
   onDeclineHome: () => void;
-  /** "How Mera handles my data". */
-  onPrivacy: () => void;
 }
 
 /** Set only by the wizard's chat step. A context so CloudPersonaChat, between the

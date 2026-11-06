@@ -42,7 +42,6 @@ import { useTranslation } from 'react-i18next';
 import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { OnboardingChatContext } from '../floating-chat/types';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
-import TutorialModalHost from '../tutorials/TutorialModalHost';
 
 const PERSONA_CONTEXT: ChatContext = { kind: 'persona', onboarding: true };
 
@@ -80,11 +79,7 @@ export default function PersonaUpdateChatStep({
   const [resumeMessages, setResumeMessages] = useState<PersistedMessage[]>([]);
   const [resumeLoadedForId, setResumeLoadedForId] = useState<string | null>(null);
 
-  const [privacyOpen, setPrivacyOpen] = useState(false);
-  const host = useMemo(
-    () => ({ onDeclineHome: () => onDeclineHome?.(), onPrivacy: () => setPrivacyOpen(true) }),
-    [onDeclineHome],
-  );
+  const host = useMemo(() => ({ onDeclineHome: () => onDeclineHome?.() }), [onDeclineHome]);
 
   const hasInitialized = useRef(false);
   const surfaceRef = useRef<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
@@ -223,7 +218,6 @@ export default function PersonaUpdateChatStep({
           composerTrailing={composerTrailing}
         />
       </OnboardingChatContext.Provider>
-      <TutorialModalHost visible={privacyOpen} onClose={() => setPrivacyOpen(false)} chapterId="privacy" />
     </Animated.View>
   );
 }

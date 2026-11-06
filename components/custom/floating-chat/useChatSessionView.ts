@@ -170,7 +170,6 @@ function useOnboardingQuestionnaire({
                 key: 'privacy',
                 label: t('onboarding.howDataHandled'),
                 testID: 'onboarding-chip-privacy',
-                onPress: () => host?.onPrivacy(),
               },
             ]
           : []),

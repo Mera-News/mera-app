@@ -186,16 +186,13 @@ describe('the first question', () => {
 });
 
 describe('How Mera handles my data', () => {
-  it('opens the privacy sheet over the chat and comes back to it with the text intact', async () => {
+  it('fills the composer and sends nothing, so the reader asks in chat', async () => {
     await openWizard();
-    await type('De Pijp');
 
     await press('onboarding-chip-privacy');
-    await screen.findByTestId('tutorial-sheet');
-    await press('tutorial-close');
 
-    await waitFor(() => expect(screen.queryByTestId('tutorial-sheet')).toBeNull());
-    expect(screen.getByTestId('chat-input').props.value).toBe('De Pijp');
+    expect(screen.getByTestId('chat-input').props.value).toBe('How Mera handles my data');
+    expect(screen.queryByTestId('tutorial-sheet')).toBeNull();
     expect(modelCalls()).toHaveLength(0);
     expect(rows()).toEqual([]);
   });
