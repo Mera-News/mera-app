@@ -368,6 +368,8 @@ export interface RawModelAttestation {
   request_nonce?: string;
   intel_quote?: string;
   nvidia_payload?: string;
+  /** Additive; served only on nonce'd replies, and read from `model_attestations[0]` only. */
+  nvidia_attestation?: unknown;
 }
 
 /**
