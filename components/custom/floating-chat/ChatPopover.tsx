@@ -177,8 +177,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     }, []);
 
     const finishClose = useCallback(() => {
-        // Idempotent when the collapse came from the store; required when the
-        // close started from a backdrop/X tap (store still says expanded).
+        // Idempotent: every close now starts by collapsing the store.
         useFloatingChatStore.getState().collapse();
         setPhase((p) => (p === 'closing' ? 'closed' : p));
     }, []);
@@ -290,8 +289,8 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                 },
             );
         } else if (!isExpanded && (phase === 'open' || phase === 'opening')) {
-            // Collapse initiated outside this component (e.g. store.collapse()
-            // from navigation) — still animate back into the bubble.
+            // Every collapse lands here, from requestClose or from the store
+            // (navigation): animate back into the bubble.
             Keyboard.dismiss();
             startClosing();
         }
