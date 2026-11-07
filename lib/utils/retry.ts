@@ -183,3 +183,17 @@ export function createCancellationError(): Error {
 export function isCancellationError(error: unknown): boolean {
   return (error as { name?: string } | undefined)?.name === 'AbortError';
 }
+
+/**
+ * expo/fetch's native cancel: a plain Error, not an AbortError. Kept apart from
+ * isCancellationError, whose name-only check the scoring pipeline's deadline logic reads.
+ * shortcut: English iOS texts only (iOS localizes them, no code exposed); a new wording
+ * needs adding here.
+ */
+export function isNativeFetchCancel(error: unknown): boolean {
+  const message = (error as { message?: unknown } | undefined)?.message;
+  return (
+    typeof message === 'string' &&
+    /^fetch failed: (fetch request has been )?cancell?ed\.?$/i.test(message)
+  );
+}

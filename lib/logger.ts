@@ -111,9 +111,9 @@ export function classifySuppression(
   if (error?.name === 'NoCredentialError') return 'no-credential';
 
   try {
-    const { isUnauthenticatedError, isCancellationError } =
+    const { isUnauthenticatedError, isCancellationError, isNativeFetchCancel } =
       require('./utils/retry') as typeof import('./utils/retry');
-    if (isCancellationError(error)) return 'cancelled';
+    if (isCancellationError(error) || isNativeFetchCancel(error)) return 'cancelled';
     if (isUnauthenticatedError(error)) return 'auth';
   } catch {
     // Predicate unavailable (test harness, partial module graph) — report it.

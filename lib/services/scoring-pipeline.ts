@@ -37,7 +37,7 @@ import {
   prepareE2EEContext,
   rebuildE2EEContext,
 } from '@/lib/e2ee/e2ee-service';
-import { isCancellationError } from '@/lib/utils/retry';
+import { isCancellationError, isNativeFetchCancel } from '@/lib/utils/retry';
 import {
   getOldestUnscoredCreatedAt,
   getScoredDonorRows,
@@ -1886,9 +1886,7 @@ async function checkBatchHeld(
       return err instanceof TaskNoAuthError ? { kind: 'no-auth' } : { kind: 'error' };
     }
     // expo fetch throws a plain Error for a native cancel, and the text is localized, so non-English devices still report.
-    const cancelled =
-      isCancellationError(err) || /^fetch failed: cancell?ed$/i.test((err as Error)?.message ?? '');
-    if (!cancelled) {
+    if (!isCancellationError(err) && !isNativeFetchCancel(err)) {
       logger.captureException(err, {
         tags: { service: 'scoring-pipeline', step: 'fetch', batchId: String(batch.batchId) },
       });

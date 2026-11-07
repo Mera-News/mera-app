@@ -110,6 +110,25 @@ describe('classifySuppression, the backgrounded-timeout class', () => {
   });
 });
 
+describe('classifySuppression, the native fetch cancel', () => {
+  // MERA-APP-9D. expo/fetch throws a plain Error, not an AbortError, when iOS cancels the
+  // socket of a call held across a background suspension.
+  it.each(['fetch failed: Fetch request has been canceled', 'fetch failed: cancelled'])(
+    'suppresses "%s"',
+    (message) => {
+      logger.captureException(new Error(message), {
+        tags: { service: 'topic-sanity-service', method: 'runSanityAudit' },
+      });
+      expect(mockCaptureException).not.toHaveBeenCalled();
+    },
+  );
+
+  it('REPORTS a fetch failure that only mentions a cancel', () => {
+    const err = new Error('fetch failed: upstream cancelled the job: 500');
+    expect(classifySuppression(err)).toBeNull();
+  });
+});
+
 describe('classifySuppression, the no-credential class', () => {
   // Duck-typed on the name so logger never imports lib/e2ee.
   it('suppresses an error named NoCredentialError', () => {
