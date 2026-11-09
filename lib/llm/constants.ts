@@ -2,8 +2,11 @@
 // BIG  — persona-update chat (tool-calling, multi-turn) and quick fact-check synthesis.
 // SMALL — everything else: topic generation, relevance scoring, reason generation.
 
-export const BIG_MODEL = 'Qwen/Qwen3.8-27B';
-export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
+// shortcut: NEAR's Qwen hosts are down (2026-11-09), so both lanes run on DeepSeek,
+// the only NEAR TEE model up that this app can encrypt to. Revert to the Qwen pair
+// (BIG Qwen/Qwen3.8-27B, SMALL Qwen/Qwen3.6-35B-A3B-FP8) once NEAR recovers.
+export const BIG_MODEL = 'deepseek-ai/DeepSeek-V4.1-Flash-1017';
+export const SMALL_MODEL = 'deepseek-ai/DeepSeek-V4.1-Flash-1017';
 
 /**
  * Session-scoped fallback model per primary. When a primary model fails in a
@@ -92,8 +95,8 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  * This map is the single point to change if a different fallback is chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
-  [BIG_MODEL]: 'Qwen/Qwen3.6-35B-A3B-FP8',
-  [SMALL_MODEL]: 'Qwen/Qwen3.8-27B',
+  // shortcut: one entry while both lanes share DeepSeek (keys would collide).
+  [BIG_MODEL]: 'Qwen/Qwen3.8-27B',
 };
 
 /**

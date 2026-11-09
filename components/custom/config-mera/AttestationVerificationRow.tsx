@@ -79,7 +79,8 @@ export const CHECK_LABEL_KEYS = {
   'deployed-software': 'meraProtocol.attestationCheckDeployedSoftware',
 } as const satisfies Record<CheckId, string>;
 
-const MODELS = [BIG_MODEL, SMALL_MODEL];
+// shortcut: deduped while both lanes share one model (see lib/llm/constants.ts).
+const MODELS = [...new Set([BIG_MODEL, SMALL_MODEL])];
 
 type ModelResult =
   | { model: string; report: VerificationReport; details: AttestationDetails }

@@ -19,7 +19,7 @@ import {
 
 /** SMALL_MODEL literal — mirrored from lib/llm/constants.ts (kept out of the
  *  harness import graph on purpose so the harness stays RN-free). */
-const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
+const SMALL_MODEL = 'deepseek-ai/DeepSeek-V4.1-Flash-1017';
 
 export interface ArticlePipelineConfig {
   /** Articles bundled into one batched relevance prompt (cloud). */
