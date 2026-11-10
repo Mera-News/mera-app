@@ -13,7 +13,7 @@
  *  2. The summary line derives from the WEAKEST check, so the header can never
  *     read "Verified" while the expanded list contains something unchecked.
  *
- * Each tap checks both models, and one failing never hides the other. A card under
+ * Each tap checks every model in use (one per provider and model), and one failing never hides the other. A card under
  * each shows the raw values for anyone who came here to check them.
  *
  * FAIL-OPEN: nothing here gates inference. A failure is displayed, not
@@ -39,7 +39,8 @@ import {
 import { checkDeployedSoftware } from '@/lib/algorithms/deployed-software';
 import { attestationDetails, type AttestationDetails } from '@/lib/algorithms/attestation-details';
 import { verifyAttestation, type CheckId, type VerificationReport } from '@/lib/algorithms/attestation-verify';
-import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
+import { PROFILES, PROVIDER_INFO, type Profile } from '@/lib/llm/profiles';
+import { useRoutingState, type RoutingState } from '@/lib/llm/router';
 import logger from '@/lib/logger';
 
 /** Stable display order — most security-relevant first, unchecked items last
@@ -79,11 +80,16 @@ export const CHECK_LABEL_KEYS = {
   'deployed-software': 'meraProtocol.attestationCheckDeployedSoftware',
 } as const satisfies Record<CheckId, string>;
 
-const MODELS = [BIG_MODEL, SMALL_MODEL];
+/** The profiles the lanes use right now, one per (provider, model). */
+function activeProfiles(state: RoutingState): Profile[] {
+  const ids = new Set<string>();
+  for (const { active } of Object.values(state.lanes)) if (active) ids.add(active.id);
+  return [...ids].map(id => PROFILES[id as keyof typeof PROFILES]).filter(Boolean);
+}
 
 type ModelResult =
-  | { model: string; report: VerificationReport; details: AttestationDetails }
-  | { model: string; report: null };
+  | { model: string; providerName: string; report: VerificationReport; details: AttestationDetails }
+  | { model: string; providerName: string; report: null };
 
 type RunState =
   | { phase: 'idle' }
@@ -91,12 +97,13 @@ type RunState =
   | { phase: 'done'; results: ModelResult[] }
   | { phase: 'error' };
 
-async function verifyModel(model: string): Promise<ModelResult> {
+async function verifyModel({ model, provider }: Profile): Promise<ModelResult> {
+  const providerName = PROVIDER_INFO[provider].name;
   try {
     // A fresh nonce per tap — this is what makes the freshness check real,
     // and it deliberately bypasses every cache in the path.
     const nonce = generateAttestationNonce();
-    const { attestation } = await fetchAttestationForVerification(model, nonce);
+    const { attestation } = await fetchAttestationForVerification(model, nonce, provider);
     const quoteHex = attestation.intel_quote ?? '';
     const deployedSoftware = await checkDeployedSoftware(
       {
@@ -126,12 +133,12 @@ async function verifyModel(model: string): Promise<ModelResult> {
       report,
       proxy: deployedSoftware.proxy,
     });
-    return { model, report, details };
+    return { model, providerName, report, details };
   } catch (e) {
     // A fetch failure is NOT a verification failure — showing it as one
     // would train users to ignore red. It gets its own state.
     logger.debug('[attestation] verification fetch failed', { model, error: String(e) });
-    return { model, report: null };
+    return { model, providerName, report: null };
   }
 }
 
@@ -150,7 +157,7 @@ function ModelSection({ result }: { result: ModelResult }) {
   return (
     <VStack space="sm" testID={`attestation-model-${model}`}>
       <Text selectable className="text-ink-2 text-sm font-semibold">
-        {model}
+        {result.providerName} · {model}
       </Text>
       {!report && (
         <Text className="text-ink-3 text-sm" testID="attestation-model-error">
@@ -213,13 +220,14 @@ export function AttestationVerificationRow() {
   const colors = useColors();
   const [expanded, setExpanded] = useState(false);
   const [state, setState] = useState<RunState>({ phase: 'idle' });
+  const routing = useRoutingState();
 
   const run = useCallback(async () => {
     setState({ phase: 'running' });
     setExpanded(true);
-    const results = await Promise.all(MODELS.map(verifyModel));
+    const results = await Promise.all(activeProfiles(routing).map(verifyModel));
     setState(results.some(r => r.report) ? { phase: 'done', results } : { phase: 'error' });
-  }, []);
+  }, [routing]);
 
   const verdict = state.phase === 'done' ? weakestVerdict(state.results) : null;
   const anyPassed = (id: CheckId) =>
@@ -266,7 +274,9 @@ export function AttestationVerificationRow() {
         {expanded && (
           <VStack space="sm" style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             {state.phase === 'done' &&
-              state.results.map(result => <ModelSection key={result.model} result={result} />)}
+              state.results.map(result => (
+                <ModelSection key={`${result.providerName}/${result.model}`} result={result} />
+              ))}
 
             {state.phase === 'done' && (
               <Text className="text-ink-3 text-xs mt-2">

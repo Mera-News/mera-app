@@ -405,7 +405,7 @@ describe('AttestationVerificationRow: proxy identity', () => {
     expect(new Set(seen.map(s => s.model))).toEqual(new Set([BIG_MODEL, SMALL_MODEL]));
     for (const model of [BIG_MODEL, SMALL_MODEL]) {
       const section = within(view.getByTestId(`attestation-model-${model}`));
-      expect(section.getByText(model)).toBeTruthy();
+      expect(section.getByText(`NEAR AI · ${model}`)).toBeTruthy();
       expect(section.getByTestId(`attestation-details-${model}`)).toBeTruthy();
       expect(section.getByTestId('attestation-detail-nonce')).toHaveTextContent(report.request_nonce, {
         exact: false,
