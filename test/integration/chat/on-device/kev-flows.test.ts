@@ -646,6 +646,18 @@ describe('follow-story on Kev', () => {
     expect(toolCalls[0].result).toMatchObject({ defaultTick: fixed.toLowerCase(), phraseRoles: { [phrase]: 'exact', [fixed.toLowerCase()]: 'corrected' } });
   });
 
+  it('a named story: AFM must write at least 3 options; a message naming nothing may still leave them empty', async () => {
+    kevScript = { intent: { follow_a_named_story: 0.9, question_or_other: 0.1 } };
+    writerReply = { reply: 'Pick one below.', options: [{ label: 'The Narrow Event', search: 'event' }] };
+    await turn(follow(), [], 'the <event> in <town>');
+    expect((writes[0].schema.properties.options as { minItems?: number }).minItems).toBe(3);
+
+    kevScript = { intent: { follow_this_story: 0.9, question_or_other: 0.1 } };
+    writerReply = { reply: 'Which story?', options: [] };
+    await turn(follow(), [], 'that one');
+    expect((writes[1].schema.properties.options as { minItems?: number }).minItems).toBeUndefined();
+  });
+
   it('a close call between the two follow readings is not a reason to ask', async () => {
     kevScript = { intent: { follow_this_story: 0.4, follow_a_named_story: 0.4, question_or_other: 0.2 } };
     writerReply = { reply: 'Which story?', options: [] };

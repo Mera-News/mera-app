@@ -27,7 +27,8 @@ import {
 import { languageLine, IDENTITY_LINE } from '../shared';
 import { proposeTrackCalls } from './parse';
 import { followStoryContext, followStoryInstructions, TRACK_OPTION_RULES } from './prompt';
-import { FOLLOW_STORY_SCHEMA, type FollowStoryReply } from './schema';
+import { readerPhrase } from './reader-phrase';
+import { FOLLOW_STORY_SCHEMA, NAMED_STORY_SCHEMA, type FollowStoryReply } from './schema';
 
 export const FOLLOW_KEV_INTENTS = [
   'follow_this_story',
@@ -184,7 +185,7 @@ export async function runFollowKevTurn(
     // The existing writer: its instructions already ask which story while none is named.
     const value = await write<FollowStoryReply & Record<string, unknown>>(ports, trace, {
       system: followStoryInstructions(input.languageName),
-      schema: FOLLOW_STORY_SCHEMA,
+      schema: readerPhrase(chat.subject) ? NAMED_STORY_SCHEMA : FOLLOW_STORY_SCHEMA,
       // No waiting card here: the new options replace it, and shown its labels the
       // writer offered them again instead of the story the user just named.
       context: `Option rules: ${TRACK_OPTION_RULES}\n\n${decisionBlock(line)}\n\n${followStoryContext({ today: input.today, pending: null })}`,
