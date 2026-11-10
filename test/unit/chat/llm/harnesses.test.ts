@@ -67,10 +67,11 @@ describe('harness registry', () => {
     }
   });
 
-  it('holds no byte-identical file in two folders', () => {
+  it('holds no byte-identical prompt file in two folders', () => {
+    // harness.json is exempt: two models can share the same params without copying any prompt.
     const seen = new Map<string, string>();
     for (const f of folders()) {
-      for (const file of filesIn(path.join(ROOT, f))) {
+      for (const file of filesIn(path.join(ROOT, f)).filter((x) => path.basename(x) !== 'harness.json')) {
         const where = `${f}/${file}`;
         const h = sha(fs.readFileSync(path.join(ROOT, f, file)));
         const other = seen.get(h);

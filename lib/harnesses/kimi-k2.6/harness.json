@@ -1,0 +1,5 @@
+{
+  "extends": "cloud-base",
+  "params": {},
+  "lanes": ["chat-tools", "chat-single", "topics"]
+}

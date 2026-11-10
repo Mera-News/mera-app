@@ -121,13 +121,13 @@ describe('a model down mid-turn', () => {
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, BIG_MODEL]);
   });
 
-  it('reaches RedPill third, with its own provider on the key fetch', async () => {
+  it('reaches RedPill Qwen third, with its own provider on the key fetch', async () => {
     useStrictClock('2026-11-10T00:00:00Z');
     const attests = watchAttestations();
     server.use(...mockGateway(() => ({ status: 502, body: { error: 'upstream gone' } })));
     const outcome = fail(chat());
     await drive(outcome);
-    expect(attests.at(-1)).toEqual({ model: REDPILL_MODEL, provider: 'redpill' });
+    expect(attests.find((a) => a.provider === 'redpill')).toEqual({ model: REDPILL_MODEL, provider: 'redpill' });
   });
 });
 
@@ -146,7 +146,7 @@ describe('a lane whose whole chain failed', () => {
     expect(exhaustedEvents()).toHaveLength(1);
     expect(exhaustedEvents()[0][1]).toEqual(expect.objectContaining({
       level: 'error',
-      tags: { lane: 'chat-tools', profile: 'redpill/qwen3.8-27b', failure_class: 'attestation', routing_version: '0' },
+      tags: { lane: 'chat-tools', profile: 'redpill/kimi-k2.6', failure_class: 'attestation', routing_version: '0' },
     }));
     expect(useForYouStore.getState().laneOutage['chat-tools']).toEqual({ since: expect.any(Number) });
   });
@@ -220,7 +220,18 @@ describe('the routing table', () => {
     server.use(http.get('*/v1/routing', () => new HttpResponse('nope', { status: 500 })));
     await refreshRouting();
     expect(routingVersion()).toBe(0);
-    expect(routeLane('scoring').map((p) => p.id)).toEqual(['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b']);
+    expect(routeLane('scoring').map((p) => p.id)).toEqual([
+      'near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b', 'redpill/gemma-4-31b',
+    ]);
+  });
+
+  it('skips a profile the table lists in a lane its harness did not qualify for', () => {
+    applyRoutingTable({
+      version: 12,
+      updatedAt: '2026-11-10T00:00:00Z',
+      lanes: { scoring: { state: 'degraded', profiles: ['redpill/kimi-k2.6', 'redpill/gemma-4-31b'] } },
+    });
+    expect(routeLane('scoring').map((p) => p.id)).toEqual(['redpill/gemma-4-31b']);
   });
 });
 
@@ -252,8 +263,8 @@ describe('mode and call shape', () => {
     expect(routeLane('scoring')).toEqual([]);
     expect(routingSnapshot().lanes.scoring.active).toBeNull();
     useMeraProtocolStore.setState({ chatInCloud: true });
-    expect(routeLane('chat-single').length).toBe(3);
-    expect(routeLane('fact-check').length).toBe(3);
+    expect(routeLane('chat-single').length).toBe(5);
+    expect(routeLane('fact-check').length).toBe(4);
     expect(routeLane('topics')).toEqual([]);
   });
 

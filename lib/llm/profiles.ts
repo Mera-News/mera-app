@@ -8,7 +8,12 @@ import type { Lane } from './router/lanes';
 
 export type Provider = E2EEProvider;
 
-export type ProfileId = 'near/qwen3.8-27b' | 'near/qwen3.6-35b-a3b' | 'redpill/qwen3.8-27b';
+export type ProfileId =
+  | 'near/qwen3.8-27b'
+  | 'near/qwen3.6-35b-a3b'
+  | 'redpill/qwen3.8-27b'
+  | 'redpill/gemma-4-31b'
+  | 'redpill/kimi-k2.6';
 
 export interface Profile {
   id: ProfileId;
@@ -30,21 +35,28 @@ export const PROFILES: Record<ProfileId, Profile> = {
   'near/qwen3.8-27b': profile('near', 'Qwen/Qwen3.8-27B'),
   'near/qwen3.6-35b-a3b': profile('near', 'Qwen/Qwen3.6-35B-A3B-FP8'),
   'redpill/qwen3.8-27b': profile('redpill', 'qwen/qwen3.8-27b'),
+  'redpill/gemma-4-31b': profile('redpill', 'google/gemma-4-31b-it'),
+  'redpill/kimi-k2.6': profile('redpill', 'moonshotai/kimi-k2.6'),
 };
 
 export const isProfileId = (id: string): id is ProfileId => id in PROFILES;
 
-const CHAT_RANKING: ProfileId[] = ['near/qwen3.8-27b', 'near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b'];
-const BULK_RANKING: ProfileId[] = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b'];
+// Qwen first (the prompts are Qwen-tuned), then the models that reached the Qwen bar in the
+// qualification matrix, each only in the lanes it reached it (Kimi missed scoring; untested on
+// fact-check and background). Mirrors mera-inference-gateway src/routing/profiles.ts.
+const CHAT_QWEN: ProfileId[] = ['near/qwen3.8-27b', 'near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b'];
+const BULK_QWEN: ProfileId[] = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b'];
+const GEMMA_KIMI: ProfileId[] = ['redpill/gemma-4-31b', 'redpill/kimi-k2.6'];
+const GEMMA: ProfileId[] = ['redpill/gemma-4-31b'];
 
 /** The gateway's seed ranking, used whenever /v1/routing has not answered. */
 export const DEFAULT_TABLE: Record<Lane, ProfileId[]> = {
-  'chat-tools': CHAT_RANKING,
-  'chat-single': CHAT_RANKING,
-  'fact-check': CHAT_RANKING,
-  scoring: BULK_RANKING,
-  topics: BULK_RANKING,
-  background: BULK_RANKING,
+  'chat-tools': [...CHAT_QWEN, ...GEMMA_KIMI],
+  'chat-single': [...CHAT_QWEN, ...GEMMA_KIMI],
+  'fact-check': [...CHAT_QWEN, ...GEMMA],
+  scoring: [...BULK_QWEN, ...GEMMA],
+  topics: [...BULK_QWEN, ...GEMMA_KIMI],
+  background: [...BULK_QWEN, ...GEMMA],
 };
 
 /**
@@ -64,6 +76,8 @@ export const PROVIDER_INFO: Record<Provider, { name: string; url: string }> = {
 export const MODEL_LABELS: Record<string, string> = {
   'qwen3.8-27b': 'Qwen3.8 27B',
   'qwen3.6-35b-a3b': 'Qwen3.6 35B',
+  'gemma-4-31b': 'Gemma 4 31B',
+  'kimi-k2.6': 'Kimi K2.6',
 };
 
 /** First-token deadline for `lane` on `profile`; a buffered call's whole answer counts as its first token. */

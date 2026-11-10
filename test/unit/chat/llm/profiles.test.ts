@@ -5,20 +5,24 @@ import { DEFAULT_TABLE, PROFILES, MODEL_LABELS, firstTokenDeadlineMs } from '@/l
 import { LANES } from '@/lib/llm/router/lanes';
 
 describe('profiles and the default table', () => {
-  it('ships the three contract profiles with their provider model ids', () => {
+  it('ships the contract profiles plus the qualified RedPill models with their provider model ids', () => {
     expect(Object.fromEntries(Object.values(PROFILES).map((p) => [p.id, [p.provider, p.model, p.harness]]))).toEqual({
       'near/qwen3.8-27b': ['near', 'Qwen/Qwen3.8-27B', 'qwen3.8-27b'],
       'near/qwen3.6-35b-a3b': ['near', 'Qwen/Qwen3.6-35B-A3B-FP8', 'qwen3.6-35b-a3b'],
       'redpill/qwen3.8-27b': ['redpill', 'qwen/qwen3.8-27b', 'qwen3.8-27b'],
+      'redpill/gemma-4-31b': ['redpill', 'google/gemma-4-31b-it', 'gemma-4-31b'],
+      'redpill/kimi-k2.6': ['redpill', 'moonshotai/kimi-k2.6', 'kimi-k2.6'],
     });
   });
 
   it('ranks every lane per the contract, every profile once', () => {
-    const chat = ['near/qwen3.8-27b', 'near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b'];
-    const bulk = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b'];
+    // Same lists as mera-inference-gateway src/routing/profiles.ts LANES.
+    const chat = ['near/qwen3.8-27b', 'near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b', 'redpill/gemma-4-31b'];
+    const bulk = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b', 'redpill/gemma-4-31b'];
+    const kimi = 'redpill/kimi-k2.6';
     expect(DEFAULT_TABLE).toEqual({
-      'chat-tools': chat, 'chat-single': chat, 'fact-check': chat,
-      scoring: bulk, topics: bulk, background: bulk,
+      'chat-tools': [...chat, kimi], 'chat-single': [...chat, kimi], 'fact-check': chat,
+      scoring: bulk, topics: [...bulk, kimi], background: bulk,
     });
     for (const lane of LANES) expect(new Set(DEFAULT_TABLE[lane]).size).toBe(DEFAULT_TABLE[lane].length);
   });

@@ -40,6 +40,7 @@ import {
   type Provider,
 } from '../profiles';
 import { CHAT_LANES, LANES, type Lane } from './lanes';
+import { loadHarness } from '../../harnesses';
 
 export type { Lane } from './lanes';
 export { LANES, CHAT_LANES } from './lanes';
@@ -133,7 +134,11 @@ export function routeLane(lane: Lane, opts: RouteOptions = {}): Profile[] {
   const now = Date.now();
   const healthy = ranked.filter((id) => !isMarked(id, now));
   const sick = ranked.filter((id) => isMarked(id, now));
-  return [...healthy, ...sick].map((id) => PROFILES[id]).filter((p) => !opts.batch || servesBatch(p));
+  return [...healthy, ...sick]
+    .map((id) => PROFILES[id])
+    // A harness names the lanes its model qualified for; a table listing it elsewhere is ignored.
+    .filter((p) => loadHarness(p.harness).lanes.includes(lane))
+    .filter((p) => !opts.batch || servesBatch(p));
 }
 
 function setLaneOutage(lane: Lane, info: { since: number } | null): void {
