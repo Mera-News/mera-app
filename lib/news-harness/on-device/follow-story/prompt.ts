@@ -1,16 +1,14 @@
 import { IDENTITY_LINE, languageLine, renderPrompt, type ChatTurn } from '../shared';
 import { MAX_OPTION_LABEL_WORDS, MAX_TRACK_SEARCH_WORDS } from './schema';
+import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { render } from '../../../harnesses/template';
 
 /** How every on-device track option is written, shared with the article chat. */
-export const TRACK_OPTION_RULES = `Each option has a label, the story name the user sees (${MAX_OPTION_LABEL_WORDS} words or fewer, Title Case), and a search, a query of ${MAX_TRACK_SEARCH_WORDS} words or fewer naming the people, places and organisations of the story, keeping their capitals. Order them from the narrow event to the broad ongoing story. Write label and search in English, whatever language the reply is in: future articles are matched in English. Never name a year, season or edition that has already ended; today's date is in the context. Never write the word scope.`;
+export const TRACK_OPTION_RULES = render(DEVICE_BASE_SLOTS["follow-story/track-option-rules"], { MAX_OPTION_LABEL_WORDS, MAX_TRACK_SEARCH_WORDS });
 
 export function followStoryInstructions(languageName?: string): string {
-  return `${IDENTITY_LINE}
-The user wants to follow a news story. There is no article, only what they write.
-If they have not named a story yet, ask in one short sentence which story, and leave options empty.
-Once they name one, give 3 or 4 options, following the option rules in the prompt. The first option is their own words with only spelling, capitals and grammar fixed, in their language, any length. Set reply to one short line asking them to pick a story below. Use only names the user wrote.
-If they ask for something other than following a story, say this chat only starts following a story.
-${languageLine(languageName)}`;
+  const language = languageLine(languageName);
+  return render(DEVICE_BASE_SLOTS["follow-story/instructions"], { IDENTITY_LINE, language });
 }
 
 export interface FollowStoryContext {

@@ -2,10 +2,9 @@
 // story, from its headline and description only (the body is paywalled and
 // never fetched). Plain text, or a bare SKIP.
 import { asUntrusted } from '../../prompts/untrusted-text';
+import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
 
-export const SUBSCRIPTION_READ_SYSTEM = `You say how one news outlet covered a story. You get the headline and a short description from an outlet the reader subscribes to. You have not seen the full article, which is behind a paywall.
-Write one or two plain sentences on what this outlet emphasises about the story. Never claim or imply you read the full article. Never add a detail that is not in the text you were given. No preamble, quotation marks or headings.
-If the text is too thin to say anything useful, reply with exactly: SKIP`;
+export const SUBSCRIPTION_READ_SYSTEM = DEVICE_BASE_SLOTS["subscription-read/subscription-read-system"];
 
 export interface SubscriptionReadInput {
   anchorTitle: string | null;

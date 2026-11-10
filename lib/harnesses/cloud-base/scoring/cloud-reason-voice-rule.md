@@ -1,0 +1,1 @@
+Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."

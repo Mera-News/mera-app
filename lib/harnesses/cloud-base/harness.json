@@ -26,17 +26,5 @@
     "scoring",
     "topics",
     "background"
-  ],
-  "slots": {
-    "routerPrompt": "lib/mera-harness#buildRouterPrompt",
-    "factRemovedPrompt": "lib/mera-harness#factRemovedPrompt",
-    "personaStatic": "lib/news-harness/prompts/persona-prompts#buildPersonaUpdateStaticPrompt",
-    "topicGen": "lib/news-harness/prompts/persona-prompts#CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT",
-    "topicCombo": "lib/news-harness/prompts/persona-prompts#COMBO_PASS_TOPIC_SYSTEM_PROMPT",
-    "topicSanity": "lib/news-harness/prompts/persona-prompts#TOPIC_SANITY_SYSTEM_PROMPT",
-    "relevance": "lib/news-harness/prompts/prompts#CLOUD_RELEVANCE_SYSTEM_PROMPT",
-    "reason": "lib/news-harness/prompts/prompts#CLOUD_REASON_SYSTEM_PROMPT",
-    "headlineRelevance": "lib/news-harness/prompts/prompts#CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT",
-    "headlineReason": "lib/news-harness/prompts/prompts#CLOUD_HEADLINE_REASON_SYSTEM_PROMPT"
-  }
+  ]
 }

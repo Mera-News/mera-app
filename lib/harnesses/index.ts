@@ -45,7 +45,6 @@ export function loadHarness(folder: string): Harness {
     chain,
     params,
     lanes: files.reduce<Harness['lanes']>((acc, f) => f.lanes ?? acc, []),
-    slots: files.reduce<Record<string, string>>((acc, f) => ({ ...acc, ...f.slots }), {}),
   };
   resolved.set(folder, harness);
   return harness;

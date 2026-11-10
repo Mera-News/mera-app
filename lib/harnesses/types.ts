@@ -1,6 +1,7 @@
 // A harness is everything a model needs beyond its id: wire params and the prompt slots.
 // One folder per model (an implementation) extends one base (cloud-base, device-base) and holds
 // only what differs. mapping.json at the root names the folder for each `<provider>:<model id>`.
+// The slots are the folder's .md files, not part of harness.json (slots.ts, generate.ts).
 import type { Lane } from '../llm/router/lanes';
 
 export interface HarnessParams {
@@ -23,8 +24,6 @@ export interface HarnessFile {
   extends: string | null;
   params: Partial<HarnessParams>;
   lanes?: Lane[];
-  /** Slot name -> `<module path>#<export>`, resolved by slots.ts. Bases only, tonight. */
-  slots?: Record<string, string>;
 }
 
 /** A harness with its `extends` chain applied, base first and overrides last. */
@@ -34,5 +33,4 @@ export interface Harness {
   chain: string[];
   params: HarnessParams;
   lanes: Lane[];
-  slots: Record<string, string>;
 }

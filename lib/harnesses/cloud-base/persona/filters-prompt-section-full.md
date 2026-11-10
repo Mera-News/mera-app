@@ -1,0 +1,4 @@
+
+- FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in ENGLISH, the user's OWN words, never an invented category name; suppressionStrength 0.9 = never show it, 0.5 = less of it}. "Show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS in <context>} — never invent an id.
+- SOURCES: "more from X" → set_publication_pref boost, "less from X" or "hide X" → mute {publicationId: X as the user named it}; "prefer X sources" → set_source_scope_pref boost {scopeCountry: country name in English}.
+- NEVER apply a filter directly: stage ONE proposeChanges, then applyProposal when the user confirms (yes / ok, any language) or cancelProposal when they decline. While a PENDING PROPOSAL is in <context> and they say anything else, leave it pending and reply normally.
