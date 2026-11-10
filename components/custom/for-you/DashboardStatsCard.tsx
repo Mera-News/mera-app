@@ -39,6 +39,7 @@ import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, ReadHoldFooter
 import { markSizeFor, markTone, type MarkTone } from './card-state';
 import { useFeedIssue, useStatsCardLead } from './use-stats-card-lead';
 import CardRow, { CARD_RADIUS, CARD_ROW_PAD, CARD_TEXT_END, CARD_TEXT_START } from '@/components/custom/feed/CardRow';
+import { OutageHelp } from './OutageHelp';
 import ReadHoldUpgradeButton, { useUpgradeFrom } from './ReadHoldUpgradeButton';
 
 
@@ -153,7 +154,7 @@ export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactE
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {
     const { t } = useTranslation();
-    const { mode, articleCount, state, zeroText, stateLabel, processing, gap, upsell } = useStatsCardLead();
+    const { mode, outageLanes, articleCount, state, zeroText, stateLabel, processing, gap, upsell } = useStatsCardLead();
     // Level 1 owns the hold's upgrade (owner): the gap bar and the one button.
     const upgradeFrom = useUpgradeFrom();
     const expanded = useFeedStatusCard((s) => s.expanded);
@@ -175,7 +176,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
     const details = (
         <ExpandingDetails open={expanded}>
             <FeedStatusDetails mode={mode} />
-            {processing ? <AnalysingProgress /> : null}
+            {processing && state !== 'outage' ? <AnalysingProgress /> : null}
             <FeedStatusActions mode={mode} />
             {/* The reset time is the panel's LAST line in the hold, so it is never lost. */}
             {mode === 'limited' ? <ReadHoldFooter /> : null}
@@ -230,7 +231,12 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                                 style={StyleSheet.absoluteFill}
                             />
                         </View>
-                        {gap || upgradeFrom ? (
+                        {state === 'outage' ? (
+                            <View style={styles.holdBlock}>
+                                <OutageHelp lanes={outageLanes} />
+                            </View>
+                        ) : null}
+                        {state !== 'outage' && (gap || upgradeFrom) ? (
                             <View style={styles.holdBlock} testID="feed-status-hold-block">
                                 {gap && zeroText ? <GapBar read={gap.read} waiting={gap.waiting} label={zeroText} /> : null}
                                 {upsell ? (

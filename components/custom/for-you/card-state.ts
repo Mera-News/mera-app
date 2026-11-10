@@ -2,6 +2,7 @@
 // (owner): ONE lead row (Mera mark, sentence, ⌄) for every state, so the card
 // has one layout. RN-free, so it is tested alone.
 //
+//  - 'outage'   a model lane is down (route1): ranks above everything
 //  - 'limited'  the read hold: when Mera reads again
 //  - 'error'    scoring failed: what went wrong (the old red status icon)
 //  - 'syncFailed'  a foreground refresh failed or paused offline: the line
@@ -17,6 +18,7 @@
 // run is in flight (the statsSync* sentence speaks) or with no facts (the
 // no-facts card owns the Feed).
 
+import type { Lane } from '@/lib/llm/router/lanes';
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
 import type { FeedSyncState, SyncErrorCode } from '@/lib/scheduler/feed-sync/feed-sync-types';
 
@@ -67,7 +69,31 @@ export function readHoldGap(found: number, read: number, waiting: number | null)
   return found > 0 && waiting != null && waiting > 0 ? { read: Math.max(0, read), waiting } : null;
 }
 
-export type CardState = 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';
+/** The lanes whose outage the card names (fact-check and background fail quietly). */
+export type OutageLane = Extract<Lane, 'scoring' | 'chat-tools' | 'chat-single' | 'topics'>;
+const OUTAGE_LANES: readonly OutageLane[] = ['scoring', 'chat-tools', 'chat-single', 'topics'];
+
+/** The down lanes the reader's setup actually uses: the cloud runs all four;
+ *  On this phone shows none, except chat when chat runs in the cloud. */
+export function outageLanesOf(
+  down: Partial<Record<Lane, unknown>>,
+  mode: { readonly onDevice: boolean; readonly chatInCloud: boolean },
+): OutageLane[] {
+  const used = OUTAGE_LANES.filter((l) => (mode.onDevice ? mode.chatInCloud && l.startsWith('chat') : true));
+  return used.filter((l) => down[l]);
+}
+
+export type OutageLine = 'laneScoring' | 'laneChat' | 'laneTopics';
+/** The "Paused" lines' keys (feed.outage.<key>), once each, in a fixed order. */
+export function outageLineKeys(lanes: readonly OutageLane[]): OutageLine[] {
+  const out: OutageLine[] = [];
+  if (lanes.includes('scoring')) out.push('laneScoring');
+  if (lanes.some((l) => l.startsWith('chat'))) out.push('laneChat');
+  if (lanes.includes('topics')) out.push('laneTopics');
+  return out;
+}
+
+export type CardState = 'outage' | 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';
 
 export interface CardStateInput {
   readonly mode: FeedStatusMode;
@@ -77,9 +103,12 @@ export interface CardStateInput {
   readonly analysedCount: number;
   readonly relevantCount: number;
   readonly syncFailure: SyncFailure | null;
+  /** Down lanes that apply to this reader (`outageLanesOf`); absent means none. */
+  readonly outageLanes?: readonly OutageLane[];
 }
 
 export function cardState(i: CardStateInput): CardState | null {
+  if (i.outageLanes?.length) return 'outage';
   if (i.mode === 'limited') return 'limited';
   if (i.mode === 'error') return 'error';
   if (syncFailureKey(i.syncFailure)) return 'syncFailed';
@@ -98,8 +127,8 @@ export function cardState(i: CardStateInput): CardState | null {
 }
 
 /** Whether the Feed has an issue to lead with: the limit, a scoring error, or a failed refresh that has a line. */
-export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null): boolean {
-  return mode === 'limited' || mode === 'error' || syncFailureKey(failure) !== null;
+export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null, outage = false): boolean {
+  return outage || mode === 'limited' || mode === 'error' || syncFailureKey(failure) !== null;
 }
 
 /** The mark's colour (owner): orange (`accentMark`) when Mera is stuck
@@ -107,7 +136,7 @@ export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null): boo
  *  theme's ink in every other state. */
 export type MarkTone = 'alert' | 'normal';
 export function markTone(state: CardState | null): MarkTone {
-  return state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' || state === 'syncFailed' ? 'alert' : 'normal';
+  return state === 'outage' || state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' || state === 'syncFailed' ? 'alert' : 'normal';
 }
 
 /** The lead row's Mera mark, by the sentence block's height (owner: about

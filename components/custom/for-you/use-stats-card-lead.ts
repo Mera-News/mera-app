@@ -1,9 +1,12 @@
+import React from 'react';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useForYouScoringError, useForYouSyncStatusMessage } from '@/lib/stores/selectors';
+import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useChatInCloud, useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { formatCount } from '@/lib/algorithms/format-count';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +14,7 @@ import { useReadHold, resetDayWord } from '@/lib/subscription/read-hold';
 import { useNotReadWaiting } from './feed-status-card';
 import { limitUnlockTime } from './FeedStatusDetails';
 import { a11yStateKey } from './status-ink';
-import { cardState, hasIssue, joinClauses, readHoldGap, readHoldSentenceKey, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
+import { cardState, hasIssue, joinClauses, outageLanesOf, readHoldGap, readHoldSentenceKey, syncFailureKey, syncFailureOf, type CardState, type SyncFailure } from './card-state';
 import { useUpgradeFrom } from './ReadHoldUpgradeButton';
 
 /** A state's lead sentence, plain text (owner: no links; the reader finds
@@ -26,6 +29,7 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
     const waiting = useNotReadWaiting();
     const scoringError = useForYouScoringError();
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
+    if (kind === 'outage') return t('feed.outage.title');
     if (kind === 'limited') {
         const count = waiting ?? 0;
         const day = resetDayWord(resetAt ?? Date.now());
@@ -63,9 +67,18 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
     return null;
 }
 
+/** The down lanes this reader's setup uses (cloud: all four; On this phone: chat only when chat runs in the cloud). */
+export function useOutageLanes() {
+    const down = useForYouStore((s) => s.laneOutage);
+    const onDevice = useIsOnDeviceProcessing();
+    const chatInCloud = useChatInCloud();
+    return React.useMemo(() => outageLanesOf(down, { onDevice, chatInCloud }), [down, onDevice, chatInCloud]);
+}
+
 /** Whether the Feed has an issue (see `hasIssue`): the card shows and the first-sync scene gives way. */
 export function useFeedIssue(): boolean {
-    return hasIssue(useFeedStatusMode(), syncFailureOf(useForYouSyncStatusMessage()));
+    const outage = useOutageLanes().length > 0;
+    return hasIssue(useFeedStatusMode(), syncFailureOf(useForYouSyncStatusMessage()), outage);
 }
 
 /** The counts card's lead line: the mode, the counts, the card state and the
@@ -81,7 +94,8 @@ export function useStatsCardLead() {
     const noFacts = useHasFacts() === false;
     const offline = useIsConnected() === false;
     const syncFailure = syncFailureOf(useForYouSyncStatusMessage());
-    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount, syncFailure });
+    const outageLanes = useOutageLanes();
+    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount, syncFailure, outageLanes });
     const zeroText = useStateText(state, syncFailure);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
@@ -95,5 +109,5 @@ export function useStatsCardLead() {
         state === 'limited' && upgradeFrom !== null && waiting != null && waiting > 0
             ? t('feed.readHold.upsell', { count: waiting, formatted: formatCount(waiting, appLanguage) })
             : null;
-    return { mode, articleCount, state, zeroText, stateLabel, processing, gap, upsell };
+    return { mode, outageLanes, articleCount, state, zeroText, stateLabel, processing, gap, upsell };
 }

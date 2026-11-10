@@ -1,5 +1,5 @@
 import type { FeedSyncState, SyncErrorCode } from '@/lib/scheduler/feed-sync/feed-sync-types';
-import { cardState, hasIssue, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, readHoldGap, readHoldSentenceKey, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
+import { cardState, hasIssue, outageLanesOf, outageLineKeys, joinClauses, MARK_MAX, MARK_MIN, markSizeFor, markTone, readHoldGap, readHoldSentenceKey, syncFailureKey, type CardStateInput, type SyncFailure } from '@/components/custom/for-you/card-state';
 
 const base: CardStateInput = {
   mode: 'idle',
@@ -164,5 +164,28 @@ describe('readHoldGap', () => {
     expect(readHoldGap(0, 0, 80)).toBeNull();
     expect(readHoldGap(120, 40, null)).toBeNull();
     expect(readHoldGap(120, 40, 0)).toBeNull();
+  });
+});
+
+describe('outage', () => {
+  it('ranks above the limit, an error and a failed refresh', () => {
+    const failure = failed('scoring');
+    for (const mode of ['limited', 'error', 'idle'] as const)
+      expect(cardState({ ...base, mode, syncFailure: failure, outageLanes: ['scoring'] })).toBe('outage');
+    expect(cardState({ ...base, outageLanes: [] })).toBeNull();
+  });
+  it('is an issue and an alert mark', () => {
+    expect(hasIssue('idle', null, true)).toBe(true);
+    expect(markTone('outage')).toBe('alert');
+  });
+  it('cloud mode uses all four lanes, On this phone none, chat-in-cloud only chat', () => {
+    const down = { scoring: { since: 1 }, topics: { since: 1 }, 'chat-single': { since: 1 }, background: { since: 1 } };
+    expect(outageLanesOf(down, { onDevice: false, chatInCloud: false })).toEqual(['scoring', 'chat-single', 'topics']);
+    expect(outageLanesOf(down, { onDevice: true, chatInCloud: false })).toEqual([]);
+    expect(outageLanesOf(down, { onDevice: true, chatInCloud: true })).toEqual(['chat-single']);
+  });
+  it('names each paused kind once', () => {
+    expect(outageLineKeys(['chat-tools', 'chat-single', 'scoring'])).toEqual(['laneScoring', 'laneChat']);
+    expect(outageLineKeys(['topics'])).toEqual(['laneTopics']);
   });
 });
