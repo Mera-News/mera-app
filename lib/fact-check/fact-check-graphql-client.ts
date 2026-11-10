@@ -255,7 +255,7 @@ export async function requestFactCheck(
                 articleId,
                 suggestionId: keep && 'suggestion' in keep ? keep.suggestion._id : null,
                 title: articleTitle ?? null,
-            });
+            }, Date.now(), explicit);
             ensureAskedFactCheckPoller();
         }
         const outcome = await fetchFactCheck(articleId);
@@ -323,7 +323,7 @@ export async function requestFactCheckAgain(
 ): Promise<'asked' | 'gone' | 'not-asked'> {
     if (recheckUnsupported) return 'not-asked';
     try {
-        await recordFactCheckAsked({ articleId, suggestionId: null, title: articleTitle ?? null });
+        await recordFactCheckAsked({ articleId, suggestionId: null, title: articleTitle ?? null }, Date.now(), true);
         const { data } = await client.mutate<{ requestFactCheck: FactCheckRow | null }>({
             mutation: REQUEST_FACT_CHECK_AGAIN,
             variables: { articleId },

@@ -311,6 +311,24 @@ describe('useFactCheck: a failed first ask', () => {
     expect(await storedFor('a1')).toEqual([]);
   }
 
+  test('a re-ask that keeps failing waits a poll interval, never re-asks in a loop', async () => {
+    // The poll's own re-ask records the ask again; if that woke the panel, each failure polled
+    // at once (seen on a simulator: "Maximum update depth exceeded", a request per render).
+    await failedFirstAsk();
+    // Every re-ask errors, so no local row is ever written: the state the simulator hit.
+    let asks = 0;
+    server.events.on('request:start', ({ request }) => {
+      void request.clone().text().then((body) => {
+        if (body.includes(ASK_OP)) asks += 1;
+      });
+    });
+
+    await renderHook(() => useFactCheck('a1'));
+    await flush(200);
+
+    expect(asks).toBe(1);
+  });
+
   test('the panel poll re-asks an article whose first ask failed', async () => {
     await failedFirstAsk();
     const wire = serveChecks({ ask: () => pendingRow() });

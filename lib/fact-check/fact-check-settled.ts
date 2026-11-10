@@ -86,13 +86,20 @@ export function onFactCheckAsked(listener: (articleId: string) => void): () => v
   };
 }
 
-/** Records an explicit ask. Reached only through `requestFactCheck`. */
-export function recordFactCheckAsked(entry: Omit<AskedFactCheck, 'askedAt'>, now = Date.now()): Promise<void> {
+/** Records an explicit ask. Reached only through `requestFactCheck`. Listeners hear a first ask
+ *  or a reader's own tap, never the panel poll's re-ask: that woke the panel into polling again at
+ *  once, a request per render while the server returned no row. */
+export function recordFactCheckAsked(
+  entry: Omit<AskedFactCheck, 'askedAt'>,
+  now = Date.now(),
+  explicit = false,
+): Promise<void> {
   return serial(async () => {
     const map = await readAsked();
+    const wake = explicit || !map[entry.articleId];
     map[entry.articleId] = { ...entry, askedAt: now };
     await writeAsked(map);
-    for (const listener of askListeners) listener(entry.articleId);
+    if (wake) for (const listener of askListeners) listener(entry.articleId);
   });
 }
 
