@@ -46,9 +46,10 @@ async function renderOpen() {
 }
 
 describe('ProviderCard', () => {
-  it('opens minimised: one Provider row naming the provider, no links or models until tapped', async () => {
+  it('opens minimised: one bare Provider row, no provider, links or models until tapped', async () => {
     const view = await render(<ProviderCard />);
-    expect(view.getByTestId('provider-card-toggle')).toHaveTextContent('NEAR AI', { exact: false });
+    expect(view.getByText('Provider')).toBeTruthy();
+    expect(view.queryByText('NEAR AI')).toBeNull();
     expect(view.queryByLabelText('Open NEAR AI website')).toBeNull();
     expect(view.queryByTestId('provider-lane-chat-tools')).toBeNull();
     await fireEvent.press(view.getByTestId('provider-card-toggle'));
@@ -68,8 +69,7 @@ describe('ProviderCard', () => {
   it('marks RedPill as the backup while a lane fails over to it', async () => {
     mockState.lanes['chat-tools'] = lane(red, 'degraded');
     const view = await renderOpen();
-    expect(view.getByTestId('provider-card-toggle')).toHaveTextContent(/NEAR AI/);
-    expect(view.getByTestId('provider-card-toggle')).toHaveTextContent(/RedPill/);
+    expect(view.getByLabelText('Open NEAR AI website')).toBeTruthy();
     expect(view.getByLabelText('Open RedPill website')).toBeTruthy();
     expect(view.getByText('(backup)')).toBeTruthy();
   });

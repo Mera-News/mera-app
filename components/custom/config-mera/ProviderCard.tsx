@@ -1,6 +1,7 @@
 // Private cloud tab: which providers the lanes use right now and which model each lane runs.
-// Reads the router's live state, so a failover shows here as it happens. Opens minimised (owner):
-// one Provider row naming who serves the lanes; a tap shows the links and the model per lane.
+// Reads the router's live state, so a failover shows here as it happens. Layered (owner): closed it is
+// one bare Provider row with no data, so a reader who won't follow it sees nothing technical; a tap
+// shows the links and the model per lane.
 import React, { useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -37,14 +38,12 @@ export function ProviderCard() {
 
   const [open, setOpen] = useState(false);
   if (shown.length === 0) return null;
-  const names = [...providers.values()].map((p) => p.name).join(', ');
   return (
     <View testID="mera-protocol-provider-card">
       <Group>
         <Row
           testID="provider-card-toggle"
           title={t('meraProtocol.providers.title')}
-          value={names || t('meraProtocol.providers.paused')}
           onPress={() => setOpen((o) => !o)}
           hideChevron
           expanded={open}
