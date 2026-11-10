@@ -8,6 +8,7 @@
 
 import { Directory, File, Paths } from 'expo-file-system';
 import * as RNFS from '@dr.pogodin/react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LegacyFileSystem from 'expo-file-system/legacy';
 import {
   addNativeLogListener,
@@ -58,6 +59,7 @@ export class LocalModelsOffError extends Error {
 let llamaContext: LlamaContext | null = null;
 let currentModelState: ModelState | null = null;
 let activeDownload: LegacyFileSystem.DownloadResumable | null = null;
+let activeDownloadModelId: string | null = null;
 
 const MODELS_DIR_NAME = 'mera-models';
 const MANIFEST_FILE_NAME = 'manifest.json';
@@ -105,6 +107,56 @@ async function hasGgufMagic(file: File): Promise<boolean> {
 // Download
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Resume data (an interrupted download continues instead of starting over)
+// ---------------------------------------------------------------------------
+
+const resumeKey = (modelId: string) => `mera_model_resume:${modelId}`;
+
+async function readResumeData(modelId: string): Promise<string | undefined> {
+  try {
+    return (await AsyncStorage.getItem(resumeKey(modelId))) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function clearResumeData(modelId: string): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(resumeKey(modelId));
+  } catch {
+    // best effort: a stale key is dropped at the next start when its file is gone
+  }
+}
+
+/**
+ * After a network failure: ask the task for its resume data and store it. With
+ * none (expo only has it after a pause, which a dead task may not give) the
+ * partial is deleted, since up to 2.7 GB of unusable bytes helps nobody.
+ */
+async function keepForResume(
+  resumable: LegacyFileSystem.DownloadResumable,
+  modelId: string,
+  file: File,
+): Promise<void> {
+  try {
+    await resumable.pauseAsync();
+  } catch {
+    // a failed task cannot always pause; savable() may still hold data
+  }
+  const data = resumable.savable().resumeData;
+  if (data && file.exists) {
+    try {
+      await AsyncStorage.setItem(resumeKey(modelId), data);
+      return;
+    } catch {
+      // fall through to a clean slate
+    }
+  }
+  if (file.exists) file.delete();
+  await clearResumeData(modelId);
+}
+
 /**
  * Downloads one model file in an iOS background URLSession (expo-file-system),
  * so it survives backgrounding, then checks it before writing the manifest: the
@@ -123,41 +175,59 @@ export async function downloadBaseModel(
   const modelFile = getModelFile(config.modelId);
   logger.info('[ModelManager] Starting download', { modelUrl: config.modelUrl });
 
+  // A saved resume point only counts while its partial file is still there.
+  let resumeData = modelFile.exists ? await readResumeData(config.modelId) : undefined;
+  if (!resumeData) await clearResumeData(config.modelId);
+
   // Native sends an event per write; only whole-percent changes reach JS state.
   let lastWholePercent = -1;
-  const resumable = LegacyFileSystem.createDownloadResumable(
-    config.modelUrl,
-    modelFile.uri,
-    { sessionType: LegacyFileSystem.FileSystemSessionType.BACKGROUND },
-    (p) => {
-      if (p.totalBytesExpectedToWrite <= 0) return;
-      const pct = (p.totalBytesWritten / p.totalBytesExpectedToWrite) * 100;
-      const whole = Math.floor(pct);
-      if (whole === lastWholePercent) return;
-      lastWholePercent = whole;
-      onProgress?.({
-        bytesWritten: p.totalBytesWritten,
-        contentLength: p.totalBytesExpectedToWrite,
-        progress: pct,
-      });
-    },
-  );
-  activeDownload = resumable;
+  const onTick = (p: LegacyFileSystem.DownloadProgressData) => {
+    if (p.totalBytesExpectedToWrite <= 0) return;
+    const pct = (p.totalBytesWritten / p.totalBytesExpectedToWrite) * 100;
+    const whole = Math.floor(pct);
+    if (whole === lastWholePercent) return;
+    lastWholePercent = whole;
+    onProgress?.({
+      bytesWritten: p.totalBytesWritten,
+      contentLength: p.totalBytesExpectedToWrite,
+      progress: pct,
+    });
+  };
 
-  try {
-    const result = await resumable.downloadAsync();
+  for (;;) {
+    const resumable = LegacyFileSystem.createDownloadResumable(
+      config.modelUrl,
+      modelFile.uri,
+      { sessionType: LegacyFileSystem.FileSystemSessionType.BACKGROUND },
+      onTick,
+      resumeData,
+    );
+    activeDownload = resumable;
+    activeDownloadModelId = config.modelId;
+    let result: LegacyFileSystem.FileSystemDownloadResult | undefined;
+    try {
+      result = await (resumeData ? resumable.resumeAsync() : resumable.downloadAsync());
+    } catch (error) {
+      // Still the active download means nobody cancelled it: an interruption, so keep the partial.
+      if (activeDownload === resumable) await keepForResume(resumable, config.modelId, modelFile);
+      throw error;
+    } finally {
+      if (activeDownload === resumable) activeDownload = null;
+    }
     if (!result) {
-      // downloadAsync resolves undefined when the task was cancelled.
+      // The task resolves undefined when it was cancelled.
       throw new Error('Download has been aborted');
     }
     logger.info('[ModelManager] Download finished', { status: result.status });
-    if (result.status !== 200) {
-      if (modelFile.exists) modelFile.delete();
-      throw new Error(`Download failed with HTTP status ${result.status}`);
-    }
-  } finally {
-    if (activeDownload === resumable) activeDownload = null;
+    // 206 is a resumed transfer finishing; the size and GGUF checks below are the integrity gate.
+    if (result.status === 200 || result.status === 206) break;
+    // The server refused (the error body is now in the file): never resume from it.
+    if (modelFile.exists) modelFile.delete();
+    await clearResumeData(config.modelId);
+    if (!resumeData) throw new Error(`Download failed with HTTP status ${result.status}`);
+    resumeData = undefined; // the resume was rejected: one fresh download
   }
+  await clearResumeData(config.modelId);
 
   const info = await modelFile.info();
   const sizeBytes = info.size ?? 0;
@@ -449,8 +519,15 @@ export function purgeStaleModels(): Promise<void> {
 /** Cancels the active download if one is in progress. */
 export function cancelActiveDownload(): void {
   const download = activeDownload;
+  const modelId = activeDownloadModelId;
   activeDownload = null;
   download?.cancelAsync().catch(() => {});
+  if (download && modelId) {
+    // Cancel means start over next time: no partial, no resume data.
+    const file = getModelFile(modelId);
+    if (file.exists) file.delete();
+    void clearResumeData(modelId);
+  }
 }
 
 /**

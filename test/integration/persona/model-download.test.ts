@@ -6,6 +6,7 @@
 // is the one native edge chat's fake does not cover, so `expo-file-system/legacy` is faked per file: each
 // `createDownloadResumable` call becomes a download the test settles by hand (a finished file lands on the
 // in-memory disk, as it would on the device). expo-notifications is the setup's native fake.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import {
@@ -59,12 +60,16 @@ interface FakeDownload {
     /** The task resolves with nothing, as expo does for a cancelled task. */
     resolveCancelled: () => void;
     cancelAsync: jest.Mock;
+    /** The resume data the given resumable was created with, and what its pause will hand back. */
+    resumedFrom: string | undefined;
+    pauseData: string | undefined;
+    resumeAsync: jest.Mock;
 }
 
 const downloads: FakeDownload[] = [];
 
 const mockCreateDownloadResumable = jest.fn(
-    (url: string, path: string, options: unknown, onProgress: FakeDownload['onProgress']) => {
+    (url: string, path: string, options: unknown, onProgress: FakeDownload['onProgress'], resumeData?: string) => {
         let settle!: (r: unknown) => void;
         let reject!: (e: Error) => void;
         const result = new Promise<unknown>((res, rej) => {
@@ -83,9 +88,18 @@ const mockCreateDownloadResumable = jest.fn(
             fail: (e) => reject(e),
             resolveCancelled: () => settle(undefined),
             cancelAsync: jest.fn(async () => {}),
+            resumedFrom: resumeData,
+            pauseData: 'resume-token',
+            resumeAsync: jest.fn(() => result),
         };
         downloads.push(download);
-        return { downloadAsync: () => result, cancelAsync: download.cancelAsync };
+        return {
+            downloadAsync: () => result,
+            resumeAsync: download.resumeAsync,
+            cancelAsync: download.cancelAsync,
+            pauseAsync: async () => {},
+            savable: () => ({ url, fileUri: path, options, resumeData: download.pauseData }),
+        };
     },
 );
 jest.mock('expo-file-system/legacy', () => ({
@@ -426,6 +440,8 @@ describe('startModelDownloads: a serial queue, one model at a time', () => {
         expect(await isModelDownloaded(SECOND.modelId)).toBe(true);
     });
 
+    // A 5xx is the server refusing: its error body is what sits in the file, so it is deleted and never resumed.
+    // Only a dropped connection (the task rejecting) keeps the partial.
     it('a server error removes the partial file and says the server had a problem', async () => {
         startModelDownloads({ modelIds: [SECOND.modelId] });
         await started();
@@ -607,6 +623,118 @@ describe('downloadBaseModel', () => {
         expect(last().cancelAsync).toHaveBeenCalledTimes(1);
         last().resolveCancelled();
         await run;
+    });
+});
+
+describe('downloadBaseModel resume', () => {
+    const KEY = `mera_model_resume:${config().modelId}`;
+    // The integration project's AsyncStorage is a real in-memory one.
+    const store = {
+        get: (k: string) => AsyncStorage.getItem(k),
+        set: (k: string, v: string) => AsyncStorage.setItem(k, v),
+    };
+    beforeEach(async () => {
+        await AsyncStorage.clear();
+    });
+    const partial = (path: string) => new fileSystemModule.File(path);
+
+    it('a 206 (a resumed transfer finishing) keeps the file and passes the size and GGUF checks', async () => {
+        const run = downloadBaseModel(config());
+        await started();
+        last().finish(206);
+        await expect(run).resolves.toMatchObject({ ready: true, sizeBytes: 4 });
+    });
+
+    it('a dropped connection keeps the partial and saves the resume data', async () => {
+        const run = downloadBaseModel(config());
+        const failed = expect(run).rejects.toThrow('network down');
+        await started();
+        void partial(last().path).write('GG');
+        last().fail(new Error('network down'));
+        await failed;
+        expect(partial(last().path).exists).toBe(true);
+        expect(await store.get(KEY)).toBe('resume-token');
+    });
+
+    it('a dropped connection with no resume data leaves nothing behind', async () => {
+        const run = downloadBaseModel(config());
+        const failed = expect(run).rejects.toThrow('network down');
+        await started();
+        void partial(last().path).write('GG');
+        last().pauseData = undefined;
+        last().fail(new Error('network down'));
+        await failed;
+        expect(partial(last().path).exists).toBe(false);
+        expect(await store.get(KEY)).toBeNull();
+    });
+
+    it('the next start resumes from the saved data, and success clears it', async () => {
+        const first = downloadBaseModel(config());
+        const failed = expect(first).rejects.toThrow('network down');
+        await started();
+        void partial(last().path).write('GG');
+        last().fail(new Error('network down'));
+        await failed;
+
+        const run = downloadBaseModel(config());
+        await started(2);
+        expect(last().resumedFrom).toBe('resume-token');
+        expect(last().resumeAsync).toHaveBeenCalledTimes(1);
+        last().finish(206);
+        await expect(run).resolves.toMatchObject({ ready: true });
+        expect(await store.get(KEY)).toBeNull();
+    });
+
+    it('resume data whose partial file is gone starts fresh', async () => {
+        await store.set(KEY, 'stale-token');
+        const run = downloadBaseModel(config());
+        await started();
+        expect(last().resumedFrom).toBeUndefined();
+        expect(last().resumeAsync).not.toHaveBeenCalled();
+        last().finish();
+        await run;
+        expect(await store.get(KEY)).toBeNull();
+    });
+
+    it('a resume the server rejects falls back to one fresh download', async () => {
+        const first = downloadBaseModel(config());
+        const failed = expect(first).rejects.toThrow('network down');
+        await started();
+        void partial(last().path).write('GG');
+        last().fail(new Error('network down'));
+        await failed;
+
+        const run = downloadBaseModel(config());
+        await started(2);
+        last().finish(416, 'nope');
+        await started(3);
+        expect(last().resumedFrom).toBeUndefined();
+        last().finish(200);
+        await expect(run).resolves.toMatchObject({ ready: true });
+        expect(await store.get(KEY)).toBeNull();
+    });
+
+    it('cancel deletes the partial and the resume data, and the late rejection saves nothing', async () => {
+        const run = downloadBaseModel(config()).catch(() => {});
+        await started();
+        void partial(last().path).write('GG');
+        await store.set(KEY, 'resume-token');
+        cancelActiveDownload();
+        last().fail(new Error('cancelled'));
+        await run;
+        expect(partial(last().path).exists).toBe(false);
+        expect(await store.get(KEY)).toBeNull();
+    });
+
+    it('an integrity failure deletes the file and leaves no resume data', async () => {
+        await store.set(KEY, 'resume-token');
+        void partial(`file:///x`);
+        const run = downloadBaseModel(config());
+        const failed = expect(run).rejects.toThrow('Damaged download');
+        await started();
+        last().finish(200, '<htm');
+        await failed;
+        expect(await store.get(KEY)).toBeNull();
     });
 });
 
