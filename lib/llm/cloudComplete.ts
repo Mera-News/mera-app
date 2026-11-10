@@ -49,6 +49,8 @@ import { attemptOnProfile, chainFor, sendOnLane, sendToProfile, type Attempt, ty
 import {
   failureClassOf,
   reportLaneExhausted,
+  refreshRoutingSoon,
+  LaneExhaustedError,
   reportProfileFailure,
   reportProfileSuccess,
   type FailureClass,
@@ -846,12 +848,18 @@ async function* playChatLeg(
     }
   }
 
-  reportLaneExhausted(lane, last!.profile, last!.failure);
-  if (first!.leg) {
+  if (!first || !last) {
+    // The table left nothing to try: no call was made.
+    refreshRoutingSoon();
+    reportLaneExhausted(lane, null, 'model_unavailable');
+    throw new LaneExhaustedError(lane);
+  }
+  reportLaneExhausted(lane, last.profile, last.failure);
+  if (first.leg) {
     yield* failedChatResponse(first!.leg);
     return;
   }
-  throw first!.error;
+  throw first.error;
 
   /** The diagnostics of a failed answer. `algo` and the model-key prefix are here because
    *  MERA-APP-72 could not be root-caused without them; the key is public data and only its

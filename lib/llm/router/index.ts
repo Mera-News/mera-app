@@ -124,9 +124,11 @@ export const isProfileMarked = (id: ProfileId): boolean => isMarked(id, Date.now
 /** The profiles to try for `lane`, healthy first. Empty only when the mode keeps the lane off the cloud. */
 export function routeLane(lane: Lane, opts: RouteOptions = {}): Profile[] {
   if (!laneRoutes(lane)) return [];
-  const listed = (table.lanes[lane]?.profiles ?? []).filter(isProfileId);
-  // An empty list is the gateway saying the lane is down. The default order still goes out: the
-  // gateway answers a down profile with a fast 503 that carries the fresh table.
+  const entry = table.lanes[lane];
+  const listed = (entry?.profiles ?? []).filter(isProfileId);
+  // The table lists only healthy profiles, so a down lane has nothing to try: no attestation and no
+  // send, the caller fails as chain-exhausted. refreshRoutingSoon() is how it finds the way back.
+  if (entry?.state === 'down' && listed.length === 0) return [];
   const ranked = listed.length > 0 ? listed : DEFAULT_TABLE[lane];
   const now = Date.now();
   const healthy = ranked.filter((id) => !isMarked(id, now));
@@ -250,6 +252,11 @@ export function refreshRouting(): Promise<void> {
     }
   })();
   return refreshing;
+}
+
+/** A lane the table says is down sends nothing, so no reply can name a newer table: ask for one, at most every REFRESH_FLOOR_MS. */
+export function refreshRoutingSoon(): void {
+  if (Date.now() - lastRefreshAt >= REFRESH_FLOOR_MS) void refreshRouting();
 }
 
 /** Every gateway reply names the table version; a different one means ours is stale. */

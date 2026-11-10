@@ -10,6 +10,8 @@ import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useNetworkStore } from '@/lib/stores/network-store';
 import i18n from '@/lib/i18n';
 import { initI18nEn } from '@/test/helpers';
 
@@ -171,6 +173,34 @@ describe('error banner', () => {
     expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
     expect(result.current.blockedMessage).not.toContain('Decryption');
     expect(result.current.blockedMessage).not.toContain('E2EE chat failed');
+  });
+});
+
+describe('error banner while a chat lane is out', () => {
+  afterEach(() => {
+    useForYouStore.getState().setLaneOutage('chat-tools', null);
+    useForYouStore.getState().setLaneOutage('chat-single', null);
+    useNetworkStore.setState({ isConnected: true });
+  });
+
+  it.each(['chat-tools', 'chat-single'] as const)('says the private AI is down when %s is out', async (lane) => {
+    useForYouStore.getState().setLaneOutage(lane, { since: 1 });
+    const { result } = await mount({ error: 'Cloud chat failed: Every model profile failed on lane chat-tools' });
+    expect(result.current.blockedMessage).toBe(`${t('feed.outage.title')} ${t('feed.outage.helpBack')}`);
+  });
+
+  it('keeps the generic copy for an offline device even with a stale outage', async () => {
+    useForYouStore.getState().setLaneOutage('chat-tools', { since: 1 });
+    useNetworkStore.setState({ isConnected: false });
+    const { result } = await mount({ error: 'boom' });
+    expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
+  });
+
+  it('keeps the generic copy when only another lane is out', async () => {
+    useForYouStore.getState().setLaneOutage('scoring', { since: 1 });
+    const { result } = await mount({ error: 'boom' });
+    expect(result.current.blockedMessage).toBe(t('chat.inferenceError'));
+    useForYouStore.getState().setLaneOutage('scoring', null);
   });
 });
 

@@ -24,6 +24,8 @@ import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-
 import { awaitsFactsRead, usesOriginalWelcome } from './original-welcome';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useUserStore } from '@/lib/stores/user-store';
+import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useNetworkStore } from '@/lib/stores/network-store';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -845,12 +847,18 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     void AccessibilityInfo.announceForAccessibility(t('chat.tryingAgain'));
   }, [t]);
 
+  // A chat lane whose whole chain is out says so; offline and every other error keep the generic line.
+  const chatLaneOut = useForYouStore((st) => Boolean(st.laneOutage['chat-tools'] || st.laneOutage['chat-single']));
+  const online = useNetworkStore((st) => st.isConnected);
+
   const leftTurn = useCloudChatStore((st) => st.interrupted);
 
   const blockedMessage = effectiveBlocked
     ? (effectiveBlockedReason || t('errors.accountRestricted'))
     : !retryTapped && (error ? leftTurn : canRetry)
       ? t('chat.turnInterrupted')
+    : error && !retryTapped && chatLaneOut && online
+      ? `${t('feed.outage.title')} ${t('feed.outage.helpBack')}`
     : error && !retryTapped
       ? // The raw error string is NOT appended. It is a bare string with no class
         // to branch on, and what it carried was the provider's own English JSON

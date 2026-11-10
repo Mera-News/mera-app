@@ -9,7 +9,11 @@ import { MIN_INTERACTIVE_INTERVAL_MS } from '@/lib/llm/gateway-rate-limiter';
 import { PROFILES } from '@/lib/llm/profiles';
 import { attestProfile } from '@/lib/llm/provider-e2ee';
 import {
+  applyRoutingTable,
+  LANES,
+  LaneExhaustedError,
   noteRoutingVersion,
+  profilesToPreattest,
   refreshRouting,
   routeLane,
   routingSnapshot,
@@ -217,6 +221,25 @@ describe('the routing table', () => {
     await refreshRouting();
     expect(routingVersion()).toBe(0);
     expect(routeLane('scoring').map((p) => p.id)).toEqual(['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b']);
+  });
+});
+
+describe('a table that lists every chat profile down', () => {
+  const allDown: RoutingTable = {
+    version: 11,
+    updatedAt: '2026-11-10T00:00:00Z',
+    lanes: Object.fromEntries(LANES.map((l) => [l, { state: 'down', profiles: [] }])),
+  };
+
+  it('routes nothing, pre-attests nothing and fails chat fast with no network call', async () => {
+    applyRoutingTable(allDown);
+    const seen = watchAttestations();
+    expect(routeLane('chat-tools')).toEqual([]);
+    expect(profilesToPreattest()).toEqual([]);
+    const err = await fail(chat());
+    expect(err).toBeInstanceOf(LaneExhaustedError);
+    expect(seen).toEqual([]);
+    expect(gatewayCalls('chat')).toEqual([]);
   });
 });
 

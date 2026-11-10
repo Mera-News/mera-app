@@ -25,6 +25,7 @@ import {
   reportLaneExhausted,
   reportProfileFailure,
   reportProfileSuccess,
+  refreshRoutingSoon,
   routeLane,
   type FailureClass,
   type Lane,
@@ -149,6 +150,7 @@ export async function sendOnLane<C, T>(
     return null;
   };
   const chain = chainFor(lane, route);
+  if (chain.length === 0) refreshRoutingSoon();
   const skipChain = perRequest !== undefined && chain.every((p) => isProfileMarked(p.id)) && perRequestProfile(lane) !== null;
   for (const profile of skipChain ? [] : chain) {
     const done = settle(profile, await attemptOnProfile(url, lane, profile, build, read, options));
