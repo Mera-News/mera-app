@@ -39,6 +39,8 @@ export function ProviderCard() {
   if (shown.length === 0) return null;
   return (
     <View testID="mera-protocol-provider-card">
+      {/* One card: the Provider row, and once opened its provider links under it (Group draws the
+          dividers), so the word "Provider" is said once. */}
       <Group>
         <Row
           testID="provider-card-toggle"
@@ -54,12 +56,8 @@ export function ProviderCard() {
             />
           }
         />
-      </Group>
-      {!open ? null : providers.size > 0 ? (
-        <>
-          <GroupLabel>{t('meraProtocol.providers.title')}</GroupLabel>
-          <Group>
-            {[...providers].map(([provider, { name, url }]) => (
+        {open
+          ? [...providers].map(([provider, { name, url }]) => (
               <Pressable
                 key={provider}
                 testID={`provider-link-${provider}`}
@@ -85,10 +83,9 @@ export function ProviderCard() {
                   </Text>
                 )}
               </Pressable>
-            ))}
-          </Group>
-        </>
-      ) : null}
+            ))
+          : null}
+      </Group>
       {open ? (
         <>
           <GroupLabel>{t('meraProtocol.providers.modelsTitle')}</GroupLabel>

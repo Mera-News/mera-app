@@ -584,7 +584,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Providers, models and Verify: whenever chat or the feed reaches the cloud. */}
             {!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat ? (
                 <View style={{ marginTop: 12 }}>
-                    <View style={{ paddingHorizontal: 14 }}>
+                    {/* 12pt between this card and Verify, the gap between groups elsewhere on the page. */}
+                    <View style={{ paddingHorizontal: 14, marginBottom: 12 }}>
                         <ProviderCard />
                     </View>
                     <AttestationVerificationRow />
