@@ -67,7 +67,7 @@ export async function sendToProfile<C>(
     failFast: true,
     turn: built.turn,
   });
-  noteRoutingVersion(response.headers.get('X-Mera-Routing'));
+  noteRoutingVersion(response.headers?.get('X-Mera-Routing'));
   if (response.status < 500) return { leg: { response, ctx: built.ctx, profile }, failure: null };
   takeStreamHandle(response)?.release();
   const body = await response.text().catch(() => '');
