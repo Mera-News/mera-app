@@ -14,6 +14,7 @@ import { _getBreakerState } from '@/lib/auth-failure-breaker';
 import { NoCredentialError } from '@/lib/e2ee/e2ee-service';
 import * as limiter from '@/lib/llm/gateway-rate-limiter';
 import { SMALL_MODEL } from '@/lib/llm/constants';
+import { routingVersion } from '@/lib/llm/router';
 import { bytesToHex, sendInferenceRequest } from '@/lib/llm/submitInferenceJob';
 import logger from '@/lib/logger';
 import { delay, gatewayCalls, http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
@@ -399,6 +400,18 @@ describe('retries, deadlines and the limiter', () => {
       expect.objectContaining({ message: expect.stringContaining('submit failed (503)') }),
       expect.objectContaining({ tags: expect.objectContaining({ status: 'retry-exhausted' }) }),
     );
+  });
+
+  it('a 503 model_unavailable is model-failed at once: one POST, no retry, its routing table applied', async () => {
+    const routing = { version: 9, lanes: { scoring: { state: 'degraded', profiles: ['near/qwen3.8-27b'] } } };
+    server.use(
+      http.post(JOBS, () => HttpResponse.json({ error: { code: 'model_unavailable', message: 'down' }, routing }, { status: 503 })),
+    );
+    const { posts } = captureJobPosts();
+    expect(await send()).toEqual({ status: 'model-failed', failureClass: 'model_unavailable' });
+    expect(posts).toHaveLength(1);
+    expect(routingVersion()).toBe(9);
+    expect(logger.captureException).not.toHaveBeenCalled();
   });
 
   it('a 5xx that clears on the second try is ok', async () => {

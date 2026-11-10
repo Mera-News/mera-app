@@ -18,6 +18,7 @@ import {
   type CloudCallBundle,
 } from '@/lib/mera-protocol/scoring-service';
 import type { E2EEProvider } from '@/lib/e2ee/provider';
+import { applyRoutingTable, failureClassOfStatus, type FailureClass } from './router';
 import type { BatchCall } from '@/lib/llm/types';
 import {
   encryptContent,
@@ -70,14 +71,19 @@ function reportSubmitFailure(err: unknown, status: string): void {
  *    `throttled`: requeue WITHOUT a new key, and the next attempt replays.
  *  - `no-auth`: `task` context only — no JWT could be minted, or the gateway
  *    refused it. Quiet by design (no Sentry, no auth-breaker report).
- *  - `failed`: a definite failure; the caller may mint a new key. */
+ *  - `failed`: a definite failure; the caller may mint a new key.
+ *  - `model-failed`: the gateway fast-failed the job because the model is down
+ *    (503 `model_unavailable`; its routing table is already applied). Model
+ *    evidence: the caller marks the profile and sends the work to the next one.
+ *    Nothing was created, so no retry here and no attempt spent. */
 export type SendInferenceOutcome =
   | { status: 'ok'; requestId: string; capabilityToken: string }
   | { status: 'read-held' }
   | { status: 'throttled' }
   | { status: 'in-progress' }
   | { status: 'no-auth' }
-  | { status: 'failed' };
+  | { status: 'failed' }
+  | { status: 'model-failed'; failureClass: FailureClass };
 
 /**
  * Shared submit primitive: encrypt the bundle's calls end-to-end, gzip the
@@ -308,6 +314,8 @@ export async function sendInferenceRequest(args: {
     'X-Mera-Provider': provider,
   };
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
+  // Set when the gateway fast-failed the job for a down model: never retried, the next profile is.
+  let modelDown: FailureClass | null = null;
   const doSubmitPost = (bearer: string): Promise<Response> =>
     withRetry(
       async () => {
@@ -328,6 +336,15 @@ export async function sendInferenceRequest(args: {
         }
         if (r.status >= 500) {
           const text = await r.text().catch(() => '');
+          if (failureClassOfStatus(r.status, text) === 'model_unavailable') {
+            try {
+              applyRoutingTable((JSON.parse(text) as { routing?: unknown }).routing);
+            } catch {
+              // No table in the body: the next reply's X-Mera-Routing refetches it.
+            }
+            modelDown = 'model_unavailable';
+            return r;
+          }
           throw new Error(`${TAG} submit failed (${r.status}): ${text.slice(0, 200)}`);
         }
         return r;
@@ -357,6 +374,7 @@ export async function sendInferenceRequest(args: {
     reportSubmitFailure(err, 'retry-exhausted');
     return { status: 'failed' };
   }
+  if (modelDown) return { status: 'model-failed', failureClass: modelDown };
 
   // 401/403 recovery — foreground (JWT) only. Mirrors authFetch's idiom
   // (lib/llm/cloudComplete.ts): invalidate the cached JWT, re-mint once, retry
@@ -384,6 +402,7 @@ export async function sendInferenceRequest(args: {
         reportSubmitFailure(err, 'retry-exhausted-after-401');
         return { status: 'failed' };
       }
+      if (modelDown) return { status: 'model-failed', failureClass: modelDown };
     }
     if (res.status === 401 || res.status === 403) {
       recordAuthFailure();

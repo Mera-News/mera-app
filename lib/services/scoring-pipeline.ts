@@ -23,7 +23,8 @@ import logger from '@/lib/logger';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { PROFILES, type Profile } from '@/lib/llm/profiles';
 import { prepareForProfile, rebuildForProfile } from '@/lib/llm/provider-e2ee';
-import { failureClassOf, reportLaneExhausted, reportProfileFailure, reportProfileSuccess, routeLane } from '@/lib/llm/router';
+import { failureClassOf, reportLaneExhausted, reportProfileFailure, reportProfileSuccess, routeLane, type FailureClass } from '@/lib/llm/router';
+import { perRequestProfile } from '@/lib/llm/routed-send';
 import type { ExecutionContext } from '@/lib/llm/execution-context';
 import * as gatewayRateLimiter from '@/lib/llm/gateway-rate-limiter';
 import {
@@ -69,6 +70,7 @@ import {
   buildReasonCallsForSubset,
   buildRelevanceCalls,
   decodeResults,
+  processAllUnscored,
   resolveReasonResultIds,
   CLOUD_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
@@ -766,13 +768,51 @@ function isModelOutageError(err: unknown): boolean {
 // it again: createRunWithBatches re-throws the last outage error for this long.
 const OUTAGE_RETRY_AFTER_MS = 2 * 60_000;
 let lastOutage: { at: number; err: unknown } | null = null;
+/** A batch left a run on a down profile: the next post-finalize kick also re-enqueues owed notes. */
+let kickOwesNotes = false;
 
 function noteScoringOutage(err: unknown, where: string): void {
   lastOutage = { at: Date.now(), err };
+  if (inlineScoringPossible()) {
+    logger.warn(`${TAG} ${where}: no profile can take a job, scoring inline on the sync-only profile`);
+    scoreInlineOnSyncProfile();
+    return;
+  }
   logger.warn(`${TAG} ${where}: scoring unavailable, rows stay unscored (${err instanceof Error ? err.name : 'error'})`);
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
   useForYouStore.getState().setLaneOutage('scoring', { since: Date.now() });
+}
+
+/**
+ * Only a sync-only profile (RedPill) is healthy and the app is in front. A job shares one header set
+ * and runs later, which RedPill refuses, so the waiting rows go through the synchronous scorer
+ * instead (processAllUnscored: same prompts and thresholds, its batches sent per item on RedPill by
+ * cloudBatchComplete). Background wakes never get here: they never use RedPill.
+ */
+function inlineScoringPossible(): boolean {
+  return AppState.currentState === 'active' && !isOnDeviceProcessing() && perRequestProfile('scoring') !== null;
+}
+
+let inlinePass: Promise<void> | null = null;
+
+/** Starts the inline pass (one at a time). It stops when the app leaves the front and leaves the rest unscored. */
+function scoreInlineOnSyncProfile(): void {
+  if (inlinePass) return;
+  const inFront = () => AppState.currentState === 'active';
+  inlinePass = (async () => {
+    try {
+      const scored = await processAllUnscored(undefined, undefined, () => void refreshUi(), inFront);
+      logger.info(`${TAG} inline pass on the sync-only profile scored ${scored}`);
+      await refreshUi();
+    } catch (err) {
+      logger.warn(`${TAG} inline pass on the sync-only profile failed, rows stay unscored`, {
+        error: err instanceof Error ? err.name : 'error',
+      });
+    } finally {
+      inlinePass = null;
+    }
+  })();
 }
 
 function clearScoringOutage(): void {
@@ -1033,7 +1073,10 @@ async function createRunWithBatches(
   if (!ctx || !profile) {
     // No profile can serve an async job (all failed, or only RedPill is left).
     const err = lastErr ?? Object.assign(new Error('model_unavailable: no scoring profile'), { statusCode: 503 });
-    reportLaneExhausted('scoring', PROFILES['near/qwen3.6-35b-a3b'], failureClassOf(err) ?? 'model_unavailable');
+    // With RedPill healthy and the app in front the lane is not out: the caller scores inline.
+    if (!inlineScoringPossible()) {
+      reportLaneExhausted('scoring', PROFILES['near/qwen3.6-35b-a3b'], failureClassOf(err) ?? 'model_unavailable');
+    }
     throw err;
   }
   const run: Omit<PipelineRun, 'version' | 'schema'> = {
@@ -1601,6 +1644,8 @@ async function doSubmitRelevance(
       logger.debug(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
       );
+    } else if (outcome.status === 'model-failed') {
+      await profileDownForRun(run, batch.batchId, 'submitting-relevance', outcome.failureClass, context);
     } else if (isRetryLater(outcome.status)) {
       await requeueThrottled(batch.batchId, 'submitting-relevance');
     } else {
@@ -1705,6 +1750,8 @@ async function doSubmitReasonsOnly(
     logger.debug(
       `${TAG} batch ${batch.batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
+  } else if (outcome.status === 'model-failed') {
+    await profileDownForRun(run, batch.batchId, 'submitting-reasons', outcome.failureClass, context);
   } else if (isRetryLater(outcome.status)) {
     await requeueThrottled(batch.batchId, 'submitting-reasons');
   } else {
@@ -1838,35 +1885,37 @@ async function markRowsOfExhaustedBatchFailed(batchId: number): Promise<void> {
 }
 
 /**
- * The run's own profile failed with a model-class error before a request left the device. A run is
- * bound to one key, so its batches are never re-encrypted to another model: when nothing of it was
- * ever sent, the run ends (rows stay unscored, no key is lost with a paid job) and the kick makes
- * a new run on the next profile, or notes the lane outage when none is left. A run with batches
- * already out keeps its key and just spends an attempt on this one.
+ * The run's own profile failed with a model-class error on a submit (its attestation, or the
+ * gateway's 503 model_unavailable). A run is bound to one key, so its batches are never
+ * re-encrypted to another model: the failing batch, and every batch that never left the device,
+ * leave the run at once with no attempt spent. Their rows stay as they were (unscored, or scored
+ * and owed a note), and once nothing of the run is still out the run finalizes and the kick puts
+ * them in a new run on the next profile (the marked one sinks to the end), or notes the lane
+ * outage when none is left. Batches already on the gateway keep the key until they finish.
  */
 async function profileDownForRun(
   run: PipelineRun,
   batchId: number,
   fromPhase: 'submitting-relevance' | 'submitting-reasons',
-  failureClass: NonNullable<ReturnType<typeof failureClassOf>>,
+  failureClass: FailureClass,
   context: ExecutionContext,
 ): Promise<void> {
   reportProfileFailure(runProfile(run), 'scoring', failureClass);
   logger.warn(`${TAG} run ${run.runId}: profile ${runProfile(run).id} down (${failureClass}) at batch ${batchId}`);
-  const snap = await getPipeline();
-  // The failing batch is still in its submitting phase: it reserved no key (the rebuild comes first).
-  const unsent =
-    !!snap &&
-    snap.run.runId === run.runId &&
-    snap.run.batches.every((b) => (b.batchId === batchId || b.phase === 'queued') && !b.idemKey);
-  if (!unsent) {
-    await failOrRetrySubmit(batchId, fromPhase);
-    return;
-  }
-  await clearPipeline();
-  stopPoller();
+  kickOwesNotes = true;
+  await mutatePipeline((r) => {
+    if (r.runId !== run.runId) return null;
+    for (const b of r.batches) {
+      const failing = b.batchId === batchId && b.phase === fromPhase;
+      if (!failing && !(b.phase === 'queued' && !b.idemKey)) continue;
+      // A notes batch keeps its scores (done); a relevance batch's rows stay unscored, not failed.
+      b.phase = b.reasonsOnly || (failing && fromPhase === 'submitting-reasons') ? 'done' : 'failed';
+      if (b.phase === 'failed') b.failureReason = 'submit-failed';
+    }
+    return true;
+  });
   await pushUiProgress(context);
-  if (context !== 'task') schedulePostFinalizeKick();
+  await maybeFinalize({ kick: context !== 'task', context });
 }
 
 async function failOrRetrySubmit(
@@ -2662,6 +2711,14 @@ async function submitNeedsReasonsHeld(
     });
   };
 
+  /** The run's profile is down: the scores stay, the notes go to the next profile in a new run. */
+  const reasonsProfileDown = async (failureClass: FailureClass): Promise<SubmitStep> => {
+    await discardLowRelevance(batch.candidateIds, batch.relevanceMap ?? {});
+    await profileDownForRun(run, batchId, 'submitting-reasons', failureClass, context);
+    await refreshUi(context);
+    return 'model-failed';
+  };
+
   const token = AppState.currentState !== 'active' ? run.expoPushToken : null;
   const profile = runProfile(run);
   let ctx;
@@ -2674,6 +2731,8 @@ async function submitNeedsReasonsHeld(
       await releaseClaim();
       return err instanceof NoCredentialError ? 'no-auth' : 'deadline';
     }
+    const failureClass = failureClassOf(err);
+    if (failureClass) return reasonsProfileDown(failureClass);
     // Off-curve model attestation key (MERA-APP-39). The relevance scores are
     // already persisted, so mirror the reasons-submit hard-failure path: mark
     // the batch done (scores kept — orphaned-reasons recovery re-submits the
@@ -2729,6 +2788,8 @@ async function submitNeedsReasonsHeld(
     );
     await pushUiProgress(context);
     return 'ok';
+  } else if (outcome.status === 'model-failed') {
+    return reasonsProfileDown(outcome.failureClass);
   } else if (isRetryLater(outcome.status)) {
     // Stay in needs-reasons-submit — retried by the poller or the next task
     // run, with the SAME key (a 409 means the gateway still holds it).
@@ -2951,11 +3012,15 @@ function isFeedSyncRunning(): boolean {
  *  a round trip. There, feed-sync's own end-of-cycle flush owns the remainder,
  *  so we fall back to the normal accumulate-and-gate behaviour. */
 async function runPostFinalizeKick(): Promise<void> {
+  const owesNotes = kickOwesNotes;
+  kickOwesNotes = false;
   try {
     // A concurrent trigger (feed-sync / scoring-pass) may already have started a
     // run between finalize and now — enqueueCandidates dedups + gates, so this
     // is safe either way.
     await enqueueUnscoredEligible({ flushRemainder: !isFeedSyncRunning() });
+    // Notes whose batch left a run on a down profile go into the new run too.
+    if (owesNotes) await enqueueOrphanedReasons();
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'post-finalize-kick' },
@@ -3720,6 +3785,8 @@ export async function getReasonsInFlightIds(): Promise<Set<string>> {
 
 export function _resetForTests(): void {
   lastOutage = null;
+  kickOwesNotes = false;
+  inlinePass = null;
   drainInFlight = null;
   firstCheckedAt.clear();
   batchesInHand.clear();

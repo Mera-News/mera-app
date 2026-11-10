@@ -883,8 +883,11 @@ export async function processAllUnscored(
   onProgress?: (completed: number, total: number) => void,
   batchSize = 20,
   onBatchComplete?: (updates: BatchUpdates) => void,
+  /** False ends the pass: rows not yet scored stay unscored, never marked failed (the RedPill
+   *  inline pass stops when the app leaves the front). */
+  shouldContinue: () => boolean = () => true,
 ): Promise<number> {
-  return scoreUnscoredRows(onProgress, batchSize, onBatchComplete);
+  return scoreUnscoredRows(onProgress, batchSize, onBatchComplete, shouldContinue);
 }
 
 async function sweepNotes(batchSize: number): Promise<void> {
@@ -902,6 +905,7 @@ async function scoreUnscoredRows(
   onProgress: ((completed: number, total: number) => void) | undefined,
   batchSize: number,
   onBatchComplete: ((updates: BatchUpdates) => void) | undefined,
+  shouldContinue: () => boolean,
 ): Promise<number> {
   const totalUnscored = await countUnscoredSuggestions();
   if (totalUnscored === 0) {
@@ -920,7 +924,12 @@ async function scoreUnscoredRows(
   let retriedLoneFailure = false;
   onProgress?.(0, totalUnscored);
 
+  let stopped = false;
   while (true) {
+    if (!shouldContinue()) {
+      stopped = true;
+      break;
+    }
     // One Kev read per story. Each pass the gate copies fresh scores onto same-story
     // copies (so it propagates after every batch) and elects one copy per story still
     // unscored. Rows this lane cannot score stay out of the election, or an elected one
@@ -1022,6 +1031,12 @@ async function scoreUnscoredRows(
     );
 
     if (succeeded.length > 0 && onBatchComplete) onBatchComplete(succeeded);
+    // Told to stop mid-batch: what failed failed for that reason, not the model's. Left unscored.
+    if (!shouldContinue()) {
+      totalProcessed += succeeded.length;
+      stopped = true;
+      break;
+    }
     for (const id of failedIds) failedThisPass.add(id);
     // Kev answered nothing usable for these (no answer, an error, a timeout).
     await batchMarkScoreFailed([...failedIds]);
@@ -1048,6 +1063,7 @@ async function scoreUnscoredRows(
   }
 
   onProgress?.(totalProcessed + settledByGate, totalUnscored);
+  if (stopped) return totalProcessed;
 
   // After scoring fresh rows, sweep any previously-scored rows whose reason
   // generation failed (reason_generation_completed = false). Non-fatal.
