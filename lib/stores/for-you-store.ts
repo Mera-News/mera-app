@@ -13,6 +13,7 @@ import {
     ArticleSuggestionStatus,
     type ArticleSuggestionStatus as ArticleSuggestionStatusType,
 } from '@/lib/database/article-suggestion-status';
+import type { Lane } from '@/lib/llm/router/lanes';
 import type { ScoringErrorKind } from '@/lib/services/scoring-error';
 // TYPE-ONLY, and that is what makes it safe: scoring-pipeline reaches this
 // store through a lazy `require` inside pushUiProgress precisely to avoid a
@@ -243,6 +244,9 @@ interface ForYouState {
     // null when the pipeline is healthy / idle.
     scoringError: ScoringErrorKind | null;
 
+    // Lanes whose model chain is out (route1). Memory only; the router and the scoring catch write it.
+    laneOutage: Partial<Record<Lane, { since: number }>>;
+
     // Hydration progress — number of article-suggestion records fetched from
     // the server during a syncFeed pass. Drives a progress bar in the For You
     // header for users with large id sets (a 2000-id hydration takes 30+ s).
@@ -301,6 +305,7 @@ interface ForYouState {
     setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
     setLastSyncAt: (ts: number) => void;
     setScoringError: (kind: ScoringErrorKind | null) => void;
+    setLaneOutage: (lane: Lane, info: { since: number } | null) => void;
     setHydrationProgress: (completed: number, total: number) => void;
     resetHydrationProgress: () => void;
     markProcessingRunFinished: () => void;
@@ -327,6 +332,7 @@ const initialState = {
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
     scoringError: null as ScoringErrorKind | null,
+    laneOutage: {} as Partial<Record<Lane, { since: number }>>,
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
@@ -470,6 +476,13 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setLastSyncAt: (ts) => set({ lastSyncAt: ts }),
 
     setScoringError: (kind) => set({ scoringError: kind }),
+    setLaneOutage: (lane, info) =>
+        set((state) => {
+            if (!info && !state.laneOutage[lane]) return state;
+            const next = { ...state.laneOutage };
+            if (info) next[lane] = state.laneOutage[lane] ?? info; else delete next[lane];
+            return { laneOutage: next };
+        }),
 
     setHydrationProgress: (completed, total) =>
         set({ hydrationCompleted: completed, hydrationTotal: total }),
