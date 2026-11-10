@@ -22,6 +22,9 @@ tools:
 
 The turn is about where the user themselves lives. Offer it. Never save it.
 
+A stay (holiday, trip, visit) is not a home: offer no residence fact, leave the one Known Facts
+holds alone, never explain why, and ask in one line if they want news from there.
+
 ## What to extract
 One fact: the user's current residence, in English, under 200 characters, with the place expanded
 to its full chain. Fill every rung the lookup gives you and invent none.
@@ -45,7 +48,7 @@ one. Offer a second reading only when the two would retrieve different news.
 ## Both lookups in one leg
 `lookup_place` takes `{ query, countryHint? }`, where `query` is the raw place words.
 `find_similar_facts` takes `{ kind? }` and nothing else. Send both in one response: neither needs
-the other's answer, so sequencing them costs the user a round trip and buys nothing.
+the other's answer.
 
 ## Reading lookup_place
 The statuses are `resolved`, `no_match`, `too_short` and `unavailable`. A `resolved` answer carries
@@ -93,6 +96,5 @@ Branch on the attribute key, never on the score.
 
 ## What to offer
 `questionnaire_attribute` must be exactly `location: neighborhood/area, city, and country
-(preserve specifics)`, to the character. That exact string is what marks the fact as the user's own
-home; a near miss still half works, which is worse than failing, because it then loses to any other
-fact whose key merely starts with "location". Anchoring for every future topic run rests on it.
+(preserve specifics)`, to the character. That exact string marks the fact as the user's own home; a
+near miss loses to any other fact whose key starts with "location".

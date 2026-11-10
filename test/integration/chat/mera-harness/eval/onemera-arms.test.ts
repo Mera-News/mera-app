@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { registerAgentArm, resetAgentArmsForTest } from '@/lib/mera-harness/core/arms';
 import { buildRouterPrompt } from '@/lib/mera-harness/core/router-prompt';
 import { loadSkill } from '@/lib/mera-harness/core/skill-loader';
-import { ACK_CAPABILITY_ROUTER_BODY, ACK_REQUEST_ROUTER_BODY } from '@/lib/mera-harness/eval/onemera-arms';
+import { ACK_CAPABILITY_ROUTER_BODY, STAY_ROUTER_BODY } from '@/lib/mera-harness/eval/onemera-arms';
 
 afterEach(() => resetAgentArmsForTest());
 
@@ -13,9 +13,9 @@ const leg0 = (arm?: string): string =>
     .update(['CONFIG', 'ONBOARDING'].map((surface) => buildRouterPrompt({ surface: surface as 'CONFIG', languageName: 'English', arm })).join('\n'))
     .digest('hex');
 
-it('router.md is the ack-request body that was measured, byte for byte', () => {
-  expect(loadSkill('router')?.trim()).toBe(ACK_REQUEST_ROUTER_BODY.trim());
-  expect(ACK_REQUEST_ROUTER_BODY).not.toContain('can search the web');
+it('router.md is the stay body that was measured, byte for byte', () => {
+  expect(loadSkill('router')?.trim()).toBe(STAY_ROUTER_BODY.trim());
+  expect(STAY_ROUTER_BODY).not.toContain('can search the web');
 });
 
 it('the ack-capability body, the next control, still builds a different leg-0 prompt', () => {

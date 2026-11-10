@@ -1,0 +1,28 @@
+{
+  "id": "real-holiday-lisbon",
+  "cohort": "production",
+  "note": "Production case (2026-11-10). A reader who lives in Lisbon says they are on holiday in Lisbon. Prod asked whether 'Lives in Lisbon' was a move, another person or a typo, and on another wording narrated a rule ('not the same as living there, so that fact does not get proposed'). A stay is interest, never residence or fact_update: no residence card, no replaces, no question about the home fact, no rule narration.",
+  "persona": {
+    "facts": [
+      {
+        "id": "home",
+        "statement": "Lives in Lisbon, Lisbon, Portugal, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm on holidays in Lisbon",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "replyExcludes": ["typo", "a move", "different person", "not the same as living", "does not get proposed"]
+      }
+    }
+  ]
+}

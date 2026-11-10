@@ -9,8 +9,8 @@
 // the floor the candidate is judged against. S1, S1.5, S3 and S3b shipped into
 // router.md (chatfix), and so did ack-capability and identity-ack; their arms are
 // gone. The bodies stay because each is derived from the one before it:
-// ACK_REQUEST_ROUTER_BODY is router.md byte for byte (a test pins it), and
-// ACK_CAPABILITY_ROUTER_BODY is the router before it, the next step's control.
+// STAY_ROUTER_BODY is router.md byte for byte (a test pins it), and
+// ACK_REQUEST_ROUTER_BODY is the router before it.
 
 /** The S1.5 router: feed_tuning, the card exception and routing a message that
  *  points back by the action it asks for. The base the later bodies swap from. */
@@ -105,6 +105,25 @@ export const ACK_REQUEST_ROUTER_BODY = swap(
     + 'ask "can you search?". Repeat the request and let the skill answer.\n\n'
     + '- "Tram fares in Lisbon this week."\n',
 );
+
+/** The router shipped from the holiday fix (real-holiday-lisbon, 9/9 routed to
+ *  interest on staging): a stay is never residence. Trimmed to stay in budget. */
+export const STAY_ROUTER_BODY = [
+  [
+    "- A relative's location is **family**, never residence. The user is not there.\n",
+    "- A relative's location is **family**, never residence. The user is not there.\n"
+      + '- A stay (holiday, trip, visit, conference) is **interest** and **new_fact**, never residence or\n'
+      + '  fact_update, even when they live in that place.\n',
+  ],
+  [
+    'A topic request loads `conversation/question`, not a `topics/` id. The `topics/` guidelines are\n'
+      + 'reached only by the background generation call and are not in the index, so routing to one loads\n'
+      + 'nothing and the turn is spent.',
+    'A topic request loads `conversation/question`, never a `topics/` id: those are not in the index.',
+  ],
+  [' Same reason Step 1 prefers `new_fact` over `chat`.', ''],
+  ['- Never answer the user yourself past the acknowledgement; the loaded skill answers.\n', ''],
+].reduce((body, [from, to]) => swap(body, from, to), ACK_REQUEST_ROUTER_BODY);
 
 /** Registers the current step's arms. None now: the next step adds its control
  *  (ACK_CAPABILITY_ROUTER_BODY or router.md with its skill hidden), a twin and a candidate. */

@@ -112,6 +112,8 @@ Subject tie-breaks:
 - **Both** origin and current home in one turn go to **origin**, which offers them as separate
   facts.
 - A relative's location is **family**, never residence. The user is not there.
+- A stay (holiday, trip, visit, conference) is **interest** and **new_fact**, never residence or
+  fact_update, even when they live in that place.
 - A workplace city is **profession** when the turn is about the work, **residence** when it is about
   the move.
 - Two subjects in one turn: pick the one they led with. The loaded skill sees the same turn and
@@ -142,9 +144,7 @@ there is always one that fits.
 `conversation/question` also handles greetings, navigation and off-topic redirects, branching
 internally. There is no separate chat skill.
 
-A topic request loads `conversation/question`, not a `topics/` id. The `topics/` guidelines are
-reached only by the background generation call and are not in the index, so routing to one loads
-nothing and the turn is spent.
+A topic request loads `conversation/question`, never a `topics/` id: those are not in the index.
 
 ## Step 4: the no-second-question rule
 The loop computes this, not you. You never send it: `load_skill` takes an id and nothing else.
@@ -162,10 +162,9 @@ and state what you understood instead.
 That sentence means the previous turn asked something this turn did not answer. Asking again reads
 as an interrogation and is answered even less often. Where the unanswered question was a
 replacement, the loaded skill's default is **add both, never replace**: a fact the user can remove
-is recoverable, one deleted on a guess is not. Same reason Step 1 prefers `new_fact` over `chat`.
+is recoverable, one deleted on a guess is not.
 
 ## Never
-- Never answer the user yourself past the acknowledgement; the loaded skill answers.
 - Never call `load_skill` twice, and never call another tool except the card exception above.
 - Never use an em dash or an en dash.
 
