@@ -31,7 +31,6 @@ import { getFacts } from '../../database/services/fact-service';
 import { getAllNormalizedTexts, normalizeTopicText } from '../../database/services/topic-service';
 import { getAllDeclinedNormalizedTexts } from '../../database/services/topic-decline-service';
 import { cloudBatchComplete } from '../../llm/cloudComplete';
-import { SMALL_MODEL } from '../../llm/constants';
 import { ProcessingMode } from '../../generated/graphql-types';
 import {
   COMBO_PASS_MAX_TOPICS,
@@ -104,7 +103,7 @@ export async function handleTopicComboJob(
     }
     if (calls.length === 0) return { applied };
 
-    const results = await cloudBatchComplete(calls, SMALL_MODEL, { lane: 'background' });
+    const results = await cloudBatchComplete(calls, 'topics', { lane: 'background' });
     const byCall = new Map(results.map((r) => [r.id, r]));
 
     // Every topic on the device and every declined text, then each accepted

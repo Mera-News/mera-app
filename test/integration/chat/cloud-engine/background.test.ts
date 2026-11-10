@@ -8,7 +8,7 @@ import {
   fetchMessagesForConversation,
 } from '@/lib/database/services/conversation-service';
 import { getSetting } from '@/lib/database/services/setting-service';
-import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import { isProfileMarked } from '@/lib/llm/router';
 import type { StagedProposal } from '@/lib/llm/types';
 import { BIG_MODEL } from '@/lib/llm/constants';
 import logger from '@/lib/logger';
@@ -82,7 +82,7 @@ describe('tools', () => {
     expect(again.messages).toEqual(cut.messages);
     expect(cloud().error).toBeNull();
     expect(answer()).toEqual(['Which part of Porto?']);
-    expect(isFallbackEngaged(BIG_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.8-27b')).toBe(false);
   });
 });
 

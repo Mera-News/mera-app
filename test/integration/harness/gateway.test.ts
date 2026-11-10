@@ -18,7 +18,7 @@ import { sendInferenceRequest } from '@/lib/llm/submitInferenceJob';
 import { fetchResults, toBatchResult } from '@/lib/services/inference-results';
 import { searchWeb, searchWebBatch } from '@/lib/web-search/web-search-client';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { LOAD_SKILL_TOOL } from '@/lib/mera-harness/core/tool-contracts';
 import { parseBatchRelevanceResponse } from '@/lib/news-harness/article-pipeline/scoring-decode';
 import type { ServerResults } from '@/lib/services/inference-results';
@@ -91,7 +91,7 @@ describe('chat: streamed', () => {
     });
     server.use(...mockGateway(respond({ chunks: ['Hello ', 'there, ', 'world.'] }), { curve: { [SMALL_MODEL]: curve } }));
 
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, enableThinking: false }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics', enableThinking: false }));
 
     expect(text(events)).toBe('Hello there, world.');
     expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'stop' });
@@ -122,7 +122,7 @@ describe('chat: streamed', () => {
           { role: 'user', content: 'hi' },
         ],
         tools: [LOAD_SKILL_TOOL],
-        model: SMALL_MODEL,
+        route: 'topics',
         enableThinking: false,
       }),
     );
@@ -134,14 +134,14 @@ describe('chat: streamed', () => {
 
   it('reasoning_content is signalled once and never shown', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ chunks: ['Answer.'], reasoning: true })));
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
     expect(events.filter((e) => e.type === 'reasoning')).toHaveLength(1);
     expect(text(events)).toBe('Answer.');
   }));
 
   it('a body the upstream buffers (ignoreStream) is still decrypted', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ chunks: ['Buffered ', 'answer.'], ignoreStream: true })));
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
     expect(text(events)).toBe('Buffered answer.');
   }));
 });
@@ -149,7 +149,7 @@ describe('chat: streamed', () => {
 describe('chat: buffered', () => {
   it('cloudComplete returns the decrypted completion', () => onFakeClock(async () => {
     server.use(...mockGateway(respond('Buffered reply.')));
-    await expect(cloudComplete({ systemPrompt: SECRET_SYSTEM, prompt: SECRET_USER, model: SMALL_MODEL })).resolves.toBe(
+    await expect(cloudComplete({ systemPrompt: SECRET_SYSTEM, prompt: SECRET_USER, route: 'topics' })).resolves.toBe(
       'Buffered reply.',
     );
     expect(gatewayCalls('chat')[0]).toMatchObject({ stream: false });
@@ -163,7 +163,7 @@ describe('chat: buffered', () => {
         { id: 'a', system: 'sys', prompt: 'one' },
         { id: 'b', system: 'sys', prompt: 'two' },
       ],
-      SMALL_MODEL,
+      'scoring',
     );
     expect(out).toEqual([
       { id: 'a', output: 'echo:one' },
@@ -186,7 +186,7 @@ describe('chat: buffered', () => {
         { id: 'b', system: 'sys', prompt: 'two' },
         { id: 'c', system: 'sys', prompt: 'three' },
       ],
-      SMALL_MODEL,
+      'scoring',
     );
     expect(out).toEqual([
       { id: 'a', output: 'echo:one' },
@@ -205,7 +205,7 @@ describe('chat: faults', () => {
           : 'recovered',
       ),
     );
-    const events = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })));
+    const events = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })));
     expect(text(events)).toBe('recovered');
     expect(gatewayCalls('chat')).toHaveLength(2);
     expect(attestationRequests(SMALL_MODEL)).toBe(2);
@@ -213,7 +213,7 @@ describe('chat: faults', () => {
 
   it('429 with Retry-After 1s on the interactive lane: one retry, then RateLimitedError', async () => {
     server.use(...mockGateway(respond({ status: 429, headers: { 'Retry-After': '1' } })));
-    const err = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e));
+    const err = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })).catch((e) => e));
     expect(err).toBeInstanceOf(RateLimitedError);
     expect(err).toMatchObject({ statusCode: 429, retryAfterMs: 1000 });
     expect(gatewayCalls('chat')).toHaveLength(2);
@@ -221,7 +221,7 @@ describe('chat: faults', () => {
 
   it('429 with a long Retry-After is not waited out', () => onFakeClock(async () => {
     server.use(...mockGateway(respond({ status: 429, headers: { 'Retry-After': '30' } })));
-    const err = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e);
+    const err = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })).catch((e) => e);
     expect(err).toBeInstanceOf(RateLimitedError);
     expect(gatewayCalls('chat')).toHaveLength(1);
   }));
@@ -230,7 +230,7 @@ describe('chat: faults', () => {
     server.use(...mockGateway(respond({ chunks: ['partial ', 'never'], closeAfter: 1 })));
     const seen: string[] = [];
     const run = async () => {
-      for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) {
+      for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics' })) {
         if (e.type === 'text-delta') seen.push(e.delta);
       }
     };
@@ -241,7 +241,7 @@ describe('chat: faults', () => {
 
   it('502 surfaces as E2EE chat failed with the body on responseBody only', async () => {
     server.use(...mockGateway(respond({ status: 502, body: { error: 'upstream gone' } })));
-    const err = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).catch((e) => e));
+    const err = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })).catch((e) => e));
     expect(err.message).toBe('E2EE chat failed: 502');
     expect(err.responseBody).toContain('upstream gone');
   });
@@ -252,7 +252,7 @@ describe('chat: fake clock', () => {
     server.use(...mockGateway(respond({ chunks: ['first ', 'second'], chunkDelayMs: gapMs })));
     const seen: string[] = [];
     const outcome = (async () => {
-      for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) {
+      for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics' })) {
         if (e.type === 'text-delta') seen.push(e.delta);
       }
     })().then(
@@ -278,24 +278,24 @@ describe('chat: fake clock', () => {
   });
 });
 
-describe('chat: hedge', () => {
-  it('a primary silent past HEDGE_DELAY_MS loses to the fallback leg, which aborts it', async () => {
+describe('chat: first-token deadline', () => {
+  it('a head silent past its 30s deadline is aborted and the next profile answers', async () => {
     server.use(
-      ...mockGateway((c) => (c.model === SMALL_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
+      ...mockGateway((c) => (c.model === BIG_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
     );
     fakeClock('2026-10-09T00:00:00Z');
     const seen: string[] = [];
     const outcome = (async () => {
-      for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) {
+      for await (const e of cloudChatStream({ messages: MESSAGES, route: 'chat-tools' })) {
         if (e.type === 'text-delta') seen.push(e.delta);
       }
     })();
     await advanceUntilDone(outcome);
     await outcome;
     expect(seen).toEqual(['fast']);
-    const [primary, hedge] = gatewayCalls('chat');
-    expect(primary).toMatchObject({ model: SMALL_MODEL, aborted: true });
-    expect(hedge).toMatchObject({ model: expect.not.stringMatching(SMALL_MODEL), aborted: false });
+    const [head, next] = gatewayCalls('chat');
+    expect(head).toMatchObject({ model: BIG_MODEL, aborted: true });
+    expect(next).toMatchObject({ model: SMALL_MODEL, aborted: false });
     expect(attestationRequests()).toBe(2);
   });
 });
@@ -305,7 +305,7 @@ describe('chat: abort', () => {
     server.use(...mockGateway(respond({ chunks: ['one ', 'two'], stallAfter: 1 })));
     const stop = new AbortController();
     const run = (async () => {
-      for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal })) {
+      for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal })) {
         if (e.type === 'text-delta') stop.abort();
       }
     })();

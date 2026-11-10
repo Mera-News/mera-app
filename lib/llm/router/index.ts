@@ -69,8 +69,9 @@ export interface RoutingState {
   }>;
 }
 
-/** A profile marked failed stays at the end of the order this long, unless a newer table or a success clears it. */
-export const MARK_MS = 120_000;
+/** A profile marked failed stays at the end of the order this long, unless a newer table or a success clears it.
+ *  Longer than a background lane's 120s deadline, or a slow chain would forget its first mark before its last try. */
+export const MARK_MS = 300_000;
 /** A failed table fetch is not retried sooner than this, however many replies name a new version. */
 const REFRESH_FLOOR_MS = 10_000;
 const ROUTING_URL = `${INFERENCE_ENDPOINT}/v1/routing`;
@@ -116,6 +117,9 @@ export interface RouteOptions {
   /** A batch or an async job: only profiles that can serve one (lib/llm/profiles servesBatch). */
   batch?: boolean;
 }
+
+/** True while `id` is marked failed (diagnostics and tests). */
+export const isProfileMarked = (id: ProfileId): boolean => isMarked(id, Date.now());
 
 /** The profiles to try for `lane`, healthy first. Empty only when the mode keeps the lane off the cloud. */
 export function routeLane(lane: Lane, opts: RouteOptions = {}): Profile[] {
@@ -197,6 +201,8 @@ export function failureClassOf(err: unknown): FailureClass | null {
   }
   // An HTTP answer was classified by its status before it became an error; its body may say "abort".
   if (typeof status === 'number') return null;
+  // A report the provider served in a shape the key cannot be read from (lib/e2ee throws these untyped).
+  if (err instanceof Error && /^(NEAR|RedPill) attestation: /.test(err.message)) return 'attestation';
   if (isAbortLike(err)) return 'deadline';
   return null;
 }

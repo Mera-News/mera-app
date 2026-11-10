@@ -6,7 +6,7 @@ import { _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { decryptContent, encryptContent, prepareE2EEContext } from '@/lib/e2ee/e2ee-service';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import { signInFixtureAccount } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';

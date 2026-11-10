@@ -7,7 +7,7 @@ import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { resetFactCheckSchemaForTest, stopAskedFactCheckPollerForTest } from '@/lib/fact-check/fact-check-graphql-client';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';

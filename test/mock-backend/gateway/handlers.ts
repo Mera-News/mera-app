@@ -225,6 +225,20 @@ async function chatReply(call: GatewayCall, reply: GatewayReply, request: Reques
 
 // --- routes --------------------------------------------------------------
 
+// GET /v1/routing: no auth, the gateway's seed ranking with every profile healthy (version 1).
+const CHAT_RANKING = ['near/qwen3.8-27b', 'near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b'];
+const BULK_RANKING = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b'];
+const routing = http.get('*/v1/routing', () =>
+  HttpResponse.json({
+    version: 1,
+    updatedAt: '2026-11-10T00:00:00.000Z',
+    lanes: Object.fromEntries([
+      ...['chat-tools', 'chat-single', 'fact-check'].map((l) => [l, { state: 'ok', profiles: CHAT_RANKING }]),
+      ...['scoring', 'topics', 'background'].map((l) => [l, { state: 'ok', profiles: BULK_RANKING }]),
+    ]),
+  }, { headers: { 'Cache-Control': 'no-store' } }),
+);
+
 const attestation = http.get('*/api/attestation/report', ({ request }) => {
   if (!request.headers.get('authorization')) return unauthorized();
   const url = new URL(request.url);
@@ -468,5 +482,5 @@ export function createGatewayHandlers(
   if (respond) state.responder = respond;
   for (const [model, algo] of Object.entries(opts.curve ?? {})) if (algo) state.curveByModel.set(model, algo);
   if (opts.pendingPolls !== undefined) state.pendingPolls = opts.pendingPolls;
-  return [attestation, chat, batch, submitJob, jobResults, webSearch, factCheckClaims, readTurn, cancelTurn];
+  return [attestation, chat, batch, submitJob, jobResults, webSearch, factCheckClaims, readTurn, cancelTurn, routing];
 }

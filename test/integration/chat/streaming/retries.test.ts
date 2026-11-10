@@ -9,10 +9,11 @@
 //   harness/gateway.test.ts > chat: fake clock > a gap above / just under STREAM_IDLE_TIMEOUT_MS after the first chunk
 import { http, HttpResponse } from 'msw';
 import { invalidateJwtCache } from '@/lib/auth-client';
-import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream, STREAM_IDLE_TIMEOUT_MS, UPSTREAM_ALIGNED_TIMEOUT_MS } from '@/lib/llm/cloudComplete';
 import { EmptyReplyError } from '@/lib/llm/gateway-fetch';
-import { isFallbackEngaged, reportModelFailure } from '@/lib/llm/model-fallback';
+import { isProfileMarked, reportProfileFailure } from '@/lib/llm/router';
+import { PROFILES } from '@/lib/llm/profiles';
 import {
   attestationRequests,
   gatewayCalls,
@@ -40,9 +41,9 @@ import {
 
 installChatHooks();
 
-const FALLBACK = MODEL_FALLBACKS[SMALL_MODEL];
+const FALLBACK = BIG_MODEL;
 const DECRYPT_400 = { status: 400, body: { error: `Provider failed for model '${SMALL_MODEL}': Decryption failed` } };
-const run = () => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+const run = () => collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
 const fail = (p: Promise<unknown>) => p.then(() => null, (e: Error & { statusCode?: number; responseBody?: string }) => e);
 
 describe('decrypt-failure re-attest', () => {
@@ -59,7 +60,7 @@ describe('decrypt-failure re-attest', () => {
     expect(second.headers['x-client-pub-key']).not.toBe(first.headers['x-client-pub-key']);
     expect(second.model).toBe(SMALL_MODEL);
     // A 4xx is not model evidence.
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
     expect(loggerSpies().captureMessage).not.toHaveBeenCalled();
     expect(bodies).toHaveLength(2);
     for (const b of bodies) expect(b).not.toContain('SENTINEL');
@@ -73,7 +74,7 @@ describe('decrypt-failure re-attest', () => {
     expect(err).toMatchObject({ statusCode: 400 });
     expect(err?.responseBody).toContain('Decryption failed');
     expect(gatewayCalls('chat')).toHaveLength(2);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
   it('records the curve and a model-key prefix on the breadcrumb of the refused request', async () => {
@@ -135,7 +136,7 @@ describe('a signed-out device', () => {
 });
 
 describe('a 502 from the gateway', () => {
-  it('spends the primary budget (2), then ONE attempt on the session fallback, and surfaces the original 502', async () => {
+  it('sends each profile ONCE, no same-model retry, and surfaces the head\'s 502', async () => {
     useStrictClock('2026-10-09T00:00:00Z');
     server.use(...mockGateway(respond({ status: 502, body: { error: 'upstream gone' } })));
     const outcome = fail(run());
@@ -144,9 +145,9 @@ describe('a 502 from the gateway', () => {
 
     expect(err?.message).toBe('E2EE chat failed: 502');
     expect(err?.responseBody).toContain('upstream gone');
-    // Not an 11-attempt storm: 3 requests, the last on the fallback.
-    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, SMALL_MODEL, FALLBACK]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    // Not an 11-attempt storm: one request per NEAR profile (RedPill fails at its key fetch in the mock).
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK]);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
   });
 });
 
@@ -160,25 +161,27 @@ describe('the stream dies', () => {
       { type: 'finish', reason: 'stop' },
     ]);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, SMALL_MODEL]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
-  it('before any text, as a cancelled body (timeout-class): the retry goes to the session fallback', async () => {
+  it('before any text, as a cancelled body (timeout-class): the next profile answers, a breadcrumb and no event', async () => {
     const { handler, requests } = rawChat(() => [{ fail: abortError() }], { once: true });
     server.use(handler, ...mockGateway(respond('second try')));
     const events = await run();
 
     expect(textOf(events)).toBe('second try');
     expect(requests()).toBe(1);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([FALLBACK]);
-    expect(loggerSpies().captureMessage).toHaveBeenCalledWith(
-      'NEAR primary model failing — session fallback engaged',
-      expect.objectContaining({ fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL] }),
+    expect(loggerSpies().captureMessage).not.toHaveBeenCalled();
+    expect(loggerSpies().captureException).not.toHaveBeenCalled();
+    expect(loggerSpies().addBreadcrumb).toHaveBeenCalledWith(
+      'model profile failed, next profile', 'router',
+      expect.objectContaining({ profile: 'near/qwen3.6-35b-a3b', failure_class: 'deadline' }), 'warning',
     );
   });
 
-  it('as an empty 2xx body (MERA-APP-8Q): model evidence, so the retry goes to the session fallback', async () => {
+  it('as an empty 2xx body (MERA-APP-8Q): model evidence, so the next profile answers', async () => {
     let empties = 0;
     server.use(
       http.post('*/v1/chat/completions', () => {
@@ -191,11 +194,11 @@ describe('the stream dies', () => {
 
     expect(textOf(events)).toBe('second try');
     expect(empties).toBe(1);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([FALLBACK]);
   });
 
-  describe('as an empty 2xx body with the session already on the fallback (MERA-APP-8X)', () => {
+  describe('as an empty 2xx body with the head already marked (MERA-APP-8X)', () => {
     const emptyThen = (empties: number) => {
       let served = 0;
       server.use(
@@ -209,18 +212,19 @@ describe('the stream dies', () => {
       return () => served;
     };
 
-    it('gets ONE fresh request on the same fallback model, and the turn succeeds', async () => {
-      reportModelFailure(SMALL_MODEL);
+    it('moves on down the chain, the marked head last, and the turn succeeds', async () => {
+      reportProfileFailure(PROFILES['near/qwen3.6-35b-a3b'], 'topics', 'deadline');
       const served = emptyThen(1);
       const events = await run();
 
       expect(textOf(events)).toBe('second try');
       expect(served()).toBe(1);
-      expect(gatewayCalls('chat').map((c) => c.model)).toEqual([FALLBACK]);
+      // Qwen3.8's empty reply came from the override, so only the marked head reaches the mock's log.
+      expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL]);
     });
 
-    it('a second empty reply surfaces as EmptyReplyError, with no third request', async () => {
-      reportModelFailure(SMALL_MODEL);
+    it('every profile empty: the first EmptyReplyError surfaces, one request per profile', async () => {
+      reportProfileFailure(PROFILES['near/qwen3.6-35b-a3b'], 'topics', 'deadline');
       const served = emptyThen(3);
       const err = await fail(run());
 
@@ -240,7 +244,7 @@ describe('the stream dies', () => {
     ]);
     expect(requests()).toBe(1);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
     expect(loggerSpies().captureMessage).not.toHaveBeenCalled();
   });
 
@@ -250,7 +254,7 @@ describe('the stream dies', () => {
     const seen: string[] = [];
     const err = await fail(
       (async () => {
-        for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) {
+        for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics' })) {
           if (e.type === 'text-delta') seen.push(e.delta);
         }
       })(),
@@ -259,7 +263,7 @@ describe('the stream dies', () => {
     expect(err?.message).toMatch(/cancel/);
     expect(seen).toEqual(['half an answer']);
     expect(requests()).toBe(1);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 });
 
@@ -355,7 +359,7 @@ describe('IDLE1: a stall before the first chunk', () => {
 
   it('is timeout-class evidence: the retry goes to the session fallback', async () => {
     await stallThenRecover();
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK]);
   });
 });

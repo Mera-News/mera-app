@@ -70,7 +70,7 @@ describe.each([
 
     await collect(
       cloudChatStream({
-        model: SMALL_MODEL,
+        route: 'topics',
         stream,
         messages: [
           { role: 'system', content: 'You are Mera.' },

@@ -1,7 +1,7 @@
 // Cards on the cloud persona loop, driven the way the app drives them: a scripted gateway, the real
 // engine, the real PersonaUpdateAgent executing proposeChanges / applyProposal / cancelProposal.
 import { resetChatSession, stopChatTurn } from '@/lib/chat-session/chat-session';
-import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetFallback } from '@/lib/llm/router';
 import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, mockGateway, server, signInFixtureAccount, type GatewayCall, type GatewayResponder } from '@/test/helpers';

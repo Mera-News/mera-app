@@ -11,7 +11,6 @@
 import { completeLocal } from '../llm/completeLocal';
 import { isOnDeviceDeferrable } from '../inference/job-defer';
 import { cloudComplete, cloudBatchComplete } from '../llm/cloudComplete';
-import { SMALL_MODEL } from '../llm/constants';
 import logger from '../logger';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
@@ -269,7 +268,7 @@ async function generateReasonForCandidate(
         prompt: userMessage,
         maxTokens: ARTICLE_CFG.reasonMaxTokens,
         temperature: ARTICLE_CFG.reasonTemperature,
-        model: SMALL_MODEL,
+        route: 'scoring',
       });
   const decoded = parseReasonResult(output, candidate.id, userMessage, appHarnessLogger);
   return onDevice ? { reason: decoded.reason } : decoded;
@@ -477,7 +476,7 @@ export async function batchScoreAndReason(
     // A refused request keeps the relevance pass: the rows save as `reason_pending` and the
     // reason sweep owes them a note, the same outcome as the on-device catch above.
     try {
-      const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
+      const reasonResults = await cloudBatchComplete(phase2.calls, 'scoring');
       const orderedIds = phase2.eligibleCandidates.map((c) => c.id);
       const decodedReasons = decodeCloudBatchResults({
         batchResults: resolveReasonResultIds(reasonResults, orderedIds),
@@ -845,7 +844,7 @@ export async function runFeedVerifierPass(
       appHarnessLogger,
     );
     if (calls.length === 0) return 0;
-    const results = await cloudBatchComplete(calls, SMALL_MODEL);
+    const results = await cloudBatchComplete(calls, 'scoring');
     const demoted = applyFeedVerifierDecisions(
       scoreMap,
       verifyIdToCandidates,
@@ -1227,7 +1226,7 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
       if (calls.length === 0) break;
 
       try {
-        const batchResults = await cloudBatchComplete(calls, SMALL_MODEL);
+        const batchResults = await cloudBatchComplete(calls, 'scoring');
         for (const result of batchResults) {
           const serverId = result.id.slice('reason:'.length);
           if (result.error) {

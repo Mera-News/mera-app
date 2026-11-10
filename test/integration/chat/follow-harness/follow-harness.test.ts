@@ -7,7 +7,7 @@ import { pendingProposalView } from '@/lib/chat-session/cloud-engine-helpers';
 import { deriveTrackProposal } from '@/components/custom/floating-chat/derive-proposals';
 import { FollowStoryAgent } from '@/lib/llm/agents/FollowStoryAgent';
 import { ArticleFeedbackAgent } from '@/lib/llm/agents/ArticleFeedbackAgent';
-import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetFallback } from '@/lib/llm/router';
 import { FOLLOW_STORY_SURFACE } from '@/lib/news-harness/follow-story';
 import type { ProposalAction, StagedProposal, TrackFeedbackSubject } from '@/lib/news-harness/core/types';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';

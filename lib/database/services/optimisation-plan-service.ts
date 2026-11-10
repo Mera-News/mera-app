@@ -30,7 +30,6 @@ import { getAllTopicSnapshots, getAllByNormalizedText } from './topic-service';
 import { applyPersonaAction, type PersonaAction } from './persona-action-executor';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
-import { SMALL_MODEL } from '../../llm/constants';
 import { toastManager } from '../../toast-manager';
 import logger from '../../logger';
 import { ACTION_NAMES, type ActionName } from '../../news-harness/persona-management/action-names';
@@ -65,7 +64,6 @@ export const STALE_SIGNAL_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_REJECTED_FINGERPRINTS = 200;
 
 /** Model + output budget for the single organize completion (calibration parity). */
-const PLAN_MODEL = SMALL_MODEL;
 const PLAN_MAX_TOKENS = 512;
 const PLAN_TEMPERATURE = 0.2;
 
@@ -433,7 +431,7 @@ async function organizePlan(candidates: DigestCandidate[]): Promise<OrganizedPla
     const output = await cloudComplete({
       systemPrompt: PLAN_SYSTEM_PROMPT,
       prompt: buildOrganizeUserMessage(candidates),
-      model: PLAN_MODEL,
+      route: 'background',
       maxTokens: PLAN_MAX_TOKENS,
       temperature: PLAN_TEMPERATURE,
     });

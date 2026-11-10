@@ -75,7 +75,7 @@ describe('item 8: Stop with a call half-parsed', () => {
     const events: SseEvent[] = [];
     const outcome = (async () => {
       for await (const e of cloudChatStream({
-        model: SMALL_MODEL,
+        route: 'topics',
         messages: [{ role: 'user', content: 'Save my note' }],
         tools: [noteAgent([]).getToolDefinitions!()[0]],
         signal: stop.signal,

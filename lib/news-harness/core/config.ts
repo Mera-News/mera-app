@@ -18,7 +18,8 @@ import {
 } from '../prompts/prompts';
 
 /** SMALL_MODEL literal — mirrored from lib/llm/constants.ts (kept out of the
- *  harness import graph on purpose so the harness stays RN-free). */
+ *  harness import graph on purpose so the harness stays RN-free). The eval runners
+ *  read it; the app ignores it: its scoring port routes by lane (lib/mera-protocol/stage-scoring). */
 const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
 export interface ArticlePipelineConfig {

@@ -9,7 +9,7 @@ import { invalidateJwtCache } from '@/lib/auth-client';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream, type SseEvent } from '@/lib/llm/cloudComplete';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { advanceUntilDone, gatewayCalls, mockGateway, server, signInFixtureAccount, useFakeClock } from '@/test/helpers';
 
 const MESSAGES = [
@@ -32,7 +32,7 @@ it('cancelling a chunkDelayMs stream mid-way, 20 times, leaks no stream error', 
     const stop = new AbortController();
     const seen: string[] = [];
     const outcome = await (async () => {
-      for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal }) as AsyncGenerator<SseEvent>) {
+      for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal }) as AsyncGenerator<SseEvent>) {
         if (e.type === 'text-delta') {
           seen.push(e.delta);
           stop.abort();
@@ -55,7 +55,7 @@ it('cancelling during a long fake-clock chunk gap, then jumping past it, leaks n
     resetLimiter();
     const stop = new AbortController();
     const run = (async () => {
-      for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal }) as AsyncGenerator<SseEvent>) {
+      for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal }) as AsyncGenerator<SseEvent>) {
         if (e.type === 'text-delta') stop.abort();
       }
     })().catch((err: Error) => err.name);

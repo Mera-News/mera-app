@@ -8,9 +8,9 @@
 // WatermelonDB native adapter (a native edge) are faked.
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { SMALL_MODEL } from '@/lib/llm/constants';
-import { cloudChatStream, cloudComplete, HEDGE_DELAY_MS } from '@/lib/llm/cloudComplete';
+import { cloudChatStream, cloudComplete } from '@/lib/llm/cloudComplete';
 import { prepareE2EEContext } from '@/lib/e2ee/e2ee-service';
-import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import { isProfileMarked } from '@/lib/llm/router';
 import {
   attestationRequests,
   gatewayCalls,
@@ -49,38 +49,22 @@ describe('a gateway call with no JWT to send', () => {
     expect(err?.message).toBe('cloudComplete: no JWT token available');
     expect(chat.count()).toBe(0);
     expect(gatewayCalls('chat')).toEqual([]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 });
 
-describe('a hedged race whose primary failed with a response', () => {
-  const hedged = () => cloudComplete(REQUEST, { hedgeAfterMs: HEDGE_DELAY_MS, maxTimeoutAttempts: 1 });
-  const late = (status: number, body: string, headerDelayMs: number) => ({ status, body, headerDelayMs });
-
-  it('the hedge already failed: the primary 502 is what surfaces', async () => {
+describe('a model-class failure, then a 4xx on the next profile', () => {
+  it('the 4xx surfaces (it is the request, not the model), and only the first profile is marked', async () => {
     server.use(
-      ...mockGateway((c) => (c.model === SMALL_MODEL ? late(502, 'primary timed out', 12_000) : { status: 400, body: 'hedge said no' })),
+      ...mockGateway((c) => (c.model === SMALL_MODEL ? { status: 502, body: 'primary timed out' } : { status: 400, body: 'next said no' })),
     );
 
-    const err = await errorOf(run(hedged()));
+    const err = await errorOf(run(cloudComplete(REQUEST)));
 
-    expect(err?.message).toContain('502');
+    expect(err?.message).toContain('400');
     expect(gatewayCalls('chat')).toHaveLength(2);
-    // A 502 is timeout-class: the primary still counts as failing even though the hedge had given up.
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
-  });
-
-  it('the hedge fails after the primary 502: the primary 502 is what surfaces, not the hedge 400', async () => {
-    server.use(
-      ...mockGateway((c) => (c.model === SMALL_MODEL ? late(502, 'primary timed out', 12_000) : late(400, 'hedge said no', 14_000))),
-    );
-
-    const err = await errorOf(run(hedged()));
-
-    expect(err?.message).toContain('502');
-    expect(err?.message).not.toContain('400');
-    expect(gatewayCalls('chat')).toHaveLength(2);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
+    expect(isProfileMarked('near/qwen3.8-27b')).toBe(false);
   });
 });
 
@@ -98,7 +82,7 @@ describe('a chat reply with no content-type header', () => {
 
     const events: unknown[] = [];
     const drain = (async () => {
-      for await (const e of cloudChatStream({ messages: [{ role: 'user', content: 'hi' }], model: SMALL_MODEL })) events.push(e);
+      for await (const e of cloudChatStream({ messages: [{ role: 'user', content: 'hi' }], route: 'topics' })) events.push(e);
     })();
     await run(drain);
 

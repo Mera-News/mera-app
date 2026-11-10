@@ -3,17 +3,15 @@
 // the reply comes from the turn store when the gateway kept it, and otherwise the leg is re-sent
 // once, with `restart` clearing what was shown so nothing renders twice.
 import { http, HttpResponse } from 'msw';
-import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import {
-  BUFFERED_HEDGE_DELAY_MS,
   cloudChatStream,
   cloudComplete,
-  HEDGE_DELAY_MS,
   STREAM_IDLE_TIMEOUT_MS,
   UPSTREAM_ALIGNED_TIMEOUT_MS,
   type SseEvent,
 } from '@/lib/llm/cloudComplete';
-import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import { isProfileMarked } from '@/lib/llm/router';
 import { gatewayCalls, mockGateway, server, setAppState } from '@/test/helpers';
 import { useStrictClock } from '@/test/integration/chat/_helpers';
 import {
@@ -30,14 +28,16 @@ import {
 
 installChatHooks();
 
-const FALLBACK = MODEL_FALLBACKS[SMALL_MODEL];
+const FALLBACK = BIG_MODEL;
+/** The topics lane's first-token deadline (lib/harnesses cloud-base): pump() runs on topics. */
+const DEADLINE_MS = 120_000;
 const ID = /^[A-Za-z0-9_-]{16,64}$/;
 
 /** Reads events as they arrive, so a test can act between two of them. */
 function pump(extra: object = {}) {
   const events: SseEvent[] = [];
   const done = (async () => {
-    for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, ...extra })) events.push(e);
+    for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics', ...extra })) events.push(e);
     return events;
   })();
   return { events, done };
@@ -94,7 +94,7 @@ describe('flag off: every read answers turn-gone', () => {
     expect(gatewayCalls('chat')).toHaveLength(2);
     expect(textOf(events)).toBe('hello');
     expect(events.some((e) => e.type === 'restart')).toBe(false);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
   it('a re-send after returning is a first attempt on the wait line, never "retrying"', async () => {
@@ -132,7 +132,7 @@ describe('flag off: every read answers turn-gone', () => {
     answer();
     await drive(outcome);
 
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
   it('mid-stream: the partial is cleared by `restart` and the text lands once', async () => {
@@ -150,7 +150,7 @@ describe('flag off: every read answers turn-gone', () => {
     expect(events.filter((e) => e.type === 'restart')).toHaveLength(1);
     expect(shownText(events)).toBe('Whole answer');
     expect(gatewayCalls('chat')).toHaveLength(2);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
   it('a stream that closes while away is re-sent, where in the foreground it would surface', async () => {
@@ -175,20 +175,23 @@ describe('flag off: every read answers turn-gone', () => {
     const { events, done } = pump();
     await advanceUntil(() => gatewayCalls('chat').length === 1);
 
-    await suspendFor(HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     setAppState('active');
     await drive(done);
 
     expect(textOf(events)).toBe('hello');
     expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, SMALL_MODEL]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
-  it('a second away inside the hedge window is no departure: the hedge fires on time, the primary is not cut, and no verdict lands', async () => {
+  it('a second away during a leg makes its deadline no verdict: one free re-send, then the next profile', async () => {
+    // shortcut: "left since the attempt began" also covers a deadline that fired on time after a short
+    // trip, so the head gets one more deadline before the router moves on. Split on timer lateness
+    // (as the old hedge did) if a brief app switch mid-turn ever shows up as slow turns.
     server.use(
-      ...mockGateway((c) => (c.model === SMALL_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
+      ...mockGateway((c) => (c.model === BIG_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
     );
-    const { events, done } = pump();
+    const { events, done } = pump({ route: 'chat-tools' });
     await advanceUntil(() => gatewayCalls('chat').length === 1);
     away();
     await jest.advanceTimersByTimeAsync(1000);
@@ -196,9 +199,8 @@ describe('flag off: every read answers turn-gone', () => {
     await drive(done);
 
     expect(textOf(events)).toBe('fast');
-    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK]);
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([BIG_MODEL, BIG_MODEL, SMALL_MODEL]);
     expect(events.some((e) => e.type === 'restart')).toBe(false);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
   });
 
   it('a leg that starts while away waits for the return', async () => {
@@ -247,7 +249,7 @@ describe('flag off: every read answers turn-gone', () => {
     await jest.advanceTimersByTimeAsync(UPSTREAM_ALIGNED_TIMEOUT_MS + 1000);
     await drive(done);
     expect(textOf(events)).toBe('hello');
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
   });
 });
 
@@ -288,7 +290,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    await suspendFor(HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(textOf(events)).toBe('From the store');
@@ -305,7 +307,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump({ stream: false });
     await advanceUntil(() => gw.ids.length === 1);
-    await suspendFor(BUFFERED_HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(textOf(events)).toBe('Buffered answer');
@@ -337,7 +339,7 @@ describe('flag on: the turn store holds the reply', () => {
 
     expect(shownText(events)).toBe('Whole');
     expect(gw.ids).toHaveLength(2);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
   it('retries a 503 turn-store-unavailable', async () => {
@@ -349,7 +351,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    await suspendFor(HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(textOf(events)).toBe('Stored');
@@ -389,7 +391,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    await suspendFor(HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     const back = Date.now();
     setAppState('active');
     await advanceUntil(() => gw.ids.length === 2, 200_000);
@@ -409,7 +411,7 @@ describe('flag on: the turn store holds the reply', () => {
     server.use(...gw.handlers);
     const { events, done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    await suspendFor(HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     setAppState('active');
     await advanceUntil(() => gw.reads.length === 1);
     await suspendFor(UPSTREAM_ALIGNED_TIMEOUT_MS + 60_000);
@@ -433,7 +435,7 @@ describe('flag on: the turn store holds the reply', () => {
     });
     const { done } = pump();
     await advanceUntil(() => gw.ids.length === 1);
-    await suspendFor(HEDGE_DELAY_MS + 5000);
+    await suspendFor(DEADLINE_MS + 5000);
     setAppState('active');
     await drive(done);
     expect(stamps.length).toBeGreaterThanOrEqual(4);
@@ -457,7 +459,7 @@ describe('best-effort DELETE', () => {
     expect(gw.deletes).toEqual([gw.ids[0]]);
   });
 
-  it('a losing hedge leg is deleted, and a failing DELETE changes nothing', async () => {
+  it('an abandoned profile\'s turn is deleted, and a failing DELETE changes nothing', async () => {
     const posts: string[] = [];
     const deletes: string[] = [];
     server.use(
@@ -467,15 +469,15 @@ describe('best-effort DELETE', () => {
       }),
       ...mockGateway((c) => {
         posts.push(c.headers['x-mera-turn-id']);
-        return c.model === SMALL_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast';
+        return c.model === BIG_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast';
       }),
     );
-    const { events, done } = pump();
+    const { events, done } = pump({ route: 'chat-tools' });
     await drive(done);
     await advanceUntil(() => deletes.length >= 1);
     expect(textOf(events)).toBe('fast');
     expect(deletes[0]).toBe(posts[0]);
-    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK]);
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([BIG_MODEL, SMALL_MODEL]);
   });
 
   it('a finished turn is left alone', async () => {

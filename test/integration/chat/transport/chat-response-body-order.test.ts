@@ -9,7 +9,7 @@ const seal = (t: string) => sealForClient(t, publicKeyHex, 'ed25519');
 
 async function textOf(response: Response): Promise<string> {
   let out = '';
-  for await (const e of consumeChatResponse(response, secret, 'ed25519', [])) {
+  for await (const e of consumeChatResponse(response, { privateKey: secret, algo: 'ed25519' }, [])) {
     if (e.type === 'text-delta') out += e.delta;
   }
   return out;

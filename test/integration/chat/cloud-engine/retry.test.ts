@@ -7,7 +7,7 @@ import {
   stopChatTurn,
 } from '@/lib/chat-session/chat-session';
 import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
-import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetFallback } from '@/lib/llm/router';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, mockGateway, server, signInFixtureAccount, type GatewayResponder } from '@/test/helpers';

@@ -1,14 +1,15 @@
-// Cloud inference model identifiers.
-// BIG  — persona-update chat (tool-calling, multi-turn) and quick fact-check synthesis.
-// SMALL — everything else: topic generation, relevance scoring, reason generation.
+// Cloud inference model identifiers: ALIASES of the default routing table's heads
+// (lib/llm/profiles DEFAULT_TABLE), for the eval scripts and tests. Nothing on a
+// request path reads them: every call names a lane and lib/llm/router picks the
+// profile (provider + model). A test pins that these still equal the heads.
+// BIG  — head of the chat lanes (tool-calling chat, article chat, fact-check).
+// SMALL — head of scoring, topics and background.
 
 export const BIG_MODEL = 'Qwen/Qwen3.8-27B';
 export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
 /**
- * Session-scoped fallback model per primary. When a primary model fails in a
- * TIMEOUT-CLASS way (see lib/llm/model-fallback) we stop sending it for the rest
- * of the JS session and send its fallback instead.
+ * WHY THESE MODELS, AND WHY THIS ORDER (the default ranking in lib/llm/profiles).
  *
  * WHICH MODELS ARE EVEN ELIGIBLE. The E2EE path keys on
  * `model_attestations[0].signing_public_key` from `/v1/attestation/report`
@@ -84,17 +85,13 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   and 12 of 961 tool calls schema-invalid. DeepSeek-V4.1-Flash-1017 attested and
  *   called tools but lost: 149 of 1031 invalid, including 49 of 218 load_skill.
  *   An older 12 of 19 `finish_reason: length` figure was thinking ON, which chat
- *   no longer sends and the adapter forces off while the fallback is engaged.
+ *   no longer sends and the qwen3.6-35b-a3b harness forces off (`thinking: false`).
  *
- * The two primaries deliberately fall back to DIFFERENT models so one dead
- * fallback cannot take out both lanes at once.
- *
- * This map is the single point to change if a different fallback is chosen.
+ * The chat lanes and the bulk lanes deliberately rank the two NEAR models in
+ * OPPOSITE order, so one dead model cannot take out both heads at once. NEAR's
+ * Qwen models have also failed as one group, which is why RedPill's Qwen3.8-27B
+ * (same harness, same prompts) is third on every lane.
  */
-export const MODEL_FALLBACKS: Record<string, string> = {
-  [BIG_MODEL]: 'Qwen/Qwen3.6-35B-A3B-FP8',
-  [SMALL_MODEL]: 'Qwen/Qwen3.8-27B',
-};
 
 /**
  * Max output tokens for a CHAT turn — the on-device path and the cloud path

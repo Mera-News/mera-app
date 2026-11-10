@@ -101,8 +101,9 @@ const isOnDeviceMode = () =>
 // --- LlmPort adapters (for the inline sync path) ---------------------------
 
 const cloudLlmPort: LlmPort = {
-  batchComplete: (calls, opts) => cloudBatchComplete(calls, opts?.model),
-  complete: (req) => cloudComplete(req),
+  batchComplete: (calls) => cloudBatchComplete(calls, 'scoring'),
+  // Its only cloud caller is the subscription read.
+  complete: (req) => cloudComplete({ ...req, route: 'background' }),
 };
 
 /** Local (on-device) port. Relevance goes through Kev (`relevanceScorer`), so only `complete`

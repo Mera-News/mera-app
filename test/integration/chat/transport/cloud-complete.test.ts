@@ -3,15 +3,14 @@
 // decrypted call log; what is only visible on the wire (temperature, max_tokens, the thinking flag,
 // that nothing is in the clear) comes from the raw request body.
 import { _getBreakerState, _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
-import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import {
   cloudBatchComplete,
   cloudComplete,
-  UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS,
   UPSTREAM_ALIGNED_TIMEOUT_MS,
 } from '@/lib/llm/cloudComplete';
 import { EmptyReplyError } from '@/lib/llm/gateway-fetch';
-import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import { isProfileMarked } from '@/lib/llm/router';
 import logger from '@/lib/logger';
 import { http, HttpResponse } from 'msw';
 import { attestationRequests, gatewayCalls, mockGateway, server, signInFixtureAccount } from '@/test/helpers';
@@ -30,7 +29,7 @@ import {
 const SECRET_SYSTEM = 'SENTINEL-SYSTEM-5e2a you are the test model';
 const SECRET_USER = 'SENTINEL-USER-b07c what is the news';
 const REQUEST = { systemPrompt: SECRET_SYSTEM, prompt: SECRET_USER };
-const FALLBACK_MODEL = MODEL_FALLBACKS[SMALL_MODEL];
+const FALLBACK_MODEL = BIG_MODEL;
 
 beforeEach(async () => {
   await resetTransport({ signIn: false });
@@ -74,9 +73,9 @@ describe('cloudComplete', () => {
     expect(headers['x-encryption-version']).toBe('2');
   });
 
-  it('uses the model it is given', async () => {
-    await run(cloudComplete({ ...REQUEST, model: 'custom-model' }));
-    expect(gatewayCalls('chat')[0].model).toBe('custom-model');
+  it('uses the head of the lane it is given', async () => {
+    await run(cloudComplete({ ...REQUEST, route: 'chat-tools' }));
+    expect(gatewayCalls('chat')[0].model).toBe(BIG_MODEL);
   });
 
   it('defaults to SMALL_MODEL', async () => {
@@ -215,44 +214,41 @@ describe('cloudComplete signed out', () => {
   });
 });
 
-describe('gateway-aligned timeout defaults', () => {
+describe('first-token deadline and the chain', () => {
   beforeEach(signedIn);
 
-  it('are 130s per attempt and 2 timeout attempts, outlasting the gateway 120s upstream limit', () => {
-    expect(UPSTREAM_ALIGNED_TIMEOUT_MS).toBe(130_000);
-    expect(UPSTREAM_ALIGNED_TIMEOUT_MS).toBeGreaterThan(120_000);
-    expect(UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS).toBe(2);
-  });
-
-  it('a gateway verdict that lands at 125s is waited for', async () => {
-    server.use(...mockGateway(respond({ chunks: ['slow but here'], headerDelayMs: 125_000 })));
+  it('a background answer that lands at 115s is waited for', async () => {
+    server.use(...mockGateway(respond({ chunks: ['slow but here'], headerDelayMs: 115_000 })));
     const chat = watchRequests(CHAT_PATH);
 
     expect(await run(cloudComplete(REQUEST), 600_000, 250)).toBe('slow but here');
     expect(chat.count()).toBe(1);
   });
 
-  it('a silent gateway costs two 130s attempts on the primary, then ONE on the fallback', async () => {
+  it('a silent model costs ONE 120s attempt per profile, never a second on the same one', async () => {
     server.use(...mockGateway(respond({ chunks: ['never'], headerDelayMs: 900_000 })));
+    server.use(http.get('*/api/attestation/report', ({ request }) =>
+      request.headers.get('x-mera-provider') === 'redpill' ? new HttpResponse('down', { status: 503 }) : undefined));
     const chat = watchRequests(CHAT_PATH);
 
     const err = await run(errorOf(cloudComplete(REQUEST)), 900_000, 250);
 
     expect(err?.message).toMatch(/abort|cancel/i);
-    expect(chat.count()).toBe(3);
-    expect(chat.times()[1] - chat.times()[0]).toBeGreaterThanOrEqual(UPSTREAM_ALIGNED_TIMEOUT_MS);
-    expect(chat.times()[1] - chat.times()[0]).toBeLessThan(UPSTREAM_ALIGNED_TIMEOUT_MS + 5_000);
-    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, SMALL_MODEL, FALLBACK_MODEL]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+    expect(chat.count()).toBe(2);
+    expect(chat.times()[1] - chat.times()[0]).toBeGreaterThanOrEqual(120_000);
+    expect(chat.times()[1] - chat.times()[0]).toBeLessThan(125_000);
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK_MODEL]);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
   });
 
-  it('cloudBatchComplete caps 502 attempts at 2 by default, plus one fallback retry (it was 11)', async () => {
+  it('cloudBatchComplete sends each NEAR profile once on a 502 and never RedPill (it was 11 requests)', async () => {
     server.use(...mockGateway(respond({ status: 502, body: 'gateway timeout' })));
     const batch = watchRequests(BATCH_PATH);
 
     const err = await run(errorOf(cloudBatchComplete([{ id: 'c1', system: 's', prompt: 'p', temperature: 0.3 }])));
 
     expect(err?.message).toMatch(/E2EE batch failed: 502/);
-    expect(batch.count()).toBe(3);
+    expect(batch.count()).toBe(2);
+    expect(gatewayCalls('batch').map((c) => c.model)).toEqual([SMALL_MODEL, FALLBACK_MODEL]);
   });
 });

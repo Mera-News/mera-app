@@ -2,7 +2,7 @@
 // thinking flag per call, per-item and whole-request failures. Replies the responder cannot express
 // (an out-of-order batch, a per-item error, a reasoning-only item) replace the batch route with
 // serveJson, sealed toward the calling client with its real key.
-import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import * as e2eeService from '@/lib/e2ee/e2ee-service';
 import { cloudBatchComplete } from '@/lib/llm/cloudComplete';
 import type { BatchCall } from '@/lib/llm/types';
@@ -191,9 +191,10 @@ describe('cloudBatchComplete', () => {
   });
 
   describe('the request body', () => {
-    it('uses the model it is given', async () => {
-      await run(cloudBatchComplete([call('x')], 'my-custom-model'));
-      expect(gatewayCalls('batch')[0].model).toBe('my-custom-model');
+    it('uses the head of the lane it is given', async () => {
+      await run(cloudBatchComplete([call('x')], 'chat-tools'));
+      expect(gatewayCalls('batch')[0].model).toBe(BIG_MODEL);
+      expect(gatewayCalls('batch')[0].headers['x-mera-provider']).toBe('near');
     });
 
     it('defaults to SMALL_MODEL', async () => {
@@ -255,7 +256,7 @@ describe('cloudBatchComplete', () => {
       }
     });
 
-    it('moves a stalled primary onto the fallback model for the retry and for later batches', async () => {
+    it('moves a stalled primary onto the next profile at once, and later batches start there', async () => {
       server.use(...mockGateway((c) => (c.model === SMALL_MODEL ? { status: 502 } : 'recovered')));
 
       const first = await run(cloudBatchComplete([call('c1')]));
@@ -263,12 +264,7 @@ describe('cloudBatchComplete', () => {
 
       expect(first).toEqual([{ id: 'c1', output: 'recovered' }]);
       expect(second).toEqual([{ id: 'c2', output: 'recovered' }]);
-      expect(gatewayCalls('batch').map((c) => c.model)).toEqual([
-        SMALL_MODEL,
-        SMALL_MODEL,
-        MODEL_FALLBACKS[SMALL_MODEL],
-        MODEL_FALLBACKS[SMALL_MODEL],
-      ]);
+      expect(gatewayCalls('batch').map((c) => c.model)).toEqual([SMALL_MODEL, BIG_MODEL, BIG_MODEL]);
     });
   });
 });

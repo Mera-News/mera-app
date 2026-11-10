@@ -9,7 +9,7 @@ import { captureChatBodies, collect, installChatHooks, MESSAGES, respond, textOf
 
 installChatHooks();
 
-const run = () => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+const run = () => collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
 
 describe('finish mapping', () => {
   it('stop is a stop, streamed, and the prompt never left the device in clear', async () => {

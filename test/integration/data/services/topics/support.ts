@@ -23,7 +23,7 @@ import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { ProcessingMode, type ArticleWithClusters } from '@/lib/generated/graphql-types';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { __resetOnDeviceGateForTests } from '@/lib/llm/on-device-gate';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';

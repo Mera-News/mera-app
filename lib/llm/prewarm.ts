@@ -6,7 +6,7 @@
 // (3) hit a possibly-COLD model (the dominant, multi-second cost the attestation
 // + JWT warming alone can't touch). (1) and (2) are cached client-side
 // (attestation ~30 min, JWT ~30 s); (3) has no client cache, so on EVERY chat
-// open (owner, 2026-10-22) we ping BIG_MODEL for the word "ready", and the chat
+// open (owner, 2026-10-22) we ping the chat model for the word "ready", and the chat
 // header shows how that went. Only an open passes `ping`; app launch warms (1) and (2) only.
 //
 // Fire-and-forget and idempotent: repeated calls hit the underlying caches / the
@@ -17,13 +17,13 @@
 
 import { create } from 'zustand';
 import { getJwtToken } from '../auth-client';
-import { fetchModelPublicKey } from '../e2ee/e2ee-service';
 import logger from '../logger';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useUserStore } from '../stores/user-store';
 import { chatRunsInCloud } from './chat-cloud';
 import { cloudComplete } from './cloudComplete';
-import { BIG_MODEL, SMALL_MODEL } from './constants';
+import { attestProfile } from './provider-e2ee';
+import { profilesToPreattest, refreshRouting } from './router';
 
 export type ChatReadiness = 'idle' | 'warming' | 'ready' | 'error';
 
@@ -60,26 +60,17 @@ export function prewarmCloudChat(opts: { ping?: boolean } = {}): void {
   }
 
   const startMs = Date.now();
-  // THE TWO PRIMARIES ONLY. Fallback attestations are fetched lazily, inside
-  // the build for whichever leg actually needs one.
-  //
-  // Every gateway call now takes a limiter grant, and these are serialised
-  // behind it — so each extra prewarm fetch pushes pingModel(), the dominant
-  // cold-start cost this file exists for, a further interval out. The old
-  // three-fetch shape spent that on BIG, fallback(BIG) and fallback(SMALL)
-  // while never warming SMALL_MODEL itself, which is what cloudChatStream
-  // defaults to and what every scoring call uses.
-  //
-  // Cost of going lazy, on the fallback path: a hedge leg that must attest
-  // cold pays one interactive grant plus one uncached attestation round trip
-  // before it can send. It only runs after 10s of total silence from the
-  // primary (HEDGE_DELAY_MS) and exists to rescue a stall, not to shave
-  // latency, so a second or two at the front of the rescue is the right trade
-  // for two fewer requests on every launch.
+  // THE TOP TWO PROFILES OF EACH LANE, once each (today: both NEAR Qwen
+  // models). On launch the routing table is fetched alongside; until it
+  // answers the built-in order decides. Later profiles attest lazily, inside the build of
+  // the send that reaches them: every gateway call takes a limiter grant, and
+  // each extra fetch here pushes pingModel(), the dominant cold-start cost this
+  // file exists for, a further interval out.
   void Promise.allSettled([
-    fetchModelPublicKey(BIG_MODEL, 'interactive'),
-    fetchModelPublicKey(SMALL_MODEL, 'interactive'),
+    ...profilesToPreattest().map((p) => attestProfile(p, 'interactive')),
     getJwtToken(),
+    // Launch only: a chat open does not refetch it; a reply naming a new version does.
+    ...(opts.ping ? [] : [refreshRouting()]),
   ]).then(
     (results) => {
       const failed = results.filter(
@@ -102,7 +93,7 @@ export function prewarmCloudChat(opts: { ping?: boolean } = {}): void {
 }
 
 /**
- * One fixed E2EE call to BIG_MODEL so the NEAR model is loaded before the
+ * One fixed E2EE call on the chat-tools lane so its model is loaded before the
  * user's first real turn; its outcome drives the header badge. The request is
  * two constants: no user data, no language, no clock. Fully silent: no Sentry,
  * no toast. The badge says error after PING_DEADLINE_MS without a reply.
@@ -133,7 +124,7 @@ async function pingModel(): Promise<void> {
     const reply = await cloudComplete({
       systemPrompt: 'Reply with the single word "ready" and nothing else.',
       prompt: 'ping',
-      model: BIG_MODEL,
+      route: 'chat-tools',
       maxTokens: 8,
       temperature: 0,
       purpose: 'chat',

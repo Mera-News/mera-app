@@ -8,7 +8,7 @@ import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { disposeModel } from '@/lib/mera-protocol-toolkit';
 import {
   __resetSuggestionsRefreshThrottleForTests,

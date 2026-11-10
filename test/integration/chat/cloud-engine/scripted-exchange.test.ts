@@ -10,7 +10,7 @@ import {
 import { isOnboardingMenuRow } from '@/lib/chat-session/engine';
 import { useChatSession } from '@/lib/chat-session/use-chat-session';
 import { createConversation, fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
-import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetFallback } from '@/lib/llm/router';
 import { FOLLOW_STORY_SKILL } from '@/lib/mera-harness/core/core';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, mockGateway, server, signInFixtureAccount } from '@/test/helpers';

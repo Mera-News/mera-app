@@ -34,7 +34,7 @@ import {
   interactiveWaitMs,
   msUntilNextGrant,
 } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { __resetOnDeviceGateForTests, OnDeviceModeError } from '@/lib/llm/on-device-gate';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import {

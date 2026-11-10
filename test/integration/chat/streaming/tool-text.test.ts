@@ -44,7 +44,7 @@ describe('the outbound request', () => {
       server.use(...mockGateway(respond('ok'), { curve: { [SMALL_MODEL]: curve } }));
       await collect(
         cloudChatStream({
-          model: SMALL_MODEL,
+          route: 'topics',
           messages: [
             { role: 'system', content: 'You are Mera.' },
             { role: 'user', content: `I live in ${PLACE}` },
@@ -88,13 +88,13 @@ describe('the outbound request', () => {
 
   it('an empty tools array adds no tools block and no tool key', async () => {
     server.use(...mockGateway(respond('ok')));
-    await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, tools: [] }));
+    await collect(cloudChatStream({ messages: MESSAGES, route: 'topics', tools: [] }));
     expect(gatewayCalls('chat')[0].messages).toEqual(MESSAGES);
   });
 
   it('no tools and no tool choice leaves the system prompt exactly as given', async () => {
     server.use(...mockGateway(respond('ok')));
-    await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, toolChoice: 'required' }));
+    await collect(cloudChatStream({ messages: MESSAGES, route: 'topics', toolChoice: 'required' }));
     expect(gatewayCalls('chat')[0].messages).toEqual(MESSAGES);
   });
 });
@@ -104,7 +104,7 @@ describe('calls parsed out of the encrypted reply', () => {
     const reply = `Noted.\n${callXml('saveExtractedFacts', { statement: 'Lives in Porto' })}`;
     server.use(...mockGateway(respond({ chunks: reply.match(/.{1,5}/gs) as string[], finishReason: 'stop' })));
     const events = await collect(
-      cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, tools: [tool('saveExtractedFacts')] }),
+      cloudChatStream({ messages: MESSAGES, route: 'topics', tools: [tool('saveExtractedFacts')] }),
     );
     expect(textOf(events)).toBe('Noted.\n');
     expect(toolCalls(events)).toEqual([
@@ -121,7 +121,7 @@ describe('calls parsed out of the encrypted reply', () => {
     const events = await collect(
       cloudChatStream({
         messages: MESSAGES,
-        model: SMALL_MODEL,
+        route: 'topics',
         tools: [tool('one', { a: { type: 'string' } }), tool('two', { b: { type: 'string' } }), tool('three', { c: { type: 'string' } })],
       }),
     );
@@ -141,7 +141,7 @@ describe('calls parsed out of the encrypted reply', () => {
     const reply = `<think>maybe ${callXml('saveExtractedFacts', { statement: 'ghost' })}</think>Nothing to save.`;
     server.use(...mockGateway(respond({ chunks: reply.match(/.{1,7}/gs) as string[] })));
     const events = await collect(
-      cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, tools: [tool('saveExtractedFacts')] }),
+      cloudChatStream({ messages: MESSAGES, route: 'topics', tools: [tool('saveExtractedFacts')] }),
     );
     expect(toolCalls(events)).toEqual([]);
     expect(textOf(events)).toBe('Nothing to save.');
@@ -150,7 +150,7 @@ describe('calls parsed out of the encrypted reply', () => {
 
   it('stream false is honoured, and a call in the one buffered envelope parses the same way', async () => {
     server.use(...mockGateway(respond(`Ok.${callXml('f', { x: '1' })}`)));
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, stream: false }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics', stream: false }));
     expect(gatewayCalls('chat')[0].stream).toBe(false);
     expect(events).toEqual([
       { type: 'text-delta', delta: 'Ok.' },
@@ -161,7 +161,7 @@ describe('calls parsed out of the encrypted reply', () => {
 
   it('a buffered reply from an upstream that ignores stream true parses calls too', async () => {
     server.use(...mockGateway(respond({ chunks: ['Ok.', callXml('f', { x: 'v' })], ignoreStream: true })));
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
     expect(gatewayCalls('chat')[0].stream).toBe(true);
     expect(textOf(events)).toBe('Ok.');
     expect(toolCalls(events)).toEqual([expect.objectContaining({ index: 0, name: 'f', argumentsDelta: '{"x":"v"}' })]);

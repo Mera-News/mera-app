@@ -3,7 +3,7 @@
 // think-stripping and text-tool-call parsing applied once for every consumer.
 // Imports gateway-fetch only.
 
-import { decryptContent, type SigningAlgo } from '../e2ee/e2ee-service';
+import { openField, type E2EEContext } from '../e2ee/e2ee-service';
 import logger from '../logger';
 import { createThinkStripper } from '../algorithms/think-strip';
 import {
@@ -75,8 +75,14 @@ export interface ChatCompletionResponse {
 
 /** One OpenAI streaming chunk. `choices` is optional AND may be empty — the
  *  final usage-only chunk carries `choices: []`. */
+/** What opens a reply: the client key, its curve, and (RedPill v2) the AAD parameters. */
+export type OpenKey = Pick<E2EEContext, 'privateKey' | 'algo' | 'v2'>;
+
 interface ChatCompletionChunk {
+  /** The response id, the same on every chunk; RedPill binds it into each field's AAD. */
+  id?: string;
   choices?: {
+    index?: number;
     delta?: {
       content?: string | null;
       reasoning_content?: string | null;
@@ -108,8 +114,7 @@ interface ChatCompletionChunk {
  *  attempt was cut off before any headers. */
 export async function* consumeChatResponse(
   response: Response | null,
-  privateKey: Uint8Array,
-  algo: SigningAlgo,
+  key: OpenKey,
   tools: TextToolDefinition[],
   signal?: AbortSignal,
   resume?: TurnResume,
@@ -125,7 +130,7 @@ export async function* consumeChatResponse(
       yield { type: 'tool-call-delta', index, id: `call_${stamp}_${index}`, name: c.name, argumentsDelta: c.argumentsRaw };
     }
   }
-  for await (const event of consumeChatResponseRaw(response, privateKey, algo, signal, resume)) {
+  for await (const event of consumeChatResponseRaw(response, key, signal, resume)) {
     if (event.type === 'text-delta') {
       const delta = think.push(event.delta);
       if (delta) yield* emit(calls.push(delta));
@@ -159,16 +164,15 @@ export async function* consumeChatResponse(
 
 async function* consumeChatResponseRaw(
   response: Response | null,
-  privateKey: Uint8Array,
-  algo: SigningAlgo,
+  key: OpenKey,
   signal?: AbortSignal,
   resume?: TurnResume,
 ): AsyncGenerator<SseEvent> {
   if (!response) {
     // shortcut: a streamed leg whose upstream ignored `stream: true` stored JSON and reads as
     // empty here, upgrade if a resumed turn ever comes back blank.
-    if (resume?.streamed) yield* consumeSseChat(null, privateKey, algo, undefined, signal, resume);
-    else yield* parseBufferedChat(await readStoredTurn(resume!, signal), privateKey, algo);
+    if (resume?.streamed) yield* consumeSseChat(null, key, undefined, signal, resume);
+    else yield* parseBufferedChat(await readStoredTurn(resume!, signal), key);
     return;
   }
   const handle = takeStreamHandle(response);
@@ -179,10 +183,10 @@ async function* consumeChatResponseRaw(
     // The gateway relays NEAR's content-type verbatim, so JSON here means the
     // upstream ignored `stream: true`. Buffered handling, unchanged.
     handle?.release();
-    yield* consumeBufferedChat(response, privateKey, algo, signal, resume);
+    yield* consumeBufferedChat(response, key, signal, resume);
     return;
   }
-  yield* consumeSseChat(response, privateKey, algo, handle, signal, resume);
+  yield* consumeSseChat(response, key, handle, signal, resume);
 }
 
 /** Streaming path: one E2EE envelope per `delta.content`, decrypted as it lands. */
@@ -195,8 +199,7 @@ function finishReasonOf(raw: string | null | undefined): 'stop' | 'tool_calls' |
 
 async function* consumeSseChat(
   response: Response | null,
-  privateKey: Uint8Array,
-  algo: SigningAlgo,
+  key: OpenKey,
   handle: StreamHandle | undefined,
   signal?: AbortSignal,
   resume?: TurnResume,
@@ -265,7 +268,8 @@ async function* consumeSseChat(
         yield { type: 'reasoning' };
       }
       if (delta.content) {
-        yield { type: 'text-delta', delta: decryptContent(delta.content, privateKey, algo) };
+        const field = `choices.${choice.index ?? 0}.delta.content`;
+        yield { type: 'text-delta', delta: openField(delta.content, key, field, chunk.id ?? '') };
       }
 
       // The app never sends a tools field, so a native `delta.tool_calls` here
@@ -302,8 +306,7 @@ async function* consumeSseChat(
  *  answer. Reached when the upstream ignores `stream: true`. */
 async function* consumeBufferedChat(
   response: Response,
-  privateKey: Uint8Array,
-  algo: SigningAlgo,
+  key: OpenKey,
   signal?: AbortSignal,
   resume?: TurnResume,
 ): AsyncGenerator<SseEvent> {
@@ -314,13 +317,12 @@ async function* consumeBufferedChat(
     if (!resume?.left() || signal?.aborted) throw err;
     raw = await readStoredTurn(resume, signal);
   }
-  yield* parseBufferedChat(raw, privateKey, algo);
+  yield* parseBufferedChat(raw, key);
 }
 
 async function* parseBufferedChat(
   raw: string,
-  privateKey: Uint8Array,
-  algo: SigningAlgo,
+  key: OpenKey,
 ): AsyncGenerator<SseEvent> {
   if (!raw.trim()) throw new EmptyReplyError();
   const data = JSON.parse(raw) as ChatCompletionResponse;
@@ -340,7 +342,7 @@ async function* parseBufferedChat(
       finishReason: choice.finish_reason,
       hasReasoning: !!choice.message.reasoning_content,
     });
-    const decrypted = decryptContent(rawContent, privateKey, algo);
+    const decrypted = openField(rawContent, key, 'choices.0.message.content', data.id ?? '');
     yield { type: 'text-delta', delta: decrypted };
   }
 

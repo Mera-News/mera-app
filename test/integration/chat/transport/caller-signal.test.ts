@@ -48,7 +48,7 @@ describe.each([
     // budget would be spent and the raw AbortError would surface instead of the caller's stop.
     const outcome = errorOf(
       cloudComplete(
-        { ...REQUEST, model: SMALL_MODEL },
+        { ...REQUEST, route: 'topics' },
         { signal: controller.signal, maxTimeoutAttempts: 1 },
       ),
     );
@@ -62,7 +62,7 @@ describe.each([
     expect(gatewayCalls('chat')).toHaveLength(1);
 
     server.use(...mockGateway(respond('fine')));
-    expect(await run(cloudComplete({ ...REQUEST, model: SMALL_MODEL }))).toBe('fine');
+    expect(await run(cloudComplete({ ...REQUEST, route: 'topics' }))).toBe('fine');
     const calls = gatewayCalls('chat');
     expect(calls[calls.length - 1].model).toBe(SMALL_MODEL);
   });

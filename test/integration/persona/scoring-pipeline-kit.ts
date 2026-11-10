@@ -22,7 +22,7 @@ import { createTopics } from '@/lib/database/services/topic-service';
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import * as scoringPipeline from '@/lib/services/scoring-pipeline';
 import { __resetSuggestionsRefreshThrottleForTests } from '@/lib/services/SuggestionSyncService';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';

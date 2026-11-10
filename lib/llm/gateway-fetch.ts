@@ -1,7 +1,7 @@
 // gateway-fetch — the authenticated transport under every cloud LLM call:
 // JWT headers, per-attempt timeout, backoff with jitter, 401 re-mint, 429 and
 // 502 handling, and the stream handle a streaming body hands to its reader.
-// Imports none of cloudComplete / hedge / chat-response.
+// Imports none of cloudComplete / routed-send / chat-response.
 
 import { fetch as expoFetch } from 'expo/fetch';
 import { randomBytes } from '@noble/ciphers/utils.js';
@@ -161,6 +161,11 @@ export interface AuthFetchOptions {
   /** Detaches this chat call from the socket: every attempt gets a fresh
    *  `X-Mera-Turn-Id`, written here so the caller can read the turn later. */
   turn?: ChatTurn;
+  /** A ROUTED call (lib/llm/routed-send): a 5xx or our own timeout is evidence about the
+   *  model, and the router answers it by moving to the next profile. So neither is retried
+   *  here: a 5xx comes back as the response, a timeout as the throw. 401, 429 and plain
+   *  network errors keep their handling. */
+  failFast?: boolean;
 }
 
 /** One chat attempt's handle on the gateway's turn store. */
@@ -194,19 +199,12 @@ export function cancelTurn(turn: ChatTurn): void {
     .catch(() => { /* the turn ends on its own deadline */ });
 }
 
-/** Per-call options for the cloud entry points, which additionally choose
- *  whether to hedge. `authFetch` itself never hedges — a hedge is two whole
- *  requests on two different models, which only the model-fallback layer above
- *  it can reason about. */
+/** Per-call options for the cloud entry points. */
 export interface CloudCallOptions extends AuthFetchOptions {
-  /** The caller's stop. Aborts EVERY leg in flight (both hedge legs), the
-   *  limiter wait and the response body. A caller abort says nothing about the
-   *  model: it never counts against the timeout budget and never engages the
-   *  session fallback. */
+  /** The caller's stop. Aborts the request in flight, the limiter wait and the
+   *  response body. A caller abort says nothing about the model: it never
+   *  counts against the timeout budget and never moves the router on. */
   signal?: AbortSignal;
-  /** Fire the same request at the primary's fallback after this many ms and
-   *  race them. Omit (the default) to disable hedging entirely. */
-  hedgeAfterMs?: number;
 }
 
 /**
@@ -264,8 +262,7 @@ export class CleartextToolCallError extends Error {
 
 /**
  * A chat attempt was cut off because the app left. Says nothing about the model,
- * and deliberately not abort-like: the model-fallback layer treats those as
- * evidence. `cloudChatStream` catches it and recovers the leg on return.
+ * and deliberately not abort-like: the router treats those as evidence. `cloudChatStream` catches it and recovers the leg on return.
  */
 export class AppLeftError extends Error {
   constructor() {
@@ -282,11 +279,11 @@ export interface StreamHandle {
   release: () => void;
 }
 
-// Keyed by Response so the handle follows whichever leg actually won a hedge
-// race, with no plumbing through the return shape every non-stream caller uses.
-// A losing leg's handle is simply never taken: the entry dies with its Response,
-// and the listener it would have detached sits on that leg's own throwaway
-// controller.
+// Keyed by Response so the handle follows whichever leg actually answered,
+// with no plumbing through the return shape every non-stream caller uses.
+// An abandoned leg's handle is simply never taken: the entry dies with its
+// Response, and the listener it would have detached sits on that leg's own
+// throwaway controller.
 const streamHandles = new WeakMap<Response, StreamHandle>();
 
 /** Take (and remove) the stream handle attached to a `streamBody` response. */
@@ -392,11 +389,11 @@ export async function authFetch(
     // THE GRANT, PER ATTEMPT. A retry is a request: metering only the first
     // attempt would let one logical call spend MAX_ATTEMPTS slots against a
     // one-slot budget. This single seam covers every path above it — the
-    // sequential fallback retry, the hedge leg, the 401 re-mint, and both of
+    // next-profile send, the 401 re-mint, and both of
     // cloudChatStream's re-sends.
     //
     // The caller's own signal is passed in so an abandoned waiter (a cancelled
-    // turn, a losing hedge leg) is spliced out of the queue instead of holding
+    // turn, an abandoned leg) is spliced out of the queue instead of holding
     // a position ahead of background callers and burning a grant nobody uses.
     if (!(attempt === 0 && options.grantAlreadyHeld)) {
       try {
@@ -487,6 +484,9 @@ export async function authFetch(
         throw new RateLimitedError(retryAfterMs);
       }
 
+      // The router's to answer: the next profile, not the same model again.
+      if (options.failFast && response.status >= 500) return response;
+
       if (response.status === 502) {
         // 502 = the gateway couldn't get a verdict from NEAR within its own
         // UPSTREAM_TIMEOUT_MS (a cold model). Retrying against the SAME cold
@@ -544,6 +544,8 @@ export async function authFetch(
           { url },
         );
       }
+      // Our own deadline on a routed call is the router's to answer.
+      if (options.failFast && isAbort) break;
       // Timeout/network failures share the cold-upstream budget with 502s. The
       // time away is not one of them.
       if (!left()) timeoutAttempts += 1;

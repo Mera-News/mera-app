@@ -2,16 +2,16 @@
 // the SSE body, and re-types the cut as CallerAbortError (never a model verdict, never a retry).
 // Already held by harness/gateway.test.ts > chat: abort > "a caller abort mid-stream marks the recorded
 // call aborted": CallerAbortError, aborted flag, one call. This file adds what that test leaves out.
-import { MODEL_FALLBACKS, SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import { CallerAbortError, cloudChatStream } from '@/lib/llm/cloudComplete';
-import { isFallbackEngaged } from '@/lib/llm/model-fallback';
+import { isProfileMarked } from '@/lib/llm/router';
 import { attestationRequests, gatewayCalls, mockGateway, server } from '@/test/helpers';
 import { useStrictClock } from '@/test/integration/chat/_helpers';
 import { advanceUntil, captureChatBodies, collect, installChatHooks, loggerSpies, MESSAGES, respond, until } from './support';
 
 installChatHooks();
 
-const FALLBACK = MODEL_FALLBACKS[SMALL_MODEL];
+const FALLBACK = BIG_MODEL;
 const SLOW = 60_000;
 const settle = (p: Promise<unknown>) => p.then(() => null, (e: unknown) => e);
 
@@ -21,23 +21,23 @@ describe('stop before anything is sent', () => {
     server.events.on('request:start', () => (requests += 1));
     const stop = new AbortController();
     stop.abort();
-    const err = await settle(collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal })));
+    const err = await settle(collect(cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal })));
 
     expect(err).toBeInstanceOf(CallerAbortError);
     expect(requests).toBe(0);
     expect(gatewayCalls()).toEqual([]);
     expect(attestationRequests()).toBe(0);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 });
 
-describe('stop while the hedge race is pending', () => {
+describe('stop while a profile is pending', () => {
   beforeEach(() => useStrictClock('2026-10-09T00:00:00Z'));
 
-  it('before the hedge fires: the primary is aborted and the hedge is never started', async () => {
+  it('before the deadline: the head is aborted and the next profile is never started', async () => {
     server.use(...mockGateway(respond({ chunks: ['slow'], headerDelayMs: SLOW })));
     const stop = new AbortController();
-    const outcome = settle(collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal })));
+    const outcome = settle(collect(cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal })));
     await advanceUntil(() => gatewayCalls('chat').length === 1);
     stop.abort();
     await jest.advanceTimersByTimeAsync(30_000);
@@ -45,17 +45,17 @@ describe('stop while the hedge race is pending', () => {
     expect(await outcome).toBeInstanceOf(CallerAbortError);
     expect(gatewayCalls('chat').map((c) => c.aborted)).toEqual([true]);
     expect(attestationRequests(FALLBACK)).toBe(0);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 
-  it('after the hedge fired: BOTH legs are aborted, and a stop says nothing about the model', async () => {
+  it('after the head missed its deadline: the next profile\'s leg is aborted, and the stop marks nothing more', async () => {
     server.use(...mockGateway(respond({ chunks: ['slow'], headerDelayMs: SLOW })));
     const stop = new AbortController();
-    const outcome = settle(collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal })));
+    const outcome = settle(collect(cloudChatStream({ messages: MESSAGES, route: 'chat-tools', signal: stop.signal })));
     await advanceUntil(() => gatewayCalls('chat').length === 2);
     expect(gatewayCalls('chat').map((c) => [c.model, c.aborted])).toEqual([
+      [BIG_MODEL, true],
       [SMALL_MODEL, false],
-      [FALLBACK, false],
     ]);
 
     stop.abort();
@@ -63,7 +63,9 @@ describe('stop while the hedge race is pending', () => {
 
     expect(await outcome).toBeInstanceOf(CallerAbortError);
     expect(gatewayCalls('chat').map((c) => c.aborted)).toEqual([true, true]);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    // The deadline was a verdict on the head; the stop is none on the next profile.
+    expect(isProfileMarked('near/qwen3.8-27b')).toBe(true);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
     expect(loggerSpies().captureMessage).not.toHaveBeenCalled();
   });
 });
@@ -76,7 +78,7 @@ describe('stop mid-stream', () => {
     const seen: string[] = [];
     const err = await settle(
       (async () => {
-        for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal })) {
+        for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal })) {
           if (e.type === 'text-delta') {
             seen.push(e.delta);
             stop.abort();
@@ -89,7 +91,7 @@ describe('stop mid-stream', () => {
     expect(seen).toEqual(['one ']);
     await until(() => gatewayCalls('chat')[0]?.aborted === true);
     expect(gatewayCalls('chat')).toHaveLength(1);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
     expect(loggerSpies().captureMessage).not.toHaveBeenCalled();
     for (const b of bodies) expect(b).not.toContain('SENTINEL');
   });
@@ -98,7 +100,7 @@ describe('stop mid-stream', () => {
     // A stream that dies before any text is normally retried once; a stop must not be.
     server.use(...mockGateway(respond({ chunks: ['never'], stallAfter: 0 })));
     const stop = new AbortController();
-    const outcome = settle(collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, signal: stop.signal })));
+    const outcome = settle(collect(cloudChatStream({ messages: MESSAGES, route: 'topics', signal: stop.signal })));
     await until(() => gatewayCalls('chat').length === 1);
     await new Promise((r) => setTimeout(r, 200));
     stop.abort();
@@ -107,6 +109,6 @@ describe('stop mid-stream', () => {
     await until(() => gatewayCalls('chat')[0].aborted);
     await new Promise((r) => setTimeout(r, 1500));
     expect(gatewayCalls('chat')).toHaveLength(1);
-    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(false);
   });
 });

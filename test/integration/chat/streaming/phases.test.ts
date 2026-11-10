@@ -3,7 +3,7 @@
 // attestation cache, the real interactive limiter, the real gateway mock. No module is mocked.
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { fetchModelPublicKey } from '@/lib/e2ee/e2ee-service';
-import { SMALL_MODEL } from '@/lib/llm/constants';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { cloudChatStream } from '@/lib/llm/cloudComplete';
 import { _resetForTests as resetLimiter, interactiveWaitMs } from '@/lib/llm/gateway-rate-limiter';
@@ -27,7 +27,7 @@ const DECRYPT_400 = { status: 400, body: { error: `Provider failed for model '${
 function watch(extra: object = {}) {
   const seen: string[] = [];
   const start = () =>
-    collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, onPhase: (p) => seen.push(String(p)), ...extra }));
+    collect(cloudChatStream({ messages: MESSAGES, route: 'topics', onPhase: (p) => seen.push(String(p)), ...extra }));
   return { seen, start };
 }
 
@@ -108,7 +108,7 @@ describe('queued', () => {
     await drive(fetchModelPublicKey(SMALL_MODEL, 'interactive'));
     resetLimiter();
     // Two calls back to back: the first spends the grant, the second finds the lane 1s out.
-    await drive(collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })));
+    await drive(collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })));
     expect(interactiveWaitMs()).toBeGreaterThan(400);
 
     const { seen, start } = watch();
@@ -121,7 +121,7 @@ describe('queued', () => {
     server.use(...mockGateway(respond('ok')));
     await drive(fetchModelPublicKey(SMALL_MODEL, 'interactive'));
     resetLimiter();
-    await drive(collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })));
+    await drive(collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })));
     while (interactiveWaitMs() > 300) await jest.advanceTimersByTimeAsync(50);
     // The precondition that makes this test discriminate: there IS a wait, and it is short.
     expect(interactiveWaitMs()).toBeGreaterThan(0);
@@ -144,16 +144,17 @@ describe('retrying: any re-entry into the request builder', () => {
     expect(seen).toEqual(['reset', 'securing', 'retrying']);
   });
 
-  it('the hedge leg says retrying, and the ordinary thinking line is not walked back to afterwards', async () => {
+  it('the next profile says retrying, and the ordinary thinking line is not walked back to afterwards', async () => {
     useStrictClock('2026-10-09T00:00:00Z');
+    // The chat head sends no first token within its 30s deadline; the next profile answers.
     server.use(...mockGateway((c) => (c.index === 0 ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')));
-    await drive(fetchModelPublicKey(SMALL_MODEL, 'interactive'));
+    await drive(Promise.all([fetchModelPublicKey(SMALL_MODEL, 'interactive'), fetchModelPublicKey(BIG_MODEL, 'interactive')]));
     resetLimiter();
-    const { seen, start } = watch();
+    const { seen, start } = watch({ route: 'chat-tools' });
     const events = await drive(start());
     expect(textOf(events)).toBe('fast');
-    expect(gatewayCalls('chat')).toHaveLength(2);
-    // A hedge built up front would have said `retrying` at t=0 on every call; it builds behind its timer.
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([BIG_MODEL, SMALL_MODEL]);
+    // The next profile builds only once the head failed, so `retrying` never shows at t=0.
     expect(seen).toEqual(['reset', 'securing', 'retrying', 'thinking']);
   });
 
@@ -185,7 +186,7 @@ describe('without a caller asking', () => {
     const idle = { kind: 'idle' };
     expect(useChatPhaseStore.getState().view).toEqual(idle);
 
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
     expect(textOf(events)).toBe('ok');
     expect(useChatPhaseStore.getState().view).toEqual(idle);
 

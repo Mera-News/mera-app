@@ -25,7 +25,8 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { REQUIRED_TOOL_REASK } from '../llm/text-tool-protocol';
 import { stepKindForTool, type PhaseSignal } from '@/lib/services/chat-phase';
 import type { LiveTool } from '@/lib/llm/chat-phase-store';
-import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
+import { CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
+import { routeLane, type Lane } from '../llm/router';
 import { handleDeleteUserFacts, handleExplainMera, handleSaveExtractedFacts } from './tool-handlers';
 import { handleWebSearch } from './web-search-handler';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -37,7 +38,6 @@ import { withReaderPhrase } from '../news-harness/on-device/follow-story/reader-
 import type { AgentPersona } from '@/lib/mera-harness';
 import { describeFactPlaces } from '../news-harness/persona-management/fact-places';
 import logger from '../logger';
-import { isFallbackEngaged } from '../llm/model-fallback';
 import { userTapOnlyRefusal } from '../news-harness/core/proposals';
 import type { ToolExecutionResult } from '../news-harness/core/types';
 
@@ -447,24 +447,15 @@ export function makeAgentToolPort(
  * thrown one must end the turn, which is what the hook's own catch expects.
  */
 /**
- * Turn the core's TIER LABEL into a real model id.
+ * Turn the core's TIER LABEL into the lane whose profiles serve it.
  *
  * The core is RN-free and must never know a model id, so it emits 'BIG' /
- * 'SMALL'. The adapter is the only place that knows what those mean.
- *
- * This was `req.model || BIG_MODEL`, which looks like a fallback and is not:
- * 'BIG' is truthy, so the tier word went on the wire and NEAR answered
- * `503 Provider error: Model 'BIG' not found`. An unrecognised value is
- * treated as a tier miss and resolved to BIG rather than forwarded, because a
- * literal id would already have matched one of the two constants and anything
- * else is a bug that must not reach the provider.
+ * 'SMALL'; the router picks the model. Anything else (absent included) is the
+ * chat loop: a tier word must never reach the wire as a model id, which is how
+ * NEAR once answered `503 Provider error: Model 'BIG' not found`.
  */
-export function resolveTierToModelId(tier: string | undefined): string {
-  if (tier === SMALL_MODEL || tier === BIG_MODEL) return tier;
-  if (tier === 'SMALL') return SMALL_MODEL;
-  if (tier === 'BIG' || !tier) return BIG_MODEL;
-  logger.warn(`${TAG} unrecognised model tier, defaulting to BIG`, { tier });
-  return BIG_MODEL;
+export function laneForTier(tier: string | undefined): Lane {
+  return tier === 'SMALL' ? 'topics' : 'chat-tools';
 }
 
 /**
@@ -505,7 +496,6 @@ async function callModelOnce(
   stop?: AbortSignal,
 ): Promise<AgentModelResult> {
   const started = Date.now();
-  const modelId = resolveTierToModelId(req.model);
   let ttVisibleMs: number | null = null;
   let content = '';
   const byIndex = new Map<number, { name: string; args: string }>();
@@ -518,13 +508,12 @@ async function callModelOnce(
     stream: req.onDelta !== undefined,
     tools: req.tools as never,
     toolChoice: req.toolChoice ?? 'auto',
-    model: modelId,
+    route: laneForTier(req.model),
     maxTokens: req.maxTokens ?? CHAT_MAX_OUTPUT_TOKENS,
     // Thinking OFF on every agent call. Measured: the trace buys nothing here
-    // and costs the whole budget on the topic path. Forced off again while the
-    // session fallback is engaged: the BIG fallback truncates with thinking on
-    // (12 of 19 persona turns).
-    enableThinking: isFallbackEngaged(modelId) ? false : (req.enableThinking ?? false),
+    // and costs the whole budget on the topic path. A harness that cannot think
+    // (Qwen3.6 truncates with it on) is never asked to: the transport applies it.
+    enableThinking: req.enableThinking ?? false,
     onPhase,
     signal: stop,
   });
@@ -562,7 +551,8 @@ async function callModelOnce(
     finishReason,
     truncated: finishReason === 'length',
     usage: null,
-    modelSent: modelId,
+    // The router's first choice for the lane; a failover inside the transport is not reflected.
+    modelSent: routeLane(laneForTier(req.model))[0]?.model ?? null,
     latencyMs: Date.now() - started,
     ttVisibleMs,
     error: null,

@@ -9,14 +9,13 @@ import { assertCloudAllowed, type CloudPurpose } from './on-device-gate';
 import {
   decryptContent,
   encryptContent,
-  encryptMessages,
-  prepareE2EEContext,
+  openField,
   type E2EEContext,
   type SigningAlgo,
 } from '../e2ee/e2ee-service';
 import { getCachedAttestation, invalidateCachedAttestation } from '../e2ee/e2ee-cache';
 import logger from '../logger';
-import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
+import { CHAT_REASONING_HEADROOM_TOKENS } from './constants';
 import { stripLeakedReasoning } from '../algorithms/reasoning-leak';
 import {
   APP_TOOL_FORMAT,
@@ -24,28 +23,34 @@ import {
   toTextToolMessages,
   type TextToolDefinition,
 } from './text-tool-protocol';
-import { reportModelFailure, resolveModel } from './model-fallback';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import { estimateTokens } from '../algorithms/estimate-tokens';
 import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import {
-  authFetch,
   CallerAbortError,
   cancelTurn,
   CleartextToolCallError,
   EmptyReplyError,
   getAuthHeaders,
-  isAbortLike,
   isCallerAbort,
   newChatTurn,
-  StreamIdleError,
   takeStreamHandle,
   type ChatTurn,
   type CloudCallOptions,
 } from './gateway-fetch';
-import { sendWithModelFallback, withUpstreamAlignedDefaults } from './hedge';
+import type { Profile } from './profiles';
+import { attestationCacheKey, prepareForProfile, sealMessages } from './provider-e2ee';
+import { chainFor, sendOnLane, sendToProfile, type Leg } from './routed-send';
+import {
+  failureClassOf,
+  reportLaneExhausted,
+  reportProfileFailure,
+  reportProfileSuccess,
+  type FailureClass,
+  type Lane,
+} from './router';
 import {
   consumeChatResponse,
   type ChatCompletionResponse,
@@ -68,7 +73,6 @@ export {
   type AuthFetchOptions,
   type CloudCallOptions,
 } from './gateway-fetch';
-export { UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS } from './hedge';
 export { STREAM_IDLE_TIMEOUT_MS, type SseEvent } from './chat-response';
 
 const TAG = '[CloudLLM]';
@@ -85,18 +89,6 @@ const BATCH_API = `${INFERENCE_ENDPOINT}/v1/chat/completions/batch`;
 const DECRYPT_FAILURE_RE = /decryption failed/i;
 
 
-/** Hedge delay for user-facing calls: after this long with nothing back from
- *  the primary model, the SAME request is fired at its fallback and the two
- *  race. With streaming, response headers ≈ the first token through the
- *  gateway, so this only fires when literally nothing has arrived — a warming
- *  or stalled model — never when a model is simply generating a long answer.
- *
- *  Raised 5s → 10s on 2026-08-03. A hedge WIN switches the whole session to
- *  the fallback, and no fallback matches the primary's quality (see
- *  MODEL_FALLBACKS): at 5s a merely-warming primary lost races it should have
- *  won, and the session paid for it in every later turn. 10s is past a healthy
- *  first token yet far short of the 130s timeout this exists to pre-empt, so
- *  the hedge stays a stall-rescue rather than a latency tuner. */
 /**
  * Below this, the interactive lane's wait is not worth a line of its own.
  *
@@ -105,14 +97,6 @@ const DECRYPT_FAILURE_RE = /decryption failed/i;
  * waits this is for are the 1-3s ones behind prewarm's own interactive calls.
  */
 const QUEUE_PHASE_FLOOR_MS = 400;
-
-export const HEDGE_DELAY_MS = 10_000;
-
-/** The hedge for a BUFFERED call (`stream: false`). Its headers arrive only
- *  when the whole answer is done, so 10s of "silence" is an ordinary tool leg
- *  (corpus p95 ~2.3s, max ~35s), not a stall: hedging there would bill twice
- *  and could engage the session fallback on a healthy primary. */
-export const BUFFERED_HEDGE_DELAY_MS = 30_000;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -126,7 +110,8 @@ export type { BatchCompletionResult };
 export interface CloudCompleteRequest {
   systemPrompt: string;
   prompt: string;
-  model?: string;
+  /** Which lane's profiles serve this call. Default 'background'. */
+  route?: Lane;
   maxTokens?: number;
   maxCompletionTokens?: number;
   temperature?: number;
@@ -138,15 +123,15 @@ export interface CloudCompleteRequest {
   purpose?: CloudPurpose;
 }
 
-/** Single E2EE completion call (used for scoring). */
+/** Single E2EE completion call. Served by `request.route`'s profiles, in the router's order. */
 export async function cloudComplete(
   request: CloudCompleteRequest,
   options: CloudCallOptions = {},
 ): Promise<string> {
   await assertCloudAllowed(request.purpose);
   const temperature = request.temperature ?? 0.3;
-  const primary = request.model ?? SMALL_MODEL;
-  const model = resolveModel(primary);
+  // A chat-purpose call (the readiness ping, the quick check) is a chat lane: it runs while chat is in the cloud.
+  const lane = request.route ?? (request.purpose === 'chat' ? 'chat-tools' : 'background');
   const maxTokens = request.maxTokens ?? request.maxCompletionTokens;
 
   const systemTokens = estimateTokens(request.systemPrompt);
@@ -156,27 +141,26 @@ export async function cloudComplete(
     promptTokens,
     totalInputTokens: systemTokens + promptTokens,
     maxOutputTokens: request.maxTokens ?? request.maxCompletionTokens,
-    model,
+    lane,
   });
 
-  const { response, ctx } = await sendWithModelFallback(
+  return sendOnLane(
     CHAT_API,
-    primary,
-    // Rebuilt per attempt: encryptMessages encrypts in place and the
-    // attestation key is per-model, so a fallback retry needs fresh plaintext.
-    async (sendModel) => {
+    lane,
+    // Rebuilt per profile: sealing encrypts in place and every profile has its own key.
+    async (profile) => {
       const messages = [
         { role: 'system', content: request.systemPrompt },
         { role: 'user', content: request.prompt },
       ];
-      const attemptCtx = await encryptMessages(messages, sendModel, options.lane, request.purpose);
+      const attemptCtx = await sealMessages(messages, profile, options.lane, request.purpose);
       const baseHeaders = await getAuthHeaders();
       return {
         init: {
           method: 'POST',
           headers: { ...baseHeaders, ...attemptCtx.headers },
           body: JSON.stringify({
-            messages, stream: false, temperature, model: sendModel,
+            messages, stream: false, temperature, model: profile.model,
             chat_template_kwargs: { enable_thinking: false },
             // Honor the caller's output cap: lets the readiness ping ask for one
             // word instead of a full completion.
@@ -186,54 +170,54 @@ export async function cloudComplete(
         ctx: attemptCtx,
       };
     },
-    withUpstreamAlignedDefaults(options),
+    // Read inside the chain, so an empty 2xx moves to the next profile too.
+    async ({ response, ctx }) => {
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
+        // message text stays as it was (job-defer.ts reads it).
+        throw Object.assign(new Error(`E2EE completion failed: ${response.status} ${response.statusText} — ${errorText}`), {
+          statusCode: response.status,
+          responseBody: errorText,
+        });
+      }
+
+      // Same guard as consumeBufferedChat: an empty 2xx is EmptyReplyError, not a SyntaxError.
+      const raw = await response.text();
+      if (!raw.trim()) throw new EmptyReplyError();
+      const data = JSON.parse(raw) as ChatCompletionResponse;
+      const msg = data.choices?.[0]?.message;
+      // Fail loud, like the batch path: a trace that exhausts max_tokens leaves
+      // `content` empty, and handing `reasoning_content` back as the answer made
+      // callers parse prose as JSON.
+      if (!msg?.content && msg?.reasoning_content) {
+        logger.warn(`${TAG} completion returned only a reasoning trace`, {
+          finishReason: data.choices?.[0]?.finish_reason,
+          reasoningLength: msg.reasoning_content.length,
+          maxTokensRequested: maxTokens,
+        });
+        throw new Error(`${TAG} reasoning-overran-budget`);
+      }
+      const encContent = msg?.content || '';
+      if (!encContent) return '';
+
+      // Thinking is OFF here, and on GLM that can leak the trace INTO content as
+      // `trace</think>answer` (lib/algorithms/reasoning-leak). Strip before the caller
+      // parses it as JSON or shows it as prose.
+      return stripLeakedReasoning(openField(encContent, ctx, 'choices.0.message.content', data.id ?? '')).trim();
+    },
+    options,
   );
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '');
-    // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
-    // message text stays as it was (job-defer.ts reads it).
-    throw Object.assign(new Error(`E2EE completion failed: ${response.status} ${response.statusText} — ${errorText}`), {
-      statusCode: response.status,
-      responseBody: errorText,
-    });
-  }
-
-  // Same guard as consumeBufferedChat: an empty 2xx is EmptyReplyError, not a SyntaxError.
-  const raw = await response.text();
-  if (!raw.trim()) throw new EmptyReplyError();
-  const data = JSON.parse(raw) as ChatCompletionResponse;
-  const msg = data.choices?.[0]?.message;
-  // Fail loud, like the batch path: a trace that exhausts max_tokens leaves
-  // `content` empty, and handing `reasoning_content` back as the answer made
-  // callers parse prose as JSON.
-  if (!msg?.content && msg?.reasoning_content) {
-    logger.warn(`${TAG} completion returned only a reasoning trace`, {
-      finishReason: data.choices?.[0]?.finish_reason,
-      reasoningLength: msg.reasoning_content.length,
-      maxTokensRequested: maxTokens,
-    });
-    throw new Error(`${TAG} reasoning-overran-budget`);
-  }
-  const encContent = msg?.content || '';
-  if (!encContent) return '';
-
-  // Thinking is OFF here, and on GLM that can leak the trace INTO content as
-  // `trace</think>answer` (lib/algorithms/reasoning-leak). Strip before the caller
-  // parses it as JSON or shows it as prose.
-  return stripLeakedReasoning(decryptContent(encContent, ctx.privateKey, ctx.algo)).trim();
 }
 
-/** E2EE batch completion via /v1/chat/completions/batch. Shares E2EE context across all items. */
+/** E2EE batch completion via /v1/chat/completions/batch. Shares one E2EE context across all items. */
 export async function cloudBatchComplete(
   calls: BatchCall[],
-  model?: string,
+  route: Lane = 'background',
   options: CloudCallOptions = {},
 ): Promise<BatchCompletionResult[]> {
   if (calls.length === 0) return [];
   await assertCloudAllowed();
-  const primary = model ?? SMALL_MODEL;
-  const resolvedModel = resolveModel(primary);
 
   // Per-call token estimate — helps diagnose empty outputs and context issues.
   let totalSystemTokens = 0;
@@ -249,7 +233,7 @@ export async function cloudBatchComplete(
       promptTokens,
       totalInputTokens: systemTokens + promptTokens,
       maxOutputTokens: call.maxTokens,
-      model: resolvedModel,
+      lane: route,
     });
   }
   logger.debug('[CloudLLM:batch] Token estimate total', {
@@ -257,16 +241,15 @@ export async function cloudBatchComplete(
     totalSystemTokens,
     totalPromptTokens,
     totalInputTokens: totalSystemTokens + totalPromptTokens,
-    model: resolvedModel,
+    lane: route,
   });
 
-  const { response, ctx } = await sendWithModelFallback(
+  return sendOnLane(
     BATCH_API,
-    primary,
-    // Rebuilt per attempt — a fallback retry needs its own E2EE context and a
-    // body encrypted under the fallback model's attestation key.
-    async (sendModel) => {
-      const attemptCtx = await prepareE2EEContext(sendModel, options.lane);
+    route,
+    // Rebuilt per profile: its own E2EE context and a body encrypted under its key.
+    async (profile) => {
+      const attemptCtx = await prepareForProfile(profile, options.lane);
 
       const requests = calls.map((call) => {
         const messages = [
@@ -282,7 +265,7 @@ export async function cloudBatchComplete(
           messages,
           stream: false,
           temperature: call.temperature ?? 0.3,
-          model: sendModel,
+          model: profile.model,
           // Honour the per-call flag, mirroring the async path
           // (submitInferenceJob.ts). DEFAULT FALSE: every existing batch caller
           // (relevance scoring, reason generation, noise generation) passes no
@@ -303,21 +286,23 @@ export async function cloudBatchComplete(
         ctx: attemptCtx,
       };
     },
-    withUpstreamAlignedDefaults(options),
+    async ({ response, ctx }) => {
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
+        // message text stays as it was (job-defer.ts reads it).
+        throw Object.assign(new Error(`E2EE batch failed: ${response.status} ${response.statusText} — ${errorText}`), {
+          statusCode: response.status,
+          responseBody: errorText,
+        });
+      }
+      const data = await response.json() as BatchResponse;
+      return mapBatchResults(calls, data, ctx.privateKey, ctx.algo);
+    },
+    options,
+    // One header set for many requests: only a provider that accepts that (not RedPill).
+    { batch: true },
   );
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '');
-    // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
-    // message text stays as it was (job-defer.ts reads it).
-    throw Object.assign(new Error(`E2EE batch failed: ${response.status} ${response.statusText} — ${errorText}`), {
-      statusCode: response.status,
-      responseBody: errorText,
-    });
-  }
-
-  const data = await response.json() as BatchResponse;
-  return mapBatchResults(calls, data, ctx.privateKey, ctx.algo);
 }
 
 interface BatchResponse {
@@ -431,7 +416,8 @@ export interface CloudChatStreamRequest {
   stream?: boolean;
   tools?: ToolDefinition[];
   system?: string;
-  model?: string;
+  /** Which lane's profiles serve this call. Default 'chat-tools'. */
+  route?: Lane;
   toolChoice?: string;
   temperature?: number;
   maxTokens?: number;
@@ -446,7 +432,7 @@ export interface CloudChatStreamRequest {
    *
    * NOT AN `SseEvent`, AND IT CANNOT BE ONE. Every phase worth naming happens
    * before this generator's first yield, inside `buildChatRequest` ->
-   * `sendWithModelFallback` -> `sendHedged`, none of which can yield here.
+   * `sendToProfile`, neither of which can yield here.
    * In-band events would have to be buffered and flushed in a burst at the
    * exact moment they stopped being true, which is worse than no line at all.
    *
@@ -455,12 +441,12 @@ export interface CloudChatStreamRequest {
    * narrate a turn a person is watching.
    */
   onPhase?: (signal: PhaseSignal) => void;
-  /** The caller's stop (the Stop button). Aborts the request on both hedge
-   *  legs and cancels the body mid-stream; surfaces as a CallerAbortError. */
+  /** The caller's stop (the Stop button). Aborts the request in flight and
+   *  cancels the body mid-stream; surfaces as a CallerAbortError. */
   signal?: AbortSignal;
 }
 
-/** One request's key and turn. `build` makes one per hedge leg and per re-send. */
+/** One request's key and turn. `build` makes one per profile tried and per re-send. */
 interface ChatAttempt {
   turn: ChatTurn;
   ctx: E2EEContext;
@@ -547,8 +533,7 @@ export async function* cloudChatStream(
         request.onPhase?.('thinking');
         const resume = { turn: unread.turn, left, streamed: request.stream !== false };
         const textTools = (request.tools ?? []) as TextToolDefinition[];
-        const { privateKey, algo } = unread.ctx;
-        yield* noting(consumeChatResponse(null, privateKey, algo, textTools, signal, resume), seen);
+        yield* noting(consumeChatResponse(null, unread.ctx, textTools, signal, resume), seen);
         return;
       } catch (err) {
         cancelTurn(unread.turn);
@@ -562,8 +547,14 @@ export async function* cloudChatStream(
   }
 }
 
-/** One full send of a leg, with today's hedge and retries. A failure that
- *  `left()` explains is not handled here: it goes to `cloudChatStream`. */
+/** A built chat request's context: the key that opens the reply and the attempt's turn. */
+type ChatCtx = E2EEContext & { turn: ChatTurn };
+
+/**
+ * One full send of a leg, profile by profile down its lane (lib/llm/router). A model-class
+ * failure before any text, at the headers or in the stream, moves to the next profile at once.
+ * A failure that `left()` explains is not handled here: it goes to `cloudChatStream`.
+ */
 async function* playChatLeg(
   request: CloudChatStreamRequest,
   attempts: ChatAttempt[],
@@ -578,8 +569,8 @@ async function* playChatLeg(
   const phase = request.onPhase ?? (() => {});
   phase('reset');
 
-  const primary = request.model ?? SMALL_MODEL;
-  const model = resolveModel(primary);
+  const lane = request.route ?? 'chat-tools';
+  const chain = chainFor(lane);
 
   // Token estimate — parallel to useLocalLLM's [LocalLLM:chat] Token estimate log.
   let totalInputTokens = 0;
@@ -592,39 +583,37 @@ async function* playChatLeg(
     totalInputTokens,
     toolCount: request.tools?.length ?? 0,
     maxOutputTokens: request.maxTokens ?? request.maxCompletionTokens,
-    model,
+    lane,
   });
 
   if (request.signal?.aborted) throw new CallerAbortError('cloudChatStream: stopped before send');
 
   logger.debug(`${TAG} cloudChatStream POST`, { url: CHAT_API });
 
-  // Rebuilt per attempt/leg: the deep copy must be FRESH, or a fallback retry
-  // would re-encrypt already-encrypted content (and under the wrong key).
-  // Counts entries into the builder, which is what distinguishes a first
-  // attempt from the 10s hedge leg, the model fallback and both stream
-  // retries. Those all re-encrypt, so without this they would report
-  // `securing` again and walk the reader back to "encrypting" at the moment
-  // they have been waiting longest.
+  // Rebuilt per attempt: the deep copy must be FRESH, or the next profile would
+  // re-encrypt already-encrypted content (and under the wrong key). Counts
+  // entries into the builder, which is what distinguishes a first attempt from
+  // the next profile and the decrypt retry. Those all re-encrypt, so without
+  // this they would report `securing` again and walk the reader back to
+  // "encrypting" at the moment they have been waiting longest.
   const textTools = (request.tools ?? []) as TextToolDefinition[];
   const resumeOf = (turn: ChatTurn) => ({ turn, left, streamed: request.stream !== false });
 
-  const buildChatRequest = async (sendModel: string) => {
-    // A LOCAL copy: a hedge leg can bump the shared counter while a cold
-    // attestation below is still in flight.
+  const buildChatRequest = async (profile: Profile) => {
+    // A LOCAL copy: the counter is shared by every attempt of this send.
     const attempt = ++counter.builds;
     // A cache hit makes the key fetch free, so `attesting` would be a line
     // about work that is not happening. A miss means a second interactive
     // grant 1000ms behind the one just spent, plus the attestation round
     // trip: on a cold launch this is the phase, and it is why the first
     // message of a session feels different from the tenth.
-    const cold = attempt === 1 && !getCachedAttestation(sendModel);
+    const cold = attempt === 1 && !getCachedAttestation(attestationCacheKey(profile));
     if (attempt > 1 && !left()) phase('retrying');
     else phase(cold ? 'attesting' : 'securing');
     // NO TOOL FIELD LEAVES THE DEVICE. The schema joins the system prompt,
     // replayed calls and results become text, and all of it is encrypted with
-    // the rest of the content (text-tool-protocol). Rebuilt per attempt, so a
-    // fallback retry never re-encrypts already-encrypted content.
+    // the rest of the content (text-tool-protocol). Rebuilt per attempt, so the
+    // next profile never re-encrypts already-encrypted content.
     const messages = toTextToolMessages(
       request.messages,
       request.tools as TextToolDefinition[] | undefined,
@@ -633,7 +622,7 @@ async function* playChatLeg(
     );
     // INTERACTIVE all the way down: a cold attestation cache makes this a real
     // gateway request on the critical path of a user's turn.
-    const attemptCtx = await encryptMessages(messages, sendModel, 'interactive', 'chat');
+    const attemptCtx = await sealMessages(messages, profile, 'interactive', 'chat');
     // The fetched key has just sealed the message: a cold first build shows
     // both steps, never only the key fetch.
     if (cold) phase('securing');
@@ -644,14 +633,15 @@ async function* playChatLeg(
     const baseHeaders = await getAuthHeaders();
     logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
 
-    const thinking = request.enableThinking ?? false;
+    // A harness that cannot think is never asked to: Qwen3.6 truncated tool turns with it on.
+    const thinking = (request.enableThinking ?? false) && profile.params.thinking;
     const body: Record<string, unknown> = {
       messages,
       // Each streamed delta is its own E2EE envelope, so streaming and E2EE
       // coexist — see cloudChatStream's doc comment. A step nobody watches is
       // buffered: one envelope (see `stream` on the request).
       stream: request.stream ?? true,
-      model: sendModel,
+      model: profile.model,
       chat_template_kwargs: { enable_thinking: thinking },
     };
     if (request.temperature !== undefined) body.temperature = request.temperature;
@@ -676,145 +666,185 @@ async function* playChatLeg(
         method: 'POST',
         headers: { ...baseHeaders, ...attemptCtx.headers },
         body: JSON.stringify(body),
-        ...(request.signal ? { signal: request.signal } : {}),
       } satisfies RequestInit,
-      ctx: { ...attemptCtx, turn },
+      ctx: { ...attemptCtx, turn } as ChatCtx,
       turn,
     };
   };
 
-  // Dev-only timing: per-request POST→response wall time. Tagged for first-chat
-  // latency attribution.
-  const postStartMs = Date.now();
-  // The grant is taken inside `sendHedged`, before the builder runs, so this
-  // is the only point at which the queueing can be named. Only when the lane
+  // The grant is taken inside authFetch, after the builder runs, so this is
+  // the only point at which the queueing can be named. Only when the lane
   // genuinely has to wait: on a warm, idle device this is 0 and the phase is
   // skipped entirely rather than shown for its minimum dwell over nothing.
   if (gatewayRateLimiter.interactiveWaitMs() > QUEUE_PHASE_FLOOR_MS) phase('queued');
   // A BUFFERED answer's headers arrive only once the whole answer is done, so
   // the headers route below would hold the line on `securing` for the model's
-  // entire think time. It says `thinking` once the request is built instead:
-  // on the hedged path the grant is already held, so the POST leaves at once.
-  // On the sequential path (session fallback engaged) the grant is taken
-  // after the build, so this can lead the send by up to one grant wait.
+  // entire think time. It says `thinking` once the request is built instead,
+  // which can lead the send by up to one grant wait.
   let sendAnnounced = false;
-  const buildAndAnnounce = async (sendModel: string) => {
-    const built = await buildChatRequest(sendModel);
+  const buildAndAnnounce = async (profile: Profile) => {
+    const built = await buildChatRequest(profile);
     if (request.stream === false && !sendAnnounced) {
       sendAnnounced = true;
       phase('thinking');
     }
     return built;
   };
-  const { response, ctx, model: sentModel } = await sendWithModelFallback(
-    CHAT_API,
-    primary,
-    buildAndAnnounce,
-    // Chat has always used the gateway-aligned budget; every other cloud call
-    // now shares it (plan A). Chat is the only user-facing path, so it is also
-    // the only one that hedges and the only one that streams its body.
-    // `lane: 'interactive'` is hardcoded, not a caller option: cloudChatStream
-    // is the only user-facing streaming path in the app.
-    withUpstreamAlignedDefaults({
-      hedgeAfterMs: request.stream === false ? BUFFERED_HEDGE_DELAY_MS : HEDGE_DELAY_MS,
-      streamBody: true,
-      lane: 'interactive',
-      signal: request.signal,
-    }),
-  );
-  // The hedge's loser keeps running upstream after its abort.
-  attempts.forEach((a) => {
-    if (a.turn !== ctx.turn) cancelTurn(a.turn);
-  });
-  logger.debug('[chat-timing] chat POST→response', {
-    ms: Date.now() - postStartMs,
-    status: response.status,
-  });
+  // `lane: 'interactive'` is hardcoded, not a caller option: cloudChatStream
+  // is the only user-facing streaming path in the app.
+  const sendOptions: CloudCallOptions = { streamBody: true, lane: 'interactive', signal: request.signal };
 
-  // ONE shared latch for BOTH of this generator's retry paths — the
-  // decrypt-failure retry below and the stream-died-before-any-text retry at the
-  // end. Each is independently bounded, but they sit on the same call path: a
-  // decrypt retry that reconnects and then dies mid-stream would otherwise fall
-  // into the second retry and issue a THIRD request. One latch, set by whichever
-  // fires first, keeps the worst case at two.
-  let retried = false;
+  // The head's failure is what surfaces when every profile failed: a later one must not mask it.
+  let first: { leg?: Leg<ChatCtx>; error?: unknown } | null = null;
+  let last: { profile: Profile; failure: FailureClass } | null = null;
+  // One fresh send on the SAME profile, once per leg, for a stream that died before any text in a
+  // way that says nothing about the model (a dropped connection, a corrupt chunk).
+  let resentSame = false;
+  // `thinking` once per leg: a resend after it ranks below `retrying` and could not render anyway.
+  let thought = false;
+  for (let i = 0; i < chain.length; i++) {
+    const profile = chain[i];
+    // Dev-only timing: per-request POST→response wall time.
+    const postStartMs = Date.now();
+    let leg: Leg<ChatCtx>;
+    try {
+      const sent = await sendToProfile(CHAT_API, lane, profile, buildAndAnnounce, sendOptions);
+      leg = sent.leg;
+      if (sent.failure && !left()) {
+        chatHttpBreadcrumb('cloudChatStream HTTP error (next profile)', leg, '');
+        reportProfileFailure(profile, lane, sent.failure);
+        first ??= { leg };
+        last = { profile, failure: sent.failure };
+        continue;
+      }
+    } catch (err) {
+      const failure = left() ? null : failureClassOf(err);
+      if (!failure) throw err;
+      reportProfileFailure(profile, lane, failure);
+      first ??= { error: err };
+      last = { profile, failure };
+      logger.warn(`${TAG} model failure before the reply, next profile`, { profile: profile.id, failure });
+      continue;
+    }
+    // An earlier profile's detached turn keeps running upstream: nobody will read it.
+    attempts.forEach((a) => {
+      if (a.turn !== leg.ctx.turn) cancelTurn(a.turn);
+    });
+    logger.debug('[chat-timing] chat POST→response', {
+      ms: Date.now() - postStartMs,
+      status: leg.response.status,
+    });
 
-  if (!response.ok) {
-    takeStreamHandle(response)?.release();
-    const errorText = await response.text().catch(() => '');
+    if (!leg.response.ok) {
+      yield* failedChatResponse(leg);
+      return;
+    }
+
+    // Headers are in and nothing visible has arrived: this is model
+    // time-to-first-token, 3-8s median and the single longest phase of the wait.
+    // It MUST fire here and not only on the `reasoning` event, because the
+    // persona loop sends `enable_thinking: false` on every leg and so emits no
+    // reasoning at all. Gating on that event froze the line on "encrypted" for
+    // the whole window, which is the failure this line exists to remove.
+    // A buffered request already said it when it was sent.
+    if (request.stream !== false && !thought) phase('thinking');
+    thought = true;
+
+    let textYielded = false;
+    try {
+      for await (const event of consumeChatResponse(leg.response, leg.ctx, textTools, request.signal, resumeOf(leg.ctx.turn))) {
+        if (event.type === 'text-delta') textYielded = true;
+        yield event;
+      }
+      reportProfileSuccess(profile, lane);
+      return;
+    } catch (err) {
+      // A stop is final: no retry, no model verdict.
+      if (isCallerAbort(err) || request.signal?.aborted) throw err;
+      // A cleartext tool call is a privacy failure, not model evidence: no retry.
+      if (err instanceof CleartextToolCallError) throw err;
+      // The app left: an overdue timer proves nothing, and the caller recovers.
+      if (left()) throw err;
+      // Text already reached the user: surface the error so the existing
+      // failed-turn UX finalizes. Re-sending a half-answered prompt would
+      // duplicate the answer.
+      if (textYielded) throw err;
+      // An idle stall, a cancelled body or an empty 2xx is model evidence; a decrypt failure is not.
+      const failure = failureClassOf(err);
+      cancelTurn(leg.ctx.turn);
+      if (!failure) {
+        if (resentSame) throw err;
+        resentSame = true;
+        logger.warn(`${TAG} stream died before any text — one fresh attempt`, { profile: profile.id, error: String(err) });
+        i -= 1;
+        continue;
+      }
+      reportProfileFailure(profile, lane, failure);
+      first ??= { error: err };
+      last = { profile, failure };
+      logger.warn(`${TAG} stream died before any text, next profile`, { profile: profile.id, failure });
+    }
+  }
+
+  reportLaneExhausted(lane, last!.profile, last!.failure);
+  if (first!.leg) {
+    yield* failedChatResponse(first!.leg);
+    return;
+  }
+  throw first!.error;
+
+  /** The diagnostics of a failed answer. `algo` and the model-key prefix are here because
+   *  MERA-APP-72 could not be root-caused without them; the key is public data and only its
+   *  first 8 hex chars are kept. */
+  function chatHttpBreadcrumb(message: string, l: Leg<ChatCtx>, errorText: string): void {
+    logger.addBreadcrumb(
+      `${TAG} ${message}`,
+      'cloud-chat',
+      {
+        status: l.response.status,
+        errorText,
+        model: l.profile.model,
+        profile: l.profile.id,
+        algo: l.ctx.algo,
+        modelKeyFp: l.ctx.modelPubKeyHex?.slice(0, 8),
+      },
+      'error',
+    );
+  }
+
+  /** A non-2xx answer the router does not move on from: one re-attest on a decrypt failure, else the error. */
+  async function* failedChatResponse(l: Leg<ChatCtx>): AsyncGenerator<SseEvent> {
+    takeStreamHandle(l.response)?.release();
+    const errorText = await l.response.text().catch(() => '');
     // BREADCRUMB, not a capture. This throw is always caught and reported by
     // useCloudPersonaChat's `sendMessage failed` handler, so a capture here
     // filed the SAME failure a second time under a different title — one HTTP
     // error became MERA-APP-72 and MERA-APP-73, same trace, same three events.
-    // The diagnostics ride along on the breadcrumb, so the surviving event
-    // still carries the status and body.
-    //
-    // `algo` and the model-key prefix are here because MERA-APP-72 could not be
-    // root-caused without them: a "Decryption failed" event carried no record of
-    // which curve built the envelope, and the two candidate causes (a wrong
-    // ecdsa wire format vs. a node/key mismatch at NEAR) point at different
-    // repos. The model key is public data and only its first 8 hex chars are
-    // kept — enough to tell two keys apart, not a secret.
-    logger.addBreadcrumb(
-      `${TAG} cloudChatStream HTTP error`,
-      'cloud-chat',
-      {
-        status: response.status,
-        errorText,
-        model: sentModel,
-        algo: ctx.algo,
-        modelKeyFp: ctx.modelPubKeyHex?.slice(0, 8),
-      },
-      'error',
-    );
+    chatHttpBreadcrumb('cloudChatStream HTTP error', l, errorText);
 
-    // NEAR could not decrypt the envelope built from the key NEAR itself had
+    // The provider could not decrypt the envelope built from the key it had
     // just attested. Re-attesting is the only client-side lever, and it is worth
-    // exactly ONE attempt: `buildChatRequest` mints a fresh client keypair and a
-    // fresh model key, which re-rolls the serving node and (since the fleet
-    // load-balances curves) possibly the algo family too.
-    //
-    // NOT a model failure: invariant — "4xx, auth, E2EE/decrypt and plain
-    // network errors say nothing about the model" — so this never calls
-    // reportModelFailure and never engages the session fallback.
-    //
-    // authFetch directly, NEVER sendWithModelFallback: chat passes
-    // `hedgeAfterMs`, so re-entering that helper would re-enter sendHedged and
-    // turn "one more request" into two plus a possible fallback engagement on a
-    // 4xx.
-    if (!retried && response.status === 400 && DECRYPT_FAILURE_RE.test(errorText)) {
-      retried = true;
-      invalidateCachedAttestation(sentModel);
+    // exactly ONE attempt on the same profile: `buildChatRequest` mints a fresh
+    // client keypair and a fresh model key, which re-rolls the serving node and
+    // possibly the algo family too. NOT a model failure.
+    // One latch with the stream-death resend: a leg is at most two sends on one profile.
+    if (!resentSame && l.response.status === 400 && DECRYPT_FAILURE_RE.test(errorText)) {
+      resentSame = true;
+      invalidateCachedAttestation(attestationCacheKey(l.profile));
       logger.warn(`${TAG} upstream could not decrypt — re-attesting once`, {
-        model: sentModel,
-        algo: ctx.algo,
+        model: l.profile.model,
+        algo: l.ctx.algo,
       });
-      const fresh = await buildChatRequest(sentModel);
-      const freshResponse = await authFetch(CHAT_API, fresh.init, {
-        ...withUpstreamAlignedDefaults({ streamBody: true, lane: 'interactive' }),
-        maxTimeoutAttempts: 1,
-        turn: fresh.turn,
-      });
-      if (freshResponse.ok) {
-        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo, textTools, request.signal, resumeOf(fresh.turn));
+      const { leg: fresh } = await sendToProfile(CHAT_API, lane, l.profile, buildChatRequest, sendOptions);
+      if (fresh.response.ok) {
+        yield* consumeChatResponse(fresh.response, fresh.ctx, textTools, request.signal, resumeOf(fresh.ctx.turn));
         return;
       }
-      takeStreamHandle(freshResponse)?.release();
-      const freshErrorText = await freshResponse.text().catch(() => '');
-      logger.addBreadcrumb(
-        `${TAG} cloudChatStream HTTP error (after re-attest)`,
-        'cloud-chat',
-        {
-          status: freshResponse.status,
-          errorText: freshErrorText,
-          model: sentModel,
-          algo: fresh.ctx.algo,
-          modelKeyFp: fresh.ctx.modelPubKeyHex?.slice(0, 8),
-        },
-        'error',
-      );
-      throw Object.assign(new Error(`E2EE chat failed: ${freshResponse.status}`), {
-        statusCode: freshResponse.status,
+      takeStreamHandle(fresh.response)?.release();
+      const freshErrorText = await fresh.response.text().catch(() => '');
+      chatHttpBreadcrumb('cloudChatStream HTTP error (after re-attest)', fresh, freshErrorText);
+      throw Object.assign(new Error(`E2EE chat failed: ${fresh.response.status}`), {
+        statusCode: fresh.response.status,
         responseBody: freshErrorText,
       });
     }
@@ -830,100 +860,9 @@ async function* playChatLeg(
     // `responseBody` and on the breadcrumb above instead, where triage still has
     // it. The `E2EE chat failed: <status>` prefix is preserved verbatim — the
     // existing specs match on it.
-    throw Object.assign(new Error(`E2EE chat failed: ${response.status}`), {
-      statusCode: response.status,
+    throw Object.assign(new Error(`E2EE chat failed: ${l.response.status}`), {
+      statusCode: l.response.status,
       responseBody: errorText,
     });
   }
-
-  // Headers are in and nothing visible has arrived: this is model
-  // time-to-first-token, 3-8s median and the single longest phase of the wait.
-  // It MUST fire here and not only on the `reasoning` event, because the
-  // persona loop sends `enable_thinking: false` on every leg and so emits no
-  // reasoning at all. Gating on that event froze the line on "encrypted" for
-  // the whole window, which is the failure this line exists to remove.
-  // A buffered request already said it when it was sent.
-  if (request.stream !== false) phase('thinking');
-
-  let textYielded = false;
-  try {
-    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo, textTools, request.signal, resumeOf(ctx.turn))) {
-      if (event.type === 'text-delta') textYielded = true;
-      yield event;
-    }
-    return;
-  } catch (err) {
-    // Text already reached the user: surface the error so the existing
-    // failed-turn UX finalizes. Silently re-sending a half-answered prompt
-    // would duplicate the answer.
-    // A stop is final: no retry, no model verdict.
-    if (isCallerAbort(err) || request.signal?.aborted) throw err;
-    // A cleartext tool call is a privacy failure, not model evidence: no retry.
-    if (err instanceof CleartextToolCallError) throw err;
-    // The app left: an overdue timer proves nothing, and the caller recovers.
-    if (left()) throw err;
-    if (textYielded) throw err;
-    // Already on the fallback (session-engaged, or a hedge winner) — there is
-    // no healthier model left to try. An empty 2xx is the exception: it is
-    // usually a one-off, so it gets the one fresh attempt on that same model
-    // (MERA-APP-8X), bounded by the shared `retried` latch below.
-    if (sentModel !== primary && !(err instanceof EmptyReplyError)) throw err;
-    // Only an abort-class death (idle stall, cancelled body) or an empty 2xx
-    // reply is model-evidence. A decrypt failure is NOT: model-fallback.ts is
-    // explicit that "4xx, auth, E2EE/decrypt and plain network errors say
-    // nothing about the model".
-    // Only a failure OF the primary is evidence against it: an empty reply from
-    // a hedge-winning fallback must not engage the session fallback.
-    if (
-      sentModel === primary &&
-      (isAbortLike(err) || err instanceof StreamIdleError || err instanceof EmptyReplyError) &&
-      !isCallerAbort(err)
-    ) {
-      reportModelFailure(primary);
-    }
-    // The decrypt-failure path above already spent this generator's one retry.
-    // Without this check a re-attested request that then died mid-stream would
-    // issue a THIRD upstream call for a single user turn.
-    if (retried) throw err;
-    cancelTurn(ctx.turn);
-    logger.warn(`${TAG} stream died before any text — one fresh attempt`, {
-      failedModel: sentModel,
-      error: String(err),
-    });
-  }
-
-  // ONE fresh request, on whatever the primary now resolves to. Bounded by
-  // construction: this branch is only reachable with zero text yielded, with the
-  // shared `retried` latch unset, and it never recurses.
-  retried = true;
-  const retryModel = resolveModel(primary);
-  const retry = await buildChatRequest(retryModel);
-  const retryResponse = await authFetch(CHAT_API, retry.init, {
-    ...withUpstreamAlignedDefaults({ streamBody: true, lane: 'interactive' }),
-    maxTimeoutAttempts: 1,
-    turn: retry.turn,
-  });
-  if (!retryResponse.ok) {
-    takeStreamHandle(retryResponse)?.release();
-    const errorText = await retryResponse.text().catch(() => '');
-    // Same reasoning as the first throw: the body rides on a field and a
-    // breadcrumb, never in the message that reaches the user's screen.
-    logger.addBreadcrumb(
-      `${TAG} cloudChatStream HTTP error (after stream-death retry)`,
-      'cloud-chat',
-      {
-        status: retryResponse.status,
-        errorText,
-        model: retryModel,
-        algo: retry.ctx.algo,
-        modelKeyFp: retry.ctx.modelPubKeyHex?.slice(0, 8),
-      },
-      'error',
-    );
-    throw Object.assign(new Error(`E2EE chat failed: ${retryResponse.status}`), {
-      statusCode: retryResponse.status,
-      responseBody: errorText,
-    });
-  }
-  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo, textTools, request.signal, resumeOf(retry.turn));
 }

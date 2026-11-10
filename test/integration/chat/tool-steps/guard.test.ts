@@ -39,7 +39,7 @@ describe('the six forbidden keys never leave the device', () => {
       real(...args).map((m, i, all) => (i === all.length - 1 ? ({ ...m, [key]: [] } as typeof m) : m)),
     );
 
-    const err = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })).then(
+    const err = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })).then(
       () => null,
       (e: unknown) => e,
     );
@@ -56,7 +56,7 @@ describe('the six forbidden keys never leave the device', () => {
   it('control: the same request without the injected key is sent and answered', async () => {
     spy = jest.spyOn(textToolProtocol, 'toTextToolMessages');
 
-    const events = await collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL }));
+    const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics' }));
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(gatewayCalls('chat')).toHaveLength(1);

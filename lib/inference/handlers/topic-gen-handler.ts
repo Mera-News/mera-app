@@ -23,7 +23,6 @@ import { cloudComplete } from '../../llm/cloudComplete';
 import { isOnDeviceMode } from '../../llm/on-device-gate';
 import { isDeferrableError, isOnDeviceDeferrable } from '../job-defer';
 import { EmptyReplyError } from '../../llm/gateway-fetch';
-import { SMALL_MODEL } from '../../llm/constants';
 import logger from '../../logger';
 import type { Fact } from '../../mera-protocol-toolkit/types';
 
@@ -143,7 +142,6 @@ async function runSkillGuided(
     skillId: payload.skillId ?? topicSkillForAttribute(fact.questionnaireAttribute),
     existingTopics: ownTopics,
     declinedTopics: [...declined],
-    model: SMALL_MODEL,
     append: payload.mode === 'append',
     ...(payload.totalCount ? { ceiling: payload.totalCount } : {}),
     deps: {
@@ -153,8 +151,8 @@ async function runSkillGuided(
           {
             systemPrompt: req.systemPrompt,
             prompt: req.messages[0]?.content ?? '',
-            // The core emits a tier label; only the app knows the id.
-            model: req.model === 'SMALL' || !req.model ? SMALL_MODEL : req.model,
+            // The core emits a tier label; the router picks the model for the lane.
+            route: 'topics',
             temperature: req.temperature,
             maxTokens: req.maxTokens,
           },

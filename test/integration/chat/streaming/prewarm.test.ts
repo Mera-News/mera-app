@@ -118,14 +118,16 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     expect(status()).toBe('ready');
   });
 
-  it('no reply within the deadline is an error, and a late reply still turns it ready', async () => {
-    server.use(...mockGateway(() => ({ chunks: ['ready'], headerDelayMs: PING_DEADLINE_MS + 30_000 })));
+  it('no reply within the deadline is an error, and a late reply (from the next profile) still turns it ready', async () => {
+    // The head never sends a first token; the router leaves it at 30s and the next profile answers
+    // just inside its own 30s deadline, which lands past the badge's 60s.
+    server.use(...mockGateway((c) => ({ chunks: ['ready'], headerDelayMs: c.model === BIG_MODEL ? 200_000 : 29_900 })));
     prewarmCloudChat({ ping: true });
     await advanceUntil(() => gatewayCalls('chat').length === 1, 60_000);
     await advanceUntil(() => status() !== 'warming', PING_DEADLINE_MS + 5_000);
     expect(status()).toBe('error');
     await advanceUntil(() => status() === 'ready', 60_000);
-    expect(gatewayCalls('chat')).toHaveLength(1);
+    expect(gatewayCalls('chat').map((c) => c.model)).toEqual([BIG_MODEL, SMALL_MODEL]);
   });
 
   it("a failed turn's banner clears when the next open's ping answers: Mera is reachable again", async () => {
@@ -172,7 +174,7 @@ describe('prewarmCloudChat, cloud mode, signed in', () => {
     expect(gatewayCalls('chat')).toHaveLength(1);
 
     // A later open, even right after a chat turn, pings again.
-    await drive(collect(cloudChatStream({ messages: MESSAGES, model: BIG_MODEL })));
+    await drive(collect(cloudChatStream({ messages: MESSAGES, route: 'chat-tools' })));
     prewarmCloudChat({ ping: true });
     await advanceUntil(() => gatewayCalls('chat').length === 3, 60_000);
     expect(gatewayCalls('chat')[2].messages[1]).toEqual({ role: 'user', content: 'ping' });

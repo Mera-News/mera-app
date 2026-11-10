@@ -20,7 +20,7 @@ import {
   type ModelAttestation,
 } from '@/lib/e2ee/e2ee-service';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetForTests as resetModelFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
 import { attestationRequests, http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import capturedReport from '@/test/fixtures/attestation-report.json';

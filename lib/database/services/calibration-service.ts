@@ -19,7 +19,6 @@
 import { getSetting, setSetting } from './setting-service';
 import { append as appendChangeLog } from './persona-change-log-service';
 import { cloudComplete } from '../../llm/cloudComplete';
-import { SMALL_MODEL } from '../../llm/constants';
 import { toastManager } from '../../toast-manager';
 import logger from '../../logger';
 import { DEFAULT_HARNESS_CONFIG } from '../../news-harness/core/config';
@@ -46,7 +45,6 @@ const KEY_SAMPLE = 'calibration.override_sample';
 const KEY_OVERRIDES = 'calibration.scoring_overrides';
 
 /** Model + output budget for the single calibration completion. */
-const CALIBRATION_MODEL = SMALL_MODEL;
 const CALIBRATION_MAX_TOKENS = 256;
 const CALIBRATION_TEMPERATURE = 0.2;
 
@@ -190,7 +188,7 @@ export async function runCalibration(): Promise<CalibrationOutcome> {
     const output = await cloudComplete({
       systemPrompt: CALIBRATION_SYSTEM_PROMPT,
       prompt: buildCalibrationUserMessage(report),
-      model: CALIBRATION_MODEL,
+      route: 'background',
       maxTokens: CALIBRATION_MAX_TOKENS,
       temperature: CALIBRATION_TEMPERATURE,
     }, {

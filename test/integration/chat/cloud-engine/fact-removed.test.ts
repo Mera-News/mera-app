@@ -9,7 +9,7 @@ import {
   pendingRemovedFacts,
   resetChatSession,
 } from '@/lib/chat-session/chat-session';
-import { __resetForTests as resetFallback } from '@/lib/llm/model-fallback';
+import { __resetRouterForTests as resetFallback } from '@/lib/llm/router';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { gatewayCalls, mockGateway, server, signInFixtureAccount, type GatewayCall } from '@/test/helpers';
 import { resetChatModules, until } from '@/test/integration/chat/_helpers';

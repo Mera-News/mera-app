@@ -33,7 +33,6 @@
 // the model nor a typed "yes" can start or narrate the check.
 
 import { cloudComplete } from '../llm/cloudComplete';
-import { BIG_MODEL } from '../llm/constants';
 import {
   ENOUGH_EVIDENCE,
   MAX_EVIDENCE_IN_PROMPT,
@@ -97,7 +96,6 @@ export interface QuickFactCheckDeps {
   complete: (req: {
     systemPrompt: string;
     prompt: string;
-    model: string;
     temperature: number;
     maxTokens: number;
   }) => Promise<string>;
@@ -110,7 +108,7 @@ const defaultDeps: QuickFactCheckDeps = {
   // INTERACTIVE: the quick check runs inside a chat turn, with the user
   // watching a 90s synthesis deadline.
   // `purpose: 'chat'`: a chat call, so it runs while cloud chat is on in On this phone.
-  complete: (req) => cloudComplete({ ...req, purpose: 'chat' }, { lane: 'interactive' }),
+  complete: (req) => cloudComplete({ ...req, route: 'fact-check', purpose: 'chat' }, { lane: 'interactive' }),
   now: () => Date.now(),
 };
 
@@ -274,7 +272,6 @@ export async function handleQuickFactCheck(
         // a reasoning trace is tens of seconds the user spends staring at a
         // spinner. Temperature 0 for the same reason it was 0 there: this is an
         // extraction, not prose.
-        model: BIG_MODEL,
         temperature: 0,
         maxTokens: SYNTHESIS_MAX_TOKENS,
       }),

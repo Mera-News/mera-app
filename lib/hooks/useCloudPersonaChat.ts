@@ -8,7 +8,7 @@ import type { ChatEngine, MoreOptionsRequest, MoreOptionsResult, SendOptions } f
 import { FollowStoryAgent } from '../llm/agents/FollowStoryAgent';
 import logger from '../logger';
 import { CallerAbortError, CleartextToolCallError, cloudChatStream, type WireMessage } from '../llm/cloudComplete';
-import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
+import { CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 import { markChatFailed, markChatReady } from '../llm/prewarm';
 import { departureMark } from '@/lib/app-restart';
 import { clearTurnInflight, markTurnInflight } from '@/lib/chat-session/turn-inflight';
@@ -497,7 +497,7 @@ export function createCloudEngine(initialAgent: IAgent): ChatEngine {
           tools,
           toolChoice: 'auto',
           stream: true,
-          model: BIG_MODEL,
+          route: 'chat-single',
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
           enableThinking: agentRef.current.chatThinking,
           onPhase: (signal) => phaseSinkRef.current?.(signal),

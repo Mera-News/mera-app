@@ -26,7 +26,7 @@ import {
 
 installChatHooks();
 
-const run = (extra: object = {}) => collect(cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL, ...extra }));
+const run = (extra: object = {}) => collect(cloudChatStream({ messages: MESSAGES, route: 'topics', ...extra }));
 const textDeltas = (events: SseEvent[]) => events.flatMap((e) => (e.type === 'text-delta' ? [e.delta] : []));
 
 describe('text deltas', () => {
@@ -168,7 +168,7 @@ describe('a provider tool call in CLEAR (never expected, never silently dropped)
       const yielded: SseEvent[] = [];
       let error: unknown = null;
       try {
-        for await (const e of cloudChatStream({ messages: MESSAGES, model: SMALL_MODEL })) yielded.push(e);
+        for await (const e of cloudChatStream({ messages: MESSAGES, route: 'topics' })) yielded.push(e);
       } catch (e) {
         error = e;
       }
@@ -227,7 +227,7 @@ describe('the request body', () => {
   it('forwards the optional numeric fields, adding the reasoning headroom when thinking is on', async () => {
     const bodies = captureChatBodies();
     server.use(...mockGateway(respond('ok')));
-    await run({ temperature: 0.9, maxTokens: 256, topP: 0.95, presencePenalty: 0.1, frequencyPenalty: 0.2, n: 2, enableThinking: true });
+    await run({ route: 'chat-tools', temperature: 0.9, maxTokens: 256, topP: 0.95, presencePenalty: 0.1, frequencyPenalty: 0.2, n: 2, enableThinking: true });
     const body = JSON.parse(bodies[0]);
     expect(body).toMatchObject({ temperature: 0.9, top_p: 0.95, presence_penalty: 0.1, frequency_penalty: 0.2, n: 2 });
     expect(body.max_tokens).toBe(256 + CHAT_REASONING_HEADROOM_TOKENS);
@@ -251,10 +251,18 @@ describe('the request body', () => {
     expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
   });
 
-  it('sends the model the caller names', async () => {
+  it('sends the head of the lane the caller names', async () => {
     server.use(...mockGateway(respond('ok')));
-    await run({ model: BIG_MODEL });
+    await run({ route: 'chat-tools' });
     expect(gatewayCalls('chat')[0].model).toBe(BIG_MODEL);
+  });
+
+  it('never asks a harness that cannot think to think (Qwen3.6 truncates with it on)', async () => {
+    const bodies = captureChatBodies();
+    server.use(...mockGateway(respond('ok')));
+    await run({ maxTokens: 256, enableThinking: true });
+    const body = JSON.parse(bodies[0]);
+    expect(body).toMatchObject({ model: SMALL_MODEL, chat_template_kwargs: { enable_thinking: false }, max_tokens: 256 });
   });
 
   it('seals every message and leaves the caller\'s array untouched', async () => {
@@ -264,7 +272,7 @@ describe('the request body', () => {
       { role: 'system' as const, content: SECRET_SYSTEM },
       { role: 'user' as const, content: SECRET_USER },
     ];
-    await collect(cloudChatStream({ messages: mine, model: SMALL_MODEL }));
+    await collect(cloudChatStream({ messages: mine, route: 'topics' }));
     expect(mine).toEqual(MESSAGES);
     expect(bodies).toHaveLength(1);
     expect(bodies[0]).not.toContain('SENTINEL');
