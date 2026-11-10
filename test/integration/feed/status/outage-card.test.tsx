@@ -1,6 +1,6 @@
 // The counts card while a model lane is down (route1): the title leads, only the down lanes are listed
 // as paused, two buttons keep the reader reading, "?" opens the why. Faked at the edges like read-hold-card.
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import React from 'react';
 import { Linking } from 'react-native';
 import { DashboardStatsCard } from '@/components/custom/for-you/DashboardStatsCard';
@@ -101,6 +101,18 @@ it('"?" opens the help, whose link opens the provider status once closed', async
   await fireEvent.press(screen.getByTestId('feed-outage-status-link', H));
   expect(open).toHaveBeenCalledWith('https://status.near.ai');
   open.mockRestore();
+});
+
+it('the real card: "?" by its label opens the help in a modal that is a sibling of the panel, Done closes it', async () => {
+  await render(<DashboardStatsCard testID="c" />);
+  const help = screen.getByLabelText('Why is this paused?', H);
+  expect(help.props.style).toMatchObject({ width: 44, height: 44 });
+  await fireEvent.press(help);
+  expect(screen.getByTestId('help-open', H)).toBeTruthy();
+  // The help is not inside the glass panel nor the details.
+  expect(within(screen.getByTestId('c', H)).queryByTestId('help-open', H)).toBeNull();
+  await fireEvent.press(screen.getByTestId('feed-outage-help-done', H));
+  expect(screen.queryByTestId('help-open', H)).toBeNull();
 });
 
 it('On this phone never shows it; chat-in-cloud shows it for chat lanes only', async () => {

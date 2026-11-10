@@ -39,7 +39,7 @@ import FeedStatusDetails, { AnalysingProgress, FeedStatusActions, ReadHoldFooter
 import { markSizeFor, markTone, type MarkTone } from './card-state';
 import { useFeedIssue, useStatsCardLead } from './use-stats-card-lead';
 import CardRow, { CARD_RADIUS, CARD_ROW_PAD, CARD_TEXT_END, CARD_TEXT_START } from '@/components/custom/feed/CardRow';
-import { OutageHelp } from './OutageHelp';
+import { OutageHelp, OutageHelpModal } from './OutageHelp';
 import ReadHoldUpgradeButton, { useUpgradeFrom } from './ReadHoldUpgradeButton';
 
 
@@ -167,6 +167,9 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
         setTextHeight((prev) => (prev === h ? prev : h));
     }, []);
 
+    const [helpOpen, setHelpOpen] = useState(false);
+    const openHelp = useCallback(() => setHelpOpen(true), []);
+    const closeHelp = useCallback(() => setHelpOpen(false), []);
     const toggle = useCallback(() => setStatusCardExpanded(!useFeedStatusCard.getState().expanded), []);
 
     // With counts to show, the card LEADS with the sentence, collapsed and
@@ -233,7 +236,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                         </View>
                         {state === 'outage' ? (
                             <View style={styles.holdBlock}>
-                                <OutageHelp lanes={outageLanes} />
+                                <OutageHelp lanes={outageLanes} onHelp={openHelp} />
                             </View>
                         ) : null}
                         {state !== 'outage' && (gap || upgradeFrom) ? (
@@ -250,6 +253,7 @@ export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID =
                         {details}
                     </>
             </GlassPanel>
+            {state === 'outage' ? <OutageHelpModal open={helpOpen} onClose={closeHelp} /> : null}
         </View>
     );
 };
