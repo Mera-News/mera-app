@@ -95,6 +95,8 @@ export function isCloseToPhrase(phrase: string, candidate: string): boolean {
 }
 
 const noTrailingPunctuation = (s: string): string => phraseKey(s).replace(/[\s\p{P}]+$/u, '');
+/** The words that make two labels one story: case, end punctuation and a leading English article aside. */
+const sameStoryKey = (s: string): string => noTrailingPunctuation(s).replace(/^(the|a|an) /, '');
 
 function optionRows(raw: unknown): TrackOptionText[] {
   if (!Array.isArray(raw)) return [];
@@ -127,7 +129,7 @@ export function withReaderPhrase(
   const stories = rows.filter((_, i) => i !== at);
   const exact: TrackOptionText = { label: phrase, search: phrase };
 
-  const oneRow = corrected !== null && noTrailingPunctuation(corrected.label) === noTrailingPunctuation(phrase);
+  const oneRow = corrected !== null && sameStoryKey(corrected.label) === sameStoryKey(phrase);
   const head = oneRow ? [corrected] : corrected ? [exact, corrected] : [exact];
   const taken = new Set(head.map((o) => phraseKey(o.label)));
   const options = [...head, ...stories.filter((o) => !taken.has(phraseKey(o.label)))].slice(0, TRACK_CARD_SLOTS);

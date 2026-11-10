@@ -75,6 +75,17 @@ describe('withReaderPhrase', () => {
     expect(card.hints.defaultTick).toBe('ajax feyenord match riots.');
   });
 
+  it('a leading article with a case change is one row too, not a phrase and its copy', () => {
+    // Seen on Kimi K2.6: "the Amsterdam protest against Dutch Israel policy" over the model's
+    // "Amsterdam Protest Against Dutch Israel Policy" read as two options for one story.
+    const card = withReaderPhrase(
+      [story('Amsterdam Protest Against Dutch Israel Policy'), story('A')],
+      'follow the Amsterdam protest against Dutch Israel policy',
+      true,
+    )!;
+    expect(card.options.map((o) => o.label)).toEqual(['Amsterdam Protest Against Dutch Israel Policy', 'A']);
+  });
+
   it('demotes a drifted first option to a story option', () => {
     const card = withReaderPhrase([story('Dutch Hooligan Clashes'), story('A')], msg, true)!;
     expect(card.options.map((o) => o.label)).toEqual(['ajax feyenord match riots', 'Dutch Hooligan Clashes', 'A']);
