@@ -9,7 +9,7 @@ import * as path from 'path';
 import { HARNESS_FILES, HARNESS_MAPPING, harnessFolderFor, loadHarness } from '@/lib/harnesses';
 import { generateSlotsModuleText, slotsFileFor } from '@/lib/harnesses/generate';
 import { resolveSlots } from '@/lib/harnesses/slots';
-import { CLOUD_BASE_SLOTS, DEVICE_BASE_SLOTS } from '@/lib/harnesses/slots.generated';
+import { CLOUD_BASE_SLOTS, DEVICE_BASE_SLOTS, HARNESS_SLOTS } from '@/lib/harnesses/slots.generated';
 import { QUIRKS } from '@/lib/harnesses/quirks';
 import { render, parseTemplate } from '@/lib/harnesses/template';
 import { APP_TOOL_FORMAT } from '@/lib/llm/text-tool-protocol';
@@ -104,9 +104,11 @@ describe('harness registry', () => {
     expect(loadHarness(folder).params.toolFormat).toBe(APP_TOOL_FORMAT);
   });
 
-  it('afm yields today\'s on-device prompts byte for byte', () => {
+  it('afm serves device-base with only its own .md slots replaced', () => {
     const slots = resolveSlots('afm');
-    expect(slots).toEqual(DEVICE_BASE_SLOTS);
+    expect(Object.keys(slots).sort()).toEqual(Object.keys(DEVICE_BASE_SLOTS).sort());
+    const overridden = Object.keys(slots).filter((k) => slots[k] !== (DEVICE_BASE_SLOTS as Record<string, string>)[k]);
+    expect(overridden.sort()).toEqual(Object.keys(HARNESS_SLOTS.afm).sort());
     expect(slots['notes/note-system']).toBe(NOTE_SYSTEM);
   });
 });

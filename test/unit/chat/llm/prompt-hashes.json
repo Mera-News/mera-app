@@ -625,5 +625,8 @@
       "kevFollow:Hindi": "792e85d44c1da5031aa4a12a4699a9d79c0979c6cb55aa8627d09114456c1850"
     }
   },
-  "onDevice": {}
+  "onDevice": {
+    "topicGenPrompt": "54df2779a0bcffa64665ef8e704ce2fbcd63103f3552d9cf5dfec6464442476d",
+    "topicGenPrompt:tight": "c35458e93a8a200d5ed8c3d52cbea0c85c5d3160c97bbdcfd172c51ea76da35c"
+  }
 }
