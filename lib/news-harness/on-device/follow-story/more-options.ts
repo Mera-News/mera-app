@@ -38,10 +38,11 @@ const SCHEMA: JsonSchema = {
 
 const norm = (s: string): string => s.trim().toLowerCase().replace(/\s+/g, ' ');
 
-export async function runMoreTrackOptions(
-  input: MoreTrackOptionsInput,
+/** The new options' texts, filtered against the card by label or search and capped at `room`; null when the writer failed. */
+export async function writeMoreTrackOptions(
+  input: Omit<MoreTrackOptionsInput, 'subject'>,
   ports: MoreTrackOptionsPorts,
-): Promise<{ actions: Extract<ProposalAction, { type: 'track_story' }>[]; reason?: MoreOptionsReason }> {
+): Promise<{ label: string; search: string }[] | null> {
   const shownLabels = asUntrusted(input.shown.map((s) => s.label).join('; '), 400);
   const context = [
     `Option rules: ${TRACK_OPTION_RULES}`,
@@ -57,21 +58,31 @@ export async function runMoreTrackOptions(
       SCHEMA,
     );
   } catch {
-    return { actions: [], reason: 'failed' };
+    return null;
   }
-  if (!raw || typeof raw !== 'object') return { actions: [], reason: 'failed' };
+  if (!raw || typeof raw !== 'object') return null;
 
   const seenLabels = new Set(input.shown.map((s) => norm(s.label)));
   const seenSearches = new Set(input.shown.map((s) => norm(s.searchText)));
-  const actions: Extract<ProposalAction, { type: 'track_story' }>[] = [];
+  const out: { label: string; search: string }[] = [];
   for (const o of trackOptions(raw.options)) {
-    if (actions.length >= input.room) break;
+    if (out.length >= input.room) break;
     const label = norm(o.label);
     const search = norm(o.search || o.label);
     if (seenLabels.has(label) || seenSearches.has(search)) continue;
     seenLabels.add(label);
     seenSearches.add(search);
-    actions.push({ type: 'track_story', label: o.label, searchText: o.search || o.label, subject: input.subject });
+    out.push({ label: o.label, search: o.search || o.label });
   }
+  return out;
+}
+
+export async function runMoreTrackOptions(
+  input: MoreTrackOptionsInput,
+  ports: MoreTrackOptionsPorts,
+): Promise<{ actions: Extract<ProposalAction, { type: 'track_story' }>[]; reason?: MoreOptionsReason }> {
+  const more = await writeMoreTrackOptions(input, ports);
+  if (!more) return { actions: [], reason: 'failed' };
+  const actions = more.map((o) => ({ type: 'track_story' as const, label: o.label, searchText: o.search, subject: input.subject }));
   return actions.length > 0 ? { actions } : { actions: [], reason: 'none' };
 }

@@ -24,7 +24,9 @@ import {
   type KevPorts,
   type KevTurnResult,
 } from '../kev';
-import { languageLine, IDENTITY_LINE } from '../shared';
+import { languageLine, IDENTITY_LINE, text } from '../shared';
+import { writeMoreTrackOptions } from './more-options';
+import { dropNearDuplicates } from './near-duplicates';
 import { proposeTrackCalls } from './parse';
 import { followStoryContext, followStoryInstructions, TRACK_OPTION_RULES } from './prompt';
 import { readerPhrase } from './reader-phrase';
@@ -192,7 +194,16 @@ export async function runFollowKevTurn(
       history: chat.history,
     });
     if (!value) return done(intent, ports.t('kevChat.reply.followFailed'));
-    return done(intent, replyOr(value, ports.t('kevChat.reply.followFailed')), proposeTrackCalls(value.options, { message: chat.subject, appIsEnglish: input.languageName === 'English' }));
+    // AFM writes one story several times over: its near-copies go, and a card left thin is refilled once.
+    const written = Array.isArray(value.options) ? dropNearDuplicates(value.options.map((o) => ({ label: text(o?.label), search: text(o?.search) }))) : [];
+    const calls = proposeTrackCalls(written, { message: chat.subject, appIsEnglish: input.languageName === 'English' });
+    const card = calls[0]?.input as { options: { label: string; search: string }[] } | undefined;
+    if (card && card.options.length < 3) {
+      const shown = card.options.map((o) => ({ label: o.label, searchText: o.search }));
+      const more = await writeMoreTrackOptions({ today: input.today, shown, room: 4 - shown.length }, ports);
+      card.options = dropNearDuplicates([...card.options, ...(more ?? [])], card.options.length).slice(0, 4);
+    }
+    return done(intent, replyOr(value, ports.t('kevChat.reply.followFailed')), calls);
   }
 
   const value = await write<{ reply?: string }>(ports, trace, {

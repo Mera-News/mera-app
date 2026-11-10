@@ -37,7 +37,8 @@ interface DecideRequest {
 let decideRequests: DecideRequest[];
 let kevScript: Record<string, Probabilities | ((req: DecideRequest) => Probabilities)>;
 let writes: { system: string; prompt: string; schema: { properties: Record<string, unknown> } }[];
-let writerReply: Record<string, unknown> | Error;
+/** One reply for every write, or one per write in order. */
+let writerReply: Record<string, unknown> | Error | Record<string, unknown>[];
 
 /** Kev answers each question from the script; an unscripted question throws, as a broken Kev would. */
 const decide = (async (request: DecideRequest) => {
@@ -58,7 +59,7 @@ const ports: KevPorts = {
   write: (async (system: string, prompt: string, schema: never) => {
     writes.push({ system, prompt, schema });
     if (writerReply instanceof Error) throw writerReply;
-    return writerReply;
+    return Array.isArray(writerReply) ? writerReply.shift() : writerReply;
   }) as KevPorts['write'],
   budget: async () => 3000,
   t: (key) => key,
@@ -658,6 +659,29 @@ describe('follow-story on Kev', () => {
     expect((writes[1].schema.properties.options as { minItems?: number }).minItems).toBeUndefined();
   });
 
+  it('a card that dropped its near-copies is refilled once, shown what it holds', async () => {
+    kevScript = { intent: { follow_a_named_story: 0.9, question_or_other: 0.1 } };
+    writerReply = [
+      {
+        reply: 'Pick one below.',
+        options: [
+          { label: 'Pune Metro Line 3 Construction', search: 'pune metro line 3' },
+          { label: 'Pune Metro Line 3 Project Progress', search: 'pune metro line 3 progress' },
+          { label: 'Pune Metro Line 3 Timeline', search: 'pune metro line 3 timeline' },
+        ],
+      },
+      { options: [{ label: 'Pune Metro Line 3 Updates', search: 'pune metro updates' }, { label: 'Maharashtra Metro Funding', search: 'maharashtra metro funds' }, { label: 'Hinjewadi Traffic Diversions', search: 'hinjewadi traffic' }] },
+    ];
+    await turn(follow(), [], 'Pune metro line 3 construction');
+    expect(writes).toHaveLength(2);
+    expect(writes[1].prompt).toContain('Already on the card, write different ones: Pune Metro Line 3 Construction');
+    expect(proposal()?.actions.map((a) => (a as { label: string }).label)).toEqual([
+      'Pune Metro Line 3 Construction',
+      'Maharashtra Metro Funding',
+      'Hinjewadi Traffic Diversions',
+    ]);
+  });
+
   it('a close call between the two follow readings is not a reason to ask', async () => {
     kevScript = { intent: { follow_this_story: 0.4, follow_a_named_story: 0.4, question_or_other: 0.2 } };
     writerReply = { reply: 'Which story?', options: [] };
@@ -759,7 +783,8 @@ describe('every Kev writer prompt', () => {
       [new PersonaOnDeviceAgent(USER, 'ONBOARDING', kevRoute), { question_or_chat: 1 }, { reply: 'Hi.' }],
       [article, { answer_question: 1 }, { reply: 'Hi.' }],
       [article, { follow_story: 1 }, { reply: 'Pick.', options: [{ label: 'A Story', search: 'story' }] }],
-      [new FollowStoryOnDeviceAgent(USER, kevRoute), { follow_a_named_story: 1 }, { reply: 'Pick.', options: [{ label: 'A Story', search: 'story' }] }],
+      // Three distinct options: a thinner card gets a More options refill, which is not a Kev writer.
+      [new FollowStoryOnDeviceAgent(USER, kevRoute), { follow_a_named_story: 1 }, { reply: 'Pick.', options: ['A Story', 'Another Event', 'The Wider Saga'].map((label) => ({ label, search: label })) }],
       [new FollowStoryOnDeviceAgent(USER, kevRoute), { question_or_other: 1 }, { reply: 'Hi.' }],
     ];
     for (const [agent, intent, reply] of runs) {
