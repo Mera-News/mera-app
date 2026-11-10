@@ -162,8 +162,9 @@ export function reportProfileSuccess(profile: Profile, lane: Lane): void {
   if (marks.delete(profile.id)) bump();
 }
 
-/** Content-free: carries the lane only. */
+/** Content-free: carries the lane only. Thrown as is when a lane had no profile it could try; a 503 to every outage check. */
 export class LaneExhaustedError extends Error {
+  readonly statusCode = 503;
   constructor(lane: Lane) {
     super(`Every model profile failed on lane ${lane}`);
     this.name = 'LaneExhaustedError';
@@ -171,11 +172,11 @@ export class LaneExhaustedError extends Error {
 }
 
 /** Every profile on `lane` failed: the lane is out, and Sentry gets its one error event. */
-export function reportLaneExhausted(lane: Lane, profile: Profile, failureClass: FailureClass): void {
+export function reportLaneExhausted(lane: Lane, profile: Profile | null, failureClass: FailureClass): void {
   setLaneOutage(lane, { since: Date.now() });
   logger.captureException(new LaneExhaustedError(lane), {
     level: 'error',
-    tags: { lane, profile: profile.id, failure_class: failureClass, routing_version: String(table.version) },
+    tags: { lane, profile: profile?.id ?? 'none', failure_class: failureClass, routing_version: String(table.version) },
     fingerprint: ['lane-exhausted', lane],
   });
 }

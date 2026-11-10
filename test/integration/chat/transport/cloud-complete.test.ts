@@ -241,7 +241,7 @@ describe('first-token deadline and the chain', () => {
     expect(isProfileMarked('near/qwen3.6-35b-a3b')).toBe(true);
   });
 
-  it('cloudBatchComplete sends each NEAR profile once on a 502 and never RedPill (it was 11 requests)', async () => {
+  it('cloudBatchComplete sends each NEAR profile once on a 502 and never a batch to RedPill (it was 11 requests)', async () => {
     server.use(...mockGateway(respond({ status: 502, body: 'gateway timeout' })));
     const batch = watchRequests(BATCH_PATH);
 

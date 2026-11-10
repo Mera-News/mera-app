@@ -16,7 +16,7 @@ import {
 import { driveUntilDone, resetChatModules, useStrictClock } from '@/test/integration/chat/_helpers';
 
 import type { JsonBodyType } from 'msw';
-import { sealForClient } from '@/test/mock-backend/gateway/crypto';
+import { openFromClientV2, redpillAttestationBody, sealForClient, sealForClientV2 } from '@/test/mock-backend/gateway/crypto';
 
 // Aliased: a function named use* trips react-hooks/rules-of-hooks wherever it is called.
 const strictClock = useStrictClock;
@@ -115,4 +115,46 @@ export function serveJson(path: string, build: (seal: (plaintext: string) => str
       return HttpResponse.json(build((text) => sealForClient(text, pub, algo)));
     }),
   );
+}
+
+/** One sync request RedPill received, opened with the test model's key. */
+export interface RedPillCall {
+  model: string;
+  nonce: string;
+  messages: { role: string; content: string }[];
+  body: Record<string, unknown>;
+}
+
+/**
+ * Serves RedPill on the mock: its aci/1 key report and E2EE v2 sync completions (the shared
+ * mock speaks NEAR only). `reply` gets the opened messages; a `{ status }` answers raw.
+ * Requests without `X-Mera-Provider: redpill` fall through to the NEAR mock.
+ */
+export function serveRedPill(
+  reply: (messages: { role: string; content: string }[]) => string | { status: number },
+): RedPillCall[] {
+  const calls: RedPillCall[] = [];
+  const isRedPill = (request: Request) => request.headers.get('x-mera-provider') === 'redpill';
+  server.use(
+    http.get('*/api/attestation/report', ({ request }) =>
+      isRedPill(request) ? HttpResponse.json(redpillAttestationBody()) : undefined,
+    ),
+    http.post(`*${CHAT_PATH}`, async ({ request }) => {
+      if (!isRedPill(request)) return undefined;
+      const h = request.headers;
+      const body = (await request.json()) as { model: string; messages: { role: string; content: string }[] };
+      const p = { model: body.model, nonce: h.get('x-e2ee-nonce') ?? '', ts: Number(h.get('x-e2ee-timestamp')) };
+      const messages = body.messages.map((m, i) => ({
+        role: m.role,
+        content: m.content ? openFromClientV2(m.content, p, `messages.${i}.content`) : '',
+      }));
+      calls.push({ model: body.model, nonce: p.nonce, messages, body });
+      const r = reply(messages);
+      if (typeof r !== 'string') return new HttpResponse('down', { status: r.status });
+      const id = `req_${calls.length}`;
+      const content = sealForClientV2(r, h.get('x-client-pub-key') ?? '', p, 'choices.0.message.content', id);
+      return HttpResponse.json({ id, choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }] });
+    }),
+  );
+  return calls;
 }

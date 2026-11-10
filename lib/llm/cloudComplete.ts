@@ -5,7 +5,8 @@
 // fails, the call fails and the user sees an error.
 
 import { departureMark, whenForeground } from '../app-restart';
-import { assertCloudAllowed, type CloudPurpose } from './on-device-gate';
+import { AppState } from 'react-native';
+import { assertCloudAllowed, OnDeviceModeError, type CloudPurpose } from './on-device-gate';
 import {
   decryptContent,
   encryptContent,
@@ -29,6 +30,7 @@ import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import {
+  AppLeftError,
   CallerAbortError,
   cancelTurn,
   CleartextToolCallError,
@@ -36,13 +38,14 @@ import {
   getAuthHeaders,
   isCallerAbort,
   newChatTurn,
+  RateLimitedError,
   takeStreamHandle,
   type ChatTurn,
   type CloudCallOptions,
 } from './gateway-fetch';
 import type { Profile } from './profiles';
 import { attestationCacheKey, prepareForProfile, sealMessages } from './provider-e2ee';
-import { chainFor, sendOnLane, sendToProfile, type Leg } from './routed-send';
+import { attemptOnProfile, chainFor, sendOnLane, sendToProfile, type Attempt, type Build, type Leg } from './routed-send';
 import {
   failureClassOf,
   reportLaneExhausted,
@@ -144,16 +147,30 @@ export async function cloudComplete(
     lane,
   });
 
-  return sendOnLane(
-    CHAT_API,
-    lane,
+  const { build, read } = completeCall(
+    { system: request.systemPrompt, prompt: request.prompt, temperature, maxTokens, enableThinking: false },
+    options,
+    request.purpose,
+  );
+  return sendOnLane(CHAT_API, lane, build, read, options);
+}
+
+/** One sealed buffered completion: the request body per profile, and how its answer is read. */
+function completeCall(
+  call: Pick<BatchCall, 'system' | 'prompt' | 'temperature' | 'maxTokens' | 'enableThinking'>,
+  options: CloudCallOptions,
+  purpose?: CloudPurpose,
+): { build: Build<E2EEContext>; read: (leg: Leg<E2EEContext>) => Promise<string> } {
+  const temperature = call.temperature ?? 0.3;
+  const maxTokens = call.maxTokens;
+  return {
     // Rebuilt per profile: sealing encrypts in place and every profile has its own key.
-    async (profile) => {
+    build: async (profile) => {
       const messages = [
-        { role: 'system', content: request.systemPrompt },
-        { role: 'user', content: request.prompt },
+        { role: 'system', content: call.system },
+        { role: 'user', content: call.prompt },
       ];
-      const attemptCtx = await sealMessages(messages, profile, options.lane, request.purpose);
+      const attemptCtx = await sealMessages(messages, profile, options.lane, purpose);
       const baseHeaders = await getAuthHeaders();
       return {
         init: {
@@ -161,7 +178,7 @@ export async function cloudComplete(
           headers: { ...baseHeaders, ...attemptCtx.headers },
           body: JSON.stringify({
             messages, stream: false, temperature, model: profile.model,
-            chat_template_kwargs: { enable_thinking: false },
+            chat_template_kwargs: { enable_thinking: call.enableThinking ?? false },
             // Honor the caller's output cap: lets the readiness ping ask for one
             // word instead of a full completion.
             ...(maxTokens !== undefined && { max_tokens: maxTokens }),
@@ -171,7 +188,7 @@ export async function cloudComplete(
       };
     },
     // Read inside the chain, so an empty 2xx moves to the next profile too.
-    async ({ response, ctx }) => {
+    read: async ({ response, ctx }) => {
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         // statusCode as a FIELD so retry.ts and the logger's 401 rule can see it; the
@@ -206,8 +223,50 @@ export async function cloudComplete(
       // parses it as JSON or shows it as prose.
       return stripLeakedReasoning(openField(encContent, ctx, 'choices.0.message.content', data.id ?? '')).trim();
     },
-    options,
-  );
+  };
+}
+
+/** How many of a batch's items go to a sync-only profile at once. */
+const PER_REQUEST_CONCURRENCY = 4;
+
+/** An item error that ends the whole batch rather than that item: the session, a throttle, a stop, the app leaving. */
+function endsTheBatch(err: unknown): boolean {
+  const status = (err as { statusCode?: unknown } | null)?.statusCode;
+  return status === 401 || status === 403 || err instanceof RateLimitedError || err instanceof AppLeftError || isCallerAbort(err) || err instanceof OnDeviceModeError;
+}
+
+/**
+ * A batch on a profile that cannot take one (RedPill: a fresh nonce and timestamp per request):
+ * each item is its own sealed sync completion, at most PER_REQUEST_CONCURRENCY at a time, results
+ * in item order. A model-class failure stops it and settles as that profile's failure, as does
+ * the app leaving (no RedPill request starts in the background); an item's own error stays on
+ * its row, as the batch route reports it.
+ */
+async function batchPerRequest(
+  calls: BatchCall[],
+  lane: Lane,
+  profile: Profile,
+  options: CloudCallOptions,
+): Promise<Attempt<BatchCompletionResult[]>> {
+  const results: BatchCompletionResult[] = new Array(calls.length);
+  let stop: Extract<Attempt<unknown>, { error: unknown }> | null = null;
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (!stop && next < calls.length) {
+      if (AppState.currentState !== 'active') {
+        stop = { error: new AppLeftError(), failure: null };
+        return;
+      }
+      const i = next++;
+      const { build, read } = completeCall(calls[i], options);
+      const a = await attemptOnProfile(CHAT_API, lane, profile, build, read, options);
+      if ('out' in a) results[i] = { id: calls[i].id, output: a.out };
+      else if (a.failure || endsTheBatch(a.error)) stop ??= a;
+      else results[i] = { id: calls[i].id, output: '', error: a.error instanceof Error ? a.error.message : String(a.error) };
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(PER_REQUEST_CONCURRENCY, calls.length) }, worker));
+  return stop ?? { out: results };
 }
 
 /** E2EE batch completion via /v1/chat/completions/batch. Shares one E2EE context across all items. */
@@ -302,6 +361,7 @@ export async function cloudBatchComplete(
     options,
     // One header set for many requests: only a provider that accepts that (not RedPill).
     { batch: true },
+    (profile) => batchPerRequest(calls, route, profile, options),
   );
 }
 
