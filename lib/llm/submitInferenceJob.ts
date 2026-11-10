@@ -17,6 +17,7 @@ import { linkedAbort, raceSignal } from './abort-race';
 import {
   type CloudCallBundle,
 } from '@/lib/mera-protocol/scoring-service';
+import type { E2EEProvider } from '@/lib/e2ee/provider';
 import type { BatchCall } from '@/lib/llm/types';
 import {
   encryptContent,
@@ -129,6 +130,8 @@ export async function sendInferenceRequest(args: {
   singleAttempt?: boolean;
   /** Aborts the JWT mint wait, the limiter wait and the POST. */
   signal?: AbortSignal;
+  /** Which provider holds `model` (the run's profile). Sent as X-Mera-Provider; absent means near. */
+  provider?: E2EEProvider;
 }): Promise<SendInferenceOutcome> {
   const {
     bundle,
@@ -141,6 +144,7 @@ export async function sendInferenceRequest(args: {
     idempotencyKey,
     singleAttempt = false,
     signal,
+    provider = 'near',
   } = args;
 
   // The one place a job is POSTed, so the one gate every caller passes. While
@@ -301,6 +305,7 @@ export async function sendInferenceRequest(args: {
     // submits with a 402, which those bundles treat as a plain failure and
     // never as a limiter pause.
     'X-Mera-Reading': '1',
+    'X-Mera-Provider': provider,
   };
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
   const doSubmitPost = (bearer: string): Promise<Response> =>
