@@ -177,6 +177,12 @@ export interface PipelineRun {
   runId: string;
   startedAt: number;
   algo: SigningAlgo;
+  /** The model profile (`<provider>/<harness folder>`) this run's key was minted for. Every submit
+   *  of the run goes to it; a run stored before profiles existed has none and means
+   *  near/qwen3.6-35b-a3b. */
+  profileId?: string;
+  /** The attested model key the run's batches are encrypted to, as fetched at creation. */
+  modelPubKeyHex?: string;
   expoPushToken: string | null;
   batches: PipelineBatch[];
   /** CAS counter — bumped on every successful mutate. */

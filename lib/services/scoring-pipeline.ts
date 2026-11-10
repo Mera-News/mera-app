@@ -21,7 +21,9 @@
 import { AppState } from 'react-native';
 import logger from '@/lib/logger';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
-import { SMALL_MODEL } from '@/lib/llm/constants';
+import { PROFILES, type Profile } from '@/lib/llm/profiles';
+import { prepareForProfile, rebuildForProfile } from '@/lib/llm/provider-e2ee';
+import { failureClassOf, reportLaneExhausted, reportProfileFailure, reportProfileSuccess, routeLane } from '@/lib/llm/router';
 import type { ExecutionContext } from '@/lib/llm/execution-context';
 import * as gatewayRateLimiter from '@/lib/llm/gateway-rate-limiter';
 import {
@@ -34,8 +36,6 @@ import {
   ModelKeyValidationError,
   NoCredentialError,
   type AttestationFetchOptions,
-  prepareE2EEContext,
-  rebuildE2EEContext,
 } from '@/lib/e2ee/e2ee-service';
 import { isCancellationError, isNativeFetchCancel } from '@/lib/utils/retry';
 import {
@@ -1000,23 +1000,55 @@ export async function enqueueOrphanedReasons(): Promise<void> {
   ensurePoller();
 }
 
-/** Mint the run keypair and create the run with the batches from `build`. */
+/** The profile a run was minted for; a run stored before profiles existed ran on the old SMALL_MODEL. */
+function runProfile(run: PipelineRun): Profile {
+  return (run.profileId && PROFILES[run.profileId as keyof typeof PROFILES]) || PROFILES['near/qwen3.6-35b-a3b'];
+}
+
+/**
+ * Mint the run keypair on the first scoring profile that attests (async jobs skip RedPill), and
+ * create the run with the batches from `build`. A model-class failure marks that profile and tries
+ * the next; with none left the lane is out and the last error is thrown for the caller to absorb.
+ */
 async function createRunWithBatches(
   build: (base: number) => PipelineBatch[],
   e2ee: AttestationFetchOptions = {},
 ): Promise<void> {
   if (lastOutage && Date.now() - lastOutage.at < OUTAGE_RETRY_AFTER_MS) throw lastOutage.err;
-  const ctx = await prepareE2EEContext(SMALL_MODEL, 'background', e2ee);
+  let ctx: Awaited<ReturnType<typeof prepareForProfile>> | null = null;
+  let profile: Profile | null = null;
+  let lastErr: unknown = null;
+  for (const candidate of routeLane('scoring', { batch: true })) {
+    try {
+      ctx = await prepareForProfile(candidate, 'background', e2ee);
+      profile = candidate;
+      break;
+    } catch (err) {
+      const failureClass = failureClassOf(err);
+      if (!failureClass) throw err;
+      lastErr = err;
+      reportProfileFailure(candidate, 'scoring', failureClass);
+    }
+  }
+  if (!ctx || !profile) {
+    // No profile can serve an async job (all failed, or only RedPill is left).
+    const err = lastErr ?? Object.assign(new Error('model_unavailable: no scoring profile'), { statusCode: 503 });
+    reportLaneExhausted('scoring', PROFILES['near/qwen3.6-35b-a3b'], failureClassOf(err) ?? 'model_unavailable');
+    throw err;
+  }
   const run: Omit<PipelineRun, 'version' | 'schema'> = {
     runId: makeRunId(),
     startedAt: Date.now(),
     algo: ctx.algo,
+    profileId: profile.id,
+    modelPubKeyHex: ctx.modelPubKeyHex,
     expoPushToken: getExpoPushToken(),
     batches: build(0),
   };
   try {
     await createPipeline(run, bytesToHex(ctx.privateKey));
     clearScoringOutage();
+    reportProfileSuccess(profile, 'scoring');
     logger.info(
       `${TAG} created run ${run.runId} with ${run.batches.length} batch(es)`,
     );
@@ -1342,6 +1374,11 @@ async function doSubmit(
       await failSubmitModelKeyInvalid(batchId, fromPhase);
       return 'failed';
     }
+    const failureClass = failureClassOf(err);
+    if (failureClass) {
+      await profileDownForRun(run, batchId, fromPhase, failureClass, context);
+      return 'failed';
+    }
     throw err;
   }
 }
@@ -1520,13 +1557,8 @@ async function doSubmitRelevance(
     // falls back to CLOUD_SCORE_CHUNK_SIZE only for a batch persisted without it.
     const scoreChunkSize = bundle.scoreChunkSize;
 
-    const ctx = await rebuildE2EEContext(
-      SMALL_MODEL,
-      privKeyHex,
-      run.algo,
-      'background',
-      attestationOpts(context, io),
-    );
+    const profile = runProfile(run);
+    const ctx = await rebuildForProfile(profile, privKeyHex, run.algo, 'background', attestationOpts(context, io));
     const idemKey = await reserveIdempotencyKey(
       batch.batchId,
       'submitting-relevance',
@@ -1541,7 +1573,8 @@ async function doSubmitRelevance(
       bundle,
       ctx,
       token,
-      model: SMALL_MODEL,
+      model: profile.model,
+      provider: profile.provider,
       context,
       grantAlreadyHeld,
       idempotencyKey: idemKey,
@@ -1636,13 +1669,8 @@ async function doSubmitReasonsOnly(
 
   const token =
     AppState.currentState !== 'active' ? run.expoPushToken : null;
-  const ctx = await rebuildE2EEContext(
-    SMALL_MODEL,
-    privKeyHex,
-    run.algo,
-    'background',
-    attestationOpts(context, io),
-  );
+  const profile = runProfile(run);
+  const ctx = await rebuildForProfile(profile, privKeyHex, run.algo, 'background', attestationOpts(context, io));
   const reasonIds = bundle.eligibleCandidates.map((c) => c.id);
   const idemKey = await reserveIdempotencyKey(
     batch.batchId,
@@ -1658,7 +1686,8 @@ async function doSubmitReasonsOnly(
     bundle,
     ctx,
     token,
-    model: SMALL_MODEL,
+    model: profile.model,
+    provider: profile.provider,
     context,
     grantAlreadyHeld,
     idempotencyKey: idemKey,
@@ -1806,6 +1835,38 @@ async function markRowsOfExhaustedBatchFailed(batchId: number): Promise<void> {
   if (b?.phase === 'failed' && b.attempt >= MAX_BATCH_ATTEMPTS) {
     await batchMarkScoreFailed(b.candidateIds);
   }
+}
+
+/**
+ * The run's own profile failed with a model-class error before a request left the device. A run is
+ * bound to one key, so its batches are never re-encrypted to another model: when nothing of it was
+ * ever sent, the run ends (rows stay unscored, no key is lost with a paid job) and the kick makes
+ * a new run on the next profile, or notes the lane outage when none is left. A run with batches
+ * already out keeps its key and just spends an attempt on this one.
+ */
+async function profileDownForRun(
+  run: PipelineRun,
+  batchId: number,
+  fromPhase: 'submitting-relevance' | 'submitting-reasons',
+  failureClass: NonNullable<ReturnType<typeof failureClassOf>>,
+  context: ExecutionContext,
+): Promise<void> {
+  reportProfileFailure(runProfile(run), 'scoring', failureClass);
+  logger.warn(`${TAG} run ${run.runId}: profile ${runProfile(run).id} down (${failureClass}) at batch ${batchId}`);
+  const snap = await getPipeline();
+  // The failing batch is still in its submitting phase: it reserved no key (the rebuild comes first).
+  const unsent =
+    !!snap &&
+    snap.run.runId === run.runId &&
+    snap.run.batches.every((b) => (b.batchId === batchId || b.phase === 'queued') && !b.idemKey);
+  if (!unsent) {
+    await failOrRetrySubmit(batchId, fromPhase);
+    return;
+  }
+  await clearPipeline();
+  stopPoller();
+  await pushUiProgress(context);
+  if (context !== 'task') schedulePostFinalizeKick();
 }
 
 async function failOrRetrySubmit(
@@ -2602,15 +2663,10 @@ async function submitNeedsReasonsHeld(
   };
 
   const token = AppState.currentState !== 'active' ? run.expoPushToken : null;
+  const profile = runProfile(run);
   let ctx;
   try {
-    ctx = await rebuildE2EEContext(
-      SMALL_MODEL,
-      privKeyHex,
-      run.algo,
-      'background',
-      attestationOpts(context, io),
-    );
+    ctx = await rebuildForProfile(profile, privKeyHex, run.algo, 'background', attestationOpts(context, io));
   } catch (err) {
     // Task: no JWT for the attestation fetch, or the deadline fired. Nothing
     // was sent; hand the batch back untouched.
@@ -2651,7 +2707,8 @@ async function submitNeedsReasonsHeld(
     bundle,
     ctx,
     token,
-    model: SMALL_MODEL,
+    model: profile.model,
+    provider: profile.provider,
     context,
     // The batch's stored token is the completed relevance job's capability
     // token — its `jobs:submit-followup` scope authorizes this chained reasons

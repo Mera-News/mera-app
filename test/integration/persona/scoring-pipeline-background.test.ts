@@ -263,7 +263,7 @@ describe('submitScoringForBackground (step b)', () => {
     expect(b.attempt).toBe(0);
   });
 
-  it('a 5xx attestation (MERA-APP-8W) stops the step with a breadcrumb, not a Sentry event (the next run retries)', async () => {
+  it('a 5xx attestation (MERA-APP-8W) stops the step with a breadcrumb and the one lane-exhausted event (the next run retries)', async () => {
     gateway({}, { pendingPolls: 999 });
     await seedArticles(['n0']);
     server.use(http.get('*/api/attestation/report', () => new HttpResponse('Upstream request failed', { status: 502 })));
@@ -271,7 +271,12 @@ describe('submitScoringForBackground (step b)', () => {
     const out = await drive(submitScoringForBackground({ deadlineAt: deadline(), articleIds: ['n0'] }));
 
     expect(out.stoppedBy).toBe('error');
-    expect(logger.captureException).not.toHaveBeenCalled();
+    // Chain exhausted (route1): the router's single content-free event, nothing about the attestation itself.
+    expect(logger.captureException).toHaveBeenCalledTimes(1);
+    expect(logger.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'LaneExhaustedError' }),
+      expect.objectContaining({ fingerprint: ['lane-exhausted', 'scoring'] }),
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('bg-submit'),
       expect.objectContaining({ statusCode: 502 }),
