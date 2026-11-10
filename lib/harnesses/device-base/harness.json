@@ -1,0 +1,31 @@
+{
+  "extends": null,
+  "params": {
+    "toolFormat": "structured",
+    "thinking": false,
+    "maxTokens": {
+      "chat-tools": 1024,
+      "chat-single": 1024,
+      "topics": 600
+    },
+    "firstTokenDeadlineMs": {},
+    "quirks": []
+  },
+  "lanes": [
+    "chat-tools",
+    "chat-single",
+    "topics",
+    "background"
+  ],
+  "slots": {
+    "identity": "lib/news-harness/on-device/shared#IDENTITY_LINE",
+    "personaChat": "lib/news-harness/on-device/persona-chat/prompt#buildPersonaChatPrompt",
+    "articleFeedback": "lib/news-harness/on-device/article-feedback/prompt#buildArticleFeedbackPrompt",
+    "followStory": "lib/news-harness/on-device/follow-story/prompt#buildFollowStoryPrompt",
+    "tutorialHelp": "lib/news-harness/on-device/tutorial-help/prompt#buildTutorialHelpOnDevicePrompt",
+    "topicGen": "lib/news-harness/on-device/topic-gen/prompt#buildTopicGenPrompt",
+    "storyScope": "lib/news-harness/on-device/story-scope/prompt#buildOnDeviceStoryScopePrompt",
+    "notes": "lib/news-harness/on-device/notes/prompt#buildNotePrompt",
+    "subscriptionRead": "lib/news-harness/on-device/subscription-read/prompt#buildSubscriptionReadPrompt"
+  }
+}
