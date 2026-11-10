@@ -264,7 +264,6 @@ describe('mode and call shape', () => {
     expect(routingSnapshot().lanes.scoring.active).toBeNull();
     useMeraProtocolStore.setState({ chatInCloud: true });
     expect(routeLane('chat-single').length).toBe(5);
-    expect(routeLane('fact-check').length).toBe(4);
     expect(routeLane('topics')).toEqual([]);
   });
 

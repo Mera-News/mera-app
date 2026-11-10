@@ -21,7 +21,7 @@ describe('profiles and the default table', () => {
     const bulk = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b', 'redpill/gemma-4-31b'];
     const kimi = 'redpill/kimi-k2.6';
     expect(DEFAULT_TABLE).toEqual({
-      'chat-tools': [...chat, kimi], 'chat-single': [...chat, kimi], 'fact-check': chat,
+      'chat-tools': [...chat, kimi], 'chat-single': [...chat, kimi],
       scoring: bulk, topics: [...bulk, kimi], background: bulk,
     });
     for (const lane of LANES) expect(new Set(DEFAULT_TABLE[lane]).size).toBe(DEFAULT_TABLE[lane].length);
@@ -32,11 +32,10 @@ describe('profiles and the default table', () => {
     expect(PROFILES[DEFAULT_TABLE.scoring[0]].model).toBe(SMALL_MODEL);
   });
 
-  it('gives chat lanes 30s to a first token and the rest, fact checks included, 120s', () => {
+  it('gives chat lanes 30s to a first token and the rest 120s', () => {
     for (const p of Object.values(PROFILES)) {
       expect(firstTokenDeadlineMs(p, 'chat-tools')).toBe(30_000);
       expect(firstTokenDeadlineMs(p, 'chat-single')).toBe(30_000);
-      expect(firstTokenDeadlineMs(p, 'fact-check')).toBe(120_000);
       expect(firstTokenDeadlineMs(p, 'scoring')).toBe(120_000);
       expect(MODEL_LABELS[p.harness]).toBeDefined();
     }

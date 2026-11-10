@@ -243,8 +243,8 @@ describe('the synthesis deadline', () => {
   const started = () => watchRequests(CHAT);
 
   it(`ends a synthesis no profile answers with synthesis-failed, inside the ${SYNTHESIS_DEADLINE_MS / 1000}s mark`, async () => {
-    // Buffered call: the wait is for the whole answer. Each profile gets the fact-check lane's 30s
-    // first-token deadline, so the chain is spent before the handler's own deadline.
+    // Buffered call: the wait is for the whole answer. Each profile gets the quick check's 60s, so the
+    // first is spent at 60s and the handler's own deadline ends the second.
     scriptQuick({ answer: () => ({ chunks: [answerJson({ verdict: 'supported' })], headerDelayMs: 100_000 }) });
     const chat = started();
     const t0 = Date.now();
@@ -255,17 +255,16 @@ describe('the synthesis deadline', () => {
     expect(answer).toMatchObject({ outcome: 'synthesis-failed', verdict: null });
     const [requestedAt] = chat.times();
     expect(requestedAt).toBeGreaterThanOrEqual(t0);
-    // Two NEAR profiles at 30s each (RedPill fails at its key fetch in the mock).
     expect(finishedAt - requestedAt).toBeGreaterThanOrEqual(60_000);
     expect(finishedAt - requestedAt).toBeLessThan(SYNTHESIS_DEADLINE_MS);
     // Let the abandoned call finish, so nothing bleeds into the next test.
     await jest.advanceTimersByTimeAsync(300_000);
   });
 
-  it('waits for a slow answer that lands inside the first-token deadline', async () => {
+  it("waits past the chat lane's 30s for a slow answer: a synthesis gets 60s per model", async () => {
     const answer = await check(
       {},
-      { answer: () => ({ chunks: [answerJson({ verdict: 'mixed', summary: 'S' })], headerDelayMs: 25_000 }) },
+      { answer: () => ({ chunks: [answerJson({ verdict: 'mixed', summary: 'S' })], headerDelayMs: 45_000 }) },
     );
     expect(answer).toMatchObject({ outcome: 'answered', verdict: 'mixed' });
   });

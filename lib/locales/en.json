@@ -933,7 +933,6 @@
       "laneChat": "Chat",
       "laneScoring": "Feed picks",
       "laneTopics": "Topics",
-      "laneFactCheck": "Fact checks",
       "laneBackground": "Background",
       "paused": "Paused",
       "openA11y": "Open {{provider}} website"

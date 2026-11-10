@@ -2,7 +2,7 @@
 // (lib/llm/profiles DEFAULT_TABLE), for the eval scripts and tests. Nothing on a
 // request path reads them: every call names a lane and lib/llm/router picks the
 // profile (provider + model). A test pins that these still equal the heads.
-// BIG  — head of the chat lanes (tool-calling chat, article chat, fact-check).
+// BIG  — head of the chat lanes (tool-calling chat, article chat and the quick fact check).
 // SMALL — head of scoring, topics and background.
 
 export const BIG_MODEL = 'Qwen/Qwen3.8-27B';

@@ -43,7 +43,7 @@ export const isProfileId = (id: string): id is ProfileId => id in PROFILES;
 
 // Qwen first (the prompts are Qwen-tuned), then the models that reached the Qwen bar in the
 // qualification matrix, each only in the lanes it reached it (Kimi missed scoring; untested on
-// fact-check and background). Mirrors mera-inference-gateway src/routing/profiles.ts.
+// background). Mirrors mera-inference-gateway src/routing/profiles.ts.
 const CHAT_QWEN: ProfileId[] = ['near/qwen3.8-27b', 'near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b'];
 const BULK_QWEN: ProfileId[] = ['near/qwen3.6-35b-a3b', 'near/qwen3.8-27b', 'redpill/qwen3.8-27b'];
 const GEMMA_KIMI: ProfileId[] = ['redpill/gemma-4-31b', 'redpill/kimi-k2.6'];
@@ -53,7 +53,6 @@ const GEMMA: ProfileId[] = ['redpill/gemma-4-31b'];
 export const DEFAULT_TABLE: Record<Lane, ProfileId[]> = {
   'chat-tools': [...CHAT_QWEN, ...GEMMA_KIMI],
   'chat-single': [...CHAT_QWEN, ...GEMMA_KIMI],
-  'fact-check': [...CHAT_QWEN, ...GEMMA],
   scoring: [...BULK_QWEN, ...GEMMA],
   topics: [...BULK_QWEN, ...GEMMA_KIMI],
   background: [...BULK_QWEN, ...GEMMA],

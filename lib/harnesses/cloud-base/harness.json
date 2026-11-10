@@ -6,13 +6,11 @@
     "maxTokens": {
       "chat-tools": 1024,
       "chat-single": 1024,
-      "fact-check": 1200,
       "topics": 600
     },
     "firstTokenDeadlineMs": {
       "chat-tools": 30000,
       "chat-single": 30000,
-      "fact-check": 120000,
       "scoring": 120000,
       "topics": 120000,
       "background": 120000
@@ -22,7 +20,6 @@
   "lanes": [
     "chat-tools",
     "chat-single",
-    "fact-check",
     "scoring",
     "topics",
     "background"

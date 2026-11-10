@@ -108,7 +108,11 @@ const defaultDeps: QuickFactCheckDeps = {
   // INTERACTIVE: the quick check runs inside a chat turn, with the user
   // watching a 90s synthesis deadline.
   // `purpose: 'chat'`: a chat call, so it runs while cloud chat is on in On this phone.
-  complete: (req) => cloudComplete({ ...req, route: 'fact-check', purpose: 'chat' }, { lane: 'interactive' }),
+  // The big chat model, whatever it is right now (owner: no lane of its own). A buffered answer's
+  // whole wait counts as its first token, so each model gets 60s, which still leaves room for one
+  // fallback inside SYNTHESIS_DEADLINE_MS.
+  complete: (req) =>
+    cloudComplete({ ...req, route: 'chat-single', purpose: 'chat' }, { lane: 'interactive', requestTimeoutMs: 60_000 }),
   now: () => Date.now(),
 };
 

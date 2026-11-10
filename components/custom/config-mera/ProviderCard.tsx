@@ -16,7 +16,6 @@ const LANE_ROWS = [
   ['chat-tools', 'meraProtocol.providers.laneChat'],
   ['scoring', 'meraProtocol.providers.laneScoring'],
   ['topics', 'meraProtocol.providers.laneTopics'],
-  ['fact-check', 'meraProtocol.providers.laneFactCheck'],
   ['background', 'meraProtocol.providers.laneBackground'],
 ] as const satisfies readonly (readonly [Lane, string])[];
 

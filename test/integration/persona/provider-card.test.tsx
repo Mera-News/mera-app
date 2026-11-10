@@ -29,7 +29,6 @@ beforeEach(() => {
     lanes: {
       'chat-tools': lane(big),
       'chat-single': lane(big),
-      'fact-check': lane(big),
       scoring: lane(small),
       topics: lane(small),
       background: lane(small),

@@ -67,7 +67,7 @@ export async function sendToProfile<C>(
   };
   const response = await authFetch(url, init, {
     ...options,
-    requestTimeoutMs: firstTokenDeadlineMs(profile, lane),
+    requestTimeoutMs: options.requestTimeoutMs ?? firstTokenDeadlineMs(profile, lane),
     failFast: true,
     turn: built.turn,
   });
