@@ -152,7 +152,7 @@ function shippedRouterBody(): string {
   if (body === null || body.trim() === '') {
     throw new Error(
       "mera-harness: the 'router' skill body is missing or empty. Re-run "
-        + 'scripts/generate-persona-skills.ts. Falling back to a hardcoded procedure is what '
+        + 'npm run harness:generate. Falling back to a hardcoded procedure is what '
         + 'left the router prompt without its decision rules for three corpus runs.',
     );
   }

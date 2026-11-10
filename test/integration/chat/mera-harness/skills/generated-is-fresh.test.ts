@@ -15,10 +15,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import {
+  EXPECTATIONS_FILE,
+  SKILL_SOURCES_DIR,
   SKILLS_ROOT,
   generateModuleText,
   outFileFor,
-  personaDirFor,
   firstDifference,
 } from '@/lib/mera-harness/skills/generate';
 
@@ -40,15 +41,15 @@ describe('index.generated.ts', () => {
     expect(
       diff === null
         ? null
-        : `index.generated.ts is stale. Run: npm run skills:generate\n  first difference at ${diff}`,
+        : `index.generated.ts is stale. Run: npm run harness:generate\n  first difference at ${diff}`,
     ).toBeNull();
   });
 
   it('notices when a skill body changes and nobody regenerates', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'persona-skills-'));
     try {
-      copyTree(SKILLS_ROOT, tmp);
-      const before = generateModuleText(tmp);
+      copyTree(SKILL_SOURCES_DIR, tmp);
+      const before = generateModuleText(tmp, EXPECTATIONS_FILE);
       // Sanity: the copy reproduces the real tree, so any difference below is
       // caused by the edit and not by the copy.
       expect(before).toBe(fs.readFileSync(outFileFor(SKILLS_ROOT), 'utf8'));
@@ -57,7 +58,7 @@ describe('index.generated.ts', () => {
       // not validity. Appending at the end breaks the closing-line rule every
       // topic body has to satisfy, and the generator then throws before it can
       // compare anything. Insert above that line instead.
-      const victim = path.join(personaDirFor(tmp), 'topics', 'family.md');
+      const victim = path.join(tmp, 'topics', 'family.md');
       const original = fs.readFileSync(victim, 'utf8');
       const closer = 'Reply with the JSON array and nothing else.';
       const at = original.lastIndexOf(closer);
@@ -65,7 +66,7 @@ describe('index.generated.ts', () => {
       const edited = `${original.slice(0, at)}One more sentence nobody regenerated.\n\n${original.slice(at)}`;
       fs.writeFileSync(victim, edited, 'utf8');
 
-      const after = generateModuleText(tmp);
+      const after = generateModuleText(tmp, EXPECTATIONS_FILE);
       expect(after).not.toBe(before);
       expect(firstDifference(before, after)).not.toBeNull();
       expect(after).toContain('One more sentence nobody regenerated.');

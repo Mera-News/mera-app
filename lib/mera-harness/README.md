@@ -88,7 +88,9 @@ Four things about that diagram are load-bearing:
 
 ## Adding a skill
 
-1. Write `skills/persona/<group>/<kind>.md` with frontmatter (`id`, `description`, `when`).
+1. Write `lib/harnesses/cloud-base/skills/<group>/<kind>.md` with frontmatter (`id`, `description`, `when`).
+   The bodies are cloud-base prompt text; `npm run harness:generate` compiles them into
+   `skills/index.generated.ts` here, so the harness still imports nothing outside this folder.
 2. Every group needs a `generic.md`. The loader **composes** it ahead of each leaf, so shared rules
    are written once; a leaf loads as generic + leaf, a generic loads alone.
 3. Regenerate the module, then run the tests. The generic preamble must carry the `## Output`

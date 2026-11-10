@@ -59,7 +59,8 @@ describe('harness registry', () => {
   it('holds no byte-identical file in two folders', () => {
     const seen = new Map<string, string>();
     for (const f of folders()) {
-      for (const file of fs.readdirSync(path.join(ROOT, f))) {
+      for (const file of fs.readdirSync(path.join(ROOT, f), { recursive: true }) as string[]) {
+        if (fs.statSync(path.join(ROOT, f, file)).isDirectory()) continue;
         const where = `${f}/${file}`;
         const h = sha(fs.readFileSync(path.join(ROOT, f, file)));
         expect([seen.get(h), where]).toEqual([undefined, where]);
