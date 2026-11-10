@@ -9,7 +9,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { countMatched, harnessVerdict, liveSystem, loadPrePrompts, parseArgs, prePostVerdict, runTurnHarness, type HarnessCaller } from './run-singleshot-corpus';
+import { countMatched, harnessVerdict, liveSystem, loadPrePrompts, parseArgs, prePostVerdict, runTool, runTurnHarness, type HarnessCaller } from './run-singleshot-corpus';
 import { BIG_MODEL } from '../../lib/llm/constants';
 import { sentModel } from '../lib/model-catalog';
 
@@ -32,6 +32,12 @@ test('--models crosses arms with models; a ~twin id reaches the wire as its mode
   assert.equal(sentModel('q/a~twin'), 'q/a');
   assert.equal(sentModel('q/a'), 'q/a');
   assert.throws(() => parseArgs(['--models', 'q/a,q/a']), /duplicate arm/);
+});
+
+test('a search on a fixture with no search list answers empty instead of throwing', () => {
+  const f = { id: 'x', agent: 'article', message: 'm', expect: 'answer' } as Parameters<typeof runTool>[0];
+  assert.deepEqual(runTool(f, { name: 'webSearch', argumentsRaw: '{}' }), { results: [] });
+  assert.equal((runTool(f, { name: 'searchNews', argumentsRaw: '{"query":"q"}' }) as { articles: unknown[] }).articles.length, 0);
 });
 
 test('an unknown arm is refused', () => {

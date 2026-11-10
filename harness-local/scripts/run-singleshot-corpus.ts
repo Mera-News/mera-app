@@ -99,7 +99,8 @@ interface Fixture {
   agent: 'follow-story' | 'article';
   message: string;
   expect: 'proposeTrack' | 'proposeFactCheck' | 'answer';
-  search: string[];
+  /** Absent on the article-open fixtures: a search there finds nothing. */
+  search?: string[];
   article?: { title: string; publication: string; description: string; related: string[] };
 }
 
@@ -253,21 +254,22 @@ function setup(f: Fixture, arm?: Arm, pre?: PrePrompts): { system: string; tools
 }
 
 /** Canned tool results: the arms must see identical tool output. */
-function runTool(f: Fixture, call: NearToolCall): unknown {
+export function runTool(f: Fixture, call: NearToolCall): unknown {
+  const search = f.search ?? [];
   let args: Record<string, unknown> = {};
   try { args = JSON.parse(call.argumentsRaw || '{}'); } catch { /* malformed: still answered */ }
   if (call.name === 'searchNews') {
-    if (f.search.length === 0) {
+    if (search.length === 0) {
       return { query: args.query ?? '', articles: [], note: "Nothing in the last 48 hours of Mera's news index matches this. Say so plainly; do not invent an article." };
     }
     return {
       query: args.query ?? '',
-      articles: f.search.map((t, i) => ({ id: `a${i}`, title: t, publication: 'Reuters', country: null, date: '2026-10-13' })),
+      articles: search.map((t, i) => ({ id: `a${i}`, title: t, publication: 'Reuters', country: null, date: '2026-10-13' })),
       note: 'Headlines only — you do not have the article text. Summarise what the headlines say and never invent details or a link.',
     };
   }
   if (call.name === 'webSearch') {
-    return { results: f.search.map((t, i) => ({ title: t, url: `https://example.org/${i}`, description: t })) };
+    return { results: search.map((t, i) => ({ title: t, url: `https://example.org/${i}`, description: t })) };
   }
   if (call.name === 'proposeTrack') return { staged: true, options: parseTrackScopeOptions(args.options).length };
   if (call.name === 'proposeFactCheck') return { staged: true };
@@ -328,7 +330,7 @@ export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model
   const tools: AgentToolPort = {
     findSimilarFacts: empty, lookupPlace: empty, saveExtractedFacts: empty, deleteUserFacts: empty,
     webSearch: async () => ({ searched: true, results: [] }),
-    searchNews: async ({ query }) => ({ query, results: f.search.map((title) => ({ title })) }),
+    searchNews: async ({ query }) => ({ query, results: (f.search ?? []).map((title) => ({ title })) }),
     proposeTrack: async (args) => { staged.push(args.options); return { staged: true, proposalId: 'track-1' }; },
   };
   const row: TurnRow = {
