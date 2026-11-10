@@ -728,7 +728,6 @@ describe('downloadBaseModel resume', () => {
 
     it('an integrity failure deletes the file and leaves no resume data', async () => {
         await store.set(KEY, 'resume-token');
-        void partial(`file:///x`);
         const run = downloadBaseModel(config());
         const failed = expect(run).rejects.toThrow('Damaged download');
         await started();
