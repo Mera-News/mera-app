@@ -270,7 +270,24 @@
     "refreshFeedAction": "Actualizar tu feed",
     "translationFailed": "La traducción falló. Reinicia la app.",
     "similarArticles_one": "{{count}} artículo similar",
-    "similarArticles_other": "{{count}} artículos similares"
+    "similarArticles_other": "{{count}} artículos similares",
+    "outage": {
+      "title": "La IA privada de Mera está caída por ahora.",
+      "pausedLabel": "En pausa",
+      "workingLabel": "Funcionando",
+      "laneScoring": "selección de artículos nuevos",
+      "laneChat": "chat",
+      "laneTopics": "temas nuevos",
+      "working": "historias seguidas, Mundo, Explorar, Guardados y tu feed",
+      "followedStories": "Historias seguidas",
+      "world": "Mundo",
+      "helpA11y": "¿Por qué está en pausa?",
+      "helpTitle": "¿Por qué está en pausa?",
+      "helpBody": "Mera solo usa IA cifrada y no cambia a una IA que no pueda mantener privados tus datos.",
+      "helpWorking": "Sigue funcionando: historias seguidas, Mundo, Explorar, Guardados y verificaciones de hechos.",
+      "helpBack": "Volverá por sí sola.",
+      "helpStatus": "Estado del proveedor de IA"
+    }
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -562,7 +579,19 @@
     "attestationDetailComposeTag": "Etiqueta de Compose",
     "attestationDetailComposeCommit": "Commit de Compose",
     "attestationCopyDetails": "Copiar detalles",
-    "attestationCopied": "Copiado"
+    "attestationCopied": "Copiado",
+    "providers": {
+      "title": "Proveedor",
+      "backup": "respaldo",
+      "modelsTitle": "Modelos en uso",
+      "laneChat": "Chat",
+      "laneScoring": "Selección del feed",
+      "laneTopics": "Temas",
+      "laneFactCheck": "Verificaciones de hechos",
+      "laneBackground": "Segundo plano",
+      "paused": "En pausa",
+      "openA11y": "Abrir el sitio web de {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Borra el registro local de los artículos que has abierto. La tarjeta «Publicaciones que has estado leyendo» de la pestaña Fuentes y el historial por publicación volverán a estar vacíos. Las historias que has leído pueden volver a aparecer en tu feed. No se modifica nada más y no se toca ningún dato del servidor, porque los servidores de Mera nunca tuvieron estos datos.",

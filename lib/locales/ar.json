@@ -347,7 +347,24 @@
     "similarArticles_two": "{{count}} مقالتان مشابهتان",
     "similarArticles_few": "{{count}} مقالات مشابهة",
     "similarArticles_many": "{{count}} مقالة مشابهة",
-    "similarArticles_other": "{{count}} مقالة مشابهة"
+    "similarArticles_other": "{{count}} مقالة مشابهة",
+    "outage": {
+      "title": "ذكاء ميرا الخاص متوقف حاليًا.",
+      "pausedLabel": "متوقف مؤقتًا",
+      "workingLabel": "يعمل",
+      "laneScoring": "اختيار المقالات الجديدة",
+      "laneChat": "الدردشة",
+      "laneTopics": "المواضيع الجديدة",
+      "working": "القصص المتابَعة، والعالم، والبحث، والمحفوظات، وخلاصتك",
+      "followedStories": "القصص المتابَعة",
+      "world": "العالم",
+      "helpA11y": "لماذا هذا متوقف؟",
+      "helpTitle": "لماذا هذا متوقف؟",
+      "helpBody": "تستخدم ميرا الذكاء الاصطناعي المشفّر فقط، ولن تنتقل إلى ذكاء اصطناعي لا يستطيع حفظ بياناتك بشكل خاص.",
+      "helpWorking": "ما زال يعمل: القصص المتابَعة، والعالم، والبحث، والمحفوظات، والتحققات من الحقائق.",
+      "helpBack": "سيعود تلقائيًا.",
+      "helpStatus": "حالة مزوّد الذكاء الاصطناعي"
+    }
   },
   "relevance": {
     "emergency": "طارئ",
@@ -647,7 +664,19 @@
     "attestationDetailComposeTag": "وسم Compose",
     "attestationDetailComposeCommit": "إيداع Compose",
     "attestationCopyDetails": "نسخ التفاصيل",
-    "attestationCopied": "تم النسخ"
+    "attestationCopied": "تم النسخ",
+    "providers": {
+      "title": "المزوّد",
+      "backup": "احتياطي",
+      "modelsTitle": "النماذج المستخدمة",
+      "laneChat": "الدردشة",
+      "laneScoring": "اختيارات الخلاصة",
+      "laneTopics": "المواضيع",
+      "laneFactCheck": "التحققات من الحقائق",
+      "laneBackground": "الخلفية",
+      "paused": "متوقف مؤقتًا",
+      "openA11y": "فتح موقع {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "يمسح السجل المحلي للمقالات التي فتحتها. ستعود بطاقة “الصحف التي تقرأها” في تبويب المصادر، وسجل كل صحيفة، إلى الفراغ. قد تظهر القصص التي قرأتها في خلاصتك من جديد. لا يتأثر شيء آخر، ولا تُمسّ أي بيانات على الخوادم، لأن خوادم ميرا لم تحتفظ بهذه البيانات أصلًا.",

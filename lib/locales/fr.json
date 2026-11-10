@@ -275,7 +275,24 @@
     "refreshFeedAction": "Actualiser votre fil",
     "translationFailed": "La traduction a échoué. Redémarrez l'application.",
     "similarArticles_one": "{{count}} article similaire",
-    "similarArticles_other": "{{count}} articles similaires"
+    "similarArticles_other": "{{count}} articles similaires",
+    "outage": {
+      "title": "L'IA privée de Mera est indisponible pour le moment.",
+      "pausedLabel": "En pause",
+      "workingLabel": "En service",
+      "laneScoring": "les nouvelles sélections d'articles",
+      "laneChat": "le chat",
+      "laneTopics": "les nouveaux sujets",
+      "working": "actualités suivies, Monde, Recherche, Enregistrés, votre Fil d'actu",
+      "followedStories": "Actualités suivies",
+      "world": "Monde",
+      "helpA11y": "Pourquoi est-ce en pause ?",
+      "helpTitle": "Pourquoi est-ce en pause ?",
+      "helpBody": "Mera utilise uniquement une IA chiffrée et ne passera pas à une IA qui ne peut pas garder vos données privées.",
+      "helpWorking": "Toujours disponibles, les actualités suivies, Monde, Recherche, Enregistrés et les vérifications de faits.",
+      "helpBack": "Cela revient tout seul.",
+      "helpStatus": "État du fournisseur d'IA"
+    }
   },
   "relevance": {
     "emergency": "Urgence",
@@ -567,7 +584,19 @@
     "attestationDetailComposeTag": "Tag Compose",
     "attestationDetailComposeCommit": "Commit Compose",
     "attestationCopyDetails": "Copier les détails",
-    "attestationCopied": "Copié"
+    "attestationCopied": "Copié",
+    "providers": {
+      "title": "Fournisseur",
+      "backup": "secours",
+      "modelsTitle": "Modèles utilisés",
+      "laneChat": "Chat",
+      "laneScoring": "Choix du fil",
+      "laneTopics": "Sujets",
+      "laneFactCheck": "Vérifications de faits",
+      "laneBackground": "Arrière-plan",
+      "paused": "En pause",
+      "openA11y": "Ouvrir le site de {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Efface le journal local des articles que vous avez ouverts. La carte « Publications que vous lisez » dans l'onglet Sources et l'historique par publication repartiront de zéro. Les histoires que vous avez lues peuvent réapparaître dans votre fil. Rien d'autre n'est touché, et aucune donnée sur les serveurs n'est modifiée, car les serveurs de Mera n'ont jamais eu ces données.",

@@ -1,0 +1,702 @@
+{
+  "en": {
+    "feed": {
+      "outage": {
+        "title": "Mera's private AI is down for now.",
+        "pausedLabel": "Paused",
+        "workingLabel": "Working",
+        "laneScoring": "new article picks",
+        "laneChat": "chat",
+        "laneTopics": "new topics",
+        "working": "followed stories, World, Search, Saved, your Feed",
+        "followedStories": "Followed stories",
+        "world": "World",
+        "helpA11y": "Why is this paused?",
+        "helpTitle": "Why is this paused?",
+        "helpBody": "Mera only uses encrypted AI, and won't switch to an AI that can't keep your data private.",
+        "helpWorking": "Still working: followed stories, World, Search, Saved and fact checks.",
+        "helpBack": "It comes back on its own.",
+        "helpStatus": "AI provider status"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Provider",
+        "backup": "backup",
+        "modelsTitle": "Models in use",
+        "laneChat": "Chat",
+        "laneScoring": "Feed picks",
+        "laneTopics": "Topics",
+        "laneFactCheck": "Fact checks",
+        "laneBackground": "Background",
+        "paused": "Paused",
+        "openA11y": "Open {{provider}} website"
+      }
+    }
+  },
+  "ar": {
+    "feed": {
+      "outage": {
+        "title": "ذكاء ميرا الخاص متوقف حاليًا.",
+        "pausedLabel": "متوقف مؤقتًا",
+        "workingLabel": "يعمل",
+        "laneScoring": "اختيار المقالات الجديدة",
+        "laneChat": "الدردشة",
+        "laneTopics": "المواضيع الجديدة",
+        "working": "القصص المتابَعة، والعالم، والبحث، والمحفوظات، وخلاصتك",
+        "followedStories": "القصص المتابَعة",
+        "world": "العالم",
+        "helpA11y": "لماذا هذا متوقف؟",
+        "helpTitle": "لماذا هذا متوقف؟",
+        "helpBody": "تستخدم ميرا الذكاء الاصطناعي المشفّر فقط، ولن تنتقل إلى ذكاء اصطناعي لا يستطيع حفظ بياناتك بشكل خاص.",
+        "helpWorking": "ما زال يعمل: القصص المتابَعة، والعالم، والبحث، والمحفوظات، والتحققات من الحقائق.",
+        "helpBack": "سيعود تلقائيًا.",
+        "helpStatus": "حالة مزوّد الذكاء الاصطناعي"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "المزوّد",
+        "backup": "احتياطي",
+        "modelsTitle": "النماذج المستخدمة",
+        "laneChat": "الدردشة",
+        "laneScoring": "اختيارات الخلاصة",
+        "laneTopics": "المواضيع",
+        "laneFactCheck": "التحققات من الحقائق",
+        "laneBackground": "الخلفية",
+        "paused": "متوقف مؤقتًا",
+        "openA11y": "فتح موقع {{provider}}"
+      }
+    }
+  },
+  "de": {
+    "feed": {
+      "outage": {
+        "title": "Die private KI von Mera ist vorübergehend nicht verfügbar.",
+        "pausedLabel": "Pausiert",
+        "workingLabel": "Läuft weiter",
+        "laneScoring": "neue Artikelauswahl",
+        "laneChat": "Chat",
+        "laneTopics": "neue Themen",
+        "working": "Gefolgte Geschichten, Welt, Suche, Gespeichert und dein Feed",
+        "followedStories": "Gefolgte Geschichten",
+        "world": "Welt",
+        "helpA11y": "Warum ist das pausiert?",
+        "helpTitle": "Warum ist das pausiert?",
+        "helpBody": "Mera nutzt nur verschlüsselte KI und wechselt nicht zu einer KI, die deine Daten nicht privat halten kann.",
+        "helpWorking": "Es läuft weiter: Gefolgte Geschichten, Welt, Suche, Gespeichert und Faktenchecks.",
+        "helpBack": "Es kommt von selbst zurück.",
+        "helpStatus": "Status des KI-Anbieters"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Anbieter",
+        "backup": "Backup",
+        "modelsTitle": "Verwendete Modelle",
+        "laneChat": "Chat",
+        "laneScoring": "Feed-Auswahl",
+        "laneTopics": "Themen",
+        "laneFactCheck": "Faktenchecks",
+        "laneBackground": "Hintergrund",
+        "paused": "Pausiert",
+        "openA11y": "{{provider}}-Website öffnen"
+      }
+    }
+  },
+  "es": {
+    "feed": {
+      "outage": {
+        "title": "La IA privada de Mera está caída por ahora.",
+        "pausedLabel": "En pausa",
+        "workingLabel": "Funcionando",
+        "laneScoring": "selección de artículos nuevos",
+        "laneChat": "chat",
+        "laneTopics": "temas nuevos",
+        "working": "historias seguidas, Mundo, Explorar, Guardados y tu feed",
+        "followedStories": "Historias seguidas",
+        "world": "Mundo",
+        "helpA11y": "¿Por qué está en pausa?",
+        "helpTitle": "¿Por qué está en pausa?",
+        "helpBody": "Mera solo usa IA cifrada y no cambia a una IA que no pueda mantener privados tus datos.",
+        "helpWorking": "Sigue funcionando: historias seguidas, Mundo, Explorar, Guardados y verificaciones de hechos.",
+        "helpBack": "Volverá por sí sola.",
+        "helpStatus": "Estado del proveedor de IA"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Proveedor",
+        "backup": "respaldo",
+        "modelsTitle": "Modelos en uso",
+        "laneChat": "Chat",
+        "laneScoring": "Selección del feed",
+        "laneTopics": "Temas",
+        "laneFactCheck": "Verificaciones de hechos",
+        "laneBackground": "Segundo plano",
+        "paused": "En pausa",
+        "openA11y": "Abrir el sitio web de {{provider}}"
+      }
+    }
+  },
+  "fr": {
+    "feed": {
+      "outage": {
+        "title": "L'IA privée de Mera est indisponible pour le moment.",
+        "pausedLabel": "En pause",
+        "workingLabel": "En service",
+        "laneScoring": "les nouvelles sélections d'articles",
+        "laneChat": "le chat",
+        "laneTopics": "les nouveaux sujets",
+        "working": "actualités suivies, Monde, Recherche, Enregistrés, votre Fil d'actu",
+        "followedStories": "Actualités suivies",
+        "world": "Monde",
+        "helpA11y": "Pourquoi est-ce en pause ?",
+        "helpTitle": "Pourquoi est-ce en pause ?",
+        "helpBody": "Mera utilise uniquement une IA chiffrée et ne passera pas à une IA qui ne peut pas garder vos données privées.",
+        "helpWorking": "Toujours disponibles, les actualités suivies, Monde, Recherche, Enregistrés et les vérifications de faits.",
+        "helpBack": "Cela revient tout seul.",
+        "helpStatus": "État du fournisseur d'IA"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Fournisseur",
+        "backup": "secours",
+        "modelsTitle": "Modèles utilisés",
+        "laneChat": "Chat",
+        "laneScoring": "Choix du fil",
+        "laneTopics": "Sujets",
+        "laneFactCheck": "Vérifications de faits",
+        "laneBackground": "Arrière-plan",
+        "paused": "En pause",
+        "openA11y": "Ouvrir le site de {{provider}}"
+      }
+    }
+  },
+  "hi": {
+    "feed": {
+      "outage": {
+        "title": "मेरा ऐप का प्राइवेट AI अभी बंद है।",
+        "pausedLabel": "रुका हुआ",
+        "workingLabel": "काम कर रहा है",
+        "laneScoring": "नए लेखों की पसंद",
+        "laneChat": "चैट",
+        "laneTopics": "नए विषय",
+        "working": "फ़ॉलो की गई स्टोरीज़, विश्व, खोज, सहेजे गए और आपकी फीड",
+        "followedStories": "फ़ॉलो की गई स्टोरीज़",
+        "world": "विश्व",
+        "helpA11y": "यह रुका हुआ क्यों है?",
+        "helpTitle": "यह रुका हुआ क्यों है?",
+        "helpBody": "मेरा ऐप केवल एन्क्रिप्टेड AI इस्तेमाल करता है, और ऐसे AI पर नहीं जाएगा जो आपका डेटा निजी न रख सके।",
+        "helpWorking": "अब भी काम कर रहा है: फ़ॉलो की गई स्टोरीज़, विश्व, खोज, सहेजे गए और फैक्ट चेक्स।",
+        "helpBack": "यह अपने आप वापस आ जाएगा।",
+        "helpStatus": "AI प्रदाता की स्थिति"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "प्रदाता",
+        "backup": "बैकअप",
+        "modelsTitle": "इस्तेमाल हो रहे मॉडल",
+        "laneChat": "चैट",
+        "laneScoring": "फीड की पसंद",
+        "laneTopics": "विषय",
+        "laneFactCheck": "फैक्ट चेक्स",
+        "laneBackground": "बैकग्राउंड",
+        "paused": "रुका हुआ",
+        "openA11y": "{{provider}} की वेबसाइट खोलें"
+      }
+    }
+  },
+  "id": {
+    "feed": {
+      "outage": {
+        "title": "AI pribadi Mera sedang tidak tersedia untuk sementara.",
+        "pausedLabel": "Dijeda",
+        "workingLabel": "Berjalan",
+        "laneScoring": "pilihan artikel baru",
+        "laneChat": "obrolan",
+        "laneTopics": "topik baru",
+        "working": "cerita yang diikuti, Dunia, Pencarian, Tersimpan, Umpan Anda",
+        "followedStories": "Cerita yang diikuti",
+        "world": "Dunia",
+        "helpA11y": "Mengapa ini dijeda?",
+        "helpTitle": "Mengapa ini dijeda?",
+        "helpBody": "Mera hanya memakai AI terenkripsi, dan tidak akan beralih ke AI yang tidak bisa menjaga data Anda tetap privat.",
+        "helpWorking": "Yang masih berjalan adalah cerita yang diikuti, Dunia, Pencarian, Tersimpan dan cek fakta.",
+        "helpBack": "Akan kembali dengan sendirinya.",
+        "helpStatus": "Status penyedia AI"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Penyedia",
+        "backup": "cadangan",
+        "modelsTitle": "Model yang dipakai",
+        "laneChat": "Obrolan",
+        "laneScoring": "Pilihan umpan",
+        "laneTopics": "Topik",
+        "laneFactCheck": "Cek fakta",
+        "laneBackground": "Latar belakang",
+        "paused": "Dijeda",
+        "openA11y": "Buka situs web {{provider}}"
+      }
+    }
+  },
+  "it": {
+    "feed": {
+      "outage": {
+        "title": "L'IA privata di Mera è momentaneamente non disponibile.",
+        "pausedLabel": "In pausa",
+        "workingLabel": "Attivo",
+        "laneScoring": "selezione dei nuovi articoli",
+        "laneChat": "chat",
+        "laneTopics": "nuovi argomenti",
+        "working": "storie seguite, Mondo, Cerca, Salvati, il tuo Feed",
+        "followedStories": "Storie seguite",
+        "world": "Mondo",
+        "helpA11y": "Perché è in pausa?",
+        "helpTitle": "Perché è in pausa?",
+        "helpBody": "Mera usa solo IA cifrata e non passa a un'IA che non può tenere al sicuro i tuoi dati.",
+        "helpWorking": "Continuano a funzionare: storie seguite, Mondo, Cerca, Salvati e verifiche dei fatti.",
+        "helpBack": "Tornerà da sola.",
+        "helpStatus": "Stato del fornitore IA"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Fornitore",
+        "backup": "di riserva",
+        "modelsTitle": "Modelli in uso",
+        "laneChat": "Chat",
+        "laneScoring": "Selezione del feed",
+        "laneTopics": "Argomenti",
+        "laneFactCheck": "Verifiche dei fatti",
+        "laneBackground": "In background",
+        "paused": "In pausa",
+        "openA11y": "Apri il sito di {{provider}}"
+      }
+    }
+  },
+  "ja": {
+    "feed": {
+      "outage": {
+        "title": "メラのプライベートAIは、今は停止しています。",
+        "pausedLabel": "一時停止中",
+        "workingLabel": "動作中",
+        "laneScoring": "新しい記事のおすすめ",
+        "laneChat": "チャット",
+        "laneTopics": "新しいトピック",
+        "working": "フォロー中のストーリー、世界、検索、保存済み、あなたのフィード",
+        "followedStories": "フォロー中のストーリー",
+        "world": "世界",
+        "helpA11y": "なぜ一時停止中なのですか？",
+        "helpTitle": "なぜ一時停止中なのですか？",
+        "helpBody": "メラは暗号化されたAIだけを使い、あなたのデータを守れないAIには切り替えません。",
+        "helpWorking": "引き続き使えるのは、フォロー中のストーリー、世界、検索、保存済み、ファクトチェックです。",
+        "helpBack": "自動的に元に戻ります。",
+        "helpStatus": "AIプロバイダーの状態"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "プロバイダー",
+        "backup": "バックアップ",
+        "modelsTitle": "使用中のモデル",
+        "laneChat": "チャット",
+        "laneScoring": "メラのおすすめ",
+        "laneTopics": "トピック",
+        "laneFactCheck": "ファクトチェック",
+        "laneBackground": "バックグラウンド",
+        "paused": "一時停止中",
+        "openA11y": "{{provider}}のウェブサイトを開く"
+      }
+    }
+  },
+  "ko": {
+    "feed": {
+      "outage": {
+        "title": "메라의 비공개 AI가 잠시 중지되었어요.",
+        "pausedLabel": "일시 중지됨",
+        "workingLabel": "작동 중",
+        "laneScoring": "새 기사 추천",
+        "laneChat": "채팅",
+        "laneTopics": "새 토픽",
+        "working": "팔로우한 스토리, 전 세계, 검색, 보관함, 회원님의 피드",
+        "followedStories": "팔로우한 스토리",
+        "world": "전 세계",
+        "helpA11y": "왜 일시 중지되었나요?",
+        "helpTitle": "왜 일시 중지되었나요?",
+        "helpBody": "메라는 암호화된 AI만 사용하며, 회원님의 데이터를 비공개로 지킬 수 없는 AI로는 바꾸지 않아요.",
+        "helpWorking": "계속 작동하는 기능: 팔로우한 스토리, 전 세계, 검색, 보관함, 팩트 체크.",
+        "helpBack": "자동으로 다시 돌아와요.",
+        "helpStatus": "AI 제공자 상태"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "제공자",
+        "backup": "백업",
+        "modelsTitle": "사용 중인 모델",
+        "laneChat": "채팅",
+        "laneScoring": "피드 추천",
+        "laneTopics": "토픽",
+        "laneFactCheck": "팩트 체크",
+        "laneBackground": "백그라운드",
+        "paused": "일시 중지됨",
+        "openA11y": "{{provider}} 웹사이트 열기"
+      }
+    }
+  },
+  "nl": {
+    "feed": {
+      "outage": {
+        "title": "De privé-AI van Mera is voor nu niet beschikbaar.",
+        "pausedLabel": "Gepauzeerd",
+        "workingLabel": "Actief",
+        "laneScoring": "nieuwe artikelkeuzes",
+        "laneChat": "chat",
+        "laneTopics": "nieuwe onderwerpen",
+        "working": "gevolgde verhalen, Wereld, Zoeken, Opgeslagen en je Feed",
+        "followedStories": "Gevolgde verhalen",
+        "world": "Wereld",
+        "helpA11y": "Waarom is dit gepauzeerd?",
+        "helpTitle": "Waarom is dit gepauzeerd?",
+        "helpBody": "Mera gebruikt alleen versleutelde AI en schakelt niet over naar een AI die je gegevens niet privé kan houden.",
+        "helpWorking": "Werkt nog gewoon: gevolgde verhalen, Wereld, Zoeken, Opgeslagen en feitchecks.",
+        "helpBack": "Het komt vanzelf weer terug.",
+        "helpStatus": "Status van AI-aanbieder"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Aanbieder",
+        "backup": "back-up",
+        "modelsTitle": "Gebruikte modellen",
+        "laneChat": "Chat",
+        "laneScoring": "Feedkeuzes",
+        "laneTopics": "Onderwerpen",
+        "laneFactCheck": "Feitchecks",
+        "laneBackground": "Achtergrond",
+        "paused": "Gepauzeerd",
+        "openA11y": "Open de website van {{provider}}"
+      }
+    }
+  },
+  "pl": {
+    "feed": {
+      "outage": {
+        "title": "Prywatna AI Mery jest na razie niedostępna.",
+        "pausedLabel": "Wstrzymane",
+        "workingLabel": "Działa",
+        "laneScoring": "wybór nowych artykułów",
+        "laneChat": "czat",
+        "laneTopics": "nowe tematy",
+        "working": "śledzone historie, Świat, Szukaj, Zapisane, Twój Strumień",
+        "followedStories": "Śledzone historie",
+        "world": "Świat",
+        "helpA11y": "Dlaczego to jest wstrzymane?",
+        "helpTitle": "Dlaczego to jest wstrzymane?",
+        "helpBody": "Mera korzysta tylko z zaszyfrowanej AI i nie przełączy się na taką, która nie zachowa Twoich danych w prywatności.",
+        "helpWorking": "Nadal działa: śledzone historie, Świat, Szukaj, Zapisane i sprawdzanie faktów.",
+        "helpBack": "Wróci samo.",
+        "helpStatus": "Status dostawcy AI"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Dostawca",
+        "backup": "zapasowy",
+        "modelsTitle": "Używane modele",
+        "laneChat": "Czat",
+        "laneScoring": "Wybrane przez Merę",
+        "laneTopics": "Tematy",
+        "laneFactCheck": "Sprawdzanie faktów",
+        "laneBackground": "Tło",
+        "paused": "Wstrzymane",
+        "openA11y": "Otwórz stronę {{provider}}"
+      }
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "outage": {
+        "title": "A IA privada da Mera está fora do ar por enquanto.",
+        "pausedLabel": "Pausado",
+        "workingLabel": "Funcionando",
+        "laneScoring": "escolha de artigos novos",
+        "laneChat": "chat",
+        "laneTopics": "tópicos novos",
+        "working": "histórias acompanhadas, Mundo, Buscar, Salvos e seu Feed",
+        "followedStories": "Histórias acompanhadas",
+        "world": "Mundo",
+        "helpA11y": "Por que isso está pausado?",
+        "helpTitle": "Por que isso está pausado?",
+        "helpBody": "A Mera usa só IA criptografada, e não troca por uma IA que não consiga manter seus dados privados.",
+        "helpWorking": "Continua funcionando: histórias acompanhadas, Mundo, Buscar, Salvos e verificações de fatos.",
+        "helpBack": "Ela volta sozinha.",
+        "helpStatus": "Status do provedor de IA"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Provedor",
+        "backup": "backup",
+        "modelsTitle": "Modelos em uso",
+        "laneChat": "Chat",
+        "laneScoring": "Escolha de artigos",
+        "laneTopics": "Tópicos",
+        "laneFactCheck": "Verificações de fatos",
+        "laneBackground": "Segundo plano",
+        "paused": "Pausado",
+        "openA11y": "Abrir o site do {{provider}}"
+      }
+    }
+  },
+  "ru": {
+    "feed": {
+      "outage": {
+        "title": "Приватный ИИ Меры сейчас не работает.",
+        "pausedLabel": "Приостановлено",
+        "workingLabel": "Работает",
+        "laneScoring": "подбор новых статей",
+        "laneChat": "чат",
+        "laneTopics": "новые темы",
+        "working": "отслеживаемые истории, Мир, Поиск, Сохранённое, ваша Лента",
+        "followedStories": "Отслеживаемые истории",
+        "world": "Мир",
+        "helpA11y": "Почему это приостановлено?",
+        "helpTitle": "Почему это приостановлено?",
+        "helpBody": "Мера использует только зашифрованный ИИ и не будет переходить на ИИ, который не может сохранять ваши данные в тайне.",
+        "helpWorking": "Продолжают работать: отслеживаемые истории, Мир, Поиск, Сохранённое и проверки фактов.",
+        "helpBack": "Всё вернётся само.",
+        "helpStatus": "Статус провайдера ИИ"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Провайдер",
+        "backup": "резервный",
+        "modelsTitle": "Используемые модели",
+        "laneChat": "Чат",
+        "laneScoring": "Подбор ленты",
+        "laneTopics": "Темы",
+        "laneFactCheck": "Проверки фактов",
+        "laneBackground": "Фоновые задачи",
+        "paused": "Приостановлено",
+        "openA11y": "Открыть сайт {{provider}}"
+      }
+    }
+  },
+  "th": {
+    "feed": {
+      "outage": {
+        "title": "ตอนนี้ AI ส่วนตัวของ เมร่า ใช้งานไม่ได้ชั่วคราว",
+        "pausedLabel": "หยุดชั่วคราว",
+        "workingLabel": "ยังทำงานอยู่",
+        "laneScoring": "การเลือกบทความใหม่",
+        "laneChat": "แชท",
+        "laneTopics": "หัวข้อใหม่",
+        "working": "เรื่องราวที่ติดตาม, โลก, ค้นหา, บันทึกแล้ว, ฟีดของคุณ",
+        "followedStories": "เรื่องราวที่ติดตาม",
+        "world": "โลก",
+        "helpA11y": "ทำไมถึงหยุดชั่วคราว",
+        "helpTitle": "ทำไมถึงหยุดชั่วคราว",
+        "helpBody": "เมร่า ใช้เฉพาะ AI ที่เข้ารหัส และจะไม่เปลี่ยนไปใช้ AI ที่ไม่สามารถปกป้องข้อมูลของคุณได้",
+        "helpWorking": "ยังใช้งานได้ตามปกติ: เรื่องราวที่ติดตาม, โลก, ค้นหา, บันทึกแล้ว และการตรวจสอบข้อเท็จจริง",
+        "helpBack": "ระบบจะกลับมาเองโดยอัตโนมัติ",
+        "helpStatus": "สถานะของผู้ให้บริการ AI"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "ผู้ให้บริการ",
+        "backup": "สำรอง",
+        "modelsTitle": "โมเดลที่ใช้งาน",
+        "laneChat": "แชท",
+        "laneScoring": "ฟีดที่เลือกให้",
+        "laneTopics": "หัวข้อ",
+        "laneFactCheck": "การตรวจสอบข้อเท็จจริง",
+        "laneBackground": "พื้นหลัง",
+        "paused": "หยุดชั่วคราว",
+        "openA11y": "เปิดเว็บไซต์ของ {{provider}}"
+      }
+    }
+  },
+  "tr": {
+    "feed": {
+      "outage": {
+        "title": "Mera'nın özel yapay zekası şimdilik kullanılamıyor.",
+        "pausedLabel": "Duraklatıldı",
+        "workingLabel": "Çalışıyor",
+        "laneScoring": "yeni makale seçimleri",
+        "laneChat": "sohbet",
+        "laneTopics": "yeni konular",
+        "working": "takip edilen haberler, Dünya, Arama, Kaydedilenler ve Akışın",
+        "followedStories": "Takip edilen haberler",
+        "world": "Dünya",
+        "helpA11y": "Bu neden duraklatıldı?",
+        "helpTitle": "Bu neden duraklatıldı?",
+        "helpBody": "Mera yalnızca şifreli yapay zeka kullanır ve verilerini gizli tutamayan bir yapay zekaya geçmez.",
+        "helpWorking": "Hâlâ çalışanlar: takip edilen haberler, Dünya, Arama, Kaydedilenler ve doğruluk kontrolleri.",
+        "helpBack": "Kendiliğinden geri gelir.",
+        "helpStatus": "Yapay zeka sağlayıcısının durumu"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Sağlayıcı",
+        "backup": "yedek",
+        "modelsTitle": "Kullanılan modeller",
+        "laneChat": "Sohbet",
+        "laneScoring": "Akış seçimleri",
+        "laneTopics": "Konular",
+        "laneFactCheck": "Doğruluk kontrolleri",
+        "laneBackground": "Arka plan",
+        "paused": "Duraklatıldı",
+        "openA11y": "{{provider}} web sitesini aç"
+      }
+    }
+  },
+  "uk": {
+    "feed": {
+      "outage": {
+        "title": "Приватний ШІ Мери тимчасово недоступний.",
+        "pausedLabel": "Призупинено",
+        "workingLabel": "Працює",
+        "laneScoring": "підбір нових статей",
+        "laneChat": "чат",
+        "laneTopics": "нові теми",
+        "working": "історії, за якими ви стежите, Світ, Пошук, Збережене, ваша Стрічка",
+        "followedStories": "Історії, за якими ви стежите",
+        "world": "Світ",
+        "helpA11y": "Чому це призупинено?",
+        "helpTitle": "Чому це призупинено?",
+        "helpBody": "Мера використовує лише зашифрований ШІ і не перейде на ШІ, який не може зберігати ваші дані приватними.",
+        "helpWorking": "Далі працюють: історії, за якими ви стежите, Світ, Пошук, Збережене і перевірки фактів.",
+        "helpBack": "Він повернеться сам.",
+        "helpStatus": "Статус провайдера ШІ"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Провайдер",
+        "backup": "резервний",
+        "modelsTitle": "Моделі, що використовуються",
+        "laneChat": "Чат",
+        "laneScoring": "Підбір для стрічки",
+        "laneTopics": "Теми",
+        "laneFactCheck": "Перевірка фактів",
+        "laneBackground": "Фоновий режим",
+        "paused": "Призупинено",
+        "openA11y": "Відкрити сайт {{provider}}"
+      }
+    }
+  },
+  "vi": {
+    "feed": {
+      "outage": {
+        "title": "AI riêng tư của Mera tạm thời không hoạt động.",
+        "pausedLabel": "Tạm dừng",
+        "workingLabel": "Đang hoạt động",
+        "laneScoring": "chọn bài viết mới",
+        "laneChat": "trò chuyện",
+        "laneTopics": "chủ đề mới",
+        "working": "câu chuyện đang theo dõi, Thế giới, Tìm kiếm, Đã lưu, Bản tin của bạn",
+        "followedStories": "Câu chuyện đang theo dõi",
+        "world": "Thế giới",
+        "helpA11y": "Vì sao tính năng này bị tạm dừng?",
+        "helpTitle": "Vì sao tính năng này bị tạm dừng?",
+        "helpBody": "Mera chỉ dùng AI được mã hóa. Mera sẽ không chuyển sang một AI không thể giữ dữ liệu của bạn riêng tư.",
+        "helpWorking": "Vẫn hoạt động: câu chuyện đang theo dõi, Thế giới, Tìm kiếm, Đã lưu và kiểm chứng thông tin.",
+        "helpBack": "Tính năng sẽ tự hoạt động trở lại.",
+        "helpStatus": "Trạng thái nhà cung cấp AI"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "Nhà cung cấp",
+        "backup": "dự phòng",
+        "modelsTitle": "Mô hình đang dùng",
+        "laneChat": "Trò chuyện",
+        "laneScoring": "Chọn bài cho bản tin",
+        "laneTopics": "Chủ đề",
+        "laneFactCheck": "Kiểm chứng",
+        "laneBackground": "Chạy nền",
+        "paused": "Tạm dừng",
+        "openA11y": "Mở trang web của {{provider}}"
+      }
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "outage": {
+        "title": "梅拉的私有 AI 暂时停止运行。",
+        "pausedLabel": "已暂停",
+        "workingLabel": "运行中",
+        "laneScoring": "新文章排序",
+        "laneChat": "聊天",
+        "laneTopics": "新话题",
+        "working": "已关注的报道、全球、搜索、已保存的内容和你的信息流",
+        "followedStories": "已关注的报道",
+        "world": "全球",
+        "helpA11y": "为什么暂停了？",
+        "helpTitle": "为什么暂停了？",
+        "helpBody": "梅拉只使用加密的 AI，不会切换到无法保护你数据隐私的 AI。",
+        "helpWorking": "仍在运行：已关注的报道、全球、搜索、已保存的内容和事实核查。",
+        "helpBack": "它会自行恢复。",
+        "helpStatus": "AI 服务商状态"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "服务商",
+        "backup": "备用",
+        "modelsTitle": "使用中的模型",
+        "laneChat": "聊天",
+        "laneScoring": "信息流推荐",
+        "laneTopics": "话题",
+        "laneFactCheck": "事实核查",
+        "laneBackground": "后台",
+        "paused": "已暂停",
+        "openA11y": "打开 {{provider}} 网站"
+      }
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "outage": {
+        "title": "梅拉的私人 AI 暫時無法使用。",
+        "pausedLabel": "已暫停",
+        "workingLabel": "運作中",
+        "laneScoring": "新文章挑選",
+        "laneChat": "聊天",
+        "laneTopics": "新主題",
+        "working": "已追蹤的報導、全球、搜尋、已儲存和你的資訊流",
+        "followedStories": "已追蹤的報導",
+        "world": "全球",
+        "helpA11y": "為什麼暫停？",
+        "helpTitle": "為什麼暫停？",
+        "helpBody": "梅拉只使用加密的 AI，不會切換到無法保護你資料隱私的 AI。",
+        "helpWorking": "仍可使用：已追蹤的報導、全球、搜尋、已儲存和事實查證。",
+        "helpBack": "它會自行恢復。",
+        "helpStatus": "AI 供應商狀態"
+      }
+    },
+    "meraProtocol": {
+      "providers": {
+        "title": "供應商",
+        "backup": "備用",
+        "modelsTitle": "使用中的模型",
+        "laneChat": "聊天",
+        "laneScoring": "資訊流排序",
+        "laneTopics": "主題",
+        "laneFactCheck": "事實查證",
+        "laneBackground": "背景",
+        "paused": "已暫停",
+        "openA11y": "開啟 {{provider}} 網站"
+      }
+    }
+  }
+}

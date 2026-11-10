@@ -268,7 +268,24 @@
     "refreshFeedAction": "Akışınızı yenileyin",
     "translationFailed": "Çeviri başarısız oldu. Uygulamayı yeniden başlatın.",
     "similarArticles_one": "{{count}} benzer haber",
-    "similarArticles_other": "{{count}} benzer haber"
+    "similarArticles_other": "{{count}} benzer haber",
+    "outage": {
+      "title": "Mera'nın özel yapay zekası şimdilik kullanılamıyor.",
+      "pausedLabel": "Duraklatıldı",
+      "workingLabel": "Çalışıyor",
+      "laneScoring": "yeni makale seçimleri",
+      "laneChat": "sohbet",
+      "laneTopics": "yeni konular",
+      "working": "takip edilen haberler, Dünya, Arama, Kaydedilenler ve Akışın",
+      "followedStories": "Takip edilen haberler",
+      "world": "Dünya",
+      "helpA11y": "Bu neden duraklatıldı?",
+      "helpTitle": "Bu neden duraklatıldı?",
+      "helpBody": "Mera yalnızca şifreli yapay zeka kullanır ve verilerini gizli tutamayan bir yapay zekaya geçmez.",
+      "helpWorking": "Hâlâ çalışanlar: takip edilen haberler, Dünya, Arama, Kaydedilenler ve doğruluk kontrolleri.",
+      "helpBack": "Kendiliğinden geri gelir.",
+      "helpStatus": "Yapay zeka sağlayıcısının durumu"
+    }
   },
   "relevance": {
     "emergency": "Acil",
@@ -560,7 +577,19 @@
     "attestationDetailComposeTag": "Compose etiketi",
     "attestationDetailComposeCommit": "Compose commit'i",
     "attestationCopyDetails": "Ayrıntıları kopyala",
-    "attestationCopied": "Kopyalandı"
+    "attestationCopied": "Kopyalandı",
+    "providers": {
+      "title": "Sağlayıcı",
+      "backup": "yedek",
+      "modelsTitle": "Kullanılan modeller",
+      "laneChat": "Sohbet",
+      "laneScoring": "Akış seçimleri",
+      "laneTopics": "Konular",
+      "laneFactCheck": "Doğruluk kontrolleri",
+      "laneBackground": "Arka plan",
+      "paused": "Duraklatıldı",
+      "openA11y": "{{provider}} web sitesini aç"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Açtığınız makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki “Okuduğunuz yayınlar” kartı ve yayıncı başına geçmiş boş hâle döner. Okuduğunuz haberler Akışınızda yeniden görünebilir. Başka hiçbir şey etkilenmez ve sunucu verilerine dokunulmaz, çünkü Mera’nın sunucularında bu veriler hiçbir zaman olmadı.",

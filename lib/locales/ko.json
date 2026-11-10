@@ -256,7 +256,24 @@
     "readyForMore": "더 읽을 준비가 되셨나요?",
     "refreshFeedAction": "피드 새로고침",
     "translationFailed": "번역에 실패했습니다. 앱을 다시 시작해 주세요.",
-    "similarArticles_other": "비슷한 기사 {{count}}개"
+    "similarArticles_other": "비슷한 기사 {{count}}개",
+    "outage": {
+      "title": "메라의 비공개 AI가 잠시 중지되었어요.",
+      "pausedLabel": "일시 중지됨",
+      "workingLabel": "작동 중",
+      "laneScoring": "새 기사 추천",
+      "laneChat": "채팅",
+      "laneTopics": "새 토픽",
+      "working": "팔로우한 스토리, 전 세계, 검색, 보관함, 회원님의 피드",
+      "followedStories": "팔로우한 스토리",
+      "world": "전 세계",
+      "helpA11y": "왜 일시 중지되었나요?",
+      "helpTitle": "왜 일시 중지되었나요?",
+      "helpBody": "메라는 암호화된 AI만 사용하며, 회원님의 데이터를 비공개로 지킬 수 없는 AI로는 바꾸지 않아요.",
+      "helpWorking": "계속 작동하는 기능: 팔로우한 스토리, 전 세계, 검색, 보관함, 팩트 체크.",
+      "helpBack": "자동으로 다시 돌아와요.",
+      "helpStatus": "AI 제공자 상태"
+    }
   },
   "relevance": {
     "emergency": "긴급",
@@ -547,7 +564,19 @@
     "attestationDetailComposeTag": "Compose 태그",
     "attestationDetailComposeCommit": "Compose 커밋",
     "attestationCopyDetails": "세부 정보 복사",
-    "attestationCopied": "복사됨"
+    "attestationCopied": "복사됨",
+    "providers": {
+      "title": "제공자",
+      "backup": "백업",
+      "modelsTitle": "사용 중인 모델",
+      "laneChat": "채팅",
+      "laneScoring": "피드 추천",
+      "laneTopics": "토픽",
+      "laneFactCheck": "팩트 체크",
+      "laneBackground": "백그라운드",
+      "paused": "일시 중지됨",
+      "openA11y": "{{provider}} 웹사이트 열기"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "열어 본 기사의 기기 기록을 지워요. 소스 탭의 '읽은 매체' 카드와 매체별 기록도 빈 상태로 초기화돼요. 읽었던 스토리가 피드에 다시 나올 수 있어요. 그 밖에는 아무것도 바뀌지 않고, 서버 데이터도 건드리지 않아요. 메라 서버에는 원래 이 데이터가 없었기 때문이에요.",

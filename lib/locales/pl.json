@@ -308,7 +308,24 @@
     "similarArticles_one": "{{count}} podobny artykuł",
     "similarArticles_few": "{{count}} podobne artykuły",
     "similarArticles_many": "{{count}} podobnych artykułów",
-    "similarArticles_other": "{{count}} podobnego artykułu"
+    "similarArticles_other": "{{count}} podobnego artykułu",
+    "outage": {
+      "title": "Prywatna AI Mery jest na razie niedostępna.",
+      "pausedLabel": "Wstrzymane",
+      "workingLabel": "Działa",
+      "laneScoring": "wybór nowych artykułów",
+      "laneChat": "czat",
+      "laneTopics": "nowe tematy",
+      "working": "śledzone historie, Świat, Szukaj, Zapisane, Twój Strumień",
+      "followedStories": "Śledzone historie",
+      "world": "Świat",
+      "helpA11y": "Dlaczego to jest wstrzymane?",
+      "helpTitle": "Dlaczego to jest wstrzymane?",
+      "helpBody": "Mera korzysta tylko z zaszyfrowanej AI i nie przełączy się na taką, która nie zachowa Twoich danych w prywatności.",
+      "helpWorking": "Nadal działa: śledzone historie, Świat, Szukaj, Zapisane i sprawdzanie faktów.",
+      "helpBack": "Wróci samo.",
+      "helpStatus": "Status dostawcy AI"
+    }
   },
   "relevance": {
     "emergency": "Pilne",
@@ -604,7 +621,19 @@
     "attestationDetailComposeTag": "Tag Compose",
     "attestationDetailComposeCommit": "Commit Compose",
     "attestationCopyDetails": "Kopiuj szczegóły",
-    "attestationCopied": "Skopiowano"
+    "attestationCopied": "Skopiowano",
+    "providers": {
+      "title": "Dostawca",
+      "backup": "zapasowy",
+      "modelsTitle": "Używane modele",
+      "laneChat": "Czat",
+      "laneScoring": "Wybrane przez Merę",
+      "laneTopics": "Tematy",
+      "laneFactCheck": "Sprawdzanie faktów",
+      "laneBackground": "Tło",
+      "paused": "Wstrzymane",
+      "openA11y": "Otwórz stronę {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta „Wydawcy, które czytasz” w zakładce Źródła oraz historia dla każdego wydawcy wrócą do stanu pustego. Przeczytane historie mogą znowu pojawić się w Twoim Kanale. Nic więcej się nie zmienia, a dane na serwerach nie są ruszane, bo serwery Mery nigdy nie miały tych danych.",

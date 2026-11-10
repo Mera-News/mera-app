@@ -308,7 +308,24 @@
     "similarArticles_one": "{{count}} схожа стаття",
     "similarArticles_few": "{{count}} схожі статті",
     "similarArticles_many": "{{count}} схожих статей",
-    "similarArticles_other": "{{count}} схожої статті"
+    "similarArticles_other": "{{count}} схожої статті",
+    "outage": {
+      "title": "Приватний ШІ Мери тимчасово недоступний.",
+      "pausedLabel": "Призупинено",
+      "workingLabel": "Працює",
+      "laneScoring": "підбір нових статей",
+      "laneChat": "чат",
+      "laneTopics": "нові теми",
+      "working": "історії, за якими ви стежите, Світ, Пошук, Збережене, ваша Стрічка",
+      "followedStories": "Історії, за якими ви стежите",
+      "world": "Світ",
+      "helpA11y": "Чому це призупинено?",
+      "helpTitle": "Чому це призупинено?",
+      "helpBody": "Мера використовує лише зашифрований ШІ і не перейде на ШІ, який не може зберігати ваші дані приватними.",
+      "helpWorking": "Далі працюють: історії, за якими ви стежите, Світ, Пошук, Збережене і перевірки фактів.",
+      "helpBack": "Він повернеться сам.",
+      "helpStatus": "Статус провайдера ШІ"
+    }
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -604,7 +621,19 @@
     "attestationDetailComposeTag": "Тег Compose",
     "attestationDetailComposeCommit": "Коміт Compose",
     "attestationCopyDetails": "Скопіювати подробиці",
-    "attestationCopied": "Скопійовано"
+    "attestationCopied": "Скопійовано",
+    "providers": {
+      "title": "Провайдер",
+      "backup": "резервний",
+      "modelsTitle": "Моделі, що використовуються",
+      "laneChat": "Чат",
+      "laneScoring": "Підбір для стрічки",
+      "laneTopics": "Теми",
+      "laneFactCheck": "Перевірка фактів",
+      "laneBackground": "Фоновий режим",
+      "paused": "Призупинено",
+      "openA11y": "Відкрити сайт {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Очищає локальний журнал статей, які ви відкривали. Картка «Видання, які ви читаєте» на вкладці «Джерела» та історія за кожним виданням стануть порожніми. Прочитані історії можуть знову з’явитися у вашій стрічці. Нічого більше не змінюється, дані на серверах не зачіпаються, бо сервери Мери цих даних ніколи не мали.",

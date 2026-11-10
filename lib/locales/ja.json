@@ -256,7 +256,24 @@
     "readyForMore": "もっと読む準備はできましたか？",
     "refreshFeedAction": "フィードを更新",
     "translationFailed": "翻訳に失敗しました。アプリを再起動してください。",
-    "similarArticles_other": "同じ話題の他の記事 {{count}} 件"
+    "similarArticles_other": "同じ話題の他の記事 {{count}} 件",
+    "outage": {
+      "title": "メラのプライベートAIは、今は停止しています。",
+      "pausedLabel": "一時停止中",
+      "workingLabel": "動作中",
+      "laneScoring": "新しい記事のおすすめ",
+      "laneChat": "チャット",
+      "laneTopics": "新しいトピック",
+      "working": "フォロー中のストーリー、世界、検索、保存済み、あなたのフィード",
+      "followedStories": "フォロー中のストーリー",
+      "world": "世界",
+      "helpA11y": "なぜ一時停止中なのですか？",
+      "helpTitle": "なぜ一時停止中なのですか？",
+      "helpBody": "メラは暗号化されたAIだけを使い、あなたのデータを守れないAIには切り替えません。",
+      "helpWorking": "引き続き使えるのは、フォロー中のストーリー、世界、検索、保存済み、ファクトチェックです。",
+      "helpBack": "自動的に元に戻ります。",
+      "helpStatus": "AIプロバイダーの状態"
+    }
   },
   "relevance": {
     "emergency": "緊急",
@@ -547,7 +564,19 @@
     "attestationDetailComposeTag": "Compose タグ",
     "attestationDetailComposeCommit": "Compose コミット",
     "attestationCopyDetails": "詳細をコピー",
-    "attestationCopied": "コピーしました"
+    "attestationCopied": "コピーしました",
+    "providers": {
+      "title": "プロバイダー",
+      "backup": "バックアップ",
+      "modelsTitle": "使用中のモデル",
+      "laneChat": "チャット",
+      "laneScoring": "メラのおすすめ",
+      "laneTopics": "トピック",
+      "laneFactCheck": "ファクトチェック",
+      "laneBackground": "バックグラウンド",
+      "paused": "一時停止中",
+      "openA11y": "{{provider}}のウェブサイトを開く"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "開いた記事のローカルの記録を消去します。ソースタブの「読んでいる媒体」カードと、媒体ごとの履歴は空にリセットされます。読んだストーリーがフィードにもう一度表示されることがあります。それ以外には影響せず、メラのサーバー上のデータにも触れません。メラのサーバーには、もともとこのデータがないためです。",

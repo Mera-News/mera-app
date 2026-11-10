@@ -256,7 +256,24 @@
     "readyForMore": "准备好读更多了吗？",
     "refreshFeedAction": "刷新你的信息流",
     "translationFailed": "翻译失败。请重启应用。",
-    "similarArticles_other": "另有 {{count}} 篇相似文章"
+    "similarArticles_other": "另有 {{count}} 篇相似文章",
+    "outage": {
+      "title": "梅拉的私有 AI 暂时停止运行。",
+      "pausedLabel": "已暂停",
+      "workingLabel": "运行中",
+      "laneScoring": "新文章排序",
+      "laneChat": "聊天",
+      "laneTopics": "新话题",
+      "working": "已关注的报道、全球、搜索、已保存的内容和你的信息流",
+      "followedStories": "已关注的报道",
+      "world": "全球",
+      "helpA11y": "为什么暂停了？",
+      "helpTitle": "为什么暂停了？",
+      "helpBody": "梅拉只使用加密的 AI，不会切换到无法保护你数据隐私的 AI。",
+      "helpWorking": "仍在运行：已关注的报道、全球、搜索、已保存的内容和事实核查。",
+      "helpBack": "它会自行恢复。",
+      "helpStatus": "AI 服务商状态"
+    }
   },
   "relevance": {
     "emergency": "紧急",
@@ -547,7 +564,19 @@
     "attestationDetailComposeTag": "Compose 标签",
     "attestationDetailComposeCommit": "Compose 提交",
     "attestationCopyDetails": "复制详细信息",
-    "attestationCopied": "已复制"
+    "attestationCopied": "已复制",
+    "providers": {
+      "title": "服务商",
+      "backup": "备用",
+      "modelsTitle": "使用中的模型",
+      "laneChat": "聊天",
+      "laneScoring": "信息流推荐",
+      "laneTopics": "话题",
+      "laneFactCheck": "事实核查",
+      "laneBackground": "后台",
+      "paused": "已暂停",
+      "openA11y": "打开 {{provider}} 网站"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你打开过的文章的本地记录。“来源”标签页中的“你阅读过的媒体”卡片和各媒体的历史记录会重置为空。你读过的报道可能会再次出现在信息流中。其他内容不受影响，也不会触及服务器数据，因为梅拉的服务器从来没有这些数据。",

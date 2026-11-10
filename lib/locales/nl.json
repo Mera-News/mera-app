@@ -268,7 +268,24 @@
     "refreshFeedAction": "Ververs je feed",
     "translationFailed": "Vertaling mislukt. Start de app opnieuw.",
     "similarArticles_one": "{{count}} vergelijkbaar artikel",
-    "similarArticles_other": "{{count}} vergelijkbare artikelen"
+    "similarArticles_other": "{{count}} vergelijkbare artikelen",
+    "outage": {
+      "title": "De privé-AI van Mera is voor nu niet beschikbaar.",
+      "pausedLabel": "Gepauzeerd",
+      "workingLabel": "Actief",
+      "laneScoring": "nieuwe artikelkeuzes",
+      "laneChat": "chat",
+      "laneTopics": "nieuwe onderwerpen",
+      "working": "gevolgde verhalen, Wereld, Zoeken, Opgeslagen en je Feed",
+      "followedStories": "Gevolgde verhalen",
+      "world": "Wereld",
+      "helpA11y": "Waarom is dit gepauzeerd?",
+      "helpTitle": "Waarom is dit gepauzeerd?",
+      "helpBody": "Mera gebruikt alleen versleutelde AI en schakelt niet over naar een AI die je gegevens niet privé kan houden.",
+      "helpWorking": "Werkt nog gewoon: gevolgde verhalen, Wereld, Zoeken, Opgeslagen en feitchecks.",
+      "helpBack": "Het komt vanzelf weer terug.",
+      "helpStatus": "Status van AI-aanbieder"
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -560,7 +577,19 @@
     "attestationDetailComposeTag": "Compose-tag",
     "attestationDetailComposeCommit": "Compose-commit",
     "attestationCopyDetails": "Details kopiëren",
-    "attestationCopied": "Gekopieerd"
+    "attestationCopied": "Gekopieerd",
+    "providers": {
+      "title": "Aanbieder",
+      "backup": "back-up",
+      "modelsTitle": "Gebruikte modellen",
+      "laneChat": "Chat",
+      "laneScoring": "Feedkeuzes",
+      "laneTopics": "Onderwerpen",
+      "laneFactCheck": "Feitchecks",
+      "laneBackground": "Achtergrond",
+      "paused": "Gepauzeerd",
+      "openA11y": "Open de website van {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart “Publicaties die je leest” op het tabblad Bronnen en de geschiedenis per publicatie beginnen weer leeg. Verhalen die je hebt gelezen kunnen opnieuw in je feed verschijnen. Verder verandert er niets, en er worden geen gegevens op de servers aangeraakt, want de servers van Mera hadden deze gegevens nooit.",

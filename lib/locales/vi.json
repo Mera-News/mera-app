@@ -256,7 +256,24 @@
     "readyForMore": "Bạn đã sẵn sàng đọc thêm chưa?",
     "refreshFeedAction": "Làm mới bảng tin",
     "translationFailed": "Dịch thất bại. Hãy khởi động lại ứng dụng.",
-    "similarArticles_other": "{{count}} bài viết tương tự"
+    "similarArticles_other": "{{count}} bài viết tương tự",
+    "outage": {
+      "title": "AI riêng tư của Mera tạm thời không hoạt động.",
+      "pausedLabel": "Tạm dừng",
+      "workingLabel": "Đang hoạt động",
+      "laneScoring": "chọn bài viết mới",
+      "laneChat": "trò chuyện",
+      "laneTopics": "chủ đề mới",
+      "working": "câu chuyện đang theo dõi, Thế giới, Tìm kiếm, Đã lưu, Bản tin của bạn",
+      "followedStories": "Câu chuyện đang theo dõi",
+      "world": "Thế giới",
+      "helpA11y": "Vì sao tính năng này bị tạm dừng?",
+      "helpTitle": "Vì sao tính năng này bị tạm dừng?",
+      "helpBody": "Mera chỉ dùng AI được mã hóa. Mera sẽ không chuyển sang một AI không thể giữ dữ liệu của bạn riêng tư.",
+      "helpWorking": "Vẫn hoạt động: câu chuyện đang theo dõi, Thế giới, Tìm kiếm, Đã lưu và kiểm chứng thông tin.",
+      "helpBack": "Tính năng sẽ tự hoạt động trở lại.",
+      "helpStatus": "Trạng thái nhà cung cấp AI"
+    }
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -547,7 +564,19 @@
     "attestationDetailComposeTag": "Thẻ Compose",
     "attestationDetailComposeCommit": "Commit Compose",
     "attestationCopyDetails": "Sao chép chi tiết",
-    "attestationCopied": "Đã sao chép"
+    "attestationCopied": "Đã sao chép",
+    "providers": {
+      "title": "Nhà cung cấp",
+      "backup": "dự phòng",
+      "modelsTitle": "Mô hình đang dùng",
+      "laneChat": "Trò chuyện",
+      "laneScoring": "Chọn bài cho bản tin",
+      "laneTopics": "Chủ đề",
+      "laneFactCheck": "Kiểm chứng",
+      "laneBackground": "Chạy nền",
+      "paused": "Tạm dừng",
+      "openA11y": "Mở trang web của {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ “Các nguồn bạn đã đọc” ở tab Nguồn và lịch sử theo từng nguồn sẽ trống trở lại. Các câu chuyện bạn đã đọc có thể xuất hiện lại trong bảng tin. Không có gì khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị đụng đến, vì máy chủ của Mera chưa bao giờ có dữ liệu này.",

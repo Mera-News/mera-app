@@ -268,7 +268,24 @@
     "refreshFeedAction": "अपनी फ़ीड रीफ़्रेश करें",
     "translationFailed": "अनुवाद नहीं हो सका। ऐप दोबारा शुरू करें।",
     "similarArticles_one": "{{count}} मिलता-जुलता लेख",
-    "similarArticles_other": "{{count}} मिलते-जुलते लेख"
+    "similarArticles_other": "{{count}} मिलते-जुलते लेख",
+    "outage": {
+      "title": "मेरा ऐप का प्राइवेट AI अभी बंद है।",
+      "pausedLabel": "रुका हुआ",
+      "workingLabel": "काम कर रहा है",
+      "laneScoring": "नए लेखों की पसंद",
+      "laneChat": "चैट",
+      "laneTopics": "नए विषय",
+      "working": "फ़ॉलो की गई स्टोरीज़, विश्व, खोज, सहेजे गए और आपकी फीड",
+      "followedStories": "फ़ॉलो की गई स्टोरीज़",
+      "world": "विश्व",
+      "helpA11y": "यह रुका हुआ क्यों है?",
+      "helpTitle": "यह रुका हुआ क्यों है?",
+      "helpBody": "मेरा ऐप केवल एन्क्रिप्टेड AI इस्तेमाल करता है, और ऐसे AI पर नहीं जाएगा जो आपका डेटा निजी न रख सके।",
+      "helpWorking": "अब भी काम कर रहा है: फ़ॉलो की गई स्टोरीज़, विश्व, खोज, सहेजे गए और फैक्ट चेक्स।",
+      "helpBack": "यह अपने आप वापस आ जाएगा।",
+      "helpStatus": "AI प्रदाता की स्थिति"
+    }
   },
   "relevance": {
     "emergency": "आपातकालीन",
@@ -560,7 +577,19 @@
     "attestationDetailComposeTag": "Compose टैग",
     "attestationDetailComposeCommit": "Compose कमिट",
     "attestationCopyDetails": "विवरण कॉपी करें",
-    "attestationCopied": "कॉपी हो गया"
+    "attestationCopied": "कॉपी हो गया",
+    "providers": {
+      "title": "प्रदाता",
+      "backup": "बैकअप",
+      "modelsTitle": "इस्तेमाल हो रहे मॉडल",
+      "laneChat": "चैट",
+      "laneScoring": "फीड की पसंद",
+      "laneTopics": "विषय",
+      "laneFactCheck": "फैक्ट चेक्स",
+      "laneBackground": "बैकग्राउंड",
+      "paused": "रुका हुआ",
+      "openA11y": "{{provider}} की वेबसाइट खोलें"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "आपके खोले गए लेखों का स्थानीय लॉग साफ़ करता है। सोर्स टैब का कार्ड “आप जो प्रकाशन पढ़ रहे हैं” और हर प्रकाशन का इतिहास खाली हो जाएगा। आपकी पढ़ी हुई स्टोरीज़ फिर से आपकी फ़ीड में दिख सकती हैं। और कुछ भी प्रभावित नहीं होता, क्योंकि सर्वर पर कोई डेटा नहीं छुआ जाता। मेरा ऐप के सर्वरों पर यह डेटा कभी था ही नहीं।",

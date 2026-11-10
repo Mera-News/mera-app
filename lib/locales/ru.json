@@ -308,7 +308,24 @@
     "similarArticles_one": "ещё {{count}} похожая статья",
     "similarArticles_few": "ещё {{count}} похожие статьи",
     "similarArticles_many": "ещё {{count}} похожих статей",
-    "similarArticles_other": "ещё {{count}} похожей статьи"
+    "similarArticles_other": "ещё {{count}} похожей статьи",
+    "outage": {
+      "title": "Приватный ИИ Меры сейчас не работает.",
+      "pausedLabel": "Приостановлено",
+      "workingLabel": "Работает",
+      "laneScoring": "подбор новых статей",
+      "laneChat": "чат",
+      "laneTopics": "новые темы",
+      "working": "отслеживаемые истории, Мир, Поиск, Сохранённое, ваша Лента",
+      "followedStories": "Отслеживаемые истории",
+      "world": "Мир",
+      "helpA11y": "Почему это приостановлено?",
+      "helpTitle": "Почему это приостановлено?",
+      "helpBody": "Мера использует только зашифрованный ИИ и не будет переходить на ИИ, который не может сохранять ваши данные в тайне.",
+      "helpWorking": "Продолжают работать: отслеживаемые истории, Мир, Поиск, Сохранённое и проверки фактов.",
+      "helpBack": "Всё вернётся само.",
+      "helpStatus": "Статус провайдера ИИ"
+    }
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -604,7 +621,19 @@
     "attestationDetailComposeTag": "Тег Compose",
     "attestationDetailComposeCommit": "Коммит Compose",
     "attestationCopyDetails": "Скопировать подробности",
-    "attestationCopied": "Скопировано"
+    "attestationCopied": "Скопировано",
+    "providers": {
+      "title": "Провайдер",
+      "backup": "резервный",
+      "modelsTitle": "Используемые модели",
+      "laneChat": "Чат",
+      "laneScoring": "Подбор ленты",
+      "laneTopics": "Темы",
+      "laneFactCheck": "Проверки фактов",
+      "laneBackground": "Фоновые задачи",
+      "paused": "Приостановлено",
+      "openA11y": "Открыть сайт {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Очищает локальный журнал открытых статей. Карточка «Издания, которые вы читаете» на вкладке «Источники» и история по каждому изданию станут пустыми. Прочитанные истории могут снова появиться в вашей Ленте. Больше ничего не меняется, данные на серверах не затрагиваются, так как серверы Меры этих данных никогда не хранили.",

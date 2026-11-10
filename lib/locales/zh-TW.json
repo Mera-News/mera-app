@@ -256,7 +256,24 @@
     "readyForMore": "準備好讀更多了嗎？",
     "refreshFeedAction": "重新整理你的資訊流",
     "translationFailed": "翻譯失敗。請重新啟動應用程式。",
-    "similarArticles_other": "另有 {{count}} 篇類似報導"
+    "similarArticles_other": "另有 {{count}} 篇類似報導",
+    "outage": {
+      "title": "梅拉的私人 AI 暫時無法使用。",
+      "pausedLabel": "已暫停",
+      "workingLabel": "運作中",
+      "laneScoring": "新文章挑選",
+      "laneChat": "聊天",
+      "laneTopics": "新主題",
+      "working": "已追蹤的報導、全球、搜尋、已儲存和你的資訊流",
+      "followedStories": "已追蹤的報導",
+      "world": "全球",
+      "helpA11y": "為什麼暫停？",
+      "helpTitle": "為什麼暫停？",
+      "helpBody": "梅拉只使用加密的 AI，不會切換到無法保護你資料隱私的 AI。",
+      "helpWorking": "仍可使用：已追蹤的報導、全球、搜尋、已儲存和事實查證。",
+      "helpBack": "它會自行恢復。",
+      "helpStatus": "AI 供應商狀態"
+    }
   },
   "relevance": {
     "emergency": "緊急",
@@ -547,7 +564,19 @@
     "attestationDetailComposeTag": "Compose 標記",
     "attestationDetailComposeCommit": "Compose 提交",
     "attestationCopyDetails": "複製詳細資料",
-    "attestationCopied": "已複製"
+    "attestationCopied": "已複製",
+    "providers": {
+      "title": "供應商",
+      "backup": "備用",
+      "modelsTitle": "使用中的模型",
+      "laneChat": "聊天",
+      "laneScoring": "資訊流排序",
+      "laneTopics": "主題",
+      "laneFactCheck": "事實查證",
+      "laneBackground": "背景",
+      "paused": "已暫停",
+      "openA11y": "開啟 {{provider}} 網站"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "清除你打開過的文章在本機的紀錄。「來源」分頁中的「你閱讀過的媒體」卡片，以及各媒體的紀錄會重設為空。你讀過的報導可能會再次出現在資訊流中。其他內容不受影響，也不會動到伺服器上的資料，因為梅拉的伺服器從來沒有這些資料。",

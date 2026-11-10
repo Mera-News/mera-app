@@ -268,7 +268,24 @@
     "refreshFeedAction": "Feed aktualisieren",
     "translationFailed": "Übersetzung fehlgeschlagen. Starte die App neu.",
     "similarArticles_one": "{{count}} ähnlicher Artikel",
-    "similarArticles_other": "{{count}} ähnliche Artikel"
+    "similarArticles_other": "{{count}} ähnliche Artikel",
+    "outage": {
+      "title": "Die private KI von Mera ist vorübergehend nicht verfügbar.",
+      "pausedLabel": "Pausiert",
+      "workingLabel": "Läuft weiter",
+      "laneScoring": "neue Artikelauswahl",
+      "laneChat": "Chat",
+      "laneTopics": "neue Themen",
+      "working": "Gefolgte Geschichten, Welt, Suche, Gespeichert und dein Feed",
+      "followedStories": "Gefolgte Geschichten",
+      "world": "Welt",
+      "helpA11y": "Warum ist das pausiert?",
+      "helpTitle": "Warum ist das pausiert?",
+      "helpBody": "Mera nutzt nur verschlüsselte KI und wechselt nicht zu einer KI, die deine Daten nicht privat halten kann.",
+      "helpWorking": "Es läuft weiter: Gefolgte Geschichten, Welt, Suche, Gespeichert und Faktenchecks.",
+      "helpBack": "Es kommt von selbst zurück.",
+      "helpStatus": "Status des KI-Anbieters"
+    }
   },
   "relevance": {
     "emergency": "Notfall",
@@ -560,7 +577,19 @@
     "attestationDetailComposeTag": "Compose-Tag",
     "attestationDetailComposeCommit": "Compose-Commit",
     "attestationCopyDetails": "Details kopieren",
-    "attestationCopied": "Kopiert"
+    "attestationCopied": "Kopiert",
+    "providers": {
+      "title": "Anbieter",
+      "backup": "Backup",
+      "modelsTitle": "Verwendete Modelle",
+      "laneChat": "Chat",
+      "laneScoring": "Feed-Auswahl",
+      "laneTopics": "Themen",
+      "laneFactCheck": "Faktenchecks",
+      "laneBackground": "Hintergrund",
+      "paused": "Pausiert",
+      "openA11y": "{{provider}}-Website öffnen"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der Artikel, die du geöffnet hast. Die Karte „Zuletzt gelesene Publikationen“ im Tab „Quellen“ und der Verlauf pro Publikation werden leer zurückgesetzt. Geschichten, die du gelesen hast, können wieder in deinem Feed auftauchen. Sonst ändert sich nichts, und keine Serverdaten werden angerührt, denn die Server von Mera hatten diese Daten nie.",

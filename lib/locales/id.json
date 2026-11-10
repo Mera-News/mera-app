@@ -256,7 +256,24 @@
     "readyForMore": "Siap membaca lebih banyak?",
     "refreshFeedAction": "Muat ulang feed Anda",
     "translationFailed": "Terjemahan gagal. Mulai ulang aplikasi.",
-    "similarArticles_other": "{{count}} artikel serupa"
+    "similarArticles_other": "{{count}} artikel serupa",
+    "outage": {
+      "title": "AI pribadi Mera sedang tidak tersedia untuk sementara.",
+      "pausedLabel": "Dijeda",
+      "workingLabel": "Berjalan",
+      "laneScoring": "pilihan artikel baru",
+      "laneChat": "obrolan",
+      "laneTopics": "topik baru",
+      "working": "cerita yang diikuti, Dunia, Pencarian, Tersimpan, Umpan Anda",
+      "followedStories": "Cerita yang diikuti",
+      "world": "Dunia",
+      "helpA11y": "Mengapa ini dijeda?",
+      "helpTitle": "Mengapa ini dijeda?",
+      "helpBody": "Mera hanya memakai AI terenkripsi, dan tidak akan beralih ke AI yang tidak bisa menjaga data Anda tetap privat.",
+      "helpWorking": "Yang masih berjalan adalah cerita yang diikuti, Dunia, Pencarian, Tersimpan dan cek fakta.",
+      "helpBack": "Akan kembali dengan sendirinya.",
+      "helpStatus": "Status penyedia AI"
+    }
   },
   "relevance": {
     "emergency": "Darurat",
@@ -547,7 +564,19 @@
     "attestationDetailComposeTag": "Tag Compose",
     "attestationDetailComposeCommit": "Commit Compose",
     "attestationCopyDetails": "Salin detail",
-    "attestationCopied": "Disalin"
+    "attestationCopied": "Disalin",
+    "providers": {
+      "title": "Penyedia",
+      "backup": "cadangan",
+      "modelsTitle": "Model yang dipakai",
+      "laneChat": "Obrolan",
+      "laneScoring": "Pilihan umpan",
+      "laneTopics": "Topik",
+      "laneFactCheck": "Cek fakta",
+      "laneBackground": "Latar belakang",
+      "paused": "Dijeda",
+      "openA11y": "Buka situs web {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu “Publikasi yang Anda baca” di tab Sumber dan riwayat per publikasi akan kembali kosong. Cerita yang sudah Anda baca bisa muncul lagi di feed. Tidak ada yang lain yang terpengaruh, dan tidak ada data server yang disentuh, karena server Mera tidak pernah menyimpan data ini.",

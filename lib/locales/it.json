@@ -270,7 +270,24 @@
     "refreshFeedAction": "Aggiorna il tuo feed",
     "translationFailed": "Traduzione non riuscita. Riavvia l'app.",
     "similarArticles_one": "{{count}} articolo simile",
-    "similarArticles_other": "{{count}} articoli simili"
+    "similarArticles_other": "{{count}} articoli simili",
+    "outage": {
+      "title": "L'IA privata di Mera è momentaneamente non disponibile.",
+      "pausedLabel": "In pausa",
+      "workingLabel": "Attivo",
+      "laneScoring": "selezione dei nuovi articoli",
+      "laneChat": "chat",
+      "laneTopics": "nuovi argomenti",
+      "working": "storie seguite, Mondo, Cerca, Salvati, il tuo Feed",
+      "followedStories": "Storie seguite",
+      "world": "Mondo",
+      "helpA11y": "Perché è in pausa?",
+      "helpTitle": "Perché è in pausa?",
+      "helpBody": "Mera usa solo IA cifrata e non passa a un'IA che non può tenere al sicuro i tuoi dati.",
+      "helpWorking": "Continuano a funzionare: storie seguite, Mondo, Cerca, Salvati e verifiche dei fatti.",
+      "helpBack": "Tornerà da sola.",
+      "helpStatus": "Stato del fornitore IA"
+    }
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -562,7 +579,19 @@
     "attestationDetailComposeTag": "Tag Compose",
     "attestationDetailComposeCommit": "Commit Compose",
     "attestationCopyDetails": "Copia dettagli",
-    "attestationCopied": "Copiato"
+    "attestationCopied": "Copiato",
+    "providers": {
+      "title": "Fornitore",
+      "backup": "di riserva",
+      "modelsTitle": "Modelli in uso",
+      "laneChat": "Chat",
+      "laneScoring": "Selezione del feed",
+      "laneTopics": "Argomenti",
+      "laneFactCheck": "Verifiche dei fatti",
+      "laneBackground": "In background",
+      "paused": "In pausa",
+      "openA11y": "Apri il sito di {{provider}}"
+    }
   },
   "manageData": {
     "viewingHistoryModalDescription": "Cancella il registro locale degli articoli che hai aperto. La scheda «Pubblicazioni che stai leggendo» e la cronologia per pubblicazione torneranno vuote. Le storie che hai letto possono ricomparire nel tuo feed. Non viene toccato nient'altro e nessun dato sui server, perché i server di Mera non hanno mai avuto questi dati.",
