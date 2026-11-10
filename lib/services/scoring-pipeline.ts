@@ -746,6 +746,42 @@ function isOnDeviceProcessing(): boolean {
   return useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
 }
 
+/**
+ * A failure of the model side (attestation 5xx or a failed key check, a gateway 5xx or
+ * model_unavailable, a timeout), never of the session: 401, no credential and on-device mode keep
+ * failing loudly. Shortcut: matched by name and status because track C's AttestationVerifyError
+ * is not exported yet; use instanceof once it is.
+ */
+function isModelOutageError(err: unknown): boolean {
+  // Not `instanceof Error`: a DOMException (the timeout abort) is not one in every runtime.
+  const e = err as { name?: unknown; message?: unknown; statusCode?: unknown } | null;
+  if (!e || typeof e !== 'object') return false;
+  if (typeof e.statusCode === 'number') return e.statusCode >= 500;
+  const message = typeof e.message === 'string' ? e.message : '';
+  return e.name === 'AbortError' || e.name === 'AttestationVerifyError' || /model_unavailable|abort|timed? ?out/i.test(message);
+}
+
+/** The scoring chain is out: leave the rows unscored for the next pass and say so; never fail the refresh. */
+// A hang costs 3 x 30s per attempt, so once the chain is out the rest of this refresh does not pay
+// it again: createRunWithBatches re-throws the last outage error for this long.
+const OUTAGE_RETRY_AFTER_MS = 2 * 60_000;
+let lastOutage: { at: number; err: unknown } | null = null;
+
+function noteScoringOutage(err: unknown, where: string): void {
+  lastOutage = { at: Date.now(), err };
+  logger.warn(`${TAG} ${where}: scoring unavailable, rows stay unscored (${err instanceof Error ? err.name : 'error'})`);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+  useForYouStore.getState().setLaneOutage('scoring', { since: Date.now() });
+}
+
+function clearScoringOutage(): void {
+  lastOutage = null;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+  useForYouStore.getState().setLaneOutage('scoring', null);
+}
+
 export async function enqueueCandidates(
   ids: string[],
   flushPartial = false,
@@ -757,7 +793,14 @@ export async function enqueueCandidates(
   // here, including this module's own post-finalize kick, so this one guard
   // closes the race. Batches already in flight still drain via recover/poll.
   if (isOnDeviceProcessing()) return { deferred: [] };
-  const out = await persistCandidateBatches(ids, flushPartial, coveredIdsByRep);
+  let out: Awaited<ReturnType<typeof persistCandidateBatches>>;
+  try {
+    out = await persistCandidateBatches(ids, flushPartial, coveredIdsByRep);
+  } catch (err) {
+    if (!isModelOutageError(err)) throw err;
+    noteScoringOutage(err, 'enqueueCandidates');
+    return { deferred: [] };
+  }
   if (out.hadRun || out.dispatched > 0) {
     await drain('foreground');
     ensurePoller();
@@ -938,9 +981,15 @@ export async function enqueueOrphanedReasons(): Promise<void> {
   );
 
   if (!snap) {
-    await createRunWithBatches((base) =>
-      chunks.map((c, i) => makeQueuedBatch(base + i, c, true, plan.coveredByRep)),
-    );
+    try {
+      await createRunWithBatches((base) =>
+        chunks.map((c, i) => makeQueuedBatch(base + i, c, true, plan.coveredByRep)),
+      );
+    } catch (err) {
+      if (!isModelOutageError(err)) throw err;
+      noteScoringOutage(err, 'enqueueOrphanedReasons');
+      return;
+    }
   } else {
     await appendBatches((base) =>
       chunks.map((c, i) => makeQueuedBatch(base + i, c, true, plan.coveredByRep)),
@@ -956,6 +1005,7 @@ async function createRunWithBatches(
   build: (base: number) => PipelineBatch[],
   e2ee: AttestationFetchOptions = {},
 ): Promise<void> {
+  if (lastOutage && Date.now() - lastOutage.at < OUTAGE_RETRY_AFTER_MS) throw lastOutage.err;
   const ctx = await prepareE2EEContext(SMALL_MODEL, 'background', e2ee);
   const run: Omit<PipelineRun, 'version' | 'schema'> = {
     runId: makeRunId(),
@@ -966,6 +1016,7 @@ async function createRunWithBatches(
   };
   try {
     await createPipeline(run, bytesToHex(ctx.privateKey));
+    clearScoringOutage();
     logger.info(
       `${TAG} created run ${run.runId} with ${run.batches.length} batch(es)`,
     );
@@ -3611,6 +3662,7 @@ export async function getReasonsInFlightIds(): Promise<Set<string>> {
 // ---------------------------------------------------------------------------
 
 export function _resetForTests(): void {
+  lastOutage = null;
   drainInFlight = null;
   firstCheckedAt.clear();
   batchesInHand.clear();
