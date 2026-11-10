@@ -328,7 +328,10 @@ export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model
   const staged: unknown[] = [];
   const empty = async (): Promise<never> => ({}) as never;
   const tools: AgentToolPort = {
-    findSimilarFacts: empty, lookupPlace: empty, saveExtractedFacts: empty, deleteUserFacts: empty,
+    // A model that calls a fact tool on the follow surface gets an empty, well-shaped answer, never a crash.
+    findSimilarFacts: async () => ({ candidates: [] }),
+    lookupPlace: async ({ query }) => ({ status: 'no_match', query }),
+    saveExtractedFacts: empty, deleteUserFacts: empty,
     webSearch: async () => ({ searched: true, results: [] }),
     searchNews: async ({ query }) => ({ query, results: (f.search ?? []).map((title) => ({ title })) }),
     proposeTrack: async (args) => { staged.push(args.options); return { staged: true, proposalId: 'track-1' }; },

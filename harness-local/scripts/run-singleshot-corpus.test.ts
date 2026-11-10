@@ -40,6 +40,21 @@ test('a search on a fixture with no search list answers empty instead of throwin
   assert.equal((runTool(f, { name: 'searchNews', argumentsRaw: '{"query":"q"}' }) as { articles: unknown[] }).articles.length, 0);
 });
 
+test('a fact tool called on the follow surface answers empty instead of crashing the turn', async () => {
+  const base = { content: '', finishReason: 'stop', truncated: false, usage: null, modelSent: null, latencyMs: 1, error: null };
+  let leg = 0;
+  const caller: HarnessCaller = async () => {
+    leg += 1;
+    if (leg === 1) return { ...base, toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'conversation/follow-story' }) }] };
+    if (leg === 2) return { ...base, toolCalls: [{ name: 'find_similar_facts', argumentsRaw: '{}' }, { name: 'lookup_place', argumentsRaw: '{"query":"x"}' }] };
+    return { ...base, content: 'Which story?', toolCalls: [] };
+  };
+  const row = await runTurnHarness(caller, { id: 'f', agent: 'follow-story', message: 'follow the cabinet talks', expect: 'proposeTrack', search: ['a'] }, 'm', 0, 'harness@m');
+  assert.equal(row.arm, 'harness@m');
+  assert.equal(row.error, null);
+  assert.ok(row.rawCalls?.some((c) => c.name === 'find_similar_facts'));
+});
+
 test('an unknown arm is refused', () => {
   assert.throws(() => parseArgs(['--arms', 'on,of']), /unknown arm "of"/);
 });
