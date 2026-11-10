@@ -30,7 +30,7 @@ import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow }
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
-import { DEFAULT_STALL_TIMEOUT_MS, postBodyStream, postBodyStreamTextTools, SpendLimitError } from '../lib/near-call';
+import { applyProviderOverride, DEFAULT_STALL_TIMEOUT_MS, postBodyStream, postBodyStreamTextTools, SpendLimitError } from '../lib/near-call';
 import { BIG_MODEL } from '../../lib/llm/constants';
 // The AGENT's arms live in the harness's own module, not in
 // news-harness/prompts/prompt-variants: adding them there reddened a test
@@ -328,6 +328,7 @@ async function main(): Promise<number> {
   // ships pointed at PROD.
   applyTargetOverride(argv);
   const overridden = applyEndpointOverrides(argv);
+  applyProviderOverride(argv);
   const args = parseArgs(argv);
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);

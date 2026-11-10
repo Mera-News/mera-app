@@ -66,6 +66,11 @@ export interface ModelInfo {
 
 export type ModelCatalog = Record<string, ModelInfo>;
 
+/** An arm id `<model>~<tag>` (e.g. `qwen/qwen3.8-27b~twin`) is a byte-identical twin of `<model>`:
+ *  near-call strips the tag before the wire and the catalogue prices it as `<model>`, so a
+ *  control can run twice in ONE interleaved run and its spread is the noise floor. */
+export const sentModel = (id: string): string => id.replace(/~[^/]*$/, '');
+
 interface RawModel {
   id?: string;
   name?: string;
@@ -148,7 +153,8 @@ export async function fetchModelCatalog(opts: {
       'utf8',
     );
   }
-  return catalog;
+  // Twin arm ids resolve to their model, so every `catalog[arm]` lookup prices a twin.
+  return new Proxy(catalog, { get: (t, k) => (typeof k === 'string' ? t[k] ?? t[sentModel(k)] : Reflect.get(t, k)) });
 }
 
 export interface TokenUsage {

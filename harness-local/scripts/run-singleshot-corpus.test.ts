@@ -11,6 +11,7 @@ import { join } from 'node:path';
 
 import { countMatched, harnessVerdict, liveSystem, loadPrePrompts, parseArgs, prePostVerdict, runTurnHarness, type HarnessCaller } from './run-singleshot-corpus';
 import { BIG_MODEL } from '../../lib/llm/constants';
+import { sentModel } from '../lib/model-catalog';
 
 test('defaults: BIG_MODEL and the on, on-twin, off arms', () => {
   const a = parseArgs([]);
@@ -22,6 +23,15 @@ test('--model and --arms pick the model and arms; off-twin is off byte for byte'
   const a = parseArgs(['--model', 'm/x', '--arms', 'off,off-twin']);
   assert.equal(a.model, 'm/x');
   assert.deepEqual(a.arms, [{ id: 'off', thinking: false }, { id: 'off-twin', thinking: false }]);
+});
+
+test('--models crosses arms with models; a ~twin id reaches the wire as its model', () => {
+  const a = parseArgs(['--arms', 'harness', '--models', 'q/a,q/a~twin,g/b', '--agent', 'article']);
+  assert.deepEqual(a.arms.map((x) => [x.id, x.model]), [['harness@q/a', 'q/a'], ['harness@q/a~twin', 'q/a~twin'], ['harness@g/b', 'g/b']]);
+  assert.equal(a.agent, 'article');
+  assert.equal(sentModel('q/a~twin'), 'q/a');
+  assert.equal(sentModel('q/a'), 'q/a');
+  assert.throws(() => parseArgs(['--models', 'q/a,q/a']), /duplicate arm/);
 });
 
 test('an unknown arm is refused', () => {

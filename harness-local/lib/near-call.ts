@@ -8,6 +8,7 @@ import {
   type TextToolDefinition,
   type ToolFormat,
 } from '../../lib/llm/text-tool-protocol';
+import { sentModel } from './model-catalog';
 // harness-local — the one place a runner posts a completion.
 //
 // Both runners and (from U5) replay-persona-chat.ts go through this, so a
@@ -21,6 +22,10 @@ import {
 // measured on. The gateway lane arrives separately: it adds a JWT, an E2EE
 // envelope and a hedge, none of which change what the model sees but all of
 // which move latency, so mixing them in one number would be wrong.
+
+/** The body as the provider gets it: a twin arm's `~tag` never reaches the wire. */
+const onWire = (body: Record<string, unknown>): Record<string, unknown> =>
+  typeof body.model === 'string' ? { ...body, model: sentModel(body.model) } : body;
 
 /** Provider model id the app's `redpill/qwen3.8-27b` profile sends. */
 export const REDPILL_QWEN_MODEL = 'qwen/qwen3.8-27b';
@@ -251,7 +256,7 @@ async function postPrepared(
     const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify(body),
+      body: JSON.stringify(onWire(body)),
       signal: controller.signal,
     });
     if (!res.ok) {
@@ -507,7 +512,7 @@ async function streamAttempt(
     const res = await guard(fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ ...body, stream: true, stream_options: { include_usage: true } }),
+      body: JSON.stringify({ ...onWire(body), stream: true, stream_options: { include_usage: true } }),
       signal: controller.signal,
     }));
     if (!res.ok) {

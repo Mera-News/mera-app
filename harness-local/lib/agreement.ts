@@ -14,7 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import type { CallType, RunRow } from './jsonl-writer';
-import { costOf, type ModelCatalog } from './model-catalog';
+import { costOf, sentModel, type ModelCatalog } from './model-catalog';
 
 export function readJsonl(path: string): RunRow[] {
   return readFileSync(path, 'utf8')
@@ -468,7 +468,7 @@ export function computeAgreement(
     // Served by something other than what this arm asked for: a fallback or a
     // hedge win. Its latency belongs to the OTHER model, so it is excluded.
     const misrouted = ctRows.filter(
-      (r) => r.fallbackFrom !== null || (r.modelSent !== null && r.modelSent !== r.modelRequested),
+      (r) => r.fallbackFrom !== null || (r.modelSent !== null && r.modelSent !== sentModel(r.modelRequested)),
     );
     const usable = ctRows.filter(
       (r) =>

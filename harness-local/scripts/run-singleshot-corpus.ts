@@ -4,6 +4,12 @@
 //     harness-local/scripts/run-singleshot-corpus.ts --target staging \
 //       --graphql-endpoint ... --auth-endpoint ... [--repeat 3] [--dry-run]
 //       [--model <id>] [--arms on,on-twin,off,off-twin]
+//       [--models <id>,<id>~twin,...] [--agent follow-story|article] [--provider near|redpill]
+//
+// --models crosses every arm with every model (arm id `<arm>@<model>`), interleaved per fixture;
+// `<model>~twin` is the control's byte-identical twin (see model-catalog `sentModel`). With
+// --models no verdict prints: the per-arm stats and the rows (raw tool arguments, prompt and
+// completion tokens) are the output. --agent keeps one agent's fixtures.
 //
 // WHAT IT MEASURES. One turn of FollowStoryAgent or ArticleFeedbackAgent the way
 // useCloudPersonaChat's single-shot path runs it: the agent's real system prompt,
@@ -97,7 +103,9 @@ interface Fixture {
   article?: { title: string; publication: string; description: string; related: string[] };
 }
 
-interface Arm { id: string; thinking: boolean; prompts?: 'pre' }
+interface Arm { id: string; thinking: boolean; prompts?: 'pre'; model?: string }
+/** The arm before any `@<model>` suffix: what the arm DOES. */
+const kindOf = (arm: Arm): string => arm.id.split('@')[0];
 const ARMS: Arm[] = [
   { id: 'on', thinking: true },
   { id: 'on-twin', thinking: true },
@@ -117,19 +125,27 @@ const FIXTURES = join(__dirname, '../../lib/mera-harness/eval/fixtures/singlesho
 // Fixed so prompts are byte-stable across arms and runs.
 const NOW_MS = Date.parse('2026-10-14T12:00:00Z');
 
-export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[]; prePrompts?: string } {
+export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; label: string; model: string; arms: Arm[]; prePrompts?: string; agent?: Fixture['agent'] } {
   let repeat = 3;
   let dryRun = false;
   let label = 'singleshot';
   let model = BIG_MODEL;
   let arms = ARMS.slice(0, 3);
   let prePrompts: string | undefined;
+  let models: string[] = [];
+  let agent: Fixture['agent'] | undefined;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--repeat') repeat = Number(argv[++i]);
     else if (argv[i] === '--dry-run') dryRun = true;
     else if (argv[i] === '--label') label = argv[++i] ?? label;
     else if (argv[i] === '--model') model = argv[++i] ?? model;
     else if (argv[i] === '--pre-prompts') prePrompts = argv[++i];
+    else if (argv[i] === '--models') models = (argv[++i] ?? '').split(',').filter(Boolean);
+    else if (argv[i] === '--agent') {
+      const a = argv[++i];
+      if (a !== 'follow-story' && a !== 'article') throw new Error('--agent takes follow-story or article');
+      agent = a;
+    }
     else if (argv[i] === '--arms') {
       arms = (argv[++i] ?? '').split(',').map((id) => {
         const arm = ARMS.find((a) => a.id === id);
@@ -140,7 +156,9 @@ export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; la
     }
   }
   if (arms.some((a) => a.prompts === 'pre') && !prePrompts) throw new Error('arm "pre" needs --pre-prompts <path>');
-  return { repeat, dryRun, label, model, arms, prePrompts };
+  if (models.length) arms = arms.flatMap((a) => models.map((m) => ({ ...a, id: `${a.id}@${m}`, model: m })));
+  if (new Set(arms.map((a) => a.id)).size !== arms.length) throw new Error('duplicate arm in --models');
+  return { repeat, dryRun, label, model, arms, prePrompts, agent };
 }
 
 export const liveSystem = (agent: Fixture['agent']): string =>
@@ -261,6 +279,10 @@ interface TurnRow {
   expect: Fixture['expect']; pass: boolean; why: string;
   passes: number; wallMs: number; firstVisibleMs: number | null;
   completionTokens: number; reasoningTokens: number; truncated: boolean; error: string | null;
+  /** Billed input, for pricing a row against the catalogue. */
+  promptTokens?: number; cachedTokens?: number;
+  /** Every tool call as the model wrote it, arguments unparsed. */
+  rawCalls?: { name: string; argumentsRaw: string }[];
   /** Cloud: legs postBodyStreamTextTools retried (stall, total timeout, fetch failed). */
   stallRetries?: number;
   calls: string[]; trackOptions: number; reply: string;
@@ -298,7 +320,7 @@ function nearCaller(env: { nearAiBaseUrl: string; nearAiApiKey: string }, model:
 }
 
 /** One follow-story turn through the real cloud loop with canned, offline tools. */
-export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model: string, repeat: number): Promise<TurnRow> {
+export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model: string, repeat: number, armId = 'harness'): Promise<TurnRow> {
   const state = createAgentState({ facts: [], surface: 'CONFIG', languageName: 'English' });
   state.surfaceContext = { kind: 'follow-story', hint: 'They opened this chat from their Followed stories page to follow a news story.', context: null };
   const staged: unknown[] = [];
@@ -310,7 +332,7 @@ export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model
     proposeTrack: async (args) => { staged.push(args.options); return { staged: true, proposalId: 'track-1' }; },
   };
   const row: TurnRow = {
-    fixture: f.id, arm: 'harness', repeat, at: new Date().toISOString(), expect: f.expect, pass: false, why: '',
+    fixture: f.id, arm: armId, repeat, at: new Date().toISOString(), expect: f.expect, pass: false, why: '',
     passes: 0, wallMs: 0, firstVisibleMs: null, completionTokens: 0, reasoningTokens: 0, truncated: false,
     error: null, calls: [], trackOptions: 0, reply: '',
   };
@@ -325,10 +347,13 @@ export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model
   row.legTools = result.legs.map((l) => l.toolCalls.map((t) => t.name));
   row.closingLegFired = result.closingLegFired;
   row.calls = row.legTools.flat();
+  row.rawCalls = result.legs.flatMap((l) => l.toolCalls.map((t) => ({ name: t.name, argumentsRaw: t.argumentsRaw })));
   row.reply = result.reply;
   for (const l of result.legs) {
     row.completionTokens += l.result.usage?.completionTokens ?? 0;
     row.reasoningTokens += l.result.usage?.reasoningTokens ?? 0;
+    row.promptTokens = (row.promptTokens ?? 0) + (l.result.usage?.promptTokens ?? 0);
+    row.cachedTokens = (row.cachedTokens ?? 0) + (l.result.usage?.cachedTokens ?? 0);
     row.truncated ||= l.result.truncated;
     row.error ??= l.result.error;
   }
@@ -351,19 +376,20 @@ export async function runTurnHarness(callModel: HarnessCaller, f: Fixture, model
 
 async function runTurn(
   env: { nearAiBaseUrl: string; nearAiApiKey: string },
-  f: Fixture, arm: Arm, model: string, repeat: number, dryRun: boolean, pre?: PrePrompts,
+  f: Fixture, arm: Arm, defaultModel: string, repeat: number, dryRun: boolean, pre?: PrePrompts,
 ): Promise<TurnRow | { dry: number }> {
-  if (arm.id === 'harness') {
+  const model = arm.model ?? defaultModel;
+  if (kindOf(arm) === 'harness') {
     if (dryRun) {
       let chars = 0;
       const dryCaller: HarnessCaller = async (req) => {
         chars += req.systemPrompt.length + req.messages.reduce((n, m) => n + m.content.length, 0);
         return { content: '', toolCalls: [], finishReason: 'stop', truncated: false, usage: null, modelSent: null, latencyMs: 0, error: null };
       };
-      await runTurnHarness(dryCaller, f, model, repeat);
+      await runTurnHarness(dryCaller, f, model, repeat, arm.id);
       return { dry: chars };
     }
-    return runTurnHarness(nearCaller(env, model), f, model, repeat);
+    return runTurnHarness(nearCaller(env, model), f, model, repeat, arm.id);
   }
   const { system, tools, history, context } = setup(f, arm, pre);
   const wire: Msg[] = [...history, { role: 'user', content: f.message }];
@@ -395,6 +421,8 @@ async function runTurn(
     if (pass === 0) row.firstVisibleMs = r.ttVisibleMs;
     row.completionTokens += r.usage?.completionTokens ?? 0;
     row.reasoningTokens += r.usage?.reasoningTokens ?? 0;
+    row.promptTokens = (row.promptTokens ?? 0) + (r.usage?.promptTokens ?? 0);
+    row.cachedTokens = (row.cachedTokens ?? 0) + (r.usage?.cachedTokens ?? 0);
     row.truncated ||= r.truncated;
     if (r.error) { row.error = r.error; break; }
     if (r.content.trim()) row.reply = r.content.trim();
@@ -405,6 +433,7 @@ async function runTurn(
     });
     for (const [i, c] of r.toolCalls.entries()) {
       row.calls.push(c.name);
+      (row.rawCalls ??= []).push({ name: c.name, argumentsRaw: c.argumentsRaw });
       if (c.name === 'proposeTrack') {
         try {
           const options = parseTrackScopeOptions(JSON.parse(c.argumentsRaw || '{}').options);
@@ -585,7 +614,8 @@ async function main(): Promise<number> {
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
   let fixtures = JSON.parse(readFileSync(FIXTURES, 'utf8')) as Fixture[];
-  if (args.arms.some((a) => a.id === 'harness')) {
+  if (args.agent) fixtures = fixtures.filter((f) => f.agent === args.agent);
+  if (args.arms.some((a) => kindOf(a) === 'harness')) {
     const before = fixtures.length;
     fixtures = fixtures.filter((f) => f.agent === 'follow-story');
     console.log(`harness arm: follow-story fixtures only; skipped ${before - fixtures.length} article fixtures for every arm.`);

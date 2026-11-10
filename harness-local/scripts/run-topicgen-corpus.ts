@@ -55,7 +55,7 @@ import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow }
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings, TOPICGEN_ARM_MODELS } from '../lib/model-catalog';
-import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
+import { applyProviderOverride, hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
 import { COHORTS, loadCohort, type Cohort, type CorpusFact, type CorpusPersona } from '../lib/corpus';
 // STEP A. The skill-guided topic prompt against the shipped one-shot prompt,
 // carried as an ARM VALUE so both sit in ONE interleaved run. Two runs would
@@ -505,6 +505,7 @@ async function main(): Promise<number> {
   if (engine !== 'cloud') return mainOnDevice(engine, parseArgs(argv));
   applyTargetOverride(argv);
   const overridden = applyEndpointOverrides(argv);
+  applyProviderOverride(argv);
   const args = parseArgs(argv);
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
