@@ -45,7 +45,7 @@ import { join } from 'node:path';
 import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
-import { postBodyStreamTextTools, SpendLimitError, type NearToolCall } from '../lib/near-call';
+import { applyProviderOverride, postBodyStreamTextTools, SpendLimitError, type NearToolCall } from '../lib/near-call';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '../../lib/llm/constants';
 import { APP_TOOL_FORMAT } from '../../lib/llm/text-tool-protocol';
 import {
@@ -575,6 +575,7 @@ async function main(): Promise<number> {
   const argv = process.argv.slice(2);
   applyTargetOverride(argv);
   applyEndpointOverrides(argv);
+  applyProviderOverride(argv);
   const args = parseArgs(argv);
   const engine = parseEngine(argv);
   if (engine !== 'cloud') {

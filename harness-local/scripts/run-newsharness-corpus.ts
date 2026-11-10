@@ -49,7 +49,7 @@ import {
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, HARNESS_ARM_MODELS, rosterWarnings } from '../lib/model-catalog';
-import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
+import { applyProviderOverride, hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
 import { decodeReason } from '../lib/reason-decode';
 import {
   bandHistogram,
@@ -304,6 +304,7 @@ async function main(): Promise<number> {
   // without any runner editing a file the user also edits.
   applyTargetOverride(argv);
   const overridden = applyEndpointOverrides(argv);
+  applyProviderOverride(argv);
   const args = parseArgs(argv);
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);

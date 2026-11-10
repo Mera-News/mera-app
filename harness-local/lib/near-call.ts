@@ -22,6 +22,31 @@ import {
 // envelope and a hedge, none of which change what the model sees but all of
 // which move latency, so mixing them in one number would be wrong.
 
+/** Provider model id the app's `redpill/qwen3.8-27b` profile sends. */
+export const REDPILL_QWEN_MODEL = 'qwen/qwen3.8-27b';
+
+/**
+ * `--provider near|redpill` (default near). `redpill` points the shared env
+ * loader at RedPill's TEE endpoint through process.env, BEFORE dotenv runs, so
+ * every runner that already posts through `env.nearAiBaseUrl` / `nearAiApiKey`
+ * follows with no further change. The key comes from REDPILL_API_KEY in the
+ * process env (the caller loads it; it is never printed or written here).
+ * Plain TLS only: no E2EE, so synthetic fixtures only, never user data.
+ * Returns the provider so a runner can default its model id.
+ */
+export function applyProviderOverride(argv: string[]): 'near' | 'redpill' {
+  const i = argv.indexOf('--provider');
+  const p = i === -1 ? 'near' : argv[i + 1];
+  if (p !== 'near' && p !== 'redpill') throw new Error(`harness-local: --provider must be near or redpill (got ${JSON.stringify(p)}).`);
+  if (p === 'redpill') {
+    const key = process.env.REDPILL_API_KEY?.trim();
+    if (!key) throw new Error('harness-local: --provider redpill needs REDPILL_API_KEY in the process env.');
+    process.env.NEWS_HARNESS_NEARAI_BASE_URL = 'https://tee.redpill.ai/v1';
+    process.env.NEWS_HARNESS_NEARAI_API_KEY = key;
+  }
+  return p;
+}
+
 /**
  * True when the model returned a reasoning trace inside `content` instead of
  * `reasoning_content`. Delegates to the app's own stripper so the harness and
