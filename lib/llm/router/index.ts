@@ -32,9 +32,7 @@ import {
   DEFAULT_TABLE,
   isProfileId,
   servesBatch,
-  MODEL_LABELS,
   PROFILES,
-  PROVIDER_INFO,
   type Profile,
   type ProfileId,
   type Provider,
@@ -66,7 +64,7 @@ export interface RoutingState {
   version: number;
   lanes: Record<Lane, {
     state: LaneState;
-    active: { id: string; provider: Provider; providerName: string; providerUrl: string; modelLabel: string } | null;
+    active: { id: string; provider: Provider } | null;
   }>;
 }
 
@@ -295,7 +293,7 @@ function outageOf(lane: Lane): boolean {
 const WORSE: Record<LaneState, number> = { ok: 0, degraded: 1, down: 2 };
 const worst = (a: LaneState, b: LaneState): LaneState => (WORSE[a] >= WORSE[b] ? a : b);
 
-/** The router as the provider card reads it: per lane, its state and the profile a call would use first. */
+/** Per lane, its state and the profile a call would use first (Verify reads the active profiles). */
 export function routingSnapshot(): RoutingState {
   const lanes = {} as RoutingState['lanes'];
   for (const lane of LANES) {
@@ -303,13 +301,7 @@ export function routingSnapshot(): RoutingState {
     const local: LaneState = outageOf(lane) ? 'down' : head && head.id !== DEFAULT_TABLE[lane][0] ? 'degraded' : 'ok';
     lanes[lane] = {
       state: worst(table.lanes[lane]?.state ?? 'ok', local),
-      active: head && {
-        id: head.id,
-        provider: head.provider,
-        providerName: PROVIDER_INFO[head.provider].name,
-        providerUrl: PROVIDER_INFO[head.provider].url,
-        modelLabel: MODEL_LABELS[head.harness] ?? head.model,
-      },
+      active: head && { id: head.id, provider: head.provider },
     };
   }
   return { version: table.version, lanes };

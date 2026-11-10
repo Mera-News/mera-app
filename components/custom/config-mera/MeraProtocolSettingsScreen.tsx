@@ -15,7 +15,6 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { BUILT_IN_MODEL_NAME } from '@/lib/mera-protocol-toolkit/core/downloadService';
 import { averageMs, hasAnyStat } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
-import { ProviderCard } from '@/components/custom/config-mera/ProviderCard';
 import BetaBadge from '@/components/custom/BetaBadge';
 import HelpButton from '@/components/custom/nav/HelpButton';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -581,13 +580,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </View>
             )}
 
-            {/* Providers, models and Verify: whenever chat or the feed reaches the cloud. */}
+            {/* Verify (it names each provider): whenever chat or the feed reaches the cloud. */}
             {!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat ? (
                 <View style={{ marginTop: 12 }}>
-                    {/* 12pt between this card and Verify, the gap between groups elsewhere on the page. */}
-                    <View style={{ paddingHorizontal: 14, marginBottom: 12 }}>
-                        <ProviderCard />
-                    </View>
                     <AttestationVerificationRow />
                 </View>
             ) : null}

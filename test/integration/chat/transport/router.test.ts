@@ -204,7 +204,7 @@ describe('the routing table', () => {
     expect(routeLane('chat-tools').map((p) => p.id)).toEqual(['near/qwen3.6-35b-a3b', 'redpill/qwen3.8-27b']);
     expect(routingSnapshot().lanes['chat-tools']).toEqual({
       state: 'degraded',
-      active: { id: 'near/qwen3.6-35b-a3b', provider: 'near', providerName: 'NEAR AI', providerUrl: 'https://near.ai', modelLabel: 'Qwen3.6 35B' },
+      active: { id: 'near/qwen3.6-35b-a3b', provider: 'near' },
     });
   });
 

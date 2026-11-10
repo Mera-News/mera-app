@@ -566,14 +566,6 @@
     "attestationCopyDetails": "詳細をコピー",
     "attestationCopied": "コピーしました",
     "providers": {
-      "title": "プロバイダー",
-      "backup": "バックアップ",
-      "modelsTitle": "使用中のモデル",
-      "laneChat": "チャット",
-      "laneScoring": "メラのおすすめ",
-      "laneTopics": "トピック",
-      "laneBackground": "バックグラウンド",
-      "paused": "一時停止中",
       "openA11y": "{{provider}}のウェブサイトを開く"
     }
   },

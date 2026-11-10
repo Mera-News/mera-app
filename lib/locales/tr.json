@@ -579,14 +579,6 @@
     "attestationCopyDetails": "Ayrıntıları kopyala",
     "attestationCopied": "Kopyalandı",
     "providers": {
-      "title": "Sağlayıcı",
-      "backup": "yedek",
-      "modelsTitle": "Kullanılan modeller",
-      "laneChat": "Sohbet",
-      "laneScoring": "Akış seçimleri",
-      "laneTopics": "Konular",
-      "laneBackground": "Arka plan",
-      "paused": "Duraklatıldı",
       "openA11y": "{{provider}} web sitesini aç"
     }
   },

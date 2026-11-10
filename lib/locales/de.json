@@ -579,14 +579,6 @@
     "attestationCopyDetails": "Details kopieren",
     "attestationCopied": "Kopiert",
     "providers": {
-      "title": "Anbieter",
-      "backup": "Backup",
-      "modelsTitle": "Verwendete Modelle",
-      "laneChat": "Chat",
-      "laneScoring": "Feed-Auswahl",
-      "laneTopics": "Themen",
-      "laneBackground": "Hintergrund",
-      "paused": "Pausiert",
       "openA11y": "{{provider}}-Website öffnen"
     }
   },

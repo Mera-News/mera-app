@@ -927,14 +927,6 @@
     "attestationCopyDetails": "Copy details",
     "attestationCopied": "Copied",
     "providers": {
-      "title": "Provider",
-      "backup": "backup",
-      "modelsTitle": "Models in use",
-      "laneChat": "Chat",
-      "laneScoring": "Feed picks",
-      "laneTopics": "Topics",
-      "laneBackground": "Background",
-      "paused": "Paused",
       "openA11y": "Open {{provider}} website"
     }
   },

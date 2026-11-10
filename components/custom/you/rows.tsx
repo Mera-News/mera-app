@@ -69,8 +69,6 @@ export interface RowProps {
     /** Makes the row a button (with a chevron unless `hideChevron`). */
     readonly onPress?: () => void;
     readonly hideChevron?: boolean;
-    /** A disclosure row: announced as expanded or collapsed. */
-    readonly expanded?: boolean;
     readonly titleLines?: number;
     readonly testID?: string;
 }
@@ -87,7 +85,6 @@ export const Row: React.FC<RowProps> = ({
     leadingIcon,
     onPress,
     hideChevron = false,
-    expanded,
     titleLines = 2,
     testID,
 }) => {
@@ -126,7 +123,6 @@ export const Row: React.FC<RowProps> = ({
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={[title, beta ? t('common.beta') : null, subtitle, value].filter(Boolean).join(', ')}
-            accessibilityState={expanded === undefined ? undefined : { expanded }}
         >
             {body}
         </Pressable>

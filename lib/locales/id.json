@@ -566,14 +566,6 @@
     "attestationCopyDetails": "Salin detail",
     "attestationCopied": "Disalin",
     "providers": {
-      "title": "Penyedia",
-      "backup": "cadangan",
-      "modelsTitle": "Model yang dipakai",
-      "laneChat": "Obrolan",
-      "laneScoring": "Pilihan umpan",
-      "laneTopics": "Topik",
-      "laneBackground": "Latar belakang",
-      "paused": "Dijeda",
       "openA11y": "Buka situs web {{provider}}"
     }
   },

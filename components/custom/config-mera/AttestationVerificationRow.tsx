@@ -22,7 +22,7 @@
  */
 import { useColors } from '@/lib/theme/tokens';
 import React, { useCallback, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
 
@@ -88,8 +88,8 @@ function activeProfiles(state: RoutingState): Profile[] {
 }
 
 type ModelResult =
-  | { model: string; providerName: string; report: VerificationReport; details: AttestationDetails }
-  | { model: string; providerName: string; report: null };
+  | { model: string; provider: Profile['provider']; report: VerificationReport; details: AttestationDetails }
+  | { model: string; provider: Profile['provider']; report: null };
 
 type RunState =
   | { phase: 'idle' }
@@ -98,7 +98,6 @@ type RunState =
   | { phase: 'error' };
 
 async function verifyModel({ model, provider }: Profile): Promise<ModelResult> {
-  const providerName = PROVIDER_INFO[provider].name;
   try {
     // A fresh nonce per tap — this is what makes the freshness check real,
     // and it deliberately bypasses every cache in the path.
@@ -133,12 +132,12 @@ async function verifyModel({ model, provider }: Profile): Promise<ModelResult> {
       report,
       proxy: deployedSoftware.proxy,
     });
-    return { model, providerName, report, details };
+    return { model, provider, report, details };
   } catch (e) {
     // A fetch failure is NOT a verification failure — showing it as one
     // would train users to ignore red. It gets its own state.
     logger.debug('[attestation] verification fetch failed', { model, error: String(e) });
-    return { model, providerName, report: null };
+    return { model, provider, report: null };
   }
 }
 
@@ -153,11 +152,23 @@ function ModelSection({ result }: { result: ModelResult }) {
   const { t } = useTranslation();
   const colors = useColors();
   const { model, report } = result;
+  const provider = PROVIDER_INFO[result.provider];
 
   return (
     <VStack space="sm" testID={`attestation-model-${model}`}>
-      <Text selectable className="text-ink-2 text-sm font-semibold">
-        {result.providerName} · {model}
+      {/* The only place the app names a provider (owner): a plain link in the line's own size. */}
+      <Text className="text-ink-2 text-sm font-semibold">
+        <Text
+          className="text-sm font-semibold underline"
+          style={{ color: colors.accentText }}
+          accessibilityRole="link"
+          accessibilityLabel={t('meraProtocol.providers.openA11y', { provider: provider.name })}
+          onPress={() => void Linking.openURL(provider.url)}
+          testID={`attestation-provider-link-${result.provider}`}
+        >
+          {provider.name}
+        </Text>
+        <Text selectable> · {model}</Text>
       </Text>
       {!report && (
         <Text className="text-ink-3 text-sm" testID="attestation-model-error">
@@ -275,7 +286,7 @@ export function AttestationVerificationRow() {
           <VStack space="sm" style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             {state.phase === 'done' &&
               state.results.map(result => (
-                <ModelSection key={`${result.providerName}/${result.model}`} result={result} />
+                <ModelSection key={`${result.provider}/${result.model}`} result={result} />
               ))}
 
             {state.phase === 'done' && (

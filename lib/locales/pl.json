@@ -623,14 +623,6 @@
     "attestationCopyDetails": "Kopiuj szczegóły",
     "attestationCopied": "Skopiowano",
     "providers": {
-      "title": "Dostawca",
-      "backup": "zapasowy",
-      "modelsTitle": "Używane modele",
-      "laneChat": "Czat",
-      "laneScoring": "Wybrane przez Merę",
-      "laneTopics": "Tematy",
-      "laneBackground": "Tło",
-      "paused": "Wstrzymane",
       "openA11y": "Otwórz stronę {{provider}}"
     }
   },

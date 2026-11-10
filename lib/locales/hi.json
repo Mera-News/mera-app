@@ -579,14 +579,6 @@
     "attestationCopyDetails": "विवरण कॉपी करें",
     "attestationCopied": "कॉपी हो गया",
     "providers": {
-      "title": "प्रदाता",
-      "backup": "बैकअप",
-      "modelsTitle": "इस्तेमाल हो रहे मॉडल",
-      "laneChat": "चैट",
-      "laneScoring": "फीड की पसंद",
-      "laneTopics": "विषय",
-      "laneBackground": "बैकग्राउंड",
-      "paused": "रुका हुआ",
       "openA11y": "{{provider}} की वेबसाइट खोलें"
     }
   },

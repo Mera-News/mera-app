@@ -566,14 +566,6 @@
     "attestationCopyDetails": "複製詳細資料",
     "attestationCopied": "已複製",
     "providers": {
-      "title": "供應商",
-      "backup": "備用",
-      "modelsTitle": "使用中的模型",
-      "laneChat": "聊天",
-      "laneScoring": "資訊流排序",
-      "laneTopics": "主題",
-      "laneBackground": "背景",
-      "paused": "已暫停",
       "openA11y": "開啟 {{provider}} 網站"
     }
   },

@@ -581,14 +581,6 @@
     "attestationCopyDetails": "Copia dettagli",
     "attestationCopied": "Copiato",
     "providers": {
-      "title": "Fornitore",
-      "backup": "di riserva",
-      "modelsTitle": "Modelli in uso",
-      "laneChat": "Chat",
-      "laneScoring": "Selezione del feed",
-      "laneTopics": "Argomenti",
-      "laneBackground": "In background",
-      "paused": "In pausa",
       "openA11y": "Apri il sito di {{provider}}"
     }
   },

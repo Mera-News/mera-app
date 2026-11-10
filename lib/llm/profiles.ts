@@ -65,19 +65,12 @@ export const DEFAULT_TABLE: Record<Lane, ProfileId[]> = {
  */
 export const servesBatch = (profile: Profile): boolean => profile.provider !== 'redpill';
 
-/** Shown on the provider card. */
+/** Named, as a link, in each Verify attestation result. */
 export const PROVIDER_INFO: Record<Provider, { name: string; url: string }> = {
   near: { name: 'NEAR AI', url: 'https://near.ai' },
   redpill: { name: 'RedPill', url: 'https://redpill.ai' },
 };
 
-/** Shown on the provider card, per harness folder (the same model on two providers reads the same). */
-export const MODEL_LABELS: Record<string, string> = {
-  'qwen3.8-27b': 'Qwen3.8 27B',
-  'qwen3.6-35b-a3b': 'Qwen3.6 35B',
-  'gemma-4-31b': 'Gemma 4 31B',
-  'kimi-k2.6': 'Kimi K2.6',
-};
 
 /** First-token deadline for `lane` on `profile`; a buffered call's whole answer counts as its first token. */
 export function firstTokenDeadlineMs(profile: Profile, lane: Lane): number {

@@ -566,14 +566,6 @@
     "attestationCopyDetails": "세부 정보 복사",
     "attestationCopied": "복사됨",
     "providers": {
-      "title": "제공자",
-      "backup": "백업",
-      "modelsTitle": "사용 중인 모델",
-      "laneChat": "채팅",
-      "laneScoring": "피드 추천",
-      "laneTopics": "토픽",
-      "laneBackground": "백그라운드",
-      "paused": "일시 중지됨",
       "openA11y": "{{provider}} 웹사이트 열기"
     }
   },

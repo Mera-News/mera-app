@@ -666,14 +666,6 @@
     "attestationCopyDetails": "نسخ التفاصيل",
     "attestationCopied": "تم النسخ",
     "providers": {
-      "title": "المزوّد",
-      "backup": "احتياطي",
-      "modelsTitle": "النماذج المستخدمة",
-      "laneChat": "الدردشة",
-      "laneScoring": "اختيارات الخلاصة",
-      "laneTopics": "المواضيع",
-      "laneBackground": "الخلفية",
-      "paused": "متوقف مؤقتًا",
       "openA11y": "فتح موقع {{provider}}"
     }
   },

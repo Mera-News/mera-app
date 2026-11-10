@@ -623,14 +623,6 @@
     "attestationCopyDetails": "Скопировать подробности",
     "attestationCopied": "Скопировано",
     "providers": {
-      "title": "Провайдер",
-      "backup": "резервный",
-      "modelsTitle": "Используемые модели",
-      "laneChat": "Чат",
-      "laneScoring": "Подбор ленты",
-      "laneTopics": "Темы",
-      "laneBackground": "Фоновые задачи",
-      "paused": "Приостановлено",
       "openA11y": "Открыть сайт {{provider}}"
     }
   },

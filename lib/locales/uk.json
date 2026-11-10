@@ -623,14 +623,6 @@
     "attestationCopyDetails": "Скопіювати подробиці",
     "attestationCopied": "Скопійовано",
     "providers": {
-      "title": "Провайдер",
-      "backup": "резервний",
-      "modelsTitle": "Моделі, що використовуються",
-      "laneChat": "Чат",
-      "laneScoring": "Підбір для стрічки",
-      "laneTopics": "Теми",
-      "laneBackground": "Фоновий режим",
-      "paused": "Призупинено",
       "openA11y": "Відкрити сайт {{provider}}"
     }
   },

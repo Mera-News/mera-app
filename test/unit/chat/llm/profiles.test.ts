@@ -1,7 +1,7 @@
 // The default routing table is what every lane uses when the gateway's table has not answered,
 // so a wrong entry is invisible until an outage. These pins exist so a change is deliberate.
 import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
-import { DEFAULT_TABLE, PROFILES, MODEL_LABELS, firstTokenDeadlineMs } from '@/lib/llm/profiles';
+import { DEFAULT_TABLE, PROFILES, firstTokenDeadlineMs } from '@/lib/llm/profiles';
 import { LANES } from '@/lib/llm/router/lanes';
 
 describe('profiles and the default table', () => {
@@ -37,7 +37,6 @@ describe('profiles and the default table', () => {
       expect(firstTokenDeadlineMs(p, 'chat-tools')).toBe(30_000);
       expect(firstTokenDeadlineMs(p, 'chat-single')).toBe(30_000);
       expect(firstTokenDeadlineMs(p, 'scoring')).toBe(120_000);
-      expect(MODEL_LABELS[p.harness]).toBeDefined();
     }
   });
 });

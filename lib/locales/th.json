@@ -566,14 +566,6 @@
     "attestationCopyDetails": "คัดลอกรายละเอียด",
     "attestationCopied": "คัดลอกแล้ว",
     "providers": {
-      "title": "ผู้ให้บริการ",
-      "backup": "สำรอง",
-      "modelsTitle": "โมเดลที่ใช้งาน",
-      "laneChat": "แชท",
-      "laneScoring": "ฟีดที่เลือกให้",
-      "laneTopics": "หัวข้อ",
-      "laneBackground": "พื้นหลัง",
-      "paused": "หยุดชั่วคราว",
       "openA11y": "เปิดเว็บไซต์ของ {{provider}}"
     }
   },

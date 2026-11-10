@@ -579,14 +579,6 @@
     "attestationCopyDetails": "Details kopiëren",
     "attestationCopied": "Gekopieerd",
     "providers": {
-      "title": "Aanbieder",
-      "backup": "back-up",
-      "modelsTitle": "Gebruikte modellen",
-      "laneChat": "Chat",
-      "laneScoring": "Feedkeuzes",
-      "laneTopics": "Onderwerpen",
-      "laneBackground": "Achtergrond",
-      "paused": "Gepauzeerd",
       "openA11y": "Open de website van {{provider}}"
     }
   },

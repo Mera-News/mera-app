@@ -566,14 +566,6 @@
     "attestationCopyDetails": "Sao chép chi tiết",
     "attestationCopied": "Đã sao chép",
     "providers": {
-      "title": "Nhà cung cấp",
-      "backup": "dự phòng",
-      "modelsTitle": "Mô hình đang dùng",
-      "laneChat": "Trò chuyện",
-      "laneScoring": "Chọn bài cho bản tin",
-      "laneTopics": "Chủ đề",
-      "laneBackground": "Chạy nền",
-      "paused": "Tạm dừng",
       "openA11y": "Mở trang web của {{provider}}"
     }
   },
