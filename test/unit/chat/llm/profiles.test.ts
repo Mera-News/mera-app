@@ -28,10 +28,11 @@ describe('profiles and the default table', () => {
     expect(PROFILES[DEFAULT_TABLE.scoring[0]].model).toBe(SMALL_MODEL);
   });
 
-  it('gives chat lanes 30s to a first token and the rest 120s', () => {
+  it('gives chat lanes 30s to a first token and the rest, fact checks included, 120s', () => {
     for (const p of Object.values(PROFILES)) {
       expect(firstTokenDeadlineMs(p, 'chat-tools')).toBe(30_000);
-      expect(firstTokenDeadlineMs(p, 'fact-check')).toBe(30_000);
+      expect(firstTokenDeadlineMs(p, 'chat-single')).toBe(30_000);
+      expect(firstTokenDeadlineMs(p, 'fact-check')).toBe(120_000);
       expect(firstTokenDeadlineMs(p, 'scoring')).toBe(120_000);
       expect(MODEL_LABELS[p.harness]).toBeDefined();
     }
