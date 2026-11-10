@@ -19,9 +19,14 @@ import {
   hexToBytes,
   ModelKeyAlgoMismatchError,
   ModelKeyValidationError,
+  openField,
+  sealField,
+  v2Aad,
+  V2_ALGO,
   type E2EEContext,
   type SigningAlgo,
 } from '@/lib/e2ee/e2ee-crypto';
+import redpillReplies from '@/test/fixtures/attestation-redpill-replies.json';
 import { TEST_MODEL_KEYS } from '@/test/mock-backend/gateway/keys';
 
 // ---- model side, independent of lib/e2ee ------------------------------------------------
@@ -356,5 +361,117 @@ describe('hexToBytes / bytesToHex', () => {
   it('rejects odd-length input', () => {
     expect(() => hexToBytes('abc')).toThrow('Invalid hex string');
     expect(() => hexToBytes('0xabc')).toThrow('Invalid hex string');
+  });
+});
+
+// ---- RedPill E2EE v2 (Dstack-TEE private-ai-gateway spec/e2ee-v2.md) ---------------------
+
+/** Model side of v2, written from the spec, not from lib/e2ee. */
+function modelOpenV2(blobHex: string, modelSecret: Uint8Array, aad: Uint8Array): string {
+  const blob = hexToBytes(blobHex);
+  const shared = secp256k1.getSharedSecret(modelSecret, blob.slice(0, 65)).slice(1, 33);
+  const key = hkdf(sha256, shared, undefined, utf8.encode('aci.e2ee.v2.secp256k1'), 32);
+  return text.decode(gcm(key, blob.slice(65, 77), aad).decrypt(blob.slice(77)));
+}
+function modelSealV2(plaintext: string, clientPub65: Uint8Array, aad: Uint8Array): string {
+  const eph = secp256k1.utils.randomSecretKey();
+  const shared = secp256k1.getSharedSecret(eph, clientPub65).slice(1, 33);
+  const key = hkdf(sha256, shared, undefined, utf8.encode('aci.e2ee.v2.secp256k1'), 32);
+  const iv = randomBytes(12);
+  return bytesToHex(secp256k1.getPublicKey(eph, false)) + bytesToHex(iv) + bytesToHex(gcm(key, iv, aad).encrypt(utf8.encode(plaintext)));
+}
+const jcs = (o: Record<string, string | number>) =>
+  utf8.encode('{' + Object.keys(o).sort().map(k => `${JSON.stringify(k)}:${JSON.stringify(o[k])}`).join(',') + '}');
+
+const V2 = { model: 'qwen/qwen3.8-27b', nonce: 'ab'.repeat(32), ts: 1794270000 };
+function v2Ctx(): E2EEContext {
+  const privateKey = secp256k1.utils.randomSecretKey();
+  return {
+    modelPubKeyHex: TEST_MODEL_KEYS.ecdsa.publicKeyHex,
+    privateKey,
+    clientPubKeyHex: bytesToHex(secp256k1.getPublicKey(privateKey, false)),
+    algo: 'ecdsa',
+    headers: {} as E2EEContext['headers'],
+    v2: V2,
+  };
+}
+
+describe('v2Aad: the spec test vectors, byte for byte', () => {
+  const vec = { model: 'demo-model', nonce: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f', ts: 1750000000 };
+  it('request field', () => {
+    expect(text.decode(v2Aad('x25519-aes-256-gcm-hkdf-sha256', vec, 'messages.0.content'))).toBe(
+      '{"algo":"x25519-aes-256-gcm-hkdf-sha256","field":"messages.0.content","model":"demo-model","nonce":"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","purpose":"aci.e2ee.request.v2","ts":1750000000}',
+    );
+  });
+  it('response field', () => {
+    expect(text.decode(v2Aad('x25519-aes-256-gcm-hkdf-sha256', vec, 'choices.0.message.content', 'chatcmpl-123'))).toBe(
+      '{"algo":"x25519-aes-256-gcm-hkdf-sha256","field":"choices.0.message.content","id":"chatcmpl-123","model":"demo-model","nonce":"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","purpose":"aci.e2ee.response.v2","ts":1750000000}',
+    );
+  });
+});
+
+describe('sealField / openField: RedPill v2', () => {
+  it('the model opens a request field under the request AAD for that field path', () => {
+    const ctx = v2Ctx();
+    const blob = sealField('hello', ctx, 'messages.1.content');
+    const aad = jcs({ purpose: 'aci.e2ee.request.v2', algo: V2_ALGO, ...V2, field: 'messages.1.content' });
+    expect(modelOpenV2(blob, TEST_MODEL_KEYS.ecdsa.secret, aad)).toBe('hello');
+  });
+
+  it('a request field moved to another path does not open', () => {
+    const blob = sealField('hello', v2Ctx(), 'messages.1.content');
+    const aad = jcs({ purpose: 'aci.e2ee.request.v2', algo: V2_ALGO, ...V2, field: 'messages.0.content' });
+    expect(() => modelOpenV2(blob, TEST_MODEL_KEYS.ecdsa.secret, aad)).toThrow();
+  });
+
+  it('opens a response field sealed under the response AAD (field path and response id)', () => {
+    const ctx = v2Ctx();
+    const aad = jcs({ purpose: 'aci.e2ee.response.v2', algo: V2_ALGO, ...V2, id: 'req_1', field: 'choices.0.delta.content' });
+    const blob = modelSealV2('tok', hexToBytes(ctx.clientPubKeyHex), aad);
+    expect(openField(blob, ctx, 'choices.0.delta.content', 'req_1')).toBe('tok');
+    expect(() => openField(blob, ctx, 'choices.0.delta.content', 'req_2')).toThrow();
+    expect(() => openField(blob, ctx, 'choices.0.message.content', 'req_1')).toThrow();
+  });
+
+  it('encryptContent refuses a v2 context: without a field path the AAD cannot be built', () => {
+    expect(() => encryptContent('x', v2Ctx())).toThrow(/sealField/);
+  });
+
+  it.each(['buffered', 'stream'] as const)('opens the real recorded RedPill %s reply', kind => {
+    const cap = redpillReplies[kind];
+    const ctx: E2EEContext = {
+      ...v2Ctx(),
+      privateKey: hexToBytes(cap.clientSecretHex),
+      v2: { model: cap.model, nonce: cap.nonce, ts: cap.ts },
+    };
+    let out = '';
+    const chunks =
+      kind === 'buffered'
+        ? [JSON.parse(cap.body)]
+        : cap.body.split('\n').filter(l => l.startsWith('data: ') && !l.includes('[DONE]')).map(l => JSON.parse(l.slice(6)));
+    for (const c of chunks) {
+      for (const ch of c.choices) {
+        const part = kind === 'buffered' ? 'message' : 'delta';
+        const v = ch[part]?.content;
+        if (typeof v === 'string' && v) out += openField(v, ctx, `choices.${ch.index}.${part}.content`, c.id);
+      }
+    }
+    expect(out).toBe('ready');
+  });
+});
+
+describe('sealField / openField: NEAR contexts are unchanged', () => {
+  it('ed25519: sealField is encryptContent, openField is decryptContent', () => {
+    expect(modelOpenEd25519(sealField('same bytes', edCtx(), 'messages.0.content'), EDS)).toBe('same bytes');
+    const clientSecret = ed25519.utils.randomSecretKey();
+    const blob = modelSealEd25519('reply', ed25519.getPublicKey(clientSecret));
+    expect(openField(blob, { ...edCtx(), privateKey: clientSecret }, 'choices.0.message.content', 'any')).toBe('reply');
+  });
+
+  it('ecdsa: sealField is encryptContent, openField is decryptContent', () => {
+    expect(modelOpenEcdsa(sealField('same bytes', ecCtx(), 'messages.0.content'), ECS)).toBe('same bytes');
+    const clientSecret = secp256k1.utils.randomSecretKey();
+    const blob = modelSealEcdsa('reply', secp256k1.getPublicKey(clientSecret, false));
+    expect(openField(blob, { ...ecCtx(), privateKey: clientSecret }, 'choices.0.message.content', 'any')).toBe('reply');
   });
 });

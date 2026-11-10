@@ -83,6 +83,29 @@ export interface E2EEHeaders {
   'X-Encryption-Version'?: string;
 }
 
+/** RedPill's E2EE v2 headers (Dstack-TEE private-ai-gateway spec/e2ee-v2.md). No
+ *  `X-Signing-Algo`: sending it selects RedPill's legacy path. `X-Mera-Provider`
+ *  rides here so every call site that spreads `ctx.headers` routes to RedPill. */
+export interface E2EEV2Headers {
+  'X-E2EE-Version': '2';
+  'X-Client-Pub-Key': string;
+  'X-Model-Pub-Key': string;
+  'X-E2EE-Nonce': string;
+  'X-E2EE-Timestamp': string;
+  'X-Mera-Provider': 'redpill';
+}
+
+/** What a v2 ciphertext's AAD binds besides the field: one request's model, nonce and time.
+ *  RedPill rejects a reused nonce, so one v2 context serves ONE upstream request. */
+export interface E2EEV2Params {
+  /** The request's top-level `model`, byte for byte. */
+  model: string;
+  /** 32 random bytes, hex. */
+  nonce: string;
+  /** Unix seconds. RedPill rejects |now - ts| > 300. */
+  ts: number;
+}
+
 /** Per-request crypto state. `privateKey` is the client's secret (Ed25519 or
  *  secp256k1, both 32 bytes) — needed at response-decryption time. Kept as
  *  bytes for in-flight use; serialized to hex for durable storage. `algo` must
@@ -92,7 +115,9 @@ export interface E2EEContext {
   privateKey: Uint8Array;
   clientPubKeyHex: string;
   algo: SigningAlgo;
-  headers: E2EEHeaders;
+  headers: E2EEHeaders | E2EEV2Headers;
+  /** Present only on a RedPill v2 context; NEAR contexts never carry it. */
+  v2?: E2EEV2Params;
 }
 
 export function bytesToHex(b: Uint8Array): string {
@@ -206,6 +231,7 @@ export function encryptContent(
   ctx: E2EEContext,
   endpoint = '',
 ): string {
+  if (ctx.v2) throw new Error(`${TAG} encryptContent: a v2 context seals through sealField (the AAD needs the field path)`);
   // Last line of defence before the raw curve primitives. Any path that builds
   // a context pairing a key with the wrong algo fails HERE, typed and
   // attributable, rather than as an untyped noble error several frames deeper
@@ -341,4 +367,89 @@ function decryptEcdsa(hexBlob: string, privateKey: Uint8Array): string {
   const key = deriveEcdsaKey(privateKey, ephPub);
   const plaintext = gcm(key, iv).decrypt(ct);
   return new TextDecoder().decode(plaintext);
+}
+
+
+// ─── RedPill E2EE v2: secp256k1 ECDH + HKDF + AES-256-GCM with a JCS AAD ─────
+// Spec: Dstack-TEE/private-ai-gateway spec/e2ee-v2.md (frozen through 2027-02-10).
+// Blob layout matches the NEAR ecdsa blob; the HKDF info differs and every field
+// carries an AAD binding it to its path, the request's model, nonce and time.
+
+export const V2_ALGO = 'secp256k1-aes-256-gcm-hkdf-sha256';
+const HKDF_INFO_V2 = new TextEncoder().encode('aci.e2ee.v2.secp256k1');
+
+/** RFC 8785 JCS of the AAD object. Every value is a string or an integer, so sorted keys
+ *  plus JSON.stringify per value is exact JCS. `responseId` given = response direction. */
+export function v2Aad(algo: string, p: E2EEV2Params, field: string, responseId?: string): Uint8Array {
+  const o: Record<string, string | number> = {
+    purpose: responseId === undefined ? 'aci.e2ee.request.v2' : 'aci.e2ee.response.v2',
+    algo,
+    model: p.model,
+    field,
+    nonce: p.nonce,
+    ts: p.ts,
+    ...(responseId === undefined ? {} : { id: responseId }),
+  };
+  const body = Object.keys(o).sort().map(k => `${JSON.stringify(k)}:${JSON.stringify(o[k])}`).join(',');
+  return new TextEncoder().encode(`{${body}}`);
+}
+
+function deriveV2Key(secret: Uint8Array, peerPub65: Uint8Array): Uint8Array {
+  const x = secp256k1.getSharedSecret(secret, peerPub65).slice(1, 33);
+  return hkdf(sha256, x, undefined, HKDF_INFO_V2, 32);
+}
+
+/** The v2 request headers. `modelPubKeyHex` is the raw 64-byte key; RedPill's keyset lists
+ *  it as the 65-byte `04` form, and the header must equal that entry. */
+export function buildE2EEV2Headers(
+  clientPubKeyHex: string,
+  modelPubKeyHex: string,
+  p: E2EEV2Params,
+): E2EEV2Headers {
+  return {
+    'X-E2EE-Version': '2',
+    'X-Client-Pub-Key': clientPubKeyHex,
+    'X-Model-Pub-Key': `04${modelPubKeyHex}`,
+    'X-E2EE-Nonce': p.nonce,
+    'X-E2EE-Timestamp': String(p.ts),
+    'X-Mera-Provider': 'redpill',
+  };
+}
+
+/** Seal one request field (`messages.<i>.content`). NEAR contexts ignore `field`. */
+export function sealField(plaintext: string, ctx: E2EEContext, field: string, endpoint = ''): string {
+  if (!ctx.v2) return encryptContent(plaintext, ctx, endpoint);
+  const modelPub65 = new Uint8Array(65);
+  modelPub65[0] = 0x04;
+  modelPub65.set(hexToBytes(ctx.modelPubKeyHex), 1);
+  const eph = secp256k1.utils.randomSecretKey();
+  const iv = randomBytes(ECDSA_IV_LEN);
+  const ct = gcm(deriveV2Key(eph, modelPub65), iv, v2Aad(V2_ALGO, ctx.v2, field)).encrypt(
+    new TextEncoder().encode(plaintext),
+  );
+  const blob = new Uint8Array(ECDSA_EPH_PUB_LEN + ECDSA_IV_LEN + ct.length);
+  blob.set(secp256k1.getPublicKey(eph, false), 0);
+  blob.set(iv, ECDSA_EPH_PUB_LEN);
+  blob.set(ct, ECDSA_EPH_PUB_LEN + ECDSA_IV_LEN);
+  return bytesToHex(blob);
+}
+
+/** Open one response field. `field` is its path (`choices.<index>.delta.content`) and
+ *  `responseId` the clear response or chunk `id` (`''` when absent). NEAR ignores both. */
+export function openField(
+  hexBlob: string,
+  ctx: Pick<E2EEContext, 'privateKey' | 'algo' | 'v2'>,
+  field: string,
+  responseId: string,
+  endpoint = '',
+): string {
+  if (!ctx.v2) return decryptContent(hexBlob, ctx.privateKey, ctx.algo, endpoint);
+  const blob = hexToBytes(hexBlob);
+  const headerLen = ECDSA_EPH_PUB_LEN + ECDSA_IV_LEN;
+  if (blob.length < headerLen + GCM_TAG_LEN) {
+    throw new Error(`RedPill decrypt: v2 blob too short (${blob.length} bytes)`);
+  }
+  const key = deriveV2Key(ctx.privateKey, blob.slice(0, ECDSA_EPH_PUB_LEN));
+  const aad = v2Aad(V2_ALGO, ctx.v2, field, responseId);
+  return new TextDecoder().decode(gcm(key, blob.slice(ECDSA_EPH_PUB_LEN, headerLen), aad).decrypt(blob.slice(headerLen)));
 }

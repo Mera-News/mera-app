@@ -29,11 +29,15 @@ import { retryAfterMs } from '../algorithms/retry-after';
 import * as gatewayRateLimiter from '../llm/gateway-rate-limiter';
 import { assertNoCleartextToolFields } from '../llm/text-tool-protocol';
 import { linkedAbort, raceSignal } from '../llm/abort-race';
-import { getCachedAttestation, setCachedAttestation } from './e2ee-cache';
+import { getCachedAttestation, isKeyVerified, markKeyVerified, setCachedAttestation } from './e2ee-cache';
+import type { E2EEProvider } from './provider';
+import type { AttestationInput, CheckId, CheckResult } from '../algorithms/attestation-verify';
+import { verifyKey } from './key-verifier';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import {
   algoForKeyBytes,
   buildE2EEHeaders,
+  buildE2EEV2Headers,
   bytesToHex,
   CLIENT_SECRET_LEN,
   encryptContent as encryptContentPure,
@@ -41,8 +45,12 @@ import {
   hexToBytes,
   ModelKeyAlgoMismatchError,
   ModelKeyValidationError,
+  openField as openFieldPure,
+  sealField,
+  V2_ALGO,
   type E2EEContext,
   type E2EEHeaders,
+  type E2EEV2Headers,
   type ModelKeyValidationDetails,
   type SigningAlgo,
 } from './e2ee-crypto';
@@ -54,8 +62,54 @@ export {
   buildE2EEHeaders,
   ModelKeyAlgoMismatchError,
   ModelKeyValidationError,
+  sealField,
 };
-export type { E2EEContext, E2EEHeaders, ModelKeyValidationDetails, SigningAlgo };
+export type { E2EEContext, E2EEHeaders, E2EEV2Headers, E2EEProvider, ModelKeyValidationDetails, SigningAlgo };
+
+/**
+ * The key's attestation did not verify, so nothing was encrypted to it (route1: hot-path
+ * verification, fail-closed). Thrown from the key fetch before the key is cached; the router
+ * treats it as a model failure and moves to the next profile. Every field is public data.
+ */
+export class AttestationVerifyError extends Error {
+  readonly model: string;
+  readonly provider: E2EEProvider;
+  readonly failedChecks: CheckId[];
+  constructor(model: string, provider: E2EEProvider, failures: CheckResult[]) {
+    super(
+      `${provider} attestation did not verify for ${model}: ${failures.map(f => `${f.id} (${f.detail})`).join('; ').slice(0, 400)}`,
+    );
+    this.name = 'AttestationVerifyError';
+    this.model = model;
+    this.provider = provider;
+    this.failedChecks = failures.map(f => f.id);
+    Object.setPrototypeOf(this, AttestationVerifyError.prototype);
+  }
+}
+
+function assertKeyVerified(
+  provider: E2EEProvider,
+  model: string,
+  input: AttestationInput,
+): void {
+  const id = `${provider}:${input.signingPublicKey.toLowerCase()}`;
+  if (isKeyVerified(id)) return;
+  const failures = verifyKey(input);
+  if (failures.length > 0) {
+    const err = new AttestationVerifyError(model, provider, failures);
+    logger.warn(`${TAG} attestation did not verify, key refused`, {
+      model,
+      provider,
+      failedChecks: err.failedChecks.join(','),
+    });
+    throw err;
+  }
+  markKeyVerified(id);
+}
+
+/** Cache and dedupe key: NEAR keeps the bare model id (unchanged), RedPill is namespaced. */
+const cacheKey = (model: string, provider: E2EEProvider) =>
+  provider === 'near' ? model : `${provider}:${model}`;
 
 /**
  * `encryptContent` / `decryptContent` with this module's attestation endpoint
@@ -69,6 +123,15 @@ export type { E2EEContext, E2EEHeaders, ModelKeyValidationDetails, SigningAlgo }
  */
 export function encryptContent(plaintext: string, ctx: E2EEContext): string {
   return encryptContentPure(plaintext, ctx, ATTESTATION_API);
+}
+/** Open one response field; see `openField` in e2ee-crypto. NEAR contexts ignore field and id. */
+export function openField(
+  hexBlob: string,
+  ctx: Pick<E2EEContext, 'privateKey' | 'algo' | 'v2'>,
+  field: string,
+  responseId: string,
+): string {
+  return openFieldPure(hexBlob, ctx, field, responseId, ATTESTATION_API);
 }
 export function decryptContent(
   hexBlob: string,
@@ -217,19 +280,21 @@ export async function fetchModelPublicKey(
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
   opts: AttestationFetchOptions = {},
+  provider: E2EEProvider = 'near',
 ): Promise<ModelAttestation> {
-  const cached = getCachedAttestation(model);
+  const key = cacheKey(model, provider);
+  const cached = getCachedAttestation(key);
   if (cached) return cached;
 
   // A joiner with a deadline races the shared fetch; the fetch itself runs on
   // with the first caller's options.
-  const inFlight = pendingAttestations.get(model);
+  const inFlight = pendingAttestations.get(key);
   if (inFlight) return raceSignal(inFlight, opts.signal);
 
-  const run = fetchModelPublicKeyUncached(model, lane, opts).finally(() => {
-    pendingAttestations.delete(model);
+  const run = fetchModelPublicKeyUncached(model, lane, opts, provider).finally(() => {
+    pendingAttestations.delete(key);
   });
-  pendingAttestations.set(model, run);
+  pendingAttestations.set(key, run);
   return run;
 }
 
@@ -237,6 +302,7 @@ async function fetchModelPublicKeyUncached(
   model: string,
   lane: gatewayRateLimiter.GatewayLane,
   opts: AttestationFetchOptions = {},
+  provider: E2EEProvider = 'near',
 ): Promise<ModelAttestation> {
   const { signal, singleAttempt = false } = opts;
   // Dev-only timing: this is the uncached NEAR pass-through — the dominant
@@ -252,9 +318,13 @@ async function fetchModelPublicKeyUncached(
     );
   }
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  // RedPill's report route takes the model only; NEAR's request is unchanged byte for byte.
+  if (provider === 'redpill') headers['X-Mera-Provider'] = 'redpill';
 
   const url =
-    `${ATTESTATION_API}?model=${encodeURIComponent(model)}&signing_algo=ed25519`;
+    provider === 'redpill'
+      ? `${ATTESTATION_API}?model=${encodeURIComponent(model)}`
+      : `${ATTESTATION_API}?model=${encodeURIComponent(model)}&signing_algo=ed25519`;
 
   // ONE grant for the whole fetch, taken OUTSIDE withRetry. Inside the closure
   // it would charge the background lane's 3s spacing per attempt on a path that
@@ -300,13 +370,8 @@ async function fetchModelPublicKeyUncached(
   const raw = await res.text();
   if (!raw.trim()) throw new NearAttestationError(res.status, 'empty body');
   const data = JSON.parse(raw) as Record<string, unknown>;
-  const mas = data.model_attestations as Record<string, unknown>[] | undefined;
-  const pub = mas?.[0]?.signing_public_key as string | undefined;
-  if (!pub) {
-    throw new Error(
-      `NEAR attestation: signing_public_key missing. top=${Object.keys(data).join(',')}`,
-    );
-  }
+  const served = provider === 'redpill' ? readRedPillKey(data, model) : readNearKey(data);
+  const pub = served.keyHex;
   // Detect the algo from the returned key length rather than asserting a single
   // curve: NEAR's TEE fleet returns either a 32-byte Ed25519 or a 64-byte
   // secp256k1 key (we request ed25519 as a preference, but the param is only
@@ -347,12 +412,20 @@ async function fetchModelPublicKeyUncached(
       throw err;
     }
   }
+  // Hot-path verification, fail-closed, BEFORE the key is cached or used: the TDX quote must
+  // chain to the pinned Intel root and commit this key. Runs after the curve check so an
+  // off-curve key keeps its own typed error (MERA-APP-39).
+  assertKeyVerified(provider, model, {
+    quoteHex: served.quoteHex ?? '',
+    signingPublicKey: served.boundKeyHex,
+    signingAlgo: served.signingAlgo,
+  });
   const attestation: ModelAttestation = {
     publicKey: pub,
     algo,
-    signingId: (mas?.[0]?.signing_address as string | undefined) ?? undefined,
+    signingId: served.signingId,
   };
-  setCachedAttestation(model, attestation);
+  setCachedAttestation(cacheKey(model, provider), attestation);
   logger.debug('[chat-timing] attestation fetch', {
     ms: Date.now() - attestStartMs,
     model,
@@ -360,6 +433,60 @@ async function fetchModelPublicKeyUncached(
     cache: 'miss',
   });
   return attestation;
+}
+
+interface ServedKey {
+  /** The key the app encrypts to, in the app's form (32 ed25519 or 64 raw secp256k1 bytes). */
+  keyHex: string;
+  /** The same key as the report states it, which is what the quote's report_data commits. */
+  boundKeyHex: string;
+  quoteHex?: string;
+  signingAlgo?: string;
+  signingId?: string;
+}
+
+/** NEAR: `model_attestations[0]`. Unchanged from before route1, the quote read added. */
+function readNearKey(data: Record<string, unknown>): ServedKey {
+  const mas = data.model_attestations as Record<string, unknown>[] | undefined;
+  const pub = mas?.[0]?.signing_public_key as string | undefined;
+  if (!pub) {
+    throw new Error(
+      `NEAR attestation: signing_public_key missing. top=${Object.keys(data).join(',')}`,
+    );
+  }
+  return {
+    keyHex: pub,
+    boundKeyHex: pub,
+    quoteHex: mas?.[0]?.intel_quote as string | undefined,
+    signingAlgo: mas?.[0]?.signing_algo as string | undefined,
+    signingId: (mas?.[0]?.signing_address as string | undefined) ?? undefined,
+  };
+}
+
+/**
+ * RedPill (an `aci/1` report on its legacy route, see .state/route1/redpill-wire.md): the key
+ * is the secp256k1 entry of `attestation.workload_keyset.e2ee_public_keys`, served as the
+ * 65-byte 04 form; the top-level `intel_quote` commits its Ethereum address. The app keeps
+ * the raw 64 bytes, like a NEAR ecdsa key.
+ */
+function readRedPillKey(data: Record<string, unknown>, model: string): ServedKey {
+  const att = data.attestation as { workload_keyset?: { e2ee_public_keys?: { algo?: string; public_key?: string }[] } } | undefined;
+  const caps = data.service_capabilities as { supported_e2ee_versions?: unknown[] } | undefined;
+  if (!caps?.supported_e2ee_versions?.includes('2')) {
+    throw new Error(`RedPill attestation: E2EE v2 not offered (model=${model})`);
+  }
+  const entry = att?.workload_keyset?.e2ee_public_keys?.find(k => k.algo === V2_ALGO);
+  const served = entry?.public_key?.replace(/^0x/, '').toLowerCase();
+  if (!served || !(served.length === 130 && served.startsWith('04')) && served.length !== 128) {
+    throw new Error(`RedPill attestation: no ${V2_ALGO} key. top=${Object.keys(data).join(',')}`);
+  }
+  return {
+    keyHex: served.length === 130 ? served.slice(2) : served,
+    boundKeyHex: served,
+    quoteHex: data.intel_quote as string | undefined,
+    signingAlgo: data.signing_algo as string | undefined,
+    signingId: (data.signing_address as string | undefined) ?? undefined,
+  };
 }
 
 /** One model attestation entry, as far as verification cares about it. */
@@ -405,6 +532,7 @@ export interface RawModelAttestation {
 export async function fetchAttestationForVerification(
   model: string,
   nonceHex: string,
+  provider: E2EEProvider = 'near',
 ): Promise<{ attestation: RawModelAttestation; nonce: string }> {
   const token = await getJwtToken();
   // Same guard as the hot path: the route is behind the gateway's AuthGuard, so
@@ -418,10 +546,12 @@ export async function fetchAttestationForVerification(
     );
   }
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (provider === 'redpill') headers['X-Mera-Provider'] = 'redpill';
 
   const url =
     `${ATTESTATION_API}?model=${encodeURIComponent(model)}` +
-    `&signing_algo=ed25519&nonce=${encodeURIComponent(nonceHex)}`;
+    (provider === 'redpill' ? '' : '&signing_algo=ed25519') +
+    `&nonce=${encodeURIComponent(nonceHex)}`;
 
   // INTERACTIVE, hardcoded: this function has exactly one caller, the user's
   // verify tap, and it bypasses every cache — so it is always a real request
@@ -434,6 +564,20 @@ export async function fetchAttestationForVerification(
     throw new NearAttestationError(res.status, body);
   }
   const data = (await res.json()) as Record<string, unknown>;
+  if (provider === 'redpill') {
+    // The report verifies the key the app encrypts to: the keyset's secp256k1 entry.
+    const served = readRedPillKey(data, model);
+    return {
+      attestation: {
+        signing_public_key: served.boundKeyHex,
+        signing_algo: served.signingAlgo,
+        intel_quote: served.quoteHex,
+        request_nonce: nonceHex,
+        nvidia_payload: data.nvidia_payload as string | undefined,
+      },
+      nonce: nonceHex,
+    };
+  }
   const mas = data.model_attestations as RawModelAttestation[] | undefined;
   const attestation = mas?.[0];
   if (!attestation) {
@@ -471,10 +615,15 @@ export async function prepareE2EEContext(
   lane: gatewayRateLimiter.GatewayLane = 'background',
   opts: AttestationFetchOptions = {},
   purpose?: CloudPurpose,
+  provider: E2EEProvider = 'near',
 ): Promise<E2EEContext> {
   await assertCloudAllowed(purpose);
-  const attestation = await fetchModelPublicKey(model, lane, opts);
+  const attestation = await fetchModelPublicKey(model, lane, opts, provider);
   const { algo } = attestation;
+  if (provider === 'redpill') {
+    const privateKey = secp256k1.utils.randomSecretKey();
+    return v2Context(model, attestation.publicKey, privateKey);
+  }
 
   // Generate the client keypair on the algo's own curve. The server sees the
   // public half in X-Client-Pub-Key and encrypts responses toward it; the
@@ -542,9 +691,10 @@ export async function rebuildE2EEContext(
   algo: SigningAlgo,
   lane: gatewayRateLimiter.GatewayLane = 'background',
   opts: AttestationFetchOptions = {},
+  provider: E2EEProvider = 'near',
 ): Promise<E2EEContext> {
   await assertCloudAllowed();
-  const attestation = await fetchModelPublicKey(model, lane, opts);
+  const attestation = await fetchModelPublicKey(model, lane, opts, provider);
   if (attestation.algo !== algo) {
     throw new ModelKeyAlgoMismatchError(
       `${TAG} rebuildE2EEContext: attested algo ${attestation.algo} != stored ${algo} (model=${model}); cannot pair a ${algo} keypair with a ${attestation.algo} model key`,
@@ -563,6 +713,7 @@ export async function rebuildE2EEContext(
       { keyHex: attestation.publicKey, algo, model, endpoint: ATTESTATION_API },
     );
   }
+  if (provider === 'redpill') return v2Context(model, attestation.publicKey, privateKey);
   const clientPubKeyHex =
     algo === 'ecdsa'
       ? bytesToHex(secp256k1.getPublicKey(privateKey, false))
@@ -584,6 +735,18 @@ export async function rebuildE2EEContext(
 }
 
 /**
+ * A RedPill E2EE v2 context for ONE request: RedPill rejects a reused nonce and a timestamp
+ * more than 300s off, so a context is built per request, never kept. The client key is
+ * secp256k1, sent as the 65-byte uncompressed point.
+ */
+function v2Context(model: string, modelPubKeyHex: string, privateKey: Uint8Array): E2EEContext {
+  const clientPubKeyHex = bytesToHex(secp256k1.getPublicKey(privateKey, false));
+  const v2 = { model, nonce: bytesToHex(randomBytes(32)), ts: Math.floor(Date.now() / 1000) };
+  const headers: E2EEV2Headers = buildE2EEV2Headers(clientPubKeyHex, modelPubKeyHex, v2);
+  return { modelPubKeyHex, privateKey, clientPubKeyHex, algo: 'ecdsa', headers, v2 };
+}
+
+/**
  * Encrypt every non-empty `content` in-place and return the context. Fails closed: any
  * message with a non-string content or a key besides role/content throws before anything
  * is sealed, because such a field would travel in clear.
@@ -593,6 +756,7 @@ export async function encryptMessages(
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
   purpose?: CloudPurpose,
+  provider: E2EEProvider = 'near',
 ): Promise<E2EEContext> {
   // The six tool keys keep their typed CleartextToolDataError (the chat guard's contract).
   assertNoCleartextToolFields(messages);
@@ -606,11 +770,12 @@ export async function encryptMessages(
       }
     }
   }
-  const ctx = await prepareE2EEContext(model, lane, {}, purpose);
-  for (const msg of messages) {
-    if (msg.content.length === 0) continue;
-    msg.content = encryptContent(msg.content, ctx);
-  }
+  const ctx = await prepareE2EEContext(model, lane, {}, purpose, provider);
+  // The field path is the message's index in the array as sent (v2 binds it into the AAD).
+  messages.forEach((msg, i) => {
+    if (msg.content.length === 0) return;
+    msg.content = sealField(msg.content, ctx, `messages.${i}.content`, ATTESTATION_API);
+  });
   return ctx;
 }
 

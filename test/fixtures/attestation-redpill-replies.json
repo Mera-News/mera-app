@@ -1,0 +1,35 @@
+{
+ "_note": "Real RedPill E2EE v2 replies (qwen/qwen3.8-27b, 2026-11-10, route1 P2). clientSecretHex is a throwaway key minted for this capture only; the prompt was a fixed harmless line. Each reply decrypts to \"ready\".",
+ "buffered": {
+  "clientSecretHex": "91045544e2ac78cf55b28b244a2fe006060397e871937c49ae2bf0d8dcce4039",
+  "clientPubKeyHex": "04b68b39eb236d374e2d3d97bafd34f2ca7877c8fd5783489afc5e98e2e0d711446d26a81995dc12c31e19b430a915d31fa2d6db9a515341c932d22d395b2b2788",
+  "modelKeyHex": "04c4201704005a835ae62f8bffea2100cdb059a5a5bd0e79e5306bd3fd1358b7ab854994006c40b075724b3681b5ddd3ac455a2e7ec5d8e57a28b90f97a2f99c1f",
+  "model": "qwen/qwen3.8-27b",
+  "nonce": "9cd2010fef56fa631aad22bf875443345067138fd874fd58d4a596a78ea8f20a",
+  "ts": 1794270267,
+  "status": 200,
+  "e2eeHeaders": {
+   "x-e2ee-algo": "secp256k1-aes-256-gcm-hkdf-sha256",
+   "x-e2ee-applied": "true",
+   "x-e2ee-version": "2",
+   "x-receipt-id": "rcpt-f93a5822dd1a06fe27bf0166"
+  },
+  "body": "{\"id\":\"req_1936cd30b66d3bdae94225665a21342d\",\"object\":\"chat.completion\",\"created\":1794270278,\"model\":\"qwen/qwen3.8-27b\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"04d4db76d0d0309c24cc3afde7ba9c9d0f818ac333088c5bbd9b8564a2d82e7d63e0836466df5ca00f1d6b2f0529e331b2ffb62888def359255b12fc730b6d9a13c41f43d44e2a3fcc16580b1c8e2a07418e1d8edc5faf4285eab7fdbae07472eb25\",\"reasoning_content\":null,\"tool_calls\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":29,\"total_tokens\":31,\"completion_tokens\":2,\"prompt_tokens_details\":null,\"completion_tokens_details\":{\"reasoning_tokens\":0},\"reasoning_tokens\":0,\"cost\":0.0000108}}"
+ },
+ "stream": {
+  "clientSecretHex": "b6f911e0ba0509c1c98c21a1f0a6d0251dd32c3dc1ee6f68a72ac67a92b94f2b",
+  "clientPubKeyHex": "0478de5dfb1eed2e06b1170e92e76d6c0178027096cfb53f8e2d1e3ef9291fc778c5b4042b44e6c975f39ccfb97b4b1079606d49161b4245af9036ff6e87f84581",
+  "modelKeyHex": "04c4201704005a835ae62f8bffea2100cdb059a5a5bd0e79e5306bd3fd1358b7ab854994006c40b075724b3681b5ddd3ac455a2e7ec5d8e57a28b90f97a2f99c1f",
+  "model": "qwen/qwen3.8-27b",
+  "nonce": "f3a2f648d49687a92848b2164b5ee6044fd8b9f99459ade20dbceb135dd5e660",
+  "ts": 1794270278,
+  "status": 200,
+  "e2eeHeaders": {
+   "x-e2ee-algo": "secp256k1-aes-256-gcm-hkdf-sha256",
+   "x-e2ee-applied": "true",
+   "x-e2ee-version": "2",
+   "x-receipt-id": "rcpt-b697f0ebcc410c7b4be05257"
+  },
+  "body": "data: {\"id\":\"req_b78fbaeeb2e64a094f68c89a1aa07a8d\",\"object\":\"chat.completion.chunk\",\"created\":1794270279,\"model\":\"qwen/qwen3.8-27b\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":null,\"role\":\"assistant\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"req_b78fbaeeb2e64a094f68c89a1aa07a8d\",\"object\":\"chat.completion.chunk\",\"created\":1794270279,\"model\":\"qwen/qwen3.8-27b\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":null,\"content\":\"04705d6a682c5e20ce657a334f47157805f4156749c94d5844e81c04daa6d7b8d87ef107b359154cc0e46b9d3e2c09ebef018cd9ae77db20ff355d73318465082b44dee0e9fad39dce2b65f82f5daad0cdb0fef3827a034821f470b595813df7244c\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"req_b78fbaeeb2e64a094f68c89a1aa07a8d\",\"object\":\"chat.completion.chunk\",\"created\":1794270280,\"model\":\"qwen/qwen3.8-27b\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}]}\n\ndata: {\"id\":\"req_b78fbaeeb2e64a094f68c89a1aa07a8d\",\"object\":\"chat.completion.chunk\",\"created\":1794270280,\"model\":\"qwen/qwen3.8-27b\",\"choices\":[],\"usage\":{\"prompt_tokens\":29,\"total_tokens\":31,\"completion_tokens\":2,\"prompt_tokens_details\":null,\"completion_tokens_details\":{\"reasoning_tokens\":0},\"reasoning_tokens\":0,\"cost\":0.0000108}}\n\ndata: [DONE]\n\n"
+ }
+}

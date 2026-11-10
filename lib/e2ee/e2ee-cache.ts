@@ -9,6 +9,14 @@ interface CacheEntry {
 
 const cache = new Map<string, CacheEntry>();
 
+/** Keys whose attestation passed the hot-path check, as `provider:keyHex`. A key proven once
+ *  stays proven, so a TTL refetch serving the same key does not verify the quote again. */
+const verifiedKeys = new Set<string>();
+export const isKeyVerified = (id: string): boolean => verifiedKeys.has(id);
+export const markKeyVerified = (id: string): void => {
+  verifiedKeys.add(id);
+};
+
 /** Return cached model attestation for `model` if still valid. */
 export function getCachedAttestation(model: string): ModelAttestation | null {
   const entry = cache.get(model);
@@ -53,4 +61,5 @@ export function invalidateCachedAttestation(model: string): void {
  */
 export function clearAttestationCache(): void {
   cache.clear();
+  verifiedKeys.clear();
 }

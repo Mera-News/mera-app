@@ -16,18 +16,15 @@
  * genuine enclave exists somewhere; a gateway could serve a real NEAR quote
  * alongside its own substituted pubkey and pass. See CHECK_REPORT_DATA_KEY.
  *
- * FAIL-OPEN, DELIBERATELY (for now)
- * ---------------------------------
- * Nothing here gates inference. `verifyAttestation` reports per-check results
- * for display and the caller ignores them for routing purposes. Two reasons:
- *   1. We do not check platform TCB currency or QE identity (that needs Intel
- *      PCS collateral we don't fetch), so a "fail" here is not yet a complete
- *      statement about the platform.
- *   2. This has never run in the field. Flipping straight to fail-closed would
- *      let one unforeseen encoding quirk brick cloud mode for every user.
- * FLIP TO FAIL-CLOSED once field telemetry shows the pass rate is ~100%. That
- * change belongs at the CALL SITE (refuse to encrypt), not here — this module
- * stays a pure reporter.
+ * A REPORTER; THE GATE IS AT THE CALL SITE
+ * -----------------------------------------
+ * `verifyAttestation` reports per-check results and never throws. Since route1
+ * the inference hot path gates on a subset of them: `hotPathFailures` names the
+ * checks that must pass (genuine quote under the pinned root that commits the
+ * key) and `lib/e2ee/e2ee-service` refuses, fail-closed, to encrypt to a key
+ * that fails them. Freshness, TCB, GPU and deployed software stay report-only:
+ * the hot path is nonce-free and fetches no collateral. The Settings verify tap
+ * still shows the full report.
  *
  * NO WEBCRYPTO / NO NATIVE MODULES
  * --------------------------------
@@ -48,7 +45,9 @@
  *     is embedded in the quote itself, so no collateral fetch is needed to
  *     build the chain.
  *   - `report_data` (last 64 bytes of the TD report body) is exactly
- *     `signing_public_key (32B) ‖ request_nonce (32B)`.
+ *     `signing_public_key (32B) ‖ request_nonce (32B)` for an ed25519 key. A
+ *     secp256k1 key is committed as its Ethereum address (keccak256(x‖y), last
+ *     20 bytes) ‖ 12 zero bytes ‖ nonce: measured on RedPill, 2026-11-10.
  *   - The `nonce` query param IS honoured upstream and lands in that
  *     `report_data`, which is what makes freshness verifiable at all.
  *   - Intel's signatures are HIGH-S. `@noble/curves` rejects those by default
@@ -115,6 +114,7 @@ import { mod, pow2 } from '@noble/curves/abstract/modular.js';
 import { p256, p384 } from '@noble/curves/nist.js';
 import { bytesToNumberBE, numberToBytesBE } from '@noble/curves/utils.js';
 import { sha256, sha384 } from '@noble/hashes/sha2.js';
+import { keccak_256 } from '@noble/hashes/sha3.js';
 
 // ─── Result model ────────────────────────────────────────────────────────────
 
@@ -668,7 +668,7 @@ export function verifyAttestation(input: AttestationInput): VerificationReport {
   //    the one that enclave committed to. Without it a gateway can serve a real
   //    NEAR quote next to its own key and read every prompt.
   const committedKey = quote.reportData.subarray(0, 32);
-  if (keyBytes && keyBytes.length === 32 && equalBytes(committedKey, keyBytes)) {
+  if (keyBytes && quoteCommitsKey(committedKey, keyBytes)) {
     add('report-data-key', 'pass', `signing key is committed in the quote's report_data`);
   } else {
     add(
@@ -764,6 +764,43 @@ export function verifyAttestation(input: AttestationInput): VerificationReport {
   return summarize(checks);
 }
 
+/**
+ * Whether the first 32 bytes of `report_data` commit `key`. An ed25519 key (32 bytes) sits
+ * there verbatim. A secp256k1 key (64-byte raw x‖y, or 65 with the 0x04 prefix) is committed
+ * as its Ethereum address, keccak256(x‖y)[12..32], followed by 12 zero bytes: measured on
+ * RedPill's legacy report route, and the layout NEAR's verifier documents for its ecdsa keys.
+ */
+function quoteCommitsKey(committed: Uint8Array, key: Uint8Array): boolean {
+  if (key.length === 32) return equalBytes(committed, key);
+  const raw = key.length === 65 && key[0] === 0x04 ? key.subarray(1) : key.length === 64 ? key : null;
+  if (!raw) return false;
+  const address = keccak_256(raw).subarray(12);
+  return equalBytes(committed.subarray(0, 20), address) && committed.subarray(20).every(b => b === 0);
+}
+
+/**
+ * The checks the inference hot path requires to PASS before it encrypts to a key: a genuine
+ * TDX quote under the pinned Intel root that commits that key. Freshness, TCB, GPU and the
+ * deployment log are not required (the hot path is nonce-free and fetches no collateral);
+ * `signing-algo` must only not fail, because a report may omit it.
+ */
+export const HOT_PATH_CHECKS: readonly CheckId[] = [
+  'quote-structure',
+  'report-data-key',
+  'qe-report-signature',
+  'attestation-key-binding',
+  'quote-signature',
+  'pck-chain',
+  'root-ca-pin',
+];
+
+/** The checks that keep `report` from gating a key in: empty means the key may be used. */
+export function hotPathFailures(report: VerificationReport): CheckResult[] {
+  return report.checks.filter(c =>
+    HOT_PATH_CHECKS.includes(c.id) ? c.status !== 'pass' : c.id === 'signing-algo' && c.status === 'fail',
+  );
+}
+
 function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
   const out = new Uint8Array(a.length + b.length);
   out.set(a, 0);
@@ -785,7 +822,9 @@ function addAlgoCheck(
     return;
   }
   // The mapping the rest of the app uses: 32 → ed25519, 64 → ecdsa (secp256k1).
-  const expected = keyBytes.length === 32 ? 'ed25519' : keyBytes.length === 64 ? 'ecdsa' : null;
+  // A 65-byte 0x04-prefixed key is the same secp256k1 point (RedPill serves that form).
+  const isEcdsa = keyBytes.length === 64 || (keyBytes.length === 65 && keyBytes[0] === 0x04);
+  const expected = keyBytes.length === 32 ? 'ed25519' : isEcdsa ? 'ecdsa' : null;
   if (expected === null) {
     add('signing-algo', 'fail', `unsupported key length ${keyBytes.length}`);
   } else if (expected === signingAlgo) {
