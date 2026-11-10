@@ -12,7 +12,7 @@
     "firstTokenDeadlineMs": {
       "chat-tools": 30000,
       "chat-single": 30000,
-      "fact-check": 30000,
+      "fact-check": 120000,
       "scoring": 120000,
       "topics": 120000,
       "background": 120000
