@@ -306,7 +306,24 @@
     "refreshFeedAction": "Refresh your feed",
     "translationFailed": "Translation failed. Restart the app.",
     "similarArticles_one": "{{count}} similar article",
-    "similarArticles_other": "{{count}} similar articles"
+    "similarArticles_other": "{{count}} similar articles",
+    "outage": {
+      "title": "Mera's private AI is down for now.",
+      "pausedLabel": "Paused",
+      "workingLabel": "Working",
+      "laneScoring": "new article picks",
+      "laneChat": "chat",
+      "laneTopics": "new topics",
+      "working": "followed stories, World, Search, Saved, your Feed",
+      "followedStories": "Followed stories",
+      "world": "World",
+      "helpA11y": "Why is this paused?",
+      "helpTitle": "Why is this paused?",
+      "helpBody": "Mera only uses encrypted AI, and won't switch to an AI that can't keep your data private.",
+      "helpWorking": "Still working: followed stories, World, Search, Saved and fact checks.",
+      "helpBack": "It comes back on its own.",
+      "helpStatus": "AI provider status"
+    }
   },
   "relevance": {
     "emergency": "Emergency",
@@ -908,7 +925,19 @@
     "attestationDetailComposeTag": "Compose tag",
     "attestationDetailComposeCommit": "Compose commit",
     "attestationCopyDetails": "Copy details",
-    "attestationCopied": "Copied"
+    "attestationCopied": "Copied",
+    "providers": {
+      "title": "Provider",
+      "backup": "backup",
+      "modelsTitle": "Models in use",
+      "laneChat": "Chat",
+      "laneScoring": "Feed picks",
+      "laneTopics": "Topics",
+      "laneFactCheck": "Fact checks",
+      "laneBackground": "Background",
+      "paused": "Paused",
+      "openA11y": "Open {{provider}} website"
+    }
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",
