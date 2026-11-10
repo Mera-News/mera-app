@@ -20,7 +20,7 @@
           "ذكاء اصطناعي خاص",
           "ذكاء اصطناعي محلي"
         ],
-        "releaseNotes": "طريقة جديدة للبدء: تعرض لك ميرا الآن ما تستطيع فعله، وتتيح لك اختيار المكان الذي تبدأ منه.\n\n• المحفوظات أصبحت أبسط، مع «القراءة لاحقًا» في المقدمة وصفحة «الأرشيف» جديدة\n• إصلاحات للأخطاء وتحسينات",
+        "releaseNotes": "تواصل الدردشة والخلاصة العمل الآن حتى حين تتعطل إحدى خدمات الذكاء الاصطناعي لدى Mera. عندها يتحول Mera إلى خدمة خاصة أخرى تلقائيًا.\n\n• إذا توقفت خدمة الذكاء الاصطناعي لبعض الوقت، يعرض Mera ما يمكنك استخدامه\n• متابعة القصة تمنحك الآن خيارات أوضح\n• إذا انقطع اتصالك أثناء تنزيل الذكاء الاصطناعي على هاتفك، يكمل التنزيل من حيث توقف\n• إصلاحات للأخطاء",
         "marketingUrl": "https://mera.news/ar",
         "supportUrl": "https://mera.news/ar/faq",
         "privacyPolicyUrl": "https://mera.news/ar/privacy",
@@ -40,7 +40,7 @@
           "lokale KI",
           "mera"
         ],
-        "releaseNotes": "Ein neuer Einstieg: Mera zeigt dir jetzt, was es kann, und lässt dich wählen, wo du anfangen willst.\n\n• Gespeichert ist einfacher, mit Später lesen ganz vorn und einer neuen Seite Archiv\n• Fehlerbehebungen und Verbesserungen",
+        "releaseNotes": "Chat und dein Feed funktionieren jetzt auch weiter, wenn einer von Meras KI-Diensten Probleme hat. Mera wechselt dann selbstständig zu einem anderen privaten Dienst.\n\n• Wenn die KI eine Weile pausiert, zeigt Mera dir, was du trotzdem noch nutzen kannst\n• Wenn du einer Geschichte folgst, hast du jetzt klarere Auswahlmöglichkeiten\n• Wenn deine Verbindung abbricht, während Meras KI auf dein Telefon geladen wird, macht sie dort weiter, wo sie aufgehört hat\n• Fehlerbehebungen",
         "marketingUrl": "https://mera.news/de",
         "supportUrl": "https://mera.news/de/faq",
         "privacyPolicyUrl": "https://mera.news/de/privacy",
@@ -59,7 +59,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
+        "releaseNotes": "Chat and your Feed now keep working when one of Mera's AI services has a problem. Mera switches to another private one by itself.\n\n• If the AI pauses for a while, Mera shows what you can still use\n• Following a story now gives you clearer choices\n• If your connection drops while Mera's AI downloads to your phone, it picks up where it stopped\n• Bug fixes",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -78,7 +78,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
+        "releaseNotes": "Chat and your Feed now keep working when one of Mera's AI services has a problem. Mera switches to another private one by itself.\n\n• If the AI pauses for a while, Mera shows what you can still use\n• Following a story now gives you clearer choices\n• If your connection drops while Mera's AI downloads to your phone, it picks up where it stopped\n• Bug fixes",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -97,7 +97,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
+        "releaseNotes": "Chat and your Feed now keep working when one of Mera's AI services has a problem. Mera switches to another private one by itself.\n\n• If the AI pauses for a while, Mera shows what you can still use\n• Following a story now gives you clearer choices\n• If your connection drops while Mera's AI downloads to your phone, it picks up where it stopped\n• Bug fixes",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -116,7 +116,7 @@
           "private ai",
           "on-device ai"
         ],
-        "releaseNotes": "A new way to get started: Mera now shows you what it can do and lets you choose where to begin.\n\n• Saved is simpler, with Read later up front and a new Archive page\n• Bug fixes and improvements",
+        "releaseNotes": "Chat and your Feed now keep working when one of Mera's AI services has a problem. Mera switches to another private one by itself.\n\n• If the AI pauses for a while, Mera shows what you can still use\n• Following a story now gives you clearer choices\n• If your connection drops while Mera's AI downloads to your phone, it picks up where it stopped\n• Bug fixes",
         "marketingUrl": "https://mera.news/en",
         "supportUrl": "https://mera.news/en/faq",
         "privacyPolicyUrl": "https://mera.news/en/privacy",
@@ -135,7 +135,7 @@
           "ia privada",
           "ia local"
         ],
-        "releaseNotes": "Una nueva forma de empezar: Mera ahora te muestra lo que puede hacer y te deja elegir por dónde empezar.\n\n• Guardados es más sencillo, con Leer más tarde al frente y una nueva página de Archivo\n• Corrección de errores y mejoras",
+        "releaseNotes": "El chat y tus Noticias siguen funcionando cuando uno de los servicios de IA de Mera tiene un problema. Mera cambia a otro servicio privado por sí solo.\n\n• Si la IA se detiene un rato, Mera te muestra lo que todavía puedes usar\n• Seguir una historia ahora te da opciones más claras\n• Si se corta tu conexión mientras la IA de Mera se descarga en tu teléfono, retoma la descarga donde se quedó\n• Correcciones de errores",
         "marketingUrl": "https://mera.news/es",
         "supportUrl": "https://mera.news/es/faq",
         "privacyPolicyUrl": "https://mera.news/es/privacy",
@@ -154,7 +154,7 @@
           "ia privada",
           "ia local"
         ],
-        "releaseNotes": "Una nueva forma de empezar: Mera ahora te muestra lo que puede hacer y te deja elegir por dónde empezar.\n\n• Guardados es más sencillo, con Leer más tarde al frente y una página nueva de Archivo\n• Correcciones de errores y mejoras",
+        "releaseNotes": "El chat y tus Noticias siguen funcionando cuando uno de los servicios de IA de Mera tiene un problema. Mera cambia a otro servicio privado por sí solo.\n\n• Si la IA se detiene un rato, Mera te muestra lo que todavía puedes usar\n• Seguir una historia ahora te da opciones más claras\n• Si se corta tu conexión mientras la IA de Mera se descarga en tu celular, retoma la descarga donde se quedó\n• Correcciones de errores",
         "marketingUrl": "https://mera.news/es",
         "supportUrl": "https://mera.news/es/faq",
         "privacyPolicyUrl": "https://mera.news/es/privacy",
@@ -174,7 +174,7 @@
           "IA locale",
           "sans pub"
         ],
-        "releaseNotes": "Une nouvelle façon de commencer : Mera vous montre maintenant ce qu'il sait faire et vous laisse choisir par où commencer.\n\n• Enregistrés est plus simple, avec À lire plus tard en premier et une nouvelle page Archives\n• Corrections de bogues et améliorations",
+        "releaseNotes": "Le chat et votre fil continuent de fonctionner quand l'un des services d'IA de Mera a un problème. Mera passe tout seul à un autre service privé.\n\n• Si l'IA se met en pause un moment, Mera vous montre ce que vous pouvez encore utiliser\n• Suivre une actualité vous donne maintenant des choix plus clairs\n• Si votre connexion se coupe pendant que l'IA de Mera se télécharge sur votre téléphone, elle reprend là où elle s'était arrêtée\n• Corrections de bogues",
         "marketingUrl": "https://mera.news/fr",
         "supportUrl": "https://mera.news/fr/faq",
         "privacyPolicyUrl": "https://mera.news/fr/privacy",
@@ -194,7 +194,7 @@
           "IA locale",
           "sans pub"
         ],
-        "releaseNotes": "Une nouvelle façon de commencer : Mera vous montre maintenant ce qu'il peut faire et vous laisse choisir par où commencer.\n\n• Enregistrés est plus simple, avec À lire plus tard en premier et une nouvelle page Archives\n• Corrections de bugs et améliorations",
+        "releaseNotes": "Le chat et votre fil continuent de fonctionner quand l'un des services d'IA de Mera a un problème. Mera passe tout seul à un autre service privé.\n\n• Si l'IA se met en pause un moment, Mera vous montre ce que vous pouvez encore utiliser\n• Suivre une actualité vous donne maintenant des choix plus clairs\n• Si votre connexion coupe pendant que l'IA de Mera se télécharge sur votre téléphone, elle reprend là où elle s'était arrêtée\n• Corrections de bugs",
         "marketingUrl": "https://mera.news/fr",
         "supportUrl": "https://mera.news/fr/faq",
         "privacyPolicyUrl": "https://mera.news/fr/privacy",
@@ -214,7 +214,7 @@
           "प्राइवेट एआई",
           "ऑन-डिवाइस एआई"
         ],
-        "releaseNotes": "शुरू करने का एक नया तरीका: मेरा अब दिखाता है कि वह क्या कर सकता है, और आप चुन सकते हैं कि कहां से शुरू करना है।\n\n• सहेजे गए अब सरल हैं, बाद में पढ़ें सबसे ऊपर है और संग्रह के लिए एक नया पेज है\n• बग ठीक किए गए और सुधार",
+        "releaseNotes": "चैट और आपकी फ़ीड अब तब भी चलती रहती हैं, जब Mera की किसी AI सेवा में कोई समस्या आती है। Mera अपने आप एक और प्राइवेट AI सेवा पर चला जाता है।\n\n• अगर AI कुछ देर के लिए रुक जाए, तो Mera दिखाता है कि आप अभी भी क्या इस्तेमाल कर सकते हैं\n• स्टोरी फ़ॉलो करते समय अब आपके पास ज़्यादा साफ़ विकल्प हैं\n• अगर Mera का AI फ़ोन पर डाउनलोड होते समय आपका कनेक्शन टूट जाए, तो वह वहीं से आगे बढ़ता है जहाँ रुका था\n• गड़बड़ियाँ ठीक की गई हैं",
         "marketingUrl": "https://mera.news/hi",
         "supportUrl": "https://mera.news/hi/faq",
         "privacyPolicyUrl": "https://mera.news/hi/privacy",
@@ -234,7 +234,7 @@
           "berita privasi",
           "ai pribadi"
         ],
-        "releaseNotes": "Cara baru untuk mulai: Mera kini menunjukkan apa yang bisa dilakukannya dan membiarkan Anda memilih dari mana mulai.\n\n• Tersimpan jadi lebih sederhana, dengan Baca nanti di depan dan halaman Arsip yang baru\n• Perbaikan bug dan peningkatan",
+        "releaseNotes": "Obrolan dan Feed Anda sekarang tetap berjalan saat salah satu layanan AI Mera bermasalah. Mera otomatis beralih ke layanan pribadi lainnya.\n\n• Jika AI berhenti sebentar, Mera menunjukkan apa yang masih bisa Anda pakai\n• Mengikuti sebuah cerita kini memberi Anda pilihan yang lebih jelas\n• Jika koneksi Anda terputus saat AI Mera diunduh ke ponsel, proses unduhnya dilanjutkan dari tempat terhenti\n• Perbaikan bug",
         "marketingUrl": "https://mera.news/id",
         "supportUrl": "https://mera.news/id/faq",
         "privacyPolicyUrl": "https://mera.news/id/privacy",
@@ -253,7 +253,7 @@
           "IA privata",
           "IA locale"
         ],
-        "releaseNotes": "Un nuovo modo per iniziare: Mera ora ti mostra cosa sa fare e ti lascia scegliere da dove cominciare.\n\n• Salvati è più semplice, con Leggi dopo in primo piano e una nuova pagina Archivio\n• Correzioni di bug e miglioramenti",
+        "releaseNotes": "La Chat e il tuo Feed ora continuano a funzionare quando uno dei servizi IA di Mera ha un problema. Mera passa automaticamente a un altro servizio privato.\n\n• Se l'IA si ferma per un po', Mera ti mostra cosa puoi usare ancora\n• Seguire una storia ora offre scelte più chiare\n• Se la connessione cade mentre l'IA di Mera si scarica sul telefono, riprende da dove si era interrotta\n• Correzione di alcuni bug",
         "marketingUrl": "https://mera.news/it",
         "supportUrl": "https://mera.news/it/faq",
         "privacyPolicyUrl": "https://mera.news/it/privacy",
@@ -275,7 +275,7 @@
           "mera",
           "メラ"
         ],
-        "releaseNotes": "はじめるための新しい方法：メラがいまできることを見せて、どこから始めるかを選べるようにしました。\n\n• 保存済みがシンプルになりました。「あとで読む」を先頭に置き、新しい「アーカイブ」のページを追加しました\n• 不具合の修正と改善",
+        "releaseNotes": "チャットとフィードは、メラのAIサービスのどれかに問題が起きても使い続けられます。メラが自動的に、別のプライベートなAIに切り替えます。\n\n• AIが少しの間止まっても、メラは今も使えるものを表示します\n• ストーリーのフォローで、選択肢がより分かりやすくなりました\n• メラのAIを電話にダウンロード中に接続が切れても、止まったところから再開します\n• 不具合を修正しました",
         "marketingUrl": "https://mera.news/ja",
         "supportUrl": "https://mera.news/ja/faq",
         "privacyPolicyUrl": "https://mera.news/ja/privacy",
@@ -297,7 +297,7 @@
           "메라",
           "mera"
         ],
-        "releaseNotes": "시작하는 새로운 방법이 생겼어요: 메라가 이제 할 수 있는 일을 보여 주고, 어디서 시작할지 직접 고를 수 있어요.\n\n• 저장됨이 더 간단해졌어요. 나중에 읽기가 맨 앞에 있고, 새 보관함 페이지가 생겼어요\n• 버그 수정과 개선",
+        "releaseNotes": "채팅과 피드는 Mera의 AI 서비스 중 하나에 문제가 생겨도 계속 작동해요. Mera가 알아서 다른 프라이빗 AI로 바꿔요.\n\n• AI가 잠시 멈추면 지금 쓸 수 있는 기능을 Mera가 보여줘요\n• 이제 스토리를 팔로우할 때 선택지가 더 분명해요\n• Mera AI를 휴대폰에 내려받는 중에 연결이 끊기면, 멈춘 곳부터 다시 이어받아요\n• 버그를 고쳤어요",
         "marketingUrl": "https://mera.news/ko",
         "supportUrl": "https://mera.news/ko/faq",
         "privacyPolicyUrl": "https://mera.news/ko/privacy",
@@ -318,7 +318,7 @@
           "privé ai",
           "mera"
         ],
-        "releaseNotes": "Een nieuwe manier om te beginnen: Mera laat nu zien wat het kan en laat je kiezen waar je wilt beginnen.\n\n• Opgeslagen is eenvoudiger, met Later lezen vooraan en een nieuwe pagina Archief\n• Bugfixes en verbeteringen",
+        "releaseNotes": "Chat en je Feed blijven nu werken als een van Mera's AI-diensten problemen heeft. Mera schakelt dan zelf over naar een andere privé-AI.\n\n• Als de AI even pauzeert, laat Mera zien wat je nog wel kunt gebruiken\n• Een verhaal volgen geeft je nu duidelijkere keuzes\n• Als je verbinding wegvalt terwijl Mera's AI naar je telefoon wordt gedownload, gaat het verder waar het gebleven was\n• Bugfixes",
         "marketingUrl": "https://mera.news/nl",
         "supportUrl": "https://mera.news/nl/faq",
         "privacyPolicyUrl": "https://mera.news/nl/privacy",
@@ -338,7 +338,7 @@
           "prywatna AI",
           "mera"
         ],
-        "releaseNotes": "Nowy sposób na start: Mera teraz pokazuje, co potrafi, i pozwala wybrać, od czego zacząć.\n\n• Zapisane są prostsze, z Przeczytaj później na początku i nową stroną Archiwum\n• Poprawki błędów i ulepszenia",
+        "releaseNotes": "Czat i Twój Strumień nadal działają, gdy jedna z usług AI Mera ma problem. Mera sama przełącza się na inną, prywatną usługę.\n\n• Jeśli AI na chwilę się zatrzyma, Mera pokaże, z czego nadal możesz korzystać\n• Śledzenie historii daje teraz wyraźniejsze wybory\n• Jeśli połączenie się urwie podczas pobierania AI Mera na telefon, pobieranie wznowi się tam, gdzie stanęło\n• Poprawki błędów",
         "marketingUrl": "https://mera.news/pl",
         "supportUrl": "https://mera.news/pl/faq",
         "privacyPolicyUrl": "https://mera.news/pl/privacy",
@@ -357,7 +357,7 @@
           "IA privada",
           "IA local"
         ],
-        "releaseNotes": "Um novo jeito de começar: Mera agora mostra o que sabe fazer e deixa você escolher por onde começar.\n\n• Salvos ficou mais simples, com Ler depois em primeiro lugar e uma nova página Arquivo\n• Correções de bugs e melhorias",
+        "releaseNotes": "O Chat e o seu Feed continuam funcionando quando um dos serviços de IA da Mera tem algum problema. A Mera troca sozinha para outro serviço privado.\n\n• Se a IA parar por um tempo, a Mera mostra o que você ainda pode usar\n• Seguir uma história agora oferece escolhas mais claras\n• Se a conexão cair enquanto a IA da Mera está sendo baixada para o seu celular, ela continua de onde parou\n• Correções de erros",
         "marketingUrl": "https://mera.news/pt",
         "supportUrl": "https://mera.news/pt/faq",
         "privacyPolicyUrl": "https://mera.news/pt/privacy",
@@ -376,7 +376,7 @@
           "IA privada",
           "IA local"
         ],
-        "releaseNotes": "Uma nova forma de começar: a Mera mostra agora o que pode fazer e deixa-te escolher por onde começar.\n\n• Guardados ficou mais simples, com Ler depois em primeiro plano e uma nova página Arquivo\n• Correções de erros e melhorias",
+        "releaseNotes": "O Chat e o teu Feed continuam a funcionar quando um dos serviços de IA da Mera tem um problema. A Mera muda sozinha para outro serviço privado.\n\n• Se a IA parar durante algum tempo, a Mera mostra o que ainda podes usar\n• Seguir uma história agora oferece opções mais claras\n• Se a ligação cair enquanto a IA da Mera está a ser transferida para o teu telemóvel, retoma de onde parou\n• Correções de erros",
         "marketingUrl": "https://mera.news/pt",
         "supportUrl": "https://mera.news/pt/faq",
         "privacyPolicyUrl": "https://mera.news/pt/privacy",
@@ -395,7 +395,7 @@
           "приватный ИИ",
           "ИИ на телефоне"
         ],
-        "releaseNotes": "Новый способ начать: Мера теперь показывает, что умеет, и позволяет выбрать, с чего начать.\n\n• Раздел «Сохранённое» стал проще: «Прочитать позже» вынесено наверх, а страница «Архив» новая\n• Исправление ошибок и улучшения",
+        "releaseNotes": "Чат и ваша Лента теперь продолжают работать, когда у одного из ИИ-сервисов Меры возникает сбой. Мера сама переключается на другой частный ИИ-сервис.\n\n• Если ИИ ненадолго приостанавливается, Мера показывает, чем вы можете пользоваться\n• Отслеживание истории теперь даёт более понятный выбор\n• Если соединение прерывается, пока ИИ Меры загружается на телефон, загрузка продолжается с того места, где остановилась\n• Исправления ошибок",
         "marketingUrl": "https://mera.news/ru",
         "supportUrl": "https://mera.news/ru/faq",
         "privacyPolicyUrl": "https://mera.news/ru/privacy",
@@ -417,7 +417,7 @@
           "เมร่า",
           "AI ส่วนตัว"
         ],
-        "releaseNotes": "วิธีใหม่ในการเริ่มต้น: เมร่าจะแสดงให้เห็นว่าทำอะไรได้บ้าง และให้คุณเลือกว่าจะเริ่มจากตรงไหน\n\n• บันทึกแล้วเรียบง่ายขึ้น โดยมีอ่านภายหลังอยู่ด้านหน้า และมีหน้าคลังเก็บใหม่\n• แก้ไขข้อบกพร่องและปรับปรุงต่าง ๆ",
+        "releaseNotes": "แชทและฟีดของคุณยังใช้งานได้ตามปกติ แม้บริการ AI บริการใดบริการหนึ่งของ Mera จะมีปัญหา Mera จะสลับไปใช้บริการส่วนตัวอีกเจ้าหนึ่งให้โดยอัตโนมัติ\n\n• หาก AI หยุดทำงานชั่วขณะ Mera จะแสดงสิ่งที่คุณยังใช้ได้\n• การติดตามเรื่องราวมีตัวเลือกที่ชัดเจนขึ้น\n• หากการเชื่อมต่อขาดขณะที่ AI ของ Mera กำลังดาวน์โหลดลงโทรศัพท์ Mera จะทำต่อจากจุดที่หยุดไว้\n• แก้ไขข้อผิดพลาดต่าง ๆ",
         "marketingUrl": "https://mera.news/th",
         "supportUrl": "https://mera.news/th/faq",
         "privacyPolicyUrl": "https://mera.news/th/privacy",
@@ -437,7 +437,7 @@
           "özel yapay zeka",
           "mera"
         ],
-        "releaseNotes": "Başlamanın yeni bir yolu: Mera artık neler yapabildiğini gösteriyor ve nereden başlamak istediğini seçmene izin veriyor.\n\n• Kaydedilenler daha sade: Sonra oku en başta, yeni bir Arşiv sayfası var\n• Hata düzeltmeleri ve iyileştirmeler",
+        "releaseNotes": "Sohbet ve Akışınız, Mera'nın yapay zeka hizmetlerinden biri sorun yaşadığında da çalışmaya devam eder. Mera, başka bir özel yapay zeka hizmetine kendiliğinden geçer.\n\n• Yapay zeka bir süre duraksarsa Mera, hâlâ kullanabileceğiniz şeyleri gösterir\n• Bir haberi takip etmek artık daha net seçenekler sunar\n• Mera'nın yapay zeka modeli telefonunuza indirilirken bağlantınız kesilirse kaldığı yerden devam eder\n• Hata düzeltmeleri",
         "marketingUrl": "https://mera.news/tr",
         "supportUrl": "https://mera.news/tr/faq",
         "privacyPolicyUrl": "https://mera.news/tr/privacy",
@@ -456,7 +456,7 @@
           "приватний ШІ",
           "ШІ на телефоні"
         ],
-        "releaseNotes": "Новий спосіб почати: Мера тепер показує, що вміє, і дає змогу обрати, з чого почати.\n\n• Збережені стали простішими: Прочитати пізніше тепер вгорі, і з'явилася нова сторінка Архів\n• Виправлення помилок і покращення",
+        "releaseNotes": "Чат і Стрічка тепер працюють, навіть коли в одному з ШІ-сервісів Мери виникає проблема. Мера сама переходить на інший приватний сервіс.\n\n• Якщо ШІ на деякий час зупиняється, Мера показує, що ви ще можете використовувати\n• Стеження за історією тепер дає вам чіткіший вибір\n• Якщо з’єднання обривається, поки ШІ Мери завантажується на ваш телефон, він продовжує з того місця, де зупинився\n• Виправлення помилок",
         "marketingUrl": "https://mera.news/uk",
         "supportUrl": "https://mera.news/uk/faq",
         "privacyPolicyUrl": "https://mera.news/uk/privacy",
@@ -477,7 +477,7 @@
           "ai riêng tư",
           "ai trên máy"
         ],
-        "releaseNotes": "Cách mới để bắt đầu: Mera giờ cho bạn thấy những gì ứng dụng làm được và để bạn chọn nơi bắt đầu.\n\n• Đã lưu đơn giản hơn, với Đọc sau ở đầu và trang Lưu trữ mới\n• Sửa lỗi và cải thiện",
+        "releaseNotes": "Trò chuyện và Bản tin của bạn giờ vẫn hoạt động khi một trong các dịch vụ AI của Mera gặp sự cố. Mera tự động chuyển sang một dịch vụ AI riêng tư khác.\n\n• Nếu AI tạm dừng một lúc, Mera sẽ cho bạn thấy những gì bạn vẫn có thể dùng\n• Theo dõi một câu chuyện giờ có các lựa chọn rõ ràng hơn\n• Nếu kết nối bị gián đoạn khi AI của Mera đang tải về điện thoại, quá trình sẽ tiếp tục từ chỗ đã dừng\n• Sửa lỗi",
         "marketingUrl": "https://mera.news/vi",
         "supportUrl": "https://mera.news/vi/faq",
         "privacyPolicyUrl": "https://mera.news/vi/privacy",
@@ -499,7 +499,7 @@
           "梅拉",
           "mera"
         ],
-        "releaseNotes": "全新的开始方式：梅拉现在会展示它能做什么，并让你选择从哪里开始。\n\n• 已保存更简单，稍后阅读放在最前，并新增归档页面\n• 错误修复与功能改进",
+        "releaseNotes": "聊天和你的资讯现在即使在梅拉的某项 AI 服务出问题时也能继续使用。梅拉会自动切换到另一个私密服务。\n\n• 如果 AI 暂停了一段时间，梅拉会告诉你现在还能用什么\n• 关注一则报道时，现在有更清楚的选择\n• 如果梅拉的 AI 下载到你手机的过程中网络断开，它会从中断的地方继续\n• 错误修复",
         "marketingUrl": "https://mera.news/zh-Hans",
         "supportUrl": "https://mera.news/zh-Hans/faq",
         "privacyPolicyUrl": "https://mera.news/zh-Hans/privacy",
@@ -522,7 +522,7 @@
           "mera",
           "梅拉"
         ],
-        "releaseNotes": "全新的開始方式：梅拉現在會展示它能做什麼，並讓你選擇從哪裡開始。\n\n• 已儲存更簡單，稍後閱讀放在最前面，並新增封存頁面\n• 錯誤修正與功能改進",
+        "releaseNotes": "即使 Mera 的某項 AI 服務出現問題，聊天和動態仍能繼續使用。Mera 會自動切換到另一個私有的 AI 服務。\n\n• 如果 AI 暫時停止回應，Mera 會告訴你目前還能使用哪些功能\n• 追蹤一則報導時，現在能看到更清楚的選項\n• 如果手機在下載 Mera 的 AI 時斷線，重新連線後會從中斷的地方繼續\n• 錯誤修正",
         "marketingUrl": "https://mera.news/zh-Hant",
         "supportUrl": "https://mera.news/zh-Hant/faq",
         "privacyPolicyUrl": "https://mera.news/zh-Hant/privacy",
