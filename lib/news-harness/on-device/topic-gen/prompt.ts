@@ -5,11 +5,11 @@
 // message so a prefix cache keeps them across facts.
 import { buildBaseUserPrompt, type RealTopicGenInputs } from '../../persona-management/topic-generation';
 import { countTokens, largestFitting } from '../shared';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 
-export const TOPIC_GEN_SYSTEM = DEVICE_BASE_SLOTS["topic-gen/topic-gen-system"];
+export const TOPIC_GEN_SYSTEM = DEVICE_SLOTS["topic-gen/topic-gen-system"];
 
-const TOPIC_GEN_RULES = DEVICE_BASE_SLOTS["topic-gen/topic-gen-rules"];
+const TOPIC_GEN_RULES = DEVICE_SLOTS["topic-gen/topic-gen-rules"];
 
 /**
  * The instruction and the message for one fact. `count` is the most topics to ask for.

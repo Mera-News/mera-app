@@ -6,9 +6,9 @@
 // (reason-grounding.ts).
 import { buildLocalReasonUserMessage } from '../../prompts/prompts';
 import { countTokens, largestFitting } from '../shared';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 
-export const NOTE_SYSTEM = DEVICE_BASE_SLOTS["notes/note-system"];
+export const NOTE_SYSTEM = DEVICE_SLOTS["notes/note-system"];
 
 /**
  * Fact bank ceiling in tokens (countTokens), so a note fits Gemini Nano's ~4000-token input next

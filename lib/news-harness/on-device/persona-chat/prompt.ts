@@ -2,7 +2,7 @@ import { DEEP_EXAMPLE_QUESTIONS } from '../../prompts/persona-prompts';
 import { asUntrusted } from '../../prompts/untrusted-text';
 import { IDENTITY_LINE, languageLine, renderPrompt, type ChatTurn } from '../shared';
 import type { PersonaSurface } from './schema';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 import { render } from '../../../harnesses/template';
 
 /** Newest facts shown; older ones fall out of the context first. */
@@ -12,7 +12,7 @@ export function personaChatInstructions(surface: PersonaSurface, languageName?: 
   const onboarding = surface === 'ONBOARDING';
   const isConfig = surface === 'CONFIG';
   const language = languageLine(languageName);
-  return render(DEVICE_BASE_SLOTS["persona-chat/instructions"], { IDENTITY_LINE, isConfig, language, onboarding });
+  return render(DEVICE_SLOTS["persona-chat/instructions"], { IDENTITY_LINE, isConfig, language, onboarding });
 }
 
 export interface PersonaChatContext {

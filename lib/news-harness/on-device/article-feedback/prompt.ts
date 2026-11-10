@@ -1,12 +1,12 @@
 import { asUntrusted } from '../../prompts/untrusted-text';
 import { TRACK_OPTION_RULES } from '../follow-story/prompt';
 import { IDENTITY_LINE, languageLine, renderPrompt, type ChatTurn } from '../shared';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 import { render } from '../../../harnesses/template';
 
 export function articleFeedbackInstructions(languageName?: string): string {
   const language = languageLine(languageName);
-  return render(DEVICE_BASE_SLOTS["article-chat/instructions"], { IDENTITY_LINE, language });
+  return render(DEVICE_SLOTS["article-chat/instructions"], { IDENTITY_LINE, language });
 }
 
 /** Everything the context block shows, already read by the adapter. */

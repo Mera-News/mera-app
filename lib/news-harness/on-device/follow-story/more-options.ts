@@ -8,7 +8,7 @@ import { IDENTITY_LINE, renderPrompt } from '../shared';
 import { trackOptions } from './parse';
 import { TRACK_OPTION_RULES } from './prompt';
 import { TRACK_OPTIONS_SCHEMA } from './schema';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 import { render } from '../../../harnesses/template';
 
 export type MoreOptionsReason = 'none' | 'busy' | 'failed' | 'stopped';
@@ -28,7 +28,7 @@ export interface MoreTrackOptionsPorts {
   budget(system: string, schema: JsonSchema): Promise<number>;
 }
 
-export const MORE_OPTIONS_SYSTEM = render(DEVICE_BASE_SLOTS["follow-story/more-options-system"], { IDENTITY_LINE });
+export const MORE_OPTIONS_SYSTEM = render(DEVICE_SLOTS["follow-story/more-options-system"], { IDENTITY_LINE });
 
 const SCHEMA: JsonSchema = {
   type: 'object',

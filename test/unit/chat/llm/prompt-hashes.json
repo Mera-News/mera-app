@@ -624,5 +624,6 @@
       "kevFollow:auto": "7130688f3afcb3cadeb44391a23bc3390c4c719f12811e52eefa4556fb1888c6",
       "kevFollow:Hindi": "792e85d44c1da5031aa4a12a4699a9d79c0979c6cb55aa8627d09114456c1850"
     }
-  }
+  },
+  "onDevice": {}
 }

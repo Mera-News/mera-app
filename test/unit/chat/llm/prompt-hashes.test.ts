@@ -7,6 +7,7 @@ import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { HARNESS_FILES, loadHarness } from '@/lib/harnesses';
+import { ON_DEVICE_HARNESS, resolveSlots } from '@/lib/harnesses/slots';
 import { buildRouterPrompt, factRemovedPrompt, loadSkill } from '@/lib/mera-harness';
 import { meraIdentity, meraRouteIdentity } from '@/lib/mera-harness/core/identity';
 import { brandRule, voiceRules } from '@/lib/mera-harness/core/router-prompt';
@@ -22,19 +23,6 @@ import {
   buildFollowStorySystemPrompt,
   getFollowStoryToolDefinitions,
 } from '@/lib/news-harness/follow-story';
-import * as shared from '@/lib/news-harness/on-device/shared';
-import * as personaChat from '@/lib/news-harness/on-device/persona-chat/prompt';
-import * as articleChat from '@/lib/news-harness/on-device/article-feedback/prompt';
-import * as followChat from '@/lib/news-harness/on-device/follow-story/prompt';
-import * as moreOptions from '@/lib/news-harness/on-device/follow-story/more-options';
-import * as tutorialHelp from '@/lib/news-harness/on-device/tutorial-help/prompt';
-import * as topicGen from '@/lib/news-harness/on-device/topic-gen/prompt';
-import * as storyScope from '@/lib/news-harness/on-device/story-scope/prompt';
-import * as notes from '@/lib/news-harness/on-device/notes/prompt';
-import * as subscriptionRead from '@/lib/news-harness/on-device/subscription-read/prompt';
-import { PERSONA_INTENTS, runPersonaKevTurn } from '@/lib/news-harness/on-device/persona-chat/kev-spec';
-import { ARTICLE_KEV_INTENTS, runArticleKevTurn } from '@/lib/news-harness/on-device/article-feedback/kev-spec';
-import { FOLLOW_KEV_INTENTS, runFollowKevTurn } from '@/lib/news-harness/on-device/follow-story/kev-spec';
 import type { KevMessage, KevPorts } from '@/lib/news-harness/on-device/kev';
 
 const SNAPSHOT = path.join(__dirname, 'prompt-hashes.json');
@@ -271,9 +259,53 @@ async function kevRun(
   return out;
 }
 
-function deviceProducers(): Record<string, Producer> {
+
+/**
+ * The on-device prompt modules loaded afresh. They read DEVICE_SLOTS (ON_DEVICE_HARNESS) at
+ * import, so `{ folder }` swaps DEVICE_SLOTS for that folder's slots (device-base, the frozen
+ * base, is pinned this way), and `{ afm }` replaces afm/'s overrides in the generated module, so
+ * the real afm resolution runs.
+ */
+function loadDeviceModules(opts: { folder: string } | { afm: Record<string, string> }) {
+  let m!: DeviceModules;
+  jest.isolateModules(() => {
+    if ('folder' in opts) {
+      const actual = jest.requireActual('@/lib/harnesses/slots');
+      jest.doMock('@/lib/harnesses/slots', () => ({ ...actual, DEVICE_SLOTS: actual.resolveSlots(opts.folder) }));
+    } else {
+      const actual = jest.requireActual('@/lib/harnesses/slots.generated');
+      jest.doMock('@/lib/harnesses/slots.generated', () => ({ ...actual, HARNESS_SLOTS: { ...actual.HARNESS_SLOTS, afm: opts.afm } }));
+    }
+    m = requireDeviceModules();
+  });
+  jest.dontMock('@/lib/harnesses/slots');
+  jest.dontMock('@/lib/harnesses/slots.generated');
+  return m;
+}
+
+function requireDeviceModules() {
+  return {
+    shared: require('@/lib/news-harness/on-device/shared') as typeof import('@/lib/news-harness/on-device/shared'),
+    personaChat: require('@/lib/news-harness/on-device/persona-chat/prompt') as typeof import('@/lib/news-harness/on-device/persona-chat/prompt'),
+    articleChat: require('@/lib/news-harness/on-device/article-feedback/prompt') as typeof import('@/lib/news-harness/on-device/article-feedback/prompt'),
+    followChat: require('@/lib/news-harness/on-device/follow-story/prompt') as typeof import('@/lib/news-harness/on-device/follow-story/prompt'),
+    moreOptions: require('@/lib/news-harness/on-device/follow-story/more-options') as typeof import('@/lib/news-harness/on-device/follow-story/more-options'),
+    tutorialHelp: require('@/lib/news-harness/on-device/tutorial-help/prompt') as typeof import('@/lib/news-harness/on-device/tutorial-help/prompt'),
+    topicGen: require('@/lib/news-harness/on-device/topic-gen/prompt') as typeof import('@/lib/news-harness/on-device/topic-gen/prompt'),
+    storyScope: require('@/lib/news-harness/on-device/story-scope/prompt') as typeof import('@/lib/news-harness/on-device/story-scope/prompt'),
+    notes: require('@/lib/news-harness/on-device/notes/prompt') as typeof import('@/lib/news-harness/on-device/notes/prompt'),
+    subscriptionRead: require('@/lib/news-harness/on-device/subscription-read/prompt') as typeof import('@/lib/news-harness/on-device/subscription-read/prompt'),
+    persona: require('@/lib/news-harness/on-device/persona-chat/kev-spec') as typeof import('@/lib/news-harness/on-device/persona-chat/kev-spec'),
+    article: require('@/lib/news-harness/on-device/article-feedback/kev-spec') as typeof import('@/lib/news-harness/on-device/article-feedback/kev-spec'),
+    follow: require('@/lib/news-harness/on-device/follow-story/kev-spec') as typeof import('@/lib/news-harness/on-device/follow-story/kev-spec'),
+  };
+}
+type DeviceModules = ReturnType<typeof requireDeviceModules>;
+
+function deviceProducers(m: DeviceModules): Record<string, Producer> {
+  const { shared, personaChat, articleChat, followChat, moreOptions, tutorialHelp, topicGen, storyScope, notes, subscriptionRead } = m;
   const p: Record<string, Producer> = {};
-  const constants: [string, Record<string, unknown>, string][] = [
+  const constants: [string, unknown, string][] = [
     ['shared', shared, 'IDENTITY_LINE'],
     ['follow-story', followChat, 'TRACK_OPTION_RULES'],
     ['more-options', moreOptions, 'MORE_OPTIONS_SYSTEM'],
@@ -282,7 +314,7 @@ function deviceProducers(): Record<string, Producer> {
     ['notes', notes, 'NOTE_SYSTEM'],
     ['subscription-read', subscriptionRead, 'SUBSCRIPTION_READ_SYSTEM'],
   ];
-  for (const [mod, m, name] of constants) p[`const:${mod}#${name}`] = () => m[name];
+  for (const [mod, mod_, name] of constants) p[`const:${mod}#${name}`] = () => (mod_ as Record<string, unknown>)[name];
 
   for (const languageName of langs) {
     const l = languageName ?? 'auto';
@@ -343,40 +375,45 @@ function deviceProducers(): Record<string, Producer> {
   for (const surface of ['ONBOARDING', 'CONFIG'] as const)
     for (const languageName of langs)
       p[`kevPersona:${surface}/${languageName ?? 'auto'}`] = () =>
-        kevRun(PERSONA_INTENTS, (ports, messages) =>
-          runPersonaKevTurn({ surface, facts: PERSONA_CONTEXT.facts, topicPlanNotes: null, pending: PENDING, languageName }, messages, ports),
+        kevRun(m.persona.PERSONA_INTENTS, (ports, messages) =>
+          m.persona.runPersonaKevTurn({ surface, facts: PERSONA_CONTEXT.facts, topicPlanNotes: null, pending: PENDING, languageName }, messages, ports),
         );
   for (const languageName of langs)
     p[`kevArticle:${languageName ?? 'auto'}`] = () =>
-      kevRun(ARTICLE_KEV_INTENTS, (ports, messages) =>
-        runArticleKevTurn({ context: ARTICLE_CONTEXT, pendingTapOnly: false, languageName }, messages, ports),
+      kevRun(m.article.ARTICLE_KEV_INTENTS, (ports, messages) =>
+        m.article.runArticleKevTurn({ context: ARTICLE_CONTEXT, pendingTapOnly: false, languageName }, messages, ports),
       );
   for (const languageName of langs)
     p[`kevFollow:${languageName ?? 'auto'}`] = () =>
-      kevRun(FOLLOW_KEV_INTENTS, (ports, messages) => runFollowKevTurn({ today: '2026-11-10', pending: PENDING, languageName }, messages, ports));
+      kevRun(m.follow.FOLLOW_KEV_INTENTS, (ports, messages) => m.follow.runFollowKevTurn({ today: '2026-11-10', pending: PENDING, languageName }, messages, ports));
   return p;
 }
 
 const PRODUCERS: Record<Base, () => Record<string, Producer>> = {
   'cloud-base': cloudProducers,
-  'device-base': deviceProducers,
+  'device-base': () => deviceProducers(loadDeviceModules({ folder: 'device-base' })),
 };
 
 interface Snapshot {
   /** Each serving harness folder and the base its prompts come from. */
   folders: Record<string, Base>;
   prompts: Record<Base, Record<string, string>>;
+  /** What the phone sends from ON_DEVICE_HARNESS: only the hashes that differ from device-base. */
+  onDevice: Record<string, string>;
 }
 
-async function computeHashes(base: Base): Promise<Record<string, string>> {
+async function hashAll(producers: Record<string, Producer>, label: string): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
-  for (const [key, produce] of Object.entries(PRODUCERS[base]())) {
+  for (const [key, produce] of Object.entries(producers)) {
     const value = await produce();
-    if (value === undefined) throw new Error(`${base} ${key}: produced undefined`);
+    if (value === undefined) throw new Error(`${label} ${key}: produced undefined`);
     out[key] = sha(value);
   }
   return out;
 }
+
+const differing = (from: Record<string, string>, to: Record<string, string>) =>
+  Object.fromEntries(Object.entries(to).filter(([k, v]) => from[k] !== v));
 
 describe('prompt hashes', () => {
   let current: Snapshot;
@@ -387,8 +424,33 @@ describe('prompt hashes', () => {
       if ((BASES as readonly string[]).includes(folder)) continue;
       folders[folder] = loadHarness(folder).chain[0] as Base;
     }
-    current = { folders, prompts: { 'cloud-base': await computeHashes('cloud-base'), 'device-base': await computeHashes('device-base') } };
+    const deviceBase = await hashAll(PRODUCERS['device-base'](), 'device-base');
+    // The modules as the app imports them, with no swap: what ON_DEVICE_HARNESS sends.
+    const sent = await hashAll(deviceProducers(requireDeviceModules()), ON_DEVICE_HARNESS);
+    current = {
+      folders,
+      prompts: { 'cloud-base': await hashAll(PRODUCERS['cloud-base'](), 'cloud-base'), 'device-base': deviceBase },
+      onDevice: differing(deviceBase, sent),
+    };
     if (process.env.UPDATE_PROMPT_HASHES) fs.writeFileSync(SNAPSHOT, `${JSON.stringify(current, null, 2)}\n`);
+  });
+
+  it(`sends device-base plus exactly the pinned ${ON_DEVICE_HARNESS} overrides on device`, () => {
+    const pinned = JSON.parse(fs.readFileSync(SNAPSHOT, 'utf8')) as Snapshot;
+    expect(current.onDevice).toEqual(pinned.onDevice);
+  });
+
+  it('an afm/ override changes exactly the on-device prompts built from that slot', async () => {
+    expect(ON_DEVICE_HARNESS).toBe('afm');
+    const base = await hashAll(deviceProducers(loadDeviceModules({ folder: 'device-base' })), 'device-base');
+    const changedBy = async (afm: Record<string, string>) =>
+      Object.keys(differing(base, await hashAll(deviceProducers(loadDeviceModules({ afm })), 'override')));
+    expect(await changedBy({})).toEqual([]);
+    expect(await changedBy({ 'notes/note-system': 'An override note prompt.' })).toEqual(['const:notes#NOTE_SYSTEM', 'notePrompt']);
+    expect(await changedBy({ 'story-scope/story-scope-system': 'An override scope prompt.' })).toEqual([
+      'const:story-scope#STORY_SCOPE_SYSTEM',
+      'storyScopePrompt',
+    ]);
   });
 
   it('serves each harness folder from the base its snapshot names', () => {

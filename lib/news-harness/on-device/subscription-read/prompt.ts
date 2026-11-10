@@ -2,9 +2,9 @@
 // story, from its headline and description only (the body is paywalled and
 // never fetched). Plain text, or a bare SKIP.
 import { asUntrusted } from '../../prompts/untrusted-text';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 
-export const SUBSCRIPTION_READ_SYSTEM = DEVICE_BASE_SLOTS["subscription-read/subscription-read-system"];
+export const SUBSCRIPTION_READ_SYSTEM = DEVICE_SLOTS["subscription-read/subscription-read-system"];
 
 export interface SubscriptionReadInput {
   anchorTitle: string | null;

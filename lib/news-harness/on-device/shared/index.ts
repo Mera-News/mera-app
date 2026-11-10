@@ -5,7 +5,7 @@
 import { isTrackCard, proposalRequiresUserChoice, TRACK_CARD_TAP_PHRASE } from '../../core/proposals';
 import type { StagedProposal } from '../../core/types';
 import { asUntrusted } from '../../prompts/untrusted-text';
-import { DEVICE_BASE_SLOTS } from '../../../harnesses/slots.generated';
+import { DEVICE_SLOTS } from '../../../harnesses/slots';
 import { render } from '../../../harnesses/template';
 
 export { IDENTITY_LINE } from '../../../mera-harness/core/identity';
@@ -104,7 +104,7 @@ export function renderPrompt(context: string, history: readonly ChatTurn[], budg
 
 /** The reply-language rule, plus the one punctuation rule for user-facing copy. */
 export function languageLine(languageName?: string): string {
-  return render(DEVICE_BASE_SLOTS["shared/language-line"], { languageName });
+  return render(DEVICE_SLOTS["shared/language-line"], { languageName });
 }
 
 /** One executor tool an on-device turn asks the app to run, by its existing name and input shape. */
