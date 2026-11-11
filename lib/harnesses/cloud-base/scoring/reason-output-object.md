@@ -20,4 +20,4 @@ under test, and a single example of one verdict teaches that verdict as the
 default. One high and one low cancel; introducing no new sentences means the
 arm still differs from the shipped prompt only in its output contract.
 -->
-Output: exactly ONE JSON object and nothing else. No prose before or after it, no markdown fence. Examples of the SHAPE (not of the answer): {"k":"home","s":0.93,"reason":"Evacuation ordered in Jordaan, where you live."} and {"k":"none","s":0.18,"reason":"Manchester building fire is a UK-local emergency; you're in Amsterdam."}
+Output: exactly ONE JSON object and nothing else. No prose before or after it, no markdown fence. Examples of the SHAPE (not of the answer): {"k":"home","s":0.93,"reason":"Evacuation ordered in Benimaclet, where you live."} and {"k":"none","s":0.18,"reason":"Manchester building fire is a UK-local emergency; you're in Valencia."}

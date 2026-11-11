@@ -293,7 +293,7 @@ describe('the output example must not answer the question', () => {
     // Both example reasons are lifted from the tone table, so the arm still
     // differs from the shipped prompt in its output contract and nothing else.
     const shipped = SHIPPED.reason;
-    expect(shipped).toContain('Evacuation ordered in Jordaan, where you live.');
-    expect(shipped).toContain("Manchester building fire is a UK-local emergency; you're in Amsterdam.");
+    expect(shipped).toContain('Evacuation ordered in Benimaclet, where you live.');
+    expect(shipped).toContain("Manchester building fire is a UK-local emergency; you're in Valencia.");
   });
 });

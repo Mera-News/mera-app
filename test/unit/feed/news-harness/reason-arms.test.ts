@@ -149,28 +149,28 @@ describe('measured sizes after the promotion', () => {
   // Restated on purpose: the reason pass sends one call per article that clears
   // the gate, so these ride on every scored article.
   it('pins the promoted prompts', () => {
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5511);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5531);
     // Smaller than its pre-promotion twin, not larger: the headline reason
     // prompt gained the 130-token rule and then dropped the 1428-token anchor
     // table to fit the gateway wire cap. golden-prompts.test.ts owns that guard.
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7066);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7036);
   });
 
   it('pins the pre-promotion prompts, which are now the control arms', () => {
     // reason-v1: the text reason-v2 beat, on the pre-geo base.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(4839);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1)).toBe(7693);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(4853);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1)).toBe(7685);
     // pre-geo-control: v2's rules, on the pre-geo base. What ships today beat
     // exactly these two strings.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(5271);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(8126);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(5290);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(8123);
   });
 
-  it('costs 432 tokens per reason call to have promoted the v2 rules', () => {
+  it('costs 437 tokens per reason call to have promoted the v2 rules', () => {
     expect(
       estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)
         - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1),
-    ).toBe(432);
+    ).toBe(437);
   });
 
   it('costs 130 tokens per call to have promoted the article-scope rule', () => {
@@ -191,6 +191,6 @@ describe('measured sizes after the promotion', () => {
     expect(
       estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)
         - estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT),
-    ).toBe(1060);
+    ).toBe(1087);
   });
 });

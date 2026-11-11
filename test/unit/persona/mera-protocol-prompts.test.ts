@@ -522,13 +522,13 @@ describe('CLOUD_REASON_SYSTEM_PROMPT', () => {
     // ("Sweden's tech-sector headwinds are industry-adjacent."). Each quoted
     // exemplar reason must now address the reader.
     for (const exemplar of [
-      'Evacuation ordered in Jordaan, where you live.',
-      'Dutch startup tax vote directly affects your Amsterdam startup work.',
-      'Netherlands economy report covers your country.',
-      "South Africa's draft AI policy matches your AI-industry interest.",
+      'Evacuation ordered in Benimaclet, where you live.',
+      'Spanish startup tax vote directly affects your Valencia startup work.',
+      'Spain economy report covers your country.',
+      "South Africa's draft drone-delivery policy matches your logistics interest.",
       "Sweden's tech-sector headwinds are adjacent to your industry.",
       "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.",
-      "Manchester building fire is a UK-local emergency; you're in Amsterdam.",
+      "Manchester building fire is a UK-local emergency; you're in Valencia.",
     ]) {
       expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(exemplar);
       expect(exemplar).toMatch(/\byou(r|'re)?\b/i);

@@ -44,17 +44,17 @@ Classify the article subject:
 
 Score gates: **0.40+** needs a named topic tie (industry/profession/hobby/investment). **0.55+** needs user's country/city/employer-industry/profession OR global story in user's exact professional area. **0.70+** needs structural change in user's jurisdiction or industry this week. **0.85+** needs direct change to user's exact work/home/family/holdings. **0.95+** needs immediate time-sensitive personal stake.
 
-## Relevance anchors (Amsterdam software engineer, AI + startups)
+## Relevance anchors (example user, NOT the reader: Valencia software engineer, delivery-routing startup)
 USE THE FULL RANGE 0.10–1.10. Spread scores — don't cluster at the bottom. A real bridge belongs in 0.40–0.75.
-- 1.05 "Flooding evacuation in Amsterdam" — city + danger, act NOW
-- 0.82 "Amsterdam council votes on startup tax" — city + profession
-- 0.75 "EU passes new AI regulation" — jurisdiction + industry structural
-- 0.62 "Google releases major AI framework" — global, exact professional area
-- 0.55 "OpenAI funding round" — industry-relevant, no exact tie
-- 0.48 "New architecture project in Amsterdam Centrumeiland" — user's city, lifestyle, no action
-- 0.35 "South Africa draft AI policy" — industry topic match, scope unrelated
+- 1.05 "Flooding evacuation in Valencia" — city + danger, act NOW
+- 0.82 "Valencia council votes on startup tax" — city + profession
+- 0.75 "EU passes new platform-work regulation" — jurisdiction + industry structural
+- 0.62 "Google releases major routing API" — global, exact professional area
+- 0.55 "Delivery-platform funding round" — industry-relevant, no exact tie
+- 0.48 "New architecture project in Valencia's Cabanyal" — user's city, lifestyle, no action
+- 0.35 "South Africa draft drone-delivery policy" — industry topic match, scope unrelated
 - 0.28 "Sweden tech sector policy headwinds" — another EU country's domestic story
-- 0.18 "Mumbai weekend events" (Amsterdam-based, born India) — origin doesn't count for lifestyle
+- 0.18 "Lima weekend events" (Valencia-based, born Peru) — origin doesn't count for lifestyle
 - 0.12 "Cricket World Cup results" — no interest
 
 Use the FULL continuous range (e.g. 0.47, 0.63, 0.71) — never round to .05/.10.

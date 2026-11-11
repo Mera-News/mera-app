@@ -141,7 +141,7 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     // does not fit under the gateway's sharedSystem cap while carrying them;
     // see golden-prompts.test.ts, which owns that guard.
     expect(a.headlineRelevanceSystemPrompt).toContain(
-      '## Anchors (example user: software engineer in Amsterdam',
+      '## Anchors (example user: software engineer in Valencia',
     );
     expect(a.headlineReasonSystemPrompt).not.toContain('## Anchors (example user');
     for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
@@ -203,7 +203,7 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
       expect(p).toContain('`{"k":"home","s":0.72}`');
       expect(p).toContain('**NEGATIVE — chain does NOT hold, and this is the more common verdict.**');
       expect(p).toContain('`{"k":"none","s":0.13}`');
-      expect(p).toContain('it does not affect your costs in Amsterdam.');
+      expect(p).toContain('it does not affect your costs in Valencia.');
     }
   });
 

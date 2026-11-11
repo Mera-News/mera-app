@@ -27,4 +27,4 @@ Shared by BOTH passes because it is part of the base, which is what stops the
 score pass and the reason pass disagreeing about what a `home` story is.
 -->
 ## Article scope
-When the title and description name no location, the article is about the publication's country (the `Article Country` / `Publication` lines). A story about a country that appears in none of the user's facts can be `domain`, `attend`, `travel`, `interest` or `none`, but never `home` or `family`: those two require the story's country to be one the user lives in or has family in. A parental-leave vote in Portugal is not a Dutch reader's `home` story, however closely the subject matches their life.
+When the title and description name no location, the article is about the publication's country (the `Article Country` / `Publication` lines). A story about a country that appears in none of the user's facts can be `domain`, `attend`, `travel`, `interest` or `none`, but never `home` or `family`: those two require the story's country to be one the user lives in or has family in. A parental-leave vote in Portugal is not a Spanish reader's `home` story, however closely the subject matches their life.

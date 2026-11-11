@@ -179,11 +179,11 @@ describe('golden — measured prompt sizes', () => {
     // RE-PINNED AGAIN when the headline reason prompt dropped the anchor table
     // to fit the gateway wire cap: 8256 -> 6958, a 1298-token cut that no other
     // prompt takes. See the wire-cap block below for why.
-    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4584);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7234);
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4585);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7230);
     // ux1: +43 for RULE_NAME_BAN, which names the rubric label in every spelling.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5511);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7066);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5531);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7036);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -200,10 +200,10 @@ describe('golden — measured prompt sizes', () => {
   //     eval:golden scores relevance and never runs a reason prompt at all. An
   //     unmeasured path with no pin is one where a change ships invisibly.
   it('pins the estimated token size of the prompts nothing else guards', () => {
-    expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBe(1903);
-    expect(estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(1539);
-    expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBe(1104);
-    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1558);
+    expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBe(1901);
+    expect(estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(1537);
+    expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBe(1119);
+    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1580);
   });
 
   // THE GATEWAY WIRE CAP. A PROD 400 lives behind these numbers.
@@ -271,14 +271,14 @@ describe('golden — measured prompt sizes', () => {
     // The tripwire. A number moving here means a prompt grew; check it against
     // the cap above before re-pinning.
     expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
-      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37322',
-      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58816',
-      'CLOUD_REASON_SYSTEM_PROMPT 44768',
-      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 57260',
-      'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12528',
-      'CLOUD_V3_NOTE_SYSTEM_PROMPT 15460',
-      'LOCAL_RELEVANCE_SYSTEM_PROMPT 9106',
-      'LOCAL_REASON_SYSTEM_PROMPT 12788',
+      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37332',
+      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58782',
+      'CLOUD_REASON_SYSTEM_PROMPT 44928',
+      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 57022',
+      'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12512',
+      'CLOUD_V3_NOTE_SYSTEM_PROMPT 15444',
+      'LOCAL_RELEVANCE_SYSTEM_PROMPT 9232',
+      'LOCAL_REASON_SYSTEM_PROMPT 12964',
     ]);
   });
 
@@ -287,7 +287,7 @@ describe('golden — measured prompt sizes', () => {
     // headline bundle: this string is the byte-exact record of what shipped,
     // and what shipped was already 408 over. Fixing it would destroy the
     // archive; the arm's description carries the warning.
-    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65944);
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65922);
     expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBeGreaterThan(CAP);
   });
 
