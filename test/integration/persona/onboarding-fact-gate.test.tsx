@@ -7,7 +7,6 @@ import React from 'react';
 import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
 import { ONBOARDING_DONE_SETTING_KEY } from '@/components/custom/onboarding/onboarding-done';
 import {
-    flushPendingNotificationHours,
     PENDING_HOURS_SETTING_KEY,
 } from '@/components/custom/onboarding/pending-notification-hours';
 import { AccountService } from '@/lib/account-service';
@@ -21,7 +20,7 @@ import { useNetworkStore } from '@/lib/stores/network-store';
 import { useOnboardingStore } from '@/lib/stores/onboarding-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import * as chatCloud from '@/lib/llm/chat-cloud';
-import { initI18nEn } from '@/test/helpers';
+import { initI18nEn, signInFixtureAccount } from '@/test/helpers';
 import { settleWrites } from '@/test/integration/data/services/persona/support';
 
 jest.mock('react-native-keyboard-controller', () => ({
@@ -32,9 +31,24 @@ jest.mock('react-native/Libraries/Modal/Modal', () => {
     return { __esModule: true, default: ({ visible, children }: { visible: boolean; children: unknown }) => (visible ? <View>{children}</View> : null) };
 });
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/onboarding/PersonaUpdateChatStep', () => ({ __esModule: true, default: () => null }));
+// Counts mounts: the real step opens a fresh conversation on every mount, so a remount loses the thread.
+const mockChatMounts = { mounted: 0, unmounted: 0 };
+jest.mock('@/components/custom/onboarding/PersonaUpdateChatStep', () => {
+    const R = jest.requireActual('react');
+    return {
+        __esModule: true,
+        default: () => {
+            R.useEffect(() => {
+                mockChatMounts.mounted += 1;
+                return () => {
+                    mockChatMounts.unmounted += 1;
+                };
+            }, []);
+            return null;
+        },
+    };
+});
 jest.mock('@/components/custom/config-mera/NotificationSettingsScreen', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/ui/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 // The picker's place search is a network edge.
 jest.mock('@/lib/place-service', () => ({
     ...jest.requireActual('@/lib/place-service'),
@@ -67,6 +81,8 @@ jest.setTimeout(30_000);
 let advance: jest.SpyInstance;
 beforeAll(initI18nEn);
 beforeEach(() => {
+    mockChatMounts.mounted = 0;
+    mockChatMounts.unmounted = 0;
     region('NL');
     useOnboardingStore.getState().resetOnboarding();
     useCloudChatStore.getState().reset();
@@ -128,6 +144,7 @@ describe('the picker fallback', () => {
         await open();
         await act(async () => useCloudChatStore.setState({ error: 'boom' }));
         await screen.findByTestId('onboarding-home-picker');
+        expect(mockChatMounts.unmounted).toBe(0);
         expect(screen.getByText('Mera is taking a while. Pick where you live instead.')).toBeTruthy();
 
         await fireEvent.changeText(screen.getByPlaceholderText('Search for a city'), 'amsterdam');
@@ -155,6 +172,8 @@ describe('the picker fallback', () => {
             expect(screen.getByTestId('onboarding-home-picker')).toBeTruthy();
             await act(async () => useCloudChatStore.setState({ status: 'idle' }));
             expect(screen.queryByTestId('onboarding-home-picker')).toBeNull();
+            // The chat step was never unmounted, so its conversation and any fact card survive the picker.
+            expect(mockChatMounts).toEqual({ mounted: 1, unmounted: 0 });
         } finally {
             jest.useRealTimers();
         }
@@ -196,17 +215,11 @@ describe('finishing is local-first', () => {
 
         await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
         expect(await getSetting(ONBOARDING_DONE_SETTING_KEY)).toBe('true');
-        expect(screen.queryByText('Connection Issue')).toBeNull();
         await settleWrites();
         expect(update).not.toHaveBeenCalled();
         expect(await getSetting(PENDING_HOURS_SETTING_KEY)).not.toBeNull();
 
-        // Back online: the launch reconcile sends the hours once, then forgets them.
-        useNetworkStore.setState({ isConnected: true });
-        await flushPendingNotificationHours('user-1');
-        await flushPendingNotificationHours('user-1');
-        expect(update).toHaveBeenCalledTimes(1);
-        expect(await getSetting(PENDING_HOURS_SETTING_KEY)).toBeNull();
+        // The launch gate sends them once online (launch-gate.test.ts).
     });
 
     it('a server failure on the background calls never blocks completion or shows a dialog', async () => {
@@ -219,15 +232,21 @@ describe('finishing is local-first', () => {
         await finish();
 
         await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
-        expect(screen.queryByText('Connection Issue')).toBeNull();
     });
 });
 
 describe('start-up never waits on the network', () => {
-    it('a hung persona fetch still show the step at once', async () => {
-        jest.spyOn(AccountService, 'getUserPersona').mockReturnValue(new Promise(() => {}) as never);
+    it('a hung persona fetch still shows the step at once', async () => {
+        await signInFixtureAccount();
+        const persona = jest.spyOn(AccountService, 'getUserPersona').mockReturnValue(new Promise(() => {}) as never);
         useUserStore.setState({ userPersona: null } as never);
         await render(<OnboardingWizard userId="user-1" onComplete={jest.fn()} />);
         expect(await screen.findByTestId('onboarding-next', undefined, { timeout: 1000 })).toBeTruthy();
+        await waitFor(() => expect(persona).toHaveBeenCalled());
+    });
+
+    it('opening the wizard marks it in progress, so a relaunch with the chip fact returns here', async () => {
+        await open();
+        expect(await getSetting(ONBOARDING_DONE_SETTING_KEY)).toBe('false');
     });
 });

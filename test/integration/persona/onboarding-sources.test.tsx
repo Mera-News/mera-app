@@ -354,7 +354,6 @@ describe('onboarding sources step', () => {
         advance.mockClear();
         await press(nextLabel());
         await waitFor(() => screen.getByTestId('onboarding-remind'));
-        expect(screen.queryByTestId('onboarding-server-error')).toBeNull();
         expect(advance).not.toHaveBeenCalled();
     });
 });

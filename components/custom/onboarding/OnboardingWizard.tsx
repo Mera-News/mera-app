@@ -41,7 +41,7 @@ import { useColors } from '@/lib/theme/tokens';
 
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 import { NextGuardBox } from './NextGuardBox';
-import { markOnboardingDone } from './onboarding-done';
+import { markOnboardingDone, markOnboardingStarted } from './onboarding-done';
 import OnboardingSourcesStep from './OnboardingSourcesStep';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import { HomePickerFallback, useHomePickerOffer } from './HomePickerFallback';
@@ -134,6 +134,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 
     // The step shows at once; the owner and the hours prefill arrive behind it and never block.
     useEffect(() => {
+        void markOnboardingStarted().catch(() => undefined);
         if (initialUserId) updatePreferences('userId', initialUserId);
         setStep(0);
         setIsInitializing(false);
@@ -180,7 +181,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         try {
             userId = await getCurrentUserId();
         } catch {
-            return; // the next launch's reconcile picks the hours up
+            return; // the launch gate resends the hours on the next online start
         }
         const quiet = (what: string) => (error: unknown) => logger.warn(`[onboarding] ${what} not sent`, { error: String(error) });
         // The push token registers regardless of the visible switch: the silent-push background cycle needs it.
@@ -318,12 +319,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 <RNText style={[styles.zeroPrivacy, { color: colors.ink3 }]}>{t('onboarding.privacyLine')}</RNText>
                             </View>
                         ) : null}
-                        <View style={styles.flex}>
-                            {showPicker ? (
-                                <HomePickerFallback onClose={() => setPickerClosed(true)} />
-                            ) : (
-                                <PersonaUpdateChatStep userId={userPreferences.userId} />
-                            )}
+                        {showPicker ? (
+                            <HomePickerFallback reason={chatUnavailable ? 'unavailable' : 'slow'} onClose={() => setPickerClosed(true)} />
+                        ) : null}
+                        {/* Hidden, never unmounted: a remount opens a new conversation and loses the reply and its fact card. */}
+                        <View style={showPicker ? styles.hidden : styles.flex}>
+                            <PersonaUpdateChatStep userId={userPreferences.userId} />
                         </View>
                     </View>
                 ) : currentStep === 1 ? (
@@ -371,6 +372,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 const styles = StyleSheet.create({
     root: { flex: 1 },
     flex: { flex: 1 },
+    hidden: { display: 'none' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, minHeight: 44 },
     who: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     shrink: { flexShrink: 1 },

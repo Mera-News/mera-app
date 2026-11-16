@@ -19,7 +19,7 @@ export const SLOW_TURN_MS = 8_000;
 /**
  * True when step 1 should offer the picker: at once when chat cannot run (on this phone, blocked), on a
  * failed turn, or after a turn has been active for SLOW_TURN_MS. A slow turn that settles gives the thread
- * back, so a fact card it offers stays reachable. Never while a fact or topic card waits to be answered.
+ * back (the wizard keeps the chat mounted underneath), so a fact card it offers stays reachable. Never while a fact or topic card waits to be answered.
  */
 export function useHomePickerOffer({ chatUnavailable, unresolved }: { chatUnavailable: boolean; unresolved: boolean }): boolean {
     const failed = useCloudChatStore((s) => !!s.error);
@@ -37,7 +37,8 @@ export function useHomePickerOffer({ chatUnavailable, unresolved }: { chatUnavai
     return !unresolved && (failed || slow);
 }
 
-export function HomePickerFallback({ onClose }: { onClose?: () => void }) {
+/** 'slow' = a turn is slow or failed; 'unavailable' = chat cannot answer at all (on this phone, blocked). */
+export function HomePickerFallback({ onClose, reason = 'slow' }: { onClose?: () => void; reason?: 'slow' | 'unavailable' }) {
     const { t } = useTranslation();
     const onSaved = async (place: ChosenPlace) => {
         const a3 = countries.alpha2ToAlpha3(place.countryCode);
@@ -52,9 +53,12 @@ export function HomePickerFallback({ onClose }: { onClose?: () => void }) {
     };
     return (
         <View style={{ flex: 1 }} testID="onboarding-home-picker">
-            <Text size="sm" className="text-ink-2 text-center px-5 pt-2">
-                {t('onboarding.fallbackPick')}
-            </Text>
+            {/* Chat that cannot answer is not "taking a while": the zero block's hint above already says what to do. */}
+            {reason === 'slow' ? (
+                <Text size="sm" className="text-ink-2 text-center px-5 pt-2">
+                    {t('onboarding.fallbackPick')}
+                </Text>
+            ) : null}
             <AddLocationView fixedRole="home" onClose={onClose ?? (() => undefined)} onSaved={onSaved} renderIdle={() => null} />
         </View>
     );

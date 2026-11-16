@@ -21,6 +21,7 @@ import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-stor
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { bindPhoneOnce } from "@/components/custom/auth/bind-phone";
+import { flushPendingNotificationHours } from "@/components/custom/onboarding/pending-notification-hours";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab, type StartupTab } from "@/lib/navigation/startup-tab";
 import { loadPageOrders } from "@/lib/navigation/page-order";
@@ -399,6 +400,8 @@ export function useLoggedInGate() {
                     // it still signs in after every email is deleted. Never
                     // blocks and never signs anyone out; retries next launch.
                     void bindPhoneOnce(userId);
+                    // Hours chosen offline at the end of onboarding; never throws.
+                    void flushPendingNotificationHours(userId);
                     // The server's verdict, which outranks RevenueCat's mirror
                     // above. Forced: this is a fresh session, and the 60s
                     // debounce must not make a returning user wait a minute to
@@ -485,6 +488,7 @@ export function useLoggedInGate() {
                 if (cancelled) return;
                 if (identityStamped) {
                     router.replace('/logged-in/app_container/feed');
+                    checkAccountAfterRoute();
                     await openPendingNotificationRoute(userId, () => cancelled);
                 } else {
                     setWipeFailed(true);

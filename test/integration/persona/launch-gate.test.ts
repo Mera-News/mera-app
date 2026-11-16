@@ -15,7 +15,9 @@ import {
     __resetLoggedInGateForTests,
 } from '@/components/custom/auth/useLoggedInGate';
 import { __resetLegalConsentLatchForTests } from '@/components/custom/auth/legal-consent';
-import { markOnboardingDone } from '@/components/custom/onboarding/onboarding-done';
+import { markOnboardingDone, markOnboardingStarted } from '@/components/custom/onboarding/onboarding-done';
+import { PENDING_HOURS_SETTING_KEY, savePendingNotificationHours } from '@/components/custom/onboarding/pending-notification-hours';
+import { AccountService } from '@/lib/account-service';
 import { _resetForTests as resetAuthBreaker } from '@/lib/auth-failure-breaker';
 import { authClient } from '@/lib/auth-client';
 import database from '@/lib/database';
@@ -354,6 +356,36 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
 
         expect(replaced()).toEqual([['/logged-in/onboarding']]);
         expect(await getSetting('onboarding_done')).toBeNull();
+    });
+
+    it('a wizard left on step 2 with its chip fact goes back to the wizard, not the tabs', async () => {
+        await signIn();
+        await setSetting('cached_user_id', ME);
+        await markOnboardingStarted();
+        await addFact('Lives in the Netherlands');
+
+        await mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(replaced()).toEqual([['/logged-in/onboarding']]);
+        expect(await getSetting('onboarding_done')).toBe('false');
+    });
+
+    it('notification hours kept offline are sent once the next launch is online, and forgotten', async () => {
+        await signIn();
+        await setSetting('cached_user_id', ME);
+        await markOnboardingDone();
+        await addFact('I follow Formula 1 racing');
+        await savePendingNotificationHours([8, 20]);
+        const update = track(jest.spyOn(AccountService, 'updateNotificationPreferences').mockResolvedValue(undefined as never));
+
+        await mountGate();
+        await waitForRoute();
+        await drain();
+
+        await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+        await waitFor(async () => expect(await getSetting(PENDING_HOURS_SETTING_KEY)).toBeNull());
     });
 
     it('no identity at all goes back to the launch gate', async () => {
