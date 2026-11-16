@@ -201,7 +201,10 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   //
   // A story is fronted by its highest band (D8), and the read state goes in
   // for the 7-day keep of unread High rows (D21; read at build time, no
-  // subscription, so a seen-mark never rebuilds the list).
+  // subscription, so a seen-mark never rebuilds the list). It is rebuilt once
+  // both stores have loaded: built before, every viewed High would read unread.
+  const orderHydrated = useFeedOrderStore((s) => s.hydrated);
+  const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
   const allCandidates = useMemo(
     () =>
       buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx, {
@@ -214,7 +217,8 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
           suggestions,
         ),
       }),
-    [suggestions, userGeoLanguageCtx],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [suggestions, userGeoLanguageCtx, orderHydrated, openedHydrated],
   );
   const allCandidatesRef = useRef(allCandidates);
   allCandidatesRef.current = allCandidates;
@@ -260,8 +264,6 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // ── Persisted order store (reactive) ──
   const order = useFeedOrderStore((s) => s.order);
   const itemsById = useFeedOrderStore((s) => s.itemsById);
-  const orderHydrated = useFeedOrderStore((s) => s.hydrated);
-  const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
 
   // ── Pinned prefix (the static region) ──
   // `pinnedIds` is the exact rendered prefix the user has already read past,

@@ -196,8 +196,9 @@ export interface BuildFeedListOptions {
    *  band first, so a High copy fronts a Medium one and the card is large.
    *  Inside a band the shared rule decides; representative-compare is untouched. */
   bandFirst?: boolean;
-  /** The Feed's read state (D21). P3 hands it to the window predicates so an
-   *  unread High or Emergency stays past 48h; until then it is unused. */
+  /** The Feed's read state (D21): with it, an unread complete High or
+   *  Emergency story stays past 48h, up to 7 days after publish
+   *  (`isWithinWindow`). Without it every row keeps 48h. */
   read?: ReadSnapshot;
 }
 
@@ -263,10 +264,10 @@ export function buildFeedList(
     (s) =>
       (opts.onlyDiscarded
         ? isDiscardedVisible(s, cutoffMs) ||
-          isVisible(s, cutoffMs) ||
+          isVisible(s, cutoffMs, opts.read) ||
           isReasonPendingVisible(s, cutoffMs) ||
           isUnscoredVisible(s, cutoffMs)
-        : isVisible(s, cutoffMs) ||
+        : isVisible(s, cutoffMs, opts.read) ||
           (includePending && isReasonPendingVisible(s, cutoffMs)) ||
           (includeUnscored && isUnscoredVisible(s, cutoffMs))) &&
       !isMutedPublication(s.publication_name, userCtx),
