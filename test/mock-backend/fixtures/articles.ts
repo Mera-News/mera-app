@@ -107,6 +107,10 @@ export const GLOBAL_HEADLINE_IDS: readonly string[] = [ARTICLE_IDS[6], ARTICLE_I
 
 export const clusterId = (a: FixtureArticle): string => hex24('c', a.clusterIndex + 1);
 export const stableClusterId = (a: FixtureArticle): string => `stable-${a.clusterIndex + 1}`;
+/** An article's memberships: what hydration carries and what `clusterMembershipsForArticles` answers. */
+export const clusterMemberships = (a: FixtureArticle): ArticleWithClusters['clusters'] => [
+    { __typename: 'ClusterMembership', clusterId: clusterId(a), confidence: 0.9, stableClusterId: stableClusterId(a) },
+];
 const clusterMembers = (a: FixtureArticle): FixtureArticle[] =>
     articles.filter((x) => x.clusterIndex === a.clusterIndex);
 
@@ -195,9 +199,7 @@ export function articleWithClusters(a: FixtureArticle, ctx: BuildContext): Artic
     return {
         __typename: 'ArticleWithClusters',
         _id: a.id,
-        clusters: [
-            { __typename: 'ClusterMembership', clusterId: clusterId(a), confidence: 0.9, stableClusterId: stableClusterId(a) },
-        ],
+        clusters: clusterMemberships(a),
         title: a.title,
         title_en: a.title,
         description_en: a.description,

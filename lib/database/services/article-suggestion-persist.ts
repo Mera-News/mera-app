@@ -5,7 +5,7 @@ import database from '../index';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
-import type { ArticleWithClusters } from '../../generated/graphql-types';
+import type { ArticleClusterMemberships, ArticleWithClusters } from '../../generated/graphql-types';
 import { getFacts } from './fact-service';
 import logger from '../../logger';
 import { toClusterMemberships, parseClusterMemberships, canonicalClusterMembershipsJson, parseDate, buildMatchedTopicsJson, isMatchedTopicsJsonEmpty, pickStableClusterId } from './article-suggestion-mappers';
@@ -105,12 +105,9 @@ export async function persistAndLinkV2Suggestions(
     } = { row };
     let hasUpdate = false;
 
-    const nextJson = canonicalClusterMembershipsJson(toClusterMemberships(a.clusters));
-    const currentJson = canonicalClusterMembershipsJson(
-      parseClusterMemberships(row.clusterMembershipsJson),
-    );
-    if (currentJson !== nextJson) {
-      update.nextClusterJson = nextJson;
+    const nextClusterJson = changedClusterJson(row, a.clusters);
+    if (nextClusterJson !== undefined) {
+      update.nextClusterJson = nextClusterJson;
       hasUpdate = true;
     }
 
@@ -304,6 +301,45 @@ export async function persistAndLinkV2Suggestions(
   });
 
   return { insertedCount, linkedCount };
+}
+
+/** The canonical memberships JSON to write, or undefined when the row already holds it (in any order). */
+function changedClusterJson(
+  row: ArticleSuggestionModel,
+  clusters: ArticleWithClusters['clusters'] | null | undefined,
+): string | undefined {
+  const next = canonicalClusterMembershipsJson(toClusterMemberships(clusters));
+  const current = canonicalClusterMembershipsJson(parseClusterMemberships(row.clusterMembershipsJson));
+  return next === current ? undefined : next;
+}
+
+/**
+ * The hourly membership refresh (D8): write each answered article's memberships onto
+ * its row. UPDATE ONLY: an id with no row is skipped, never inserted. An article the
+ * answer leaves out keeps its value; `clusters: []` clears it. Rows are read inside
+ * the writer, so a prune that ran first is respected. Returns how many rows changed.
+ */
+export async function updateClusterMemberships(answer: ArticleClusterMemberships[]): Promise<number> {
+  if (answer.length === 0) return 0;
+  const byId = new Map(answer.map((a) => [a.articleId, a.clusters]));
+  // Unchanged rows cost no write: the common answer after the first refresh.
+  const planned = (
+    await articleSuggestionsCol.query(Q.where('id', Q.oneOf([...byId.keys()]))).fetch()
+  ).filter((row) => byId.has(row.id) && changedClusterJson(row, byId.get(row.id)) !== undefined);
+  if (planned.length === 0) return 0;
+
+  return database.write(async () => {
+    const rows = await articleSuggestionsCol
+      .query(Q.where('id', Q.oneOf(planned.map((r) => r.id))))
+      .fetch();
+    const ops = rows.flatMap((row) => {
+      // An id the answer left out is "no info", never a clear.
+      const next = byId.has(row.id) ? changedClusterJson(row, byId.get(row.id)) : undefined;
+      return next === undefined ? [] : [row.prepareUpdate((r) => { r.clusterMembershipsJson = next; })];
+    });
+    if (ops.length > 0) await database.batch(ops);
+    return ops.length;
+  });
 }
 
 async function resolveFactsByTopicTexts(

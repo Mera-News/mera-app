@@ -1,6 +1,7 @@
 import { gql, type DocumentNode } from '@apollo/client';
 import client from './apollo-client';
 import {
+    ArticleClusterMemberships,
     ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
     ArticlesForTopicsByIdsResponse,
@@ -692,6 +693,22 @@ const GET_ARTICLES_FOR_STORIES_LEGACY = gql`
   }
 `;
 
+// D8: the current memberships of articles already on the device, from the newest
+// COMPLETE clustering generation. An article left out of the answer has no complete
+// generation (keep its value); `clusters: []` means it has no links (clear).
+const GET_CLUSTER_MEMBERSHIPS_FOR_ARTICLES = gql`
+  query ClusterMembershipsForArticles($articleIds: [ID!]!) {
+    clusterMembershipsForArticles(articleIds: $articleIds) {
+      articleId
+      clusters {
+        clusterId
+        confidence
+        stableClusterId
+      }
+    }
+  }
+`;
+
 // [Persona v3] Privacy-lean candidate listing: topic texts + limits +
 // COUNTRY/GLOBAL headline scopes only (NO locations/weights/negatives ever leave
 // the device). The server stores nothing and charges no quota here (quota is
@@ -803,6 +820,17 @@ let storyKeyUnsupported = false;
 export function __resetStoryKeySupport(): void {
     storyKeyUnsupported = false;
 }
+
+/** True once the server rejected `clusterMembershipsForArticles`: no refresh this session. */
+let clusterMembershipsUnsupported = false;
+
+/** Test seam. */
+export function __resetClusterMembershipsSupport(): void {
+    clusterMembershipsUnsupported = false;
+}
+
+/** The server rejects more than this many ids with BAD_USER_INPUT. */
+export const MAX_CLUSTER_MEMBERSHIP_IDS = 500;
 
 /** One hydration chunk. Concurrent workers that fail before the latch lands each fall back on their own, which is harmless. */
 async function hydrateBatch(
@@ -1129,6 +1157,34 @@ export class ArticleService {
                 { method: 'getArticlesForStories', idCount: articleIds.length },
                 'error',
             );
+            throw error;
+        }
+    }
+
+    /**
+     * Current cluster memberships for up to {@link MAX_CLUSTER_MEMBERSHIP_IDS}
+     * articles, one request. Null when this server predates the query
+     * (GRAPHQL_VALIDATION_FAILED, latched for the session, nothing reported).
+     * Not part of the feed sync's status: a failure never raises the banner.
+     */
+    static async getClusterMembershipsForArticles(articleIds: string[]): Promise<ArticleClusterMemberships[] | null> {
+        if (clusterMembershipsUnsupported) return null;
+        if (articleIds.length === 0) return [];
+        try {
+            const { data } = await client.query<{ clusterMembershipsForArticles: ArticleClusterMemberships[] }>({
+                query: GET_CLUSTER_MEMBERSHIPS_FOR_ARTICLES,
+                variables: { articleIds: articleIds.slice(0, MAX_CLUSTER_MEMBERSHIP_IDS) },
+                fetchPolicy: 'no-cache',
+                context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+            });
+            return data?.clusterMembershipsForArticles ?? [];
+        } catch (error) {
+            if (graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) {
+                clusterMembershipsUnsupported = true;
+                logger.info('[ArticleService] server has no clusterMembershipsForArticles; no membership refresh this session');
+                return null;
+            }
+            this.reportQueryError('getClusterMembershipsForArticles', error, { idCount: articleIds.length });
             throw error;
         }
     }

@@ -14,6 +14,7 @@ import { createTopics } from '@/lib/database/services/topic-service';
 import { __resetPendingForTests } from '@/lib/database/services/topic-decline-service';
 import { PERSONA_V3_MIGRATION_KEY } from '@/lib/services/persona-migration-service';
 import {
+  CLUSTER_MEMBERSHIP_REFRESH_KEY,
   stepDiff,
   stepFetchTopicIds,
   stepHydratePersistEnqueue,
@@ -474,6 +475,8 @@ export async function resetScoringWorld(): Promise<void> {
   useUserStore.setState({ userPersona: { expoPushToken: 'ExponentPushToken[test]' } as never });
   await signInFixtureAccount();
   freezeClockAt(PIPELINE_NOW);
+  // The hourly membership refresh has just run, so a sync sends only what its test is about.
+  await setSetting(CLUSTER_MEMBERSHIP_REFRESH_KEY, String(PIPELINE_NOW));
 }
 
 /** Article ids the gateway was asked to score, from the decrypted relevance prompts. */

@@ -385,6 +385,11 @@ class FeedSyncMachine {
       // Background: the 6h prefilter and the metered budget, BEFORE hydrate, so
       // nothing outside them is ever charged.
       const diffResult = bg ? bg.shapeDiff(rawDiff) : rawDiff;
+      // Stale memberships keep copies of one story apart. Foreground only, hourly,
+      // never fails the run; both branches below flush the store refresh.
+      if (!bg && (await steps.stepRefreshClusterMemberships(useForYouStore.getState().suggestions)) > 0) {
+        void requestSuggestionsRefresh();
+      }
 
       if (diffResult.missingIds.length === 0) {
         // No new articles and nothing deleted — but still run scoring in case

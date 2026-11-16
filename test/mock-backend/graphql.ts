@@ -27,6 +27,7 @@ import {
     articleWithClusters,
     articlesByIds,
     articlesForCountry,
+    clusterMemberships,
     newsArticle,
     newsCluster,
     pageOf,
@@ -177,6 +178,16 @@ query<'articlesForStories'>('GetArticlesForStoriesLegacy', (c) => ({
         articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
         dailyLimitReached: false,
     },
+}));
+
+// Every known id answers the memberships hydration gave it, so a refresh changes nothing by
+// default; an unknown id is left out (the server's "no complete generation": the app keeps its value).
+query<'clusterMembershipsForArticles'>('ClusterMembershipsForArticles', (c) => ({
+    clusterMembershipsForArticles: articlesByIds(c.variables.articleIds).map((a) => ({
+        __typename: 'ArticleClusterMemberships' as const,
+        articleId: a.id,
+        clusters: clusterMemberships(a),
+    })),
 }));
 
 query<'articleById'>('GetArticleById', (c) => {

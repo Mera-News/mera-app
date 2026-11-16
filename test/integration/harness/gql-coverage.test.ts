@@ -120,6 +120,7 @@ const VARIABLES: Record<string, Record<string, unknown>> = {
   GetArticlesForStories: { articleIds: [...ARTICLE_IDS] },
   GetArticlesForTopicsByIdsLegacy: { articleIds: [...ARTICLE_IDS] },
   GetArticlesForStoriesLegacy: { articleIds: [...ARTICLE_IDS] },
+  ClusterMembershipsForArticles: { articleIds: [...ARTICLE_IDS] },
   GetNewsClusterForArticle: { articleId: ARTICLE_IDS[0] },
   GetArticlesForPublisher: { newsPublisherId: 'd00000000000000000000001' },
   GetArticlesForPublisherNoOrder: { newsPublisherId: 'd00000000000000000000001' },

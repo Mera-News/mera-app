@@ -1,7 +1,7 @@
 // Individual steps of the feed sync flow, extracted from SuggestionSyncService.
 // Each step is a pure async function that can be aborted via AbortSignal.
 
-import { ArticleService, MAX_TOPICS_PER_BATCH } from '@/lib/article-service';
+import { ArticleService, MAX_CLUSTER_MEMBERSHIP_IDS, MAX_TOPICS_PER_BATCH } from '@/lib/article-service';
 import {
   batchMarkAsScoredByIds,
   batchMarkExcluded,
@@ -14,6 +14,7 @@ import {
 } from '@/lib/database/services/article-suggestion-reads';
 import {
   persistAndLinkV2Suggestions,
+  updateClusterMemberships,
   type PersonaPersistMeta,
 } from '@/lib/database/services/article-suggestion-persist';
 import { type MatchedTopicMeta } from '@/lib/database/services/article-suggestion-mappers';
@@ -51,6 +52,8 @@ import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language
 import logger from '@/lib/logger';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { passesRenderGate } from '@/lib/stores/fact-rows-selector';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { createCancellationError, withRetry } from '@/lib/utils/retry';
 
@@ -768,6 +771,43 @@ export async function stepDiff(
     personaIds,
     personaMeta,
   };
+}
+
+/** Settings row: epoch ms of the last membership refresh attempt (stamped before the request). */
+export const CLUSTER_MEMBERSHIP_REFRESH_KEY = 'cluster_membership_refresh_at';
+export const CLUSTER_MEMBERSHIP_REFRESH_EVERY_MS = 60 * 60_000;
+/** The ML job clusters a 48h window and deletes older generations, so an older row has
+ *  no links left and its answer would clear the memberships that group its story.
+ *  Older rows (the 7-day keep) keep their last memberships. */
+export const CLUSTER_MEMBERSHIP_MAX_AGE_MS = 44 * 60 * 60_000;
+
+/**
+ * The hourly cluster-membership refresh (D8): rows hydrated before the clustering
+ * job grouped them carry stale memberships, so copies of one story show as
+ * separate cards. Asks once about the newest rows that clear the render gate and
+ * were published within {@link CLUSTER_MEMBERSHIP_MAX_AGE_MS}, and writes what
+ * changed. Returns the changed-row count; never throws (a failure waits an hour).
+ */
+export async function stepRefreshClusterMemberships(suggestions: ForYouSuggestion[]): Promise<number> {
+  try {
+    const now = Date.now();
+    const last = Number(await getSetting(CLUSTER_MEMBERSHIP_REFRESH_KEY));
+    if (Math.abs(now - last) < CLUSTER_MEMBERSHIP_REFRESH_EVERY_MS) return 0;
+    const cutoff = now - CLUSTER_MEMBERSHIP_MAX_AGE_MS;
+    const ids = suggestions
+      .map((s) => ({ s, pub: Date.parse(s.firstPubDate) }))
+      .filter(({ s, pub }) => pub >= cutoff && passesRenderGate(s))
+      .sort((a, b) => b.pub - a.pub)
+      .slice(0, MAX_CLUSTER_MEMBERSHIP_IDS)
+      .map(({ s }) => s.articleId);
+    if (ids.length === 0) return 0;
+    await setSetting(CLUSTER_MEMBERSHIP_REFRESH_KEY, String(now));
+    const answer = await ArticleService.getClusterMembershipsForArticles(ids);
+    return answer ? await updateClusterMemberships(answer) : 0;
+  } catch (err) {
+    logger.warn('[feed-sync-steps] cluster membership refresh failed', { error: String(err) });
+    return 0;
+  }
 }
 
 /**
