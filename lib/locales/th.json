@@ -641,7 +641,8 @@
     "deleteAccountWarningGrace": "⚠️ หลังจาก 30 วัน ข้อมูลบัญชีของคุณจะถูกลบถาวร ระบบจะเก็บบันทึกการเรียกเก็บเงินไว้ 7 ปีเพื่อการทำบัญชี การดำเนินการนี้ยกเลิกไม่ได้",
     "finalConfirmationBodyGrace": "นี่จะกำหนดเวลาบัญชีของคุณสำหรับการลบถาวรใน 30 วัน",
     "accountDeletionScheduledTitle": "กำหนดการลบแล้ว",
-    "accountDeletionScheduledDescription": "บัญชีของคุณจะถูกลบถาวรใน 30 วัน"
+    "accountDeletionScheduledDescription": "บัญชีของคุณจะถูกลบถาวรใน 30 วัน",
+    "rateApp": "ให้คะแนน เมร่า นิวส์"
   },
   "configPanel": {
     "factDeletedTitle": "ลบข้อเท็จจริงแล้ว",

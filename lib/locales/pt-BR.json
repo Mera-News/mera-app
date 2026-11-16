@@ -656,7 +656,8 @@
     "deleteAccountWarningGrace": "⚠️ Após 30 dias, os dados da sua conta são removidos permanentemente. Os registros de cobrança são guardados por 7 anos para fins contábeis. Isso não pode ser desfeito.",
     "finalConfirmationBodyGrace": "Isto agenda sua conta para exclusão permanente em 30 dias.",
     "accountDeletionScheduledTitle": "Exclusão Agendada",
-    "accountDeletionScheduledDescription": "Sua conta será excluída permanentemente em 30 dias."
+    "accountDeletionScheduledDescription": "Sua conta será excluída permanentemente em 30 dias.",
+    "rateApp": "Avaliar Mera News"
   },
   "configPanel": {
     "factDeletedTitle": "Fato Excluído",

@@ -640,7 +640,8 @@
     "deleteAccountWarningGrace": "⚠️ 30 天後，你的帳號資料將被永久移除。帳務紀錄會為記帳目的保留 7 年。此操作無法復原。",
     "finalConfirmationBodyGrace": "這將在30天後排定永久刪除你的帳號。",
     "accountDeletionScheduledTitle": "刪除已排定",
-    "accountDeletionScheduledDescription": "你的帳號將在 30 天後被永久刪除。"
+    "accountDeletionScheduledDescription": "你的帳號將在 30 天後被永久刪除。",
+    "rateApp": "為梅拉新聞評分"
   },
   "configPanel": {
     "factDeletedTitle": "事實已刪除",

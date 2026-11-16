@@ -640,7 +640,8 @@
     "deleteAccountWarningGrace": "⚠️ 30 天后，你的账户数据将被永久删除。账单记录会保留 7 年，用于记账。此操作无法撤消。",
     "finalConfirmationBodyGrace": "这将在30天内安排您的账户永久删除。",
     "accountDeletionScheduledTitle": "删除已安排",
-    "accountDeletionScheduledDescription": "你的账号将在 30 天后被永久删除。"
+    "accountDeletionScheduledDescription": "你的账号将在 30 天后被永久删除。",
+    "rateApp": "给梅拉新闻评分"
   },
   "configPanel": {
     "factDeletedTitle": "事实已删除",

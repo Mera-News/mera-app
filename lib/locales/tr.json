@@ -654,7 +654,8 @@
     "deleteAccountWarningGrace": "⚠️ 30 gün sonra hesap verilerin kalıcı olarak kaldırılır. Faturalama kayıtları muhasebe için 7 yıl saklanır. Bu geri alınamaz.",
     "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
     "accountDeletionScheduledTitle": "Silme Planlandı",
-    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek."
+    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek.",
+    "rateApp": "Mera News uygulamasını değerlendir"
   },
   "configPanel": {
     "factDeletedTitle": "Gerçek silindi",

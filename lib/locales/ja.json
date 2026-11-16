@@ -640,7 +640,8 @@
     "deleteAccountWarningGrace": "⚠️ 30日後、アカウントのデータは完全に削除されます。請求記録は経理のため7年間保存されます。この操作は元に戻せません。",
     "finalConfirmationBodyGrace": "これは30日後のアカウントの永久削除をスケジュールします。",
     "accountDeletionScheduledTitle": "削除がスケジュールされました",
-    "accountDeletionScheduledDescription": "アカウントは30日後に完全に削除されます。"
+    "accountDeletionScheduledDescription": "アカウントは30日後に完全に削除されます。",
+    "rateApp": "メラニュースを評価"
   },
   "configPanel": {
     "factDeletedTitle": "ファクトを削除しました",

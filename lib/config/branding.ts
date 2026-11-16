@@ -18,6 +18,18 @@ export const WEBSITE_URL =
   process.env.EXPO_PUBLIC_WEBSITE_URL || 'https://mera.news';
 export const GITHUB_URL =
   process.env.EXPO_PUBLIC_GITHUB_URL || 'https://github.com/Mera-News/mera-app';
+// The store's own review page. The native scheme opens the store app; the
+// https form is the fallback where it cannot (a simulator, a phone without Play).
+export const RATE_APP_URLS =
+  Platform.OS === 'ios'
+    ? {
+        native: 'itms-apps://apps.apple.com/app/id6754119677?action=write-review',
+        web: 'https://apps.apple.com/app/id6754119677?action=write-review',
+      }
+    : {
+        native: 'market://details?id=com.mera.news',
+        web: 'https://play.google.com/store/apps/details?id=com.mera.news',
+      };
 // How-to videos: one per kind, platform and app language, named
 // <kind>-<ios|android>-<app language code>.mp4 (built in mera-social, hosted in
 // mera-infra's guides bucket). A function, not a constant, so the language is

@@ -1088,7 +1088,8 @@
     "signedOutTitle": "Signed Out",
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
-    "logoutFailedDescription": "There was an issue signing out. Please try again."
+    "logoutFailedDescription": "There was an issue signing out. Please try again.",
+    "rateApp": "Rate Mera News"
   },
   "settings": {
     "groupHelp": "Help",

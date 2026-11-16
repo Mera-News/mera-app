@@ -661,7 +661,8 @@
     "deleteAccountWarningGrace": "⚠️ Après 30 jours, les données de votre compte sont définitivement supprimées. Les justificatifs de facturation sont conservés 7 ans pour la comptabilité. Cette action est irréversible.",
     "finalConfirmationBodyGrace": "Cela programme la suppression permanente de votre compte dans 30 jours.",
     "accountDeletionScheduledTitle": "Suppression programmée",
-    "accountDeletionScheduledDescription": "Votre compte sera définitivement supprimé dans 30 jours."
+    "accountDeletionScheduledDescription": "Votre compte sera définitivement supprimé dans 30 jours.",
+    "rateApp": "Noter Mera News"
   },
   "configPanel": {
     "factDeletedTitle": "Fait supprimé",

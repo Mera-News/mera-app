@@ -700,7 +700,8 @@
     "deleteAccountWarningGrace": "⚠️ Через 30 дней данные вашего аккаунта будут удалены навсегда. Платёжные записи хранятся 7 лет для бухгалтерского учёта. Это нельзя отменить.",
     "finalConfirmationBodyGrace": "Это назначает вашу учётную запись на постоянное удаление через 30 дней.",
     "accountDeletionScheduledTitle": "Удаление запланировано",
-    "accountDeletionScheduledDescription": "Ваш аккаунт будет удалён навсегда через 30 дней."
+    "accountDeletionScheduledDescription": "Ваш аккаунт будет удалён навсегда через 30 дней.",
+    "rateApp": "Оценить Мера Ньюс"
   },
   "configPanel": {
     "factDeletedTitle": "Факт удалён",

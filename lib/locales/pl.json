@@ -700,7 +700,8 @@
     "deleteAccountWarningGrace": "⚠️ Po upływie 30 dni dane Twojego konta zostaną trwale usunięte. Dokumenty rozliczeniowe są przechowywane przez 7 lat ze względów księgowych. Nie można tego cofnąć.",
     "finalConfirmationBodyGrace": "To zaplanuje trwałe usunięcie Twojego konta za 30 dni.",
     "accountDeletionScheduledTitle": "Usuwanie zaplanowane",
-    "accountDeletionScheduledDescription": "Twoje konto zostanie trwale usunięte za 30 dni."
+    "accountDeletionScheduledDescription": "Twoje konto zostanie trwale usunięte za 30 dni.",
+    "rateApp": "Oceń Mera News"
   },
   "configPanel": {
     "factDeletedTitle": "Fakt usunięty",

@@ -700,7 +700,8 @@
     "deleteAccountWarningGrace": "⚠️ Через 30 днів дані вашого облікового запису буде остаточно видалено. Платіжні записи зберігаються 7 років для бухгалтерського обліку. Це не можна скасувати.",
     "finalConfirmationBodyGrace": "Це запланує ваш обліковий запис на постійне видалення за 30 днів.",
     "accountDeletionScheduledTitle": "Видалення заплановане",
-    "accountDeletionScheduledDescription": "Ваш обліковий запис буде остаточно видалено через 30 днів."
+    "accountDeletionScheduledDescription": "Ваш обліковий запис буде остаточно видалено через 30 днів.",
+    "rateApp": "Оцінити Мера Ньюз"
   },
   "configPanel": {
     "factDeletedTitle": "Факт видалено",

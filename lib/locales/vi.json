@@ -640,7 +640,8 @@
     "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn. Hồ sơ thanh toán được giữ 7 năm để phục vụ sổ sách kế toán. Không thể hoàn tác.",
     "finalConfirmationBodyGrace": "Điều này lên lịch tài khoản của bạn để xóa vĩnh viễn trong 30 ngày.",
     "accountDeletionScheduledTitle": "Xóa đã được lên lịch",
-    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày."
+    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày.",
+    "rateApp": "Đánh giá Mera News"
   },
   "configPanel": {
     "factDeletedTitle": "Đã xóa thông tin",

@@ -745,7 +745,8 @@
     "deleteAccountWarningGrace": "⚠️ بعد 30 يومًا، تُحذف بيانات حسابك نهائيًا. تُحفظ سجلات الفوترة لمدة 7 سنوات لأغراض المحاسبة. لا يمكنك التراجع عن هذا.",
     "finalConfirmationBodyGrace": "هذا يجدول حسابك للحذف الدائم في 30 يومًا.",
     "accountDeletionScheduledTitle": "حذف مجدول",
-    "accountDeletionScheduledDescription": "سيُحذف حسابك نهائيًا خلال 30 يومًا."
+    "accountDeletionScheduledDescription": "سيُحذف حسابك نهائيًا خلال 30 يومًا.",
+    "rateApp": "قيّم ميرا نيوز"
   },
   "configPanel": {
     "factDeletedTitle": "تم حذف الحقيقة",

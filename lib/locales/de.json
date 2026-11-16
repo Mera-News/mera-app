@@ -654,7 +654,8 @@
     "deleteAccountWarningGrace": "⚠️ Nach 30 Tagen werden deine Kontodaten endgültig entfernt. Abrechnungsunterlagen werden 7 Jahre lang für die Buchhaltung aufbewahrt. Das lässt sich nicht rückgängig machen.",
     "finalConfirmationBodyGrace": "Dies plant dein Konto zur permanenten Löschung in 30 Tagen.",
     "accountDeletionScheduledTitle": "Löschung geplant",
-    "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen endgültig gelöscht."
+    "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen endgültig gelöscht.",
+    "rateApp": "Mera News bewerten"
   },
   "configPanel": {
     "factDeletedTitle": "Fakt gelöscht",

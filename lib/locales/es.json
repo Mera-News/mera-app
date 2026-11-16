@@ -656,7 +656,8 @@
     "deleteAccountWarningGrace": "⚠️ Después de 30 días, los datos de tu cuenta se eliminan permanentemente. Los registros de facturación se conservan durante 7 años por motivos contables. No se puede deshacer.",
     "finalConfirmationBodyGrace": "Esto programa tu cuenta para eliminación permanente en 30 días.",
     "accountDeletionScheduledTitle": "Eliminación programada",
-    "accountDeletionScheduledDescription": "Tu cuenta se eliminará de forma permanente en 30 días."
+    "accountDeletionScheduledDescription": "Tu cuenta se eliminará de forma permanente en 30 días.",
+    "rateApp": "Valorar Mera News"
   },
   "configPanel": {
     "factDeletedTitle": "Hecho eliminado",

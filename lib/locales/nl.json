@@ -654,7 +654,8 @@
     "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden je accountgegevens permanent verwijderd. Factuurgegevens worden 7 jaar bewaard voor de boekhouding. Dit kan niet ongedaan worden gemaakt.",
     "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
     "accountDeletionScheduledTitle": "Verwijdering gepland",
-    "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd."
+    "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd.",
+    "rateApp": "Mera News beoordelen"
   },
   "configPanel": {
     "factDeletedTitle": "Feit verwijderd",

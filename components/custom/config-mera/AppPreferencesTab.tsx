@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
-import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, RATE_APP_URLS, TERMS_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useChatInCloud } from '@/lib/stores/mera-protocol-store';
@@ -15,7 +15,7 @@ import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, View } from 'react-native';
+import { Linking, Platform, View } from 'react-native';
 import { TEXT_SIZE_LABEL_KEYS } from './DisplaySettingsScreen';
 import SettingsUsageCard from './SettingsUsageCard';
 import SupportIdCopy, { useSupportId } from './SupportIdCopy';
@@ -198,6 +198,16 @@ const AppPreferencesTab: React.FC = () => {
                     leadingIcon="bug-report"
                     title={t('preferences.reportBug')}
                     onPress={() => showFeedback()}
+                />
+                <Row
+                    testID="settings-row-rate"
+                    leadingIcon="rate-review"
+                    title={t('preferences.rateApp')}
+                    onPress={() => {
+                        Linking.openURL(RATE_APP_URLS.native).catch(() =>
+                            openInAppBrowser(RATE_APP_URLS.web).catch(() => undefined)
+                        );
+                    }}
                 />
             </Group>
 

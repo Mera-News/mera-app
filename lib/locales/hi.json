@@ -654,7 +654,8 @@
     "deleteAccountWarningGrace": "⚠️ 30 दिन के बाद, आपके खाते का डेटा स्थायी रूप से हटा दिया जाता है। बिलिंग रिकॉर्ड हिसाब-किताब के लिए 7 साल तक रखे जाते हैं। इसे पूर्ववत नहीं किया जा सकता।",
     "finalConfirmationBodyGrace": "यह आपके खाते को 30 दिनों में स्थायी रूप से हटाने के लिए शेड्यूल करता है।",
     "accountDeletionScheduledTitle": "हटाना शेड्यूल किया गया",
-    "accountDeletionScheduledDescription": "आपका खाता 30 दिनों में स्थायी रूप से हटा दिया जाएगा।"
+    "accountDeletionScheduledDescription": "आपका खाता 30 दिनों में स्थायी रूप से हटा दिया जाएगा।",
+    "rateApp": "मेरा न्यूज़ को रेटिंग दें"
   },
   "configPanel": {
     "factDeletedTitle": "तथ्य हटाया गया",

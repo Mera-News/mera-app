@@ -640,7 +640,8 @@
     "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, data akun Anda dihapus secara permanen. Catatan penagihan disimpan selama 7 tahun untuk pembukuan. Tindakan ini tidak dapat dibatalkan.",
     "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
     "accountDeletionScheduledTitle": "Penghapusan Dijadwalkan",
-    "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari."
+    "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari.",
+    "rateApp": "Beri rating Mera News"
   },
   "configPanel": {
     "factDeletedTitle": "Fakta Dihapus",

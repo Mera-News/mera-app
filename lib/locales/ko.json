@@ -640,7 +640,8 @@
     "deleteAccountWarningGrace": "⚠️ 30일 후에는 계정 데이터가 영구적으로 삭제됩니다. 결제 기록은 장부 관리를 위해 7년간 보관됩니다. 이 작업은 되돌릴 수 없습니다.",
     "finalConfirmationBodyGrace": "계정이 30일 후 영구 삭제되도록 예약됩니다.",
     "accountDeletionScheduledTitle": "삭제 예약됨",
-    "accountDeletionScheduledDescription": "계정은 30일 후 영구적으로 삭제됩니다."
+    "accountDeletionScheduledDescription": "계정은 30일 후 영구적으로 삭제됩니다.",
+    "rateApp": "메라 뉴스 평가하기"
   },
   "configPanel": {
     "factDeletedTitle": "사실 삭제됨",
