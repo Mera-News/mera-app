@@ -36,6 +36,13 @@ export type AppVersionInfo = {
   storeUrl?: Maybe<Scalars['String']['output']>;
 };
 
+/** One article's cluster memberships from the newest COMPLETE clustering generation. */
+export type ArticleClusterMemberships = {
+  __typename?: 'ArticleClusterMemberships';
+  articleId: Scalars['ID']['output'];
+  clusters: Array<ClusterMembership>;
+};
+
 export type ArticleIdsForTopicsResponse = {
   __typename?: 'ArticleIdsForTopicsResponse';
   results: Array<TopicArticleIdsResult>;
@@ -679,6 +686,8 @@ export type Query = {
   cachedFactCheck?: Maybe<FactCheck>;
   /** The seeded canonical category tree, optionally one level. */
   canonicalTopics: Array<CanonicalTopic>;
+  /** Cluster memberships for up to 500 article ids, from the newest complete clustering generation. An article with no links returns clusters: []; one whose links are all mid-swap is omitted. Response order is not request order. */
+  clusterMembershipsForArticles: Array<ArticleClusterMemberships>;
   /** Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call. */
   embedPhrases: PhraseEmbeddingResult;
   /** The fact check for an article. Returns the cached row instantly when one exists (in any state); creates a `pending` one and starts the job when none does. Poll until `status` is complete / blocked / failed. Null means no check exists and none could be started (the article is no longer servable). Always read `checkedBy` together with `checkedByStatus` — an empty list only means "nobody has published" when the status is `searched`. */
@@ -786,6 +795,11 @@ export type QueryCachedFactCheckArgs = {
 
 export type QueryCanonicalTopicsArgs = {
   level?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryClusterMembershipsForArticlesArgs = {
+  articleIds: Array<Scalars['ID']['input']>;
 };
 
 

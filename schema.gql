@@ -38,6 +38,14 @@ type AppVersionInfo {
   storeUrl: String
 }
 
+"""
+One article's cluster memberships from the newest COMPLETE clustering generation.
+"""
+type ArticleClusterMemberships {
+  articleId: ID!
+  clusters: [ClusterMembership!]!
+}
+
 type ArticleIdsForTopicsResponse {
   results: [TopicArticleIdsResult!]!
 }
@@ -746,6 +754,11 @@ type Query {
 
   """The seeded canonical category tree, optionally one level."""
   canonicalTopics(level: Int): [CanonicalTopic!]!
+
+  """
+  Cluster memberships for up to 500 article ids, from the newest complete clustering generation. An article with no links returns clusters: []; one whose links are all mid-swap is omitted. Response order is not request order.
+  """
+  clusterMembershipsForArticles(articleIds: [ID!]!): [ArticleClusterMemberships!]!
 
   """
   Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call.
