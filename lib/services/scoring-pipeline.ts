@@ -3128,6 +3128,12 @@ export async function enqueueUnscoredEligible(
 export async function pollTick(context: ExecutionContext): Promise<void> {
   const snap = await getPipeline();
   if (!snap) return;
+  // See recover(): the switch to on-device can land while the poller is running.
+  // Safe here: a poll tick never runs inside a drain.
+  if (isOnDeviceProcessing()) {
+    await abortRun('on-device');
+    return;
+  }
   const { run } = snap;
   const now = Date.now();
 
@@ -3293,6 +3299,13 @@ export async function recover(): Promise<'idle' | 'running'> {
       `${TAG} run ${run.runId} idle for over ${RUN_ABANDON_MS}ms — abandoning`,
     );
     await forceFailNonTerminalAndFinalize();
+    return 'idle';
+  }
+  // A cloud run left over from before a switch to on-device: every submit would hit
+  // the cloud gate. Abort it rather than park it, since a live run suppresses the
+  // on-device lane's scoring in feed-sync. Its rows stay unscored for that lane.
+  if (isOnDeviceProcessing()) {
+    await abortRun('on-device');
     return 'idle';
   }
 

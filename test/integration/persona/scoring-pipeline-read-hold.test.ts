@@ -236,3 +236,33 @@ describe('the foreground poller under the read hold', () => {
     await wrapUp();
   });
 });
+
+// MERA-APP-9V: batches queued while in Cloud mode, then the reader switched to on-device. The
+// foreground drain kept submitting them, each submit threw OnDeviceModeError at the cloud gate,
+// was reported and requeued. The run is aborted instead: a live run would also keep feed-sync
+// from scoring on the on-device lane. Its rows stay unscored, unstamped, for that lane.
+describe('on-device mode in the foreground', () => {
+  afterEach(() => {
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
+  });
+
+  it('aborts the leftover cloud run: no submit, no report, rows left for the on-device lane', async () => {
+    gateway();
+    await seedAndEnqueue(ids(25));
+    expect(await phases()).toEqual(['queued', 'queued', 'queued']);
+    useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
+    const posts = countJobPosts();
+
+    for (let i = 0; i < 3; i += 1) await tick();
+
+    expect(posts()).toBe(0);
+    expect(await pipeline.getPipelineStatus()).not.toBe('running');
+    expect(logger.captureException).not.toHaveBeenCalled();
+    const stored = await database.get('article_suggestions').query().fetch();
+    for (const row of stored) {
+      const raw = row._raw as unknown as Record<string, unknown>;
+      expect(raw.status).toBe('unscored');
+      expect(raw.score_failed_at ?? null).toBeNull();
+    }
+  });
+});
