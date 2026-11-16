@@ -192,11 +192,11 @@ describe('golden — measured prompt sizes', () => {
     // trip expiry, family bands, anchors; paid for in bytes by the Jersey worked
     // example and every spaced em dash in the base, so the headline relevance
     // prompt still fits the 90% wire cap below.
-    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4669);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7311);
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4676);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7318);
     // ux1: +43 for RULE_NAME_BAN, which names the rubric label in every spelling.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5616);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7067);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5623);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7075);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -284,10 +284,10 @@ describe('golden — measured prompt sizes', () => {
     // The tripwire. A number moving here means a prompt grew; check it against
     // the cap above before re-pinning.
     expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
-      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37628',
-      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58912',
-      'CLOUD_REASON_SYSTEM_PROMPT 45248',
-      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 56968',
+      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37684',
+      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58968',
+      'CLOUD_REASON_SYSTEM_PROMPT 45304',
+      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 57024',
       'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12512',
       'CLOUD_V3_NOTE_SYSTEM_PROMPT 15444',
       'LOCAL_RELEVANCE_SYSTEM_PROMPT 9232',
@@ -302,7 +302,7 @@ describe('golden — measured prompt sizes', () => {
     // archive; the arm's description carries the warning. Since the retention
     // rubric (D20.6) the pre-geo arms are "current base minus the geo rule",
     // no longer byte-exact to what shipped, and still over the cap.
-    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65958);
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(66014);
     expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBeGreaterThan(CAP);
   });
 

@@ -5,7 +5,7 @@
   "today": "2026-11-16",
   "note": "Anonymised mirror of a real reader calibration set: other cities and countries, synthetic articles, no real reader data. Persona: lives in Copenhagen, from Brazil, trip to Slush Helsinki ENDED (as of today), on-device AI and privacy interests, AI-app founder. `calibration` per article: group KEEP/MAYBE/CUT/HIDDEN with optional min/max target on the FINAL score (D20.2: family-country routine items 0.40-0.59, every other CUT and HIDDEN <= 0.39, KEEP and strong MAYBE >= 0.6). Fact dates for the model: trip fact added 2026-10-28, threaded by run-newsharness-corpus.",
   "factAddedOn": {
-   "Traveling to Slush Helsinki": "2026-10-28"
+   "Traveling to Slush Helsinki, 4 to 6 November 2026": "2026-10-28"
   }
  },
  "personaFacts": [
@@ -19,7 +19,7 @@
    "statement": "From Brazil"
   },
   {
-   "statement": "Traveling to Slush Helsinki"
+   "statement": "Traveling to Slush Helsinki, 4 to 6 November 2026"
   },
   {
    "statement": "Interested in on-device language models"
