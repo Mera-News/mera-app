@@ -148,7 +148,11 @@ describe('fetchResults: auth header', () => {
   it('throws when foreground has no JWT and no capability token', async () => {
     const seen = captureResults();
 
-    await expect(fetchResults('req-1', 'foreground')).rejects.toThrow('no auth available (foreground)');
+    // MERA-APP-9J: a NoCredentialError, so the logger's no-credential class keeps it out of Sentry.
+    await expect(fetchResults('req-1', 'foreground')).rejects.toMatchObject({
+      name: 'NoCredentialError',
+      message: 'no auth available (foreground)',
+    });
 
     expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
       expect.objectContaining({
