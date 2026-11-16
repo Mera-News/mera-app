@@ -81,7 +81,16 @@ function report(fx: CalibrationFixture, rows: RunRow[], need: number): boolean {
 
 // ---------------------------------------------------------------------------
 
-const PRIVATE_WORDS = /owner-private-placeholder/i;
+// The reader's real words must never sit in this repo, so the denylist is read at runtime from a
+// gitignored file (one word per line): $MERA_PRIVATE_WORDS_FILE, else the nearest
+// .state/retention-wave/private-words.txt above this script. Absent: the check is skipped, loudly.
+function loadPrivateWords(): string[] | null {
+  const given = process.env.MERA_PRIVATE_WORDS_FILE;
+  const found = [given, ...Array.from({ length: 8 }, (_, i) => join(__dirname, ...Array(i + 1).fill('..'), '.state', 'retention-wave', 'private-words.txt'))]
+    .find((p) => p && existsSync(p));
+  if (!found) return null;
+  return readFileSync(found, 'utf8').split('\n').map((w) => w.trim()).filter(Boolean);
+}
 
 function selftest(): number {
   let f = 0;
@@ -129,10 +138,16 @@ function selftest(): number {
   ck('fixture: unique ids', ids.size === real.articles.length);
   ck('fixture: every article has a group target', real.articles.every((a) => ['KEEP', 'MAYBE', 'CUT', 'HIDDEN'].includes(a.calibration?.group)));
   const n = (g: string) => real.articles.filter((a) => a.calibration.group === g).length;
-  ck('fixture: 2 KEEP, 4 MAYBE, 14 CUT, 14 HIDDEN', n('KEEP') === 2 && n('MAYBE') === 4 && n('CUT') === 14 && n('HIDDEN') === 14);
+  ck('fixture: 3 KEEP, 4 MAYBE, 14 CUT, 14 HIDDEN', n('KEEP') === 3 && n('MAYBE') === 4 && n('CUT') === 14 && n('HIDDEN') === 14);
   ck('fixture: the ended-trip fact is present', real.personaFacts.some((p) => /Slush/.test(p.statement)));
-  ck('fixture: no owner-private words', !PRIVATE_WORDS.test(raw));
-  ck('CONTROL: the privacy check fires on a planted leak', PRIVATE_WORDS.test(raw + ' Bhopal'));
+  const words = loadPrivateWords();
+  if (!words || words.length === 0) {
+    console.log('SKIP  fixture: no owner-private words (no private-words file; set MERA_PRIVATE_WORDS_FILE)');
+  } else {
+    const leak = new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
+    ck('fixture: no owner-private words', !leak.test(raw));
+    ck('CONTROL: the privacy check fires on a planted leak', leak.test(`${raw} ${words[0]}`));
+  }
 
   console.log(f === 0 ? '\nALL PASS' : `\n${f} FAILURE(S)`);
   return f === 0 ? 0 : 1;

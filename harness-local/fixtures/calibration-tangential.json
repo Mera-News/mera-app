@@ -3,7 +3,7 @@
   "name": "calibration-tangential",
   "synthetic": true,
   "today": "2026-11-16",
-  "note": "Anonymised mirror of a real reader calibration set: other cities and countries, synthetic articles, no real reader data. Persona: lives in Copenhagen, from Brazil, trip to Slush Helsinki ENDED (as of today), on-device AI and privacy interests, AI-app founder. `calibration` per article: group KEEP/MAYBE/CUT/HIDDEN with optional min/max target on the FINAL score (D20.2: family-country routine items 0.40-0.59, every other CUT and HIDDEN <= 0.39, KEEP and strong MAYBE >= 0.6). Fact dates for the model: trip fact added 2026-10-28; the runner does not yet thread them.",
+  "note": "Anonymised mirror of a real reader calibration set: other cities and countries, synthetic articles, no real reader data. Persona: lives in Copenhagen, from Brazil, trip to Slush Helsinki ENDED (as of today), on-device AI and privacy interests, AI-app founder. `calibration` per article: group KEEP/MAYBE/CUT/HIDDEN with optional min/max target on the FINAL score (D20.2: family-country routine items 0.40-0.59, every other CUT and HIDDEN <= 0.39, KEEP and strong MAYBE >= 0.6). Fact dates for the model: trip fact added 2026-10-28, threaded by run-newsharness-corpus.",
   "factAddedOn": {
    "Traveling to Slush Helsinki": "2026-10-28"
   }
@@ -511,6 +511,20 @@
    "calibration": {
     "group": "HIDDEN",
     "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c35",
+   "title": "Man hurt after scaffolding collapses on a busy Copenhagen street near Norreport",
+   "description": "A section of scaffolding fell onto the pavement outside a shop in central Copenhagen on Tuesday morning. One passer-by was taken to hospital and the street is closed while the city inspects other scaffolding on the block.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "The Local Denmark",
+   "languageCode": "en",
+   "calibration": {
+    "group": "KEEP",
+    "min": 0.6
    }
   }
  ]
