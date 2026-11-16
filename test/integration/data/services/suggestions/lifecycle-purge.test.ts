@@ -216,6 +216,34 @@ describe('deleteOldSuggestions keeps unread High for 7 days', () => {
     expect(await idsInDb()).toEqual([]);
   });
 
+  it('a viewed fresh sibling marks an old member read: the old member is deleted', async () => {
+    await seedAt(3 * DAY, [clustered('old', 'S-story', 3 * DAY)]);
+    jest.setSystemTime(T0 - HOUR);
+    await seed([clustered('fresh', 'S-story', 3 * DAY)]);
+    await toComplete('fresh', 0.8);
+    jest.setSystemTime(T0);
+    await viewed('fresh');
+
+    await deleteOldSuggestions(cutoff);
+
+    expect(await idsInDb()).toEqual(['fresh']);
+  });
+
+  it('read evidence outlives the viewed representative: its younger copy is deleted by the next sweep', async () => {
+    // R created 50h ago and viewed (the Feed stores the story keys beside its card state);
+    // copy Y created 40h ago. The first sweep deletes R and leaves Y inside the 48h window.
+    await seedAt(50 * HOUR, [clustered('R', 'S-story', 51 * HOUR)]);
+    await seedAt(40 * HOUR, [clustered('Y', 'S-story', 51 * HOUR)]);
+    await setSetting('feed_card_state_v1', JSON.stringify({ states: { R: ['v', T0, ['S-story']] } }));
+
+    await deleteOldSuggestions(cutoff);
+    expect(await idsInDb()).toEqual(['Y']);
+
+    // Ten hours on, Y is past 48h too: with R's row gone, only the persisted key says it was read.
+    await deleteOldSuggestions(T0 - 30 * HOUR);
+    expect(await idsInDb()).toEqual([]);
+  });
+
   it('an unread 3-member story at 50h is spared whole', async () => {
     const pub = 50 * HOUR;
     await seedAt(pub, ['m1', 'm2', 'm3'].map((id) => clustered(id, 'S-story', pub)));
