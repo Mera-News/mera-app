@@ -14,6 +14,7 @@ import { useColors, useThemeMode } from '@/lib/theme/tokens';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
+import type { LocationRole } from '@/lib/database/models/Location';
 import { flagForAlpha2 } from './location-display';
 import LocationRolePicker from './LocationRolePicker';
 import WeightSegments from './WeightSegments';
@@ -34,6 +35,8 @@ interface Props {
   readonly renderIdle: () => React.ReactNode;
   /** Above the search bar, on the search step only: the other steps need the height. */
   readonly header?: React.ReactNode;
+  /** Saves every place under this role and hides the role question. */
+  readonly fixedRole?: LocationRole;
 }
 
 /**
@@ -44,7 +47,7 @@ interface Props {
  * query, search step) it defers to `renderIdle` so the saved-places list stays
  * visible under the search bar.
  */
-const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, header }) => {
+const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, header, fixedRole }) => {
   const { t } = useTranslation();
   const colors = useColors();
   const themeMode = useThemeMode();
@@ -78,7 +81,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, header
     handlePickPlace,
     handleManualContinue,
     handleSave,
-  } = useAddLocation({ onSaved });
+  } = useAddLocation({ onSaved, fixedRole });
   useRestartHold([query, manualCity, countrySearch].some((v) => v.trim().length > 0), 'draft:location', 'hard');
 
   // ── Configure step ────────────────────────────────────────────────────────
@@ -102,10 +105,12 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle, header
             </Pressable>
           </HStack>
 
-          <VStack space="sm">
-            <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
-            <LocationRolePicker value={role} onChange={setRole} />
-          </VStack>
+          {fixedRole ? null : (
+            <VStack space="sm">
+              <Text className="text-ink-2 text-xs uppercase">{t('locations.roleLabel')}</Text>
+              <LocationRolePicker value={role} onChange={setRole} />
+            </VStack>
+          )}
 
           <VStack space="sm">
             <Text className="text-ink-2 text-xs uppercase">{t('locations.weightLabel')}</Text>

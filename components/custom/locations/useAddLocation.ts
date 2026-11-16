@@ -22,13 +22,16 @@ export interface ChosenPlace {
 
 export function useAddLocation({
   onSaved,
+  fixedRole,
 }: {
+  /** Pins the role (onboarding's "where do you live" picker); the role step is not offered. */
+  fixedRole?: LocationRole;
   /** Awaited: a rejection counts as a failed save, so the reader can try again. */
   onSaved: (place: ChosenPlace) => void | Promise<void>;
 }) {
   const { t } = useTranslation();
   const [chosen, setChosen] = useState<ChosenPlace | null>(null);
-  const [role, setRole] = useState<LocationRole>('home');
+  const [role, setRole] = useState<LocationRole>(fixedRole ?? 'home');
   const [bucket, setBucket] = useState<WeightBucket>('medium');
   const [saving, setSaving] = useState(false);
 

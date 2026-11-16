@@ -1,6 +1,7 @@
 // The onboarding questionnaire on the real surface: the wizard, its chat step, the chat session and
 // engine, the in-memory DB. Only the network edge is scripted (the inference gateway mock).
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { getLocales } from 'expo-localization';
 import React from 'react';
 
 import OnboardingWizard from '@/components/custom/onboarding/OnboardingWizard';
@@ -93,6 +94,12 @@ const openWizard = async (onComplete = jest.fn()) => {
   await screen.findByTestId('chat-input', {}, { timeout: 15_000 });
   await screen.findByTestId('onboarding-path-card', {}, { timeout: 10_000 });
   return onComplete;
+};
+/** Step 1 needs one fact before Next: the one-tap home chip gives it with no chat turn. */
+const tapHomeChip = async () => {
+  jest.mocked(getLocales).mockReturnValue([{ languageCode: 'en', regionCode: 'NL', languageTag: 'en' }] as never);
+  await press('home-country-chip');
+  await waitFor(() => expect(screen.getByTestId('onboarding-next').props.accessibilityState?.disabled).toBeFalsy());
 };
 const menuCount = () => screen.queryAllByTestId('onboarding-path-card').length;
 const waitForMenus = (n: number) => waitFor(() => expect(menuCount()).toBe(n), { timeout: 10_000 });
@@ -256,12 +263,13 @@ describe("I'd rather not say", () => {
 });
 
 describe('the wizard after a decline', () => {
-  it('Next with nothing saved reaches sources and writes nothing', async () => {
+  it('Next waits for the home chip, then reaches sources with one fact and no location', async () => {
     const onComplete = await openWizard();
+    await tapHomeChip();
     await press('onboarding-next');
 
     expect(await screen.findByTestId('onboarding-sources-step')).toBeTruthy();
-    expect(await getFacts()).toEqual([]);
+    expect(await getFacts()).toHaveLength(1);
     expect(await getLocations()).toEqual([]);
 
     await press('onboarding-next');
@@ -507,6 +515,7 @@ describe('the Ready badge', () => {
   it('hides on the later steps', async () => {
     await openWizard();
     await status('ready');
+    await tapHomeChip();
     await press('onboarding-next');
     await screen.findByTestId('onboarding-sources-step');
     expect(badge()).toBeNull();
@@ -529,7 +538,7 @@ describe('the Ready badge', () => {
   it('hides on device', async () => {
     await setProcessingMode('on-device');
     await render(<OnboardingWizard userId={FIXTURE_ACCOUNT.userId} onComplete={jest.fn()} />);
-    await screen.findByTestId('onboarding-cloud-only', {}, { timeout: 10_000 });
+    await screen.findByTestId('onboarding-home-picker', {}, { timeout: 10_000 });
     await status('ready');
 
     expect(badge()).toBeNull();

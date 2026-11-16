@@ -8,13 +8,14 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Spinner } from '@/components/ui/spinner';
 import ReadinessBadge from '@/components/custom/floating-chat/ReadinessBadge';
 import MeraToast from '@/components/custom/toast/MeraToast';
 import { useToast } from '@/components/ui/toast';
 import { AccountService } from '@/lib/account-service';
+import { HomeCountryChip } from '@/components/custom/home-country-chip/HomeCountryChip';
 import { authClient } from '@/lib/auth-client';
+import logger from '@/lib/logger';
 import { observeFacts } from '@/lib/database/services/fact-service';
 import { OnboardingStage } from '@/lib/generated/graphql-types';
 import { reconcileAppLanguageWithPersona } from '@/lib/language-sync';
@@ -22,15 +23,13 @@ import { useChatRunsInCloud } from '@/lib/llm/chat-cloud';
 import { useChatReadiness } from '@/lib/llm/prewarm';
 import { SPRING } from '@/lib/motion';
 import { ensurePushTokenRegistered } from '@/lib/notification-service';
-import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
+import { convertUTCHoursToLocal } from '@/lib/algorithms/notificationSlotUtils';
 import {
     useFloatingChatHasUnresolvedTopicPlans,
     useFloatingChatStore,
     useFloatingChatUnresolvedCounts,
 } from '@/lib/stores/floating-chat-store';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
-import { isOnline, useIsOnline } from '@/lib/stores/network-store';
-import { isSessionRefusedError } from '@/lib/utils/retry';
 import {
     useOnboardingIsInitializing,
     useOnboardingPreferences,
@@ -45,7 +44,8 @@ import { NextGuardBox } from './NextGuardBox';
 import { markOnboardingDone } from './onboarding-done';
 import OnboardingSourcesStep from './OnboardingSourcesStep';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
-import { useServerErrorLogout } from './useServerErrorLogout';
+import { HomePickerFallback, useHomePickerOffer } from './HomePickerFallback';
+import { flushPendingNotificationHours, savePendingNotificationHours } from './pending-notification-hours';
 
 // Three steps (FinalJourney #8, #24): 0 = tell Mera (the persona chat), 1 =
 // sources (search only, skippable, no server stage), 2 = notifications. Chat
@@ -87,13 +87,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const isInitializing = useOnboardingIsInitializing();
     const { setStep, updatePreferences, setIsInitializing, resetOnboarding } = useOnboardingStore();
 
-    const [showServerError, setShowServerError] = useState(false);
-    const [sessionRefused, setSessionRefused] = useState(false);
-    const { isLoggingOut, handleServerErrorLogout } = useServerErrorLogout(setShowServerError);
-    const offline = !useIsOnline();
     const [guard, setGuard] = useState<Guard>(null);
-    // Next with zero facts asks for a city, unless the reader already declined that
-    // question in the chat. Memory only, so a reopened wizard asks again.
     const [notificationsOn, setNotificationsOn] = useState(false);
     const [enableRequest, setEnableRequest] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -121,6 +115,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
 
     // The facts counter (Journey #8): the counter is the progress.
     const [factCount, setFactCount] = useState(0);
+    // Step 1 needs one fact before Next (the chip or the picker gives it without a chat turn).
+    const gated = currentStep === 0 && factCount === 0;
+    const [pickerClosed, setPickerClosed] = useState(false);
+    const chatUnavailable = !chatInCloud || blockedLive || blockedPersona;
+    const pickerOffered = useHomePickerOffer({ chatUnavailable, unresolved: hasUnresolvedTopicPlans });
+    const showPicker = gated && pickerOffered && (chatUnavailable || !pickerClosed);
     const pop = useSharedValue(1);
     useEffect(() => {
         const sub = observeFacts().subscribe((rows) => setFactCount(rows.length));
@@ -132,31 +132,30 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     }, [factCount, reduceMotion, pop]);
     const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
 
+    // The step shows at once; the owner and the hours prefill arrive behind it and never block.
     useEffect(() => {
-        const init = async () => {
+        if (initialUserId) updatePreferences('userId', initialUserId);
+        setStep(0);
+        setIsInitializing(false);
+        void (async () => {
             try {
-                if (initialUserId) updatePreferences('userId', initialUserId);
                 // Bounded: better-auth's transport has no timeout of its own.
                 const sessionData = await Promise.race([
                     authClient.getSession(),
                     new Promise<null>((resolve) => setTimeout(() => resolve(null), SESSION_LOOKUP_TIMEOUT_MS)),
                 ]);
                 const userId = sessionData?.data?.user?.id;
-                if (userId) {
-                    updatePreferences('userId', userId);
-                    const persona = await AccountService.getUserPersona(userId);
-                    if (persona?.preferredNotificationWindow?.length) {
-                        updatePreferences('notificationHours', convertUTCHoursToLocal(persona.preferredNotificationWindow));
-                    }
+                if (!userId) return;
+                updatePreferences('userId', userId);
+                const persona = await AccountService.getUserPersona(userId);
+                // Never over what the reader has already picked.
+                if (persona?.preferredNotificationWindow?.length && useOnboardingStore.getState().preferences.notificationHours.length === 0) {
+                    updatePreferences('notificationHours', convertUTCHoursToLocal(persona.preferredNotificationWindow));
                 }
             } catch {
                 // The wizard works without the prefill.
-            } finally {
-                setStep(0);
-                setIsInitializing(false);
             }
-        };
-        void init();
+        })();
     }, [initialUserId, updatePreferences, setIsInitializing, setStep]);
 
     // Leaving onboarding restores the floating chat's default state.
@@ -176,6 +175,21 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         return resolved;
     };
 
+    const finishInBackground = async () => {
+        let userId: string;
+        try {
+            userId = await getCurrentUserId();
+        } catch {
+            return; // the next launch's reconcile picks the hours up
+        }
+        const quiet = (what: string) => (error: unknown) => logger.warn(`[onboarding] ${what} not sent`, { error: String(error) });
+        // The push token registers regardless of the visible switch: the silent-push background cycle needs it.
+        void Promise.resolve(ensurePushTokenRegistered(userId)).catch(quiet('push token'));
+        void reconcileAppLanguageWithPersona({ userId });
+        void flushPendingNotificationHours(userId);
+        void Promise.resolve(AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2])).catch(quiet('stage'));
+    };
+
     /** Move on from the current step, past its guard. */
     const advance = useCallback(async () => {
         setGuard(null);
@@ -193,42 +207,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
             setStep(2);
             return;
         }
-        // Offline FIRST: the last step talks to the server.
-        if (!isOnline()) {
-            setSessionRefused(false);
-            setShowServerError(true);
-            return;
-        }
+        // Local first: the reader is done the moment the device says so. Every server call runs after,
+        // in the background, and none can keep them here (hours are kept to resend).
         setBusy(true);
+        const hours = userPreferences.notificationHours;
         try {
-            const userId = await getCurrentUserId();
-            if (userPreferences.notificationHours.length > 0) {
-                await AccountService.updateNotificationPreferences(
-                    userId,
-                    convertLocalHoursToUTC(userPreferences.notificationHours),
-                );
-            }
-            // The push token registers regardless of the visible switch: the
-            // silent-push background cycle needs it. Never awaited: it is total,
-            // push-token-check-task re-registers later, and a slow Expo answer
-            // must not hold the reader back.
-            void ensurePushTokenRegistered(userId);
-            void reconcileAppLanguageWithPersona({ userId });
-            await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2]);
+            await savePendingNotificationHours(hours);
             await markOnboardingDone();
-            resetOnboarding();
-            onComplete();
         } catch (error) {
-            setSessionRefused(isSessionRefusedError(error));
-            setShowServerError(true);
-        } finally {
-            setBusy(false);
+            logger.captureException(error, { tags: { component: 'OnboardingWizard', method: 'finish' } });
         }
+        void finishInBackground();
+        resetOnboarding();
+        setBusy(false);
+        onComplete();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep, userPreferences, setStep, resetOnboarding, onComplete]);
 
     const handleNext = useCallback(() => {
-        if (busy) return;
+        if (busy || gated) return;
         if (currentStep === 0) {
             if (hasUnresolvedTopicPlans) {
                 toast.show({
@@ -251,7 +248,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
             return;
         }
         void advance();
-    }, [busy, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, notificationsOn, advance, toast, t]);
+    }, [busy, gated, currentStep, hasUnresolvedTopicPlans, unresolvedCounts, notificationsOn, advance, toast, t]);
 
     if (isInitializing) {
         return (
@@ -270,7 +267,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 action="primary"
                 variant={skipping ? 'outline' : 'solid'}
                 onPress={handleNext}
-                isDisabled={busy}
+                isDisabled={busy || gated}
+                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                accessibilityHint={gated ? t('onboarding.gateHint') : undefined}
                 style={currentStep === 1 ? styles.nextFixed : styles.next}
                 testID="onboarding-next"
             >
@@ -310,8 +309,21 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 {t('onboarding.factsCount', { count: factCount })}
                             </RNText>
                         </Animated.View>
+                        {gated ? (
+                            <View style={styles.zero} testID="onboarding-zero-block">
+                                <RNText accessibilityRole="header" style={[styles.zeroHint, { color: colors.ink }]}>
+                                    {t('onboarding.gateHint')}
+                                </RNText>
+                                <HomeCountryChip />
+                                <RNText style={[styles.zeroPrivacy, { color: colors.ink3 }]}>{t('onboarding.privacyLine')}</RNText>
+                            </View>
+                        ) : null}
                         <View style={styles.flex}>
-                            <PersonaUpdateChatStep userId={userPreferences.userId} />
+                            {showPicker ? (
+                                <HomePickerFallback onClose={() => setPickerClosed(true)} />
+                            ) : (
+                                <PersonaUpdateChatStep userId={userPreferences.userId} />
+                            )}
                         </View>
                     </View>
                 ) : currentStep === 1 ? (
@@ -352,29 +364,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                     />
                 </View>
             </View>
-
-            {/* A failed request on Next. Log out is destructive (signOutAndWipe),
-                so it is offered only on a real 401 or 403; anything else retries,
-                or just closes while offline. */}
-            <ConfirmDialog
-                open={showServerError}
-                title={t('onboarding.connectionIssue')}
-                body={t('onboarding.connectionDescription')}
-                confirmLabel={sessionRefused ? t('onboarding.logout') : offline ? t('onboarding.close') : t('common.retry')}
-                destructive={sessionRefused}
-                busy={isLoggingOut}
-                onConfirm={() => {
-                    if (sessionRefused) {
-                        void handleServerErrorLogout();
-                        return;
-                    }
-                    setShowServerError(false);
-                    if (!offline) void advance();
-                }}
-                onCancel={offline && !sessionRefused ? undefined : () => setShowServerError(false)}
-                cancelLabel={t('onboarding.close')}
-                testID="onboarding-server-error"
-            />
         </View>
     );
 };
@@ -397,6 +386,9 @@ const styles = StyleSheet.create({
         borderWidth: StyleSheet.hairlineWidth,
     },
     counterText: { fontSize: 13, fontWeight: '600' },
+    zero: { paddingHorizontal: 20, paddingVertical: 8, gap: 8, alignItems: 'center' },
+    zeroHint: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+    zeroPrivacy: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
     remind: { paddingHorizontal: 20, paddingTop: 16, gap: 10, marginBottom: 12 },
     title: { fontSize: 26, fontWeight: '700' },
     body: { fontSize: 15, lineHeight: 22 },

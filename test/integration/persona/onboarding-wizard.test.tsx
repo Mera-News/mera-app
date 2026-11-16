@@ -1,5 +1,4 @@
-// The wizard's Next: nothing is required to move on; a saved city moves on. A declined one is
-// onboarding-questionnaire.test.tsx.
+// The wizard's Next past step 1 (the fact gate itself is onboarding-fact-gate.test.tsx).
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
@@ -56,20 +55,12 @@ beforeEach(() => {
 });
 afterEach(() => advanceStage.mockRestore());
 
-it('Next with zero facts goes straight to the sources step, because a location is optional', async () => {
-  await open();
-
-  await fireEvent.press(screen.getByTestId('onboarding-next'));
-
-  await waitFor(() => expect(advanceStage).toHaveBeenCalledWith('user-1', OnboardingStage.PersonaChat));
-  expect(await screen.findByTestId('onboarding-sources-step')).toBeTruthy();
-});
-
 it('finishing does not wait for the push token', async () => {
   await addFact('I follow Formula 1 racing');
   jest.spyOn(notificationService, 'ensurePushTokenRegistered').mockReturnValue(new Promise(() => {}));
   const onComplete = jest.fn();
   await render(<OnboardingWizard userId="user-1" onComplete={onComplete} />);
+  await waitFor(() => expect(screen.getByTestId('onboarding-next').props.accessibilityState?.disabled).toBeFalsy());
   await fireEvent.press(await screen.findByTestId('onboarding-next'));
   await skipSources();
 
@@ -82,6 +73,7 @@ it('finishing does not wait for the push token', async () => {
 it('Next with a fact goes straight to the sources step', async () => {
   await addFact('I follow Formula 1 racing');
   await open();
+  await waitFor(() => expect(screen.getByTestId('onboarding-next').props.accessibilityState?.disabled).toBeFalsy());
 
   await fireEvent.press(screen.getByTestId('onboarding-next'));
 
@@ -93,6 +85,7 @@ describe('Next when the server does not answer', () => {
   const toNotifications = async () => {
     await addFact('I follow Formula 1 racing');
     await open();
+    await waitFor(() => expect(screen.getByTestId('onboarding-next').props.accessibilityState?.disabled).toBeFalsy());
     await fireEvent.press(screen.getByTestId('onboarding-next'));
     await skipSources();
   };
@@ -121,39 +114,23 @@ describe('Next when the server does not answer', () => {
     expect(screen.queryByText('Connection Issue')).toBeNull();
   });
 
-  it('the last step still needs the network: offline it says so and offers no Log out', async () => {
-    await toNotifications();
-    useNetworkStore.setState({ isConnected: false });
-
-    await finish();
-
-    await screen.findByText('Connection Issue');
-    expect(screen.queryByText('Logout')).toBeNull();
-  });
-
-  it('a failure that is not a refusal offers a retry, which runs again, and never Log out', async () => {
-    await toNotifications();
-    advanceStage.mockClear();
-    advanceStage.mockRejectedValueOnce(graphqlError('INTERNAL_SERVER_ERROR', 500));
-
-    await finish();
-    await fireEvent.press(await screen.findByText('Retry'));
-
-    expect(screen.queryByText('Logout')).toBeNull();
-    await waitFor(() => expect(advanceStage).toHaveBeenCalledTimes(2));
-  });
-
   it.each([
-    ['a GraphQL 401', graphqlError('UNAUTHENTICATED', 401)],
-    ['a GraphQL 403', graphqlError('FORBIDDEN', 403)],
-    ['a network 403', Object.assign(new Error('no'), { statusCode: 403 })],
-  ])('%s offers Log out', async (_name, error) => {
-    await toNotifications();
-    advanceStage.mockRejectedValueOnce(error);
+    ['offline', () => useNetworkStore.setState({ isConnected: false })],
+    ['a failing stage write', () => advanceStage.mockRejectedValue(graphqlError('INTERNAL_SERVER_ERROR', 500))],
+    ['a refused session', () => advanceStage.mockRejectedValue(graphqlError('UNAUTHENTICATED', 401))],
+  ])('the last step completes with %s and offers neither a dialog nor Log out', async (_name, breakIt) => {
+    const onComplete = jest.fn();
+    await addFact('I follow Formula 1 racing');
+    await render(<OnboardingWizard userId="user-1" onComplete={onComplete} />);
+    await waitFor(() => expect(screen.getByTestId('onboarding-next').props.accessibilityState?.disabled).toBeFalsy());
+    await fireEvent.press(screen.getByTestId('onboarding-next'));
+    await skipSources();
+    breakIt();
 
     await finish();
 
-    await screen.findByText('Logout');
-    expect(screen.queryByText('Retry')).toBeNull();
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText('Connection Issue')).toBeNull();
+    expect(screen.queryByText('Logout')).toBeNull();
   });
 });
