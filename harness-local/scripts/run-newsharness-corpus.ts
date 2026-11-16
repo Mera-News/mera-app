@@ -109,8 +109,21 @@ interface GoldsetArticle {
   languageCode?: string | null;
 }
 interface Goldset {
+  /** `today` and `factAddedOn` (statement -> YYYY-MM-DD) give the prompt its Today line and fact dates (D11c). */
+  _provenance?: { today?: string; factAddedOn?: Record<string, string> };
   personaFacts: { statement: string }[];
   articles: GoldsetArticle[];
+}
+
+/** The fact lines and Today for a fixture; both absent on a fixture that carries none, as before. */
+function datedContext(goldset: Goldset): { factStatements: string[]; today?: string } {
+  const added = goldset._provenance?.factAddedOn ?? {};
+  return {
+    today: goldset._provenance?.today,
+    factStatements: goldset.personaFacts.map((f) =>
+      added[f.statement] ? `${f.statement} (added ${added[f.statement]})` : f.statement,
+    ),
+  };
 }
 
 interface Args {
@@ -245,8 +258,8 @@ async function mainOnDevice(engine: LocalEngine, args: Args): Promise<number> {
   await assertEngineReady(engine);
   const config = DEFAULT_HARNESS_CONFIG.articlePipeline;
   const goldset = JSON.parse(readFileSync(args.fixture, 'utf8')) as Goldset;
-  const factStatements = goldset.personaFacts.map((f) => f.statement);
-  const userContext = buildUserContext(factStatements);
+  const { factStatements, today } = datedContext(goldset);
+  const userContext = buildUserContext(factStatements, today);
   const gated = goldset.articles.filter((a) => (a.v1Relevance ?? 0) >= config.reasonRelevanceThreshold).slice(0, args.limit);
   const candidates = toCandidates(gated);
   const relevanceById = new Map(gated.map((a) => [a.articleId, a.v1Relevance ?? 0]));
@@ -327,7 +340,7 @@ async function main(): Promise<number> {
   }
 
   const goldset = JSON.parse(readFileSync(args.fixture, 'utf8')) as Goldset;
-  const factStatements = goldset.personaFacts.map((f) => f.statement);
+  const { factStatements, today } = datedContext(goldset);
   const candidates = toCandidates(goldset.articles).slice(0, args.limit);
   // articleId -> fixture row, for the verdict column on each emitted row.
   const verdictById = new Map<string, string | null>(
@@ -438,7 +451,7 @@ async function main(): Promise<number> {
     const builtByVariant = new Map(
       args.variants.map((v) => [
         v,
-        buildScoreCallForChunk(chunkCandidates, factStatements, systemByVariant.get(v) as string, config, v),
+        buildScoreCallForChunk(chunkCandidates, factStatements, systemByVariant.get(v) as string, config, v, today),
       ]),
     );
 
@@ -717,6 +730,7 @@ async function main(): Promise<number> {
             undefined,
             false,
             variantId,
+            today,
           );
           for (let ri = 0; ri < reasonBundle.calls.length; ri++) {
             await runReasonCall({
@@ -750,6 +764,7 @@ async function main(): Promise<number> {
         undefined,
         false,
         variantId,
+        today,
       );
       // CloudCallBundle, not an array: the calls live on `.calls`.
       const reasonCalls = reasonBundle.calls;

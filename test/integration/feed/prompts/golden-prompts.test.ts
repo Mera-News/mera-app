@@ -44,6 +44,11 @@ import { useFakeClock } from '@/test/helpers';
 import type { ScoringCandidate } from '@/lib/news-harness/core/types';
 
 const FACT_STATEMENTS = ['Lives in Amsterdam, Netherlands', 'Works in AI'];
+// What the shim sends for the seeded bank: each fact with the day it was saved (beforeEach seeds
+// them a second apart from T0, newest first) and today's date. The twin is given the same.
+const T0 = Date.parse('2026-10-09T00:00:00Z');
+const DATED_FACTS = FACT_STATEMENTS.map((st, j) => withAddedDate(st, T0 + (FACT_STATEMENTS.length - 1 - j) * 1000));
+const todayNow = () => localDay(Date.now());
 
 // Article content is fenced with a per-build random nonce, so two independent
 // builds of the same prompt differ in exactly that token and nowhere else. The
@@ -105,7 +110,7 @@ function publisherCandidate(id: string): ScoringCandidate {
 // The shim reads its fact bank through getFacts(), newest first. Seed in
 // reverse with the clock a second apart so the order is FACT_STATEMENTS'.
 beforeEach(async () => {
-  const t0 = Date.parse('2026-10-09T00:00:00Z');
+  const t0 = T0;
   useFakeClock(t0);
   for (const [i, statement] of [...FACT_STATEMENTS].reverse().entries()) {
     jest.setSystemTime(t0 + i * 1000);
@@ -118,7 +123,7 @@ describe('golden — buildRelevanceCalls', () => {
   it('shim and harness produce byte-identical score calls (incl. chunking)', async () => {
     const candidates = ['a', 'b', 'c', 'd', 'e', 'f'].map(candidate); // 6 → 2 chunks
     const shim = await shimBuildRelevanceCalls(candidates);
-    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls(candidates, DATED_FACTS, undefined, undefined, undefined, todayNow());
 
     expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
@@ -143,7 +148,8 @@ describe('golden — buildReasonCallsForSubset', () => {
       candidates,
       relevanceMap,
       0.3,
-      FACT_STATEMENTS,
+      DATED_FACTS,
+      undefined, undefined, false, undefined, todayNow(),
     );
 
     expect(shim.calls.map((c) => c.id)).toEqual(['reason:0', 'reason:1']);
@@ -186,11 +192,11 @@ describe('golden — measured prompt sizes', () => {
     // trip expiry, family bands, anchors; paid for in bytes by the Jersey worked
     // example and every spaced em dash in the base, so the headline relevance
     // prompt still fits the 90% wire cap below.
-    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4653);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7295);
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4655);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7297);
     // ux1: +43 for RULE_NAME_BAN, which names the rubric label in every spelling.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5600);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7052);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5602);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7053);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -278,10 +284,10 @@ describe('golden — measured prompt sizes', () => {
     // The tripwire. A number moving here means a prompt grew; check it against
     // the cap above before re-pinning.
     expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
-      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37502',
-      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58786',
-      'CLOUD_REASON_SYSTEM_PROMPT 45122',
-      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 56842',
+      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37514',
+      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58798',
+      'CLOUD_REASON_SYSTEM_PROMPT 45134',
+      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 56854',
       'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12512',
       'CLOUD_V3_NOTE_SYSTEM_PROMPT 15444',
       'LOCAL_RELEVANCE_SYSTEM_PROMPT 9232',
@@ -296,7 +302,7 @@ describe('golden — measured prompt sizes', () => {
     // archive; the arm's description carries the warning. Since the retention
     // rubric (D20.6) the pre-geo arms are "current base minus the geo rule",
     // no longer byte-exact to what shipped, and still over the cap.
-    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65832);
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65844);
     expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBeGreaterThan(CAP);
   });
 
@@ -389,7 +395,7 @@ describe('golden — headline variant (P4b routing)', () => {
   it('shim and harness produce byte-identical HEADLINE score calls (one chunk size, 5)', async () => {
     const candidates = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(headlineCandidate);
     const shim = await shimBuildRelevanceCalls(candidates);
-    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls(candidates, DATED_FACTS, undefined, undefined, undefined, todayNow());
 
     // 7 headline candidates at 5 per call = 2 calls: headlines take no size of their own.
     expect(shim.calls).toHaveLength(2);
@@ -416,7 +422,7 @@ describe('golden — headline variant (P4b routing)', () => {
       ...['h0', 'h1', 'h2', 'h3', 'h4'].map(headlineCandidate),
     ];
     const shim = await shimBuildRelevanceCalls(candidates);
-    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls(candidates, DATED_FACTS, undefined, undefined, undefined, todayNow());
     expect(shim.calls.map((c) => c.system)).toEqual([
       CLOUD_RELEVANCE_SYSTEM_PROMPT,
       CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
@@ -442,7 +448,8 @@ describe('golden — headline variant (P4b routing)', () => {
       candidates,
       relevanceMap,
       0.3,
-      FACT_STATEMENTS,
+      DATED_FACTS,
+      undefined, undefined, false, undefined, todayNow(),
     );
 
     expect(shimReasonIds(shim)).toEqual(harness.calls.map((c) => c.id));
@@ -465,7 +472,7 @@ describe('golden — article fence', () => {
   it('fences every article block in both the shim and the harness build', async () => {
     const candidates = [candidate('a'), candidate('b')];
     const shim = await shimBuildRelevanceCalls(candidates);
-    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls(candidates, DATED_FACTS, undefined, undefined, undefined, todayNow());
 
     for (const prompt of [shim.calls[0].prompt, harness.calls[0].prompt]) {
       const opens = prompt.match(/<<ARTICLE [a-f0-9]{12}>>/g) ?? [];
@@ -497,7 +504,7 @@ describe('golden — publisher and alpha-3 country parity', () => {
   it('shim and harness agree on a candidate carrying a publisher', async () => {
     const cands = [publisherCandidate('p1'), publisherCandidate('p2')];
     const shim = await shimBuildRelevanceCalls(cands);
-    const harness = harnessBuildRelevanceCalls(cands, FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls(cands, DATED_FACTS, undefined, undefined, undefined, todayNow());
     expect(stripNonces(harness.calls.map((c) => c.prompt))).toEqual(
       stripNonces(shim.calls.map((c) => c.prompt)),
     );
@@ -520,7 +527,7 @@ describe('golden — publisher and alpha-3 country parity', () => {
     const cands = [publisherCandidate('p1')];
     const rel = { p1: 0.62 };
     const shim = await shimBuildReasonCallsForSubset(cands, rel, 0.3);
-    const harness = harnessBuildReasonCallsForSubset(cands, rel, 0.3, FACT_STATEMENTS);
+    const harness = harnessBuildReasonCallsForSubset(cands, rel, 0.3, DATED_FACTS, undefined, undefined, false, undefined, todayNow());
     expect(stripNonces(harness.calls.map((c) => c.prompt))).toEqual(
       stripNonces(shim.calls.map((c) => c.prompt)),
     );
@@ -580,7 +587,7 @@ describe('golden — related fact places', () => {
   it('shim and harness render "(news from: ...)" in score and reason prompts, identically', async () => {
     const candidates = [withPlaces('a')];
     const shim = await shimBuildRelevanceCalls(candidates);
-    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls(candidates, DATED_FACTS, undefined, undefined, undefined, todayNow());
     const [shimPrompt] = stripNonces(shim.calls.map((c) => c.prompt));
     expect(shimPrompt).toEqual(stripNonces(harness.calls.map((c) => c.prompt))[0]);
     expect(shimPrompt).toContain(
@@ -588,7 +595,7 @@ describe('golden — related fact places', () => {
     );
 
     const shimR = await shimBuildReasonCallsForSubset(candidates, { a: 0.8 }, 0.3);
-    const harnessR = harnessBuildReasonCallsForSubset(candidates, { a: 0.8 }, 0.3, FACT_STATEMENTS);
+    const harnessR = harnessBuildReasonCallsForSubset(candidates, { a: 0.8 }, 0.3, DATED_FACTS, undefined, undefined, false, undefined, todayNow());
     expect(stripNonces(shimR.calls.map((c) => c.prompt))).toEqual(
       stripNonces(harnessR.calls.map((c) => c.prompt)),
     );
@@ -602,7 +609,7 @@ describe('golden — related fact places', () => {
       relatedFacts: [{ id: 'f-a', statement: long, places: 'Bhopal, Madhya Pradesh, India' }],
     };
     const shim = await shimBuildRelevanceCalls([c]);
-    const harness = harnessBuildRelevanceCalls([c], FACT_STATEMENTS);
+    const harness = harnessBuildRelevanceCalls([c], DATED_FACTS, undefined, undefined, undefined, todayNow());
     const [shimPrompt] = stripNonces(shim.calls.map((x) => x.prompt));
     expect(shimPrompt).toEqual(stripNonces(harness.calls.map((x) => x.prompt))[0]);
     expect(shimPrompt).toContain(`Related User Fact: ${'x'.repeat(200)} (news from: Bhopal, Madhya Pradesh, India)\n`);

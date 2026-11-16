@@ -509,15 +509,25 @@ describe('buildRelevanceCalls', () => {
     const [row] = await seedAndLoad(['x']);
     await addFact('Lives in Amsterdam');
     const { calls } = await buildRelevanceCalls([row]);
-    expect(calls[0].prompt).toContain('User Context: [User facts] ');
+    expect(calls[0].prompt).toContain('[User facts] ');
     expect(calls[0].prompt).toContain('I follow Formula 1 racing');
     expect(calls[0].prompt).toContain('Lives in Amsterdam');
+  });
+
+  it("carries today's date and each fact's saved day, so an ended trip can be told from a coming one (D20.3/.4)", async () => {
+    const [row] = await seedAndLoad(['x']);
+    await addFact('Trip to Lyon next weekend');
+    const { calls } = await buildRelevanceCalls([row]);
+    const day = /^(\d{4}-\d{2}-\d{2})$/;
+    const today = calls[0].prompt.match(/Today: (\S+)/)?.[1] ?? '';
+    expect(today).toMatch(day);
+    expect(calls[0].prompt).toContain(`Trip to Lyon next weekend (added ${today})`);
   });
 
   it('says the fact bank is empty instead of leaving an empty user-facts line', async () => {
     const [row] = await seedAndLoad(['a'], { factless: true, headline: 'GLOBAL' });
     const { calls } = await buildRelevanceCalls([row]);
-    expect(calls[0].prompt).toContain('User Context: [User facts] none.');
+    expect(calls[0].prompt).toContain('[User facts] none.');
     expect(calls[0].prompt).not.toContain('[User facts] .');
   });
 });

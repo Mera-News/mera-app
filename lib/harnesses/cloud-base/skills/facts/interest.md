@@ -72,11 +72,11 @@ A trip is a stake (`has_stake` true), and the feed stops treating the place as t
 has ended, so the statement carries when it is, in their own terms.
 
 - Good: "Trip to Gothenburg for a book fair, 3 to 5 May", "Trip to Lyon next weekend".
-- Bad: "Traveling to Lisbon", "Interested in Lyon".
+- Bad: "Traveling to Gothenburg", "Interested in Lyon".
 
 Keep a relative time ("next weekend") as they said it: the app records the day the fact was saved.
-Never add a year or a date they did not give. When they gave no time at all, offer the fact and ask
-in one short line when the trip is; their answer replaces the fact with the dated one.
+Never add a year or a date they did not give. When they gave no time at all, ask in
+one short line when the trip is and offer the fact once they answer, so one dated card is all they see.
 
 ## Checking what is already known
 `find_similar_facts` takes `{ kind? }` and nothing else. Pass the kind matching the key above, so

@@ -48,6 +48,8 @@ import {
   resolveCountryName,
   buildPublicationLabel,
   buildUserContext,
+  localDay,
+  withAddedDate,
   isEligible,
   relatedFactLine,
   isScorableCandidate,
@@ -144,7 +146,9 @@ async function loadAllFactStatements(withPlaces = true): Promise<string[]> {
   const facts = await getFacts();
   return facts
     .filter((f) => typeof f.statement === 'string' && f.statement.trim().length > 0)
-    .map((f) => (withPlaces ? factLineWithPlaces(f) : f.statement));
+    .map((f) =>
+      withPlaces ? withAddedDate(factLineWithPlaces(f), f.createdAt ? Date.parse(f.createdAt) : null) : f.statement,
+    );
 }
 
 // --- Batch scoring + reason generation ---
@@ -173,7 +177,7 @@ function buildScoreCallForChunk(
    */
   config: ArticlePipelineConfig = ARTICLE_CFG,
 ): { prompt: string; system: string } {
-  const userContext = buildUserContext(allFactStatements);
+  const userContext = buildUserContext(allFactStatements, localDay(Date.now()));
   const prompt = buildBatchScoringUserMessage({
     userContext,
     articles: chunkCandidates.map((c) => ({
@@ -539,7 +543,7 @@ export function buildReasonCallsForSurvivors(
   // In call order: position n of a `reason:<n>` id maps to called[n], never to a
   // survivor that was skipped and got no call.
   const called: ScoringCandidate[] = [];
-  const fullUserContext = buildUserContext(allFactStatements);
+  const fullUserContext = buildUserContext(allFactStatements, localDay(Date.now()));
 
   for (const c of survivors) {
     const relevance = scoreMap.get(c.id);
@@ -716,7 +720,7 @@ export async function buildReasonCallsForSubset(
   const calls: BatchCall[] = [];
   const promptsById = new Map<string, string>();
   const allFactStatements = await loadAllFactStatements();
-  const fullUserContext = buildUserContext(allFactStatements);
+  const fullUserContext = buildUserContext(allFactStatements, localDay(Date.now()));
 
   for (const c of subset) {
     const reasonPrompt = buildReasonUserMessage({
@@ -842,6 +846,7 @@ export async function runFeedVerifierPass(
       allFactStatements,
       ARTICLE_CFG,
       appHarnessLogger,
+      localDay(Date.now()),
     );
     if (calls.length === 0) return 0;
     const results = await cloudBatchComplete(calls, 'scoring');
@@ -1200,7 +1205,7 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     // absent id means the row keeps the relevance it already had.
     const rescoreMap = new Map<string, number>();
     const allFactStatements = await loadAllFactStatements();
-    const fullUserContext = buildUserContext(allFactStatements);
+    const fullUserContext = buildUserContext(allFactStatements, localDay(Date.now()));
 
     {
       // Cloud path — single batch call for all reason prompts in this batch.
