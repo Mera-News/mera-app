@@ -135,6 +135,23 @@ describe('which retrieval path runs', () => {
     ]);
   });
 
+  it('a place with no facts at all fetches headlines for its country and the world', async () => {
+    await markPersonaMigrated();
+    await seedLocation('NL', 0.6);
+    const sent = recordOps();
+
+    await stepFetchTopicIds('', makeCtx().ctx);
+
+    expect(await sent.count('GetArticleIdsForTopics')).toBe(0);
+    const persona = await sent.named('GetArticleIdsForPersona');
+    expect(persona).toHaveLength(1);
+    expect(persona[0].variables.query.topics).toEqual([]);
+    expect(persona[0].variables.query.topHeadlines.scopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'NL' },
+      { scope: 'GLOBAL', countryCode: null },
+    ]);
+  });
+
   // DA45: a reader who follows only staged or muted topics still gets headlines. The profile always
   // carries a GLOBAL scope, so the request is sent with an empty topic list.
   test('DA45: staged-only topics still fetch headlines (no topics, GLOBAL plus the country scope)', async () => {

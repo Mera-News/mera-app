@@ -693,9 +693,12 @@ async function fetchTopicIdsPersona(
 async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResult> {
   const topicTexts = await getLocalTopicTextsForPersona();
   if (topicTexts.length === 0) {
-    // A fact with no topics yet (a city, or a run still queued) still gets its
-    // country and the world: the persona query takes an empty topic list.
-    if (await hasAnyFacts()) return fetchTopicIdsPersona([], ctx);
+    // A fact with no topics yet (a city, or a run still queued), or a place with
+    // no fact at all, still gets its country and the world: the persona query
+    // takes an empty topic list. Only zero facts AND zero places is terminal.
+    if ((await hasAnyFacts()) || (await getAllLocations()).length > 0) {
+      return fetchTopicIdsPersona([], ctx);
+    }
     throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
   ctx.log(`fetching ids for ${topicTexts.length} topics (legacy path)`);
