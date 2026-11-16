@@ -176,8 +176,10 @@ describe('SuggestionSyncService', () => {
       expect(useForYouStore.getState().scoringError).toBeNull();
     });
 
-    it('sets the header scoring error, logs a warning and returns 0 when the cycle errors', async () => {
-      // The run's attestation fetch fails, so the cycle reports 'error' (transient).
+    it('sets the header scoring error, sends no Sentry message and returns 0 when the cycle errors', async () => {
+      // The run's attestation fetch fails, so the cycle reports 'error' (transient). The cycle
+      // already reported (or deliberately suppressed) the cause; MERA-APP-8A was this pass
+      // re-reporting every one of them as a stackless message.
       server.use(
         http.get('*/api/attestation/report', () => new HttpResponse('Unauthorized', { status: 401 })),
       );
@@ -187,9 +189,9 @@ describe('SuggestionSyncService', () => {
 
       expect(result).toBe(0);
       expect(useForYouStore.getState().scoringError).toBe('server');
-      expect(logs.captureMessage).toHaveBeenCalledWith(
+      expect(logs.captureMessage).not.toHaveBeenCalledWith(
         expect.stringContaining('cloud inference cycle returned error'),
-        expect.objectContaining({ level: 'warning' }),
+        expect.anything(),
       );
     });
 

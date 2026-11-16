@@ -41,10 +41,8 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
       // Log it but let the sync complete so articles are at least persisted.
       // inference-recover will attempt scoring again on the next foreground.
       // Surface it in the header status row so the user knows the pipeline stalled.
-      logger.captureMessage('[runScoringPass] cloud inference cycle returned error — transient, sync will complete', {
-        level: 'warning',
-        tags: { service: 'SuggestionSyncService', method: 'runScoringPass' },
-      });
+      // A breadcrumb only: the cycle already captured (or deliberately suppressed) the cause.
+      logger.warn('[runScoringPass] cloud inference cycle returned error, sync will complete');
       setScoringError(classifyScoringError());
       return 0;
     }
