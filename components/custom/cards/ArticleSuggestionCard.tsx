@@ -95,6 +95,9 @@ interface ArticleCardProps {
   /** The Feed only: other copies of the story (`FeedRowDisplay.similar`).
    *  Null/omitted: no row. */
   similarCount?: number | null;
+  similarVariant?: 'similar' | 'reports';
+  /** The Feed's "From yesterday" label. */
+  ageLabel?: string | null;
 }
 
 export type { ArticleCardProps };
@@ -132,6 +135,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   notReadLine,
   halo,
   similarCount,
+  similarVariant,
+  ageLabel,
 }) => {
   const { t } = useTranslation();
 
@@ -360,6 +365,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       onPress={() => onPress(suggestion)}
       halo={halo}
       similarCount={similarCount}
+      similarVariant={similarVariant}
+      ageLabel={ageLabel}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
       spokenPriority={spokenPriority}

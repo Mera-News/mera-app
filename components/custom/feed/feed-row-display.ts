@@ -22,6 +22,10 @@
 //    row's height, so the card never shrinks under the reader. A story that
 //    gains its first copy mid-session shows the row from the next session.
 //
+// 4. THE CARD SIZE IS DECIDED ONCE (D10). High and Emergency render the large
+//    card, Medium and Low the compact row. The size is frozen at the row's
+//    first resolve, so a Medium rescored to High keeps its row for the session.
+//
 // All the sets are SESSION state: FeedScreen replaces the whole object in
 // `resetSession`, the same moment the partition and the pin reset and the list
 // returns to the top, which is what makes re-electing safe.
@@ -29,6 +33,7 @@
 // PURE: no React, no store, no database.
 
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { relevanceBandRank } from '@/lib/feed-ordering/priority-order';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
@@ -43,10 +48,12 @@ export interface FeedRowSession {
   readonly wasPending: Set<string>;
   /** Row ids that carried other copies when first resolved. */
   readonly hasSimilar: Set<string>;
+  /** Row id -> the card size it first rendered with. */
+  readonly compact: Map<string, boolean>;
 }
 
 export function newFeedRowSession(): FeedRowSession {
-  return { frozenRep: new Map(), rowBySuggestion: new Map(), wasPending: new Set(), hasSimilar: new Set() };
+  return { frozenRep: new Map(), rowBySuggestion: new Map(), wasPending: new Set(), hasSimilar: new Set(), compact: new Map() };
 }
 
 export interface FeedRowDisplay {
@@ -58,6 +65,8 @@ export interface FeedRowDisplay {
   /** The "N similar articles" row: null = no row; else the count of OTHER
    *  copies (0 keeps the row's height with the label hidden). */
   similar: { count: number } | null;
+  /** Medium/Low: the compact row. Frozen per session. */
+  compact: boolean;
 }
 
 /**
@@ -95,12 +104,15 @@ export function resolveFeedRowDisplay(
     session.frozenRep.set(item.id, item.suggestion);
     session.rowBySuggestion.set(item.suggestion._id, item.id);
     if (item.memberCount > 1) session.hasSimilar.add(item.id);
+    // Band 0 emergency, 1 high: the large card; everything else compact.
+    session.compact.set(item.id, relevanceBandRank(item.suggestion.relevance ?? 0) > 1);
   }
   const suggestion = displayedSuggestionOf(item, liveById, session);
   if (suggestion.status !== ArticleSuggestionStatus.Complete) session.wasPending.add(item.id);
   return {
     suggestion,
     reserveNoteSpace: session.wasPending.has(item.id),
+    compact: session.compact.get(item.id) ?? false,
     similar: session.hasSimilar.has(item.id) ? { count: Math.max(0, item.memberCount - 1) } : null,
   };
 }

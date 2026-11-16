@@ -10,6 +10,7 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
 import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
@@ -124,6 +125,10 @@ interface ArticleCardBaseProps {
    *  "N similar articles" row under the footer; 0 keeps its height with the
    *  label hidden. Null/undefined: no row. */
   similarCount?: number | null;
+  /** `reports`: the Feed's "N more reports" wording, shown whatever the global gate says. */
+  similarVariant?: 'similar' | 'reports';
+  /** The Feed's "From yesterday" label for a story kept past 24h; only drawn while `showRecency` is off. */
+  ageLabel?: string | null;
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -158,10 +163,13 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   spokenTail,
   halo,
   similarCount: similarCountProp,
+  similarVariant = 'similar',
+  ageLabel,
 }) => {
   const { t } = useTranslation();
   // The similar-articles line is off (owner) until it says something the order does not.
-  const similarCount = SIMILAR_ARTICLES_LINE_ENABLED ? similarCountProp : undefined;
+  const reports = similarVariant === 'reports';
+  const similarCount = SIMILAR_ARTICLES_LINE_ENABLED || reports ? similarCountProp : undefined;
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // Two-step fallback: rewritten URL -> original -> placeholder. Keyed on
   // `imageUrl` inside the hook, so a recycled row cannot inherit the previous
@@ -187,11 +195,11 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
     shownTitle ?? displayTitle,
     titleFailed ? t('feed.translationFailed') : null,
     meta.publication,
-    showRecency ? meta.age : null,
+    showRecency ? meta.age : ageLabel,
     spokenPriority,
     meta.language,
     ...(spokenTail ?? []),
-    similarCount != null && similarCount >= 1 ? t('feed.similarArticles', { count: similarCount }) : null,
+    similarCount != null && similarCount >= 1 ? t(reports ? 'feed.moreReports' : 'feed.similarArticles', { count: similarCount }) : null,
   ]);
   // Unchanged meaning: a real image, not the placeholder. The h-48/h-28 band
   // split and metaRowRightReserve depend on it.
@@ -270,6 +278,11 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               onPublicationPress={onPublicationPress}
             />
           </Box>
+          {!showRecency && ageLabel ? (
+            <Text size="xs" className="font-medium text-ink-3" testID="card-age-label">
+              {ageLabel}
+            </Text>
+          ) : null}
           {/* No title at all: the app's own fallback copy, already in the
               reader's language, never runtime-translated. */}
           {titleEnglish || titleOriginal ? (
@@ -296,7 +309,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
       {footer ? <Box className={similarCount != null ? 'px-4 pt-2' : 'px-4 pb-4 pt-2'}>{footer}</Box> : null}
       {similarCount != null ? (
         <Box className="px-4 pb-4 pt-1">
-          <SimilarArticlesRow count={similarCount} />
+          <SimilarArticlesRow count={similarCount} variant={similarVariant} />
         </Box>
       ) : null}
     </>

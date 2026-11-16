@@ -7,7 +7,8 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, findNodeHandle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import MeraLogo from './MeraLogo';
 
@@ -32,10 +33,52 @@ interface AllCaughtUpCardProps {
     readonly refreshing?: boolean;
     /** The not-read divider while the read hold is on: the upgrade button, under the body. */
     readonly action?: React.ReactNode;
+    /** The Feed's fold states (D5/D18). Omitted: the legacy footer / divider above.
+     *  fold: the card at the Medium/Low line. label: the shrunk card once opened.
+     *  end: the terminal card, Refresh always kept. reading: the quiet line while
+     *  the session's first run is still processing. */
+    readonly variant?: 'fold' | 'label' | 'end' | 'reading';
+    /** fold: stories below the line (Low story rows only, never the not-read tail). */
+    readonly count?: number;
+    /** fold: nothing reached Medium, so the title says so. */
+    readonly nothingAbove?: boolean;
+    readonly onShowThem?: () => void;
+    /** fold/end: picks were held back while the reader read; adds the held line above Refresh. */
+    readonly held?: boolean;
+    /** label: stories just revealed, announced once to VoiceOver on mount. */
+    readonly shownCount?: number;
 }
 
-const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID = 'all-caught-up-card', onRefresh, refreshing = false, action }) => {
+const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
+    title,
+    body,
+    testID = 'all-caught-up-card',
+    onRefresh,
+    refreshing = false,
+    action,
+    variant,
+    count = 0,
+    nothingAbove = false,
+    onShowThem,
+    held = false,
+    shownCount,
+}) => {
     const { t } = useTranslation();
+    const labelRef = useRef<React.ComponentRef<typeof Text>>(null);
+    // "Show them" unmounts the button, so VoiceOver focus would be lost: move it to the
+    // label that replaces the card and say what appeared.
+    useEffect(() => {
+        if (variant !== 'label') return;
+        try {
+            const node = labelRef.current ? findNodeHandle(labelRef.current) : null;
+            if (node) AccessibilityInfo.setAccessibilityFocus(node);
+            if (shownCount) AccessibilityInfo.announceForAccessibility(t('feed.fold.shownAnnounce', { count: shownCount }));
+        } catch {
+            // Focus is a nicety; the label is still on screen.
+        }
+        // Once, on the card's own mount.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const messages = t('feed.mindfulness', { returnObjects: true }) as string[];
@@ -46,7 +89,7 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID =
     const animationsActive = useAnimationsActive();
     // Lite / Reduce Motion: the first message stays; nothing cycles.
     const motion = useMotionAllowed();
-    const cycling = title === undefined && body === undefined;
+    const cycling = !variant && title === undefined && body === undefined;
     useEffect(() => {
         if (!animationsActive || !motion || !cycling) return;
         const interval = setInterval(() => {
@@ -55,7 +98,52 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID =
 
         return () => clearInterval(interval);
     }, [messages.length, animationsActive, motion, cycling]);
-    const bodyText = cycling ? messages[currentIndex] : body;
+    const bodyText = variant === 'end' ? messages[0] : cycling ? messages[currentIndex] : body;
+
+    if (variant === 'label') {
+        return (
+            <Box testID={testID} className="px-4 pt-2 pb-3">
+                <Text
+                    ref={labelRef}
+                    testID="fold-label"
+                    accessible
+                    accessibilityRole="header"
+                    size="sm"
+                    className="text-ink-3 font-semibold"
+                >
+                    {t('feed.fold.label')}
+                </Text>
+            </Box>
+        );
+    }
+    if (variant === 'reading') {
+        return (
+            <Box testID={testID} className="px-4 py-6 items-center">
+                <Text size="sm" className="text-ink-3 text-center">
+                    {t('feed.fold.stillReading')}
+                </Text>
+            </Box>
+        );
+    }
+
+    const isFold = variant === 'fold';
+    const isEnd = variant === 'end';
+    const headline = isFold
+        ? t(nothingAbove ? 'feed.fold.nothingTitle' : 'feed.fold.upToDateTitle')
+        : isEnd
+          ? t('feed.fold.endTitle')
+          : (title ?? t('feed.allCaughtUp'));
+    const lead = isFold
+        ? t(nothingAbove ? 'feed.fold.nothingBody' : 'feed.fold.upToDateBody', { count })
+        : isEnd
+          ? t('feed.fold.endBody')
+          : null;
+    const refreshButton = onRefresh ? (
+        <Button action="primary" onPress={onRefresh} isDisabled={refreshing} testID="all-caught-up-refresh">
+            {refreshing ? <ButtonSpinner /> : null}
+            <ButtonText>{t('feed.refreshFeedAction')}</ButtonText>
+        </Button>
+    ) : null;
 
     // `px-4` mirrors ArticleCardBase's own content padding, so the
     // text column starts on the same vertical line as every neighbouring card's.
@@ -73,23 +161,51 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ title, body, testID =
                 size="lg"
                 className="text-ink text-center font-semibold mb-2"
             >
-                {title ?? t('feed.allCaughtUp')}
+                {headline}
             </Text>
 
-            {onRefresh ? (
-                <Box className="items-center mb-4" style={{ gap: 12 }}>
-                    <Text size="md" className="text-ink text-center">
-                        {t('feed.readyForMore')}
-                    </Text>
-                    <Button action="primary" onPress={onRefresh} isDisabled={refreshing} testID="all-caught-up-refresh">
-                        {refreshing ? <ButtonSpinner /> : null}
-                        <ButtonText>{t('feed.refreshFeedAction')}</ButtonText>
+            {lead ? (
+                <Text size="sm" className="text-ink-2 text-center mb-2" testID="all-caught-up-lead">
+                    {lead}
+                </Text>
+            ) : null}
+
+            {isFold && onShowThem ? (
+                <Box className="mt-2 mb-2">
+                    <Button action="primary" onPress={onShowThem} testID="fold-show-them">
+                        <ButtonText>{t('feed.fold.showThem')}</ButtonText>
                     </Button>
                 </Box>
             ) : null}
 
+            {isEnd && bodyText ? (
+                <Text size="sm" className="text-ink-3 text-center mb-3" testID="all-caught-up-mindful">
+                    {bodyText}
+                </Text>
+            ) : null}
+
+            {(isFold || isEnd) && held ? (
+                <Box className="items-center mb-4" style={{ gap: 12 }}>
+                    <Text testID="fold-held-line" size="sm" className="text-ink text-center">
+                        {t('feed.fold.held')}
+                    </Text>
+                    {refreshButton}
+                </Box>
+            ) : isEnd && refreshButton ? (
+                <Box className="items-center mb-4">{refreshButton}</Box>
+            ) : null}
+
+            {!variant && onRefresh ? (
+                <Box className="items-center mb-4" style={{ gap: 12 }}>
+                    <Text size="md" className="text-ink text-center">
+                        {t('feed.readyForMore')}
+                    </Text>
+                    {refreshButton}
+                </Box>
+            ) : null}
+
             {/* Cycling mindfulness message — the "put the phone down" nudge. */}
-            {bodyText ? (
+            {bodyText && !isFold && !isEnd ? (
                 <Text size="sm" className="text-ink-2 text-center">
                     {bodyText}
                 </Text>

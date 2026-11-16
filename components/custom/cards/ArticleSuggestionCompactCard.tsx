@@ -10,6 +10,8 @@ import RelevanceChip from '@/components/custom/RelevanceChip';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useTranslation } from 'react-i18next';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useMemo } from 'react';
 
@@ -29,6 +31,17 @@ interface ArticleSuggestionCompactCardProps {
   isNew?: boolean;
   /** Other copies of the story (group members minus the one shown). */
   similarCount?: number;
+  /** The Feed only. The verdict and Mera handoff go through the same handlers as the
+   *  large card, so Not interested from a compact row dims it, marks it read and reaches
+   *  Mera. Without them the row falls back to the generic action hook. */
+  feedbackHandlers?: CardFeedbackHandlers;
+  /** The row's stored verdict: dims the row, like the large card. */
+  verdict?: Verdict | null;
+  /** `reports`: "N more reports" (the Feed). */
+  similarVariant?: 'similar' | 'reports';
+  /** Feed rule: no relative age; only the "From yesterday" label past 24h. */
+  showRecency?: boolean;
+  ageLabel?: string | null;
 }
 
 /**
@@ -50,6 +63,11 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   read = false,
   isNew = false,
   similarCount,
+  feedbackHandlers,
+  verdict = null,
+  similarVariant,
+  showRecency,
+  ageLabel,
 }) => {
   const { t } = useTranslation();
   const status = suggestion.status;
@@ -105,7 +123,10 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
     },
     rowActions,
     archiveItem: actions.archiveItem,
-    onVerdictRecorded: actions.onVerdictRecorded,
+    onVerdictRecorded: feedbackHandlers ? () => feedbackHandlers.onVerdictRecorded(suggestion) : actions.onVerdictRecorded,
+    onFeedbackChat: feedbackHandlers
+      ? (pathIds, answers) => feedbackHandlers.onInvokeMera(suggestion, pathIds, answers)
+      : undefined,
   });
 
   return (
@@ -121,7 +142,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         countryCode={suggestion.country_code}
         publicationName={suggestion.publication_name}
         recyclingKey={suggestion._id}
-        dimmed={dimmed}
+        dimmed={dimmed || verdict != null}
         read={read}
         isNew={isNew}
         onPress={() => onPress(suggestion)}
@@ -133,6 +154,9 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
         similarCount={similarCount}
+        similarVariant={similarVariant}
+        showRecency={showRecency}
+        ageLabel={ageLabel}
       />
       {menu.element}
     </>

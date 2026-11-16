@@ -15,13 +15,17 @@ const ROW_HEIGHT = 18;
  * stack glyph is decorative, so it is hidden from VoiceOver; the card root's
  * spoken label carries the count instead.
  *
+ * The `reports` variant is the Feed's ("N more reports"): it ignores the global gate,
+ * which is for the older wording.
+ *
  * `count` 0 keeps the row's height with the label hidden: a Feed card that
  * showed the row earlier this session must not shrink under the reader when a
  * member leaves the pool.
  */
-export const SimilarArticlesRow: React.FC<{ count: number; testID?: string }> = ({
+export const SimilarArticlesRow: React.FC<{ count: number; testID?: string; variant?: 'similar' | 'reports' }> = ({
   count,
   testID = 'card-similar-articles',
+  variant = 'similar',
 }) => {
   const { t } = useTranslation();
   const colors = useColors();
@@ -43,7 +47,7 @@ export const SimilarArticlesRow: React.FC<{ count: number; testID?: string }> = 
           <Layers size={14} strokeWidth={2} color={colors.ink3} />
         </Box>
         <Text size="xs" className="font-medium text-ink-3">
-          {t('feed.similarArticles', { count: Math.max(1, count) })}
+          {t(variant === 'reports' ? 'feed.moreReports' : 'feed.similarArticles', { count: Math.max(1, count) })}
         </Text>
       </HStack>
     </Box>
