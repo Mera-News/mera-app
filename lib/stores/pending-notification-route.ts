@@ -250,6 +250,15 @@ export function markStartupGatePassed(): void {
   startupGatePassed = true;
 }
 
+/**
+ * Called when the root tree unmounts. Android can destroy the Activity and keep
+ * this JS context; the next tree's router is unbound until its first render, so
+ * a tap until its own gate passes must stash, not navigate (MERA-APP-9P).
+ */
+export function closeStartupGate(): void {
+  startupGatePassed = false;
+}
+
 export function isStartupGatePassed(): boolean {
   return startupGatePassed;
 }

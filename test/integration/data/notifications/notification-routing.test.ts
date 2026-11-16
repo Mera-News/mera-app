@@ -36,6 +36,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import {
   PENDING_NOTIFICATION_ROUTE_KEY,
   __resetPendingNotificationRouteForTests,
+  closeStartupGate,
   consumePendingNotificationRoute,
   markStartupGatePassed,
 } from '@/lib/stores/pending-notification-route';
@@ -237,6 +238,21 @@ describe('a tap goes through the startup gate and the PIN lock', () => {
         tags: { service: 'notification-service', method: 'handleNotificationTap' },
         extra: { data: { type: 'news-ready' } },
       });
+    });
+  });
+
+  // MERA-APP-9P: Android destroys the Activity and keeps the JS context, then a tap recreates it.
+  // The gate flag outlived the old tree, so router.push ran before the new tree bound the router.
+  describe('after the root unmounted (Activity recreated, JS context kept)', () => {
+    it('stashes instead of navigating, and the new tree\'s gate consumes it', async () => {
+      openGate();
+      closeStartupGate();
+
+      await coldTap(FACT_CHECK);
+
+      expect(pushes()).toEqual([]);
+      expect(await readStash()).toMatchObject({ href: ARTICLE, userId: USER, navigatedAt: null });
+      await expect(consumePendingNotificationRoute(USER)).resolves.toEqual(ARTICLE);
     });
   });
 

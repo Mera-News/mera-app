@@ -19,6 +19,7 @@ import { purgeStaleModels } from '@/lib/mera-protocol-toolkit';
 import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
+import { closeStartupGate } from '@/lib/stores/pending-notification-route';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
@@ -80,6 +81,16 @@ export function useAppRoot() {
       setNavigationReady(true);
     }
   }, [navigationRef, setNavigationReady]);
+
+  // The root can unmount while JS lives on (Android destroys the Activity, a tap
+  // recreates it). Nothing set by the old tree may vouch for the new one.
+  useEffect(
+    () => () => {
+      closeStartupGate();
+      setNavigationReady(false);
+    },
+    [setNavigationReady],
+  );
 
   // Set up notification listeners + wire silent-push task wakes. Push-token
   // registration happens during onboarding (explicit consent), not at boot.
