@@ -23,7 +23,7 @@ beforeEach(async () => {
 it('shows the privacy copy with no false claim', async () => {
   await render(<FirstFeedCard />);
   expect(await screen.findByTestId('first-feed-card')).toBeTruthy();
-  expect(screen.getByText(/Your interests stay on your phone/)).toBeTruthy();
+  expect(screen.getByText(/What you tell Mera stays on this phone/)).toBeTruthy();
   expect(screen.queryByText(/nothing leaves/i)).toBeNull();
 });
 

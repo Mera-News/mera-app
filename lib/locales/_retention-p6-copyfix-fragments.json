@@ -1,0 +1,143 @@
+{
+  "_comment": "Retention wave P6 copy fix: feed.firstFeed.body drops 'Your interests' (profile rule), reusing D2's 'What you tell Mera stays on this phone'. English text, brand phonetic in non-Latin, translated in the final pass.",
+  "ar": {
+    "feed": {
+      "firstFeed": {
+        "body": "ميرا is reading today's news for you. What you tell ميرا stays on this phone, so no server keeps a feed about you. That's why ميرا starts reading when you open the app."
+      }
+    }
+  },
+  "de": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "en": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "es": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "fr": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "hi": {
+    "feed": {
+      "firstFeed": {
+        "body": "मेरा is reading today's news for you. What you tell मेरा stays on this phone, so no server keeps a feed about you. That's why मेरा starts reading when you open the app."
+      }
+    }
+  },
+  "id": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "it": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "ja": {
+    "feed": {
+      "firstFeed": {
+        "body": "メラ is reading today's news for you. What you tell メラ stays on this phone, so no server keeps a feed about you. That's why メラ starts reading when you open the app."
+      }
+    }
+  },
+  "ko": {
+    "feed": {
+      "firstFeed": {
+        "body": "메라 is reading today's news for you. What you tell 메라 stays on this phone, so no server keeps a feed about you. That's why 메라 starts reading when you open the app."
+      }
+    }
+  },
+  "nl": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "pl": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "ru": {
+    "feed": {
+      "firstFeed": {
+        "body": "Мера is reading today's news for you. What you tell Мера stays on this phone, so no server keeps a feed about you. That's why Мера starts reading when you open the app."
+      }
+    }
+  },
+  "th": {
+    "feed": {
+      "firstFeed": {
+        "body": "เมร่า is reading today's news for you. What you tell เมร่า stays on this phone, so no server keeps a feed about you. That's why เมร่า starts reading when you open the app."
+      }
+    }
+  },
+  "tr": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "uk": {
+    "feed": {
+      "firstFeed": {
+        "body": "Мера is reading today's news for you. What you tell Мера stays on this phone, so no server keeps a feed about you. That's why Мера starts reading when you open the app."
+      }
+    }
+  },
+  "vi": {
+    "feed": {
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app."
+      }
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "firstFeed": {
+        "body": "梅拉 is reading today's news for you. What you tell 梅拉 stays on this phone, so no server keeps a feed about you. That's why 梅拉 starts reading when you open the app."
+      }
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "firstFeed": {
+        "body": "梅拉 is reading today's news for you. What you tell 梅拉 stays on this phone, so no server keeps a feed about you. That's why 梅拉 starts reading when you open the app."
+      }
+    }
+  }
+}
