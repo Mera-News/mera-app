@@ -46,7 +46,7 @@ interface AllCaughtUpCardProps {
     readonly held?: boolean;
 }
 
-const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
+const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
     title,
     body,
     testID = 'all-caught-up-card',
@@ -223,5 +223,13 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
         </Box>
     );
 };
+
+// Keyed by variant: the footer swaps reading / fold / end in place, and the variants differ in style shape
+// (shadow, plate). A style that gains a CSS variable after its first render trips react-native-css-interop's
+// dev-only upgrade warning, which stringifies navigation props and crashes the Feed. A fresh mount per variant
+// keeps every instance's shape fixed from its first render.
+const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = (props) => (
+    <AllCaughtUpCardBody key={props.variant ?? 'footer'} {...props} />
+);
 
 export default AllCaughtUpCard;

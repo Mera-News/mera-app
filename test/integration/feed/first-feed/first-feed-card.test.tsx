@@ -2,7 +2,7 @@
 // setting; only the explainer sheet is faked.
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import FirstFeedCard from '@/components/custom/for-you/FirstFeedCard';
+import FirstFeedCard, { __newFirstFeedSessionForTests } from '@/components/custom/for-you/FirstFeedCard';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { initI18nEn } from '@/test/helpers';
@@ -17,6 +17,8 @@ const KEY = 'feed_privacy_intro_dismissed';
 beforeAll(initI18nEn);
 beforeEach(async () => {
   await setSetting(KEY, '');
+  await setSetting('feed_privacy_intro_session', '');
+  __newFirstFeedSessionForTests();
   useForYouStore.setState({ suggestionsHydrated: true, lastProcessingRunFinishedAt: null });
 });
 
@@ -47,14 +49,19 @@ it('the link opens the Feed explainer', async () => {
   expect(screen.getByTestId('explainer-open')).toBeTruthy();
 });
 
-it('a run finishing during the first session keeps it; a later session finds it spent', async () => {
+it('a run that finished before the Feed mounted still shows the card in that session, then a new session hides it', async () => {
+  useForYouStore.setState({ lastProcessingRunFinishedAt: Date.now() });
   const first = await render(<FirstFeedCard />);
-  await screen.findByTestId('first-feed-card');
-  await act(async () => useForYouStore.setState({ lastProcessingRunFinishedAt: Date.now() }));
-  expect(screen.getByTestId('first-feed-card')).toBeTruthy();
+  expect(await screen.findByTestId('first-feed-card')).toBeTruthy();
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 100));
+  });
   first.unmount();
-  // Next session: a run is already on record when the card first looks.
+  __newFirstFeedSessionForTests();
   await render(<FirstFeedCard />);
-  await waitFor(async () => expect(await getSetting(KEY)).toBe('1'));
   expect(screen.queryByTestId('first-feed-card')).toBeNull();
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 100));
+  });
+  expect(await getSetting(KEY)).toBe('1');
 });

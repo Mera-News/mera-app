@@ -1,7 +1,8 @@
 // The first-feed privacy card (D9): one dismissible card above the counts card. It says why Mera reads when the app
 // opens, without claiming nothing leaves the phone. It stays until dismissed or until the first session in which a
-// run finished is over: a run already on record when the card first looks means that session passed.
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+// run finished is over. The session a run finished in is stamped with this process's id: the same session keeps the
+// card (even when the run ended before the Feed mounted, e.g. during onboarding), a different one hides it.
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -17,18 +18,29 @@ import { useForYouLastProcessingRunFinishedAt } from '@/lib/stores/selectors';
 import { useColors } from '@/lib/theme/tokens';
 
 const DISMISSED_KEY = 'feed_privacy_intro_dismissed';
+const SESSION_KEY = 'feed_privacy_intro_session';
+let sessionId = `${Date.now()}-${Math.random()}`;
+/** Tests: start a new app session. */
+export function __newFirstFeedSessionForTests(): void {
+    sessionId = `${Date.now()}-${Math.random()}`;
+}
 
 /** Null until the setting and the run record are both read, so the card never flashes for a reader who is past it. */
 export function useFirstFeedVisible(): [boolean, () => void] {
     const [dismissed, setDismissed] = useState<boolean | null>(null);
+    // The session a run finished in: undefined until read, null when none yet.
+    const [stamp, setStamp] = useState<string | null | undefined>(undefined);
     const hydrated = useForYouSuggestionsHydrated();
     const runFinishedAt = useForYouLastProcessingRunFinishedAt();
-    const judged = useRef(false);
 
     useEffect(() => {
         let live = true;
-        getSetting(DISMISSED_KEY)
-            .then((v) => live && setDismissed(v === '1'))
+        Promise.all([getSetting(DISMISSED_KEY), getSetting(SESSION_KEY)])
+            .then(([d, s]) => {
+                if (!live) return;
+                setDismissed(d === '1');
+                setStamp(s || null);
+            })
             .catch(() => live && setDismissed(true));
         return () => {
             live = false;
@@ -36,13 +48,15 @@ export function useFirstFeedVisible(): [boolean, () => void] {
     }, []);
 
     useEffect(() => {
-        if (dismissed !== false || !hydrated || judged.current) return;
-        judged.current = true;
-        if (runFinishedAt !== null) {
+        if (dismissed !== false || !hydrated || stamp === undefined) return;
+        if (stamp !== null && stamp !== sessionId) {
             setDismissed(true);
             void setSetting(DISMISSED_KEY, '1').catch(() => {});
+        } else if (stamp === null && runFinishedAt !== null) {
+            setStamp(sessionId);
+            void setSetting(SESSION_KEY, sessionId).catch(() => {});
         }
-    }, [dismissed, hydrated, runFinishedAt]);
+    }, [dismissed, hydrated, runFinishedAt, stamp]);
 
     const dismiss = useCallback(() => {
         setDismissed(true);
