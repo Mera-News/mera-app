@@ -149,21 +149,21 @@ describe('measured sizes after the promotion', () => {
   // Restated on purpose: the reason pass sends one call per article that clears
   // the gate, so these ride on every scored article.
   it('pins the promoted prompts', () => {
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5623);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5620);
     // Smaller than its pre-promotion twin, not larger: the headline reason
     // prompt gained the 130-token rule and then dropped the 1428-token anchor
     // table to fit the gateway wire cap. golden-prompts.test.ts owns that guard.
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7075);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7072);
   });
 
   it('pins the control arms, which since D11/D20.6 are the current base minus the promoted rules, not the shipped bytes', () => {
     // reason-v1: the text reason-v2 beat, on the pre-geo base.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(4931);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1)).toBe(7760);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(4928);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1)).toBe(7757);
     // pre-geo-control: v2's rules, on the pre-geo base. What ships today beat
     // exactly these two strings.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(5368);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(8198);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(5365);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(8195);
   });
 
   it('costs 437 tokens per reason call to have promoted the v2 rules', () => {
