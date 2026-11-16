@@ -33,6 +33,10 @@
 //    filter-scoped eviction the hard "not interested" purge calls with the exact
 //    ids it just marked `excluded`. Route (2) infers nothing and remembers
 //    nothing — it is deliberately NOT the eviction mechanism described below.
+//    (3) `prune`, hydrate's survivor rule run again at a session boundary
+//    (`resetSession`), so a row whose story merged into another one or aged
+//    out leaves while the list returns to the top and nothing moves under
+//    the reader.
 //
 //    An earlier revision evicted seen cards after 10 minutes and left
 //    "tombstones" so they could not be re-ingested. Those tombstones keyed on
@@ -59,6 +63,7 @@ import {
   stableClusterIdOf,
   type FeedListItem,
 } from './feed-list-selector';
+import { parseCardState } from '@/lib/feed-ordering/read-snapshot';
 
 /** The only verdict left: the feedback sheet's first answer. Verdicts are
  *  session-only here, so no pre-v6 like survives a restart. */
@@ -136,6 +141,8 @@ interface FeedOrderState {
   /** Mark/unmark a verdict as COMMITTED (a terminal leaf settled). No-op if
    *  absent. Only ever stores `true`; unmarking deletes the key. */
   setCommitted: (id: string, committed: boolean) => void;
+  /** Session boundary only: drop rows no live candidate backs (see `prune`). */
+  prune: (items: FeedListItem[]) => void;
   /** FILTER-SCOPED eviction — see `removeIds` in the implementation. */
   removeIds: (ids: string[]) => void;
   /** Stamp `skipped` on cards the user dwelt on. Write-once per id. */
@@ -180,36 +187,6 @@ function parsePersisted(raw: string | null): PersistedOrder {
 
 /** Compact wire encoding for a state record: `['s' | 'v', epochMs]`. */
 type WireState = ['s' | 'v', number];
-
-/** Defensive parse. A device that has never written this key — or wrote a
- *  malformed one — returns an empty map ⇒ every card back at `unviewed`, which
- *  is the safe direction (shows more, hides nothing).
- *
- *  Older blobs also carry a `tombs` map from the removed eviction mechanism.
- *  It is deliberately ignored and never re-serialized, so it goes inert on the
- *  next write without needing a migration or a key bump. */
-function parseCardState(raw: string | null): Record<string, CardStateRecord> {
-  if (!raw) return {};
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return {};
-  }
-  if (!parsed || typeof parsed !== 'object') return {};
-  const rawStates = (parsed as { states?: unknown }).states;
-  if (!rawStates || typeof rawStates !== 'object') return {};
-
-  const states: Record<string, CardStateRecord> = {};
-  for (const [id, v] of Object.entries(rawStates as Record<string, unknown>)) {
-    if (!Array.isArray(v) || v.length !== 2) continue;
-    const [code, at] = v as WireState;
-    if (code !== 's' && code !== 'v') continue;
-    if (typeof at !== 'number' || !Number.isFinite(at)) continue;
-    states[id] = { state: code === 'v' ? 'viewed' : 'skipped', at };
-  }
-  return states;
-}
 
 function persist(order: string[], builtAt: number | null): void {
   // NOTE: `order` must stay the FIRST serialized key — the store's persistence
@@ -469,6 +446,46 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
       if (current.committed === true) return {} as Partial<FeedOrderState>;
       return { verdicts: { ...s.verdicts, [id]: { ...current, committed: true } } };
     }),
+
+  /**
+   * Hydrate's survivor rule, at a session boundary: keep a row while a live
+   * candidate backs it, by its own id or, like `ingest`'s rep-switch, by its
+   * story's identity (stable cluster id, member ids); drop the rest. Two rows
+   * whose stories the server now groups as one leave one card: the row that
+   * no candidate claims goes. Same empty-pool guard as `hydrate`: an empty
+   * pool proves nothing, so it drops nothing. Card states stay (hydrate keeps
+   * them too).
+   */
+  prune: (items) => {
+    const s = get();
+    if (!s.hydrated || items.length === 0 || s.order.length === 0) return;
+    const keep = new Set<string>();
+    const pending: FeedListItem[] = [];
+    const inOrder = new Set(s.order);
+    for (const it of items) {
+      if (inOrder.has(it.id)) keep.add(it.id);
+      else pending.push(it);
+    }
+    const identityToOrderId = new Map<string, string>();
+    for (const id of s.order) {
+      if (keep.has(id)) continue;
+      const existing = s.itemsById[id];
+      if (!existing) continue;
+      const scid = stableClusterIdOf(existing);
+      if (scid) identityToOrderId.set(scid, id);
+      for (const mid of existing.memberIds ?? []) identityToOrderId.set(mid, id);
+    }
+    for (const it of pending) {
+      const oldId = resolveExistingOrderId(it, identityToOrderId);
+      if (oldId) keep.add(oldId);
+    }
+    if (keep.size === s.order.length) return;
+    const order = s.order.filter((id) => keep.has(id));
+    const itemsById: Record<string, FeedListItem> = {};
+    for (const id of order) if (s.itemsById[id]) itemsById[id] = s.itemsById[id];
+    set({ order, itemsById });
+    persist(order, s.builtAt);
+  },
 
   /**
    * FILTER-SCOPED eviction. Removes EXACTLY the ids passed in — the ids a hard

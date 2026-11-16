@@ -129,6 +129,12 @@ export async function arrive(rows: readonly (readonly [id: string, relevance: nu
   });
 }
 
+/** The session's scoring run finishes (fold readiness rule A): the fold may draw. One ms past
+ *  now, so it is later than the session start even within the mount's millisecond. */
+export async function finishRun(): Promise<void> {
+  await act(() => useForYouStore.setState({ lastProcessingRunFinishedAt: Date.now() + 1 }));
+}
+
 /** A strict fake clock: time moves only when the test says so (`jest.setSystemTime`), never in
  *  step with real time. `useFakeClock` lets real time leak in under load, which an upper-bound
  *  timing assertion cannot tolerate. Call it before seeding: seeded pubDates read `Date.now()`. */

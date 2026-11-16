@@ -3,7 +3,7 @@
 // stamped viewed. The sheet writes the article_feedback row itself (useArticleMenu).
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { setAppState, signInFixtureAccount } from '@/test/helpers';
-import { HIGH, LOW, MEDIUM, act, hydrateSuggestions, renderFeed, resetFeedStores, seedComplete, waitFor } from './support';
+import { HIGH, LOW, MEDIUM, act, finishRun, hydrateSuggestions, renderFeed, resetFeedStores, seedComplete, waitFor } from './support';
 
 beforeEach(async () => {
   setAppState('active');
@@ -15,6 +15,10 @@ async function mount() {
   await seedComplete([['a', HIGH], ['b', MEDIUM], ['c', LOW]]);
   await hydrateSuggestions();
   const feed = await renderFeed();
+  // The Low card sits below the fold: open it, as a reader would with Show them.
+  await finishRun();
+  await waitFor(() => expect(feed.result.current.fold.terminal).toBe('fold'));
+  await act(() => feed.result.current.onShowThem());
   await waitFor(() => expect(feed.ids()).toHaveLength(3));
   const suggestionOf = (id: string) => feed.result.current.listData.find((it) => it.id === id)!.suggestion;
   const record = (id: string) => useFeedOrderStore.getState().verdicts[id];

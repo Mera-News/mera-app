@@ -37,6 +37,8 @@ import { isDiscardedVisible, isReasonPendingVisible, isUnscoredVisible } from '@
 import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from './for-you-store';
+import { relevanceBandRank } from '@/lib/feed-ordering/priority-order';
+import type { ReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
 
 /** Exponential-decay half-life (hours) for the recency term of `feedScore`. */
 export const FEED_HALF_LIFE_HOURS = 6;
@@ -190,6 +192,13 @@ export interface BuildFeedListOptions {
    *  stories made entirely of them are kept, so a story the Feed shows is
    *  never also listed as discarded. Every other option is ignored. */
   onlyDiscarded?: boolean;
+  /** The Feed only (D8, D18 Q5): a story is fronted by its highest relevance
+   *  band first, so a High copy fronts a Medium one and the card is large.
+   *  Inside a band the shared rule decides; representative-compare is untouched. */
+  bandFirst?: boolean;
+  /** The Feed's read state (D21). P3 hands it to the window predicates so an
+   *  unread High or Emergency stays past 48h; until then it is unused. */
+  read?: ReadSnapshot;
 }
 
 /** Fronting rank inside a story: a member with its note, then one still
@@ -229,12 +238,19 @@ export function buildFeedList(
   // fronts the story ahead of one still being written, and either ahead of
   // one Mera has not read (`statusRank`); the shared rule decides the rest.
   // Without them every member is complete and this is the shared rule exactly.
+  const bandFirst = opts.bandFirst === true;
   const repCompareForGroups: (a: GroupItem, b: GroupItem) => number =
-    includePending || includeUnscored
+    includePending || includeUnscored || bandFirst
       ? (a, b) => {
           const pa = statusRank(a.s);
           const pb = statusRank(b.s);
-          return pa !== pb ? pa - pb : baseRepCompare(a, b);
+          if (pa !== pb) return pa - pb;
+          if (bandFirst) {
+            const ba = relevanceBandRank(a.s.relevance ?? 0);
+            const bb = relevanceBandRank(b.s.relevance ?? 0);
+            if (ba !== bb) return ba - bb;
+          }
+          return baseRepCompare(a, b);
         }
       : baseRepCompare;
 

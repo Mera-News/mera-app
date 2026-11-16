@@ -35,7 +35,7 @@ async function mountWith(rows: readonly (readonly [string, number])[]) {
   await seedComplete(rows);
   await hydrateSuggestions();
   const feed = await renderFeed();
-  await waitFor(() => expect(feed.ids()).toHaveLength(rows.length));
+  await waitFor(() => expect(useFeedOrderStore.getState().order).toHaveLength(rows.length));
   await act(async () => {});
   return feed;
 }
@@ -45,14 +45,16 @@ describe('ingest is insert-only', () => {
     const feed = await mountWith([['a', HIGH], ['b', MEDIUM]]);
     expect(feed.ids()).toEqual(['a', 'b']);
 
+    // A Low arrival joins the folded rows (D5), behind "Show them".
     await arrive([['c', LOW]]);
-    await waitFor(() => expect(feed.ids()).toContain('c'));
-    expect(feed.ids()).toEqual(['a', 'b', 'c']);
+    await waitFor(() => expect(feed.result.current.fold.count).toBe(1));
+    expect(feed.ids()).toEqual(['a', 'b']);
 
     await arrive([['d', HIGH]]);
     await waitFor(() => expect(feed.ids()).toContain('d'));
-    expect(feed.ids()).toEqual(expect.arrayContaining(['a', 'b', 'c', 'd']));
-    expect(feed.ids()).toHaveLength(4);
+    expect(feed.ids()).toEqual(expect.arrayContaining(['a', 'b', 'd']));
+    expect(feed.ids()).toHaveLength(3);
+    expect(useFeedOrderStore.getState().order).toHaveLength(4);
   });
 
   it('a candidate pool that empties out removes nothing from the list or the order', async () => {
@@ -142,16 +144,19 @@ describe('partition snapshot', () => {
 });
 
 describe('rows whose note is still being written', () => {
-  it('a reason_pending row that clears the gate is listed after every unseen LOW row', async () => {
+  it('a reason_pending row is listed after the unseen rows on its own side of the fold', async () => {
     await seedComplete([['hi', HIGH], ['mid', MEDIUM], ['lo', LOW]]);
     await seedReasonPending('pend-hi', 0.95);
     await seedReasonPending('pend-lo', LOW);
     await hydrateSuggestions();
     const feed = await renderFeed();
-    await waitFor(() => expect(feed.ids()).toHaveLength(5));
+    await waitFor(() => expect(useFeedOrderStore.getState().order).toHaveLength(5));
+    await act(async () => {});
 
-    // PENDING_BAND_OFFSET sinks both below the LOW band; relevance order holds among them.
-    expect(feed.ids()).toEqual(['hi', 'mid', 'lo', 'pend-hi', 'pend-lo']);
+    // The fold splits on the band without the pending offset; on each side the pending row sinks.
+    expect(feed.ids()).toEqual(['hi', 'mid', 'pend-hi']);
+    await act(() => feed.result.current.onShowThem());
+    expect(feed.ids()).toEqual(['hi', 'mid', 'pend-hi', 'lo', 'pend-lo']);
   });
 });
 

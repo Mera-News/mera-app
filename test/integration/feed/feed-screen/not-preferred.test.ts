@@ -7,7 +7,7 @@ import { resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display
 import { resetFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
 import { revertSourcePrefChange, setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import { setAppState } from '@/test/helpers';
-import { HIGH, MEDIUM, act, hydrateSuggestions, renderFeed, resetFeedStores, seedArticles, seedComplete, waitFor } from './support';
+import { HIGH, MEDIUM, act, finishRun, hydrateSuggestions, renderFeed, resetFeedStores, seedArticles, seedComplete, waitFor } from './support';
 
 beforeEach(async () => {
   setAppState('active');
@@ -80,6 +80,8 @@ it('a not-read card leaves too, and Undo puts it back', async () => {
   await batchMarkScoreFailed(tried);
   await hydrateSuggestions();
   const feed = await renderFeed();
+  // The tail renders once the session's first run is done (the fold's readiness).
+  await finishRun();
   await waitFor(() => expect(feed.ids()).toEqual(['pick', 'tried']));
 
   const res = await hide('Gone');

@@ -1,8 +1,21 @@
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
+  FEED_SYNC_TASK,
   useFeedSyncRefresh,
+  useFeedSyncRunning,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
+import { pickScoringProgress } from '@/components/custom/for-you/status-ink';
+import {
+  foldReadinessWakeAt,
+  nextFoldReadiness,
+  startFoldReadiness,
+  type FoldObservation,
+} from './fold-readiness';
+import { buildReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
+import { observeAll as observeLocations } from '@/lib/database/services/location-service';
+import { useNetworkStore } from '@/lib/stores/network-store';
+import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useHasFacts } from '@/components/custom/feed/use-has-facts';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
@@ -18,11 +31,13 @@ import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
-  sortFeedEntries,
   countUnviewed,
   EMPTY_PIN,
   arrivalFloor,
+  expandFold,
   extendPin,
+  layoutFeed,
+  type FeedLayout,
   type FeedPin,
   isAwaitingNote,
   arrivedAtOf,
@@ -39,7 +54,6 @@ import {
   useFeedViewPrefs,
 } from './feed-view-prefs';
 import {
-  applyFeedShow,
   buildDiscardedStories,
   feedShowCounts,
   foldNotReadTail,
@@ -80,6 +94,9 @@ import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import {
+  useForYouAsyncJobProcessedCount,
+  useForYouAsyncJobTotalCount,
+  useForYouBatchProgress,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
 } from '@/lib/stores/selectors';
@@ -181,14 +198,26 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // And rows Mera has not read (`includeUnscored`): every article reaches the
   // Feed. Those never enter the order store; they are the session's not-read
   // tail (not-read-tail.ts), after every scored card.
+  //
+  // A story is fronted by its highest band (D8), and the read state goes in
+  // for the 7-day keep of unread High rows (D21; read at build time, no
+  // subscription, so a seen-mark never rebuilds the list).
   const allCandidates = useMemo(
     () =>
       buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx, {
         includeReasonPending: true,
         includeUnscored: true,
+        bandFirst: true,
+        read: buildReadSnapshot(
+          useFeedOrderStore.getState().cardStates,
+          useOpenedStoriesStore.getState().ids,
+          suggestions,
+        ),
       }),
     [suggestions, userGeoLanguageCtx],
   );
+  const allCandidatesRef = useRef(allCandidates);
+  allCandidatesRef.current = allCandidates;
   // The not-read tail, frozen per reading session (replaced in resetSession,
   // which bumps `sessionEpoch`). Folding mutates the session, idempotently.
   const tailSessionRef = useRef<NotReadTailSession>(newNotReadTailSession());
@@ -247,18 +276,25 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // one could only land above rows on screen.
   const [pin, setPin] = useState<FeedPin>(EMPTY_PIN);
   const pinnedIds = pin.ids;
-  // How many rows render after the picks (the not-read tail under All).
-  const renderedAfterPicksRef = useRef(0);
   // Live mirror of the rendered STORY order for the viewability tracker. Created
   // once (stable identity) because the tracker's callbacks are frozen at mount.
   const renderedIdsRef = useRef<readonly string[]>([]);
-  // Live mirror of the rendered story rows, so the ingest effect can extend the
-  // pin from the PRE-ingest list without depending on `listData` (which would
-  // re-run the effect on every re-sort).
+  // Live mirror of the rendered story rows (the new-below scan).
   const listDataRef = useRef<FeedListItem[]>([]);
-  // The SCORED rows only, in sorted order: what the pinned prefix is
-  // extended over, so a not-read card can never be pinned above a pick.
-  const scoredRowsRef = useRef<FeedListItem[]>([]);
+  // The last layout, so the ingest effect can extend the pin from the
+  // PRE-ingest list without depending on it (which would re-run the effect
+  // on every re-sort). The pin extends over the rendered above-fold picks
+  // only, so a not-read or folded card can never be pinned above a pick.
+  const layoutRef = useRef<FeedLayout | null>(null);
+  /** `extendPin` against the last layout. */
+  const extendPinFromLayout = useCallback(
+    (prev: FeedPin, deepestSeenId: string | null, floor: number): FeedPin => {
+      const l = layoutRef.current;
+      if (!l) return prev;
+      return extendPin(prev, l.above, deepestSeenId, floor, l.renderedAfterPicks, l.below.map((it) => it.id));
+    },
+    [],
+  );
 
   // ── Freeze boundary + skip dwell (viewability → refs only; no store/DB
   //    writes mid-scroll). `FeedRow` subscribes to the opened set per row for
@@ -387,6 +423,50 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     });
   }, []);
 
+  // ── Fold readiness (D5) ──
+  // The fold says "you're up to date", so it waits for the session's first
+  // run (fold-readiness.ts). Latched; a reset (refresh, a long background)
+  // starts it again, a Show switch does not (no sync follows one).
+  const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
+  const syncRunning = useFeedSyncRunning();
+  const scoring =
+    pickScoringProgress(useForYouBatchProgress(), useForYouAsyncJobProcessedCount(), useForYouAsyncJobTotalCount()) !==
+    null;
+  const offline = useNetworkStore((s) => !s.isConnected);
+  const syncLastRun = useSchedulerStore((s) => s.taskLastRun[FEED_SYNC_TASK] ?? null);
+  const [foldReadiness, setFoldReadiness] = useState(() => startFoldReadiness(Date.now()));
+  // A sync seen running this session that has stopped counts as run, failed
+  // ones included (a failure stamps no last-run time).
+  const syncSeenRef = useRef(false);
+  if (syncRunning) syncSeenRef.current = true;
+  const syncRan =
+    (syncSeenRef.current && !syncRunning) || (syncLastRun !== null && syncLastRun > foldReadiness.sessionStart);
+  const [foldWake, setFoldWake] = useState(0);
+  useEffect(() => {
+    const obs: FoldObservation = {
+      now: Date.now(),
+      lastRunFinishedAt: lastProcessingRunFinishedAt,
+      busy: syncRunning || narrating,
+      scoring,
+      syncRan,
+      offline,
+    };
+    const next = nextFoldReadiness(foldReadiness, obs);
+    if (
+      next.ready !== foldReadiness.ready ||
+      next.scoringStarted !== foldReadiness.scoringStarted ||
+      next.idleSince !== foldReadiness.idleSince
+    ) {
+      setFoldReadiness(next);
+      return;
+    }
+    // One timer for the idle rule, never a poll.
+    const wakeAt = foldReadinessWakeAt(next, obs);
+    if (wakeAt === null) return;
+    const timer = setTimeout(() => setFoldWake((n) => n + 1), Math.max(0, wakeAt - obs.now));
+    return () => clearTimeout(timer);
+  }, [foldReadiness, foldWake, lastProcessingRunFinishedAt, syncRunning, narrating, scoring, syncRan, offline]);
+
   /**
    * Start a NEW reading session: re-freeze the partition AND drop the pinned
    * prefix + its anchor, so the whole list is free to re-sort and new arrivals
@@ -397,7 +477,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
    * old positions, and clearing it without re-sorting would un-pin rows for no
    * reason. One function, so the two can never drift apart.
    */
-  const resetSession = useCallback(() => {
+  const resetSession = useCallback((restartFold = true) => {
     // Re-elect representatives and forget "was pending": the list returns to
     // the top on every reset, so nothing changes under a reader.
     rowSessionRef.current = newFeedRowSession();
@@ -406,8 +486,17 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     tailSessionRef.current = newNotReadTailSession();
     setSessionEpoch((e) => e + 1);
     refreshPartitionSnapshot();
+    // EMPTY_PIN also collapses the fold.
     setPin(EMPTY_PIN);
     resetDeepestSeen();
+    // The session boundary is the one moment a row may leave the order (the
+    // list returns to the top): a row whose story merged into another or aged
+    // out goes. Scored candidates only, the tail never enters the order.
+    useFeedOrderStore.getState().prune(allCandidatesRef.current.filter((c) => !isNotRead(c.suggestion)));
+    if (restartFold) {
+      syncSeenRef.current = false;
+      setFoldReadiness(startFoldReadiness(Date.now()));
+    }
   }, [refreshPartitionSnapshot, resetDeepestSeen]);
 
   // Seed once BOTH stores are hydrated — deliberately not inside `hydrate`,
@@ -498,84 +587,71 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   useEffect(() => {
     if (!isFocused || !orderHydrated || !openedHydrated) return;
     setPin((prev) =>
-      extendPin(
-        prev,
-        scoredRowsRef.current,
-        deepestSeenIdRef.current,
-        arrivalFloor(renderedIdsRef.current, onScreenIdsRef.current),
-        renderedAfterPicksRef.current,
-      ),
+      extendPinFromLayout(prev, deepestSeenIdRef.current, arrivalFloor(renderedIdsRef.current, onScreenIdsRef.current)),
     );
     useFeedOrderStore
       .getState()
       .ingest(candidates, useOpenedStoriesStore.getState().articleIds);
     if (candidates.length > 0) setIngestedCandidates(true);
-  }, [candidates, isFocused, orderHydrated, openedHydrated, deepestSeenIdRef]);
+  }, [candidates, isFocused, orderHydrated, openedHydrated, deepestSeenIdRef, extendPinFromLayout]);
 
   const data = useMemo(
     () => order.map((id) => itemsById[id]).filter((it): it is FeedListItem => !!it),
     [order, itemsById],
   );
 
-  // Display list: the STATIC pinned prefix (what the user has already read past,
-  // in reading order), then the DYNAMIC region — unviewed (high → med → low),
-  // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
-  // below the boundary, it does not disappear. Empty when there are no stories,
-  // so the empty-state chain renders.
-  // `pinnedCount` is part of `sortFeedEntries`'s return but has no consumer
-  // here any more — it used to tell `buildFeedRows` where the pinned prefix
-  // ended so it could splice a divider just past it; that splicing is gone
-  // (see the header comment), and the pinned rows are already in their final
-  // rendered position within `listData` itself.
+  // Display list (feed-entries `layoutFeed`): the STATIC pinned prefix, then
+  // the DYNAMIC region by tier and band; split at the FOLD (D5: Medium and up
+  // above it, Low one tap away), then the Show filter. Every rendered row is a
+  // story: the fold card is the footer, its label rides a row's divider slot.
   //
-  // A card still waiting for its note sinks to the end of the unseen cards,
-  // judged on the article the card SHOWS (its session-frozen representative),
-  // not the store's: the store fronts a story with a member that has a note,
-  // while the card keeps its first article. `liveById` is a dep so a note
-  // landing re-sorts the row up into its band.
-  const { rows: scoredRows } = useMemo(
+  // A card still waiting for its note sinks to the end of its side of the
+  // fold, judged on the article the card SHOWS (its session-frozen
+  // representative), not the store's: the store fronts a story with a member
+  // that has a note, while the card keeps its first article. `liveById` is a
+  // dep so a note landing re-sorts the row up into its band.
+  //
+  // Only Discarded reads its rows, so opening the menu never rebuilds the list.
+  const discardedShown = show === 'discarded' ? discarded?.rows ?? NO_ROWS : NO_ROWS;
+  const layout = useMemo(
     () =>
-      sortFeedEntries(
+      layoutFeed({
         // A card keeps the article it first showed, which a re-election can
         // leave out of `item.suggestion`: the hide reads what the card shows.
-        data.filter(
+        data: data.filter(
           (it) =>
             !isMutedPublication(displayedSuggestionOf(it, liveById, rowSessionRef.current).publication_name, userGeoLanguageCtx),
         ),
-        partitionSnapshot.cardStates,
-        partitionSnapshot.openedArticleIds,
-        pinnedIds,
-        partitionSnapshot.at,
-        (it) => isAwaitingNote(displayedSuggestionOf(it, liveById, rowSessionRef.current)),
-        userGeoLanguageCtx,
-        pin.closed,
-      ),
-    [data, partitionSnapshot, pinnedIds, pin.closed, liveById, userGeoLanguageCtx],
+        cardStates: partitionSnapshot.cardStates,
+        openedArticleIds: partitionSnapshot.openedArticleIds,
+        nowMs: partitionSnapshot.at,
+        awaitingNote: (it) => isAwaitingNote(displayedSuggestionOf(it, liveById, rowSessionRef.current)),
+        ctx: userGeoLanguageCtx,
+        pin,
+        tail: folded.tail,
+        show,
+        discarded: discardedShown,
+        ready: foldReadiness.ready,
+      }),
+    [data, partitionSnapshot, pin, liveById, userGeoLanguageCtx, folded, show, discardedShown, foldReadiness.ready],
   );
-  scoredRowsRef.current = scoredRows;
+  layoutRef.current = layout;
+  const { rows: listData, picks: picksCount } = layout;
+  // Every scored story this session holds, folded or not (held picks aside).
+  const scoredRows = useMemo(() => [...layout.above, ...layout.below], [layout]);
 
-  // The Show filter (feed_show): Mera's picks, then the not-read tail; or the
-  // discarded stories alone. The unfiltered lists (picks and tail) keep
-  // feeding the pin (scored rows) and the empty chain.
-  // Only Discarded reads its rows, so opening the menu never rebuilds the list.
-  const discardedShown = show === 'discarded' ? discarded?.rows ?? NO_ROWS : NO_ROWS;
-  const { rows: listData, picks: picksCount } = useMemo(
-    () => applyFeedShow(scoredRows, folded.tail, show, discardedShown),
-    [scoredRows, folded, show, discardedShown],
-  );
-  // The Show menu's counts, from the same segments (one source of truth);
-  // Discarded's only while its stories are built.
+  // The Show menu's counts: what each option RENDERS (owner: always the exact
+  // number), so folded stories count once they are shown, and the not-read
+  // tail counts under All only while it renders. Discarded's only while its
+  // stories are built.
   useEffect(() => {
-    const counts = feedShowCounts(
-      scoredRows,
-      folded.tail,
-      folded.overflow,
-      discarded?.rows ?? [],
-      discarded?.total ?? 0,
-    );
+    const pickRows = pin.expanded ? scoredRows : layout.above;
+    const counts = feedShowCounts(pickRows, folded.tail, folded.overflow, discarded?.rows ?? [], discarded?.total ?? 0);
+    const tailRenders = pin.expanded || (foldReadiness.ready && layout.below.length === 0);
+    if (!tailRenders) counts.all = { n: pickRows.length };
     const { discarded: _unbuilt, ...withoutDiscarded } = counts;
     setFeedShowCounts(discarded ? counts : withoutDiscarded);
-  }, [scoredRows, folded, discarded]);
+  }, [layout, scoredRows, pin.expanded, foldReadiness.ready, folded, discarded]);
   useEffect(() => () => setFeedShowCounts(null), []);
   const allRowsCount = scoredRows.length + folded.tail.length;
   // The divider says "below are articles Mera hasn't read yet": only while
@@ -585,7 +661,6 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     [folded, liveById],
   );
   listDataRef.current = listData;
-  renderedAfterPicksRef.current = show === 'all' ? folded.tail.length : 0;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
 
   // The reading hold, read ONCE for the whole list (no subscription per
@@ -697,17 +772,11 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // against an empty pin and reproduce the mid-list-open jump this phase exists
   // to remove.
   useEffect(() => {
-    if (scoredRows.length === 0 || pinnedIds.length > 0) return;
+    if (layout.above.length === 0 || pinnedIds.length > 0) return;
     setPin((prev) =>
-      extendPin(
-        prev,
-        scoredRows,
-        deepestSeenIdRef.current,
-        arrivalFloor(renderedIdsRef.current, onScreenIdsRef.current),
-        renderedAfterPicksRef.current,
-      ),
+      extendPinFromLayout(prev, deepestSeenIdRef.current, arrivalFloor(renderedIdsRef.current, onScreenIdsRef.current)),
     );
-  }, [scoredRows, pinnedIds.length, deepestSeenIdRef]);
+  }, [layout.above, pinnedIds.length, deepestSeenIdRef, extendPinFromLayout]);
 
   // DEV-only: the FIRST commit at which this screen actually has cards. A
   // useEFFECT, not the memo body above — the memo runs during render, BEFORE
@@ -880,9 +949,9 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
       // in above the cards the reader is now looking at, which read as a
       // second jump right after the refresh. Floor-sized (the reader is at the
       // top), and still monotonic from here.
-      setPin((prev) => extendPin(prev, scoredRowsRef.current, null, 0, renderedAfterPicksRef.current));
+      setPin((prev) => extendPinFromLayout(prev, null, 0));
     });
-  }, [partitionSnapshot, listData]);
+  }, [partitionSnapshot, listData, extendPinFromLayout]);
 
   // A Show switch is a new reading session: re-sort, back to the top, no
   // arrival motion for the whole list, then say what is shown and move
@@ -898,7 +967,7 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     seenRowIdsRef.current = null;
     pendingScrollResetRef.current = true;
     pendingShowAnnounceRef.current = partitionSnapshot;
-    resetSession();
+    resetSession(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resetSession]);
   useEffect(() => {
@@ -940,9 +1009,18 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler, anchorHandler]);
 
   // ── Empty-state chain (the same priority as the Interests page's) ──
+  // No facts AND no places: a place alone drives a sync (D1), so that reader
+  // takes the processing and counts path.
   const hasFacts = useHasFacts();
-  const noFacts = hasFacts === false;
-  const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
+  const [hasPlaces, setHasPlaces] = useState<boolean | null>(null);
+  useEffect(() => {
+    const sub = observeLocations().subscribe({
+      next: (rows) => setHasPlaces(rows.length > 0),
+      error: () => setHasPlaces(null),
+    });
+    return () => sub.unsubscribe();
+  }, []);
+  const noFacts = hasFacts === false && hasPlaces === false;
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
   // OR-s in the scheduler flag on its own.
@@ -991,6 +1069,26 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     lastProcessingRunFinishedAt !== null;
   const hasRows = allRowsCount > 0;
 
+  // "Show them": pin what renders plus the folded rows, closed and expanded.
+  const onShowThem = useCallback(() => {
+    setPin((prev) => (layoutRef.current ? expandFold(prev, layoutRef.current) : prev));
+  }, []);
+  const fold = useMemo(
+    () => ({
+      terminal: layout.terminal,
+      /** Folded stories (Low rows only, never the not-read tail). */
+      count: layout.below.length,
+      nothingAbove: layout.above.length === 0,
+      /** Picks the closed pin holds until the next session. */
+      held: layout.heldCount,
+      /** The row whose divider slot carries the fold label (expanded). */
+      index: layout.foldIndex,
+      /** How many "Show them" revealed, for the label's announcement. */
+      shown: pin.belowIds.length,
+    }),
+    [layout, pin.belowIds.length],
+  );
+
   return {
     listRef,
     listData,
@@ -999,7 +1097,8 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     noteHeldLine,
     notReadDividerOn,
     notReadLine,
-    tailCount: folded.tail.length,
+    fold,
+    onShowThem,
     scoredCount: scoredRows.length,
     allRowsCount,
     liveById,

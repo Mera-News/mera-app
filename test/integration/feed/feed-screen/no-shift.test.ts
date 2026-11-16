@@ -11,6 +11,7 @@ import {
   MEDIUM,
   act,
   arrive,
+  finishRun,
   hydrateSuggestions,
   renderFeed,
   resetFeedStores,
@@ -134,6 +135,7 @@ describe('rows Mera tried and that stayed unscored (score_failed_at)', () => {
     await markTriedUnscored(['tried']);
     await hydrateSuggestions();
     const feed = await renderFeed();
+    await finishRun();
     await waitFor(() => expect(feed.ids()).toEqual(['p1', 'p2', 'tried']));
     await act(async () => {});
     expect(feed.ids()).toEqual(['p1', 'p2', 'tried']);
@@ -144,6 +146,7 @@ describe('rows Mera tried and that stayed unscored (score_failed_at)', () => {
     await seedNotRead(['later']);
     await hydrateSuggestions();
     const feed = await renderFeed();
+    await finishRun();
     await waitFor(() => expect(feed.ids()).toEqual(['p1']));
 
     await markTriedUnscored(['later']);
@@ -160,6 +163,7 @@ describe('rows Mera tried and that stayed unscored (score_failed_at)', () => {
     await markTriedUnscored(['t1', 't2', 't3']);
     await hydrateSuggestions();
     const feed = await renderFeed();
+    await finishRun();
     await waitFor(() => expect(feed.ids()).toHaveLength(5));
     const before = feed.ids();
 
