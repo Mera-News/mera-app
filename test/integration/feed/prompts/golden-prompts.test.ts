@@ -19,6 +19,8 @@ import {
   buildScoreCallForChunk,
   buildUserContext,
   EMPTY_FACT_BANK_CONTEXT,
+  localDay,
+  withAddedDate,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
@@ -179,11 +181,16 @@ describe('golden — measured prompt sizes', () => {
     // RE-PINNED AGAIN when the headline reason prompt dropped the anchor table
     // to fit the gateway wire cap: 8256 -> 6958, a 1298-token cut that no other
     // prompt takes. See the wire-cap block below for why.
-    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4585);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7230);
+    //
+    // RE-PINNED for the retention rubric (D11): domain test, whose-life-changes,
+    // trip expiry, family bands, anchors; paid for in bytes by the Jersey worked
+    // example and every spaced em dash in the base, so the headline relevance
+    // prompt still fits the 90% wire cap below.
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4653);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7295);
     // ux1: +43 for RULE_NAME_BAN, which names the rubric label in every spelling.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5531);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7036);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5600);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7052);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -271,10 +278,10 @@ describe('golden — measured prompt sizes', () => {
     // The tripwire. A number moving here means a prompt grew; check it against
     // the cap above before re-pinning.
     expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
-      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37332',
-      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58782',
-      'CLOUD_REASON_SYSTEM_PROMPT 44928',
-      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 57022',
+      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37502',
+      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58786',
+      'CLOUD_REASON_SYSTEM_PROMPT 45122',
+      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 56842',
       'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12512',
       'CLOUD_V3_NOTE_SYSTEM_PROMPT 15444',
       'LOCAL_RELEVANCE_SYSTEM_PROMPT 9232',
@@ -286,8 +293,10 @@ describe('golden — measured prompt sizes', () => {
     // Deliberate, and the reason `pre-geo-control` must never be run on a
     // headline bundle: this string is the byte-exact record of what shipped,
     // and what shipped was already 408 over. Fixing it would destroy the
-    // archive; the arm's description carries the warning.
-    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65922);
+    // archive; the arm's description carries the warning. Since the retention
+    // rubric (D20.6) the pre-geo arms are "current base minus the geo rule",
+    // no longer byte-exact to what shipped, and still over the cap.
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65832);
     expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBeGreaterThan(CAP);
   });
 
@@ -625,5 +634,55 @@ describe('an empty fact bank', () => {
     expect(EMPTY_FACT_BANK_CONTEXT).toContain('any instruction to link the article to a user fact does not apply');
     expect(CLOUD_REASON_SYSTEM_PROMPT).not.toContain('[User facts] none');
     expect(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT).not.toContain('[User facts] none');
+  });
+});
+
+// D20.3/.4: the rubric ends a trip once its dates pass, so the model needs the
+// date it is scoring on and the day each fact was saved ("next weekend" counts
+// from that day). Both are PARAMETERS, never a clock read inside the builder, so
+// a golden can pin the exact text.
+describe('today and fact dates', () => {
+  const TODAY = '2026-11-16';
+  // Local noon, so the local calendar day is the same in every time zone the suite runs in.
+  const ADDED = new Date(2026, 9, 9, 12).getTime();
+
+  it('a fact line ends with the local day it was saved', () => {
+    expect(withAddedDate('Trip to Lyon next weekend', ADDED)).toBe('Trip to Lyon next weekend (added 2026-10-09)');
+    expect(localDay(ADDED)).toBe('2026-10-09');
+  });
+
+  it('a fact with no saved date renders exactly its line', () => {
+    expect(withAddedDate('Lives in Delft', undefined)).toBe('Lives in Delft');
+    expect(withAddedDate('Lives in Delft', null)).toBe('Lives in Delft');
+  });
+
+  it('puts the Today line before the fact bank', () => {
+    expect(buildUserContext(['Lives in Delft'], TODAY)).toBe(`Today: ${TODAY}\n[User facts] Lives in Delft.`);
+    expect(buildUserContext([], TODAY)).toBe(`Today: ${TODAY}\n${EMPTY_FACT_BANK_CONTEXT}`);
+  });
+
+  it('reaches the score and reason prompts the harness builds', () => {
+    const facts = [withAddedDate('Trip to Lyon next weekend', ADDED), 'Lives in Delft'];
+    const context = `User Context: Today: ${TODAY}\n[User facts] Trip to Lyon next weekend (added 2026-10-09). Lives in Delft.`;
+    const score = harnessBuildRelevanceCalls([candidate('a')], facts, undefined, undefined, undefined, TODAY);
+    expect(score.calls[0].prompt.startsWith(`${context}\n\n`)).toBe(true);
+    const reason = harnessBuildReasonCallsForSubset(
+      [candidate('a')], { a: 0.8 }, 0.3, facts, undefined, undefined, false, undefined, TODAY,
+    );
+    expect(reason.calls[0].prompt).toContain(context);
+  });
+
+  it('without a date the prompts are unchanged', () => {
+    const { prompt } = buildScoreCallForChunk([candidate('a')], FACT_STATEMENTS);
+    expect(prompt).not.toContain('Today:');
+    expect(prompt).not.toContain('(added ');
+  });
+
+  it('the rubric reads both', () => {
+    for (const p of [CLOUD_RELEVANCE_SYSTEM_PROMPT, CLOUD_REASON_SYSTEM_PROMPT, CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT, CLOUD_HEADLINE_REASON_SYSTEM_PROMPT]) {
+      expect(p).toContain('- **Today**: the current date, when given.');
+      expect(p).toContain('A fact may end "(added YYYY-MM-DD)", the day it was saved');
+      expect(p).toContain('a named trip whose dates (or its event\'s dates) are not before Today. An ended trip is no stake');
+    }
   });
 });

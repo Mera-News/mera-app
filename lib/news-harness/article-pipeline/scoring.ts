@@ -203,11 +203,31 @@ export function reasonSystemPromptFor(
 export const EMPTY_FACT_BANK_CONTEXT =
   '[User facts] none. Nothing is known about this reader, so never assume a home, job, family, trip or interest for them, and any instruction to link the article to a user fact does not apply. Say plainly that it has no known link to them, for example "This is major news with no known link to you."';
 
-/** Build the "[User facts] …" string from the user's FULL fact bank. */
-export function buildUserContext(allFactStatements: string[]): string {
+/**
+ * Build the "[User facts] …" string from the user's FULL fact bank.
+ *
+ * `today` (YYYY-MM-DD, see {@link localDay}) puts a "Today:" line before it: the
+ * rubric ends a trip once its dates pass. A parameter, never a clock read here,
+ * so goldens stay pinnable. Omitted, the context is what it always was.
+ */
+export function buildUserContext(allFactStatements: string[], today?: string): string {
   const statements = allFactStatements.filter((s) => s && s.trim().length > 0);
-  if (statements.length === 0) return EMPTY_FACT_BANK_CONTEXT;
-  return `[User facts] ${statements.join('. ')}.`;
+  const facts = statements.length === 0
+    ? EMPTY_FACT_BANK_CONTEXT
+    : `[User facts] ${statements.join('. ')}.`;
+  return today ? `Today: ${today}\n${facts}` : facts;
+}
+
+/** The LOCAL calendar day of `ms` as YYYY-MM-DD: the day the reader is living in. */
+export function localDay(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** A fact line ending with the day it was saved, so "next weekend" in it can be dated. */
+export function withAddedDate(line: string, addedAtMs: number | null | undefined): string {
+  return addedAtMs ? `${line} (added ${localDay(addedAtMs)})` : line;
 }
 
 /** A related fact as the cloud prompts show it: the statement, plus where its news should
@@ -339,8 +359,10 @@ export function buildScoreCallForChunk(
   config: ArticlePipelineConfig = ARTICLE_CFG,
   /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output. */
   promptVariant?: PromptVariantId,
+  /** YYYY-MM-DD for the "Today:" line; omitted ⇒ no line. */
+  today?: string,
 ): { prompt: string; system: string } {
-  const userContext = buildUserContext(allFactStatements);
+  const userContext = buildUserContext(allFactStatements, today);
   const prompt = buildBatchScoringUserMessage({
     userContext,
     articles: chunkCandidates.map((c) => ({
@@ -384,6 +406,8 @@ export function buildRelevanceCalls(
   config: ArticlePipelineConfig = ARTICLE_CFG,
   logger: HarnessLogger = NOOP_LOGGER,
   variant?: ScoringVariant,
+  /** YYYY-MM-DD for the "Today:" line; omitted ⇒ no line. */
+  today?: string,
 ): CloudCallBundle {
   // isScorableCandidate, not isEligible: a pure TOP-HEADLINE row is factless by
   // design and would otherwise be silently dropped from the bundle here even
@@ -402,6 +426,8 @@ export function buildRelevanceCalls(
       factStatements,
       relevanceSystemPromptFor(config, variant ?? resolveScoringVariant(chunkCandidates)),
       config,
+      undefined,
+      today,
     );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
@@ -454,6 +480,8 @@ export function buildReasonCallsForSubset(
   v3 = false,
   /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output. */
   promptVariant?: PromptVariantId,
+  /** YYYY-MM-DD for the "Today:" line; omitted ⇒ no line. */
+  today?: string,
 ): CloudCallBundle {
   const eligible = candidates.filter((c) => {
     // isScorableCandidate: without it a factless headline that SCORED well gets
@@ -480,7 +508,7 @@ export function buildReasonCallsForSubset(
 
   const calls: BatchCall[] = [];
   const promptsById = new Map<string, string>();
-  const fullUserContext = buildUserContext(factStatements);
+  const fullUserContext = buildUserContext(factStatements, today);
 
   for (const c of subset) {
     const reasonPrompt = buildReasonUserMessage({
@@ -556,12 +584,14 @@ export function buildFeedVerifierCalls(
   factStatements: string[],
   config: ArticlePipelineConfig = ARTICLE_CFG,
   _logger: HarnessLogger = NOOP_LOGGER,
+  /** YYYY-MM-DD for the "Today:" line; omitted ⇒ no line. */
+  today?: string,
 ): { calls: BatchCall[]; verifyIdToCandidates: Map<string, ScoringCandidate[]> } {
   const eligible = feedCandidates.filter(isEligible);
   const chunks = chunk(eligible, config.feedVerifierBatchSize);
   const calls: BatchCall[] = [];
   const verifyIdToCandidates = new Map<string, ScoringCandidate[]>();
-  const userContext = buildUserContext(factStatements);
+  const userContext = buildUserContext(factStatements, today);
 
   chunks.forEach((chunkCandidates, idx) => {
     const prompt = buildFeedVerifierUserMessage({

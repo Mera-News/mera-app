@@ -132,7 +132,7 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     // (The base is module-private; these are load-bearing excerpts of it.)
     for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
       expect(p).toContain('## Product tiers (hard boundaries');
-      expect(p).toContain('**FEED — 0.40 to 1.10.**');
+      expect(p).toContain('**FEED: 0.40 to 1.10.**');
       expect(p).toContain('## FEED gates (within 0.40–1.10; each band needs its named evidence)');
     }
     // THE ANCHOR TABLE IS THE ONE EXCEPTION, and only on the reason pass. It is
@@ -156,15 +156,40 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.headlineRelevanceSystemPrompt).not.toContain('"k":"impact"');
   });
 
+  it('pins the retention rubric (D11) in every scoring prompt', () => {
+    // Each clause is a judged failure on a real feed: interest-only research and
+    // foreign lawsuits at 0.8, a tourist tax for a resident, an ended trip still
+    // a stake, routine family-city items above the fold.
+    for (const p of [
+      a.relevanceSystemPrompt,
+      a.reasonSystemPrompt,
+      a.headlineRelevanceSystemPrompt,
+      a.headlineReasonSystemPrompt,
+    ]) {
+      expect(p).toContain('Test: name the fact it touches AND a decision the reader could take. A named interest alone is never a domain stake.');
+      expect(p).toContain('research findings and studies in an interest area; lawsuits, rulings, declarations and seminars in other jurisdictions; academic events');
+      expect(p).toContain('- **Whose life changes.** A rule, tax or cost aimed at a group the facts show the user is not in');
+      expect(p).toContain('An ended trip is no stake, and its city is foreign news again.');
+      expect(p).toContain('routine items (civic news, prices, a protest, a single crime case, an arrest, a court case, an investigation) are a real but LOW family stake (0.40–0.59)');
+      expect(p).toContain('and `domain` only when its rule binds where the user lives or sells');
+      // The Jersey worked example paid for these rules (D20.7); the island hard rule still names it.
+      expect(p).not.toContain('Worked examples: family in Jersey');
+      expect(p).toContain('the US state of New Jersey is NOT Jersey');
+    }
+    expect(a.relevanceSystemPrompt).toContain('- 0.36 "Fitness apps leak users\' home locations, researchers find"');
+    expect(a.relevanceSystemPrompt).toContain('- 0.31 "Valencia raises its tourist tax"');
+    expect(a.headlineRelevanceSystemPrompt).toContain('requires a trip whose dates are not before Today');
+  });
+
   it('pins the headline impact rubric (the four gates + the escape hatch)', () => {
     // Every assertion below is a rule the feature is INERT without. The base
     // prompt forbids exactly this reasoning ("global implications … forbidden",
     // "No holdings ⇒ no market relevance"), so the carve-out must name both
     // rules explicitly — later-instruction-wins ordering is not enough.
     for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
-      expect(p).toContain('## Headline override — indirect impact (this batch only)');
+      expect(p).toContain('## Headline override: indirect impact (this batch only)');
       expect(p).toContain(
-        'It SUSPENDS exactly two of the Hard rules above — "Do NOT bridge via … \'global implications\' … these produce phantom relevance and are forbidden" and "No holdings ⇒ no market relevance"',
+        'It SUSPENDS exactly two of the Hard rules above: "Do NOT bridge via … \'global implications\' … these produce phantom relevance and are forbidden" and "No holdings ⇒ no market relevance"',
       );
       expect(p).toContain('If any one of the four fails, both suspended rules apply again in full and unchanged.');
       // Closed vocabulary — nothing is stored server-side, so the list IS the
@@ -176,7 +201,7 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
       // Exposure gate — this is what keeps "no holdings ⇒ no market relevance"
       // CARVED rather than repealed.
       expect(p).toContain(
-        '**equity_markets, gold** — require investments listed in [User facts]. With no investments they are UNAVAILABLE',
+        '**equity_markets, gold**: require investments listed in [User facts]. With no investments they are UNAVAILABLE',
       );
       // Magnitude / shock-absorption + the hop-count evidence rule.
       expect(p).toContain('### Magnitude test (shock size RELATIVE to the absorbing economy)');
@@ -188,20 +213,20 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
       expect(p).toContain('### Grounding (the mechanism comes from the article, not from memory)');
       // The escape hatch, stated as a rule, plus the anti-hedging line that
       // makes it the DEFAULT rather than a permitted option.
-      expect(p).toContain('### The escape hatch — this is the NORMAL answer');
+      expect(p).toContain('### The escape hatch: this is the NORMAL answer');
       // An indirect chain must never outrank a direct stake: 0.80+ stays
       // reserved for a change to their own work/home/family, 0.95+ for danger
       // where they are. Without this cap a fuel-price chain could outscore a
       // flood in the family's city.
       expect(p).toContain('**An indirect chain never exceeds 0.79.**');
       expect(p).toContain(
-        'A hedged "may indirectly influence" is a WRONG answer, not a safe one — hedging IS the failure mode here.',
+        'A hedged "may indirectly influence" is a WRONG answer, not a safe one: hedging IS the failure mode here.',
       );
       // BOTH worked examples. The negative one is load-bearing: without a
       // worked EXCLUDE the rubric reads as an invitation to find a chain.
-      expect(p).toContain('**POSITIVE — chain holds.**');
+      expect(p).toContain('**POSITIVE: chain holds.**');
       expect(p).toContain('`{"k":"home","s":0.72}`');
-      expect(p).toContain('**NEGATIVE — chain does NOT hold, and this is the more common verdict.**');
+      expect(p).toContain('**NEGATIVE: chain does NOT hold, and this is the more common verdict.**');
       expect(p).toContain('`{"k":"none","s":0.13}`');
       expect(p).toContain('it does not affect your costs in Valencia.');
     }

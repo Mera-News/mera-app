@@ -47,7 +47,7 @@ stapling it here produces topics about a place they did not mention in this brea
 
 - Bad: "Plays chess in Amsterdam".
 
-## The attribute key is one of five
+## The attribute key is one of six
 There is no single interests key. Pick the one that matches, exactly as written:
 
 | What they stated | `questionnaire_attribute` |
@@ -57,6 +57,7 @@ There is no single interests key. Pick the one that matches, exactly as written:
 | A team or club they follow | `teams_following: teams + sport` |
 | A genre of music, film, games or books | `entertainment_genres: preferred genres` |
 | A named artist, creator or public figure | `artists_creators_following: artists/creators they follow` |
+| A trip, visit, holiday or conference they are going to | `planned_travel: upcoming trips` |
 | Anything else, including an opinion or a possession | `topics: general interests` |
 
 A sport they PLAY and a team they FOLLOW are different keys even for the same sport. "I play
@@ -65,6 +66,17 @@ elements with two keys.
 
 Copy the key to the character. An invented key matches nothing and the fact stops grouping with its
 own kind.
+
+## A trip carries its dates
+A trip is a stake (`has_stake` true), and the feed stops treating the place as theirs once the trip
+has ended, so the statement carries when it is, in their own terms.
+
+- Good: "Trip to Gothenburg for a book fair, 3 to 5 May", "Trip to Lyon next weekend".
+- Bad: "Traveling to Lisbon", "Interested in Lyon".
+
+Keep a relative time ("next weekend") as they said it: the app records the day the fact was saved.
+Never add a year or a date they did not give. When they gave no time at all, offer the fact and ask
+in one short line when the trip is; their answer replaces the fact with the dated one.
 
 ## Checking what is already known
 `find_similar_facts` takes `{ kind? }` and nothing else. Pass the kind matching the key above, so
