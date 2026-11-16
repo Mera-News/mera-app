@@ -284,6 +284,8 @@ LC_ALL=C grep -a -q -F "$MOCK_HOST:$PORT" "$BUNDLE" || { echo "FAIL: bundle lack
 # metro.config.js swaps in the scenario-driven paywall stub (lib/e2e/purchases-ui.ts) for this build.
 LC_ALL=C grep -a -q -F "/__e2e/paywall" "$BUNDLE" || { echo "FAIL: bundle lacks the e2e paywall stub" >&2; exit 1; }
 LC_ALL=C grep -a -q -F "e2e-fixture-integrity-token" "$BUNDLE" || { echo "FAIL: bundle lacks the e2e attestation stub" >&2; exit 1; }
+# Without the key-verifier stub every cloud call fails attestation on the mock's quote-less keys.
+LC_ALL=C grep -a -q -F "e2e-key-verifier-test-keys" "$BUNDLE" || { echo "FAIL: bundle lacks the e2e key-verifier stub" >&2; exit 1; }
 BAD=0
 if [ -n "$DEVICE" ]; then
   LC_ALL=C grep -a -q -F "e2e-netinfo-connected" "$BUNDLE" || { echo "FAIL: bundle lacks the phone NetInfo stub" >&2; BAD=1; }

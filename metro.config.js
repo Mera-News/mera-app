@@ -23,12 +23,16 @@ const ALIASES = {
 };
 
 let E2E_ATTEST_STUB = null;
+let E2E_KEY_VERIFIER_STUB = null;
+const E2EE_DIR = path.resolve(__dirname, 'lib/e2ee') + path.sep;
 
 // E2E build only (scripts/e2e-android.sh exports .env.e2e): the paywall is answered by the mock
 // backend's scenario, since that build carries no RevenueCat key. Same flag as app.config.js.
 if (process.env.EXPO_PUBLIC_E2E === '1') {
     ALIASES['react-native-purchases-ui'] = path.resolve(__dirname, 'lib/e2e/purchases-ui.ts');
     E2E_ATTEST_STUB = path.resolve(__dirname, 'lib/e2e/device-attest.ts');
+    // The mock gateway's test keys carry no Intel quote; this verifier accepts exactly those.
+    E2E_KEY_VERIFIER_STUB = path.resolve(__dirname, 'lib/e2e/key-verifier.ts');
     if (process.env.E2E_DEVICE_BUILD === '1') {
         ALIASES['@react-native-community/netinfo'] = path.resolve(__dirname, 'lib/e2e/netinfo-connected.ts');
     }
@@ -39,6 +43,11 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     // Metro resolves an import, so the `@/modules/...` spelling never reaches this function.
     if (E2E_ATTEST_STUB && /(^|\/)modules\/mera-device-attest$/.test(moduleName)) {
         return context.resolveRequest(context, E2E_ATTEST_STUB, platform);
+    }
+    // Only imports made from lib/e2ee/ (e2ee-service's './key-verifier'); the stub's own import of
+    // the real module comes from lib/e2e/ and resolves normally.
+    if (E2E_KEY_VERIFIER_STUB && /(^|\/)key-verifier$/.test(moduleName) && context.originModulePath.startsWith(E2EE_DIR)) {
+        return context.resolveRequest(context, E2E_KEY_VERIFIER_STUB, platform);
     }
     if (ALIASES[moduleName]) {
         return context.resolveRequest(context, ALIASES[moduleName], platform);
