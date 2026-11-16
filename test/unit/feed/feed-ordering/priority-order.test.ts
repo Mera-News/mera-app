@@ -5,6 +5,8 @@
 
 import {
   countUnviewedBy,
+  FOLD_BAND,
+  isAboveFold,
   isViewedArticle,
   relevanceBandRank,
   sortByPriority,
@@ -152,5 +154,19 @@ describe('countUnviewedBy', () => {
     ];
     expect(countUnviewedBy(rows, (r) => r)).toBe(2);
     expect(countUnviewedBy([], (r: PriorityFacts) => r)).toBe(0);
+  });
+});
+
+// D5: the Feed shows Medium and up above a fold. The line lives here, beside
+// the band ladder, so ordering keeps one home.
+describe('FOLD_BAND / isAboveFold', () => {
+  it('is the Medium band: Emergency, High and Medium sit above, Low and below sit under', () => {
+    expect(FOLD_BAND).toBe(relevanceBandRank(0.6));
+    expect(isAboveFold(relevanceBandRank(1.2))).toBe(true);
+    expect(isAboveFold(relevanceBandRank(0.8))).toBe(true);
+    expect(isAboveFold(relevanceBandRank(0.6))).toBe(true);
+    expect(isAboveFold(relevanceBandRank(0.59))).toBe(false);
+    expect(isAboveFold(relevanceBandRank(0.4))).toBe(false);
+    expect(isAboveFold(relevanceBandRank(0))).toBe(false);
   });
 });

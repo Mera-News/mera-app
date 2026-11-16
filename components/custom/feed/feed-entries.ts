@@ -38,6 +38,7 @@
 
 import {
   countUnviewedBy,
+  isAboveFold,
   isViewedArticle,
   relevanceBandRank,
   seenTierOf,
@@ -51,6 +52,7 @@ import { isMutedPublication, rankedRelevance, type RankingContext } from '@/lib/
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import { FEED_HALF_LIFE_HOURS, type FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { applyFeedShow, type FeedShow } from './not-read-tail';
 
 // The banding + ordering RULE lives in lib/feed-ordering/priority-order — the
 // Dashboard applies the identical rule to its section content, and encoding it
@@ -138,23 +140,35 @@ export interface FeedPin {
    *  at the top, a long background). Appending to the END of the list moves
    *  nothing, so a list with nothing rendered after its picks never closes. */
   readonly closed: boolean;
+  /** The folded (below-the-fold) row ids, FROZEN when the pin closes: from then
+   *  on a Low arrival is held like any other pick. Empty while open, and empty
+   *  for the session when the pin closed with no fold showing. */
+  readonly belowIds: readonly string[];
+  /** "Show them" was pressed: the folded rows render under the fold label. */
+  readonly expanded: boolean;
 }
 
-export const EMPTY_PIN: FeedPin = { ids: [], closed: false };
+/** `resetSession` sets this, which also collapses the fold. */
+export const EMPTY_PIN: FeedPin = { ids: [], closed: false, belowIds: [], expanded: false };
 
-/** `extendPinnedIds` plus the close rule. `renderedAfterPicks` is how many rows
- *  render after the picks (the not-read tail under All, else 0). Monotonic: a
- *  closed pin stays closed; an unchanged pin returns `prev` by identity. */
+/** `extendPinnedIds` plus the close rule. `sorted` is the rendered ABOVE-fold
+ *  picks (`FeedLayout.above`); `renderedAfterPicks` is how many rows render
+ *  after them (`FeedLayout.renderedAfterPicks`: 1 for the fold card, else the
+ *  rows after the picks). `belowIds` (`FeedLayout.below`) freezes as the folded
+ *  set at the moment the pin closes. Monotonic: a closed pin stays closed; an
+ *  unchanged pin returns `prev` by identity. */
 export function extendPin(
   prev: FeedPin,
   sorted: readonly FeedListItem[],
   deepestSeenId: string | null,
   floor: number,
   renderedAfterPicks: number,
+  belowIds: readonly string[] = [],
 ): FeedPin {
   const ids = extendPinnedIds(prev.ids, sorted, deepestSeenId, floor);
   const closed = prev.closed || (renderedAfterPicks > 0 && floor > sorted.length);
-  return ids === prev.ids && closed === prev.closed ? prev : { ids, closed };
+  if (ids === prev.ids && closed === prev.closed) return prev;
+  return { ...prev, ids, closed, belowIds: prev.closed ? prev.belowIds : closed ? [...belowIds] : [] };
 }
 
 /** What `sortFeedEntries` returns: the rendered story order plus the length of
@@ -226,6 +240,9 @@ export function seenTierOfEntry(
 // TIER 0 ONLY. Tiers 1 and 2 are history — the user's own reading order — and
 // re-ranking them by age would scramble the timeline they just built.
 //
+// MEDIUM AND LOW ONLY (D6). An unread High or Emergency is never demoted: it is
+// what the reader must not miss, and the data area keeps it up to 7 days.
+//
 // TRADE-OFF, accepted deliberately: this breaks the band-monotonicity that
 // `relevanceBandRank`'s docstring protects, so a "High" chip can now render below
 // a "Medium" one. That invariant exists so the user never sees a contradiction;
@@ -274,10 +291,8 @@ function ageHoursOf(item: FeedListItem, nowMs: number): number {
  * The band a Feed row actually sorts in: its relevance band, plus the staleness
  * demotion when the row is unseen.
  *
- * EMERGENCY FLOOR: band 0 can drop to 1 but no further. An emergency is the one
- * class where "this is a day old" must not bury it — the user's constraint that a
- * genuinely big development still surfaces. Everything else clamps at 4, the
- * existing bottom band, so no new band value is introduced.
+ * An unread High or Emergency keeps its band whatever its age (D6). Medium and
+ * Low clamp at 4, the existing bottom band, so no new band value is introduced.
  */
 export function effectiveBand(
   item: FeedListItem,
@@ -289,11 +304,8 @@ export function effectiveBand(
   const base = relevanceBandRank(
     rankedRelevance(item.suggestion.relevance ?? 0, item.suggestion, ctx),
   );
-  if (tier !== 0) return base;
-  const penalty = stalenessBandPenalty(ageHoursOf(item, nowMs));
-  if (penalty === 0) return base;
-  if (base === 0) return 1;
-  return Math.min(4, base + penalty);
+  if (tier !== 0 || base <= 1) return base;
+  return Math.min(4, base + stalenessBandPenalty(ageHoursOf(item, nowMs)));
 }
 
 // ── Pending-note sink (Feed only) ──────────────────────────────────────────
@@ -301,7 +313,9 @@ export function effectiveBand(
 // The Feed shows scored rows whose note is still being written. An UNSEEN card
 // with no note sorts below every band (owner): its band plus
 // `PENDING_BAND_OFFSET`, so it lands after the Low cards but above the seen
-// tiers, and pending cards keep relevance order among themselves. Once the note
+// tiers, and pending cards keep relevance order among themselves. The fold
+// (`layoutFeed`) splits on the band WITHOUT this offset, so a pending card ends
+// up at the end of the unseen cards on its own side of the fold (D5). Once the note
 // lands the list re-sorts and the card rises to its own band, below the pinned
 // prefix like any other move. Tier 0 only, same reason as staleness.
 
@@ -400,6 +414,124 @@ export function sortFeedEntries(
   if (closed) return { rows: pinned, pinnedCount: pinned.length };
   const rest = data.filter((it) => !pinnedSet.has(it.id));
   return { rows: [...pinned, ...sortByPriority(rest, facts)], pinnedCount: pinned.length };
+}
+
+// ── The fold (D5, D18) ──────────────────────────────────────────────────────
+//
+// Medium and up render above the fold, Low below it, one tap ("Show them")
+// away. The fold is a STABLE PARTITION of the sorted list by the band a row
+// sorts in (`effectiveBand`, so a stale unseen Medium folds), across all tiers:
+// seen High and Medium stay above it. A pinned row stays above whatever its band
+// does later, because the reader has seen it there.
+//
+// No row is ever a non-story: while collapsed the fold card is the list's
+// TERMINAL card (footer); once expanded its label rides the divider slot of the
+// first folded row (`foldIndex`). The not-read tail waits behind the fold and is
+// never counted in it (`below` holds scored stories only); with nothing folded
+// it renders after the picks as before. 'unread' and 'discarded' never fold.
+
+/** The footer: Mera still reading the session's first run, the fold card, or
+ *  the end card. */
+export type FeedTerminal = 'reading' | 'fold' | 'end';
+
+export interface FeedLayoutInput {
+  /** The order store's rows (scored stories). */
+  data: FeedListItem[];
+  cardStates: Record<string, CardStateRecord>;
+  openedArticleIds: Set<string>;
+  nowMs: number;
+  awaitingNote?: (it: FeedListItem) => boolean;
+  ctx?: RankingContext | null;
+  pin: FeedPin;
+  /** The not-read tail (`foldNotReadTail`). */
+  tail: readonly FeedListItem[];
+  show: FeedShow;
+  discarded?: readonly FeedListItem[];
+  /** `fold-readiness`: false until the session's first run finished. */
+  ready: boolean;
+}
+
+export interface FeedLayout {
+  /** What the list renders, every row a story: FlatList data, viewability,
+   *  the minimap, the new-below scan. */
+  rows: FeedListItem[];
+  /** Leading scored rows of `rows`: the not-read divider index and the minimap's
+   *  mapped count. */
+  picks: number;
+  /** Rendered above-fold picks: `extendPin`'s `sorted`. */
+  above: FeedListItem[];
+  /** Stories below the fold, folded or shown. Its length is the fold card's
+   *  count; never a not-read row. */
+  below: FeedListItem[];
+  /** Index in `rows` of the first folded row, whose divider slot carries the
+   *  fold label. Null unless expanded with a folded row left. */
+  foldIndex: number | null;
+  terminal: FeedTerminal;
+  /** Picks the closed pin holds back this session ("Mera picked new stories"). */
+  heldCount: number;
+  /** `extendPin`'s `renderedAfterPicks`. */
+  renderedAfterPicks: number;
+}
+
+/** Lay the Feed out: sort (`sortFeedEntries`), split at the fold, apply the
+ *  closed pin and the Show filter. Pure. */
+export function layoutFeed(input: FeedLayoutInput): FeedLayout {
+  const { cardStates, openedArticleIds, nowMs, pin, tail, show, ready } = input;
+  const ctx = input.ctx ?? null;
+  const awaiting = input.awaitingNote ?? representativeAwaitingNote;
+  // Unclosed so every row comes back: the closed pin is applied here, with the
+  // frozen folded set beside it.
+  const { rows: sorted } = sortFeedEntries(input.data, cardStates, openedArticleIds, pin.ids, nowMs, awaiting, ctx);
+  const pinned = new Set(pin.ids);
+  const frozenBelow = new Set(pin.belowIds);
+  const above: FeedListItem[] = [];
+  const below: FeedListItem[] = [];
+  let heldCount = 0;
+  for (const it of sorted) {
+    if (pin.closed) {
+      if (frozenBelow.has(it.id)) below.push(it);
+      else if (pinned.has(it.id)) above.push(it);
+      else heldCount += 1;
+    } else if (
+      pinned.has(it.id) ||
+      isAboveFold(effectiveBand(it, seenTierOfEntry(it, cardStates, openedArticleIds), nowMs, ctx))
+    ) {
+      above.push(it);
+    } else {
+      below.push(it);
+    }
+  }
+
+  const base = { above, below, heldCount, foldIndex: null };
+  if (show !== 'all' && show !== 'picks') {
+    const { rows } = applyFeedShow(above, tail, show, input.discarded);
+    return { ...base, rows, picks: 0, terminal: 'end', renderedAfterPicks: 0 };
+  }
+  const tailShown = show === 'all' ? tail : [];
+  if (pin.expanded) {
+    const picks = [...above, ...below];
+    return {
+      ...base,
+      rows: [...picks, ...tailShown],
+      picks: picks.length,
+      foldIndex: below.length > 0 ? above.length : null,
+      terminal: 'end',
+      renderedAfterPicks: below.length + tailShown.length,
+    };
+  }
+  const picksOnly = { ...base, rows: above, picks: above.length };
+  // The reading line never closes the pin: picks keep arriving in the first run.
+  if (!ready) return { ...picksOnly, terminal: 'reading', renderedAfterPicks: 0 };
+  // The fold card renders after the picks, so it counts as one row there.
+  if (below.length > 0) return { ...picksOnly, terminal: 'fold', renderedAfterPicks: 1 };
+  return { ...picksOnly, rows: [...above, ...tailShown], terminal: 'end', renderedAfterPicks: tailShown.length };
+}
+
+/** "Show them": pin every rendered and folded row, closed and expanded. Held
+ *  picks stay out until the next session. */
+export function expandFold(prev: FeedPin, layout: Pick<FeedLayout, 'above' | 'below'>): FeedPin {
+  const belowIds = layout.below.map((it) => it.id);
+  return { ...prev, ids: [...layout.above.map((it) => it.id), ...belowIds], closed: true, expanded: true, belowIds };
 }
 
 /** How many rows at the head of a sorted list are unviewed. The boundary is no

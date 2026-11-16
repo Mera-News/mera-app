@@ -385,16 +385,18 @@ describe('staleness demotion (tier 0 only)', () => {
     expect(stalenessBandPenalty(Number.NaN)).toBe(0);
   });
 
-  it('demotes an unseen story by one band at 12h and two at 24h', () => {
-    expect(effectiveBand(aged('a', 0.9, 1), 0, NOW)).toBe(1); // high, fresh
-    expect(effectiveBand(aged('a', 0.9, 13), 0, NOW)).toBe(2); // → medium
-    expect(effectiveBand(aged('a', 0.9, 30), 0, NOW)).toBe(3); // → low
+  it('demotes an unseen Medium or Low story by one band at 12h and two at 24h', () => {
+    expect(effectiveBand(aged('a', 0.7, 1), 0, NOW)).toBe(2); // medium, fresh
+    expect(effectiveBand(aged('a', 0.7, 13), 0, NOW)).toBe(3); // → low
+    expect(effectiveBand(aged('a', 0.7, 30), 0, NOW)).toBe(4); // → bottom band
+    expect(effectiveBand(aged('l', 0.45, 13), 0, NOW)).toBe(4);
   });
 
-  it('EMERGENCY floors at band 1 — a big development still surfaces', () => {
-    expect(effectiveBand(aged('e', 1.2, 1), 0, NOW)).toBe(0);
-    expect(effectiveBand(aged('e', 1.2, 13), 0, NOW)).toBe(1);
-    expect(effectiveBand(aged('e', 1.2, 47), 0, NOW)).toBe(1); // never worse
+  it('D6: an unread High or Emergency is never demoted', () => {
+    expect(effectiveBand(aged('h', 0.9, 13), 0, NOW)).toBe(1);
+    expect(effectiveBand(aged('h', 0.9, 47), 0, NOW)).toBe(1);
+    expect(effectiveBand(aged('e', 1.2, 13), 0, NOW)).toBe(0);
+    expect(effectiveBand(aged('e', 1.2, 47), 0, NOW)).toBe(0);
   });
 
   it('clamps at the existing bottom band — no new band value is invented', () => {
@@ -419,17 +421,26 @@ describe('staleness demotion (tier 0 only)', () => {
   });
 
   it('falls back to createdAt when firstPubDate is absent (matches the card label)', () => {
-    const it = item('z', 0.9);
+    const it = item('z', 0.7);
     (it.suggestion as unknown as { createdAt: string }).createdAt = hoursAgo(30);
-    expect(effectiveBand(it, 0, NOW)).toBe(3);
+    expect(effectiveBand(it, 0, NOW)).toBe(4);
   });
 
   // The user-visible complaint, end to end.
-  it("REGRESSION: today's medium story outranks yesterday's high one", () => {
-    const data = [aged('yesterday-high', 0.9, 30), aged('today-med', 0.6, 2)];
+  it("today's medium story outranks yesterday's medium one", () => {
+    const data = [aged('yesterday-med', 0.7, 30), aged('today-low', 0.45, 2), aged('today-med', 0.6, 2)];
     expect(ids(sortFeedEntries(data, noStates, new Set(), [], NOW))).toEqual([
       'today-med',
+      'today-low',
+      'yesterday-med',
+    ]);
+  });
+
+  it("D6: yesterday's unread High stays above today's Medium", () => {
+    const data = [aged('today-med', 0.7, 2), aged('yesterday-high', 0.9, 30)];
+    expect(ids(sortFeedEntries(data, noStates, new Set(), [], NOW))).toEqual([
       'yesterday-high',
+      'today-med',
     ]);
   });
 
@@ -453,7 +464,7 @@ describe('staleness demotion (tier 0 only)', () => {
   });
 
   it('the pinned prefix is immune — pinned rows never re-rank by age', () => {
-    const data = [aged('p-stale', 0.9, 40), aged('fresh', 0.9, 1)];
+    const data = [aged('p-stale', 0.7, 40), aged('fresh', 0.7, 1)];
     const out = sortFeedEntries(data, noStates, new Set(), ['p-stale'], NOW);
     expect(ids(out)).toEqual(['p-stale', 'fresh']);
   });
@@ -608,7 +619,7 @@ describe('arrivalFloor and extendPin (nothing on screen moves)', () => {
   it('closes when an arrival could only land above rows rendered after the picks, and stays closed', () => {
     const sorted = ['p1', 'p2'].map((id) => item(id));
     const closed = extendPin(EMPTY_PIN, sorted, null, 6, 4);
-    expect(closed).toEqual({ ids: ['p1', 'p2'], closed: true });
+    expect(closed).toEqual({ ids: ['p1', 'p2'], closed: true, expanded: false, belowIds: [] });
     expect(extendPin(closed, sorted, null, 0, 0)).toBe(closed);
     const out = sortFeedEntries([...sorted, item('hot', 0.95)], noStates, new Set(), closed.ids, Date.now(), undefined, null, closed.closed);
     expect(ids(out)).toEqual(['p1', 'p2']);

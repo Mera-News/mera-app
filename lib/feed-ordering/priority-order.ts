@@ -93,6 +93,17 @@ export function relevanceBandRank(relevance: number): number {
 }
 
 /**
+ * The Feed's fold (D5): Medium and up render above it, Low below, one tap away.
+ * A rank on the same LOWER-first scale as `relevanceBandRank`. The Feed applies
+ * it to the band a row SORTS in (`effectiveBand`), so a stale Medium folds.
+ */
+export const FOLD_BAND = 4 - bandRank('MEDIUM');
+
+export function isAboveFold(band: number): boolean {
+  return band <= FOLD_BAND;
+}
+
+/**
  * The single "has the user seen this?" predicate.
  *
  * Two signals, deliberately equivalent for display: an explicit OPEN (tap,
