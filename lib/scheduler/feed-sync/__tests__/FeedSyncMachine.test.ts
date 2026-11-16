@@ -8,6 +8,7 @@ const mockStepFetchTopicIds = jest.fn();
 const mockStepDiff = jest.fn();
 const mockStepHydratePersistEnqueue = jest.fn();
 const mockStepScore = jest.fn();
+const mockStepRefreshClusterMemberships = jest.fn();
 const mockRefreshSuggestionsInStoreUnsafe = jest.fn();
 const mockRequestSuggestionsRefresh = jest.fn();
 const mockFlushSuggestionsRefresh = jest.fn();
@@ -93,6 +94,7 @@ jest.mock('@/lib/scheduler/feed-sync/feed-sync-steps', () => ({
   stepDiff: (...args: any[]) => mockStepDiff(...args),
   stepHydratePersistEnqueue: (...args: any[]) => mockStepHydratePersistEnqueue(...args),
   stepScore: (...args: any[]) => mockStepScore(...args),
+  stepRefreshClusterMemberships: (...args: any[]) => mockStepRefreshClusterMemberships(...args),
   growTrackedStories: jest.fn(),
 }));
 
@@ -186,6 +188,7 @@ beforeEach(() => {
     enqueuedCount: 2,
   });
   mockStepScore.mockResolvedValue(2);
+  mockStepRefreshClusterMemberships.mockResolvedValue(0);
   mockRefreshSuggestionsInStoreUnsafe.mockResolvedValue(undefined);
   mockRequestSuggestionsRefresh.mockResolvedValue(undefined);
   mockFlushSuggestionsRefresh.mockResolvedValue(undefined);
@@ -402,6 +405,30 @@ describe('FeedSyncMachine — scoring-pipeline stale-guard', () => {
     expect(mockAbortRun).not.toHaveBeenCalled();
     expect(mockStepFetchTopicIds).toHaveBeenCalled();
     expect(mockStepScore).not.toHaveBeenCalled();
+  });
+});
+
+describe('FeedSyncMachine — cluster membership refresh', () => {
+  async function refreshCallsFor(changed: number) {
+    mockRequestSuggestionsRefresh.mockClear();
+    mockStepRefreshClusterMemberships.mockResolvedValue(changed);
+    await feedSyncMachine.start('persona-1', makeCtx());
+    return mockRequestSuggestionsRefresh.mock.calls.length;
+  }
+
+  it('asks the store to refresh only when a membership changed', async () => {
+    const none = await refreshCallsFor(0);
+    expect(mockStepRefreshClusterMemberships).toHaveBeenCalledTimes(1);
+    const one = await refreshCallsFor(1);
+    expect(one).toBe(none + 1);
+  });
+
+  it('never runs in a background wake', async () => {
+    mockStepHydratePersistEnqueue.mockResolvedValue({ insertedCount: 2, enqueuedCount: 0, eligibleIds: [] });
+    await feedSyncMachine.start('', makeCtx(), {
+      background: { shapeDiff: (d: any) => d, submit: jest.fn(async () => {}), refreshStore: jest.fn(async () => {}) } as any,
+    });
+    expect(mockStepRefreshClusterMemberships).not.toHaveBeenCalled();
   });
 });
 
