@@ -1,6 +1,7 @@
 // The fold (D5, D18): Medium and up above it, Low one tap away, nothing on screen moves when picks
 // arrive. Driven through useFeedScreen with the real stores, the in-memory DB and the list's own
 // viewability pairs.
+import { AccessibilityInfo } from 'react-native';
 import { FEED_SYNC_TASK } from '@/components/custom/FeedSyncIndicator';
 import { resetFeedViewPrefs, setFeedMinimap, setFeedShow, useFeedShowCountsStore } from '@/components/custom/feed/feed-view-prefs';
 import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
@@ -188,6 +189,17 @@ describe('Show them', () => {
     expect(feed.ids()).toEqual(['h', 'm', 'l1', 'l2', 't1']);
     expect(fold(feed)).toMatchObject({ terminal: 'end', index: 2, shown: 2 });
     expect(feed.result.current.picksCount).toBe(4);
+  });
+
+  it('Show them announces the revealed count once, from the tap', async () => {
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l1', LOW], ['l2', LOW]]);
+    await finishRun();
+    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
+    announce.mockClear();
+    await act(() => feed.result.current.onShowThem());
+    expect(announce).toHaveBeenCalledWith('Showing 2 more stories');
+    expect(announce).toHaveBeenCalledTimes(1);
   });
 
   it('resetSession collapses it again', async () => {

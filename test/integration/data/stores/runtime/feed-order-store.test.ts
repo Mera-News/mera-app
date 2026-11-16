@@ -498,6 +498,17 @@ describe('feed-order-store', () => {
   });
 
   describe('card state, parse and persistence', () => {
+    it('markViewed persists the story keys, so the read outlives a deleted representative', async () => {
+      const a = item('a', { cluster: 'C1', memberIds: ['a', 'sib'] });
+      (a.suggestion as { storyKey?: string }).storyKey = 'k1';
+      await hydrated([a]);
+      store().markViewed('a', NOW);
+      await jest.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      const blob = JSON.parse(await rowAppears(FEED_CARD_STATE_SETTING_KEY));
+      expect(blob.states.a).toEqual(['v', NOW, ['sib', 'C1', 'sk:k1']]);
+      expect(store().cardStates.a.keys).toEqual(['sib', 'C1', 'sk:k1']);
+    });
+
     it('a device with no card-state row hydrates to an empty map and keeps the whole order (back-compat)', async () => {
       await hydrated([item('a'), item('b'), item('c')]);
       expect(store().order).toEqual(['a', 'b', 'c']);

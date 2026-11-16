@@ -156,7 +156,8 @@
       },
       "stageA11y": "Adım {{index}} / {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Mera is reading the news on this phone."
+      "onDeviceReading": "Mera is reading the news on this phone.",
+      "writingReasons": "Her uygun hikaye için kısa bir not yazılıyor."
     },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",

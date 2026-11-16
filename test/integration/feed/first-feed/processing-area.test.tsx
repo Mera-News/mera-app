@@ -39,7 +39,9 @@ it('cloud analysing: the headline carries the count and the line below stays emp
 
 it('summarising does not claim it is reading and shows one count', async () => {
   await render(<ProcessingArea snapshot={snap({ stage: 'summarising', stageIndex: 4 })} />);
-  expect(screen.getByTestId('processing-headline').props.children).toBe('');
+  const head = screen.getByTestId('processing-headline').props.children as string;
+  expect(head).toBe('Writing a short note for each relevant story.');
+  expect(head).not.toMatch(/notify|reading|\d/i);
   expect(screen.getByTestId('processing-progress-line').props.children).toBe('Analysing 12 of 40 articles');
 });
 

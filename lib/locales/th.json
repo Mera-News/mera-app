@@ -156,7 +156,8 @@
       },
       "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "เมร่า is reading the news on this phone."
+      "onDeviceReading": "เมร่า is reading the news on this phone.",
+      "writingReasons": "กำลังเขียนบันทึกสั้น ๆ สำหรับแต่ละเรื่องที่เกี่ยวข้อง"
     },
     "syncToast": {
       "relevanceTitle": "กำลังคำนวณความเกี่ยวข้อง",

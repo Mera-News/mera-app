@@ -1,5 +1,7 @@
 // The Feed's age label: nothing under 24h, then local CALENDAR days (never hours).
-import { feedAgeLabel } from '@/components/custom/feed/feed-age-label';
+import { act, renderHook } from '@testing-library/react-native';
+import { feedAgeLabel, useFeedAgeLabel, useFrozenFeedAgeLabel } from '@/components/custom/feed/feed-age-label';
+import { notifyTimeTick } from '@/lib/time-tick';
 import i18n from 'i18next';
 import { initI18nEn } from '@/test/helpers';
 
@@ -22,5 +24,22 @@ describe('feedAgeLabel', () => {
     expect(feedAgeLabel(at(2026, 10, 14, 17), NOW, 'en', t)).toBe('From Saturday');
     expect(feedAgeLabel(at(2026, 10, 11, 9), NOW, 'en', t)).toBe('From Wednesday');
     expect(feedAgeLabel(at(2026, 10, 10, 9), NOW, 'en', t)).toBe('From Nov 10');
+  });
+});
+
+describe('useFrozenFeedAgeLabel', () => {
+  afterEach(() => jest.useRealTimers());
+  it('a large card crossing 24h in the session gains no line; the live label would', async () => {
+    jest.useFakeTimers({ now: NOW });
+    const pub = new Date(NOW - 23 * 3600e3).toISOString();
+    const frozen = await renderHook(() => useFrozenFeedAgeLabel(pub));
+    const live = await renderHook(() => useFeedAgeLabel(pub));
+    expect(frozen.result.current).toBeNull();
+    await act(async () => {
+      jest.setSystemTime(NOW + 2 * 3600e3);
+      notifyTimeTick();
+    });
+    expect(live.result.current).toBe('From yesterday');
+    expect(frozen.result.current).toBeNull();
   });
 });

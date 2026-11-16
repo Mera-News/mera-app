@@ -156,7 +156,8 @@
       },
       "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "ميرا is reading the news on this phone."
+      "onDeviceReading": "ميرا is reading the news on this phone.",
+      "writingReasons": "جارٍ كتابة ملاحظة قصيرة لكل قصة ذات صلة."
     },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",

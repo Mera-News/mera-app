@@ -90,6 +90,10 @@ export interface CardStateRecord {
   state: CardState;
   /** `stateUpdatedAt` — epoch ms of the transition INTO this state. */
   at: number;
+  /** `viewed` only: the story's other keys at view time (member ids, stable
+   *  cluster id, `sk:` story key). Lets the 7-day keep still read a sibling
+   *  after the viewed row itself was swept (read-snapshot.ts). */
+  keys?: string[];
 }
 
 /** What `hydrate` saw, kept for the funnel diagnostic. Without these a launch
@@ -186,7 +190,7 @@ function parsePersisted(raw: string | null): PersistedOrder {
 }
 
 /** Compact wire encoding for a state record: `['s' | 'v', epochMs]`. */
-type WireState = ['s' | 'v', number];
+type WireState = ['s' | 'v', number] | ['s' | 'v', number, string[]];
 
 function persist(order: string[], builtAt: number | null): void {
   // NOTE: `order` must stay the FIRST serialized key — the store's persistence
@@ -196,10 +200,20 @@ function persist(order: string[], builtAt: number | null): void {
   );
 }
 
+/** Keys a viewed story stays readable by once its row is gone. Capped so a
+ *  hot story cannot bloat the blob. */
+function storyKeysOf(item: FeedListItem): string[] {
+  const keys = (item.memberIds ?? []).filter((m) => m !== item.id).slice(0, 10);
+  const scid = stableClusterIdOf(item);
+  if (scid) keys.push(scid);
+  if (item.suggestion.storyKey) keys.push(`sk:${item.suggestion.storyKey}`);
+  return keys;
+}
+
 function serializeCardState(cardStates: Record<string, CardStateRecord>): string {
   const states: Record<string, WireState> = {};
   for (const [id, r] of Object.entries(cardStates)) {
-    states[id] = [r.state === 'viewed' ? 'v' : 's', r.at];
+    states[id] = r.keys?.length ? [r.state === 'viewed' ? 'v' : 's', r.at, r.keys] : [r.state === 'viewed' ? 'v' : 's', r.at];
   }
   return JSON.stringify({ states });
 }
@@ -543,7 +557,9 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
     const current = s.cardStates ?? {};
     if (current[id]?.state === 'viewed') return; // idempotent; keeps the first stamp
     if (!s.order.includes(id)) return;
-    set({ cardStates: { ...current, [id]: { state: 'viewed', at: nowMs } } });
+    const item = s.itemsById[id];
+    const keys = item ? storyKeysOf(item) : [];
+    set({ cardStates: { ...current, [id]: { state: 'viewed', at: nowMs, ...(keys.length ? { keys } : {}) } } });
     scheduleCardStatePersist(get);
   },
 

@@ -1,5 +1,6 @@
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { useSessionGeoLanguageContext, withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
+import { useReadSnapshot } from '@/components/custom/feed/use-read-snapshot';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { deleteFact, observeFact } from '@/lib/database/services/fact-service';
 import { removeFactFromTap } from '@/lib/chat-session/fact-removal';
@@ -103,15 +104,16 @@ export function useFactPage({ factId, from, statement }: UseFactPageArgs) {
     const geoCtx = useMemo(() => withLiveMutes(heldCtx, liveCtx), [heldCtx, liveCtx]);
     // ONE buildFactRows pass (the expensive selector), for Impactful and for
     // the Next interest footer.
+    const readSnapshot = useReadSnapshot(suggestions, openedIds);
     const rows = useMemo(
-        () => (snapshots ? buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, geoCtx).rows : []),
-        [snapshots, suggestions, openedIds, geoCtx],
+        () => (snapshots ? buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, geoCtx, null, readSnapshot).rows : []),
+        [snapshots, suggestions, openedIds, geoCtx, readSnapshot],
     );
     const impactful = useMemo(() => {
         const groups = rows.find((r) => r.factId === factId)?.groups ?? [];
         return [...groups].sort((a, b) => b.pubDateMs - a.pubDateMs);
     }, [rows, factId]);
-    const leftOut = useMemo(() => leftOutStories(suggestions, factId, Date.now(), geoCtx), [suggestions, factId, geoCtx]);
+    const leftOut = useMemo(() => leftOutStories(suggestions, factId, Date.now(), geoCtx, readSnapshot), [suggestions, factId, geoCtx, readSnapshot]);
     const topicStories = useMemo(() => storiesPerTopic([...impactful, ...leftOut]), [impactful, leftOut]);
     const total = impactful.length + leftOut.length;
     const filterCount = (f: StoryFilter) => (f === 'all' ? total : f === 'suggested' ? impactful.length : leftOut.length);

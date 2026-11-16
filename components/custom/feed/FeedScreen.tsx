@@ -97,7 +97,7 @@ import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
-import { useFeedAgeLabel } from './feed-age-label';
+import { useFeedAgeLabel, useFrozenFeedAgeLabel } from './feed-age-label';
 import { resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import { arrivedAtOf, isNewCard, type FeedEntry } from './feed-entries';
@@ -223,6 +223,8 @@ const FeedRow = React.memo(function FeedRow({
   const isNew = newSince !== null && isNewCard(arrivedAtOf(suggestion), seen, newSince);
   // No relative age on this screen; a story kept past a day says so (D7).
   const ageLabel = useFeedAgeLabel(suggestion.firstPubDate ?? suggestion.createdAt);
+  // The large card's label is its own line: frozen, so it never pushes rows down.
+  const largeAgeLabel = useFrozenFeedAgeLabel(suggestion.firstPubDate ?? suggestion.createdAt);
   return (
     // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
     // shape never changes between renders of the same row.
@@ -263,7 +265,7 @@ const FeedRow = React.memo(function FeedRow({
       // question this feed is deliberately not asking. Interests' compact
       // cards keep both, and the article detail screen always shows the time.
       showRecency={false}
-      ageLabel={ageLabel}
+      ageLabel={largeAgeLabel}
       similarVariant="reports"
       verdict={verdict}
       onVerdict={onVerdict}
@@ -383,7 +385,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           testID="feed-not-read-divider"
         />
       ) : index === fold.index ? (
-        <AllCaughtUpCard variant="label" shownCount={fold.shown} testID="feed-fold-label" />
+        <AllCaughtUpCard variant="label" testID="feed-fold-label" />
       ) : undefined;
       return (
       <FeedRow

@@ -13,6 +13,7 @@ import { useFeedSyncRefresh, useIsFeedProcessing } from '@/components/custom/Fee
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
+import { useReadSnapshot } from '@/components/custom/feed/use-read-snapshot';
 import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
@@ -121,6 +122,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   const issue = useFeedIssue();
   const snapshots = useSectionSnapshots('InterestsPage', [hasGeneratedInterests, suggestions.length]);
   const userGeoLanguageCtx = useUserGeoLanguageContext();
+  const readSnapshot = useReadSnapshot(suggestions, openedIds);
   const rows = useMemo(() => {
     if (!snapshots) return [];
     return buildFactRows(
@@ -131,8 +133,9 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
       DEFAULT_HARNESS_CONFIG,
       userGeoLanguageCtx,
       lastProcessingRunFinishedAt,
+      readSnapshot,
     ).rows.filter((row) => !isHeadlineRow(row));
-  }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx, lastProcessingRunFinishedAt]);
+  }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx, lastProcessingRunFinishedAt, readSnapshot]);
 
   const { refreshing, onRefresh } = useFeedSyncRefresh(header.reveal);
   const isFeedProcessing = useIsFeedProcessing();

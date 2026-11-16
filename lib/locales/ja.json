@@ -156,7 +156,8 @@
       },
       "stageA11y": "ステップ {{index}}/{{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "メラ is reading the news on this phone."
+      "onDeviceReading": "メラ is reading the news on this phone.",
+      "writingReasons": "関連する各ストーリーに短いメモを書いています。"
     },
     "syncToast": {
       "relevanceTitle": "関連性を計算中",

@@ -69,11 +69,11 @@ describe('AllCaughtUpCard fold variants', () => {
     expect(held.getByText('Mera picked new stories while you were reading.')).toBeTruthy();
     expect(held.getByTestId('all-caught-up-refresh')).toBeTruthy();
   });
-  it('label: a header that takes VoiceOver focus announce the count', async () => {
+  it('label: a plain header; mounting it (a virtualized cell scrolling back) announces nothing', async () => {
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    const { getByTestId } = await render(<AllCaughtUpCard variant="label" shownCount={12} />);
+    const { getByTestId } = await render(<AllCaughtUpCard variant="label" />);
     expect(getByTestId('fold-label').props.accessibilityRole).toBe('header');
-    expect(announce).toHaveBeenCalledWith('Showing 12 more stories');
+    expect(announce).not.toHaveBeenCalled();
   });
   it('end: keeps Refresh without "ready to read more", with the still mindfulness line', async () => {
     const { getByTestId, getByText, queryByText } = await render(<AllCaughtUpCard variant="end" onRefresh={() => {}} />);
@@ -103,6 +103,11 @@ describe('reports variant', () => {
     expect(card.getByLabelText(/1 more report/)).toBeTruthy();
     const big = await render(<ArticleCardBase titleEnglish="A story" testID="b" footer={<></>} similarCount={3} similarVariant="reports" />);
     expect(big.getByLabelText(/3 more reports/)).toBeTruthy();
+  });
+  it('a compact row keeps its row at count 0 (a member leaving must not shrink it)', async () => {
+    const card = await render(<ArticleCompactCardBase titleEnglish="A story" testID="c" similarCount={0} similarVariant="reports" />);
+    expect(card.getByTestId('card-similar-articles')).toBeTruthy();
+    expect(card.queryByText(/more report/)).toBeNull();
   });
   it('the default variant stays off with the gate off', async () => {
     const card = await render(<ArticleCompactCardBase titleEnglish="A story" testID="c" similarCount={3} />);

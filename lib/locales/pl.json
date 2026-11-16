@@ -156,7 +156,8 @@
       },
       "stageA11y": "Krok {{index}} z {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Mera is reading the news on this phone."
+      "onDeviceReading": "Mera is reading the news on this phone.",
+      "writingReasons": "Pisanie krótkiej notatki dla każdej trafnej historii."
     },
     "syncToast": {
       "relevanceTitle": "Obliczanie trafności",

@@ -453,7 +453,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               </Box>
             ) : null}
           </Box>
-          {similarCount != null && similarCount >= 1 ? (
+          {similarCount != null && (similarCount >= 1 || reports) ? (
             <Box style={{ marginTop: 8 }}>
               <SimilarArticlesRow count={similarCount} variant={similarVariant} />
             </Box>

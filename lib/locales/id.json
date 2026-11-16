@@ -156,7 +156,8 @@
       },
       "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Mera is reading the news on this phone."
+      "onDeviceReading": "Mera is reading the news on this phone.",
+      "writingReasons": "Menulis catatan singkat untuk setiap cerita yang relevan."
     },
     "syncToast": {
       "relevanceTitle": "Menghitung relevansi",

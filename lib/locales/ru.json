@@ -156,7 +156,8 @@
       },
       "stageA11y": "Шаг {{index}} из {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Мера is reading the news on this phone."
+      "onDeviceReading": "Мера is reading the news on this phone.",
+      "writingReasons": "Составляем короткое пояснение к каждой актуальной истории."
     },
     "syncToast": {
       "relevanceTitle": "Рассчитываем релевантность",

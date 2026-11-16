@@ -28,6 +28,7 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useColors } from '@/lib/theme/tokens';
+import { useReadSnapshot } from '@/components/custom/feed/use-read-snapshot';
 import { useSessionGeoLanguageContext, withLiveMutes } from '@/components/custom/feed/use-session-geo-context';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -134,10 +135,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   // Hoisted so the "next fact" footer below can reuse it instead of calling
   // `buildFactRows` a second time — this was previously computed inline and
   // thrown away, keeping only this section's own `groups`.
+  const readSnapshot = useReadSnapshot(suggestions, openedIds);
   const allRows: FactRow[] = useMemo(() => {
     if (!snapshots) return [];
-    return buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx).rows;
-  }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
+    return buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx, null, readSnapshot).rows;
+  }, [snapshots, suggestions, openedIds, userGeoLanguageCtx, readSnapshot]);
 
   const groups: FactRowGroup[] = useMemo(() => {
     const found = allRows.find((r) => r.factId === factId)?.groups ?? [];

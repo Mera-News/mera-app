@@ -156,7 +156,8 @@
       },
       "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "梅拉 is reading the news on this phone."
+      "onDeviceReading": "梅拉 is reading the news on this phone.",
+      "writingReasons": "正在為每則相關報導撰寫簡短說明。"
     },
     "syncToast": {
       "relevanceTitle": "計算相關性",

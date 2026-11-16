@@ -1072,9 +1072,15 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const hasRows = allRowsCount > 0;
 
   // "Show them": pin what renders plus the folded rows, closed and expanded.
+  // The count is announced HERE, once, not from the label's mount: the label
+  // sits in a virtualized cell that remounts when scrolled back into range.
   const onShowThem = useCallback(() => {
-    setPin((prev) => (layoutRef.current ? expandFold(prev, layoutRef.current) : prev));
-  }, []);
+    const current = layoutRef.current;
+    setPin((prev) => (current ? expandFold(prev, current) : prev));
+    if (current?.below.length) {
+      AccessibilityInfo.announceForAccessibility(t('feed.fold.shownAnnounce', { count: current.below.length }));
+    }
+  }, [t]);
   const fold = useMemo(
     () => ({
       terminal: layout.terminal,

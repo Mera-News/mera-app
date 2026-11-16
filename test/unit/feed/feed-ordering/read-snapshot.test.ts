@@ -75,4 +75,23 @@ describe('buildReadSnapshot / isReadStory', () => {
     const snap = buildReadSnapshot({}, NONE, [row('a', 'S1')]);
     expect(isReadStory(row('a', 'S1'), snap)).toBe(false);
   });
+
+  it('a viewed record carries its story keys, so the read outlives the viewed row', () => {
+    // Rep R was viewed, then deleted at 48h; sibling S arrives later and the
+    // pool no longer holds R. The persisted keys still lift S to read.
+    const blob = JSON.stringify({ states: { R: ['v', 1, ['S1', 'sk:k1']] } });
+    const states = parseCardState(blob);
+    expect(states.R.keys).toEqual(['S1', 'sk:k1']);
+    const sib = row('S', 'S1');
+    const byKey = row('S2row', undefined, 'k1');
+    const snap = buildReadSnapshot(states, NONE, [sib, byKey]);
+    expect(isReadStory(sib, snap)).toBe(true);
+    expect(isReadStory(byKey, snap)).toBe(true);
+    expect(isReadStory(row('x', 'S9'), snap)).toBe(false);
+  });
+
+  it('keys on a skipped record are ignored', () => {
+    const snap = buildReadSnapshot(parseCardState(JSON.stringify({ states: { R: ['s', 1, ['S1']] } })), NONE, []);
+    expect(isReadStory(row('S', 'S1'), snap)).toBe(false);
+  });
 });

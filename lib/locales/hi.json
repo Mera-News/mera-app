@@ -156,7 +156,8 @@
       },
       "stageA11y": "चरण {{index}} / {{total}}: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "मेरा is reading the news on this phone."
+      "onDeviceReading": "मेरा is reading the news on this phone.",
+      "writingReasons": "हर प्रासंगिक स्टोरी के लिए एक छोटा नोट लिखा जा रहा है।"
     },
     "syncToast": {
       "relevanceTitle": "प्रासंगिकता की गणना हो रही है",

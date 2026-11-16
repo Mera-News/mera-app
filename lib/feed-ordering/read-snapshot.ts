@@ -21,7 +21,7 @@ import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /** Compact wire encoding for a state record: `['s' | 'v', epochMs]`. */
-type WireState = ['s' | 'v', number];
+type WireState = ['s' | 'v', number, string[]?];
 
 /** Defensive parse of the persisted `feed_card_state_v1` blob. A device that has
  *  never written the key, or wrote a malformed one, gets an empty map: every
@@ -43,11 +43,12 @@ export function parseCardState(raw: string | null): Record<string, CardStateReco
 
   const states: Record<string, CardStateRecord> = {};
   for (const [id, v] of Object.entries(rawStates as Record<string, unknown>)) {
-    if (!Array.isArray(v) || v.length !== 2) continue;
-    const [code, at] = v as WireState;
+    if (!Array.isArray(v) || (v.length !== 2 && v.length !== 3)) continue;
+    const [code, at, keys] = v as WireState;
     if (code !== 's' && code !== 'v') continue;
     if (typeof at !== 'number' || !Number.isFinite(at)) continue;
-    states[id] = { state: code === 'v' ? 'viewed' : 'skipped', at };
+    const kept = code === 'v' && Array.isArray(keys) ? keys.filter((k) => typeof k === 'string') : [];
+    states[id] = { state: code === 'v' ? 'viewed' : 'skipped', at, ...(kept.length ? { keys: kept } : {}) };
   }
   return states;
 }
@@ -76,7 +77,11 @@ export function buildReadSnapshot(
   rows: Iterable<StoryRow>,
 ): ReadSnapshot {
   const readKeys = new Set<string>(opened);
-  for (const id in cardStates) if (cardStates[id].state === 'viewed') readKeys.add(id);
+  for (const id in cardStates) {
+    if (cardStates[id].state !== 'viewed') continue;
+    readKeys.add(id);
+    for (const k of cardStates[id].keys ?? []) readKeys.add(k);
+  }
   const snap = { readKeys };
   // One pass: a row read by any key lends the story its other keys.
   for (const r of rows) {

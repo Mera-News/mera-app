@@ -1,5 +1,5 @@
 // The home chip on the Feed's zero-fact card and as World's leading row (D21): hidden once a home or any fact exists.
-import { act, render, screen } from '@testing-library/react-native';
+import { act, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 import { FeedNoFacts } from '@/components/custom/for-you/ForYouEmptyState';
 import WorldHomeRow from '@/components/custom/world/WorldHomeRow';
@@ -26,11 +26,24 @@ it('World row shows with zero facts and a country, with its line and the chip', 
   expect(screen.getByTestId('world-home-chip')).toBeTruthy();
 });
 
+// The row renders only after all three hooks resolved, so each absence test first waits for it to appear.
 it('World row is gone once any fact exists', async () => {
-  await addFact('I follow Formula 1 racing');
   await render(<WorldHomeRow />);
-  await act(async () => {});
-  expect(screen.queryByTestId('world-home-row')).toBeNull();
+  expect(await screen.findByTestId('world-home-row')).toBeTruthy();
+  await act(async () => {
+    await addFact('I follow Formula 1 racing');
+  });
+  await waitFor(() => expect(screen.queryByTestId('world-home-row')).toBeNull());
+});
+
+it('World row is gone once the reader has any place, even a non-home one', async () => {
+  const { upsertLocation } = require('@/lib/database/services/location-service');
+  await render(<WorldHomeRow />);
+  expect(await screen.findByTestId('world-home-row')).toBeTruthy();
+  await act(async () => {
+    await upsertLocation({ countryCode: 'NL', role: 'other' });
+  });
+  await waitFor(() => expect(screen.queryByTestId('world-home-row')).toBeNull());
 });
 
 describe('counts card lead with a place but no facts', () => {

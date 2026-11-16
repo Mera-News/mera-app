@@ -7,8 +7,7 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, findNodeHandle } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MeraLogo from './MeraLogo';
 
@@ -45,8 +44,6 @@ interface AllCaughtUpCardProps {
     readonly onShowThem?: () => void;
     /** fold/end: picks were held back while the reader read; adds the held line above Refresh. */
     readonly held?: boolean;
-    /** label: stories just revealed, announced once to VoiceOver on mount. */
-    readonly shownCount?: number;
 }
 
 const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
@@ -61,25 +58,8 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
     nothingAbove = false,
     onShowThem,
     held = false,
-    shownCount,
 }) => {
     const { t } = useTranslation();
-    const labelRef = useRef<React.ComponentRef<typeof Text>>(null);
-    // "Show them" unmounts the button, so VoiceOver focus would be lost: move it to the
-    // label that replaces the card and say what appeared.
-    useEffect(() => {
-        if (variant !== 'label') return;
-        try {
-            const node = labelRef.current ? findNodeHandle(labelRef.current) : null;
-            if (node) AccessibilityInfo.setAccessibilityFocus(node);
-            if (shownCount) AccessibilityInfo.announceForAccessibility(t('feed.fold.shownAnnounce', { count: shownCount }));
-        } catch {
-            // Focus is a nicety; the label is still on screen.
-        }
-        // Once, on the card's own mount.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     const [currentIndex, setCurrentIndex] = useState(0);
     const messages = t('feed.mindfulness', { returnObjects: true }) as string[];
 
@@ -104,7 +84,6 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
         return (
             <Box testID={testID} className="px-4 pt-2 pb-3">
                 <Text
-                    ref={labelRef}
                     testID="fold-label"
                     accessible
                     accessibilityRole="header"

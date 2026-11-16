@@ -61,7 +61,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
         ? tAny(headlinesKey, { returnObjects: true })
         : undefined;
     // Analysing and summarising have no pool: the headline is the one honest count (cloud) or the on-device
-    // line, so the progress line below never repeats it. Summarising writes reasons, so it never says "Reading".
+    // line, so the progress line below never repeats it. Summarising shows a no-number writing line, never "Reading"; its count stays in the progress line.
     const liveHeadline =
         stage === 'analysing'
             ? onDevice
@@ -69,7 +69,9 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                 : snapshot.analysedTotal > 0
                     ? t('feed.processing.readingProgress', { done: snapshot.analysedDone, total: snapshot.analysedTotal })
                     : ''
-            : '';
+            : stage === 'summarising'
+              ? t('feed.processing.writingReasons')
+              : '';
     const headlines = headlinesKey ? (Array.isArray(raw) ? raw : raw ? [raw] : []) : [liveHeadline];
 
     const [index, setIndex] = useState(0);

@@ -156,7 +156,8 @@
       },
       "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}",
       "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "메라 is reading the news on this phone."
+      "onDeviceReading": "메라 is reading the news on this phone.",
+      "writingReasons": "관련 기사마다 짧은 메모를 작성하는 중입니다."
     },
     "syncToast": {
       "relevanceTitle": "관련성 계산 중",

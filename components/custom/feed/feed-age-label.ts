@@ -6,6 +6,7 @@
 import { toEpochMs, type TimeAgoInput } from '@/lib/algorithms/time-ago';
 import { useTimeTickValue } from '@/lib/time-tick';
 import type { TFunction } from 'i18next';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -30,4 +31,14 @@ export function useFeedAgeLabel(pubDate: TimeAgoInput): string | null {
   const { t, i18n } = useTranslation();
   const locale = i18n?.language;
   return useTimeTickValue((now) => feedAgeLabel(pubDate, now, locale, t));
+}
+
+/** Decided once at mount, never re-derived: the large card draws the label as
+ *  its own line, so one crossing 24h mid-session would push every row below
+ *  it (invariant 5). The compact row draws it inside its meta row and takes
+ *  the live label. */
+export function useFrozenFeedAgeLabel(pubDate: TimeAgoInput): string | null {
+  const { t, i18n } = useTranslation();
+  const [label] = useState(() => feedAgeLabel(pubDate, Date.now(), i18n?.language, t));
+  return label;
 }
