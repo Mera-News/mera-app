@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "已完成 {{total}} 个分析批次中的 {{ready}} 个"
       },
-      "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
+      "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "梅拉 is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "计算相关性",
@@ -273,7 +275,36 @@
       "helpWorking": "仍在运行：已关注的报道、全球、搜索、已保存的内容和事实核查。",
       "helpBack": "它会自行恢复。",
       "helpStatus": "AI 服务商状态"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "梅拉 found {{count}} story that might still interest you.",
+      "nothingBody_other": "梅拉 found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "梅拉 picked new stories while you were reading.",
+      "stillReading": "梅拉 is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "梅拉 keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "梅拉 is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why 梅拉 starts reading when you open the app.",
+      "link": "How 梅拉 keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell 梅拉 where you live to start your feed."
   },
   "relevance": {
     "emergency": "紧急",
@@ -374,7 +405,12 @@
     "placeholderFollow": "一则报道、一支球队或一个话题",
     "placeholderAbout": "随便问",
     "pathLocation": "设置我的位置",
-    "locationAsk": "你住在哪里？你想说多少都可以，一个街区和城市，或者只说州或国家。"
+    "locationAsk": "你住在哪里？你想说多少都可以，一个街区和城市，或者只说州或国家。",
+    "gateHint": "Tell 梅拉 one thing so your feed is yours.",
+    "privacyLine": "What you tell 梅拉 stays on this phone. 梅拉 uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "梅拉 is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "通知",
@@ -2885,7 +2921,8 @@
       "justMath": "只是简单的计算。没有 AI 为这个页面排序，每个人看到的结果都一样。",
       "mathWorld": "每个报道某条新闻的国家得 1 分，该国每多一家媒体再加一点，每个国家最多 4 分。把所有国家的分数加起来，总分最高的排在最前面。",
       "mathCountry": "数一数这个国家的媒体在过去 24 小时里写了多少篇关于某条新闻的文章。文章最多的新闻排在最前面。"
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

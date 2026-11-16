@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "เสร็จแล้ว {{ready}} จาก {{total}} ชุดการวิเคราะห์"
       },
-      "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}"
+      "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "เมร่า is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "กำลังคำนวณความเกี่ยวข้อง",
@@ -273,7 +275,36 @@
       "helpWorking": "ยังใช้งานได้ตามปกติ: เรื่องราวที่ติดตาม, โลก, ค้นหา, บันทึกแล้ว และการตรวจสอบข้อเท็จจริง",
       "helpBack": "ระบบจะกลับมาเองโดยอัตโนมัติ",
       "helpStatus": "สถานะของผู้ให้บริการ AI"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "เมร่า found {{count}} story that might still interest you.",
+      "nothingBody_other": "เมร่า found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "เมร่า picked new stories while you were reading.",
+      "stillReading": "เมร่า is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "เมร่า keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "เมร่า is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why เมร่า starts reading when you open the app.",
+      "link": "How เมร่า keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell เมร่า where you live to start your feed."
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -374,7 +405,12 @@
     "placeholderFollow": "เรื่องราว ทีม หรือหัวข้อ",
     "placeholderAbout": "ถามอะไรก็ได้",
     "pathLocation": "ตั้งค่าตำแหน่งของฉัน",
-    "locationAsk": "คุณอยู่ที่ไหน? แชร์มากหรือน้อยก็ได้ เช่น ย่านและเมือง หรือแค่รัฐหรือประเทศ"
+    "locationAsk": "คุณอยู่ที่ไหน? แชร์มากหรือน้อยก็ได้ เช่น ย่านและเมือง หรือแค่รัฐหรือประเทศ",
+    "gateHint": "Tell เมร่า one thing so your feed is yours.",
+    "privacyLine": "What you tell เมร่า stays on this phone. เมร่า uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "เมร่า is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "การแจ้งเตือน",
@@ -2886,7 +2922,8 @@
       "justMath": "แค่การนับเท่านั้น ไม่มี AI มาจัดอันดับหน้านี้ และทุกคนเห็นผลเหมือนกัน",
       "mathWorld": "ทุกประเทศที่รายงานข่าวจะได้ 1 คะแนน และได้เพิ่มอีกนิดสำหรับสำนักข่าวอื่นในประเทศเดียวกันแต่ละแห่ง โดยได้สูงสุดไม่เกิน 4 คะแนนต่อประเทศ จากนั้นรวมคะแนนของทุกประเทศ เรื่องที่มีคะแนนรวมสูงสุดจะขึ้นก่อน",
       "mathCountry": "นับจำนวนบทความที่สำนักข่าวของประเทศนี้เขียนถึงเรื่องหนึ่งในช่วง 24 ชั่วโมงที่ผ่านมา เรื่องที่มีบทความมากที่สุดจะขึ้นก่อน"
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

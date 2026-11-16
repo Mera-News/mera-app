@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "{{total}} में से {{ready}} विश्लेषण बैच पूरे हुए"
       },
-      "stageA11y": "चरण {{index}} / {{total}}: {{name}}"
+      "stageA11y": "चरण {{index}} / {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "मेरा is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "प्रासंगिकता की गणना हो रही है",
@@ -285,7 +287,36 @@
       "helpWorking": "अब भी काम कर रहा है: फ़ॉलो की गई स्टोरीज़, विश्व, खोज, सहेजे गए और फैक्ट चेक्स।",
       "helpBack": "यह अपने आप वापस आ जाएगा।",
       "helpStatus": "AI प्रदाता की स्थिति"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "मेरा found {{count}} story that might still interest you.",
+      "nothingBody_other": "मेरा found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "मेरा picked new stories while you were reading.",
+      "stillReading": "मेरा is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "मेरा keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "मेरा is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why मेरा starts reading when you open the app.",
+      "link": "How मेरा keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell मेरा where you live to start your feed."
   },
   "relevance": {
     "emergency": "आपातकालीन",
@@ -386,7 +417,12 @@
     "placeholderFollow": "कोई स्टोरी, टीम या विषय",
     "placeholderAbout": "कुछ भी पूछें",
     "pathLocation": "मेरा स्थान सेट करें",
-    "locationAsk": "आप कहाँ रहते हैं? जितना चाहें बताएं: कोई इलाका और शहर, या सिर्फ़ आपका राज्य या देश।"
+    "locationAsk": "आप कहाँ रहते हैं? जितना चाहें बताएं: कोई इलाका और शहर, या सिर्फ़ आपका राज्य या देश।",
+    "gateHint": "Tell मेरा one thing so your feed is yours.",
+    "privacyLine": "What you tell मेरा stays on this phone. मेरा uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "मेरा is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "नोटिफिकेशन",
@@ -2908,7 +2944,8 @@
       "justMath": "बस गिनती है। इस पेज का क्रम कोई AI तय नहीं करता, और यह सबके लिए एक जैसा दिखता है।",
       "mathWorld": "हर देश, जो किसी खबर को कवर करता है, उसे 1 अंक मिलता है। उस देश के हर अतिरिक्त प्रकाशक के लिए थोड़ा और जुड़ता है, पर एक देश को ज़्यादा से ज़्यादा 4 अंक मिलते हैं। सभी देशों के अंक जोड़े जाते हैं, और सबसे ज़्यादा कुल अंक वाली खबर सबसे ऊपर आती है।",
       "mathCountry": "उस देश के प्रकाशकों ने पिछले 24 घंटों में किसी खबर पर जितने लेख लिखे, उन्हें गिना जाता है। जिस खबर पर सबसे ज़्यादा लेख होते हैं, वह सबसे ऊपर आती है।"
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

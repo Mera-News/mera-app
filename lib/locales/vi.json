@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích"
       },
-      "stageA11y": "Bước {{index}} trên {{total}}: {{name}}"
+      "stageA11y": "Bước {{index}} trên {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "Mera is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "Đang tính mức độ liên quan",
@@ -273,7 +275,36 @@
       "helpWorking": "Vẫn hoạt động: câu chuyện đang theo dõi, Thế giới, Tìm kiếm, Đã lưu và kiểm chứng thông tin.",
       "helpBack": "Tính năng sẽ tự hoạt động trở lại.",
       "helpStatus": "Trạng thái nhà cung cấp AI"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
+      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "Mera picked new stories while you were reading.",
+      "stillReading": "Mera is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "Mera keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "Mera is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
+      "link": "How Mera keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell Mera where you live to start your feed."
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -374,7 +405,12 @@
     "placeholderFollow": "Một câu chuyện, đội bóng hoặc chủ đề",
     "placeholderAbout": "Hỏi bất cứ điều gì",
     "pathLocation": "Đặt vị trí của tôi",
-    "locationAsk": "Bạn sống ở đâu? Chia sẻ bao nhiêu tùy bạn: một khu phố và thành phố, hoặc chỉ tiểu bang hay quốc gia."
+    "locationAsk": "Bạn sống ở đâu? Chia sẻ bao nhiêu tùy bạn: một khu phố và thành phố, hoặc chỉ tiểu bang hay quốc gia.",
+    "gateHint": "Tell Mera one thing so your feed is yours.",
+    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "Mera is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "Thông báo",
@@ -2885,7 +2921,8 @@
       "justMath": "Chỉ là phép đếm. Không có AI nào xếp hạng trang này, và trang trông giống nhau với mọi người.",
       "mathWorld": "Mỗi quốc gia đưa tin về một câu chuyện được 1 điểm, cộng thêm một chút cho mỗi báo khác ở quốc gia đó, tối đa 4 điểm cho mỗi quốc gia. Cộng tất cả các quốc gia lại, tổng điểm cao nhất sẽ đứng đầu.",
       "mathCountry": "Đếm số bài mà các báo của quốc gia này viết về một câu chuyện trong 24 giờ qua. Câu chuyện có nhiều bài nhất sẽ đứng đầu."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

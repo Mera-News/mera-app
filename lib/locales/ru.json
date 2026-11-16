@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "Готово {{ready}} из {{total}} партий анализа"
       },
-      "stageA11y": "Шаг {{index}} из {{total}}: {{name}}"
+      "stageA11y": "Шаг {{index}} из {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "Мера is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "Рассчитываем релевантность",
@@ -325,7 +327,36 @@
       "helpWorking": "Продолжают работать: отслеживаемые истории, Мир, Поиск, Сохранённое и проверки фактов.",
       "helpBack": "Всё вернётся само.",
       "helpStatus": "Статус провайдера ИИ"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "Мера found {{count}} story that might still interest you.",
+      "nothingBody_other": "Мера found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "Мера picked new stories while you were reading.",
+      "stillReading": "Мера is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "Мера keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "Мера is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why Мера starts reading when you open the app.",
+      "link": "How Мера keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell Мера where you live to start your feed."
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -428,7 +459,12 @@
     "placeholderFollow": "История, команда или тема",
     "placeholderAbout": "Спросите что угодно",
     "pathLocation": "Указать моё местоположение",
-    "locationAsk": "Где вы живёте? Расскажите столько, сколько хотите: район и город или только регион или страну."
+    "locationAsk": "Где вы живёте? Расскажите столько, сколько хотите: район и город или только регион или страну.",
+    "gateHint": "Tell Мера one thing so your feed is yours.",
+    "privacyLine": "What you tell Мера stays on this phone. Мера uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "Мера is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "Уведомления",
@@ -3008,7 +3044,8 @@
       "justMath": "Просто математика. ИИ не ранжирует эту страницу, и для всех она выглядит одинаково.",
       "mathWorld": "Каждая страна, где пишут об истории, даёт ей 1 балл, плюс немного за каждое дополнительное издание в этой стране, но не больше 4 баллов с одной страны. Баллы всех стран складываются, и выше всех стоит история с наибольшей суммой.",
       "mathCountry": "Считаем статьи, которые издания этой страны написали об истории за последние 24 часа. Первой идёт история с самым большим числом статей."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

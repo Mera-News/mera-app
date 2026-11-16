@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "{{ready}} de {{total}} tandas de análisis terminadas"
       },
-      "stageA11y": "Paso {{index}} de {{total}}: {{name}}"
+      "stageA11y": "Paso {{index}} de {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "Mera is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "Calculando relevancia",
@@ -287,7 +289,36 @@
       "helpWorking": "Sigue funcionando: historias seguidas, Mundo, Explorar, Guardados y verificaciones de hechos.",
       "helpBack": "Volverá por sí sola.",
       "helpStatus": "Estado del proveedor de IA"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
+      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "Mera picked new stories while you were reading.",
+      "stillReading": "Mera is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "Mera keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "Mera is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
+      "link": "How Mera keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell Mera where you live to start your feed."
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -388,7 +419,12 @@
     "placeholderFollow": "Una historia, equipo o tema",
     "placeholderAbout": "Pregunta lo que quieras",
     "pathLocation": "Establecer mi ubicación",
-    "locationAsk": "¿Dónde vives? Comparte todo lo que quieras: un barrio y una ciudad, o solo tu estado o país."
+    "locationAsk": "¿Dónde vives? Comparte todo lo que quieras: un barrio y una ciudad, o solo tu estado o país.",
+    "gateHint": "Tell Mera one thing so your feed is yours.",
+    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "Mera is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -2912,7 +2948,8 @@
       "justMath": "Solo matemáticas. Ninguna IA ordena esta página, y se ve igual para todo el mundo.",
       "mathWorld": "Cada país que cubre una noticia le da 1 punto, más un poco más por cada medio extra de ese país, hasta 4 puntos por país. Se suman todos los países, y el total más alto aparece primero.",
       "mathCountry": "Se cuentan los artículos que los medios de este país escribieron sobre una noticia en las últimas 24 horas. La noticia con más artículos aparece primero."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

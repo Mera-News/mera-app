@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료"
       },
-      "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}"
+      "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "메라 is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "관련성 계산 중",
@@ -273,7 +275,36 @@
       "helpWorking": "계속 작동하는 기능: 팔로우한 스토리, 전 세계, 검색, 보관함, 팩트 체크.",
       "helpBack": "자동으로 다시 돌아와요.",
       "helpStatus": "AI 제공자 상태"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "메라 found {{count}} story that might still interest you.",
+      "nothingBody_other": "메라 found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "메라 picked new stories while you were reading.",
+      "stillReading": "메라 is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "메라 keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "메라 is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why 메라 starts reading when you open the app.",
+      "link": "How 메라 keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell 메라 where you live to start your feed."
   },
   "relevance": {
     "emergency": "긴급",
@@ -374,7 +405,12 @@
     "placeholderFollow": "스토리, 팀 또는 주제",
     "placeholderAbout": "무엇이든 물어보세요",
     "pathLocation": "내 위치 설정하기",
-    "locationAsk": "어디에 사시는지 알려 주세요. 편한 만큼 말씀해 주시면 돼요. 동네와 도시, 아니면 주나 나라만 알려 주셔도 괜찮아요."
+    "locationAsk": "어디에 사시는지 알려 주세요. 편한 만큼 말씀해 주시면 돼요. 동네와 도시, 아니면 주나 나라만 알려 주셔도 괜찮아요.",
+    "gateHint": "Tell 메라 one thing so your feed is yours.",
+    "privacyLine": "What you tell 메라 stays on this phone. 메라 uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "메라 is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "알림",
@@ -2885,7 +2921,8 @@
       "justMath": "그냥 계산일 뿐이에요. AI는 이 페이지의 순위를 매기지 않고, 누구에게나 똑같이 보여요.",
       "mathWorld": "이야기를 다루는 나라마다 1점을 줘요. 그 나라에 발행사가 더 있으면 조금씩 더 줘요. 나라당 최대 4점까지예요. 모든 나라의 점수를 더하고, 총점이 가장 높은 이야기가 맨 위에 와요.",
       "mathCountry": "이 나라 발행사들이 지난 24시간 동안 어떤 이야기를 다룬 기사를 세어 봐요. 기사가 가장 많은 이야기가 맨 위에 와요."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "اكتملت {{ready}} من {{total}} دفعة"
       },
-      "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}"
+      "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "ميرا is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",
@@ -364,7 +366,36 @@
       "helpWorking": "ما زال يعمل: القصص المتابَعة، والعالم، والبحث، والمحفوظات، والتحققات من الحقائق.",
       "helpBack": "سيعود تلقائيًا.",
       "helpStatus": "حالة مزوّد الذكاء الاصطناعي"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "ميرا found {{count}} story that might still interest you.",
+      "nothingBody_other": "ميرا found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "ميرا picked new stories while you were reading.",
+      "stillReading": "ميرا is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "ميرا keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "ميرا is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why ميرا starts reading when you open the app.",
+      "link": "How ميرا keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell ميرا where you live to start your feed."
   },
   "relevance": {
     "emergency": "طارئ",
@@ -469,7 +500,12 @@
     "placeholderFollow": "قصة أو فريق أو موضوع",
     "placeholderAbout": "اسأل عن أي شيء",
     "pathLocation": "حدّد موقعي",
-    "locationAsk": "أين تعيش؟ شارك بقدر ما تريد، حيًا ومدينة، أو ولايتك أو بلدك فقط."
+    "locationAsk": "أين تعيش؟ شارك بقدر ما تريد، حيًا ومدينة، أو ولايتك أو بلدك فقط.",
+    "gateHint": "Tell ميرا one thing so your feed is yours.",
+    "privacyLine": "What you tell ميرا stays on this phone. ميرا uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "ميرا is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "الإشعارات",
@@ -3115,7 +3151,8 @@
       "justMath": "مجرد حساب. لا يرتّب الذكاء الاصطناعي هذه الصفحة، وتظهر بالشكل نفسه للجميع.",
       "mathWorld": "تحصل كل دولة تغطي خبراً على نقطة واحدة، ومع كل ناشر إضافي فيها تُضاف نقاط صغيرة، بحد أقصى 4 نقاط لكل دولة. تُجمع النقاط لكل الدول، ويأتي الإجمالي الأعلى أولاً.",
       "mathCountry": "احسب عدد المقالات التي كتبها ناشرو هذه الدولة عن الخبر خلال آخر 24 ساعة. الخبر الذي له أكبر عدد يأتي أولاً."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

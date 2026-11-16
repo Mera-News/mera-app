@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "{{total}}件中{{ready}}件の分析バッチが完了"
       },
-      "stageA11y": "ステップ {{index}}/{{total}}: {{name}}"
+      "stageA11y": "ステップ {{index}}/{{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "メラ is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "関連性を計算中",
@@ -273,7 +275,36 @@
       "helpWorking": "引き続き使えるのは、フォロー中のストーリー、世界、検索、保存済み、ファクトチェックです。",
       "helpBack": "自動的に元に戻ります。",
       "helpStatus": "AIプロバイダーの状態"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "メラ found {{count}} story that might still interest you.",
+      "nothingBody_other": "メラ found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "メラ picked new stories while you were reading.",
+      "stillReading": "メラ is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "メラ keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "メラ is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why メラ starts reading when you open the app.",
+      "link": "How メラ keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell メラ where you live to start your feed."
   },
   "relevance": {
     "emergency": "緊急",
@@ -374,7 +405,12 @@
     "placeholderFollow": "ストーリー、チーム、トピック",
     "placeholderAbout": "何でも聞いてください",
     "pathLocation": "自分の居住地を設定する",
-    "locationAsk": "どこにお住まいですか？ 近所と市区町村でも、都道府県や国だけでも構いません。"
+    "locationAsk": "どこにお住まいですか？ 近所と市区町村でも、都道府県や国だけでも構いません。",
+    "gateHint": "Tell メラ one thing so your feed is yours.",
+    "privacyLine": "What you tell メラ stays on this phone. メラ uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "メラ is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "通知",
@@ -2885,7 +2921,8 @@
       "justMath": "ただの計算です。AIがこのページを並べ替えることはありません。どなたに対しても同じ内容が表示されます。",
       "mathWorld": "ストーリーを報じている国ごとに1点が入ります。その国にほかの報道機関があれば、少しずつ加点されます。ただし1か国あたり最大4点までです。すべての国の点数を合計し、合計点が最も高いものが一番上に来ます。",
       "mathCountry": "その国の報道機関が過去24時間にそのストーリーについて書いた記事の数を数えます。記事が最も多いストーリーが一番上に来ます。"
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

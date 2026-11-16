@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı"
       },
-      "stageA11y": "Adım {{index}} / {{total}}: {{name}}"
+      "stageA11y": "Adım {{index}} / {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "Mera is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",
@@ -285,7 +287,36 @@
       "helpWorking": "Hâlâ çalışanlar: takip edilen haberler, Dünya, Arama, Kaydedilenler ve doğruluk kontrolleri.",
       "helpBack": "Kendiliğinden geri gelir.",
       "helpStatus": "Yapay zeka sağlayıcısının durumu"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
+      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "Mera picked new stories while you were reading.",
+      "stillReading": "Mera is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "Mera keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "Mera is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
+      "link": "How Mera keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell Mera where you live to start your feed."
   },
   "relevance": {
     "emergency": "Acil",
@@ -386,7 +417,12 @@
     "placeholderFollow": "Bir haber, takım ya da konu",
     "placeholderAbout": "İstediğinizi sorun",
     "pathLocation": "Konumumu ayarla",
-    "locationAsk": "Nerede yaşıyorsunuz? İstediğiniz kadar paylaşın: bir mahalle ve şehir, ya da yalnızca eyaletiniz veya ülkeniz."
+    "locationAsk": "Nerede yaşıyorsunuz? İstediğiniz kadar paylaşın: bir mahalle ve şehir, ya da yalnızca eyaletiniz veya ülkeniz.",
+    "gateHint": "Tell Mera one thing so your feed is yours.",
+    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "Mera is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "Bildirimler",
@@ -2908,7 +2944,8 @@
       "justMath": "Sadece matematik. Bu sayfayı hiçbir yapay zeka sıralamaz ve herkes için aynı görünür.",
       "mathWorld": "Bir haberi ele alan her ülke habere 1 puan verir. O ülkedeki her ek yayıncı için biraz daha eklenir, ama her ülke en fazla 4 puanla sınırlıdır. Tüm ülkeler toplanır ve en yüksek toplam en üstte yer alır.",
       "mathCountry": "Bu ülkenin yayıncılarının son 24 saatte bir habere dair yazdığı makaleleri sayın. En çok makalesi olan haber en üstte yer alır."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {

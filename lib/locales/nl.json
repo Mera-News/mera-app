@@ -154,7 +154,9 @@
       "chunks": {
         "ready": "{{ready}} van {{total}} analyserondes klaar"
       },
-      "stageA11y": "Stap {{index}} van {{total}}: {{name}}"
+      "stageA11y": "Stap {{index}} van {{total}}: {{name}}",
+      "readingProgress": "Reading {{done}} of {{total}} for you",
+      "onDeviceReading": "Mera is reading the news on this phone."
     },
     "syncToast": {
       "relevanceTitle": "Relevantie berekenen",
@@ -285,7 +287,36 @@
       "helpWorking": "Werkt nog gewoon: gevolgde verhalen, Wereld, Zoeken, Opgeslagen en feitchecks.",
       "helpBack": "Het komt vanzelf weer terug.",
       "helpStatus": "Status van AI-aanbieder"
-    }
+    },
+    "fold": {
+      "upToDateTitle": "You're up to date on what matters to you.",
+      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+      "nothingTitle": "Nothing new looks important for you right now.",
+      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
+      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
+      "showThem": "Show them",
+      "label": "Less likely to matter to you",
+      "shownAnnounce_one": "Showing {{count}} more story",
+      "shownAnnounce_other": "Showing {{count}} more stories",
+      "held": "Mera picked new stories while you were reading.",
+      "stillReading": "Mera is still reading. New stories will show up here.",
+      "endTitle": "That's everything for now.",
+      "endBody": "Mera keeps reading in the background. Check back later."
+    },
+    "firstFeed": {
+      "body": "Mera is reading today's news for you. Your interests stay on your phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
+      "link": "How Mera keeps this private",
+      "dismiss": "Dismiss"
+    },
+    "age": {
+      "yesterday": "From yesterday",
+      "fromDay": "From {{day}}",
+      "fromDate": "From {{date}}"
+    },
+    "moreReports_one": "{{count}} more report",
+    "moreReports_other": "{{count}} more reports",
+    "homeChipHint": "Tell Mera where you live to start your feed."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -386,7 +417,12 @@
     "placeholderFollow": "Een verhaal, team of onderwerp",
     "placeholderAbout": "Vraag wat je wilt",
     "pathLocation": "Mijn locatie instellen",
-    "locationAsk": "Waar woon je? Deel zoveel als je wilt: een buurt en stad, of alleen je regio of land."
+    "locationAsk": "Waar woon je? Deel zoveel als je wilt: een buurt en stad, of alleen je regio of land.",
+    "gateHint": "Tell Mera one thing so your feed is yours.",
+    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
+    "homeChip": "I live in {{country}}",
+    "homeChipThe": "I live in the {{country}}",
+    "fallbackPick": "Mera is taking a while. Pick where you live instead."
   },
   "notifications": {
     "title": "Meldingen",
@@ -2906,7 +2942,8 @@
       "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina, en hij ziet er voor iedereen hetzelfde uit.",
       "mathWorld": "Elk land dat een verhaal behandelt, geeft het 1 punt, plus een beetje meer voor elke extra uitgever daar, tot maximaal 4 punten per land. Tel alle landen op, en het hoogste totaal staat bovenaan.",
       "mathCountry": "Tel de artikelen die de uitgevers van dit land in de afgelopen 24 uur over een verhaal schreven. Het verhaal met de meeste artikelen staat bovenaan."
-    }
+    },
+    "homeRow": "Want news from where you live?"
   },
   "library": {
     "saved": {
