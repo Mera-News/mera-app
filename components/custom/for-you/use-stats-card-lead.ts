@@ -1,5 +1,5 @@
 import React from 'react';
-import { useHasFacts } from '@/components/custom/feed/use-has-facts';
+import { useHasFactsOrPlaces } from '@/components/custom/for-you/use-has-facts-or-places';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -91,7 +91,7 @@ export function useStatsCardLead() {
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     // Not the list's emptiness (an empty Feed past a run, exactly where a zero needs
     // explaining): with no facts at all the no-facts card owns the Feed.
-    const noFacts = useHasFacts() === false;
+    const noFacts = useHasFactsOrPlaces() === false;
     const offline = useIsConnected() === false;
     const syncFailure = syncFailureOf(useForYouSyncStatusMessage());
     const outageLanes = useOutageLanes();

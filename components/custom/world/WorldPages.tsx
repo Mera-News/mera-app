@@ -1,3 +1,4 @@
+import WorldHomeRow from '@/components/custom/world/WorldHomeRow';
 import ScopeArticleList, { /* EXPLORE_WINDOWS_HOURS, */ type ExploreWindowHours } from '@/components/custom/explore/ScopeArticleList';
 // import InlineChoiceChip from '@/components/custom/nav/InlineChoiceChip';
 import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
@@ -137,6 +138,7 @@ export function WorldPages() {
                     key={`${hours}:${topicId ?? ''}`}
                     topicId={topicId}
                     pickLabel={pickName}
+                    leading={page.scope.kind === 'world' ? <WorldHomeRow /> : undefined}
                     onFacets={reportFacets(pageId)}
                     scope={page.scope}
                     windowHours={hours}

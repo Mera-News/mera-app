@@ -121,8 +121,9 @@ export interface ProcessingStageDef<
   readonly id: ProcessingStageId;
   /** `t()` key for the stage's own short label. */
   readonly labelKey: L;
-  /** `t()` key for the rotating headline pool. Resolves to an ARRAY. */
-  readonly headlinesKey: H;
+  /** `t()` key for the rotating headline pool (resolves to an ARRAY), or null when the stage's headline is
+   *  built from live progress (analysing, summarising) in ProcessingArea. */
+  readonly headlinesKey: H | null;
   /** Drawn when `animation-registry.ts` has no entry for this stage. */
   readonly fallback: StageFallbackKind;
 }

@@ -21,6 +21,7 @@
 //
 // No announcement here: FeedScreen announces the capped and error states.
 
+import FirstFeedCard, { useFirstFeedVisible } from '@/components/custom/for-you/FirstFeedCard';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -148,8 +149,20 @@ function StatusMark({ working, size, tone }: { working: boolean; size: number; t
  */
 export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactElement | null {
     const shown = statsCardShown({ issue: useFeedIssue(), empty, hasRows });
+    // The first-feed privacy card leads (D9). It is its own gate: the first run shows no counts card yet.
+    // shortcut: this instance only gates the header; dismissing inside the card leaves an empty zero-height header until the next mount.
+    const [intro] = useFirstFeedVisible();
     // One element per state, so the list header is not re-rendered per render.
-    return useMemo(() => (shown ? <DashboardStatsCard testID="feed-status-card" /> : null), [shown]);
+    return useMemo(
+        () =>
+            shown || intro ? (
+                <>
+                    {intro ? <FirstFeedCard /> : null}
+                    {shown ? <DashboardStatsCard testID="feed-status-card" /> : null}
+                </>
+            ) : null,
+        [shown, intro],
+    );
 }
 
 export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({ testID = 'dashboard-stats-card' }) => {

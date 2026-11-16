@@ -7,12 +7,10 @@ import type { ProcessingStageDef, ProcessingStageId } from './types';
  * read by a test without a translation runtime and the keys can be asserted
  * against `en.json` directly.
  *
- * Three of the six headline pools were already translated in all twenty
- * dictionaries and shown to NOBODY: `stages.fetching` and its `amberSubline`
- * became unreachable when `FeedStatusShimmer` was deleted, and
- * `stages.cloudRelevance` / `cloudReasons` / `onDevice` render only inside the
- * status panel a reader has to open. The stage table puts all of them back on
- * the surface they were written for.
+ * Analysing and summarising carry no pool: their headline is built from the
+ * live scoring progress ("Reading 12 of 40 for you") in ProcessingArea, so the
+ * old cloud and on-device pools (which promised a notification and claimed
+ * nothing leaves the phone) are gone from the surface.
  */
 export const PROCESSING_STAGES = [
   {
@@ -36,13 +34,13 @@ export const PROCESSING_STAGES = [
   {
     id: 'analysing',
     labelKey: 'feed.processing.stageLabels.analysing',
-    headlinesKey: 'feed.processing.stages.cloudRelevance.headlines',
+    headlinesKey: null,
     fallback: 'sweep',
   },
   {
     id: 'summarising',
     labelKey: 'feed.processing.stageLabels.summarising',
-    headlinesKey: 'feed.processing.stages.cloudReasons.headlines',
+    headlinesKey: null,
     fallback: 'write',
   },
   {
@@ -56,15 +54,6 @@ export const PROCESSING_STAGES = [
 /** The registry's own row type, keys and all, so `t(def.labelKey)` stays typed
  *  rather than falling back to `tAny`. */
 export type StageDef = (typeof PROCESSING_STAGES)[number];
-
-/**
- * The on-device variant of the analysing stage's headlines.
- *
- * The stage is the same step in the same order either way, so it is one row
- * above rather than two; only the copy differs, because on-device scoring can
- * honestly say nothing leaves the phone and the cloud round trip cannot.
- */
-export const ON_DEVICE_HEADLINES_KEY = 'feed.processing.stages.onDevice.headlines' as const;
 
 /** Shown under the fetching stage only. Already translated everywhere, and its
  *  only previous reader was a component with no importers. */

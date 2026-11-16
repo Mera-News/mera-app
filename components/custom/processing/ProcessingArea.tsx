@@ -7,7 +7,7 @@ import MultiStepProgressBar from '@/components/custom/MultiStepProgressBar';
 import { Text } from '@/components/ui/text';
 
 import ProcessingStageAnimation from './ProcessingStageAnimation';
-import { FETCHING_SUBLINE_KEY, ON_DEVICE_HEADLINES_KEY, stageDef } from './processing-stages';
+import { FETCHING_SUBLINE_KEY, stageDef } from './processing-stages';
 import {
     PROCESSING_HEADLINE_CYCLE_MS,
     PROCESSING_METRICS as M,
@@ -20,8 +20,7 @@ const FADE_MS = 220;
 
 interface ProcessingAreaProps {
     readonly snapshot: ProcessingSnapshot;
-    /** True when on-device scoring is driving the analysing stage, which gets
-     *  its own honest copy about nothing leaving the phone. */
+    /** True when on-device scoring is driving the analysing stage, which says it reads on this phone. */
     readonly onDevice?: boolean;
 }
 
@@ -56,13 +55,22 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
 
     const stage = snapshot.stage;
     const def = stage ? stageDef(stage) : null;
-    const headlinesKey =
-        stage === 'analysing' && onDevice ? ON_DEVICE_HEADLINES_KEY : def?.headlinesKey;
+    const headlinesKey = def?.headlinesKey ?? null;
 
     const raw = headlinesKey
         ? tAny(headlinesKey, { returnObjects: true })
         : undefined;
-    const headlines = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    // Analysing and summarising have no pool: the headline is the one honest count (cloud) or the on-device
+    // line, so the progress line below never repeats it. Summarising writes reasons, so it never says "Reading".
+    const liveHeadline =
+        stage === 'analysing'
+            ? onDevice
+                ? t('feed.processing.onDeviceReading')
+                : snapshot.analysedTotal > 0
+                    ? t('feed.processing.readingProgress', { done: snapshot.analysedDone, total: snapshot.analysedTotal })
+                    : ''
+            : '';
+    const headlines = headlinesKey ? (Array.isArray(raw) ? raw : raw ? [raw] : []) : [liveHeadline];
 
     const [index, setIndex] = useState(0);
     const opacity = useSharedValue(1);
@@ -112,14 +120,15 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
             total: snapshot.hydrationTotal,
         });
     } else if (
-        (stage === 'analysing' || stage === 'summarising') &&
+        // Analysing on the cloud lane carries its count in the headline: one count on screen.
+        (stage === 'summarising' || (stage === 'analysing' && onDevice)) &&
         snapshot.analysedTotal > 0
     ) {
         progressLine = t('feed.analysingProgress', {
             done: snapshot.analysedDone,
             total: snapshot.analysedTotal,
         });
-    } else if (snapshot.chunksTotal > 0) {
+    } else if (snapshot.chunksTotal > 0 && !(stage === 'analysing' && snapshot.analysedTotal > 0)) {
         progressLine = t('feed.processing.chunks.ready', {
             ready: snapshot.chunksReady,
             total: snapshot.chunksTotal,

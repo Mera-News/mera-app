@@ -130,6 +130,8 @@ interface ScopeArticleListProps {
     readonly pickLabel?: string | null;
     /** Reports whether this page is the active one, and its facets once its answer is in
      *  (null while loading or failed, so the host never shows another page's counts). */
+    /** A row above the stories, inside the list header (World's home chip row). */
+    readonly leading?: React.ReactNode;
     readonly onFacets?: (facets: readonly CanonicalTopicFacet[] | null, topicsSupported: boolean, active: boolean) => void;
 }
 
@@ -174,6 +176,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     bottomClearance,
     topicId,
     pickLabel,
+    leading,
     onFacets,
 }) => {
     const { t } = useTranslation();
@@ -249,8 +252,9 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
 
     const ListHeaderComponent = useMemo(
         () =>
-            (countryName && firstLoad && !loadHung) || topicLine ? (
+            leading || (countryName && firstLoad && !loadHung) || topicLine ? (
                 <View style={{ marginBottom: PAGE_TITLE_GAP }}>
+                    {leading}
                     {countryName && firstLoad && !loadHung ? (
                         <GatheringBar label={t('world.gathering', { country: countryName })} />
                     ) : null}
@@ -261,7 +265,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                     ) : null}
                 </View>
             ) : null,
-        [firstLoad, countryName, loadHung, topicLine, colors.ink2, t],
+        [leading, firstLoad, countryName, loadHung, topicLine, colors.ink2, t],
     );
 
     // Skeleton-or-empty-state, decided INSIDE the list. Previously these were two

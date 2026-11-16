@@ -20,6 +20,8 @@ import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { I18nManager, Pressable, View } from 'react-native';
+import { HomeCountryChip } from '@/components/custom/home-country-chip/HomeCountryChip';
+import { useHomeCountryChip } from '@/components/custom/home-country-chip/useHomeCountryChip';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
@@ -95,6 +97,22 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
   );
 };
 
+/** The hint and the chip, together or not at all (no region, or a home already on file). */
+const HomeChipBlock: React.FC = () => {
+  const { t } = useTranslation();
+  const c = useColors();
+  const { country } = useHomeCountryChip();
+  if (!country) return null;
+  return (
+    <View style={{ gap: 6, alignItems: 'center' }}>
+      <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 18 }} className="text-center">
+        {t('feed.homeChipHint')}
+      </Text>
+      <HomeCountryChip />
+    </View>
+  );
+};
+
 /**
  * The Feed's "No facts yet" block (FinalFeed #8, #9), both views: a COMPACT
  * card the size of the counts card (owner): the Mera mark, the title, the
@@ -142,6 +160,8 @@ export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }
           </View>
         </View>
       </GlassPanel>
+      {/* One tap gives a zero-fact reader a country; the chip renders nothing with no region or a home on file. */}
+      <HomeChipBlock />
       <FeedShortcuts reading={false} />
     </View>
   );

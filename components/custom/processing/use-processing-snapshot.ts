@@ -1,5 +1,6 @@
 
 import { useFeedSyncRunning, useIsFeedProcessing } from '@/components/custom/FeedSyncIndicator';
+import { pickScoringProgress } from '@/components/custom/for-you/status-ink';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import {
   processingStageIndex,
@@ -8,6 +9,8 @@ import {
 } from '@/lib/services/processing-stage';
 import {
   useForYouAsyncJobPhase,
+  useForYouAsyncJobProcessedCount,
+  useForYouAsyncJobTotalCount,
   useForYouBatchProgress,
   useForYouChunkStates,
   useForYouDeviceProcessing,
@@ -79,7 +82,12 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
   const asyncJobPhase = useForYouAsyncJobPhase();
   const { isDeviceProcessing } = useForYouDeviceProcessing();
   const chunkStates = useForYouChunkStates();
-  const batchProgress = useForYouBatchProgress();
+  // The ONE scoring figure the Feed's other surfaces read, so the card never disagrees with them.
+  const scoring = pickScoringProgress(
+    useForYouBatchProgress(),
+    useForYouAsyncJobProcessedCount(),
+    useForYouAsyncJobTotalCount(),
+  );
   const { hydrationCompleted, hydrationTotal } = useForYouHydrationProgress();
   const lastRunFinishedAt = useForYouLastProcessingRunFinishedAt();
 
@@ -115,8 +123,8 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
     stageValue: stageValueFor(stage, {
       hydrationCompleted,
       hydrationTotal,
-      analysedDone: batchProgress?.done ?? 0,
-      analysedTotal: batchProgress?.total ?? 0,
+      analysedDone: scoring?.done ?? 0,
+      analysedTotal: scoring?.total ?? 0,
       chunksReady: chunkStates?.ready ?? 0,
       chunksTotal: chunkStates?.total ?? 0,
     }),
@@ -125,8 +133,8 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
     chunksTotal: chunkStates?.total ?? 0,
     hydrationCompleted,
     hydrationTotal,
-    analysedDone: batchProgress?.done ?? 0,
-    analysedTotal: batchProgress?.total ?? 0,
+    analysedDone: scoring?.done ?? 0,
+    analysedTotal: scoring?.total ?? 0,
     isStatic: !motion,
     animationsActive,
   };
