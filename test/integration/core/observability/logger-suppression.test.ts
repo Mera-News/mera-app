@@ -180,3 +180,39 @@ describe('captureMessage fingerprint default', () => {
     );
   });
 });
+
+// MERA-APP-9F/9D/9K/9T/97/9H/9X: transport failures on a device that reports a link. They
+// still report, as warnings, so a real error is never buried under a flaky network.
+describe('captureException, transient network errors while connected', () => {
+  it('sends a transient network error at warning level', () => {
+    logger.captureException(new Error('fetch failed: The network connection was lost.'), {
+      tags: { service: 'auth-client' },
+    });
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ level: 'warning' }),
+    );
+  });
+
+  it('keeps a level the caller set', () => {
+    logger.captureException(new Error('The request timed out.'), { level: 'fatal' });
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ level: 'fatal' }),
+    );
+  });
+
+  it('keeps a non-network error at error level', () => {
+    logger.captureException(new Error('Cannot read property x of undefined'));
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ level: 'error' }),
+    );
+  });
+
+  it('still drops the same error when the device is offline', () => {
+    setConnected(false);
+    logger.captureException(new Error('fetch failed: The network connection was lost.'));
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+});

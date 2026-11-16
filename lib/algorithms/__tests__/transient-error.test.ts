@@ -30,6 +30,19 @@ describe('isTransientNetworkError', () => {
     expect(isTransientNetworkError(new Error('read ECONNRESET'))).toBe(true);
   });
 
+  // MERA-APP-9F/9D/9K/97, 9N, 9Q, 9Z: the transport and expo-updates wordings seen in production.
+  it.each([
+    'fetch failed: The network connection was lost.',
+    'fetch failed: Fetch request has been canceled',
+    'fetch failed: The Internet connection appears to be offline.',
+    'fetch failed: A server with the specified hostname could not be found.',
+    'Call to function \'ExpoUpdates.checkForUpdateAsync\' has been rejected.\n→ Caused by: Failed to check for update: Failed to download remote update: Unable to resolve host "u.expo.dev": No address associated with hostname',
+    'Failed to download new update: Failed to load all assets',
+    'Error performing request.',
+  ])('matches %s', (message) => {
+    expect(isTransientNetworkError(new Error(message))).toBe(true);
+  });
+
   it('returns false for a genuine non-network error', () => {
     expect(isTransientNetworkError(new Error('Cannot read property of undefined'))).toBe(false);
   });

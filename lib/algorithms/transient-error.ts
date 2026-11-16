@@ -27,6 +27,13 @@ export function isTransientNetworkError(err: unknown): boolean {
     msg.includes('offline') ||
     msg.includes('econnreset') ||
     msg.includes('econnaborted') ||
-    msg.includes('enotfound')
+    msg.includes('enotfound') ||
+    // expo/fetch prefixes every native transport failure with this; an HTTP status never carries it.
+    msg.includes('fetch failed') ||
+    msg.includes('hostname could not be found') ||
+    msg.includes('unable to resolve host') ||
+    // expo-updates' wordings for a download cut short.
+    msg.includes('failed to load all assets') ||
+    msg.includes('error performing request')
   );
 }

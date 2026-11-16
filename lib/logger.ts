@@ -179,6 +179,18 @@ export function classifySuppression(
   return null;
 }
 
+// A transport failure on a device that reports a link still reports, but as a warning:
+// the offline class above drops it only when the device has confirmed it has no link.
+function isTransientSafely(error: Error): boolean {
+  try {
+    const { isTransientNetworkError } =
+      require('./algorithms/transient-error') as typeof import('./algorithms/transient-error');
+    return isTransientNetworkError(error);
+  } catch {
+    return false;
+  }
+}
+
 function recordAuthFailureSafely(): void {
   try {
     const { recordAuthFailure } =
@@ -318,7 +330,9 @@ const logger = {
     }
 
     return Sentry.captureException(errorObject, {
-      level: level as Sentry.SeverityLevel,
+      level: (options.level === undefined && isTransientSafely(errorObject)
+        ? 'warning'
+        : level) as Sentry.SeverityLevel,
       tags,
       extra: finalExtra,
       fingerprint,
