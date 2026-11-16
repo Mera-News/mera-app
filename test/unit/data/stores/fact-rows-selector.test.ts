@@ -1082,7 +1082,8 @@ describe('feed window and the 7-day keep', () => {
   });
 
   it('keeps an Emergency by rawScore too', () => {
-    expect(isWithinWindow(sugg({ relevance: 1.1, firstPubDate: age(3) }), CUT, none)).toBe(true);
+    expect(isWithinWindow(sugg({ relevance: 0.7, rawScore: 1.2, firstPubDate: age(3) }), CUT, none)).toBe(true);
+    expect(isWithinWindow(sugg({ relevance: 0.7, rawScore: 0.9, firstPubDate: age(3) }), CUT, none)).toBe(false);
   });
 
   it('never extends an unscored row', () => {

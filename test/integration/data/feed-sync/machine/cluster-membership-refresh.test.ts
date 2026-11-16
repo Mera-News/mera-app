@@ -92,7 +92,7 @@ describe('the cluster membership refresh in a feed sync', () => {
     JSON.parse((await database.get<ArticleSuggestionModel>('article_suggestions').find(id)).clusterMembershipsJson ?? 'null');
   const run = (t = makeCtx()) => advanceUntilDone(startMachine(t));
 
-  it('asks once about the rows inside 44h that clear the render gate, newest first, and writes the answer', async () => {
+  it('asks once about every row inside 44h whatever its score, newest first, when one clears the render gate', async () => {
     await seedRows([
       { id: 'older', ageH: 20, relevance: 0.65 },
       { id: 'newer', ageH: 2, relevance: 0.85 },
@@ -102,7 +102,7 @@ describe('the cluster membership refresh in a feed sync', () => {
 
     await run();
 
-    expect(asked).toEqual([['newer', 'older']]);
+    expect(asked).toEqual([['low', 'newer', 'older']]);
     expect(await membershipsOf('newer')).toEqual([{ clusterId: 'c-bhopal', confidence: 0.82, stableClusterId: 's-bhopal' }]);
     const inStore = useForYouStore.getState().suggestions.find((s) => s._id === 'older');
     expect(inStore?.clusters).toEqual([{ clusterId: 'c-bhopal', confidence: 0.82, stableClusterId: 's-bhopal' }]);

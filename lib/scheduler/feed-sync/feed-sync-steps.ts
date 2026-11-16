@@ -784,8 +784,7 @@ export const CLUSTER_MEMBERSHIP_MAX_AGE_MS = 44 * 60 * 60_000;
 /**
  * The hourly cluster-membership refresh (D8): rows hydrated before the clustering
  * job grouped them carry stale memberships, so copies of one story show as
- * separate cards. Asks once about the newest rows that clear the render gate and
- * were published within {@link CLUSTER_MEMBERSHIP_MAX_AGE_MS}, and writes what
+ * separate cards. Asks once about the newest rows published within {@link CLUSTER_MEMBERSHIP_MAX_AGE_MS}, and writes what
  * changed. Returns the changed-row count; never throws (a failure waits an hour).
  */
 export async function stepRefreshClusterMemberships(suggestions: ForYouSuggestion[]): Promise<number> {
@@ -794,13 +793,16 @@ export async function stepRefreshClusterMemberships(suggestions: ForYouSuggestio
     const last = Number(await getSetting(CLUSTER_MEMBERSHIP_REFRESH_KEY));
     if (Math.abs(now - last) < CLUSTER_MEMBERSHIP_REFRESH_EVERY_MS) return 0;
     const cutoff = now - CLUSTER_MEMBERSHIP_MAX_AGE_MS;
-    const ids = suggestions
+    const fresh = suggestions
       .map((s) => ({ s, pub: Date.parse(s.firstPubDate) }))
-      .filter(({ s, pub }) => pub >= cutoff && passesRenderGate(s))
+      .filter(({ pub }) => pub >= cutoff);
+    // The gate only decides WHEN to ask. The request carries every fresh row whatever its
+    // score, so the ids equal what the server already sent and say nothing about relevance.
+    if (!fresh.some(({ s }) => passesRenderGate(s))) return 0;
+    const ids = fresh
       .sort((a, b) => b.pub - a.pub)
       .slice(0, MAX_CLUSTER_MEMBERSHIP_IDS)
       .map(({ s }) => s.articleId);
-    if (ids.length === 0) return 0;
     await setSetting(CLUSTER_MEMBERSHIP_REFRESH_KEY, String(now));
     const answer = await ArticleService.getClusterMembershipsForArticles(ids);
     return answer ? await updateClusterMemberships(answer) : 0;

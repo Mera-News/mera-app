@@ -40,7 +40,7 @@ AppScheduler.register({
 
     const deletedCount = await deleteOldSuggestions(Date.now() - SUGGESTION_TTL_MS);
     if (deletedCount > 0) {
-      ctx.log(`pruned ${deletedCount} suggestions older than 48h`);
+      ctx.log(`pruned ${deletedCount} suggestions (unread High and Emergency rows are kept up to 7 days)`);
       await refreshSuggestionsInStoreUnsafe();
     }
 

@@ -295,7 +295,7 @@ describe('the sweep', () => {
     await run();
 
     expect(logged()).toEqual([
-      `[${NAME}] pruned 2 suggestions older than 48h`,
+      `[${NAME}] pruned 2 suggestions (unread High and Emergency rows are kept up to 7 days)`,
       `[${NAME}] pruned 1 story impressions older than 30d`,
       `[${NAME}] pruned 2 fact checks (unattributed >7d, any >90d)`,
       `[${NAME}] released 1 unreferenced retained article snapshots`,
