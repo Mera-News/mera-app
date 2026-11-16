@@ -14,6 +14,7 @@ import {
 import { isMutedPublication, type RankingContext } from '@/lib/feed-ordering/publication-tags';
 import { FEED_WINDOW_MS, isWithinWindow, relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { FactRowGroup } from '@/lib/stores/fact-rows-selector';
+import type { ReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /** A story: its newest article and the rest. */
@@ -48,12 +49,13 @@ export function leftOutStories(
     factId: string,
     nowMs: number,
     ctx: RankingContext | null = null,
+    readSnapshot?: ReadSnapshot,
 ): Story[] {
     const cutoff = nowMs - FEED_WINDOW_MS;
     const pool = suggestions.filter(
         (s) =>
             (s.factIds ?? []).includes(factId) &&
-            isWithinWindow(s, cutoff) &&
+            isWithinWindow(s, cutoff, readSnapshot) &&
             isLeftOut(s) &&
             !isMutedPublication(s.publication_name, ctx),
     );

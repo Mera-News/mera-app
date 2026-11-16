@@ -23,6 +23,8 @@ import {
 } from '@/lib/database/services/topic-decline-service';
 import { getAllTopicIds, suppress } from '@/lib/database/services/topic-service';
 import database from '@/lib/database';
+import { recordOpen } from '@/lib/database/services/story-impression-service';
+import { setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import {
   DAY,
@@ -154,6 +156,73 @@ describe('deleteOldSuggestions(cutoff)', () => {
     expect(await deleteOldSuggestions(T0 - 2 * DAY)).toBe(0);
     expect(await deleteOldSuggestions(0)).toBe(0);
     expect(await idsInDb()).toEqual(['a1']);
+  });
+});
+
+// D7: an unread High or Emergency survives the 48h sweep until 7 days after publish. Read is
+// decided per STORY: opened (article or stable cluster) or viewed on the Feed (card state).
+describe('deleteOldSuggestions keeps unread High for 7 days', () => {
+  const cutoff = T0 - 2 * DAY;
+  const clustered = (id: string, stable: string, pubAgoMs: number) =>
+    article(id, {
+      pubDate: new Date(T0 - pubAgoMs).toISOString(),
+      clusters: [{ clusterId: `c-${id}`, confidence: 1, stableClusterId: stable }] as never,
+    });
+  async function seedAt(agoMs: number, articles: ReturnType<typeof article>[], relevance = 0.8) {
+    jest.setSystemTime(T0 - agoMs);
+    await seed(articles);
+    for (const a of articles) await toComplete(a._id, relevance);
+    jest.setSystemTime(T0);
+  }
+  const viewed = (...ids: string[]) =>
+    setSetting('feed_card_state_v1', JSON.stringify({ states: Object.fromEntries(ids.map((i) => [i, ['v', T0]])) }));
+
+  it('spares an unread High at 3 days; deletes a Medium, an 8-day High', async () => {
+    await seedAt(3 * DAY, [clustered('high3', 'S-high3', 3 * DAY)]);
+    await seedAt(3 * DAY, [clustered('med3', 'S-med3', 3 * DAY)], 0.6);
+    await seedAt(8 * DAY, [clustered('high8', 'S-high8', 8 * DAY)]);
+
+    await deleteOldSuggestions(cutoff);
+
+    expect(await idsInDb()).toEqual(['high3']);
+  });
+
+  it('deletes a High opened by article id or by stable cluster id', async () => {
+    await seedAt(3 * DAY, [clustered('byArticle', 'S-a', 3 * DAY), clustered('byCluster', 'S-b', 3 * DAY)]);
+    await recordOpen({ articleId: 'byArticle', surface: 'feed' });
+    await recordOpen({ articleId: 'other-copy', stableClusterId: 'S-b', surface: 'feed' });
+
+    await deleteOldSuggestions(cutoff);
+
+    expect(await idsInDb()).toEqual([]);
+  });
+
+  it('deletes a High viewed in the Feed card state, but not one that was only skipped past', async () => {
+    await seedAt(3 * DAY, [clustered('seen', 'S-seen', 3 * DAY), clustered('skipped', 'S-skip', 3 * DAY)]);
+    await setSetting('feed_card_state_v1', JSON.stringify({ states: { seen: ['v', T0], skipped: ['s', T0] } }));
+
+    await deleteOldSuggestions(cutoff);
+
+    expect(await idsInDb()).toEqual(['skipped']);
+  });
+
+  it('viewed 3-member story at 50h: no member is kept', async () => {
+    const pub = 50 * HOUR;
+    await seedAt(pub, ['m1', 'm2', 'm3'].map((id) => clustered(id, 'S-story', pub)));
+    await viewed('m1');
+
+    await deleteOldSuggestions(cutoff);
+
+    expect(await idsInDb()).toEqual([]);
+  });
+
+  it('an unread 3-member story at 50h is spared whole', async () => {
+    const pub = 50 * HOUR;
+    await seedAt(pub, ['m1', 'm2', 'm3'].map((id) => clustered(id, 'S-story', pub)));
+
+    await deleteOldSuggestions(cutoff);
+
+    expect(await idsInDb()).toEqual(['m1', 'm2', 'm3']);
   });
 });
 

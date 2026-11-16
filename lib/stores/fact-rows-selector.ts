@@ -63,6 +63,7 @@
 // their section, unaffected by this change.
 
 import {
+  bandOf,
   bucketOf,
   bucketRank,
   isSectionMemberEligible,
@@ -84,34 +85,31 @@ import {
   DISPLAY_GROUPING_OPTIONS,
   groupableOf,
   pickRepresentative,
-  SCORE_PROPAGATION_LOOKBACK_MS,
 } from '@/lib/algorithms/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { type UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import { isMutedPublication } from '@/lib/feed-ordering/publication-tags';
 import { makeRepCompare } from '@/lib/algorithms/representative-compare';
+import { isReadStory, type ReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
 import type { ForYouSuggestion } from './for-you-store';
 
 /**
- * Publication window for everything the user can see — the Feed tab, the
- * Dashboard, and the swipe stack all gate on this one constant.
+ * Publication window for everything the user can see: the Feed tab, the
+ * Dashboard and the swipe stack. 48h. It is its own constant, apart from
+ * `SCORE_PROPAGATION_LOOKBACK_MS` (the donor pool, also 48h), so the two can
+ * move independently. Storage keeps the same 48h
+ * (`SUGGESTION_TTL_MS` in lib/scheduler/tasks/data-cleanup-task.ts), except
+ * for the unread High and Emergency rows of {@link IMPORTANT_KEEP_MS}.
  *
- * 48h, and deliberately not a second hardcoded copy: it IS
- * `SCORE_PROPAGATION_LOOKBACK_MS`, which is also what the storage TTL keeps
- * (`SUGGESTION_TTL_MS` in lib/scheduler/tasks/data-cleanup-task.ts). The stats
- * card's counts are NOT this window: every count there is the last 24 hours
- * (`COUNTS_WINDOW_MS` in lib/hooks/use-feed-counts.ts, owner), a subset of
- * what the feed lists. The direction matters: this window was once 24h while
- * the header counted 48h, so the header advertised a pile of articles the feed
- * then silently refused to render. Counts narrower than the list can never do
- * that.
- *
- * Widening it also simply gives the user more to read — rows in the 24-48h band
- * were already on the device, already scored, and already being kept alive as
- * score-propagation donors; they were just never shown.
+ * The stats card's counts are NOT this window: every count there is the last
+ * 24 hours (`COUNTS_WINDOW_MS`), a subset of what the feed lists. Counts
+ * narrower than the list can never advertise rows the feed refuses to render.
  */
-export const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
+export const FEED_WINDOW_MS = 48 * 3600_000;
+
+/** How long an unread High or Emergency stays visible and survives cleanup. */
+export const IMPORTANT_KEEP_MS = 7 * 24 * 3600_000;
 
 /** The render gate — a scored row must clear this to be shown. Exported so the
  *  swipe-stack selector reuses the exact same threshold.
@@ -381,9 +379,27 @@ export function passesRenderGate(s: ForYouSuggestion): boolean {
   return relevancePassesGate(s);
 }
 
-/** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). */
-export function isWithinWindow(s: ForYouSuggestion, cutoffMs: number): boolean {
-  return parseMs(s.firstPubDate) >= cutoffMs;
+/** The 7-day keep (D7): a complete High or Emergency story nobody has read.
+ *  "Read" comes from the caller's pure snapshot (opened or viewed on the Feed,
+ *  at story level). It decides only the extension; the 7-day age limit is
+ *  applied by {@link isWithinWindow}. */
+export function keepsPastFeedWindow(s: ForYouSuggestion, snap: ReadSnapshot): boolean {
+  if (!isComplete(s)) return false;
+  const band = bandOf(s.relevance);
+  const important =
+    band === 'HIGH' ||
+    band === 'EMERGENCY' ||
+    (s.rawScore ?? 0) > DEFAULT_HARNESS_CONFIG.articlePipeline.emergencyPriorityCutoff;
+  return important && !isReadStory(s, snap);
+}
+
+/** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). With a
+ *  `snap`, an unread High or Emergency also passes until 7 days after publish.
+ *  No snapshot means no extension. */
+export function isWithinWindow(s: ForYouSuggestion, cutoffMs: number, snap?: ReadSnapshot): boolean {
+  const pub = parseMs(s.firstPubDate);
+  if (pub >= cutoffMs) return true;
+  return !!snap && pub >= cutoffMs - (IMPORTANT_KEEP_MS - FEED_WINDOW_MS) && keepsPastFeedWindow(s, snap);
 }
 
 /** A row is VISIBLE once its note exists (status `complete`) — see the module
@@ -395,8 +411,8 @@ export function isWithinWindow(s: ForYouSuggestion, cutoffMs: number): boolean {
  *  can attribute WHICH gate rejected a row without re-implementing (and then
  *  drifting from) the comparisons. Keep the conjunction order in sync with the
  *  diagnostic's attribution order. */
-export function isVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
-  return isComplete(s) && passesRenderGate(s) && isWithinWindow(s, cutoffMs);
+export function isVisible(s: ForYouSuggestion, cutoffMs: number, snap?: ReadSnapshot): boolean {
+  return isComplete(s) && passesRenderGate(s) && isWithinWindow(s, cutoffMs, snap);
 }
 
 /** scoredAt ?? createdAt in epoch ms — the row's "added to feed" time. */
@@ -563,6 +579,8 @@ export function buildFactRows(
   /** When the last processing run finished (null = none yet). Decides an empty
    *  section's `emptyReason`. */
   lastProcessingRunFinishedAt: number | null = null,
+  /** Who has read what, for the 7-day keep. Absent = plain 48h window. */
+  readSnapshot?: ReadSnapshot,
 ): FactRowsResult {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
   const hpMult = config.scoringEngine.HP_MULT;
@@ -595,7 +613,7 @@ export function buildFactRows(
   const headlineReadCounts = new Map<string, number>();
   const headlineCountries = new Map<string, string>(); // sectionId → alpha-2
   for (const s of suggestions) {
-    if (!isWithinWindow(s, cutoffMs)) continue;
+    if (!isWithinWindow(s, cutoffMs, readSnapshot)) continue;
     const projection = ownershipProjection(s);
     const sectionId = headlineSectionIdOf(projection);
     if (!sectionId) continue;
@@ -617,7 +635,7 @@ export function buildFactRows(
   //    publication's rows leave here, not at each surface: its purge waits for
   //    the Undo toast and dies with the app, so rows can outlive the mute.
   const visible = suggestions.filter(
-    (s) => isVisible(s, cutoffMs) && !isMutedPublication(s.publication_name, userCtx),
+    (s) => isVisible(s, cutoffMs, readSnapshot) && !isMutedPublication(s.publication_name, userCtx),
   );
   if (visible.length === 0) {
     return {

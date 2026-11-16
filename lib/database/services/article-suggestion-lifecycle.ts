@@ -7,7 +7,11 @@ import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
 import logger from '../../logger';
-import { parseMatchedTopicRefs, parseTopicIds } from './article-suggestion-mappers';
+import { parseMatchedTopicRefs, parseTopicIds, toForYouSuggestion } from './article-suggestion-mappers';
+import { getOpenedSeenSet } from './story-impression-service';
+import { FEED_WINDOW_MS, IMPORTANT_KEEP_MS, keepsPastFeedWindow } from '../../stores/fact-rows-selector';
+import { FEED_CARD_STATE_SETTING_KEY } from '../../stores/feed-order-store';
+import { buildReadSnapshot, parseCardState } from '../../feed-ordering/read-snapshot';
 
 const articleSuggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
 const articleSuggestionFactsCol = database.get<ArticleSuggestionFactModel>('article_suggestion_facts');
@@ -44,10 +48,47 @@ export async function deleteSuggestionByServerId(
   return (await deleteSuggestionsByServerIds([serverId])) > 0;
 }
 
+/**
+ * The 48h sweep (`cutoffMs` = now - 48h on `created_at`). Unread High and
+ * Emergency stories are spared until 7 days after publish (D7). "Unread" is
+ * decided per STORY from the opened set plus the Feed's persisted card state:
+ * if any member is read, no member is spared; if any old member qualifies,
+ * every old member of that story inside the 7 days stays with it.
+ */
 export async function deleteOldSuggestions(cutoffMs: number): Promise<number> {
-  const suggestions = await articleSuggestionsCol
+  const old = await articleSuggestionsCol
     .query(Q.where('created_at', Q.lt(cutoffMs)))
     .fetch();
+  if (old.length === 0) return 0;
+
+  const keepFrom = cutoffMs + FEED_WINDOW_MS - IMPORTANT_KEEP_MS; // now - 7d
+  const recent = old.filter((r) => r.firstPubDate.getTime() >= keepFrom);
+  let suggestions = old;
+  if (recent.length > 0) {
+    // Whole pool, so a viewed fresh sibling marks the old members read too.
+    const pool = (await articleSuggestionsCol.query().fetch()).map((r) => toForYouSuggestion(r));
+    const snap = buildReadSnapshot(
+      parseCardState(await getSetting(FEED_CARD_STATE_SETTING_KEY)),
+      await getOpenedSeenSet(),
+      pool,
+    );
+    const keysOf = (s: { articleId: string; clusters: { stableClusterId?: string | null }[]; storyKey?: string | null }) => [
+      s.articleId,
+      s.clusters.find((c) => c.stableClusterId)?.stableClusterId,
+      s.storyKey ? `sk:${s.storyKey}` : null,
+    ];
+    const spareKeys = new Set<string>();
+    for (const r of recent) {
+      const fy = toForYouSuggestion(r);
+      if (keepsPastFeedWindow(fy, snap)) for (const k of keysOf(fy)) if (k) spareKeys.add(k);
+    }
+    if (spareKeys.size > 0) {
+      const spared = new Set(
+        recent.filter((r) => keysOf(toForYouSuggestion(r)).some((k) => k && spareKeys.has(k))).map((r) => r.id),
+      );
+      suggestions = old.filter((r) => !spared.has(r.id));
+    }
+  }
   if (suggestions.length === 0) return 0;
 
   const ids = suggestions.map((s) => s.id);

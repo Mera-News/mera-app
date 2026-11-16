@@ -15,6 +15,8 @@ import {
   isWithinWindow,
   passesRenderGate,
   FEED_WINDOW_MS,
+  IMPORTANT_KEEP_MS,
+  keepsPastFeedWindow,
   RENDER_GATE,
   V3_RENDER_GATE,
   gateForRow,
@@ -25,6 +27,8 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import type { UserGeoLanguageContext } from '@/lib/algorithms/geo-language-priority';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/algorithms/story-grouping';
+import { buildReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
 
 const NOW = 1_000_000_000_000; // fixed clock
 const H = 3_600_000;
@@ -1051,5 +1055,67 @@ describe('primaryStatement', () => {
   });
   it('falls back to the whole statement when the first part is empty', () => {
     expect(primaryStatement('; Lives in Berlin')).toBe('; Lives in Berlin');
+  });
+});
+
+// --- D7: 48h window, 7-day keep for unread High / Emergency ------------------
+
+describe('feed window and the 7-day keep', () => {
+  const CUT = NOW - FEED_WINDOW_MS;
+  const age = (days: number) => new Date(NOW - days * 24 * H).toISOString();
+  const none = buildReadSnapshot({}, [], []);
+
+  it('FEED_WINDOW_MS is its own 48h, apart from the score propagation lookback', () => {
+    expect(FEED_WINDOW_MS).toBe(48 * H);
+    expect(SCORE_PROPAGATION_LOOKBACK_MS).toBe(48 * H);
+    expect(IMPORTANT_KEEP_MS).toBe(7 * 24 * H);
+  });
+
+  it('keeps an unread High at 3d, not a Medium at 3d, not a High at 8d', () => {
+    const high3 = sugg({ relevance: 0.8, firstPubDate: age(3) });
+    const med3 = sugg({ relevance: 0.6, firstPubDate: age(3) });
+    const high8 = sugg({ relevance: 0.8, firstPubDate: age(8) });
+    expect(isWithinWindow(high3, CUT, none)).toBe(true);
+    expect(isVisible(high3, CUT, none)).toBe(true);
+    expect(isWithinWindow(med3, CUT, none)).toBe(false);
+    expect(isWithinWindow(high8, CUT, none)).toBe(false);
+  });
+
+  it('keeps an Emergency by rawScore too', () => {
+    expect(isWithinWindow(sugg({ relevance: 1.1, firstPubDate: age(3) }), CUT, none)).toBe(true);
+  });
+
+  it('never extends an unscored row', () => {
+    const u = sugg({ relevance: 0.9, status: ArticleSuggestionStatus.Unscored, firstPubDate: age(3) });
+    expect(keepsPastFeedWindow(u, none)).toBe(false);
+    expect(isWithinWindow(u, CUT, none)).toBe(false);
+  });
+
+  it('without a snapshot nothing is extended', () => {
+    expect(isWithinWindow(sugg({ relevance: 0.8, firstPubDate: age(3) }), CUT)).toBe(false);
+  });
+
+  it('a viewed High is not kept, and neither are its siblings (story level)', () => {
+    const rep = sugg({ _id: 'rep', articleId: 'rep', relevance: 0.8, firstPubDate: age(3), clusters: [{ clusterId: 'c', confidence: 1, stableClusterId: 'S' } as never] });
+    const sib = sugg({ _id: 'sib', articleId: 'sib', relevance: 0.8, firstPubDate: age(3), clusters: [{ clusterId: 'c2', confidence: 1, stableClusterId: 'S' } as never] });
+    const snap = buildReadSnapshot({ rep: { state: 'viewed', at: 1 } }, [], [rep, sib]);
+    expect(isWithinWindow(rep, CUT, snap)).toBe(false);
+    expect(isWithinWindow(sib, CUT, snap)).toBe(false);
+    // a skipped card is still unread
+    const skipped = buildReadSnapshot({ rep: { state: 'skipped', at: 1 } }, [], [rep, sib]);
+    expect(isWithinWindow(sib, CUT, skipped)).toBe(true);
+  });
+
+  it('an opened article hides its row from the keep', () => {
+    const r = sugg({ _id: 'o', articleId: 'o', relevance: 0.8, firstPubDate: age(3) });
+    expect(isWithinWindow(r, CUT, buildReadSnapshot({}, ['o'], [r]))).toBe(false);
+  });
+
+  it('buildFactRows shows a kept High at 3d only with a snapshot', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    const r = sugg({ _id: 'k', relevance: 0.8, firstPubDate: age(3), matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const ids = (rs: ReturnType<typeof buildFactRows>) => rs.rows.flatMap((x) => x.groups.map((g) => g.data._id));
+    expect(ids(buildFactRows([r], snap, new Set(), NOW))).toEqual([]);
+    expect(ids(buildFactRows([r], snap, new Set(), NOW, undefined, null, null, none))).toEqual(['k']);
   });
 });
