@@ -104,25 +104,6 @@
           ],
           "amberSubline": "Harap tetap buka layar ini."
         },
-        "cloudRelevance": {
-          "headlines": [
-            "AI sedang membaca setiap artikel untuk melihat mana yang penting bagi Anda.",
-            "Permintaan Anda dienkripsi sehingga hanya AI di dalam enklave yang tersegel yang bisa membacanya."
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "Menulis catatan singkat untuk setiap cerita yang relevan.",
-            "Anda bisa pergi sejenak. Kami akan memberi tahu Anda saat sudah siap.",
-            "Semuanya tetap terenkripsi antara ponsel Anda dan enklave AI yang tersegel."
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "Ponsel Anda sedang memberi skor pada cerita-cerita ini untuk Anda.",
-            "Ini terjadi sepenuhnya di perangkat Anda. Tidak ada yang keluar darinya."
-          ]
-        },
         "downloading": {
           "headlines": [
             "Artikel hari ini sedang masuk ke ponsel Anda.",
@@ -155,8 +136,8 @@
         "ready": "{{ready}} dari {{total}} putaran analisis selesai"
       },
       "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Mera is reading the news on this phone.",
+      "readingProgress": "Membaca {{done}} dari {{total}} untuk Anda",
+      "onDeviceReading": "Mera sedang membaca berita di ponsel ini.",
       "writingReasons": "Menulis catatan singkat untuk setiap cerita yang relevan."
     },
     "syncToast": {
@@ -278,34 +259,34 @@
       "helpStatus": "Status penyedia AI"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
-      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "Mera picked new stories while you were reading.",
-      "stillReading": "Mera is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "Mera keeps reading in the background. Check back later."
+      "upToDateTitle": "Anda sudah membaca hal-hal yang penting bagi Anda.",
+      "upToDateBody_one": "{{count}} cerita lagi kemungkinan kecil penting bagi Anda.",
+      "upToDateBody_other": "{{count}} cerita lagi kemungkinan kecil penting bagi Anda.",
+      "nothingTitle": "Belum ada yang baru yang tampak penting bagi Anda saat ini.",
+      "nothingBody_one": "Mera menemukan {{count}} cerita yang mungkin masih menarik bagi Anda.",
+      "nothingBody_other": "Mera menemukan {{count}} cerita yang mungkin masih menarik bagi Anda.",
+      "showThem": "Tampilkan",
+      "label": "Kemungkinan kecil penting bagi Anda",
+      "shownAnnounce_one": "Menampilkan {{count}} cerita lagi",
+      "shownAnnounce_other": "Menampilkan {{count}} cerita lagi",
+      "held": "Mera memilih cerita baru selagi Anda membaca.",
+      "stillReading": "Mera masih membaca. Cerita baru akan muncul di sini.",
+      "endTitle": "Itu saja untuk sekarang.",
+      "endBody": "Mera terus membaca di latar belakang. Periksa lagi nanti."
     },
     "firstFeed": {
-      "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
-      "link": "How Mera keeps this private",
-      "dismiss": "Dismiss"
+      "body": "Mera sedang membaca berita hari ini untuk Anda. Apa yang Anda ceritakan kepada Mera tetap di ponsel ini, jadi tidak ada server yang menyimpan feed tentang Anda. Itulah sebabnya Mera mulai membaca saat Anda membuka aplikasi.",
+      "link": "Cara Mera menjaga privasi ini",
+      "dismiss": "Tutup"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "Dari kemarin",
+      "fromDay": "Dari {{day}}",
+      "fromDate": "Dari {{date}}"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell Mera where you live to start your feed."
+    "moreReports_one": "{{count}} laporan lagi",
+    "moreReports_other": "{{count}} laporan lagi",
+    "homeChipHint": "Beri tahu Mera tempat tinggal Anda untuk memulai feed Anda."
   },
   "relevance": {
     "emergency": "Darurat",
@@ -365,12 +346,7 @@
   },
   "onboarding": {
     "stepOf": "Langkah {{current}} dari {{total}}",
-    "connectionIssue": "Masalah Koneksi",
-    "connectionDescription": "Kami kesulitan menjangkau server. Tutup aplikasi dan coba lagi beberapa saat lagi.",
-    "logout": "Keluar",
     "close": "Tutup",
-    "logoutFailedTitle": "Gagal Keluar",
-    "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
     "composerPlaceholder": "Ceritakan tentang hidup Anda",
     "factsCount_one": "{{count}} fakta tentang Anda",
     "factsCount_other": "{{count}} fakta tentang Anda",
@@ -407,11 +383,11 @@
     "placeholderAbout": "Tanyakan apa saja",
     "pathLocation": "Atur lokasi saya",
     "locationAsk": "Di mana Anda tinggal? Bagikan sebanyak yang Anda mau: sebuah kawasan dan kota, atau hanya provinsi atau negara Anda.",
-    "gateHint": "Tell Mera one thing so your feed is yours.",
-    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "Mera is taking a while. Pick where you live instead."
+    "gateHint": "Beri tahu Mera satu hal agar feed Anda benar-benar milik Anda.",
+    "privacyLine": "Apa yang Anda ceritakan kepada Mera tetap di ponsel ini. Mera memakainya untuk membaca berita untuk Anda.",
+    "homeChip": "Saya tinggal di {{country}}",
+    "homeChipThe": "Saya tinggal di {{country}}",
+    "fallbackPick": "Mera butuh waktu lebih lama. Pilih tempat tinggal Anda sebagai gantinya."
   },
   "notifications": {
     "title": "Notifikasi",
@@ -2923,7 +2899,7 @@
       "mathWorld": "Setiap negara yang meliput sebuah berita mendapat 1 poin, ditambah sedikit lagi untuk setiap penerbit tambahan di negara itu, dengan batas 4 poin per negara. Semua poin dari semua negara dijumlahkan, dan total tertinggi tampil paling atas.",
       "mathCountry": "Hitung artikel yang ditulis penerbit di negara ini tentang sebuah berita dalam 24 jam terakhir. Berita dengan artikel terbanyak tampil paling atas."
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "Ingin berita dari tempat tinggal Anda?"
   },
   "library": {
     "saved": {
@@ -3204,14 +3180,8 @@
     }
   },
   "gate": {
-    "getHelp": "Minta bantuan",
     "noEmailBody": "Terjadi masalah saat masuk di ponsel ini. Hubungi dukungan, atau reset ponsel ini lalu masuk lagi.",
     "noEmailTitle": "Ada masalah dengan akun Anda",
-    "offlineBody": "Mera perlu koneksi untuk memeriksa akun Anda sebelum dibuka.",
-    "offlineTitle": "Anda sedang offline",
-    "opensByItself": "Terbuka sendiri saat Anda kembali online",
-    "unreachableBody": "Masalahnya ada di pihak kami, bukan ponsel Anda. Mera terus mencoba dan akan terbuka saat kembali normal.",
-    "unreachableTitle": "Mera tidak dapat dihubungi",
     "contactSupport": "Hubungi dukungan",
     "resetPhone": "Reset ponsel ini dan masuk lagi",
     "resetTitle": "Reset ponsel ini?",

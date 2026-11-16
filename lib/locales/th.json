@@ -104,25 +104,6 @@
           ],
           "amberSubline": "กรุณาเปิดหน้าจอนี้ค้างไว้"
         },
-        "cloudRelevance": {
-          "headlines": [
-            "AI กำลังอ่านบทความแต่ละชิ้นเพื่อดูว่าชิ้นไหนสำคัญกับคุณ",
-            "คำขอของคุณถูกเข้ารหัส เพื่อให้มีเพียง AI ใน enclave ที่ปิดผนึกเท่านั้นที่อ่านได้"
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "กำลังเขียนบันทึกสั้น ๆ สำหรับแต่ละเรื่องที่เกี่ยวข้อง",
-            "คุณออกไปได้เลย เราจะแจ้งให้รู้เมื่อพร้อมแล้ว",
-            "ทุกอย่างยังคงถูกเข้ารหัสระหว่างโทรศัพท์ของคุณกับ enclave ที่ปิดผนึกของ AI"
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "โทรศัพท์ของคุณกำลังจัดเรียงเรื่องราวให้คุณ",
-            "ขั้นตอนนี้เกิดขึ้นบนอุปกรณ์ของคุณทั้งหมด: ไม่มีข้อมูลออกไปข้างนอก"
-          ]
-        },
         "downloading": {
           "headlines": [
             "บทความของวันนี้กำลังมาที่โทรศัพท์ของคุณ",
@@ -155,8 +136,8 @@
         "ready": "เสร็จแล้ว {{ready}} จาก {{total}} ชุดการวิเคราะห์"
       },
       "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "เมร่า is reading the news on this phone.",
+      "readingProgress": "กำลังอ่าน {{done}} จาก {{total}} บทความให้คุณ",
+      "onDeviceReading": "เมร่ากำลังอ่านข่าวบนโทรศัพท์เครื่องนี้.",
       "writingReasons": "กำลังเขียนบันทึกสั้น ๆ สำหรับแต่ละเรื่องที่เกี่ยวข้อง"
     },
     "syncToast": {
@@ -278,34 +259,34 @@
       "helpStatus": "สถานะของผู้ให้บริการ AI"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "เมร่า found {{count}} story that might still interest you.",
-      "nothingBody_other": "เมร่า found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "เมร่า picked new stories while you were reading.",
-      "stillReading": "เมร่า is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "เมร่า keeps reading in the background. Check back later."
+      "upToDateTitle": "คุณอัปเดตเรื่องที่สำคัญกับคุณครบแล้ว.",
+      "upToDateBody_one": "มีอีก {{count}} เรื่องที่มีแนวโน้มน้อยที่จะสำคัญกับคุณ.",
+      "upToDateBody_other": "มีอีก {{count}} เรื่องที่มีแนวโน้มน้อยที่จะสำคัญกับคุณ.",
+      "nothingTitle": "ตอนนี้ยังไม่มีเรื่องใหม่ที่ดูสำคัญกับคุณ.",
+      "nothingBody_one": "เมร่าพบ {{count}} เรื่องที่อาจยังน่าสนใจสำหรับคุณ.",
+      "nothingBody_other": "เมร่าพบ {{count}} เรื่องที่อาจยังน่าสนใจสำหรับคุณ.",
+      "showThem": "แสดงเรื่องเหล่านี้",
+      "label": "มีแนวโน้มน้อยที่จะสำคัญกับคุณ",
+      "shownAnnounce_one": "กำลังแสดงอีก {{count}} เรื่อง",
+      "shownAnnounce_other": "กำลังแสดงอีก {{count}} เรื่อง",
+      "held": "เมร่าเลือกเรื่องใหม่ขึ้นมาระหว่างที่คุณกำลังอ่าน.",
+      "stillReading": "เมร่ากำลังอ่านอยู่. เรื่องใหม่จะปรากฏที่นี่.",
+      "endTitle": "ตอนนี้มีเท่านี้ก่อน.",
+      "endBody": "เมร่ายังอ่านต่อในเบื้องหลัง. ลองกลับมาดูใหม่ภายหลัง."
     },
     "firstFeed": {
-      "body": "เมร่า is reading today's news for you. What you tell เมร่า stays on this phone, so no server keeps a feed about you. That's why เมร่า starts reading when you open the app.",
-      "link": "How เมร่า keeps this private",
-      "dismiss": "Dismiss"
+      "body": "เมร่ากำลังอ่านข่าววันนี้ให้คุณ. ความสนใจของคุณอยู่บนโทรศัพท์เครื่องนี้ จึงไม่มีเซิร์ฟเวอร์ใดเก็บฟีดเกี่ยวกับคุณไว้. นั่นคือเหตุผลที่เมร่าเริ่มอ่านข่าวเมื่อคุณเปิดแอป.",
+      "link": "เมร่าปกป้องความเป็นส่วนตัวของคุณอย่างไร",
+      "dismiss": "ปิด"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "จากเมื่อวาน",
+      "fromDay": "จาก {{day}}",
+      "fromDate": "จาก {{date}}"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell เมร่า where you live to start your feed."
+    "moreReports_one": "มีอีก {{count}} รายงาน",
+    "moreReports_other": "มีอีก {{count}} รายงาน",
+    "homeChipHint": "บอกเมร่าว่าคุณอยู่ที่ไหนเพื่อเริ่มฟีดของคุณ."
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -365,12 +346,7 @@
   },
   "onboarding": {
     "stepOf": "ขั้นตอนที่ {{current}} จาก {{total}}",
-    "connectionIssue": "ปัญหาการเชื่อมต่อ",
-    "connectionDescription": "เราเชื่อมต่อกับเซิร์ฟเวอร์ไม่ได้ ปิดแอปแล้วลองใหม่อีกครั้งในอีกสักครู่",
-    "logout": "ออกจากระบบ",
     "close": "ปิด",
-    "logoutFailedTitle": "ออกจากระบบไม่สำเร็จ",
-    "logoutFailedDescription": "เกิดปัญหาในการออกจากระบบ กรุณาลองอีกครั้ง",
     "composerPlaceholder": "เล่าเรื่องชีวิตของคุณให้ฟังหน่อย",
     "factsCount_one": "ข้อเท็จจริงเกี่ยวกับคุณ {{count}} รายการ",
     "factsCount_other": "ข้อเท็จจริงเกี่ยวกับคุณ {{count}} รายการ",
@@ -407,11 +383,11 @@
     "placeholderAbout": "ถามอะไรก็ได้",
     "pathLocation": "ตั้งค่าตำแหน่งของฉัน",
     "locationAsk": "คุณอยู่ที่ไหน? แชร์มากหรือน้อยก็ได้ เช่น ย่านและเมือง หรือแค่รัฐหรือประเทศ",
-    "gateHint": "Tell เมร่า one thing so your feed is yours.",
-    "privacyLine": "What you tell เมร่า stays on this phone. เมร่า uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "เมร่า is taking a while. Pick where you live instead."
+    "gateHint": "บอกเมร่าสักหนึ่งอย่าง เพื่อให้ฟีดเป็นของคุณ.",
+    "privacyLine": "สิ่งที่คุณบอกเมร่าจะอยู่บนโทรศัพท์เครื่องนี้. เมร่าใช้ข้อมูลนี้เพื่ออ่านข่าวให้คุณ.",
+    "homeChip": "ฉันอาศัยอยู่ใน {{country}}",
+    "homeChipThe": "ฉันอาศัยอยู่ใน {{country}}",
+    "fallbackPick": "เมร่ากำลังใช้เวลาสักพัก. เลือกที่ที่คุณอาศัยอยู่แทนได้เลย."
   },
   "notifications": {
     "title": "การแจ้งเตือน",
@@ -2924,7 +2900,7 @@
       "mathWorld": "ทุกประเทศที่รายงานข่าวจะได้ 1 คะแนน และได้เพิ่มอีกนิดสำหรับสำนักข่าวอื่นในประเทศเดียวกันแต่ละแห่ง โดยได้สูงสุดไม่เกิน 4 คะแนนต่อประเทศ จากนั้นรวมคะแนนของทุกประเทศ เรื่องที่มีคะแนนรวมสูงสุดจะขึ้นก่อน",
       "mathCountry": "นับจำนวนบทความที่สำนักข่าวของประเทศนี้เขียนถึงเรื่องหนึ่งในช่วง 24 ชั่วโมงที่ผ่านมา เรื่องที่มีบทความมากที่สุดจะขึ้นก่อน"
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "อยากอ่านข่าวจากที่ที่คุณอาศัยอยู่ไหม?"
   },
   "library": {
     "saved": {
@@ -3205,14 +3181,8 @@
     }
   },
   "gate": {
-    "getHelp": "ขอความช่วยเหลือ",
     "noEmailBody": "เกิดข้อผิดพลาดขณะลงชื่อเข้าใช้บนโทรศัพท์เครื่องนี้ ติดต่อฝ่ายสนับสนุน หรือรีเซ็ตโทรศัพท์เครื่องนี้แล้วลงชื่อเข้าใช้อีกครั้ง",
     "noEmailTitle": "บัญชีของคุณมีปัญหา",
-    "offlineBody": "เมร่า ต้องการการเชื่อมต่อเพื่อตรวจสอบบัญชีของคุณก่อนเปิด",
-    "offlineTitle": "คุณออฟไลน์อยู่",
-    "opensByItself": "จะเปิดเองเมื่อคุณกลับมาออนไลน์",
-    "unreachableBody": "ปัญหาอยู่ที่ฝั่งเรา ไม่ใช่โทรศัพท์ของคุณ เมร่า จะลองต่อไปและจะเปิดเมื่อกลับมาใช้งานได้",
-    "unreachableTitle": "ติดต่อ เมร่า ไม่ได้",
     "contactSupport": "ติดต่อฝ่ายสนับสนุน",
     "resetPhone": "รีเซ็ตโทรศัพท์เครื่องนี้และลงชื่อเข้าใช้อีกครั้ง",
     "resetTitle": "รีเซ็ตโทรศัพท์เครื่องนี้ใช่ไหม",

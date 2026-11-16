@@ -104,25 +104,6 @@
           ],
           "amberSubline": "Пожалуйста, не закрывайте этот экран."
         },
-        "cloudRelevance": {
-          "headlines": [
-            "ИИ читает каждую статью, чтобы выбрать важное для вас.",
-            "Ваш запрос зашифрован, поэтому прочитать его может только ИИ в защищённом анклаве."
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "Составляем короткое пояснение к каждой актуальной истории.",
-            "Можете отойти. Мы уведомим вас, когда всё будет готово.",
-            "Всё остаётся зашифрованным между вашим телефоном и защищённым анклавом ИИ."
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "Ваш телефон оценивает эти истории для вас.",
-            "Это происходит полностью на вашем устройстве: ничего не выходит за его пределы."
-          ]
-        },
         "downloading": {
           "headlines": [
             "Сегодняшние статьи загружаются на ваш телефон.",
@@ -155,8 +136,8 @@
         "ready": "Готово {{ready}} из {{total}} партий анализа"
       },
       "stageA11y": "Шаг {{index}} из {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Мера is reading the news on this phone.",
+      "readingProgress": "Прочитано {{done}} из {{total}} для вас",
+      "onDeviceReading": "Мера читает новости на этом телефоне.",
       "writingReasons": "Составляем короткое пояснение к каждой актуальной истории."
     },
     "syncToast": {
@@ -330,34 +311,42 @@
       "helpStatus": "Статус провайдера ИИ"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "Мера found {{count}} story that might still interest you.",
-      "nothingBody_other": "Мера found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "Мера picked new stories while you were reading.",
-      "stillReading": "Мера is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "Мера keeps reading in the background. Check back later."
+      "upToDateTitle": "Вы в курсе всего важного для вас.",
+      "upToDateBody_one": "Ещё {{count}} история вряд ли важна для вас.",
+      "upToDateBody_other": "Ещё {{count}} истории вряд ли важны для вас.",
+      "nothingTitle": "Ничего нового, что может быть важно для вас, сейчас нет.",
+      "nothingBody_one": "Мера нашла {{count}} историю, которая может вас ещё заинтересовать.",
+      "nothingBody_other": "Мера нашла {{count}} истории, которые могут вас ещё заинтересовать.",
+      "showThem": "Показать их",
+      "label": "Вряд ли важно для вас",
+      "shownAnnounce_one": "Показываем ещё {{count}} историю",
+      "shownAnnounce_other": "Показываем ещё {{count}} истории",
+      "held": "Мера подобрала новые истории, пока вы читали.",
+      "stillReading": "Мера ещё читает. Новые истории появятся здесь.",
+      "endTitle": "На сегодня всё.",
+      "endBody": "Мера продолжает читать в фоне. Загляните позже.",
+      "upToDateBody_few": "Ещё {{count}} истории вряд ли важны для вас.",
+      "upToDateBody_many": "Ещё {{count}} историй вряд ли важны для вас.",
+      "nothingBody_few": "Мера нашла {{count}} истории, которые могут вас ещё заинтересовать.",
+      "nothingBody_many": "Мера нашла {{count}} историй, которые могут вас ещё заинтересовать.",
+      "shownAnnounce_few": "Показываем ещё {{count}} истории",
+      "shownAnnounce_many": "Показываем ещё {{count}} историй"
     },
     "firstFeed": {
-      "body": "Мера is reading today's news for you. What you tell Мера stays on this phone, so no server keeps a feed about you. That's why Мера starts reading when you open the app.",
-      "link": "How Мера keeps this private",
-      "dismiss": "Dismiss"
+      "body": "Мера читает сегодняшние новости для вас. Ваши интересы остаются на этом телефоне, поэтому ни один сервер не хранит ленту о вас. Вот почему Мера начинает читать, когда вы открываете приложение.",
+      "link": "Как Мера сохраняет приватность",
+      "dismiss": "Закрыть"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "Со вчерашнего дня",
+      "fromDay": "С {{day}}",
+      "fromDate": "С {{date}}"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell Мера where you live to start your feed."
+    "moreReports_one": "Ещё {{count}} отчёт",
+    "moreReports_other": "Ещё {{count}} отчёта",
+    "homeChipHint": "Скажите Мере, где вы живёте, чтобы начать свою ленту.",
+    "moreReports_few": "Ещё {{count}} отчёта",
+    "moreReports_many": "Ещё {{count}} отчётов"
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -417,12 +406,7 @@
   },
   "onboarding": {
     "stepOf": "Шаг {{current}} из {{total}}",
-    "connectionIssue": "Проблема с подключением",
-    "connectionDescription": "Не удаётся подключиться к серверу. Закройте приложение и попробуйте снова чуть позже.",
-    "logout": "Выйти",
     "close": "Закрыть",
-    "logoutFailedTitle": "Ошибка выхода",
-    "logoutFailedDescription": "Возникла проблема при выходе. Пожалуйста, попробуйте ещё раз.",
     "composerPlaceholder": "Расскажите о своей жизни",
     "factsCount_one": "{{count}} факт о вас",
     "factsCount_few": "{{count}} факта о вас",
@@ -461,11 +445,11 @@
     "placeholderAbout": "Спросите что угодно",
     "pathLocation": "Указать моё местоположение",
     "locationAsk": "Где вы живёте? Расскажите столько, сколько хотите: район и город или только регион или страну.",
-    "gateHint": "Tell Мера one thing so your feed is yours.",
-    "privacyLine": "What you tell Мера stays on this phone. Мера uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "Мера is taking a while. Pick where you live instead."
+    "gateHint": "Скажите Мере одну вещь, чтобы лента стала вашей.",
+    "privacyLine": "То, что вы рассказываете Мере, остаётся на этом телефоне. Мера использует это, чтобы читать новости для вас.",
+    "homeChip": "Я живу в {{country}}",
+    "homeChipThe": "Я живу в {{country}}",
+    "fallbackPick": "Мера думает дольше обычного. Укажите, где вы живёте."
   },
   "notifications": {
     "title": "Уведомления",
@@ -3046,7 +3030,7 @@
       "mathWorld": "Каждая страна, где пишут об истории, даёт ей 1 балл, плюс немного за каждое дополнительное издание в этой стране, но не больше 4 баллов с одной страны. Баллы всех стран складываются, и выше всех стоит история с наибольшей суммой.",
       "mathCountry": "Считаем статьи, которые издания этой страны написали об истории за последние 24 часа. Первой идёт история с самым большим числом статей."
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "Хотите новости оттуда, где вы живёте?"
   },
   "library": {
     "saved": {
@@ -3361,14 +3345,8 @@
     }
   },
   "gate": {
-    "getHelp": "Получить помощь",
     "noEmailBody": "При входе на этом телефоне что-то пошло не так. Свяжитесь с поддержкой или сбросьте этот телефон и войдите снова.",
     "noEmailTitle": "Возникла проблема с вашим аккаунтом",
-    "offlineBody": "Чтобы проверить аккаунт, Мере нужно подключение к интернету.",
-    "offlineTitle": "Нет подключения",
-    "opensByItself": "Откроется само, когда появится подключение",
-    "unreachableBody": "Проблема на нашей стороне, а не в вашем телефоне. Мера продолжает попытки и откроется, как только всё заработает.",
-    "unreachableTitle": "Мера недоступна",
     "contactSupport": "Связаться с поддержкой",
     "resetPhone": "Сбросить этот телефон и войти снова",
     "resetTitle": "Сбросить этот телефон?",

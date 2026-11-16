@@ -1,0 +1,967 @@
+{
+  "_comment": "Retention wave P6b: real translations of the P6 strings, spliced with --allow-overwrite over the English placeholders of _retention-p6-fragments.json; firstFeed.body is the copyfix text.",
+  "ar": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "لقد اطلعت على كل ما يهمك.",
+        "upToDateBody_one": "{{count}} قصة أخرى من غير المرجح أن تهمك.",
+        "upToDateBody_other": "{{count}} قصص أخرى من غير المرجح أن تهمك.",
+        "nothingTitle": "لا يبدو أن هناك جديدًا يهمك الآن.",
+        "nothingBody_one": "وجدت ميرا {{count}} قصة قد تثير اهتمامك.",
+        "nothingBody_other": "وجدت ميرا {{count}} قصصًا قد تثير اهتمامك.",
+        "showThem": "عرضها",
+        "label": "من غير المرجح أن تهمك",
+        "shownAnnounce_one": "نعرض {{count}} قصة أخرى",
+        "shownAnnounce_other": "نعرض {{count}} قصص أخرى",
+        "held": "اختارت ميرا قصصًا جديدة أثناء قراءتك.",
+        "stillReading": "ما زالت ميرا تقرأ. ستظهر القصص الجديدة هنا.",
+        "endTitle": "هذا كل شيء في الوقت الحالي.",
+        "endBody": "تواصل ميرا القراءة في الخلفية. عُد لاحقًا."
+      },
+      "firstFeed": {
+        "body": "تقرأ ميرا أخبار اليوم من أجلك. تبقى اهتماماتك على هاتفك، فلا يحتفظ أي خادم بخلاصة عنك. لهذا تبدأ ميرا القراءة حين تفتح التطبيق.",
+        "link": "كيف تحافظ ميرا على خصوصية هذا",
+        "dismiss": "تجاهل"
+      },
+      "age": {
+        "yesterday": "من أمس",
+        "fromDay": "من {{day}}",
+        "fromDate": "من {{date}}"
+      },
+      "moreReports_one": "{{count}} تقرير آخر",
+      "moreReports_other": "{{count}} تقريرًا آخر",
+      "homeChipHint": "أخبر ميرا أين تعيش لتبدأ خلاصتك.",
+      "processing": {
+        "readingProgress": "تقرأ ميرا {{done}} من {{total}} لأجلك",
+        "onDeviceReading": "تقرأ ميرا الأخبار على هذا الهاتف."
+      }
+    },
+    "onboarding": {
+      "gateHint": "أخبر ميرا بشيء واحد كي تصبح خلاصتك خاصة بك.",
+      "privacyLine": "ما تخبر به ميرا يبقى على هذا الهاتف. تستعمله ميرا لقراءة الأخبار لأجلك.",
+      "homeChip": "أعيش في {{country}}",
+      "homeChipThe": "أعيش في {{country}}",
+      "fallbackPick": "ميرا تستغرق بعض الوقت. اختر مكان سكنك بدلًا من ذلك."
+    },
+    "world": {
+      "homeRow": "هل تريد أخبارًا من مكان سكنك؟"
+    }
+  },
+  "de": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Du bist auf dem neuesten Stand mit allem, was dich betrifft.",
+        "upToDateBody_one": "{{count}} weitere Geschichte ist für dich wahrscheinlich weniger wichtig.",
+        "upToDateBody_other": "{{count}} weitere Geschichten sind für dich wahrscheinlich weniger wichtig.",
+        "nothingTitle": "Im Moment wirkt nichts Neues wichtig für dich.",
+        "nothingBody_one": "Mera hat {{count}} Geschichte gefunden, die dich trotzdem interessieren könnte.",
+        "nothingBody_other": "Mera hat {{count}} Geschichten gefunden, die dich trotzdem interessieren könnten.",
+        "showThem": "Anzeigen",
+        "label": "Für dich wahrscheinlich weniger wichtig",
+        "shownAnnounce_one": "{{count}} weitere Geschichte wird angezeigt",
+        "shownAnnounce_other": "{{count}} weitere Geschichten werden angezeigt",
+        "held": "Mera hat neue Geschichten ausgewählt, während du gelesen hast.",
+        "stillReading": "Mera liest noch. Neue Geschichten erscheinen hier.",
+        "endTitle": "Das war's fürs Erste.",
+        "endBody": "Mera liest im Hintergrund weiter. Schau später noch einmal vorbei."
+      },
+      "firstFeed": {
+        "body": "Mera liest heute die Nachrichten für dich. Deine Interessen bleiben auf deinem Telefon, daher speichert kein Server einen Feed über dich. Deshalb beginnt Mera mit dem Lesen, sobald du die App öffnest.",
+        "link": "So schützt Mera deine Privatsphäre",
+        "dismiss": "Schließen"
+      },
+      "age": {
+        "yesterday": "Von gestern",
+        "fromDay": "Vom {{day}}",
+        "fromDate": "Vom {{date}}"
+      },
+      "moreReports_one": "{{count}} weiterer Bericht",
+      "moreReports_other": "{{count}} weitere Berichte",
+      "homeChipHint": "Sag Mera, wo du wohnst, damit dein Feed startet.",
+      "processing": {
+        "readingProgress": "Mera liest {{done}} von {{total}} für dich",
+        "onDeviceReading": "Mera liest die Nachrichten auf diesem Telefon."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Sag Mera eine Sache, damit dein Feed ganz deiner ist.",
+      "privacyLine": "Was du Mera sagst, bleibt auf diesem Telefon. Mera nutzt es, um die Nachrichten für dich zu lesen.",
+      "homeChip": "Ich wohne in {{country}}",
+      "homeChipThe": "Ich wohne in {{country}}",
+      "fallbackPick": "Mera braucht etwas länger. Wähle stattdessen, wo du wohnst."
+    },
+    "world": {
+      "homeRow": "Möchtest du Nachrichten aus deiner Gegend?"
+    }
+  },
+  "en": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "You're up to date on what matters to you.",
+        "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
+        "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
+        "nothingTitle": "Nothing new looks important for you right now.",
+        "nothingBody_one": "Mera found {{count}} story that might still interest you.",
+        "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
+        "showThem": "Show them",
+        "label": "Less likely to matter to you",
+        "shownAnnounce_one": "Showing {{count}} more story",
+        "shownAnnounce_other": "Showing {{count}} more stories",
+        "held": "Mera picked new stories while you were reading.",
+        "stillReading": "Mera is still reading. New stories will show up here.",
+        "endTitle": "That's everything for now.",
+        "endBody": "Mera keeps reading in the background. Check back later."
+      },
+      "firstFeed": {
+        "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
+        "link": "How Mera keeps this private",
+        "dismiss": "Dismiss"
+      },
+      "age": {
+        "yesterday": "From yesterday",
+        "fromDay": "From {{day}}",
+        "fromDate": "From {{date}}"
+      },
+      "moreReports_one": "{{count}} more report",
+      "moreReports_other": "{{count}} more reports",
+      "homeChipHint": "Tell Mera where you live to start your feed.",
+      "processing": {
+        "readingProgress": "Reading {{done}} of {{total}} for you",
+        "onDeviceReading": "Mera is reading the news on this phone."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Tell Mera one thing so your feed is yours.",
+      "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
+      "homeChip": "I live in {{country}}",
+      "homeChipThe": "I live in the {{country}}",
+      "fallbackPick": "Mera is taking a while. Pick where you live instead."
+    },
+    "world": {
+      "homeRow": "Want news from where you live?"
+    }
+  },
+  "es": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Estás al día con lo que te importa.",
+        "upToDateBody_one": "{{count}} historia más tiene menos probabilidades de importarte.",
+        "upToDateBody_other": "{{count}} historias más tienen menos probabilidades de importarte.",
+        "nothingTitle": "Nada nuevo parece importante para ti en este momento.",
+        "nothingBody_one": "Mera encontró {{count}} historia que podría interesarte.",
+        "nothingBody_other": "Mera encontró {{count}} historias que podrían interesarte.",
+        "showThem": "Mostrarlas",
+        "label": "Menos probable que te importe",
+        "shownAnnounce_one": "Mostrando {{count}} historia más",
+        "shownAnnounce_other": "Mostrando {{count}} historias más",
+        "held": "Mera eligió historias nuevas mientras leías.",
+        "stillReading": "Mera sigue leyendo. Las historias nuevas aparecerán aquí.",
+        "endTitle": "Eso es todo por ahora.",
+        "endBody": "Mera sigue leyendo en segundo plano. Vuelve a consultar más tarde."
+      },
+      "firstFeed": {
+        "body": "Mera lee las noticias de hoy por ti. Tus intereses se quedan en tu teléfono, así que ningún servidor guarda un feed sobre ti. Por eso Mera empieza a leer cuando abres la app.",
+        "link": "Cómo Mera mantiene esto privado",
+        "dismiss": "Cerrar"
+      },
+      "age": {
+        "yesterday": "De ayer",
+        "fromDay": "De {{day}}",
+        "fromDate": "De {{date}}"
+      },
+      "moreReports_one": "{{count}} informe más",
+      "moreReports_other": "{{count}} informes más",
+      "homeChipHint": "Dile a Mera dónde vives para empezar tu feed.",
+      "processing": {
+        "readingProgress": "Leyendo {{done}} de {{total}} para ti",
+        "onDeviceReading": "Mera está leyendo las noticias en este teléfono."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Cuéntale a Mera una cosa para que tu feed sea tuyo.",
+      "privacyLine": "Lo que le cuentas a Mera se queda en este teléfono. Mera lo usa para leer las noticias por ti.",
+      "homeChip": "Vivo en {{country}}",
+      "homeChipThe": "Vivo en {{country}}",
+      "fallbackPick": "Mera está tardando un poco. Elige tú dónde vives."
+    },
+    "world": {
+      "homeRow": "¿Quieres noticias de donde vives?"
+    }
+  },
+  "fr": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Vous êtes à jour sur ce qui vous concerne.",
+        "upToDateBody_one": "{{count}} article de plus a moins de chances de vous concerner.",
+        "upToDateBody_other": "{{count}} articles de plus ont moins de chances de vous concerner.",
+        "nothingTitle": "Rien de nouveau ne semble important pour vous en ce moment.",
+        "nothingBody_one": "Mera a trouvé {{count}} article qui pourrait encore vous intéresser.",
+        "nothingBody_other": "Mera a trouvé {{count}} articles qui pourraient encore vous intéresser.",
+        "showThem": "Les afficher",
+        "label": "Moins susceptibles de vous concerner",
+        "shownAnnounce_one": "Affichage de {{count}} article de plus",
+        "shownAnnounce_other": "Affichage de {{count}} articles de plus",
+        "held": "Mera a sélectionné de nouveaux articles pendant que vous lisiez.",
+        "stillReading": "Mera est toujours en train de lire. Les nouveaux articles apparaîtront ici.",
+        "endTitle": "C'est tout pour le moment.",
+        "endBody": "Mera continue de lire en arrière-plan. Revenez plus tard."
+      },
+      "firstFeed": {
+        "body": "Mera lit les actualités du jour pour vous. Vos centres d'intérêt restent sur votre téléphone, donc aucun serveur ne conserve de fil vous concernant. C'est pourquoi Mera commence à lire dès que vous ouvrez l'application.",
+        "link": "Comment Mera garde cela privé",
+        "dismiss": "Ignorer"
+      },
+      "age": {
+        "yesterday": "D'hier",
+        "fromDay": "Depuis {{day}}",
+        "fromDate": "Depuis {{date}}"
+      },
+      "moreReports_one": "{{count}} autre reportage",
+      "moreReports_other": "{{count}} autres reportages",
+      "homeChipHint": "Dites à Mera où vous habitez pour démarrer votre Fil d'actu.",
+      "processing": {
+        "readingProgress": "Lecture de {{done}} sur {{total}} pour vous",
+        "onDeviceReading": "Mera lit les actualités sur ce téléphone."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Dites une chose à Mera pour que votre Fil d'actu soit le vôtre.",
+      "privacyLine": "Ce que vous dites à Mera reste sur ce téléphone. Mera s'en sert pour lire les actualités à votre place.",
+      "homeChip": "Je vis en {{country}}",
+      "homeChipThe": "Je vis dans {{country}}",
+      "fallbackPick": "Mera prend son temps. Choisissez plutôt où vous habitez."
+    },
+    "world": {
+      "homeRow": "Vous voulez des actualités de l'endroit où vous vivez ?"
+    }
+  },
+  "hi": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "आप उन चीज़ों पर अपडेट हैं जो आपके लिए मायने रखती हैं।",
+        "upToDateBody_one": "आपके लिए शायद कम काम की {{count}} और स्टोरी है।",
+        "upToDateBody_other": "आपके लिए शायद कम काम की {{count}} और स्टोरीज़ हैं।",
+        "nothingTitle": "अभी आपके लिए कुछ नया खास नहीं लग रहा।",
+        "nothingBody_one": "मेरा को {{count}} स्टोरी मिली है जो अब भी आपकी रुचि की हो सकती है।",
+        "nothingBody_other": "मेरा को {{count}} स्टोरीज़ मिली हैं जो अब भी आपकी रुचि की हो सकती हैं।",
+        "showThem": "इन्हें दिखाएँ",
+        "label": "आपके लिए कम काम की",
+        "shownAnnounce_one": "{{count}} और स्टोरी दिखाई जा रही है",
+        "shownAnnounce_other": "{{count}} और स्टोरीज़ दिखाई जा रही हैं",
+        "held": "आपके पढ़ते समय मेरा ने नई स्टोरीज़ चुनीं।",
+        "stillReading": "मेरा अब भी पढ़ रहा है। नई स्टोरीज़ यहाँ दिखेंगी।",
+        "endTitle": "अभी के लिए बस इतना ही है।",
+        "endBody": "मेरा बैकग्राउंड में पढ़ता रहता है। बाद में फिर देखें।"
+      },
+      "firstFeed": {
+        "body": "मेरा आज की खबरें आपके लिए पढ़ रहा है। आपकी रुचियाँ आपके फ़ोन पर ही रहती हैं, इसलिए कोई सर्वर आपके बारे में कोई फ़ीड नहीं रखता। इसीलिए मेरा तब पढ़ना शुरू करता है जब आप ऐप खोलते हैं।",
+        "link": "मेरा इसे निजी कैसे रखता है",
+        "dismiss": "बंद करें"
+      },
+      "age": {
+        "yesterday": "कल की खबर",
+        "fromDay": "{{day}} की खबर",
+        "fromDate": "{{date}} की खबर"
+      },
+      "moreReports_one": "{{count}} और रिपोर्ट",
+      "moreReports_other": "{{count}} और रिपोर्ट",
+      "homeChipHint": "फ़ीड शुरू करने के लिए मेरा को बताएं कि आप कहाँ रहते हैं।",
+      "processing": {
+        "readingProgress": "आपके लिए {{total}} में से {{done}} पढ़े जा रहे हैं",
+        "onDeviceReading": "मेरा इस फ़ोन पर खबरें पढ़ रहा है।"
+      }
+    },
+    "onboarding": {
+      "gateHint": "आपकी फ़ीड आपकी अपनी बने, इसके लिए मेरा को एक बात बताएं।",
+      "privacyLine": "आप मेरा को जो बताते हैं वह इसी फ़ोन पर रहता है। मेरा इसका इस्तेमाल आपके लिए खबरें पढ़ने में करता है।",
+      "homeChip": "मैं {{country}} में रहता हूँ",
+      "homeChipThe": "मैं {{country}} में रहता हूँ",
+      "fallbackPick": "मेरा को कुछ समय लग रहा है। इसकी जगह बताएं कि आप कहाँ रहते हैं।"
+    },
+    "world": {
+      "homeRow": "आप जहाँ रहते हैं, वहाँ की खबरें चाहिए?"
+    }
+  },
+  "id": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Anda sudah membaca hal-hal yang penting bagi Anda.",
+        "upToDateBody_one": "{{count}} cerita lagi kemungkinan kecil penting bagi Anda.",
+        "upToDateBody_other": "{{count}} cerita lagi kemungkinan kecil penting bagi Anda.",
+        "nothingTitle": "Belum ada yang baru yang tampak penting bagi Anda saat ini.",
+        "nothingBody_one": "Mera menemukan {{count}} cerita yang mungkin masih menarik bagi Anda.",
+        "nothingBody_other": "Mera menemukan {{count}} cerita yang mungkin masih menarik bagi Anda.",
+        "showThem": "Tampilkan",
+        "label": "Kemungkinan kecil penting bagi Anda",
+        "shownAnnounce_one": "Menampilkan {{count}} cerita lagi",
+        "shownAnnounce_other": "Menampilkan {{count}} cerita lagi",
+        "held": "Mera memilih cerita baru selagi Anda membaca.",
+        "stillReading": "Mera masih membaca. Cerita baru akan muncul di sini.",
+        "endTitle": "Itu saja untuk sekarang.",
+        "endBody": "Mera terus membaca di latar belakang. Periksa lagi nanti."
+      },
+      "firstFeed": {
+        "body": "Mera sedang membaca berita hari ini untuk Anda. Apa yang Anda ceritakan kepada Mera tetap di ponsel ini, jadi tidak ada server yang menyimpan feed tentang Anda. Itulah sebabnya Mera mulai membaca saat Anda membuka aplikasi.",
+        "link": "Cara Mera menjaga privasi ini",
+        "dismiss": "Tutup"
+      },
+      "age": {
+        "yesterday": "Dari kemarin",
+        "fromDay": "Dari {{day}}",
+        "fromDate": "Dari {{date}}"
+      },
+      "moreReports_one": "{{count}} laporan lagi",
+      "moreReports_other": "{{count}} laporan lagi",
+      "homeChipHint": "Beri tahu Mera tempat tinggal Anda untuk memulai feed Anda.",
+      "processing": {
+        "readingProgress": "Membaca {{done}} dari {{total}} untuk Anda",
+        "onDeviceReading": "Mera sedang membaca berita di ponsel ini."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Beri tahu Mera satu hal agar feed Anda benar-benar milik Anda.",
+      "privacyLine": "Apa yang Anda ceritakan kepada Mera tetap di ponsel ini. Mera memakainya untuk membaca berita untuk Anda.",
+      "homeChip": "Saya tinggal di {{country}}",
+      "homeChipThe": "Saya tinggal di {{country}}",
+      "fallbackPick": "Mera butuh waktu lebih lama. Pilih tempat tinggal Anda sebagai gantinya."
+    },
+    "world": {
+      "homeRow": "Ingin berita dari tempat tinggal Anda?"
+    }
+  },
+  "it": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Sei aggiornato su ciò che conta per te.",
+        "upToDateBody_one": "{{count}} altra storia ha meno probabilità di contare per te.",
+        "upToDateBody_other": "{{count}} altre storie hanno meno probabilità di contare per te.",
+        "nothingTitle": "Al momento non c'è niente di nuovo che sembri importante per te.",
+        "nothingBody_one": "Mera ha trovato {{count}} storia che potrebbe ancora interessarti.",
+        "nothingBody_other": "Mera ha trovato {{count}} storie che potrebbero ancora interessarti.",
+        "showThem": "Mostrale",
+        "label": "Con meno probabilità di contare per te",
+        "shownAnnounce_one": "Mostro {{count}} altra storia",
+        "shownAnnounce_other": "Mostro {{count}} altre storie",
+        "held": "Mera ha scelto nuove storie mentre leggevi.",
+        "stillReading": "Mera sta ancora leggendo. Le nuove storie compariranno qui.",
+        "endTitle": "Per ora è tutto.",
+        "endBody": "Mera continua a leggere in secondo piano. Ricontrolla più tardi."
+      },
+      "firstFeed": {
+        "body": "Mera legge le notizie di oggi per te. I tuoi interessi restano sul telefono, quindi nessun server conserva un feed su di te. Per questo Mera inizia a leggere quando apri l'app.",
+        "link": "Come Mera mantiene tutto privato",
+        "dismiss": "Chiudi"
+      },
+      "age": {
+        "yesterday": "Di ieri",
+        "fromDay": "Di {{day}}",
+        "fromDate": "Del {{date}}"
+      },
+      "moreReports_one": "{{count}} altro servizio",
+      "moreReports_other": "{{count}} altri servizi",
+      "homeChipHint": "Dì a Mera dove vivi per iniziare il tuo Feed.",
+      "processing": {
+        "readingProgress": "Lettura di {{done}} su {{total}} per te",
+        "onDeviceReading": "Mera sta leggendo le notizie su questo telefono."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Dì a Mera una cosa, così il tuo Feed è davvero tuo.",
+      "privacyLine": "Quello che dici a Mera resta su questo telefono. Mera lo usa per leggere le notizie per te.",
+      "homeChip": "Vivo in {{country}}",
+      "homeChipThe": "Vivo in {{country}}",
+      "fallbackPick": "Mera sta impiegando più tempo del previsto. Scegli invece dove vivi."
+    },
+    "world": {
+      "homeRow": "Vuoi notizie da dove vivi?"
+    }
+  },
+  "ja": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "あなたにとって大切なニュースは、すべて確認済みです。",
+        "upToDateBody_one": "あなたにとって重要である可能性が低いストーリーが、あと{{count}}件あります。",
+        "upToDateBody_other": "あなたにとって重要である可能性が低いストーリーが、あと{{count}}件あります。",
+        "nothingTitle": "今のところ、あなたにとって重要そうな新着はありません。",
+        "nothingBody_one": "メラは、あなたの興味を引くかもしれないストーリーを{{count}}件見つけました。",
+        "nothingBody_other": "メラは、あなたの興味を引くかもしれないストーリーを{{count}}件見つけました。",
+        "showThem": "表示する",
+        "label": "あなたにとって重要である可能性は低い",
+        "shownAnnounce_one": "あと{{count}}件のストーリーを表示中",
+        "shownAnnounce_other": "あと{{count}}件のストーリーを表示中",
+        "held": "あなたが読んでいる間に、メラが新しいストーリーを選びました。",
+        "stillReading": "メラはまだ読んでいます。新しいストーリーはここに表示されます。",
+        "endTitle": "今のところは以上です。",
+        "endBody": "メラはバックグラウンドで読み続けています。後でまたご確認ください。"
+      },
+      "firstFeed": {
+        "body": "メラは今日のニュースをあなたのために読んでいます。あなたの関心事はこの端末に残るので、あなたについてのフィードを保存するサーバーはありません。だからメラは、アプリを開いたときに読み始めます。",
+        "link": "メラがこれをプライベートに保つ仕組み",
+        "dismiss": "閉じる"
+      },
+      "age": {
+        "yesterday": "昨日公開",
+        "fromDay": "{{day}}公開",
+        "fromDate": "{{date}}公開"
+      },
+      "moreReports_one": "ほかに{{count}}件の記事",
+      "moreReports_other": "ほかに{{count}}件の記事",
+      "homeChipHint": "フィードを始めるために、メラにお住まいの地域を教えてください。",
+      "processing": {
+        "readingProgress": "{{total}}件中{{done}}件をあなたのために読んでいます",
+        "onDeviceReading": "メラはこの電話でニュースを読んでいます。"
+      }
+    },
+    "onboarding": {
+      "gateHint": "フィードをあなたのものにするために、メラに一つ教えてください。",
+      "privacyLine": "メラに伝えた内容はこの電話に残ります。メラはそれを使って、あなたのためにニュースを読みます。",
+      "homeChip": "{{country}}に住んでいます",
+      "homeChipThe": "{{country}}に住んでいます",
+      "fallbackPick": "メラに少し時間がかかっています。代わりに、お住まいの地域を選んでください。"
+    },
+    "world": {
+      "homeRow": "お住まいの地域のニュースを見ますか？"
+    }
+  },
+  "ko": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "회원님에게 중요한 소식은 모두 확인하셨습니다.",
+        "upToDateBody_one": "회원님에게 중요할 가능성이 낮은 기사가 {{count}}개 더 있습니다.",
+        "upToDateBody_other": "회원님에게 중요할 가능성이 낮은 기사가 {{count}}개 더 있습니다.",
+        "nothingTitle": "지금은 회원님에게 중요해 보이는 새 기사가 없습니다.",
+        "nothingBody_one": "메라가 그래도 관심을 끌 만한 기사를 {{count}}개 찾았습니다.",
+        "nothingBody_other": "메라가 그래도 관심을 끌 만한 기사를 {{count}}개 찾았습니다.",
+        "showThem": "모두 보기",
+        "label": "회원님에게 중요할 가능성이 낮음",
+        "shownAnnounce_one": "기사 {{count}}개 더 표시 중",
+        "shownAnnounce_other": "기사 {{count}}개 더 표시 중",
+        "held": "회원님이 읽는 동안 메라가 새 기사를 골랐습니다.",
+        "stillReading": "메라가 아직 읽고 있습니다. 새 기사는 여기에 나타납니다.",
+        "endTitle": "지금은 여기까지입니다.",
+        "endBody": "메라가 백그라운드에서 계속 읽고 있습니다. 나중에 다시 확인해 주세요."
+      },
+      "firstFeed": {
+        "body": "메라가 회원님을 위해 오늘의 뉴스를 읽고 있습니다. 회원님의 관심사는 휴대폰에만 남아 있으므로, 회원님에 대한 피드를 보관하는 서버는 없습니다. 그래서 메라는 앱을 열 때 읽기 시작합니다.",
+        "link": "메라가 이를 비공개로 지키는 방법",
+        "dismiss": "닫기"
+      },
+      "age": {
+        "yesterday": "어제",
+        "fromDay": "{{day}} 기사",
+        "fromDate": "{{date}} 기사"
+      },
+      "moreReports_one": "보도 {{count}}건 더",
+      "moreReports_other": "보도 {{count}}건 더",
+      "homeChipHint": "피드를 시작하려면 메라에게 사는 곳을 알려 주세요.",
+      "processing": {
+        "readingProgress": "회원님을 위해 {{total}}개 중 {{done}}개를 읽는 중",
+        "onDeviceReading": "메라가 이 휴대폰에서 뉴스를 읽고 있습니다."
+      }
+    },
+    "onboarding": {
+      "gateHint": "피드를 회원님의 것으로 만들도록 메라에게 한 가지만 알려 주세요.",
+      "privacyLine": "메라에게 알려 주신 내용은 이 휴대폰에만 남습니다. 메라는 이를 활용해 회원님을 위해 뉴스를 읽습니다.",
+      "homeChip": "{{country}}에 살아요",
+      "homeChipThe": "{{country}} 지역에 살아요",
+      "fallbackPick": "메라가 시간이 조금 걸리고 있습니다. 대신 사는 곳을 선택해 주세요."
+    },
+    "world": {
+      "homeRow": "사는 곳의 뉴스를 보고 싶으세요?"
+    }
+  },
+  "nl": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Je bent helemaal bij met wat voor jou relevant is.",
+        "upToDateBody_one": "Nog {{count}} verhaal is minder waarschijnlijk belangrijk voor jou.",
+        "upToDateBody_other": "Nog {{count}} verhalen zijn minder waarschijnlijk belangrijk voor jou.",
+        "nothingTitle": "Op dit moment lijkt er niets nieuws belangrijk voor jou.",
+        "nothingBody_one": "Mera vond {{count}} verhaal dat je misschien nog interesseert.",
+        "nothingBody_other": "Mera vond {{count}} verhalen die je misschien nog interesseren.",
+        "showThem": "Toon ze",
+        "label": "Minder waarschijnlijk belangrijk voor jou",
+        "shownAnnounce_one": "{{count}} extra verhaal wordt getoond",
+        "shownAnnounce_other": "{{count}} extra verhalen worden getoond",
+        "held": "Mera koos nieuwe verhalen terwijl je aan het lezen was.",
+        "stillReading": "Mera leest nog steeds. Nieuwe verhalen verschijnen hier.",
+        "endTitle": "Dat is alles voor nu.",
+        "endBody": "Mera blijft op de achtergrond lezen. Kom later nog eens kijken."
+      },
+      "firstFeed": {
+        "body": "Mera leest het nieuws van vandaag voor je. Je interesses blijven op je telefoon, dus geen server bewaart een feed over jou. Daarom begint Mera met lezen zodra je de app opent.",
+        "link": "Zo houdt Mera dit privé",
+        "dismiss": "Sluiten"
+      },
+      "age": {
+        "yesterday": "Van gisteren",
+        "fromDay": "Van {{day}}",
+        "fromDate": "Van {{date}}"
+      },
+      "moreReports_one": "{{count}} extra bericht",
+      "moreReports_other": "{{count}} extra berichten",
+      "homeChipHint": "Vertel Mera waar je woont om je feed te starten.",
+      "processing": {
+        "readingProgress": "Bezig met lezen: {{done}} van {{total}} voor jou",
+        "onDeviceReading": "Mera leest het nieuws op deze telefoon."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Vertel Mera één ding, zodat je feed van jou is.",
+      "privacyLine": "Wat je aan Mera vertelt, blijft op deze telefoon. Mera gebruikt het om het nieuws voor je te lezen.",
+      "homeChip": "Ik woon in {{country}}",
+      "homeChipThe": "Ik woon in de {{country}}",
+      "fallbackPick": "Mera doet er even over. Kies in plaats daarvan waar je woont."
+    },
+    "world": {
+      "homeRow": "Wil je nieuws uit waar je woont?"
+    }
+  },
+  "pl": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Jesteś na bieżąco z tym, co dla Ciebie ważne.",
+        "upToDateBody_one": "Jeszcze {{count}} historia raczej nie będzie dla Ciebie ważna.",
+        "upToDateBody_few": "Jeszcze {{count}} historie raczej nie będą dla Ciebie ważne.",
+        "upToDateBody_many": "Jeszcze {{count}} historii raczej nie będzie dla Ciebie ważnych.",
+        "upToDateBody_other": "Jeszcze {{count}} historii raczej nie będzie dla Ciebie ważnych.",
+        "nothingTitle": "Nic nowego nie wygląda teraz na ważne dla Ciebie.",
+        "nothingBody_one": "Mera znalazła {{count}} historię, która może Cię nadal zainteresować.",
+        "nothingBody_few": "Mera znalazła {{count}} historie, które mogą Cię nadal zainteresować.",
+        "nothingBody_many": "Mera znalazła {{count}} historii, które mogą Cię nadal zainteresować.",
+        "nothingBody_other": "Mera znalazła {{count}} historii, które mogą Cię nadal zainteresować.",
+        "showThem": "Pokaż je",
+        "label": "Mniej prawdopodobne, że będzie dla Ciebie ważne",
+        "shownAnnounce_one": "Pokazuję jeszcze {{count}} historię",
+        "shownAnnounce_few": "Pokazuję jeszcze {{count}} historie",
+        "shownAnnounce_many": "Pokazuję jeszcze {{count}} historii",
+        "shownAnnounce_other": "Pokazuję jeszcze {{count}} historii",
+        "held": "Mera wybrała nowe historie podczas czytania.",
+        "stillReading": "Mera wciąż czyta. Nowe historie pojawią się tutaj.",
+        "endTitle": "To wszystko na teraz.",
+        "endBody": "Mera czyta dalej w tle. Wróć później."
+      },
+      "firstFeed": {
+        "body": "Mera czyta dla Ciebie dzisiejsze wiadomości. Twoje zainteresowania zostają w telefonie, więc żaden serwer nie przechowuje Twojego Strumienia. Dlatego Mera zaczyna czytać, gdy otwierasz aplikację.",
+        "link": "Jak Mera zachowuje prywatność",
+        "dismiss": "Zamknij"
+      },
+      "age": {
+        "yesterday": "Z wczoraj",
+        "fromDay": "Z {{day}}",
+        "fromDate": "Z {{date}}"
+      },
+      "moreReports_one": "{{count}} kolejny raport",
+      "moreReports_few": "{{count}} kolejne raporty",
+      "moreReports_many": "{{count}} kolejnych raportów",
+      "moreReports_other": "{{count}} kolejnych raportów",
+      "homeChipHint": "Powiedz Merze, gdzie mieszkasz, aby zacząć swój Strumień.",
+      "processing": {
+        "readingProgress": "Mera czyta {{done}} z {{total}} dla Ciebie",
+        "onDeviceReading": "Mera czyta wiadomości na tym telefonie."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Powiedz Merze jedną rzecz, żeby Twój Strumień był tylko Twój.",
+      "privacyLine": "To, co powiesz Merze, zostaje na tym telefonie. Mera używa tego, by czytać dla Ciebie wiadomości.",
+      "homeChip": "Mieszkam w {{country}}",
+      "homeChipThe": "Mieszkam w {{country}}",
+      "fallbackPick": "Mera zajmuje się tym dłużej, niż zwykle. Wybierz zamiast tego, gdzie mieszkasz."
+    },
+    "world": {
+      "homeRow": "Chcesz wiadomości z miejsca, w którym mieszkasz?"
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Você está em dia com o que importa para você.",
+        "upToDateBody_one": "Mais {{count}} história tem menos chance de importar para você.",
+        "upToDateBody_other": "Mais {{count}} histórias têm menos chance de importar para você.",
+        "nothingTitle": "Nada de novo parece importante para você agora.",
+        "nothingBody_one": "A Mera encontrou {{count}} história que ainda pode interessar a você.",
+        "nothingBody_other": "A Mera encontrou {{count}} histórias que ainda podem interessar a você.",
+        "showThem": "Mostrar",
+        "label": "Menos chance de importar para você",
+        "shownAnnounce_one": "Mostrando mais {{count}} história",
+        "shownAnnounce_other": "Mostrando mais {{count}} histórias",
+        "held": "A Mera escolheu novas histórias enquanto você lia.",
+        "stillReading": "A Mera ainda está lendo. As novas histórias vão aparecer aqui.",
+        "endTitle": "Por enquanto é só isso.",
+        "endBody": "A Mera continua lendo em segundo plano. Volte mais tarde."
+      },
+      "firstFeed": {
+        "body": "A Mera está lendo as notícias de hoje para você. O que você conta à Mera fica neste celular, então nenhum servidor guarda um feed sobre você. Por isso a Mera começa a ler quando você abre o app.",
+        "link": "Como a Mera mantém isso privado",
+        "dismiss": "Dispensar"
+      },
+      "age": {
+        "yesterday": "De ontem",
+        "fromDay": "De {{day}}",
+        "fromDate": "De {{date}}"
+      },
+      "moreReports_one": "Mais {{count}} reportagem",
+      "moreReports_other": "Mais {{count}} reportagens",
+      "homeChipHint": "Conte à Mera onde você mora para começar seu feed.",
+      "processing": {
+        "readingProgress": "Lendo {{done}} de {{total}} para você",
+        "onDeviceReading": "A Mera está lendo as notícias neste celular."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Conte uma coisa à Mera para que o feed seja seu.",
+      "privacyLine": "O que você conta à Mera fica neste celular. A Mera usa isso para ler as notícias para você.",
+      "homeChip": "Eu moro em {{country}}",
+      "homeChipThe": "Eu moro em {{country}}",
+      "fallbackPick": "A Mera está demorando. Escolha onde você mora."
+    },
+    "world": {
+      "homeRow": "Quer notícias de onde você mora?"
+    }
+  },
+  "ru": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Вы в курсе всего важного для вас.",
+        "upToDateBody_one": "Ещё {{count}} история вряд ли важна для вас.",
+        "upToDateBody_few": "Ещё {{count}} истории вряд ли важны для вас.",
+        "upToDateBody_many": "Ещё {{count}} историй вряд ли важны для вас.",
+        "upToDateBody_other": "Ещё {{count}} истории вряд ли важны для вас.",
+        "nothingTitle": "Ничего нового, что может быть важно для вас, сейчас нет.",
+        "nothingBody_one": "Мера нашла {{count}} историю, которая может вас ещё заинтересовать.",
+        "nothingBody_few": "Мера нашла {{count}} истории, которые могут вас ещё заинтересовать.",
+        "nothingBody_many": "Мера нашла {{count}} историй, которые могут вас ещё заинтересовать.",
+        "nothingBody_other": "Мера нашла {{count}} истории, которые могут вас ещё заинтересовать.",
+        "showThem": "Показать их",
+        "label": "Вряд ли важно для вас",
+        "shownAnnounce_one": "Показываем ещё {{count}} историю",
+        "shownAnnounce_few": "Показываем ещё {{count}} истории",
+        "shownAnnounce_many": "Показываем ещё {{count}} историй",
+        "shownAnnounce_other": "Показываем ещё {{count}} истории",
+        "held": "Мера подобрала новые истории, пока вы читали.",
+        "stillReading": "Мера ещё читает. Новые истории появятся здесь.",
+        "endTitle": "На сегодня всё.",
+        "endBody": "Мера продолжает читать в фоне. Загляните позже."
+      },
+      "firstFeed": {
+        "body": "Мера читает сегодняшние новости для вас. Ваши интересы остаются на этом телефоне, поэтому ни один сервер не хранит ленту о вас. Вот почему Мера начинает читать, когда вы открываете приложение.",
+        "link": "Как Мера сохраняет приватность",
+        "dismiss": "Закрыть"
+      },
+      "age": {
+        "yesterday": "Со вчерашнего дня",
+        "fromDay": "С {{day}}",
+        "fromDate": "С {{date}}"
+      },
+      "moreReports_one": "Ещё {{count}} отчёт",
+      "moreReports_few": "Ещё {{count}} отчёта",
+      "moreReports_many": "Ещё {{count}} отчётов",
+      "moreReports_other": "Ещё {{count}} отчёта",
+      "homeChipHint": "Скажите Мере, где вы живёте, чтобы начать свою ленту.",
+      "processing": {
+        "readingProgress": "Прочитано {{done}} из {{total}} для вас",
+        "onDeviceReading": "Мера читает новости на этом телефоне."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Скажите Мере одну вещь, чтобы лента стала вашей.",
+      "privacyLine": "То, что вы рассказываете Мере, остаётся на этом телефоне. Мера использует это, чтобы читать новости для вас.",
+      "homeChip": "Я живу в {{country}}",
+      "homeChipThe": "Я живу в {{country}}",
+      "fallbackPick": "Мера думает дольше обычного. Укажите, где вы живёте."
+    },
+    "world": {
+      "homeRow": "Хотите новости оттуда, где вы живёте?"
+    }
+  },
+  "th": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "คุณอัปเดตเรื่องที่สำคัญกับคุณครบแล้ว.",
+        "upToDateBody_one": "มีอีก {{count}} เรื่องที่มีแนวโน้มน้อยที่จะสำคัญกับคุณ.",
+        "upToDateBody_other": "มีอีก {{count}} เรื่องที่มีแนวโน้มน้อยที่จะสำคัญกับคุณ.",
+        "nothingTitle": "ตอนนี้ยังไม่มีเรื่องใหม่ที่ดูสำคัญกับคุณ.",
+        "nothingBody_one": "เมร่าพบ {{count}} เรื่องที่อาจยังน่าสนใจสำหรับคุณ.",
+        "nothingBody_other": "เมร่าพบ {{count}} เรื่องที่อาจยังน่าสนใจสำหรับคุณ.",
+        "showThem": "แสดงเรื่องเหล่านี้",
+        "label": "มีแนวโน้มน้อยที่จะสำคัญกับคุณ",
+        "shownAnnounce_one": "กำลังแสดงอีก {{count}} เรื่อง",
+        "shownAnnounce_other": "กำลังแสดงอีก {{count}} เรื่อง",
+        "held": "เมร่าเลือกเรื่องใหม่ขึ้นมาระหว่างที่คุณกำลังอ่าน.",
+        "stillReading": "เมร่ากำลังอ่านอยู่. เรื่องใหม่จะปรากฏที่นี่.",
+        "endTitle": "ตอนนี้มีเท่านี้ก่อน.",
+        "endBody": "เมร่ายังอ่านต่อในเบื้องหลัง. ลองกลับมาดูใหม่ภายหลัง."
+      },
+      "firstFeed": {
+        "body": "เมร่ากำลังอ่านข่าววันนี้ให้คุณ. ความสนใจของคุณอยู่บนโทรศัพท์เครื่องนี้ จึงไม่มีเซิร์ฟเวอร์ใดเก็บฟีดเกี่ยวกับคุณไว้. นั่นคือเหตุผลที่เมร่าเริ่มอ่านข่าวเมื่อคุณเปิดแอป.",
+        "link": "เมร่าปกป้องความเป็นส่วนตัวของคุณอย่างไร",
+        "dismiss": "ปิด"
+      },
+      "age": {
+        "yesterday": "จากเมื่อวาน",
+        "fromDay": "จาก {{day}}",
+        "fromDate": "จาก {{date}}"
+      },
+      "moreReports_one": "มีอีก {{count}} รายงาน",
+      "moreReports_other": "มีอีก {{count}} รายงาน",
+      "homeChipHint": "บอกเมร่าว่าคุณอยู่ที่ไหนเพื่อเริ่มฟีดของคุณ.",
+      "processing": {
+        "readingProgress": "กำลังอ่าน {{done}} จาก {{total}} บทความให้คุณ",
+        "onDeviceReading": "เมร่ากำลังอ่านข่าวบนโทรศัพท์เครื่องนี้."
+      }
+    },
+    "onboarding": {
+      "gateHint": "บอกเมร่าสักหนึ่งอย่าง เพื่อให้ฟีดเป็นของคุณ.",
+      "privacyLine": "สิ่งที่คุณบอกเมร่าจะอยู่บนโทรศัพท์เครื่องนี้. เมร่าใช้ข้อมูลนี้เพื่ออ่านข่าวให้คุณ.",
+      "homeChip": "ฉันอาศัยอยู่ใน {{country}}",
+      "homeChipThe": "ฉันอาศัยอยู่ใน {{country}}",
+      "fallbackPick": "เมร่ากำลังใช้เวลาสักพัก. เลือกที่ที่คุณอาศัยอยู่แทนได้เลย."
+    },
+    "world": {
+      "homeRow": "อยากอ่านข่าวจากที่ที่คุณอาศัยอยู่ไหม?"
+    }
+  },
+  "tr": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Senin için önemli olan haberlerin hepsini okudun.",
+        "upToDateBody_one": "Senin için önemli olma ihtimali daha düşük {{count}} haber daha var.",
+        "upToDateBody_other": "Senin için önemli olma ihtimali daha düşük {{count}} haber daha var.",
+        "nothingTitle": "Şu anda senin için önemli görünen yeni bir şey yok.",
+        "nothingBody_one": "Mera, seni hâlâ ilgilendirebilecek {{count}} haber buldu.",
+        "nothingBody_other": "Mera, seni hâlâ ilgilendirebilecek {{count}} haber buldu.",
+        "showThem": "Hepsini göster",
+        "label": "Senin için önemli olma ihtimali daha düşük",
+        "shownAnnounce_one": "{{count}} haber daha gösteriliyor",
+        "shownAnnounce_other": "{{count}} haber daha gösteriliyor",
+        "held": "Sen okurken Mera yeni haberler seçti.",
+        "stillReading": "Mera hâlâ okuyor. Yeni haberler burada görünecek.",
+        "endTitle": "Şimdilik hepsi bu.",
+        "endBody": "Mera arka planda okumaya devam ediyor. Daha sonra tekrar bak."
+      },
+      "firstFeed": {
+        "body": "Mera bugünün haberlerini senin için okuyor. İlgi alanların telefonunda kalır, bu yüzden hiçbir sunucu senin hakkında bir akış tutmaz. Bu yüzden Mera uygulamayı açtığında okumaya başlar.",
+        "link": "Mera bunu gizli nasıl tutuyor",
+        "dismiss": "Kapat"
+      },
+      "age": {
+        "yesterday": "Dünden",
+        "fromDay": "{{day}} tarihinden",
+        "fromDate": "{{date}} tarihinden"
+      },
+      "moreReports_one": "{{count}} rapor daha",
+      "moreReports_other": "{{count}} rapor daha",
+      "homeChipHint": "Akışını başlatmak için Mera'ya nerede yaşadığını söyle.",
+      "processing": {
+        "readingProgress": "Senin için {{total}} haberden {{done}} tanesi okunuyor",
+        "onDeviceReading": "Mera haberleri bu telefonda okuyor."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Akışının senin olması için Mera'ya bir şey söyle.",
+      "privacyLine": "Mera'ya söylediklerin bu telefonda kalır. Mera bunları senin için haberleri okumak için kullanır.",
+      "homeChip": "{{country}} ülkesinde yaşıyorum",
+      "homeChipThe": "{{country}} bölgesinde yaşıyorum",
+      "fallbackPick": "Mera biraz zaman alıyor. Bunun yerine nerede yaşadığını seç."
+    },
+    "world": {
+      "homeRow": "Yaşadığın yerden haber almak ister misin?"
+    }
+  },
+  "uk": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Ви в курсі всього, що важливо для вас.",
+        "upToDateBody_one": "Ще {{count}} історія навряд чи важлива для вас.",
+        "upToDateBody_few": "Ще {{count}} історії навряд чи важливі для вас.",
+        "upToDateBody_many": "Ще {{count}} історій навряд чи важливі для вас.",
+        "upToDateBody_other": "Ще {{count}} історії навряд чи важливі для вас.",
+        "nothingTitle": "Зараз для вас немає нічого нового, що здається важливим.",
+        "nothingBody_one": "Мера знайшла {{count}} історію, яка ще може вас зацікавити.",
+        "nothingBody_few": "Мера знайшла {{count}} історії, які ще можуть вас зацікавити.",
+        "nothingBody_many": "Мера знайшла {{count}} історій, які ще можуть вас зацікавити.",
+        "nothingBody_other": "Мера знайшла {{count}} історії, які ще можуть вас зацікавити.",
+        "showThem": "Показати їх",
+        "label": "Навряд чи важливе для вас",
+        "shownAnnounce_one": "Показано ще {{count}} історію",
+        "shownAnnounce_few": "Показано ще {{count}} історії",
+        "shownAnnounce_many": "Показано ще {{count}} історій",
+        "shownAnnounce_other": "Показано ще {{count}} історії",
+        "held": "Мера вибрала нові історії, поки ви читали.",
+        "stillReading": "Мера ще читає. Нові історії з'являться тут.",
+        "endTitle": "Це все на зараз.",
+        "endBody": "Мера продовжує читати у фоновому режимі. Поверніться пізніше."
+      },
+      "firstFeed": {
+        "body": "Мера читає для вас сьогоднішні новини. Ваші інтереси залишаються на телефоні, тож жоден сервер не зберігає стрічку про вас. Саме тому Мера починає читати, коли ви відкриваєте застосунок.",
+        "link": "Як Мера зберігає приватність",
+        "dismiss": "Закрити"
+      },
+      "age": {
+        "yesterday": "З учорашнього дня",
+        "fromDay": "З {{day}}",
+        "fromDate": "З {{date}}"
+      },
+      "moreReports_one": "Ще {{count}} звіт",
+      "moreReports_few": "Ще {{count}} звіти",
+      "moreReports_many": "Ще {{count}} звітів",
+      "moreReports_other": "Ще {{count}} звіти",
+      "homeChipHint": "Скажіть Мері, де ви живете, щоб почати вашу стрічку.",
+      "processing": {
+        "readingProgress": "Читаємо {{done}} з {{total}} для вас",
+        "onDeviceReading": "Мера читає новини на цьому телефоні."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Скажіть Мері одну річ, щоб ваша стрічка була саме вашою.",
+      "privacyLine": "Те, що ви розповідаєте Мері, залишається на цьому телефоні. Мера використовує це, щоб читати для вас новини.",
+      "homeChip": "Я живу в {{country}}",
+      "homeChipThe": "Я живу в {{country}}",
+      "fallbackPick": "Мера затримується. Натомість оберіть, де ви живете."
+    },
+    "world": {
+      "homeRow": "Хочете новини з того місця, де ви живете?"
+    }
+  },
+  "vi": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
+        "upToDateBody_one": "{{count}} tin nữa ít có khả năng quan trọng với bạn.",
+        "upToDateBody_other": "{{count}} tin nữa ít có khả năng quan trọng với bạn.",
+        "nothingTitle": "Hiện chưa có tin mới nào quan trọng với bạn.",
+        "nothingBody_one": "Mera tìm thấy {{count}} tin có thể vẫn khiến bạn quan tâm.",
+        "nothingBody_other": "Mera tìm thấy {{count}} tin có thể vẫn khiến bạn quan tâm.",
+        "showThem": "Hiện chúng",
+        "label": "Ít có khả năng quan trọng với bạn",
+        "shownAnnounce_one": "Đang hiện thêm {{count}} tin",
+        "shownAnnounce_other": "Đang hiện thêm {{count}} tin",
+        "held": "Mera đã chọn tin mới trong lúc bạn đọc.",
+        "stillReading": "Mera vẫn đang đọc. Tin mới sẽ hiện ở đây.",
+        "endTitle": "Hiện tại chỉ có vậy thôi.",
+        "endBody": "Mera tiếp tục đọc ở chế độ nền. Bạn quay lại sau nhé."
+      },
+      "firstFeed": {
+        "body": "Mera đang đọc tin tức hôm nay cho bạn. Sở thích của bạn chỉ nằm trên điện thoại này, nên không máy chủ nào giữ một bảng tin về bạn. Vì vậy Mera bắt đầu đọc khi bạn mở ứng dụng.",
+        "link": "Mera giữ điều này riêng tư như thế nào",
+        "dismiss": "Đóng"
+      },
+      "age": {
+        "yesterday": "Từ hôm qua",
+        "fromDay": "Từ {{day}}",
+        "fromDate": "Từ {{date}}"
+      },
+      "moreReports_one": "{{count}} bài viết khác",
+      "moreReports_other": "{{count}} bài viết khác",
+      "homeChipHint": "Cho Mera biết bạn sống ở đâu để bắt đầu bảng tin của bạn.",
+      "processing": {
+        "readingProgress": "Đang đọc {{done}} trong {{total}} bài cho bạn",
+        "onDeviceReading": "Mera đang đọc tin tức trên điện thoại này."
+      }
+    },
+    "onboarding": {
+      "gateHint": "Cho Mera biết một điều để bảng tin thuộc về bạn.",
+      "privacyLine": "Những gì bạn kể cho Mera chỉ nằm trên điện thoại này. Mera dùng thông tin đó để đọc tin tức cho bạn.",
+      "homeChip": "Tôi sống ở {{country}}",
+      "homeChipThe": "Tôi sống ở {{country}}",
+      "fallbackPick": "Mera mất khá nhiều thời gian. Thay vào đó, hãy chọn nơi bạn sống."
+    },
+    "world": {
+      "homeRow": "Muốn xem tin tức từ nơi bạn sống không?"
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "您已了解所有对您重要的内容。",
+        "upToDateBody_one": "另有 {{count}} 篇报道与您的关联较低。",
+        "upToDateBody_other": "另有 {{count}} 篇报道与您的关联较低。",
+        "nothingTitle": "目前没有对您重要的新内容。",
+        "nothingBody_one": "梅拉找到 {{count}} 篇您可能仍感兴趣的报道。",
+        "nothingBody_other": "梅拉找到 {{count}} 篇您可能仍感兴趣的报道。",
+        "showThem": "显示",
+        "label": "与您的关联较低",
+        "shownAnnounce_one": "正在显示另外 {{count}} 篇报道",
+        "shownAnnounce_other": "正在显示另外 {{count}} 篇报道",
+        "held": "您阅读时，梅拉挑选了新的报道。",
+        "stillReading": "梅拉仍在阅读。新的报道会出现在这里。",
+        "endTitle": "目前就这些了。",
+        "endBody": "梅拉会在后台继续阅读。请稍后再来看看。"
+      },
+      "firstFeed": {
+        "body": "梅拉正在为您阅读今天的新闻。您告诉梅拉的内容只保存在这部手机上，因此没有服务器保存关于您的动态。所以梅拉会在您打开应用时开始阅读。",
+        "link": "梅拉如何保护这些隐私",
+        "dismiss": "关闭"
+      },
+      "age": {
+        "yesterday": "来自昨天",
+        "fromDay": "来自{{day}}",
+        "fromDate": "来自{{date}}"
+      },
+      "moreReports_one": "另有 {{count}} 篇报道",
+      "moreReports_other": "另有 {{count}} 篇报道",
+      "homeChipHint": "告诉梅拉您住在哪里，开始您的动态。",
+      "processing": {
+        "readingProgress": "正在为您阅读 {{done}}/{{total}}",
+        "onDeviceReading": "梅拉正在这部手机上阅读新闻。"
+      }
+    },
+    "onboarding": {
+      "gateHint": "告诉梅拉一件事，让动态真正属于您。",
+      "privacyLine": "您告诉梅拉的内容只保存在这部手机上。梅拉用它为您阅读新闻。",
+      "homeChip": "我住在{{country}}",
+      "homeChipThe": "我住在{{country}}",
+      "fallbackPick": "梅拉花的时间有点长。请直接选择您住的地方。"
+    },
+    "world": {
+      "homeRow": "想看您所在地的新闻吗？"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "fold": {
+        "upToDateTitle": "您已掌握所有對您重要的內容。",
+        "upToDateBody_one": "另有 {{count}} 則報導與您的關聯較低。",
+        "upToDateBody_other": "另有 {{count}} 則報導與您的關聯較低。",
+        "nothingTitle": "目前沒有對您重要的新內容。",
+        "nothingBody_one": "梅拉找到 {{count}} 則您可能仍感興趣的報導。",
+        "nothingBody_other": "梅拉找到 {{count}} 則您可能仍感興趣的報導。",
+        "showThem": "顯示",
+        "label": "與您的關聯較低",
+        "shownAnnounce_one": "正在顯示另外 {{count}} 則報導",
+        "shownAnnounce_other": "正在顯示另外 {{count}} 則報導",
+        "held": "您閱讀時，梅拉挑選了新的報導。",
+        "stillReading": "梅拉仍在閱讀。新的報導會出現在這裡。",
+        "endTitle": "目前就這些了。",
+        "endBody": "梅拉會在背景繼續閱讀。請稍後再來看看。"
+      },
+      "firstFeed": {
+        "body": "梅拉正在為您閱讀今天的新聞。您告訴梅拉的內容只儲存在這支手機上，因此沒有伺服器保存關於您的動態。所以梅拉會在您開啟 App 時開始閱讀。",
+        "link": "梅拉如何保護這些隱私",
+        "dismiss": "關閉"
+      },
+      "age": {
+        "yesterday": "來自昨天",
+        "fromDay": "來自{{day}}",
+        "fromDate": "來自{{date}}"
+      },
+      "moreReports_one": "另有 {{count}} 則報導",
+      "moreReports_other": "另有 {{count}} 則報導",
+      "homeChipHint": "告訴梅拉您住在哪裡，開始您的動態。",
+      "processing": {
+        "readingProgress": "正在為您閱讀 {{done}}/{{total}}",
+        "onDeviceReading": "梅拉正在這支手機上閱讀新聞。"
+      }
+    },
+    "onboarding": {
+      "gateHint": "告訴梅拉一件事，讓動態真正屬於您。",
+      "privacyLine": "您告訴梅拉的內容只儲存在這支手機上。梅拉用它為您閱讀新聞。",
+      "homeChip": "我住在{{country}}",
+      "homeChipThe": "我住在{{country}}",
+      "fallbackPick": "梅拉花的時間有點久。請直接選擇您住的地方。"
+    },
+    "world": {
+      "homeRow": "想看您所在地的新聞嗎？"
+    }
+  }
+}

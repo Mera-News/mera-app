@@ -104,25 +104,6 @@
           ],
           "amberSubline": "कृपया यह स्क्रीन खुली रखें।"
         },
-        "cloudRelevance": {
-          "headlines": [
-            "एक AI हर लेख पढ़ रहा है यह देखने के लिए कि कौन-से आपके लिए मायने रखते हैं।",
-            "आपकी रिक्वेस्ट एन्क्रिप्टेड है, ताकि उसे केवल सील्ड एन्क्लेव के अंदर का AI ही पढ़ सके।"
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "हर प्रासंगिक स्टोरी के लिए एक छोटा नोट लिखा जा रहा है।",
-            "आप दूर जा सकते हैं। जैसे ही तैयार होगा, हम आपको सूचित करेंगे।",
-            "आपके फ़ोन और AI के सील्ड एन्क्लेव के बीच सब कुछ एन्क्रिप्टेड रहता है।"
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "आपका फ़ोन आपके लिए इन स्टोरीज़ को स्कोर कर रहा है।",
-            "यह पूरी तरह आपके डिवाइस पर होता है। कुछ भी बाहर नहीं जाता।"
-          ]
-        },
         "downloading": {
           "headlines": [
             "आज के लेख आपके फ़ोन पर आ रहे हैं।",
@@ -155,8 +136,8 @@
         "ready": "{{total}} में से {{ready}} विश्लेषण बैच पूरे हुए"
       },
       "stageA11y": "चरण {{index}} / {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "मेरा is reading the news on this phone.",
+      "readingProgress": "आपके लिए {{total}} में से {{done}} पढ़े जा रहे हैं",
+      "onDeviceReading": "मेरा इस फ़ोन पर खबरें पढ़ रहा है।",
       "writingReasons": "हर प्रासंगिक स्टोरी के लिए एक छोटा नोट लिखा जा रहा है।"
     },
     "syncToast": {
@@ -290,34 +271,34 @@
       "helpStatus": "AI प्रदाता की स्थिति"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "मेरा found {{count}} story that might still interest you.",
-      "nothingBody_other": "मेरा found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "मेरा picked new stories while you were reading.",
-      "stillReading": "मेरा is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "मेरा keeps reading in the background. Check back later."
+      "upToDateTitle": "आप उन चीज़ों पर अपडेट हैं जो आपके लिए मायने रखती हैं।",
+      "upToDateBody_one": "आपके लिए शायद कम काम की {{count}} और स्टोरी है।",
+      "upToDateBody_other": "आपके लिए शायद कम काम की {{count}} और स्टोरीज़ हैं।",
+      "nothingTitle": "अभी आपके लिए कुछ नया खास नहीं लग रहा।",
+      "nothingBody_one": "मेरा को {{count}} स्टोरी मिली है जो अब भी आपकी रुचि की हो सकती है।",
+      "nothingBody_other": "मेरा को {{count}} स्टोरीज़ मिली हैं जो अब भी आपकी रुचि की हो सकती हैं।",
+      "showThem": "इन्हें दिखाएँ",
+      "label": "आपके लिए कम काम की",
+      "shownAnnounce_one": "{{count}} और स्टोरी दिखाई जा रही है",
+      "shownAnnounce_other": "{{count}} और स्टोरीज़ दिखाई जा रही हैं",
+      "held": "आपके पढ़ते समय मेरा ने नई स्टोरीज़ चुनीं।",
+      "stillReading": "मेरा अब भी पढ़ रहा है। नई स्टोरीज़ यहाँ दिखेंगी।",
+      "endTitle": "अभी के लिए बस इतना ही है।",
+      "endBody": "मेरा बैकग्राउंड में पढ़ता रहता है। बाद में फिर देखें।"
     },
     "firstFeed": {
-      "body": "मेरा is reading today's news for you. What you tell मेरा stays on this phone, so no server keeps a feed about you. That's why मेरा starts reading when you open the app.",
-      "link": "How मेरा keeps this private",
-      "dismiss": "Dismiss"
+      "body": "मेरा आज की खबरें आपके लिए पढ़ रहा है। आपकी रुचियाँ आपके फ़ोन पर ही रहती हैं, इसलिए कोई सर्वर आपके बारे में कोई फ़ीड नहीं रखता। इसीलिए मेरा तब पढ़ना शुरू करता है जब आप ऐप खोलते हैं।",
+      "link": "मेरा इसे निजी कैसे रखता है",
+      "dismiss": "बंद करें"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "कल की खबर",
+      "fromDay": "{{day}} की खबर",
+      "fromDate": "{{date}} की खबर"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell मेरा where you live to start your feed."
+    "moreReports_one": "{{count}} और रिपोर्ट",
+    "moreReports_other": "{{count}} और रिपोर्ट",
+    "homeChipHint": "फ़ीड शुरू करने के लिए मेरा को बताएं कि आप कहाँ रहते हैं।"
   },
   "relevance": {
     "emergency": "आपातकालीन",
@@ -377,12 +358,7 @@
   },
   "onboarding": {
     "stepOf": "चरण {{current}} / {{total}}",
-    "connectionIssue": "कनेक्शन समस्या",
-    "connectionDescription": "हमें सर्वर तक पहुँचने में दिक़्क़त हो रही है। ऐप बंद करें और थोड़ी देर बाद फिर कोशिश करें।",
-    "logout": "लॉगआउट",
     "close": "बंद करें",
-    "logoutFailedTitle": "लॉगआउट विफल",
-    "logoutFailedDescription": "साइन आउट करने में समस्या हुई। कृपया पुनः प्रयास करें।",
     "composerPlaceholder": "मुझे अपनी ज़िंदगी के बारे में बताइए",
     "factsCount_one": "आपके बारे में {{count}} तथ्य",
     "factsCount_other": "आपके बारे में {{count}} तथ्य",
@@ -419,11 +395,11 @@
     "placeholderAbout": "कुछ भी पूछें",
     "pathLocation": "मेरा स्थान सेट करें",
     "locationAsk": "आप कहाँ रहते हैं? जितना चाहें बताएं: कोई इलाका और शहर, या सिर्फ़ आपका राज्य या देश।",
-    "gateHint": "Tell मेरा one thing so your feed is yours.",
-    "privacyLine": "What you tell मेरा stays on this phone. मेरा uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "मेरा is taking a while. Pick where you live instead."
+    "gateHint": "आपकी फ़ीड आपकी अपनी बने, इसके लिए मेरा को एक बात बताएं।",
+    "privacyLine": "आप मेरा को जो बताते हैं वह इसी फ़ोन पर रहता है। मेरा इसका इस्तेमाल आपके लिए खबरें पढ़ने में करता है।",
+    "homeChip": "मैं {{country}} में रहता हूँ",
+    "homeChipThe": "मैं {{country}} में रहता हूँ",
+    "fallbackPick": "मेरा को कुछ समय लग रहा है। इसकी जगह बताएं कि आप कहाँ रहते हैं।"
   },
   "notifications": {
     "title": "नोटिफिकेशन",
@@ -2946,7 +2922,7 @@
       "mathWorld": "हर देश, जो किसी खबर को कवर करता है, उसे 1 अंक मिलता है। उस देश के हर अतिरिक्त प्रकाशक के लिए थोड़ा और जुड़ता है, पर एक देश को ज़्यादा से ज़्यादा 4 अंक मिलते हैं। सभी देशों के अंक जोड़े जाते हैं, और सबसे ज़्यादा कुल अंक वाली खबर सबसे ऊपर आती है।",
       "mathCountry": "उस देश के प्रकाशकों ने पिछले 24 घंटों में किसी खबर पर जितने लेख लिखे, उन्हें गिना जाता है। जिस खबर पर सबसे ज़्यादा लेख होते हैं, वह सबसे ऊपर आती है।"
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "आप जहाँ रहते हैं, वहाँ की खबरें चाहिए?"
   },
   "library": {
     "saved": {
@@ -3227,14 +3203,8 @@
     }
   },
   "gate": {
-    "getHelp": "मदद लें",
     "noEmailBody": "इस फ़ोन पर साइन इन करते समय कुछ गड़बड़ हो गई। सहायता टीम से संपर्क करें, या इस फ़ोन को रीसेट करके फिर से साइन इन करें।",
     "noEmailTitle": "आपके अकाउंट में कोई समस्या है",
-    "offlineBody": "खुलने से पहले मेरा ऐप को आपका खाता जाँचने के लिए कनेक्शन चाहिए।",
-    "offlineTitle": "आप ऑफ़लाइन हैं",
-    "opensByItself": "आपके ऑनलाइन होते ही अपने आप खुल जाएगा",
-    "unreachableBody": "समस्या हमारी तरफ़ से है, आपके फ़ोन की नहीं। मेरा ऐप कोशिश करता रहता है, और वापस आने पर खुल जाता है।",
-    "unreachableTitle": "मेरा ऐप तक पहुँचा नहीं जा सकता",
     "contactSupport": "सहायता टीम से संपर्क करें",
     "resetPhone": "यह फ़ोन रीसेट करें और फिर से साइन इन करें",
     "resetTitle": "यह फ़ोन रीसेट करें?",

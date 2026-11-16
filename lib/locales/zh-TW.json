@@ -104,25 +104,6 @@
           ],
           "amberSubline": "請保持此畫面開啟。"
         },
-        "cloudRelevance": {
-          "headlines": [
-            "AI 正在閱讀每篇文章，判斷哪些對你重要。",
-            "你的請求已加密，只有密封隔離區內的 AI 能讀取。"
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "正在為每則相關報導撰寫簡短說明。",
-            "你可以先離開。準備好時我們會通知你。",
-            "一切在你的手機與 AI 的密封隔離區之間都保持加密。"
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "你的手機正在為這些報導評分。",
-            "這一切完全在你的裝置上進行：沒有任何內容離開它。"
-          ]
-        },
         "downloading": {
           "headlines": [
             "今天的文章正在下載到你的手機上。",
@@ -155,8 +136,8 @@
         "ready": "已完成 {{total}} 個分析批次中的 {{ready}} 個"
       },
       "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "梅拉 is reading the news on this phone.",
+      "readingProgress": "正在為您閱讀 {{done}}/{{total}}",
+      "onDeviceReading": "梅拉正在這支手機上閱讀新聞。",
       "writingReasons": "正在為每則相關報導撰寫簡短說明。"
     },
     "syncToast": {
@@ -278,34 +259,34 @@
       "helpStatus": "AI 供應商狀態"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "梅拉 found {{count}} story that might still interest you.",
-      "nothingBody_other": "梅拉 found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "梅拉 picked new stories while you were reading.",
-      "stillReading": "梅拉 is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "梅拉 keeps reading in the background. Check back later."
+      "upToDateTitle": "您已掌握所有對您重要的內容。",
+      "upToDateBody_one": "另有 {{count}} 則報導與您的關聯較低。",
+      "upToDateBody_other": "另有 {{count}} 則報導與您的關聯較低。",
+      "nothingTitle": "目前沒有對您重要的新內容。",
+      "nothingBody_one": "梅拉找到 {{count}} 則您可能仍感興趣的報導。",
+      "nothingBody_other": "梅拉找到 {{count}} 則您可能仍感興趣的報導。",
+      "showThem": "顯示",
+      "label": "與您的關聯較低",
+      "shownAnnounce_one": "正在顯示另外 {{count}} 則報導",
+      "shownAnnounce_other": "正在顯示另外 {{count}} 則報導",
+      "held": "您閱讀時，梅拉挑選了新的報導。",
+      "stillReading": "梅拉仍在閱讀。新的報導會出現在這裡。",
+      "endTitle": "目前就這些了。",
+      "endBody": "梅拉會在背景繼續閱讀。請稍後再來看看。"
     },
     "firstFeed": {
-      "body": "梅拉 is reading today's news for you. What you tell 梅拉 stays on this phone, so no server keeps a feed about you. That's why 梅拉 starts reading when you open the app.",
-      "link": "How 梅拉 keeps this private",
-      "dismiss": "Dismiss"
+      "body": "梅拉正在為您閱讀今天的新聞。您告訴梅拉的內容只儲存在這支手機上，因此沒有伺服器保存關於您的動態。所以梅拉會在您開啟 App 時開始閱讀。",
+      "link": "梅拉如何保護這些隱私",
+      "dismiss": "關閉"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "來自昨天",
+      "fromDay": "來自{{day}}",
+      "fromDate": "來自{{date}}"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell 梅拉 where you live to start your feed."
+    "moreReports_one": "另有 {{count}} 則報導",
+    "moreReports_other": "另有 {{count}} 則報導",
+    "homeChipHint": "告訴梅拉您住在哪裡，開始您的動態。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -365,12 +346,7 @@
   },
   "onboarding": {
     "stepOf": "步驟 {{current}} / {{total}}",
-    "connectionIssue": "連線問題",
-    "connectionDescription": "我們無法連線到伺服器。請關閉 App，稍後再試。",
-    "logout": "登出",
     "close": "關閉",
-    "logoutFailedTitle": "登出失敗",
-    "logoutFailedDescription": "登出時發生問題，請再試一次。",
     "composerPlaceholder": "告訴我你的生活",
     "factsCount_one": "關於你的 {{count}} 項事實",
     "factsCount_other": "關於你的 {{count}} 項事實",
@@ -407,11 +383,11 @@
     "placeholderAbout": "問任何問題",
     "pathLocation": "設定我的位置",
     "locationAsk": "你住在哪裡？你想分享多少都可以：可以是社區與城市，也可以只說州或國家。",
-    "gateHint": "Tell 梅拉 one thing so your feed is yours.",
-    "privacyLine": "What you tell 梅拉 stays on this phone. 梅拉 uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "梅拉 is taking a while. Pick where you live instead."
+    "gateHint": "告訴梅拉一件事，讓動態真正屬於您。",
+    "privacyLine": "您告訴梅拉的內容只儲存在這支手機上。梅拉用它為您閱讀新聞。",
+    "homeChip": "我住在{{country}}",
+    "homeChipThe": "我住在{{country}}",
+    "fallbackPick": "梅拉花的時間有點久。請直接選擇您住的地方。"
   },
   "notifications": {
     "title": "通知",
@@ -2923,7 +2899,7 @@
       "mathWorld": "每個報導這則新聞的國家各得 1 分，該國每多一家媒體，再多加一點分數，每個國家最多 4 分。把所有國家的分數加總，總分最高的排第一。",
       "mathCountry": "計算這個國家的媒體在過去 24 小時內，寫了多少則關於某則新聞的報導。報導數最多的新聞排第一。"
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "想看您所在地的新聞嗎？"
   },
   "library": {
     "saved": {
@@ -3204,14 +3180,8 @@
     }
   },
   "gate": {
-    "getHelp": "取得協助",
     "noEmailBody": "在這支手機上登入時出了問題。請聯絡支援團隊，或重設這支手機後重新登入。",
     "noEmailTitle": "你的帳號出現問題",
-    "offlineBody": "梅拉需要網路連線，才能在開啟前確認你的帳號。",
-    "offlineTitle": "你目前離線",
-    "opensByItself": "恢復連線後會自動開啟",
-    "unreachableBody": "問題出在我們這邊，不是你的手機。梅拉會持續嘗試，恢復後就會開啟。",
-    "unreachableTitle": "無法連上梅拉",
     "contactSupport": "聯絡支援團隊",
     "resetPhone": "重設這支手機並重新登入",
     "resetTitle": "要重設這支手機嗎？",

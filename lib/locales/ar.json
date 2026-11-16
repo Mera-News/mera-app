@@ -104,25 +104,6 @@
           ],
           "amberSubline": "يرجى إبقاء هذه الشاشة مفتوحة."
         },
-        "cloudRelevance": {
-          "headlines": [
-            "يقرأ ذكاء اصطناعي كل مقالة لمعرفة أيها تهمك.",
-            "طلبك مشفّر، ولا يستطيع قراءته إلا الذكاء الاصطناعي داخل صندوقه محكم الإغلاق."
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "جارٍ كتابة ملاحظة قصيرة لكل قصة ذات صلة.",
-            "يمكنك الابتعاد: سنُعلمك فور الجاهزية.",
-            "يبقى كل شيء مشفّرًا بين هاتفك والصندوق محكم الإغلاق الخاص بالذكاء الاصطناعي."
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "يقوم هاتفك بترتيب هذه القصص لك.",
-            "تتم هذه الخطوة بالكامل على جهازك: لا شيء يغادره."
-          ]
-        },
         "downloading": {
           "headlines": [
             "جارٍ سحب مقالات اليوم إلى هاتفك.",
@@ -155,8 +136,8 @@
         "ready": "اكتملت {{ready}} من {{total}} دفعة"
       },
       "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "ميرا is reading the news on this phone.",
+      "readingProgress": "تقرأ ميرا {{done}} من {{total}} لأجلك",
+      "onDeviceReading": "تقرأ ميرا الأخبار على هذا الهاتف.",
       "writingReasons": "جارٍ كتابة ملاحظة قصيرة لكل قصة ذات صلة."
     },
     "syncToast": {
@@ -369,34 +350,34 @@
       "helpStatus": "حالة مزوّد الذكاء الاصطناعي"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "ميرا found {{count}} story that might still interest you.",
-      "nothingBody_other": "ميرا found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "ميرا picked new stories while you were reading.",
-      "stillReading": "ميرا is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "ميرا keeps reading in the background. Check back later."
+      "upToDateTitle": "لقد اطلعت على كل ما يهمك.",
+      "upToDateBody_one": "{{count}} قصة أخرى من غير المرجح أن تهمك.",
+      "upToDateBody_other": "{{count}} قصص أخرى من غير المرجح أن تهمك.",
+      "nothingTitle": "لا يبدو أن هناك جديدًا يهمك الآن.",
+      "nothingBody_one": "وجدت ميرا {{count}} قصة قد تثير اهتمامك.",
+      "nothingBody_other": "وجدت ميرا {{count}} قصصًا قد تثير اهتمامك.",
+      "showThem": "عرضها",
+      "label": "من غير المرجح أن تهمك",
+      "shownAnnounce_one": "نعرض {{count}} قصة أخرى",
+      "shownAnnounce_other": "نعرض {{count}} قصص أخرى",
+      "held": "اختارت ميرا قصصًا جديدة أثناء قراءتك.",
+      "stillReading": "ما زالت ميرا تقرأ. ستظهر القصص الجديدة هنا.",
+      "endTitle": "هذا كل شيء في الوقت الحالي.",
+      "endBody": "تواصل ميرا القراءة في الخلفية. عُد لاحقًا."
     },
     "firstFeed": {
-      "body": "ميرا is reading today's news for you. What you tell ميرا stays on this phone, so no server keeps a feed about you. That's why ميرا starts reading when you open the app.",
-      "link": "How ميرا keeps this private",
-      "dismiss": "Dismiss"
+      "body": "تقرأ ميرا أخبار اليوم من أجلك. تبقى اهتماماتك على هاتفك، فلا يحتفظ أي خادم بخلاصة عنك. لهذا تبدأ ميرا القراءة حين تفتح التطبيق.",
+      "link": "كيف تحافظ ميرا على خصوصية هذا",
+      "dismiss": "تجاهل"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "من أمس",
+      "fromDay": "من {{day}}",
+      "fromDate": "من {{date}}"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell ميرا where you live to start your feed."
+    "moreReports_one": "{{count}} تقرير آخر",
+    "moreReports_other": "{{count}} تقريرًا آخر",
+    "homeChipHint": "أخبر ميرا أين تعيش لتبدأ خلاصتك."
   },
   "relevance": {
     "emergency": "طارئ",
@@ -456,12 +437,7 @@
   },
   "onboarding": {
     "stepOf": "الخطوة {{current}} من {{total}}",
-    "connectionIssue": "مشكلة في الاتصال",
-    "connectionDescription": "نواجه مشكلة في الوصول إلى الخادم. أغلق التطبيق وحاول مرة أخرى بعد قليل.",
-    "logout": "تسجيل الخروج",
     "close": "إغلاق",
-    "logoutFailedTitle": "فشل تسجيل الخروج",
-    "logoutFailedDescription": "حدثت مشكلة أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى.",
     "composerPlaceholder": "أخبرني عن حياتك",
     "factsCount_zero": "لا توجد حقائق عنك",
     "factsCount_one": "حقيقة واحدة عنك",
@@ -502,11 +478,11 @@
     "placeholderAbout": "اسأل عن أي شيء",
     "pathLocation": "حدّد موقعي",
     "locationAsk": "أين تعيش؟ شارك بقدر ما تريد، حيًا ومدينة، أو ولايتك أو بلدك فقط.",
-    "gateHint": "Tell ميرا one thing so your feed is yours.",
-    "privacyLine": "What you tell ميرا stays on this phone. ميرا uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "ميرا is taking a while. Pick where you live instead."
+    "gateHint": "أخبر ميرا بشيء واحد كي تصبح خلاصتك خاصة بك.",
+    "privacyLine": "ما تخبر به ميرا يبقى على هذا الهاتف. تستعمله ميرا لقراءة الأخبار لأجلك.",
+    "homeChip": "أعيش في {{country}}",
+    "homeChipThe": "أعيش في {{country}}",
+    "fallbackPick": "ميرا تستغرق بعض الوقت. اختر مكان سكنك بدلًا من ذلك."
   },
   "notifications": {
     "title": "الإشعارات",
@@ -3153,7 +3129,7 @@
       "mathWorld": "تحصل كل دولة تغطي خبراً على نقطة واحدة، ومع كل ناشر إضافي فيها تُضاف نقاط صغيرة، بحد أقصى 4 نقاط لكل دولة. تُجمع النقاط لكل الدول، ويأتي الإجمالي الأعلى أولاً.",
       "mathCountry": "احسب عدد المقالات التي كتبها ناشرو هذه الدولة عن الخبر خلال آخر 24 ساعة. الخبر الذي له أكبر عدد يأتي أولاً."
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "هل تريد أخبارًا من مكان سكنك؟"
   },
   "library": {
     "saved": {
@@ -3502,14 +3478,8 @@
     }
   },
   "gate": {
-    "getHelp": "احصل على مساعدة",
     "noEmailBody": "حدث خطأ أثناء تسجيل الدخول على هذا الهاتف. تواصل مع الدعم، أو أعد ضبط هذا الهاتف وسجّل الدخول مرة أخرى.",
     "noEmailTitle": "هناك مشكلة في حسابك",
-    "offlineBody": "يحتاج ميرا إلى اتصال للتحقق من حسابك قبل أن يفتح.",
-    "offlineTitle": "أنت غير متصل",
-    "opensByItself": "يفتح تلقائيًا عند عودة الاتصال",
-    "unreachableBody": "المشكلة من جهتنا وليست من هاتفك. يواصل ميرا المحاولة، ويفتح عند عودته.",
-    "unreachableTitle": "تعذّر الوصول إلى ميرا",
     "contactSupport": "تواصل مع الدعم",
     "resetPhone": "إعادة ضبط هذا الهاتف وتسجيل الدخول مجددًا",
     "resetTitle": "هل تريد إعادة ضبط هذا الهاتف؟",

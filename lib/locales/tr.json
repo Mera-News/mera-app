@@ -104,25 +104,6 @@
           ],
           "amberSubline": "Lütfen bu ekranı açık tut."
         },
-        "cloudRelevance": {
-          "headlines": [
-            "Bir AI her makaleyi okuyarak hangilerinin sana önemli olduğunu belirliyor.",
-            "İsteğin şifreli, bu yüzden onu yalnızca kapalı kapsülündeki AI okuyabilir."
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "Her uygun hikaye için kısa bir not yazılıyor.",
-            "Uzaklaşabilirsin. Hazır olduğunda sana bildirim göndeririz.",
-            "Her şey telefonun ile AI'ın kapalı kapsülü arasında şifreli kalır."
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "Telefonun bu hikayeleri senin için puanlıyor.",
-            "Bu adım tamamen cihazında gerçekleşiyor: hiçbir şey dışarı çıkmıyor."
-          ]
-        },
         "downloading": {
           "headlines": [
             "Bugünün makaleleri telefonunuza geliyor.",
@@ -155,8 +136,8 @@
         "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı"
       },
       "stageA11y": "Adım {{index}} / {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Mera is reading the news on this phone.",
+      "readingProgress": "Senin için {{total}} haberden {{done}} tanesi okunuyor",
+      "onDeviceReading": "Mera haberleri bu telefonda okuyor.",
       "writingReasons": "Her uygun hikaye için kısa bir not yazılıyor."
     },
     "syncToast": {
@@ -290,34 +271,34 @@
       "helpStatus": "Yapay zeka sağlayıcısının durumu"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
-      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "Mera picked new stories while you were reading.",
-      "stillReading": "Mera is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "Mera keeps reading in the background. Check back later."
+      "upToDateTitle": "Senin için önemli olan haberlerin hepsini okudun.",
+      "upToDateBody_one": "Senin için önemli olma ihtimali daha düşük {{count}} haber daha var.",
+      "upToDateBody_other": "Senin için önemli olma ihtimali daha düşük {{count}} haber daha var.",
+      "nothingTitle": "Şu anda senin için önemli görünen yeni bir şey yok.",
+      "nothingBody_one": "Mera, seni hâlâ ilgilendirebilecek {{count}} haber buldu.",
+      "nothingBody_other": "Mera, seni hâlâ ilgilendirebilecek {{count}} haber buldu.",
+      "showThem": "Hepsini göster",
+      "label": "Senin için önemli olma ihtimali daha düşük",
+      "shownAnnounce_one": "{{count}} haber daha gösteriliyor",
+      "shownAnnounce_other": "{{count}} haber daha gösteriliyor",
+      "held": "Sen okurken Mera yeni haberler seçti.",
+      "stillReading": "Mera hâlâ okuyor. Yeni haberler burada görünecek.",
+      "endTitle": "Şimdilik hepsi bu.",
+      "endBody": "Mera arka planda okumaya devam ediyor. Daha sonra tekrar bak."
     },
     "firstFeed": {
-      "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
-      "link": "How Mera keeps this private",
-      "dismiss": "Dismiss"
+      "body": "Mera bugünün haberlerini senin için okuyor. İlgi alanların telefonunda kalır, bu yüzden hiçbir sunucu senin hakkında bir akış tutmaz. Bu yüzden Mera uygulamayı açtığında okumaya başlar.",
+      "link": "Mera bunu gizli nasıl tutuyor",
+      "dismiss": "Kapat"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "Dünden",
+      "fromDay": "{{day}} tarihinden",
+      "fromDate": "{{date}} tarihinden"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell Mera where you live to start your feed."
+    "moreReports_one": "{{count}} rapor daha",
+    "moreReports_other": "{{count}} rapor daha",
+    "homeChipHint": "Akışını başlatmak için Mera'ya nerede yaşadığını söyle."
   },
   "relevance": {
     "emergency": "Acil",
@@ -377,12 +358,7 @@
   },
   "onboarding": {
     "stepOf": "Adım {{current}} / {{total}}",
-    "connectionIssue": "Bağlantı Sorunu",
-    "connectionDescription": "Sunucuya ulaşmakta sorun yaşıyoruz. Uygulamayı kapat ve biraz sonra tekrar dene.",
-    "logout": "Çıkış Yap",
     "close": "Kapat",
-    "logoutFailedTitle": "Çıkış Başarısız",
-    "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
     "composerPlaceholder": "Hayatınızı anlatın",
     "factsCount_one": "Hakkınızda {{count}} bilgi",
     "factsCount_other": "Hakkınızda {{count}} bilgi",
@@ -419,11 +395,11 @@
     "placeholderAbout": "İstediğinizi sorun",
     "pathLocation": "Konumumu ayarla",
     "locationAsk": "Nerede yaşıyorsunuz? İstediğiniz kadar paylaşın: bir mahalle ve şehir, ya da yalnızca eyaletiniz veya ülkeniz.",
-    "gateHint": "Tell Mera one thing so your feed is yours.",
-    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "Mera is taking a while. Pick where you live instead."
+    "gateHint": "Akışının senin olması için Mera'ya bir şey söyle.",
+    "privacyLine": "Mera'ya söylediklerin bu telefonda kalır. Mera bunları senin için haberleri okumak için kullanır.",
+    "homeChip": "{{country}} ülkesinde yaşıyorum",
+    "homeChipThe": "{{country}} bölgesinde yaşıyorum",
+    "fallbackPick": "Mera biraz zaman alıyor. Bunun yerine nerede yaşadığını seç."
   },
   "notifications": {
     "title": "Bildirimler",
@@ -2946,7 +2922,7 @@
       "mathWorld": "Bir haberi ele alan her ülke habere 1 puan verir. O ülkedeki her ek yayıncı için biraz daha eklenir, ama her ülke en fazla 4 puanla sınırlıdır. Tüm ülkeler toplanır ve en yüksek toplam en üstte yer alır.",
       "mathCountry": "Bu ülkenin yayıncılarının son 24 saatte bir habere dair yazdığı makaleleri sayın. En çok makalesi olan haber en üstte yer alır."
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "Yaşadığın yerden haber almak ister misin?"
   },
   "library": {
     "saved": {
@@ -3227,14 +3203,8 @@
     }
   },
   "gate": {
-    "getHelp": "Yardım alın",
     "noEmailBody": "Bu telefonda giriş yaparken bir sorun oluştu. Destekle iletişime geçin veya bu telefonu sıfırlayıp yeniden giriş yapın.",
     "noEmailTitle": "Hesabınızla ilgili bir sorun var",
-    "offlineBody": "Mera, açılmadan önce hesabınızı kontrol etmek için bağlantıya ihtiyaç duyar.",
-    "offlineTitle": "Çevrimdışısınız",
-    "opensByItself": "Tekrar çevrimiçi olduğunuzda kendiliğinden açılır",
-    "unreachableBody": "Sorun telefonunuzda değil, bizim tarafımızda. Mera denemeye devam eder ve geri geldiğinde açılır.",
-    "unreachableTitle": "Mera'ya ulaşılamıyor",
     "contactSupport": "Destekle iletişime geçin",
     "resetPhone": "Bu telefonu sıfırlayın ve yeniden giriş yapın",
     "resetTitle": "Bu telefon sıfırlansın mı?",

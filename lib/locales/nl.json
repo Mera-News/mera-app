@@ -104,25 +104,6 @@
           ],
           "amberSubline": "Houd dit scherm alsjeblieft open."
         },
-        "cloudRelevance": {
-          "headlines": [
-            "Een AI leest elk artikel om te zien welke voor jou van belang zijn.",
-            "Je verzoek is versleuteld, zodat alleen de AI in zijn afgesloten enclave het kan lezen."
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "Een korte notitie schrijven voor elk relevant artikel.",
-            "Je kunt wegstappen. We sturen je een melding wanneer het klaar is.",
-            "Alles blijft versleuteld tussen je telefoon en de afgesloten enclave van de AI."
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "Je telefoon scoort deze artikelen voor jou.",
-            "Dit gebeurt volledig op je apparaat: niets verlaat het."
-          ]
-        },
         "downloading": {
           "headlines": [
             "De artikelen van vandaag komen naar je telefoon.",
@@ -155,8 +136,8 @@
         "ready": "{{ready}} van {{total}} analyserondes klaar"
       },
       "stageA11y": "Stap {{index}} van {{total}}: {{name}}",
-      "readingProgress": "Reading {{done}} of {{total}} for you",
-      "onDeviceReading": "Mera is reading the news on this phone.",
+      "readingProgress": "Bezig met lezen: {{done}} van {{total}} voor jou",
+      "onDeviceReading": "Mera leest het nieuws op deze telefoon.",
       "writingReasons": "Een korte notitie schrijven voor elk relevant artikel."
     },
     "syncToast": {
@@ -290,34 +271,34 @@
       "helpStatus": "Status van AI-aanbieder"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
-      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
-      "held": "Mera picked new stories while you were reading.",
-      "stillReading": "Mera is still reading. New stories will show up here.",
-      "endTitle": "That's everything for now.",
-      "endBody": "Mera keeps reading in the background. Check back later."
+      "upToDateTitle": "Je bent helemaal bij met wat voor jou relevant is.",
+      "upToDateBody_one": "Nog {{count}} verhaal is minder waarschijnlijk belangrijk voor jou.",
+      "upToDateBody_other": "Nog {{count}} verhalen zijn minder waarschijnlijk belangrijk voor jou.",
+      "nothingTitle": "Op dit moment lijkt er niets nieuws belangrijk voor jou.",
+      "nothingBody_one": "Mera vond {{count}} verhaal dat je misschien nog interesseert.",
+      "nothingBody_other": "Mera vond {{count}} verhalen die je misschien nog interesseren.",
+      "showThem": "Toon ze",
+      "label": "Minder waarschijnlijk belangrijk voor jou",
+      "shownAnnounce_one": "{{count}} extra verhaal wordt getoond",
+      "shownAnnounce_other": "{{count}} extra verhalen worden getoond",
+      "held": "Mera koos nieuwe verhalen terwijl je aan het lezen was.",
+      "stillReading": "Mera leest nog steeds. Nieuwe verhalen verschijnen hier.",
+      "endTitle": "Dat is alles voor nu.",
+      "endBody": "Mera blijft op de achtergrond lezen. Kom later nog eens kijken."
     },
     "firstFeed": {
-      "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
-      "link": "How Mera keeps this private",
-      "dismiss": "Dismiss"
+      "body": "Mera leest het nieuws van vandaag voor je. Je interesses blijven op je telefoon, dus geen server bewaart een feed over jou. Daarom begint Mera met lezen zodra je de app opent.",
+      "link": "Zo houdt Mera dit privé",
+      "dismiss": "Sluiten"
     },
     "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
+      "yesterday": "Van gisteren",
+      "fromDay": "Van {{day}}",
+      "fromDate": "Van {{date}}"
     },
-    "moreReports_one": "{{count}} more report",
-    "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell Mera where you live to start your feed."
+    "moreReports_one": "{{count}} extra bericht",
+    "moreReports_other": "{{count}} extra berichten",
+    "homeChipHint": "Vertel Mera waar je woont om je feed te starten."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -377,12 +358,7 @@
   },
   "onboarding": {
     "stepOf": "Stap {{current}} van {{total}}",
-    "connectionIssue": "Verbindingsprobleem",
-    "connectionDescription": "We kunnen de server niet bereiken. Sluit de app en probeer het over een tijdje opnieuw.",
-    "logout": "Uitloggen",
     "close": "Sluiten",
-    "logoutFailedTitle": "Uitloggen mislukt",
-    "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
     "composerPlaceholder": "Vertel me over je leven",
     "factsCount_one": "{{count}} feit over jou",
     "factsCount_other": "{{count}} feiten over jou",
@@ -419,11 +395,11 @@
     "placeholderAbout": "Vraag wat je wilt",
     "pathLocation": "Mijn locatie instellen",
     "locationAsk": "Waar woon je? Deel zoveel als je wilt: een buurt en stad, of alleen je regio of land.",
-    "gateHint": "Tell Mera one thing so your feed is yours.",
-    "privacyLine": "What you tell Mera stays on this phone. Mera uses it to read the news for you.",
-    "homeChip": "I live in {{country}}",
-    "homeChipThe": "I live in the {{country}}",
-    "fallbackPick": "Mera is taking a while. Pick where you live instead."
+    "gateHint": "Vertel Mera één ding, zodat je feed van jou is.",
+    "privacyLine": "Wat je aan Mera vertelt, blijft op deze telefoon. Mera gebruikt het om het nieuws voor je te lezen.",
+    "homeChip": "Ik woon in {{country}}",
+    "homeChipThe": "Ik woon in de {{country}}",
+    "fallbackPick": "Mera doet er even over. Kies in plaats daarvan waar je woont."
   },
   "notifications": {
     "title": "Meldingen",
@@ -2944,7 +2920,7 @@
       "mathWorld": "Elk land dat een verhaal behandelt, geeft het 1 punt, plus een beetje meer voor elke extra uitgever daar, tot maximaal 4 punten per land. Tel alle landen op, en het hoogste totaal staat bovenaan.",
       "mathCountry": "Tel de artikelen die de uitgevers van dit land in de afgelopen 24 uur over een verhaal schreven. Het verhaal met de meeste artikelen staat bovenaan."
     },
-    "homeRow": "Want news from where you live?"
+    "homeRow": "Wil je nieuws uit waar je woont?"
   },
   "library": {
     "saved": {
@@ -3225,14 +3201,8 @@
     }
   },
   "gate": {
-    "getHelp": "Hulp krijgen",
     "noEmailBody": "Er ging iets mis bij het inloggen op deze telefoon. Neem contact op met support, of reset deze telefoon en log opnieuw in.",
     "noEmailTitle": "Er is een probleem met je account",
-    "offlineBody": "Mera heeft een verbinding nodig om je account te controleren voordat het opent.",
-    "offlineTitle": "Je bent offline",
-    "opensByItself": "Opent vanzelf zodra je weer online bent",
-    "unreachableBody": "Het probleem zit aan onze kant, niet op je telefoon. Mera blijft het proberen en opent zodra het weer kan.",
-    "unreachableTitle": "Mera is niet bereikbaar",
     "contactSupport": "Contact opnemen met support",
     "resetPhone": "Deze telefoon resetten en opnieuw inloggen",
     "resetTitle": "Deze telefoon resetten?",

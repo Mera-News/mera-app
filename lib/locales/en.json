@@ -142,25 +142,6 @@
           ],
           "amberSubline": "Please keep this screen open."
         },
-        "cloudRelevance": {
-          "headlines": [
-            "An AI is reading each article to see which ones matter to you.",
-            "Your request is encrypted so only the AI in its sealed enclave can read it."
-          ]
-        },
-        "cloudReasons": {
-          "headlines": [
-            "Writing a short note for each relevant story.",
-            "You can step away. We’ll notify you when it’s ready.",
-            "Everything stays encrypted between your phone and the AI's sealed enclave."
-          ]
-        },
-        "onDevice": {
-          "headlines": [
-            "Your phone is scoring these stories for you.",
-            "This happens entirely on your device: nothing leaves it."
-          ]
-        },
         "downloading": {
           "headlines": [
             "Pulling today's articles onto your phone.",
@@ -725,12 +706,7 @@
   },
   "onboarding": {
     "stepOf": "Step {{current}} of {{total}}",
-    "connectionIssue": "Connection Issue",
-    "connectionDescription": "We're having trouble reaching the server. Close the app and try again in a little while.",
-    "logout": "Logout",
     "close": "Close",
-    "logoutFailedTitle": "Logout Failed",
-    "logoutFailedDescription": "There was an issue signing out. Please try again.",
     "composerPlaceholder": "Tell me about your life",
     "factsCount_one": "{{count}} fact about you",
     "factsCount_other": "{{count}} facts about you",
@@ -3226,14 +3202,8 @@
     }
   },
   "gate": {
-    "getHelp": "Get help",
     "noEmailBody": "Something went wrong signing in on this phone. Contact support, or reset this phone and sign in again.",
     "noEmailTitle": "There's a problem with your account",
-    "offlineBody": "Mera needs a connection to check your account before it opens.",
-    "offlineTitle": "You're offline",
-    "opensByItself": "Opens by itself when you're back online",
-    "unreachableBody": "The problem is on our side, not your phone. Mera keeps trying and opens when it's back.",
-    "unreachableTitle": "Mera can't be reached",
     "contactSupport": "Contact support",
     "resetPhone": "Reset this phone and sign in again",
     "resetTitle": "Reset this phone?",
