@@ -17,7 +17,7 @@ jest.mock('@/components/custom/onboarding/OnboardingScreen', () => ({
   },
 }));
 
-it('lands on World and starts a feed sync past the debounce', async () => {
+it('lands on the Feed (D3) and starts a feed sync past the debounce', async () => {
   const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
   await setSetting('cached_user_id', 'user-1');
   await render(<Onboarding />);
@@ -25,7 +25,8 @@ it('lands on World and starts a feed sync past the debounce', async () => {
 
   finish?.();
 
-  expect(router.replace).toHaveBeenCalledWith('/logged-in/app_container/world');
+  expect(router.replace).toHaveBeenCalledWith('/logged-in/app_container/feed');
+  expect(router.replace).not.toHaveBeenCalledWith('/logged-in/app_container/world');
   expect(trigger).toHaveBeenCalledWith('feed-sync', undefined, { bypassDebounce: true });
   trigger.mockRestore();
 });

@@ -57,6 +57,7 @@ import {
     isAuthReadQuarantined,
 } from '@/lib/security/install-boundary-latch';
 import { setPin } from '@/lib/security/pin-service';
+import { upsertLocation } from '@/lib/database/services/location-service';
 import { STARTUP_TAB_DEFAULT } from '@/lib/navigation/startup-tab';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
@@ -66,12 +67,12 @@ import {
     FIXTURE_ACCOUNT,
     HttpResponse,
     failSecureStore,
+    graphql,
     http,
     secureStoreDump,
     server,
     setAppState,
     signInFixtureAccount,
-    useFakeClock,
 } from '@/test/helpers';
 import { personaFor } from '@/test/mock-backend/fixtures/graphql/persona';
 import { RESTORE_CAP_MS } from '@/components/custom/auth/useLoggedInGate';
@@ -286,6 +287,34 @@ describe('useLoggedInGate: where a signed-in launch goes', () => {
         await drain();
 
         expect(replaced()).toEqual([['/logged-in/app_container/world']]);
+    });
+
+    it('a finished account with a place and no facts opens on the Feed, which syncs for it (D1)', async () => {
+        await signIn();
+        await setSetting('cached_user_id', ME);
+        await markOnboardingDone();
+        await upsertLocation({ countryCode: 'NL', city: 'Amsterdam', role: 'home' });
+
+        await mountGate();
+        await waitForRoute();
+        await drain();
+
+        expect(replaced()).toEqual([[APP_ROUTE]]);
+    });
+
+    it('a persona fetch that never answers holds neither the route nor the start screen', async () => {
+        let answer: (r: Response) => void = () => undefined;
+        const hung = new Promise<Response>((resolve) => {
+            answer = resolve;
+        });
+        server.use(graphql.query('GetUserPersona', () => hung));
+        await signIn();
+
+        await mountGate();
+        await waitForRoute();
+
+        expect(replaced()).toEqual([['/logged-in/onboarding']]);
+        answer(HttpResponse.json({ errors: [{ message: 'late' }] }));
     });
 
     it('opens on the tab the person chose, not the default', async () => {
@@ -752,9 +781,10 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
         expect(await getSetting(IDENTITY_FAULT_KEY)).toBe('1');
     });
 
-    it('offline with a coherent local identity: adopts the id in memory, writes nothing, shows the offline gate', async () => {
+    it('offline with a coherent local identity: adopts the id in memory, writes nothing, opens the tabs (D4)', async () => {
         useNetworkStore.setState({ isConnected: false });
         await setSetting('cached_user_id', ME);
+        await markOnboardingDone();
         const writes: string[] = [];
         const real = settingService.setSetting;
         track(jest.spyOn(settingService, 'setSetting')).mockImplementation((k, v) => {
@@ -762,23 +792,27 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             return real(k, v);
         });
 
-        const hook = await mountGate();
-        await waitFor(() => expect(hook.result.current.gate).toBe('offline'), { timeout: 8000 });
+        await mountGate();
+        await waitForRoute();
         await drain();
 
         expect(await getSetting('cached_user_id')).toBe(ME);
         expect(writes.filter((k) => k === 'cached_user_id' || k === HAS_LAUNCHED_SETTING_KEY)).toEqual([]);
         expect(useUserStore.getState().userId).toBe(ME);
-        expect(replaced()).toEqual([]);
+        // The root layout's offline band says why nothing loads; no full-screen gate.
+        expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
     });
 
+    // D4 / D16(4): the launch routes on local state alone. The account check runs after the route;
+    // a dead verdict flags needsReauth (feed-sync pauses) and tries the silent resume, and the
+    // sign-in gate waits for the next return (ReauthOnReturn), never an immediate /login.
     describe('the launch account check', () => {
-        const recheckOnly = (reply: () => Response) =>
+        const recheckOnly = (reply: () => Response | Promise<Response>) =>
             http.get('*/api/auth/get-session', ({ request }) =>
                 new URL(request.url).searchParams.has('disableCookieCache') ? reply() : undefined,
             );
 
-        it('a dead session at launch routes to sign in with reauth', async () => {
+        it('a dead session at launch opens the app and flags reauth, never /login', async () => {
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
@@ -788,27 +822,29 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
             await waitForRoute();
             await drain();
 
-            expect(replaced()).toEqual([[REAUTH]]);
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            expect(useUserStore.getState().needsReauth).toBe(true);
         });
 
-        it('a dead session routes to sign in even when the check answers after the local reads', async () => {
-            // The board's start screen stays up while the check runs: a slow answer still gates.
+        it('a check that never answers does not hold the route', async () => {
+            let answer: (r: Response) => void = () => undefined;
+            const pending = new Promise<Response>((resolve) => {
+                answer = resolve;
+            });
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
-            server.use(
-                http.get('*/api/auth/get-session', async ({ request }) => {
-                    if (!new URL(request.url).searchParams.has('disableCookieCache')) return undefined;
-                    await new Promise((resolve) => setTimeout(resolve, 400));
-                    return HttpResponse.json(null);
-                }),
-            );
+            server.use(recheckOnly(() => pending));
 
             await mountGate();
             await waitForRoute();
-            await drain();
 
-            expect(replaced()).toEqual([[REAUTH]]);
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            // A dead answer that lands later still routes nowhere.
+            answer(HttpResponse.json(null));
+            await drain();
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+            expect(useUserStore.getState().needsReauth).toBe(true);
         });
 
         describe('the silent resume', () => {
@@ -836,7 +872,7 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
                 setAppState('active');
             });
 
-            it('a resumed session opens the app, past the sign-in gate', async () => {
+            it('a dead session found after the route resumes in place', async () => {
                 const posts = signInPosts();
                 server.use(deadUntil(posts));
 
@@ -846,9 +882,10 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
 
                 expect(posts).toHaveLength(1);
                 expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+                expect(useUserStore.getState().needsReauth).toBe(false);
             });
 
-            it('a 409 shows the sign-in gate', async () => {
+            it('a 409 leaves the reader in the app with reauth flagged for the next return', async () => {
                 const posts = signInPosts(() =>
                     HttpResponse.json({ code: 'DEVICE_NOT_BOUND', message: 'x' }, { status: 409 }),
                 );
@@ -859,12 +896,11 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
                 await drain();
 
                 expect(posts).toHaveLength(1);
-                expect(replaced()).toEqual([[REAUTH]]);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+                expect(useUserStore.getState().needsReauth).toBe(true);
             });
 
-            it('a refused account still routes when its session re-ran the gate', async () => {
-                // The refetch of the refused session lands a round trip after the reply, past the
-                // switch hold, and the re-run it causes stops there.
+            it('a refused account changes neither the route nor the stamp', async () => {
                 const posts = signInPosts(() => {
                     setTimeout(
                         () => sessionAtom().set({ ...sessionAtom().get(), data: { user: { id: FOREIGN }, session: {} } }),
@@ -879,77 +915,68 @@ describe('useLoggedInGate: ownership fault and the account check', () => {
                 await drain();
 
                 expect(posts).toHaveLength(1);
-                expect(replaced()).toEqual([[REAUTH]]);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
                 expect(await getSetting('cached_user_id')).toBe(ME);
             });
 
-            it('a launch in the background waits for the reader before attesting', async () => {
+            it('a launch in the background routes at once and attests nothing while away', async () => {
                 setAppState('background');
                 const posts = signInPosts();
                 server.use(deadUntil(posts));
 
                 await mountGate();
-                await drain();
-                expect(posts).toEqual([]);
-                expect(replaced()).toEqual([]);
-
-                setAppState('active');
                 await waitForRoute();
                 await drain();
-                expect(posts).toHaveLength(1);
+
                 expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
+                expect(posts).toEqual([]);
+                expect(useUserStore.getState().needsReauth).toBe(true);
             });
 
-            it('a resume that hangs cannot hold the start screen past the cap', async () => {
-                const hang = new Promise<never>(() => undefined);
-                track(jest.spyOn(sessionResume, 'resumeDeadSession')).mockReturnValue(hang);
+            it('a resume that hangs holds nothing', async () => {
+                track(jest.spyOn(sessionResume, 'resumeDeadSession')).mockReturnValue(new Promise<never>(() => undefined));
                 server.use(recheckOnly(() => HttpResponse.json(null)));
-                useFakeClock(Date.now(), { advanceTimers: true });
 
                 await mountGate();
                 await waitForRoute();
 
-                expect(replaced()).toEqual([[REAUTH]]);
+                expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
             });
         });
 
-        it('Mera down at a cold start shows the unreachable gate, not an app whose queries fail', async () => {
+        it('Mera down at a cold start opens the app; the offline band explains it', async () => {
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
             server.use(
                 recheckOnly(() => HttpResponse.json({ message: 'boom' }, { status: 500 })),
                 http.get('*/api/auth/ok', () => new HttpResponse(null, { status: 503 })),
-                http.get('*/generate_204', () => new HttpResponse(null, { status: 204 })),
-                http.get('*/hotspot-detect.html', () => HttpResponse.text('Success')),
             );
 
-            const hook = await mountGate();
-            await waitFor(() => expect(hook.result.current.gate).toBe('unreachable'), { timeout: 8000 });
+            await mountGate();
+            await waitForRoute();
             await drain();
 
-            expect(replaced()).toEqual([]);
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         });
 
-        it('a link with no internet behind it (captive portal) is offline, never blamed on Mera', async () => {
+        it('a link with no internet behind it (captive portal) opens the app too', async () => {
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();
             server.use(
                 recheckOnly(() => HttpResponse.error()),
                 http.get('*/api/auth/ok', () => HttpResponse.error()),
-                http.get('*/generate_204', () => HttpResponse.text('portal login', { status: 200 })),
-                http.get('*/hotspot-detect.html', () => HttpResponse.text('portal login', { status: 200 })),
             );
 
-            const hook = await mountGate();
-            await waitFor(() => expect(hook.result.current.gate).toBe('offline'), { timeout: 8000 });
+            await mountGate();
+            await waitForRoute();
             await drain();
 
-            expect(replaced()).toEqual([]);
+            expect(replaced()).toEqual([[FACTLESS_ROUTE]]);
         });
 
-        it('a live session opens the app (the control for the two cases above)', async () => {
+        it('a live session opens the app (the control for the cases above)', async () => {
             await signIn();
             await setSetting('cached_user_id', ME);
             await markOnboardingDone();

@@ -90,7 +90,6 @@ type Mod<T> = T;
 let authClient: Mod<typeof import('@/lib/auth-client').authClient>;
 let useAppPreferences: typeof import('@/components/custom/config-mera/useAppPreferences').useAppPreferences;
 let useDeleteAccount: typeof import('@/components/custom/config-mera/use-delete-account').useDeleteAccount;
-let useServerErrorLogout: typeof import('@/components/custom/onboarding/useServerErrorLogout').useServerErrorLogout;
 let settings: typeof import('@/lib/database/services/setting-service');
 let factService: typeof import('@/lib/database/services/fact-service');
 let personaService: typeof import('@/lib/database/services/user-persona-service');
@@ -149,7 +148,6 @@ beforeAll(async () => {
     authClient = authModule.authClient;
     ({ useAppPreferences } = require('@/components/custom/config-mera/useAppPreferences'));
     ({ useDeleteAccount } = require('@/components/custom/config-mera/use-delete-account'));
-    ({ useServerErrorLogout } = require('@/components/custom/onboarding/useServerErrorLogout'));
     settings = require('@/lib/database/services/setting-service');
     factService = require('@/lib/database/services/fact-service');
     personaService = require('@/lib/database/services/user-persona-service');
@@ -962,44 +960,5 @@ describe('delete account (useDeleteAccount)', () => {
         const left = secrets();
         for (const k of SECURE_STORE_KEYS) expect(left[k]).toBeUndefined();
         expect(await AsyncStorage.getItem(CAPABILITY_TOKEN)).toBeNull();
-    });
-});
-
-// ---------------------------------------------------------------------------------------------
-// B2: the onboarding server-error logout
-// ---------------------------------------------------------------------------------------------
-
-describe('onboarding server-error logout (useServerErrorLogout)', () => {
-    async function logOutFromOnboarding() {
-        await signIn();
-        await settings.setSetting('cached_user_id', ME);
-        useUserStore.setState({ userId: ME });
-        const setShow = jest.fn();
-        const { result } = await renderHook(() => useServerErrorLogout(setShow));
-        await act(async () => {
-            await result.current.handleServerErrorLogout();
-        });
-        return { setShow, result };
-    }
-
-    it('hides the error, signs the session out, resets the SDKs and goes back to the launch gate', async () => {
-        const { setShow, result } = await logOutFromOnboarding();
-
-        expect(setShow).toHaveBeenCalledWith(false);
-        expect(secureStoreDump()[key('cookie')]).toBeUndefined();
-        expect(Purchases.logOut).toHaveBeenCalled();
-        expect(Intercom.logout).toHaveBeenCalled();
-        expect(replaced()).toEqual([[LOGIN_SIGNED_OUT]]);
-        expect(result.current.isLoggingOut).toBe(false);
-    });
-
-    test('B2 the onboarding logout leaves the device signed out', async () => {
-        await logOutFromOnboarding();
-
-        expect(await settings.getSetting('cached_user_id')).toBeNull();
-        const hasIdentity = (await launchRoute.readLocalIdentityState()) === 'present';
-        expect(
-            resolveLaunchRoute({ hasIdentity, lockEnabled: false, pinSet: false, locked: false }),
-        ).toBe('/login');
     });
 });

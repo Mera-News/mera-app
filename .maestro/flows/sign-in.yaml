@@ -22,26 +22,19 @@ appId: ${APP_ID}
 - tapOn:
     id: "auth-consent-agree"
 # Agree is the sign-in, and consent was accepted with it, so no gate here.
-# Onboarding step 1: tell Mera one interest and add the offered fact. A zero-fact Feed requests no
-# articles (D2), so this is what gives the Feed cards. The mock's default responder scripts the
-# turn ("I follow ..." -> facts/interest -> saveExtractedFacts) and the topic generation.
+# Onboarding step 1: Next stays disabled until there is one fact (D2). The home-country chip saves
+# a residence fact in one tap with no chat turn, and a residence fact gives the Feed its country.
 - extendedWaitUntil:
     visible:
-      id: "chat-input"
+      id: "home-country-chip"
     timeout: 30000
 - tapOn:
-    id: "chat-input"
-- inputText: "I follow Formula 1 racing"
-- tapOn:
-    id: "chat-send"
+    id: "home-country-chip"
 - extendedWaitUntil:
     visible:
-      id: "fact-choice-add-.*"
-    timeout: 60000
-- tapOn:
-    id: "fact-choice-add-.*"
-# No hideKeyboard: on Android it presses BACK, which closed the app when no keyboard was up.
-# Next rides beside the composer, so it stays reachable with the keyboard open.
+      id: "onboarding-next"
+      enabled: true
+    timeout: 30000
 - tapOn:
     id: "onboarding-next"
 # Step 2 is the sources step (Skip with no picks); Next stays on screen across the switch.
@@ -63,13 +56,8 @@ appId: ${APP_ID}
     id: "onboarding-next"
 - tapOn:
     id: "onboarding-guard-notifications-secondary"
-# A finished wizard always lands on World, with the first sync running behind it
-# (handleComplete in app/logged-in/onboarding.tsx). Flows go on from the Feed, by deep link.
-- extendedWaitUntil:
-    visible:
-      id: "world-pages"
-    timeout: 60000
-- openLink: ${SCHEME}:///logged-in/app_container/feed
+# A finished wizard lands on the Feed (D3), with the first sync running behind it
+# (handleComplete in app/logged-in/onboarding.tsx).
 - extendedWaitUntil:
     visible:
       id: "feed-screen"

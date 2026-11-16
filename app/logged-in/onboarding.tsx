@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 
 /** The languages lib/i18n lays out right to left. */
 const RTL_LANGUAGES = new Set(["ar", "he"]);
-/** Long enough for the World route to commit, so the restart is not blocked. */
+/** Long enough for the Feed route to commit, so the restart is not blocked. */
 const RTL_RESTART_AFTER_MS = 1000;
 
 export default function Onboarding() {
@@ -98,18 +98,18 @@ export default function Onboarding() {
         router.replace({ pathname: "/login", params: { reauth: "1" } });
     }, []);
 
-    // ALWAYS World, and start the first sync NOW. World has news the moment it
-    // opens; Feed fills behind it while the reader's topics are written. The
+    // ALWAYS the Feed (D3), and start the first sync NOW: the wizard asks for
+    // one fact before Next, so the Feed has something to read for. The
     // startup-tab preference (lib/navigation/startup-tab.ts) is deliberately NOT
     // consulted: it answers "where do I like to start when I open the app", and
     // it is applied on the returning-user path in app/logged-in/index.tsx. This
     // also runs on a re-login to a finished device, which lands here too.
     const handleComplete = useCallback(() => {
         void AppScheduler.trigger("feed-sync", undefined, { bypassDebounce: true });
-        router.replace("/logged-in/app_container/world");
+        router.replace("/logged-in/app_container/feed");
         // A right-to-left language picked on the first-launch track needs a
         // reload to flip the layout, and no restart can happen on /login or
-        // here (RESTART_BLOCKED_ROUTES). So the first moment it can is World:
+        // here (RESTART_BLOCKED_ROUTES). So the first moment it can is the Feed:
         // once, after the replace has committed. Until then Arabic reads in a
         // left-to-right layout.
         const rtl = RTL_LANGUAGES.has(useAppLanguageStore.getState().appLanguage);

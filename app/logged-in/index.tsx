@@ -6,7 +6,6 @@ import LaunchLogo from "@/components/custom/auth/LaunchLogo";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { StyleSheet } from "react-native";
 import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
-import AccountGateScreen from "@/components/custom/auth/AccountGateScreen";
 import { useLoggedInGate } from "@/components/custom/auth/useLoggedInGate";
 import { releaseSplash } from "@/lib/splash-hold";
 
@@ -21,16 +20,12 @@ export default function LoggedInIndex() {
 }
 
 function LoggedInGate() {
-    const { gate, wipeFailed, handleRetry } = useLoggedInGate();
+    const { wipeFailed, handleRetry } = useLoggedInGate();
 
     // Fail closed. Nothing was stamped and nothing was routed, so this screen
     // is still mounted and is the only thing the user can see. It reads no
-    // store and no persona — see its header for why that is a correctness rule
+    // store and no persona: see its header for why that is a correctness rule
     // rather than a preference.
-    if (gate) {
-        return <AccountGateScreen variant={gate} onRetry={handleRetry} />;
-    }
-
     if (wipeFailed) {
         // Rendered in place on the gate's own pathname, so no route releases
         // the held splash (lib/splash-hold.ts). Release it here.

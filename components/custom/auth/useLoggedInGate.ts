@@ -2,9 +2,7 @@ import { authClient } from "@/lib/auth-client";
 import logger from "@/lib/logger";
 import { clearPreviousUserData } from "@/lib/stores";
 import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
-import { type AccountGateVariant } from "@/components/custom/auth/AccountGateScreen";
-import { accountGateVerdict } from "@/lib/algorithms/account-gate";
-import { recheckSession, type RecheckOutcome } from "@/lib/auth-failure-breaker";
+import { recheckSession } from "@/lib/auth-failure-breaker";
 import { readSupportIdFromUser } from "@/lib/support-id";
 import { getSetting, setSetting } from "@/lib/database/services/setting-service";
 import { assertPersonaOwner } from "@/lib/database/services/user-persona-service";
@@ -17,9 +15,9 @@ import {
     resolveIdentity,
 } from "@/lib/security/identity-gate";
 import { wipeAllLocalUserData } from "@/lib/security/local-wipe";
-import { resumeDeadSession, whenForeground } from "@/lib/session-resume";
+import { resumeDeadSession } from "@/lib/session-resume";
 import { useUserStore } from "@/lib/stores/user-store";
-import { probeInternetReachable, probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
+import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { bindPhoneOnce } from "@/components/custom/auth/bind-phone";
@@ -41,8 +39,19 @@ import { lastRestoreMissing, parseResumeSpot, restoreSpot, type RestoreResult } 
 import { beginRestoreLook, endRestoreLook } from "@/lib/splash-hold";
 import { useCallback, useEffect, useState } from "react";
 
-/** How long the start screen waits for the launch account check (nav-redesign-v2 plan #6/#7). */
-const LAUNCH_ACCOUNT_CHECK_CAP_MS = 8_000;
+/**
+ * The launch account check, run AFTER the route (D4): launch never waits on the
+ * network. A dead verdict persists needsReauth itself (feed-sync pauses), then
+ * the phone's key tries a silent resume; when that fails the sign-in gate waits
+ * for the next return (ReauthOnReturn), never an immediate /login. The resume
+ * refuses in the background and under a PIN lock, so a background launch and a
+ * locked one leave it to that return too.
+ */
+function checkAccountAfterRoute(): void {
+    void recheckSession()
+        .then((outcome) => (outcome === 'dead' ? resumeDeadSession() : false))
+        .catch(() => false);
+}
 
 /**
  * After the startup tab is in place: the gate is passed, so a notification tap
@@ -151,12 +160,9 @@ export function useLoggedInGate() {
     // routing; `retryNonce` is what its "Try again" bumps to re-run the effect.
     const [wipeFailed, setWipeFailed] = useState(false);
     const [retryNonce, setRetryNonce] = useState(0);
-    // The account gate (offline / unreachable), rendered in place.
-    const [gate, setGate] = useState<AccountGateVariant | null>(null);
 
     const handleRetry = useCallback(() => {
         setWipeFailed(false);
-        setGate(null);
         setRetryNonce((n) => n + 1);
     }, []);
 
@@ -200,16 +206,6 @@ export function useLoggedInGate() {
             }
 
             const userStore = useUserStore.getState();
-
-            // The launch account check, started in PARALLEL with the local
-            // reads below and awaited (capped) only at the verdict, so a
-            // normal launch pays only whatever the check takes beyond them.
-            let accountCheck: RecheckOutcome | null = null;
-            const accountCheckSettled = recheckSession()
-                .catch((): RecheckOutcome => 'inconclusive')
-                .then((o) => {
-                    accountCheck = o;
-                });
 
             try {
                 // Resolve session <-> local-identity coherence BEFORE anything
@@ -387,7 +383,6 @@ export function useLoggedInGate() {
                 // decides the route (see the fact gate below) but downstream
                 // screens read it, so keep it warm.
                 await userStore.hydrateFromDb();
-                const persona = useUserStore.getState().userPersona;
 
                 // Deliberately re-read rather than reusing the value from the
                 // identity gate above: several awaits have happened since, and
@@ -409,17 +404,6 @@ export function useLoggedInGate() {
                     // debounce must not make a returning user wait a minute to
                     // learn their plan lapsed while the app was closed.
                     void syncEntitlement({ force: true });
-
-                    // No cached persona yet (fresh login) — downstream screens
-                    // read it, so pull it before handing off. Routing no longer
-                    // depends on it, so a failure here is simply swallowed.
-                    if (!persona) {
-                        try {
-                            await userStore.fetchUserPersonaOrThrow(userId, true);
-                        } catch {
-                            // Non-fatal — the fact gate below is local.
-                        }
-                    }
                 }
 
                 // The Support ID, kept for the no-email account gate, which
@@ -440,63 +424,6 @@ export function useLoggedInGate() {
                 // PREVIOUS user's state and reports the incoming user as
                 // already onboarded. That is the leak, and this is the line it
                 // comes out of.
-                // Definite answers only (account-gate.ts): a dead session
-                // signs in again, a phone with no connection or a server
-                // marked unreachable gets the gate. FinalStart #2: a check
-                // still running keeps the start screen up until it answers;
-                // never awaiting it opened a dead session straight into an
-                // app whose every query failed. Past the cap it opens the app.
-                if (useNetworkStore.getState().isConnected) {
-                    let capTimer: ReturnType<typeof setTimeout> | undefined;
-                    await Promise.race([
-                        accountCheckSettled,
-                        new Promise<void>((resolve) => {
-                            capTimer = setTimeout(resolve, LAUNCH_ACCOUNT_CHECK_CAP_MS);
-                        }),
-                    ]);
-                    clearTimeout(capTimer);
-                    // Inconclusive: is Mera up, and if not, is the internet?
-                    // Mera down = "can't be reached"; neither = offline. Each
-                    // probe is bounded at 3s inside.
-                    if (accountCheck === 'inconclusive' && !(await probeServerReachable())) {
-                        await probeInternetReachable();
-                    }
-                }
-                const network = useNetworkStore.getState();
-                const gateVerdict = accountGateVerdict({
-                    outcome: accountCheck,
-                    isConnected: network.isConnected,
-                    serverReachable: network.serverReachable,
-                    internetReachable: network.internetReachable,
-                });
-                if (cancelled) return;
-                if (gateVerdict === 'reauth') {
-                    // Before the sign-in gate: the phone's key can usually bring the
-                    // session back. A launch in the background waits for the reader.
-                    await whenForeground();
-                    if (cancelled) return;
-                    let capTimer: ReturnType<typeof setTimeout> | undefined;
-                    const resumed = await Promise.race([
-                        resumeDeadSession(),
-                        new Promise<boolean>((resolve) => {
-                            capTimer = setTimeout(() => resolve(false), LAUNCH_ACCOUNT_CHECK_CAP_MS);
-                        }),
-                    ]);
-                    clearTimeout(capTimer);
-                    // Past `cancelled` on purpose: a refused account's session lands
-                    // in the atom and re-runs this gate, and that run stops at the
-                    // account-switch hold with nothing else to route the reader.
-                    if (!resumed) {
-                        router.replace({ pathname: '/login', params: { reauth: '1' } });
-                        return;
-                    }
-                    if (cancelled) return;
-                }
-                if (gateVerdict === 'offline' || gateVerdict === 'unreachable') {
-                    setGate(gateVerdict);
-                    return;
-                }
-
                 let done = false;
                 try {
                     done = await isOnboardingDone();
@@ -521,6 +448,7 @@ export function useLoggedInGate() {
                         loadFeedViewPrefs(),
                     ]);
                     if (cancelled) return;
+                    checkAccountAfterRoute();
                     await placeReader(startupTab, userId, () => cancelled);
                     return;
                 }
@@ -539,6 +467,7 @@ export function useLoggedInGate() {
                 // RevenueCat id. It is fire-and-forget now rather than awaited.
                 startEntitlementWarmup(userId);
                 router.replace('/logged-in/onboarding');
+                checkAccountAfterRoute();
                 return;
             } catch (error) {
                 // NARROWED. This used to drop every failure into the feed,
@@ -571,7 +500,7 @@ export function useLoggedInGate() {
         // Re-run when the session id changes (login/logout), and when the
         // blocking screen asks for a retry. Never on a useSession poll tick.
     }, [session?.user?.id, retryNonce]);
-    return { gate, wipeFailed, handleRetry };
+    return { wipeFailed, handleRetry };
 }
 
 export { wipeOnce, forceWipeOnce };
