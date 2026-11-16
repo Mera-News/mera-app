@@ -10,21 +10,49 @@ const ROOT = path.resolve(__dirname, '../../..');
 
 type StubModule = typeof import('@/lib/e2e/key-verifier');
 
-/** The stub as a bundle with EXPO_PUBLIC_E2E=flag would load it (E2E_MODE is read at load). */
-function loadStub(flag: string | undefined): StubModule {
-  const before = process.env.EXPO_PUBLIC_E2E;
-  if (flag === undefined) delete process.env.EXPO_PUBLIC_E2E;
-  else process.env.EXPO_PUBLIC_E2E = flag;
+/** Run `fn` with these env values set (undefined deletes), then restore them. */
+function withEnv<T>(env: Record<string, string | undefined>, fn: () => T): T {
+  const before = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
+  const apply = (vals: Record<string, string | undefined>) => {
+    for (const [k, v] of Object.entries(vals)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  };
+  apply(env);
   try {
+    return fn();
+  } finally {
+    apply(before);
+  }
+}
+
+/** The stub as a bundle built with these env values would load it (E2E_MODE is read at load). */
+function loadStub(flag: string | undefined, env: Record<string, string | undefined> = {}): StubModule {
+  return withEnv({ EXPO_PUBLIC_E2E: flag, ...env }, () => {
     let mod!: StubModule;
     jest.isolateModules(() => {
       mod = require('@/lib/e2e/key-verifier');
     });
     return mod;
-  } finally {
-    if (before === undefined) delete process.env.EXPO_PUBLIC_E2E;
-    else process.env.EXPO_PUBLIC_E2E = before;
-  }
+  });
+}
+
+/** What metro.config.js resolves e2ee-service's `./key-verifier` import to, for this flag. */
+function resolveKeyVerifier(flag: string | undefined): string {
+  return withEnv({ EXPO_PUBLIC_E2E: flag, E2E_DEVICE_BUILD: undefined }, () => {
+    let resolved = '';
+    jest.isolateModules(() => {
+      const config = require(path.join(ROOT, 'metro.config.js'));
+      const context = {
+        originModulePath: path.join(ROOT, 'lib/e2ee/e2ee-service.ts'),
+        // Metro's resolution shape: NativeWind's wrapper reads filePath off it.
+        resolveRequest: (_c: unknown, name: string) => ({ type: 'sourceFile', filePath: name }),
+      };
+      resolved = config.resolver.resolveRequest(context, './key-verifier', 'android').filePath;
+    });
+    return resolved;
+  });
 }
 
 const served = (signingPublicKey: string, signingAlgo: string) => ({
@@ -64,5 +92,23 @@ describe('e2e key-verifier stub', () => {
     const { verifyKey } = loadStub(undefined);
     const ed = TEST_MODEL_KEYS.ed25519.publicKeyHex;
     expect(verifyKey(served(ed, 'ed25519')).map((c) => c.id)).toContain('quote-structure');
+  });
+
+  // The flag alone is not E2E mode: a leaked flag with a real endpoint must still refuse.
+  it('judges the test keys for real when the flag is set but an endpoint is not loopback', () => {
+    const { verifyKey } = loadStub('1', { EXPO_PUBLIC_INFERENCE_ENDPOINT: 'https://inference.example.com' });
+    const ed = TEST_MODEL_KEYS.ed25519.publicKeyHex;
+    expect(verifyKey(served(ed, 'ed25519')).map((c) => c.id)).toContain('quote-structure');
+  });
+});
+
+describe('metro.config.js key-verifier alias', () => {
+  it('leaves the real verifier in place without EXPO_PUBLIC_E2E', () => {
+    expect(resolveKeyVerifier(undefined)).toBe('./key-verifier');
+    expect(resolveKeyVerifier('0')).toBe('./key-verifier');
+  });
+
+  it('swaps in the stub for an e2e build', () => {
+    expect(resolveKeyVerifier('1')).toBe(path.join(ROOT, 'lib/e2e/key-verifier.ts'));
   });
 });
