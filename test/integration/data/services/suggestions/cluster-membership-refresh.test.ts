@@ -44,7 +44,20 @@ describe('updateClusterMemberships', () => {
 
     expect(changed).toBe(6);
     expect(await groups()).toBe(1);
+    for (const id of ids) expect((await row(id)).stableClusterId).toBe('s-bhopal');
     expect(await row('b3')).toMatchObject({ status: 'complete', relevance: 0.85 });
+  });
+
+  it('keeps a stable cluster id the row already holds', async () => {
+    await seed([article('held', { clusters: own('held') })]);
+    await database.write(async () => {
+      const r = await database.get<any>('article_suggestions').find('held');
+      await r.update((x: any) => { x.stableClusterId = 's-meta'; });
+    });
+
+    await updateClusterMemberships([answer('held', bhopal)]);
+
+    expect((await row('held')).stableClusterId).toBe('s-meta');
   });
 
   it('leaves an omitted id alone and clears an id answered with no clusters', async () => {

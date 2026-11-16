@@ -335,7 +335,14 @@ export async function updateClusterMemberships(answer: ArticleClusterMemberships
     const ops = rows.flatMap((row) => {
       // An id the answer left out is "no info", never a clear.
       const next = byId.has(row.id) ? changedClusterJson(row, byId.get(row.id)) : undefined;
-      return next === undefined ? [] : [row.prepareUpdate((r) => { r.clusterMembershipsJson = next; })];
+      if (next === undefined) return [];
+      // The indexed column is what the subscribed-sibling query reads. Fill it when empty (rows
+      // hydrated before clustering); a value already there, persona-meta included, stays.
+      const scid = byId.get(row.id)?.find((c) => c.stableClusterId)?.stableClusterId ?? null;
+      return [row.prepareUpdate((r) => {
+        r.clusterMembershipsJson = next;
+        if (!r.stableClusterId && scid) r.stableClusterId = scid;
+      })];
     });
     if (ops.length > 0) await database.batch(ops);
     return ops.length;
