@@ -1,0 +1,517 @@
+{
+ "_provenance": {
+  "name": "calibration-tangential",
+  "synthetic": true,
+  "today": "2026-11-16",
+  "note": "Anonymised mirror of a real reader calibration set: other cities and countries, synthetic articles, no real reader data. Persona: lives in Copenhagen, from Brazil, trip to Slush Helsinki ENDED (as of today), on-device AI and privacy interests, AI-app founder. `calibration` per article: group KEEP/MAYBE/CUT/HIDDEN with optional min/max target on the FINAL score (D20.2: family-country routine items 0.40-0.59, every other CUT and HIDDEN <= 0.39, KEEP and strong MAYBE >= 0.6). Fact dates for the model: trip fact added 2026-10-28; the runner does not yet thread them.",
+  "factAddedOn": {
+   "Traveling to Slush Helsinki": "2026-10-28"
+  }
+ },
+ "personaFacts": [
+  {
+   "statement": "Partner's parents live in Gozo, Malta, EU"
+  },
+  {
+   "statement": "Parents live in Curitiba, Parana, Brazil, South America"
+  },
+  {
+   "statement": "From Brazil"
+  },
+  {
+   "statement": "Traveling to Slush Helsinki"
+  },
+  {
+   "statement": "Interested in on-device language models"
+  },
+  {
+   "statement": "Interested in privacy-safe AI"
+  },
+  {
+   "statement": "Entrepreneur building an AI-powered recipe app startup"
+  },
+  {
+   "statement": "Expat in Denmark"
+  },
+  {
+   "statement": "Lives in Norrebro, Copenhagen, Capital Region, Denmark, EU"
+  }
+ ],
+ "articles": [
+  {
+   "articleId": "cal-c01",
+   "title": "E. coli found again in Curitiba tap water, residents of Agua Verde ask the utility for answers",
+   "description": "Tests in the Agua Verde district found the same E. coli strain for the second time in 16 days. About 200 households report cloudy, foul-smelling water and the state water company has issued a boil notice.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Gazeta do Povo",
+   "languageCode": "pt",
+   "calibration": {
+    "group": "KEEP",
+    "min": 0.6
+   }
+  },
+  {
+   "articleId": "cal-c02",
+   "title": "Denmark cuts the residency needed for citizenship to six years for working residents",
+   "description": "Parliament approved a shorter path to Danish citizenship. Residents with a full-time job, Danish language level and no benefit claims can apply after six years instead of nine, starting next spring.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "The Local Denmark",
+   "languageCode": "en",
+   "calibration": {
+    "group": "KEEP",
+    "min": 0.6
+   }
+  },
+  {
+   "articleId": "cal-c03",
+   "title": "Denmark sets a minimum bank balance for people who invite visitors on a visa",
+   "description": "Hosts in Denmark who sponsor a family visit must now show a minimum balance on their account for the 90 days before the application.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "The Local Denmark",
+   "languageCode": "en",
+   "calibration": {
+    "group": "MAYBE"
+   }
+  },
+  {
+   "articleId": "cal-c04",
+   "title": "European gas prices fall as mild weather cuts heating demand",
+   "description": "Benchmark gas prices in Europe dropped for a third week as mild temperatures reduced heating demand and storage stayed above 90 percent.",
+   "countryCode": "EUR",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Reuters",
+   "languageCode": "en",
+   "calibration": {
+    "group": "MAYBE"
+   }
+  },
+  {
+   "articleId": "cal-c05",
+   "title": "Copenhagen rental market stalls and the personal fallout is often severe",
+   "description": "Tenants in Copenhagen cannot move because there is nothing to move to, and landlords report record queues for every flat. Housing associations describe long waiting lists.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "DR Nyheder",
+   "languageCode": "da",
+   "calibration": {
+    "group": "MAYBE"
+   }
+  },
+  {
+   "articleId": "cal-c06",
+   "title": "Revolutionary Guard says two oil tankers exploded after hitting sea mines in the Strait of Hormuz; heating oil and gas prices in Europe jump",
+   "description": "Two tankers hit naval mines in the Strait of Hormuz. Traders expect higher fuel and heating prices across Europe this winter.",
+   "countryCode": "IRN",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Al Jazeera",
+   "languageCode": "en",
+   "calibration": {
+    "group": "MAYBE",
+    "min": 0.6
+   }
+  },
+  {
+   "articleId": "cal-c07",
+   "title": "US families sue Microsoft and OpenAI, warning of a \"grave danger\" from AI chatbots",
+   "description": "A group of families filed a lawsuit in a federal court in California claiming that AI chatbots pose a grave danger to children and seeking damages.",
+   "countryCode": "USA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "The Verge",
+   "languageCode": "en",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c08",
+   "title": "Korean actress sues a studio over AI face-swap videos using her likeness",
+   "description": "The actress filed a lawsuit in Seoul saying a video studio used AI to copy her face without consent.",
+   "countryCode": "KOR",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Korea Herald",
+   "languageCode": "en",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c09",
+   "title": "Black bean prices rise in Curitiba markets, feijao reaches 9 reais a kilo",
+   "description": "Prices of black beans and rice rose in Curitiba open markets this week while sugar prices declined slightly.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Gazeta do Povo",
+   "languageCode": "pt",
+   "calibration": {
+    "group": "CUT",
+    "min": 0.4,
+    "max": 0.59
+   }
+  },
+  {
+   "articleId": "cal-c10",
+   "title": "This EU country has the cheapest housing for young buyers, but rent still takes almost half of income",
+   "description": "A new survey ranks EU countries by home affordability. Rent in the cheapest one still eats nearly half of a young renter's pay.",
+   "countryCode": "EUR",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Euronews",
+   "languageCode": "en",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c11",
+   "title": "Peruvian media groups in Arequipa sign a declaration on AI-generated news",
+   "description": "Regional editors meeting in Arequipa signed a declaration asking that AI use in newsrooms be disclosed to readers.",
+   "countryCode": "PER",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "El Comercio",
+   "languageCode": "es",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c12",
+   "title": "Two big orders in Curitiba: protest rallies need police notice, landlords must not evict tenants on short notice",
+   "description": "The city issued two orders. Organisers of protests must inform the police beforehand, and landlords are barred from forcing tenants out with less than 30 days notice.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Bem Parana",
+   "languageCode": "pt",
+   "calibration": {
+    "group": "CUT",
+    "min": 0.4,
+    "max": 0.59
+   }
+  },
+  {
+   "articleId": "cal-c13",
+   "title": "Tears from a tenant after drugs found in her flat: \"If I had known, he would have been out\"",
+   "description": "A Copenhagen housing association is evicting a tenant after police found drugs in the flat she had sublet. She says she knew nothing and the case goes to court.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "BT",
+   "languageCode": "da",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c14",
+   "title": "Training AI models keeps consuming more energy, French researchers find",
+   "description": "A study from a French research institute measured the electricity used by training runs over five years and found steady growth.",
+   "countryCode": "FRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Le Monde",
+   "languageCode": "fr",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c15",
+   "title": "Rail service resumes between Helsinki Central and Pasila after a signal fault",
+   "description": "Trains between Helsinki Central and Pasila are running again after a signal fault earlier in the day caused delays.",
+   "countryCode": "FIN",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Yle",
+   "languageCode": "fi",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c16",
+   "title": "Copenhagen introduces a record tourist tax from 2027",
+   "description": "The city council voted for a tourist tax on every hotel night, among the highest in Europe.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "DR Nyheder",
+   "languageCode": "da",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c17",
+   "title": "Why Copenhagen will soon charge the highest tourist tax in Europe",
+   "description": "Hotels warn that the new levy will push nightly prices up for visitors, while the city says it will fund harbour cleanup.",
+   "countryCode": "DNK",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Politiken",
+   "languageCode": "da",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c18",
+   "title": "Who is liable when an AI agent causes harm? Singapore law school seminar covers four legal puzzles",
+   "description": "A seminar at a Singapore law school discussed liability, contracts, privacy and evidence when AI agents act for users.",
+   "countryCode": "SGP",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Straits Times",
+   "languageCode": "en",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c19",
+   "title": "EU nations to unveil a deal with Kenya for a migrant return hub",
+   "description": "Several EU governments will present an agreement to send rejected asylum seekers to a processing hub in Kenya.",
+   "countryCode": "KEN",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Politico Europe",
+   "languageCode": "en",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-c20",
+   "title": "Contract nurses in Goias state to get health insurance cover",
+   "description": "Health workers on contract with the state health service will be added to the public insurance scheme next year.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "O Popular",
+   "languageCode": "pt",
+   "calibration": {
+    "group": "CUT",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h01",
+   "title": "Opinion: using AI to spread fakes",
+   "description": "A columnist argues that AI tools make disinformation cheaper to produce and harder to trace.",
+   "countryCode": "USA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Counterpunch",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h02",
+   "title": "Utility deploys 60 MWh of battery storage across Sao Paulo",
+   "description": "The power utility installed battery storage at substations across Sao Paulo to ease evening peaks.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Valor Economico",
+   "languageCode": "pt",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h03",
+   "title": "Heavy rain and cold nights forecast for Minas Gerais this week",
+   "description": "Forecasters expect rain in the state with cooler nights through the weekend.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Estado de Minas",
+   "languageCode": "pt",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h04",
+   "title": "Spain fail to keep their record as England end the unbeaten run in the Nations League",
+   "description": "England beat Spain in the Nations League while Italy crashed out of the competition.",
+   "countryCode": "ESP",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "BBC Sport",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h05",
+   "title": "Apple launches an AI health research app to study how people look for medical advice",
+   "description": "The research app will study how users search for health information and talk to AI about it.",
+   "countryCode": "USA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "9to5Mac",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h06",
+   "title": "Opinion: protect creators whose work trains AI without permission",
+   "description": "A columnist calls for stronger protections for writers and artists whose work is used to train AI models.",
+   "countryCode": "KOR",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Hankyoreh",
+   "languageCode": "ko",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h07",
+   "title": "Hong Kong promises a new cybersecurity law to defend against AI risks",
+   "description": "The government said a new cybersecurity law will address risks from AI and cross-border attacks.",
+   "countryCode": "HKG",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "RTHK",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h08",
+   "title": "Simpler visas, firmer checks: how Brazil is rebuilding its e-visa system",
+   "description": "Brazil's foreign ministry is rebuilding its e-visa platform with faster approvals and stricter document checks.",
+   "countryCode": "BRA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Agencia Brasil",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h09",
+   "title": "The world's happiest passports: beyond visa-free travel, what matters most",
+   "description": "A ranking looks at which passports give holders the best quality of life as well as easy travel.",
+   "countryCode": "ARE",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Gulf News",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h10",
+   "title": "International overview 2026: the most important AI news of week 46",
+   "description": "A weekly digest of AI product launches, funding rounds and policy news from around the world.",
+   "countryCode": "EST",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Cyber Weekly",
+   "languageCode": "et",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h11",
+   "title": "Business Brief: five files to follow this week",
+   "description": "A round-up of the corporate and economic stories to watch in the coming days.",
+   "countryCode": "CAN",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Globe and Mail",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h12",
+   "title": "US government proposes one-sentence change to USCIS rules for L-1 visa holders",
+   "description": "A proposed one-line change in the rules would alter how long intra-company transferees can stay.",
+   "countryCode": "USA",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "Reuters",
+   "languageCode": "en",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h13",
+   "title": "Electricity and gas get more expensive: Essen utility announces price increases",
+   "description": "The municipal utility will raise electricity and gas prices from January.",
+   "countryCode": "DEU",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "WAZ",
+   "languageCode": "de",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  },
+  {
+   "articleId": "cal-h14",
+   "title": "National demonstration on 23 November: Antwerp De Lijn network will be heavily disrupted",
+   "description": "Trams and buses in Antwerp will run a reduced service during a national demonstration.",
+   "countryCode": "BEL",
+   "relatedFacts": [],
+   "verdict": null,
+   "publicationName": "VRT",
+   "languageCode": "nl",
+   "calibration": {
+    "group": "HIDDEN",
+    "max": 0.39
+   }
+  }
+ ]
+}

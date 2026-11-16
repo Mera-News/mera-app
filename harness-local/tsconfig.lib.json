@@ -70,6 +70,7 @@
     "../lib/news-harness/on-device/persona-chat/kev-spec.ts",
     "../lib/news-harness/on-device/article-feedback/kev-spec.ts",
     "../lib/news-harness/on-device/follow-story/kev-spec.ts",
+    "scripts/score-calibration.ts",
     "scripts/test-account.ts"
   ]
 }
