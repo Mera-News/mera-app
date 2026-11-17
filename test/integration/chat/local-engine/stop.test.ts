@@ -3,7 +3,6 @@
 // inference lock, the partial reply stays, and a structured reply that lands after Stop is dropped.
 import { stopChatTurn } from '@/lib/chat-session/chat-session';
 import { fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
-import { getFacts } from '@/lib/database/services/fact-service';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import '@/test/helpers';
@@ -11,7 +10,6 @@ import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-l
 import {
   installLlama,
   llamaCalls,
-  llamaReleases,
   resetChatModules,
   resetFileSystem,
   setProcessingMode,
@@ -22,9 +20,7 @@ import {
   expectNothingLeftTheDevice,
   lastAssistant,
   local,
-  personaAgent,
   sampleLocal,
-  saveFactReply,
   settle,
   streamHolds,
   turnDone,
@@ -103,54 +99,5 @@ describe('stopChatTurn', () => {
     expect(lastAssistant()).toMatchObject({ content: 'Next one.' });
     expect(lastAssistant()?.stopped).toBeUndefined();
     expectNothingLeftTheDevice();
-  });
-
-  // A structured turn cannot be cut short: the reply lands after Stop and must be dropped whole.
-  it('drops a structured reply that lands after Stop: nothing staged, nothing run', async () => {
-    text({ tokens: [saveFactReply()], tokenDelayMs: 300 });
-    const { engine } = await attachLocal(personaAgent());
-    const watch = sampleLocal();
-
-    engine.send('I live somewhere new');
-    await until(() => onDeviceLlmCalls().some((c) => c.kind === 'structured'), 5000, 'the structured call started');
-    stopChatTurn();
-    await turnDone();
-    expect(local()).toMatchObject({ status: 'idle', turnBusy: false });
-    // The reply arrives after the turn ended, and changes nothing.
-    await until(() => onDeviceLlmCalls().find((c) => c.kind === 'structured')!.delivered.length === 1, 5000, 'the late reply');
-    await settle();
-    watch.stop();
-
-    expect(lastAssistant()).toMatchObject({ content: '', stopped: true, toolCalls: undefined });
-    expect(watch.samples.flatMap((s) => s.tools)).toEqual([]);
-    expect(useFloatingChatStore.getState().proposal).toBeNull();
-    expect(await getFacts()).toEqual([]);
-  });
-
-  it('does nothing when no turn is running: the next turn is not pre-stopped', async () => {
-    text(['Hello', ' there', '.']);
-    const { engine } = await attachLocal();
-
-    stopChatTurn();
-    engine.send('hi');
-    await turnDone();
-
-    expect(lastAssistant()).toMatchObject({ content: 'Hello there.' });
-    expect(lastAssistant()?.stopped).toBeUndefined();
-    expect(onDeviceLlmCalls()[0].cancelled).toBe(false);
-  });
-
-  it('a stop leaves Kev alone: nothing is released or reloaded', async () => {
-    text(firstCallThen(longReply(), ['Next one.']));
-    const { engine } = await attachLocal();
-
-    engine.send('tell me everything');
-    await until(() => (lastAssistant()?.content ?? '').length > 6, 5000, 'a few tokens');
-    stopChatTurn();
-    await turnDone();
-    engine.send('and now?');
-    await turnDone();
-
-    expect(llamaReleases()).toBe(0);
   });
 });

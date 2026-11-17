@@ -10,32 +10,52 @@
 import fs from 'fs';
 import path from 'path';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { CLIENT_ROOT } = require('../../../../client-resolution') as { CLIENT_ROOT: string };
+
 const ROOT = path.resolve(__dirname, '../../../..');
 const DIRS = ['app', 'components', 'lib'];
 const SKIP = /(__tests__|__mocks__|node_modules|\/generated\/|\/locales\/)/;
 
+// Paths are reported relative to the root they were found under, so a client file reads `lib/...`.
 function sources(): { rel: string; text: string }[] {
   const out: { rel: string; text: string }[] = [];
-  const walk = (dir: string) => {
+  const walk = (root: string, dir: string) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
-      const rel = path.relative(ROOT, full);
+      const rel = path.relative(root, full);
       if (SKIP.test(rel)) continue;
-      if (entry.isDirectory()) walk(full);
+      if (entry.isDirectory()) walk(root, full);
       else if (/\.(ts|tsx)$/.test(entry.name)) out.push({ rel, text: fs.readFileSync(full, 'utf8') });
     }
   };
-  for (const d of DIRS) walk(path.join(ROOT, d));
+  for (const d of DIRS) walk(ROOT, path.join(ROOT, d));
+  walk(CLIENT_ROOT, path.join(CLIENT_ROOT, 'lib'));
   return out;
 }
 
-const ALL = sources();
+// The three moved files come from resolution: the client's copy wins over any app copy.
+const MOVED = [
+  'lib/fact-check/fact-check-graphql-client.ts',
+  'lib/chat-tools/quick-fact-check-handler.ts',
+  'lib/fact-check/request-article-fact-check.ts',
+];
+function sourcesWithMoved(): { rel: string; text: string }[] {
+  const byRel = new Map(sources().map((f) => [f.rel, f]));
+  for (const rel of MOVED) {
+    const file = require.resolve(`@/${rel.replace(/\.tsx?$/, '')}`);
+    byRel.set(rel, { rel, text: fs.readFileSync(file, 'utf8') });
+  }
+  return [...byRel.values()];
+}
+
+const ALL = sourcesWithMoved();
 const filesMatching = (re: RegExp) =>
   ALL.filter((f) => re.test(f.text))
     .map((f) => f.rel)
     .sort();
 
-const CLIENT = 'lib/fact-check/fact-check-graphql-client.ts';
+const CLIENT = MOVED[0];
 
 it('the sweep sees the client (negative control)', () => {
   expect(ALL.map((f) => f.rel)).toContain(CLIENT);

@@ -14,6 +14,27 @@ import type { DecisionRequest } from 'llama.rn';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+/**
+ * A third-party module, required on its first read and kept. The first read happens while the
+ * client runs (in Jest, after the test file's jest.mock), and a late call, such as a log line after
+ * Jest has torn the file down, still gets the module, as a top-level import would.
+ */
+function kept<T>(load: () => T): () => T {
+  let value: T | undefined;
+  return () => (value ??= load());
+}
+
+const reactNative = kept(() => require('react-native'));
+const keepAwake = kept(() => require('expo-keep-awake'));
+const updates = kept(() => require('expo-updates'));
+const sentry = kept(() => require('@sentry/react-native'));
+const expoFetch = kept(() => require('expo/fetch').fetch as typeof globalThis.fetch);
+const netInfo = kept(() => require('@react-native-community/netinfo').default);
+const asyncStorage = kept(() => require('@react-native-async-storage/async-storage').default);
+const localization = kept(() => require('expo-localization'));
+const sqliteAdapter = kept(() => require('@nozbe/watermelondb/adapters/sqlite').default);
+const fileSystem = kept(() => require('expo-file-system'));
+
 const toolkit = (): typeof import('@/lib/mera-protocol-toolkit') => require('@/lib/mera-protocol-toolkit');
 const authClient = (): typeof import('@/lib/auth-client') => require('@/lib/auth-client');
 const breaker = (): typeof import('@/lib/auth-failure-breaker') => require('@/lib/auth-failure-breaker');
@@ -80,7 +101,7 @@ async function resetAppState(): Promise<void> {
 
 /** Development only: keeps the plaintext of an inference job under Documents/prompt-dumps. */
 function devDump(fileName: string, text: string): void {
-  const { Directory, File, Paths } = require('expo-file-system');
+  const { Directory, File, Paths } = fileSystem();
   const dir = new Directory(Paths.document, 'prompt-dumps');
   if (!dir.exists) dir.create({ intermediates: true });
   const file = new File(dir, fileName);
@@ -116,39 +137,39 @@ const host: PlatformHost = {
   },
 
   get appState() {
-    return require('react-native').AppState;
+    return reactNative().AppState;
   },
-  devReload: (reason) => require('react-native').DevSettings.reload(reason),
+  devReload: (reason) => reactNative().DevSettings.reload(reason),
   get keepAwake() {
-    return require('expo-keep-awake');
+    return keepAwake();
   },
   get updates() {
-    return require('expo-updates');
+    return updates();
   },
   getCurrentPathname: () => require('@/lib/nav-state').getCurrentPathname(),
   captureSpot: () => require('@/lib/navigation/resume-spot').captureSpot(),
 
   get sentry() {
-    return require('@sentry/react-native');
+    return sentry();
   },
   submitFeatureRequest: (title, summary) => require('@/lib/feedback').submitFeatureRequest(title, summary),
   devDump,
 
   get fetch() {
-    return require('expo/fetch').fetch as typeof globalThis.fetch;
+    return expoFetch();
   },
   isRequestTimeoutError: (error) => require('@/lib/apollo-fetch').isRequestTimeoutError(error),
   get netInfo() {
-    return require('@react-native-community/netinfo').default;
+    return netInfo();
   },
 
   get asyncStorage() {
-    return require('@react-native-async-storage/async-storage').default;
+    return asyncStorage();
   },
   get secureStore() {
     return require('@/lib/utils/secure-store-adapter').secureStore;
   },
-  getLocales: () => require('expo-localization').getLocales(),
+  getLocales: () => localization().getLocales(),
 
   auth: {
     getJwtToken: () => authClient().getJwtToken(),
@@ -162,7 +183,7 @@ const host: PlatformHost = {
     return require('@/lib/apollo-client').default;
   },
   createDatabaseAdapter: (options) => {
-    const SQLiteAdapter = require('@nozbe/watermelondb/adapters/sqlite').default;
+    const SQLiteAdapter = sqliteAdapter();
     return new SQLiteAdapter(options);
   },
 

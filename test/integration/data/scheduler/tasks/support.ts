@@ -47,6 +47,9 @@ export const DAY = 24 * HOUR;
 export function registeredDefinition(modulePath: string): TaskDefinition<unknown> {
   let definition: TaskDefinition<unknown> | undefined;
   jest.isolateModules(() => {
+    // A fresh registry has no platform host: register the app's before any client module loads.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@/lib/app-host');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { AppScheduler: fresh } = require('@/lib/scheduler/AppScheduler') as typeof import('@/lib/scheduler/AppScheduler');
     const register = jest.spyOn(fresh, 'register');

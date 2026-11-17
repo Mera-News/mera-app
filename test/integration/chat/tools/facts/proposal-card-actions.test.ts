@@ -4,7 +4,6 @@
 // was drawn on the card and applied by Confirm. Walks every ProposalAction kind from staging
 // through derivation, and Confirm's apply through the real executor.
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import type { ProposalAction, StagedProposal, ToolCallRecord } from '@/lib/llm/types';
 import type { ActiveSuppressionView, ToolExecutionResult } from '@/lib/news-harness/core/types';
 import {
@@ -233,7 +232,8 @@ describe('every action kind survives staging and derivation unchanged', () => {
   });
 
   it('the executor has a branch for every kind', () => {
-    const source = readFileSync(join(__dirname, '../../../../../lib/chat-tools/proposal-handlers.ts'), 'utf8');
+    // The executor lives in mera-news-client; read the file the app actually resolves.
+    const source = readFileSync(require.resolve('@/lib/chat-tools/proposal-handlers'), 'utf8');
     for (const kind of Object.keys(STAGE)) {
       expect(source).toContain(`case '${kind}':`);
     }

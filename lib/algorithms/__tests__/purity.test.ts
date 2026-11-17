@@ -7,7 +7,7 @@
 // file inside lib/algorithms, or a package that is not on the forbidden list; nothing else.
 //
 // NEGATIVE CONTROLS INCLUDED. A check that has never been seen to fail proves nothing, so the same
-// checker runs against lib/logger.ts (imports @sentry) and against a planted fixture with one
+// checker runs against lib/sentry-init.ts (imports @sentry) and against a planted fixture with one
 // forbidden package and one relative import that leaves lib/algorithms; both must be flagged.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -104,8 +104,8 @@ describe('lib/algorithms purity', () => {
 });
 
 describe('the checker can fail (negative controls)', () => {
-  it('flags lib/logger.ts, which loads Sentry', () => {
-    expect(violationsOf(join(ROOT, 'lib', 'logger.ts'))).toEqual(
+  it('flags lib/sentry-init.ts, which loads Sentry', () => {
+    expect(violationsOf(join(ROOT, 'lib', 'sentry-init.ts'))).toEqual(
       expect.arrayContaining([expect.stringContaining('@sentry/react-native')]),
     );
   });

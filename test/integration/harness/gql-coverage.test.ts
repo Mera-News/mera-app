@@ -1,14 +1,21 @@
 // Contract: the mock backend answers every GraphQL operation the app sends, and
 // answers it with every field the app's own document selects. Documents are read as
-// text from lib/, app/ and components/ with the same rules as scripts/check-schema.js.
+// text from the app's lib/, app/ and components/ and from the client package's lib/, with the
+// same rules as scripts/check-schema.js.
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse, type FieldNode, type SelectionSetNode } from 'graphql';
 import { GQL_OPERATIONS } from '@/test/mock-backend/graphql';
 import { ARTICLE_IDS } from '@/test/mock-backend/fixtures/articles';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { CLIENT_ROOT } = require('../../../client-resolution') as { CLIENT_ROOT: string };
+
 const ROOT = path.resolve(__dirname, '../../..');
-const SCAN_DIRS = ['lib', 'app', 'components'];
+const SCAN_DIRS = [
+  ...['lib', 'app', 'components'].map((d) => path.join(ROOT, d)),
+  path.join(CLIENT_ROOT, 'lib'),
+];
 const SKIP_DIRS = new Set(['node_modules', '__tests__', '__test-helpers__']);
 const DOC_START = /^(query|mutation|subscription|fragment)\b/;
 
@@ -58,7 +65,7 @@ interface AppDocument {
 export function collectDocuments(): AppDocument[] {
   const docs: AppDocument[] = [];
   for (const dir of SCAN_DIRS) {
-    for (const file of sourceFiles(path.join(ROOT, dir))) {
+    for (const file of sourceFiles(dir)) {
       const source = fs.readFileSync(file, 'utf8');
       // The call form gql(`...`) counts too: a document kept out of check:schema is still sent.
       const opener = /\bgql\(?`/g;

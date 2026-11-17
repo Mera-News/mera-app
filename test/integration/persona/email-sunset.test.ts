@@ -6,13 +6,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { CLIENT_ROOT } = require('../../../client-resolution') as { CLIENT_ROOT: string };
+
 const ROOT = path.resolve(__dirname, '../../..');
 
 function sources(dir: string): string[] {
-    return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
-        const rel = path.join(dir, e.name);
-        if (e.isDirectory()) return sources(rel);
-        return /\.(ts|tsx)$/.test(e.name) ? [rel] : [];
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) return sources(full);
+        return /\.(ts|tsx)$/.test(e.name) ? [full] : [];
     });
 }
 
@@ -29,8 +32,11 @@ describe('the retired move to phone', () => {
     });
 
     it('no screen or route names a move entry point or its copy', () => {
-        const offenders = [...sources('app'), ...sources('components'), ...sources('lib')].filter((file) => {
-            const text = fs.readFileSync(path.join(ROOT, file), 'utf8');
+        const offenders = [
+            ...['app', 'components', 'lib'].flatMap((d) => sources(path.join(ROOT, d))),
+            ...sources(path.join(CLIENT_ROOT, 'lib')),
+        ].filter((file) => {
+            const text = fs.readFileSync(file, 'utf8');
             return /requestMoveToPhone|MoveToPhoneHost|settings-row-move-to-phone|['"`]moveToPhone\./.test(text);
         });
         expect(offenders).toEqual([]);

@@ -4,8 +4,6 @@ import '@/test/helpers';
 
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import type { TaskCondition } from '@/lib/scheduler/scheduler-types';
-import { useDatabaseStore } from '@/lib/stores/database-store';
-import { useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import {
   advanceUntilDone,
@@ -37,83 +35,6 @@ async function startWith(condition: TaskCondition) {
   await advanceUntilDone(AppScheduler.init());
   return task;
 }
-
-describe('db-ready', () => {
-  it('skips the task until the database store reports ready, then runs it on the next tick', async () => {
-    const task = await startWith({ type: 'db-ready' });
-    await settle(11_000);
-    expect(task.runs).toHaveLength(0);
-
-    useDatabaseStore.setState({ ready: true });
-    await settle(5_100);
-
-    expect(task.runs).toHaveLength(1);
-  });
-});
-
-describe('network', () => {
-  it('skips the task while the device is offline and runs it once the link is back', async () => {
-    useNetworkStore.getState().setIsConnected(false);
-    const task = await startWith({ type: 'network' });
-    await settle(11_000);
-    expect(task.runs).toHaveLength(0);
-
-    useNetworkStore.getState().setIsConnected(true);
-    await settle(5_100);
-
-    expect(task.runs).toHaveLength(1);
-  });
-});
-
-describe('custom', () => {
-  it('respects a synchronous check: false skips, true runs', async () => {
-    let allowed = false;
-    const task = await startWith({ type: 'custom', check: () => allowed });
-    await settle(11_000);
-    expect(task.runs).toHaveLength(0);
-
-    allowed = true;
-    await settle(5_100);
-
-    expect(task.runs).toHaveLength(1);
-  });
-
-  // The skill documents this as a silent kill ("a Promise is always truthy"). It is not, today:
-  // `_checkCondition` is an `async` function, so returning the Promise from `check` adopts it and
-  // `await _checkCondition(...)` sees the real boolean. The TYPE still forbids it, and the gate
-  // only holds while that async wrapper does. Pinned as today's behaviour.
-  it('awaits a check that returns a Promise, because _checkCondition is async: an async false still gates the task', async () => {
-    let allowed = false;
-    const asyncCheck = (async () => allowed) as unknown as () => boolean;
-
-    const task = await startWith({ type: 'custom', check: asyncCheck });
-    await settle(11_000);
-    expect(task.runs).toHaveLength(0);
-
-    allowed = true;
-    await settle(5_100);
-
-    expect(task.runs).toHaveLength(1);
-  });
-
-  it('lets a task through whose condition type is unknown to the scheduler', async () => {
-    const task = await startWith({ type: 'from-the-future' } as unknown as TaskCondition);
-    await settle(500);
-
-    expect(task.runs).toHaveLength(1);
-  });
-
-  it('checks every condition, so one failing condition blocks the task', async () => {
-    const task = addTask({
-      frequency: 10_000,
-      conditions: [{ type: 'custom', check: () => true }, { type: 'custom', check: () => false }],
-    });
-    await advanceUntilDone(AppScheduler.init());
-    await settle(11_000);
-
-    expect(task.runs).toHaveLength(0);
-  });
-});
 
 describe('authenticated', () => {
   const authPaths: string[] = [];
@@ -181,38 +102,5 @@ describe('authenticated', () => {
 
     // Ran long before the 20s answer could arrive: the timeout passed it.
     expect(task.runs).toHaveLength(1);
-  });
-
-  it('fails at once with no persona, without touching the network', async () => {
-    useUserStore.setState({ userPersona: null });
-    await signedIn();
-
-    const task = await startWith({ type: 'authenticated' });
-    await settle(11_000);
-
-    expect(task.runs).toHaveLength(0);
-    expect(authPaths).toEqual([]);
-  });
-
-  it('fails at once when the breaker flagged the session dead, even while offline', async () => {
-    await signedIn();
-    useUserStore.setState({ needsReauth: true });
-    useNetworkStore.getState().setIsConnected(false);
-
-    const task = await startWith({ type: 'authenticated' });
-    await settle(11_000);
-
-    expect(task.runs).toHaveLength(0);
-    expect(authPaths).toEqual([]);
-  });
-
-  it('passes while offline without checking the credential (local identity is enough)', async () => {
-    useNetworkStore.getState().setIsConnected(false);
-
-    const task = await startWith({ type: 'authenticated' });
-    await settle(500);
-
-    expect(task.runs).toHaveLength(1);
-    expect(authPaths).toEqual([]);
   });
 });

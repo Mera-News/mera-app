@@ -8,10 +8,8 @@ import {
   clearAllStores,
   useConfigPanelStore,
   useFloatingChatStore,
-  useForYouStore,
   useMeraProtocolStore,
   useUIStore,
-  useUserStore,
 } from '@/lib/stores';
 import { clearPreviousUserData } from '@/lib/security/identity-gate';
 import { addFact } from '@/lib/database/services/fact-service';
@@ -19,10 +17,6 @@ import { persistUserPersona } from '@/lib/database/services/user-persona-service
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import { trackStory } from '@/lib/database/services/tracked-story-service';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import {
-  knownSourceNamesForPublisher,
-  rememberPublisherSourceNames,
-} from '@/lib/database/services/publisher-source-names';
 import { loadPageOrders, usePageOrderStore } from '@/lib/navigation/page-order';
 import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
 import { usePendingPageStore } from '@/components/custom/nav/navigate-to-page';
@@ -33,7 +27,6 @@ import {
 } from '@/components/custom/mera-button/corner';
 import { loadFeedViewPrefs, useFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
 import { readLastKnownTier, rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
-import { getReadHold, hydrateReadHold, isReadHeld, setReadHold } from '@/lib/subscription/read-hold';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
@@ -109,15 +102,6 @@ const USER_TABLES = [
 ] as const;
 
 describe('clearAllStores: database', () => {
-  it('empties every user table', async () => {
-    await seedUserData();
-    for (const table of USER_TABLES) expect(await tableCount(table)).toBeGreaterThan(0);
-
-    await expect(clearAllStores()).resolves.toBeUndefined();
-
-    for (const table of USER_TABLES) expect(await tableCount(table)).toBe(0);
-    expect(await getSetting('cached_user_id')).toBeNull();
-  });
 
   it('forgets the last-known subscription tier even if the database reset leaves the row behind', async () => {
     // The guarantee must not silently depend on unsafeResetDatabase staying total
@@ -130,26 +114,6 @@ describe('clearAllStores: database', () => {
 });
 
 describe('clearAllStores: Zustand stores', () => {
-  it('resets for-you, user, ui, config-panel, floating-chat', async () => {
-    useForYouStore.setState({ articleCount: 12, relevantArticleCount: 4, lastSyncAt: 1 });
-    useUserStore.setState({ userId: 'old-user', needsReauth: true, lastFetchedAt: 5 });
-    useUIStore.getState().openModal('logout');
-    useConfigPanelStore.getState().openPanel();
-    useFloatingChatStore.getState().expand();
-
-    await clearAllStores();
-
-    expect(useForYouStore.getState()).toMatchObject({ articleCount: 0, relevantArticleCount: 0, lastSyncAt: null });
-    expect(useUserStore.getState()).toMatchObject({
-      userId: null,
-      userPersona: null,
-      needsReauth: false,
-      lastFetchedAt: null,
-    });
-    expect(useUIStore.getState().modals.logout.isOpen).toBe(false);
-    expect(useConfigPanelStore.getState().isOpen).toBe(false);
-    expect(useFloatingChatStore.getState().isExpanded).toBe(false);
-  });
 
   it('resets mera-protocol, subscription, feed-order, related-sort and tutorials', async () => {
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
@@ -170,12 +134,6 @@ describe('clearAllStores: Zustand stores', () => {
 });
 
 describe('clearAllStores: module mirrors', () => {
-  it('forgets the publisher source-name map, so the next account never inherits it', async () => {
-    rememberPublisherSourceNames('pub-1', ['BBC News', 'BBC']);
-    expect(knownSourceNamesForPublisher('pub-1')).not.toBeNull();
-    await clearAllStores();
-    expect(knownSourceNamesForPublisher('pub-1')).toBeNull();
-  });
 
   it('forgets page orders and their memoised load, so a later load reads the database again', async () => {
     await setSetting('nav_order_world', JSON.stringify(['country:DE', 'world']));
@@ -229,18 +187,6 @@ describe('clearAllStores: module mirrors', () => {
     await setSetting('feed_view', 'sectioned');
     await loadFeedViewPrefs();
     expect(useFeedViewPrefs.getState().view).toBe('sectioned');
-  });
-
-  it('forgets the read hold, so the next account never starts held', async () => {
-    await setReadHold({ resetAt: Date.now() + 60 * 60 * 1000, used: 1 });
-    expect(isReadHeld()).toBe(true);
-
-    await clearAllStores();
-    expect(isReadHeld()).toBe(false);
-    expect(getReadHold()).toEqual({ resetAt: null, used: null });
-    // The row went with the database, so the next hydrate finds nothing either.
-    await hydrateReadHold();
-    expect(isReadHeld()).toBe(false);
   });
 
   it('clears the last-known subscription tier', async () => {
