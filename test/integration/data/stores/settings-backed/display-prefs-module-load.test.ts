@@ -11,6 +11,7 @@
 it('requiring display-prefs-store does not construct the database', () => {
   let mockConstructed = 0;
   jest.resetModules();
+  require('@/lib/app-host');
   jest.doMock('@nozbe/watermelondb/adapters/sqlite', () => {
     const Real = require('@/test/helpers/memory-sqlite-adapter').default;
     return {

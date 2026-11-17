@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { delay, http, HttpResponse, type RequestHandler } from 'msw';
 import { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import { gunzipSync } from 'node:zlib';
-import { FORBIDDEN_TOOL_KEYS } from '../../../lib/llm/text-tool-protocol';
+import { FORBIDDEN_TOOL_KEYS } from '@/lib/harnesses/text-tool-protocol';
 import type {
   GatewayCall,
   GatewayReply,

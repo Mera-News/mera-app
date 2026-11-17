@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * check:schema — validate every GraphQL document the app sends against
- * `schema.gql`.
+ * `schema.gql` from the installed mera-news-client.
  *
  * ## Why this exists
  *
@@ -14,16 +14,15 @@
  * That gap is not hypothetical. `articlesForCluster` sat in this repo as a
  * fully-wired service method whose query had no matching field in the schema.
  *
- * It also matters for anyone pointing the app at their own backend: `schema.gql`
- * doubles as the contract a self-hosted server must satisfy (see the README),
- * and this is how you check your server actually satisfies it. Export your
- * server's SDL over `schema.gql`, run this, and every incompatibility is listed
- * before you build.
+ * It also matters for anyone pointing the app at their own backend: the client's
+ * `schema.gql` doubles as the contract a self-hosted server must satisfy (see the
+ * README), and this is how you check your server actually satisfies it. Pass your
+ * server's SDL as an argument and every incompatibility is listed before you build.
  *
  * ## What it checks
  *
- * Every `gql` -tagged document under SCAN_DIRS is parsed and run through
- * `graphql.validate()` against `schema.gql`. Unknown fields, unknown arguments,
+ * Every `gql` -tagged document under SCAN_DIRS, and under the client's `lib`, is parsed and run through
+ * `graphql.validate()` against the client's `schema.gql`. Unknown fields, unknown arguments,
  * wrong variable types, and malformed documents all fail the run.
  *
  * A document may interpolate one `${IDENTIFIER}` — a shared field-list constant
@@ -46,7 +45,7 @@
  *   production documents as plain template strings rather than `gql` tags,
  *   precisely so the Node harness can run without Apollo. Untagged strings are
  *   indistinguishable from any other template literal, so they are out of
- *   scope; the originals in `lib/article-service.ts` are checked.
+ *   scope; the originals in the client's `lib/article-service.ts` are checked.
  * - Whether the server actually implements a field it declares. That is a
  *   server-side concern; the SDL is taken at its word here.
  * - An interpolated constant computed at runtime, built from more than one
@@ -54,7 +53,7 @@
  *   document fails loudly with "could not resolve" rather than guessing.
  *
  * Usage:
- *   npm run check:schema                  # validate against ./schema.gql
+ *   npm run check:schema                  # validate against the client's schema.gql
  *   npm run check:schema -- path/to.gql   # validate against another SDL
  */
 
@@ -62,8 +61,10 @@ const fs = require('fs');
 const path = require('path');
 const { buildSchema, parse, validate } = require('graphql');
 
+const { CLIENT_ROOT } = require('../client-resolution');
+
 const ROOT = path.resolve(__dirname, '..');
-const SCAN_DIRS = ['lib', 'app', 'components'];
+const SCAN_DIRS = ['lib', 'app', 'components'].map((d) => path.join(ROOT, d)).concat(path.join(CLIENT_ROOT, 'lib'));
 const SKIP_DIR_NAMES = new Set(['node_modules', '__tests__', '__test-helpers__']);
 const SOURCE_EXT = new Set(['.ts', '.tsx']);
 
@@ -172,7 +173,7 @@ function resolveInterpolations(body, filePath, source) {
 }
 
 function main() {
-  const schemaPath = path.resolve(ROOT, process.argv[2] || 'schema.gql');
+  const schemaPath = process.argv[2] ? path.resolve(ROOT, process.argv[2]) : path.join(CLIENT_ROOT, 'schema.gql');
   if (!fs.existsSync(schemaPath)) {
     console.error(`check:schema — schema not found: ${schemaPath}`);
     process.exit(2);
@@ -192,7 +193,7 @@ function main() {
   let fileCount = 0;
 
   for (const dir of SCAN_DIRS) {
-    for (const file of sourceFiles(path.join(ROOT, dir))) {
+    for (const file of sourceFiles(dir)) {
       const source = fs.readFileSync(file, 'utf8');
       const docs = extractDocuments(source);
       if (docs.length === 0) continue;

@@ -32,6 +32,7 @@ function loadStub(flag: string | undefined, env: Record<string, string | undefin
   return withEnv({ EXPO_PUBLIC_E2E: flag, ...env }, () => {
     let mod!: StubModule;
     jest.isolateModules(() => {
+      require('@/lib/app-host');
       mod = require('@/lib/e2e/key-verifier');
     });
     return mod;
@@ -43,9 +44,10 @@ function resolveKeyVerifier(flag: string | undefined): string {
   return withEnv({ EXPO_PUBLIC_E2E: flag, E2E_DEVICE_BUILD: undefined }, () => {
     let resolved = '';
     jest.isolateModules(() => {
+      require('@/lib/app-host');
       const config = require(path.join(ROOT, 'metro.config.js'));
       const context = {
-        originModulePath: path.join(ROOT, 'lib/e2ee/e2ee-service.ts'),
+        originModulePath: require.resolve('@/lib/e2ee/e2ee-service'),
         // Metro's resolution shape: NativeWind's wrapper reads filePath off it.
         resolveRequest: (_c: unknown, name: string) => ({ type: 'sourceFile', filePath: name }),
       };
@@ -63,7 +65,7 @@ const served = (signingPublicKey: string, signingAlgo: string) => ({
 
 describe('e2e key-verifier stub', () => {
   it('exports every name e2ee-service imports from the real module', () => {
-    const source = fs.readFileSync(path.join(ROOT, 'lib/e2ee/e2ee-service.ts'), 'utf8');
+    const source = fs.readFileSync(require.resolve('@/lib/e2ee/e2ee-service'), 'utf8');
     const block = source.match(/import \{([^}]*)\} from '\.\/key-verifier'/);
     const names = block![1].split(',').map((n) => n.trim()).filter(Boolean);
     expect(names.length).toBeGreaterThan(0);

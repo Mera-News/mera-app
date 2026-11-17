@@ -1,6 +1,6 @@
 import { authClient } from "@/lib/auth-client";
 import logger from "@/lib/logger";
-import { clearPreviousUserData } from "@/lib/stores";
+import { clearPreviousUserData } from "@/lib/security/identity-gate";
 import { isOnboardingDone } from "@/components/custom/onboarding/onboarding-done";
 import { recheckSession } from "@/lib/auth-failure-breaker";
 import { readSupportIdFromUser } from "@/lib/support-id";

@@ -5,6 +5,10 @@
     "experimentalDecorators": true,
     "types": ["jest", "node"],
     "paths": {
+      "@/lib/*": [
+        "./node_modules/mera-news-client/lib/*",
+        "./lib/*"
+      ],
       "@/*": [
         "./*"
       ],

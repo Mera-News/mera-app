@@ -13,6 +13,7 @@ type Loaded = {
 function loadWithConfig(expoConfig: Record<string, unknown>): Loaded {
     let loaded!: Loaded;
     jest.isolateModules(() => {
+      require('@/lib/app-host');
         jest.doMock('expo-constants', () => ({
             __esModule: true,
             default: { executionEnvironment: 'standalone', appOwnership: null, expoConfig },

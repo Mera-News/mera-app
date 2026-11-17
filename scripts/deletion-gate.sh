@@ -4,6 +4,13 @@
 # line, # comments allowed). It never deletes or commits anything.
 #
 #   scripts/deletion-gate.sh <paths-file> [--out DIR] [--rev REV]
+#   scripts/deletion-gate.sh - --baseline-only [--out DIR] [--rev REV]
+#   scripts/deletion-gate.sh - --before DIR [--out DIR] [--rev REV]
+#
+# --baseline-only runs only run A and keeps its coverage, for a later --before. --before DIR takes
+# run A from DIR (an earlier --out) and runs B as is at REV: the gate across a deletion commit, where
+# REV already lacks the deleted tests. The worktree resolves mera-news-client through ROOT's
+# node_modules (install the pinned client first); MERA_CLIENT_ROOT, when set, reaches Jest unchanged.
 #
 # Both runs happen in a throwaway detached worktree at REV (default HEAD), with node_modules
 # symlinked, so other agents' uncommitted work in the shared tree can neither add nor break
@@ -24,21 +31,32 @@ HEAVY="$ROOT/../bin/heavy"
 [ -x "$HEAVY" ] || HEAVY=""
 BASELINE="scripts/deletion-gate.tsc-baseline"  # read inside the worktree, so it is REV's
 
-usage() { echo "usage: $0 <paths-file> [--out DIR] [--rev REV]" >&2; exit 2; }
+usage() { echo "usage: $0 <paths-file|-> [--out DIR] [--rev REV] [--baseline-only | --before DIR]" >&2; exit 2; }
 [ $# -ge 1 ] || usage
 LIST="$1"; shift
 OUT="e2e-output/gate/$(date +%Y%m%d-%H%M%S)"
 REV=HEAD
+MODE=exclude
+BEFORE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="${2:?}"; shift ;;
     --rev) REV="${2:?}"; shift ;;
+    --baseline-only) MODE=baseline ;;
+    --before) MODE=across; BEFORE="$(cd "${2:?}" && pwd)"; shift ;;
     *) usage ;;
   esac
   shift
 done
-[ -f "$LIST" ] || { echo "error: no such paths file: $LIST" >&2; exit 2; }
-LIST="$(cd "$(dirname "$LIST")" && pwd)/$(basename "$LIST")"
+if [ "$MODE" = exclude ]; then
+  [ -f "$LIST" ] || { echo "error: no such paths file: $LIST" >&2; exit 2; }
+  LIST="$(cd "$(dirname "$LIST")" && pwd)/$(basename "$LIST")"
+else
+  [ "$LIST" = - ] || { echo "error: --baseline-only and --before take - as the paths file" >&2; exit 2; }
+  if [ "$MODE" = across ]; then
+    [ -f "$BEFORE/before/coverage-summary.json" ] || { echo "error: no run A coverage in $BEFORE/before" >&2; exit 2; }
+  fi
+fi
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 SHA="$(git rev-parse --verify "$REV^{commit}")"
 WT="${TMPDIR:-/tmp}/mera-gate-$SHA-$$"
@@ -49,6 +67,8 @@ ln -s "$ROOT/node_modules" "$WT/node_modules"
 cd "$WT"
 
 # ---- (a) the listed paths ------------------------------------------------------------------
+EXCLUDE=""
+if [ "$MODE" = exclude ]; then
 PATHS=()
 while IFS= read -r line || [ -n "$line" ]; do
   line="${line%%#*}"; line="$(echo "$line" | tr -d '[:space:]')"
@@ -64,6 +84,9 @@ done
 [ "$BAD" = 0 ] || exit 2
 EXCLUDE="$(IFS=,; echo "${PATHS[*]}")"
 echo "gate: ${#PATHS[@]} replaced test file(s) at $SHA, output in $OUT"
+else
+echo "gate ($MODE): $SHA, output in $OUT"
+fi
 
 run_jest() { # <label> <coverage dir>
   local label="$1" dir="$2" rc=0
@@ -76,20 +99,30 @@ run_jest() { # <label> <coverage dir>
 
 # ---- (b)-(d) the two runs ------------------------------------------------------------------
 RC_A=0; RC_B=0
-run_jest "A (as is)" "$OUT/before" || RC_A=$?
-GATE_EXCLUDE="$EXCLUDE" run_jest "B (replaced tests excluded)" "$OUT/after" || RC_B=$?
+case "$MODE" in
+  exclude)
+    run_jest "A (as is)" "$OUT/before" || RC_A=$?
+    GATE_EXCLUDE="$EXCLUDE" run_jest "B (replaced tests excluded)" "$OUT/after" || RC_B=$? ;;
+  baseline)
+    run_jest "A (as is)" "$OUT/before" || RC_A=$? ;;
+  across)
+    cp -R "$BEFORE/before" "$OUT/before"; cp "$BEFORE/before.json" "$OUT/before.json"
+    run_jest "B (as is, after the deletion commit)" "$OUT/after" || RC_B=$? ;;
+esac
 [ "$RC_A" = 0 ] || echo "FAIL: run A is red (see $OUT/before.log)" >&2
 [ "$RC_B" = 0 ] || echo "FAIL: run B is red (see $OUT/after.log)" >&2
 
 # ---- (e)-(f) per-file coverage diff --------------------------------------------------------
 COV_RC=0
-SUMMARY="$(node - "$OUT/before/coverage-summary.json" "$OUT/after/coverage-summary.json" "$WT" <<'NODE'
+SUMMARY="baseline only: no coverage diff"
+[ "$MODE" = baseline ] || SUMMARY="$(node - "$OUT/before/coverage-summary.json" "$OUT/after/coverage-summary.json" "$WT" <<'NODE'
 const fs = require('fs');
 const [a, b, root] = process.argv.slice(2);
 if (!fs.existsSync(a) || !fs.existsSync(b)) { console.error('FAIL: a coverage summary is missing'); process.exit(1); }
-const A = JSON.parse(fs.readFileSync(a, 'utf8')), B = JSON.parse(fs.readFileSync(b, 'utf8'));
-const roots = [root, fs.realpathSync(root)].map((r) => r + '/');
-const rel = (f) => { for (const r of roots) if (f.startsWith(r)) return f.slice(r.length); return f; };
+// Keyed repo-relative: a --before summary was written in another throwaway worktree.
+const rel = (f) => f.replace(/^.*\/mera-gate-[0-9a-f]+-\d+\//, '');
+const byRel = (S) => Object.fromEntries(Object.entries(S).map(([k, v]) => [k === 'total' ? k : rel(k), v]));
+const A = byRel(JSON.parse(fs.readFileSync(a, 'utf8'))), B = byRel(JSON.parse(fs.readFileSync(b, 'utf8')));
 const files = (S) => new Set(Object.keys(S).filter((k) => k !== 'total'));
 const fa = files(A), fb = files(B);
 const pct = (m) => (m.total === 0 ? 100 : (100 * m.covered) / m.total).toFixed(2);
@@ -110,7 +143,8 @@ for (const f of fb) if (!fa.has(f)) console.error(`only in B: ${rel(f)}`);
 const t = (S, m) => S.total[m].pct.toFixed(2);
 console.error(`totals: lines ${t(A, 'lines')}% -> ${t(B, 'lines')}%, branches ${t(A, 'branches')}% -> ${t(B, 'branches')}%`);
 console.log(`coverage L ${t(A, 'lines')}->${t(B, 'lines')} B ${t(A, 'branches')}->${t(B, 'branches')}, ${compared} files compared, ${drops} drops`);
-process.exit(drops > 0 ? 1 : 0);
+if (compared === 0) console.error('FAIL: no file is in both summaries, so nothing was compared');
+process.exit(drops > 0 || compared === 0 ? 1 : 0);
 NODE
 )" || COV_RC=$?
 
@@ -119,8 +153,11 @@ TSC_RC=0
 [ -f "$BASELINE" ] || { echo "FAIL: missing $BASELINE" >&2; exit 1; }
 while read -r cfg base; do
   case "$cfg" in ''|\#*) continue ;; esac
-  n=$( { ${HEAVY:+"$HEAVY"} npx tsc --noEmit -p "$cfg" 2>&1 || true; } | grep -c 'error TS' || true)
-  if [ "$n" -gt "$base" ]; then echo "FAIL: tsc -p $cfg: $n errors, baseline $base" >&2; TSC_RC=1
+  out=$( { ${HEAVY:+"$HEAVY"} npx tsc --noEmit -p "$cfg" 2>&1 || true; } )
+  n=$(printf '%s\n' "$out" | grep -c 'error TS' || true)
+  # TS5101 (and any config error) stops tsc before it checks a single file: that count measures nothing.
+  if printf '%s\n' "$out" | grep -q 'error TS5[0-9][0-9][0-9]'; then echo "FAIL: tsc -p $cfg stops on a config error before checking files" >&2; TSC_RC=1
+  elif [ "$n" -gt "$base" ]; then echo "FAIL: tsc -p $cfg: $n errors, baseline $base" >&2; TSC_RC=1
   else echo "tsc -p $cfg: $n errors (baseline $base)"; fi
 done < "$BASELINE"
 

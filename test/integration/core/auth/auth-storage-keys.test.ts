@@ -11,6 +11,7 @@ function cookieKeyFor(expoConfig: unknown): string {
   (Constants as { expoConfig: unknown }).expoConfig = expoConfig;
   let key = '';
   jest.isolateModules(() => {
+    require('@/lib/app-host');
     key = require('@/lib/auth-client').AUTH_COOKIE_KEY;
   });
   return key;

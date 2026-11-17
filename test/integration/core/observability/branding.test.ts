@@ -22,6 +22,7 @@ afterEach(() => {
 describe('config/branding — default values (iOS)', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
     // Clear all EXPO_PUBLIC_* branding vars so defaults kick in
     delete process.env.EXPO_PUBLIC_PRIVACY_URL;
     delete process.env.EXPO_PUBLIC_TERMS_URL;
@@ -88,6 +89,7 @@ describe('config/branding — default values (iOS)', () => {
 describe('config/branding — env overrides', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
   });
 
   afterEach(() => {

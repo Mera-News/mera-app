@@ -1,0 +1,717 @@
+{
+  "calls": [
+    {
+      "kind": "job:reason",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "428284c81c61478e9990c830eeb7f2f839a2832954eb92f1e89a7fedb8046602",
+      "article": "77317c686927d13d6ab3a87bb99f7b92b5e2cc3c41ff3438ef744bd8a753bd35",
+      "context": "2e47cb30a1dc900b1b9a18107440af5e8967dc71b7715c8154bfb4c6c40ef742"
+    },
+    {
+      "kind": "job:reason",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "428284c81c61478e9990c830eeb7f2f839a2832954eb92f1e89a7fedb8046602",
+      "article": "c2c13f93c35fefdc04fae0dcbe64cf94e317498dbfaab6be28199fa5ea44a110",
+      "context": "e9752e7b4780402814c85cbf5bfae180a04a622ce042561ffc07479d5fcdca8d"
+    },
+    {
+      "kind": "job:reason",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "428284c81c61478e9990c830eeb7f2f839a2832954eb92f1e89a7fedb8046602",
+      "article": "f30b69c4ba147b163786c035718d9b8f2be33d021a80b81cf16e51dca1b66cc8",
+      "context": "e9752e7b4780402814c85cbf5bfae180a04a622ce042561ffc07479d5fcdca8d"
+    },
+    {
+      "kind": "job:reason",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "ef40ee5d2727fc417b9904d52a890996f1fe59e494c25cd4ef1aacbcc35cdd32",
+      "article": "71abedb69d3c24c8412eaba5988bc025508a795ff1723fe0fae1319f692a88f1",
+      "context": "5faece72f5af3be2d86ac8a777806f3dc41b846cd5fa8c6b1e27d0f116cb510b"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "2ecd3d6b6b159a6ffca5d2e28b7a5aafa04e475332e3ea8fd93f702db73de129",
+      "context": "24ca224a4bcd3b53889d4bbd1ddfa75d484f94b179ed7ba92437a58bdf052581"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "8867f227dff3cfd7d26054e95df7afa8cc0849ddb37091e2684334413caf3784",
+      "context": "5233e52626e163c89b842bb6008fc1ea44592baaaa8c69f38775e0d3b1d3ceec"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "a63cb4e4d0d335ee41cc8052533d185c78a3121b5b1edef346a6297b7a92e04d",
+      "context": "5233e52626e163c89b842bb6008fc1ea44592baaaa8c69f38775e0d3b1d3ceec"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "a914ff097bdbbcb244199f5cbb3b77b07522044176d33ac4da51f654c4a59cb9",
+      "context": "5233e52626e163c89b842bb6008fc1ea44592baaaa8c69f38775e0d3b1d3ceec"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "b74fa2d63c81ff43751e56e3d3acc1d5d6b5be365d28a8c3b76fe1ed45cf26cd",
+      "context": "24ca224a4bcd3b53889d4bbd1ddfa75d484f94b179ed7ba92437a58bdf052581"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "d96bf777d9e43157a73704219ea9700c871f3a02edfa0b71494f7a1219684a05",
+      "context": "24ca224a4bcd3b53889d4bbd1ddfa75d484f94b179ed7ba92437a58bdf052581"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "fce9e18d098fea9d4871d8232a1ee58fc2cdb28aa741d0be26b9b38675471cd6",
+      "context": "5233e52626e163c89b842bb6008fc1ea44592baaaa8c69f38775e0d3b1d3ceec"
+    },
+    {
+      "kind": "job:score",
+      "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+      "system": "91e3ad07b2e46da5ceb2497ab73fef422c00073f255615f4bff3e9715bffba73",
+      "article": "fe69f072d0a23213f9663773dbe382eb04a90af97e83b7aeac3bcee9647f7ce5",
+      "context": "5233e52626e163c89b842bb6008fc1ea44592baaaa8c69f38775e0d3b1d3ceec"
+    }
+  ],
+  "rows": [
+    {
+      "_id": "f1a",
+      "articleId": "f1a",
+      "clusters": [
+        {
+          "clusterId": "c-f1a",
+          "confidence": 0.9,
+          "stableClusterId": "member-f1a"
+        }
+      ],
+      "relevance": 0.8,
+      "reason": "Verstappen takes pole in Abu Dhabi, which ties to I follow Formula 1 (47c74e5a).",
+      "status": "complete",
+      "country_code": "AE",
+      "language_code": "en",
+      "publication_name": "Pub f1a",
+      "title_en": "Verstappen takes pole in Abu Dhabi",
+      "title_original": "Verstappen takes pole in Abu Dhabi",
+      "description_en": "Red Bull locks out the front row before the season finale.",
+      "article_url": "https://example.com/f1a",
+      "image_url": null,
+      "userTopicIds": [
+        "formula 1",
+        "motorsport"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": null,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": null,
+      "headlineCountryCode": null,
+      "matchedTopics": [
+        {
+          "topicId": "topic:formula 1",
+          "text": "formula 1"
+        },
+        {
+          "topicId": "topic:motorsport",
+          "text": "motorsport"
+        }
+      ],
+      "factIds": [
+        "fact:I follow Formula 1"
+      ],
+      "scoredAt": 1791540007650,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "f1b",
+      "articleId": "f1b",
+      "clusters": [
+        {
+          "clusterId": "c-f1b",
+          "confidence": 0.9,
+          "stableClusterId": "member-f1b"
+        }
+      ],
+      "relevance": 0.26,
+      "reason": "",
+      "status": "complete",
+      "country_code": null,
+      "language_code": "en",
+      "publication_name": "Pub f1b",
+      "title_en": "Formula 1 confirms 2027 calendar",
+      "title_original": "Formula 1 confirms 2027 calendar",
+      "description_en": "Twenty-four races, with Madrid joining and Imola dropped.",
+      "article_url": "https://example.com/f1b",
+      "image_url": null,
+      "userTopicIds": [
+        "formula 1"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": null,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": null,
+      "headlineCountryCode": null,
+      "matchedTopics": [
+        {
+          "topicId": "topic:formula 1",
+          "text": "formula 1"
+        }
+      ],
+      "factIds": [
+        "fact:I follow Formula 1"
+      ],
+      "scoredAt": 1791540007650,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "gld",
+      "articleId": "gld",
+      "clusters": [
+        {
+          "clusterId": "c-gld",
+          "confidence": 0.9,
+          "stableClusterId": "member-gld"
+        }
+      ],
+      "relevance": 0,
+      "reason": "",
+      "status": "excluded",
+      "country_code": "US",
+      "language_code": "en",
+      "publication_name": "Pub gld",
+      "title_en": "Gold hits record as markets slide",
+      "title_original": "Gold hits record as markets slide",
+      "description_en": "Investors move to safe assets after weak jobs data.",
+      "article_url": "https://example.com/gld",
+      "image_url": null,
+      "userTopicIds": [
+        "top headline · global"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": 0,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": "GLOBAL",
+      "headlineCountryCode": null,
+      "matchedTopics": [
+        {
+          "topicId": null,
+          "text": "top headline · global"
+        }
+      ],
+      "factIds": [],
+      "scoredAt": 1791540002450,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "msp",
+      "articleId": "msp",
+      "clusters": [
+        {
+          "clusterId": "c-msp",
+          "confidence": 0.9,
+          "stableClusterId": "member-msp"
+        }
+      ],
+      "relevance": 0.4,
+      "reason": "MotoGP rider fined after Valencia crash, which ties to I follow Formula 1 (db1bba06).",
+      "status": "complete",
+      "country_code": "ES",
+      "language_code": "en",
+      "publication_name": "Pub msp",
+      "title_en": "MotoGP rider fined after Valencia crash",
+      "title_original": "MotoGP rider fined after Valencia crash",
+      "description_en": "Stewards hand down a grid penalty for the next race.",
+      "article_url": "https://example.com/msp",
+      "image_url": null,
+      "userTopicIds": [
+        "motorsport"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": null,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": null,
+      "headlineCountryCode": null,
+      "matchedTopics": [
+        {
+          "topicId": "topic:motorsport",
+          "text": "motorsport"
+        }
+      ],
+      "factIds": [
+        "fact:I follow Formula 1"
+      ],
+      "scoredAt": 1791540007650,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "nhs",
+      "articleId": "nhs",
+      "clusters": [
+        {
+          "clusterId": "c-nhs",
+          "confidence": 0.9,
+          "stableClusterId": "member-nhs"
+        }
+      ],
+      "relevance": 0,
+      "reason": "",
+      "status": "excluded",
+      "country_code": "NL",
+      "language_code": "en",
+      "publication_name": "Pub nhs",
+      "title_en": "Dutch hospitals short of night nurses",
+      "title_original": "Dutch hospitals short of night nurses",
+      "description_en": "Unions warn of burnout as winter admissions climb.",
+      "article_url": "https://example.com/nhs",
+      "image_url": null,
+      "userTopicIds": [
+        "dutch healthcare",
+        "top headline · country"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": 0,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": "COUNTRY",
+      "headlineCountryCode": "NL",
+      "matchedTopics": [
+        {
+          "topicId": "topic:dutch healthcare",
+          "text": "dutch healthcare"
+        },
+        {
+          "topicId": null,
+          "text": "top headline · country"
+        }
+      ],
+      "factIds": [
+        "fact:Works as a nurse in Utrecht"
+      ],
+      "scoredAt": 1791540002450,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "ten",
+      "articleId": "ten",
+      "clusters": [
+        {
+          "clusterId": "c-ten",
+          "confidence": 0.9,
+          "stableClusterId": "member-ten"
+        }
+      ],
+      "relevance": 0,
+      "reason": "",
+      "status": "excluded",
+      "country_code": "GB",
+      "language_code": "en",
+      "publication_name": "Pub ten",
+      "title_en": "Wimbledon raises prize money again",
+      "title_original": "Wimbledon raises prize money again",
+      "description_en": "Singles champions will receive three million pounds.",
+      "article_url": "https://example.com/ten",
+      "image_url": null,
+      "userTopicIds": [
+        "top headline · global"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": 0,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": "GLOBAL",
+      "headlineCountryCode": null,
+      "matchedTopics": [
+        {
+          "topicId": null,
+          "text": "top headline · global"
+        }
+      ],
+      "factIds": [],
+      "scoredAt": 1791540002450,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "utc",
+      "articleId": "utc",
+      "clusters": [
+        {
+          "clusterId": "c-utc",
+          "confidence": 0.9,
+          "stableClusterId": "member-utc"
+        }
+      ],
+      "relevance": 0.8,
+      "reason": "Utrecht council approves new cycle bridge, which ties to Works as a nurse in Utrecht (3a093af7).",
+      "status": "complete",
+      "country_code": "NL",
+      "language_code": "en",
+      "publication_name": "Pub utc",
+      "title_en": "Utrecht council approves new cycle bridge",
+      "title_original": "Utrecht council approves new cycle bridge",
+      "description_en": "The bridge links Leidsche Rijn with the city centre.",
+      "article_url": "https://example.com/utc",
+      "image_url": null,
+      "userTopicIds": [
+        "utrecht news"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": null,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": null,
+      "headlineCountryCode": null,
+      "matchedTopics": [
+        {
+          "topicId": "topic:utrecht news",
+          "text": "utrecht news"
+        }
+      ],
+      "factIds": [
+        "fact:Works as a nurse in Utrecht"
+      ],
+      "scoredAt": 1791540002450,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    },
+    {
+      "_id": "utr",
+      "articleId": "utr",
+      "clusters": [
+        {
+          "clusterId": "c-utr",
+          "confidence": 0.9,
+          "stableClusterId": "member-utr"
+        }
+      ],
+      "relevance": 0.6,
+      "reason": "Rail strike halts trains across Utrecht, which ties to Works as a nurse in Utrecht (73b7ffab).",
+      "status": "complete",
+      "country_code": "NL",
+      "language_code": "en",
+      "publication_name": "Pub utr",
+      "title_en": "Rail strike halts trains across Utrecht",
+      "title_original": "Rail strike halts trains across Utrecht",
+      "description_en": "NS cancelled most services during the 24-hour walkout.",
+      "article_url": "https://example.com/utr",
+      "image_url": null,
+      "userTopicIds": [
+        "utrecht news",
+        "Utrecht rail strike",
+        "top headline · country"
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "firstPubDate": "2026-10-09T09:00:00.000Z",
+      "rawScore": null,
+      "eventType": null,
+      "storyKey": null,
+      "entities": [],
+      "geoTags": [],
+      "headlineScope": "COUNTRY",
+      "headlineCountryCode": "NL",
+      "matchedTopics": [
+        {
+          "topicId": "topic:utrecht news",
+          "text": "utrecht news"
+        },
+        {
+          "topicId": "topic:Utrecht rail strike",
+          "text": "Utrecht rail strike"
+        },
+        {
+          "topicId": null,
+          "text": "top headline · country"
+        }
+      ],
+      "factIds": [
+        "fact:Works as a nurse in Utrecht"
+      ],
+      "scoredAt": 1791540002450,
+      "scoreFailedAt": null,
+      "scoredWithV3": false
+    }
+  ],
+  "picks": [
+    "f1a",
+    "msp",
+    "utc",
+    "utr"
+  ],
+  "feed": [
+    {
+      "id": "f1a",
+      "suggestion": {
+        "_id": "f1a",
+        "articleId": "f1a",
+        "clusters": [
+          {
+            "clusterId": "c-f1a",
+            "confidence": 0.9,
+            "stableClusterId": "member-f1a"
+          }
+        ],
+        "relevance": 0.8,
+        "reason": "Verstappen takes pole in Abu Dhabi, which ties to I follow Formula 1 (47c74e5a).",
+        "status": "complete",
+        "country_code": "AE",
+        "language_code": "en",
+        "publication_name": "Pub f1a",
+        "title_en": "Verstappen takes pole in Abu Dhabi",
+        "title_original": "Verstappen takes pole in Abu Dhabi",
+        "description_en": "Red Bull locks out the front row before the season finale.",
+        "article_url": "https://example.com/f1a",
+        "image_url": null,
+        "userTopicIds": [
+          "formula 1",
+          "motorsport"
+        ],
+        "createdAt": "2026-10-09T10:00:00.000Z",
+        "firstPubDate": "2026-10-09T09:00:00.000Z",
+        "rawScore": null,
+        "eventType": null,
+        "storyKey": null,
+        "entities": [],
+        "geoTags": [],
+        "headlineScope": null,
+        "headlineCountryCode": null,
+        "matchedTopics": [
+          {
+            "topicId": "topic:formula 1",
+            "text": "formula 1"
+          },
+          {
+            "topicId": "topic:motorsport",
+            "text": "motorsport"
+          }
+        ],
+        "factIds": [
+          "fact:I follow Formula 1"
+        ],
+        "scoredAt": 1791540007650,
+        "scoreFailedAt": null,
+        "scoredWithV3": false
+      },
+      "memberCount": 1,
+      "memberIds": [
+        "f1a"
+      ],
+      "breaking": false,
+      "score": 0.44544935907016964
+    },
+    {
+      "id": "msp",
+      "suggestion": {
+        "_id": "msp",
+        "articleId": "msp",
+        "clusters": [
+          {
+            "clusterId": "c-msp",
+            "confidence": 0.9,
+            "stableClusterId": "member-msp"
+          }
+        ],
+        "relevance": 0.4,
+        "reason": "MotoGP rider fined after Valencia crash, which ties to I follow Formula 1 (db1bba06).",
+        "status": "complete",
+        "country_code": "ES",
+        "language_code": "en",
+        "publication_name": "Pub msp",
+        "title_en": "MotoGP rider fined after Valencia crash",
+        "title_original": "MotoGP rider fined after Valencia crash",
+        "description_en": "Stewards hand down a grid penalty for the next race.",
+        "article_url": "https://example.com/msp",
+        "image_url": null,
+        "userTopicIds": [
+          "motorsport"
+        ],
+        "createdAt": "2026-10-09T10:00:00.000Z",
+        "firstPubDate": "2026-10-09T09:00:00.000Z",
+        "rawScore": null,
+        "eventType": null,
+        "storyKey": null,
+        "entities": [],
+        "geoTags": [],
+        "headlineScope": null,
+        "headlineCountryCode": null,
+        "matchedTopics": [
+          {
+            "topicId": "topic:motorsport",
+            "text": "motorsport"
+          }
+        ],
+        "factIds": [
+          "fact:I follow Formula 1"
+        ],
+        "scoredAt": 1791540007650,
+        "scoreFailedAt": null,
+        "scoredWithV3": false
+      },
+      "memberCount": 1,
+      "memberIds": [
+        "msp"
+      ],
+      "breaking": false,
+      "score": 0.44544935907016964
+    },
+    {
+      "id": "utc",
+      "suggestion": {
+        "_id": "utc",
+        "articleId": "utc",
+        "clusters": [
+          {
+            "clusterId": "c-utc",
+            "confidence": 0.9,
+            "stableClusterId": "member-utc"
+          }
+        ],
+        "relevance": 0.8,
+        "reason": "Utrecht council approves new cycle bridge, which ties to Works as a nurse in Utrecht (3a093af7).",
+        "status": "complete",
+        "country_code": "NL",
+        "language_code": "en",
+        "publication_name": "Pub utc",
+        "title_en": "Utrecht council approves new cycle bridge",
+        "title_original": "Utrecht council approves new cycle bridge",
+        "description_en": "The bridge links Leidsche Rijn with the city centre.",
+        "article_url": "https://example.com/utc",
+        "image_url": null,
+        "userTopicIds": [
+          "utrecht news"
+        ],
+        "createdAt": "2026-10-09T10:00:00.000Z",
+        "firstPubDate": "2026-10-09T09:00:00.000Z",
+        "rawScore": null,
+        "eventType": null,
+        "storyKey": null,
+        "entities": [],
+        "geoTags": [],
+        "headlineScope": null,
+        "headlineCountryCode": null,
+        "matchedTopics": [
+          {
+            "topicId": "topic:utrecht news",
+            "text": "utrecht news"
+          }
+        ],
+        "factIds": [
+          "fact:Works as a nurse in Utrecht"
+        ],
+        "scoredAt": 1791540002450,
+        "scoreFailedAt": null,
+        "scoredWithV3": false
+      },
+      "memberCount": 1,
+      "memberIds": [
+        "utc"
+      ],
+      "breaking": false,
+      "score": 0.44544935907016964
+    },
+    {
+      "id": "utr",
+      "suggestion": {
+        "_id": "utr",
+        "articleId": "utr",
+        "clusters": [
+          {
+            "clusterId": "c-utr",
+            "confidence": 0.9,
+            "stableClusterId": "member-utr"
+          }
+        ],
+        "relevance": 0.6,
+        "reason": "Rail strike halts trains across Utrecht, which ties to Works as a nurse in Utrecht (73b7ffab).",
+        "status": "complete",
+        "country_code": "NL",
+        "language_code": "en",
+        "publication_name": "Pub utr",
+        "title_en": "Rail strike halts trains across Utrecht",
+        "title_original": "Rail strike halts trains across Utrecht",
+        "description_en": "NS cancelled most services during the 24-hour walkout.",
+        "article_url": "https://example.com/utr",
+        "image_url": null,
+        "userTopicIds": [
+          "utrecht news",
+          "Utrecht rail strike",
+          "top headline · country"
+        ],
+        "createdAt": "2026-10-09T10:00:00.000Z",
+        "firstPubDate": "2026-10-09T09:00:00.000Z",
+        "rawScore": null,
+        "eventType": null,
+        "storyKey": null,
+        "entities": [],
+        "geoTags": [],
+        "headlineScope": "COUNTRY",
+        "headlineCountryCode": "NL",
+        "matchedTopics": [
+          {
+            "topicId": "topic:utrecht news",
+            "text": "utrecht news"
+          },
+          {
+            "topicId": "topic:Utrecht rail strike",
+            "text": "Utrecht rail strike"
+          },
+          {
+            "topicId": null,
+            "text": "top headline · country"
+          }
+        ],
+        "factIds": [
+          "fact:Works as a nurse in Utrecht"
+        ],
+        "scoredAt": 1791540002450,
+        "scoreFailedAt": null,
+        "scoredWithV3": false
+      },
+      "memberCount": 1,
+      "memberIds": [
+        "utr"
+      ],
+      "breaking": false,
+      "score": 0.44544935907016964
+    }
+  ]
+}

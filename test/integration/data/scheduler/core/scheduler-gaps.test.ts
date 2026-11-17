@@ -118,7 +118,8 @@ describe('scheduler-runner', () => {
 
     await run(task.name);
 
-    expect(Sentry.captureException).toHaveBeenCalledWith('plain string failure');
+    // The client reaches Sentry through its platform facade, which always passes the (here absent) hint.
+    expect(Sentry.captureException).toHaveBeenCalledWith('plain string failure', undefined);
     const [row] = await jobRows(task.name);
     expect(row).toMatchObject({ status: 'failed', errorMessage: 'plain string failure' });
   });

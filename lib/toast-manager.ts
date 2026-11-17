@@ -332,8 +332,17 @@ class ToastManager {
             });
         }
 
-        // 2. Show the transient toast. Its one button runs the row's first action
-        // (one handler for both, components/custom/notifications/notification-actions.ts).
+        // 2. Show the transient toast for that row (null when the write failed).
+        this.showNotifiedRowToast(row, opts);
+    }
+
+    /**
+     * The notified toast for an inbox row that is already written: mera-news-client writes the row
+     * itself, then asks the app (lib/app-host.ts) to show this. `row` is null when the write failed.
+     */
+    showNotifiedRowToast(row: unknown, opts: NotifiedToastOptions) {
+        // Its one button runs the row's first action (one handler for both,
+        // components/custom/notifications/notification-actions.ts).
         const first = opts.actions?.[0];
         this.showNoticeToast({
             title: this.resolveI18n(opts.title, opts.context),

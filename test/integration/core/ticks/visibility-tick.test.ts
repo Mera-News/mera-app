@@ -5,6 +5,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   // Reset module state (lastFireAt / trailingTimer) between tests.
   jest.resetModules();
+  require('@/lib/app-host');
   jest.useFakeTimers();
   // Anchor the fake clock well past THROTTLE_MS so the very first
   // notifyScrollTick in each test is always a fresh leading-edge fire.
