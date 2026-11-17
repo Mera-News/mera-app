@@ -48,6 +48,7 @@ function load(enabled: boolean): Loaded {
   process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';
   delete process.env.EXPO_PUBLIC_SENTRY_IN_DEV;
   jest.resetModules();
+  require('@/lib/app-host');
   const loaded: Loaded = {
     scope: require('@/lib/observability/sentry-scope'),
     stores: {

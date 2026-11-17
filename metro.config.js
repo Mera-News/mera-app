@@ -22,9 +22,18 @@ const ALIASES = {
     'tslib': require.resolve('tslib/tslib.es6.js'),
 };
 
+// mera-news-client holds the app's logic. `@/lib/*` resolves to it first and to the app's own lib/
+// second; Babel leaves those specifiers alone for this. A bundle only ever uses the installed client.
+const { INSTALLED_CLIENT_ROOT, refuseClientOverride } = require('./client-resolution');
+refuseClientOverride('Metro');
+const CLIENT_DIR = INSTALLED_CLIENT_ROOT + path.sep;
+const CLIENT_LIB = path.join(INSTALLED_CLIENT_ROOT, 'lib');
+const APP_LIB = path.join(__dirname, 'lib');
+const APP_ORIGIN = path.join(__dirname, 'index.js');
+
 let E2E_ATTEST_STUB = null;
 let E2E_KEY_VERIFIER_STUB = null;
-const E2EE_DIR = path.resolve(__dirname, 'lib/e2ee') + path.sep;
+const E2EE_DIR = path.join(CLIENT_LIB, 'e2ee') + path.sep;
 
 // E2E build only (scripts/e2e-android.sh exports .env.e2e): the paywall is answered by the mock
 // backend's scenario, since that build carries no RevenueCat key. Same flag as app.config.js.
@@ -39,18 +48,31 @@ if (process.env.EXPO_PUBLIC_E2E === '1') {
 }
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-    // By pattern: babel's module-resolver has already rewritten `@/` to a relative path by the time
-    // Metro resolves an import, so the `@/modules/...` spelling never reaches this function.
+    // By pattern: babel's module-resolver has already rewritten `@/` (all but `@/lib/`) to a relative
+    // path by the time Metro resolves an import, so the `@/modules/...` spelling never reaches here.
     if (E2E_ATTEST_STUB && /(^|\/)modules\/mera-device-attest$/.test(moduleName)) {
         return context.resolveRequest(context, E2E_ATTEST_STUB, platform);
     }
-    // Only imports made from lib/e2ee/ (e2ee-service's './key-verifier'); the stub's own import of
-    // the real module comes from lib/e2e/ and resolves normally.
+    // Only imports made from the client's lib/e2ee/ (e2ee-service's './key-verifier'); the stub's own
+    // import of the real module comes from the app's lib/e2e/ and resolves normally.
     if (E2E_KEY_VERIFIER_STUB && /(^|\/)key-verifier$/.test(moduleName) && context.originModulePath.startsWith(E2EE_DIR)) {
         return context.resolveRequest(context, E2E_KEY_VERIFIER_STUB, platform);
     }
     if (ALIASES[moduleName]) {
         return context.resolveRequest(context, ALIASES[moduleName], platform);
+    }
+    if (moduleName.startsWith('@/lib/')) {
+        const rest = moduleName.slice('@/lib/'.length);
+        try {
+            return context.resolveRequest(context, path.join(CLIENT_LIB, rest), platform);
+        } catch {
+            return context.resolveRequest(context, path.join(APP_LIB, rest), platform);
+        }
+    }
+    // A bare import made from a client file resolves in the app's node_modules, so a package the
+    // client's install nested can never become a second copy of a peer (zustand, graphql, ...).
+    if (context.originModulePath.startsWith(CLIENT_DIR) && !moduleName.startsWith('.') && !path.isAbsolute(moduleName)) {
+        return context.resolveRequest({ ...context, originModulePath: APP_ORIGIN }, moduleName, platform);
     }
     return context.resolveRequest(context, moduleName, platform);
 };

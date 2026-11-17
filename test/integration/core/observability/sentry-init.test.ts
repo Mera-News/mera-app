@@ -43,6 +43,7 @@ afterEach(() => {
 describe('sentry-init (prod path: __DEV__ = false)', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
     jest.clearAllMocks();
     // Simulate production: __DEV__ = false
     (global as any).__DEV__ = false;
@@ -180,6 +181,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
 
     beforeEach(() => {
       jest.resetModules();
+      require('@/lib/app-host');
       jest.clearAllMocks();
       (global as any).__DEV__ = false;
       process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';
@@ -389,6 +391,7 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
 describe('sentry-init (dev path: __DEV__ = true)', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
     jest.clearAllMocks();
     (global as any).__DEV__ = true;
   });

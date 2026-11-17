@@ -8,15 +8,15 @@
     "types": ["node"],
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": "..",
     "paths": {
+      "@/lib/*": ["./node_modules/mera-news-client/lib/*", "./lib/*"],
       "@/*": ["./*"]
     }
   },
   "include": [
-    "**/*.ts",
-    "../lib/news-harness/**/*.ts",
-    "../lib/mera-protocol-toolkit/types.ts"
+    "**/*.ts"
   ],
   "exclude": [
     "**/__tests__/**"

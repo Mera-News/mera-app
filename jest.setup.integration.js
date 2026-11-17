@@ -284,6 +284,12 @@ global.console = {
 // loaded before the patch would send real requests that MSW never sees. Guarded by
 // test/integration/harness/fetch-capture.test.ts.
 const { server, unhandled } = require('./test/helpers/msw');
+server.listen({ onUnhandledRequest: (req) => unhandled.push(`${req.method} ${req.url}`) });
+// 11a. The app's platform host registers itself on import. It must run after MSW listens (the auth
+// client it reaches binds fetch) and before anything loads a mera-news-client module, which throws
+// PlatformNotRegisteredError until a host is registered. A fresh registry (jest.isolateModules,
+// jest.resetModules) has no host: a test that loads client code there requires it again first.
+require('./lib/app-host');
 // Harness modules the hooks below call, loaded here at setup level: nothing is first required
 // inside a hook (a module that registers hooks on load, such as @testing-library/react-native,
 // fails the test when loaded there). The DB stays lazy so a test's own jest.mock still applies.
@@ -293,7 +299,6 @@ const { resetScenario } = require('./test/mock-backend/scenario');
 const { resetAuthState } = require('./test/mock-backend/auth');
 const { resetGatewayState } = require('./test/mock-backend/gateway/handlers');
 const { resetDatabase } = require('./test/helpers/db');
-server.listen({ onUnhandledRequest: (req) => unhandled.push(`${req.method} ${req.url}`) });
 afterEach(() => {
   server.resetHandlers();
   jest.useRealTimers();

@@ -55,6 +55,7 @@ describe('sentry-init supplemental — scrubEventValues edge cases', () => {
 
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
     jest.clearAllMocks();
     (global as any).__DEV__ = false;
     process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';
@@ -125,6 +126,7 @@ describe('sentry-init supplemental — scrubEventValues edge cases', () => {
 describe('sentry-init supplemental — null endpoint values in setContext', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
     jest.clearAllMocks();
     (global as any).__DEV__ = false;
     process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';
@@ -160,6 +162,7 @@ describe('sentry-init supplemental — null endpoint values in setContext', () =
 describe('sentry-init supplemental — static build tags degrade safely', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
     jest.clearAllMocks();
     (global as any).__DEV__ = false;
     process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';

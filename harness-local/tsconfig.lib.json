@@ -1,10 +1,9 @@
 {
   "//": [
     "Scoped typecheck for the harness-local runner libraries.",
-    "tsconfig.json pulls in ../lib/news-harness and, through it, app modules where",
-    "~1,700 errors pre-exist, so `tsc -p harness-local/tsconfig.json` cannot tell a",
-    "new mistake from the standing red. This file lists ONLY the runner libraries",
-    "and their own imports, so its exit code means something.",
+    "tsconfig.json checks every harness-local file and carries standing errors",
+    "(counted in scripts/deletion-gate.tsc-baseline). This file lists ONLY the runner",
+    "libraries and their own imports, so its exit code means something.",
     "  npx tsc -p harness-local/tsconfig.lib.json"
   ],
   "compilerOptions": {
@@ -19,7 +18,7 @@
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": "..",
-    "paths": { "@/*": ["./*"] }
+    "paths": { "@/lib/*": ["./node_modules/mera-news-client/lib/*", "./lib/*"], "@/*": ["./*"] }
   },
   "files": [
     "lib/staging-guard.ts",
@@ -66,10 +65,10 @@
     "lib/chat-flow-score.test.ts",
     "scripts/run-chat-flows.ts",
     "scripts/chat-flow-report.ts",
-    "../lib/news-harness/on-device/kev/index.ts",
-    "../lib/news-harness/on-device/persona-chat/kev-spec.ts",
-    "../lib/news-harness/on-device/article-feedback/kev-spec.ts",
-    "../lib/news-harness/on-device/follow-story/kev-spec.ts",
+    "../node_modules/mera-news-client/lib/news-harness/on-device/kev/index.ts",
+    "../node_modules/mera-news-client/lib/news-harness/on-device/persona-chat/kev-spec.ts",
+    "../node_modules/mera-news-client/lib/news-harness/on-device/article-feedback/kev-spec.ts",
+    "../node_modules/mera-news-client/lib/news-harness/on-device/follow-story/kev-spec.ts",
     "scripts/score-calibration.ts",
     "scripts/test-account.ts"
   ]

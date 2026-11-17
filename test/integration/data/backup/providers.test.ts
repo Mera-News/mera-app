@@ -280,6 +280,7 @@ function loadDrive(options: { webClientId?: string; iosClientId?: string; linked
   let drive!: DriveModule;
   try {
     jest.isolateModules(() => {
+      require('@/lib/app-host');
       drive = require('@/lib/backup/providers/google-drive');
     });
   } finally {
@@ -296,6 +297,7 @@ const REMOTE = `${REMOTE_DIRECTORY}/mera-backup-a.bin`;
 describe('Drive is unusable until the build carries a client id and the native module', () => {
   it('is unconfigured in the integration env, which carries no Google client id', () => {
     jest.isolateModules(() => {
+      require('@/lib/app-host');
       const drive = require('@/lib/backup/providers/google-drive') as DriveModule;
       expect(drive.isGoogleDriveConfigured()).toBe(false);
     });

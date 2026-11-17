@@ -13,6 +13,7 @@ function startProcess(): { defined: [string, Body][]; success: unknown } {
   let defined: [string, Body][] = [];
   let success: unknown;
   jest.isolateModules(() => {
+    require('@/lib/app-host');
     require('@/lib/background/define-tasks');
     const tm = require('expo-task-manager');
     defined = (tm.defineTask as jest.Mock).mock.calls.map((c) => [c[0], c[1]]);

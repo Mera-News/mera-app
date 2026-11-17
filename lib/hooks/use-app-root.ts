@@ -7,7 +7,6 @@ import { useEffect } from 'react';
 import { Directory, Paths } from 'expo-file-system';
 import { useThemeMode } from '@/lib/theme/tokens';
 import { useMotionAllowed } from '@/lib/motion-gate';
-import { hydrateAllStores } from '@/lib/database/hydrate-stores';
 import { useUserStore } from '@/lib/stores/user-store';
 import { applyLanguage } from '@/lib/i18n';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -36,8 +35,7 @@ import {
 } from '@/lib/revenuecat';
 import { ensureSilentPushTaskRegistered } from '@/lib/background/inference-task';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
-import { initRestartContext } from '@/lib/app-restart';
-import { AppScheduler } from '@/lib/scheduler/AppScheduler';
+import { startClient } from '@/lib/scheduler/start-client';
 
 export function useAppRoot() {
   const navigationRef = useNavigationContainerRef();
@@ -183,94 +181,50 @@ export function useAppRoot() {
     // the feed without waiting for any DB work.
     setAppInitialized(true);
 
-    // ONE settings read, ahead of everything that depends on it.
-    //
-    // `initRestartContext()` reads and clears the restart marker
-    // (lib/app-restart.ts), which is what tells this boot apart from a real
-    // cold start. It is awaited BEFORE AppScheduler.init() so that
-    // `onStoresHydrated()` — which must stay synchronous, see its header — can
-    // read the populated cache rather than a promise. pin-store.init() runs in
-    // an earlier effect and awaits the same memoised promise, so the two
-    // callers share a single read and neither has to know about the other.
-    // `cancelled` because `AppScheduler.init()` now sits behind an await. If the
-    // update gate flips to blocked in that window, AppRoot unmounts and
-    // dispose() runs FIRST — and init() registers its AppState and network
-    // listeners above its own `suspended` guard, so it would re-arm them behind
-    // the force-update screen.
-    let cancelled = false;
-    void (async () => {
-      await initRestartContext();
-      if (cancelled) return;
+    // The client's boot (mera-news-client, lib/scheduler/start-client.ts): restart context, the
+    // scheduler, store hydration, then the scheduler's hydrated kick. `afterHydrate` runs
+    // synchronously right before that kick and is never awaited, so the work below is
+    // fire-and-forget and the first sync never waits on it. Returns the stop function.
+    return startClient({
+      afterHydrate: () => {
+        applyLanguage(useAppLanguageStore.getState().appLanguage);
 
-      // Initialise the scheduler after marking the app ready so tasks that
-      // check db-ready will pass their condition on the first tick.
-      void AppScheduler.init();
-
-      // Kick off store hydration in the background. The For You suggestion
-      // query inside is fired ahead of everything else and updates the store
-      // the instant it resolves — the screen re-renders with cached rows
-      // without the rest of hydration needing to complete.
-      hydrateAllStores()
-        .then(() => {
-          // Post-hydration tasks that need hydrated store state.
-          applyLanguage(useAppLanguageStore.getState().appLanguage);
-
-          // On cloud processing, delete retired and unknown model files. The
-          // current model stays, so switching back to On this phone needs no
-          // 3 GB download. Safe on cold start: no llama context is loaded yet.
-          const meraStore = useMeraProtocolStore.getState();
-          if (meraStore.processingMode !== ProcessingMode.OnDevice) {
-            purgeStaleModels()
-              .catch((err) =>
-                logger.captureException(err, {
-                  tags: { component: 'RootLayout', method: 'purge-disabled-models' },
-                }),
-              );
-          } else {
-            // On-device users: delete retired catalogue models and fall back to
-            // Cloud when the selected model is not on disk. Never blocks boot.
-            retireLegacyModels().catch((err) =>
+        // On cloud processing, delete retired and unknown model files. The
+        // current model stays, so switching back to On this phone needs no
+        // 3 GB download. Safe on cold start: no llama context is loaded yet.
+        const meraStore = useMeraProtocolStore.getState();
+        if (meraStore.processingMode !== ProcessingMode.OnDevice) {
+          purgeStaleModels()
+            .catch((err) =>
               logger.captureException(err, {
-                tags: { component: 'RootLayout', method: 'retire-legacy-models' },
+                tags: { component: 'RootLayout', method: 'purge-disabled-models' },
               }),
             );
-          }
+        } else {
+          // On-device users: delete retired catalogue models and fall back to
+          // Cloud when the selected model is not on disk. Never blocks boot.
+          retireLegacyModels().catch((err) =>
+            logger.captureException(err, {
+              tags: { component: 'RootLayout', method: 'retire-legacy-models' },
+            }),
+          );
+        }
 
-          // Re-register the Expo push token on every boot. This is idempotent —
-          // only POSTs to the server when the token has changed vs the cached
-          // persona. Handles reinstalls, iOS→Android migrations, and token
-          // rotation events.
-          //
-          // Deliberately NOT awaited: it is a network POST sitting directly on the
-          // critical path to the first sync, and cold start is exactly when the
-          // user is looking at an empty feed. Tradeoff — `getExpoPushToken()`
-          // reads `userPersona?.expoPushToken`, so on a very first cold start the
-          // scoring run may be minted with a null token and fall back to polling
-          // for its result instead of a push wake-up. Latency now beats a
-          // slightly cheaper first run.
-          const { userId } = useUserStore.getState();
-          if (userId) {
-            void ensurePushTokenRegistered(userId).catch((err) =>
-              logger.captureException(err, {
-                tags: { component: 'RootLayout', method: 'ensurePushTokenRegistered' },
-              }),
-            );
-          }
-
-          // Treat cold start like an app-foreground event so tasks that
-          // declare 'app-foreground' triggers (feed-sync, inference-recover)
-          // fire immediately without waiting for a background→foreground cycle.
-          // Placed after hydration so the 'authenticated' condition passes.
-          AppScheduler.onStoresHydrated();
-        })
-        .catch((error) =>
-          logger.captureException(error, {
-            tags: { component: 'RootLayout', method: 'bootstrap' },
-          }),
-        );
-    })();
-
-    return () => { cancelled = true; AppScheduler.dispose(); };
+        // Re-register the Expo push token on every boot. Idempotent: it only
+        // POSTs when the token differs from the cached persona. Deliberately not
+        // awaited: it is a network POST on the critical path to the first sync.
+        // On a very first cold start the scoring run may then be minted with a
+        // null token and poll for its result instead of a push wake-up.
+        const { userId } = useUserStore.getState();
+        if (userId) {
+          void ensurePushTokenRegistered(userId).catch((err) =>
+            logger.captureException(err, {
+              tags: { component: 'RootLayout', method: 'ensurePushTokenRegistered' },
+            }),
+          );
+        }
+      },
+    });
   }, [setAppInitialized]);
 
   // Handle the notification tap that launched or foregrounded the app. Must

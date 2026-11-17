@@ -376,3 +376,26 @@ export async function clearIdentityFault(): Promise<void> {
   faultTriggered = false;
   writeFaultFlag(null);
 }
+
+/**
+ * Called on every cold start from logged-in/index.tsx before setting the
+ * active userId. Reads `cached_user_id` directly from the DB (no Zustand
+ * hydration needed, so no race) and wipes all local state when the session
+ * belongs to a different user than the one whose data is on-device.
+ *
+ * The FULL wipe, not `clearAllStores()` alone: the database and Zustand are
+ * only part of what an account leaves behind. The keychain (PIN, backup key,
+ * E2EE keys), the staged backup files and the natively held SDK identities
+ * (Drive, Intercom, RevenueCat) would otherwise pass to the incoming account,
+ * whose Drive backup would then upload into the previous account's Drive.
+ * `keepSession` spares only the incoming account's own session cookie. Lazy
+ * requires: local-wipe reaches the stores, which reach the database.
+ */
+export const clearPreviousUserData = async (newUserId: string): Promise<void> => {
+  const { getSetting } = require('@/lib/database/services/setting-service');
+  const cachedUserId = await getSetting('cached_user_id');
+  if (cachedUserId && cachedUserId !== newUserId) {
+    const { wipeAllLocalUserData } = require('./local-wipe');
+    await wipeAllLocalUserData({ keepSession: true });
+  }
+};

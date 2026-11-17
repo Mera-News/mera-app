@@ -37,6 +37,7 @@ const loadWithContext = () => {
 describe('revenuecat', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
   });
 
   // The SDK is configured with no appUserID, so every cold start runs
@@ -317,6 +318,7 @@ const sub = (overrides: Record<string, unknown> = {}) => ({
 describe('describeSubscriptions', () => {
     beforeEach(() => {
         jest.resetModules();
+        require('@/lib/app-host');
     });
 
     it('returns an empty list for null/undefined customer info', () => {
@@ -422,6 +424,7 @@ const valued = (attrs: Record<string, string | null>) =>
 describe('syncRevenueCatAttributes', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
   });
 
   it('sends exactly the six attributes billing support needs', async () => {
@@ -624,6 +627,7 @@ describe('syncRevenueCatAttributes', () => {
 describe('loginRevenueCat attribute ordering', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
   });
 
   // The reason this ordering has its own test: `configureRevenueCat()` passes
@@ -683,6 +687,7 @@ describe('loginRevenueCat attribute ordering', () => {
 describe('subscriber-attribute privacy contract', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('@/lib/app-host');
   });
 
   // Identity, contact and advertising surfaces. `$`-prefixed keys are
@@ -775,7 +780,10 @@ describe('subscriber-attribute privacy contract', () => {
 });
 
 describe('restoreRevenueCatPurchases', () => {
-  beforeEach(() => jest.resetModules());
+  beforeEach(() => {
+    jest.resetModules();
+    require('@/lib/app-host');
+  });
 
   it('returns the CustomerInfo the store restore answers with', async () => {
     const { rc, Purchases } = load();

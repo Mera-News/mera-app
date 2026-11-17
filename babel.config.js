@@ -1,5 +1,8 @@
 module.exports = function (api) {
   api.cache(true);
+  if (process.env.NODE_ENV === 'production') {
+    require('./client-resolution').refuseClientOverride('a production build');
+  }
 
   return {
     // SDK 58's preset runs the decorators transform itself, after TS type
@@ -13,8 +16,10 @@ module.exports = function (api) {
         {
           root: ['./'],
 
+          // `@/lib/*` is left as written: Metro and Jest resolve it to mera-news-client first and
+          // the app second (client-resolution.js), which a path rewritten here would bypass.
           alias: {
-            '@': './',
+            '^@/(?!lib/)(.+)': './\\1',
             'tailwind.config': './tailwind.config.js',
           },
         },

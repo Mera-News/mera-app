@@ -6,10 +6,16 @@
 // to test/helpers/node-fetch.ts below. Workers inherit the parent's env.
 process.env.EXPO_PUBLIC_USE_RN_FETCH = '1';
 
+const path = require('path');
+// mera-news-client holds the moved logic. `@/lib/*` resolves client first, app second; the same rule
+// as tsconfig and Metro. CLIENT_ROOT honours MERA_CLIENT_ROOT (a planted scratch copy in a proof run).
+const { CLIENT_ROOT } = require('./client-resolution');
+const CLIENT_LIB = ['^@/lib/(.*)$', [path.join(CLIENT_ROOT, 'lib/$1'), '<rootDir>/lib/$1']];
+
 // Existing transform allowlist. `msw` is appended for the integration project
 // only: msw/node and its helper packages ship untranspiled ESM.
 const ALLOW =
-  '((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|better-auth|@better-auth|@apollo|graphql|nanostores|rou3|jose|@noble|@gluestack-ui/.*|@legendapp/.*';
+  'mera-news-client|((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|better-auth|@better-auth|@apollo|graphql|nanostores|rou3|jose|@noble|@gluestack-ui/.*|@legendapp/.*';
 const MSW_ALLOW =
   'msw|@mswjs|@bundled-es-modules|@open-draft|until-async|rettime|outvariant|strict-event-emitter|headers-polyfill|graphql';
 
@@ -40,8 +46,11 @@ const base = {
   modulePathIgnorePatterns: IGNORED_DIRS,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   moduleNameMapper: {
+    [CLIENT_LIB[0]]: CLIENT_LIB[1],
     '^@/(.*)$': '<rootDir>/$1',
   },
+  // A bare import made from a client file resolves from the app's node_modules: one copy of each peer.
+  resolver: '<rootDir>/test/helpers/jest-resolver.js',
   testEnvironment: 'node',
   globals: {
     '__DEV__': true,
@@ -153,6 +162,7 @@ module.exports = {
       },
       moduleNameMapper: {
         '^expo/fetch$': '<rootDir>/test/helpers/node-fetch.ts',
+        [CLIENT_LIB[0]]: CLIENT_LIB[1],
         '^@/(.*)$': '<rootDir>/$1',
       },
     },

@@ -80,3 +80,6 @@ global.console = {
   warn: jest.fn(),
   log: jest.fn(),
 };
+
+// The app's platform host registers itself on import, before any mera-news-client module loads.
+require('./lib/app-host');

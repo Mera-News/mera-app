@@ -3,7 +3,7 @@
 // SECRET half. Seeds are constants so a failing run reproduces byte for byte.
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
-import { bytesToHex } from '../../../lib/e2ee/e2ee-crypto';
+import { bytesToHex } from '@/lib/e2ee/e2ee-crypto';
 
 export type GatewayAlgo = 'ed25519' | 'ecdsa';
 

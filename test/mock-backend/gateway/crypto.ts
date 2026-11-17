@@ -6,7 +6,7 @@ import { gcm } from '@noble/ciphers/aes.js';
 import { randomBytes } from '@noble/ciphers/utils.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { realKeyVerifier, setKeyVerifier } from '../../../lib/e2ee/key-verifier';
+import { realKeyVerifier, setKeyVerifier } from '@/lib/e2ee/key-verifier';
 import {
   bytesToHex,
   decryptContent,
@@ -16,7 +16,7 @@ import {
   v2Aad,
   type E2EEContext,
   type E2EEV2Params,
-} from '../../../lib/e2ee/e2ee-crypto';
+} from '@/lib/e2ee/e2ee-crypto';
 import { TEST_MODEL_KEYS, type GatewayAlgo } from './keys';
 
 /** Open a client -> model envelope with the test model's secret. Throws when it does not open. */

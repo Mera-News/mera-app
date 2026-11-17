@@ -387,12 +387,14 @@ describe('getArticleTranslationSupport (iOS)', () => {
         // Better to let the user try than to nag them about an update we can't
         // prove they need.
         jest.resetModules();
+        require('@/lib/app-host');
         jest.doMock('expo-device', () => ({ isDevice: true, osVersion: undefined }));
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const reloaded = require('@/lib/translation-service');
         expect(reloaded.getArticleTranslationSupport('sv', 'en').status).toBe('translatable');
         jest.dontMock('expo-device');
         jest.resetModules();
+        require('@/lib/app-host');
     });
 });
 

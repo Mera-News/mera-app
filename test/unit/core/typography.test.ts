@@ -1,4 +1,4 @@
-import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '../../../lib/algorithms/policy';
+import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/algorithms/policy';
 import { scaledTypeStyle } from '../../../lib/typography/TextScaleContext';
 import {
   DEFAULT_TEXT_SCALE,
@@ -8,7 +8,7 @@ import {
   TYPE_SCALE,
   defaultTextScaleForWidth,
   nearestTextScale,
-} from '../../../lib/algorithms/scale';
+} from '@/lib/algorithms/scale';
 
 describe('maxFontSizeMultiplierFor', () => {
   it('returns the tier cap when the user is at the default scale', () => {

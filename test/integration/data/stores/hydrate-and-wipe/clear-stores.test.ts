@@ -6,7 +6,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import database from '@/lib/database';
 import {
   clearAllStores,
-  clearPreviousUserData,
   useConfigPanelStore,
   useFloatingChatStore,
   useForYouStore,
@@ -14,6 +13,7 @@ import {
   useUIStore,
   useUserStore,
 } from '@/lib/stores';
+import { clearPreviousUserData } from '@/lib/security/identity-gate';
 import { addFact } from '@/lib/database/services/fact-service';
 import { persistUserPersona } from '@/lib/database/services/user-persona-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';

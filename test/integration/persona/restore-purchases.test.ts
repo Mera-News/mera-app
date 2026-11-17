@@ -99,6 +99,7 @@ describe('Intercom login', () => {
     it('sends the user id and never an email', async () => {
         // Fresh registry: the Intercom keys are read when lib/config/endpoints first loads.
         jest.resetModules();
+        require('@/lib/app-host');
         const { useUserStore: freshUserStore } = require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
         freshUserStore.setState({ userId: 'user-1' });
         const intercom = require('@/lib/intercom') as typeof import('@/lib/intercom');
