@@ -21,14 +21,14 @@ import {
 } from 'http-status-codes';
 import { authClient } from './auth-client';
 import { recordAuthFailure, recordAuthSuccess } from './auth-failure-breaker';
-import logger from './logger';
+import logger from '@/lib/logger';
 import { isOwnershipFault, recordOwnershipFault } from './security/identity-gate';
-import { useForYouStore } from './stores/for-you-store';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import {
     recordServerReachable,
     recordServerTransportFailure,
     useNetworkStore,
-} from './stores/network-store';
+} from '@/lib/stores/network-store';
 import {
     instrumentedFetch,
     isRequestTimeoutError,
@@ -36,7 +36,7 @@ import {
 } from './apollo-fetch';
 import { clientHeaderValue } from './observability/client-header';
 import { toastManager } from './toast-manager';
-import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
+import { GRAPHQL_SERVER_ENDPOINT } from '@/lib/config/endpoints';
 
 // Cache TTL in milliseconds (10 minutes)
 const CACHE_TTL_MS = 10 * 60 * 1000;

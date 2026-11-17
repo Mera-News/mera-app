@@ -11,8 +11,8 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { factRemovedPrompt, runFactRemovedTurn } from '../../lib/mera-harness/core/fact-removed-turn';
-import { BIG_MODEL } from '../../lib/llm/constants';
+import { factRemovedPrompt, runFactRemovedTurn } from '@/lib/mera-harness/core/fact-removed-turn';
+import { BIG_MODEL } from '@/lib/llm/constants';
 import { loadHarnessEnv } from '../config/env';
 import { costOf, fetchModelCatalog } from '../lib/model-catalog';
 import { postCompletion } from '../lib/near-call';

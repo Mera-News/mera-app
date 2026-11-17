@@ -15,7 +15,7 @@ import {
   generateTopicsForFactsBatch,
   DEFAULT_HARNESS_CONFIG,
   type Fact,
-} from '../../lib/news-harness';
+} from '@/lib/news-harness';
 
 interface Args {
   label: string;

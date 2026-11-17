@@ -50,12 +50,12 @@
 
 import { Q } from '@nozbe/watermelondb';
 import { useEffect, useState } from 'react';
-import database from '../database/index';
-import FactCheckRecord from '../database/models/FactCheckRecord';
-import type { StoredFactCheck } from '../database/services/fact-check-record-service';
-import { requestFactCheck } from './fact-check-graphql-client';
-import { listAskedFactChecks, onFactCheckAsked } from './fact-check-settled';
-import type { FactCheckRow } from './fact-check-types';
+import database from '@/lib/database';
+import FactCheckRecord from '@/lib/database/models/FactCheckRecord';
+import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
+import { requestFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
+import { listAskedFactChecks, onFactCheckAsked } from '@/lib/fact-check/fact-check-settled';
+import type { FactCheckRow } from '@/lib/fact-check/fact-check-types';
 import {
     isTerminalStatus,
     POLL_CEILING_MS,
@@ -63,7 +63,7 @@ import {
     PROGRESS_DELAY_MS,
     shouldShowProgress,
     type FactCheckPhase,
-} from './fact-check-state';
+} from '@/lib/fact-check/fact-check-state';
 
 export type { FactCheckPhase };
 

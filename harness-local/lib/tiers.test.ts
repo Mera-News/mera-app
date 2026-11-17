@@ -8,7 +8,7 @@ import { test } from 'node:test';
 
 import { addOnly, erroredCells, loadTier, runPool, selectTurns, TIERS_PATH } from './tiers';
 import { SpendLimitError } from './near-call';
-import type { AgentScript, EvalRow } from '../../lib/mera-harness/eval/types';
+import type { AgentScript, EvalRow } from '@/lib/mera-harness/eval/types';
 
 const turn = (index: number, chooses?: string): AgentScript['turns'][number] =>
   ({ index, ...(chooses ? { chooses } : { user: `u${index}` }), expect: { tools: [] } }) as unknown as AgentScript['turns'][number];

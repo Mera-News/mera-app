@@ -1,8 +1,8 @@
 import { AppState, type AppStateStatus } from 'react-native';
 
-import { holdRestart } from '../app-restart';
-import logger from '../logger';
-import { isSecureUrl } from '../algorithms/secure-url';
+import { holdRestart } from '@/lib/app-restart';
+import logger from '@/lib/logger';
+import { isSecureUrl } from '@/lib/algorithms/secure-url';
 import type { appendReferrer, openInAppBrowser } from '../web-browser-utils';
 
 /**

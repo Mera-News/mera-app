@@ -1,5 +1,5 @@
 import { checkPushTokenRevocation } from '@/lib/notification-service';
-import { AppScheduler } from '../AppScheduler';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 
 AppScheduler.register({
   name: 'push-token-check',

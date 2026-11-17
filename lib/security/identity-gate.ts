@@ -303,7 +303,7 @@ export function __resetIdentityFaultForTests(): void {
 function setNeedsReauthSafe(value: boolean): void {
   try {
     const { useUserStore } =
-      require('../stores/user-store') as typeof import('../stores/user-store');
+      require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
     useUserStore.getState().setNeedsReauth(value);
   } catch {
     // best-effort — the store may not be available (e.g. in unit tests)
@@ -313,7 +313,7 @@ function setNeedsReauthSafe(value: boolean): void {
 function writeFaultFlag(value: '1' | null): void {
   try {
     const { setSetting, deleteSetting } =
-      require('../database/services/setting-service') as typeof import('../database/services/setting-service');
+      require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
     if (value === null) deleteSetting(IDENTITY_FAULT_KEY).catch(() => {});
     else setSetting(IDENTITY_FAULT_KEY, value).catch(() => {});
   } catch {
@@ -339,7 +339,7 @@ export function recordOwnershipFault(context: { operationName?: string } = {}): 
   setNeedsReauthSafe(true);
 
   try {
-    const logger = (require('../logger') as { default: typeof import('../logger').default }).default;
+    const logger = (require('@/lib/logger') as { default: typeof import('@/lib/logger').default }).default;
     logger.captureMessage(
       'Identity fault: server rejected a query as belonging to another user',
       {
@@ -357,7 +357,7 @@ export function recordOwnershipFault(context: { operationName?: string } = {}): 
 export async function hasIdentityFault(): Promise<boolean> {
   try {
     const { getSetting } =
-      require('../database/services/setting-service') as typeof import('../database/services/setting-service');
+      require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
     return (await getSetting(IDENTITY_FAULT_KEY)) === '1';
   } catch {
     return false;

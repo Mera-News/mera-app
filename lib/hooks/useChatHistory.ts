@@ -12,8 +12,8 @@ import {
   fetchMessagesBefore,
   type MessageCursor,
   type PersistedMessage,
-} from '../database/services/conversation-service';
-import logger from '../logger';
+} from '@/lib/database/services/conversation-service';
+import logger from '@/lib/logger';
 
 const PAGE_SIZE = 30;
 

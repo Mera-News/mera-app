@@ -42,7 +42,7 @@
 // No counter, tally or record of what was exported is kept anywhere. Exporting
 // is not an event this app measures.
 
-import type { SavedItem } from './database/services/saved-article-suggestion-service';
+import type { SavedItem } from '@/lib/database/services/saved-article-suggestion-service';
 
 /** One article as it appears in an export, in either format. */
 export interface SavedExportRow {

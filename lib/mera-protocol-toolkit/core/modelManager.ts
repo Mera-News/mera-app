@@ -18,21 +18,21 @@ import {
   type LlamaContext,
 } from 'llama.rn';
 
-import logger from '../../logger';
-import { ProcessingMode } from '../../generated/graphql-types';
-import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
-import { LOCAL_CONTEXT_TOKENS } from './context-size';
-import { holdRestart } from '../../app-restart';
+import logger from '@/lib/logger';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { LOCAL_CONTEXT_TOKENS } from '@/lib/mera-protocol-toolkit/core/context-size';
+import { holdRestart } from '@/lib/app-restart';
 import { recordModelLoad } from './inference-stats';
 import { withLlamaLock } from './llama-lock';
-import { MODEL_CATALOG, RELEVANCE_MODEL } from './model-catalog';
+import { MODEL_CATALOG, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { builtInAvailability } from './text-engine';
 import { prewarm as prewarmNative } from '@/modules/mera-on-device-llm';
 import type {
   BaseModelDownloadConfig,
   BaseModelManifest,
   ModelState,
-} from '../types';
+} from '@/lib/mera-protocol-toolkit/types';
 
 // ---------------------------------------------------------------------------
 // Progress callback type

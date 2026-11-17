@@ -22,7 +22,7 @@ import logger from '@/lib/logger';
 import {
   runBackgroundCycle,
   type CycleReason,
-} from './run-inference-handler';
+} from '@/lib/background/run-inference-handler';
 
 export const INFERENCE_TASK = 'mera-inference-task';
 

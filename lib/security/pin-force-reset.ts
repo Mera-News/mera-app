@@ -31,7 +31,7 @@ import Constants from 'expo-constants';
 import { secureStore } from '../utils/secure-store-adapter';
 import { setAppLockEnabled } from './app-lock-service';
 import { clearPin } from './pin-service';
-import logger from '../logger';
+import logger from '@/lib/logger';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 const PIN_FORCE_RESET_KEY = `${APP_SLUG}_pin_force_reset_v1`;

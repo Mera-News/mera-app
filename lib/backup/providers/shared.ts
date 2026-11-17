@@ -26,7 +26,7 @@ import {
   CloudStorageScope,
 } from 'react-native-cloud-storage';
 
-import type { RestoreRefusal } from '../types';
+import type { RestoreRefusal } from '@/lib/backup/types';
 
 /**
  * App-data scope on both providers: Drive's hidden `appDataFolder`, matching

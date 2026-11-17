@@ -5,7 +5,7 @@
 // make it report failure. A metric that cannot be shown failing on a
 // constructed input is not verified, only exercised.
 
-import { bandOf, bandRank, DEFAULT_HARNESS_CONFIG, type RelevanceBand } from '../../lib/news-harness';
+import { bandOf, bandRank, DEFAULT_HARNESS_CONFIG, type RelevanceBand } from '@/lib/news-harness';
 
 // --- band histogram ---------------------------------------------------------
 

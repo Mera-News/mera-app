@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentScript, EvalRow } from '../../lib/mera-harness/eval/types';
+import type { AgentScript, EvalRow } from '@/lib/mera-harness/eval/types';
 
 /** Pre-registered, tracked. Outside fixtures/scripts/, which the runner globs. */
 export const TIERS_PATH = join(__dirname, '../../lib/mera-harness/eval/fixtures/tiers.json');

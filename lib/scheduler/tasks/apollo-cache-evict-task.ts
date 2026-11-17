@@ -1,5 +1,5 @@
 import { evictExpiredApolloCache } from '@/lib/apollo-client';
-import { AppScheduler } from '../AppScheduler';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 
 AppScheduler.register({
   name: 'apollo-cache-evict',

@@ -11,13 +11,13 @@
 
 import type { DecisionRequest, DecisionResult } from 'llama.rn';
 import { AppState } from 'react-native';
-import type { InferParams, InferResult } from '../types';
-import { holdRestart } from '../../app-restart';
+import type { InferParams, InferResult } from '@/lib/mera-protocol-toolkit/types';
+import { holdRestart } from '@/lib/app-restart';
 import { recordCompletion, recordRefusal } from './inference-stats';
 import { acquireLlamaLock, withLlamaLock } from './llama-lock';
-import { RELEVANCE_MODEL } from './model-catalog';
+import { RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { _assertOnDeviceMode, _ensureLoaded, _getContext, _releaseModel } from './modelManager';
-import { readStructured, type JsonSchema } from './structured-json';
+import { readStructured, type JsonSchema } from '@/lib/mera-protocol-toolkit/core/structured-json';
 import type { TextEngine } from './text-engine';
 import {
   contextSize as nativeContextSize,

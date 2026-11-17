@@ -20,7 +20,7 @@
 
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 
-import type { BackupCadence } from './types';
+import type { BackupCadence } from '@/lib/backup/types';
 
 export const BACKUP_CADENCE_KEY = 'backup_cadence';
 export const BACKUP_PROVIDER_KEY = 'backup_provider';

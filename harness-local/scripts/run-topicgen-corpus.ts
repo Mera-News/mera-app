@@ -66,8 +66,8 @@ import {
   resolveAgentArm,
   topicFlowFor,
   topicPromptFor,
-} from '../../lib/mera-harness/core/arms';
-import type { AgentModelResult } from '../../lib/mera-harness/core/types';
+} from '@/lib/mera-harness/core/arms';
+import type { AgentModelResult } from '@/lib/mera-harness/core/types';
 // The skill core, from the harness's public entry, exactly as the app's
 // topic-gen handler imports it.
 import {
@@ -77,28 +77,28 @@ import {
   normalizeTopicText,
   topicSkillForAttribute,
 } from '@/lib/mera-harness';
-import { ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
-import { PERSONA_SKILLS } from '../../lib/mera-harness/skills/index.generated';
+import { ensureNullControlArm } from '@/lib/mera-harness/eval/null-control';
+import { PERSONA_SKILLS } from '@/lib/mera-harness/skills/index.generated';
 import {
   buildCloudBatchCallsForFact,
   parseTopicsFromOutput,
   splitCount,
-} from '../../lib/news-harness/persona-management/topic-generation';
+} from '@/lib/news-harness/persona-management/topic-generation';
 import {
   COMBO_PASS_MAX_TOPICS,
   COMBO_PASS_TOPIC_SYSTEM_PROMPT,
   buildComboPassUserMessage,
   buildTopicGenSystemPrompt,
-} from '../../lib/news-harness/prompts/persona-prompts';
-import { planTopupTopicRows } from '../../lib/news-harness/persona-management/topic-topup';
+} from '@/lib/news-harness/prompts/persona-prompts';
+import { planTopupTopicRows } from '@/lib/news-harness/persona-management/topic-topup';
 import { f6Words } from './score-topic-run';
-import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
+import { promptVariantIds, resolvePromptVariant } from '@/lib/news-harness/prompts/prompt-variants';
 import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
-import { DEFAULT_HARNESS_CONFIG } from '../../lib/news-harness/core/config';
-import { buildTopicGenPrompt, TOPIC_GEN_SYSTEM } from '../../lib/news-harness/on-device/topic-gen/prompt';
-import { topicGenSchema, type TopicGenReply } from '../../lib/news-harness/on-device/topic-gen/schema';
-import { topicsFromReply } from '../../lib/news-harness/on-device/topic-gen/parse';
-import { promptBudgetTokens } from '../../lib/news-harness/on-device/shared';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import { buildTopicGenPrompt, TOPIC_GEN_SYSTEM } from '@/lib/news-harness/on-device/topic-gen/prompt';
+import { topicGenSchema, type TopicGenReply } from '@/lib/news-harness/on-device/topic-gen/schema';
+import { topicsFromReply } from '@/lib/news-harness/on-device/topic-gen/parse';
+import { promptBudgetTokens } from '@/lib/news-harness/on-device/shared';
 import {
   assertEngineReady,
   engineContextSize,

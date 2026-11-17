@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 import { AccessibilityInfo } from 'react-native';
 import type React from 'react';
-import logger from './logger';
+import logger from '@/lib/logger';
 import { TOAST_MIN_DURATION_MS, rearm } from './toast/toast-queue';
 import type { ToastTone } from '@/components/custom/toast/MeraToast';
 

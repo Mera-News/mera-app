@@ -77,10 +77,10 @@ import {
   buildUserContext,
   parseReasonResult,
   resolveCountryName,
-} from '../../lib/news-harness';
-import { buildNotePrompt } from '../../lib/news-harness/on-device/notes/prompt';
+} from '@/lib/news-harness';
+import { buildNotePrompt } from '@/lib/news-harness/on-device/notes/prompt';
 import { assertEngineReady, callLocal, isTransportError, parseEngine, type LocalEngine } from '../lib/engine';
-import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
+import { promptVariantIds, resolvePromptVariant } from '@/lib/news-harness/prompts/prompt-variants';
 import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
 
 // Once per process, before any variant resolves. This runner's own arms are

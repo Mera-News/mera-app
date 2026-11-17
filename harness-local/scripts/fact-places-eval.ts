@@ -17,13 +17,13 @@ import { loadHarnessEnv } from '../config/env';
 import { applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
 import { postCompletion } from '../lib/near-call';
-import { SMALL_MODEL } from '../../lib/llm/constants';
-import { parsePlace, type ReaderPlace } from '../../lib/news-harness/persona-management/fact-places';
+import { SMALL_MODEL } from '@/lib/llm/constants';
+import { parsePlace, type ReaderPlace } from '@/lib/news-harness/persona-management/fact-places';
 import {
   FACT_PLACES_CALL,
   buildFactPlacesRequest,
   decodeFactPlaces,
-} from '../../lib/news-harness/persona-management/geo-derivation';
+} from '@/lib/news-harness/persona-management/geo-derivation';
 
 export const BAR = { country: 0.95, level: 0.85, wrong: 0.02 } as const;
 

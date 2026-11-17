@@ -14,7 +14,7 @@
 import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
 import { Platform } from 'react-native';
 
-import type { BackupProvider } from '../types';
+import type { BackupProvider } from '@/lib/backup/types';
 import {
   BACKUP_SCOPE,
   REMOTE_DIRECTORY,

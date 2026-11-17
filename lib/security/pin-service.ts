@@ -26,9 +26,9 @@
 import * as Crypto from 'expo-crypto';
 import { bytesToHex, randomBytes } from '@noble/hashes/utils.js';
 import Constants from 'expo-constants';
-import { cooldownForFailCount } from '../algorithms/pin-cooldown';
+import { cooldownForFailCount } from '@/lib/algorithms/pin-cooldown';
 import { secureStore } from '../utils/secure-store-adapter';
-import logger from '../logger';
+import logger from '@/lib/logger';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 const PIN_RECORD_KEY = `${APP_SLUG}_pin_record`;

@@ -1,6 +1,6 @@
 import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
-import { AppScheduler } from '../AppScheduler';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 
 // Keeps the server's entitlement verdict fresh while the app is in use. A
 // subscription can lapse, renew, or be restored on another device with nothing

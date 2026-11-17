@@ -6,7 +6,7 @@
 // Accepts exactly the mock's test keys, and only in E2E mode (flag AND loopback endpoints); every
 // other key, and every key outside E2E mode, goes to the real verifier. The export below doubles
 // as the bundle marker scripts/e2e-android.sh greps.
-import { realKeyVerifier, setKeyVerifier, type KeyVerifier } from '../e2ee/key-verifier';
+import { realKeyVerifier, setKeyVerifier, type KeyVerifier } from '@/lib/e2ee/key-verifier';
 import { E2E_MODE } from '../e2e-mode';
 import { TEST_MODEL_KEYS } from '../../test/mock-backend/gateway/keys';
 

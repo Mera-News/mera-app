@@ -40,7 +40,7 @@ import { loadHarnessEnv } from '../config/env';
 import {
   parseFactCheckClaimOptions,
   type FactCheckArticleInput,
-} from '../../lib/news-harness/fact-check';
+} from '@/lib/news-harness/fact-check';
 // The claim picker is a SECTION of the article agent's prompt now (the chip
 // sends into the existing article thread), so the replay has to render the
 // article agent's prompt + <context> or it measures a prompt we do not ship.
@@ -48,12 +48,12 @@ import {
   buildArticleFeedbackSystemPrompt,
   buildFeedbackContext,
   getArticleFeedbackToolDefinitions,
-} from '../../lib/news-harness/article-feedback/agent-core';
+} from '@/lib/news-harness/article-feedback/agent-core';
 import {
   BIG_MODEL,
   CHAT_MAX_OUTPUT_TOKENS,
   CHAT_REASONING_HEADROOM_TOKENS,
-} from '../../lib/llm/constants';
+} from '@/lib/llm/constants';
 /** Prompt guidance is ≤6 words; this is the reporting threshold for a pill that
  *  will visibly wrap on a card. */
 const LABEL_WORD_LIMIT = 6;

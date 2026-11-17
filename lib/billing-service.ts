@@ -1,9 +1,9 @@
 import { gql } from '@apollo/client';
 import client from './apollo-client';
-import { UserBillingInfo } from './generated/graphql-types';
-import logger from './logger';
+import { UserBillingInfo } from '@/lib/generated/graphql-types';
+import logger from '@/lib/logger';
 import { noteBillingTier } from './subscription/plan-rise';
-import { getReadHold, hydrateReadHold, setReadHold } from './subscription/read-hold';
+import { getReadHold, hydrateReadHold, setReadHold } from '@/lib/subscription/read-hold';
 
 const GET_USER_BILLING = gql`
   query GetUserBilling {

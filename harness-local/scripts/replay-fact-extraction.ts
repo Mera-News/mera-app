@@ -21,12 +21,12 @@ import {
   buildPersonaUpdateStaticPrompt,
   buildToolDefinitions,
   buildPersonaUpdateContext,
-} from '../../lib/news-harness/prompts/prompts';
+} from '@/lib/news-harness/prompts/prompts';
 import {
   BIG_MODEL,
   CHAT_MAX_OUTPUT_TOKENS,
   CHAT_REASONING_HEADROOM_TOKENS,
-} from '../../lib/llm/constants';
+} from '@/lib/llm/constants';
 
 /** The exact CLOUD fact-extraction text as it stood BEFORE the r14 edits. */
 const REVERT_TO_PRE_R14: { from: string; to: string }[] = [

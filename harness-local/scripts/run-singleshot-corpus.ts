@@ -52,19 +52,19 @@ import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
 import { applyProviderOverride, postBodyStreamTextTools, SpendLimitError, type NearToolCall } from '../lib/near-call';
-import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '../../lib/llm/constants';
-import { APP_TOOL_FORMAT } from '../../lib/llm/text-tool-protocol';
+import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
+import { APP_TOOL_FORMAT } from '@/lib/llm/text-tool-protocol';
 import {
   buildFollowStoryContext,
   buildFollowStorySystemPrompt,
   getFollowStoryToolDefinitions,
-} from '../../lib/news-harness/follow-story';
+} from '@/lib/news-harness/follow-story';
 import {
   buildArticleFeedbackSystemPrompt,
   buildFeedbackContext,
   getArticleFeedbackToolDefinitions,
   parseTrackScopeOptions,
-} from '../../lib/news-harness/article-feedback/agent-core';
+} from '@/lib/news-harness/article-feedback/agent-core';
 import {
   createAgentState,
   loadSkill,
@@ -72,26 +72,26 @@ import {
   type AgentModelRequest,
   type AgentModelResult,
   type AgentToolPort,
-} from '../../lib/mera-harness';
-import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
-import { KNOWLEDGE_TOOL_NAMES } from '../../lib/news-harness/persona-management/persona-agent-core';
-import { asUntrusted } from '../../lib/news-harness/prompts/untrusted-text';
-import { jsonCandidates } from '../../lib/mera-protocol-toolkit/core/structured-json';
+} from '@/lib/mera-harness';
+import { PERSONA_SKILL_IDS } from '@/lib/mera-harness/skills/index.generated';
+import { KNOWLEDGE_TOOL_NAMES } from '@/lib/news-harness/persona-management/persona-agent-core';
+import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
+import { jsonCandidates } from '@/lib/mera-protocol-toolkit/core/structured-json';
 import {
   buildFollowStoryPrompt,
   FOLLOW_STORY_SCHEMA,
   followStoryInstructions,
   followStoryTurn,
   type FollowStoryReply,
-} from '../../lib/news-harness/on-device/follow-story';
+} from '@/lib/news-harness/on-device/follow-story';
 import {
   ARTICLE_FEEDBACK_SCHEMA,
   articleFeedbackInstructions,
   articleFeedbackTurn,
   buildArticleFeedbackPrompt,
   type ArticleFeedbackReply,
-} from '../../lib/news-harness/on-device/article-feedback';
-import type { OnDeviceTurnResult } from '../../lib/news-harness/on-device/shared';
+} from '@/lib/news-harness/on-device/article-feedback';
+import type { OnDeviceTurnResult } from '@/lib/news-harness/on-device/shared';
 import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 
 interface Fixture {

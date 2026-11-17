@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { countMatched, harnessVerdict, liveSystem, loadPrePrompts, parseArgs, prePostVerdict, runTool, runTurnHarness, type HarnessCaller } from './run-singleshot-corpus';
-import { BIG_MODEL } from '../../lib/llm/constants';
+import { BIG_MODEL } from '@/lib/llm/constants';
 import { sentModel } from '../lib/model-catalog';
 
 test('defaults: BIG_MODEL and the on, on-twin, off arms', () => {

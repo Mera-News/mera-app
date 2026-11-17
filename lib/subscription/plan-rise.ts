@@ -12,7 +12,7 @@
 // The first read of a process only records the tier: a cold start mints a
 // fresh JWT anyway.
 
-import { setReadHold } from './read-hold';
+import { setReadHold } from '@/lib/subscription/read-hold';
 
 const MULTIPLIER: Readonly<Record<string, number>> = {
   starter: 1,

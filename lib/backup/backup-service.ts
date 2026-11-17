@@ -27,25 +27,25 @@ import appSchema from '@/lib/database/schema';
 import logger from '@/lib/logger';
 
 import { RnfsFile } from './adapters/rnfs-file';
-import { watermelonRowSink } from './adapters/watermelon-row-sink';
-import { watermelonRowSource } from './adapters/watermelon-row-source';
-import { exportBackup, type ExportProgress } from './export';
-import { importBackup, type ImportProgress, type ImportResult } from './import';
+import { watermelonRowSink } from '@/lib/backup/adapters/watermelon-row-sink';
+import { watermelonRowSource } from '@/lib/backup/adapters/watermelon-row-source';
+import { exportBackup, type ExportProgress } from '@/lib/backup/export';
+import { importBackup, type ImportProgress, type ImportResult } from '@/lib/backup/import';
 import { getBackupKey, isRecoveryCodeConfirmed } from './key-store';
 import { REMOTE_DIRECTORY } from './providers/shared';
-import { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from './remote-names';
+import { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from '@/lib/backup/remote-names';
 import {
   BACKUP_DOCUMENT_DIRECTORY,
   BACKUP_SCRATCH_DIRECTORY,
   type BackupHeader,
   type BackupProvider,
   type RestoreRefusal,
-} from './types';
+} from '@/lib/backup/types';
 
 /** Blobs kept in the cloud. Older ones are pruned after a successful upload. */
 export const BACKUP_KEEP_COUNT = 3;
 
-export { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from './remote-names';
+export { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from '@/lib/backup/remote-names';
 
 export class BackupServiceError extends Error {
   constructor(
@@ -243,7 +243,7 @@ export async function runRestore(
     });
     // Lazy: this module loads in places that must not open the database.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    await (require('../database/services/topic-generation-status-service') as typeof import('../database/services/topic-generation-status-service')).restartTopicClocks();
+    await (require('@/lib/database/services/topic-generation-status-service') as typeof import('@/lib/database/services/topic-generation-status-service')).restartTopicClocks();
     return result;
   } finally {
     await local.remove();

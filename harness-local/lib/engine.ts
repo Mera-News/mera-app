@@ -15,9 +15,9 @@
 
 import { afmAvailability, afmCall } from '../adapters/afm-llm';
 import { postCompletion, type NearResult } from './near-call';
-import { LOCAL_CONTEXT_TOKENS } from '../../lib/mera-protocol-toolkit/core/context-size';
-import { readStructured, type JsonSchema } from '../../lib/mera-protocol-toolkit/core/structured-json';
-import { ON_DEVICE_CHAT_MAX_TOKENS, promptBudgetTokens } from '../../lib/news-harness/on-device/shared';
+import { LOCAL_CONTEXT_TOKENS } from '@/lib/mera-protocol-toolkit/core/context-size';
+import { readStructured, type JsonSchema } from '@/lib/mera-protocol-toolkit/core/structured-json';
+import { ON_DEVICE_CHAT_MAX_TOKENS, promptBudgetTokens } from '@/lib/news-harness/on-device/shared';
 
 export const ENGINES = ['cloud', 'afm', 'qwen-local', 'nano-proxy'] as const;
 export type Engine = (typeof ENGINES)[number];

@@ -15,7 +15,7 @@ import {
   type OnDeviceLlmAvailability,
   type OnDeviceLlmUnavailableReason,
 } from '@/modules/mera-on-device-llm';
-import type { TextEngine } from '../types';
+import type { TextEngine } from '@/lib/mera-protocol-toolkit/types';
 
 export type { TextEngine };
 
