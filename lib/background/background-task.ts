@@ -131,7 +131,7 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { trackBackgroundCollect } = require('./collect-gate') as typeof import('./collect-gate');
+      const { trackBackgroundCollect } = require('@/lib/background/collect-gate') as typeof import('@/lib/background/collect-gate');
 
       // 4. Collect: the device's waiting batches first, so the next open has
       //    notes, and so their slots are free for step (b).

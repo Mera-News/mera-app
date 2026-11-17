@@ -37,16 +37,16 @@ import {
   buildPersonaUpdateStaticPrompt,
   buildToolDefinitions,
   buildPersonaUpdateContext,
-} from '../../lib/news-harness/prompts/prompts';
+} from '@/lib/news-harness/prompts/prompts';
 import {
   BIG_MODEL,
   CHAT_MAX_OUTPUT_TOKENS,
   CHAT_REASONING_HEADROOM_TOKENS,
-} from '../../lib/llm/constants';
+} from '@/lib/llm/constants';
 import { buildChatTurnBody } from '../lib/chat-turn';
 import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 import { createRunWriter } from '../lib/run-writer';
-import { filterFactChoiceGroups, normalizeStatement, type FactEntry } from '../../lib/news-harness/persona-management/fact-rules';
+import { filterFactChoiceGroups, normalizeStatement, type FactEntry } from '@/lib/news-harness/persona-management/fact-rules';
 import {
   buildPersonaChatPrompt,
   personaChatInstructions,
@@ -56,7 +56,7 @@ import {
   type PersonaChatContext,
   type PersonaChatReply,
   type PersonaSurface,
-} from '../../lib/news-harness/on-device/persona-chat';
+} from '@/lib/news-harness/on-device/persona-chat';
 
 interface WireMsg {
   role: 'user' | 'assistant';

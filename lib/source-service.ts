@@ -6,9 +6,9 @@ import {
     PublicationSource,
     PublisherSearchHit,
     SearchPublishersResponse,
-} from './generated/graphql-types';
-import logger from './logger';
-import { rememberPublisherSourceNames } from './database/services/publisher-source-names';
+} from '@/lib/generated/graphql-types';
+import logger from '@/lib/logger';
+import { rememberPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 
 const GET_NEWS_PUBLISHERS = gql`
   query GetNewsPublishers(

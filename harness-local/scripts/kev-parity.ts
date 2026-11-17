@@ -21,7 +21,7 @@ import type { DecisionResult } from 'llama.rn';
 import { kevUrlBackend, startKev, type KevBackend } from '../adapters/kev-local';
 import { ensureLocalTestData } from '../config/local-data';
 import { createRunWriter, captureGitSha } from '../lib/run-writer';
-import { resolveCountryName } from '../../lib/news-harness';
+import { resolveCountryName } from '@/lib/news-harness';
 
 // --- copied from lib/mera-protocol/kev-relevance.ts ---------------------------------------
 // That file imports the toolkit, which loads llama.rn and react-native, so tsx cannot load it.

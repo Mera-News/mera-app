@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import { getFreeDiskStorageAsync } from 'expo-file-system/legacy';
 
-import type { SystemRequirementsResult, RequirementCheckId } from '../types';
+import type { SystemRequirementsResult, RequirementCheckId } from '@/lib/mera-protocol-toolkit/types';
 import { builtInAvailability, CANNOT_RUN_REASONS } from './text-engine';
 
 // ---------------------------------------------------------------------------

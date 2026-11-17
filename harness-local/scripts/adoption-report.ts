@@ -19,7 +19,7 @@ import { join, resolve } from 'node:path';
 
 import { optionQuality } from './score-option-quality';
 import { topicGates } from './score-topic-run';
-import { NO_USABLE_SET_GATE } from '../../lib/mera-harness/eval/topic-metrics';
+import { NO_USABLE_SET_GATE } from '@/lib/mera-harness/eval/topic-metrics';
 
 type Kind = 'singleshot' | 'persona-chat' | 'topicgen' | 'notes';
 

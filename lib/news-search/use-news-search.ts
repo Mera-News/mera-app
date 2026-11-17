@@ -20,7 +20,7 @@ import {
   SEARCH_NEWS_MIN_QUERY_LENGTH,
   searchNews,
   type NewsSearchErrorKind,
-} from './search-news-service';
+} from '@/lib/news-search/search-news-service';
 
 /** Trailing-edge debounce window before a query fires. */
 export const NEWS_SEARCH_DEBOUNCE_MS = 300;

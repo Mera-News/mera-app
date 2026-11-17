@@ -31,7 +31,7 @@ import { getSetting, setSetting, deleteSetting } from '@/lib/database/services/s
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 
 import { backupProviderId } from './backup-settings';
-import { decodeRecoveryCode, encodeRecoveryCode, generateBackupKey } from './crypto';
+import { decodeRecoveryCode, encodeRecoveryCode, generateBackupKey } from '@/lib/backup/crypto';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 

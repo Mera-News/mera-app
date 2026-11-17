@@ -23,7 +23,7 @@
 //
 // No counter, tally or record of what was exported is kept anywhere.
 
-import type { ForYouSuggestion } from './stores/for-you-store';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { displayLanguage, isoDay, oneLine, toIso } from './saved-articles-export';
 
 /** A timeline card, as the story screen holds it. `TimelineCard` satisfies

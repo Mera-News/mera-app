@@ -29,7 +29,7 @@ import {
   normalizeTopicText,
   topicSkillForAttribute,
 } from '@/lib/mera-harness';
-import type { AgentModelResult } from '../../lib/mera-harness/core/types';
+import type { AgentModelResult } from '@/lib/mera-harness/core/types';
 import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';

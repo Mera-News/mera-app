@@ -9,7 +9,7 @@ import { deleteSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
-import { RETIRED_MODEL_IDS } from './model-catalog';
+import { RETIRED_MODEL_IDS } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { deleteBaseModel, isModelDownloaded } from './modelManager';
 import { RETIRED_TEXT_ENGINE_SETTING } from './text-engine';
 

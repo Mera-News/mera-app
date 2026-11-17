@@ -7,7 +7,7 @@
 //
 // Node-only: never imported by the app bundle.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { cleanProse } from '../../lib/mera-harness/core/prose';
+import { cleanProse } from '@/lib/mera-harness/core/prose';
 
 const D = '.local-test-data/runs/20260918-142924-g4';
 const rows = readFileSync(`${D}/rater-rows-reply.jsonl`, 'utf8')

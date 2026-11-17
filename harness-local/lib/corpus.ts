@@ -36,7 +36,7 @@ import {
   formatKnownFactsList,
   MAX_FACTS_IN_CONTEXT,
   MAX_HISTORY_USER_TURNS,
-} from '../../lib/news-harness';
+} from '@/lib/news-harness';
 // fact-conflict and fact-hygiene are NOT on the news-harness public index
 // (lib/news-harness/index.ts re-exports core, prompts, fact-rules,
 // topic-generation, persona-agent-core, article-pipeline, article-feedback,
@@ -45,17 +45,17 @@ import {
 import {
   detectFactConflicts,
   type FactForConflict,
-} from '../../lib/news-harness/persona-management/fact-conflict';
+} from '@/lib/news-harness/persona-management/fact-conflict';
 import {
   analyzeHygiene,
   type HygieneFactInput,
   type HygieneTopicInput,
-} from '../../lib/news-harness/persona-management/fact-hygiene';
+} from '@/lib/news-harness/persona-management/fact-hygiene';
 import {
   filterFactChoiceGroups,
   normalizeStatement,
   type FactEntry,
-} from '../../lib/news-harness/persona-management/fact-rules';
+} from '@/lib/news-harness/persona-management/fact-rules';
 
 export const COHORTS = ['good', 'confused', 'adversarial', 'heavy'] as const;
 export type CohortName = (typeof COHORTS)[number];

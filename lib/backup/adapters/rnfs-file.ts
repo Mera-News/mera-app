@@ -15,9 +15,9 @@
 
 import * as RNFS from '@dr.pogodin/react-native-fs';
 
-import { base64ToBytes, bytesToBase64 } from '../base64';
-import type { BlobSink, BlobSource } from '../blob';
-import type { ScratchFile } from '../export';
+import { base64ToBytes, bytesToBase64 } from '@/lib/backup/base64';
+import type { BlobSink, BlobSource } from '@/lib/backup/blob';
+import type { ScratchFile } from '@/lib/backup/export';
 
 export class RnfsFile implements BlobSink, BlobSource, ScratchFile {
   constructor(readonly path: string) {}

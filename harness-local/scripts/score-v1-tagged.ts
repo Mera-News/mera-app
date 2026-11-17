@@ -45,7 +45,7 @@ import {
   chunk,
   type ScoringCandidate,
   type BatchCall,
-} from '../../lib/news-harness';
+} from '@/lib/news-harness';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 

@@ -35,9 +35,9 @@ import {
 } from '../lib/engine';
 import { judgeTurn, summariseRows, summaryTable, type Expect, type Flow, type FlowRow } from '../lib/chat-flow-score';
 import { createRunWriter } from '../lib/run-writer';
-import { proposalRequiresUserChoice } from '../../lib/news-harness/core/proposals';
-import type { StagedProposal } from '../../lib/news-harness/core/types';
-import type { DecidePort, KevMessage, KevPorts, KevTurnResult } from '../../lib/news-harness/on-device/kev';
+import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
+import type { StagedProposal } from '@/lib/news-harness/core/types';
+import type { DecidePort, KevMessage, KevPorts, KevTurnResult } from '@/lib/news-harness/on-device/kev';
 import {
   buildPersonaChatPrompt,
   personaChatInstructions,
@@ -47,8 +47,8 @@ import {
   type PersonaChatContext,
   type PersonaChatReply,
   type PersonaSurface,
-} from '../../lib/news-harness/on-device/persona-chat';
-import { runPersonaKevTurn } from '../../lib/news-harness/on-device/persona-chat/kev-spec';
+} from '@/lib/news-harness/on-device/persona-chat';
+import { runPersonaKevTurn } from '@/lib/news-harness/on-device/persona-chat/kev-spec';
 import {
   ARTICLE_FEEDBACK_SCHEMA,
   articleFeedbackInstructions,
@@ -56,23 +56,23 @@ import {
   buildArticleFeedbackPrompt,
   type ArticleChatContext,
   type ArticleFeedbackReply,
-} from '../../lib/news-harness/on-device/article-feedback';
-import { runArticleKevTurn } from '../../lib/news-harness/on-device/article-feedback/kev-spec';
+} from '@/lib/news-harness/on-device/article-feedback';
+import { runArticleKevTurn } from '@/lib/news-harness/on-device/article-feedback/kev-spec';
 import {
   buildFollowStoryPrompt,
   FOLLOW_STORY_SCHEMA,
   followStoryInstructions,
   followStoryTurn,
   type FollowStoryReply,
-} from '../../lib/news-harness/on-device/follow-story';
-import { runFollowKevTurn } from '../../lib/news-harness/on-device/follow-story/kev-spec';
+} from '@/lib/news-harness/on-device/follow-story';
+import { runFollowKevTurn } from '@/lib/news-harness/on-device/follow-story/kev-spec';
 import {
   describePending,
   ON_DEVICE_CHAT_MAX_TOKENS,
   promptBudgetTokens,
   type ChatTurn,
   type OnDeviceTurnResult,
-} from '../../lib/news-harness/on-device/shared';
+} from '@/lib/news-harness/on-device/shared';
 
 const FIXTURES = resolve(__dirname, '..', 'fixtures');
 const APP = resolve(__dirname, '..', '..');

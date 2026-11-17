@@ -23,7 +23,7 @@ import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
 
 import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '@/lib/config/endpoints';
 
-import type { BackupProvider } from '../types';
+import type { BackupProvider } from '@/lib/backup/types';
 import {
   BACKUP_SCOPE,
   BackupProviderError,

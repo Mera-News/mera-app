@@ -20,11 +20,11 @@
 // request at 15s that would have completed at 20s makes the bad-network case
 // worse, and "keep trying" is the explicit requirement.
 
-import { createCancellationError } from './utils/retry';
+import { createCancellationError } from '@/lib/utils/retry';
 import {
     reportRequestSlow,
     reportSlowRequestEnded,
-} from './stores/network-store';
+} from '@/lib/stores/network-store';
 
 /** A request in flight longer than this arms the band. The request continues. */
 export const SLOW_REQUEST_MS = 8_000;

@@ -1,6 +1,6 @@
 import { AppState } from 'react-native';
 
-import logger from './logger';
+import logger from '@/lib/logger';
 
 // Circuit breaker for the app's soft-fail auth handling.
 //
@@ -125,7 +125,7 @@ interface SessionResult {
 function pauseFeedSync(): void {
   try {
     const { AppScheduler } =
-      require('./scheduler/AppScheduler') as typeof import('./scheduler/AppScheduler');
+      require('@/lib/scheduler/AppScheduler') as typeof import('@/lib/scheduler/AppScheduler');
     AppScheduler.pauseTask(FEED_SYNC_TASK);
   } catch {
     // best-effort — scheduler may not be initialized (e.g. in unit tests)
@@ -135,7 +135,7 @@ function pauseFeedSync(): void {
 function resumeFeedSync(): void {
   try {
     const { AppScheduler } =
-      require('./scheduler/AppScheduler') as typeof import('./scheduler/AppScheduler');
+      require('@/lib/scheduler/AppScheduler') as typeof import('@/lib/scheduler/AppScheduler');
     AppScheduler.resumeTask(FEED_SYNC_TASK);
   } catch {
     // best-effort
@@ -164,7 +164,7 @@ function invalidateJwtCache(): void {
 function setNeedsReauth(value: boolean): void {
   try {
     const { useUserStore } =
-      require('./stores/user-store') as typeof import('./stores/user-store');
+      require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
     useUserStore.getState().setNeedsReauth(value);
   } catch {
     // best-effort — store may not be available (e.g. in unit tests)
@@ -175,7 +175,7 @@ function setNeedsReauth(value: boolean): void {
 function getNeedsReauth(): boolean {
   try {
     const { useUserStore } =
-      require('./stores/user-store') as typeof import('./stores/user-store');
+      require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
     return useUserStore.getState().needsReauth === true;
   } catch {
     return false;

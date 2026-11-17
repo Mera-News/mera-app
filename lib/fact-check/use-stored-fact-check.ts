@@ -29,7 +29,7 @@ import { useEffect, useState } from 'react';
 import {
     listFactChecksForArticle,
     type StoredFactCheck,
-} from '../database/services/fact-check-record-service';
+} from '@/lib/database/services/fact-check-record-service';
 
 export function useStoredFactCheck(
     articleId: string | null | undefined,

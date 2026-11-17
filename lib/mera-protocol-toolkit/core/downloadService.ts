@@ -16,11 +16,11 @@
 import { useSyncExternalStore } from 'react';
 import * as Notifications from 'expo-notifications';
 import i18next from 'i18next';
-import { holdRestart } from '../../app-restart';
-import logger from '../../logger';
-import { ProcessingMode } from '../../generated/graphql-types';
-import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
-import { MODEL_CATALOG, type ModelCatalogEntry } from './model-catalog';
+import { holdRestart } from '@/lib/app-restart';
+import logger from '@/lib/logger';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { MODEL_CATALOG, type ModelCatalogEntry } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import {
   cancelActiveDownload,
   downloadBaseModel,
@@ -246,8 +246,8 @@ async function writeOnDeviceIntent(stillWanted: () => boolean = () => true): Pro
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { resolveCurrentUserId } =
       require('../../security/current-user') as typeof import('../../security/current-user');
-    const { AccountService } = require('../../account-service') as typeof import('../../account-service');
-    const { useUserStore } = require('../../stores/user-store') as typeof import('../../stores/user-store');
+    const { AccountService } = require('@/lib/account-service') as typeof import('@/lib/account-service');
+    const { useUserStore } = require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
     /* eslint-enable @typescript-eslint/no-require-imports */
     await AccountService.updateProcessingMode(await resolveCurrentUserId(), ProcessingMode.OnDevice);
     if (!stillWanted()) return false;
@@ -287,7 +287,7 @@ export async function promoteToOnDevice(): Promise<boolean> {
  */
 export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
   /* eslint-disable @typescript-eslint/no-require-imports */
-  const { useUserStore } = require('../../stores/user-store') as typeof import('../../stores/user-store');
+  const { useUserStore } = require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
   /* eslint-enable @typescript-eslint/no-require-imports */
   const cached = useUserStore.getState().userPersona;
   if (cached?.processingMode !== ProcessingMode.OnDevice) return false;
@@ -297,7 +297,7 @@ export async function restoreOnDeviceIfRunnable(): Promise<boolean> {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { resolveCurrentUserId } =
       require('../../security/current-user') as typeof import('../../security/current-user');
-    const { AccountService } = require('../../account-service') as typeof import('../../account-service');
+    const { AccountService } = require('@/lib/account-service') as typeof import('@/lib/account-service');
     /* eslint-enable @typescript-eslint/no-require-imports */
     const persona = await AccountService.getUserPersona(await resolveCurrentUserId());
     if (!persona) return false;

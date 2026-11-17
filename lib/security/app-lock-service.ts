@@ -32,7 +32,7 @@
 
 import Constants from 'expo-constants';
 import { secureStore } from '../utils/secure-store-adapter';
-import logger from '../logger';
+import logger from '@/lib/logger';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
 const APP_LOCK_ENABLED_KEY = `${APP_SLUG}_app_lock_enabled`;

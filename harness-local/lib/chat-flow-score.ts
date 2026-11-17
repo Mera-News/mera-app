@@ -18,7 +18,7 @@
 //   follow_this_story = follow_a_named_story and thanks_or_ack =
 //   question_or_chat are one act each.
 
-import { filterFactChoiceGroups, normalizeStatement, type FactEntry } from '../../lib/news-harness/persona-management/fact-rules';
+import { filterFactChoiceGroups, normalizeStatement, type FactEntry } from '@/lib/news-harness/persona-management/fact-rules';
 import { scoreOptions, type OptionCheck } from './option-quality';
 
 export type Flow = 'persona' | 'article' | 'follow';

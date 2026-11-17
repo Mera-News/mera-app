@@ -33,7 +33,7 @@ import {
   type PipelineStage,
   type NewsApiPort,
   type HarnessArticle,
-} from '../../lib/news-harness';
+} from '@/lib/news-harness';
 
 interface Args {
   label: string;

@@ -11,7 +11,7 @@
 
 import { THEME_SWITCH_LIVE, useThemeStore } from './theme-store';
 
-export { tint } from '../algorithms/tint';
+export { tint } from '@/lib/algorithms/tint';
 
 export type ThemeMode = 'dark' | 'light';
 

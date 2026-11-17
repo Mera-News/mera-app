@@ -20,21 +20,21 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { DEFAULT_HARNESS_CONFIG } from '../../lib/news-harness/core/config';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import {
   computeRelevance,
   type ScoredCandidateInput,
   type MatchedTopicInput,
-} from '../../lib/news-harness/scoring-engine/relevance';
-import { resolveGeoMatch, type ArticleGeoTag } from '../../lib/news-harness/scoring-engine/geo';
+} from '@/lib/news-harness/scoring-engine/relevance';
+import { resolveGeoMatch, type ArticleGeoTag } from '@/lib/news-harness/scoring-engine/geo';
 import {
   computeAndScore,
   type StageCandidate,
-} from '../../lib/news-harness/scoring-engine/run-stage';
+} from '@/lib/news-harness/scoring-engine/run-stage';
 import {
   type PersonaScoringContext,
   type PersonaLocationSnapshot,
-} from '../../lib/news-harness/scoring-engine/persona-context';
+} from '@/lib/news-harness/scoring-engine/persona-context';
 import { loadHarnessEnv } from '../../harness-local/config/env';
 import { createNearAiLlm, type LlmCallRecord } from '../../harness-local/adapters/nearai-llm';
 

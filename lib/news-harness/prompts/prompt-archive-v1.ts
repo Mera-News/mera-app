@@ -21,7 +21,7 @@ import {
   BASELINE_VARIANT_ID,
   registerPromptVariant,
   type PromptVariantId,
-} from './prompt-variants';
+} from '@/lib/news-harness/prompts/prompt-variants';
 import ARCHIVE from './prompt-archive-v1.json';
 import V2 from './prompt-experiments-v2.json';
 

@@ -11,7 +11,7 @@ import {
     fetchUserReading,
 } from '@/lib/billing-service';
 import { syncPlanPromo } from './plan-promo';
-import { fetchReadingPlans } from './reading-plans';
+import { fetchReadingPlans } from '@/lib/subscription/reading-plans';
 import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';

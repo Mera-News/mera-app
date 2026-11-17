@@ -31,7 +31,7 @@ import {
   encryptContent,
   type E2EEContext,
   type SigningAlgo,
-} from '../../lib/e2ee/e2ee-crypto';
+} from '@/lib/e2ee/e2ee-crypto';
 import type { NearResult, NearUsage } from '../lib/near-call';
 import { SpendLimitError } from '../lib/near-call';
 

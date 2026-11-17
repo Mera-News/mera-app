@@ -7,8 +7,8 @@ import type { PersistedMessage } from '@/lib/database/services/conversation-serv
 import type { ChatAgent } from '@/lib/llm/agents/on-device/types';
 import { useCallback, useEffect, useRef } from 'react';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { attachChatSession, type EngineKind } from './chat-session';
-import type { SendOptions } from './engine';
+import { attachChatSession, type EngineKind } from '@/lib/chat-session/chat-session';
+import type { SendOptions } from '@/lib/chat-session/engine';
 
 export function useChatSession(
     kind: EngineKind,

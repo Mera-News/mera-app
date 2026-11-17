@@ -3,8 +3,8 @@
 // of nothing), and again on the wire after it.
 
 import { createHash } from 'node:crypto';
-import { personaPromptFor, resolveAgentArm } from '../../lib/mera-harness/core/arms';
-import { buildRouterPrompt } from '../../lib/mera-harness/core/router-prompt';
+import { personaPromptFor, resolveAgentArm } from '@/lib/mera-harness/core/arms';
+import { buildRouterPrompt } from '@/lib/mera-harness/core/router-prompt';
 
 /**
  * Arms that share a leg-0 prompt BY DESIGN: a control and its twin (their

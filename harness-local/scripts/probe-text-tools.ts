@@ -36,15 +36,15 @@ import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { getAuthHeaders, mintJwt } from '../adapters/auth';
 import { fetchModelKey, prepareContext } from '../adapters/gateway-e2ee-llm';
-import { decryptContent, encryptContent, type E2EEContext } from '../../lib/e2ee/e2ee-crypto';
+import { decryptContent, encryptContent, type E2EEContext } from '@/lib/e2ee/e2ee-crypto';
 import {
   parseToolCallsFromText,
   toTextToolMessages,
   type ProtocolMessageIn,
   type TextToolDefinition,
   type ToolFormat,
-} from '../../lib/llm/text-tool-protocol';
-import { BIG_MODEL, SMALL_MODEL } from '../../lib/llm/constants';
+} from '@/lib/llm/text-tool-protocol';
+import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 
 const TOOL: TextToolDefinition = {
   type: 'function',

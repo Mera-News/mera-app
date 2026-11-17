@@ -12,7 +12,7 @@
 
 import * as Sentry from '@sentry/react-native';
 
-import { useFeedbackStore } from './stores/feedback-store';
+import { useFeedbackStore } from '@/lib/stores/feedback-store';
 import { SENTRY_ENABLED, setPrefilledReportPending } from './sentry-init';
 
 // Sentry RN 7.11 keeps the unsent draft in a TS-private static. A spec pins that

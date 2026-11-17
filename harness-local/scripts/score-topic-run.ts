@@ -17,8 +17,8 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { readJsonl } from '../lib/agreement';
-import { namesFact } from '../../lib/mera-harness/core/topic-similarity';
-import { ladderOrder, parseExpectations, scoreCase, selectCase } from '../../lib/mera-harness/eval/expectations';
+import { namesFact } from '@/lib/mera-harness/core/topic-similarity';
+import { ladderOrder, parseExpectations, scoreCase, selectCase } from '@/lib/mera-harness/eval/expectations';
 import {
   EMPTY_CONTENT_GATE,
   NO_USABLE_SET_GATE,
@@ -30,7 +30,7 @@ import {
   sharedRules,
   type ArmSetEntry,
   type TopicSetInput,
-} from '../../lib/mera-harness/eval/topic-metrics';
+} from '@/lib/mera-harness/eval/topic-metrics';
 
 const ROOT = resolve(__dirname, '..', '..');
 const EXPECTATIONS = join(ROOT, 'lib/mera-harness/skills/persona/expectations/topics.json');

@@ -32,8 +32,8 @@ import { createStreamAccumulator, hasReasoningLeak, parseSpendLimit, SpendLimitE
 import { estimateRunCost, formatCostEstimate } from '../lib/cost-estimate';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
 import { buildChatTurnBody, withContextOnLastUserTurn } from '../lib/chat-turn';
-import { filterNewFacts, normalizeStatement } from '../../lib/news-harness/persona-management/fact-rules';
-import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '../../lib/llm/constants';
+import { filterNewFacts, normalizeStatement } from '@/lib/news-harness/persona-management/fact-rules';
+import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
 import {
   COHORTS, applyToolCalls, freshState, loadCohort, measureFactsInPrompt,
   measureTurnsInPrompt, renderKnownFacts, PROMPT_CAPS,

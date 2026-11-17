@@ -1,4 +1,4 @@
-import { stripLeakedReasoning } from '../../lib/algorithms/reasoning-leak';
+import { stripLeakedReasoning } from '@/lib/algorithms/reasoning-leak';
 import {
   REQUIRED_TOOL_REASK,
   createToolCallStreamParser,
@@ -7,7 +7,7 @@ import {
   type ProtocolMessageIn,
   type TextToolDefinition,
   type ToolFormat,
-} from '../../lib/llm/text-tool-protocol';
+} from '@/lib/llm/text-tool-protocol';
 import { sentModel } from './model-catalog';
 // harness-local — the one place a runner posts a completion.
 //

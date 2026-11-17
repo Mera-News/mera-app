@@ -22,8 +22,8 @@
 import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { postBody, postBodyStream, SpendLimitError } from '../lib/near-call';
-import { BIG_MODEL } from '../../lib/llm/constants';
-import { HARNESS_TOOLS } from '../../lib/mera-harness/core/tool-contracts';
+import { BIG_MODEL } from '@/lib/llm/constants';
+import { HARNESS_TOOLS } from '@/lib/mera-harness/core/tool-contracts';
 
 const PROMPTS = [
   'I live in Nieuw-West Amsterdam',

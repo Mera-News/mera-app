@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import { Platform } from 'react-native';
 import client from './apollo-client';
-import { AppPlatform } from './generated/graphql-types';
+import { AppPlatform } from '@/lib/generated/graphql-types';
 
 const APP_VERSION_INFO = gql`
   query AppVersionInfo($platform: AppPlatform!) {

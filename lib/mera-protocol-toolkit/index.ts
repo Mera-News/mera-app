@@ -13,7 +13,7 @@ export {
   StructuredOutputError,
 } from './core/inference';
 export type { StructuredParams } from './core/inference';
-export type { JsonSchema } from './core/structured-json';
+export type { JsonSchema } from '@/lib/mera-protocol-toolkit/core/structured-json';
 
 // === Base Model Lifecycle ===
 export {
@@ -35,8 +35,8 @@ export {
   DEFAULT_MODEL_ID,
   RETIRED_MODEL_IDS,
   isRetiredModelId,
-} from './core/model-catalog';
-export type { ModelCatalogEntry } from './core/model-catalog';
+} from '@/lib/mera-protocol-toolkit/core/model-catalog';
+export type { ModelCatalogEntry } from '@/lib/mera-protocol-toolkit/core/model-catalog';
 
 // === Text engine (the platform's built-in model: AFM or Gemini Nano) ===
 export {
@@ -74,4 +74,4 @@ export type {
   // System Requirements
   SystemRequirementsResult,
   RequirementCheckId,
-} from './types';
+} from '@/lib/mera-protocol-toolkit/types';

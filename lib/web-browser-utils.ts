@@ -2,8 +2,8 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 import { REFERRER_SOURCE } from './config/branding';
-import { isSecureUrl } from './algorithms/secure-url';
-import { useAppLanguageStore } from './stores/app-language-store';
+import { isSecureUrl } from '@/lib/algorithms/secure-url';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 
 // The website's supported locale codes (mirrors mera-promo-website
 // lib/languages.ts). Used to avoid double-injecting a locale segment.

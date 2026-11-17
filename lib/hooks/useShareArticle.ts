@@ -13,9 +13,9 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import { WEBSITE_URL } from '../config/branding';
-import logger from '../logger';
-import { secureUrlOrNull } from '../algorithms/secure-url';
-import { useAppLanguage } from '../stores/app-language-store';
+import logger from '@/lib/logger';
+import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
     getArticleTranslatableStatus, resolveUiLocale, type TranslatableStatus,
 } from '../translation-service';

@@ -23,7 +23,7 @@
 import { join, resolve } from 'node:path';
 import { readJsonl } from '../lib/agreement';
 import type { RunRow } from '../lib/jsonl-writer';
-import { hasBannedDash, proseOf } from '../../lib/mera-harness/eval/copy-rules';
+import { hasBannedDash, proseOf } from '@/lib/mera-harness/eval/copy-rules';
 
 // The dash rule lives in lib/mera-harness/eval/copy-rules.ts, imported rather
 // than copied. It carries a subtlety that took a measurement to get right (an

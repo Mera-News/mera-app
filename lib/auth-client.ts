@@ -3,11 +3,11 @@ import { emailOTPClient, jwtClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import Constants from 'expo-constants';
 import { CHUNK_MARKER, secureStore } from "./utils/secure-store-adapter";
-import { AUTH_ENDPOINT } from "./config/endpoints";
+import { AUTH_ENDPOINT } from "@/lib/config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
 import { logoutIntercom } from "./intercom";
-import logger from "./logger";
-import { sleep } from "./utils/sleep";
+import logger from "@/lib/logger";
+import { sleep } from "@/lib/utils/sleep";
 import {
     clearJwtSubscriptionLock,
     isJwtSubscriptionLocked,

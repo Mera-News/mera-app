@@ -26,16 +26,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import logger from '@/lib/logger';
 import { applyPageOrder, usePageOrderStore, type CountryPageId } from '@/lib/navigation/page-order';
-import { addBrowseCountry, getBrowseCountries, removeBrowseCountry } from './browse-countries';
-import { getDeviceCountryAlpha2 } from './device-country';
+import { addBrowseCountry, getBrowseCountries, removeBrowseCountry } from '@/lib/explore/browse-countries';
+import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import {
     alpha2ToAlpha3,
     deriveExploreScopes,
     electPrimaryCountry,
     type ExploreScope,
     type ScopeLocationInput,
-} from './scopes';
-import { addSuppressedScopeId, getSuppressedScopeIds, removeSuppressedScopeId } from './suppressed-scopes';
+} from '@/lib/explore/scopes';
+import { addSuppressedScopeId, getSuppressedScopeIds, removeSuppressedScopeId } from '@/lib/explore/suppressed-scopes';
 
 export type WorldPageId = 'world' | CountryPageId;
 export type WorldPageOrigin = 'world' | 'place' | 'browse';

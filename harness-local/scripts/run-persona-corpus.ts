@@ -51,7 +51,7 @@ import {
   renderKnownFacts,
   type CorpusPersona,
 } from '../lib/corpus';
-import { BIG_MODEL } from '../../lib/llm/constants';
+import { BIG_MODEL } from '@/lib/llm/constants';
 import { assertEngineReady, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 import {
   buildPersonaChatPrompt,
@@ -61,14 +61,14 @@ import {
   shownFactIds,
   type PersonaChatContext,
   type PersonaChatReply,
-} from '../../lib/news-harness/on-device/persona-chat';
-import type { ChatTurn } from '../../lib/news-harness/on-device/shared';
+} from '@/lib/news-harness/on-device/persona-chat';
+import type { ChatTurn } from '@/lib/news-harness/on-device/shared';
 import {
   buildPersonaUpdateContext,
   buildPersonaUpdateStaticPrompt,
   buildToolDefinitions,
-} from '../../lib/news-harness/prompts/persona-prompts';
-import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
+} from '@/lib/news-harness/prompts/persona-prompts';
+import { promptVariantIds, resolvePromptVariant } from '@/lib/news-harness/prompts/prompt-variants';
 import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
 
 // ONCE PER PROCESS, before any variant resolves. The v1 control arms live in a

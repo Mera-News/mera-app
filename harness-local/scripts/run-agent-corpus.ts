@@ -31,18 +31,18 @@ import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agree
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
 import { applyProviderOverride, DEFAULT_STALL_TIMEOUT_MS, postBodyStream, postBodyStreamTextTools, SpendLimitError } from '../lib/near-call';
-import { BIG_MODEL } from '../../lib/llm/constants';
+import { BIG_MODEL } from '@/lib/llm/constants';
 // The AGENT's arms live in the harness's own module, not in
 // news-harness/prompts/prompt-variants: adding them there reddened a test
 // outside P1's write set, and they belong to the folder that is meant to lift
 // out as its own package.
-import { agentArmIds, resolveAgentArm } from '../../lib/mera-harness/core/arms';
-import { NULL_CONTROL_ARM, ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
+import { agentArmIds, resolveAgentArm } from '@/lib/mera-harness/core/arms';
+import { NULL_CONTROL_ARM, ensureNullControlArm } from '@/lib/mera-harness/eval/null-control';
 import {
   closingWiringFailures,
   ensureForcedOfferClosingArms,
   isClosingLeg,
-} from '../../lib/mera-harness/eval/forced-offer-closing';
+} from '@/lib/mera-harness/eval/forced-offer-closing';
 
 // ONCE, at module scope. registerAgentArm throws on a second registration, so
 // this must not move inside a loop.
@@ -53,17 +53,17 @@ ensureForcedOfferClosingArms();
 // are simply unknown (an unknown --variant then fails at startup, as any typo).
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const onemera = require('../../lib/mera-harness/eval/onemera-arms') as { ensureOnemeraArms?: () => void };
+  const onemera = require('@/lib/mera-harness/eval/onemera-arms') as { ensureOnemeraArms?: () => void };
   onemera.ensureOnemeraArms?.();
 } catch (err) {
   if ((err as { code?: string }).code !== 'MODULE_NOT_FOUND') throw err;
 }
 
-import { PERSONA_SKILL_IDS, PERSONA_SKILL_INDEX } from '../../lib/mera-harness/skills/index.generated';
-import { moreOptionsReport, trackReport } from '../../lib/mera-harness/eval/track-metrics';
-import { routeKindsFor } from '../../lib/mera-harness/eval/contract';
-import { parseScript } from '../../lib/mera-harness/eval/script';
-import { runAgentScript } from '../../lib/mera-harness/eval/run-agent-corpus';
+import { PERSONA_SKILL_IDS, PERSONA_SKILL_INDEX } from '@/lib/mera-harness/skills/index.generated';
+import { moreOptionsReport, trackReport } from '@/lib/mera-harness/eval/track-metrics';
+import { routeKindsFor } from '@/lib/mera-harness/eval/contract';
+import { parseScript } from '@/lib/mera-harness/eval/script';
+import { runAgentScript } from '@/lib/mera-harness/eval/run-agent-corpus';
 import {
   consecutiveQuestionReport,
   routeOutcomes,
@@ -83,10 +83,10 @@ import {
   silentTurnReport,
   thinkingGearReport,
   toolValidityReport,
-} from '../../lib/mera-harness/eval/agent-metrics';
-import type { AgentScript, EvalModelRequest, EvalModelResult, EvalRow } from '../../lib/mera-harness/eval/types';
-import { REPLY_SCRIPT_MIN_SHARE } from '../../lib/mera-harness/eval/copy-rules';
-import { MERA_EXPLAINER_SECTIONS } from '../../lib/chat-tools/mera-explainer-content';
+} from '@/lib/mera-harness/eval/agent-metrics';
+import type { AgentScript, EvalModelRequest, EvalModelResult, EvalRow } from '@/lib/mera-harness/eval/types';
+import { REPLY_SCRIPT_MIN_SHARE } from '@/lib/mera-harness/eval/copy-rules';
+import { MERA_EXPLAINER_SECTIONS } from '@/lib/chat-tools/mera-explainer-content';
 
 /** explainMera as the device answers it (handleExplainMera, minus its lazy
  *  require): the REAL reference text. The eval's own fake returns a

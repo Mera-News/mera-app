@@ -14,11 +14,11 @@
 export {
   parseReasonResult as decodeReason,
   type ReasonRescore,
-} from '../../lib/news-harness';
+} from '@/lib/news-harness';
 
 /** The shape `decodeReason` returns. `rescore` is absent whenever `k`/`s` did
  *  not parse: fail open, the pass-1 score stands. */
 export interface DecodedReason {
   reason: string;
-  rescore?: import('../../lib/news-harness').ReasonRescore;
+  rescore?: import('@/lib/news-harness').ReasonRescore;
 }

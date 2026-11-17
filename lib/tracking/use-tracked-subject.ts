@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FeedbackSubject } from '../../components/custom/cards/feedback-subject';
 import { hapticLight } from '../haptics';
-import { useFloatingChatStore } from '../stores/floating-chat-store';
-import { observeSubjectTrackedId } from './track-actions';
+import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { observeSubjectTrackedId } from '@/lib/tracking/track-actions';
 
 export interface UseTrackedSubject {
   /** True when an ACTIVE tracked story already covers this subject. */

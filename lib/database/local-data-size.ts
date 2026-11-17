@@ -5,9 +5,9 @@ import { Q } from '@nozbe/watermelondb';
 import { Directory, File, Paths } from 'expo-file-system';
 import { getFreeDiskStorageAsync } from 'expo-file-system/legacy';
 
-import { BACKUP_DOCUMENT_DIRECTORY } from '../backup/types';
-import { RELEVANCE_MODEL } from '../mera-protocol-toolkit/core/model-catalog';
-import database from './index';
+import { BACKUP_DOCUMENT_DIRECTORY } from '@/lib/backup/types';
+import { RELEVANCE_MODEL } from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import database from '@/lib/database';
 
 export interface LocalDataSizes {
   readonly databaseBytes: number;

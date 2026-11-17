@@ -25,7 +25,7 @@
 import {
   CHAT_MAX_OUTPUT_TOKENS,
   CHAT_REASONING_HEADROOM_TOKENS,
-} from '../../lib/llm/constants';
+} from '@/lib/llm/constants';
 
 export interface ChatWireMessage {
   role: 'system' | 'user' | 'assistant';

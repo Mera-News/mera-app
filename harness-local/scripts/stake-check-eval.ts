@@ -16,12 +16,12 @@ import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
 import { postCompletion } from '../lib/near-call';
-import { SMALL_MODEL } from '../../lib/llm/constants';
+import { SMALL_MODEL } from '@/lib/llm/constants';
 import {
   STAKE_CHECK_CALL,
   decodeStakeCheck,
   stakeCheckRequest,
-} from '../../lib/news-harness/persona-management/stake-check';
+} from '@/lib/news-harness/persona-management/stake-check';
 
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);

@@ -3,13 +3,13 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
-import logger from './logger';
+import logger from '@/lib/logger';
 import { E2E_MODE } from './e2e-mode';
-import { AccountService } from './account-service';
-import { useUserStore } from './stores/user-store';
-import { useNetworkStore } from './stores/network-store';
-import { getSetting, setSetting } from './database/services/setting-service';
-import { ArticleSuggestionStatus } from './database/article-suggestion-status';
+import { AccountService } from '@/lib/account-service';
+import { useUserStore } from '@/lib/stores/user-store';
+import { useNetworkStore } from '@/lib/stores/network-store';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import {
     isFeedbackRequestId,
     isStartupGatePassed,
@@ -222,8 +222,8 @@ export async function setupNotifications(): Promise<string | null> {
 async function refreshForYouCacheFromDb(): Promise<void> {
     try {
         const [{ useForYouStore }, { loadSuggestions }] = await Promise.all([
-            import('./stores/for-you-store'),
-            import('./database/services/article-suggestion-reads'),
+            import('@/lib/stores/for-you-store'),
+            import('@/lib/database/services/article-suggestion-reads'),
         ]);
 
         const rows = await loadSuggestions();
@@ -303,7 +303,7 @@ export async function resolveNotificationRoute(
                 // ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG), so a test would
                 // only ever see the catch below.
                 // eslint-disable-next-line @typescript-eslint/no-require-imports
-                const { getSuggestionByServerId } = require('./database/services/article-suggestion-reads') as typeof import('./database/services/article-suggestion-reads');
+                const { getSuggestionByServerId } = require('@/lib/database/services/article-suggestion-reads') as typeof import('@/lib/database/services/article-suggestion-reads');
                 if (await getSuggestionByServerId(suggestionId)) {
                     return {
                         pathname: '/logged-in/suggestion-detail',
