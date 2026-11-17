@@ -1,6 +1,0 @@
-{
-  "extends": "cloud-base",
-  "params": {
-    "thinking": false
-  }
-}

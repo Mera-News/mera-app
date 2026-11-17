@@ -63,25 +63,20 @@ module.exports = {
   // - Everything else is an integration test at a service or hook seam in
   //   test/integration/<area>/, run against MSW and the in-memory DB, with no
   //   component render or snapshot tests.
-  // - `legacy` runs the pre-wave tests until P2 converts or deletes them.
   // - Coverage settings stay as they are until P5.
   //
-  // Coverage measures plain `.ts` under lib/, minus hooks. Also excluded:
-  // generated GraphQL types, locale data, the native DB singleton (instantiates
-  // SQLiteAdapter at import; every legacy consumer mocks it), and the three thin
-  // llama.rn/react-native-fs native toolkit wrappers (no meaningful pure logic).
+  // Coverage measures the app's own plain `.ts` under lib/ (the moved logic is
+  // mera-news-client's and is measured there), minus hooks. Also excluded: locale
+  // data and the three thin llama.rn/react-native-fs native toolkit wrappers (no
+  // meaningful pure logic).
   collectCoverageFrom: [
     'lib/**/*.ts',
     '!lib/hooks/**',
-    '!lib/generated/**',
     '!lib/locales/**',
-    '!lib/database/index.ts',
     '!lib/apollo-client.ts',
-    '!lib/__test-helpers__/**',
     '!lib/mera-protocol-toolkit/core/modelManager.ts',
     '!lib/mera-protocol-toolkit/core/adapterManager.ts',
     '!lib/mera-protocol-toolkit/core/downloadService.ts',
-    '!lib/generated/**',
     '!**/node_modules/**',
     '!**/__tests__/**',
   ],
@@ -97,34 +92,6 @@ module.exports = {
     },
   },
   projects: [
-    {
-      ...base,
-      displayName: 'legacy',
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-      testMatch: [
-        '**/__tests__/**/*.(test|spec).[jt]s?(x)',
-        '**/?(*.)+(test|spec).[jt]s?(x)',
-      ],
-      // harness-local/ is a standalone Node executor (tsx scripts, not jest specs) —
-      // its testMatch shape already excludes them, but this is belt-and-suspenders
-      // so a future harness-local/**/*.test.ts fixture never gets picked up here.
-      //
-      // .claude/worktrees/ is a full duplicate repo tree (428 spec files). Its specs
-      // resolve `@/…` through THIS rootDir's alias, so they run the LIVE code
-      // against STALE expectations: the suite ran twice, and any deliberate change
-      // to a component here failed in the copy while passing in the original. That
-      // is a false red by construction, not coverage.
-      //
-      // test/ and lib/algorithms/ belong to the integration and unit projects.
-      testPathIgnorePatterns: [
-        '/node_modules/',
-        '/harness-local/',
-        '/.claude/worktrees/',
-        '<rootDir>/test/',
-        '<rootDir>/lib/algorithms/',
-        ...IGNORED_DIRS,
-      ],
-    },
     {
       ...base,
       displayName: 'unit',

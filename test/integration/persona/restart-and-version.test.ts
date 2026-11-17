@@ -104,6 +104,23 @@ const asProductionBuild = () => {
 };
 
 /**
+ * mera-news-client reads `Updates.isEnabled` once per module graph, as it is constant in a real build.
+ * A build with updates off is therefore a fresh graph loaded while the mock says so; `run` executes
+ * inside it, so the client's lazy requires land in that graph too.
+ */
+const inUpdatesDisabledBuild = async <T,>(run: (m: typeof import('@/lib/app-restart')) => T | Promise<T>): Promise<T> => {
+    mockUpdatesEnabled = false;
+    let out!: T;
+    await jest.isolateModulesAsync(async () => {
+        /* eslint-disable @typescript-eslint/no-require-imports */
+        require('@/lib/app-host');
+        out = await run(require('@/lib/app-restart'));
+        /* eslint-enable @typescript-eslint/no-require-imports */
+    });
+    return out;
+};
+
+/**
  * Lets background work land before the test ends. Settings writes are fired without awaiting, and a write
  * started under the fake clock needs the fake clock to finish: if the clock is restored first, the write never
  * completes and the next test's DB reset waits on it forever. This must run BEFORE the setup's own afterEach
@@ -281,8 +298,7 @@ describe('restarts and the version floor', () => {
 
         it('does nothing when updates are disabled', async () => {
             asProductionBuild();
-            mockUpdatesEnabled = false;
-            await requestRestart('ota');
+            await inUpdatesDisabledBuild((m) => m.requestRestart('ota'));
             expect(mockReloadAsync).not.toHaveBeenCalled();
         });
 
@@ -518,12 +534,11 @@ describe('restarts and the version floor', () => {
         });
 
         // An inert build eating the attempt is the same bug in different clothes.
-        it('is false in a dev build, when updates are disabled, and under EXPO_PUBLIC_RESTART_DEBUG', () => {
+        it('is false in a dev build, when updates are disabled, and under EXPO_PUBLIC_RESTART_DEBUG', async () => {
             expect(restartWouldReload('ota')).toBe(false);
 
             asProductionBuild();
-            mockUpdatesEnabled = false;
-            expect(restartWouldReload('ota')).toBe(false);
+            expect(await inUpdatesDisabledBuild((m) => m.restartWouldReload('ota'))).toBe(false);
 
             asProductionBuild();
             process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
@@ -550,11 +565,10 @@ describe('restarts and the version floor', () => {
             }
         });
 
-        it('restartIsAvailable: false in a dev build and when updates are disabled, true on a production build', () => {
+        it('restartIsAvailable: false in a dev build and when updates are disabled, true on a production build', async () => {
             expect(restartIsAvailable()).toBe(false);
             asProductionBuild();
-            mockUpdatesEnabled = false;
-            expect(restartIsAvailable()).toBe(false);
+            expect(await inUpdatesDisabledBuild((m) => m.restartIsAvailable())).toBe(false);
             mockUpdatesEnabled = true;
             expect(restartIsAvailable()).toBe(true);
         });

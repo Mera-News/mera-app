@@ -12,23 +12,13 @@
 // same as one in a template literal.
 
 import { readFileSync } from 'fs';
-import { join } from 'path';
-
-import { MERA_EXPLAINER_SECTIONS, PLAN_SIZES_TOKEN } from '@/lib/chat-tools/mera-explainer-content';
 import en from '@/lib/locales/en.json';
-import { MERA_EXPLAINER_TOPIC_IDS } from '@/lib/news-harness/persona-management/persona-agent-core';
 
-const SOURCE_PATH = join(__dirname, '../../../../lib/chat-tools/mera-explainer-content.ts');
+// The explainer text lives in mera-news-client; read the file the app actually resolves.
+const SOURCE_PATH = require.resolve('@/lib/news-harness/prompts/mera-explainer-content');
 const source = readFileSync(SOURCE_PATH, 'utf8');
 
 describe('mera-explainer-content — banned claims', () => {
-  // The licence is not OSI-approved. The promo site's own CLAUDE.md forbids the
-  // stronger label outright, and it is the single cheapest claim available to
-  // this product, which is exactly why it is checked rather than trusted.
-  it('never uses the OSI licence label', () => {
-    expect(source).not.toMatch(/open[- ]source/i);
-  });
-
   // The app NOW verifies the attestation quote's signature chain to a pinned
   // Intel root and the key-to-quote binding, so the old blanket ban on
   // "attestation-verified" would block honest, corrected copy. What must stay
@@ -63,35 +53,6 @@ describe('mera-explainer-content — banned claims', () => {
     }
     return null;
   }
-  const affirmsThat = (pattern: RegExp) => runAffirmsThat(source, pattern);
-
-  // The guard guards nothing if it cannot fire. `affirmsThat` is now the thing
-  // enforcing honesty in published copy, and a refactor that broke its regex or
-  // its negation window would leave every assertion below green while the
-  // invariant was dead. So prove it discriminates, on both sides.
-  it('the negation-aware guard actually fires on an affirmative claim', () => {
-    const probe = /hardware[- ]proven/i;
-    // Affirmative → caught.
-    expect(runAffirmsThat('This path is hardware-proven.', probe)).not.toBeNull();
-    // Negated → ignored, so honest disclosure is not banned.
-    expect(runAffirmsThat('This path is not hardware-proven.', probe)).toBeNull();
-    // Negation from a PREVIOUS sentence must not leak into this one.
-    expect(
-      runAffirmsThat('Mera does not store facts. The chip is hardware-proven.', probe),
-    ).not.toBeNull();
-  });
-
-  it('never claims the hardware or platform is proven', () => {
-    expect(affirmsThat(/hardware[- ](proven|verified|attested|checked)/i)).toBeNull();
-    expect(affirmsThat(/(fully|completely)[- ]verified/i)).toBeNull();
-    expect(affirmsThat(/tamper[- ]proof/i)).toBeNull();
-  });
-
-  // A check the app does NOT perform, so prose asserting it is a fabrication,
-  // not a nuance.
-  it('never claims the platform firmware level is checked', () => {
-    expect(affirmsThat(/(verif|check|validat)\w*[^.]{0,60}\b(TCB|firmware)\b/i)).toBeNull();
-  });
 
   // The limit on what NVIDIA's signed result can claim, in the explainer and in
   // the Settings strings: genuine NVIDIA GPUs answered, nothing about where they sit.
@@ -108,17 +69,6 @@ describe('mera-explainer-content — banned claims', () => {
     expect(source).toMatch(/does not show what that software does/);
   });
 
-  it('the GPU guard fires on a claim that the GPUs are attached', () => {
-    expect(runAffirmsThat('Those GPUs are attached to the enclave.', GPU_ATTACHED)).not.toBeNull();
-    expect(runAffirmsThat("It doesn't show those GPUs are attached.", GPU_ATTACHED)).toBeNull();
-    expect('NVIDIA checked all GPUs.').toMatch(ALL_GPUS);
-  });
-
-  it('never claims the GPUs are attached to the enclave, or speaks for all of them', () => {
-    expect(affirmsThat(GPU_ATTACHED)).toBeNull();
-    expect(source).not.toMatch(ALL_GPUS);
-  });
-
   it('Settings strings keep to the same limit', () => {
     const { attestationGpuNotice, helpModesVerify } = en.meraProtocol;
     for (const text of [attestationGpuNotice, helpModesVerify]) {
@@ -130,161 +80,5 @@ describe('mera-explainer-content — banned claims', () => {
     expect(attestationGpuNotice).toMatch(/genuine NVIDIA GPUs answered/i);
     expect(attestationGpuNotice).toMatch(/doesn't show those GPUs are attached/i);
     expect(helpModesVerify).toMatch(/Intel's signature/);
-  });
-
-  // The feature does not exist: nothing in the app generates, sends or discards
-  // decoy topics, and no setting turns one on. This file claimed otherwise until
-  // 2026-08, and the claim was a privacy protection users were told they had.
-  // Banned affirmatively (via `affirmsThat`) so an honest DENIAL stays sayable
-  // in prose and in this file's own header.
-  it('never claims Mera sends decoy or noise topics', () => {
-    expect(affirmsThat(/decoy/i)).toBeNull();
-    // `[-\s]?` and not a literal space: "inject-noise" / "noise-injection" are
-    // the forms this claim actually shipped in.
-    expect(affirmsThat(/noise[-\s]?injection|inject(?:ing|s)?[-\s]?noise/i)).toBeNull();
-  });
-
-  // The disclosure must SURVIVE. A future edit that quietly drops the
-  // limitations paragraph would leave copy that is technically unbanned above
-  // but misleading by omission — which is how this invariant gets defeated.
-  it('still discloses what is not checked, and that failures are not enforced', () => {
-    const s = MERA_EXPLAINER_SECTIONS.encryption_and_inference;
-    expect(s).toMatch(/still missing|does not check/i);
-    expect(s).toMatch(/does not show those GPUs are attached/i);
-    expect(s).toMatch(/not enforced|does not yet refuse|shown to you, not enforced/i);
-    expect(s).toMatch(/not hardware-proven/i);
-  });
-});
-
-describe('mera-explainer-content — pipeline confidentiality', () => {
-  // The public surface is exactly: WHICH feeds (the registry repo) and THAT we
-  // pre-process them. Not a stage list, not a model, not a matching method, not
-  // a threshold, not an expiry window, not the infrastructure.
-  // "Gemini Nano" is the one exception: it is the model built into Android phones, a choice the
-  // reader makes in Settings, so the on-device section names it (D29).
-  const MECHANISM_TERMS =
-    /hdbscan|jina|gemini(?! nano)|embedding|vector|cluster|cosine|cld3|bullmq|cloud run|mongo|redis/i;
-
-  it('names no processing mechanism anywhere in the file', () => {
-    const hit = source.match(MECHANISM_TERMS);
-    expect(hit ? `${hit[0]} @ "${source.slice(Math.max(0, hit.index! - 60), hit.index! + 60)}"` : null)
-      .toBeNull();
-  });
-
-  it('names no downloaded on-device model; only Apple Intelligence may be named (D29, D44)', () => {
-    expect(source).not.toMatch(/kev|qwen/i);
-    expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toContain('Apple Intelligence');
-    expect(MERA_EXPLAINER_SECTIONS.encryption_and_inference).toMatch(/Beta/);
-  });
-
-  it('says On this phone is an iPhone-only beta, not offered on Android yet (D44)', () => {
-    const text = MERA_EXPLAINER_SECTIONS.encryption_and_inference;
-    expect(text).toMatch(/iPhone with Apple Intelligence only/);
-    expect(text).not.toMatch(/Gemini Nano/);
-  });
-
-  it('points at the public feed registry instead', () => {
-    expect(MERA_EXPLAINER_SECTIONS.how_news_works).toContain(
-      'github.com/Mera-News/mera-news-rss-feeds',
-    );
-  });
-});
-
-describe('mera-explainer-content — shape', () => {
-  it('carries exactly the topic ids the tool advertises', () => {
-    expect(Object.keys(MERA_EXPLAINER_SECTIONS).sort()).toEqual(
-      [...MERA_EXPLAINER_TOPIC_IDS].sort(),
-    );
-  });
-
-  it('gives every section real substance', () => {
-    for (const [id, text] of Object.entries(MERA_EXPLAINER_SECTIONS)) {
-      // id in the message so a failure names the thin section, not just a number.
-      expect({ id, chars: text.length > 800 }).toEqual({ id, chars: true });
-    }
-  });
-
-  // The honest passages are the reason this tool is worth shipping at all — a
-  // reference document that only says flattering things is marketing, and the
-  // model would be right to distrust it.
-  it('keeps the known gaps honest', () => {
-    const gaps = MERA_EXPLAINER_SECTIONS.known_gaps;
-    for (const beat of [
-      /cloud is the default/i,
-      /reproducible builds/i,
-      /which code a server is actually running/i,
-      /account deletion/i,
-      /unbounded/i,
-      /third-party security assessment/i,
-    ]) {
-      expect(gaps).toMatch(beat);
-    }
-  });
-});
-
-// Since readcap a plan meters megabytes of cloud reading a day, not articles:
-// Mera reads through end-to-end encryption and cannot see which or how many
-// articles it reads. A daily article count here is a false limit the chat
-// would state as fact.
-describe('mera-explainer-content — plans', () => {
-  it('names no daily article-count limit', () => {
-    const plans = MERA_EXPLAINER_SECTIONS.plans_and_limits;
-    expect(plans).not.toMatch(/\b250\b|\b1,000\b|\b10,000\b/);
-    expect(plans).not.toMatch(/articles? (?:analysed|analyzed)[^.]*a day/i);
-    // Owner: no static plan size in the app. The sizes come from the server at answer time.
-    expect(plans).not.toMatch(/\d+(\.\d+)? MB/);
-    expect(plans).toContain(PLAN_SIZES_TOKEN);
-  });
-
-  it('names the Individual trial, for new subscribers', () => {
-    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/Individual starts with a free trial for new subscribers/);
-  });
-
-  it('says what the servers keep in the same terms as the plans', () => {
-    expect(MERA_EXPLAINER_SECTIONS.privacy_what_we_store).not.toMatch(/count of how many articles were analysed/i);
-  });
-});
-
-describe('mera-explainer-content — what chat can reach', () => {
-  // The reference outranks the identity on the about-Mera skill, so a text that
-  // only says Mera reads feeds answers "Can you browse?" with no.
-  it('says chat searches the web and opens no page', () => {
-    const text = MERA_EXPLAINER_SECTIONS.what_is_mera;
-    expect(text).toMatch(/search the web/i);
-    expect(text).toMatch(/does not open a page or read an article/i);
-    expect(text).toMatch(/publishers own their articles/i);
-  });
-});
-
-// Owner rule: the profile holds what affects the reader, and everything else is
-// followed. A chat answer repeats this text, so its limits are pinned here.
-describe('mera-explainer-content — profile or followed story', () => {
-  const text = MERA_EXPLAINER_SECTIONS.profile_vs_stories;
-
-  it('states the rule in the owner words, with F1 both ways', () => {
-    expect(text).toContain('Your profile is for what affects you. Everything else, just follow.');
-    expect(text).toContain('I like Formula 1');
-    expect(text).toContain("I'm going to Monaco");
-  });
-
-  it('says no AI reads followed stories, and names what it does touch', () => {
-    expect(text).toMatch(/no AI reads followed stories/i);
-    expect(text).toMatch(/also matches a fact/i);
-    expect(text).toMatch(/your own words/i);
-    expect(source).not.toMatch(/no AI is involved/i);
-  });
-
-  it('recommends and never forbids, and says where following starts on the phone', () => {
-    expect(text).toMatch(/never a rule/i);
-    expect(text).toContain('Add to my profile instead');
-    expect(text).toMatch(/on your phone/i);
-  });
-
-  it('plans say followed stories use no reading', () => {
-    expect(MERA_EXPLAINER_SECTIONS.plans_and_limits).toMatch(/followed stories use no reading/i);
-  });
-
-  it('no section treats "interests" as where things go', () => {
-    expect(source).not.toMatch(/your interests|interest profiles/i);
   });
 });

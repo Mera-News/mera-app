@@ -49,6 +49,8 @@ export function freshGraph(env: Record<string, string> = {}): Graph {
   try {
     jest.isolateModules(() => {
       jest.doMock('@/lib/database', () => sharedDatabase);
+      // A fresh registry has no platform host: register the app's before any client module loads.
+      require('@/lib/app-host'); // eslint-disable-line @typescript-eslint/no-require-imports
       /* eslint-disable @typescript-eslint/no-require-imports */
       graph = {
         service: require('@/lib/notification-service'),

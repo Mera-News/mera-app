@@ -11,7 +11,7 @@ import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
-import { setAppState, signInFixtureAccount } from '@/test/helpers';
+import { initI18nEn, setAppState, signInFixtureAccount } from '@/test/helpers';
 import {
   HIGH,
   LOW,
@@ -192,6 +192,7 @@ describe('Show them', () => {
   });
 
   it('Show them announces the revealed count once, from the tap', async () => {
+    await initI18nEn(); // the case asserts English copy
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l1', LOW], ['l2', LOW]]);
     await finishRun();

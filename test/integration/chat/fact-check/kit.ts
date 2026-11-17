@@ -76,17 +76,16 @@ export async function askedMap(): Promise<Record<string, { articleId: string; su
 }
 export const askedIds = async (): Promise<string[]> => Object.keys(await askedMap());
 
-/** Spies on the one call that announces a settled check. ESCALATION: the real manager persists the
- *  inbox row through a dynamic `import()`, which Jest cannot run without
- *  --experimental-vm-modules (ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG), so the real
- *  `fact_check_done` row is unobservable here. The options handed to the manager ARE the row and the
- *  toast; everything up to that call (asked list, store, settle detection) is real. */
+/** Spies on the one call that announces a settled check. mera-news-client writes the inbox row
+ *  (for real, in the in-memory DB) and then hands the row and the options to the app's toast
+ *  through the platform host, which calls `showNotifiedRowToast(row, opts)`. The options are the
+ *  row's fields and the toast; everything up to that call (asked list, store, settle detection) is real. */
 export function spyNotified(): jest.SpyInstance {
-  return jest.spyOn(toastManager, 'showNotifiedToast').mockResolvedValue(undefined);
+  return jest.spyOn(toastManager, 'showNotifiedRowToast').mockImplementation(() => undefined);
 }
 
 /** The options of every announcement made so far. */
-export const announced = (spy: jest.SpyInstance) => spy.mock.calls.map((c) => c[0] as {
+export const announced = (spy: jest.SpyInstance) => spy.mock.calls.map((c) => c[1] as {
   type: string;
   source: string;
   title: string;

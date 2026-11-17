@@ -11,12 +11,15 @@ import fs from 'fs';
 import path from 'path';
 
 const ROOT = path.resolve(__dirname, '../../../..');
+// The stores and services that set the mode live in mera-news-client: read them there too.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { CLIENT_ROOT } = require('../../../../client-resolution') as { CLIENT_ROOT: string };
 const HAND_GATED = new Set(['components/custom/config-mera/useMeraProtocolSettings.tsx']);
 
-function sourceFiles(dir: string): string[] {
-    return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
+function sourceFiles(dir: string, root = ROOT): string[] {
+    return fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((e) => {
         const rel = path.join(dir, e.name);
-        if (e.isDirectory()) return sourceFiles(rel);
+        if (e.isDirectory()) return e.name === '__tests__' && root !== ROOT ? [] : sourceFiles(rel, root);
         return /\.tsx?$/.test(e.name) ? [rel] : [];
     });
 }
@@ -35,10 +38,12 @@ describe('a server persona mode reaches the local store only through localModeFo
     });
 
     it('no other app file copies it raw', () => {
-        const offenders = ['app', 'components', 'lib']
-            .flatMap(sourceFiles)
-            .filter((f) => !HAND_GATED.has(f))
-            .filter((f) => rawCopies(fs.readFileSync(path.join(ROOT, f), 'utf8')).length > 0);
+        const offenders = [
+            ...['app', 'components', 'lib'].flatMap((d) => sourceFiles(d)).map((f) => path.join(ROOT, f)),
+            ...sourceFiles('lib', CLIENT_ROOT).map((f) => path.join(CLIENT_ROOT, f)),
+        ]
+            .filter((f) => !HAND_GATED.has(path.relative(ROOT, f)))
+            .filter((f) => rawCopies(fs.readFileSync(f, 'utf8')).length > 0);
         expect(offenders).toEqual([]);
     });
 });

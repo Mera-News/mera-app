@@ -7,7 +7,7 @@ import { decide, disposeModel, RELEVANCE_MODEL } from '@/lib/mera-protocol-toolk
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import '@/test/helpers';
 import { llamaLoads } from '@/test/helpers/llama';
-import { installOnDeviceLlm, onDeviceLlmCalls } from '@/test/helpers/on-device-llm';
+import { installOnDeviceLlm } from '@/test/helpers/on-device-llm';
 import { installLlama, llamaCalls, resetChatModules, resetFileSystem } from '@/test/integration/chat/_helpers';
 
 // Hoisted above the imports by babel-jest.
@@ -45,26 +45,6 @@ describe('the built-in model writes the text', () => {
     await expect(ask()).resolves.toBe('ok');
     expect(llamaLoads()).toEqual([RELEVANCE_MODEL.modelId]);
   });
-
-  it('trims the reply', async () => {
-    installOnDeviceLlm({ reply: '   clean output   ' });
-    await expect(ask()).resolves.toBe('clean output');
-  });
-});
-
-describe('request forwarding', () => {
-  it('sends the system prompt and the prompt, with 512 tokens and temperature 0.3 by default', async () => {
-    await ask({ prompt: 'u' });
-
-    expect(onDeviceLlmCalls()).toEqual([
-      expect.objectContaining({ kind: 'respond', instructions: 'sys', prompt: 'u', options: { maxTokens: 512, temperature: 0.3 } }),
-    ]);
-  });
-
-  it('forwards explicit maxTokens and temperature', async () => {
-    await ask({ maxTokens: 256, temperature: 0.7 });
-    expect(onDeviceLlmCalls()[0].options).toEqual({ maxTokens: 256, temperature: 0.7 });
-  });
 });
 
 describe('errors', () => {
@@ -72,18 +52,5 @@ describe('errors', () => {
     installOnDeviceLlm({ reply: { error: 'ERR_AFM_CONTEXT' } });
     await expect(ask()).rejects.toMatchObject({ code: 'ERR_AFM_CONTEXT' });
     expect(activeHolds()).not.toContain('local-inference');
-  });
-
-  it('a failed call does not wedge the lock: the next call runs', async () => {
-    let first = true;
-    installOnDeviceLlm({
-      reply: () => {
-        if (!first) return 'fine';
-        first = false;
-        return { error: 'ERR_AFM_BUSY' };
-      },
-    });
-    await expect(ask()).rejects.toMatchObject({ code: 'ERR_AFM_BUSY' });
-    await expect(ask()).resolves.toBe('fine');
   });
 });
