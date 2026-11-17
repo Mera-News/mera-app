@@ -247,6 +247,7 @@ describe('start-up never waits on the network', () => {
 
     it('opening the wizard marks it in progress, so a relaunch with the chip fact returns here', async () => {
         await open();
-        expect(await getSetting(ONBOARDING_DONE_SETTING_KEY)).toBe('false');
+        // The wizard marks itself fire-and-forget on mount; the step can render before that write lands.
+        await waitFor(async () => expect(await getSetting(ONBOARDING_DONE_SETTING_KEY)).toBe('false'));
     });
 });
