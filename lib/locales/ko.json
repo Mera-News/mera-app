@@ -3313,7 +3313,8 @@
         "uses": "순위, 이유, 채팅에 회원님의 서비스를 사용합니다.",
         "off": "웹 검색과 팩트 체크가 꺼집니다.",
         "verify": "‘증명 확인’은 숨겨집니다. 프라이빗 클라우드만 확인하는 기능입니다."
-      }
+      },
+      "line": "Your AI service isn't answering. Check it in 메라 프로토콜."
     },
     "news": {
       "title": "내 뉴스 서버",
@@ -3329,7 +3330,8 @@
         "title": "여기서는 사용할 수 없음",
         "intro": "회원님의 뉴스 서버는 이 기능들을 제공하지 않습니다. 메라 뉴스는 이 기능들을 빈 상태로 보여 줍니다.",
         "unknown": "회원님의 뉴스 서버가 어떤 기능을 제공하는지 알려 주지 않았습니다. 표시할 수 없는 페이지는 빈 상태로 남습니다."
-      }
+      },
+      "line": "Your news server isn't answering."
     },
     "feature": {
       "search": "검색",
@@ -3341,6 +3343,57 @@
       "factChecks": "팩트 체크",
       "storyGrouping": "스토리 묶기",
       "publicationNames": "언론사 이름"
-    }
+    },
+    "podRow": "Your own 메라 뉴스 server",
+    "usingPod": "Using your own 메라 뉴스 server",
+    "pod": {
+      "title": "Your own 메라 뉴스 server",
+      "intro": "Your server reads and ranks the news. This phone shows the results.",
+      "pairButton": "Pair with your server",
+      "enterCodeRow": "Enter code instead",
+      "pairTitle": "Pair with your server",
+      "pairStep1": "On your server, run the pairing command.",
+      "pairStep2": "Scan its code with the 카메라 앱, or open its link on this phone.",
+      "codeTitle": "Enter code",
+      "serverAddress": "Server address",
+      "code": "Pairing code",
+      "pair": "Pair",
+      "codeWrong": "This code didn't work.",
+      "codeExpired": "This code has expired. Run the pairing command again.",
+      "codeTooMany": "Too many tries. Try again in a minute.",
+      "confirmTitle": "Pair with {{host}}?",
+      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
+      "profileTitle": "Your server already has a profile",
+      "profileBody": "Keep one. The other is replaced.",
+      "keepPhone": "Keep this phone's",
+      "keepServer": "Keep the server's",
+      "laterTitle": "Use your server's profile?",
+      "laterBody": "This phone shows your server's profile. The profile on this phone is replaced.",
+      "continue": "Continue",
+      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
+      "notSetUp": "Finish setting up 메라 뉴스, then open the link again.",
+      "linkInvalid": "This pairing link isn't valid.",
+      "server": "Server",
+      "lastSynced": "Last synced",
+      "readTheNews": "Read the news",
+      "syncNow": "Sync now",
+      "unpair": "Unpair",
+      "status": {
+        "unreachable": "Can't reach your server. Showing what this phone has.",
+        "refused": "Your server refused this phone. Pair again.",
+        "serverOld": "Your server needs an update.",
+        "phoneOld": "Update 메라 뉴스 to keep syncing."
+      },
+      "pairAgain": "Pair again",
+      "unpairTitle": "Unpair this phone?",
+      "unpairBody": "This phone keeps its copy and goes back to the private cloud. Your server keeps its copy too.",
+      "line": "Can't reach your server.",
+      "unpairFirst": "Unpair your server first.",
+      "toastUnreachable": "Can't reach your server. Nothing was changed.",
+      "toastFailed": "Your server couldn't save this. Try again."
+    },
+    "logoutPaired": "This phone is also unpaired from your server.",
+    "logoutOwn": "Your own service settings are removed from this phone."
   }
 }

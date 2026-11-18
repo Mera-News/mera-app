@@ -3314,7 +3314,8 @@
         "uses": "การจัดอันดับ เหตุผล และแชทใช้บริการของคุณ",
         "off": "การค้นหาเว็บและการตรวจสอบข้อเท็จจริงจะปิดอยู่",
         "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น"
-      }
+      },
+      "line": "Your AI service isn't answering. Check it in เมร่า โปรโตคอล."
     },
     "news": {
       "title": "เซิร์ฟเวอร์ข่าวของคุณเอง",
@@ -3330,7 +3331,8 @@
         "title": "ไม่มีให้ใช้ที่นี่",
         "intro": "เซิร์ฟเวอร์ข่าวของคุณไม่มีสิ่งเหล่านี้ แอปแสดงหน้าเหล่านี้ว่างเปล่า",
         "unknown": "เซิร์ฟเวอร์ข่าวของคุณไม่ได้บอกว่ามีอะไรให้บ้าง หน้าที่แสดงไม่ได้จะยังว่างเปล่า"
-      }
+      },
+      "line": "Your news server isn't answering."
     },
     "feature": {
       "search": "ค้นหา",
@@ -3342,6 +3344,57 @@
       "factChecks": "การตรวจสอบข้อเท็จจริง",
       "storyGrouping": "การจัดกลุ่มเรื่องข่าว",
       "publicationNames": "ชื่อสำนักข่าว"
-    }
+    },
+    "podRow": "Your own เมร่า นิวส์ server",
+    "usingPod": "Using your own เมร่า นิวส์ server",
+    "pod": {
+      "title": "Your own เมร่า นิวส์ server",
+      "intro": "Your server reads and ranks the news. This phone shows the results.",
+      "pairButton": "Pair with your server",
+      "enterCodeRow": "Enter code instead",
+      "pairTitle": "Pair with your server",
+      "pairStep1": "On your server, run the pairing command.",
+      "pairStep2": "Scan its code with the แอปกล้อง, or open its link on this phone.",
+      "codeTitle": "Enter code",
+      "serverAddress": "Server address",
+      "code": "Pairing code",
+      "pair": "Pair",
+      "codeWrong": "This code didn't work.",
+      "codeExpired": "This code has expired. Run the pairing command again.",
+      "codeTooMany": "Too many tries. Try again in a minute.",
+      "confirmTitle": "Pair with {{host}}?",
+      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
+      "profileTitle": "Your server already has a profile",
+      "profileBody": "Keep one. The other is replaced.",
+      "keepPhone": "Keep this phone's",
+      "keepServer": "Keep the server's",
+      "laterTitle": "Use your server's profile?",
+      "laterBody": "This phone shows your server's profile. The profile on this phone is replaced.",
+      "continue": "Continue",
+      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
+      "notSetUp": "Finish setting up เมร่า นิวส์, then open the link again.",
+      "linkInvalid": "This pairing link isn't valid.",
+      "server": "Server",
+      "lastSynced": "Last synced",
+      "readTheNews": "Read the news",
+      "syncNow": "Sync now",
+      "unpair": "Unpair",
+      "status": {
+        "unreachable": "Can't reach your server. Showing what this phone has.",
+        "refused": "Your server refused this phone. Pair again.",
+        "serverOld": "Your server needs an update.",
+        "phoneOld": "Update เมร่า นิวส์ to keep syncing."
+      },
+      "pairAgain": "Pair again",
+      "unpairTitle": "Unpair this phone?",
+      "unpairBody": "This phone keeps its copy and goes back to the private cloud. Your server keeps its copy too.",
+      "line": "Can't reach your server.",
+      "unpairFirst": "Unpair your server first.",
+      "toastUnreachable": "Can't reach your server. Nothing was changed.",
+      "toastFailed": "Your server couldn't save this. Try again."
+    },
+    "logoutPaired": "This phone is also unpaired from your server.",
+    "logoutOwn": "Your own service settings are removed from this phone."
   }
 }
