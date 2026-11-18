@@ -520,10 +520,7 @@ describe('when the person does something while paired', () => {
     expect(pod.requests.some((r) => r.path === '/devices/revoke')).toBe(true);
   });
 
-  // Known, reported: logging out resets the Mera Protocol store while the sink is still set, and its
-  // deleteSetting('mera_skip_notes') goes to the server as a command, after the revoke. It flips to a
-  // pass once logout leaves pod mode before the stores reset.
-  it.failing('logs out: the server gets the revoke and nothing else', async () => {
+  it('logs out: the server gets the revoke and nothing else', async () => {
     await logOut();
     expect(pod.requests.filter((r) => r.path !== '/devices/revoke' && r.path !== '/snapshot')).toEqual([]);
   });

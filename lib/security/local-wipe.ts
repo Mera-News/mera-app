@@ -143,6 +143,15 @@ export async function wipeAllLocalUserData(
     // Never block the wipe on the server.
   }
 
+  // Then out of pod mode, before any store resets: a reset that writes a shared setting would otherwise
+  // go to the server as a change.
+  try {
+    const { leavePodMode } = require('@/lib/own-services/pod-runner');
+    await leavePodMode();
+  } catch {
+    // The stores' own reset leaves the mode too.
+  }
+
   for (const key of SECURE_STORE_KEYS) {
     if (opts.keepSession && SESSION_KEYS.has(key)) continue;
     try {

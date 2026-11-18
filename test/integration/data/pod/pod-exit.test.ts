@@ -268,6 +268,23 @@ describe('the wipes', () => {
     expect(reportSecrets()).toEqual({ hosts: [], secrets: [] });
   }
 
+  // The wipe resets every store; a reset that writes a shared setting would go to the server as a command.
+  const commandsAfter = (since: number) => pod.requests.slice(since).filter((r) => r.path === '/commands');
+
+  it.each([
+    ['a logout', async () => (await import('@/lib/security/local-wipe')).signOutAndWipe()],
+    ['an account deletion', async () => (await import('@/components/custom/config-mera/use-delete-account')).finishAccountDeletion()],
+    ['an account switch', async () => (await import('@/lib/security/local-wipe')).wipeAllLocalUserData({ keepSession: true })],
+  ])('%s sends the server no change at all: it leaves pod mode before any store resets', async (_n, wipe) => {
+    await signInFixtureAccount();
+    await paired();
+    const since = pod.requests.length;
+    await wipe();
+    await new Promise<void>((r) => setImmediate(r));
+    expect(commandsAfter(since)).toEqual([]);
+    expect(pod.requests.slice(since).map((r) => r.path)).toEqual(['/devices/revoke']);
+  });
+
   it('signing out while paired revokes before the key is deleted, then leaves everything', async () => {
     await signInFixtureAccount();
     const original = AppScheduler.definition('feed-sync');
