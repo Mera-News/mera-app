@@ -9,6 +9,7 @@ import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { ownAiState, type OwnAiConfig } from '@/lib/own-services/own-ai-state';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import * as WebBrowser from 'expo-web-browser';
 import { http, HttpResponse, initI18nEn, server } from '@/test/helpers';
 
 const HOST = 'https://ai.own.test';
@@ -19,7 +20,7 @@ const answer = (status: number, body: unknown = {}) =>
 const unreachable = () => server.use(http.post(CHECK_URL, () => HttpResponse.error()));
 
 const seed = (p: Partial<OwnAiConfig> = {}) =>
-    ownAiState.save({ v: 1, baseUrl: HOST, model: 'm1', key: null, on: false, checkedAt: 1, status: 'connected', ...p });
+    ownAiState.save({ v: 1, baseUrl: HOST, model: 'm1', key: null, on: false, checkedAt: 1, status: 'connected', confirmed: null, ...p });
 
 const mount = async () => {
     await render(<OwnAiServiceScreen />);
@@ -95,7 +96,8 @@ describe('own AI service page', () => {
         await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
         const ask = useDialogQueue.getState().queue[0];
         expect(ask.title).toBe('Use your own AI service?');
-        expect(ask.body).toMatch(/has no confidential computing/);
+        expect(ask.body).toBe("Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats.");
+        expect(ask.confirmLabel).toBe('Use it');
         await act(async () => settleDialog(ask.id, false));
         expect(ownAiState.get()?.on).toBe(false);
         expect(sw().props.value).toBe(false);
@@ -105,6 +107,22 @@ describe('own AI service page', () => {
         await act(async () => settleDialog(useDialogQueue.getState().queue[0].id, true));
         await waitFor(() => expect(ownAiState.get()?.on).toBe(true));
         expect(sw().props.value).toBe(true);
+        // The confirmation is kept in the stored item, with no address or anything else of the person's.
+        expect(ownAiState.get()?.confirmed).toEqual({ at: expect.any(Number), privacyVersion: null });
+
+        // Off and on again at the same address: already confirmed, so no dialog.
+        await flip(false);
+        await waitFor(() => expect(ownAiState.get()?.on).toBe(false));
+        await flip(true);
+        await waitFor(() => expect(ownAiState.get()?.on).toBe(true));
+        expect(useDialogQueue.getState().queue).toHaveLength(0);
+    });
+
+    it('the privacy policy link opens the own-services section in the in-app browser', async () => {
+        await seed();
+        await mount();
+        await fireEvent.press(screen.getByTestId('own-ai-privacy'));
+        expect(jest.mocked(WebBrowser.openBrowserAsync).mock.calls.at(-1)?.[0]).toMatch(/^https:\/\/mera\.news\/(en\/)?privacy#own-services$/);
     });
 
     it.each([
@@ -126,7 +144,7 @@ describe('own AI service page', () => {
     });
 
     it('on, then a check that fails: says so and the switch stays on', async () => {
-        await seed({ on: true });
+        await seed({ on: true, confirmed: { at: 1, privacyVersion: null } });
         unreachable();
         await mount();
         expect(sw().props.value).toBe(true);
@@ -137,7 +155,7 @@ describe('own AI service page', () => {
     });
 
     it('on, then an address edit: nothing moves until Check, which saves the new address and turns the switch off', async () => {
-        await seed({ on: true });
+        await seed({ on: true, confirmed: { at: 1, privacyVersion: null } });
         await mount();
         await typeInto('own-ai-address', 'https://other.own.test');
         // Typing alone moves nothing: the stored service stays on and in use.

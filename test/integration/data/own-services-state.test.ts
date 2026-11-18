@@ -19,9 +19,11 @@ import {
   ownNewsRoute,
   ownNewsState,
   saveOwnNewsFields,
+  setOwnNewsOn,
   type OwnNewsConfig,
 } from '@/lib/own-services/own-news-state';
 
+const CONFIRMED = { at: 1_700_000_000_000, privacyVersion: '2026-10' };
 const ai = (over: Partial<OwnAiConfig> = {}): OwnAiConfig => ({
   v: 1,
   baseUrl: 'https://ai.own.test/v1',
@@ -30,6 +32,7 @@ const ai = (over: Partial<OwnAiConfig> = {}): OwnAiConfig => ({
   on: false,
   checkedAt: null,
   status: null,
+  confirmed: null,
   ...over,
 });
 const news = (over: Partial<OwnNewsConfig> = {}): OwnNewsConfig => ({
@@ -40,6 +43,7 @@ const news = (over: Partial<OwnNewsConfig> = {}): OwnNewsConfig => ({
   checkedAt: null,
   status: null,
   fields: null,
+  confirmed: null,
   ...over,
 });
 
@@ -115,7 +119,7 @@ describe('own AI state', () => {
   it('turning on aborts any gateway run, so the pipeline stamps a finished run', async () => {
     useForYouStore.setState({ lastProcessingRunFinishedAt: null });
     await ownAiState.save(ai({ status: 'connected' }));
-    await setOwnAiOn(true);
+    await setOwnAiOn(true, CONFIRMED);
     expect(ownAiOn()).toBe(true);
     expect(useForYouStore.getState().lastProcessingRunFinishedAt).not.toBeNull();
   });
@@ -128,6 +132,31 @@ describe('own AI state', () => {
     await reading;
     expect(ownAiState.isHydrated()).toBe(true);
     expect(ownAiState.get()?.model).toBe('new');
+  });
+
+  it('never turns on without a confirmation, and keeps one through off and on at the same address', async () => {
+    await ownAiState.save(ai({ status: 'connected', checkedAt: 1 }));
+    await expect(setOwnAiOn(true)).rejects.toMatchObject({ code: 'not-confirmed' });
+    expect(ownAiOn()).toBe(false);
+    await setOwnAiOn(true, CONFIRMED);
+    expect(ownAiState.get()?.confirmed).toEqual(CONFIRMED);
+    await setOwnAiOn(false);
+    await setOwnAiOn(true);
+    expect(ownAiOn()).toBe(true);
+    // A new address needs a new confirmation.
+    await saveOwnAiFields({ baseUrl: 'https://other.own.test/v1', model: 'm1', key: null });
+    expect(ownAiState.get()?.confirmed).toBeNull();
+  });
+
+  it('a stored item that says on but holds no confirmation reads as off', async () => {
+    await ownAiState.save(ai({ on: true, status: 'connected', checkedAt: 1, confirmed: null }));
+    ownAiState.resetMemory();
+    await ownAiState.hydrate();
+    expect(ownAiOn()).toBe(false);
+    await ownAiState.save(ai({ on: true, status: 'connected', checkedAt: 1, confirmed: CONFIRMED }));
+    ownAiState.resetMemory();
+    await ownAiState.hydrate();
+    expect(ownAiOn()).toBe(true);
   });
 
   it('keeps the switch on when a check fails', async () => {
@@ -147,7 +176,7 @@ describe('own news state', () => {
   });
 
   it('reads a saved config back and holds its host and key as report secrets', async () => {
-    await ownNewsState.save(news({ on: true }));
+    await ownNewsState.save(news({ on: true, confirmed: CONFIRMED }));
     ownNewsState.resetMemory();
     await ownNewsState.hydrate();
     expect(ownNewsRoute()).toEqual({ graphqlUrl: 'https://news.own.test/graphql', key: 'news-key-12345678' });
@@ -172,6 +201,18 @@ describe('own news state', () => {
     expect(ownNewsState.get()).toEqual(on);
     await saveOwnNewsFields({ baseUrl: 'https://n2.test', key: on.key });
     expect(ownNewsState.get()).toMatchObject({ on: false, status: null, checkedAt: null });
+  });
+
+  it('never turns on without a confirmation, and a stored on with none reads as off', async () => {
+    await ownNewsState.save(news({ status: 'connected', checkedAt: 1 }));
+    await expect(setOwnNewsOn(true)).rejects.toMatchObject({ code: 'not-confirmed' });
+    expect(ownNewsOn()).toBe(false);
+    await setOwnNewsOn(true, CONFIRMED);
+    expect(ownNewsOn()).toBe(true);
+    await ownNewsState.save(news({ on: true, status: 'connected', checkedAt: 1, confirmed: null }));
+    ownNewsState.resetMemory();
+    await ownNewsState.hydrate();
+    expect(ownNewsOn()).toBe(false);
   });
 
   it('builds the graphql url', () => {

@@ -18,7 +18,7 @@ const BASE = 'https://ai.own.test/v1';
 const KEY = 'own-ai-key-12345678';
 const REQUEST = { systemPrompt: 'system', prompt: 'user' };
 const config = (over: Partial<OwnAiConfig> = {}): OwnAiConfig => ({
-  v: 1, baseUrl: BASE, model: 'own-model', key: KEY, on: true, checkedAt: 1, status: 'connected', ...over,
+  v: 1, baseUrl: BASE, model: 'own-model', key: KEY, on: true, checkedAt: 1, status: 'connected', confirmed: { at: 1, privacyVersion: null }, ...over,
 });
 
 let own: { url: string; headers: Headers }[];

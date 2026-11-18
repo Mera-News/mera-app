@@ -50,7 +50,7 @@ it.each(cases)('%s', async (_n, reply, status) => {
 });
 
 it('never turns the mode on, and logs nothing that holds the key or the address', async () => {
-  await ownAiState.save({ v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: KEY, on: false, checkedAt: null, status: null });
+  await ownAiState.save({ v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: KEY, on: false, checkedAt: null, status: null, confirmed: null });
   const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) => jest.spyOn(console, m).mockImplementation(() => undefined));
   answer(() => HttpResponse.json({ choices: [{}] }));
   expect(await check()).toBe('connected');

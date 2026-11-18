@@ -126,7 +126,7 @@ it('paired: a caller-supplied header never reaches the paired server', async () 
 it('pairing wins over an own news server that is also on', async () => {
     await saveOwnNewsFields({ baseUrl: 'https://news.own.test', key: 'own-news-key-12345678' });
     await recordOwnNewsCheck('connected', null);
-    await setOwnNewsOn(true);
+    await setOwnNewsOn(true, { at: 1, privacyVersion: null });
     await savePairing(pairing);
     const rec = record();
     await askNews();
@@ -220,7 +220,7 @@ describe('the cache', () => {
     it('switching from an own news server to paired clears the cache', async () => {
         await saveOwnNewsFields({ baseUrl: 'https://news.own.test', key: 'own-news-key-12345678' });
         await recordOwnNewsCheck('connected', null);
-        await setOwnNewsOn(true);
+        await setOwnNewsOn(true, { at: 1, privacyVersion: null });
         const rec = record();
         await client.query(cached);
         await savePairing(pairing);

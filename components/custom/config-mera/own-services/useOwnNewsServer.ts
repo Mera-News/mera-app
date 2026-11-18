@@ -9,6 +9,7 @@ import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { confirmTurnOn, useAcceptedPrivacyVersion } from './confirm-turn-on';
 import { ADDRESS_ERROR_KEY, NEWS_STATUS_KEY, OWN_ROUTES } from './own-services-copy';
 
 /** What the person's server lacks: null when it did not say, otherwise the features it cannot serve. */
@@ -72,9 +73,23 @@ export function useOwnNewsServer() {
         }
     };
 
+    const privacyVersion = useAcceptedPrivacyVersion();
     const toggle = async (next: boolean) => {
         setError(null);
         try {
+            // Once per address, as on the AI page.
+            if (next && cfg && !cfg.confirmed) {
+                const confirmation = await confirmTurnOn({
+                    title: t('ownServices.news.confirmTitle'),
+                    body: t('ownServices.news.confirmBody'),
+                    yes: t('ownServices.ai.confirmYes'),
+                    cancel: t('common.cancel'),
+                    privacyVersion,
+                });
+                if (!confirmation) return;
+                await setOwnNewsOn(true, confirmation);
+                return;
+            }
             await setOwnNewsOn(next);
         } catch (e) {
             if (!(e instanceof OwnServiceError)) throw e;

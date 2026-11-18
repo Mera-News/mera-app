@@ -3612,7 +3612,8 @@
         "off": "البحث على الويب والتحقق من الحقائق متوقفان.",
         "verify": "«تحقق من الشهادة» مخفي. وهو يتحقق من السحابة الخاصة فقط."
       },
-      "line": "Your AI service isn't answering. Check it in بروتوكول ميرا."
+      "line": "Your AI service isn't answering. Check it in بروتوكول ميرا.",
+      "confirmBody": "Your profile, your chats and the articles ميرا نيوز reads for you go to this service. Whoever runs it can read them and decides how they are used. ميرا لابز still can't see your profile or your chats."
     },
     "news": {
       "title": "خادم الأخبار الخاص بك",
@@ -3629,7 +3630,9 @@
         "intro": "لا يقدّم خادم أخبارك هذه الميزات. تعرض ميرا نيوز هذه الصفحات فارغة.",
         "unknown": "لم يذكر خادم أخبارك ما يقدّمه. ستبقى الصفحات التي لا يستطيع عرضها فارغة."
       },
-      "line": "Your news server isn't answering."
+      "line": "Your news server isn't answering.",
+      "confirmTitle": "Use your own news server?",
+      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. ميرا لابز still can't see your profile or your chats."
     },
     "feature": {
       "search": "البحث",
@@ -3660,7 +3663,7 @@
       "codeExpired": "This code has expired. Run the pairing command again.",
       "codeTooMany": "Too many tries. Try again in a minute.",
       "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmBody": "Your server can see your profile, your chats and what you read. Whoever runs it decides how they are used, so pair only with a server you trust. ميرا لابز still can't see your profile or your chats.",
       "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
       "profileTitle": "Your server already has a profile",
       "profileBody": "Keep one. The other is replaced.",

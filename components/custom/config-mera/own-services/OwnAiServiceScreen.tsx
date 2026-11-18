@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { BetaIntro } from './BetaIntro';
 import { ModeSwitchRow, ServicePage } from './ModeSwitchRow';
+import { PrivacyLink } from './PrivacyLink';
 import { OWN_ROUTES } from './own-services-copy';
 import { ServiceField } from './ServiceField';
 import { ServiceStatus } from './ServiceStatus';
@@ -51,6 +52,7 @@ function OwnAiForm() {
                 reason={s.reason}
                 error={s.error}
             />
+            <PrivacyLink testID="own-ai-privacy" />
             <View style={{ marginTop: 14 }}>
                 <Group>
                     <Row testID="own-ai-changes-row" title={t('ownServices.ai.whatChanges')} onPress={() => router.push(OWN_ROUTES.aiChanges as Href)} />

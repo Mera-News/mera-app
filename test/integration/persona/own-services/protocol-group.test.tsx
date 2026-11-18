@@ -25,9 +25,9 @@ jest.mock('@/components/ui/gluestack-ui-provider', () => ({
     GluestackUIProvider: ({ children }: { children?: React.ReactNode }) => children,
 }));
 
-const aiOn = () => ownAiState.save({ v: 1, baseUrl: 'https://ai.own.test', model: 'm', key: null, on: true, checkedAt: 1, status: 'connected' });
+const aiOn = () => ownAiState.save({ v: 1, baseUrl: 'https://ai.own.test', model: 'm', key: null, on: true, checkedAt: 1, status: 'connected', confirmed: { at: 1, privacyVersion: null } });
 const newsOn = () =>
-    ownNewsState.save({ v: 1, baseUrl: 'https://news.own.test', key: null, on: true, checkedAt: 1, status: 'connected', fields: null });
+    ownNewsState.save({ v: 1, baseUrl: 'https://news.own.test', key: null, on: true, checkedAt: 1, status: 'connected', fields: null, confirmed: { at: 1, privacyVersion: null } });
 
 const mount = async () => {
     await render(<MeraProtocolSettingsScreen />);

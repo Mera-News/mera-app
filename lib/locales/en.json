@@ -3325,7 +3325,7 @@
         "busy": "This service is busy. Try again in a minute.",
         "failing": "This service had a problem. Try again later."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
+      "warning": "Whoever runs this service can read your profile, your chats and the articles Mera News reads for you.",
       "switch": "Use this service",
       "confirmTitle": "Use your own AI service?",
       "confirmYes": "Use it",
@@ -3336,7 +3336,8 @@
         "off": "Web search and fact checks are off.",
         "verify": "Verify attestation is hidden. It checks the private cloud only."
       },
-      "line": "Your AI service isn't answering. Check it in Mera Protocol."
+      "line": "Your AI service isn't answering. Check it in Mera Protocol.",
+      "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
     },
     "news": {
       "title": "Your own news server",
@@ -3353,7 +3354,9 @@
         "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
         "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
       },
-      "line": "Your news server isn't answering."
+      "line": "Your news server isn't answering.",
+      "confirmTitle": "Use your own news server?",
+      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
     },
     "feature": {
       "search": "Search",
@@ -3384,7 +3387,7 @@
       "codeExpired": "This code has expired. Run the pairing command again.",
       "codeTooMany": "Too many tries. Try again in a minute.",
       "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmBody": "Your server can see your profile, your chats and what you read. Whoever runs it decides how they are used, so pair only with a server you trust. Mera Labs still can't see your profile or your chats.",
       "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
       "profileTitle": "Your server already has a profile",
       "profileBody": "Keep one. The other is replaced.",

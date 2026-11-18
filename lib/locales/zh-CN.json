@@ -3314,7 +3314,8 @@
         "off": "网页搜索和事实核查将关闭。",
         "verify": "「验证证明」已隐藏。它只检查私有云。"
       },
-      "line": "Your AI service isn't answering. Check it in 梅拉协议."
+      "line": "Your AI service isn't answering. Check it in 梅拉协议.",
+      "confirmBody": "Your profile, your chats and the articles 梅拉新闻 reads for you go to this service. Whoever runs it can read them and decides how they are used. 梅拉实验室 still can't see your profile or your chats."
     },
     "news": {
       "title": "你自己的新闻服务器",
@@ -3331,7 +3332,9 @@
         "intro": "你的新闻服务器不提供这些内容。梅拉新闻会将这些页面显示为空。",
         "unknown": "你的新闻服务器没有说明它提供哪些内容。它无法显示的页面会保持为空。"
       },
-      "line": "Your news server isn't answering."
+      "line": "Your news server isn't answering.",
+      "confirmTitle": "Use your own news server?",
+      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. 梅拉实验室 still can't see your profile or your chats."
     },
     "feature": {
       "search": "搜索",
@@ -3362,7 +3365,7 @@
       "codeExpired": "This code has expired. Run the pairing command again.",
       "codeTooMany": "Too many tries. Try again in a minute.",
       "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmBody": "Your server can see your profile, your chats and what you read. Whoever runs it decides how they are used, so pair only with a server you trust. 梅拉实验室 still can't see your profile or your chats.",
       "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
       "profileTitle": "Your server already has a profile",
       "profileBody": "Keep one. The other is replaced.",

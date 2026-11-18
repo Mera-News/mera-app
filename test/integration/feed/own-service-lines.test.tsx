@@ -68,12 +68,12 @@ const NEWS_DATA = { data: { articleIdsForPersona: { __typename: 'PersonaArticleI
 const turnOnAi = async (baseUrl = 'https://ai.own.test/v1') => {
   await saveOwnAiFields({ baseUrl, model: 'own-model', key: AI_KEY });
   await recordOwnAiCheck('connected');
-  await setOwnAiOn(true);
+  await setOwnAiOn(true, { at: 1, privacyVersion: null });
 };
 const turnOnNews = async (baseUrl = 'https://news.own.test') => {
   await saveOwnNewsFields({ baseUrl, key: NEWS_KEY });
   await recordOwnNewsCheck('connected', null);
-  await setOwnNewsOn(true);
+  await setOwnNewsOn(true, { at: 1, privacyVersion: null });
 };
 const askNews = () => client.query({ query: NEWS, variables: { query: { topics: [] } }, fetchPolicy: 'no-cache' }).catch(() => undefined);
 const callAi = (status: number | 'network') => {
@@ -234,7 +234,7 @@ describe('own AI service', () => {
     });
     expect(screen.queryByText(AI_LINE, H)).toBeNull();
     await act(async () => {
-      await setOwnAiOn(true);
+      await setOwnAiOn(true, { at: 1, privacyVersion: null });
     });
     expect(screen.queryByText(AI_LINE, H)).toBeNull();
     expect(useOwnAiHealth.getState().health).toBeNull();

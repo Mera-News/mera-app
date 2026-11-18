@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { BetaIntro } from './BetaIntro';
 import { ModeSwitchRow, ServicePage } from './ModeSwitchRow';
+import { PrivacyLink } from './PrivacyLink';
 import { OWN_ROUTES } from './own-services-copy';
 import { ServiceField } from './ServiceField';
 import { ServiceStatus } from './ServiceStatus';
@@ -48,6 +49,7 @@ function OwnNewsForm() {
                 error={s.error}
             />
             <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, marginTop: 8, marginHorizontal: 4 }}>{t('ownServices.news.topicsLine')}</Text>
+            <PrivacyLink testID="own-news-privacy" />
             {s.showMissing ? (
                 <View style={{ marginTop: 14 }}>
                     <Group>

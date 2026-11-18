@@ -23,7 +23,7 @@ import { rowsById, serveFresh, wakeCleanup, wakeWorld } from './support';
 jest.setTimeout(60_000);
 
 const OWN: OwnAiConfig = {
-  v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: 'own-ai-key-12345678', on: true, checkedAt: 1, status: 'connected',
+  v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: 'own-ai-key-12345678', on: true, checkedAt: 1, status: 'connected', confirmed: { at: 1, privacyVersion: null },
 };
 
 // Stored but not in memory: the wake has to read it itself before any request.
@@ -60,7 +60,7 @@ describe('a wake', () => {
   it('with own news on: the wake asks the own server for news, with no Mera cookie, and Mera gets no news query', async () => {
     await serveFresh(3);
     const NEWS: OwnNewsConfig = {
-      v: 1, baseUrl: 'https://news.own.test', key: 'own-news-key-12345678', on: true, checkedAt: 1, status: 'connected', fields: null,
+      v: 1, baseUrl: 'https://news.own.test', key: 'own-news-key-12345678', on: true, checkedAt: 1, status: 'connected', fields: null, confirmed: { at: 1, privacyVersion: null },
     };
     ownNewsState.resetMemory();
     await ownNewsState.save(NEWS);

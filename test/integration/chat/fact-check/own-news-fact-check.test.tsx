@@ -46,7 +46,7 @@ const ARTICLE = { title: 'Headline', language: 'en', publication: 'Organiser', p
 const turnOnNews = async () => {
   await saveOwnNewsFields({ baseUrl: 'https://news.own.test', key: 'own-news-key-12345678' });
   await recordOwnNewsCheck('connected', null);
-  await setOwnNewsOn(true);
+  await setOwnNewsOn(true, { at: 1, privacyVersion: null });
 };
 
 /** Every GraphQL operation name that reaches either host, in order. */

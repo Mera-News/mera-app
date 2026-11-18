@@ -8,7 +8,7 @@ import { fakeClock, resetTransport, run } from '@/test/integration/chat/transpor
 
 const TOKEN = 'pod-token-abcdef123456';
 const pairing: PodPairing = { v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 };
-const ownAi: OwnAiConfig = { v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: 'own-ai-key-12345678', on: true, checkedAt: 1, status: 'connected' };
+const ownAi: OwnAiConfig = { v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: 'own-ai-key-12345678', on: true, checkedAt: 1, status: 'connected', confirmed: { at: 1, privacyVersion: null } };
 const REQUEST = { messages: [{ role: 'user' as const, content: 'hi' }], route: 'topics' as const, enableThinking: false };
 
 const leg = async () => {

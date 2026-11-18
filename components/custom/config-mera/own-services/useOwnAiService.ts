@@ -3,11 +3,11 @@ import { checkOwnAi } from '@/lib/own-services/check-ai';
 import { OwnServiceError, ownServicesAllowed } from '@/lib/own-services/gate';
 import { ownAiState, recordOwnAiCheck, saveOwnAiFields, setOwnAiOn } from '@/lib/own-services/own-ai-state';
 import { useRestartHold } from '@/lib/app-restart';
-import { showDialog } from '@/lib/dialog';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { router, type Href } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { confirmTurnOn, useAcceptedPrivacyVersion } from './confirm-turn-on';
 import { ADDRESS_ERROR_KEY, AI_STATUS_KEY, OWN_ROUTES } from './own-services-copy';
 
 /** The page's state. Call it once the stored config is read in: the fields start from it. */
@@ -20,8 +20,7 @@ export function useOwnAiService() {
     const [key, setKey] = useState(cfg?.key ?? '');
     const [checking, setChecking] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    // The address the person has already accepted the no-confidential-computing warning for.
-    const confirmedFor = useRef<string | null>(cfg?.on ? cfg.baseUrl : null);
+    const privacyVersion = useAcceptedPrivacyVersion();
 
     const trimmed = address.trim();
     const parsed = trimmed ? parseServiceAddress(trimmed) : null;
@@ -80,15 +79,18 @@ export function useOwnAiService() {
     const toggle = async (next: boolean) => {
         setError(null);
         try {
-            if (next && cfg && confirmedFor.current !== cfg.baseUrl) {
-                const yes = await showDialog({
+            // Once per address: a stored confirmation is cleared whenever the address, model or key changes.
+            if (next && cfg && !cfg.confirmed) {
+                const confirmation = await confirmTurnOn({
                     title: t('ownServices.ai.confirmTitle'),
-                    body: t('ownServices.ai.warning'),
-                    confirmLabel: t('ownServices.ai.confirmYes'),
-                    cancelLabel: t('common.cancel'),
+                    body: t('ownServices.ai.confirmBody'),
+                    yes: t('ownServices.ai.confirmYes'),
+                    cancel: t('common.cancel'),
+                    privacyVersion,
                 });
-                if (!yes) return;
-                confirmedFor.current = cfg.baseUrl;
+                if (!confirmation) return;
+                await setOwnAiOn(true, confirmation);
+                return;
             }
             await setOwnAiOn(next);
         } catch (e) {

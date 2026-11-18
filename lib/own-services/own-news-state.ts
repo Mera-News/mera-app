@@ -1,5 +1,5 @@
 import { parseServiceAddress } from './address';
-import { guardTurnOn, OwnServiceError } from './gate';
+import { guardTurnOn, OwnServiceError, parseConfirmation, type Confirmation } from './gate';
 import { OWN_NEWS_KEY } from './keys';
 import { createServiceState } from './service-state';
 
@@ -12,6 +12,8 @@ export type OwnNewsConfig = {
   on: boolean;
   checkedAt: number | null;
   status: NewsCheckStatus | null;
+  /** Set only by the confirm's affirmative button; cleared with every new address, model or key. */
+  confirmed: Confirmation | null;
   fields: string[] | null;
 };
 
@@ -25,7 +27,9 @@ export const ownNewsState = createServiceState<OwnNewsConfig>({
       v: 1,
       baseUrl: r.baseUrl,
       key: typeof r.key === 'string' ? r.key : null,
-      on: r.on,
+      // An item that says on without a confirmation was never turned on through the confirm: it stays off.
+      on: r.on && parseConfirmation(r.confirmed) !== null,
+      confirmed: parseConfirmation(r.confirmed),
       checkedAt: typeof r.checkedAt === 'number' ? r.checkedAt : null,
       status: (r.status as NewsCheckStatus | null) ?? null,
       fields: Array.isArray(r.fields) ? r.fields.filter((f): f is string => typeof f === 'string') : null,
@@ -54,7 +58,7 @@ export async function saveOwnNewsFields(f: { baseUrl: string; key: string | null
   await ownNewsState.hydrate();
   const cur = ownNewsState.get();
   if (cur && cur.baseUrl === addr.url && cur.key === f.key) return;
-  await ownNewsState.save({ v: 1, baseUrl: addr.url, key: f.key, on: false, checkedAt: null, status: null, fields: null });
+  await ownNewsState.save({ v: 1, baseUrl: addr.url, key: f.key, on: false, checkedAt: null, status: null, fields: null, confirmed: null });
 }
 
 export async function recordOwnNewsCheck(status: NewsCheckStatus, fields: string[] | null): Promise<void> {
@@ -63,11 +67,15 @@ export async function recordOwnNewsCheck(status: NewsCheckStatus, fields: string
   if (cur) await ownNewsState.save({ ...cur, status, fields, checkedAt: Date.now() });
 }
 
-export async function setOwnNewsOn(on: boolean): Promise<void> {
+/** Turning on needs the person's confirmation for this address: given now, or kept from an earlier turn-on. */
+export async function setOwnNewsOn(on: boolean, confirmation?: Confirmation): Promise<void> {
   await ownNewsState.hydrate();
   const cur = ownNewsState.get();
   if (on) guardTurnOn(cur?.status);
-  if (cur) await ownNewsState.save({ ...cur, on });
+  if (!cur) return;
+  const confirmed = confirmation ?? cur.confirmed;
+  if (on && !confirmed) throw new OwnServiceError('not-confirmed');
+  await ownNewsState.save({ ...cur, on, confirmed });
 }
 
 export const forgetOwnNews = (): Promise<void> => ownNewsState.clear();

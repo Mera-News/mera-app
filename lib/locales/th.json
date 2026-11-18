@@ -3315,7 +3315,8 @@
         "off": "การค้นหาเว็บและการตรวจสอบข้อเท็จจริงจะปิดอยู่",
         "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น"
       },
-      "line": "Your AI service isn't answering. Check it in เมร่า โปรโตคอล."
+      "line": "Your AI service isn't answering. Check it in เมร่า โปรโตคอล.",
+      "confirmBody": "Your profile, your chats and the articles เมร่า นิวส์ reads for you go to this service. Whoever runs it can read them and decides how they are used. เมร่า แล็บส์ still can't see your profile or your chats."
     },
     "news": {
       "title": "เซิร์ฟเวอร์ข่าวของคุณเอง",
@@ -3332,7 +3333,9 @@
         "intro": "เซิร์ฟเวอร์ข่าวของคุณไม่มีสิ่งเหล่านี้ แอปแสดงหน้าเหล่านี้ว่างเปล่า",
         "unknown": "เซิร์ฟเวอร์ข่าวของคุณไม่ได้บอกว่ามีอะไรให้บ้าง หน้าที่แสดงไม่ได้จะยังว่างเปล่า"
       },
-      "line": "Your news server isn't answering."
+      "line": "Your news server isn't answering.",
+      "confirmTitle": "Use your own news server?",
+      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. เมร่า แล็บส์ still can't see your profile or your chats."
     },
     "feature": {
       "search": "ค้นหา",
@@ -3363,7 +3366,7 @@
       "codeExpired": "This code has expired. Run the pairing command again.",
       "codeTooMany": "Too many tries. Try again in a minute.",
       "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmBody": "Your server can see your profile, your chats and what you read. Whoever runs it decides how they are used, so pair only with a server you trust. เมร่า แล็บส์ still can't see your profile or your chats.",
       "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
       "profileTitle": "Your server already has a profile",
       "profileBody": "Keep one. The other is replaced.",

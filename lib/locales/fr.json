@@ -3347,7 +3347,8 @@
         "off": "La recherche web et les vérifications de faits sont désactivées.",
         "verify": "« Vérifier l'attestation » est masqué. Il ne contrôle que le cloud privé."
       },
-      "line": "Your AI service isn't answering. Check it in Mera Protocol."
+      "line": "Your AI service isn't answering. Check it in Mera Protocol.",
+      "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
     },
     "news": {
       "title": "Votre propre serveur d'actualités",
@@ -3364,7 +3365,9 @@
         "intro": "Votre serveur d'actualités ne propose pas ces éléments. Mera News les affiche vides.",
         "unknown": "Votre serveur d'actualités n'a pas indiqué ce qu'il propose. Les pages qu'il ne peut pas afficher restent vides."
       },
-      "line": "Your news server isn't answering."
+      "line": "Your news server isn't answering.",
+      "confirmTitle": "Use your own news server?",
+      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
     },
     "feature": {
       "search": "Recherche",
@@ -3395,7 +3398,7 @@
       "codeExpired": "This code has expired. Run the pairing command again.",
       "codeTooMany": "Too many tries. Try again in a minute.",
       "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmBody": "Your server can see your profile, your chats and what you read. Whoever runs it decides how they are used, so pair only with a server you trust. Mera Labs still can't see your profile or your chats.",
       "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
       "profileTitle": "Your server already has a profile",
       "profileBody": "Keep one. The other is replaced.",

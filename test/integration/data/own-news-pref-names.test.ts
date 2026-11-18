@@ -29,7 +29,7 @@ const ownAnswers = (respond: () => Response) =>
 const turnOn = async (fields: string[] | null) => {
     await saveOwnNewsFields({ baseUrl: 'https://news.own.test', key: 'own-news-key-12345678' });
     await recordOwnNewsCheck('connected', fields);
-    await setOwnNewsOn(true);
+    await setOwnNewsOn(true, { at: 1, privacyVersion: null });
 };
 const starIt = async () => {
     const { result } = await renderHook(() => usePublicationRowPrefs());

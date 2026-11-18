@@ -31,12 +31,12 @@ const askNews = () => client.query({ query: NEWS, variables: { query: { topics: 
 const turnOnAi = async (baseUrl = 'https://ai.own.test/v1') => {
     await saveOwnAiFields({ baseUrl, model: 'own-model', key: AI_KEY });
     await recordOwnAiCheck('connected');
-    await setOwnAiOn(true);
+    await setOwnAiOn(true, { at: 1, privacyVersion: null });
 };
 const turnOnNews = async () => {
     await saveOwnNewsFields({ baseUrl: 'https://news.own.test', key: NEWS_KEY });
     await recordOwnNewsCheck('connected', null);
-    await setOwnNewsOn(true);
+    await setOwnNewsOn(true, { at: 1, privacyVersion: null });
 };
 
 /** Every GraphQL request by host, with its cookie. */
@@ -89,7 +89,7 @@ it('own AI off after on: the next call reaches the gateway, and a changed addres
 
     await saveOwnAiFields({ baseUrl: 'https://ai2.own.test/v1', model: 'own-model', key: AI_KEY });
     await recordOwnAiCheck('connected');
-    await setOwnAiOn(true);
+    await setOwnAiOn(true, { at: 1, privacyVersion: null });
     await cloudComplete({ systemPrompt: 's', prompt: 'u' });
     expect(ownAi[1]).toBe('https://ai2.own.test/v1/chat/completions');
 });

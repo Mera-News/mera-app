@@ -2,9 +2,11 @@
 // (introspection and the feed document), the real stored state and the router.
 import React from 'react';
 import { router } from 'expo-router';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import * as WebBrowser from 'expo-web-browser';
 import NotAvailableHereScreen from '@/components/custom/config-mera/own-services/NotAvailableHereScreen';
 import OwnNewsServerScreen from '@/components/custom/config-mera/own-services/OwnNewsServerScreen';
+import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { ownNewsState, type OwnNewsConfig } from '@/lib/own-services/own-news-state';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -18,7 +20,7 @@ const introspection = (names: string[]) =>
 const unreachable = () => server.use(http.post(URL_, () => HttpResponse.error()));
 
 const seed = (p: Partial<OwnNewsConfig> = {}) =>
-    ownNewsState.save({ v: 1, baseUrl: 'https://news.own.test', key: null, on: false, checkedAt: 1, status: 'connected', fields: FEED, ...p });
+    ownNewsState.save({ v: 1, baseUrl: 'https://news.own.test', key: null, on: false, checkedAt: 1, status: 'connected', fields: FEED, confirmed: null, ...p });
 
 const mount = async () => {
     await render(<OwnNewsServerScreen />);
@@ -35,6 +37,7 @@ const pressCheck = async () => {
 beforeAll(initI18nEn);
 beforeEach(() => {
     ownNewsState.resetMemory();
+    useDialogQueue.setState({ queue: [] });
     useMeraProtocolStore.setState({ processingMode: ProcessingMode.Cloud });
     jest.mocked(router.push).mockClear();
     jest.mocked(router.navigate).mockClear();
@@ -55,7 +58,7 @@ describe('own news server page', () => {
         expect(screen.getByTestId('own-news-check')).toBeDisabled();
     });
 
-    it('the topics line is always there, and a good check turns on with no confirm', async () => {
+    it('the topics line is always there, and a good check turns on only after the confirm', async () => {
         introspection([...FEED, 'searchNews']);
         await mount();
         expect(screen.getByText(/Your topics go to this server/)).toBeTruthy();
@@ -64,8 +67,26 @@ describe('own news server page', () => {
         expect(await screen.findByText('Connected')).toBeTruthy();
         expect(sw()).toBeEnabled();
         await fireEvent(sw(), 'valueChange', true);
+        await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+        const ask = useDialogQueue.getState().queue[0];
+        expect(ask.title).toBe('Use your own news server?');
+        expect(ask.body).toBe("Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats.");
+        expect(ask.confirmLabel).toBe('Use it');
+        await act(async () => settleDialog(ask.id, false));
+        expect(ownNewsState.get()?.on).toBe(false);
+
+        await fireEvent(sw(), 'valueChange', true);
+        await waitFor(() => expect(useDialogQueue.getState().queue).toHaveLength(1));
+        await act(async () => settleDialog(useDialogQueue.getState().queue[0].id, true));
         await waitFor(() => expect(ownNewsState.get()?.on).toBe(true));
         expect(sw().props.value).toBe(true);
+        expect(ownNewsState.get()?.confirmed).toEqual({ at: expect.any(Number), privacyVersion: null });
+    });
+
+    it('the privacy policy link opens the own-services section in the in-app browser', async () => {
+        await mount();
+        await fireEvent.press(screen.getByTestId('own-news-privacy'));
+        expect(jest.mocked(WebBrowser.openBrowserAsync).mock.calls.at(-1)?.[0]).toMatch(/^https:\/\/mera\.news\/(en\/)?privacy#own-services$/);
     });
 
     it.each([
@@ -83,7 +104,7 @@ describe('own news server page', () => {
     });
 
     it('on, then a check that fails: says so and the switch stays on', async () => {
-        await seed({ on: true });
+        await seed({ on: true, confirmed: { at: 1, privacyVersion: null } });
         unreachable();
         await mount();
         await pressCheck();
@@ -92,7 +113,7 @@ describe('own news server page', () => {
     });
 
     it('on, then an address edit: nothing moves until Check, which saves the new address and turns the switch off', async () => {
-        await seed({ on: true });
+        await seed({ on: true, confirmed: { at: 1, privacyVersion: null } });
         await mount();
         await typeInto('own-news-address', 'https://other.own.test');
         expect(sw().props.value).toBe(true);

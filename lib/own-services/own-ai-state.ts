@@ -1,5 +1,5 @@
 import { parseServiceAddress } from './address';
-import { guardTurnOn, OwnServiceError } from './gate';
+import { guardTurnOn, OwnServiceError, parseConfirmation, type Confirmation } from './gate';
 import { OWN_AI_KEY } from './keys';
 import { createServiceState } from './service-state';
 
@@ -21,6 +21,8 @@ export type OwnAiConfig = {
   on: boolean;
   checkedAt: number | null;
   status: AiCheckStatus | null;
+  /** Set only by the confirm's affirmative button; cleared with every new address, model or key. */
+  confirmed: Confirmation | null;
 };
 
 export const ownAiState = createServiceState<OwnAiConfig>({
@@ -34,7 +36,9 @@ export const ownAiState = createServiceState<OwnAiConfig>({
       baseUrl: r.baseUrl,
       model: r.model,
       key: typeof r.key === 'string' ? r.key : null,
-      on: r.on,
+      // An item that says on without a confirmation was never turned on through the confirm: it stays off.
+      on: r.on && parseConfirmation(r.confirmed) !== null,
+      confirmed: parseConfirmation(r.confirmed),
       checkedAt: typeof r.checkedAt === 'number' ? r.checkedAt : null,
       status: (r.status as AiCheckStatus | null) ?? null,
     };
@@ -53,7 +57,7 @@ export async function saveOwnAiFields(f: { baseUrl: string; model: string; key: 
   await ownAiState.hydrate();
   const cur = ownAiState.get();
   if (cur && cur.baseUrl === addr.url && cur.model === f.model && cur.key === f.key) return;
-  await ownAiState.save({ v: 1, baseUrl: addr.url, model: f.model, key: f.key, on: false, checkedAt: null, status: null });
+  await ownAiState.save({ v: 1, baseUrl: addr.url, model: f.model, key: f.key, on: false, checkedAt: null, status: null, confirmed: null });
 }
 
 export async function recordOwnAiCheck(status: AiCheckStatus): Promise<void> {
@@ -62,12 +66,15 @@ export async function recordOwnAiCheck(status: AiCheckStatus): Promise<void> {
   if (cur) await ownAiState.save({ ...cur, status, checkedAt: Date.now() });
 }
 
-export async function setOwnAiOn(on: boolean): Promise<void> {
+/** Turning on needs the person's confirmation for this address: given now, or kept from an earlier turn-on. */
+export async function setOwnAiOn(on: boolean, confirmation?: Confirmation): Promise<void> {
   await ownAiState.hydrate();
   const cur = ownAiState.get();
   if (on) guardTurnOn(cur?.status);
   if (!cur) return;
-  await ownAiState.save({ ...cur, on });
+  const confirmed = confirmation ?? cur.confirmed;
+  if (on && !confirmed) throw new OwnServiceError('not-confirmed');
+  await ownAiState.save({ ...cur, on, confirmed });
   if (on) {
     // So no gateway run is collected after the switch. Lazy: the pipeline reaches the database at import.
     // eslint-disable-next-line @typescript-eslint/no-require-imports

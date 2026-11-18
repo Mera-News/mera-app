@@ -96,7 +96,7 @@ const cleanups: (() => void)[] = [];
 const turnOnOwnNews = async (baseUrl = 'https://news.own.test') => {
     await saveOwnNewsFields({ baseUrl, key: KEY });
     await recordOwnNewsCheck('connected', null);
-    await setOwnNewsOn(true);
+    await setOwnNewsOn(true, { at: 1, privacyVersion: null });
 };
 /** An own server answering one operation by name; every other operation falls through to the default handlers. */
 const ownAnswers = (op: string, respond: () => Response) =>
@@ -345,7 +345,7 @@ describe('the cache', () => {
 
         await saveOwnNewsFields({ baseUrl: 'https://other.own.test', key: KEY });
         await recordOwnNewsCheck('connected', null);
-        await setOwnNewsOn(true);
+        await setOwnNewsOn(true, { at: 1, privacyVersion: null });
         await client.query(cached);
         expect((await rec.settled()).map((s) => s.host).pop()).toBe('other.own.test');
     });

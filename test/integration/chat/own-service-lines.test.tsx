@@ -63,7 +63,7 @@ const callAi = (status: number) => {
 const turnOnAi = async () => {
   await saveOwnAiFields({ baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: 'own-ai-key-12345678' });
   await recordOwnAiCheck('connected');
-  await setOwnAiOn(true);
+  await setOwnAiOn(true, { at: 1, privacyVersion: null });
 };
 const line = () => screen.queryByTestId('chat-service-line');
 
@@ -141,7 +141,7 @@ it('is announced when it appears', async () => {
 it('the own news server never shows in chat', async () => {
   await saveOwnNewsFields({ baseUrl: 'https://news.own.test', key: 'own-news-key-12345678' });
   await recordOwnNewsCheck('connected', null);
-  await setOwnNewsOn(true);
+  await setOwnNewsOn(true, { at: 1, privacyVersion: null });
   await render(<Thread />);
   await act(async () => useOwnNewsHealth.setState({ health: 'unreachable' }));
   expect(line()).toBeNull();

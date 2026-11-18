@@ -3483,7 +3483,8 @@
         "off": "Пошук у мережі та перевірки фактів вимкнено.",
         "verify": "«Перевірити засвідчення» приховано. Ця перевірка стосується лише приватної хмари."
       },
-      "line": "Your AI service isn't answering. Check it in Протокол Мера."
+      "line": "Your AI service isn't answering. Check it in Протокол Мера.",
+      "confirmBody": "Your profile, your chats and the articles Мера Ньюз reads for you go to this service. Whoever runs it can read them and decides how they are used. Мера Лабс still can't see your profile or your chats."
     },
     "news": {
       "title": "Ваш власний новинний сервер",
@@ -3500,7 +3501,9 @@
         "intro": "Ваш новинний сервер не пропонує цього. Мера Ньюз показує ці сторінки порожніми.",
         "unknown": "Ваш новинний сервер не повідомив, що він пропонує. Сторінки, які він не може показати, лишаються порожніми."
       },
-      "line": "Your news server isn't answering."
+      "line": "Your news server isn't answering.",
+      "confirmTitle": "Use your own news server?",
+      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Мера Лабс still can't see your profile or your chats."
     },
     "feature": {
       "search": "Пошук",
@@ -3531,7 +3534,7 @@
       "codeExpired": "This code has expired. Run the pairing command again.",
       "codeTooMany": "Too many tries. Try again in a minute.",
       "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read.",
+      "confirmBody": "Your server can see your profile, your chats and what you read. Whoever runs it decides how they are used, so pair only with a server you trust. Мера Лабс still can't see your profile or your chats.",
       "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
       "profileTitle": "Your server already has a profile",
       "profileBody": "Keep one. The other is replaced.",
