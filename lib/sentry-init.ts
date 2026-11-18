@@ -10,6 +10,7 @@
 
 import * as Sentry from '@sentry/react-native';
 
+import { scrubDeep, scrubOwnServices } from './own-services/report-scrub';
 import { getStaticAppContext } from './observability/app-context';
 
 // Note: this file intentionally does NOT import from ./config/endpoints.
@@ -26,6 +27,9 @@ import { getStaticAppContext } from './observability/app-context';
 // auth-client, i.e. exactly the cycle this file's ordering rule exists to
 // avoid. The runtime tags are pushed onto the scope later by
 // ./observability/sentry-scope.ts instead.
+//
+// ./own-services/report-scrub is the second exception: it imports only the
+// import-free ./own-services/report-secrets, so it is safe to load first.
 
 // WHAT beforeSend CAN AND CANNOT DO — read before relying on it.
 // beforeSend runs in JS, so it only sees events the JS layer sends. NATIVE
@@ -204,6 +208,13 @@ export function keepBreadcrumb<T extends ScrubbableCrumb & { type?: string }>(cr
   return scrubPublicationPageCrumb(crumb);
 }
 
+function isOwnServerError(err: unknown): boolean {
+  const e = err as { ownServer?: unknown; errors?: { extensions?: { ownServer?: unknown } }[] } | null;
+  if (!e || typeof e !== 'object') return false;
+  if (e.ownServer === true) return true;
+  return Array.isArray(e.errors) && e.errors.length > 0 && e.errors.every((x) => x?.extensions?.ownServer === true);
+}
+
 // Sentry is production-only by default. Set EXPO_PUBLIC_SENTRY_IN_DEV=true in a
 // local .env to force-initialise it in a dev build — needed to exercise the
 // User Feedback widget (showFeedbackWidget) and other Sentry UI from `expo start`.
@@ -338,12 +349,32 @@ if (SENTRY_ENABLED) {
     // Record-time scrub: a crumb is clean before it can ride on anything,
     // including a native crash that never passes through beforeSend.
     beforeBreadcrumb(breadcrumb) {
-      return keepBreadcrumb(breadcrumb);
+      const kept = keepBreadcrumb(breadcrumb);
+      if (!kept) return kept;
+      if (typeof kept.message === 'string') kept.message = scrubOwnServices(kept.message);
+      if (kept.data) kept.data = scrubDeep(kept.data);
+      return kept;
     },
-    beforeSend(event) {
+    beforeSend(event, hint) {
       // beforeSend only sees error/message events; feedback has type 'feedback'
       // and bypasses it, so dropping all here leaves feedback as the only output.
       if (__DEV__) return null;
+      // A failure of the person's own server is expected and never Mera's bug.
+      if (isOwnServerError(hint?.originalException)) return null;
+      // Remove the person's own host, key and pairing link from everything sent.
+      if (typeof event.message === 'string') event.message = scrubOwnServices(event.message);
+      for (const v of event.exception?.values ?? []) {
+        if (typeof v.value === 'string') v.value = scrubOwnServices(v.value);
+      }
+      if (event.extra) event.extra = scrubDeep(event.extra);
+      if (event.contexts) event.contexts = scrubDeep(event.contexts);
+      if (event.tags) event.tags = scrubDeep(event.tags);
+      if (typeof event.transaction === 'string') event.transaction = scrubOwnServices(event.transaction);
+      if (typeof event.request?.url === 'string') event.request.url = scrubOwnServices(event.request.url);
+      for (const crumb of event.breadcrumbs ?? []) {
+        if (typeof crumb.message === 'string') crumb.message = scrubOwnServices(crumb.message);
+        if (crumb.data) crumb.data = scrubDeep(crumb.data);
+      }
       // Keep `user.id` (the join key — see the sendDefaultPii note above) and
       // discard every other user field, whether the SDK attached it or a future
       // contributor set it. Allowlisting rather than deleting known-bad keys
