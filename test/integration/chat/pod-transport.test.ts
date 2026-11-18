@@ -108,8 +108,8 @@ it('a redirect from the paired server is refused, never followed, and the token 
   );
   await savePairing(pairing);
   await expect(leg()).rejects.toThrow();
-  // The client's transport treats the refusal as a failed attempt and tries the same host again.
-  expect(asked).toBeGreaterThan(0);
+  // A refused redirect ends the call: the paired server is asked exactly once.
+  expect(asked).toBe(1);
   expect(elsewhere).toBe(0);
 });
 

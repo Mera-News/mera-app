@@ -112,6 +112,20 @@ it('a throwing read: the call fails rather than reach the gateway, and lands at 
   expect(own).toHaveLength(1);
 });
 
+it('a redirecting own service is asked exactly once and its target gets nothing', async () => {
+  await ownAiState.save(config());
+  let asked = 0;
+  let elsewhere = 0;
+  server.use(
+    http.all('https://elsewhere.test/*', () => { elsewhere += 1; return HttpResponse.json({}); }),
+    http.post('https://ai.own.test/*', () => { asked += 1; return new HttpResponse(null, { status: 302, headers: { location: 'https://elsewhere.test/v1/chat/completions' } }); }),
+  );
+  fakeClock();
+  await run(cloudComplete(REQUEST).catch(() => undefined));
+  expect(asked).toBe(1);
+  expect(elsewhere).toBe(0);
+});
+
 it('a provider error echoing the request leaves no key or address in what is thrown or reported', async () => {
   await ownAiState.save(config());
   server.use(

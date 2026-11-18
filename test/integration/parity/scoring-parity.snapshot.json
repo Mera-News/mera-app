@@ -113,7 +113,7 @@
       ],
       "createdAt": "2026-10-09T10:00:00.000Z",
       "firstPubDate": "2026-10-09T09:00:00.000Z",
-      "rawScore": null,
+      "rawScore": 0.87,
       "eventType": null,
       "storyKey": null,
       "entities": [],
@@ -163,7 +163,7 @@
       ],
       "createdAt": "2026-10-09T10:00:00.000Z",
       "firstPubDate": "2026-10-09T09:00:00.000Z",
-      "rawScore": null,
+      "rawScore": 0.26,
       "eventType": null,
       "storyKey": null,
       "entities": [],
@@ -253,7 +253,7 @@
       ],
       "createdAt": "2026-10-09T10:00:00.000Z",
       "firstPubDate": "2026-10-09T09:00:00.000Z",
-      "rawScore": null,
+      "rawScore": 0.57,
       "eventType": null,
       "storyKey": null,
       "entities": [],
@@ -394,7 +394,7 @@
       ],
       "createdAt": "2026-10-09T10:00:00.000Z",
       "firstPubDate": "2026-10-09T09:00:00.000Z",
-      "rawScore": null,
+      "rawScore": 0.87,
       "eventType": null,
       "storyKey": null,
       "entities": [],
@@ -442,7 +442,7 @@
       ],
       "createdAt": "2026-10-09T10:00:00.000Z",
       "firstPubDate": "2026-10-09T09:00:00.000Z",
-      "rawScore": null,
+      "rawScore": 0.66,
       "eventType": null,
       "storyKey": null,
       "entities": [],
@@ -473,9 +473,9 @@
   ],
   "picks": [
     "f1a",
-    "msp",
     "utc",
-    "utr"
+    "utr",
+    "msp"
   ],
   "feed": [
     {
@@ -507,7 +507,7 @@
         ],
         "createdAt": "2026-10-09T10:00:00.000Z",
         "firstPubDate": "2026-10-09T09:00:00.000Z",
-        "rawScore": null,
+        "rawScore": 0.87,
         "eventType": null,
         "storyKey": null,
         "entities": [],
@@ -536,62 +536,7 @@
         "f1a"
       ],
       "breaking": false,
-      "score": 0.44544935907016964
-    },
-    {
-      "id": "msp",
-      "suggestion": {
-        "_id": "msp",
-        "articleId": "msp",
-        "clusters": [
-          {
-            "clusterId": "c-msp",
-            "confidence": 0.9,
-            "stableClusterId": "member-msp"
-          }
-        ],
-        "relevance": 0.4,
-        "reason": "MotoGP rider fined after Valencia crash, which ties to I follow Formula 1 (db1bba06).",
-        "status": "complete",
-        "country_code": "ES",
-        "language_code": "en",
-        "publication_name": "Pub msp",
-        "title_en": "MotoGP rider fined after Valencia crash",
-        "title_original": "MotoGP rider fined after Valencia crash",
-        "description_en": "Stewards hand down a grid penalty for the next race.",
-        "article_url": "https://example.com/msp",
-        "image_url": null,
-        "userTopicIds": [
-          "motorsport"
-        ],
-        "createdAt": "2026-10-09T10:00:00.000Z",
-        "firstPubDate": "2026-10-09T09:00:00.000Z",
-        "rawScore": null,
-        "eventType": null,
-        "storyKey": null,
-        "entities": [],
-        "geoTags": [],
-        "headlineScope": null,
-        "headlineCountryCode": null,
-        "matchedTopics": [
-          {
-            "topicId": "topic:motorsport",
-            "text": "motorsport"
-          }
-        ],
-        "factIds": [
-          "fact:I follow Formula 1"
-        ],
-        "scoredAt": 1791540007650,
-        "scoreFailedAt": null,
-        "scoredWithV3": false
-      },
-      "memberCount": 1,
-      "memberIds": [
-        "msp"
-      ],
-      "breaking": false,
-      "score": 0.44544935907016964
+      "score": 1.3154493590701697
     },
     {
       "id": "utc",
@@ -621,7 +566,7 @@
         ],
         "createdAt": "2026-10-09T10:00:00.000Z",
         "firstPubDate": "2026-10-09T09:00:00.000Z",
-        "rawScore": null,
+        "rawScore": 0.87,
         "eventType": null,
         "storyKey": null,
         "entities": [],
@@ -646,7 +591,7 @@
         "utc"
       ],
       "breaking": false,
-      "score": 0.44544935907016964
+      "score": 1.3154493590701697
     },
     {
       "id": "utr",
@@ -678,7 +623,7 @@
         ],
         "createdAt": "2026-10-09T10:00:00.000Z",
         "firstPubDate": "2026-10-09T09:00:00.000Z",
-        "rawScore": null,
+        "rawScore": 0.66,
         "eventType": null,
         "storyKey": null,
         "entities": [],
@@ -711,7 +656,62 @@
         "utr"
       ],
       "breaking": false,
-      "score": 0.44544935907016964
+      "score": 1.1054493590701697
+    },
+    {
+      "id": "msp",
+      "suggestion": {
+        "_id": "msp",
+        "articleId": "msp",
+        "clusters": [
+          {
+            "clusterId": "c-msp",
+            "confidence": 0.9,
+            "stableClusterId": "member-msp"
+          }
+        ],
+        "relevance": 0.4,
+        "reason": "MotoGP rider fined after Valencia crash, which ties to I follow Formula 1 (db1bba06).",
+        "status": "complete",
+        "country_code": "ES",
+        "language_code": "en",
+        "publication_name": "Pub msp",
+        "title_en": "MotoGP rider fined after Valencia crash",
+        "title_original": "MotoGP rider fined after Valencia crash",
+        "description_en": "Stewards hand down a grid penalty for the next race.",
+        "article_url": "https://example.com/msp",
+        "image_url": null,
+        "userTopicIds": [
+          "motorsport"
+        ],
+        "createdAt": "2026-10-09T10:00:00.000Z",
+        "firstPubDate": "2026-10-09T09:00:00.000Z",
+        "rawScore": 0.57,
+        "eventType": null,
+        "storyKey": null,
+        "entities": [],
+        "geoTags": [],
+        "headlineScope": null,
+        "headlineCountryCode": null,
+        "matchedTopics": [
+          {
+            "topicId": "topic:motorsport",
+            "text": "motorsport"
+          }
+        ],
+        "factIds": [
+          "fact:I follow Formula 1"
+        ],
+        "scoredAt": 1791540007650,
+        "scoreFailedAt": null,
+        "scoredWithV3": false
+      },
+      "memberCount": 1,
+      "memberIds": [
+        "msp"
+      ],
+      "breaking": false,
+      "score": 1.0154493590701696
     }
   ]
 }

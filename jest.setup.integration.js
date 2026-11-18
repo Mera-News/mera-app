@@ -334,6 +334,11 @@ afterEach(() => {
     return;
   }
   actions.cancelPendingPurges?.();
+  try {
+    require('@/lib/database/services/topic-decline-service').cancelPendingDeletes?.();
+  } catch {
+    // Not loaded in this file.
+  }
 });
 
 // 12. Per-test reset.
