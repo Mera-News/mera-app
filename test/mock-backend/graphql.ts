@@ -372,6 +372,23 @@ query<'searchNews'>('SearchNews', (c) => ({
     searchNews: isEmpty(c) ? [] : searchHits(c, c.variables.limit),
 }));
 query<'placeSearch'>('PlaceSearch', () => ({ placeSearch: places }));
+// A news server's own status. Mera's API does not serve it, so it is not in schema.gql: pushed untyped.
+ops.push({
+    kind: 'query',
+    name: 'NewsServerStatus',
+    resolve: () => ({
+        newsServerStatus: {
+            __typename: 'NewsServerStatus',
+            placesSeeded: true,
+            lastArticleAt: null,
+            lastClusteringAt: null,
+            lastTopicLinkAt: null,
+            headlineEditionsBuilt: true,
+            vectorIndexState: null,
+            embeddingModel: null,
+        },
+    }),
+});
 query<'allCountries'>('AllCountries', () => ({ allCountries: countries }));
 
 // ---- fact check ---------------------------------------------------------------------
