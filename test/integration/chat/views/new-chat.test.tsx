@@ -73,12 +73,18 @@ it('after a finished turn', async () => {
 });
 
 it('during a running turn', async () => {
-  server.use(...mockGateway((call) => (call.route === 'chat' && call.messages.some((m) => m.content.includes(OLD)) ? { chunks: ['Looking ', 'x'], stallAfter: 1 } : defaultResponder(call))));
+  // The old reply is still arriving when New chat is pressed, and finishes on its own a little later.
+  const OLD_TAIL_MS = 2000;
+  server.use(...mockGateway((call) => (call.route === 'chat' && call.messages.some((m) => m.content.includes(OLD)) ? { chunks: ['Looking ', 'x'], chunkDelayMs: OLD_TAIL_MS } : defaultResponder(call))));
   await ask(OLD);
-  await until(() => useCloudChatStore.getState().messages.length > 1, 10_000, 'first turn');
+  await until(() => useCloudChatStore.getState().messages.some((m) => m.role === 'assistant' && m.content.includes('Looking')), 10_000, 'first turn streaming');
+  const oldEndsAt = Date.now() + OLD_TAIL_MS + 300;
   await newChat();
   await ask(NEW);
   await expectOnlyNew();
+  // Let the old reply finish inside this file, so nothing of it runs after the file has ended.
+  await new Promise((r) => setTimeout(r, Math.max(0, oldEndsAt - Date.now())));
+  expect(useCloudChatStore.getState().messages.some((m) => m.content.includes('Looking x'))).toBe(false);
 });
 
 it('after a failed turn', async () => {
