@@ -53,8 +53,11 @@ const MAX_PII_STRING_LEN = 200;
 // `userEmail`, `X-Authorization`, `promptTokens` and `topicText` must all hit,
 // and for a privacy control over-redaction is the safe direction to err in
 // (`keyboard` matching `key` costs us nothing but a diagnostic we didn't need).
+// The second line is model- or person-written text that rides under plain names: a guardrail
+// warning's reason, a block reason, feedback answers, appeals, queries, claims and questions.
+// `message` is left out: it carries error messages, and long ones are already capped above.
 const REDACTED_KEY_PATTERN =
-  /email|token|statement|topics?|text|title|prompt|content|cookie|key|secret|password|authorization/i;
+  /email|token|statement|topics?|text|title|prompt|content|cookie|key|secret|password|authorization|reason|feedback|answer|appeal|query|claim|question|comment/i;
 
 /**
  * In-place scrub of a free-form payload: denylisted keys are dropped outright,
