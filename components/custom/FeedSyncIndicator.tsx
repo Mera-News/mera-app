@@ -35,6 +35,7 @@ import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
+import { podPaired } from '@/lib/own-services/pod-state';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import {
     useForYouAsyncJobPhase,
@@ -204,7 +205,7 @@ export function useFeedSyncRefresh(
         // here, every pull would run a doomed sync that 402s. The free-tier
         // card pinned at the top of the list is the explanation; the spinner
         // has nothing to add.
-        if (getAiAccess() === 'locked') {
+        if (getAiAccess() === 'locked' && !podPaired()) {
             logger.info('[FeedSyncIndicator] pull-to-refresh skipped — Mera News Free');
             return;
         }

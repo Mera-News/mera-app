@@ -10,6 +10,8 @@
 //   captured at import would bypass the test's mock. The facades read the host at call time, so a
 //   require here costs nothing after the first one.
 import { registerPlatform, type OnDeviceModel, type PlatformHost } from '@/lib/platform';
+// The one app module imported here: it has no imports, so it loads nothing before registration.
+import { currentPodSink } from '@/lib/own-services/pod-sink';
 import type { DecisionRequest } from 'llama.rn';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -65,6 +67,7 @@ async function hydrateAppState(): Promise<void> {
     // Whether an own AI service or news server is on, before any scoring or feed call picks its host.
     require('@/lib/own-services/own-ai-state').ownAiState.hydrate(),
     require('@/lib/own-services/own-news-state').ownNewsState.hydrate(),
+    require('@/lib/own-services/pod-state').podState.hydrate(),
     // The backup preferences mirror, then the OS task re-synced to the hydrated cadence: the only
     // moment the cadence is known to be right. Never rejects.
     require('@/lib/backup/backup-settings')
@@ -77,6 +80,14 @@ async function hydrateAppState(): Promise<void> {
       require('@/lib/logger').default.captureException(result.reason, {
         tags: { module: 'hydrate-stores', step: 'hydrate-entry' },
       });
+    }
+  }
+  // Before the scheduler's first kick, so that kick is a sync with the server.
+  if (require('@/lib/own-services/pod-state').podPaired()) {
+    try {
+      await require('@/lib/own-services/pod-runner').enterPodMode();
+    } catch (e) {
+      require('@/lib/logger').default.captureException(e, { tags: { module: 'hydrate-stores', step: 'pod-mode' } });
     }
   }
 }
@@ -95,6 +106,8 @@ async function resetAppState(): Promise<void> {
   require('@/components/custom/feed/feed-view-prefs').resetFeedViewPrefs();
   require('@/lib/own-services/own-ai-state').ownAiState.resetMemory();
   require('@/lib/own-services/own-news-state').ownNewsState.resetMemory();
+  await require('@/lib/own-services/pod-runner').leavePodMode();
+  require('@/lib/own-services/pod-state').podState.resetMemory();
   // LAST, and deliberately so: the device's memory of its last resolved subscription tier. Without
   // it, user B on user A's device inherits A's tier and walks past the pre-onboarding entitlement
   // gate as a subscriber. The tier is written by a fire-and-forget `recordResolvedTier()` that reads
@@ -215,6 +228,9 @@ const host: PlatformHost = {
   recordForeground: (at) => require('@/lib/background/bg-refresh-settings').recordForeground(at),
   runKeychainAccessibilityMigration: () =>
     require('@/lib/utils/keychain-accessibility-migration').runKeychainAccessibilityMigration(),
+  get podCommand() {
+    return currentPodSink();
+  },
   hydrateHostState: hydrateAppState,
   resetHostState: resetAppState,
 };

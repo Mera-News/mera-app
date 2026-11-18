@@ -1,1 +1,1 @@
-export * from '@/lib/services/clear-feed-cache';
+export * from '@/lib/own-services/clear-feed-cache';

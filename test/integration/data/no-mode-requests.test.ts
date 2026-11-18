@@ -121,5 +121,5 @@ it('no own service stored: every request goes to Mera, GraphQL with the cookie, 
 
     const host = platform('no-mode-requests');
     expect(host.llmTransport).toBeUndefined();
-    expect('podCommand' in host).toBe(false);
+    expect(host.podCommand).toBeUndefined();
 });

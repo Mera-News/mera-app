@@ -124,6 +124,8 @@ interface SessionResult {
 //   AppScheduler  → auth-failure-breaker (foreground reset)
 // Statically importing these here would form a cycle at module-eval time.
 function pauseFeedSync(): void {
+  // A task held by an own mode is not the breaker's to pause either.
+  if (modeHoldsFeedSync()) return;
   try {
     const { AppScheduler } =
       require('@/lib/scheduler/AppScheduler') as typeof import('@/lib/scheduler/AppScheduler');
@@ -713,6 +715,8 @@ export function _resetForTests(): void {
   lastReauthVerifyAt = 0;
   lastRecheckDetail = { recheckBasis: 'unknown' };
 }
+
+export const isBreakerOpen = (): boolean => breakerOpen;
 
 /** Test-only / diagnostics: current breaker state snapshot. */
 export function _getBreakerState(): {

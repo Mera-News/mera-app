@@ -50,6 +50,7 @@ export type RefreshStop =
   | 'db-unavailable'
   | 'locked'
   | 'signed-out'
+  | 'pod'
   | 'deadline'
   | 'done'
   | 'error';
@@ -135,7 +136,20 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
         const { ownAiState } = require('@/lib/own-services/own-ai-state') as typeof import('@/lib/own-services/own-ai-state');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { ownNewsState } = require('@/lib/own-services/own-news-state') as typeof import('@/lib/own-services/own-news-state');
-        await Promise.all([ownAiState.hydrate(), ownNewsState.hydrate()]);
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { podPaired, podState } = require('@/lib/own-services/pod-state') as typeof import('@/lib/own-services/pod-state');
+        await Promise.all([ownAiState.hydrate(), ownNewsState.hydrate(), podState.hydrate()]);
+        // Reading and scoring here would write served tables on the phone, so a wake only syncs.
+        if (podPaired()) {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { syncPodInWake } = require('@/lib/own-services/pod-runner') as typeof import('@/lib/own-services/pod-runner');
+          try {
+            await syncPodInWake();
+          } catch {
+            breadcrumb('pod sync failed');
+          }
+          return { stoppedBy: 'pod' };
+        }
       } catch {
         return { stoppedBy: 'locked' };
       }

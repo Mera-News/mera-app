@@ -1,4 +1,4 @@
-// Set while an own mode has feed-sync paused, so the auth breaker's recovery does not resume it.
+// Set while an own mode owns feed-sync, so the auth breaker neither pauses nor resumes it.
 let held = false;
 
 export const holdFeedSyncForMode = (on: boolean): void => {
