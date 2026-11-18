@@ -110,6 +110,7 @@ it('no own service stored: every request goes to Mera, GraphQL with the cookie, 
 
     const seen = await rec.all();
     expect([...new Set(seen.map((s) => s.host))]).toEqual([MERA]);
+    expect(seen.filter((s) => s.host === 'pod.own.test')).toEqual([]);
     const graphql = seen.filter((s) => s.path.endsWith('/graphql'));
     expect(graphql.length).toBeGreaterThan(0);
     for (const s of graphql) expect(s.cookie).toBe(cookie);
