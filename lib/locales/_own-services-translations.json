@@ -1,5 +1,5 @@
 {
-  "_comment": "Own services, translated (wave pubparts P9). Spliced with --allow-overwrite over every key.",
+  "_comment": "Own services, translated. Spliced with --allow-overwrite over every key.",
   "en": {
     "ownServices": {
       "groupTitle": "Your own services",
